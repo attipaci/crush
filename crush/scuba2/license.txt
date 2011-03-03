@@ -1,0 +1,81 @@
+
+      *** Proprietary License for the SCUBA-2 modules of CRUSH-2 ***
+		      Version 1, 9 September 2010
+
+
+
+1. The SCUBA-2 plugin modules of CRUSH-2
+========================================
+
+The SCUBA-2 modules of CRUSH-2 are distributed as a plugin separate from the
+CRUSH-2 software itself. While the CRUSH-2 software package is covered by an
+open source license (GPLv3), the SCUBA-2 modules are strictly proprietary, with
+restrictions on its distribution, use, modification and other aspects. These
+restrictions are outlined in Section 2 of this document.
+
+This proprietary license covers all files of the SCUBA-2 plugin of CRUSH, all 
+files in the directory, in which this license resides, and all files in all 
+sub-directories within it. 
+
+
+2. Licensing Terms
+==================
+
+The SCUBA-2 modules of CRUSH-2 are proprietary software. By using it, you
+agree to the terms laid out below. The main restrictions for using the
+SCUBA-2 plugin of CRUSH are as follows:
+
+	1. You may use only the software prepared specifically for you.
+	   If you do not have your personalized copy, you may request one
+	   from Attila Kovacs <kovacs[AT]astro.umn.edu> directly.
+
+	2. You may not share or redistribute the software to other persons.
+	   If you wish to collaborate on the SCUBA-2 reduction with others,
+	   make them obtain their own personalized copies of the required 
+	   SCUBA-2 modules. You are also responsible for making sure that your
+	   personalized software modules are not accessible to anyone other
+	   than you. Thus, you should avoid installing it on shared
+	   computers, or accounts that are visible to others, unless you
+	   know how to restrict read permissions appropriately.
+
+	3. You may not change or modify the source code or binaries (i.e. 
+	   class files). You are also forbidden to reverse engineer the
+	   binaries included in your software modules.
+
+	4. By using the SCUBA-2 plugin modules of CRUSH, you agree to offer
+	   authorship to Attila Kovacs <kovacs[AT]astro.umn.edu> on all 
+	   publications (including posters and presentations) that result from 
+	   using the SCUBA-2 plugin modules of CRUSH.
+
+	5. By using the SCUBA-2 plugin modules of CRUSH, you also agree to
+	   give credit to the CRUSH software, where appropriate. Publications
+	   (papers, letters, posters) should reference the CRUSH paper
+	   (Kovacs, A., 2006, Proc. SPIE 7020, 45) and/or the PhD thesis
+	   of Attila Kovacs (Caltech, 2006). In presentations, memos and
+	   other documents relating to your use of the SCUBA-2 modules, it
+	   is sufficient to reference CRUSH by its web page:
+
+	     www.submm.caltech.edu/~sharc/crush
+	
+	6. There is absolutely no warranty relating to the use of these
+	   modules.	
+
+This is an open-ended license agreement, with no termination date to its terms.
+However, future releases of the same modules (by Attila Kovacs), may contain 
+less restrictive licenses. Any potential easing of the terms in future releases
+retrospetively applies to the files covered by this license also. Thus, if 
+future releases of the SCUBA-2 modules covered by this license, are made public
+under a GPL license, then all files covered by this license will also 
+automatically assume the same GPL licensing status from that point in time. The
+current version of this license is available at:
+
+  http://www.submm.caltech.edu/~sharc/crush/instruments/scuba2/license.txt
+
+If you do not agree to these terms, you cannot use the proprietary SCUBA-2
+modules of CRUSH-2. By declining the terms above, you are also required to 
+remove any copies of these modules you may have, immediately after reading this
+license agreement.
+
+-------------------------------------------------------------------------------
+Copyright (c) 2010 Attila Kovacs <kovacs[AT]astro.umn.edu>.
+All rights reserved. 

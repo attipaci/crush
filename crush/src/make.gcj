@@ -1,0 +1,15 @@
+# This script may be called from the CRUSH installation directory to compile
+# machine-dependent binaries for crush with gcj (the GNU Java compiler).
+# In principle, pre-compiled code can run faster than one inside a Java virtual
+# machine (JVM). However, even with all optimizations on, and all safety 
+# checks off, the compiled version is almost half the speed of the OpenJDK
+# VM's. If you do not believe it, feel free to check... 
+
+KERNEL=`uname -s`
+ARCH=`uname -i`
+
+gcj -o crush-$KERNEL-$ARCH -Ifits.jar -Ibin \
+  --main=crush.CRUSH \
+  -O3 -march=i686 -ffast-math -fno-bounds-check -fno-store-check \
+  bin/crush/*.class bin/crush/*/*.class bin/util/*.class bin/util/*/*.class \
+  fits.jar bin/crush/gui/colorscheme/*.class

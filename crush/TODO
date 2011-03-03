@@ -1,0 +1,78 @@
+>> check how decorrelating seems to 'unflag' weighting/spike flags...
+>> Smoothing in deep does not preserve point source flux...
+
+!	-- Flag by data (DAC ranges) (channel.offset)
+	-- main image header edits by instrument...
+	-- logging support
+	-- Better gain normalization, average weight
+	-- phases.filtering
+	-- Do not add pixels to instruments on initialization.
+	   Add these only when reading scans!
+	-- Scan horizontal coordinates only for GroundBased 
+	   (getHorizontal(), setHorizontal(coords))
+	-- Generic FFT filtering with response
+		getSpectrum
+		filter(spectrum, response)
+		filter(response)
+	-- highpass filtering to hp signals too...
+
+	-- Generic FITS reading:
+	    OK non-square pixels
+	    * multi-dimensional images (plane=n1[,n2...])
+	      (or 0,[0...] as default)
+	    OK transfer matrices (if no CDELT keys)
+	    * Automatic detection of VARIANCE, NOISE, RMS images
+	    * Automatic units...
+	    .. Extra projection keys (poles etc.)
+2.03+	-- Better map units (baseUnit, isBeamNormalized?)
+	-- source.whiten?
+	-- check double filtering
+2.03	-- sort out main image header edits by instrument...
+	-- 'aperture' for aperture conversion/scaling
+	-- channel.dataIndex --> channel.getID()?
+	-- private Scan.serialNo (use getID())
+	-- faint.cfg's [extended] reenable some forgotten modalities.
+	-- re-check accel-mag (before array) on instruments (sharc2/apex/gismo)
+	   should do something about whitening also??
+	-- Shadow scans
+		* Scan.shadow, CRUSH.shadowSource?
+		* call shadow operations on all signal estimation/removal.
+		* console output on shadows?
+		* write shadow scans
+		* options:
+			shadow
+			shadow.sources	(default catalog 1Jy, point)
+	-- Scan.parallelization
+	   -- load management...
+		size=frames*channels
+		Navailable = Ncp * remainingSize / totalSize 	
+		Npossible = remainingsize / size
+		parallel = round|floor ? (Navailable / Npossible)
+	-- Annuli, Polygon, and Point regions
+	-- More debug (CRUSH.debug) 
+		--> give traces for all exceptions
+		--> Remove ? from NaN checks?
+	-- Merge util with xcrush and update to it...
+	-- Common TextFileParser (and TextTableParser?)...
+	-- RMI (client/server) mode...
+		-- InfoMessage, WarningMessage, ErrorMessage (with stubs)
+		-- ScanSet (for fixed threads)
+		-- Node/Job Manager
+		-- node.readScan(), or node.addScan()
+		-- Service discovery via UDP
+		-- node.merge(SourceModel)
+	-- parallelization
+		-- drifts
+		-- decorrelate
+		-- gains
+		-- weighting (all)
+		-- despike
+		-- filter
+		-- reading/validation
+	-- Orientable corrections (e.g. single scan rows...)
+		-- Multimode analysis
+		   (choose the highest mode with a certain power
+		   fraction of the zero mode)
+		-- mean rotation span from weighted center
+
+

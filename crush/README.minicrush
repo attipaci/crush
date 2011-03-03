@@ -1,0 +1,230 @@
+
+		  *** CRUSH-2: Notes to minicrush users ***
+
+			        Attila Kovacs
+			  <kovacs[AT]astro.umn.edu>
+
+			  Last Updated: 21 Aug 2010
+
+
+
+Table of Contents
+=================
+
+1. Overview
+
+  1.1 Why Switch?
+  1.2 What's (still) Missing?
+  1.3 RCPs by the Date
+  1.4 Migrating scripts
+
+2. Reference: Old and New Configurations 
+
+
+
+
+#############################################################################
+1. Overview
+#############################################################################
+
+The purpose of this document is to highlight the differences between minicrush,
+and the new CRUSH-2, and thus help users transition to the new software. 
+
+minicrush is no longer supported, and will be phased out completely in time. 
+Thus, all minicrush users are strongly encouraged to switch to the new release 
+as soon as possible. 
+
+After glancing at this document, you should read the first Section ('Getting 
+Started') of the CRUSH-2 User's Guide ('README') to familiarize yourself 
+with the new version.
+
+
+1.1 Why Switch?
+===============	
+
+
+   User Experience
+   ---------------
+   
+	* Skydip, beammap, and pointing/calibration reductions.
+
+	* Faster reductions (~2-3x faster, depending on machine and
+	  configuration).
+
+	* More transparent and versatile configuration capability. Do what
+	  you want, when you want, and how you want.
+
+	* The same CRUSH, same options, not just for the APEX cameras!
+
+	* Up-to-date documentation (online and off-line), so you are never
+	  lost!
+
+	* Code support. CRUSH-2 is the only CRUSH that is being actively
+	  developed and supported. So if you find problems, they can be fixed
+	  quickly!
+
+	
+
+   Under the Hood
+   --------------
+
+	* Smaller memory footprint enables reducing larger datasets than
+	  ever.
+
+	* Hierarchical configuration with conditional settings allows for
+	  smarter 'scripting'.
+
+
+
+1.2 What's (still) Missing?
+===========================
+
+   CRUSH-2 grew out of minicrush. Thus, most minicrush features also exist
+   in CRUSH-2, often with more polish and refinement, as well as additional
+   versatility. The main features that are missing:
+
+      * The data 'simulator' of minicrush is not (yet) reproduced for CRUSH-2. 
+	Moreover, because CRUSH-2 uses more information from the data than what
+	is created/updated by the minicrush simulator, you are advised against 
+	using the minicrush simulator to generate test data for CRUSH-2.
+
+        The CRUSH-2 simulator should become available in one of the upcoming 
+   	releases in the not too distant future. There are also plans to add a 
+   	'shadow' reduction mode, in which a simulated source undergoes
+   	*exacly* the same reduction steps as the real data, s.t. the points
+   	source profiles of the reduction can be determined accurately.
+
+   Keep checking back to see when these features become available.
+
+
+
+1.3 RCPs by the Date
+====================
+
+   Both minicrush and CRUSH-2 can specify RCP files by date. However, they
+   achieve this differently. Since minicrush did not have date-specific
+   configuration per se, it relied on a file 'rcps.dat' to provide a lookup
+   of rcp files by MJD date ranges. This file had entries like:
+
+	54372.0	54391.0	laboca-2007-10.rcp
+
+   specifying that 'laboca-2007-10.rcp' (in the appropriare instrument 
+   subdirectory of minicrush) should be used between MJD dates of 54372.0 and 
+   54391.0.
+
+   Because CRUSH-2 provides the ability of conditionally setting properties
+   by date (both MJD date and calendar date!), there is no longer a need for
+   such a lookup file. Instead, the date-specific RCP lookup is defined in
+   <instrument>/default.cfg. The equivalent configuration to the above is
+   achieved by:
+
+	mjd.[54372.0--54391.0] rcp {$CRUSH}/laboca/laboca-2007-10.rcp
+
+   (Note, that because the full path to the file is given, the RCP does not
+   necessarily have to reside in the laboca subdirectory of crush-2!)
+   MJDs are nice for astronomy, but not very meaningful to humans. Thus,
+   The same can be defined by easier-to-understand calendar dates:
+
+	date.[2007.09.29--2007.10.17] rcp {$CRUSH}/laboca/laboca-2007-10.rcp
+
+    Thus, if you would like to add RCP information for dates beyond the ones
+    already defined in your CRUSH-2 distribution, simply add lines, like
+    one of the last two above into the 'default.cfg' file inside the 
+    appropriate instrument subdirectory.	
+
+
+
+1.4 Migrating Scripts
+=====================
+
+   The CRUSH-2 configuration system is basically just an evolved version of 
+   that of minicrush. Thus, most configuration options look the same, and 
+   behave the same as in minicrush. However, a few have changed. Either, 
+   because in the hierarchical configuration of CRUSH-2 it made better sense 
+   to specify these as sub-options of a group, or to provide simplification 
+   otherwise. 
+
+   For example, the option 'despike=absolute,6.0' of minicrush at once 
+   activated despiking, chose the 'absolute' method of searching for spikes, 
+   and specified excursions larger than 6.0-sigma to be flagged. This was 
+   great if you wanted to achieve all three at once, but the syntax did not
+   allow for changing just one aspect of despiking, while leaving whatever
+   setting was defined for the other two. Thus, it made more sense to break
+   the 3 functions into 3 separate settings: 'despike' to activate, 
+   'despike.method' to chose the algorithm, and 'despike.level' to set the
+   critical significance. This is the approach used in CRUSH-2.
+
+   If you want to migrate your existing minicrush reduction scripts to
+   CRUSH-2, please refer to the table below, to see what you have to change
+   in your scripts to make them work with CRUSH-2.
+
+   You should also understand that the default settings of CRUSH-2, while
+   similar, are not identical to those in minicrush. It is possible that you
+   will find that certain overriders you used in minicrush reductions may
+   no longer be necessary, while you may opt to use others, which you
+   did not require before. As such, you should proceed with caution, when
+   migrating old scripts with some more advanced settings.
+
+
+
+
+
+
+#############################################################################
+2. Reference: Old and New Configurations
+#############################################################################
+
+Below you will find a summary of all the minicrush options that have changed, 
+listed alphabetically, with their CRUSH-2 equivalent (if any) shown to the
+right.
+
+
+Table 1. List of options whose name/usage has changed since minicrush.
+
+------------------------------------------------------------------------------
+minicrush option		CRUSH-2 option
+==============================================================================	
+center				pointing
+chopoffsets			chopped (automatic)
+decorrelate			array (i.e. correlated.obs-channels)
+despike=<method>,<level>	despike.method=<method> 
+				  + despike.level=<level>
+				  + despike
+extendedopts			[extended] (see conditionals in README.)
+filter				source.filter
+filter=<type>,<blank>		source.filter.type=<type>
+				  + source.filter.blank=<blank> 
+				  + source.filter	
+framespikes			despike.framespikes
+gains=<type>			gains.estimator=<type> 
+				  + gains
+intermediatemaps		source.intermediates
+iteration.n=key:value		iteration.[n]key=value
+iterations.clear		remove=iteration
+jansky				jansky + jansky.inverse (!)
+maxHe3rms			He3.maxrms
+MEM.lambda			source.mem.lambda
+nefd-range			source.nefd
+relative-noise-range		weighting.noiserange
+scanmap-correction		source.correct		
+scanmap-redundancy		source.redundancy
+scanmapdespike			source.despike
+scanweighting			weighting.scans
+sky				gradients
+skydipfactor			---
+sourcemap			source
+sourcemap=MEM			source.MEM
+				  + source
+sourcemap=nosync		source.nosync
+				  + source
+spikecount			despike.flagcount
+spikefraction			despike.flagfraction
+spikewidth			despike.width	
+time-weight-range		weighting.frames.noiserange
+time-weighting			weighting.frames 
+time-weighting=<dt>		weighting.frames.resolution=<dt>
+				  + weighting.frames
+weighting=<method>		weighting.method=<method> 
+				  + weighting
+-------------------------------------------------------------------------------
+Copyright (C)2010 Attila Kovacs -- <kovacs[AT]astro.umn.edu>

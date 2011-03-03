@@ -1,0 +1,341 @@
+#	LABOCA / ABBA
+#	Full set of channels - 20070509 (new array)
+#--------------------------------------------------
+#
+#columns:
+#1=backend channel	[1-320]
+#2=box number	[1-4]
+#3=group	[0-12]
+#4=amplifier	[1-5]
+#5=board	[A-P]
+#6=cable	[A-M]
+#7=pin number	[0-26]
+#8=bolometer number in the array	[0-295]
+#9=channel state	[B/R/N]
+#10=comment
+#
+#NOTE: 0 means not bolometer/not connected
+#
+#
+#BEch	box	group	amp	board	cable	pin	bolo	state	comment
+#-----------------------------------------------------------------------------------------------
+1	1	1	3	A	I	11	206	B	
+2	1	1	5	B	I	7	201	B	
+3	1	1	3	C	I	17	210	B	
+4	1	1	3	B	I	14	211	B	blind, bad horn with too
+5	1	1	2	C	I	18	212	B	
+6	1	1	3	D	I	20	215	B	
+7	1	1	1	B	I	16	217	B	
+8	1	1	1	D	I	22	218	B	
+9	1	1	5	C	I	5	203	B	
+10	1	1	4	C	I	6	202	B	
+11	1	1	4	B	I	8	205	B	
+12	1	1	1	C	I	19	214	B	
+13	1	1	2	A	I	12	209	B	
+14	1	1	2	B	I	15	213	B	
+15	1	1	2	D	I	21	220	R	1MOhm, broken membrane
+16	1	1	1	A	I	13	207	R	1MOhm, broken membrane
+17	1	3	5	M	G	7	153	B	
+18	1	3	4	P	G	1	149	B	
+19	1	3	3	M	G	15	165	B	
+20	1	3	3	N	G	18	164	B	
+21	1	3	4	O	G	3	152	B	
+22	1	3	4	N	G	6	154	B	
+23	1	3	1	O	G	23	168	B	
+24	1	3	2	N	G	19	166	B	
+25	1	3	4	M	G	8	157	B	
+26	1	3	5	P	G	2	151	B	
+27	1	3	5	N	G	5	155	B	
+28	1	3	5	O	G	4	150	B	
+29	1	3	3	O	G	21	0	R	1MOhm, not connected
+30	1	3	1	N	G	20	167	B	
+31	1	3	2	O	G	22	170	B	
+32	1	3	1	M	G	17	162	B	
+33	1	3	3	P	G	26	0	R	1MOhm, not connected
+34	1	2	4	I	H	6	177	B	
+35	1	3	1	P	G	24	0	R	1MOhm, not connected
+36	1	2	5	I	H	5	178	B	
+37	1	2	3	K	H	25	194	B	
+38	1	2	3	I	H	19	189	B	
+39	1	2	5	J	H	3	175	B	
+40	1	2	2	K	H	26	0	R	1MOhm, not connected
+41	1	3	2	P	G	25	171	B	
+42	1	3	2	M	G	16	169	B	
+43	1	3	5	L	G	9	156	B	
+44	1	2	5	K	H	1	172	B	
+45	1	3	4	L	G	10	160	B	
+46	1	2	4	K	H	2	174	B	
+47	1	3	1	K	G	11	158	B	
+48	1	2	4	J	H	4	173	B	
+49	1	2	3	J	H	22	193	B	
+50	1	2	2	J	H	23	191	B	
+51	1	2	5	H	H	7	176	B	
+52	1	2	2	I	H	20	190	B	
+53	1	2	1	I	H	21	195	B	
+54	1	2	4	H	H	8	180	B	
+55	1	1	4	E	I	2	199	B	
+56	1	1	3	E	I	23	216	B	
+57	1	3	2	L	G	13	159	B	
+58	1	3	3	L	G	12	161	B	
+59	1	2	1	J	H	24	196	B	
+60	1	3	1	L	G	14	163	B	
+61	1	2	5	G	H	9	179	B	
+62	1	1	5	E	I	1	197	B	
+63	1	2	3	G	H	13	182	B	
+64	1	0	5	F	0	0	0	N	ampl. not connected
+65	1	1	3	F	I	26	222	B	
+66	1	0	4	F	0	0	0	N	ampl. not connected
+67	1	2	2	G	H	14	186	B	
+68	1	2	2	H	H	17	185	B	
+69	1	2	3	H	H	16	192	B	
+70	1	1	2	E	I	24	221	B	
+71	1	1	4	D	I	4	198	B	
+72	1	2	1	H	H	18	187	B	
+73	1	2	4	G	H	10	183	B	
+74	1	2	1	G	H	15	188	B	
+75	1	2	1	F	H	12	184	B	
+76	1	2	2	F	H	11	181	B	
+77	1	1	1	E	I	25	219	B	
+78	1	1	5	D	I	3	200	B	
+79	1	1	5	A	I	9	204	B	
+80	1	1	4	A	I	10	208	B	
+81	2	4	3	A	M	11	279	B	
+82	2	4	5	B	M	7	274	B	
+83	2	4	3	C	M	17	283	B	
+84	2	4	3	B	M	14	284	B	
+85	2	4	2	C	M	18	285	B	
+86	2	4	3	D	M	20	288	B	
+87	2	4	1	B	M	16	290	R	1MOhm, broken membrane
+88	2	4	1	D	M	22	291	R	1MOhm, broken membrane
+89	2	4	5	C	M	5	276	B	
+90	2	4	4	C	M	6	275	B	
+91	2	4	4	B	M	8	278	B	
+92	2	4	1	C	M	19	287	B	
+93	2	4	2	A	M	12	282	B	
+94	2	4	2	B	M	15	286	B	
+95	2	4	2	D	M	21	293	R	1MOhm, broken membrane
+96	2	4	1	A	M	13	280	B	
+97	2	6	5	M	K	7	227	B	
+98	2	6	4	P	K	1	223	B	
+99	2	6	3	M	K	15	239	B	
+100	2	6	3	N	K	18	238	B	
+101	2	6	4	O	K	3	226	B	
+102	2	6	4	N	K	6	228	B	
+103	2	6	1	O	K	23	242	B	
+104	2	6	2	N	K	19	240	B	
+105	2	6	4	M	K	8	231	B	
+106	2	6	5	P	K	2	225	B	
+107	2	6	5	N	K	5	229	B	
+108	2	6	5	O	K	4	224	B	
+109	2	6	3	O	K	21	246	B	
+110	2	6	1	N	K	20	241	B	
+111	2	6	2	O	K	22	244	B	
+112	2	6	1	M	K	17	236	B	
+113	2	6	3	P	K	26	248	B	
+114	2	5	4	I	L	6	253	B	
+115	2	6	1	P	K	24	247	B	
+116	2	5	5	I	L	5	254	B	
+117	2	5	3	K	L	25	270	B	
+118	2	5	3	I	L	19	265	B	
+119	2	5	5	J	L	3	251	B	
+120	2	5	2	K	L	26	273	B	
+121	2	6	2	P	K	25	245	B	
+122	2	6	2	M	K	16	243	B	
+123	2	6	5	L	K	9	230	B	
+124	2	5	5	K	L	1	0	R	1MOhm, not connected
+125	2	6	4	L	K	10	234	B	
+126	2	5	4	K	L	2	250	B	
+127	2	6	1	K	K	11	232	B	
+128	2	5	4	J	L	4	249	B	
+129	2	5	3	J	L	22	269	B	
+130	2	5	2	J	L	23	267	B	
+131	2	5	5	H	L	7	252	B	
+132	2	5	2	I	L	20	266	B	
+133	2	5	1	I	L	21	271	B	
+134	2	5	4	H	L	8	256	B	
+135	2	4	4	E	M	2	0	R	1MOhm, not connected
+136	2	4	3	E	M	23	289	B	
+137	2	6	2	L	K	13	233	B	
+138	2	6	3	L	K	12	235	B	
+139	2	5	1	J	L	24	272	R	1MOhm, broken membrane
+140	2	6	1	L	K	14	237	B	
+141	2	5	5	G	L	9	255	B	
+142	2	4	5	E	M	1	0	R	1MOhm, not connected
+143	2	5	3	G	L	13	258	R	1MOhm, broken membrane
+144	2	0	5	F	0	0	0	N	ampl. not connected
+145	2	4	3	F	M	26	295	R	1MOhm, broken membrane
+146	2	0	4	F	0	0	0	N	ampl. not connected
+147	2	5	2	G	L	14	262	B	
+148	2	5	2	H	L	17	261	B	
+149	2	5	3	H	L	16	268	R	1MOhm, broken membrane
+150	2	4	2	E	M	24	294	R	1MOhm, broken membrane
+151	2	4	4	D	M	4	0	R	1MOhm, not connected
+152	2	5	1	H	L	18	263	B	
+153	2	5	4	G	L	10	259	B	
+154	2	5	1	G	L	15	264	B	
+155	2	5	1	F	L	12	260	B	
+156	2	5	2	F	L	11	257	B	
+157	2	4	1	E	M	25	292	R	1MOhm, bad contact
+158	2	4	5	D	M	3	0	R	1MOhm, not connected
+159	2	4	5	A	M	9	277	B	
+160	2	4	4	A	M	10	281	B	
+161	3	9	3	A	C	11	58	B	
+162	3	9	5	B	C	7	53	B	
+163	3	9	3	C	C	17	62	B	blind, bad cavity, absor
+164	3	9	3	B	C	14	63	B	
+165	3	9	2	C	C	18	64	B	
+166	3	9	3	D	C	20	67	B	
+167	3	9	1	B	C	16	69	B	
+168	3	9	1	D	C	22	70	B	
+169	3	9	5	C	C	5	55	B	
+170	3	9	4	C	C	6	54	B	
+171	3	9	4	B	C	8	57	B	
+172	3	9	1	C	C	19	66	B	
+173	3	9	2	A	C	12	61	B	
+174	3	9	2	B	C	15	65	B	
+175	3	9	2	D	C	21	72	B	
+176	3	9	1	A	C	13	59	B	
+177	3	7	5	M	A	7	5	B	
+178	3	7	4	P	A	1	1	R	1MOhm, broken membrane
+179	3	7	3	M	A	15	17	B	
+180	3	7	3	N	A	18	16	B	
+181	3	7	4	O	A	3	4	R	1MOhm, broken membrane
+182	3	7	4	N	A	6	6	B	
+183	3	7	1	O	A	23	20	B	
+184	3	7	2	N	A	19	18	B	
+185	3	7	4	M	A	8	9	B	
+186	3	7	5	P	A	2	3	R	1MOhm, broken membrane
+187	3	7	5	N	A	5	7	R	1MOhm, bad contact
+188	3	7	5	O	A	4	2	R	1MOhm, broken membrane
+189	3	7	3	O	A	21	0	R	1MOhm, broken membrane
+190	3	7	1	N	A	20	19	R	1MOhm, broken membrane
+191	3	7	2	O	A	22	22	B	
+192	3	7	1	M	A	17	14	B	
+193	3	7	3	P	A	26	0	R	1MOhm, not connected
+194	3	8	4	I	B	6	29	B	
+195	3	7	1	P	A	24	0	R	1MOhm, not connected
+196	3	8	5	I	B	5	30	B	
+197	3	8	3	K	B	25	46	B	
+198	3	8	3	I	B	19	41	B	
+199	3	8	5	J	B	3	27	B	
+200	3	8	2	K	B	26	0	R	1MOhm, not connected
+201	3	7	2	P	A	25	23	B	
+202	3	7	2	M	A	16	21	B	
+203	3	7	5	L	A	9	8	B	
+204	3	8	5	K	B	1	24	B	
+205	3	7	4	L	A	10	12	B	
+206	3	8	4	K	B	2	26	B	
+207	3	7	1	K	A	11	10	B	
+208	3	8	4	J	B	4	25	B	
+209	3	8	3	J	B	22	45	B	
+210	3	8	2	J	B	23	43	B	
+211	3	8	5	H	B	7	28	B	
+212	3	8	2	I	B	20	42	B	
+213	3	8	1	I	B	21	47	B	
+214	3	8	4	H	B	8	32	B	
+215	3	9	4	E	C	2	51	B	
+216	3	9	3	E	C	23	68	B	
+217	3	7	2	L	A	13	11	B	
+218	3	7	3	L	A	12	13	B	
+219	3	8	1	J	B	24	48	B	
+220	3	7	1	L	A	14	15	B	
+221	3	8	5	G	B	9	31	B	
+222	3	9	5	E	C	1	49	B	
+223	3	8	3	G	B	13	34	B	
+224	3	0	5	F	0	0	0	N	ampl. not connected
+225	3	9	3	F	C	26	74	B	
+226	3	0	4	F	0	0	0	N	ampl. not connected
+227	3	8	2	G	B	14	38	B	
+228	3	8	2	H	B	17	37	B	
+229	3	8	3	H	B	16	44	B	
+230	3	9	2	E	C	24	73	B	
+231	3	9	4	D	C	4	50	B	
+232	3	8	1	H	B	18	39	B	
+233	3	8	4	G	B	10	35	B	
+234	3	8	1	G	B	15	40	B	
+235	3	8	1	F	B	12	36	B	
+236	3	8	2	F	B	11	33	B	
+237	3	9	1	E	C	25	71	B	
+238	3	9	5	D	C	3	52	B	
+239	3	9	5	A	C	9	56	B	
+240	3	9	4	A	C	10	60	B	
+241	4	10	3	A	F	11	132	B	
+242	4	10	5	B	F	7	127	B	
+243	4	10	3	C	F	17	136	B	
+244	4	10	3	B	F	14	137	B	
+245	4	10	2	C	F	18	138	B	
+246	4	10	3	D	F	20	141	B	
+247	4	10	1	B	F	16	143	B	
+248	4	10	1	D	F	22	144	B	
+249	4	10	5	C	F	5	129	B	
+250	4	10	4	C	F	6	128	B	
+251	4	10	4	B	F	8	131	B	
+252	4	10	1	C	F	19	140	B	
+253	4	10	2	A	F	12	135	B	
+254	4	10	2	B	F	15	139	B	
+255	4	10	2	D	F	21	146	R	1MOhm, broken membrane
+256	4	10	1	A	F	13	133	B	
+257	4	12	5	M	D	7	79	B	
+258	4	12	4	P	D	1	75	B	
+259	4	12	3	M	D	15	91	B	
+260	4	12	3	N	D	18	90	B	
+261	4	12	4	O	D	3	78	B	
+262	4	12	4	N	D	6	80	B	
+263	4	12	1	O	D	23	94	B	
+264	4	12	2	N	D	19	92	B	
+265	4	12	4	M	D	8	83	B	
+266	4	12	5	P	D	2	77	B	
+267	4	12	5	N	D	5	81	B	
+268	4	12	5	O	D	4	76	B	
+269	4	12	3	O	D	21	98	B	
+270	4	12	1	N	D	20	93	B	
+271	4	12	2	O	D	22	96	B	
+272	4	12	1	M	D	17	88	B	
+273	4	12	3	P	D	26	100	B	
+274	4	11	4	I	E	6	105	B	
+275	4	12	1	P	D	24	99	B	
+276	4	11	5	I	E	5	106	B	
+277	4	11	3	K	E	25	122	B	
+278	4	11	3	I	E	19	117	B	
+279	4	11	5	J	E	3	103	B	
+280	4	11	2	K	E	26	125	B	
+281	4	12	2	P	D	25	97	B	
+282	4	12	2	M	D	16	95	B	
+283	4	12	5	L	D	9	82	B	
+284	4	11	5	K	E	1	0	R	1MOhm, not connected
+285	4	12	4	L	D	10	86	B	
+286	4	11	4	K	E	2	102	B	
+287	4	12	1	K	D	11	84	B	
+288	4	11	4	J	E	4	101	B	
+289	4	11	3	J	E	22	121	B	
+290	4	11	2	J	E	23	119	B	
+291	4	11	5	H	E	7	104	B	
+292	4	11	2	I	E	20	118	B	
+293	4	11	1	I	E	21	123	B	
+294	4	11	4	H	E	8	108	B	
+295	4	10	4	E	F	2	0	R	1MOhm, not connected
+296	4	10	3	E	F	23	142	B	
+297	4	12	2	L	D	13	85	B	
+298	4	12	3	L	D	12	87	B	
+299	4	11	1	J	E	24	124	B	
+300	4	12	1	L	D	14	89	B	
+301	4	11	5	G	E	9	107	B	
+302	4	10	5	E	F	1	0	R	1MOhm, not connected
+303	4	11	3	G	E	13	110	B	
+304	4	0	5	F	0	0	0	N	ampl. not connected
+305	4	10	3	F	F	26	148	B	
+306	4	0	4	F	0	0	0	N	ampl. not connected
+307	4	11	2	G	E	14	114	B	
+308	4	11	2	H	E	17	113	B	
+309	4	11	3	H	E	16	120	B	
+310	4	10	2	E	F	24	147	R	1MOhm, broken membrane
+311	4	10	4	D	F	4	0	R	1MOhm, not connected
+312	4	11	1	H	E	18	115	B	
+313	4	11	4	G	E	10	111	B	
+314	4	11	1	G	E	15	116	B	
+315	4	11	1	F	E	12	112	B	
+316	4	11	2	F	E	11	109	B	
+317	4	10	1	E	F	25	145	R	1MOhm, broken membrane
+318	4	10	5	D	F	3	126	B	
+319	4	10	5	A	F	9	130	B	
+320	4	10	4	A	F	10	134	B	

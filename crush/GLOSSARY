@@ -1,0 +1,2403 @@
+
+:: 350um		@Instrument: SHARC-2
+			Specify that the 350um filter was used (default). This 
+			adjuts conversion factors, tau scaling relations for 
+			calculating in-band line-of sight opacitites, and beam 
+			sizes (see 'sharc2/default.cfg').
+			@See: 'jansky', 'tau.<?>', 'beam'.
+
+:: 450um		@Instrument: SHARC-2, SCUBA-2 
+			Use if the 450um filter was used to observe with 
+			SHARC-2, or to specify 450um imaging with SCUBA-2
+			@See: '350um' and '850um'
+
+:: 850um		@Instrument: SHARC-2, SCUBA-2
+			Specify that data was taken at 850um with SHARC-2, or
+			to reduce the data from the 850um array of SCUBA-2.
+			@See: '350um' and '450um'
+
+:: accel		@Alias -> 'correlated.accel-mag'
+			@Instrument
+			@Advanced
+		 	Can be used to enable acceleration response 
+			decorrrelation, or to set options for it.
+			@See: 'correlated.<?>' for available options.
+	
+:: aclip=X		@Advanced
+			Clip data when the telescope acceleration is above
+			X arcsec/s^2. Heavy accelerations can put mechanical
+			energy into the detector system, changing the shape of
+			the primary, thereby generating bright signals from the 
+			varying illumination of the bright atmosphere. Clipping 
+			data when there is danger of this happening is a good 
+			idea. 
+			@See: 'accel' for possible modeling of these signals)
+
+:: alias.<?>		@Advanced
+			Use to define convenient shorthands for yourself. 
+			Aliases are literal substitutions. Thus:
+
+			    alias.altaz system=horizontal		
+			
+			can specify 'altaz' to serve as a shorthand for the
+			key/value pair 'system=horizontal'. Conditional can also
+			be aliased. E.g.:
+			
+			    alias.final iteration.[last]
+
+			Defines 'final' as a shorthand for 'iteration.[last]'.
+			Thus:
+			
+			    final:smooth=9.0
+
+			is understood as being 
+
+			   iteration.[last] smooth=9.0
+
+			(The colon provides an alternative to a white-space to
+			separate the condition from the statement, which is also
+			command-line friendly).
+			@See: 'altaz', 'final'   
+
+:: altaz		@Alias -> 'system=horizontal' 
+			Shorthand for reducing in Alt/Az cordinates.
+			@See: 'system' and 'horizontal'.
+
+:: amps			@Alias -> 'correlated.amps'
+			@Instrument: LABOCA
+			@Advanced
+			Decorrelate on amplifier boards, or set options for it.
+			@See: 'correlated.<?>' for details on brached options.
+
+:: array		@Alias -> 'correlated.obs-channels'
+			@Advanced
+			Decorrelate on all the radiation-sensitive channels of
+			the instrument, or set options for it.
+			@See: 'correlated.<?>' for details on brached options.
+	
+:: azymuth		@Alias -> 'correlated.telescope-x'
+			@Instrument: GISMO
+			@Advanced
+			Remove signals, which are correlated to the azymuth
+			movement of the telescope (e.g. superconducting detector
+			arrays sensitive to Earth's magnetic field.),
+			@See: 'correlated.<?>' for details on brached options.
+
+:: beam=X		Set the instrument beam to X arcseconds.
+			@Advanced
+			@See: 'resolution'
+
+:: beammap		Effectively the same as 'source.type=beammap', which is
+			invoked by a condition, not an alias because aliasing
+			would interfere with the similarly named 
+			'beammap.process' and 'beammap.writemaps' options.
+			Used for reducing beam map data. Instead of making a 
+			single map from all pixels, separate maps are created 
+			for each pixel (Note, this can chew up some memory if 
+			you have a lot of pixels). At the end of the reduction 
+			CRUSH determines the actual pixel offsets in the focal 
+			plane.
+			@See: 'source.type', 'map', 'skydip', 'grid'
+	
+:: beammap.process	@Advanced
+			Specify that beam-maps should undergo the same
+			post-processing steps (e.g. smoothing, clipping
+			filtering, etc.) that are used for regular map-making.
+			When the option is not set, beam-maps are used in their
+			raw maximum-likelihood forms.
+			@See: 'beammap', 'beammap.writemaps'
+
+:: beammap.writemaps	Beam maps normally only produce the pixel position 
+			information. Use this option if you want CRUSH to write
+ 			individual pixel maps as well, so you can peek at these
+			yourself.
+			@See: 'beammap', beammap.process'
+
+:: blacklist[=<list>]	Similar to 'forget', except it will not set options 
+			even if they are then specified at a later time. This 
+			is useful for altogether removing settings from the 
+			configuration.
+			@Since: 2.01-4
+			Without an argument, the command will produce the list
+			of all blacklisted settings on the console.
+			@See: 'whitelist', 'forget', 'recall', 'remove', 
+			      'replace'
+
+:: blank=X		@Expert
+			Skip data from modeling over points that have a source
+			flux exceeding the signal-to-noise level X. This may
+			be useful in reducing the filtering effect around 
+			bright peaks. 
+			@See: 'clip'.
+
+:: blind=<list>		@Expert
+			Specify a list of blind pixels. Use data indeces (e.g.
+			backend indeces for APEX) and ranges, in a comma-
+			separated form. E.g.:
+
+			   blind 46,70-72,84
+
+			Blind channels may be used by some instruments to
+			estimate instrumental signals, such as temperature
+			fluctuations (LABOCA). Channels are normally numbered
+			from 1 (i.e. not C-style!)
+			@See: 'flag'.
+
+:: block=NX,NY		@Instrument: SHARC-2, SCUBA-2
+			@Expert
+			Specify a correlated block size for higher order 
+			sky-noise removal, as two integer pixel numbers (rows 
+			and columns) separated by a comma or 'x'. E.g.:
+
+			   block=4x6
+
+			will decorrelate signals on blocks that are 4 columns 
+			wide and 6 rows tall (i.e. there will be 16 such blocks
+			on the 32x12 SHARC-2 array).
+			@See: 'blocks'
+
+:: blocks		@Alias -> correlated.blocks
+			@instrument: SHARC-2, SCUBA-2
+			@Advanced
+			Decorrelate on rectangular block regions of the array, 
+			as a way to remove higher order sky-noise. As such, it 
+			can be used together with, or instead of 'gradients'.
+			@See: 'gradients', 'correlated.<?>'
+
+:: boxes		@Alias -> correlated.boxes
+			@Instrument: LABOCA
+			@Advanced
+			Decorrelate on electronic boxes, or set options for it.
+			@See: 'correlated.<?>', 'cables', 'squids'
+
+:: bright		Use for bright sources (S/N > ~1000). This setting
+			entirely bypasses all filtering to produce a very
+			faithful map. The drawback is more noise, but
+			that should not be an issue for such a bright guy :-)
+			Will invoke 'bright.cfg'.
+			@See: 'config', 'faint', 'deep'
+
+:: cables		@Alias -> correlated.cables
+			@Instrument: LABOCA, ASZCA
+			@Advanced
+			Decorrelate channels whose signals are running on the 
+			same cables, and which are therefore subject to the 
+			same pickups (electromagnetic or microphonic).
+			@See: 'correlated.<?>', 'boxes'
+
+:: center		@Deprecated: 2.00-b4
+			@See: 'pointing'
+
+:: chopped		Used for specifying a chopped data reduction. Can be
+			set manually or automatically (via 'detect.chopped')
+			based on the data itself. The key may trigger 
+			conditional statements and extra decorrelation steps.
+			@See: 'detect.chopped', 'correlated.<?>.trigger'
+
+:: chopper		@Alias -> correlated.chopper-x
+			@Instrument: SHARC-2
+			@Advanced
+			Remove signals that are correlated with chopper 
+			movement. The moving secondary mirror changes the 
+			telescope illumination, thus producing strong signals 
+			when observing under a bright atmosphere. To first 
+			order, such signals are linear with chopper 
+			displacement. Since most telescopes chop in the 
+			horizontal 'x' direction only, the 'chopper' keyword is
+			aliased to decorrelation on motion in that direction. 
+			When a 2D chopper is used, you should decorrelate in 
+			both the 'x' and 'y' directions.
+			@See: 'decorrelate.<?>', 'detect.chopped'
+
+:: clip=X		@Expert
+			In early generations of the source map, force map
+			pixels with flux below signal-to-noise level X to zero.
+			This may help getting lesser baselines, and filtering 
+			artefacts around the brighter peaks. Often used together
+			with 'blank' in the intermediate iterations.
+			@See: 'blank', 'iteration.[?]'
+
+:: conditions[=<pattern>]	@Since: 2.01-4
+				Check conditional settings in the configuration
+			Used without the pattern, it lists all conditionals
+			under the current configuration tree. An optional
+			pattern can be used to restrict the list to those
+			conditions only, which start with the specified pattern.
+			E.g.:
+
+			   > crush [...] -condition=despike
+
+			Will lists all conditions that depend on one of the
+			despike settings ('despike', 'despike2', or 'despike3')
+			Due to the configuration hierarchy, the listing can
+			also be produces for subtrees. E.g.:
+
+			   > crush [...] -date.conditions
+
+			will list the conditions residing under the 'date'
+			subtree (i.e. conditions originally specified as 
+			'date.[...]').
+			@See: 'poll', 'blacklist' 
+
+:: config=<filename>	Load the configuration file filename. 
+				The file is looked for in the locations in the
+				following order:
+
+					1. ./
+					
+					2. ./<instrument>/
+
+					3. ~/.crush2/
+
+					4. ~/.crush2/<instrument>/
+
+			Whenever a matching file is found its contents are 
+			parsed. Because of the ordering, it is convenient to 
+			create overriding configurations.
+			Thus instrument specific settings can be used to 
+			override common defaults, and user specific settings 
+			placed in '~/.crush2' can override the distribution 
+			defaults. Whenever a configuration is parsed, there is 
+			a note of it on the console output so that one always 
+			knows which files were read and in what order. E.g. 
+			when using
+		
+			   > crush laboca 12066
+
+			the following configuration files will be loaded in 
+			order (provided they exist):
+
+			    {$CRUSH}/default.cfg
+			    {$CRUSH}/laboca/default.cfg
+			    ~/.crush2/default.cfg
+			    ~/.crush2/laboca/default.cfg
+				  
+			Each successively loaded file may override the options 
+			set before it.
+			@See: 'bright', 'faint', 'deep'
+
+:: convert		@Instrument: SCUBA-2
+			@Since: 2.01-3
+			@Advanced
+			Just convert all the SDF files to FITS, then exit. 
+			Batch conversion is useful if you are going to reduce
+			the same dataset many times over (e.g. to optimize
+			the reduction settings). You will need the 'ndf2fits'
+			option to be configured and working, before batch 
+			conversions can be used. The resulting FITS files are
+			written to the path defined by 'outpath', or 'datapath'
+			(in the above order, depending on which is defined). 
+			@See: 'ndf2fits', 'outpath', 'datapath'
+
+:: correlated.<?>	Remove the correlated noise term accross the entire
+			array. The <?> stands for the name of the modality on
+			which decorrelation is performed. E.g. 'obs-channels', 
+			'gradients', 'squids' (ASZCA, GISMO or SABOCA), or 
+			'rows' (SHARC-2). 
+			This is an effective way of dealing with most 
+			atmospheric, and instrumental signals, such as sky 
+			noise, ground pickup, temperature fluctuations, 
+			electromagnetic or microphonic pickups. The 
+			decorrelation of each modality can be further 
+			controlled by a number of subkeys (see below). 
+			The given decorrelation step must also appear in the
+			pipeline 'ordering' before it can be used.
+			@See: 'modality', 'ordering'
+
+:: correlated.<?>.nofield	@Expert
+				@since: 2.02
+			Allows to decouple the gains of the correlated mode 
+			from the gain fields stored under the channel (which 
+			are initialized from the file specified by 
+			'pixeldata'). 
+			@See: 'pixeldata', 'source.fixedgains'
+
+:: correlated.<?>.gainrange=min:max	@Expert
+					Specify a range of acceptable gains to 
+			the given correlated signal <?>, relative to the 
+			average gain response of the correlated mode. Channels 
+			that exhibit responses outside of this range will be 
+			appropriately flagged in the reduction, and ignored in 
+			the modeling steps until the flag is revised and 
+			cleared in another decorrelation step.
+			@See: 'division.<?>.gainflag', 'correlated.<?>.signed'
+
+:: correlated.<?>.nogains	@Advanced
+			      	Disable the solving of gains (i.e. channel 
+				responses) to the correlated signal <?>.
+
+:: correlated.<?>.nosignals	@Expert
+				Disable the solving for correlated signal <?>, 
+				whose value stays fixed afterwards.
+
+:: correlated.<?>.phases	@Expert
+				@Since: 2.02
+			Decorrelated the phase data (e.g. for chopped
+			photometry scans) together with the fast samples.
+			The same gains are used as for the usual decorrelation
+			on the fast samples.
+
+:: correlated.<?>.resolution=X	@Advanced
+				Set the time resolution (in seconds) for the 
+			decorrelation of <?>. When dealing with 1/f-type 
+			signals, you probably want to set this to the 1/f knee 
+			time-scale or below if you want optimal sensitivities. 
+			Else, you may want to try larger values if you want to 				recover more large-scale emission and you aren't too 
+			worried about the loss of sensitivity.
+			@See: 'extended'
+			
+:: correlated.<?>.signed	@Expert
+				By default gain responses are allowed to be 
+			bidirectional, and flagging affects only those channels
+			or pixels, whose absolute gain values fall outside of 
+			the specified range. When 'signed' is set, then gains 
+			are flagged with the signs also taken into account. 
+			I.e., under 'signed', 'gainrange' of '0.3:3.0' would 
+			flag pixels with a gain of -0.8, whereas the default 
+			behaviour is to tolerate them.
+			@See: 'correlated.<?>.gainrange',
+			      'correlated.<?>.nogains'
+
+:: correlated.<?>.span		@Expert
+				@Since: 2.02
+			Make the gains of the correlated modality span scans
+			instead of integrations (subscans). You can also
+			set this option for all correlated modalities at once
+			using the 'gains.span' key.
+			@See: 'gains.span', 'correlated.<?>.phases'
+
+:: correlated.<?>.trigger=<key>	@Expert
+				You can specify a configuration key that is to 
+			serve as a trigger for activation the decorrelation of 
+			<?>. This is used, for example to activate the 
+			decorrelation of chopper signals, if and when the 
+			'chopped' keyword is specified. E.g.:
+
+			   chopper.trigger=chopped
+
+			@See: 'chopper', 'chopped'
+
+:: correlated.*		@Advanced
+			You can use wildcards '*' to set options for all
+			decorrelation steps at once. E.g.:
+
+			   correlated.*.resolution 1.0
+			 
+			Sets the time-resolution of all currently defined 
+			decorrelation branches (and modalities) to 1 second.
+			@See: 'correlated.<?>', 'resolution'
+
+:: datapath=<dir>	Start looking for raw data in directory <dir>. Some
+			instruments may also interpret it as a root directory
+			in which data may reside some specific hierarchy. E.g.
+			in <dir>/<project> for APEX bolometers. Thus, if an
+			APEX instrument defines:
+				
+				datapath /homes/data
+				project T-79.F-0002-2007
+
+			then crush will try to find data first in
+			'/homes/data', then in '/homes/data/T-79.F-0002-2007'
+			This provides a convenient way for accessing 
+			hierarchically stored data. See the instrument-
+			specific notes for details.
+ 
+:: dataunit=<name>	@Advanced
+			Specify the units, in which the data are stored.
+			Typically, 'counts' or 'V', or any of their common 
+			multiples, such as 'mV', 'uV' or 'pcount' are accepted.
+			The conversion from data units to jansky-based units is
+	 		set via the 'jansky' option, while the choise of units 
+			in the data reduction is set by 'unit'.
+			@See: 'unit', 'jansky'
+
+:: date=YYYY-MM-DD	@Instrument: GISMO
+			Specify the date of observation for GISMO data, which 
+			can be used along with 'object' to help locate scan 
+			data using scans numbers (and ranges). The date must be
+ 			given in the specified format, identical to the one 
+			appearing in the standard IRAM scan IDs.
+			@See: 'object', 'read'
+
+:: date.[...]		@Advanced
+			A way to set date specific conditional statements. 
+			Inside the square brackets one can specify a date range 
+			in YYYY-MM-DD format, separated by a colon ':' or 
+			hyphen(s) '-'. Wildcards '*' are also accepted to 
+			specify open ranges. E.g.:
+
+			  date.[2009.12.10--*] instrument.gain=-1000.0
+
+			Can be used to specify an inverted thousand-fold
+			instrumental gain starting from Dec 10, 2009.
+			@See: 'mjd', 'serial'
+
+:: deep			Use for very faint sources which are not at all 
+			detected in single scans, or if you think
+			there is too much residual noise (baselines) in your 
+			map to your liking. This setting results in the most 
+			agressive filtering. Will load the configuration from
+			'deep.cfg'. The output map is optimally filtered
+			(smoothed) for point sources.
+			@See: 'config', 'bright', 'faint'
+
+:: despike		Use despiking. CRUSH allows the use of up to three
+	 		different despiking steps, each configurable on its
+			own, to specify a despiking method, S/N level and
+			flagging criteria. See the various despiking options
+			below:
+
+:: despike2		@Advanced
+			A second round of despiking.
+			@See: despike
+
+:: despike3		@Advanced
+			A third round of despiking.
+			@See: despike
+
+:: despike.flagcount=N	@Expert
+			Tolerate (w/o pixel flagging) up to N spikes up in each
+	 		pixel.
+
+:: despike.flagfraction=X	@Expert
+				Tolerate (w/o pixel flagging) spikes up to 
+			fraction X of the scan frames in each channel.
+				
+:: despike.framespikes=N	@Expert
+				Tolerate up to N spikes per frame.
+	
+:: despike.level=X	@Advanced
+			Despike at an S/N level of X.	
+
+:: despike.method=<name>	@Advanced
+				CRUSH offers a choice of despiking methods to 
+			choose from. Each of these have their own pros and 
+			cons, and may produce different results and side-
+			effects in different environments. The following 
+			methods are currently available:
+
+			   neighbours  Despike only by comparing neighbouring 
+			   	       samples of data from the same channel.
+
+			   absolute    Flag data that deviates by the specified
+			   	       S/N level.
+
+			   gradual     Like 'absolute' but proceeds more 
+			   	       cautiously, removing only a fraction of
+				       most offending spikes at each turn.
+
+			   features    Look for spikes wider than just a sigle 
+			   	       sample. The 'width' subkey (below) 
+				       the timescale, up to which spikes sought.
+
+			All methods will flag pixels and frames if these have 
+			too many spikes. The flagging of spiky channels and 
+			frames is controlled by the 'flagcount, 'flagfraction' 
+			and 'framespikes' subkeys.
+			@See: 'despike.flagcount', 'despike.flagfraction',
+			      'despike.framespikes', 'despike.level',
+			      'despike.width'
+
+:: despike.width=X	@Expert
+			When despiking using the 'features' method, spikes up 
+			to X second in width will be sought.
+				
+:: detect.chopped	@Advanced
+			Try determine from the data itself if the chopper was 
+			used, and set the 'chopped' flag accordingly. This can 
+			be used to trigger the actication of specific reduction
+			steps for chopped data.
+			@See: 'correlated.<?>.trigger'
+
+:: division.<?>=<list> 	@Expert
+			Specify a new pixel division <?> from a list of pixel 
+			groups, separated by commas. For example, if the pixel 
+			groups 'my-pixels-1' and 'my-pixels-2' were defined 
+			(via 'group.<?>') then the line
+
+			   division.my-division my-pixels-1,my-pixels-2
+			   
+			creates a division from these two groups. For every
+			division created this way, CRUSH will also create a
+			correlated modality with the same name.
+			@See: 'correlated.<?>', group.<?> 
+
+:: division.<?>.id=<ID>	@Expert
+			Specify a designated ID for the pixel division <?>. 
+			This short ID will be printed on the console output, 
+			whenever the decorrelation step on the modality <?> is 
+			performed in the reduction.
+			@See: 'correlated.<?>'
+
+:: division.<?>.gainfield=<name>	@Expert
+					You can also specify the name of an 
+					existing JAVA double field inside the
+			pixel class of the given instrument to serve the gains
+			for the decorrelation of <?>. Unless 
+			'correlated.<?>.nogains' is also specified, these gains
+			will be determined and overwriten each time the 
+			decorrelation takes place.
+			@See: 'correlated.<?>.nogains'
+
+:: division.<?>.gainflag=N	@Expert
+				Specify a gain flagging pattern to use when 
+				flagging outlying gains in the decorrelation 
+			step of <?>. Gain flags are normally one bit in a 
+			4-byte integer, and can be specified using octal ('0' 
+			prefix) or hexadecimal ('0x' prefix) numbers, and 
+			regular integers. You should be careful not to 
+			interfere with existing flags, many of which may be
+			hardcoded in the JAVA source. Use with extreme caution,
+			if you must...
+			@See: 'correlated.<?>.gainrange'
+
+:: downsample=X		@Advanced
+			Downsample the data by a factor of N. At times the
+			raw data is sampled at unnecessarily high frequencies.
+			By donwsampling, you can ease the memory requirement
+			and speed up the reduction. You can also set the value
+			to 'auto' (default), in which case an optimal 
+			downsampling rate is determined based on the typical 
+			scanning speeds, s.t. the loss of information will be 
+			insignificant due to unintended smearing of the data.
+
+:: drifts=X		@Advanced
+			Filter low frequencies below the characteristic 
+			timescale of X seconds. An effective way of dealing 
+			with 1/f noise.
+			You can also use 'auto' to determine the filtering
+			timescales automatically, based on 'sourcesize', 
+			scanning speeds, and instrument 'stability' time-scales.
+			@See: 'sourcesize', 'stability', 'offsets
+	
+:: drifts.method=<name>	@Advanced
+			Choose the method, with which drifts are removed. The 
+			choice is between 'blocks' or 'fft'. The former 
+			estimates and removes drifts from the timestreams in 
+			consecutive time windows (i.e. blocks) of data. This is
+			very fast, and scales linearly with data size. The 
+			'fft' method implements a spectral lowpass filter, with
+			the same characteristic timescale as the other method. 
+			It is slower, and its computation requirement scales 
+			with N log N.
+
+:: ecliptic		@Alias -> system=ecliptic
+			Reduce using ecliptic coordinates (for mapping).
+			@See: 'system', 'altaz', 'equatorial'
+
+:: elevation-response   @Instrument: SHARC-2
+			@Expert
+			Load and use an lookup table for the elevation 
+			dependent forward efficiency of the telecscope. The 
+			table is an ASCII file, as specified by Darren Dowell, 
+			and is available from the SHARC-2 web-site. CRUSH 
+			contains copies of the available tables and is 
+			configured to use them as needed.
+
+:: epoch=X		@Instrument: GISMO
+			Normally the coordinate epoch, in which the equatorial 
+			source coordinates are expressed, is stored in the data.
+			However, for GISMO runs 1 and 2, this information was 
+			handled incorrectly. This option provides the means to 
+			correct that. The value can specify a year (e.g. 
+			1950.0, or 2000.0), or a proper epoch designation 
+			(e.g. B1950, or J2000). IRAM uses J2000 for static 
+			sources and the current epoch for solar system objects.
+
+:: equatorial		@Alias -> system=equatorial
+			Reduce using equatorial coordinates (for mapping).
+			@See: 'system', 'altaz'
+
+:: estimator=<type>	@Advanced
+			'median' or 'maximum-likelihood' estimators to use in 
+			deriving signal models. 'median' estimators are less 
+			sensitive to the presence of bright sources in the 
+			data, therefore it is the default for when 'bright' is 
+			specified (see 'bright.cfg'), and for some instruments 
+			(e.g. GISMO).
+			When medians are used, the corresponding models are 
+			reported on the console output in []'s...
+			(see the Console Output section of the README).
+			@See: 'gains.estimator', 'weighting.method'
+
+:: exposureclip=X  	@Advanced
+			Flag (clip) map pixels whose relative time coverage
+			is less than the specified value X. This is helpful for
+			discarding the underexposed noisy edges of the map.
+
+:: excessload=X		@Instrument: SHARC-2
+			@Expert 
+			SHARC-2 can determine a line-of-sight opacity based on 
+			the total-power response of its detectors. However, for 
+			this to work well, all sources of optical loading on 
+			the detectors must be understood. The load curves (see 
+			'response') were determined at one time only, and 
+			therefore this flag provides the means to specify a
+			different optical loading environment from then, as an
+			excess optical load (in Kelvins).
+			@See: 'response', 'tau.<?>'
+
+:: extended		Try to better preserve extended structures. This
+			setting can be used alone or in combination with
+			a brightness options. The fainter settings the more 
+			difficult it is to recover extended emission. For 
+			bright structures recovery up to FOV (or beyond!) 
+			should be possible, while for faint structures ~1/4 FOV
+			to ~FOV scales are maximally obtainable (see more on 
+			this in the README).
+  			@See: 'sourcesize', 'bright', 'faint', 'deep'
+
+:: faint		Use with faint sources (S/N < ~30) when the
+			source is faint but still visible in a single scan. 
+			This setting applies some more aggressive filtering of 
+			the timestreams, and extended structures. It invokes 
+			'faint.cfg'.
+			@See: 'bright', 'deep'
+
+:: fazo			@Instrument: SHARC-2, GISMO
+			An alternative to 'center' for providing pointing 
+			corrections. As opposed to 'center', which specifies 
+			incremental corrections, this option takes an absolute 
+			AZ pointing offset (i.e. FAZO at the CSO) which should 
+			have been the correct one (as opposed to the value used
+			by the antenna computer during the observations).
+			@See: 'fzao', 'center'
+
+:: febe			@Instrument: APEX
+			@Expert
+			Defines the frontend-backend combination to use. 
+			E.g. for LABOCA, this would be set to 'LABOCA-ABBA'.
+
+:: final:key=value	@Alias -> iteration.[last]
+			When used on the command line, a ':' can be used as
+			a sepatation between the abbreviated condition and its
+			statement. E.g.:
+
+			   > crush [...] -final:smooth=beam
+
+			to specify beam smoothing in the last iteration.
+
+:: flag=<list>		Specify a list of backend channels that ought to be 
+			ignored for the successively read scans. Can use pixel
+			numbers (i.e. APEX backend indexes) and ranges. E.g.:
+
+			   flag 5-10,12,33-37
+			   
+			Indeces normally start at 1 (i.e. not C-style!).
+			@See: 'noslim', 'blind' 
+
+:: forget=<list>...	Forget the priorly set values for the listed options 
+			as if they were never defined. E.g. 
+		     		
+			   forget=outpath
+
+			will unset the 'outpath' option. You can specify more 
+			than one options as a comma-separated list. E.g.
+	
+			   forget=outpath,project
+				
+			Will unset both the 'outpath' and 'project' options.	
+			Forgotten values may be 'recall'-ed.
+			Additionally, 'forget' can be used to clear all
+			conditionals or all blacklisted settings, if the
+			argument list contains the values 'conditions' or 
+			'blacklist', respectively.
+			@See: 'recall', 'blacklist', 'remove'
+
+:: frames=<from>-<to>   @Advanced
+			Read only frames <from>-<to> from the data. Maybe
+			useful for quick peeks at the data without processing
+			the full scan, or when a part of the data is corrupted.
+
+:: fzao			@Instrument: SHARC-2, GISMO
+			Specify a zenith pointing offset.
+			@See: 'fazo'
+
+:: gain=X     		@Expert
+			Specify an instrument gain of X from the detector stage 
+			(or fixed signal stage) to the readout. Many 
+			instruments may automatically determine the relevant 
+			gain based on their data headers. For others, the gains
+			may have to be adjusted by hand, especially if they are
+			changing. Upon reading the scans, CRUSH will divide all
+			data by the specified value, to bring all scans to a 
+			comparable signal level. Conversions to 'jansky' are 
+			referenced to such gain-scaled data.
+			@See: 'jansky', 'dataunit', 'scale'
+
+:: gainnoise		@Expert
+			Add noise to the initial gains. There isn't much use
+			for this option, other than it allows to check the
+			robustness of the reduction on the initial gain 
+			assumption. Since gains are usually measured in the
+			reduction itself, typical reductions should not depend
+			a lot on the intitial gain values.
+			@See: 'uniform'
+
+:: gains		@Advanced
+			Solve for pixel gains based on their response to the
+			correlated noise (above). If not specified, then
+			all decorrelation steps will proceed without gain 
+			solution. A model-by-model control is offered by the
+			'correlated.<?>.nogains' option.
+			@See: 'gains.estimator', 'correlated.<?>.nogains'
+
+:: gains.estimator=<type>	@Advanced
+				Specify the type of estimator ('median' or
+				'maximum-likelihood') to be used for estimating
+			pixel gains to correlated signals.
+			@See: 'estimator', 'correlated.<?>'
+			
+
+:: gains.span		@Expert
+			@Since: 2.02 
+			Derive gains for all correlated modalities for entire
+			scans, rather than separately for each integration
+			(subscan). Most scans contain just one integration, and
+			multiple integrations are often merged into one upon 
+			reading. However, for chopped photometry observations, 
+			the nod phases remain in separate subscans, and this 
+			option makes the gains apply to all nod phases in a 
+			scan, rather than separate gains for each nod phase.
+			Alternatively, the gain spans can be controlled 
+			individually, per modality, via the 
+			'correlated.<?>.span' keys.
+			@See: 'correlated.<?>.span', 'phases'
+
+:: galactic 		@Alias -> system=galactic
+			Reduce using new galactic coordinates (for mapping).
+			@See: 'system', 'equatorial', 'altaz'
+
+:: gradients		@Alias -> correlated.gradients
+			@Advanced
+			Shorthand for the decorrelation of gradients accross the
+			detector array. Such gradients can occue as a result of
+			spatial sky-noise, or as temperature variation across 
+			the detectors.
+			@See: 'correlated.<?>', 'blocks'			
+	
+:: grid=X		set the map pixelization to X arcsec. Pixelization
+			smaller than 2/5 beam is recommended. The default is
+			~1/5 beam pixelization.
+
+:: group.<?>=<list>     @Expert
+			Specify a list of channels, by index, that belong
+			to a group with name <?>. The list can contain
+			comma separated list of indeces (starting with 1) and
+			ranges. E.g.:
+
+			  group.my-group 10-20,45,50-60
+			    	
+			defines a group named 'my-group' from the specified
+			channels.
+			@See: 'division'
+
+:: he3=<source>		@Instrument: LABOCA
+			@Advanced
+			Correct time-streams for He3 temperature fluctuations. 
+			<source> specifies the source of the He3 data, which 
+			can be 'thermistor' or 'blinds'. The use of blind 
+			bolometers is quicker and preferred, unless you 
+			specifically wish to use the 'thermistors'.
+
+::  he3.gains		@Instrument: LABOCA
+			@Expert
+			Specifies that rather than correcting for temperature 
+			fluctuations, the thermistor and bolometer data should 
+			be used to calculate appropriate temperature gains. 
+			This option should only be used on skydip scans with 
+			the shutter closed (i.e. only temperature signals 
+			without sky). Additionally 'forget=source' should be 
+			used to disable source modeling for such data.
+
+:: he3.maxrms=X		@Instrument: LABOCA
+			@Expert
+			Define the maximum RMS temperature variation (Kelvin)
+			over the duration of a scan. When a scan has variation
+			larger than this limit, it will be dropped from the
+			reduction. 
+	
+:: horizontal		@Alias -> system=horizontal
+			Reduce in horizontal coordinates (for mapping).
+			This is often useful for determining pointing offsets
+			or for beam mapping.
+			@See: 'system', 'center', 'beammap', 'fazo', 'fzao'
+
+:: indexing		@Expert
+			Allows the use of data indexing to speed up coordinate
+			calculations for mapping. Without indexing the map
+			coordinates are calculated at each mapping step. This 
+			can be slow because of the complexity of the spherical
+			projections, which often require several complex math
+			evaluations. With indexing enabled, the calculations
+			are performed only once, and the relevant data is stored
+			for reuse. However, the storage of indexes more or
+			less doubles the memory requirement of CRUSH. Thus, 
+			'indexing' may be disabled for very large reductions.
+			Alternatively, one may control the amount of memory such
+			indexes may use, via the 'indexing.saturation' option.
+			@See: 'indexing.saturation', 'grid'
+
+:: indexing.saturation=X 	@Expert
+				Specify the maximum fraction X of the total
+				available memory that can be filled before
+			indexing is automatically disabled. Given a typically 
+			20% overhead during reduction, values below 0.8 are
+			recommended to avoid overflows. 
+			@See: 'indexing'
+
+:: invert		Invert signals. This setting may be useful in creating 
+			custom jackknifes, where the user wishes to retain 
+			control over which scans are inverted.
+			@See: 'gain', 'scale', 'jackknife'
+
+:: iteration.[N]	Use as a condition to delay settings until the Nth
+			iteration. E.g.
+
+			   iteration.[3] smooth halfbeam
+
+			or 
+
+			   > crush [...] -iteration.[3]smooth=halfbeam [...]
+			 
+			to specify half-beam smoothing starting from the 3rd
+			iteration.
+			@See: 'iteration.[?]'
+
+			
+:: iteration.[last]    	Specify settings that should be interpreted only at the 
+			beginning of the last iteration.
+			@See: 'iteration.[?]'
+	
+:: iteration.[last-N]  	Activate settings N iterations before the last one. 
+			E.g.
+			    
+			    iteration.[last-2] forget=clip
+
+			Disables clipping two iterations before the last one.	
+			@See: 'iteration.[?]'
+
+:: iteration.[X%]	Activate settings as a percentage X of the total
+			number of iterations (as set by 'rounds'). E.g.
+			
+			    iteration.[50%] forget clip
+
+			can be used to disable the S/N clipping of the source 
+			map half way through the reduction.
+			@See: 'iteration.[?]'
+
+:: iteration.[?]	Apply settings at the beginning of specific iterations. 
+			Because of the flexible syntax, the same iteration can 
+			be referred to in different ways. Consider a reduction 
+			with 10 rounds. Then,
+
+			    iteration.[5] smooth 5.0
+			    iteration.[50%] smooth 10.0
+			    iteration.[last-5] smooth beam
+
+			can all be used to define what happens in the 5th
+			iteration. CRUSH will parse these conditionals in the 
+			above order: first the explicit iteration settings then 
+			those relative to the reduction length, and finally the 
+			settings relative to the end of the reduction. Thus, in 
+			the above example the beam smoothing will always 
+			override the other two settings.
+			@See: 'iteration.[N]', 'iteration.[X%]', 
+			      'iteration.[last]', 'iteration.[last-N]'
+
+
+:: jackknife		Jackkniving is a useful technique to produce accurate 
+			noise maps from large datasets. When the option is used 
+			the scan signals are randomly inverted, s.t. the source 
+			signals in large datasets will tend to cancel out, 
+			leaving one with pure noise maps.
+			The sign inversion is truly random, s.t. repeated runs
+			with the 'jackknife' flag will produce a different 
+			jackknife every time. If you want more control over 
+			which scans are inverted, consider using the 'invert' 
+			flag instead.
+			@See: 'invert', 'scramble'
+
+
+:: jansky=X		Specify the calibration factor from data units to Jy.
+			@See: 'dataunit', 'gain', 'jansky.inverse'.
+
+:: jansky.inverse	When used, the 'jansky' definition is inverted to mean
+			Jy to data unit. This used to be the old definition used
+			in crush-1.xx and minicrush.
+			@See: 'jansky'
+
+:: log		
+
+:: log.format
+
+:: maitau.fallback=<type>	@Instrument: SHARC-2
+				@Advanced
+			Define which tau value to use in case the MaiTau lookup
+			fails. The possible values are:
+
+			   direct 	  Calculate tau from the total-power
+			       		  loading of the detectors
+
+			   225GHz	  Use the 225GHz tipper value.
+
+			   350um	  Use the 350um tipper value.
+
+			   pwv		  Use precipitable water vapor.
+
+			   sharc2	  Use the value specified by tau.sharc2
+
+			Other than the 'direct' flag, the values may be 
+			specified with the corresponding tau settings.
+			@See: 'maitau.server', 'tau.225GHz', 'tau.350um',
+			      'tau.sharc2'
+
+:: maitau.server=IP	@Instrument: SHARC-2
+			@Expert
+			Specify the MaiTau server to use, either as an IP
+			address, or server name. This should probably be set to 
+			'agn.caltech.edu', or to the equivalent 
+			'fangorn.submm.caltech.edu'. MaiTau is a server-based
+			lookup of the CSO opacities, based on dailly polynomial
+			fits to the measured 225GHz and 350um tipper data. The
+			polynomials smooth out short-term fluctuations and 
+			measurement errors, providing a smoothly varying 
+			function of tau with time. When using MaiTau, CRUSH 
+			will try use the 350um fit, and then the 225GHz fit (if 
+			available), from which it calculates an appropriate 
+			in-band zenith tau value.
+			@See: 'tau.<?>.a', 'tau.<?>.b'
+
+:: mappingfraction=X   	@Advanced
+			Specify a minimum fraction of pixels in the array
+			that have to remain unflagged for creating a map
+			from the scan. If too many pixels are flagged in the
+			reduction, it may be a sign of bigger problems, 
+			questioning the reliability of the scan data. It is best
+			to skip over problematic scans in order to minimize 
+			their impact on the mapping.
+			@See: 'mappingpixels'
+
+:: mappingpixels=N	@Advanced
+			Specify a minimum number of pixel, which have to
+			be unflagged by the reduction in order for the scan to
+			contribute to the mapping step
+			@See: 'mappingfraction'
+
+:: map.size=X,Y		@Advanced
+			Explicitly set the size of the mapped are, centered on 
+			the source to and X by Y arcseconds rectangle. Normally,
+			the map size is automatically calculated to contain all
+			of the data. One may want to restrict mapping to smaller
+			regions (outside of which, there should be no bright
+			sinals). The letter 'x' may also be used instead of the
+			comma to separate the dimensions. E.g.:
+
+			   map.size=300x200
+
+			will restrict mapping to a 300" by 200" are (in the 
+			chosen coordinate system of the mapping), centered on
+			the nominal source coordinates.
+			@See: 'system'
+
+:: mjd.[...]		@Advanced
+			Specify settings that are conditionally activated if and
+			when the MJD of the scan falls within the specified 
+			range inside the square brackets. Wildcards '*' can be 
+			used to indicate open ended ranges. E.g.:
+
+			       mjd.[*-54230.25] jansky=5.0
+
+			specifies that up until 6:00 UT on 10.05.2007, the 
+			conversion factor of 5.0 data units per Jy should be
+			used.
+			@See: 'date.[...]', 'serial.[...]'
+
+:: mux			@Alias -> decorrelate.mux
+			@Instrument: SHARC-2, GISMO, SCUBA-2
+			@Advanced
+			Decorrelate on MUXes, or set options for it.
+			@See: 'decorrelate.<?>'
+
+:: name=		Specify the output image file name, relative to the
+			directory specified by 'outpath'. When not given
+			minicrush will chose a file name based on the source
+			name and scan number(s), which is either
+
+				<sourcename>.<scanno>.fits
+
+			or
+	
+				<sourcename>.<firstscan>-<lastscan>.fits
+
+			For mapping. Other source model types (e.g. skydips
+			or beam maps) may have different default naming 
+			conventions.
+			@See: 'outpath'
+
+:: ndf2fits=<path>	@Instrument: SCUBA-2
+			@Since: 2.01-1
+			SCUBA-2 data is released in a proprietary SDF format,
+			which is not well documented for direct use. Instead,
+			the StarLink software suite provides utilities for
+			manipulating such files. Among these it provides a
+			conversion utility 'ndf2fits' that can translate SDF
+			files into FITS files readable by CRUSH. You can do 
+			the conversion yourself using the 'proexts' option.
+			Or, you can let CRUSH convert the input files on-the-
+			fly, as necessary. This option serves to specify the
+			full path to the ndf2fits utility, including the
+			executable name. E.g.:
+			
+			  ndf2fits=/usr/local/starlink/convert/ndf2fits
+
+			Clearly, you will need a functional installation
+			of the Starlink software or, at minimumm it conversion
+			package, for this option to work.
+			
+:: noiseclip=X		Flag (clip) map pixel with a noise level that is more
+			than X times higher than the deepest covered parts
+			of the map.
+			@See: 'exposureclip', 'clip'
+
+:: nogaps[=JSharc]	@Instrument: SHARC-2
+			@Advanced
+			Terminate the reading of the data at the first 
+			gap. During the early SHARC-2 runs when JSharc was used 
+			for the acquisition of the data, there was an 
+			occasional damaging timing bug resultuing from the 
+			wraparound of an internal buffer. The bug manifested in
+			a sudden jump in the timestamps, making it relatively 
+			easy to diagnose if this happened during the scan.
+			The optional argument 'JSharc' restricts the gap 
+			termination to data obtained using 'JSharc' alone
+			(default).
+
+:: noresistors		@Instrument: LABOCA
+			@Expert
+			Do not use the resistor channels in the decorrelation of
+			electrinic signals, such as 'boxes', 'cables' and 
+			'amps'. In LABOCA several of the readout channels are 
+			connected not to light-sensitive detectors, but to 
+			fixed resistors. While these are not sensitive to 
+			radiation or temperature the channels will still be 
+			subject to electronic pickup. Therefore, the default is
+			to use these channels when decorrelating signals, which
+			are thought to originate within the electronics. This 
+			option can be used to overrride this behavior, and 
+			restrict all decorrelation steps to detector channels 
+			only.
+			@See: 'boxes', 'cables', 'amps'
+		
+:: noslim		@Expert
+			After reading the scans, CRUSH will discard data from
+			from channels flagged with a  harware problem (any bit 
+			in 0xFF), to free up memory, and to speed up the 
+			reduction. This option overrides this behaviour, and 
+			retains all channels for the reduction, whether these 
+			are used or not.
+
+:: object=<name>	@Instrument: GISMO
+			Can be used to help locate GISMO data with scan numbers
+			when used together with the 'datapath' and 'date' 
+			options.
+			E.g.:
+			
+			  > crush [...] -datapath=. -object=Mars \
+			    -date=2010-04-15 12-14
+
+		 	Will reduce Mars scans 12 to 14 from Apr 15, 2010. The
+			object name is case-sensitive!
+			@See: 'datapath', 'date'
+
+:: obslog
+
+:: obslog.format
+
+:: offsets		@Advanced
+			Remove the residual DC offsets from the bolometer 
+			signals (ignored when 'drifts' below is also 
+			specified.)
+			@See: 'drifts'
+
+:: ordering=a,b,c	@Advanced
+			Specify the order of pipeline elements as a comma
+			separated list of keys.
+			@See: 'offsets', 'drifts', 'weighting', 'despike'
+			      'source', 'decorrelate.<?>', 'whiten',
+			      'time-weighting'
+
+:: ortho		@Instrument: PolKa
+			Specify that the orthogonal (a.k.a vertical) analyzer 
+			was used for taking the data. Specifying the analyzer is
+			important for recovering the polarization information.
+			Currently the analyzer position is not recorded in the
+			data files, although the plan is to have this capability
+			in the future. Currently, therefore, this option is
+			necessary to distinguish between the two analyzer grids.
+
+:: outpath=<path>	Specify the output path, where all CRUSH output will be 
+			written (including maps etc.). Path names follow the
+			usual rules (See 'Basic Configuration' section in the
+			README), and can use '~' to refer to the home 
+			directories or to environment variables in {} brackets 
+			with a $ sign.
+			E.g.
+
+				outpath={$HOME}/images
+
+			in UNIX specifies the 'images' subdirectory inside a
+			user's home.
+
+:: pcenter=row,col	@Instrument: SHARC-2, GISMO
+			@Advanced
+			Defines the pointing center used, in terms of the
+			instrument pixel row and colum coordinates. Pixel 1,1
+			designates the top-left corner of the array in 
+			horizontal (AZ/EL) or equivalent Nasmyth coordinates. 
+			Columns increase to the right, while row numbers 
+			increase downward. Thus, the center of the 
+			SHARC-2 array is 6.5,16.5, while the center of GISMO is 
+			8.5,4.5. The 'pcenter' option is not used if the pixel 
+			positions are loaded from an RCP data file, instead of 
+			being calculated (since a rectangular grid can no 
+			longer be assumed).
+			@See: 'rcp', 'rcenter', 'pixelsize', 'rotate'
+
+:: phases		@Expert
+			@Since: 2.02
+			Decorrelate also the phase data (e.g. for chopped 
+			observations) for all correlated modes. Alternatively
+			phase decorrelation can be turned on individually for
+			modalities using the 'correlated.<?>.phases' options.
+			@See: 'correlated.<?>.phases', 'gains.span'
+			
+:: pins			@Alias -> correlated.pins
+			@Instrument: GISMO, SCUBA-2
+			@Advanced
+			Decorrelate on readout address lines (across the MUXes)
+			or set options for it.
+			@See: 'decorrelate.<?>', 'pins.group', 'mux'
+
+:: pins.group=N		@Instrument: GISMO
+			@Expert
+			Based on the 'pins' alias for GISMO, it defines a 
+			grouping of N neighbouring address lines. For each MUX,
+			there are 32 address lines, which are read out 
+			sequentially in the time-domain multiplexing scheme. 
+			Thus,
+
+			   pins.group=4
+			   
+			will group the address lines 1-4, 5-8, ..., 29-32 
+			together across all MUXes, thus increasing the number 
+			of channels in each group. The decorrelation of address
+			lines using the 'pins' option will take place on these 
+			groups.
+			@See: 'pins', 'mux'
+
+:: pixeldata=<filename>	@Expert
+			Specifies a pixel data file, providing initial
+			gains, weights and flags for the detectors,
+			and possible other information as well depending on the
+			specific instrument. Such files can be produced via the
+			'write.pixeldata' option (in addition to which you
+			may want to specify 'forget=pixeldata' s.t. flags are
+			determined without prior bias).
+			@See: 'gainnoise', 'uniform', 'flag', 'blind'
+
+:: pixelsize=X,Y	@Instrument: SHARC-2, GISMO, P-ArTeMiS
+			@Expert
+			Specify the size of rectangular pixels in a grid. This
+			is used for calculating pixel positions on a rectangular
+			grid. The information is ignored when positions are
+			loaded from an RCP data file (as a regular grid can no 
+			nonger be assumed).
+			@See: 'rcp', 'pcenter', 'rcenter'
+
+:: point		@Since: 2.00-b4
+			This is a convenience key for triggering settings for
+			reducing pointing scans. Currently, it invokes
+			'iteration.[last] pointing=suggest', i.e. suggesting 
+			pointing corrections in the last iteration.
+			@See: 'pointing', 'pointing.method', 'fazo', 'fzao'
+
+:: pointing=<value>	@Since: 2.00-b4
+			Specify pointing corrections, or the way these
+			should be derived. The following values are 
+			accepted:			 
+	
+			   x,y		Specify relative pointing offsets as 
+					comma-separated valutes (in arcseconds) 
+					in the system of the telescope mount. 
+					I.e., these should be horizontal
+					offsets for ground-based telescopes 
+					with an Alt/AZ mount. 
+					Some instruments may allow more ways
+					to specify pointing corrections (E.g.
+					'fazo' and 'fzao' for SHARC-2).
+
+			   suggest	Suggest pointing offsets (at the end
+					of the reduction) from the scan itself.
+					This is only suitable when reducing 
+					compact pointing sources with 
+					sufficient S/N to be clearly visible in
+					single scans.
+
+			@See: 'point', 'fazo', 'fzao'
+
+:: pointing.method=<value>	@Since: 2.00-b4
+				@Expert		
+			Specify the method used for obtaining positions of 
+			pointing sources. Currently 'centroid' (default) and 
+			'peak' are supported. This option also controls how 
+			pixel position information (RCP) is calculated for 
+			'beammap' reductions.
+			@See: 'point', 'beammap'
+
+:: pointing.significance=X	@Since: 2.00-0
+				@Expert
+			Set the significance (S/N) level required for pointing
+			sources to provide a valid pointing result. If the
+			option is not set, a value of 5.0 is assumed.
+
+:: poll[=<key>]		Whenever unsure what options are set at any given stage,
+			you can poll the settings. Without an additional 
+			argument it will list all currently defined setting to 
+			the standard output. When an argument is specified it 
+			will list the configuration settings that start with 
+			the specified string. E.g.
+
+			    > crush [...] -poll=despike
+	
+			will list all despiking options (e.g. all settings 
+			under the 'despike', 'despike2', and 'despike3' 				branches) that have been defined prior to the 					invokation of the '-poll' command.
+			Due to the hierarchical nature of the configurations
+			you can also selectively poll settings under subtrees
+			of the configuration. E.g.:
+
+			   > crush [...] -source.poll
+
+			Will lists all source model related settings stored
+			under the 'source' subtree.
+			@See: 'conditions', 'blacklist'
+
+:: positions.smooth=X	@Expert
+			Specify that the telescope encoder data should be
+			smoothed with a time window X seconds wide, in 
+			order to minimize the effects on encoder noise on the
+			calculation of scanning speeds and accelerations, based
+			on which data may be discarded, and optimal downsampling
+			rates are determined.
+			@See: 'aclip', 'vclip', 'downsample'
+
+:: project=<id>    	@Instrument: APEX
+			Some instruments (e.g. APEX bolometers) may require a 
+			project ID to be set in order to locate scans by serial 
+			number. Use capitalized form when defining APEX 
+			projects. E.g.,
+
+                              project T-79.F-0002-2007
+
+
+:: projection=		Choose a map projection to use. The following 
+			projections are supported:
+
+				SIN  --  Slant Orthographic
+				TAN  --  Gnomonic
+				ZEA  --  Zenithal Equal Area
+				SFL  --  Sanson-Flamsteed
+				MER  --  Mercator
+				CAR  --  Plate-Carree
+				AIT  --  Hammer-Aitoff
+				GLS  --  Radio (aka Global Sinusoidal)
+
+			@See: 'system', 'grid', 'mapsize'
+
+:: radec		@Alias -> system=equatorial
+			Reduce using equatorial coordinates (for mapping).
+			(Default)
+			@See: 'system', 'altaz'
+
+:: rcenter=dX,dY	@Instrument: SHARC-2
+			@Expert
+			Specify a rotation center, in the coordinate system of
+			the array (AZ,EL or Nasmyth coordinates). Works 
+			similarly to 'pcenter'
+			@See: 'pcenter'
+
+:: rcp=<filename>	@Advanced
+			Use the RCP file from <filename>. The usual rules of
+			path specification apply (see the 'Basic Configuration' 
+			section of the README.). The file should conform to the
+			standard IRAM or APEX RCP specs containing the 
+			information in ASCII columns. RCP files can be produced 
+			by the 'beammap' option, from scans, which move a 
+			bright point source over all pixels.
+			For rectangular arrays, pixel positions can also be 
+			calculated on a regular grid using 'pixelsize' and 
+			'pcenter'
+			@See: 'beammap', 'pixelsize', 'pcenter' 
+
+:: rcp.center=x,y	@Advanced
+			Define the center RCP position at x,y in arcseconds.
+			Centering takes place immediately after the parsing
+			of RCP data.
+			@See: 'rcp'
+
+:: rcp.gains		@Advanced
+			Use gains from the RCP files. Otherwise gains may 
+			come from the 'pixeldata' file, or assume default
+			values, such as 'uniform'.
+			@See: 'rcp'
+
+:: rcp.rotate=X		@Advanced
+			Rotate the RCP positions by X degrees (counter 
+			clockwise). Rotations take place after centering (if
+			specified).
+			@See: 'rcp'
+
+:: rcp.zoom=X		@Advanced
+			Zoom (rescale) the RCP position data by the scaling
+			factor X. Rescaling takes place after the centering
+			(if defined).	
+			@See: 'rcp'
+
+:: read=<list>		Read the scans in the list. The list can be a comma, or
+			space-separated list of arguments, which can be contain
+			the following types of arguments:
+			
+			  <filename>	Read the scan data from <filename>, 
+			  		which can be either a fully specified 
+					path, or relative to 'datapath'. 
+
+			  N		Read scan number N. May need additional
+			  		options such as 'project' (APEX) or
+					'date' and 'object' (GISMO) to be set in
+					order to locate the data in a filesystem
+					hierarchy.
+
+			  from-to	A hyphen '-' separated range of scan 
+			  		numbers (inclusive). Same considerations
+					apply as above.
+
+			In all cases, the 'read' key can be omitted on the 
+			command  line, where it suffices to list the arguments 
+			with white spaces, without any option key. E.g.:
+
+			 > crush [...] myscan.fits 11564 12067-12071
+
+			@See: 'datapath', @APEX:'project', @GISMO:'date',
+			      @GISMO:'object'
+
+
+:: recall=<option>	Undoes 'forget', and reinstates the <option> to its 
+			old value.
+			@See: 'forget'	
+
+:: remove=<option>	Similar to 'forget', but removes the entire branch. 
+			Thus '-remove=despike' unsets:
+
+				despike
+				despike.level
+				despike.method
+				despike.flagfraction
+				...
+
+			Branches can be reinstated to their prior state using 
+			the 'restore' command.
+			@See: 'forget', 'restore'
+
+:: reservecpus=N	Instruct crush NOT to use N number of CPU cores of the 
+			machine. By default crush will try to use all 
+			processing cores in your machine for maximum 
+			performance. This option allows to modify this behavior 
+			according to need. 
+			Note, that at least 1 CPU will always be used by crush, 
+			independent of this setting. The number of actual 
+			parallel threads will be the smaller of the allowed 
+			number of CPUs and the number of scans processed.
+
+
+:: resolution=X		@Advanced
+			Define the resolution of the instrument. For single-
+			color imaging arrays, this is equivalent to 'beam', 
+			with X specifying the instrument's main beam FWHM in 
+			arcsec. Other instruments (like heterodyne receivers) 
+			may interpret 'resolution' differently.
+			@See: 'beam'
+
+:: response=<filename>	@Instrument: SHARC-2
+			@Expert
+			Specify the <filename> containing the pixel 
+			loading information, based on which in-band 
+			line-of-sight opacities may be calculated.
+			@See: 'response.calc', 'tau', 'tau.<?>'
+
+:: response.calc	@Instrument: SHARC-2
+			@Expert
+			Allows the recalculation of pixel responses, based on an
+			initial 'response' provided in a file, and a 'tau' 
+			value. Scans on very faint or deep-field sources are 
+			most suited for such recalculations. Use this option 
+			only if you really understand what it is meant to do.
+			@See: 'response', 'tau', 'tau.<?>'
+
+:: restore=<option>	Undoes the 'remove' option, reinstating the <option> 
+			tree to its prior state.
+			@See: 'remove'
+
+:: rot0			@Instrument: SHARC-2
+			@Expert
+			Specifies the reference (zero point) of the rotator (if
+			available). This option applies only for the early 
+			SHARC-2 runs, when the instrument was still mounted on 
+			the Cassdegrain platform. The values should be correcly
+			configured in the default SHARC-2 configuration 
+			('sharc2/default.cfg'), and there should be no reason 
+			for the user to change these settings...
+			@See: 'rotation'
+
+:: rotation		@Advanced
+			Define the instrument rotation (in degrees) if
+			applicable.	
+
+:: rounds=N		@Advanced
+			Iterate N times. You may want to increase the number
+			of default iterations either to recover more extended
+			emission (e.g. when 'extended' is set), or to go
+			deeper (esp. when the 'faint' or 'deep' options are
+			used).
+			@See: 'iteration.[?]', 'extended', 'faint', 'deep'
+
+:: rows			@Alias: -> decorrelate.rows
+			@Instrument: SHARC-2, P-ArTeMiS
+			@Advanced
+			Decorrelate on detector rows, or set options for it.
+			@See: 'decorrelate.<?>'
+
+:: scale=<arg>		Set the calibration scaling of the data. The option
+			can take as argument, either:
+
+			    X	    	    An explicit scaling value X, by 
+			    		    which the entire scan data is 
+					    scaled. E.g.
+					    
+					      scale=0.92
+
+
+			    <filename>	    the name of a calibration file, 
+			    		    which among other things, contains 
+					    the ISO time-stamp and the 
+					    corresponding calibration values 
+					    for each scan. The filenames follow
+					    the usual path conventions of CRUSH
+					    and may contain references to 
+					    environment variables enclosed in 
+					    {} brackets. E.g.:
+
+					      scale={$HOME]}/laboca/scaling.dat
+
+			@See: 'tau', 'gain', 'invert', 'jackknife'
+
+
+:: scanmaps		@Advanced
+			When specified, a map will be written for each scan
+			(every time it is solved), under the name 
+			'scan-<scannumber>.fits' in the usual output path.
+			Best to use as:
+			     
+			     final:scanmaps
+ 			
+			to avoid the unnecessary writing of scan maps for every
+			iteration (unless you really want that to be the case).
+			@See: 'final', 'source'
+
+:: scramble		Make a map with inverted scanning offsets. Under the
+			typical scanning patterns, this will not produce a
+			coherent source. Therefore it is a good method for
+			checking on the noise properties of deep maps. The 
+			method essentially smears the source flux all over the 
+			map. While not as good as 'jackknife' for producing pure
+			noise maps, 'jackknife' requires a large number of scans
+			for robust results (because of the random inversion),
+			whereas 'scramble' can be used also for few, or even 
+			single scans to nearly the same effect.
+			@See: 'jackknife'
+			
+:: serial.[...]		@Advanced
+			Specify settings to apply when the scan's serial number
+			falls within the specified range inside the brackets.
+			The range is simply an inclusive range of scan numbers
+			separated by colon(s) ':' or hyphen(s) '-'. Wildcards 
+			'*' can be used to specify open ranges. E.g.:
+
+			   serial.[*--2593] rotation 15.3
+
+			specifies an instrument rotation of 15.3 degrees up 
+			until and including scan 2593.
+			@See: 'mjd.[...]', 'date.[...]'
+
+:: signal-response	@Expert
+			This is diagnostic option. It affects the console
+			output of decorrelation steps. When specified, 
+			each decorrelation step will produce a sequence of 
+			numbers, corresponding to the normalized covariances of 
+			the detector signals in each correlated mode in the
+			'modality'. The user may take this number as an 
+			indication of the importance of each type of correlated 
+			signal, and make decisions based on it, whether a 
+			decorrelation step is truly necessary or not. Values
+			close to 1.0 indicate signals that are (almost) 
+			perfectly correlated, whereas values near zero are 
+			indicative of negligible correations.
+			@See: 'correlated.<?>', 'division.<?>', 'ordering' 
+
+:: skydip		Reduce skydip data, instead of trying to make an 
+			impossibly large map out of it :-). This option is
+			equivalent to specifying 'source.type=skydip', which is
+			activated conditionally, instead of an alias. The reason
+			for not using an alias in this case, is to retain,
+			independently, 'skydip' option branches.
+
+:: skydip.fit=<list>	@Expert
+			Specify the list of parameters to fit for the skydip 
+			model. The standard model is
+
+			  y(EL) = Kelvin * Tsky * (1-exp(-tau/sin(EL))) + offset
+
+		        where:
+
+			   Kelvin	conversion from Kelvin to dataunits.
+				   	(see: skydip.Kelvin)
+
+			   Tsky	  	Sky temperature (in Kelvin).
+				   	(see: 'skydip.Tsky')
+
+			   tau	 	The in-band zenith opacity
+				   	(see: 'skydip.tau')
+						 
+			   offset	An offset in dataunits 
+			   		(see 'skydip.offset')
+
+			The default is to fit Kelvin, tau, and offset, and 
+			assume that the sky temperature is close to ambient. 
+			(The assumption on the sky temperature is not critical 
+			as long as the conversion factor 'Kelvin' is fitted to 
+			absorb an overall scaling).
+			@See: 'skydip.Kelvin', 'skydip.offset', 'skydip.tau', 
+			      'skydip.Tsky', 'dataunit'
+					  
+:: skydip.Kelvin=X	@Expert
+			Specify the (initial) value X to convert from Kelvins 
+			to dataunits.
+			@See: 'skydip.fit'
+
+:: skydip.offset=X	@Expert
+			Specify the (initial) offset value in dataunits
+			@See: 'skydip.fit'
+
+:: skydip.tau=X		@Advanced
+			Specify the (initial) in-band zenith opacity.
+			@See: 'skydip.fit'
+
+:: skydip.Tsky=X	@Advanced
+			Specify the (initial) sky temperature in Kelvins.
+			By default the ambient temperature (if available) will 
+			be used. This option can be use to override with a
+			specific value.
+			@See: 'skydip.fit'
+
+:: smooth=X		@Advanced
+			Smooth the map by X arcsec FWHM beam. Smoothing
+			helps improve visual appearance, but is also useful
+			during reduction to create more redundancy in the data
+			in the intermediate reduction steps. Also, smoothing
+			by the beam is optimal for point source extaction from
+			deep fields. Therefore, beam smoothing is default in
+			with the 'deep' option (see 'deep.cfg').
+			Typically you want to use some smoothing during 
+			reduction, and you may want to turn it off in the 
+			final map. Thus, you may have something like:
+
+			  smooth=9.0			# 9" smoothing at first
+			  iteration.[2]smooth=12.0 	# smooth more later
+			  iteration.[last]forget=smooth # no smoothing at last
+
+			Other than specifying explicit values, you can use
+			the predefined values: 'minimal', 'halfbeam', '2/3beam'
+			'beam', or 'optimal'.
+			@See: 'smooth.optimal', 'final', 'source.filter', 'grid'
+			
+:: smooth.external	@Advanced
+			Do not actually perform the smoothing set by
+			the 'smooth' option. Instead, use the 'smooth'
+			value as an assumption in calculating smoothing-related
+			corrections. The option is designed for the reduction
+			of very large datasets, which have to be 'split' into
+			smaller, manageable sized chunks. The unsmoothed outputs
+			can be coadded and then smoothed to the desired amount
+			before feeding the result back for further rounds of
+			reduction via 'source.model'
+			@See: 'smooth', 'split', 'source.model'
+
+:: smooth.optimal=X     @Expert
+			Define the optimal smoothing for point-source
+			extraction if it is different from beam-smoothing.
+			For arrays, whose detectors are completely independent,
+			beam-smoothing produces the optimal signal-to-noise
+			for point sources. However, if the detectors are not
+			independent, the optimal smoothing may vary. This is
+			expected to be the case for some filled arrays, where
+			one expects a certain level of beam-sized photon 
+			correlations.
+			@See: 'smooth'
+
+:: source		Solve for the source model, or set options for it.
+
+:: source.correct	@Advanced
+			Correct peak fluxes for the point source filtering
+			effect of the various reduction steps (default). The
+			filtering of point sources is carefully calculated
+			through the reduction steps, thus with the correction
+			scheme, point source fluxes ought to stay constant 
+			(within a few percent) independent of the pipeline
+			configuration.
+			@See: 'faint', 'deep', 'bright', 'ordering', 'whiten'
+
+:: source.coupling	@Advanced
+			(Re)calculate point source copling efficiencies
+			(i.e., the ratio of point-source and sky-noise
+			response) as part of the source modeling step. This is
+			only really useful for bright sources.
+			@See: 'source.coupling.range'
+
+:: source.coupling.range=min:max	@Expert
+					Specify the range of acceptable coupling
+					efficiencies relative to the "average"
+			of all pixels, when 'source.coupling' is used to 
+			calculate these based on bright source responses. Pixels
+			with efficiencies outside of the specified range will be
+			flagged and ignored from further source modeling steps
+			until these flags are cleared again in the reduction.
+			@See: 'correlated.<?>.gainrange'
+
+:: source.despike  	@Advanced
+			Despike scan maps at. 
+			Clearly you want to set X to be higher than the most 
+			significant source in your map. Therefore it is only 
+			really useful in 'deep' mode, where 5-sigma despiking
+			is default (see 'deep.cfg').
+
+
+:: source.despike.level=X	@Advanced
+				Set the source despiking level to an S/N of 
+				X. You probably want to set X to be no more 
+		    	than about 10 times the most significant source in your
+			map. Therefore it is only really useful in 'deep' mode, 
+			where a  5-sigma despiking is default (see 'deep.cfg').
+			@See: 'despike'	
+
+:: source.filter   	Filter extended structures. By default the filter will
+			skip over map pixels that are above the 'blanking' S/N 
+			level (>6 by default). Thus any structure above this 
+			significance level will remain unfiltered.
+			Filtering is useful to get deeper in the map when 
+			retaining the very faint extended structures is not 
+			an issue. Thus filtering above 5 times the source size
+			(see 'sourcesize') is default when the filter is used.
+			See the advanced configuration section for further
+			details on fine tuning the large-scale structure 
+			filter.	
+
+:: source.filter.blank=X	@Expert
+				Set the blanking level of the large-scale
+				structure (LSS) filter. Any map pixels with an
+			S/N above the specified level will be skipped over, 
+			and thus remain unaffected, by the filter.
+			@See: 'source.filter.fwhm'
+
+:: source.filter.fwhm=X	@Advanced
+			Specify the Gaussian FWHM of the large-scale
+			structure (LSS) filter. Values greater than
+			about 5-times the beam size are recommended in order
+			to avoid the unnecessary filtering of compact or point
+			sources.
+			@See: 'source.filter.blank'
+
+:: source.filter.type=<type>	@Advanced
+				Specify the type ('convolution' or 'fft') of 
+				the large-scale structure filter. Convolution 
+			is more accurate but may be slower than FFT, especially
+ 			for very large maps.
+
+:: source.fixedgains	@Advanced
+			Specifies to use the fixed source gains (e.g. from an 
+			RCP file -- see 'rcp' key).
+			Normally, crush calculates source gains based on the 
+			correlated noise response and the specified point
+			source couplings (e.g. as derived from the two gain
+			columns of RCP files.). This option can be used to 
+			treat the supplied source gains as static (i.e. 
+			decoupled from the sky-noise gains).
+			@See: 'source.coupling', 'beammap'
+
+:: source.intermediates @Expert
+			Write the maps made during the reduction into 
+			'intermediate.fits' (inside the crush directory). 
+			This option thus allows to keep an eye on 
+			the evolution of maps iteration-to-iteration. Each 
+			iteration will overwrite this temporary file, and it 
+			will be erased at the end of the reduction.
+
+:: source.mem		@Advanced
+			Use maximum-entropy method (MEM) correction to the
+			source map. The maximum-entropy requirement supresses
+			some of the noise on the small spatial scales, and
+			pushes solutions closer to the zero level for low S/N
+			structures. This increases contrast between significant
+			source structures and background. It is similar to the
+			MEM used in radio interferometry, although there are
+			key differences. (For one, interferometry measures 
+			components in the uv-plane, and MEM corrections are
+			applied in xy coordinate space. For crush, both the
+			solutions and the corrections are applied in the same
+			configuration space.)
+			@See: 'source.mem.lambda'
+
+:: source.mem.lambda=X	@Advanced
+			Specify the desirability of MEM solutions 
+			relative to the maximum-likelihood solution.
+			Typical values of lambda are in the range 0.1--1, but
+			higher or lower values may be set to give extra weight
+			towards one type of solution.
+
+:: source.model=<file>  @Advanced
+			Specify a in initial source model to use in the
+			reduction. This may be useful when reducing 
+			large datasets where all data cannot be reduced 
+			together. Instead the data can be split in manageable 
+			sized chunks, which are reduced separately. The results 
+			can be coadded with the 'coadd' utility to create a 
+			composite map. This may be further manipulated (e.g. 
+			s/n clipping, smoothing, filtering etc.) with 
+			'imagetool' before feeding back into another round of 
+			reduction. See more in the README on how to deal with
+			very large data sets.
+			Clipping and blanking settings are usually altered
+			(see 'default.cfg') when an a-priori source-model is
+			thus defined.
+			@WARNING: This feature is not yet thorougly tested.
+		 		  Use at you own risk... 
+			@See: 'smooth.external', 'clip', 'blank'
+
+:: source.nefd=min:max	@Advanced
+			Specify a range of acceptable NEFDs in "Jy sqrt(s)" 
+			units. All scans with NEFD outside this range will not 
+			contribute to the composite map. If the optional 'min' 
+			value is not given, then it is assumed to be 0. ('-' 
+			may also be used in place of ':' for separating min and
+			max values.) 
+
+:: source.nosync	@Expert
+			Do not bother synching the source solution back into the
+			raw time-stream. This saves a bit of time in the last
+			round of most reductions, when the 'source' is the
+			last step in the pipeline, and the residuals are not
+			used otherwise, e.g. by 'write.covar', 'write.ascii' or
+			'write.spectrum'
+			@See: 'write.covar', 'write.ascii', 'write.spectrum'
+
+:: source.polarization  @Instrument: PolKa
+			@Advanced
+			Specify to yield polarization data (I,Q and U)
+			rather than simply producing a total-power image. The
+			option obviously only affects instruments that measure
+			polarization, anbd will be ignored otherwise.
+			@See: 'source.synchronized', 'waveplate.refangle', 
+			      'ortho'
+
+:: source.redundancy=N	@Expert
+			Specify the minimum redundancy (N samples) that
+			each scan-map pixel ought to have in order to be
+			considered valid. Pixels with redundancies smaller than
+			this critical value will be flagged an not used in
+			the composite source mapmaking.
+
+:: source.synchronized 	@Instrument: PolKa
+			@Advanced
+			CRUSH offers two methods of analyzing 
+			polarization data. The default is an inventive method
+			that extracts polarization from repeated observations
+			over each map pixels, which can be scattered in time. 
+			As such, the default method can be used also for fast
+			scanning (relative to waveplate rotation). The more
+			traditional approach is to scan slowly, and integrate
+			an entire waveplate rotation over one map pixel. This
+			"synchronized" mode can be selected with this option. It
+			is only suitable for reducing data, where telescope
+			movement is always less than a map pixel in a quarter
+			waveplate cycle.
+			@See: 'grid'
+
+:: source.type=<type>	By default, crush will try to make a map from
+			the data. However, some istruments may take
+			data that is analyzed differently. For example, you 
+			may want to use crush to reduce beam maps (to
+			determine the positions of your pixels on sky), or
+			skydips (to derive appropriate opacities), or do
+			point source photometry. Presently, the following
+			source types are supported accross the board:
+		
+			   map 		Make a map of the source (default)
+
+			   skydip	Reduced skydips, and determine 
+					opacities by fitting a model to it.
+
+			   beammap	Create individual maps for every
+					pixel, and use it to determine their
+					location in the field of view.
+		
+			   null		Do not generate a source model.
+					Useful for lab/diagnostic reductions.
+	
+			Note, that you may also just use 'skydip' and 'beammap'
+			shorthands to the same effect. E.g.
+
+			  > crush [...] -skydip [...]
+
+			@See: 'skydip', 'beammap'
+
+
+:: sources=<filename>	@Advanced
+			@Since: 2.02
+			Insert test sources into the data, from a catalog 
+			specified by <filename>. You can find an example
+			catalog in the crush directory, as 'example.mask'.
+			The sources are inserted at the beginning of the
+			reduction, with the default pixel gains. Since the
+			gains are normally adjusted during the reduction the
+			recovered source is expected to yield slightly 
+			different flux, typically by a few percent. You can
+			get a more accurate test calibration by using
+			fixed source gains (i.e. decoupling these from the
+			sky noise gains) via the 'source.fixedgains' option.
+			Thus, the default configuration sets 
+			'source.fixedgains' together with the 'sources' option.
+			@See: 'source.fixedgains' 
+
+:: sourcesize=X		This option can be used instead of 'extended' in 
+			conjunction with 'faint' or 'deep' to specify the 
+			typical size of sources (FWHM in arcsec) that are 
+			expected. The reduction then allows filtering 
+			structures that are much larger than the specified 
+			source-size...
+			If 'sourcesize' or 'extended' is not specified, then 
+			point-like compact sources are assumed.	
+			@See: 'faint', 'extended', 'sourcesize'
+
+:: split		A convenience key for adjusting options for very large
+			data sets, which have to be split into manageable sized
+			chunks in the reduction. See the README for more
+			information on the reduction of very large data sets.
+			@See: 'smooth.external', 'source.model'
+
+:: squids		@Alias -> correlated.squids
+			@Instrument: ASZCA, SABOCA
+			@Advanced
+			Enable SQUID decorrelation or set options for it.
+			@See: 'correlated.<?>'
+
+:: stability=X		@Expert
+			Specify the instrument's 1/f stability time scale in 
+			seconds. This value is used for optimizing reduction 
+			parameters when (e.g. the filtering time scale for the 
+			'drifts' option) when these are not explicitly 
+			specified.
+			@See: 'drifts', 'sourcesize'
+
+:: <subarray>.pixelsize=X,Y	@Expert
+				@Instrument: SCUBA-2
+				@Since: 2.01-1
+			Specify the pixel spacing (in arcseconds) of the 
+			<subarray> pixels. Pixels positions are then calculated 
+			assuming a rectangular grid with the given spacing.
+			E.g.: s8d.pixelsize=6.2,6.1
+			@See: '<subarray>.position', '<subarray>.rotation'
+
+:: <subarray>.position=X,Y	@Expert
+				@Instrument: SCUBA-2
+				@Since: 2.01-1
+			Defines the position of the the <subarray> center 
+			relative to the pointing center of the instrument as
+			comma separated coordinates (in arcseconds) in the
+			Nasmyth focal plane.
+			E.g.: s4a.position=-12.2,5.3
+			@See: '<subarray>.pixelsize', '<subarray>.rotation'
+
+:: <subarray>.rotation=X	@Expert
+				@Instrument: SCUBA-2
+				@Since: 2.01-1
+			Specify the rotation angle (in degrees) of the 
+			<subarray>. E.g.: s4a.rotation=45.0 
+			@See: '<subarray>.pixelsize', 'subarray.position',
+			      'rotation'.
+
+:: subscans.merge	@Expert
+			@Instrument: SCUBA-2
+			@Since: 2.01-1
+			Specifies that the integrations (subscans) in a scans
+			should be merged into a single timestream, with
+			null frames filling potential gaps at the boundaries
+			to ensure proper time-spacing of all data (for time
+			window processing or FFT).
+			@See: 'subscans.split'
+
+:: subscans.minlength=X	@Expert
+			@Instrument: SCUBA-2
+			@Since: 2.01-1
+			Set the minimum length of inegrations (subscans) to
+			X seconds. Integrations (subscans) shorter than the
+			specified value will be skipped during the scan
+			reading phase.
+			Most CRUSH reductions rely on the background variations
+			to create signals from which detector gains can be
+			estimated with the required accuracy. Very short
+			integrations may not have sufficient background signals
+			for the robust estimation of gains, and it is thus
+			best to simply ignore such data.
+
+:: subscans.split	@Expert
+			@Since: 2.01-1
+			Instruct CRUSH to split subscans into separate
+			scans. This is practical to speed up the reduction
+			of single scans with many subscans on machines with
+			multi-core CPUs, since CRUSH does not process
+			integrations in parallel, but it does parallel process
+			scans.
+			@See: 'subscans.merge'
+
+:: supergalactic	@Alias -> system=supergalactic
+			Make maps in supergalactic coordinates.
+			@See: 'system'
+
+:: system=<type>	Select the coordinate system for mapping. The default
+			is 'equatorial'. Other possibilities are 'horizontal'
+			'ecliptic', 'galactic' or 'supergalactic'. Each of 
+			these values is additionally aliased to simple keys. 
+			Thus, you may use:
+			
+			   > crush -galactic [...]
+			   
+			as a shorthand for '-system=galactic'.
+			@See: 'altaz', 'equatorial', 'ecliptic', 'galactic',
+			      'supergalactic', 'radec', 'horizontal'	       
+
+:: tau=<arg>		Specify an in-band zenith opacity value to use. E.g.:
+
+			  > crush [...] -tau=0.344 [...]			
+
+			Alternatively, the argument can also specify a 
+			file-name with lookup information (usually containing 
+			tau values from the radiometer or from the skydips),
+			or tau in another band (See 'tau.<?>' option) with an
+			approporate scaling relation to in-band values (see
+			'tau.<?>.a' and 'tau.<?>.b' options).
+			
+			When lookup tables are used, the tau values will be 
+			interpolated for each scan, as long as the scan falls 
+			inside the interpolator's range. Otherwise, tau of 0.0 
+			will be used. The filename may contain references to 
+			environmnent variables enclosed in {} brackets. E.g.:
+
+			  tau={$HOME}/laboca/tau.dat
+			  
+			Some instrument (e.g. SHARC-2) may use measurements 
+			from a 225GHz radiometer, or some other source, from
+			which values can be scaled to in-band. E.g. the 
+			combination of options:
+
+			  tau.225GHz=0.033
+			  tau=225GHz
+
+			can be used to set tau to it's 225GHz equivalent value.
+			(e.g. for SHARC-2).
+
+			SHARC-2 also allows for setting tau to 'direct', for
+			a calibrated conversion of bolometer DC levels to
+			in-band line-of-sight opacities, when in '350um' mode.
+			@see: 'tau.<?>', 'tau.<?>.a', 'tau.<?>.b'
+
+
+:: tau.<?>=X		@Advanced
+			Specify the tau value X for <?>. The <?> can stand for
+			any user-specified relation. Some useful conversion
+			relations are predefined for certain instruments. E.g.
+			some typical values may be one of the following:
+
+			   225GHz	The 225GHz radiometer value.
+
+			   350um	The tau value for the 350um tipper.
+
+			   pwv		millimeters of precipitable water vapor.
+
+			The values will be scaled to in-band zenith opacities 
+			using the linear scaling relations defined via the 
+			'tau.<?>.a', and 'tau.<?>.b' constants.
+			@See: 'tau', 'tau.<?>.a', 'tau.<?>.b'
+
+:: tau.<?>.a=X		@Expert
+			Define the scaling term for the opacity measure <?>.
+			Zenith opacities are expressed in a linear relationship
+			to some user-defined tau parameter t as:
+
+			  tau(<?>) = a*t + b
+
+			This key sets the linear scaling constant 'a' in the
+			above equation, while 'tau.<?>.b' specifies the offset
+			value. By default the parameter t is set to be the
+			225GHz radiometer value (This is achived by setting
+			"tau.225GHz.a=1.0" and "tau.225GHz.b=0.0" in 
+			"default.cfg").
+			@See: 'tau.<?>'
+
+:: tau.<?>.b=X		@Expert
+			Set the offset value in a linear tau scaling 
+			relationship.
+			@See: 'tau.<?>.a' for details.
+
+:: time-weighting	@Alias: -> weighting.frames
+			@Advanced
+			Turn on time weighting or set options for it.
+			@See: 'weighting.frames'
+
+
+:: twisting		@Alias: -> correlated.twisting	
+			@Instrument: LABOCA
+			@Expert
+			Enable the decorrelation of signals that correspond to
+			twisting flexible band cables, or set options for it.
+			@See: 'correlated.<?>', 'cables'
+
+:: uniform		@Expert
+			Instruct the use uniform pixel gains initially instead 
+			of the values read from the appropriate pixel data file
+			@See: 'pixeldata'
+
+:: unit=<name>		Set the output units to <name>. You can use either the
+			instrumental units (e.g. 'V/beam' or 'counts/beam') or
+			the more typical 'Jy/beam' (default), as well as their
+			common multiples (e.g. 'uJy/beam', or 'nV/beam').	
+			@See: 'dataunit', 'jansky'
+
+:: vclip=<arg>		@Advanced
+			Clip data where the field scan velocity is outside
+			the specified range (min:max in arcsec/sec). The 
+			successfull disentangling of the source structures from 
+			the various noise terms relies on these being separated
+			in frequency space. With the typical 1/f type limiting 
+			noise, this is harder when the scan speed is low s.t. 
+			the source signals occupy the low frequencies. 
+			Therefore, requiring a minimum scanning speed is a 
+			good idea...
+			On the other side, too high scanning speeds will smear
+			out sources, if the movement between samples is larger
+			than ~1/3 beam.
+			The value 'auto' can be specified to set the velocity
+			clipping range optimally based on the typical scanning
+			speeds.
+			@See: 'aclip', 'resolution'
+
+:: wafers		@Alias: -> correlated.wafers
+			@Instrument: ASZCA
+			@Advanced
+			Decorrelate on detector wafers (wedges) or set options
+			for it.
+			@See: 'correlated.<?>'
+
+:: waveplate.channel=N  @Instrument: PolKa
+			@Expert
+			Specify the LABOCA channel (counting from 1) that
+			carries the waveplate phase information. The waveplate
+			phases are critical to recovering the polarization
+			information from the data.
+			@See: 'waveplate.fchannel', 'waveplate.refangle'
+	
+:: waveplate.data=<filename>	@Instrument: PolKa
+				@Obsolete
+				@Expert
+			Specify the file containing the waveplate information.
+			The data file is a simple sequence of ISO timestamps
+			marking the times when the waveplate passes its 
+			reference position. By now, the waveplate information
+			is merged into the data.
+			@See: 'waveplate.channel', 'waveplate.fchannel'
+
+
+:: waveplate.fchannel=N	@Instrument: PolKa
+			@Expert
+			The LABOCA channel number (counting from 1),
+			which contains the frequency information for the last
+			waveplate cycle. This information is not used by crush
+			really, but may point the user to where to find this
+			information in the raw data, if one wishes to look into
+			the details.
+			@See: 'waveplate.channel'
+
+:: waveplate.frequency=X	@Instrument: PolKa
+				@Obsolete
+				@Expert
+				Specify the waveplate frequency (in Hz) to 
+			assume when detailed waveplate information is not 
+			readily available. The waveplate angle of the first
+			frame can be set via 'waveplate.refangle'.
+			@See: 'waveplate.channel', 'waveplate.refangle'
+ 
+:: waveplate.jitter=X	@Instrument: PolKa
+			@Expert
+			Specify the typical fractional waveplate jitter.
+			This information is used for designing optimal notch
+			filters for the total-power mode to reject any waveplate
+			modulated residues.
+			@See: 'waveplate.channel'
+
+:: waveplate.refangle=X	@Instrument: PolKa
+			@Advanced
+			Set the waveplate angle at its reference 
+			position. The calibration of this position is necessary
+			for obtaining meaningful polatization angles. Without
+			it only the polarized fluxes, or polarization fractions
+			can be measured. The calibration of the reference angle
+			requires measurements on sources of known polarization
+			(e.g. a wire grid in the pupil)
+			@See: 'waveplate.channel'
+
+:: weighting		Derive pixel weights based on the rms of the unmodelled
+			timestream signals.
+
+:: weighting.frames	@Advanced
+			In addition to pixel weighting, time-weights
+			can also be calculated to allow for non-stationary 
+			noise. 
+			@See: 'weighting.frames.resolution', 'time-weighting'
+
+:: weighting.frames.noiserange=min:max	@Expert
+					Set the range of acceptable temporal 
+					noise variation.
+			Hyphen(s) '-' can also be used instead of colon(s) ':'
+			to separate the min and max values. Wildcards can '*'
+			indicate open ranges. E.g.
+			
+			   weighting.frames.noiserange=0.1:*
+
+			@See: 'weighting.noiserange'
+
+:: weighting.frames.resolution=X	@Expert
+					By default all exposures are weighted 
+					indepently. With this
+			option set, weights are derived for blocks of exposures
+			spanning X seconds. The value 'auto' can be also used
+			to match the time-constant to that of 'drifts'. 
+			Time weighting is often desired but can cause 
+			instabilities in the reduction, especially if the 
+			time-scale is mismatched to the other reduction steps.
+			Adjust the timescale only if you really understand what
+			you are doing.	
+			@See: 'drifts'
+
+:: weighting.method=<name>	@Advanced
+				Set the method used for deriving pixel weights 
+			from the residuals. The following methods are 
+			available:
+
+			   rms	          Standard rms calculation.
+			   robust         Use robust estimates for the standard 
+			   		  deviation.
+			   differential   Estimate noise based on pairs of data
+			   		  separated by some interval in time.
+					  
+
+:: weighting.noiserange=min:max	@Advanced
+				Specify what range of pixel noises are
+				admissible, relative to the median pixel
+			noise. Pixels that fall outside of the specified range 
+			(min and max) will be flagged. Hyphen(s) '-' can also be
+			used instead of colons(s) ':' to specify the ranges. 
+			Wildcards '*' can specify open ranges. E.g.
+			
+			   weighting.noiserange=0.3:*
+
+			@See: 'weighting.frames.noiserange'
+
+
+:: weighting.scans	@Advanced
+			If specified, each scan gets an assigned weight
+			with which it contributes to the composite map.
+			This weight is measured directly from the noise 
+			properties of the produced map. 
+
+:: weighting.scans.method=<name>	@Advanced
+					'robust' or 'maximum-likelihood'.
+
+
+:: whitelist=<list>	Remove <option> from the blacklist, allowing
+			it to be set again if desired. Whitelisting
+			an option will not reinstate it to its prior value. 
+			After whitelisting, you must explicitly set it again, 
+			or 'recall' or 'replace' it to its prior state.
+
+
+:: whiten		@Advanced
+			Use noise whitening algorithm. White noise assures that
+			the noise in the map is independent pixel-to-pixel. 
+			Otherwise noise may be correlated on spacific scales.
+			Whitening is also useful to get rid of any signals
+			(still) unmodelled by the other reduction steps. It
+			should always be a last resort only. The modeling of
+			signals is generally preferred.
+
+:: whiten.below		@Expert
+			@Since 2.00-b2
+			By default the whitening filter only supresses
+			excessive noise, but will leave those spectral 
+			components untouched, where the spectral power is
+			deficient. Setting this option allows the boosting of
+			such components to the white level, thus achieving
+			true noise whitening, which is necessary to obtain maps 
+			without instrinsic spacial correlations.
+			@See: 'whiten.proberange'
+
+
+:: whiten.level=X	@Advanced
+			Specify the noise whitening level at X times
+			the average (median) spectral noise level. 
+			Spectral channels that have noise in excess of the
+			critical level will be approproately filtered to bring
+			them back in line. Values clearly above 1 are 
+			recommended. Typically values around 1.5--2.0 are 
+			useful without overfiltering.
+
+:: whiten.minchannels=N	@Expert
+			@Since: 2.01-1
+			Make sure that at least N channels are used for
+			estimating the white noise levels, even if the 
+			specified probe range is smaller or falls outside of
+			the available spectrum. In such cases, CRUSH will
+			automatically expand the requested range to include
+			at least N spectral channels, or as many as possible
+			if the spectral range itself is too small.
+			@See: 'whiten.proberange'
+	
+:: whiten.neighbours	@Expert
+			@Since 2.00-b2
+			The default whitening method is based on the absolute
+			amplitude of spectral components compared to the 
+			white noise level. This second method can be activated
+			in addition, based on the comparative noise power
+			in neighbouring spectral regions (at all resolutions).
+			The method is designed to filter to smooth (but
+			not necessarily flat) spectral shapes, rejecting
+			narrow features effectively, while allowing soft
+			rolloffs etc. It may be especially useful when
+			'whiten.below' is not enabled, i.e. when spectral
+			flatness is not a requirement.
+
+:: whiten.proberange=from:to	@Expert
+				@Since 2.00-b2
+				Specify the spectral range (in Hz), in
+			which to measure the white-noise level before 
+			whitening. It is best to use the truly flat part of
+			the available spectral range, with no 1/f, resonances
+			or lopass roloff are present. Wildcards '*' can be used
+			for specifying open ranges.
+			@See: 'whiten'
+				
+
+:: wiring=<filename>	@Expert
+			This option is commonly used to specify a
+			file containing the wiring information of
+			the detectors, which can be used to establish the
+			typical pixel groupings of instruments. There is no
+			standard format for the wiring file (it may be
+			different for each instrument), and not all instrument
+			may use such information.
+			@See: 'pixeldata', 'rcp'
+
+
+:: write.ascii		@Advanced
+			Write the residual timestreams into an ASCII table.
+			The file will contain as many columns as there are
+			pixels in the reduction (see 'noslim'), each 
+			corresponding to a pixel time-stream. The first row 
+			contains the sampling rate (in Hz). Flagged data is 
+			indicated with a NaN character.
+			@See: 'noslim', 'write.spectrum'			
+
+:: write.covar[=<list>]	@Expert
+			Write covariance data. If no argument is
+			specified, CRUSH will write the full 
+			pixel-to-pixel covariance data as a FITS image. The 
+			optional argument can specify the ordering of the 
+			covariance matrix according to pixel divisions. Each
+			group in the pixel division will be blocked together
+			for easy identifycation of block-diagonal covariance
+			structures. Other than the division names, the list
+			can contain 'full' and 'reduced' to indicate the full
+			covariance matrix if all instrument pixels, or only
+			those that were used in the reduction (see 'noslim').
+			@See: 'division.<?>', 'noslim'
+
+
+:: write.pixeldata	@Expert
+			Write the pixel data file (gains, weights, 
+			flags). The oputput will be 'pixel-<scanno>.dat'.
+			You can use these files to update instrumental
+			defaults in the instrument subdirectory. E.g., you can 
+			overwrite 
+
+				laboca/laboca-pixel.dat
+
+			to change what default pixel settings to use.
+			@See: 'rcp', 'wiring'
+
+:: write.signals	@Expert
+			Write out all the correlated signals that were
+			calculated in the reduction as ASCII timestreams.
+			Each signal mode is written in its own file, named
+			after the mode's name, and carrying a '.tms' extension.
+			The files are simple ASCII timestreams with the 
+			sampling frequency appearing in the first row.
+
+:: write.scandata	@Advanced
+			Whether or not to add HDUs at the end of the output
+			FITS image describing each scan (default). Each scan
+			will contribute an extra HDU at the end of the image.
+			Disabling this option (e.g. via 'forget') can decrease
+			the size of the output images, esp. for large data sets
+			containing many scans.
+
+:: write.scandata.details	@Advanced
+				@Since 2.00-b2
+				When the option is enabled, 'write.scandata'
+			will add extra detail into the FITS outputs, such as
+			channel gains, weights and flags, spectral filtering
+			profiles and residual noise power spectra.
+			@See: 'write.scandata'
+
+:: write.spectrum[=window] 	@Expert
+				Writes channel spectra (of residuals) into an 
+			ASCII table. The optional argument can specify a window
+			function to use. The available window functions are:
+			'Rectangular', 'Hamming', 'Hann', 'Nutall', 'Blackman'
+			'Blackman-Harris', 'Blackman-Nutall', and 'Flat top'.
+			The default is 'Hamming'.
+			The first column indicates the frequency, after which
+			come the power-spectral-densities (PSD) of each channel
+			used in the reduction (see 'noslim').
+			@See: 'write.ascii', 'noslim'
+
+:: write.spectrum.size=N	@Expert
+				Specify the windowsize (in powers of 2) to use
+			for measuring spectra. By default, the spectral range
+			is set by the 1/f filtering timescale.
+			@See: 'drifts'
