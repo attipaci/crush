@@ -1,0 +1,240 @@
+
+	      *** CRUSH User's Manual Extension for GISMO ***
+
+			      Attila Kovacs
+			<kovacs[AT]astro.umn.edu>
+
+			Last updated: 10 Aug 2010
+
+
+
+Table of Contents
+=================
+
+1. Introduction
+2. Locating Scans
+  2.1 By file names
+  2.2 By scan numbers 
+3. Extinction Correction
+4. GISMO-specific pixel divisions
+5. Runs 1 & 2 Peculiarities
+6. Glossary of GISMO-specific options
+
+
+
+
+
+
+#####################################################################
+1. Introduction
+#####################################################################
+
+
+This document contains information specific to using CRUSH-2 to reduce GISMO 
+data. It is assumed that you are already familiar with the contents of the main 
+CRUSH-2 README (inside the distribution directory), especially its Section 1 
+(Getting Started). 
+
+If you run into difficulty understanding the concepts in this document, you
+will probably find it useful to study the main README document a little longer.
+
+
+
+
+
+#####################################################################
+2. Locating Scans
+#####################################################################
+
+
+GISMO scans are typically stored in a filing hierarchy, organized by source 
+name, then an IRAM scan ID (itself composed of a UT calendar date and a scan
+number).
+
+For example, files for scan 79 taken on 2010-04-12 (of Mars) are stored under 
+
+    <datapath>/Mars/2010-04-12.79/ 
+
+relative to the main GISMO data directory <datapath>. Inside the scan 
+directory, you will find several files. The ones ending with
+
+    [...]-GISMO-IRAM-condensed.fits
+
+contain the merged data, which can be reduced by CRUSH. 
+
+You can instruct CRUSH several ways how to locate your data. Your main options 
+are either by their file names, or via a combination of 'object' name, 'date' 
+and scan number. The latter approach is especially useful for specifying 
+multiple scans taken on the same object, and over a handful of days, since it 
+allows you to list scan numbers and ranges for convenience.
+
+You can find a more detailed explanation below.
+
+
+
+2.1 By file names
+=================    
+
+   For single scans, it may be the simplest to specify the file name itself
+   (especially if your OS or shell supports autocompletion). Simply 
+   give the file name, either as a fully qualified path name, or relative
+   to the 'datapath' setting. Thus,
+
+       > crush gismo /data/Mars/2010-04-12.79/[...]-GISMO-IRAM-condensed.fits
+       
+   and
+
+       > crush gismo -datapath=/data Mars/2010-04-12.79/[...]-GISMO-IRAM-cond \
+         ensed.fits
+   
+   are equivalent.
+
+
+
+2.2 By scan numbers
+===================
+
+   When reducing several scans together (which is the recommended way to deal
+   with datasets), it may be more convenient to use a combination of
+   'datapath', 'object', 'date' and the scan numbers, and let crush find the
+   desired data files based on these. E.g.:
+   
+       > crush gismo -datapath=/data -object=NGC3627 \
+                     -date=2010-11-08 32-39 43 \
+                     -date=2011-02-13 15 19-22 33
+
+   Of course, for each scan, or set of scans, you may add additional options
+   such as pointing corrections (via 'pointing') or in-band opacities (via
+   'tau'), or calibration corrections (via 'scale') etc.
+
+
+
+
+#####################################################################
+3. Extinction Correction
+#####################################################################
+
+GISMO, being a 2-mm camera, typically operates with low atmospheric extinction.
+Nonetheless, properly accounting for the extinction is important for getting 
+the calibration right. By default, CRUSH will reduce the data with a 
+guesstimate of the in-band tau value, based on the last IRAM 225GHz radiometer 
+measurement before the scan. The scaling of the 225GHz value to 2-mm passband 
+is approximate, and is based on the CSO atmospheric transmission model of Juan 
+Pardo.
+
+You can also set an in-band zenith tau value based on your estimate directly, 
+using the 'tau' option (see the GLOSSARY).
+
+
+
+
+#####################################################################
+4. GISMO-specific pixel divisions
+#####################################################################
+
+For a general overview of channel divisions, please consult Section 3.
+(Correlated Signals) in the main README document.
+
+   mux		A grouping of pixels based on their SQUID multiplexing scheme
+		Each 4x8 pixel quadrant of the array is read out through the
+		same SQUID amplifier. Therefore, it is not suprizing that 
+		correlated signals are present on these quadrants. The
+		decorrelating on 'mux' groups is default in GISMO reductions
+
+   pins		The GISMO multiplexing scheme is implemented in the time-domain
+		Thus, the first channels of each SQUID are read out at the same
+		time, followed by the second channel in each group etc. Thus,
+		if there is any pickup of high-frequency signals in the
+		multiplexing scheme, one could expect some correlated signals
+		to be present on these virtual readout pin groups. There
+		is little evidence for these, but the reduction of very faint
+		compact sources may benefit from the additional decorrelation
+		on these groups.
+
+
+
+
+
+#####################################################################
+6. Runs 1&2 Peculiarities
+#####################################################################
+
+
+
+  6.1 Coordinate Epochs
+
+
+
+  6.2 Pointing
+
+
+
+#####################################################################
+6. Glossary of GISMO-specific options
+#####################################################################
+
+   date=YYYY-MM-DD	Specify the observing date (UT) in the format
+			YYYY-MM-DD. This is used for constructing the IRAM 
+			scan IDs by combining with scan numbers.
+			You also need to specify the 'object' and 'datapath' 
+			before CRUSH will be able to find scans by number.
+			@See: 'datapath', 'object'
+
+   object=<name>	Give the IRAM catalog name (case sensitive) of the 
+			observed object. Use together with 'datapath' and 
+			'date' to allow locating scans by serial numbers.
+			@See: 'datapath', 'date'
+
+   pcenter=<row>,<col>	@Expert
+			Specify the pointing center as a row,col combination 
+			on the array. There are 16 rows and 8 columns on the 
+			GISMO array, and the numbering starts from 1. Thus, 
+			the geometric center of the array corresponds to 
+			8.5,4.5. This option is not used (ignored) if pixel
+			positions are defined by the 'rcp' option (which is 
+			default). In those cases, the pointing center can be 
+			adjusted via the 'rcp.center' option.
+			@See: 'rcp', 'rcp.center', 'pixelsize', 'rotation'
+
+
+   pixelsize=<a>[,<b>]	@Expert
+			Specify the size of the pixels for calculating pixel 
+			positions based on a regular grid. A better way of 
+			setting the pixel positions is through the 'rcp' 
+			option. 
+			The argument can be either a lateral size (in arcsec) 
+			for square pixels, or two comma separated sizes for 
+			rectangular pixels.
+			@See: 'rcp', 'rotation', 'pcenter'
+
+   rotation=<deg>	@Expert
+			Specify the array rotation (in degrees), when pixel 
+			positions are calculated from a regular grid. A better 
+			way is to specify pixel positions via the 'rcp' option 
+			their rotation via 'rcp.rotate'.
+			@See: 'rcp', 'rcp.rotate', 'pixelsize'
+
+   mux			@Alias: 'correlated.mux'
+			@Expert
+			Specifies the grouping of channels by the SQUID 
+			multiplexing.
+			@See: 'correlated.<?>'
+
+   pins			@Alias: 'correlated.pins'
+			@Expert
+			Specifies the grouping of channels by their virtual 
+			pin numbers in the multiplexing time domain.
+			@See: 'correlated.<?>'
+
+   pins.group=<n>	@Alias: 'correlated.pins.group'
+			@Expert
+			Because there are only four SQUID multiplexers in 
+			GISMO, there is little redundancy among the pixels, 
+			which are read out at exactly the same instant. This 
+			option allows to group together <n> consecutive 
+			samples, to combine pixels read in some time-interval.
+			@See: 'pins'
+
+------------------------------------------------------------------------------
+Copyright (C)2010 -- Attila Kovacs <kovacs@astro.umn.edu>
+

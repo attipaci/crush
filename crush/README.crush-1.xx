@@ -1,0 +1,365 @@
+
+		  *** CRUSH-2: Notes to CRUSH-1.xx users ***
+
+			        Attila Kovacs
+			  <kovacs[AT]astro.umn.edu>
+
+			  Last Updated: 15 Aug 2010
+
+
+
+Table of Contents
+=================
+
+1. Overview
+
+  1.1 Why Switch?
+  1.2 What's (still) Missing?
+  1.3 Migrating scripts
+
+2. Reference: Old and New Configurations 
+
+
+
+
+#############################################################################
+1. Overview
+#############################################################################
+
+The purpose of this document is to highlight the differences between the old
+CRUSH-1.xx, and the new CRUSH-2, and thus help users transition to the new
+software. 
+
+The old CRUSH is no longer supported (has not been for a while now!), and will 
+be phased out completely in time. Thus, all users of CRUSH-1.xx are strongly 
+encouraged to switch to the new release as soon as possible. 
+
+After glancing at this document, you should read the first Section ('Getting 
+Started') of the CRUSH-2 User's Guide ('README') to familiarize yourself 
+with the new version. You can then use this document as further reference
+for dealing with the different configuration scheme of CRUSH-2.
+
+
+
+1.1 Why Switch?
+===============	
+
+
+   User Experience
+   ---------------
+
+	* Improved algorithms provide better removal of noise signals
+	  while keeping more large-scale structure in your maps.
+
+	* Faster reductions (2.5x--20x faster, depending on machine and
+	  configuration).
+
+	* More transparent and versatile configuration capability. Do what
+	  you want, when you want, and how you want.
+
+	* The same CRUSH, same options, work with many instruments.
+
+	* Up-to-date documentation (online and off-line), so you are never
+	  lost!
+
+	* Code support. CRUSH-2 is the only CRUSH that is being actively
+	  developed and supported. So if you find problems, they can be fixed
+	  quickly!
+
+	
+
+   Under the Hood
+   --------------
+
+	* Redesigned from the ground-up. The restructured code makes it easier 
+	  to spot bugs and fix them quickly. The new code is much less prone to
+	  nasty bugs than CRUSH 1.xx every was.
+	
+	* Multi-threaded reductions to get through large data sets fast.
+
+	* Smaller memory footprint enables reducing larger datasets than
+	  ever.
+
+	* Hierarchical configuration with conditional settings allows for
+	  smarter 'scripting'.
+
+
+
+
+1.2 What's (still) Missing?
+===========================
+
+   While CRUSH-2 brings you many of the same capabilities as CRUSH-1.xx 
+   (and more!), not all features of CRUSH-1.xx have been migrated to the
+   new code base of CRUSH-2.
+
+   Most notably, CRUSH-2 still relies on the image manipulation tools of
+   CRUSH-1.xx (e.g. 'show', 'imagetool', 'detect'). These work fine (in most
+   cases) with the images produced by CRUSH-2. However, the plan is to create
+   equivalent tools from within the CRUSH-2 code, both for better integration
+   with the reduction, and also to take advantage of its superior code 
+   structure. Keep checking future CRUSH-2 releases for status updates.
+
+   Some of the missing aspects in CRUSH-2 are (were) niche features of CRUSH 
+   1.xx, which were rarely used by the typical astronomer. Such features will 
+   be slow to make it into CRUSH-2 due to their low priority. If there is
+   a feature that you are sorely missing, please contact Attila Kovacs
+   <kovacs[AT]astro.umn.edu> to see if it can be implemented quickly... 
+
+   Here's a quick list of CRUSH-1.xx features not found in CRUSH-2:
+
+	* Native CRUSH-2 image tools (for now, the CRUSH-1.xx tools are
+	  bundled).
+
+	* Pointing reductions suggest pointing corrections but do not 
+	  automatically display the reduced images and pointing circles (due
+	  to the lack of an integrated 'show' tool for CRUSH-2, see above).
+	  If you want to look at the image, you have to do this manually
+	  via 'show'. 
+
+	* Some output options, like writing 2-D sky spectra, or spatial
+	  correlations is not (yet) implemented. Let me know if you need
+	  these for your research!
+
+	* Sky noise removal is limited to the common mode and gradients. 
+	  Higher order polynomials, available in CRUSH-1.xx, are not 
+	  implemented. 
+	  In truth, there is no evidence that anything above the linear
+	  order exists, or that it would improve on the reduction quality.
+	  If you have a problem with baselines, even in 'deep' mode, use
+	  'source.filter' instead to reject larger scale (atmospheric) 
+	  strucures.
+
+	* No regional correlations in CRUSH-2. See the notes on sky-noise
+	  polynomials above for alternatives. 
+
+	* No real-time opacity correction, based on the correlated signals.
+	  There is no reason why these should be necessary really. The
+	  dropping of this capability may result in an extra source of
+	  calibration uncertainty less than 1%. Given that there are much
+	  larger uncertainties because of the absolute tau, focus variations,
+	  DSOS status, and fridge cycles, the effect is absolutely negligible.
+
+
+
+
+1.3 Migrating Scripts
+=====================
+
+   If you have old CRUSH-1.xx reductions scripts that you want to use with
+   CRUSH-2, you have to make some adjustments manually before they can be used
+   with the latest CRUSH. First, you must insert 'sharc2' as the first command-
+   line argument:
+
+	crush sharc2 [...]
+
+   If you are using extra command-line options, you should check in the table
+   below for their CRUSH-2 equivalents. Note, that the most commonly used 
+   options such as '-faint', '-bright', '-deep', '-outpath' and '-name' have 
+   not changed at all, but some options may have.
+
+   Also, you should be aware that the default configuration of CRUSH-2 is not
+   identical to the defaults of CRUSH 1.xx. If you have been relying on some
+   advanced CRUSH-1.xx switches, you should first check, if anything similar
+   is really necessary with CRUSH-2. I.e., try reducing with only the most
+   essential options first, and try adding more options gradually, carefully
+   evaluating their effect. In all likelihood, CRUSH-2 will achieve better
+   results with fewer tweaks from the default settings.
+
+
+
+
+#############################################################################
+2. Reference: Old and New Configurations
+#############################################################################
+
+
+Below is a quick overview of the CRUSH-2 keywords corresponding to CRUSH-1.xx
+command-line options and equivalent configuration keys. The table is sorted 
+case-sensitive alphabetically according to the 1.xx command-line options as
+produced by 'crush -help' (even though the neither crush-1.xx or CRUSH-2 is
+case sensitive in parsing these keywords!).
+
+Most CRUSH-1.xx settings have their CRUSH-2 equivalent. Often the same key is
+used as in 1.xx. In some cases, the key may be renamed, but its behaviour is
+the same. In other cases, there exist similar (if not 1:1 equivalent) CRUSH-2
+settings that can be used for similar effect.
+
+
+Table 1. Old and new configuration options/keys
+
+------------------------------------------------------------------------------
+CRUSH-1.xx	CRUSH-1.xx key		CRUSH-2
+==============================================================================
+-13Hz		NOISY_13HZ_ACTION	--- (not needed)
+-aclip		MAX_ACCELERATION	aclip
+-altaz		ALTAZ=true		altaz (system=horizontal)
+-aperture	---			photometry
+-atm		ATMOSPHERIC_CORRECTION=true  --- (default)
+-average=	AVERAGE_FRAMES		downsample
+-beam=		SHARC2_BEAM_FWHM	beam
+-blank=		MAP_BLANKING_LEVEL	blank
+-bright		LOAD_CONFIG=bright.cfg	bright
+-blocksize	BLOCK_SIZE		blocks.size
+-blockT=	BLOCK_CORRELATION_T	blocks.resolution (in seconds!)
+-chi2		CHI2_REPORTING		---
+-chopped=	CHOPPED_OBSERVATION=true  chopped (see also 'detect.chopped')
+-compact	---			(default) or forget=extended
+-config=	LOAD_CONFIG		config
+-correct=	FLUX_CORRECTING_FWHM	--- (see 'source.correct')
+-covar=		WRITE_COVARIANCE=true	write.covar
+-cutoff=	MAP_CUTOFF_LEVEL	clip
+-debug		---			debug
+-deep		LOAD_CONFIG=deep.cfg	deep
+-default	LOAD_CONFIG=default.cfg	config=default.cfg
+-diameter	SOURCE_DIAMETER		sourcesize
+-directGains	DIRECT_GAINS=true	(default)
+-driftT=	PIXEL_DRIFT_T		drifts.resolution (in seconds!)
+-Eblock=	BLOCK_CORRELATION_ESTIMATOR  --- (see 'estimator')
+-Ecorr=		CORRELATED_ESTIMATOR	--- (see 'estimator')
+-Edrift=	PIXEL_DRIFT_ESTIMATOR	--- (see 'estimator')
+-Emap=		MAP_ESTIMATOR		(see 'source.mem')
+-Emux=		MUX_ESTIATOR		--- (see 'estimator')
+-Eoffset=	OFFSET_ESTIMATOR	--- (see 'estimator')
+-ErowDrift=	ROW_DRIFT_ESTIMATOR	--- (see 'estimator')
+-edge=		IGNORE_ARRAY_EDGES	--- (not needed, \
+					     use 'flag' if really want it)
+-efficiency	---			beammap or source.coupling
+-estimator=	DEFAULT_ESTIMATOR	estimator
+-excessLoad=	DEFAULT_EXCESS_LOAD	excessLoad
+-extended	---			extended
+-extBlank	EXTENDED_FILTER_BLANKING  source.filter.blank
+-extFilter=	EXTENDED_FILTER_SCALE	source.filter, source.filter.fwhm
+...		EXTENDED_FILTER_TYPE	source.filter.type
+-FAZO=		---			fazo
+-FZAO=		---			fzao
+-faint		LOAD_CONFIG=faint.cfg	faint
+-fftFilter=	---			source.filter, source.filter.type, \ 
+					source.filter.fwhm	
+-flagFraction	FLAG_NOISY_PIXEL_FRACTION  ---
+-flags		EXCLUDE_FLAGS		---
+-gainrounds	GAIN_ITERATIONS		---
+-gainGoal	GAIN_CONVERGENCE_GOAL	---
+-gains		---			write.pixeldata
+-gapOK=		TOLERATE_TIMING_GAPS	(see 'nogaps')
+-grid=		MAP_GRID_RESOLUTION	grid
+-hipass		HIGH_PASS_FILTER	hipass
+-histogram	WRITE_HISTOGRAM=true	---
+-histbin	HISTOGRAM_RESOLUTION	---
+-Iaccel=n	ACCELERATION_RESPONSE_TURN  iteration.[n]accel
+-Ibeam=n	BEAM_EFFICIENCY_TURN	iteration.[n]source.coupling
+-Iblock=n	BLOCK_CORRELATION_TURN	iteration.[n]blocks
+-Ichop=n	CHOP_RESIDUAL_TURN	forget=chopper + iteration.[n]chopper
+-Icorr=n	CORRELATED_TURN		forget=array + iteration.[n]array
+-Idespike=n	DESPIKE_TURN		forget=despike + iteration.[n]despike
+-Idrift=n	PIXEL_DRIFT_TURN	forget=drifts + iteration.[n]drifts
+-Iextended=n	EXTENDED_PRESERVE_TURNS	--- (not needed)
+-Ifidel=n	MAP_FAITHFUL_TURN	iteration.[n]blacklist=clip
+-Igain=n	GAIN_TURN		array.nogains + \
+					iteration.[n]forget=array.nogains
+-Imap=n		MAP_TURN		forget=source + iteration.[n]source
+-Imux=n		MUX_TURN		iteration.[n]mux
+-Inonlinear=n	NON_LINEAR_TURN		---
+-Ioffset=n	OFFSET_TURN		iteration.[n]offsets
+-Ipweight=n	PIXEL_WEIGHT_TURN	forget=weighting + \
+					iteration.[n]weighting
+-Iregion=n	REGIONAL_CORRELATION_TURN  --- (see 'source.filter' \
+					       and 'iteration')
+-IrowDrift=n	ROW_DRIFT_TURN		forget=drifts + iteration.[n]drifts
+-Isky=n		SKY_POLYNOMIAL_TURN	forget=gradients + \
+					iteration.[n]gradients
+-Ispectal=n	SPECTRAL_ANALYSIS_TURN	--- (see 'whiten')
+-Ispike=n				forget=despike + iteration.[n]despike
+-ItauAdjust=n	TAU_ADJUST_TURN		---
+-Itemporal=n	TEMPORAL_ANALYSIS_TURN	iteration.[n]despike.method=features
+-Itweight=n	TIME_WEIGHTING_TURN	iteration.[n]weighting.frames
+-index		---			---
+-info		---			---
+-Jy=		MAP_VOLTS_PER_JY	jansky 
+-lambda=	MEM_LAMBDA		source.mem.lambda
+-linear		LINEAR_RESPONSE=true		(default)
+-log		---			log, log.format
+-lookup		COORDINATE_LOOKUP	indexing, indexing.saturation
+-MaiTau=	MAI_TAU			maitau.server			\
+					(see also 'maitau.fallback')
+-map=		---			--- (use 'ordering')
+-mapJy		---			--- (see 'jansky')
+-mapWeight=	MAP_ROBUST_WEIGHT=true	weighting.scans			\
+					(see also 'weighting.scans.method')
+-mask=		---			---
+-maxNoise=	MAX_RELATIVE_PIXEL_NOISE  weighting.noiserange
+-maxRMS=	MAX_RELATIVE_NOISE	noiseclip
+-maxSpectral=	MAX_SPEXTRAL_FEATURE	--- (see 'whiten.level')
+-maxTemporal=	MAX_TEMPORAL_FEATURE	--- (see 'despike.level')
+-minDOF=	MIN_DEGREES_OF_FREEDOM	---
+-minExp=	MIN_RELATIVE_EXPOSURE	exposureclip
+-minIntT=	MIN_INTEGRATION_TIME	---
+-minPixels=	MAP_MIN_PIXELS		mappingpixels 			\
+					(see also 'mappingfraction')
+-model=		---			source.model
+-models		WRITE_SCAN_MODELS=true	write.signals
+-muxT=		MUX_T			mux.resolution (in seconds!)
+-name=		---			name
+-noatm		ATMOSPHERIC_CORRECTION=false  tau=0.0 or forget=tau
+-noflag		---			---
+-nogains	---			forget=write.pixeldata
+-nohist		WRITE_HISOGRAM=false	---
+-noindex	---			---
+-nonlinear	LINEAR_RESPONSE=false	---
+-nomodels	WRITE_MODELS=false	forget=write.pixeldata
+-noreorder	PIPELINE_AUTO_REORDER=false  --- (see 'ordering')
+-noresiduals	---			forget=write.ascii
+-noshow		SHOW_FINAL_MAP=false 	---
+-nospacial	---			---
+-out=		---			outpath + name
+-outpath=	REDUCED_MAP_PATH	outpath
+-path=		RAW_DATA_PATH		datapath
+-pcenter=	POINTING_CENTER		pcenter
+-pixelCoeffs=	NONLINEARITY_COEFFICIENTS  response
+-pixelData=	PIXEL_DATA		pixeldata
+-planetary	PLANETARY=TRUE		---
+-platescale=	SHARC2_PIXEL_SIZE	pixelsize
+-point		LOAD_CONFIG=point.cfg	point
+-precess=	REDUCED_MAP_EPOCH	---
+-prefix=	RAW_DATA_PREFIX		--- (not needed)
+-projection=	MAP_PROJECTION		projection
+-pwRange=	PIXEL_WEIGHT_RANGE	--- (see 'whiten.proberange')
+-radec		ALTAZ=false		radec (system=equatorial)
+-rcenter	ROTATION_CENTER		rcenter
+-regionalT=	REGIONAL_CORRELATION_T	---
+-regionType=	REGIONAL_CORRELATION_FORM  --- 
+-regionSize=	REGIONAL_CORRELATION_SIZE  --- (see 'source.filter.fwhm')
+-reorder	PIPELINE_AUTO_REORDER=true --- (see 'ordering')
+-residuals	---			write.ascii
+-reweight=	MAP_FINAL_REWEIGHT	('true' is default)
+-rot0=		ROTATOR_ZERO		rot0
+-rotator=	---			rotation
+-rounds=	ITERATIONS		rounds			
+-rowDriftT=	ROW_DRIFT_T		rows.resolution (in seconds!)
+-scanmaps	WRITE_SCAN_MAPS		scanmaps
+-scale=		---			scale
+-scramble	---			scramble
+-show		SHOW_FINAL_MAP=true	---
+-skyOrder=	SKY_POLYNOMIAL_ORDER	--- (see 'source.filter')
+-skySpectrum=	---			---
+-skyT=		SKY_POLYNOMIAL_T	gradients.resolution (in seconds!)
+-slice=		---			---
+-smear=		CHOPPER_MAX_SMEAR	--- (see 'vclip')
+-smooth=	MAP_SMOOTHING		(see 'smooth')
+-spacial	---			---
+-spectrum=	---			write.spectrum, write.spectrum.size
+-spikelevel=	DESPIKE_LEVEL		despike.level
+-spikefraction=	REJECT_SPIKE_FRACTION	despike.flagfraction
+-static		PLANETARY=false		---
+-TCscale=	---			--- (see 'correlated.<?>.resolution')
+-tau=id:value	---			tau.id=value \
+					(tau, tau.225GHz, tau.350um, tau.pwv)
+-tauScale=id(a,b)  DEFINE_TAU		tau.id.a, tau.id.b
+-temporalT=	TEMPORAL_ANALYSIS_MIN_T	despike.width (in seconds!)
+-unit=		MAP_UNIT		unit
+-vclip=		MIN_SCAN_SPEED		vclip
+-version	---			---
+-weightT=	TIME_WEIGHT_T		weighting.frames.resolution (in sec!).
+-width13Hz=	FILTER_13HZ_WIDTH	---
+------------------------------------------------------------------------------
+Copyright (C)2010 -- Attila Kovacs <kovacs[AT]astro.umn.edu>

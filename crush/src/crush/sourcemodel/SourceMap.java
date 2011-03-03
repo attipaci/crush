@@ -1,0 +1,473 @@
+/*******************************************************************************
+ * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * All rights reserved. 
+ * 
+ * This file is part of crush.
+ * 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ * 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ * 
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ ******************************************************************************/
+// Copyright (c) 2009 Attila Kovacs 
+
+package crush.sourcemodel;
+
+
+import util.*;
+import util.astro.CelestialProjector;
+import util.astro.CoordinateEpoch;
+import util.astro.EclipticCoordinates;
+import util.astro.EquatorialCoordinates;
+import util.astro.GalacticCoordinates;
+import util.astro.Gnomonic;
+import util.astro.HorizontalCoordinates;
+import util.astro.SuperGalacticCoordinates;
+import util.data.ArrayUtil;
+
+import java.util.*;
+
+import crush.*;
+
+
+public abstract class SourceMap<InstrumentType extends Instrument<?>, ScanType extends Scan<? extends InstrumentType, ?>>
+extends SourceModel<InstrumentType, ScanType> {
+	
+	public SphericalProjection projection;
+	public double integationTime = 0.0;
+	public double smoothing = 0.0;
+	
+	public SourceMap(InstrumentType instrument) {
+		super(instrument);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public Object clone() {
+		SourceMap<InstrumentType, ScanType> clone = (SourceMap<InstrumentType, ScanType>) super.clone();
+		return clone;
+	}
+	
+	@Override
+	public void reset() {
+		super.reset();
+		setSmoothing();
+	}
+	
+	@Override
+	public void create(Collection<? extends Scan<?,?>> collection) {
+		super.create(collection);
+		
+		System.out.print(" Initializing Source Map. ");	
+		
+		try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
+		catch(Exception e) { projection = new Gnomonic(); }		
+	}
+	
+	public boolean isHorizontal() {
+		return projection.getReference() instanceof HorizontalCoordinates;
+	}
+	
+	public boolean isEquatorial() {
+		return projection.getReference() instanceof EquatorialCoordinates;
+	}
+	
+	public boolean isEcliptic() {
+		return projection.getReference() instanceof EclipticCoordinates;
+	}
+	
+	public boolean isGalactic() {
+		return projection.getReference() instanceof GalacticCoordinates;
+	}
+	
+	public boolean isSuperGalactic() {
+		return projection.getReference() instanceof SuperGalacticCoordinates;
+	}
+
+
+	public void setSmoothing() {
+		if(!hasOption("smooth")) return;
+		double sizeUnit = instrument.getDefaultSizeUnit();
+		Configurator option = option("smooth");
+		if(option.equals("beam")) setSmoothing(instrument.resolution);
+		else if(option.equals("halfbeam")) setSmoothing(0.5 * instrument.resolution);
+		else if(option.equals("2/3beam")) setSmoothing(instrument.resolution / 1.5);
+		else if(option.equals("minimal")) setSmoothing(0.3 * instrument.resolution);
+		else if(option.equals("optimal")) {
+			setSmoothing(hasOption("smooth.optimal") ? 
+					option("smooth.optimal").getDouble() * sizeUnit : instrument.resolution);
+		}
+		else setSmoothing(Math.max(0.0, option.getDouble()) * sizeUnit);
+	}
+	
+	public void setSmoothing(double value) { smoothing = value; }
+	
+	public double getSmoothing() { return smoothing; }
+
+
+	@Override
+	public double getPointSize(Instrument<?> instrument) { return Math.hypot(instrument.resolution, smoothing); }
+	
+	@Override
+	public double getSourceSize(Instrument<?> instrument) { return Math.hypot(super.getSourceSize(instrument), smoothing); }
+	
+	
+	public synchronized void searchCorners() throws InterruptedException {
+		final boolean fixSize = hasOption("map.size");
+		
+		Parallel<Integration<?,?>> boxing = new Parallel<Integration<?,?>>(CRUSH.maxThreads) {
+			double fixdX = Double.NaN, fixdY = Double.NaN;
+			
+			@Override
+			public void init() {
+				if(!fixSize) return;
+				
+				StringTokenizer sizes = new StringTokenizer(option("map.size").getValue(), " \t,:xX");
+
+				fixdX = 0.5* Double.parseDouble(sizes.nextToken()) * Unit.arcsec;
+				fixdY = sizes.hasMoreTokens() ? 0.5 * Double.parseDouble(sizes.nextToken()) * Unit.arcsec : fixdX;
+				
+				xRange.setRange(-fixdX, fixdX);
+				yRange.setRange(-fixdY, fixdY);	
+			}
+			
+			@Override
+			public void process(Integration<?,?> integration, ProcessingThread thread) {	
+				Scan<?,?> scan = integration.scan;
+				
+				// Try restrict boxing to the corners only...
+				// May not work well for maps that reach far on both sides of the equator...
+				// Also may end up with larger than necessary maps as rotated box corners can go
+				// farther than any of the actual pixels...
+				// Else use 'perimeter' key
+
+				// The safe thing to do is to check all pixels...
+				Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
+				scan.longitudeRange = new Range();
+				scan.latitudeRange = new Range();
+
+				final CelestialProjector projector = new CelestialProjector(projection);
+
+				for(Frame exposure : integration) if(exposure != null) {
+					boolean valid = false;
+
+					for(Pixel pixel : pixels) {
+						exposure.project(pixel.getPosition(), projector);
+
+						if(!fixSize) {
+							xRange.include(projector.offset.x);
+							yRange.include(projector.offset.y);
+							scan.longitudeRange.include(projector.offset.x);
+							scan.latitudeRange.include(projector.offset.y);
+						}
+						else for(Channel channel : pixel) {
+							if(Math.abs(projector.offset.x) > fixdX) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+							else if(Math.abs(projector.offset.y) > fixdY) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+							else valid = true;
+						}
+					}
+
+					if(fixSize && !valid) exposure = null;
+				}
+			}
+		};
+			
+		boxing.process(getIntegrations());		
+	}
+	
+	public long getMemoryFootprint() {
+		return (long) (pixels() * getPixelFootprint());
+	}
+	
+	public long getReductionFootprint() {
+		// The composite map + one copy for each thread, plus base image (double)
+		return (CRUSH.maxThreads + 1) * getMemoryFootprint() + baseFootprint();
+	}
+	
+	public abstract double getPixelFootprint();
+	
+	public abstract long baseFootprint();
+	
+	public abstract long pixels();
+	
+	public abstract double resolution();
+	
+	public void setSize() {
+		//double margin = hasOption("map.margin") ? option("map.margin").getDouble() * instrument.getDefaultSizeUnit() : 0.0;
+		
+		// Figure out what offsets the corners of the map will have...
+		try { searchCorners(); }
+		catch(InterruptedException e) { 
+			e.printStackTrace(); 
+			System.exit(1);
+		}
+		
+		/*
+		xRange.max += margin;
+		xRange.min -= margin;
+		yRange.max += margin;
+		yRange.min -= margin;
+		*/
+
+		int sizeX = (int)Math.ceil((xRange.max - xRange.min)/resolution()) + 2;
+		int sizeY = (int)Math.ceil((yRange.max - yRange.min)/resolution()) + 2;
+	
+		try { 
+			checkForStorage(sizeX, sizeY);	
+			setSize(sizeX, sizeY);
+		}
+		catch(OutOfMemoryError e) { memoryError(sizeX, sizeY); }
+	}
+	
+	public abstract void setSize(int sizeX, int sizeY);
+	
+	public abstract SphericalProjection getProjection(); 
+	
+	public void memoryError(int sizeX, int sizeY) {
+		int diagonal = (int) Math.hypot(sizeX, sizeY);
+		
+		System.err.println("\n");
+		System.err.println("ERROR! Map is too large to fit into memory (" + sizeX + "x" + sizeY + " pixels).");
+		System.err.println("       Requires " + ((long) (pixels() * getPixelFootprint()) >> 20) + " MB free memory."); 
+		System.err.println();
+		
+		if(scans.size() > 1) {
+			// Check if there is a scan at least half long edge away from the median center...
+			Collection<Scan<?,?>> suspects = findOutliers(diagonal >> 2);
+			if(!suspects.isEmpty()) {
+				System.err.println("   * Check that all scans observe the same area on sky.");
+				System.err.println("     Remove scans, which are far from your source.");	
+				System.err.println("     Suspect scan(s): ");
+				for(Scan<?,?> scan : suspects) System.err.println("\t--> " + scan.descriptor);
+				System.err.println();
+			}
+		}
+		else {
+			// Check if there is a scan that spans at least a half long edge... 
+			Collection<Scan<?,?>> suspects = findSlewing(diagonal >> 1);
+			if(!suspects.isEmpty()) {
+				System.err.println("   * Was data acquired during telescope slew?");	
+				System.err.println("     Suspect scan(s):");
+				for(Scan<?,?> scan : suspects) System.err.println("\t--> " + scan.descriptor);
+				System.err.println();
+			}
+			else {	
+				System.err.println("   * Could there be an unflagged pixel with an invalid position?");
+				System.err.println("     check your instrument configuration and pixel data files.");
+				System.err.println();
+			}
+		}
+			
+		System.err.println("   * Increase the amount of memory available to crush, by editing the '-Xmx'");
+		System.err.println("     option to Java in 'wrapper.sh'.");
+		System.err.println();
+	
+		System.exit(1);
+	}
+	
+	// Check for minimum required storage (without reduction overheads)
+	protected void checkForStorage(int sizeX, int sizeY) {
+		Runtime runtime = Runtime.getRuntime();
+		long max = runtime.maxMemory();
+		long used = runtime.totalMemory() - runtime.freeMemory();
+		long required = (long) (getPixelFootprint() * sizeX * sizeY);
+		if(used + required > max) memoryError(sizeX, sizeY); 
+	}
+	
+	public Collection<Scan<?,?>> findOutliers(int pixels) {
+		ArrayList<Scan<?,?>> outliers = new ArrayList<Scan<?,?>>();
+
+		float[] ra = new float[scans.size()];
+		float[] dec = new float[scans.size()];
+		
+		for(int i=0; i<scans.size(); i++) {
+			EquatorialCoordinates equatorial = (EquatorialCoordinates) scans.get(i).equatorial.clone();
+			equatorial.precess(CoordinateEpoch.J2000);
+			ra[i] = (float) equatorial.RA();
+			dec[i] = (float) equatorial.DEC();
+		}
+		EquatorialCoordinates median = new EquatorialCoordinates(ArrayUtil.median(ra), ArrayUtil.median(dec), CoordinateEpoch.J2000);
+		for(Scan<?,?> scan : scans) {
+			EquatorialCoordinates equatorial = (EquatorialCoordinates) scan.equatorial.clone();
+			equatorial.precess(CoordinateEpoch.J2000);
+			double d = equatorial.distanceTo(median);
+			if(d > pixels * resolution()) outliers.add(scan);
+		}
+		return outliers;
+	}
+	
+	public Collection<Scan<?,?>> findSlewing(int pixels) {
+		ArrayList<Scan<?,?>> slews = new ArrayList<Scan<?,?>>();
+		double cosLat = getProjection().getReference().cosLat;
+		
+		for(Scan<?,?> scan : scans) {
+			double span = Math.hypot(scan.longitudeRange.span() * cosLat, scan.latitudeRange.span());
+			if(span > pixels * resolution()) slews.add(scan);
+		}
+		return slews;
+	}
+	
+	public abstract void getIndex(final Frame exposure, final Pixel pixel, final CelestialProjector projector, final MapIndex index);
+	
+	protected abstract void add(final Frame exposure, final Pixel pixel, final MapIndex index, final double fGC, final double[] sourceGain, final double dt, final int excludeSamples);
+	
+	public abstract boolean isMasked(MapIndex index); 
+	
+	protected int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
+		int goodFrames = 0;
+		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
+		final double samplingInterval = integration.instrument.samplingInterval;
+
+		final CelestialProjector projector = new CelestialProjector(projection);
+		final MapIndex index = new MapIndex();
+		
+		for(final Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) {
+			final double fG = integration.gain * exposure.getSourceGain(signalMode);
+			final double fGC = (isMasked(index) ? 1.0 : filtering) * fG;
+			
+			goodFrames++;
+
+			for(final Pixel pixel : pixels) {
+				getIndex(exposure, pixel, projector, index);
+				add(exposure, pixel, index, fGC, sourceGain, samplingInterval, excludeSamples);
+			}
+		}
+		return goodFrames;
+	}
+	
+	@Override
+	public void add(Integration<?,?> integration) {
+		add(integration, Mode.TOTAL_POWER);
+	}
+	
+	public void add(Integration<?,?> integration, int signalMode) {
+		Configurator option = option("source");
+		Instrument<?> instrument = integration.instrument; 
+
+		boolean filterCorrection = option.isConfigured("correct");
+	
+		integration.comments += "Map";
+		// For jackknived maps indicate sign...
+		if(hasOption("jackknife")) integration.comments += integration.gain > 0 ? "+" : "-";
+		
+		Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
+		
+		// If there aren't enough good pixels in the scan, do not generate a map...
+		if(hasOption("mappingpixels")) if(pixels.size() < option("mappingpixels").getInt()) {
+			integration.comments += "(!ch)";
+			return;
+		}
+		
+		// If there aren't enough good pixels in the scan, do not generate a map...
+		if(hasOption("mappingfraction")) if(pixels.size() < option("mappingfraction").getDouble() * instrument.size()) {
+			integration.comments += "(!ch%)";
+			return;
+		}
+
+		// Calculate the effective source NEFD based on the latest weights and the current filtering
+		integration.calcSourceNEFD();
+
+		// For the first source generation, apply the point source correction directly to the signals...
+		final boolean signalCorrection = integration.sourceGeneration == 0;
+		final double[] sourceGain = instrument.getSourceGains(signalCorrection);	
+	
+		double averageFiltering = instrument.getAverageFiltering();
+		double C = filterCorrection && !signalCorrection ? averageFiltering : 1.0;
+	
+		add(integration, pixels, sourceGain, C, signalMode);
+
+		if(signalCorrection)
+			integration.comments += "[C1~" + Util.f2.format(1.0/averageFiltering) + "] ";
+		else if(filterCorrection) {
+			integration.comments += "[C2=" + Util.f2.format(1.0/C) + "] ";
+		}
+		
+		integration.comments += " ";
+	}
+	
+	protected abstract void sync(final Frame exposure, final Pixel pixel, final MapIndex index, final double fG, final double[] sourceGain, final double[] usedSourceGain, final boolean isMasked);
+	
+	protected void sync(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
+		final CelestialProjector projector = new CelestialProjector(projection);
+		final MapIndex index = new MapIndex();
+		
+		for(final Frame exposure : integration) if(exposure != null) {
+			final double fG = integration.gain * exposure.getSourceGain(signalMode); 
+			
+			// Remove source from all but the blind channels...
+			for(final Pixel pixel : pixels)  {
+				getIndex(exposure, pixel, projector, index);
+				sync(exposure, pixel, index, fG, sourceGain, integration.usedSourceGain, isMasked(index));
+			}
+		}
+	}
+
+	@Override
+	public void sync(Integration<?,?> integration) {
+		sync(integration, Mode.TOTAL_POWER);
+	}
+	
+	public void sync(Integration<?,?> integration, int signalMode) {
+		Instrument<?> instrument = integration.instrument; 
+		
+		double[] sourceGain = instrument.getSourceGains(false);	
+		if(integration.usedSourceGain == null) integration.usedSourceGain = new double[sourceGain.length];
+
+		Collection<? extends Pixel> pixels = instrument.getMappingPixels();
+		
+		if(hasOption("source.coupling")) calcCoupling(integration, pixels, sourceGain);
+		sync(integration, pixels, sourceGain, signalMode);
+
+		// Do an approximate accounting of the source dependence...
+		double sumpw = 0.0;
+		for(Pixel pixel : pixels) for(Channel channel : pixel) if(channel.flag == 0) 
+			sumpw += sourceGain[channel.index] * sourceGain[channel.index] / channel.variance;
+
+		double sumfw = 0.0;
+		for(Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS))
+			sumfw += exposure.relativeWeight * exposure.getSourceGain(signalMode);		
+
+		double N = Math.min(integration.scan.sourcePoints, countPoints()) / covariantPoints();
+		double np = sumpw > 0.0 ? N / sumpw : 0.0;
+		double nf = sumfw > 0 ? N / sumfw : 0.0;
+
+		Dependents parms = integration.dependents.containsKey("source") ? integration.dependents.get("source") : new Dependents(integration, "source");
+		for(Pixel pixel : pixels) parms.clear(pixel, 0, integration.size());
+
+		for(Pixel pixel : pixels) for(Channel channel : pixel) if(channel.flag == 0) 
+			parms.add(channel, np * sourceGain[channel.index] * sourceGain[channel.index] / channel.variance);
+
+		for(Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) 
+			parms.add(exposure, nf * exposure.relativeWeight * exposure.transmission);
+
+		for(Pixel pixel : pixels) parms.apply(pixel, 0, integration.size());
+
+		integration.usedSourceGain = sourceGain;
+		integration.sourceGeneration++;
+		integration.scan.sourcePoints = countPoints();
+
+		if(CRUSH.debug) for(Pixel pixel : pixels) integration.checkForNaNs(pixel, 0, integration.size());
+	}
+
+	public abstract int countPoints();
+	
+	public abstract double covariantPoints();
+	
+	protected abstract void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain);
+
+	public Range xRange = new Range();
+	public Range yRange = new Range();
+	
+}
+

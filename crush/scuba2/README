@@ -1,0 +1,356 @@
+             *** CRUSH User's Manual for the SCUBA-2 Plugin ***
+
+                              Attila Kovacs
+                        <kovacs[AT]astro.umn.edu>
+
+                        Last updated: 17 Sep 2010
+
+
+
+Table of Contents
+=================
+
+1. License Agreement
+2. Introduction
+3. Installation
+  3.1 Updates
+4. Reading Scans
+  4.1 FITS vs. SDF
+  4.2 '450um' vs '850um' reduction mode
+  4.3 By date and scan number
+  4.4 By file names
+5. Calibration and Pointig
+  5.1 Extinction Correction
+  5.2 Calibration Correction
+  5.3 Pointing Corrections
+
+
+
+
+#####################################################################
+1. License Agreement
+#####################################################################
+
+The SCUBA-2 plugin of CRUSH are proprietary and strictly private. You should
+use only the modules prepared specifically for you. You can obtain your
+personalized plugin from Attila Kovacs <kovacs[AT]astro.umn.edu>. By using
+the software, you agree to
+
+  * not share your copy of the plugin with anyone, even accidentally (e.g. by
+    leaving its files accessible to others), and
+
+  * extend authorship to Attila Kovacs on any publication(s) that result from
+    your use of CRUSH.
+
+After installation, you should read the full license agreement ('license.txt' 
+in the 'scuba2' sub-directory of crush) to familiarize yourself with the 
+restritions imposed by the proprietary license.
+
+
+
+
+#####################################################################
+2. Introduction
+#####################################################################
+
+This document contains information specific to using CRUSH-2 to reduce SCUBA-2
+data. It is assumed that you are already familiar with the contents of the main
+CRUSH-2 README (inside the distribution directory), especially its Section 1
+(Getting Started).
+
+If you run into difficulty understanding the concepts in this document, you
+will probably find it useful to study the main README document a little longer.
+
+
+
+
+#####################################################################
+3. Installation
+#####################################################################
+
+The SCUBA-2 plugin modules are distributed as a gzipped tarball (or zip file).
+Simply uncompress it inside the crush distribution directory. E.g.:
+
+   > cd <crush-distro>
+   > tar xzf crush-2.xx-scuba2-x-<username>.tar.gz
+
+The archive file name contains both the crush version number (e.g. 2.01), for
+which the plugin is prepared, and the serial version of the SCUBA-2 modules 
+(e.g. 1), as well as the username, to which the plugin is locked.
+
+The plugins are intended for use with the designated version of crush (and its
+updates). While it is possible that the same plugin may work with other CRUSH 
+versions also, there is no guarantee to it. If you want to upgrade CRUSH to the 
+latest release, you can request a corresponding update of the plugin from 
+<kovacs[AT]astro.umn.edu>.
+
+To protect the privacy of the plugin, you should install crush only on your
+own machine, or on a personal computer account.
+
+If you install the plugin on a shared computer, you should delete the original 
+archive after installation, or else make it unreadable to other users, to 
+protect its privacy as agreed by the licensing terms. On UNIX systems, you can 
+limit access to the plugin archive by:
+
+   > chmod go-rw crush-2.xx-scuba2-x-<username>.tar.gz
+
+
+
+3.1 Updates
+===========
+
+   The SCUBA-2 modules of CRUSH are very new, and are subject to active
+   development. To make sure, that you have the latest-greatest version, 
+   please check the SCUBA-2 pages of the crush web-page regularly 
+   (under "Instruments"):
+
+      www.submm.caltech.edu/~sharc/crush
+
+   To check what version of the modules you are using, either run:
+  
+      > crush scuba2
+
+   (the plugin version is reported immediately under the CRUSH banner), or
+   refer to the version number in your personal archive (if you still have it).
+   To update to the current version, request new modules from 
+   <kovacs[AT]astro.umn.edu>.
+
+
+
+
+
+#####################################################################
+4. Reading Scans
+#####################################################################
+
+
+4.1 FITS vs. SDF
+================
+
+   The SCUBA-2 data are recorded in the proprietary SDF format of the JCMT.
+   While the SDF files can be accessed with the Starlink software suite, the 
+   format itself is not documented in a way that would allow the creation of an
+   independent tool for them. Therefore, CRUSH can access these data only via
+   the Starlink suite.
+
+   The Starlink suite provides a utility for converting SDF files to FITS,
+   which is the format expected by CRUSH. The 'ndf2fits' tool usually resides 
+   in the 'bin/convert' subdirectory of the Starlink installation directory. 
+
+   You have two choices for handling the conversion. You can either do this
+   manually, or let CRUSH convert the files on-the-fly, as needed. In either
+   case, you will need access to the Starlink software suite. 
+
+   Manual Conversion
+   -----------------
+   If you opt for manual conversion, make sure to use the 'proexts' option
+   of 'ndf2fits'. E.g.:
+
+	> ndf2fits <scan-name>.sdf <scan-name>.fits proexts
+
+   You should name the FITS files exactly like the originals SDF ones, changing
+   only the extension from '.sdf' to '.fits'.
+
+  
+   On-the-Fly Conversion
+   ---------------------
+   The alternative is to let CRUSH handle the conversion automatically, by 
+   calling on 'ndf2fits' internally. If 'ndf2fits' is in your path, you should
+   be set to go. Otherwise, you will have to instruct crush where to find the 
+   'ndf2fits' executable. You can do this by editing 'default.cfg' in the 
+   'scuba2' subdirectory of crush. Change the value of the 'ndf2fits' keyword 
+   to indicate the location of the executable. E.g.:
+
+        ndf2fits /usr/local/starlink/bin/convert/ndf2fits
+
+   If you set this up correctly, CRUSH will manage the conversion of SDF files 
+   automatically.
+
+   
+   Batch Conversion
+   ----------------
+   If you are going to reduce your data set over and over (e.g. to optimize 
+   reduction settings), it makes sense to convert all your files to FITS once,
+   rather than every time you run CRUSH. Thus, CRUSH provides the 'convert'
+   option for batch conversions (assuming that the 'ndf2fits' option is set up
+   correctly -- see above). Scans are listed the usual way, but instead of 
+   reducing them, they are only converted to FITS. You can also specify the
+   path, where you want the converted files to be written using 'outpath'.
+   (Otherwise, 'datapath' will be used if defined). E.g.
+
+	> crush scuba2 -convert -outpath=/data/fits <scans>
+
+   After the conversion, make sure that your reduction scripts have 'datapath' 
+   set to the location of the FITS files. E.g., using the above example:
+
+	> crush scuba2 [...] -datapath=/data/fits [...] <scans>
+
+
+4.2 '450um' vs '850um' reduction mode
+=====================================
+
+   When reducing SCUBA-2 data with CRUSH, you should specify the wavelength, in
+   which you are interested. This way CRUSH will load settings that are
+   appropriate for mapping in that band. You can choose between '450um' or 
+   '850um' reduction modes. E.g., on the command-line:
+
+      > crush scuba2 -450um [...]
+   
+   If you do not define the wavelength, then '850um' reduction will be assumed.
+   (The wavelength does not have to be the first argument, but should precede
+   the first scan number or name in the argument list).
+
+
+4.3 By date and scan number
+===========================
+
+   The preferred way of reading SCUBA-2 data is by 'date' and scan number.
+   The convention of SCUBA-2 is to spread the scan data over several files.
+   Data from each subarray is dumped at some intervals (typically 30s), which 
+   are referred to as subscans. Thus, with two subarrays, the data for a 10 
+   minute scan are typically spread over 40 files.
+
+   (The file names begin with the subarray id, 's4a' for the current single 
+   450um subarray, and 's8d' for the single 850um subarray, then continue with
+   the date ('YYYYMMDD' format), scan number, and finally the subscan number.)
+   
+   Thus, given the location of the data ('datapath' option), the reduction 
+   wavelength ('450um' or '850um'), the date (in 'YYYYMMDD' format) and the 
+   scan number, CRUSH can easily find all files necessary. E.g.:
+
+      > crush scuba2 -450um -datapath=/home/data/scuba2 -date=20100301 36
+
+   The above line will load all usable subscans of scan #36. Some subscans
+   may be designated unusable by CRUSH, either because the subscan contains
+   no coordinate data from the telescope (which often happens to the first and
+   last subscans in a scan), or because the subscan is too short (<5s) for
+   proper processing. These will be dropped from the reduction queue. You can 
+   override the minimum length requirement by changing or commenting the 
+   'subscans.minlength' option in 'scuba2/default.cfg'
+
+   Scan ranges can be specified as usual, e.g.:
+
+      > crush scuba2 -date=20100301 39-42 45-48 -date=20100302 12-15 17
+   
+   
+4.4 By file names
+=================
+
+   The alternative is to specify file names directly. You can use both full
+   pathnames (which can contain wildcards and other shell-expansions) or
+   give exact file names (without wildcards, etc.) relative to 'datapath'. 
+   Locating scans by file names is not recommended in general, since it allows
+   for processing 450um scans in '850um' mode (and vice versa) or even mixing
+   the data from the different wavelengths. On the other hand, you may want
+   to use file-names for locating scans, if:
+	
+	* your scans are named differently from the standard convention, or
+
+	* you want to control which subscans are processed.
+
+   For example:
+	
+      > crush scuba2 -450um /data/scuba2/s4a20100301_00036_0002.sdf
+
+   or, equivalently
+
+      > crush scuba2 -450um -datapath=/data/scuba2 s4a20100301_00036_0002.sdf
+
+   will both process only the 2nd subscan of scan 36 (taken on 2010-03-01) in 
+   '450um' mode.
+
+
+
+#####################################################################
+5. Calibration and Pointing
+#####################################################################	
+
+The default configuration of CRUSH provides approximate blind calibration, 
+expected to be good to 7% rms at 850um, and approximately 23% rms at 450um,
+when using aperture fluxes in apertures large enough to contain the SCUBA-2
+error beams of the emission.
+
+When using peak fluxes, the blind calibration accuracy is expected to be worse
+due to the variations in main-beam efficiency with focus, elevation and
+the surface quality of the JCMT.
+
+To improve on the calibration accuracy, you can set the atmospheric extinction
+(tau) manually, and provide order-of-unity corrections based on observations
+of nearby calibrator sources. 
+
+
+5.1 Extinction Correction
+=========================
+
+   The JCMT records both 225GHz and 186GHz opacities from radiometer 
+   measurements. These are stored in the data files. CRUSH uses the 186GHz 
+   value with an appropriate scaling relation to the SCUBA-2 bands, to obtain a
+   guesstimate of the in-band opacities for the atmospheric extinction 
+   correction. 
+
+   You can also specify your preferred tau value, for every group of scans 
+   (see the main CRUSH README). You can set an in-band zenith opacity the 
+   usual way, for successive scans. E.g.:
+
+      > crush scuba2 [...] -tau=1.21 <scans> [...]
+
+   You can also set your preferred 186GHz or 225GHz tau values (e.g. from daily
+   polynomial fits), e.g.:
+
+      > crush scuba2 [...] -tau.225GHz=0.064 <scans> [...]
+
+   or,
+
+      > crush scuba2 [...] -tau.186GHz=0.058 <scans> [...]
+
+   CRUSH will then use the specified value to calculate an equivalent in-band
+   opacity for the given '450um' or '850um' band.
+
+
+
+5.2 Calibration Correction
+==========================
+
+   Even if the opacity is perfectly determined, there are remaining 
+   uncertainties in the calibration. These are mainly due to the beam-quality 
+   and variations thereof, due to imperfect focusing, gravitational flexing of 
+   the JCMT primary with elevation, or changes in surface quality (e.g. before 
+   and after a holography run). 
+
+   Because the JCMT beams are not perfectly Gaussian (esp. at 450um), the 
+   calibration scaling is also dependent on the type of flux measure used. You
+   will need a different flux scaling when using apertures (of different sizes)
+   or peak fluxes (for point sources). To calibrate your science target 
+   properly you should first determine an order-of-unity calibration correction
+   using the same flux measure (peak flux or integrated flux in the *same* 
+   aperture) on a known calibrator source. You can use 
+
+      > crush scuba2 -point [...]
+
+   to measure both peak fluxes and fluxes in 98% inclusive apertures on compact
+   calibrator sources. You can then determine a appropriate calibration scaling
+   as the ratio of expected flux to observed flux. To multiply your science
+   data with this scaling, use the 'scale' option of crush. E.g.:
+
+      > crush scuba2 [...] -scale=1.23 <scans> [...]
+
+   The blind calibration of CRUSH is based on apertures large enough to capture
+   98% of the integrated source flux of point sources (including the first 
+   error beam), because this measure is much less dependent on beam quality. 
+   Therefore, if you are to use peak fluxes (e.g. for deep field source 
+   extraction) you should pay special attention to derive appropriate 
+   calibration scalings using the same method.
+
+
+
+5.3 Pointing Corrections
+========================
+
+   You can specify incremental pointing corrections as AZ,EL offsets for every
+   group of scans, the usual way using the 'pointing' option. E.g.:
+
+      > crush scuba2 [...] -pointing=-2.3,1.6 <scans> [...]
+
+
+-----------------------------------------------------------------------------
+Copyright (C)2010 Attila Kovacs <kovacs[AT]astro.umn.edu>

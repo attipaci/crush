@@ -1,0 +1,230 @@
+/*******************************************************************************
+ * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * All rights reserved. 
+ * 
+ * This file is part of crush.
+ * 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ * 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ * 
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ ******************************************************************************/
+// Copyright (c) 2009 Attila Kovacs 
+
+package crush.laboca;
+
+import crush.*;
+import crush.apex.*;
+import crush.array.*;
+import nom.tam.fits.*;
+
+import java.io.*;
+import java.util.*;
+
+import util.Unit;
+import util.Util;
+
+
+public class Laboca extends APEXArray<LabocaPixel> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5113244732586496137L;
+	
+	public Laboca() {
+		super("laboca", 320);	
+		resolution = 19.5 * Unit.arcsec;
+		nonDetectorFlags = Channel.FLAG_DEAD | LabocaPixel.FLAG_RESISTOR;
+	}
+	
+	@Override
+	public LabocaPixel getChannelInstance(int backendIndex) { return new LabocaPixel(this, backendIndex); }
+	
+	@Override
+	public void readPar(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {
+		Header header = hdu.getHeader();
+
+		gain = 270.0 * (1<<(int)header.getDoubleValue("FEGAIN"));
+		//System.err.println(" Frontend Gain is " + gain);
+	
+		// LabocaPixel.offset: get BOLDCOFF
+
+		// Needed only for pre Feb2007 Files with integer format.
+		//gain *= 10.0/ ((float[]) row[hdu.findColumn("BEGAIN"])[0] / (1<<15-1);	
+		
+		super.readPar(hdu);
+	}
+	
+	@Override
+	public void addDivisions() {
+		super.addDivisions();
+		
+		try { addDivision(getDivision("boxes", LabocaPixel.class.getField("box"), nonDetectorFlags)); }
+		catch(Exception e) { e.printStackTrace(); }
+		
+		try { addDivision(getDivision("cables", LabocaPixel.class.getField("cable"), Channel.FLAG_DEAD)); }
+		catch(Exception e) { e.printStackTrace(); }
+		
+		try { addDivision(getDivision("amps", LabocaPixel.class.getField("amp"), Channel.FLAG_DEAD)); }
+		catch(Exception e) { e.printStackTrace(); }
+		
+	}
+	
+	@Override
+	public void addModalities() {
+		super.addModalities();
+		
+		try { addModality(new CorrelatedModality("boxes", "B", divisions.get("boxes"), LabocaPixel.class.getField("boxGain"))); }
+		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		
+		try { addModality(new CorrelatedModality("cables", "c", divisions.get("cables"), LabocaPixel.class.getField("cableGain"))); }
+		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		
+		try { addModality(new CorrelatedModality("amps", "a", divisions.get("amps"), LabocaPixel.class.getField("ampGain"))); }
+		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		
+		addModality(new CorrelatedModality("twisting", "t", divisions.get("cables"), TwistingMode.class));
+
+		try { addModality(new Modality<LabocaHe3Response>("temperature", "T", divisions.get("detectors"), LabocaPixel.class.getField("temperatureGain"), LabocaHe3Response.class));	}
+		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		
+		modalities.get("boxes").setGainFlag(LabocaPixel.FLAG_BOX);
+		modalities.get("cables").setGainFlag(LabocaPixel.FLAG_CABLE);
+		modalities.get("amps").setGainFlag(LabocaPixel.FLAG_AMP);
+		
+		((CorrelatedModality) modalities.get("boxes")).setSkipFlags(~(LabocaPixel.FLAG_RESISTOR | Channel.FLAG_SENSITIVITY));
+		((CorrelatedModality) modalities.get("cables")).setSkipFlags(~(LabocaPixel.FLAG_RESISTOR | Channel.FLAG_SENSITIVITY));
+		((CorrelatedModality) modalities.get("amps")).setSkipFlags(~(LabocaPixel.FLAG_RESISTOR | Channel.FLAG_SENSITIVITY));
+	}
+	
+	
+	@Override
+	public void readWiring(String fileName) throws IOException {	
+		System.err.println(" Loading wiring data from " + fileName);
+		fileName = Util.getSystemPath(fileName);
+		
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+		Hashtable<Integer, LabocaPixel> lookup = getChannelLookup();
+		
+		String line = null;
+		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+			StringTokenizer tokens = new StringTokenizer(line);
+		 	LabocaPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
+			pixel.box = Integer.parseInt(tokens.nextToken());
+			pixel.cable = Integer.parseInt(tokens.nextToken());
+			tokens.nextToken(); // amp line
+			pixel.amp = 16 * pixel.box + tokens.nextToken().charAt(0) - 'A';
+			tokens.nextToken(); // cable name
+			pixel.pin = Integer.parseInt(tokens.nextToken()); // cable pin
+			
+			int bol = Integer.parseInt(tokens.nextToken());
+			char state = tokens.nextToken().charAt(0);
+			//boolean hasComment = tokens.hasMoreTokens();
+			
+			if(bol < 0 || state != 'B') pixel.flag(Channel.FLAG_DEAD);
+			if(state == 'R') {
+				pixel.unflag(Channel.FLAG_DEAD);
+				pixel.flag(LabocaPixel.FLAG_RESISTOR);
+				pixel.gain = 0.0;
+				pixel.coupling = 0.0;
+				pixel.boxGain = 0.0;
+			}
+		}	
+		in.close();
+	}
+	
+	public void readTemperatureGains(String fileName) throws IOException {
+		System.err.println(" Loading He3 gains from " + fileName);
+		
+		// Read gains into LabocaPixel -> temperatureGain:
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+		String line;
+		
+		Hashtable<Integer, LabocaPixel> lookup = getChannelLookup();
+		
+		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+			StringTokenizer tokens = new StringTokenizer(line);
+			LabocaPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
+			if(pixel != null) pixel.temperatureGain = Double.parseDouble(tokens.nextToken());
+		}
+		in.close();
+		
+	}
+	
+	
+	public void writeTemperatureGains(String fileName, String header) throws IOException {		
+		PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(fileName)));
+		out.println("# He3 Temperature Gains Data.");
+		out.println("# ");
+		if(header != null) {
+			out.println(header);
+			out.println("# ");
+		}
+		out.println("# BEch\tGain");
+		out.println("#     \t(V/K)");
+		out.println("# ----\t-----");
+		for(LabocaPixel pixel : this) out.println(pixel.dataIndex + "\t" + Util.e6.format(pixel.temperatureGain));
+		
+		out.flush();
+		out.close();
+		System.err.println(" Written He3 gain data to " + fileName + ".");
+		
+	}
+	
+	// Wiring is read when divisions are created...
+	@Override
+	public void loadChannelData() {
+		super.loadChannelData();
+		
+		if(hasOption("he3")) if(!option("he3").equals("calc")) {
+			String fileName = hasOption("he3.gains") ? Util.getSystemPath(option("he3.gains").getValue()) : getDefaultConfigPath() + "he3-gains.dat";
+			
+			try { readTemperatureGains(fileName); }
+			catch(IOException e) {
+				System.err.println(" WARNING! File not found. Skipping temperature correction.");
+				options.purge("he3");
+			}
+		}
+		
+		// Unflag 1MOhm resistors as blinds, since these will be flagged as dead by markBlinds() [and removed by slim()] 
+		// when blind channels are explicitly defined via the 'blind' option.
+		for(LabocaPixel pixel : this) if(pixel.isFlagged(LabocaPixel.FLAG_RESISTOR)) pixel.unflag(Channel.FLAG_BLIND);
+		
+		if(hasOption("noresistors"))
+			for(LabocaPixel pixel : this) if(pixel.isFlagged(LabocaPixel.FLAG_RESISTOR)) pixel.flag(Channel.FLAG_DEAD);
+			
+	}
+	
+
+	@Override
+	public Scan<?, ?> getScanInstance() {
+		return new LabocaScan(this);
+	}
+	
+
+	@Override
+	public void flagInvalidPositions() {
+		for(SimplePixel pixel : this) if(pixel.position.length() > 10.0 * Unit.arcmin) pixel.flag(Channel.FLAG_BLIND);
+	}
+
+	@Override
+	public String getPixelDataHeader() {
+		return super.getPixelDataHeader() + "\tGbox\tGcable\tbox\tcable\tamp";
+	}
+	
+
+}
+
+
+
