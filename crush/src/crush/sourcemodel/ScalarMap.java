@@ -399,13 +399,13 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		// Eposure clip
 		if(hasOption("exposureclip")) {
 			if(verbose) System.err.print("(exposureclip) ");
-			map.exposureClip(option("exposureclip").getDouble());		
+			map.exposureClip(option("exposureclip").getDouble(), 0.95);		
 		}
 
 		// Noise clip
 		if(hasOption("noiseclip")) {
 			if(verbose) System.err.print("(noiseclip) ");
-			map.rmsClip(option("noiseclip").getDouble());		
+			map.rmsClip(option("noiseclip").getDouble(), 0.05);		
 		}
 
 		
