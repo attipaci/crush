@@ -224,14 +224,23 @@ public class AstroMap extends AstroImage {
 	// It's important to completely reset clipped points, otherwise they can be used...
 	// One possibility for future is to raise flag only, then call sanitize()
 	public void rmsClip(double maxRelativeRMS) {
+		rmsClip(maxRelativeRMS, 0.0);
+	}
+	
+	public void rmsClip(double maxRelativeRMS, double refPercentile) {
 		double[][] rms = getRMSImage().data;
-		double maxRMS = maxRelativeRMS * new AstroImage(rms).getMin();
+		double maxRMS = maxRelativeRMS * new AstroImage(rms).select(refPercentile);
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
 			if(rms[i][j] > maxRMS) flag[i][j] = 1;
 	}
+	
 
 	public void exposureClip(double minRelativeExposure) {
-		double minIntTime = minRelativeExposure * new AstroImage(count).getMax();
+		exposureClip(minRelativeExposure, 1.0);
+	}
+	
+	public void exposureClip(double minRelativeExposure, double refPercentile) {
+		double minIntTime = minRelativeExposure * new AstroImage(count).select(refPercentile);
 		directExposureClip(minIntTime);
 	}
 	

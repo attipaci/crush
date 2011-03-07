@@ -52,6 +52,11 @@ public final class ArrayUtil {
 		int n = toIndex - fromIndex;
 		return n % 2 == 0 ? 0.5 * (data[fromIndex + n/2-1] + data[fromIndex + n/2]) : data[fromIndex + (n-1)/2];
 	}
+	
+	public static double select(double[] data, double fraction, int fromIndex, int toIndex) {
+		Arrays.sort(data, fromIndex, toIndex);
+		return data[fromIndex + (int)Math.round(fraction * (toIndex - fromIndex - 1))];
+	}
 
 	public static float median(float[] data) { return median(data, 0, data.length); }
 
@@ -61,6 +66,11 @@ public final class ArrayUtil {
 		return n % 2 == 0 ? 0.5F * (data[fromIndex + n/2-1] + data[fromIndex + n/2]) : data[fromIndex + (n-1)/2];
 	}
 
+	public static float select(float[] data, double fraction, int fromIndex, int toIndex) {
+		Arrays.sort(data, fromIndex, toIndex);
+		return data[fromIndex + (int)Math.floor(fraction * (toIndex - fromIndex - 1))];
+	}
+	
 	public static double median(WeightedPoint[] data) { return median(data, 0, data.length); }
 	
 	public static double median(WeightedPoint[] data, int fromIndex, int toIndex) {

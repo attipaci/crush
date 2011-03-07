@@ -624,6 +624,7 @@
 			Flag (clip) map pixels whose relative time coverage
 			is less than the specified value X. This is helpful for
 			discarding the underexposed noisy edges of the map.
+			@See: 'noiseclip', 'clip'
 
 :: excessload=X		@Instrument: SHARC-2
 			@Expert 

@@ -315,17 +315,31 @@ public class AstroImage implements Cloneable {
 	
 	public double getMin() { 
 		double min=Double.POSITIVE_INFINITY;
-		for(int i=sizeX(); --i >=0; ) for(int j=sizeY(); --j >= 0; ) 
-			if(flag[i][j]==0) if(data[i][j] < min) min = data[i][j];
+		for(int i=sizeX(); --i >=0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) 
+			if(data[i][j] < min) min = data[i][j];
 		return min;
 	}
 
 	
 	public double getMax() {
 		double max=Double.NEGATIVE_INFINITY;
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >=0; ) if(flag[i][j]==0) 
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) 
 				if(data[i][j] > max) max = data[i][j];
 		return max;
+	}
+	
+	public double getMedian() {
+		float[] temp = new float[sizeX() * sizeY()];
+		int n=0;
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) temp[n++] = (float) data[i][j];
+		return ArrayUtil.median(temp, 0, n);
+	}
+	
+	public double select(double fraction) {
+		float[] temp = new float[sizeX() * sizeY()];
+		int n=0;
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) temp[n++] = (float) data[i][j];
+		return ArrayUtil.select(temp, fraction, 0, n);
 	}
 	
 	public Range getRange() {
@@ -335,7 +349,6 @@ public class AstroImage implements Cloneable {
 			range.include(data[i][j]);
 		return range;
 	}
-	
 	
 	public MapIndex indexOfMax() {
 		MapIndex index = new MapIndex();
