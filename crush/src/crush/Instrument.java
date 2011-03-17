@@ -34,14 +34,17 @@ import util.astro.AstroTime;
 import util.astro.CelestialCoordinates;
 import util.astro.EquatorialCoordinates;
 import util.astro.HorizontalCoordinates;
-import util.data.ArrayUtil;
+import util.data.Statistics;
+import util.data.TableEntries;
+import util.text.TableFormatter;
 import crush.sourcemodel.*;
 
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
 
-public abstract class Instrument<ChannelType extends Channel> extends ChannelGroup<ChannelType> {	
+public abstract class Instrument<ChannelType extends Channel> extends ChannelGroup<ChannelType> 
+implements TableEntries {	
 	/**
 	 * 
 	 */
@@ -99,6 +102,8 @@ public abstract class Instrument<ChannelType extends Channel> extends ChannelGro
 	@Override
 	public ChannelGroup<ChannelType> copy() {
 		Instrument<ChannelType> copy = (Instrument<ChannelType>) super.copy();
+		
+		for(Channel channel : copy) channel.instrument = copy;
 		
 		// TODO this needs to be done properly???
 		copy.options = options.copy();
@@ -255,7 +260,7 @@ public abstract class Instrument<ChannelType extends Channel> extends ChannelGro
 	
 	public Scan<?, ?> readScan(String descriptor) throws Exception {
 		Scan<?, ?> scan = getScanInstance();
-		scan.read(descriptor);
+		scan.read(descriptor, true);
 		return scan;
 	}
 	
@@ -762,9 +767,10 @@ public abstract class Instrument<ChannelType extends Channel> extends ChannelGro
 		}
 		if(n == 0) throw new IllegalStateException("DOF?");
 		
-		double medianSW = n > 0 ? ArrayUtil.median(weights, 0, n) : 0.0;	
-		double maxWeight = wRange.max * medianSW;
-		double minWeight = wRange.min * medianSW;	
+		// Use robust mean (with 10% tails) to estimate average weight.
+		double aveSW = n > 0 ? Statistics.robustMean(weights, 0, n, 0.1) : 0.0;	
+		double maxWeight = wRange.max * aveSW;
+		double minWeight = wRange.min * aveSW;	
 		double sumw = 0.0;
 		
 		// Flag out channels with unrealistically small or large source weights
@@ -958,6 +964,26 @@ public abstract class Instrument<ChannelType extends Channel> extends ChannelGro
 			e.printStackTrace();
 			return null; 	
 		}
+	}
+	
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+		
+		if(name.equals("gain")) return Util.defaultFormat(gain, f);
+		else if(name.equals("sampling")) return Util.defaultFormat(samplingInterval / Unit.s, f);
+		else if(name.equals("rate")) return Util.defaultFormat(Unit.s / samplingInterval, f);
+		else if(name.equals("okchannels")) return Integer.toString(mappingChannels);
+		else if(name.equals("channels")) return Integer.toString(size());
+		else if(name.equals("maxchannels")) return Integer.toString(storeChannels);
+		else if(name.equals("mount")) return mount.name();
+		else if(name.equals("resolution")) return Util.defaultFormat(resolution / getDefaultSizeUnit(), f);
+		else if(name.equals("sizeunit")) return getDefaultSizeName();
+		else if(name.equals("ptfilter")) return Util.defaultFormat(getAverageFiltering(), f);
+		else if(name.equals("FWHM")) return Util.defaultFormat(getAverageBeamFWHM() / getDefaultSizeUnit(), f);
+		else if(name.equals("minFWHM")) return Util.defaultFormat(getMinBeamFWHM() / getDefaultSizeUnit(), f);
+		else if(name.equals("maxFWHM")) return Util.defaultFormat(getMaxBeamFWHM() / getDefaultSizeUnit(), f);
+		
+		return "(n/a)";
 	}
 	
 	public final static int GAINS_SIGNED = 0;

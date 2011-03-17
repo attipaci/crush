@@ -117,6 +117,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 				i++;
 			}
 			catch(Exception e) {
+				if(CRUSH.debug) e.printStackTrace();
 				System.err.println("   WARNING! Invalid integration. Dropping #" + (i+1) + ".");
 				remove(i); 
 			}
@@ -209,10 +210,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 	}
 
 	// Read should validate the instrument before instantiating integrations for reading...
-	public abstract void readHeader(String descriptor) throws Exception;
-	
-	// Read should validate the instrument before instantiating integrations for reading...
-	public abstract void read(String descriptor) throws Exception;
+	public abstract void read(String descriptor, boolean readFully) throws Exception;
 	
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
 	// The constructor of Integration thus copies the Scan instrument for private use...
@@ -342,74 +340,96 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 	
 	public double getObservingTime() {
 		double t = 0.0;
-		for(IntegrationType integration : this) t += integration.getFrameCount(~0) * instrument.integrationTime;
+		for(IntegrationType integration : this) t += integration.getFrameCount(~0) * integration.instrument.integrationTime;
 		return t;
 	}
 	
+	public int getFrameCount(int skipFlags) {
+		int n = 0;
+		for(IntegrationType integration : this) n += integration.getFrameCount(skipFlags);
+		return n;
+	}
 	
-	// separators: ' ' \t - =
+	// separators: ' ' \t , =
 	// entries:	name(format)
 	//      format: e.g. d3, f1, e3, t:1 (time with colons, 1 decimal), ad2 (angle with symbols, 2 decimals)
-	public void writeLog() throws IOException {
-		String fileName = option("log").getValue();
-		if(fileName.length() == 0) fileName = CRUSH.workPath + File.separator + instrument.name + ".log";
-		PrintWriter out = new PrintWriter(new FileOutputStream(fileName, true));
+	public void writeLog(Configurator option, String defaultFileName) throws IOException {
+		// Map the optional argument to the 'file' sub-option.
+		option.mapValueTo("file");
 		
-		String format = hasOption("log.format") ? option("log.format").getValue() : "date(YYYY-MM-DD)\tserial\tobject\tobsmins(f1)\tAZ(f1) EL(f1)\tRA(f1) DEC(f1)";
+		String fileName = option.isConfigured("file") ? 
+				Util.getSystemPath(option.get("file").getValue()) : defaultFileName;
 
-		// TODO construct a header for new files...
+		String format = option.isConfigured("format") ? 
+				option.get("format").getValue() : 
+				"date(yyyy-MM-dd)  id\tobject\tobsmins(f1)\tAZd(f1) ELd(f1)\tRAh(f1) DECd(f1)";
 		
-		out.println(TableFormatter.format(this, format));
-		out.close();
+		int conflictPolicy = LogFile.CONFLICT_DEFAULT;
+		if(option.isConfigured("conflict")) {
+			String policy = option.get("conflict").getValue().toLowerCase();
+			if(policy.equals("overwrite")) conflictPolicy = LogFile.CONFLICT_OVERWRITE;
+			else if(policy.equals("version")) conflictPolicy = LogFile.CONFLICT_VERSION;
+		}
+		
+		LogFile log = new LogFile(fileName, format, conflictPolicy);
+		log.add(TableFormatter.format(this, format));
+		
+		System.err.println(" Written log to " + log.getFileName());
 	}
 	
-
-	public void writeObsLog() throws IOException {
-		String fileName = option("obslog").getValue();
-		if(fileName.length() == 0) fileName = CRUSH.workPath + File.separator + instrument.name + ".obs.log";
-		PrintWriter out = new PrintWriter(new FileOutputStream(fileName, true));
-		
-		String format = hasOption("obslog.format") ? option("obslog.format").getValue() : "MJD(d5)\tserial\tobject\tobsmins(f1)\tAZ(f1) EL(f1)\tRA(f1) DEC(f1)";
-
-		// TODO construct a header for new files...
-		
-		out.println(TableFormatter.format(this, format));
-		out.close();
-	}
 	
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 		
 		if(horizontal == null) horizontal = equatorial.toHorizontal(site, LST);
 		
-		if(name.equals("object")) return sourceName;
+		if(name.startsWith("?")) {
+			name = name.substring(1).toLowerCase();
+			if(!hasOption(name)) return "---";
+			else {
+				String value = option(name).getValue();
+				if(value.length() == 0) return "<true>";
+				else return value;				
+			}
+		}
+		else if(name.equals("object")) return sourceName;
 		else if(name.equals("id")) return getID();
 		else if(name.equals("serial")) return Integer.toString(serialNo);
-		else if(name.equals("MJD")) return defaultFormat(MJD, f);
-		else if(name.equals("AZ")) return defaultFormat(horizontal.AZ(), f);
-		else if(name.equals("EL")) return defaultFormat(horizontal.EL(), f);
-		else if(name.equals("RA")) return defaultFormat(equatorial.RA() / Unit.timeAngle, f);
-		else if(name.equals("DEC")) return defaultFormat(equatorial.DEC(), f);
+		else if(name.equals("MJD")) return Util.defaultFormat(MJD, f);
+		else if(name.equals("PA")) return Util.defaultFormat(getPA(), f);
+		else if(name.equals("PAd")) return Util.defaultFormat(getPA() / Unit.deg, f);
+		else if(name.equals("AZ")) return Util.defaultFormat(horizontal.AZ(), f);
+		else if(name.equals("EL")) return Util.defaultFormat(horizontal.EL(), f);
+		else if(name.equals("RA")) return Util.defaultFormat(equatorial.RA() / Unit.timeAngle, f);
+		else if(name.equals("DEC")) return Util.defaultFormat(equatorial.DEC(), f);
+		else if(name.equals("AZd")) return Util.defaultFormat(horizontal.AZ() / Unit.deg, f);
+		else if(name.equals("ELd")) return Util.defaultFormat(horizontal.EL() / Unit.deg, f);
+		else if(name.equals("RAd")) return Util.defaultFormat(equatorial.RA() / Unit.deg, f);
+		else if(name.equals("RAh")) return Util.defaultFormat(equatorial.RA() / Unit.hourAngle, f);
+		else if(name.equals("DECd")) return Util.defaultFormat(equatorial.DEC() / Unit.deg, f);
 		else if(name.equals("epoch")) return equatorial.epoch.toString();
-		else if(name.equals("epochY")) return defaultFormat(equatorial.epoch.getYear(), f);
-		else if(name.equals("LST")) return defaultFormat(LST, f);
+		else if(name.equals("epochY")) return Util.defaultFormat(equatorial.epoch.getYear(), f);
+		else if(name.equals("LST")) return Util.defaultFormat(LST, f);
+		else if(name.equals("LSTh")) return Util.defaultFormat(LST / Unit.hour, f);
 		else if(name.equals("date")) {
 			AstroTime time = new AstroTime();
 			time.setMJD(MJD);
 			return new SimpleDateFormat(formatSpec).format(time.getDate());
 		}
-		else if(name.equals("obstime")) return defaultFormat(getObservingTime() / Unit.sec, f);
-		else if(name.equals("obsmins")) return defaultFormat(getObservingTime() / Unit.min, f);
-		else if(name.equals("obshours")) return defaultFormat(getObservingTime() / Unit.hour, f);
+		else if(name.equals("obstime")) return Util.defaultFormat(getObservingTime() / Unit.sec, f);
+		else if(name.equals("obsmins")) return Util.defaultFormat(getObservingTime() / Unit.min, f);
+		else if(name.equals("obshours")) return Util.defaultFormat(getObservingTime() / Unit.hour, f);
+		else if(name.equals("weight")) return Util.defaultFormat(weight, f);
+		else if(name.equals("frames")) return Integer.toString(getFrameCount(~0)); 
 		else if(name.equals("project")) return project;
 		else if(name.equals("observer")) return observer; 
-		else if(name.equals("descriptor")) return descriptor; 
+		else if(name.equals("descriptor")) return descriptor;
+		else if(name.equals("creator")) return creator;
 		else if(name.equals("integrations")) return Integer.toString(size());
-		return "N/A";
-	}
-	
-	private String defaultFormat(double value, NumberFormat f) {
-		return f == null ? Double.toString(value) : f.format(value);
+		else if(name.equals("generation")) return Integer.toString(getSourceGeneration());
+		else getFirstIntegration().getFormattedEntry(name, formatSpec);
+		
+		return "(n/a)";
 	}
 	
 	public int getSourceGeneration() {
@@ -421,6 +441,14 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 	public void writeProducts() {
 		for(Integration<?,?> integration : this) integration.writeProducts();
 		printPointing();
+		
+		if(hasOption("log")) {
+			try { writeLog(option("log"), CRUSH.workPath + File.separator + instrument.name + ".log"); }
+			catch(IOException e) {
+				System.err.println(" WARNING! Could not write log.");
+				if(CRUSH.debug) e.printStackTrace();
+			}
+		}
 	}
 	
 	public void printPointing() {
@@ -538,9 +566,6 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 	}
 	
 	public String getID() { return Integer.toString(serialNo); }
-	
-	public final static byte CASSEGRAIN = 0;
-	public final static byte LEFT_NASMYTH = 1;
-	public final static byte RIGHT_NASMYTH = 2;
+
 	
 }

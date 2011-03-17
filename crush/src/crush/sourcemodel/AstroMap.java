@@ -38,9 +38,9 @@ import crush.Instrument;
 import crush.Scan;
 
 import util.*;
-import util.data.ArrayUtil;
 import util.data.DataPoint;
 import util.data.FFT;
+import util.data.Statistics;
 import util.data.WeightedPoint;
 
 
@@ -549,7 +549,7 @@ public class AstroMap extends AstroImage {
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
 			point[k++] = new WeightedPoint(data[i][j], weight[i][j]);
 		
-		return ArrayUtil.median(point);
+		return Statistics.median(point);
 	}
 	
 	public void rmsScale(final double scalar) {
@@ -590,7 +590,7 @@ public class AstroMap extends AstroImage {
 		
 		
 		// median(x^2) = 0.454937 * sigma^2 
-		return k > 0 ? 0.454937 / ArrayUtil.median(chi2, 0, k) : Double.NaN;	
+		return k > 0 ? 0.454937 / Statistics.median(chi2, 0, k) : Double.NaN;	
 	}
 
 	protected double getChi2() {

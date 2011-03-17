@@ -215,7 +215,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		if(chopper != null) {
 			// TODO clearly, need to add this at the pipeline level no at the subscan level...
 			instrument.options.process("chopped", "");
-			markChopped();
+			if(isProper) markChopped();
 		}
 	}
 		

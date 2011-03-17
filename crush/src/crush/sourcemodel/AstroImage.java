@@ -36,7 +36,7 @@ import util.astro.EquatorialCoordinates;
 import util.astro.GalacticCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.astro.SuperGalacticCoordinates;
-import util.data.ArrayUtil;
+import util.data.Statistics;
 import util.data.WeightedPoint;
 
 import java.io.*;
@@ -332,14 +332,14 @@ public class AstroImage implements Cloneable {
 		float[] temp = new float[sizeX() * sizeY()];
 		int n=0;
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) temp[n++] = (float) data[i][j];
-		return ArrayUtil.median(temp, 0, n);
+		return Statistics.median(temp, 0, n);
 	}
 	
 	public double select(double fraction) {
 		float[] temp = new float[sizeX() * sizeY()];
 		int n=0;
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) temp[n++] = (float) data[i][j];
-		return ArrayUtil.select(temp, fraction, 0, n);
+		return Statistics.select(temp, fraction, 0, n);
 	}
 	
 	public Range getRange() {
@@ -407,7 +407,7 @@ public class AstroImage implements Cloneable {
 			chi2[k++] = value * value;
 		}
 		// median(x^2) = 0.454937 * sigma^2 
-		return Math.sqrt(ArrayUtil.median(chi2) / 0.454937);	
+		return Math.sqrt(Statistics.median(chi2) / 0.454937);	
 	}
 	
 	public void fluxClip(double level) {

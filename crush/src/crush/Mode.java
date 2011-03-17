@@ -29,6 +29,7 @@ import java.util.Arrays;
 
 import util.Range;
 import util.Util;
+import util.data.Statistics;
 import util.data.WeightedPoint;
 
 public class Mode {
@@ -137,31 +138,16 @@ public class Mode {
 	}
 	
 	public double getAverageGain(float[] gain, int gainFlag) {
-		// Calculate the 5% tails of the gain distribution
-		// on channels that are not flagged outside of gain...
-		double[] point = new double[channels.size()];
+		double[] value = new double[channels.size()];
 		int n = 0;
 		for(int k=channels.size(); --k >= 0; ) if(channels.get(k).isUnflagged(gainFlag)) 
-			point[n++] = Math.abs(gain[k]);
+			value[n++] = Math.pow(gainAveragingOffset + Math.abs(gain[k]), dynamicalCompression);
 		
-		Arrays.sort(point);
-		Range range = new Range();
-		range.min = point[(int) Math.floor(0.05*n)];
-		range.max = point[Math.max(0, (int) Math.ceil(0.95*n) - 1)];
-		
-		// Normalize by the mean absolute gain (w/o the 5% tails)
-		// on channels not flagged outside of gain...
-		double sum = 0.0, sumw = 0.0;
-		for(int k=channels.size(); --k >= 0; ) if(range.contains(Math.abs(gain[k]))) {
-			Channel channel = channels.get(k);
-			if(channel.isUnflagged(~gainFlag)) { 	
-				sum += Math.pow(gainAveragingOffset + Math.abs(gain[k]), dynamicalCompression);
-				// It best to use equal weights, otherwise dead channels will bias gains towards 0
-				sumw += 1.0;
-			}
-		}
-
-		return sumw > 0.0 ? Math.pow(sum / sumw, 1.0/dynamicalCompression) - gainAveragingOffset : 1.0;	
+		// Use a robust mean (with 10% tails) to calculate the average gain...
+		double aveG = Statistics.robustMean(value, 0, n, 0.1);
+		if(Double.isNaN(aveG)) return 1.0;
+ 
+		return Math.pow(aveG, 1.0/dynamicalCompression) - gainAveragingOffset;	
 	}
 	
 	public WeightedPoint[] getGains(Integration<?, ?> integration, boolean isRobust) throws IllegalAccessException {

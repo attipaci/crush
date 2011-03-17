@@ -35,7 +35,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	public int dataIndex;
 	public int flag = 0;
 	
-	public double offset = 0.0;
+	public double offset = 0.0; // At the readout stage! (as of 2.03)
 	public double gain = 1.0;
 	public double coupling = 1.0;
 	public double weight = 1.0;
@@ -50,11 +50,9 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	public float[] filterResponse; // The whitening filter's spectral response...
 	public double directFiltering = 1.0; // The effect of FFT filters on source rel. to noise.
 	
-	public double filterTimeScale = Double.NaN;
+	public double filterTimeScale = Double.POSITIVE_INFINITY;
 	
 	public int spikes = 0;
-	
-	
 	
 	public Channel(Instrument<?> instrument, int dataIndex) {
 		this.instrument = instrument;
@@ -110,6 +108,10 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 		flag = 0;
 	}
 	
+	public double getHardwareGain() {
+		return instrument.gain;
+	}
+	
 	// Write backendIndex plus whatever information....
 	@Override
 	public String toString() {
@@ -153,6 +155,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	public final static int FLAG_SPIKY = 1 << nextSoftwareFlag++;
 	//public final static int FLAG_DISCONTINUITY = 1 << nextSoftwareFlag++;
 	public final static int FLAG_FEATURES = 1 << nextSoftwareFlag++;
+	public final static int FLAG_DAC_RANGE = 1 << nextSoftwareFlag++;
 	public final static int SOFTWARE_FLAGS = ~HARDWARE_FLAGS;
 	
 	

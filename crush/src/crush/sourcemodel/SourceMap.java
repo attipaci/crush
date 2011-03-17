@@ -34,7 +34,7 @@ import util.astro.GalacticCoordinates;
 import util.astro.Gnomonic;
 import util.astro.HorizontalCoordinates;
 import util.astro.SuperGalacticCoordinates;
-import util.data.ArrayUtil;
+import util.data.Statistics;
 
 import java.util.*;
 
@@ -297,7 +297,7 @@ extends SourceModel<InstrumentType, ScanType> {
 			ra[i] = (float) equatorial.RA();
 			dec[i] = (float) equatorial.DEC();
 		}
-		EquatorialCoordinates median = new EquatorialCoordinates(ArrayUtil.median(ra), ArrayUtil.median(dec), CoordinateEpoch.J2000);
+		EquatorialCoordinates median = new EquatorialCoordinates(Statistics.median(ra), Statistics.median(dec), CoordinateEpoch.J2000);
 		for(Scan<?,?> scan : scans) {
 			EquatorialCoordinates equatorial = (EquatorialCoordinates) scan.equatorial.clone();
 			equatorial.precess(CoordinateEpoch.J2000);

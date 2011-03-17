@@ -36,11 +36,11 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.02-1
+ * @version 2.03-b1
  * 
  */
 public class CRUSH extends Configurator {
-	public static String version = "2.02-1";
+	public static String version = "2.03-b1";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -157,27 +157,26 @@ public class CRUSH extends Configurator {
 		}
 		
 		// Keep only the non-specific global options here...
-		for(Scan<?,?> scan : scans) instrument.options.intersect(scan.instrument.options); 
-		
-		if(containsKey("outpath")) workPath = Util.getSystemPath(get("outpath").getValue()); 
-		
+		for(Scan<?,?> scan : scans) instrument.options.intersect(scan.instrument.options); 		
 		for(int i=0; i<scans.size(); i++) if(scans.get(i).isEmpty()) scans.remove(i--);
 		
 		//Collections.sort(scans);
 		
-		refreshUseCPUs();
+		update();
 		System.err.println("Will use " + Math.min(scans.size(), maxThreads) + " CPU core(s).");
 	}
 	
-	public void refreshUseCPUs() {
+	public void update() {
 		maxThreads = Runtime.getRuntime().availableProcessors();
 		if(isConfigured("reservecpus")) maxThreads -= get("reservecpus").getInt();
 		maxThreads = Math.max(maxThreads, 1);
+		
+		if(containsKey("outpath")) workPath = Util.getSystemPath(get("outpath").getValue()); 
 	}
 
 	public void read(String scanID) {
 		StringTokenizer list = new StringTokenizer(scanID, "; \t");
-		refreshUseCPUs();
+		update();
 		
 		if(list.countTokens() > 1) {
 			while(list.hasMoreTokens()) read(list.nextToken());
@@ -186,11 +185,11 @@ public class CRUSH extends Configurator {
 			try {
 				Scan<?,?> scan = (Scan<?,?>) instrument.getScanInstance();
 				if(isConfigured("obslog")) {
-					scan.readHeader(scanID);
-					scan.writeObsLog();
+					scan.read(scanID, false);
+					scan.writeLog(get("obslog"),  workPath + File.separator + instrument.name + ".obs.log");
 				}
 				else { 
-					scan.read(scanID);
+					scan.read(scanID, true);
 					if(scan.size() == 0) System.err.println("WARNING! Scan " + scan.getID() + " contains no data. Skipping.");
 					else if(isConfigured("subscans.split")) scans.addAll(scan.split());
 					else scans.add(scan);	
@@ -225,12 +224,20 @@ public class CRUSH extends Configurator {
 					}
 					catch(Exception parseError) {
 						System.err.println(" ERROR! " + parseError.getMessage()); 
+						if(debug) e.printStackTrace();
 					}
 				}
-				else System.err.println("\n ERROR! " + e.getMessage() + "\n");
+				else {
+					System.err.println("\n ERROR! " + e.getMessage() + "\n");
+					if(debug) e.printStackTrace();
+				}
 			}
-			catch(IOException e) { System.err.println(" ERROR! " + e.getMessage()); }
+			catch(IOException e) { 
+				System.err.println(" ERROR! " + e.getMessage());
+				if(debug) e.printStackTrace();
+			}
 			catch(Exception e) { e.printStackTrace(); }
+
 		}	
 	}
 

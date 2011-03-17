@@ -55,7 +55,7 @@ public abstract class MonoArray<ChannelType extends SimplePixel> extends
 	public void validate() {
 		if(hasOption("beam")) resolution = option("beam").getDouble() * getDefaultSizeUnit();
 		super.validate();
-		for(SimplePixel pixel : this) pixel.instrument = this;
+		//for(SimplePixel pixel : this) pixel.instrument = this;
 	}
 	
 	@Override

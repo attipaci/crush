@@ -65,7 +65,6 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		// Tau is set here...
 		super.validate();	
 		
-	
 		boolean directTau = false;
 		if(hasOption("tau")) directTau = option("tau").equals("direct"); 
 		
@@ -365,24 +364,6 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 			}
 		}
 	}
-
-	
-	@Override
-	public synchronized void detectorStage() {
-		if(isDetectorStage()) return;
-		for(Frame exposure : this) if(exposure != null) for(Sharc2Pixel pixel : instrument) 
-			exposure.data[pixel.index] /= instrument.rowGain[pixel.row];
-		isDetectorStage = true;
-	}
-
-	@Override
-	public synchronized void readoutStage() {
-		if(!isDetectorStage()) return;
-		for(Frame exposure : this) if(exposure != null) for(Sharc2Pixel pixel : instrument) 
-			exposure.data[pixel.index] *= instrument.rowGain[pixel.row];
-		isDetectorStage = false;
-	}
-	
 
 	public double getMaiTau(String id) throws IOException {
 		// Return immediately if ID does not match 225GHz or 350um, which are the only values in

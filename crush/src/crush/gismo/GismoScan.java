@@ -63,17 +63,10 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	}
 
 	@Override
-	public void read(String scanDescriptor) throws HeaderCardException, FitsException , FileNotFoundException{
-		read(getFits(scanDescriptor));
+	public void read(String scanDescriptor, boolean readFully) throws HeaderCardException, FitsException , FileNotFoundException{
+		read(getFits(scanDescriptor), readFully);
 	}
-	
-	@Override
-	public void readHeader(String scanDescriptor) throws HeaderCardException, FitsException, IOException {
-		Fits fits = getFits(scanDescriptor);
-		readHeader(fits.getHDU(0), (BinaryTableHDU) fits.getHDU(1));
-		try { fits.getStream().close(); }
-		catch(IOException e) {}
-	}
+
 	
 	@Override
 	public void validate() {
@@ -143,14 +136,18 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		return new Fits(getFile(scanDescriptor), isCompressed);
 	}
 	
-	protected void read(Fits fits) throws IllegalStateException, HeaderCardException, FitsException {
-		
+	protected void read(Fits fits, boolean readFully) throws IllegalStateException, HeaderCardException, FitsException {
 		// Read in entire FITS file
 		BasicHDU[] HDU = fits.read();
 
-		readHeader(HDU[0], (BinaryTableHDU) HDU[1]);
+		parseScanPrimaryHDU(HDU[0]);
+		instrument.parseScanPrimaryHDU(HDU[1]);
+		instrument.parseHardwareHDU((BinaryTableHDU) HDU[1]);
+		instrument.validate(MJD);	
+		clear();
 		
 		GismoIntegration integration = new GismoIntegration(this);
+		integration.isProper = readFully;
 		integration.read((BinaryTableHDU) HDU[2]);
 		
 		try { fits.getStream().close(); }
@@ -164,13 +161,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		validate();
 	}
 	
-	protected void readHeader(BasicHDU mainHDU, BinaryTableHDU instrumentHDU) throws IllegalStateException, HeaderCardException, FitsException {
-		parseScanPrimaryHDU(mainHDU);
-		instrument.parseScanPrimaryHDU(mainHDU);
-		instrument.parseHardwareHDU(instrumentHDU);
-		instrument.validate(MJD);	
-		clear();
-	}
+
 	
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();

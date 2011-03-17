@@ -59,8 +59,9 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 		
 		super.validate();
 		
-		getWavePlateFrequency();
+		if(!isProper) return;
 		
+		getWavePlateFrequency();
 		prepareFilter();
 		
 	}
