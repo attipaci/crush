@@ -928,9 +928,56 @@
 			in crush-1.xx and minicrush.
 			@See: 'jansky'
 
-:: log		
+:: log			@Advanced
+			@Since: 2.03
+			Log the scans after the reduction. (Similar logging
+			is available without reducing at all via the 'obslog'
+			key). You can control what quantities are logged and
+			in what format via the 'log.format' key. Please refer
+			to the README for details on how the logging works and
+			what you many log and how.
+			@See: 'obslog', 'log.file', 'log.format', 
+			      'log.conflict'
 
-:: log.format
+:: log.conflict=<value>		@Expert
+				@Since:2.03	
+			Since log files are locked to their format, a changing
+			for format without specifying a new log file will 
+			cause a conflict. Use this key to determine how such
+			conflicts are resolved. The following values are
+			permitted:
+
+			   overwrite	Delete the previous log file, and 
+					create a new one with the same name
+					using the new format.
+
+			   version	Try find an alternative version of the
+					log file (with .1, .2 ... extension
+					attached to the file name) in the new
+					format, or create a new such version.
+			
+			The default behaviour is to assume versioning, in order
+			to preserve prior logs.
+			@See: 'log.file'
+
+:: log.file=<path>	@Advanced
+			@Since:2.03
+			Set the file to which reductions will be logged. You
+			can use the usual path specifications of CRUSH, 
+			including shorthands (such as '~') and environment
+			variables (such as {$HOME}). The actual log file used
+			may be a sub-version of the specified file (with
+			.1, .2 ... extension added) if the conflict policy
+			set by 'log.conflict' is to use versioning.
+			@See: 'log', 'log.format', 'log.conflict'
+
+:: log.format=		@Expert
+			@Since: 2.03
+			Specify the format of the log file. You can control 
+			what quantities are logged and how they should appear.
+			Please refer to the README for more details on the
+			available options
+			@See: 'log', 'log.file', 'log.format'
 
 :: maitau.fallback=<type>	@Instrument: SHARC-2
 				@Advanced
@@ -1111,9 +1158,38 @@
 			object name is case-sensitive!
 			@See: 'datapath', 'date'
 
-:: obslog
+:: obslog		@Advanced
+			@Since: 2.03
+			Log the scans immediately after reading, and without
+			reducing them at all. (Similar logging is available 
+			post reduction via the 'log' key). Please refer to the 
+			README for details on how the logging works and what 
+			you may log and how.
+			@See: 'log', 'obslog.file', 'obslog.format', 
+			      'obslog.conflict'
 
-:: obslog.format
+:: obslog.conflict=<value>	@Expert
+				@Since:2.03	
+			Since log files are locked to their format, a changing
+			for format without specifying a new log file will 
+			cause a conflict. Use this key to determine how such
+			conflicts are resolved. Please refer to 'log.conflict'
+			for details.
+			@See: 'log.conflict', 'obslog.file'
+
+:: obslog.file=<path>	@Advanced
+			@Since:2.03
+			Set the file to which scans will be logged. Refer to
+			'log.file' for details.
+			@See: 'log.file', 'obslog.format', 'obslog.conflict'
+
+:: obslog.format=	@Expert
+			@Since: 2.03
+			Specify the format of the obslog file. You can control 
+			what quantities are logged and how they should appear.
+			Please refer to the README for more details on the
+			available options
+			@See: 'obslog', 'obslog.file', 'obslog.format'
 
 :: offsets		@Advanced
 			Remove the residual DC offsets from the bolometer 
@@ -1320,7 +1396,23 @@
 			(Default)
 			@See: 'system', 'altaz'
 
-:: rcenter=dX,dY	@Instrument: SHARC-2
+:: range=min:max	@Expert
+			@Since: 2.03
+			Set the acceptable range of data (in the units it is
+			stored). Values outside of thi range will be flagged,
+			and pixels that are consistent offenders will be
+			removed from the reduction (as set by 
+			'range.flagfraction').
+			@See: 'dataunit', 'range.flagfraction'	
+
+:: range.flagfraction=X		@Expert
+				@Since: 2.03
+			Specify the maximum fraction of samples for which a
+			channel can be out of range (as set by 'range') before
+			that channel is flagged and removed from the reduction.
+			@See: 'range'
+
+:: rcenter=dX,dY	@Instrument: SHARC-2	
 			@Expert
 			Specify a rotation center, in the coordinate system of
 			the array (AZ,EL or Nasmyth coordinates). Works 

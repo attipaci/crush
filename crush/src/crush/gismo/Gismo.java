@@ -57,8 +57,6 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	public Gismo() {
 		super("gismo", pixels);
 		resolution = 16.7 * Unit.arcsec;
-		ensureCapacity(pixels);
-		for(int c=0; c<pixels; c++) add(new GismoPixel(this, c));
 		
 		// TODO calculate this?
 		integrationTime = samplingInterval = 0.1 * Unit.sec;
@@ -238,6 +236,10 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	
 	protected void parseHardwareHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
 		Object[] row = hdu.getRow(0);
+			
+		if(!isEmpty()) clear();
+		ensureCapacity(pixels);
+		for(int c=0; c<pixels; c++) add(new GismoPixel(this, c));
 		
 		int iMask = hdu.findColumn("PIXMASK");
 		

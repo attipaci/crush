@@ -32,7 +32,7 @@ import util.*;
 import util.astro.CelestialProjector;
 import util.astro.EclipticCoordinates;
 import util.astro.GalacticCoordinates;
-import util.data.ArrayUtil;
+import util.data.Statistics;
 
 import nom.tam.fits.*;
 
@@ -578,7 +578,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 			data[n++] = (float) (sumIM[channel.index] / sumM2[channel.index]);
 	
 		if(n > 0) {
-			double ave = ArrayUtil.median(data, 0, n);
+			double ave = Statistics.median(data, 0, n);
 			for(final Pixel pixel : pixels) for(final Channel channel : pixel) if(sumM2[channel.index] > 0.0)
 				channel.coupling *= sumIM[channel.index] / sumM2[channel.index] / ave;
 		}

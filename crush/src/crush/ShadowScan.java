@@ -40,13 +40,9 @@ public class ShadowScan extends Scan<Instrument<?>, Integration<Instrument<?>,?>
 	}
 
 	@Override
-	public void read(String descriptor) throws Exception {
+	public void read(String descriptor, boolean readFully) throws Exception {
 		throw new UnsupportedOperationException("Shadow scans cannot be read.");
 	}
 
-	@Override
-	public void readHeader(String descriptor) throws Exception {
-		throw new UnsupportedOperationException("Shadow scans cannot be read.");
-	}
 
 }

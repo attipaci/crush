@@ -30,9 +30,8 @@ import util.data.TableEntries;
 
 public final class TableFormatter {
 
-	
 	public static String format(TableEntries entries, String format) {
-		return format(entries, format, " \t=");
+		return format(entries, format, " \t,=");
 	}
 	
 	public static String format(TableEntries entries, String format, String separators) {
@@ -95,6 +94,32 @@ public final class TableFormatter {
 				}
 			}
 			return af;
+		case 'h' : 
+			HourAngleFormat hf = new HourAngleFormat();
+			sepSpec = spec.charAt(1);
+			switch(sepSpec) {
+			case ':' : hf.colons(); break;
+			case 's' : hf.symbols(); break;
+			case 'l' : hf.letters(); break;
+			}
+			hf.setDecimals(Integer.parseInt(spec.substring(2, 3)));
+			if(spec.length() > 3) {
+				char levelSpec = spec.charAt(3);
+				switch(levelSpec) {
+				case 'd' : hf.topLevel = HourAngleFormat.DEGREE;
+				case 'm' : hf.topLevel = HourAngleFormat.MINUTE;
+				case 's' : hf.topLevel = HourAngleFormat.SECOND;
+				}
+			}
+			if(spec.length() > 4) {
+				char levelSpec = spec.charAt(4);
+				switch(levelSpec) {
+				case 'd' : hf.bottomLevel = HourAngleFormat.DEGREE;
+				case 'm' : hf.bottomLevel = HourAngleFormat.MINUTE;
+				case 's' : hf.bottomLevel = HourAngleFormat.SECOND;
+				}
+			}
+			return hf;
 		case 't' : 
 			TimeFormat tf = new TimeFormat();
 			sepSpec = spec.charAt(1);

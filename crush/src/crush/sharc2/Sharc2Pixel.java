@@ -59,6 +59,11 @@ public class Sharc2Pixel extends SimplePixel {
 		return copy;		
 	}
 	
+	@Override
+	public double getHardwareGain() {
+		return ((Sharc2) instrument).rowGain[row];
+	}
+	
 	public void calcPosition() {
 		// ALt/Az maps show this to be correct...
 		position = getPosition(size, row, col);

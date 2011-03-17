@@ -77,22 +77,14 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		get(0).onSourceFlag = 0;
 	}
 	
-	@Override
-	public void read(String descriptor) throws Exception {
-		read(descriptor, false);
-	}
-	
-	@Override
-	public void readHeader(String descriptor) throws Exception {
-		read(descriptor, true);
-	}
 	
 	public boolean readMonitor() { return false; }
 	
-	public void read(String descriptor, boolean headerOnly) throws Exception {
+	@Override
+	public void read(String descriptor, boolean readFully) throws Exception {
 		String project = hasOption("project") ? option("project").getValue() : null;
 		
-		try { read(project, descriptor, headerOnly); }
+		try { read(project, descriptor, readFully); }
 		catch(FileNotFoundException e) {
 			if(hasOption("debug")) e.printStackTrace();
 			
@@ -105,7 +97,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 			throw new FileNotFoundException(message);		
 		}
 		
-		if(!headerOnly) {
+		if(readFully) {
 			if(chopper == null) mergeSubscans();
 			validate();
 		}
@@ -158,7 +150,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	}
 	
 
-	public void read(String projectID, String spec, boolean headerOnly) throws IOException, FitsException, HeaderCardException {		
+	public void read(String projectID, String spec, boolean readFully) throws IOException, FitsException, HeaderCardException {		
 		String name = getFileName(getDataPath(), spec, projectID);	
 	
 		File file = new File(name);
@@ -170,29 +162,33 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 		if(file.isDirectory()) {
 			System.err.println(" From directory '" + name + "'.");
-			try { readScanDirectory(name, "", headerOnly); }
+			try { readScanDirectory(name, "", readFully); }
 			catch(Exception e) {
 				if(hasOption("debug")) e.printStackTrace();
-				try { readScanDirectory(name, ".gz", headerOnly); }
+				try { readScanDirectory(name, ".gz", readFully); }
 				catch(Exception e2) { 
 					if(hasOption("debug")) e.printStackTrace();
-					readScanDirectory(name, ".Z", headerOnly); 
+					readScanDirectory(name, ".Z", readFully); 
 				}
 			}
 		}
 		else {
 			System.err.println(" From file '" + name + "'.");
-			readScan(name, headerOnly);
+			readScan(name, readFully);
 		}
 	}
 	
 	
 	// TODO Currently only the first FEBE combination is read from the data...
-	public void readScanDirectory(String dir, String ext, boolean headerOnly) throws IOException, FitsException, HeaderCardException {	
+	public void readScanDirectory(String dir, String ext, boolean readFully) throws IOException, FitsException, HeaderCardException {	
 		ext = ".fits" + ext;
 		dir += File.separator;
 	
-		int subscans = readHeader(getHDU(dir + "SCAN" + ext), getHDU(dir + getFEBECombination() + "-FEBEPAR" + ext));
+		int subscans = readScanInfo(getHDU(dir + "SCAN" + ext));
+		instrument.readPar(getHDU(dir + getFEBECombination() + "-FEBEPAR" + ext));
+		instrument.validate(MJD);
+		clear();
+		
 		closeStreams();
 		
 		for(int i=0; i<subscans; i++) {
@@ -201,13 +197,12 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 
 				System.err.println(" Integration {" + (i+1) + "}:");
 				subscan.integrationNo = i;
+				subscan.isProper = readFully;
 				
-				if(!headerOnly) {
-					subscan.readDataPar(getHDU(dir + (i+1) + File.separator + getFEBECombination() + "-DATAPAR" + ext));
-					subscan.readData(getHDU(dir + (i+1) + File.separator + getFEBECombination() + "-ARRAYDATA-1" + ext));
-					if(readMonitor()) subscan.readMonitor(getHDU(dir + (i+1) + File.separator + "MONITOR" + ext));
-					closeStreams();
-				}
+				subscan.readDataPar(getHDU(dir + (i+1) + File.separator + getFEBECombination() + "-DATAPAR" + ext));
+				subscan.readData(getHDU(dir + (i+1) + File.separator + getFEBECombination() + "-ARRAYDATA-1" + ext));
+				if(readMonitor()) subscan.readMonitor(getHDU(dir + (i+1) + File.separator + "MONITOR" + ext));
+				closeStreams();
 				
 				add(subscan);
 			}
@@ -227,7 +222,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		openFits.clear();
 	}
 	
-	public void readScan(String fileName, boolean headerOnly) throws IOException, FitsException, HeaderCardException {	
+	public void readScan(String fileName, boolean readFully) throws IOException, FitsException, HeaderCardException {	
 		File file = new File(fileName);
 		if(!file.exists()) throw new FileNotFoundException("Cannot find data file.");
 		
@@ -235,18 +230,22 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		BasicHDU[] hdu = fits.read();
 		
 		// TODO Pick scan and instrument hdu's by name
-		int subscans = readHeader((BinaryTableHDU) hdu[1], (BinaryTableHDU) hdu[2]);
+		int subscans = readScanInfo((BinaryTableHDU) hdu[1]);
+		instrument.readPar((BinaryTableHDU) hdu[2]);
+		instrument.validate(MJD);
+		clear();
 		
 		int k=3;
 		for(int i=0; i<subscans; i++) {
 			try {
 				SubscanType subscan = getIntegrationInstance();
 				subscan.integrationNo = i;
+				subscan.isProper = readFully;
 				
 				System.err.println(" Integration {" + (i+1) + "}:");
 				
 				// HDUs for each integration can come in any order, so check EXTNAME...
-				if(!headerOnly) for(int m=0; m<3; m++, k++) {
+				for(int m=0; m<3; m++, k++) {
 					BinaryTableHDU table = (BinaryTableHDU) hdu[k];
 					String extName = table.getHeader().getStringValue("EXTNAME");
 					
@@ -267,14 +266,6 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 	}
 	
-	public int readHeader(BinaryTableHDU scanHDU, BinaryTableHDU instrumentHDU) throws IOException, FitsException, HeaderCardException {
-		int subscans = readScanInfo(scanHDU);
-		instrument.readPar(instrumentHDU);
-		instrument.validate(MJD);
-		clear();
-		return subscans;
-	}
-
 	
 	public BinaryTableHDU getHDU(String fileName) throws IOException, FitsException, HeaderCardException {
 		File file = new File(fileName);

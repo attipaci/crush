@@ -1,13 +1,9 @@
 >> check how decorrelating seems to 'unflag' weighting/spike flags...
 >> Smoothing in deep does not preserve point source flux...
 
-!	-- Flag by data (DAC ranges) (channel.offset)
+	-- Better chop on-source detection (phase.onsourcechannel?)
 	-- main image header edits by instrument...
-	-- logging support
-	-- Better gain normalization, average weight
-	-- phases.filtering
-	-- Do not add pixels to instruments on initialization.
-	   Add these only when reading scans!
+?	-- phases.filtering
 	-- Scan horizontal coordinates only for GroundBased 
 	   (getHorizontal(), setHorizontal(coords))
 	-- Generic FFT filtering with response
@@ -16,7 +12,7 @@
 		filter(response)
 	-- highpass filtering to hp signals too...
 
-	-- Generic FITS reading:
+	-- Generic FITS image reading:
 	    OK non-square pixels
 	    * multi-dimensional images (plane=n1[,n2...])
 	      (or 0,[0...] as default)
@@ -27,7 +23,6 @@
 2.03+	-- Better map units (baseUnit, isBeamNormalized?)
 	-- source.whiten?
 	-- check double filtering
-2.03	-- sort out main image header edits by instrument...
 	-- 'aperture' for aperture conversion/scaling
 	-- channel.dataIndex --> channel.getID()?
 	-- private Scan.serialNo (use getID())

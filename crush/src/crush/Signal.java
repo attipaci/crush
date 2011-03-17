@@ -25,7 +25,7 @@
 package crush;
 
 import util.Util;
-import util.data.ArrayUtil;
+import util.data.Statistics;
 import util.data.WeightedPoint;
 
 import java.io.*;
@@ -145,7 +145,7 @@ public class Signal implements Cloneable {
 	public WeightedPoint getMedian() {
 		float[] temp = new float[value.length];
 		for(int t=0; t<value.length; t++) if(!Float.isNaN(value[t])) temp[t] = value[t];
-		return new WeightedPoint(ArrayUtil.median(temp), Double.POSITIVE_INFINITY);
+		return new WeightedPoint(Statistics.median(temp), Double.POSITIVE_INFINITY);
 	}
 	
 	public WeightedPoint getMean() {

@@ -553,6 +553,9 @@ public final class Util {
 		return value == null ? "n/a" : value;
 	}
 	
+	public static String defaultFormat(double value, NumberFormat f) {
+		return f == null ? Double.toString(value) : f.format(value);
+	}
 	
 	public static double sinc(double x) { return x == 0.0 ? 1.0 : Math.sin(x) / x; } 
 	

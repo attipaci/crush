@@ -53,6 +53,8 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 	public void validate() {	
 		super.validate();
 		
+		if(!isProper) return;
+		
 		if(hasOption("he3")) {
 			reindex();
 			

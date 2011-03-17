@@ -1,0 +1,986 @@
+
+2.03-b1
+	
+	Overview
+	=====================================================================
+	This is a beta release of the next CRUSH version (2.03).
+	The main new feature of this version is the powerful custom log
+	capability (read more about it in Section 2.7 of the README), and the
+	ability to detect and flag channels at or near their saturation values.
+	It also comes with updated photometry configuration for LABOCA (based
+	on the patches released for the previous version).
+	=====================================================================
+
+	[NEW] Introducing a powerful custom logging of scans (and reductions)
+	via the 'log' and 'obslog' keys, and their various sub options. You
+	can specify what quantities are logged, and how they are formatted.
+	Please have a look at the new Section 2.7 of the README for a detailed
+	explanation of the logging capability. Over time, more quantities will	
+	be made available for these logs, so keep an eye out for changes and
+	additions.
+
+	[NEW] Pixels and data, which are at, or close to, the limits of the 
+	readout (DAC) range are now identified and flagged. You can use the 
+	'range' keyword to specify the range of acceptable values, and 
+	'range.flagfraction' to set the maximum fraction of affected samples 
+	before the pixel is discarded from the reduction. It is an expert-level
+	setting. You probably do not need to play with this option unless you 
+	really know what you are doing... Note, that the range is always 
+	specified in the units of the raw data as it is stored in the data 
+	files (see 'dataunit').
+
+	[NEW] Introducing logging capability via the 'log' key. When specified
+	an entry is written to the reduction log (argument can specify log file
+	name in the usual way) in the format specified by 'log.format'. The 
+	format specification should contain a list of field specifications and
+	separators, which can be white spaces (e.g. ' ', '\t') or commas ','.
+	The field specifications can specify a number formating option in 
+	brackets. E.g. the default log format is:
+
+	  date(yyyy-MM-dd) serial\tobject\tobsmins(f1)\tAZ(f1) EL(f1)
+	  \tRA(f1) DEC(f1)
+
+	For more detail on log formatting, please refer to the corresponding
+	section of the README. In time more and more quantities may be logged
+	Keep checking the README for updates.
+
+	[FIX] Drifts removal updates filter timescales to the shorter of the
+	previous filter time scale and the new filter time scale. This is the
+	failsafe behaviour, even though theconfigurations were set up such that
+	there should be no difference in behaviour as a result of this change.
+
+	[FIX] Slight issue with copying Instrument classes. If the instrument
+	was already populated with channels, then the channel copies kept 
+	carrying their original Instrument object as their parent instead of
+	its copy. Luckily the parental references were rarely used and in
+	non-critical context only. This prevented the issue from being a much
+	more serious bug...
+
+	[TWEAK] Average gains and weights (for gain an weight flagging) now
+	use robust means, with the 10% tails ignored.
+
+	[TWEAK] {APEX} Chopped photometry reductions to use 'neighbours'
+	method to despike, even in 'faint' and 'deep' modes.
+
+	[TWEAK] {APEX} Photometry reductions to use more up-to-date pixel 
+	values. The pixel data table should be updated more regularly...
+
+	[TWEAK] {APEX} Tweaked photometry configurations for better precision.
+	These tweaks are used for the only photometry summary on the CRUSH
+	pages.
+
+	[CODE] Instruments are instantiated without adding channels. They
+	are populated with channels only when reading the data.
+
+	[CODE] Pixel offsets are now interpreted at the readout stage.
+
+	[CODE] Overhauled scaling data to and from detector stage. 
+
+	[CODE] Statistics functionality moved to Statistics class.
+
+	[CLEANUP] Fixed Debian package permissions providing global read access
+	to all files of crush.
+
+
+2.02-1 (7-Mar-2011)
+
+	Overview
+        =====================================================================
+	It is a significant update of CRUSH-2, bringing a new APEX photometry
+	reduction mode (for chopped photometry), tau conversions for all
+	instruments, and other new features. It also fixes a range of smaller
+	issues from the prior versions, offers some tweaks, some code 
+	restructuring, and up-to-date configuration files for LABOCA and 
+	SABOCA.
+	=====================================================================
+
+	[NEW] Preliminary support for APEX chopped photometry reductions. 
+
+	[NEW] Added 'sources' key, allowing to specify a catalog of test 
+	sources, which are inserted into the data. For an example catalog file,
+	see 'example.mask' inside the crush distribution directory. By default 
+	'source.fixedgains' is also set together with the 'sources' option to 
+	assure that test sources are extracted with the same pixel gains as the
+	ones used for the insertion.
+
+	[NEW] The new option 'correlated.<?>.phases' allows the decorrelating 
+	of chopper phases together with the usual decorrelation on the high-
+	frequency samples. It is not recommended that you change the default 
+	settings for LABOCA (and SABOCA) unless you are really sure what you 
+	are doing.
+
+	[NEW] The new option 'correlated.<?>.nofield' allows the decoupling
+	of correlated noise gains from the field values stored under each 
+	channel. The field values are read and written via the 'pixeldata'
+	option. The option is meant to provide more tweaking ability for true 
+	experts.
+
+	[NEW] Dataset validation for APEX photometry scans. The validation
+	discards all scans from the data set which are not compatible with the
+	photometry of the first scan. Eventually, the validation will check
+	for other types of inconsitencies (e.g. different filter bands,
+	focus and skydip scans etc.)
+
+	[NEW] Common default configuration for APEX instruments is moved under 
+	the new 'apex' subdirectory.
+
+	[NEW] Tau scaling relations are now extended to all instruments
+	not only for SHARC2. Normally, a set of useful relations should be 
+	defined for the instrument by default. Please contact Attila if you 
+	would want to add a new relation into the default configuration of the 
+	distribution. Once the scaling relations are established, you can set 
+	values with them. E.g., to specify opacities for GISMO using a PWV 
+	value of 0.5 mm, you would write (this time on the command line):
+		
+		> crush gismo [...] -tau.pwv=0.5 -tau=pwv [...]
+
+	The first option ('tau.pwv') specifies the PWV value, while the 
+	second option ('tau') instructs to use the PWV for determining the
+	appropriate GISMO in-band opacity. The following relations
+	are defined as defaults:
+
+		SCUBA-2: '186GHz', '225GHz', 'PWV'
+		SHARC-2: '225GHz', '350um', 'PWV', 'direct'
+		GISMO:	 '225GHz', 'PWV'
+		LABOCA:	 'PWV'
+		SABOCA:  'PWV'
+
+	The SHARC-2 'direct' value is not really a scaling relation, rather
+	it is a calibrated method to convert total-power DC offsets into 
+	in-band line-of-sight opacities when operating at 350um.
+	A PWV scaling relation is included in the configurations of LABOCA
+	and SABOCA.	
+
+	[CHANGE] 'exposureclip' and 'noiseclip' now specify clipping values
+	relative to the median exppsure/rms of the map, rather than the max/min
+	values used before. This should make it more robust when a small part
+	of the map is overexposed, having caused NaN images.
+
+	[CHANGE] Decorrelation time constants (controlled by the options
+	'correlated.<?>.resolution') are now rounded to the nearest power of
+	2 frames to avoid awkward boundaries, esp. in relation with the
+	1/f 'drifts' filtering.
+
+	[CHANGE] Repackaged utility classes for better organization. This does
+	not affect the functionality of the bundled code, but will break prior
+	versions of plugins (e.g. for SCUBA-2) which will have to be updated 
+	also. This change is one of the reasons for bumping the version number 
+	to 2.02...
+
+	[FIX] A problem existed when adding Gaussian sources to images with
+	FWHM larger than the beam size. In such cases the patch size used for
+	the insertion was too small. Thanks Haukur, for finding this one.
+
+	[FIX] There has been a recursion error when keys were removed from 
+	the configuration set, resulting in nested 'removed' branches being
+	created. (This created some very long FITS keys, which caused errors.)
+	A twofold solution was inplemented. 1. Checking for and disallowing 
+	nested branching of 'removed' keys, and 2. introducing a 'purge' 
+	function, which permanently removes branches from the configuration
+	set, to be used by internally, e.g. when intersecting configurations.
+	Many thanks to Haukur and Ciriaco for diagnosing this!	
+
+	[FIX] Check for very long HIERARCH fits keys, which cannot be written
+	conventionally. Use abbreviated form when writing.
+
+	[FIX] Small fix on parameter accounting of decorrelation steps. Now
+	the dependencies are calculated only for the same unflagged channels
+	as are used for the decorrelation itself.
+
+	[FIX] Relax photometry position checking for moving objects, such as
+	solar system bodies.  
+
+	[FIX] Fixed problem with 'config' option not accepting paths with
+	variables and shorthands.
+
+	[FIX] Fixed a small problem with the selection of channels used in 
+	normalizing gains of different correlated modes.
+
+	[FIX] Fixed problem with 'correlated.<*>.nogains' not having any 
+	effect.
+
+	[FIX] Invalid subscans no longer produce an error on validation. 
+	Instead, these are dropped from the reduction, as indicated by the 
+	corresponding warning message on the console.
+
+	[FIX] Prevent error resulting from an empty "" command line argument.
+	Although such empty arguments should never be produced, it never hurts
+	to be safe...
+
+	[FIX] An error was fixed in complex FFT function. Currently, this has 
+	no effect on CRUSH since it uses real transforms only.
+	
+	[FIX] {SHARC-2} 'tau=direct' did not take residual DC offsets into
+	account. As such the tau values were not as accurate as they could have
+	been when the instrument was not levelled at the beginning of the scan.
+	Now, the issue is fixed, leading to more accurate 'direct' tau values
+	at all times :-).
+
+	[FIX] {SHARC-2} 'tau=225GHz' option was not working due to a hardcoded 
+	case-sensitive table lookup error. Now fixed.
+
+	[FIX] {SHARC-2} The use of tau scaling relations has been generalized.
+	It now allows the use of PWV values and user-specified relations.
+
+	[FIX] {SHARC-2} Optimal smoothing ('smooth.optimal') is now set only 
+	for 350um reduction mode. At other wavelengths, the deep reductions 
+	default to beam smoothing. (Earlier, all wavelengths were wrongly using
+	the optimal 350um value).
+
+	[FIX] {SHARC-2, GISMO} Fixed a minor issue with the copying of pixels,
+	with the pixel sizes having been shallow copies rather than the desired
+	deep ones.
+
+	[IMPROVE] {GISMO} Pointing information enhanced, by including 			cumulative horizontal offsets.
+
+	[IMPROVE] Avoid double validation of subscans/integrations.
+
+	[SPEED] {post-b2} parallelized source insertion via 'sources'. 
+
+	[SPEED] Various small performance tweaks relating to FFTs. Since FFTs
+	are rarely used, and the tweaks are relatively minor, there is no
+	noticeable boost to reduction speeds.
+
+	[SPEED] Source extraction now using one source copy per thread, rather
+	than per scan as before. Should result in a minor performance boost,
+	epsecially for large maps and datasets.
+
+	[TWEAK] {APEX} Exposure and noise clipping ('exposureclip' and 
+	'noiseclip') are made more robust, by selecting the 5/95-percentile
+	values as the reference, rather than the absolute max/min values as
+	before.
+
+	[TWEAK] {APEX} Smooth telescope positions only by 0.1s (used to be
+	0.25s), to be more sensitive to rapid motion changes.
+
+	[TWEAK] {APEX} Checking for incompatible datasets (photometry vs
+	mapping data, or photometry on different objects) is extended for
+	checking the names of solar system (moving frame) objects also.
+
+	[TWEAK] {SHARC-2} 'maitau.fallback' adjusted to use 'direct' tau only
+	for 350um data, and 225GHz taus otherwise. (see sharc2/default.cfg).
+
+	[CODE] Use Parallel class to reimplement parallel operations on 
+	source (extraction, synching, boxing, and indexing). 
+
+	[CODE] Restructured pipeline code. Tasks are now performed scanwise
+	rather than integrationwise. The new code is cleaner.
+
+	[CODE] Restructured decorrelation code among Integration, Modality and
+	Scan classes. The idea is to allow some operations (like gain 
+	estimation) to perform on scans rather than integrations. The effect is
+	to have gains that span an entire scan and not just an integration
+	within it.
+
+	[CODE] Got rid of non-necessary exception handling when editing
+	headers for scan data HDUs.
+
+	[CODE] Instruments can now edit the FITS image headers, allowing
+	for more structured editing.
+
+	[CODE] The performing of tasks moved from Pipeline to Integration
+	(and its subclasses). This allows for the definition of tasks that are
+	specific to certain data types only...
+
+	[UPDATE] {LABOCA, SABOCA} RCP, tau and calibration data up-to-date
+	as of 07 Mar 2011.
+
+	[UPDATE] {LABOCA, SABOCA} PWV to tau conversions refined for LABOCA
+	and SABOCA based on all skydip data to date (4000+ for LABOCA and ~300
+	for SABOCA).
+
+
+2.01-4 (19-Nov-2010)
+
+	Overview
+	=====================================================================
+	This is a maintenance update of CRUSH 2.01. The main change is a 
+	complete overhaul of the configuration parser engine, with the aim
+	of overcoming some of its pathologies, especially with the way aliases
+	and wildcards are processed. Apart from the parser, there has been
+	an update of the FITS image code, to handle a wider variety of FITS
+	images, in preparation for the new show/imagetool. Various smaller
+	fixes and improvements are also part of this release.
+	=====================================================================
+
+	[NEW] The command 'blacklist' without an argument now produces a list
+	of all blacklisted settings on the console.
+
+	[NEW] Introducing 'conditions' command, which allows checking on the
+	currently active conditional statements. Used without an argument it
+	lists all conditions, while an optional argument can be used to match
+	only conditions that start with the specified pattern.
+
+	[FIX] {parser} 'restore' commands was not recognised by the parser,
+	which expected the deprecated 'replace' command instead. The GLOSSARY
+	has been updated accordingly. The deprecated 'replace' command will be 
+	recognized as an alternative to 'restore' for some time to come...
+
+	[FIX] {parser} Fixed parsing of wildcards '*' in 'forget', 'recall', 
+	'remove', 'restore', and 'whitelist' statements. No wildcards are 
+	allowed for 'blacklist' (since these would be hard to enforce for
+	arbitrary non-enxisting branches).
+
+	[FIX] {parser} Fixes to how 'forget', 'remove', 'blacklist' etc. deal 
+	with aliased statements.
+
+	[FIX] {parser} 'recall' now checks for pending conditionals.
+
+	[FIX] {parser} Fixes to the way conditions are canonized. (removing 
+	leading white spaces, and replacing sequences of other spaces and 
+	'=' with a single '?').
+
+	[FIX] {FITS} Added precession FITS processing for Ecliptic Coordinates.
+
+	[FIX] {FITS} Precessing coordinates now recognize 'FK4-NO-E' epoch, but
+	process it just like the regular 'FK4'.
+
+	[TWEAK] {GISMO} Added 'beam' size to default configuration. The same
+	beam size was already assumed as the hardcoded default, so it changes
+	nothing, except it makes the setting more transparent.
+	
+	[TWEAK] {GISMO} MUXes are decorrelated at the full time resolution of
+	the downsampled data in 'faint' and 'deep' modes.	
+
+	[TWEAK] {deep} Source filtering over 5 beam widths is now default in 
+	'deep' mode, instead of gradients. In case of some instruments, like 
+	SCUBA-2 and GISMO, the filter is made even more agressive to combat 
+	sky noise.
+
+	[TWEAK] {parser} Configuration branches removed by the 'remove' command
+	are now stored under the 'removed' key, for greater transparency.
+	
+	[TWEAK] Simplified the calculation of 1/f filter (drift) corrections.
+
+	[TWEAK] 'faint' + 'extended' now enables the removal of gradients by 
+	default. It also enables row decorrelation for SHARC-2. This is more
+	in line with the intended behaviour...
+
+	[IMPROVE] {poll} Polling the configuration (via '-poll') now also 
+	prints the forgotten configuration keys with their values, such that 
+	the user may more easily decide if to 'recall' an old value, or set it 
+	freshly again. 
+
+	[IMPROVE] {FITS} Overhauled code for handling spherical projections and
+	celestial coordinates, to conform more closely with the specification
+	by Calabretta and Greisen (2002). Specifically, coordinate system
+	transformations are now built in, and the projection classes 
+	recognize most of the designated FITS keywords. These changes will be 
+	used by the new 'show' and 'imagetool' utilities (coming soon!).
+
+	[IMPROVE] {FITS} Overhauled code to allow images with non-square 
+	pixels, and to process 2x2 coordinate transformation matrices. 
+	Currently, neither of these features is used. Rather, it is an 
+	important preparatory step towards the new show/imagetool (coming 
+	soon!).
+
+	[IMPROVE] {parser} Reduced costly string comparisons in parser.
+
+	[SPEED] Noise whitening is made faster by using floating point 
+	precision instead of double precision arithmetic.
+
+	[COSMETIC] {FITS} Conditionals are now properly bracketed in FITS
+	headers.
+
+	[UPDATE] Updated README on the configuration syntax/rules and on the 
+	explanation of the console output, and on checking the current
+	configuration settings. 
+
+	[UPDATE] Bundled CRUSH-1.xx tools (e.g. 'show', 'imagetool', 'detect')
+	have been upgraded to 1.63-15.
+
+	[UPDATE] LABOCA and SABOCA configurations updated thru 17-Nov-2010.
+
+
+2.01-3 (26-Sep-2010)
+
+	Overview
+	=====================================================================
+	This is a maintenance release of CRUSH-2.01. There have been a number
+	of issues identified in the previous release(s). This update offers
+	fixes to all issues identified thus far. There are also a number of 
+	smaller tweaks, improvements, and configuration updates.
+	=====================================================================
+
+	[BUG] CRUSH tools (e.g. 'show', 'imagetool', and 'detect') indicated 
+	that the map fluxes were uncorrected, when in fact they were corrected
+	for point-sources. This may have caused calibration issues when
+
+	   1. 'source.filter' was used during reduction (default only for
+	      'deep' mode SCUBA-2 reductions).
+
+        AND
+	
+	   2. Additional filtering was performed via 'show' or 'imagetool' 
+	      *after* reduction (via the '-extFilter' option), OR fluxes were 
+	      extracted with the 'detect' tool. 
+ 
+	When both the above conditions were met, CRUSH applied duplicate 
+	point-source corrections. 
+	Part of the problem was traced back to a missing FITS header key/value 
+	pair. A second issue was an unexpected change in the FITS libraries, 
+	which defaulted even when the correct value was stored. Both issues are
+	now fixed, and the correction scheme should now work as expected.
+	
+	[FIX] Rare divide by zero bug found and fixed when calculating the
+	point-source filtering of decorrelation steps.
+
+	[FIX] 'source.model' option worked only if the model was exactly the 
+	same size, and on the same grid, as the target map. This was fine if 
+	the model was produced from exactly the same set of scans, and if it
+	was not cropped afterwards via 'imagetool'. The fix now allow models 
+	to be provided on any grid, and any size...
+
+	[FIX] Beam units recalculated after regrid operation also, (not just
+	after smoothing).
+	
+	[SPEED] Map indexing has been parallelized for better performance...
+
+	[TWEAK] By accident 'median' estimators were made default in 2.01-2 for 
+	one iteration in 'faint' and 'deep' modes (but not in default mode). It
+ 	is not a bad idea, in fact, to start with the more robust median 
+	estimators at first. Therefore, starting from this release, medians are
+	made default for one iteration in all reduction modes...
+	
+	[TWEAK] {gismo} Configurations slightly tweaked on use of 'median' vs.
+	Maximum-likelihood estimators...
+
+	[TWEAK] Streamlined reading of data of all instruments, using a faster
+	method of reading FITS binary tables (by columns instead of rows).
+
+	[CONFIG] 'split' reductions should not be clipped by exposure before
+	coadding. Instead, noise or exposure clipping can be performed after 
+	the coaddition, using 'imagetool'.
+
+	[CONFIG] {laboca} 'faint' mode reductions now always decorrelate
+	modes at the full time resolution of the data. This was already the
+	default in non-extended mode, but now 'faint' together with 'extended'
+	will also adopt these settings.
+
+	[COSMETIC] Removed extra line-feed when 'source.filter' is used.
+	
+	[UPDATE] Expanded README, to include sections on 'Pixellization and
+	smoothing' and on 'Image processing post-reduction'. Also reorganized
+	its sections, and made small edits in parts.
+
+	[UPDATE] {laboca} Calibration information ('laboca/tau.dat' and
+	'laboca/calibration.dat') updated until 26.09.2010, using data from
+	the APEX pages
+
+	[UPDATE] Bundled CRUSH 1.xx tools ('show', 'imagtool', 'detect' etc.) 
+	are upgraded to 1.63-14. The update fixes various issues with the 
+	handling of CRUSH-2 images.
+
+
+2.01-2
+	
+	[FIX] {java} The default JAVA runtime configuraton in the previous
+	release was accidentally changed, during testing, to use 4GB of memory.
+	This update reverts back to the usual 1GB requirement, and 32-bit 
+	memory model (since the -d64 flag is also non-standard accross virtual 
+	machines). Since these settings should normally be edited during 
+	installation, as descibed, the update is not critical.
+
+2.01-1	
+	
+	Overview
+	=====================================================================
+	This release fixes a critical bug, which strongly affected calibration
+	in the 'faint' and 'deep' reduction modes. The bug had to do with the
+	'Jy/beam' unit normalization, when smoothing was used internally
+	in the reduction.
+	The main new feature of CRUSH is to support SCUBA-2 scan reductions. 
+	It  also introduces a few other features, and provides some smaller 
+	fixes, tweaks, and cosmetic improvements over the prior release.
+	=====================================================================
+
+	[CRITICAL] 'faint' and 'deep' mode reductions had incorrect 
+	normalization due to peak fluxes normalized to the instrument beam, 
+	instead of the proper image beam. For 'deep' mode reductions this 
+	skewed calibration by a full factor of 2. The images (S/N and 
+	structures are otherwise correct). The bug can be compensated manually
+	by scaling images with (1 + smoothFWHM^2/instrumentFWHM^2) manually
+	after reduction (e.g. by imagetool). Extremely sorry for this nasty 
+	bug!!! 
+
+	[BUG] {GISMO} Date-specific options were set too late for some of the 
+	settings to take effect in time. The date-specific configuration is now
+	moved ahead for such settings to be loaded in time...
+
+	[NEW] SCUBA-2 modules are available upon request. These modules are
+	strictly private and proprietary, with restrictions on its 
+	distribution, use, and modification. If interested, please contact
+	Attila <kovacs[AT]astro.umn.edu> for a personalized copy of the plugin.
+
+	[NEW] {SABOCA} Automatic tau from skydips, and calibration corrections
+	from observations of calibration sources are now included for SABOCA
+	between 2009-09-13 and 2010-08-31, thanks to the information becoming
+	available on the APEX pages. Only data with 'OK' quality designation
+	is used.
+
+	[NEW] 'source.type=null' can be used for sourceless reductions. When
+	set, CRUSH will not even attempt to create a source model for data, but
+	will process using the other pipeline steps. This is useful for
+	reducing diagnostic or lab data (e.g. noise measurements), where 
+	modeling a source is meaningless.
+
+	[FIX] {parser} Statements in which the key and value were identical
+	strings were parsed incorrectly. Since such a scenario never occured
+	in the supplied configurations, there was no maleffect. The parser has
+	been adjusted to handle such cases.
+
+	[FIX] {whiten} Make sure that there is a resonable frequency range for 
+	probing the white noise properties, even of the desired probing range 
+	falls outside of the available spectrum. In such cases use a minimum 
+	number of channels, set by the new key 'whiten.minchannels' closest to 
+	the desired range to determine the 'white' noise levels.
+
+	[TWEAK] {faint} RMS weighting is made default in 'faint' mode 
+	reductions also for 'extended' sources.
+
+	[TWEAK] {source.filter} Spatial filtering of source maps has been
+	adjusted to act both on the scan maps (for deriving proper weights on 
+	these) and on the final composite (to properly reflect the filter 
+	blanking of the final output).
+
+	[TWEAK] {GISMO} The GISMO reduction of 'faint' + 'extended' sources did
+	not work as intended. Several tweaks have been applied to 'extended' 
+	mode reductions both in 'gismo/default.cfg' and in 'gismo/faint.cfg'.
+
+	[TWEAK] {GISMO} The pointing center for run 2 has been changed back to 
+	the nominal array center, for better backwards compatibility with
+	pointing in older scripts (e.g. CasA)...
+
+	[COSMETIC] Extra line-feeds on console when 'pointing' (old 'center')
+	option was used. Cleaned up...
+
+	[COSMETIC] More cleanup on scan/subscan IDs, both on the reduction
+	console and for the data output...
+
+	[COSMETIC] Scans containing no valid integration are now dropped.
+	(This should never occur, except for some SCUBA-2 scans, which may
+	not have the antenna information in them).
+
+	[COSMETIC] Use scan ID more consistently instead of scan number in
+	various output file names and on the console. Also, the subscan ID is 
+	included where it is informative. There is no change in functionality.
+
+	[COSMETIC] For multi-subscan reductions, the subscan ID was not
+	separated by '|' from the scan ID on the console output.
+
+	[COSMETIC] Scan reading/processing reporting made more structured, 
+	especially when processing multiple subscans in the same scan...
+
+	[UPDATE] {copyright} E-mail address updated in the copyright statement
+	appearing in the source files.
+	
+	[UPDATE] {LABOCA} Updated laboca configuration (RCPs, 'tau.dat' and
+	'calibration.dat') with the latest information from the APEX pages.
+	Information is good thru 31 Aug 2010. Only data with 'OK' quality
+	is used.
+
+	[UPDATE] {SABOCA} RCP data update to latest from APEX pages. (Also
+	added new tau and calibration data -- see above!)
+
+	
+
+2.00-1
+
+	Overview
+	======================================================================
+	The first official CRUSH-2 release at last :-)...
+	It fixes a number of remaining issues from the final beta (b4) and 
+	provides a few small improvements over it.
+	This version of CRUSH is now the official stable release for all
+	instruments, replacing both CRUSH-1.xx and miniCRUSH as the default
+	reduction package. The old versions will, however, coexists for the 
+	time-being, in case unexpected problems arise with the newer version.
+	Users are strongly encouraged to convert to CRUSH-2 sooner than later.
+	======================================================================
+
+	[BUG] Disabled parallel scan reading. It appears that the FITS 
+	libraries aren't thread safe, leading to slight instabilities when
+	processing FITS data in parallel. Fortunately, the effect was small
+	enough s.t. it was not easily noticed. However, to be safe, crush is
+	reverting to the original (and slower) serial processing of FITS data.
+
+	[NEW] CRUSH is now available also as RPM or Debian packages, making
+	installation a breeze under Linux (if you have root privileges).
+
+	[NEW] Added man pages for crush and the various crush-1.xx image tools 
+	bundled with it. If you are installing CRUSH from an RPM or Debian 
+	package, then the man pages are fully accesible. You can also install 
+	the man pages (and the executables) from the archive (tarball or zip) 
+	distribution, by running 'install.sh' as root (or via 'sudo').
+	The man pages are also available online through the CRUSH homepage,
+	under the 'Documentation' section.
+
+	[NEW] {tar.gz|zip} Included 'install.sh' and 'remove.sh' scripts in 
+	non-package distributions to make system-wide access to the 
+	executables simpler and to install the newly added man pages (try 
+	'man crush' after running 'install.sh' to verify the installation).
+	Uninstalling is possible via the 'remove.sh' script. You need root
+	privileges to run these scripts.
+
+	[NEW] Added check for a suitable java virtual machine. If crush is
+	configured to run on GNU Java (libgcj/gij), it will produce a warning 
+	message recommending users to change to something more reliable.
+
+	[CHANGE] Scans are no longer sorted by serial number before reduction.
+	Instead, the order, in which they were submitted, is retained.
+
+	[CHANGE] {GISMO} The default GISMO output file names now contain the 
+	full IRAM scan IDs, i.e. YYYY-MM-DD.<scanNo>, or their range when
+	reducing multiple scans. This should make the origin of images
+ 	traceable by name. (The same ID are also used on the console output
+	during the reduction.)
+
+	[CHANGE] Changed the way instruments are loaded, making them more plug 
+	and play modules (rather than the hardcoded list before). Instruments 
+	are now registered in the instruments subdirectory. A file, named the 
+	way you would invoke the instrument in crush, specifies the 
+	corresponding java class of the instrument. While, the change has no 
+	immediate effect to the user, it allows instrument packages added to or
+ 	removed from crush installations at any time. (As instrument-related
+	content grows, it makes sense to allow customized instrument 
+	installations).
+
+	[FIX] {LABOCA} 'laboca/faint.cfg' contained old 'maxHe3rms' key. 
+	Corrected to 'H3.maxrms'.
+
+	[FIX] {SABOCA,ASZCA,p-ArTeMiS} Created 'amps' alias for minicrush 
+	compatibility.
+
+	[FIX] {pointing} Pointing corrections are properly accumulated. 
+	It is possible to both apply an initial pointing corrections
+	(via 'pointing=x,y') and then make crush suggest incremental 
+ 	corrections (e.g. via 'point'). Previously, the suggestions were 
+	incremental to the initially supplied values, but it makes more sense
+	to provide the user with the aggregated pointing correction at the
+	end of the reduction.
+
+	[FIX] {skydip} Skydip reduction was broken, because it was trying to
+	find a group of channels by their old name, which is no longer used. 
+	The source code is now fixed with the correct channel group 
+	identification ('obs-channels').
+
+	[FIX] Windows .bat files were not working correctly when CRUSH was
+	installed in a location whose path contained white spaces. The updated
+	batch files should now work as expected.
+
+	[FIX] Checking for updates on startup was suffering from incomplete
+	version comparison, which should now be fixed.
+
+	[TWEAK] {sharc2} Rehabilitated decorrelation on rows by default. The 
+	prior releases did this only for 'faint' reductions, which was fine in 
+	most cases, but occasionally the stability seems to have been worse, 
+	and some data really benefit from the row decorrelations. Nonetheless, 
+	it  remains default to ignore the 'rows' in 'extended' reductions...
+
+	[TWEAK] {point} The suggesting of pointing corrections is made more
+	informative with integrated flux (in an adaptive aperture), S/N and 
+	FWHM uncertainty reporting, and providing elongation (major, minor 
+	axis and position angle on map). 
+
+	[TWEAK] {point} The FWHM estimation is made more adaptive, with a
+	growing aperture until ~98% of the central source flux is captured.
+
+	[TWEAK] {bright} Disabled all clipping of 'bright' source redcutions.
+
+	[UPDATE] Updated README installation instructions to include 
+	system-wide install (executables and man pages), and Linux packages.
+
+	[UPDATE] {README} Moved 'Recovery of Extended Structures' section
+	further up in the README, thus giving it a more prominent place. Added
+	exaples of pointing/calibration scan reduction, skydip and beammap
+	reductions in the 'Quick Start' section. Small corrections elsewhere.
+
+	[UPDATE] {crush.jar} Updated crush-1.xx image tools (e.g. 'imagetool'
+	'show', 'histogram') to 1.63-13.
+
+	[UPDATE] {laboca} Updated LABOCA opacities until 2010-08-18.
+	(calibration scaling factors not updated due to a broken www interface)
+	Also added latest RCP data for Aug 2010.
+
+	[UPDATE] {saboca} Added RCP for Aug 2010.
+
+2.00-b4
+
+	Overview
+	======================================================================
+	Hopefully the last beta release before the finalized CRUSH-2.00 hits
+	the streets. This update bring several fixes to the prior version and
+	a brand new capability for reducing pointing scans to obtain suggested 
+	pointing corrections.
+	======================================================================
+
+	[NEW] Added preliminary pointing support to CRUSH-2. To obtain 
+	pointing corrections, reduce with the '-point' option. E.g.
+
+	   > crush laboca -point 11564
+
+	The pointing (and calibration information) is displayed at the end of
+	the reduction. Currently, only the values are calculated, without
+	displaying the result (as in the old crush) since much work is still
+	needed to migrate the display capabilities to CRUSH-2. Note, the
+	pointing corrections are calculated independently of the map
+	orientation, thus the use of the 'altaz' option is not at all required.
+	
+	[NEW] The option 'pointing' is now used for both specifying pointing 
+	corrections at reduction time (as x,y), or can be used to calculate 
+	these automatically 'auto'. The old 'center' option is now deprecated, 
+	although it will be allowed for the foreseeable future. Thus,
+	
+		crush [...] -pointing=-3.4,5.0 [...]
+		
+	can be used to specify pointing offsets of -3.4" (in azymuth) and
+	5.0" (in elevation), and
+
+		crush [...] -pointing=auto [...]
+	
+	is used for determining pointing offsets from appriate observations of
+	pointing sources (which must be bright enough to see with enough S/N
+	in single scans!). The shorthand 'point' stands for 'iteration.[last]
+	pointing=auto", i.e. calculating pointing corrections in the last 
+	iteration only.
+
+	The option 'pointing.method' controls the method of measuring positions
+	and can be set to 'centroid' (default) or 'peak', at present.
+
+	[FIX] Fixed issue with '~' and environment variables such as {$HOME}
+	not being accepted in the 'datapath' specification.
+	
+	[FIX] {cosmetic} 'write.ascii' subscan numbering to start from 1 
+	instead of 0.
+
+	[FIX] 'write.spectra' malfunction if windowname was not explicitly
+	specified. Now fixed to use 'Hamming' as default.
+
+	[FIX] 'write.spectrum' PSD normalization is fixed. Output is now in 
+	'Jy/sqrt(Hz)'.
+
+	[FIX] {GISMO} FITS time-stamp was parsed wrongly after the latest
+	changes to the FITS file during run 3. This cosmetic detail is now
+	addressed.
+
+	[CHANGE] Added header information to various ASCII output data (e.g.
+	pixel data, RCP) to make it easier to trace the origin of such files
+
+	[TWEAK] Improved centroid pointing algorithm. 
+
+	[UPDATE] Updated GISMO pixel position data (.rcp) using the improved
+	centroid fitting algorithm.
+
+	[UPDATE] Updated LABOCA tau and calibration data to 2010.06.30.
+
+	[UPDATE] CRUSH-1.xx tools ('show', 'imagetool' etc.) are updated to
+	the latest 1.63-12 release.
+
+
+2.00-b3
+	
+	Overview
+	======================================================================
+	This is a critical update. The previous release did not have the
+	essential FITS libraries packaged. Additionally both prior beta 
+	releases suffered from a B1950 bug, which is now fixed.
+	======================================================================
+
+	[CRITICAL] Precession from Besselian epochs to Julian epochs (e.g. 
+	B1950 to J2000) was messed up, due to a typo in the MJD value for 
+	B1900.0. As such, the astrometry of all scans taken with B1950 
+	coordinates is wrong, since the conversion to J2000 is automatic in 
+	crush.
+
+	[FIX] FITS libraries (fits.jar) were not actually bundled in the
+        previous update, which instead contained a dysfunctional symbolic link
+        to it...
+
+	[CHANGE] Overhauled code for defining regions on maps. The changes may
+	only affect the 'beammap' functionality in minor ways...
+	
+	[UPDATE] Laboca 'tau.dat' and 'calibration.dat' files up to 6/23/2010.
+
+
+
+2.00-b2
+
+	Overview
+	======================================================================
+	This is an update on the first beta release of CRUSH-2. A critical
+	bug fix addresses the reduction dependence of calibration. It has 
+	always been a stated aim of CRUSH to make calibration completely
+	independent of the reduction options used. Unfortunately, due to a
+	number of bugs and features this was not fully accomplished. This new
+	update hopefully lives up to the promise.
+	Another major area of work has been a major revision to the way the
+	noise whitening filter works. All instrument configurations have been
+	updated to with new whitening parameters.
+	Otherwise, the update also contains a number minor fixes and 
+	performace tweaks. It also includes updated LABOCA and SABOCA 
+	configurations up to June 2010.
+	======================================================================
+
+	[CRITICAL] {calibration,deep} Identified various problems with the 
+	filtering correction scheme. The idea is to make calibration entirely 
+	independent of reduction parameters. However, due to several coding 
+	bugs, the corrections were underestimated, resulting in overoptimistic
+	noise levels, and reduced fluxes in 'deep' mode reductions. 
+
+	[BUG] {GISMO} Beam map data was erroneously handled. See details below.
+	As a result all GISMO beam maps have been updated.
+
+	[BUG] {beammap} Major bug with beammap algorithm. There was a botch-up
+	in the pixel indexing scheme as well as what quantities were calculated
+	and written.
+
+	[BUG] {parser} There was a problem parsing statements, in which '=' 
+	was used after a condition, such as "-iteration.[2]forget=clip". Such 
+	statements were effectively ignored. This is now corrected.
+
+	[CHANGE] {whitening} Major changes to the noise whitening filter
+	behaviour. The new keyword 'whiten.below' allows the whitening filter
+	to behave not only as a rejection filter (suppressing excessive
+	spectral components) but also as an enhancing filter, whereby 
+	components below the white noise level are scaled up in order to arrive
+	at a truly white noise spectrum (which is necessary for obtainig maps
+	without intrinsic spatial correlations). This new mode of whitening
+	is made default for all instruments. Two more new keywords provide
+	more control over the whitening filter. 'whiten.neighbours' enables
+	a whitening based on neighboruring spectral regions (at different
+	spectral resolutions). Such a behaviour was already implicitly present.
+	Finally, a the key 'whiten.proberange' can be used for defining a
+	spectral range (Hz) in which the white-noise level is to be measured.
+	All instruments are configured to use the truly flat part of their
+	typical pixel spectra for white noise level estimation.
+	The changes of the noise whitening may impact the results of reductions
+	significantly. You can restore the old behaviour via the
+
+		whiten.proberange *:*
+		forget whiten.below
+	
+	configuration settings.
+
+	[CHANGE] New release checking will pause for 5 seconds before 
+	continuing with the reduction, when a new release is available, to 
+	bring attention to the update. Users should always upgrade to the 
+	latest (stable) version.
+
+	[CHANGE] Move map filtering step (see 'source.filter') up to the scan
+	level. This way each scan map is filtered independently, before 
+	weighting and coadding. This should provide cleaner results when
+	source filters are used. Especially the edges of scan-coverages should
+	be better behaved...
+
+	[NEW] New option 'write.scandata.details' can be used to add more 
+	inforation into the data tables of scan HDUs, such as channel gains, 
+	weights, offsets and filter profiles, noise spectra (and more...)
+
+	[FIX] {spectrum} The 'spectrum' key resulted in spectra with a
+	messed-up Nyquist component due to a coding error. Fixed.
+
+	[FIX] {correction} Filtering corrections of decorrelation steps
+	and the 1/f drifts filtering were not applied, because of a coding 
+	error. The corrections applied only to the noise whitening filter. 
+	As a result, deep mode fluxes were slightly (or in some cases) 
+	significantly below expected.
+
+	[FIX] {correction} Filter corrections of drifts would have been 
+	applied repeatedly, if not for the above bug, which resulted in not
+	being used at all. 
+
+	[FIX] {correction} Calibration corrections did not take smoothing
+	into account. Smoothing increases the filtering effect because the
+	negative bowls around point sources are blended into the positive peaks
+	further reducing them. With the changes in place, the independence of
+	the calibration on reduction parameters should be fully restored.
+
+	[FIX] {deep} Deep reductions were not beam smoothed as intended. This
+	is now corrected.
+
+	[FIX] {scripts} Updated shell wrapper scripts to correctly deal with 
+	spaces in command line arguments (when quoted or escaped). This is 
+	achieved by replacing $* with ${1+"$@"}, which results in the correct 
+	expansion of arguments.
+
+	[FIX] {decorrelation} Problem with the hipass filtering of correlated
+	signals. Integer math was used where floating point was necessary,
+	resulting (at times) in incorrect filter frame counts. This is now 
+	corrected.
+
+	[FIX] {decorrelation} time-scales should never exceed the 1/f filter
+	time scales. This is also true for any other time-scale in the
+	reduction. Accordingly, a maximum timescale is now enforced for all
+	things...
+
+	[FIX] {Minor} Arithmetic error in calculating the noise in single-plane
+	images. This did not affect any reduction, since CRUSH never uses 
+	single-plane images internally...
+
+	[FIX] {regrid} Fixed regrid signal and noise normalizations.
+
+	[FIX] {show} Changed 'show' tool to disable unit changes when 
+	displaying the S/N image. This produces the expected behaviour.
+
+	[FIX] {Minor} A small fix for the interpolation of image values between
+	pixel positions to return NaN when the nearest position is flagged.
+
+	[FIX] {Minor} Fast convolution method to ensure flagging of any NaNs.
+
+	[FIX] {p-ArTeMiS} Reinstated 'median' estimators as default for 
+	p-ArTeMiS. Using maximum-likelihood caused unstable solutions for some
+	scans. 
+
+	[SPEED] Parallelized FITS scan reading. This should result in some 
+	performance enhancement on multicore systems, although the gain may not
+	scale with the number of cores simply because the underlying FITS 
+	library is not thread safe, thus only the processing of steps are
+	apeeded up.
+
+	[TWEAK] {faint,deep} Disable 'weighting.frames' by default. The time
+	weighting can lead to a lot of instabilities in the reduction. At the
+	same time, there is no evidence for non-stationary noise for any of
+	the instruments. It is better therefore to turn this feature off in
+	general, and enable it only when truly necessary...
+
+	[TWEAK] {Minor} Performance enhancement of image operations.
+	
+	[TWEAK] {Minor} Performance enhancement of some iterators.
+
+	[TWEAK] {Minor} Use floats instead of doubles for medians where 
+	possible.
+
+	[TWEAK] {Minor} Simplified initialization of some commonly used 
+	classes, by eliminating duplicate field inits.
+
+	[TWEAK] {Minor} Simplified constructor of EquatorialCoordinates and
+	EclipticCoordinates for the default (J2000) epoch.
+
+	[TWEAK] {Minor} Converted much of the precession algorithm to faster 
+	floating point math, which is sufficient given that the precession 
+	constants aren't provided to higher accuracy.
+
+	[TWEAK] {show} Turned on antialiasing for text in 'show' tool. It 
+	should remove the JVM dependence of the font antialiasing.
+	
+	[UPDATE] Updated LABOCA RCP, calibration and tau data, which is now
+	available up to 06/20/2010. Thanks to Andreas Lundgren for bringing
+	attention to the information.
+
+	[UPDATE] Updated SABOCA RCP information, with the most current data
+	from the APEX SABOCA pages.
+	
+	[UPDATE] Updated GISMO configurations (new RCP/coupling data and
+	various tweaks to the configuration options.
+
+	[UPDATE] All instrument configurations have been updated with new
+	noise whitening parameters.
+
+	[UPDATE] Updated nom.tam.fits libraries to 1.04.
+
+
+2.00-b1	(24 May 2010)
+
+	######################################################################
+	First official beta release of CRUSH-2. :-)
+	######################################################################

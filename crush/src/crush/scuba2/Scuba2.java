@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of the proprietary SCUBA-2 modules of crush.
@@ -168,7 +168,6 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 		// Create the pixel storage
 		clear();
 		ensureCapacity(pixels);
-		
 		for(int c=0; c<pixels; c++) add(new Scuba2Pixel(this, c));
 		
 		subarray = new Scuba2Subarray(header.getStringValue("SUBARRAY"));

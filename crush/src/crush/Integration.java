@@ -26,15 +26,18 @@ package crush;
 
 
 import java.io.*;
+import java.text.NumberFormat;
 import java.util.*;
 
 import util.*;
 import util.astro.EquatorialCoordinates;
-import util.data.ArrayUtil;
 import util.data.DataPoint;
 import util.data.FFT;
+import util.data.Statistics;
+import util.data.TableEntries;
 import util.data.WeightedPoint;
 import util.data.WindowFunction;
+import util.text.TableFormatter;
 
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -49,7 +52,9 @@ import nom.tam.util.*;
  * 
  * Always iterate frames first then channels. It's a lot faster this way, probably due to caching...
  */
-public abstract class Integration<InstrumentType extends Instrument<?>, FrameType extends Frame> extends ArrayList<FrameType> implements Comparable<Integration<InstrumentType, FrameType>> {
+public abstract class Integration<InstrumentType extends Instrument<?>, FrameType extends Frame> 
+extends ArrayList<FrameType> 
+implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	/**
 	 * 
 	 */
@@ -80,6 +85,7 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 	
 	protected boolean isDetectorStage = false;
 	protected boolean isValid = false;
+	public boolean isProper = true;
 	
 		
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
@@ -140,24 +146,32 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 		
 		for(Frame frame : this) if(frame != null) frame.validate();
 		
-		int gapTolerance = hasOption("gap-tolerance") ? framesFor(Double.parseDouble("gap-tolerance") * Unit.s) : 0;
-		if(hasGaps(gapTolerance)) fillGaps();
-		else reindex();
-			
-		//if(hasOption("shift")) shiftData();
-		if(hasOption("detect.chopped")) detectChopper();
-		if(hasOption("frames")) selectFrames();
-		// Explicit downsampling should precede v-clipping
-		if(hasOption("downsample")) if(!option("downsample").equals("auto")) downsample();
-		if(hasOption("vclip")) velocityClip();
-		if(hasOption("aclip")) accelerationClip();
-	
-		calcScanSpeedStats();
+		if(isProper) {
+			int gapTolerance = hasOption("gap-tolerance") ? framesFor(Double.parseDouble("gap-tolerance") * Unit.s) : 0;
+			if(hasGaps(gapTolerance)) fillGaps();
+			else reindex();
+				
+			//if(hasOption("shift")) shiftData();
+			if(hasOption("detect.chopped")) detectChopper();
+			if(hasOption("frames")) selectFrames();
+			// Explicit downsampling should precede v-clipping
+			if(hasOption("downsample")) if(!option("downsample").equals("auto")) downsample();
+			if(hasOption("vclip")) velocityClip();
+			if(hasOption("aclip")) accelerationClip();
 		
-		// Automatic downsampling after vclipping...
-		if(hasOption("downsample")) if(option("downsample").equals("auto")) downsample();
+			calcScanSpeedStats();
+		}
 		
-		trim();
+		// Flag out-of-range data
+		if(hasOption("range")) checkRange();
+		
+		if(isProper) {
+			// Automatic downsampling after vclipping...
+			if(hasOption("downsample")) if(option("downsample").equals("auto")) downsample();
+		
+			trim();
+		}
+		
 		detectorStage();
 		
 		if(hasOption("tau")) {
@@ -166,11 +180,14 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 		}
 		if(hasOption("scale")) setScaling();
 		if(hasOption("invert")) gain *= -1.0;
-		if(!hasOption("noslim")) slim();
+
+		if(!isProper) {
+			if(!hasOption("noslim")) slim();
 		
-		if(hasOption("jackknife")) if(Math.random() < 0.5) {
-			System.err.println("   JACKKNIFE! inverted source.");
-			gain *= -1.0;
+			if(hasOption("jackknife")) if(Math.random() < 0.5) {
+				System.err.println("   JACKKNIFE! inverted source.");
+				gain *= -1.0;
+			}
 		}
 		
 		isValid = true;
@@ -216,6 +233,39 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 		clear();
 		addAll(buffer);
 		reindex();
+	}
+	
+	public void checkRange() {
+		if(!hasOption("range")) return;
+		final Range range = option("range").getRange();
+		
+		System.err.print("   Flagging out-of-range data. ");
+		
+		int[] n = new int[instrument.size()];
+		int N = 0;
+		for(Frame exposure : this) if(exposure != null) {
+			for(Channel channel : instrument) if(!range.contains(exposure.data[channel.index])) {
+				exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+				n[channel.index]++;
+			}
+			N++;
+		}
+		
+		if(!hasOption("range.flagfraction")) {
+			System.err.println();
+			return;
+		}
+			
+		int flagged = 0;
+		double critical = option("range.flagfraction").getDouble();
+		for(Channel channel : instrument) {
+			if((double) n[channel.index] / N > critical) {
+				channel.flag(Channel.FLAG_DAC_RANGE | Channel.FLAG_DEAD);
+				flagged++;
+			}
+		}
+	
+		System.err.println(flagged + " channel(s) discarded.");
 	}
 	
 	public void downsample() {
@@ -520,7 +570,8 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 		
 		int driftN = Math.min(size(), FFT.getPaddedSize(targetFrameResolution));
 		final int step = quick ? (int) Math.pow(driftN, 2.0/3.0) : 1;
-		filterTimeScale = driftN * instrument.samplingInterval;
+		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);
+		
 		
 		Dependents parms = getDependents("drifts");
 		
@@ -551,24 +602,29 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 			parms.apply(channels, from, to);
 		}
 		
+		// Store the mean offset as a channel property...
+		for(Channel channel : channels) {
+			final double G = isDetectorStage ? channel.getHardwareGain() : 1.0;
+			channel.offset += G * aveOffset[channel.index].value;
+		}
+			
 		if(driftN < size()) for(Channel channel : channels) {
-			double crossingTime = getPointCrossingTime();
-				
+			double crossingTime = getPointCrossingTime();	
+			
 			if(!Double.isNaN(crossingTime) && !Double.isInfinite(crossingTime)) {
 				// Undo prior drift corrections....
-				if(!Double.isNaN(channel.filterTimeScale)) {
+				if(!Double.isInfinite(channel.filterTimeScale)) {
 					if(channel.filterTimeScale > 0.0) 
 						channel.sourceFiltering /= 1.0 - crossingTime / channel.filterTimeScale;
 					else channel.sourceFiltering = 0.0;
 				}
 				// Apply the new drift correction
-				channel.sourceFiltering *= 1.0 - crossingTime / filterTimeScale;
+				channel.sourceFiltering *= 1.0 - crossingTime / Math.min(filterTimeScale, channel.filterTimeScale);
 			}
 			else channel.sourceFiltering = 0.0;
-				
-			channel.filterTimeScale = filterTimeScale;
-			channel.offset += aveOffset[channel.index].value;
+			channel.filterTimeScale = Math.min(filterTimeScale, channel.filterTimeScale);	
 		}		
+			
 			
 		// Make sure signals are filtered the same as time-streams...
 		// TODO this is assuming all channels are filtered the same...
@@ -640,7 +696,7 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 			}
 
 			if(sumw > 0.0) {
-				offset.value = ArrayUtil.smartMedian(buffer, 0, n, 0.25);
+				offset.value = Statistics.smartMedian(buffer, 0, n, 0.25);
 				offset.weight = sumw;
 				
 				aveOffset[channel.index].average(offset);
@@ -827,7 +883,7 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 				}
 			}
 		}
-		increment.value = ArrayUtil.smartMedian(buffer, 0, n, 0.25); 
+		increment.value = Statistics.smartMedian(buffer, 0, n, 0.25); 
 	}
 	
 	
@@ -873,7 +929,7 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 				point.weight = exposure.tempWC2;
 				increment.weight += exposure.tempWC2;
 			}
-			if(increment.weight > 0.0) increment.value = ArrayUtil.smartMedian(gainData, 0, n, 0.25);
+			if(increment.weight > 0.0) increment.value = Statistics.smartMedian(gainData, 0, n, 0.25);
 		}
 	}
 	
@@ -958,7 +1014,7 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 			
 			if(points > 0) {
 				channel.dof = Math.max(0.0, 1.0 - channel.dependents / points);
-				channel.variance = points > 0 ? (ArrayUtil.median(dev2, 0, points) / 0.454937) : 0.0;
+				channel.variance = points > 0 ? (Statistics.median(dev2, 0, points) / 0.454937) : 0.0;
 				channel.weight = channel.variance > 0.0 ? channel.dof / channel.variance : 0.0;	
 			}
 		}
@@ -1233,7 +1289,7 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 
 			
 			System.arraycopy(A, 0, temp, 0, A.length);
-			final double medA = ArrayUtil.median(temp, measureFrom, measureTo);
+			final double medA = Statistics.median(temp, measureFrom, measureTo);
 			
 			// Save the original amplitudes for later use...
 			System.arraycopy(A, 0, temp, 0, A.length);
@@ -1291,7 +1347,7 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 			
 			// Renormalize the whitening scaling s.t. it is median-power neutral
 			for(int F=0; F<nF; F++) temp[F] *= phi[F];
-			double norm = medA / ArrayUtil.median(temp, measureFrom, measureTo);
+			double norm = medA / Statistics.median(temp, measureFrom, measureTo);
 			if(Double.isNaN(norm)) norm = 1.0;
 			
 			double sumPreserved = 0.0;	
@@ -1605,13 +1661,25 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 	
 	public synchronized void detectorStage() { 
 		if(isDetectorStage) return;
-		scale(1.0 / instrument.gain); 
+		
+		final float[] G = new float[instrument.size()];
+		for(Channel channel : instrument) G[channel.index] = (float) channel.getHardwareGain();
+		
+		for(Frame frame : this) if(frame != null) for(Channel channel : instrument)
+			frame.data[channel.index] /= G[channel.index];
+		
 		isDetectorStage = true;		
 	}
 	
 	public synchronized void readoutStage() { 
 		if(!isDetectorStage) return;
-		scale(instrument.gain); 
+		
+		final float[] G = new float[instrument.size()];
+		for(Channel channel : instrument) G[channel.index] = (float) channel.getHardwareGain();
+		
+		for(Frame frame : this) if(frame != null) for(Channel channel : instrument)
+			frame.data[channel.index] *= G[channel.index];
+		
 		isDetectorStage = false;
 	}
 	
@@ -1782,14 +1850,14 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 		
 		int n=0;
 		for(int t=0; t<v.length; t++) if(v[t] != null) speed[n++] = (float) v[t].length();
-		double avev = n > 0 ? ArrayUtil.median(speed, 0, n) : Double.NaN;
+		double avev = n > 0 ? Statistics.median(speed, 0, n) : Double.NaN;
 		
 		n=0;
 		for(int t=0; t<v.length; t++) if(v[t] != null) {
 			float dev = (float) (speed[n] - avev);
 			speed[n++] = dev*dev;
 		}
-		double w = n > 0 ? 0.454937/ArrayUtil.median(speed, 0, n) : 0.0;
+		double w = n > 0 ? 0.454937/Statistics.median(speed, 0, n) : 0.0;
 		
 		return new DataPoint(new WeightedPoint(avev, w));
 	}
@@ -2530,7 +2598,7 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 			dt *= Unit.day;
 			
 			chopper = new Chopper();
-			chopper.amplitude = ArrayUtil.median(distance, 0, n);
+			chopper.amplitude = Statistics.median(distance, 0, n);
 			if(chopper.amplitude < threshold) {
 				chopper = null;
 				System.err.println("   Small chopper fluctuations (assuming chopper not used).");
@@ -2699,4 +2767,36 @@ public abstract class Integration<InstrumentType extends Instrument<?>, FrameTyp
 		else getPixelWeights();	
 	}
 	
+
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+		
+		if(name.equals("scale")) return Util.defaultFormat(gain, f);
+		else if(name.equals("NEFD")) return Util.defaultFormat(nefd, f);
+		else if(name.equals("zenithtau")) return Util.defaultFormat(zenithTau, f);
+		else if(name.equals("tau")) return Util.defaultFormat(zenithTau / Math.cos(scan.horizontal.EL()), f);
+		else if(name.startsWith("tau.")) {
+			String id = name.substring(4).toLowerCase();
+			return Util.defaultFormat(getTau(id), f);
+		}
+		else if(name.equals("scanspeed")) return Util.defaultFormat(aveScanSpeed.value / (Unit.arcsec / Unit.s), f);
+		else if(name.equals("rmsspeed")) return Util.defaultFormat(aveScanSpeed.rms() / (Unit.arcsec / Unit.s), f);
+		else if(name.equals("hipass")) return Util.defaultFormat(filterTimeScale / Unit.s, f);
+		else if(name.equals("chopfreq")) {
+			if(chopper == null) return "---";
+			else return  Util.defaultFormat(chopper.frequency / Unit.Hz, f);
+		}
+		else if(name.equals("chopthrow")) {
+			if(chopper == null) return "---";
+			else return  Util.defaultFormat(2.0 * chopper.amplitude / instrument.getDefaultSizeUnit(), f);
+		}
+		else if(name.equals("chopeff")) {
+			if(chopper == null) return "---";
+			else return  Util.defaultFormat(chopper.efficiency, f);
+		}
+		else instrument.getFormattedEntry(name, formatSpec);
+
+		
+		return "(n/a)";
+	}
 }

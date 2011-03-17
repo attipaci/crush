@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of the proprietary SCUBA-2 modules of crush.
@@ -56,7 +56,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	}
 
 	@Override
-	public void read(String scanDescriptor) throws IOException, HeaderCardException, FitsException, FileNotFoundException {
+	public void read(String scanDescriptor, boolean readFully) throws IOException, HeaderCardException, FitsException, FileNotFoundException {
 		ArrayList<File> files = getFiles(scanDescriptor);
 		for(int i=0; i<files.size(); i++) {
 			File file = files.get(i);
@@ -70,7 +70,14 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 				continue;				
 			}
 			
-			if(i==0) readHeader(fits.getHDU(0));
+			if(i==0) {
+				BasicHDU mainHDU = fits.getHDU(0);
+				parseScanPrimaryHDU(mainHDU);
+				instrument.parseScanPrimaryHDU(mainHDU);
+				instrument.validate(MJD);	
+				clear();
+			}
+					
 			try { readSubscan(fits); }
 			catch(IllegalStateException e) { 
 				System.err.println("   WARNING! " + e.getMessage() + " Skipping.");
@@ -89,22 +96,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		if(!isEmpty()) validate();
 	}
 	
-	@Override
-	public void readHeader(String scanDescriptor) throws HeaderCardException, FitsException, IOException {
-		ArrayList<File> files = getFiles(scanDescriptor);
-		File file = files.get(0);
-		Fits fits = getFits(file);
-			
-		readHeader(fits.getHDU(0));
-		
-		try { fits.getStream().close(); }
-		catch(IOException e) {}
-		
-		if(fitsTemp != null) if(fitsTemp.exists()) {
-			fitsTemp.delete(); 
-			fitsTemp = null;
-		}
-	}
+	
 	
 	@Override
 	public void validate() {
@@ -278,13 +270,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		}
 		return null;		
 	}
-	
-	protected void readHeader(BasicHDU hdu) throws IllegalStateException, HeaderCardException, FitsException {
-		parseScanPrimaryHDU(hdu);
-		instrument.parseScanPrimaryHDU(hdu);
-		instrument.validate(MJD);	
-		clear();
-	}
+
 	
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();

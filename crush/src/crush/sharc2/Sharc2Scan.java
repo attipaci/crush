@@ -85,18 +85,27 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		}
 	}
 	
-	protected void read(Fits fits) throws IllegalStateException, HeaderCardException, FitsException {
+	protected void read(Fits fits, boolean readFully) throws IllegalStateException, HeaderCardException, FitsException {
 		// Read in entire FITS file		
 		BasicHDU[] HDU = fits.read();
 		
 		int i = 4; 
 		BasicHDU firstDataHDU = null;
 		while( !(firstDataHDU = HDU[i]).getHeader().getStringValue("EXTNAME").equalsIgnoreCase("SHARC2 Data") ) i++;
-			
+		
+		parseScanPrimaryHDU(HDU[0]);
+		clear();
+		
 		// Load the instrument settings...
-		readHeader(HDU[0], (BinaryTableHDU) HDU[1], (BinaryTableHDU) HDU[2], (BinaryTableHDU) HDU[3], firstDataHDU);
+		instrument.parseScanPrimaryHDU(HDU[0]);
+		instrument.parseHardwareHDU((BinaryTableHDU) HDU[1]);
+		instrument.parseDSPHDU((BinaryTableHDU) HDU[2]);
+		instrument.parsePixelHDU((BinaryTableHDU) HDU[3]);
+		instrument.parseDataHeader(firstDataHDU.getHeader());
+		instrument.validate(iMJD);
 		
 		Sharc2Integration integration = new Sharc2Integration(this);
+		integration.isProper = readFully;
 		integration.read(HDU, i);
 		add(integration);
 		
@@ -106,33 +115,6 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		horizontal = null;
 		
 		validate();
-	}
-	
-	protected void readHeader(Fits fits) throws IllegalStateException, HeaderCardException, FitsException, IOException {
-		int i = 4; 
-		BasicHDU firstDataHDU = null;
-		while(!(firstDataHDU = fits.getHDU(i)).getHeader().getStringValue("EXTNAME").equalsIgnoreCase("SHARC2 Data") ) i++;
-		
-		readHeader(fits.getHDU(0), (BinaryTableHDU) fits.getHDU(1), (BinaryTableHDU) fits.getHDU(2), 
-					(BinaryTableHDU) fits.getHDU(4), firstDataHDU);		
-		
-		try { fits.getStream().close(); }
-		catch(IOException e) {}
-	}
-	
-	protected void readHeader(BasicHDU mainHDU, BinaryTableHDU hardwareHDU, BinaryTableHDU dspHDU, BinaryTableHDU pixelHDU, BasicHDU dataHDU) throws IllegalStateException, HeaderCardException, FitsException {	
-		parseScanPrimaryHDU(mainHDU);
-		clear();
-		
-		// Load the instrument settings...
-		instrument.parseScanPrimaryHDU(mainHDU);
-		instrument.parseHardwareHDU(hardwareHDU);
-		instrument.parseDSPHDU(dspHDU);
-		instrument.parsePixelHDU(pixelHDU);
-		instrument.parseDataHeader(dataHDU.getHeader());
-		instrument.validate(iMJD);
-		
-		horizontal = null;
 	}
 	
 	
@@ -180,16 +162,10 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 	
 	
 	@Override
-	public void read(String scanDescriptor) throws HeaderCardException, FitsException, FileNotFoundException {
-		read(getFits(scanDescriptor));
+	public void read(String scanDescriptor, boolean readFully) throws HeaderCardException, FitsException, FileNotFoundException {
+		read(getFits(scanDescriptor), readFully);
 	}
-	
-	@Override
-	public void readHeader(String scanDescriptor) throws HeaderCardException, FitsException, FileNotFoundException, IOException {
-		readHeader(getFits(scanDescriptor));
-		Sharc2Integration integration = new Sharc2Integration(this);	
-		add(integration);
-	}
+
 	
 	public Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
 		File file = getFile(scanDescriptor);

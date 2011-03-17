@@ -27,6 +27,7 @@ Table of Contents
   2.4 Pixellization and Smoothing
   2.5 Image Processing Post-Reduction
   2.6 Reducing Very Large Datasets (to do...)
+  2.7 Custom Logging Support
 
 3. Advanced Configuration
 
@@ -1259,7 +1260,270 @@ options on the console.
 
 
 
+2.7 Custom Logging Support
+==========================
 
+   CRUSH (as of version 2.03 really) provides a poweful scan/reduction logging
+   capability via the 'log' and 'obslog' keys. 
+
+   'log' writes the log entries for each scan *after* the reduction, whereas 
+   'obslog' does not reduce data at all, only logs the scans immediately after 
+   reading them. While both logging functions work identically, some of the 
+   values are generated during reduction, and therefore may not be available to
+   'obslog'.
+
+   Log Files and Versioning
+   ------------------------
+   You can specify the log files to use with the 'log.file' and 'obslog.file'
+   keys (the default is to use <instrument>.log and <instrument>.obs.log in the
+   'outpath' directory). Equivalently, you can also set the filename directly 
+   as an optional argument to 'log' and 'obslog':
+
+      > crush [...] -log=myLog.log [...]  
+
+   You can specify the quantities, and the formatting in which they will appear,
+   using the 'log.format' and 'obslog.format' keys. Below you will find more
+   information on how to set the number formatting of quantities and a list
+   of values available for the logging.
+   
+   A log file always has a fixed format, the one which was used when creating 
+   it. Therefore, a conflict may arise if the same log file is specified for 
+   use with a different format. The policy for resolving such conflicts can be
+   set via the 'log.conflict' and 'obslog.conflict' keys, which can have one
+   of the following values:
+
+       overwrite    Overwrites the previous log file, with a new one in the
+       		    newly specified format
+
+       version	    Tries to find a sub-version of the same log file (with .1,
+       		    .2, .3 ... extension added) in the new format, or create
+		    the next available sub-version.
+
+   The default behaviour is to assume versioning, in order to preserve 
+   information in case of conflicts.
+
+
+   Decimal Formatting of Values
+   ----------------------------
+   Many of the quantities you can log are floating point values, and you have
+   the possibility of controlling how these will appear in your log files. 
+   Simply put one of the formatting directives in brackets after the value
+   to specifts its format. 
+
+   E.g. the keys 'RA' or 'RAh' will write the right-ascention coordinate either
+   as radians or as hours, with the default floating point formats. However,
+   'RA(ha2)' will write the value in human-readable 'hh:mm:ss.ss' format, 
+   whereas 'RAh(f3)' will express it as 'hh.hhh'.
+
+   You can choose from the following formats to express various quantities.
+   Be careful, because not all formats are appropriate to all types of data.
+   (For example, you should not try to format angles expressed in degrees with
+   the DMS formatting capabilities of the 'af' angle formats. Use these only
+   with angles expressed in radians!)
+
+
+	d0...d9		Integer format with 0...9 digits. E.g. 'd3' will write
+			Pi (3.1415...) as 003.
+
+	e0...e9		Exponential format with 0...9 decimals. E.g. e4 will
+			write Pi as 3.1415E0.
+
+	f0...f9		Floating point format with 0...9 decimals. E.g. f3 will
+			write Pi as 3.141.
+
+	s0...s9		Human readable format with 0...9 significant figures 
+			(floating point or exponential format,
+			whichever is more compact).
+
+	a:0...a:3
+	as0...as3
+	al0...al3	Angle format with 0...3 decimals on the seconds. E.g.
+			'a:1' produces angles in ddd:mm:ss.s format. Use only
+			with values expressed as radians (not in degrees!).
+			As such, 'a:1' will format Pi as '180:00:00.0'. The
+			difference between the 'a:', 'as', and 'al' formats is
+			the separators used between degrees, minutes and seconds
+			(colons, symbols, and letters respectively).
+
+	h:0...h:3
+	hs0...hs3		
+	hl0...hl3	Hour-angle format (e.g. for RA coordinate) with 0...3
+			decimals on the seconds. E.g. 'h:2' formats angles in
+			'hh:mm:ss.ss' format. Use only with values expressed
+			as radians (not in degrees!). As such 'h:2' will format
+			Pi as '12:00:00.0'. The difference between the 'h:', 
+			'hs', and 'hl' formats is the separators used between 
+			hours, minutes and seconds (colons, symbols, and 
+			letters respectively).
+
+			E.g. Pi will be:
+
+				h:1	12:00:00.0
+				hs1	12h00'00.0"
+				hl1	12h00m00.0s
+
+	t:0...t:3
+	ts0...ts3
+	tf0...tf3	Time format with 0...3 decimals on the seconds. E.g.
+			't:1' formats time in 'hh:mm:ss.s' format. Use only
+			on time values expressed in seconds! The difference 
+			between the 't:', 'ts', and 'tl' formats is the 
+			separators used between hours, minutes and seconds 
+			(colons, symbols, and letters respectively).
+
+	
+
+   Quantities and values that can be logged
+   ----------------------------------------
+   Currently, CRUSH offers the following quantities for logging. Directives
+   starting with '?' will log the values of configuration keys. Other 
+   quantitites reflect the various internals of the scan or instrument state.
+   More quantities will be added to this list in the future, especially 
+   values that are specific to certain instruments only. Keep an eye out for
+   changes/addititions :-).   
+
+
+	?<keyword>	The value of the configuration <keyword>. If the
+			configuration option is not defined '---' is written.
+			If the keyword is set without a value, then '<true>'
+			is written.
+
+	AZ		Azymuth coordinate (in radians). E.g. 'AZ(a:1)'
+			produces ddd:mm:ss.s formatted output. See also 'AZd' 
+			and 'EL'.
+
+	AZd		Azymuth coordinate in degrees. E.g. 'AZ(f2)'
+			produces output in ddd.dd format. See also 'AZ' and 
+			'ELd'
+
+	channels	Number of channels processed in the reduction. See
+			also 'okchannels' and 'maxchannels'.
+
+	chopeff		Chopper efficiency.
+
+	chopfreq	Chopper frequency (in Hz).
+
+	chopthrow	Chopper throw (2x amplitude).
+
+	creator		Software that created the data file (as stored by
+			the FITS CREATOR keyword).
+
+	date		Date (and time) of the observation. E.g. 
+			'date(yyyy-MM-dd)'. The format follows the rules for 
+			Java's SimpleDateFormat class.
+			
+	DEC		Declination coordinate (in radians). E.g. 'DEC(a:0)'
+			produces the declination in ddd:mm:ss format. See also
+			'RA' and 'DECd'.
+
+	DECd		Declination coordinate (in degrees). E.g. 'DECd(f1)'
+			produces output in ddd.d format. See also 'RAh' and
+			'DEC'.
+
+	descriptor	A descriptor string for the scan (e.g. the scan number
+			or file name used to invoke the scan).
+
+	EL		Elevation coordinate (in radians). 
+	
+	ELd		Elevation coordinate (in degrees).
+
+	epoch		Full coordinate epoch, e.g. (J2000.0).
+
+	epochY		E.g. epochY(f1) -> 2000.0
+
+	frames		Number of unflagged frames in the scan.
+
+	FWHM		Mean beam FWHM of the instrument (in 'sizeunit').
+
+	gain		Instrument gain.
+
+	generation	Source model generation.
+
+	hipass		Highpass filtering timescale (in seconds)
+
+	id		Scan identifier (e.g. scan number)
+
+	integrations	Number of integrations (subscans) contained in the 
+			scan.
+
+	LST		Local Sidereal Time (in seconds). E.g. use 'LST(t:1)'
+			to format is as 'hh:mm:ss.s'.
+
+	LSTh		LST in hours.
+
+	maxchannels	Maximum number of channels the instrument can have
+			(effectively the number of channels stored in the
+			data file).
+
+	maxFWHM		Smallest beam of the instrument (in sizeunit).
+
+	minFWHM		Largest beam of the instrument (in sizeunit).
+
+	MJD		Modified Julian Date of the scan.
+
+	mount		The focus in which the instrument is mounted.
+
+	NEFD		Average Noise Equivalent Flux Density (Jy sqrt[s]) as a
+			measure of the array sensitivity.
+
+	object		Name of observed object.
+
+	observer	Name(s) of the observer(s).
+
+	obshours	Effective on-source time (in hours).
+
+	obsmins		Effective on-source time (in minutes).
+
+	obstime		Effective on-source time (in seconds).
+
+	okchannels	Number of good (unflagged) channels.
+
+	PA		Mean parallactic angle (in radians).
+
+	PAd		Mean parallactic angle in degrees.
+
+	project		Project name (if defined)
+
+	ptfilter	The point-source flux filtering throughput of the 
+			reduction.
+
+	RA		Right-ascention coordinate (in radians). E.g. use
+			'RA(h:2)' to format as 'hh:mm:ss.ss'.
+
+	RAd		Right-ascention coordinate (in degrees).
+
+	RAh		Righ-ascention coordinate (in hours).
+
+	rate		Sampling rate of the data (Hz). See also 'sampling'
+
+	resolution	Instrument resolution (i.e. FWHM of the main beam).
+			in 'sizeunit'.
+	
+	rmsspeed	RMS fluctuation of the scanning speed (arcsec/s).
+
+	sampling	Sampling interval (seconds). The inverse of 'rate'.
+
+	scale		Scaling factor applied to the scan. 
+
+	scanspeed	Average scanning speed (arcsec/s).
+
+	serial		Serial number of the scan.
+
+	sizeunit	The size unit for measuring resolutions. E.g. 'arcsec'. 
+
+	tau		The in-band, line-of-sight opacity value.
+
+	tau.<id>	The zenith tau value for <id>. E.g. 'tau.225GHz' or
+			'tau.PWV' if these are defined by appropriate scaling
+			relations.
+
+	weight		The relative weight of the scan, based on the actual
+			noise of the map it generates.
+
+	zenithtau	The in-band opacity at zenith.
+
+
+	
 
 #####################################################################
 3. Advanced Configuration

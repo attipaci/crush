@@ -105,7 +105,6 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 		clear();
 		ensureCapacity(storeChannels);
 
-	
 		for(int c=0; c<storeChannels; c++) {
 			final ChannelType pixel = getChannelInstance(c+1);
 			pixel.index = c;

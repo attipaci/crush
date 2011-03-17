@@ -25,7 +25,8 @@
 package crush;
 
 import java.util.Arrays;
-import util.data.ArrayUtil;
+
+import util.data.Statistics;
 import util.data.WeightedPoint;
 
 
@@ -119,7 +120,7 @@ public class CorrelatedSignal extends Signal {
 			temp[t] = new WeightedPoint(value[t], weight[t]);
 			sumw += weight[t];
 		}
-		return new WeightedPoint(ArrayUtil.median(temp), sumw);
+		return new WeightedPoint(Statistics.median(temp), sumw);
 	}
 	
 	@Override

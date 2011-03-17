@@ -27,7 +27,7 @@ import java.util.Collection;
 
 import util.*;
 import util.astro.CelestialProjector;
-import util.data.ArrayUtil;
+import util.data.Statistics;
 import crush.*;
 import crush.array.*;
 
@@ -267,7 +267,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 		}
 		if(k == 0) return;
 		
-		double mean = ArrayUtil.median(peaks, 0, k);
+		double mean = Statistics.median(peaks, 0, k);
 		
 		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
 			int i = pixel.getDataIndex();

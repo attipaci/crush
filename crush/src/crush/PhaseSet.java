@@ -24,7 +24,7 @@ package crush;
 
 import java.util.*;
 
-import util.data.ArrayUtil;
+import util.data.Statistics;
 import util.data.WeightedPoint;
 
 public class PhaseSet extends ArrayList<PhaseOffsets> {
@@ -178,7 +178,7 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 			point.weight = wG2;
 			increment.weight += wG2;
 		}
-		increment.value = n > 0 ? ArrayUtil.smartMedian(temp, 0, n, 0.25) : 0.0;
+		increment.value = n > 0 ? Statistics.smartMedian(temp, 0, n, 0.25) : 0.0;
 	}
 	
 	protected void level(Channel channel) {
