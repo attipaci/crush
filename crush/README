@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 			  <kovacs[AT]astro.umn.edu>
 
-			  Last updated: 17 Sep 2010
+			  Last updated: 17 Mar 2011
 
 
 
@@ -1312,13 +1312,13 @@ options on the console.
 
    E.g. the keys 'RA' or 'RAh' will write the right-ascention coordinate either
    as radians or as hours, with the default floating point formats. However,
-   'RA(ha2)' will write the value in human-readable 'hh:mm:ss.ss' format, 
+   'RA(h:2)' will write the value in human-readable 'hh:mm:ss.ss' format, 
    whereas 'RAh(f3)' will express it as 'hh.hhh'.
 
    You can choose from the following formats to express various quantities.
    Be careful, because not all formats are appropriate to all types of data.
    (For example, you should not try to format angles expressed in degrees with
-   the DMS formatting capabilities of the 'af' angle formats. Use these only
+   the DMS formatting capabilities of the 'a' angle formats. Use these only
    with angles expressed in radians!)
 
 
@@ -1392,7 +1392,7 @@ options on the console.
 			produces ddd:mm:ss.s formatted output. See also 'AZd' 
 			and 'EL'.
 
-	AZd		Azymuth coordinate in degrees. E.g. 'AZ(f2)'
+	AZd		Azymuth coordinate in degrees. E.g. 'AZd(f2)'
 			produces output in ddd.dd format. See also 'AZ' and 
 			'ELd'
 
@@ -1589,8 +1589,13 @@ necessary.) The commands are:
 				   
 				Each successively loaded file may override
 				the options set before it.
-
-
+				When a matching configuration file is not found
+				in any of the standard locations (above), CRUSH
+				will make one last attempt to interpret the
+				argument as a regular pathname. This allows
+				users to store and invoke configuration files
+				anywhere on the filesystem.
+				
 	forget=<option>...	Forget the priorly set values for <option>
 				as if it were never defined. E.g. 
 		     		

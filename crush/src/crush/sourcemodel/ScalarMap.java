@@ -285,8 +285,8 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		if(hasOption("weighting.scans")) {
 			Configurator weighting = option("weighting.scans");
 			String method = "rms";
-			if(weighting.isConfigured("method")) method = weighting.get("method").value.toLowerCase();
-			else if(weighting.value.length() > 0) method = weighting.value.toLowerCase();
+			if(weighting.isConfigured("method")) method = weighting.get("method").getValue().toLowerCase();
+			else if(weighting.getValue().length() > 0) method = weighting.getValue().toLowerCase();
 			scan.weight = map.getChi2(method.equals("robust"));
 			if(Double.isNaN(scan.weight)) scan.weight = 0.0;
 		}

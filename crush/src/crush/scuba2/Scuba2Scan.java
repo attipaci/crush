@@ -205,7 +205,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		
 			// Try the same in the default working directory of CRUSH...
 			String path = CRUSH.workPath;
-			if(hasOption("outpath")) path = Util.getSystemPath(option("outpath").value);
+			if(hasOption("outpath")) path = Util.getSystemPath(option("outpath").getValue());
 			else path = getDataPath();
 			
 			outName = path + File.separator + getFitsName(file.getName());

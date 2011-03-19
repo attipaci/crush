@@ -2718,6 +2718,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		
 			final WeightedPoint left = phases.get(i).getValue(channel);
 			final WeightedPoint right = phases.get(i-1).getValue(channel);
+					
 			right.average(phases.get(i+1).getValue(channel));
 			left.subtract(right);
 		

@@ -36,11 +36,11 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.03-b1
+ * @version 2.03-b2
  * 
  */
 public class CRUSH extends Configurator {
-	public static String version = "2.03-b1";
+	public static String version = "2.03-b2";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -126,22 +126,44 @@ public class CRUSH extends Configurator {
 	@Override
 	public void readConfig(String fileName) {
 		String userConfPath = System.getProperty("user.home") + File.separator + ".crush2"+ File.separator;
+		boolean found = false;
 		
-		try { super.readConfig(CRUSH.home + File.separator + fileName); }
+		try { 
+			super.readConfig(CRUSH.home + File.separator + fileName); 
+			found = true;
+		}
 		catch(IOException e) {}
 		
-		try { super.readConfig(userConfPath + fileName); }
+		try { 
+			super.readConfig(userConfPath + fileName); 
+			found = true;
+		}
 		catch(IOException e) {}
 		
-		try { super.readConfig(instrument.getDefaultConfigPath() + fileName); }
+		try { 
+			super.readConfig(instrument.getDefaultConfigPath() + fileName); 
+			found = true;
+		}
 		catch(IOException e) { }
 		
 		// read the instrument overriderrs (if any).
-		try { super.readConfig(userConfPath + instrument.name + File.separator + fileName); }
+		try { 
+			super.readConfig(userConfPath + instrument.name + File.separator + fileName); 
+			found = true;
+		}
 		catch(IOException e) {}
+		
+		// If no matching config was found in any of the standard locations, then try it as an absolute
+		// config path...
+		if(!found) {
+			// read the instrument overriderrs (if any).
+			try { super.readConfig(fileName); }
+			catch(IOException e) {}
+			
+		}
 	}
 	
-	public void validate() {
+	public void validate() {		
 		if(scans.size() == 0) {
 			System.err.println("No scans to reduce. Exiting.");
 			System.exit(1);

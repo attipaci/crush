@@ -1,18 +1,20 @@
 
-2.03-b1
+2.03-b2
 	
 	Overview
 	=====================================================================
-	This is a beta release of the next CRUSH version (2.03).
+	This is the second beta release of the next CRUSH version (2.03).
 	The main new feature of this version is the powerful custom log
 	capability (read more about it in Section 2.7 of the README), and the
 	ability to detect and flag channels at or near their saturation values.
 	It also comes with updated photometry configuration for LABOCA (based
-	on the patches released for the previous version).
+	on the patches released for the previous version), and fixes the issue
+	of APEX configurations not being properly established when crush was
+	run from outside of its distribution directory.
 	=====================================================================
 
 	[NEW] Introducing a powerful custom logging of scans (and reductions)
-	via the 'log' and 'obslog' keys, and their various sub options. You
+	via the 'log' and 'obslog' keys, and their various sub-options. You
 	can specify what quantities are logged, and how they are formatted.
 	Please have a look at the new Section 2.7 of the README for a detailed
 	explanation of the logging capability. Over time, more quantities will	
@@ -20,7 +22,7 @@
 	additions.
 
 	[NEW] Pixels and data, which are at, or close to, the limits of the 
-	readout (DAC) range are now identified and flagged. You can use the 
+	readout (ADC) range are now identified and flagged. You can use the 
 	'range' keyword to specify the range of acceptable values, and 
 	'range.flagfraction' to set the maximum fraction of affected samples 
 	before the pixel is discarded from the reduction. It is an expert-level
@@ -29,25 +31,26 @@
 	specified in the units of the raw data as it is stored in the data 
 	files (see 'dataunit').
 
-	[NEW] Introducing logging capability via the 'log' key. When specified
-	an entry is written to the reduction log (argument can specify log file
-	name in the usual way) in the format specified by 'log.format'. The 
-	format specification should contain a list of field specifications and
-	separators, which can be white spaces (e.g. ' ', '\t') or commas ','.
-	The field specifications can specify a number formating option in 
-	brackets. E.g. the default log format is:
+	[BUG] {APEX} Common APEX configurations were not loaded when CRUSH was
+	run from outside of its disctibution directory, because the invocation
+	syntax did not follow the rules of the 'config' option (which does not
+	take full pathnames, only relative ones!). Sorry for the inconvenience.
 
-	  date(yyyy-MM-dd) serial\tobject\tobsmins(f1)\tAZ(f1) EL(f1)
-	  \tRA(f1) DEC(f1)
+	[FIX] Changed the way the config option behaves. If the specified
+	config file is not found in one of the standard locations for crush or
+	for the instrument, CRUSH will attempt to interpret it as a regular
+	pathname. This way users can actually store their custom configs
+	anywhere on the file system, as long as the names do not clash with
+	those distributed with crush. When using non-standard config files
+	try avoid names like 'default.cfg', 'faint.cfg', 'deep.cfg' or 
+	'bright.cfg' to minimize undesired behaviour...
 
-	For more detail on log formatting, please refer to the corresponding
-	section of the README. In time more and more quantities may be logged
-	Keep checking the README for updates.
+	[FIX] Allows processing configuration values enclosed in quotes. E.g.
+	
+	   crush -datapath="C:\My Data"
 
-	[FIX] Drifts removal updates filter timescales to the shorter of the
-	previous filter time scale and the new filter time scale. This is the
-	failsafe behaviour, even though theconfigurations were set up such that
-	there should be no difference in behaviour as a result of this change.
+	Both single (') and double (") quotes are allowed (as long as they 
+	match at the beginning and end).
 
 	[FIX] Slight issue with copying Instrument classes. If the instrument
 	was already populated with channels, then the channel copies kept 
@@ -55,6 +58,19 @@
 	its copy. Luckily the parental references were rarely used and in
 	non-critical context only. This prevented the issue from being a much
 	more serious bug...
+
+	[TWEAK] Whitening restricted to rejection of excess noise (by disabling 
+	'whiten.below') for chopped photometry reductions. Otherwise, with the 
+	fixed filter time-scale bug (see below), the whitening could go
+	berzerk. Proper white noise is a nice property to have for maps, but it
+	is not essential for photometry, where spatial information is not 
+	retained. Thus, the more restricted whitening has no negative impact 
+	whatsoever on the result :-).
+
+	[TWEAK] Drifts removal updates filter timescales to the shorter of the
+	previous filter time scale and the new filter time scale. This is the
+	failsafe behaviour, even though theconfigurations were set up such that
+	there should be no difference in behaviour as a result of this change.
 
 	[TWEAK] Average gains and weights (for gain an weight flagging) now
 	use robust means, with the 10% tails ignored.
@@ -259,6 +275,9 @@
 
 	[TWEAK] {SHARC-2} 'maitau.fallback' adjusted to use 'direct' tau only
 	for 350um data, and 225GHz taus otherwise. (see sharc2/default.cfg).
+
+	[CODE] Configurator.value now private, access only through get and set
+	methods.	
 
 	[CODE] Use Parallel class to reimplement parallel operations on 
 	source (extraction, synching, boxing, and indexing). 
