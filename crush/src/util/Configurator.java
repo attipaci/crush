@@ -32,7 +32,7 @@ import java.util.*;
 
 
 public class Configurator implements Cloneable {
-	public String value;
+	private String value;
 	public boolean isEnabled = false;
 	public boolean wasUsed = false;
 	public int index;
@@ -89,10 +89,58 @@ public class Configurator implements Cloneable {
 		StringTokenizer tokens = new StringTokenizer(line," \t=:");
 		Entry entry = new Entry();
 		entry.key = tokens.nextToken().toLowerCase();
-		entry.value = tokens.hasMoreTokens() ? line.substring(line.indexOf(tokens.nextToken(), entry.key.length())).trim() : "";
+		String value = tokens.hasMoreTokens() ? line.substring(line.indexOf(tokens.nextToken(), entry.key.length())).trim() : "";
+
+		// Remove quotes from around the argument
+		if(value.length() == 0);
+		else if(value.charAt(0) == '"' && value.charAt(value.length()-1) == '"')
+			value = value.substring(1, value.length() - 1);
+		else if(value.charAt(0) == '\'' && value.charAt(value.length()-1) == '\'')
+			value = value.substring(1, value.length() - 1);
+		
+		entry.value = value;
+		
 		return entry;
 	}
 	
+	/*
+	protected String resolve(String value) {
+		if(!value.contains("{#")) return value;
+			
+		StringBuffer resolved = new StringBuffer();
+		
+		int from = value.indexOf("{#");
+		int to = from;
+		resolved.append(value, 0, from);
+		
+		System.err.println("### from " + from);
+		
+		while(from >= 0) {
+			to = value.indexOf("}", from);
+			System.err.println("### from " + from);
+			if(to < 0) {
+				// If no closing bracket, then just quote the rest as literal, including
+				// the opening bracket...
+				System.err.println("### unclosed!");
+				resolved.append(value, from, value.length());
+				return new String(resolved);
+			}
+			String key = value.substring(from + 2, to);
+			
+			System.err.println("### resolving " + key);
+			
+			if(key.length() > 0) if(isConfigured(key)) {
+				String substitute = get(key).getValue();
+				System.err.println("### substitute " + substitute);
+				if(substitute != null) resolved.append(substitute);
+			}
+			
+			from = value.indexOf("{#", to);
+		}
+		resolved.append(value, to + 1, value.length());
+		return new String(resolved);
+	}
+	*/
 	
 	protected String unalias(String key) {
 		String branchName = getBranchName(key);
@@ -576,10 +624,12 @@ public class Configurator implements Cloneable {
 		if(settings.containsKey(spec)) parse(settings.get(spec));
 	}
 	
+	public void setValue(String value) {
+		this.value = value;
+	}
 	
 	public String getValue() {
 		return value; 
-		
 	}
 	
 	public double getDouble() {
@@ -774,7 +824,7 @@ public class Configurator implements Cloneable {
 			if(pattern != null) if(!key.startsWith(pattern)) continue;
 			
 			out.print("   (" + key);
-			String value = get(key).getValue();
+			String value = get(key).value;
 			if(value.length() > 0) out.print(" = " + value);
 			out.print(")");
 			if(isBlacklisted(key)) out.print(" --blacklisted--");

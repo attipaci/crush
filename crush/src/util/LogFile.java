@@ -83,11 +83,37 @@ public class LogFile {
 	
 	public void delete() {
 		File file = getFile();
-		if(file.exists()) file.delete();
+		if(file.exists()) {
+			System.err.println("Deleting " + file.getPath());
+			file.delete();
+		}
 	}
 	
 	public void deleteAll() {
+		File directory = getFile().getParentFile();
+		final String name = getFile().getName();
+		if(directory == null) directory = new File(".");
 		
+		File[] matches = directory.listFiles(new FileFilter() {
+
+			public boolean accept(File arg) {
+				String value = arg.getName();
+				
+				if(!value.startsWith(name)) return false;
+				if(value.length() == name.length()) return true;
+				String remainder = value.substring(name.length());
+				if(remainder.charAt(0) != '.') return false;
+				try {
+					Integer.parseInt(remainder.substring(1));
+					return true;
+				}
+				catch(NumberFormatException e) { return false; }
+			}
+		});
+		
+		for(File file : matches) {
+			System.err.println("Deleting " + file.getPath());
+		}
 	}
 	
 	public PrintStream getPrintStream() throws IOException {

@@ -21,10 +21,10 @@ JAVA="java"
 #JAVAOPTS="-Xbatch -Xmx4000M"
 # 
 # Uncomment and edit the line below for 64-bit SUN Java on 64-bit Unix OS
-JAVAOPTS="-d64 -server -Xbatch -Xmx6000M"
+#JAVAOPTS="-d64 -server -Xbatch -Xmx6000M"
 # 
 # Default SUN Java setup. Comment if using one of the other configs from above.
-#JAVAOPTS="-server -Xbatch -Xmx1000M"
+JAVAOPTS="-server -Xbatch -Xmx1000M"
 
 NAME=$0
 

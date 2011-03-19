@@ -274,7 +274,13 @@
 				  
 			Each successively loaded file may override the options 
 			set before it.
+			When a matching configuration file is not found in any
+			of the standard locations (above), CRUSH will make one
+			last attempt to interpret the argument as a standard 
+			pathname. This allows users to store and invoke custom 
+			configurations anywhere on the file system.
 			@See: 'bright', 'faint', 'deep'
+	
 
 :: convert		@Instrument: SCUBA-2
 			@Since: 2.01-3
