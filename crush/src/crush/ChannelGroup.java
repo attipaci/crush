@@ -109,7 +109,7 @@ public class ChannelGroup<ChannelType extends Channel> extends ArrayList<Channel
 		
 	public ChannelGroup<ChannelType> discard(int flagPattern, int criterion) {
 		
-		for(int i=0; i<size(); i++) {
+		for(int i=0; i < size(); i++) {
 			Channel channel = get(i);
 			switch(criterion) {
 			case DISCARD_ANY_FLAG:

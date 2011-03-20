@@ -43,7 +43,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	 * 
 	 */
 	private static final long serialVersionUID = 2929947229904002745L;
-	public int onSourceFlag = 0;
+	public int nodFlag = 0;
 	
 	protected WeightedPoint[] tempPhase;
 	
@@ -64,7 +64,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	}
 	
 	public void markChopped() {
-		if(onSourceFlag == 0) 
+		if(nodFlag == 0) 
 			throw new IllegalStateException("Merged subscan contains mixed nod phases. Cannot process chopper.");
 		
 		// Flag pixels that chop on source
@@ -73,8 +73,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		//System.err.println("on phase is " + integration[i][k].onPhase);
 		
 		
-		Vector2D left = new Vector2D(onSourceFlag == Frame.CHOP_LEFT ? 0.0 : 2.0 * chopper.amplitude, 0.0);
-		Vector2D right = new Vector2D(onSourceFlag == Frame.CHOP_LEFT ? -2.0 * chopper.amplitude : 0.0, 0.0);
+		Vector2D left = new Vector2D(nodFlag == Frame.CHOP_LEFT ? 0.0 : 2.0 * chopper.amplitude, 0.0);
+		Vector2D right = new Vector2D(nodFlag == Frame.CHOP_LEFT ? -2.0 * chopper.amplitude : 0.0, 0.0);
 		double tolerance = instrument.resolution / 5.0;
 		
 		markChopped(left, right, tolerance);
@@ -95,11 +95,15 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		for(Pixel pixel : instrument.getPixels()) {
 			Vector2D position = pixel.getPosition();
 			
-			if(position.distanceTo(left) < tolerance) for(Channel channel : pixel) 
+			if(position.distanceTo(left) < tolerance) for(Channel channel : pixel) {
+				channel.label |= Channel.LABEL_ONSOURCE;
 				System.err.print(" L" + channel.dataIndex);
-			else if(position.distanceTo(right) < tolerance) for(Channel channel : pixel) 
-				System.err.print(" R" + channel.dataIndex);
-				
+			}
+			else if(position.distanceTo(right) < tolerance) for(Channel channel : pixel) {
+				channel.label |= Channel.LABEL_ONSOURCE;
+				System.err.print(" R" + channel.dataIndex); 
+			}
+			else for(Channel channel : pixel) channel.label &= ~Channel.LABEL_ONSOURCE;
 		}
 		
 		System.err.println();
@@ -123,7 +127,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 					current.start = exposure;
 					current.end = exposure;
 					current.phase = Frame.CHOP_LEFT;
-					if((current.phase & onSourceFlag) != 0) current.flag |= PhaseOffsets.FLAG_ONSOURCE;
 					chopper.phases.add(current);
 					phases++;
 				}
@@ -137,7 +140,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 					current.start = exposure;
 					current.end = exposure;
 					current.phase = Frame.CHOP_RIGHT;
-					if((current.phase & onSourceFlag) != 0) current.flag |= PhaseOffsets.FLAG_ONSOURCE;
 					chopper.phases.add(current);
 					phases++;
 				}
@@ -325,22 +327,22 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			final String phase1 = header.getStringValue("PHASE1");	
 			final String phase2 = header.getStringValue("PHASE2");
 
-			onSourceFlag = Frame.CHOP_LEFT;
+			nodFlag = Frame.CHOP_LEFT;
 			
 			if(phase1 != null) {
-				if(phase1.equalsIgnoreCase("WON")) onSourceFlag = Frame.CHOP_LEFT;
-				else if(phase1.equalsIgnoreCase("WOFF")) onSourceFlag = Frame.CHOP_RIGHT;
+				if(phase1.equalsIgnoreCase("WON")) nodFlag = Frame.CHOP_LEFT;
+				else if(phase1.equalsIgnoreCase("WOFF")) nodFlag = Frame.CHOP_RIGHT;
 			}
 			else if(phase2 != null) {
-				if(phase2.equalsIgnoreCase("WON")) onSourceFlag = Frame.CHOP_RIGHT;
-				else if(phase2.equalsIgnoreCase("WOFF")) onSourceFlag = Frame.CHOP_LEFT;
+				if(phase2.equalsIgnoreCase("WON")) nodFlag = Frame.CHOP_RIGHT;
+				else if(phase2.equalsIgnoreCase("WOFF")) nodFlag = Frame.CHOP_LEFT;
 			}
 			
 			if(apexScan.chopper != null) chopper = apexScan.chopper.copy();
 
 			if(chopper != null)
-				System.err.println("   Nodding " + (onSourceFlag == Frame.CHOP_LEFT ? "[LEFT]" : 
-							(onSourceFlag == Frame.CHOP_RIGHT ? "[RIGHT]" : "[???]")));
+				System.err.println("   Nodding " + (nodFlag == Frame.CHOP_LEFT ? "[LEFT]" : 
+							(nodFlag == Frame.CHOP_RIGHT ? "[RIGHT]" : "[???]")));
 		
 		}
 		
@@ -373,7 +375,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				if(chop != null) exposure.chopperPosition.x = chop[t] * Unit.deg;
 				exposure.chopperPhase = phase[t];			
 				exposure.zenithTau = (float) zenithTau;
-				exposure.onSourceFlag = onSourceFlag;
+				exposure.nodFlag = nodFlag;
 				
 				if(chopper != null) if(!chopperIncluded) {
 					exposure.horizontal.x += exposure.chopperPosition.x / exposure.horizontal.cosLat;

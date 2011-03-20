@@ -99,6 +99,6 @@ public class PhaseOffsets {
 		return new WeightedPoint(value[channel.index], weight[channel.index]);
 	}
 
-	public static final int FLAG_ONSOURCE = 1;
+	//public static final int FLAG_ONSOURCE = 1;
 	
 }

@@ -1409,7 +1409,14 @@
 			and pixels that are consistent offenders will be
 			removed from the reduction (as set by 
 			'range.flagfraction').
-			@See: 'dataunit', 'range.flagfraction'	
+			@See: 'dataunit', 'range.flagfraction', 'range.auto'	
+
+:: range.auto		@Expert
+			@Instrument: LABOCA
+			@Since: 2.03
+			Set the ADC range automatically using the actual 
+			backend gain setting
+			@See: 'range'
 
 :: range.flagfraction=X		@Expert
 				@Since: 2.03

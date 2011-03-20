@@ -30,7 +30,7 @@ import crush.*;
 
 public class APEXFrame extends HorizontalFrame {
 	public int chopperPhase;
-	public int onSourceFlag;
+	public int nodFlag;
 	boolean isValid = true;
 	final static double m900deg = -900.0*Unit.deg;
 	

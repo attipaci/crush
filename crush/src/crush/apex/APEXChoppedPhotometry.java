@@ -105,11 +105,11 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 			final APEXArraySubscan<?,?> subscan = (APEXArraySubscan<?,?>) integration;
 			final double transmission = 0.5 * (subscan.getFirstFrame().transmission + subscan.getLastFrame().transmission);
 			
-			for(APEXPixel pixel : subscan.instrument.getObservingChannels()) if(pixel.isUnflagged()) {
+			for(APEXPixel pixel : subscan.instrument.getObservingChannels()) if((pixel.label & Channel.LABEL_ONSOURCE) != 0) {
 				WeightedPoint point = null;
 
-				if(subscan.onSourceFlag == Frame.CHOP_LEFT) point = left[pixel.dataIndex];
-				else if(subscan.onSourceFlag == Frame.CHOP_RIGHT) point = right[pixel.dataIndex];
+				if(subscan.nodFlag == Frame.CHOP_LEFT) point = left[pixel.dataIndex];
+				else if(subscan.nodFlag == Frame.CHOP_RIGHT) point = right[pixel.dataIndex];
 				else continue;
 				
 				WeightedPoint df = integration.getLROffset(pixel);
