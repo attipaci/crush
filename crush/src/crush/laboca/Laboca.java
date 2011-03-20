@@ -32,6 +32,7 @@ import nom.tam.fits.*;
 import java.io.*;
 import java.util.*;
 
+import util.Range;
 import util.Unit;
 import util.Util;
 
@@ -59,9 +60,18 @@ public class Laboca extends APEXArray<LabocaPixel> {
 		//System.err.println(" Frontend Gain is " + gain);
 	
 		// LabocaPixel.offset: get BOLDCOFF
-
+		
 		// Needed only for pre Feb2007 Files with integer format.
 		//gain *= 10.0/ ((float[]) row[hdu.findColumn("BEGAIN"])[0] / (1<<15-1);	
+		
+		if(hasOption("range.auto")) {
+			Range range = new Range(-9.9, 9.9);
+			Object[] row = hdu.getRow(0);
+			float G = ((float[]) row[hdu.findColumn("BEGAIN")])[0];
+			range.scale(1.0 / G);
+			System.err.println(" Setting ADC range to " + range.toString() + "(V)");
+			options.process("range", range.toString());
+		}
 		
 		super.readPar(hdu);
 	}

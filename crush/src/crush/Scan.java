@@ -530,7 +530,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 				catch(IllegalAccessException e) { e.printStackTrace(); }
 			}
 			integration.instrument.census();
-			integration.comments += instrument.mappingChannels;
+			integration.comments += integration.instrument.mappingChannels;
 		}
 		
 	

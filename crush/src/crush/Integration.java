@@ -1629,19 +1629,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			else exposure.flag &= ~Frame.FLAG_SPIKY;
 		}
 		
-		
 		comments += "(" + Util.f1.format(100.0*spikyFrames/size()) + "%)";
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	// 2*bins complex gains per pixel...

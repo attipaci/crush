@@ -154,9 +154,12 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 	public void getMLCorrelated(PhaseOffsets offsets, CorrelatedMode mode, float[] G, WeightedPoint increment) {
 		increment.noData();
 		
+		final int skipChannels = mode.skipChannels;
+		
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.channels.get(k);
-			if(channel.isFlagged(mode.skipChannels)) continue;
+			if(channel.isFlagged(skipChannels)) continue;
+			if((channel.label & Channel.LABEL_ONSOURCE) != 0) continue;
 			final double wG = offsets.weight[channel.index] * G[k];
 			increment.value += wG * offsets.value[channel.index];
 			increment.weight += wG * G[k];
@@ -165,11 +168,14 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 	}
 	
 	public void getRobustCorrelated(PhaseOffsets offsets, CorrelatedMode mode, float[] G, WeightedPoint[] temp, WeightedPoint increment) {
+		final int skipChannels = mode.skipChannels;
+		
 		int n=0;
 		increment.weight = 0.0;
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.channels.get(k);
-			if(channel.isFlagged(mode.skipChannels)) continue;
+			if(channel.isFlagged(skipChannels)) continue;
+			if((channel.label & Channel.LABEL_ONSOURCE) != 0) continue;
 			final float Gk = G[k];
 			final double wG2 = offsets.weight[channel.index] * Gk * Gk;
 			if(wG2 == 0.0) continue;

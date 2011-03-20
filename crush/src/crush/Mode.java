@@ -126,14 +126,14 @@ public class Mode {
 		float[] gain = getGains();
 		
 		for(int k=channels.size(); --k >= 0; ) {
-			Channel pixel = channels.get(k);
+			Channel channel = channels.get(k);
 			
 			float G = Float.NaN;
 			if(gainType == Instrument.GAINS_SIGNED) G = gain[k];
 			else if(gainType == Instrument.GAINS_BIDIRECTIONAL) G = Math.abs(gain[k]);
 
-			if(!gainRange.contains(G)) pixel.flag(gainFlag);
-			else pixel.unflag(gainFlag);
+			if(!gainRange.contains(G)) channel.flag(gainFlag);
+			else channel.unflag(gainFlag);
 		}
 	}
 	

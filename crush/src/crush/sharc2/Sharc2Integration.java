@@ -175,7 +175,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 							throw e;
 						}	
 						System.err.println("Falling back to '" + source + "'.");
-						option("tau").setValue(source);
+						instrument.options.process("tau", source);
 						setTau();
 					}
 					else throw e;				

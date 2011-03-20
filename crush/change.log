@@ -1,17 +1,25 @@
 
-2.03-b2
+2.03-1
 	
 	Overview
 	=====================================================================
-	This is the second beta release of the next CRUSH version (2.03).
-	The main new feature of this version is the powerful custom log
+	This is a major update of CRUSH.
+	It fixes a critical bug that surfaced since 2.02-1, and affected 
+	releases before 2.03-b2. APEX configurations were not properly
+	established when crush was run from outside of its distribution 
+	directory.
+	The main new feature of this version is a powerful custom logging
 	capability (read more about it in Section 2.7 of the README), and the
 	ability to detect and flag channels at or near their saturation values.
 	It also comes with updated photometry configuration for LABOCA (based
-	on the patches released for the previous version), and fixes the issue
-	of APEX configurations not being properly established when crush was
-	run from outside of its distribution directory.
+	on the patches released for the previous version).
 	=====================================================================
+
+	[CRITICAL] {APEX} Common APEX configurations were not loaded when CRUSH
+	was run from outside of its disctibution directory, because the 
+	invocation syntax did not follow the rules of the 'config' option 
+	(which did not take full pathnames, only relative ones!). Sorry for 
+	the inconvenience.
 
 	[NEW] Introducing a powerful custom logging of scans (and reductions)
 	via the 'log' and 'obslog' keys, and their various sub-options. You
@@ -29,14 +37,20 @@
 	setting. You probably do not need to play with this option unless you 
 	really know what you are doing... Note, that the range is always 
 	specified in the units of the raw data as it is stored in the data 
-	files (see 'dataunit').
+	files (see 'dataunit'). LABOCA can set the range automatically, based
+	on the backend gain setting, if the 'range.auto' option is set.
 
-	[BUG] {APEX} Common APEX configurations were not loaded when CRUSH was
-	run from outside of its disctibution directory, because the invocation
-	syntax did not follow the rules of the 'config' option (which does not
-	take full pathnames, only relative ones!). Sorry for the inconvenience.
+	[FIX] Photometry reductions had a small level (10--15%) of unaccounted 
+	flux filtering resulting from the decorrelation of phase offsets. As
+	of now, the information in the on-source channel no longer contributes
+	to the estimate of the correlated offset, and therefore there is no
+	more undesired filtering of the source fluxes.
 
-	[FIX] Changed the way the config option behaves. If the specified
+	[FIX] Decorrelation steps in photometry reductions did not report
+	the number of unflagged channels correctly. However, this was simply a
+	display issue, with no effect on the actual reduction.
+
+	[FIX] Changed the way the 'config' option behaves. If the specified
 	config file is not found in one of the standard locations for crush or
 	for the instrument, CRUSH will attempt to interpret it as a regular
 	pathname. This way users can actually store their custom configs
@@ -69,8 +83,9 @@
 
 	[TWEAK] Drifts removal updates filter timescales to the shorter of the
 	previous filter time scale and the new filter time scale. This is the
-	failsafe behaviour, even though theconfigurations were set up such that
-	there should be no difference in behaviour as a result of this change.
+	failsafe behaviour, even though the configurations were set up such 
+	that there should be no difference in behaviour as a result of this 
+	change.
 
 	[TWEAK] Average gains and weights (for gain an weight flagging) now
 	use robust means, with the 10% tails ignored.
