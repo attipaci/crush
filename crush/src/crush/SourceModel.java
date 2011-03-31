@@ -173,6 +173,17 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 	
 	public abstract Unit getUnit();
 	
+	// Replace character sequences that are problematic in filenames with underscores "_"
+	public String getCanonicalSourceName() {
+		StringTokenizer tokens = new StringTokenizer(getSourceName(), " \t\r*?/\\\"");
+		StringBuffer canonized = new StringBuffer();
+		while(tokens.hasMoreTokens()) {
+			canonized.append(tokens.nextToken());
+			if(tokens.hasMoreTokens()) canonized.append('_');
+		}
+		return new String(canonized);
+	}
+	
 	public String getDefaultCoreName() {
 		ScanType first, last;
 		first = last = scans.get(0);
@@ -182,7 +193,7 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 			else if(scan.compareTo(last) > 0) last = scan;			
 		}
 		
-		String name = getSourceName() + "." + first.getID();
+		String name = getCanonicalSourceName() + "." + first.getID();
 		if(scans.size() > 1) if(!first.getID().equals(last.getID())) name += "-" + last.getID();
 		
 		return name;

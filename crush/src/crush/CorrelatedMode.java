@@ -28,7 +28,6 @@ import java.lang.reflect.*;
 
 import util.data.WeightedPoint;
 
-
 // Gains can be linked to a channel's field, or can be internal...
 
 public class CorrelatedMode extends Mode {
@@ -36,7 +35,6 @@ public class CorrelatedMode extends Mode {
 	public boolean fixedSignal = false;
 	public boolean solvePhases = false;
 	public int skipChannels = ~0;
-	public float[] usedGains;
 	
 	public CorrelatedMode() {}
 	
@@ -53,43 +51,63 @@ public class CorrelatedMode extends Mode {
 		return channels.getChannels().discard(skipChannels);		
 	}	
 	
-	public synchronized void normalizeGains(float[] gain, Signal signal, int normFlags) throws IllegalStateException {
+	public synchronized void normalizeGains(float[] G, double norm) {
+		for(int i=G.length; --i >= 0; ) G[i] /= norm;
+	}
+	
+	public synchronized void normalizeGains(WeightedPoint[] G, double aveG) {
+		final double norm = 1.0 / aveG;
+		for(WeightedPoint gain : G) gain.scale(norm);
+	}
+	
+	public synchronized void scaleSignals(Integration<?,?> integration, double aveG) {
 		if(fixedGains) throw new IllegalStateException("Correlate mode '" + name + "' has non-adjustable gains.");
-		double aveG = getAverageGain(gain, normFlags);
-		for(int k=0; k<channels.size(); k++) gain[k] /= aveG;
+		
+		Signal signal = integration.signals.get(this);
 		signal.scale(aveG);
+		
+		PhaseSet phases = integration.getPhases();
+		if(phases != null) phases.signals.get(this).scale(aveG);
 	}
 	
 	public void updateSignal(Integration<?, ?> integration, boolean isRobust) {
 		if(fixedSignal) throw new IllegalStateException("WARNING! Cannot decorrelate fixed signal modes.");
-		try { integration.updateCorrelated(this, isRobust); }
+		try { 
+			CorrelatedSignal signal = (CorrelatedSignal) integration.signals.get(this);
+			if(signal == null) signal = new CorrelatedSignal(this, integration);
+			signal.update(isRobust); 	
+		}
 		catch(IllegalAccessException e) { e.printStackTrace(); }
-	}
-		
-	@Override
-	public void validateGainIncrement(WeightedPoint[] dG, Signal signal) throws IllegalAccessException {
-		super.validateGainIncrement(dG, signal);
-		if(fixedSignal) return;
-		
-		float[] G = getGains();
-		float[] G1 = new float[G.length];
-		for(int i=G.length; --i >= 0; ) G1[i] = G[i] + (float) dG[i].value;
-		normalizeGains(G1, signal, gainFlag);
-		
-		for(int i=G.length; --i >= 0; ) dG[i].value = G1[i] - G[i];
-	}
-	
-	public void setUsedGains(float[] G) {
-		// The used gains is an independent copy of the currently set values...
-		if(usedGains == null) usedGains = new float[G.length];
-		else if(usedGains.length != G.length) usedGains = new float[G.length];
-		System.arraycopy(G, 0, usedGains, 0, G.length);
-	}
+	}	
 	
 	@Override
-	public void setGains(float[] G) throws IllegalAccessException {
-		setUsedGains(G);
-		super.setGains(G);
+	protected void syncGains(Integration<?, ?> integration, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {		
+		// Now do the actual synching to the samples
+		super.syncGains(integration, sumwC2, isTempReady);
+		
+			
+		/*
+		 * TODO
+		 * Gain renormalization is dangerous when other modes depend on the same gains
+		 * but are not renormalized... A better way to do this is to keep track of
+		 * dependent modes, and renormalize them all... 
+		 * 
+		// Renormalized the gains to be unity on average...
+		double aveG = getAverageGain(fG, gainFlag);
+		normalizeGains(fG, aveG);
+		normalizeGains(G, aveG);
+		
+		// Re-scale the relevant signals to keep gain/signal products intact...
+		// This scales both the fast signals and the phase signals...
+		scaleSignals(integration, aveG);	
+		
+		// Mark these as the gains used for the sync...
+		// This has to happen after the sync!!!
+		integration.signals.get(this).setUsedGains(fG);
+		if(phases != null) phases.signals.get(this).setUsedGains(fG);		
+		*/
+
 	}
-	
+		
+
 }

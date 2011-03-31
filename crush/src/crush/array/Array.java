@@ -110,7 +110,8 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		
 		Hashtable<Integer, Pixel> backends = getPixelLookup(); 
 		boolean useGains = hasOption("rcp.gains");
-		boolean fixedGains = hasOption("source.fixedgains");
+			
+		if(useGains) System.err.println(" Initial Source Gains set from RCP file.");
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(!"#!/".contains(line.charAt(0) + "")) {
 			StringTokenizer tokens = new StringTokenizer(line);
@@ -123,11 +124,7 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 						double sourceGain = Double.parseDouble(tokens.nextToken());
 						double gain = (columns == 3 || columns > 4) ? Double.parseDouble(tokens.nextToken()) : sourceGain;
 						
-						if(useGains) {
-							channel.gain = gain;
-							// TODO fix me!
-							channel.coupling = fixedGains ? sourceGain : sourceGain / gain;
-						}
+						if(useGains) channel.gain = gain;
 						if(sourceGain != 0.0) channel.unflag(Channel.FLAG_BLIND);
 					}
 

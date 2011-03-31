@@ -137,6 +137,33 @@ public class WeightedPoint implements Comparable<WeightedPoint>, Cloneable {
 		return df.format(value) + " +- " + df.format(Math.sqrt(1.0 / weight)); 
 	}
 
+	public static float[] floatValues(WeightedPoint[] data) {
+		float[] fdata = new float[data.length];
+		for(int i=data.length; --i >= 0; ) fdata[i] = (float) data[i].value;
+		return fdata;
+	}
+	
+	public static double[] values(WeightedPoint[] data) {
+		double[] ddata = new double[data.length];
+		for(int i=data.length; --i >= 0; ) ddata[i] = data[i].value;
+		return ddata;
+	}
+	
+	public static float[] floatWeights(WeightedPoint[] data) {
+		float[] fdata = new float[data.length];
+		for(int i=data.length; --i >= 0; ) fdata[i] = (float) data[i].weight;
+		return fdata;
+	}
+	
+	public static double[] weights(WeightedPoint[] data) {
+		double[] ddata = new double[data.length];
+		for(int i=data.length; --i >= 0; ) ddata[i] = data[i].weight;
+		return ddata;
+	}
+	
+	
+	
+	
 	public final static WeightedPoint NaN = new WeightedPoint(0.0, 0.0);
 
 	

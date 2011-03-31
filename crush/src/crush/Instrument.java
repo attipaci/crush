@@ -148,7 +148,10 @@ implements TableEntries {
 			for(Channel channel : this) channel.gain *= 1.0 + level * random.nextGaussian();
 		}
 				
-		if(hasOption("source.fixedgains")) System.out.println(" Will use static source gains (from RCP).");
+		if(hasOption("source.fixedgains")) {
+			fixedSourceGains();
+			System.out.println(" Will use static source gains.");
+		}
 		
 		for(Channel channel : this) {
 			channel.spikes = 0;
@@ -492,6 +495,10 @@ implements TableEntries {
 		for(Channel channel : this) field.setDouble(channel, 1.0);		
 	}
 			
+	public void fixedSourceGains() {
+		for(Channel channel : this) channel.coupling = channel.gain;
+	}
+	
 	// create the channel groups based on the wiring scheme.
 	
 	public String getPixelDataHeader() {
@@ -689,6 +696,8 @@ implements TableEntries {
 		return this;
 	}
 	
+	
+		
 	public double[] getSourceGains(boolean filterCorrected) {
 		final double[] sourceGain = new double[size()];
 		boolean fixedGains = hasOption("source.fixedgains");
@@ -761,9 +770,7 @@ implements TableEntries {
 				channel.unflag(Channel.FLAG_DOF);
 				if(channel.isUnflagged(Channel.FLAG_GAIN)) weights[n++] = channel.weight * channel.gain * channel.gain;
 			}
-			else {
-				channel.flag(Channel.FLAG_DOF);
-			}
+			else channel.flag(Channel.FLAG_DOF);
 		}
 		if(n == 0) throw new IllegalStateException("DOF?");
 		

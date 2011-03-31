@@ -523,30 +523,25 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		for(IntegrationType integration : this) {
 			Modality<?> modality = integration.instrument.modalities.get(modalityName);
 			for(Mode mode : modality) if(!mode.fixedGains) {
-				WeightedPoint[] iG = new WeightedPoint[mode.channels.size()];
-				for(int k=iG.length; --k >= 0; ) iG[k] = G[mode.channels.get(k).dataIndex];
+				float[] fG = new float[mode.channels.size()];
+				float[] sumwC2 = new float[mode.channels.size()];
 				
-				try { mode.applyGains(iG, integration, true); }
+				for(int k=fG.length; --k >= 0; ) {
+					final WeightedPoint channelGain = G[mode.channels.get(k).dataIndex];
+					fG[k] = (float) channelGain.value;
+					sumwC2[k] = (float) channelGain.weight;
+				}
+				
+				try { 
+					mode.setGains(fG);
+					mode.syncGains(integration, sumwC2, true); 			
+				}
 				catch(IllegalAccessException e) { e.printStackTrace(); }
 			}
 			integration.instrument.census();
 			integration.comments += integration.instrument.mappingChannels;
 		}
-		
-	
-		// Set the new gains
-		for(IntegrationType integration : this) {
-			Modality<?> modality = integration.instrument.modalities.get(modalityName);
-			for(Mode mode : modality) if(!mode.fixedGains) {
-				float[] g = new float[mode.channels.size()];
-				for(int k=g.length; --k >= 0; ) g[k] = (float) G[mode.channels.get(k).dataIndex].value;
-				try { mode.setGains(g); }	
-				catch(IllegalAccessException e) { e.printStackTrace(); }
-			}
-		}
 	}
-	
-	
 	
 	public void decorrelate(String modalityName) {
 		boolean isRobust = false;
@@ -560,7 +555,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		if(task.startsWith("correlated.")) {
 			String modalityName = task.substring(task.indexOf('.')+1);
 			decorrelate(modalityName);
-			for(IntegrationType integration : this) integration.comments += " ";
+			for(IntegrationType integration : this) if(integration.comments.charAt(integration.comments.length() - 1) != ' ') 
+				integration.comments += " ";
 		}
 		else for(IntegrationType integration : this) integration.perform(task);
 	}

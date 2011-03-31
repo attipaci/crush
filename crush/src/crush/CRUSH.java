@@ -40,7 +40,7 @@ import nom.tam.util.*;
  * 
  */
 public class CRUSH extends Configurator {
-	public static String version = "2.03-1";
+	public static String version = "2.04-a1";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -163,12 +163,12 @@ public class CRUSH extends Configurator {
 		}
 	}
 	
-	public void validate() {		
+	public void validate() {			
 		if(scans.size() == 0) {
 			System.err.println("No scans to reduce. Exiting.");
 			System.exit(1);
 		}
-		
+				
 		try { instrument.validate(scans); }
 		catch(Error e) {
 			System.err.println("ERROR! " + e.getMessage());
@@ -184,6 +184,7 @@ public class CRUSH extends Configurator {
 		
 		//Collections.sort(scans);
 		
+			
 		update();
 		System.err.println("Will use " + Math.min(scans.size(), maxThreads) + " CPU core(s).");
 	}
@@ -410,7 +411,7 @@ public class CRUSH extends Configurator {
 			"  crush -- Reduction and imaging tool for bolometer arrays.\n" +
 			"           Version " + version + "\n" +
 			"           http://www.submm.caltech.edu/~sharc/crush\n" +
-			"           Copyright (C)2010 Attila Kovacs <kovacs[AT]astro.umn.edu>\n" +
+			"           Copyright (C)2011 Attila Kovacs <kovacs[AT]astro.umn.edu>\n" +
 			"  ----------------------------------------------------------------------\n";	
 		System.err.println(info);
 	}

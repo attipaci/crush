@@ -82,11 +82,12 @@ public class Configurator implements Cloneable {
 	
 	public void parse(String line) {
 		Entry entry = getEntry(line);
-		process(entry.key, entry.value);
+		if(entry != null) process(entry.key, entry.value);
 	}
 	
 	protected Entry getEntry(String line) {
 		StringTokenizer tokens = new StringTokenizer(line," \t=:");
+		if(!tokens.hasMoreTokens()) return null;
 		Entry entry = new Entry();
 		entry.key = tokens.nextToken().toLowerCase();
 		String value = tokens.hasMoreTokens() ? line.substring(line.indexOf(tokens.nextToken(), entry.key.length())).trim() : "";

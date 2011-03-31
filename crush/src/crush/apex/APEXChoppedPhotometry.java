@@ -74,21 +74,7 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 		APEXArraySubscan<?,?> subscan = (APEXArraySubscan<?,?>) integration;		
 		APEXArray<?> instrument = subscan.instrument;
 		integrationTime += subscan.chopper.efficiency * subscan.size() * instrument.integrationTime;
-	
-		for(PhaseOffsets offsets : subscan.chopper.phases) {
-			double sum = 0.0, sumw = 0.0;
-			for(APEXPixel pixel : instrument.getObservingChannels()) if(pixel.isUnflagged()) {
-				if(pixel == instrument.referencePixel) continue;
-				
-				final double wG = offsets.weight[pixel.index] * pixel.gain;
-				sum += wG * offsets.value[pixel.index];
-				sumw += wG * pixel.gain;
-			}
-			if(sumw > 0.0) {
-				final double C = sum/sumw;
-				for(APEXPixel pixel : instrument) offsets.value[pixel.index] -= pixel.gain * C;
-			}
- 		}
+		//integration.updatePhases();
 	}
 
 	@Override
@@ -101,20 +87,23 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 			right[c] = new WeightedPoint();			
 		}
 		
+		
 		for(Integration<?,?> integration : scan) {
 			final APEXArraySubscan<?,?> subscan = (APEXArraySubscan<?,?>) integration;
 			final double transmission = 0.5 * (subscan.getFirstFrame().transmission + subscan.getLastFrame().transmission);
+			final double[] sourceGain = subscan.instrument.getSourceGains(false);
+			final PhaseSet phases = integration.getPhases();
 			
-			for(APEXPixel pixel : subscan.instrument.getObservingChannels()) if((pixel.label & Channel.LABEL_ONSOURCE) != 0) {
+			for(APEXPixel pixel : subscan.instrument.getObservingChannels()) if(pixel.sourcePhase != 0) {
 				WeightedPoint point = null;
 
-				if(subscan.nodFlag == Frame.CHOP_LEFT) point = left[pixel.dataIndex];
-				else if(subscan.nodFlag == Frame.CHOP_RIGHT) point = right[pixel.dataIndex];
+				if(pixel.sourcePhase == Frame.CHOP_LEFT) point = left[pixel.dataIndex];
+				else if(pixel.sourcePhase == Frame.CHOP_RIGHT) point = right[pixel.dataIndex];
 				else continue;
 				
-				WeightedPoint df = integration.getLROffset(pixel);
-				df.weight /= Math.max(1.0, integration.getLRChi2(pixel, df.value));
-				df.scale(1.0 / transmission / subscan.gain / pixel.gain);
+				WeightedPoint df = phases.getLROffset(pixel);
+				df.weight /= Math.max(1.0, phases.getLRChi2(pixel, df.value));
+				df.scale(1.0 / transmission / subscan.gain / sourceGain[pixel.index]);
 				
 				point.average(df);
 			}

@@ -1,3 +1,59 @@
+>> Look into source.model... (and blanking through all iterations).
+>> Updater (for tau.dat and calibration.dat files + pixeldata.cfg)
+	update.auto (check once daily)
+	'<instrument>/lastupdate' (times and versions)
+>> Check gain derivation, normalization, synching and updating...
+   both for phases and samples...
+>> no space to comments if no operation was performed successfully...
+>> does pixel data override RCP gains, even if rcp.gains is set?
+
+	[BUG] {APEX} Conditional settings for photometry were always active
+	for APEX scans due to a coding error. Should be fixed now...
+	
+	[FIX] Lines containing only empty spaces in the configuration files
+	resulted in errors when parsing. The fix checks for 'empty' lines and
+	ignored these as expected.
+
+	[FIX] Gains were not normalized when spanning scans, rather than
+	subscans/integrations. 
+	
+	[FIX] Source gains were not used for photometry reductions as intended.
+	This is now fixed. AS such options like 'source.fixedgains' now work
+	as expected.
+
+	[FIX] Fixed a multitude of problems with the derivation of gains from 
+	the phases. As a result, chopped photometry reductions can now derive
+	sky-noise gains properly using phases. Therefore, the confoiguration
+	has been updated to use this feature rather than relying on the 
+	accuracy of pre-supplied fixed gains.
+
+	[TWEAK] Default file names are now constructed with an edited version
+	of the catalog source name, with problematic character sequences (
+	such as white spaces, quotes, *, ?, /, and \) replaced with underscores
+	('_'). This makes it easier to refer to the output files from the 
+	command line. Thanks to Giorgio for the suggestion.
+
+	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
+	sky-noise gains and apply these as the source gains also. The change
+	decreases the reliance on an up-to-date pixel data file for accurate
+	photometry.
+
+	[TWEAK] {APEX} Disabled noise whitening in chopped photometry 
+	reductions. While whitening seemed like a good idea, it is likely
+	the cause of some of the occasional excess error.
+
+	[CODE] Complete reorganization of the decorrelation code among classes
+	that take part in the process. The new locations of the code make
+	the behaviour more transparent.
+
+	[CODE] Cleaned up some of the gain derivation code, with an eye on
+	using more common code to get gains from phases or from samples.
+
+	[CODE] Cleaned up leftover extra decorrelation code in photometry
+	reductions.
+
+	[CLEANUP] Cleaned up Debian changelog file to fully comply with the
+	expected format.
 
 2.03-1
 	
