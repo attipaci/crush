@@ -145,9 +145,8 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 		if(isChopped) {
 			System.err.println("Setting chopped reduction mode.");
 			System.err.println("Target is [" + scan.sourceName + "] at " + reference.toString());
+			options.parse("chopped");
 		}
-		options.parse("chopped");
-		
 		
 		for(int i=scans.size(); --i >=0; ) {
 			scan = (APEXArrayScan<?,?>) scans.get(i);

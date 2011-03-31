@@ -751,186 +751,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		return true;
 	}
 	
-	// Get correlated for all frames even those that are no good...
-	// But use only channels that are valid, and skip over flagged samples...
-	public synchronized void updateCorrelated(final CorrelatedMode mode, final boolean isRobust) throws IllegalAccessException {
-		// work on only a selected subset of not critically flagged channels only (for speed)
-		final ChannelGroup<?> goodChannels = mode.getValidChannels();
-		final int nc = mode.channels.size();
-		
-		// Need at least 2 channels for decorrelaton...
-		//if(goodChannels.size() < 2) return;
-		
-		final int resolution = mode.getFrameResolution(this);
-		final int nt = size();
-		final int nT = mode.getSize(this);
-		
-		CorrelatedSignal signal = null;
-		if(signals.containsKey(mode)) signal = (CorrelatedSignal) signals.get(mode);
-		else {
-			signal = new CorrelatedSignal(this, mode);
-			signals.put(mode, signal);
-		}
-			
-		final Dependents parms = signal.dependents;
-		parms.clear(goodChannels, 0, size());
-		
-		final float[] gain = mode.getGains();
-		
-		// Make usedGains carry the gain increment from last sync...
-		if(mode.usedGains == null) mode.usedGains = new float[gain.length];
-		else for(int k=0; k<nc; k++) mode.usedGains[k] = gain[k] - mode.usedGains[k];
-		
-		
-		// Precalculate the gain-weight products...
-		for(int k=0; k<nc; k++) {
-			final Channel channel = mode.channels.get(k);
-			channel.temp = 0.0F;
-			channel.tempG = gain[k];
-			channel.tempWG = (float) (channel.weight) * channel.tempG;
-			channel.tempWG2 = channel.tempWG * channel.tempG;
-		}
-		
-		final WeightedPoint increment = new WeightedPoint();
-		
-		WeightedPoint[] buffer = null;
-		if(isRobust) buffer = signal.getTempStorage(goodChannels);
-		else signal.noTempStorage();
-		
-		for(int T=0, from=0; T < nT; T++, from += resolution) {
-			final int to = Math.min(from + resolution, nt);
-			
-			if(isRobust) getRobustCorrelated(goodChannels, from, to, increment, buffer);
-			else getMLCorrelated(goodChannels, from, to, increment);
-			
-			if(increment.weight > 0.0) {
-				// Cast the incremental value into float for speed...
-				final float C = signal.value[T];
-				final float dC = (float) increment.value;
-		
-				// precalculate the channel dependences...
-				for(final Channel pixel : goodChannels) pixel.temp = pixel.tempWG2 / (float) increment.weight;
-		
-				// sync to data and calculate dependeces...
-				for(int t=from; t<to; t++) {
-					final Frame exposure = get(t);
-					if(exposure == null) continue;
-				
-					for(int k=nc; --k >= 0; ) {
-						final Channel channel = mode.channels.get(k);
-						// Here usedGains carries the gain increment dG from the last correlated signal removal
-						exposure.data[channel.index] -= mode.usedGains[k] * C + channel.tempG * dC;
-						if(channel.temp > 0.0F) parms.add(exposure, channel, exposure.relativeWeight * channel.temp);
-					}
-				}
-				
-				// Update the correlated signal model...
-				signal.value[T] += dC;
-				signal.weight[T] = (float) increment.weight;
-			}
-		}
-		
-		// Update the gain values used for signal extraction...
-		mode.setUsedGains(gain);
-		
-		// Free up the temporary storage, which is used for calculating medians
-		signal.noTempStorage();
-		
-		if(CRUSH.debug) checkForNaNs(mode.channels, 0, size());
-		
-		signal.generation++;
-		
-		// Apply the mode dependices...
-		parms.apply(goodChannels, 0, size());	
-		
-		// Calculate the point-source filtering by the decorrelation...
-		signal.calcFiltering();
-		
-		// Solve for the correlated phases also, if required
-		if(isPhaseModulated()) if(hasOption("phases") || mode.solvePhases)  
-			getPhases().updateSignal(mode, isRobust);
-	}
-	
-
-	private final void getMLCorrelated(final ChannelGroup<?> channels, final int from, final int to, final WeightedPoint increment) {
-		increment.noData();
-		
-		for(int t=from; t<to; t++) {
-			final Frame exposure = get(t);
-			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
-				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
-					increment.value += (exposure.relativeWeight * channel.tempWG * exposure.data[channel.index]);
-					increment.weight += (exposure.relativeWeight * channel.tempWG2);
-				}
-			}
-		}
-		increment.value /= increment.weight;
-	}
-		
-
-	private final void getRobustCorrelated(final ChannelGroup<?> channels, final int from, final int to, final WeightedPoint increment, WeightedPoint[] buffer) {
-		increment.noData();
-		int n = 0;
-		
-		for(int t=from; t<to; t++) {
-			final Frame exposure = get(t);
-			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
-				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
-					final WeightedPoint point = buffer[n++];
-					point.value = (exposure.data[channel.index] / channel.tempG);
-					point.weight = (exposure.relativeWeight * channel.tempWG2);	
-					increment.weight += point.weight;
-				}
-			}
-		}
-		increment.value = Statistics.smartMedian(buffer, 0, n, 0.25); 
-	}
-	
-	
 	public Dependents getDependents(String name) {
 		return dependents.containsKey(name) ? dependents.get(name) : new Dependents(this, name);
 	}
 
+	
 
-	protected final void getMLGainIncrement(final int[] index, final WeightedPoint[] dG) {
-		for(int k=dG.length; --k >= 0; ) dG[k].noData();
-		
-		for(final Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {	
-			for(int k=dG.length; --k >= 0; ) {
-				final int c = index[k];
-				if(exposure.sampleFlag[c] == 0) {
-					final WeightedPoint increment = dG[k];
-					increment.value += (exposure.tempWC * exposure.data[c]);
-					increment.weight += exposure.tempWC2;
-				}
-			}
-		}
-		for(int k=dG.length; --k >= 0; ) {
-			final WeightedPoint increment = dG[k];
-			if(increment.weight > 0.0) increment.value /= increment.weight;
-		}
+	public WeightedPoint[] getGainIncrement(Mode mode, boolean isRobust) {
+		return signals.get(mode).getGainIncrement(isRobust);
 	}
 	
-
-	protected final void getRobustGainIncrement(final int[] index, final WeightedPoint[] dG) {
-		for(int k=0; k<dG.length; k++) dG[k].noData();
-		
-		// Allocate storage for sorting if estimating robustly...
-		final WeightedPoint[] gainData = new WeightedPoint[size()];
-		for(int t=size(); --t >= 0; ) gainData[t] = new WeightedPoint();
-	
-		for(int k=dG.length; --k >= 0; ) {
-			int n=0;
-			final int c = index[k];
-			final WeightedPoint increment = dG[k];
-			for(final Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0) {
-				final WeightedPoint point = gainData[n++];
-				point.value = (exposure.data[c] / exposure.tempC);
-				point.weight = exposure.tempWC2;
-				increment.weight += exposure.tempWC2;
-			}
-			if(increment.weight > 0.0) increment.value = Statistics.smartMedian(gainData, 0, n, 0.25);
-		}
+	protected void syncGains(final Mode mode, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {		
+		signals.get(mode).syncGains(sumwC2, isTempReady);
 	}
 	
 
@@ -1111,34 +943,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 
 	}
 	
-	public double getCovariance(Mode mode, Signal signal) {
-		ChannelGroup<?> channels = mode.channels.getChannels().discard(~0);
 	
-		final double[] sumXS = new double[instrument.size()];
-		final double[] sumX2 = new double[instrument.size()];
-		final double[] sumS2 = new double[instrument.size()];
-		
-		for(final Frame exposure : this) if(exposure != null) {
-			for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
-				final int c = channel.index;
-				final float x = exposure.data[c];
-				final float S = signal.valueAt(exposure);
-				if(!Float.isNaN(S)) {
-					sumXS[c] += channel.weight * x * S;
-					sumX2[c] += channel.weight * x * x;
-					sumS2[c] += channel.weight * S * S;
-				}
-			}	
-		}
-		
-		double C2 = 0.0;
-		for(Channel channel : channels) {
-			final int c = channel.index;
-			if(sumS2[c] > 0.0) C2 += sumXS[c] * sumXS[c] / (sumX2[c] * sumS2[c]);
-		}
-		
-		return Math.sqrt(C2);
-	}
 	
 	public void getTimeStream(final Channel channel, final double[] data) {
 		final int c = channel.index;
@@ -1688,7 +1493,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	}
 	
 	public void addCorrelated(CorrelatedSignal signal) throws IllegalAccessException {	
-		final Mode mode = signal.mode;
+		final Mode mode = signal.getMode();
 		final float[] gain = mode.getGains();
 		final int nc = mode.channels.size();
 		
@@ -1803,11 +1608,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	}
 	
 	
-	public Signal getPositionSignal(int type, Motion direction) {
+	public Signal getPositionSignal(Mode mode, int type, Motion direction) {
 		Vector2D[] pos = getSmoothPositions(type);
 		double[] data = new double[size()];	
 		for(int t=0; t<data.length; t++) data[t] = pos[t] == null ? Float.NaN : direction.getValue(pos[t]);
-		return new Signal(this, data);
+		return new Signal(mode, this, data);
 	}
 	
 	public Vector2D[] getScanningVelocities() { 
@@ -1938,11 +1743,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	}
 	
 	
-	public Signal getAccelerationSignal(Motion direction) {
+	public Signal getAccelerationSignal(Mode mode, Motion direction) {
 		Vector2D[] a = getAccelerations();
 		double[] data = new double[size()];	
 		for(int t=0; t<data.length; t++) data[t] = a[t] == null ? Float.NaN : direction.getValue(a[t]);
-		return new Signal(this, data);
+		return new Signal(mode, this, data);
 	}
 	
 
@@ -2522,8 +2327,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	
 	public void detectChopper() {
 		
-		Signal x = getPositionSignal(Motion.CHOPPER, Motion.X);
-		Signal y = getPositionSignal(Motion.CHOPPER, Motion.Y);
+		Signal x = getPositionSignal(null, Motion.CHOPPER, Motion.X);
+		Signal y = getPositionSignal(null, Motion.CHOPPER, Motion.Y);
 		
 		x.level(true);
 		y.level(true);
@@ -2697,49 +2502,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		return chopper == null ? null : chopper.phases;
 	}
 	
-	public WeightedPoint getLROffset(Channel channel) {
-		final PhaseSet phases = chopper.phases;
-		final WeightedPoint bias = new WeightedPoint();
-		
-		for(int i=phases.size() - 1; --i > 0; ) {
-			final PhaseOffsets offsets = phases.get(i);
-			if(offsets.phase != Frame.CHOP_LEFT) continue;
-		
-			final WeightedPoint left = phases.get(i).getValue(channel);
-			final WeightedPoint right = phases.get(i-1).getValue(channel);
-					
-			right.average(phases.get(i+1).getValue(channel));
-			left.subtract(right);
-		
-			bias.average(left);
-		}
-		
-		return bias;
-	}
 	
-	
-	public double getLRChi2(Channel channel, double bias) {
-		final PhaseSet phases = chopper.phases;
-		
-		double chi2 = 0.0;
-		int n = 0;
-		for(int i=phases.size() - 1; --i > 0; ) {
-			final PhaseOffsets offsets = phases.get(i);
-			if(offsets.phase != Frame.CHOP_LEFT) continue;
-
-			final WeightedPoint left = phases.get(i).getValue(channel);
-			final WeightedPoint right = phases.get(i-1).getValue(channel);
-			right.average(phases.get(i+1).getValue(channel));
-			left.subtract(right);
-			left.value -= bias;
-
-			final double chi = left.significance();
-			chi2 += chi * chi;
-			n++;
-		}
-		
-		return n > 1 ? chi2/(n - 1) : Double.NaN;
-	}
 	
 	public void getWeights() {
 		String method = "rms";

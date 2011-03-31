@@ -87,11 +87,12 @@ public class SkyDip<InstrumentType extends Instrument<?>, ScanType extends Scan<
 	public void add(Integration<?, ?> integration) {
 		integration.comments += "[Dip] ";
 		
-		Mode mode = integration.instrument.modalities.get("obs-channels").get(0);
+		CorrelatedMode mode = (CorrelatedMode) integration.instrument.modalities.get("obs-channels").get(0);
 		CorrelatedSignal C = (CorrelatedSignal) integration.signals.get(mode);
 	
 		if(C == null) {
-			try { integration.updateCorrelated((CorrelatedMode) mode, false); }
+			C = new CorrelatedSignal(mode, integration);
+			try { C.update(false); }
 			catch(IllegalAccessException e) { 
 				System.err.println("ERROR! Cannot decorrelate sky channels: " + e.getMessage());
 			}

@@ -41,7 +41,7 @@ public class FieldResponse extends Response {
 			}
 		}
 		catch(Exception e) { System.err.println("WARNING! No field named " + field.getName() + " for signal."); }
-		return new Signal(integration, data);
+		return new Signal(this, integration, data);
 	}
 
 }

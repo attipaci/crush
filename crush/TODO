@@ -1,5 +1,20 @@
 >> Smoothing in deep does not preserve point source flux...
+>> global phasegains, individual samplegains
 
+	-- Phase gains through scans
+	   (on source pixel to use only off position, others use both)
+	   (print out the derived on-source gains -- for checking)
+	-- Automatic skydip detection (APEX + GISMO?) 
+		scan validation for skydips...
+		(throw out skydips from multiscan datasets, but reduce if only
+		argument...)
+	-- Dynamic download/update for instrument data...
+		versioning of files to allow append
+		(in sepatate .version files)
+		'update' or 'update.auto'
+		What about permissions?
+			create local config (with directories as needed)
+			place config data there, with correct references...
 	-- Better chop on-source detection (phase.onsourcechannel?)
 	-- main image header edits by instrument...
 ?	-- phases.filtering

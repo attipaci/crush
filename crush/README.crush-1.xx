@@ -278,7 +278,7 @@ CRUSH-1.xx	CRUSH-1.xx key		CRUSH-2
 -Jy=		MAP_VOLTS_PER_JY	jansky 
 -lambda=	MEM_LAMBDA		source.mem.lambda
 -linear		LINEAR_RESPONSE=true		(default)
--log		---			log, log.format
+-log		---			obslog, obslog.format
 -lookup		COORDINATE_LOOKUP	indexing, indexing.saturation
 -MaiTau=	MAI_TAU			maitau.server			\
 					(see also 'maitau.fallback')
@@ -358,7 +358,7 @@ CRUSH-1.xx	CRUSH-1.xx key		CRUSH-2
 -temporalT=	TEMPORAL_ANALYSIS_MIN_T	despike.width (in seconds!)
 -unit=		MAP_UNIT		unit
 -vclip=		MIN_SCAN_SPEED		vclip
--version	---			---
+-version	---			--- (run crush without an argument)
 -weightT=	TIME_WEIGHT_T		weighting.frames.resolution (in sec!).
 -width13Hz=	FILTER_13HZ_WIDTH	---
 ------------------------------------------------------------------------------

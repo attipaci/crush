@@ -28,7 +28,6 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 
 import util.Range;
-import util.Util;
 import util.data.Statistics;
 import util.data.WeightedPoint;
 
@@ -38,6 +37,7 @@ public class Mode {
 	public Field gainField;
 
 	public boolean fixedGains = false;
+	public boolean phaseGains = false;
 	public double resolution;
 	public Range gainRange = new Range();
 	public int gainFlag = 0;
@@ -101,17 +101,13 @@ public class Mode {
 		}
 	}
 	
-	public synchronized void setGains(float[] gain) throws IllegalAccessException { 
+	
+	public synchronized void setGains(float[] gain) throws IllegalAccessException {
 		if(gainField == null) this.gain = gain;
 		else updateFields(gain);
 		flagGains();
 	}
 	
-	public void incrementGains(WeightedPoint[] dG) throws IllegalAccessException { 
-		float[] g = getGains();
-		for(int i=dG.length; --i >= 0; ) g[i] += dG[i].value;
-		setGains(g);
-	}
 	
 	public synchronized void updateFields(float[] gain) throws IllegalAccessException { 
 		if(gainField == null) return;
@@ -151,107 +147,21 @@ public class Mode {
 	}
 	
 	public WeightedPoint[] getGains(Integration<?, ?> integration, boolean isRobust) throws IllegalAccessException {
-		WeightedPoint[] G = getGainIncrement(integration, isRobust);
-		float[] G0 = getGains();
-		for(int i=G0.length; --i >= 0; ) if(G[i] != null) G[i].value += G0[i];
-		return G;
-	}
-	
-	
-	public WeightedPoint[] getGainIncrement(Integration<?, ?> integration, boolean isRobust) throws IllegalAccessException {
 		if(fixedGains) throw new IllegalStateException("WARNING! Cannot solve gains for fixed gain modes.");
-		
-		final int nc = channels.size();					
-		final Signal signal = integration.signals.get(this);
-			
-		if(signal == null) return null;
-		//throw new IllegalStateException("No such correlated mode.");
-
-		if(integration.hasOption("signal-response")) 
-			integration.comments += "{" + Util.f2.format(integration.getCovariance(this, signal)) + "}";
-
-		// Precalculate the gain-weight products...
-		for(final Frame exposure : integration) if(exposure != null) {
-			exposure.tempC = signal.valueAt(exposure);
-			if(Float.isNaN(exposure.tempC)) exposure.tempC = 0.0F;
-			exposure.tempWC = exposure.isUnflagged(Frame.MODELING_FLAGS) ? exposure.relativeWeight * exposure.tempC : 0.0F;
-			exposure.tempWC2 = exposure.tempWC * exposure.tempC;
-		}
-
-		// Load data into static arrays used for fast access internally...
-		final WeightedPoint[] dG = new WeightedPoint[nc];
-		final int[] index = new int[nc];
-		for(int k=0; k<nc; k++) {
-			dG[k] = new WeightedPoint();
-			index[k] = channels.get(k).index;
-		}
-
-		// Calculate gains here...
-		if(isRobust) integration.getRobustGainIncrement(index, dG);
-		else integration.getMLGainIncrement(index, dG);
-
-		validateGainIncrement(dG, signal);
-		
-		return dG;
-	}
-	
-	public void validateGainIncrement(WeightedPoint[] dG, Signal signal) throws IllegalAccessException {
-		
-	}
-	
-	public void applyGains(WeightedPoint[] G, Integration<?, ?> integration, boolean isTempReady) throws IllegalAccessException {
 		float[] G0 = getGains();
-		WeightedPoint[] dG = new WeightedPoint[G.length];
-		for(int i=G.length; --i >=0; ) if(G[i] != null) {
-			dG[i] = (WeightedPoint) G[i].clone();
-			dG[i].value -= G0[i];
+		WeightedPoint[] G = phaseGains ? 
+				integration.getPhases().getGainIncrement(this) : 
+				integration.signals.get(this).getGainIncrement(isRobust);
+				
+		for(int i=G0.length; --i >= 0; ) {
+			if(G[i] != null) G[i].value += G0[i];
+			else G[i] = new WeightedPoint(G0[i], 0.0);
 		}
-		applyGainIncrement(dG, integration, isTempReady);
+		return G;		
 	}
 	
-	public void applyGainIncrement(WeightedPoint[] dG, Integration<?, ?> integration, boolean isTempReady) throws IllegalAccessException {
-		if(fixedGains) throw new IllegalStateException("WARNING! Cannot solve gains for fixed gain modes.");
-
-		final int nc = channels.size();
-		final Dependents parms = integration.getDependents("gains-" + name);
-		
-		parms.clear(channels, 0, integration.size());
-
-		// Precalculate the gain-weight products...
-		if(!isTempReady) {
-			final Signal signal = integration.signals.get(this);
-			if(signal == null) return;
-			for(final Frame exposure : integration) if(exposure != null) {
-				exposure.tempC = signal.valueAt(exposure);
-				if(Float.isNaN(exposure.tempC)) exposure.tempC = 0.0F;
-				exposure.tempWC = exposure.isUnflagged(Frame.MODELING_FLAGS) ? exposure.relativeWeight * exposure.tempC : 0.0F;
-				exposure.tempWC2 = exposure.tempWC * exposure.tempC;
-			}
-		}
-
-		// Sync to data and calculate dependeces...
-		for(final Frame exposure : integration) if(exposure != null) {
-			final float[] data = exposure.data;
-			final float C = exposure.tempC;
-			final float wC2 = exposure.tempWC2;
-
-			for(int k=nc; --k >=0; ) {
-				final WeightedPoint increment = dG[k];
-				if(increment == null) continue;
-				data[channels.get(k).index] -= (float) increment.value * C;
-				parms.add(exposure, wC2 / increment.weight);
-			}
-		}
-
-		// Account for the one gain parameter per channel...
-		for(int k=0; k<nc; k++) if(dG[k].weight > 0.0) {
-			parms.add(channels.get(k), 1.0);
-		}
-		
-		// Apply the mode dependeces...
-		parms.apply(channels, 0, integration.size());
-
-		if(CRUSH.debug) integration.checkForNaNs(channels, 0, integration.size());
+	protected void syncGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {
+		integration.signals.get(this).syncGains(sumwC2, isTempReady);		
 	}
 	
 	public int getFrameResolution(Integration<?, ?> integration) {
@@ -268,6 +178,8 @@ public class Mode {
 		for(Channel channel : channels) description += " " + channel.dataIndex;
 		return description;
 	}
+	
+	
 	
 	protected static int nextMode = 0;
 	public final static int TOTAL_POWER = nextMode++;

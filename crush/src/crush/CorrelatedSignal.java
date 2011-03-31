@@ -31,7 +31,6 @@ import util.data.WeightedPoint;
 
 
 public class CorrelatedSignal extends Signal {
-	CorrelatedMode mode;
 	Dependents dependents;
 	float[] weight;
 	float[] sourceFiltering; // per channel
@@ -43,9 +42,9 @@ public class CorrelatedSignal extends Signal {
 	
 	private WeightedPoint[] temp;
 	
-	CorrelatedSignal(Integration<?, ?> integration, CorrelatedMode mode) {
-		super(integration);
-		this.mode = mode;
+	public CorrelatedSignal(CorrelatedMode mode, Integration<?, ?> integration) {
+		super(mode, integration);
+		syncGains = new float[mode.channels.size()];
 		dependents = new Dependents(integration, mode.name);
 		resolution = mode.getFrameResolution(integration);
 		value = new float[mode.getSize(integration)];
@@ -199,17 +198,19 @@ public class CorrelatedSignal extends Signal {
 	public void calcFiltering() {
 		// Create the filtering srorage if necessary...
 		if(sourceFiltering == null) {
-			sourceFiltering = new float[mode.channels.size()];
+			sourceFiltering = new float[getMode().channels.size()];
 			Arrays.fill(sourceFiltering, 1.0F);
 		}
 		
 		// Calculate the source filtering for this mode...
 		int nP = getParms();
 		
+		final CorrelatedMode mode = (CorrelatedMode) getMode();
+		final ChannelGroup<?> channels = mode.channels;
 		int skipFlags = mode.skipChannels;
 		
-		for(int k=0; k<mode.channels.size(); k++) {
-			Channel channel = mode.channels.get(k);
+		for(int k=channels.size(); --k >= 0; ) {
+			Channel channel = channels.get(k);
 			double phi = 0.0;
 			// Every pixel that sees the source contributes to the filtering...
 			if(channel.isUnflagged(skipFlags)) for(Channel other : mode.channels) if(other.isUnflagged(skipFlags))
@@ -267,8 +268,143 @@ public class CorrelatedSignal extends Signal {
 		for(int i=0; i<value.length; i++) if(weight[i] > 0.0) n++;
 		return n;
 	}
+
+	
+	// Get correlated for all frames even those that are no good...
+	// But use only channels that are valid, and skip over flagged samples...
+	public synchronized void update(boolean isRobust) throws IllegalAccessException {
+		// work on only a selected subset of not critically flagged channels only (for speed)
+		final CorrelatedMode mode = (CorrelatedMode) getMode();
+		final ChannelGroup<?> goodChannels = mode.getValidChannels();
+		final int nc = mode.channels.size();
+		
+		// Need at least 2 channels for decorrelaton...
+		//if(goodChannels.size() < 2) return;
+		
+		final int resolution = mode.getFrameResolution(integration);
+		final int nt = integration.size();
+		final int nT = mode.getSize(integration);
+		
+		dependents.clear(goodChannels, 0, integration.size());
+		
+		final float[] gain = mode.getGains();
+		final float[] dG = syncGains;
+		
+		// Make usedGains carry the gain increment from last sync...
+		for(int k=nc; --k >= 0; ) dG[k] = gain[k] - dG[k];
+		
+		// Precalculate the gain-weight products...
+		for(int k=nc; --k >= 0; ) {
+			final Channel channel = mode.channels.get(k);
+			channel.temp = 0.0F;
+			channel.tempG = gain[k];
+			channel.tempWG = (float) (channel.weight) * channel.tempG;
+			channel.tempWG2 = channel.tempWG * channel.tempG;
+		}
+		
+		final WeightedPoint increment = new WeightedPoint();
+		
+		WeightedPoint[] buffer = null;
+		if(isRobust) buffer = getTempStorage(goodChannels);
+		else noTempStorage();
+		
+		for(int T=0, from=0; T < nT; T++, from += resolution) {
+			final int to = Math.min(from + resolution, nt);
+			
+			if(isRobust) getRobustCorrelated(goodChannels, from, to, increment, buffer);
+			else getMLCorrelated(goodChannels, from, to, increment);
+			
+			if(increment.weight <= 0.0) continue;
+			
+			// Cast the incremental value into float for speed...
+			final float C = value[T];
+			final float dC = (float) increment.value;
+
+			// precalculate the channel dependences...
+			for(final Channel pixel : goodChannels) pixel.temp = pixel.tempWG2 / (float) increment.weight;
+
+			// sync to data and calculate dependeces...
+			for(int t=from; t<to; t++) {
+				final Frame exposure = integration.get(t);
+				if(exposure == null) continue;
+
+				for(int k=nc; --k >= 0; ) {
+					final Channel channel = mode.channels.get(k);
+					// Here usedGains carries the gain increment dG from the last correlated signal removal
+					exposure.data[channel.index] -= dG[k] * C + channel.tempG * dC;
+					if(channel.temp > 0.0F) dependents.add(exposure, channel, exposure.relativeWeight * channel.temp);
+				}
+			}
+				
+			// Update the correlated signal model...
+			value[T] += dC;
+			weight[T] = (float) increment.weight;
+		}
+		
+		// Update the gain values used for signal extraction...
+		setSyncGains(gain);
+		
+		// Free up the temporary storage, which is used for calculating medians
+		noTempStorage();
+		
+		if(CRUSH.debug) integration.checkForNaNs(mode.channels, 0, integration.size());
+		
+		generation++;
+		
+		// Apply the mode dependices...
+		dependents.apply(goodChannels, 0, integration.size());	
+		
+		// Calculate the point-source filtering by the decorrelation...
+		calcFiltering();
+		
+		// Solve for the correlated phases also, if required
+		if(integration.isPhaseModulated()) if(integration.hasOption("phases") || mode.solvePhases) {
+			PhaseSignal signal = integration.getPhases().signals.get(mode);
+			if(signal == null) signal = new PhaseSignal(integration.getPhases(), mode);
+			signal.update(isRobust);
+		}
+	}
+	
+	
+	private final void getMLCorrelated(final ChannelGroup<?> channels, final int from, final int to, final WeightedPoint increment) {
+		increment.noData();
+		
+		for(int t=from; t<to; t++) {
+			final Frame exposure = integration.get(t);
+			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
+				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
+					increment.value += (exposure.relativeWeight * channel.tempWG * exposure.data[channel.index]);
+					increment.weight += (exposure.relativeWeight * channel.tempWG2);
+				}
+			}
+		}
+		increment.value /= increment.weight;
+	}
+		
+
+	private final void getRobustCorrelated(final ChannelGroup<?> channels, final int from, final int to, final WeightedPoint increment, WeightedPoint[] buffer) {
+		increment.noData();
+		int n = 0;
+		
+		for(int t=from; t<to; t++) {
+			final Frame exposure = integration.get(t);
+			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
+				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
+					final WeightedPoint point = buffer[n++];
+					point.value = (exposure.data[channel.index] / channel.tempG);
+					point.weight = (exposure.relativeWeight * channel.tempWG2);	
+					increment.weight += point.weight;
+				}
+			}
+		}
+		increment.value = Statistics.smartMedian(buffer, 0, n, 0.25); 
+	}
+	
+	
 	
 	// TODO Use estimators...
+	
+	
 	
 	
 }

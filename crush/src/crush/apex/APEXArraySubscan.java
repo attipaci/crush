@@ -96,14 +96,14 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			Vector2D position = pixel.getPosition();
 			
 			if(position.distanceTo(left) < tolerance) for(Channel channel : pixel) {
-				channel.label |= Channel.LABEL_ONSOURCE;
+				channel.sourcePhase |= Frame.CHOP_LEFT;
 				System.err.print(" L" + channel.dataIndex);
 			}
 			else if(position.distanceTo(right) < tolerance) for(Channel channel : pixel) {
-				channel.label |= Channel.LABEL_ONSOURCE;
+				channel.sourcePhase |= Frame.CHOP_RIGHT;
 				System.err.print(" R" + channel.dataIndex); 
 			}
-			else for(Channel channel : pixel) channel.label &= ~Channel.LABEL_ONSOURCE;
+			else for(Channel channel : pixel) channel.sourcePhase &= ~(Frame.CHOP_FLAGS);
 		}
 		
 		System.err.println();
@@ -210,6 +210,33 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		int to = size();
 		while((frame = get(--to)).isUnflagged(Frame.CHOP_TRANSIT) && to > 0) frame.flag(APEXFrame.CHOP_ENDS);
 	}
+	
+	/*
+	@Override
+	public void updatePhases() {
+		super.updatePhases();
+		
+		for(APEXPixel pixel : instrument) {
+			if(pixel.LROffset == null) pixel.LROffset = new WeightedPoint();
+			
+			WeightedPoint dLR = getLROffset(pixel);
+			if(dLR.weight > 0.0) {
+				pixel.LROffset.value += dLR.value;
+				removeLROffset(dLR.value, pixel);
+			}
+			pixel.LROffset.weight = dLR.weight;	
+		}
+	}
+	*/
+	
+	/*
+	protected void removeLROffset(double increment, Channel channel) {
+		for(PhaseOffsets offsets : getPhases()) {
+			if((offsets.phase & Frame.CHOP_LEFT) != 0) offsets.value[channel.index] -= 0.5 * increment;
+			else if((offsets.phase & Frame.CHOP_RIGHT) != 0) offsets.value[channel.index] += 0.5 * increment;
+		}	
+	}
+	*/
 	
 	@Override
 	public void validate() {

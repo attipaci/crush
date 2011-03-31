@@ -128,14 +128,15 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		
 		System.err.println("   Calculating He3 temperatures from " + blindChannels.size() + " blind bolometer[s].");
 		
-		try { updateCorrelated(blindMode, false); }
+		// Calculate the RMS temperature fluctuation...
+		CorrelatedSignal signal = new CorrelatedSignal(blindMode, this);
+		
+		try { signal.update(false); }
 		catch(IllegalAccessException e) { 
 			e.printStackTrace(); 
 			return;
 		}
-	
-		// Calculate the RMS temperature fluctuation...
-		Signal signal = signals.get(blindMode);
+
 		
 		// Set blind temperatures...
 		for(LabocaFrame exposure : this) if(exposure != null) exposure.he3Temp = signal.valueAt(exposure);

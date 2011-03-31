@@ -34,7 +34,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	public int index;
 	public int dataIndex;
 	public int flag = 0;
-	public int label = 0;
+	public int sourcePhase = 0;
 	
 	public double offset = 0.0; // At the readout stage! (as of 2.03)
 	public double gain = 1.0;
@@ -160,7 +160,5 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	
 	public final static int SOFTWARE_FLAGS = ~HARDWARE_FLAGS;
 	
-	public static int nextLabel = 0;
-	public final static int LABEL_ONSOURCE = 1 << nextLabel++;
 	
 }

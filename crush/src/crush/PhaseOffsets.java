@@ -24,6 +24,7 @@ package crush;
 
 import java.util.Arrays;
 
+import util.data.Statistics;
 import util.data.WeightedPoint;
 
 public class PhaseOffsets {
@@ -98,7 +99,47 @@ public class PhaseOffsets {
 	public WeightedPoint getValue(Channel channel) {
 		return new WeightedPoint(value[channel.index], weight[channel.index]);
 	}
+	
+	protected void getMLCorrelated(CorrelatedMode mode, final float[] G, WeightedPoint increment) {
+		increment.noData();
+		
+		final int skipChannels = mode.skipChannels;
+	
+		for(int k=G.length; --k >= 0; ) {
+			final Channel channel = mode.channels.get(k);
 
-	//public static final int FLAG_ONSOURCE = 1;
+			if(channel.isFlagged(skipChannels)) continue;
+			if(channel.sourcePhase != 0) continue;
+	
+			final double wG = weight[channel.index] * G[k];
+			increment.value += wG * value[channel.index];
+			increment.weight += wG * G[k];
+		}
+		if(increment.weight > 0.0) increment.value /= increment.weight;
+	}
+	
+	
+	protected void getRobustCorrelated(CorrelatedMode mode, final float[] G, final WeightedPoint[] temp, final WeightedPoint increment) {
+		final int skipChannels = mode.skipChannels;
+		
+		int n=0;
+		increment.weight = 0.0;
+		for(int k=G.length; --k >= 0; ) {
+			final Channel channel = mode.channels.get(k);
+			if(channel.isFlagged(skipChannels)) continue;
+			if(channel.sourcePhase != 0) continue;
+
+			final float Gk = G[k];
+			final double wG2 = weight[channel.index] * Gk * Gk;
+			if(wG2 == 0.0) continue;
+			
+			final WeightedPoint point = temp[n++];
+			point.value = value[channel.index] / Gk;
+			point.weight = wG2;
+			increment.weight += wG2;
+		}
+		increment.value = n > 0 ? Statistics.smartMedian(temp, 0, n, 0.25) : 0.0;
+	}
+	
 	
 }

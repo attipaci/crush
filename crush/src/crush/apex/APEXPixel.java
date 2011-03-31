@@ -27,9 +27,11 @@ package crush.apex;
 import crush.Channel;
 import crush.array.SimplePixel;
 import util.*;
+import util.data.WeightedPoint;
 
 public abstract class APEXPixel extends SimplePixel {
 	public Vector2D fitsPosition;
+	public WeightedPoint LROffset;
 	
 	public APEXPixel(APEXArray<?> array, int backendIndex) {
 		super(array, backendIndex);

@@ -46,7 +46,7 @@ public abstract class Response extends Mode {
 	public abstract Signal getSignal(Integration<?, ?> integration);
 	
 	@Override
-	public WeightedPoint[] getGainIncrement(Integration<?, ?> integration, boolean isRobust) throws IllegalAccessException {
+	public WeightedPoint[] getGains(Integration<?, ?> integration, boolean isRobust) throws IllegalAccessException {
 		Signal signal = integration.signals.get(this);
 		
 		if(signal == null) {
@@ -55,7 +55,7 @@ public abstract class Response extends Mode {
 			integration.signals.put(this, signal);	
 		}
 		
-		return super.getGainIncrement(integration, isRobust);
+		return super.getGains(integration, isRobust);
 	}	
 	
 }

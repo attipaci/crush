@@ -81,10 +81,14 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		trigger = option.isConfigured("trigger") ? option.get("trigger").getValue() : null;
 		
 		boolean noGainField = option.isConfigured("nofield");
+		boolean phaseGains = option.isConfigured("phasegains");
 		setGainRange(option.isConfigured("gainrange") ? option.get("gainrange").getRange() : new Range());
 		setGainDirection(option.isConfigured("signed") ? Instrument.GAINS_SIGNED : Instrument.GAINS_BIDIRECTIONAL);
 		
-		for(Mode mode : this) if(noGainField) mode.gainField = null;
+		for(Mode mode : this) {
+			if(noGainField) mode.gainField = null;
+			mode.phaseGains = phaseGains;
+		}
 	}
 
 	public void setGainFlag(int pattern) {
@@ -106,9 +110,9 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		
 		for(Mode mode : this) if(!mode.fixedGains) {	
 			try {
-				WeightedPoint[] dG = mode.getGainIncrement(integration, isRobust);
-				mode.applyGainIncrement(dG, integration, true);
-				mode.incrementGains(dG);
+				WeightedPoint[] G = mode.getGains(integration, isRobust);
+				mode.setGains(WeightedPoint.floatValues(G));
+				mode.syncGains(integration, WeightedPoint.floatWeights(G), true);
 				isFlagging = true;
 			}
 			catch(IllegalAccessException e) { e.printStackTrace(); }
