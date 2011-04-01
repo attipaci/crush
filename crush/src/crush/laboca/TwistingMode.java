@@ -46,7 +46,7 @@ public class TwistingMode extends CorrelatedMode {
 		}
 		float aveg = sumw > 0.0 ?  (float) (sumwg / sumw) : 0.0F;
 
-		for(int c=0; c<channels.size(); c++) {
+		for(int c=channels.size(); --c >= 0; ) {
 			LabocaPixel pixel = (LabocaPixel) channels.get(c);
 			gains[c] = (float) pixel.cableGain * pixel.pin - aveg;
 		}

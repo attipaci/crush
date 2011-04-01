@@ -72,10 +72,11 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 	}
 	
 
-	public void updateSignal(Integration<?, ?> integration, boolean isRobust) {
+	public void updateAllSignals(Integration<?, ?> integration, boolean isRobust) {
 		for(CorrelatedMode mode : this) if(!mode.fixedSignal) {
 			if(!Double.isNaN(resolution)) mode.resolution = resolution;
-			mode.updateSignal(integration, isRobust);
+			try { mode.updateAllSignals(integration, isRobust); }
+			catch(IllegalAccessException e) { e.printStackTrace(); }
 		}
 	}
 	

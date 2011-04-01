@@ -53,7 +53,7 @@ public class GradientMode extends CorrelatedMode {
 		}
 		if(sumw > 0.0) aveg /= sumw;
 
-		for(int c=0; c<channels.size(); c++) {
+		for(int c=channels.size(); --c >= 0; ) {
 			SimplePixel pixel = (SimplePixel) channels.get(c);
 			gains[c] = (float)((horizontal ? pixel.position.x : pixel.position.y) - aveg);
 		}

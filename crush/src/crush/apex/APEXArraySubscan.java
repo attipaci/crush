@@ -124,9 +124,9 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				exposure.flag |= Frame.CHOP_LEFT;
 				if(current.phase != Frame.CHOP_LEFT) {
 					current = new PhaseOffsets(this);
+					current.phase = Frame.CHOP_LEFT;
 					current.start = exposure;
 					current.end = exposure;
-					current.phase = Frame.CHOP_LEFT;
 					chopper.phases.add(current);
 					phases++;
 				}
@@ -137,9 +137,9 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				exposure.flag |= Frame.CHOP_RIGHT;
 				if(current.phase != Frame.CHOP_RIGHT) {
 					current = new PhaseOffsets(this);
+					current.phase = Frame.CHOP_RIGHT;
 					current.start = exposure;
 					current.end = exposure;
-					current.phase = Frame.CHOP_RIGHT;
 					chopper.phases.add(current);
 					phases++;
 				}

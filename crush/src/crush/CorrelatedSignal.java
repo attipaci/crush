@@ -85,7 +85,7 @@ public class CorrelatedSignal extends Signal {
 	}
 
 	@Override
-	public void removeDrifts() {
+	public synchronized void removeDrifts() {
 		int N = (int)Math.ceil((double) integration.framesFor(integration.filterTimeScale) / resolution);
 		if(N == driftN) return;
 		
@@ -133,7 +133,7 @@ public class CorrelatedSignal extends Signal {
 	}
 	
 	@Override
-	public void differentiate() {
+	public synchronized void differentiate() {
 		double dt = resolution * integration.instrument.samplingInterval;
 		WeightedPoint last = new WeightedPoint(value[0], weight[0]);
 		WeightedPoint point = new WeightedPoint();
@@ -167,7 +167,7 @@ public class CorrelatedSignal extends Signal {
 	
 	// Intergate using trapesiod rule...
 	@Override
-	public void integrate() {
+	public synchronized void integrate() {
 		float dt = (float) (resolution * integration.instrument.samplingInterval);
 		float dt2 = dt * dt;
 		
@@ -230,7 +230,7 @@ public class CorrelatedSignal extends Signal {
 	
 	// TODO Use this in ArrayUtil...
 	@Override
-	public void smooth(double[] w) {
+	public synchronized void smooth(double[] w) {
 		int ic = w.length / 2;
 		WeightedPoint[] smoothed = new WeightedPoint[value.length];
 	
@@ -287,17 +287,17 @@ public class CorrelatedSignal extends Signal {
 		
 		dependents.clear(goodChannels, 0, integration.size());
 		
-		final float[] gain = mode.getGains();
+		final float[] G = mode.getGains();
 		final float[] dG = syncGains;
 		
 		// Make usedGains carry the gain increment from last sync...
-		for(int k=nc; --k >= 0; ) dG[k] = gain[k] - dG[k];
+		for(int k=nc; --k >= 0; ) dG[k] = G[k] - dG[k];
 		
 		// Precalculate the gain-weight products...
 		for(int k=nc; --k >= 0; ) {
 			final Channel channel = mode.channels.get(k);
 			channel.temp = 0.0F;
-			channel.tempG = gain[k];
+			channel.tempG = G[k];
 			channel.tempWG = (float) (channel.weight) * channel.tempG;
 			channel.tempWG2 = channel.tempWG * channel.tempG;
 		}
@@ -342,7 +342,7 @@ public class CorrelatedSignal extends Signal {
 		}
 		
 		// Update the gain values used for signal extraction...
-		setSyncGains(gain);
+		setSyncGains(G);
 		
 		// Free up the temporary storage, which is used for calculating medians
 		noTempStorage();
@@ -356,13 +356,6 @@ public class CorrelatedSignal extends Signal {
 		
 		// Calculate the point-source filtering by the decorrelation...
 		calcFiltering();
-		
-		// Solve for the correlated phases also, if required
-		if(integration.isPhaseModulated()) if(integration.hasOption("phases") || mode.solvePhases) {
-			PhaseSignal signal = integration.getPhases().signals.get(mode);
-			if(signal == null) signal = new PhaseSignal(integration.getPhases(), mode);
-			signal.update(isRobust);
-		}
 	}
 	
 	

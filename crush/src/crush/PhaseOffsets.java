@@ -22,7 +22,6 @@
  ******************************************************************************/
 package crush;
 
-import java.util.Arrays;
 
 import util.data.Statistics;
 import util.data.WeightedPoint;
@@ -40,58 +39,62 @@ public class PhaseOffsets {
 	}
 	
 	public void update(ChannelGroup<?> channels, Dependents parms) {
-		if(end.index - start.index > 1);
+		if(end.index - start.index <= 1) return;
 		
-		final Instrument<?> instrument = integration.instrument;
-		final int nc = instrument.size();
-		
-		final float[] sum = new float[nc];
-		
+		final int nc = integration.instrument.size();
 		if(value == null) {
 			value = new float[nc];
 			weight = new float[nc];
 		}
-		else Arrays.fill(weight, 0.0F);
 		
-		final int to = end.index;
+		final int to = end.index + 1;
 		
 		parms.clear(channels, start.index, to);
+	
+		final double[] sum = new double[channels.size()];
+		final double[] sumw = new double[channels.size()];
 		
-		for(int t=start.index; t<=to; t++) {
+		for(int t=start.index; t<to; t++) {
 			final Frame exposure = integration.get(t);
 			if(exposure == null) continue;
 			if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
 			
 			float fw = exposure.relativeWeight;
 
-			for(Channel channel : channels) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE_FLAGS) == 0) {
-				sum[channel.index] += fw * exposure.data[channel.index];
-				weight[channel.index] += fw;
+			for(int k=channels.size(); --k >=0; ) {
+				final Channel channel = channels.get(k);
+				if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE_FLAGS) == 0) {
+					sum[k] += fw * exposure.data[channel.index];
+					sumw[k] += fw;
+				}
 			}
 		}
 		
 		
-		for(Channel channel : instrument) {	
+		for(int k=channels.size(); --k >=0; ) {
+			final Channel channel = channels.get(k);
 			parms.add(channel, 1.0);
-			if(weight[channel.index] > 0.0) sum[channel.index] /= weight[channel.index];
-			value[channel.index] += sum[channel.index];
+			if(sumw[channel.index] > 0.0) sum[k] /= sumw[k];
+			value[channel.index] += sum[k];
+			weight[channel.index] = (float) sumw[k];
 		}
 		
 		// Remove the incremental phase offset from the integration...
-		for(int t=start.index; t<=to; t++) {
+		for(int t=start.index; t<to; t++) {
 			final Frame exposure = integration.get(t);
 			if(exposure == null) continue;
 			
 			final float fw = exposure.relativeWeight;
 			
-			for(int c=nc; --c >=0; ) {
-				exposure.data[c] -= sum[c];
-				if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if((exposure.sampleFlag[c] & Frame.SAMPLE_SPIKE_FLAGS) == 0)					
-					parms.add(exposure, fw / weight[c]); 
+			for(int k=channels.size(); --k >=0; ) {
+				final Channel channel = channels.get(k);
+				exposure.data[channel.index] -= sum[k];
+				if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE_FLAGS) == 0)					
+					parms.add(exposure, fw / sumw[k]); 
 			}
 		}
 		
-		for(Channel channel : instrument) weight[channel.index] *= channel.weight;
+		for(Channel channel : channels) weight[channel.index] *= channel.weight;
 		
 		parms.apply(channels, start.index, to);
 	}

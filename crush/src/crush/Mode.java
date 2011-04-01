@@ -118,7 +118,7 @@ public class Mode {
 	
 	protected synchronized void flagGains() throws IllegalAccessException {
 		if(gainFlag == 0) return;
-		
+			
 		float[] gain = getGains();
 		
 		for(int k=channels.size(); --k >= 0; ) {
@@ -133,11 +133,13 @@ public class Mode {
 		}
 	}
 	
-	public double getAverageGain(float[] gain, int gainFlag) {
+	public double getAverageGain(int gainFlag) throws IllegalAccessException {
+		float[] G = getGains();
+		
 		double[] value = new double[channels.size()];
 		int n = 0;
 		for(int k=channels.size(); --k >= 0; ) if(channels.get(k).isUnflagged(gainFlag)) 
-			value[n++] = Math.pow(gainAveragingOffset + Math.abs(gain[k]), dynamicalCompression);
+			value[n++] = Math.pow(gainAveragingOffset + Math.abs(G[k]), dynamicalCompression);
 		
 		// Use a robust mean (with 10% tails) to calculate the average gain...
 		double aveG = Statistics.robustMean(value, 0, n, 0.1);
@@ -148,6 +150,7 @@ public class Mode {
 	
 	public WeightedPoint[] getGains(Integration<?, ?> integration, boolean isRobust) throws IllegalAccessException {
 		if(fixedGains) throw new IllegalStateException("WARNING! Cannot solve gains for fixed gain modes.");
+
 		float[] G0 = getGains();
 		WeightedPoint[] G = phaseGains ? 
 				integration.getPhases().getGainIncrement(this) : 
@@ -160,8 +163,12 @@ public class Mode {
 		return G;		
 	}
 	
-	protected void syncGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {
-		integration.signals.get(this).syncGains(sumwC2, isTempReady);		
+	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {		
+		integration.signals.get(this).syncGains(sumwC2, isTempReady);
+		
+		// Sync to the phases also...
+		PhaseSet phases = integration.getPhases();
+		if(phases != null) phases.syncGains(this);
 	}
 	
 	public int getFrameResolution(Integration<?, ?> integration) {
