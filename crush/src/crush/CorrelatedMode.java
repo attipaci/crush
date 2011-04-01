@@ -25,8 +25,8 @@
 package crush;
 
 import java.lang.reflect.*;
+import java.util.Collection;
 
-import util.data.WeightedPoint;
 
 // Gains can be linked to a channel's field, or can be internal...
 
@@ -51,14 +51,18 @@ public class CorrelatedMode extends Mode {
 		return channels.getChannels().discard(skipChannels);		
 	}	
 	
-	public synchronized void normalizeGains(float[] G, double norm) {
-		for(int i=G.length; --i >= 0; ) G[i] /= norm;
+	// TODO Gain normalization is not safe during reduction, it is meant solely
+	// for use at the end of reduction, for creating a normalized gain set for writing.
+	// To make it safe, it should properly rescale all dependent signals and gains...
+	public synchronized void normalizeGains(Collection<Integration<?,?>> integrations, int gainFlag) throws IllegalAccessException {
+		final float aveG = (float) getAverageGain(gainFlag);
+		float[] G = getGains();
+		
+		for(int i=G.length; --i >= 0; ) G[i] /= aveG;
+		
+		for(Integration<?,?> integration : integrations) scaleSignals(integration, aveG);
 	}
-	
-	public synchronized void normalizeGains(WeightedPoint[] G, double aveG) {
-		final double norm = 1.0 / aveG;
-		for(WeightedPoint gain : G) gain.scale(norm);
-	}
+
 	
 	public synchronized void scaleSignals(Integration<?,?> integration, double aveG) {
 		if(fixedGains) throw new IllegalStateException("Correlate mode '" + name + "' has non-adjustable gains.");
@@ -67,26 +71,35 @@ public class CorrelatedMode extends Mode {
 		signal.scale(aveG);
 		
 		PhaseSet phases = integration.getPhases();
-		if(phases != null) phases.signals.get(this).scale(aveG);
+		if(phases != null) {
+			PhaseSignal pSignal = phases.signals.get(this);
+			if(pSignal != null) pSignal.scale(aveG);
+		}
 	}
 	
-	public void updateSignal(Integration<?, ?> integration, boolean isRobust) {
+	public synchronized void updateAllSignals(Integration<?, ?> integration, boolean isRobust) throws IllegalAccessException {
 		if(fixedSignal) throw new IllegalStateException("WARNING! Cannot decorrelate fixed signal modes.");
-		try { 
-			CorrelatedSignal signal = (CorrelatedSignal) integration.signals.get(this);
-			if(signal == null) signal = new CorrelatedSignal(this, integration);
-			signal.update(isRobust); 	
+
+		CorrelatedSignal signal = (CorrelatedSignal) integration.signals.get(this);
+		if(signal == null) signal = new CorrelatedSignal(this, integration);
+		signal.update(isRobust); 	
+
+		// Solve for the correlated phases also, if required
+		if(integration.isPhaseModulated()) if(integration.hasOption("phases") || solvePhases) {
+			PhaseSignal pSignal = integration.getPhases().signals.get(this);
+			if(pSignal == null) pSignal = new PhaseSignal(integration.getPhases(), this);
+			pSignal.update(isRobust);
 		}
-		catch(IllegalAccessException e) { e.printStackTrace(); }
 	}	
 	
+	/*
 	@Override
-	protected void syncGains(Integration<?, ?> integration, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {		
+	protected void syncAllGains(Integration<?, ?> integration, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {		
 		// Now do the actual synching to the samples
-		super.syncGains(integration, sumwC2, isTempReady);
+		super.syncAllGains(integration, sumwC2, isTempReady);
 		
 			
-		/*
+		
 		 * TODO
 		 * Gain renormalization is dangerous when other modes depend on the same gains
 		 * but are not renormalized... A better way to do this is to keep track of
@@ -105,9 +118,9 @@ public class CorrelatedMode extends Mode {
 		// This has to happen after the sync!!!
 		integration.signals.get(this).setUsedGains(fG);
 		if(phases != null) phases.signals.get(this).setUsedGains(fG);		
-		*/
+		
 
 	}
-		
+	*/
 
 }

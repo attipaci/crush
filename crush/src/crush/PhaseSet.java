@@ -34,16 +34,15 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 	
 	protected Integration<?,?> integration;
 	protected Hashtable<Mode, PhaseSignal> signals = new Hashtable<Mode, PhaseSignal>();
-
+	Dependents dependents;
+	
 	public PhaseSet(Integration<?,?> integration) {
-		this.integration = integration;		
+		this.integration = integration;	
+		dependents = new Dependents(integration, "phases");
 	}
 	
-	public void update(ChannelGroup<?> channels) {	
-		String name = "phases";
-		Dependents parms = integration.dependents.containsKey(name) ? integration.dependents.get(name) : new Dependents(integration, name);
-		
-		for(PhaseOffsets offsets : this) offsets.update(channels, parms);	
+	public void update(ChannelGroup<?> channels) {		
+		for(PhaseOffsets offsets : this) offsets.update(channels, dependents);	
 		
 		// Discard the DC component of the phases...
 		for(Channel channel : channels) level(channel); 
@@ -56,7 +55,6 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 	protected void syncGains(final Mode mode) throws IllegalAccessException {		
 		signals.get(mode).syncGains();
 	}
-	
 	
 	protected void level(final Channel channel) {
 		final int c = channel.index;
@@ -76,7 +74,7 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 		
 		for(int i=size() - 1; --i > 0; ) {
 			final PhaseOffsets offsets = get(i);
-			if(offsets.phase != Frame.CHOP_LEFT) continue;
+			if((offsets.phase & Frame.CHOP_LEFT) == 0) continue;
 		
 			final WeightedPoint left = get(i).getValue(channel);
 			final WeightedPoint right = get(i-1).getValue(channel);
@@ -96,7 +94,7 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 		int n = 0;
 		for(int i=size() - 1; --i > 0; ) {
 			final PhaseOffsets offsets = get(i);
-			if(offsets.phase != Frame.CHOP_LEFT) continue;
+			if((offsets.phase & Frame.CHOP_LEFT) == 0) continue;
 
 			final WeightedPoint left = get(i).getValue(channel);
 			final WeightedPoint right = get(i-1).getValue(channel);
@@ -109,7 +107,7 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 			n++;
 		}
 		
-		return n > 1 ? chi2/(n - 1) : Double.NaN;
+		return n > 1 ? chi2/(n-1) : Double.NaN;
 	}
 	
 }

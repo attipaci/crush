@@ -86,19 +86,19 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 			left[c] = new WeightedPoint();
 			right[c] = new WeightedPoint();			
 		}
-		
-		
+	
 		for(Integration<?,?> integration : scan) {
 			final APEXArraySubscan<?,?> subscan = (APEXArraySubscan<?,?>) integration;
 			final double transmission = 0.5 * (subscan.getFirstFrame().transmission + subscan.getLastFrame().transmission);
 			final double[] sourceGain = subscan.instrument.getSourceGains(false);
 			final PhaseSet phases = integration.getPhases();
 			
+		
 			for(APEXPixel pixel : subscan.instrument.getObservingChannels()) if(pixel.sourcePhase != 0) {
 				WeightedPoint point = null;
 
-				if(pixel.sourcePhase == Frame.CHOP_LEFT) point = left[pixel.dataIndex];
-				else if(pixel.sourcePhase == Frame.CHOP_RIGHT) point = right[pixel.dataIndex];
+				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.dataIndex];
+				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.dataIndex];
 				else continue;
 				
 				WeightedPoint df = phases.getLROffset(pixel);
@@ -109,6 +109,10 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 			}
 		}
 		
+		
+		Channel refPixel = ((APEXArrayScan<?,?>) scan).get(0).instrument.referencePixel;
+		int refIndex = refPixel.dataIndex;
+		
 		for(int c=flux.length; --c >=0; ) {
 			flux[c] = (WeightedPoint) left[c].clone();
 			flux[c].subtract(right[c]);
@@ -116,11 +120,8 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 		}
 	
 		// TODO add all pixels chopping over the source to the source flux...
-		Channel refPixel = ((APEXArrayScan<?,?>) scan).get(0).instrument.referencePixel;
-		int refIndex = refPixel.dataIndex;
 		sourceFlux.copy(flux[refIndex]);
-		flux[refIndex].noData();
-		
+		flux[refIndex].noData();		
 	}
 	
 

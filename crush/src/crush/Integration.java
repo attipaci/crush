@@ -724,11 +724,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		if(frameResolution > 1) comments += "(" + frameResolution + ")";	
 		
 		modality.solveGains = hasOption("gains");
+		modality.phaseGains = hasOption("phasegains");
 		modality.setOptions(option("correlated." + modality.name));
 		
 		if(modality instanceof CorrelatedModality) {
 			CorrelatedModality correlated = (CorrelatedModality) modality;
-			if(correlated.solveSignal) correlated.updateSignal(this, isRobust);
+			if(correlated.solveSignal) correlated.updateAllSignals(this, isRobust);
 		}	
 		
 		// Continue to solve gains only if gains are derived per integration
@@ -742,7 +743,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			gains.mapValueTo("estimator");
 			if(gains.isConfigured("estimator")) if(gains.get("estimator").equals("median")) isGainRobust = true; 
 			
-			if(modality.updateGains(this, isGainRobust)) {
+			if(modality.updateAllGains(this, isGainRobust)) {
 				instrument.census();
 				comments += instrument.mappingChannels;
 			}
@@ -755,16 +756,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		return dependents.containsKey(name) ? dependents.get(name) : new Dependents(this, name);
 	}
 
-	
-
-	public WeightedPoint[] getGainIncrement(Mode mode, boolean isRobust) {
-		return signals.get(mode).getGainIncrement(isRobust);
-	}
-	
-	protected void syncGains(final Mode mode, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {		
-		signals.get(mode).syncGains(sumwC2, isTempReady);
-	}
-	
 
 	public void getPixelWeights() {
 		comments += "W";
@@ -2466,6 +2457,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		else if(task.equals("weighting.frames")) {
 			int n = hasOption("weighting.frames.resolution") ? filterFramesFor(option("weighting.frames.resolution").getValue(), 10.0 * Unit.s) : 1;
 			getTimeWeights(FFT.getPaddedSize(n));
+			updatePhases();
 		}
 		else if(task.startsWith("despike")) {
 			despike(option(task));

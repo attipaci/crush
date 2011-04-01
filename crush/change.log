@@ -6,6 +6,8 @@
    both for phases and samples...
 >> no space to comments if no operation was performed successfully...
 >> does pixel data override RCP gains, even if rcp.gains is set?
+>> There is something fishy with the phase decorrelation (or gains). Noise
+   increases with iterations...
 
 	[BUG] {APEX} Conditional settings for photometry were always active
 	for APEX scans due to a coding error. Should be fixed now...
@@ -38,7 +40,7 @@
 	decreases the reliance on an up-to-date pixel data file for accurate
 	photometry.
 
-	[TWEAK] {APEX} Disabled noise whitening in chopped photometry 
+???	[TWEAK] {APEX} Disabled noise whitening in chopped photometry 
 	reductions. While whitening seemed like a good idea, it is likely
 	the cause of some of the occasional excess error.
 

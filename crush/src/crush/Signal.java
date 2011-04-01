@@ -77,25 +77,26 @@ public class Signal implements Cloneable {
 		return value[frame.index / resolution]; 
 	}
 		
-	public void scale(double factor) {
+	public synchronized void scale(double factor) {
 		float fValue = (float) factor;
 		for(int t=value.length; --t >= 0; ) value[t] *= fValue;
 		if(drifts != null) for(int T=drifts.length; --T >= 0; ) drifts[T] *= fValue;
+		for(int k=syncGains.length; --k >= 0; ) syncGains[k] /= fValue;
 	}
 	
-	public void add(double x) {
+	public synchronized void add(double x) {
 		float fValue = (float) x;
 		for(int t=value.length; --t >= 0; ) value[t] += fValue;
 		if(drifts != null) for(int T=drifts.length; --T >= 0; ) drifts[T] += fValue;
 	}
 	
-	public void subtract(double x) {
+	public synchronized void subtract(double x) {
 		float fValue = (float) x;
 		for(int t=value.length; --t >= 0; ) value[t] -= fValue;
 		if(drifts != null) for(int T=drifts.length; --T >= 0; ) drifts[T] -= fValue;
 	}
 	
-	public void addDrifts() {
+	public synchronized void addDrifts() {
 		if(drifts == null) return;
 		
 		for(int fromt=0, T=0; fromt<value.length; fromt+=driftN) {
@@ -131,7 +132,7 @@ public class Signal implements Cloneable {
 	}
 	
 	
-	public void removeDrifts() {
+	public synchronized void removeDrifts() {
 		int N = integration.framesFor(integration.filterTimeScale) / resolution;
 		if(N == driftN) return;
 		
@@ -190,7 +191,7 @@ public class Signal implements Cloneable {
 	//
 	// f[1] = f[0] + h f'[0]
 	// f[n] = f[n-1] + h f'[n]
-	public void differentiate() {
+	public synchronized void differentiate() {
 		float dt = (float) (resolution * integration.instrument.samplingInterval);
 		for(int t=1; t<value.length; t++) value[t-1] = (value[t] - value[t-1]) / dt;
 		
@@ -205,7 +206,7 @@ public class Signal implements Cloneable {
 	}
 	
 	// Intergate using trapesiod rule...
-	public void integrate() {
+	public synchronized void integrate() {
 		double dt = (float) (resolution * integration.instrument.samplingInterval);		
 		double I = 0.0;
 		
@@ -236,7 +237,7 @@ public class Signal implements Cloneable {
 		return d;
 	}
 	
-	public void level(boolean isRobust) {
+	public synchronized void level(boolean isRobust) {
 		WeightedPoint center = isRobust ? getMedian() : getMean();
 		float fValue = (float) center.value;
 		for(int t=value.length; --t >= 0; ) value[t] -= fValue;
@@ -255,7 +256,7 @@ public class Signal implements Cloneable {
 	}
 	
 	// TODO Use this in ArrayUtil...
-	public void smooth(double[] w) {
+	public synchronized void smooth(double[] w) {
 		int ic = w.length / 2;
 		float[] smoothed = new float[value.length];
 		
@@ -278,7 +279,7 @@ public class Signal implements Cloneable {
 		value = smoothed;
 	}
 	
-	public void setSyncGains(float[] G) {
+	public synchronized void setSyncGains(float[] G) {
 		System.arraycopy(G, 0, syncGains, 0, G.length);
 	}
 	
@@ -290,7 +291,7 @@ public class Signal implements Cloneable {
 	}
 	
 	
-	protected WeightedPoint[] getGainIncrement(boolean isRobust) {
+	protected synchronized WeightedPoint[] getGainIncrement(boolean isRobust) {
 		Mode mode = getMode();
 		final ChannelGroup<?> channels = mode.channels;
 		final int nc = channels.size();					
@@ -364,7 +365,7 @@ public class Signal implements Cloneable {
 	}
 
 	
-	protected void syncGains(float[] sumwC2, boolean isTempReady) throws IllegalAccessException {
+	protected synchronized void syncGains(float[] sumwC2, boolean isTempReady) throws IllegalAccessException {
 		Mode mode = getMode();
 		if(mode.fixedGains) throw new IllegalStateException("WARNING! Cannot change gains for fixed gain modes.");
 		
@@ -412,10 +413,6 @@ public class Signal implements Cloneable {
 		setSyncGains(G);
 		
 		if(CRUSH.debug) integration.checkForNaNs(channels, 0, integration.size());
-		
-		// Sync to the phases also...
-		PhaseSet phases = integration.getPhases();
-		if(phases != null) phases.syncGains(mode);
 	}
 	
 	

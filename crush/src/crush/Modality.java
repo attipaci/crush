@@ -44,6 +44,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	public String trigger;
 	
 	public boolean solveGains = true;
+	public boolean phaseGains = false;
 	public double resolution = Double.NaN;
 	
 	protected Modality(String name, String id) {
@@ -74,14 +75,16 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	}
 	
 	public void setOptions(Configurator option) {	
-		if(option.isConfigured("nogains")) solveGains = false;	
+		
 		
 		resolution = option.isConfigured("resolution") ? option.get("resolution").getDouble() * Unit.s : 0.0;
-		
 		trigger = option.isConfigured("trigger") ? option.get("trigger").getValue() : null;
 		
+		if(option.isConfigured("nogains")) solveGains = false;	
+		if(option.isConfigured("phasegains")) phaseGains = true;
+		
 		boolean noGainField = option.isConfigured("nofield");
-		boolean phaseGains = option.isConfigured("phasegains");
+		
 		setGainRange(option.isConfigured("gainrange") ? option.get("gainrange").getRange() : new Range());
 		setGainDirection(option.isConfigured("signed") ? Instrument.GAINS_SIGNED : Instrument.GAINS_BIDIRECTIONAL);
 		
@@ -103,8 +106,35 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		for(Mode mode : this) mode.gainType = type;
 	}
 	
+	// Gains are stored according to dataIndex
+	public void averageGains(WeightedPoint[] G, Integration<?,?> integration, boolean isRobust) throws IllegalAccessException {
+		for(Mode mode : this) if(!mode.fixedGains) {
+			WeightedPoint[] iG = mode.getGains(integration, isRobust);
+			for(int k=iG.length; --k >= 0; ) G[mode.channels.get(k).dataIndex].average(iG[k]);
+		}
+	}
 	
-	public boolean updateGains(Integration<?, ?> integration, boolean isRobust) {
+	// Gain arrays is according to dataIndex
+	public void applyGains(WeightedPoint[] G, Integration<?,?> integration) throws IllegalAccessException {
+		for(Mode mode : this) if(!mode.fixedGains) {
+			final float[] fG = new float[mode.channels.size()];
+			final float[] sumwC2 = new float[mode.channels.size()];
+			
+			for(int k=fG.length; --k >= 0; ) {
+				final WeightedPoint channelGain = G[mode.channels.get(k).dataIndex];
+				fG[k] = (float) channelGain.value;
+				sumwC2[k] = (float) channelGain.weight;
+			}
+			
+			try { 
+				mode.setGains(fG);
+				mode.syncAllGains(integration, sumwC2, true); 			
+			}
+			catch(IllegalAccessException e) { e.printStackTrace(); }
+		}
+	}
+	
+	public boolean updateAllGains(Integration<?, ?> integration, boolean isRobust) {
 		if(!solveGains) return false;
 		boolean isFlagging = false;
 		
@@ -112,7 +142,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 			try {
 				WeightedPoint[] G = mode.getGains(integration, isRobust);
 				mode.setGains(WeightedPoint.floatValues(G));
-				mode.syncGains(integration, WeightedPoint.floatWeights(G), true);
+				mode.syncAllGains(integration, WeightedPoint.floatWeights(G), true);
 				isFlagging = true;
 			}
 			catch(IllegalAccessException e) { e.printStackTrace(); }

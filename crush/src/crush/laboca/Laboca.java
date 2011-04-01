@@ -233,7 +233,15 @@ public class Laboca extends APEXArray<LabocaPixel> {
 		return super.getPixelDataHeader() + "\tGbox\tGcable\tbox\tcable\tamp";
 	}
 	
-
+	@Override
+	public void uniformGains() {
+		super.uniformGains();
+		for(LabocaPixel pixel : this) {
+			pixel.boxGain = 1.0;
+			pixel.cableGain = 1.0;
+			pixel.ampGain = 1.0;
+		}
+	}
 }
 
 
