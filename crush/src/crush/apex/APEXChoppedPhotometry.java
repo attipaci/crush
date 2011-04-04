@@ -74,7 +74,6 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 		APEXArraySubscan<?,?> subscan = (APEXArraySubscan<?,?>) integration;		
 		APEXArray<?> instrument = subscan.instrument;
 		integrationTime += subscan.chopper.efficiency * subscan.size() * instrument.integrationTime;
-		//integration.updatePhases();
 	}
 
 	@Override
@@ -92,18 +91,19 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 			final double transmission = 0.5 * (subscan.getFirstFrame().transmission + subscan.getLastFrame().transmission);
 			final double[] sourceGain = subscan.instrument.getSourceGains(false);
 			final PhaseSet phases = integration.getPhases();
-			
-		
+						
 			for(APEXPixel pixel : subscan.instrument.getObservingChannels()) if(pixel.sourcePhase != 0) {
 				WeightedPoint point = null;
 
+				//ArrayList<APEXPixel> neighbours = subscan.instrument.getNeighbours(pixel, 5.0 * pixel.getResolution());
+				
 				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.dataIndex];
 				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.dataIndex];
 				else continue;
-				
-				WeightedPoint df = phases.getLROffset(pixel);
-				df.weight /= Math.max(1.0, phases.getLRChi2(pixel, df.value));
-				df.scale(1.0 / transmission / subscan.gain / sourceGain[pixel.index]);
+					
+				WeightedPoint df = pixel.getLROffset(phases);
+				df.weight /= Math.max(1.0, pixel.getLRChi2(phases, df.value));
+				df.scale(1.0 / (transmission * subscan.gain * sourceGain[pixel.index]));
 				
 				point.average(df);
 			}

@@ -22,8 +22,10 @@
  ******************************************************************************/
 package crush;
 
+import java.io.*;
 import java.util.*;
 
+import util.Util;
 import util.data.WeightedPoint;
 
 public class PhaseSet extends ArrayList<PhaseOffsets> {
@@ -35,28 +37,32 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 	protected Integration<?,?> integration;
 	protected Hashtable<Mode, PhaseSignal> signals = new Hashtable<Mode, PhaseSignal>();
 	Dependents dependents;
+	int generation = 0;
 	
 	public PhaseSet(Integration<?,?> integration) {
 		this.integration = integration;	
 		dependents = new Dependents(integration, "phases");
 	}
 	
-	public void update(ChannelGroup<?> channels) {		
+	public synchronized void update(ChannelGroup<?> channels) {
 		for(PhaseOffsets offsets : this) offsets.update(channels, dependents);	
 		
 		// Discard the DC component of the phases...
 		for(Channel channel : channels) level(channel); 
+		
+		generation++;
 	}
 	
-	public WeightedPoint[] getGainIncrement(Mode mode) {
+	public synchronized WeightedPoint[] getGainIncrement(Mode mode) {
 		return signals.get(mode).getGainIncrement();
 	}
 	
-	protected void syncGains(final Mode mode) throws IllegalAccessException {		
+	protected synchronized void syncGains(final Mode mode) throws IllegalAccessException {		
 		signals.get(mode).syncGains();
 	}
 	
-	protected void level(final Channel channel) {
+	// TODO levelling on just the left frames...
+	protected synchronized void level(final Channel channel) {
 		final int c = channel.index;
 		double sum = 0.0, sumw = 0.0;
 		for(PhaseOffsets offsets : this) if(offsets.flag == 0) {			
@@ -64,50 +70,22 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 			sumw += offsets.weight[c];
 		}
 		if(sumw == 0.0) return;
-		final float d = (float) (sum / sumw);
+		final float ave = (float) (sum / sumw);
 		
-		for(PhaseOffsets offsets : this) offsets.value[c] -= d;
-	}
-
-	public WeightedPoint getLROffset(Channel channel) {
-		final WeightedPoint bias = new WeightedPoint();
-		
-		for(int i=size() - 1; --i > 0; ) {
-			final PhaseOffsets offsets = get(i);
-			if((offsets.phase & Frame.CHOP_LEFT) == 0) continue;
-		
-			final WeightedPoint left = get(i).getValue(channel);
-			final WeightedPoint right = get(i-1).getValue(channel);
-					
-			right.average(get(i+1).getValue(channel));
-			left.subtract(right);
-		
-			bias.average(left);
-		}
-		
-		return bias;
+		for(PhaseOffsets offsets : this) offsets.value[c] -= ave;
 	}
 	
-	
-	public double getLRChi2(Channel channel, double bias) {	
-		double chi2 = 0.0;
-		int n = 0;
-		for(int i=size() - 1; --i > 0; ) {
-			final PhaseOffsets offsets = get(i);
-			if((offsets.phase & Frame.CHOP_LEFT) == 0) continue;
-
-			final WeightedPoint left = get(i).getValue(channel);
-			final WeightedPoint right = get(i-1).getValue(channel);
-			right.average(get(i+1).getValue(channel));
-			left.subtract(right);
-			left.value -= bias;
-
-			final double chi = left.significance();
-			chi2 += chi * chi;
-			n++;
-		}
-		
-		return n > 1 ? chi2/(n-1) : Double.NaN;
+	public void write() throws IOException {
+		String filename = CRUSH.workPath + File.separator + integration.scan.getID() + "-" + integration.getID() + ".phases.tms";
+		PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename)));
+		write(out);
+		out.close();
+		System.err.println("Written phases to " + filename);
 	}
 	
+	public void write(PrintStream out) {
+		out.println(integration.getASCIIHeader());
+		for(int i=0; i<size(); i++) out.println(get(i).toString(Util.e3));
+	}
+
 }

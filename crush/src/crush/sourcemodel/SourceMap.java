@@ -396,37 +396,44 @@ extends SourceModel<InstrumentType, ScanType> {
 		integration.comments += " ";
 	}
 	
-	protected abstract void sync(final Frame exposure, final Pixel pixel, final MapIndex index, final double fG, final double[] sourceGain, final double[] usedSourceGain, final boolean isMasked);
+	protected abstract void sync(final Frame exposure, final Pixel pixel, final MapIndex index, final double fG, final double[] sourceGain, double[] syncGain, final boolean isMasked);
 	
 	protected void sync(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
 		final CelestialProjector projector = new CelestialProjector(projection);
 		final MapIndex index = new MapIndex();
-		
+				
 		for(final Frame exposure : integration) if(exposure != null) {
 			final double fG = integration.gain * exposure.getSourceGain(signalMode); 
 			
 			// Remove source from all but the blind channels...
 			for(final Pixel pixel : pixels)  {
 				getIndex(exposure, pixel, projector, index);
-				sync(exposure, pixel, index, fG, sourceGain, integration.usedSourceGain, isMasked(index));
+				sync(exposure, pixel, index, fG, sourceGain, integration.sourceSyncGain, isMasked(index));
 			}
 		}
-	}
+		
+		System.arraycopy(sourceGain, 0, integration.sourceSyncGain, 0, sourceGain.length);
+	
+		integration.sourceGeneration++;
+		integration.scan.sourcePoints = countPoints();
 
+	}
+	
 	@Override
 	public void sync(Integration<?,?> integration) {
 		sync(integration, Mode.TOTAL_POWER);
 	}
+
 	
 	public void sync(Integration<?,?> integration, int signalMode) {
 		Instrument<?> instrument = integration.instrument; 
 		
 		double[] sourceGain = instrument.getSourceGains(false);	
-		if(integration.usedSourceGain == null) integration.usedSourceGain = new double[sourceGain.length];
-
+		if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
+		
 		Collection<? extends Pixel> pixels = instrument.getMappingPixels();
 		
-		if(hasOption("source.coupling")) calcCoupling(integration, pixels, sourceGain);
+		if(hasOption("source.coupling")) calcCoupling(integration, pixels, sourceGain, integration.sourceSyncGain);
 		sync(integration, pixels, sourceGain, signalMode);
 
 		// Do an approximate accounting of the source dependence...
@@ -453,10 +460,6 @@ extends SourceModel<InstrumentType, ScanType> {
 
 		for(Pixel pixel : pixels) parms.apply(pixel, 0, integration.size());
 
-		integration.usedSourceGain = sourceGain;
-		integration.sourceGeneration++;
-		integration.scan.sourcePoints = countPoints();
-
 		if(CRUSH.debug) for(Pixel pixel : pixels) integration.checkForNaNs(pixel, 0, integration.size());
 	}
 
@@ -464,7 +467,7 @@ extends SourceModel<InstrumentType, ScanType> {
 	
 	public abstract double covariantPoints();
 	
-	protected abstract void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain);
+	protected abstract void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain);
 
 	public Range xRange = new Range();
 	public Range yRange = new Range();

@@ -75,7 +75,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	
 	public boolean approximateSourceMap = false;
 	public int sourceGeneration = 0;
-	public double[] usedSourceGain;
+	public double[] sourceSyncGain;
 	
 	public Chopper chopper;
 	public DataPoint aveScanSpeed;
@@ -86,7 +86,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	protected boolean isDetectorStage = false;
 	protected boolean isValid = false;
 	public boolean isProper = true;
-	
 		
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
 	// The constructor of Integration thus copies the Scan instrument for private use...
@@ -111,10 +110,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		Integration<InstrumentType, FrameType> copy = (Integration<InstrumentType, FrameType>) clone();
 		copy.instrument = (InstrumentType) instrument.copy();
 		copy.comments = new String(comments);
-		if(usedSourceGain != null) {
-			copy.usedSourceGain = new double[usedSourceGain.length];
-			System.arraycopy(usedSourceGain, 0, copy.usedSourceGain, 0, usedSourceGain.length);
+	
+		if(sourceSyncGain != null) {
+			copy.sourceSyncGain = new double[sourceSyncGain.length];
+			System.arraycopy(sourceSyncGain, 0, copy.sourceSyncGain, 0, sourceSyncGain.length);	
 		}
+		
 		return copy;
 	}
 	
@@ -2160,6 +2161,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			catch(Exception e) { e.printStackTrace(); }
 		}
 		
+		if(hasOption("write.phases")) if(isPhaseModulated()) {
+			try { getPhases().write(); }
+			catch(Exception e) { e.printStackTrace(); }
+		}
+		
 		if(hasOption("write.spectrum")) {
 			Configurator spectrumOption = option("write.spectrum");
 			String argument = spectrumOption.getValue();
@@ -2439,8 +2445,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		
 		boolean accomplished = true;
 		
-		if(task.equals("offsets"))	
+		if(task.equals("offsets")) {
 			removeDrifts(instrument, size(), isRobust, isRobust);	    
+			//updatePhases();
+		}
 		else if(task.equals("drifts")) {
 			if(isPhaseModulated()) return false;
 			Configurator driftOptions = option("drifts");
@@ -2453,7 +2461,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			String modalityName = task.substring(task.indexOf('.')+1);
 			accomplished = decorrelate(modalityName, isRobust);
 		}
-		else if(task.equals("weighting")) getWeights();
+		else if(task.equals("weighting")) {
+			getWeights();
+			updatePhases();
+		}
 		else if(task.equals("weighting.frames")) {
 			int n = hasOption("weighting.frames.resolution") ? filterFramesFor(option("weighting.frames.resolution").getValue(), 10.0 * Unit.s) : 1;
 			getTimeWeights(FFT.getPaddedSize(n));
@@ -2465,8 +2476,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		}
 		else if(task.equals("whiten")) {
 			whiten();
-			updatePhases();
 			if(indexOf("whiten") > indexOf("weighting")) getWeights();
+			updatePhases();
 		}
 		else return false;
 		
@@ -2493,8 +2504,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	public PhaseSet getPhases() {
 		return chopper == null ? null : chopper.phases;
 	}
-	
-	
 	
 	public void getWeights() {
 		String method = "rms";

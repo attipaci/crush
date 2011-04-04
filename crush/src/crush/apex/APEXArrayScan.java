@@ -74,7 +74,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	@Override
 	public void mergeSubscans() {
 		super.mergeSubscans();
-		get(0).nodFlag = 0;
+		get(0).nodPhase = 0;
 	}
 	
 	

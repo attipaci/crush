@@ -96,11 +96,11 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	public void removeBias(Integration<?, ?> subscan) {
 		
 		if(subscan instanceof Biased) {
-			double[] sourceGain = subscan.instrument.getSourceGains(false);	
-			if(subscan.usedSourceGain == null) subscan.usedSourceGain = new double[sourceGain.length];			
-			else for(int c=0; c<sourceGain.length; c++) sourceGain[c] -= subscan.usedSourceGain[c];
+			double[] dG = subscan.instrument.getSourceGains(false);	
+			if(subscan.sourceSyncGain != null) 
+				for(int c=dG.length; --c >= 0; ) dG[c] -= subscan.sourceSyncGain[c];
 				
-			((Biased) subscan).removeBias(sourceGain);
+			((Biased) subscan).removeBias(dG);
 			subscan.comments += " ";
 		}
 		

@@ -43,7 +43,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	 * 
 	 */
 	private static final long serialVersionUID = 2929947229904002745L;
-	public int nodFlag = 0;
+	public int nodPhase = 0;
 	
 	protected WeightedPoint[] tempPhase;
 	
@@ -64,7 +64,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	}
 	
 	public void markChopped() {
-		if(nodFlag == 0) 
+		if(nodPhase == 0) 
 			throw new IllegalStateException("Merged subscan contains mixed nod phases. Cannot process chopper.");
 		
 		// Flag pixels that chop on source
@@ -73,8 +73,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		//System.err.println("on phase is " + integration[i][k].onPhase);
 		
 		
-		Vector2D left = new Vector2D(nodFlag == Frame.CHOP_LEFT ? 0.0 : 2.0 * chopper.amplitude, 0.0);
-		Vector2D right = new Vector2D(nodFlag == Frame.CHOP_LEFT ? -2.0 * chopper.amplitude : 0.0, 0.0);
+		Vector2D left = new Vector2D(nodPhase == Frame.CHOP_LEFT ? 0.0 : 2.0 * chopper.amplitude, 0.0);
+		Vector2D right = new Vector2D(nodPhase == Frame.CHOP_LEFT ? -2.0 * chopper.amplitude : 0.0, 0.0);
 		double tolerance = instrument.resolution / 5.0;
 		
 		markChopped(left, right, tolerance);
@@ -103,7 +103,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				channel.sourcePhase |= Frame.CHOP_RIGHT;
 				System.err.print(" R" + channel.dataIndex); 
 			}
-			else for(Channel channel : pixel) channel.sourcePhase &= ~(Frame.CHOP_FLAGS);
+			else for(Channel channel : pixel) channel.sourcePhase &= ~Frame.CHOP_FLAGS;
 		}
 		
 		System.err.println();
@@ -125,9 +125,10 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				if(current.phase != Frame.CHOP_LEFT) {
 					current = new PhaseOffsets(this);
 					current.phase = Frame.CHOP_LEFT;
+					if(current.phase == nodPhase) current.flag |= PhaseOffsets.SKIP_LEVEL;
 					current.start = exposure;
 					current.end = exposure;
-					chopper.phases.add(current);
+					if(current.phase != 0) chopper.phases.add(current);
 					phases++;
 				}
 				else current.end = exposure;
@@ -138,9 +139,10 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				if(current.phase != Frame.CHOP_RIGHT) {
 					current = new PhaseOffsets(this);
 					current.phase = Frame.CHOP_RIGHT;
+					if(current.phase == nodPhase) current.flag |= PhaseOffsets.SKIP_LEVEL;
 					current.start = exposure;
 					current.end = exposure;
-					chopper.phases.add(current);
+					if(current.phase != 0) chopper.phases.add(current);
 					phases++;
 				}
 				else current.end = exposure;
@@ -211,41 +213,10 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		while((frame = get(--to)).isUnflagged(Frame.CHOP_TRANSIT) && to > 0) frame.flag(APEXFrame.CHOP_ENDS);
 	}
 	
-	/*
-	@Override
-	public void updatePhases() {
-		super.updatePhases();
-		
-		for(APEXPixel pixel : instrument) {
-			if(pixel.LROffset == null) pixel.LROffset = new WeightedPoint();
-			
-			WeightedPoint dLR = getLROffset(pixel);
-			if(dLR.weight > 0.0) {
-				pixel.LROffset.value += dLR.value;
-				removeLROffset(dLR.value, pixel);
-			}
-			pixel.LROffset.weight = dLR.weight;	
-		}
-	}
-	*/
-	
-	/*
-	protected void removeLROffset(double increment, Channel channel) {
-		for(PhaseOffsets offsets : getPhases()) {
-			if((offsets.phase & Frame.CHOP_LEFT) != 0) offsets.value[channel.index] -= 0.5 * increment;
-			else if((offsets.phase & Frame.CHOP_RIGHT) != 0) offsets.value[channel.index] += 0.5 * increment;
-		}	
-	}
-	*/
-	
 	@Override
 	public void validate() {
 		super.validate();	
-		if(chopper != null) {
-			// TODO clearly, need to add this at the pipeline level no at the subscan level...
-			instrument.options.process("chopped", "");
-			if(isProper) markChopped();
-		}
+		if(chopper != null) if(isProper) markChopped();
 	}
 		
 	public void readData(BinaryTableHDU hdu) throws FitsException {	
@@ -354,22 +325,22 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			final String phase1 = header.getStringValue("PHASE1");	
 			final String phase2 = header.getStringValue("PHASE2");
 
-			nodFlag = Frame.CHOP_LEFT;
+			nodPhase = Frame.CHOP_LEFT;
 			
 			if(phase1 != null) {
-				if(phase1.equalsIgnoreCase("WON")) nodFlag = Frame.CHOP_LEFT;
-				else if(phase1.equalsIgnoreCase("WOFF")) nodFlag = Frame.CHOP_RIGHT;
+				if(phase1.equalsIgnoreCase("WON")) nodPhase = Frame.CHOP_LEFT;
+				else if(phase1.equalsIgnoreCase("WOFF")) nodPhase = Frame.CHOP_RIGHT;
 			}
 			else if(phase2 != null) {
-				if(phase2.equalsIgnoreCase("WON")) nodFlag = Frame.CHOP_RIGHT;
-				else if(phase2.equalsIgnoreCase("WOFF")) nodFlag = Frame.CHOP_LEFT;
+				if(phase2.equalsIgnoreCase("WON")) nodPhase = Frame.CHOP_RIGHT;
+				else if(phase2.equalsIgnoreCase("WOFF")) nodPhase = Frame.CHOP_LEFT;
 			}
 			
 			if(apexScan.chopper != null) chopper = apexScan.chopper.copy();
 
 			if(chopper != null)
-				System.err.println("   Nodding " + (nodFlag == Frame.CHOP_LEFT ? "[LEFT]" : 
-							(nodFlag == Frame.CHOP_RIGHT ? "[RIGHT]" : "[???]")));
+				System.err.println("   Nodding " + (nodPhase == Frame.CHOP_LEFT ? "[LEFT]" : 
+							(nodPhase == Frame.CHOP_RIGHT ? "[RIGHT]" : "[???]")));
 		
 		}
 		
@@ -402,7 +373,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				if(chop != null) exposure.chopperPosition.x = chop[t] * Unit.deg;
 				exposure.chopperPhase = phase[t];			
 				exposure.zenithTau = (float) zenithTau;
-				exposure.nodFlag = nodFlag;
+				exposure.nodFlag = nodPhase;
 				
 				if(chopper != null) if(!chopperIncluded) {
 					exposure.horizontal.x += exposure.chopperPosition.x / exposure.horizontal.cosLat;

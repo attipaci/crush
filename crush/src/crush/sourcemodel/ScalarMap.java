@@ -524,12 +524,12 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	}
 	
 	@Override
-	protected void sync(final Frame exposure, final Pixel pixel, final MapIndex index, final double fG, final double[] sourceGain, final double usedSourceGain[], final boolean isMasked) {
+	protected void sync(final Frame exposure, final Pixel pixel, final MapIndex index, final double fG, final double[] sourceGain, final double[] syncGain, final boolean isMasked) {
 		// The use of iterables is a minor performance hit only (~3% overall)
 		for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SKIP) == 0) {
 			// Do not check for flags, to get a true difference image...
 			exposure.data[channel.index] -= getIncrement(index, channel, 
-					fG * usedSourceGain[channel.index], fG * sourceGain[channel.index]);
+					fG * syncGain[channel.index], fG * sourceGain[channel.index]);
 			// Do the blanking here...
 			if(isMasked) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
 			else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SOURCE_BLANK;
@@ -537,15 +537,13 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	}
 
 	@Override
-	protected void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain) {
+	protected void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain) {
 		final CelestialProjector projector = new CelestialProjector(projection);
 		final MapIndex index = new MapIndex();
 
 		final double[] sumIM = new double[sourceGain.length];
 		final double[] sumM2 = new double[sourceGain.length];
-			
-		final double[] usedSourceGain = integration.usedSourceGain;
-		
+				
 		for(final Frame exposure : integration) if(exposure != null) {
 			final double fG = integration.gain * exposure.getSourceGain(signalMode); 
 			final float[] data = exposure.data;
@@ -563,7 +561,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 					final int c = channel.index;
 					if((sampleFlag[c] & Frame.SAMPLE_SKIP) == 0) {
 						final double mapValue = fG * sourceGain[c] * map.data[i][j];
-						final double value = data[c] + fG * usedSourceGain[c] * base[i][j];;
+						final double value = data[c] + fG * syncGain[c] * base[i][j];;
 						sumIM[c] += fw * value * mapValue;
 						sumM2[c] += fw * mapValue * mapValue;			
 					}

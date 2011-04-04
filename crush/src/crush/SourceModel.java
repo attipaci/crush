@@ -36,8 +36,9 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 	public boolean isValid = false;
 	public int generation = 0;
 	public String commandLine;
-	public String id;		
-		
+	public String id;	
+	
+	
 	public SourceModel(InstrumentType instrument) {
 		this.instrument = instrument;
 	}
@@ -59,6 +60,7 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 	@SuppressWarnings("unchecked")
 	public SourceModel<InstrumentType, ScanType> copy() {
 		SourceModel<InstrumentType, ScanType> copy = (SourceModel<InstrumentType, ScanType>) clone();
+	
 		return copy;
 	}
 	
@@ -73,6 +75,8 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 				integration.gain *= janskyPerBeam / integration.instrument.janskyPerBeam();
 		}
 
+	
+		
 		// Set the global units to those of the first scan...
 		instrument.options.process("jansky", Double.toString(janskyPerBeam));
 	}

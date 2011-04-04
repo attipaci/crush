@@ -23,6 +23,8 @@
 package crush;
 
 
+import java.text.NumberFormat;
+
 import util.data.Statistics;
 import util.data.WeightedPoint;
 
@@ -61,7 +63,7 @@ public class PhaseOffsets {
 			
 			float fw = exposure.relativeWeight;
 
-			for(int k=channels.size(); --k >=0; ) {
+			for(int k=channels.size(); --k >= 0; ) {
 				final Channel channel = channels.get(k);
 				if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE_FLAGS) == 0) {
 					sum[k] += fw * exposure.data[channel.index];
@@ -74,9 +76,11 @@ public class PhaseOffsets {
 		for(int k=channels.size(); --k >=0; ) {
 			final Channel channel = channels.get(k);
 			parms.add(channel, 1.0);
-			if(sumw[channel.index] > 0.0) sum[k] /= sumw[k];
-			value[channel.index] += sum[k];
-			weight[channel.index] = (float) sumw[k];
+			if(sumw[channel.index] > 0.0) {
+				sum[k] /= sumw[k];
+				value[channel.index] += sum[k];
+				weight[channel.index] = (float) sumw[k];
+			}
 		}
 		
 		// Remove the incremental phase offset from the integration...
@@ -93,6 +97,7 @@ public class PhaseOffsets {
 					parms.add(exposure, fw / sumw[k]); 
 			}
 		}
+	
 		
 		for(Channel channel : channels) weight[channel.index] *= channel.weight;
 		
@@ -103,46 +108,55 @@ public class PhaseOffsets {
 		return new WeightedPoint(value[channel.index], weight[channel.index]);
 	}
 	
-	protected void getMLCorrelated(CorrelatedMode mode, final float[] G, WeightedPoint increment) {
-		increment.noData();
-		
+	protected void getMLCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint increment) {	
 		final int skipChannels = mode.skipChannels;
-	
+
+		double sum = 0.0, sumw = 0.0;
+		
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.channels.get(k);
 
 			if(channel.isFlagged(skipChannels)) continue;
 			if(channel.sourcePhase != 0) continue;
 	
-			final double wG = weight[channel.index] * G[k];
-			increment.value += wG * value[channel.index];
-			increment.weight += wG * G[k];
+			final float wG = weight[channel.index] * G[k];
+			sum += (wG * value[channel.index]);
+			sumw += (wG * G[k]);
 		}
-		if(increment.weight > 0.0) increment.value /= increment.weight;
+			
+		increment.value = sum / sumw;
+		increment.weight = sumw;
 	}
-	
 	
 	protected void getRobustCorrelated(CorrelatedMode mode, final float[] G, final WeightedPoint[] temp, final WeightedPoint increment) {
 		final int skipChannels = mode.skipChannels;
 		
 		int n=0;
 		increment.weight = 0.0;
+		
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.channels.get(k);
 			if(channel.isFlagged(skipChannels)) continue;
 			if(channel.sourcePhase != 0) continue;
 
 			final float Gk = G[k];
-			final double wG2 = weight[channel.index] * Gk * Gk;
-			if(wG2 == 0.0) continue;
+			final float wG2 = weight[channel.index] * Gk * Gk;
+			if(wG2 == 0.0F) continue;
 			
 			final WeightedPoint point = temp[n++];
-			point.value = value[channel.index] / Gk;
+			point.value = (value[channel.index] / Gk);
 			point.weight = wG2;
+			
 			increment.weight += wG2;
 		}
-		increment.value = n > 0 ? Statistics.smartMedian(temp, 0, n, 0.25) : 0.0;
+		increment.value = n > 0 ? Statistics.smartMedian(temp, 0, n, 0.25) : Double.NaN;
 	}
 	
-	
+	public String toString(NumberFormat nf) {
+		StringBuffer text = new StringBuffer();
+		for(int c=0; c<value.length; c++) text.append((weight[c] > 0.0 ? nf.format(value[c]) : "NaN") + "\t");
+		return new String(text);
+	}
+
+	public static final int SKIP_LEVEL = 1;
 }

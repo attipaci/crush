@@ -153,7 +153,7 @@ public class SyncModMap<InstrumentType extends Instrument<?>, ScanType extends S
 
 					for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SKIP) == 0) {
 						// Do not check for flags, to get a true difference image...
-						exposure.data[channel.index] -= getIncrement(index, channel, fG * integration.usedSourceGain[channel.index], fG * sourceGain[channel.index]);
+						exposure.data[channel.index] -= getIncrement(index, channel, fG * integration.sourceSyncGain[channel.index], fG * sourceGain[channel.index]);
 
 						// Do the blanking here...
 						if(mask[index.i][index.j]) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
