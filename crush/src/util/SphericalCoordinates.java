@@ -195,7 +195,7 @@ public class SphericalCoordinates extends CoordinatePair {
 	
 	
 	public final void getNativeOffsetFrom(final SphericalCoordinates reference, final Vector2D toOffset) {
-		toOffset.x = (x - reference.x) * reference.cosLat;
+		toOffset.x = Math.IEEEremainder(x - reference.x, fullTurn) * reference.cosLat;
 		toOffset.y = y - reference.y;
 	}
 	

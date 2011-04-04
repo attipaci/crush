@@ -4,36 +4,16 @@
 	'<instrument>/lastupdate' (times and versions)
 >> Check gain derivation, normalization, synching and updating...
    both for phases and samples...
->> no space to comments if no operation was performed successfully...
 >> does pixel data override RCP gains, even if rcp.gains is set?
 >> There is something fishy with the phase decorrelation (or gains). Noise
    increases with iterations...
-
-	[BUG] {APEX} Conditional settings for photometry were always active
-	for APEX scans due to a coding error. Should be fixed now...
-	
-	[FIX] Lines containing only empty spaces in the configuration files
-	resulted in errors when parsing. The fix checks for 'empty' lines and
-	ignored these as expected.
-
-	[FIX] Gains were not normalized when spanning scans, rather than
-	subscans/integrations. 
-	
-	[FIX] Source gains were not used for photometry reductions as intended.
-	This is now fixed. AS such options like 'source.fixedgains' now work
-	as expected.
+>> Extends uniformGains to other instruments.
 
 	[FIX] Fixed a multitude of problems with the derivation of gains from 
 	the phases. As a result, chopped photometry reductions can now derive
 	sky-noise gains properly using phases. Therefore, the confoiguration
 	has been updated to use this feature rather than relying on the 
 	accuracy of pre-supplied fixed gains.
-
-	[TWEAK] Default file names are now constructed with an edited version
-	of the catalog source name, with problematic character sequences (
-	such as white spaces, quotes, *, ?, /, and \) replaced with underscores
-	('_'). This makes it easier to refer to the output files from the 
-	command line. Thanks to Giorgio for the suggestion.
 
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change
@@ -51,13 +31,69 @@
 	[CODE] Cleaned up some of the gain derivation code, with an eye on
 	using more common code to get gains from phases or from samples.
 
-	[CODE] Cleaned up leftover extra decorrelation code in photometry
-	reductions.
+        [CODE] Disabled gain renormalization.
 
-	[CLEANUP] Cleaned up Debian changelog file to fully comply with the
-	expected format.
+..      [CODE] 'uniform' now sets all gains uniform (for LABOCA only).
 
-2.03-1
+
+
+2.03-2 (3 Apr 2011)
+
+	Overview
+        =====================================================================
+        This update fixes an unfortunate configuration bug with the APEX                bolometers. Due to a badly placed line of code, 'chopped' configuration
+        settings were always activated, resulting in suboptimal pipeline
+        settings for scans obtained in mapping mode.
+        A few smaller issues were also fixed (especially in the photometry
+        code). Photometry errors may have increased slightly, but these
+        uncertainties are expected to be more accurate than before.
+        =====================================================================
+
+	[BUG] {APEX} Conditional settings for photometry were always active
+        for APEX scans due to a coding error. Should be fixed now...
+
+        [FIX] Fixed GLS projection problem around RA~12h (and AZ~180 deg).
+	(Also updated SphericalCoordinates.getNativeOffsetFrom() method.)
+
+        [FIX] Lines containing only empty spaces in the configuration files
+        resulted in errors when parsing. The fix checks for 'empty' lines and
+        ignored these as expected.
+
+	[FIX] Source gains were not used for photometry reductions as intended.
+        This is now fixed. As such options like 'source.fixedgains' now work
+        as expected.
+
+        [TWEAK] Default file names are now constructed with an edited version
+        of the catalog source name, with problematic character sequences (such 
+	as white spaces, quotes, *, ?, /, and \) replaced with underscores
+        ('_'). This makes it easier to refer to the output files from the
+        command line. Thanks to Giorgio for the suggestion.
+
+	[CODE] Changed the markup of photometry phases.
+
+        [CODE] Cleaned up phase update code to work properly on a selection of
+        channels. (The old code was a mule, which only really worked when
+        phases were updated for the full instrument. Luckily, that was the
+        case...).
+
+        [CODE] Dependent accounting fixed for phase update. The last sample in
+        the phase has slipped through previously.
+
+        [CODE] Removed extra phase decorrelation step from photometry code.
+
+	[CODE] No automatic phase updates after weighting, whitening or 
+        despiking. However, phases are updated with the offsets.
+
+	[CODE] Better handling of 'source.fixedgains'.
+
+        [COSMETIC] Extra white space on the console output (from a skipped
+        decorrelation step) removed.
+
+	[UPDATE] {LABOCA} Updated opacities ('laboca/tau.dat') and calibration
+        scaling data ('laboca/calibration.dat') up to and including 29.03.2011.
+
+
+2.03-1 (21 Mar 2011)
 	
 	Overview
 	=====================================================================

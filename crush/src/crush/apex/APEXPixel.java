@@ -24,14 +24,19 @@
 
 package crush.apex;
 
+import java.util.Collection;
+
 import crush.Channel;
+import crush.Frame;
+import crush.PhaseOffsets;
+import crush.PhaseSet;
 import crush.array.SimplePixel;
 import util.*;
 import util.data.WeightedPoint;
 
 public abstract class APEXPixel extends SimplePixel {
 	public Vector2D fitsPosition;
-	public WeightedPoint LROffset;
+	//public WeightedPoint LROffset;
 	
 	public APEXPixel(APEXArray<?> array, int backendIndex) {
 		super(array, backendIndex);
@@ -42,6 +47,106 @@ public abstract class APEXPixel extends SimplePixel {
 		APEXPixel copy = (APEXPixel) super.copy();
 		if(fitsPosition != null) copy.fitsPosition = (Vector2D) fitsPosition.clone();
 		return copy;
+	}
+	
+	public WeightedPoint getCorrectedLROffset(PhaseSet phases, int i, Collection<APEXPixel> neighbours) {
+		WeightedPoint base = new WeightedPoint();
+		for(APEXPixel pixel : neighbours) {
+			WeightedPoint bias = pixel.getRelativeOffset(phases, i);
+			bias.scale(1.0 / pixel.gain);
+			base.average(bias);
+		}
+
+		WeightedPoint value = getRelativeOffset(phases, i);
+		value.scale(1.0 / gain);
+		
+		value.subtract(base);
+		value.scale(gain);
+		
+		return value;
+	}
+
+	
+	
+	public WeightedPoint getRelativeOffset(PhaseSet phases, int i) {
+		final WeightedPoint value = phases.get(i).getValue(this);
+		final WeightedPoint base = phases.get(i-1).getValue(this);
+		base.average(phases.get(i+1).getValue(this));
+		value.subtract(base);
+		return value;
+	}
+	
+	/*
+	public void updateLROffset(PhaseSet phases) {
+		if(LROffset == null) LROffset = new WeightedPoint();
+		WeightedPoint increment = getLROffset(phases);
+		if(increment.weight <= 0.0) return;
+		
+		for(PhaseOffsets offsets : phases) offsets.value[index] -= increment.value;
+		
+		LROffset.value += increment.value;
+		LROffset.weight = increment.weight;
+	}
+	*/
+	
+	
+	public WeightedPoint getLROffset(PhaseSet phases) {
+		final WeightedPoint bias = new WeightedPoint();
+		
+		for(int i=phases.size()-1; --i > 0; ) {
+			final PhaseOffsets offsets = phases.get(i);
+			if((offsets.phase & Frame.CHOP_LEFT) != 0) bias.average(getRelativeOffset(phases, i));
+		}
+		
+		return bias;
+	}
+
+	public WeightedPoint getCorrectedLROffset(PhaseSet phases, Collection<APEXPixel> neighbours) {
+		final WeightedPoint bias = new WeightedPoint();
+		
+		for(int i=phases.size()-1; --i > 0; ) {
+			final PhaseOffsets offsets = phases.get(i);
+			if((offsets.phase & Frame.CHOP_LEFT) != 0) bias.average(getCorrectedLROffset(phases, i, neighbours));
+		}
+		
+		return bias;
+	}
+	
+	
+	public double getLRChi2(PhaseSet phases, double mean) {	
+		double chi2 = 0.0;
+		int n = 0;
+		for(int i=phases.size()-1; --i > 0; ) {
+			final PhaseOffsets offsets = phases.get(i);
+			if((offsets.phase & Frame.CHOP_LEFT) == 0) continue;
+
+			WeightedPoint LR = getRelativeOffset(phases, i);
+			LR.value -= mean;
+
+			final double chi = LR.significance();
+			chi2 += chi * chi;
+			n++;
+		}
+		
+		return n > 1 ? chi2/(n-1) : Double.NaN;
+	}
+	
+	public double getCorrectedLRChi2(PhaseSet phases, Collection<APEXPixel> neighbours, double mean) {	
+		double chi2 = 0.0;
+		int n = 0;
+		for(int i=phases.size()-1; --i > 0; ) {
+			final PhaseOffsets offsets = phases.get(i);
+			if((offsets.phase & Frame.CHOP_LEFT) == 0) continue;
+
+			WeightedPoint LR = getCorrectedLROffset(phases, i, neighbours);
+			LR.value -= mean;
+
+			final double chi = LR.significance();
+			chi2 += chi * chi;
+			n++;
+		}
+		
+		return n > 1 ? chi2/(n-1) : Double.NaN;
 	}
 	
 }

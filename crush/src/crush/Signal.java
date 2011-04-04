@@ -295,7 +295,6 @@ public class Signal implements Cloneable {
 		Mode mode = getMode();
 		final ChannelGroup<?> channels = mode.channels;
 		final int nc = channels.size();					
-		
 	
 		if(integration.hasOption("signal-response")) 
 			integration.comments += "{" + Util.f2.format(getCovariance()) + "}";
@@ -360,7 +359,8 @@ public class Signal implements Cloneable {
 				point.weight = exposure.tempWC2;
 				increment.weight += exposure.tempWC2;
 			}
-			if(increment.weight > 0.0) increment.value = Statistics.smartMedian(gainData, 0, n, 0.25);
+			increment.value = increment.weight > 0.0 ? Statistics.smartMedian(gainData, 0, n, 0.25) : 0.0;
+		
 		}
 	}
 

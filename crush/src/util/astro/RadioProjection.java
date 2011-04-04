@@ -40,7 +40,7 @@ public class RadioProjection extends SphericalProjection {
 	
 	@Override
 	public final void project(final SphericalCoordinates coords, final CoordinatePair toProjected) {
-		toProjected.x = (coords.x - reference.x) * coords.cosLat;
+		toProjected.x = Math.IEEEremainder(coords.x - reference.x, twoPI) * coords.cosLat;
 		toProjected.y = coords.y - reference.y;
 	}
 	

@@ -114,7 +114,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 
 
 	@Override
-	protected void calcCoupling(Integration<?, ?> integration, Collection<? extends Pixel> pixels, double[] sourceGain) {
+	protected void calcCoupling(Integration<?, ?> integration, Collection<? extends Pixel> pixels, double[] sourceGain, double[] syncGain) {
 		// TODO
 	}
 
@@ -180,10 +180,9 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 
 
 	@Override
-	protected void sync(Frame exposure, Pixel pixel, MapIndex index, double fG,
-			double[] sourceGain, double[] usedSourceGain, boolean isMasked) {
+	protected void sync(Frame exposure, Pixel pixel, MapIndex index, double fG, double[] sourceGain, double[] syncGain, boolean isMasked) {
 		ScalarMap<InstrumentType, ScanType> map = pixelMap[pixel.getDataIndex()];
-		if(map != null) map.sync(exposure, pixel, index, fG, sourceGain, usedSourceGain, isMasked);	
+		if(map != null) map.sync(exposure, pixel, index, fG, sourceGain, syncGain, isMasked);	
 	}
 
 

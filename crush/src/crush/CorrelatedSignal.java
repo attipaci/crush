@@ -163,6 +163,7 @@ public class CorrelatedSignal extends Signal {
 			value[t] = 0.5F * (value[t] + value[t-1]);
 			weight[t] += weight[t-1];
 		}
+		
 	}
 	
 	// Intergate using trapesiod rule...
@@ -290,7 +291,7 @@ public class CorrelatedSignal extends Signal {
 		final float[] G = mode.getGains();
 		final float[] dG = syncGains;
 		
-		// Make usedGains carry the gain increment from last sync...
+		// Make syncGains carry the gain increment from last sync...
 		for(int k=nc; --k >= 0; ) dG[k] = G[k] - dG[k];
 		
 		// Precalculate the gain-weight products...
@@ -336,7 +337,7 @@ public class CorrelatedSignal extends Signal {
 				}
 			}
 				
-			// Update the correlated signal model...
+			// Update the correlated signal model...	
 			value[T] += dC;
 			weight[T] = (float) increment.weight;
 		}
@@ -360,18 +361,22 @@ public class CorrelatedSignal extends Signal {
 	
 	
 	private final void getMLCorrelated(final ChannelGroup<?> channels, final int from, final int to, final WeightedPoint increment) {
-		increment.noData();
+		double sum = 0.0, sumw = 0.0;
 		
 		for(int t=from; t<to; t++) {
 			final Frame exposure = integration.get(t);
+						
 			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
+				final float fw = exposure.relativeWeight;	
 				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
-					increment.value += (exposure.relativeWeight * channel.tempWG * exposure.data[channel.index]);
-					increment.weight += (exposure.relativeWeight * channel.tempWG2);
+					sum += (fw * channel.tempWG * exposure.data[channel.index]);
+					sumw += (fw * channel.tempWG2);
 				}
 			}
 		}
-		increment.value /= increment.weight;
+	
+		increment.value = sum / sumw;
+		increment.weight = sumw;
 	}
 		
 

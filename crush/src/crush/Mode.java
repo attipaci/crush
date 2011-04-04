@@ -104,17 +104,14 @@ public class Mode {
 	
 	public synchronized void setGains(float[] gain) throws IllegalAccessException {
 		if(gainField == null) this.gain = gain;
-		else updateFields(gain);
+		else {
+			Class<?> fieldClass = gainField.getClass();
+			if(fieldClass.equals(float.class)) for(int c=channels.size(); --c >=0; ) gainField.setFloat(channels.get(c), gain[c]);
+			else for(int c=channels.size(); --c>=0; ) gainField.setDouble(channels.get(c), gain[c]);
+		}
 		flagGains();
 	}
-	
-	
-	public synchronized void updateFields(float[] gain) throws IllegalAccessException { 
-		if(gainField == null) return;
-		Class<?> fieldClass = gainField.getClass();
-		if(fieldClass.equals(float.class)) for(int c=channels.size(); --c >=0; ) gainField.setFloat(channels.get(c), gain[c]);
-		else for(int c=channels.size(); --c>=0; ) gainField.setDouble(channels.get(c), gain[c]);
-	}		
+		
 	
 	protected synchronized void flagGains() throws IllegalAccessException {
 		if(gainFlag == 0) return;
@@ -150,7 +147,7 @@ public class Mode {
 	
 	public WeightedPoint[] getGains(Integration<?, ?> integration, boolean isRobust) throws IllegalAccessException {
 		if(fixedGains) throw new IllegalStateException("WARNING! Cannot solve gains for fixed gain modes.");
-
+		
 		float[] G0 = getGains();
 		WeightedPoint[] G = phaseGains ? 
 				integration.getPhases().getGainIncrement(this) : 
@@ -166,9 +163,9 @@ public class Mode {
 	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {		
 		integration.signals.get(this).syncGains(sumwC2, isTempReady);
 		
-		// Sync to the phases also...
-		PhaseSet phases = integration.getPhases();
-		if(phases != null) phases.syncGains(this);
+		// Solve for the correlated phases also, if required
+		if(integration.isPhaseModulated()) if(integration.hasOption("phases"))
+			integration.getPhases().syncGains(this);
 	}
 	
 	public int getFrameResolution(Integration<?, ?> integration) {

@@ -75,8 +75,6 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	}
 	
 	public void setOptions(Configurator option) {	
-		
-		
 		resolution = option.isConfigured("resolution") ? option.get("resolution").getDouble() * Unit.s : 0.0;
 		trigger = option.isConfigured("trigger") ? option.get("trigger").getValue() : null;
 		
@@ -109,8 +107,9 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	// Gains are stored according to dataIndex
 	public void averageGains(WeightedPoint[] G, Integration<?,?> integration, boolean isRobust) throws IllegalAccessException {
 		for(Mode mode : this) if(!mode.fixedGains) {
-			WeightedPoint[] iG = mode.getGains(integration, isRobust);
-			for(int k=iG.length; --k >= 0; ) G[mode.channels.get(k).dataIndex].average(iG[k]);
+			final ChannelGroup<?> channels = mode.channels;
+			final WeightedPoint[] modeGain = mode.getGains(integration, isRobust);
+			for(int k=modeGain.length; --k >= 0; ) G[channels.get(k).dataIndex].average(modeGain[k]);
 		}
 	}
 	

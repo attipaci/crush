@@ -54,7 +54,7 @@ public class CorrelatedMode extends Mode {
 	// TODO Gain normalization is not safe during reduction, it is meant solely
 	// for use at the end of reduction, for creating a normalized gain set for writing.
 	// To make it safe, it should properly rescale all dependent signals and gains...
-	public synchronized void normalizeGains(Collection<Integration<?,?>> integrations, int gainFlag) throws IllegalAccessException {
+	public synchronized void renormalizeGains(Collection<Integration<?,?>> integrations, int gainFlag) throws IllegalAccessException {
 		final float aveG = (float) getAverageGain(gainFlag);
 		float[] G = getGains();
 		
@@ -92,35 +92,4 @@ public class CorrelatedMode extends Mode {
 		}
 	}	
 	
-	/*
-	@Override
-	protected void syncAllGains(Integration<?, ?> integration, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {		
-		// Now do the actual synching to the samples
-		super.syncAllGains(integration, sumwC2, isTempReady);
-		
-			
-		
-		 * TODO
-		 * Gain renormalization is dangerous when other modes depend on the same gains
-		 * but are not renormalized... A better way to do this is to keep track of
-		 * dependent modes, and renormalize them all... 
-		 * 
-		// Renormalized the gains to be unity on average...
-		double aveG = getAverageGain(fG, gainFlag);
-		normalizeGains(fG, aveG);
-		normalizeGains(G, aveG);
-		
-		// Re-scale the relevant signals to keep gain/signal products intact...
-		// This scales both the fast signals and the phase signals...
-		scaleSignals(integration, aveG);	
-		
-		// Mark these as the gains used for the sync...
-		// This has to happen after the sync!!!
-		integration.signals.get(this).setUsedGains(fG);
-		if(phases != null) phases.signals.get(this).setUsedGains(fG);		
-		
-
-	}
-	*/
-
 }

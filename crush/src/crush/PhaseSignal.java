@@ -30,6 +30,7 @@ public class PhaseSignal {
 	CorrelatedMode mode;
 	float[] value, weight;
 	float[] syncGains;
+	int generation = 0;
 	
 	public PhaseSignal(PhaseSet phases, CorrelatedMode mode) {
 		this.phases = phases;
@@ -54,17 +55,18 @@ public class PhaseSignal {
 			value[i] *= factor;
 			weight[i] /= f2;
 		}
+		// Rescale the corresponding synching gains also to keep the product intact
 		for(int k=syncGains.length; --k >= 0; ) syncGains[k] /= factor;
+		
+		// TODO What about signals of gain dependent modes? 
 	}
 	
-	protected synchronized void setSyncGains(float[] G) {
-		System.arraycopy(G, 0, syncGains, 0, G.length);
-	}
 	
 	protected synchronized void update(final boolean isRobust) throws IllegalAccessException {
 		final float[] G = mode.getGains();
 		final float[] dG = syncGains;
-
+	
+		// Make syncGains carry the gain increment since last sync...
 		for(int k=G.length; --k >= 0; ) dG[k] = G[k] - dG[k];
 			
 		final ChannelGroup<?> channels = mode.channels;
@@ -80,15 +82,18 @@ public class PhaseSignal {
 			final PhaseOffsets offsets = phases.get(i);
 				
 			if(isRobust) offsets.getRobustCorrelated(mode, G, temp, dC);
-			offsets.getMLCorrelated(mode, G, dC);
+			else offsets.getMLCorrelated(mode, G, dC);
 			
-			for(int k=G.length; --k >= 0; ) 
+			if(dC.weight <= 0.0) continue;
+			
+			for(int k=G.length; --k >= 0; )
 				offsets.value[channels.get(k).index] -= dG[k] * value[i] + G[k] * dC.value;
-
+		
 			value[i] += dC.value;
 			weight[i] = (float) dC.weight;
 		}		
 		
+		generation++;
 		setSyncGains(G);
 	}
 	
@@ -103,41 +108,24 @@ public class PhaseSignal {
 	
 	protected WeightedPoint getGainIncrement(Channel channel) {
 		double sum = 0.0, sumw = 0.0;
-		double sumC = 0.0, sumCw = 0.0;
-		
-		// Find the mean signal for the given phase...
-		if(channel.sourcePhase != 0) for(int i=phases.size(); --i >= 0; ) {
-			final PhaseOffsets offsets = phases.get(i);
-	
-			if(offsets.flag != 0) continue;
-			if((offsets.phase & channel.sourcePhase) != 0) continue;
-			
-			sum += offsets.value[channel.index];
-			sumw += offsets.weight[channel.index];		
-			
-			sumC += value[i];
-			sumCw += weight[i];
-		}
-		final float ave = sumw > 0.0 ? (float) (sum / sumw) : 0.0F;
-		final float aveC = sumCw > 0.0 ? (float) (sumC / sumCw) : 0.0F;
-		
-		
-		// Get the gain for the given phase...
-		sum = 0.0; sumw = 0.0;
+
 		for(int i=phases.size(); --i >= 0; ) {
 			final PhaseOffsets offsets = phases.get(i);
 			if(offsets.flag != 0) continue;
-			if((offsets.phase & channel.sourcePhase) != 0) continue;
-		
-			final float C = value[i] - aveC;
+			
+			final float C = value[i];
 			final float wC = offsets.weight[channel.index] * C;
-			sum += wC * (offsets.value[channel.index] - ave);
-			sumw += wC * C;
+			sum += (wC * offsets.value[channel.index]);
+			sumw += (wC * C);
 		}
 		return sumw > 0.0 ? new WeightedPoint(sum / sumw, sumw) : new WeightedPoint();
 	}
 	
 	// TODO robust gains?...
+	
+	protected synchronized void setSyncGains(float[] G) {
+		System.arraycopy(G, 0, syncGains, 0, G.length);
+	}
 	
 	protected void syncGains() throws IllegalAccessException {
 		final ChannelGroup<?> channels = mode.channels;
@@ -148,13 +136,12 @@ public class PhaseSignal {
 			
 		for(int i=phases.size(); --i >= 0; ) {
 			final PhaseOffsets offsets = phases.get(i);
-			for(int k=mode.channels.size(); --k >= 0; )
+			for(int k=G.length; --k >= 0; ) if(weight[i] > 0.0)
 				offsets.value[channels.get(k).index] -= dG[k] * value[i];
 		}
 		
 		setSyncGains(G);
 	}
 	
-	
-	
+
 }

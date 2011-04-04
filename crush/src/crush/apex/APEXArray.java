@@ -30,6 +30,7 @@ import crush.array.SimplePixel;
 import nom.tam.fits.*;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Vector;
 
 import util.Unit;
@@ -192,5 +193,12 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 		if(hasOption("chopped")) return new APEXChoppedPhotometry<APEXArray<?>, APEXArrayScan<APEXArray<?>,?>>(this);
 		else return super.getSourceModelInstance();
 	}
+	
+	public ArrayList<APEXPixel> getNeighbours(APEXPixel pixel, double radius) {
+		ArrayList<APEXPixel> neighbours = new ArrayList<APEXPixel>();
+		for(APEXPixel p2 : getObservingChannels()) if(p2 != pixel) if(p2.distanceTo(pixel) <= radius) neighbours.add(p2);
+		return neighbours;		
+	}
+	
 	
 }

@@ -495,7 +495,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		boolean isRobust = false;
 		if(!hasOption("gains")) return;
 		if(hasOption("correlated." + modalityName + ".nogains")) return;
-	
+		
 		Configurator gains = option("gains");
 		gains.mapValueTo("estimator");
 		if(gains.isConfigured("estimator")) if(gains.get("estimator").equals("median")) isRobust = true; 
