@@ -103,14 +103,14 @@ public class AstroImage implements Cloneable {
 	
 	public final void copy(AstroImage image) {
 		copyObjectFields(image);
-		copyImage(image);		
+		copyImageOf(image);		
 	}
 	
 	public void copyObjectFields(AstroImage image) {
 		grid = image.grid == null ? null : image.grid.copy();		
 	}
 	
-	public void copyImage(AstroImage image) {
+	public void copyImageOf(AstroImage image) {
 		// Make a copy of the fundamental data
 		data = (double[][]) copyOf(image.data);
 		beam = (double[][]) copyOf(image.beam);
@@ -198,7 +198,7 @@ public class AstroImage implements Cloneable {
 		return 1.0 / (1.0 - effectiveFWHM2/effectiveFilterFWHM2);
 	}
 	
-	public void copyImage(double[][] image) { 
+	public void copyImageOf(double[][] image) { 
 		for(int i=sizeX(); --i>=0; ) System.arraycopy(image[i], 0, data[i], 0, sizeY());
 	}
 
@@ -421,13 +421,15 @@ public class AstroImage implements Cloneable {
 		return points;
 	}
 	
-	public void crop(double dXmin, double dYmin, double dXmax, double dYmax) {		
+	public void crop(double dXmin, double dYmin, double dXmax, double dYmax) {
 		if(dXmin > dXmax) { double temp = dXmin; dXmin = dXmax; dXmax=temp; }
 		if(dYmin > dYmax) { double temp = dYmin; dYmin = dYmax; dYmax=temp; }
-		
+	
+		if(verbose) System.err.println("Will crop to " + ((dXmax - dXmin)/Unit.arcsec) + "x" + ((dYmax - dYmin)/Unit.arcsec) + " arcsec.");
+			
 		MapIndex c1 = getIndex(new Vector2D(dXmin, dYmin));
 		MapIndex c2 = getIndex(new Vector2D(dXmax, dYmax));
-	
+		
 		crop(c1.i, c1.j, c2.i, c2.j);
 	}
 
@@ -750,14 +752,14 @@ public class AstroImage implements Cloneable {
 	public void regridTo(final AstroImage map) throws IllegalStateException {
 		AstroImage regrid = getRegrid(map.grid);
 		
-		Vector2D o1 = new Vector2D();
-		Vector2D o2 = new Vector2D(map.sizeX() - 1.0, map.sizeY() - 1.0);
-		toOffset(o1);
-		toOffset(o2);
+		Vector2D corner1 = new Vector2D();
+		Vector2D corner2 = new Vector2D(map.sizeX() - 1.0, map.sizeY() - 1.0);
+		map.toOffset(corner1);
+		map.toOffset(corner2);
 		
-		regrid.crop(o1.x, o1.y, o2.x, o2.y); 
+		regrid.crop(corner1.x, corner1.y, corner2.x, corner2.y); 
 		
-		map.copyImage(regrid);
+		map.copyImageOf(regrid);
 	}
 	
 
@@ -765,6 +767,7 @@ public class AstroImage implements Cloneable {
 	public AstroImage getRegrid(final SphericalGrid toGrid) throws IllegalStateException {		
 		// Check if it is an identical grid...
 		// Add directly if it is...
+	
 		if(toGrid.equals(grid, 1e-10)) {
 			if(verbose) System.err.println(" Matching grids.");
 			return this;
@@ -1022,8 +1025,8 @@ public class AstroImage implements Cloneable {
 	public void toOffset(Vector2D index) { grid.toOffset(index); }
 
 	public void getIndex(Vector2D offset, MapIndex index) {
-		double x = offset.x;
-		double y = offset.y;
+		final double x = offset.x;
+		final double y = offset.y;
 		toIndex(offset);
 		index.i = (int) Math.round(offset.x);
 		index.j = (int) Math.round(offset.y);

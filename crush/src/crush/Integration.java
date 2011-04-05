@@ -2447,7 +2447,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		
 		if(task.equals("offsets")) {
 			removeDrifts(instrument, size(), isRobust, isRobust);	    
-			//updatePhases();
 		}
 		else if(task.equals("drifts")) {
 			if(isPhaseModulated()) return false;
@@ -2463,7 +2462,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		}
 		else if(task.equals("weighting")) {
 			getWeights();
-			updatePhases();
 		}
 		else if(task.equals("weighting.frames")) {
 			int n = hasOption("weighting.frames.resolution") ? filterFramesFor(option("weighting.frames.resolution").getValue(), 10.0 * Unit.s) : 1;

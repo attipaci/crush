@@ -69,11 +69,11 @@ public abstract class APEXPixel extends SimplePixel {
 	
 	
 	public WeightedPoint getRelativeOffset(PhaseSet phases, int i) {
-		final WeightedPoint value = phases.get(i).getValue(this);
+		final WeightedPoint signal = phases.get(i).getValue(this);	
 		final WeightedPoint base = phases.get(i-1).getValue(this);
 		base.average(phases.get(i+1).getValue(this));
-		value.subtract(base);
-		return value;
+		signal.subtract(base);		
+		return signal;
 	}
 	
 	/*

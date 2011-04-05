@@ -58,6 +58,12 @@ public class SabocaPixel extends APEXPixel {
 		return channel == this ? 1.0 : 0.0;
 	}
 
+	@Override
+	public void uniformGains() {
+		super.uniformGains();
+		squidGain = 1.0;
+	}
+	
 	public final static int FLAG_SQUID = 1 << nextSoftwareFlag++;
 	
 }

@@ -1,17 +1,22 @@
->> Look into source.model... (and blanking through all iterations).
->> Updater (for tau.dat and calibration.dat files + pixeldata.cfg)
-	update.auto (check once daily)
-	'<instrument>/lastupdate' (times and versions)
->> Check gain derivation, normalization, synching and updating...
-   both for phases and samples...
->> does pixel data override RCP gains, even if rcp.gains is set?
->> There is something fishy with the phase decorrelation (or gains). Noise
-   increases with iterations...
->> Extends uniformGains to other instruments.
+>> update photometry data page
+
+2.04-b1
+
+	[BUG] Obsolete trimChopper() and markChopperEnds functions removed.
+	Bugs in these caused subscans to be needlessly dropped from the 
+	reduction, leading to increased photometry errors in the prior update.
+	
+	[BUG] Fixed bug in applying an a-priori source model via the
+	'source.model' key. The problem was with the coordinate transformations
+	when a nontrivial transformation matrix was defined.
+
+	[FIX] The option 'rcp.gains' was ineffective since 'pixeldata'
+	overwrote those gains afterwards. By switching the order of RCP
+	and pixeldata reads, the function of 'rcp.gains' should be restored.
 
 	[FIX] Fixed a multitude of problems with the derivation of gains from 
 	the phases. As a result, chopped photometry reductions can now derive
-	sky-noise gains properly using phases. Therefore, the confoiguration
+	sky-noise gains properly using phases. Therefore, the configuration
 	has been updated to use this feature rather than relying on the 
 	accuracy of pre-supplied fixed gains.
 
@@ -20,9 +25,24 @@
 	decreases the reliance on an up-to-date pixel data file for accurate
 	photometry.
 
-???	[TWEAK] {APEX} Disabled noise whitening in chopped photometry 
-	reductions. While whitening seemed like a good idea, it is likely
-	the cause of some of the occasional excess error.
+	[TWEAK] {APEX} Disabled noise whitening for photometry. It has little
+	or no benefit, and if anything it may harm reliability...
+
+	[TWEAK] Clipping and blanking are permanently disabled in 'faint' mode 
+	when using an a-priori source model (via 'source.model'). This is 
+	because with the removal of the model, the remaining faint signals 
+	should not require it any more. If you do want to use clippinng and
+	blanking together with a source model, then stick to the default
+	brightness (i.e. not 'faint' or 'deep').
+
+	[TWEAK] {APEX} photometry reductions now check to make sure enough
+	good pixels remain in the reduction (see 'mappingpixels' and 
+	'mappingfraction') before proceeding to obtain photometry from the
+	subscans.
+
+	[TWEAK] Chop phase data are updated whenever a change could result
+	(after time weighting, despiking or whitening) to make sure all
+	correlated signals end up in the right places (phases vs samples).
 
 	[CODE] Complete reorganization of the decorrelation code among classes
 	that take part in the process. The new locations of the code make
@@ -31,10 +51,24 @@
 	[CODE] Cleaned up some of the gain derivation code, with an eye on
 	using more common code to get gains from phases or from samples.
 
-        [CODE] Disabled gain renormalization.
+        [CODE] Disabled gain renormalization, until it can be made perfectly
+	safe...
 
-..      [CODE] 'uniform' now sets all gains uniform (for LABOCA only).
+	[CODE] Double precision weights of stored phases and phase signals. 
 
+	[CODE] 'uniform' now sets all gains uniform.
+
+	[CODE] {LABOCA} Keep resistors properly flagged, so they can be used 
+	for decorrelating amplifier boxes and the flexible cryogenic band 
+	cables.
+	
+	[CODE] {APEX} Validating chopped-modulated offsets s.t. those without 
+	enough frames for estimating offsets are removed from the set.
+
+	[COSMETIC] Decorrelation steps that do not flag channels by gain 
+	do not display a census of active channels unnecessarily...
+
+	[UPDATE] {LABOCA} Updated pixel data files to include resistors.
 
 
 2.03-2 (3 Apr 2011)

@@ -91,7 +91,13 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 			final double transmission = 0.5 * (subscan.getFirstFrame().transmission + subscan.getLastFrame().transmission);
 			final double[] sourceGain = subscan.instrument.getSourceGains(false);
 			final PhaseSet phases = integration.getPhases();
-						
+		
+			// To be sure one could update the phases one last time...
+			//integration.updatePhases();
+			
+			// Proceed only if there are enough pixels to do the job...
+			if(!checkPixelCount(integration)) continue;
+			
 			for(APEXPixel pixel : subscan.instrument.getObservingChannels()) if(pixel.sourcePhase != 0) {
 				WeightedPoint point = null;
 
@@ -101,7 +107,9 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.dataIndex];
 				else continue;
 					
+				
 				WeightedPoint df = pixel.getLROffset(phases);
+					
 				df.weight /= Math.max(1.0, pixel.getLRChi2(phases, df.value));
 				df.scale(1.0 / (transmission * subscan.gain * sourceGain[pixel.index]));
 				

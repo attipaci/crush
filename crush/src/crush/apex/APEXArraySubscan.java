@@ -92,6 +92,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		
 		System.err.print("   Marking Chopper Phases: ");
 	
+		
 		for(Pixel pixel : instrument.getPixels()) {
 			Vector2D position = pixel.getPosition();
 			
@@ -125,7 +126,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				if(current.phase != Frame.CHOP_LEFT) {
 					current = new PhaseOffsets(this);
 					current.phase = Frame.CHOP_LEFT;
-					if(current.phase == nodPhase) current.flag |= PhaseOffsets.SKIP_LEVEL;
+					//if(current.phase == nodPhase) current.flag |= PhaseOffsets.SKIP_GAINS;
 					current.start = exposure;
 					current.end = exposure;
 					if(current.phase != 0) chopper.phases.add(current);
@@ -139,7 +140,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				if(current.phase != Frame.CHOP_RIGHT) {
 					current = new PhaseOffsets(this);
 					current.phase = Frame.CHOP_RIGHT;
-					if(current.phase == nodPhase) current.flag |= PhaseOffsets.SKIP_LEVEL;
+					//if(current.phase == nodPhase) current.flag |= PhaseOffsets.SKIP_GAINS;
 					current.start = exposure;
 					current.end = exposure;
 					if(current.phase != 0) chopper.phases.add(current);
@@ -155,8 +156,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		
 		System.err.println("   Chopper parameters: " + chopper.toString());
 		
-		trimChopper();
-		markChopperEnds();
+		chopper.phases.validate();
 		
 		// Discard transit frames altogether...
 		for(int i=size(); --i >=0; ) {
@@ -171,46 +171,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		
 		filterTimeScale = size() * instrument.integrationTime / phases; 
 		
-	}
-
-	public void trimChopper() {
-		int from = 0;
-		
-		// crop until first transit
-		//while(get(from).isUnflagged(Frame.CHOP_TRANSIT) && from < size()) from++;
-		
-		// crop until first right
-		while(get(from).isUnflagged(Frame.CHOP_RIGHT) && from < size()) from++;
-		
-		int to = size()-1;
-		
-		// crop back to last transit
-		//while(get(to).isUnflagged(Frame.CHOP_TRANSIT) && to > 0) to--;
-		
-		// crop back to last right
-		while(get(to).isUnflagged(Frame.CHOP_RIGHT) && to > 0) to--;
-		
-		removeRange(to+1, size());
-		removeRange(0, from);
-		
-		for(int i=chopper.phases.size(); --i >= 0; ) {
-			if(chopper.phases.get(i).start.index >= to) chopper.phases.remove(i);
-			else break;
-		}
-		
-		while(chopper.phases.get(0).start.index < from) chopper.phases.remove(0);
-		
-		reindex();
-	}
-	
-	
-	public void markChopperEnds() {
-		int from = -1;
-		APEXFrame frame = null;
-		while((frame = get(++from)).isUnflagged(Frame.CHOP_TRANSIT) && from < size()) frame.flag(APEXFrame.CHOP_ENDS);
-		
-		int to = size();
-		while((frame = get(--to)).isUnflagged(Frame.CHOP_TRANSIT) && to > 0) frame.flag(APEXFrame.CHOP_ENDS);
 	}
 	
 	@Override

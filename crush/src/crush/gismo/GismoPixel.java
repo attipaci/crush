@@ -65,6 +65,13 @@ public class GismoPixel extends SimplePixel {
 		return FLAG_DEAD | FLAG_BLIND;
 	}
 	
+	@Override
+	public void uniformGains() {
+		super.uniformGains();
+		muxGain = 1.0;
+		pinGain = 1.0;
+	}
+	
 	public static Vector2D defaultSize = new Vector2D(13.9 * Unit.arcsec, 10.56 * Unit.arcsec);
 	
 	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;

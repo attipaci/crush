@@ -28,7 +28,7 @@ import util.data.WeightedPoint;
 public class PhaseSignal {
 	PhaseSet phases;
 	CorrelatedMode mode;
-	float[] value, weight;
+	double[] value, weight;
 	float[] syncGains;
 	int generation = 0;
 	
@@ -36,8 +36,8 @@ public class PhaseSignal {
 		this.phases = phases;
 		this.mode = mode;
 		
-		value = new float[phases.size()];
-		weight = new float[phases.size()];
+		value = new double[phases.size()];
+		weight = new double[phases.size()];
 		
 		syncGains = new float[mode.channels.size()];
 		
@@ -62,7 +62,7 @@ public class PhaseSignal {
 	}
 	
 	
-	protected synchronized void update(final boolean isRobust) throws IllegalAccessException {
+	protected synchronized void update(boolean isRobust) throws IllegalAccessException {
 		final float[] G = mode.getGains();
 		final float[] dG = syncGains;
 	
@@ -71,6 +71,10 @@ public class PhaseSignal {
 			
 		final ChannelGroup<?> channels = mode.channels;
 		final WeightedPoint dC = new WeightedPoint(); 
+		
+		// Always use maximum-likelihood gains...
+		if(phases.integration.hasOption("phases.estimator")) 
+			isRobust = phases.integration.option("phases.estimator").equals("median");
 		
 		WeightedPoint[] temp = null;
 		if(isRobust) {
@@ -88,9 +92,9 @@ public class PhaseSignal {
 			
 			for(int k=G.length; --k >= 0; )
 				offsets.value[channels.get(k).index] -= dG[k] * value[i] + G[k] * dC.value;
-		
+			
 			value[i] += dC.value;
-			weight[i] = (float) dC.weight;
+			weight[i] = dC.weight;	
 		}		
 		
 		generation++;
@@ -113,8 +117,8 @@ public class PhaseSignal {
 			final PhaseOffsets offsets = phases.get(i);
 			if(offsets.flag != 0) continue;
 			
-			final float C = value[i];
-			final float wC = offsets.weight[channel.index] * C;
+			final double C = value[i];
+			final double wC = offsets.weight[channel.index] * C;
 			sum += (wC * offsets.value[channel.index]);
 			sumw += (wC * C);
 		}

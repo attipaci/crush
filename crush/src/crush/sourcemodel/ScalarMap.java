@@ -184,13 +184,14 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	
 	public void applyModel(String fileName) throws IOException, FitsException, HeaderCardException {
 		System.err.println(" Applying source model:");
+			
 		AstroMap model = new AstroMap(fileName, map.instrument);
-		
+			
 		model.regridTo(map);	
 		map.generation = 1;
 		map.sanitize();
 		isValid = true;
-		
+			
 		double blankingLevel = getBlankingLevel();
 		if(!Double.isNaN(blankingLevel)) System.err.println("  --> Blanking positions above " + Util.f2.format(blankingLevel) + " sigma in source model.");
 		

@@ -69,5 +69,4 @@ public class APEXFrame extends HorizontalFrame {
 		data = flatData;
 	}
 	
-	public static final int CHOP_ENDS = nextFlag++;
 }

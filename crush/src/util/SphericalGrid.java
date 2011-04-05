@@ -145,13 +145,15 @@ public class SphericalGrid implements Cloneable {
 	
 	// Generalize to non-square pixels...
 	public void rotate(double angle) {
+		if(angle == 0.0) return;
+		
 		double c = Math.cos(angle);
 		double s = Math.sin(angle);
 		double a11 = Double.isNaN(m11) ? 1.0 : m11, a12 = Double.isNaN(m12) ? 0.0 : m12;
 		double a21 = Double.isNaN(m21) ? 0.0 : m21, a22 = Double.isNaN(m22) ? 1.0 : m22;
 		m11 = c * a11 - s * a21;
 		m12 = c * a12 - s * a22;
-		m21 = s * a11 + c * a22;
+		m21 = s * a11 + c * a21;
 		m22 = s * a12 + c * a22;
 		calcInverseTransform();
 	}

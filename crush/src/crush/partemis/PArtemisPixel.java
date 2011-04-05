@@ -48,6 +48,13 @@ public class PArtemisPixel extends APEXPixel {
 		return new Vector2D(size.x * col, size.y * row);
 	}
 	
+	@Override
+	public void uniformGains() {
+		super.uniformGains();
+		rowGain = 1.0;
+		colGain = 1.0;
+	}
+	
 	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
 	public final static int FLAG_COL = 1 << nextSoftwareFlag++;
 	

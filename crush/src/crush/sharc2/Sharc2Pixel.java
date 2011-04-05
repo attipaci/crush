@@ -89,6 +89,13 @@ public class Sharc2Pixel extends SimplePixel {
 		return size.x * size.y / (defaultSize.x * defaultSize.y);	
 	}
 	
+	@Override
+	public void uniformGains() {
+		super.uniformGains();
+		muxGain = 1.0;
+		rowGain = 1.0;
+	}
+	
 	public static Vector2D defaultSize = new Vector2D(4.89 * Unit.arcsec, 4.82 * Unit.arcsec);
 
 	public final static int FLAG_13HZ = 1 << nextHardwareFlag++;

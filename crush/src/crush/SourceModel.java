@@ -209,6 +209,25 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 		return integrations;		
 	}
 
-	
+	public boolean checkPixelCount(Integration<?,?> integration) {
+		Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
+		int nObs = integration.instrument.getObservingChannels().size();
+		
+		// If there aren't enough good pixels in the scan, do not generate a map...
+		if(integration.hasOption("mappingpixels")) if(pixels.size() < integration.option("mappingpixels").getInt()) {
+			integration.comments += "(!ch)";
+			return false;
+		}
+		
+		// If there aren't enough good pixels in the scan, do not generate a map...
+		if(integration.hasOption("mappingfraction")) if(pixels.size() < integration.option("mappingfraction").getDouble() * nObs) {
+			integration.comments += "(!ch%)";
+			return false;
+		}
+		
+		return true;
+
+		
+	}
 	
 }

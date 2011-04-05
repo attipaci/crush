@@ -310,14 +310,6 @@
 			pipeline 'ordering' before it can be used.
 			@See: 'modality', 'ordering'
 
-:: correlated.<?>.nofield	@Expert
-				@since: 2.02
-			Allows to decouple the gains of the correlated mode 
-			from the gain fields stored under the channel (which 
-			are initialized from the file specified by 
-			'pixeldata'). 
-			@See: 'pixeldata', 'source.fixedgains'
-
 :: correlated.<?>.gainrange=min:max	@Expert
 					Specify a range of acceptable gains to 
 			the given correlated signal <?>, relative to the 
@@ -327,6 +319,14 @@
 			the modeling steps until the flag is revised and 
 			cleared in another decorrelation step.
 			@See: 'division.<?>.gainflag', 'correlated.<?>.signed'
+
+:: correlated.<?>.nofield	@Expert
+				@since: 2.02
+			Allows to decouple the gains of the correlated mode 
+			from the gain fields stored under the channel (which 
+			are initialized from the file specified by 
+			'pixeldata'). 
+			@See: 'pixeldata', 'source.fixedgains'
 
 :: correlated.<?>.nogains	@Advanced
 			      	Disable the solving of gains (i.e. channel 
@@ -1254,7 +1254,17 @@
 			phase decorrelation can be turned on individually for
 			modalities using the 'correlated.<?>.phases' options.
 			@See: 'correlated.<?>.phases', 'gains.span'
-			
+		
+:: phases.estimator=<value>	@Expert
+				@Since: 2.04
+			Allows to override the global estimator setting for
+			the phases (e.g. chopper phases). The <value> can be
+			either 'median' or 'maximum-likelihood' all other
+			values default to 'maximum-likelihood'. When not set
+			the global 'estimator' setting will be used for the
+			phases also.
+			@See: 'estimator'
+	
 :: pins			@Alias -> correlated.pins
 			@Instrument: GISMO, SCUBA-2
 			@Advanced
@@ -1452,9 +1462,9 @@
 			@See: 'rcp'
 
 :: rcp.gains		@Advanced
-			Use gains from the RCP files. Otherwise gains may 
-			come from the 'pixeldata' file, or assume default
-			values, such as 'uniform'.
+			Calculate coupling efficiencies using gains from the 
+			RCP files. Otherwise uniform coupling is assumed with
+			sky noise gains from the 'pixeldata' file.
 			@See: 'rcp'
 
 :: rcp.rotate=X		@Advanced

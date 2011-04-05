@@ -63,7 +63,10 @@ public class LabocaPixel extends APEXPixel {
 
 		boxGain = Double.parseDouble(tokens.nextToken());
 		cableGain = Double.parseDouble(tokens.nextToken());
-	
+		
+		// Make sure resistors are also flagged as blind... 
+		//if(isFlagged(FLAG_RESISTOR)) flag(FLAG_BLIND);
+
 		/*
 		channel[ch].box = Integer.parseInt(tokens.nextToken());
 		channel[ch].cable = Integer.parseInt(tokens.nextToken());
@@ -74,6 +77,19 @@ public class LabocaPixel extends APEXPixel {
 	@Override
 	public final double overlap(Channel channel, SourceModel<?,?> model) {
 		return channel == this ? 1.0 : 0.0;
+	}
+	
+	@Override
+	public int getCriticalFlags() {
+		return super.getCriticalFlags() | FLAG_RESISTOR;
+	}
+	
+	@Override
+	public void uniformGains() {
+		super.uniformGains();
+		ampGain = 1.0;
+		boxGain = 1.0;
+		cableGain = 1.0;
 	}
 	
 	public final static int FLAG_RESISTOR = 1 << nextHardwareFlag++;

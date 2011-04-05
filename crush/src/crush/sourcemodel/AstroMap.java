@@ -86,8 +86,8 @@ public class AstroMap extends AstroImage {
 	}
 	
 	@Override
-	public void copyImage(AstroImage other) {
-		super.copyImage(other);
+	public void copyImageOf(AstroImage other) {
+		super.copyImageOf(other);
 		if(!(other instanceof AstroMap)) return;
 		
 		AstroMap image = (AstroMap) other;
