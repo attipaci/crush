@@ -343,6 +343,14 @@
 			The same gains are used as for the usual decorrelation
 			on the fast samples.
 
+:: correlated.<?>.phasegains	@Expert
+				@Since: 2.04
+			Determine gains from the phase data, rather than from
+			the correlated fast samples. You can also set this
+			globally for all correlated modalities/modes using
+			the 'phasegains' keyword.
+			@See: 'phasegains'
+
 :: correlated.<?>.resolution=X	@Advanced
 				Set the time resolution (in seconds) for the 
 			decorrelation of <?>. When dealing with 1/f-type 
@@ -1264,6 +1272,15 @@
 			the global 'estimator' setting will be used for the
 			phases also.
 			@See: 'estimator'
+
+:: phasegains		@Expert
+			@Since: 2.04
+			Use the information in the phases to calculate gains
+			for all correlated modes. (The default is to use the
+			fast samples for calculating gains). Alternatively you
+			can set this property separately for each correlated
+			modality.
+			@See: 'correlated.<?>.phasegains'
 	
 :: pins			@Alias -> correlated.pins
 			@Instrument: GISMO, SCUBA-2
