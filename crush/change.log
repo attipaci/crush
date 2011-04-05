@@ -1,6 +1,16 @@
->> update photometry data page
 
 2.04-b1
+	
+	Overview
+	=====================================================================
+	This version of crush brings better photometry support by fixing bugs
+	and adding new features to the relevant code. Under the hood a lot
+	of code changes to make the decorrelation more transparent, solid, and
+	bug proof. A few other fixes should make this shape up in a very
+	solid release. After a period of beta testing to allow identification
+	of remaining issues, this version is expected to become the next
+	stable release.
+	=====================================================================
 
 	[BUG] Obsolete trimChopper() and markChopperEnds functions removed.
 	Bugs in these caused subscans to be needlessly dropped from the 
@@ -10,15 +20,23 @@
 	'source.model' key. The problem was with the coordinate transformations
 	when a nontrivial transformation matrix was defined.
 
-	[FIX] The option 'rcp.gains' was ineffective since 'pixeldata'
-	overwrote those gains afterwards. By switching the order of RCP
-	and pixeldata reads, the function of 'rcp.gains' should be restored.
+	[NEW] More control over the decorrelation of phases (e.g. for chopped
+	photometry data). The 'correlated.<?>.phasegains' keys and 'phasegains'
+	can be used to derived gains from the correlated phases rather than
+	using the correlated fast samples -- either per modality or as a
+	global setting. The 'phases.estimator' key can specify what estimator
+	to use for deriving phases, if it is different from the defalt
+	estimator type set by 'estimator'. 
 
 	[FIX] Fixed a multitude of problems with the derivation of gains from 
 	the phases. As a result, chopped photometry reductions can now derive
 	sky-noise gains properly using phases. Therefore, the configuration
 	has been updated to use this feature rather than relying on the 
 	accuracy of pre-supplied fixed gains.
+
+	[FIX] The option 'rcp.gains' was ineffective since 'pixeldata'
+	overwrote those gains afterwards. By switching the order of RCP
+	and pixeldata reads, the function of 'rcp.gains' should be restored.
 
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change
