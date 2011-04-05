@@ -86,12 +86,12 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	}
 	
 	@Override
-	public void loadChannelData() {
+	public void loadChannelData() {	
 		if(hasOption("rcp")) {
 			try { readRCP(Util.getSystemPath(option("rcp").getValue())); }
 			catch(IOException e) { System.err.println("WARNING! Cannot update pixel RCP data. Using values from FITS."); }
 		}
-			
+		
 		super.loadChannelData();
 	}
 	
@@ -104,8 +104,6 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		// Channels not in the RCP file are assumed to be blind...
 		for(ChannelType pixel : this) {
 			pixel.flag(Channel.FLAG_BLIND);
-			pixel.gain = 0.0;
-			pixel.coupling = 1.0;
 		}
 		
 		Hashtable<Integer, Pixel> backends = getPixelLookup(); 
@@ -122,9 +120,9 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 					if(pixel instanceof Channel) {
 						Channel channel = (Channel) pixel;
 						double sourceGain = Double.parseDouble(tokens.nextToken());
-						double gain = (columns == 3 || columns > 4) ? Double.parseDouble(tokens.nextToken()) : sourceGain;
+						double coupling = (columns == 3 || columns > 4) ? sourceGain / Double.parseDouble(tokens.nextToken()) : sourceGain / channel.gain;
 						
-						if(useGains) channel.gain = gain;
+						if(useGains) channel.coupling = coupling;
 						if(sourceGain != 0.0) channel.unflag(Channel.FLAG_BLIND);
 					}
 

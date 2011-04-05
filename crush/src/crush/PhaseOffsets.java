@@ -31,7 +31,7 @@ import util.data.WeightedPoint;
 public class PhaseOffsets {
 	protected Integration<?,?> integration;
 	
-	public float[] value, weight;
+	public double[] value, weight;
 	public Frame start, end;
 	public int phase = 0;
 	public int flag = 0;
@@ -40,13 +40,22 @@ public class PhaseOffsets {
 		this.integration = integration;
 	}
 	
+	public boolean validate() {
+		boolean isValid = end.index - start.index > 0;
+		if(!isValid) {
+			final int to = end.index + 1;
+			for(int t=start.index; t<to; t++) integration.set(t, null);
+		}
+		return isValid;
+	}
+	
 	public void update(ChannelGroup<?> channels, Dependents parms) {
-		if(end.index - start.index <= 1) return;
+		if(end.index - start.index < 1) return;
 		
 		final int nc = integration.instrument.size();
 		if(value == null) {
-			value = new float[nc];
-			weight = new float[nc];
+			value = new double[nc];
+			weight = new double[nc];
 		}
 		
 		final int to = end.index + 1;
@@ -79,7 +88,7 @@ public class PhaseOffsets {
 			if(sumw[channel.index] > 0.0) {
 				sum[k] /= sumw[k];
 				value[channel.index] += sum[k];
-				weight[channel.index] = (float) sumw[k];
+				weight[channel.index] = sumw[k];
 			}
 		}
 		
@@ -119,7 +128,7 @@ public class PhaseOffsets {
 			if(channel.isFlagged(skipChannels)) continue;
 			if(channel.sourcePhase != 0) continue;
 	
-			final float wG = weight[channel.index] * G[k];
+			final double wG = weight[channel.index] * G[k];
 			sum += (wG * value[channel.index]);
 			sumw += (wG * G[k]);
 		}
@@ -140,7 +149,7 @@ public class PhaseOffsets {
 			if(channel.sourcePhase != 0) continue;
 
 			final float Gk = G[k];
-			final float wG2 = weight[channel.index] * Gk * Gk;
+			final double wG2 = weight[channel.index] * Gk * Gk;
 			if(wG2 == 0.0F) continue;
 			
 			final WeightedPoint point = temp[n++];
@@ -158,5 +167,5 @@ public class PhaseOffsets {
 		return new String(text);
 	}
 
-	public static final int SKIP_LEVEL = 1;
+	public static final int SKIP_GAINS = 1;
 }

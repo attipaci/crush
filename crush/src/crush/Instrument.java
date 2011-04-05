@@ -485,18 +485,19 @@ implements TableEntries {
 	}
 	
 	public void uniformGains() {
-		for(Channel channel : this) {
-			channel.gain = 1.0;
-			channel.coupling = 1.0;			
-		}		
+		for(Channel channel : this) channel.uniformGains();	
 	}
 	
 	public void uniformGains(Field field) throws IllegalAccessException {
 		for(Channel channel : this) field.setDouble(channel, 1.0);		
 	}
 			
+	private boolean fixedSourceGains = false;
+	
 	public void fixedSourceGains() {
-		for(Channel channel : this) channel.coupling = channel.gain;
+		if(fixedSourceGains) return;
+		for(Channel channel : this) channel.coupling *= channel.gain;
+		fixedSourceGains = true;
 	}
 	
 	// create the channel groups based on the wiring scheme.

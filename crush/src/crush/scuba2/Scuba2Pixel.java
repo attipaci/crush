@@ -39,6 +39,13 @@ public class Scuba2Pixel extends SimplePixel {
 		return FLAG_DEAD | FLAG_BLIND;
 	}
 	
+	@Override
+	public void uniformGains() {
+		super.uniformGains();
+		muxGain = 1.0;
+		pinGain = 1.0;
+	}
+	
 	public static Vector2D defaultSize = new Vector2D(5.7 * Unit.arcsec, 5.7 * Unit.arcsec);
 	
 	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;

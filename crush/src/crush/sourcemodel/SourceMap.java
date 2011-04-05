@@ -363,17 +363,8 @@ extends SourceModel<InstrumentType, ScanType> {
 		
 		Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 		
-		// If there aren't enough good pixels in the scan, do not generate a map...
-		if(hasOption("mappingpixels")) if(pixels.size() < option("mappingpixels").getInt()) {
-			integration.comments += "(!ch)";
-			return;
-		}
-		
-		// If there aren't enough good pixels in the scan, do not generate a map...
-		if(hasOption("mappingfraction")) if(pixels.size() < option("mappingfraction").getDouble() * instrument.size()) {
-			integration.comments += "(!ch%)";
-			return;
-		}
+		// Proceed only if there are enough pixels to do the job...
+		if(!checkPixelCount(integration)) return;
 
 		// Calculate the effective source NEFD based on the latest weights and the current filtering
 		integration.calcSourceNEFD();

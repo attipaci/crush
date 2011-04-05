@@ -118,7 +118,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 			}
 			catch(Exception e) {
 				if(CRUSH.debug) e.printStackTrace();
-				System.err.println("   WARNING! Invalid integration. Dropping #" + (i+1) + ".");
+				System.err.println("   WARNING! Invalid integration. Dropping from set.");
 				remove(i); 
 			}
 		}
@@ -519,12 +519,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		// Apply the gain increment
 		for(IntegrationType integration : this) {
 			Modality<?> modality = integration.instrument.modalities.get(modalityName);
-		
-			try { modality.applyGains(G, integration); }
+			boolean isFlagging = false; 
+			
+			try { isFlagging |= modality.applyGains(G, integration); }
 			catch(IllegalAccessException e) { e.printStackTrace(); }
 			
-			integration.instrument.census();
-			integration.comments += integration.instrument.mappingChannels;
+			if(isFlagging) {
+				integration.instrument.census();
+				integration.comments += integration.instrument.mappingChannels;
+			}
 		}
 	}
 	

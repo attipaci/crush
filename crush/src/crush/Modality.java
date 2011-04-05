@@ -114,7 +114,9 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	}
 	
 	// Gain arrays is according to dataIndex
-	public void applyGains(WeightedPoint[] G, Integration<?,?> integration) throws IllegalAccessException {
+	public boolean applyGains(WeightedPoint[] G, Integration<?,?> integration) throws IllegalAccessException {
+		boolean isFlagging = false;
+		
 		for(Mode mode : this) if(!mode.fixedGains) {
 			final float[] fG = new float[mode.channels.size()];
 			final float[] sumwC2 = new float[mode.channels.size()];
@@ -126,11 +128,13 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 			}
 			
 			try { 
-				mode.setGains(fG);
+				isFlagging |= mode.setGains(fG);
 				mode.syncAllGains(integration, sumwC2, true); 			
 			}
 			catch(IllegalAccessException e) { e.printStackTrace(); }
 		}
+		
+		return isFlagging;
 	}
 	
 	public boolean updateAllGains(Integration<?, ?> integration, boolean isRobust) {
@@ -140,9 +144,8 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		for(Mode mode : this) if(!mode.fixedGains) {	
 			try {
 				WeightedPoint[] G = mode.getGains(integration, isRobust);
-				mode.setGains(WeightedPoint.floatValues(G));
+				isFlagging |= mode.setGains(WeightedPoint.floatValues(G));
 				mode.syncAllGains(integration, WeightedPoint.floatWeights(G), true);
-				isFlagging = true;
 			}
 			catch(IllegalAccessException e) { e.printStackTrace(); }
 		}

@@ -66,6 +66,14 @@ public class AszcaPixel extends APEXPixel {
 	public final double overlap(Channel channel, SourceModel<?,?> model) {
 		return channel == this ? 1.0 : 0.0;
 	}
+	
+	@Override
+	public void uniformGains() {
+		super.uniformGains();
+		cableGain = 1.0;
+		squidGain = 1.0;
+		squidGroupGain = 1.0;
+	}
 
 	public final static int FLAG_WAFER = 1 << nextSoftwareFlag++;
 	public final static int FLAG_SQUID = 1 << nextSoftwareFlag++;

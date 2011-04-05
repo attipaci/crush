@@ -101,20 +101,25 @@ public class Mode {
 		}
 	}
 	
-	
-	public synchronized void setGains(float[] gain) throws IllegalAccessException {
+	// Return true if flagging...
+	public synchronized boolean setGains(float[] gain) throws IllegalAccessException {
 		if(gainField == null) this.gain = gain;
 		else {
 			Class<?> fieldClass = gainField.getClass();
 			if(fieldClass.equals(float.class)) for(int c=channels.size(); --c >=0; ) gainField.setFloat(channels.get(c), gain[c]);
 			else for(int c=channels.size(); --c>=0; ) gainField.setDouble(channels.get(c), gain[c]);
 		}
-		flagGains();
+		return flagGains();
 	}
 		
+	public void uniformGains() throws IllegalAccessException {
+		float[] G = new float[channels.size()];
+		Arrays.fill(G, 1.0F);
+		setGains(G);
+	}
 	
-	protected synchronized void flagGains() throws IllegalAccessException {
-		if(gainFlag == 0) return;
+	protected synchronized boolean flagGains() throws IllegalAccessException {
+		if(gainFlag == 0) return false;
 			
 		float[] gain = getGains();
 		
@@ -128,6 +133,7 @@ public class Mode {
 			if(!gainRange.contains(G)) channel.flag(gainFlag);
 			else channel.unflag(gainFlag);
 		}
+		return true;
 	}
 	
 	public double getAverageGain(int gainFlag) throws IllegalAccessException {
@@ -160,7 +166,7 @@ public class Mode {
 		return G;		
 	}
 	
-	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {		
+	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {			
 		integration.signals.get(this).syncGains(sumwC2, isTempReady);
 		
 		// Solve for the correlated phases also, if required

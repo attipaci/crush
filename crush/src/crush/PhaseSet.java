@@ -53,6 +53,10 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 		generation++;
 	}
 	
+	public void validate() {
+		for(int i=size(); --i >=0; ) if(!get(i).validate()) remove(i);
+	}
+		
 	public synchronized WeightedPoint[] getGainIncrement(Mode mode) {
 		return signals.get(mode).getGainIncrement();
 	}
@@ -70,7 +74,7 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 			sumw += offsets.weight[c];
 		}
 		if(sumw == 0.0) return;
-		final float ave = (float) (sum / sumw);
+		final double ave = sum / sumw;
 		
 		for(PhaseOffsets offsets : this) offsets.value[c] -= ave;
 	}

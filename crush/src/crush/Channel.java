@@ -25,6 +25,7 @@
 package crush;
 
 import util.*;
+
 import java.util.StringTokenizer;
 
 
@@ -143,7 +144,12 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	
 	public double getResolution() { return instrument.resolution; }
 	
+	public void uniformGains() {
+		gain = 1.0; 
+		coupling = 1.0;
+	}
 	
+
 	public static int nextHardwareFlag = 0;
 	public final static int FLAG_DEAD = 1 << nextHardwareFlag++;
 	public final static int FLAG_BLIND = 1 << nextHardwareFlag++;

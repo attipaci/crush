@@ -40,4 +40,10 @@ public class MapIndex {
 		i = (int)Math.round(index.x);
 		j = (int)Math.round(index.y);
 	}
+
+	@Override
+	public String toString() {
+		return i + "," + j;
+	}
+
 }
