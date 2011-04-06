@@ -27,6 +27,7 @@ package crush.polarization;
 
 import crush.*;
 import crush.array.*;
+import crush.sourcemodel.AstroMap;
 import crush.sourcemodel.ScalarMap;
 
 import java.util.*;
@@ -36,7 +37,7 @@ import util.Unit;
 public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? extends InstrumentType, ?>>
 		extends SourceModel<InstrumentType, ScanType> {
 
-	ScalarMap<InstrumentType, ScanType> I,Q,U;
+	ScalarMap<InstrumentType, ScanType> N,Q,U;
 	
 	public PolarMap(InstrumentType instrument) {
 		super(instrument);
@@ -50,22 +51,22 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	public void create(Collection<? extends Scan<?, ?>> scans) {
 		super.create(scans);
 		
-		I = createMap();
-		I.create(scans);
-		I.signalMode = PolarizationMode.I;
-		I.isLevelled = true;
-		I.id = "I";
+		N = createMap();
+		N.create(scans);
+		N.signalMode = PolarModulation.N;
+		N.isLevelled = true;
+		N.id = "N";
 		
-		Q = (ScalarMap<InstrumentType, ScanType>) I.copy();
+		Q = (ScalarMap<InstrumentType, ScanType>) N.copy();
 		Q.standalone();
-		Q.signalMode = PolarizationMode.Q;
+		Q.signalMode = PolarModulation.Q;
 		Q.isLevelled = false;
 		Q.allowBias = false;
 		Q.id = "Q";
 		
-		U = (ScalarMap<InstrumentType, ScanType>) I.copy();
+		U = (ScalarMap<InstrumentType, ScanType>) N.copy();
 		U.standalone();
-		U.signalMode = PolarizationMode.U;
+		U.signalMode = PolarModulation.U;
 		U.isLevelled = false;
 		U.allowBias = false;
 		U.id = "U";
@@ -74,7 +75,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	@Override
 	public SourceModel<InstrumentType, ScanType> copy() {
 		PolarMap<InstrumentType, ScanType> copy = (PolarMap<InstrumentType, ScanType>) super.copy();
-		copy.I = (ScalarMap<InstrumentType, ScanType>) I.copy();
+		copy.N = (ScalarMap<InstrumentType, ScanType>) N.copy();
 		copy.Q = (ScalarMap<InstrumentType, ScanType>) Q.copy();
 		copy.U = (ScalarMap<InstrumentType, ScanType>) U.copy();
 		return copy;
@@ -85,7 +86,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	@Override
 	public void add(SourceModel<?, ?> model, double weight) {
 		PolarMap<InstrumentType, ScanType> other = (PolarMap<InstrumentType, ScanType>) model;
-		I.add(other.I, weight);
+		N.add(other.N, weight);
 		if(hasOption("source.polarization")) {
 			Q.add(other.Q, weight);
 			U.add(other.U, weight);
@@ -110,7 +111,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	public void add(Integration<?, ?> subscan) {
 		removeBias(subscan);
 		
-		I.add(subscan);
+		N.add(subscan);
 		if(hasOption("source.polarization")) {			
 			Q.add(subscan);
 			U.add(subscan);
@@ -119,7 +120,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 
 	@Override
 	public void setBase() {
-		I.setBase();
+		N.setBase();
 		if(hasOption("source.polarization")) {
 			Q.setBase();
 			U.setBase();
@@ -128,7 +129,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 
 	@Override
 	public void process(Scan<?, ?> scan) {
-		I.process(scan);
+		N.process(scan);
 		if(hasOption("source.polarization")) {
 			Q.process(scan);
 			U.process(scan);
@@ -137,8 +138,8 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	
 	@Override
 	public synchronized void sync() throws InterruptedException {
-		System.err.print("\n   [I] ");
-		I.sync();
+		System.err.print("\n   [N] ");
+		N.sync();
 		if(hasOption("source.polarization")) {
 			System.err.print("\n   [Q] ");
 			Q.sync();
@@ -149,51 +150,85 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 
 	@Override
 	public void reset() {
-		I.reset();
+		N.reset();
 		Q.reset();
 		U.reset();
 	}
 	
 	@Override
 	public void sync(Integration<?, ?> subscan) {
-		I.sync(subscan);	
+		N.sync(subscan);	
 		if(hasOption("source.polarization")) {
 			Q.sync(subscan);
 			U.sync(subscan);	
 		}
 	}
 
+	
+	public ScalarMap<InstrumentType, ScanType> getI() {
+		final ScalarMap<InstrumentType, ScanType> P = getP();
+		
+		final AstroMap p = P.map;
+		final AstroMap n = N.map;
+		
+		for(int i=n.sizeX(); --i >= 0; ) for(int j=n.sizeY(); --j >= 0; ) {
+			if(n.flag[i][j] == 0 && p.flag[i][j] == 0) {
+				p.data[i][j] += n.data[i][j];
+				p.weight[i][j] = 1.0 / (1.0/n.weight[i][j] + 1.0/p.weight[i][j]);
+			}
+			else p.flag[i][j] = 1;
+		}
+		P.id = "I";
+		p.sanitize();
+		return P;
+	}
+	
+	
+	public ScalarMap<InstrumentType, ScanType> getP() {
+		final ScalarMap<InstrumentType, ScanType> P = (ScalarMap<InstrumentType, ScanType>) N.copy();
+		
+		final AstroMap q = Q.map;
+		final AstroMap u = U.map;
+		final AstroMap p = P.map;
+		
+		for(int i=p.sizeX(); --i >= 0; ) for(int j=p.sizeY(); --j >= 0; ) {	
+			if(q.flag[i][j] == 0 && u.flag[i][j] == 0) {
+				p.data[i][j] = Math.hypot(q.data[i][j], u.data[i][j]);
+				
+				// Do error propagation properly...
+				if(p.data[i][j] > 0.0) {
+					final double qf = q.data[i][j] / p.data[i][j];
+					final double uf = u.data[i][j] / p.data[i][j];
+					p.weight[i][j] = 1.0 / (qf*qf/q.weight[i][j] + uf*uf/u.weight[i][j]);
+				}
+				else p.weight[i][j] = 2.0 / (1.0/q.weight[i][j] + 1.0/u.weight[i][j]);
+ 				
+				p.flag[i][j] = 0;
+			}
+			else p.flag[i][j] = 1;
+		}
+		P.id = "P";
+		p.sanitize();
+		return P;
+	}
+	
 	@Override
 	public void write(String path) throws Exception {
-		I.write(path);
+		N.write(path);
 		Q.write(path);
 		U.write(path);
-	
-		for(int i=0; i<Q.map.sizeX(); i++) for(int j=0; j<Q.map.sizeY(); j++) {
-			if(Q.map.flag[i][j] == 0 && U.map.flag[i][j] == 0) {
-				double q = Q.map.data[i][j];
-				double u = U.map.data[i][j];
-				
-				Q.map.data[i][j] = Math.hypot(q,u);
-				Q.map.weight[i][j] = 0.5 * (Q.map.weight[i][j] + U.map.weight[i][j]);
-			}
-			else Q.map.flag[i][j] = 1;
-		}
-		
-		Q.map.sanitize();
-		Q.id = "P";
-		Q.write(path);
-				
+		getI().write(path);
+		getP().write(path);			
 	}
 
 	@Override
 	public String getSourceName() {
-		return I.getSourceName();
+		return N.getSourceName();
 	}
 
 	@Override
 	public Unit getUnit() {
-		return I.getUnit();
+		return N.getUnit();
 	}
 	
 

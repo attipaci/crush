@@ -41,9 +41,9 @@ public class PolKaFrame extends LabocaFrame {
 	
 	@Override
 	public double getSourceGain(final int mode) {	
-		if(mode == PolarizationMode.I) return transmission;
-		else if(mode == PolarizationMode.Q) return Q * transmission;
-		else if(mode == PolarizationMode.U) return U * transmission;
+		if(mode == PolarModulation.N) return transmission;
+		else if(mode == PolarModulation.Q) return Q * transmission;
+		else if(mode == PolarModulation.U) return U * transmission;
 		else return super.getSourceGain(mode);
 	}
 	
@@ -81,4 +81,6 @@ public class PolKaFrame extends LabocaFrame {
 		if(polka.wavePlateChannel != null) wavePlateAngle = data[polka.wavePlateChannel.index];	
 		if(polka.frequencyChannel != null) wavePlateFrequency = data[polka.frequencyChannel.index];	
 	}
+	
+	
 }

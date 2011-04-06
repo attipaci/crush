@@ -134,27 +134,50 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 	@Override
 	public void validate(Vector<Scan<?,?>> scans) throws Exception {
 		
-		APEXArrayScan<?,?> scan = (APEXArrayScan<?,?>) scans.get(0);
-		APEXArraySubscan<?,?> subscan = scan.get(0);
-		EquatorialCoordinates reference = scan.equatorial;
-		String sourceName = scan.sourceName;
+		final APEXArrayScan<?,?> firstScan = (APEXArrayScan<?,?>) scans.get(0);
+		final APEXArraySubscan<?,?> firstSubscan = firstScan.get(0);
+		final EquatorialCoordinates reference = firstScan.equatorial;
+		final String sourceName = firstScan.sourceName;
 		
-		double pointingTolerance = resolution / 5.0;
+		final double pointingTolerance = resolution / 5.0;
 		
-		boolean isChopped = subscan.chopper != null;
+		final boolean isChopped = firstSubscan.chopper != null;
 		
+	
 		if(isChopped) {
 			System.err.println("Setting chopped reduction mode.");
-			System.err.println("Target is [" + scan.sourceName + "] at " + reference.toString());
+			System.err.println("Target is [" + sourceName + "] at " + reference.toString());
 			options.parse("chopped");
 		}
+		else if(sourceName.equalsIgnoreCase("SKYDIP")) {
+			System.err.println("Setting skydip reduction mode.");
+			options.parse("skydip");
+			
+			if(scans.size() > 1) {
+				System.err.println("Ignoring all but first scan in list (for skydip).");
+				scans.clear();
+				scans.add(firstScan);
+			}
+		}
 		
-		for(int i=scans.size(); --i >=0; ) {
-			scan = (APEXArrayScan<?,?>) scans.get(i);
-			subscan = scan.get(0);
+		if(firstScan.type.equalsIgnoreCase("POINT")) if(scans.size() == 1) {
+			System.err.println("Setting 'point' option to obtain pointing data.");
+			options.parse("point");
+			firstScan.instrument.options.parse("point");
+		}
+		
+		
+		// Make sure the rest of the list conform to the first scan...
+		for(int i=scans.size(); --i > 0; ) {
+			APEXArrayScan<?,?> scan = (APEXArrayScan<?,?>) scans.get(i);
+			APEXArraySubscan<?,?> subscan = scan.get(0);
 			
 			if((subscan.chopper != null) != isChopped) {		
 				System.err.println("  WARNING! Scan " + scan.serialNo + " is not a chopped scan. Dropping from dataset.");
+				scans.remove(i);
+			}
+			else if(scan.sourceName.equalsIgnoreCase("SKYDIP")) {
+				System.err.println("  WARNING! Scan " + scan.serialNo + " is a skydip. Dropping from dataset.");
 				scans.remove(i);
 			}
 			else if(!scan.isPlanetary) {
@@ -168,6 +191,7 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 				scans.remove(i);
 			}
 		}
+		
 		
 		super.validate(scans);		
 	}

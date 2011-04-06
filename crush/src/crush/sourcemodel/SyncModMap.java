@@ -60,22 +60,6 @@ public class SyncModMap<InstrumentType extends Instrument<?>, ScanType extends S
 		double integral = 0.5 * waveform.length;
 		double samplingInterval = integration.instrument.samplingInterval;
 		
-		/*
-		float[] I = new float[waveform.length];
-		float[] Q = new float[waveform.length];
-		float[] U = new float[waveform.length];
-		
-		modulation.getWaveForm('I', 0, I);
-		modulation.getWaveForm('Q', 0, Q);
-		modulation.getWaveForm('U', 0, U);
-		
-		System.err.println();
-		System.err.println("IQ: " + Util.e3.format(product(I, Q)));
-		System.err.println("IU: " + Util.e3.format(product(I, U)));
-		System.err.println("QU: " + Util.e3.format(product(Q, U)));
-		*/
-		
-		
 		for(int fromt=0; fromt<last; fromt += waveform.length) {
 			Arrays.fill(value, 0.0F);
 			int samples = 0;

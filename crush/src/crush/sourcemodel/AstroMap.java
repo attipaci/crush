@@ -549,7 +549,7 @@ public class AstroMap extends AstroImage {
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
 			point[k++] = new WeightedPoint(data[i][j], weight[i][j]);
 		
-		return Statistics.median(point);
+		return Statistics.median(point).value;
 	}
 	
 	public void rmsScale(final double scalar) {

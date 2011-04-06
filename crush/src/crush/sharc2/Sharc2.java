@@ -471,7 +471,7 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 			data[n++] = T;
 		}
 		
-		return Statistics.smartMedian(data, 0, n, 0.25) - excessLoad;
+		return Statistics.smartMedian(data, 0, n, 0.25).value - excessLoad;
 	}
 	
 	public void calcGainCoefficients(double loadT) {

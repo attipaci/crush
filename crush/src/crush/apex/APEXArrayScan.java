@@ -293,15 +293,14 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		timeStamp = header.getStringValue("DATE-OBS");
 		if(sourceName == null) sourceName = "Undefined";
 		
+		if(sourceName.equalsIgnoreCase("SKYDIP")) {
+			System.err.println(" Setting options for skydip");
+			instrument.options.parse("skydip");
+		}
+		
 		pointingOffset = new Vector2D(header.getDoubleValue("IA"), header.getDoubleValue("IE"));
 		pointingOffset.scale(Unit.deg);
-		
-		/*
-		if(sourceName.equalsIgnoreCase("SKYDIP")) 
-			throw new IOException("Scan is a SKYDIP. Skipping.");
-		*/
-		
-		
+				
 		String dateString = timeStamp.substring(0, timeStamp.indexOf('T'));
 		String timeString = timeStamp.substring(timeStamp.indexOf('T') + 1);
 		
@@ -327,6 +326,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 			chopper.frequency = 1.0 / (header.getDoubleValue("WOBCYCLE") * Unit.sec);
 			chopper.positions = 2;
 			chopper.angle = 0.0 * Unit.degree;
+			System.err.println(" Setting options for chopped photometry.");
 			instrument.options.parse("chopped");
 		}
 			

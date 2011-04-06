@@ -119,7 +119,7 @@ public class CorrelatedSignal extends Signal {
 			temp[t] = new WeightedPoint(value[t], weight[t]);
 			sumw += weight[t];
 		}
-		return new WeightedPoint(Statistics.median(temp), sumw);
+		return Statistics.median(temp);
 	}
 	
 	@Override
@@ -395,7 +395,7 @@ public class CorrelatedSignal extends Signal {
 				}
 			}
 		}
-		increment.value = Statistics.smartMedian(buffer, 0, n, 0.25); 
+		Statistics.smartMedian(buffer, 0, n, 0.25, increment); 
 	}
 	
 	

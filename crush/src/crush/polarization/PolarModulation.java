@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,34 +20,12 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2010 Attila Kovacs 
 
 package crush.polarization;
 
-import java.lang.reflect.Field;
-
-import crush.ChannelGroup;
-import crush.Mode;
-
-public class PolarizationMode extends Mode {
-
-	public PolarizationMode() {
-		// TODO Auto-generated constructor stub
-	}
-
-	public PolarizationMode(ChannelGroup<?> group) {
-		super(group);
-		// TODO Auto-generated constructor stub
-	}
-
-	public PolarizationMode(ChannelGroup<?> group, Field gainField) {
-		super(group, gainField);
-		// TODO Auto-generated constructor stub
-	}
-
-	
-	public static final int I = nextMode++;
-	public static final int Q = nextMode++;
-	public static final int U = nextMode++;
-	public static final int V = nextMode++;
+public final class PolarModulation {
+	public final static int N = 1; 
+	public final static int Q = 2;
+	public final static int U = 3;
+	public final static int V = 4;
 }

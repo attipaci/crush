@@ -49,7 +49,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	
 	double tau225GHz;
 	double ambientT, pressure, humidity, windAve, windPeak, windDirection;
-	String scanID;
+	String scanID, obsType;
 	double[] pointingConstants;
 	
 	
@@ -174,11 +174,6 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		site = new GeodeticCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
 		System.err.println(" Telescope Location: " + site);
 		
-		// Wikipedia
-		//site = new GeodeticCoordinates("-03d23m58.1s, 37d04m05.6s");
-		//System.err.println(" Telescope Location: " + site);
-		//System.err.println("-03d23m58.1s, 37d04m05.6s");
-		
 		// IRAM Pico Veleta PDF 
 		//site = new GeodeticCoordinates("-03d23m33.7s, 37d03m58.3s");
 		
@@ -195,10 +190,12 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		project = header.getStringValue("PROJECT");
 		descriptor = header.getStringValue("DESCRIPT");
 		scanID = header.getStringValue("SCANID");
+		obsType = header.getStringValue("OBSTYPE");
 		
 		if(creator == null) creator = "Unknown";
 		if(observer == null) observer = "Unknown";
 		if(project == null) project = "Unknown";
+		if(obsType == null) obsType = "Unknown";
 		if(scanID == null) scanID = "Unknown";
 		else {
 			StringTokenizer tokens = new StringTokenizer(scanID, ".");
@@ -207,6 +204,11 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		}
 		serialNo = header.getIntValue("SCANNUM", serialNo);
 
+		if(obsType.equalsIgnoreCase("tip")) {
+			System.err.println(" Setting options for skydip");
+			instrument.options.parse("skydip");
+		}
+		
 		// Weather
 		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();
 		else {

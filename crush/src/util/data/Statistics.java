@@ -42,14 +42,35 @@ public final class Statistics {
 		return n % 2 == 0 ? 0.5F * (data[fromIndex + n/2-1] + data[fromIndex + n/2]) : data[fromIndex + (n-1)/2];
 	}
 
-	public static double median(WeightedPoint[] data) { return median(data, 0, data.length); }
+	public static WeightedPoint median(WeightedPoint[] data) { return median(data, 0, data.length); }
+	
+	public static void median(WeightedPoint[] data, WeightedPoint result) { median(data, 0, data.length, result); }
 
-	public static double median(WeightedPoint[] data, int fromIndex, int toIndex) {
+	public static WeightedPoint median(WeightedPoint[] data, int fromIndex, int toIndex) {
 		return smartMedian(data, fromIndex, toIndex, 1.0);		
 	}
+	
+	public static void median(WeightedPoint[] data, int fromIndex, int toIndex, WeightedPoint result) {
+		smartMedian(data, fromIndex, toIndex, 1.0, result);		
+	}
+	
+	public static WeightedPoint smartMedian(final WeightedPoint[] data, final int fromIndex, final int toIndex, final double maxDependence) {
+		WeightedPoint result = new WeightedPoint();
+		smartMedian(data, fromIndex, toIndex, maxDependence, result);
+		return result;		
+	}
 
-	public static double smartMedian(final WeightedPoint[] data, final int fromIndex, final int toIndex, final double maxDependence) {
-		if(toIndex - fromIndex == 1) return data[fromIndex].value;
+	public static void smartMedian(final WeightedPoint[] data, final int fromIndex, final int toIndex, final double maxDependence, WeightedPoint result) {
+		// If no data, then 
+		if(toIndex == fromIndex) {
+			result.noData();
+			return;
+		}
+		
+		if(toIndex - fromIndex == 1) {
+			result.copy(data[fromIndex]);
+			return;
+		}
 	
 		Arrays.sort(data, fromIndex, toIndex);
 	
@@ -73,25 +94,30 @@ public final class Statistics {
 					sumw += w;
 				}
 			}
-			return sum/sumw;
+			result.value = sum/sumw;
+			result.weight = sumw;
+			return;
 		}
 		
 		// If all weights are zero return the arithmetic median...
 		// This should never happen, but just in case...
 		if(wt == 0.0) {
 			final int n = toIndex - fromIndex;
-			return n % 2 == 0 ? 0.5F * (data[fromIndex + n/2-1].value + data[fromIndex + n/2].value) : data[fromIndex + (n-1)/2].value;
+			result.value = n % 2 == 0 ? 
+					0.5F * (data[fromIndex + n/2-1].value + data[fromIndex + n/2].value) 
+					: data[fromIndex + (n-1)/2].value;
+			result.weight = 0.0;
+			return;
 		}
 	
 	
-		final double midw = wt / 2.0; 
+		final double midw = 0.5 * wt; 
 		int ig = fromIndex; 
 		
 		WeightedPoint last = WeightedPoint.NaN;
 		WeightedPoint point = data[fromIndex];
 	
 		double wi = point.weight;
-		
 		
 		while(wi < midw) if(data[++ig].weight > 0.0) {
 			last = point;
@@ -103,7 +129,8 @@ public final class Statistics {
 		double wminus = wi - 0.5 * (last.weight + point.weight);
 		
 		double w1 = (wplus - midw) / (wplus + wminus);
-		return w1 * last.value + (1.0-w1) * point.value;
+		result.value = w1 * last.value + (1.0-w1) * point.value;
+		result.weight = wt;
 	}
 
 	public static double select(double[] data, double fraction, int fromIndex, int toIndex) {
@@ -156,11 +183,31 @@ public final class Statistics {
 		return sum / (to - from);
 	}
 	
-	public static double robustMean(WeightedPoint[] data, double tails) {
+	public static WeightedPoint robustMean(WeightedPoint[] data, double tails) {
 		return robustMean(data, 0, data.length, tails);
 	}
 	
-	public static double robustMean(WeightedPoint[] data, int from, int to, double tails) {
+	public static void robustMean(WeightedPoint[] data, double tails, WeightedPoint result) {
+		robustMean(data, 0, data.length, tails, result);
+	}
+	
+	public static WeightedPoint robustMean(WeightedPoint[] data, int from, int to, double tails) {
+		WeightedPoint result = new WeightedPoint();
+		robustMean(data, from, to, tails, result);
+		return result;
+	}
+	
+	public static void robustMean(WeightedPoint[] data, int from, int to, double tails, WeightedPoint result) {
+		if(from >= to) {
+			result.noData();
+			return;
+		}
+		
+		if(to-from == 1) {
+			result.copy(data[from]);
+			return;
+		}
+		
 		Arrays.sort(data, from, to);
 		
 		// Ignore the tails on both sides of the distribution...
@@ -168,7 +215,10 @@ public final class Statistics {
 	
 		to -= dn;
 		from += dn;
-		if(from >= to) return Double.NaN;
+		if(from >= to) {
+			result.noData();
+			return;
+		}
 
 		// Average over the middle section of values...
 		double sum = 0.0, sumw = 0.0;
@@ -177,7 +227,8 @@ public final class Statistics {
 			sum += point.weight * point.value;
 			sumw += point.weight;
 		}
-		return sum / sumw;
+		result.value = sum / sumw;
+		result.weight = sumw;
 	}
 
 }
