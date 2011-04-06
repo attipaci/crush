@@ -544,4 +544,20 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	public int maxPixels() {
 		return storeChannels;
 	}
+
+	@Override
+	public void validate(Vector<Scan<?,?>> scans) throws Exception {
+		
+		final Sharc2Scan firstScan = (Sharc2Scan) scans.get(0);
+		final String upperCaseSource = firstScan.sourceName.toUpperCase();
+		
+		if(upperCaseSource.startsWith("PNT_") || upperCaseSource.startsWith("CAL_")) if(scans.size() == 1) {
+			System.err.println("Setting 'point' option to obtain pointing/calibration data.");
+			options.parse("point");
+			firstScan.instrument.options.parse("point");
+		}
+		
+		super.validate(scans);
+	}
 }
+
