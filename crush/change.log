@@ -30,6 +30,10 @@
 	sets, in case they are accidentally included in the list.
 
 	[NEW] {GISMO} Automatic skydip detection. (see also above).
+
+	[NEW] {SHARC-2} Automatic pointing/calibration reduction for standalone
+	scans of pointing/calibration sources whose catalog names start with
+	'PNT_' and 'CAL_'.
 	
 	[NEW] More control over the decorrelation of phases (e.g. for chopped
 	photometry data). The 'correlated.<?>.phasegains' keys and 'phasegains'
