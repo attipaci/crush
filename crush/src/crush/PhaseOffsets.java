@@ -158,7 +158,7 @@ public class PhaseOffsets {
 			
 			increment.weight += wG2;
 		}
-		increment.value = n > 0 ? Statistics.smartMedian(temp, 0, n, 0.25) : Double.NaN;
+		Statistics.smartMedian(temp, 0, n, 0.25, increment);
 	}
 	
 	public String toString(NumberFormat nf) {

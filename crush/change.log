@@ -1,5 +1,5 @@
 
-2.04-b1
+2.04-b2
 	
 	Overview
 	=====================================================================
@@ -20,6 +20,17 @@
 	'source.model' key. The problem was with the coordinate transformations
 	when a nontrivial transformation matrix was defined.
 
+	[NEW] {APEX} Automatic pointing scan detection. Reduction will suggest
+	pointing offsets for standalone pointing scans. However, no automatic
+	pointing suggestion for multiscan datasets (you can still manually set
+	'point' to override).
+
+	[NEW] {APEX} Automatic skydip detection. No need to manually set the
+	'skydip' option. :-). Also, skydips will be removed from mapping data
+	sets, in case they are accidentally included in the list.
+
+	[NEW] {GISMO} Automatic skydip detection. (see also above).
+	
 	[NEW] More control over the decorrelation of phases (e.g. for chopped
 	photometry data). The 'correlated.<?>.phasegains' keys and 'phasegains'
 	can be used to derived gains from the correlated phases rather than
@@ -37,6 +48,16 @@
 	[FIX] The option 'rcp.gains' was ineffective since 'pixeldata'
 	overwrote those gains afterwards. By switching the order of RCP
 	and pixeldata reads, the function of 'rcp.gains' should be restored.
+
+	[FIX] {PolKa} 'I' is now proper Stokes I, rather than the unpolarized
+	power before. The unpolarized power is written as 'N', and is more
+	sensitive than 'I' = 'N' + 'P'. For low polarization fractions,
+	therefore it is a good idea too use 'N' as a proxy for the real 'I'. 
+
+	[FIX] {PolKa} More proper noise calculation for polarized power 'P'.
+
+	[FIX] {PolKa} Non-destructive writing plus small optimizations. As such
+	polarization images can work with 'source.intermediates', if desired...
 
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change
@@ -83,6 +104,12 @@
 	[CODE] {APEX} Validating chopped-modulated offsets s.t. those without 
 	enough frames for estimating offsets are removed from the set.
 
+	[CODE] {PolKa} Use Modulation rather than Mode as nomenclature for 
+	separating the polarization signals.
+
+	[CODE] Slight changes to weighted median calculation methods. No change
+	in functionality.
+	
 	[COSMETIC] Decorrelation steps that do not flag channels by gain 
 	do not display a census of active channels unnecessarily...
 

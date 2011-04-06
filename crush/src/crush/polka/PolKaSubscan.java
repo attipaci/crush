@@ -141,8 +141,8 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 	
 	public void getWaveForm(int mode, int index, float[] waveform) {	
 		
-		if(mode == PolarizationMode.I) Arrays.fill(waveform, 1.0F);
-		else if(mode == PolarizationMode.Q) {
+		if(mode == PolarModulation.N) Arrays.fill(waveform, 1.0F);
+		else if(mode == PolarModulation.Q) {
 			int nt = Math.min(waveform.length, size() - index);
 			for(int blockt=0; blockt<nt; blockt++, index++) { 
 				PolKaFrame exposure = (PolKaFrame) get(index);
@@ -150,7 +150,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 				else waveform[blockt] = Float.NaN;
 			}
 		}
-		else if(mode == PolarizationMode.U) {
+		else if(mode == PolarModulation.U) {
 			int nt = Math.min(waveform.length, size() - index);
 			for(int blockt=0; blockt<nt; blockt++, index++) {
 				PolKaFrame exposure = (PolKaFrame) get(index);

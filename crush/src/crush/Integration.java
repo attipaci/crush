@@ -697,9 +697,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			}
 
 			if(sumw > 0.0) {
-				offset.value = Statistics.smartMedian(buffer, 0, n, 0.25);
-				offset.weight = sumw;
-				
+				Statistics.smartMedian(buffer, 0, n, 0.25, offset);				
 				aveOffset[channel.index].average(offset);
 				
 				for(int t=fromt; t<tot; t+=step) {

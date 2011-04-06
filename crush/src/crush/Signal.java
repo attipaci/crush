@@ -359,8 +359,7 @@ public class Signal implements Cloneable {
 				point.weight = exposure.tempWC2;
 				increment.weight += exposure.tempWC2;
 			}
-			increment.value = increment.weight > 0.0 ? Statistics.smartMedian(gainData, 0, n, 0.25) : 0.0;
-		
+			Statistics.smartMedian(gainData, 0, n, 0.25, increment);
 		}
 	}
 
