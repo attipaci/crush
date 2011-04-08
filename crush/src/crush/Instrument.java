@@ -321,7 +321,7 @@ implements TableEntries {
 	
 	public void census() {
 		mappingChannels = 0;
-		for(Channel channel : this) if(channel.flag == 0 && channel.weight > 0.0) mappingChannels++;
+		for(Channel channel : this) if(channel.flag == 0) if(channel.weight > 0.0) mappingChannels++;
 	}
 	
 	public String getDefaultConfigPath() {

@@ -1689,15 +1689,15 @@
 :: skydip		Reduce skydip data, instead of trying to make an 
 			impossibly large map out of it :-). This option is
 			equivalent to specifying 'source.type=skydip', which is
-			activated conditionally, instead of an alias. The reason
-			for not using an alias in this case, is to retain,
-			independently, 'skydip' option branches.
+			activated conditionally, instead of an alias. The 
+			reason for not using an alias in this case, is to 
+			retain, independently, 'skydip' option branches.
 
 :: skydip.fit=<list>	@Expert
 			Specify the list of parameters to fit for the skydip 
 			model. The standard model is
 
-			  y(EL) = Kelvin * Tsky * (1-exp(-tau/sin(EL))) + offset
+			 y(EL) = Kelvin * Tsky * (1-exp(-tau/sin(EL))) + offset
 
 		        where:
 

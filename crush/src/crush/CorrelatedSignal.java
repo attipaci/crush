@@ -276,8 +276,9 @@ public class CorrelatedSignal extends Signal {
 	public synchronized void update(boolean isRobust) throws IllegalAccessException {
 		// work on only a selected subset of not critically flagged channels only (for speed)
 		final CorrelatedMode mode = (CorrelatedMode) getMode();
+		final ChannelGroup<?> channels = mode.channels;
 		final ChannelGroup<?> goodChannels = mode.getValidChannels();
-		final int nc = mode.channels.size();
+		final int nc = channels.size();
 		
 		// Need at least 2 channels for decorrelaton...
 		//if(goodChannels.size() < 2) return;
@@ -296,7 +297,7 @@ public class CorrelatedSignal extends Signal {
 		
 		// Precalculate the gain-weight products...
 		for(int k=nc; --k >= 0; ) {
-			final Channel channel = mode.channels.get(k);
+			final Channel channel = channels.get(k);
 			channel.temp = 0.0F;
 			channel.tempG = G[k];
 			channel.tempWG = (float) (channel.weight) * channel.tempG;
@@ -329,11 +330,14 @@ public class CorrelatedSignal extends Signal {
 				final Frame exposure = integration.get(t);
 				if(exposure == null) continue;
 
+				final float[] data = exposure.data;
+				final float fw = exposure.relativeWeight;
+				
 				for(int k=nc; --k >= 0; ) {
-					final Channel channel = mode.channels.get(k);
+					final Channel channel = channels.get(k);
 					// Here usedGains carries the gain increment dG from the last correlated signal removal
-					exposure.data[channel.index] -= dG[k] * C + channel.tempG * dC;
-					if(channel.temp > 0.0F) dependents.add(exposure, channel, exposure.relativeWeight * channel.temp);
+					data[channel.index] -= dG[k] * C + channel.tempG * dC;
+					if(channel.temp > 0.0F) dependents.add(exposure, channel, fw * channel.temp);
 				}
 			}
 				
@@ -367,10 +371,9 @@ public class CorrelatedSignal extends Signal {
 			final Frame exposure = integration.get(t);
 						
 			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
-				final float fw = exposure.relativeWeight;	
 				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
-					sum += (fw * channel.tempWG * exposure.data[channel.index]);
-					sumw += (fw * channel.tempWG2);
+					sum += (exposure.relativeWeight * channel.tempWG * exposure.data[channel.index]);
+					sumw += (exposure.relativeWeight * channel.tempWG2);
 				}
 			}
 		}
@@ -390,8 +393,7 @@ public class CorrelatedSignal extends Signal {
 				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
 					final WeightedPoint point = buffer[n++];
 					point.value = (exposure.data[channel.index] / channel.tempG);
-					point.weight = (exposure.relativeWeight * channel.tempWG2);	
-					increment.weight += point.weight;
+					increment.weight += (point.weight = (exposure.relativeWeight * channel.tempWG2));	
 				}
 			}
 		}

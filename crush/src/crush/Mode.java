@@ -85,6 +85,12 @@ public class Mode {
 		name = group.name;
 	}
 	
+	public int[] getChannelIndex() {
+		final int[] index = new int[channels.size()];
+		for(int c=channels.size(); --c >= 0; ) index[c] = channels.get(c).index;
+		return index;
+	}
+	
 	public synchronized float[] getGains() throws IllegalAccessException {
 		if(gainField == null) {
 			if(gain == null) {
@@ -121,10 +127,10 @@ public class Mode {
 	protected synchronized boolean flagGains() throws IllegalAccessException {
 		if(gainFlag == 0) return false;
 			
-		float[] gain = getGains();
+		final float[] gain = getGains();
 		
 		for(int k=channels.size(); --k >= 0; ) {
-			Channel channel = channels.get(k);
+			final Channel channel = channels.get(k);
 			
 			float G = Float.NaN;
 			if(gainType == Instrument.GAINS_SIGNED) G = gain[k];

@@ -547,10 +547,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 				
 		for(final Frame exposure : integration) if(exposure != null) {
 			final double fG = integration.gain * exposure.getSourceGain(signalMode); 
-			final float[] data = exposure.data;
-			final byte[] sampleFlag = exposure.sampleFlag;
-			final float fw = exposure.relativeWeight;
-			
+				
 			// Remove source from all but the blind channels...
 			for(final Pixel pixel : pixels)  {
 				getIndex(exposure, pixel, projector, index);
@@ -560,11 +557,11 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 				// The use of iterables is a minor performance hit only (~3% overall)
 				if(isMasked(index)) for(final Channel channel : pixel) {
 					final int c = channel.index;
-					if((sampleFlag[c] & Frame.SAMPLE_SKIP) == 0) {
+					if((exposure.sampleFlag[c] & Frame.SAMPLE_SKIP) == 0) {
 						final double mapValue = fG * sourceGain[c] * map.data[i][j];
-						final double value = data[c] + fG * syncGain[c] * base[i][j];;
-						sumIM[c] += fw * value * mapValue;
-						sumM2[c] += fw * mapValue * mapValue;			
+						final double value = exposure.data[c] + fG * syncGain[c] * base[i][j];;
+						sumIM[c] += exposure.relativeWeight * value * mapValue;
+						sumM2[c] += exposure.relativeWeight * mapValue * mapValue;			
 					}
 				}
 			}	    
