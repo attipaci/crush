@@ -69,14 +69,12 @@ public class PhaseOffsets {
 			final Frame exposure = integration.get(t);
 			if(exposure == null) continue;
 			if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
-			
-			float fw = exposure.relativeWeight;
-
+		
 			for(int k=channels.size(); --k >= 0; ) {
-				final Channel channel = channels.get(k);
-				if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE_FLAGS) == 0) {
-					sum[k] += fw * exposure.data[channel.index];
-					sumw[k] += fw;
+				final int c = channels.get(k).index;
+				if((exposure.sampleFlag[c] & Frame.SAMPLE_SPIKE_FLAGS) == 0) {
+					sum[k] += exposure.relativeWeight * exposure.data[c];
+					sumw[k] += exposure.relativeWeight;
 				}
 			}
 		}
@@ -96,14 +94,12 @@ public class PhaseOffsets {
 		for(int t=start.index; t<to; t++) {
 			final Frame exposure = integration.get(t);
 			if(exposure == null) continue;
-			
-			final float fw = exposure.relativeWeight;
-			
+		
 			for(int k=channels.size(); --k >=0; ) {
-				final Channel channel = channels.get(k);
-				exposure.data[channel.index] -= sum[k];
-				if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE_FLAGS) == 0)					
-					parms.add(exposure, fw / sumw[k]); 
+				final int c = channels.get(k).index;
+				exposure.data[c] -= sum[k];
+				if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if((exposure.sampleFlag[c] & Frame.SAMPLE_SPIKE_FLAGS) == 0)					
+					parms.add(exposure, exposure.relativeWeight / sumw[k]); 
 			}
 		}
 	
@@ -154,9 +150,7 @@ public class PhaseOffsets {
 			
 			final WeightedPoint point = temp[n++];
 			point.value = (value[channel.index] / Gk);
-			point.weight = wG2;
-			
-			increment.weight += wG2;
+			increment.weight += (point.weight = wG2);
 		}
 		Statistics.smartMedian(temp, 0, n, 0.25, increment);
 	}

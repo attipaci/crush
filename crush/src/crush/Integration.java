@@ -686,13 +686,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			int n = 0;
 			double sumw = 0.0;
 
+			final int c = channel.index;
+			
 			for(int t=fromt; t<tot; t+=step) {
 				final Frame exposure = get(t);
-				if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0) {
+				if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0) {
 					final WeightedPoint point = buffer[n++];
-					point.value = exposure.data[channel.index];
-					point.weight = exposure.relativeWeight;
-					sumw += exposure.relativeWeight;
+					point.value = exposure.data[c];
+					sumw += (point.weight = exposure.relativeWeight);
 				}
 			}
 
@@ -703,7 +704,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 				for(int t=fromt; t<tot; t+=step) {
 					final Frame exposure = get(t);
 					if(exposure == null) continue;
-					exposure.data[channel.index] -= offset.value;
+					exposure.data[c] -= offset.value;
 					parms.add(exposure, exposure.relativeWeight / sumw);
 				}
 				parms.add(channel, 1.0);
@@ -713,6 +714,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 
 	public boolean decorrelate(final String modalityName, final boolean isRobust) {
 		Modality<?> modality = instrument.modalities.get(modalityName);
+		modality.solveGains = hasOption("gains");
+		modality.phaseGains = hasOption("phasegains");
+		modality.setOptions(option("correlated." + modality.name));
+			
 		if(modality.trigger != null) if(!hasOption(modality.trigger)) return false;
 		
 		String left = isRobust ? "[" : "";
@@ -722,9 +727,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		int frameResolution = power2FramesFor(modality.resolution);
 		if(frameResolution > 1) comments += "(" + frameResolution + ")";	
 		
-		modality.solveGains = hasOption("gains");
-		modality.phaseGains = hasOption("phasegains");
-		modality.setOptions(option("correlated." + modality.name));
 		
 		if(modality instanceof CorrelatedModality) {
 			CorrelatedModality correlated = (CorrelatedModality) modality;
@@ -1257,7 +1259,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
 		
-		float[] level = new float[instrument.size()];
+		final float[] level = new float[instrument.size()];
 		for(Channel channel : connectedChannels) level[channel.index] = (float) (significance * Math.sqrt(channel.variance));
 		
 		int nt = size();

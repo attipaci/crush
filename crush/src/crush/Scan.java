@@ -508,6 +508,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		for(IntegrationType integration : this) {	
 			try {		
 				Modality<?> modality = integration.instrument.modalities.get(modalityName);
+				if(modality.trigger != null) if(!hasOption(modality.trigger)) continue;
 				modality.averageGains(G, integration, isRobust);
 				gotGains = true;
 			}	

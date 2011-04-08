@@ -1,5 +1,5 @@
-
-2.04-b2
+	
+2.04-b3
 	
 	Overview
 	=====================================================================
@@ -12,9 +12,10 @@
 	stable release.
 	=====================================================================
 
-	[BUG] Obsolete trimChopper() and markChopperEnds functions removed.
-	Bugs in these caused subscans to be needlessly dropped from the 
-	reduction, leading to increased photometry errors in the prior update.
+	[BUG] {APEX} Obsolete trimChopper() and markChopperEnds() functions 
+	removed. Bugs in these caused subscans to be needlessly dropped from 
+	the  reduction, leading to increased photometry errors in the prior 
+	update (2.03-2).
 	
 	[BUG] Fixed bug in applying an a-priori source model via the
 	'source.model' key. The problem was with the coordinate transformations
@@ -23,7 +24,7 @@
 	[NEW] {APEX} Automatic pointing scan detection. Reduction will suggest
 	pointing offsets for standalone pointing scans. However, no automatic
 	pointing suggestion for multiscan datasets (you can still manually set
-	'point' to override).
+	'point' to do it anyway).
 
 	[NEW] {APEX} Automatic skydip detection. No need to manually set the
 	'skydip' option. :-). Also, skydips will be removed from mapping data
@@ -42,6 +43,12 @@
 	global setting. The 'phases.estimator' key can specify what estimator
 	to use for deriving phases, if it is different from the defalt
 	estimator type set by 'estimator'. 
+
+	[FIX] {SHARC-2} Fixed triggered decorrelation issue. The first ieration
+	did not detect the trigger. This meant that chopper response was 
+	decorrelated once even for non-chopped observations. Neither was 
+	'gains.span' trigger aware, which meant that the chopper response was
+	always decorrelated when the spanning option was set. 
 
 	[FIX] Fixed a multitude of problems with the derivation of gains from 
 	the phases. As a result, chopped photometry reductions can now derive
@@ -118,6 +125,7 @@
 	do not display a census of active channels unnecessarily...
 
 	[UPDATE] {LABOCA} Updated pixel data files to include resistors.
+
 
 
 2.03-2 (3 Apr 2011)
