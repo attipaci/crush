@@ -380,4 +380,11 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		header.addValue("EQSCAN", isEquatorial, "Was the scanning in Equatorial frame?");
 	}
 	
+	@Override
+	public String getPointingString(Vector2D pointing) {
+		return super.getPointingString(pointing) + "\n\n" +
+			"  >>> pcorr " + Util.f1.format(pointing.x / Unit.arcsec) + "," + Util.f1.format(pointing.y / Unit.arcsec);
+		
+	}
+	
 }

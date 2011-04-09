@@ -262,17 +262,6 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		return storeChannels;
 	}    
 	
-	@Override
-	public String getPointingString(Scan<?,?> scan, Vector2D pointing) {
-		GismoScan gismoScan = (GismoScan) scan;
-		//Vector2D nasmyth = getNasmythOffset(scan, pointing);
-		
-		return super.getPointingString(scan, pointing) + "\n" +
-			"  Absolute: " + 
-			Util.f1.format((gismoScan.pointingConstants[0] + pointing.x) / Unit.arcsec) + ", " + 
-			Util.f1.format((gismoScan.pointingConstants[6] + pointing.y) / Unit.arcsec) +
-			(" (az, el)");
-	}
 	
 	
 	@Override

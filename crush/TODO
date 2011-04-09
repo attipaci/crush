@@ -1,5 +1,8 @@
 >> Smoothing in deep does not preserve point source flux...
 
+	-- Messages (InfoMessage, ErrorMessage, WarningMessage, StatusMessage
+	   DebugMessage, Detail).
+
 	-- Redo FITS tables read row-by-row using a modelRow...
 	   (should be faster...)
 

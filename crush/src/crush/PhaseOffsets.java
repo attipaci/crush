@@ -151,6 +151,10 @@ public class PhaseOffsets {
 			final WeightedPoint point = temp[n++];
 			point.value = (value[channel.index] / Gk);
 			increment.weight += (point.weight = wG2);
+			
+			assert !Double.isNaN(point.value);
+			assert !Double.isInfinite(point.value);
+			
 		}
 		Statistics.smartMedian(temp, 0, n, 0.25, increment);
 	}

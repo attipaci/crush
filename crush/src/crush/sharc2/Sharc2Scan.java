@@ -309,6 +309,27 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		header.addValue("HUMIDITY", humidity, "Humidity (%).");
 	}
 	
+	@Override
+	public DataTable getPointingData() {
+		DataTable data = super.getPointingData();
+		Vector2D pointingOffset = getNativePointingIncrement(pointing);
+		
+		double sizeUnit = instrument.getDefaultSizeUnit();
+		String sizeName = instrument.getDefaultSizeName();
+		
+		data.add(new Datum("FAZO", (pointingOffset.x + fixedOffset.x) / sizeUnit, sizeName));
+		data.add(new Datum("FZAO", (pointingOffset.y - fixedOffset.y) / sizeUnit, sizeName));
+		
+		return data;
+	}
+	
+	@Override
+	public String getPointingString(Vector2D pointing) {	
+		return super.getPointingString(pointing) + "\n\n" +
+			"  FAZO --> " + Util.f1.format((pointing.x + fixedOffset.x) / Unit.arcsec) +
+			", FZAO --> " + Util.f1.format((pointing.y - fixedOffset.y) / Unit.arcsec);		
+	}
+	
 	public double getAmbientHumidity() {
 		return humidity;
 	}

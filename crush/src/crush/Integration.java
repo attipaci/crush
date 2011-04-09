@@ -566,13 +566,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		removeDrifts(instrument, size(), robust, quick);
 	}
 	
+	
 	public void removeDrifts(final ChannelGroup<?> channels, final int targetFrameResolution, final boolean robust, final boolean quick) {
 		//System.err.println("O >>> " + channels.size() + " > " + targetFrameResolution);
 		
 		int driftN = Math.min(size(), FFT.getPaddedSize(targetFrameResolution));
 		final int step = quick ? (int) Math.pow(driftN, 2.0/3.0) : 1;
 		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);
-		
 		
 		Dependents parms = getDependents("drifts");
 		
@@ -676,12 +676,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			}
 		}
 	}
-
+	
 	private synchronized void removeRobustDrifts(final ChannelGroup<?> group, final Dependents parms, final int fromt, int tot, final int step, final WeightedPoint[] buffer, final WeightedPoint[] aveOffset) {
 		tot = Math.min(tot, size());
 	
 		final WeightedPoint offset = new WeightedPoint();
-		
+			
 		for(final Channel channel : group) {		
 			int n = 0;
 			double sumw = 0.0;
@@ -2549,6 +2549,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		else instrument.getFormattedEntry(name, formatSpec);
 
 		
-		return "(n/a)";
+		return TableFormatter.NO_SUCH_DATA;
 	}
+	
 }

@@ -109,21 +109,21 @@ public class ChannelGroup<ChannelType extends Channel> extends ArrayList<Channel
 		
 	public ChannelGroup<ChannelType> discard(int flagPattern, int criterion) {
 		
-		for(int i=0; i < size(); i++) {
+		for(int i=size(); --i >= 0; ) {
 			Channel channel = get(i);
 			switch(criterion) {
 			case DISCARD_ANY_FLAG:
-				if(channel.isFlagged(flagPattern)) remove(i--); break; 
+				if(channel.isFlagged(flagPattern)) remove(i); break; 
 			case DISCARD_ALL_FLAGS:
-				if((channel.flag & flagPattern) == flagPattern) remove(i--); break; 
+				if((channel.flag & flagPattern) == flagPattern) remove(i); break; 
 			case DISCARD_MATCH_FLAGS:
-				if(channel.flag == flagPattern) remove(i--); break;
+				if(channel.flag == flagPattern) remove(i); break;
 			case KEEP_ANY_FLAG:
-				if(channel.isUnflagged(flagPattern)) remove(i--); break; 
+				if(channel.isUnflagged(flagPattern)) remove(i); break; 
 			case KEEP_ALL_FLAGS:
-				if((channel.flag & flagPattern) != flagPattern) remove(i--); break; 
+				if((channel.flag & flagPattern) != flagPattern) remove(i); break; 
 			case KEEP_MATCH_FLAGS:
-				if(channel.flag != flagPattern) remove(i--); break;
+				if(channel.flag != flagPattern) remove(i); break;
 			}	
 		}
 			

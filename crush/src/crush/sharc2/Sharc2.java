@@ -523,14 +523,7 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		out.close();
 	}
 
-	@Override
-	public String getPointingString(Scan<?,?> scan, Vector2D pointing) {
-		Vector2D fixed = ((Sharc2Scan) scan).fixedOffset; 
-		
-		return super.getPointingString(scan, pointing) + "\n\n" +
-			"  FAZO --> " + Util.f1.format((pointing.x + fixed.x) / Unit.arcsec) +
-			", FZAO --> " + Util.f1.format((pointing.y - fixed.y) / Unit.arcsec);		
-	}
+	
 	
 	public final static int pixels = 384;
 

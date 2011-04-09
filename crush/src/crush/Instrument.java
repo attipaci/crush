@@ -31,9 +31,6 @@ import java.text.*;
 
 import util.*;
 import util.astro.AstroTime;
-import util.astro.CelestialCoordinates;
-import util.astro.EquatorialCoordinates;
-import util.astro.HorizontalCoordinates;
 import util.data.Statistics;
 import util.data.TableEntries;
 import util.text.TableFormatter;
@@ -842,97 +839,7 @@ implements TableEntries {
 		data.put("Channel_Flags", flags);
 	}
 	
-	public void printPointing(Scan<?,?> scan) {
-		GaussianSource source = scan.pointing;
-
-		if(scan.sourceModel instanceof ScalarMap<?,?>) {
-			AstroMap map = ((ScalarMap<?,?>) scan.sourceModel).map;
-			System.out.println(source.pointingInfo(map));
-		}
-			
-		System.out.println(getPointingString(scan, getNativePointing(scan, scan.pointing)));
-	}
 	
-	public Vector2D getEquatorialPointing(Scan<?,?> scan, GaussianSource source) {
-		EquatorialCoordinates equatorial = null;
-		
-		if(source.coords instanceof EquatorialCoordinates) {
-			equatorial = (EquatorialCoordinates) source.coords;
-			if(!equatorial.epoch.equals(scan.equatorial.epoch)) equatorial.precess(scan.equatorial.epoch);
-		}
-		else {
-			equatorial = (EquatorialCoordinates) scan.equatorial.clone();
-			((CelestialCoordinates) source.coords).toEquatorial(equatorial);
-		}
-		
-		return equatorial.getOffsetFrom(scan.equatorial);
-	}
-	
-	public Vector2D getNativePointing(Scan<?,?> scan, GaussianSource source) {
-		Vector2D offset = getNativePointingIncrement(scan, source);
-		if(scan.pointingCorrection != null) offset.add(scan.pointingCorrection);
-		return offset;
-	}
-	
-	public Vector2D getNativePointingIncrement(Scan<?,?> scan, GaussianSource source) {
-		if(scan.instrument instanceof GroundBased) {
-			if(source.coords instanceof HorizontalCoordinates) return source.coords.getOffsetFrom(scan.horizontal);			
-			else {
-				Vector2D offset = getEquatorialPointing(scan, source);
-				// Rotate to Horizontal...
-				Vector2D from = (Vector2D) offset.clone();
-				((HorizontalFrame) scan.getFirstIntegration().getFirstFrame()).toHorizontal(from);
-				Vector2D to = (Vector2D) offset.clone();
-				((HorizontalFrame) scan.getLastIntegration().getLastFrame()).toHorizontal(to);
-				offset.x = 0.5 * (from.x + to.x);
-				offset.y = 0.5 * (from.y + to.y);
-				return offset;
-			}
-		}	
-		else if(source.coords instanceof EquatorialCoordinates) 
-			return source.coords.getOffsetFrom(scan.equatorial);
-		else {
-			EquatorialCoordinates sourceEq = ((CelestialCoordinates) source.coords).toEquatorial();
-			return sourceEq.getOffsetFrom(scan.equatorial);
-		}
-	}
- 
-	public String getPointingString(Scan<?,?> scan, Vector2D pointing) {		
-		// Print the native pointing offsets...
-		String text = "";
-			
-		text += "  Offset: ";
-		text += Util.f1.format(pointing.x / getDefaultSizeUnit()) + ", " + 
-			Util.f1.format(pointing.y / getDefaultSizeUnit()) + " " + getDefaultSizeName() +
-			" (" + (this instanceof GroundBased ? "az,el" : "ra,dec") + ")";
-		
-		// Also print Nasmyth offsets if applicable...
-		if(mount == Mount.LEFT_NASMYTH || mount == Mount.RIGHT_NASMYTH) {
-			text += "\n  Offset: ";
-		
-			Vector2D nasmyth = getNasmythOffset(scan, pointing);
-		
-			text += Util.f1.format(nasmyth.x / getDefaultSizeUnit()) + ", " + 
-				Util.f1.format(nasmyth.y / getDefaultSizeUnit()) + " " + getDefaultSizeName() +
-				" (nasmyth)";
-		}
-		
-		return text;
-	}	
-	
-	// Inverse rotation from Native to Nasmyth...
-	public Vector2D getNasmythOffset(Scan<?,?> scan, Vector2D offset) {
-		SphericalCoordinates coords = this instanceof GroundBased ? scan.horizontal : scan.equatorial;
-		double sinA = mount == Mount.LEFT_NASMYTH ? -coords.sinLat : coords.sinLat;
-		double cosA = coords.cosLat;
-		
-		// Inverse rotation from Native to Nasmyth...
-		Vector2D nasmyth = new Vector2D();
-		nasmyth.x = cosA * offset.x + sinA * offset.y;
-		nasmyth.y = cosA * offset.y - sinA * offset.x ;
-		
-		return nasmyth;
-	}
 	
 	public void editImageHeader(Cursor cursor) throws HeaderCardException {
 		cursor.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
@@ -991,7 +898,7 @@ implements TableEntries {
 		else if(name.equals("minFWHM")) return Util.defaultFormat(getMinBeamFWHM() / getDefaultSizeUnit(), f);
 		else if(name.equals("maxFWHM")) return Util.defaultFormat(getMaxBeamFWHM() / getDefaultSizeUnit(), f);
 		
-		return "(n/a)";
+		return TableFormatter.NO_SUCH_DATA;
 	}
 	
 	public final static int GAINS_SIGNED = 0;

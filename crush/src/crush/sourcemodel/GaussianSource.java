@@ -360,6 +360,29 @@ public class GaussianSource extends CircularRegion {
 		radius.weight *= 2.0 / (1.0 + SF0 * SF0);
 	}
 	
+	public DataTable getData(AstroMap map) {
+		DataTable data = new DataTable();
+		
+		double sizeUnit = map.instrument.getDefaultSizeUnit();
+		String sizeName = map.instrument.getDefaultSizeName();
+		double beamScaling = map.getInstrumentBeamArea() / map.getImageBeamArea();
+			
+		data.add(new Datum("peak", peak.value * beamScaling / map.unit.value, map.unit.name));
+		data.add(new Datum("dpeak", peak.rms() * beamScaling / map.unit.value, map.unit.name));
+		data.add(new Datum("peakS2N", peak.significance(), ""));
+		
+		DataPoint F = new DataPoint(getAdaptiveIntegral(map));
+		F.scale(map.getPixelArea() / map.getImageBeamArea());
+		
+		data.add(new Datum("int", F.value * beamScaling / map.unit.value, map.unit.name));
+		data.add(new Datum("dint", F.rms() * beamScaling / map.unit.value, map.unit.name));
+		data.add(new Datum("intS2N", F.significance(), ""));
+		
+		data.add(new Datum("FWHM", radius.value / sizeUnit, sizeName));
+		data.add(new Datum("dFWHM", radius.rms() / sizeUnit, sizeName));
+		
+		return data;
+	}
 	
 	public String pointingInfo(AstroMap map) {
 		double sizeUnit = map.instrument.getDefaultSizeUnit();
@@ -380,7 +403,6 @@ public class GaussianSource extends CircularRegion {
 				+ (radius.weight > 0.0 ? " +- " + Util.f1.format(radius.rms() / sizeUnit) : "")
 				+ " " + map.instrument.getDefaultSizeName();
 	
-		peak.scale(map.getImageBeamArea());
 		
 		return info;
 	}

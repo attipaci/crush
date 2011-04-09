@@ -287,7 +287,8 @@ public class CorrelatedSignal extends Signal {
 		final int nt = integration.size();
 		final int nT = mode.getSize(integration);
 		
-		dependents.clear(goodChannels, 0, integration.size());
+		// Clear the dependents in all mode channels...
+		dependents.clear(channels, 0, integration.size());
 		
 		final float[] G = mode.getGains();
 		final float[] dG = syncGains;
@@ -303,6 +304,13 @@ public class CorrelatedSignal extends Signal {
 			channel.tempWG = (float) (channel.weight) * channel.tempG;
 			channel.tempWG2 = channel.tempWG * channel.tempG;
 		}
+		
+		// Remove channels with zero gain/weight from goodChannels
+		for(int k=goodChannels.size(); --k >= 0; ) {
+			Channel channel = goodChannels.get(k);
+			if(channel.tempWG2 == 0.0) goodChannels.remove(k);
+		}
+		
 		
 		final WeightedPoint increment = new WeightedPoint();
 		
@@ -356,7 +364,7 @@ public class CorrelatedSignal extends Signal {
 		
 		generation++;
 		
-		// Apply the mode dependices...
+		// Apply the mode dependices only to the channels that have contributed...
 		dependents.apply(goodChannels, 0, integration.size());	
 		
 		// Calculate the point-source filtering by the decorrelation...
@@ -393,7 +401,10 @@ public class CorrelatedSignal extends Signal {
 				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
 					final WeightedPoint point = buffer[n++];
 					point.value = (exposure.data[channel.index] / channel.tempG);
-					increment.weight += (point.weight = (exposure.relativeWeight * channel.tempWG2));	
+					increment.weight += (point.weight = (exposure.relativeWeight * channel.tempWG2));
+					
+					assert !Double.isNaN(point.value);
+					assert !Double.isInfinite(point.value);
 				}
 			}
 		}
