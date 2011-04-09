@@ -150,4 +150,5 @@ public final class TableFormatter {
 		return null;
 	}
 	
+	public static String NO_SUCH_DATA = "(n/a)";
 }

@@ -104,6 +104,28 @@ public class EllipticalSource extends GaussianSource {
 	}
 	
 	@Override
+	public DataTable getData(AstroMap map) {
+		DataTable data = super.getData(map);
+		Range axes = getAxes();
+		
+		double da = radius.weight > 0.0 ? Math.hypot(radius.rms(), axes.max * elongation.rms()) : Double.NaN;
+		double db = radius.weight > 0.0 ? Math.hypot(radius.rms(), axes.min * elongation.rms()) : Double.NaN;
+		
+		double sizeUnit = map.instrument.getDefaultSizeUnit();
+		String sizeName = map.instrument.getDefaultSizeName();
+		
+		data.add(new Datum("a", axes.max / sizeUnit, sizeName));
+		data.add(new Datum("b", axes.min / sizeUnit, sizeName));
+		data.add(new Datum("angle", angle.value / sizeUnit, sizeName));
+		data.add(new Datum("dangle", angle.rms() / sizeUnit, sizeName));
+		
+		data.add(new Datum("da", da / sizeUnit, sizeName));
+		data.add(new Datum("db", db / sizeUnit, sizeName));
+		
+		return data;
+	}
+	
+	@Override
 	public String pointingInfo(AstroMap map) {
 		String info = super.pointingInfo(map);
 		Range axes = getAxes();

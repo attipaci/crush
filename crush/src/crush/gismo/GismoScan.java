@@ -344,6 +344,31 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		return scanID;
 	}
 	
+	@Override
+	public DataTable getPointingData() {
+		DataTable data = super.getPointingData();
+
+		Vector2D pointingOffset = getNativePointingIncrement(pointing);
+		
+		double sizeUnit = instrument.getDefaultSizeUnit();
+		String sizeName = instrument.getDefaultSizeName();
+		
+		data.add(new Datum("X", (pointingConstants[0] + pointingOffset.x) / sizeUnit, sizeName));
+		data.add(new Datum("Y", (pointingConstants[6] + pointingOffset.y) / sizeUnit, sizeName));
+		
+		return data;
+	}
+	
+	
+	@Override
+	public String getPointingString(Vector2D pointing) {	
+		return super.getPointingString(pointing) + "\n" +
+			"  Absolute: " + 
+			Util.f1.format((pointingConstants[0] + pointing.x) / Unit.arcsec) + ", " + 
+			Util.f1.format((pointingConstants[6] + pointing.y) / Unit.arcsec) + " arcsec (az, el)";
+	}
+	
+	
 	public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	
 }

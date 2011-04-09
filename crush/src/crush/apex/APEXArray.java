@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 import util.Unit;
-import util.Util;
 import util.Vector2D;
 import util.astro.EquatorialCoordinates;
 
@@ -203,13 +202,6 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 	@Override
 	public int maxPixels() {
 		return storeChannels;
-	}
-	
-	@Override
-	public String getPointingString(Scan<?,?> scan, Vector2D pointing) {
-		return super.getPointingString(scan, pointing) + "\n\n" +
-			"  >>> pcorr " + Util.f1.format(pointing.x / Unit.arcsec) + "," + Util.f1.format(pointing.y / Unit.arcsec);
-		
 	}
 	
 	@Override

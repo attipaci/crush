@@ -47,6 +47,8 @@ public abstract class Frame implements Cloneable {
 	public double dof = 1.0;
 	public double dependents = 0.0;
 	public float relativeWeight = 1.0F;
+	
+	// Some temporary fields to speed up some operations...
 	public float tempC, tempWC, tempWC2;
 	
 	public float[] data;

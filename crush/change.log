@@ -1,4 +1,8 @@
-	
+>> Better pointing support. Scan.getPointingData(), a dictionaty of pointing
+data. It can be used by instrument.getPointingString(), and for logging...
+'pnt.<value>'. 'src.<value>' for values of the Gaussian source.
+
+
 2.04-b3
 	
 	Overview
@@ -44,9 +48,14 @@
 	to use for deriving phases, if it is different from the defalt
 	estimator type set by 'estimator'. 
 
-	[FIX] {SHARC-2} Fixed triggered decorrelation issue. The first ieration
-	did not detect the trigger. This meant that chopper response was 
-	decorrelated once even for non-chopped observations. Neither was 
+	[NEW] The results of pointing reductions (via 'point') are now 
+	available for logging. The pointing information are accessible with
+	keywords starting with 'pnt.' while the fluxes and geometry have keys
+	that begin with 'src.'. See Section 2.7 of the README for details.
+
+	[FIX] {SHARC-2} Fixed triggered decorrelation issue. The first 
+	iteration did not detect the trigger. This meant that chopper response 
+	was decorrelated once even for non-chopped observations. Neither was 
 	'gains.span' trigger aware, which meant that the chopper response was
 	always decorrelated when the spanning option was set. 
 
@@ -69,6 +78,10 @@
 
 	[FIX] {PolKa} Non-destructive writing plus small optimizations. As such
 	polarization images can work with 'source.intermediates', if desired...
+
+	[FIX] small fix for dependent accounting of decorrelation. Now all 
+	channels in a correlated mode get their dependents cleared upon the
+	update of the correlated signal. This is the correct behavior.
 
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change
@@ -120,6 +133,12 @@
 
 	[CODE] Slight changes to weighted median calculation methods. No change
 	in functionality.
+
+	[CODE] Decorrelation od signal skips over channels with zero gains or
+	weights.
+
+	[CODE] Added some assertions in places where NaNs or Infs can be 
+	produced.  
 	
 	[COSMETIC] Decorrelation steps that do not flag channels by gain 
 	do not display a census of active channels unnecessarily...

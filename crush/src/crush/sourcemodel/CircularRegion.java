@@ -26,14 +26,15 @@ package crush.sourcemodel;
 
 import util.*;
 import util.data.DataPoint;
+import util.data.TableEntries;
 import util.text.AngleFormat;
+import util.text.TableFormatter;
 
 import java.text.*;
 import java.util.*;
 
-public class CircularRegion extends Region {
+public class CircularRegion extends Region implements TableEntries {
 	public SphericalCoordinates coords;
-	public Vector2D centerRMS;
 	public DataPoint radius;
 	
 	private SphericalGrid useGrid = null;
@@ -321,5 +322,15 @@ public class CircularRegion extends Region {
 	public final static int FORMAT_POINTING = 4; // TODO
 	public final static int FORMAT_DISPLAY = 5; // TODO
 	public final static int FORMAT_LONG = 6; // TODO
+
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat nf = TableFormatter.getNumberFormat(formatSpec);
+		
+		if(name.equals("r")) return nf.format(radius.value);
+		else if(name.equals("dr")) return nf.format(radius.rms());
+		if(name.equals("dr")) return nf.format(radius.rms());
+		else return TableFormatter.NO_SUCH_DATA;
+		
+	}
 }
 

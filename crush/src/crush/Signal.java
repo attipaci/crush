@@ -342,10 +342,13 @@ public class Signal implements Cloneable {
 			final int c = channelIndex[k];
 			final WeightedPoint increment = dG[k];
 			for(final Frame exposure : integration) if(exposure != null) 
-				if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0) {
+				if(exposure.tempWC2 > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)  {
 					final WeightedPoint point = gainData[n++];
 					point.value = (exposure.data[c] / exposure.tempC);
 					increment.weight += (point.weight = exposure.tempWC2);
+					
+					assert !Double.isNaN(point.value);
+					assert !Double.isInfinite(point.value);
 				}
 			Statistics.smartMedian(gainData, 0, n, 0.25, increment);
 		}
