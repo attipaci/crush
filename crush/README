@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 			  <kovacs[AT]astro.umn.edu>
 
-			  Last updated: 17 Mar 2011
+			  Last updated: 9 Apr 2011
 
 
 
@@ -1482,6 +1482,18 @@ options on the console.
 
 	PAd		Mean parallactic angle in degrees.
 
+	pnt.dAZ		Azymuth pointing offset (if available).
+
+	pnt.dDEC	Pointing offset in the declination dir (if available).
+	
+	pnt.dEL		Elevation pointing offset (if available).
+
+	pnt.dRA		Pointing offset in the RA direction (if available).
+
+	pnt.dNasX	Pointing offset in the Nasmyth X dir (if available).
+
+	pnt.dNasY	Pointing offset in the Nasmyth Y dir (if available).
+
 	project		Project name (if defined)
 
 	ptfilter	The point-source flux filtering throughput of the 
@@ -1509,7 +1521,32 @@ options on the console.
 
 	serial		Serial number of the scan.
 
-	sizeunit	The size unit for measuring resolutions. E.g. 'arcsec'. 
+	sizeunit	Size unit for measuring resolutions. E.g. 'arcsec'. 
+
+	src.da		Uncertainty of the minor axis (arcsec).
+	
+	src.dangle	Uncertainty of the orientation (deg).
+
+	src.db		Uncertainty of the major axis (deg).
+
+	src.dFWHM	Uncertainty of the source FWHM (arcsec).
+
+	src.dint	Uncertainty of the integrated source flux (Jy). 
+
+	src.dpeak	Uncertainty of the peah source flux (Jy/beam).
+
+	src.a		Major axis (arcsec) of the source ellipse.
+
+	src.angle	Orientation of the source ellipse (deg).
+	
+	src.b		Minor axis (arcsec) of the source ellipse.
+
+	src.FWHM	Source FWHM (arcsec).
+
+	src.int		Integrated source flux (Jy) insize and adaptive
+			aperture.
+
+	src.peak	Peak source flux (Jy/beam).
 
 	tau		The in-band, line-of-sight opacity value.
 
@@ -1523,7 +1560,115 @@ options on the console.
 	zenithtau	The in-band opacity at zenith.
 
 
+
+   APEX specific log entries
+   -------------------------
+
+	chop?		Whether wobbler (chopper) was used.
+
+	dir		Scan direction.
+
+	geom		Geometry of observation.
+
+	planet?		Whether observing a moving object (e.g. planet).
+
+	obsmode		Observing mode.
+
+	obstype		Type of observation.
+
+	ref		Reference pixel number.
+
+	rot		Rotation angle (deg).
+
+
+   GISMO specific log entries
+   --------------------------
+
+        focDY           Focus Y offset (mm).
+
+        focDZ           Focus Z offset (mm).
+
+        focX            Focus X (mm).
+
+        focY            Focus Y (mm).
+
+        focZ            Focus Z (mm).
+
+	nasX		Nasmyth X position of instrument.
+
+	nasY		Nasmyth Y position of instrument.
+
+	obstype		Type of observation.
+
+	pnt.X		Aggregate azymuth pointing offset.
 	
+	pnt.Y		Aggregate elevation pointing offset.
+	
+	rot		Rotation of the instrument (deg).
+
+
+   LABOCA specific log entries
+   ---------------------------
+
+	rmsHe3		RMS He3 temperature fluctutations (mK).
+	
+   
+   PolKa specific log entries
+   --------------------------
+
+	wpfreq		Waveplate frequency (Hz).
+
+	wpjitter	Fractional jitter of the waveplate.
+
+
+   SHARC-2 specific log entries
+   ----------------------------
+
+	dsos?		Whether DSOS was used.
+
+	filter		Filter setting.
+
+	focDY		Focus Y offset (mm).
+
+	focDZ		Focus Z offset (mm).
+
+	focmode		Focum mode.
+
+	focX		Focus X (mm).
+
+	focY		Focus Y (mm).
+
+	focZ		Focus Z (mm).
+
+	load		The excess optical load in K (calculated or assumed).
+
+	pnt.FAZO	FAZO pointing offset.
+	
+	pnt.FZAO	FZAO pointing offset.
+
+	rot		Rotator angle (deg).
+
+	rot0		Zero rotation angle (deg).
+
+	rotmode		Rotator mode.
+
+	rotoff		Rotator offset (deg).
+
+
+   SCUBA-2 specific log entries
+   ----------------------------
+
+	filter		The observing wavelength.		
+
+	focX		Focus X.
+
+	focY		Focus Y.
+	
+	focZ		Focus Z.
+
+
+
+
 
 #####################################################################
 3. Advanced Configuration

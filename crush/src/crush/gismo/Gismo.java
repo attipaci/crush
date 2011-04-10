@@ -25,11 +25,13 @@
 package crush.gismo;
 
 import java.io.*;
+import java.text.NumberFormat;
 import java.util.*;
 
 import crush.*;
 import crush.array.*;
 import util.*;
+import util.text.TableFormatter;
 import nom.tam.fits.*;
 
 public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
@@ -187,31 +189,14 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
-		
-		// Platform
-		/*
-		String platform = header.getStringValue("PLATFORM");
-		if(platform == null) platform = "Cassegrain";
-		
-		isNasmyth = platform.equalsIgnoreCase("NASMYTH");
-		
-		System.err.println(" " + (isNasmyth ? "Nasmyth" : "Cassegrain") + " mount assumed.");
-		*/
-		
-		//rotatorAngle = header.getDoubleValue("ROTATOR", 0.0) * Unit.deg;
-		//rotatorOffset = header.getDoubleValue("ROTOFFST") * Unit.deg;
-		//rotatorMode = header.getStringValue("ROTMODE");
-		
-		//rotatorZeroAngle = header.getDoubleValue("ROTZERO") * Unit.deg;
-		//if(rotatorMode == null) rotatorMode = "Unknown";
-		
+			
 		// Focus
-		focusX =  header.getDoubleValue("FOCUS_X");
-		focusY =  header.getDoubleValue("FOCUS_Y");
-		focusZ =  header.getDoubleValue("FOCUS_Z");
+		focusX =  header.getDoubleValue("FOCUS_X") * Unit.mm;
+		focusY =  header.getDoubleValue("FOCUS_Y") * Unit.mm;
+		focusZ =  header.getDoubleValue("FOCUS_Z") * Unit.mm;
 
-		focusYOffset =  header.getDoubleValue("FOCUS_YO");
-		focusZOffset =  header.getDoubleValue("FOCUS_ZO");
+		focusYOffset =  header.getDoubleValue("FOCUS_YO") * Unit.mm;
+		focusZOffset =  header.getDoubleValue("FOCUS_ZO") * Unit.mm;
 
 		focusMode = header.getStringValue("FOCMODE");
 		if(focusMode == null) focusMode = "Unknown";
@@ -221,17 +206,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 				header.getDoubleValue("RXVERT", Double.NaN) + header.getDoubleValue("RXVERTCO", 0.0)
 				);
 		
-		/*
-		System.err.println(" Focus [" + focusMode + "]"
-				+ " X=" + Util.f2.format(focusX)
-				+ " Y=" + Util.f2.format(focusY)
-				+ " Z=" + Util.f2.format(focusZ)
-				+ " YOff=" + Util.f2.format(focusYOffset) 
-				+ " ZOff=" + Util.f2.format(focusZOffset)
-		);
-		*/	
-		
-		System.err.println(" Focus: dZ = " + Util.f2.format(focusZOffset) + " mm.");
+		System.err.println(" Focus: dZ = " + Util.f2.format(focusZOffset / Unit.mm) + " mm.");
 	}
 	
 	protected void parseHardwareHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
@@ -290,4 +265,22 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		
 		super.validate(scans);
 	}
+	
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+	
+		if(name.equals("focX")) return Util.defaultFormat(focusX / Unit.mm, f);
+		else if(name.equals("focY")) return Util.defaultFormat(focusY / Unit.mm, f);
+		else if(name.equals("focZ")) return Util.defaultFormat(focusZ / Unit.mm, f);
+		else if(name.equals("focDY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
+		else if(name.equals("focDZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
+		else if(name.equals("nasX")) return Util.defaultFormat(nasmythOffset.x / Unit.arcsec, f);
+		else if(name.equals("nasY")) return Util.defaultFormat(nasmythOffset.y / Unit.arcsec, f);
+		else if(name.equals("rot")) return Util.defaultFormat(rotation / Unit.deg, f);
+		else return super.getFormattedEntry(name, formatSpec);
+	}
+	
+	
 }

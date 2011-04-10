@@ -28,9 +28,11 @@ import crush.*;
 import crush.apex.*;
 
 import java.io.*;
+import java.text.NumberFormat;
 import java.util.*;
 
 import util.*;
+import util.text.TableFormatter;
 
 import nom.tam.fits.*;
 
@@ -227,5 +229,13 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 	@Override
 	public LabocaFrame getFrameInstance() {
 		return new LabocaFrame((LabocaScan) scan);
+	}
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+	
+		if(name.equals("rmsHe3")) return Util.defaultFormat(rmsHe3 / Unit.mK, f);
+		else return super.getFormattedEntry(name, formatSpec);
 	}
 }

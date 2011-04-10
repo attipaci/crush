@@ -414,4 +414,12 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		super.editScanHeader(header);
 	}
 	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		if(name.equals("obsmode")) return obsMode;
+		else if(name.equals("obspattern")) return scanPattern;
+		else return super.getFormattedEntry(name, formatSpec);
+	}
+
+	
 }

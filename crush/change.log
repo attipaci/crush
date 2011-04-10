@@ -1,6 +1,5 @@
->> Better pointing support. Scan.getPointingData(), a dictionaty of pointing
-data. It can be used by instrument.getPointingString(), and for logging...
-'pnt.<value>'. 'src.<value>' for values of the Gaussian source.
+>> Add instrument log capabilities to README
+
 
 
 2.04-b3
@@ -52,6 +51,10 @@ data. It can be used by instrument.getPointingString(), and for logging...
 	available for logging. The pointing information are accessible with
 	keywords starting with 'pnt.' while the fluxes and geometry have keys
 	that begin with 'src.'. See Section 2.7 of the README for details.
+
+	[NEW] Additional instrument-dependent logging capabilities. Check 
+	Section 2.7 of the README for details on what instrument-specific
+	qunatities are available.
 
 	[FIX] {SHARC-2} Fixed triggered decorrelation issue. The first 
 	iteration did not detect the trigger. This meant that chopper response 
