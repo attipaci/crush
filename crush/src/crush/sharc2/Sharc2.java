@@ -29,11 +29,13 @@ import crush.array.*;
 import nom.tam.fits.*;
 
 import java.io.*;
+import java.text.NumberFormat;
 import java.util.*;
 
 import util.*;
 import util.data.Statistics;
 import util.data.WeightedPoint;
+import util.text.TableFormatter;
 
 public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	/**
@@ -556,7 +558,25 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		scan.instrument.options.parse("point");		
 	}
 	
-
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+	
+		if(name.equals("dsos?")) return Boolean.toString(dsosUsed);
+		else if(name.equals("focY")) return Util.defaultFormat(focusX / Unit.mm, f);
+		else if(name.equals("focY")) return Util.defaultFormat(focusY / Unit.mm, f);
+		else if(name.equals("focZ")) return Util.defaultFormat(focusZ / Unit.mm, f);
+		else if(name.equals("focDY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
+		else if(name.equals("focDZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
+		else if(name.equals("focmode")) return focusMode;
+		else if(name.equals("rot")) return Util.defaultFormat(rotatorAngle / Unit.deg, f);
+		else if(name.equals("rot0")) return Util.defaultFormat(rotatorZeroAngle / Unit.deg, f);
+		else if(name.equals("rotoff")) return Util.defaultFormat(rotatorOffset / Unit.deg, f);
+		else if(name.equals("rotMode")) return rotatorMode;
+		else if(name.equals("load")) return Util.defaultFormat(excessLoad / Unit.K, f);
+		else if(name.equals("filter")) return filterName;
+		else return super.getFormattedEntry(name, formatSpec);
+	}
 
 	
 }

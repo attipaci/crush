@@ -16,11 +16,13 @@
 package crush.scuba2;
 
 import java.io.*;
+import java.text.NumberFormat;
 import java.util.*;
 
 import crush.*;
 import crush.array.*;
 import util.*;
+import util.text.TableFormatter;
 
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -30,7 +32,7 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 	 * 
 	 */
 	private static final long serialVersionUID = 3009881856872575936L;
-	private static final int version = 2;
+	private static final int version = 3;
 	
 	// Array is 32x40 (rows x cols)
 	double focusXOffset, focusYOffset, focusZOffset;
@@ -261,4 +263,16 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 		cursor.add(new HeaderCard("SC2VER", version, "CRUSH-SCUBA2 Plugin Modules Version."));
 		cursor.add(new HeaderCard("SC2UID", serialVersionUID, "CRUSH-SCUBA2 Modules ID."));
 	}
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+	
+		if(name.equals("filter")) return filter;
+		else if(name.equals("focX")) return Util.defaultFormat(focusXOffset, f);
+		else if(name.equals("focY")) return Util.defaultFormat(focusYOffset, f);
+		else if(name.equals("focZ")) return Util.defaultFormat(focusZOffset, f);
+		else return super.getFormattedEntry(name, formatSpec);
+	}
+	
 }

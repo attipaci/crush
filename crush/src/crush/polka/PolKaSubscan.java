@@ -30,7 +30,9 @@ import crush.polarization.*;
 import crush.laboca.*;
 import util.*;
 import util.data.FFT;
+import util.text.TableFormatter;
 
+import java.text.NumberFormat;
 import java.util.*;
 
 public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
@@ -182,7 +184,14 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 		return new PolKaFrame((PolKaScan) scan);
 	}
 	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 	
+		if(name.equals("wpfreq")) return Util.defaultFormat(wavePlateFrequency / Unit.Hz, f);
+		else if(name.equals("wpjitter")) return Util.defaultFormat(jitter, f);
+		else return super.getFormattedEntry(name, formatSpec);
+	}
 
 
 }

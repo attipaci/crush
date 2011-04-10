@@ -368,6 +368,11 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			Util.f1.format((pointingConstants[6] + pointing.y) / Unit.arcsec) + " arcsec (az, el)";
 	}
 	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		if(name.equals("obstype")) return obsType;
+		else return super.getFormattedEntry(name, formatSpec);
+	}
 	
 	public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	

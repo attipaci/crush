@@ -30,12 +30,15 @@ import crush.array.SimplePixel;
 import nom.tam.fits.*;
 
 import java.io.*;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Vector;
 
 import util.Unit;
+import util.Util;
 import util.Vector2D;
 import util.astro.EquatorialCoordinates;
+import util.text.TableFormatter;
 
 public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray<ChannelType> implements GroundBased {
 	/**
@@ -215,6 +218,16 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 		for(APEXPixel p2 : getObservingChannels()) if(p2 != pixel) if(p2.distanceTo(pixel) <= radius) neighbours.add(p2);
 		return neighbours;		
 	}
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+	
+		if(name.equals("ref")) return Integer.toString(referencePixel.dataIndex);
+		else if(name.equals("rot")) return Util.defaultFormat(rotation / Unit.deg, f);
+		else return super.getFormattedEntry(name, formatSpec);
+	}
+	
 	
 	
 }
