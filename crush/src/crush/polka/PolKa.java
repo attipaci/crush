@@ -32,6 +32,10 @@ import crush.polarization.*;
 
 import java.io.*;
 
+import nom.tam.fits.BinaryTableHDU;
+import nom.tam.fits.FitsException;
+import nom.tam.fits.HeaderCardException;
+
 public class PolKa extends Laboca {
 	/**
 	 * 
@@ -89,8 +93,38 @@ public class PolKa extends Laboca {
 				System.err.println("   Waveplate frequencies from channel " + frequencyChannel.dataIndex);
 		}
 			
-		isOrthogonal = hasOption("ortho");
-		System.err.println("   Analyzer grid orientation is " + (isOrthogonal ? "V" : "H"));
+		
+	}
+	
+	@Override
+	public void readPar(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {
+		super.readPar(hdu);
+		
+		int iAnalyzer = hdu.findColumn("POLTY");
+		if(iAnalyzer > 0) {
+			char type = ((String) hdu.getRow(0)[iAnalyzer]).charAt(0);
+			options.remove("ortho");
+			
+			switch(type) {
+			case 'N' : 
+				System.err.println();
+				System.err.println("WARNING! It appears you are trying to reduce total-power data in");
+				System.err.println("         polarization mode. You should use 'laboca' as your instrument");
+				System.err.println("         instead of 'polka'. Exiting.");
+				System.err.println();
+				System.exit(1);
+				break;
+			case 'V' : 
+				isOrthogonal = true; break;
+			case 'H' :
+				isOrthogonal = false; break;
+			default :
+				isOrthogonal = hasOption("ortho");
+			}
+		}
+		else isOrthogonal = hasOption("ortho");
+		
+		System.err.println(" Analyzer grid orientation is " + (isOrthogonal ? "V" : "H"));
 	}
 	
 	@Override

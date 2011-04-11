@@ -53,8 +53,8 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 	}
 	
 	@Override
-	public void create(Collection<? extends Scan<?,?>> collection) {
-		super.create(collection);
+	public void createFrom(Collection<? extends Scan<?,?>> collection) {
+		super.createFrom(collection);
 		ScanType firstScan = scans.get(0);
 		sourceName = firstScan.sourceName;
 	}

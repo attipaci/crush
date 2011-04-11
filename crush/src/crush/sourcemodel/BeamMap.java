@@ -52,7 +52,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void create(Collection<? extends Scan<?,?>> collection) {
+	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		// Set all pixel positions to zero...
 		for(Scan<?,?> scan : collection) for(Integration<?,?> integration : scan) 
 			for(Pixel pixel : integration.instrument.getMappingPixels()) {
@@ -60,11 +60,10 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 				pixel.setIndependent(true);
 			}
 		
-		super.create(collection);
+		super.createFrom(collection);
 		
 		template = new ScalarMap<InstrumentType, ScanType>(instrument);
-		template.options = options;
-		template.create(collection);
+		template.createFrom(collection);
 		
 		pixelMap = new ScalarMap[instrument.maxPixels() + 1];
 	}

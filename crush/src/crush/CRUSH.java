@@ -36,11 +36,11 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.04-b3
+ * @version 2.04-b4
  * 
  */
 public class CRUSH extends Configurator {
-	public static String version = "2.04-rc1";
+	public static String version = "2.04-b4";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -283,8 +283,7 @@ public class CRUSH extends Configurator {
 		
 		if(source != null) {
 			source.commandLine = commandLine;
-			source.options = this;
-			source.create(scans);
+			source.createFrom(scans);
 		}
 		
 		if(isConfigured("rounds")) rounds = get("rounds").getInt();

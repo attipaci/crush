@@ -91,7 +91,6 @@ implements TableEntries {
 	}
 	
 	// TODO check for incompatible scans
-	// E.g. scans vs chopped, different wavelengths, shutter etc...
 	public void validate(Vector<Scan<?,?>> scans) throws Exception {
 		
 	}
@@ -103,7 +102,7 @@ implements TableEntries {
 		for(Channel channel : copy) channel.instrument = copy;
 		
 		// TODO this needs to be done properly???
-		copy.options = options.copy();
+		if(options != null) copy.options = options.copy();
 		copy.groups = new Hashtable<String, ChannelGroup<ChannelType>>();
 		copy.divisions = new Hashtable<String, ChannelDivision<ChannelType>>();
 		copy.modalities = new Hashtable<String, Modality<?>>();

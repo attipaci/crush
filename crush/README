@@ -1523,6 +1523,12 @@ options on the console.
 
 	sizeunit	Size unit for measuring resolutions. E.g. 'arcsec'. 
 
+	src.a		Major axis (arcsec) of the source ellipse.
+
+	src.angle	Orientation of the source ellipse (deg).
+	
+	src.b		Minor axis (arcsec) of the source ellipse.
+
 	src.da		Uncertainty of the minor axis (arcsec).
 	
 	src.dangle	Uncertainty of the orientation (deg).
@@ -1534,12 +1540,6 @@ options on the console.
 	src.dint	Uncertainty of the integrated source flux (Jy). 
 
 	src.dpeak	Uncertainty of the peah source flux (Jy/beam).
-
-	src.a		Major axis (arcsec) of the source ellipse.
-
-	src.angle	Orientation of the source ellipse (deg).
-	
-	src.b		Minor axis (arcsec) of the source ellipse.
 
 	src.FWHM	Source FWHM (arcsec).
 
@@ -1625,6 +1625,10 @@ options on the console.
    ----------------------------
 
 	dsos?		Whether DSOS was used.
+
+	FAZO		FAZO during observation (arcsec).
+
+	FZAO		FZAO during observation (arcsec).
 
 	filter		Filter setting.
 

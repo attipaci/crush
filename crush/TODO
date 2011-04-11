@@ -1,17 +1,21 @@
 >> Smoothing in deep does not preserve point source flux...
 
+	-- Quotes in format specifications
+
 	-- Messages (InfoMessage, ErrorMessage, WarningMessage, StatusMessage
 	   DebugMessage, Detail).
 
 	-- Redo FITS tables read row-by-row using a modelRow...
-	   (should be faster...)
+	   (should be faster, but requires Java 6...)
 
 !!	-- Better gain renormalization...
 		-- either propagate to dependent modes
-		-- or just renormalize for writing (cleaner!) 
+		-- or just renormalize for writing (cleaner!)
+ 
 	-- Updater (for tau.dat and calibration.dat files + pixeldata.cfg)
 	        update.auto (check once daily)
         	'<instrument>/lastupdate' (times and versions)
+
 	-- 'correlated.*.uniform' to set uniform gains?
    	   (only at the beginning or set every time?)
 	-- Dynamic download/update for instrument data...

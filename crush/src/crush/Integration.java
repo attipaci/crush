@@ -102,22 +102,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		// TODO redo it safely, s.t. existing reduction steps copy over as well.
 		clone.dependents = new Hashtable<String, Dependents>(); 
 		clone.signals = new Hashtable<Mode, Signal>();
+
 		return clone;
 	}
-	
-	@SuppressWarnings("unchecked")
-	public Integration<InstrumentType, FrameType> copy() {
-		Integration<InstrumentType, FrameType> copy = (Integration<InstrumentType, FrameType>) clone();
-		copy.instrument = (InstrumentType) instrument.copy();
-		copy.comments = new String(comments);
-	
-		if(sourceSyncGain != null) {
-			copy.sourceSyncGain = new double[sourceSyncGain.length];
-			System.arraycopy(sourceSyncGain, 0, copy.sourceSyncGain, 0, sourceSyncGain.length);	
-		}
-		
-		return copy;
-	}
+
 	
 	public int compareTo(Integration<InstrumentType, FrameType> other) {
 		if(integrationNo == other.integrationNo) return 0;
@@ -2085,28 +2073,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		System.err.println("Written Power spectra to " + fileName);
 
 	}
-	
-	public void log(PrintStream out) throws IOException {
-		if(instrument.mappingChannels == 0 || Double.isNaN(scan.weight)) out.print("#");
-
-		out.print(scan.getID() + " " + getID());
-		out.print("\t" + Util.f4.format(getMJD()));
-		out.print("\t" + instrument.mappingChannels);
-		out.print("\t" + Util.e3.format(nefd));
-		out.print("\t" + Util.e3.format(scan.weight));
-		out.print("\t" + Util.f3.format(get(0).transmission));
-		//out.print("\t" + Util.e3.format(rmsHe3));
-
-		out.println();
-	}
-	
-	public void writeLog() throws IOException {
-		PrintStream out = new PrintStream(new FileOutputStream(CRUSH.workPath + File.separator + "scans.log", true));
-		log(out);
-		out.println("#");
-		out.flush();
-		out.close();
-	}
 
 
 	public void writeCovariances() {
@@ -2149,12 +2115,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		}
 
 		if(hasOption("write.covar")) writeCovariances();
-
-		if(hasOption("log")) {
-			try { writeLog(); }
-			catch(Exception e) { e.printStackTrace(); }
-		}
-	
 			
 		if(hasOption("write.ascii")) {
 			try { writeASCIITimeStream(); }

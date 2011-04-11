@@ -365,6 +365,9 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 				option.get("format").getValue() : 
 				"date(yyyy-MM-dd)  id\tobject\tobsmins(f1)\tAZd(f1) ELd(f1)\tRAh(f1) DECd(f1)";
 		
+		// Allow literal '\t' to represent a tab, like in C or Java 
+		format = format.replaceAll("\\t", "\t");
+				
 		int conflictPolicy = LogFile.CONFLICT_DEFAULT;
 		if(option.isConfigured("conflict")) {
 			String policy = option.get("conflict").getValue().toLowerCase();
@@ -493,15 +496,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		return scans;
 	}
 	
-	// TODO This assumes that channels gains are in sync among integrations from the beginning...
-	// Perhaps it would be better to make sure it works regardless...
-	
-	// TODO 
-	// Mode.updateGains(Integration) --> Integration.updateGains(Mode)
-	// Mode.decorrelate(Integrayion) --> Intergation.updateSignal(Mode)
-	// Mode.flagGains(...)			 --> Modality.flagGains(...)?
-	
-	
+
 	public synchronized void updateGains(final String modalityName) {		
 		boolean isRobust = false;
 		if(!hasOption("gains")) return;
@@ -563,7 +558,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 	
 	public String getID() { return Integer.toString(serialNo); }
 
-	public DataTable getPointingData() {
+	public DataTable getPointingData() throws IllegalStateException {
+		if(pointing == null) throw new IllegalStateException("No pointing data for scan " + getID());
 		Vector2D pointingOffset = getNativePointingIncrement(pointing);
 		
 		DataTable data = new DataTable();

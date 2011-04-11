@@ -105,8 +105,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		}
 	}
 	
-	public void printEquivalentTaus(double value) {
-		
+	public void printEquivalentTaus(double value) {	
 		System.err.println("   --->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz", value))
 				+ ", tau(350um):" + Util.f3.format(getTau("350um", value))
@@ -177,6 +176,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 						System.err.println("Falling back to '" + source + "'.");
 						instrument.options.process("tau", source);
 						setTau();
+						return;
 					}
 					else throw e;				
 				}

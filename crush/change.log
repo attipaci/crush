@@ -2,7 +2,7 @@
 
 
 
-2.04-b3
+2.04-b4
 	
 	Overview
 	=====================================================================
@@ -23,6 +23,12 @@
 	[BUG] Fixed bug in applying an a-priori source model via the
 	'source.model' key. The problem was with the coordinate transformations
 	when a nontrivial transformation matrix was defined.
+
+	[BUG] {PolKa} Instrument object name had a wrong case letter in the
+	specification file in the 'instruments' sub-directory. Fixed.
+
+	[BUG] {PolKa} Fatal error on instrument initialization fixed. It was
+	due to a null options field to the source model.
 
 	[NEW] {APEX} Automatic pointing scan detection. Reduction will suggest
 	pointing offsets for standalone pointing scans. However, no automatic
@@ -86,6 +92,8 @@
 	channels in a correlated mode get their dependents cleared upon the
 	update of the correlated signal. This is the correct behavior.
 
+	[FIX] Empty maps are not written but skipped as intended.
+
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change
 	decreases the reliance on an up-to-date pixel data file for accurate
@@ -142,7 +150,33 @@
 
 	[CODE] Added some assertions in places where NaNs or Infs can be 
 	produced.  
+
+	[CODE] Disabled old subscan logging code. Its function has been
+	superceded by a much more versatile logging capability.
 	
+	[CODE] Log formats now accept C-style '\t' to signify a tab in the
+	format specification string.
+
+	[CODE] Chopper state is now copy safe (i.e. not sharing the same 
+	object after copy.
+
+	[CODE] Removed copy() from Integrations. There should be no need to
+	duplicate data, and the depndent field classes can be very troublesome
+	for copying over properly. It's safest to not have this feature.
+
+	[CODE] SourceModel class no longer retains a local reference of the
+	options. Rather it relies on the options field of its instrument.
+	This is more robust.
+
+	[COSMETIC] {PolKa} The detailed information is shown only for the
+	unpolarized power map, while other maps are written more silently. 
+
+	[COSMETIC] {LABOCA} Now reports line-of-sight tau and equivalent PWV
+	when setting zenith tau (manually or from skydip table).
+
+	[COSMETIC] {SHARC-2} Duplicate reporting of 'direct' tau values when
+	falling back on MaiTau is fixed.
+
 	[COSMETIC] Decorrelation steps that do not flag channels by gain 
 	do not display a census of active channels unnecessarily...
 
