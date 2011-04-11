@@ -66,8 +66,8 @@ extends SourceModel<InstrumentType, ScanType> {
 	}
 	
 	@Override
-	public void create(Collection<? extends Scan<?,?>> collection) {
-		super.create(collection);
+	public void createFrom(Collection<? extends Scan<?,?>> collection) {
+		super.createFrom(collection);
 		
 		System.out.print(" Initializing Source Map. ");	
 		

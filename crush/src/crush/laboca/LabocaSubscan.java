@@ -54,7 +54,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 	@Override
 	public void validate() {	
 		super.validate();
-		
+			
 		if(!isProper) return;
 		
 		if(hasOption("he3")) {
@@ -77,6 +77,16 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 			}
 		}
 		
+		
+	}
+	
+	@Override
+	public void setZenithTau(double value) {	
+		super.setZenithTau(value);
+		System.err.println("   --->"
+				+ " tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat)
+				+ ", PWV:" + Util.f2.format(getTau("pwv", zenithTau)) + "mm"
+		);		
 	}
 	
 	public void temperatureCorrect() {

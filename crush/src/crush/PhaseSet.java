@@ -39,6 +39,7 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 	Dependents dependents;
 	int generation = 0;
 	
+	
 	public PhaseSet(Integration<?,?> integration) {
 		this.integration = integration;	
 		dependents = new Dependents(integration, "phases");

@@ -86,8 +86,8 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	}
 
 	@Override
-	public void create(Collection<? extends Scan<?,?>> collection) {
-		super.create(collection);
+	public void createFrom(Collection<? extends Scan<?,?>> collection) {
+		super.createFrom(collection);
 		
 		map = new AstroMap();
 		
@@ -616,9 +616,10 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		else map.fileName = path + File.separator + getDefaultCoreName() + idExt + ".fits";
 		
 		if(!isValid) {
-			System.err.println("Source" + idExt + " is empty. Skipping");
+			System.err.println(" WARNING! Source" + idExt + " is empty. Skipping");
 			File file = new File(map.fileName);
 			if(file.exists()) file.delete();
+			return;
 		}
 		
 		// Re-level and weight map, unless 'extended' in other than 'deep'.
@@ -627,7 +628,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 			map.weight(true);
 		}
 
-		map.info();
+		if(info) map.info();
 		map.write(); 
 	}
 

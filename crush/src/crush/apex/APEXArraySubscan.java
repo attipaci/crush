@@ -51,17 +51,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		super(parent);
 	}
 	
-	@Override
-	public Integration<InstrumentType, FrameType> copy() {
-		APEXArraySubscan<InstrumentType, FrameType> copy = (APEXArraySubscan<InstrumentType, FrameType>) super.copy();
-		
-		if(tempPhase != null) {
-			copy.tempPhase = new WeightedPoint[tempPhase.length];
-			for(int i=tempPhase.length; --i >= 0; ) tempPhase[i] = new WeightedPoint();
-		}
-		
-		return copy;		
-	}
 	
 	public void markChopped() {
 		if(nodPhase == 0) 

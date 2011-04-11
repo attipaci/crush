@@ -59,8 +59,8 @@ public class SkyDip<InstrumentType extends Instrument<?>, ScanType extends Scan<
 	}
 	
 	@Override
-	public void create(Collection<? extends Scan<?,?>> collection) {
-		super.create(collection);
+	public void createFrom(Collection<? extends Scan<?,?>> collection) {
+		super.createFrom(collection);
 		
 		resolution = hasOption("grid") ? option("grid").getDouble() * Unit.arcsec : 0.25 * Unit.deg;
 		int bins = (int) Math.ceil(0.5 * Math.PI / resolution);

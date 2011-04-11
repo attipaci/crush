@@ -40,19 +40,20 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	ScalarMap<InstrumentType, ScanType> N,Q,U;
 	
 	public PolarMap(InstrumentType instrument) {
-		super(instrument);
+		super(instrument);	
 	}
-	
-	public ScalarMap<InstrumentType, ScanType> createMap() {
+
+	public ScalarMap<InstrumentType, ScanType> getMapInstance() {
+		
 		return new ScalarMap<InstrumentType, ScanType>(instrument);
 	}
 	
 	@Override
-	public void create(Collection<? extends Scan<?, ?>> scans) {
-		super.create(scans);
+	public void createFrom(Collection<? extends Scan<?, ?>> scans) {
+		super.createFrom(scans);
 		
-		N = createMap();
-		N.create(scans);
+		N = getMapInstance();
+		N.createFrom(scans);
 		N.signalMode = PolarModulation.N;
 		N.isLevelled = true;
 		N.id = "N";
@@ -164,10 +165,11 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		}
 	}
 
-	
 	public ScalarMap<InstrumentType, ScanType> getI() {
-		final ScalarMap<InstrumentType, ScanType> P = getP();
-		
+		return getI(getP());
+	}
+	
+	public ScalarMap<InstrumentType, ScanType> getI(ScalarMap<InstrumentType, ScanType> P) {	
 		final AstroMap p = P.map;
 		final AstroMap n = N.map;
 		
@@ -214,11 +216,12 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	
 	@Override
 	public void write(String path) throws Exception {
-		N.write(path);
-		Q.write(path);
-		U.write(path);
-		getI().write(path);
-		getP().write(path);			
+		N.write(path, true);
+		Q.write(path, false);
+		U.write(path, false);
+		ScalarMap<InstrumentType, ScanType> P = getP();
+		P.write(path, false);	
+		getI(P).write(path, false);	
 	}
 
 	@Override

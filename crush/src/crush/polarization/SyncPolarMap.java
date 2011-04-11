@@ -38,7 +38,7 @@ extends PolarMap<InstrumentType, ScanType> {
 	}
 
 	@Override
-	public ScalarMap<InstrumentType, ScanType> createMap() {
+	public ScalarMap<InstrumentType, ScanType> getMapInstance() {
 		return new SyncModMap<InstrumentType, ScanType>(instrument);
 	}
 }

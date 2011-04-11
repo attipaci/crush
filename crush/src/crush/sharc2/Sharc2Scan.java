@@ -36,6 +36,7 @@ import util.astro.AstroTime;
 import util.astro.EquatorialCoordinates;
 import util.astro.GeodeticCoordinates;
 import util.astro.Weather;
+import util.text.TableFormatter;
 
 public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements GroundBased, Weather {
 	/**
@@ -328,6 +329,15 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		return super.getPointingString(pointing) + "\n\n" +
 			"  FAZO --> " + Util.f1.format((pointing.x + fixedOffset.x) / Unit.arcsec) +
 			", FZAO --> " + Util.f1.format((pointing.y - fixedOffset.y) / Unit.arcsec);		
+	}
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+	
+		if(name.equals("FAZO")) return Util.defaultFormat(fixedOffset.x / Unit.arcsec, f);
+		else if(name.equals("FZAO")) return Util.defaultFormat(-fixedOffset.y / Unit.arcsec, f);
+		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
 	public double getAmbientHumidity() {
