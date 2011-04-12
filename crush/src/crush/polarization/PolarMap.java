@@ -53,6 +53,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		super.createFrom(scans);
 		
 		N = getMapInstance();
+		N.setOptions(getOptions());
 		N.createFrom(scans);
 		N.signalMode = PolarModulation.N;
 		N.isLevelled = true;

@@ -31,7 +31,7 @@ import java.util.*;
 
 public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType extends Scan<? extends InstrumentType, ?>> implements Cloneable {
 	public InstrumentType instrument;
-	Configurator options; 
+	private Configurator options; 
 		
 	public Vector<ScanType> scans;
 	public boolean isValid = false;
@@ -46,6 +46,10 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 	
 	public void setOptions(Configurator options) {
 		this.options = options;
+	}
+	
+	public Configurator getOptions() {
+		return options;
 	}
 	
 	@Override
