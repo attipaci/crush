@@ -557,6 +557,48 @@ public final class Util {
 		return f == null ? Double.toString(value) : f.format(value);
 	}
 	
+	public static String fromEscapedString(String value) throws IllegalStateException {
+		StringBuffer buffer = new StringBuffer(value.length());
+		for(int i=0; i<value.length(); i++) {
+			final char c = value.charAt(i);
+			if(c == '\\') {
+				if(++i == value.length()) throw new IllegalStateException("Illegal escape character at the end of string.");
+				switch(value.charAt(i)) {
+				case '\\' : buffer.append('\\'); break;
+				case 't' : buffer.append('\t'); break;
+				case 'n' : buffer.append('\n'); break;
+				case 'r' : buffer.append('\r'); break;
+				case 'b' : buffer.append('\b'); break;
+				case '"' : buffer.append('\"'); break;
+				case '\'' : buffer.append('\''); break;
+				default : throw new IllegalStateException("Illegal escape sequence '\\" + value.charAt(i) + "'.");
+				}
+			}
+			else buffer.append(c);
+		}
+		
+		return new String(buffer);
+	}
+	
+	public static String toEscapedString(String value) {
+		StringBuffer buffer = new StringBuffer(2*value.length());
+		for(int i=0; i<value.length(); i++) {
+			char c = value.charAt(i);
+			switch(c) {
+			case '\\' : buffer.append("\\\\"); break;
+			case '\t' : buffer.append("\\t"); break;
+			case '\n' : buffer.append("\\n"); break;
+			case '\r' : buffer.append("\\r"); break;
+			case '\b' : buffer.append("\\b"); break;
+			case '\"' : buffer.append("\\\""); break;
+			case '\'' : buffer.append("\\\'"); break;
+			default : buffer.append(c);
+			}
+		}
+		
+		return new String(buffer);
+	}
+	
 	public static double sinc(double x) { return x == 0.0 ? 1.0 : Math.sin(x) / x; } 
 	
 	public static final double sigmasInFWHM = 2.0*Math.sqrt(2.0*Math.log(2.0));

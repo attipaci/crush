@@ -1,8 +1,5 @@
->> Add instrument log capabilities to README
 
-
-
-2.04-b4
+2.04-b5
 	
 	Overview
 	=====================================================================
@@ -29,6 +26,9 @@
 
 	[BUG] {PolKa} Fatal error on instrument initialization fixed. It was
 	due to a null options field to the source model.
+
+	[BUG] {2.04-b4} A bug was carelessly introduced into 2.04-b4, which
+	resulted in empty or mostly empty maps. Now fixed.
 
 	[NEW] {APEX} Automatic pointing scan detection. Reduction will suggest
 	pointing offsets for standalone pointing scans. However, no automatic
@@ -61,6 +61,9 @@
 	[NEW] Additional instrument-dependent logging capabilities. Check 
 	Section 2.7 of the README for details on what instrument-specific
 	qunatities are available.
+
+	[NEW] Quantities 'UT' and 'UTh' have been added to the list of values
+	that can be logged.
 
 	[FIX] {SHARC-2} Fixed triggered decorrelation issue. The first 
 	iteration did not detect the trigger. This meant that chopper response 
@@ -164,9 +167,7 @@
 	duplicate data, and the depndent field classes can be very troublesome
 	for copying over properly. It's safest to not have this feature.
 
-	[CODE] SourceModel class no longer retains a local reference of the
-	options. Rather it relies on the options field of its instrument.
-	This is more robust.
+	[CODE] Log formats can now deal with properly escaped sequences.
 
 	[COSMETIC] {PolKa} The detailed information is shown only for the
 	unpolarized power map, while other maps are written more silently. 
