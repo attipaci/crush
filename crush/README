@@ -1554,6 +1554,11 @@ options on the console.
 			'tau.PWV' if these are defined by appropriate scaling
 			relations.
 
+	UT		UT in seconds. E.g. use 'UT(t:1)' to format is as 
+			'hh:mm:ss.s'.
+
+	UTh		UT in hours.
+
 	weight		The relative weight of the scan, based on the actual
 			noise of the map it generates.
 

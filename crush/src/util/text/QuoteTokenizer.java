@@ -29,12 +29,12 @@ public class QuoteTokenizer {
 	String line;
 	int index = 0;
 
-	/*
+
 	public static void main(String[] args) {
 		
-		//String line = "\"this is a 'quote'\" and 'this is another \"quote\"'";
+		String line = "\"this is a 'quote'\" and 'this is another \"quote\"'";
 		//String line = "";
-		String line = "what about 'this' and \"this unfinished one?";
+		//String line = "what about 'this' and \"this unfinished one?";
 		QuoteTokenizer quotes = new QuoteTokenizer(line);
 		
 		while(quotes.hasMoreElements()) {
@@ -43,10 +43,30 @@ public class QuoteTokenizer {
 		
 		
 	}
-	*/
+	
 	
 	public QuoteTokenizer(String line) {
 		this.line = line;
+		// If starting with a quote, then no need to return what precedes the quote...
+		if(line.length() == 0) return;
+			
+		char first = line.charAt(0);
+		
+		// Initialize, in case starting with a quote right away.
+		// S.t. isNextQuote methods return the correct values...
+		if(first == '\'') {
+			type = SINGLE_QUOTE;
+			index++;
+		}
+		else if(first == '"') {
+			type = DOUBLE_QUOTE;
+			index++;
+		}
+		
+	}
+	
+	public boolean isNextQuote() {
+		return type != UNQUOTED;
 	}
 	
 	public boolean isNextDoubleQuote() {
@@ -69,13 +89,8 @@ public class QuoteTokenizer {
 		if(nextSingle < 0) nextSingle = line.length();
 		if(nextDouble < 0) nextDouble = line.length();
 
-		// If starting with a quote, then no need to return what precedes the quote...
 		int nextQuote = Math.min(nextSingle, nextDouble);
-		if(nextQuote == 0) {
-			type = nextSingle < nextDouble ? SINGLE_QUOTE : DOUBLE_QUOTE;
-			index++;
-			return nextToken();
-		}
+		
 		
 		String value = null;
 	

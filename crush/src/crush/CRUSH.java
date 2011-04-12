@@ -283,6 +283,7 @@ public class CRUSH extends Configurator {
 		
 		if(source != null) {
 			source.commandLine = commandLine;
+			source.setOptions(this);
 			source.createFrom(scans);
 		}
 		

@@ -366,7 +366,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 				"date(yyyy-MM-dd)  id\tobject\tobsmins(f1)\tAZd(f1) ELd(f1)\tRAh(f1) DECd(f1)";
 		
 		// Allow literal '\t' to represent a tab, like in C or Java 
-		format = format.replaceAll("\\t", "\t");
+		format = Util.fromEscapedString(format);
 				
 		int conflictPolicy = LogFile.CONFLICT_DEFAULT;
 		if(option.isConfigured("conflict")) {
@@ -410,6 +410,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		else if(name.equals("id")) return getID();
 		else if(name.equals("serial")) return Integer.toString(serialNo);
 		else if(name.equals("MJD")) return Util.defaultFormat(MJD, f);
+		else if(name.equals("UT")) return Util.defaultFormat((MJD - Math.floor(MJD)) * Unit.day, f);
+		else if(name.equals("UTh")) return Util.defaultFormat((MJD - Math.floor(MJD)) * 24.0, f);
 		else if(name.equals("PA")) return Util.defaultFormat(getPA(), f);
 		else if(name.equals("PAd")) return Util.defaultFormat(getPA() / Unit.deg, f);
 		else if(name.equals("AZ")) return Util.defaultFormat(horizontal.AZ(), f);

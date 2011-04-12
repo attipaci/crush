@@ -31,6 +31,8 @@ import java.util.*;
 
 public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType extends Scan<? extends InstrumentType, ?>> implements Cloneable {
 	public InstrumentType instrument;
+	Configurator options; 
+		
 	public Vector<ScanType> scans;
 	public boolean isValid = false;
 	public int generation = 0;
@@ -42,6 +44,10 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 		this.instrument = instrument;
 	}
 	
+	public void setOptions(Configurator options) {
+		this.options = options;
+	}
+	
 	@Override
 	public Object clone() {
 		try { return super.clone(); }
@@ -49,11 +55,11 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 	}	
 	
 	public boolean hasOption(String name) {
-		return instrument.options.isConfigured(name);
+		return options.isConfigured(name);
 	}
 
 	public Configurator option(String name) {
-		return instrument.options.get(name);
+		return options.get(name);
 	}
 	
 	@SuppressWarnings("unchecked")
