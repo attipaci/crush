@@ -163,6 +163,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		
 		detectorStage();
 		
+		
 		if(hasOption("tau")) {
 			try { setTau(); }
 			catch(Exception e) { System.err.println("   WARNING! Problem setting tau: " + e.getMessage()); }
@@ -2482,7 +2483,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-		
+			
 		if(name.equals("scale")) return Util.defaultFormat(gain, f);
 		else if(name.equals("NEFD")) return Util.defaultFormat(nefd, f);
 		else if(name.equals("zenithtau")) return Util.defaultFormat(zenithTau, f);
@@ -2506,10 +2507,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			if(chopper == null) return "---";
 			else return  Util.defaultFormat(chopper.efficiency, f);
 		}
-		else instrument.getFormattedEntry(name, formatSpec);
-
-		
-		return TableFormatter.NO_SUCH_DATA;
+		else return instrument.getFormattedEntry(name, formatSpec);
 	}
 	
 }

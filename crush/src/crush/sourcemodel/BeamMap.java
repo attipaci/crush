@@ -63,6 +63,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 		super.createFrom(collection);
 		
 		template = new ScalarMap<InstrumentType, ScanType>(instrument);
+		template.setOptions(getOptions());
 		template.createFrom(collection);
 		
 		pixelMap = new ScalarMap[instrument.maxPixels() + 1];

@@ -28,10 +28,10 @@ import java.awt.*;
 
 import crush.gui.ColorScheme;
 
-public class CameraLike extends ColorScheme {
+public class Colorful extends ColorScheme {
 
 
-	public CameraLike() {
+	public Colorful() {
 		schemename= "CameraLike";
 	}
 

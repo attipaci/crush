@@ -26,6 +26,7 @@ import util.*;
 
 import java.awt.*;
 
+
 public abstract class ArrayImager extends ScaleImager {
 	/**
 	 * 
@@ -69,6 +70,8 @@ public abstract class ArrayImager extends ScaleImager {
 		}
 		return range;	
 	}
+	
+	
 	
 	public void autoscale() {
 		Range range = getDataRange();

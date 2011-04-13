@@ -443,9 +443,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		else if(name.equals("creator")) return creator;
 		else if(name.equals("integrations")) return Integer.toString(size());
 		else if(name.equals("generation")) return Integer.toString(getSourceGeneration());
-		else getFirstIntegration().getFormattedEntry(name, formatSpec);
-		
-		return TableFormatter.NO_SUCH_DATA;
+		else return getFirstIntegration().getFormattedEntry(name, formatSpec);
 	}
 	
 	public int getSourceGeneration() {
@@ -472,7 +470,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 			System.out.println();
 			System.out.println(" Pointing Results for Scan " + getID() + ":");
 			System.out.println();
-			System.out.println(getPointingString());
+			System.out.println(getPointingString() + "\n");
 		}
 		else if(hasOption("pointing")) {
 			Configurator pointingOption = option("pointing");

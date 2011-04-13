@@ -24,7 +24,10 @@
 
 package crush.gui;
 
+import crush.gui.colorscheme.*;
 import java.awt.*;
+import java.util.Hashtable;
+
 
 public abstract class ColorScheme {
 	public String schemename;
@@ -39,6 +42,23 @@ public abstract class ColorScheme {
 
 	public String getSchemeName() {
 		return schemename;
+	}
+	
+	public static ColorScheme getInstanceFor(String name) throws IllegalAccessException, InstantiationException {
+		name = name.toLowerCase();
+		return schemes.containsKey(name) ? schemes.get(name).newInstance() : null;
+	}
+	
+	public static Hashtable<String, Class<? extends ColorScheme>> schemes = new Hashtable<String, Class<? extends ColorScheme>>();
+	
+	static {
+		schemes.put("grayscale", GreyScale.class);
+		schemes.put("colorful", Colorful.class);
+		schemes.put("blue", CoolBlue.class);
+		schemes.put("orange", Orangy.class);
+		schemes.put("greyscale", GreyScale.class);
+		schemes.put("gray", GreyScale.class);
+		schemes.put("grey", GreyScale.class);
 	}
 }
 

@@ -68,6 +68,7 @@ public final class TableFormatter {
 		case 'd' : return Util.d[Integer.parseInt(spec.substring(1))];
 		case 'f' : return Util.f[Integer.parseInt(spec.substring(1))];
 		case 'e' : return Util.e[Integer.parseInt(spec.substring(1))];
+		case 's' : return Util.s[Integer.parseInt(spec.substring(1))];
 		case 'a' : 
 			AngleFormat af = new AngleFormat();
 			char sepSpec = spec.charAt(1);

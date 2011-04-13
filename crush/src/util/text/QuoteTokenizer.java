@@ -29,10 +29,10 @@ public class QuoteTokenizer {
 	String line;
 	int index = 0;
 
-
+	/*
 	public static void main(String[] args) {
 		
-		String line = "\"this is a 'quote'\" and 'this is another \"quote\"'";
+		String line = "\"this is a 'quote'\" and 'this is another \"quote\"' and this quote \"has escaped \\\" in it.\"";
 		//String line = "";
 		//String line = "what about 'this' and \"this unfinished one?";
 		QuoteTokenizer quotes = new QuoteTokenizer(line);
@@ -40,10 +40,8 @@ public class QuoteTokenizer {
 		while(quotes.hasMoreElements()) {
 			System.err.println(quotes.type + " : " + quotes.nextToken());
 		}
-		
-		
 	}
-	
+	*/
 	
 	public QuoteTokenizer(String line) {
 		this.line = line;
@@ -81,17 +79,24 @@ public class QuoteTokenizer {
 		return index < line.length();
 	}
 	
+
+	private int findNext(char c, int from) {
+		int i = line.indexOf(c, from);
+
+		if(i < 0) return line.length();
+		else if(i > 0) if(line.charAt(i-1) == '\\') return findNext(c, i+1);
+
+		return i;
+	}
+	
 	public String nextToken() {
 		if(line.length() == 0) return line;
 
-		int nextSingle = line.indexOf("'", index);
-		int nextDouble = line.indexOf("\"", index);
-		if(nextSingle < 0) nextSingle = line.length();
-		if(nextDouble < 0) nextDouble = line.length();
+		int nextSingle = findNext('\'', index);
+		int nextDouble = findNext('"', index);
 
 		int nextQuote = Math.min(nextSingle, nextDouble);
-		
-		
+				
 		String value = null;
 	
 		
