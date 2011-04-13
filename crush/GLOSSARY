@@ -2493,6 +2493,31 @@
 			to change what default pixel settings to use.
 			@See: 'rcp', 'wiring'
 
+:: write.png		@Since: 2.04
+			Write a PNG thumbnail for every FITS image. The PNG
+			image has the same name as the FITS file but with
+			'.png' appended.
+			@See: 'write.png.size', 'write.png.color'
+
+:: write.png.color=<name>	@Since: 2.04
+				Set the color scheme used for rendering the 
+			PNG image. The following schemes are supported:
+
+			   'colorful'
+			   'grayscale'
+			   'blue'
+			   'orange'
+
+			The default is 'colorful'.
+			@See: 'write.png'
+
+:: write.png.size=<size>	@Since: 2.04
+				Set the size of the PNG thumbnails. You can
+			specify both a single integer for square images or
+			two integers separated by 'x' or ',' e.g. '640x480'.
+			The default size is 300x300.
+			@See: 'write.png'
+
 :: write.signals	@Expert
 			Write out all the correlated signals that were
 			calculated in the reduction as ASCII timestreams.

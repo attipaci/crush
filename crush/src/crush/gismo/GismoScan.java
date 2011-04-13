@@ -354,7 +354,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		double sizeUnit = instrument.getDefaultSizeUnit();
 		String sizeName = instrument.getDefaultSizeName();
 	
-		data.add(new Datum("X", (pointingConstants[0] + pointingOffset.x) / sizeUnit, sizeName));
+		data.add(new Datum("X", (pointingConstants[1] + pointingOffset.x) / sizeUnit, sizeName));
 		data.add(new Datum("Y", (pointingConstants[6] + pointingOffset.y) / sizeUnit, sizeName));
 		data.add(new Datum("NasX", (instrument.nasmythOffset.x + nasmyth.x) / sizeUnit, sizeName));
 		data.add(new Datum("NasY", (instrument.nasmythOffset.y + nasmyth.y) / sizeUnit, sizeName));
