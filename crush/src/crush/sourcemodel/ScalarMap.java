@@ -651,6 +651,13 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 			
 			final AstroImager imager = new AstroImager(cropped);
 			ColorScheme scheme = new Colorful();
+			
+			if(hasOption("write.png.bg")) {
+				String spec = option("write.png.bg").getValue();
+				try { imager.setBackground(new Color(Integer.decode(spec))); }
+				catch(NumberFormatException e) { imager.setBackground(Color.getColor(spec)); }
+			}
+			
 			if(hasOption("write.png.color")) {
 				String schemeName = option("write.png.color").getValue();
 				if(ColorScheme.schemes.containsKey(schemeName)) 

@@ -124,20 +124,25 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 			}
 		}
 		
-		if(hasOption("pointing")) setPointing(option("pointing"));
+		if(instrument.options.containsKey("pointing")) pointingAt(getPointingCorrection(option("pointing")));
 	}
 	
-	public void setPointing(Configurator option) {		
+	public Vector2D getPointingCorrection(Configurator option) {
+		if(!option.isEnabled) return null;
 		String value = option.getValue().toLowerCase();
-		if(value.equals("auto") || value.equals("suggest")) return;
-		
+		if(value.equals("auto") || value.equals("suggest")) return null;
 		Vector2D correction = option.getVector2D(); 
-		System.err.println("   Adjusting pointing by " + correction + " " + instrument.getDefaultSizeName() + ".");
 		correction.scale(instrument.getDefaultSizeUnit());
-		pointingAt(correction);		
+		return correction;
 	}
 	
 	public void pointingAt(Vector2D correction) {
+		if(correction == null) return;
+		double sizeUnit = instrument.getDefaultSizeUnit();
+		System.err.println("   Adjusting pointing by " + 
+				Util.f1.format(correction.x / sizeUnit) + ", " + Util.f1.format(correction.y / sizeUnit) +
+				" " + instrument.getDefaultSizeName() + ".");
+		
 		for(Integration<?,?> integration : this) integration.pointingAt(correction);
 		if(pointingCorrection == null) pointingCorrection = correction;
 		else pointingCorrection.add(correction);

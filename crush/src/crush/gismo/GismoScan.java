@@ -50,7 +50,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	double tau225GHz;
 	double ambientT, pressure, humidity, windAve, windPeak, windDirection;
 	String scanID, obsType;
-	double[] pointingConstants;
+	IRAMPointingModel iRAMPointingModel;
+	Vector2D appliedPointing = new Vector2D();
 	
 	
 	public GismoScan(Gismo instrument) {
@@ -69,10 +70,36 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 
 	
 	@Override
-	public void validate() {
+	public void validate() {	
 		super.validate();
 		double PA = 0.5 * (getFirstIntegration().getFirstFrame().getParallacticAngle() + getLastIntegration().getLastFrame().getParallacticAngle());
-		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");
+		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");		
+	}
+	
+	@Override
+	public Vector2D getPointingCorrection(Configurator option) {
+		Vector2D correction = super.getPointingCorrection(option);
+		
+		if(!option.isConfigured("model")) return correction;
+		
+		try { 
+			IRAMPointingModel model = new IRAMPointingModel(option.get("model").getValue());
+			Vector2D modelCorr = model.getCorrection(horizontal);
+
+			System.err.println("   Got pointing from model: " + 
+					Util.f1.format(modelCorr.x / Unit.arcsec) + ", " +
+					Util.f1.format(modelCorr.y / Unit.arcsec) + " arcsec."
+			);
+
+			if(correction == null) correction = modelCorr;
+			else correction.add(modelCorr);
+		}
+		catch(IOException e) {
+			System.err.println("WARNING! Cannot read pointing model from " + option.get("model").getValue());
+		}
+
+		return correction;
+		
 	}
 
 	public File getFile(String scanDescriptor) throws FileNotFoundException {
@@ -291,9 +318,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	
 		// Add pointing corrections...
 		
-		pointingConstants = new double[9];
-		for(int i=0; i<pointingConstants.length; i++) 
-			pointingConstants[i] = header.getDoubleValue("PCONST" + (i+1), Double.NaN) + header.getDoubleValue("P" + (i+1) + "COR", 0.0);
+		iRAMPointingModel = new IRAMPointingModel();
+		for(int i=1; i<=9; i++) 
+			iRAMPointingModel.P[i] = header.getDoubleValue("PCONST" + i, 0.0) + header.getDoubleValue("P" + i + "COR", 0.0);
 		
 		
 		
@@ -354,8 +381,10 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		double sizeUnit = instrument.getDefaultSizeUnit();
 		String sizeName = instrument.getDefaultSizeName();
 	
-		data.add(new Datum("X", (pointingConstants[1] + pointingOffset.x) / sizeUnit, sizeName));
-		data.add(new Datum("Y", (pointingConstants[6] + pointingOffset.y) / sizeUnit, sizeName));
+		Vector2D corr = pointingCorrection == null ? new Vector2D() : pointingCorrection;
+		
+		data.add(new Datum("X", (pointingOffset.x + corr.x) / sizeUnit, sizeName));
+		data.add(new Datum("Y", (pointingOffset.y + corr.y) / sizeUnit, sizeName));
 		data.add(new Datum("NasX", (instrument.nasmythOffset.x + nasmyth.x) / sizeUnit, sizeName));
 		data.add(new Datum("NasY", (instrument.nasmythOffset.y + nasmyth.y) / sizeUnit, sizeName));
 		
@@ -364,11 +393,13 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	
 	
 	@Override
-	public String getPointingString(Vector2D pointing) {	
+	public String getPointingString(Vector2D pointing) {
+		Vector2D corr = pointingCorrection == null ? new Vector2D() : pointingCorrection;
+		
 		return super.getPointingString(pointing) + "\n" +
 			"  Absolute: " + 
-			Util.f1.format((pointingConstants[0] + pointing.x) / Unit.arcsec) + ", " + 
-			Util.f1.format((pointingConstants[6] + pointing.y) / Unit.arcsec) + " arcsec (az, el)";
+			Util.f1.format((pointing.x + corr.x) / Unit.arcsec) + ", " + 
+			Util.f1.format((pointing.y + corr.y) / Unit.arcsec) + " arcsec (az, el)";
 	}
 	
 	@Override

@@ -1,15 +1,16 @@
 
-2.04-b5
+2.04-b6
 	
 	Overview
 	=====================================================================
-	This version of crush brings better photometry support by fixing bugs
-	and adding new features to the relevant code. Under the hood a lot
-	of code changes to make the decorrelation more transparent, solid, and
-	bug proof. A few other fixes should make this shape up in a very
-	solid release. After a period of beta testing to allow identification
-	of remaining issues, this version is expected to become the next
-	stable release.
+	This version of crush brings many cool new features, like PNG image 
+	writing and automatic scan type detection, as well as better photometry
+ 	support by fixing bugs and adding new features to the relevant code. 
+	Under the hood a lot of code changes to make the decorrelation more 
+	transparent, solid, and bug proof. A few other fixes should make this 
+	and exciting release. After a period of beta testing to allow 
+	identification of remaining issues, this version is expected to become 
+	the next stable release.
 	=====================================================================
 
 	[BUG] {APEX} Obsolete trimChopper() and markChopperEnds() functions 
@@ -37,7 +38,8 @@
 	[NEW] Added new capability to create PNG thumbnail images for all FITS
 	images. The PNG image writing is activated by 'write.png', the size
 	can be set with 'write.png.size' (default is 300x300), and the
-	colorscheme is determined by 'write.png.color'.
+	colorscheme is determined by 'write.png.color'. You can also set the
+	backgrounf via 'write.png.bg'
 
 	[NEW] {APEX} Automatic pointing scan detection. Reduction will suggest
 	pointing offsets for standalone pointing scans. However, no automatic
@@ -73,6 +75,10 @@
 
 	[NEW] Quantities 'UT' and 'UTh' have been added to the list of values
 	that can be logged.
+
+	[NEW] {GISMO} Pointing corrections can be calculated and applied
+	automatically via an incremental pointing model using the
+	'pointing.model' option
 
 	[FIX] {SHARC-2} Fixed triggered decorrelation issue. The first 
 	iteration did not detect the trigger. This meant that chopper response 
@@ -110,6 +116,11 @@
 	format with 0...9 significant figures.
 
 	[FIX] Log entries supplied by first integration not working. Fixed.
+
+	[FIX] It turns out that old PolKa data already contained the POLTYP
+	values, making it impossible to reduce old polarization data, where it
+	was recorded as 'N' always. The new keyword 'analyzer' can be used to 
+	override the stored setting. Valid values to 'analyzer' are 'H' or 'V'.
 
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change

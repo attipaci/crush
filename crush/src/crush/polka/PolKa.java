@@ -99,32 +99,42 @@ public class PolKa extends Laboca {
 	@Override
 	public void readPar(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {
 		super.readPar(hdu);
-		
+	
 		int iAnalyzer = hdu.findColumn("POLTY");
-		if(iAnalyzer > 0) {
-			char type = ((String) hdu.getRow(0)[iAnalyzer]).charAt(0);
-			options.remove("ortho");
-			
-			switch(type) {
-			case 'N' : 
-				System.err.println();
-				System.err.println("WARNING! It appears you are trying to reduce total-power data in");
-				System.err.println("         polarization mode. You should use 'laboca' as your instrument");
-				System.err.println("         instead of 'polka'. Exiting.");
-				System.err.println();
-				System.exit(1);
-				break;
-			case 'V' : 
-				isOrthogonal = true; break;
-			case 'H' :
-				isOrthogonal = false; break;
-			default :
-				isOrthogonal = hasOption("ortho");
-			}
-		}
-		else isOrthogonal = hasOption("ortho");
 		
+		if(hasOption("analyzer")) {
+			String value = option("analyzer").getValue().toUpperCase();
+			setAnalyzer(value.charAt(0));
+		}
+		if(iAnalyzer > 0) setAnalyzer(((String) hdu.getRow(0)[iAnalyzer]).charAt(0));
+			
 		System.err.println(" Analyzer grid orientation is " + (isOrthogonal ? "V" : "H"));
+	}
+	
+	public void setAnalyzer(char c) {
+		switch(c) {
+		case 'N' : 
+			System.err.println();
+			System.err.println("WARNING! It appears you are trying to reduce total-power data in");
+			System.err.println("         polarization mode. You should use 'laboca' as your instrument");
+			System.err.println("         instead of 'polka'. Otherwise, if you are reducing 2010 data");
+			System.err.println("         use the 'pol' key to set 'H' or 'V' analyzer positions");
+			System.err.println("         manually. Exiting.");
+			System.err.println();
+			System.exit(1);
+			break;
+		case 'V' : 
+			isOrthogonal = true; break;
+		case 'H' :
+			isOrthogonal = false; break;
+		default :
+			System.err.println();
+			System.err.println("WARNING! Polarization analyzer position is undefined. Set the 'pol'");
+			System.err.println("         option to 'H' or 'V' to specify. Exiting.");
+			System.err.println();
+			System.exit(1);
+			break;
+		}
 	}
 	
 	@Override

@@ -69,6 +69,18 @@
 			Decorrelate on amplifier boards, or set options for it.
 			@See: 'correlated.<?>' for details on brached options.
 
+:: analyzer=<pos>	@Instrument: PolKa
+			@Since: 2.04
+			Specify that the analyzer grid position that was used
+			for taking the data. Specifying the analyzer is
+			important for recovering the polarization information.
+			The <pos> must be either 'H' or 'V' corresponding to
+			the two positions.
+			As of 2011, the analyzer position should be correctly
+			recorded in the data file, and therefore automatically
+			detected. You can still use 'pol' to override the
+			recorded setting.
+
 :: array		@Alias -> 'correlated.obs-channels'
 			@Advanced
 			Decorrelate on all the radiation-sensitive channels of
@@ -1218,15 +1230,6 @@
 			      'source', 'decorrelate.<?>', 'whiten',
 			      'time-weighting'
 
-:: ortho		@Instrument: PolKa
-			Specify that the orthogonal (a.k.a vertical) analyzer 
-			was used for taking the data. Specifying the analyzer is
-			important for recovering the polarization information.
-			Currently the analyzer position is not recorded in the
-			data files, although the plan is to have this capability
-			in the future. Currently, therefore, this option is
-			necessary to distinguish between the two analyzer grids.
-
 :: outpath=<path>	Specify the output path, where all CRUSH output will be 
 			written (including maps etc.). Path names follow the
 			usual rules (See 'Basic Configuration' section in the
@@ -1364,6 +1367,27 @@
 			pixel position information (RCP) is calculated for 
 			'beammap' reductions.
 			@See: 'point', 'beammap'
+
+:: pointing.model=<name>	@Advanced
+				@Instrument: GISMO
+				@Since: 2.04
+			Use an incremental pointing model to derive and apply
+			pointing corrections automatically. The argument is the
+			name of the file containing the pointing constants. The
+			file is simply an ASCII file, with separate lines 
+			containing the pointing constants and their incremental
+			values. E.g., the pointing model file derived for
+			2011 Apr 13 contains the entries:
+
+				P4 = 22.54
+				P5 = 17.17
+				P9 = -11.56
+				P10 = -38.59
+				P11 = 2.60
+
+			You can still apply a incremental offset on top of this
+			model, using the 'pointing' key the usual way.
+			@See: 'pointing'
 
 :: pointing.significance=X	@Since: 2.00-0
 				@Expert
@@ -1948,7 +1972,7 @@
 			option obviously only affects instruments that measure
 			polarization, anbd will be ignored otherwise.
 			@See: 'source.synchronized', 'waveplate.refangle', 
-			      'ortho'
+			      'analyzer'
 
 :: source.redundancy=N	@Expert
 			Specify the minimum redundancy (N samples) that
@@ -2498,6 +2522,13 @@
 			image has the same name as the FITS file but with
 			'.png' appended.
 			@See: 'write.png.size', 'write.png.color'
+
+:: write.png.bg=<value>		@Since: 2.04
+				Set the background color of the PNG image. You
+			can use hexadecimal values, e.g. '0xFFFFFF' (in RGB) 
+			for white, or equivalently the word 'white' to the 
+			same effect.
+			@See: 'write.png.color'
 
 :: write.png.color=<name>	@Since: 2.04
 				Set the color scheme used for rendering the 
