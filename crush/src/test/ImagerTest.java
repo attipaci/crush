@@ -37,15 +37,18 @@ public class ImagerTest {
 	public static void main(String[] args) {
 		try {
 			Instrument<?> instrument = new GenericInstrument("generic");
-			AstroMap map = new AstroMap(args[0], instrument);
+			AstroMap map = new AstroMap("/home/pumukli/data/sharc2/images/VESTA.8293.fits", instrument);
 			
 			
 			final AstroImager imager = new AstroImager(map);
 			imager.invertAxes(false, false);
-			imager.colorScheme = new CameraLike();
+			imager.colorScheme = new Colorful();
+			
 			
 			ColorBar colorbar = new ColorBar(imager, ColorBar.VERTICAL, 20);
+			AxisLabel label = new AxisLabel(map.unit.name, ColorBar.VERTICAL);
 			
+			/*
 			final JComponent cross = new JComponent() {
 				public void paintComponent(Graphics g) {
 					g.setColor(Color.RED);
@@ -57,24 +60,30 @@ public class ImagerTest {
 					g.drawLine(width/2, 0, width/2, height);
 				}
 			};
+			*/
 		
-			//imager.setTransparent(true);
+			imager.setTransparent(true);
 			
 			JComponent root = new JComponent() {
 				public void paintComponent(Graphics g) {
 					imager.setSize(getSize());
-					cross.setSize(getSize());
+					//cross.setSize(getSize());
 					super.paintComponent(g);
 				}
 			};
 			
 			
 			root.add(imager);
-			root.add(cross, 0);
+			//root.add(cross, 0);
 			
 			JFrame frame = new JFrame();
 			frame.setSize(600, 600);
-			frame.add(colorbar, "East");
+			
+			Box box = Box.createHorizontalBox();
+			box.add(colorbar);
+			box.add(label);	
+			
+			frame.add(box, "East");
 			frame.add(root);
 			
 			frame.setVisible(true);

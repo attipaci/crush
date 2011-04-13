@@ -30,6 +30,10 @@
 	[BUG] {2.04-b4} A bug was carelessly introduced into 2.04-b4, which
 	resulted in empty or mostly empty maps. Now fixed.
 
+	[BUG] {beammap} Error in beammap reduction mode during initialization
+	is now fixed. Same null pointer issue as the one that broke 
+	polarimetry reductions (further above).
+
 	[NEW] {APEX} Automatic pointing scan detection. Reduction will suggest
 	pointing offsets for standalone pointing scans. However, no automatic
 	pointing suggestion for multiscan datasets (you can still manually set
@@ -96,6 +100,11 @@
 	update of the correlated signal. This is the correct behavior.
 
 	[FIX] Empty maps are not written but skipped as intended.
+
+	[FIX] Fixed log formatting with 's0'...'s9' formats (human readable
+	format with 0...9 significant figures.
+
+	[FIX] Log entries supplied by first integration not working. Fixed.
 
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change

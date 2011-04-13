@@ -61,10 +61,10 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		// Add the residual offsets to the DAC values...
 		// Must do this before tau estimates...
 		removeOffsets(true, true);
-			
+		
 		// Tau is set here...
 		super.validate();	
-		
+			
 		boolean directTau = false;
 		if(hasOption("tau")) directTau = option("tau").equals("direct"); 
 		
@@ -157,7 +157,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 	@Override
 	public void setTau() throws Exception {
 		String source = option("tau").getValue().toLowerCase();
-		
+			
 		if(source.equals("direct")) setZenithTau(getDirectTau());
 		else {
 			if(source.equals("maitau")) {

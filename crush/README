@@ -1605,6 +1605,12 @@ options on the console.
 
 	obstype		Type of observation.
 
+	pnt.NasX	Aggregate Nasmyth X pointing offset (arcsec).
+			(value not yet stored in data.)
+
+	pnt.NasY	Aggregate Nasmyth Y pointing offset (arcsec). 
+			(value not yet stored in data.)
+
 	pnt.X		Aggregate azymuth pointing offset.
 	
 	pnt.Y		Aggregate elevation pointing offset.

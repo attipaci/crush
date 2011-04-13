@@ -78,7 +78,8 @@ public class ColorBar extends FloatArrayImager {
 		super.setRotation(prerotate + angle);		
 	}
 	
-	@Override public void setRenderSize(int width, int height) {
+	@Override 
+	public void setRenderSize(int width, int height) {
 		if(direction == HORIZONTAL) super.setRenderSize(height, width);
 		else super.setRenderSize(width, height);
 	}

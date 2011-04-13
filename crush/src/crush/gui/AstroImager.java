@@ -49,5 +49,4 @@ public class AstroImager extends DoubleArrayImager {
 		return super.getRGB(i, j);
 	}
 	
-	
 }

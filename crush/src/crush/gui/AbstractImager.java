@@ -25,6 +25,10 @@ package crush.gui;
 import java.awt.*;
 import java.awt.geom.*;
 import java.awt.image.*;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 public abstract class AbstractImager extends JPanel {
@@ -207,6 +211,33 @@ public abstract class AbstractImager extends JPanel {
 
 	public Point2D toDataIndex(Point2D point) {
 		return inverseTransform.transform(point, point);
+	}
+	
+	// Returns a generated image.
+	public RenderedImage getRenderedImage(int width, int height) {
+		setSize(width, height);
+		
+		// Create a buffered image in which to draw
+	    BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+	    
+	    // Create a graphics contents on the buffered image
+	    Graphics2D g2d = bufferedImage.createGraphics();  
+	    
+	    // Draw graphics
+	    paintComponent(g2d);
+
+	    // Graphics context no longer needed so dispose it
+	    g2d.dispose();
+
+	    return bufferedImage;
+	}
+
+	public void saveAs(String fileName, int width, int height) throws IOException {
+		File file = new File(fileName);
+		int iExt = fileName.lastIndexOf(".");
+		String type = iExt > 0 && iExt < fileName.length() - 1 ? fileName.substring(iExt + 1) : "gif";
+		ImageIO.write(getRenderedImage(width, height), type, file);
+		System.err.println(" Written " + fileName);
 	}
 	
 	public static final int ZOOM_FIXED = 0;

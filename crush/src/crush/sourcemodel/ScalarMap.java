@@ -24,13 +24,18 @@
 
 package crush.sourcemodel;
 
+import java.awt.Color;
 import java.io.*;
 import java.util.*;
 
 import crush.*;
+import crush.gui.AstroImager;
+import crush.gui.ColorScheme;
+import crush.gui.colorscheme.Colorful;
 import util.*;
 import util.astro.CelestialProjector;
 import util.astro.EclipticCoordinates;
+import util.astro.EquatorialCoordinates;
 import util.astro.GalacticCoordinates;
 import util.data.Statistics;
 
@@ -630,6 +635,33 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 
 		if(info) map.info();
 		map.write(); 
+		
+		
+		if(hasOption("write.png")) {
+			int width = 300;
+			int height = 300;
+			
+			if(hasOption("write.png.size")) {
+				StringTokenizer tokens = new StringTokenizer(option("write.png.size").getValue(), ",x ");
+				width = Integer.parseInt(tokens.nextToken());
+				height = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : width;
+			}
+			AstroMap cropped = (AstroMap) map.copy();
+			cropped.autoCrop();
+			
+			final AstroImager imager = new AstroImager(cropped);
+			ColorScheme scheme = new Colorful();
+			if(hasOption("write.png.color")) {
+				String schemeName = option("write.png.color").getValue();
+				if(ColorScheme.schemes.containsKey(schemeName)) 
+					scheme = ColorScheme.getInstanceFor(schemeName);
+			}
+				
+			imager.setBackground(Color.LIGHT_GRAY);
+			imager.colorScheme = scheme;
+			imager.saveAs(map.fileName + ".png", width, height);	
+		}
+		
 	}
 
 	@Override
