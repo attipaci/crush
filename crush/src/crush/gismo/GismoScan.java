@@ -50,7 +50,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	double tau225GHz;
 	double ambientT, pressure, humidity, windAve, windPeak, windDirection;
 	String scanID, obsType;
-	IRAMPointingModel iRAMPointingModel;
+	IRAMPointingModel pointingModel;
 	Vector2D appliedPointing = new Vector2D();
 	
 	
@@ -318,9 +318,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	
 		// Add pointing corrections...
 		
-		iRAMPointingModel = new IRAMPointingModel();
+		pointingModel = new IRAMPointingModel();
 		for(int i=1; i<=9; i++) 
-			iRAMPointingModel.P[i] = header.getDoubleValue("PCONST" + i, 0.0) + header.getDoubleValue("P" + i + "COR", 0.0);
+			pointingModel.P[i] = header.getDoubleValue("PCONST" + i, 0.0) + header.getDoubleValue("P" + i + "COR", 0.0);
 		
 		
 		

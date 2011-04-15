@@ -35,6 +35,11 @@
 	is now fixed. Same null pointer issue as the one that broke 
 	polarimetry reductions (further above).
 
+	[BUG] {PolKa} Several bugs fixed that broke PolKa reductions. (1)
+	waveplate angles were not calculated causing NaNs, and (2) spurious
+	polarization signal filter was badly set up. As a result, de-biasing
+	created NaN timestreams.
+
 	[NEW] Added new capability to create PNG thumbnail images for all FITS
 	images. The PNG image writing is activated by 'write.png', the size
 	can be set with 'write.png.size' (default is 300x300), and the

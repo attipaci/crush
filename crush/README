@@ -1482,17 +1482,25 @@ options on the console.
 
 	PAd		Mean parallactic angle in degrees.
 
-	pnt.dAZ		Azymuth pointing offset (if available).
+	pnt.AZ		Azymuth pointing (arcsec).
 
-	pnt.dDEC	Pointing offset in the declination dir (if available).
+	pnt.EL          Elevation pointing (arcsec).
+
+	pnt.DEC		Declination pointing (arcsec).
+
+	pnt.dAZ		Azymuth pointing residual (if available).
+
+	pnt.dDEC	Pointing residual in the declination dir (if available).
 	
-	pnt.dEL		Elevation pointing offset (if available).
+	pnt.dEL		Elevation pointing residual (if available).
 
-	pnt.dRA		Pointing offset in the RA direction (if available).
+	pnt.dRA		Pointing residual in the RA direction (if available).
 
-	pnt.dNasX	Pointing offset in the Nasmyth X dir (if available).
+	pnt.dNasX	Pointing residual in the Nasmyth X dir (if available).
 
-	pnt.dNasY	Pointing offset in the Nasmyth Y dir (if available).
+	pnt.dNasY	Pointing residual in the Nasmyth Y dir (if available).
+
+	pnt.RA		RA pointing (arcsec).
 
 	project		Project name (if defined)
 
@@ -1605,16 +1613,6 @@ options on the console.
 
 	obstype		Type of observation.
 
-	pnt.NasX	Aggregate Nasmyth X pointing offset (arcsec).
-			(value not yet stored in data.)
-
-	pnt.NasY	Aggregate Nasmyth Y pointing offset (arcsec). 
-			(value not yet stored in data.)
-
-	pnt.X		Aggregate azymuth pointing offset.
-	
-	pnt.Y		Aggregate elevation pointing offset.
-	
 	rot		Rotation of the instrument (deg).
 
 

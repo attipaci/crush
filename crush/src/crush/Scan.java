@@ -566,17 +566,21 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 	public DataTable getPointingData() throws IllegalStateException {
 		if(pointing == null) throw new IllegalStateException("No pointing data for scan " + getID());
 		Vector2D pointingOffset = getNativePointingIncrement(pointing);
+		Vector2D absolute = getNativePointing(pointing);
 		
 		DataTable data = new DataTable();
 		
-		String dX = this instanceof GroundBased ? "dAZ" : "dRA";
-		String dY = this instanceof GroundBased ? "dEL" : "dDEC";
+		String nameX = this instanceof GroundBased ? "AZ" : "RA";
+		String nameY = this instanceof GroundBased ? "EL" : "DEC";
 		
 		double sizeUnit = instrument.getDefaultSizeUnit();
 		String sizeName = instrument.getDefaultSizeName();
 		
-		data.add(new Datum(dX, pointingOffset.x / sizeUnit, sizeName));
-		data.add(new Datum(dY, pointingOffset.y / sizeUnit, sizeName));
+		data.add(new Datum("d" + nameX, pointingOffset.x / sizeUnit, sizeName));
+		data.add(new Datum("d" + nameY, pointingOffset.y / sizeUnit, sizeName));
+		
+		data.add(new Datum(nameX, absolute.x / sizeUnit, sizeName));
+		data.add(new Datum(nameY, absolute.y / sizeUnit, sizeName));
 		
 		// Also print Nasmyth offsets if applicable...
 		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
@@ -584,6 +588,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 			
 			data.add(new Datum("dNasX", nasmyth.x / sizeUnit, sizeName));
 			data.add(new Datum("dNasY", nasmyth.y / sizeUnit, sizeName));
+			
+			nasmyth = getNasmythOffset(absolute);
+			data.add(new Datum("NasX", nasmyth.x / sizeUnit, sizeName));
+			data.add(new Datum("NasY", nasmyth.y / sizeUnit, sizeName));
 		}
 		
 		return data;
@@ -597,7 +605,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 			info += pointing.pointingInfo(map) + "\n";
 		}
 			
-		info += getPointingString(getNativePointing(pointing));
+		info += getPointingString(getNativePointingIncrement(pointing));
 		return info;
 	}
 	
