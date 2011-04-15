@@ -32,8 +32,6 @@ import util.*;
 import util.data.FFT;
 import util.text.TableFormatter;
 
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -43,7 +41,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 	 */
 	private static final long serialVersionUID = -901946410688579472L;
 
-	double[] filterI;
+	double[] phi;
 	
 	
 	public PolKaSubscan(APEXArrayScan<Laboca, LabocaSubscan> parent) {
@@ -62,7 +60,9 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 	@Override
 	public void validate() {
 		// TODO Apply the time-stamps to the frames
-		timeStamp();
+		if(hasOption("waveplate.data")) timeStamp();
+	
+		super.validate();
 	
 		try { updateWavePlateFrequency(); }
 		catch(IllegalStateException e) { System.err.println("   WARNING! " + e.getMessage() + " Using defaults."); }
@@ -71,13 +71,8 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 		
 		prepareFilter();
 		
-		super.validate();
-		
 		if(!isProper) return;
-		
-		
-		
-		
+	
 	}
 	
 	public void updateWavePlateFrequency() throws IllegalStateException {
@@ -91,8 +86,9 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 				n++;
 			}
 			if(n < 1) throw new IllegalStateException("No valid frames with waveplate data");	
-			if(sum == 0.0 || Double.isNaN(sum)) throw new IllegalStateException("No waveplate frequency data in channel.");
-			
+			if(sum == 0.0) throw new IllegalStateException("All zeros in waveplate frequency channel.");
+			if(Double.isNaN(sum)) throw new IllegalStateException("No waveplate frequency data in channel.");
+				
 			polka.wavePlateFrequency = sum / n;
 			sum = 0.0;
 			for(Frame frame : this) if(frame != null) {
@@ -101,9 +97,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 			}
 			polka.jitter = Math.sqrt(sum / (n-1)) / polka.wavePlateFrequency;
 			//jitter = polka.jitter;
-			
-			
-			
+				
 			System.err.println("   Measured waveplate frequency is " + Util.f3.format(polka.wavePlateFrequency) + "Hz (" + Util.f1.format(100.0*polka.jitter) + "% jitter)");
 		}
 	}
@@ -112,24 +106,29 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 	public void prepareFilter() {
 		PolKa polka = (PolKa) instrument;
 		//int filterFrames = hasOption("drifts") ? getFilterFrames(option("drifts").getValue(), 10.0 * Unit.s) : size();
-		int filterFrames = size();
-		filterI = new double[FFT.getPaddedSize(filterFrames) >> 1];
-		Arrays.fill(filterI, 1.0);
-		
-		double df = 1.0 / (filterI.length * instrument.samplingInterval);
-		double fundamental = polka.wavePlateFrequency / df;
-		int harmonics = (int) (1.0 / (2.0 * instrument.samplingInterval * polka.wavePlateFrequency));
-		int width = (int) Math.ceil(1.0 * polka.jitter * filterI.length);
-		
-		System.err.println("   Preparing filter for spurious polarization signal (" + harmonics + " harmonics x " + width + " channels).");
-		
-		for(int i=1; i<harmonics; i++) {
-			int f = (int)Math.round(i * fundamental);
-			int fromf = Math.max(0, f - width/2);
-			int tof = Math.min(filterI.length-1, fromf + width);
 			
-			for(int k=fromf; k<=tof; k++) filterI[k] = 0.0;
+		int N = FFT.getPaddedSize(size());
+		phi = new double[N >> 1];
+		Arrays.fill(phi, 1.0);
+		
+		double df = 1.0 / (N * instrument.samplingInterval);
+		double width = 4.0 * polka.jitter * polka.wavePlateFrequency;
+		
+		int harmonics = (int) (1.0 / (2.0 * instrument.samplingInterval * polka.wavePlateFrequency));
+		int nChannels = (int) Math.ceil(width / df);
+		
+		harmonics *= 2;
+		
+		System.err.println("   Preparing power modulation filter (" + harmonics + " harmonics x " + nChannels + " channels).");
+		
+		for(int i=1; i<=harmonics; i++) {
+			double f = i * polka.wavePlateFrequency;
+			int fromf = Math.max(0, (int)Math.floor((f - 0.5 * width) / df));
+			int tof = Math.min(phi.length-1, (int)Math.ceil((f + 0.5 * width) / df));
+			
+			for(int k=fromf; k<=tof; k++) phi[k] = 0.0;
 		}
+	
 	}
 	
 	public void timeStamp() {
@@ -189,7 +188,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 				frame.data[channel.index] -= dG[channel.index] * (frame.Qh * polka.Q0 + frame.Uh * polka.U0);
 		}
 		
-		filter(instrument.getObservingChannels(), filterI);
+		filter(instrument.getObservingChannels(), phi);
 	}
 
 

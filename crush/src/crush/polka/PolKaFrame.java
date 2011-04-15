@@ -56,6 +56,8 @@ public class PolKaFrame extends LabocaFrame {
 		
 		final PolKa polka = (PolKa) scan.instrument;
 		
+		if(polka.wavePlateChannel != null) wavePlateAngle = data[polka.wavePlateChannel.index];	
+		if(polka.frequencyChannel != null) wavePlateFrequency = data[polka.frequencyChannel.index];	
 		if(Double.isNaN(wavePlateAngle)) wavePlateAngle = polka.getWavePlateAngle(MJD - MJD0);
 		
 		Qh = (float) Math.cos(4.0 * wavePlateAngle);
@@ -72,15 +74,10 @@ public class PolKaFrame extends LabocaFrame {
 			Q *= -1;
 			U *= -1;
 		}
+		
+		
 	}
 
-	@Override
-	public void parse(float[][] fitsData) {
-		super.parse(fitsData);
-		final PolKa polka = (PolKa) scan.instrument;
-		if(polka.wavePlateChannel != null) wavePlateAngle = data[polka.wavePlateChannel.index];	
-		if(polka.frequencyChannel != null) wavePlateFrequency = data[polka.frequencyChannel.index];	
-	}
 	
 	
 }

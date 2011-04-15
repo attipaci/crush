@@ -940,32 +940,42 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		if(data.length > nt) Arrays.fill(data, nt, data.length, 0.0);
 	}
 	
-	public void getWeightedTimeStream(final Channel channel, final double[] data) {	
+	public int getWeightedTimeStream(final Channel channel, final double[] data) {	
 		final int c = channel.index;
 		final int nt = size();
+		int n=0;
 		for(int t=nt; --t >= 0; ) {
 			final Frame exposure = get(t);
 			if(exposure == null) data[t] = 0.0;
 			else if(exposure.isFlagged(Frame.MODELING_FLAGS)) data[t] = 0.0;
 			else if(exposure.sampleFlag[c] != 0) data[t] = 0.0;
-			else data[t] = exposure.relativeWeight * exposure.data[c];
+			else {
+				data[t] = exposure.relativeWeight * exposure.data[c];
+				n++;
+			}
 		}
 		// Pad if necessary...
 		if(data.length > nt) Arrays.fill(data, nt, data.length, 0.0);
+		return n;
 	}
 	
-	public void getWeightedTimeStream(final Channel channel, final float[] data) {	
+	public int getWeightedTimeStream(final Channel channel, final float[] data) {	
 		final int c = channel.index;
 		final int nt = size();
+		int n=0;
 		for(int t=nt; --t >= 0; ) {
 			final Frame exposure = get(t);
 			if(exposure == null) data[t] = 0.0F;
 			else if(exposure.isFlagged(Frame.MODELING_FLAGS)) data[t] = 0.0F;
 			else if(exposure.sampleFlag[c] != 0) data[t] = 0.0F;
-			else data[t] = exposure.relativeWeight * exposure.data[c];
+			else {
+				data[t] = exposure.relativeWeight * exposure.data[c];
+				n++;
+			}
 		}
 		// Pad if necessary...
 		if(data.length > nt) Arrays.fill(data, nt, data.length, 0.0F);
+		return n;
 	}
 	
 	public void getTimeStream(final Channel channel, final WeightedPoint[] data) {
@@ -1054,7 +1064,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			}
 			
 			// Put the time-stream data into an array, and FFT it...
-			getWeightedTimeStream(channel, data);		
+			int goodSamples = getWeightedTimeStream(channel, data);		
 			
 			// Average power in windows, then convert to rms amplitude
 			FFT.inplaceRealForward(data);
@@ -1184,8 +1194,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			data[1] *= 1.0 - phi[nF-1];
 	
 			FFT.inplaceRealBackward(data);
-			 
-			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= data[exposure.index];
+			
+			// Amplitude correction for the zero padding and zero flags
+			final float scale = (float) data.length / goodSamples;
+			
+			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= scale * data[exposure.index];
 			
 		}
 		
@@ -1756,12 +1769,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	public synchronized void filter(ChannelGroup<? extends Channel> channels, double[] response) {
 		comments += "F";
 		
-		int N = FFT.getPaddedSize(size());
-		float[] signal = new float[N];
+		float[] signal = new float[FFT.getPaddedSize(size())];
 		
 		for(final Channel channel : channels) {
 			final int c = channel.index;
-			getWeightedTimeStream(channel, signal);
+			int goodSamples = getWeightedTimeStream(channel, signal);
 			
 			FFT.inplaceRealForward(signal);
 			
@@ -1775,8 +1787,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			signal[1] *= 1.0 - response[response.length-1];
 			
 			FFT.inplaceRealBackward(signal);
-	
-			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= signal[exposure.index];
+			
+			// Correction for the zero padding and zero flags...
+			final float scale = (float) signal.length / goodSamples;
+			
+			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= scale * signal[exposure.index];
 		}
 
 	}
