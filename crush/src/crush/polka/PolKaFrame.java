@@ -56,8 +56,8 @@ public class PolKaFrame extends LabocaFrame {
 		
 		final PolKa polka = (PolKa) scan.instrument;
 		
-		if(Double.isNaN(wavePlateAngle)) polka.getWavePlateAngle(MJD - MJD0);
-			
+		if(Double.isNaN(wavePlateAngle)) wavePlateAngle = polka.getWavePlateAngle(MJD - MJD0);
+		
 		Qh = (float) Math.cos(4.0 * wavePlateAngle);
 		Uh = (float) Math.sin(4.0 * wavePlateAngle);
 			

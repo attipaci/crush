@@ -943,7 +943,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	public void getWeightedTimeStream(final Channel channel, final double[] data) {	
 		final int c = channel.index;
 		final int nt = size();
-		for(int t=0; t<nt; t++) {
+		for(int t=nt; --t >= 0; ) {
 			final Frame exposure = get(t);
 			if(exposure == null) data[t] = 0.0;
 			else if(exposure.isFlagged(Frame.MODELING_FLAGS)) data[t] = 0.0;
@@ -957,7 +957,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	public void getWeightedTimeStream(final Channel channel, final float[] data) {	
 		final int c = channel.index;
 		final int nt = size();
-		for(int t=0; t<nt; t++) {
+		for(int t=nt; --t >= 0; ) {
 			final Frame exposure = get(t);
 			if(exposure == null) data[t] = 0.0F;
 			else if(exposure.isFlagged(Frame.MODELING_FLAGS)) data[t] = 0.0F;
@@ -1760,21 +1760,23 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		float[] signal = new float[N];
 		
 		for(final Channel channel : channels) {
+			final int c = channel.index;
 			getWeightedTimeStream(channel, signal);
+			
 			FFT.inplaceRealForward(signal);
 			
-			for(int i=2; i<signal.length; i++) {
+			for(int i=2; i<signal.length; ) {
 				final int F = (int) ((long)i * response.length / signal.length);
 				final double phi = 1.0 - response[F];
-				signal[i] *= phi;
-				signal[++i] *= phi;
+				signal[i++] *= phi;
+				signal[i++] *= phi;
 			}
 			signal[0] *= 1.0 - response[0];
 			signal[1] *= 1.0 - response[response.length-1];
 			
 			FFT.inplaceRealBackward(signal);
 	
-			for(Frame exposure : this) if(exposure != null) exposure.data[channel.index] -= signal[exposure.index];
+			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= signal[exposure.index];
 		}
 
 	}

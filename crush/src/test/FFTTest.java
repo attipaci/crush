@@ -65,6 +65,7 @@ public class FFTTest {
 		System.out.println("pow:");
 		print(power);		
 		
+		/*
 		int n = args.length > 0 ? Integer.parseInt(args[0]) : 16;
 		int N = n * 1024*1024;
 		int ops = N * (int) (Math.log(data.length) / Math.log(2.0));
@@ -91,7 +92,26 @@ public class FFTTest {
 		FFT.powerTransform(cdata, true);
 		time += System.currentTimeMillis();
 		System.err.println("complex transform of " + n + "M points: " + time + "ms --> " + Util.e3.format(1e-3*ops/time) + " Mcycles/sec");
+		*/
 
+		System.out.println("Inplace real transform test:");
+		
+		float[] fdata = new float[16];
+		for(int i=0; i<fdata.length; i+=4) fdata[i] = 1.0F;
+		
+		System.out.println("Original array");
+		print(fdata);
+		
+		FFT.inplaceRealForward(fdata);
+		
+		System.out.println("Frequency space");
+		print(fdata);
+		
+		System.out.println("Back transform...");
+		FFT.inplaceRealBackward(fdata);
+		
+		print(fdata);
+		
 	}
 
 	public static void print(Complex[] data) {
@@ -103,6 +123,12 @@ public class FFTTest {
 	public static void print(double[] data) {
 		for(int i=0; i<data.length; i++) 
 			System.out.println("  " + i + ":\t" + Util.e6.format(data[i]));
+		System.out.println();
+	}
+	
+	public static void print(float[] fdata) {
+		for(int i=0; i<fdata.length; i++) 
+			System.out.println("  " + i + ":\t" + Util.e6.format(fdata[i]));
 		System.out.println();
 	}
 	

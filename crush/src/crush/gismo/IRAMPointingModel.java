@@ -53,7 +53,7 @@ public class IRAMPointingModel {
 		double V = P[11];
 		
 		return P[1] * cosE + P[2] + P[3] * sinE + (P[4] * cosA + P[5] * sinA) * sinE + P[6] * sinA
-			+ H * cosE + V * sinE;
+			+ H * cosE - V * sinE;
 	}
 	
 	public double getDY(HorizontalCoordinates horizontal) {
@@ -64,7 +64,7 @@ public class IRAMPointingModel {
 		double H = P[10];
 		double V = P[11];
 		
-		return -P[4] * sinA + P[5] * cosA + P[7] + P[8] * cosE + P[9] * sinE - H * sinE + V * cosE;
+		return -P[4] * sinA + (P[5] + P[6] * sinE) * cosA + P[7] + P[8] * cosE + P[9] * sinE - H * sinE - V * cosE;
 	}
 	
 	public void write(String fileName) throws IOException {
