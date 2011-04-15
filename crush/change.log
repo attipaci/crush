@@ -1,5 +1,5 @@
 
-2.04-b6
+2.04-b7
 	
 	Overview
 	=====================================================================
@@ -85,6 +85,14 @@
 	automatically via an incremental pointing model using the
 	'pointing.model' option
 
+	[FIX] {PolKa} 'waveplate.frequency' option had no effect. Fixed.
+	
+	[FIX] {PolKa} No warning message when external timestamp data is not
+	available. Such timestamps were used only in the initial commissioning
+	phase of LABOCA, and are no longer needed for proper operation.
+
+	[FIX] {PolKa} Power modulation filter was wrongly calculated.
+
 	[FIX] {SHARC-2} Fixed triggered decorrelation issue. The first 
 	iteration did not detect the trigger. This meant that chopper response 
 	was decorrelated once even for non-chopped observations. Neither was 
@@ -126,6 +134,10 @@
 	values, making it impossible to reduce old polarization data, where it
 	was recorded as 'N' always. The new keyword 'analyzer' can be used to 
 	override the stored setting. Valid values to 'analyzer' are 'H' or 'V'.
+
+	[FIX] Noise whitening (and FFT filtering in general) are adjusted for
+	padding effects. As a result the removal of unwanted signals should be
+	more effective.
 
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change

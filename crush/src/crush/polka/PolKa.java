@@ -72,28 +72,34 @@ public class PolKa extends Laboca {
 	
 	@Override
 	public void validate(double MJD) {
-		super.validate(MJD);
+		
+		if(hasOption("waveplate.frequency")) 
+			wavePlateFrequency = option("waveplate.frequency").getDouble() * Unit.Hz;
+		
+		if(hasOption("waveplate.jitter")) 
+			jitter = option("waveplate.jitter").getDouble();
+		
 		
 		if(hasOption("waveplate.refangle")) {
 			phi0 = option("waveplate.refangle").getDouble() * Unit.deg;
-			System.err.println("   Waveplate reference angle " + Util.f1.format(phi0/Unit.deg));
+			System.err.println(" Waveplate reference angle " + Util.f1.format(phi0/Unit.deg));
 		}
 		
 		if(hasOption("waveplate.channel")) {
 			int beIndex = option("waveplate.channel").getInt();
 			wavePlateChannel = get(beIndex-1);
 			if(wavePlateChannel != null) 
-				System.err.println("   Waveplate angles from channel " + wavePlateChannel.dataIndex);
+				System.err.println(" Waveplate angles from channel " + wavePlateChannel.dataIndex);
 		}
 		
 		if(hasOption("waveplate.fchannel")) {
 			int beIndex = option("waveplate.fchannel").getInt();
 			frequencyChannel = get(beIndex-1);
 			if(frequencyChannel != null) 
-				System.err.println("   Waveplate frequencies from channel " + frequencyChannel.dataIndex);
+				System.err.println(" Waveplate frequencies from channel " + frequencyChannel.dataIndex);
 		}
 			
-		
+		super.validate(MJD);
 	}
 	
 	@Override
@@ -106,8 +112,13 @@ public class PolKa extends Laboca {
 			String value = option("analyzer").getValue().toUpperCase();
 			setAnalyzer(value.charAt(0));
 		}
-		if(iAnalyzer > 0) setAnalyzer(((String) hdu.getRow(0)[iAnalyzer]).charAt(0));
-			
+		else if(iAnalyzer > 0) setAnalyzer(((String) hdu.getRow(0)[iAnalyzer]).charAt(0));
+		else {
+			System.err.println("ERROR! Analyzer position is not defined. Use 'analyzer' option to");
+			System.err.println("       to manually set it to 'H' or 'V'.");
+			System.exit(1);
+		}
+		
 		System.err.println(" Analyzer grid orientation is " + (isOrthogonal ? "V" : "H"));
 	}
 	
@@ -153,14 +164,7 @@ public class PolKa extends Laboca {
 	}
 	
 	public void calcWavePlate(double fromMJD, double toMJD) {
-		if(timeStamps == null) {
-			if(hasOption("waveplate.frequency")) wavePlateFrequency = option("waveplate.frequency").getDouble() * Unit.Hz;
-			System.err.println("   WARNING! Wave plate frequency not defined. Assuming default.");
-			if(hasOption("waveplate.jitter")) jitter = option("waveplate.jitter").getDouble();
-			return;
-		}
-		
-		
+		if(timeStamps == null) return;
 		
 		int from = timeStamps.higherIndex(fromMJD);
 		int to = timeStamps.lowerIndex(toMJD);
