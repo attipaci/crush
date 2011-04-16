@@ -71,8 +71,6 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 		
 		prepareFilter();
 		
-		if(!isProper) return;
-	
 	}
 	
 	public void updateWavePlateFrequency() throws IllegalStateException {
@@ -105,30 +103,30 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 	
 	public void prepareFilter() {
 		PolKa polka = (PolKa) instrument;
-		//int filterFrames = hasOption("drifts") ? getFilterFrames(option("drifts").getValue(), 10.0 * Unit.s) : size();
 			
 		int N = FFT.getPaddedSize(size());
 		phi = new double[N >> 1];
 		Arrays.fill(phi, 1.0);
 		
-		double df = 1.0 / (N * instrument.samplingInterval);
-		double width = 4.0 * polka.jitter * polka.wavePlateFrequency;
+		final double df = 1.0 / (N * instrument.samplingInterval);
 		
-		int harmonics = (int) (1.0 / (2.0 * instrument.samplingInterval * polka.wavePlateFrequency));
-		int nChannels = (int) Math.ceil(width / df);
+		int harmonics = (int) Math.ceil((0.5 / instrument.samplingInterval) / polka.wavePlateFrequency);
 		
-		harmonics *= 2;
-		
-		System.err.println("   Preparing power modulation filter (" + harmonics + " harmonics x " + nChannels + " channels).");
-		
+		int nChannels = 0;
 		for(int i=1; i<=harmonics; i++) {
-			double f = i * polka.wavePlateFrequency;
-			int fromf = Math.max(0, (int)Math.floor((f - 0.5 * width) / df));
-			int tof = Math.min(phi.length-1, (int)Math.ceil((f + 0.5 * width) / df));
+			double fc = i * polka.wavePlateFrequency;
+			double width = 3.0 * polka.jitter * fc;
+			int fromf = Math.max(0, (int)Math.floor((fc - 0.5 * width) / df));
+			int tof = Math.min(phi.length-1, (int)Math.ceil((fc + 0.5 * width) / df));
 			
 			for(int k=fromf; k<=tof; k++) phi[k] = 0.0;
+			nChannels += tof - fromf + 1;
 		}
 	
+		double fraction = 100.0 * (double) nChannels / phi.length;
+		System.err.println("   Preparing power modulation filter (" + harmonics + " harmonics, " + nChannels + " spectral channels; " + Util.f2.format(fraction) + "% of data).");
+		
+		
 	}
 	
 	public void timeStamp() {

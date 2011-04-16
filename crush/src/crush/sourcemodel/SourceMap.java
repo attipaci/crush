@@ -359,7 +359,6 @@ extends SourceModel<InstrumentType, ScanType> {
 	
 		integration.comments += "Map";
 		// For jackknived maps indicate sign...
-		if(hasOption("jackknife")) integration.comments += integration.gain > 0 ? "+" : "-";
 		
 		Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 		

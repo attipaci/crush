@@ -174,23 +174,32 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 			APEXArrayScan<?,?> scan = (APEXArrayScan<?,?>) scans.get(i);
 			APEXArraySubscan<?,?> subscan = scan.get(0);
 			
-			if((subscan.chopper != null) != isChopped) {		
-				System.err.println("  WARNING! Scan " + scan.serialNo + " is not a chopped scan. Dropping from dataset.");
-				scans.remove(i);
-			}
-			else if(scan.sourceName.equalsIgnoreCase("SKYDIP")) {
+			// Throw out any subsequent skydips...
+			if(scan.sourceName.equalsIgnoreCase("SKYDIP")) {
 				System.err.println("  WARNING! Scan " + scan.serialNo + " is a skydip. Dropping from dataset.");
 				scans.remove(i);
 			}
-			else if(!scan.isPlanetary) {
-				if(isChopped && scan.equatorial.distanceTo(reference) > pointingTolerance) {
-					System.err.println("  WARNING! Scan " + scan.serialNo + " observed at a different position. Dropping from dataset.");
+			
+			boolean subscanChopped = subscan.chopper != null;
+			
+			if(subscanChopped != isChopped) {	
+				if(isChopped) System.err.println("  WARNING! Scan " + scan.serialNo + " is not a chopped scan. Dropping from dataset.");
+				else System.err.println("  WARNING! Scan " + scan.serialNo + " is a chopped scan. Dropping from dataset.");
+				scans.remove(i);
+				continue;
+			}
+			
+			if(isChopped) {
+				if(!scan.isPlanetary) {
+					if(scan.equatorial.distanceTo(reference) > pointingTolerance) {
+						System.err.println("  WARNING! Scan " + scan.serialNo + " observed at a different position. Dropping from dataset.");
+						scans.remove(i);
+					}
+				}
+				else if(!scan.sourceName.equalsIgnoreCase(sourceName)) {
+					System.err.println("  WARNING! Scan " + scan.serialNo + " is on a different object. Dropping from dataset.");
 					scans.remove(i);
 				}
-			}
-			else if(!scan.sourceName.equalsIgnoreCase(sourceName)) {
-				System.err.println("  WARNING! Scan " + scan.serialNo + " is on a different object. Dropping from dataset.");
-				scans.remove(i);
 			}
 		}
 		

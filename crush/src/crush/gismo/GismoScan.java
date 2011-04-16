@@ -79,28 +79,45 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	@Override
 	public Vector2D getPointingCorrection(Configurator option) {
 		Vector2D correction = super.getPointingCorrection(option);
+		IRAMPointingModel model = null;
+		Gismo gismo = (Gismo) instrument;
 		
-		if(!option.isConfigured("model")) return correction;
-		
-		try { 
-			IRAMPointingModel model = new IRAMPointingModel(option.get("model").getValue());
-			Vector2D modelCorr = model.getCorrection(horizontal);
+		if(option.isConfigured("model")) {
+			try { 
+				model = new IRAMPointingModel(option.get("model").getValue());
+				Vector2D modelCorr = model.getCorrection(horizontal);
 
-			System.err.println("   Got pointing from model: " + 
-					Util.f1.format(modelCorr.x / Unit.arcsec) + ", " +
-					Util.f1.format(modelCorr.y / Unit.arcsec) + " arcsec."
-			);
+				System.err.println("   Got pointing from model: " + 
+						Util.f1.format(modelCorr.x / Unit.arcsec) + ", " +
+						Util.f1.format(modelCorr.y / Unit.arcsec) + " arcsec."
+				);
 
-			if(correction == null) correction = modelCorr;
-			else correction.add(modelCorr);
+				if(correction == null) correction = modelCorr;
+				else correction.add(modelCorr);
+			}
+			catch(IOException e) {
+				System.err.println("WARNING! Cannot read pointing model from " + option.get("model").getValue());
+			}
 		}
-		catch(IOException e) {
-			System.err.println("WARNING! Cannot read pointing model from " + option.get("model").getValue());
+			
+		if(option.isConfigured("log")) {
+			try { 
+				System.err.print("   ");
+				gismo.setPointings(option.get("log").getValue()); 
+				if(model == null) model = new IRAMPointingModel();
+				correction.add(gismo.pointings.getIncrement(MJD, horizontal, model));
+			}
+			catch(Exception e) {
+				System.err.println("WARNING! No incremental correction: " + e.getMessage());
+				e.printStackTrace();
+			}
 		}
 
 		return correction;
 		
 	}
+	
+	
 
 	public File getFile(String scanDescriptor) throws FileNotFoundException {
 		File scanFile;
@@ -174,7 +191,6 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		clear();
 		
 		GismoIntegration integration = new GismoIntegration(this);
-		integration.isProper = readFully;
 		integration.read((BinaryTableHDU) HDU[2]);
 		
 		try { fits.getStream().close(); }

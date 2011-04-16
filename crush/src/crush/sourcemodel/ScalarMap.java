@@ -35,7 +35,6 @@ import crush.gui.colorscheme.Colorful;
 import util.*;
 import util.astro.CelestialProjector;
 import util.astro.EclipticCoordinates;
-import util.astro.EquatorialCoordinates;
 import util.astro.GalacticCoordinates;
 import util.data.Statistics;
 

@@ -197,7 +197,6 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 
 				System.err.println(" Integration {" + (i+1) + "}:");
 				subscan.integrationNo = i;
-				subscan.isProper = readFully;
 				
 				subscan.readDataPar(getHDU(dir + (i+1) + File.separator + getFEBECombination() + "-DATAPAR" + ext));
 				subscan.readData(getHDU(dir + (i+1) + File.separator + getFEBECombination() + "-ARRAYDATA-1" + ext));
@@ -240,7 +239,6 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 			try {
 				SubscanType subscan = getIntegrationInstance();
 				subscan.integrationNo = i;
-				subscan.isProper = readFully;
 				
 				System.err.println(" Integration {" + (i+1) + "}:");
 				

@@ -48,6 +48,8 @@ public abstract class Frame implements Cloneable {
 	public double dependents = 0.0;
 	public float relativeWeight = 1.0F;
 	
+	public int sign = 1;
+	
 	// Some temporary fields to speed up some operations...
 	public float tempC, tempWC, tempWC2;
 	
@@ -117,9 +119,12 @@ public abstract class Frame implements Cloneable {
 		sampleFlag = newSampleFlag;
 	}
 	
+	public void jackknife() {
+		sign = Math.random() < 0.5 ? -1 : 1;
+	}
 		
 	public double getSourceGain(int mode) throws IllegalArgumentException {
-		if(mode == TOTAL_POWER) return transmission;
+		if(mode == TOTAL_POWER) return sign * transmission;
 		else throw new IllegalArgumentException(getClass().getSimpleName() + " does not define signal mode " + mode);
 	}
 
