@@ -165,7 +165,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	@Override
 	public void validate() {
 		super.validate();	
-		if(chopper != null) if(isProper) markChopped();
+		if(chopper != null) markChopped();
 	}
 		
 	public void readData(BinaryTableHDU hdu) throws FitsException {	

@@ -23,6 +23,7 @@
 package util;
 
 import java.io.*;
+import java.util.*;
 
 public class LogFile {
 	String path;
@@ -37,6 +38,14 @@ public class LogFile {
 		check();
 	}
 	
+	protected static String readHeader(BufferedReader in) throws IOException {
+		String header = in.readLine();
+		if(header == null) throw new IllegalStateException("Empty log file header.");
+		if(header.charAt(0) != '#') throw new IllegalStateException("Illegal log file header.");
+		if(header.length() < 2) throw new IllegalStateException("Empty file header.");
+		return header.substring(2);
+	}
+		
 	protected void check() throws IOException {
 		File file = getFile();
 
@@ -50,10 +59,7 @@ public class LogFile {
 					
 		// Otherwise check if the headers match...
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(getFile())));
-		String header = in.readLine();
-		if(header == null) throw new IllegalStateException("Empty log file header.");
-		if(header.charAt(0) != '#') throw new IllegalStateException("Illegal log file header.");
-		if(header.substring(2).equals(format)) return;
+		if(readHeader(in).equals(format)) return;
 		
 		// Conflict...
 		if(conflictPolicy == CONFLICT_OVERWRITE) {
@@ -127,6 +133,64 @@ public class LogFile {
 		out.close();
 	}
 	
+	
+	public static class Entry {
+		private String key, value;
+		
+		public Entry(String key, String value) {
+			this.key = key;
+			this.value = value;
+		}
+		
+		public String getKey() { return key; }
+		
+		public String getValue() { return value; }
+		
+		public double getDouble() { return Double.parseDouble(value); }
+		
+		public int getInt() { return Integer.parseInt(value); }
+	}
+	
+	public static class Row extends Hashtable<String, Entry> {	
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1708055526314357120L;
+
+		public void add(Entry entry) {
+			put(entry.getKey(), entry);
+		}
+	}
+	
+	
+	public static ArrayList<Row> read(String fileName) throws IOException {
+		ArrayList<Row> data = new ArrayList<Row>();
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+		
+		String header = readHeader(in);
+		StringTokenizer tokens = new StringTokenizer(header);
+		ArrayList<String> labels = new ArrayList<String>();
+		while(tokens.hasMoreTokens()) {
+			String label = tokens.nextToken();
+			if(label.contains("(")) label = label.substring(0, label.indexOf("("));
+			labels.add(label);
+		}
+		
+		//for(String label : labels) System.err.println("### label: " + label);
+		
+		String line = null;
+		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+			tokens = new StringTokenizer(line);
+			int col = 0;
+			Row row = new Row();
+			
+			while(tokens.hasMoreTokens()) row.add(new Entry(labels.get(col++), tokens.nextToken()));
+			data.add(row);
+		}
+		
+		return data;		
+	}
+
 	
 	public final static int CONFLICT_OVERWRITE = 0;
 	public final static int CONFLICT_VERSION = 1;

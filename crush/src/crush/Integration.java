@@ -85,7 +85,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	
 	protected boolean isDetectorStage = false;
 	protected boolean isValid = false;
-	public boolean isProper = true;
 		
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
 	// The constructor of Integration thus copies the Scan instrument for private use...
@@ -135,34 +134,30 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		
 		for(Frame frame : this) if(frame != null) frame.validate();
 		
-		if(isProper) {
-			int gapTolerance = hasOption("gap-tolerance") ? framesFor(Double.parseDouble("gap-tolerance") * Unit.s) : 0;
-			if(hasGaps(gapTolerance)) fillGaps();
-			else reindex();
-				
-			//if(hasOption("shift")) shiftData();
-			if(hasOption("detect.chopped")) detectChopper();
-			if(hasOption("frames")) selectFrames();
-			// Explicit downsampling should precede v-clipping
-			if(hasOption("downsample")) if(!option("downsample").equals("auto")) downsample();
-			if(hasOption("vclip")) velocityClip();
-			if(hasOption("aclip")) accelerationClip();
-		
-			calcScanSpeedStats();
-		}
-		
+
+		int gapTolerance = hasOption("gap-tolerance") ? framesFor(Double.parseDouble("gap-tolerance") * Unit.s) : 0;
+		if(hasGaps(gapTolerance)) fillGaps();
+		else reindex();
+
+		//if(hasOption("shift")) shiftData();
+		if(hasOption("detect.chopped")) detectChopper();
+		if(hasOption("frames")) selectFrames();
+		// Explicit downsampling should precede v-clipping
+		if(hasOption("downsample")) if(!option("downsample").equals("auto")) downsample();
+		if(hasOption("vclip")) velocityClip();
+		if(hasOption("aclip")) accelerationClip();
+
+		calcScanSpeedStats();
+			
 		// Flag out-of-range data
 		if(hasOption("range")) checkRange();
-		
-		if(isProper) {
-			// Automatic downsampling after vclipping...
-			if(hasOption("downsample")) if(option("downsample").equals("auto")) downsample();
-		
-			trim();
-		}
+
+		// Automatic downsampling after vclipping...
+		if(hasOption("downsample")) if(option("downsample").equals("auto")) downsample();
+			
+		trim();
 		
 		detectorStage();
-		
 		
 		if(hasOption("tau")) {
 			try { setTau(); }
@@ -170,15 +165,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		}
 		if(hasOption("scale")) setScaling();
 		if(hasOption("invert")) gain *= -1.0;
-
-		if(!isProper) {
-			if(!hasOption("noslim")) slim();
 		
-			if(hasOption("jackknife")) if(Math.random() < 0.5) {
-				System.err.println("   JACKKNIFE! inverted source.");
-				gain *= -1.0;
-			}
-		}
+		if(!hasOption("noslim")) slim();
+		if(hasOption("jackknife")) jackknife();
 		
 		isValid = true;
 		
@@ -187,6 +176,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	
 	public void invert() {
 		for(Frame frame : this) if(frame != null) frame.invert();
+	}
+	
+	public void jackknife() {
+		System.err.println("   JACKKNIFE! frames randomly inverted in source.");
+		for(Frame frame : this) if(frame != null) frame.jackknife();
 	}
 	
 	public int getFrameCount(int excludeFlags) {
@@ -1067,7 +1061,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			int goodSamples = getWeightedTimeStream(channel, data);		
 			
 			// Average power in windows, then convert to rms amplitude
-			FFT.inplaceRealForward(data);
+			FFT.forwardRealInplace(data);
 			for(int F=0; F<nF; F++) {
 				double sumP = 0.0;
 				final int fromf = Math.max(2, 2 * F * blocks);
@@ -1146,6 +1140,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			double norm = medA / Statistics.median(temp, measureFrom, measureTo);
 			if(Double.isNaN(norm)) norm = 1.0;
 			
+			
 			double sumPreserved = 0.0;	
 			for(int F=0; F<nF; F++) {
 				phi[F] *= norm;
@@ -1183,22 +1178,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 				sumpwG += Math.abs(channel.directFiltering) / channel.variance;
 			}
 			
-			// Calculate the signal that is to be discarded...
-			for(int F=0; F<nF; F++) {
-				final int fromf = Math.max(2, 2 * F * blocks);
-				final int tof = Math.min(fromf + 2 * blocks, data.length);
-				final double factor = 1.0 - phi[F];
-				for(int f=fromf; f<tof; f++) data[f] *= factor; 
-			}
-			data[0] *= 1.0 - phi[0]; 
-			data[1] *= 1.0 - phi[nF-1];
-	
-			FFT.inplaceRealBackward(data);
+			toRejected(data, phi);
 			
-			// Amplitude correction for the zero padding and zero flags
-			final float scale = (float) data.length / goodSamples;
+			FFT.backRealInplace(data);
 			
-			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= scale * data[exposure.index];
+			level(data, channel);
+			
+			// Correct amplitudes for flags and padding...
+			//final float scale = (float) data.length / goodSamples;
+			
+			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= data[exposure.index];
 			
 		}
 		
@@ -1775,25 +1764,52 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			final int c = channel.index;
 			int goodSamples = getWeightedTimeStream(channel, signal);
 			
-			FFT.inplaceRealForward(signal);
+			FFT.forwardRealInplace(signal);
 			
-			for(int i=2; i<signal.length; ) {
-				final int F = (int) ((long)i * response.length / signal.length);
-				final double phi = 1.0 - response[F];
-				signal[i++] *= phi;
-				signal[i++] *= phi;
-			}
-			signal[0] *= 1.0 - response[0];
-			signal[1] *= 1.0 - response[response.length-1];
+			toRejected(signal, response);
 			
-			FFT.inplaceRealBackward(signal);
+			FFT.backRealInplace(signal);
 			
-			// Correction for the zero padding and zero flags...
-			final float scale = (float) signal.length / goodSamples;
+			// Re-level the useful part of the signal
+			level(signal, channel);
 			
-			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= scale * signal[exposure.index];
+			// Correct amplitudes for the flags and padding...
+			//final float scale = (float) signal.length / goodSamples;
+			
+			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= signal[exposure.index];
 		}
+	}
 
+	protected void toRejected(float[] spectrum, double[] response) {
+		// Calculate the idealized filter (no flags, no padding).
+		spectrum[0] *= 1.0 - response[0];
+		spectrum[1] *= 1.0 - response[response.length-1];
+		
+		for(int i=spectrum.length; --i >= 2; ) {
+			final int F = (int) ((long)i * response.length / spectrum.length);
+			final float rejection = (float) (1.0 - response[F]);
+			spectrum[i] *= rejection;
+			spectrum[--i] *= rejection;
+		}
+	}
+	
+	
+	protected void level(float[] signal, Channel channel) {
+		final int c = channel.index;
+		double sum = 0.0, sumw = 0.0;
+		for(int i=size(); --i >= 0; ) {
+			final Frame exposure = get(i);
+			if(exposure == null) continue;
+			if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+			if(exposure.sampleFlag[c] != 0) continue;
+			sum += exposure.relativeWeight * signal[i];
+			sumw += exposure.relativeWeight;
+		}
+		if(sumw <= 0.0) Arrays.fill(signal, 0, size(), 0.0F);
+		else {
+			float ave = (float) (sum / sumw);
+			for(int i=size(); --i >= 0; ) signal[i] -= ave;			
+		}
 	}
 	
 			

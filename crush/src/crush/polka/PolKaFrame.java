@@ -24,6 +24,7 @@
 
 package crush.polka;
 
+import util.astro.CoordinateEpoch;
 import crush.apex.APEXArrayScan;
 import crush.laboca.*;
 import crush.polarization.*;
@@ -41,9 +42,9 @@ public class PolKaFrame extends LabocaFrame {
 	
 	@Override
 	public double getSourceGain(final int mode) {	
-		if(mode == PolarModulation.N) return transmission;
-		else if(mode == PolarModulation.Q) return Q * transmission;
-		else if(mode == PolarModulation.U) return U * transmission;
+		if(mode == PolarModulation.N) return super.getSourceGain(TOTAL_POWER);
+		else if(mode == PolarModulation.Q) return Q * super.getSourceGain(TOTAL_POWER);
+		else if(mode == PolarModulation.U) return U * super.getSourceGain(TOTAL_POWER);
 		else return super.getSourceGain(mode);
 	}
 	
@@ -52,7 +53,7 @@ public class PolKaFrame extends LabocaFrame {
 		super.validate();
 		
 		// TODO Set the correct zero angle...
-		MJD0 = scan.MJD;
+		MJD0 = CoordinateEpoch.J2000.getMJD();
 		
 		final PolKa polka = (PolKa) scan.instrument;
 		

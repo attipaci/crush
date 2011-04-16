@@ -1,3 +1,7 @@
+>> filtering/whitening
+>> gismo 'pointing.model', 'pointing.log'
+>> jackknife by frames...
+>> POLKA filter...
 
 2.04-b7
 	
@@ -138,6 +142,10 @@
 	[FIX] Noise whitening (and FFT filtering in general) are adjusted for
 	padding effects. As a result the removal of unwanted signals should be
 	more effective.
+
+	[FIX] Improved noise whitening and Fourier filtering by taking gaps
+	and padding more properly into account to get as close to the desired
+	rejection profile as possible.
 
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change

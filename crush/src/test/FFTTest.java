@@ -102,13 +102,13 @@ public class FFTTest {
 		System.out.println("Original array");
 		print(fdata);
 		
-		FFT.inplaceRealForward(fdata);
+		FFT.forwardRealInplace(fdata);
 		
 		System.out.println("Frequency space");
 		print(fdata);
 		
 		System.out.println("Back transform...");
-		FFT.inplaceRealBackward(fdata);
+		FFT.backRealInplace(fdata);
 		
 		print(fdata);
 		

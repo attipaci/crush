@@ -211,7 +211,7 @@ public class FFT {
 	// This performs the fft on tdata, and puts the
 	// apmlitude normalized frequency data into the supplied Complex array.
 	// but the tdata is also destroyed in the process...
-	public static void inplaceRealForward(final double[] data) {
+	public static void forwardRealInplace(final double[] data) {
 		powerRealTransform(data, true);
 		
 		final double norm = 2.0 / data.length;
@@ -221,7 +221,7 @@ public class FFT {
 	// This performs the fft on tdata, and puts the
 	// apmlitude normalized frequency data into the supplied Complex array.
 	// but the tdata is also destroyed in the process...
-	public static void inplaceRealForward(final float[] data) {
+	public static void forwardRealInplace(final float[] data) {
 		powerRealTransform(data, true);
 		
 		final double norm = 2.0 / data.length;
@@ -258,9 +258,9 @@ public class FFT {
 		powerRealTransform(data, false);
 	}
 
-	public static void inplaceRealBackward(double[] data) { powerRealTransform(data, false); }
+	public static void backRealInplace(double[] data) { powerRealTransform(data, false); }
 
-	public static void inplaceRealBackward(float[] data) { powerRealTransform(data, false); }
+	public static void backRealInplace(float[] data) { powerRealTransform(data, false); }
 
 	public static double[] backward(Complex[] spectrum) {
 		return backward(spectrum, getPaddedSize(spectrum.length-1));

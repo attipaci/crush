@@ -106,7 +106,6 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		instrument.validate(iMJD);
 		
 		Sharc2Integration integration = new Sharc2Integration(this);
-		integration.isProper = readFully;
 		integration.read(HDU, i);
 		add(integration);
 		
