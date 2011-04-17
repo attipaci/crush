@@ -91,6 +91,9 @@ public class Pipeline extends Thread {
 			boolean mapping = true;
 			if(hasOption("source.nefd")) if(!option("source.nefd").getRange(true).contains(integration.nefd)) mapping = false;
 			if(mapping) {
+				if(integration.hasOption("jackknife")) integration.comments += integration.gain > 0.0 ? "+" : "-";
+				else if(integration.gain < 0.0) integration.comments += "-";
+				
 				scanSource.add(integration);
 				contributeSource = true;
 			}

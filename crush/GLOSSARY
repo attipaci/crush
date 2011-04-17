@@ -200,6 +200,16 @@
 :: center		@Deprecated: 2.00-b4
 			@See: 'pointing'
 
+:: channeljk		@Expert
+			@Since: 2.04
+			Jackknife channels, such that they are randomly 
+			inverted for the source model. Beware, however, that 
+			channel-wise jackknives aren't as representative of the
+			true noise as the regular scanwise 'jackknife' is, 
+			because they will reject spatial correlations and
+			instrumental channel-to-channel correlations.
+			@See: 'jackknife', 'framejk', 'scramble'
+
 :: chopped		Used for specifying a chopped data reduction. Can be
 			set manually or automatically (via 'detect.chopped')
 			based on the data itself. The key may trigger 
@@ -731,6 +741,15 @@
 			'blacklist', respectively.
 			@See: 'recall', 'blacklist', 'remove'
 
+:: framejk		@Expert
+			@Since: 2.04
+			Jackknife frames, such that they are randomly inverted
+			for the source model. Beware, however, that frame
+			jackknives aren't as representative of the true noise
+			as the regular scanwise 'jackknife' is, because they
+			will reject temporal correlations.
+			@See: 'jackknife', 'channeljk', 'scramble'
+
 :: frames=<from>-<to>   @Advanced
 			Read only frames <from>-<to> from the data. Maybe
 			useful for quick peeks at the data without processing
@@ -943,7 +962,7 @@
 			jackknife every time. If you want more control over 
 			which scans are inverted, consider using the 'invert' 
 			flag instead.
-			@See: 'invert', 'scramble'
+			@See: 'invert', 'scramble', 'framejk', 'channeljk'
 
 
 :: jansky=X		Specify the calibration factor from data units to Jy.
@@ -1359,6 +1378,15 @@
 
 			@See: 'point', 'fazo', 'fzao'
 
+:: pointing.exposureclip=X	@Since: 2.04
+				@Expert
+				Clip away the underexposed part of the map,
+				below a relative exposure X times the most 
+			exposed part of the map. The option works similar to
+			the 'exposureclip' option, but applies only to the map
+			used for deriving the pointing internally.
+			@See: 'exposureclip'	
+
 :: pointing.method=<value>	@Since: 2.00-b4
 				@Expert		
 			Specify the method used for obtaining positions of 
@@ -1388,6 +1416,22 @@
 			You can still apply a incremental offset on top of this
 			model, using the 'pointing' key the usual way.
 			@See: 'pointing'
+
+:: pointing.log=<name>	@Advanced
+			@Instrumment: GISMO
+			@Since: 2.04
+			Use a pointing log (obtained via the 'log' option) to
+			derive incremental pointing corrections, on top of the
+			pointing model. You can still use 'pointing' to add yet
+			another increment. For the incremental correction to
+			work, the log file must contain the columns 'id', 'AZ',
+			'EL', 'pnt.X', 'pnt.Y', 'src.peak', 'src.dpeak', and
+			'src.FWHM'. The routine will weight pointing data by
+			distance to source, and by distance in time of 
+			observation. When using this option, you should make
+			sure to remove or comment out any entries with 
+			unreliable pointing results.
+			@See: 'pointing', 'pointing.model'
 
 :: pointing.significance=X	@Since: 2.00-0
 				@Expert

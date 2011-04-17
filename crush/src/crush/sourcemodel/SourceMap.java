@@ -370,7 +370,7 @@ extends SourceModel<InstrumentType, ScanType> {
 
 		// For the first source generation, apply the point source correction directly to the signals...
 		final boolean signalCorrection = integration.sourceGeneration == 0;
-		final double[] sourceGain = instrument.getSourceGains(signalCorrection);	
+		final double[] sourceGain = instrument.getSourceGains(signalCorrection);
 	
 		double averageFiltering = instrument.getAverageFiltering();
 		double C = filterCorrection && !signalCorrection ? averageFiltering : 1.0;

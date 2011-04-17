@@ -167,7 +167,15 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		if(hasOption("invert")) gain *= -1.0;
 		
 		if(!hasOption("noslim")) slim();
-		if(hasOption("jackknife")) jackknife();
+		if(hasOption("jackknife")) if(Math.random() < 0.5) {
+			System.err.println("   JACKKNIFE! This integration will produce an inverted source.");
+			gain *= -1.0;
+		}
+		if(hasOption("framejk")) {
+			System.err.println("   JACKKNIFE! Randomly inverted frames in source.");
+			for(Frame exposure : this) exposure.jackknife();
+		}
+		
 		
 		isValid = true;
 		
@@ -176,11 +184,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	
 	public void invert() {
 		for(Frame frame : this) if(frame != null) frame.invert();
-	}
-	
-	public void jackknife() {
-		System.err.println("   JACKKNIFE! frames randomly inverted in source.");
-		for(Frame frame : this) if(frame != null) frame.jackknife();
 	}
 	
 	public int getFrameCount(int excludeFlags) {
@@ -1058,7 +1061,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			}
 			
 			// Put the time-stream data into an array, and FFT it...
-			int goodSamples = getWeightedTimeStream(channel, data);		
+			getWeightedTimeStream(channel, data);		
 			
 			// Average power in windows, then convert to rms amplitude
 			FFT.forwardRealInplace(data);
@@ -1183,9 +1186,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			FFT.backRealInplace(data);
 			
 			level(data, channel);
-			
-			// Correct amplitudes for flags and padding...
-			//final float scale = (float) data.length / goodSamples;
 			
 			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= data[exposure.index];
 			
@@ -1762,7 +1762,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		
 		for(final Channel channel : channels) {
 			final int c = channel.index;
-			int goodSamples = getWeightedTimeStream(channel, signal);
+			getWeightedTimeStream(channel, signal);
 			
 			FFT.forwardRealInplace(signal);
 			
@@ -1772,10 +1772,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			
 			// Re-level the useful part of the signal
 			level(signal, channel);
-			
-			// Correct amplitudes for the flags and padding...
-			//final float scale = (float) signal.length / goodSamples;
-			
+				
 			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= signal[exposure.index];
 		}
 	}

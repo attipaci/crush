@@ -312,6 +312,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		
 		if(hasOption("pointing")) if(option("pointing").equals("auto") || option("pointing").equals("suggest")) {
 			map.convolveTo(scan.instrument.resolution);
+			if(hasOption("pointing.exposureclip")) map.exposureClip(option("pointing.exposureclip").getDouble(), 0.1);
 			map.weight(true);
 			scan.pointing = getPeakSource();
 		}
