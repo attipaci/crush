@@ -32,6 +32,7 @@ import crush.sourcemodel.ScalarMap;
 
 import java.util.*;
 
+import util.Purifiable;
 import util.Unit;
 
 public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? extends InstrumentType, ?>>
@@ -106,7 +107,6 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 			((Biased) subscan).removeBias(dG);
 			subscan.comments += " ";
 		}
-		
 	}
 	
 	@Override
@@ -114,7 +114,8 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		removeBias(subscan);
 		
 		N.add(subscan);
-		if(hasOption("source.polarization")) {			
+		if(hasOption("source.polarization")) {
+			((Purifiable) subscan).purify();
 			Q.add(subscan);
 			U.add(subscan);
 		}

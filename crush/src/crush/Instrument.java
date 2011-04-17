@@ -149,6 +149,11 @@ implements TableEntries {
 			System.out.println(" Will use static source gains.");
 		}
 		
+		if(hasOption("channeljk")) {
+			System.err.println("   JACKKNIFE! Randomly inverted channels in source.");
+			for(Channel channel : this) if(Math.random() < 0.5) channel.coupling *= -1.0;
+		}
+		
 		for(Channel channel : this) {
 			channel.spikes = 0;
 			channel.dof = 1.0;

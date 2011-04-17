@@ -97,7 +97,7 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 	public abstract void add(SourceModel<?, ?> model, double weight);
 	
 	public abstract void add(Integration<?,?> integration);
-	
+		
 	public abstract void process(Scan<?,?> scan);
 		
 	public void postprocess(Scan<?,?> scan) {}

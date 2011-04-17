@@ -109,7 +109,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			}
 			catch(Exception e) {
 				System.err.println("WARNING! No incremental correction: " + e.getMessage());
-				e.printStackTrace();
+				if(CRUSH.debug) e.printStackTrace();
 			}
 		}
 

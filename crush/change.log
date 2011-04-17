@@ -1,9 +1,5 @@
->> filtering/whitening
->> gismo 'pointing.model', 'pointing.log'
->> jackknife by frames...
->> POLKA filter...
 
-2.04-b7
+2.04-b8
 	
 	Overview
 	=====================================================================
@@ -89,6 +85,19 @@
 	automatically via an incremental pointing model using the
 	'pointing.model' option
 
+	[NEW] {GISMO} Incremental pointing corrections can be automatically
+	derived and applied based on the scan logs, using the 'pointing.log'
+	option.
+
+	[NEW] Additional jackkniving possibilities, allowing to randomly invert
+	frames or channels via the 'framejk' and 'channeljk' options,
+	respectively. Such jackknives give less realistic noise maps that the
+	regular 'jackknife' option, which inverts entire integations/subscans,
+	because frame and channel jackkniving may belie temporal or spatial
+	correlations. However, for datasets with too few scans for a true
+	jackknife, these give at least some alternative to estimate noise
+	characteristics, even if they are not perfectly ideal.
+
 	[FIX] {PolKa} 'waveplate.frequency' option had no effect. Fixed.
 	
 	[FIX] {PolKa} No warning message when external timestamp data is not
@@ -139,13 +148,7 @@
 	was recorded as 'N' always. The new keyword 'analyzer' can be used to 
 	override the stored setting. Valid values to 'analyzer' are 'H' or 'V'.
 
-	[FIX] Noise whitening (and FFT filtering in general) are adjusted for
-	padding effects. As a result the removal of unwanted signals should be
-	more effective.
-
-	[FIX] Improved noise whitening and Fourier filtering by taking gaps
-	and padding more properly into account to get as close to the desired
-	rejection profile as possible.
+	[FIX] Jackniving was not functional. This is now fixed.
 
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change
@@ -170,6 +173,14 @@
 	[TWEAK] Chop phase data are updated whenever a change could result
 	(after time weighting, despiking or whitening) to make sure all
 	correlated signals end up in the right places (phases vs samples).
+
+	[TWEAK] Pointing applies its own exposureclip to discard the under-
+	exposed parts of the map, thereby increasing the reliability of the
+	pointing measurement.
+
+	[TWEAK] {PolKa} improved filtering of total-power modulation, by
+	better tailoring to the waveplate jitter, and application only before
+	the derivation of Q and U maps.
 
 	[CODE] Complete reorganization of the decorrelation code among classes
 	that take part in the process. The new locations of the code make
@@ -283,6 +294,9 @@
         despiking. However, phases are updated with the offsets.
 
 	[CODE] Better handling of 'source.fixedgains'.
+
+	[CODE] More shared code between regular Fourier filtering and noise
+	whitening.
 
         [COSMETIC] Extra white space on the console output (from a skipped
         decorrelation step) removed.

@@ -35,13 +35,13 @@ import util.text.TableFormatter;
 import java.text.NumberFormat;
 import java.util.*;
 
-public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
+public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Purifiable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -901946410688579472L;
 
-	double[] phi;
+	public double[] phi;
 	
 	
 	public PolKaSubscan(APEXArrayScan<Laboca, LabocaSubscan> parent) {
@@ -185,10 +185,11 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased {
 			for(Channel channel : instrument)
 				frame.data[channel.index] -= dG[channel.index] * (frame.Qh * polka.Q0 + frame.Uh * polka.U0);
 		}
-		
-		filter(instrument.getObservingChannels(), phi);
 	}
-
+	
+	public void purify() {
+		filter(instrument, phi);
+	}
 
 	@Override
 	public LabocaFrame getFrameInstance() {
