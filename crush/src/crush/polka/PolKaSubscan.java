@@ -30,6 +30,7 @@ import crush.polarization.*;
 import crush.laboca.*;
 import util.*;
 import util.data.FFT;
+import util.data.WeightedPoint;
 import util.text.TableFormatter;
 
 import java.text.NumberFormat;
@@ -43,12 +44,20 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 
 	public double[] phi;
 	
-	
 	public PolKaSubscan(APEXArrayScan<Laboca, LabocaSubscan> parent) {
 		super(parent);
 	}
 
 	
+	public void regularAngles() {
+		double MJD0 = getMJD();
+		double f0 = getWavePlateFrequency();
+		
+		for(LabocaFrame frame : this) if(frame != null) {
+			((PolKaFrame) frame).wavePlateAngle = 2.0 * Math.PI * (frame.MJD - MJD0) * Unit.day * f0;
+		}
+	}
+		
 	public int getPeriod(int mode) {
 		return (int)Math.round(instrument.samplingInterval / (4.0*getWavePlateFrequency()));
 	}
@@ -58,10 +67,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 	}
 	
 	@Override
-	public void validate() {
-		// TODO Apply the time-stamps to the frames
-		if(hasOption("waveplate.data")) timeStamp();
-	
+	public void validate() {	
 		super.validate();
 	
 		try { updateWavePlateFrequency(); }
@@ -69,7 +75,11 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 		
 		System.err.println("   Using waveplate frequency " + Util.f3.format(getWavePlateFrequency()) + " Hz.");
 		
-		prepareFilter();
+		regularAngles();
+		
+		//prepareFilter();
+		
+		removeTPModulation();
 		
 	}
 	
@@ -94,9 +104,9 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 				sum += dev*dev;				
 			}
 			polka.jitter = Math.sqrt(sum / (n-1)) / polka.wavePlateFrequency;
-			//jitter = polka.jitter;
-				
-			System.err.println("   Measured waveplate frequency is " + Util.f3.format(polka.wavePlateFrequency) + "Hz (" + Util.f1.format(100.0*polka.jitter) + "% jitter)");
+			
+			System.err.println("   Measured waveplate frequency is " + Util.f3.format(polka.wavePlateFrequency) + " Hz (" + Util.f1.format(100.0*polka.jitter) + "% jitter).");
+			
 		}
 	}
 
@@ -115,42 +125,75 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 		int nChannels = 0;
 		for(int i=1; i<=harmonics; i++) {
 			double fc = i * polka.wavePlateFrequency;
-			double width = 3.0 * polka.jitter * fc;
+			double width = 4.0 * polka.jitter * fc;
 			int fromf = Math.max(0, (int)Math.floor((fc - 0.5 * width) / df));
 			int tof = Math.min(phi.length-1, (int)Math.ceil((fc + 0.5 * width) / df));
 			
-			for(int k=fromf; k<=tof; k++) phi[k] = 0.0;
-			nChannels += tof - fromf + 1;
+			for(int k=fromf; k<=tof; k++) { 
+				phi[k] = 0.0;
+				nChannels++;
+			}
 		}
 	
 		double fraction = 100.0 * (double) nChannels / phi.length;
-		System.err.println("   Preparing power modulation filter (" + harmonics + " harmonics, " + nChannels + " spectral channels; " + Util.f2.format(fraction) + "% of data).");
+		System.err.println("   Preparing power modulation filter (" + harmonics + " harmonics, " + Util.f2.format(fraction) + "% of spectrum).");
 		
 		
 	}
 	
-	public void timeStamp() {
-		PolKaTimeStamps stamps = ((PolKa) scan.instrument).timeStamps;
+	public void removeTPModulation() {
+		PolKa polka = (PolKa) instrument;
+		
+		double oversample = 4.0;
+		int n = (int)Math.round(oversample / (instrument.samplingInterval * polka.wavePlateFrequency));
+		
+		WeightedPoint[] waveform = new WeightedPoint[n];
+		for(int i=waveform.length; --i >= 0; ) waveform[i] = new WeightedPoint();
+		double dAngle = 2.0 * Math.PI / n;
+		
+		comments += "P(" + n + ") ";
+		
+		ChannelGroup<?> channels = instrument.getObservingChannels();
+		Dependents parms = getDependents("tpmod");
+		parms.clear(channels, 0, size());
+		
+		for(Channel channel : channels) {
+			for(int i=waveform.length; --i >= 0; ) waveform[i].noData();
+			final int c = channel.index;
+			
+			for(LabocaFrame exposure : this) if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
+				if(exposure.sampleFlag[c] != 0) continue;
+				
+				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).wavePlateAngle, 2.0 * Math.PI) + Math.PI;
+				final int i = (int)Math.floor(normAngle / dAngle);
 
-		if(stamps == null) {
-			System.err.println("   WARNING! Wave plate timings not defined. Phaseless polarization.");
-			final double MJD0 = 54000.0;
-			for(Frame frame : this) if(frame != null) ((PolKaFrame) frame).MJD0 = MJD0;
-			return;
+				WeightedPoint point = waveform[i];
+				point.value += exposure.relativeWeight * exposure.data[c];
+				point.weight += exposure.relativeWeight;
+			}
+			
+			for(int i=waveform.length; --i >= 0; ) {
+				final WeightedPoint point = waveform[i];
+				if(point.weight > 0.0) {
+					point.value /= point.weight;				
+					parms.add(channel, 1.0);
+				}
+			}
+			
+			for(LabocaFrame exposure : this) if(exposure != null) {
+				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).wavePlateAngle, 2.0 * Math.PI) + Math.PI;
+				final int i = (int)Math.floor(normAngle / dAngle);
+				final WeightedPoint point = waveform[i];
+				
+				exposure.data[c] -= point.value;
+				if(point.weight > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] != 0)
+					parms.add(channel, exposure.relativeWeight / point.weight);
+			}
 		}
 		
-		int index = stamps.higherIndex(get(0).MJD);
-		double MJD0 = stamps.get(index);
-		double expire = MJD0;
-		for(int t=0; t<size(); t++) {
-			PolKaFrame frame = (PolKaFrame) get(t);
-			if(frame != null) while(frame.MJD > expire) {
-				MJD0 = stamps.get(++index);
-				expire = index < size() - 1 ? MJD0 : Double.POSITIVE_INFINITY; 
-			}
-			frame.MJD0 = MJD0;
-		}
+		parms.apply(channels, 0, size());
 	}
+
 	
 	public void getWaveForm(int mode, int index, float[] waveform) {	
 		
@@ -185,17 +228,25 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 			for(Channel channel : instrument)
 				frame.data[channel.index] -= dG[channel.index] * (frame.Qh * polka.Q0 + frame.Uh * polka.U0);
 		}
+		
 	}
 	
 	public void purify() {
-		filter(instrument, phi);
+		//filter(instrument, phi);
+		removeTPModulation();
 	}
 
 	@Override
 	public LabocaFrame getFrameInstance() {
 		return new PolKaFrame((PolKaScan) scan);
 	}
-	
+		
+	@Override
+	public Vector2D getTauCoefficients(String id) {
+		if(id.equals(instrument.name)) return getTauCoefficients("laboca");
+		else return super.getTauCoefficients(id);
+	}
+		
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);

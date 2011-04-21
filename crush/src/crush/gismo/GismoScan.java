@@ -73,8 +73,10 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	public void validate() {	
 		super.validate();
 		double PA = 0.5 * (getFirstIntegration().getFirstFrame().getParallacticAngle() + getLastIntegration().getLastFrame().getParallacticAngle());
-		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");		
+		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");	
 	}
+	
+
 	
 	@Override
 	public Vector2D getPointingCorrection(Configurator option) {
@@ -105,7 +107,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 				System.err.print("   ");
 				gismo.setPointings(option.get("log").getValue()); 
 				if(model == null) model = new IRAMPointingModel();
-				correction.add(gismo.pointings.getIncrement(MJD, horizontal, model));
+				Vector2D increment = gismo.pointings.getIncrement(MJD, horizontal, model);
+				//increment.rotate(-horizontal.EL());
+				correction.add(increment);
 			}
 			catch(Exception e) {
 				System.err.println("WARNING! No incremental correction: " + e.getMessage());

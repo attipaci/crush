@@ -112,10 +112,11 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	@Override
 	public void add(Integration<?, ?> subscan) {
 		removeBias(subscan);
-		
+
+		((Purifiable) subscan).purify();
 		N.add(subscan);
+		
 		if(hasOption("source.polarization")) {
-			((Purifiable) subscan).purify();
 			Q.add(subscan);
 			U.add(subscan);
 		}

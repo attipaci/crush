@@ -212,7 +212,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	}
 		
 	public void index() {
-		System.err.print(" Creating map index lookup tables.");
+		System.err.print(" Indexing maps. ");
 	
 		Parallel<Integration<?,?>> indexing = new Parallel<Integration<?,?>>(CRUSH.maxThreads) {
 			Runtime runtime;
@@ -608,17 +608,24 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		write(path, true);
 	}
 
+	public String getCoreName() {
+		if(hasOption("name")) {
+			String fileName = Util.getSystemPath(option("name").getValue());
+			if(fileName.toLowerCase().endsWith(".fits")) return fileName.substring(0, fileName.length()-5);
+			else return fileName;
+		}
+		else return getDefaultCoreName();
+	}
 	
 	public void write(String path, boolean info) throws Exception {		
 		// Remove the intermediate image file...
-		File intermediate = new File("intermediate.fits");
+		File intermediate = new File(path + File.separator + "intermediate." + id + ".fits");
 		if(intermediate.exists()) intermediate.delete();
 		
 		String idExt = "";
 		if(id != null) if(id.length() > 0) idExt = "." + id;
 
-		if(hasOption("name")) map.fileName = path + File.separator + Util.getSystemPath(option("name").getValue());
-		else map.fileName = path + File.separator + getDefaultCoreName() + idExt + ".fits";
+		map.fileName = path + File.separator + getCoreName() + idExt + ".fits";
 		
 		if(!isValid) {
 			System.err.println(" WARNING! Source" + idExt + " is empty. Skipping");

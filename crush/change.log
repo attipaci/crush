@@ -1,3 +1,11 @@
+>> -name with polarization... (getCoreName....)
+>> new TP rejection
+>> clean up polarization (make sure the information is used correctly!)
+>> fix or remove 'autobright'
+>> clean up gismo configurations...
+>> gismo incremetal in nasmyth coordinates!
+>> SHARC-2 pixel scales...
+>> --OK-- Parameter accounting for new TP rejection.
 
 2.04-b8
 	
@@ -87,7 +95,7 @@
 
 	[NEW] {GISMO} Incremental pointing corrections can be automatically
 	derived and applied based on the scan logs, using the 'pointing.log'
-	option.
+	option. (Tweak: avoid double counting nearest pointing.)
 
 	[NEW] Additional jackkniving possibilities, allowing to randomly invert
 	frames or channels via the 'framejk' and 'channeljk' options,
@@ -97,6 +105,12 @@
 	correlations. However, for datasets with too few scans for a true
 	jackknife, these give at least some alternative to estimate noise
 	characteristics, even if they are not perfectly ideal.
+
+	[NEW] 'autobright' option allows to automatically set 'bright' 
+	reduction mode for sources listed in the '<instrument>/bright.cat'
+	file (one source name per line). Currently, 'autobright' is enabled
+	for 'gismo','laboca' and 'sharc2' with planets that typically 
+	require the 'bright' reduction mode.
 
 	[FIX] {PolKa} 'waveplate.frequency' option had no effect. Fixed.
 	
@@ -132,6 +146,9 @@
 	[FIX] {PolKa} Non-destructive writing plus small optimizations. As such
 	polarization images can work with 'source.intermediates', if desired...
 
+	[FIX] {PolKa} Tau relations were not defined for 'polka'. Fixed by
+	referring to the 'laboca' relation.
+
 	[FIX] small fix for dependent accounting of decorrelation. Now all 
 	channels in a correlated mode get their dependents cleared upon the
 	update of the correlated signal. This is the correct behavior.
@@ -149,6 +166,8 @@
 	override the stored setting. Valid values to 'analyzer' are 'H' or 'V'.
 
 	[FIX] Jackniving was not functional. This is now fixed.
+
+	[FIX] Highpass filtering thru 'drifts.method=fft' was badly broken.
 
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change
@@ -181,6 +200,17 @@
 	[TWEAK] {PolKa} improved filtering of total-power modulation, by
 	better tailoring to the waveplate jitter, and application only before
 	the derivation of Q and U maps.
+
+	[TWEAK] Automatic veclocity clipping ('vclip=auto') adjusted s.t. low
+	scanning speeds are more stringently rejected.
+
+	[TWEAK] {LABOCA} Adjusted 'gainrange' option for 'cables' and 'boxes',
+	to reject very low (<0.1) gains relative to average. As a result, the
+	new configuration ought to be more reliable...
+
+	[TWEAK] {PolKa} Disabled whitening for PolKa. The whitening filter
+	may inadvertendtly remove polarization signals, so it's best to avoid
+	it.
 
 	[CODE] Complete reorganization of the decorrelation code among classes
 	that take part in the process. The new locations of the code make

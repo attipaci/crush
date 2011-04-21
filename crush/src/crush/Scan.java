@@ -124,8 +124,11 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 			}
 		}
 		
+		
 		if(instrument.options.containsKey("pointing")) pointingAt(getPointingCorrection(option("pointing")));
 	}
+	
+
 	
 	public Vector2D getPointingCorrection(Configurator option) {
 		if(!option.isEnabled) return null;

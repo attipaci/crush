@@ -184,10 +184,10 @@ public class CRUSH extends Configurator {
 		
 		//Collections.sort(scans);
 		
-			
 		update();
-		System.err.println("Will use " + Math.min(scans.size(), maxThreads) + " CPU core(s).");
+		System.err.println(" Will use " + Math.min(scans.size(), maxThreads) + " CPU core(s).");
 	}
+	
 	
 	public void update() {
 		maxThreads = Runtime.getRuntime().availableProcessors();
@@ -263,20 +263,11 @@ public class CRUSH extends Configurator {
 
 		}	
 	}
-
+	
 
 	public void reduce() throws InterruptedException {	
 		int rounds = 0;
 	
-		if(isConfigured("bright")) System.out.println("Bright source reduction.");
-		else if(isConfigured("faint")) System.out.println("Faint source reduction.");
-		else if(isConfigured("deep")) System.out.println("Deep source reduction.");
-		else System.out.println("Default reduction.");
-		
-		if(isConfigured("extended")) System.out.println("Assuming extended source(s).");
-	
-		System.out.println("Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getDefaultSizeUnit()) + " " + instrument.getDefaultSizeName() + " sized source(s).");
-		
 		System.out.println();
 		
 		source = ((Instrument<?>) instrument.copy()).getSourceModelInstance();
@@ -286,6 +277,24 @@ public class CRUSH extends Configurator {
 			source.setOptions(this);
 			source.createFrom(scans);
 		}
+	
+		System.err.println();
+		
+		if(isConfigured("autobright")) {
+			try { autoBright(); }
+			catch(IOException e) { System.err.println("   WARNING! Cannot read bright source catalog."); }			
+		}
+			
+		if(isConfigured("bright")) System.out.println(" Bright source reduction.");
+		else if(isConfigured("faint")) System.out.println(" Faint source reduction.");
+		else if(isConfigured("deep")) System.out.println(" Deep source reduction.");
+		else System.out.println(" Default reduction.");
+	
+		if(isConfigured("extended")) System.out.println(" Assuming extended source(s).");
+		
+		System.out.println(" Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getDefaultSizeUnit()) + " " + instrument.getDefaultSizeName() + " sized source(s).");
+		
+	
 		
 		if(isConfigured("rounds")) rounds = get("rounds").getInt();
 		
@@ -373,6 +382,29 @@ public class CRUSH extends Configurator {
 		System.gc();
 	}
 
+	public void autoBright() throws IOException {
+		System.err.print(" Checking if source should be reduced as 'bright' --- ");
+		
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(
+				instrument.getDefaultConfigPath() + "bright.cat")));
+		
+		String line = null;
+		String sourceName = source.getSourceName();
+		while((line = in.readLine()) != null) if(line.equalsIgnoreCase(sourceName)) {
+			System.err.println("YES!");
+			in.close();
+			parse("bright");
+			for(Scan<?,?> scan : scans) {
+				scan.instrument.options.parse("bright");
+				for(Integration<?,?> integration : scan) integration.instrument.options.parse("bright");
+			}
+			return;
+		}
+		
+		in.close();
+		System.err.println("NO.");
+	}
+	
 	public boolean solveSource() {
 		if(source == null) return false;
 		return isConfigured("source");

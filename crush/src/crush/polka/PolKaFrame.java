@@ -24,7 +24,6 @@
 
 package crush.polka;
 
-import util.astro.CoordinateEpoch;
 import crush.apex.APEXArrayScan;
 import crush.laboca.*;
 import crush.polarization.*;
@@ -34,7 +33,6 @@ public class PolKaFrame extends LabocaFrame {
 	float Q,U;
 	float Qh,Uh;
 	double wavePlateAngle = Double.NaN, wavePlateFrequency = Double.NaN;
-	double MJD0;
 	
 	public PolKaFrame(APEXArrayScan<Laboca, LabocaSubscan> parent) {
 		super(parent);
@@ -52,15 +50,11 @@ public class PolKaFrame extends LabocaFrame {
 	public void validate() {
 		super.validate();
 		
-		// TODO Set the correct zero angle...
-		MJD0 = CoordinateEpoch.J2000.getMJD();
-		
 		final PolKa polka = (PolKa) scan.instrument;
 		
 		if(polka.wavePlateChannel != null) wavePlateAngle = data[polka.wavePlateChannel.index];	
 		if(polka.frequencyChannel != null) wavePlateFrequency = data[polka.frequencyChannel.index];	
-		if(Double.isNaN(wavePlateAngle)) wavePlateAngle = polka.getWavePlateAngle(MJD - MJD0);
-		
+				
 		Qh = (float) Math.cos(4.0 * wavePlateAngle);
 		Uh = (float) Math.sin(4.0 * wavePlateAngle);
 			
