@@ -370,7 +370,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		Configurator option = option("vclip");
 		
 		if(option.equals("auto"))
-			vRange = new Range(instrument.resolution / instrument.getStability(), 0.4 * instrument.resolution / instrument.samplingInterval);	
+			vRange = new Range(0.2*instrument.resolution / instrument.getStability(), 0.4 * instrument.resolution / instrument.samplingInterval);	
 		else {
 			vRange = option.getRange(true);
 			vRange.scale(Unit.arcsec / Unit.s);
@@ -1735,21 +1735,22 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 	
 
 	public synchronized void highPassFilter(double T) {
-		int nf = FFT.getPaddedSize(size())/2+1;
+		int Nt = FFT.getPaddedSize(size());
 	
 		// sigmat sigmaw = 1 ->
 		// Dt sigmaw = 2.35 
 		// Dt 2Pi sigmaf = 2.35 --> sigmaf = 2.35/2Pi 1/Dt
-		// df = 1/Nt;
-		// sigmaf / df = 2.35/2Pi * Nt/Dt 
+		// df = 1/(Nt*dt);
+		// sigmaf / df = 2.35/2Pi * (Nt*dt)/Dt 
 	
-		double sigma_f = 2.35/(2.0*Math.PI) * size() * instrument.samplingInterval / T;		
+		double sigma_f = 2.35/(2.0*Math.PI) * Nt * instrument.samplingInterval / T;	
+		
 		double A = 0.5/(sigma_f*sigma_f);
-		double[] response = new double[nf];
-		for(int f=0; f<response.length; f++) response[f] = -Math.expm1(-A*f*f);
+		double[] response = new double[Nt >> 1];
+		for(int f=response.length; --f >= 0; ) response[f] = -Math.expm1(-A*f*f);
 		
 		filter(instrument.getConnectedChannels(), response);
-	
+		
 		comments += "h";
 		filterTimeScale = T;
 	}

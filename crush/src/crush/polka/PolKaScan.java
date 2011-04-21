@@ -42,17 +42,5 @@ public class PolKaScan extends LabocaScan {
 		return new PolKaSubscan(this);
 	}
 	
-	@Override
-	public void validate() {
-
-		PolKa polka = (PolKa) instrument;
-		
-		if(polka.timeStamps != null) 
-			polka.calcWavePlate(getFirstIntegration().getFirstFrame().MJD, getLastIntegration().getLastFrame().MJD); 
-		
-		
-		super.validate();
-		
-	}
 	
 }

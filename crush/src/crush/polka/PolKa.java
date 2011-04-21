@@ -48,7 +48,7 @@ public class PolKa extends Laboca {
 	double phi0 = 0.0;
 	boolean isOrthogonal = false;
 	Channel wavePlateChannel, frequencyChannel;
-	PolKaTimeStamps timeStamps;
+	//PolKaTimeStamps timeStamps;
 	
 	public PolKa() {
 		super();
@@ -58,16 +58,6 @@ public class PolKa extends Laboca {
 	@Override
 	public void initialize() {
 		super.initialize();
-		
-		if(hasOption("waveplate.data")) {
-			timeStamps = new PolKaTimeStamps();
-			String waveFile = option("waveplate.data").getValue();
-			try { timeStamps.read(waveFile); }
-			catch(IOException e) { 
-				System.err.println("ERROR! Cannot read waveplate data from " + waveFile); 
-				System.exit(1);
-			}
-		}
 	}
 	
 	@Override
@@ -78,7 +68,6 @@ public class PolKa extends Laboca {
 		
 		if(hasOption("waveplate.jitter")) 
 			jitter = option("waveplate.jitter").getDouble();
-		
 		
 		if(hasOption("waveplate.refangle")) {
 			phi0 = option("waveplate.refangle").getDouble() * Unit.deg;
@@ -159,33 +148,4 @@ public class PolKa extends Laboca {
 		else return new PolarMap<Laboca, PolKaScan>(this);
 	}  
 	
-	public double getWavePlateAngle(double dMJD) {
-		return Math.IEEEremainder(phi0 + 2.0 * Math.PI * dMJD * Unit.day * wavePlateFrequency, 2.0 * Math.PI);
-	}
-	
-	public void calcWavePlate(double fromMJD, double toMJD) {
-		if(timeStamps == null) return;
-		
-		int from = timeStamps.higherIndex(fromMJD);
-		int to = timeStamps.lowerIndex(toMJD);
-		
-		if(from < 0 || to >= timeStamps.size()) 
-			throw new IllegalStateException("No PolKa time stamps for specified time range.");
-		
-		int rotations = to - from;
-		wavePlateFrequency = rotations / (toMJD - fromMJD) / Unit.day;
-		
-		System.err.println(" Half-wave plate frequency is " + Util.f4.format(wavePlateFrequency / Unit.Hz) + " Hz.");
-		
-		double rms = 0.0, max = 0.0;
-		for(int i=from+1; i<to; i++) {
-			double dev = timeStamps.get(i) * Unit.day - (i-from) / wavePlateFrequency;
-			max = Math.max(dev, max);
-			rms += dev*dev;			
-		}
-		if(rotations > 1) rms = Math.sqrt(rms / (rotations-1));
-
-		System.err.println(" Half-wave plate jitter is " + Util.f3.format(1000.0*rms) + " ms rms, " + Util.f3.format(1000.0*max) + " ms max.");
-		
-	} 
 }

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.*;
 import java.text.ParseException;
 
+
 import util.LogFile;
 import util.Range;
 import util.Unit;
@@ -76,7 +77,7 @@ public class PointingTable extends ArrayList<PointingEntry> {
 					pointing.significance = row.get("src.peak").getDouble() / row.get("src.dpeak").getDouble();
 
 					pointing.FWHM = row.get("src.FWHM").getDouble() * Unit.arcsec;
-
+					
 					if(pointing.significance > minS2N) if(sizeRange.contains(pointing.FWHM)) 
 						add(pointing);
 				}
@@ -107,13 +108,14 @@ public class PointingTable extends ArrayList<PointingEntry> {
 		WeightedPoint dX = new WeightedPoint();
 		WeightedPoint dY = new WeightedPoint();
 		
-		double dMJD = 2.0 * timeWindow / Unit.day;
+		double dMJD = 3.0 * timeWindow / Unit.day;
 		
-		for(int from = i0; --from >= 0; ) {
-			if(MJD - get(from).MJD > dMJD) break;
+		for(int i = i0; i >= 0; i--) {
+			if(MJD - get(i).MJD > dMJD) break;
 
-			PointingEntry pointing = get(from);
+			PointingEntry pointing = get(i);
 			Vector2D increment = getIncrementalPointing(pointing, pointingModel);
+			//increment.rotate(pointing.horizontal.EL());
 			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
 			
 			dX.average(new WeightedPoint(increment.x, weight));
@@ -121,11 +123,12 @@ public class PointingTable extends ArrayList<PointingEntry> {
 			
 		}
 	
-		for(int to=i0; ++to<size(); ) {
-			if(get(to).MJD - MJD > dMJD) break;
+		for(int i = i0+1; i<size(); i++) {
+			if(get(i).MJD - MJD > dMJD) break;
 	
-			PointingEntry pointing = get(to);
+			PointingEntry pointing = get(i);
 			Vector2D increment = getIncrementalPointing(pointing, pointingModel);
+			//increment.rotate(pointing.horizontal.EL());
 			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
 			
 			dX.average(new WeightedPoint(increment.x, weight));
