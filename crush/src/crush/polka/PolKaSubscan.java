@@ -29,7 +29,6 @@ import crush.apex.APEXArrayScan;
 import crush.polarization.*;
 import crush.laboca.*;
 import util.*;
-import util.data.FFT;
 import util.data.WeightedPoint;
 import util.text.TableFormatter;
 
@@ -48,8 +47,9 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 		super(parent);
 	}
 
-	
 	public void regularAngles() {
+		System.err.println("   WARNING! Phaseless polarization (i.e. uncalibrated angles).");
+		
 		double MJD0 = getMJD();
 		double f0 = getWavePlateFrequency();
 		
@@ -69,14 +69,16 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 	@Override
 	public void validate() {	
 		super.validate();
-	
-		try { updateWavePlateFrequency(); }
-		catch(IllegalStateException e) { System.err.println("   WARNING! " + e.getMessage() + " Using defaults."); }
 		
+		// If the frequency is set manually, then calculate angles based on it...
+		if(hasOption("waveplate.frequency")) regularAngles();
+		else {
+			try { updateWavePlateFrequency(); }
+			catch(IllegalStateException e) { System.err.println("   WARNING! " + e.getMessage() + " Using defaults."); }
+		}
+
 		System.err.println("   Using waveplate frequency " + Util.f3.format(getWavePlateFrequency()) + " Hz.");
-		
-		regularAngles();
-		
+			
 		//prepareFilter();
 		
 		removeTPModulation();
@@ -111,6 +113,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 	}
 
 	
+	/*
 	public void prepareFilter() {
 		PolKa polka = (PolKa) instrument;
 			
@@ -137,14 +140,13 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 	
 		double fraction = 100.0 * (double) nChannels / phi.length;
 		System.err.println("   Preparing power modulation filter (" + harmonics + " harmonics, " + Util.f2.format(fraction) + "% of spectrum).");
-		
-		
 	}
+	*/
 	
 	public void removeTPModulation() {
 		PolKa polka = (PolKa) instrument;
 		
-		double oversample = 4.0;
+		double oversample = hasOption("waveplate.oversample") ? option("waveplate.oversample").getDouble() : 1.0;
 		int n = (int)Math.round(oversample / (instrument.samplingInterval * polka.wavePlateFrequency));
 		
 		WeightedPoint[] waveform = new WeightedPoint[n];
@@ -165,9 +167,8 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 				if(exposure.sampleFlag[c] != 0) continue;
 				
 				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).wavePlateAngle, 2.0 * Math.PI) + Math.PI;
-				final int i = (int)Math.floor(normAngle / dAngle);
-
-				WeightedPoint point = waveform[i];
+				final WeightedPoint point = waveform[(int)Math.floor(normAngle / dAngle)];
+				
 				point.value += exposure.relativeWeight * exposure.data[c];
 				point.weight += exposure.relativeWeight;
 			}
@@ -182,8 +183,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 			
 			for(LabocaFrame exposure : this) if(exposure != null) {
 				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).wavePlateAngle, 2.0 * Math.PI) + Math.PI;
-				final int i = (int)Math.floor(normAngle / dAngle);
-				final WeightedPoint point = waveform[i];
+				final WeightedPoint point = waveform[(int)Math.floor(normAngle / dAngle)];
 				
 				exposure.data[c] -= point.value;
 				if(point.weight > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] != 0)

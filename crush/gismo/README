@@ -4,7 +4,7 @@
 			      Attila Kovacs
 			<kovacs[AT]astro.umn.edu>
 
-			Last updated: 10 Aug 2010
+			Last updated: 28 Apr 2011
 
 
 
@@ -15,10 +15,13 @@ Table of Contents
 2. Locating Scans
   2.1 By file names
   2.2 By scan numbers 
-3. Extinction Correction
-4. GISMO-specific pixel divisions
-5. Runs 1 & 2 Peculiarities
-6. Glossary of GISMO-specific options
+3. Automatic Pointing Corrections
+  3.1 Differential Pointing Model
+  3.2 Incremental Pointing Corrections
+4. Extinction Correction
+5. GISMO-specific pixel divisions
+6. Runs 1 & 2 Peculiarities
+7. Glossary of GISMO-specific options
 
 
 
@@ -111,7 +114,78 @@ You can find a more detailed explanation below.
 
 
 #####################################################################
-3. Extinction Correction
+3. Automatic Pointing Corrections
+#####################################################################
+
+A major improvement offered since crush 2.04 is the ability to apply automatic
+pointing corrections, (a) via supplying a differential pointing model, and (b)
+calculating incremental pointing corrections based on the pointing log. The
+combination of the two methods allows to reach pointing accuracies down to a 
+few arcseconds. Below is a detailed explanation on how to use these methods.
+
+
+3.1 Differential Pointing Model
+===============================
+
+   You can use the 'pointing.model' option to specify a file containing the
+   differential pointing constants, relative to those used by IRAM during
+   the observations. These are the P1 through P9 as decribed by Greve, A., et
+   al. A&A, 115, 379, (1996), and the two Nasmyth offsets P10 and P11. The
+   argument of the 'pointing.model' option should be a file containing the
+   differential constants, one per line. E.g. for adjusting P4, P5, P10, and
+   P11, the file could contain the lines:
+
+	P4 = 2.38
+	P5 = -6.12
+	P10 = -0.68
+	P11 = 4.30
+
+   The actual pointing correction calculated from the supplied differential
+   constants is reported on the console output during the processing of each
+   scan.
+
+
+3.2 Incremental Pointing Corrections
+====================================
+
+   You can also apply incremental pointing corrections based on observations
+   of nearby pointing sources. It is preferred that you observe pointing
+   sources frequently, and preferably at least once withing 30 minutes of all
+   your science scans, and withing 15 degrees distance on the sky. The more 
+   pointings you have and the closer they are in distance and time to your
+   source, the more reliable will be the derived corrections, which are 
+   weighted by their relative proximity on sky and in time.
+
+   To apply incremental corrections, use the 'pointing.log' option whose 
+   argument should specify the pointing log file. Such log files, containing
+   pointing information are automatically generated during GISMO runs. However,
+   you should use an edited copy of this log, making sure to remove, or comment
+   out, all entries with unsuitale pointings. E.g. remove all bogus pointing on
+   very faint sources, where the automatic routine may hit a noise peak or
+   spike rather than a real source. Remove also any pointing data on extended
+   source, objects with multiple peaks or otherwise complex structure, etc.
+
+   For the option to work, the pointing log must contain certain mandatory
+   columns, such as 'id', 'UTh', 'AZd', 'Eld', 'pnt.X', 'pnt.Y', 'src.peak'
+   'src.dpeak', and 'src.FWHM'. Refer to the main README for details.
+
+   The incremental corrections calculated from nearby pointing data are printed
+   on the console during the processing of each scan, together with a quality
+   indicator (qualities near or above 1 are considered good). 
+
+   The incremental corrections can be used together with a pointing model 
+   (which is the preferred way to use this option), in which case increments 
+   are calculated on top of the model predictions, or without a pointing model
+   for an 'absolute' pointing correction. In either case, you can still specify
+   an additional correction manually, if desired, via the 'pointing' option,
+   as usual. The total combined correction (pointing model, incremental
+   correction based on pointing logs, and manual setting via 'pointing') are
+   displayed during the scan processing for verification.
+
+
+
+#####################################################################
+4. Extinction Correction
 #####################################################################
 
 GISMO, being a 2-mm camera, typically operates with low atmospheric extinction.
@@ -120,7 +194,9 @@ the calibration right. By default, CRUSH will reduce the data with a
 guesstimate of the in-band tau value, based on the last IRAM 225GHz radiometer 
 measurement before the scan. The scaling of the 225GHz value to 2-mm passband 
 is approximate, and is based on the CSO atmospheric transmission model of Juan 
-Pardo.
+Pardo. (Addition: during the 2011 April run, we confirmed that the opacity
+correction based on the radiometer and the atmospheric model works well even
+up to 10mm of precipitable water vapor, yielding ~7% rms blind calibration!!!)
 
 You can also set an in-band zenith tau value based on your estimate directly, 
 using the 'tau' option (see the GLOSSARY).
@@ -129,7 +205,7 @@ using the 'tau' option (see the GLOSSARY).
 
 
 #####################################################################
-4. GISMO-specific pixel divisions
+5. GISMO-specific pixel divisions
 #####################################################################
 
 For a general overview of channel divisions, please consult Section 3.
@@ -170,7 +246,7 @@ For a general overview of channel divisions, please consult Section 3.
 
 
 #####################################################################
-6. Glossary of GISMO-specific options
+7. Glossary of GISMO-specific options
 #####################################################################
 
    date=YYYY-MM-DD	Specify the observing date (UT) in the format
@@ -206,6 +282,24 @@ For a general overview of channel divisions, please consult Section 3.
 			for square pixels, or two comma separated sizes for 
 			rectangular pixels.
 			@See: 'rcp', 'rotation', 'pcenter'
+
+   pointing.log=<file>	@Advanced
+			@Since: 2.04
+			Specify the reduction log file (produced via the 'log'
+			option) to use for applying incremental pointing
+			corrections base on the nearby pointing observations. 
+			You can use this option together with 'pointing.model' 
+			or separately. For more information see Section 3.2 
+			(above).
+			@See: 'pointing.model', 'pointing'
+
+   pointing.model=<file>	@Expert
+				@Since: 2.04
+				Specify a file containing differential
+			pointing constants (i.e. relative to those used by IRAM
+			during the observations). See Section 3.1 (above) for
+			details on the file format.
+			@See: 'pointing.log', 'pointing'
 
    rotation=<deg>	@Expert
 			Specify the array rotation (in degrees), when pixel 

@@ -36,11 +36,11 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.04-b8
+ * @version 2.04-1
  * 
  */
 public class CRUSH extends Configurator {
-	public static String version = "2.04-b8";
+	public static String version = "2.04-1";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -107,11 +107,7 @@ public class CRUSH extends Configurator {
 			if(args[i].charAt(0) == '-') {
 				String option = args[i].substring(1);
 				parse(option);
-				
-				if(option.equals("bright")) readConfig("bright.cfg"); 
-				else if(option.equals("faint")) readConfig("faint.cfg"); 
-				else if(option.equals("deep")) readConfig("deep.cfg"); 
-				else if(option.equals("debug")) debug=true;
+				if(option.equals("debug")) debug=true;
 			}
 			else {
 				if(!instrument.initialized) instrument.initialize();
@@ -390,14 +386,12 @@ public class CRUSH extends Configurator {
 		
 		String line = null;
 		String sourceName = source.getSourceName();
+		
 		while((line = in.readLine()) != null) if(line.equalsIgnoreCase(sourceName)) {
 			System.err.println("YES!");
 			in.close();
+			System.err.print(" ");
 			parse("bright");
-			for(Scan<?,?> scan : scans) {
-				scan.instrument.options.parse("bright");
-				for(Integration<?,?> integration : scan) integration.instrument.options.parse("bright");
-			}
 			return;
 		}
 		

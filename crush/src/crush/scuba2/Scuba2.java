@@ -130,9 +130,6 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 	@Override
 	public void loadChannelData() {
 		calcPixelPositions();
-		
-		if(hasOption("rotation")) rotate(option("rotation").getDouble() * Unit.deg);
-		
 		super.loadChannelData();
 	}
 	

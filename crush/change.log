@@ -1,24 +1,19 @@
->> -name with polarization... (getCoreName....)
->> new TP rejection
->> clean up polarization (make sure the information is used correctly!)
->> fix or remove 'autobright'
->> clean up gismo configurations...
->> gismo incremetal in nasmyth coordinates!
->> SHARC-2 pixel scales...
->> --OK-- Parameter accounting for new TP rejection.
 
-2.04-b8
+2.04-1
 	
 	Overview
 	=====================================================================
 	This version of crush brings many cool new features, like PNG image 
 	writing and automatic scan type detection, as well as better photometry
  	support by fixing bugs and adding new features to the relevant code. 
+	Many more innovations make this one of the most feature-packed releases
+	to date.. 
 	Under the hood a lot of code changes to make the decorrelation more 
-	transparent, solid, and bug proof. A few other fixes should make this 
-	and exciting release. After a period of beta testing to allow 
-	identification of remaining issues, this version is expected to become 
-	the next stable release.
+	transparent, solid, and bug proof. Many other fixes correct various
+	smaller issues. SHARC-2 configurations come with updated astrometric
+	parameters, thanks to a recent discovery by Mike Dunham on the 
+	variability of these. Many improvements to GISMO reductions based on
+	the Apr 2011 run.
 	=====================================================================
 
 	[BUG] {APEX} Obsolete trimChopper() and markChopperEnds() functions 
@@ -98,7 +93,7 @@
 	option. (Tweak: avoid double counting nearest pointing.)
 
 	[NEW] Additional jackkniving possibilities, allowing to randomly invert
-	frames or channels via the 'framejk' and 'channeljk' options,
+	frames or channels via 'jackknife.frames' and 'jackknife.channels' 
 	respectively. Such jackknives give less realistic noise maps that the
 	regular 'jackknife' option, which inverts entire integations/subscans,
 	because frame and channel jackkniving may belie temporal or spatial
@@ -112,7 +107,18 @@
 	for 'gismo','laboca' and 'sharc2' with planets that typically 
 	require the 'bright' reduction mode.
 
+	[NEW] {PolKa} Changed the algorithm for total-power modulation removal
+	from FFT-based filtering to time-domain analysis. The new time-domain
+	filter is both faster (linear with data size) and works well even if 
+	the waveplate rotation is very jittery. Thus, the new algorithm should
+	yield more robust rejection of the unwanted power modulation. The
+	new option 'waveplate.oversample' can be used to fine-tune the
+	time-domain filter.
+
 	[FIX] {PolKa} 'waveplate.frequency' option had no effect. Fixed.
+	Also, now when the option is set, it is used to calculate waveplate
+	angles with it. However, this means that the phase information of the
+	polarization is lost, as the reference timings are lost.
 	
 	[FIX] {PolKa} No warning message when external timestamp data is not
 	available. Such timestamps were used only in the initial commissioning
@@ -149,7 +155,7 @@
 	[FIX] {PolKa} Tau relations were not defined for 'polka'. Fixed by
 	referring to the 'laboca' relation.
 
-	[FIX] small fix for dependent accounting of decorrelation. Now all 
+	[FIX] Small fix for dependent accounting of decorrelation. Now all 
 	channels in a correlated mode get their dependents cleared upon the
 	update of the correlated signal. This is the correct behavior.
 
@@ -165,9 +171,14 @@
 	was recorded as 'N' always. The new keyword 'analyzer' can be used to 
 	override the stored setting. Valid values to 'analyzer' are 'H' or 'V'.
 
-	[FIX] Jackniving was not functional. This is now fixed.
+	[FIX] Jackkniving was not functional. This is now fixed.
 
 	[FIX] Highpass filtering thru 'drifts.method=fft' was badly broken.
+
+	[TWEAK] The invocation of 'bright.cfg', 'faint.cfg' and 'deep.cfg'
+	configuration files with the corresponding options is not longer hard-
+	coded. Rather, these happen via the conditional settings established
+	in 'default.cfg'.
 
 	[TWEAK] {APEX} Adjusted APEX photometry configuration to solve for
 	sky-noise gains and apply these as the source gains also. The change
@@ -177,12 +188,8 @@
 	[TWEAK] {APEX} Disabled noise whitening for photometry. It has little
 	or no benefit, and if anything it may harm reliability...
 
-	[TWEAK] Clipping and blanking are permanently disabled in 'faint' mode 
-	when using an a-priori source model (via 'source.model'). This is 
-	because with the removal of the model, the remaining faint signals 
-	should not require it any more. If you do want to use clippinng and
-	blanking together with a source model, then stick to the default
-	brightness (i.e. not 'faint' or 'deep').
+	[TWEAK] Adjusted initial blanking and clipping when a source model
+	is supplied via 'source.model'.
 
 	[TWEAK] {APEX} photometry reductions now check to make sure enough
 	good pixels remain in the reduction (see 'mappingpixels' and 
@@ -211,6 +218,27 @@
 	[TWEAK] {PolKa} Disabled whitening for PolKa. The whitening filter
 	may inadvertendtly remove polarization signals, so it's best to avoid
 	it.
+
+	[TWEAK] {SHARC-2} The typical Nasmyth plate-scale values are made 
+	default, making it easier to generate overriding options for current
+	runs without the need for pre-pending date-specific conditionals...
+
+	[TWEAK] {LABOCA} Not using resistors to decorrelate amplifier boxes and
+	cables. While, the inclusion of channels wired with 1 MOhm resistors,
+	instiead of bolometers, could help obtain more robust solutions, in
+	practice the evidence is that they slightly degrade the reduction
+	quality. Thus, the 'noresistors' option is now set by default.
+
+	[TWEAK] {LABOCA} Switched the order of decorretaling amplifier boxes
+	(now first) and gradients (now second). This reflects the prominance
+	of signals in these two modes, leading to more robust solutions given
+	the level of degeneracy between the two.
+
+	[TWEAK] {GISMO} Switched the order of MUX decorrelation and gradients.
+	See above entry for more details.
+
+	[TWEAK] {GISMO} Adjusted default log format: 'RAh' with 1 decimal, and
+	added 'NEFD' and 'scanspeed'.
 
 	[CODE] Complete reorganization of the decorrelation code among classes
 	that take part in the process. The new locations of the code make
@@ -260,6 +288,11 @@
 
 	[CODE] Log formats can now deal with properly escaped sequences.
 
+	[CODE] Rotation of arrays was a little bit messy. This has been cleaned
+	up, offering more consistency across various arrays (GISMO, SHARC-2, 
+	SCUBA-2). The applied rotation is also printed on the console allowing 
+	verification.
+
 	[COSMETIC] {PolKa} The detailed information is shown only for the
 	unpolarized power map, while other maps are written more silently. 
 
@@ -274,6 +307,18 @@
 
 	[UPDATE] {LABOCA} Updated pixel data files to include resistors.
 
+	[UPDATE] {SHARC-2} Updated configurations with the latest array 
+	astrometry from Darren Dowell, Mike Dunham and Attila Kovacs. The
+	zoom of the SHARC-2 array is very sensitive to its distance in the
+	optical path. Some 10% variation has been found in the astrometric
+	parameters since Sep 2004. The exact date boundaries of these changes
+	are still under debate, but the currect configuration presents a first
+	best guess. We hope to refine the configuration in upcoming releases. 
+
+	[UPDATE] {GISMO} Pixel positions have been fitted to the Neptune 
+	beammap using a quadratic distortion model, yielding 0.6" rms in x
+	and 0.9" rms in y (not bad for a 17" beam!). The fitted positions are
+	now the default.
 
 
 2.03-2 (3 Apr 2011)

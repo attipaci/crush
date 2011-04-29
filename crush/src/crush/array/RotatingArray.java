@@ -44,22 +44,15 @@ public abstract class RotatingArray<PixelType extends SimplePixel> extends MonoA
 	
 	public abstract Vector2D getPointingCenterOffset();
 	
-	public abstract double getRotation();
-	
+	public double getRotation() {
+		if(hasOption("rotation")) return option("rotation").getDouble() * Unit.deg;
+		else return Double.NaN;
+	}
+
 	@Override
 	public void loadChannelData() {
-		super.loadChannelData();
-		
-		if(hasOption("rotation")) {
-			double rotation = option("rotation").getDouble() * Unit.deg;
-			for(PixelType pixel : this) pixel.position.rotate(rotation);
-		}
-	}
-	
-	@Override
-	public void setReferencePosition(Vector2D position) {
-		super.setReferencePosition(position);
 		appliedRotation = 0.0;
+		super.loadChannelData();
 		rotate(getRotation());
 	}
 	
@@ -91,6 +84,8 @@ public abstract class RotatingArray<PixelType extends SimplePixel> extends MonoA
 	protected double appliedRotation = 0.0;
 	
 	protected void rotate(double angle) {
+		System.err.println(" Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
+		
 		// Undo the prior rotation...
 		Vector2D priorOffset = getPointingOffset(appliedRotation);
 		Vector2D newOffset = getPointingOffset(angle);
@@ -106,5 +101,5 @@ public abstract class RotatingArray<PixelType extends SimplePixel> extends MonoA
 		
 		appliedRotation = angle;
 	}
-
+	
 }

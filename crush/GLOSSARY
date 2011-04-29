@@ -86,7 +86,20 @@
 			Decorrelate on all the radiation-sensitive channels of
 			the instrument, or set options for it.
 			@See: 'correlated.<?>' for details on brached options.
-	
+
+:: autobright		@Since: 2.04
+			@Advanced
+			When used, CRUSH will check the source name (case
+			insensitive) against names listed in 'bright.cat' in
+			the instrument's sub-directory (e.g. 
+			'gismo/bright.cat'), and set the 'bright' option 
+			automatically if a match is found. The 'bright.cat'
+			file should contain sourcenames only, one per line.
+			Currently, 'autobright' is enabled for GISMO, LABOCA,
+			SABOCA, and SHARC-2, with a list of typically bright
+			planets.
+			@See: 'bright'
+						
 :: azymuth		@Alias -> 'correlated.telescope-x'
 			@Instrument: GISMO
 			@Advanced
@@ -187,7 +200,7 @@
 			faithful map. The drawback is more noise, but
 			that should not be an issue for such a bright guy :-)
 			Will invoke 'bright.cfg'.
-			@See: 'config', 'faint', 'deep'
+			@See: 'autobright', 'config', 'faint', 'deep'
 
 :: cables		@Alias -> correlated.cables
 			@Instrument: LABOCA, ASZCA
@@ -199,16 +212,6 @@
 
 :: center		@Deprecated: 2.00-b4
 			@See: 'pointing'
-
-:: channeljk		@Expert
-			@Since: 2.04
-			Jackknife channels, such that they are randomly 
-			inverted for the source model. Beware, however, that 
-			channel-wise jackknives aren't as representative of the
-			true noise as the regular scanwise 'jackknife' is, 
-			because they will reject spatial correlations and
-			instrumental channel-to-channel correlations.
-			@See: 'jackknife', 'framejk', 'scramble'
 
 :: chopped		Used for specifying a chopped data reduction. Can be
 			set manually or automatically (via 'detect.chopped')
@@ -741,15 +744,6 @@
 			'blacklist', respectively.
 			@See: 'recall', 'blacklist', 'remove'
 
-:: framejk		@Expert
-			@Since: 2.04
-			Jackknife frames, such that they are randomly inverted
-			for the source model. Beware, however, that frame
-			jackknives aren't as representative of the true noise
-			as the regular scanwise 'jackknife' is, because they
-			will reject temporal correlations.
-			@See: 'jackknife', 'channeljk', 'scramble'
-
 :: frames=<from>-<to>   @Advanced
 			Read only frames <from>-<to> from the data. Maybe
 			useful for quick peeks at the data without processing
@@ -962,8 +956,27 @@
 			jackknife every time. If you want more control over 
 			which scans are inverted, consider using the 'invert' 
 			flag instead.
-			@See: 'invert', 'scramble', 'framejk', 'channeljk'
+			@See: 'invert', 'scramble', 'jackknife.frames', 
+			      'jackknife.channels'
 
+:: jackknife.channels	@Expert
+			@Since: 2.04
+			Jackknife channels, such that they are randomly 
+			inverted for the source model. Beware, however, that 
+			channel-wise jackknives aren't as representative of the
+			true noise as the regular scanwise 'jackknife' is, 
+			because they will reject spatial correlations and
+			instrumental channel-to-channel correlations.
+			@See: 'jackknife', 'jackknife.frames', 'scramble'
+
+:: jackknife.frames	@Expert
+			@Since: 2.04
+			Jackknife frames, such that they are randomly inverted
+			for the source model. Beware, however, that frame
+			jackknives aren't as representative of the true noise
+			as the regular scanwise 'jackknife' is, because they
+			will reject temporal correlations.
+			@See: 'jackknife', 'jackknife.channels', 'scramble'
 
 :: jansky=X		Specify the calibration factor from data units to Jy.
 			@See: 'dataunit', 'gain', 'jansky.inverse'.
@@ -2324,17 +2337,6 @@
 			information from the data.
 			@See: 'waveplate.fchannel', 'waveplate.refangle'
 	
-:: waveplate.data=<filename>	@Instrument: PolKa
-				@Obsolete
-				@Expert
-			Specify the file containing the waveplate information.
-			The data file is a simple sequence of ISO timestamps
-			marking the times when the waveplate passes its 
-			reference position. By now, the waveplate information
-			is merged into the data.
-			@See: 'waveplate.channel', 'waveplate.fchannel'
-
-
 :: waveplate.fchannel=N	@Instrument: PolKa
 			@Expert
 			The LABOCA channel number (counting from 1),
@@ -2356,10 +2358,27 @@
  
 :: waveplate.jitter=X	@Instrument: PolKa
 			@Expert
+			@Obsolete
 			Specify the typical fractional waveplate jitter.
 			This information is used for designing optimal notch
-			filters for the total-power mode to reject any waveplate
-			modulated residues.
+			filters for the total-power mode to reject any 
+			waveplate modulated residues. This option has been
+			obsoleted by the new time-domain filter, and will 
+			dissappear in future releases.
+			@See: 'waveplate.channel'
+
+:: waveplate.oversample=X	@Instrument: PolKa
+				@Expert
+				@Since: 2.04
+			Define the oversampling rate for the total-power 
+			modulation removal. Typically, a waveplate rotation 
+			(1.560 Hz) is 16 samples (at 25Hz sampling rate),
+			only coarsly resolving the power modulation waveform.
+			Because the waveplate rotation is not completely 
+			synchronous with the acquition, it may help to model
+			the waveform at somewhat higher resolution for a better
+			removal of the unwanted total-power modulation 
+			signals. The default value is 1.0.
 			@See: 'waveplate.channel'
 
 :: waveplate.refangle=X	@Instrument: PolKa
