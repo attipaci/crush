@@ -171,7 +171,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 			System.err.println("   JACKKNIFE! This integration will produce an inverted source.");
 			gain *= -1.0;
 		}
-		if(hasOption("framejk")) {
+		if(hasOption("jackknife.frames")) {
 			System.err.println("   JACKKNIFE! Randomly inverted frames in source.");
 			for(Frame exposure : this) exposure.jackknife();
 		}
@@ -370,6 +370,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
 		Configurator option = option("vclip");
 		
 		if(option.equals("auto"))
+			// Move at least 5 beams over the stability timescale
+			// But less that 1/2.5 beams per sample to avoid smearing
 			vRange = new Range(0.2*instrument.resolution / instrument.getStability(), 0.4 * instrument.resolution / instrument.samplingInterval);	
 		else {
 			vRange = option.getRange(true);

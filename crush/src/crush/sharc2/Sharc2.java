@@ -110,14 +110,15 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	@Override
 	public void validate() {
 		if(hasOption("excessload")) excessLoad = option("excessload").getDouble() * Unit.K;	
-		checkRotation();
 		super.validate();
 	}
+	
 	
 	private void checkRotation() {
 		// Check the instrument rotation...
 		if(hasOption("rot0")) rotatorZeroAngle = option("rot0").getDouble() * Unit.deg;
-			
+		if(hasOption("rotation")) rotatorAngle = option("rotation").getDouble() * Unit.deg;	
+		
 		if(mount == Mount.CASSEGRAIN) {
 			System.out.println(" Rotator = " + Util.f1.format(rotatorAngle/Unit.deg) + " RotZero = " 
 					+ Util.f1.format(rotatorZeroAngle/Unit.deg));
@@ -137,6 +138,8 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 			}
 		}
 		else System.out.println(" Mounted at " + Util.f1.format(rotatorZeroAngle/Unit.deg) + " deg.");
+		
+		
 	}
 
 
@@ -157,7 +160,6 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 
 	@Override
 	public void loadChannelData() {
-		super.loadChannelData();
 		
 		// Load the Gain Non-linearity coefficients
 		if(hasOption("response")) {
@@ -182,6 +184,10 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		}
 
 		calcPositions(pixelSize);
+	
+		checkRotation();
+		
+		super.loadChannelData();
 		
 	}
 	

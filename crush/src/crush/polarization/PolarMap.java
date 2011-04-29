@@ -39,6 +39,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		extends SourceModel<InstrumentType, ScanType> {
 
 	ScalarMap<InstrumentType, ScanType> N,Q,U;
+	public boolean usePolarization = false;
 	
 	public PolarMap(InstrumentType instrument) {
 		super(instrument);	
@@ -47,6 +48,10 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	public ScalarMap<InstrumentType, ScanType> getMapInstance() {
 		
 		return new ScalarMap<InstrumentType, ScanType>(instrument);
+	}
+	
+	public boolean usePolarization() {
+		return usePolarization | hasOption("source.polarization");
 	}
 	
 	@Override
@@ -90,15 +95,14 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	public void add(SourceModel<?, ?> model, double weight) {
 		PolarMap<InstrumentType, ScanType> other = (PolarMap<InstrumentType, ScanType>) model;
 		N.add(other.N, weight);
-		if(hasOption("source.polarization")) {
+		if(usePolarization()) {
 			Q.add(other.Q, weight);
 			U.add(other.U, weight);
 		}
 	}
 
 	
-	public void removeBias(Integration<?, ?> subscan) {
-		
+	public void removeBias(Integration<?, ?> subscan) {	
 		if(subscan instanceof Biased) {
 			double[] dG = subscan.instrument.getSourceGains(false);	
 			if(subscan.sourceSyncGain != null) 
@@ -114,9 +118,10 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		removeBias(subscan);
 
 		((Purifiable) subscan).purify();
-		N.add(subscan);
 		
-		if(hasOption("source.polarization")) {
+		N.add(subscan);		
+		if(usePolarization()) {
+			((Purifiable) subscan).purify();
 			Q.add(subscan);
 			U.add(subscan);
 		}
@@ -125,7 +130,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	@Override
 	public void setBase() {
 		N.setBase();
-		if(hasOption("source.polarization")) {
+		if(usePolarization()) {
 			Q.setBase();
 			U.setBase();
 		}
@@ -134,7 +139,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	@Override
 	public void process(Scan<?, ?> scan) {
 		N.process(scan);
-		if(hasOption("source.polarization")) {
+		if(usePolarization()) {
 			Q.process(scan);
 			U.process(scan);
 		}
@@ -144,7 +149,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	public synchronized void sync() throws InterruptedException {
 		System.err.print("\n   [N] ");
 		N.sync();
-		if(hasOption("source.polarization")) {
+		if(usePolarization()) {
 			System.err.print("\n   [Q] ");
 			Q.sync();
 			System.err.print("\n   [U] ");
@@ -155,19 +160,30 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	@Override
 	public void reset() {
 		N.reset();
-		Q.reset();
-		U.reset();
+		if(usePolarization()) {
+			Q.reset();
+			U.reset();
+		}
 	}
+	
 	
 	@Override
 	public void sync(Integration<?, ?> subscan) {
 		N.sync(subscan);	
-		if(hasOption("source.polarization")) {
+		if(usePolarization()) {
 			Q.sync(subscan);
 			U.sync(subscan);	
 		}
 	}
 
+	@Override
+	public void postprocess(Scan<?,?> scan) {
+		super.postprocess(scan);
+		
+		// Treat N as a regular total-power map, so do the post-processing accordingly...
+		N.postprocess(scan);
+	}
+	
 	public ScalarMap<InstrumentType, ScanType> getI() {
 		return getI(getP());
 	}
@@ -200,7 +216,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 			if(q.flag[i][j] == 0 && u.flag[i][j] == 0) {
 				p.data[i][j] = Math.hypot(q.data[i][j], u.data[i][j]);
 				
-				// Do error propagation properly...
+				// Propagate errors properly...
 				if(p.data[i][j] > 0.0) {
 					final double qf = q.data[i][j] / p.data[i][j];
 					final double uf = u.data[i][j] / p.data[i][j];

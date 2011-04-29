@@ -142,8 +142,6 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 
 		setPlateScale(pixelSize);
 		
-		if(hasOption("rotation")) rotate(option("rotation").getDouble() * Unit.deg);
-		
 		super.loadChannelData();
 	}
 	

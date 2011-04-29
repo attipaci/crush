@@ -149,7 +149,7 @@ implements TableEntries {
 			System.out.println(" Will use static source gains.");
 		}
 		
-		if(hasOption("channeljk")) {
+		if(hasOption("jackknife.channels")) {
 			System.err.println("   JACKKNIFE! Randomly inverted channels in source.");
 			for(Channel channel : this) if(Math.random() < 0.5) channel.coupling *= -1.0;
 		}
