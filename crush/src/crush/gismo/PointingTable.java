@@ -60,8 +60,10 @@ public class PointingTable extends ArrayList<PointingEntry> {
 		for(LogFile.Row row : LogFile.read(fileName)) {
 			PointingEntry pointing = new PointingEntry();
 			try { 
-				AstroTime time = AstroTime.forFitsTimeStamp(row.get("id").getValue().substring(0, 10));
-				pointing.MJD = time.getMJD() + row.get("UTh").getDouble() * Unit.hour / Unit.day;
+				pointing.id = row.get("id").getValue();
+				AstroTime time = AstroTime.forFitsTimeStamp(pointing.id.substring(0, 10));
+				
+				pointing.MJD = Math.round(time.getMJD()) + row.get("UTh").getDouble() * Unit.hour / Unit.day;
 				
 				pointing.horizontal = new HorizontalCoordinates(
 						row.get("AZd").getDouble() * Unit.deg,
@@ -117,7 +119,7 @@ public class PointingTable extends ArrayList<PointingEntry> {
 			Vector2D increment = getIncrementalPointing(pointing, pointingModel);
 			//increment.rotate(pointing.horizontal.EL());
 			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
-			
+				
 			dX.average(new WeightedPoint(increment.x, weight));
 			dY.average(new WeightedPoint(increment.y, weight));
 			
@@ -130,7 +132,7 @@ public class PointingTable extends ArrayList<PointingEntry> {
 			Vector2D increment = getIncrementalPointing(pointing, pointingModel);
 			//increment.rotate(pointing.horizontal.EL());
 			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
-			
+				
 			dX.average(new WeightedPoint(increment.x, weight));
 			dY.average(new WeightedPoint(increment.y, weight));
 		}
@@ -146,7 +148,7 @@ public class PointingTable extends ArrayList<PointingEntry> {
 	}
 	
 	public Vector2D getIncrementalPointing(PointingEntry pointing, IRAMPointingModel pointingModel) {		
-		Vector2D model = pointingModel.getCorrection(pointing.horizontal);
+		Vector2D model = pointingModel.getCorrection(pointing.horizontal, (pointing.MJD % 1.0) * Unit.day);	
 		model.x = pointing.offset.x - model.x;
 		model.y = pointing.offset.y - model.y;
 		return model;
@@ -164,6 +166,7 @@ public class PointingTable extends ArrayList<PointingEntry> {
 
 
 class PointingEntry implements Comparable<PointingEntry> {
+	String id;
 	double MJD;
 	HorizontalCoordinates horizontal;
 	Vector2D offset;

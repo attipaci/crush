@@ -24,17 +24,16 @@
 
 package util.astro;
 
-// TODO:
-// 		getFITSTimeStamp(), parseFITSTimeStamp(), forFITSTimeStamp()
-
-
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
 
 import util.Unit;
+import util.text.TimeFormat;
 
 //  BUG Fixes 4 Nov 2009
 
@@ -168,13 +167,32 @@ public class AstroTime {
 		return isoFormatter.format(getDate());
 	}
 	
+	// Proper parsing of UT (rather than UTC)...
 	public void parseFitsTimeStamp(String text) throws ParseException {
-		try { setMillis(fitsFormatter.parse(text).getTime()); }
-		catch(ParseException e) { setMillis(shortFitsFormatter.parse(text).getTime()); }
+		// Set the nearest MJD day to the given UTC day...
+		setMillis(fitsDateFormatter.parse(text.substring(0,10)).getTime()); 
+		MJD = Math.round(MJD);
+		
+		// Add in the UT time component...
+		if(text.length() > 11) {
+			double UT = 0.0;
+			StringTokenizer tokens = new StringTokenizer(text.substring(11), ":");
+			if(tokens.hasMoreTokens()) UT += Integer.parseInt(tokens.nextToken()) * Unit.hour;
+			if(tokens.hasMoreTokens()) UT += Integer.parseInt(tokens.nextToken()) * Unit.min;
+			if(tokens.hasMoreTokens()) UT += Double.parseDouble(tokens.nextToken()) * Unit.s;
+			MJD += UT / Unit.day;			
+		}
+	
 	}
 	
 	public String getFitsTimeStamp() {
-		return fitsFormatter.format(getDate());
+		long millis = getMillis();
+		long remainder = (millis - millisJ2000) % dayMillis;
+		
+		// The UT day around noon (to very safely avoid rounding errors
+		// plus the UT time from the fractional part...
+		return fitsDateFormatter.format(millis - remainder + dayMillis/2) + 
+			'T' + fitsTimeFormat.format((MJD - Math.floor(MJD)) * Unit.day);
 	}
 	
 	public void parseSimpleDate(String text) throws ParseException {
@@ -193,7 +211,18 @@ public class AstroTime {
 	
 	public static AstroTime forFitsTimeStamp(String text) throws ParseException {
 		AstroTime time = new AstroTime();
-		time.parseFitsTimeStamp(text);
+		
+		time.parseFitsTimeStamp(text.substring(0, 10));
+		time.MJD = Math.round(time.MJD);
+		if(text.length() > 11) {
+			double UT = 0.0;
+			StringTokenizer tokens = new StringTokenizer(text.substring(11), ":");
+			if(tokens.hasMoreTokens()) UT += Integer.parseInt(tokens.nextToken()) * Unit.hour;
+			if(tokens.hasMoreTokens()) UT += Integer.parseInt(tokens.nextToken()) * Unit.min;
+			if(tokens.hasMoreTokens()) UT += Double.parseDouble(tokens.nextToken()) * Unit.s;
+			time.MJD += UT / Unit.day;			
+		}
+			
 		return time;
 	}
 	
@@ -208,7 +237,7 @@ public class AstroTime {
 	}
 	
 	// millis of 2000 UT - leap2000 - tai2tt -> 2000 TT
-	protected final static long millisJ2000 = 946684800000L - 32000L - 32184L; // millis at TT 2000
+	public final static long millisJ2000 = 946684800000L - 32000L - 32184L; // millis at TT 2000
 	protected final static double mjdJ2000 = 51544.0;
 	protected final static long dayMillis = 86400L * 1000L;
 	protected final static double julianCenturyMillis = Unit.julianCentury / Unit.s * 1000.0;
@@ -219,27 +248,17 @@ public class AstroTime {
 	protected static double TAI2TT = 32.184 * Unit.s;
 	protected static double GPS2TAI = -19.0 * Unit.s;
 	
+	public static TimeZone UTC = TimeZone.getTimeZone("UTC");
+	
 	private static DateFormat isoFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-	private static DateFormat fitsFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-	private static DateFormat shortFitsFormatter = new SimpleDateFormat("yyyy-MM-dd");
+	private static DateFormat fitsDateFormatter = new SimpleDateFormat("yyyy-MM-dd");
 	private static DateFormat defaultFormatter = new SimpleDateFormat("yyyy.MM.dd");
+	private static TimeFormat fitsTimeFormat = new TimeFormat(3); 
 	
-	
-	/*
 	static {
-		TimeZone UTC = TimeZone.getTimeZone("UTC");
-		
-		isoFormatter.setTimeZone(UTC);
-		fitsFormatter.setTimeZone(UTC);
-		
-		GregorianCalendar calendar = new GregorianCalendar();
-		calendar.set(2000, 0, 31, 11, 58, 55);
-		calendar.set(Calendar.MILLISECOND, 816);
-		calendar.setTimeZone(UTC);
-		millisJ2000 = calendar.getTimeInMillis();
-		
-		System.err.println(">>> " + millisJ2000);
+		fitsDateFormatter.setTimeZone(UTC);
+		defaultFormatter.setTimeZone(UTC);
+		fitsTimeFormat.colons();
 	}
-	*/
 	
 }

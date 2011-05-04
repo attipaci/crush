@@ -42,6 +42,7 @@ import util.astro.GeodeticCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.astro.JulianEpoch;
 import util.astro.Precession;
+import util.astro.Weather;
 import util.data.TableEntries;
 import util.data.WeightedPoint;
 import util.text.TableFormatter;
@@ -124,6 +125,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 			}
 		}
 		
+		if(instrument.options.containsKey("jackknife")) sourceName += "-JK";
 		
 		if(instrument.options.containsKey("pointing")) pointingAt(getPointingCorrection(option("pointing")));
 	}
@@ -429,7 +431,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		else if(name.equals("AZd")) return Util.defaultFormat(horizontal.AZ() / Unit.deg, f);
 		else if(name.equals("ELd")) return Util.defaultFormat(horizontal.EL() / Unit.deg, f);
 		else if(name.equals("RAd")) return Util.defaultFormat(equatorial.RA() / Unit.deg, f);
-		else if(name.equals("RAh")) return Util.defaultFormat(equatorial.RA() / Unit.hourAngle, f);
+		else if(name.equals("RAh")) return Util.defaultFormat((equatorial.RA() + Math.PI) / Unit.hourAngle, f);
 		else if(name.equals("DECd")) return Util.defaultFormat(equatorial.DEC() / Unit.deg, f);
 		else if(name.equals("epoch")) return equatorial.epoch.toString();
 		else if(name.equals("epochY")) return Util.defaultFormat(equatorial.epoch.getYear(), f);
@@ -451,6 +453,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		else if(name.equals("creator")) return creator;
 		else if(name.equals("integrations")) return Integer.toString(size());
 		else if(name.equals("generation")) return Integer.toString(getSourceGeneration());
+		else if(this instanceof Weather) {	
+			if(name.equals("Tamb")) return Util.defaultFormat(((Weather) this).getAmbientTemperature() - 273.16*Unit.K, f);
+			else if(name.equals("humidity")) return Util.defaultFormat(((Weather) this).getAmbientHumidity(), f);
+			else if(name.equals("pressure")) return Util.defaultFormat(((Weather) this).getAmbientPressure() / Unit.hPa, f);
+			else if(name.equals("windspeed")) return Util.defaultFormat(((Weather) this).getWindSpeed() / (Unit.m / Unit.s), f);
+			else if(name.equals("windpk")) return Util.defaultFormat(((Weather) this).getWindPeak() / (Unit.m / Unit.s), f);
+			else if(name.equals("winddir"))	return Util.defaultFormat(((Weather) this).getWindDirection() / Unit.deg, f);
+			else return getFirstIntegration().getFormattedEntry(name, formatSpec);
+		}
 		else return getFirstIntegration().getFormattedEntry(name, formatSpec);
 	}
 	
