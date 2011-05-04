@@ -33,6 +33,7 @@ import util.astro.EquatorialCoordinates;
 import util.astro.GeodeticCoordinates;
 import util.astro.JulianEpoch;
 import util.astro.Weather;
+import util.text.TableFormatter;
 
 import java.io.*;
 import java.text.*;
@@ -50,7 +51,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	double tau225GHz;
 	double ambientT, pressure, humidity, windAve, windPeak, windDirection;
 	String scanID, obsType;
-	IRAMPointingModel pointingModel;
+	IRAMPointingModel observingModel, tiltCorrections;
+	
 	Vector2D appliedPointing = new Vector2D();
 	
 	
@@ -81,14 +83,19 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	@Override
 	public Vector2D getPointingCorrection(Configurator option) {
 		Vector2D correction = super.getPointingCorrection(option);
-		IRAMPointingModel model = null;
+		IRAMPointingModel incrementalModel = null;
 		Gismo gismo = (Gismo) instrument;
 		
 		if(option.isConfigured("model")) {
 			try { 
-				model = new IRAMPointingModel(option.get("model").getValue());
-				Vector2D modelCorr = model.getCorrection(horizontal);
-
+				double UT = (MJD % 1.0) * Unit.day;
+				incrementalModel = new IRAMPointingModel(option.get("model").getValue());
+				
+				if(!option.isConfigured("model.incremental")) incrementalModel.subtract(observingModel);				
+				if(option.isConfigured("model.static")) incrementalModel.setStatic(true);
+				
+				Vector2D modelCorr = incrementalModel.getCorrection(horizontal, UT);
+				
 				System.err.println("   Got pointing from model: " + 
 						Util.f1.format(modelCorr.x / Unit.arcsec) + ", " +
 						Util.f1.format(modelCorr.y / Unit.arcsec) + " arcsec."
@@ -106,8 +113,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			try { 
 				System.err.print("   ");
 				gismo.setPointings(option.get("log").getValue()); 
-				if(model == null) model = new IRAMPointingModel();
-				Vector2D increment = gismo.pointings.getIncrement(MJD, horizontal, model);
+				if(incrementalModel == null) incrementalModel = new IRAMPointingModel();
+				Vector2D increment = gismo.pointings.getIncrement(MJD, horizontal, incrementalModel);
 				//increment.rotate(-horizontal.EL());
 				correction.add(increment);
 			}
@@ -218,8 +225,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		
 		if(instrument.options.containsKey("serial")) instrument.setSerialOptions(serialNo);
 		
-		site = new GeodeticCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
-		System.err.println(" Telescope Location: " + site);
+		//site = new GeodeticCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
+		//System.err.println(" Telescope Location: " + site);
 		
 		// IRAM Pico Veleta PDF 
 		//site = new GeodeticCoordinates("-03d23m33.7s, 37d03m58.3s");
@@ -293,7 +300,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			instrument.setDateOptions(MJD);
 		}
 		catch(ParseException e) { System.err.println("WARNING! " + e.getMessage()); }
-			
+		
 		CoordinateEpoch epoch = hasOption("epoch") ? 
 				CoordinateEpoch.forString(option("epoch").getValue()) 
 			: new JulianEpoch(header.getDoubleValue("EQUINOX"));
@@ -336,13 +343,18 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		
 		equatorial.addOffset(eqOffset);
 	
-		// Add pointing corrections...
-		
-		pointingModel = new IRAMPointingModel();
-		for(int i=1; i<=9; i++) 
-			pointingModel.P[i] = header.getDoubleValue("PCONST" + i, 0.0) + header.getDoubleValue("P" + i + "COR", 0.0);
-		
-		
+		// Read the effective pointing model
+		// Static constant *AND* tilt-meter corrections...
+		observingModel = new IRAMPointingModel();
+		tiltCorrections = new IRAMPointingModel();
+		for(int i=1; i<=9; i++) {
+			observingModel.P[i] = (header.getDoubleValue("PCONST" + i, 0.0) + header.getDoubleValue("P" + i + "COR", 0.0)) / Unit.arcsec;			
+			tiltCorrections.P[i] = header.getDoubleValue("P" + i + "CORINC", 0.0) / Unit.arcsec;
+		}
+		// TODO
+		// Where are the nasmyth receiver offsets really stored?
+		observingModel.P[10] = (header.getDoubleValue("RXHORI", 0.0) + header.getDoubleValue("RXHORICO", 0.0)) / Unit.arcsec;
+		observingModel.P[11] = (header.getDoubleValue("RXVERT", 0.0) + header.getDoubleValue("RXVERTCO", 0.0)) / Unit.arcsec;
 		
 		isTracking = true;
 		
@@ -401,7 +413,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		double sizeUnit = instrument.getDefaultSizeUnit();
 		String sizeName = instrument.getDefaultSizeName();
 	
-		Vector2D corr = pointingCorrection == null ? new Vector2D() : pointingCorrection;
+		// X and Y are absolute pointing offsets including the static pointing model...
+		Vector2D corr = observingModel.getCorrection(horizontal, (MJD % 1.0) * Unit.day);
+		if(pointingCorrection != null) corr.add(pointingCorrection);
 		
 		data.add(new Datum("X", (pointingOffset.x + corr.x) / sizeUnit, sizeName));
 		data.add(new Datum("Y", (pointingOffset.y + corr.y) / sizeUnit, sizeName));
@@ -424,7 +438,13 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+		
 		if(name.equals("obstype")) return obsType;
+		else if(name.equals("modelX")) return Util.defaultFormat(observingModel.getDX(horizontal, (MJD % 1) * Unit.day), f);
+		else if(name.equals("modelY")) return Util.defaultFormat(observingModel.getDY(horizontal, (MJD % 1) * Unit.day), f);
+		else if(name.equals("tiltX")) return Util.defaultFormat(tiltCorrections.getDX(horizontal, (MJD % 1) * Unit.day), f);
+		else if(name.equals("tiltY")) return Util.defaultFormat(tiltCorrections.getDY(horizontal, (MJD % 1) * Unit.day), f);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

@@ -28,10 +28,17 @@ import util.Util;
 import util.Vector2D;
 import util.astro.HorizontalCoordinates;
 import java.io.*;
+import java.util.Arrays;
 import java.util.StringTokenizer;
 
 public class IRAMPointingModel {
-	double[] P = new double[12];
+	double[] P = new double[1+CONSTANTS];
+	double[] c = new double[1+CONSTANTS];
+	double[] s = new double[1+CONSTANTS];
+	
+	boolean isStatic = false;
+	
+	public final static int CONSTANTS = 11;
 	
 	public IRAMPointingModel() {}
 	
@@ -40,36 +47,54 @@ public class IRAMPointingModel {
 		read(fileName);
 	}
 	
-	public Vector2D getCorrection(HorizontalCoordinates horizontal) {
-		return new Vector2D(getDX(horizontal) * Unit.arcsec, getDY(horizontal) * Unit.arcsec);
+	public Vector2D getCorrection(HorizontalCoordinates horizontal, double UT) {
+		return new Vector2D(getDX(horizontal, UT) * Unit.arcsec, getDY(horizontal, UT) * Unit.arcsec);
 	}
 	
-	public double getDX(HorizontalCoordinates horizontal) {
+	public double P(int n, double UT) {
+		double theta = UT * (2.0 * Math.PI / Unit.day);
+		return P[n] + (isStatic ? c[n] * Math.cos(theta) + s[n] * Math.sin(theta) : 0.0);
+	}
+	
+	public void subtract(IRAMPointingModel model) {
+		for(int i=P.length; --i >= 0; ) {
+			P[i] -= model.P[i];
+			c[i] -= model.c[i];
+			s[i] -= model.s[i];			
+		}
+	}
+	
+	public void setStatic(boolean value) {
+		isStatic = value;
+	}
+	
+	public double getDX(HorizontalCoordinates horizontal, double UT) {
 		double cosE = horizontal.cosLat;
 		double sinE = horizontal.sinLat;
 		double sinA = Math.sin(horizontal.x);
 		double cosA = Math.cos(horizontal.x);
-		double H = P[10];
-		double V = P[11];
+		double H = P(10, UT);
+		double V = P(11, UT);
 		
-		return P[1] * cosE + P[2] + P[3] * sinE + (P[4] * cosA + P[5] * sinA) * sinE + P[6] * sinA
+		return P(1, UT) * cosE + P(2, UT) + P(3, UT) * sinE + (P(4, UT) * cosA + P(5, UT) * sinA) * sinE + P(6, UT) * sinA
 			+ H * cosE - V * sinE;
 	}
 	
-	public double getDY(HorizontalCoordinates horizontal) {
+	public double getDY(HorizontalCoordinates horizontal, double UT) {
 		double cosE = horizontal.cosLat;
 		double sinE = horizontal.sinLat;
 		double sinA = Math.sin(horizontal.x);
 		double cosA = Math.cos(horizontal.x);
-		double H = P[10];
-		double V = P[11];
+		double H = P(10, UT);
+		double V = P(11, UT);
 		
-		return -P[4] * sinA + (P[5] + P[6] * sinE) * cosA + P[7] + P[8] * cosE + P[9] * sinE - H * sinE - V * cosE;
+		return -P(4, UT) * sinA + (P(5, UT) + P(6,UT) * sinE) * cosA + P(7, UT) + P(8, UT) * cosE + P(9, UT) * sinE - H * sinE - V * cosE;
 	}
 	
 	public void write(String fileName) throws IOException {
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-		for(int i=1; i<P.length; i++) out.println("P" + i + " = " + Util.f2.format(P[i])); 
+		for(int i=1; i<P.length; i++) 
+			out.println("P" + i + " = " + Util.f2.format(P[i]) + ", " + Util.f2.format(c[i]) + ", " + Util.f2.format(s[i])); 
 		out.close();
 	}
 	
@@ -78,12 +103,14 @@ public class IRAMPointingModel {
 		String line;
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line, " \t\r=:");
+			StringTokenizer tokens = new StringTokenizer(line, " \t\r=:, ");
 			if(tokens.hasMoreTokens()) {
 				String constant = tokens.nextToken().toLowerCase();
 				if(constant.startsWith("p")) {
 					int i = Integer.parseInt(constant.substring(1));
 					if(tokens.hasMoreTokens()) P[i] = Double.parseDouble(tokens.nextToken());
+					if(tokens.hasMoreTokens()) c[i] = Double.parseDouble(tokens.nextToken());
+					if(tokens.hasMoreTokens()) s[i] = Double.parseDouble(tokens.nextToken());
 				}
 			}
 		}

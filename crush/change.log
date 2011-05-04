@@ -1,5 +1,48 @@
 
-2.04-1
+2.04-2
+
+	[NEW] {GISMO} The pointing corrections from the static pointing model
+	and the inclinometer can be logged via 'modelX', 'modelY', and 'tiltX',
+	'tiltY' labels.
+
+	[BUG] Timestamp parsing/formatting was done in local time rather than
+	UTC as it should have been. This was a major problem with the
+	processing of GISMO timestamps and the application of incremental
+	pointing corrections because MJD and UT were wrongly calculated.
+
+	[FIX] FITS timestamps are now parsed and printed in UT rather than UTC.
+	As such it is now the proper FITS timestamp.
+
+	[TWEAK] {GISMO} Pointing model now contains absolute pointing constants
+	by default (unless 'pointing.model.incremental' is set) and is used
+	to calculate differential corrections to whatever pointing model was
+	used during the observing. This allows changing the telescope pointing
+	model without penalty.
+
+	[TWEAK] {GISMO} Log quantities 'pnt.X', and 'pnt.Y' are now absolute
+	pointing offsets including the corrections applied by the static 
+	pointing model (but not the dynamic corrections by the inclinometer).
+	
+	[TWEAK] When jackknifing options are used, the sourcename gets 
+	automatically appended with '-JK' to indicate it being an jackknife
+	rather than an actual source map.
+
+	[TWEAK] Logging now reports 'RAh' values in 0--24 range (rather than
+	-12:12 as before).
+
+	[TWEAK] {GISMO} Added time variability to GISMO pointing constants.
+	The time variablility terms can be ignored by setting the 
+	'pointing.model.static' option.
+
+	[TWEAK] Slightly adjusted default gismo log format.
+
+	[TWEAK] Added 'Tamb', 'pressure', 'humidity', 'windspeed', 'windpk',
+	and 'winddir' as log quantities. Not all instruments/telescoped may 
+	provide all these quantities.
+
+
+
+2.04-1 (28 Apr 2011)
 	
 	Overview
 	=====================================================================
@@ -42,6 +85,8 @@
 	waveplate angles were not calculated causing NaNs, and (2) spurious
 	polarization signal filter was badly set up. As a result, de-biasing
 	created NaN timestreams.
+
+	[BUG] {SABOCA} Reductions broken due to invalid ADC range flagging.
 
 	[NEW] Added new capability to create PNG thumbnail images for all FITS
 	images. The PNG image writing is activated by 'write.png', the size

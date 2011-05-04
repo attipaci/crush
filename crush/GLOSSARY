@@ -1412,8 +1412,8 @@
 :: pointing.model=<name>	@Advanced
 				@Instrument: GISMO
 				@Since: 2.04
-			Use an incremental pointing model to derive and apply
-			pointing corrections automatically. The argument is the
+			Use a pointing model to derive and apply pointing 
+			corrections automatically. The argument is the
 			name of the file containing the pointing constants. The
 			file is simply an ASCII file, with separate lines 
 			containing the pointing constants and their incremental
@@ -1428,7 +1428,31 @@
 
 			You can still apply a incremental offset on top of this
 			model, using the 'pointing' key the usual way.
-			@See: 'pointing'
+			By default, the pointing model contains aggregated 
+			constants, which are compared to the telescope model
+			to calculate appropriate corrections. However, it is
+			also possible to supply incremental constants if the
+			'pointing.model.incremental' option is also set.
+			@See: 'pointing', 'pointing.model.incremental'
+			      'pointing.model.static'
+
+:: pointing.model.incremetal	@Instrument: GISMO
+				@Since: 2.04-2
+				@Advanced
+			Specify the the pointing model supplied via 'pointing
+			model is an incremental model on top of whatever model
+			was used during the observations.
+			@See: 'pointing.model'
+
+:: pointing.model.static	@Instrument: GISMO
+				@Since: 2.04-2
+				@Expert
+			Use the static terms only of the supplied pointing
+			model. By default the GISMO model can have time variant
+			coefficients defined also. When this option is set, the
+			time variability will be ignored, and only the static
+			values are used.
+			@See: 'pointing.model'
 
 :: pointing.log=<name>	@Advanced
 			@Instrumment: GISMO

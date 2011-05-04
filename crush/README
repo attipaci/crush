@@ -1441,6 +1441,8 @@ options on the console.
 
 	hipass		Highpass filtering timescale (in seconds)
 
+	humidity	Ambient humidity (if recorded).
+
 	id		Scan identifier (e.g. scan number)
 
 	integrations	Number of integrations (subscans) contained in the 
@@ -1502,6 +1504,14 @@ options on the console.
 
 	pnt.RA		RA pointing (arcsec).
 
+	pnt.X		Aggregated X pointing correction (including applied
+			corrections and sometimes the pointing model too).
+
+	pnt.Y		Aggregated Y pointing correction (including applied
+                        corrections and sometimes the pointing model too).
+
+	pressure	Ambient pressure (if recorded) in hPa.
+
 	project		Project name (if defined)
 
 	ptfilter	The point-source flux filtering throughput of the 
@@ -1556,6 +1566,8 @@ options on the console.
 
 	src.peak	Peak source flux (Jy/beam).
 
+	Tamb		Ambient temperature (if recorded) in degrees C.
+
 	tau		The in-band, line-of-sight opacity value.
 
 	tau.<id>	The zenith tau value for <id>. E.g. 'tau.225GHz' or
@@ -1570,7 +1582,13 @@ options on the console.
 	weight		The relative weight of the scan, based on the actual
 			noise of the map it generates.
 
-	zenithtau	The in-band opacity at zenith.
+	winddir		Wind direction (if recorded) in degrees.
+
+	windpk		Peak wind speed (if recorded) in m/s.
+	
+	windspeed	Wind speed (if recorded) im m/s.
+
+	zenithtau	In-band opacity at zenith.
 
 
 
@@ -1607,6 +1625,10 @@ options on the console.
 
         focZ            Focus Z (mm).
 
+	modelX		Static pointing model correction in azymuth (arcsec).
+
+	modelY		Static pointing model correction in elevation (arcsec). 
+
 	nasX		Nasmyth X position of instrument.
 
 	nasY		Nasmyth Y position of instrument.
@@ -1615,6 +1637,10 @@ options on the console.
 
 	rot		Rotation of the instrument (deg).
 
+	tiltX		Azymuth pointing correction from inclinometer (arcsec).
+
+	tiltY		Elevation pointing correction from inclinometer 
+			(arcsec).
 
    LABOCA specific log entries
    ---------------------------
