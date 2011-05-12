@@ -1,17 +1,11 @@
 >> Smoothing in deep does not preserve point source fluxes...
->> Polarization: why does it add up over iterations? Why not correct?	
+>> Polarization: why does it add up over iterations? Why not correct?
 
-	-- AstroTime getMJD()? or date issues...
-
-	-- GISMO absolute pointing model (difference to scan model...)
-	
 	-- swap option (swap scans to disk as a way to reduce very large
 	   data sets with limited resources -- also an important step towards
 	   a supercomputer model with no downtime).
 	
 	-- drifts via window function -- interpolated...
-
-	-- Quick reduce w/o flagging to determine source brightness?...
 
 	-- Quotes in format specifications
 

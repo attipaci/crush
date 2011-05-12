@@ -243,15 +243,18 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		
 		final GismoScan firstScan = (GismoScan) scans.get(0);
 			
-		if(scans.size() == 1) if(firstScan.obsType.equalsIgnoreCase("tip")) {
-			System.err.println("Setting skydip reduction mode.");
-			options.parse("skydip");
-			
-			if(scans.size() > 1) {
-				System.err.println("Ignoring all but first scan in list (for skydip).");
-				scans.clear();
-				scans.add(firstScan);
+		if(scans.size() == 1) {
+			if(firstScan.obsType.equalsIgnoreCase("tip")) {
+				System.err.println("Setting skydip reduction mode.");
+				options.parse("skydip");
+
+				if(scans.size() > 1) {
+					System.err.println("Ignoring all but first scan in list (for skydip).");
+					scans.clear();
+					scans.add(firstScan);
+				}
 			}
+			else if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
 		}
 		
 		for(int i=scans.size(); --i > 0; ) {

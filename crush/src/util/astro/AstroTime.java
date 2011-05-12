@@ -35,7 +35,12 @@ import java.util.TimeZone;
 import util.Unit;
 import util.text.TimeFormat;
 
-//  BUG Fixes 4 Nov 2009
+//  Last updated on 12 May 2011
+// 
+//  -- Fixed timezone issue on UT/UTC timestamps
+//  -- FITS timestamps are now interpreted as proper UT timestamps
+//  -- Setting UTC is correct with leap seconds
+//  -- Better way of accounting for leap seconds
 
 //	2451545.0 JD = 1 January 2000, 11:58:55.816 UT, or 11:59:27.816 TAI
 //  UTC routines are approximate but consistent (btw. getUTC() and setUTC(), and currentTime())
@@ -53,67 +58,47 @@ public class AstroTime {
 		return this;
 	}
 	
-	public void setMJD(double date) { MJD = date; }
-	
-	public void setJD(double JD) { setMJD(JD - 2400000.5); }
-	
-	// Assuming UNIX clock measures TT...
-	// TODO With UTC it needs adjustment for LeapSeconds between 2000 and the time...
-	// If implemented take leap correction from currentTime...
+	public Date getDate() { return new Date(getMillis()); }
+
+	public void setTime(Date date) { setMillis(date.getTime()); }
+
+	public long getMillis() { 
+		long UT = millisJ2000 + (long)((MJD - mjdJ2000) * dayMillis); 
+		// Since leap seconds are relative to UTC, first get calculate UTC assuming
+		// leap of UT. This UTC0 may be off by 1 second around a few seconds of a leap...
+		long UTC0 = UT - 1000L * (LeapSeconds.get(UT) - leap2000);
+		// By using UTC0 to recalculate the leap, UTC is always correct, except perhaps during the leap itself...
+		return UT - 1000L * (LeapSeconds.get(UTC0) - leap2000);
+	}
+
 	public void setMillis(long millis) {
 		MJD = getMJD(millis);
 	}
-	
+
+	// UNIX clock measures UTC...
 	public static double getMJD(long millis) {
-		return mjdJ2000 + (double)(millis - millisJ2000) / dayMillis;
+		return mjdJ2000 + (double)(millis - millisJ2000 + 1000L * (LeapSeconds.get(millis) - leap2000)) / dayMillis;
 	}
-	
-	public void setLeap(double dt) { leap = dt; }
-	
-	public void setTime(Date date) { setMillis(date.getTime()); }
-	
-	// Terrestrial Time (based on Atomic Time TAI)
-	public void setTT(double TT) { MJD = Math.floor(MJD) + TT / Unit.day; }
-	
-	public void setUTC(double UTC) { setTAI(UTC + leap); }
 
-	public void setTAI(double TAI) { setTT(TAI + TAI2TT); }
-	
-	public void setGPSTime(double GPST) { setTAI(GPST + GPS2TAI); }
-	
-	public void setTCG(double TCG) {
-		setTT(TCG - 6.969290134e-10 * (MJD - 43144.5003725) * Unit.day);
-	}
-	
-	
-	public void setTimeFromJ2000(double time) { MJD = mjdJ2000 + time/Unit.day; }
-
-	
-	
 	public double getMJD() { return MJD; }
+
+	public void setMJD(double date) { MJD = date; }
 	
 	public double getJD() { return 2400000.5 + MJD; }
-	
-	public long getMillis() { return millisJ2000 + (long)((MJD - mjdJ2000) * dayMillis); }
 
-	public Date getDate() { return new Date(getMillis()); }
+	public void setJD(double JD) { setMJD(JD - 2400000.5); }
 	
-	// Terrestrial Time (based on Atomic Time TAI)
+	// Terrestrial Time (based on Atomic Time TAI) in seconds
 	public double getTT() {
 		return (MJD - (int)Math.floor(MJD)) * Unit.day;
 	}
-	
-	// TODO use DUT1?
-	public double getUTC() {
-		return getTAI() - leap;
-		// TODO correct by actual leaps...
-	}
-	
-	public double getTAI() { return getTT() - TAI2TT; }
-	
-	public double getGPSTime() { return getTAI() - GPS2TAI; }
 
-	
+	public void setTT(double TT) { MJD = Math.floor(MJD) + TT / Unit.day; }
+
+	public double getTAI() { return getTT() - TAI2TT; }
+
+	public void setTAI(double TAI) { setTT(TAI + TAI2TT); }
+
 	// TCG is based on the Atomic Time but corrects for the gravitational dilation on Earth
 	// Thus it is a good measure of time in space.
 	// TT = TCG − LG × (JDTCG − 2443144.5003725) × 86400
@@ -121,17 +106,34 @@ public class AstroTime {
 	public double getTCG() {
 		return getTT() + 6.969290134e-10 * (MJD - 43144.5003725) * Unit.day;
 	}
+
+	public void setTCG(double TCG) {
+		setTT(TCG - 6.969290134e-10 * (MJD - 43144.5003725) * Unit.day);
+	}
+
+	public double getGPSTime() { return getTAI() - GPS2TAI; }
+
+	public void setGPSTime(double GPST) { setTAI(GPST + GPS2TAI); }
+	
+	/*	
+	public void setTimeFromJ2000(double time) { MJD = mjdJ2000 + time/Unit.day; }
 	
 	public double getTimeFromJ2000() {
 		return (MJD - mjdJ2000) * Unit.day;
 	}
+	*/
 	
+	// TODO use DUT1?
+	public double getUTC() {
+		return (getMillis() % dayMillis) / 1000.0;
+	}
+
 	// Mean Fictive Equatorial Sun's RA in time units (use for calculationg LST)
     public double getMeanFictiveEquatorialSunTime() {
     	double Tu = (MJD - mjdJ2000) / julianCenturyDays;
 	
     	double alphaU = 24110.54841 + 8640184.812866 * Tu + 0.093104 * Tu * Tu;
-    	alphaU *= Unit.sec ;
+    	alphaU *= Unit.sec;
     	return alphaU;
     }
 	
@@ -170,7 +172,8 @@ public class AstroTime {
 	// Proper parsing of UT (rather than UTC)...
 	public void parseFitsTimeStamp(String text) throws ParseException {
 		// Set the nearest MJD day to the given UTC day...
-		setMillis(fitsDateFormatter.parse(text.substring(0,10)).getTime()); 
+		long millis = fitsDateFormatter.parse(text.substring(0,10)).getTime();
+		MJD = mjdJ2000 + (double)(millis - millisJ2000) / dayMillis;
 		MJD = Math.round(MJD);
 		
 		// Add in the UT time component...
@@ -182,7 +185,6 @@ public class AstroTime {
 			if(tokens.hasMoreTokens()) UT += Double.parseDouble(tokens.nextToken()) * Unit.s;
 			MJD += UT / Unit.day;			
 		}
-	
 	}
 	
 	public String getFitsTimeStamp() {
@@ -196,7 +198,11 @@ public class AstroTime {
 	}
 	
 	public void parseSimpleDate(String text) throws ParseException {
-		setMillis(defaultFormatter.parse(text).getTime());
+		parseSimpleDate(text, defaultFormatter);
+	}
+	
+	public void parseSimpleDate(String text, DateFormat format) throws ParseException {
+		setMillis(format.parse(text).getTime());
 	}
 	
 	public String getSimpleDate() {
@@ -239,11 +245,12 @@ public class AstroTime {
 	// millis of 2000 UT - leap2000 - tai2tt -> 2000 TT
 	public final static long millisJ2000 = 946684800000L - 32000L - 32184L; // millis at TT 2000
 	protected final static double mjdJ2000 = 51544.0;
+	protected final static int leap2000 = 32;
 	protected final static long dayMillis = 86400L * 1000L;
 	protected final static double julianCenturyMillis = Unit.julianCentury / Unit.s * 1000.0;
 	protected final static double julianCenturyDays = 36525.0;
-	protected final static double leap2000 = 32.0 * Unit.sec;
-	protected static double leap = 34.0 * Unit.sec;
+	//protected final static double leap2000 = 32.0 * Unit.sec;
+	//protected static double leap = 34.0 * Unit.sec;
 	
 	protected static double TAI2TT = 32.184 * Unit.s;
 	protected static double GPS2TAI = -19.0 * Unit.s;

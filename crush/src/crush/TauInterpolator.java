@@ -29,7 +29,6 @@ import java.io.*;
 import java.util.*;
 
 import util.data.Interpolator;
-import util.data.InterpolatorData;
 
 
 public class TauInterpolator extends Interpolator {
@@ -49,7 +48,7 @@ public class TauInterpolator extends Interpolator {
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
-			InterpolatorData skydip = new InterpolatorData();
+			Interpolator.Data skydip = new Interpolator.Data();
 			tokens.nextToken();
 			tokens.nextToken();
 			skydip.ordinate = Double.parseDouble(tokens.nextToken());

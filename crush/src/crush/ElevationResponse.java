@@ -29,7 +29,6 @@ import java.util.*;
 
 import util.Unit;
 import util.data.Interpolator;
-import util.data.InterpolatorData;
 
 public class ElevationResponse extends Interpolator {
 	/**
@@ -48,7 +47,7 @@ public class ElevationResponse extends Interpolator {
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
-			InterpolatorData response = new InterpolatorData();
+			Interpolator.Data response = new Interpolator.Data();
 			response.ordinate = Double.parseDouble(tokens.nextToken()) * Unit.deg;
 			response.value = Double.parseDouble(tokens.nextToken());
 			add(response);

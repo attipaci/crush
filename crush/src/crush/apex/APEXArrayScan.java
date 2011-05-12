@@ -183,7 +183,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	public void readScanDirectory(String dir, String ext, boolean readFully) throws IOException, FitsException, HeaderCardException {	
 		ext = ".fits" + ext;
 		dir += File.separator;
-	
+		
 		int subscans = readScanInfo(getHDU(dir + "SCAN" + ext));
 		instrument.readPar(getHDU(dir + getFEBECombination() + "-FEBEPAR" + ext));
 		instrument.validate(MJD);

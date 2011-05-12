@@ -34,7 +34,6 @@ import util.astro.EquatorialCoordinates;
 import util.data.DataPoint;
 import util.data.FFT;
 import util.data.Statistics;
-import util.data.TableEntries;
 import util.data.WeightedPoint;
 import util.data.WindowFunction;
 import util.text.TableFormatter;
@@ -54,7 +53,7 @@ import nom.tam.util.*;
  */
 public abstract class Integration<InstrumentType extends Instrument<?>, FrameType extends Frame> 
 extends ArrayList<FrameType> 
-implements Comparable<Integration<InstrumentType, FrameType>>, TableEntries {
+implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.Entries {
 	/**
 	 * 
 	 */

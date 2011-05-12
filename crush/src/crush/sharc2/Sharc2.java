@@ -552,17 +552,14 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		final Sharc2Scan firstScan = (Sharc2Scan) scans.get(0);
 		final String upperCaseSource = firstScan.sourceName.toUpperCase();
 		
-		if(upperCaseSource.startsWith("PNT_") || upperCaseSource.startsWith("CAL_")) if(scans.size() == 1) 
-			setPointing(firstScan);
+		if(scans.size() == 1) {
+			if(upperCaseSource.startsWith("PNT_") || upperCaseSource.startsWith("CAL_")) setPointing(firstScan);
+			else if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
+		}
 		
 		super.validate(scans);
 	}
 	
-	protected void setPointing(Scan<?,?> scan) {
-		System.err.println("Setting 'point' option to obtain pointing/calibration data.");
-		options.parse("point");
-		scan.instrument.options.parse("point");		
-	}
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {

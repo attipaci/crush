@@ -28,7 +28,6 @@ import util.Util;
 import util.Vector2D;
 import util.astro.HorizontalCoordinates;
 import java.io.*;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 
 public class IRAMPointingModel {
@@ -53,7 +52,7 @@ public class IRAMPointingModel {
 	
 	public double P(int n, double UT) {
 		double theta = UT * (2.0 * Math.PI / Unit.day);
-		return P[n] + (isStatic ? c[n] * Math.cos(theta) + s[n] * Math.sin(theta) : 0.0);
+		return P[n] + (isStatic ? 0.0 : c[n] * Math.cos(theta) + s[n] * Math.sin(theta));
 	}
 	
 	public void subtract(IRAMPointingModel model) {
@@ -99,7 +98,7 @@ public class IRAMPointingModel {
 	}
 	
 	public void read(String fileName) throws IOException {
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Util.getSystemPath(fileName))));
 		String line;
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
