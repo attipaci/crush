@@ -257,11 +257,6 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			serialNo = Integer.parseInt(tokens.nextToken());
 		}
 		serialNo = header.getIntValue("SCANNUM", serialNo);
-
-		if(obsType.equalsIgnoreCase("tip")) {
-			System.err.println(" Setting options for skydip");
-			instrument.options.parse("skydip");
-		}
 		
 		// Weather
 		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();

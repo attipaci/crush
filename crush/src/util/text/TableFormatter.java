@@ -26,15 +26,14 @@ import java.util.*;
 import java.text.*;
 
 import util.Util;
-import util.data.TableEntries;
 
 public final class TableFormatter {
 
-	public static String format(TableEntries entries, String format) {
+	public static String format(Entries entries, String format) {
 		return format(entries, format, " \t,=");
 	}
 	
-	public static String format(TableEntries entries, String format, String separators) {
+	public static String format(Entries entries, String format, String separators) {
 		StringTokenizer tokens = new StringTokenizer(format, separators, true);
 		StringBuffer line = new StringBuffer();
 		
@@ -149,6 +148,12 @@ public final class TableFormatter {
 			return tf;
 		}
 		return null;
+	}
+	
+	public interface Entries {
+
+		public String getFormattedEntry(String name, String formatSpec);
+
 	}
 	
 	public static String NO_SUCH_DATA = "(n/a)";

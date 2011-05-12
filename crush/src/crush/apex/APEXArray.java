@@ -163,9 +163,7 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 		}
 		
 		if(firstScan.type.equalsIgnoreCase("POINT")) if(scans.size() == 1) {
-			System.err.println("Setting 'point' option to obtain pointing data.");
-			options.parse("point");
-			firstScan.instrument.options.parse("point");
+			setPointing(firstScan);
 		}
 		
 		

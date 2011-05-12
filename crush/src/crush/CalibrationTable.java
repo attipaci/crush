@@ -28,7 +28,6 @@ import java.io.*;
 import java.util.*;
 
 import util.data.Interpolator;
-import util.data.InterpolatorData;
 
 
 public class CalibrationTable extends Interpolator {
@@ -48,7 +47,7 @@ public class CalibrationTable extends Interpolator {
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
-			InterpolatorData calibration = new InterpolatorData();
+			Interpolator.Data calibration = new Interpolator.Data();
 			
 			tokens.nextToken();
 			tokens.nextToken();

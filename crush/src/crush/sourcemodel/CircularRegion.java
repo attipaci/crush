@@ -26,14 +26,13 @@ package crush.sourcemodel;
 
 import util.*;
 import util.data.DataPoint;
-import util.data.TableEntries;
 import util.text.AngleFormat;
 import util.text.TableFormatter;
 
 import java.text.*;
 import java.util.*;
 
-public class CircularRegion extends Region implements TableEntries {
+public class CircularRegion extends Region implements TableFormatter.Entries {
 	public SphericalCoordinates coords;
 	public DataPoint radius;
 	

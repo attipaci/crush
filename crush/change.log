@@ -1,30 +1,36 @@
+>> Update gismo/README with pointing model...
+>> Why do aperture fluxes have smaller error (e.g. in pointing) than peak 
+fluxes?
+>> parse leap seconds file
+>> autoupdate leap seconds file
 
 2.04-2
-
-	[NEW] {GISMO} The pointing corrections from the static pointing model
-	and the inclinometer can be logged via 'modelX', 'modelY', and 'tiltX',
-	'tiltY' labels.
 
 	[BUG] Timestamp parsing/formatting was done in local time rather than
 	UTC as it should have been. This was a major problem with the
 	processing of GISMO timestamps and the application of incremental
 	pointing corrections because MJD and UT were wrongly calculated.
 
-	[FIX] FITS timestamps are now parsed and printed in UT rather than UTC.
-	As such it is now the proper FITS timestamp.
+	[NEW] {GISMO} Included the finalized pointing log for the April 2011
+	run. The table can be found inside the gismo/ sub-directory and can be
+	used for applying incremental pointing corrections, via 'pointing.log',
+	on top of the pointing model. 
+
+	[FIX] FITS timestamps are now parsed and printed in UT rather than UTC,
+	as they should be :-).
 
 	[TWEAK] {GISMO} Pointing model now contains absolute pointing constants
 	by default (unless 'pointing.model.incremental' is set) and is used
-	to calculate differential corrections to whatever pointing model was
+	for calculating differential corrections to whatever pointing model was
 	used during the observing. This allows changing the telescope pointing
-	model without penalty.
+	model during observations without penalty.
 
 	[TWEAK] {GISMO} Log quantities 'pnt.X', and 'pnt.Y' are now absolute
-	pointing offsets including the corrections applied by the static 
+	pointing offsets including the corrections applied by the telescope 
 	pointing model (but not the dynamic corrections by the inclinometer).
 	
-	[TWEAK] When jackknifing options are used, the sourcename gets 
-	automatically appended with '-JK' to indicate it being an jackknife
+	[TWEAK] When jackknifing options are used, the source name gets 
+	automatically appended with '-JK' to indicate it being a jackknife
 	rather than an actual source map.
 
 	[TWEAK] Logging now reports 'RAh' values in 0--24 range (rather than
@@ -34,12 +40,23 @@
 	The time variablility terms can be ignored by setting the 
 	'pointing.model.static' option.
 
-	[TWEAK] Slightly adjusted default gismo log format.
+	[TWEAK] {GISMO} Slightly adjusted default GISMO log format.
 
 	[TWEAK] Added 'Tamb', 'pressure', 'humidity', 'windspeed', 'windpk',
 	and 'winddir' as log quantities. Not all instruments/telescoped may 
 	provide all these quantities.
 
+	[TWEAK] {GISMO} The pointing corrections from the telescope pointing 
+	model and the inclinometer can be logged via 'modelX', 'modelY', and 
+	'tiltX', 'tiltY' labels.
+
+	[TWEAK] {GISMO} Adjusted acceptable readout ranges.
+
+	[TWEAK] {SHARC-2} Added 'Uranus' to 'sharc2/bright.cat', so it is
+	reduced with the 'bright' setting by default. 
+
+	[TWEAK] Pointing/calibration reduction automatically invoked for GISMO
+	and SHARC-2 when reducing single scans 3 minutes or shorter.
 
 
 2.04-1 (28 Apr 2011)

@@ -25,10 +25,9 @@ package util;
 
 import java.util.Hashtable;
 
-import util.data.TableEntries;
 import util.text.TableFormatter;
 
-public class DataTable extends Hashtable<String, Datum> implements TableEntries {
+public class DataTable extends Hashtable<String, Datum> implements TableFormatter.Entries {
 	/**
 	 * 
 	 */

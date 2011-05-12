@@ -43,12 +43,11 @@ import util.astro.HorizontalCoordinates;
 import util.astro.JulianEpoch;
 import util.astro.Precession;
 import util.astro.Weather;
-import util.data.TableEntries;
 import util.data.WeightedPoint;
 import util.text.TableFormatter;
 
 public abstract class Scan<InstrumentType extends Instrument<?>, IntegrationType extends Integration<InstrumentType, ?>>
-extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, IntegrationType>>, TableEntries {
+extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, IntegrationType>>, TableFormatter.Entries {
 	/**
 	 * 
 	 */
@@ -431,7 +430,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		else if(name.equals("AZd")) return Util.defaultFormat(horizontal.AZ() / Unit.deg, f);
 		else if(name.equals("ELd")) return Util.defaultFormat(horizontal.EL() / Unit.deg, f);
 		else if(name.equals("RAd")) return Util.defaultFormat(equatorial.RA() / Unit.deg, f);
-		else if(name.equals("RAh")) return Util.defaultFormat((equatorial.RA() + Math.PI) / Unit.hourAngle, f);
+		else if(name.equals("RAh")) return Util.defaultFormat(((equatorial.RA() + 2.0 * Math.PI) / Unit.hourAngle) % 24.0, f);
 		else if(name.equals("DECd")) return Util.defaultFormat(equatorial.DEC() / Unit.deg, f);
 		else if(name.equals("epoch")) return equatorial.epoch.toString();
 		else if(name.equals("epochY")) return Util.defaultFormat(equatorial.epoch.getYear(), f);

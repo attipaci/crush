@@ -45,7 +45,7 @@ public class SimpleInterpolator extends Interpolator {
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			try {
 				StringTokenizer tokens = new StringTokenizer(line);
-				InterpolatorData point = new InterpolatorData();
+				Interpolator.Data point = new Interpolator.Data();
 				point.ordinate = Double.parseDouble(tokens.nextToken());
 				point.value = Double.parseDouble(tokens.nextToken());
 				add(point);

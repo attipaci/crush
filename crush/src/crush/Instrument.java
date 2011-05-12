@@ -32,7 +32,6 @@ import java.text.*;
 import util.*;
 import util.astro.AstroTime;
 import util.data.Statistics;
-import util.data.TableEntries;
 import util.text.TableFormatter;
 import crush.sourcemodel.*;
 
@@ -41,7 +40,7 @@ import nom.tam.util.*;
 
 
 public abstract class Instrument<ChannelType extends Channel> extends ChannelGroup<ChannelType> 
-implements TableEntries {	
+implements TableFormatter.Entries {	
 	/**
 	 * 
 	 */
@@ -229,12 +228,12 @@ implements TableEntries {
 			try {			
 				StringTokenizer tokens = new StringTokenizer(rangeSpec, "-");
 				Range mjdRange = new Range();
-				String spec = tokens.nextToken();
-				mjdRange.min = spec.equals("*") ? Double.NEGATIVE_INFINITY : AstroTime.forSimpleDate(spec).getMJD();
+				String spec = tokens.nextToken().replace('.', '-');
+				mjdRange.min = spec.equals("*") ? Double.NEGATIVE_INFINITY : AstroTime.forFitsTimeStamp(spec).getMJD();
 				mjdRange.max = Double.POSITIVE_INFINITY;
 				if(tokens.hasMoreTokens()) {
-					spec = tokens.nextToken();
-					mjdRange.max = spec.equals("*") ? Double.POSITIVE_INFINITY : AstroTime.forSimpleDate(spec).getMJD();
+					spec = tokens.nextToken().replace('.', '-');
+					mjdRange.max = spec.equals("*") ? Double.POSITIVE_INFINITY : AstroTime.forFitsTimeStamp(spec).getMJD();
 				}
 				
 				if(mjdRange.contains(MJD)) options.parse(settings.get(rangeSpec));

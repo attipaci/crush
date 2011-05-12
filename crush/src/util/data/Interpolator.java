@@ -29,7 +29,7 @@ import java.util.*;
 
 import util.Util;
 
-public abstract class Interpolator extends ArrayList<InterpolatorData> {
+public abstract class Interpolator extends ArrayList<Interpolator.Data> {
 	/**
 	 * 
 	 */
@@ -79,7 +79,7 @@ public abstract class Interpolator extends ArrayList<InterpolatorData> {
 		int i0 = getIndexAbove(ordinate); 
 		
 		double sum = 0.0, sumw = 0.0;
-		InterpolatorData last = get(i0);
+		Data last = get(i0);
 		
 		double sigma = fwhm / Util.sigmasInFWHM;
 		double A = -0.5 / (sigma * sigma);
@@ -104,6 +104,19 @@ public abstract class Interpolator extends ArrayList<InterpolatorData> {
 		
 		return sum / sumw;
 	}
+
+	public class Data implements Comparable<Interpolator.Data> {
+		public double ordinate, value;
+		
+		public Data() {}
+		
+		public int compareTo(Data other) {
+			return Double.compare(ordinate, other.ordinate);
+		}
+		
+	}
+
 	
 }
+
 

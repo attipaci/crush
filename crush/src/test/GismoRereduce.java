@@ -6,12 +6,15 @@ import java.util.*;
 public class GismoRereduce {
 	String crush = "./crush";
 	String logFile = "../images/rereduce.log";
-	String options = "-point -log -log.file=$LOGFILE -write.png";
+	String options = "-point -log -log.file=$LOGFILE";
 	
 	public static void main(String[] args) {
 		GismoRereduce reducer = new GismoRereduce();
+		//System.err.println("# Rereduce script...");
 		try { reducer.rereduce(args[0]); }
-		catch(IOException e) {}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void rereduce(String logFileName) throws IOException {
