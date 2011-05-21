@@ -59,7 +59,7 @@ public class AstroImage implements Cloneable {
 		
 	public Header header;
 	public String fileName, sourceName, contentType = "";
-	public String creator = "CRUSH", creatorVersion = CRUSH.version; 
+	public String creator = "CRUSH", creatorVersion = CRUSH.getFullVersion(); 
 	
 	public boolean verbose = false;
 	
@@ -953,7 +953,6 @@ public class AstroImage implements Cloneable {
 		cursor.add(new HeaderCard("OBJECT", sourceName, "Source name as it appear in the raw data."));	
 		cursor.add(new HeaderCard("DATE", FitsDate.getFitsDateString(), "Time-stamp of creation."));
 		cursor.add(new HeaderCard("CREATOR", creator, "The software that created the image."));
-		cursor.add(new HeaderCard("CRUSHVER", creatorVersion, "CRUSH version information."));
 		//cursor.add(new HeaderCard("ORIGIN", "Caltech", "California Institute of Technology"));
 		
 		if(instrument != null) instrument.editImageHeader(cursor);
@@ -974,6 +973,69 @@ public class AstroImage implements Cloneable {
 		if(instrument != null) if(instrument.options != null) instrument.options.editHeader(cursor);
 	}
 
+	public void parseHeader(Header header) throws HeaderCardException {	
+		this.header = header;
+		
+		correctingFWHM = Double.NaN;
+		extFilterFWHM = Double.NaN;
+		
+		parseBasicHeader(header);
+		parseCrushHeader(header);
+		
+		setUnit(header.getStringValue("BUNIT"));
+	}
+
+	protected void parseCrushHeader(Header header) throws HeaderCardException {
+		correctingFWHM = header.getDoubleValue("CORRECTN", Double.NaN) * Unit.arcsec;
+		creatorVersion = header.getStringValue("CRUSHVER");
+	
+		// get the map resolution
+		smoothFWHM = header.getDoubleValue("SMOOTH") * Unit.arcsec;
+		if(smoothFWHM < Math.sqrt(grid.getPixelArea()) / fwhm2size) smoothFWHM = Math.sqrt(grid.getPixelArea()) / fwhm2size;
+		extFilterFWHM = header.getDoubleValue("EXTFLTR", Double.NaN) * Unit.arcsec;		
+	}
+
+	
+	private void parseBasicHeader(Header header) throws HeaderCardException {
+		int sizeX = header.getIntValue("NAXIS1");
+		int sizeY = header.getIntValue("NAXIS2");
+		
+		setSize(sizeX, sizeY);
+		
+		grid.getCoordinateInfo(header);
+		
+		if(instrument == null) {
+			if(header.containsKey("INSTRUME")) {
+				instrument = Instrument.forName(header.getStringValue("INSTRUME"));
+				if(instrument == null) {
+					instrument = new GenericInstrument(header.getStringValue("INSTRUME"));
+					if(header.containsKey("TELESCOP")) ((GenericInstrument) instrument).telescope = header.getStringValue("TELESCOP");
+				}
+			}
+			else {
+				instrument = new GenericInstrument("unknown");
+				if(header.containsKey("TELESCOP")) ((GenericInstrument) instrument).telescope = header.getStringValue("TELESCOP");
+			}
+		}
+		
+		instrument.parseHeader(header);
+		
+		creator = header.getStringValue("CREATOR");
+		if(creator == null) creator = "unknown";
+		creatorVersion = "unknown";
+		sourceName = header.getStringValue("OBJECT");
+		
+		// get the beam and calculate derived quantities
+		if(header.containsKey("BEAM")) 
+			instrument.resolution = header.getDoubleValue("BEAM", instrument.resolution / Unit.arcsec) * Unit.arcsec;
+		else if(header.containsKey("BMAJ"))
+			instrument.resolution =  header.getDoubleValue("BMAJ", instrument.resolution / Unit.deg) * Unit.deg;
+		else 
+			instrument.resolution = 3.0 * Math.sqrt(grid.getPixelArea());
+
+		smoothFWHM = Math.sqrt(grid.getPixelArea()) / fwhm2size;
+	}
+	
     public boolean containsIndex(double i, double j) {
     	return i >= 0 && i < sizeX() && i >= 0 && j < sizeY();
     }

@@ -1,5 +1,14 @@
+>> Why do aperture fluxes have smaller error (e.g. in pointing) than peak
+fluxes?
 >> Smoothing in deep does not preserve point source fluxes...
->> Polarization: why does it add up over iterations? Why not correct?
+>> Polarization: why doetive es it add up over iterations? Why not correct?
+
+	-- object.[<name>] conditions to replace 'bright.cat'.
+           (case insensitive exact match or pattern match?).	   
+
+	-- Load leap seconds from file (option?). 
+
+	-- Autoupdate leap seconds from web...
 
 	-- swap option (swap scans to disk as a way to reduce very large
 	   data sets with limited resources -- also an important step towards

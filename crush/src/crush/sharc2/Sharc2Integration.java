@@ -25,8 +25,6 @@
 package crush.sharc2;
 
 import crush.*;
-import crush.fits.HDUManager;
-import crush.fits.HDUReader;
 import nom.tam.fits.*;
 
 import java.io.*;
@@ -36,6 +34,8 @@ import java.util.Arrays;
 import util.*;
 import util.astro.*;
 import util.data.FFT;
+import crush.fits.HDUManager;
+import crush.fits.HDUReader;
 
 // TODO Split nod-phases into integrations...
 public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implements GroundBased {

@@ -25,14 +25,14 @@
 package crush.gismo;
 
 import crush.*;
-import crush.fits.HDUManager;
-import crush.fits.HDUReader;
 import util.*;
 import util.astro.CoordinateEpoch;
 import util.astro.EquatorialCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.astro.JulianEpoch;
 import util.astro.Precession;
+import crush.fits.HDUManager;
+import crush.fits.HDUReader;
 
 import nom.tam.fits.*;
 

@@ -43,7 +43,7 @@ public class GismoRereduce {
 					String scanNo = idbits.nextToken();
 
 					String cmdLine = "$CRUSH gismo $OPTIONS -object=" + sourceName + " -date=" + date + " " + scanNo;
-					Runtime runtime = Runtime.getRuntime();
+					//Runtime runtime = Runtime.getRuntime();
 
 					System.out.println(cmdLine);
 					//runtime.exec(cmdLine);

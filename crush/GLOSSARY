@@ -1400,6 +1400,22 @@
 			used for deriving the pointing internally.
 			@See: 'exposureclip'	
 
+:: pointing.log=<name>	@Advanced
+			@Instrumment: GISMO
+			@Since: 2.04
+			Use a pointing log (obtained via the 'log' option) to
+			derive residual pointing corrections, on top of the
+			pointing model. You can still use 'pointing' to add yet
+			another increment. For the residual correction to
+			work, the log file must contain the columns 'id', 'AZ',
+			'EL', 'pnt.X', 'pnt.Y', 'src.peak', 'src.dpeak', and
+			'src.FWHM'. The routine will weight pointing data by
+			distance to source, and by distance in time of 
+			observation. When using this option, you should make
+			sure to remove or comment out any entries with 
+			unreliable pointing results.
+			@See: 'pointing', 'pointing.model'
+
 :: pointing.method=<value>	@Since: 2.00-b4
 				@Expert		
 			Specify the method used for obtaining positions of 
@@ -1436,7 +1452,7 @@
 			@See: 'pointing', 'pointing.model.incremental'
 			      'pointing.model.static'
 
-:: pointing.model.incremetal	@Instrument: GISMO
+:: pointing.model.incremental	@Instrument: GISMO
 				@Since: 2.04-2
 				@Advanced
 			Specify the the pointing model supplied via 'pointing
@@ -1453,22 +1469,6 @@
 			time variability will be ignored, and only the static
 			values are used.
 			@See: 'pointing.model'
-
-:: pointing.log=<name>	@Advanced
-			@Instrumment: GISMO
-			@Since: 2.04
-			Use a pointing log (obtained via the 'log' option) to
-			derive incremental pointing corrections, on top of the
-			pointing model. You can still use 'pointing' to add yet
-			another increment. For the incremental correction to
-			work, the log file must contain the columns 'id', 'AZ',
-			'EL', 'pnt.X', 'pnt.Y', 'src.peak', 'src.dpeak', and
-			'src.FWHM'. The routine will weight pointing data by
-			distance to source, and by distance in time of 
-			observation. When using this option, you should make
-			sure to remove or comment out any entries with 
-			unreliable pointing results.
-			@See: 'pointing', 'pointing.model'
 
 :: pointing.significance=X	@Since: 2.00-0
 				@Expert

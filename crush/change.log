@@ -1,8 +1,3 @@
->> Update gismo/README with pointing model...
->> Why do aperture fluxes have smaller error (e.g. in pointing) than peak 
-fluxes?
->> parse leap seconds file
->> autoupdate leap seconds file
 
 2.04-2
 
@@ -11,19 +6,29 @@ fluxes?
 	processing of GISMO timestamps and the application of incremental
 	pointing corrections because MJD and UT were wrongly calculated.
 
+	[NEW] {GISMO} Pointing model now contains absolute pointing constants
+	by default (unless 'pointing.model.incremental' is set) and is used
+	for calculating differential corrections to whatever pointing model was
+	used during the observing. This allows changing the telescope pointing
+	model during observations without penalty.
+	
+	[NEW] {GISMO} Added time variability to GISMO pointing constants.
+	The time variablility terms can be ignored by setting the 
+	'pointing.model.static' option.
+
 	[NEW] {GISMO} Included the finalized pointing log for the April 2011
 	run. The table can be found inside the gismo/ sub-directory and can be
 	used for applying incremental pointing corrections, via 'pointing.log',
 	on top of the pointing model. 
 
+	[NEW] CRUSH now reports a sub-version string (both on console and in
+	FITS files) that allow identification of intermediate development
+	versions. 
+
 	[FIX] FITS timestamps are now parsed and printed in UT rather than UTC,
 	as they should be :-).
 
-	[TWEAK] {GISMO} Pointing model now contains absolute pointing constants
-	by default (unless 'pointing.model.incremental' is set) and is used
-	for calculating differential corrections to whatever pointing model was
-	used during the observing. This allows changing the telescope pointing
-	model during observations without penalty.
+	[FIX] Conditional set by 'date' are now interpred as proper FITS dates.
 
 	[TWEAK] {GISMO} Log quantities 'pnt.X', and 'pnt.Y' are now absolute
 	pointing offsets including the corrections applied by the telescope 
@@ -36,15 +41,11 @@ fluxes?
 	[TWEAK] Logging now reports 'RAh' values in 0--24 range (rather than
 	-12:12 as before).
 
-	[TWEAK] {GISMO} Added time variability to GISMO pointing constants.
-	The time variablility terms can be ignored by setting the 
-	'pointing.model.static' option.
-
 	[TWEAK] {GISMO} Slightly adjusted default GISMO log format.
 
 	[TWEAK] Added 'Tamb', 'pressure', 'humidity', 'windspeed', 'windpk',
 	and 'winddir' as log quantities. Not all instruments/telescoped may 
-	provide all these quantities.
+	provide all these values.
 
 	[TWEAK] {GISMO} The pointing corrections from the telescope pointing 
 	model and the inclinometer can be logged via 'modelX', 'modelY', and 
@@ -57,6 +58,18 @@ fluxes?
 
 	[TWEAK] Pointing/calibration reduction automatically invoked for GISMO
 	and SHARC-2 when reducing single scans 3 minutes or shorter.
+
+	[CODE] Improved accounting for leap seconds. The new code allows the
+	loading of a standard NIST leap-seconds table from 
+	
+	   ftp://time.nist.gov/pub/ 
+
+	Currently, this table is not automatically loaded or updated. Such 
+	automatic leap second update might be implemented in the future...
+
+	[CODE] Reporting of non-fatal exceptions during scan reading is fixed.
+
+	[CODE] FITS image header parsing moved up: AstroMap -> AstroImage. 
 
 
 2.04-1 (28 Apr 2011)

@@ -103,7 +103,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		for(Scan<?,?> scan : scans) map.scans.add(scan);	
 		map.setResolution(gridSize);
 		map.creator = CRUSH.class.getSimpleName();
-		map.creatorVersion = CRUSH.version;
+		map.creatorVersion = CRUSH.getFullVersion();
 		map.sourceName = firstScan.sourceName;
 		map.commandLine = commandLine;
 		map.instrument = (Instrument<?>) instrument.copy();
