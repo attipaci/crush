@@ -16,8 +16,9 @@ Table of Contents
   2.1 By file names
   2.2 By scan numbers 
 3. Automatic Pointing Corrections
-  3.1 Differential Pointing Model
-  3.2 Incremental Pointing Corrections
+  3.1 Setting an IRAM Pointing Model
+  3.2 Differential Pointing Model
+  3.3 Residual Pointing Corrections
 4. Extinction Correction
 5. GISMO-specific pixel divisions
 6. Runs 1 & 2 Peculiarities
@@ -119,36 +120,68 @@ You can find a more detailed explanation below.
 
 A major improvement offered since crush 2.04 is the ability to apply automatic
 pointing corrections, (a) via supplying a differential pointing model, and (b)
-calculating incremental pointing corrections based on the pointing log. The
+calculating residual pointing corrections based on the pointing log. The
 combination of the two methods allows to reach pointing accuracies down to a 
 few arcseconds. Below is a detailed explanation on how to use these methods.
 
 
-3.1 Differential Pointing Model
-===============================
+3.1 Setting an IRAM Pointing Model
+==================================
 
    You can use the 'pointing.model' option to specify a file containing the
-   differential pointing constants, relative to those used by IRAM during
-   the observations. These are the P1 through P9 as decribed by Greve, A., et
-   al. A&A, 115, 379, (1996), and the two Nasmyth offsets P10 and P11. The
-   argument of the 'pointing.model' option should be a file containing the
-   differential constants, one per line. E.g. for adjusting P4, P5, P10, and
-   P11, the file could contain the lines:
+   effective IRAM pointing constants. These are the P1 through P9 as decribed 
+   by Greve, A., et al. A&A, 115, 379, (1996), and the two Nasmyth offsets P10 
+   and P11. The argument of the 'pointing.model' option should be a file 
+   containing all relevant constants, one per line. E.g.:
+
+	P1 = -3.15
+	P2 = -8.41
+	P3 = -0.18, -2.4, -4.2
+	P4 = 0.1, 17.5, 0.4
+	[...]
+	P11 = 1.0
+
+   As shown in the example above, each constant can have a single value to
+   specify a static term, or a comma-separated list of 3 values for a time-
+   variant dynamical model: the static term plus two dynamic terms, Pn0, PnC, 
+   and PnS, from which the pointing constant Pn is calculated for a given UT 
+   phase (in radians) as:
+
+   	Pn = Pn0 + PnC * cos(UT) + PnS * sin(UT)
+
+   Such dynamical constants can be a powerful way to cyclical variations of
+   the pointing model due to a daily cycle (e.g. temperature cycle or heating
+   cycle by the Sun). However, if you rather stick to just the static values
+   you can set 'pointing.model.static' to ignore the dynamical terms even if
+   those were defined.
+
+   The actual pointing correction calculated from the supplied pointing model
+   are reported on the console output during the processing of each scan.
+
+
+3.2. Differential Pointing Model
+================================
+   
+   Instead of specifying the full pointing model, you can also use the 
+   'pointing.model' option to set incremental corrections relative to the model
+   used by IRAM during the observations, if you set the 
+   'pointing.model.incremental' option as well. Then, for adjusting P4, P5, 
+   P10, and P11, the file could contain the lines:
 
 	P4 = 2.38
 	P5 = -6.12
 	P10 = -0.68
 	P11 = 4.30
 
-   The actual pointing correction calculated from the supplied differential
-   constants is reported on the console output during the processing of each
-   scan.
+   Now, these values will be added to whatever pointing model was used during
+   the observations to calculate pointing corrections. Otherwise, the behaviour
+   is the same as described above.
 
 
-3.2 Incremental Pointing Corrections
-====================================
+3.3 Residual Pointing Corrections
+=================================
 
-   You can also apply incremental pointing corrections based on observations
+   You can also apply residual pointing corrections based on observations
    of nearby pointing sources. It is preferred that you observe pointing
    sources frequently, and preferably at least once withing 30 minutes of all
    your science scans, and withing 15 degrees distance on the sky. The more 
@@ -156,7 +189,7 @@ few arcseconds. Below is a detailed explanation on how to use these methods.
    source, the more reliable will be the derived corrections, which are 
    weighted by their relative proximity on sky and in time.
 
-   To apply incremental corrections, use the 'pointing.log' option whose 
+   To apply residual corrections, use the 'pointing.log' option whose 
    argument should specify the pointing log file. Such log files, containing
    pointing information are automatically generated during GISMO runs. However,
    you should use an edited copy of this log, making sure to remove, or comment
@@ -169,11 +202,11 @@ few arcseconds. Below is a detailed explanation on how to use these methods.
    columns, such as 'id', 'UTh', 'AZd', 'Eld', 'pnt.X', 'pnt.Y', 'src.peak'
    'src.dpeak', and 'src.FWHM'. Refer to the main README for details.
 
-   The incremental corrections calculated from nearby pointing data are printed
+   The residual corrections calculated from nearby pointing data are printed
    on the console during the processing of each scan, together with a quality
    indicator (qualities near or above 1 are considered good). 
 
-   The incremental corrections can be used together with a pointing model 
+   The residual corrections can be used together with a pointing model 
    (which is the preferred way to use this option), in which case increments 
    are calculated on top of the model predictions, or without a pointing model
    for an 'absolute' pointing correction. In either case, you can still specify

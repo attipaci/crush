@@ -29,7 +29,6 @@ import crush.sourcemodel.*;
 import crush.gui.*;
 import crush.gui.colorscheme.*;
 
-import java.awt.*;
 import javax.swing.*;
 
 public class ImagerTest {

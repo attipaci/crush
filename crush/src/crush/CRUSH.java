@@ -40,7 +40,8 @@ import nom.tam.util.*;
  * 
  */
 public class CRUSH extends Configurator {
-	public static String version = "2.04-2";
+	private static String version = "2.04-2";
+	private static String revision = "beta 1";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -429,13 +430,13 @@ public class CRUSH extends Configurator {
 		System.err.println(integration.comments);
 		integration.comments = new String();
 	}	
-	
+
 
 	public static void info() {
 		String info = "\n" +
 			"  ----------------------------------------------------------------------\n" +
 			"  crush -- Reduction and imaging tool for bolometer arrays.\n" +
-			"           Version " + version + "\n" +
+			"           Version " + getFullVersion() + "\n" + 
 			"           http://www.submm.caltech.edu/~sharc/crush\n" +
 			"           Copyright (C)2011 Attila Kovacs <kovacs[AT]astro.umn.edu>\n" +
 			"  ----------------------------------------------------------------------\n";	
@@ -595,9 +596,18 @@ public class CRUSH extends Configurator {
 		System.err.println("\rContinuing...                          ");
 	}
 
+	public static String getFullVersion() {
+		if(revision == null) return version;
+		if(revision.length() == 0) return version;
+		return version + " (" + revision + ")";
+	}
+	
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException, FitsException {
 		// Add the system descriptors...
+		
+		cursor.add(new HeaderCard("CRUSHVER", getFullVersion(), "CRUSH version information."));
+		
 		cursor.add(new HeaderCard("JAVA", Util.getProperty("java.vendor"), "Java vendor name."));
 		cursor.add(new HeaderCard("JAVAVER", Util.getProperty("java.version"), "The Java version."));
 		cursor.add(new HeaderCard("JAVAHOME", Util.getProperty("java.home"), "Java location."));

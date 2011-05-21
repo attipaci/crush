@@ -66,6 +66,10 @@ public abstract class HDUReader extends Thread implements Cloneable {
 			manager.checkout(this);
 		}
 		catch(FitsException e) { manager.readException(e); }
+		catch(Exception e) { 
+			System.err.println("WARNING! " + e.getMessage());
+			e.printStackTrace(); 
+		}
 	}
 	
 	public abstract void read() throws FitsException;

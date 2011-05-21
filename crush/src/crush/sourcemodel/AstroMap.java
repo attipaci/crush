@@ -33,7 +33,6 @@ import java.io.*;
 import java.util.*;
 
 import crush.CRUSH;
-import crush.GenericInstrument;
 import crush.Instrument;
 import crush.Scan;
 
@@ -670,80 +669,30 @@ public class AstroMap extends AstroImage {
 	public void read(String name) throws HeaderCardException, FitsException, IOException {
 		// Get the coordinate system information
 		BasicHDU[] HDU = getFits(name).read();
-		readHeader(HDU[0].getHeader());
+		parseHeader(HDU[0].getHeader());
 		readCrushData(HDU);
 	}
 
-	private void readBasicHeaderData(Header header) throws HeaderCardException {
-		int sizeX = header.getIntValue("NAXIS1");
-		int sizeY = header.getIntValue("NAXIS2");
-		
-		setSize(sizeX, sizeY);
-		
-		grid.getCoordinateInfo(header);
-		
-		if(instrument == null) {
-			if(header.containsKey("INSTRUME")) {
-				instrument = Instrument.forName(header.getStringValue("INSTRUME"));
-				if(instrument == null) {
-					instrument = new GenericInstrument(header.getStringValue("INSTRUME"));
-					if(header.containsKey("TELESCOP")) ((GenericInstrument) instrument).telescope = header.getStringValue("TELESCOP");
-				}
-			}
-			else {
-				instrument = new GenericInstrument("unknown");
-				if(header.containsKey("TELESCOP")) ((GenericInstrument) instrument).telescope = header.getStringValue("TELESCOP");
-			}
-		}
-		
-		instrument.parseHeader(header);
-		
-		creator = header.getStringValue("CREATOR");
-		if(creator == null) creator = "unknown";
-		creatorVersion = "unknown";
-		sourceName = header.getStringValue("OBJECT");
-		
-		// get the beam and calculate derived quantities
-		if(header.containsKey("BEAM")) 
-			instrument.resolution = header.getDoubleValue("BEAM", instrument.resolution / Unit.arcsec) * Unit.arcsec;
-		else if(header.containsKey("BMAJ"))
-			instrument.resolution =  header.getDoubleValue("BMAJ", instrument.resolution / Unit.deg) * Unit.deg;
-		else 
-			instrument.resolution = 3.0 * Math.sqrt(grid.getPixelArea());
-
-		smoothFWHM = Math.sqrt(grid.getPixelArea()) / fwhm2size;
-	}
+	
 
 
-	public void readHeader(Header header) throws HeaderCardException {	
-		this.header = header;
-		
+	@Override
+	public void parseHeader(Header header) throws HeaderCardException {	
 		weightFactor = 1.0;
-		correctingFWHM = Double.NaN;
 		filterBlanking = Double.NaN;
 		clippingS2N = Double.NaN;
 		integrationTime = Double.NaN;
-		extFilterFWHM = Double.NaN;
 		
-		readBasicHeaderData(header);
-		readCrushHeaderData(header);
-		
-		setUnit(header.getStringValue("BUNIT"));
+		super.parseHeader(header);
 	}
 
-	private void readCrushHeaderData(Header header) throws HeaderCardException {
+	@Override
+	protected void parseCrushHeader(Header header) throws HeaderCardException {
+		super.parseCrushHeader(header);
 		weightFactor =  header.getDoubleValue("XWEIGHT", 1.0);
 		integrationTime = header.getDoubleValue("INTEGRTN", Double.NaN) * Unit.s;
-		correctingFWHM = header.getDoubleValue("CORRECTN", Double.NaN) * Unit.arcsec;
 		filterBlanking = header.getDoubleValue("FLTRBLNK", header.getDoubleValue("MAP_XBLK", Double.NaN));
-		clippingS2N = header.getDoubleValue("CLIPS2N", header.getDoubleValue("MAP_CLIP", Double.NaN));
-			
-		creatorVersion = header.getStringValue("CRUSHVER");
-	
-		// get the map resolution
-		smoothFWHM = header.getDoubleValue("SMOOTH") * Unit.arcsec;
-		if(smoothFWHM < Math.sqrt(grid.getPixelArea()) / fwhm2size) smoothFWHM = Math.sqrt(grid.getPixelArea()) / fwhm2size;
-		extFilterFWHM = header.getDoubleValue("EXTFLTR", Double.NaN) * Unit.arcsec;		
+		clippingS2N = header.getDoubleValue("CLIPS2N", header.getDoubleValue("MAP_CLIP", Double.NaN));		
 	}
 
 	private void readCrushData(BasicHDU[] HDU) throws FitsException {

@@ -2417,7 +2417,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			"# Exposure: " + (getFrameCount(Frame.SOURCE_FLAGS) * instrument.integrationTime) + " s.\n" +
 			"# Equatorial: " + scan.equatorial + "\n" +
 			(scan instanceof GroundBased ? "# Horizontal: " + scan.horizontal + "\n" : "") +
-			"# CRUSH version: " + CRUSH.version;
+			"# CRUSH version: " + CRUSH.getFullVersion();
 	}
 	
 	public String getID() {

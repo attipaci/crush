@@ -25,8 +25,6 @@
 package crush.apex;
 
 import crush.*;
-import crush.fits.HDUManager;
-import crush.fits.HDUReader;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
@@ -36,6 +34,8 @@ import util.*;
 import util.astro.EquatorialCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.data.WeightedPoint;
+import crush.fits.HDUManager;
+import crush.fits.HDUReader;
 
 public class APEXArraySubscan<InstrumentType extends APEXArray<?>, FrameType extends APEXFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased {
