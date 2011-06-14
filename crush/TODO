@@ -1,7 +1,10 @@
 >> Why do aperture fluxes have smaller error (e.g. in pointing) than peak
 fluxes?
 >> Smoothing in deep does not preserve point source fluxes...
->> Polarization: why doetive es it add up over iterations? Why not correct?
+>> Polarization: why does it add up over iterations? Why not correct?
+
+	-- Use ExecutorService in Parallel to thread tasks, with fixed thread
+	count...
 
 	-- object.[<name>] conditions to replace 'bright.cat'.
            (case insensitive exact match or pattern match?).	   

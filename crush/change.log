@@ -71,6 +71,8 @@
 
 	[CODE] FITS image header parsing moved up: AstroMap -> AstroImage. 
 
+	[CODE] Some cleanup of Coordinate set() vs. setNative() methods.
+	
 
 2.04-1 (28 Apr 2011)
 	
