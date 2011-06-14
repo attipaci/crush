@@ -43,11 +43,9 @@ public class CoordinatePair implements Cloneable {
 	
 	public CoordinatePair(String text) { parse(text); }
 
-	public CoordinatePair(double X, double Y) { setNative(X,Y); }
+	public CoordinatePair(double X, double Y) { set(X,Y); }
 
 	public CoordinatePair(CoordinatePair template) { x = template.x; y = template.y; }
-
-	public void setNative(double X, double Y) { x = X; y = Y; }
 
 	public void copy(final CoordinatePair template) { x = template.x; y = template.y; }
 

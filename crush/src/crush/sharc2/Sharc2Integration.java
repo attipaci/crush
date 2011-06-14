@@ -356,7 +356,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 
 				// Add in the equatorial sweeping offsets
 				// Watch out for the sign of the RA offset, which is counter to the native coordinate direction
-				equatorialOffset.setNative(RAO[i] * Unit.arcsec, DECO[i] * Unit.arcsec);			
+				equatorialOffset.set(RAO[i] * Unit.arcsec, DECO[i] * Unit.arcsec);			
 				frame.toHorizontal(equatorialOffset);
 				frame.horizontalOffset.add(equatorialOffset);
 				

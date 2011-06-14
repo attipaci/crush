@@ -105,10 +105,9 @@ public class SphericalCoordinates extends CoordinatePair {
 	public void NaN() { super.NaN(); cosLat = Double.NaN; sinLat = Double.NaN; }
 
 	@Override
-	public void setNative(double lon, double lat) { setNativeLongitude(lon); setNativeLatitude(lat); }
-	
-	@Override
 	public void set(double lon, double lat) { setLongitude(lon); setLatitude(lat); }
+	
+	public void setNative(double lon, double lat) { setNativeLongitude(lon); setNativeLatitude(lat); }	
 	
 	public final double nativeLongitude() { return x; }
 	

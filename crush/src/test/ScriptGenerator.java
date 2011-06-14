@@ -3,6 +3,7 @@ package test;
 public class ScriptGenerator {
 
 	public static void main(String[] args) {
+		/*
 		String[][] options = {
 				{ null, "-estimator=maximum-likelihood" },
 				{ "-rounds=10", "-rounds=20", "-rounds=50" },
@@ -21,6 +22,24 @@ public class ScriptGenerator {
 		};
 		
 		// 2 x 3 x 2 x 3 x 3 = 112
+		*/
+		
+		String[][] options = {
+				{ "-estimator=maximum-likelihood" },
+				{ "-rounds=20", "-rounds=25", "-rounds=30" },
+				{ "-stability=2.5", "-stability=5.0" },
+				{ "-source.filter.fwhm=30", "-source.filter.fwhm=35", "-source.filter.fwhm=40" }
+				
+		};
+	
+		String[][] names = {
+				{ "ML" },
+				{ "r20", "r25", "r30" },
+				{ "S3", "S5" },
+				{ "x30", "x35", "x40" },
+		};
+		
+		// 1 x 3 x 2 x 3 = 18
 		
 		
 		int[] index = new int[options.length];
