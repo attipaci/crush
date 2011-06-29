@@ -87,19 +87,6 @@
 			the instrument, or set options for it.
 			@See: 'correlated.<?>' for details on brached options.
 
-:: autobright		@Since: 2.04
-			@Advanced
-			When used, CRUSH will check the source name (case
-			insensitive) against names listed in 'bright.cat' in
-			the instrument's sub-directory (e.g. 
-			'gismo/bright.cat'), and set the 'bright' option 
-			automatically if a match is found. The 'bright.cat'
-			file should contain sourcenames only, one per line.
-			Currently, 'autobright' is enabled for GISMO, LABOCA,
-			SABOCA, and SHARC-2, with a list of typically bright
-			planets.
-			@See: 'bright'
-						
 :: azymuth		@Alias -> 'correlated.telescope-x'
 			@Instrument: GISMO
 			@Advanced
@@ -200,7 +187,7 @@
 			faithful map. The drawback is more noise, but
 			that should not be an issue for such a bright guy :-)
 			Will invoke 'bright.cfg'.
-			@See: 'autobright', 'config', 'faint', 'deep'
+			@See: 'config', 'faint', 'deep'
 
 :: cables		@Alias -> correlated.cables
 			@Instrument: LABOCA, ASZCA
@@ -1215,6 +1202,22 @@
 		 	Will reduce Mars scans 12 to 14 from Apr 15, 2010. The
 			object name is case-sensitive!
 			@See: 'datapath', 'date'
+
+
+:: object.[...]		@Since:2.05
+			@Advanced
+			Allows you to set conditionals based on object names.
+			All source names that begin with the specified string
+			(case insensitive!) will satisfy the condition. Thus,
+			the SHARC-2 setting:
+
+			   object.[PNT_] point
+
+			will automatically perform a pointing fit (see 'point'
+			option) at the end of the reduction for all sources
+			whose catalog names begin with 'PNT_', such as 
+			'PNT_3C345'.
+			@See: 'point'
 
 :: obslog		@Advanced
 			@Since: 2.03

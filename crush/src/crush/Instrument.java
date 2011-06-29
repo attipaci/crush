@@ -114,9 +114,11 @@ implements TableFormatter.Entries {
 		return copy;
 	}
 	
-	public void validate(double MJD) {
-		setMJDOptions(MJD);
-		setDateOptions(MJD);
+	public void validate(Scan<?,?> scan) {
+		setMJDOptions(scan.MJD);
+		setDateOptions(scan.MJD);
+		setObjectOptions(scan.sourceName);
+		
 		validate();
 	}
 	
@@ -252,6 +254,22 @@ implements TableFormatter.Entries {
 		for(String rangeSpec : settings.keySet()) if(Range.parse(rangeSpec, true).contains(serialNo)) 
 			options.parse(settings.get(rangeSpec));
 	}
+	
+	public void setObjectOptions(String sourceName) {
+		//System.err.println(">>> Setting local options for " + sourceName);
+		sourceName = sourceName.toLowerCase();
+		
+		if(!options.containsKey("object")) return;
+		
+		options = options.copy();
+		
+		// Make options an independent set of options, setting object specifics...
+		Hashtable<String, Vector<String>> settings = option("object").conditionals;
+		for(String spec : settings.keySet()) if(sourceName.startsWith(spec)) {
+			options.parse(settings.get(spec));
+		}
+	}
+	
 	
 	public boolean hasOption(String name) {
 		return options.isConfigured(name);

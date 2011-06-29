@@ -103,7 +103,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		instrument.parseDSPHDU((BinaryTableHDU) HDU[2]);
 		instrument.parsePixelHDU((BinaryTableHDU) HDU[3]);
 		instrument.parseDataHeader(firstDataHDU.getHeader());
-		instrument.validate(iMJD);
+		instrument.validate(this);
 		
 		Sharc2Integration integration = new Sharc2Integration(this);
 		integration.read(HDU, i);

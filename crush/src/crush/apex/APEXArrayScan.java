@@ -186,7 +186,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 		int subscans = readScanInfo(getHDU(dir + "SCAN" + ext));
 		instrument.readPar(getHDU(dir + getFEBECombination() + "-FEBEPAR" + ext));
-		instrument.validate(MJD);
+		instrument.validate(this);
 		clear();
 		
 		closeStreams();
@@ -231,7 +231,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		// TODO Pick scan and instrument hdu's by name
 		int subscans = readScanInfo((BinaryTableHDU) hdu[1]);
 		instrument.readPar((BinaryTableHDU) hdu[2]);
-		instrument.validate(MJD);
+		instrument.validate(this);
 		clear();
 		
 		int k=3;

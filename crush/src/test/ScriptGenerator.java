@@ -26,28 +26,31 @@ public class ScriptGenerator {
 		
 		String[][] options = {
 				{ "-estimator=maximum-likelihood" },
-				{ "-rounds=20", "-rounds=25", "-rounds=30" },
+				{ "-rounds=15", "-rounds=20", "-rounds=25", "-rounds=30" },
 				{ "-stability=2.5", "-stability=5.0" },
 				{ "-source.filter.fwhm=30", "-source.filter.fwhm=35", "-source.filter.fwhm=40" }
-				
 		};
 	
 		String[][] names = {
 				{ "ML" },
-				{ "r20", "r25", "r30" },
+				{ "r15", "r20", "r25", "r30" },
 				{ "S3", "S5" },
 				{ "x30", "x35", "x40" },
 		};
 		
-		// 1 x 3 x 2 x 3 = 18
+		// 1 x 4 x 2 x 3 = 36
 		
+		System.out.println("CRUSH=\"$HOME/src/crush/crush\"");
+		System.out.println("REDUCE=\"./GDF-generic.sh\"");
+		System.out.println("GLOBALOPTS=\"\"");
+		System.out.println();
 		
 		int[] index = new int[options.length];
 		boolean finished = false;
 	
 		while(!finished) {		
 			String option = "";
-			String name = "HDF";
+			String name = "GDF";
 		
 			for(int i=0; i<options.length; i++) if(options[i][index[i]] != null) {
 				option += options[i][index[i]] + " ";
@@ -57,9 +60,9 @@ public class ScriptGenerator {
 		
 			name += ".fits";
 		
-			System.out.println("OPTIONS=\"" + option.trim() + "\"");
+			System.out.println("OPTIONS=\"$GLOBALOPTS " + option.trim() + "\"");
 			System.out.println("NAME=\"" + name + "\"");
-			System.out.println("source ./HDF-generic.sh");
+			System.out.println("source $REDUCE");
 			System.out.println();
 			
 			boolean overflow = true;

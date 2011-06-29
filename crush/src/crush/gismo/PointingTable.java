@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.*;
 import java.text.ParseException;
 
-
 import util.LogFile;
 import util.Range;
 import util.Unit;
@@ -147,8 +146,8 @@ public class PointingTable extends ArrayList<PointingEntry> {
 		
 	}
 	
-	public Vector2D getIncrementalPointing(PointingEntry pointing, IRAMPointingModel pointingModel) {		
-		Vector2D model = pointingModel.getCorrection(pointing.horizontal, (pointing.MJD % 1.0) * Unit.day);	
+	public Vector2D getIncrementalPointing(PointingEntry pointing, IRAMPointingModel pointingModel) {			
+		Vector2D model = pointingModel.getCorrection(pointing.horizontal, (pointing.MJD % 1.0) * Unit.day);
 		model.x = pointing.offset.x - model.x;
 		model.y = pointing.offset.y - model.y;
 		return model;
