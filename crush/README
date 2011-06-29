@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 			  <kovacs[AT]astro.umn.edu>
 
-			  Last updated: 9 Apr 2011
+			  Last updated: 22 Jun 2011
 
 
 
@@ -569,6 +569,21 @@ options on the console.
 	serial.[14203-15652] flag 112-154,173
 
     are examples of setting activated based on dates or scan serial numbers.
+
+    As of version 2.05, you may also specify conditional settings based on the
+    source names under the 'object' branch. E.g.:
+
+	object.[Jupiter] bright
+
+    will invoke the 'bright' configuration for Jupiter. The check for the 
+    source name is case insensitive, and matches all source names that begin
+    with the specified sequence of characters. Thus, the SHARC-2 configuration
+    line:
+	
+	object.[PNT_] point
+
+    will perform a pointing fit at the end of the reduction for all sources
+    whose catalog names begin with 'PNT_' (e.g. PNT_3C345).
 
     These examples also demonstrates that conditionals can be branched just 
     like options. (In the above cases, the conditions effectively reside in the

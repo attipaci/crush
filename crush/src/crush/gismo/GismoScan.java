@@ -83,18 +83,18 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	@Override
 	public Vector2D getPointingCorrection(Configurator option) {
 		Vector2D correction = super.getPointingCorrection(option);
-		IRAMPointingModel incrementalModel = null;
+		IRAMPointingModel model = null;
 		Gismo gismo = (Gismo) instrument;
 		
 		if(option.isConfigured("model")) {
 			try { 
 				double UT = (MJD % 1.0) * Unit.day;
-				incrementalModel = new IRAMPointingModel(option.get("model").getValue());
+				model = new IRAMPointingModel(option.get("model").getValue());
+						
+				if(option.isConfigured("model.static")) model.setStatic(true);
 				
-				if(!option.isConfigured("model.incremental")) incrementalModel.subtract(observingModel);				
-				if(option.isConfigured("model.static")) incrementalModel.setStatic(true);
-				
-				Vector2D modelCorr = incrementalModel.getCorrection(horizontal, UT);
+				Vector2D modelCorr = model.getCorrection(horizontal, UT);
+				if(!option.isConfigured("model.incremental")) modelCorr.subtract(observingModel.getCorrection(horizontal, UT));	
 				
 				System.err.println("   Got pointing from model: " + 
 						Util.f1.format(modelCorr.x / Unit.arcsec) + ", " +
@@ -113,8 +113,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			try { 
 				System.err.print("   ");
 				gismo.setPointings(option.get("log").getValue()); 
-				if(incrementalModel == null) incrementalModel = new IRAMPointingModel();
-				Vector2D increment = gismo.pointings.getIncrement(MJD, horizontal, incrementalModel);
+				if(model == null) model = new IRAMPointingModel();
+				Vector2D increment = gismo.pointings.getIncrement(MJD, horizontal, model);
 				//increment.rotate(-horizontal.EL());
 				correction.add(increment);
 			}
@@ -198,7 +198,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		parseScanPrimaryHDU(HDU[0]);
 		instrument.parseScanPrimaryHDU(HDU[1]);
 		instrument.parseHardwareHDU((BinaryTableHDU) HDU[1]);
-		instrument.validate(MJD);	
+		instrument.validate(this);	
 		clear();
 		
 		GismoIntegration integration = new GismoIntegration(this);

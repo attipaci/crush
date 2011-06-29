@@ -74,7 +74,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 				BasicHDU mainHDU = fits.getHDU(0);
 				parseScanPrimaryHDU(mainHDU);
 				instrument.parseScanPrimaryHDU(mainHDU);
-				instrument.validate(MJD);	
+				instrument.validate(this);	
 				clear();
 			}
 					

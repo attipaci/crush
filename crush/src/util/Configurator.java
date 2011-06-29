@@ -234,7 +234,7 @@ public class Configurator implements Cloneable {
 		branches.put(branchName, branch);		
 	}
 	
-	private void addCondition(String condition, String setting) {	
+	private void addCondition(String condition, String setting) {		
 		if(isSatisfied(condition)) parse(setting);
 		else {
 			Vector<String> list = conditionals.containsKey(condition) ? conditionals.get(condition) : new Vector<String>();
@@ -296,12 +296,13 @@ public class Configurator implements Cloneable {
 	}
 	
 	public void setCondition(String expression) {
-		expression.toLowerCase();
-			
+		//expression.toLowerCase();
+		//System.err.println("### " + expression);
+		
 		if(!conditionals.containsKey(expression)) return;
 		else {
 			if(verbose) System.err.println("[c] " + expression + " > " + conditionals.get(expression));
-			parse(conditionals.get(expression));		
+			parse(conditionals.get(expression));
 		}
 	}
 	

@@ -550,12 +550,8 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	public void validate(Vector<Scan<?,?>> scans) throws Exception {
 		
 		final Sharc2Scan firstScan = (Sharc2Scan) scans.get(0);
-		final String upperCaseSource = firstScan.sourceName.toUpperCase();
 		
-		if(scans.size() == 1) {
-			if(upperCaseSource.startsWith("PNT_") || upperCaseSource.startsWith("CAL_")) setPointing(firstScan);
-			else if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
-		}
+		if(scans.size() == 1) if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
 		
 		super.validate(scans);
 	}

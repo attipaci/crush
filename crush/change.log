@@ -1,5 +1,43 @@
 
-2.04-2
+2.05-a1
+
+	[BUG] {GISMO} There was an oops when trying to use an absolute pointing
+	model together with the incremental corrections based on a pointing 
+	log for GISMO. In essence, a differential pointing model was used where
+	an absolute model was needed, resulting in hugely wrong corrections.
+	Now fixed :-).
+
+	[NEW] Conditionals under the 'object' key can be used to set object-
+	specific conditions. E.g., the object-dependent 'bright' setting for
+	Jupiter can be specified by the config statement:
+
+		object.[Jupiter] bright
+
+	As such, the 'bright.cat' method introduced in 2.04 is now deprecated.
+	The condition check is case insensitive and is satisfied whenever the 
+	source name starts with the specified sequence. E.g.
+
+		object.[PNT_] point
+
+	specifies to derive pointing corrections for all objects whose names
+	begin with the string 'PNT_'. Thus, in SHARC-2 similar lines replace
+	the hardcoded automatic pointing for such sources, making this more 
+	transparent and user adjustable.
+
+	[DEPRECATE] 'autobright' option, introduced in 2.04-2, is deprecated.
+	Use object dependent conditionals instead, which were introduced in 
+	this version. Check new features above for details.
+
+
+2.04-2 (13 Jun 2011)
+
+	Overview
+        =====================================================================
+	This update of crush offer some important fixes to how timestamps are
+	handled (esp. for the GISMO pointing logs), and other improvements
+	to the GISMO pointing model. As usual there are many other smaller
+	fixes and improvements also.
+	=====================================================================
 
 	[BUG] Timestamp parsing/formatting was done in local time rather than
 	UTC as it should have been. This was a major problem with the
@@ -72,7 +110,11 @@
 	[CODE] FITS image header parsing moved up: AstroMap -> AstroImage. 
 
 	[CODE] Some cleanup of Coordinate set() vs. setNative() methods.
-	
+
+	[UPDATE] {LABOCA, SABOCA} Updated LABOCA and SABOCA configuration 
+	data (RCPs, opacities and calibration tables) with the latest from the
+	APEX pages. All data is good thru 25 May 2011.	
+
 
 2.04-1 (28 Apr 2011)
 	

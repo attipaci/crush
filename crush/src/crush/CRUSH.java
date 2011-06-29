@@ -36,11 +36,11 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.04-2
+ * @version 2.05-a1
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.04-2";
+	private static String version = "2.05-a1";
 	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
@@ -277,10 +277,7 @@ public class CRUSH extends Configurator {
 	
 		System.err.println();
 		
-		if(isConfigured("autobright")) {
-			try { autoBright(); }
-			catch(IOException e) { System.err.println("   WARNING! Cannot read bright source catalog."); }			
-		}
+		setObjectOptions(source.getSourceName());
 			
 		if(isConfigured("bright")) System.out.println(" Bright source reduction.");
 		else if(isConfigured("faint")) System.out.println(" Faint source reduction.");
@@ -378,27 +375,19 @@ public class CRUSH extends Configurator {
 		
 		System.gc();
 	}
+	
+	public void setObjectOptions(String sourceName) {
+		//System.err.println(">>> Setting global options for " + sourceName);
+		sourceName = sourceName.toLowerCase();
+		
+		if(!containsKey("object")) return;
 
-	public void autoBright() throws IOException {
-		System.err.print(" Checking if source should be reduced as 'bright' --- ");
-		
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(
-				instrument.getDefaultConfigPath() + "bright.cat")));
-		
-		String line = null;
-		String sourceName = source.getSourceName();
-		
-		while((line = in.readLine()) != null) if(line.equalsIgnoreCase(sourceName)) {
-			System.err.println("YES!");
-			in.close();
-			System.err.print(" ");
-			parse("bright");
-			return;
-		}
-		
-		in.close();
-		System.err.println("NO.");
+		Hashtable<String, Vector<String>> settings = get("object").conditionals;
+		for(String spec : settings.keySet()) if(sourceName.startsWith(spec)) 
+			parse(settings.get(spec));
+	
 	}
+	
 	
 	public boolean solveSource() {
 		if(source == null) return false;

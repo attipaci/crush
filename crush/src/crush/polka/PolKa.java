@@ -61,7 +61,7 @@ public class PolKa extends Laboca {
 	}
 	
 	@Override
-	public void validate(double MJD) {
+	public void validate(Scan<?,?> scan) {
 		
 		if(hasOption("waveplate.frequency")) 
 			wavePlateFrequency = option("waveplate.frequency").getDouble() * Unit.Hz;
@@ -88,7 +88,7 @@ public class PolKa extends Laboca {
 				System.err.println(" Waveplate frequencies from channel " + frequencyChannel.dataIndex);
 		}
 			
-		super.validate(MJD);
+		super.validate(scan);
 	}
 	
 	@Override
