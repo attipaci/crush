@@ -20,33 +20,32 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.gui;
+// Copyright (c) 2007 Attila Kovacs 
 
-import crush.sourcemodel.*;
+package util.plot.colorscheme;
 
-public class AstroImager extends DoubleArrayImager {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 5730801953668713086L;
-	
-	AstroImage image;
-	
-	public AstroImager(AstroImage image) {
-		super(image.data);
-		this.image = image;
+import java.awt.*;
+
+import util.plot.ColorScheme;
+
+
+public class Orangy extends ColorScheme {
+
+	public Orangy() {
+		schemename= "Orangy";
+		highlight = Color.CYAN.getRGB();
 	}
-	
+
 	@Override
-	public void defaults() {
-		zoomMode = ZOOM_FIT;
-		super.defaults();
-	}
+	public int getRGB(double scaled) {
+		if(Double.isNaN(scaled)) return noData;
 	
-	@Override
-	public int getRGB(int i, int j) {
-		if(image.flag[i+i0][j+j0] != 0) return colorScheme.noData;  
-		return super.getRGB(i, j);
+		if(scaled < 0.0) scaled = 0.0;
+		if(scaled > 1.0) scaled = 1.0;
+
+		if(scaled < 0.5) return Color.HSBtoRGB(1.0F/15.0F, 1.0F, 2.0F * (float) scaled);
+		else return Color.HSBtoRGB(1.0F/15.0F, 2.0F - 2.0F * (float) scaled, 1.0F);
+
+
 	}
-	
 }

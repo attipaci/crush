@@ -22,28 +22,44 @@
  ******************************************************************************/
 // Copyright (c) 2007 Attila Kovacs 
 
-package crush.gui.colorscheme;
+package util.plot;
 
 import java.awt.*;
+import java.util.Hashtable;
 
-import crush.gui.ColorScheme;
+import util.plot.colorscheme.*;
 
-public class CoolBlue extends ColorScheme {
 
-	public CoolBlue() {
-		schemename= "CoolBlue";
-		highlight = Color.ORANGE.getRGB();
+public abstract class ColorScheme {
+	public String schemename;
+	public int highlight = Color.WHITE.getRGB();
+	public int noData = Color.TRANSLUCENT;
+	
+	public ColorScheme() {}
+
+	public abstract int getRGB(double scaledintensity);
+	
+	public int getHighlight() { return highlight; }
+
+	public String getSchemeName() {
+		return schemename;
 	}
-
-	@Override
-	public int getRGB(double scaled) {
-		if(Double.isNaN(scaled)) return noData;
 	
-		if(scaled < 0.0) scaled=0.0;
-		else if(scaled > 1.0) scaled=1.0;
+	public static ColorScheme getInstanceFor(String name) throws IllegalAccessException, InstantiationException {
+		name = name.toLowerCase();
+		return schemes.containsKey(name) ? schemes.get(name).newInstance() : null;
+	}
 	
-		if(scaled < 0.5) return Color.HSBtoRGB(0.75F, 1.0F, 2.0F * (float) scaled);
-		else return Color.HSBtoRGB(0.75F, 2.0F - 2.0F * (float) scaled, 1.0F);
-
+	public static Hashtable<String, Class<? extends ColorScheme>> schemes = new Hashtable<String, Class<? extends ColorScheme>>();
+	
+	static {
+		schemes.put("grayscale", GreyScale.class);
+		schemes.put("colorful", Colorful.class);
+		schemes.put("blue", CoolBlue.class);
+		schemes.put("orange", Orangy.class);
+		schemes.put("greyscale", GreyScale.class);
+		schemes.put("gray", GreyScale.class);
+		schemes.put("grey", GreyScale.class);
 	}
 }
+

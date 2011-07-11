@@ -136,6 +136,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		String path = getDataPath();
 		descriptor = scanDescriptor;
 
+		String ending = hasOption("dataname.end") ? option("dataname.end").getValue() : "GISMO-IRAM-condensed.fits";
+		
 		// Try to read scan number with the help of 'object' and 'date' keys...
 		try {
 			int scanNo = Integer.parseInt(scanDescriptor);
@@ -155,9 +157,15 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 				}
 				else {
 					String[] files = directory.list();
-					for(int i=0; i<files.length; i++) if(files[i].endsWith("GISMO-IRAM-condensed.fits"))
+					for(int i=0; i<files.length; i++) if(files[i].endsWith(ending))
 						return new File(dirName + File.separator + files[i]);
-					throw new FileNotFoundException("Cannot find a merged GISMO-IRAM-condensed.fits file in " + dirName);
+					
+					String message = "Cannot find file ending with '" + ending + "' in " + dirName +
+						"\n    * Check that 'datapath' and 'dataname.end' are correct:" +
+						"\n      --> datapath = '" + path + "'" +
+						"\n      --> dataname.end = '" + ending + "'";		
+					
+					throw new FileNotFoundException(message);
 				}
 			}
 			else {

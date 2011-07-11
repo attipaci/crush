@@ -27,6 +27,12 @@ package crush.gui;
 import crush.*;
 import crush.sourcemodel.*;
 import util.*;
+import util.plot.AxisLabel;
+import util.plot.ColorBar;
+import util.plot.ColorScheme;
+import util.plot.Imager;
+import util.plot.Plot;
+import util.plot.Ruler;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -35,22 +41,25 @@ import javax.swing.*;
 
 
 //Display with value/coordinate readout
-class MapPanel extends ColorMapPanel {
+class MapPanel extends JComponent {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 8619921669585536452L;
 	
-	AstroImage image;
-	
-	InfoPanel infobar;
-	ColorScalePanel colorScale;
-	Ruler ruler;
-	Scale scale;
-	AxisLabel fluxLabel;
+	JComponent root;
 	Box scaleBox;
 	
-	Set<ColorScheme> colorSchemes = new Set<ColorScheme>();
+	Imager<AstroImageLayer> imager;
+	
+	InfoPanel infobar;
+	ColorBar colorScale;
+	Ruler ruler;
+	AxisLabel fluxLabel;
+	
+	Scale scale;
+	
+	Vector<ColorScheme> colorSchemes = new Vector<ColorScheme>();
 	Vector<Region> regions = new Vector<Region>();
 		
 	double zoom=1.0;
@@ -59,7 +68,9 @@ class MapPanel extends ColorMapPanel {
 	//boolean masked = false;
 	//boolean polygonDrawMode = false;
 
-	public MapPanel() {
+	public MapPanel(final AstroImage image) {
+		// TODO create imager
+		
 		setMinimumSize(new Dimension(100, 100));
 		setSize(200, 100);
 		infobar = new InfoPanel(3);
@@ -67,7 +78,7 @@ class MapPanel extends ColorMapPanel {
 		//setBorder(BorderFactory.createLineBorder(Color.black));
 		setBackground(Color.LIGHT_GRAY);
 
-		colorScale = new ColorScalePanel(ColorScalePanel.VERTICAL, 20);
+		colorScale = new ColorBar(imager, ColorBar.VERTICAL, 20);
 		ruler = new Ruler();
 		scale = ruler.scale;
 		fluxLabel = new AxisLabel(image.unit.name, AxisLabel.RIGHT);
@@ -83,9 +94,11 @@ class MapPanel extends ColorMapPanel {
 		addMouseListener(new MouseAdapter() {
 			Vector2D center = new Vector2D();
 
+			@Override
 			public void mouseEntered(MouseEvent evt) {
 				setCursor(new java.awt.Cursor(java.awt.Cursor.CROSSHAIR_CURSOR));
 			}
+			@Override
 			public void mouseExited(MouseEvent evt) {
 				setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
 				infobar.clear();
@@ -143,6 +156,7 @@ class MapPanel extends ColorMapPanel {
 			CoordinateAxis xAxis = offsetSystem.get(0);
 			CoordinateAxis yAxis = offsetSystem.get(1);
 			
+			@Override
 			public void mouseMoved(MouseEvent evt) {
 				xAxis.setFormat(Util.f1);
 				yAxis.setFormat(Util.f1);

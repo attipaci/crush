@@ -297,10 +297,10 @@ public class AstroMap extends AstroImage {
 	
 	
 	private void addGaussianAt(AstroMap from, int fromi, int fromj, double FWHM, double beamRadius, float[][] renorm) {
-		final double xFWHM = FWHM / grid.delta.x;	
+		final double xFWHM = FWHM / grid.pixelSizeX();	
 		final double sigmaX = xFWHM / Util.sigmasInFWHM;
 		
-		final double yFWHM = FWHM / grid.delta.y;	
+		final double yFWHM = FWHM / grid.pixelSizeY();	
 		final double sigmaY = yFWHM / Util.sigmasInFWHM;
 		
 		final double Ax = -0.5 / (sigmaX*sigmaX);
@@ -361,6 +361,10 @@ public class AstroMap extends AstroImage {
 		return regrid;
 	}
 	
+	public AstroImage getFluxImage() {
+		return getImage(data, "Flux", unit);
+	}
+	
 	public AstroImage getS2NImage() {
 		AstroImage image = getRMSImage();
 		image.contentType = "S/N";
@@ -407,6 +411,24 @@ public class AstroMap extends AstroImage {
 		return data[i][j] / getRMS(i,j);		
 	}
 	
+	public double getTypicalRMS() {
+		double sumw = 0.0;
+		int n = 0;
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
+			sumw += 1.0 / weight[i][j];
+			n++;
+		}
+		return Math.sqrt(n/sumw);
+	}
+	
+	public void filterCorrect() {
+		filterCorrect(instrument.resolution, getSkip(filterBlanking));
+	}
+	
+	public void undoFilterCorrect() {
+		undoFilterCorrect(instrument.resolution, getSkip(filterBlanking));
+	}
+				
 	public int[][] getSkip(double blankingValue) {
 		int[][] skip = (int[][]) copyOf(flag);
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(data[i][j] / getRMS(i,j) > blankingValue) skip[i][j] = 1;
@@ -422,6 +444,7 @@ public class AstroMap extends AstroImage {
 	
 	public void filterAbove(double extendedFWHM, double blankingValue) {
 		filterAbove(extendedFWHM, getSkip(blankingValue));
+		filterBlanking = blankingValue;
 	}
 
 	
@@ -463,8 +486,8 @@ public class AstroMap extends AstroImage {
 		final int nx = cdata.length;
 		final int ny = cdata[0].length;
 
-		double sigmax = Util.sigmasInFWHM *  nx * grid.delta.x / (2.0*Math.PI * FWHM);
-		double sigmay = Util.sigmasInFWHM *  ny * grid.delta.y / (2.0*Math.PI * FWHM);
+		double sigmax = Util.sigmasInFWHM *  nx * grid.pixelSizeX() / (2.0*Math.PI * FWHM);
+		double sigmay = Util.sigmasInFWHM *  ny * grid.pixelSizeY() / (2.0*Math.PI * FWHM);
 		
 		final double ax = -0.5/(sigmax*sigmax);
 		final double ay = -0.5/(sigmay*sigmay);
@@ -502,6 +525,8 @@ public class AstroMap extends AstroImage {
 
 		if(Double.isNaN(extFilterFWHM)) extFilterFWHM = FWHM;
 		else extFilterFWHM = 1.0/Math.sqrt(1.0/(extFilterFWHM * extFilterFWHM) + 1.0/(FWHM*FWHM));
+			
+		filterBlanking = blankingValue;
 		
 		filterCorrect(instrument.resolution, skip);
 	}
@@ -637,10 +662,10 @@ public class AstroMap extends AstroImage {
 		FitsFactory.setUseHierarch(true);
 		Fits fits = new Fits();	
 
-		fits.addHDU(makeHDU());
-		fits.addHDU(getTimeImage().makeHDU());
-		fits.addHDU(getRMSImage().makeHDU());
-		fits.addHDU(getS2NImage().makeHDU());
+		fits.addHDU(createHDU());
+		fits.addHDU(getTimeImage().createHDU());
+		fits.addHDU(getRMSImage().createHDU());
+		fits.addHDU(getS2NImage().createHDU());
 
 		editHeader(fits);
 		

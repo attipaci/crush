@@ -196,6 +196,7 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		return coords;
 	}
 	
+	
 	public String toCrushString(AstroImage image) {
 		SphericalCoordinates coords = getCoordinates();
 		
@@ -312,6 +313,8 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		}
 		else radius.value = Double.NaN;
 	}
+	
+	
 	
 	
 	public final static int FORMAT_CRUSH = 0;

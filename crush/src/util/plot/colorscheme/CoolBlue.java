@@ -22,29 +22,29 @@
  ******************************************************************************/
 // Copyright (c) 2007 Attila Kovacs 
 
-package crush.gui.colorscheme;
+package util.plot.colorscheme;
 
 import java.awt.*;
 
-import crush.gui.ColorScheme;
+import util.plot.ColorScheme;
 
-public class Orangy extends ColorScheme {
 
-	public Orangy() {
-		schemename= "Orangy";
-		highlight = Color.CYAN.getRGB();
+public class CoolBlue extends ColorScheme {
+
+	public CoolBlue() {
+		schemename= "CoolBlue";
+		highlight = Color.ORANGE.getRGB();
 	}
 
 	@Override
 	public int getRGB(double scaled) {
 		if(Double.isNaN(scaled)) return noData;
 	
-		if(scaled < 0.0) scaled = 0.0;
-		if(scaled > 1.0) scaled = 1.0;
-
-		if(scaled < 0.5) return Color.HSBtoRGB(1.0F/15.0F, 1.0F, 2.0F * (float) scaled);
-		else return Color.HSBtoRGB(1.0F/15.0F, 2.0F - 2.0F * (float) scaled, 1.0F);
-
+		if(scaled < 0.0) scaled=0.0;
+		else if(scaled > 1.0) scaled=1.0;
+	
+		if(scaled < 0.5) return Color.HSBtoRGB(0.75F, 1.0F, 2.0F * (float) scaled);
+		else return Color.HSBtoRGB(0.75F, 2.0F - 2.0F * (float) scaled, 1.0F);
 
 	}
 }

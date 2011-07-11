@@ -93,7 +93,7 @@ public class CoordinatePair implements Cloneable {
 
 	public final boolean isNaN() { return Double.isNaN(x) || Double.isNaN(y); }
 
-	public final void weightedAverageWith(double w1, CoordinatePair coord, double w2) {
+	public final void weightedAverageWith(double w1, final CoordinatePair coord, double w2) {
 		double isumw = 1.0 / (w1 + w2);
 		w1 *= isumw; w2 *= isumw;
 		x = w1 * x + w2 * coord.x;

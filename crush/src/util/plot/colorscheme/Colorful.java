@@ -20,35 +20,31 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.gui;
+// Copyright (c) 2007 Attila Kovacs 
 
-import java.awt.Dimension;
+package util.plot.colorscheme;
 
-public class DoubleArrayImager extends ArrayImager {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6276800154911203125L;
+import java.awt.*;
 
-	double[][] data;
-	
-	public DoubleArrayImager(double[][] data) {
-		setData(data);
-	}
-	
-	public void setData(double[][] data) {
-		this.data = data;
-	}
-	
-	@Override
-	public Dimension getArraySize() {
-		return new Dimension(data.length, data[0].length);
+import util.plot.ColorScheme;
+
+
+public class Colorful extends ColorScheme {
+
+
+	public Colorful() {
+		schemename= "CameraLike";
 	}
 
 	@Override
-	public double getValue(int i, int j) {
-		return data[i][j];
+	public int getRGB(double scaled) {
+		if(Double.isNaN(scaled)) return noData;
+
+		if(scaled < 0.0) scaled=0.0;
+		else if(scaled > 1.0) scaled=1.0;
+		
+		if(scaled < 0.2) return Color.HSBtoRGB(0.8F, 1.0F, 5.0F * (float) scaled);
+		else if(scaled >= 0.8) return Color.HSBtoRGB(0.0F, 5.0F - 5.0F * (float) scaled, 1.0F);
+		else return Color.HSBtoRGB(4.0F/3.0F*(0.8F - (float)scaled), 1.0F, 1.0F);		
 	}
-	
-	
 }

@@ -130,11 +130,11 @@ public abstract class CelestialCoordinates extends SphericalCoordinates {
 	
 	
 	public static EquatorialCoordinates getPole(double inclination, double risingRA) {
-		return new EquatorialCoordinates(risingRA - quarterTurn, quarterTurn - inclination);
+		return new EquatorialCoordinates(risingRA - rightAngle, rightAngle - inclination);
 	}
 
 	public static EquatorialCoordinates getPole(CelestialCoordinates referenceSystem, double inclination, double risingLON) {
-		referenceSystem.set(risingLON - quarterTurn, quarterTurn - inclination);
+		referenceSystem.set(risingLON - rightAngle, rightAngle - inclination);
 		return referenceSystem.toEquatorial();
 	}
 	

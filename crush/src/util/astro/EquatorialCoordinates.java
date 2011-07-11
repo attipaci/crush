@@ -221,7 +221,7 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 	@Override
 	public double getZeroLongitude() { return 0.0; }
 	
-	private static EquatorialCoordinates equatorialPole = new EquatorialCoordinates(0.0, quarterTurn);
+	private static EquatorialCoordinates equatorialPole = new EquatorialCoordinates(0.0, rightAngle);
 
 	public CoordinateEpoch getEpoch() { return epoch; }
 }

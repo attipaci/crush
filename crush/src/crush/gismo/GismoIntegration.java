@@ -67,7 +67,6 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		return new GismoFrame((GismoScan) scan);
 	}
 	
-	
 	protected void read(BinaryTableHDU hdu) throws IllegalStateException, HeaderCardException, FitsException {
 		int records = hdu.getAxes()[0];
 
@@ -86,9 +85,8 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		new HDUManager(this).read(new GismoReader(hdu));
 	}
 		
-	class GismoReader extends HDUReader {
-			
-		float[] DAC, RA, DEC, AZ, EL, AZE, ELE, LST, chop;
+	class GismoReader extends HDUReader {	
+		float[] DAC, RA, DEC, AZ, EL, AZE, ELE, LST;
 		double[] MJD;
 		int[] NS, SN, CAL;
 		byte[] SDI;
@@ -96,24 +94,28 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		
 		public GismoReader(BinaryTableHDU hdu) throws FitsException {
 			super(hdu);
-			
+		
 			int iDAC = hdu.findColumn("DAC");
 			channels = table.getSizes()[iDAC];
 			
 			DAC = (float[]) table.getColumn(iDAC);
 			RA = (float[]) table.getColumn(hdu.findColumn("RA"));
-			DEC = (float[]) table.getColumn(hdu.findColumn("DEC"));
-			AZ = (float[]) table.getColumn(hdu.findColumn("AZ"));
-			EL = (float[]) table.getColumn(hdu.findColumn("EL"));
-			AZE = (float[]) table.getColumn(hdu.findColumn("AZ_ERROR"));
-			ELE = (float[]) table.getColumn(hdu.findColumn("EL_ERROR"));	
+			DEC = (float[]) table.getColumn(hdu.findColumn("DEC"));	
 			MJD = (double[]) table.getColumn(hdu.findColumn("MJD"));
 			LST = (float[]) table.getColumn(hdu.findColumn("LST"));
 			SN = (int[]) table.getColumn(hdu.findColumn("FRAME_COUNTER"));
 			NS = (int[]) table.getColumn(hdu.findColumn("NUMBER_OF_SAMPLES"));
 			SDI = (byte[]) table.getColumn(hdu.findColumn("SUMMARIZED_DIGITAL_INPUT"));
-			chop = (float[]) table.getColumn(hdu.findColumn("CHOP_OFFSET")); // TODO is it used?
 			
+			// chop = (float[]) table.getColumn(hdu.findColumn("CHOP_OFFSET"));
+			// AZO = (float[]) table.getColumn(hdu.findColumn("AZO"));
+			// ELO = (float[]) table.getColumn(hdu.findColumn("ELO"));
+			
+			AZ = (float[]) table.getColumn(hdu.findColumn("AZ"));
+			EL = (float[]) table.getColumn(hdu.findColumn("EL"));
+			AZE = (float[]) table.getColumn(hdu.findColumn("AZ_ERROR"));
+			ELE = (float[]) table.getColumn(hdu.findColumn("EL_ERROR"));		
+
 			int iCAL = hdu.findColumn("CalFlag"); // 0=none, 1=shutter, 2=ivcurve
 			if(iCAL > 0) CAL = (int[]) table.getColumn(iCAL);
 			
@@ -127,10 +129,10 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 			//iFlag = hdu.findColumn("Celestial");
 			//iTRK = hdu.findColumn("Tracking");
 			//iDT = hdu.findColumn("DIODE_TEMPERATURES");
-			//iRT = hdu.findColumn("RESISTOR_TEMPERATURES"); // TODO One of these is cold plate temp.
+			//iRT = hdu.findColumn("RESISTOR_TEMPERATURES");
 			//iDV = hdu.findColumn("DIODE_VOLTS");
 			//iRO = hdu.findColumn("RESISTOR_OHMS");
-			//iMRT = hdu.findColumn("MAIN_RESISTOR_TEMPERATURE"); // TODO is this cold plate?
+			//iMRT = hdu.findColumn("MAIN_RESISTOR_TEMPERATURE");
 			//iSAE = hdu.findColumn("SAE");
 		}
 		
@@ -164,34 +166,40 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 				// It's in the same epoch as the scan (checked!)
 				apparent.setLongitude(RA[i] * Unit.hourAngle);
 				apparent.setLatitude(DEC[i] * Unit.deg);
+				
 				if(catalogToApparent == null) {
 					CoordinateEpoch apparentEpoch = new JulianEpoch();
 					apparentEpoch.setMJD(frame.MJD);
 					catalogToApparent = new Precession(scan.equatorial.epoch, apparentEpoch);
 				}
 				catalogToApparent.precess(apparent);
-
-
-				frame.horizontal = new HorizontalCoordinates(
-						AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
-						EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
-
-				frame.calcParallacticAngle();
-
+				
 				frame.LST = LST[i] * Unit.sec;
 
 				//frame.labviewTime = ((double[])row[iLT])[0] * Unit.sec;
 				frame.frameNumber = SN[i];
 
 				// Read the chopped position data...
-				frame.chopperPosition.x = chop[i] * Unit.arcsec;
-
-				// Add the chopper offet to the actual coordinates as well...
-				frame.horizontal.x += frame.chopperPosition.x / frame.horizontal.cosLat;
-
+				//frame.chopperPosition.x = chop[i] * Unit.arcsec;
+				
 				// Calculate the horizontal offset	
 				apparent.toHorizontal(trackingCenter, scan.site, frame.LST);
+				
+				//	frame.horizontalOffset = new Vector2D(AZO[i] * Unit.arcsec, ELO[i] * Unit.arcsec);
+				//	frame.horizontal = (HorizontalCoordinates) trackingCenter.clone();
+				//	frame.horizontal.addOffset(frame.horizontalOffset);
+				
+				frame.horizontal = new HorizontalCoordinates(
+						AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
+						EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
 				frame.horizontalOffset = frame.horizontal.getOffsetFrom(trackingCenter);
+				
+				// Add the chopper offet to the actual coordinates as well...
+				//final double chopOffset = frame.chopperPosition.x / frame.horizontal.cosLat;
+				//frame.horizontal.x += chopOffset;
+				//frame.horizontalOffset.x += chopOffset;
+					
+			    frame.calcParallacticAngle();
 
 				// Force recalculation of the equatorial coordinates...
 				frame.equatorial = null;

@@ -22,7 +22,7 @@
  ******************************************************************************/
 // Copyright (c) 2007 Attila Kovacs 
 
-package crush.gui;
+package util.plot;
 
 import java.awt.*;
 import javax.swing.*;
@@ -45,9 +45,9 @@ public class AxisLabel extends JPanel {
 
 	public AxisLabel() { create(); }
 
-	public AxisLabel(String text, int orientation) { 
+	public AxisLabel(String text, int location) { 
 		label = text;
-		axis = orientation;
+		axis = location;
 		create();
 	}
 
