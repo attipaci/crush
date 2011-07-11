@@ -1,5 +1,9 @@
+>> dataname.end
+>> check png writing capability with new Plot classes...
+>> debug imager...
 
-2.05-a1
+
+2.05-a2
 
 	[BUG] {GISMO} There was an oops when trying to use an absolute pointing
 	model together with the incremental corrections based on a pointing 
@@ -23,6 +27,20 @@
 	begin with the string 'PNT_'. Thus, in SHARC-2 similar lines replace
 	the hardcoded automatic pointing for such sources, making this more 
 	transparent and user adjustable.
+
+	[NEW] {GISMO} Introducing the new configuration keyword 'dataname.end'
+	which specifies the naming convention of merged GISMO FITS files. E.g.
+	for runs 1-4, the appropriate setting is:
+
+		dataname.end GISMO-IRAM-condensed.fits
+
+	This setting was hardcoded previously. With the new keyword, there is
+	more flexibility for changing the naming convention.
+
+	[CODE] Complete overhaul of imaging and spherical grid classes. The
+	new gridding is cleaner, more generic and more efficient, while the 
+	new imaging classes have been designed with more powerful and generic
+	plotting capabilities in mind.
 
 	[DEPRECATE] 'autobright' option, introduced in 2.04-2, is deprecated.
 	Use object dependent conditionals instead, which were introduced in 

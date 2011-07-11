@@ -155,24 +155,24 @@ public class SphericalCoordinates extends CoordinatePair {
 	public CoordinatePair getProjected(SphericalProjection projection) { return projection.getProjected(this); }
 	
 	
-	public void addNativeOffset(Vector2D offset) {
+	public void addNativeOffset(final Vector2D offset) {
 		x += offset.x / cosLat;
 		setNativeLatitude(y + offset.y);
 	}
 	
-	public void addOffset(Vector2D offset) {
+	public void addOffset(final Vector2D offset) {
 		if(isReverseLongitude()) x -= offset.x / cosLat;
 		else x += offset.x / cosLat;
 		if(isReverseLatitude()) setNativeLatitude(y - offset.y);
 		else setNativeLatitude(y + offset.y);
 	}
 	
-	public void subtractNativeOffset(Vector2D offset) {
+	public void subtractNativeOffset(final Vector2D offset) {
 		x -= offset.x / cosLat;
 		setNativeLatitude(y - offset.y);
 	}
 	
-	public void subtractOffset(Vector2D offset) {
+	public void subtractOffset(final Vector2D offset) {
 		if(isReverseLongitude()) x += offset.x / cosLat;
 		else x -= offset.x / cosLat;
 		if(isReverseLatitude()) setNativeLatitude(y + offset.y);
@@ -194,7 +194,7 @@ public class SphericalCoordinates extends CoordinatePair {
 	
 	
 	public final void getNativeOffsetFrom(final SphericalCoordinates reference, final Vector2D toOffset) {
-		toOffset.x = Math.IEEEremainder(x - reference.x, fullTurn) * reference.cosLat;
+		toOffset.x = Math.IEEEremainder(x - reference.x, twoPI) * reference.cosLat;
 		toOffset.y = y - reference.y;
 	}
 	
@@ -205,7 +205,7 @@ public class SphericalCoordinates extends CoordinatePair {
 	}
 		
 	public void standardize() {
-		x = Math.IEEEremainder(x, fullTurn);
+		x = Math.IEEEremainder(x, twoPI);
 		y = Math.IEEEremainder(y, Math.PI);
 	}
 	
@@ -282,15 +282,15 @@ public class SphericalCoordinates extends CoordinatePair {
 	}
 	
 	public final static double angularAccuracy = 1e-12;
-	public final static double fullTurn = 2.0 * Math.PI;
-	public final static double halfTurn = Math.PI;
-	public final static double quarterTurn = 0.5 * Math.PI;
+	public final static double twoPI = 2.0 * Math.PI;
+	public final static double PI = Math.PI;
+	public final static double rightAngle = 0.5 * Math.PI;
 	
 	public static final void transform(final SphericalCoordinates from, final SphericalCoordinates newPole, final double phi0, final SphericalCoordinates to) {		
 		final double dL = from.x - newPole.x;
 		final double cosdL = Math.cos(dL);	
 		to.setNativeLatitude(asin(newPole.sinLat * from.sinLat + newPole.cosLat * from.cosLat * cosdL));
-		to.setNativeLongitude(quarterTurn - phi0 +
+		to.setNativeLongitude(rightAngle - phi0 +
 				Math.atan2(-from.sinLat * newPole.cosLat + from.cosLat * newPole.sinLat * cosdL, -from.cosLat * Math.sin(dL))
 		);	
 	}
@@ -300,7 +300,7 @@ public class SphericalCoordinates extends CoordinatePair {
 		final double cosdL = Math.cos(dL);
 		
 		to.setNativeLatitude(asin(pole.sinLat * from.sinLat + pole.cosLat * from.cosLat * cosdL));
-		to.setNativeLongitude(pole.x + quarterTurn + 
+		to.setNativeLongitude(pole.x + rightAngle + 
 				Math.atan2(-from.sinLat * pole.cosLat + from.cosLat * pole.sinLat * cosdL, -from.cosLat * Math.sin(dL)));	
 	}
 }

@@ -22,6 +22,8 @@
  ******************************************************************************/
 package util;
 
+import java.awt.geom.AffineTransform;
+
 import util.astro.EclipticCoordinates;
 import util.astro.EquatorialCoordinates;
 import util.astro.GalacticCoordinates;
@@ -31,54 +33,36 @@ import nom.tam.fits.*;
 
 public class SphericalGrid implements Cloneable {
 	public SphericalProjection projection;
-	public Vector2D refIndex = new Vector2D();
-	public Vector2D delta = new Vector2D();
 	public String alt = ""; // The FITS alternative coordinate system specifier... 
 	
-	private double m11 = Double.NaN, m12 = Double.NaN, m21 = Double.NaN, m22 = Double.NaN;
-	private double im11, im12, im21, im22;
+	public Vector2D refIndex = new Vector2D();
+	
+	// These are transformation matrix elements to native offsets
+	private double m11, m12, m21, m22, i11, i12, i21, i22;
 	
 	@Override
 	public boolean equals(Object o) {
-		if(!(o instanceof SphericalGrid)) return false;
-		SphericalGrid grid = (SphericalGrid) o;
-		if(!grid.projection.getClass().equals(projection.getClass())) return false;
-		if(grid.delta != delta) return false;
-		
-		// TODO compare the transformation matrices...	
-		Vector2D a = new Vector2D();
-		Vector2D b = new Vector2D();
-		toOffset(a);
-		toOffset(b);
-		
-		if(!a.equals(b)) return false;
-		return true;
+		return equals(o, 1e-8);
 	}
 	
 	public boolean equals(Object o, double precision) {
 		if(!(o instanceof SphericalGrid)) return false;
 		SphericalGrid grid = (SphericalGrid) o;
 		if(!grid.projection.getClass().equals(projection.getClass())) return false;
-		if(Math.abs(grid.delta.x / delta.x - 1.0) > precision) return false;
-		if(Math.abs(grid.delta.y / delta.y - 1.0) > precision) return false;
-	
-		// TODO Compare the transformation matrices too...
-		Vector2D a = new Vector2D();
-		Vector2D b = new Vector2D();
-		toOffset(a);
-		toOffset(b);
-		a.subtract(b);
-		a.x /= delta.x;
-		a.y /= delta.y;
-		
-		if(Math.abs(a.x) > precision) return false;
-		if(Math.abs(a.y) > precision) return false;
+		if(Math.abs(grid.m11 / m11 - 1.0) > precision) return false;
+		if(Math.abs(grid.m12 / m12 - 1.0) > precision) return false;
+		if(Math.abs(grid.m21 / m21 - 1.0) > precision) return false;
+		if(Math.abs(grid.m22 / m22 - 1.0) > precision) return false;
+		if(Math.abs(grid.refIndex.x / refIndex.x - 1.0) > precision) return false;
+		if(Math.abs(grid.refIndex.y / refIndex.y - 1.0) > precision) return false;
 		return true;
 	}
 	
 	@Override
 	public int hashCode() {
-		return projection.hashCode() ^ (~refIndex.hashCode()) ^ HashCode.get(delta.x) ^ ~HashCode.get(delta.y);
+		return projection.hashCode() ^ 
+			~HashCode.get(m11) ^ HashCode.get(m22) ^ HashCode.get(m12) ^ ~HashCode.get(m21) ^
+			refIndex.hashCode();
 	}
 		
 	@Override
@@ -94,7 +78,18 @@ public class SphericalGrid implements Cloneable {
 		return copy;
 	}
 	
-	public double getPixelArea() { return delta.x * delta.y; }
+	public double getPixelArea() { return Math.abs(m11 * m22 - m12 * m21); }
+	
+	public void setResolution(double delta) {
+		setResolution(delta, delta);
+	}
+	
+	public void setResolution(double dx, double dy) {
+		m11 = dx;
+		m22 = dy;
+		m21 = m12 = 0.0;
+		calcInverseTransform();
+	}
 	
 	public boolean isHorizontal() {
 		return getReference() instanceof HorizontalCoordinates;
@@ -116,31 +111,25 @@ public class SphericalGrid implements Cloneable {
 		return getReference() instanceof SuperGalacticCoordinates;
 	}
 	
-	public void setTransform(double a11, double a12, double a21, double a22) {
-		m11 = a11;
-		m12 = a12;
-		m21 = a21;
-		m22 = a22;
-		calcInverseTransform();
+	
+	public AffineTransform getLocalAffineTransform() {
+		return new AffineTransform(m11, m12, m21, m22, 0.0, 0.0);
 	}
+	
+	public Vector2D getResolution() {
+		return new Vector2D(m11, m22);
+	}
+	
+	public double pixelSizeX() { return Math.abs(m11); }
+	
+	public double pixelSizeY() { return Math.abs(m22); }
 	
 	public void calcInverseTransform() {
-		double adet = Math.abs(m11 * m22 - m12 * m21);
-		im11 = m11 / adet;
-		im12 = m21 / adet;
-		im21 = m12 / adet;
-		im22 = m22 / adet;
-	}
-	
-	public void setTransform(double[][] M) {
-		setTransform(M[0][0], M[0][1], M[1][0], M[1][1]);		
-	}
-	
-	public void normalizeTransform() {
-		double adet = Math.abs(m11 * m22 - m12 * m21);
-		m11 /= adet; m12 /= adet; m21 /= adet; m22 /= adet;
-		im11 *= adet; im12 *= adet; im21 *= adet; im22 *= adet;
-		delta.scale(adet);
+		double adet = getPixelArea();
+		i11 = m11 / adet;
+		i12 = m21 / adet;
+		i21 = m12 / adet;
+		i22 = m22 / adet;
 	}
 	
 	// Generalize to non-square pixels...
@@ -149,13 +138,15 @@ public class SphericalGrid implements Cloneable {
 		
 		double c = Math.cos(angle);
 		double s = Math.sin(angle);
-		double a11 = Double.isNaN(m11) ? 1.0 : m11, a12 = Double.isNaN(m12) ? 0.0 : m12;
-		double a21 = Double.isNaN(m21) ? 0.0 : m21, a22 = Double.isNaN(m22) ? 1.0 : m22;
+		double a11 = m11, a12 = m12;
+		double a21 = m21, a22 = m22;
 		m11 = c * a11 - s * a21;
 		m12 = c * a12 - s * a22;
 		m21 = s * a11 + c * a21;
 		m22 = s * a12 + c * a22;
+		
 		calcInverseTransform();
+
 	}
 	
 	public void addCoordinateInfo(BasicHDU hdu) throws HeaderCardException {
@@ -167,22 +158,26 @@ public class SphericalGrid implements Cloneable {
 		projection.edit(cursor, alt);
 		reference.edit(cursor, alt);
 		
+		double a11 = m11, a12 = m12, a21 = m21, a22 = m22;
+		if(reference.isReverseLongitude()) { a11 *= -1.0; a21 *= -1.0; }
+		if(reference.isReverseLatitude()) { a22 *= -1.0; a12 *= -1.0; }
+		
 		cursor.add(new HeaderCard("CRPIX1" + alt, refIndex.x + 1, "Reference grid position"));
-		cursor.add(new HeaderCard("CDELT1" + alt, (reference.isReverseLongitude() ? -1 : 1) * delta.x/Unit.deg, "Grid spacing (deg)"));	
-		//cursor.add(new HeaderCard("CROTA1" + alt, 0.0, "Axis rotation (deg)."));
-		
 		cursor.add(new HeaderCard("CRPIX2" + alt, refIndex.y + 1, "Reference grid position"));
-		cursor.add(new HeaderCard("CDELT2" + alt, (reference.isReverseLatitude() ? -1 : 1) * delta.y/Unit.deg, "Grid spacing (deg)"));		
-		//cursor.add(new HeaderCard("CROTA2" + alt, 0.0, "Axis rotation (deg)."));
 		
-		if(!Double.isNaN(m11)) cursor.add(new HeaderCard("PC1_1" + alt, m11, "Transformation matrix element"));
-		if(!Double.isNaN(m12)) cursor.add(new HeaderCard("PC1_2" + alt, m12, "Transformation matrix element"));
-		if(!Double.isNaN(m21)) cursor.add(new HeaderCard("PC2_1" + alt, m21, "Transformation matrix element"));
-		if(!Double.isNaN(m21)) cursor.add(new HeaderCard("PC2_2" + alt, m22, "Transformation matrix element"));
-		
+		if(m12 == 0.0 && m21 == 0.0) {
+			cursor.add(new HeaderCard("CDELT1" + alt, a11/Unit.deg, "Grid spacing (deg)"));	
+			cursor.add(new HeaderCard("CDELT2" + alt, a22/Unit.deg, "Grid spacing (deg)"));		
+		}
+		else {		
+			cursor.add(new HeaderCard("CD1_1" + alt, a11, "Transformation matrix element"));
+			cursor.add(new HeaderCard("CD1_2" + alt, a12, "Transformation matrix element"));
+			cursor.add(new HeaderCard("CD2_1" + alt, a21, "Transformation matrix element"));
+			cursor.add(new HeaderCard("CD2_2" + alt, a22, "Transformation matrix element"));
+		}
 	}
 	
-	public void getCoordinateInfo(Header header) throws HeaderCardException {
+	public void parseCoordinateInfo(Header header) throws HeaderCardException {
 		String type = header.getStringValue("CTYPE1" + alt);
 	
 		try { projection = SphericalProjection.forName(type.substring(5, 8)); }
@@ -207,46 +202,42 @@ public class SphericalGrid implements Cloneable {
 		reference.parse(header, alt);
 		projection.setReference(reference);
 		
-		refIndex.x = header.getDoubleValue("CRPIX1" + alt) - 1;
-		refIndex.y = header.getDoubleValue("CRPIX2" + alt) - 1;
-			
 		// Internally keep the transformation matrix unitary 
 		// And have delta carry the pixel sizes...
 		
 		if(header.containsKey("CD1_1" + alt) || header.containsKey("CD1_2" + alt) || header.containsKey("CD2_1" + alt) || header.containsKey("CD2_2" + alt)) {
 			// When the CDi_j keys are used the scaling is incorporated into the CDi_j values.
 			// Thus, the deltas are implicitly assumed to be 1...
-			delta.x = delta.y = 1.0;
-			setTransform(
-					header.getDoubleValue("CD1_1" + alt, 1.0),
-					header.getDoubleValue("CD1_2" + alt, 0.0),
-					header.getDoubleValue("CD2_1" + alt, 0.0),
-					header.getDoubleValue("CD2_2" + alt, 1.0)
-					);
-			normalizeTransform();
+			m11 = header.getDoubleValue("CD1_1" + alt, 1.0);
+			m12 = header.getDoubleValue("CD1_2" + alt, 0.0);
+			m21 = header.getDoubleValue("CD2_1" + alt, 0.0);
+			m22 = header.getDoubleValue("CD2_2" + alt, 1.0);	
 		}	
 		else {
 			// Otherwise, the scaling is set by CDELTi keys...
-			delta.x = (reference.isReverseLongitude() ? -1.0 : 1.0) * header.getDoubleValue("CDELT1" + alt, 1.0) * Unit.deg;
-			delta.y = (reference.isReverseLatitude() ? -1.0 : 1.0) * header.getDoubleValue("CDELT2" + alt, 1.0) * Unit.deg;
-		
+			double dx = header.getDoubleValue("CDELT1" + alt, 1.0) * Unit.deg;
+			double dy = header.getDoubleValue("CDELT2" + alt, 1.0) * Unit.deg;
+			
 			// And the transformation is set by the PCi_j keys
 			// Transform then scale...
-			if(header.containsKey("PC1_1" + alt) || header.containsKey("PC1_2" + alt) || header.containsKey("PC2_1" + alt) || header.containsKey("PC2_2" + alt)) {				
-				setTransform(
-						header.getDoubleValue("PC1_1" + alt, 1.0),
-						header.getDoubleValue("PC1_2" + alt, 0.0),
-						header.getDoubleValue("PC2_1" + alt, 0.0),
-						header.getDoubleValue("PC2_2" + alt, 1.0)
-				);
-				normalizeTransform();
-			}
+			m11 = dx * header.getDoubleValue("PC1_1" + alt, 1.0);
+			m12 = dx * header.getDoubleValue("PC1_2" + alt, 0.0);
+			m21 = dy * header.getDoubleValue("PC2_1" + alt, 0.0);
+			m22 = dy * header.getDoubleValue("PC2_2" + alt, 1.0);
+			
 			// Or the rotation of the latitude axis is set via CROTAi...
-			else if(header.containsKey("CROTA2" + alt)) {
+			if(header.containsKey("CROTA2" + alt)) {
 				rotate(header.getDoubleValue("CROTA2" + alt) * Unit.deg);
 			}		
 		}	
-
+		
+		if(reference.isReverseLongitude()) { m11 *= -1.0; m21 *= -1.0; }
+		if(reference.isReverseLatitude()) { m22 *= -1.0; m12 *= -1.0; }
+		
+		refIndex.x = header.getDoubleValue("CRPIX1" + alt) - 1;
+		refIndex.y = header.getDoubleValue("CRPIX2" + alt) - 1;
+		
+		calcInverseTransform();
 	}
 	
 	@Override
@@ -258,39 +249,26 @@ public class SphericalGrid implements Cloneable {
 		String info =
 			"  " + projectionName + ": " + reference.toString() + "\n" +
 			"  Projection: " + projection.getFullName() + " (" + projection.getFitsID() + ")\n" + 
-			"  Grid Spacing: " + Util.f2.format(delta.x / Unit.arcsec) + " x " + Util.f2.format(delta.y / Unit.arcsec) + " arcsec.\n";
+			"  Grid Spacing: " + Util.f2.format(m11 / Unit.arcsec) + " x " + Util.f2.format(m22 / Unit.arcsec) + " arcsec.\n";
 		
 		return info;
 	}
+
 	
-	public final void toIndex(Vector2D offset) {
-		offset.x /= delta.x;
-		offset.y /= delta.y;
-		
+	public final void toIndex(final Vector2D offset) {
 		// transform here...
-		if(!Double.isNaN(m11)) {
-			double x = offset.x;
-			offset.x = m11 * x + m12 * offset.y;
-			offset.y = m21 * x + m22 * offset.y;
-		}
-		
-		offset.x += refIndex.x;
-		offset.y += refIndex.y;
+		final double x = offset.x;
+		offset.x = i11 * x + i12 * offset.y + refIndex.x;
+		offset.y = i21 * x + i22 * offset.y + refIndex.y;
 	}
 	
-	public final void toOffset(Vector2D index) {
+	public final void toOffset(final Vector2D index) {
 		index.x -= refIndex.x;
 		index.y -= refIndex.y;
 
-		// inverse transform
-		if(!Double.isNaN(m11)) {
-			double x = index.x;
-			index.x = im11 * x + im12 * index.y;
-			index.y = im21 * x + im22 * index.y;
-		}
-		
-		index.x *= delta.x;
-		index.y *= delta.y;
+		final double x = index.x;
+		index.x = m11 * x + m12 * index.y;
+		index.y = m21 * x + m22 * index.y;
 	}
 	
     public final SphericalCoordinates getReference() { return projection.getReference(); }
@@ -312,4 +290,19 @@ public class SphericalGrid implements Cloneable {
     	index.x = i;
     	index.y = j;
     }
+    
+    public void toggleNative(Vector2D offset) {
+    	SphericalCoordinates reference = getReference();
+    	if(reference.isReverseLongitude()) offset.x *= -1.0;
+    	if(reference.isReverseLatitude()) offset.y *= -1.0;
+    }
+    
+    
+    public void shift(Vector2D offset) {
+    	toIndex(offset);
+    	refIndex.x += offset.x;
+    	refIndex.y += offset.y;
+    }
+    
+    
 }

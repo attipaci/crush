@@ -179,16 +179,16 @@ public class AstroImage implements Cloneable {
 	}
 	
 	public double getPointsPerSmoothingBeam() {
-		return Math.max(1.0, fwhm2size * smoothFWHM / grid.delta.x) * Math.max(1.0, fwhm2size * smoothFWHM / grid.delta.y);
+		return Math.max(1.0, fwhm2size * smoothFWHM / grid.pixelSizeX()) * Math.max(1.0, fwhm2size * smoothFWHM / grid.pixelSizeY());
 	}
 	
 	public void setResolution(double value) { 
-		grid.delta.x = grid.delta.y = value; 
+		grid.setResolution(value);
 		smoothFWHM = Math.max(smoothFWHM, value / fwhm2size);
 	}
 	
 	public Vector2D getResolution() {
-		return grid.delta;
+		return grid.getResolution();
 	}
 	
 	public double getExtFilterCorrectionFactor(double FWHM) {
@@ -207,6 +207,10 @@ public class AstroImage implements Cloneable {
 	}
 
 	public void addImage(double[][] image) { addImage(image, 1.0); }
+
+	public void addValue(double x) {
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) data[i][j] += x;
+	}
 	
 	public void clear() {
 		for(int i=sizeX(); --i >= 0; ) {
@@ -456,7 +460,7 @@ public class AstroImage implements Cloneable {
 	}
 	
 	public int[] getHorizontalIndexRange() {
-		int min = sizeX()-1, max = 0;
+		int min = sizeX(), max = -1;
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
 			if(i < min) min = i;
 			if(i > max) max = i;
@@ -466,7 +470,7 @@ public class AstroImage implements Cloneable {
 	}
 	
 	public int[] getVerticalIndexRange() {
-		int min = sizeY()-1, max = 0;
+		int min = sizeY(), max = -1;
 		for(int j=sizeY(); --j >= 0; ) for(int i=sizeX(); --i >= 0; ) if(flag[i][j] == 0) {
 			if(j < min) min = j;
 			if(j > max) max = j;
@@ -498,6 +502,29 @@ public class AstroImage implements Cloneable {
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(mask[i][j]) flag[i][j] &= pattern;	 
 	}
 	
+	public void growFlags(double radius, int pattern) {
+		if(verbose) System.err.println("Growing flagged areas.");
+		
+		int di = (int)Math.ceil(radius / grid.pixelSizeX());
+		int dj = (int)Math.ceil(radius / grid.pixelSizeY());
+		
+		final int sizeX = sizeX();
+		final int sizeY = sizeY();
+		
+		for(int i=sizeX; --i >= 0; ) for(int j=sizeY; --j >= 0; ) if((flag[i][j] & pattern) != 0) {
+			final int fromi1 = Math.max(0, i-di);
+			final int fromj1 = Math.max(0, j-dj);
+			final int toi1 = Math.max(sizeX, i+di+1);
+			final int toj1 = Math.max(sizeY, j+dj+1);
+			final int matchPattern = flag[i][j] & pattern;
+			
+			// TODO for sheared grids...
+			for(int i1 = fromi1; i1<toi1; i1++) for(int j1 = fromj1; j1<toj1; j1++) 
+				if(Math.hypot((i-i1) * grid.pixelSizeX(), (j-j1) * grid.pixelSizeY()) <= radius) flag[i1][j1] |= matchPattern;
+		}
+	}
+	
+	
 	public double level(boolean robust) {
 		double level = robust ? median() : mean();
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) data[i][j] -= level;
@@ -523,8 +550,8 @@ public class AstroImage implements Cloneable {
 	}
 
 	public void convolve(double FWHM) {
-		int stepX = (int)Math.ceil(FWHM/(5.0 * grid.delta.y));
-		int stepY = (int)Math.ceil(FWHM/(5.0 * grid.delta.y));
+		int stepX = (int)Math.ceil(FWHM/(5.0 * grid.pixelSizeX()));
+		int stepY = (int)Math.ceil(FWHM/(5.0 * grid.pixelSizeY()));
 		
 		fastConvolve(getGaussian(FWHM, 2.0), stepX, stepY);
 		smoothFWHM = Math.hypot(smoothFWHM, FWHM);
@@ -535,8 +562,8 @@ public class AstroImage implements Cloneable {
 	}
 
 	public double[][] getConvolved(double[][] image, double FWHM) {
-		int stepX = (int)Math.ceil(FWHM/(5.0 * grid.delta.y));
-		int stepY = (int)Math.ceil(FWHM/(5.0 * grid.delta.y));
+		int stepX = (int)Math.ceil(FWHM/(5.0 * grid.pixelSizeX()));
+		int stepY = (int)Math.ceil(FWHM/(5.0 * grid.pixelSizeY()));
 		return getFastConvolved(image, getGaussian(FWHM, 2.0), null, stepX, stepY);
 	}   
 
@@ -668,6 +695,16 @@ public class AstroImage implements Cloneable {
 		correctingFWHM = FWHM;
 	}
 	
+	public void undoFilterCorrect(double FWHM, int[][] skip) {
+		if(!Double.isNaN(correctingFWHM)) return;
+		
+		final double iFilterC = getExtFilterCorrectionFactor(FWHM);
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(skip[i][j] != 0) scale(i, j, iFilterC);
+		
+		correctingFWHM = Double.NaN;
+	}
+	
+	
 	public void scale(int i, int j, double factor) {
 		data[i][j] *= factor;
 	}
@@ -677,8 +714,8 @@ public class AstroImage implements Cloneable {
 	}
 	
 	public double[][] getGaussian(double FWHM, double nBeams) {
-		int sizeX = 2 * (int)Math.ceil(nBeams * FWHM/grid.delta.x) + 1;
-		int sizeY = 2 * (int)Math.ceil(nBeams * FWHM/grid.delta.x) + 1;
+		int sizeX = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeX()) + 1;
+		int sizeY = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeY()) + 1;
 		
 		final double[][] beam = new double[sizeX][sizeY];
 		final double sigma = FWHM / Util.sigmasInFWHM;
@@ -696,8 +733,8 @@ public class AstroImage implements Cloneable {
 	}	
 	
 	private void addGaussianAt(AstroImage from, int fromi, int fromj, double FWHM, double beamRadius, float[][] renorm) {	
-		double xFWHM = FWHM / grid.delta.x;
-		double yFWHM = FWHM / grid.delta.y;
+		double xFWHM = FWHM / grid.pixelSizeX();
+		double yFWHM = FWHM / grid.pixelSizeY();
 		
 		final double sigmaX = xFWHM / Util.sigmasInFWHM;
 		final double Ax = -0.5 / (sigmaX*sigmaX);
@@ -775,8 +812,8 @@ public class AstroImage implements Cloneable {
 			
 		// replace pixels with Gaussians whose FWHM is the diagonal of the pixel (i.e. enclosing)...
 		double FWHM = Math.sqrt(2.0 * getPixelArea());
-		final int nx = (int) Math.ceil(sizeX() * grid.delta.x / toGrid.delta.x);
-		final int ny = (int) Math.ceil(sizeY() * grid.delta.y / toGrid.delta.y);
+		final int nx = (int) Math.ceil(sizeX() * grid.pixelSizeX() / toGrid.pixelSizeX());
+		final int ny = (int) Math.ceil(sizeY() * grid.pixelSizeY() / toGrid.pixelSizeY());
 		if(verbose) System.err.println(" Regrid size: " + nx + "x" + ny);
 		
 		AstroImage regrid = getRawRegrid(toGrid, nx, ny, FWHM, 1.0);
@@ -865,7 +902,7 @@ public class AstroImage implements Cloneable {
 		}
 	}
 	
-	public ImageHDU makeHDU() throws HeaderCardException, FitsException {
+	public ImageHDU createHDU() throws HeaderCardException, FitsException {
 		float[][] fitsImage = new float[sizeY()][sizeX()];
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) {
 			if(flag[i][j] == 0.0) fitsImage[j][i] = (float) (data[i][j] / unit.value);
@@ -919,7 +956,7 @@ public class AstroImage implements Cloneable {
 	public String toString() {		
 		String info =
 			"  Map Size: " + sizeX() + " x " + sizeY() + " pixels. (" 
-			+ Util.f1.format(sizeX() * grid.delta.x / Unit.arcmin) + " x " + Util.f1.format(sizeY() * grid.delta.y / Unit.arcmin) + " arcmin)." + "\n"
+			+ Util.f1.format(sizeX() * grid.pixelSizeX() / Unit.arcmin) + " x " + Util.f1.format(sizeY() * grid.pixelSizeY() / Unit.arcmin) + " arcmin)." + "\n"
 			+ grid.toString();
 		return info;
 	}
@@ -929,10 +966,10 @@ public class AstroImage implements Cloneable {
 	}
 	
 	
-	public void write(String name, Unit unit) throws HeaderCardException, FitsException, IOException {
+	public void write(String name) throws HeaderCardException, FitsException, IOException {
 		Fits fits = new Fits();	
 
-		fits.addHDU(makeHDU());
+		fits.addHDU(createHDU());
 		editHeader(fits);
 
 		BufferedDataOutputStream file = new BufferedDataOutputStream(new FileOutputStream(name));
@@ -1002,7 +1039,7 @@ public class AstroImage implements Cloneable {
 		
 		setSize(sizeX, sizeY);
 		
-		grid.getCoordinateInfo(header);
+		grid.parseCoordinateInfo(header);
 		
 		if(instrument == null) {
 			if(header.containsKey("INSTRUME")) {
@@ -1201,7 +1238,19 @@ public class AstroImage implements Cloneable {
 		return null;
 	}
     
-    
+    public void setKey(String key, String value) throws HeaderCardException {
+    	String comment = header.containsKey(key) ? header.findCard(key).getComment() : "Set bu user.";
+
+    	// Try add as boolean, int or double -- fall back to String...
+    	try{ header.addValue(key, Util.parseBoolean(value), comment); }
+    	catch(NumberFormatException e1) { 
+    		try{ header.addValue(key, Integer.parseInt(value), comment); }
+    		catch(NumberFormatException e2) {
+    			try{ header.addValue(key, Double.parseDouble(value), comment); }
+    			catch(NumberFormatException e3) { header.addValue(key, value, comment); }
+			}
+		}
+	}
     
     
 }

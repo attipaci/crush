@@ -22,7 +22,7 @@
  ******************************************************************************/
 // Copyright (c) 2007 Attila Kovacs 
 
-package crush.gui;
+package util.plot;
 
 
 import java.awt.*;

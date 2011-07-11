@@ -158,7 +158,7 @@ public class EclipticCoordinates extends CelestialCoordinates implements Precess
 	public EquatorialCoordinates getEquatorialPole() { return equatorialPole; }
 
 	@Override
-	public double getZeroLongitude() { return quarterTurn; }
+	public double getZeroLongitude() { return rightAngle; }
 
 	public CoordinateEpoch getEpoch() { return epoch; }
 

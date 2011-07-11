@@ -20,22 +20,32 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.gui;
+// Copyright (c) 2007 Attila Kovacs 
 
-import crush.gui.colorscheme.*;
-import util.*;
+package util.plot.colorscheme;
 
-public abstract class ScaleImager extends AbstractImager {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -6845728740095618762L;
-	
-	public ColorScheme colorScheme = new GreyScale();
-	public Scale scale;
-	
-	public int getRGB(double value) {
-		return Double.isNaN(value) ? colorScheme.noData : colorScheme.getRGB(scale.getScaled(value));
+import java.awt.*;
+
+import util.plot.ColorScheme;
+
+
+public class GreyScale extends ColorScheme {
+
+	public GreyScale() {
+		schemename= "GreyScale";
+		highlight = Color.RED.getRGB();
 	}
-	
+
+	@Override
+	public int getRGB(double scaled) {
+		if(Double.isNaN(scaled)) return noData;
+		
+		if(scaled < 0.0) scaled = 0.0;
+		else if(scaled > 1.0) scaled = 1.0;
+
+		final float value = (float) scaled;
+		
+		return Color.HSBtoRGB(0.0F, 0.0F, value);
+	}
+
 }

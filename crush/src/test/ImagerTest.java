@@ -22,14 +22,20 @@
  ******************************************************************************/
 package test;
 
+import java.awt.Color;
 import java.awt.Graphics;
 
 import crush.*;
 import crush.sourcemodel.*;
 import crush.gui.*;
-import crush.gui.colorscheme.*;
 
 import javax.swing.*;
+
+import util.plot.AxisLabel;
+import util.plot.ColorBar;
+import util.plot.Imager;
+import util.plot.Plot;
+import util.plot.colorscheme.*;
 
 public class ImagerTest {
 
@@ -38,16 +44,16 @@ public class ImagerTest {
 			Instrument<?> instrument = new GenericInstrument("generic");
 			AstroMap map = new AstroMap("/home/pumukli/data/sharc2/images/VESTA.8293.fits", instrument);
 			
+			AstroImageLayer image = new AstroImageLayer(map);
+			image.colorScheme = new Colorful();
 			
-			final AstroImager imager = new AstroImager(map);
-			imager.invertAxes(false, false);
-			imager.colorScheme = new Colorful();
+			final Imager<AstroImageLayer> imager = new Imager<AstroImageLayer>();
+			imager.setContentLayer(image);
+			//imager.invertAxes(false, false);
 			
-			
-			ColorBar colorbar = new ColorBar(imager, ColorBar.VERTICAL, 20);
+			//ColorBar colorbar = new ColorBar(imager, ColorBar.VERTICAL, 20);
 			AxisLabel label = new AxisLabel(map.unit.name, ColorBar.VERTICAL);
 			
-			/*
 			final JComponent cross = new JComponent() {
 				public void paintComponent(Graphics g) {
 					g.setColor(Color.RED);
@@ -59,32 +65,30 @@ public class ImagerTest {
 					g.drawLine(width/2, 0, width/2, height);
 				}
 			};
-			*/
 		
-			imager.setTransparent(true);
+			image.setTransparent(true);
 			
 			JComponent root = new JComponent() {
 				public void paintComponent(Graphics g) {
 					imager.setSize(getSize());
-					//cross.setSize(getSize());
+					cross.setSize(getSize());
 					super.paintComponent(g);
 				}
 			};
 			
-			
+			root.add(cross);
 			root.add(imager);
-			//root.add(cross, 0);
 			
 			JFrame frame = new JFrame();
 			frame.setSize(600, 600);
 			
 			Box box = Box.createHorizontalBox();
-			box.add(colorbar);
+			//box.add(colorbar);
 			box.add(label);	
 			
+			frame.add(root, "Center");
 			frame.add(box, "East");
-			frame.add(root);
-			
+		
 			frame.setVisible(true);
 		}
 		catch(Exception e) {

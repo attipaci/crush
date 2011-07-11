@@ -29,14 +29,15 @@ import java.io.*;
 import java.util.*;
 
 import crush.*;
-import crush.gui.AstroImager;
-import crush.gui.ColorScheme;
-import crush.gui.colorscheme.Colorful;
+import crush.gui.AstroImageLayer;
 import util.*;
 import util.astro.CelestialProjector;
 import util.astro.EclipticCoordinates;
 import util.astro.GalacticCoordinates;
 import util.data.Statistics;
+import util.plot.ColorScheme;
+import util.plot.Imager;
+import util.plot.colorscheme.Colorful;
 
 import nom.tam.fits.*;
 
@@ -101,7 +102,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		ScanType firstScan = scans.get(0);
 		
 		for(Scan<?,?> scan : scans) map.scans.add(scan);	
-		map.setResolution(gridSize);
+		
 		map.creator = CRUSH.class.getSimpleName();
 		map.creatorVersion = CRUSH.getFullVersion();
 		map.sourceName = firstScan.sourceName;
@@ -132,6 +133,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		else projection.setReference(firstScan.equatorial);
 	
 		map.grid.projection = projection;
+		map.setResolution(gridSize);
 		
 		setSize();
 
@@ -656,7 +658,10 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 			AstroMap cropped = (AstroMap) map.copy();
 			cropped.autoCrop();
 			
-			final AstroImager imager = new AstroImager(cropped);
+			final Imager<AstroImageLayer> imager = new Imager<AstroImageLayer>();
+			final AstroImageLayer image = new AstroImageLayer(cropped);
+			imager.setContentLayer(image);
+			
 			ColorScheme scheme = new Colorful();
 			
 			if(hasOption("write.png.bg")) {
@@ -672,7 +677,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 			}
 				
 			imager.setBackground(Color.LIGHT_GRAY);
-			imager.colorScheme = scheme;
+			image.colorScheme = scheme;
 			imager.saveAs(map.fileName + ".png", width, height);	
 		}
 		

@@ -22,46 +22,48 @@
  ******************************************************************************/
 // Copyright (c) 2007 Attila Kovacs 
 
-package crush.gui;
+package util.plot;
 
 import java.awt.*;
 
+
 import util.*;
 
-public class ColorBar extends FloatArrayImager {
+public class ColorBar extends Plot<FloatImageLayer> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 460851913543807978L;
 	
-	ScaleImager imager;
+	Plot<? extends ImageLayer> imager;
 	int direction = VERTICAL;
 	public static int defaultShades = 512;
 	int width;
 	
-	public ColorBar(ScaleImager imager, int dir, int width) { this(imager, dir, width, defaultShades); }
+	public ColorBar(Plot<? extends ImageLayer> imager, int dir, int width) { this(imager, dir, width, defaultShades); }
 	
-	public ColorBar(ScaleImager imager, int dir, int width, int shades) {
-		super(new float[1][shades]);
+	public ColorBar(Plot<? extends ImageLayer> imager, int dir, int width, int shades) {
+		
+		FloatImageLayer bar = new FloatImageLayer(new float[1][shades]);
+		setContentLayer(bar);
 		this.imager = imager;
 		this.direction = dir;
 		this.width = width;
 		
-		setBorder(Math.max(1, imager.border));
-		scale = new Scale(0.0, 1.0);
+		//setBorder(Math.max(1, imager.border));
+		bar.scale = new Scale(0.0, 1.0);
 		
-		setPadding(Math.min(5, imager.padHorizontal), imager.padVertical);		
 		setRotation(0.0);
 		
-		for(int j=data[0].length, height=j; --j >=0; ) data[0][j] = (float) j/(height-1);	
+		for(int j=bar.data[0].length, height=j; --j >=0; ) bar.data[0][j] = (float) j/(height-1);	
 	}
 
 	@Override
 	public void setPadding(int x, int y) {
 		super.setPadding(x, y);
 		Dimension size = null;
-		if(direction == HORIZONTAL) size = new Dimension(1, width + 2 * padVertical);
-		else if(direction == VERTICAL) size = new Dimension(width + 2 * padHorizontal, 1);	
+		if(direction == HORIZONTAL) size = new Dimension(1, width + padTop + padBottom);
+		else if(direction == VERTICAL) size = new Dimension(width + padLeft + padRight, 1);	
 		setMinimumSize(size);
 		setPreferredSize(size);
 	}
@@ -86,7 +88,8 @@ public class ColorBar extends FloatArrayImager {
 	
 	@Override
 	public void paintComponent(Graphics g) {
-		colorScheme = imager.colorScheme;
+		setPadding(imager.padTop, Math.min(5, imager.padLeft), imager.padBottom, Math.min(5, imager.padRight));
+		getContentLayer().colorScheme = imager.getContentLayer().colorScheme;
 		super.paintComponent(g);
 	}
 	

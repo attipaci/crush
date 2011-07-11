@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,33 +20,31 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.gui;
 
-import java.awt.Dimension;
+package util.plot;
 
-public class FloatArrayImager extends ArrayImager {
+import java.awt.Graphics;
+
+import javax.swing.JComponent;
+
+
+public abstract class PlotLayer extends JComponent {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -3462471789894733802L;
-	float[][] data;
+	private static final long serialVersionUID = -1331038094866703152L;
+
+	boolean transparent = false;
+	protected Plot<?> plot;
 	
-	public FloatArrayImager(float[][] data) {
-		setData(data);
-	}
-	
-	public void setData(float[][] data) {
-		this.data = data;
-	}
+	public abstract void defaults();
 	
 	@Override
-	public Dimension getArraySize() {
-		return new Dimension(data.length, data[0].length);
+	public void paintComponent(Graphics g) {
+		if(!transparent) super.paintComponent(g);	
 	}
-
-	@Override
-	public double getValue(int i, int j) {
-		return data[i][j];
+	
+	public void setTransparent(boolean value) {
+		transparent = value;
 	}
-
 }

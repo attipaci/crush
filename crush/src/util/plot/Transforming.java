@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,30 +20,12 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2007 Attila Kovacs 
 
-package crush.gui.colorscheme;
+package util.plot;
 
-import java.awt.*;
+import java.awt.geom.AffineTransform;
 
-import crush.gui.ColorScheme;
+public interface Transforming {
 
-public class Colorful extends ColorScheme {
-
-
-	public Colorful() {
-		schemename= "CameraLike";
-	}
-
-	@Override
-	public int getRGB(double scaled) {
-		if(Double.isNaN(scaled)) return noData;
-
-		if(scaled < 0.0) scaled=0.0;
-		else if(scaled > 1.0) scaled=1.0;
-		
-		if(scaled < 0.2) return Color.HSBtoRGB(0.8F, 1.0F, 5.0F * (float) scaled);
-		else if(scaled >= 0.8) return Color.HSBtoRGB(0.0F, 5.0F - 5.0F * (float) scaled, 1.0F);
-		else return Color.HSBtoRGB(4.0F/3.0F*(0.8F - (float)scaled), 1.0F, 1.0F);		
-	}
+	public AffineTransform getTransform();
 }

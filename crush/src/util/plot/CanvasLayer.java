@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,31 +20,28 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2007 Attila Kovacs 
 
-package crush.gui.colorscheme;
+package util.plot;
 
 import java.awt.*;
 
-import crush.gui.ColorScheme;
 
-public class GreyScale extends ColorScheme {
-
-	public GreyScale() {
-		schemename= "GreyScale";
-		highlight = Color.RED.getRGB();
+public class CanvasLayer extends PlotLayer {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6890933149678172692L;
+	Color color = null;
+	
+	@Override
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		Graphics2D g2 = (Graphics2D) g;	
+		g2.setColor(color);
+		g2.setStroke(new BasicStroke(0));
+		g2.fill(plot.getPlotRectangle());
 	}
 
 	@Override
-	public int getRGB(double scaled) {
-		if(Double.isNaN(scaled)) return noData;
-		
-		if(scaled < 0.0) scaled = 0.0;
-		else if(scaled > 1.0) scaled = 1.0;
-
-		final float value = (float) scaled;
-		
-		return Color.HSBtoRGB(0.0F, 0.0F, value);
-	}
-
+	public void defaults() {}
 }
