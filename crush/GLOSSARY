@@ -413,6 +413,17 @@
 			decorrelation branches (and modalities) to 1 second.
 			@See: 'correlated.<?>', 'resolution'
 
+:: dataname.end=<name>	@Instrument: GISMO
+			@Expert
+			@Since: 2.05
+			Allows specifying the naming convention of merged
+			GISMO FITS files. E.g., the correct (and default) 
+			setting for runs 1--4 is:
+
+			   dataname.end GISO-IRAM-condensed.fits 
+
+			@See: 'datapath', 'object', 'date'
+
 :: datapath=<dir>	Start looking for raw data in directory <dir>. Some
 			instruments may also interpret it as a root directory
 			in which data may reside some specific hierarchy. E.g.
@@ -2195,9 +2206,8 @@
 			@See: 'subscans.split'
 
 :: subscans.minlength=X	@Expert
-			@Instrument: SCUBA-2
-			@Since: 2.01-1
-			Set the minimum length of inegrations (subscans) to
+			@Since: 2.05
+			Set the minimum length of integrations (subscans) to
 			X seconds. Integrations (subscans) shorter than the
 			specified value will be skipped during the scan
 			reading phase.

@@ -29,20 +29,20 @@ import java.awt.*;
 
 import util.*;
 
-public class ColorBar extends Plot<FloatImageLayer> {
+public class ColorBar extends PlotArea<FloatImageLayer> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 460851913543807978L;
 	
-	Plot<? extends ImageLayer> imager;
+	PlotArea<? extends ImageLayer> imager;
 	int direction = VERTICAL;
 	public static int defaultShades = 512;
 	int width;
 	
-	public ColorBar(Plot<? extends ImageLayer> imager, int dir, int width) { this(imager, dir, width, defaultShades); }
+	public ColorBar(PlotArea<? extends ImageLayer> imager, int dir, int width) { this(imager, dir, width, defaultShades); }
 	
-	public ColorBar(Plot<? extends ImageLayer> imager, int dir, int width, int shades) {
+	public ColorBar(PlotArea<? extends ImageLayer> imager, int dir, int width, int shades) {
 		
 		FloatImageLayer bar = new FloatImageLayer(new float[1][shades]);
 		setContentLayer(bar);
@@ -56,16 +56,6 @@ public class ColorBar extends Plot<FloatImageLayer> {
 		setRotation(0.0);
 		
 		for(int j=bar.data[0].length, height=j; --j >=0; ) bar.data[0][j] = (float) j/(height-1);	
-	}
-
-	@Override
-	public void setPadding(int x, int y) {
-		super.setPadding(x, y);
-		Dimension size = null;
-		if(direction == HORIZONTAL) size = new Dimension(1, width + padTop + padBottom);
-		else if(direction == VERTICAL) size = new Dimension(width + padLeft + padRight, 1);	
-		setMinimumSize(size);
-		setPreferredSize(size);
 	}
 	
 	public void invert() {
@@ -88,7 +78,6 @@ public class ColorBar extends Plot<FloatImageLayer> {
 	
 	@Override
 	public void paintComponent(Graphics g) {
-		setPadding(imager.padTop, Math.min(5, imager.padLeft), imager.padBottom, Math.min(5, imager.padRight));
 		getContentLayer().colorScheme = imager.getContentLayer().colorScheme;
 		super.paintComponent(g);
 	}

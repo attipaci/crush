@@ -40,8 +40,8 @@ import nom.tam.util.*;
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.05-a2";
-	private static String revision = "1";
+	private static String version = "2.05-b1";
+	private static String revision = "beta";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -210,7 +210,7 @@ public class CRUSH extends Configurator {
 				}
 				else { 
 					scan.read(scanID, true);
-					if(scan.size() == 0) System.err.println("WARNING! Scan " + scan.getID() + " contains no data. Skipping.");
+					if(scan.size() == 0) System.err.println(" WARNING! Scan " + scan.getID() + " contains no valid data. Skipping.");
 					else if(isConfigured("subscans.split")) scans.addAll(scan.split());
 					else scans.add(scan);	
 					System.gc();		

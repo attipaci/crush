@@ -25,7 +25,6 @@ package util.plot;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
@@ -41,7 +40,7 @@ import javax.swing.JPanel;
 
 import util.Vector2D;
 
-public class Plot<ContentType extends ContentLayer> extends JPanel {
+public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 	/**
 	 * 
 	 */
@@ -62,14 +61,9 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	boolean initialized = false;
 	boolean verbose = false;
 	
-	protected int border = 0;
-	protected int padLeft = 0, padRight = 0, padTop = 0, padBottom = 0;
+	public PlotArea() {}
 	
-	
-	
-	public Plot() {}
-	
-	public Plot(ContentType content) {
+	public PlotArea(ContentType content) {
 		this();
 		setContentLayer(content);
 	}
@@ -81,27 +75,6 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	public void defaults() {
 		initialized = true;
 	}
-
-	
-	public void setPadding(int n) {
-		setPadding(n, n);
-	}
-	
-	public void setPadding(int horizontal, int vertical) {
-		setPadding(horizontal, vertical, horizontal, vertical);
-	}
-	
-	public void setPadding(int left, int top, int right, int bottom) {
-		if(verbose) System.err.println("Setting padding to " + left + ", " + top + ", " + right + ", " + bottom);
-		padTop = Math.max(0, top);
-		padLeft = Math.max(0, left);
-		padBottom = Math.max(0, bottom);
-		padRight = Math.max(0, right);
-	}
-	
-	public int getVisibleWidth() { return getWidth() - padLeft - padRight; }
-	
-	public int getVisibleHeight() { return getHeight() - padTop - padBottom; }
 	
 	public ContentType getContentLayer() {
 		return contentLayer;		
@@ -118,19 +91,13 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 		contentLayer = layer;
 	}
 	
-	
-	public Rectangle getPlotRectangle() {
-		return new Rectangle(padLeft, padTop, getVisibleWidth(), getVisibleHeight());
-	}
-	
-	
 	public void addLayer(PlotLayer layer) {
-		layer.plot = this;
+		layer.plotArea = this;
 		layers.add(layer);
 	}
 	
 	public void insertLayer(PlotLayer layer, int pos) {
-		layer.plot = this;
+		layer.plotArea = this;
 		layers.insertElementAt(layer, pos);
 	}
 	
@@ -161,6 +128,10 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 		zoomMode = ZOOM_FIXED;
 	}
 	
+	public void moveReference(double dx, double dy) {
+		referencePoint.x -= dx / getWidth();
+		referencePoint.y -= dy / getHeight();
+	}
 	
 	public void setZoom(double value) {
 		if(verbose) System.err.println("Setting zoom to " + value);
@@ -179,7 +150,7 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 		switch(zoomMode) {
 		case ZOOM_FIT : fitInside(); break;
 		case ZOOM_FILL : fillInside(); break; 
-		case ZOOM_STRETCH : setRenderSize(getVisibleWidth(), getVisibleHeight()); zoomMode = ZOOM_STRETCH; break;
+		case ZOOM_STRETCH : setRenderSize(getWidth(), getHeight()); zoomMode = ZOOM_STRETCH; break;
 		case ZOOM_FIXED : break;	// Nothing to do, it stays where it was set by setZoom or setRenderSize
 		default : setRenderSize(300, 300);
 		}		
@@ -188,14 +159,14 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	
 	public void fitInside() {
 		Vector2D range = contentLayer.getPlotRange();
-		double zoom = Math.min((double) getVisibleWidth() / range.x, (double) getVisibleHeight() / range.y);
+		double zoom = Math.min((double) getWidth() / range.x, (double) getHeight() / range.y);
 		setZoom(zoom);
 		zoomMode = ZOOM_FIT;
 	}
 	
 	public void fillInside() {
 		Vector2D range = contentLayer.getPlotRange();
-		double zoom = Math.max((double) getVisibleWidth() / range.x, (double) getVisibleHeight() / range.y);
+		double zoom = Math.max((double) getWidth() / range.x, (double) getHeight() / range.y);
 		setZoom(zoom);
 		zoomMode = ZOOM_FILL;
 	}
@@ -209,6 +180,13 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 		flipY = y;
 	}
 	 
+	public int getCenterX() {
+		return (int) Math.round(0.5 * getWidth());
+	}
+	
+	public int getCenterY() {
+		return (int) Math.round(0.5 * getHeight());
+	}
 
 	public void updateTransforms() {
 		toDisplay = new AffineTransform();
@@ -216,11 +194,11 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 		updateZoom();
 			
 		toDisplay.translate(
-				padLeft + referencePoint.x * getVisibleWidth(), 
-				padTop + referencePoint.y * getVisibleHeight()
+				referencePoint.x * getWidth(), 
+				referencePoint.y * getHeight()
 		);	// Move image to the referencepoint of the panel.
 			
-		//if(flipX) toDisplay.scale(-1.0, 1.0);	// invert axes as desired
+		if(flipX) toDisplay.scale(-1.0, 1.0);	// invert axes as desired
 		if(!flipY) toDisplay.scale(1.0, -1.0);	// invert axes as desired
 		
 		toDisplay.scale(scale.x, scale.y);		// Rescale to image size
@@ -292,5 +270,7 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	public static final int ZOOM_FIT = 1;
 	public static final int ZOOM_FILL = 2;
 	public static final int ZOOM_STRETCH = 3;
+	
+
 	
 }

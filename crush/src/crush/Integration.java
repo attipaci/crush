@@ -132,8 +132,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		System.err.println(" Processing integration " + getID() + ":");
 		
 		for(Frame frame : this) if(frame != null) frame.validate();
-		
-
+	
 		int gapTolerance = hasOption("gap-tolerance") ? framesFor(Double.parseDouble("gap-tolerance") * Unit.s) : 0;
 		if(hasGaps(gapTolerance)) fillGaps();
 		else reindex();
@@ -151,10 +150,22 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Flag out-of-range data
 		if(hasOption("range")) checkRange();
 
+		// Continue only if enough valid channels remain...
+		int minChannels = hasOption("mappingpixels") ? option("mappingpixels").getInt() : 2;
+		if(instrument.mappingChannels < minChannels)
+			throw new IllegalStateException("Too few valid channels (" + instrument.mappingChannels + ").");
+		
 		// Automatic downsampling after vclipping...
 		if(hasOption("downsample")) if(option("downsample").equals("auto")) downsample();
-			
+		
+		// Discard invalid frames at the beginning and end of the integration...
 		trim();
+		
+		// Continue only if integration is long enough to be processed...
+		int minFrames = hasOption("subscan.minlength") ? (int) Math.floor(option("subscan.minlength").getDouble() / instrument.samplingInterval) : 2;
+		int mappingFrames = getFrameCount(Frame.SOURCE_FLAGS);
+		if(getFrameCount(Frame.SOURCE_FLAGS) < minFrames) 
+			throw new IllegalStateException("Integration is too short (" + Util.f1.format(mappingFrames * instrument.samplingInterval / Unit.s) + " seconds).");
 		
 		detectorStage();
 		
@@ -174,7 +185,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			System.err.println("   JACKKNIFE! Randomly inverted frames in source.");
 			for(Frame exposure : this) exposure.jackknife();
 		}
-		
 		
 		isValid = true;
 		
@@ -252,6 +262,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 	
 		System.err.println(flagged + " channel(s) discarded.");
+		
+		instrument.census();
 	}
 	
 	public void downsample() {

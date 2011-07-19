@@ -31,7 +31,6 @@ import nom.tam.util.*;
 import java.io.*;
 
 import util.*;
-import util.astro.EquatorialCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.data.WeightedPoint;
 import crush.fits.HDUManager;
@@ -235,7 +234,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	}
 		
 	class APEXDataParReader extends HDUReader {
-		private double[] MJD, LST, RA, DEC, AZ, EL, DX, DY, chop;
+		private double[] MJD, LST, AZ, EL, DX, DY, chop;
 		private int[] phase;
 		private boolean chopperIncluded;
 		
@@ -253,8 +252,9 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			DY = (double[]) table.getColumn(hdu.findColumn("LATOFF"));
 			phase = (int[]) table.getColumn(hdu.findColumn("PHASE"));
 			
+			/*
 			int iRA = hdu.findColumn("RA");
-			int iDEC = hdu.findColumn("BASLAT");
+			int iDEC = hdu.findColumn("DEC");
 			
 			if(iRA < 0 && apexScan.isEquatorial) {
 				iRA = hdu.findColumn("BASLONG");
@@ -263,6 +263,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			
 			RA = iRA > 0 ? (double[]) table.getColumn(iRA) : null;
 			DEC = iDEC > 0 ? (double[]) table.getColumn(iDEC) : null;
+			*/
 			
 			int iChop = hdu.findColumn("WOBDISLN");
 			chop = iChop > 0 ? (double[]) table.getColumn(iChop) : null;
@@ -330,6 +331,9 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				}
 
 				// If the RA,DEC coords are readily available, then just use them...
+				// Except that these seem to be off (perhaps in apparent epoch?)
+				// as Andreas noticed it on Jul 18
+				/*
 				if(RA != null) {
 					double ra = RA[t] * Unit.deg;
 					double dec = DEC[t] * Unit.deg;
@@ -339,8 +343,9 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 
 					exposure.equatorial = new EquatorialCoordinates(ra, dec, scan.equatorial.epoch);
 				}
+				*/
 				// Otherwise calculate the equatorial coordinates from the horizontal ones...
-				else exposure.calcEquatorial();
+				exposure.calcEquatorial();
 
 				// Scrambling produces a messed-up map, which is suitable for  studying the noise properties
 				// If the scanning is more or less centrally symmetric, the resulting 'noise' map is

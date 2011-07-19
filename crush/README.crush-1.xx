@@ -4,7 +4,7 @@
 			        Attila Kovacs
 			  <kovacs[AT]astro.umn.edu>
 
-			  Last Updated: 15 Aug 2010
+			  Last Updated: 18 Jul 2011
 
 
 
@@ -293,7 +293,7 @@ CRUSH-1.xx	CRUSH-1.xx key		CRUSH-2
 -maxTemporal=	MAX_TEMPORAL_FEATURE	--- (see 'despike.level')
 -minDOF=	MIN_DEGREES_OF_FREEDOM	---
 -minExp=	MIN_RELATIVE_EXPOSURE	exposureclip
--minIntT=	MIN_INTEGRATION_TIME	---
+-minIntT=	MIN_INTEGRATION_TIME	subscan.minlength
 -minPixels=	MAP_MIN_PIXELS		mappingpixels 			\
 					(see also 'mappingfraction')
 -model=		---			source.model

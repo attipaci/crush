@@ -74,17 +74,13 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	
 	protected void drawImage(Graphics g) {	
 		Graphics2D g2 = (Graphics2D) g;
-		AffineTransformOp op = new AffineTransformOp(plot.toDisplay, interpolationType);
+		AffineTransformOp op = new AffineTransformOp(plotArea.toDisplay, interpolationType);
 		g2.drawImage(buffer, op, 0, 0);				
 	}
 	
 	@Override
 	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-
-		Rectangle clip = plot.getPlotRectangle();
-		g.setClip(clip.x, clip.y, clip.width, clip.height);
-		
+		super.paintComponent(g);		
 		drawImage(g);
 	}
 	

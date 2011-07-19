@@ -33,8 +33,7 @@ import javax.swing.*;
 
 import util.plot.AxisLabel;
 import util.plot.ColorBar;
-import util.plot.Imager;
-import util.plot.Plot;
+import util.plot.ImageArea;
 import util.plot.colorscheme.*;
 
 public class ImagerTest {
@@ -47,7 +46,7 @@ public class ImagerTest {
 			AstroImageLayer image = new AstroImageLayer(map);
 			image.colorScheme = new Colorful();
 			
-			final Imager<AstroImageLayer> imager = new Imager<AstroImageLayer>();
+			final ImageArea<AstroImageLayer> imager = new ImageArea<AstroImageLayer>();
 			imager.setContentLayer(image);
 			//imager.invertAxes(false, false);
 			
@@ -55,6 +54,12 @@ public class ImagerTest {
 			AxisLabel label = new AxisLabel(map.unit.name, ColorBar.VERTICAL);
 			
 			final JComponent cross = new JComponent() {
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 6303247317754045021L;
+
+				@Override
 				public void paintComponent(Graphics g) {
 					g.setColor(Color.RED);
 					
@@ -69,6 +74,12 @@ public class ImagerTest {
 			image.setTransparent(true);
 			
 			JComponent root = new JComponent() {
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = -3036536847348729404L;
+
+				@Override
 				public void paintComponent(Graphics g) {
 					imager.setSize(getSize());
 					cross.setSize(getSize());

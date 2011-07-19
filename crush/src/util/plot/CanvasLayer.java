@@ -37,9 +37,11 @@ public class CanvasLayer extends PlotLayer {
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D) g;	
+		
 		g2.setColor(color);
 		g2.setStroke(new BasicStroke(0));
-		g2.fill(plot.getPlotRectangle());
+		
+		g2.fill(new Rectangle(0, 0, plotArea.getWidth(), plotArea.getHeight()));
 	}
 
 	@Override

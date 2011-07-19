@@ -36,7 +36,7 @@ import util.astro.EclipticCoordinates;
 import util.astro.GalacticCoordinates;
 import util.data.Statistics;
 import util.plot.ColorScheme;
-import util.plot.Imager;
+import util.plot.ImageArea;
 import util.plot.colorscheme.Colorful;
 
 import nom.tam.fits.*;
@@ -658,7 +658,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 			AstroMap cropped = (AstroMap) map.copy();
 			cropped.autoCrop();
 			
-			final Imager<AstroImageLayer> imager = new Imager<AstroImageLayer>();
+			final ImageArea<AstroImageLayer> imager = new ImageArea<AstroImageLayer>();
 			final AstroImageLayer image = new AstroImageLayer(cropped);
 			imager.setContentLayer(image);
 			

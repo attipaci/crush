@@ -23,14 +23,14 @@
 
 package util.plot;
 
-public class Imager<ContentType extends ImageLayer> extends Plot<ContentType> {
+public class ImageArea<ContentType extends ImageLayer> extends PlotArea<ContentType> {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -2517432416174422671L;
 
-	public Imager() {
+	public ImageArea() {
 		zoomMode = ZOOM_FIT;
 		referencePoint.set(0.5, 0.5);
 	}
