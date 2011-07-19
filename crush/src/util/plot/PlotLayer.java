@@ -35,7 +35,7 @@ public abstract class PlotLayer extends JComponent {
 	private static final long serialVersionUID = -1331038094866703152L;
 
 	boolean transparent = false;
-	protected Plot<?> plot;
+	protected PlotArea<?> plotArea;
 	
 	public abstract void defaults();
 	

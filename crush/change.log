@@ -1,15 +1,34 @@
->> dataname.end
->> check png writing capability with new Plot classes...
->> debug imager...
 
+2.05-b1
+	
+	Overview
+	=====================================================================
+	This update fixes two important bugs affecting the pointing of
+	the APEX cameras and GISMO, and offers several fixes and improvements
+	in general. The main new features are object-depended configuration
+	capability, and better diagnostic of invalid scans/subscans.
+	=====================================================================
 
-2.05-a2
+	[CRITICAL] {APEX} A major issue with the pointing of APEX cameras has
+	been found. CRUSH was using the RA and DEC data columns directly from
+	the data, when available. However, it seems that these coordinates are
+	not correct (or are in apparent epoch rather than J2000), yielding 
+	erroneous pointing (by a few arcseconds at least!). It is best to
+	ignore this data, and calculate the RA/DEC coordinates directly using
+	the horizontal scanning offsets. Thanks to Andreas Lundgren for 
+	identifying and reporting this issue...
 
 	[BUG] {GISMO} There was an oops when trying to use an absolute pointing
 	model together with the incremental corrections based on a pointing 
 	log for GISMO. In essence, a differential pointing model was used where
 	an absolute model was needed, resulting in hugely wrong corrections.
 	Now fixed :-).
+
+	[NEW] The option 'subscan.minlength', originally introduced for the
+	SCUBA-2 module, is now extended to all instruments, allowing to specify
+	the minimum length of an integration (subscan) that is processed. 
+	Integrations shorter than the specified length (in seconds) will be
+	ignored by crush.
 
 	[NEW] Conditionals under the 'object' key can be used to set object-
 	specific conditions. E.g., the object-dependent 'bright' setting for
@@ -34,13 +53,44 @@
 
 		dataname.end GISMO-IRAM-condensed.fits
 
-	This setting was hardcoded previously. With the new keyword, there is
-	more flexibility for changing the naming convention.
+	The above line now appears in 'gismo/default.cfg' as part of the 
+	default configuation. This setting was hardcoded previously. With the 
+	new keyword, there is more flexibility for changing the naming 
+	convention in the future, if necessary...
+
+	[FIX] Improved checking for invalid integrations/subscans. Those with
+	too little data (either too few channels, set by 'mappingpixels', or
+	too few frames, set by 'minlength') will be ignored after producing 
+	a warning message.
+
+	[FIX] {SCUBA-2} 'subscan.minlength' was not used by the SCUBA-2 module,
+	which was expecting just 'minlength' instead. Now fixed.
+
+	[FIX] {detect} Revised how confidence levels are calculated in the
+	detection source list. The new method should take more properly into
+	account the detection bias (the fact that any peak is more likely to
+	be a source than noise after several sources have already been found 
+	in a  map). The old method was crude, and also quite wrong...
+
+	[FIX] Fixed a few outstanding issues in the way coordinate grids were
+	calculated when a non-trivial matrix transformation was present. 
+	Luckily, such transformations were never used by crush, making these
+	entirely harmless bloopers... :-)
+
+	[TWEAK] {SHARC-2} Beam sizes are changed slightly (e.g. 8.0" --> 8.5"
+	at 350um), to more realistic values. As a result, the default 
+	conversions from volts to Janskys ('jansky' option) has been updated 
+	too to yield the same peak fluxes as before.
+
+	[TWEAK] {GISMO} Updated 'deep' configuration based on the optimal 
+	parameters of the deep-field dataset. These are shorter 1/f stability
+	timescale, more stringent LSS filter, and longer iterations.
 
 	[CODE] Complete overhaul of imaging and spherical grid classes. The
 	new gridding is cleaner, more generic and more efficient, while the 
 	new imaging classes have been designed with more powerful and generic
-	plotting capabilities in mind.
+ 	plotting capabilities in mind -- bringing a native crush 'show' tool
+	one big step closer...
 
 	[DEPRECATE] 'autobright' option, introduced in 2.04-2, is deprecated.
 	Use object dependent conditionals instead, which were introduced in 

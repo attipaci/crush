@@ -114,12 +114,12 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		for(int i=0; i<size(); ) {
 			Integration<InstrumentType, ?> integration = get(i);
 			try { 
-				integration.validate(); 
+				integration.validate();
 				i++;
 			}
 			catch(Exception e) {
+				System.err.println("   WARNING! " + e.getMessage() + " Dropping from set.");
 				if(CRUSH.debug) e.printStackTrace();
-				System.err.println("   WARNING! Invalid integration. Dropping from set.");
 				remove(i); 
 			}
 		}

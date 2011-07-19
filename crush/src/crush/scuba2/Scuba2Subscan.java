@@ -66,9 +66,9 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		// TODO chop phase and beam (L/R/M?)...	
 		final Scuba2Scan scuba2Scan = (Scuba2Scan) scan;
 		
-		if(hasOption("minlength"))
-			if(header.getIntValue("NAXIS3") * instrument.samplingInterval < option("minlength").getDouble() * Unit.s)
-				throw new IllegalStateException(" Subscan " + getID() + " is less than " + option("minlength").getDouble() + "s long. Skipping.");
+		if(hasOption("subscan.minlength"))
+			if(header.getIntValue("NAXIS3") * instrument.samplingInterval < option("subscan.minlength").getDouble() * Unit.s)
+				throw new IllegalStateException(" Subscan " + getID() + " is less than " + option("subscan.minlength").getDouble() + "s long. Skipping.");
 		
 		int[][][] data = (int[][][]) dataHDU.getData().getData();
 			

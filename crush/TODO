@@ -4,6 +4,8 @@ fluxes?
 >> Polarization: why does it add up over iterations? Why not correct?
 
 
+	-- De-blend detection fluxes...
+
 	-- Use ExecutorService in Parallel to thread tasks, with fixed thread
 	count...
 
