@@ -26,6 +26,7 @@ package crush.sourcemodel;
 
 import util.*;
 import util.data.DataPoint;
+import util.data.Index2D;
 import util.text.AngleFormat;
 import util.text.TableFormatter;
 
@@ -111,7 +112,7 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		Vector2D centerIndex = getIndex(map.grid);
 		
 		if(!map.containsIndex(centerIndex.x, centerIndex.y)) throw new IllegalStateException("Region falls outside of map.");
-		MapIndex index = new MapIndex(centerIndex);
+		Index2D index = new Index2D(centerIndex);
 		
 		double significance = map.getS2N(index.i, index.j);
 		

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,8 +20,38 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.sourcemodel;
 
-public class Bounds {
-	public int fromi, toi, fromj, toj;
+package util.data;
+
+public class SimpleImage extends GridImage<SimpleGrid2D> {
+
+	SimpleGrid2D grid;
+
+	
+	public SimpleImage() {
+		super();
+	}
+
+	public SimpleImage(double[][] data, int[][] flag) {
+		super(data, flag);
+	}
+
+	public SimpleImage(double[][] data) {
+		super(data);
+	}
+
+	public SimpleImage(int sizeX, int sizeY) {
+		super(sizeX, sizeY);
+	}
+
+	@Override
+	public SimpleGrid2D getGrid() {
+		return grid;
+	}
+
+	@Override
+	public void setGrid(SimpleGrid2D grid) {
+		this.grid = grid;
+	}
+
 }

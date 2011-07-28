@@ -1511,11 +1511,15 @@ options on the console.
 	
 	pnt.dEL		Elevation pointing residual (if available).
 
-	pnt.dRA		Pointing residual in the RA direction (if available).
-
 	pnt.dNasX	Pointing residual in the Nasmyth X dir (if available).
 
 	pnt.dNasY	Pointing residual in the Nasmyth Y dir (if available).
+
+	pnt.dRA		Pointing residual in the RA direction (if available).
+
+	pnt.dX		Pointing residual in native X direction.
+
+	pnt.dY		Pointing residual in native Y direction.
 
 	pnt.RA		RA pointing (arcsec).
 
@@ -1524,6 +1528,7 @@ options on the console.
 
 	pnt.Y		Aggregated Y pointing correction (including applied
                         corrections and sometimes the pointing model too).
+
 
 	pressure	Ambient pressure (if recorded) in hPa.
 

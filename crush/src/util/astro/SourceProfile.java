@@ -20,8 +20,18 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.sourcemodel;
 
-public class Bounds {
-	public int fromi, toi, fromj, toj;
+package util.astro;
+
+import util.Vector2D;
+
+public interface SourceProfile {
+	
+	// These are practical bounds, outside of which it is OK to assume source profile is zero
+	public Vector2D getBoundsX();
+	
+	public Vector2D getBoundsY();
+	
+	public double valueAt(Vector2D offset);
+	
 }

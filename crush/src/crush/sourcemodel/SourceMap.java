@@ -34,6 +34,7 @@ import util.astro.GalacticCoordinates;
 import util.astro.Gnomonic;
 import util.astro.HorizontalCoordinates;
 import util.astro.SuperGalacticCoordinates;
+import util.data.Index2D;
 import util.data.Statistics;
 
 import java.util.*;
@@ -318,11 +319,11 @@ extends SourceModel<InstrumentType, ScanType> {
 		return slews;
 	}
 	
-	public abstract void getIndex(final Frame exposure, final Pixel pixel, final CelestialProjector projector, final MapIndex index);
+	public abstract void getIndex(final Frame exposure, final Pixel pixel, final CelestialProjector projector, final Index2D index);
 	
-	protected abstract void add(final Frame exposure, final Pixel pixel, final MapIndex index, final double fGC, final double[] sourceGain, final double dt, final int excludeSamples);
+	protected abstract void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain, final double dt, final int excludeSamples);
 	
-	public abstract boolean isMasked(MapIndex index); 
+	public abstract boolean isMasked(Index2D index); 
 	
 	protected int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
 		int goodFrames = 0;
@@ -330,7 +331,7 @@ extends SourceModel<InstrumentType, ScanType> {
 		final double samplingInterval = integration.instrument.samplingInterval;
 
 		final CelestialProjector projector = new CelestialProjector(projection);
-		final MapIndex index = new MapIndex();
+		final Index2D index = new Index2D();
 		
 		for(final Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) {
 			final double fG = integration.gain * exposure.getSourceGain(signalMode);
@@ -386,11 +387,11 @@ extends SourceModel<InstrumentType, ScanType> {
 		integration.comments += " ";
 	}
 	
-	protected abstract void sync(final Frame exposure, final Pixel pixel, final MapIndex index, final double fG, final double[] sourceGain, double[] syncGain, final boolean isMasked);
+	protected abstract void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, double[] syncGain, final boolean isMasked);
 	
 	protected void sync(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
 		final CelestialProjector projector = new CelestialProjector(projection);
-		final MapIndex index = new MapIndex();
+		final Index2D index = new Index2D();
 				
 		for(final Frame exposure : integration) if(exposure != null) {
 			final double fG = integration.gain * exposure.getSourceGain(signalMode); 

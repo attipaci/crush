@@ -31,6 +31,8 @@ import nom.tam.util.*;
 import java.io.*;
 
 import util.*;
+import util.astro.CelestialCoordinates;
+import util.astro.EquatorialCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.data.WeightedPoint;
 import crush.fits.HDUManager;
@@ -234,7 +236,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	}
 		
 	class APEXDataParReader extends HDUReader {
-		private double[] MJD, LST, AZ, EL, DX, DY, chop;
+		private double[] MJD, LST, X, Y, DX, DY, chop;
 		private int[] phase;
 		private boolean chopperIncluded;
 		
@@ -246,12 +248,14 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 
 			MJD = (double[]) table.getColumn(hdu.findColumn("MJD"));
 			LST = (double[]) table.getColumn(hdu.findColumn("LST"));
-			AZ = (double[]) table.getColumn(hdu.findColumn("AZIMUTH"));
-			EL = (double[]) table.getColumn(hdu.findColumn("ELEVATIO"));
+			//AZ = (double[]) table.getColumn(hdu.findColumn("AZIMUTH"));
+			//EL = (double[]) table.getColumn(hdu.findColumn("ELEVATIO"));
+			X = (double[]) table.getColumn(hdu.findColumn("BASLONG"));
+			Y = (double[]) table.getColumn(hdu.findColumn("BASLAT"));
 			DX = (double[]) table.getColumn(hdu.findColumn("LONGOFF"));
 			DY = (double[]) table.getColumn(hdu.findColumn("LATOFF"));
 			phase = (int[]) table.getColumn(hdu.findColumn("PHASE"));
-			
+		
 			/*
 			int iRA = hdu.findColumn("RA");
 			int iDEC = hdu.findColumn("DEC");
@@ -292,11 +296,22 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				System.err.println("   Nodding " + (nodPhase == Frame.CHOP_LEFT ? "[LEFT]" : 
 							(nodPhase == Frame.CHOP_RIGHT ? "[RIGHT]" : "[???]")));
 		
-		}
-		
+		}	
+	
 		@Override
 		public void read() throws FitsException {
 			final APEXArrayScan<InstrumentType, ?> apexScan = (APEXArrayScan<InstrumentType, ?>) scan;
+			
+			final Vector2D tempOffset = new Vector2D();
+			
+			CelestialCoordinates basisCoords = null;
+			if(apexScan.basisSystem != HorizontalCoordinates.class && apexScan.basisSystem != EquatorialCoordinates.class) {
+				try { basisCoords = (CelestialCoordinates) apexScan.basisSystem.newInstance(); }
+				catch(Exception e) {
+					throw new IllegalStateException("Error instantiating " + apexScan.basisSystem.getName() +
+							": " + e.getMessage());
+				}
+			}
 			
 			for(int t=from; t<to; t++) {
 				if(isInterrupted()) break;
@@ -307,18 +322,30 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				exposure.MJD = MJD[t];
 				exposure.LST = LST[t];
 
-				double az = AZ[t] * Unit.deg;
-				double el = EL[t] * Unit.deg;
-
-				if(az < APEXFrame.m900deg) az = Double.NaN;
-				if(el < APEXFrame.m900deg) el = Double.NaN;
-
-				exposure.horizontal = new HorizontalCoordinates(az, el);
+				double x = X[t] * Unit.deg;
+				double y = Y[t] * Unit.deg;
+				
+				if(x < APEXFrame.m900deg) x = Double.NaN;
+				if(y < APEXFrame.m900deg) y = Double.NaN;
+				
+				if(basisCoords != null) {
+					basisCoords.set(x, y);
+					exposure.equatorial = basisCoords.toEquatorial();
+					exposure.calcHorizontal();
+				}			
+				else if(apexScan.basisSystem == EquatorialCoordinates.class) {
+					exposure.equatorial = new EquatorialCoordinates(x, y, scan.equatorial.epoch);
+					exposure.calcHorizontal();
+				}
+				else exposure.horizontal = new HorizontalCoordinates(x, y);
+				
 				exposure.calcParallacticAngle();
 
 				exposure.horizontalOffset = new Vector2D(DX[t] * Unit.deg, DY[t] * Unit.deg);
-				// Make offsets always horizontal...
-				if(apexScan.isNativeEquatorial) exposure.toHorizontal(exposure.horizontalOffset);
+				
+				// Make scanning offsets always horizontal...
+				if(apexScan.nativeSystem == EquatorialCoordinates.class) 
+					exposure.toHorizontal(exposure.horizontalOffset);
 
 				if(chop != null) exposure.chopperPosition.x = chop[t] * Unit.deg;
 				exposure.chopperPhase = phase[t];			
@@ -326,13 +353,16 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				exposure.nodFlag = nodPhase;
 				
 				if(chopper != null) if(!chopperIncluded) {
+					// Add the chopping offsets to the horizontal coordinates and offsets
 					exposure.horizontal.x += exposure.chopperPosition.x / exposure.horizontal.cosLat;
 					exposure.horizontalOffset.x += exposure.chopperPosition.x;
+					// Add to the equatorial coordinate also...
+					tempOffset.copy(exposure.chopperPosition);
+					exposure.toEquatorial(tempOffset);
+					exposure.equatorial.addOffset(tempOffset);
 				}
 
 				// If the RA,DEC coords are readily available, then just use them...
-				// Except that these seem to be off (perhaps in apparent epoch?)
-				// as Andreas noticed it on Jul 18
 				/*
 				if(RA != null) {
 					double ra = RA[t] * Unit.deg;
@@ -342,10 +372,11 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 					if(dec < APEXFrame.m900deg) dec = Double.NaN;
 
 					exposure.equatorial = new EquatorialCoordinates(ra, dec, scan.equatorial.epoch);
+					exposure.calcHorizontal();
 				}
 				*/
 				// Otherwise calculate the equatorial coordinates from the horizontal ones...
-				exposure.calcEquatorial();
+				//exposure.calcEquatorial();
 
 				// Scrambling produces a messed-up map, which is suitable for  studying the noise properties
 				// If the scanning is more or less centrally symmetric, the resulting 'noise' map is
@@ -355,6 +386,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 					exposure.chopperPosition.x *= -1.0;
 					exposure.sinPA *= -1.0;
 					exposure.cosPA *= -1.0;
+					exposure.calcEquatorial();
 				}		
 
 				if(exposure.isValid()) set(t, exposure);

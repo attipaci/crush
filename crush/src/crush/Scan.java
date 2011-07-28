@@ -589,6 +589,9 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		double sizeUnit = instrument.getDefaultSizeUnit();
 		String sizeName = instrument.getDefaultSizeName();
 		
+		data.add(new Datum("dX", pointingOffset.x / sizeUnit, sizeName));
+		data.add(new Datum("dY", pointingOffset.y / sizeUnit, sizeName));
+		
 		data.add(new Datum("d" + nameX, pointingOffset.x / sizeUnit, sizeName));
 		data.add(new Datum("d" + nameY, pointingOffset.y / sizeUnit, sizeName));
 		
@@ -622,7 +625,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		return info;
 	}
 	
-	protected String getPointingString(Vector2D pointingOffset) {			
+	protected String getPointingString(Vector2D pointingOffset) {	
 		// Print the native pointing offsets...
 		String text = "";
 		

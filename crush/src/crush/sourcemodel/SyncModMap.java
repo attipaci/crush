@@ -28,6 +28,7 @@ import java.util.*;
 
 import crush.*;
 import util.astro.CelestialProjector;
+import util.data.Index2D;
 
 
 public class SyncModMap<InstrumentType extends Instrument<?>, ScanType extends Scan<? extends InstrumentType, ?>>
@@ -48,7 +49,7 @@ public class SyncModMap<InstrumentType extends Instrument<?>, ScanType extends S
 		int goodFrames = 0;
 		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
 		final CelestialProjector projector = new CelestialProjector(projection);
-		final MapIndex index = new MapIndex();
+		final Index2D index = new Index2D();
 		
 		final float[] value = new float[integration.instrument.size()];
 		
@@ -112,7 +113,7 @@ public class SyncModMap<InstrumentType extends Instrument<?>, ScanType extends S
 	@Override
 	protected synchronized void sync(Integration<?,?> integration, Collection<? extends Pixel> pixels, double[] sourceGain, int signalMode) {
 		final CelestialProjector projector = new CelestialProjector(projection);
-		final MapIndex index = new MapIndex();
+		final Index2D index = new Index2D();
 		
 		final int last = integration.size();
 		

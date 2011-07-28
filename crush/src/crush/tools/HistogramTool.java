@@ -33,19 +33,20 @@ import java.util.*;
 // TODO reinstate imagetool functionality...
 // TODO redo using Configurator engine
 
-
-
 public class HistogramTool {
 	static String version = "0.1-1";
-	static double binres = 1.0;
-	static String type = "s2n";
-	static String fileName;
-
+	
+	double binres = 1.0;
+	AstroImage image;
+	String type = "s2n";
+	String fileName;
+	
 	public static void main(String[] args) {
 		versionInfo();
 		if(args.length == 0) usage();
 
 		AstroMap map = new AstroMap();
+		HistogramTool histogramTool = new HistogramTool(); 
 		
 		try { 
 			map.read(args[args.length-1]); 
@@ -54,51 +55,58 @@ public class HistogramTool {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		
 		//ImageTool.image = map;
 		
-		for(int k=0; k < args.length-1; k++) option(args[k]);
-
-		try {		
-			AstroImage image = map;			
-			
-			if(type.equalsIgnoreCase("flux")) {}
-			else if(type.equalsIgnoreCase("s2n")) { image = map.getS2NImage(); }
-			else if(type.equalsIgnoreCase("rms")) { image = map.getRMSImage(); }
-			else if(type.equalsIgnoreCase("weight")) { image = map.getWeightImage(); }
-			else if(type.equalsIgnoreCase("time")) { image = map.getTimeImage(); }
-			
-			binres *= image.unit.value;
-			
-			int zeroBin = (int) Math.ceil(-image.getMin() / binres);
-			int bins = 1 + zeroBin + (int) Math.ceil(image.getMax() / binres);
-
-			int[] count = new int[bins];
-
-			for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.flag[i][j] == 0) {
-				int bin = zeroBin + (int) Math.round(image.data[i][j] / binres);		
-				count[bin]++;
-			}
-
-			if(fileName == null) fileName = CRUSH.workPath + "histogram-" + type + "." + map.sourceName + ".dat"; 
-
-			PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(fileName)));
-
-			out.println("# histogram for " + map.fileName);
-			out.println("# bin resolution is " + (binres / image.unit.value) + " " + image.unit.name);
-			out.println("# bin\t" + type + "\tcount");
-			out.println("# ----\t-----\t------");
-
-			for(int i=0; i<bins; i++) out.println((i+1) + "\t" + Util.e5.format((i-zeroBin) * (binres / image.unit.value)) + "\t" + count[i]);
-
-			out.close();
-
-			System.out.println("Written histogram to " + fileName);
+		for(int k=0; k < args.length-1; k++) histogramTool.option(args[k]);
+				
+		histogramTool.selectImage(map, histogramTool.type);
+		histogramTool.binres *= histogramTool.image.unit.value;
+		
+		try { histogramTool.writeHistogram(); }
+		catch(IOException e) {
+			System.err.println("ERROR! " + e.getMessage());
 		}
-		catch(Exception e) { e.printStackTrace(); }	
+	}
+	
+	public void selectImage(AstroMap map, String type) {
+		if(type.equalsIgnoreCase("flux")) {}
+		else if(type.equalsIgnoreCase("s2n")) { image = map.getS2NImage(); }
+		else if(type.equalsIgnoreCase("rms")) { image = map.getRMSImage(); }
+		else if(type.equalsIgnoreCase("weight")) { image = map.getWeightImage(); }
+		else if(type.equalsIgnoreCase("time")) { image = map.getTimeImage(); }
+		else throw new IllegalArgumentException("Image plane '" + type + "' is not recognised.");
+		
+		this.type = type;
+	}
+	
+	public void writeHistogram() throws IOException {		
+		int zeroBin = (int) Math.ceil(-image.getMin() / binres);
+		int bins = 1 + zeroBin + (int) Math.ceil(image.getMax() / binres);
+
+		int[] count = new int[bins];
+
+		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.flag[i][j] == 0) {
+			int bin = zeroBin + (int) Math.round(image.data[i][j] / binres);		
+			count[bin]++;
+		}
+
+		if(fileName == null) fileName = CRUSH.workPath + "histogram-" + type + "." + image.sourceName + ".dat"; 
+
+		PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(fileName)));
+
+		out.println("# histogram for " + image.fileName);
+		out.println("# bin resolution is " + (binres / image.unit.value) + " " + image.unit.name);
+		out.println("# bin\t" + type + "\tcount");
+		out.println("# ----\t-----\t------");
+
+		for(int i=0; i<bins; i++) out.println((i+1) + "\t" + Util.e5.format((i-zeroBin) * (binres / image.unit.value)) + "\t" + count[i]);
+
+		out.close();
+
+		System.out.println("Written histogram to " + fileName);
 	}
 
-	public static boolean option(String optionString) {
+	public boolean option(String optionString) {
 		StringTokenizer tokens = new StringTokenizer(optionString, "=");
 
 		String key = tokens.nextToken();
@@ -129,7 +137,7 @@ public class HistogramTool {
 		System.out.println("  All options of 'imagetool' are available. Additionally, 'histogram' defines");
 		System.out.println("  the following options:");
 		System.out.println();
-		System.out.println("    -bin=      Set the bin size in the units of the image plane. (" + binres + ")");
+		System.out.println("    -bin=      Set the bin size in the units of the image plane.");
 		System.out.println("    -image=    Select which image to use for the histogram");
 		System.out.println("               (image name is one of: flux,s2n,rms,weight,time)");
 		System.out.println("    -out=      Set the output file's name.");	

@@ -1,5 +1,5 @@
 
-2.05-b1
+2.05-b2
 	
 	Overview
 	=====================================================================
@@ -9,20 +9,43 @@
 	capability, and better diagnostic of invalid scans/subscans.
 	=====================================================================
 
-	[CRITICAL] {APEX} A major issue with the pointing of APEX cameras has
-	been found. CRUSH was using the RA and DEC data columns directly from
-	the data, when available. However, it seems that these coordinates are
-	not correct (or are in apparent epoch rather than J2000), yielding 
-	erroneous pointing (by a few arcseconds at least!). It is best to
-	ignore this data, and calculate the RA/DEC coordinates directly using
-	the horizontal scanning offsets. Thanks to Andreas Lundgren for 
-	identifying and reporting this issue...
+	[BUG] {APEX} An issue was identified with applying pointing corrections
+	for APEX scans, resulting from is an inconsistency in the raw data 
+	between the reported AZ,EL and RA,DEC coordinates. The first attempt at
+	a fix (in version 2.05-b1) assumed that the AZ,EL values were correct.
+	However, this seems not be the case. The latest fix uses BASLONG and
+	BASLAT columns (usually in equatorial), which seems to work well, and
+	also results in simpler,cleaner code.
 
 	[BUG] {GISMO} There was an oops when trying to use an absolute pointing
 	model together with the incremental corrections based on a pointing 
 	log for GISMO. In essence, a differential pointing model was used where
 	an absolute model was needed, resulting in hugely wrong corrections.
 	Now fixed :-).
+
+	[NEW] {APEX} New astrometry code can handle unusual basis coordinate
+	systems in the raw data file (e.g. scans in Ecliptic, Galactic, or 
+	Super-Galactic coordinates). Thus, for the first time fully complying 
+	to the MBFITS specification on coordinates.
+
+	[NEW] {detect} The source extraction tool 'detect' was always designed
+	to work in a way that would accomodate non-Gaussian map noise, by 
+	getting some empirical measure of the high S/N tail statistics from the
+	map itself. However, most instruments do produce very Gaussian noise
+	and therefore, this adaptive method may be overly cautious and less
+	accurate than the strict assumption of Gaussianity. For this reason, 
+	the latest update to 'detect' introduces the '-gaussian' command-line 
+	option to enforce the use of Gaussian statistics for calculating 
+	confidence levels and cumulative false detection rates.
+
+	[NEW] {detect} New 'detect' option '-dynamic' can be used for 
+	re-estimating the noise distribution after each extraction round. This
+	may be helpful if the presence of unextracted sources leads to a
+	bias in the noise eastimate earlier on. Previously this was the
+	default behaviour. However, the removal of noise peaks in the 
+	extraction can also lead to overly optimistic noise estimates, 
+	especially when extracting sources from a small map (i.e. at low S/N
+	cutoff). For this reason, noise reestimaion is now disabled by default. 
 
 	[NEW] The option 'subscan.minlength', originally introduced for the
 	SCUBA-2 module, is now extended to all instruments, allowing to specify
@@ -60,8 +83,8 @@
 
 	[FIX] Improved checking for invalid integrations/subscans. Those with
 	too little data (either too few channels, set by 'mappingpixels', or
-	too few frames, set by 'minlength') will be ignored after producing 
-	a warning message.
+	too few frames, set by 'subscan.minlength') will be ignored after 
+	producing a warning message.
 
 	[FIX] {SCUBA-2} 'subscan.minlength' was not used by the SCUBA-2 module,
 	which was expecting just 'minlength' instead. Now fixed.
@@ -77,20 +100,49 @@
 	Luckily, such transformations were never used by crush, making these
 	entirely harmless bloopers... :-)
 
-	[TWEAK] {SHARC-2} Beam sizes are changed slightly (e.g. 8.0" --> 8.5"
-	at 350um), to more realistic values. As a result, the default 
-	conversions from volts to Janskys ('jansky' option) has been updated 
-	too to yield the same peak fluxes as before.
+	[TWEAK] Added 'pnt.dX' and 'pnt.dY' to the list of loggable quanties.
+	These are the pointing increments in the telescope's native frame. I.e.
+	these are the same as 'pnt.dAZ' and 'pnt.dEL' for horizontal mounts, 
+	and 'pnt.dRA' and 'pnt.dDEC' or equatorial mounts.
+
+	[TWEAK] {GISMO} Pointing reduction no longer suggests absolute 
+	pointing. It's confusing, and was also inconsistent with the value
+	written into the the log. Therefore, it's best to omit (for now, at 
+	least).
+
+	[TWEAK] {GISMO} 'maximum-likelihood' estimation made default from 
+	start for GISMO.
+
+	[TWEAK] {GISMO} Run 4 data erroneously invoked configuration from the
+	end of Run 3 (2010 April). This wasn't harmful, since the settings
+	were then overwritten by the proper Run 4 configuration. Nevertheless,
+	the unintended behaviour has been eliminated.
+
+	[TWEAK] {SHARC-2} Nominal beam sizes are changed slightly (e.g. 
+	8.0" --> 8.5" at 350um), to more realistic values. As a result, the 
+	default conversions from volts to Janskys ('jansky' option) has been 
+	updated too to yield the same peak fluxes as before.
 
 	[TWEAK] {GISMO} Updated 'deep' configuration based on the optimal 
 	parameters of the deep-field dataset. These are shorter 1/f stability
 	timescale, more stringent LSS filter, and longer iterations.
 
+	[CODE] Reorganized 2D image and grid classes for more hierarchical
+	structure. This is in preparation for a more generic (not necessarily
+	astronomical) image processing classes.
+
+	[CODE] Migrated CLEAN algorithm, and regrid functionality of CRUSH-1.
+	These aren't used right now, but are in preparation for migrating the
+	old CRUSH-1 tools into CRUSH-2.
+	
 	[CODE] Complete overhaul of imaging and spherical grid classes. The
 	new gridding is cleaner, more generic and more efficient, while the 
 	new imaging classes have been designed with more powerful and generic
  	plotting capabilities in mind -- bringing a native crush 'show' tool
 	one big step closer...
+
+	[CODE] {APEX} Cleaned up code handling the selectable basis system
+	of APEX MBFITS files.
 
 	[DEPRECATE] 'autobright' option, introduced in 2.04-2, is deprecated.
 	Use object dependent conditionals instead, which were introduced in 
@@ -130,6 +182,12 @@
 	[NEW] CRUSH now reports a sub-version string (both on console and in
 	FITS files) that allow identification of intermediate development
 	versions. 
+
+	[FIX] Some FITS image tools seem to have trouble understanding negative
+	longitudes, even though the FITS standard (e.g. Hanisch 2001, 
+	Calabretta & Greisen 2002) do not prescribe any range, in which angles
+	have to be represented. Nonetheless, to conform better to non-standard 
+	FITS utilities, the longitudes are now written in the 0--2Pi range.
 
 	[FIX] FITS timestamps are now parsed and printed in UT rather than UTC,
 	as they should be :-).

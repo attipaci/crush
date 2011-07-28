@@ -262,9 +262,14 @@ public class SphericalCoordinates extends CoordinatePair {
 	}
 
 	public void edit(Cursor cursor) throws HeaderCardException { edit(cursor, ""); }
-	
-	public void edit(Cursor cursor, String alt) throws HeaderCardException {
-		cursor.add(new HeaderCard("CRVAL1" + alt, longitude() / Unit.deg, "The reference longitude coordinate (deg)."));
+
+	public void edit(Cursor cursor, String alt) throws HeaderCardException {	
+		// Always write longitude in the 0:2Pi range.
+		// Some FITS utilities may require it, even if it's not required by the FITS standard...
+		double lon = Math.IEEEremainder(longitude(), twoPI);
+		if(lon < 0.0) lon += twoPI;
+
+		cursor.add(new HeaderCard("CRVAL1" + alt, lon / Unit.deg, "The reference longitude coordinate (deg)."));
 		cursor.add(new HeaderCard("CRVAL2" + alt, latitude() / Unit.deg, "The reference latitude coordinate (deg)."));
 	}
 
@@ -302,5 +307,29 @@ public class SphericalCoordinates extends CoordinatePair {
 		to.setNativeLatitude(asin(pole.sinLat * from.sinLat + pole.cosLat * from.cosLat * cosdL));
 		to.setNativeLongitude(pole.x + rightAngle + 
 				Math.atan2(-from.sinLat * pole.cosLat + from.cosLat * pole.sinLat * cosdL, -from.cosLat * Math.sin(dL)));	
+	}
+	
+	public static Class<? extends SphericalCoordinates> getFITSClass(String spec) {
+		spec = spec.toUpperCase();
+		
+		if(spec.startsWith("RA--")) return util.astro.EquatorialCoordinates.class;
+		else if(spec.startsWith("DEC-")) return util.astro.EquatorialCoordinates.class;
+		else if(spec.substring(1).startsWith("LON")) {
+			switch(spec.charAt(0)) {
+			case 'A' : return util.astro.HorizontalCoordinates.class;
+			case 'G' : return util.astro.GalacticCoordinates.class;
+			case 'E' : return util.astro.EclipticCoordinates.class;
+			case 'S' : return util.astro.SuperGalacticCoordinates.class;
+			}
+		}
+		else if(spec.substring(1).startsWith("LAT")) {
+			switch(spec.charAt(0)) {
+			case 'A' : return util.astro.HorizontalCoordinates.class;
+			case 'G' : return util.astro.GalacticCoordinates.class;
+			case 'E' : return util.astro.EclipticCoordinates.class;
+			case 'S' : return util.astro.SuperGalacticCoordinates.class;
+			}
+		}
+		throw new IllegalArgumentException("Unknown Coordinate Definition " + spec);
 	}
 }

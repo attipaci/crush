@@ -26,18 +26,19 @@ package crush.tools;
 import crush.*;
 import crush.sourcemodel.*;
 import util.*;
+import util.astro.SourceCatalog;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import nom.tam.fits.*;
 
 public class ImageTool {
 	static String version = "0.1-1";
 
-	static AstroMap image;
+	AstroMap image;
+	Vector<Region> regions = new Vector<Region>();
 
-	static Vector<Region> regions = new Vector<Region>();
-	
 	public static void main(String args[]) {
 		versionInfo();
 
@@ -45,21 +46,29 @@ public class ImageTool {
 		else if(args[0].equalsIgnoreCase("-help")) usage();
 
 		try {	    
-			image = new AstroMap();
-			image.read(args[args.length-1]);
+			ImageTool imageTool = new ImageTool(args[args.length-1]);
 
-			for(int i=0; i<args.length-1; i++) option(args[i]);
+			for(int i=0; i<args.length-1; i++) imageTool.option(args[i]);
 			
 			System.out.println(" Updated image information: \n");
 			
-			image.info();
+			imageTool.image.info();
 			
-			image.write();
+			imageTool.image.write();
 		}
 		catch(Exception e) { e.printStackTrace(); }
 	}
+	
+	public ImageTool(String path) throws IOException, FitsException, HeaderCardException {
+		this(new AstroMap());
+		image.read(path);
+	}
 
-	public static boolean option(String optionString) {
+	public ImageTool(AstroMap map) {
+		this.image = map;
+	}
+	
+	public boolean option(String optionString) {
 		StringTokenizer tokens = new StringTokenizer(optionString, "=,");
 
 		String key = tokens.nextToken();
@@ -186,7 +195,8 @@ public class ImageTool {
 
 				catch(NumberFormatException e)  {
 					try {
-						AstroMap beamImage = new AstroMap(beamSpec);
+						AstroImage beamImage = new AstroImage();
+						beamImage.read(beamSpec);
 						beamImage.scale(1.0 / beamImage.getMax());
 						beam = beamImage.data;
 					}
@@ -317,9 +327,7 @@ public class ImageTool {
 		    	catch(Exception e2) { System.err.println("ERROR!: " + e2.getMessage()); }
 		    }
 		}
-		else if(key.equalsIgnoreCase("-area")) {
-			image.assumedArea = Double.parseDouble(tokens.nextToken()) * Unit.arcmin2; 
-		}
+		
 		else if(key.equalsIgnoreCase("-polygon")) {
 			String fileName = Util.getSystemPath(tokens.nextToken());
 		    try { image.addPolygon(fileName); }
@@ -357,7 +365,6 @@ public class ImageTool {
 		else if(key.equalsIgnoreCase("-profile")) {
 			image.profile();
 		}
-		
 			
 		else if(key.equalsIgnoreCase("-help")) usage();
 		else return false;
