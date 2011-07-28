@@ -31,6 +31,7 @@ import java.io.*;
 import java.util.*;
 
 import util.*;
+import util.astro.CelestialCoordinates;
 import util.astro.CoordinateEpoch;
 import util.astro.EquatorialCoordinates;
 import util.astro.GeodeticCoordinates;
@@ -44,10 +45,11 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	 */
 	private static final long serialVersionUID = 6352446637906429368L;
 
-	public boolean isEquatorial = false;
-	public boolean isNativeEquatorial = false;
 	public boolean isPlanetary = false;
 	//public boolean isChopped = false;
+	
+	public Class<? extends SphericalCoordinates> nativeSystem;
+	public Class<? extends SphericalCoordinates> basisSystem;
 	
 	//public double chopperThrow, chopperFrequency;
 	
@@ -327,55 +329,62 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 			System.err.println(" Setting options for chopped photometry.");
 			instrument.options.parse("chopped");
 		}
-			
-		isNativeEquatorial = false;
-		isPlanetary = header.getBooleanValue("MOVEFRAM");
-		
+					
+		isPlanetary = header.getBooleanValue("MOVEFRAM");	
 		equatorial = null; horizontal = null;
 		
 		boolean hasNative = header.findCard("CTYPE1").getComment().contains("Native");
 		
 		// If there is information on the native frame, then use it. Else, assume horizontal...
-		isNativeEquatorial = hasNative ? header.getStringValue("CTYPE1").startsWith("RA") : false;
-		
-		// Tracking assumed for equatorial...
-		isTracking = isNativeEquatorial;
-		
+		if(hasNative) {
+			String label = header.getStringValue("CTYPE1");
+			nativeSystem = SphericalCoordinates.getFITSClass(label);
+		}
+		else nativeSystem = HorizontalCoordinates.class;
+			
 		// In some cases the reference values of main coordinate system are given in the alternative basis system...
 		// This is rather confusing and wrong, but using the comment field one can try to figure out what belongs where...
 		boolean confused = hasNative && header.findCard("CRVAL1").getComment().contains("basis");
 		
 		// The scan coordinates are set to those of the tracking object....
-		if(confused) {
-			if(header.getStringValue("CTYPE1B").startsWith("RA")) isEquatorial = true;
-			else if(header.getStringValue("CTYPE1B").startsWith("ALON")) isEquatorial = false;
-		}
-		else {
-			if(header.getStringValue("CTYPE1").startsWith("RA")) isEquatorial = true;
-			else if(header.getStringValue("CTYPE1").startsWith("ALON")) isEquatorial = false;
-		}	
-	
-		if(isEquatorial) {
+		String keyword = confused ? "CTYPE1B" : "CTYPE1";
+		basisSystem = SphericalCoordinates.getFITSClass(header.getStringValue(keyword));
+						
+		if(basisSystem == EquatorialCoordinates.class) {
 			equatorial = new EquatorialCoordinates(
 					header.getDoubleValue("BLONGOBJ") * Unit.deg, 
 					header.getDoubleValue("BLATOBJ") * Unit.deg,
 					CoordinateEpoch.J2000);	
 			calcHorizontal();	
 		}
-		else {
+		else if(basisSystem == HorizontalCoordinates.class) {
 			horizontal = new HorizontalCoordinates(
 				header.getDoubleValue("BLONGOBJ") * Unit.deg, 
 				header.getDoubleValue("BLATOBJ") * Unit.deg);	
 			calcEquatorial();
 		}
-			
+		else {
+			try { 
+				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.newInstance(); 
+				equatorial = basisCoords.toEquatorial();
+				calcHorizontal();
+			}
+			catch(Exception e) {
+				throw new IllegalStateException("Error instantiating " + basisSystem.getName() +
+						": " + e.getMessage());
+			}
+		}
+		
+		// Tracking assumed for equatorial...
+		isTracking = !HorizontalCoordinates.class.isAssignableFrom(basisSystem);
+		
 		return header.getIntValue("NOBS");	
 	}	
 	
 	@Override
 	public void editScanHeader(Header header) throws FitsException {	
 		super.editScanHeader(header);
-		header.addValue("EQSCAN", isEquatorial, "Was the scanning in Equatorial frame?");
+		header.addValue("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan.");
 	}
 	
 	@Override

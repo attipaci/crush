@@ -37,8 +37,9 @@ import crush.Instrument;
 import crush.Scan;
 
 import util.*;
+import util.data.Data2D;
 import util.data.DataPoint;
-import util.data.FFT;
+import util.data.Index2D;
 import util.data.Statistics;
 import util.data.WeightedPoint;
 
@@ -67,7 +68,7 @@ public class AstroMap extends AstroImage {
 		this.instrument = instrument;
 	}
 	
-	public AstroMap(String fileName, Instrument<?> instrument) throws FitsException, HeaderCardException, IOException { 
+	public AstroMap(String fileName, Instrument<?> instrument) throws Exception { 
 		this(instrument);
 		read(fileName);		
 	}
@@ -85,7 +86,7 @@ public class AstroMap extends AstroImage {
 	}
 	
 	@Override
-	public void copyImageOf(AstroImage other) {
+	public void copyImageOf(Data2D other) {
 		super.copyImageOf(other);
 		if(!(other instanceof AstroMap)) return;
 		
@@ -395,7 +396,7 @@ public class AstroMap extends AstroImage {
 		return image;		
 	}
 
-	public final double getRMS(final MapIndex index) {
+	public final double getRMS(final Index2D index) {
 		return getRMS(index.i, index.j);
 	}
 	
@@ -403,7 +404,7 @@ public class AstroMap extends AstroImage {
 		return 1.0 / Math.sqrt(weight[i][j]);		
 	}
 	
-	public final double getS2N(final MapIndex index) {
+	public final double getS2N(final Index2D index) {
 		return getS2N(index.i, index.j);
 	}
 	
@@ -447,90 +448,18 @@ public class AstroMap extends AstroImage {
 		filterBlanking = blankingValue;
 	}
 
-	
-	//	 8/20/07 Changed to use blanking 
-	//         Using Gaussian taper.
-	//         Robust re-levelling at the end.
-	public void fftFilterAbove(double FWHM, double blankingValue) {
-		// sigma_x sigma_w = 1
-		// FWHM_x sigma_w = 2.35
-		// FWHM_x * 2Pi sigma_f = 2.35
-		// sigma_f = 2.35/2Pi * 1.0/FWHM_x
-		// delta_f = 1.0/(Nx * delta_x);
-		// sigma_nf = sigma_f / delta_x = 2.35 * Nx * delta_x / (2Pi * FWHM_x)
-		
-		// Try to get an honest estimate of the extended structures using FFT (while blaning bright sources).
-		// Then remove it from the original image...
-		
-		final double[][] extended = new double[sizeX()][sizeY()];
-		final int[][] skip = getSkip(blankingValue);
-		
-		double avew = 0.0;
-		int n=0;
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			double rms = getRMS(i,j);
-			
-			if(skip[i][j] > 0) extended[i][j] = 0.0;
-			else {
-				double w = 1.0 / (rms * rms);
-				extended[i][j] = w * data[i][j];
-				avew += w;
-				n++;
-			}
-		}
-		if(n > 0) avew /= n;	
-		
-		Complex[][] cdata = FFT.load(extended);
-		FFT.uncheckedForward(cdata, true);
-
-		final int nx = cdata.length;
-		final int ny = cdata[0].length;
-
-		double sigmax = Util.sigmasInFWHM *  nx * grid.pixelSizeX() / (2.0*Math.PI * FWHM);
-		double sigmay = Util.sigmasInFWHM *  ny * grid.pixelSizeY() / (2.0*Math.PI * FWHM);
-		
-		final double ax = -0.5/(sigmax*sigmax);
-		final double ay = -0.5/(sigmay*sigmay);
-
-		for(int fx=nx; --fx>0; ) {
-			final double axfx2 = ax*fx*fx;
-			final Complex[] r1 = cdata[fx];
-			final Complex[] r2 = cdata[nx-fx];
-			
-			for(int fy=1; fy<ny; fy++) {
-				final double A = Math.exp(axfx2 + ay*fy*fy);
-				final int fy1 = ny - fy;
-				
-				r1[fy].scale(A);
-				r2[fy].scale(A);
-				r1[fy1].scale(A);
-				r2[fy1].scale(A);
-			}
-		}
-		cdata[0][0].zero();
-		cdata[1][0].scale(Math.exp(ax));
-		cdata[0][1].scale(Math.exp(ay));
-		
-		FFT.uncheckedForward(cdata, false);
-		FFT.unload(cdata, extended);
-		
-		// Scale weights for filtering in the white noise assumption/
-		double r = getImageFWHM() / FWHM;
-		final double weightScale = 1.0 / (1.0 - r*r);
-		
-		if(avew > 0.0) for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) {
-			data[i][j] -= extended[i][j] / avew;
-			weight[i][j] *= weightScale;
-		}
-
-		if(Double.isNaN(extFilterFWHM)) extFilterFWHM = FWHM;
-		else extFilterFWHM = 1.0/Math.sqrt(1.0/(extFilterFWHM * extFilterFWHM) + 1.0/(FWHM*FWHM));
-			
-		filterBlanking = blankingValue;
-		
-		filterCorrect(instrument.resolution, skip);
+	@Override
+	public void fftFilterAbove(double extendedFWHM, int[][] skip) {
+		super.filterAbove(extendedFWHM, skip);
+		double r = getImageFWHM() / extendedFWHM;
+		weightScale(1.0 / (1.0 - r*r));
 	}
 	
+	public void fftFilterAbove(double extendedFWHM, double blankingValue) {
+		fftFilterAbove(extendedFWHM, getSkip(blankingValue));
+		filterBlanking = blankingValue;
+	}
+
 
 	public double getMeanIntegrationTime() {
 		double sum = 0.0, sumw = 0.0;
@@ -691,18 +620,15 @@ public class AstroMap extends AstroImage {
 		return fits;
 	}
 
-	public void read(String name) throws HeaderCardException, FitsException, IOException {
+	public void read(String name) throws Exception {
 		// Get the coordinate system information
 		BasicHDU[] HDU = getFits(name).read();
 		parseHeader(HDU[0].getHeader());
 		readCrushData(HDU);
 	}
 
-	
-
-
 	@Override
-	public void parseHeader(Header header) throws HeaderCardException {	
+	public void parseHeader(Header header) throws Exception {	
 		weightFactor = 1.0;
 		filterBlanking = Double.NaN;
 		clippingS2N = Double.NaN;
@@ -742,14 +668,9 @@ public class AstroMap extends AstroImage {
 	}
 	
 	@Override
-	public void editHeader(Fits fits) throws HeaderCardException, FitsException, IOException {
-		super.editHeader(fits);
+	public void editHeader(Cursor cursor) throws HeaderCardException, FitsException, IOException {
+		super.editHeader(cursor);
 		
-		nom.tam.util.Cursor cursor = fits.getHDU(0).getHeader().iterator();
-
-		// Go to the end of the header cards...
-		while(cursor.hasNext()) cursor.next();
-	
 		// Add the command-line reduction options
 		if(commandLine != null) {
 			StringTokenizer args = new StringTokenizer(commandLine);
@@ -854,8 +775,10 @@ public class AstroMap extends AstroImage {
 		return n > 0 ? sum / n : 0.0;
 	}
 	
-	
-	
+	@Override
+	public int clean(double[][] beam, double gain, double replacementFWHM) {
+	    	return clean(this, beam, gain, replacementFWHM);
+	}
 	
 	@Override
 	public String toString() {

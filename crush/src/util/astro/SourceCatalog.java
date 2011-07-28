@@ -20,11 +20,14 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.sourcemodel;
+package util.astro;
 
 import java.io.*;
 import java.util.Vector;
 import java.text.*;
+
+import crush.sourcemodel.AstroImage;
+import crush.sourcemodel.GaussianSource;
 
 public class SourceCatalog extends Vector<GaussianSource> {
 	/**

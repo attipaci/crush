@@ -428,16 +428,12 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		return data;
 	}
 	
-	
 	@Override
-	public String getPointingString(Vector2D pointing) {
-		Vector2D corr = pointingCorrection == null ? new Vector2D() : pointingCorrection;
-		
-		return super.getPointingString(pointing) + "\n" +
-			"  Absolute: " + 
-			Util.f1.format((pointing.x + corr.x) / Unit.arcsec) + ", " + 
-			Util.f1.format((pointing.y + corr.y) / Unit.arcsec) + " arcsec (az, el)";
+	public Vector2D getNasmythOffset(Vector2D nativeOffset) {
+		// TODO Flip axes and signs as necessary to conform to IRAM convention
+		return super.getNasmythOffset(nativeOffset);
 	}
+	
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {

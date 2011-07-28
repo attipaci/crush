@@ -29,9 +29,10 @@ import util.astro.EquatorialCoordinates;
 import util.astro.GalacticCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.astro.SuperGalacticCoordinates;
+import util.data.Grid2D;
 import nom.tam.fits.*;
 
-public class SphericalGrid implements Cloneable {
+public class SphericalGrid implements Grid2D<SphericalCoordinates>, Cloneable {
 	public SphericalProjection projection;
 	public String alt = ""; // The FITS alternative coordinate system specifier... 
 	
@@ -82,6 +83,21 @@ public class SphericalGrid implements Cloneable {
 	
 	public void setResolution(double delta) {
 		setResolution(delta, delta);
+	}
+	
+	public double[][] getTransform() {
+		return new double[][] {{ m11, m12 }, { m21, m22 }};
+	}
+	
+	public void setTransform(double[][] M) {
+		if(M.length != 2) throw new IllegalArgumentException("Coordinate transform should a 2x2 matrix.");
+		if(M[0].length != 2) throw new IllegalArgumentException("Coordinate transform should a 2x2 matrix.");
+		
+		m11 = M[0][0];
+		m12 = M[0][1];
+		m21 = M[1][0];
+		m22 = M[1][1];
+		calcInverseTransform();
 	}
 	
 	public void setResolution(double dx, double dy) {
@@ -177,7 +193,7 @@ public class SphericalGrid implements Cloneable {
 		}
 	}
 	
-	public void parseCoordinateInfo(Header header) throws HeaderCardException {
+	public void parseCoordinateInfo(Header header) throws HeaderCardException, InstantiationException, IllegalAccessException {
 		String type = header.getStringValue("CTYPE1" + alt);
 	
 		try { projection = SphericalProjection.forName(type.substring(5, 8)); }
@@ -185,19 +201,8 @@ public class SphericalGrid implements Cloneable {
 		
 		SphericalCoordinates reference = null;
 		
-		String lonType = type.toUpperCase();
-		
-		if(lonType.startsWith("RA--")) reference = new EquatorialCoordinates();
-		else if(lonType.substring(1).startsWith("LON")) {
-			switch(lonType.charAt(0)) {
-			case 'A' : reference = new HorizontalCoordinates(); break;
-			case 'G' : reference = new GalacticCoordinates(); break;
-			case 'E' : reference = new EclipticCoordinates(); break;
-			case 'S' : reference = new SuperGalacticCoordinates(); break;
-			default: System.err.println("ERROR! Unknown Coordinate Definition " + type);
-			}
-		}
-		else System.err.println("ERROR! Unknown Coordinate Definition " + type);
+		Class<? extends SphericalCoordinates> coordClass = SphericalCoordinates.getFITSClass(type);
+		reference = coordClass.newInstance();
 		
 		reference.parse(header, alt);
 		projection.setReference(reference);
@@ -272,6 +277,12 @@ public class SphericalGrid implements Cloneable {
 	}
 	
     public final SphericalCoordinates getReference() { return projection.getReference(); }
+    
+    public void setReference(SphericalCoordinates reference) { projection.setReference(reference); }
+    
+    public Vector2D getReferenceIndex() { return refIndex; }
+    
+    public void setReferenceIndex(Vector2D v) { refIndex = v; }
     
     public final SphericalProjection getProjection() { return projection; }
 

@@ -32,6 +32,8 @@ import util.astro.CoordinateEpoch;
 import util.astro.EquatorialCoordinates;
 import util.astro.Precessing;
 import util.data.DataPoint;
+import util.data.Grid2D;
+import util.data.Index2D;
 import util.data.WeightedPoint;
 
 
@@ -61,9 +63,14 @@ public class GaussianSource extends CircularRegion {
 		return bounds;
 	}
 	
+	public DataPoint getFWHM() { return radius; }
+	
+	public void setFWHM(double value) { radius.value = value; radius.weight = 0.0; }
+	
+	public void setFWHM(DataPoint value) { radius = value; }
 	
 	public void setPeakPixel(AstroMap map) {
-		MapIndex index = map.getS2NImage().indexOfMax();
+		Index2D index = map.getS2NImage().indexOfMax();
 		SphericalCoordinates coords = (SphericalCoordinates) map.getReference().clone();
 		map.grid.getCoords(new Vector2D(index.i, index.j), coords);
 		id = map.sourceName;
@@ -407,5 +414,29 @@ public class GaussianSource extends CircularRegion {
 		return info;
 	}
 	
+	public static double[][] getBeam(double FWHM, Grid2D<?> grid) {
+		return getBeam(FWHM, grid, 3.0);
+	}	
+
+	public static double[][] getBeam(double FWHM, Grid2D<?> grid, double nBeams) {
+		int sizeX = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeX()) + 1;
+		int sizeY = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeY()) + 1;
+		
+		final double[][] beam = new double[sizeX][sizeY];
+		final double sigma = FWHM / Util.sigmasInFWHM;
+		final double Ax = -0.5 * grid.pixelSizeX() * grid.pixelSizeX() / (sigma * sigma);
+		final double Ay = -0.5 * grid.pixelSizeY() * grid.pixelSizeY() / (sigma * sigma);
+		final double centerX = (sizeX-1) / 2.0;
+		final double centerY = (sizeY-1) / 2.0;
+		
+		for(int i=sizeX; --i >= 0; ) for(int j=sizeY; --j >= 0; ) {
+			double dx = i - centerX;
+			double dy = j - centerY;
+
+			beam[i][j] = Math.exp(Ax*dx*dx + Ay*dy*dy);
+		}
+		return beam;
+		
+	}
 	
 }

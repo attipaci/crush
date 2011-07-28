@@ -34,7 +34,7 @@ import java.text.*;
 import util.Complex;
 
 
-public final class ArrayUtil {
+public final class ArrayFunc {
 
 	public static void print(double[] data) { print(data, System.out, new DecimalFormat("0.000000E0")); }
 

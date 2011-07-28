@@ -27,6 +27,7 @@ import java.util.Collection;
 
 import util.*;
 import util.astro.CelestialProjector;
+import util.data.Index2D;
 import util.data.Statistics;
 import crush.*;
 import crush.array.*;
@@ -98,7 +99,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 	
 	
 	@Override
-	protected void add(Frame exposure, Pixel pixel, MapIndex index, double fGC, double[] sourceGain, double dt, int excludeSamples) {
+	protected void add(Frame exposure, Pixel pixel, Index2D index, double fGC, double[] sourceGain, double dt, int excludeSamples) {
 		int i = pixel.getDataIndex();
 		ScalarMap<InstrumentType, ScanType> map = pixelMap[i];
 		
@@ -136,7 +137,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 
 
 	@Override
-	public void getIndex(Frame exposure, Pixel pixel, CelestialProjector projector, MapIndex index) {
+	public void getIndex(Frame exposure, Pixel pixel, CelestialProjector projector, Index2D index) {
 		template.getIndex(exposure, pixel, projector, index);
 	}
 
@@ -154,7 +155,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 
 
 	@Override
-	public boolean isMasked(MapIndex index) {
+	public boolean isMasked(Index2D index) {
 		return false;
 	}
 
@@ -180,7 +181,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 
 
 	@Override
-	protected void sync(Frame exposure, Pixel pixel, MapIndex index, double fG, double[] sourceGain, double[] syncGain, boolean isMasked) {
+	protected void sync(Frame exposure, Pixel pixel, Index2D index, double fG, double[] sourceGain, double[] syncGain, boolean isMasked) {
 		ScalarMap<InstrumentType, ScanType> map = pixelMap[pixel.getDataIndex()];
 		if(map != null) map.sync(exposure, pixel, index, fG, sourceGain, syncGain, isMasked);	
 	}

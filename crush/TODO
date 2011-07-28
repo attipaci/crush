@@ -3,6 +3,41 @@ fluxes?
 >> Smoothing in deep does not preserve point source fluxes...
 >> Polarization: why does it add up over iterations? Why not correct?
 
+For 2.10:
+
+	-- Switch to Java 1.6 (change package deps)
+
+	-- update FITS libs	
+
+	-- Faster scan reading (SHARC-2, APEX, SCUBA-2, GISMO)
+	   (try parallel once again)...
+
+	-- Native show tool (+ others)
+	   (crush icon in show...)
+
+	-- Scan.getPointingString() to work with getPointingData() table...
+           (for better consistency)
+
+	-- Update ConfidenceCalculator...
+
+	-- GaussianSource --> SourceProfile
+	   FilteredGaussianSource
+		FilteredGaussianSource(GaussianSource)
+			[true peak to observed peak]
+		GaussianSource(FilteredGaussianSource)
+			[observed peak to true peak]
+
+
+	-- SourceCatalog --> Region, SourceProfile
+		insert(AstroImage)
+		remove(AstroImage)
+	   (detect to always correct prior sources with profile, in bounds)
+	   (detect finds filteredGaussian sources, but writes Gaussian ones)
+
+	-- getBeam() / clean() to work with source profiles
+
+
+General:
 
 	-- De-blend detection fluxes...
 

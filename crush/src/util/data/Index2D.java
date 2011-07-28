@@ -22,21 +22,21 @@
  ******************************************************************************/
 // Copyright (c) 2010 Attila Kovacs 
 
-package crush.sourcemodel;
+package util.data;
 
 import util.*;
 
-public class MapIndex {
+public class Index2D {
 	public int i,j;
 	
-	public MapIndex() {}
+	public Index2D() {}
 	
-	public MapIndex(int i, int j) {
+	public Index2D(int i, int j) {
 		this.i = i;
 		this.j = j;
 	}
 	
-	public MapIndex(Vector2D index) {
+	public Index2D(Vector2D index) {
 		i = (int)Math.round(index.x);
 		j = (int)Math.round(index.y);
 	}

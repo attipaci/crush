@@ -34,12 +34,13 @@ import util.*;
 import util.astro.CelestialProjector;
 import util.astro.EclipticCoordinates;
 import util.astro.GalacticCoordinates;
+import util.astro.SourceCatalog;
+import util.data.Index2D;
 import util.data.Statistics;
 import util.plot.ColorScheme;
 import util.plot.ImageArea;
 import util.plot.colorscheme.Colorful;
 
-import nom.tam.fits.*;
 
 public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Scan<? extends InstrumentType,?>> extends SourceMap<InstrumentType, ScanType> {
 	public AstroMap map;
@@ -188,7 +189,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		catch(InterruptedException e) { System.err.println("WARNING! Source insertion was interrupted."); }
 	}
 	
-	public void applyModel(String fileName) throws IOException, FitsException, HeaderCardException {
+	public void applyModel(String fileName) throws Exception {
 		System.err.println(" Applying source model:");
 			
 		AstroMap model = new AstroMap(fileName, map.instrument);
@@ -469,18 +470,18 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	}
 	
 	@Override
-	protected void add(final Frame exposure, final Pixel pixel, final MapIndex index, final double fGC, final double[] sourceGain, final double dt, final int excludeSamples) {
+	protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain, final double dt, final int excludeSamples) {
 		// The use of iterables is a minor performance hit only (~3% overall)
 		for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0) 	
 			addPoint(index, channel, exposure, fGC * sourceGain[channel.index], dt);
 	}
 	
-	protected void addPoint(final MapIndex index, final Channel channel, final Frame exposure, final double G, final double dt) {
+	protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {
 		map.addPointAt(index.i, index.j, exposure.data[channel.index], G, exposure.relativeWeight/channel.variance, dt);
 	}
 	
 	@Override
-	public final void getIndex(final Frame exposure, final Pixel pixel, final CelestialProjector projector, final MapIndex index) {
+	public final void getIndex(final Frame exposure, final Pixel pixel, final CelestialProjector projector, final Index2D index) {
 		if(exposure.sourceIndex == null) {
 			exposure.project(pixel.getPosition(), projector);
 			map.getIndex(projector.offset, index);
@@ -493,13 +494,13 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	}
 
 	@Override
-	public final boolean isMasked(MapIndex index) {
+	public final boolean isMasked(Index2D index) {
 		return mask[index.i][index.j];
 	}
 	
 	public void createLookup(Integration<?,?> integration) {	
 		final CelestialProjector projector = new CelestialProjector(projection);
-		final MapIndex index = new MapIndex();
+		final Index2D index = new Index2D();
 		final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 		final int n = integration.instrument.getPixelCount();
 		final Vector2D offset = projector.offset;
@@ -527,12 +528,12 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		return goodFrames;
 	}
 	
-	protected double getIncrement(final MapIndex index, final Channel channel, final double oldG, final double G) {
+	protected double getIncrement(final Index2D index, final Channel channel, final double oldG, final double G) {
 		return G * map.data[index.i][index.j] - oldG * base[index.i][index.j];	
 	}
 	
 	@Override
-	protected void sync(final Frame exposure, final Pixel pixel, final MapIndex index, final double fG, final double[] sourceGain, final double[] syncGain, final boolean isMasked) {
+	protected void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, final double[] syncGain, final boolean isMasked) {
 		// The use of iterables is a minor performance hit only (~3% overall)
 		for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SKIP) == 0) {
 			// Do not check for flags, to get a true difference image...
@@ -547,7 +548,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	@Override
 	protected void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain) {
 		final CelestialProjector projector = new CelestialProjector(projection);
-		final MapIndex index = new MapIndex();
+		final Index2D index = new Index2D();
 
 		final double[] sumIM = new double[sourceGain.length];
 		final double[] sumM2 = new double[sourceGain.length];
@@ -642,7 +643,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 			map.weight(true);
 		}
 
-		if(info) map.info();
+		if(info) map.toString();
 		map.write(); 
 		
 		
