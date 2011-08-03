@@ -91,7 +91,11 @@ implements TableFormatter.Entries {
 	
 	// TODO check for incompatible scans
 	public void validate(Vector<Scan<?,?>> scans) throws Exception {
-		
+		if(hasOption("jackknife.alternate")) {
+			System.err.println(" JACKKNIFE! Alternating scans.");
+			for(int i=scans.size(); --i >= 0; ) if(i%2 == 1) 
+				for(Integration<?,?> subscan : scans.get(i)) subscan.gain *= -1.0;
+		}
 	}
 	
 	@Override

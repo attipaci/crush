@@ -52,6 +52,8 @@ public class SimpleImage extends GridImage<SimpleGrid2D> {
 	@Override
 	public void setGrid(SimpleGrid2D grid) {
 		this.grid = grid;
+		double fwhm = Math.sqrt(grid.getPixelArea()) / GridImage.fwhm2size;
+		if(smoothFWHM < fwhm) smoothFWHM = fwhm;
 	}
 
 }

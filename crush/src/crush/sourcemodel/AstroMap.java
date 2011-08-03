@@ -39,6 +39,7 @@ import crush.Scan;
 import util.*;
 import util.data.Data2D;
 import util.data.DataPoint;
+import util.data.GridImage;
 import util.data.Index2D;
 import util.data.Statistics;
 import util.data.WeightedPoint;
@@ -97,10 +98,18 @@ public class AstroMap extends AstroImage {
 		count = (double[][]) copyOf(image.count);
 	}
 	
-	public void shortInfo() {
-		System.err.println("\n\n  [" + sourceName + "]\n" + super.toString());
+	@Override
+	public void setImage(Data2D other) {
+		super.setImage(other);
+		if(!(other instanceof AstroMap)) return;
+		
+		AstroMap image = (AstroMap) other;
+		
+		// Make a copy of the fundamental data
+		weight = image.weight;
+		count = image.count;
 	}
-
+	
 	@Override
 	public void setSize(int i, int j) {
 		super.setSize(i, j);
@@ -223,37 +232,46 @@ public class AstroMap extends AstroImage {
 
 	// It's important to completely reset clipped points, otherwise they can be used...
 	// One possibility for future is to raise flag only, then call sanitize()
-	public void rmsClip(double maxRelativeRMS) {
-		rmsClip(maxRelativeRMS, 0.0);
+	public void clipAboveRelativeRMS(double maxRelativeRMS) {
+		clipAboveRelativeRMS(maxRelativeRMS, 0.0);
 	}
 	
-	public void rmsClip(double maxRelativeRMS, double refPercentile) {
+	public void clipAboveRelativeRMS(double maxRelativeRMS, double refPercentile) {
 		double[][] rms = getRMSImage().data;
 		double maxRMS = maxRelativeRMS * new AstroImage(rms).select(refPercentile);
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
 			if(rms[i][j] > maxRMS) flag[i][j] = 1;
 	}
 	
-
-	public void exposureClip(double minRelativeExposure) {
-		exposureClip(minRelativeExposure, 1.0);
+	public void clipAboveRMS(double value) {
+		double[][] rms = getRMSImage().data;
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
+			if(rms[i][j] > value) flag[i][j] = 1;
 	}
 	
-	public void exposureClip(double minRelativeExposure, double refPercentile) {
+	public void clipBelowRelativeExposure(double minRelativeExposure) {
+		clipBelowRelativeExposure(minRelativeExposure, 1.0);
+	}
+	
+	public void clipBelowRelativeExposure(double minRelativeExposure, double refPercentile) {
 		double minIntTime = minRelativeExposure * new AstroImage(count).select(refPercentile);
-		directExposureClip(minIntTime);
+		clipBelowExposure(minIntTime);
 	}
 	
-	public void directExposureClip(double minIntTime) {
+	public void clipBelowExposure(double minIntTime) {
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
 			if(count[i][j] < minIntTime) flag[i][j] = 1;
 	}
 
-	public void s2nClip(double level) {
+	public void s2nClipBelow(double level) {
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
 			if(data[i][j] / getRMS(i,j) < level) flag[i][j] = 1;
 	}
 
+	public void s2nClipAbove(double level) {
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
+			if(data[i][j] / getRMS(i,j) > level) flag[i][j] = 1;
+	}
 	
 	public boolean[][] getMask(double minS2N, int minNeighbours) {
 		boolean[][] mask = new boolean[sizeX()][sizeY()];
@@ -279,87 +297,51 @@ public class AstroMap extends AstroImage {
 	}
 
 	@Override
-	public void convolve(double[][] beam) {
+	public void smooth(double[][] beam) {
 		double[][] beamw = new double[sizeX()][sizeY()];
-		data = getConvolved(data, beam, beamw);
-		count = getConvolved(count, beam, null);
+		data = getSmoothed(beam, beamw);
+		count = getTimeImage().getSmoothed(beam, null);
 		weight = beamw;
-		this.beam = beam;
 	}
 	
 	@Override
-	public void fastConvolve(double[][] beam, int stepX, int stepY) {
+	public void fastSmooth(double[][] beam, int stepX, int stepY) {
 		double[][] beamw = new double[sizeX()][sizeY()];
-		data = getFastConvolved(data, beam, beamw, stepX, stepY);
-		count = getFastConvolved(count, beam, null, stepX, stepY);
+		data = getFastSmoothed(beam, beamw, stepX, stepY);
+		count = getTimeImage().getFastSmoothed(beam, null, stepX, stepY);
 		weight = beamw;
-		this.beam = beam;
 	}
 	
-	
-	private void addGaussianAt(AstroMap from, int fromi, int fromj, double FWHM, double beamRadius, float[][] renorm) {
-		final double xFWHM = FWHM / grid.pixelSizeX();	
-		final double sigmaX = xFWHM / Util.sigmasInFWHM;
-		
-		final double yFWHM = FWHM / grid.pixelSizeY();	
-		final double sigmaY = yFWHM / Util.sigmasInFWHM;
-		
-		final double Ax = -0.5 / (sigmaX*sigmaX);
-		final double Ay = -0.5 / (sigmaY*sigmaY);
-		
-		final Vector2D fromIndex = new Vector2D(fromi, fromj);
-		from.toOffset(fromIndex);
-		toIndex(fromIndex);
-		final double i0 = fromIndex.x;
-		final double j0 = fromIndex.y;
-		final int di = (int)Math.ceil(beamRadius * xFWHM);
-		final int dj = (int)Math.ceil(beamRadius * yFWHM);
-		
-		final int imin = Math.max(0, (int)Math.floor(i0-di));
-		final int imax = Math.min(sizeX()-1, (int)Math.ceil(i0+di));
-		final int jmin = Math.max(0, (int)Math.floor(j0-dj));
-		final int jmax = Math.min(sizeY()-1, (int)Math.ceil(j0+dj));
-		
-		for(int i=imin; i<=imax; i++) {
-			double dx2 = i - i0;
-			dx2 *= Ax * dx2;
+	@Override
+	public void resample(GridImage<?> from) {
 			
-			for(int j=jmin; j<=jmax; j++) {
-				double dy2 = j - j0;
-				dy2 *= Ay * dy2;
-				
-				final double a = Math.exp(dx2+dy2);
-				
-				final double aw = a * from.weight[fromi][fromj];
-				data[i][j] += aw * from.data[fromi][fromj];
-				weight[i][j] += aw;
-				count[i][j] += a * from.count[fromi][fromj];
-				renorm[i][j] += (float) a;
-			}
-		}
-	}
-	
-	
-	@Override
-	protected AstroImage getRawRegrid(SphericalGrid toGrid, int nx, int ny, double FWHM, double beams) {
-		AstroMap regrid = (AstroMap) clone();	
-		regrid.copyObjectFields(this);
-		regrid.setSize(nx, ny);
-		float renorm[][] = new float[nx][ny];
-		
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) 
-			regrid.addGaussianAt(this, i, j, FWHM, beams, renorm);
-
-		// renormalize the weights with the taper...
-		final double wscale = regrid.getPixelArea() / getPixelArea();
-		final double tscale = Math.sqrt(wscale);
-		for(int i=nx; --i >= 0; ) for(int j=ny; --j >= 0; ) if(regrid.weight[i][j] > 0.0) {
-			regrid.data[i][j] /= regrid.weight[i][j];
-			regrid.weight[i][j] *= wscale / renorm[i][j];
-			regrid.count[i][j] *= tscale / renorm[i][j];
+		if(!(from instanceof AstroMap)) {
+			super.resample(from);
+			return;
 		}
 		
-		return regrid;
+		if(verbose) System.err.println(" Resampling map to "+ sizeX() + "x" + sizeY() + ".");
+		
+		AstroMap fromMap = (AstroMap) from;
+		AstroImage fromWeight = fromMap.getWeightImage();
+		AstroImage fromCount = fromMap.getTimeImage();
+		
+		final Vector2D v = new Vector2D();
+		
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) {
+			v.set(i, j);
+			toOffset(v);
+			from.toIndex(v);
+			
+			//System.err.println(i + "," + j + " <--" + Util.f1.format(v.x) + "," + Util.f1.format(v.y));
+		
+			data[i][j] = fromMap.valueAtIndex(v.x, v.y);
+			weight[i][j] = fromWeight.valueAtIndex(v.x, v.y);
+			count[i][j] = fromCount.valueAtIndex(v.x, v.y);
+			
+			if(Double.isNaN(data[i][j])) flag[i][j] = 1;
+			else flag[i][j] = 0;
+		}
 	}
 	
 	public AstroImage getFluxImage() {
@@ -620,6 +602,7 @@ public class AstroMap extends AstroImage {
 		return fits;
 	}
 
+	@Override
 	public void read(String name) throws Exception {
 		// Get the coordinate system information
 		BasicHDU[] HDU = getFits(name).read();
@@ -647,12 +630,12 @@ public class AstroMap extends AstroImage {
 	}
 
 	private void readCrushData(BasicHDU[] HDU) throws FitsException {
-		read(HDU[0]);
-		getTimeImage().read(HDU[1]);
+		setImage(HDU[0]);
+		getTimeImage().setImage(HDU[1]);
 		
 		AstroImage noise = getWeightImage();
 		noise.unit = unit;
-		noise.read(HDU[2]);
+		noise.setImage(HDU[2]);
 		
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) weight[i][j] = 1.0 / (weight[i][j] * weight[i][j]); 
 	}
@@ -664,7 +647,7 @@ public class AstroMap extends AstroImage {
 		if(fileName == null) fileName = CRUSH.workPath + File.separator + sourceName + ".fits";  
 		BufferedDataOutputStream file = new BufferedDataOutputStream(new FileOutputStream(fileName));
 		fits.write(file);
-		System.out.println(" Written " + fileName);
+		System.err.println(" Written " + fileName);
 	}
 	
 	@Override
@@ -701,7 +684,7 @@ public class AstroMap extends AstroImage {
 	public void despike(double significance) {
 		double[][] neighbours = {{ 0, 1, 0 }, { 1, 0, 1 }, { 0, 1, 0 }};
 		AstroMap diff = (AstroMap) copy();
-		diff.convolve(neighbours);
+		diff.smooth(neighbours);
 		
 		WeightedPoint point = new WeightedPoint();
 		WeightedPoint surrounding = new WeightedPoint();
@@ -777,17 +760,12 @@ public class AstroMap extends AstroImage {
 	
 	@Override
 	public int clean(double[][] beam, double gain, double replacementFWHM) {
-	    	return clean(this, beam, gain, replacementFWHM);
+	    	return clean(getS2NImage(), beam, gain, replacementFWHM);
 	}
 	
 	@Override
-	public String toString() {
-		String info = fileName == null ? "\n" : " Image File: " + fileName + ". ->" + "\n\n" + 
-			"  [" + sourceName + "]" + "\n" +
-			super.toString() + 
-			"  Instrument Beam FWHM: " + Util.f2.format(instrument.resolution / Unit.arcsec) + " arcsec." + "\n" +
-			"  Applied Smoothing: " + Util.f2.format(smoothFWHM / Unit.arcsec) + " arcsec." + " (includes pixelization)\n" +
-			"  Image Resolution (FWHM): " + Util.f2.format(getImageFWHM() / Unit.arcsec) + " arcsec. (includes smoothing)" + "\n" +
+	public String toString() {	
+		String info = super.toString() +
 			"  Noise Estimate from: " + (weightFactor == 1.0 ? "data" : "image (" + Util.f2.format(1.0 / weightFactor) + "x data)") + "\n"; 
 
 		return info;

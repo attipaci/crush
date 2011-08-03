@@ -161,38 +161,36 @@ public class GaussianSource extends CircularRegion {
 		add(image, FWHM, scaling, null);
 	}
 	
-	public void add(AstroImage image, final double FWHM, final double scaling, final Collection<Region> others) {			
-		double filterFWHM = Double.NaN;
-		double imageFWHM = image.getImageFWHM();
-	
-		if(!Double.isNaN(image.extFilterFWHM)) 
-			filterFWHM = Math.sqrt(
-					image.extFilterFWHM * image.extFilterFWHM 
-					+ FWHM * FWHM 
-					- imageFWHM * imageFWHM
-			);		
+	public void add(AstroImage image, final double FWHM, final double scaling, final Collection<Region> others) {
+		// Remove the Gaussian main beam...
+		addGaussian(image, Math.hypot(FWHM, image.smoothFWHM), scaling);
 		
-		// Remove source only after the filtering corrections are applied to its flux...
-		addGaussian(image, FWHM, scaling);
+		// If an LSS filter was used, also correct for the Gaussian bowl around the source...
+		if(Double.isNaN(image.extFilterFWHM)) return;
+		
+		final double filterFWHM = Math.hypot(FWHM, image.extFilterFWHM);			
 
 		// Correct for filtering.
-		// Consider that only the tip of the source might escape the filter...
+		double filterFraction = 1.0 - 1.0 / image.getExtFilterCorrectionFactor(FWHM);
 		
-		double filterBeamScale = Math.pow(FWHM / filterFWHM, 2.0);
-		
-		if(!Double.isNaN(image.extFilterFWHM)) if(image instanceof AstroMap) {
+		// Consider that only the tip of the source might escape the filter...	
+		if(image instanceof AstroMap) {
 			AstroMap map = (AstroMap) image;
-	
-			filterBeamScale *= Double.isNaN(map.filterBlanking) ? 1.0 : Math.min(1.0, map.filterBlanking / peak.significance());
-			addGaussian(image, filterFWHM, -scaling * filterBeamScale);
+			filterFraction *= Double.isNaN(map.filterBlanking) ? 1.0 : Math.min(1.0, map.filterBlanking / peak.significance());	
 		}
 
-		final Vector2D resolution = image.getResolution();
-		final double sigmaX = radius.value / Util.sigmasInFWHM / resolution.x;
-		final double sigmaY = radius.value / Util.sigmasInFWHM / resolution.y;
-		final double Ax = -0.5 / (sigmaX*sigmaX);
-		final double Ay = -0.5 / (sigmaY*sigmaY);	
+		// Add the filter bowl to the image
+		addGaussian(image, filterFWHM, -scaling * filterFraction);
 
+		// Now adjust prior detections for the bias caused by this source's filtering...
+		final Vector2D resolution = image.getResolution();
+		final double sigmai = filterFWHM / Util.sigmasInFWHM / resolution.x;
+		final double sigmaj = filterFWHM / Util.sigmasInFWHM / resolution.y;
+		final double Ai = -0.5 / (sigmai*sigmai);
+		final double Aj = -0.5 / (sigmaj*sigmaj);	
+
+		double filterPeak = -filterFraction * scaling * peak.value;
+		
 		Vector2D centerIndex = getIndex(image.grid);
 		// Adjust prior detections.for the filtering around this one.
 		if(others != null) for(Region region : others) if(region instanceof GaussianSource) if(region != this) {
@@ -202,7 +200,7 @@ public class GaussianSource extends CircularRegion {
 			final double dj = sourceIndex.y - centerIndex.y;
 			
 			if(!Double.isNaN(image.extFilterFWHM))
-				source.peak.value -= scaling * filterBeamScale * peak.value * Math.exp(Ax*di*di + Ay * dj*dj);
+				source.peak.value -= filterPeak * Math.exp(Ai*di*di + Aj*dj*dj);
 		}
 		
 	}

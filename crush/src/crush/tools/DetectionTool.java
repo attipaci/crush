@@ -28,8 +28,11 @@ import java.util.*;
 
 import crush.CRUSH;
 import crush.sourcemodel.AstroMap;
+import crush.sourcemodel.Region;
 
+import util.ConfidenceCalculator;
 import util.Unit;
+import util.Util;
 import util.astro.SourceCatalog;
 
 //noise-peaks
@@ -49,6 +52,7 @@ public class DetectionTool {
 	boolean iterateNoise = false;
 	
 	double extractionArea;
+	boolean verbose;
 
 	public static void main(String[] arg) {
 		versionInfo();
@@ -74,14 +78,17 @@ public class DetectionTool {
 				else if(key.equalsIgnoreCase("-area"))
 					detectionTool.extractionArea = Double.parseDouble(tokens.nextToken()) * Unit.arcmin2; 
 				
-				else ImageTool.option(option);
+				else imageTool.option(option);
 			}
 
-			//image.extFilterFWHM = Double.NaN;
 			
-			image.clearRegions();
+			AstroMap image = detectionTool.image;
+			
+			//image.extFilterFWHM = Double.NaN;
+			//image.clearRegions();
 			
 			extract(image, arg[0]);
+			
 			
 			image.fileName = CRUSH.workPath + image.sourceName + ".residual.fits";
 			
@@ -96,7 +103,7 @@ public class DetectionTool {
 	public void setImage(AstroMap map) {
 		this.image = map;
 		// Make sure map is convolved at least to beam
-		image.convolveTo(map.instrument.resolution);
+		image.smoothTo(map.instrument.resolution);
 	}
 	
 	
@@ -137,14 +144,14 @@ public class DetectionTool {
 		
 		// Remove possible prior corrections to fluxes, to analyze raw maps.
 		// This is important because corrections are calculated individually for each source extracted...
-		if(!Double.isNaN(fluxCorrectingFWHM) || fluxCorrectingFWHM <= 0.0) uncorrect();
+		if(!Double.isNaN(image.fluxCorrectingFWHM) || image.fluxCorrectingFWHM <= 0.0) image.uncorrect();
 		
 		switch(criterion) {
 		case SIGNAL_TO_NOISE: significance = value; break;
-		case MAX_FALSE_DETECTIONS: significance = ConfidenceCalculator.getSigma(1.0 - value / countIndependentPoints()); break;
+		case MAX_FALSE_DETECTIONS: significance = ConfidenceCalculator.getSigma(1.0 - value / image.countIndependentPoints()); break;
 		case FALSE_DETECTION_CHANCE: {
 			double Nfalse = -Math.log(1.0 - value);
-			significance = ConfidenceCalculator.getSigma(1.0 - Nfalse / countIndependentPoints());
+			significance = ConfidenceCalculator.getSigma(1.0 - Nfalse / image.countIndependentPoints());
 			break;
 		}
 		case SINGLE_BEAM_CONFIDENCE: significance = ConfidenceCalculator.getSigma(value); break;
@@ -153,8 +160,8 @@ public class DetectionTool {
 	
 		if(reporting && significance > 0.0) System.out.println("# [extract] Searching for peaks at " + Util.f2.format(significance) + " sigma...");
 		
-		final double points = countIndependentPoints();
-		final double instrumentBeams = countInstrumentBeams();
+		final double points = image.countIndependentPoints();
+		final double instrumentBeams = image.countInstrumentBeams();
 	
 		if(reporting) System.out.println("# [extract] Search area is " + Util.e2.format(getArea()/Unit.deg2) + " sqdeg...");
 		if(reporting) System.out.println("# [extract] Search area contains " + Util.f1.format(instrumentBeams) + " instrument beams...");
@@ -184,7 +191,7 @@ public class DetectionTool {
 		for(int k=1; ; k++) {
 			System.err.println("[Extraction Round #" + k + "]");
 			
-			updateStats(isOneSided && priorSources > 0, iterateNoise || k == 1);
+			image.updateStats(isOneSided && priorSources > 0, iterateNoise || k == 1);
 	
 			// Remove anything that may have dropped below the search criterion...
 			for(int i=0; i<regions.size(); ) {
@@ -344,7 +351,47 @@ public class DetectionTool {
 		
 		// Reapply flux corrections to the residuals...
 		if(Double.isNaN(fluxCorrectingFWHM) || fluxCorrectingFWHM <= 0.0) correct(beamFWHM);
+	}// Return them in descending order
+	
+	
+	public Vector<Region> findPeaks(final int dir, double S2N) {
+		// Estimate how much of the peak may be missed due to regridding...
+		final double sigma = image.getImageFWHM() / Util.sigmasInFWHM;
+		final double halfpixeldev = delta / (2.0 * sigma);
+		final double searchS2N = S2N * Math.exp(-halfpixeldev * halfpixeldev / 2.0); // maximum peak position error is a half-diagonal pixel.
+		
+		Vector<Region> points = new Vector<Region>(100);
+		
+		AstroImage s2n = image.getS2NImage();
+		
+		// Peak cannot be an edge pixel (not reliable)...
+		final int toi = image.sizeX()-1, toj=image.sizeY()-1;
+		for(int i=toi; --i >= 0; ) for(int j=toj; --j >= 1; ) if(image.flag[i][j] == 0) if(dir * Double.compare(s2n[i][j], searchS2N) > 0) {
+
+			// check that it is a peak in the neighbourhood...			
+			boolean isPeak = true;	
+			for(int i1=i-1; i1<=i+1 && isPeak; i1++) for(int j1=j-1; j1<=j+1 && isPeak; j1++) 
+				if(image.flag[i1][j1] == 0) if(dir * Double.compare(s2n.data[i1][j1], s2n.data[i][j]) > 0) isPeak = false;
+		
+			if(isPeak) {	
+				Region point = new Region(dXofIndex(i), dYofIndex(j), beamFWHM, false);
+				point.finetunePeak();
+		
+				if(dir * Double.compare(point.peak / point.dpeak, S2N) > 0) points.add(point);
+			}
+		}
+				
+		// Return peaks sorted from far to near...
+		Collections.sort(points, new Comparator<Region>() {
+			public int compare(Region a, Region b) {
+				return dir * Double.compare(b.peak / b.dpeak, a.peak / a.dpeak);
+			}
+		});
+
+		return points;
 	}
+	
+	
 	
 	
 	public static void versionInfo() {
