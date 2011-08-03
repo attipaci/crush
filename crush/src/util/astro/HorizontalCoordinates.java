@@ -32,21 +32,21 @@ import util.Vector2D;
 import util.text.AngleFormat;
 
 public class HorizontalCoordinates extends SphericalCoordinates {
-	static CoordinateAxis azymuthAxis, elevationAxis, azymuthOffsetAxis, elevationOffsetAxis;
+	static CoordinateAxis azimuthAxis, elevationAxis, azimuthOffsetAxis, elevationOffsetAxis;
 	static CoordinateSystem defaultCoordinateSystem, defaultLocalCoordinateSystem;
 
 	static {
 		defaultCoordinateSystem = new CoordinateSystem("Horizontal Coordinates");
 		defaultLocalCoordinateSystem = new CoordinateSystem("Horizontal Offsets");
 
-		azymuthAxis = new CoordinateAxis("Azymuth", "ALON");
+		azimuthAxis = new CoordinateAxis("Azimuth", "ALON");
 		elevationAxis = new CoordinateAxis("Elevation", "ALAT");
-		azymuthOffsetAxis = new CoordinateAxis("dAZ", azymuthAxis.wcsName);
+		azimuthOffsetAxis = new CoordinateAxis("dAZ", azimuthAxis.wcsName);
 		elevationOffsetAxis = new CoordinateAxis("dEL", elevationAxis.wcsName);
 		
-		defaultCoordinateSystem.add(azymuthAxis);
+		defaultCoordinateSystem.add(azimuthAxis);
 		defaultCoordinateSystem.add(elevationAxis);
-		defaultLocalCoordinateSystem.add(azymuthOffsetAxis);
+		defaultLocalCoordinateSystem.add(azimuthOffsetAxis);
 		defaultLocalCoordinateSystem.add(elevationOffsetAxis);
 		
 		double[] angularUnits = { Unit.deg, Unit.arcmin, Unit.arcsec, Unit.mas };
@@ -72,7 +72,7 @@ public class HorizontalCoordinates extends SphericalCoordinates {
 
 	public double AZ() { return nativeLongitude(); }
 
-	public double azymuth() { return nativeLongitude(); }
+	public double azimuth() { return nativeLongitude(); }
 
 	public double EL() { return nativeLatitude(); }
 
@@ -83,8 +83,6 @@ public class HorizontalCoordinates extends SphericalCoordinates {
 	public double zenithAngle() { return ZA(); }
 
 	public double cosEL() { return cosLat; }
-
-
 
 	public void setAZ(double AZ) { setNativeLongitude(AZ); }
 

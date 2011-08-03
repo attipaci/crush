@@ -52,7 +52,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		super(parent);
 	}
 	
-	
 	public void markChopped() {
 		if(nodPhase == 0) 
 			throw new IllegalStateException("Merged subscan contains mixed nod phases. Cannot process chopper.");

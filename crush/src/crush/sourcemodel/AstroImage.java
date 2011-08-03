@@ -33,7 +33,6 @@ import util.astro.EquatorialCoordinates;
 import util.astro.GalacticCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.astro.SuperGalacticCoordinates;
-import util.data.Data2D;
 import util.data.GridImage;
 
 import java.io.*;
@@ -44,13 +43,10 @@ import crush.*;
 public class AstroImage extends GridImage<SphericalGrid> implements Cloneable {
 	public SphericalGrid grid = new SphericalGrid();
 
-	protected double[][] beam;
-
 	public Instrument<?> instrument;
 
 	public Header header;
 	public String sourceName;
-
 
 	public AstroImage() {
 	}
@@ -65,18 +61,6 @@ public class AstroImage extends GridImage<SphericalGrid> implements Cloneable {
 
 	public AstroImage(double[][] data, int[][] flag) {
 		super(data, flag);
-	}
-
-	@Override
-	public void copyImageOf(Data2D image) {
-		super.copyImageOf(image);
-		if(image instanceof AstroImage) beam = (double[][]) copyOf(((AstroImage) image).beam);
-	}
-
-	@Override
-	public void setSize(int x, int y) {
-		super.setSize(x, y);
-		beam = new double[][] {{1.0}};
 	}
 
 	public SphericalProjection getProjection() {
@@ -117,12 +101,6 @@ public class AstroImage extends GridImage<SphericalGrid> implements Cloneable {
 		double size = instrument.resolution * fwhm2size;
 		return size*size;
 	}
-
-	@Override
-	public void reset() {
-		super.reset();
-		beam = new double[][] {{ 1.0 }};
-	}	
 
 	public void setProjection(SphericalProjection projection) {
 		grid.projection = projection;
@@ -257,22 +235,9 @@ public class AstroImage extends GridImage<SphericalGrid> implements Cloneable {
 
 	
 	@Override
-	public void convolve(double FWHM) {
-		super.convolve(FWHM);
+	public void smooth(double FWHM) {
+		super.smooth(FWHM);
 		setUnit(unit.name);
-	}
-
-
-	@Override
-	public void convolve(double[][] beam) {
-		super.convolve(beam);
-		this.beam = beam;
-	}
-
-	@Override
-	public void fastConvolve(double[][] beam, int stepX, int stepY) {
-		super.fastConvolve(beam, stepX, stepY);
-		this.beam = beam;
 	}
 
 	@Override
@@ -360,7 +325,26 @@ public class AstroImage extends GridImage<SphericalGrid> implements Cloneable {
 	@Override
 	public void setGrid(SphericalGrid grid) {
 		this.grid = grid;
+		double fwhm = Math.sqrt(grid.getPixelArea()) / GridImage.fwhm2size;
+		if(smoothFWHM < fwhm) smoothFWHM = fwhm;
 	}
-
+	
+	public void printShortInfo() {
+		System.err.println("\n\n  [" + sourceName + "]\n" + super.toString());
+	}
+	
+	@Override
+	public String toString() {
+		String info = fileName == null ? "\n" : " Image File: " + fileName + ". ->" + "\n\n" + 
+			"  [" + sourceName + "]\n" +
+			super.toString() + 
+			"  Instrument Beam FWHM: " + Util.f2.format(instrument.resolution / Unit.arcsec) + " arcsec." + "\n" +
+			"  Applied Smoothing: " + Util.f2.format(smoothFWHM / Unit.arcsec) + " arcsec." + " (includes pixelization)\n" +
+			"  Image Resolution (FWHM): " + Util.f2.format(getImageFWHM() / Unit.arcsec) + " arcsec. (includes smoothing)" + "\n";
+			
+		return info;
+	}
+	
+	
 }
 

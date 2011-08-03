@@ -1,21 +1,34 @@
 
-2.05-b2
+2.05-1 (3 Aug 2011)
 	
 	Overview
 	=====================================================================
-	This update fixes two important bugs affecting the pointing of
-	the APEX cameras and GISMO, and offers several fixes and improvements
-	in general. The main new features are object-depended configuration
-	capability, and better diagnostic of invalid scans/subscans.
+	This update fixes bugs affecting the pointing of the APEX cameras and 
+	GISMO. Also fixes the filter correction bug of CRUSH-1.xx tools (e.g.
+	'detect'. Includes a updated/improved 'detect' tool, and offers several 
+	fixes and improvements in general. The main new features are object-
+	depended configuration capability, and better diagnostic of invalid 
+	scans/subscans, and handling of unusual APEX scans (e.g. in Ecliptic
+	or Galactic coordinates). A lot of under-the-hood code changes to
+	clean up and reorganize some old code, and bring the native CRUSH-2
+	tools one step closer (perhaps in the next release...)
 	=====================================================================
+
+	[BUG] {detect} Major bug found with the filter correction algorithm of 
+	'detect' tool. This could have resulted in somewhat wrong source fluxes
+ 	when  heavy spatial filtering was used (e.g. at 2--3 times the beam 
+	size).
 
 	[BUG] {APEX} An issue was identified with applying pointing corrections
 	for APEX scans, resulting from is an inconsistency in the raw data 
-	between the reported AZ,EL and RA,DEC coordinates. The first attempt at
-	a fix (in version 2.05-b1) assumed that the AZ,EL values were correct.
-	However, this seems not be the case. The latest fix uses BASLONG and
-	BASLAT columns (usually in equatorial), which seems to work well, and
-	also results in simpler,cleaner code.
+	between the reported AZ,EL and RA,DEC coordinates. This did not affect
+	reductions before version 2.05-b1, as long as the 'pointing' option was
+	not used to try correct for pointing offsets (when 'pointing' was used,
+	it produced unpredictable results). The first attempt at a fix (in 
+	version 2.05-b1) assumed that the AZ,EL values were correct. However, 
+	this seems not be the case. The latest fix uses BASLONG and BASLAT 
+	columns (usually in equatorial) exclusively, which seems to work well, 
+	and also results in simpler, cleaner code.
 
 	[BUG] {GISMO} There was an oops when trying to use an absolute pointing
 	model together with the incremental corrections based on a pointing 
@@ -24,9 +37,21 @@
 	Now fixed :-).
 
 	[NEW] {APEX} New astrometry code can handle unusual basis coordinate
-	systems in the raw data file (e.g. scans in Ecliptic, Galactic, or 
-	Super-Galactic coordinates). Thus, for the first time fully complying 
-	to the MBFITS specification on coordinates.
+	systems in the raw data file (e.g. scans performed in Ecliptic, 
+	Galactic, or Super-Galactic coordinates). Thus, for the first time 
+	fully complying  to the MBFITS specification on coordinates.
+
+	[NEW] Implemented bicubic spline interpolation for inbetween pixels.
+	This replaces the old piecewise quadratic interpolation, which could
+	produce small discontinuities at patch boundaries. The interpolation
+	is used for the fast convolution of large-scale-structure (LSS) 
+	filtering, via the 'source.filter' option. The default interpolation 
+	method can be changed via the new 'source.filter.interpolation' key, 
+	which can take the following values:
+
+		nearest		Nearest pixel value.
+		linear		Bilinear interpolation.
+		cubic		Bicubic spline method.
 
 	[NEW] {detect} The source extraction tool 'detect' was always designed
 	to work in a way that would accomodate non-Gaussian map noise, by 
@@ -81,6 +106,15 @@
 	new keyword, there is more flexibility for changing the naming 
 	convention in the future, if necessary...
 
+	[NEW] New jackknifing option through 'jackknife.alternate' will invert
+	every other scan on the list. This, more controlled, jackknifing has
+	some advantages over the default random approach: (1) For an even
+	number of scans, *exactly* half will be inverted, and (2) scans taken
+	after one another (assuming chronological listing) will have opposite
+	source signatures. Both of these result in a more perfect cancellation
+	of source signals, especially for smaller datasets, than the random
+	jackknife.
+
 	[FIX] Improved checking for invalid integrations/subscans. Those with
 	too little data (either too few channels, set by 'mappingpixels', or
 	too few frames, set by 'subscan.minlength') will be ignored after 
@@ -100,15 +134,27 @@
 	Luckily, such transformations were never used by crush, making these
 	entirely harmless bloopers... :-)
 
+	[TWEAK] {detect} Interpolation method between pixels has been changed 
+	from piecewise  quadratic to bicubic spline in crush-1.xx tools (e.g.
+	'detect' or 'imagetool'). This may have a small effect (e.g. on 
+	fluxes reported by 'detect').
+
+	[TWEAK] Piecewise quadratic (i.e. old) interpolation inbetween image 
+	pixels has been improved to fall back to linear when lack of data (e.g.
+	edges) does not allow for quadratic interpolation. This method is now
+	deprecated in crush-1.xx tools (e.g. 'detect', see above) but can be
+	selected for filtering in reductions via 'source.filter.interpolation'
+	(see further above).
+
 	[TWEAK] Added 'pnt.dX' and 'pnt.dY' to the list of loggable quanties.
 	These are the pointing increments in the telescope's native frame. I.e.
 	these are the same as 'pnt.dAZ' and 'pnt.dEL' for horizontal mounts, 
 	and 'pnt.dRA' and 'pnt.dDEC' or equatorial mounts.
 
 	[TWEAK] {GISMO} Pointing reduction no longer suggests absolute 
-	pointing. It's confusing, and was also inconsistent with the value
-	written into the the log. Therefore, it's best to omit (for now, at 
-	least).
+	pointing on screen. It was confusing, and was also inconsistent with 
+	the values written into the the log. Therefore, it's best to omit (for 
+	now, at least).
 
 	[TWEAK] {GISMO} 'maximum-likelihood' estimation made default from 
 	start for GISMO.
@@ -127,13 +173,19 @@
 	parameters of the deep-field dataset. These are shorter 1/f stability
 	timescale, more stringent LSS filter, and longer iterations.
 
+	[CODE] New regrid algorithm implemented in CRUSH-2. This relies on
+	antialias filtering (via an appropriate Gaussian filter) before
+	straightforward resampling using the interpolation method of the image
+	(bicubic spline is default). The new method is cleaner, more efficient,
+	and has been tested.
+
 	[CODE] Reorganized 2D image and grid classes for more hierarchical
 	structure. This is in preparation for a more generic (not necessarily
 	astronomical) image processing classes.
 
-	[CODE] Migrated CLEAN algorithm, and regrid functionality of CRUSH-1.
-	These aren't used right now, but are in preparation for migrating the
-	old CRUSH-1 tools into CRUSH-2.
+	[CODE] Migrated (and tested) CLEAN algorithm, and regrid functionality 
+	of CRUSH-1. These aren't used right now, but are in preparation for 
+	migrating the old CRUSH-1 tools into CRUSH-2.
 	
 	[CODE] Complete overhaul of imaging and spherical grid classes. The
 	new gridding is cleaner, more generic and more efficient, while the 
@@ -143,6 +195,9 @@
 
 	[CODE] {APEX} Cleaned up code handling the selectable basis system
 	of APEX MBFITS files.
+
+	[CODE] Changed regridding functions to rely on interpolation rather
+	than the old slow Gaussian method.
 
 	[DEPRECATE] 'autobright' option, introduced in 2.04-2, is deprecated.
 	Use object dependent conditionals instead, which were introduced in 

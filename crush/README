@@ -1645,7 +1645,7 @@ options on the console.
 
         focZ            Focus Z (mm).
 
-	modelX		Static pointing model correction in azymuth (arcsec).
+	modelX		Static pointing model correction in azimuth (arcsec).
 
 	modelY		Static pointing model correction in elevation (arcsec). 
 
@@ -2147,7 +2147,7 @@ necessary.) The commands are:
 
 
 	pointing=dx,dy	  Specify incremental pointing offsets x,y in the
-			  system of the telescope mount (I.e., azymuth and
+			  system of the telescope mount (I.e., azimuth and
 			  elevation for horizontal mounts. (Note, this option
 			  works like pcorr in APECS). 
 

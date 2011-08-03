@@ -52,14 +52,14 @@ public class ImageTool {
 			
 			System.out.println(" Updated image information: \n");
 			
-			imageTool.image.info();
+			imageTool.image.toString();
 			
 			imageTool.image.write();
 		}
 		catch(Exception e) { e.printStackTrace(); }
 	}
 	
-	public ImageTool(String path) throws IOException, FitsException, HeaderCardException {
+	public ImageTool(String path) throws Exception {
 		this(new AstroMap());
 		image.read(path);
 	}
@@ -113,26 +113,26 @@ public class ImageTool {
 				if(spec.equals("flux")) {
 					System.err.println("Replacing flux plane.");
 					plane.unit = image.unit;
-					plane.read(hdu);
+					plane.setImage(hdu);
 					image.data = plane.data;
 					image.flag = plane.flag;
 				}
 				else if(spec.equals("weight")) {
 					System.err.println("Replacing weight plane.");
 					plane.unit = new Unit("weight", 1.0 / (image.unit.value * image.unit.value));
-					plane.read(hdu);
+					plane.setImage(hdu);
 					image.weight = plane.data;
 				}
 				else if(spec.equals("time")) {
 					System.err.println("Replacing integration-time plane.");
 					plane.unit = Unit.get("s");
-					plane.read(hdu);
+					plane.setImage(hdu);
 					image.count = plane.data;
 				}
 				else if(spec.equals("flag")) {
 					System.err.println("Replacing integration-time plane.");
 					plane.unit = Unit.unity;
-					plane.read(hdu);
+					plane.setImage(hdu);
 					image.flag = plane.flag;
 				}
 				// TODO integer flag?
@@ -146,7 +146,7 @@ public class ImageTool {
 				AstroImage plane = new AstroImage();
 				
 				plane.unit = Unit.unity;
-				plane.read(hdu);
+				plane.setImage(hdu);
 				image.flag = plane.flag;
 				
 				System.err.println("Applying new flag image.");
@@ -166,10 +166,10 @@ public class ImageTool {
 			image.regrid(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
 		}
 		else if(key.equalsIgnoreCase("-convolve")) {
-			image.convolve(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
+			image.smooth(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
 		}
 		else if(key.equalsIgnoreCase("-smooth")) {
-			image.convolveTo(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
+			image.smoothTo(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
 		}
 		else if(key.equalsIgnoreCase("-extFilter")) {
 			double fwhm = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
@@ -190,8 +190,9 @@ public class ImageTool {
 				
 				StringTokenizer specs = new StringTokenizer(tokens.nextToken(), ":");
 				String beamSpec = specs.nextToken(); 
-
-				try { beam = image.getBeam(Double.parseDouble(beamSpec) * Unit.arcsec); }
+				double FWHM = Double.parseDouble(beamSpec) * Unit.arcsec;
+				
+				try { beam = image.getGaussian(FWHM / image.getGrid().pixelSizeX(), FWHM / image.getGrid().pixelSizeY()); }
 
 				catch(NumberFormatException e)  {
 					try {
@@ -210,13 +211,13 @@ public class ImageTool {
 			else image.clean();
 		}
 		else if(key.equalsIgnoreCase("-minexp")) {
-			image.exposureClip(Double.parseDouble(tokens.nextToken()));
+			image.clipBelowRelativeExposure(Double.parseDouble(tokens.nextToken()));
 		}
 		else if(key.equalsIgnoreCase("-maxnoise")) {
-			image.rmsClip(Double.parseDouble(tokens.nextToken()));
+			image.clipAboveRelativeRMS(Double.parseDouble(tokens.nextToken()));
 		}
 		else if(key.equalsIgnoreCase("-s2nclip")) {
-			image.s2nClip(Double.parseDouble(tokens.nextToken()));
+			image.s2nClipBelow(Double.parseDouble(tokens.nextToken()));
 		}
 		else if(key.equalsIgnoreCase("-growflags")) {
 			double radius = image.getImageFWHM();

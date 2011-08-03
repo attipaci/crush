@@ -61,17 +61,6 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		super(data, flag);
 	}
 	
-	@SuppressWarnings("unchecked")
-	@Override
-	public void copyObjectFields(Data2D data) {
-		super.copyObjectFields(data);
-		if(!(data instanceof GridImage)) return;
-		
-		GridImage<GridType> image = (GridImage<GridType>) data;
-		if(image.getGrid() != null) image.setGrid((GridType) image.getGrid().copy());		
-	}
-
-	
 	public abstract GridType getGrid();
 	
 	public abstract void setGrid(GridType grid);
@@ -104,9 +93,9 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 	}
 	
 	public double getExtFilterCorrectionFactor(double FWHM) {
+		if(Double.isNaN(extFilterFWHM)) return 1.0;
 		double effectiveFilterFWHM2 = FWHM*FWHM + extFilterFWHM*extFilterFWHM;
 		double effectiveFWHM2 = FWHM*FWHM + smoothFWHM*smoothFWHM;
-		if(Double.isNaN(extFilterFWHM)) return 1.0;
 		return 1.0 / (1.0 - effectiveFWHM2/effectiveFilterFWHM2);
 	}
 	
@@ -188,32 +177,32 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 	
 	// Convolves image to the specified beam resolution
 	// by a properly chosen convolving beam...
-	public void convolveTo(double FWHM) {
+	public void smoothTo(double FWHM) {
 		if(smoothFWHM >= FWHM) return;
-		convolve(Math.sqrt(FWHM * FWHM - smoothFWHM * smoothFWHM));
+		smooth(Math.sqrt(FWHM * FWHM - smoothFWHM * smoothFWHM));
 	}	
-
-	public double[][] getConvolvedTo(double[][] image, double FWHM) {
-		if(smoothFWHM >= FWHM) return image; 
-		return getConvolved(image, Math.sqrt((FWHM * FWHM - smoothFWHM * smoothFWHM)));
-	}
-
-	public void convolve(double FWHM) {
+	
+	
+	public void smooth(double FWHM) {
 		int stepX = (int)Math.ceil(FWHM/(5.0 * getGrid().pixelSizeX()));
 		int stepY = (int)Math.ceil(FWHM/(5.0 * getGrid().pixelSizeY()));
 		
-		fastConvolve(GaussianSource.getBeam(FWHM, getGrid(), 2.0), stepX, stepY);
+		fastSmooth(GaussianSource.getBeam(FWHM, getGrid(), 2.0), stepX, stepY);
 		smoothFWHM = Math.hypot(smoothFWHM, FWHM);
 		
 		// The correcting FWHM is underlying FWHM...
 		//if(!Double.isNaN(correctingFWHM)) correctingFWHM = Math.hypot(correctingFWHM, FWHM);
 	}
 
+	public double[][] getSmoothedTo(double FWHM) {
+		if(smoothFWHM >= FWHM) return data; 
+		return getSmoothed(Math.sqrt((FWHM * FWHM - smoothFWHM * smoothFWHM)));
+	}
 	
-	public double[][] getConvolved(double[][] image, double FWHM) {
+	public double[][] getSmoothed(double FWHM) {
 		int stepX = (int)Math.ceil(FWHM/(5.0 * getGrid().pixelSizeX()));
 		int stepY = (int)Math.ceil(FWHM/(5.0 * getGrid().pixelSizeY()));
-		return getFastConvolved(image, GaussianSource.getBeam(FWHM, getGrid(), 2.0), null, stepX, stepY);
+		return getFastSmoothed(GaussianSource.getBeam(FWHM, getGrid(), 2.0), null, stepX, stepY);
 	}   
 
 	
@@ -222,7 +211,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 	public void filterAbove(double FWHM, int[][] skip) {
 		GridImage<?> extended = (GridImage<?>) copy();
 		extended.flag = skip;
-		extended.convolveTo(FWHM);
+		extended.smoothTo(FWHM);
 	
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) data[i][j] -= extended.data[i][j];		
 
@@ -326,66 +315,31 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 	}
 	
 	
-	protected void addGaussianAt(GridImage<GridType> from, int fromi, int fromj, double FWHM, double beamRadius, float[][] renorm) {	
-		double xFWHM = FWHM / getGrid().pixelSizeX();
-		double yFWHM = FWHM / getGrid().pixelSizeY();
+	public void copyValueOf(final GridImage<?> from, final double fromi, final double fromj, final int toi, final int toj) {
+		data[toi][toj] = from.valueAtIndex(fromi, fromj);
+		if(Double.isNaN(data[toi][toj])) flag[toi][toj] = 1;
+	}
+
+	public void resample(GridImage<?> from) {
+		if(verbose) System.err.println(" Resampling image to "+ sizeX() + "x" + sizeY() + ".");
+		final Vector2D v = new Vector2D();
 		
-		final double sigmaX = xFWHM / Util.sigmasInFWHM;
-		final double Ax = -0.5 / (sigmaX*sigmaX);
+		// Antialias filter first...
+		if(from.smoothFWHM < smoothFWHM) {
+			from = (GridImage<?>) from.copy();
+			from.smoothTo(smoothFWHM);
+		}
 		
-		final double sigmaY = yFWHM / Util.sigmasInFWHM;
-		final double Ay = -0.5 / (sigmaY*sigmaY);
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) {
+			v.set(i, j);
+			toOffset(v);
+			from.toIndex(v);
 		
-		final Vector2D fromIndex = new Vector2D(fromi, fromj);
-		from.toOffset(fromIndex);
-		toIndex(fromIndex);
-		final double i0 = fromIndex.x;
-		final double j0 = fromIndex.y;
-		final int di = (int)Math.ceil(beamRadius * xFWHM);
-		final int dj = (int)Math.ceil(beamRadius * yFWHM);
-		
-		final int imin = Math.max(0, (int)Math.floor(i0-di));
-		final int imax = Math.min(sizeX()-1, (int)Math.ceil(i0+di));
-		final int jmin = Math.max(0, (int)Math.floor(j0-dj));
-		final int jmax = Math.min(sizeY()-1, (int)Math.ceil(j0+dj));
-		
-		for(int i=imin; i<=imax; i++) {
-			double dx2 = i - i0;
-			dx2 *= Ax * dx2;
-			
-			for(int j=jmin; j<=jmax; j++) {
-				double dy2 = j - j0;
-				dy2 *= Ay * dy2;
-				
-				final double a = Math.exp(dx2 + dy2);
-				
-				data[i][j] += a * from.data[fromi][fromj];
-				renorm[i][j] += (float) a;
-			}
+			data[i][j] = from.valueAtIndex(v.x, v.y);
+			if(Double.isNaN(data[i][j])) flag[i][j] = 1;
 		}
 	}
 	
-	
-	protected GridImage<GridType> getRawRegrid(GridType toGrid, int nx, int ny, double FWHM, double beams) {	
-		@SuppressWarnings("unchecked")
-		GridImage<GridType> regrid = (GridImage<GridType>) clone();
-		regrid.copyObjectFields(this);
-		regrid.setSize(nx, ny);
-		float renorm[][] = new float[nx][ny];
-
-		for(int i=nx; --i >= 0; ) for(int j=ny; --j >= 0; ) if(flag[i][j]==0) 
-			regrid.addGaussianAt(this, i, j, FWHM, beams, renorm);
-
-		// renormalize with the taper...
-		for(int i=0; i<nx; i++) for(int j=0; j<ny; j++) if(renorm[i][j] > 0.0) regrid.data[i][j] /= renorm[i][j];
-
-		return regrid;
-	}
-
-	public void regrid(double resolution) {
-		copy(getRegrid(resolution));
-	}
-
 	public GridImage<GridType> getRegrid(final double resolution) throws IllegalStateException {
 		return getRegrid(new Vector2D(resolution, resolution));
 	}
@@ -396,8 +350,13 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		GridType toGrid = (GridType) getGrid().copy();
 		
 		Vector2D refIndex = toGrid.getReferenceIndex();
+		
+		if(verbose) System.err.print(" Reference index: " + refIndex.toString(Util.f1));
+		
 		refIndex.x /= dRes.x;
-		refIndex.x /= dRes.x;
+		refIndex.y /= dRes.y;
+		
+		if(verbose) System.err.println(" --> " + refIndex.toString(Util.f1));
 		
 		double[][] M = getGrid().getTransform();
 		M[0][0] *= dRes.x;
@@ -405,10 +364,13 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		M[1][0] *= dRes.x;
 		M[1][1] *= dRes.y;
 		toGrid.setTransform(M);
+		
+		//System.err.println(" M = {{" + M[0][0] + ", " + M[0][1] + "}, {" + M[1][0] + "," + M[1][1] + "}}");
 
 		return getRegrid(toGrid);
 	}
 
+	
 	public GridImage<GridType> getRegrid(final GridType toGrid) throws IllegalStateException {		
 		// Check if it is an identical grid...
 		// Add directly if it is...
@@ -418,62 +380,49 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 			return this;
 		}
 
-		// replace pixels with Gaussians whose FWHM is the diagonal of the pixel (i.e. enclosing)...
-		double FWHM = Math.sqrt(2.0 * getPixelArea());
 		final int nx = (int) Math.ceil(sizeX() * getGrid().pixelSizeX() / toGrid.pixelSizeX());
 		final int ny = (int) Math.ceil(sizeY() * getGrid().pixelSizeY() / toGrid.pixelSizeY());
-		if(verbose) System.err.println(" Regrid size: " + nx + "x" + ny);
-
-		GridImage<GridType> regrid = getRawRegrid(toGrid, nx, ny, FWHM, 1.0);
-
-		regrid.smoothFWHM = Math.hypot(smoothFWHM, FWHM);
-
-		for(int i=regrid.sizeX(); --i >= 0; ) Arrays.fill(regrid.flag[i], 1);
-
-		final Vector2D c1 = new Vector2D();
-		final Vector2D c2 = new Vector2D();
-		final Index2D idx1 = new Index2D();
-		final Index2D idx2 = new Index2D();
-
-		final int rxm1 = regrid.sizeX() - 1;
-		final int rym1 = regrid.sizeY() - 1;
-
-		// recalculate the flags...	
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			c1.x = i - 0.5;
-			c2.x = i + 0.5;
-			c1.y = j - 0.5;
-			c1.y = j + 0.5;
-
-			toOffset(c1);
-			regrid.getIndex(c1, idx1);
-			toOffset(c2);
-			regrid.getIndex(c2, idx2);
-
-			final int mini = Math.max(0, idx1.i);
-			final int maxi = Math.min(idx2.i, rxm1);
-			final int minj = Math.max(0, idx2.j);
-			final int maxj = Math.min(idx2.j, rym1);
-
-			for(int i1=mini; i1<=maxi; i1++) for(int j1=minj; j1<=maxj; j1++) regrid.flag[i1][j1] = 0;
+		if(verbose) {
+			System.err.println(" Regrid size: " + nx + "x" + ny);
+			System.err.println(" Resolution = " + Vector2D.toString(toGrid.getResolution(), Unit.get("arcsec"), 2));
 		}
-
-		regrid.sanitize();
+		
+		return getRegrid(toGrid, nx, ny);
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected GridImage<GridType> getRegrid(GridType toGrid, int nx, int ny) {	
+		GridImage<GridType> regrid = (GridImage<GridType>) clone();
+		regrid.setGrid(toGrid);
+		regrid.setSize(nx, ny);
+		
+		regrid.resample(this);
+		
+		sanitize();
+		
 		return regrid;
+	}
+	
+
+	public void regrid(double resolution) {		
+		GridImage<GridType> regrid = getRegrid(resolution);
+		setImage(regrid);
+		setGrid(regrid.getGrid());
+		smoothFWHM = regrid.smoothFWHM;
 	}
 
 	
-	public void regridTo(final GridImage<GridType> map) throws IllegalStateException {
-		GridImage<GridType> regrid = getRegrid(map.getGrid());
+	public void regridTo(final GridImage<GridType> image) throws IllegalStateException {
+		GridImage<GridType> regrid = getRegrid(image.getGrid());
 
 		Vector2D corner1 = new Vector2D();
-		Vector2D corner2 = new Vector2D(map.sizeX() - 1.0, map.sizeY() - 1.0);
-		map.toOffset(corner1);
-		map.toOffset(corner2);
+		Vector2D corner2 = new Vector2D(image.sizeX() - 1.0, image.sizeY() - 1.0);
+		image.toOffset(corner1);
+		image.toOffset(corner2);
 
 		regrid.crop(corner1.x, corner1.y, corner2.x, corner2.y); 
 
-		map.copyImageOf(regrid);
+		image.setImage(regrid);
 	}
 
 	public void clean() {
@@ -545,10 +494,12 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 
 			peakValue = search.data[i][j];         
 
+			/*
 			if(verbose) if(components % 100 == 0) {
-				System.err.print("\r\t" + components + " components removed. (Last: " + Util.f2.format(peakValue) + "-sigma, Ave: " + Util.f2.format(ave) + "-sigma)   ");
+				System.err.print("\r " + components + " components removed. (Last: " + Util.f2.format(peakValue) + "-sigma, Ave: " + Util.f2.format(ave) + "-sigma)   ");
 				System.err.flush();
 			}
+			*/
 
 			// The moving average value of the peak...
 			ave *= Math.exp(-0.03);
@@ -558,14 +509,19 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 
 		} while(Math.abs(peakValue) > critical && components < maxComponents);
 
+		
+		//if(verbose) System.err.println("\r " + components + " components removed. (Last: " + Util.f2.format(peakValue) + "-sigma, Ave: " + Util.f2.format(ave) + "-sigma)   ");
 
-		if(verbose) System.err.println("\r\t" + components + " components removed. (Last: " + Util.f2.format(peakValue) + "-sigma, Ave: " + Util.f2.format(ave) + "-sigma)   ");
+		if(verbose) System.err.println(" " + components + " components removed. (Last: " + Util.f2.format(peakValue) + "-sigma, Ave: " + Util.f2.format(ave) + "-sigma)   ");
 
-		clean = getConvolved(clean, replacementFWHM);
+		
+		GridImage<?> cleanImage = (GridImage<?>) clone();
+		cleanImage.data = clean;
+		
+		clean = cleanImage.getSmoothed(replacementFWHM);
 
 		// Add deconvolved components back to the residual noise...
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0 ; ) data[i][j] += clean[i][j];
-
 
 		smoothFWHM = Math.sqrt(getGrid().getPixelArea()) / fwhm2size;
 
@@ -607,8 +563,17 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		getOffset(index, offset);
 		return offset;
 	}
-
-	public void read(BasicHDU HDU) throws FitsException {		
+	
+	public void read(String fileName) throws Exception {	
+		read(fileName, 0);
+	}
+		
+	public void read(String fileName, int hduIndex) throws Exception {	
+		Fits fits = new Fits(fileName);
+		setImage(fits.getHDU(hduIndex));
+	}
+		
+	public void setImage(BasicHDU HDU) throws FitsException {		
 		Object image = HDU.getData().getData();
 		for(int i=sizeX(); --i >= 0; ) Arrays.fill(flag[i], 0);
 
@@ -684,7 +649,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		BufferedDataOutputStream file = new BufferedDataOutputStream(new FileOutputStream(name));
 
 		fits.write(file);	
-		System.out.println(" Written Image to " + name);
+		System.err.println(" Written Image to " + name);
 	}
 	
 	public final void editHeader(Fits fits) throws HeaderCardException, FitsException, IOException {

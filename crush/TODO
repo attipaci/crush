@@ -1,6 +1,7 @@
 >> Why do aperture fluxes have smaller error (e.g. in pointing) than peak
 fluxes?
 >> Smoothing in deep does not preserve point source fluxes...
+	-- is this corrected in 2.05-1?
 >> Polarization: why does it add up over iterations? Why not correct?
 
 For 2.10:

@@ -87,7 +87,7 @@
 			the instrument, or set options for it.
 			@See: 'correlated.<?>' for details on brached options.
 
-:: azymuth		@Alias -> 'correlated.telescope-x'
+:: azimuth		@Alias -> 'correlated.telescope-x'
 			@Instrument: GISMO
 			@Advanced
 			Remove signals, which are correlated to the azymuth
@@ -838,7 +838,7 @@
 			bolometers is quicker and preferred, unless you 
 			specifically wish to use the 'thermistors'.
 
-::  he3.gains		@Instrument: LABOCA
+:: he3.gains		@Instrument: LABOCA
 			@Expert
 			Specifies that rather than correcting for temperature 
 			fluctuations, the thermistor and bolometer data should 
@@ -955,7 +955,20 @@
 			which scans are inverted, consider using the 'invert' 
 			flag instead.
 			@See: 'invert', 'scramble', 'jackknife.frames', 
-			      'jackknife.channels'
+			      'jackknife.channels', 'jackknife.alternate'
+
+:: jackknife.alternate	@Advanced
+			@Since: 2.05
+			Rather than randomly inverting scans for a jackknife,
+			this option will invert every other scan. This may be
+			preferred for small datasets, because it leads to
+			better cancellation of the source signals, especially
+			with an even number of scans, chronologically listed.
+			To have the desired effect, use instead of 'jackknife',
+			rather than together with it (otherwise, the ordered 
+			inversion will simply compound the random method of the
+			standard 'jackknife').
+			@See: 'jackknife'
 
 :: jackknife.channels	@Expert
 			@Since: 2.04
@@ -1976,6 +1989,18 @@
 			to avoid the unnecessary filtering of compact or point
 			sources.
 			@See: 'source.filter.blank'
+
+:: source.filter.interpolation=<type>	@Expert
+					@Since: 2.05
+			The interpolation type for the convolution filter.
+			The following <type> values are defined:
+
+			   nearest	Nearest discrete point.
+			   linear	Bilinear interpolation.
+			   cubic	Bicubic spline method.
+
+			The default value is 'cubic'.
+			@See: 'source.filer.type'
 
 :: source.filter.type=<type>	@Advanced
 				Specify the type ('convolution' or 'fft') of 

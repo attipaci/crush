@@ -24,7 +24,9 @@
 package util.data;
 
 import java.util.Arrays;
+import java.util.ConcurrentModificationException;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import util.Range;
 import util.Unit;
@@ -32,7 +34,7 @@ import util.Util;
 import util.Vector2D;
 import crush.sourcemodel.AstroImage;
 
-public class Data2D {
+public class Data2D implements Cloneable {
 	public double[][] data;
 	public int[][] flag;
 	public Unit unit = Unit.unity;
@@ -46,6 +48,13 @@ public class Data2D {
 	//   = sqrt(2 pi) fwhm / 2.35
 	public static double fwhm2size = Math.sqrt(2.0 * Math.PI) / Util.sigmasInFWHM;
 
+	public int interpolationType = BICUBIC_SPLINE;
+	
+	public final static int NEAREST_NEIGHBOR = 0;
+	public final static int BILINEAR = 1;
+	public final static int PIECEWISE_QUADRATIC = 2;
+	public final static int BICUBIC_SPLINE = 3;
+		
 	public Data2D() {
 		Locale.setDefault(Locale.US);
 	}
@@ -69,28 +78,33 @@ public class Data2D {
 	
 	@Override
 	public Object clone() {
-		try {return super.clone(); }
+		try { 
+			Data2D clone = (Data2D) super.clone(); 
+			clone.ax = null;
+			clone.ay = null;
+			clone.interpolating = new AtomicBoolean(false);
+			return clone;
+		}
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
 	public Data2D copy() {
 		Data2D copy = (Data2D) clone();
-		copy.copy(this);
+		copy.copyImageOf(this);
 		return copy;
 	}
 	
-	public final void copy(Data2D image) {
-		copyImageOf(image);	
-		copyObjectFields(image);
-	}
-		
+
 	public void copyImageOf(Data2D image) {
 		// Make a copy of the fundamental data
 		data = (double[][]) copyOf(image.data);
 		flag = (int[][]) copyOf(image.flag);		
 	}
 	
-	public void copyObjectFields(Data2D image) {}
+	public void setImage(Data2D image) {
+		data = image.data;
+		flag = image.flag;		
+	}
 	
 	public final int sizeX() { return data.length; }
 	
@@ -135,44 +149,193 @@ public class Data2D {
 		return valueAtIndex(index.i, index.j);
 	}
 	
-	public double valueAtIndex(int i, int j) { return data[i][j]; }
+	public double valueAtIndex(int i, int j) { return flag[i][j] == 0 ? data[i][j] : Double.NaN; }
 	
 	public double valueAtIndex(Vector2D index) {
 		return valueAtIndex(index.x, index.y);
 	}
 	
-	// Interpolate (linear at edges, quadratic otherwise)	
-	public double valueAtIndex(double ic, double jc) {		
+	
+	public double valueAtIndex(double ic, double jc) {
+		
+		// The nearest data point (i,j)
 		final int i = (int) Math.round(ic);
 		final int j = (int) Math.round(jc);
 		
 		if(!isValid(i, j)) return Double.NaN;
-		if(flag[i][j] != 0) return Double.NaN;
 		
-		final int sizeX = sizeX();
-		final int sizeY = sizeY();
+		switch(interpolationType) {
+		case NEAREST_NEIGHBOR : return data[i][j];
+		case BILINEAR : return bilinearAt(ic, jc);
+		case PIECEWISE_QUADRATIC : return piecewiseQuadraticAt(ic, jc);
+		case BICUBIC_SPLINE : return splineAt(ic, jc);
+		}
+		
+		return Double.NaN;
+	}
+	
+	// Bilinear interpolation
+	public double bilinearAt(double ic, double jc) {		
+		final int i = (int)Math.floor(ic);
+		final int j = (int)Math.floor(jc);
+		
+		final double di = ic - i;
+		final double dj = jc - j;
+		
+		double sum = 0.0, sumw = 0.0;
+		
+		if(isValid(i, j)) {
+			double w = (1.0 - di) * (1.0 - dj);
+			sum += w * data[i][j];
+			sumw += w;			
+		}
+		if(isValid(i+1, j)) {
+			double w = di * (1.0 - dj);
+			sum += w * data[i+1][j];
+			sumw += w;	
+		}
+		if(isValid(i, j+1)) {
+			double w = (1.0 - di) * dj;
+			sum += w * data[i][j+1];
+			sumw += w;	
+		}
+		if(isValid(i+1, j+1)) {
+			double w = di * dj;
+			sum += w * data[i+1][j+1];
+			sumw += w;	
+		}
+
+		return sum / sumw;
+	}
+	
+	
+	// Interpolate (linear at edges, quadratic otherwise)	
+	// Piecewise quadratic...
+	public double piecewiseQuadraticAt(double ic, double jc) {
+		// Find the nearest data point (i,j)
+		final int i = (int)Math.round(ic);
+		final int j = (int)Math.round(jc);
 		
 		final double y0 = data[i][j];
-		double a=0.0, b=0.0, c=0.0, d=0.0;
-		
-		if(i > 0 && i < sizeX-1) if((flag[i+1][j] | flag[i-1][j]) == 0) {
-			a = 0.5 * (data[i+1][j] + data[i-1][j]) - y0;
-			c = 0.5 * (data[i+1][j] - data[i-1][j]);
+		double ax=0.0, ay=0.0, bx=0.0, by=0.0;
+
+		if(isValid(i+1,j)) {
+			if(isValid(i-1, j)) {
+				ax = 0.5 * (data[i+1][j] + data[i-1][j]) - y0;
+				bx = 0.5 * (data[i+1][j] - data[i-1][j]);
+			}
+			else bx = data[i+1][j] - y0; // Fall back to linear...
 		}
-		if(j > 0 && j < sizeY-1) if((flag[i][j+1] | flag[i][j-1]) == 0) {
-			b = 0.5 * (data[i][j+1] + data[i][j-1]) - y0;
-			d = 0.5 * (data[i][j+1] - data[i][j-1]);
+		else if(isValid(i-1, j)) bx = y0 - data[i-1][j];
+	
+		if(isValid(i,j+1)) {
+			if(isValid(i,j-1)) {
+				ay = 0.5 * (data[i][j+1] + data[i][j-1]) - y0;
+				by = 0.5 * (data[i][j+1] - data[i][j-1]);
+			}
+			else by = data[i][j+1] - y0; // Fall back to linear...
 		}
+		else if(isValid(i,j-1)) by = y0 - data[i][j-1];
 		
 		ic -= i;
 		jc -= j;
 		
-		return (a*ic+c)*ic + (b*jc+d)*jc + y0;
+		return (ax*ic+bx)*ic + (ay*jc+by)*jc + y0;
+	}
+	
+	private double[] ax, ay;
+	private AtomicBoolean interpolating = new AtomicBoolean(false);
+	// Performs a bicubic spline interpolation...
+	public double splineAt(double ic, double jc) {
+		
+		final int i0 = (int)Math.floor(ic-1.0);
+		final int j0 = (int)Math.floor(jc-1.0);
+		
+		final int fromi = Math.max(0, i0);
+		final int toi = Math.min(sizeX(), i0+4);
+		
+		final int fromj = Math.max(0, j0);
+		final int toj = Math.min(sizeY(), j0+4);
+		
+		
+		// Check to make sure the coefficients aren't being used by another call...
+		// Get an exclusive lock if possible...
+		if(!interpolating.compareAndSet(false, true)) 
+			throw new ConcurrentModificationException("concurrent interpolation conflict.");
+		
+		if(ax == null) ax = new double[4];
+		if(ay == null) ay = new double[4];
+		
+		// Calculate the spline coefficients....
+		for(int i=fromi; i<toi; i++) {
+			final double dx = Math.abs(i - ic);
+			ax[i-i0] = dx > 1 ? 
+					((-0.5 * dx + 2.5) * dx - 4.0) * dx + 2.0 : (1.5 * dx - 2.5) * dx * dx + 1;
+		}
+		
+		for(int j=fromj; j<toj; j++) {
+			final double dy = Math.abs(j - jc);
+			ay[j-j0] = dy > 1 ? 
+					((-0.5 * dy + 2.5) * dy - 4.0) * dy + 2.0 : (1.5 * dy - 2.5) * dy * dy + 1;
+		}
+		
+		// Do the spline convolution...
+		double sum = 0.0, sumw = 0.0;
+		for(int i=fromi; i<toi; i++) for(int j=fromj; j<toj; j++) if(flag[i][j] == 0) {
+			final double w = ax[i-i0]*ay[j-j0];
+			sum += w * data[i][j];
+			sumw += w;
+		}
+		
+		// Release the lock on the interpolation. Others may call it now...
+		interpolating.set(false);
+		
+		return sum / sumw;
+	}
+	
+	public void resample(Data2D from) {
+		final Vector2D stretch = new Vector2D(sizeX() / from.sizeX(), sizeY() / from.sizeY());
+	
+		// Antialias filter
+		if(stretch.x > 1.0 || stretch.y > 1.0) {
+			from = (Data2D) from.copy();
+			double a = Math.sqrt(stretch.x * stretch.x - 1.0);
+			double b = Math.sqrt(stretch.y * stretch.y - 1.0);
+			from.smooth(getGaussian(a, b));
+		}
+		
+		// Interpolate to new array...
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) {		
+			data[i][j] = from.valueAtIndex(i*stretch.x, j*stretch.y);
+			if(Double.isNaN(data[i][j])) flag[i][j] = 1;
+		}
+	}
+	
+	public double[][] getGaussian(double pixelRadius) {
+		return getGaussian(pixelRadius, pixelRadius);		
+	}
+	
+	public double[][] getGaussian(double a, double b) {
+		int nx = 1 + 2 * (int)(Math.ceil(3.0 * a));
+		int ny = 1 + 2 * (int)(Math.ceil(3.0 * b));
+		double[][] beam = new double[nx][ny];
+		int ic = nx/2;
+		int jc = ny/2;
+		
+		for(int i=nx; --i >= 0; ) {
+			final double devx = (i - ic) / a;
+			for(int j=ny; --j >= 0;) {
+				final double devy = (j - jc) / b;	
+				beam[i][j] = Math.exp(-0.5 * (devx*devx + devy * devy));
+			}
+		}
+		
+		return beam;
 	}
 	
 	public double getWeight(int i, int j) { return 1.0; }
 	
-	public boolean contains(final int i, final int j) {
+	public boolean containsIndex(final int i, final int j) {
 		if(i < 0) return false;
 		if(j < 0) return false;
 		if(i >= sizeX()) return false;
@@ -180,7 +343,7 @@ public class Data2D {
 		return true;
 	}
 	
-	public boolean contains(final double i, final double j) {
+	public boolean containsIndex(final double i, final double j) {
 		if(i < 0) return false;
 		if(j < 0) return false;
 		if(i >= sizeX()-0.5) return false;
@@ -189,13 +352,13 @@ public class Data2D {
 	}
 	
 	public boolean isValid(final int i, final int j) {
-		if(!contains(i, j)) return false;
+		if(!containsIndex(i, j)) return false;
 		if(flag[i][j] != 0) return false;
 		return true;
 	}
 	
 	public boolean isValid(final double i, final double j) {
-		if(!contains(i, j)) return false;
+		if(!containsIndex(i, j)) return false;
 		if(flag[(int)Math.round(i)][(int)Math.round(j)] != 0) return false;
 		return true;
 	}
@@ -216,8 +379,6 @@ public class Data2D {
 	public void setUnit(Unit u) {
 		unit = u;
 	}
-	
-
 	
 	public double getMin() { 
 		double min=Double.POSITIVE_INFINITY;
@@ -270,9 +431,6 @@ public class Data2D {
 
 		return index;
 	}
-	
-
-	
 	
 	public Index2D indexOfMaxDev() {
 		Index2D index = new Index2D();
@@ -336,11 +494,14 @@ public class Data2D {
 	}
 	
 
-
-
-	public void fluxClip(double level) {
+	public void clipBelow(double level) {
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
 			if(data[i][j] < level) flag[i][j] = 1;
+	}
+	
+	public void clipAbove(double level) {
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
+			if(data[i][j] > level) flag[i][j] = 1;
 	}
 	
 	public int countPoints() {
@@ -349,8 +510,6 @@ public class Data2D {
 		return points;
 	}
 	
-
-
 	protected void crop(int imin, int jmin, int imax, int jmax) {
 		if(verbose) System.err.println("Cropping to " + (imax - imin + 1) + "x" + (jmax - jmin + 1));
 
@@ -368,8 +527,6 @@ public class Data2D {
 			data[i1][j1] = olddata[i][j];
 			flag[i1][j1] = oldflag[i][j];
 		}
-
-		
 	}	
 	
 
@@ -425,17 +582,17 @@ public class Data2D {
 	}
 	
 	
-	public void convolve(double[][] beam) {
+	public void smooth(double[][] beam) {
 		double[][] beamw = new double[sizeX()][sizeY()];
-		data = getConvolved(data, beam, beamw);
+		data = getSmoothed(beam, beamw);
 	}
 	
-	public void fastConvolve(double[][] beam, int stepX, int stepY) {
+	public void fastSmooth(double[][] beam, int stepX, int stepY) {
 		double[][] beamw = new double[sizeX()][sizeY()];
-		data = getFastConvolved(data, beam, beamw, stepX, stepY);
+		data = getFastSmoothed(beam, beamw, stepX, stepY);
 	}
 	
-	public double[][] getConvolved(double[][] image, double[][] beam, double[][] beamw) {
+	public double[][] getSmoothed(double[][] beam, double[][] beamw) {
 		double[][] convolved = new double[sizeX()][sizeY()];
 		final int ic = (beam.length-1) / 2;
 		final int jc = (beam[0].length-1) / 2;
@@ -443,7 +600,7 @@ public class Data2D {
 		final WeightedPoint result = new WeightedPoint();
 		
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			getConvolved(image, i, j, beam, ic, jc, result);
+			getSmoothedValueAt(i, j, beam, ic, jc, result);
 			convolved[i][j] = result.value;
 			if(beamw != null) beamw[i][j] = result.weight;
 		}
@@ -453,8 +610,8 @@ public class Data2D {
 	
 	
 	// Do the convolution proper at the specified intervals (step) only, and interpolate (quadratic) inbetween
-	public double[][] getFastConvolved(double[][] image, double[][] beam, double[][] beamw, int stepX, int stepY) {
-		if(stepX < 2 && stepY < 2) return getConvolved(image, beam, beamw);
+	public double[][] getFastSmoothed(double[][] beam, double[][] beamw, int stepX, int stepY) {
+		if(stepX < 2 && stepY < 2) return getSmoothed(beam, beamw);
 		
 		final int ic = (beam.length-1) / 2;
 		final int jc = (beam[0].length-1) / 2;
@@ -465,15 +622,18 @@ public class Data2D {
 		final int ny = sizeY()/stepY + 1;
  
 		final AstroImage signalImage = new AstroImage(nx, ny);
+		signalImage.interpolationType = interpolationType;
+		
 		AstroImage weightImage = null;
 		
 		if(beamw != null) {
 			weightImage = (AstroImage) signalImage.clone();
 			weightImage.data = new double[nx][ny];
+			weightImage.interpolationType = interpolationType;
 		}
 			
 		for(int i=0, i1=0; i<sizeX(); i+=stepX, i1++) for(int j=0, j1=0; j<sizeY(); j+=stepY, j1++) {
-			getConvolved(image, i, j, beam, ic, jc, result);
+			getSmoothedValueAt(i, j, beam, ic, jc, result);
 			signalImage.data[i1][j1] = result.value;
 			if(beamw != null) weightImage.data[i1][j1] = result.weight;
 			signalImage.flag[i1][j1] = result.weight > 0.0 ? 0 : 1;
@@ -502,7 +662,7 @@ public class Data2D {
 	// I(x) = I -> I' = I -> C = sum(wB2) / sum(wB)
 	// I' = sum(wBI)/sum(wB)
 	// rms = Math.sqrt(1 / sum(wB))
-	public void getConvolved(final double[][] image, final int i, final int j, final double[][] beam, int ic, int jc, WeightedPoint result) {
+	public void getSmoothedValueAt(final int i, final int j, final double[][] beam, int ic, int jc, WeightedPoint result) {
 		result.noData();
 		
 		ic += i;
@@ -517,7 +677,7 @@ public class Data2D {
 		for(int ib=fromib, i1=ic-fromib; ib>toib; ib--,i1++) for(int jb=fromjb, j1=jc-fromjb; jb>tojb; jb--,j1++) if(flag[i1][j1] == 0) {
 			final double B = beam[ib][jb];
 			if(B != 0.0) {
-				result.value += getWeight(i1, j1) * B * image[i1][j1];
+				result.value += getWeight(i1, j1) * B * data[i1][j1];
 				result.weight += getWeight(i1, j1) * Math.abs(B);		    
 			}
 		}
@@ -533,7 +693,7 @@ public class Data2D {
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] != 0) sanitize(i, j);
 	}
 	
-	protected void sanitize(int i, int j) { 
+	protected void sanitize(final int i, final int j) { 
 		flag[i][j] |= 1;
 		data[i][j] = 0.0;		
 	}
@@ -553,23 +713,20 @@ public class Data2D {
 		return bin;
 	}
 	
-	public boolean containsIndex(double i, double j) {
-		return i >= 0 && i < sizeX() && i >= 0 && j < sizeY();
-	}
-	    
+	
 	public static Object copyOf(final Object image) {
 		if(image == null) return null;
 
 		if(image instanceof double[][]) {
 			final double[][] orig = (double[][]) image;
 			final double[][] copy = new double[orig.length][orig[0].length];
-			for(int i=0; i<orig.length; i++) System.arraycopy(orig[i], 0, copy[i], 0, orig[0].length);	
+			for(int i=orig.length; --i >= 0; ) System.arraycopy(orig[i], 0, copy[i], 0, orig[0].length);	
 			return copy;
 		}	
 		else if(image instanceof int[][]) {
 			final int[][] orig = (int[][]) image;
 			final int[][] copy = new int[orig.length][orig[0].length];
-			for(int i=0; i<orig.length; i++) System.arraycopy(orig[i], 0, copy[i], 0, orig[0].length);	
+			for(int i=orig.length; --i >= 0; ) System.arraycopy(orig[i], 0, copy[i], 0, orig[0].length);	
 			return copy;
 		}
 

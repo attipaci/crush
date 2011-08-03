@@ -35,6 +35,7 @@ import util.astro.CelestialProjector;
 import util.astro.EclipticCoordinates;
 import util.astro.GalacticCoordinates;
 import util.astro.SourceCatalog;
+import util.data.Data2D;
 import util.data.Index2D;
 import util.data.Statistics;
 import util.plot.ColorScheme;
@@ -142,7 +143,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		map.grid.refIndex.x = 0.5 - Math.rint(xRange.min/gridSize);
 		map.grid.refIndex.y = 0.5 - Math.rint(yRange.min/gridSize);
 			
-		map.shortInfo();		
+		map.printShortInfo();		
 		
 		base = new double[map.sizeX()][map.sizeY()];
 		mask = new boolean[map.sizeX()][map.sizeY()];
@@ -273,7 +274,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		if(base != null) map.addImage(base);
 		
 		double minIntTime = instrument.integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
-		if(minIntTime > 0.0) map.directExposureClip(minIntTime);
+		if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
 		
 		if(isLevelled && scan.getSourceGeneration() == 0) map.level(true);
 		else isLevelled = false;
@@ -314,8 +315,8 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		super.postprocess(scan);
 		
 		if(hasOption("pointing")) if(option("pointing").equals("auto") || option("pointing").equals("suggest")) {
-			map.convolveTo(scan.instrument.resolution);
-			if(hasOption("pointing.exposureclip")) map.exposureClip(option("pointing.exposureclip").getDouble(), 0.1);
+			map.smoothTo(scan.instrument.resolution);
+			if(hasOption("pointing.exposureclip")) map.clipBelowRelativeExposure(option("pointing.exposureclip").getDouble(), 0.1);
 			map.weight(true);
 			scan.pointing = getPeakSource();
 		}
@@ -334,6 +335,21 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		String mode = filter.isConfigured("type") ? filter.get("type").getValue() : "convolution";
 		String directive = "auto";
 			
+		if(filter.isConfigured("interpolation")) {
+			String spec = filter.get("interpolation").getValue().toLowerCase();
+			// The default terminology...
+			if(spec.equals("nearest")) map.interpolationType = Data2D.NEAREST_NEIGHBOR;
+			else if(spec.equals("linear")) map.interpolationType = Data2D.BILINEAR;
+			else if(spec.equals("quadratic")) map.interpolationType = Data2D.PIECEWISE_QUADRATIC;
+			else if(spec.equals("cubic")) map.interpolationType = Data2D.BICUBIC_SPLINE;
+			// And alternative names...
+			else if(spec.equals("none")) map.interpolationType = Data2D.NEAREST_NEIGHBOR;
+			else if(spec.equals("bilinear")) map.interpolationType = Data2D.BILINEAR;
+			else if(spec.equals("piecewise")) map.interpolationType = Data2D.PIECEWISE_QUADRATIC;
+			else if(spec.equals("bicubic")) map.interpolationType = Data2D.BICUBIC_SPLINE;
+			else if(spec.equals("spline")) map.interpolationType = Data2D.BICUBIC_SPLINE;
+		}
+		
 		if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
 		
 		double filterScale = directive.equals("auto") ? 
@@ -396,32 +412,33 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 
 		if(hasOption("smooth") && !hasOption("smooth.external")) {
 			if(verbose) System.err.print("(smooth) ");
-			map.convolveTo(getSmoothing());
+			map.smoothTo(getSmoothing());
 		}
 
 		// Apply the filtering to the final map, to reflect the correct blanking
 		// level...
-		filter();
 		if(hasOption("source.filter")) if(verbose) System.err.print("(filter) ");
+		filter();
+		
 		
 		// Noise and exposure clip after smoothing for evened-out coverage...
 		// Eposure clip
 		if(hasOption("exposureclip")) {
 			if(verbose) System.err.print("(exposureclip) ");
-			map.exposureClip(option("exposureclip").getDouble(), 0.95);		
+			map.clipBelowRelativeExposure(option("exposureclip").getDouble(), 0.95);		
 		}
 
 		// Noise clip
 		if(hasOption("noiseclip")) {
 			if(verbose) System.err.print("(noiseclip) ");
-			map.rmsClip(option("noiseclip").getDouble(), 0.05);		
+			map.clipAboveRelativeRMS(option("noiseclip").getDouble(), 0.05);		
 		}
 
 		
 		if(hasOption("clip") && allowBias) {	
 			double clipLevel = option("clip").getDouble();
 			if(verbose) System.err.print("(clip:" + clipLevel + ") ");
-			map.s2nClip(clipLevel);
+			map.s2nClipBelow(clipLevel);
 			map.clippingS2N = clipLevel;
 		}
 

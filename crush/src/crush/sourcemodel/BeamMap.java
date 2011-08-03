@@ -249,7 +249,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 			ScalarMap<InstrumentType, ScanType> beamMap = pixelMap[i];
 			if(beamMap != null) {
 				AstroMap map = beamMap.map;
-				if(smooth) map.convolveTo(instrument.resolution);
+				if(smooth) map.smoothTo(instrument.resolution);
 				GaussianSource source = beamMap.getPeakSource();
 				
 				// Get the source peak in the pixel.
