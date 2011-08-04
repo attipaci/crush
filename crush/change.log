@@ -203,6 +203,9 @@
 	Use object dependent conditionals instead, which were introduced in 
 	this version. Check new features above for details.
 
+	[UPDATE] LABOCA & SABOCA configuration data (RCPs, skydips and
+	calibration tables) updated and good thru 28 Jul 2011.
+
 
 2.04-2 (13 Jun 2011)
 
