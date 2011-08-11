@@ -30,6 +30,6 @@ public class Scuba2TempResponse extends FieldResponse {
 		}
 	}
 	
-	public Scuba2TempResponse() { super(temperatureField); }
+	public Scuba2TempResponse() { super(temperatureField, true); }
 }
 

@@ -240,7 +240,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {	
 			if(skip[i][j] > 0) extended[i][j] = 0.0;
 			else {
-				double w = getWeight(i, j);
+				double w = weightAt(i, j);
 				extended[i][j] = w * data[i][j];
 				avew += w;
 				n++;

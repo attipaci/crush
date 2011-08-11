@@ -681,7 +681,7 @@ implements TableFormatter.Entries {
 	*/
 	
 	public synchronized void reindex() {
-		for(int k=0; k<size(); k++) get(k).index = k;
+		for(int k=size(); --k >= 0; ) get(k).index = k;
 	}
 	
 	@Override
@@ -708,7 +708,7 @@ implements TableFormatter.Entries {
 	}
 	
 	public void slimGroup(ChannelGroup<?> group, Hashtable<Integer, ChannelType> lookup) {
-		for(int c=0; c<group.size(); c++) if(!lookup.containsKey(group.get(c).dataIndex)) group.remove(c--);
+		for(int c=group.size(); --c >= 0; ) if(!lookup.containsKey(group.get(c).dataIndex)) group.remove(c);
 		group.trimToSize();
 	}
 	
@@ -718,8 +718,6 @@ implements TableFormatter.Entries {
 		reindex();	
 		return this;
 	}
-	
-	
 		
 	public double[] getSourceGains(boolean filterCorrected) {
 		final double[] sourceGain = new double[size()];

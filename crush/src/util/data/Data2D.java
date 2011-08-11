@@ -269,14 +269,14 @@ public class Data2D implements Cloneable {
 		// Calculate the spline coefficients....
 		for(int i=fromi; i<toi; i++) {
 			final double dx = Math.abs(i - ic);
-			ax[i-i0] = dx > 1 ? 
-					((-0.5 * dx + 2.5) * dx - 4.0) * dx + 2.0 : (1.5 * dx - 2.5) * dx * dx + 1;
+			ax[i-i0] = dx > 1.0 ? 
+					((-0.5 * dx + 2.5) * dx - 4.0) * dx + 2.0 : (1.5 * dx - 2.5) * dx * dx + 1.0;
 		}
 		
 		for(int j=fromj; j<toj; j++) {
 			final double dy = Math.abs(j - jc);
-			ay[j-j0] = dy > 1 ? 
-					((-0.5 * dy + 2.5) * dy - 4.0) * dy + 2.0 : (1.5 * dy - 2.5) * dy * dy + 1;
+			ay[j-j0] = dy > 1.0 ? 
+					((-0.5 * dy + 2.5) * dy - 4.0) * dy + 2.0 : (1.5 * dy - 2.5) * dy * dy + 1.0;
 		}
 		
 		// Do the spline convolution...
@@ -318,22 +318,25 @@ public class Data2D implements Cloneable {
 	public double[][] getGaussian(double a, double b) {
 		int nx = 1 + 2 * (int)(Math.ceil(3.0 * a));
 		int ny = 1 + 2 * (int)(Math.ceil(3.0 * b));
+		
 		double[][] beam = new double[nx][ny];
 		int ic = nx/2;
 		int jc = ny/2;
 		
-		for(int i=nx; --i >= 0; ) {
-			final double devx = (i - ic) / a;
-			for(int j=ny; --j >= 0;) {
-				final double devy = (j - jc) / b;	
-				beam[i][j] = Math.exp(-0.5 * (devx*devx + devy * devy));
+		for(int di=ic; --di > 0; ) {
+			final double devx = di / a;
+			for(int dj=jc; --dj > 0;) {
+				final double devy = dj / b;	
+				beam[ic-di][jc-dj] = beam[ic-di][jc+dj] = beam[ic+di][jc-dj] = beam[ic+di][jc+dj] = 
+					Math.exp(-0.5 * (devx*devx + devy*devy));
 			}
 		}
+		beam[ic][jc] = 1.0;
 		
 		return beam;
 	}
 	
-	public double getWeight(int i, int j) { return 1.0; }
+	public double weightAt(int i, int j) { return 1.0; }
 	
 	public boolean containsIndex(final int i, final int j) {
 		if(i < 0) return false;
@@ -412,8 +415,7 @@ public class Data2D implements Cloneable {
 	public Range getRange() {
 		final Range range = new Range();
 		range.empty();
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) 
-			range.include(data[i][j]);
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) range.include(data[i][j]);
 		return range;
 	}
 	
@@ -663,26 +665,23 @@ public class Data2D implements Cloneable {
 	// I' = sum(wBI)/sum(wB)
 	// rms = Math.sqrt(1 / sum(wB))
 	public void getSmoothedValueAt(final int i, final int j, final double[][] beam, int ic, int jc, WeightedPoint result) {
-		result.noData();
+		final int i0 = i - ic;
+		final int fromi = Math.max(0, i0);
+		final int toi = Math.min(sizeX()-1, i0 + beam.length);
 		
-		ic += i;
-		jc += j;
-		
-		// ib = i + ic - i1
-		final int fromib = Math.min(beam.length-1, ic);
-		final int fromjb = Math.min(beam[0].length-1, jc);
-		final int toib = Math.max(0, ic - sizeX());
-		final int tojb = Math.max(0, jc - sizeY());
-			
-		for(int ib=fromib, i1=ic-fromib; ib>toib; ib--,i1++) for(int jb=fromjb, j1=jc-fromjb; jb>tojb; jb--,j1++) if(flag[i1][j1] == 0) {
-			final double B = beam[ib][jb];
-			if(B != 0.0) {
-				result.value += getWeight(i1, j1) * B * data[i1][j1];
-				result.weight += getWeight(i1, j1) * Math.abs(B);		    
-			}
+		final int j0 = j - jc;
+		final int fromj = Math.max(0, j0);
+		final int toj = Math.min(sizeY(), j0 + beam[0].length);
+
+		double sum = 0.0, sumw = 0.0;
+		for(int i1=fromi; i1 < toi; i1++) for(int j1=fromj; j1 < toj; j1++) if(flag[i1][j1] == 0) {
+			final double wB = weightAt(i1, j1) * beam[i1-i0][j1-j0];
+			sum += wB * data[i1][j1];
+			sumw += Math.abs(wB);		    
 		}
 
-		result.value /= result.weight;
+		result.value = sum / sumw;
+		result.weight = sumw;
 	}
 	
 	public void scale(int i, int j, double factor) {

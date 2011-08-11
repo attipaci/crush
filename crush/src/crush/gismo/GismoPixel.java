@@ -76,6 +76,8 @@ public class GismoPixel extends SimplePixel {
 	
 	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
 	public final static int FLAG_PIN = 1 << nextSoftwareFlag++;
+	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
+	public final static int FLAG_COL = 1 << nextSoftwareFlag++;
 	
 	
 }

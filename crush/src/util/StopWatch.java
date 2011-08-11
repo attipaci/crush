@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,22 +20,25 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.laboca;
 
-import crush.*;
-import java.lang.reflect.*;
+package util;
 
-public class LabocaHe3Response extends FieldResponse {
-
-	static Field temperatureField;
+public final class StopWatch {
+	static long start, last = -1;
 	
-	static { 
-		try { temperatureField = LabocaFrame.class.getField("he3Temp"); }
-		catch(NoSuchFieldException e) {
-			System.err.println("WARNING! LabocaFrame has no such field.");
-			e.printStackTrace();
-		}
+	public static void start() {
+		start = System.currentTimeMillis();
+		System.err.println("### Started stop watch.");
 	}
 	
-	public LabocaHe3Response() { super(temperatureField, true); }
+	public static void now() {
+		long now = System.currentTimeMillis();
+		System.err.print("### Time: " + Util.f3.format((now - start) / 1000.0));
+		if(last > 0) 
+			System.err.print(" delta: " + Util.f3.format((now - last) / 1000.0));
+		System.err.println();
+		last = now;		
+	}
+	
+	
 }

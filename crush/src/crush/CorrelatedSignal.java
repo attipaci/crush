@@ -56,7 +56,7 @@ public class CorrelatedSignal extends Signal {
 		if(n == 0) return new WeightedPoint[0];
 		if(temp == null) temp = new WeightedPoint[n];
 		if(temp.length < n) temp = new WeightedPoint[n];
-		if(temp[0] == null) for(int i=0; i<temp.length; i++) temp[i] = new WeightedPoint();	
+		if(temp[0] == null) for(int i=temp.length; --i >= 0; ) temp[i] = new WeightedPoint();	
 		return temp;
 	}
 
@@ -67,7 +67,7 @@ public class CorrelatedSignal extends Signal {
 	@Override
 	public double getVariance() {
 		double sum = 0.0, sumw = 0.0;
-		for(int t=0; t<value.length; t++) if(weight[t] > 0.0){
+		for(int t=value.length; --t >= 0; ) if(weight[t] > 0.0){
 			sum += weight[t] * value[t] * value[t];
 			sumw += weight[t];
 		}	
@@ -77,7 +77,7 @@ public class CorrelatedSignal extends Signal {
 	@Override
 	public double getUnderlyingVariance() {
 		double sum = 0.0, sumw = 0.0;
-		for(int t=0; t<value.length; t++) if(weight[t] > 0.0) {
+		for(int t=value.length; --t >= 0; ) if(weight[t] > 0.0) {
 			sum += weight[t] * value[t] * value[t] - 1.0;
 			sumw += value[t];
 		}	
@@ -114,18 +114,16 @@ public class CorrelatedSignal extends Signal {
 	@Override
 	public WeightedPoint getMedian() {
 		WeightedPoint[] temp = new WeightedPoint[value.length];
-		double sumw = 0.0;
-		for(int t=0; t<value.length; t++) if(weight[t] > 0.0) {
-			temp[t] = new WeightedPoint(value[t], weight[t]);
-			sumw += weight[t];
-		}
-		return Statistics.median(temp);
+		int n = 0;
+		for(int t=value.length; --t >= 0; ) if(weight[t] > 0.0)
+			temp[n++] = new WeightedPoint(value[t], weight[t]);
+		return Statistics.median(temp, 0, n);
 	}
 	
 	@Override
 	public WeightedPoint getMean() {
 		double sum = 0.0, sumw = 0.0;
-		for(int t=0; t<value.length; t++) if(weight[t] > 0.0) {
+		for(int t=value.length; --t >= 0; ) if(weight[t] > 0.0) {
 			sum += weight[t] * value[t];
 			sumw += weight[t];
 		}	
@@ -233,32 +231,30 @@ public class CorrelatedSignal extends Signal {
 	@Override
 	public synchronized void smooth(double[] w) {
 		int ic = w.length / 2;
-		WeightedPoint[] smoothed = new WeightedPoint[value.length];
-	
-		double norm = 0.0;
-		for(int i=0; i<w.length; i++) norm += Math.abs(w[i]);
+		float[] smooth = new float[value.length];
+		float[] smoothw = new float[value.length];
 		
-		for(int t=0; t<value.length; t++) {
-			smoothed[t] = new WeightedPoint();
-			
+		double norm = 0.0;
+		for(int i=w.length; --i >= 0; ) norm += Math.abs(w[i]);
+		
+		for(int t=value.length; --t >= 0; ) {		
 			int t1 = Math.max(0, t-ic); // the beginning index for the convolution
 			int tot = Math.min(value.length, t + w.length - ic);
 			int i = ic + t - t1; // the beginning index for the weighting fn.
+			double sum = 0.0, sumw = 0.0;
 			
 			for( ; t1<tot; t1++, i++) if(weight[t1] > 0.0) {
 				double wc = w[i] * weight[t1];
-				smoothed[t].value += wc * value[t1];
-				smoothed[t].weight += Math.abs(wc);
+				sum += wc * value[t1];
+				sumw += Math.abs(wc);
 			}
-			if(smoothed[t].weight != 0.0) {
-				smoothed[t].value /= smoothed[t].weight;
-				smoothed[t].weight /= norm;
+			if(sumw > 0.0) {
+				smooth[t] = (float) (sum / sumw);
+				smoothw[t] = (float) sumw;
 			}
 		}
-		for(int t=0; t<value.length; t++) {
-			value[t] = (float) smoothed[t].value;
-			weight[t] = (float) smoothed[t].weight;
-		}
+		value = smooth;
+		weight = smoothw;
 	}
 	
 	

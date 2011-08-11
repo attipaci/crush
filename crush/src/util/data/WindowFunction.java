@@ -107,13 +107,13 @@ public class WindowFunction {
 	// normalize to sum w^2
 	// Needed for provididng true PSD estimates...
 	public static double[] get(int n, double[] coeff) {
-		double[] w = new double[n];
+		final double[] w = new double[n];
 		double norm = 0.0;
-		for(int i=0; i<n; i++) {
-			for(int k=0; k<coeff.length; k++) w[i] += coeff[k] * Math.cos(2.0*k*Math.PI * i/(n-1));
+		for(int i=n; --i >= 0; ) {
+			for(int k=coeff.length; --k >= 0; ) w[i] += coeff[k] * Math.cos(2.0*k*Math.PI * i/(n-1));
 			norm += w[i]*w[i];
 		}
-		for(int i=0; i<n; i++) w[i] /= norm;
+		for(int i=n; --i >= 0; ) w[i] /= norm;
 	
 		return w;
 	}

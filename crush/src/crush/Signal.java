@@ -37,7 +37,7 @@ public class Signal implements Cloneable {
 	public float[] syncGains;
 	int resolution;
 	int driftN;
-	
+	boolean isFloating = false;
 	
 	Signal(Mode mode, Integration<?, ?> integration) {
 		this.mode = mode;
@@ -48,7 +48,7 @@ public class Signal implements Cloneable {
 		}
 	}
 	
-	Signal(Mode mode, Integration<?, ?> integration, double[] values) {
+	Signal(Mode mode, Integration<?, ?> integration, double[] values, boolean isFloating) {
 		this(mode, integration);
 		resolution = (int) Math.ceil((double) integration.size() / values.length);
 		this.value = new float[values.length];
@@ -203,6 +203,8 @@ public class Signal implements Cloneable {
 			value[t] = value[t-1];
 			value[t] = 0.5F * (value[t] + value[t+1]);
 		}
+		
+		isFloating = false;
 	}
 	
 	// Intergate using trapesiod rule...
@@ -223,6 +225,8 @@ public class Signal implements Cloneable {
 			
 			halfLast = halfNext;
 		}
+		
+		isFloating = true;
 	}
 	
 	public Signal getDifferential() {
@@ -261,12 +265,12 @@ public class Signal implements Cloneable {
 		float[] smoothed = new float[value.length];
 		
 		double norm = 0.0;
-		for(int i=0; i<w.length; i++) norm += Math.abs(w[i]);
+		for(int i=w.length; --i >= 0; ) norm += Math.abs(w[i]);
 		
-		for(int t=0; t<value.length; t++) {
+		for(int t=value.length; --t >= 0; ) {
 			
 			int t1 = Math.max(0, t-ic); // the beginning index for the convolution
-			int tot = Math.min(value.length, t + w.length - ic);
+			final int tot = Math.min(value.length, t + w.length - ic);
 			int i = ic + t - t1; // the beginning index for the weighting fn.
 			int n = 0;
 			

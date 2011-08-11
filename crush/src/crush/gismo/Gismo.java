@@ -116,12 +116,12 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		try { addModality(new CorrelatedModality("pins", "p", divisions.get("pins"), GismoPixel.class.getField("pinGain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
-		/*
 		addModality(new CorrelatedModality("rows", "r", divisions.get("rows")));
 		addModality(new CorrelatedModality("cols", "c", divisions.get("cols")));
-		*/
 		
 		modalities.get("mux").setGainFlag(GismoPixel.FLAG_MUX);
+		modalities.get("rows").setGainFlag(GismoPixel.FLAG_ROW);
+		modalities.get("cols").setGainFlag(GismoPixel.FLAG_COL);
 		modalities.get("pins").setGainFlag(GismoPixel.FLAG_PIN);
 	}
 	
