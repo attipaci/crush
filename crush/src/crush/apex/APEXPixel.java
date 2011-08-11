@@ -32,6 +32,7 @@ import crush.PhaseOffsets;
 import crush.PhaseSet;
 import crush.array.SimplePixel;
 import util.*;
+import util.data.DataPoint;
 import util.data.WeightedPoint;
 
 public abstract class APEXPixel extends SimplePixel {
@@ -102,7 +103,7 @@ public abstract class APEXPixel extends SimplePixel {
 	}
 
 	public WeightedPoint getCorrectedLROffset(PhaseSet phases, Collection<APEXPixel> neighbours) {
-		final WeightedPoint bias = new WeightedPoint();
+		final WeightedPoint bias = new DataPoint();
 		
 		for(int i=phases.size()-1; --i > 0; ) {
 			final PhaseOffsets offsets = phases.get(i);
@@ -123,7 +124,7 @@ public abstract class APEXPixel extends SimplePixel {
 			WeightedPoint LR = getRelativeOffset(phases, i);
 			LR.value -= mean;
 
-			final double chi = LR.significance();
+			final double chi = DataPoint.significanceOf(LR);
 			chi2 += chi * chi;
 			n++;
 		}
@@ -141,7 +142,7 @@ public abstract class APEXPixel extends SimplePixel {
 			WeightedPoint LR = getCorrectedLROffset(phases, i, neighbours);
 			LR.value -= mean;
 
-			final double chi = LR.significance();
+			final double chi = DataPoint.significanceOf(LR);
 			chi2 += chi * chi;
 			n++;
 		}

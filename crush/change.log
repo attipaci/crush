@@ -1,3 +1,30 @@
+>>> acceleration terms?
+>>> eliminate unnecessary WeightedPoint, Data and Vector2D arrays...
+
+
+
+	[BUG] {APEX} Skydip reductions were broken due to trying to validate
+	equatorial coordinates, which are no longer read from the tables.
+
+	[FIX] Fixed signals (e.g. telescope position/acceleration signals)
+	can now be absolute (e.g. acceleration signals) or floating (e.g.
+	position signals). Floating signals are automatically levelled to
+	zero mean, while absolute signals are kept as they are. The separation
+	should allow better decorrelation of their responses. Previously all
+	signals were assumed floating.
+
+	[FIX] Various small and rather inconsequential arithmetic fixes.
+
+	[SPEED] Various small speed optimizations on iterating over arrays and
+	image smoothing. As a result, reduction speeds may have improved 
+	25--30%.
+
+	[CODE] The beginnings of a common FFT filter umbrella structure, which
+	will be the base of noise whitening and profiled filters in the near
+	future...
+
+	[CODE] New 1D array resampling functionality...
+
 
 2.05-1 (3 Aug 2011)
 	

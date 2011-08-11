@@ -98,7 +98,7 @@ public class PolygonalRegion extends Region {
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
 			if(image.flag[i][j] == 0) if(isInside(image.grid, i, j)) {
 				flux.value += image.data[i][j];
-				flux.weight += image.getWeight(i, j);
+				flux.weight += image.weightAt(i, j);
 			}
 		
 		
@@ -115,7 +115,7 @@ public class PolygonalRegion extends Region {
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
 			if(image.flag[i][j] == 0) if(isInside(image.grid, i, j)) {
-				final double weight = image.getWeight(i, j);
+				final double weight = image.weightAt(i, j);
 				sum += weight * image.data[i][j];
 				sumw += weight;
 			}

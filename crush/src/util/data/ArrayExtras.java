@@ -69,7 +69,7 @@ public final class ArrayExtras {
 	public static double[] shift(double[] data, int n) {
 		if(n>0) {
 			for(int to=data.length-1; to >= n; to--) data[to] = data[to-n];
-			for(int i=0; i<n; i++) data[i] = Double.NaN;
+			for(int i=n; --i >= 0; ) data[i] = Double.NaN;
 		}
 		else {
 			for(int from=n; from < data.length; from++) data[from-n] = data[from];

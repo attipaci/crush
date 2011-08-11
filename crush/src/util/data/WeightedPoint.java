@@ -32,7 +32,6 @@ public class WeightedPoint implements Comparable<WeightedPoint>, Cloneable {
 	public WeightedPoint() { noData(); }
 
 	public WeightedPoint(WeightedPoint template) {
-		super();
 		copy(template);
 	}
 
@@ -52,8 +51,7 @@ public class WeightedPoint implements Comparable<WeightedPoint>, Cloneable {
 	}
 
 	public void noData() { 
-		value = 0.0;
-		weight = 0.0;
+		value = weight = 0.0;
 	}
 
 	public boolean isNaN() { return isNaN(this); }
@@ -70,8 +68,6 @@ public class WeightedPoint implements Comparable<WeightedPoint>, Cloneable {
 		value = x.value;
 		weight = x.weight;
 	}
-
-	public final double significance() { return Math.abs(value) * Math.sqrt(weight); }
 	
 	public void add(final WeightedPoint x) {
 		value += x.value;

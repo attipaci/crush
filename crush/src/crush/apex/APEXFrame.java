@@ -32,7 +32,7 @@ public class APEXFrame extends HorizontalFrame {
 	public int chopperPhase;
 	public int nodFlag;
 	boolean isValid = true;
-	final static double m900deg = -900.0*Unit.deg;
+	final static double m900deg = -900.0 * Unit.deg;
 	
 	public static double skydipFactor = 1.0;
 	
@@ -46,9 +46,7 @@ public class APEXFrame extends HorizontalFrame {
 	}
 	
 	public boolean isValid() {	
-		if(Double.isNaN(equatorial.x)) return false;
-		else if(Double.isNaN(equatorial.y)) return false;
-		else if(Double.isNaN(horizontal.x)) return false;
+		if(Double.isNaN(horizontal.x)) return false;
 		else if(Double.isNaN(horizontal.y)) return false;
 		else if(horizontalOffset.x < m900deg) return false;
 		else if(horizontalOffset.y < m900deg) return false;		

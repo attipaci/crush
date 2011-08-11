@@ -161,7 +161,7 @@ public class AstroMap extends AstroImage {
 	}
 	
 	@Override
-	public double getWeight(int i, int j) { return weight[i][j]; }
+	public double weightAt(int i, int j) { return weight[i][j]; }
 	
 	@Override
 	public void scale(int i, int j, double factor) {

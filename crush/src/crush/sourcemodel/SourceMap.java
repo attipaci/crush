@@ -292,13 +292,14 @@ extends SourceModel<InstrumentType, ScanType> {
 		float[] ra = new float[scans.size()];
 		float[] dec = new float[scans.size()];
 		
-		for(int i=0; i<scans.size(); i++) {
+		for(int i=scans.size(); --i >= 0; ) {
 			EquatorialCoordinates equatorial = (EquatorialCoordinates) scans.get(i).equatorial.clone();
 			equatorial.precess(CoordinateEpoch.J2000);
 			ra[i] = (float) equatorial.RA();
 			dec[i] = (float) equatorial.DEC();
 		}
 		EquatorialCoordinates median = new EquatorialCoordinates(Statistics.median(ra), Statistics.median(dec), CoordinateEpoch.J2000);
+
 		for(Scan<?,?> scan : scans) {
 			EquatorialCoordinates equatorial = (EquatorialCoordinates) scan.equatorial.clone();
 			equatorial.precess(CoordinateEpoch.J2000);

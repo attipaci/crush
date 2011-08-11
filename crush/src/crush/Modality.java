@@ -71,7 +71,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	}
 		
 	public void setDefaultNames() {
-		for(int i=0; i<size(); i++) get(i).name = name + ":" + get(i).channels.name;
+		for(int i=size(); --i >= 0; ) get(i).name = name + ":" + get(i).channels.name;
 	}
 	
 	public void setOptions(Configurator option) {	

@@ -51,7 +51,7 @@ public abstract class Response extends Mode {
 		
 		if(signal == null) {
 			signal = getSignal(integration);
-			signal.level(isRobust);
+			if(signal.isFloating) signal.level(isRobust);
 			integration.signals.put(this, signal);	
 		}
 		

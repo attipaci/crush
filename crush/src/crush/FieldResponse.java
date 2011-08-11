@@ -26,9 +26,15 @@ import java.lang.reflect.*;
 
 public class FieldResponse extends Response {
 	Field field;
+	boolean isFloating = false;
 	
 	public FieldResponse(Field field) {
 		this.field = field;
+	}
+	
+	public FieldResponse(Field field, boolean isFloating) {
+		this(field);
+		this.isFloating = isFloating;
 	}
 	
 	@Override
@@ -41,7 +47,7 @@ public class FieldResponse extends Response {
 			}
 		}
 		catch(Exception e) { System.err.println("WARNING! No field named " + field.getName() + " for signal."); }
-		return new Signal(this, integration, data);
+		return new Signal(this, integration, data, isFloating);
 	}
 
 }
