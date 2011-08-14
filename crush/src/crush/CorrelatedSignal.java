@@ -94,17 +94,17 @@ public class CorrelatedSignal extends Signal {
 		driftN = N;
 		drifts = new float[(int) Math.ceil((double) value.length / driftN)];
 		
-		for(int fromt=0, T=0; fromt<value.length; fromt+=driftN) {
+		for(int fromt=0, T=0; fromt < value.length; fromt += driftN) {
 			double sum = 0.0, sumw = 0.0;
 			final int tot = Math.min(fromt + driftN, value.length);
 			
-			for(int t=fromt; t<tot; t++) if(weight[t] > 0.0){
+			for(int t=tot; --t >= fromt; ) if(weight[t] > 0.0){
 				sum += weight[t] * value[t];
 				sumw += weight[t];
 			}
 			if(sumw > 0.0) {
 				float fValue = (float) (sum /= sumw);
-				for(int t=fromt; t<tot; t++) value[t] -= fValue;
+				for(int t=tot; --t >= fromt; ) value[t] -= fValue;
 				drifts[T++] = fValue;
 			}
 		}
@@ -132,36 +132,46 @@ public class CorrelatedSignal extends Signal {
 	
 	@Override
 	public synchronized void differentiate() {
-		double dt = resolution * integration.instrument.samplingInterval;
-		WeightedPoint last = new WeightedPoint(value[0], weight[0]);
-		WeightedPoint point = new WeightedPoint();
+		final double idt = 1.0 / (resolution * integration.instrument.samplingInterval);
+		final WeightedPoint p1 = new WeightedPoint();
+		final WeightedPoint p2 = new WeightedPoint();
 		
-		for(int t=1; t<value.length; t++) {
-			point.value = value[t];
-			point.weight = weight[t];
+		final int n = value.length;
+		final int nm1 = n-1;
+		
+		// v[n] = f'[n+0.5]
+		for(int t=0; t<nm1; t++) {
+			p1.value = value[t];
+			p1.weight = weight[t];
 			
-			point.subtract(last);
-			point.scale(1.0/dt);
-			
-			value[t-1] = (float) point.value;
-			weight[t-1] = (float) point.weight;
-			
-			last = point;
+			p2.value = value[t+1];
+			p2.weight = weight[t+1];
+		
+			p2.subtract(p1);
+			p2.scale(idt);
+		
+			value[t] = (float) p2.value;
+			weight[t] = (float) p2.weight;
 		}
+
+		// the last value is based on the last difference...
+		value[nm1] = value[n-2];
+		weight[nm1] = weight[n-2];
 		
-		float temp = value[value.length-1];
-		value[value.length-1] = value[value.length-2];
-		value[value.length-2] = temp;
-		
-		temp = weight[value.length-1];
-		weight[value.length-1] = weight[value.length-2];
-		weight[value.length-2] = temp;
-		
-		for(int t=value.length-2; t>0; t--) {
-			value[t] = 0.5F * (value[t] + value[t-1]);
-			weight[t] += weight[t-1];
+		// otherwise, it's:
+		// v[n] = (f'[n+0.5] + f'[n-0.5]) = v[n] + v[n-1]
+		for(int t=nm1; --t > 0; ) {
+			p1.value = value[t];
+			p1.weight = weight[t];
+			
+			p2.value = value[t-1];
+			p2.weight = weight[t-1];
+			
+			p2.average(p1);
+			
+			value[t] = (float) p2.value;
+			weight[t] = (float) p2.weight;
 		}
-		
 	}
 	
 	// Intergate using trapesiod rule...
@@ -262,7 +272,7 @@ public class CorrelatedSignal extends Signal {
 	
 	public int getParms() {
 		int n = 0;
-		for(int i=0; i<value.length; i++) if(weight[i] > 0.0) n++;
+		for(int i=value.length; --i >= 0; ) if(weight[i] > 0.0) n++;
 		return n;
 	}
 
@@ -330,7 +340,7 @@ public class CorrelatedSignal extends Signal {
 			for(final Channel pixel : goodChannels) pixel.temp = pixel.tempWG2 / (float) increment.weight;
 
 			// sync to data and calculate dependeces...
-			for(int t=from; t<to; t++) {
+			for(int t=to; --t >= from; ) {
 				final Frame exposure = integration.get(t);
 				if(exposure == null) continue;
 
@@ -371,7 +381,7 @@ public class CorrelatedSignal extends Signal {
 	private final void getMLCorrelated(final ChannelGroup<?> channels, final int from, final int to, final WeightedPoint increment) {
 		double sum = 0.0, sumw = 0.0;
 		
-		for(int t=from; t<to; t++) {
+		for(int t=to; --t >= from; ) {
 			final Frame exposure = integration.get(t);
 						
 			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
@@ -391,7 +401,7 @@ public class CorrelatedSignal extends Signal {
 		increment.noData();
 		int n = 0;
 		
-		for(int t=from; t<to; t++) {
+		for(int t=to; --t >= from; ) {
 			final Frame exposure = integration.get(t);
 			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
 				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {

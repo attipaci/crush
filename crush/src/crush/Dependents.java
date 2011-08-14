@@ -41,7 +41,7 @@ public class Dependents {
 	}
 	
 	public void clear(final Iterable<? extends Channel> channels, final int from, final int to) { 
-		for(int t=from; t<to; t++) {
+		for(int t=to; --t >= from; ) {
 			final Frame exposure = integration.get(t);
 			if(exposure != null) exposure.dependents -= forFrame[t];
 		}
@@ -75,7 +75,7 @@ public class Dependents {
 	}
 	
 	public void apply(final Iterable<? extends Channel> channels, final int from, final int to) {
-		for(int t=from; t<to; t++) {
+		for(int t=to; --t >= from; ) {
 			final Frame exposure = integration.get(t);
 			if(exposure != null) exposure.dependents += forFrame[t];
 		}

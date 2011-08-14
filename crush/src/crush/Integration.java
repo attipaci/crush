@@ -587,11 +587,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(robust) {
 			buffer = new WeightedPoint[(int) Math.ceil((double)size()/step)];
-			for(int i=0; i<buffer.length; i++) buffer[i] = new WeightedPoint();
+			for(int i=buffer.length; --i >= 0; ) buffer[i] = new WeightedPoint();
 		}
 		else {
 			offsets = new WeightedPoint[instrument.size()];
-			for(int i=0; i<offsets.length; i++) offsets[i] = new WeightedPoint();
+			for(int i=offsets.length; --i >= 0; ) offsets[i] = new WeightedPoint();
 		}
 		
 		int nt = size();
@@ -883,7 +883,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			final int fromt = T*blockSize;
 			final int tot = Math.min(size(), fromt+blockSize);
 			
-			for(int t=fromt; t < tot; t++) {
+			for(int t=tot; --t >= 0; ) {
 				final Frame exposure = get(t);
 				if(exposure == null) continue;
 
@@ -909,7 +909,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					nFrames++;
 				}
 			}
-			else for(int t=fromt; t < tot; t++) {
+			else for(int t=tot; --t >= 0; ) {
 				final Frame exposure = get(t);
 				if(exposure == null) continue;
 				if(points > deps) exposure.relativeWeight = 1.0F;
@@ -1001,7 +1001,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return n;
 	}
 	
-	public void zgetTimeStream(final Channel channel, final WeightedPoint[] data) {
+	public void getTimeStream(final Channel channel, final WeightedPoint[] data) {
 		final int c = channel.index;
 		final int nt = size();
 		for(int t=nt; --t >= 0; ) {
@@ -1609,15 +1609,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(n < 2) return pos;
 		
 		Vector2D[] smooth = new Vector2D[size()];
-		int valids = 0;
+		int valids = n;
 
 		Vector2D sum = new Vector2D();
 		
-		for(int t=n-1; --t >= 0; ) {
-			Vector2D position = pos[t];
-			if(position == null) continue;
-			sum.add(position);
-			valids++;
+		for(int t=n; --t >= 0; ) {
+			if(pos[t] == null) valids--;
+			else sum.add(pos[t]);
 		}
 
 		final int nm = n/2;
@@ -1658,6 +1656,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Vector2D[] pos = getSmoothPositions(Motion.SCANNING | Motion.CHOPPER, framesFor(smoothT));
 		Vector2D[] v = new Vector2D[size()];
 
+		final double i2dt = 0.5 / instrument.samplingInterval;
+		
 		for(int t=size()-1; --t > 0; ) {
 			if(pos[t+1] == null || pos[t-1] == null) v[t] = null;
 			else {
@@ -1665,7 +1665,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 						pos[t+1].x - pos[t-1].x,
 						pos[t+1].y - pos[t-1].y
 				);
-				v[t].scale(0.5 / instrument.samplingInterval);
+				v[t].scale(i2dt);
 			}
 		}
 
@@ -1760,6 +1760,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Vector2D[] pos = getSmoothPositions(Motion.TELESCOPE, framesFor(smoothT));
 		Vector2D[] a = new Vector2D[size()];
 	
+		final double idt = 1.0 / instrument.samplingInterval;
+		
 		for(int t=size()-1; --t > 0; ) {
 			if(pos[t] == null || pos[t+1] == null || pos[t-1] == null) a[t] = null;
 			else {
@@ -1767,7 +1769,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 						pos[t+1].x + pos[t-1].x - 2.0*pos[t].x,
 						pos[t+1].y + pos[t-1].y - 2.0*pos[t].y
 				);
-				a[t].scale(1.0/instrument.samplingInterval);
+				a[t].scale(idt);
 			}
 		}
 	
@@ -1860,12 +1862,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 			
-	public void checkForNaNs(Iterable<? extends Channel> channels, int from, int to) {
+	public void checkForNaNs(Iterable<? extends Channel> channels, final int from, int to) {
 		comments += "?";
 		
 		to = Math.min(to, size());
 		
-		for(int t=from; t<to; t++) {
+		for(int t=to; --t >= from; ) {
 			Frame exposure = get(t);
 			
 			if(exposure != null) for(Channel channel : channels) {

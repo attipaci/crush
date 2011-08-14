@@ -30,13 +30,13 @@ import java.util.*;
 import util.Unit;
 import util.data.Interpolator;
 
-public class ElevationResponse extends Interpolator {
+public class ElevationCouplingCurve extends Interpolator {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public ElevationResponse(String fileName) throws IOException {
+	public ElevationCouplingCurve(String fileName) throws IOException {
 		super(fileName);		
 	}
 	

@@ -163,7 +163,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 			final int matchPattern = flag[i][j] & pattern;
 			
 			// TODO for sheared grids...
-			for(int i1 = fromi1; i1<toi1; i1++) for(int j1 = fromj1; j1<toj1; j1++) 
+			for(int i1 = toi1; --i1 >= fromi1; ) for(int j1 = toj1; --j1 >= fromj1; ) 
 				if(Math.hypot((i-i1) * dx, (j-j1) * dy) <= radius) flag[i1][j1] |= matchPattern;
 		}
 	}
@@ -265,7 +265,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 			final Complex[] r1 = cdata[fx];
 			final Complex[] r2 = cdata[nx-fx];
 			
-			for(int fy=1; fy<ny; fy++) {
+			for(int fy=ny; --fy>0; ) {
 				final double A = Math.exp(axfx2 + ay*fy*fy);
 				final int fy1 = ny - fy;
 				

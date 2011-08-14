@@ -674,7 +674,7 @@ public class Data2D implements Cloneable {
 		final int toj = Math.min(sizeY(), j0 + beam[0].length);
 
 		double sum = 0.0, sumw = 0.0;
-		for(int i1=fromi; i1 < toi; i1++) for(int j1=fromj; j1 < toj; j1++) if(flag[i1][j1] == 0) {
+		for(int i1=toi; --i1 >= fromi; ) for(int j1=toj; --j1 > fromj; ) if(flag[i1][j1] == 0) {
 			final double wB = weightAt(i1, j1) * beam[i1-i0][j1-j0];
 			sum += wB * data[i1][j1];
 			sumw += Math.abs(wB);		    

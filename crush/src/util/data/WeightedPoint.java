@@ -29,7 +29,7 @@ import java.text.*;
 public class WeightedPoint implements Comparable<WeightedPoint>, Cloneable {
 	public double value, weight;
 
-	public WeightedPoint() { noData(); }
+	public WeightedPoint() {}
 
 	public WeightedPoint(WeightedPoint template) {
 		copy(template);
@@ -156,9 +156,6 @@ public class WeightedPoint implements Comparable<WeightedPoint>, Cloneable {
 		for(int i=data.length; --i >= 0; ) ddata[i] = data[i].weight;
 		return ddata;
 	}
-	
-	
-	
 	
 	public final static WeightedPoint NaN = new WeightedPoint(0.0, 0.0);
 

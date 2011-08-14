@@ -32,12 +32,7 @@ import java.text.*;
 public class CoordinatePair implements Cloneable {
 	public double x, y;
 
-	public CoordinatePair() { defaults(); }
-
-	public void defaults() {
-		x = Double.NaN;
-		y = Double.NaN;
-	}
+	public CoordinatePair() {}
 	
 	public CoordinatePair(Point2D point) { x = point.getX(); y = point.getY(); }
 	
@@ -85,7 +80,7 @@ public class CoordinatePair implements Cloneable {
 	
 	public void set(final double X, final double Y) { x = X; y = Y; }
 
-	public void zero() { x = 0.0; y = 0.0; }
+	public void zero() { x = y = 0.0; }
 
 	public boolean isNull() { return x == 0.0 && y == 0.0; }	
 

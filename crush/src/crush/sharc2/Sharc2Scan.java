@@ -75,7 +75,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		if(hasOption("elevation-response")) {
 			try { 
 				String fileName = Util.getSystemPath(option("elevation-response").getValue());
-				elevationResponse = new ElevationResponse(fileName).getValue(horizontal.elevation()); 
+				elevationResponse = new ElevationCouplingCurve(fileName).getValue(horizontal.elevation()); 
 				System.err.println("   Relative beam efficiency is " + Util.f3.format(elevationResponse));
 				for(Sharc2Integration integration : this) integration.gain *= elevationResponse;
 			}
@@ -235,10 +235,8 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		System.err.println(" Equatorial: " + equatorial.toString());	
 		
 		
-		// TODO iMJD does not exist in earlier scans
-		// need utility to convert DATE-OBS into MJD...
-		// (AstroTime with Calendar
-		
+		// iMJD does not exist in earlier scans
+		// convert DATE-OBS into MJD...
 		if(header.containsKey("JUL_DAY")) iMJD = header.getIntValue("JUL_DAY");
 		else {
 			try { iMJD = (int)(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }

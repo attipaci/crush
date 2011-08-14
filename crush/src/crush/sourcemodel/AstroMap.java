@@ -205,8 +205,7 @@ public class AstroMap extends AstroImage {
 	public void normalize() {
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; )  {
 			if(weight[i][j] <= 0.0) {
-				data[i][j] = 0.0;
-				weight[i][j] = 0.0;
+				data[i][j] = weight[i][j] = 0.0;
 				flag[i][j] = 1;
 			} 
 			else {
@@ -219,14 +218,15 @@ public class AstroMap extends AstroImage {
 	@Override
 	protected void sanitize(int i, int j) {
 		flag[i][j] |= 1;
-		data[i][j] = 0.0;
-		weight[i][j] = 0.0;
+		data[i][j] = weight[i][j] = 0.0;
 	}
 	
-	public void applyCorrection(double filtering, double[][] significance) {
+	public void applyCorrection(double filtering, final double[][] significance) {
+		final double ifiltering = 1.0 / filtering;
+		final double filtering2 = filtering * filtering;
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(weight[i][j] > 0.0) if(significance[i][j] <= clippingS2N) {
-			data[i][j] /= filtering;
-			weight[i][j] *= filtering * filtering;
+			data[i][j] *= ifiltering;
+			weight[i][j] *= filtering2;
 		}	
 	}
 
@@ -287,7 +287,7 @@ public class AstroMap extends AstroImage {
 				final int toi = Math.min(sizeX(), i+1);
 				final int fromj = Math.max(0, j-1);
 				final int toj = Math.min(sizeY(), j+1);
-				for(int i1=fromi; i1<toi; i1++) for(int j1=fromj; j1<toj; j1++) if(mask[i1][j1]) neighbours++;
+				for(int i1=toi; --i1 >= fromi; ) for(int j1=toj; --j1 >= fromj; ) if(mask[i1][j1]) neighbours++;
 				if(neighbours >= minNeighbours) cleaned[i][j] = true;
 			}
 			return cleaned;
@@ -455,11 +455,11 @@ public class AstroMap extends AstroImage {
 	@Override
 	public void scale(final double scalar) {
 		if(scalar == 1.0) return;		
-		final double scalar2 = scalar*scalar;
+		final double iscalar2 = 1.0 / (scalar*scalar);
 		
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) {
 			data[i][j] *= scalar;
-			weight[i][j] /= scalar2;
+			weight[i][j] *= iscalar2;
 		}
 	}  
 	
@@ -562,8 +562,8 @@ public class AstroMap extends AstroImage {
 		
 	public void MEM(double[][] model, double lambda) {
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			double sigma = Math.sqrt(1.0/weight[i][j]);
-			double memValue = Math.hypot(sigma, data[i][j]) / Math.hypot(sigma, model[i][j]) ;
+			final double sigma = Math.sqrt(1.0/weight[i][j]);
+			final double memValue = Math.hypot(sigma, data[i][j]) / Math.hypot(sigma, model[i][j]) ;
 			data[i][j] -= Math.signum(data[i][j]) * lambda * sigma * Math.log(memValue);
 		}
 	}
@@ -689,13 +689,13 @@ public class AstroMap extends AstroImage {
 		WeightedPoint point = new WeightedPoint();
 		WeightedPoint surrounding = new WeightedPoint();
 		
-		for(int i=0; i<sizeX(); i++) for(int j=0; j<sizeY(); j++) if(flag[i][j] == 0) {
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
 			point.value = data[i][j];
 			point.weight = weight[i][j];
 			surrounding.value = diff.data[i][j];
 			surrounding.weight = diff.weight[i][j];
 			point.subtract(surrounding);
-			if(point.significance() > significance) flag[i][j] = 1;			
+			if(DataPoint.significanceOf(point) > significance) flag[i][j] = 1;			
 		}	
 	}
 	
