@@ -26,8 +26,7 @@ import java.util.Arrays;
 
 import util.Complex;
 
-public class FFT {
-	
+public class FFT {	
 
 	// Rewritten to skip costly intermediate Complex storage...
 	public static double[] convolve(double[] data, double[] beam) {
@@ -162,7 +161,7 @@ public class FFT {
 		double[] tdata = getPadded(data, n);
 		int N = n/2;
 	
-		Complex[] fdata = new Complex[N+1];
+		final Complex[] fdata = new Complex[N+1];
 		for(int i=N+1; --i >= 0; ) fdata[i] = new Complex();
 	
 		uncheckedForward(tdata, fdata);
@@ -182,10 +181,9 @@ public class FFT {
 		fdata[0].x = norm * data[0];
 		fdata[N].x = norm * data[1];
 	
-		// TODO inverted iteration order...
-		for(int i=1,ii=2; i<N; i++) {
-			fdata[i].x = norm * data[ii++];
-			fdata[i].y = norm * data[ii++];
+		for(int i=N, ii=data.length; --i > 0; ) {
+			fdata[i].x = norm * data[--ii];
+			fdata[i].y = norm * data[--ii];
 		}
 	}
 
@@ -201,10 +199,9 @@ public class FFT {
 		fdata[0].x = norm * data[0];
 		fdata[N].x = norm * data[1];
 	
-		// TODO inverted iteration order...
-		for(int i=1,ii=2; i<N; i++) {
-			fdata[i].x = norm * data[ii++];
-			fdata[i].y = norm * data[ii++];
+		for(int i=N, ii=data.length; --i > 0; ) {
+			fdata[i].x = norm * data[--ii];
+			fdata[i].y = norm * data[--ii];
 		}
 	}
 
@@ -234,10 +231,9 @@ public class FFT {
 		data[0] = fdata[0].x;
 		data[1] = fdata[N].x;
 	
-		// TODO inverted iteration order
-		for(int i=1,ii=2; i<N; i++) {
-			data[ii++] = fdata[i].x;
-			data[ii++] = fdata[i].y;
+		for(int i=N, ii=data.length; --i > 0; ) {
+			data[--ii] = fdata[i].x;
+			data[--ii] = fdata[i].y;
 		}
 	
 		powerRealTransform(data, false);
@@ -249,10 +245,9 @@ public class FFT {
 		data[0] = (float) fdata[0].x;
 		data[1] = (float) fdata[N].x;
 	
-		// TODO inverted iteration order...
-		for(int i=1,ii=2; i<N; i++) {
-			data[ii++] = (float) fdata[i].x;
-			data[ii++] = (float) fdata[i].y;
+		for(int i=N, ii=data.length; --i > 0; ) {
+			data[--ii] = (float) fdata[i].x;
+			data[--ii] = (float) fdata[i].y;
 		}
 	
 		powerRealTransform(data, false);
@@ -272,34 +267,26 @@ public class FFT {
 		return tdata;
 	}
 
-	public static void uncheckedForward(final Complex[] data, final boolean isForward, double[] temp) {
-		if(temp == null) temp = new double[2*data.length];
-		else if(temp.length != 2*data.length) temp = new double[2*data.length];
+	public static void uncheckedTransform(final Complex[] data, final boolean isForward) {
+		// FFT
+		powerTransform(data, isForward);
 	
-		// TODO inverted iteration order...
-		for(int i=0, ii=0; i<data.length; i++) {
-			temp[ii++] = data[i].x;
-			temp[ii++] = data[i].y;
-		}
-	
-		powerTransform(temp, isForward);
-	
-		double norm = isForward ? 1.0 / data.length : 1.0;
-	
-		// TODO inverted iteration order...
-		for(int i=0, ii=0; i<data.length; i++) {
-			data[i].x = norm * temp[ii++];
-			data[i].y = norm * temp[ii++];
-		}	    
+		// Unload the normalized spectrum
+		if(!isForward) return;
+		
+		double norm = 1.0 / data.length;
+		
+		// Renormalize forward transforms to amplitudes...
+		for(Complex value : data) value.scale(norm);
+		
 	}
-
+	
 	public static void uncheckedForward(Complex[][] data, boolean isForward) {
 		Complex[] ctemp = null;
-		double[] dtemp = null;
-		uncheckedForward(data, isForward, ctemp, dtemp);
+		uncheckedForward(data, isForward, ctemp);
 	}
 
-	public static void uncheckedForward(Complex[][] data, boolean isForward, Complex[] temp, double[] dtemp) {
+	public static void uncheckedForward(Complex[][] data, boolean isForward, Complex[] temp) {
 		int nx = data.length;
 		int ny = data[0].length;
 	
@@ -308,12 +295,12 @@ public class FFT {
 	
 		for(int i=nx; --i >= 0; ) {
 			if(temp[i] == null) temp[i] = new Complex();
-			uncheckedForward(data[i], isForward, dtemp);
+			uncheckedTransform(data[i], isForward);
 		}
 	
 		for(int j=ny; --j >= 0; ) {
 			for(int i=nx; --i >= 0; ) temp[i] = data[i][j];
-			uncheckedForward(temp, isForward, dtemp);
+			uncheckedTransform(temp, isForward);
 			for(int i=nx; --i >= 0; ) data[i][j] = temp[i];
 		}
 	}
@@ -377,13 +364,13 @@ public class FFT {
 	
 		// Change from integral to amplitide normalization
 		for(int i=nx; --i >= 0; ) {
-			a[i][0] /= 2.0;
-			a[i][ny-1] /= 2.0;
+			a[i][0] *= 0.5;
+			a[i][ny-1] *= 0.5;
 		}
 	
 		for(int j=ny; --j >= 0; ) {
-			a[0][j] /= 2.0;
-			a[nx-1][j] /= 2.0;
+			a[0][j] *= 0.5;
+			a[nx-1][j] *= 0.5;
 		}
 	
 		return a;

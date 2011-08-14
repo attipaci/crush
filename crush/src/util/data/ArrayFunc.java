@@ -208,9 +208,9 @@ public final class ArrayFunc {
 			final int toi = Math.min(data.length, i0 + nbeam);
 		
 			double sum = 0.0, sumw = 0.0;
-			for(int i1=fromi; i1 < toi; i1++) if(!Double.isNaN(data[i1])) {
-				sum += beam[i1 - i0] * data[i1];
-				sumw += beam[i1 - i0];
+			for(int i1=toi, ib=toi-i0-1; --i1 >= fromi; ib--) if(!Double.isNaN(data[i1])) {
+				sum += beam[ib] * data[i1];
+				sumw += beam[ib];
 			}
 			smoothed[i] = sum / sumw;
 		}

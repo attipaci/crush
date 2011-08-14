@@ -4,6 +4,8 @@ fluxes?
 	-- is this corrected in 2.05-1?
 >> Polarization: why does it add up over iterations? Why not correct?
 
+
+
 For 2.10:
 
 	-- Switch to Java 1.6 (change package deps)
@@ -39,6 +41,13 @@ For 2.10:
 
 
 General:
+
+	-- Scan-synchronous filtering...
+	   (get X and Y spectra) filter some sigma above rms
+	   'filter.motion', 'filter.motion.significance'
+	   keep track of dependents...	 
+
+	-- Hipass through fast-smooth instead of FFT
 
 	-- De-blend detection fluxes...
 

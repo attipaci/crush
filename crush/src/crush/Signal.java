@@ -52,7 +52,7 @@ public class Signal implements Cloneable {
 		this(mode, integration);
 		resolution = (int) Math.ceil((double) integration.size() / values.length);
 		this.value = new float[values.length];
-		for(int i=0; i<values.length; i++) this.value[i] = (float) values[i];
+		for(int i=values.length; --i >= 0; ) this.value[i] = (float) values[i];
 		driftN = values.length+1;
 	}
 	
@@ -101,7 +101,7 @@ public class Signal implements Cloneable {
 		
 		for(int fromt=0, T=0; fromt<value.length; fromt+=driftN) {
 			final int tot = Math.min(fromt + driftN, value.length);
-			for(int t=fromt; t<tot; t++) value[t] += drifts[T];
+			for(int t=tot; --t >= fromt; ) value[t] += drifts[T];
 		}
 		
 		drifts = null;
@@ -146,13 +146,13 @@ public class Signal implements Cloneable {
 			int n = 0;
 			final int tot = Math.min(fromt + driftN, value.length);
 			
-			for(int t=fromt; t<tot; t++) if(!Float.isNaN(value[t])){
+			for(int t=tot; --t >= fromt; ) if(!Float.isNaN(value[t])) {
 				sum += value[t];
 				n++;
 			}
 			if(n > 0) {
 				float fValue = (float) (sum / n);
-				for(int t=fromt; t<tot; t++) value[t] -= fValue;
+				for(int t=tot; --t >= fromt; ) value[t] -= fValue;
 				drifts[T++] = fValue;
 			}
 		}
@@ -192,17 +192,19 @@ public class Signal implements Cloneable {
 	// f[1] = f[0] + h f'[0]
 	// f[n] = f[n-1] + h f'[n]
 	public synchronized void differentiate() {
-		float dt = (float) (resolution * integration.instrument.samplingInterval);
-		for(int t=1; t<value.length; t++) value[t-1] = (value[t] - value[t-1]) / dt;
+		final float dt = (float) (resolution * integration.instrument.samplingInterval);
 		
-		float temp = value[value.length-1];
-		value[value.length-1] = value[value.length-2];
-		value[value.length-2] = temp;
+		final int n = value.length;
+		final int nm1 = n-1;
 		
-		for(int t=value.length-2; t>0; t--) {
-			value[t] = value[t-1];
-			value[t] = 0.5F * (value[t] + value[t+1]);
-		}
+		// v[n] = f'[n+0.5]
+		for(int t=0; t<nm1; t++) value[t] = (value[t+1] - value[t]) / dt;
+
+		// the last value is based on the last difference...
+		value[n-1] = value[n-2];
+		// otherwise, it's:
+		// v[n] = (f'[n+0.5] + f'[n-0.5]) = v[n] + v[n-1]
+		for(int t=nm1; --t > 0; ) value[t] = 0.5F * (value[t] + value[t-1]);
 		
 		isFloating = false;
 	}

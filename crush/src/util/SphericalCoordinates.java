@@ -64,19 +64,15 @@ public class SphericalCoordinates extends CoordinatePair {
 		defaultLocalCoordinateSystem.add(latitudeOffsetAxis);			
 	}
 	
-	public SphericalCoordinates() {}
+	public SphericalCoordinates() {
+		cosLat = 1.0;
+		sinLat = 0.0;
+		setDefaultCoordinates();		
+	}
 
 	public SphericalCoordinates(double X, double Y) { setDefaultCoordinates(); set(X,Y); }
 	
 	public SphericalCoordinates(String text) { setDefaultCoordinates(); parse(text); }
-	
-	@Override
-	public final void defaults() {
-		super.defaults();
-		cosLat = 1.0;
-		sinLat = 0.0;
-		setDefaultCoordinates();
-	}
 	
 	public void setDefaultCoordinates() {
 		coordinateSystem = SphericalCoordinates.defaultCoordinateSystem;

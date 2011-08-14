@@ -29,12 +29,6 @@ package util;
 public class Vector2D extends CoordinatePair {
 
 	public Vector2D() {}
-	
-	@Override
-	public void defaults() { 
-		x = 0.0;
-		y = 0.0;
-	}
 
 	public Vector2D(String text) { parse(text); }
 

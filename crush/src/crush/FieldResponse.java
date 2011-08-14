@@ -41,8 +41,8 @@ public class FieldResponse extends Response {
 	public Signal getSignal(Integration<?, ?> integration) {
 		double[] data = new double[integration.size()];	
 		try {
-			for(int t=0; t<data.length; t++) {
-				Frame exposure = integration.get(t);
+			for(int t=data.length; --t >= 0; ) {
+				final Frame exposure = integration.get(t);
 				data[t] = exposure == null ? Double.NaN : field.getDouble(exposure);
 			}
 		}

@@ -2,7 +2,6 @@
 >>> eliminate unnecessary WeightedPoint, Data and Vector2D arrays...
 
 
-
 	[BUG] {APEX} Skydip reductions were broken due to trying to validate
 	equatorial coordinates, which are no longer read from the tables.
 
@@ -13,18 +12,32 @@
 	should allow better decorrelation of their responses. Previously all
 	signals were assumed floating.
 
-	[FIX] Various small and rather inconsequential arithmetic fixes.
+	[FIX] Various small and fairly inconsequential arithmetic fixes.
+
+	[FIX] One of the Complex FFT routines has not copied contents into a
+	real array properly. However, this particular routine was never used
+	in crush.
+
+	[FIX] Signal.differenciate() fixed and improved. The functionality was
+	not really used so far, but may be in the future...
+
+	[TWEAK] {APEX} Changed smoothing of telescope position data to 48ms
+	('positions.smooth=0.048') matching the native telescope rate. 
 
 	[SPEED] Various small speed optimizations on iterating over arrays and
-	image smoothing. As a result, reduction speeds may have improved 
-	25--30%.
+	image smoothing. As a result, reduction speeds may have improved by
+	a few percent (i.e. not much).
 
 	[CODE] The beginnings of a common FFT filter umbrella structure, which
 	will be the base of noise whitening and profiled filters in the near
 	future...
 
-	[CODE] New 1D array resampling functionality...
+	[CODE] New 1D array resampling functionality.
 
+	[CODE] 2D Complex FFT to rely on native 1D Complex FFT (rather than
+	NR style array).
+
+	[CODE] CoordinatePair default values changes to 0,0 from NaN,NaN
 
 2.05-1 (3 Aug 2011)
 	
