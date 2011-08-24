@@ -27,7 +27,7 @@ import java.util.Arrays;
 
 import util.Complex;
 import util.Util;
-import util.data.ArrayFunc;
+import util.data.Data;
 import util.data.FFT;
 
 public abstract class Filter {
@@ -105,7 +105,7 @@ public abstract class Filter {
 		// Get a standard length representation of the filter response
 		// to record...
 		float[] filterResponse = new float[channel.filterResponse.length];
-		ArrayFunc.resample(phi, filterResponse);
+		Data.resample(phi, filterResponse);
 		
 		double sumPreserved = 0.0;	
 		for(int F=filterResponse.length; --F >= 0; ) {

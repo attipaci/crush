@@ -42,6 +42,8 @@ For 2.10:
 
 General:
 
+	-- tau.dat and calibration.dat by year...
+
 	-- Scan-synchronous filtering...
 	   (get X and Y spectra) filter some sigma above rms
 	   'filter.motion', 'filter.motion.significance'

@@ -36,12 +36,12 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.05-1
+ * @version 2.05-2
  * 
  */
 public class CRUSH extends Configurator {
 	private static String version = "2.05-2";
-	private static String revision = "alpha 2";
+	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -321,8 +321,8 @@ public class CRUSH extends Configurator {
 	}
 	
 	public synchronized void iterate() throws InterruptedException {
-		Vector<String> ordering = get("ordering").getLowerCaseList();
-		Vector<String> tasks = new Vector<String>();
+		List<String> ordering = get("ordering").getLowerCaseList();
+		ArrayList<String> tasks = new ArrayList<String>();
 		
 		for(String task : ordering) {
 			tasks.add(task);
@@ -337,10 +337,10 @@ public class CRUSH extends Configurator {
 		System.err.println();
 	}
 	
-	public synchronized void iterate(Vector<String> tasks) throws InterruptedException {
+	public synchronized void iterate(List<String> tasks) throws InterruptedException {
 		while(!queue.isEmpty()) wait();
 		
-		Vector<Pipeline> threads = new Vector<Pipeline>();
+		ArrayList<Pipeline> threads = new ArrayList<Pipeline>();
 		System.err.println();
 			
 		threads.clear();	

@@ -78,6 +78,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public Chopper chopper;
 	public DataPoint aveScanSpeed;
+	//public MotionFilter motionFilter;
 	
 	public double filterTimeScale = Double.POSITIVE_INFINITY;
 	public double nefd = Double.NaN; // It is readily cast into the Jy sqrt(s) units!!!
@@ -156,7 +157,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		// Automatic downsampling after vclipping...
 		if(hasOption("downsample")) if(option("downsample").equals("auto")) downsample();
-		
+	
 		// Discard invalid frames at the beginning and end of the integration...
 		trim();
 		
@@ -165,6 +166,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		int mappingFrames = getFrameCount(Frame.SOURCE_FLAGS);
 		if(getFrameCount(Frame.SOURCE_FLAGS) < minFrames) 
 			throw new IllegalStateException("Integration is too short (" + Util.f1.format(mappingFrames * instrument.samplingInterval / Unit.s) + " seconds).");
+		
+		// Filter motion only after downsampling...
+		//if(hasOption("filter.motion")) motionFilter = new MotionFilter(this);
 		
 		detectorStage();
 		
@@ -224,7 +228,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		int from = (int)range.min;
 		int to = Math.min(size(), (int)range.max);
 		
-		Vector<FrameType> buffer = new Vector<FrameType>(to-from+1);
+		ArrayList<FrameType> buffer = new ArrayList<FrameType>(to-from+1);
 		
 		for(int t=from; t<to; t++) buffer.add(get(t));
 		clear();
@@ -485,7 +489,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void fillGaps() {
 		double lastMJD = Double.NaN;
 
-		Vector<FrameType> buffer = new Vector<FrameType>(2*size());
+		ArrayList<FrameType> buffer = new ArrayList<FrameType>(2*size());
 		
 		for(FrameType exposure : this) if(!Double.isNaN(lastMJD)) {
 			final int gap = (int)Math.round((exposure.MJD - lastMJD) * Unit.day / instrument.samplingInterval) - 1;
@@ -883,7 +887,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			final int fromt = T*blockSize;
 			final int tot = Math.min(size(), fromt+blockSize);
 			
-			for(int t=tot; --t >= 0; ) {
+			for(int t=tot; --t >= fromt; ) {
 				final Frame exposure = get(t);
 				if(exposure == null) continue;
 
@@ -899,7 +903,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				final double dof = 1.0 - deps/points;
 				final float fw = (float) ((points-deps) / sumChi2);
 			
-				for(int t=fromt; t < tot; t++) {
+				for(int t=tot; --t >= fromt; ) {
 					final Frame exposure = get(t);
 					if(exposure == null) continue;
 					exposure.unflag(Frame.FLAG_DOF);
@@ -909,7 +913,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					nFrames++;
 				}
 			}
-			else for(int t=tot; --t >= 0; ) {
+			else for(int t=tot; --t >= fromt; ) {
 				final Frame exposure = get(t);
 				if(exposure == null) continue;
 				if(points > deps) exposure.relativeWeight = 1.0F;
@@ -1579,7 +1583,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					if((type & Motion.CHOPPER) == 0) coords.subtractNativeOffset(exposure.chopperPosition);
 					pos.x = coords.x;
 					pos.y = coords.y;
+					
+					if((type & Motion.PROJECT_GLS) != 0) pos.x *= coords.cosLat;
 				}
+				
 
 				// Scanning includes the chopper motion
 				// SCANNING with or without CHOPPER
@@ -1601,10 +1608,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public Vector2D[] getSmoothPositions(int type) {
 		double T = hasOption("positions.smooth") ? option("positions.smooth").getDouble() * Unit.s : instrument.samplingInterval;
-		return getSmoothPositions(type, framesFor(T));
-	}
-	
-	public Vector2D[] getSmoothPositions(int type, int n) {
+		final int n = framesFor(T);
+
 		Vector2D[] pos = getPositions(type);
 		if(n < 2) return pos;
 		
@@ -1648,12 +1653,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public Vector2D[] getScanningVelocities() { 
-		double T = hasOption("positions.smooth") ? option("positions.smooth").getDouble() * Unit.s : instrument.samplingInterval; 
-		return getScanningVelocities(T); 	
-	}
-	
-	public Vector2D[] getScanningVelocities(double smoothT) {
-		Vector2D[] pos = getSmoothPositions(Motion.SCANNING | Motion.CHOPPER, framesFor(smoothT));
+		Vector2D[] pos = getSmoothPositions(Motion.SCANNING | Motion.CHOPPER);
 		Vector2D[] v = new Vector2D[size()];
 
 		final double i2dt = 0.5 / instrument.samplingInterval;
@@ -1662,7 +1662,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(pos[t+1] == null || pos[t-1] == null) v[t] = null;
 			else {
 				v[t] = new Vector2D(
-						pos[t+1].x - pos[t-1].x,
+						Math.IEEEremainder(pos[t+1].x - pos[t-1].x, SphericalCoordinates.twoPI),
 						pos[t+1].y - pos[t-1].y
 				);
 				v[t].scale(i2dt);
@@ -1690,15 +1690,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return new DataPoint(new WeightedPoint(avev, w));
 	}
 	
-	public int velocityCut(Range v) { 
-		double T = hasOption("positions.smooth") ? option("positions.smooth").getDouble() * Unit.s : instrument.samplingInterval; 
-		return velocityCut(v, T); 
-	}
-
-	public int velocityCut(Range range, double smoothT) {
+	public int velocityCut(Range range) { 
 		System.err.print("   Discarding unsuitable mapping speeds. ");
 	
-		Vector2D[] v = getScanningVelocities(smoothT);
+		Vector2D[] v = getScanningVelocities();
 		
 		int flagged = 0;
 		int cut = 0;
@@ -1752,21 +1747,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public Vector2D[] getAccelerations() { 
-		double T = hasOption("positions.smooth") ? option("positions.smooth").getDouble() * Unit.s : instrument.samplingInterval; 
-		return getAccelerations(T); 	
-	}
-	
-	public Vector2D[] getAccelerations(double smoothT) {
-		Vector2D[] pos = getSmoothPositions(Motion.TELESCOPE, framesFor(smoothT));
-		Vector2D[] a = new Vector2D[size()];
-	
+		final Vector2D[] pos = getSmoothPositions(Motion.TELESCOPE | Motion.PROJECT_GLS);
+		final Vector2D[] a = new Vector2D[size()];
+		
 		final double idt = 1.0 / instrument.samplingInterval;
 		
 		for(int t=size()-1; --t > 0; ) {
 			if(pos[t] == null || pos[t+1] == null || pos[t-1] == null) a[t] = null;
 			else {
 				a[t] = new Vector2D(
-						pos[t+1].x + pos[t-1].x - 2.0*pos[t].x,
+						Math.IEEEremainder(pos[t+1].x + pos[t-1].x - 2.0*pos[t].x, SphericalCoordinates.twoPI),
 						pos[t+1].y + pos[t-1].y - 2.0*pos[t].y
 				);
 				a[t].scale(idt);
@@ -1906,7 +1896,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final int windowSize = (int)Math.round(1.82 * WindowFunction.getEquivalenWidth("Hann")*n);
 		final int centerOffset = windowSize/2 + 1;
 		final double[] w = WindowFunction.get("Hann", windowSize);
-		final Vector<FrameType> buffer = new Vector<FrameType>((size()-windowSize)/n+1); 
+		final ArrayList<FrameType> buffer = new ArrayList<FrameType>((size()-windowSize)/n+1); 
 		final double[] value = new double[instrument.size()];
 		
 		// Normalize window function to absolute intergral 1
@@ -2162,7 +2152,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		String scanID = getFullID("-");
 		
 		double[][] covar = getCovariance(); 
-		Vector<String> specs = hasOption("write.covar") ? option("write.covar").getList() : new Vector<String>();
+		List<String> specs = hasOption("write.covar") ? option("write.covar").getList() : new ArrayList<String>();
 		String prefix = CRUSH.workPath + File.separator + "covar";
 		
 		// If no argument is specified, write the full covariance in backend channel ordering
@@ -2317,8 +2307,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		// Then the ArrayList
 		i = 0;
-		Vector<Frame> frames = new Vector<Frame>();
-		Vector<Channel> channels = new Vector<Channel>();
+		ArrayList<Frame> frames = new ArrayList<Frame>();
+		ArrayList<Channel> channels = new ArrayList<Channel>();
 		frames.addAll(this);
 		channels.addAll(instrument);
 		
@@ -2515,6 +2505,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			despike(option(task));
 			updatePhases();
 		}
+		/*
+		else if(task.equals("filter.motion")) {
+			motionFilter.filter();			
+		}
+		*/
 		else if(task.equals("whiten")) {
 			whiten();
 			if(indexOf("whiten") > indexOf("weighting")) getWeights();

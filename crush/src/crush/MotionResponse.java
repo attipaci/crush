@@ -30,17 +30,14 @@ public abstract class MotionResponse extends Response {
 
 	public MotionResponse() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public MotionResponse(ChannelGroup<?> group, Field gainField) {
 		super(group, gainField);
-		// TODO Auto-generated constructor stub
 	}
 
 	public MotionResponse(ChannelGroup<?> group) {
 		super(group);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public abstract Signal getSignal(Integration<?, ?> integration, Motion direction);

@@ -291,13 +291,13 @@ implements TableFormatter.Entries {
 	
 	// TODO ability to flag groups divisions...
 	// perhaps flag.group, and flag.division...
-	public void flagPixels(Vector<Integer> list) {
+	public void flagPixels(Collection<Integer> list) {
 		Hashtable<Integer, ChannelType> lookup = getChannelLookup();
 		System.err.println(" Flagging " + list.size() + " channels");
 		for(int beIndex : list) if(lookup.containsKey(beIndex)) lookup.get(beIndex).flag(Channel.FLAG_DEAD);
 	}
 	
-	public void markBlinds(Vector<Integer> list) {
+	public void markBlinds(Collection<Integer> list) {
 		// Anything flagged as blind so far should be flagged as dead instead...
 		for(Channel channel : this) if(channel.isFlagged(Channel.FLAG_BLIND)) {
 			channel.unflag(Channel.FLAG_BLIND);
@@ -492,15 +492,15 @@ implements TableFormatter.Entries {
 
 	}
 	
-	public Vector<String> getDivisionNames() {
-		Vector<String> keys = new Vector<String>();
+	public List<String> getDivisionNames() {
+		ArrayList<String> keys = new ArrayList<String>();
 		for(String key : divisions.keySet()) keys.add(key);
 		Collections.sort(keys);
 		return keys;
 	}
 	
-	public Vector<String> getModalityNames() {
-		Vector<String> keys = new Vector<String>();
+	public List<String> getModalityNames() {
+		ArrayList<String> keys = new ArrayList<String>();
 		for(String key : modalities.keySet()) keys.add(key);
 		Collections.sort(keys);
 		return keys;

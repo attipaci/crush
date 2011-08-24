@@ -57,7 +57,7 @@ public class SkyDipModel {
 		parameters.clear();
 		
 		if(options.isConfigured("fit")) {
-			Vector<String> names = options.get("fit").getList();
+			List<String> names = options.get("fit").getList();
 			for(String name : names) {
 				name = name.toLowerCase();
 				
