@@ -1662,7 +1662,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(pos[t+1] == null || pos[t-1] == null) v[t] = null;
 			else {
 				v[t] = new Vector2D(
-						Math.IEEEremainder(pos[t+1].x - pos[t-1].x, SphericalCoordinates.twoPI),
+						pos[t+1].x - pos[t-1].x,
 						pos[t+1].y - pos[t-1].y
 				);
 				v[t].scale(i2dt);
@@ -1747,7 +1747,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public Vector2D[] getAccelerations() { 
-		final Vector2D[] pos = getSmoothPositions(Motion.TELESCOPE | Motion.PROJECT_GLS);
+		final Vector2D[] pos = getSmoothPositions(Motion.TELESCOPE);
 		final Vector2D[] a = new Vector2D[size()];
 		
 		final double idt = 1.0 / instrument.samplingInterval;
@@ -1756,7 +1756,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(pos[t] == null || pos[t+1] == null || pos[t-1] == null) a[t] = null;
 			else {
 				a[t] = new Vector2D(
-						Math.IEEEremainder(pos[t+1].x + pos[t-1].x - 2.0*pos[t].x, SphericalCoordinates.twoPI),
+						Math.cos(pos[t].y) * Math.IEEEremainder(pos[t+1].x + pos[t-1].x - 2.0*pos[t].x, SphericalCoordinates.twoPI),
 						pos[t+1].y + pos[t-1].y - 2.0*pos[t].y
 				);
 				a[t].scale(idt);
