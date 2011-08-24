@@ -113,7 +113,7 @@ public class Data2D implements Cloneable {
 	public void setSize(int x, int y) {
 		data = new double[x][y];
 		flag = new int[x][y];
-		for(int i=0; i<x; i++) Arrays.fill(flag[i], 1); 
+		while(--x >= 0) Arrays.fill(flag[x], 1); 
 	}
 	
 	public void noFlag() {
@@ -123,7 +123,7 @@ public class Data2D implements Cloneable {
 	
 
 	public void copyImageOf(double[][] image) { 
-		for(int i=sizeX(); --i>=0; ) System.arraycopy(image[i], 0, data[i], 0, sizeY());
+		for(int i=sizeX(); --i >= 0; ) System.arraycopy(image[i], 0, data[i], 0, sizeY());
 	}
 
 	public void addImage(double[][] image, double scale) {
@@ -267,13 +267,13 @@ public class Data2D implements Cloneable {
 		if(ay == null) ay = new double[4];
 		
 		// Calculate the spline coefficients....
-		for(int i=fromi; i<toi; i++) {
+		for(int i=toi; --i >= fromi; ) {
 			final double dx = Math.abs(i - ic);
 			ax[i-i0] = dx > 1.0 ? 
 					((-0.5 * dx + 2.5) * dx - 4.0) * dx + 2.0 : (1.5 * dx - 2.5) * dx * dx + 1.0;
 		}
 		
-		for(int j=fromj; j<toj; j++) {
+		for(int j=toj; --j >= fromj; ) {
 			final double dy = Math.abs(j - jc);
 			ay[j-j0] = dy > 1.0 ? 
 					((-0.5 * dy + 2.5) * dy - 4.0) * dy + 2.0 : (1.5 * dy - 2.5) * dy * dy + 1.0;
@@ -281,7 +281,7 @@ public class Data2D implements Cloneable {
 		
 		// Do the spline convolution...
 		double sum = 0.0, sumw = 0.0;
-		for(int i=fromi; i<toi; i++) for(int j=fromj; j<toj; j++) if(flag[i][j] == 0) {
+		for(int i=toi; --i >= fromi; ) for(int j=toj; --j >= fromj; ) if(flag[i][j] == 0) {
 			final double w = ax[i-i0]*ay[j-j0];
 			sum += w * data[i][j];
 			sumw += w;
@@ -667,14 +667,14 @@ public class Data2D implements Cloneable {
 	public void getSmoothedValueAt(final int i, final int j, final double[][] beam, int ic, int jc, WeightedPoint result) {
 		final int i0 = i - ic;
 		final int fromi = Math.max(0, i0);
-		final int toi = Math.min(sizeX()-1, i0 + beam.length);
+		final int toi = Math.min(sizeX(), i0 + beam.length);
 		
 		final int j0 = j - jc;
 		final int fromj = Math.max(0, j0);
 		final int toj = Math.min(sizeY(), j0 + beam[0].length);
 
 		double sum = 0.0, sumw = 0.0;
-		for(int i1=toi; --i1 >= fromi; ) for(int j1=toj; --j1 > fromj; ) if(flag[i1][j1] == 0) {
+		for(int i1=toi; --i1 >= fromi; ) for(int j1=toj; --j1 >= fromj; ) if(flag[i1][j1] == 0) {
 			final double wB = weightAt(i1, j1) * beam[i1-i0][j1-j0];
 			sum += wB * data[i1][j1];
 			sumw += Math.abs(wB);		    

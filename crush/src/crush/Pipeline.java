@@ -32,7 +32,7 @@ public class Pipeline extends Thread {
 	Vector<Scan<?, ?>> scans = new Vector<Scan<?, ?>>();
 	CRUSH crush;
 	
-	Vector<String> ordering = new Vector<String>();
+	List<String> ordering = new ArrayList<String>();
 	boolean isRobust = false, isGainRobust = false;
 	
 	SourceModel<?,?> scanSource;
@@ -61,7 +61,7 @@ public class Pipeline extends Thread {
 		catch(InterruptedException e) { System.err.println("\nInterrupted!"); }
 	}
 
-	public void setOrdering(Vector<String> ordering) { this.ordering = ordering; }
+	public void setOrdering(List<String> ordering) { this.ordering = ordering; }
 	
 	public synchronized void iterate() throws InterruptedException {					
 		for(Scan<?, ?> scan : scans) iterate(scan);

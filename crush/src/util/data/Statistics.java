@@ -60,25 +60,25 @@ public final class Statistics {
 		return result;		
 	}
 
-	public static void smartMedian(final WeightedPoint[] data, final int fromIndex, final int toIndex, final double maxDependence, WeightedPoint result) {
+	public static void smartMedian(final WeightedPoint[] data, final int from, final int to, final double maxDependence, WeightedPoint result) {
 		// If no data, then 
-		if(toIndex == fromIndex) {
+		if(to == from) {
 			result.noData();
 			return;
 		}
 		
-		if(toIndex - fromIndex == 1) {
-			result.copy(data[fromIndex]);
+		if(to - from == 1) {
+			result.copy(data[from]);
 			return;
 		}
 	
-		Arrays.sort(data, fromIndex, toIndex);
+		Arrays.sort(data, from, to);
 	
 		// wt is the sum of all weights
 		// wi is the integral sum including the current point.
 		double wt = 0.0, wmax = 0.0;
 		
-		for(int i=fromIndex; i<toIndex; i++) {
+		for(int i=to; --i >= from; ) {
 			final double w = data[i].weight;
 			if(w > wmax) wmax = w;
 			if(w > 0.0) wt += w;
@@ -87,7 +87,7 @@ public final class Statistics {
 		// If a single datum dominates, then return the weighted mean...
 		if(wmax >= maxDependence * wt) {
 			double sum=0.0, sumw=0.0;
-			for(int i=fromIndex; i<toIndex; i++) {
+			for(int i = to; --i >= from; ) {
 				final double w = data[i].weight;
 				if(w > 0.0) {
 					sum += w * data[i].value;
@@ -102,20 +102,20 @@ public final class Statistics {
 		// If all weights are zero return the arithmetic median...
 		// This should never happen, but just in case...
 		if(wt == 0.0) {
-			final int n = toIndex - fromIndex;
+			final int n = to - from;
 			result.value = n % 2 == 0 ? 
-					0.5F * (data[fromIndex + n/2-1].value + data[fromIndex + n/2].value) 
-					: data[fromIndex + (n-1)/2].value;
+					0.5F * (data[from + n/2-1].value + data[from + n/2].value) 
+					: data[from + (n-1)/2].value;
 			result.weight = 0.0;
 			return;
 		}
 	
 	
 		final double midw = 0.5 * wt; 
-		int ig = fromIndex; 
+		int ig = from; 
 		
 		WeightedPoint last = WeightedPoint.NaN;
-		WeightedPoint point = data[fromIndex];
+		WeightedPoint point = data[from];
 	
 		double wi = point.weight;
 		
@@ -222,8 +222,8 @@ public final class Statistics {
 
 		// Average over the middle section of values...
 		double sum = 0.0, sumw = 0.0;
-		for(int i = to; --i >= from; ) {
-			final WeightedPoint point = data[i];
+		while(--to >= from) {
+			final WeightedPoint point = data[to];
 			sum += point.weight * point.value;
 			sumw += point.weight;
 		}

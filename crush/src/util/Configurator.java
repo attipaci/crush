@@ -40,7 +40,7 @@ public class Configurator implements Cloneable {
 	public Hashtable<String, Configurator> branches = new Hashtable<String, Configurator>();
 	public Hashtable<String, Vector<String>> conditionals = new Hashtable<String, Vector<String>>();
 	public Vector<String> blacklist = new Vector<String>();
-	public Vector<Class<?>> users = new Vector<Class<?>>(); // Not yet used...
+	//public Vector<Class<?>> users = new Vector<Class<?>>(); // Not yet used...
 	
 	private static int counter = 0;	
 	public static boolean verbose = false;
@@ -210,7 +210,7 @@ public class Configurator implements Cloneable {
 			if(verbose) System.err.println("<.> " + branchName);
 
 			if(branchName.equals("*")) {
-				for(String name : new Vector<String>(branches.keySet())) process(name + key.substring(1), argument);				
+				for(String name : new ArrayList<String>(branches.keySet())) process(name + key.substring(1), argument);				
 			}	
 			else if(branchName.startsWith("[")) {
 				String condition = branchName.substring(1, branchName.indexOf(']'));
@@ -282,8 +282,8 @@ public class Configurator implements Cloneable {
 		return false;
 	}
 	
-	private Vector<String> getList(String argument) {
-		Vector<String> list = new Vector<String>();
+	private List<String> getList(String argument) {
+		ArrayList<String> list = new ArrayList<String>();
 		StringTokenizer tokens = new StringTokenizer(argument, " \t,");
 		while(tokens.hasMoreTokens()) list.add(tokens.nextToken());
 		return list;
@@ -322,7 +322,7 @@ public class Configurator implements Cloneable {
 		String branchName = getBranchName(arg);
 		
 		if(branchName.equals("*")) {
-			for(String name : new Vector<String>(branches.keySet())) forget(name + getRemainder(arg, 1));
+			for(String name : new ArrayList<String>(branches.keySet())) forget(name + getRemainder(arg, 1));
 		}	
 		else {
 			String key = unaliasedKey(branchName);
@@ -339,7 +339,7 @@ public class Configurator implements Cloneable {
 		String branchName = getBranchName(arg);
 		
 		if(branchName.equals("*")) {
-			for(String name : new Vector<String>(branches.keySet())) recall(name + getRemainder(arg, 1));
+			for(String name : new ArrayList<String>(branches.keySet())) recall(name + getRemainder(arg, 1));
 		}	
 		else {
 			String key = unaliasedKey(branchName);
@@ -361,11 +361,11 @@ public class Configurator implements Cloneable {
 		String branchName = getBranchName(arg);
 		
 		if(branchName.equals("*")) {
-			for(String name : new Vector<String>(branches.keySet())) remove(name + getRemainder(arg, 1));;
+			for(String name : new ArrayList<String>(branches.keySet())) remove(name + getRemainder(arg, 1));;
 		}
 		else if(branchName.startsWith("[") && branchName.endsWith("]")) {
 			branchName = branchName.substring(1, branchName.length()-1).trim();
-			for(String condition : new Vector<String>(conditionals.keySet())) if(condition.startsWith(branchName)) conditionals.remove(condition);
+			for(String condition : new ArrayList<String>(conditionals.keySet())) if(condition.startsWith(branchName)) conditionals.remove(condition);
 		}
 		else {
 			String key = unaliasedKey(branchName);
@@ -387,11 +387,11 @@ public class Configurator implements Cloneable {
 		String branchName = getBranchName(arg);
 		
 		if(branchName.equals("*")) {
-			for(String name : new Vector<String>(branches.keySet())) purge(name + getRemainder(arg, 1));;
+			for(String name : new ArrayList<String>(branches.keySet())) purge(name + getRemainder(arg, 1));;
 		}
 		else if(branchName.startsWith("[") && branchName.endsWith("]")) {
 			branchName = branchName.substring(1, branchName.length()-1).trim();
-			for(String condition : new Vector<String>(conditionals.keySet())) if(condition.startsWith(branchName)) conditionals.remove(condition);
+			for(String condition : new ArrayList<String>(conditionals.keySet())) if(condition.startsWith(branchName)) conditionals.remove(condition);
 		}
 		else {
 			String key = unaliasedKey(branchName);
@@ -419,7 +419,7 @@ public class Configurator implements Cloneable {
 		
 		if(branchName.equals("*")) {
 			if(arg.length() == 1) for(String name : getRemoved().branches.keySet()) restore(name);
-			else for(String name : new Vector<String>(branches.keySet())) restore(name + getRemainder(arg, 1));
+			else for(String name : new ArrayList<String>(branches.keySet())) restore(name + getRemainder(arg, 1));
 		}
 		else {
 			String key = unaliasedKey(branchName);
@@ -561,6 +561,7 @@ public class Configurator implements Cloneable {
 		value = "";
 	}
 	
+	/*
 	public boolean hasUser(Class<?> c) {
 		return users.contains(c);		
 	}
@@ -574,6 +575,7 @@ public class Configurator implements Cloneable {
 		if(users.contains(c)) return;
 		users.add(c);
 	}
+	*/
 	
 	public void addUser(Object o) {
 		addUser(o.getClass());
@@ -634,6 +636,10 @@ public class Configurator implements Cloneable {
 		return Double.parseDouble(getValue());
 	}
 	
+	public float getFloat() {
+		return Float.parseFloat(getValue());
+	}
+	
 	public int getInt() {
 		return Integer.decode(getValue());
 	}
@@ -655,23 +661,23 @@ public class Configurator implements Cloneable {
 	}
 	
 	
-	public Vector<String> getList() {
-		Vector<String> list = new Vector<String>();
+	public List<String> getList() {
+		ArrayList<String> list = new ArrayList<String>();
 		StringTokenizer tokens = new StringTokenizer(getValue(), " \t,");
 		while(tokens.hasMoreTokens()) list.add(tokens.nextToken());
 		return list;
 	}
 	
-	public Vector<String> getLowerCaseList() {
-		Vector<String> list = new Vector<String>();
+	public List<String> getLowerCaseList() {
+		ArrayList<String> list = new ArrayList<String>();
 		StringTokenizer tokens = new StringTokenizer(getValue(), " \t,");
 		while(tokens.hasMoreTokens()) list.add(tokens.nextToken().toLowerCase());
 		return list;		
 	}
 	
-	public Vector<Double> getDoubles() {
-		Vector<String> list = getList();
-		Vector<Double> doubles = new Vector<Double>(list.size());	
+	public List<Double> getDoubles() {
+		List<String> list = getList();
+		ArrayList<Double> doubles = new ArrayList<Double>(list.size());	
 		for(String entry : list) {
 			try { doubles.add(Double.parseDouble(entry)); }
 			catch(NumberFormatException e) { doubles.add(Double.NaN); }
@@ -679,10 +685,20 @@ public class Configurator implements Cloneable {
 		return doubles;
 	}
 	
+	public List<Float> getFloats() {
+		List<String> list = getList();
+		ArrayList<Float> floats = new ArrayList<Float>(list.size());	
+		for(String entry : list) {
+			try { floats.add(Float.parseFloat(entry)); }
+			catch(NumberFormatException e) { floats.add(Float.NaN); }
+		}
+		return floats;
+	}
+	
 	// Also takes ranges...
-	public Vector<Integer> getIntegers() {
-		Vector<String> list = getList();
-		Vector<Integer> ints = new Vector<Integer>(list.size());	
+	public List<Integer> getIntegers() {
+		List<String> list = getList();
+		ArrayList<Integer> ints = new ArrayList<Integer>(list.size());	
 		for(String entry : list) {
 			try { ints.add(Integer.decode(entry)); }
 			catch(NumberFormatException e) {
@@ -696,8 +712,8 @@ public class Configurator implements Cloneable {
 		return ints;
 	}
 	
-	public Vector<String> getKeys() {
-		Vector<String> keys = new Vector<String>();
+	public List<String> getKeys() {
+		ArrayList<String> keys = new ArrayList<String>();
 		for(String branchName : branches.keySet()) {
 			Configurator option = branches.get(branchName);	
 			if(option.isEnabled) keys.add(branchName);
@@ -706,8 +722,8 @@ public class Configurator implements Cloneable {
 		return keys;
 	}
 	
-	public Vector<String> getForgottenKeys() {
-		Vector<String> keys = new Vector<String>();
+	public List<String> getForgottenKeys() {
+		ArrayList<String> keys = new ArrayList<String>();
 		for(String branchName : branches.keySet()) {
 			Configurator option = branches.get(branchName);
 			if(!option.isEnabled) if(option.value != null) if(option.value.length() > 0) keys.add(branchName);
@@ -716,8 +732,8 @@ public class Configurator implements Cloneable {
 		return keys;		
 	}
 	
-	public Vector<String> getBlacklist() {
-		Vector<String> keys = new Vector<String>();
+	public List<String> getBlacklist() {
+		ArrayList<String> keys = new ArrayList<String>();
 		keys.addAll(blacklist);
 		
 		for(String branchName : branches.keySet()) {
@@ -744,8 +760,8 @@ public class Configurator implements Cloneable {
 	
 
 	
-	public Vector<String> getTimeOrderedKeys() {		
-		Vector<String> keys = getKeys();	
+	public List<String> getTimeOrderedKeys() {		
+		List<String> keys = getKeys();	
 		Collections.sort(keys,
 			new Comparator<String>() {
 				public int compare(String key1, String key2) {
@@ -758,8 +774,8 @@ public class Configurator implements Cloneable {
 		return keys;
 	}
 	
-	public Vector<String> getAlphabeticalKeys() {
-		Vector<String> keys = getKeys();
+	public List<String> getAlphabeticalKeys() {
+		List<String> keys = getKeys();
 		Collections.sort(keys);
 		return keys;
 	}
@@ -815,7 +831,7 @@ public class Configurator implements Cloneable {
 		
 		out.println(prefix + " --------------------------------------------------------------------");
 		
-		Vector<String> list = getForgottenKeys();
+		List<String> list = getForgottenKeys();
 		Collections.sort(list);
 		
 		for(String key : list) {
@@ -851,7 +867,7 @@ public class Configurator implements Cloneable {
 		
 		out.println(prefix + " --------------------------------------------------------------------");
 		
-		Vector<String> list = getBlacklist();
+		List<String> list = getBlacklist();
 		Collections.sort(list);
 		
 		for(String key : list) {
@@ -881,7 +897,7 @@ public class Configurator implements Cloneable {
 
 		// Add all the conditionals...
 		Hashtable<String, Vector<String>> conditions = getConditions(true);
-		Vector<String> conditionKeys = new Vector<String>(conditions.keySet());	
+		ArrayList<String> conditionKeys = new ArrayList<String>(conditions.keySet());	
 		Collections.sort(conditionKeys);
 		
 		out.println(prefix + " --------------------------------------------------------------------");
@@ -921,7 +937,7 @@ public class Configurator implements Cloneable {
 		
 		// Add all the conditionals...
 		Hashtable<String, Vector<String>> conditions = getConditions(true);
-		Vector<String> conditionKeys = new Vector<String>(conditions.keySet());	
+		ArrayList<String> conditionKeys = new ArrayList<String>(conditions.keySet());	
 		Collections.sort(conditionKeys);
 		
 		for(String condition : conditionKeys) {

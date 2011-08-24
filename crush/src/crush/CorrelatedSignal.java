@@ -378,11 +378,11 @@ public class CorrelatedSignal extends Signal {
 	}
 	
 	
-	private final void getMLCorrelated(final ChannelGroup<?> channels, final int from, final int to, final WeightedPoint increment) {
+	private final void getMLCorrelated(final ChannelGroup<?> channels, final int from, int to, final WeightedPoint increment) {
 		double sum = 0.0, sumw = 0.0;
 		
-		for(int t=to; --t >= from; ) {
-			final Frame exposure = integration.get(t);
+		while(--to >= from) {
+			final Frame exposure = integration.get(to);
 						
 			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
 				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
@@ -397,12 +397,12 @@ public class CorrelatedSignal extends Signal {
 	}
 		
 
-	private final void getRobustCorrelated(final ChannelGroup<?> channels, final int from, final int to, final WeightedPoint increment, WeightedPoint[] buffer) {
+	private final void getRobustCorrelated(final ChannelGroup<?> channels, final int from, int to, final WeightedPoint increment, WeightedPoint[] buffer) {
 		increment.noData();
 		int n = 0;
 		
-		for(int t=to; --t >= from; ) {
-			final Frame exposure = integration.get(t);
+		while(--to >= from) {
+			final Frame exposure = integration.get(to);
 			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
 				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
 					final WeightedPoint point = buffer[n++];

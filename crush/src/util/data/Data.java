@@ -35,7 +35,7 @@ import util.Complex;
 import util.Util;
 
 
-public final class ArrayFunc {
+public final class Data {
 
 	public static void print(double[] data) { print(data, System.out, new DecimalFormat("0.000000E0")); }
 
@@ -102,7 +102,7 @@ public final class ArrayFunc {
 		final float delta = (float) from.length / to.length;
 		if(delta > 1.0F) from = getSmoothed(from, delta);
 	
-		for(int i=to.length; --i >= 0; ) to[i] = ArrayFunc.valueAt(from, i * delta);
+		for(int i=to.length; --i >= 0; ) to[i] = Data.valueAt(from, i * delta);
 	}
 	
 	
@@ -164,7 +164,7 @@ public final class ArrayFunc {
 		final double delta = (double) from.length / to.length;
 		if(delta > 1.0) from = getSmoothed(from, delta);
 	
-		for(int i=to.length; --i >= 0; ) to[i] = ArrayFunc.valueAt(from, i * delta);
+		for(int i=to.length; --i >= 0; ) to[i] = Data.valueAt(from, i * delta);
 	}
 	
 	
@@ -218,6 +218,26 @@ public final class ArrayFunc {
 		return smoothed;
 	}
 	
+	
+	public static int indexOfMax(float[] data) {
+		int index=0;
+		float max = 0.0F;
+		for(int i=data.length; --i > 0; ) if(data[i] > max) {
+			max = data[i];
+			index = i;
+		}	
+		return index;
+	}
+	
+	public static int indexOfMax(double[] data) {
+		int index=0;
+		double max = 0.0F;
+		for(int i=data.length; --i > 0; ) if(data[i] > max) {
+			max = data[i];
+			index = i;
+		}	
+		return index;
+	}
 	
 	
 }

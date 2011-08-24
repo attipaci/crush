@@ -25,7 +25,11 @@ package crush;
 import util.Vector2D;
 
 public enum Motion {
-	X("x"), Y("y"), Z("z"), X2("x^2"), Y2("y^2"), Z2("z^2"), X_MAGNITUDE("|x|"), Y_MAGNITUDE("|y|"), Z_MAGNITUDE("|z|"), MAGNITUDE("mag"), NORM("norm");
+	X("x"), Y("y"), Z("z"), 
+	X2("x^2"), Y2("y^2"), Z2("z^2"), 
+	X_MAGNITUDE("|x|"), Y_MAGNITUDE("|y|"), Z_MAGNITUDE("|z|"), 
+	MAGNITUDE("mag"), 
+	NORM("norm");
 	
 	public String id;
 	
@@ -59,5 +63,6 @@ public enum Motion {
 	public final static int TELESCOPE = 1<<0;
 	public final static int SCANNING = 1<<1;
 	public final static int CHOPPER = 1<<2;
+	public final static int PROJECT_GLS = 1<<3;
 	
 }
