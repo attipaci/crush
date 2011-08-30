@@ -1,3 +1,39 @@
+>> SHARC2 .gz 
+
+>> drifts, signal to remove with cubic spline 
+   drifts to store signals...
+
+>> filter
+>> filter.ordering=hipass,notch,motion,whiten
+   * single filter via DFT/FFT.
+   * composite FFT filtering
+
+>> 'filter.motion' '.level', '.cutoff', '.range'
+   * configured for all instruments
+   * check for OTF/box scans...
+   * test on extended emission
+     (adjust [extended] configs)
+>> whitening/mf interaction...
+
+	[TWEAK] Noise whitening filter now fully ignores the DC component.
+
+	[TWEAK] Adjusted DataPoint decimal formatting s.t. the precision of
+	the value matches that of the printed error. (E.g. '45.2 +- 1.1' vs
+	the previous '45 +- 1.1'). This is simply more pleasant to read, 
+	without providing any real information with the increased precision.
+
+	[TWEAK] Despiking relaxed in 'faint' and 'deep' modes to >10-sigma
+	spikes (from >8-sigma before).
+
+	[TWEAK] {SABOCA, SCUBA-2} 'accel' is now a shorthand for
+	'correlated.accel-mag'. Previously, 'correlated.accel-norm' was part
+	of the pipeline but without an alias.	
+
+	[TWEAK] {APEX} Checking for invalid coordinates (-999 deg) is now
+	inlined for greater efficiency.
+
+	[CLEANUP] Cleaned up units and simplified coordinate axes.
+
 2.05-2
 
 	Overview

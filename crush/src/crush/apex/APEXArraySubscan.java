@@ -302,6 +302,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			final APEXArrayScan<InstrumentType, ?> apexScan = (APEXArrayScan<InstrumentType, ?>) scan;
 			
 			final Vector2D tempOffset = new Vector2D();
+			final double m900deg = -900.0 * Unit.deg;
 			
 			CelestialCoordinates basisCoords = null;
 			if(apexScan.basisSystem != HorizontalCoordinates.class && apexScan.basisSystem != EquatorialCoordinates.class) {
@@ -321,11 +322,11 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				exposure.MJD = MJD[t];
 				exposure.LST = LST[t];
 
+				// Continue only if the basis coordinates are valid...
+				// APEX uses -999 deg to mark invalid data...
 				double x = X[t] * Unit.deg;
 				double y = Y[t] * Unit.deg;
-				
-				if(x < APEXFrame.m900deg) x = Double.NaN;
-				if(y < APEXFrame.m900deg) y = Double.NaN;
+				if(x < m900deg || y < m900deg) { set(t, null); continue; }
 				
 				if(basisCoords != null) {
 					basisCoords.set(x, y);
@@ -337,10 +338,15 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 					exposure.calcHorizontal();
 				}
 				else exposure.horizontal = new HorizontalCoordinates(x, y);
-				
-				exposure.calcParallacticAngle();
 
-				exposure.horizontalOffset = new Vector2D(DX[t] * Unit.deg, DY[t] * Unit.deg);
+				// Continue only if the scanning offsets are valid...
+				// APEX uses -999 deg to mark invalid data...
+				x = DX[t] * Unit.deg;
+				y = DY[t] * Unit.deg;
+				if(x < m900deg || y < m900deg) { set(t, null); continue; }
+				
+				exposure.horizontalOffset = new Vector2D(x, y);
+				exposure.calcParallacticAngle();
 				
 				// Make scanning offsets always horizontal...
 				if(apexScan.nativeSystem == EquatorialCoordinates.class) 
@@ -388,8 +394,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 					exposure.calcEquatorial();
 				}		
 
-				if(exposure.isValid()) set(t, exposure);
-				else set(t, null);
+				set(t, exposure);
 			}		
 		}
 	}

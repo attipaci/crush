@@ -43,19 +43,18 @@ public class SphericalCoordinates extends CoordinatePair {
 	static CoordinateSystem defaultCoordinateSystem, defaultLocalCoordinateSystem;
 	
 	static {
+		
 		defaultCoordinateSystem = new CoordinateSystem("Spherical Coordinates");
 		defaultLocalCoordinateSystem = new CoordinateSystem("Spherical Offsets");
 		
 		longitudeAxis = new CoordinateAxis("Latitude", "LON-");
 		longitudeAxis.setFormat(new AngleFormat(3));
-		longitudeAxis.setTickUnits(new double[] { Unit.deg, Unit.arcmin, Unit.arcsec, Unit.mas});
-
+	
 		latitudeAxis = new CoordinateAxis("Longitude", "LAT-");
 		latitudeAxis.setFormat(new AngleFormat(3));
-		latitudeAxis.setTickUnits(new double[] { Unit.deg, Unit.arcmin, Unit.arcsec, Unit.mas });
-
-		longitudeOffsetAxis = new CoordinateAxis("d phi", longitudeAxis.wcsName);
-		latitudeOffsetAxis = new CoordinateAxis("d theta", latitudeAxis.wcsName);
+	
+		longitudeOffsetAxis = new CoordinateAxis("dLon", longitudeAxis.wcsName);
+		latitudeOffsetAxis = new CoordinateAxis("dLat", latitudeAxis.wcsName);
 		
 		defaultCoordinateSystem.add(longitudeAxis);
 		defaultCoordinateSystem.add(latitudeAxis);
