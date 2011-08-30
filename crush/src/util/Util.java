@@ -104,9 +104,13 @@ public final class Util {
 	s = { null, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10};
 
 	public static DecimalFormat getDecimalFormat(double significance) {
+		return getDecimalFormat(significance, 6);
+	}
+	
+	public static DecimalFormat getDecimalFormat(double significance, int maxDecimals) {
 		if(Double.isNaN(significance)) return Util.f1;
 		if(significance == 0.0) return Util.f2;
-		int figures = Math.min(4, (int) Math.log10(Math.abs(significance)) + 2);
+		int figures = Math.min(maxDecimals, (int) Math.floor(Math.log10(Math.abs(significance))) + 2);
 		figures = Math.max(1, figures);
 		return s[figures];
 	}

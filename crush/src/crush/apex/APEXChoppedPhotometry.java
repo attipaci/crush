@@ -166,7 +166,10 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 		double jansky = instrument.janskyPerBeam();
 		
 		DataPoint F = new DataPoint(sourceFlux);
-		F.scale(1.0/jansky);
+		
+		Unit Jy = new Unit("Jy/beam", jansky);
+		Unit mJy = new Unit("mJy/beam", 1e-3 * jansky);
+		Unit uJy = new Unit("uJy/beam", 1e-6 * jansky);
 		
 		System.out.println("  Note, that the results of the APEX chopped photometry reduction below include");
 		System.out.println("  the best estimate of the systematic errors, based on the true scatter of the");
@@ -179,12 +182,9 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 		System.out.println("  =====================================");
 		System.out.print("  Flux  : ");
 		
-		if(F.value < 1.0)
-			System.out.println(Util.getDecimalFormat(F.significance()).format(1000.0 * F.value) 
-				+ " +- " + Util.s2.format(1000.0 * F.rms()) + " mJy/beam.");
-		else 
-			System.out.println(Util.getDecimalFormat(F.significance()).format(F.value) 
-				+ " +- " + Util.s2.format(F.rms()) + " Jy/beam.");
+		if(F.value > 1.0 * Jy.value) System.out.println(F.toString(Jy));
+		else if(F.value > 1.0 * mJy.value) System.out.println(F.toString(mJy));
+		else System.out.println(F.toString(uJy));
 		
 		System.out.println("  Time  : " + Util.f1.format(integrationTime/Unit.min) + " min.");
 		//System.out.println("  NEFD  : " + Util.f1.format(500.0 * F.rms() * Math.sqrt(integrationTime/Unit.s)) + " mJy sqrt(s).");

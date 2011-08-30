@@ -56,11 +56,9 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 		rightAscentionAxis = new CoordinateAxis("Right Ascention", "RA--");
 		rightAscentionAxis.setReverse(true);
 		rightAscentionAxis.setFormat(new HourAngleFormat(2));
-		rightAscentionAxis.setTickUnits(new double[] { Unit.hourAngle, Unit.minuteAngle, Unit.secondAngle});
 
 		declinationAxis = new CoordinateAxis("Declination", "DEC-");
 		declinationAxis.setFormat(new AngleFormat(1));
-		declinationAxis.setTickUnits(new double[] { Unit.deg, Unit.arcmin, Unit.arcsec, Unit.mas });
 
 		rightAscentionOffsetAxis = new CoordinateAxis("dRA", rightAscentionAxis.wcsName);
 		rightAscentionOffsetAxis.setReverse(true);

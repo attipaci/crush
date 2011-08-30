@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,40 +20,39 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
-package crush.apex;
+package crush.filter;
 
-import crush.*;
+import crush.Integration;
 
+public class WhiteningFilter extends DynamicFilter {
 
-public class APEXFrame extends HorizontalFrame {
-	public int chopperPhase;
-	public int nodFlag;
+	public WhiteningFilter(Integration<?, ?> integration) {
+		super(integration);
+		// TODO Auto-generated constructor stub
+	}
+
+	protected WhiteningFilter(Integration<?,?> integration, float[] data) {
+		super(integration, data);
+	}
 	
-	public static double skydipFactor = 1.0;
+	@Override
+	public void update() {
+		
+		
+	}
 	
-	public APEXFrame(APEXArrayScan<?, ?> parent) {
-		super(parent);
+	@Override
+	public float[] getIncrementalProfile() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
-	public void setZenithTau(double value) {
-		super.setZenithTau(skydipFactor * value);
+	public String getID() {
+		// TODO Auto-generated method stub
+		return null;
 	}
-	
-	public void parse(float[][] fitsData) {
-		data = new float[fitsData.length];
-		for(int c=0; c<fitsData.length; c++) data[c] = fitsData[c][0];		
-	}
-	
-	public void parse(float[] flatData, int from, int channels) {
-		data = new float[channels];
-		System.arraycopy(flatData, from, data, 0, channels);
-	}
-	
-	public void parse(float[] flatData) {
-		data = flatData;
-	}
+
 	
 }

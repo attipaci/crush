@@ -29,6 +29,8 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
+import crush.filter.MotionFilter;
+
 import util.*;
 import util.astro.EquatorialCoordinates;
 import util.data.DataPoint;
@@ -78,7 +80,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public Chopper chopper;
 	public DataPoint aveScanSpeed;
-	//public MotionFilter motionFilter;
+	public MotionFilter motionFilter;
 	
 	public double filterTimeScale = Double.POSITIVE_INFINITY;
 	public double nefd = Double.NaN; // It is readily cast into the Jy sqrt(s) units!!!
@@ -168,7 +170,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			throw new IllegalStateException("Integration is too short (" + Util.f1.format(mappingFrames * instrument.samplingInterval / Unit.s) + " seconds).");
 		
 		// Filter motion only after downsampling...
-		//if(hasOption("filter.motion")) motionFilter = new MotionFilter(this);
+		if(hasOption("filter.motion")) motionFilter = new MotionFilter(this);
 		
 		detectorStage();
 		
@@ -1041,6 +1043,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	
+	public double[] getPointSourceProfile(int nt) {
+		double sigma = getPointCrossingTime() / Util.sigmasInFWHM / instrument.samplingInterval;
+		double[] sourceProfile = new double[nt];
+		int nF = nt >> 1;
+		
+		sourceProfile[0] = 1.0;
+		for(int t=nF; --t > 0; ) {
+			double dev = t / sigma;
+			double a = Math.exp(-0.5*dev*dev);
+			sourceProfile[t] = sourceProfile[sourceProfile.length-t] = a;
+		}
+		return sourceProfile;
+	}
+	
 	
 	// Changes:
 	//  * Always goes ahead with whitening even when window size is large...
@@ -1110,8 +1126,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			// Put the time-stream data into an array, and FFT it...
 			getWeightedTimeStream(channel, data);		
 			
+			// Remove the DC component
+			level(data, channel);
+			
 			// Average power in windows, then convert to rms amplitude
 			FFT.forwardRealInplace(data);
+			
 			for(int F=nF; --F >= 0; ) {
 				double sumP = 0.0;
 				final int fromf = Math.max(2, 2 * F * blocks);
@@ -1841,6 +1861,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(exposure == null) continue;
 			if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
 			if(exposure.sampleFlag[c] != 0) continue;
+			
 			sum += exposure.relativeWeight * signal[i];
 			sumw += exposure.relativeWeight;
 		}
@@ -2505,11 +2526,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			despike(option(task));
 			updatePhases();
 		}
-		/*
 		else if(task.equals("filter.motion")) {
 			motionFilter.filter();			
 		}
-		*/
 		else if(task.equals("whiten")) {
 			whiten();
 			if(indexOf("whiten") > indexOf("weighting")) getWeights();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,40 +20,50 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
-package crush.apex;
+package crush.filter;
 
-import crush.*;
+import crush.Integration;
 
-
-public class APEXFrame extends HorizontalFrame {
-	public int chopperPhase;
-	public int nodFlag;
+public abstract class ProfiledFilter extends Filter {
+	float[] profile;
+	int rounds = 0;
 	
-	public static double skydipFactor = 1.0;
+	public ProfiledFilter(Integration<?, ?> integration) {
+		super(integration);
+		// TODO Auto-generated constructor stub
+	}
 	
-	public APEXFrame(APEXArrayScan<?, ?> parent) {
-		super(parent);
+	protected ProfiledFilter(Integration<?,?> integration, float[] data) {
+		super(integration, data);
+	}
+	
+	public void setProfile(float[] profile) {
+		this.profile = profile;
 	}
 
 	@Override
-	public void setZenithTau(double value) {
-		super.setZenithTau(skydipFactor * value);
+	public void filter() {
+		rounds++;
+		super.filter();
 	}
 	
-	public void parse(float[][] fitsData) {
-		data = new float[fitsData.length];
-		for(int c=0; c<fitsData.length; c++) data[c] = fitsData[c][0];		
+	@Override
+	public double throughputAt(int fch) {
+		if(profile == null) return 1.0;
+		return Math.pow(profile[(int) Math.round((double) fch / (nf+1) * profile.length)], rounds);
 	}
+
+	@Override
+	public double countParms() {
+		final int minf = getMinIndex();
+		if(profile == null) return 0.0;
+		double parms = 0.0;
+		for(int f=profile.length; --f >= minf; ) parms += 1.0 - profile[f] * profile[f];
+		return parms;
+	}
+
 	
-	public void parse(float[] flatData, int from, int channels) {
-		data = new float[channels];
-		System.arraycopy(flatData, from, data, 0, channels);
-	}
-	
-	public void parse(float[] flatData) {
-		data = flatData;
-	}
+
 	
 }

@@ -21,9 +21,12 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush;
+package crush.filter;
 
 import java.util.Arrays;
+
+import crush.Integration;
+import crush.Motion;
 
 import util.Range;
 import util.Util;
@@ -35,28 +38,25 @@ import util.data.Statistics;
 // TODO write filter data into scan header?...
 // TODO motion filter to disable whiten.below, or even whitening altogether...
 
-public class MotionFilter {
-	Integration<?,?> integration;
+public class MotionFilter extends KillFilter {
 	float critical = 10.0F;
-	float[] data;
-	boolean[] reject;
 	
-	MotionFilter() {}
-	
-	MotionFilter(Integration<?,?> integration) {
-		this();
-		setIntegration(integration);
+	public MotionFilter(Integration<?,?> integration) {
+		super(integration);
 	}
 	
-	public void setIntegration(Integration<?,?> integration) {
-		this.integration = integration;
+	protected MotionFilter(Integration<?,?> integration, float[] data) {
+		super(integration, data);
+	}
+	
+	@Override
+	protected void setIntegration(Integration<?,?> integration) {
+		super.setIntegration(integration);
 
 		System.err.print("   Motion filter: ");
 		
-		if(integration.hasOption("filter.motion.s2n")) critical = integration.option("filter.motion.level").getFloat();
+		if(integration.hasOption("filter.motion.level")) critical = integration.option("filter.motion.level").getFloat();
 		
-		data = new float[FFT.getPaddedSize(integration.size())];
-		reject = new boolean[data.length];
 		Vector2D[] pos = integration.getSmoothPositions(Motion.SCANNING);
 		
 		addFilter(pos, Motion.X);
@@ -67,31 +67,37 @@ public class MotionFilter {
 		int pass = 0;
 		for(int i=reject.length; --i >= 0; ) if(!reject[i]) pass++;
 		
-		System.err.println(Util.f2.format(100.0 * pass / reject.length) + "% information preserved.");
+		System.err.print(Util.f2.format(100.0 * pass / reject.length) + "% pass. ");
+
+		components = reject.length - pass;
+		
+		autoDFT();
+		
+		System.err.println("Using " + (dft ? "DFT" : "FFT") + ".");
 	}
 	
-	public void rangeCheck() {
+	
+	private void rangeCheck() {
 		if(!integration.hasOption("filter.motion.range")) return;
 		
 		Range range = integration.option("filter.motion.range").getRange(true);
-		
-		double df = 1.0 / (integration.instrument.samplingInterval * data.length);
-		int mini = 2 * ((int) Math.floor(range.min / df));
-		int maxi = 2 * ((int) Math.ceil(range.max / df));
+				
+		int mini = ((int) Math.floor(range.min / df));
+		int maxi = ((int) Math.ceil(range.max / df));
 		
 		Arrays.fill(reject, 0, Math.min(mini, reject.length), false);
 		if(maxi < reject.length) Arrays.fill(reject, maxi, reject.length, false);
 	}
 	
 	
-	public void addFilter(Vector2D[] pos, Motion dir) {	
+	private void addFilter(Vector2D[] pos, Motion dir) {	
 		for(int t=pos.length; --t >= 0; )
-			data[t] = pos[t] == null ? 0.0F : (float) dir.getValue(pos[t]);
+			data[t] = pos[t] == null ? Float.NaN : (float) dir.getValue(pos[t]);
 
 		Arrays.fill(data, pos.length, data.length, 0.0F);
 		
 		// Remove any constant scanning offset
-		level(data);
+		levelData();
 		
 		// FFT to get the scanning spectra
 		FFT.forwardRealInplace(data);
@@ -119,65 +125,35 @@ public class MotionFilter {
 		}
 		
 
-		for(int i=0; i<reject.length; i += 2) {
+		for(int i=2; i<data.length; i += 2) {
 			double value = Math.hypot(data[i], data[i+1]);
-			if(value > criticalLevel) reject[i] = reject[i+1] = true;	
+			if(value > criticalLevel) reject[i>>1] = true;	
 		}
 		
 		double df = 1.0 / (integration.instrument.samplingInterval * data.length);
-		double f = peakIndex * df;
+		double f = peakIndex/2 * df;
 	
-		System.err.print(dir.id + " @ " + Util.f3.format(f) + "Hz, ");
+		System.err.print(dir.id + " @ " + Util.f1.format(1000.0 * f) + " mHz, ");
 	}
 	
-	protected float getRMS(float[] spectrum) {
+	private float getRMS(float[] spectrum) {
 		float[] vars = new float[spectrum.length];
+		
 		for(int i=0; i < spectrum.length; i += 2) {
 			vars[i] = spectrum[i] * spectrum[i] + spectrum[i+1] * spectrum[i+1];
 		}
 		return (float) Math.sqrt(Statistics.median(vars, 0, (spectrum.length >> 1) - 1) / 0.454937);
 	}
 	
+	@Override
+	public String getID() {
+		return "Mf";
+	}
+	
+	@Override
 	public void filter() {
-		integration.comments += "FM";
-		for(Channel channel : integration.instrument) filter(channel);		
+		setChannels(integration.instrument.getObservingChannels());
+		super.filter();
 	}
-	
-	public synchronized void filter(Channel channel) {
-		final int c = channel.index;
-		for(int i = integration.size(); --i >= 0; ) {
-			final Frame exposure = integration.get(i);
-
-			if(exposure == null) data[i] = 0.0F;
-			else if(exposure.isFlagged(Frame.MODELING_FLAGS)) data[i] = 0.0F;
-			else if(exposure.sampleFlag[c] != 0) data[i] = 0.0F;
-			else data[i] = exposure.relativeWeight * exposure.data[c];
-		}
-		
-		Arrays.fill(data, integration.size(), data.length, 0.0F);
-		
-		level(data);
-		
-		FFT.forwardRealInplace(data);
-		
-		for(int i=0; i<reject.length; i += 2) if(!reject[i]) data[i] = data[i+1] = 0.0F; 	
-		
-		FFT.backRealInplace(data);
-		
-		level(data);
-		
-		for(int i = integration.size(); --i >= 0; ) {
-			final Frame exposure = integration.get(i);
-			if(exposure != null) exposure.data[c] -= data[i];	
-		}
-	}
-	
-	protected void level(float[] data) {
-		double sum = 0.0;
-		for(int i=integration.size(); --i >= 0; ) sum += data[i];
-		double level = sum / integration.size();
-		for(int i=integration.size(); --i >= 0; ) data[i] -= level;
-	}
-	
 	
 }

@@ -50,13 +50,9 @@ public class GalacticCoordinates extends CelestialCoordinates {
 		defaultLocalCoordinateSystem.add(longitudeOffsetAxis);
 		defaultLocalCoordinateSystem.add(latitudeOffsetAxis);	
 		
-		double[] angularUnits = { Unit.deg, Unit.arcmin, Unit.arcsec, Unit.mas };
-		AngleFormat af = new AngleFormat(3);
+			AngleFormat af = new AngleFormat(3);
 		
-		for(CoordinateAxis axis : defaultCoordinateSystem) {
-			axis.setFormat(af);
-			axis.setTickUnits(angularUnits);
-		}
+		for(CoordinateAxis axis : defaultCoordinateSystem) axis.setFormat(af);
 	}
 	
     public GalacticCoordinates() {}

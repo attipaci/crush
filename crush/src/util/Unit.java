@@ -27,31 +27,23 @@ package util;
 import java.util.*;
 
 public class Unit implements Cloneable {
-	protected static Hashtable<String,Unit> table = new Hashtable<String,Unit>();
+	protected final static Hashtable<String, Unit> table = new Hashtable<String, Unit>();
 
 	// Usage Examples:
-	//    1. To convert radians to arcsecs : secAngle = radAngle / ArcSECONDS
-	//    2. To convert arcsecs to radians : radAngle = secAngle * ArcSECONDS
-	//    3. To convert degrees to hourangle : hourAngle = degAngle * DEGREES/HOURangle
+	//    1. To convert radians to arcsecs : arcsecs = radians / Unit.acsec
+	//    2. To convert arcsecs to radians : radians = arcsecs * Unit.acsec
+	//    3. To convert degrees to hourangle : hourAngle = (degrees * Unit.deg) / Unit.hourAngle
 
 	public String name = "";
 	public double value = Double.NaN;
 
 	public Unit() {}
 
-	public Unit(boolean remember) { if(remember) add(name, this); }
-
-	public Unit(String setName, double setValue) { value = setValue; name = setName; add(name, this); }
-
-	public Unit(String setName, double setValue, boolean remember) { value = setValue; name = setName; if(remember) add(name, this); }
-
-	public Unit(double setValue, String names) {
-		StringTokenizer tokens = new StringTokenizer(names, ",; \t");
-		value = setValue; name = tokens.nextToken();
-		add(name, this);
-		while(tokens.hasMoreTokens()) add(tokens.nextToken(), this);
+	public Unit(String name, double value) { 
+		this.value = value; 
+		this.name = name; 
 	}
-
+	
 	public Unit(String text) { parse(text); }
 
 	@Override
@@ -60,32 +52,31 @@ public class Unit implements Cloneable {
 		catch(CloneNotSupportedException e) { return null; }		
 	}
 	
-	public void copy(Unit unit) {
-		name = unit.name;
-		value =	unit.value;
+	public void register() {
+		if(name == null) table.put("unity", this);
+		else table.put(name, this);
 	}
 	
-	protected static void add(String id, Unit unit) {
-		table.put(id, unit);
+	public static Unit get(String id) throws IllegalArgumentException {
+		Unit u = table.get(id);
+		if(u != null) return u;
+		if(id.length() < 2) throw new IllegalArgumentException("No such unit: '" + id + "'.");
+		
+		// Try unit with multiplier...
+		u = table.get(id.substring(1));
+		if(u == null) throw new IllegalArgumentException("No such unit: '" + id + "'.");
+		
+		double multiplier = getMultiplier(id.charAt(0)) ;
+		if(Double.isNaN(multiplier)) throw new IllegalArgumentException("No such unit: '" + id + "'.");
+		
+		return new Unit(id, multiplier * u.value);
 	}
 
-	public static Unit get(String id) {
-		return table.get(id);
-	}
-
-	// For now parser only knows units that have been explicitly set
-	// and their multiples...
-	public static Unit parseElemental(String expression) {
-		Unit unit = get(expression);
-		if(unit != null) return unit;
-		unit = get(expression.substring(1));
-		return unit == null ? null : new Unit(expression, getMultiplier(expression.charAt(0)) * unit.value, false);
-	}
-
-	// ---> need to implement....
+	// TODO need to implement....
 	public void parse(String text) {
 
 	}
+	
 
 	@Override
 	public String toString() {
@@ -129,26 +120,25 @@ public class Unit implements Cloneable {
 	
 
 	public static double getMultiplier(char c) {
-		double multiple = Double.NaN;
 		switch(c) {
-		case ' ': multiple = 1.0; break;
-		case 'd': multiple = deci; break; // could also be deka
-		case 'c': multiple = centi; break;
-		case 'm': multiple = milli; break;
-		case 'u': multiple = micro; break;
-		case 'n': multiple = nano; break;
-		case 'p': multiple = pico; break;
-		case 'f': multiple = femto; break;
-		case 'a': multiple = atto; break;
-		case 'h': multiple = hecto; break;
-		case 'k': multiple = kilo; break;
-		case 'M': multiple = mega; break;
-		case 'G': multiple = giga; break;
-		case 'T': multiple = tera; break;
-		case 'P': multiple = peta; break;
-		case 'E': multiple = exa; break;
+		case ' ': return 1.0;
+		case 'd': return deci; // could also be deka
+		case 'c': return centi;
+		case 'm': return milli;
+		case 'u': return micro;
+		case 'n': return nano;
+		case 'p': return pico;
+		case 'f': return femto;
+		case 'a': return atto;
+		case 'h': return hecto;
+		case 'k': return kilo;
+		case 'M': return mega;
+		case 'G': return giga;
+		case 'T': return tera;
+		case 'P': return peta;
+		case 'E': return exa;
+		default: return Double.NaN;
 		}
-		return multiple;
 	}
 
 	// Basics (SI) and common scales
@@ -545,98 +535,108 @@ public class Unit implements Cloneable {
 	// Various
 	public final static double mpg = mile / gal;
 
-	public final static Unit unity = new Unit(1.0, "counts");
+	
+	public static void register(double value, String names) {
+		StringTokenizer tokens = new StringTokenizer(names, ",; \t");
+		while(tokens.hasMoreTokens()) new Unit(tokens.nextToken(), value).register();
+	}
 
+	public final static Unit unity = new Unit(" ", 1.0);
+	public final static Unit counts = new Unit("counts", 1.0);
+
+	
 	static {
-		new Unit(1.0, "count, counts, ct, piece, pieces, pcs, 1");
+		register(1.0, "count, counts, ct, piece, pieces, pcs, 1");
+		register(m, "m, meter, metre");
+		//register(kg, "kg, kilogram"); register gramms, since that has valid multiples...
+		register(s, "s, sec, second");
+		register(A, "A, amp, ampere");
+		register(K, "K, kelvin");
+		register(cd, "cd, candela");
+		
+		register(rad, "rad, radian");
+		register(sr, "sr, steradian");
+		register(mol, "mol");
+		
+		register(g, "g, gramm");
+		register(dkg, "dkg, dekagramm");
+		register(Hz, "Hz, hertz");
+		register(N, "N, newton");
+		register(Pa, "Pa, pascal");
+		register(J, "J, joule");
+		register(W, "W, watt");
+		register(C, "C, Coulomb");
+		register(V, "V, volt");
+		register(F, "F, farad");
+		register(ohm, "ohm");
+		register(S, "S, siemens");
+		register(Wb, "Wb, weber");
+		register(T, "T, tesla");
+		register(H, "H, henry");
+		register(lm, "lm, lumen");
+		register(lx, "lx, lux");
+		register(Bq, "Bq, bequerel");
+		register(Gy, "Gy, gray");
+		register(Sv, "Sv, sievert");
 
-		new Unit(m, "m, meter, metre");
-		new Unit(g, "g, gramm");
-		new Unit(dkg, "dkg, dekagramm");
-		new Unit(s, "s, sec, second");
-		new Unit(A, "A, amp, ampere");
-		new Unit(K, "K, kelvin");
-		new Unit(mol, "mol");
-		new Unit(cd, "cd, candela");
-		new Unit(rad, "rad, radian");
-		new Unit(sr, "sr, steradian");
-		new Unit(Hz, "Hz, hertz");
-		new Unit(N, "N, newton");
-		new Unit(Pa, "Pa, pascal");
-		new Unit(J, "J, joule");
-		new Unit(W, "W, watt");
-		new Unit(C, "C, Coulomb");
-		new Unit(V, "V, volt");
-		new Unit(F, "F, farad");
-		new Unit(ohm, "ohm");
-		new Unit(S, "S, siemens");
-		new Unit(Wb, "Wb, weber");
-		new Unit(T, "T, tesla");
-		new Unit(H, "H, henry");
-		new Unit(lm, "lm, lumen");
-		new Unit(lx, "lx, lux");
-		new Unit(Bq, "Bq, bequerel");
-		new Unit(Gy, "Gy, gray");
-		new Unit(Sv, "Sv, sievert");
-
-		new Unit(deg, "deg, degree");
-		new Unit(arcmin, "arcmin, am");
-		new Unit(arcsec, "arcsec, as");
+		register(deg, "deg, degree");
+		register(arcmin, "arcmin, am");
+		register(arcsec, "arcsec, as");
 		// ...
-		new Unit(min, "min, minute");
-		new Unit(hour, "hour");
-		new Unit(day, "day");
-		new Unit(year, "year, yr");
-		new Unit(century, "century, cent");
-		new Unit(julianCentury, "juliancentury");
-		new Unit(angstrom, "angstrom");
-		new Unit(Rsun, "Rsun, solarradius");
-		new Unit(Rearth, "Rearth, earthradius");
-		new Unit(AU, "AU, astronomicalunit");
-		new Unit(ly, "ly, lyr, lightyear");
-		new Unit(pc, "pc, parsec");
-		new Unit(in, "in, inch");
-		new Unit(mil, "mil");
-		new Unit(ft, "ft, foot");
-		new Unit(yd, "yd, yard");
-		new Unit(mi, "mi, mile");
-		new Unit(pt, "pt");
-		new Unit(barn, "barn");
-		new Unit(l, "l, L, litre, liter");
-		new Unit(gal, "gal, gallon");
-		new Unit(quart, "quart");
-		new Unit(pint, "pint");
-		new Unit(cup, "cup");
-		new Unit(fl_oz, "fl.oz, floz, fluidounce");
+		register(min, "min, minute");
+		register(hour, "hour");
+		register(day, "day");
+		register(year, "year, yr");
+		register(century, "century, cent");
+		register(julianCentury, "juliancentury");
+		register(angstrom, "angstrom");
+		register(Rsun, "Rsun, solarradius");
+		register(Rearth, "Rearth, earthradius");
+		register(AU, "AU, astronomicalunit");
+		register(ly, "ly, lyr, lightyear");
+		register(pc, "pc, parsec");
+		register(in, "in, inch");
+		register(mil, "mil");
+		register(ft, "ft, foot");
+		register(yd, "yd, yard");
+		register(mi, "mi, mile");
+		register(pt, "pt");
+		register(barn, "barn");
+		register(l, "l, L, litre, liter");
+		register(gal, "gal, gallon");
+		register(quart, "quart");
+		register(pint, "pint");
+		register(cup, "cup");
+		register(fl_oz, "fl.oz, floz, fluidounce");
 		// ...
-		new Unit(englishPint, "englishpint");
-		new Unit(Msun, "Msun, solarmass");
-		new Unit(Mearth, "Mearth, earthmass");
-		new Unit(u, "u, atomicunit");
-		new Unit(lb, "lb, lbs, pound");
-		new Unit(oz, "oz, ounce");
+		register(englishPint, "englishpint");
+		register(Msun, "Msun, solarmass");
+		register(Mearth, "Mearth, earthmass");
+		register(u, "u, atomicunit");
+		register(lb, "lb, lbs, pound");
+		register(oz, "oz, ounce");
 
-		new Unit(debye, "debye");
-		new Unit(Bi, "Bi, biot");
-		new Unit(Gs, "Gs, gauss");
-		new Unit(rpm, "rpm");
-		new Unit(waveNumber, "wavenumber");
-		new Unit(dyn, "dyn");
-		new Unit(psi, "psi");
-		new Unit(atm, "atm, atmosphere");
-		new Unit(bar, "bar");
-		new Unit(torr, "mmHg, torr");
+		register(debye, "debye");
+		register(Bi, "Bi, biot");
+		register(Gs, "Gs, gauss");
+		register(rpm, "rpm");
+		register(waveNumber, "wavenumber");
+		register(dyn, "dyn");
+		register(psi, "psi");
+		register(atm, "atm, atmosphere");
+		register(bar, "bar");
+		register(torr, "mmHg, torr");
 
-		new Unit(erg, "erg");
-		new Unit(cal, "cal, calorie");
-		new Unit(BTU, "BTU, therm");
+		register(erg, "erg");
+		register(cal, "cal, calorie");
+		register(BTU, "BTU, therm");
 
-		new Unit(eV, "eV, electronvolt");
-		new Unit(Lsun, "Lsun, solarluminosity");
-		new Unit(hp, "hp, HP, horsepower");
+		register(eV, "eV, electronvolt");
+		register(Lsun, "Lsun, solarluminosity");
+		register(hp, "hp, HP, horsepower");
 
-		new Unit(Jy, "Jy, jansky");
-		new Unit(mpg, "mpg, MPG");
+		register(Jy, "Jy, jansky");
+		register(mpg, "mpg, MPG");
 	}
 
 }

@@ -28,7 +28,6 @@ import nom.tam.fits.*;
 import nom.tam.util.*;
 
 import java.text.*;
-import java.util.*;
 
 //Add visualizable...
 
@@ -39,9 +38,6 @@ public class CoordinateAxis implements Cloneable {
 	public boolean reverse = false;
 	public double reverseFrom = 0.0;
 	
-	public Unit unit; // TODO newly added...
-
-	public Vector<Unit> tickUnits = new Vector<Unit>();
 	public double[] multiples; // The multiples of the fundamental tickunits that can be used.
 	public boolean magnitudeScaling = true; // If the ticks can be scaled by powers of 10 also.
 	public double majorTick, minorTick; // The actual ticks.
@@ -58,13 +54,6 @@ public class CoordinateAxis implements Cloneable {
 		wcsName = fitsID;
 	}
 	
-	public void copy(CoordinateAxis axis) {
-		label = axis.label;
-		wcsName = axis.wcsName;
-		format = axis.format;
-		unit = axis.unit;
-	}
-	
 	@Override
 	public Object clone() { 
 		try { return super.clone(); }
@@ -72,16 +61,11 @@ public class CoordinateAxis implements Cloneable {
 	}
 	
 	public void defaults() {
-		tickUnits.clear();
-		tickUnits.add(Unit.unity);
+		//unit = Unit.unity;
 		reverse = false;
 		multiples = new double[] { 1.0, 2.0, 5.0 }; // The multiples of the fundamental tickunits that can be used.
 		magnitudeScaling = true;
 	}
-
-	public void setTickUnits(double[] unit) {}
-
-	public Vector<Unit> getTickUnits() { return tickUnits; }
 
 	public void setLabel(String text) { label = text; }
 
@@ -101,7 +85,7 @@ public class CoordinateAxis implements Cloneable {
 	
 	public void edit(Cursor cursor, String id) throws HeaderCardException {
 		cursor.add(new HeaderCard("CTYPE" + id, wcsName, "Description of coordinate axis."));
-		cursor.add(new HeaderCard("CUNIT" + id, unit.name, "Coordinate units used."));	
+		//cursor.add(new HeaderCard("CUNIT" + id, unit.name, "Coordinate units used."));	
 	}
 	
 	// TODO
@@ -109,8 +93,8 @@ public class CoordinateAxis implements Cloneable {
 	// should use getDefaults("wcsName")?
 	public void parse(Header header, String id) {
 		wcsName = header.getStringValue("CTYPE" + id);
-		unit = Unit.get("CUNIT" + "id");
-		if(unit == null) unit = Unit.unity;
+		//unit = Unit.get("CUNIT" + "id");
+		//if(unit == null) unit = Unit.unity;
 	}
 	
 }

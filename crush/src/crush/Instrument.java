@@ -205,7 +205,7 @@ implements TableFormatter.Entries {
 	
 	public Unit getDataUnit() {
 		if(hasOption("dataunit")) return Unit.get(option("dataunit").getValue());
-		return Unit.get("count");		
+		return Unit.counts;		
 	}
 	
 	public void setMJDOptions(double MJD) {

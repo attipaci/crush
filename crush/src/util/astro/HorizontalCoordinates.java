@@ -49,13 +49,9 @@ public class HorizontalCoordinates extends SphericalCoordinates {
 		defaultLocalCoordinateSystem.add(azimuthOffsetAxis);
 		defaultLocalCoordinateSystem.add(elevationOffsetAxis);
 		
-		double[] angularUnits = { Unit.deg, Unit.arcmin, Unit.arcsec, Unit.mas };
 		AngleFormat af = new AngleFormat(3);
 		
-		for(CoordinateAxis axis : defaultCoordinateSystem) {
-			axis.setFormat(af);
-			axis.setTickUnits(angularUnits);
-		}
+		for(CoordinateAxis axis : defaultCoordinateSystem) axis.setFormat(af);
 	}
 
 	public HorizontalCoordinates() {}
