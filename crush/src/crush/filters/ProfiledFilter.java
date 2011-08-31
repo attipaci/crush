@@ -21,58 +21,48 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.filter;
+package crush.filters;
 
-import java.util.Arrays;
-
-import crush.Channel;
 import crush.Integration;
 
-public abstract class DynamicFilter extends ProfiledFilter {
+public abstract class ProfiledFilter extends FixedFilter {
+	float[] profile;
+	int rounds = 0;
 	
-	// TODO noiseFiltering to be replaced by dependents accounting...
-	float[] noiseFiltering, pointSourceThroughput;
-	float[][] profiles;
-	
-	Channel currentChannel;
-	
-	public DynamicFilter(Integration<?, ?> integration) {
+	public ProfiledFilter(Integration<?, ?> integration) {
 		super(integration);
 	}
-
-	protected DynamicFilter(Integration<?,?> integration, float[] data) {
+	
+	protected ProfiledFilter(Integration<?,?> integration, float[] data) {
 		super(integration, data);
 	}
 	
-	@Override
-	public void setIntegration(Integration<?,?> integration) {
-		super.setIntegration(integration);
-		
-		int nc = integration.instrument.size();
-		
-		noiseFiltering = new float[nc];
-		pointSourceThroughput = new float[nc];
-		profiles = new float[nc][];
-		
-		Arrays.fill(noiseFiltering, 1.0F);
-		Arrays.fill(pointSourceThroughput, 1.0F);		
+	public void setProfile(float[] profile) {
+		this.profile = profile;
 	}
-	
-	@Override
-	public void filter(Channel channel) {
-		currentChannel = channel;
-		profile = profiles[channel.index];
-		
-		super.filter(channel);
-		// TODO add updateProfile() in filtering sequence...
-	}
-	
-	public abstract float[] getIncrementalProfile();
 
 	@Override
-	public double throughputAt(int fch) {
+	public void apply() {
+		rounds++;
+		super.apply();
+	}
+	
+	@Override
+	protected double responseAt(int fch) {
 		if(profile == null) return 1.0;
-		return profile[(int) Math.round((double) fch / (nf+1) * profile.length)];
+		return Math.pow(profile[(int) Math.round((double) fch / (nf+1) * profile.length)], rounds);
 	}
 
+	@Override
+	protected double countParms() {
+		final int minf = getMinIndex();
+		if(profile == null) return 0.0;
+		double parms = 0.0;
+		for(int f=profile.length; --f >= minf; ) parms += 1.0 - profile[f] * profile[f];
+		return parms;
+	}
+
+	
+
+	
 }

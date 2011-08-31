@@ -21,7 +21,7 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.filter;
+package crush.filters;
 
 import java.util.Arrays;
 
@@ -55,7 +55,7 @@ public class MotionFilter extends KillFilter {
 
 		System.err.print("   Motion filter: ");
 		
-		if(integration.hasOption("filter.motion.level")) critical = integration.option("filter.motion.level").getFloat();
+		if(hasOption("level")) critical = option("level").getFloat();
 		
 		Vector2D[] pos = integration.getSmoothPositions(Motion.SCANNING);
 		
@@ -73,14 +73,14 @@ public class MotionFilter extends KillFilter {
 		
 		autoDFT();
 		
-		System.err.println("Using " + (dft ? "DFT" : "FFT") + ".");
+		System.err.println("Preferring " + (dft ? "DFT" : "FFT") + ".");
 	}
 	
 	
 	private void rangeCheck() {
-		if(!integration.hasOption("filter.motion.range")) return;
+		if(!hasOption("range")) return;
 		
-		Range range = integration.option("filter.motion.range").getRange(true);
+		Range range = option("range").getRange(true);
 				
 		int mini = ((int) Math.floor(range.min / df));
 		int maxi = ((int) Math.ceil(range.max / df));
@@ -119,8 +119,8 @@ public class MotionFilter extends KillFilter {
 			}
 		}
 		
-		if(integration.hasOption("filter.motion.cutoff")) {
-			float cutoff = integration.option("filter.motion.cutoff").getFloat() * (float) max;
+		if(hasOption("cutoff")) {
+			float cutoff = option("cutoff").getFloat() * (float) max;
 			if(cutoff > criticalLevel) criticalLevel = cutoff;
 		}
 		
@@ -145,15 +145,21 @@ public class MotionFilter extends KillFilter {
 		return (float) Math.sqrt(Statistics.median(vars, 0, (spectrum.length >> 1) - 1) / 0.454937);
 	}
 	
+	
+	@Override
+	public void apply() {
+		setChannels(integration.instrument.getObservingChannels());
+		super.apply();
+	}
+
 	@Override
 	public String getID() {
 		return "Mf";
 	}
 	
 	@Override
-	public void filter() {
-		setChannels(integration.instrument.getObservingChannels());
-		super.filter();
+	public String getConfigName() {
+		return "filter.motion";
 	}
 	
 }

@@ -21,11 +21,10 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.filter;
+package crush.filters;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import util.data.FFT;
 
@@ -33,7 +32,9 @@ import crush.Channel;
 import crush.Frame;
 import crush.Integration;
 
-public class CompoundFilter extends Filter {
+// TODO integration should have the initialized filters, from 'filter.ordering'...
+
+public class CompoundFilter extends AdaptiveFilter {
 	ArrayList<Filter> filters = new ArrayList<Filter>();
 	float[] filtered;
 	
@@ -51,32 +52,6 @@ public class CompoundFilter extends Filter {
 		}
 		
 		filtered = new float[data.length];
-	}
-	
-	@Override
-	public void update() {
-		// TODO instrument should provide its filters...
-		if(integration.hasOption("filter.ordering")) {
-			List<Filter> current = filters;
-			filters = new ArrayList<Filter>();
-			
-			List<String> specs = integration.option("filter.ordering").getList();
-
-			for(String spec : specs) {
-				Class<Filter> filterClass = Filter.forName(spec);
-				if(filterClass == null) continue;
-				
-				boolean exists = false;
-				for(Filter f : current) if(f.getClass().equals(filterClass)) {
-					exists = true;
-					filters.add(f);
-					break;
-				}
-				
-				if(!exists) filters.add(integration.getFilter(spec));
-			}
-		}
-		
 	}
 	
 	
@@ -116,14 +91,20 @@ public class CompoundFilter extends Filter {
 	}
 	
 	@Override
-	public synchronized void filter(Channel channel) {
-		// If single filter, then just do it it's own way...
-		if(filters.size() == 1) filters.get(0).filter(channel);
-		else fftFilter(channel);
+	public void updateConfig() {
+		super.updateConfig();
+		for(Filter filter : filters) filter.updateConfig();
 	}
 	
 	@Override
-	public synchronized void fftFilter(Channel channel) {	
+	protected synchronized void apply(Channel channel) {
+		// If single filter, then just do it it's own way...
+		if(filters.size() == 1) filters.get(0).apply(channel);
+		else super.apply(channel);
+	}
+	
+	@Override
+	protected synchronized void fftFilter(Channel channel) {		
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		Arrays.fill(filtered, 0.0F);
 		
@@ -133,7 +114,7 @@ public class CompoundFilter extends Filter {
 		
 		// Apply the filters sequentially...
 		for(Filter filter : filters) {
-			filter.update();
+			if(filter instanceof AdaptiveFilter) ((AdaptiveFilter) filter).updateProfile(channel);
 		
 			final float nyquistReject = (float) rejectionAt(nf);
 			filtered[1] = data[1] * nyquistReject;
@@ -168,10 +149,10 @@ public class CompoundFilter extends Filter {
 	}
 	
 	@Override
-	public double throughputAt(int fch) {
+	protected double responseAt(int fch) {
 		double pass = 1.0;
 		for(Filter filter : filters) {
-			pass *= filter.throughputAt(fch);
+			pass *= filter.responseAt(fch);
 			// Once the filtering is total, there is no need to continue compounding...
 			if(pass == 0.0) return 0.0;
 		}
@@ -180,11 +161,21 @@ public class CompoundFilter extends Filter {
 
 	// only effective above 1/f cutoff freq...
 	@Override
-	public double countParms() {
+	protected double countParms() {
 		final int minf = getMinIndex();
 		double parms = 0.0;
 		for(int f = nf; --f >= minf; ) parms += rejectionAt(f);
 		return parms;
+	}
+
+	@Override
+	public String getConfigName() {
+		return "filter";
+	}
+
+	@Override
+	protected void updateProfile(Channel channel) {
+		// Nothing to do...
 	}
 
 }

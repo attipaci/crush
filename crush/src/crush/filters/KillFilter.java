@@ -21,17 +21,17 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.filter;
+package crush.filters;
 
+import java.util.List;
+
+import util.Range;
 import crush.Channel;
 import crush.Integration;
 
-public abstract class KillFilter extends Filter {
+public class KillFilter extends FixedFilter {
 	boolean[] reject;
 	int components = 0;
-	
-	// TODO noiseFiltering to be replaced by Dependents accounting...
-	protected double noiseFiltering = 1.0, pointSourceThroughput = 1.0;
 	
 	KillFilter(Integration<?,?> integration) {
 		super(integration);
@@ -47,12 +47,9 @@ public abstract class KillFilter extends Filter {
 		reject = new boolean[nf+1];
 	}
 	
-	public void kill(double freq, double deltaf) {
-		freq = Math.abs(freq);
-		deltaf = Math.abs(deltaf);
-		
-		int fromf = Math.max(0, (int) Math.floor((freq - deltaf) / df));
-		int tof = Math.min(nf, (int) Math.ceil((freq + deltaf) / df));
+	public void kill(Range fRange) {
+		int fromf = Math.max(0, (int)Math.floor(fRange.min / df));
+		int tof = Math.min(nf, (int)Math.ceil(fRange.max / df));
 		
 		for(int f=fromf; f<=tof; f++) {
 			if(!reject[f]) components++;
@@ -61,23 +58,23 @@ public abstract class KillFilter extends Filter {
 		
 		autoDFT();
 	}
+
+	@Override
+	public void updateConfig() {
+		if(hasOption("bands")) {
+			List<String> ranges = option("bands").getList();
+			for(String rangeSpec : ranges) kill(Range.parse(rangeSpec, true));			
+		}
+	}
 	
 	@Override
-	public void filter(Channel channel) {
-		// TODO How to do this better with applied rejection...
-		// Discount the effect of the prior filtering...
-		channel.noiseWhitening /= noiseFiltering;
-		channel.directFiltering /= pointSourceThroughput;
+	protected void apply(Channel channel) {
+		channel.directFiltering /= getPointResponse();
 		
-		super.filter(channel);
-		
-		noiseFiltering = getNoiseWhitening();
-		pointSourceThroughput = getPointSourceThroughput();
+		super.apply(channel);
 		
 		// Apply the effect of the current filtering...
-		channel.noiseWhitening *= noiseFiltering;
-		channel.directFiltering *= pointSourceThroughput;
-		
+		channel.directFiltering *= getPointResponse();
 	}
 	
 	public void autoDFT() {
@@ -91,17 +88,26 @@ public abstract class KillFilter extends Filter {
 	}
 		
 	@Override
-	public double throughputAt(int fch) {
+	protected double responseAt(int fch) {
 		if(fch == reject.length) return reject[1] ? 0.0 : 1.0;
 		return reject[fch] ? 0.0 : 1.0;		
 	}
 
 	@Override
-	public double countParms() {
+	protected double countParms() {
 		int n = 0;
 		for(int i=getMinIndex(); i<reject.length; i++) if(reject[i]) n++;
 		return n;
 	}
 
-	
+	@Override
+	public String getID() {
+		return "K";
+	}
+
+	@Override
+	public String getConfigName() {
+		return "filter.kill";
+	}
+
 }
