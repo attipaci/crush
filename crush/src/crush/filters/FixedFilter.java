@@ -21,38 +21,51 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.filter;
+package crush.filters;
 
+import crush.Channel;
+import crush.Frame;
 import crush.Integration;
 
-public class WhiteningFilter extends DynamicFilter {
+public abstract class FixedFilter extends Filter {
 
-	public WhiteningFilter(Integration<?, ?> integration) {
+	private double pointResponse = 1.0;
+	private double rejected = 0.0;
+	
+	public FixedFilter(Integration<?, ?> integration) {
 		super(integration);
-		// TODO Auto-generated constructor stub
 	}
 
-	protected WhiteningFilter(Integration<?,?> integration, float[] data) {
+	protected FixedFilter(Integration<?, ?> integration, float[] data) {
 		super(integration, data);
 	}
-	
-	@Override
-	public void update() {
-		
-		
+
+	public double getPointResponse() {
+		return pointResponse;
 	}
 	
 	@Override
-	public float[] getIncrementalProfile() {
-		// TODO Auto-generated method stub
-		return null;
+	public void apply() {
+		for(Channel channel : channels) channel.directFiltering /= pointResponse;
+		
+		rejected = countParms();	
+		super.apply();
+		
+		pointResponse = calcPointResponse();
+		
+		for(Channel channel : channels) channel.directFiltering *= pointResponse;
+	}
+	
+	@Override
+	protected void apply(Channel channel) {
+		parms.clear(channel);
+		
+		super.apply(channel);
+		
+		parms.add(channel, rejected);
+		
+		final double dp = rejected / integration.getFrameCount(Frame.MODELING_FLAGS);
+		for(Frame exposure : integration) if(exposure != null) parms.add(exposure, dp);
 	}
 
-	@Override
-	public String getID() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	
 }

@@ -21,10 +21,9 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.filter;
+package crush.filters;
 
 import java.util.Arrays;
-import java.util.Hashtable;
 
 import crush.Channel;
 import crush.ChannelGroup;
@@ -32,18 +31,19 @@ import crush.Dependents;
 import crush.Frame;
 import crush.Integration;
 
+import util.Configurator;
 import util.SphericalCoordinates;
 import util.Util;
 import util.data.FFT;
 
 public abstract class Filter {
 	protected Integration<?,?> integration;
+	protected Dependents parms;
 	protected ChannelGroup<?> channels;
 	protected float[] data;
 	protected int nf;
 	protected double df;	
 	
-	boolean isGlobal = true;
 	boolean dft = false;
 	
 	public Filter(Integration<?,?> integration) {
@@ -57,12 +57,14 @@ public abstract class Filter {
 	
 	public abstract String getID();
 	
-	public abstract double throughputAt(int fch);
+	public abstract String getConfigName();
 	
-	public abstract double countParms();
+	protected abstract double responseAt(int fch);
+	
+	protected abstract double countParms();
 	
 	public double rejectionAt(int fch) {
-		return 1.0 - throughputAt(fch);
+		return 1.0 - responseAt(fch);
 	}
 	
 	protected void setIntegration(Integration<?,?> integration) {
@@ -83,19 +85,32 @@ public abstract class Filter {
 		this.channels = channels;
 	}
 	
+	public boolean hasOption(String key) { 
+		return integration.hasOption(getConfigName() + "." + key);
+	}
+	
+	public Configurator option(String key) {
+		return integration.option(getConfigName() + "." + key);
+	}
+	
+	public void updateConfig() {}
+	
 	// Allows to adjust the FFT filter after the channel spectrum has been loaded
-	public void update() {}
+	public void configFFTFilter(Channel channel) {}
 	
 	// TODO point source filtering...
-	public void filter() {
+	public void apply() {
 		integration.comments += getID();
-		Dependents parms = integration.getDependents(getClass().getSimpleName());
+		
+		// parse settings...
+		updateConfig();
+		
+		if(parms == null) parms = integration.getDependents(getConfigName());
 			
 		double rejected = countParms();	
 		
 		for(Channel channel : channels) {
-			parms.clear(channel);
-			filter(channel);
+			apply(channel);
 			parms.add(channel, rejected);
 		}
 		
@@ -122,7 +137,8 @@ public abstract class Filter {
 		levelData();
 	}
 	
-	public void filter(Channel channel) {
+	protected void apply(Channel channel) {
+		
 		loadTimeStream(channel);
 		
 		// Apply the filter, with the rejected signal written to the local data array
@@ -141,12 +157,12 @@ public abstract class Filter {
 	}
 	
 	// Convert data into a rejected signal (unlevelled)
-	public synchronized void fftFilter(Channel channel) {	
+	protected synchronized void fftFilter(Channel channel) {	
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		
 		FFT.forwardRealInplace(data);
 		
-		update();
+		configFFTFilter(channel);
 		
 		data[0] = 0.0F;
 		data[1] *= rejectionAt(nf);
@@ -161,7 +177,7 @@ public abstract class Filter {
 	}
 	
 	// Convert data into a rejected signal (unlevelled)
-	public synchronized void dftFilter(Channel channel) {
+	protected synchronized void dftFilter(Channel channel) {
 		float[] rejected = new float[integration.size()];
 		for(int f=nf+1; --f >= 0; ) {
 			final double rejection = rejectionAt(f);
@@ -170,7 +186,7 @@ public abstract class Filter {
 		System.arraycopy(rejected, 0, data, 0, rejected.length);
 	}
 	
-	public double getPointSourceThroughput() {
+	protected double calcPointResponse() {
 		// Assume Gaussian source profile under crossing time
 		// sigmaT sigmaw = 1
 		// T/2.35 * 2pi * sigmaf = 1
@@ -196,29 +212,16 @@ public abstract class Filter {
 		// Calculate the true source filtering above the hipass timescale...
 		for(int f=minf; f <= nf; f++) {
 			double A = Math.exp(a*f*f);
-			sum += A * throughputAt(f);
+			sum += A * responseAt(f);
 			norm += A;
 		}
 		
 		// TODO check normalization...
 		return sum / norm;
 	}
+
 	
-	
-	public double getNoiseWhitening() {		
-		double sumPreserved = 0.0;
-		int minf = getMinIndex();
-		
-		// just calculate x=0 component O(N)
-		for(int f=minf; f <= nf; f++) {
-			double phi = throughputAt(f);
-			sumPreserved += phi * phi;
-		}
-		
-		return (nf > minf) ? sumPreserved /= nf - minf : 1.0;
-	}
-	
-	public int getMinIndex() {
+	protected int getMinIndex() {
 		double hipassf = 0.5 / integration.filterTimeScale;
 		
 		if(Double.isNaN(hipassf)) return 1;
@@ -318,14 +321,18 @@ public abstract class Filter {
 		}	
 	}
 
-	public static void register(Class<Filter> filterClass, String name) {
-		registry.put(name, filterClass);
+	// Get a fixed-length representation of the filter response.
+	protected void getFilterResponse(float[] response) {
+		double n = (double) (nf+1) / response.length;
+		
+		for(int i=response.length; --i >= 0; ) {
+			int fromf = (int) Math.round(i * n); 
+			int tof = (int) Math.round((i+1) * n);
+			double sum = 0.0;
+			for(int f=tof; --f >= fromf; ) sum += responseAt(f);
+			response[i] = (float) (sum / (tof - fromf));
+		}
+		
 	}
-	
-	public static Class<Filter> forName(String name) {
-		return registry.get(name);
-	}
-	
-	static Hashtable<String, Class<Filter>> registry = new Hashtable<String, Class<Filter>>();
 	
 }

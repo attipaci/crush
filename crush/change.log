@@ -15,6 +15,18 @@
      (adjust [extended] configs)
 >> whitening/mf interaction...
 
+	[FIX] Some fixes to noise whitening. The zeroth component is now 
+	ignored, since that is the domain of the drifts filtering. The 
+	neighbour-based round is also adjusted to reflect the lack of a zeroth
+	component.
+
+	[TWEAK] Tweaked noise whitening, by eliminating some unnecessary FFTs,
+	and by conforming to the common dependent accounting instead of its own
+	measure of noise adjustment.
+
+	[TWEAK] {GISMO} Commented superflous 'whiten.below', which could 
+	interfere with the 1st generation motion filter.
+
 	[TWEAK] Noise whitening filter now fully ignores the DC component.
 
 	[TWEAK] Adjusted DataPoint decimal formatting s.t. the precision of
@@ -33,6 +45,8 @@
 	inlined for greater efficiency.
 
 	[CLEANUP] Cleaned up units and simplified coordinate axes.
+
+	[CODE] Motion filter moved under the common filtering architecture.
 
 2.05-2
 

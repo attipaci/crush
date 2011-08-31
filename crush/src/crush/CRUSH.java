@@ -36,11 +36,11 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.05-2
+ * @version 2.06-a2
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.06-a1";
+	private static String version = "2.06-a2";
 	private static String revision = "devel";
 	public static String workPath = ".";
 	public static String home = ".";

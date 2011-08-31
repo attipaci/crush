@@ -47,10 +47,10 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	
 	public double dependents = 0.0;
 	
-	public double noiseWhitening = 1.0;
 	public double sourceFiltering = 1.0; // filtering on source...
-	public float[] filterResponse; // The whitening filter's spectral response...
 	public double directFiltering = 1.0; // The effect of FFT filters on source rel. to noise.
+	
+	public float[] filterResponse; // The whitening filter's spectral response...
 	
 	public double filterTimeScale = Double.POSITIVE_INFINITY;
 	
