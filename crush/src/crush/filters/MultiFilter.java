@@ -29,31 +29,41 @@ import java.util.Arrays;
 import util.data.FFT;
 
 import crush.Channel;
+import crush.ChannelGroup;
 import crush.Frame;
 import crush.Integration;
 
-// TODO integration should have the initialized filters, from 'filter.ordering'...
 
-public class CompoundFilter extends AdaptiveFilter {
+public class MultiFilter extends VariedFilter {
 	ArrayList<Filter> filters = new ArrayList<Filter>();
 	float[] filtered;
 	
-	public CompoundFilter(Integration<?, ?> integration) {
+	private int enabled = 0;
+	
+	public MultiFilter(Integration<?, ?> integration) {
 		super(integration);
-		// TODO Auto-generated constructor stub
 	}
 	
 	@Override
 	protected void setIntegration(Integration<?,?> integration) {
 		super.setIntegration(integration);
-		for(Filter filter : filters) {
+		
+		if(filters != null) for(Filter filter : filters) {
 			filter.data = data;
 			filter.setIntegration(integration);
 		}
 		
 		filtered = new float[data.length];
+		
+		updateSourceProfile();
 	}
 	
+	
+	@Override
+	public void setChannels(ChannelGroup<?> channels) {
+		super.setChannels(channels);
+		if(filters != null) for(Filter filter : filters) filter.setChannels(channels);		
+	}
 	
 	public synchronized int size() {
 		return filters.size();
@@ -63,10 +73,21 @@ public class CompoundFilter extends AdaptiveFilter {
 		return filters.contains(filter);
 	}
 	
+	public synchronized boolean contains(Class<? extends Filter> filterClass) {
+		for(Filter filter : filters) if(filter.getClass().equals(filterClass)) return true;
+		return false;
+	}
+	
+	public Filter get(Class<? extends Filter> filterClass) {
+		for(Filter filter : filters) if(filter.getClass().equals(filterClass)) return filter;
+		return null;
+	}
+	
 	public synchronized void addFilter(Filter filter) {
 		if(filter.integration == null) filter.setIntegration(integration);
 		else if(filter.integration != integration) 
 			throw new IllegalStateException("Cannot compound filter from a different integration.");
+		filter.setChannels(getChannels());
 		filters.add(filter);
 	}
 
@@ -74,6 +95,7 @@ public class CompoundFilter extends AdaptiveFilter {
 		if(filter.integration == null) filter.setIntegration(integration);
 		else if(filter.integration != integration) 
 			throw new IllegalStateException("Cannot compound filter from a different integration.");
+		filter.setChannels(getChannels());
 		filters.set(i, filter);
 	}
 	
@@ -85,52 +107,80 @@ public class CompoundFilter extends AdaptiveFilter {
 		return filters.remove(i);
 	}
 	
-	@Override
-	public String getID() {
-		return "f";
-	}
 	
 	@Override
 	public void updateConfig() {
 		super.updateConfig();
-		for(Filter filter : filters) filter.updateConfig();
+		for(Filter filter : filters) filter.updateConfig();			
+	}
+	
+	@Override 
+	public boolean isEnabled() {
+		if(!super.isEnabled()) return false;
+		
+		enabled = 0;
+		for(Filter filter : filters) if(filter.isEnabled()) enabled++;
+		return enabled > 0;
+	}
+
+	// TODO what's wrong with standalone whitening filter...
+	
+	/*
+	@Override
+	public boolean apply(boolean report) {
+		updateConfig();
+		
+		if(enabled > 1) return super.apply(report);
+		else for(Filter filter : filters) if(filter.isEnabled()) return filter.apply(report);
+		return false;
+	}
+	*/
+	
+	@Override
+	protected void preFilter() {
+		super.preFilter();
+		for(Filter filter : filters) if(filter.isEnabled()) filter.preFilter();		
 	}
 	
 	@Override
-	protected synchronized void apply(Channel channel) {
-		// If single filter, then just do it it's own way...
-		if(filters.size() == 1) filters.get(0).apply(channel);
-		else super.apply(channel);
+	protected void postFilter() {
+		super.postFilter();
+		for(Filter filter : filters) if(filter.isEnabled()) filter.postFilter();		
 	}
 	
 	@Override
-	protected synchronized void fftFilter(Channel channel) {		
+	protected synchronized void fftFilter(Channel channel) {				
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		Arrays.fill(filtered, 0.0F);
 		
-		FFT.forwardRealInplace(data);
-		
+		FFT.forwardRealInplace(data);	
 		data[0] = 0.0F;
 		
 		// Apply the filters sequentially...
-		for(Filter filter : filters) {
-			if(filter instanceof AdaptiveFilter) ((AdaptiveFilter) filter).updateProfile(channel);
-		
+		for(Filter filter : filters) if(filter.isEnabled()) {
+			// A safety check to make sure the filter uses the spectrum from the master data array...
+			if(filter.data != data) filter.data = data;
+			
+			filter.preFilter(channel);
+			filter.updateProfile(channel);
+			
 			final float nyquistReject = (float) rejectionAt(nf);
 			filtered[1] = data[1] * nyquistReject;
 			data[1] *= (1.0 - nyquistReject);
 		
 			for(int i=2; i<data.length; ) {
-				final float rejection = (float) rejectionAt(i >> 1);
+				final float pass = (float) filter.responseAt(i >> 1);
 			
 				// Apply the filter to the real part...
-				filtered[i] = rejection * data[i];
-				data[i++] *= (1.0 - rejection);
+				filtered[i] = (1.0F - pass) * data[i];
+				data[i++] *= pass;
 				
 				// Apply the filter to the imaginary part
-				filtered[i] = rejection * data[i];
-				data[i++] *= (1.0 - rejection);
+				filtered[i] = (1.0F - pass) * data[i];
+				data[i++] *= pass;
 			}
+			
+			filter.postFilter(channel);
 		}
 		
 		// Convert to rejected signal...
@@ -151,7 +201,7 @@ public class CompoundFilter extends AdaptiveFilter {
 	@Override
 	protected double responseAt(int fch) {
 		double pass = 1.0;
-		for(Filter filter : filters) {
+		for(Filter filter : filters) if(filter.isEnabled()) {
 			pass *= filter.responseAt(fch);
 			// Once the filtering is total, there is no need to continue compounding...
 			if(pass == 0.0) return 0.0;
@@ -159,23 +209,20 @@ public class CompoundFilter extends AdaptiveFilter {
 		return pass;
 	}
 
-	// only effective above 1/f cutoff freq...
+	
 	@Override
-	protected double countParms() {
-		final int minf = getMinIndex();
-		double parms = 0.0;
-		for(int f = nf; --f >= minf; ) parms += rejectionAt(f);
-		return parms;
+	public String getID() {
+		String id = "";
+		for(Filter filter : filters) if(filter.isEnabled()) {
+			if(id.length() != 0) id += ":";
+			id += filter.getID(); 
+		}
+		return id;
 	}
 
 	@Override
 	public String getConfigName() {
 		return "filter";
-	}
-
-	@Override
-	protected void updateProfile(Channel channel) {
-		// Nothing to do...
 	}
 
 }

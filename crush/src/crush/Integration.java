@@ -29,7 +29,10 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
+import crush.filters.MultiFilter;
+import crush.filters.KillFilter;
 import crush.filters.MotionFilter;
+import crush.filters.WhiteningFilter;
 
 import util.*;
 import util.astro.EquatorialCoordinates;
@@ -80,7 +83,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public Chopper chopper;
 	public DataPoint aveScanSpeed;
-	public MotionFilter motionFilter;
+	public MultiFilter filter;
 	
 	public double filterTimeScale = Double.POSITIVE_INFINITY;
 	public double nefd = Double.NaN; // It is readily cast into the Jy sqrt(s) units!!!
@@ -103,6 +106,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// TODO redo it safely, s.t. existing reduction steps copy over as well.
 		clone.dependents = new Hashtable<String, Dependents>(); 
 		clone.signals = new Hashtable<Mode, Signal>();
+		clone.filter = null;
 
 		return clone;
 	}
@@ -170,7 +174,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			throw new IllegalStateException("Integration is too short (" + Util.f1.format(mappingFrames * instrument.samplingInterval / Unit.s) + " seconds).");
 		
 		// Filter motion only after downsampling...
-		if(hasOption("filter.motion")) motionFilter = new MotionFilter(this);
+		if(hasOption("filter.ordering")) setupFilters();
 		
 		detectorStage();
 		
@@ -408,6 +412,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	public void pointingAt(Vector2D offset) {
 		for(Frame frame : this) if(frame != null) frame.pointingAt(offset);
+	}
+	
+	
+	public void setupFilters() {
+		System.err.println("   Configuring filters.");
+		List<String> ordering = option("filter.ordering").getList();
+		filter = new MultiFilter(this);
+		for(String name : ordering) {
+			if(name.equals("motion")) filter.addFilter(new MotionFilter(this, filter.getData()));
+			else if(name.equals("kill")) filter.addFilter(new KillFilter(this, filter.getData()));
+			else if(name.equals("whiten")) filter.addFilter(new WhiteningFilter(this, filter.getData()));
+			else System.err.println(" WARNING! No filter for '" + name + "'.");
+		}	
 	}
 	
 	
@@ -1057,217 +1074,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return sourceProfile;
 	}
 	
-	
-	// Changes:
-	//  * Always goes ahead with whitening even when window size is large...
-	public synchronized void whiten() {
-		comments += "wh(";
-		
-		int windowSize = 2*framesFor(filterTimeScale);
-		double level = hasOption("whiten.level") ? option("whiten.level").getDouble() : 2.0;
-		Range measure = hasOption("whiten.proberange") ? option("whiten.proberange").getRange(true) : null; 
-		boolean symmetric = hasOption("whiten.below");
-		int minProbeChannels = hasOption("whiten.minchannels") ? option("whiten.minchannels").getInt() : 16;
-		
-		windowSize = FFT.getPaddedSize(windowSize);
-		// convert critical whitening power level to amplitude...
-		level = Math.sqrt(level);
-		
-		if(size() < windowSize) windowSize = FFT.getPaddedSize(size());
-		
-		final int n = FFT.getPaddedSize(size());
-		final float[] data = new float[n];
-		final int blocks = n/windowSize;
-		
-		final int nF = windowSize / 2;
-		final double[] A = new double[nF];
-		final double[] temp = new double[nF];
-		final double[] phi = new double[nF];
-		
-		
-		final double T = getPointCrossingTime();
-		final double df = 1.0 / (n * instrument.samplingInterval);
-		final double dF = 1.0 / (windowSize * instrument.samplingInterval);
-		
-		int measureFrom = measure == null ? 1 : Math.max(1, (int) Math.floor(measure.min / dF));
-		int measureTo = measure == null ? nF : Math.min(nF, (int) Math.ceil(measure.max / dF) + 1);
-		
-		// Make sure the probing range is contains enough channels
-		// and that the range is valid...
-		if(measureFrom > measureTo - minProbeChannels + 1) measureFrom = measureTo - minProbeChannels + 1;
-		if(measureFrom < 0) measureFrom = 0;
-		if(measureFrom > measureTo - minProbeChannels + 1) measureTo = Math.min(minProbeChannels + 1, nF);
-	
-		final double sigma = Util.sigmasInFWHM / (SphericalCoordinates.twoPI * T * df);
-		final double a = -0.5 / (sigma * sigma);
-		
-		double sourceNorm = 0.0;
-		
-		// just calculate x=0 component -- O(N)
-		// Below the hipass time-scale, the filter has no effect, so count it as such...
-		final double[] sourceProfile = new double[nF];
-		for(int F=nF; --F >= 1; ) {
-			sourceProfile[F] = Math.exp(a*F*F);
-			sourceNorm += sourceProfile[F];
-		}
-		
-		Dependents parms = getDependents("whiten");
-			
-		double sumpwG = 0.0, aveSourceWhitening = 0.0;
-		
-		for(final Channel channel : instrument.getConnectedChannels()) {
-			final int c = channel.index;
-			
-			parms.clear(channel);
-			
-			// If the filterResponse array does not exist, create it...
-			if(channel.filterResponse == null) {
-				channel.filterResponse = new float[nF];
-				Arrays.fill(channel.filterResponse, 1.0F);
-			}
-			
-			// Put the time-stream data into an array, and FFT it...
-			int points = getWeightedTimeStream(channel, data);		
-			
-			// Remove the DC component
-			level(data, channel);
-			
-			// Average power in windows, then convert to rms amplitude
-			FFT.forwardRealInplace(data);
-			
-			for(int F=nF; --F >= 1; ) {
-				double sumP = 0.0;
-				final int fromf = 2 * F * blocks;
-				int tof = Math.min(fromf + 2 * blocks, data.length);
-				// Sum the power inside the spectral window...
-				for(int f=fromf; f<tof; f++) sumP += data[f] * data[f];
-				
-				// Add the Nyquist component to the last bin...
-				if(F == nF-1) {
-					sumP += data[1] * data[1];
-					tof++;
-				}
-				// Set the amplitude equal to the rms power...
-				A[F] = tof > fromf ? Math.sqrt(2.0 * sumP / (tof - fromf)) : 0.0;
-			}	
-
-			
-			System.arraycopy(A, 0, temp, 0, A.length);
-			final double medA = Statistics.median(temp, measureFrom, measureTo);
-			
-			// Save the original amplitudes for later use...
-			System.arraycopy(A, 0, temp, 0, A.length);
-			
-			final double sigmaA = medA / Math.sqrt(blocks);
-			final double critical = medA * level + 2.0 * sigmaA;
-			final double criticalBelow = medA / level - 2.0 * sigmaA;
-			
-			// Only whiten those frequencies which have a significant excess power
-			// when compared to the specified level over the median spectral power.
-				
-			Arrays.fill(phi, 1.0); // To be safe initialize the scaling array here...
-		
-			// This is the main whitening filter...
-			for(int F=nF; --F >= 1; ) if(A[F] > 0.0) {
-				// Check if there is excess power that needs filtering
-				if(A[F] > critical) phi[F] = medA / A[F];
-				else if(symmetric) if(A[F] < criticalBelow) phi[F] = medA / A[F];
-				
-				// If it was filtered prior, see if the filtering can be relaxed (not to overdo it...)
-				if(channel.filterResponse[F] < 1.0) if(A[F] < medA) phi[F] = medA / A[F];
-				else if(channel.filterResponse[F] > 1.0) if(A[F] > medA) phi[F] = medA / A[F];
-				
-				if(A[F] > 0.0) A[F] *= phi[F];
-				else A[F] = medA;
-			}
-		
-			
-			// Do a neighbour based round as well, with different resolutions
-			// (like a feature seek).
-			if(hasOption("whiten.neighbours")) {
-				int N = A.length;
-				int maxBlock = N >> 2;
-				double uncertainty = Math.sqrt(2.0 / blocks);
-				double limit = 1.0 + 3.0 * uncertainty;
-				
-				// Cheat to make sure the lack of a zero-f component does not cause trouble...
-				A[0] = A[1];
-				
-				for(int blockSize = 1; blockSize <= maxBlock; blockSize <<= 1) {	
-					final int N1 = N-1;
-
-					for(int F = 1; F < N1; F++) if(A[F] > 0.0) {
-						double maxA = Math.max(A[F-1], A[F+1]);
-						if(A[F] > maxA * limit) {
-							final double rescale = maxA / A[F];
-							for(int blockf = 0, f = F*blockSize; blockf < blockSize; blockf++, f++) phi[f] *= rescale;
-							A[F] = maxA;
-						}
-					}				
-
-					for(int F = 0; F < N1; F += 2) A[F>>1] = 0.5 * Math.hypot(A[F], A[F+1]);
-					N >>= 1;
-
-					uncertainty /= Math.sqrt(2.0);
-				}
-			}
-			
-			// Renormalize the whitening scaling s.t. it is median-power neutral
-			for(int F=nF; --F >= 1; ) temp[F] *= phi[F];
-			double norm = medA / Statistics.median(temp, measureFrom, measureTo);
-			if(Double.isNaN(norm)) norm = 1.0;
-			
-			double sumPreserved = 0.0;	
-			double deps = 0.0;
-			
-			channel.filterResponse[0] = 0.0F;
-			for(int F=nF; --F >= 1; ) {
-				phi[F] *= norm;
-				channel.filterResponse[F] *= phi[F];				
-				final double phi2 = channel.filterResponse[F] * channel.filterResponse[F];
-				sumPreserved += phi2;
-				deps += 1.0 - phi2;
-			}
-		
-			// Figure out how much filtering effect there is on the point source peaks...
-			double sumSource = 0.0;
-			for(int F=nF; --F >= 1; ) sumSource += channel.filterResponse[F] * sourceProfile[F];
-				
-			// Discount the effect of prior whitening...
-			if(channel.directFiltering > 0.0) channel.sourceFiltering /= channel.directFiltering;
-			// And apply the new values...
-			channel.directFiltering = sumSource / sourceNorm;	
-			channel.sourceFiltering *= channel.directFiltering;
-			
-			// To calculate <G> = sum w G^2 / sum w G
-			if(channel.isUnflagged()) {
-				aveSourceWhitening += channel.directFiltering * channel.directFiltering / channel.variance;
-				sumpwG += Math.abs(channel.directFiltering) / channel.variance;
-			}
-			
-			toRejected(data, phi);
-			
-			FFT.backRealInplace(data);
-			
-			level(data, channel);
-			
-			parms.add(channel, deps);
-			final double dp = deps / points;
-	
-			for(Frame exposure : this) if(exposure != null) {
-				exposure.data[c] -= data[exposure.index];
-				if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0) 
-					parms.add(exposure, dp);
-			}
-		}
-		
-		parms.apply(instrument.getConnectedChannels(), 0, size());
-		
-		comments += Util.f2.format(aveSourceWhitening/sumpwG) + ")";
-				
-	}
-
-
 	protected boolean despikedNeighbours = false;
 		
 	public void despike(Configurator despike) {
@@ -2094,7 +1900,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(int i=fullCovar.length; --i >= 0; ) Arrays.fill(fullCovar[i], Double.NaN);
 		
 		for(Channel c1 : instrument) for(Channel c2 : instrument)
-			fullCovar[c1.dataIndex-1][c2.dataIndex-1] = covar[c1.index][c2.index];
+			fullCovar[c1.storeIndex-1][c2.storeIndex-1] = covar[c1.index][c2.index];
 			
 		return fullCovar;
 	}
@@ -2258,21 +2064,27 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	
 	public void addDetails(LinkedHashMap<String, Object> data) {
+		WhiteningFilter whitener = null;
+		
+		if(filter != null) if(filter.contains(WhiteningFilter.class)) 
+			whitener = (WhiteningFilter) filter.get(WhiteningFilter.class);
+		
 		int[] dataIndex = new int[instrument.size()];
 		float[] channelGain = new float[instrument.size()];
 		float[] channelOffset = new float[instrument.size()];
 		float[] channelWeight = new float[instrument.size()];
 		int[] channelFlags = new int[instrument.size()];
-		float[][] filterProfile = new float[instrument.size()][];
 		short[] channelSpikes = new short[instrument.size()];
 
+		float[][] filterProfile = whitener == null ? null : new float[instrument.size()][];
+		
 		for(Channel channel : instrument) {
-			dataIndex[channel.index] = channel.dataIndex;
+			dataIndex[channel.index] = channel.storeIndex;
 			channelGain[channel.index] = (float) channel.gain;
 			channelOffset[channel.index] = (float) channel.offset;
 			channelWeight[channel.index] = (float) channel.weight;
 			channelFlags[channel.index] = channel.flag;
-			filterProfile[channel.index] = channel.filterResponse;
+			if(whitener != null) filterProfile[channel.index] = whitener.getValidProfile(channel);
 			channelSpikes[channel.index] = (short) channel.spikes;
 		}
 		
@@ -2282,7 +2094,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		data.put("Channel_Weight", channelWeight);
 		data.put("Channel_Flags", channelFlags);
 		data.put("Channel_Spikes", channelSpikes);
-		data.put("Filter_Profile", filterProfile);
+		if(whitener != null) data.put("Whitening_Profile", filterProfile);
 		data.put("Noise_Spectrum", getSpectra());		
 	}
 	
@@ -2501,9 +2313,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public synchronized boolean perform(String task) {
 		boolean isRobust = false;
 		if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust = true;
-		
-		boolean accomplished = true;
-		
+			
 		if(task.equals("offsets")) {
 			removeDrifts(instrument, size(), isRobust, isRobust);	    
 		}
@@ -2517,7 +2327,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		else if(task.startsWith("correlated.")) {	
 			String modalityName = task.substring(task.indexOf('.')+1);
-			accomplished = decorrelate(modalityName, isRobust);
+			if(!decorrelate(modalityName, isRobust)) return false;
 		}
 		else if(task.equals("weighting")) {
 			getWeights();
@@ -2531,18 +2341,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			despike(option(task));
 			updatePhases();
 		}
-		else if(task.equals("filter.motion")) {
-			motionFilter.apply();			
-		}
-		else if(task.equals("whiten")) {
-			whiten();
-			if(indexOf("whiten") > indexOf("weighting")) getWeights();
+		else if(task.equals("filter")) {
+			if(!filter.apply()) return false;
+			if(indexOf("filter") > indexOf("weighting")) getWeights();
 			updatePhases();
 		}
 		else return false;
-		
-		if(!accomplished) return false;
-		
+			
 		comments += " ";	
 	
 		Thread.yield();

@@ -617,7 +617,7 @@ implements TableFormatter.Entries {
 	
 	public Hashtable<Integer, ChannelType> getChannelLookup() {
 		Hashtable<Integer, ChannelType> lookup = new Hashtable<Integer, ChannelType>();
-		for(ChannelType channel : this) lookup.put(channel.dataIndex, channel);
+		for(ChannelType channel : this) lookup.put(channel.storeIndex, channel);
 		return lookup;
 	}
 	
@@ -708,7 +708,7 @@ implements TableFormatter.Entries {
 	}
 	
 	public void slimGroup(ChannelGroup<?> group, Hashtable<Integer, ChannelType> lookup) {
-		for(int c=group.size(); --c >= 0; ) if(!lookup.containsKey(group.get(c).dataIndex)) group.remove(c);
+		for(int c=group.size(); --c >= 0; ) if(!lookup.containsKey(group.get(c).storeIndex)) group.remove(c);
 		group.trimToSize();
 	}
 	
@@ -850,9 +850,9 @@ implements TableFormatter.Entries {
 		standardWeights();
 		
 		for(Channel channel : this) {
-			gains[channel.dataIndex-1] = (float) channel.gain;
-			weights[channel.dataIndex-1] = (float) channel.weight;
-			flags[channel.dataIndex-1] = channel.flag;
+			gains[channel.storeIndex-1] = (float) channel.gain;
+			weights[channel.storeIndex-1] = (float) channel.weight;
+			flags[channel.storeIndex-1] = channel.flag;
 		}
 		
 		dataWeights();

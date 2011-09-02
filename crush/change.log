@@ -1,4 +1,6 @@
->> SHARC2 .gz 
+>> Check filter.kill
+
+>> SHARC2 return to 8.0" beam
 
 >> drifts, signal to remove with cubic spline 
    drifts to store signals...
@@ -15,10 +17,74 @@
      (adjust [extended] configs)
 >> whitening/mf interaction...
 
+	[NEW] The biggest change is the addition of a new motion filter. The
+	periodic motions of the scanning can excite vibrational modes in the
+	telescope as well as the instrument. Since these are scan-synchronous
+	signals, they will have a fixed imprint in the maps, showing up as
+	artefacts. To counter this, CRUSH can now spectrally filter the 
+	timestreams to reject the frequencies where most of the motion power
+	is. The feature is controlled by the 'filter.motion' key and its
+	subkeys 'level' (setting a minimum S/N for removed components) and 
+	'cutoff' (setting a minimum relative fraction to peak component for
+	removal), and 'range' (setting the target frequency range). E.g.
+
+		filter.motion.range 0.03--10.0
+		filter.motion.level 10.0
+		filter.motion.cutoff 0.05
+		
+
+	will identify and filter features of the scanning motion, between 30mHz
+	and 10Hz, that are at least 10-sigma significant and have an amplitude 
+	at least 5% of the strongest feature. The filter itself is enabled by
+		
+		filter.motion
+	
+	(It is enabled by the default configuration, see 'default.cfg')
+	The motion filter is part of the unified filter architecture also 
+	introduced in this version.
+
+	[NEW] Introducing a unified filter architercture for frequency domain
+	filtering of timestreams. The umbrella filter is controlled by the
+	'filter' key, and its components are specified by 'filter.ordering'.
+	The available, and default, components are
+
+		filter.ordering  motion, kill, whiten 
+
+	corresponding to motion filtering (see above), killing specific 
+	frequencies and spectral bands altogether, and the adaptive
+	whitening filter. The filtering architecure makes sure these filters
+	do not conflict and that the source filtering and paramter accountings
+	are always correct. Additionally, the umbrella filter optimizes for
+	speed by requiring a single FFT pair per channel for all filters.
+
+	[NEW] Another new component of the new filter structure is the kill
+	filter, controlled by 'filter.kill'. The sub-option 'bands', can 
+	specify the frequency ranges, which should be totally discarded. This
+	can be used to set up specific notch filters for instruments that have
+	known bothersome resonances. E.g.
+
+		filter.kill.bands 0.33--0.39, 5.74--6.71, 12.2-12.3
+
+	will set up the notch filter for three bands, each specified in Hz.
+	The filter itself is enabled, as usual by 
+
+		filter.kill
+
+	[CHANGE] For better comformance with the new filter-architecture, the
+	old 'whiten' key and its subkeys have been moved under 'filter.whiten'.
+	At the same time 'whiten' remains a valid alias for backward 
+	compatibility.
+
 	[FIX] Some fixes to noise whitening. The zeroth component is now 
 	ignored, since that is the domain of the drifts filtering. The 
 	neighbour-based round is also adjusted to reflect the lack of a zeroth
 	component.
+
+	[TWEAK] Amplitude noise, used for determining when a deviation from
+	target noise level is significant, was wrongly calculated erring on the
+	conservative side. The result of the fix is somewhat more aggressive
+	detection of non-white noise, and therefore a stronger noise whitening
+	filter.
 
 	[TWEAK] Tweaked noise whitening, by eliminating some unnecessary FFTs,
 	and by conforming to the common dependent accounting instead of its own
@@ -39,7 +105,7 @@
 
 	[TWEAK] {SABOCA, SCUBA-2} 'accel' is now a shorthand for
 	'correlated.accel-mag'. Previously, 'correlated.accel-norm' was part
-	of the pipeline but without an alias.	
+	of the pipeline but without an alias for SABOCA and SCUBA-2.	
 
 	[TWEAK] {APEX} Checking for invalid coordinates (-999 deg) is now
 	inlined for greater efficiency.

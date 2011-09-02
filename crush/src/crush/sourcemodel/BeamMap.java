@@ -298,7 +298,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 			String positionString = Util.f1.format(position.x / Unit.arcsec) + "\t" + Util.f1.format(position.y / Unit.arcsec);
 			
 			if(pixelMap[pixel.getDataIndex()] != null) for(Channel channel : pixel) {			
-				out.println(channel.dataIndex + "\t" + 
+				out.println(channel.storeIndex + "\t" + 
 						Util.f3.format(sourceGain[channel.index]) + "\t" +
 						Util.f3.format(channel.gain) + "\t" +
 						positionString
