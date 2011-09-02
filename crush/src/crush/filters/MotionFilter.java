@@ -55,7 +55,7 @@ public class MotionFilter extends KillFilter {
 
 		System.err.print("   Motion filter: ");
 		
-		if(hasOption("level")) critical = option("level").getFloat();
+		if(hasOption("s2n")) critical = option("s2n").getFloat();
 		
 		Vector2D[] pos = integration.getSmoothPositions(Motion.SCANNING);
 		
@@ -119,8 +119,8 @@ public class MotionFilter extends KillFilter {
 			}
 		}
 		
-		if(hasOption("cutoff")) {
-			float cutoff = option("cutoff").getFloat() * (float) max;
+		if(hasOption("above")) {
+			float cutoff = option("above").getFloat() * (float) max;
 			if(cutoff > criticalLevel) criticalLevel = cutoff;
 		}
 		

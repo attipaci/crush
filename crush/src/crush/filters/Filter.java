@@ -151,6 +151,8 @@ public abstract class Filter {
 		return true;
 	}
 	
+	
+	
 	protected void preFilter() {
 		if(parms == null) parms = integration.getDependents(getConfigName());		
 	}

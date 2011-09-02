@@ -5,17 +5,15 @@
 >> drifts, signal to remove with cubic spline 
    drifts to store signals...
 
->> filter
->> filter.ordering=hipass,notch,motion,whiten
-   * single filter via DFT/FFT.
-   * composite FFT filtering
-
->> 'filter.motion' '.level', '.cutoff', '.range'
-   * configured for all instruments
+>> 'filter.motion'
    * check for OTF/box scans...
    * test on extended emission
      (adjust [extended] configs)
+
 >> whitening/mf interaction...
+
+
+2.10-a1
 
 	[NEW] The biggest change is the addition of a new motion filter. The
 	periodic motions of the scanning can excite vibrational modes in the
@@ -24,13 +22,13 @@
 	artefacts. To counter this, CRUSH can now spectrally filter the 
 	timestreams to reject the frequencies where most of the motion power
 	is. The feature is controlled by the 'filter.motion' key and its
-	subkeys 'level' (setting a minimum S/N for removed components) and 
-	'cutoff' (setting a minimum relative fraction to peak component for
+	subkeys 's2n' (setting a minimum S/N for removed components) and 
+	'above' (setting a minimum relative fraction to peak component for
 	removal), and 'range' (setting the target frequency range). E.g.
 
 		filter.motion.range 0.03--10.0
-		filter.motion.level 10.0
-		filter.motion.cutoff 0.05
+		filter.motion.s2n 10.0
+		filter.motion.above 0.05
 		
 
 	will identify and filter features of the scanning motion, between 30mHz
@@ -69,6 +67,9 @@
 	The filter itself is enabled, as usual by 
 
 		filter.kill
+
+	When used standalone, the filter uses DFT or FFT depending on which
+	is faster. (Same is true for the motion filter).
 
 	[CHANGE] For better comformance with the new filter-architecture, the
 	old 'whiten' key and its subkeys have been moved under 'filter.whiten'.
@@ -113,6 +114,7 @@
 	[CLEANUP] Cleaned up units and simplified coordinate axes.
 
 	[CODE] Motion filter moved under the common filtering architecture.
+
 
 2.05-2
 
