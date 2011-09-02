@@ -706,6 +706,167 @@
 			Defines the frontend-backend combination to use. 
 			E.g. for LABOCA, this would be set to 'LABOCA-ABBA'.
 
+:: filter		@Since: 2.10
+			@Advanced
+			Activate spectral filtering of time-streams. The 
+			filter components are set by 'filter.ordering' and can
+			be configured activated separately.
+			@See: 'filter.ordering', 'filter.motion', 
+			'filter.kill', 'filter.whiten'
+
+:: filter.kill		@Since: 2.10
+			@Expert
+			Allows completely quenching certain frequencies in the
+			time-stream data. To activate, both this option and the
+			'filter' umbrella option must be set. The bands of the
+			kill-filter are set by 'filter.kill.bands'.
+			@See: 'filter', 'filter.kill.bands'
+
+:: filter.kill.bands=<list>	@Since: 2.10
+				@Expert
+			Provide a comman-separated list of frequency ranges
+			(in Hz) that are to be quenched by the kill-filter. 
+			E.g.:
+
+			  filter.kill.bands 0.35--0.37, 9.8-10.2
+			
+			@See: 'filter', 'filter.kill'
+
+:: filter.motion	@Since: 2.10
+			@Advanced
+			The (typically) periodic motion of the scanning can
+			induce vibrations in the telescope and instrument. 
+			Since these signals will be in synch with the scanning 
+			motion they will produce definite mapping artefacts
+			(e.g. broad peaks or bowls in the map center, or ridges
+			near the map edges). The motion filter lets you 				spectrally filter those frequencies where most of the
+			scanning motion is concentrated. To activate, both this
+			option and the'filter' umbrella option must be set.  
+			The identification of rejected motion frequencies is
+			controlled by the 's2n', 'above', and 'range' sub-keys
+			@See: 'filter', 'filter.motion.s2n',
+			'filter.motion.above', 'filter.motion.range'
+
+:: filter.motion.above=X	@Since: 2.10
+				@Expert
+			The fraction, relative to the peak spectral component
+			of the scanning motion, above which to filter motion.
+			E.g.:
+			  
+			  filter.motion.above 0.1
+
+			will identify component that have amplited at least 10%
+			of the main component.
+			@See: 'filter.motion', 'filter.motion.s2n', 
+			'filter.motion.range'
+
+:: filter.motion.range=min:max	@Since: 2.10
+				@Expert
+			Set the frequency range (Hz) in which the motion filter
+			operates.
+			@See: 'filter.motion', 'filter.motion.above',
+			'filter.motion.s2n'
+
+:: filter.motion.s2n=X		@Since: 2.10
+				@Expert
+			The minimum significance of the motion spectral 
+			component to be considered for filtering.
+			@See: 'filter.motion', 'filter.motion.above', 
+			'filter.motion.range'
+
+:: filter.ordering=<list>	@Since: 2.10
+				@Expert
+			A comma-separated list of spectral filters, in the
+			order they are to be applied. E.g., the default is:
+			
+			  filter.ordering motion, kill, whiten
+
+			applies first the motion filter, then kills specified
+			spectral bands, and finally applies noise whitening
+			on the remainder. Each of the components can be 
+			controlled and activated separately with the 
+			appropriate subkeys of 'filter' with the same names.
+			@See: 'filter.motion', 'filter.whiten', 'filter.kill'
+				
+:: filter.whiten	@Since: 2.10
+			@Was: 'whiten'
+			@Advanced
+			Use noise whitening algorithm. White noise assures that
+			the noise in the map is independent pixel-to-pixel. 
+			Otherwise noise may be correlated on spacific scales.
+			Whitening is also useful to get rid of any signals
+			(still) unmodelled by the other reduction steps. It
+			should always be a last resort only. The modeling of
+			signals is generally preferred. To activate, both this
+                        option and the'filter' umbrella option must be set.
+			@See: 'filter', 'whiten', 'filter.whiten.below', 
+			'filter.whiten.level', 'filter.whiten.minchannels'
+			'filter.whiten.neighbours', 'filter.whiten.proberange'
+			
+:: filter.whiten.below	@Since: 2.10
+			@Was: 'whiten.below'
+			@Expert
+			By default the whitening filter only supresses
+			excessive noise, but will leave those spectral 
+			components untouched, where the spectral power is
+			deficient. Setting this option allows the boosting of
+			such components to the white level, thus achieving
+			true noise whitening, which is necessary to obtain maps 
+			without instrinsic spacial correlations.
+			@See: 'filter.whiten'
+
+:: filter.whiten.level=X	@Since: 2.10
+				@Was: 'whiten.level'
+				@Advanced
+			Specify the noise whitening level at X times
+			the average (median) spectral noise level. 
+			Spectral channels that have noise in excess of the
+			critical level will be approproately filtered to bring
+			them back in line. Values clearly above 1 are 
+			recommended. Typically values around 1.5--2.0 are 
+			useful without overfiltering.
+			@See: 'filter.whiten'
+
+:: filter.whiten.minchannels=N	@Since: 2.10
+				@Was: 'whiten.minchannels'
+				@Expert
+			Make sure that at least N channels are used for
+			estimating the white noise levels, even if the 
+			specified probe range is smaller or falls outside of
+			the available spectrum. In such cases, CRUSH will
+			automatically expand the requested range to include
+			at least N spectral channels, or as many as possible
+			if the spectral range itself is too small.
+			@See: 'filter.whiten', 'filter.whiten.proberange'
+	
+:: filter.whiten.neighbours	@Since: 2.10
+				@Was: 'whiten.neighbours'
+				@Expert
+			The default whitening method is based on the absolute
+			amplitude of spectral components compared to the 
+			white noise level. This second method can be activated
+			in addition, based on the comparative noise power
+			in neighbouring spectral regions (at all resolutions).
+			The method is designed to filter to smooth (but
+			not necessarily flat) spectral shapes, rejecting
+			narrow features effectively, while allowing soft
+			rolloffs etc. It may be especially useful when
+			'whiten.below' is not enabled, i.e. when spectral
+			flatness is not a requirement.
+			@See: 'filter.whiten'
+
+:: filter.whiten.proberange=from:to	@Since: 2.10
+					@Was: 'whiten.proberange'
+					@Expert
+			Specify the spectral range (in Hz), in which to measure
+			the white-noise level before whitening. It is best to 
+			use the truly flat part of the available spectral 
+			range, with no 1/f, resonances or lopass roloff are 
+			present. Wildcards '*' can be used for specifying open 
+			ranges.
+			@See: 'filter.whiten', 'filter.whiten.minchannels'
+		
+
 :: final:key=value	@Alias -> iteration.[last]
 			When used on the command line, a ':' can be used as
 			a sepatation between the abbreviated condition and its
@@ -2530,70 +2691,26 @@
 
 
 :: whiten		@Advanced
-			Use noise whitening algorithm. White noise assures that
-			the noise in the map is independent pixel-to-pixel. 
-			Otherwise noise may be correlated on spacific scales.
-			Whitening is also useful to get rid of any signals
-			(still) unmodelled by the other reduction steps. It
-			should always be a last resort only. The modeling of
-			signals is generally preferred.
+			@Alias: 'filter.whiten'
 
 :: whiten.below		@Expert
+			@Alias: 'filter.whiten.below'
 			@Since 2.00-b2
-			By default the whitening filter only supresses
-			excessive noise, but will leave those spectral 
-			components untouched, where the spectral power is
-			deficient. Setting this option allows the boosting of
-			such components to the white level, thus achieving
-			true noise whitening, which is necessary to obtain maps 
-			without instrinsic spacial correlations.
-			@See: 'whiten.proberange'
-
 
 :: whiten.level=X	@Advanced
-			Specify the noise whitening level at X times
-			the average (median) spectral noise level. 
-			Spectral channels that have noise in excess of the
-			critical level will be approproately filtered to bring
-			them back in line. Values clearly above 1 are 
-			recommended. Typically values around 1.5--2.0 are 
-			useful without overfiltering.
+			@Alias: 'filter.whiten.level'
 
 :: whiten.minchannels=N	@Expert
+			@Alias: 'filter.whiten.minchannels'
 			@Since: 2.01-1
-			Make sure that at least N channels are used for
-			estimating the white noise levels, even if the 
-			specified probe range is smaller or falls outside of
-			the available spectrum. In such cases, CRUSH will
-			automatically expand the requested range to include
-			at least N spectral channels, or as many as possible
-			if the spectral range itself is too small.
-			@See: 'whiten.proberange'
 	
 :: whiten.neighbours	@Expert
+			@Alias: 'filter.whiten.neighbours'
 			@Since 2.00-b2
-			The default whitening method is based on the absolute
-			amplitude of spectral components compared to the 
-			white noise level. This second method can be activated
-			in addition, based on the comparative noise power
-			in neighbouring spectral regions (at all resolutions).
-			The method is designed to filter to smooth (but
-			not necessarily flat) spectral shapes, rejecting
-			narrow features effectively, while allowing soft
-			rolloffs etc. It may be especially useful when
-			'whiten.below' is not enabled, i.e. when spectral
-			flatness is not a requirement.
 
 :: whiten.proberange=from:to	@Expert
+				@Alias: 'filter.whiten.proberange'
 				@Since 2.00-b2
-				Specify the spectral range (in Hz), in
-			which to measure the white-noise level before 
-			whitening. It is best to use the truly flat part of
-			the available spectral range, with no 1/f, resonances
-			or lopass roloff are present. Wildcards '*' can be used
-			for specifying open ranges.
-			@See: 'whiten'
-				
 
 :: wiring=<filename>	@Expert
 			This option is commonly used to specify a

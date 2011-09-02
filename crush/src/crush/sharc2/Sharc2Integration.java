@@ -131,6 +131,8 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		
 	}
 	
+	/*
+	 * TODO Redo via KillFilter?...
 	public void filter13Hz(ChannelGroup<Sharc2Pixel> channels) {
 		System.err.println("   Filtering 13.4 Hz resonances.");
 		
@@ -153,6 +155,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		
 		comments += "n";
 	}
+	*/
 	
 	@Override
 	public void setTau() throws Exception {
