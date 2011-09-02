@@ -103,8 +103,8 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 
 				//ArrayList<APEXPixel> neighbours = subscan.instrument.getNeighbours(pixel, 5.0 * pixel.getResolution());
 				
-				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.dataIndex];
-				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.dataIndex];
+				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.storeIndex];
+				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.storeIndex];
 				else continue;
 					
 				
@@ -119,7 +119,7 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 		
 		
 		Channel refPixel = ((APEXArrayScan<?,?>) scan).get(0).instrument.referencePixel;
-		int refIndex = refPixel.dataIndex;
+		int refIndex = refPixel.storeIndex;
 		
 		for(int c=flux.length; --c >=0; ) {
 			flux[c] = (WeightedPoint) left[c].clone();

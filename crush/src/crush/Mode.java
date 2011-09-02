@@ -191,7 +191,7 @@ public class Mode {
 	@Override
 	public String toString() {
 		String description = name + ":";
-		for(Channel channel : channels) description += " " + channel.dataIndex;
+		for(Channel channel : channels) description += " " + channel.storeIndex;
 		return description;
 	}
 	

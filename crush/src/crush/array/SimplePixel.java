@@ -51,7 +51,7 @@ public class SimplePixel extends Channel implements Pixel {
 	
 	public final int getIndex() { return index; }
 	
-	public final int getDataIndex() { return dataIndex; }
+	public final int getDataIndex() { return storeIndex; }
 	
 	public final Vector2D getPosition() { return position; }
 	

@@ -39,21 +39,29 @@ import util.data.FFT;
 public abstract class Filter {
 	protected Integration<?,?> integration;
 	protected Dependents parms;
-	protected ChannelGroup<?> channels;
+	private ChannelGroup<?> channels;
+	
 	protected float[] data;
-	protected int nf;
-	protected double df;	
+	protected int nf, points;
+	protected double df;
 	
 	boolean dft = false;
+	boolean isEnabled = false;
 	
 	public Filter(Integration<?,?> integration) {
 		setIntegration(integration);
 	}
 	
-	protected Filter(Integration<?,?> integration, float[] data) {
+	public Filter(Integration<?,?> integration, float[] data) {
 		this.data = data;
 		setIntegration(integration);
 	}
+	
+	public boolean isEnabled() {
+		return isEnabled;
+	}
+	
+	public float[] getData() { return data; }
 	
 	public abstract String getID();
 	
@@ -61,7 +69,14 @@ public abstract class Filter {
 	
 	protected abstract double responseAt(int fch);
 	
-	protected abstract double countParms();
+	protected double countParms() {
+		final int minf = getHipassIndex();
+		double parms = 0.0;
+		for(int f = nf; --f >= minf; ) parms += rejectionAt(f);
+		return parms;
+	}
+	
+	protected abstract double getMeanPointResponse();
 	
 	public double rejectionAt(int fch) {
 		return 1.0 - responseAt(fch);
@@ -78,7 +93,11 @@ public abstract class Filter {
 		nf = nt >> 1;
 		df = 1.0 / (integration.instrument.samplingInterval * nt);
 		
-		if(channels == null) channels = integration.instrument;
+		if(getChannels() == null) setChannels(integration.instrument);
+	}
+	
+	public ChannelGroup<?> getChannels() {
+		return channels;
 	}
 	
 	public void setChannels(ChannelGroup<?> channels) {
@@ -93,61 +112,63 @@ public abstract class Filter {
 		return integration.option(getConfigName() + "." + key);
 	}
 	
-	public void updateConfig() {}
+	public void updateConfig() {
+		isEnabled = integration.hasOption(getConfigName());	
+	}
 	
 	// Allows to adjust the FFT filter after the channel spectrum has been loaded
-	public void configFFTFilter(Channel channel) {}
+	protected void updateProfile(Channel channel) {}
 	
-	// TODO point source filtering...
-	public void apply() {
-		integration.comments += getID();
+	public final boolean apply() { return apply(true); }
 		
-		// parse settings...
+	public final boolean apply(boolean report) {
 		updateConfig();
 		
-		if(parms == null) parms = integration.getDependents(getConfigName());
+		if(!isEnabled()) return false;
+		
+		integration.comments += getID();
+		
+		preFilter();
+		
+		for(Channel channel : getChannels()) {
+			loadTimeStream(channel);
 			
-		double rejected = countParms();	
-		
-		for(Channel channel : channels) {
-			apply(channel);
-			parms.add(channel, rejected);
+			preFilter(channel);
+			
+			// Apply the filter, with the rejected signal written to the local data array
+			if(dft) dftFilter(channel);
+			else fftFilter(channel);
+			
+			postFilter(channel);
+			
+			remove(channel);
 		}
+			
+		postFilter();
 		
-		final double dp = rejected / integration.getFrameCount(Frame.MODELING_FLAGS);
-		for(Frame exposure : integration) if(exposure != null) parms.add(exposure, dp);
+		if(report) report();
 		
-		parms.apply(channels, 0, integration.size());
+		return true;
 	}
 	
-	protected void loadTimeStream(Channel channel) {
-		final int c = channel.index;
-		
-		// Load the channel data into the data array
-		for(int t = integration.size(); --t >= 0; ) {
-			final Frame exposure = integration.get(t);
-
-			if(exposure == null) data[t] = Float.NaN;
-			else if(exposure.isFlagged(Frame.MODELING_FLAGS)) data[t] = Float.NaN;
-			else if(exposure.sampleFlag[c] != 0) data[t] = Float.NaN;
-			else data[t] = exposure.relativeWeight * exposure.data[c];
-		}
-		
-		// Remove DC component
-		levelData();
+	protected void preFilter() {
+		if(parms == null) parms = integration.getDependents(getConfigName());		
 	}
 	
-	protected void apply(Channel channel) {
-		
-		loadTimeStream(channel);
-		
-		// Apply the filter, with the rejected signal written to the local data array
-		if(dft) dftFilter(channel);
-		else fftFilter(channel);
-		
+	protected void postFilter() {
+		parms.apply(getChannels(), 0, integration.size());	
+	}
+	
+	protected void preFilter(Channel channel) {
+		parms.clear(channel);
+	}
+	
+	protected void postFilter(Channel channel) {
 		// Remove the DC component...
 		levelDataFor(channel);
-		
+	}
+	
+	protected void remove(Channel channel) {
 		// Subtract the rejected signal...
 		final int c = channel.index;
 		for(int t = integration.size(); --t >= 0; ) {
@@ -156,21 +177,48 @@ public abstract class Filter {
 		}
 	}
 	
+	public void report() {
+		integration.comments += "(" + Util.f2.format(getMeanPointResponse()) + ")";
+	}
+	
+	protected void loadTimeStream(Channel channel) {
+		final int c = channel.index;
+		
+		points = 0;
+		
+		// Load the channel data into the data array
+		for(int t = integration.size(); --t >= 0; ) {
+			final Frame exposure = integration.get(t);
+
+			if(exposure == null) data[t] = Float.NaN;
+			else if(exposure.isFlagged(Frame.MODELING_FLAGS)) data[t] = Float.NaN;
+			else if(exposure.sampleFlag[c] != 0) data[t] = Float.NaN;
+			else {
+				data[t] = exposure.relativeWeight * exposure.data[c];
+				points++;
+			}
+		}
+		
+		// Remove DC component
+		levelData();
+	}
+	
+	
 	// Convert data into a rejected signal (unlevelled)
 	protected synchronized void fftFilter(Channel channel) {	
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		
 		FFT.forwardRealInplace(data);
 		
-		configFFTFilter(channel);
+		updateProfile(channel);
 		
 		data[0] = 0.0F;
 		data[1] *= rejectionAt(nf);
 		
-		for(int i=2; i<data.length; i+=2) {
+		for(int i=2; i<data.length; ) {
 			final double rejection = rejectionAt(i >> 1);
-			data[i] *= rejection;
-			data[i+1] *= rejection; 	
+			data[i++] *= rejection;
+			data[i++] *= rejection; 	
 		}
 		
 		FFT.backRealInplace(data);
@@ -178,6 +226,7 @@ public abstract class Filter {
 	
 	// Convert data into a rejected signal (unlevelled)
 	protected synchronized void dftFilter(Channel channel) {
+		// TODO make rejected a private field, initialize or throw away as needed (setDFT())
 		float[] rejected = new float[integration.size()];
 		for(int f=nf+1; --f >= 0; ) {
 			final double rejection = rejectionAt(f);
@@ -199,8 +248,7 @@ public abstract class Filter {
 		final double a = -0.5 / (sigma * sigma);
 		
 		// Start from the 1/f filter cutoff
-		double hipassf = 0.5 / integration.filterTimeScale;
-		int minf = (int) Math.ceil(hipassf / df);
+		int minf = getHipassIndex();
 		
 		double sum = 0.0, norm = 0.0;;
 		
@@ -216,12 +264,11 @@ public abstract class Filter {
 			norm += A;
 		}
 		
-		// TODO check normalization...
 		return sum / norm;
 	}
 
 	
-	protected int getMinIndex() {
+	protected int getHipassIndex() {
 		double hipassf = 0.5 / integration.filterTimeScale;
 		
 		if(Double.isNaN(hipassf)) return 1;
@@ -323,16 +370,21 @@ public abstract class Filter {
 
 	// Get a fixed-length representation of the filter response.
 	protected void getFilterResponse(float[] response) {
-		double n = (double) (nf+1) / response.length;
+		final double n = (double) (nf+1) / response.length;
 		
 		for(int i=response.length; --i >= 0; ) {
-			int fromf = (int) Math.round(i * n); 
-			int tof = (int) Math.round((i+1) * n);
-			double sum = 0.0;
-			for(int f=tof; --f >= fromf; ) sum += responseAt(f);
-			response[i] = (float) (sum / (tof - fromf));
+			final int fromf = (int) Math.round(i * n); 
+			final int tof = (int) Math.round((i+1) * n);
+			
+			if(tof == fromf) response[i] = (float) responseAt(fromf);
+			else {
+				double sum = 0.0;
+				for(int f=tof; --f >= fromf; ) sum += responseAt(f);
+				response[i] = (float) (sum / (tof - fromf));
+			}
 		}
 		
 	}
+	
 	
 }

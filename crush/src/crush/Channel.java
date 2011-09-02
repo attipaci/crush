@@ -33,7 +33,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	public Instrument<?> instrument;
 	
 	public int index;
-	public int dataIndex;
+	public int storeIndex;
 	public int flag = 0;
 	public int sourcePhase = 0;
 	
@@ -50,15 +50,13 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	public double sourceFiltering = 1.0; // filtering on source...
 	public double directFiltering = 1.0; // The effect of FFT filters on source rel. to noise.
 	
-	public float[] filterResponse; // The whitening filter's spectral response...
-	
 	public double filterTimeScale = Double.POSITIVE_INFINITY;
 	
 	public int spikes = 0;
 	
 	public Channel(Instrument<?> instrument, int dataIndex) {
 		this.instrument = instrument;
-		this.dataIndex = dataIndex;
+		this.storeIndex = dataIndex;
 	}
 	
 	@Override
@@ -69,16 +67,12 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	
 	// By default, channels can be sorted by backend-index
 	public int compareTo(Channel channel) {
-		if(channel.dataIndex == dataIndex) return 0;
-		else return dataIndex < channel.dataIndex ? -1 : 1;
+		if(channel.storeIndex == storeIndex) return 0;
+		else return storeIndex < channel.storeIndex ? -1 : 1;
 	}
 	
 	public Channel copy() {
 		Channel copy = (Channel) clone();
-		if(filterResponse != null) {
-			copy.filterResponse = new float[filterResponse.length];
-			System.arraycopy(filterResponse, 0, copy.filterResponse, 0, filterResponse.length);
-		}
 		return copy;
 	}
 	
@@ -117,7 +111,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	// Write backendIndex plus whatever information....
 	@Override
 	public String toString() {
-		String text = dataIndex + "\t" +
+		String text = storeIndex + "\t" +
 			Util.f3.format(gain) + " \t" +
 			Util.e3.format(weight) + " \t" +
 			"0x" + Integer.toHexString(flag);

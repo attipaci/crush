@@ -26,18 +26,17 @@ package crush.filters;
 import java.util.List;
 
 import util.Range;
-import crush.Channel;
 import crush.Integration;
 
 public class KillFilter extends FixedFilter {
 	boolean[] reject;
 	int components = 0;
 	
-	KillFilter(Integration<?,?> integration) {
+	public KillFilter(Integration<?,?> integration) {
 		super(integration);
 	}
 	
-	protected KillFilter(Integration<?,?> integration, float[] data) {
+	public KillFilter(Integration<?,?> integration, float[] data) {
 		super(integration, data);
 	}
 	
@@ -51,6 +50,8 @@ public class KillFilter extends FixedFilter {
 		int fromf = Math.max(0, (int)Math.floor(fRange.min / df));
 		int tof = Math.min(nf, (int)Math.ceil(fRange.max / df));
 		
+		if(fromf > tof) return;
+		
 		for(int f=fromf; f<=tof; f++) {
 			if(!reject[f]) components++;
 			reject[f] = true;
@@ -61,28 +62,20 @@ public class KillFilter extends FixedFilter {
 
 	@Override
 	public void updateConfig() {
+		super.updateConfig();
+		
 		if(hasOption("bands")) {
-			List<String> ranges = option("bands").getList();
+			final List<String> ranges = option("bands").getList();
 			for(String rangeSpec : ranges) kill(Range.parse(rangeSpec, true));			
 		}
-	}
-	
-	@Override
-	protected void apply(Channel channel) {
-		channel.directFiltering /= getPointResponse();
-		
-		super.apply(channel);
-		
-		// Apply the effect of the current filtering...
-		channel.directFiltering *= getPointResponse();
 	}
 	
 	public void autoDFT() {
 		// DFT 51 ops per datum, per rejected complex frequency...
 		int dftreq = 51 * components * integration.size();
 		
-		// FFT with 31 ops each loop, 9.5 ops per datum, 34.5 ops per datum rearrange...
-		int fftreq = 31 * (int) Math.round(Math.log(data.length) / Math.log(2.0)) * data.length + 44 * data.length; 
+		// 2xFFT (forth and back) with 31 ops each loop, 9.5 ops per datum, 34.5 ops per datum rearrange...
+		int fftreq = 2 * (31 * (int) Math.round(Math.log(data.length) / Math.log(2.0)) * data.length + 44 * data.length); 
 	
 		setDFT(dftreq < fftreq);
 	}
@@ -96,7 +89,7 @@ public class KillFilter extends FixedFilter {
 	@Override
 	protected double countParms() {
 		int n = 0;
-		for(int i=getMinIndex(); i<reject.length; i++) if(reject[i]) n++;
+		for(int i=getHipassIndex(); i<reject.length; i++) if(reject[i]) n++;
 		return n;
 	}
 

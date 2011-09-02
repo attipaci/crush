@@ -36,36 +36,54 @@ public abstract class FixedFilter extends Filter {
 		super(integration);
 	}
 
-	protected FixedFilter(Integration<?, ?> integration, float[] data) {
+	public FixedFilter(Integration<?, ?> integration, float[] data) {
 		super(integration, data);
 	}
 
-	public double getPointResponse() {
+	protected double getPointResponse() {
 		return pointResponse;
 	}
 	
 	@Override
-	public void apply() {
-		for(Channel channel : channels) channel.directFiltering /= pointResponse;
-		
-		rejected = countParms();	
-		super.apply();
-		
-		pointResponse = calcPointResponse();
-		
-		for(Channel channel : channels) channel.directFiltering *= pointResponse;
+	protected double getMeanPointResponse() {
+		return pointResponse;
+	}
+	
+	
+	@Override 
+	protected void preFilter() {
+		super.preFilter();
+		rejected = countParms();
 	}
 	
 	@Override
-	protected void apply(Channel channel) {
-		parms.clear(channel);
+	protected void postFilter() {
+		super.postFilter();
 		
-		super.apply(channel);
 		
+	}
+	
+	@Override
+	protected void preFilter(Channel channel) {
+		super.preFilter(channel);
+		channel.directFiltering /= pointResponse;			
+	}
+	
+	@Override
+	protected void postFilter(Channel channel) {
+		super.postFilter(channel);
+		
+		pointResponse = calcPointResponse();
+		channel.directFiltering *= pointResponse;	
 		parms.add(channel, rejected);
 		
-		final double dp = rejected / integration.getFrameCount(Frame.MODELING_FLAGS);
-		for(Frame exposure : integration) if(exposure != null) parms.add(exposure, dp);
+		final double dp = (double) rejected / points;
+		final int c = channel.index;
+		for(Frame exposure : integration) if(exposure != null) 
+			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)
+				parms.add(exposure, dp);
 	}
+	
+	
 
 }

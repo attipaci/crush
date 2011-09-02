@@ -109,7 +109,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		for(Mode mode : this) if(!mode.fixedGains) {
 			final ChannelGroup<?> channels = mode.channels;
 			final WeightedPoint[] modeGain = mode.getGains(integration, isRobust);
-			for(int k=modeGain.length; --k >= 0; ) G[channels.get(k).dataIndex].average(modeGain[k]);
+			for(int k=modeGain.length; --k >= 0; ) G[channels.get(k).storeIndex].average(modeGain[k]);
 		}
 	}
 	
@@ -122,7 +122,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 			final float[] sumwC2 = new float[mode.channels.size()];
 			
 			for(int k=fG.length; --k >= 0; ) {
-				final WeightedPoint channelGain = G[mode.channels.get(k).dataIndex];
+				final WeightedPoint channelGain = G[mode.channels.get(k).storeIndex];
 				fG[k] = (float) channelGain.value;
 				sumwC2[k] = (float) channelGain.weight;
 			}

@@ -45,7 +45,7 @@ public class MotionFilter extends KillFilter {
 		super(integration);
 	}
 	
-	protected MotionFilter(Integration<?,?> integration, float[] data) {
+	public MotionFilter(Integration<?,?> integration, float[] data) {
 		super(integration, data);
 	}
 	
@@ -147,9 +147,9 @@ public class MotionFilter extends KillFilter {
 	
 	
 	@Override
-	public void apply() {
+	protected void preFilter() {
 		setChannels(integration.instrument.getObservingChannels());
-		super.apply();
+		super.preFilter();
 	}
 
 	@Override
