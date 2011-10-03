@@ -29,9 +29,22 @@ public class Constant {
 
     public Constant() {}
 
-
+    // Mathematical Constants
+    public final static double PI = Math.PI;
+    public final static double twoPI = 2.0 * PI;
+    public final static double rightAngle = 0.5 * PI;
+    public final static double sqrt2 = Math.sqrt(2.0);
+    public final static double sqrt3 = Math.sqrt(3.0);
+    public final static double sqrt5 = Math.sqrt(5.0);
+    public final static double goldenRatio = 0.5 * (1.0 + sqrt5);
+    public final static double euler = 0.577215664901533;
+    
+    public final double fibonacci(int n) {
+    	return (Math.pow(goldenRatio, n) - Math.pow(1.0 - goldenRatio, n)) / sqrt5;
+    }
+    
     // Physical Constants
-    public final static double Planck = 6.626076e-34*Unit.J*Unit.s;
+    public final static double Planck = 6.626076e-34 * Unit.J * Unit.s;
     public final static double h = Planck;
     public final static double h2 = h * h;
     public final static double h3 = h2 * h;
@@ -39,7 +52,7 @@ public class Constant {
     public final static double h5 = h4 * h;
     public final static double h6 = h5 * h;
 
-    public final static double Dirac = h / (2.0*Math.PI);
+    public final static double Dirac = h / twoPI;
     public final static double hbar = Dirac;
     public final static double hbar2 = hbar * hbar;
     public final static double hbar3 = hbar2 * hbar;
@@ -70,8 +83,8 @@ public class Constant {
     public final static double kB = k;
     public final static double k_B = k;
 
-    public final static double mu0 = 4.0e-7 * Math.PI * Unit.H / Unit.m;
-    public final static double mu_0 = 4.0e-7 * Math.PI * Unit.H / Unit.m;
+    public final static double mu0 = 4.0e-7 * PI * Unit.H / Unit.m;
+    public final static double mu_0 = 4.0e-7 * PI * Unit.H / Unit.m;
     public final static double u0 = mu0;
     public final static double u_0 = mu0;
     public final static double epsilon0 = 1.0 / (u0 * c2);

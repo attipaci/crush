@@ -26,6 +26,7 @@ package crush.filters;
 import java.util.Arrays;
 
 import util.Range;
+import util.data.DataPoint;
 import util.data.FFT;
 import util.data.Statistics;
 
@@ -34,13 +35,15 @@ import crush.Integration;
 
 public class WhiteningFilter extends AdaptiveFilter {
 	double level = 1.2;
+	double significance = 2.0;
+	double maxBoost = 2.0;
 	boolean symmetric = false;
-	boolean neighbours = false;
+	//boolean neighbours = false;
 	
 	private int nF; // The number of stacked frequency components
-	private double[] A, temp; // The amplitude at reduced resolution, and a temp storage for medians
+	private DataPoint[] A, temp; // The amplitude at reduced resolution, and a temp storage for median
 	private int windows; // The number of stacked windows...
-	private int measureFrom, measureTo; // The frequency channel indexes of the white-level measuring range
+	private int whiteFrom, whiteTo; // The frequency channel indexes of the white-level measuring range
 	
 	
 	public WhiteningFilter(Integration<?, ?> integration) {
@@ -63,27 +66,30 @@ public class WhiteningFilter extends AdaptiveFilter {
 		setSize(integration.framesFor(integration.filterTimeScale));
 		
 		symmetric = hasOption("below");
-		neighbours = hasOption("neighbours");
 		
-		level = hasOption("level") ? option("level").getDouble() : 2.0;
-		// convert critical whitening power level to amplitude...
-		level = Math.sqrt(level);
-	
+		// Specify maximum boost as power, just like level...
+		if(hasOption("below.max")) maxBoost = Math.sqrt(option("below.max").getDouble());
+		
+		//neighbours = hasOption("neighbours");
+		
+		// Specify critical level as power, but use as amplitude...
+		if(hasOption("level")) level = Math.sqrt(option("level").getDouble());
+
 		int windowSize = FFT.getPaddedSize(2 * nF);
 		int n = data.length;
 		if(n < windowSize) windowSize = n;
 		windows = n / windowSize;
 		
 		Range measure = hasOption("proberange") ? option("proberange").getRange(true) : new Range(0, nF); 
-		measureFrom = measure == null ? 1 : Math.max(1, (int) Math.floor(measure.min / dF));
-		measureTo = measure == null ? nF : Math.min(nF, (int) Math.ceil(measure.max / dF) + 1);
+		whiteFrom = measure == null ? 1 : Math.max(1, (int) Math.floor(measure.min / dF));
+		whiteTo = measure == null ? nF : Math.min(nF, (int) Math.ceil(measure.max / dF) + 1);
 		
 		// Make sure the probing range is contains enough channels
 		// and that the range is valid...
 		int minProbeChannels = hasOption("minchannels") ? option("minchannels").getInt() : 16;
-		if(measureFrom > measureTo - minProbeChannels + 1) measureFrom = measureTo - minProbeChannels + 1;
-		if(measureFrom < 0) measureFrom = 0;
-		if(measureFrom > measureTo - minProbeChannels + 1) measureTo = Math.min(minProbeChannels + 1, nF);	
+		if(whiteFrom > whiteTo - minProbeChannels + 1) whiteFrom = whiteTo - minProbeChannels + 1;
+		if(whiteFrom < 0) whiteFrom = 0;
+		if(whiteFrom > whiteTo - minProbeChannels + 1) whiteTo = Math.min(minProbeChannels + 1, nF);	
 		
 	}
 	
@@ -95,30 +101,31 @@ public class WhiteningFilter extends AdaptiveFilter {
 		
 		this.nF = nF;
 		
-		A = new double[nF];
-		temp = new double[nF];
+		A = new DataPoint[nF];
+		temp = new DataPoint[nF];
 	
-		
-	}
-	
+		for(int i=nF; --i >= 0; ) A[i] = new DataPoint();	
+	}	
 	
 	@Override
 	public void updateProfile(Channel channel) {
-		
+		calcMeanAmplitudes(channel);
+		whitenProfile(channel);
+	}
+	
+	private void calcMeanAmplitudes(Channel channel) {
 		// If the filterResponse array does not exist, create it...
 		if(profiles[channel.index] == null) {
 			profiles[channel.index] = new float[nF];
 			Arrays.fill(profiles[channel.index], 1.0F);
 		}
 		
-		final float[] lastProfile = profiles[channel.index];
-		
 		// Get the coarse average spectrum...
-		for(int F=nF; --F >= 1; ) {
-			double sumP = 0.0;
-			final int fromf = 2 * F * windows;
-			int tof = Math.min(fromf + 2 * windows, data.length);
+		for(int F=nF; --F >= 0; ) {
+			final int fromf = Math.max(2, 2 * F * windows);
+			final int tof = Math.min(fromf + 2 * windows, data.length);
 			
+			double sumP = 0.0;
 			int pts = 0;
 			
 			// Sum the power inside the spectral window...
@@ -128,91 +135,126 @@ public class WhiteningFilter extends AdaptiveFilter {
 				pts++;
 			}
 			
-			// Add the Nyquist component to the last bin...
-			// Skip if it has been killed by KillFilter...
-			if(F == nF-1) if(data[1] != 0.0) {
-				sumP += data[1] * data[1];
-				pts++;
-			}
 			// Set the amplitude equal to the rms power...
 			// The full power is the sum of real and imaginary components...
-			A[F] = pts > 0 ? Math.sqrt(2.0 * sumP / pts) : 0.0;
+			A[F].value = pts > 0 ? Math.sqrt(2.0 * sumP / pts) : 0.0;
+			A[F].weight = pts;
 		}	
 
+		// Add the Nyquist component to the last bin...
+		// Skip if it has been killed by KillFilter...
+		if(data[nF - 1] != 0.0) {
+			final DataPoint nyquist = A[nF-1];
+			nyquist.value = nyquist.weight * nyquist.value * nyquist.value + 2.0 * data[1] * data[1];
+			nyquist.weight += 1.0;
+			nyquist.value = Math.sqrt(nyquist.value / nyquist.weight);
+		}		
+	
+	}
+	
+	private void whitenProfile(Channel channel) {
+
+		Arrays.fill(profile, 1.0F); // To be safe initialize the scaling array here...
+		final float[] lastProfile = profiles[channel.index];
+		
 		// Calculate the median amplitude
 		System.arraycopy(A, 0, temp, 0, A.length);	
-		final double medA = Statistics.median(temp, measureFrom, measureTo);
+		final double medA = Statistics.median(temp, whiteFrom, whiteTo).value;
 		
-		// Save the original amplitudes for later use...
-		System.arraycopy(A, 0, temp, 0, A.length);
-		
-		// sigmaP = medP / sqrt(windows)
+		// sigmaP = medP / sqrt(pts)
 		// A = sqrt(P)
 		// dA = 0.5 / sqrtP * dP
-		// sigmaA = 0.5 / medA * sigmaP = 0.5 * medA / sqrt(windows)
-		
-		final double sigmaA = 0.5 * medA / Math.sqrt(windows);
-		final double critical = medA * level + 2.0 * sigmaA;
-		final double criticalBelow = medA / level - 2.0 * sigmaA;
+		// sigmaA = 0.5 / medA * sigmaP = 0.5 * medA / sqrt(pts)
+		// wA = 4 * pts / (medA * medA) 
+		final double weightScale = 4.0 / (medA * medA);
+		for(int F=nF; --F >= 0; ) A[F].weight *= weightScale;
 		
 		// Only whiten those frequencies which have a significant excess power
 		// when compared to the specified level over the median spectral power.
-			
-		Arrays.fill(profile, 1.0F); // To be safe initialize the scaling array here...
-	
-		// This is the main whitening filter...
-		for(int F=nF; --F >= 1; ) if(A[F] > 0.0) {
-			// Check if there is excess power that needs filtering
-			if(A[F] > critical) profile[F] = (float) (medA / A[F]);
-			else if(symmetric) if(A[F] < criticalBelow) profile[F] = (float) (medA / A[F]);
-			
-			// If it was filtered prior, see if the filtering can be relaxed (not to overdo it...)
-			if(lastProfile[F] < 1.0) if(A[F] < medA) profile[F] = (float) (medA / A[F]);
-			else if(lastProfile[F] > 1.0) if(A[F] > medA) profile[F] = (float) (medA / A[F]);
-			
-			if(A[F] > 0.0) A[F] *= profile[F];
-			else A[F] = medA;
+		for(int F=nF; --F >= 1; ) {
+			if(A[F].weight > 0.0) {
+				final double dev = (A[F].value / lastProfile[F] - medA) / A[F].rms();
+				
+				// Check if there is excess/deficit power that needs filtering...
+				if(dev > significance) profile[F] = (float) (medA / A[F].value);
+				else if(symmetric) if(dev < -significance) {
+					profile[F] = (float) (medA / A[F].value);
+					// Make sure not too overboost...
+					if(profile[F]*lastProfile[F] > maxBoost) profile[F] = (float) maxBoost / lastProfile[F];
+				}
+					
+				A[F].value *= profile[F];
+			}
+			else A[F].value = medA;
 		}
 		
 		// Do a neighbour based round as well, with different resolutions
 		// (like a feature seek).
-		if(neighbours) profileNeighbours();
+		// TODO Fix or eliminate neighbour-based whitening...
+		//if(neighbours) profileNeighbours();
 		
+		// TODO replace neighbour-based whitening
+		// with multires whitening...
+		// decimate by averaging power in neighbouring bins
+		// and reapply standard whitening fn...
 		
 		// Renormalize the whitening scaling s.t. it is median-power neutral
-		for(int F=nF; --F >= 1; ) temp[F] *= profile[F];
-		double norm = medA / Statistics.median(temp, measureFrom, measureTo);
-		if(Double.isNaN(norm)) norm = 1.0;		
+		//double norm = medA / Statistics.median(temp, measureFrom, measureTo).value;
+		//if(Double.isNaN(norm)) norm = 1.0;		
+		//for(int F = nF; --F >= 0; ) profile[F] *= norm;
+		
 	}
 	
-	
+	/*
 	protected void profileNeighbours() {
 		int N = A.length;
 		int maxBlock = N >> 2;
-		double uncertainty = 0.5 * Math.sqrt(2.0 / windows);
-		double limit = 1.0 + 2.0 * uncertainty;
 		
 		// Cheat to make sure the lack of a zero-f component does not cause trouble...
-		A[0] = A[1];
+		A[0].copy(A[1]);
+		DataPoint d1 = new DataPoint();
+		DataPoint d2 = new DataPoint();
 		
 		for(int blockSize = 1; blockSize <= maxBlock; blockSize <<= 1) {	
 			final int N1 = N-1;
 
-			for(int F = 1; F < N1; F++) if(A[F] > 0.0) {
-				double maxA = Math.max(A[F-1], A[F+1]);
-				if(A[F] > maxA * limit) {
-					final double rescale = maxA / A[F];
+			for(int F = 1; F < N1; F++) if(A[F].weight > 0.0) {
+				d1.copy(A[F]);
+				d1.subtract(A[F-1]);
+				
+				d2.copy(A[F]);
+				d2.subtract(A[F+1]);
+				
+				double s1 = Math.signum(d1.value) * d1.significance();
+				double s2 = Math.signum(d2.value) * d2.significance();
+				
+				double max = s1 > s2 ? A[F-1].value : A[F+1].value;				
+				double sig = Math.max(s1, s2);
+						
+				if(sig > 3.0) {
+					final double rescale = max / A[F].value;
 					for(int blockf = 0, f = F*blockSize; blockf < blockSize; blockf++, f++) profile[f] *= rescale;
-					A[F] = maxA;
+					A[F].value = max;
 				}
 			}				
 
-			for(int F = 0; F < N1; F += 2) A[F>>1] = 0.5 * Math.hypot(A[F], A[F+1]);
+			// A' = sqrt(A1^2 + A2^2)
+			// dA' / dA1 = 0.5 / A' * 2*A1 = A1/A';
+			// s'2 = (A1/A' * s1)^2 + (A2/A' * s2)^2
+			// s'   = hypot(A1*s1, A2*s2) / A'
+			// 1.0 / wA' = (A1/A')^2 / w1 + (A2/A')^2 / w2
+			
+			for(int F = 0; F < N1; F += 2) {
+				final double A1 = Math.hypot(A[F].value, A[F+1].value);
+				final double var = (A[F].value * A[F].value / A[F].weight + A[F+1].value * A[F+1].value / A[F+1].weight) / (A1 * A1);
+				final int F1 = F >> 1;
+				A[F1].value = A1;
+				A[F1].weight = 1.0 / var;
+			}
 			N >>= 1;
-
-			uncertainty /= Math.sqrt(2.0);
 		}
 	}
+	*/
 	
 	@Override
 	public String getID() {

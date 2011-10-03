@@ -295,7 +295,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		if(!Double.isNaN(correctingFWHM)) return;
 		
 		final double filterC = getExtFilterCorrectionFactor(FWHM);
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(skip[i][j] != 0) scale(i, j, filterC);
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(skip[i][j] == 0) scale(i, j, filterC);
 		
 		correctingFWHM = FWHM;
 	}
@@ -304,7 +304,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		if(!Double.isNaN(correctingFWHM)) return;
 		
 		final double iFilterC = getExtFilterCorrectionFactor(FWHM);
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(skip[i][j] != 0) scale(i, j, iFilterC);
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(skip[i][j] == 0) scale(i, j, iFilterC);
 		
 		correctingFWHM = Double.NaN;
 	}

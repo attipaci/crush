@@ -28,6 +28,7 @@ package util.astro;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import util.Constant;
 import util.CoordinateAxis;
 import util.CoordinatePair;
 import util.CoordinateSystem;
@@ -154,7 +155,7 @@ public class EclipticCoordinates extends CelestialCoordinates implements Precess
 	public EquatorialCoordinates getEquatorialPole() { return equatorialPole; }
 
 	@Override
-	public double getZeroLongitude() { return rightAngle; }
+	public double getZeroLongitude() { return Constant.rightAngle; }
 
 	public CoordinateEpoch getEpoch() { return epoch; }
 

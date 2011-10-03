@@ -66,7 +66,8 @@ public abstract class FixedFilter extends Filter {
 	@Override
 	protected void preFilter(Channel channel) {
 		super.preFilter(channel);
-		channel.directFiltering /= pointResponse;			
+		channel.directFiltering /= pointResponse;
+		channel.sourceFiltering /= pointResponse;
 	}
 	
 	@Override
@@ -74,7 +75,9 @@ public abstract class FixedFilter extends Filter {
 		super.postFilter(channel);
 		
 		pointResponse = calcPointResponse();
-		channel.directFiltering *= pointResponse;	
+		channel.directFiltering *= pointResponse;
+		channel.sourceFiltering *= pointResponse;
+		
 		parms.add(channel, rejected);
 		
 		final double dp = (double) rejected / points;
