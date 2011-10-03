@@ -24,6 +24,7 @@
 
 package util.astro;
 
+import util.Constant;
 import util.SphericalCoordinates;
 
 // This is an abstract class for coordinate systems that are fixed (except perhaps a precession)
@@ -130,11 +131,11 @@ public abstract class CelestialCoordinates extends SphericalCoordinates {
 	
 	
 	public static EquatorialCoordinates getPole(double inclination, double risingRA) {
-		return new EquatorialCoordinates(risingRA - rightAngle, rightAngle - inclination);
+		return new EquatorialCoordinates(risingRA - Constant.rightAngle, Constant.rightAngle - inclination);
 	}
 
 	public static EquatorialCoordinates getPole(CelestialCoordinates referenceSystem, double inclination, double risingLON) {
-		referenceSystem.set(risingLON - rightAngle, rightAngle - inclination);
+		referenceSystem.set(risingLON - Constant.rightAngle, Constant.rightAngle - inclination);
 		return referenceSystem.toEquatorial();
 	}
 	

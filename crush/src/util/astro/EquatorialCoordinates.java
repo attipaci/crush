@@ -27,6 +27,7 @@ package util.astro;
 import java.text.*;
 import java.util.*;
 
+import util.Constant;
 import util.CoordinateAxis;
 import util.CoordinateSystem;
 import util.SphericalCoordinates;
@@ -219,7 +220,7 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 	@Override
 	public double getZeroLongitude() { return 0.0; }
 	
-	private static EquatorialCoordinates equatorialPole = new EquatorialCoordinates(0.0, rightAngle);
+	private static EquatorialCoordinates equatorialPole = new EquatorialCoordinates(0.0, Constant.rightAngle);
 
 	public CoordinateEpoch getEpoch() { return epoch; }
 }

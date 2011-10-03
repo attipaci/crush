@@ -414,15 +414,8 @@ public class AstroMap extends AstroImage {
 				
 	public int[][] getSkip(double blankingValue) {
 		int[][] skip = (int[][]) copyOf(flag);
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(data[i][j] / getRMS(i,j) > blankingValue) skip[i][j] = 1;
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(getS2N(i,j) > blankingValue) skip[i][j] = 1;
 		return skip;
-	}
-
-	@Override
-	public void filterAbove(double extendedFWHM, int[][] skip) {
-		super.filterAbove(extendedFWHM, skip);
-		double r = getImageFWHM() / extendedFWHM;
-		weightScale(1.0 / (1.0 - r*r));
 	}
 	
 	public void filterAbove(double extendedFWHM, double blankingValue) {
@@ -430,13 +423,7 @@ public class AstroMap extends AstroImage {
 		filterBlanking = blankingValue;
 	}
 
-	@Override
-	public void fftFilterAbove(double extendedFWHM, int[][] skip) {
-		super.filterAbove(extendedFWHM, skip);
-		double r = getImageFWHM() / extendedFWHM;
-		weightScale(1.0 / (1.0 - r*r));
-	}
-	
+
 	public void fftFilterAbove(double extendedFWHM, double blankingValue) {
 		fftFilterAbove(extendedFWHM, getSkip(blankingValue));
 		filterBlanking = blankingValue;
@@ -488,8 +475,7 @@ public class AstroMap extends AstroImage {
 	}
 	
 	public void rmsScale(final double scalar) {
-		final double scalar2 = scalar*scalar;
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) weight[i][j] /= scalar2;
+		weightScale(1.0 / (scalar*scalar));
 	}
 
 	public void weightScale(double scalar) {
@@ -519,7 +505,7 @@ public class AstroMap extends AstroImage {
 		
 		int k=0;
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			final float s2n = (float) (data[i][j] / getRMS(i,j));
+			final float s2n = (float) getS2N(i,j);
 			chi2[k++] = s2n * s2n;
 		}
 		
@@ -533,7 +519,7 @@ public class AstroMap extends AstroImage {
 		int n=0;
 		
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			double s2n = data[i][j] / getRMS(i,j);
+			final double s2n = getS2N(i,j);
 			chi2 += s2n * s2n;
 			n++;
 		}
@@ -735,7 +721,7 @@ public class AstroMap extends AstroImage {
 
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
 			if(flag[i][j] == 0)  if(region.isInside(grid, i, j)) {
-				double rms = getRMS(i,j);
+				final double rms = getRMS(i,j);
 				var += rms * rms;
 				n++;
 			}

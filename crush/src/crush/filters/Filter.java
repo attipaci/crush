@@ -32,7 +32,7 @@ import crush.Frame;
 import crush.Integration;
 
 import util.Configurator;
-import util.SphericalCoordinates;
+import util.Constant;
 import util.Util;
 import util.data.FFT;
 
@@ -200,14 +200,15 @@ public abstract class Filter {
 				points++;
 			}
 		}
-		
+			
 		// Remove DC component
 		levelData();
 	}
 	
 	
 	// Convert data into a rejected signal (unlevelled)
-	protected synchronized void fftFilter(Channel channel) {	
+	protected synchronized void fftFilter(Channel channel) {
+		// Pad with zeroes as necessary...
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		
 		FFT.forwardRealInplace(data);
@@ -246,7 +247,7 @@ public abstract class Filter {
 		// sigmaF = sigmaf / df = 2.35/2Pi * n dt / T; 
 		
 		final double T = integration.getPointCrossingTime();
-		final double sigma = Util.sigmasInFWHM / (SphericalCoordinates.twoPI * T * df);
+		final double sigma = Util.sigmasInFWHM / (Constant.twoPI * T * df);
 		final double a = -0.5 / (sigma * sigma);
 		
 		// Start from the 1/f filter cutoff

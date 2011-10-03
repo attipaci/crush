@@ -1,3 +1,25 @@
+>> 'whiten.multires'?
+
+>> deprecate 'whiten.below', 'whiten.neighbours'
+
+>> what's wrong with whiten.below and whiten.neighbours?
+
+>> Check filter.kill
+
+>> SHARC2 return to 8.0" beam
+
+>> drifts, signal to remove with cubic spline
+   drifts to store signals...
+
+>> 'filter.motion'
+   * check for OTF/box scans...
+   * test on extended emission
+     (adjust [extended] configs)
+
+>> whitening/mf interaction...
+
+
+
 >> Why do aperture fluxes have smaller error (e.g. in pointing) than peak
 fluxes?
 >> Smoothing in deep does not preserve point source fluxes...
@@ -6,7 +28,7 @@ fluxes?
 
 
 
-For 2.10:
+For 2.20:
 
 	-- Switch to Java 1.6 (change package deps)
 

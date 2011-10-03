@@ -22,6 +22,8 @@
  ******************************************************************************/
 package util.data;
 
+import util.Constant;
+
 public class WindowFunction {
 	public final static String[] names =  { "Rectangular", "Hamming", "Hann", "Blackman", "Nutall", 
 		"Blackman-Harris", "Blackman-Nutall", "Flat Top"};
@@ -110,7 +112,7 @@ public class WindowFunction {
 		final double[] w = new double[n];
 		double norm = 0.0;
 		for(int i=n; --i >= 0; ) {
-			for(int k=coeff.length; --k >= 0; ) w[i] += coeff[k] * Math.cos(2.0*k*Math.PI * i/(n-1));
+			for(int k=coeff.length; --k >= 0; ) w[i] += coeff[k] * Math.cos(i * k * Constant.twoPI / (n-1.0));
 			norm += w[i]*w[i];
 		}
 		for(int i=n; --i >= 0; ) w[i] /= norm;

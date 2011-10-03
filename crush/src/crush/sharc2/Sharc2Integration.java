@@ -29,11 +29,9 @@ import nom.tam.fits.*;
 
 import java.io.*;
 import java.net.*;
-import java.util.Arrays;
 
 import util.*;
 import util.astro.*;
-import util.data.FFT;
 import crush.fits.HDUManager;
 import crush.fits.HDUReader;
 

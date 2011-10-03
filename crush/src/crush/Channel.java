@@ -48,7 +48,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 	public double dependents = 0.0;
 	
 	public double sourceFiltering = 1.0; // filtering on source...
-	public double directFiltering = 1.0; // The effect of FFT filters on source rel. to noise.
+	public double directFiltering = 1.0; // The effect of FFT filters on source.
 	
 	public double filterTimeScale = Double.POSITIVE_INFINITY;
 	

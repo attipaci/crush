@@ -17,7 +17,6 @@
 			@See: '350um' and '450um'
 
 :: accel		@Alias -> 'correlated.accel-mag'
-			@Instrument
 			@Advanced
 		 	Can be used to enable acceleration response 
 			decorrrelation, or to set options for it.
@@ -95,8 +94,8 @@
 			arrays sensitive to Earth's magnetic field.),
 			@See: 'correlated.<?>' for details on brached options.
 
-:: beam=X		Set the instrument beam to X arcseconds.
-			@Advanced
+:: beam=X		@Advanced
+			Set the instrument beam to X arcseconds.
 			@See: 'resolution'
 
 :: beammap		Effectively the same as 'source.type=beammap', which is
@@ -801,7 +800,7 @@
                         option and the'filter' umbrella option must be set.
 			@See: 'filter', 'whiten', 'filter.whiten.below', 
 			'filter.whiten.level', 'filter.whiten.minchannels'
-			'filter.whiten.neighbours', 'filter.whiten.proberange'
+			'filter.whiten.proberange'
 			
 :: filter.whiten.below	@Since: 2.10
 			@Was: 'whiten.below'
@@ -813,7 +812,17 @@
 			such components to the white level, thus achieving
 			true noise whitening, which is necessary to obtain maps 
 			without instrinsic spacial correlations.
-			@See: 'filter.whiten'
+			@See: 'filter.whiten', 'filter.whiten.below.max'
+
+:: filter.whiten.below.max=X	@Since: 2.10
+				@Expert
+			The maximum boosting of spectral power that may be
+			applied when whitening frequencies with a deficiency
+			of signal below the white level. The option acts as
+			a safety pin, making sure that whitening does not
+			enhance spectral bands insanely, when 
+			'filter.whiten.below' is enabled.
+			@See: 'filter.whiten.below'
 
 :: filter.whiten.level=X	@Since: 2.10
 				@Was: 'whiten.level'
@@ -839,22 +848,6 @@
 			if the spectral range itself is too small.
 			@See: 'filter.whiten', 'filter.whiten.proberange'
 	
-:: filter.whiten.neighbours	@Since: 2.10
-				@Was: 'whiten.neighbours'
-				@Expert
-			The default whitening method is based on the absolute
-			amplitude of spectral components compared to the 
-			white noise level. This second method can be activated
-			in addition, based on the comparative noise power
-			in neighbouring spectral regions (at all resolutions).
-			The method is designed to filter to smooth (but
-			not necessarily flat) spectral shapes, rejecting
-			narrow features effectively, while allowing soft
-			rolloffs etc. It may be especially useful when
-			'whiten.below' is not enabled, i.e. when spectral
-			flatness is not a requirement.
-			@See: 'filter.whiten'
-
 :: filter.whiten.proberange=from:to	@Since: 2.10
 					@Was: 'whiten.proberange'
 					@Expert
@@ -2689,27 +2682,26 @@
 			After whitelisting, you must explicitly set it again, 
 			or 'recall' or 'replace' it to its prior state.
 
+:: whiten		@Alias -> 'filter.whiten'
+			@Advanced
 
-:: whiten		@Advanced
-			@Alias: 'filter.whiten'
-
-:: whiten.below		@Expert
-			@Alias: 'filter.whiten.below'
+:: whiten.below		@Alias -> 'filter.whiten.below'
+			@Expert
 			@Since 2.00-b2
 
-:: whiten.level=X	@Advanced
-			@Alias: 'filter.whiten.level'
+:: whiten.level=X	@Alias -> 'filter.whiten.level'
+			@Advanced
 
-:: whiten.minchannels=N	@Expert
-			@Alias: 'filter.whiten.minchannels'
+:: whiten.minchannels=N	@Alias -> 'filter.whiten.minchannels'
+			@Expert
 			@Since: 2.01-1
 	
-:: whiten.neighbours	@Expert
-			@Alias: 'filter.whiten.neighbours'
+:: whiten.neighbours	@Alias -> 'filter.whiten.neighbours'
+			@Expert
 			@Since 2.00-b2
 
-:: whiten.proberange=from:to	@Expert
-				@Alias: 'filter.whiten.proberange'
+:: whiten.proberange=from:to	@Alias -> 'filter.whiten.proberange'
+				@Expert
 				@Since 2.00-b2
 
 :: wiring=<filename>	@Expert

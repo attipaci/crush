@@ -25,7 +25,7 @@ package crush.filters;
 
 import java.util.Arrays;
 
-import util.SphericalCoordinates;
+import util.Constant;
 import util.Util;
 
 import crush.Channel;
@@ -60,7 +60,11 @@ public abstract class VariedFilter extends Filter {
 	
 	@Override
 	protected void preFilter(Channel channel) {
-		channel.directFiltering /= getPointResponse(channel);
+		final double response = getPointResponse(channel);
+		if(response > 0.0) {
+			channel.directFiltering /= response;
+			channel.sourceFiltering /= response;
+		}
 		super.preFilter(channel);
 	}
 		
@@ -78,8 +82,11 @@ public abstract class VariedFilter extends Filter {
 			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)
 				parms.add(exposure, dp);
 		
-		pointResponse[channel.index] = (float) calcPointResponse();
-		channel.directFiltering *= getPointResponse(channel);
+		final double response = calcPointResponse();
+		pointResponse[channel.index] = (float) response;
+		
+		channel.directFiltering *= response;
+		channel.sourceFiltering *= response;
 		
 		/*
 		double weighRescale = 1.0 - rejected / points;
@@ -126,7 +133,7 @@ public abstract class VariedFilter extends Filter {
 		// sigmaF = sigmaf / df = 2.35/2Pi * n dt / T; 
 		
 		final double T = integration.getPointCrossingTime();
-		final double sigma = Util.sigmasInFWHM / (SphericalCoordinates.twoPI * T * df);
+		final double sigma = Util.sigmasInFWHM / (Constant.twoPI * T * df);
 		final double a = -0.5 / (sigma * sigma);
 		
 		sourceNorm = 0.0;

@@ -189,7 +189,7 @@ public class SphericalCoordinates extends CoordinatePair {
 	
 	
 	public final void getNativeOffsetFrom(final SphericalCoordinates reference, final Vector2D toOffset) {
-		toOffset.x = Math.IEEEremainder(x - reference.x, twoPI) * reference.cosLat;
+		toOffset.x = Math.IEEEremainder(x - reference.x, Constant.twoPI) * reference.cosLat;
 		toOffset.y = y - reference.y;
 	}
 	
@@ -200,7 +200,7 @@ public class SphericalCoordinates extends CoordinatePair {
 	}
 		
 	public void standardize() {
-		x = Math.IEEEremainder(x, twoPI);
+		x = Math.IEEEremainder(x, Constant.twoPI);
 		y = Math.IEEEremainder(y, Math.PI);
 	}
 	
@@ -261,8 +261,8 @@ public class SphericalCoordinates extends CoordinatePair {
 	public void edit(Cursor cursor, String alt) throws HeaderCardException {	
 		// Always write longitude in the 0:2Pi range.
 		// Some FITS utilities may require it, even if it's not required by the FITS standard...
-		double lon = Math.IEEEremainder(longitude(), twoPI);
-		if(lon < 0.0) lon += twoPI;
+		double lon = Math.IEEEremainder(longitude(), Constant.twoPI);
+		if(lon < 0.0) lon += Constant.twoPI;
 
 		cursor.add(new HeaderCard("CRVAL1" + alt, lon / Unit.deg, "The reference longitude coordinate (deg)."));
 		cursor.add(new HeaderCard("CRVAL2" + alt, latitude() / Unit.deg, "The reference latitude coordinate (deg)."));
@@ -282,15 +282,13 @@ public class SphericalCoordinates extends CoordinatePair {
 	}
 	
 	public final static double angularAccuracy = 1e-12;
-	public final static double twoPI = 2.0 * Math.PI;
-	public final static double PI = Math.PI;
-	public final static double rightAngle = 0.5 * Math.PI;
+	
 	
 	public static final void transform(final SphericalCoordinates from, final SphericalCoordinates newPole, final double phi0, final SphericalCoordinates to) {		
 		final double dL = from.x - newPole.x;
 		final double cosdL = Math.cos(dL);	
 		to.setNativeLatitude(asin(newPole.sinLat * from.sinLat + newPole.cosLat * from.cosLat * cosdL));
-		to.setNativeLongitude(rightAngle - phi0 +
+		to.setNativeLongitude(Constant.rightAngle - phi0 +
 				Math.atan2(-from.sinLat * newPole.cosLat + from.cosLat * newPole.sinLat * cosdL, -from.cosLat * Math.sin(dL))
 		);	
 	}
@@ -300,7 +298,7 @@ public class SphericalCoordinates extends CoordinatePair {
 		final double cosdL = Math.cos(dL);
 		
 		to.setNativeLatitude(asin(pole.sinLat * from.sinLat + pole.cosLat * from.cosLat * cosdL));
-		to.setNativeLongitude(pole.x + rightAngle + 
+		to.setNativeLongitude(pole.x + Constant.rightAngle + 
 				Math.atan2(-from.sinLat * pole.cosLat + from.cosLat * pole.sinLat * cosdL, -from.cosLat * Math.sin(dL)));	
 	}
 	

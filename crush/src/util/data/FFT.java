@@ -25,6 +25,7 @@ package util.data;
 import java.util.Arrays;
 
 import util.Complex;
+import util.Constant;
 
 public class FFT {	
 
@@ -490,7 +491,7 @@ public class FFT {
 		bitReverse(data);
 		
 		int blockSize = 2;
-		final double sg2Pi = (isForward ? 1: -1) * 2.0 * Math.PI;		
+		final double sg2Pi = (isForward ? 1: -1) * Constant.twoPI;		
 		final int N = data.length;
 		
 		while(blockSize < N) {
@@ -531,7 +532,7 @@ public class FFT {
 		bitReverse(data);
 		
 		int blockSize = 2;
-		final double sg2Pi = (isForward ? 1: -1) * 2.0 * Math.PI;		
+		final double sg2Pi = (isForward ? 1: -1) * Constant.twoPI;		
 		final int N = data.length;
 		
 		while(blockSize < N) {

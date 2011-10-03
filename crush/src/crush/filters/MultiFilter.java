@@ -122,8 +122,6 @@ public class MultiFilter extends VariedFilter {
 		for(Filter filter : filters) if(filter.isEnabled()) enabled++;
 		return enabled > 0;
 	}
-
-	// TODO what's wrong with standalone whitening filter...
 	
 	/*
 	@Override
@@ -144,8 +142,8 @@ public class MultiFilter extends VariedFilter {
 	
 	@Override
 	protected void postFilter() {
+		for(Filter filter : filters) if(filter.isEnabled()) filter.postFilter();	
 		super.postFilter();
-		for(Filter filter : filters) if(filter.isEnabled()) filter.postFilter();		
 	}
 	
 	@Override
@@ -157,16 +155,20 @@ public class MultiFilter extends VariedFilter {
 		data[0] = 0.0F;
 		
 		// Apply the filters sequentially...
-		for(Filter filter : filters) if(filter.isEnabled()) {
+		for(int n=0; n<filters.size(); n++) {
+			final Filter filter = filters.get(n);
+			
+			if(!filter.isEnabled()) continue;
+			
 			// A safety check to make sure the filter uses the spectrum from the master data array...
 			if(filter.data != data) filter.data = data;
 			
 			filter.preFilter(channel);
 			filter.updateProfile(channel);
 			
-			final float nyquistReject = (float) rejectionAt(nf);
-			filtered[1] = data[1] * nyquistReject;
-			data[1] *= (1.0 - nyquistReject);
+			final float nyquistPass = (float) filter.responseAt(nf);
+			filtered[1] = data[1] * (1.0F - nyquistPass);
+			data[1] *= nyquistPass;
 		
 			for(int i=2; i<data.length; ) {
 				final float pass = (float) filter.responseAt(i >> 1);

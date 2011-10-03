@@ -1,19 +1,27 @@
->> Check filter.kill
 
->> SHARC2 return to 8.0" beam
+2.10-b1
 
->> drifts, signal to remove with cubic spline 
-   drifts to store signals...
+	Overview
+	=====================================================================
+	This is a major update of CRUSH. The main new feature is an innovative
+	motion filter, which may be used to reject signals induced by the
+	scanning telescope movement (esp. when it is roughly periodic). The new
+	filter is especially useful for GISMO faint/deep reductions. Many
+	big changes improvements to Fourier filtering in general, including
+	some critical bug fixes to restore calibration stability of point
+	source fluxes when Fourier filters are used (both spatially, or on the
+	timestreams).
+	=====================================================================
 
->> 'filter.motion'
-   * check for OTF/box scans...
-   * test on extended emission
-     (adjust [extended] configs)
-
->> whitening/mf interaction...
-
-
-2.10-a1
+	[BUG] Large-scale structure (LSS) filtering via 'source.filter' was
+	not applying filter corrections (or did it incorrectly) due to a 
+	malformed conditional statement. This affected flux calibration in 
+	'deep' mode reductions, typically by 5%--10% (depending on the
+	filtering setting for the particular instrument). For GISMO, the
+	effect was larger (~30%--40%) due to the much heavier filtering used.
+	
+	[BUG] {a1} Fourier filter corrections were not reflected in the point-
+	source flux corrections scheme or NEFD numbers. Now included.
 
 	[NEW] The biggest change is the addition of a new motion filter. The
 	periodic motions of the scanning can excite vibrational modes in the
@@ -30,7 +38,6 @@
 		filter.motion.s2n 10.0
 		filter.motion.above 0.05
 		
-
 	will identify and filter features of the scanning motion, between 30mHz
 	and 10Hz, that are at least 10-sigma significant and have an amplitude 
 	at least 5% of the strongest feature. The filter itself is enabled by
@@ -61,7 +68,7 @@
 	can be used to set up specific notch filters for instruments that have
 	known bothersome resonances. E.g.
 
-		filter.kill.bands 0.33--0.39, 5.74--6.71, 12.2-12.3
+		filter.kill.bands 0.33--0.39, 5.74--6.71, 12.2:12.3
 
 	will set up the notch filter for three bands, each specified in Hz.
 	The filter itself is enabled, as usual by 
@@ -71,15 +78,33 @@
 	When used standalone, the filter uses DFT or FFT depending on which
 	is faster. (Same is true for the motion filter).
 
-	[CHANGE] For better comformance with the new filter-architecture, the
+	[NEW] The new key 'filter.whiten.below.max' gives more control over how
+	much the whitening filter may boost spectral power when whitening
+	frequencies with a deficit of signal relative to the white noise level.
+	(i.e. when 'filter.whiten.below' is used). This is to make sure that 
+	the whitening does not insanely enhance certain frequencies.	
+
+	[CHANGE] For better conformance with the new filter-architecture, the
 	old 'whiten' key and its subkeys have been moved under 'filter.whiten'.
 	At the same time 'whiten' remains a valid alias for backward 
 	compatibility.
+
+	[FIX] {a1} Filtering order fixed. In 2.10-a1, filters were applied in 
+	reverse order (i.e. default iteration order).
+
+	[FIX] {a1} Nyquist response of multiple filters fixed.
+
+	[FIX] Removed superflous noise rescaling when applying LSS filter
+	via 'source.filter'.
 
 	[FIX] Some fixes to noise whitening. The zeroth component is now 
 	ignored, since that is the domain of the drifts filtering. The 
 	neighbour-based round is also adjusted to reflect the lack of a zeroth
 	component.
+
+	[TWEAK] {a1} Motion filter enabled only for GISMO faint/deep modes, but
+	not otherwise, since it can interfere with the recovery of larger 
+	scales.
 
 	[TWEAK] Amplitude noise, used for determining when a deviation from
 	target noise level is significant, was wrongly calculated erring on the
@@ -96,11 +121,21 @@
 
 	[TWEAK] Noise whitening filter now fully ignores the DC component.
 
+	[TWEAK] Further tweaks to noise whitening to fully account for killed
+	frequency components. 
+
+	[TWEAK] Deprecated 'neighbour' based noise whitening. There is no real
+	need for it, and it can really mess up when used with other filters.
+
 	[TWEAK] Adjusted DataPoint decimal formatting s.t. the precision of
 	the value matches that of the printed error. (E.g. '45.2 +- 1.1' vs
 	the previous '45 +- 1.1'). This is simply more pleasant to read, 
 	without providing any real information with the increased precision.
 
+	[TWEAK] {SHARC-2} Nominal beam sizes switched back to 8.0", which was
+	the default value before 2.05. It seems, after all, that this is
+	closer to the true diffraction-limited beam size than 8.5" would be...
+	
 	[TWEAK] Despiking relaxed in 'faint' and 'deep' modes to >10-sigma
 	spikes (from >8-sigma before).
 

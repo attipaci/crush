@@ -419,7 +419,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		System.err.println("   Configuring filters.");
 		List<String> ordering = option("filter.ordering").getList();
 		filter = new MultiFilter(this);
-		for(String name : ordering) {
+		for(String name : ordering) {	
 			if(name.equals("motion")) filter.addFilter(new MotionFilter(this, filter.getData()));
 			else if(name.equals("kill")) filter.addFilter(new KillFilter(this, filter.getData()));
 			else if(name.equals("whiten")) filter.addFilter(new WhiteningFilter(this, filter.getData()));
@@ -1587,7 +1587,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(pos[t] == null || pos[t+1] == null || pos[t-1] == null) a[t] = null;
 			else {
 				a[t] = new Vector2D(
-						Math.cos(pos[t].y) * Math.IEEEremainder(pos[t+1].x + pos[t-1].x - 2.0*pos[t].x, SphericalCoordinates.twoPI),
+						Math.cos(pos[t].y) * Math.IEEEremainder(pos[t+1].x + pos[t-1].x - 2.0*pos[t].x, Constant.twoPI),
 						pos[t+1].y + pos[t-1].y - 2.0*pos[t].y
 				);
 				a[t].scale(idt);
