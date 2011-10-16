@@ -83,8 +83,6 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 			for(Integration<?,?> integration : scan)
 				integration.gain *= janskyPerBeam / integration.instrument.janskyPerBeam();
 		}
-
-	
 		
 		// Set the global units to those of the first scan...
 		instrument.options.process("jansky", Double.toString(janskyPerBeam));

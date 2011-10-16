@@ -29,18 +29,10 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
-import crush.filters.MultiFilter;
-import crush.filters.KillFilter;
-import crush.filters.MotionFilter;
-import crush.filters.WhiteningFilter;
+import crush.filters.*;
 
 import util.*;
-import util.astro.EquatorialCoordinates;
-import util.data.DataPoint;
-import util.data.FFT;
-import util.data.Statistics;
-import util.data.WeightedPoint;
-import util.data.WindowFunction;
+import util.data.*;
 import util.text.TableFormatter;
 
 import nom.tam.fits.*;
@@ -1370,30 +1362,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			for(int k=nc; --k >= 0; ) exposure.data[mode.channels.get(k).index] += gain[k] * C;
 		}
 	}
-	
-	public void addSource(EquatorialCoordinates coords, double peak, double FWHM) {
-		addSource(coords, peak, FWHM, instrument.getPixels(), Mode.TOTAL_POWER);
-	}
-	
-	public void addSource(EquatorialCoordinates coords, double peak, double FWHM, Collection<? extends Pixel> pixels, int signalMode) {
-		final double[] sourceGain = instrument.getSourceGains(false);
-		final EquatorialCoordinates equatorial = new EquatorialCoordinates();
-		final double sigma = FWHM / Util.sigmasInFWHM;
-		final double A = -0.5 / (sigma * sigma);
-		
-		for(Frame exposure : this) if(exposure != null) {
-			final double fG = gain * exposure.getSourceGain(signalMode);
-			
-			for(Pixel pixel : pixels) {
-				exposure.getEquatorial(pixel.getPosition(), equatorial);
-				final double d = equatorial.distanceTo(coords);
-				final double value = peak * Math.exp(A*d*d);
-				for(final Channel channel : pixel) exposure.data[channel.index] += sourceGain[channel.index] * fG * value;
-			}
-		}
-	
-	}
-	
 	
 	
 	public Vector2D[] getPositions(int type) {

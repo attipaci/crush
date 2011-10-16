@@ -307,6 +307,12 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		observer = header.getStringValue("OBSID");
 		project = header.getStringValue("PROJID");
 		if(observer == null) observer = "Anonymous";
+		else {
+			// Remove quotation marks from observer names to avoid errors when writing headers.
+			if(observer.contains("'")) observer = observer.replaceAll("'", "");
+			if(observer.contains("\"")) observer = observer.replaceAll("\"", "");
+		}
+		
 		if(project == null) project = "Unknown";
 		
 		System.err.println(" [" + sourceName + "] observed on " + dateString + " at " + timeString + " UT by " + observer);

@@ -48,7 +48,6 @@ public class PolKa extends Laboca {
 	double phi0 = 0.0;
 	boolean isOrthogonal = false;
 	Channel wavePlateChannel, frequencyChannel;
-	//PolKaTimeStamps timeStamps;
 	
 	public PolKa() {
 		super();
@@ -62,30 +61,35 @@ public class PolKa extends Laboca {
 	
 	@Override
 	public void validate(Scan<?,?> scan) {
+		System.err.println(" Parsing waveplate settings: ");
 		
-		if(hasOption("waveplate.frequency")) 
+		if(hasOption("waveplate.frequency")) { 
 			wavePlateFrequency = option("waveplate.frequency").getDouble() * Unit.Hz;
-		
-		if(hasOption("waveplate.jitter")) 
+			System.err.println("  --> Frequency = " + Util.f3.format(wavePlateFrequency / Unit.Hz) + " Hz.");
+		}
+			
+		if(hasOption("waveplate.jitter")) { 
 			jitter = option("waveplate.jitter").getDouble();
-		
+			System.err.println("  --> Jitter = " + Util.f2.format(100.0 * jitter) + "%.");
+		}
+			
 		if(hasOption("waveplate.refangle")) {
 			phi0 = option("waveplate.refangle").getDouble() * Unit.deg;
-			System.err.println(" Waveplate reference angle " + Util.f1.format(phi0/Unit.deg));
+			System.err.println("  --> phi0 = " + Util.f1.format(phi0/Unit.deg) + " deg.");
 		}
 		
 		if(hasOption("waveplate.channel")) {
 			int beIndex = option("waveplate.channel").getInt();
 			wavePlateChannel = get(beIndex-1);
 			if(wavePlateChannel != null) 
-				System.err.println(" Waveplate angles from channel " + wavePlateChannel.storeIndex);
+				System.err.println("  --> Angles from channel " + wavePlateChannel.storeIndex + ".");
 		}
 		
 		if(hasOption("waveplate.fchannel")) {
 			int beIndex = option("waveplate.fchannel").getInt();
 			frequencyChannel = get(beIndex-1);
 			if(frequencyChannel != null) 
-				System.err.println(" Waveplate frequencies from channel " + frequencyChannel.storeIndex);
+				System.err.println("  --> Frequencies from channel " + frequencyChannel.storeIndex + ".");
 		}
 			
 		super.validate(scan);
@@ -118,7 +122,7 @@ public class PolKa extends Laboca {
 			System.err.println("WARNING! It appears you are trying to reduce total-power data in");
 			System.err.println("         polarization mode. You should use 'laboca' as your instrument");
 			System.err.println("         instead of 'polka'. Otherwise, if you are reducing 2010 data");
-			System.err.println("         use the 'pol' key to set 'H' or 'V' analyzer positions");
+			System.err.println("         use the 'analyzer' key to set 'H' or 'V' analyzer positions");
 			System.err.println("         manually. Exiting.");
 			System.err.println();
 			System.exit(1);
@@ -129,8 +133,8 @@ public class PolKa extends Laboca {
 			isOrthogonal = false; break;
 		default :
 			System.err.println();
-			System.err.println("WARNING! Polarization analyzer position is undefined. Set the 'pol'");
-			System.err.println("         option to 'H' or 'V' to specify. Exiting.");
+			System.err.println("WARNING! Polarization analyzer position is undefined. Set the");
+			System.err.println("         'analyzer' option to 'H' or 'V' to specify. Exiting.");
 			System.err.println();
 			System.exit(1);
 			break;

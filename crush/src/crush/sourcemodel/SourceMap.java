@@ -48,6 +48,7 @@ extends SourceModel<InstrumentType, ScanType> {
 	public SphericalProjection projection;
 	public double integationTime = 0.0;
 	public double smoothing = 0.0;
+	public int signalMode = Frame.TOTAL_POWER;
 	
 	public SourceMap(InstrumentType instrument) {
 		super(instrument);
@@ -350,7 +351,7 @@ extends SourceModel<InstrumentType, ScanType> {
 	
 	@Override
 	public void add(Integration<?,?> integration) {
-		add(integration, Mode.TOTAL_POWER);
+		add(integration, signalMode);
 	}
 	
 	public void add(Integration<?,?> integration, int signalMode) {
@@ -360,6 +361,7 @@ extends SourceModel<InstrumentType, ScanType> {
 		boolean filterCorrection = option.isConfigured("correct");
 	
 		integration.comments += "Map";
+		if(id != null) integration.comments += "." + id;
 		// For jackknived maps indicate sign...
 		
 		Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
@@ -410,10 +412,11 @@ extends SourceModel<InstrumentType, ScanType> {
 		integration.scan.sourcePoints = countPoints();
 
 	}
-	
+
+
 	@Override
 	public void sync(Integration<?,?> integration) {
-		sync(integration, Mode.TOTAL_POWER);
+		sync(integration, signalMode);
 	}
 
 	

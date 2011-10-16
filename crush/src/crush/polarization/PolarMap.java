@@ -40,6 +40,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 
 	ScalarMap<InstrumentType, ScanType> N,Q,U;
 	public boolean usePolarization = false;
+	public boolean hasPolarization = false;
 	
 	public PolarMap(InstrumentType instrument) {
 		super(instrument);	
@@ -62,21 +63,24 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		N.setOptions(getOptions());
 		N.createFrom(scans);
 		N.signalMode = PolarModulation.N;
-		N.isLevelled = true;
+		N.enableLevel = true;
+		N.enableWeighting = true;
 		N.id = "N";
 		
 		Q = (ScalarMap<InstrumentType, ScanType>) N.copy();
 		Q.standalone();
 		Q.signalMode = PolarModulation.Q;
-		Q.isLevelled = false;
-		Q.allowBias = false;
+		Q.enableLevel = false;
+		Q.enableWeighting = true;
+		Q.enableBias = false;
 		Q.id = "Q";
 		
 		U = (ScalarMap<InstrumentType, ScanType>) N.copy();
 		U.standalone();
 		U.signalMode = PolarModulation.U;
-		U.isLevelled = false;
-		U.allowBias = false;
+		U.enableLevel = false;
+		U.enableWeighting = true;
+		U.enableBias = false;
 		U.id = "U";
 	}
 	
@@ -98,6 +102,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		if(usePolarization()) {
 			Q.add(other.Q, weight);
 			U.add(other.U, weight);
+			hasPolarization = true;
 		}
 	}
 
@@ -117,9 +122,10 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	public void add(Integration<?, ?> subscan) {
 		removeBias(subscan);
 
-		((Purifiable) subscan).purify();
+		//((Purifiable) subscan).purify();
 		
-		N.add(subscan);		
+		N.add(subscan);	
+		
 		if(usePolarization()) {
 			((Purifiable) subscan).purify();
 			Q.add(subscan);
@@ -184,27 +190,6 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		N.postprocess(scan);
 	}
 	
-	public ScalarMap<InstrumentType, ScanType> getI() {
-		return getI(getP());
-	}
-	
-	public ScalarMap<InstrumentType, ScanType> getI(ScalarMap<InstrumentType, ScanType> P) {	
-		final AstroMap p = P.map;
-		final AstroMap n = N.map;
-		
-		for(int i=n.sizeX(); --i >= 0; ) for(int j=n.sizeY(); --j >= 0; ) {
-			if(n.flag[i][j] == 0 && p.flag[i][j] == 0) {
-				p.data[i][j] += n.data[i][j];
-				p.weight[i][j] = 1.0 / (1.0/n.weight[i][j] + 1.0/p.weight[i][j]);
-			}
-			else p.flag[i][j] = 1;
-		}
-		P.id = "I";
-		p.sanitize();
-		return P;
-	}
-	
-	
 	public ScalarMap<InstrumentType, ScanType> getP() {
 		final ScalarMap<InstrumentType, ScanType> P = (ScalarMap<InstrumentType, ScanType>) N.copy();
 		
@@ -233,14 +218,97 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		return P;
 	}
 	
+	public ScalarMap<InstrumentType, ScanType> getI() {
+		return getI(getP());
+	}	
+	
+	public ScalarMap<InstrumentType, ScanType> getI(ScalarMap<InstrumentType, ScanType> P) {	
+		final ScalarMap<InstrumentType, ScanType> I = (ScalarMap<InstrumentType, ScanType>) N.copy();
+		final AstroMap n = N.map;
+		final AstroMap p = P.map;
+		final AstroMap t = I.map;
+		
+		for(int i=n.sizeX(); --i >= 0; ) for(int j=n.sizeY(); --j >= 0; ) {
+			if(n.flag[i][j] == 0 && p.flag[i][j] == 0) {
+				t.data[i][j] = n.data[i][j] + p.data[i][j];
+				t.weight[i][j] = 1.0 / (1.0/n.weight[i][j] + 1.0/p.weight[i][j]);
+			}
+			else t.flag[i][j] = 1;
+		}
+		I.id = "I";
+		t.sanitize();
+		return I;
+	}
+	
+	public ScalarMap<InstrumentType, ScanType> getPolarFraction(ScalarMap<InstrumentType, ScanType> P, ScalarMap<InstrumentType, ScanType> I, double accuracy) {	
+		final ScalarMap<InstrumentType, ScanType> F = (ScalarMap<InstrumentType, ScanType>) P.copy();
+		final AstroMap p = P.map;
+		final AstroMap t = I.map;
+		final AstroMap f = F.map;
+		
+		final double minw = 1.0 / (accuracy * accuracy);
+		
+		for(int i=t.sizeX(); --i >= 0; ) for(int j=t.sizeY(); --j >= 0; ) {
+			if(t.flag[i][j] == 0 && p.flag[i][j] == 0) {
+				f.data[i][j] = p.data[i][j] / t.data[i][j];
+			
+				// f = a/b --> df/db = -a/b^2 * db
+				// df2 = (da / b)^2 + (a db / b2)^2 = a/b * ((da/a)^2 + (db/b)^2)
+				// 1 / wf = 1/(wa * b2) + a2/(wb*b4) = a2/b2 * (1/(wa*a2) + 1/(wb*b2))
+				// wf = b2/a2 / (1/(wa*a2) + 1/(wb*b2))
+				final double p2 = p.data[i][j] * p.data[i][j];
+				final double t2 = t.data[i][j] * t.data[i][j];
+				f.weight[i][j] = t2 / p2 / (1.0 / (p2 * p.weight[i][j]) + 1.0 / (t2 * t.weight[i][j]));
+				
+				// if sigma_f > accuracy than flag the datum
+				if(f.weight[i][j] < minw) f.flag[i][j] = 1;
+			}
+			else f.flag[i][j] = 1;
+		}
+		
+		F.id = "F";
+		F.enableLevel = false;
+		F.enableWeighting = false;
+		F.enableBias = false;
+		
+		f.unit = Unit.unity;
+		f.sanitize();
+		return F;
+	}
+	
 	@Override
 	public void write(String path) throws Exception {
 		N.write(path, true);
+		
+		if(!hasPolarization) {
+			System.err.println();
+			System.err.println("WARNING! No polarization products available.");
+			System.err.println("         Consider setting the 'source.polarization' option");
+			System.err.println("         to create Q, U, P and I images (and optionally F).");
+			return;
+		}
+		
 		Q.write(path, false);
 		U.write(path, false);
+		
+		// Write P (polarized power)
 		ScalarMap<InstrumentType, ScanType> P = getP();
 		P.write(path, false);	
-		getI(P).write(path, false);	
+			
+		// Write I (total power)
+		ScalarMap<InstrumentType, ScanType> I = getI(P);
+		I.write(path, false);	
+		
+		if(hasOption("source.polarization.fraction")) {
+			// Write F (polarized fraction)
+			double accuracy = hasOption("source.polarization.fraction.rmsclip") ?
+					option("source.polarization.fraction.rmsclip").getDouble() : 0.03;
+			
+			ScalarMap<InstrumentType, ScanType> F = getPolarFraction(P, I, accuracy);
+			F.write(path, false);
+		}
+		
+		
 	}
 
 	@Override

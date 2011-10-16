@@ -50,7 +50,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 	public void regularAngles() {
 		System.err.println("   WARNING! Phaseless polarization (i.e. uncalibrated angles).");
 		
-		double MJD0 = getMJD();
+		double MJD0 = 54000.0;
 		double f0 = getWavePlateFrequency();
 		
 		for(LabocaFrame frame : this) if(frame != null) {
@@ -73,75 +73,42 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 		// If the frequency is set manually, then calculate angles based on it...
 		if(hasOption("waveplate.frequency")) regularAngles();
 		else {
-			try { updateWavePlateFrequency(); }
+			try { calcMeanWavePlateFrequency(); }
 			catch(IllegalStateException e) { System.err.println("   WARNING! " + e.getMessage() + " Using defaults."); }
 		}
 
 		System.err.println("   Using waveplate frequency " + Util.f3.format(getWavePlateFrequency()) + " Hz.");
-			
-		//prepareFilter();
 		
 		removeTPModulation();
 		
 	}
 	
-	public void updateWavePlateFrequency() throws IllegalStateException {
+	public void calcMeanWavePlateFrequency() throws IllegalStateException {
 		PolKa polka = (PolKa) instrument;
 		
-		if(polka.frequencyChannel != null) {
-			double sum = 0.0;
-			int n=0;
-			for(Frame frame : this) if(frame != null) {
-				sum += ((PolKaFrame) frame).wavePlateFrequency;
-				n++;
-			}
-			if(n < 1) throw new IllegalStateException("No valid frames with waveplate data");	
-			if(sum == 0.0) throw new IllegalStateException("All zeros in waveplate frequency channel.");
-			if(Double.isNaN(sum)) throw new IllegalStateException("No waveplate frequency data in channel.");
-				
-			polka.wavePlateFrequency = sum / n;
-			sum = 0.0;
-			for(Frame frame : this) if(frame != null) {
-				double dev = ((PolKaFrame) frame).wavePlateFrequency - polka.wavePlateFrequency;
-				sum += dev*dev;				
-			}
-			polka.jitter = Math.sqrt(sum / (n-1)) / polka.wavePlateFrequency;
-			
-			System.err.println("   Measured waveplate frequency is " + Util.f3.format(polka.wavePlateFrequency) + " Hz (" + Util.f1.format(100.0*polka.jitter) + "% jitter).");
-			
-		}
-	}
+		if(polka.frequencyChannel == null) 
+			throw new IllegalStateException("WARNING! Frequency channel undefined.");
 
-	
-	/*
-	public void prepareFilter() {
-		PolKa polka = (PolKa) instrument;
-			
-		int N = FFT.getPaddedSize(size());
-		phi = new double[N >> 1];
-		Arrays.fill(phi, 1.0);
-		
-		final double df = 1.0 / (N * instrument.samplingInterval);
-		
-		int harmonics = (int) Math.ceil((0.5 / instrument.samplingInterval) / polka.wavePlateFrequency);
-		
-		int nChannels = 0;
-		for(int i=1; i<=harmonics; i++) {
-			double fc = i * polka.wavePlateFrequency;
-			double width = 4.0 * polka.jitter * fc;
-			int fromf = Math.max(0, (int)Math.floor((fc - 0.5 * width) / df));
-			int tof = Math.min(phi.length-1, (int)Math.ceil((fc + 0.5 * width) / df));
-			
-			for(int k=fromf; k<=tof; k++) { 
-				phi[k] = 0.0;
-				nChannels++;
-			}
+		double sum = 0.0;
+		int n=0;
+		for(Frame frame : this) if(frame != null) {
+			sum += ((PolKaFrame) frame).wavePlateFrequency;
+			n++;
 		}
-	
-		double fraction = 100.0 * (double) nChannels / phi.length;
-		System.err.println("   Preparing power modulation filter (" + harmonics + " harmonics, " + Util.f2.format(fraction) + "% of spectrum).");
+		if(n < 1) throw new IllegalStateException("No valid frames with waveplate data");	
+		if(sum == 0.0) throw new IllegalStateException("All zeros in waveplate frequency channel.");
+		if(Double.isNaN(sum)) throw new IllegalStateException("No waveplate frequency data in channel.");
+
+		polka.wavePlateFrequency = sum / n;
+		sum = 0.0;
+		for(Frame frame : this) if(frame != null) {
+			double dev = ((PolKaFrame) frame).wavePlateFrequency - polka.wavePlateFrequency;
+			sum += dev*dev;				
+		}
+		polka.jitter = Math.sqrt(sum / (n-1)) / polka.wavePlateFrequency;
+
+		System.err.println("   Measured waveplate frequency is " + Util.f3.format(polka.wavePlateFrequency) + " Hz (" + Util.f1.format(100.0*polka.jitter) + "% jitter).");
 	}
-	*/
 	
 	public void removeTPModulation() {
 		PolKa polka = (PolKa) instrument;
@@ -232,7 +199,6 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 	}
 	
 	public void purify() {
-		//filter(instrument, phi);
 		removeTPModulation();
 	}
 

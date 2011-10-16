@@ -47,9 +47,9 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	public AstroMap map;
 	public double[][] base; 
 	public boolean[][] mask;
-	public boolean isLevelled = true;
-	public boolean allowBias = true;
-	public int signalMode = Frame.TOTAL_POWER;
+	public boolean enableWeighting = true;
+	public boolean enableLevel = true;
+	public boolean enableBias = true;
 	
 	public ScalarMap(InstrumentType instrument) {
 		super(instrument);
@@ -61,7 +61,11 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		ScalarMap<InstrumentType, ScanType> other = (ScalarMap<InstrumentType, ScanType>) model;
 		isValid = false;
 		map.addDirect(other.map, weight);
-		if(!other.isLevelled) isLevelled = false;
+		
+		enableLevel |= other.enableLevel;
+		enableWeighting |= other.enableWeighting;
+		enableBias |= other.enableBias;
+		
 		generation = Math.max(generation, other.generation);
 	}
 
@@ -276,8 +280,8 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		double minIntTime = instrument.integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
 		if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
 		
-		if(isLevelled && scan.getSourceGeneration() == 0) map.level(true);
-		else isLevelled = false;
+		if(enableLevel && scan.getSourceGeneration() == 0) map.level(true);
+		else enableLevel = false;
 		
 		if(hasOption("source.despike")) {
 			Configurator despike = option("source.despike");
@@ -315,7 +319,11 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		super.postprocess(scan);
 		
 		if(hasOption("pointing")) if(option("pointing").equals("auto") || option("pointing").equals("suggest")) {
-			map.smoothTo(scan.instrument.resolution);
+			double optimal = hasOption("smooth.optimal") ? 
+					option("smooth.optimal").getDouble() * scan.instrument.getDefaultSizeUnit() :
+					scan.instrument.resolution;
+	
+			map.smoothTo(optimal);
 			if(hasOption("pointing.exposureclip")) map.clipBelowRelativeExposure(option("pointing.exposureclip").getDouble(), 0.1);
 			map.weight(true);
 			scan.pointing = getPeakSource();
@@ -398,7 +406,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		
 		if(hasOption("source.redundancy")) System.err.print("{check} ");
 		
-		if(verbose) if(isLevelled) System.err.print("{level} ");
+		if(verbose) if(enableLevel) System.err.print("{level} ");
 
 		if(verbose) if(hasOption("source.despike")) System.err.print("{despike} ");
 
@@ -406,7 +414,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 			if(verbose) System.err.print("{filter} ");
 		}
 		
-		if(verbose) if(hasOption("weighting.scans"))
+		if(verbose) if(enableWeighting) if(hasOption("weighting.scans"))
 			for(Scan<?,?> scan : scans) System.err.print("{" + Util.f2.format(scan.weight) + "} ");
 
 
@@ -435,7 +443,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		}
 
 		
-		if(hasOption("clip") && allowBias) {	
+		if(hasOption("clip") && enableBias) {	
 			double clipLevel = option("clip").getDouble();
 			if(verbose) System.err.print("(clip:" + clipLevel + ") ");
 			map.s2nClipBelow(clipLevel);
@@ -461,7 +469,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 
 		// Coupled with blanking...
 		if(!sourceOption.isConfigured("nosync")) {
-			if(hasOption("blank") && allowBias) {
+			if(hasOption("blank") && enableBias) {
 				if(verbose) System.err.print("(blank:" + blankingLevel + ") ");
 				mask = map.getMask(getBlankingLevel(), 3);
 			}
@@ -533,10 +541,6 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		}
 	}
 
-	@Override
-	public void add(Integration<?,?> integration) {
-		add(integration, signalMode);
-	}
 	
 	@Override
 	protected int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
@@ -654,10 +658,10 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 			return;
 		}
 		
-		// Re-level and weight map, unless 'extended' in other than 'deep'.
+		// Re-level and weight map if allowed and not 'extended' or 'deep'.
 		if(!hasOption("extended") || hasOption("deep")) {
-			map.level(true);
-			map.weight(true);
+			if(enableLevel) map.level(true);
+			if(enableWeighting) map.weight(true);
 		}
 
 		if(info) map.toString();
@@ -679,6 +683,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 			final ImageArea<AstroImageLayer> imager = new ImageArea<AstroImageLayer>();
 			final AstroImageLayer image = new AstroImageLayer(cropped);
 			imager.setContentLayer(image);
+			imager.setBackground(Color.LIGHT_GRAY);
 			
 			ColorScheme scheme = new Colorful();
 			
@@ -694,7 +699,6 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 					scheme = ColorScheme.getInstanceFor(schemeName);
 			}
 				
-			imager.setBackground(Color.LIGHT_GRAY);
 			image.colorScheme = scheme;
 			imager.saveAs(map.fileName + ".png", width, height);	
 		}
