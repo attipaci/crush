@@ -77,7 +77,7 @@
 			the two positions.
 			As of 2011, the analyzer position should be correctly
 			recorded in the data file, and therefore automatically
-			detected. You can still use 'pol' to override the
+			detected. You can still use 'analyzer' to override the
 			recorded setting.
 
 :: array		@Alias -> 'correlated.obs-channels'
@@ -1657,6 +1657,9 @@
 			sources to provide a valid pointing result. If the
 			option is not set, a value of 5.0 is assumed.
 
+:: pol			@Alias --> 'source.polarization'
+			@Since: 2.10
+
 :: poll[=<key>]		Whenever unsure what options are set at any given stage,
 			you can poll the settings. Without an additional 
 			argument it will list all currently defined setting to 
@@ -2245,8 +2248,30 @@
 			rather than simply producing a total-power image. The
 			option obviously only affects instruments that measure
 			polarization, anbd will be ignored otherwise.
-			@See: 'source.synchronized', 'waveplate.refangle', 
-			      'analyzer'
+			You can also use the shorthand 'pol' to the same 
+			effect.
+			@See: 'pol', 'spf', 'source.synchronized', 
+			      'waveplate.refangle', 'analyzer'
+
+:: source.polarization.fraction		@Since: 2.10
+					@Instrument: PolKa
+					@Advanced
+			Write an image of the polarized power fraction as well
+			as the default polarization products (N, Q, U and the
+			derivatives I & P). You can also use the shorthand 
+			'spf' to the same effect, and can control the clipping 
+			of the noisy bits via the 'rmsclip' sub-option.
+			@See: 'spf', 'source.polarization', 
+			      'source.polarization.fration.rmsclip'
+
+:: source.polarization.fraction.rmsclip=X	@Since: 2.10
+						@Instrument: PolKa
+						@Expert
+			Set the maximum rms for the unflagged points in the
+			polarization fraction image. The default value is 0.03
+			(i.e. 3% rms). You can also use the shorthand version
+			'spf.rmsclip'.
+			@See: 'spf', 'source.polarization.fraction' 
 
 :: source.redundancy=N	@Expert
 			Specify the minimum redundancy (N samples) that
@@ -2326,6 +2351,9 @@
 			If 'sourcesize' or 'extended' is not specified, then 
 			point-like compact sources are assumed.	
 			@See: 'faint', 'extended', 'sourcesize'
+
+:: spf			@Alias --> 'source.polarization.fraction'
+			@Since: 2.10
 
 :: split		A convenience key for adjusting options for very large
 			data sets, which have to be split into manageable sized

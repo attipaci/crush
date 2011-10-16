@@ -1,13 +1,5 @@
 >> 'whiten.multires'?
 
->> deprecate 'whiten.below', 'whiten.neighbours'
-
->> what's wrong with whiten.below and whiten.neighbours?
-
->> Check filter.kill
-
->> SHARC2 return to 8.0" beam
-
 >> drifts, signal to remove with cubic spline
    drifts to store signals...
 
@@ -24,8 +16,14 @@
 fluxes?
 >> Smoothing in deep does not preserve point source fluxes...
 	-- is this corrected in 2.05-1?
->> Polarization: why does it add up over iterations? Why not correct?
 
+	-- Aparapi integration for GPU computing? 
+		* Need ATI Stream SDK
+		* only 1D primitive arrays up to float[]
+		* no object access
+		* no recursion
+		* Needs an ATI graphics card...
+		! but should work otherwise on fallback mode...
 
 
 For 2.20:

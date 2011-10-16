@@ -37,7 +37,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 	double level = 1.2;
 	double significance = 2.0;
 	double maxBoost = 2.0;
-	boolean symmetric = false;
+	boolean boost = false;
 	//boolean neighbours = false;
 	
 	private int nF; // The number of stacked frequency components
@@ -65,16 +65,16 @@ public class WhiteningFilter extends AdaptiveFilter {
 		
 		setSize(integration.framesFor(integration.filterTimeScale));
 		
-		symmetric = hasOption("below");
+		boost = hasOption("below");
 		
 		// Specify maximum boost as power, just like level...
-		if(hasOption("below.max")) maxBoost = Math.sqrt(option("below.max").getDouble());
+		if(hasOption("below.max")) maxBoost = Math.max(1.0, Math.sqrt(option("below.max").getDouble()));
 		
 		//neighbours = hasOption("neighbours");
 		
 		// Specify critical level as power, but use as amplitude...
-		if(hasOption("level")) level = Math.sqrt(option("level").getDouble());
-
+		if(hasOption("level")) level = Math.max(1.0, Math.sqrt(option("level").getDouble()));
+		
 		int windowSize = FFT.getPaddedSize(2 * nF);
 		int n = data.length;
 		if(n < windowSize) windowSize = n;
@@ -160,6 +160,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 		// Calculate the median amplitude
 		System.arraycopy(A, 0, temp, 0, A.length);	
 		final double medA = Statistics.median(temp, whiteFrom, whiteTo).value;
+		final double critical = level * medA;
 		
 		// sigmaP = medP / sqrt(pts)
 		// A = sqrt(P)
@@ -173,15 +174,17 @@ public class WhiteningFilter extends AdaptiveFilter {
 		// when compared to the specified level over the median spectral power.
 		for(int F=nF; --F >= 1; ) {
 			if(A[F].weight > 0.0) {
-				final double dev = (A[F].value / lastProfile[F] - medA) / A[F].rms();
+				final double dev = (A[F].value / lastProfile[F] - critical) / A[F].rms();
 				
 				// Check if there is excess/deficit power that needs filtering...
 				if(dev > significance) profile[F] = (float) (medA / A[F].value);
-				else if(symmetric) if(dev < -significance) {
+				else if(boost && dev < -significance) {
 					profile[F] = (float) (medA / A[F].value);
 					// Make sure not too overboost...
 					if(profile[F]*lastProfile[F] > maxBoost) profile[F] = (float) maxBoost / lastProfile[F];
 				}
+				// If there is no significant deviation, undo the last filtering...
+				else profile[F] = 1.0F / lastProfile[F];
 					
 				A[F].value *= profile[F];
 			}
@@ -199,7 +202,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 		// and reapply standard whitening fn...
 		
 		// Renormalize the whitening scaling s.t. it is median-power neutral
-		//double norm = medA / Statistics.median(temp, measureFrom, measureTo).value;
+		//double norm = medA / Statistics.median(temp, whiteFrom, whiteTo).value;
 		//if(Double.isNaN(norm)) norm = 1.0;		
 		//for(int F = nF; --F >= 0; ) profile[F] *= norm;
 		

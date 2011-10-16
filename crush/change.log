@@ -10,7 +10,7 @@
 	big changes improvements to Fourier filtering in general, including
 	some critical bug fixes to restore calibration stability of point
 	source fluxes when Fourier filters are used (both spatially, or on the
-	timestreams).
+	timestreams). Also, fixed polarimetry with PolKa.
 	=====================================================================
 
 	[BUG] Large-scale structure (LSS) filtering via 'source.filter' was
@@ -21,7 +21,12 @@
 	effect was larger (~30%--40%) due to the much heavier filtering used.
 	
 	[BUG] {a1} Fourier filter corrections were not reflected in the point-
-	source flux corrections scheme or NEFD numbers. Now included.
+	source flux corrections scheme or NEFD numbers in 2.10-a1. Now 
+	included.
+
+	[BUG] {PolKa} Polarization maps were wrongly synced back to timestreams
+	as total power, explaining why polarization reduction was broken when
+	iterating on Q & U.
 
 	[NEW] The biggest change is the addition of a new motion filter. The
 	periodic motions of the scanning can excite vibrational modes in the
@@ -84,15 +89,42 @@
 	(i.e. when 'filter.whiten.below' is used). This is to make sure that 
 	the whitening does not insanely enhance certain frequencies.	
 
+	[NEW] {PolKa} The new key 'source.polarization.fraction' allows writing
+	images of the polarized fraction (F) as well as the default products 
+	(N, Q, U, P, & I). You can clip away the noisy bits via the 'rmsclip'
+	sub-option. For convenience, the shorthand 'spf' is defined for this
+	option. E.g., you may write:
+
+	   > crush polka -spf -spf.rmsclip=0.01 [...]
+
+	To enable the writing of polarized fraction showing only the parts
+	with <1% rms.
+
+	[NEW] 'pol' is now a shorthand for 'source.polarization'
+
 	[CHANGE] For better conformance with the new filter-architecture, the
 	old 'whiten' key and its subkeys have been moved under 'filter.whiten'.
 	At the same time 'whiten' remains a valid alias for backward 
 	compatibility.
 
+	[FIX] {APEX} Fixed error when observer names contain quotation marks.
+	Normally they should not, but because the apecs syntax often requires
+	strings to be enclosed in quotes, these can end up as extraneous quotes
+	in the FITS headers. The fix includes a workaround by removing any 
+	quotes from observer names. Thanks Giorgio for helping to get to the 
+	end of this!
+
+	[FIX] Setting PNG image background via 'write.png.bg' was ineffective.
+	Now fixed.
+
+	[FIX] {b1} 'whiten.level' was not used in 2.10-b1, resulting in 
+	whitening as if level was set to 1.0. That may have been a little too 
+	strong...
+
 	[FIX] {a1} Filtering order fixed. In 2.10-a1, filters were applied in 
 	reverse order (i.e. default iteration order).
 
-	[FIX] {a1} Nyquist response of multiple filters fixed.
+	[FIX] {a1} Nyquist response of multiple filters in 2.10-a1 fixed.
 
 	[FIX] Removed superflous noise rescaling when applying LSS filter
 	via 'source.filter'.
@@ -102,9 +134,32 @@
 	neighbour-based round is also adjusted to reflect the lack of a zeroth
 	component.
 
+	[TWEAK] {PolKa} The polarization products Q, U, P, I (and F) are not
+	written if the 'source.polarization' option was never enabled during
+	the reduction, allowing to solve for the necessary models.
+
+	[TWEAK] Leveling and re-wrighting of output maps happens only when
+	the map type supports it. As a result of this change polarization Q 
+	and U maps, and the derivatives P (polarized power) and F (polarized
+	fraction) maps are no longer levelled. 
+
+	[TWEAK] {PolKa} Undo duplicate total-power-modulation removal. Instead
+	do it just once, right before Q/U modulation modeling. This should be
+	sufficient to prevent TP leakage into polarization signals.
+
+	[TWEAK] {PolKa} Tweaked configuration: allowing downsampling and noise 
+	whitening for polar maps.
+
+	[TWEAK] Relaxed whitening level. Should preserve source structures
+	more effectively...
+
+	[TWEAK] Suggestion of pointing offsets ('point' option) now smoothes
+	by the optimal amount rather than the beam if and when 'smooth.optimal'
+	is defined.
+
 	[TWEAK] {a1} Motion filter enabled only for GISMO faint/deep modes, but
-	not otherwise, since it can interfere with the recovery of larger 
-	scales.
+	not otherwise (as opposed to 2.10-a1 where it was always enabled), 
+	since it can interfere with the recovery of larger scales.
 
 	[TWEAK] Amplitude noise, used for determining when a deviation from
 	target noise level is significant, was wrongly calculated erring on the
@@ -149,6 +204,10 @@
 	[CLEANUP] Cleaned up units and simplified coordinate axes.
 
 	[CODE] Motion filter moved under the common filtering architecture.
+
+	[UPDATE] {LABOCA, SABOCA} Configuration files (RCPs, opcaity and 
+	calibration lookup tables) have been updated thru 9 Oct 2011 for 
+	LABOCA and 5 Oct 2011 for SABOCA
 
 
 2.05-2

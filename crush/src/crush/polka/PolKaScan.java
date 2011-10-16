@@ -34,7 +34,6 @@ public class PolKaScan extends LabocaScan {
 	
 	public PolKaScan(Laboca instrument) {
 		super(instrument);
-		// TODO Auto-generated constructor stub
 	}
 	
 	@Override

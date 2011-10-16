@@ -25,17 +25,15 @@ public class ScriptGenerator {
 		*/
 		
 		String[][] options = {
-				{ "-estimator=maximum-likelihood" },
 				{ "-rounds=15", "-rounds=20", "-rounds=25", "-rounds=30" },
-				{ "-stability=2.5", "-stability=5.0" },
-				{ "-source.filter.fwhm=30", "-source.filter.fwhm=35", "-source.filter.fwhm=40" }
+				{ "-stability=2.5", "-stability=5.0", "-stability=10.0" },
+				{ "-source.filter.fwhm=35", "-source.filter.fwhm=45", "-source.filter.fwhm=55" }
 		};
 	
 		String[][] names = {
-				{ "ML" },
 				{ "r15", "r20", "r25", "r30" },
-				{ "S3", "S5" },
-				{ "x30", "x35", "x40" },
+				{ "S3", "S5", "S10" },
+				{ "x35", "x45", "x55" },
 		};
 		
 		// 1 x 4 x 2 x 3 = 36
