@@ -203,5 +203,11 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 		return null;
 	}
 
+	@Override
+	public void noParallel() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	
 }

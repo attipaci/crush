@@ -1,3 +1,13 @@
+>> SCUBA-2 inline conversion issues... (race condition?)
+
+>> Data2D.PointProcessor subclass for parallel processing of images...
+	process(int i, int j)
+   Data2D.BlockProcessor
+	process(int block)
+
+>> GISMO avoid repeated parse of pointing logs...
+
+
 >> 'whiten.multires'?
 
 >> drifts, signal to remove with cubic spline

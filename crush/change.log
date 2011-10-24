@@ -1,5 +1,25 @@
+>> SCUBA-2 module to version 3 (change.log!)
+>> Test why on-the-fly conversion makes trouble...
 
-2.10-b1
+
+	[NEW] Introducing a parallel processing framework for images. The goal 
+	is to speed up image processing functionality on modern multicore 
+	systems. Most image operations are now utilizing all available CPU 
+	power.
+
+	[FIX] {SCUBA-2} Updated the SCUBA-2 proprietary module to work with
+	CRUSH v2.10.
+
+	[TWEAK] Slightly tweaked 'faint' despiking settings, reverting to
+	more stringent despiking of faint sources. Even more so for GISMO.
+
+	[TWEAK] {GISMO} 'deep' reductions to whiten more aggressively than
+	usual.
+
+	[CLEANUP] Removed obsoleted key 'whiten.neighbours' from configuration.
+
+
+2.10-1 (15 Oct 2011)
 
 	Overview
 	=====================================================================

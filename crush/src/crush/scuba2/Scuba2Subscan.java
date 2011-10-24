@@ -41,16 +41,24 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	@Override
 	public void setTau() throws Exception {
 		super.setTau();
-		printEquivalentTaus();		
+		printEquivalentTaus();	
 	}
 	
 	public void printEquivalentTaus() {
 		System.err.println("   --->"
 				+ " tau(186GHz):" + Util.f3.format(getTau("186ghz"))
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
+				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
+		);	
+		
+		/*
+		System.err.println("   --->"
+				+ " tau(186GHz):" + Util.f3.format(getTau("186ghz"))
+				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
 				+ ", tau(LOS):" + Util.f3.format(zenithTau / scan.horizontal.sinLat)
 				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
-		);		
+		);
+		*/	
 	}
 	
 	@Override

@@ -40,7 +40,7 @@ public abstract class Parallel<Type> {
 	public void init() {};
 	
 	public ProcessingThread createThread(int chunkSize) {
-		return new ProcessingThread(chunkSize);
+		return new ProcessingThread(this, chunkSize);
 	}
 	
 	public synchronized void process(Collection<Type> data) throws InterruptedException {
@@ -77,18 +77,22 @@ public abstract class Parallel<Type> {
 	
 	public abstract void process(Type data, ProcessingThread thread);
 	
-	public class ProcessingThread extends ArrayList<Type> implements Runnable {			
+	protected class ProcessingThread extends ArrayList<Type> implements Runnable {			
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = -3973614679104705385L;
+		private Parallel<Type> parent;
 		
-		public ProcessingThread(int capacity) { super(capacity); }
+		public ProcessingThread(Parallel<Type> p, int capacity) { 
+			super(capacity); 
+			this.parent = p;
+		}
 	
 		public void run() {
 			//System.err.println("### Starting processing " + size() + " item(s).");
-			for(Type entry : this) process(entry, this);
-			checkout(this);
+			for(Type entry : this) parent.process(entry, this);
+			parent.checkout(this);
 		}
 	}
 	

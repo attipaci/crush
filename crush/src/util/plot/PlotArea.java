@@ -35,12 +35,13 @@ import java.io.IOException;
 import java.util.Vector;
 
 import javax.imageio.ImageIO;
-import javax.swing.JPanel;
+import javax.swing.JComponent;
 
 
+import util.CoordinatePair;
 import util.Vector2D;
 
-public class PlotArea<ContentType extends ContentLayer> extends JPanel {
+public class PlotArea<ContentType extends ContentLayer> extends JComponent {
 	/**
 	 * 
 	 */
@@ -69,7 +70,7 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 	}
 	
 	/**
-	 * Called before the first rendering of the image. Otherwise, it can be called beforehand, allowing
+	 * Called before the first rendering of the image. Otherwise, it can be called before rendering, allowing
 	 * to override the rendering parameters (e.g. rendering size, data scaling, subarray selection etc.)
 	 */
 	public void defaults() {
@@ -118,10 +119,15 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 		if(index >= 0) removeLayer(index);
 	}
 	
+	public Vector2D getScale() { return scale; }
+	
+	public void setScale(CoordinatePair s) { setScale(s.x, s.y); }
+	
+	public void setScale(double x, double y) { this.scale.set(x, y); }
 	
 	public void setRenderSize(int width, int height) {
 		if(verbose) System.err.println("Setting render size to " + width + "x" + height);
-		Vector2D range = contentLayer.getPlotRange();
+		Vector2D range = contentLayer.getPlotRanges();
 		System.err.println("range is " + range);
 		scale.x = width / range.x;
 		scale.y = height / range.y;
@@ -158,14 +164,14 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 	
 	
 	public void fitInside() {
-		Vector2D range = contentLayer.getPlotRange();
+		Vector2D range = contentLayer.getPlotRanges();
 		double zoom = Math.min((double) getWidth() / range.x, (double) getHeight() / range.y);
 		setZoom(zoom);
 		zoomMode = ZOOM_FIT;
 	}
 	
 	public void fillInside() {
-		Vector2D range = contentLayer.getPlotRange();
+		Vector2D range = contentLayer.getPlotRanges();
 		double zoom = Math.max((double) getWidth() / range.x, (double) getHeight() / range.y);
 		setZoom(zoom);
 		zoomMode = ZOOM_FILL;

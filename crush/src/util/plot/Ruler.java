@@ -29,24 +29,54 @@ import java.awt.*;
 import java.text.*;
 import javax.swing.*;
 
-import util.Scale;
+import util.ScaleMarks;
+import util.Util;
 
 import java.util.*;
+
+// TODO
+//   * 4 orientations (H & V, with alignment...)
+//   * update also content.getCoordinateLayer() if necessary for inward ticks
+//   * Mouse over to draw grey ticks for dragging when outer ticks not drawn
+//				-- inner ticks not redrawn until finished dragging)
+//				-- move linked rulers (moveScale(double value))
+//   * Mouse drag to rescale --> apply scale to content (content.getScale());
+//							--> apply scale to linked rulers...
+//
+//	 * Right click to bring up scale dialog (also change units here...)
+//	 * Click to change scale type (log or sqrt might be disabled)
+//
+//	 * Turn on/off numbering
+//   * NumberFormatting
+//   * Numbering orientation
+//   * Numbering width...
 
 public class Ruler extends JPanel {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 228962325800810360L;
-	Scale scale;
+
+	PlotArea<?> content;
+	ScaleMarks scaleMarks;
 	Font font = new Font("Monospaced", Font.PLAIN, 10);
+
+	Stroke divStroke = new BasicStroke();
+	Stroke smallStroke = new BasicStroke();
 	
-	int width = 50;
-
+	int divLength = 8;
+	int subdivLength = 2; 
+	
+	boolean isLabeled = true;
+	NumberFormat nf;	// null if automatic...
+	
 	private int height;
+	private double delta = Double.NaN;
 
-	public Ruler() {
-		scale = new Scale();
+	public Ruler(PlotArea<?> forContent) {
+		this.content = forContent;
+		
+		scaleMarks = new ScaleMarks();
 		setPreferredSize(new Dimension(width, 1));
 		setBackground(Color.WHITE);
 
@@ -55,53 +85,77 @@ public class Ruler extends JPanel {
 	}
 
 	public void setScale(double min, double max) {
-		setRuler(new Scale(min, max));
+		scaleMarks.updateDivs(min, max);
+		// TODO recalculate component minimum size...
 	}
-
-	public void setRuler(Scale setscale) {
-		scale=setscale;
-		repaint();
+	
+	public void setNumberFormat(NumberFormat nf) {
+		this.nf = nf;
 	}
-
+	
+	public void autoFormat() {
+		nf = null;
+	}
+	
 	@Override
 	public void paintComponent(Graphics g){
 		//AffineTransform upright = new AffineTransform();
 		//upright.rotate(Math.PI/2.0);
 		//font = font.deriveFont(upright);
-
+		
 		super.paintComponent(g);
-
+		
 		FontMetrics fm = g.getFontMetrics(font);
 		int fontheight=fm.getHeight();
 		setFont(font);
 
+		final ArrayList<Double> subdivs = scaleMarks.getDivisions();
+		
 		height = getHeight();
-	
-		int keepEvery=1;
-		double smalldiv=(height/(10*scale.range/scale.bigdiv));
-		if(smalldiv < 5 && smalldiv > 2.5) keepEvery = 2; 
-		if(smalldiv <= 2.5 ) keepEvery=5;
+		final double npix = height/subdivs.size();
 		
-		Vector<Double> divs = scale.smallDivisions;
+		// Figure out how many of the subdivisions to actually draw...
+		int subStep = 1;
+		if(npix < 5 && npix > 2.5) subStep = 2; 
+		else if(npix <= 2.5 ) subStep=5;
 		
-		for(int i=0; i<divs.size(); i += keepEvery) {
-			int y = getY(divs.get(i));
-			g.drawLine(0, y, 2, y);
+		final Graphics2D g2 = (Graphics2D) g;
+		g2.setStroke(smallStroke);
+		
+		// Draw subdivisions only if they are separated by at least 2 pixels...
+		if(npix > 0.4) for(int i=0; i<subdivs.size(); i += subStep) {
+			final int y = getY(subdivs.get(i));
+			g2.drawLine(0, y, subdivLength, y);
 		}
 		
-		divs = scale.bigDivisions;
+		// TODO separate handling of CUSTOM subdivisions....
+		
+		final ArrayList<Double> divs = scaleMarks.getDivisions();
+		g2.setStroke(divStroke);
+		
+		// Find what decimal resolution is necessary...
+		delta = Double.NaN;
 
-		for(int i=0; i<divs.size(); i++) {
-			double level = divs.get(i);
+		int lastLabelY = -1;
+		// TODO calculate what spacing is really necessary given some tilt...
+		
+		for(double level : divs) {
 			int y = getY(level);
-			g.drawLine(0, y, 8, y);
-			g.drawString(format(level), 10, y + fontheight / 2);
+			g2.drawLine(0, y, divLength, y);
+			
+			// TODO use font metrics to calculate proper centering...
+			if(isLabeled) if(y - lastLabelY > fontheight) {
+				g2.drawString(format(level), 10, y + fontheight / 2);
+				lastLabelY = y;
+			}
 		}	
+		
 
 	}
-	
+
 	public int getY(double level) {
-		return (int) Math.round(height * (1.0 - scale.getScaled(level)));
+		// TODO
+		return 1;
 	}
 	
 	public double getValue(int y) {
@@ -109,22 +163,25 @@ public class Ruler extends JPanel {
 		return f;
 	}
 		
+	protected void calcDelta() {
+		delta = Double.POSITIVE_INFINITY;
+		final ArrayList<Double> divs = scaleMarks.getDivisions();
+		double last = divs.get(divs.size() - 1);
+		for(int i=divs.size()-1; --i >= 0; ) {
+			final double current = divs.get(i);
+			final double d = Math.abs(last - current);
+			if(d > 0.0) if(d < delta) delta = d;
+			last = current;	
+		}
+	}
+	
 	public String format(double level) {
-		double L = Math.abs(level);
-		if(L == 0.0) return i1.format(level);
-		if(L < 10000.0 && L >= 10.0) return i1.format(level);
-		if(L >= 10000.0) e2.format(level);
-		if(L < 10.0 && L >= 0.1) return f1.format(level);
-		if(L < 0.1 && L >= 0.01) return f2.format(level);
-		if(L < 0.01 && L >= 0.001) return f3.format(level);
-		else return e1.format(level);
+		if(nf == null) {
+			if(Double.isNaN(delta)) calcDelta();
+			return Util.getDecimalFormat(level / delta).format(level);
+		}
+		else return nf.format(level);
 	}
 
 
-	final static DecimalFormat e1 = new DecimalFormat("0.0E0");
-	final static DecimalFormat e2 = new DecimalFormat("0.00E0");
-	final static DecimalFormat i1 = new DecimalFormat("0");
-	final static DecimalFormat f1 = new DecimalFormat("0.0");    
-	final static DecimalFormat f2 = new DecimalFormat("0.00");
-	final static DecimalFormat f3 = new DecimalFormat("0.000");
 }

@@ -26,8 +26,8 @@ package util.plot;
 
 import java.awt.*;
 
-
 import util.*;
+
 
 public class ColorBar extends PlotArea<FloatImageLayer> {
 	/**
@@ -51,7 +51,7 @@ public class ColorBar extends PlotArea<FloatImageLayer> {
 		this.width = width;
 		
 		//setBorder(Math.max(1, imager.border));
-		bar.scale = new Scale(0.0, 1.0);
+		bar.range = new Range(0.0, 1.0);
 		
 		setRotation(0.0);
 		

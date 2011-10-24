@@ -22,9 +22,11 @@
  ******************************************************************************/
 // Copyright (c) 2010 Attila Kovacs 
 
-package crush.gui;
+package crush.devel;
 
 import crush.*;
+import crush.gui.AstroImageLayer;
+import crush.gui.InfoPanel;
 import crush.sourcemodel.*;
 import util.*;
 import util.plot.AxisLabel;

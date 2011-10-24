@@ -47,4 +47,6 @@ public abstract class PlotLayer extends JComponent {
 	public void setTransparent(boolean value) {
 		transparent = value;
 	}
+	
+
 }

@@ -27,6 +27,10 @@ package util.plot;
 import java.awt.*;
 import javax.swing.*;
 
+// TODO
+// 	*	Right click --> make editable (Directly or through dialog)
+//  *	"%u" to symbolize unit...
+//  *	left click cycle through units/labels, or --> UnitLabel to change unit
 
 public class AxisLabel extends JPanel {
 	/**
