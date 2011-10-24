@@ -132,7 +132,7 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 				private static final long serialVersionUID = 4434473251287385757L;
 				SourceModel<InstrumentType, ScanType> scanSource = copy();
 			
-				public ExtractionThread(int capacity) { super(capacity); }
+				public ExtractionThread(Parallel<ScanType> p, int capacity) { super(p, capacity); }
 			}
 			
 		};
@@ -233,8 +233,8 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 		}
 		
 		return true;
-
-		
 	}
+	
+	public abstract void noParallel();
 	
 }

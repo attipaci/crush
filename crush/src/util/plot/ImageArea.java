@@ -31,7 +31,9 @@ public class ImageArea<ContentType extends ImageLayer> extends PlotArea<ContentT
 	private static final long serialVersionUID = -2517432416174422671L;
 
 	public ImageArea() {
+		// Fit the image into the plottable area...
 		zoomMode = ZOOM_FIT;
+		// Set the reference at the center of the plot...
 		referencePoint.set(0.5, 0.5);
 	}
 

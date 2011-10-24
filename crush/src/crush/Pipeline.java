@@ -39,7 +39,10 @@ public class Pipeline extends Thread {
 	
 	public Pipeline(CRUSH crush) {
 		this.crush = crush;
-		if(crush.source != null) scanSource = crush.source.copy();
+		if(crush.source != null) {
+			scanSource = crush.source.copy();
+			scanSource.noParallel();
+		}
 	}
 
 	public boolean hasOption(String name) {

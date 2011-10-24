@@ -92,6 +92,11 @@ public class Range {
 		if(value > max) max = value;		
 	}
 	
+	public void include(Range range) {
+		include(range.min);
+		include(range.max);
+	}
+	
 	public static Range parse(String text, boolean isPositive) {
 		Range range = new Range();
 		StringTokenizer tokens = new StringTokenizer(text, " \t:" + (isPositive ? "-" : ""));

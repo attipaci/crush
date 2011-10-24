@@ -25,6 +25,7 @@ package util.plot;
 
 import java.awt.*;
 
+// TODO Enclosing box. Ticks handled by ruler...
 
 public class CoordinateLayer extends PlotLayer {
 	/**

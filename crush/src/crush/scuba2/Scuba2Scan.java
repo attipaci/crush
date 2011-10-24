@@ -58,6 +58,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	@Override
 	public void read(String scanDescriptor, boolean readFully) throws IOException, HeaderCardException, FitsException, FileNotFoundException {
 		ArrayList<File> files = getFiles(scanDescriptor);
+
 		for(int i=0; i<files.size(); i++) {
 			File file = files.get(i);
 			Fits fits = getFits(file);
@@ -332,7 +333,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 
 		// Weather
 		
-		if(!hasOption("tau.186ghz")) tau186GHz = option("tau.186ghz").getDouble();
+		if(hasOption("tau.186ghz")) tau186GHz = option("tau.186ghz").getDouble();
 		else {
 			tau186GHz = 0.5 * (header.getDoubleValue("WVMTAUST") + header.getDoubleValue("WVMTAUEN"));
 			instrument.options.process("tau.186ghz", tau186GHz + "");

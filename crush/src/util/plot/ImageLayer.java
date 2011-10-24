@@ -46,7 +46,7 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	public Vector2D referenceIndex = new Vector2D();
 	public CoordinateSystem coordinateSystem;
 	public ColorScheme colorScheme = new GreyScale();
-	public Scale scale;
+	public Range range;
 
 	public boolean verbose = false;
 	
@@ -63,8 +63,12 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 		return toCoordinates;
 	}
 	
+	protected double getScaled(double value) {
+		return (value - range.min) / range.span();
+	}
+	
 	public int getRGB(double value) {
-		return Double.isNaN(value) ? colorScheme.noData : colorScheme.getRGB(scale.getScaled(value));
+		return Double.isNaN(value) ? colorScheme.noData : colorScheme.getRGB(getScaled(value));
 	}
 	
 	public void createBuffer(int width, int height) {
@@ -99,8 +103,7 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	}
 	
 	public void autoscale() {
-		Range range = getDataRange();
-		scale = new Scale(range.min, range.max);
+		range = getDataRange();
 		if(verbose) System.err.println("Setting scale to " + range);
 	}
 	
@@ -143,12 +146,12 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	}
 
 	@Override
-	public Vector2D getPlotRange() {
+	public Vector2D getPlotRanges() {
 		Point2D c1 = new Point2D.Double(0, 0);
 		Point2D c2 = new Point2D.Double(buffer.getWidth(), buffer.getHeight());
 		toCoordinates.transform(c1, c1);
 		toCoordinates.transform(c2, c2);
 		return new Vector2D(Math.abs(c2.getX() - c1.getX()), Math.abs(c2.getY() - c1.getY()));
 	}
-	
+
 }

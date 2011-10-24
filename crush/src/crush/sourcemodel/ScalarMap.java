@@ -109,6 +109,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		
 		for(Scan<?,?> scan : scans) map.scans.add(scan);	
 		
+		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
 		map.creatorVersion = CRUSH.getFullVersion();
 		map.sourceName = firstScan.sourceName;
@@ -713,6 +714,11 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	@Override
 	public Unit getUnit() {
 		return map.unit;
+	}
+
+	@Override
+	public void noParallel() {
+		map.noParallel();
 	}
 	
 }

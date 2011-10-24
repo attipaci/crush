@@ -318,5 +318,10 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 	@Override
 	public Unit getUnit() {
 		return template.getUnit();
+	}
+
+	@Override
+	public void noParallel() {
+		for(ScalarMap<?,?> map : pixelMap) map.noParallel();
 	}	
 }

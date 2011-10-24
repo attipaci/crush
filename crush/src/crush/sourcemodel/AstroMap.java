@@ -146,12 +146,10 @@ public class AstroMap extends AstroImage {
 
 
 	@Override
-	public void clear() {
-		super.clear();
-		for(int i=sizeX(); --i >= 0; ) {
-			Arrays.fill(weight[i], 0.0);
-			Arrays.fill(count[i], 0.0);
-		}
+	public void clear(int i, int  j) {
+		super.clear(i, j);
+		weight[i][j] = 0.0;
+		count[i][j] = 0.0;
 	}
 
 	@Override
@@ -162,12 +160,6 @@ public class AstroMap extends AstroImage {
 	
 	@Override
 	public double weightAt(int i, int j) { return weight[i][j]; }
-	
-	@Override
-	public void scale(int i, int j, double factor) {
-		data[i][j] *= factor;
-		weight[i][j] /= factor * factor;
-	}
 
 	public final void addPointAt(Vector2D mapOffset, final double value, final double g, final double w, final double time) {
 		double x = mapOffset.x;
@@ -191,43 +183,60 @@ public class AstroMap extends AstroImage {
 		count[i][j] += time;
 	}
 	
-	public synchronized void addDirect(AstroMap map, double w) {
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(map.flag[i][j] == 0) {
-			data[i][j] += w * map.weight[i][j] * map.data[i][j];
-			weight[i][j] += w * map.weight[i][j];
-			count[i][j] += map.count[i][j];
-			flag[i][j] = 0;
-		}
+	public synchronized void addDirect(final AstroMap map, final double w) {
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(map.flag[i][j] == 0) {
+					final double ww = w * map.weight[i][j];
+					data[i][j] += ww * map.data[i][j];
+					weight[i][j] += ww;
+					count[i][j] += map.count[i][j];
+					flag[i][j] = 0;
+				}
+			}
+		}.process();
 		integrationTime += map.integrationTime;
 	}
 
 	// Normalize assuming weighting was sigma weighting
 	public void normalize() {
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; )  {
-			if(weight[i][j] <= 0.0) {
-				data[i][j] = weight[i][j] = 0.0;
-				flag[i][j] = 1;
-			} 
-			else {
-				data[i][j] /= weight[i][j];	
-				flag[i][j] = 0;	    
-			}	    
-		}
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) { normalize(i, j); }
+		}.process();
 	}
 
+	public void normalize(int i, int j) { 
+		if(weight[i][j] <= 0.0) {
+			data[i][j] = weight[i][j] = 0.0;
+			flag[i][j] = 1;
+		} 
+		else {
+			data[i][j] /= weight[i][j];	
+			flag[i][j] = 0;	    
+		}
+	}
+	
 	@Override
 	protected void sanitize(int i, int j) {
-		flag[i][j] |= 1;
-		data[i][j] = weight[i][j] = 0.0;
+		super.sanitize(i, j);
+		weight[i][j] = 0.0;
 	}
 	
 	public void applyCorrection(double filtering, final double[][] significance) {
 		final double ifiltering = 1.0 / filtering;
 		final double filtering2 = filtering * filtering;
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(weight[i][j] > 0.0) if(significance[i][j] <= clippingS2N) {
-			data[i][j] *= ifiltering;
-			weight[i][j] *= filtering2;
-		}	
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(weight[i][j] > 0.0) if(significance[i][j] <= clippingS2N) {
+					data[i][j] *= ifiltering;
+					weight[i][j] *= filtering2;
+				}
+			}
+		}.process();
 	}
 
 	// It's important to completely reset clipped points, otherwise they can be used...
@@ -237,16 +246,26 @@ public class AstroMap extends AstroImage {
 	}
 	
 	public void clipAboveRelativeRMS(double maxRelativeRMS, double refPercentile) {
-		double[][] rms = getRMSImage().data;
-		double maxRMS = maxRelativeRMS * new AstroImage(rms).select(refPercentile);
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
-			if(rms[i][j] > maxRMS) flag[i][j] = 1;
+		final double[][] rms = getRMSImage().data;
+		final double maxRMS = maxRelativeRMS * new AstroImage(rms).select(refPercentile);
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j] == 0) if(rms[i][j] > maxRMS) flag[i][j] = 1;
+			}
+		}.process();
 	}
 	
-	public void clipAboveRMS(double value) {
-		double[][] rms = getRMSImage().data;
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
-			if(rms[i][j] > value) flag[i][j] = 1;
+	public void clipAboveRMS(final double value) {
+		final double[][] rms = getRMSImage().data;
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j] == 0) if(rms[i][j] > value) flag[i][j] = 1;
+			}
+		}.process();
 	}
 	
 	public void clipBelowRelativeExposure(double minRelativeExposure) {
@@ -258,38 +277,60 @@ public class AstroMap extends AstroImage {
 		clipBelowExposure(minIntTime);
 	}
 	
-	public void clipBelowExposure(double minIntTime) {
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
-			if(count[i][j] < minIntTime) flag[i][j] = 1;
+	public void clipBelowExposure(final double minIntTime) {
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j] == 0) if(count[i][j] < minIntTime) flag[i][j] = 1;
+			}
+		}.process();
 	}
 
-	public void s2nClipBelow(double level) {
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
-			if(data[i][j] / getRMS(i,j) < level) flag[i][j] = 1;
+	public void s2nClipBelow(final double level) {
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j] == 0) if(data[i][j] / getRMS(i,j) < level) flag[i][j] = 1;
+			}
+		}.process();
 	}
 
-	public void s2nClipAbove(double level) {
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
-			if(data[i][j] / getRMS(i,j) > level) flag[i][j] = 1;
+	public void s2nClipAbove(final double level) {
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j] == 0) if(data[i][j] / getRMS(i,j) > level) flag[i][j] = 1;
+			}
+		}.process();
 	}
 	
-	public boolean[][] getMask(double minS2N, int minNeighbours) {
-		boolean[][] mask = new boolean[sizeX()][sizeY()];
+	public boolean[][] getMask(final double minS2N, final int minNeighbours) {
+		final boolean[][] mask = new boolean[sizeX()][sizeY()];
 		
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) if(data[i][j] / getRMS(i,j) > minS2N) mask[i][j] = true;
-		
-		if(minNeighbours > 0) {
-			boolean[][] cleaned = new boolean[sizeX()][sizeY()];
-			
-			for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(mask[i][j]) {
-				int neighbours = -1;
-				final int fromi = Math.max(0, i-1);
-				final int toi = Math.min(sizeX(), i+1);
-				final int fromj = Math.max(0, j-1);
-				final int toj = Math.min(sizeY(), j+1);
-				for(int i1=toi; --i1 >= fromi; ) for(int j1=toj; --j1 >= fromj; ) if(mask[i1][j1]) neighbours++;
-				if(neighbours >= minNeighbours) cleaned[i][j] = true;
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j] == 0) if(data[i][j] / getRMS(i,j) > minS2N) mask[i][j] = true;
 			}
+		}.process();
+			
+		if(minNeighbours > 0) {
+			final boolean[][] cleaned = new boolean[sizeX()][sizeY()];
+		
+			new Task<Void>() {
+				@Override
+				public void process(int i, int j) {
+					if(mask[i][j]) {
+						int neighbours = -1;
+						final int fromi = Math.max(0, i-1);
+						final int toi = Math.min(sizeX(), i+1);
+						final int fromj = Math.max(0, j-1);
+						final int toj = Math.min(sizeY(), j+1);
+						for(int i1=toi; --i1 >= fromi; ) for(int j1=toj; --j1 >= fromj; ) if(mask[i1][j1]) neighbours++;
+						if(neighbours >= minNeighbours) cleaned[i][j] = true;
+					}
+				}
+			}.process();
 			return cleaned;
 		}
 		
@@ -328,6 +369,7 @@ public class AstroMap extends AstroImage {
 		
 		final Vector2D v = new Vector2D();
 		
+		// TODO redo with parallel once valueAtIndex is concurrent...
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) {
 			v.set(i, j);
 			toOffset(v);
@@ -349,16 +391,28 @@ public class AstroMap extends AstroImage {
 	}
 	
 	public AstroImage getS2NImage() {
-		AstroImage image = getRMSImage();
-		image.contentType = "S/N";
-		image.unit = Unit.unity;
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) image.data[i][j] = data[i][j] / image.data[i][j]; 
-		return image;
+		final AstroImage rms = getRMSImage();
+		rms.contentType = "S/N";
+		rms.unit = Unit.unity;
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				rms.data[i][j] = data[i][j] / rms.data[i][j]; 
+			}
+		}.process();
+	
+		return rms;
 	}
 	
 	public AstroImage getRMSImage() {
-		double[][] rms = new double[sizeX()][sizeY()];
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) rms[i][j] = getRMS(i,j);
+		final double[][] rms = new double[sizeX()][sizeY()];
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) { rms[i][j] = getRMS(i,j); }
+		}.process();
+		
 		return getImage(rms, "Noise", unit);
 	}
 	
@@ -395,13 +449,34 @@ public class AstroMap extends AstroImage {
 	}
 	
 	public double getTypicalRMS() {
-		double sumw = 0.0;
-		int n = 0;
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			sumw += 1.0 / weight[i][j];
-			n++;
-		}
-		return Math.sqrt(n/sumw);
+		Task<WeightedPoint> var = new Task<WeightedPoint>() {
+			private double sumiw = 0.0;
+			private int n = 0;
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j] == 0) {
+					sumiw += 1.0 / weight[i][j];
+					n++;
+				}
+			}
+			@Override
+			public WeightedPoint getPartialResult() { return new WeightedPoint(sumiw, n); }
+			@Override
+			public WeightedPoint getResult() {
+				WeightedPoint result = new WeightedPoint();
+				for(Task<WeightedPoint> task : parent.tasks) {
+					WeightedPoint partial = task.getPartialResult();
+					result.value += partial.value;
+					result.weight += partial.weight;
+				}
+				return result;
+			}
+		};
+			
+		var.process();
+		WeightedPoint result = var.getResult();
+			
+		return Math.sqrt(result.weight/result.value);
 	}
 	
 	public void filterCorrect() {
@@ -412,9 +487,16 @@ public class AstroMap extends AstroImage {
 		undoFilterCorrect(instrument.resolution, getSkip(filterBlanking));
 	}
 				
-	public int[][] getSkip(double blankingValue) {
-		int[][] skip = (int[][]) copyOf(flag);
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(getS2N(i,j) > blankingValue) skip[i][j] = 1;
+	public int[][] getSkip(final double blankingValue) {
+		final int[][] skip = (int[][]) copyOf(flag);
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(getS2N(i,j) > blankingValue) skip[i][j] = 1;
+			}
+		}.process();
+		
 		return skip;
 	}
 	
@@ -430,6 +512,7 @@ public class AstroMap extends AstroImage {
 	}
 
 
+	// TODO redo with parallel...
 	public double getMeanIntegrationTime() {
 		double sum = 0.0, sumw = 0.0;
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
@@ -437,28 +520,6 @@ public class AstroMap extends AstroImage {
 			sumw += weight[i][j];
 		}
 		return sum > 0.0 ? sum/sumw : 0.0;
-	}
-	
-	@Override
-	public void scale(final double scalar) {
-		if(scalar == 1.0) return;		
-		final double iscalar2 = 1.0 / (scalar*scalar);
-		
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) {
-			data[i][j] *= scalar;
-			weight[i][j] *= iscalar2;
-		}
-	}  
-	
-	@Override
-	public double mean() {
-		double sum = 0.0, sumw = 0.0;
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			final double w = weight[i][j];
-			sum += w * data[i][j];
-			sumw += w;
-		}
-		return sum / sumw;
 	}
 	
 	@Override
@@ -478,9 +539,15 @@ public class AstroMap extends AstroImage {
 		weightScale(1.0 / (scalar*scalar));
 	}
 
-	public void weightScale(double scalar) {
+	public void weightScale(final double scalar) {
 		if(scalar == 1.0) return;
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) weight[i][j] *= scalar;
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				weight[i][j] *= scalar;
+			}
+		}.process();
 	}
 
 	public void weight(boolean robust) {
@@ -514,6 +581,7 @@ public class AstroMap extends AstroImage {
 		return k > 0 ? 0.454937 / Statistics.median(chi2, 0, k) : Double.NaN;	
 	}
 
+	// TODO redo in parallel...
 	protected double getChi2() {
 		double chi2 = 0.0;
 		int n=0;
@@ -546,12 +614,17 @@ public class AstroMap extends AstroImage {
 		MEM(smoothed, lambda);
 	}
 		
-	public void MEM(double[][] model, double lambda) {
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			final double sigma = Math.sqrt(1.0/weight[i][j]);
-			final double memValue = Math.hypot(sigma, data[i][j]) / Math.hypot(sigma, model[i][j]) ;
-			data[i][j] -= Math.signum(data[i][j]) * lambda * sigma * Math.log(memValue);
-		}
+	public void MEM(final double[][] model, final double lambda) {
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j] == 0) {
+					final double sigma = Math.sqrt(1.0/weight[i][j]);
+					final double memValue = Math.hypot(sigma, data[i][j]) / Math.hypot(sigma, model[i][j]) ;
+					data[i][j] -= Math.signum(data[i][j]) * lambda * sigma * Math.log(memValue);
+				}
+			}
+		}.process();
 	}
 	
 	
@@ -623,7 +696,12 @@ public class AstroMap extends AstroImage {
 		noise.unit = unit;
 		noise.setImage(HDU[2]);
 		
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) weight[i][j] = 1.0 / (weight[i][j] * weight[i][j]); 
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				weight[i][j] = 1.0 / (weight[i][j] * weight[i][j]); 
+			}
+		}.process();
 	}
 
 
@@ -666,10 +744,10 @@ public class AstroMap extends AstroImage {
 		header.dumpHeader(System.out);
 	}      
 
-	
-	public void despike(double significance) {
-		double[][] neighbours = {{ 0, 1, 0 }, { 1, 0, 1 }, { 0, 1, 0 }};
-		AstroMap diff = (AstroMap) copy();
+	// TODO redo with parallel...
+	public void despike(final double significance) {
+		final double[][] neighbours = {{ 0, 1, 0 }, { 1, 0, 1 }, { 0, 1, 0 }};
+		final AstroMap diff = (AstroMap) copy();
 		diff.smooth(neighbours);
 		
 		WeightedPoint point = new WeightedPoint();

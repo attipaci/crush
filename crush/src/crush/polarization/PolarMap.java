@@ -306,9 +306,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 			
 			ScalarMap<InstrumentType, ScanType> F = getPolarFraction(P, I, accuracy);
 			F.write(path, false);
-		}
-		
-		
+		}	
 	}
 
 	@Override
@@ -319,6 +317,13 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	@Override
 	public Unit getUnit() {
 		return N.getUnit();
+	}
+
+	@Override
+	public void noParallel() {
+		if(N != null) N.noParallel();
+		if(Q != null) Q.noParallel();
+		if(U != null) U.noParallel();
 	}
 	
 

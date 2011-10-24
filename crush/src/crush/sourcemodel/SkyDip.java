@@ -185,5 +185,11 @@ public class SkyDip<InstrumentType extends Instrument<?>, ScanType extends Scan<
 	public Unit getUnit() {
 		return Unit.get("K");
 	}
+
+	@Override
+	public void noParallel() {
+		// TODO Auto-generated method stub
+		
+	}
 	
 }
