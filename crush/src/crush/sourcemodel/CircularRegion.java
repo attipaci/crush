@@ -118,13 +118,13 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		double significance = map.getS2N(index.i, index.j);
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
-			if(map.flag[i][j] == 0) if(map.getS2N(i,j) > significance) if(isInside(map.grid, i, j)) {
+			if(map.isUnflagged(i, j)) if(map.getS2N(i,j) > significance) if(isInside(map.grid, i, j)) {
 				significance = map.getS2N(i,j);
 				index.i = i;
 				index.j = j;				
 			}
 		
-		if(map.flag[index.i][index.j] != 0) throw new IllegalStateException("No valid peak in search area. ");
+		if(map.isFlagged(index.i, index.j)) throw new IllegalStateException("No valid peak in search area. ");
 		
 		centerIndex.x = index.i;
 		centerIndex.y = index.j;
@@ -144,12 +144,12 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 			
 		double y0 = map.getS2N(i,j);
 	
-		if(i>0 && i<map.sizeX()-1) if((map.flag[i+1][j] | map.flag[i-1][j]) == 0) {
+		if(i>0 && i<map.sizeX()-1) if((map.getFlag(i+1, j) | map.getFlag(i-1, j)) == 0) {
 			a = 0.5 * (map.getS2N(i+1,j) + map.getS2N(i-1,j)) - y0;
 			c = 0.5 * (map.getS2N(i+1,j) - map.getS2N(i-1,j));
 		}
 		
-		if(j>0 && j<map.sizeY()-1) if((map.flag[i][j+1] | map.flag[i][j-1]) == 0) {
+		if(j>0 && j<map.sizeY()-1) if((map.getFlag(i, j+1) | map.getFlag(i, j-1)) == 0) {
 			b = 0.5 * (map.getS2N(i,j+1) + map.getS2N(i,j-1)) - y0;
 			d = 0.5 * (map.getS2N(i,j+1) - map.getS2N(i,j-1));
 		}

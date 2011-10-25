@@ -96,8 +96,8 @@ public class PolygonalRegion extends Region {
 		Bounds bounds = getBounds(image);
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
-			if(image.flag[i][j] == 0) if(isInside(image.grid, i, j)) {
-				flux.value += image.data[i][j];
+			if(image.isUnflagged(i, j)) if(isInside(image.grid, i, j)) {
+				flux.value += image.getValue(i, j);
 				flux.weight += image.weightAt(i, j);
 			}
 		
@@ -114,9 +114,9 @@ public class PolygonalRegion extends Region {
 		Bounds bounds = getBounds(image);
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
-			if(image.flag[i][j] == 0) if(isInside(image.grid, i, j)) {
+			if(image.isUnflagged(i, j)) if(isInside(image.grid, i, j)) {
 				final double weight = image.weightAt(i, j);
-				sum += weight * image.data[i][j];
+				sum += weight * image.getValue(i, j);
 				sumw += weight;
 			}
 			
@@ -130,8 +130,8 @@ public class PolygonalRegion extends Region {
 		double var = 0.0;
 		int n = 0;
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
-			if(image.flag[i][j] == 0) if(isInside(image.grid, i, j)) {
-				double value = image.data[i][j] - level;
+			if(image.isUnflagged(i, j)) if(isInside(image.grid, i, j)) {
+				double value = image.getValue(i, j) - level;
 				var += value * value;
 				n++;
 			}

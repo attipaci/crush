@@ -484,9 +484,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 
 
 	@Override
-	public void setBase() {
-		for(int i=0; i<map.sizeX(); i++) System.arraycopy(map.data[i], 0, base[i], 0, map.sizeY());
-	}
+	public void setBase() { map.copyTo(base); }
 
 	@Override
 	public void reset() {
@@ -551,7 +549,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	}
 	
 	protected double getIncrement(final Index2D index, final Channel channel, final double oldG, final double G) {
-		return G * map.data[index.i][index.j] - oldG * base[index.i][index.j];	
+		return G * map.getValue(index.i, index.j) - oldG * base[index.i][index.j];	
 	}
 	
 	@Override
@@ -588,7 +586,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 				if(isMasked(index)) for(final Channel channel : pixel) {
 					final int c = channel.index;
 					if((exposure.sampleFlag[c] & Frame.SAMPLE_SKIP) == 0) {
-						final double mapValue = fG * sourceGain[c] * map.data[i][j];
+						final double mapValue = fG * sourceGain[c] * map.getValue(i, j);
 						final double value = exposure.data[c] + fG * syncGain[c] * base[i][j];;
 						sumIM[c] += exposure.relativeWeight * value * mapValue;
 						sumM2[c] += exposure.relativeWeight * mapValue * mapValue;			

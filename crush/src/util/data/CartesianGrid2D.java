@@ -29,7 +29,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import util.*;
 
-public class SimpleGrid2D implements Grid2D<Vector2D> {
+public class CartesianGrid2D implements Grid2D<Vector2D> {
 	public Vector2D reference = new Vector2D(), refIndex = new Vector2D();
 	public Vector2D delta = new Vector2D(1.0, 1.0);
 
@@ -40,8 +40,8 @@ public class SimpleGrid2D implements Grid2D<Vector2D> {
 	}
 
 	public boolean equals(Object o, double precision) {
-		if(!(o instanceof SimpleGrid2D)) return false;
-		SimpleGrid2D grid = (SimpleGrid2D) o;
+		if(!(o instanceof CartesianGrid2D)) return false;
+		CartesianGrid2D grid = (CartesianGrid2D) o;
 		if(Math.abs(grid.delta.x / delta.x - 1.0) > precision) return false;
 		if(Math.abs(grid.delta.y / delta.y - 1.0) > precision) return false;
 		if(Math.abs(grid.reference.x / reference.x - 1.0) > precision) return false;
@@ -57,7 +57,7 @@ public class SimpleGrid2D implements Grid2D<Vector2D> {
 	}
 	
 	public Grid2D<Vector2D> copy() {
-		SimpleGrid2D copy = (SimpleGrid2D) clone();
+		CartesianGrid2D copy = (CartesianGrid2D) clone();
 		if(delta != null) copy.delta = (Vector2D) delta.clone();
 		if(reference != null) copy.reference = (Vector2D) reference.clone();
 		if(refIndex != null) copy.refIndex = (Vector2D) refIndex.clone();

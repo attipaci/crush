@@ -1,4 +1,12 @@
->> SCUBA-2 inline conversion issues... (race condition?)
+>> Data2D (.Float?, .Double?) 
+	-> Map2D (.Float?, .Double?)
+
+   GridData2D<ImageType, GridType> (contains an image and a grid)
+	-> AstroData<ImageType> (GridType=SphericalGrid)
+		-> AstroImage (ImageType=Data2D)
+		-> AstroMap (ImageType=Map2D)
+	-> CartesianData2D<ImageType> (GridType=CartesianGrid)
+		-> CartesianMap2D (ImageType=Map2D)
 
 >> 'whiten.multires'?
 

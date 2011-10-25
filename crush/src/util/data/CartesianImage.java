@@ -23,34 +23,34 @@
 
 package util.data;
 
-public class SimpleImage extends GridImage<SimpleGrid2D> {
+public class CartesianImage extends GridImage<CartesianGrid2D> {
 
-	SimpleGrid2D grid;
+	CartesianGrid2D grid;
 
 	
-	public SimpleImage() {
+	public CartesianImage() {
 		super();
 	}
 
-	public SimpleImage(double[][] data, int[][] flag) {
+	public CartesianImage(double[][] data, int[][] flag) {
 		super(data, flag);
 	}
 
-	public SimpleImage(double[][] data) {
+	public CartesianImage(double[][] data) {
 		super(data);
 	}
 
-	public SimpleImage(int sizeX, int sizeY) {
+	public CartesianImage(int sizeX, int sizeY) {
 		super(sizeX, sizeY);
 	}
 
 	@Override
-	public SimpleGrid2D getGrid() {
+	public CartesianGrid2D getGrid() {
 		return grid;
 	}
 
 	@Override
-	public void setGrid(SimpleGrid2D grid) {
+	public void setGrid(CartesianGrid2D grid) {
 		this.grid = grid;
 		double fwhm = Math.sqrt(grid.getPixelArea()) / GridImage.fwhm2size;
 		if(smoothFWHM < fwhm) smoothFWHM = fwhm;

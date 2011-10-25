@@ -65,7 +65,7 @@ public class EllipticalSource extends GaussianSource {
 		
 		double m0 = 0.0, m2c = 0.0, m2s = 0.0;
 		
-		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.flag[i][j] == 0) {
+		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.isUnflagged(i, j)) {
 			double p = Math.abs(map.getS2N(i,j));
 			//p *= p;
 			double theta = 2.0 * Math.atan2(j - center.y, i - center.x);

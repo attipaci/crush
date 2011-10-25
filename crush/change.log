@@ -35,6 +35,9 @@
 
 	[CODE] {GISMO} PointingTable.Entry made into proper inner class.
 
+	[CODE] Made access to images more convetional by restrincting direct
+	access to fields, and using convenience methods instead.
+
 	[CLEANUP] Removed obsoleted key 'whiten.neighbours' from configuration.
 
 
