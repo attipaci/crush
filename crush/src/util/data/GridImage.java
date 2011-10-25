@@ -24,7 +24,6 @@
 package util.data;
 
 import java.io.*;
-import java.util.Arrays;
 
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -143,29 +142,34 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		refIndex.y -= jmin;
 	}
 	
-	public void growFlags(double radius, int pattern) {
+	public void growFlags(final double radius, final int pattern) {
 		if(verbose) System.err.println("Growing flagged areas.");
 		
-		double dx = getGrid().pixelSizeX();
-		double dy = getGrid().pixelSizeY();
+		final double dx = getGrid().pixelSizeX();
+		final double dy = getGrid().pixelSizeY();
 		
-		int di = (int)Math.ceil(radius / dx);
-		int dj = (int)Math.ceil(radius / dy);
+		final int di = (int)Math.ceil(radius / dx);
+		final int dj = (int)Math.ceil(radius / dy);
 		
 		final int sizeX = sizeX();
 		final int sizeY = sizeY();
-		
-		for(int i=sizeX; --i >= 0; ) for(int j=sizeY; --j >= 0; ) if((flag[i][j] & pattern) != 0) {
-			final int fromi1 = Math.max(0, i-di);
-			final int fromj1 = Math.max(0, j-dj);
-			final int toi1 = Math.max(sizeX, i+di+1);
-			final int toj1 = Math.max(sizeY, j+dj+1);
-			final int matchPattern = flag[i][j] & pattern;
-			
-			// TODO for sheared grids...
-			for(int i1 = toi1; --i1 >= fromi1; ) for(int j1 = toj1; --j1 >= fromj1; ) 
-				if(Math.hypot((i-i1) * dx, (j-j1) * dy) <= radius) flag[i1][j1] |= matchPattern;
-		}
+
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if((flag[i][j] & pattern) != 0) {
+					final int fromi1 = Math.max(0, i-di);
+					final int fromj1 = Math.max(0, j-dj);
+					final int toi1 = Math.max(sizeX, i+di+1);
+					final int toj1 = Math.max(sizeY, j+dj+1);
+					final int matchPattern = flag[i][j] & pattern;
+					
+					// TODO for sheared grids...
+					for(int i1 = toi1; --i1 >= fromi1; ) for(int j1 = toj1; --j1 >= fromj1; ) 
+						if(Math.hypot((i-i1) * dx, (j-j1) * dy) <= radius) flag[i1][j1] |= matchPattern;
+				}
+			}
+		}.process();
 	}
 	
 	
@@ -209,12 +213,17 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 	public void filterAbove(double FWHM) { filterAbove(FWHM, flag); }
 
 	public void filterAbove(double FWHM, int[][] skip) {
-		GridImage<?> extended = (GridImage<?>) copy();
+		final GridImage<?> extended = (GridImage<?>) copy();
 		extended.flag = skip;
 		extended.smoothTo(FWHM);
 	
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) data[i][j] -= extended.data[i][j];		
-
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				data[i][j] -= extended.data[i][j];
+			}
+		}.process();
+		
 		if(Double.isNaN(extFilterFWHM)) extFilterFWHM = FWHM;
 		else extFilterFWHM = 1.0/Math.sqrt(1.0/(extFilterFWHM * extFilterFWHM) + 1.0/(FWHM*FWHM));
 	}
@@ -222,7 +231,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 	//	 8/20/07 Changed to use blanking 
 	//         Using Gaussian taper.
 	//         Robust re-levelling at the end.
-	public void fftFilterAbove(double FWHM, int[][] skip) {
+	public void fftFilterAbove(double FWHM, final int[][] skip) {
 		// sigma_x sigma_w = 1
 		// FWHM_x sigma_w = 2.35
 		// FWHM_x * 2Pi sigma_f = 2.35
@@ -235,18 +244,24 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		
 		final double[][] extended = new double[sizeX()][sizeY()];
 		
-		double avew = 0.0;
-		int n=0;
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {	
-			if(skip[i][j] > 0) extended[i][j] = 0.0;
-			else {
-				double w = weightAt(i, j);
-				extended[i][j] = w * data[i][j];
-				avew += w;
-				n++;
+		Task<WeightedPoint> ecalc = new AveragingTask() {
+			private double sumw = 0.0;
+			private int n = 0;
+			@Override
+			public void process(final int i, final int j) {
+				if(flag[i][j] != 0) return;	
+				if(skip[i][j] > 0) extended[i][j] = 0.0;
+				else {
+					final double w = weightAt(i, j);
+					extended[i][j] = w * data[i][j];
+					sumw += w;
+					n++;
+				}
 			}
-		}
-		if(n > 0) avew /= n;	
+			@Override
+			public WeightedPoint getPartialResult() { return new WeightedPoint(sumw, n); }
+		};
+		ecalc.process();
 		
 		Complex[][] cdata = FFT.load(extended);
 		FFT.uncheckedForward(cdata, true);
@@ -282,29 +297,48 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		FFT.uncheckedForward(cdata, false);
 		FFT.unload(cdata, extended);
 	
-		if(avew > 0.0) for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; )
-			data[i][j] -= extended[i][j] / avew;
+		double avew = ecalc.getResult().value;
+		if(avew > 0.0) {
+			final double norm = 1.0 / avew;
+			new Task<Void>() {
+				@Override
+				public void process(int i, int j) {
+					data[i][j] -= norm * extended[i][j];
+				}
+			}.process();
+		}
 		
-
 		if(Double.isNaN(extFilterFWHM)) extFilterFWHM = FWHM;
 		else extFilterFWHM = 1.0/Math.sqrt(1.0/(extFilterFWHM * extFilterFWHM) + 1.0/(FWHM*FWHM));
 	}
 	
 	
-	public void filterCorrect(double FWHM, int[][] skip) {
+	public void filterCorrect(double FWHM, final int[][] skip) {
 		if(!Double.isNaN(correctingFWHM)) return;
 		
 		final double filterC = getExtFilterCorrectionFactor(FWHM);
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(skip[i][j] == 0) scale(i, j, filterC);
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(skip[i][j] == 0) scale(i, j, filterC);
+			}
+		}.process();
 		
 		correctingFWHM = FWHM;
 	}
 	
-	public void undoFilterCorrect(double FWHM, int[][] skip) {
+	public void undoFilterCorrect(double FWHM, final int[][] skip) {
 		if(!Double.isNaN(correctingFWHM)) return;
 		
 		final double iFilterC = getExtFilterCorrectionFactor(FWHM);
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(skip[i][j] == 0) scale(i, j, iFilterC);
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(skip[i][j] == 0) scale(i, j, iFilterC);
+			}
+		}.process();
 		
 		correctingFWHM = Double.NaN;
 	}
@@ -330,14 +364,21 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 			from.smoothTo(smoothFWHM);
 		}
 		
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) {
-			v.set(i, j);
-			toOffset(v);
-			from.toIndex(v);
+		final GridImage<?> antialiased = from;
 		
-			data[i][j] = from.valueAtIndex(v.x, v.y);
-			if(Double.isNaN(data[i][j])) flag[i][j] = 1;
-		}
+		new InterpolatingTask() {
+			@Override
+			public void process(int i, int j) { 
+				if(flag[i][j]==0) {
+					v.set(i, j);
+					toOffset(v);
+					antialiased.toIndex(v);
+				
+					data[i][j] = antialiased.valueAtIndex(v.x, v.y, getInterpolatorData());
+					if(Double.isNaN(data[i][j])) flag[i][j] = 1;
+				}				
+			}
+		}.process();
 	}
 	
 	public GridImage<GridType> getRegrid(final double resolution) throws IllegalStateException {
@@ -395,10 +436,9 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		GridImage<GridType> regrid = (GridImage<GridType>) clone();
 		regrid.setGrid(toGrid);
 		regrid.setSize(nx, ny);
-		
+		regrid.fillFlag(1);
 		regrid.resample(this);
-		
-		sanitize();
+		regrid.sanitize();
 		
 		return regrid;
 	}
@@ -575,30 +615,41 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		
 	public void setImage(BasicHDU HDU) throws FitsException {		
 		Object image = HDU.getData().getData();
-		for(int i=sizeX(); --i >= 0; ) Arrays.fill(flag[i], 0);
-
+		noFlag();
+	
 		try {
 			final float[][] fdata = (float[][]) image;
-			for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) {
-				if(Float.isNaN(fdata[j][i])) flag[i][j] |= 1;
-				else data[i][j] = fdata[j][i] * unit.value;	    
-			}
+			new Task<Void>() {
+				@Override
+				public void process(int i, int j) {
+					if(Float.isNaN(fdata[j][i])) flag[i][j] |= 1;
+					else data[i][j] = fdata[j][i] * unit.value;	    
+				}
+			}.process();
 		}
 		catch(ClassCastException e) {
 			final double[][] ddata = (double[][]) image;
-			for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) {
-				if(Double.isNaN(ddata[j][i])) flag[i][j] |= 1;
-				else data[i][j] = ddata[j][i] * unit.value;	    
-			}				
+			new Task<Void>() {
+				@Override
+				public void process(int i, int j) {
+					if(Double.isNaN(ddata[j][i])) flag[i][j] |= 1;
+					else data[i][j] = ddata[j][i] * unit.value;	    
+				}
+			}.process();
 		}
 	}
 
 	public ImageHDU createHDU() throws HeaderCardException, FitsException {
-		float[][] fitsImage = new float[sizeY()][sizeX()];
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) {
-			if(flag[i][j] == 0.0) fitsImage[j][i] = (float) (data[i][j] / unit.value);
-			else fitsImage[j][i] = Float.NaN;
-		}
+		final float[][] fitsImage = new float[sizeY()][sizeX()];
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j] == 0.0) fitsImage[j][i] = (float) (data[i][j] / unit.value);
+				else fitsImage[j][i] = Float.NaN;
+			}
+		}.process();
+		
 		ImageHDU hdu = (ImageHDU)Fits.makeHDU(fitsImage);
 
 		hdu.addValue("EXTNAME", contentType, "The type of data contained in this HDU");

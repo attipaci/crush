@@ -36,16 +36,21 @@ public abstract class Interpolator extends ArrayList<Interpolator.Data> {
 	private static final long serialVersionUID = -7962217110619389946L;
 	public boolean verbose = false;
 	
-	public String fileName;
+	public String fileName = "";
 	
 	public Interpolator(String fileName) throws IOException {
-		readData(fileName);
-		this.fileName = fileName;
+		read(fileName);
 		if(verbose) System.err.println(getClass().getSimpleName() + "> " + size() + " records parsed.");	
 		Collections.sort(this);
 	}
 	
-	public abstract void readData(String fileName) throws IOException; 
+	public void read(String fileName) throws IOException {
+		if(fileName.equals(this.fileName)) return;
+		readData(fileName);
+		this.fileName = fileName;
+	}
+	
+	protected abstract void readData(String fileName) throws IOException; 
 	
 	// Linear interpolation.
 	// Throws Exception if MJD is outside of the interpolator range.

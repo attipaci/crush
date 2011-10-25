@@ -291,9 +291,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void setScaling() {
 		try { setScaling(option("scale").getDouble()); }
 		catch(NumberFormatException noworry) {
-			instrument.setCalibrationTable(Util.getSystemPath(option("scale").getValue()));
-			try { setScaling(1.0 / instrument.calibrationTable.getValue(getMJD())); }
+			String calName = Util.getSystemPath(option("scale").getValue());
+			try { setScaling(1.0 / CalibrationTable.get(calName).getValue(getMJD())); }
 			catch(ArrayIndexOutOfBoundsException e) { System.err.println("     WARNING! " + e.getMessage()); }
+			catch(IOException e) { System.err.println("WARNING! Calibration table could not be read."); }
 		}
 	}
 
@@ -314,9 +315,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			String scaling = source.toLowerCase();
 			if(hasOption("tau." + scaling)) setTau(scaling, option("tau." + scaling).getDouble());
 			else {
-				instrument.setTauInterpolator(Util.getSystemPath(option("tau").getValue()));
-				try { setTau(instrument.tauInterpolator.getValue(getMJD())); }
-				catch(Exception e) { System.err.println("     WARNING! " + e.getMessage()); }
+				String tauName = Util.getSystemPath(option("tau").getValue());
+				try { setTau(TauInterpolator.get(tauName).getValue(getMJD())); }
+				catch(ArrayIndexOutOfBoundsException e) { System.err.println("     WARNING! " + e.getMessage()); }
+				catch(IOException e) { System.err.println("WARNING! Tau interpolator table could not be read."); }
 			}
 		}
 		catch(Exception e) { 

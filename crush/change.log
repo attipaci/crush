@@ -1,14 +1,31 @@
->> SCUBA-2 module to version 3 (change.log!)
->> Test why on-the-fly conversion makes trouble...
-
+>> SCUBA-2 module to version 4 (change.log, web-page!)
+>> Finish parallel in Data2D, GridImage, AstroImage, AstroMap...
 
 	[NEW] Introducing a parallel processing framework for images. The goal 
 	is to speed up image processing functionality on modern multicore 
 	systems. Most image operations are now utilizing all available CPU 
-	power.
+	power. This will result in a small gain for reduction purposes, but 
+	should make the upcoming new 'show', 'imagetool' (etc.) more 
+	responsive, especially when handling large images...
+
+	[FIX] {GISMO} 'pointing.model' and 'pointing.log' now accept path
+	specifications with shell variables. (Prior to the fix only literal 
+	paths were processed).
+
+	[FIX] {SCUBA-2} Fixed error when both an SDF and a FITS file are 
+	present for the same scan and in the same location.
 
 	[FIX] {SCUBA-2} Updated the SCUBA-2 proprietary module to work with
-	CRUSH v2.10.
+	CRUSH v2.10 (module Version 4).
+
+	[TWEAK] Calibration and tau tables are loaded as necessary and stay
+	persistent. This speeds up the reading of sets of scans using the same 
+	data.
+
+	[TWEAK] {GISMO} Pointing logs are loaded as necessary and persists, 
+	making the reading of multiple scans more efficient.
+
+	[TWEAK] Motion filter frequency range restricted to <1Hz.
 
 	[TWEAK] Slightly tweaked 'faint' despiking settings, reverting to
 	more stringent despiking of faint sources. Even more so for GISMO.
@@ -16,7 +33,10 @@
 	[TWEAK] {GISMO} 'deep' reductions to whiten more aggressively than
 	usual.
 
+	[CODE] {GISMO} PointingTable.Entry made into proper inner class.
+
 	[CLEANUP] Removed obsoleted key 'whiten.neighbours' from configuration.
+
 
 
 2.10-1 (15 Oct 2011)

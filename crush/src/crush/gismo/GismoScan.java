@@ -84,12 +84,11 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	public Vector2D getPointingCorrection(Configurator option) {
 		Vector2D correction = super.getPointingCorrection(option);
 		IRAMPointingModel model = null;
-		Gismo gismo = (Gismo) instrument;
 		
 		if(option.isConfigured("model")) {
 			try { 
 				double UT = (MJD % 1.0) * Unit.day;
-				model = new IRAMPointingModel(option.get("model").getValue());
+				model = new IRAMPointingModel(Util.getSystemPath(option.get("model").getValue()));
 						
 				if(option.isConfigured("model.static")) model.setStatic(true);
 				
@@ -111,10 +110,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			
 		if(option.isConfigured("log")) {
 			try { 
-				System.err.print("   ");
-				gismo.setPointings(option.get("log").getValue()); 
 				if(model == null) model = new IRAMPointingModel();
-				Vector2D increment = gismo.pointings.getIncrement(MJD, horizontal, model);
+				String logName = Util.getSystemPath(option.get("log").getValue()); 
+				Vector2D increment = PointingTable.get(logName).getIncrement(MJD, horizontal, model);
 				//increment.rotate(-horizontal.EL());
 				correction.add(increment);
 			}

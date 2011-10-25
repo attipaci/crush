@@ -32,7 +32,7 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 	 * 
 	 */
 	private static final long serialVersionUID = 3009881856872575936L;
-	private static final int version = 3;
+	private static final int version = 4;
 	
 	// Array is 32x40 (rows x cols)
 	double focusXOffset, focusYOffset, focusZOffset;
@@ -53,8 +53,8 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 	
 	public Scuba2() {
 		super("scuba2", pixels);
-		//resolution = 14.3 * Unit.arcsec;
-		resolution = 7.6 * Unit.arcsec;	
+		resolution = 14.3 * Unit.arcsec;
+		//resolution = 7.6 * Unit.arcsec;	
 		integrationTime = samplingInterval = 1.0/200.0 * Unit.sec;
 		mount = Mount.RIGHT_NASMYTH;
 	}
@@ -121,8 +121,6 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 		try { addModality(new CorrelatedModality("blocks", "b", divisions.get("blocks"), Scuba2Pixel.class.getField("gain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
-	
-
 		modalities.get("mux").setGainFlag(Scuba2Pixel.FLAG_MUX);
 		modalities.get("pins").setGainFlag(Scuba2Pixel.FLAG_PIN);
 	}

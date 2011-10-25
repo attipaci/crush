@@ -64,10 +64,6 @@ implements TableFormatter.Entries {
 	public Hashtable<String, ChannelDivision<ChannelType>> divisions = new Hashtable<String, ChannelDivision<ChannelType>>();
 	public Hashtable<String, Modality<?>> modalities = new Hashtable<String, Modality<?>>();	
 		
-	// These are initialized ad-hoc by getTau() and getScaling()...
-	public TauInterpolator tauInterpolator;
-	public CalibrationTable calibrationTable;
-	
 	public boolean initialized = false, validated = false;
 	
 	public Mount mount;
@@ -171,28 +167,6 @@ implements TableFormatter.Entries {
 	}
 	
 	public abstract String getTelescopeName();
-	
-	public void setCalibrationTable(String fileName) {
-		if(calibrationTable == null) readCalibrationTable(fileName);
-		else if(!fileName.equals(calibrationTable.fileName)) readCalibrationTable(fileName);	
-	}
-	
-	public void setTauInterpolator(String fileName) {
-		if(tauInterpolator == null) readTauInterpolator(fileName);
-		else if(!fileName.equals(tauInterpolator.fileName)) readTauInterpolator(fileName);		
-	}
-	
-	protected void readCalibrationTable(String fileName) {
-		//System.err.print("   ");
-		try { calibrationTable = new CalibrationTable(Util.getSystemPath(option("scale").getValue())); }
-		catch(IOException e) { System.err.println("WARNING! Calibration table could not be read."); }		
-	}
-	
-	protected void readTauInterpolator(String fileName) {
-		//System.err.print("   ");
-		try { tauInterpolator = new TauInterpolator(Util.getSystemPath(option("tau").getValue())); }
-		catch(IOException e) { System.err.println("WARNING! Tau interpolator table could not be read."); }	
-	}
 	
 	public double janskyPerBeam() {
 		if(hasOption("jansky")) {

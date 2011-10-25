@@ -47,7 +47,7 @@ import util.data.WeightedPoint;
 
 public class AstroMap extends AstroImage {
 	public double[][] weight, count;
-	
+
 	public Vector<Scan<?, ?>> scans = new Vector<Scan<?, ?>>();
 	public String commandLine;
 	
@@ -354,7 +354,7 @@ public class AstroMap extends AstroImage {
 	}
 	
 	@Override
-	public void resample(GridImage<?> from) {
+	public void resample(final GridImage<?> from) {
 			
 		if(!(from instanceof AstroMap)) {
 			super.resample(from);
@@ -363,27 +363,31 @@ public class AstroMap extends AstroImage {
 		
 		if(verbose) System.err.println(" Resampling map to "+ sizeX() + "x" + sizeY() + ".");
 		
-		AstroMap fromMap = (AstroMap) from;
-		AstroImage fromWeight = fromMap.getWeightImage();
-		AstroImage fromCount = fromMap.getTimeImage();
+		final AstroMap fromMap = (AstroMap) from;
+		final AstroImage fromWeight = fromMap.getWeightImage();
+		final AstroImage fromCount = fromMap.getTimeImage();
 		
 		final Vector2D v = new Vector2D();
 		
-		// TODO redo with parallel once valueAtIndex is concurrent...
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) {
-			v.set(i, j);
-			toOffset(v);
-			from.toIndex(v);
+		new InterpolatingTask() {
+			@Override
+			public void process(int i, int j) {
+				v.set(i, j);
+				toOffset(v);
+				from.toIndex(v);
+				
+				//System.err.println(i + "," + j + " <--" + Util.f1.format(v.x) + "," + Util.f1.format(v.y));
 			
-			//System.err.println(i + "," + j + " <--" + Util.f1.format(v.x) + "," + Util.f1.format(v.y));
-		
-			data[i][j] = fromMap.valueAtIndex(v.x, v.y);
-			weight[i][j] = fromWeight.valueAtIndex(v.x, v.y);
-			count[i][j] = fromCount.valueAtIndex(v.x, v.y);
-			
-			if(Double.isNaN(data[i][j])) flag[i][j] = 1;
-			else flag[i][j] = 0;
-		}
+				final InterpolatorData ipolData = getInterpolatorData();
+				data[i][j] = fromMap.valueAtIndex(v.x, v.y, ipolData);
+				weight[i][j] = fromWeight.valueAtIndex(v.x, v.y, ipolData);
+				count[i][j] = fromCount.valueAtIndex(v.x, v.y, ipolData);
+				
+				if(Double.isNaN(data[i][j])) flag[i][j] = 1;
+				else flag[i][j] = 0;
+			}
+		}.process();
+	
 	}
 	
 	public AstroImage getFluxImage() {
@@ -449,34 +453,22 @@ public class AstroMap extends AstroImage {
 	}
 	
 	public double getTypicalRMS() {
-		Task<WeightedPoint> var = new Task<WeightedPoint>() {
-			private double sumiw = 0.0;
+		Task<WeightedPoint> avew = new AveragingTask() {
+			private double sumw = 0.0;
 			private int n = 0;
 			@Override
 			public void process(int i, int j) {
 				if(flag[i][j] == 0) {
-					sumiw += 1.0 / weight[i][j];
+					sumw += weight[i][j];
 					n++;
 				}
 			}
 			@Override
-			public WeightedPoint getPartialResult() { return new WeightedPoint(sumiw, n); }
-			@Override
-			public WeightedPoint getResult() {
-				WeightedPoint result = new WeightedPoint();
-				for(Task<WeightedPoint> task : parent.tasks) {
-					WeightedPoint partial = task.getPartialResult();
-					result.value += partial.value;
-					result.weight += partial.weight;
-				}
-				return result;
-			}
+			public WeightedPoint getPartialResult() { return new WeightedPoint(sumw, n); }
 		};
 			
-		var.process();
-		WeightedPoint result = var.getResult();
-			
-		return Math.sqrt(result.weight/result.value);
+		avew.process();		
+		return Math.sqrt(1.0 / avew.getResult().value);
 	}
 	
 	public void filterCorrect() {
@@ -512,14 +504,22 @@ public class AstroMap extends AstroImage {
 	}
 
 
-	// TODO redo with parallel...
 	public double getMeanIntegrationTime() {
-		double sum = 0.0, sumw = 0.0;
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			sum += count[i][j] * weight[i][j];
-			sumw += weight[i][j];
-		}
-		return sum > 0.0 ? sum/sumw : 0.0;
+		Task<WeightedPoint> meanIntTime = new AveragingTask() {
+			private double sum = 0.0, sumw = 0.0;	
+			@Override
+			public void process(final int i, final int j) {
+				if(flag[i][j] == 0) {
+					sum += count[i][j] * weight[i][j];
+					sumw += weight[i][j];
+				}
+			}
+			@Override
+			public WeightedPoint getPartialResult() { return new WeightedPoint(sum, sumw); }
+		};
+		
+		meanIntTime.process();
+		return meanIntTime.getResult().value;
 	}
 	
 	@Override
@@ -551,7 +551,7 @@ public class AstroMap extends AstroImage {
 	}
 
 	public void weight(boolean robust) {
-		double weightCorrection = robust ? getRobustChi2() : getChi2();
+		double weightCorrection = 1.0 / (robust ? getRobustChi2() : getChi2());
 		weightScale(weightCorrection);
 		weightFactor *= weightCorrection;
 	}
@@ -578,23 +578,30 @@ public class AstroMap extends AstroImage {
 		
 		
 		// median(x^2) = 0.454937 * sigma^2 
-		return k > 0 ? 0.454937 / Statistics.median(chi2, 0, k) : Double.NaN;	
+		return k > 0 ? Statistics.median(chi2, 0, k) / 0.454937 : 0.0;	
 	}
 
-	// TODO redo in parallel...
 	protected double getChi2() {
-		double chi2 = 0.0;
-		int n=0;
+		Task<WeightedPoint> rChi2 = new AveragingTask() {
+			private double chi2 = 0.0;
+			private int n = 0;	
+			@Override
+			public void process(final int i, final int j) {
+				if(flag[i][j] == 0) {
+					final double s2n = getS2N(i,j);
+					chi2 += s2n * s2n;
+					n++;
+				}
+			}
+			@Override
+			public WeightedPoint getPartialResult() { return new WeightedPoint(chi2, n); }
+		};
 		
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			final double s2n = getS2N(i,j);
-			chi2 += s2n * s2n;
-			n++;
-		}
-
-		return n / chi2;	
+		rChi2.process();
+		return rChi2.getResult().value;
 	}
 		
+	// TODO redo with parallel... Need global interrupt (static interrupt()?)
 	public boolean containsNaN() {
 		boolean hasNaN = false;
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) {
@@ -619,14 +626,13 @@ public class AstroMap extends AstroImage {
 			@Override
 			public void process(int i, int j) {
 				if(flag[i][j] == 0) {
-					final double sigma = Math.sqrt(1.0/weight[i][j]);
+					final double sigma = getRMS(i, j);
 					final double memValue = Math.hypot(sigma, data[i][j]) / Math.hypot(sigma, model[i][j]) ;
 					data[i][j] -= Math.signum(data[i][j]) * lambda * sigma * Math.log(memValue);
 				}
 			}
 		}.process();
-	}
-	
+	}	
 	
 	public Fits getFits() throws HeaderCardException, FitsException, IOException {
 		FitsFactory.setUseHierarch(true);
@@ -744,25 +750,31 @@ public class AstroMap extends AstroImage {
 		header.dumpHeader(System.out);
 	}      
 
-	// TODO redo with parallel...
 	public void despike(final double significance) {
 		final double[][] neighbours = {{ 0, 1, 0 }, { 1, 0, 1 }, { 0, 1, 0 }};
 		final AstroMap diff = (AstroMap) copy();
 		diff.smooth(neighbours);
 		
-		WeightedPoint point = new WeightedPoint();
-		WeightedPoint surrounding = new WeightedPoint();
-		
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			point.value = data[i][j];
-			point.weight = weight[i][j];
-			surrounding.value = diff.data[i][j];
-			surrounding.weight = diff.weight[i][j];
-			point.subtract(surrounding);
-			if(DataPoint.significanceOf(point) > significance) flag[i][j] = 1;			
-		}	
+		new Task<Void>() {	
+			private WeightedPoint point, surrounding;
+			@Override
+			public void init() {
+				point = new WeightedPoint();
+				surrounding = new WeightedPoint();
+			}
+			@Override
+			public void process(final int i, final int j) {
+				if(flag[i][j] == 0) {
+					point.value = data[i][j];
+					point.weight = weight[i][j];
+					surrounding.value = diff.data[i][j];
+					surrounding.weight = diff.weight[i][j];
+					point.subtract(surrounding);
+					if(DataPoint.significanceOf(point) > significance) flag[i][j] = 1;			
+				}	
+			}
+		}.process();
 	}
-	
 	
 	public DataPoint getFlux(Region region) {
 		final Bounds bounds = region.getBounds(this);

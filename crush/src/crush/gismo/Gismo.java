@@ -55,8 +55,6 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	double focusYOffset, focusZOffset;
 	String focusMode;
 	
-	PointingTable pointings;
-	
 	public Gismo() {
 		super("gismo", pixels);
 		resolution = 16.7 * Unit.arcsec;
@@ -282,17 +280,6 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		else if(name.equals("nasY")) return Util.defaultFormat(nasmythOffset.y / Unit.arcsec, f);
 		else if(name.equals("rot")) return Util.defaultFormat(rotation / Unit.deg, f);
 		else return super.getFormattedEntry(name, formatSpec);
-	}
-	
-	public void setPointings(String fileName) throws IOException {
-		if(pointings == null) {
-			pointings = new PointingTable();
-			pointings.read(fileName);
-		}
-		else if(!fileName.equals(pointings.fileName)) {
-			pointings = new PointingTable();
-			pointings.read(fileName);
-		}
 	}
 	
 	

@@ -277,8 +277,6 @@ public class AstroImage extends GridImage<SphericalGrid> implements Cloneable {
 			if(region.isInside(grid, i, j)) flag[i][j] &= ~pattern;
 	}
 
-
-
 	public double getIntegral(Region region) {
 		final Bounds bounds = region.getBounds(this);
 		double sum = 0.0;

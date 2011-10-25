@@ -61,12 +61,13 @@ public class Data2D implements Cloneable {
 	public Data2D(int sizeX, int sizeY) {
 		this();
 		setSize(sizeX, sizeY);
+		fillFlag(1);
 	}
 	
 	public Data2D(double[][] data) {
 		this();
 		this.data = data;
-		noFlag();
+		this.flag = new int[sizeX()][sizeY()];
 	}
 	
 	public Data2D(double[][] data, int[][] flag) {
@@ -83,8 +84,7 @@ public class Data2D implements Cloneable {
 	public Object clone() {
 		try { 
 			Data2D clone = (Data2D) super.clone(); 
-			clone.reuseSplineX = new SplineCoeffs();
-			clone.reuseSplineY = new SplineCoeffs();
+			clone.reuseIpolData = new InterpolatorData();
 			return clone;
 		}
 		catch(CloneNotSupportedException e) { return null; }
@@ -126,12 +126,14 @@ public class Data2D implements Cloneable {
 		
 	}
 	
-	public void noFlag() {
+	public void noFlag() { fillFlag(0); }
+	
+	public void fillFlag(final int value) {
 		if(flag == null) flag = new int[sizeX()][sizeY()];
 		else {
 			new Task<Void>() {
 				@Override
-				public void processIndex(int i) { Arrays.fill(flag[i], 0); }
+				public void processIndex(int i) { Arrays.fill(flag[i], value); }
 				@Override
 				public void process(int i, int j) {}
 			}.process();	
@@ -177,13 +179,19 @@ public class Data2D implements Cloneable {
 	
 	public double valueAtIndex(int i, int j) { return flag[i][j] == 0 ? data[i][j] : Double.NaN; }
 	
-	// TODO see below...
 	public double valueAtIndex(Vector2D index) {
-		return valueAtIndex(index.x, index.y);
+		return valueAtIndex(index.x, index.y, null);
 	}
 	
-	// TODO check concurrent users, and call with spline coeffs...
+	public double valueAtIndex(Vector2D index, InterpolatorData ipolData) {
+		return valueAtIndex(index.x, index.y, ipolData);
+	}
+		
 	public double valueAtIndex(double ic, double jc) {
+		return valueAtIndex(ic, jc, null);
+	}
+	
+	public double valueAtIndex(double ic, double jc, InterpolatorData ipolData) {
 		
 		// The nearest data point (i,j)
 		final int i = (int) Math.round(ic);
@@ -195,7 +203,7 @@ public class Data2D implements Cloneable {
 		case NEAREST_NEIGHBOR : return data[i][j];
 		case BILINEAR : return bilinearAt(ic, jc);
 		case PIECEWISE_QUADRATIC : return piecewiseQuadraticAt(ic, jc);
-		case BICUBIC_SPLINE : return splineAt(ic, jc);
+		case BICUBIC_SPLINE : return ipolData == null ? splineAt(ic, jc) : splineAt(ic, jc, ipolData);
 		}
 		
 		return Double.NaN;
@@ -270,38 +278,40 @@ public class Data2D implements Cloneable {
 		return (ax*ic+bx)*ic + (ay*jc+by)*jc + y0;
 	}
 	
-	private SplineCoeffs reuseSplineX = new SplineCoeffs();
-	private SplineCoeffs reuseSplineY = new SplineCoeffs();
-		
+	
+	private InterpolatorData reuseIpolData = new InterpolatorData();
+	
 	public synchronized double splineAt(final double ic, final double jc) {	
-		return splineAt(ic, jc, reuseSplineX, reuseSplineY);
+		return splineAt(ic, jc, reuseIpolData);
 	}
 		
 	// Performs a bicubic spline interpolation...
-	public double splineAt(final double ic, final double jc, SplineCoeffs x, SplineCoeffs y) {	
-		final double[] ax = x.coeffs;
-		final double[] ay = y.coeffs;
+	public double splineAt(final double ic, final double jc, InterpolatorData ipolData) {	
+		final double[] ax = ipolData.splineX.coeffs;
+		final double[] ay = ipolData.splineY.coeffs;
 		
 		final int i0 = (int)Math.floor(ic-1.0);
 		final int fromi = Math.max(0, i0);
 		final int toi = Math.min(sizeX(), i0+4);
 		
-		// Calculate the spline coefficients....
-		for(int i=toi; --i >= fromi; ) {
+		// Calculate the spline coefficients (as necessary)...
+		if(ipolData.ic != ic) for(int i=toi; --i >= fromi; ) {
 			final double dx = Math.abs(i - ic);
 			ax[i-i0] = dx > 1.0 ? 
 					((-0.5 * dx + 2.5) * dx - 4.0) * dx + 2.0 : (1.5 * dx - 2.5) * dx * dx + 1.0;
+			ipolData.ic = ic;
 		}
 	
 		final int j0 = (int)Math.floor(jc-1.0);
 		final int fromj = Math.max(0, j0);
 		final int toj = Math.min(sizeY(), j0+4);
 		
-		// Calculate the spline coefficients....
-		for(int j=toj; --j >= fromj; ) {
+		// Calculate the spline coefficients (as necessary)...
+		if(ipolData.jc != jc) for(int j=toj; --j >= fromj; ) {
 			final double dy = Math.abs(j - jc);
 			ay[j-j0] = dy > 1.0 ? 
 					((-0.5 * dy + 2.5) * dy - 4.0) * dy + 2.0 : (1.5 * dy - 2.5) * dy * dy + 1.0;
+			ipolData.jc = jc;
 		}
 		
 		// Do the spline convolution...
@@ -327,12 +337,19 @@ public class Data2D implements Cloneable {
 			from.smooth(getGaussian(a, b));
 		}
 		
+		final Data2D antialiased = from;
+		
 		// Interpolate to new array...
-		// TODO redo with parallel but first make sure valueAtIndex is concurrent...
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j]==0) {		
-			data[i][j] = from.valueAtIndex(i*stretch.x, j*stretch.y);
-			if(Double.isNaN(data[i][j])) flag[i][j] = 1;
-		}
+		new InterpolatingTask() {
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j]==0) {		
+					data[i][j] = antialiased.valueAtIndex(i*stretch.x, j*stretch.y, getInterpolatorData());
+					if(Double.isNaN(data[i][j])) flag[i][j] = 1;
+				}
+			}
+		}.process();
+		
 	}
 	
 	public double[][] getGaussian(double pixelRadius) {
@@ -483,41 +500,81 @@ public class Data2D implements Cloneable {
 		return search.getResult();
 	}
 	
-	// TODO redo with Parallel...
-	public Index2D indexOfMax() {
-		Index2D index = new Index2D();
-
-		double peak = 0.0;
-
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
-			if(data[i][j] > peak) {
-				peak = data[i][j];
-				index.i = i;
-				index.j = j;
+	
+	public Index2D indexOfMax() {	
+		Task<Index2D> search = new Task<Index2D>() {
+			private Index2D index;
+			private double peak = Double.NEGATIVE_INFINITY;
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j] == 0) if(data[i][j] > peak) {
+					peak = data[i][j];
+					if(index == null) index = new Index2D();
+					index.i = i;
+					index.j = j;
+				}
 			}
-
-		return index;
+			@Override 
+			public Index2D getPartialResult() { return index; }
+			@Override
+			public Index2D getResult() {
+				double globalPeak = Double.NEGATIVE_INFINITY;
+				Index2D globalIndex = null;
+				for(Task<Index2D> task : parent.tasks) {
+					Index2D partial = task.getPartialResult();
+					if(partial != null) if(data[partial.i][partial.j] > globalPeak) {
+						globalIndex = partial;
+						globalPeak = data[partial.i][partial.j];
+					}
+				}
+				return globalIndex;
+			}
+		};
+		
+		search.process();
+		return search.getResult();
 	}
 	
-	// TODO redo with Parallel...
 	public Index2D indexOfMaxDev() {
-		Index2D index = new Index2D();
-
-		double dev = 0.0;
-
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0)
-			if(Math.abs(data[i][j]) > dev) {
-				dev = Math.abs(data[i][j]);
-				index.i = i;
-				index.j = j;
+		Task<Index2D> search = new Task<Index2D>() {
+			private Index2D index;
+			private double dev = 0.0;
+			@Override
+			public void process(int i, int j) {
+				final double value = Math.abs(data[i][j]);
+				if(flag[i][j] == 0) if(value > dev) {
+					dev = value;
+					if(index == null) index = new Index2D();
+					index.i = i;
+					index.j = j;
+				}
 			}
-
-		return index;
+			@Override 
+			public Index2D getPartialResult() { return index; }
+			@Override
+			public Index2D getResult() {
+				double globalDev = 0.0;
+				Index2D globalIndex = null;
+				for(Task<Index2D> task : parent.tasks) {
+					Index2D partial = task.getPartialResult();
+					if(partial == null) continue;
+					final double value = Math.abs(data[partial.i][partial.j]);
+					if(value > globalDev) {
+						globalIndex = partial;
+						globalDev = value;
+					}
+				}
+				return globalIndex;
+			}
+		};
+		
+		search.process();
+		return search.getResult();
 	}
 
 	
 	public double mean() {
-		Task<WeightedPoint> average = new Task<WeightedPoint>() {
+		Task<WeightedPoint> average = new AveragingTask() {
 			private double sum = 0.0, sumw = 0.0;
 			@Override
 			public void process(int i, int j) { 
@@ -528,17 +585,6 @@ public class Data2D implements Cloneable {
 			}
 			@Override
 			public WeightedPoint getPartialResult() { return new WeightedPoint(sum, sumw); }
-			@Override
-			public WeightedPoint getResult() {
-				WeightedPoint mean = new WeightedPoint();
-				for(Task<WeightedPoint> task : parent.tasks) {
-					WeightedPoint partial = task.getPartialResult();
-					mean.value += partial.value;
-					mean.weight += partial.weight;
-				}
-				mean.value /= mean.weight;
-				return mean;
-			}
 		};
 		
 		average.process();
@@ -562,7 +608,7 @@ public class Data2D implements Cloneable {
 
 	
 	public double getRMS() {
-		Task<WeightedPoint> rms = new Task<WeightedPoint>() {
+		Task<WeightedPoint> rms = new AveragingTask() {
 			private double sum = 0.0;
 			private int n = 0;
 			@Override
@@ -574,17 +620,6 @@ public class Data2D implements Cloneable {
 			}
 			@Override
 			public WeightedPoint getPartialResult() { return new WeightedPoint(sum, n); }
-			@Override
-			public WeightedPoint getResult() {
-				WeightedPoint mean = new WeightedPoint();
-				for(Task<WeightedPoint> task : parent.tasks) {
-					WeightedPoint partial = task.getPartialResult();
-					mean.value += partial.value;
-					mean.weight += partial.weight;
-				}
-				mean.value /= mean.weight;
-				return mean;
-			}
 		};
 		
 		rms.process();
@@ -657,6 +692,7 @@ public class Data2D implements Cloneable {
 		final int toj = Math.min(sizeY()-1, jmax);		
 		
 		setSize(imax-imin+1, jmax-jmin+1);
+		fillFlag(1);
 		
 		for(int i=fromi, i1=fromi-imin; i<=toi; i++, i1++) for(int j=fromj, j1=fromj-jmin; j<=toj; j++, j1++) {
 			data[i1][j1] = olddata[i][j];
@@ -800,17 +836,23 @@ public class Data2D implements Cloneable {
 		final double istepX = 1.0 / stepX;
 		final double istepY = 1.0 / stepY;
 	
-		// TODO redo in parallel, but first make sure valueAtIndex is concurrent...
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(flag[i][j] == 0) {
-			final double i1 = i * istepX;
-			final double j1 = j * istepY;
-			final double value = signalImage.valueAtIndex(i1, j1);
-			if(!Double.isNaN(value)) {		
-				convolved[i][j] = value;
-				if(beamw != null) beamw[i][j] = weightImage.valueAtIndex(i1, j1);
+		final Data2D wI = weightImage;
+		
+		new InterpolatingTask() {
+			@Override
+			public void process(int i, int j) {
+				if(flag[i][j] == 0) {
+					final double i1 = i * istepX;
+					final double j1 = j * istepY;
+					final double value = signalImage.valueAtIndex(i1, j1, getInterpolatorData());
+					if(!Double.isNaN(value)) {		
+						convolved[i][j] = value;
+						if(beamw != null) beamw[i][j] = wI.valueAtIndex(i1, j1, getInterpolatorData());
+					}
+					else flag[i][j] = 1;
+				}
 			}
-			else flag[i][j] = 1;
-		}
+		}.process();
 		
 		return convolved;
 	}
@@ -988,6 +1030,28 @@ public class Data2D implements Cloneable {
 		}	
 	}
 	
+	
+	public abstract class AveragingTask extends Task<WeightedPoint> {
+		@Override
+		public WeightedPoint getResult() {
+			WeightedPoint ave = new WeightedPoint();
+			for(Task<WeightedPoint> task : parent.tasks) {
+				WeightedPoint partial = task.getPartialResult();
+				ave.value += partial.value;
+				ave.weight += partial.weight;
+			}
+			if(ave.weight > 0.0) ave.value /= ave.weight;
+			return ave;
+		}
+	}
+	
+	public abstract class InterpolatingTask extends Task<Void> {
+		private InterpolatorData ipolData;
+		@Override
+		public void init() { ipolData = new InterpolatorData(); }
+		public final InterpolatorData getInterpolatorData() { return ipolData; }
+	}	
+	
 	public static Object copyOf(final Object image) {
 		if(image == null) return null;
 
@@ -1005,6 +1069,23 @@ public class Data2D implements Cloneable {
 		}
 
 		return null;
+	}
+	
+	
+	public class InterpolatorData {
+		double ic = Double.NaN, jc = Double.NaN;
+		SplineCoeffs splineX, splineY;
+		
+		public InterpolatorData() {
+			refresh();
+		}
+		
+		public void refresh() {
+			if(interpolationType == BICUBIC_SPLINE) {
+				if(splineX == null) splineX = new SplineCoeffs();
+				if(splineY == null) splineY = new SplineCoeffs();
+			}
+		}	
 	}
 	
 }
