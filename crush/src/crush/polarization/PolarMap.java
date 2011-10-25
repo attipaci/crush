@@ -190,6 +190,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		N.postprocess(scan);
 	}
 	
+	// TODO redo with parallel...
 	public ScalarMap<InstrumentType, ScanType> getP() {
 		final ScalarMap<InstrumentType, ScanType> P = (ScalarMap<InstrumentType, ScanType>) N.copy();
 		
@@ -198,20 +199,21 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		final AstroMap p = P.map;
 		
 		for(int i=p.sizeX(); --i >= 0; ) for(int j=p.sizeY(); --j >= 0; ) {	
-			if(q.flag[i][j] == 0 && u.flag[i][j] == 0) {
-				p.data[i][j] = Math.hypot(q.data[i][j], u.data[i][j]);
+			if(q.isUnflagged(i, j) && u.isUnflagged(i, j)) {
+				p.setValue(i, j, Math.hypot(q.getValue(i, j), u.getValue(i, j)));
 				
 				// Propagate errors properly...
-				if(p.data[i][j] > 0.0) {
-					final double qf = q.data[i][j] / p.data[i][j];
-					final double uf = u.data[i][j] / p.data[i][j];
-					p.weight[i][j] = 1.0 / (qf*qf/q.weight[i][j] + uf*uf/u.weight[i][j]);
+				if(p.getValue(i, j) > 0.0) {
+					final double pol = p.getValue(i, j);
+					final double qf = q.getValue(i, j) / pol;
+					final double uf = u.getValue(i, j) / pol;
+					p.setWeight(i, j, 1.0 / (qf*qf/q.getWeight(i, j) + uf*uf/u.getWeight(i, j)));
 				}
-				else p.weight[i][j] = 2.0 / (1.0/q.weight[i][j] + 1.0/u.weight[i][j]);
+				else p.setWeight(i, j, 2.0 / (1.0/q.getWeight(i, j) + 1.0/u.getWeight(i, j)));
  				
-				p.flag[i][j] = 0;
+				p.unflag(i, j);
 			}
-			else p.flag[i][j] = 1;
+			else p.flag(i, j);
 		}
 		P.id = "P";
 		p.sanitize();
@@ -222,6 +224,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		return getI(getP());
 	}	
 	
+	// TODO redo with parallel...
 	public ScalarMap<InstrumentType, ScanType> getI(ScalarMap<InstrumentType, ScanType> P) {	
 		final ScalarMap<InstrumentType, ScanType> I = (ScalarMap<InstrumentType, ScanType>) N.copy();
 		final AstroMap n = N.map;
@@ -229,17 +232,18 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		final AstroMap t = I.map;
 		
 		for(int i=n.sizeX(); --i >= 0; ) for(int j=n.sizeY(); --j >= 0; ) {
-			if(n.flag[i][j] == 0 && p.flag[i][j] == 0) {
-				t.data[i][j] = n.data[i][j] + p.data[i][j];
-				t.weight[i][j] = 1.0 / (1.0/n.weight[i][j] + 1.0/p.weight[i][j]);
+			if(n.isUnflagged(i, j) && p.isUnflagged(i, j)) {
+				t.setValue(i, j, n.getValue(i, j) + p.getValue(i, j));
+				t.setWeight(i, j, 1.0 / (1.0/n.getWeight(i, j) + 1.0/p.getWeight(i, j)));
 			}
-			else t.flag[i][j] = 1;
+			else t.flag(i, j);
 		}
 		I.id = "I";
 		t.sanitize();
 		return I;
 	}
 	
+	// TODO redo with parallel...
 	public ScalarMap<InstrumentType, ScanType> getPolarFraction(ScalarMap<InstrumentType, ScanType> P, ScalarMap<InstrumentType, ScanType> I, double accuracy) {	
 		final ScalarMap<InstrumentType, ScanType> F = (ScalarMap<InstrumentType, ScanType>) P.copy();
 		final AstroMap p = P.map;
@@ -249,21 +253,21 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		final double minw = 1.0 / (accuracy * accuracy);
 		
 		for(int i=t.sizeX(); --i >= 0; ) for(int j=t.sizeY(); --j >= 0; ) {
-			if(t.flag[i][j] == 0 && p.flag[i][j] == 0) {
-				f.data[i][j] = p.data[i][j] / t.data[i][j];
+			if(t.isUnflagged(i, j) && p.isUnflagged(i, j)) {
+				f.setValue(i, j, p.getValue(i, j) / t.getValue(i, j));
 			
 				// f = a/b --> df/db = -a/b^2 * db
 				// df2 = (da / b)^2 + (a db / b2)^2 = a/b * ((da/a)^2 + (db/b)^2)
 				// 1 / wf = 1/(wa * b2) + a2/(wb*b4) = a2/b2 * (1/(wa*a2) + 1/(wb*b2))
 				// wf = b2/a2 / (1/(wa*a2) + 1/(wb*b2))
-				final double p2 = p.data[i][j] * p.data[i][j];
-				final double t2 = t.data[i][j] * t.data[i][j];
-				f.weight[i][j] = t2 / p2 / (1.0 / (p2 * p.weight[i][j]) + 1.0 / (t2 * t.weight[i][j]));
+				final double p2 = p.getValue(i, j) * p.getValue(i, j);
+				final double t2 = t.getValue(i, j) * t.getValue(i, j);
+				f.setWeight(i, j, t2 / p2 / (1.0 / (p2 * p.getWeight(i, j)) + 1.0 / (t2 * t.getWeight(i, j))));
 				
 				// if sigma_f > accuracy than flag the datum
-				if(f.weight[i][j] < minw) f.flag[i][j] = 1;
+				if(f.getWeight(i, j) < minw) f.flag(i, j);
 			}
-			else f.flag[i][j] = 1;
+			else f.flag(i, j);
 		}
 		
 		F.id = "F";

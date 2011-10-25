@@ -33,26 +33,15 @@ import util.Util;
 import util.Vector2D;
 
 public class Data2D implements Cloneable {
-	public double[][] data;
-	public int[][] flag;
-	public Unit unit = Unit.unity;
-
-	public String contentType = "";
+	private double[][] data;
+	private int[][] flag;
+	private int parallelism = Runtime.getRuntime().availableProcessors();
 	
+	public Unit unit = Unit.unity;
+	public String contentType = "";
+	public int interpolationType = BICUBIC_SPLINE;
 	public boolean verbose = false;
 	
-	// 2 pi sigma^2 = a^2
-	// a = sqrt(2 pi) sigma
-	//   = sqrt(2 pi) fwhm / 2.35
-	public static double fwhm2size = Math.sqrt(2.0 * Math.PI) / Util.sigmasInFWHM;
-
-	public int parallelism = Runtime.getRuntime().availableProcessors();
-	public int interpolationType = BICUBIC_SPLINE;
-	
-	public final static int NEAREST_NEIGHBOR = 0;
-	public final static int BILINEAR = 1;
-	public final static int PIECEWISE_QUADRATIC = 2;
-	public final static int BICUBIC_SPLINE = 3;
 		
 	public Data2D() {
 		Locale.setDefault(Locale.US);
@@ -76,6 +65,51 @@ public class Data2D implements Cloneable {
 		this.flag = flag;
 	}
 	
+
+	public final double[][] getData() { return data; }
+	
+	public final int[][] getFlag() { return flag; }
+	
+	public void setData(double[][] image) { data = image; }
+	
+	public final void setFlag(int[][] image) { flag = image; }
+	
+	public final double getValue(int i, int j) { return data[i][j]; }
+	
+	public final void setValue(int i, int j, double weight) { data[i][j] = weight; }
+	
+	public final void increment(int i, int j, double d) { data[i][j] += d; }
+	
+	public final void decrement(int i, int j, double d) { data[i][j] -= d; }
+	
+	public final void scaleValue(int i, int j, double factor) { data[i][j] *= factor; }
+	
+	public final boolean isNaN(int i, int j) { return Double.isNaN(data[i][j]); }
+	
+	public final boolean isInfinite(int i, int j) { return Double.isInfinite(data[i][j]); }
+	
+	public final boolean isIndefinite(int i, int j) { return Double.isNaN(data[i][j]) || Double.isInfinite(data[i][j]); }
+	
+	public final int getFlag(int i, int j) { return flag[i][j]; }
+	
+	public final void setFlag(int i, int j, int value) { flag[i][j] = value; }
+	
+	public final void flag(int i, int j) { flag[i][j] |= 1; }
+	
+	public final void unflag(int i, int j) { flag[i][j] = 0; }
+	
+	public final void flag(int i, int j, int pattern) { flag[i][j] |= pattern; }
+	
+	public final void unflag(int i, int j, int pattern) { flag[i][j] &= ~pattern; }
+	
+	public final boolean isFlagged(int i, int j) { return flag[i][j] != 0; }
+	
+	public final boolean isUnflagged(int i, int j) { return flag[i][j] == 0; }
+	
+	public final boolean isFlagged(int i, int j, int pattern) { return (flag[i][j] & pattern) != 0; }
+	
+	public final boolean isUnflagged(int i, int j, int pattern) { return (flag[i][j] & pattern) == 0; }
+	
 	public void setParallel(int n) { parallelism = Math.max(1, n); }
 	
 	public void noParallel() { parallelism = 1; }
@@ -92,17 +126,43 @@ public class Data2D implements Cloneable {
 	
 	public Data2D copy() {
 		Data2D copy = (Data2D) clone();
+		copy.setSize(sizeX(), sizeY());
 		copy.copyImageOf(this);
 		return copy;
 	}
 
-	// TODO make it work with parallel... (but really...)
-	public void copyImageOf(Data2D image) {
-		// Make a copy of the fundamental data
-		data = (double[][]) copyOf(image.data);
-		flag = (int[][]) copyOf(image.flag);		
+	public boolean conformsTo(Data2D image) {
+		if(data == null) return false;
+		else if(sizeX() != image.sizeX()) return false;
+		else if(sizeY() != image.sizeY()) return false;
+		return true;
 	}
 	
+	public void copyImageOf(final Data2D image) {
+		if(!conformsTo(image)) setSize(image.sizeX(), image.sizeY());
+		
+		new Task<Void>() {
+			@Override
+			public void processIndex(int i) { copy(image, i); }
+			@Override
+			public void process(int i, int j) {}
+		}.process();	
+	}
+	
+	protected void copy(Data2D image, int i) {
+		System.arraycopy(image.data[i], 0, data[i], 0, sizeY()); 
+		System.arraycopy(image.flag[i], 0, flag[i], 0, sizeY()); 
+	}
+	
+	public void copyTo(final double[][] dst) {
+		new Task<Void>() {
+			final int sizeY = sizeY();
+			@Override
+			public void processIndex(int i) { System.arraycopy(data[i], 0, dst[i], 0, sizeY); }
+			@Override
+			public void process(int i, int j) {}
+		}.process();	
+	}
 	
 	public void setImage(Data2D image) {
 		data = image.data;
@@ -139,8 +199,7 @@ public class Data2D implements Cloneable {
 			}.process();	
 		}
 	}
-	
-	
+
 	public void addImage(final double[][] image, final double scale) {
 		new Task<Void>() {
 			@Override
@@ -1052,6 +1111,24 @@ public class Data2D implements Cloneable {
 		public final InterpolatorData getInterpolatorData() { return ipolData; }
 	}	
 	
+	
+	public class InterpolatorData {
+		double ic = Double.NaN, jc = Double.NaN;
+		SplineCoeffs splineX, splineY;
+		
+		public InterpolatorData() {
+			refresh();
+		}
+		
+		public void refresh() {
+			if(interpolationType == BICUBIC_SPLINE) {
+				if(splineX == null) splineX = new SplineCoeffs();
+				if(splineY == null) splineY = new SplineCoeffs();
+			}
+		}	
+	}
+
+	
 	public static Object copyOf(final Object image) {
 		if(image == null) return null;
 
@@ -1071,22 +1148,15 @@ public class Data2D implements Cloneable {
 		return null;
 	}
 	
+	// 2 pi sigma^2 = a^2
+	// a = sqrt(2 pi) sigma
+	//   = sqrt(2 pi) fwhm / 2.35
+	public static double fwhm2size = Math.sqrt(2.0 * Math.PI) / Util.sigmasInFWHM;
 	
-	public class InterpolatorData {
-		double ic = Double.NaN, jc = Double.NaN;
-		SplineCoeffs splineX, splineY;
-		
-		public InterpolatorData() {
-			refresh();
-		}
-		
-		public void refresh() {
-			if(interpolationType == BICUBIC_SPLINE) {
-				if(splineX == null) splineX = new SplineCoeffs();
-				if(splineY == null) splineY = new SplineCoeffs();
-			}
-		}	
-	}
+	public final static int NEAREST_NEIGHBOR = 0;
+	public final static int BILINEAR = 1;
+	public final static int PIECEWISE_QUADRATIC = 2;
+	public final static int BICUBIC_SPLINE = 3;
 	
 }
 

@@ -268,20 +268,20 @@ public class AstroImage extends GridImage<SphericalGrid> implements Cloneable {
 	public void flag(Region region, int pattern) {
 		final Bounds bounds = region.getBounds(this);
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
-			if(region.isInside(grid, i, j)) flag[i][j] |= pattern;
+			if(region.isInside(grid, i, j)) flag(i, j, pattern);
 	}
 
 	public void unflag(Region region, int pattern) {
 		final Bounds bounds = region.getBounds(this);
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
-			if(region.isInside(grid, i, j)) flag[i][j] &= ~pattern;
+			if(region.isInside(grid, i, j)) unflag(i, j, pattern);
 	}
 
 	public double getIntegral(Region region) {
 		final Bounds bounds = region.getBounds(this);
 		double sum = 0.0;
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
-			if(flag[i][j] == 0) if(region.isInside(grid, i, j)) sum += data[i][j];	
+			if(isUnflagged(i, j)) if(region.isInside(grid, i, j)) sum += getValue(i, j);	
 		return sum;			
 	}
 
@@ -290,8 +290,8 @@ public class AstroImage extends GridImage<SphericalGrid> implements Cloneable {
 		double sum = 0.0;
 		int n = 0;
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
-			if(flag[i][j] == 0) if(region.isInside(grid, i, j)) {
-				sum += data[i][j];
+			if(isUnflagged(i, j)) if(region.isInside(grid, i, j)) {
+				sum += getValue(i, j);
 				n++;
 			}
 		return sum / n;			
@@ -304,8 +304,8 @@ public class AstroImage extends GridImage<SphericalGrid> implements Cloneable {
 		double level = getLevel(region);
 
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
-			if(flag[i][j] == 0) if(region.isInside(grid, i, j))  {
-				double value = data[i][j] - level;
+			if(isUnflagged(i, j)) if(region.isInside(grid, i, j))  {
+				double value = getValue(i, j) - level;
 				var += value * value;
 				n++;
 			}

@@ -38,6 +38,7 @@ import util.Util;
 import util.Vector2D;
 
 public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
+	// TODO make private...
 	public double smoothFWHM;  
 	public double extFilterFWHM = Double.NaN;
 	public double correctingFWHM = Double.NaN;	
@@ -157,16 +158,16 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
-				if((flag[i][j] & pattern) != 0) {
+				if(isFlagged(i, j, pattern)) {
 					final int fromi1 = Math.max(0, i-di);
 					final int fromj1 = Math.max(0, j-dj);
 					final int toi1 = Math.max(sizeX, i+di+1);
 					final int toj1 = Math.max(sizeY, j+dj+1);
-					final int matchPattern = flag[i][j] & pattern;
+					final int matchPattern = getFlag(i, j) & pattern;
 					
 					// TODO for sheared grids...
 					for(int i1 = toi1; --i1 >= fromi1; ) for(int j1 = toj1; --j1 >= fromj1; ) 
-						if(Math.hypot((i-i1) * dx, (j-j1) * dy) <= radius) flag[i1][j1] |= matchPattern;
+						if(Math.hypot((i-i1) * dx, (j-j1) * dy) <= radius) flag(i1, j1, matchPattern);
 				}
 			}
 		}.process();
@@ -199,7 +200,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 	}
 
 	public double[][] getSmoothedTo(double FWHM) {
-		if(smoothFWHM >= FWHM) return data; 
+		if(smoothFWHM >= FWHM) return getData(); 
 		return getSmoothed(Math.sqrt((FWHM * FWHM - smoothFWHM * smoothFWHM)));
 	}
 	
@@ -210,17 +211,17 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 	}   
 
 	
-	public void filterAbove(double FWHM) { filterAbove(FWHM, flag); }
+	public void filterAbove(double FWHM) { filterAbove(FWHM, getFlag()); }
 
 	public void filterAbove(double FWHM, int[][] skip) {
 		final GridImage<?> extended = (GridImage<?>) copy();
-		extended.flag = skip;
+		extended.setFlag(skip);
 		extended.smoothTo(FWHM);
 	
 		new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
-				data[i][j] -= extended.data[i][j];
+				decrement(i, j, extended.getValue(i, j));
 			}
 		}.process();
 		
@@ -249,11 +250,11 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 			private int n = 0;
 			@Override
 			public void process(final int i, final int j) {
-				if(flag[i][j] != 0) return;	
+				if(getFlag(i, j) != 0) return;	
 				if(skip[i][j] > 0) extended[i][j] = 0.0;
 				else {
 					final double w = weightAt(i, j);
-					extended[i][j] = w * data[i][j];
+					extended[i][j] = w * getValue(i, j);
 					sumw += w;
 					n++;
 				}
@@ -303,7 +304,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 			new Task<Void>() {
 				@Override
 				public void process(int i, int j) {
-					data[i][j] -= norm * extended[i][j];
+					decrement(i, j, norm * extended[i][j]);
 				}
 			}.process();
 		}
@@ -350,8 +351,8 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 	
 	
 	public void copyValueOf(final GridImage<?> from, final double fromi, final double fromj, final int toi, final int toj) {
-		data[toi][toj] = from.valueAtIndex(fromi, fromj);
-		if(Double.isNaN(data[toi][toj])) flag[toi][toj] = 1;
+		setValue(toi, toj, from.valueAtIndex(fromi, fromj));
+		if(isNaN(toi, toj)) setFlag(toi, toj, 1);
 	}
 
 	public void resample(GridImage<?> from) {
@@ -369,13 +370,13 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		new InterpolatingTask() {
 			@Override
 			public void process(int i, int j) { 
-				if(flag[i][j]==0) {
+				if(isUnflagged(i, j)) {
 					v.set(i, j);
 					toOffset(v);
 					antialiased.toIndex(v);
 				
-					data[i][j] = antialiased.valueAtIndex(v.x, v.y, getInterpolatorData());
-					if(Double.isNaN(data[i][j])) flag[i][j] = 1;
+					setValue(i, j, antialiased.valueAtIndex(v.x, v.y, getInterpolatorData()));
+					if(isNaN(i, j)) setFlag(i, j, 1);
 				}				
 			}
 		}.process();
@@ -502,7 +503,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 
 		// Find the peak
 		Index2D index = search.indexOfMaxDev();
-		double peakValue = search.data[index.i][index.j];
+		double peakValue = search.getValue(index.i, index.j);
 		double ave = Math.abs(peakValue);
 
 		do {			    
@@ -517,22 +518,22 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 			final int imax = Math.min(i0 + beam.length, sizeX());
 			final int jmax = Math.min(j0 + beam[0].length, sizeY());
 
-			final double decrement = gain * data[i][j];
+			final double decrement = gain * getValue(i, j);
 			final double searchDecrement = gain * peakValue;
 
 			// Pole is the peak value times the beam integral to conserve flux	    
 			clean[i][j] += decrement * beamInt; // est. intergal flux in beam
 
 
-			for(int i1=imin; i1 < imax; i1++) for(int j1=jmin; j1 < jmax; j1++) if(flag[i1][j1] == 0) {
+			for(int i1=imin; i1 < imax; i1++) for(int j1=jmin; j1 < jmax; j1++) if(isUnflagged(i1, j1)) {
 				final double B = beam[i1 - i0][j1 - j0];
-				data[i1][j1] -= B * decrement;
-				if(search != this) search.data[i][j] -= B * searchDecrement;
+				decrement(i1, j1, B * decrement);
+				if(search != this) search.decrement(i, j, B * searchDecrement);
 			}
 
 			components++;
 
-			peakValue = search.data[i][j];         
+			peakValue = search.getValue(i, j);         
 
 			/*
 			if(verbose) if(components % 100 == 0) {
@@ -556,12 +557,12 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 
 		
 		GridImage<?> cleanImage = (GridImage<?>) clone();
-		cleanImage.data = clean;
+		cleanImage.setData(clean);
 		
 		clean = cleanImage.getSmoothed(replacementFWHM);
 
 		// Add deconvolved components back to the residual noise...
-		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0 ; ) data[i][j] += clean[i][j];
+		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0 ; ) increment(i, j, clean[i][j]);
 
 		smoothFWHM = Math.sqrt(getGrid().getPixelArea()) / fwhm2size;
 
@@ -622,8 +623,8 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 			new Task<Void>() {
 				@Override
 				public void process(int i, int j) {
-					if(Float.isNaN(fdata[j][i])) flag[i][j] |= 1;
-					else data[i][j] = fdata[j][i] * unit.value;	    
+					if(Float.isNaN(fdata[j][i])) flag(i, j);
+					else setValue(i, j, fdata[j][i] * unit.value);	    
 				}
 			}.process();
 		}
@@ -632,8 +633,8 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 			new Task<Void>() {
 				@Override
 				public void process(int i, int j) {
-					if(Double.isNaN(ddata[j][i])) flag[i][j] |= 1;
-					else data[i][j] = ddata[j][i] * unit.value;	    
+					if(Double.isNaN(ddata[j][i])) flag(i, j);
+					else setValue(i, j, ddata[j][i] * unit.value);	    
 				}
 			}.process();
 		}
@@ -645,7 +646,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
-				if(flag[i][j] == 0.0) fitsImage[j][i] = (float) (data[i][j] / unit.value);
+				if(isUnflagged(i, j)) fitsImage[j][i] = (float) (getValue(i, j) / unit.value);
 				else fitsImage[j][i] = Float.NaN;
 			}
 		}.process();

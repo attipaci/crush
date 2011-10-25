@@ -57,17 +57,17 @@ public abstract class Region implements Cloneable {
 	public double getIntegral(AstroImage image) {
 		final Bounds bounds = getBounds(image);
 		double sum = 0.0;
-		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(image.flag[i][j] == 0) 
-			sum += image.data[i][j];
+		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(image.isUnflagged(i, j)) 
+			sum += image.getValue(i, j);
 		return sum;		
 	}
 	
 	public WeightedPoint getIntegral(AstroMap map) {
 		final Bounds bounds = getBounds(map);
 		WeightedPoint sum = new WeightedPoint();
-		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.flag[i][j] == 0) {
-			sum.value += map.data[i][j];	
-			sum.weight += 1.0 / map.weight[i][j];
+		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.isUnflagged(i, j)) {
+			sum.value += map.getValue(i, j);	
+			sum.weight += 1.0 / map.getWeight(i, j);
 		}
 		sum.weight = 1.0 / sum.weight;	
 		return sum;

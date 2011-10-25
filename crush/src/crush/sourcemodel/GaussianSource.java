@@ -116,10 +116,10 @@ public class GaussianSource extends CircularRegion {
 		final double Ax = -0.5 / (sigmaX*sigmaX);
 		final double Ay = -0.5 / (sigmaY*sigmaY);
 
-		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.flag[i][j] == 0) {
+		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.isUnflagged(i, j)) {
 			final double di = i-centerIndex.x;
 			final double dj = j-centerIndex.y;
-			final double dev = (map.data[i][j] - level - peak.value * Math.exp(Ax*di*di + Ay*dj*dj)) / map.getRMS(i, j);
+			final double dev = (map.getValue(i, j) - level - peak.value * Math.exp(Ax*di*di + Ay*dj*dj)) / map.getRMS(i, j);
 			chi2.value += dev * dev;
 			chi2.weight += 1.0;
 		}
@@ -137,7 +137,7 @@ public class GaussianSource extends CircularRegion {
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) {
 			final double di = i-centerIndex.x;
 			final double dj = j-centerIndex.y;
-			image.data[i][j] += scaling * peak.value * Math.exp(Ax*di*di + Ay*dj*dj);
+			image.increment(i, j, scaling * peak.value * Math.exp(Ax*di*di + Ay*dj*dj));
 		}
 		
 	}
@@ -317,7 +317,7 @@ public class GaussianSource extends CircularRegion {
 		Vector2D index = new Vector2D();
 		double sumw = 0.0;
 		
-		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.flag[i][j] == 0) {
+		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.isUnflagged(i, j)) {
 			double w = Math.abs(map.getS2N(i,j));
 			index.x += w * i;
 			index.y += w * j;
