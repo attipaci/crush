@@ -31,6 +31,7 @@ import util.*;
 import util.astro.CoordinateEpoch;
 import util.astro.EquatorialCoordinates;
 import util.astro.Precessing;
+import util.data.Data2D;
 import util.data.DataPoint;
 import util.data.Grid2D;
 import util.data.Index2D;
@@ -91,11 +92,12 @@ public class GaussianSource extends CircularRegion {
 	@Override
 	public DataPoint finetunePeak(AstroMap map) {
 		AstroImage rms = map.getRMSImage();
+		Data2D.InterpolatorData ipolData = map.new InterpolatorData();
 		peak = super.finetunePeak(map);
 		Vector2D centerIndex = getIndex(map.grid);
 		if(peak == null) {
-			peak.value = map.valueAtIndex(centerIndex);
-			peak.setRMS(rms.valueAtIndex(centerIndex));
+			peak.value = map.valueAtIndex(centerIndex, ipolData);
+			peak.setRMS(rms.valueAtIndex(centerIndex, ipolData));
 		}
 		return peak;
 	}

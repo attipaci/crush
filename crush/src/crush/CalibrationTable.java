@@ -36,12 +36,25 @@ public class CalibrationTable extends Interpolator {
 	 */
 	private static final long serialVersionUID = -3843930469196283911L;
 	
-	public CalibrationTable(String fileName) throws IOException {
+	private static Hashtable<String, CalibrationTable> tables = new Hashtable<String, CalibrationTable>();
+	
+	public static CalibrationTable get(String fileName) throws IOException {
+		CalibrationTable table = tables.get(fileName);
+		if(table == null) {
+			table = new CalibrationTable(fileName);
+			tables.put(fileName, table);
+		}
+		return table;
+	}
+		
+	private CalibrationTable(String fileName) throws IOException {
 		super(fileName);
 	}
 	
 	@Override
-	public void readData(String datafile) throws IOException {
+	protected void readData(String datafile) throws IOException {	
+		System.err.print("   [Loading calibration data] ");
+		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(datafile)));
 
 		String line = null;
@@ -57,6 +70,8 @@ public class CalibrationTable extends Interpolator {
 			add(calibration);
 		}
 		in.close();
+		
+		System.err.println("-- " + size() + " values parsed.");
 	}
 	
 	

@@ -37,12 +37,26 @@ public class TauInterpolator extends Interpolator {
 	 */
 	private static final long serialVersionUID = -7962217110619389946L;
 	
-	public TauInterpolator(String fileName) throws IOException {
+	private static Hashtable<String, TauInterpolator> tables = new Hashtable<String, TauInterpolator>();
+
+	
+	public static TauInterpolator get(String fileName) throws IOException {
+		TauInterpolator table = tables.get(fileName);
+		if(table == null) {
+			table = new TauInterpolator(fileName);
+			tables.put(fileName, table);
+		}
+		return table;
+	}
+	
+	private TauInterpolator(String fileName) throws IOException {
 		super(fileName);
 	}
 	
 	@Override
-	public void readData(String fileName) throws IOException {
+	protected void readData(String fileName) throws IOException {
+		System.err.print("   [Loading tau data] ");
+		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		
 		String line = null;
@@ -56,6 +70,10 @@ public class TauInterpolator extends Interpolator {
 			add(skydip);
 		}
 		in.close();
+		
+		this.fileName = fileName;
+		
+		System.err.println("-- " + size() + " values parsed.");
 	}	
 }
 

@@ -79,15 +79,12 @@ public class Complex extends Vector2D {
 	
 	// This is almost exactly the same speed as separating the operations
 	// I.e. the overheads are in accessing the complex fields...
-	public final void omegaFFT(final Complex d1, final Complex d2) {
-		final double d2x = d2.x;
-		final double d2y = d2.y;
-		
-		double z = x * d2x - y * d2y;
+	public final void omegaFFT(final Complex d1, final Complex d2) {	
+		double z = x * d2.x - y * d2.y;
 		d2.x = d1.x - z;
 		d1.x += z;
 		
-		z = x * d2y + y * d2x;
+		z = x * d2.y + y * d2.x;
 		d2.y = d1.y - z;
 		d1.y += z;	
 	}

@@ -36,13 +36,13 @@ import util.astro.AstroTime;
 import util.astro.HorizontalCoordinates;
 import util.data.WeightedPoint;
 
-public class PointingTable extends ArrayList<PointingEntry> {
+public class PointingTable extends ArrayList<PointingTable.Entry> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -416191292991301334L;
 
-	public String fileName;
+	public String fileName = "";
 	
 	public double minS2N = 10.0;
 	public Range sizeRange = new Range(15.0 * Unit.arcsec, 25.0 * Unit.arcsec);
@@ -50,14 +50,30 @@ public class PointingTable extends ArrayList<PointingEntry> {
 	public double searchRadius = 15.0 * Unit.deg;
 	public double timeWindow = 0.5 * Unit.hour;
 	
-	PointingTable pointings;
+	private static Hashtable<String, PointingTable> tables = new Hashtable<String, PointingTable>();
 	
-	public void read(String fileName) throws IOException {
+	public static PointingTable get(String fileName) throws IOException {
+		PointingTable table = tables.get(fileName);
+		if(table == null) {
+			table = new PointingTable(fileName);
+			tables.put(fileName, table);
+		}
 		
-		System.err.print("Parsing pointing logs. ");
+		return table;
+	}
+	
+		
+	private PointingTable(String fileName) throws IOException {
+		read(fileName);
+	}
+	
+	private void read(String fileName) throws IOException {
+		if(fileName.equals(this.fileName)) return;
+		
+		System.err.print("   [Loading pointing log.] ");
 		
 		for(LogFile.Row row : LogFile.read(fileName)) {
-			PointingEntry pointing = new PointingEntry();
+			Entry pointing = new Entry();
 			try { 
 				pointing.id = row.get("id").getValue();
 				AstroTime time = AstroTime.forFitsTimeStamp(pointing.id.substring(0, 10));
@@ -94,7 +110,7 @@ public class PointingTable extends ArrayList<PointingEntry> {
 		
 		Collections.sort(this);
 		
-		System.err.println(size() + " valid records found.");	
+		System.err.println("-- " + size() + " valid records found.");	
 	}
 	
 	public int indexBefore(double MJD) {
@@ -114,7 +130,7 @@ public class PointingTable extends ArrayList<PointingEntry> {
 		for(int i = i0; i >= 0; i--) {
 			if(MJD - get(i).MJD > dMJD) break;
 
-			PointingEntry pointing = get(i);
+			Entry pointing = get(i);
 			Vector2D increment = getIncrementalPointing(pointing, pointingModel);
 			//increment.rotate(pointing.horizontal.EL());
 			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
@@ -127,7 +143,7 @@ public class PointingTable extends ArrayList<PointingEntry> {
 		for(int i = i0+1; i<size(); i++) {
 			if(get(i).MJD - MJD > dMJD) break;
 	
-			PointingEntry pointing = get(i);
+			Entry pointing = get(i);
 			Vector2D increment = getIncrementalPointing(pointing, pointingModel);
 			//increment.rotate(pointing.horizontal.EL());
 			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
@@ -146,7 +162,7 @@ public class PointingTable extends ArrayList<PointingEntry> {
 		
 	}
 	
-	public Vector2D getIncrementalPointing(PointingEntry pointing, IRAMPointingModel pointingModel) {			
+	public Vector2D getIncrementalPointing(Entry pointing, IRAMPointingModel pointingModel) {			
 		Vector2D model = pointingModel.getCorrection(pointing.horizontal, (pointing.MJD % 1.0) * Unit.day);
 		model.x = pointing.offset.x - model.x;
 		model.y = pointing.offset.y - model.y;
@@ -159,23 +175,20 @@ public class PointingTable extends ArrayList<PointingEntry> {
 		
 		return Math.exp(-0.5 * (devX * devX + devT * devT));
 	}
+
+	class Entry implements Comparable<Entry> {
+		String id;
+		double MJD;
+		HorizontalCoordinates horizontal;
+		Vector2D offset;
+		double significance;
+		double FWHM;
+		
+		public int compareTo(Entry arg0) {
+			return Double.compare(MJD, arg0.MJD);
+		}
+	}	
 	
 }
 
 
-
-class PointingEntry implements Comparable<PointingEntry> {
-	String id;
-	double MJD;
-	HorizontalCoordinates horizontal;
-	Vector2D offset;
-	double significance;
-	double FWHM;
-	
-	public int compareTo(PointingEntry arg0) {
-		return Double.compare(MJD, arg0.MJD);
-	}
-	
-	
-	
-}

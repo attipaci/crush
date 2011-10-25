@@ -25,6 +25,7 @@
 package crush.sourcemodel;
 
 import util.*;
+import util.data.Data2D;
 import util.data.DataPoint;
 import util.data.Index2D;
 import util.text.AngleFormat;
@@ -134,6 +135,7 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 	
 	public DataPoint finetunePeak(AstroMap map) {
 		Vector2D centerIndex = getIndex(map.grid);
+		Data2D.InterpolatorData ipolData = map.new InterpolatorData();
 		
 		int i = (int) Math.round(centerIndex.x);
 		int j = (int) Math.round(centerIndex.y);
@@ -166,7 +168,7 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		centerIndex.x = i + di;
 		centerIndex.y = j + dj;
 		
-		double peak = map.valueAtIndex(i+di, j+dj);
+		double peak = map.valueAtIndex(i+di, j+dj, ipolData);
 	
 		return new DataPoint(peak, peak / significance);
 	}

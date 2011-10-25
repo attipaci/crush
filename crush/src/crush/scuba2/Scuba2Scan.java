@@ -64,6 +64,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			Fits fits = getFits(file);
 			if(fits == null) continue;
 			
+			// If converting only, than close the FITS file and move on...
 			if(hasOption("convert")) if(fitsTemp != null) {
 				try { fits.getStream().close(); }
 				catch(IOException e) {}
@@ -71,6 +72,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 				continue;				
 			}
 			
+			// Get the header information from the first file in this scan...
 			if(i==0) {
 				BasicHDU mainHDU = fits.getHDU(0);
 				parseScanPrimaryHDU(mainHDU);
@@ -79,14 +81,17 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 				clear();
 			}
 					
+			// Read the data contained in the FITS...
 			try { readSubscan(fits); }
 			catch(IllegalStateException e) { 
 				System.err.println("   WARNING! " + e.getMessage() + " Skipping.");
 			}
 			
+			// Try close the FITS stream so that it can be garbage collected.
 			try { fits.getStream().close(); }
 			catch(IOException e) {}
 			
+			// Remove the temporary FITS file, as it is no longer needed...
 			if(fitsTemp != null) if(fitsTemp.exists()) {
 				fitsTemp.delete();
 				fitsTemp = null;
@@ -183,7 +188,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		return sdfName.substring(0, sdfName.length() - 4) + ".fits";		
 	}
 	
-	public Fits getFits(File file) throws IOException, FileNotFoundException, FitsException {
+	private Fits getFits(File file) throws IOException, FileNotFoundException, FitsException {
 		String fileName = file.getName();
 		if(fileName.endsWith(".sdf.gz")) 
 			throw new IOException("Uncompress SDF '" + fileName + "' before use.");
@@ -201,8 +206,9 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			String outName = getFitsName(inName);
 				
 			// Check if the SDF has a FITS equivalent in the same directory...
+			// Return the existing FITS is exists...
 			File outFile = new File(outName);
-			if(outFile.exists()) return null;
+			if(outFile.exists()) return new Fits(outFile);
 		
 			// Try the same in the default working directory of CRUSH...
 			String path = CRUSH.workPath;
@@ -246,9 +252,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		}
 		return null;
 	}
-
-
-
+	
 
 	protected void readSubscan(Fits fits) throws IllegalStateException, HeaderCardException, FitsException {
 		// Read in entire FITS file
