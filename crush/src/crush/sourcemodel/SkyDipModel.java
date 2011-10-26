@@ -80,7 +80,7 @@ public class SkyDipModel {
 		return offset.value + Tobs * Kelvin.value;
 	}
 	
-	protected void initialize(AmoebaMinimizer minimizer, SkyDip<?,?> skydip) {
+	protected void initialize(AmoebaMinimizer minimizer, SkyDip skydip) {
 		double lowest = Double.NaN;
 		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight > 0.0) {
 			lowest = skydip.data[i].value;
@@ -117,7 +117,7 @@ public class SkyDipModel {
 		for(int p=0; p<parameters.size(); p++) parameters.get(p).value = tryparm[p];
 	}
 	
-	public double getDeviationFrom(SkyDip<?,?> skydip) {
+	public double getDeviationFrom(SkyDip skydip) {
 		double sumdev = 0.0;
 		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight > 0.0) {
 			double EL = skydip.getEL(i);
@@ -129,7 +129,7 @@ public class SkyDipModel {
 	}
 
 	
-	public void fit(final SkyDip<?,?> skydip) {
+	public void fit(final SkyDip skydip) {
 		AmoebaMinimizer minimizer = new AmoebaMinimizer() {
 			@Override
 			public double evaluate(double[] tryparm) {

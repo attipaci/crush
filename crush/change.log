@@ -2,7 +2,8 @@
 >> Finish parallel in Data2D, GridImage, AstroImage, AstroMap...
 >> Finish gridMap unimplemented methods.
 >> Go through leftover TODO's from code reorganization...
-
+>> Try SourceModel<CoordinateType>, SourceMap<CT>, ScalarMap<CT> ...
+>> Instrument.getCoordinateInstance();
 
 	[NEW] Introducing a parallel processing framework for images. The goal 
 	is to speed up image processing functionality on modern multicore 
@@ -47,6 +48,12 @@
 	result, a whole lot of code has been moved around to generalize objects
 	s.t. more of the crush tools can be used also on non-astronomical
 	images (perhaps sometime in the future...).
+
+	[CODE] Undid generic types on SourceModel. It did not really make sense
+	to use them here (no speccific reverse access to scans and instruments
+	is necessary, and restriction to instrument subclasses is easily done
+	through the constructor). At the same time, the lifting of the 
+	restriction makes for nicer code, and removes some annoying obstacles.
 
 	[CLEANUP] Removed obsoleted key 'whiten.neighbours' from configuration.
 

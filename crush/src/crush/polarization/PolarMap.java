@@ -35,20 +35,20 @@ import java.util.*;
 import util.Purifiable;
 import util.Unit;
 
-public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? extends InstrumentType, ?>>
-		extends SourceModel<InstrumentType, ScanType> {
+public class PolarMap extends SourceModel {
 
-	ScalarMap<InstrumentType, ScanType> N,Q,U;
+	ScalarMap N,Q,U;
 	public boolean usePolarization = false;
 	public boolean hasPolarization = false;
 	
-	public PolarMap(InstrumentType instrument) {
+	public PolarMap(Array<?,?> instrument) {
 		super(instrument);	
 	}
+	
+	public Array<?,?> getArray() { return (Array<?,?>) instrument; }
 
-	public ScalarMap<InstrumentType, ScanType> getMapInstance() {
-		
-		return new ScalarMap<InstrumentType, ScanType>(instrument);
+	public ScalarMap getMapInstance() {
+		return new ScalarMap(instrument);
 	}
 	
 	public boolean usePolarization() {
@@ -67,7 +67,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		N.enableWeighting = true;
 		N.id = "N";
 		
-		Q = (ScalarMap<InstrumentType, ScanType>) N.copy();
+		Q = (ScalarMap) N.copy();
 		Q.standalone();
 		Q.signalMode = PolarModulation.Q;
 		Q.enableLevel = false;
@@ -75,7 +75,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		Q.enableBias = false;
 		Q.id = "Q";
 		
-		U = (ScalarMap<InstrumentType, ScanType>) N.copy();
+		U = (ScalarMap) N.copy();
 		U.standalone();
 		U.signalMode = PolarModulation.U;
 		U.enableLevel = false;
@@ -85,19 +85,18 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	}
 	
 	@Override
-	public SourceModel<InstrumentType, ScanType> copy() {
-		PolarMap<InstrumentType, ScanType> copy = (PolarMap<InstrumentType, ScanType>) super.copy();
-		copy.N = (ScalarMap<InstrumentType, ScanType>) N.copy();
-		copy.Q = (ScalarMap<InstrumentType, ScanType>) Q.copy();
-		copy.U = (ScalarMap<InstrumentType, ScanType>) U.copy();
+	public SourceModel copy() {
+		PolarMap copy = (PolarMap) super.copy();
+		copy.N = (ScalarMap) N.copy();
+		copy.Q = (ScalarMap) Q.copy();
+		copy.U = (ScalarMap) U.copy();
 		return copy;
 	}
 	
 	
-	@SuppressWarnings("unchecked")
 	@Override
-	public void add(SourceModel<?, ?> model, double weight) {
-		PolarMap<InstrumentType, ScanType> other = (PolarMap<InstrumentType, ScanType>) model;
+	public void add(SourceModel model, double weight) {
+		PolarMap other = (PolarMap) model;
 		N.add(other.N, weight);
 		if(usePolarization()) {
 			Q.add(other.Q, weight);
@@ -191,8 +190,8 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	}
 	
 	// TODO redo with parallel...
-	public ScalarMap<InstrumentType, ScanType> getP() {
-		final ScalarMap<InstrumentType, ScanType> P = (ScalarMap<InstrumentType, ScanType>) N.copy();
+	public ScalarMap getP() {
+		final ScalarMap P = (ScalarMap) N.copy();
 		
 		final AstroMap q = Q.map;
 		final AstroMap u = U.map;
@@ -220,13 +219,13 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		return P;
 	}
 	
-	public ScalarMap<InstrumentType, ScanType> getI() {
+	public ScalarMap getI() {
 		return getI(getP());
 	}	
 	
 	// TODO redo with parallel...
-	public ScalarMap<InstrumentType, ScanType> getI(ScalarMap<InstrumentType, ScanType> P) {	
-		final ScalarMap<InstrumentType, ScanType> I = (ScalarMap<InstrumentType, ScanType>) N.copy();
+	public ScalarMap getI(ScalarMap P) {	
+		final ScalarMap I = (ScalarMap) N.copy();
 		final AstroMap n = N.map;
 		final AstroMap p = P.map;
 		final AstroMap t = I.map;
@@ -244,8 +243,8 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 	}
 	
 	// TODO redo with parallel...
-	public ScalarMap<InstrumentType, ScanType> getPolarFraction(ScalarMap<InstrumentType, ScanType> P, ScalarMap<InstrumentType, ScanType> I, double accuracy) {	
-		final ScalarMap<InstrumentType, ScanType> F = (ScalarMap<InstrumentType, ScanType>) P.copy();
+	public ScalarMap getPolarFraction(ScalarMap P, ScalarMap I, double accuracy) {	
+		final ScalarMap F = (ScalarMap) P.copy();
 		final AstroMap p = P.map;
 		final AstroMap t = I.map;
 		final AstroMap f = F.map;
@@ -296,11 +295,11 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 		U.write(path, false);
 		
 		// Write P (polarized power)
-		ScalarMap<InstrumentType, ScanType> P = getP();
+		ScalarMap P = getP();
 		P.write(path, false);	
 			
 		// Write I (total power)
-		ScalarMap<InstrumentType, ScanType> I = getI(P);
+		ScalarMap I = getI(P);
 		I.write(path, false);	
 		
 		if(hasOption("source.polarization.fraction")) {
@@ -308,7 +307,7 @@ public class PolarMap<InstrumentType extends Array<?,?>, ScanType extends Scan<?
 			double accuracy = hasOption("source.polarization.fraction.rmsclip") ?
 					option("source.polarization.fraction.rmsclip").getDouble() : 0.03;
 			
-			ScalarMap<InstrumentType, ScanType> F = getPolarFraction(P, I, accuracy);
+			ScalarMap F = getPolarFraction(P, I, accuracy);
 			F.write(path, false);
 		}	
 	}

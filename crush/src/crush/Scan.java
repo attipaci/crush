@@ -48,7 +48,7 @@ import util.data.WeightedPoint;
 import util.text.TableFormatter;
 
 public abstract class Scan<InstrumentType extends Instrument<?>, IntegrationType extends Integration<InstrumentType, ?>>
-extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, IntegrationType>>, TableFormatter.Entries {
+extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatter.Entries {
 	/**
 	 * 
 	 */
@@ -72,7 +72,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 	public Range longitudeRange, latitudeRange;
 	public boolean isTracking = false;
 	
-	public SourceModel<?,?> sourceModel;
+	public SourceModel sourceModel;
 	public double weight = 1.0;
 	
 	public int sourcePoints = 0;
@@ -86,7 +86,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		this.instrument = (InstrumentType) instrument.copy();
 	}
 	
-	public int compareTo(Scan<InstrumentType, IntegrationType> other) {
+	public int compareTo(Scan<?, ?> other) {
 		if(serialNo == other.serialNo) return 0;
 		return serialNo < other.serialNo ? -1 : 1;
 	}
@@ -345,7 +345,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		instrument.editScanHeader(header);
 	}
 	
-	public void setSourceModel(SourceModel<?,?> model) {
+	public void setSourceModel(SourceModel model) {
 		sourceModel = model;
 	}
 	
@@ -413,7 +413,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		else if(name.startsWith("src.")) {
 			if(pointing == null) return "---";
 			if(!(sourceModel instanceof ScalarMap)) return "---";
-			AstroMap map = ((ScalarMap<?,?>) sourceModel).map;
+			AstroMap map = ((ScalarMap) sourceModel).map;
 			return pointing.getData(map).getFormattedEntry(name.substring(4), formatSpec);
 		}
 		else if(name.equals("object")) return sourceName;
@@ -617,8 +617,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 	public String getPointingString() {
 		String info = "";
 		
-		if(sourceModel instanceof ScalarMap<?,?>) {
-			AstroMap map = ((ScalarMap<?,?>) sourceModel).map;
+		if(sourceModel instanceof ScalarMap) {
+			AstroMap map = ((ScalarMap) sourceModel).map;
 			info += pointing.pointingInfo(map) + "\n";
 		}
 			

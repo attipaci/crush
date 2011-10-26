@@ -24,40 +24,45 @@
 
 package util.astro;
 
+import util.Projection2D;
+import util.Projector2D;
 import util.SphericalCoordinates;
-import util.SphericalProjection;
-import util.Vector2D;
 
-public class CelestialProjector {
-	public EquatorialCoordinates equatorial = new EquatorialCoordinates();
-	public Vector2D offset = new Vector2D();
+public class CelestialProjector extends Projector2D<SphericalCoordinates> {
+	private EquatorialCoordinates equatorial;
+	private CelestialCoordinates celestial;
 	
-	private SphericalProjection projection;
-	private CelestialCoordinates coords;
-	
-	public CelestialProjector(SphericalProjection projection) {
-		this.projection = projection;
-		SphericalCoordinates reference = projection.getReference();
-		if(reference instanceof CelestialCoordinates) coords = (CelestialCoordinates) reference.clone();
+	public CelestialProjector(Projection2D<SphericalCoordinates> projection) {
+		super(projection);
+
+		// The equatorial is the same as coords if that is itself equatorial
+		// otherwise it's used for converting to and from equatorial...
+		if(getCoordinates() instanceof EquatorialCoordinates) 
+			equatorial = (EquatorialCoordinates) getCoordinates();
+		else equatorial = new EquatorialCoordinates();
+
+		// celestial is the same as coords if coords itself is celestial
+		// otherwise celestial is null, indicating horizontal projection...
+		if(getCoordinates() instanceof CelestialCoordinates)
+			celestial = (CelestialCoordinates) getCoordinates();
+		
 	}
+	
+	public EquatorialCoordinates getEquatorial() { return equatorial; }
 	
 	public final boolean isHorizontal() {
-		return projection.getReference() instanceof HorizontalCoordinates;
+		return celestial == null;
 	}
 	
+	@Override
 	public final void project() {
-		if(coords instanceof EquatorialCoordinates) projection.project(equatorial, offset);
-		else {
-			coords.fromEquatorial(equatorial);
-			projection.project(coords, offset);
-		}
+		if(getCoordinates() != equatorial) celestial.fromEquatorial(equatorial);
+		super.project();
 	}
 	
+	@Override
 	public final void deproject() {
-		if(coords instanceof EquatorialCoordinates) projection.deproject(offset, equatorial);
-		else {
-			projection.deproject(offset, coords);
-			coords.toEquatorial(equatorial);
-		}
+		super.deproject();
+		if(getCoordinates() != equatorial) celestial.toEquatorial(equatorial);
 	}
 }

@@ -210,7 +210,7 @@ public abstract class Frame implements Cloneable {
 	public final void project(final Vector2D position, final CelestialProjector projector) {
 		if(projector.isHorizontal()) getHorizontalOffset(position, projector.offset);
 		else {
-			getEquatorial(position, projector.equatorial);
+			getEquatorial(position, projector.getEquatorial());
 			projector.project();
 		}
 	}	

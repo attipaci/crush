@@ -386,7 +386,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	}
 
 	@Override 
-	public int compareTo(Scan<Gismo, GismoIntegration> scan) {
+	public int compareTo(Scan<?, ?> scan) {
 		try {
 			int dateComp = dateFormat.parse(date).compareTo(dateFormat.parse(((GismoScan) scan).date));
 			if(dateComp != 0) return dateComp;

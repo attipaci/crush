@@ -147,9 +147,9 @@ public class PolKa extends Laboca {
 	}
 	
 	@Override
-	public SourceModel<?, ?> getSourceModelInstance() {
-		if(hasOption("source.synchronized")) return new SyncPolarMap<Laboca, PolKaScan>(this);
-		else return new PolarMap<Laboca, PolKaScan>(this);
+	public SourceModel getSourceModelInstance() {
+		if(hasOption("source.synchronized")) return new SyncPolarMap(this);
+		else return new PolarMap(this);
 	}  
 	
 }

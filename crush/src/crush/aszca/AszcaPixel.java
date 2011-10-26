@@ -63,7 +63,7 @@ public class AszcaPixel extends APEXPixel {
 	}	
 	
 	@Override
-	public final double overlap(Channel channel, SourceModel<?,?> model) {
+	public final double overlap(Channel channel, SourceModel model) {
 		return channel == this ? 1.0 : 0.0;
 	}
 	

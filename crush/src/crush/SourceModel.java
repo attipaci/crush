@@ -29,18 +29,18 @@ import util.*;
 import java.util.*;
 
 
-public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType extends Scan<? extends InstrumentType, ?>> implements Cloneable {
-	public InstrumentType instrument;
+public abstract class SourceModel implements Cloneable {
+	public Instrument<?> instrument;
 	private Configurator options; 
 		
-	public Vector<ScanType> scans;
+	public Vector<Scan<?,?>> scans;
 	public boolean isValid = false;
 	public int generation = 0;
 	public String commandLine;
 	public String id;	
 	
 	
-	public SourceModel(InstrumentType instrument) {
+	public SourceModel(Instrument<?> instrument) {
 		this.instrument = instrument;
 	}
 	
@@ -66,16 +66,14 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 		return options.get(name);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public SourceModel<InstrumentType, ScanType> copy() {
-		SourceModel<InstrumentType, ScanType> copy = (SourceModel<InstrumentType, ScanType>) clone();
-	
+	public SourceModel copy() {
+		SourceModel copy = (SourceModel) clone();
 		return copy;
 	}
 	
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
-		this.scans = new Vector<ScanType>();
-		for(Scan<?,?> scan : collection) scans.add((ScanType) scan);
+		this.scans = new Vector<Scan<?,?>>();
+		for(Scan<?,?> scan : collection) scans.add(scan);
 		
 		double janskyPerBeam = scans.get(0).instrument.janskyPerBeam();
 		for(Scan<?,?> scan : scans) {
@@ -92,7 +90,7 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 		isValid = false;
 	}
 	
-	public abstract void add(SourceModel<?, ?> model, double weight);
+	public abstract void add(SourceModel model, double weight);
 	
 	public abstract void add(Integration<?,?> integration);
 		
@@ -111,10 +109,9 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 
 		reset();
 			
-		Parallel<ScanType> extraction = new Parallel<ScanType>(CRUSH.maxThreads) {
+		Parallel<Scan<?,?>> extraction = new Parallel<Scan<?,?>>(CRUSH.maxThreads) {
 			@Override
-			public void process(ScanType scan, ProcessingThread thread) {
-				@SuppressWarnings("unchecked")
+			public void process(Scan<?,?> scan, ProcessingThread thread) {
 				ExtractionThread extractor = (ExtractionThread) thread;
 				
 				extractor.scanSource.reset();
@@ -130,9 +127,9 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 				 * 
 				 */
 				private static final long serialVersionUID = 4434473251287385757L;
-				SourceModel<InstrumentType, ScanType> scanSource = copy();
+				SourceModel scanSource = copy();
 			
-				public ExtractionThread(Parallel<ScanType> p, int capacity) { super(p, capacity); }
+				public ExtractionThread(Parallel<Scan<?,?>> p, int capacity) { super(p, capacity); }
 			}
 			
 		};
@@ -196,10 +193,10 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 	}
 	
 	public String getDefaultCoreName() {
-		ScanType first, last;
+		Scan<?,?> first, last;
 		first = last = scans.get(0);
 		
-		for(ScanType scan : scans) {
+		for(Scan<?,?> scan : scans) {
 			if(scan.compareTo(first) < 0) first = scan;
 			else if(scan.compareTo(last) > 0) last = scan;			
 		}
@@ -212,7 +209,7 @@ public abstract class SourceModel<InstrumentType extends Instrument<?>, ScanType
 	
 	public ArrayList<Integration<?,?>> getIntegrations() {
 		final ArrayList<Integration<?,?>> integrations = new ArrayList<Integration<?,?>>();
-		for(ScanType scan : scans) for(Integration<?,?> integration : scan) integrations.add(integration);
+		for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) integrations.add(integration);
 		return integrations;		
 	}
 

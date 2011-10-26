@@ -73,7 +73,7 @@ public class GenericInstrument extends Instrument<Channel> {
 	}
 
 	@Override
-	public SourceModel<?, ?> getSourceModelInstance() {
+	public SourceModel getSourceModelInstance() {
 		// TODO Auto-generated method stub
 		return null;
 	}

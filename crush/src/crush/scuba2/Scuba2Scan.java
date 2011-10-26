@@ -395,7 +395,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 
 	
 	@Override 
-	public int compareTo(Scan<Scuba2, Scuba2Subscan> scan) {
+	public int compareTo(Scan<?,?> scan) {
 		Scuba2Scan scubascan = (Scuba2Scan) scan;
 		if(iDate != scubascan.iDate) return iDate < scubascan.iDate ? -1 : 1;
 		if(serialNo == scan.serialNo) return 0;
@@ -409,7 +409,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	}
 	
 	@Override
-	public void setSourceModel(SourceModel<?,?> model) {
+	public void setSourceModel(SourceModel model) {
 		super.setSourceModel(model);
 		sourceModel.id = instrument.filter;
 	}	

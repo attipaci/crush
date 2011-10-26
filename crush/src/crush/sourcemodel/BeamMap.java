@@ -33,26 +33,23 @@ import crush.*;
 import crush.array.*;
 import crush.astro.AstroMap;
 
-public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? extends InstrumentType, ?>>
-		extends SourceMap<InstrumentType, ScanType> {
+public class BeamMap extends SourceMap {
 	
-	ScalarMap<InstrumentType, ScanType>[] pixelMap;
-	ScalarMap<InstrumentType, ScanType> template;
+	ScalarMap[] pixelMap;
+	ScalarMap template;
 	
-	public BeamMap(InstrumentType instrument) {
+	public BeamMap(Array<?, ?> instrument) {
 		super(instrument);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public SourceModel<InstrumentType, ScanType> copy() {
-		BeamMap<InstrumentType, ScanType> copy = (BeamMap<InstrumentType, ScanType>) super.copy();
+	public SourceModel copy() {
+		BeamMap copy = (BeamMap) super.copy();
 		copy.pixelMap = new ScalarMap[pixelMap.length];
-		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) copy.pixelMap[p] = (ScalarMap<InstrumentType, ScanType>) pixelMap[p].copy();
+		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) copy.pixelMap[p] = (ScalarMap) pixelMap[p].copy();
 		return copy;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		// Set all pixel positions to zero...
@@ -64,28 +61,29 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 		
 		super.createFrom(collection);
 		
-		template = new ScalarMap<InstrumentType, ScanType>(instrument);
+		template = new ScalarMap(instrument);
 		template.setOptions(getOptions());
 		template.createFrom(collection);
 		
-		pixelMap = new ScalarMap[instrument.maxPixels() + 1];
+		pixelMap = new ScalarMap[getArray().maxPixels() + 1];
 	}
+	
+	public Array<?, ?> getArray() { return (Array<?, ?>) instrument; }
 	
 	@Override
 	public void reset() {
 		super.reset();
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].reset();
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	@Override
-	public void add(SourceModel<?, ?> model, double weight) {
-		if(!(model instanceof BeamMap<?, ?>)) throw new IllegalArgumentException("ERROR! Cannot add " + model.getClass().getSimpleName() + " to " + getClass().getSimpleName());
-		BeamMap<InstrumentType, ScanType> other = (BeamMap<InstrumentType, ScanType>) model;
+	public void add(SourceModel model, double weight) {
+		if(!(model instanceof BeamMap)) throw new IllegalArgumentException("ERROR! Cannot add " + model.getClass().getSimpleName() + " to " + getClass().getSimpleName());
+		BeamMap other = (BeamMap) model;
 		
 		for(int p=0; p<pixelMap.length; p++) if(other.pixelMap[p] != null) {
 			if(pixelMap[p] == null) {
-				pixelMap[p] = (ScalarMap<InstrumentType, ScanType>) other.pixelMap[p].copy();
+				pixelMap[p] = (ScalarMap) other.pixelMap[p].copy();
 				pixelMap[p].map.scaleWeight(weight);
 			}
 			else pixelMap[p].add(other.pixelMap[p], weight);
@@ -102,10 +100,10 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 	@Override
 	protected void add(Frame exposure, Pixel pixel, Index2D index, double fGC, double[] sourceGain, double dt, int excludeSamples) {
 		int i = pixel.getDataIndex();
-		ScalarMap<InstrumentType, ScanType> map = pixelMap[i];
+		ScalarMap map = pixelMap[i];
 		
 		if(map == null) {
-			map = (ScalarMap<InstrumentType, ScanType>) template.copy();
+			map = (ScalarMap) template.copy();
 			map.id = Integer.toString(i);
 			map.standalone();
 			pixelMap[i] = map;
@@ -183,7 +181,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 
 	@Override
 	protected void sync(Frame exposure, Pixel pixel, Index2D index, double fG, double[] sourceGain, double[] syncGain, boolean isMasked) {
-		ScalarMap<InstrumentType, ScanType> map = pixelMap[pixel.getDataIndex()];
+		ScalarMap map = pixelMap[pixel.getDataIndex()];
 		if(map != null) map.sync(exposure, pixel, index, fG, sourceGain, syncGain, isMasked);	
 	}
 
@@ -247,7 +245,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 		
 		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
 			int i = pixel.getDataIndex();
-			ScalarMap<InstrumentType, ScanType> beamMap = pixelMap[i];
+			ScalarMap beamMap = pixelMap[i];
 			if(beamMap != null) {
 				AstroMap map = beamMap.map;
 				if(smooth) map.smoothTo(instrument.resolution);
@@ -272,7 +270,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 		
 		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
 			int i = pixel.getDataIndex();
-			ScalarMap<InstrumentType, ScanType> map = pixelMap[i];
+			ScalarMap map = pixelMap[i];
 			if(map != null) {
 				final double rel = pixelPeak[i] / mean;
 				for(Channel channel : pixel) channel.coupling *= rel;
@@ -323,6 +321,6 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 
 	@Override
 	public void noParallel() {
-		for(ScalarMap<?,?> map : pixelMap) map.noParallel();
+		for(ScalarMap map : pixelMap) map.noParallel();
 	}	
 }
