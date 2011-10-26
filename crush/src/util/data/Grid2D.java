@@ -38,8 +38,8 @@ import util.astro.HorizontalCoordinates;
 import util.astro.SuperGalacticCoordinates;
 import nom.tam.fits.*;
 
-public abstract class Grid2D<CoordinateType extends CoordinatePair, ProjectionType extends Projection2D<CoordinateType>> implements Cloneable {
-	public ProjectionType projection;
+public abstract class Grid2D<CoordinateType extends CoordinatePair> implements Cloneable {
+	public Projection2D<CoordinateType> projection;
 	public String alt = ""; // The FITS alternative coordinate system specifier... 
 	
 	public Vector2D refIndex = new Vector2D();
@@ -54,7 +54,7 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair, ProjectionTy
 	
 	public boolean equals(Object o, double precision) {
 		if(!(o instanceof Grid2D)) return false;
-		Grid2D<?, ?> grid = (Grid2D<?, ?>) o;
+		Grid2D<?> grid = (Grid2D<?>) o;
 		if(!grid.projection.equals(projection)) return false;
 		if(Math.abs(grid.m11 / m11 - 1.0) > precision) return false;
 		if(Math.abs(grid.m12 / m12 - 1.0) > precision) return false;
@@ -79,9 +79,9 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair, ProjectionTy
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Grid2D<CoordinateType, ProjectionType> copy() {
-		Grid2D<CoordinateType, ProjectionType> copy = (Grid2D<CoordinateType, ProjectionType>) clone();
-		copy.projection = (ProjectionType) projection.copy();
+	public Grid2D<CoordinateType> copy() {
+		Grid2D<CoordinateType> copy = (Grid2D<CoordinateType>) clone();
+		copy.projection = projection.copy();
 		copy.refIndex = (Vector2D) refIndex.clone();
 		return copy;
 	}
@@ -301,7 +301,7 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair, ProjectionTy
     
     public void setReferenceIndex(Vector2D v) { refIndex = v; }
     
-    public final ProjectionType getProjection() { return projection; }
+    public final Projection2D<CoordinateType> getProjection() { return projection; }
 
     public void getIndex(CoordinateType coords, Vector2D index) {
     	projection.project(coords, index);

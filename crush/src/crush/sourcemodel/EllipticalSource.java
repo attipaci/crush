@@ -24,10 +24,14 @@ package crush.sourcemodel;
 
 import java.text.ParseException;
 
-import util.*;
-import util.data.DataPoint;
+import crush.Instrument;
 
-public class EllipticalSource extends GaussianSource {
+import util.*;
+import util.data.Bounds;
+import util.data.DataPoint;
+import util.data.GridImage;
+
+public class EllipticalSource<CoordinateType extends CoordinatePair> extends GaussianSource<CoordinateType> {
 	public DataPoint elongation = new DataPoint();
 	public DataPoint angle = new DataPoint();
 	
@@ -36,28 +40,28 @@ public class EllipticalSource extends GaussianSource {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public EllipticalSource(AstroMap map, Vector2D offset, double a, double b, double angle) {
+	public EllipticalSource(GridImage<CoordinateType> map, Vector2D offset, double a, double b, double angle) {
 		super(map, offset, 0.5*(a+b));
 		elongation.value = (a-b) / (a+b);
 		this.angle.value = angle;
 		// TODO Auto-generated constructor stub
 	}
 	
-	public EllipticalSource(SphericalCoordinates coords, double a, double b, double angle) {
+	public EllipticalSource(CoordinateType coords, double a, double b, double angle) {
 		super(coords, 0.5*(a+b));
 		elongation.value = (a-b) / (a+b);
 		this.angle.value = angle;
 		// TODO Auto-generated constructor stub
 	}
 	
-	public EllipticalSource(String line, AstroImage forImage)
+	public EllipticalSource(String line, GridImage<CoordinateType> forImage)
 			throws ParseException {
 		super(line, forImage);
 		// TODO Auto-generated constructor stub
 	}
 	
 	@Override
-	public void measureShape(AstroMap map) {	
+	public void measureShape(GridImage<CoordinateType> map) {	
 		super.measureShape(map);
 		
 		Vector2D center = getIndex(map.getGrid());
@@ -104,15 +108,22 @@ public class EllipticalSource extends GaussianSource {
 	}
 	
 	@Override
-	public DataTable getData(AstroMap map) {
+	public DataTable getData(GridImage<CoordinateType> map) {
 		DataTable data = super.getData(map);
 		Range axes = getAxes();
 		
 		double da = radius.weight > 0.0 ? Math.hypot(radius.rms(), axes.max * elongation.rms()) : Double.NaN;
 		double db = radius.weight > 0.0 ? Math.hypot(radius.rms(), axes.min * elongation.rms()) : Double.NaN;
 		
-		double sizeUnit = map.instrument.getDefaultSizeUnit();
-		String sizeName = map.instrument.getDefaultSizeName();
+		double sizeUnit = 1.0;
+		String sizeName = "pixels"; 
+		
+		if(map instanceof GridSource) {
+			GridSource<?> sourceMap = ((GridSource<?>) map);
+			Instrument<?> instrument = sourceMap.instrument;
+			sizeUnit = instrument.getDefaultSizeUnit();
+			sizeName = instrument.getDefaultSizeName();
+		}
 		
 		data.add(new Datum("a", axes.max / sizeUnit, sizeName));
 		data.add(new Datum("b", axes.min / sizeUnit, sizeName));
@@ -126,15 +137,21 @@ public class EllipticalSource extends GaussianSource {
 	}
 	
 	@Override
-	public String pointingInfo(AstroMap map) {
+	public String pointingInfo(GridImage<CoordinateType> map) {
 		String info = super.pointingInfo(map);
 		Range axes = getAxes();
 		
 		double da = radius.weight > 0.0 ? Math.hypot(radius.rms(), axes.max * elongation.rms()) : Double.NaN;
 		double db = radius.weight > 0.0 ? Math.hypot(radius.rms(), axes.min * elongation.rms()) : Double.NaN;
 		
-		double sizeUnit = map.instrument.getDefaultSizeUnit();
-		
+		double sizeUnit = 1.0;
+			
+		if(map instanceof GridSource) {
+			GridSource<?> sourceMap = ((GridSource<?>) map);
+			Instrument<?> instrument = sourceMap.instrument;
+			sizeUnit = instrument.getDefaultSizeUnit();
+		}
+			
 		info += " (a="
 				+ Util.f1.format(axes.max / sizeUnit) + "+-" + Util.f1.format(da / sizeUnit) 
 				+ ", b=" 

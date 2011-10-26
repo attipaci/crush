@@ -4,7 +4,7 @@ import util.Unit;
 import util.data.Data2D;
 import crush.GenericInstrument;
 import crush.Instrument;
-import crush.sourcemodel.AstroMap;
+import crush.astro.AstroMap;
 
 public class RegridTest {
 

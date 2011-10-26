@@ -21,23 +21,10 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package util.data;
+package util;
 
-import nom.tam.fits.Header;
-import nom.tam.fits.HeaderCardException;
-import util.*;
+public interface Metric<Type> {
 
-public class CartesianGrid2D extends Grid2D<CoordinatePair> {
-
-	@Override
-	public void parseProjection(Header header) throws HeaderCardException {
-		// TODO Auto-generated method stub	
-	}
-
-	@Override
-	public CoordinatePair getCoordinateInstanceFor(String type) {
-		return new CoordinatePair();
-	}
-	
+	public double distanceTo(Metric<? extends Type> other);
 	
 }

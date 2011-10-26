@@ -23,40 +23,62 @@
 
 package crush.sourcemodel;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
+import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
+import crush.CRUSH;
 import crush.GenericInstrument;
 import crush.Instrument;
+import crush.Scan;
+import util.CoordinatePair;
 import util.Unit;
 import util.Util;
 import util.data.Grid2D;
 import util.data.GridImage;
+import util.data.GridMap;
 
 
-public class SourceImage<GridType extends Grid2D<?, ?>> extends GridImage<GridType> implements Cloneable {
+public abstract class GridSource<CoordinateType extends CoordinatePair> extends GridMap<CoordinateType> implements Cloneable {
 	public Instrument<?> instrument;
+	public Vector<Scan<?, ?>> scans = new Vector<Scan<?, ?>>();
 
-	public Header header;
 	public String sourceName;
+	public String commandLine;
 	
-	public SourceImage() {
+	
+	public int generation = 0;
+	public double integrationTime = 0.0;	
+	
+	
+	public GridSource() {
+	}
+	
+	public GridSource(String fileName, Instrument<?> instrument) throws Exception { 
+		read(fileName);		
 	}
 
-	public SourceImage(int sizeX, int sizeY) {
+	public GridSource(int sizeX, int sizeY) {
 		super(sizeX, sizeY);
 	}
-
-	public SourceImage(double[][] data) {
-		super(data);
+	
+	@Override
+	public void reset() {
+		super.reset();
+		integrationTime = 0.0;
 	}
-
-	public SourceImage(double[][] data, int[][] flag) {
-		super(data, flag);
+	
+	@Override
+	public synchronized void addDirect(final GridMap<?> map, final double w) {
+		super.addDirect(map, w);
+		if(map instanceof GridSource) integrationTime += ((GridSource<?>) map).integrationTime;
 	}
 	
 	@Override
@@ -69,17 +91,71 @@ public class SourceImage<GridType extends Grid2D<?, ?>> extends GridImage<GridTy
 		return size*size;
 	}
 	
+	// Normalize assuming weighting was sigma weighting
+	public void normalize() {
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) { normalize(i, j); }
+		}.process();
+	}
+
+	public void normalize(int i, int j) { 
+		if(getWeight(i, j) <= 0.0) {
+			setValue(i, j, 0.0);
+			setWeight(i, j, 0.0);
+			flag(i, j);
+		} 
+		else {
+			scaleValue(i, j, 1.0 / getWeight(i, j));	
+			unflag(i, j);	    
+		}
+	}
+	
+	
 	@Override
-	public GridImage<GridType> getRegrid(final GridType toGrid) throws IllegalStateException {	
-		SourceImage<GridType> regrid = (SourceImage<GridType>) super.getRegrid(toGrid);
+	public Fits getFits() throws HeaderCardException, FitsException, IOException {
+		Fits fits = super.getFits();
+		
+		if(instrument != null) if(instrument.hasOption("write.scandata")) 
+			for(Scan<?,?> scan : scans) fits.addHDU(scan.getSummaryHDU(instrument.options));
+		
+		return fits;
+	}
+	
+	
+	@Override
+	public void write(Fits fits) throws HeaderCardException, FitsException, IOException {
+		if(fileName == null) fileName = CRUSH.workPath + File.separator + sourceName + ".fits";  
+		super.write(fits);
+	}
+	
+	@Override
+	public GridImage<CoordinateType> getRegrid(final Grid2D<CoordinateType> toGrid) throws IllegalStateException {	
+		GridSource<CoordinateType> regrid = (GridSource<CoordinateType>) super.getRegrid(toGrid);
 		regrid.setUnit(unit.name);
 		return regrid;
 	}
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException, FitsException, IOException {
-		super.editHeader(cursor);
 		cursor.add(new HeaderCard("OBJECT", sourceName, "Source name as it appear in the raw data."));	
+		cursor.add(new HeaderCard("INTEGRTN", integrationTime / Unit.s, "The total integration time in seconds."));
+
+		// The number of scans contributing to this image
+		cursor.add(new HeaderCard("SCANS", scans.size(), "The number of scans in this composite image."));
+		
+		super.editHeader(cursor);
+			
+		// Add the command-line reduction options
+		if(commandLine != null) {
+			StringTokenizer args = new StringTokenizer(commandLine);
+			cursor.add(new HeaderCard("ARGS", args.countTokens(), "The number of arguments passed from the command line."));
+			int i=1;
+			while(args.hasMoreTokens()) Util.addLongFitsKey(cursor, "ARG" + (i++), args.nextToken(), "Command-line argument.");
+		}
+		
+		cursor.add(new HeaderCard("V2JY", instrument.janskyPerBeam(), "1 Jy/beam in instrument data units."));	
+		
 		if(instrument != null) {
 			instrument.editImageHeader(cursor);
 			if(instrument.options != null) instrument.options.editHeader(cursor);
@@ -87,31 +163,16 @@ public class SourceImage<GridType extends Grid2D<?, ?>> extends GridImage<GridTy
 	}
 
 	@Override
-	public void parseHeader(Header header) throws Exception {	
-		this.header = header;
-
-		correctingFWHM = Double.NaN;
-		extFilterFWHM = Double.NaN;
-
+	public void parseHeader(Header header) throws Exception {		
 		super.parseHeader(header);
-		parseBasicHeader(header);
-		parseCrushHeader(header);
+		
+		integrationTime = header.getDoubleValue("INTEGRTN", Double.NaN) * Unit.s;
+		parseInstrumentData(header);
 
 		setUnit(header.getStringValue("BUNIT"));
 	}
-
-	protected void parseCrushHeader(Header header) throws HeaderCardException {
-		correctingFWHM = header.getDoubleValue("CORRECTN", Double.NaN) * Unit.arcsec;
-		creatorVersion = header.getStringValue("CRUSHVER");
-
-		// get the map resolution
-		smoothFWHM = header.getDoubleValue("SMOOTH") * Unit.arcsec;
-		if(smoothFWHM < Math.sqrt(getGrid().getPixelArea()) / fwhm2size) smoothFWHM = Math.sqrt(getGrid().getPixelArea()) / fwhm2size;
-		extFilterFWHM = header.getDoubleValue("EXTFLTR", Double.NaN) * Unit.arcsec;		
-	}
-
-
-	private void parseBasicHeader(Header header) throws HeaderCardException, InstantiationException, IllegalAccessException {
+	
+	private void parseInstrumentData(Header header) throws HeaderCardException, InstantiationException, IllegalAccessException {
 		if(instrument == null) {
 			if(header.containsKey("INSTRUME")) {
 				instrument = Instrument.forName(header.getStringValue("INSTRUME"));
@@ -183,20 +244,6 @@ public class SourceImage<GridType extends Grid2D<?, ?>> extends GridImage<GridTy
 	}
 
 
-	public void setKey(String key, String value) throws HeaderCardException {
-		String comment = header.containsKey(key) ? header.findCard(key).getComment() : "Set bu user.";
-
-		// Try add as boolean, int or double -- fall back to String...
-		try{ header.addValue(key, Util.parseBoolean(value), comment); }
-		catch(NumberFormatException e1) { 
-			try{ header.addValue(key, Integer.parseInt(value), comment); }
-			catch(NumberFormatException e2) {
-				try{ header.addValue(key, Double.parseDouble(value), comment); }
-				catch(NumberFormatException e3) { header.addValue(key, value, comment); }
-			}
-		}
-	}
-
 	
 	@Override
 	public void smooth(double FWHM) {
@@ -218,7 +265,7 @@ public class SourceImage<GridType extends Grid2D<?, ?>> extends GridImage<GridTy
 
 	
 	@Override
-	public int clean(GridImage<GridType> search, double[][] beam, double gain, double replacementFWHM) {
+	public int clean(GridImage<CoordinateType> search, double[][] beam, double gain, double replacementFWHM) {
 		int components = super.clean(search, beam, gain, replacementFWHM);
 		
 		// Reset the beam and resolution... 
@@ -244,5 +291,6 @@ public class SourceImage<GridType extends Grid2D<?, ?>> extends GridImage<GridTy
 		return info;
 	}
 	
+
 	
 }

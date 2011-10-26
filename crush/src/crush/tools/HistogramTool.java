@@ -24,6 +24,8 @@
 package crush.tools;
 
 import crush.*;
+import crush.astro.AstroImage;
+import crush.astro.AstroMap;
 import crush.sourcemodel.*;
 import util.*;
 
@@ -85,8 +87,8 @@ public class HistogramTool {
 
 		int[] count = new int[bins];
 
-		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.flag[i][j] == 0) {
-			int bin = zeroBin + (int) Math.round(image.data[i][j] / binres);		
+		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.isUnflagged(i, j)) {
+			int bin = zeroBin + (int) Math.round(image.getValue(i, j) / binres);		
 			count[bin]++;
 		}
 

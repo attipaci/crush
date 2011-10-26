@@ -23,9 +23,11 @@
 
 package util.data;
 
-public class CartesianImage extends GridImage<CartesianGrid2D> {
+import util.CoordinatePair;
 
-	CartesianGrid2D grid;
+public class CartesianImage extends GridImage<CoordinatePair> {
+
+	Grid2D<CoordinatePair> grid;
 
 	
 	public CartesianImage() {
@@ -45,12 +47,12 @@ public class CartesianImage extends GridImage<CartesianGrid2D> {
 	}
 
 	@Override
-	public CartesianGrid2D getGrid() {
+	public Grid2D<CoordinatePair> getGrid() {
 		return grid;
 	}
 
 	@Override
-	public void setGrid(CartesianGrid2D grid) {
+	public void setGrid(Grid2D<CoordinatePair> grid) {
 		this.grid = grid;
 		double fwhm = Math.sqrt(grid.getPixelArea()) / GridImage.fwhm2size;
 		if(smoothFWHM < fwhm) smoothFWHM = fwhm;

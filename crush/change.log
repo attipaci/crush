@@ -1,5 +1,8 @@
 >> SCUBA-2 module to version 4 (change.log, web-page!)
 >> Finish parallel in Data2D, GridImage, AstroImage, AstroMap...
+>> Finish gridMap unimplemented methods.
+>> Go through leftover TODO's from code reorganization...
+
 
 	[NEW] Introducing a parallel processing framework for images. The goal 
 	is to speed up image processing functionality on modern multicore 
@@ -39,6 +42,11 @@
 	access to fields, and using convenience methods instead.
 	
 	[CODE] Generalized projections, grids and images using grids.
+
+	[CODE] GridImage<GridType> changed to GridImage<CoordinateType>. As a
+	result, a whole lot of code has been moved around to generalize objects
+	s.t. more of the crush tools can be used also on non-astronomical
+	images (perhaps sometime in the future...).
 
 	[CLEANUP] Removed obsoleted key 'whiten.neighbours' from configuration.
 

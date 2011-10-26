@@ -22,22 +22,22 @@
  ******************************************************************************/
 // Copyright (c) 2009 Attila Kovacs 
 
-package crush.sourcemodel;
+package util.data;
 
 import java.text.*;
 
-import util.data.SphericalGrid;
-import util.data.WeightedPoint;
 
-public abstract class Region implements Cloneable {
-	String id;
-	String comment = "";
+import util.CoordinatePair;
+
+public abstract class Region<CoordinateType extends CoordinatePair> implements Cloneable {
+	public String id;
+	public String comment = "";
 	
 	public static int counter = 1;
 	
 	public Region() { id = "[" + (counter++) + "]"; }
 	
-	public Region(String line, AstroImage forImage) throws ParseException { parse(line, forImage); }
+	public Region(String line, GridImage<CoordinateType> forImage) throws ParseException { parse(line, forImage); }
 	
 	@Override
 	public Object clone() {
@@ -45,23 +45,19 @@ public abstract class Region implements Cloneable {
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
-	protected abstract Bounds getBounds(AstroImage image);
+	public String getID() { return id; }
 	
-	public abstract boolean isInside(SphericalGrid grid, double i, double j);	
+	public void setID(String id) { this.id = id; }
 	
-	public abstract void parse(String line, AstroImage forImage) throws ParseException;
+	public abstract Bounds getBounds(GridImage<CoordinateType> image);
 	
-	public abstract String toString(AstroImage image);
+	public abstract boolean isInside(Grid2D<CoordinateType> grid, double i, double j);	
 	
-	public double getIntegral(AstroImage image) {
-		final Bounds bounds = getBounds(image);
-		double sum = 0.0;
-		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(image.isUnflagged(i, j)) 
-			sum += image.getValue(i, j);
-		return sum;		
-	}
+	public abstract void parse(String line, GridImage<CoordinateType> forImage) throws ParseException;
 	
-	public WeightedPoint getIntegral(AstroMap map) {
+	public abstract String toString(GridImage<CoordinateType> image);
+	
+	public WeightedPoint getIntegral(GridImage<CoordinateType> map) {
 		final Bounds bounds = getBounds(map);
 		WeightedPoint sum = new WeightedPoint();
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.isUnflagged(i, j)) {
@@ -72,7 +68,7 @@ public abstract class Region implements Cloneable {
 		return sum;
 	}
 	
-	public WeightedPoint getFlux(AstroMap map) {
+	public WeightedPoint getFlux(GridImage<CoordinateType> map) {
 		WeightedPoint integral = getIntegral(map);
 		integral.scale(map.getPixelArea() / map.getImageBeamArea());
 		return integral;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,24 +20,51 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+// Copyright (c) 2009 Attila Kovacs 
 
-package util.data;
+package crush.astro;
 
-import nom.tam.fits.Header;
-import nom.tam.fits.HeaderCardException;
 import util.*;
+import util.astro.*;
+import util.data.GridImage;
 
-public class CartesianGrid2D extends Grid2D<CoordinatePair> {
+public class AstroImage extends GridImage<SphericalCoordinates> implements Cloneable, SkyCoordinates {
 
-	@Override
-	public void parseProjection(Header header) throws HeaderCardException {
-		// TODO Auto-generated method stub	
+	public AstroImage() {
 	}
 
-	@Override
-	public CoordinatePair getCoordinateInstanceFor(String type) {
-		return new CoordinatePair();
+	public AstroImage(int sizeX, int sizeY) {
+		super(sizeX, sizeY);
 	}
-	
-	
+
+	public AstroImage(double[][] data) {
+		super(data);
+	}
+
+	public AstroImage(double[][] data, int[][] flag) {
+		super(data, flag);
+	}
+
+	public boolean isHorizontal() {
+		return getReference() instanceof HorizontalCoordinates;
+	}
+
+	public boolean isEquatorial() {
+		return getReference() instanceof EquatorialCoordinates;
+	}
+
+	public boolean isEcliptic() {
+		return getReference() instanceof EclipticCoordinates;
+	}
+
+	public boolean isGalactic() {
+		return getReference() instanceof GalacticCoordinates;
+	}
+
+	public boolean isSuperGalactic() {
+		return getReference() instanceof SuperGalacticCoordinates;
+	}
+
+
 }
+

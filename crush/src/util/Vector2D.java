@@ -26,7 +26,7 @@ package util;
 
 //Add parsing
 
-public class Vector2D extends CoordinatePair {
+public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 
 	public Vector2D() {}
 
@@ -206,6 +206,10 @@ public class Vector2D extends CoordinatePair {
 		}
 	}
 
+	public final double distanceTo(Metric<? extends Vector2D> point) {
+		return distanceTo((Vector2D) point);
+	}
+	
 	public final double distanceTo(Vector2D point) {
 		return Math.hypot(point.x - x, point.y - y);
 	}

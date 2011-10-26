@@ -31,6 +31,7 @@ import util.data.Index2D;
 import util.data.Statistics;
 import crush.*;
 import crush.array.*;
+import crush.astro.AstroMap;
 
 public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? extends InstrumentType, ?>>
 		extends SourceMap<InstrumentType, ScanType> {
@@ -85,7 +86,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 		for(int p=0; p<pixelMap.length; p++) if(other.pixelMap[p] != null) {
 			if(pixelMap[p] == null) {
 				pixelMap[p] = (ScalarMap<InstrumentType, ScanType>) other.pixelMap[p].copy();
-				pixelMap[p].map.weightScale(weight);
+				pixelMap[p].map.scaleWeight(weight);
 			}
 			else pixelMap[p].add(other.pixelMap[p], weight);
 		}
@@ -149,7 +150,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 
 
 	@Override
-	public SphericalProjection getProjection() {
+	public Projection2D<SphericalCoordinates> getProjection() {
 		return template.getProjection();
 	}
 
@@ -218,7 +219,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 		super.sync();		
 	}
 	
-		
+	// TODO for non AstroMap and non spherical coordinates...
 	public void calcPixelData(boolean smooth) {
 		float[] peaks = new float[instrument.storeChannels];
 		float[] pixelPeak = new float[pixelMap.length];
@@ -250,7 +251,7 @@ public class BeamMap<InstrumentType extends Array<?,?>, ScanType extends Scan<? 
 			if(beamMap != null) {
 				AstroMap map = beamMap.map;
 				if(smooth) map.smoothTo(instrument.resolution);
-				GaussianSource source = beamMap.getPeakSource();
+				GaussianSource<SphericalCoordinates> source = beamMap.getPeakSource();
 				
 				// Get the source peak in the pixel.
 				pixelPeak[i] = (float) source.peak.value;

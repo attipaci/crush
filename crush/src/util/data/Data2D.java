@@ -114,6 +114,25 @@ public class Data2D implements Cloneable {
 	
 	public void noParallel() { parallelism = 1; }
 	
+	
+	// TODO 
+	// It may be practical to have these methods so more sophisticated algorithms can work on these
+	// images. However, the case for it may not be so strong after all, and they create confusion...
+	public double getWeight(int i, int j) { return 1.0; }
+	
+	public double getRMS(int i, int j) { return 1.0; }
+	
+	public double getS2N(int i, int j) { return valueAtIndex(i, j); }
+	
+	public final double getWeight(final Index2D index) { return getWeight(index.i, index.j); }
+	
+	public final double getRMS(final Index2D index) { return getRMS(index.i, index.j); }
+	
+	public final double getS2N(final Index2D index) { return getS2N(index.i, index.j); }
+	
+	
+	
+	
 	@Override
 	public Object clone() {
 		try { 
@@ -200,6 +219,19 @@ public class Data2D implements Cloneable {
 		}
 	}
 
+	public void fill(final double value) {
+		if(flag == null) flag = new int[sizeX()][sizeY()];
+		else {
+			new Task<Void>() {
+				@Override
+				public void processIndex(int i) { Arrays.fill(data[i], value); }
+				@Override
+				public void process(int i, int j) {}
+			}.process();	
+		}
+	}
+
+	
 	public void addImage(final double[][] image, final double scale) {
 		new Task<Void>() {
 			@Override
@@ -436,8 +468,6 @@ public class Data2D implements Cloneable {
 		return beam;
 	}
 	
-	public double weightAt(int i, int j) { return 1.0; }
-	
 	public boolean containsIndex(final int i, final int j) {
 		if(i < 0) return false;
 		if(j < 0) return false;
@@ -639,7 +669,7 @@ public class Data2D implements Cloneable {
 			public void process(int i, int j) { 
 				if(flag[i][j] == 0) {
 					sum  += data[i][j];
-					sumw += weightAt(i, j);
+					sumw += getWeight(i, j);
 				}
 			}
 			@Override
@@ -666,7 +696,7 @@ public class Data2D implements Cloneable {
 	}
 
 	
-	public double getRMS() {
+	public double getRMSScatter() {
 		Task<WeightedPoint> rms = new AveragingTask() {
 			private double sum = 0.0;
 			private int n = 0;
@@ -932,7 +962,7 @@ public class Data2D implements Cloneable {
 
 		double sum = 0.0, sumw = 0.0;
 		for(int i1=toi; --i1 >= fromi; ) for(int j1=toj; --j1 >= fromj; ) if(flag[i1][j1] == 0) {
-			final double wB = weightAt(i1, j1) * beam[i1-i0][j1-j0];
+			final double wB = getWeight(i1, j1) * beam[i1-i0][j1-j0];
 			sum += wB * data[i1][j1];
 			sumw += Math.abs(wB);		    
 		}
@@ -940,7 +970,20 @@ public class Data2D implements Cloneable {
 		result.value = sum / sumw;
 		result.weight = sumw;
 	}
+	public int[][] getSkip(final double blankingValue) {
+		final int[][] skip = (int[][]) copyOf(getFlag());
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(data[i][j] > blankingValue) skip[i][j] = 1;
+			}
+		}.process();
+		
+		return skip;
+	}
 	
+
 	
 	public void sanitize() {
 		new Task<Void>() {

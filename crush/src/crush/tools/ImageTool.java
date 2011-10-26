@@ -24,9 +24,12 @@
 package crush.tools;
 
 import crush.*;
+import crush.astro.AstroImage;
+import crush.astro.AstroMap;
 import crush.sourcemodel.*;
 import util.*;
 import util.astro.SourceCatalog;
+import util.data.Region;
 
 import java.io.File;
 import java.io.IOException;
@@ -114,26 +117,26 @@ public class ImageTool {
 					System.err.println("Replacing flux plane.");
 					plane.unit = image.unit;
 					plane.setImage(hdu);
-					image.data = plane.data;
-					image.flag = plane.flag;
+					image.setData(plane.getData());
+					image.setFlag(plane.getFlag());
 				}
 				else if(spec.equals("weight")) {
 					System.err.println("Replacing weight plane.");
 					plane.unit = new Unit("weight", 1.0 / (image.unit.value * image.unit.value));
 					plane.setImage(hdu);
-					image.weight = plane.data;
+					image.setWeight(plane.getData());
 				}
 				else if(spec.equals("time")) {
 					System.err.println("Replacing integration-time plane.");
 					plane.unit = Unit.get("s");
 					plane.setImage(hdu);
-					image.count = plane.data;
+					image.setTime(plane.getData());
 				}
 				else if(spec.equals("flag")) {
 					System.err.println("Replacing integration-time plane.");
 					plane.unit = Unit.unity;
 					plane.setImage(hdu);
-					image.flag = plane.flag;
+					image.setFlag(plane.getFlag());
 				}
 				// TODO integer flag?
 				else System.err.println("Unknown image plane: " + spec);
@@ -147,7 +150,7 @@ public class ImageTool {
 				
 				plane.unit = Unit.unity;
 				plane.setImage(hdu);
-				image.flag = plane.flag;
+				image.setFlag(plane.getFlag());
 				
 				System.err.println("Applying new flag image.");
 			}
@@ -199,7 +202,7 @@ public class ImageTool {
 						AstroImage beamImage = new AstroImage();
 						beamImage.read(beamSpec);
 						beamImage.scale(1.0 / beamImage.getMax());
-						beam = beamImage.data;
+						beam = beamImage.getData();
 					}
 					catch(Exception e2) { System.err.println("ERROR! Cannot open beam FITS file " + beamSpec); }		
 				}		
@@ -253,8 +256,8 @@ public class ImageTool {
 				SphericalCoordinates origin = new SphericalCoordinates();
 				origin.parse(x + " " + y);
 				Vector2D index = new Vector2D();
-				image.grid.getIndex(origin, index);
-				image.grid.refIndex = index;
+				image.getGrid().getIndex(origin, index);
+				image.getGrid().refIndex = index;
 				image.getReference().copy(origin);
 			}
 		}
@@ -263,7 +266,7 @@ public class ImageTool {
 			image.smoothFWHM = Math.sqrt(image.getPixelArea()) / AstroImage.fwhm2size;
 			image.extFilterFWHM = Double.NaN;
 			for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) 
-				image.data[i][j] = random.nextGaussian() / Math.sqrt(image.weight[i][j]);
+				image.setValue(i, j, random.nextGaussian() / Math.sqrt(image.getWeight(i, j)));
 		}
 		else if(key.equalsIgnoreCase("-masks")) {
 			StringTokenizer actions = new StringTokenizer(tokens.nextToken(), ", \t");
@@ -311,7 +314,7 @@ public class ImageTool {
 		else if(key.equalsIgnoreCase("-shift")) {
 			Vector2D offset = new Vector2D(Double.parseDouble(tokens.nextToken()), Double.parseDouble(tokens.nextToken()));
 			offset.scale(Unit.arcsec);
-			image.grid.shift(offset);
+			image.getGrid().shift(offset);
 		}
 		else if(key.equalsIgnoreCase("-unit")) {
 			image.setUnit(tokens.nextToken());
