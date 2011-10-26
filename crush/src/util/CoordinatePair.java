@@ -27,6 +27,11 @@ package util;
 import java.awt.geom.Point2D;
 import java.text.*;
 
+import nom.tam.fits.Header;
+import nom.tam.fits.HeaderCard;
+import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
+
 //Add parsing
 
 public class CoordinatePair implements Cloneable {
@@ -163,6 +168,20 @@ public class CoordinatePair implements Cloneable {
 		}
 	}
 	
+	public void edit(Cursor cursor) throws HeaderCardException { edit(cursor, ""); }
+	
+	public void edit(Cursor cursor, String alt) throws HeaderCardException {
+		cursor.add(new HeaderCard("CRVAL1" + alt, x, "The reference x coordinate in SI units."));
+		cursor.add(new HeaderCard("CRVAL2" + alt, y, "The reference y coordinate in SI units."));
+	}
+	
+	public void parse(Header header) { parse(header, ""); }
+	
+	public void parse(Header header, String alt) {
+		x = header.getDoubleValue("CRVAL1" + alt, 0.0);
+		y = header.getDoubleValue("CRVAL2" + alt, 0.0);
+	}
+	
 	public static String toString(CoordinatePair coords, Unit unit) {
 		return toString(coords, unit, 3);
 	}
@@ -171,6 +190,8 @@ public class CoordinatePair implements Cloneable {
 		return Util.f[decimals].format(coords.x / unit.value) + " " + unit.name + 
 		", " + Util.f[decimals].format(coords.y / unit.value) + " " + unit.name;
 	}
+	
+	
 	
 	
 	public static final int X = 0;

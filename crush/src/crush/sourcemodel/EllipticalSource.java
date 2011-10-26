@@ -60,7 +60,7 @@ public class EllipticalSource extends GaussianSource {
 	public void measureShape(AstroMap map) {	
 		super.measureShape(map);
 		
-		Vector2D center = getIndex(map.grid);
+		Vector2D center = getIndex(map.getGrid());
 		Bounds bounds = getBounds(map, 1.0);
 		
 		double m0 = 0.0, m2c = 0.0, m2s = 0.0;

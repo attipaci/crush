@@ -37,7 +37,9 @@ import util.Unit;
 import util.Util;
 import util.Vector2D;
 
-public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
+public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
+	GridType grid;
+	
 	// TODO make private...
 	public double smoothFWHM;  
 	public double extFilterFWHM = Double.NaN;
@@ -61,10 +63,14 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 		super(data, flag);
 	}
 	
-	public abstract GridType getGrid();
+	public GridType getGrid() { return grid; }
 	
-	public abstract void setGrid(GridType grid);
-	
+	public void setGrid(GridType grid) { 
+		this.grid = grid; 
+		double fwhm = Math.sqrt(grid.getPixelArea()) / fwhm2size;
+		if(smoothFWHM < fwhm) smoothFWHM = fwhm;	
+	}
+
 	public void setResolution(double value) { 
 		getGrid().setResolution(value);
 		smoothFWHM = Math.max(smoothFWHM, value / fwhm2size);
@@ -350,18 +356,19 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 	}
 	
 	
-	public void copyValueOf(final GridImage<?> from, final double fromi, final double fromj, final int toi, final int toj) {
+	public void copyValueOf(final GridImage<GridType> from, final double fromi, final double fromj, final int toi, final int toj) {
 		setValue(toi, toj, from.valueAtIndex(fromi, fromj));
 		if(isNaN(toi, toj)) setFlag(toi, toj, 1);
 	}
 
-	public void resample(GridImage<?> from) {
+	@SuppressWarnings("unchecked")
+	public void resample(GridImage<GridType> from) {
 		if(verbose) System.err.println(" Resampling image to "+ sizeX() + "x" + sizeY() + ".");
 		final Vector2D v = new Vector2D();
 		
 		// Antialias filter first...
 		if(from.smoothFWHM < smoothFWHM) {
-			from = (GridImage<?>) from.copy();
+			from = (GridImage<GridType>) from.copy();
 			from.smoothTo(smoothFWHM);
 		}
 		
@@ -751,7 +758,7 @@ public abstract class GridImage<GridType extends Grid2D<?>> extends Data2D {
 
 	@Override
 	public String toString() {		
-		Grid2D<?> grid = getGrid();
+		Grid2D<?, ?> grid = getGrid();
 		String info =
 			"  Map Size: " + sizeX() + " x " + sizeY() + " pixels. (" 
 			+ Util.f1.format(sizeX() * grid.pixelSizeX() / Unit.arcmin) + " x " + Util.f1.format(sizeY() * grid.pixelSizeY() / Unit.arcmin) + " arcmin)." + "\n"

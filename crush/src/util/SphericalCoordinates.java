@@ -256,8 +256,7 @@ public class SphericalCoordinates extends CoordinatePair {
 		return 2.0 * asin(Math.sqrt(sindTheta * sindTheta + cosLat * point.cosLat * sindPhi * sindPhi));
 	}
 
-	public void edit(Cursor cursor) throws HeaderCardException { edit(cursor, ""); }
-
+	@Override
 	public void edit(Cursor cursor, String alt) throws HeaderCardException {	
 		// Always write longitude in the 0:2Pi range.
 		// Some FITS utilities may require it, even if it's not required by the FITS standard...
@@ -267,10 +266,8 @@ public class SphericalCoordinates extends CoordinatePair {
 		cursor.add(new HeaderCard("CRVAL1" + alt, lon / Unit.deg, "The reference longitude coordinate (deg)."));
 		cursor.add(new HeaderCard("CRVAL2" + alt, latitude() / Unit.deg, "The reference latitude coordinate (deg)."));
 	}
-
-	
-	public void parse(Header header) { parse(header, ""); }
 		
+	@Override
 	public void parse(Header header, String alt) {
 		setLongitude(header.getDoubleValue("CRVAL1" + alt, 0.0) * Unit.deg);
 		setLatitude(header.getDoubleValue("CRVAL2" + alt, 0.0) * Unit.deg);
