@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,8 +20,29 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.sourcemodel;
 
-public class Bounds {
-	public int fromi, toi, fromj, toj;
+package util.data;
+
+public interface Noise2D {
+
+	public double[][] getRMS();
+	
+	public void setRMS(double[][] image);
+	
+	public void scaleRMS(double factor);
+	
+	public double getRMS(int i, int j);
+	
+	public void setRMS(int i, int j, double sigma);
+	
+	public void scaleRMS(int i, int j, double factor);
+
+	
+
+	public double[][] getS2N();
+	
+	public double getS2N(int i, int j);
+	
 }
+
+

@@ -27,7 +27,7 @@ package crush.polarization;
 
 import crush.*;
 import crush.array.*;
-import crush.sourcemodel.AstroMap;
+import crush.astro.AstroMap;
 import crush.sourcemodel.ScalarMap;
 
 import java.util.*;

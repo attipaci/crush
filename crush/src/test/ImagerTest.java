@@ -27,6 +27,7 @@ import java.awt.Graphics;
 
 import crush.*;
 import crush.sourcemodel.*;
+import crush.astro.AstroMap;
 import crush.gui.*;
 
 import javax.swing.*;

@@ -34,7 +34,7 @@ import nom.tam.util.*;
 
 // TODO add BinaryTableIO interface (with projections...)
 
-public class SphericalCoordinates extends CoordinatePair {
+public class SphericalCoordinates extends CoordinatePair implements Metric<SphericalCoordinates> {
 	public double cosLat, sinLat;
 	
 	public CoordinateSystem coordinateSystem, localCoordinateSystem;
@@ -248,6 +248,10 @@ public class SphericalCoordinates extends CoordinatePair {
 		if(value < -1.0) value = -1.0;
 		else if(value > 1.0) value = 1.0;
 		return Math.acos(value);
+	}
+	
+	public double distanceTo(Metric<? extends SphericalCoordinates> point) {
+		return distanceTo((SphericalCoordinates) point);
 	}
 
 	public double distanceTo(SphericalCoordinates point) {

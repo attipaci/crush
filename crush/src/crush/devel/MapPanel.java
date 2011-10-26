@@ -25,10 +25,12 @@
 package crush.devel;
 
 import crush.*;
+import crush.astro.AstroImage;
 import crush.gui.AstroImageLayer;
 import crush.gui.InfoPanel;
 import crush.sourcemodel.*;
 import util.*;
+import util.data.Region;
 import util.plot.AxisLabel;
 import util.plot.ColorBar;
 import util.plot.ColorScheme;

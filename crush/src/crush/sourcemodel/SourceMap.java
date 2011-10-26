@@ -234,7 +234,7 @@ extends SourceModel<InstrumentType, ScanType> {
 	
 	public abstract void setSize(int sizeX, int sizeY);
 	
-	public abstract SphericalProjection getProjection(); 
+	public abstract Projection2D<SphericalCoordinates> getProjection(); 
 	
 	public void memoryError(int sizeX, int sizeY) {
 		int diagonal = (int) Math.hypot(sizeX, sizeY);

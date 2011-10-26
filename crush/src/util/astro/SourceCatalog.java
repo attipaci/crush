@@ -26,28 +26,30 @@ import java.io.*;
 import java.util.Vector;
 import java.text.*;
 
-import crush.sourcemodel.AstroImage;
+import util.CoordinatePair;
+import util.data.GridImage;
+
 import crush.sourcemodel.GaussianSource;
 
-public class SourceCatalog extends Vector<GaussianSource> {
+public class SourceCatalog<CoordinateType extends CoordinatePair> extends Vector<GaussianSource<CoordinateType>> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 7728245572373531025L;
 
-	public void insert(AstroImage image) {
-		for(GaussianSource source : this) source.add(image);
+	public void insert(GridImage<CoordinateType> image) {
+		for(GaussianSource<CoordinateType> source : this) source.add(image);
 	}
 	
-	public void remove(AstroImage image) {
-		for(GaussianSource source : this) source.subtract(image);
+	public void remove(GridImage<CoordinateType> image) {
+		for(GaussianSource<CoordinateType> source : this) source.subtract(image);
 	}
 	
-	public void read(String fileName, AstroImage image) throws IOException {
+	public void read(String fileName, GridImage<CoordinateType> map) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			try { add(new GaussianSource(line, image)); }
+			try { add(new GaussianSource<CoordinateType>(line, map)); }
 			catch(ParseException e) { System.err.println("WARNING! Cannot parse: " + line); }
 		}
 		System.err.println(" Source catalog loaded: " + size() + " source(s).");

@@ -5,7 +5,7 @@ import util.SphericalProjection;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
 
-public class SphericalGrid extends Grid2D<SphericalCoordinates, SphericalProjection> {
+public class SphericalGrid extends Grid2D<SphericalCoordinates> {
 
 	@Override
 	public boolean isReverseX() { return projection.getReference().isReverseLongitude(); }

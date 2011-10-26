@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,24 +20,8 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-
 package util.data;
 
-import nom.tam.fits.Header;
-import nom.tam.fits.HeaderCardException;
-import util.*;
-
-public class CartesianGrid2D extends Grid2D<CoordinatePair> {
-
-	@Override
-	public void parseProjection(Header header) throws HeaderCardException {
-		// TODO Auto-generated method stub	
-	}
-
-	@Override
-	public CoordinatePair getCoordinateInstanceFor(String type) {
-		return new CoordinatePair();
-	}
-	
-	
+public class Bounds {
+	public int fromi, toi, fromj, toj;
 }

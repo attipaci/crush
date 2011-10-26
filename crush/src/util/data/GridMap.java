@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,71 +20,50 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2007 Attila Kovacs 
 
-package crush.sourcemodel;
+package util.data;
 
-import nom.tam.fits.*;
-import nom.tam.util.*;
+import java.io.IOException;
 
-
-
-import java.io.*;
-import java.util.*;
-
-import crush.CRUSH;
+import nom.tam.fits.BasicHDU;
+import nom.tam.fits.Fits;
+import nom.tam.fits.FitsException;
+import nom.tam.fits.Header;
+import nom.tam.fits.HeaderCard;
+import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 import crush.Instrument;
-import crush.Scan;
+import crush.astro.AstroImage;
+import crush.astro.AstroMap;
+import util.CoordinatePair;
+import util.Unit;
+import util.Util;
+import util.Vector2D;
 
-import util.*;
-import util.data.Data2D;
-import util.data.DataPoint;
-import util.data.GridImage;
-import util.data.Index2D;
-import util.data.SphericalGrid;
-import util.data.Statistics;
-import util.data.Timed2D;
-import util.data.Weighted2D;
-import util.data.WeightedPoint;
-
-
-public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
+public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<CoordinateType> implements Weighted2D, Timed2D, Noise2D {
 	private double[][] weight, count;
-
-	public Vector<Scan<?, ?>> scans = new Vector<Scan<?, ?>>();
-	public String commandLine;
-	
-	public int generation = 0;
-	public double integrationTime = 0.0;	
 	public double weightFactor = 1.0;
- 
+	
 	public double filterBlanking = Double.NaN;
 	public double clippingS2N = Double.NaN;
-		
+	
 	private Vector2D reuseOffset = new Vector2D();
-
-	public AstroMap() { 
+	
+	public GridMap() { 
 		contentType = "Signal";
 	}
 	
-	public AstroMap(Instrument<?> instrument) { 
-		this(); 
-		this.instrument = instrument;
-	}
-	
-	public AstroMap(String fileName, Instrument<?> instrument) throws Exception { 
-		this(instrument);
+	public GridMap(String fileName, Instrument<?> instrument) throws Exception { 
 		read(fileName);		
 	}
 
-	public AstroMap(int i, int j) { 
-		this();
-		setSize(i, j);
+	public GridMap(int i, int j) { 
+		super(i, j);
 	}
 	
 	@Override
 	public Object clone() {
-		AstroMap clone = (AstroMap) super.clone();
+		GridMap<?> clone = (GridMap<?>) super.clone();
 		clone.reuseOffset = new Vector2D();
 		return clone;
 	}
@@ -92,18 +71,19 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 	@Override
 	protected void copy(Data2D other, int i) {
 		super.copy(other, i); 
-		if(!(other instanceof AstroMap)) return;
-		final AstroMap image = (AstroMap) other;
+		if(!(other instanceof GridMap)) return;
+		final GridMap<?> image = (GridMap<?>) other;
 		System.arraycopy(image.weight[i], 0, weight[i], 0, sizeY()); 
 		System.arraycopy(image.count[i], 0, count[i], 0, sizeY()); 
 	}
 	
+
 	@Override
 	public void setImage(Data2D other) {
 		super.setImage(other);
-		if(!(other instanceof AstroMap)) return;
+		if(!(other instanceof GridMap)) return;
 		
-		AstroMap image = (AstroMap) other;
+		GridMap<?> image = (GridMap<?>) other;
 		
 		// Make a copy of the fundamental data
 		setWeight(image.getWeight());
@@ -124,7 +104,6 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		if(contentType != null) if(contentType.length() != 0) type = contentType + "> ";
 		return type + Util.getDecimalFormat(getS2N(i, j)).format(getValue(i, j)) + " +- " + Util.s2.format(getRMS(i, j)) + " " + unit.name;
 	}
-	
 	
 	@Override
 	protected void crop(int imin, int jmin, int imax, int jmax) {
@@ -151,17 +130,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		setWeight(i, j, 0.0);
 		setTime(i, j, 0.0);
 	}
-
-	@Override
-	public void reset() {
-		super.reset();
-		integrationTime = 0.0;
-	}
 	
-	// TODO is this really needed?
-	@Override
-	public final double weightAt(int i, int j) { return getWeight(i, j); }
-
 	public final void addPointAt(Vector2D mapOffset, final double value, final double g, final double w, final double time) {
 		double x = mapOffset.x;
 		double y = mapOffset.y;
@@ -171,7 +140,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		mapOffset.y = y;
 	}
 	
-	public final void addPointAt(SphericalCoordinates coords, final double value, final double g, final double w, final double time) {
+	public final void addPointAt(CoordinateType coords, final double value, final double g, final double w, final double time) {
 		getProjection().project(coords, reuseOffset);
 		toIndex(reuseOffset);
 		addPointAt((int)Math.round(reuseOffset.x), (int)Math.round(reuseOffset.y), value, g, w, time);
@@ -184,7 +153,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		incrementTime(i, j, time);
 	}
 	
-	public synchronized void addDirect(final AstroMap map, final double w) {
+	public synchronized void addDirect(final GridMap<?> map, final double w) {
 		new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
@@ -197,28 +166,9 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 				}
 			}
 		}.process();
-		integrationTime += map.integrationTime;
 	}
 
-	// Normalize assuming weighting was sigma weighting
-	public void normalize() {
-		new Task<Void>() {
-			@Override
-			public void process(int i, int j) { normalize(i, j); }
-		}.process();
-	}
-
-	public void normalize(int i, int j) { 
-		if(getWeight(i, j) <= 0.0) {
-			setValue(i, j, 0.0);
-			setWeight(i, j, 0.0);
-			flag(i, j);
-		} 
-		else {
-			scaleValue(i, j, 1.0 / getWeight(i, j));	
-			unflag(i, j);	    
-		}
-	}
+	
 	
 	@Override
 	protected void sanitize(int i, int j) {
@@ -226,6 +176,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		setWeight(i, j, 0.0);
 	}
 	
+
 	public void applyCorrection(double filtering, final double[][] significance) {
 		final double ifiltering = 1.0 / filtering;
 		final double filtering2 = filtering * filtering;
@@ -305,7 +256,8 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 			}
 		}.process();
 	}
-	
+
+
 	public boolean[][] getMask(final double minS2N, final int minNeighbours) {
 		final boolean[][] mask = new boolean[sizeX()][sizeY()];
 		
@@ -338,7 +290,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		
 		return mask;
 	}
-
+	
 	@Override
 	public void smooth(double[][] beam) {
 		double[][] beamw = new double[sizeX()][sizeY()];
@@ -356,18 +308,18 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 	}
 	
 	@Override
-	public void resample(final GridImage<SphericalGrid> from) {
+	public void resample(final GridImage<CoordinateType> from) {
 			
-		if(!(from instanceof AstroMap)) {
+		if(!(from instanceof GridMap)) {
 			super.resample(from);
 			return;
 		}
 		
 		if(verbose) System.err.println(" Resampling map to "+ sizeX() + "x" + sizeY() + ".");
 		
-		final AstroMap fromMap = (AstroMap) from;
-		final AstroImage fromWeight = fromMap.getWeightImage();
-		final AstroImage fromCount = fromMap.getTimeImage();
+		final GridMap<CoordinateType> fromMap = (GridMap<CoordinateType>) from;
+		final GridImage<CoordinateType> fromWeight = fromMap.getWeightImage();
+		final GridImage<CoordinateType> fromCount = fromMap.getTimeImage();
 		
 		final Vector2D v = new Vector2D();
 		
@@ -392,26 +344,32 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 	
 	}
 	
-	public AstroImage getFluxImage() {
-		return getImage(getData(), "Flux", unit);
+	public GridImage<CoordinateType> getWeightImage() { 
+		return getImage(getWeight(), "Weight", new Unit("[" + unit.name + "]**(-2)", 1.0 / (unit.value * unit.value)));
 	}
 	
-	public AstroImage getS2NImage() {
-		final AstroImage rms = getRMSImage();
-		rms.contentType = "S/N";
-		rms.unit = Unit.unity;
+	public GridImage<CoordinateType> getTimeImage() { 
+		return getImage(getTime(), "Exposure",new Unit("s/pixel", Unit.s));
+	}
+	
+	// TODO revise...
+	public GridImage<CoordinateType> getS2NImage() { 
+		final GridImage<CoordinateType> rmsImage = getRMSImage();
+		rmsImage.contentType = "S/N";
+		rmsImage.unit = Unit.unity;
 		
 		new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
-				rms.setValue(i, j, getValue(i, j) / rms.getValue(i, j)); 
+				rmsImage.setValue(i, j, getValue(i, j) / rmsImage.getValue(i, j)); 
 			}
 		}.process();
-	
-		return rms;
+		
+		return rmsImage;
 	}
 	
-	public AstroImage getRMSImage() {
+	// TODO revise...
+	public GridImage<CoordinateType> getRMSImage() {
 		final double[][] rms = new double[sizeX()][sizeY()];
 		
 		new Task<Void>() {
@@ -420,36 +378,16 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		}.process();
 		
 		return getImage(rms, "Noise", unit);
-	}
-	
-	public AstroImage getWeightImage() { 
-		return getImage(getWeight(), "Weight", new Unit("[" + unit.name + "]**(-2)", 1.0 / (unit.value * unit.value)));
-	}
-	
-	public AstroImage getTimeImage() { 
-		return getImage(getTime(), "Exposure",new Unit("s/pixel", Unit.s));
-	}
-	
-	private AstroImage getImage(double[][] data, String contentType, Unit unit) {
-		AstroImage image = (AstroImage) clone();
-		image.setData(data);
-		image.contentType = contentType;
-		image.unit = unit;
-		return image;		
+		
 	}
 
-	public final double getRMS(final Index2D index) {
-		return getRMS(index.i, index.j);
-	}
 	
+	@Override
 	public final double getRMS(final int i, final int j) {
 		return 1.0 / Math.sqrt(getWeight(i, j));		
 	}
 	
-	public final double getS2N(final Index2D index) {
-		return getS2N(index.i, index.j);
-	}
-	
+	@Override
 	public final double getS2N(final int i, final int j) {
 		return getValue(i, j) / getRMS(i,j);		
 	}
@@ -473,14 +411,9 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		return Math.sqrt(1.0 / avew.getResult().value);
 	}
 	
-	public void filterCorrect() {
-		filterCorrect(instrument.resolution, getSkip(filterBlanking));
-	}
 	
-	public void undoFilterCorrect() {
-		undoFilterCorrect(instrument.resolution, getSkip(filterBlanking));
-	}
-				
+		
+	@Override
 	public int[][] getSkip(final double blankingValue) {
 		final int[][] skip = (int[][]) copyOf(getFlag());
 		
@@ -504,8 +437,8 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		fftFilterAbove(extendedFWHM, getSkip(blankingValue));
 		filterBlanking = blankingValue;
 	}
-
-
+	
+	
 	public double getMeanIntegrationTime() {
 		Task<WeightedPoint> meanIntTime = new AveragingTask() {
 			private double sum = 0.0, sumw = 0.0;	
@@ -538,11 +471,11 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		return Statistics.median(point).value;
 	}
 	
-	public void rmsScale(final double scalar) {
-		weightScale(1.0 / (scalar*scalar));
+	public void scaleRMS(final double scalar) {
+		scaleWeight(1.0 / (scalar*scalar));
 	}
 
-	public void weightScale(final double scalar) {
+	public void scaleWeight(final double scalar) {
 		if(scalar == 1.0) return;
 		
 		new Task<Void>() {
@@ -555,13 +488,13 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 
 	public void weight(boolean robust) {
 		double weightCorrection = 1.0 / (robust ? getRobustChi2() : getChi2());
-		weightScale(weightCorrection);
+		scaleWeight(weightCorrection);
 		weightFactor *= weightCorrection;
 	}
 
 	// Return to calculated weights...
 	public void dataWeight() {
-		weightScale(1.0/weightFactor);
+		scaleWeight(1.0/weightFactor);
 		weightFactor = 1.0;
 	}
 
@@ -578,8 +511,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 			final float s2n = (float) getS2N(i,j);
 			chi2[k++] = s2n * s2n;
 		}
-		
-		
+	
 		// median(x^2) = 0.454937 * sigma^2 
 		return k > 0 ? Statistics.median(chi2, 0, k) / 0.454937 : 0.0;	
 	}
@@ -603,7 +535,8 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		rChi2.process();
 		return rChi2.getResult().value;
 	}
-		
+	
+	
 	// TODO redo with parallel... Need global interrupt (static interrupt()?)
 	public boolean containsNaN() {
 		boolean hasNaN = false;
@@ -637,36 +570,12 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		}.process();
 	}	
 	
+	@Override
 	public Fits getFits() throws HeaderCardException, FitsException, IOException {
-		FitsFactory.setUseHierarch(true);
-		Fits fits = new Fits();	
-
-		fits.addHDU(createHDU());
+		Fits fits = super.getFits();
 		fits.addHDU(getTimeImage().createHDU());
 		fits.addHDU(getRMSImage().createHDU());
 		fits.addHDU(getS2NImage().createHDU());
-
-		editHeader(fits);
-		
-		if(instrument != null) if(instrument.hasOption("write.scandata")) 
-			for(Scan<?,?> scan : scans) fits.addHDU(scan.getSummaryHDU(instrument.options));
-
-		return fits;
-	}
-
-	public Fits getFits(String name) throws FitsException, IOException {
-		FitsFactory.setUseHierarch(true);
-		Fits fits;
-	
-		try { 
-			fits = new Fits(new File(name)); 
-			fileName = name;
-		}
-		catch(Exception e) { 
-			fileName = CRUSH.workPath + name;
-			fits = new Fits(new File(fileName)); 
-		}
-		
 		return fits;
 	}
 
@@ -674,34 +583,25 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 	public void read(String name) throws Exception {
 		// Get the coordinate system information
 		BasicHDU[] HDU = getFits(name).read();
-		parseHeader(HDU[0].getHeader());
-		readCrushData(HDU);
+		parseHeader(HDU[0].getHeader());	
+		readData(HDU);
 	}
 
 	@Override
-	public void parseHeader(Header header) throws Exception {	
-		weightFactor = 1.0;
-		filterBlanking = Double.NaN;
-		clippingS2N = Double.NaN;
-		integrationTime = Double.NaN;
-		
+	public void parseHeader(Header header) throws Exception {			
 		super.parseHeader(header);
-	}
-
-	@Override
-	protected void parseCrushHeader(Header header) throws HeaderCardException {
-		super.parseCrushHeader(header);
+		
 		weightFactor =  header.getDoubleValue("XWEIGHT", 1.0);
-		integrationTime = header.getDoubleValue("INTEGRTN", Double.NaN) * Unit.s;
 		filterBlanking = header.getDoubleValue("FLTRBLNK", header.getDoubleValue("MAP_XBLK", Double.NaN));
-		clippingS2N = header.getDoubleValue("CLIPS2N", header.getDoubleValue("MAP_CLIP", Double.NaN));		
+		clippingS2N = header.getDoubleValue("CLIPS2N", header.getDoubleValue("MAP_CLIP", Double.NaN));
 	}
 
-	private void readCrushData(BasicHDU[] HDU) throws FitsException {
+
+	private void readData(BasicHDU[] HDU) throws FitsException {
 		setImage(HDU[0]);
 		getTimeImage().setImage(HDU[1]);
 		
-		AstroImage noise = getWeightImage();
+		GridImage<CoordinateType> noise = getWeightImage();
 		noise.unit = unit;
 		noise.setImage(HDU[2]);
 		
@@ -714,45 +614,19 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		}.process();
 	}
 
-
-	public void write() throws HeaderCardException, FitsException, IOException { write(getFits()); }
-
-	public void write(Fits fits) throws HeaderCardException, FitsException, IOException {
-		if(fileName == null) fileName = CRUSH.workPath + File.separator + sourceName + ".fits";  
-		BufferedDataOutputStream file = new BufferedDataOutputStream(new FileOutputStream(fileName));
-		fits.write(file);
-		System.err.println(" Written " + fileName);
-	}
 	
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException, FitsException, IOException {
 		super.editHeader(cursor);
 		
-		// Add the command-line reduction options
-		if(commandLine != null) {
-			StringTokenizer args = new StringTokenizer(commandLine);
-			cursor.add(new HeaderCard("ARGS", args.countTokens(), "The number of arguments passed from the command line."));
-			int i=1;
-			while(args.hasMoreTokens()) Util.addLongFitsKey(cursor, "ARG" + (i++), args.nextToken(), "Command-line argument.");
-		}
-		
-		cursor.add(new HeaderCard("V2JY", instrument.janskyPerBeam(), "1 Jy/beam in instrument data units."));	
-		cursor.add(new HeaderCard("INTEGRTN", integrationTime / Unit.s, "The total integration time in seconds."));
-		
 		if(!Double.isNaN(filterBlanking))
 			cursor.add(new HeaderCard("FLTRBLNK", filterBlanking, "The S/N blanking of LSS filter."));
 		if(!Double.isNaN(clippingS2N))
 			cursor.add(new HeaderCard("CLIPS2N", clippingS2N, "The S/N clipping level used in reduction."));
-	
-		// The number of scans contributing to this image
-		cursor.add(new HeaderCard("SCANS", scans.size(), "The number of scans in this composite image."));			
 		
 	}
 	
-	
-	public void printHeader() {
-		header.dumpHeader(System.out);
-	}      
+	    
 
 	public void despike(final double significance) {
 		final double[][] neighbours = {{ 0, 1, 0 }, { 1, 0, 1 }, { 0, 1, 0 }};
@@ -780,7 +654,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		}.process();
 	}
 	
-	public DataPoint getFlux(Region region) {
+	public DataPoint getFlux(Region<CoordinateType> region) {
 		final Bounds bounds = region.getBounds(this);
 		double flux = 0.0, var = 0.0;
 
@@ -794,22 +668,26 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		
 		return new DataPoint(A * flux, A * Math.sqrt(var));
 	}
-	
 
-	@Override
-	public double getLevel(Region region) {
+	public double getRMS(Region<CoordinateType> region) {
 		final Bounds bounds = region.getBounds(this);
-		double sum = 0.0, sumw = 0.0;
-		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
-			if(isUnflagged(i, j)) if(region.isInside(getGrid(), i, j)) {
-				final double w = getWeight(i, j);
-				sum += w * getValue(i, j);
-				sumw += w;
-			}
-		return sum / sumw;			
-	}
+		double var = 0.0;
+		int n = 0;
+		double level = getLevel(region);
 
-	public double getMeanNoise(Region region) {
+		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
+			if(isUnflagged(i, j)) if(region.isInside(getGrid(), i, j))  {
+				double value = getValue(i, j) - level;
+				var += value * value;
+				n++;
+			}
+		var /= (n-1);
+
+		return Math.sqrt(var);
+	}	
+	
+	
+	public double getMeanNoise(Region<CoordinateType> region) {
 		final Bounds bounds = region.getBounds(this);
 		double var = 0.0;
 		int n = 0;
@@ -825,7 +703,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		return Math.sqrt(var);
 	}
 	
-	public double getMeanExposure(Region region) {	
+	public double getMeanExposure(Region<CoordinateType> region) {	
 		final Bounds bounds = region.getBounds(this);
 		double sum = 0.0;
 		int n = 0;
@@ -843,6 +721,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 	public int clean(double[][] beam, double gain, double replacementFWHM) {
 	    	return clean(getS2NImage(), beam, gain, replacementFWHM);
 	}
+	
 	
 	@Override
 	public String toString() {	
@@ -880,6 +759,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		weight = image;
 	}
 
+	@Override
 	public final double getWeight(final int i, final int j) {
 		return weight[i][j];
 	}
@@ -895,10 +775,30 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 	public void scaleWeight(final int i, final int j, final double factor) {
 		weight[i][j] *= factor;
 	}
+
+
+	public double[][] getRMS() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	public void setRMS(double[][] image) {
+		// TODO Auto-generated method stub	
+	}
+
+	public void setRMS(int i, int j, double sigma) {
+		// TODO Auto-generated method stub	
+	}
+
+	public void scaleRMS(int i, int j, double factor) {
+		// TODO Auto-generated method stub	
+	}
+
+	public double[][] getS2N() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	
 }
-
-
-
-
 

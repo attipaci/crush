@@ -1,14 +1,40 @@
+/*******************************************************************************
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * All rights reserved. 
+ * 
+ * This file is part of crush.
+ * 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ * 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ * 
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ ******************************************************************************/
+
 package crush.sourcemodel;
 
 import java.util.*;
 import java.text.ParseException;
 
 import util.*;
-import util.data.SphericalGrid;
+import util.data.Bounds;
+import util.data.Grid2D;
+import util.data.GridImage;
+import util.data.Region;
 import util.data.WeightedPoint;
 
-public class PolygonalRegion extends Region {
-	Vector<SphericalCoordinates> points = new Vector<SphericalCoordinates>();
+public class PolygonalRegion<CoordinateType extends CoordinatePair> extends Region<CoordinateType> {
+	Vector<CoordinateType> points = new Vector<CoordinateType>();
 	
 	//String name = "polygon";
 	boolean isClosed = false;
@@ -17,13 +43,13 @@ public class PolygonalRegion extends Region {
 	
 	public PolygonalRegion() {}
 	
-	public PolygonalRegion(String fileName, AstroImage forImage) throws ParseException {
+	public PolygonalRegion(String fileName, GridImage<CoordinateType> forImage) throws ParseException {
 		parse(fileName, forImage); 
 	}
 	
 	@Override
 	public Object clone() {
-		PolygonalRegion polygon = (PolygonalRegion) super.clone();
+		PolygonalRegion<?> polygon = (PolygonalRegion<?>) super.clone();
 		polygon.reuseFrom = new Vector2D();
 		polygon.reuseTo = new Vector2D();
 		return polygon;
@@ -33,8 +59,8 @@ public class PolygonalRegion extends Region {
 	
 
 	@Override
-	public boolean isInside(SphericalGrid grid, double i, double j) {
-		SphericalProjection projection = grid.projection;
+	public boolean isInside(Grid2D<CoordinateType> grid, double i, double j) {
+		Projection2D<CoordinateType> projection = grid.projection;
 		int below = 0;
 
 		final Vector2D from = reuseFrom;
@@ -59,14 +85,14 @@ public class PolygonalRegion extends Region {
 	
 
 	@Override
-	protected Bounds getBounds(AstroImage image) {
+	public Bounds getBounds(GridImage<CoordinateType> image) {
 		Vector2D min = (Vector2D) points.get(0).clone();
 		Vector2D max = (Vector2D) points.get(0).clone();
 		
 		Vector2D vertex = reuseFrom;
-		SphericalProjection projection = image.getProjection();
+		Projection2D<CoordinateType> projection = image.getProjection();
 		
-		for(SphericalCoordinates coords : points) {
+		for(CoordinateType coords : points) {
 			projection.project(coords, vertex);
 			
 			if(vertex.x < min.x) min.x = vertex.x;
@@ -91,7 +117,8 @@ public class PolygonalRegion extends Region {
 		return bounds;
 	}
 	
-	public WeightedPoint getFlux(AstroImage image) {
+	@Override
+	public WeightedPoint getFlux(GridImage<CoordinateType> image) {
 		WeightedPoint flux = new WeightedPoint();
 		
 		Bounds bounds = getBounds(image);
@@ -99,10 +126,8 @@ public class PolygonalRegion extends Region {
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
 			if(image.isUnflagged(i, j)) if(isInside(image.getGrid(), i, j)) {
 				flux.value += image.getValue(i, j);
-				flux.weight += image.weightAt(i, j);
+				flux.weight += image.getWeight(i, j);
 			}
-		
-		
 		
 		flux.weight = 1.0 / flux.weight;
 		flux.scale(image.getPixelArea() / image.getImageBeamArea());
@@ -110,13 +135,13 @@ public class PolygonalRegion extends Region {
 		return flux;
 	}
 	
-	public double getInsideLevel(AstroImage image) {
+	public double getInsideLevel(GridImage<CoordinateType> image) {
 		double sum = 0.0, sumw = 0.0;
 		Bounds bounds = getBounds(image);
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
 			if(image.isUnflagged(i, j)) if(isInside(image.getGrid(), i, j)) {
-				final double weight = image.weightAt(i, j);
+				final double weight = image.getWeight(i, j);
 				sum += weight * image.getValue(i, j);
 				sumw += weight;
 			}
@@ -124,7 +149,7 @@ public class PolygonalRegion extends Region {
 		return sum / sumw;			
 	}
 	
-	public double getRMS(AstroImage image) {
+	public double getRMS(GridImage<CoordinateType> image) {
 		double level = getInsideLevel(image);
 		Bounds bounds = getBounds(image);
 		
@@ -144,21 +169,23 @@ public class PolygonalRegion extends Region {
 
 	
 	@Override
-	public void parse(String line, AstroImage forImage) throws ParseException {
+	// TODO for non spherical coordinates also...
+	public void parse(String line, GridImage<CoordinateType> forImage) throws ParseException {
 		points.clear();
 		
 		StringTokenizer tokens = new StringTokenizer(line, ";");
-		SphericalCoordinates reference = forImage.getReference();
+		CoordinateType reference = forImage.getReference();
 		
 		while(tokens.hasMoreTokens()) {
-			SphericalCoordinates coords = (SphericalCoordinates) reference.clone();
+			@SuppressWarnings("unchecked")
+			CoordinateType coords = (CoordinateType) reference.clone();
 			coords.parse(tokens.nextToken());
 			points.add(coords);
 		}
 	}
 
 	@Override
-	public String toString(AstroImage image) {
+	public String toString(GridImage<CoordinateType> image) {
 		// TODO Auto-generated method stub
 		return null;
 	}

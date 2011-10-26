@@ -29,6 +29,7 @@ import java.io.*;
 import java.util.*;
 
 import crush.*;
+import crush.astro.AstroMap;
 import crush.gui.AstroImageLayer;
 import util.*;
 import util.astro.CelestialProjector;
@@ -159,7 +160,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		
 		if(hasOption("sources")) {
 			try { 
-				SourceCatalog catalog = new SourceCatalog();
+				SourceCatalog<SphericalCoordinates> catalog = new SourceCatalog<SphericalCoordinates>();
 				catalog.read(Util.getSystemPath(option("sources").getValue()), map); 
 				insertSources(catalog);
 				map.reset();
@@ -179,9 +180,9 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		
 	}
 	
-	public void insertSources(SourceCatalog catalog) {
+	public void insertSources(SourceCatalog<SphericalCoordinates> catalog) {
 		catalog.remove(map);
-		for(GaussianSource source : catalog) source.peak.scale(-1.0);
+		for(GaussianSource<?> source : catalog) source.peak.scale(-1.0);
 		
 		System.err.println(" Inserting test sources into data.");
 			
@@ -273,7 +274,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	public double resolution() { return Math.sqrt(map.getPixelArea()); }
 	
 	@Override
-	public SphericalProjection getProjection() { return map.getProjection(); }
+	public Projection2D<SphericalCoordinates> getProjection() { return map.getProjection(); }
 	
 	@Override
 	public void process(Scan<?,?> scan) {
@@ -375,8 +376,9 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		map.filterBlanking = filterBlanking;
 	}
 	
-	public GaussianSource getPeakSource() {
-		EllipticalSource source = new EllipticalSource();
+	// TODO for non spherical coordinates...
+	public GaussianSource<SphericalCoordinates> getPeakSource() {
+		EllipticalSource<SphericalCoordinates> source = new EllipticalSource<SphericalCoordinates>();
 		source.setPeak(map);	
 
 		// Rescale the peak to an equivalent unsmoothed value...

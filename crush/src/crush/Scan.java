@@ -31,6 +31,7 @@ import java.io.*;
 import java.util.*;
 import java.text.*;
 
+import crush.astro.AstroMap;
 import crush.sourcemodel.*;
 import util.*;
 import util.DataTable;
@@ -77,7 +78,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 	public int sourcePoints = 0;
 	public boolean hasSiblings = false;
 	
-	public GaussianSource pointing;
+	public GaussianSource<SphericalCoordinates> pointing;
 	
 	// Creates a scan with an initialized copy of the instrument
 	@SuppressWarnings("unchecked")
@@ -648,7 +649,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 	}	
 	
 
-	public Vector2D getEquatorialPointing(GaussianSource source) {
+	public Vector2D getEquatorialPointing(GaussianSource<SphericalCoordinates> source) {
 		EquatorialCoordinates sourceCoords = null;
 		
 		if(source.coords instanceof EquatorialCoordinates) {
@@ -663,13 +664,13 @@ extends Vector<IntegrationType> implements Comparable<Scan<InstrumentType, Integ
 		return sourceCoords.getOffsetFrom(equatorial);
 	}
 	
-	public Vector2D getNativePointing(GaussianSource source) {
+	public Vector2D getNativePointing(GaussianSource<SphericalCoordinates> source) {
 		Vector2D offset = getNativePointingIncrement(source);
 		if(pointingCorrection != null) offset.add(pointingCorrection);
 		return offset;
 	}
 	
-	public Vector2D getNativePointingIncrement(GaussianSource source) {
+	public Vector2D getNativePointingIncrement(GaussianSource<SphericalCoordinates> source) {
 		if(instrument instanceof GroundBased) {
 			if(source.coords instanceof HorizontalCoordinates) return source.coords.getOffsetFrom(horizontal);			
 			else {

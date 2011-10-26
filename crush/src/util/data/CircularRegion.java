@@ -22,69 +22,68 @@
  ******************************************************************************/
 // Copyright (c) 2009 Attila Kovacs 
 
-package crush.sourcemodel;
+package util.data;
 
 import util.*;
-import util.data.Data2D;
-import util.data.DataPoint;
-import util.data.Index2D;
-import util.data.SphericalGrid;
 import util.text.AngleFormat;
 import util.text.TableFormatter;
 
 import java.text.*;
 import java.util.*;
 
-public class CircularRegion extends Region implements TableFormatter.Entries {
-	public SphericalCoordinates coords;
+import crush.astro.AstroMap;
+
+public class CircularRegion<CoordinateType extends CoordinatePair> extends Region<CoordinateType> implements TableFormatter.Entries {
+	public CoordinateType coords;
 	public DataPoint radius;
 	
-	private SphericalGrid useGrid = null;
+	private Grid2D<CoordinateType> useGrid = null;
 	private Vector2D gridIndex = new Vector2D();
 
 	public CircularRegion() {}
 
-	public CircularRegion(AstroImage image, Vector2D offset, double r) {
-		coords = (SphericalCoordinates) image.getReference().clone();
+	@SuppressWarnings("unchecked")
+	public CircularRegion(GridImage<CoordinateType> image, Vector2D offset, double r) {
+		coords = (CoordinateType) image.getReference().clone();
 		image.getProjection().deproject(offset, coords);
 		radius.value = r;
 		radius.setRMS(Math.sqrt(image.getPixelArea()) / (AstroMap.fwhm2size * Util.sigmasInFWHM));
 	}
 	
-	public CircularRegion(SphericalCoordinates coords, double r) {
+	public CircularRegion(CoordinateType coords, double r) {
 		setCenter(coords);
 		radius = new DataPoint();
 		radius.value = r;
 		radius.weight = 0.0;
 	}
 	
-	public CircularRegion(String line, AstroImage forImage) throws ParseException { super(line, forImage); }
+	public CircularRegion(String line, GridImage<CoordinateType> forImage) throws ParseException { super(line, forImage); }
 	
 	@Override
 	public Object clone() {
-		CircularRegion clone = (CircularRegion) super.clone();
+		CircularRegion<?> clone = (CircularRegion<?>) super.clone();
 		clone.useGrid = null;
 		clone.gridIndex = new Vector2D();
 		return clone;
 	}
 	
-	public Vector2D getIndex(SphericalGrid grid) {
+	public Vector2D getIndex(Grid2D<CoordinateType> grid) {
 		if(useGrid != grid) indexFor(grid);
 		return gridIndex;
 	}
 	
-	public void setCenter(SphericalCoordinates coords) {
+	public void setCenter(CoordinateType coords) {
 		this.coords = coords;
 		useGrid = null;
 	}
 	
-	private void indexFor(SphericalGrid grid) {	
+	private void indexFor(Grid2D<CoordinateType> grid) {	
 		grid.getIndex(coords, gridIndex);
 		useGrid = grid;
 	}
 	
 	@Override
-	protected Bounds getBounds(AstroImage image) {
+	public Bounds getBounds(GridImage<CoordinateType> image) {
 		Vector2D centerIndex = getIndex(image.getGrid());
 		Bounds bounds = new Bounds();
 		Vector2D resolution = image.getResolution();
@@ -99,17 +98,18 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		return bounds;
 	}
 
-	public double distanceTo(SphericalCoordinates pos) {
-		return coords.distanceTo(pos);
+	public double distanceTo(CoordinateType pos) {
+		return coords instanceof Metric<?> ? 
+				((Metric<CoordinateType>) coords).distanceTo((Metric<CoordinateType>) pos) : Double.NaN;
 	}
 
 	@Override
-	public boolean isInside(SphericalGrid grid, double i, double j) {
+	public boolean isInside(Grid2D<CoordinateType> grid, double i, double j) {
 		Vector2D centerIndex = getIndex(grid);
 		return Math.hypot(centerIndex.x - i, centerIndex.y - j) <= radius.value;
 	}
 	
-	public void moveToPeak(AstroMap map) throws IllegalStateException {
+	public void moveToPeak(GridImage<CoordinateType> map) throws IllegalStateException {
 		Bounds bounds = getBounds(map);
 		Vector2D centerIndex = getIndex(map.getGrid());
 		
@@ -134,7 +134,7 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 			if(isInside(map.getGrid(), index.i, index.j+1)) if(isInside(map.getGrid(), index.i, index.j-1)) finetunePeak(map);
 	}
 	
-	public DataPoint finetunePeak(AstroMap map) {
+	public DataPoint finetunePeak(GridImage<CoordinateType> map) {
 		Vector2D centerIndex = getIndex(map.getGrid());
 		Data2D.InterpolatorData ipolData = map.new InterpolatorData();
 		
@@ -176,11 +176,11 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 
 	
 	@Override
-	public String toString(AstroImage image) {
+	public String toString(GridImage<CoordinateType> image) {
 		return toString(image, FORMAT_CRUSH);
 	}
 	
-	public String toString(AstroImage image, int format) {
+	public String toString(GridImage<CoordinateType> image, int format) {
 		String line = null;
 		
 		switch(format) {
@@ -196,51 +196,62 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		return line;
 	}
 	
-	public SphericalCoordinates getCoordinates() {
+	public CoordinateType getCoordinates() {
 		return coords;
 	}
 	
 	
-	public String toCrushString(AstroImage image) {
-		SphericalCoordinates coords = getCoordinates();
+	public String toCrushString(GridImage<CoordinateType> image) {
+		CoordinateType coords = getCoordinates();
 		
-		((AngleFormat) coords.coordinateSystem.get(0).format).colons();
-		((AngleFormat) coords.coordinateSystem.get(1).format).colons();
 		
-		return id + "\t" + coords.toString() + "  " + Util.f1.format(radius.value/Unit.arcsec) + " # " + comment;
+		
+		if(coords instanceof SphericalCoordinates) {
+			SphericalCoordinates spherical = (SphericalCoordinates) coords;
+			((AngleFormat) spherical.coordinateSystem.get(0).format).colons();
+			((AngleFormat) spherical.coordinateSystem.get(1).format).colons();
+			return id + "\t" + coords.toString() + "  " + Util.f1.format(radius.value/Unit.arcsec) + " # " + comment;
+		}
+		else return id + "\t" + coords.x + "\t" + coords.y + "\t" + radius.value + "\t# " + comment;
 	}
 
-	public String toGregString(AstroImage image) {
-		Vector2D offset = new Vector2D();
+	public String toGregString(GridImage<CoordinateType> image) {
+		CoordinatePair offset = new CoordinatePair();
 		useGrid.projection.project(coords, offset);
 		
 		return "ellipse " + Util.f1.format(radius.value/Unit.arcsec) + " /user " +
 		Util.f1.format(offset.x / Unit.arcsec) + " " + Util.f1.format(offset.y / Unit.arcsec);
 	}
 	
-	public String toDS9String(AstroImage image) {
-		SphericalCoordinates coords = getCoordinates();
+	public String toDS9String(GridImage<CoordinateType> image) {
+		CoordinateType coords = getCoordinates();
 	
-		((AngleFormat) coords.coordinateSystem.get(0).format).colons();
-		((AngleFormat) coords.coordinateSystem.get(1).format).colons();
+		if(coords instanceof SphericalCoordinates) {
+			SphericalCoordinates spherical = (SphericalCoordinates) coords;
+			((AngleFormat) spherical.coordinateSystem.get(0).format).colons();
+			((AngleFormat) spherical.coordinateSystem.get(1).format).colons();
 		
-		String line = "circle(" 
-			+ coords.coordinateSystem.get(0).format(coords.x) + ","
-			+ coords.coordinateSystem.get(1).format(coords.y) + ","
-			+ Util.f3.format(radius.value / Unit.arcsec) + "\")";
-		
-		return line;
+			return "circle(" 
+				+ spherical.coordinateSystem.get(0).format(coords.x) + ","
+				+ spherical.coordinateSystem.get(1).format(coords.y) + ","
+				+ Util.f3.format(radius.value / Unit.arcsec) + "\")";
+		}
+		else return "circle(" + coords.x + "," + coords.y + "," + radius.value + ")";		
 	}
 	
-	public String toOffsetString(AstroImage image) {
+	
+	public String toOffsetString(GridImage<CoordinateType> image) {
 		Vector2D offset = new Vector2D();
 		image.getProjection().project(coords, offset);
 	
-		SphericalCoordinates reference = useGrid.getReference();
-		CoordinateAxis x = reference.localCoordinateSystem.get(0);
-		CoordinateAxis y = reference.localCoordinateSystem.get(1);
+		if(coords instanceof SphericalCoordinates) {
+			SphericalCoordinates reference = (SphericalCoordinates) useGrid.getReference();
+			CoordinateAxis x = reference.localCoordinateSystem.get(0);
+			CoordinateAxis y = reference.localCoordinateSystem.get(1);
 		
-		return x.label + " = " + x.format(offset.x) + "\t" + y.label + " = " + y.format(offset.y);
+			return x.label + " = " + x.format(offset.x) + "\t" + y.label + " = " + y.format(offset.y);
+		}
+		else return "dx = " + offset.x + "\tdy = " + offset.y;
 	}
 	
 	public String getComment() {
@@ -248,11 +259,11 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 	}
 	
 	@Override
-	public void parse(String line, AstroImage forImage) throws ParseException {
+	public void parse(String line, GridImage<CoordinateType> forImage) throws ParseException {
 		parseCrush(line, forImage);
 	}
 	
-	public void parse(String line, int format, AstroImage forImage) {	
+	public void parse(String line, int format, GridImage<CoordinateType> forImage) {	
 		switch(format) {
 		case FORMAT_CRUSH : parseCrush(line, forImage); break;
 		//case FORMAT_OFFSET : parseOffset(line); break;
@@ -261,25 +272,36 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		}
 	}
 	
-	public StringTokenizer parseCrush(String line, AstroImage forImage) {
-		SphericalCoordinates coords = getCoordinates();
-		
-		((AngleFormat) coords.coordinateSystem.get(0).format).colons();
-		((AngleFormat) coords.coordinateSystem.get(1).format).colons();
+	public StringTokenizer parseCrush(String line, GridImage<CoordinateType> forImage) {
+		CoordinateType coords = getCoordinates();
 		
 		StringTokenizer tokens = new StringTokenizer(line);
 		id = tokens.nextToken();
-		coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " " + tokens.nextToken());
-		setCenter(coords);
-		radius.value = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
-		radius.weight = 0.0;
+		
+		if(coords instanceof SphericalCoordinates) {
+			SphericalCoordinates spherical = (SphericalCoordinates) coords;
+			((AngleFormat) spherical.coordinateSystem.get(0).format).colons();
+			((AngleFormat) spherical.coordinateSystem.get(1).format).colons();
+		
+			coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " " + tokens.nextToken());
+			setCenter(coords);
+			radius.value = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
+			
+		}
+		else {
+			coords.x = Double.parseDouble(tokens.nextToken());
+			coords.y = Double.parseDouble(tokens.nextToken());			
+		}
+		
+		
+		radius.weight = 0.0;	
 		
 		if(line.contains("#")) comment = line.substring(line.indexOf('#') + 2);
 	
 		return tokens;
 	}
 
-	public void parseGreg(String line, AstroImage forImage) {
+	public void parseGreg(String line, GridImage<CoordinateType> forImage) {
 		StringTokenizer tokens = new StringTokenizer(line);
 		if(!tokens.nextToken().equalsIgnoreCase("ellipse"))
 			throw new IllegalArgumentException("WARNING! " + getClass().getSimpleName() + " can parse 'ellipse' only.");
@@ -296,17 +318,25 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		forImage.getGrid().getCoords(centerIndex, coords);
 	}
 	
-	public void parseDS9(String line, AstroImage forImage) {	
-		SphericalCoordinates coords = getCoordinates();
-	
-		((AngleFormat) coords.coordinateSystem.get(0).format).colons();
-		((AngleFormat) coords.coordinateSystem.get(1).format).colons();
+	public void parseDS9(String line, GridImage<CoordinateType> forImage) {	
+		CoordinateType coords = getCoordinates();
 	
 		StringTokenizer tokens = new StringTokenizer(line, "(), \t");
 		boolean isCircle = tokens.nextToken().equalsIgnoreCase("circle");
-	
-		coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " (J2000)");
 		
+		if(coords instanceof SphericalCoordinates) {
+			SphericalCoordinates spherical = (SphericalCoordinates) coords;
+		
+			((AngleFormat) spherical.coordinateSystem.get(0).format).colons();
+			((AngleFormat) spherical.coordinateSystem.get(1).format).colons();
+	
+			coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " (J2000)");
+		}
+		else {
+			coords.x = Double.parseDouble(tokens.nextToken());
+			coords.y = Double.parseDouble(tokens.nextToken());
+		}
+				
 		if(isCircle) {
 			String R = tokens.nextToken();
 			char unit = R.charAt(R.length() - 1);

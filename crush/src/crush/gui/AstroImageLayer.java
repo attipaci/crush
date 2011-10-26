@@ -25,9 +25,8 @@ package crush.gui;
 import java.awt.geom.NoninvertibleTransformException;
 
 import util.Vector2D;
+import util.data.GridImage;
 import util.plot.DoubleImageLayer;
-
-import crush.sourcemodel.*;
 
 public class AstroImageLayer extends DoubleImageLayer {
 	/**
@@ -35,13 +34,13 @@ public class AstroImageLayer extends DoubleImageLayer {
 	 */
 	private static final long serialVersionUID = 5730801953668713086L;
 	
-	AstroImage image;
+	GridImage<?> image;
 	
-	public AstroImageLayer(AstroImage image) {
-		super(image.data);
+	public AstroImageLayer(GridImage<?> image) {
+		super(image.getData());
 		this.image = image;
 		
-		try { this.setCoordinateTransform(image.grid.getLocalAffineTransform()); }
+		try { this.setCoordinateTransform(image.getGrid().getLocalAffineTransform()); }
 		catch(NoninvertibleTransformException e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
@@ -52,13 +51,12 @@ public class AstroImageLayer extends DoubleImageLayer {
 	
 	@Override
 	public double getValue(int i, int j) {
-		if(image.flag[i+i0][j+j0] != 0) return Double.NaN;
-		return super.getValue(i, j);
+		return image.valueAtIndex(i+i0, j+j0);
 	}
 	
 	@Override
 	public Vector2D getReferencePoint() {
-		return image.grid.refIndex;
+		return image.getGrid().refIndex;
 	}
 	
 }

@@ -21,23 +21,17 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package util.data;
+package util.astro;
 
-import nom.tam.fits.Header;
-import nom.tam.fits.HeaderCardException;
-import util.*;
-
-public class CartesianGrid2D extends Grid2D<CoordinatePair> {
-
-	@Override
-	public void parseProjection(Header header) throws HeaderCardException {
-		// TODO Auto-generated method stub	
-	}
-
-	@Override
-	public CoordinatePair getCoordinateInstanceFor(String type) {
-		return new CoordinatePair();
-	}
+public interface SkyCoordinates {
 	
+	public boolean isHorizontal();
+
+	public boolean isEquatorial();
 	
+	public boolean isEcliptic();
+
+	public boolean isGalactic();
+	
+	public boolean isSuperGalactic();
 }

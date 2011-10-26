@@ -27,13 +27,13 @@ package crush.tools;
 import java.util.*;
 
 import crush.CRUSH;
-import crush.sourcemodel.AstroMap;
-import crush.sourcemodel.Region;
+import crush.astro.AstroMap;
 
 import util.ConfidenceCalculator;
 import util.Unit;
 import util.Util;
 import util.astro.SourceCatalog;
+import util.data.Region;
 
 //noise-peaks
 //N_beam * Q = N_max -- limiting the number of false detections

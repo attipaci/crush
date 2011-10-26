@@ -32,13 +32,15 @@ import crush.CRUSH;
 import crush.sourcemodel.GaussianSource;
 import util.Complex;
 import util.ConfidenceCalculator;
+import util.CoordinatePair;
+import util.Projection2D;
 import util.Range;
 import util.Unit;
 import util.Util;
 import util.Vector2D;
 
-public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
-	GridType grid;
+public abstract class GridImage<CoordinateType extends CoordinatePair> extends Data2D {
+	Grid2D<CoordinateType> grid;
 	
 	// TODO make private...
 	public double smoothFWHM;  
@@ -47,6 +49,8 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 
 	public String fileName;
 	public String creator = "CRUSH", creatorVersion = CRUSH.getFullVersion();
+	
+	public Header header;
 	
 	public GridImage() {
 	}
@@ -63,9 +67,9 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 		super(data, flag);
 	}
 	
-	public GridType getGrid() { return grid; }
+	public Grid2D<CoordinateType> getGrid() { return grid; }
 	
-	public void setGrid(GridType grid) { 
+	public void setGrid(Grid2D<CoordinateType> grid) { 
 		this.grid = grid; 
 		double fwhm = Math.sqrt(grid.getPixelArea()) / fwhm2size;
 		if(smoothFWHM < fwhm) smoothFWHM = fwhm;	
@@ -78,6 +82,28 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 	
 	public Vector2D getResolution() {
 		return getGrid().getResolution();
+	}
+	
+	
+	public Projection2D<CoordinateType> getProjection() { return getGrid().getProjection(); }
+	
+	public void setProjection(Projection2D<CoordinateType> projection) { getGrid().projection = projection; }
+	
+	public CoordinateType getReference() { return getGrid().getReference(); }
+	
+	public void setReference(CoordinateType reference) { getGrid().setReference(reference); }
+		
+	protected GridImage<CoordinateType> getImage(double[][] data, String contentType, Unit unit) {
+		@SuppressWarnings("unchecked")
+		GridImage<CoordinateType> image = (GridImage<CoordinateType>) clone();
+		image.setData(data);
+		image.contentType = contentType;
+		image.unit = unit;
+		return image;		
+	}
+
+	public GridImage<CoordinateType> getFluxImage() {
+		return getImage(getData(), "Flux", unit);
 	}
 	
 	public double getPixelArea() {
@@ -259,7 +285,7 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 				if(getFlag(i, j) != 0) return;	
 				if(skip[i][j] > 0) extended[i][j] = 0.0;
 				else {
-					final double w = weightAt(i, j);
+					final double w = getWeight(i, j);
 					extended[i][j] = w * getValue(i, j);
 					sumw += w;
 					n++;
@@ -356,19 +382,19 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 	}
 	
 	
-	public void copyValueOf(final GridImage<GridType> from, final double fromi, final double fromj, final int toi, final int toj) {
+	public void copyValueOf(final GridImage<CoordinateType> from, final double fromi, final double fromj, final int toi, final int toj) {
 		setValue(toi, toj, from.valueAtIndex(fromi, fromj));
 		if(isNaN(toi, toj)) setFlag(toi, toj, 1);
 	}
 
 	@SuppressWarnings("unchecked")
-	public void resample(GridImage<GridType> from) {
+	public void resample(GridImage<CoordinateType> from) {
 		if(verbose) System.err.println(" Resampling image to "+ sizeX() + "x" + sizeY() + ".");
 		final Vector2D v = new Vector2D();
 		
 		// Antialias filter first...
 		if(from.smoothFWHM < smoothFWHM) {
-			from = (GridImage<GridType>) from.copy();
+			from = (GridImage<CoordinateType>) from.copy();
 			from.smoothTo(smoothFWHM);
 		}
 		
@@ -389,14 +415,13 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 		}.process();
 	}
 	
-	public GridImage<GridType> getRegrid(final double resolution) throws IllegalStateException {
+	public GridImage<CoordinateType> getRegrid(final double resolution) throws IllegalStateException {
 		return getRegrid(new Vector2D(resolution, resolution));
 	}
 
-	public GridImage<GridType> getRegrid(final Vector2D resolution) throws IllegalStateException {	
+	public GridImage<CoordinateType> getRegrid(final Vector2D resolution) throws IllegalStateException {	
 		Vector2D dRes = new Vector2D(resolution.x / getGrid().pixelSizeX(), resolution.y / getGrid().pixelSizeY());
-		@SuppressWarnings("unchecked")
-		GridType toGrid = (GridType) getGrid().copy();
+		Grid2D<CoordinateType> toGrid = (Grid2D<CoordinateType>) getGrid().copy();
 		
 		Vector2D refIndex = toGrid.getReferenceIndex();
 		
@@ -420,7 +445,7 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 	}
 
 	
-	public GridImage<GridType> getRegrid(final GridType toGrid) throws IllegalStateException {		
+	public GridImage<CoordinateType> getRegrid(final Grid2D<CoordinateType> toGrid) throws IllegalStateException {		
 		// Check if it is an identical grid...
 		// Add directly if it is...
 
@@ -440,8 +465,8 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected GridImage<GridType> getRegrid(GridType toGrid, int nx, int ny) {	
-		GridImage<GridType> regrid = (GridImage<GridType>) clone();
+	protected GridImage<CoordinateType> getRegrid(Grid2D<CoordinateType> toGrid, int nx, int ny) {	
+		GridImage<CoordinateType> regrid = (GridImage<CoordinateType>) clone();
 		regrid.setGrid(toGrid);
 		regrid.setSize(nx, ny);
 		regrid.fillFlag(1);
@@ -453,15 +478,15 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 	
 
 	public void regrid(double resolution) {		
-		GridImage<GridType> regrid = getRegrid(resolution);
+		GridImage<CoordinateType> regrid = getRegrid(resolution);
 		setImage(regrid);
 		setGrid(regrid.getGrid());
 		smoothFWHM = regrid.smoothFWHM;
 	}
 
 	
-	public void regridTo(final GridImage<GridType> image) throws IllegalStateException {
-		GridImage<GridType> regrid = getRegrid(image.getGrid());
+	public void regridTo(final GridImage<CoordinateType> image) throws IllegalStateException {
+		GridImage<CoordinateType> regrid = getRegrid(image.getGrid());
 
 		Vector2D corner1 = new Vector2D();
 		Vector2D corner2 = new Vector2D(image.sizeX() - 1.0, image.sizeY() - 1.0);
@@ -485,7 +510,7 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 		return clean(this, beam, gain, replacementFWHM);
 	}
 
-	public int clean(GridImage<GridType> search, double[][] beam, double gain, double replacementFWHM) {
+	public int clean(GridImage<CoordinateType> search, double[][] beam, double gain, double replacementFWHM) {
 		if(verbose) System.err.println("Deconvolving to " + Util.f1.format(replacementFWHM/Unit.arcsec) + " arcsec resolution.");
 
 		int ic = beam.length / 2;
@@ -699,6 +724,15 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 			addLongHierarchKey(cursor, key, (char)(part+1), value.substring(available)); 
 		}
 	}
+	
+	public void write() throws HeaderCardException, FitsException, IOException { write(getFits()); }
+
+	public void write(Fits fits) throws HeaderCardException, FitsException, IOException {
+		BufferedDataOutputStream file = new BufferedDataOutputStream(new FileOutputStream(fileName));
+		fits.write(file);
+		System.err.println(" Written " + fileName);
+	}
+	
 	public void write(String name) throws HeaderCardException, FitsException, IOException {
 		Fits fits = new Fits();	
 
@@ -740,8 +774,10 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 		if(!Double.isNaN(correctingFWHM))
 			cursor.add(new HeaderCard("CORRECTN", correctingFWHM / Unit.arcsec, "The FWHM (arcsec) for which fluxes are corrected."));
 	}
-
+	
 	public void parseHeader(Header header) throws Exception {
+		this.header = header;
+		
 		int sizeX = header.getIntValue("NAXIS1");
 		int sizeY = header.getIntValue("NAXIS2");
 
@@ -753,17 +789,112 @@ public abstract class GridImage<GridType extends Grid2D<?, ?>> extends Data2D {
 		if(creator == null) creator = "unknown";
 		creatorVersion = "unknown";
 
-		smoothFWHM = Math.sqrt(getGrid().getPixelArea()) / fwhm2size;
+		correctingFWHM = header.getDoubleValue("CORRECTN", Double.NaN) * Unit.arcsec;
+		creatorVersion = header.getStringValue("CRUSHVER");
+
+		// get the map resolution
+		smoothFWHM = header.getDoubleValue("SMOOTH", 0.0) * Unit.arcsec;
+		if(smoothFWHM < Math.sqrt(getGrid().getPixelArea()) / fwhm2size) smoothFWHM = Math.sqrt(getGrid().getPixelArea()) / fwhm2size;
+		extFilterFWHM = header.getDoubleValue("EXTFLTR", Double.NaN) * Unit.arcsec;
+	}
+	
+	
+	public Fits getFits() throws HeaderCardException, FitsException, IOException {
+		FitsFactory.setUseHierarch(true);
+		Fits fits = new Fits();	
+
+		fits.addHDU(createHDU());
+		editHeader(fits);
+	
+		return fits;
 	}
 
+	public Fits getFits(String name) throws FitsException, IOException {
+		FitsFactory.setUseHierarch(true);
+		Fits fits;
+	
+		try { 
+			fits = new Fits(new File(name)); 
+			fileName = name;
+		}
+		catch(Exception e) { 
+			fileName = CRUSH.workPath + name;
+			fits = new Fits(new File(fileName)); 
+		}
+		
+		return fits;
+	}
+	
+	
+	
 	@Override
 	public String toString() {		
-		Grid2D<?, ?> grid = getGrid();
+		Grid2D<?> grid = getGrid();
 		String info =
 			"  Map Size: " + sizeX() + " x " + sizeY() + " pixels. (" 
 			+ Util.f1.format(sizeX() * grid.pixelSizeX() / Unit.arcmin) + " x " + Util.f1.format(sizeY() * grid.pixelSizeY() / Unit.arcmin) + " arcmin)." + "\n"
-			+ grid.toString();
+			+ grid.toString()
+			+ 	"  Applied Smoothing: " + Util.f2.format(smoothFWHM / Unit.arcsec) + " arcsec." + " (includes pixelization)\n"
+			+ "  Image Resolution (FWHM): " + Util.f2.format(getImageFWHM() / Unit.arcsec) + " arcsec. (includes smoothing)" + "\n";
+			
 		return info;
+	}
+
+
+	public void setKey(String key, String value) throws HeaderCardException {
+		String comment = header.containsKey(key) ? header.findCard(key).getComment() : "Set bu user.";
+
+		// Try add as boolean, int or double -- fall back to String...
+		try{ header.addValue(key, Util.parseBoolean(value), comment); }
+		catch(NumberFormatException e1) { 
+			try{ header.addValue(key, Integer.parseInt(value), comment); }
+			catch(NumberFormatException e2) {
+				try{ header.addValue(key, Double.parseDouble(value), comment); }
+				catch(NumberFormatException e3) { header.addValue(key, value, comment); }
+			}
+		}
+	}
+
+	public void printHeader() {
+		header.dumpHeader(System.out);
+	}  
+	
+	
+	public void flag(Region<CoordinateType> region) { flag(region, 1); }
+
+	public void flag(Region<CoordinateType> region, int pattern) {
+		final Bounds bounds = region.getBounds(this);
+		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
+			if(region.isInside(getGrid(), i, j)) flag(i, j, pattern);
+	}
+
+	public void unflag(Region<CoordinateType> region, int pattern) {
+		final Bounds bounds = region.getBounds(this);
+		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
+			if(region.isInside(getGrid(), i, j)) unflag(i, j, pattern);
+	}
+
+	
+
+	public double getLevel(Region<CoordinateType> region) {
+		final Bounds bounds = region.getBounds(this);
+		double sum = 0.0, sumw = 0.0;
+		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
+			if(isUnflagged(i, j)) if(region.isInside(getGrid(), i, j)) {
+				final double w = getWeight(i, j);
+				sum += w * getValue(i, j);
+				sumw += w;
+			}
+		return sum / sumw;			
+	}
+	
+
+	public double getIntegral(Region<CoordinateType> region) {
+		final Bounds bounds = region.getBounds(this);
+		double sum = 0.0;
+		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
+			if(isUnflagged(i, j)) if(region.isInside(getGrid(), i, j)) sum += getValue(i, j);	
+		return sum;			
 	}
 
 	

@@ -31,6 +31,8 @@ public interface Weighted2D {
 	
 	public double getWeight(int i, int j);
 	
+	public void scaleWeight(double factor);
+	
 	public void setWeight(int i, int j, double weight);
 	
 	public void incrementWeight(int i, int j, double dw);

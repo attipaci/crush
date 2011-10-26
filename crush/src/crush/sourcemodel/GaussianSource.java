@@ -27,36 +27,35 @@ package crush.sourcemodel;
 import java.text.*;
 import java.util.*;
 
+import crush.Instrument;
+import crush.astro.AstroMap;
+
 import util.*;
 import util.astro.CoordinateEpoch;
 import util.astro.EquatorialCoordinates;
 import util.astro.Precessing;
-import util.data.Data2D;
-import util.data.DataPoint;
-import util.data.Grid2D;
-import util.data.Index2D;
-import util.data.WeightedPoint;
+import util.data.*;
 
 
-public class GaussianSource extends CircularRegion {
+public class GaussianSource<CoordinateType extends CoordinatePair> extends CircularRegion<CoordinateType> {
 	public DataPoint peak;
 	public boolean isCorrected = false;
 	
 	public GaussianSource() { }
 
-	public GaussianSource(String line, AstroImage forImage) throws ParseException {
+	public GaussianSource(String line, GridImage<CoordinateType> forImage) throws ParseException {
 		super(line, forImage);
 	}
 	
-	public GaussianSource(AstroMap map, Vector2D offset, double r) {
+	public GaussianSource(GridImage<CoordinateType> map, Vector2D offset, double r) {
 		super(map, offset, r);
 	}
 	
-	public GaussianSource(SphericalCoordinates coords, double r) {
+	public GaussianSource(CoordinateType coords, double r) {
 		super(coords, r);
 	}
 	
-	public Bounds getBounds(AstroImage image, double beams) {
+	public Bounds getBounds(GridImage<CoordinateType> image, double beams) {
 		double origRadius = radius.value;
 		radius.value = beams * image.getImageFWHM();
 		Bounds bounds = getBounds(image);
@@ -70,34 +69,37 @@ public class GaussianSource extends CircularRegion {
 	
 	public void setFWHM(DataPoint value) { radius = value; }
 	
-	public void setPeakPixel(AstroMap map) {
-		Index2D index = map.getS2NImage().indexOfMax();
-		SphericalCoordinates coords = (SphericalCoordinates) map.getReference().clone();
+	public void setPeakPixel(GridImage<CoordinateType> map) {
+		Index2D index = map instanceof GridMap ? ((GridMap<?>) map).getS2NImage().indexOfMax() : map.indexOfMax();
+		@SuppressWarnings("unchecked")
+		CoordinateType coords = (CoordinateType) map.getReference().clone();
 		map.getGrid().getCoords(new Vector2D(index.i, index.j), coords);
-		id = map.sourceName;
+		id = map instanceof GridSource ? ((GridSource<?>) map).sourceName : "[1]";
 		setCenter(coords);
 		radius = new DataPoint(map.getImageFWHM(), Math.sqrt(map.getPixelArea()));	
 	}
 	
-	public void setPeak(AstroMap map) {
+	public void setPeak(GridImage<CoordinateType> map) {
 		setPeakPixel(map);
 		finetunePeak(map);
 	}
 	
-	public void setPeakCentroid(AstroMap map) {
+	public void setPeakCentroid(GridImage<CoordinateType> map) {
 		setPeak(map);
 		centroid(map);
 	}
 	
 	@Override
-	public DataPoint finetunePeak(AstroMap map) {
-		AstroImage rms = map.getRMSImage();
-		Data2D.InterpolatorData ipolData = map.new InterpolatorData();
-		peak = super.finetunePeak(map);
-		Vector2D centerIndex = getIndex(map.getGrid());
+	public DataPoint finetunePeak(GridImage<CoordinateType> image) {
+		
+		Data2D.InterpolatorData ipolData = image.new InterpolatorData();
+		peak = super.finetunePeak(image);
+		Vector2D centerIndex = getIndex(image.getGrid());
 		if(peak == null) {
-			peak.value = map.valueAtIndex(centerIndex, ipolData);
-			peak.setRMS(rms.valueAtIndex(centerIndex, ipolData));
+			peak.value = image.valueAtIndex(centerIndex, ipolData);
+			if(image instanceof GridMap)
+				peak.setRMS(((GridMap<?>) image).getRMSImage().valueAtIndex(centerIndex, ipolData));
+			else peak.weight = 0.0;
 		}
 		return peak;
 	}
@@ -106,7 +108,7 @@ public class GaussianSource extends CircularRegion {
 		peak.scale(factor);		
 	}
 	
-	public void getChi2(AstroMap map, WeightedPoint chi2, double level) {
+	public void getChi2(GridImage<CoordinateType> map, WeightedPoint chi2, double level) {
 		chi2.noData();
 		Bounds bounds = getBounds(map);
 		Vector2D centerIndex = getIndex(map.getGrid());
@@ -125,7 +127,7 @@ public class GaussianSource extends CircularRegion {
 		}
 	}
 	
-	public void addGaussian(AstroImage image, double FWHM, double scaling) {
+	public void addGaussian(GridImage<CoordinateType> image, double FWHM, double scaling) {
 		Bounds bounds = getBounds(image, 3.0 * FWHM / image.getImageFWHM());
 		Vector2D centerIndex = getIndex(image.getGrid());
 		final Vector2D resolution = image.getResolution();
@@ -142,28 +144,28 @@ public class GaussianSource extends CircularRegion {
 		
 	}
 	
-	public void add(AstroImage image) { add(image, null); }
+	public void add(GridImage<CoordinateType> image) { add(image, null); }
 	
-	public void add(AstroImage image, Collection<Region> others) { add(image, radius.value, 1.0, others); }
+	public void add(GridImage<CoordinateType> image, Collection<Region<CoordinateType>> others) { add(image, radius.value, 1.0, others); }
 	
-	public void addPoint(AstroImage image) { addPoint(image, null); }
+	public void addPoint(GridImage<CoordinateType> image) { addPoint(image, null); }
 	
-	public void addPoint(AstroImage image, Collection<Region> others) { add(image, image.getImageFWHM(), 1.0, others); }	
+	public void addPoint(GridImage<CoordinateType> image, Collection<Region<CoordinateType>> others) { add(image, image.getImageFWHM(), 1.0, others); }	
 	
-	public void subtract(AstroImage image) { subtract(image, null); }
+	public void subtract(GridImage<CoordinateType> image) { subtract(image, null); }
 	
-	public void subtract(AstroImage image, Collection<Region> others) { add(image, radius.value, -1.0, others); }
+	public void subtract(GridImage<CoordinateType> image, Collection<Region<CoordinateType>> others) { add(image, radius.value, -1.0, others); }
 	
-	public void subtractPoint(AstroImage image) { subtractPoint(image, null); }
+	public void subtractPoint(GridImage<CoordinateType> image) { subtractPoint(image, null); }
 	
-	public void subtractPoint(AstroImage image, Collection<Region> others) { add(image, image.getImageFWHM(), -1.0, others); }
+	public void subtractPoint(GridImage<CoordinateType> image, Collection<Region<CoordinateType>> others) { add(image, image.getImageFWHM(), -1.0, others); }
 	
 	
-	public void add(AstroImage image, final double FWHM, final double scaling) {
+	public void add(GridImage<CoordinateType> image, final double FWHM, final double scaling) {
 		add(image, FWHM, scaling, null);
 	}
 	
-	public void add(AstroImage image, final double FWHM, final double scaling, final Collection<Region> others) {
+	public void add(GridImage<CoordinateType> image, final double FWHM, final double scaling, final Collection<Region<CoordinateType>> others) {
 		// Remove the Gaussian main beam...
 		addGaussian(image, Math.hypot(FWHM, image.smoothFWHM), scaling);
 		
@@ -195,8 +197,8 @@ public class GaussianSource extends CircularRegion {
 		
 		Vector2D centerIndex = getIndex(image.getGrid());
 		// Adjust prior detections.for the filtering around this one.
-		if(others != null) for(Region region : others) if(region instanceof GaussianSource) if(region != this) {
-			GaussianSource source = (GaussianSource) region;
+		if(others != null) for(Region<CoordinateType> region : others) if(region instanceof GaussianSource) if(region != this) {
+			GaussianSource<CoordinateType> source = (GaussianSource<CoordinateType>) region;
 			Vector2D sourceIndex = source.getIndex(image.getGrid());
 			final double di = sourceIndex.x - centerIndex.x;
 			final double dj = sourceIndex.y - centerIndex.y;
@@ -207,7 +209,7 @@ public class GaussianSource extends CircularRegion {
 		
 	}
 	
-	public double getCorrectionFactor(AstroMap map, double FWHM) {	
+	public double getCorrectionFactor(GridMap<CoordinateType> map, double FWHM) {	
 		double correction = 1.0;	
 		
 		// Correct for filtering.
@@ -222,7 +224,7 @@ public class GaussianSource extends CircularRegion {
 	}
 	
 	
-	public void correct(AstroMap map, double FWHM) {	
+	public void correct(GridMap<CoordinateType> map, double FWHM) {	
 		if(isCorrected) throw new IllegalStateException("Source is already corrected.");
 		double correction = getCorrectionFactor(map, FWHM);
 		peak.scale(correction);
@@ -230,7 +232,7 @@ public class GaussianSource extends CircularRegion {
 	}
 	
 
-	public void uncorrect(AstroMap map, double FWHM) {
+	public void uncorrect(GridMap<CoordinateType> map, double FWHM) {
 		if(!isCorrected) throw new IllegalStateException("Source is already uncorrected.");
 		double correction = getCorrectionFactor(map, FWHM);
 		peak.scale(1.0 / correction);
@@ -239,14 +241,14 @@ public class GaussianSource extends CircularRegion {
 	
 	
 	// Formula from Kovacs et al. (2006)
-	public void setSearchRadius(AstroImage image, double pointingRMS) {
+	public void setSearchRadius(GridSource<CoordinateType> image, double pointingRMS) {
 		double beamSigma = image.instrument.resolution / Util.sigmasInFWHM;
 		radius.value = Math.sqrt(4.0 * pointingRMS * pointingRMS - 2.0 * beamSigma * beamSigma * Math.log(1.0 - 2.0 / peak.significance()));
 	}
 
 	
 	@Override
-	public void parse(String line, AstroImage forImage) throws ParseException {
+	public void parse(String line, GridImage<CoordinateType> forImage) throws ParseException {
 		if(line == null) return;
 		if(line.length() == 0) return;
 		if(line.charAt(0) == '#' || line.charAt(0) == '!') return;
@@ -255,9 +257,10 @@ public class GaussianSource extends CircularRegion {
 
 		if(tokens.countTokens() < 5) return;
 
-		id = tokens.nextToken();
+		setID(tokens.nextToken());
 
-		coords = new EquatorialCoordinates();
+		// TODO make it work with non equatorial coordinates...
+		coords = (CoordinateType) new EquatorialCoordinates();
 		coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " " + tokens.nextToken());
 	
 		if(forImage.getReference() instanceof Precessing) {
@@ -277,16 +280,22 @@ public class GaussianSource extends CircularRegion {
 			}
 			catch(NumberFormatException e) {}
 		}
+
+		if(forImage instanceof GridSource) {
+			GridSource<CoordinateType> sourceMap = (GridSource<CoordinateType>) forImage;
+			Unit unit = nextArg == null ? 
+					new Unit("Jy/beam", sourceMap.getUnit("Jy/beam")) :
+					new Unit(nextArg, sourceMap.getUnit(nextArg));
+			peak.scale(unit.value);
+		}
 			
-		Unit unit = nextArg == null ? new Unit("Jy/beam", forImage.getUnit("Jy/beam")) : new Unit(nextArg, forImage.getUnit(nextArg));
 		while(tokens.hasMoreTokens()) comment += tokens.nextToken() + " ";
 		comment.trim();
 		
-		peak.scale(unit.value);
 	}
 
 	@Override
-	public String toCrushString(AstroImage image) {
+	public String toCrushString(GridImage<CoordinateType> image) {
 		return id + "\t" + super.toCrushString(image) + "  " + DataPoint.toString(peak, image.unit);
 	}
 	
@@ -296,7 +305,7 @@ public class GaussianSource extends CircularRegion {
 	}
 	
 	@Override
-	public StringTokenizer parseCrush(String line, AstroImage forImage) {
+	public StringTokenizer parseCrush(String line, GridImage<CoordinateType> forImage) {
 		StringTokenizer tokens = super.parseCrush(line, forImage);
 		
 		peak.value = Double.parseDouble(tokens.nextToken());
@@ -306,13 +315,14 @@ public class GaussianSource extends CircularRegion {
 			next = tokens.nextToken();
 		}
 		
-		peak.value *= forImage.getUnit(next);
+		if(forImage instanceof GridSource)
+			peak.value *= ((GridSource<CoordinateType>) forImage).getUnit(next);
 		
 		return tokens;
 	}
 	
 	
-	public void centroid(AstroMap map) {
+	public void centroid(GridImage<CoordinateType> map) {
 		Bounds bounds = getBounds(map, 2.0);
 		Vector2D index = new Vector2D();
 		double sumw = 0.0;
@@ -330,7 +340,7 @@ public class GaussianSource extends CircularRegion {
 	// Increase the aperture until it captures >98% of the flux
 	// Then estimate the spread by comparing the peak flux to the integrated flux
 	// with an equivalent Gaussian source profile...
-	public WeightedPoint getAdaptiveIntegral(AstroMap map) {
+	public WeightedPoint getAdaptiveIntegral(GridImage<CoordinateType> map) {
 		double origRadius = radius.value;		
 		WeightedPoint I = getIntegral(map);
 
@@ -349,12 +359,12 @@ public class GaussianSource extends CircularRegion {
 		return I;
 	}
 	
-	public double spread(AstroMap map) {	
+	public double spread(GridImage<CoordinateType> map) {	
 		WeightedPoint I = getAdaptiveIntegral(map);	
 		return Math.sqrt(I.value / (2.0 * Math.PI * peak.value) * map.getPixelArea());
 	}
 	
-	public void measureShape(AstroMap map) {	
+	public void measureShape(GridImage<CoordinateType> map) {	
 		radius.value = spread(map) * Util.sigmasInFWHM;
 		radius.setRMS(radius.value / peak.significance());
 		
@@ -363,16 +373,26 @@ public class GaussianSource extends CircularRegion {
 		// so sigma(FWHM0)^2 ~ (0.5 / FWHM0 * 2 FWHM)^2  sigma(FWHM)^2
 		//                   ~ F2 / (F^2 - S^2) * sigmaF^2
 		//                   ~ 1 + (S^2 / F0^2) * sigmaF^2
-		double SF0 = Math.min(1.0, map.instrument.resolution / radius.value);
-		radius.weight *= 2.0 / (1.0 + SF0 * SF0);
+		if(map instanceof GridSource) {
+			double SF0 = Math.min(1.0, ((GridSource<?>) map).instrument.resolution / radius.value);
+			radius.weight *= 2.0 / (1.0 + SF0 * SF0);
+		}
 	}
 	
-	public DataTable getData(AstroMap map) {
+	public DataTable getData(GridImage<CoordinateType> map) {
 		DataTable data = new DataTable();
 		
-		double sizeUnit = map.instrument.getDefaultSizeUnit();
-		String sizeName = map.instrument.getDefaultSizeName();
-		double beamScaling = map.getInstrumentBeamArea() / map.getImageBeamArea();
+		double sizeUnit = 1.0; 
+		String sizeName = "pixels"; 
+		double beamScaling = 1.0;
+		
+		if(map instanceof GridSource) {
+			GridSource<?> sourceMap = ((GridSource<?>) map);
+			Instrument<?> instrument = sourceMap.instrument;
+			sizeUnit = instrument.getDefaultSizeUnit();
+			sizeName = instrument.getDefaultSizeName();
+			beamScaling = sourceMap.getInstrumentBeamArea() / sourceMap.getImageBeamArea();
+		}
 			
 		data.add(new Datum("peak", peak.value * beamScaling / map.unit.value, map.unit.name));
 		data.add(new Datum("dpeak", peak.rms() * beamScaling / map.unit.value, map.unit.name));
@@ -391,14 +411,25 @@ public class GaussianSource extends CircularRegion {
 		return data;
 	}
 	
-	public String pointingInfo(AstroMap map) {
-		double sizeUnit = map.instrument.getDefaultSizeUnit();
-		peak.scale(map.getInstrumentBeamArea() / map.getImageBeamArea());
+	public String pointingInfo(GridImage<CoordinateType> map) {
+		double sizeUnit = 1.0;
+		String sizeName = "pixels"; 
+		double beamScaling = 1.0;
+		
+		if(map instanceof GridSource) {
+			GridSource<?> sourceMap = ((GridSource<?>) map);
+			Instrument<?> instrument = sourceMap.instrument;
+			sizeUnit = instrument.getDefaultSizeUnit();
+			sizeName = instrument.getDefaultSizeName();
+			beamScaling = sourceMap.getInstrumentBeamArea() / sourceMap.getImageBeamArea();
+		}
+		
+		peak.scale(beamScaling);
 		
 		String info = "  Peak: " + DataPoint.toString(peak, map.unit) 
 			+ " (S/N ~ " + Util.f1.format(peak.significance()) + ")\n";
 	
-		peak.scale(map.getImageBeamArea() / map.getInstrumentBeamArea());
+		peak.scale(1.0 / beamScaling);
 		
 		DataPoint F = new DataPoint(getAdaptiveIntegral(map));
 		F.scale(map.getPixelArea() / map.getImageBeamArea());
@@ -408,17 +439,17 @@ public class GaussianSource extends CircularRegion {
 		
 		info += "  FWHM: " + Util.f1.format(radius.value / sizeUnit) 
 				+ (radius.weight > 0.0 ? " +- " + Util.f1.format(radius.rms() / sizeUnit) : "")
-				+ " " + map.instrument.getDefaultSizeName();
+				+ " " + sizeName;
 	
 		
 		return info;
 	}
 	
-	public static double[][] getBeam(double FWHM, Grid2D<?, ?> grid) {
+	public static double[][] getBeam(double FWHM, Grid2D<?> grid) {
 		return getBeam(FWHM, grid, 3.0);
 	}	
 
-	public static double[][] getBeam(double FWHM, Grid2D<?, ?> grid, double nBeams) {
+	public static double[][] getBeam(double FWHM, Grid2D<?> grid, double nBeams) {
 		int sizeX = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeX()) + 1;
 		int sizeY = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeY()) + 1;
 		
