@@ -44,8 +44,8 @@ import nom.tam.util.*;
 // TODO Implement a few more projections...
 
 // Based on Calabretta & Greisen 2002
-public abstract class SphericalProjection implements Cloneable {
-	protected SphericalCoordinates reference; // the reference in celestial (alpha0, delta0)
+public abstract class SphericalProjection extends Projection2D<SphericalCoordinates> {
+	// the reference in celestial (alpha0, delta0)
 	protected SphericalCoordinates referenceNative; // the reference in native (phi0, theta0)
 	
 	protected SphericalCoordinates pole; // the pole in celestial (alphap, deltap)
@@ -65,15 +65,14 @@ public abstract class SphericalProjection implements Cloneable {
 		SphericalProjection projection = (SphericalProjection) o;
 		
 		if(projection.userPole != userPole) return false;
-		if(!projection.reference.equals(reference)) return false;
 		if(!projection.referenceNative.equals(referenceNative)) return false;
 		if(!projection.poleNative.equals(poleNative)) return false;
-		return true;		
+		return super.equals(o);		
 	}
 	
 	@Override
 	public int hashCode() {
-		int hash = 0;
+		int hash = super.hashCode();
 		if(reference != null) hash ^= reference.hashCode();
 		if(referenceNative != null) hash ^= referenceNative.hashCode();
 		if(!isRightAnglePole()) if(pole != null) hash ^= pole.hashCode();
@@ -82,14 +81,8 @@ public abstract class SphericalProjection implements Cloneable {
 	}
 	
 	@Override
-	public Object clone() {
-		try { return super.clone(); }
-		catch(CloneNotSupportedException e) { return null; }
-	}
-	
-	public SphericalProjection copy() {
+	public Projection2D<SphericalCoordinates> copy() {
 		SphericalProjection copy = (SphericalProjection) clone();
-		if(reference != null) copy.reference = (SphericalCoordinates) reference.clone();
 		if(pole != null) copy.pole = (SphericalCoordinates) pole.clone();
 		if(referenceNative != null) copy.referenceNative = (SphericalCoordinates) referenceNative.clone();
 		if(poleNative != null) copy.poleNative = (SphericalCoordinates) poleNative.clone();
@@ -101,6 +94,7 @@ public abstract class SphericalProjection implements Cloneable {
 	}
 	
 	// Global projection
+	@Override
 	public void project(final SphericalCoordinates coords, final CoordinatePair toProjected) {		
 		final double dLON = coords.x - pole.x;
 		double phi = Double.NaN, theta = Double.NaN;
@@ -133,6 +127,7 @@ public abstract class SphericalProjection implements Cloneable {
 	}
 	
 	// Global deprojection
+	@Override
 	public void deproject(final CoordinatePair projected, final SphericalCoordinates toCoords) {
 		final double theta = theta(projected);
 		final double phi = phi(projected);
@@ -162,10 +157,7 @@ public abstract class SphericalProjection implements Cloneable {
 		
 		toCoords.standardize();
 	}
-	
-	public abstract String getFitsID();
-	
-	public abstract String getFullName();
+
 	
 	public abstract double phi(CoordinatePair offset);
 	
@@ -173,12 +165,13 @@ public abstract class SphericalProjection implements Cloneable {
 	
 	public abstract void getOffsets(double theta, double phi, CoordinatePair toOffset);
 	
+	@Override
 	public void setReference(SphericalCoordinates coordinates) {
 		setReference(coordinates, referenceNative);
 	}
 	
 	public void setReference(SphericalCoordinates celestialCoords, SphericalCoordinates nativeCoords) throws IllegalArgumentException { 
-		reference = celestialCoords; 
+		super.setReference(celestialCoords);
 		referenceNative = nativeCoords; 
 		
 		if(!userPole) poleNative.setNativeLongitude(reference.y >= referenceNative.y ? 0 : Math.PI); 
@@ -237,8 +230,6 @@ public abstract class SphericalProjection implements Cloneable {
 	}
 	
 	
-	public SphericalCoordinates getReference() { return reference; }
-	
 	public void setNativePole(SphericalCoordinates nativeCoords) {
 		userPole = true;
 		poleNative = nativeCoords;
@@ -254,21 +245,10 @@ public abstract class SphericalProjection implements Cloneable {
 		setReference(getReference());
 	}
 	
-	public CoordinatePair getProjected(SphericalCoordinates coords) {
-		CoordinatePair offset = new CoordinatePair();
-		project(coords, offset);
-		return offset;		
-	}
-	
-	public SphericalCoordinates getDeprojected(Vector2D projected) {
-		SphericalCoordinates coords = new SphericalCoordinates();
-		deproject(projected, coords);
-		return coords;		
-	}
+
 	
 	
-	public void edit(Cursor cursor) throws HeaderCardException { edit(cursor, ""); }
-	
+	@Override
 	public void edit(Cursor cursor, String alt) throws HeaderCardException {		
 		
 		for(int i=0; i<reference.coordinateSystem.size(); i++) {
@@ -284,13 +264,10 @@ public abstract class SphericalProjection implements Cloneable {
 			cursor.add(new HeaderCard("PV1_1" + alt, referenceNative.x / Unit.deg, "The longitude (deg) of the native reference."));
 			cursor.add(new HeaderCard("PV1_2" + alt, referenceNative.y / Unit.deg, "The latitude (deg) of the native reference."));			
 			// TODO should calculate and write PV0_j offsets
-		}
-		
-		
+		}	
 	}
 	
-	public void parse(Header header) { parse(header, ""); }
-	
+	@Override
 	public void parse(Header header, String alt) {
 	
 		if(header.containsKey("PV1_3" + alt)) {
@@ -322,6 +299,10 @@ public abstract class SphericalProjection implements Cloneable {
 		// TODO reference offset PV0_j should be used also...		
 	}
 	
+	@Override
+	public SphericalCoordinates getCoordinateInstance() {
+		return new SphericalCoordinates();
+	}
 	
 	// Safe asin and acos for when rounding errors make values fall outside of -1:1 range.
 	protected final static double asin(double value) {

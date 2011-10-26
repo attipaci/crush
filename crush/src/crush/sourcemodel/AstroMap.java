@@ -41,6 +41,7 @@ import util.data.Data2D;
 import util.data.DataPoint;
 import util.data.GridImage;
 import util.data.Index2D;
+import util.data.SphericalGrid;
 import util.data.Statistics;
 import util.data.Timed2D;
 import util.data.Weighted2D;
@@ -355,7 +356,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 	}
 	
 	@Override
-	public void resample(final GridImage<?> from) {
+	public void resample(final GridImage<SphericalGrid> from) {
 			
 		if(!(from instanceof AstroMap)) {
 			super.resample(from);
@@ -786,7 +787,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		double A = 1.0 / getPointsPerSmoothingBeam();
 
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
-			if(isUnflagged(i, j)) if(region.isInside(grid, i, j))  {
+			if(isUnflagged(i, j)) if(region.isInside(getGrid(), i, j))  {
 				flux += getValue(i, j);
 				var += 1.0 / getWeight(i, j);
 			}
@@ -800,7 +801,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		final Bounds bounds = region.getBounds(this);
 		double sum = 0.0, sumw = 0.0;
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
-			if(isUnflagged(i, j)) if(region.isInside(grid, i, j)) {
+			if(isUnflagged(i, j)) if(region.isInside(getGrid(), i, j)) {
 				final double w = getWeight(i, j);
 				sum += w * getValue(i, j);
 				sumw += w;
@@ -814,7 +815,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		int n = 0;
 
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
-			if(isUnflagged(i, j))  if(region.isInside(grid, i, j)) {
+			if(isUnflagged(i, j))  if(region.isInside(getGrid(), i, j)) {
 				final double rms = getRMS(i,j);
 				var += rms * rms;
 				n++;
@@ -830,7 +831,7 @@ public class AstroMap extends AstroImage implements Weighted2D, Timed2D {
 		int n = 0;
 
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
-			if(isUnflagged(i, j)) if(region.isInside(grid, i, j)) {
+			if(isUnflagged(i, j)) if(region.isInside(getGrid(), i, j)) {
 				sum += getTime(i, j);
 				n++;
 			}

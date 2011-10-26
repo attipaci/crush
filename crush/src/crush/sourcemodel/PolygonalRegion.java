@@ -4,6 +4,7 @@ import java.util.*;
 import java.text.ParseException;
 
 import util.*;
+import util.data.SphericalGrid;
 import util.data.WeightedPoint;
 
 public class PolygonalRegion extends Region {
@@ -75,7 +76,7 @@ public class PolygonalRegion extends Region {
 			else if(vertex.y > max.y) max.y = vertex.y;				
 		}
 		
-		Vector2D delta = image.grid.getResolution();
+		Vector2D delta = image.getGrid().getResolution();
 		min.x /= delta.x;
 		min.y /= delta.y;
 		max.x /= delta.x;
@@ -96,7 +97,7 @@ public class PolygonalRegion extends Region {
 		Bounds bounds = getBounds(image);
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
-			if(image.isUnflagged(i, j)) if(isInside(image.grid, i, j)) {
+			if(image.isUnflagged(i, j)) if(isInside(image.getGrid(), i, j)) {
 				flux.value += image.getValue(i, j);
 				flux.weight += image.weightAt(i, j);
 			}
@@ -114,7 +115,7 @@ public class PolygonalRegion extends Region {
 		Bounds bounds = getBounds(image);
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
-			if(image.isUnflagged(i, j)) if(isInside(image.grid, i, j)) {
+			if(image.isUnflagged(i, j)) if(isInside(image.getGrid(), i, j)) {
 				final double weight = image.weightAt(i, j);
 				sum += weight * image.getValue(i, j);
 				sumw += weight;
@@ -130,7 +131,7 @@ public class PolygonalRegion extends Region {
 		double var = 0.0;
 		int n = 0;
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
-			if(image.isUnflagged(i, j)) if(isInside(image.grid, i, j)) {
+			if(image.isUnflagged(i, j)) if(isInside(image.getGrid(), i, j)) {
 				double value = image.getValue(i, j) - level;
 				var += value * value;
 				n++;

@@ -73,7 +73,7 @@ public class GaussianSource extends CircularRegion {
 	public void setPeakPixel(AstroMap map) {
 		Index2D index = map.getS2NImage().indexOfMax();
 		SphericalCoordinates coords = (SphericalCoordinates) map.getReference().clone();
-		map.grid.getCoords(new Vector2D(index.i, index.j), coords);
+		map.getGrid().getCoords(new Vector2D(index.i, index.j), coords);
 		id = map.sourceName;
 		setCenter(coords);
 		radius = new DataPoint(map.getImageFWHM(), Math.sqrt(map.getPixelArea()));	
@@ -94,7 +94,7 @@ public class GaussianSource extends CircularRegion {
 		AstroImage rms = map.getRMSImage();
 		Data2D.InterpolatorData ipolData = map.new InterpolatorData();
 		peak = super.finetunePeak(map);
-		Vector2D centerIndex = getIndex(map.grid);
+		Vector2D centerIndex = getIndex(map.getGrid());
 		if(peak == null) {
 			peak.value = map.valueAtIndex(centerIndex, ipolData);
 			peak.setRMS(rms.valueAtIndex(centerIndex, ipolData));
@@ -109,7 +109,7 @@ public class GaussianSource extends CircularRegion {
 	public void getChi2(AstroMap map, WeightedPoint chi2, double level) {
 		chi2.noData();
 		Bounds bounds = getBounds(map);
-		Vector2D centerIndex = getIndex(map.grid);
+		Vector2D centerIndex = getIndex(map.getGrid());
 		final Vector2D resolution = map.getResolution();
 		final double sigmaX = radius.value / Util.sigmasInFWHM / resolution.x;
 		final double sigmaY = radius.value / Util.sigmasInFWHM / resolution.y;
@@ -127,7 +127,7 @@ public class GaussianSource extends CircularRegion {
 	
 	public void addGaussian(AstroImage image, double FWHM, double scaling) {
 		Bounds bounds = getBounds(image, 3.0 * FWHM / image.getImageFWHM());
-		Vector2D centerIndex = getIndex(image.grid);
+		Vector2D centerIndex = getIndex(image.getGrid());
 		final Vector2D resolution = image.getResolution();
 		final double sigmaX = radius.value / Util.sigmasInFWHM / resolution.x;
 		final double sigmaY = radius.value / Util.sigmasInFWHM / resolution.y;
@@ -193,11 +193,11 @@ public class GaussianSource extends CircularRegion {
 
 		double filterPeak = -filterFraction * scaling * peak.value;
 		
-		Vector2D centerIndex = getIndex(image.grid);
+		Vector2D centerIndex = getIndex(image.getGrid());
 		// Adjust prior detections.for the filtering around this one.
 		if(others != null) for(Region region : others) if(region instanceof GaussianSource) if(region != this) {
 			GaussianSource source = (GaussianSource) region;
-			Vector2D sourceIndex = source.getIndex(image.grid);
+			Vector2D sourceIndex = source.getIndex(image.getGrid());
 			final double di = sourceIndex.x - centerIndex.x;
 			final double dj = sourceIndex.y - centerIndex.y;
 			
@@ -324,7 +324,7 @@ public class GaussianSource extends CircularRegion {
 			sumw += w;
 		}
 		index.scale(1.0/sumw);
-		map.grid.getCoords(index, coords);
+		map.getGrid().getCoords(index, coords);
 	}
 	
 	// Increase the aperture until it captures >98% of the flux
@@ -414,11 +414,11 @@ public class GaussianSource extends CircularRegion {
 		return info;
 	}
 	
-	public static double[][] getBeam(double FWHM, Grid2D<?> grid) {
+	public static double[][] getBeam(double FWHM, Grid2D<?, ?> grid) {
 		return getBeam(FWHM, grid, 3.0);
 	}	
 
-	public static double[][] getBeam(double FWHM, Grid2D<?> grid, double nBeams) {
+	public static double[][] getBeam(double FWHM, Grid2D<?, ?> grid, double nBeams) {
 		int sizeX = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeX()) + 1;
 		int sizeY = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeY()) + 1;
 		

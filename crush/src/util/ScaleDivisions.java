@@ -28,16 +28,16 @@ import java.util.*;
 
 // TODO Better handling of custom divisions (all vs within range)
 
-public class ScaleMarks implements Cloneable {
+public class ScaleDivisions implements Cloneable {
 	protected Range range;
 	protected int type = LINEAR;
 	
 	protected ArrayList<Double> divisions = new ArrayList<Double>();
 	protected ArrayList<Double> subDivisions = new ArrayList<Double>();
 	
-	public ScaleMarks () {}
+	public ScaleDivisions () {}
 
-	public ScaleMarks(double setmin, double setmax) {
+	public ScaleDivisions(double setmin, double setmax) {
 		updateDivs(setmin, setmax);
 	}
 

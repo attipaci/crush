@@ -26,8 +26,7 @@ package crush.sourcemodel;
 
 import java.text.*;
 
-
-import util.*;
+import util.data.SphericalGrid;
 import util.data.WeightedPoint;
 
 public abstract class Region implements Cloneable {

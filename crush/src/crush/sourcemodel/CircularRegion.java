@@ -28,6 +28,7 @@ import util.*;
 import util.data.Data2D;
 import util.data.DataPoint;
 import util.data.Index2D;
+import util.data.SphericalGrid;
 import util.text.AngleFormat;
 import util.text.TableFormatter;
 
@@ -84,7 +85,7 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 	
 	@Override
 	protected Bounds getBounds(AstroImage image) {
-		Vector2D centerIndex = getIndex(image.grid);
+		Vector2D centerIndex = getIndex(image.getGrid());
 		Bounds bounds = new Bounds();
 		Vector2D resolution = image.getResolution();
 		double deltaX = radius.value / resolution.x;
@@ -110,7 +111,7 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 	
 	public void moveToPeak(AstroMap map) throws IllegalStateException {
 		Bounds bounds = getBounds(map);
-		Vector2D centerIndex = getIndex(map.grid);
+		Vector2D centerIndex = getIndex(map.getGrid());
 		
 		if(!map.containsIndex(centerIndex.x, centerIndex.y)) throw new IllegalStateException("Region falls outside of map.");
 		Index2D index = new Index2D(centerIndex);
@@ -118,7 +119,7 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		double significance = map.getS2N(index.i, index.j);
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
-			if(map.isUnflagged(i, j)) if(map.getS2N(i,j) > significance) if(isInside(map.grid, i, j)) {
+			if(map.isUnflagged(i, j)) if(map.getS2N(i,j) > significance) if(isInside(map.getGrid(), i, j)) {
 				significance = map.getS2N(i,j);
 				index.i = i;
 				index.j = j;				
@@ -129,12 +130,12 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		centerIndex.x = index.i;
 		centerIndex.y = index.j;
 		
-		if(isInside(map.grid, index.i+1, index.j)) if(isInside(map.grid, index.i-1, index.j)) 
-			if(isInside(map.grid, index.i, index.j+1)) if(isInside(map.grid, index.i, index.j-1)) finetunePeak(map);
+		if(isInside(map.getGrid(), index.i+1, index.j)) if(isInside(map.getGrid(), index.i-1, index.j)) 
+			if(isInside(map.getGrid(), index.i, index.j+1)) if(isInside(map.getGrid(), index.i, index.j-1)) finetunePeak(map);
 	}
 	
 	public DataPoint finetunePeak(AstroMap map) {
-		Vector2D centerIndex = getIndex(map.grid);
+		Vector2D centerIndex = getIndex(map.getGrid());
 		Data2D.InterpolatorData ipolData = map.new InterpolatorData();
 		
 		int i = (int) Math.round(centerIndex.x);
@@ -292,7 +293,7 @@ public class CircularRegion extends Region implements TableFormatter.Entries {
 		centerIndex.x = -Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
 		centerIndex.y = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
 		
-		forImage.grid.getCoords(centerIndex, coords);
+		forImage.getGrid().getCoords(centerIndex, coords);
 	}
 	
 	public void parseDS9(String line, AstroImage forImage) {	

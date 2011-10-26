@@ -29,7 +29,7 @@ import java.awt.*;
 import java.text.*;
 import javax.swing.*;
 
-import util.ScaleMarks;
+import util.ScaleDivisions;
 import util.Util;
 
 import java.util.*;
@@ -58,7 +58,7 @@ public class Ruler extends JPanel {
 	private static final long serialVersionUID = 228962325800810360L;
 
 	PlotArea<?> content;
-	ScaleMarks scaleMarks;
+	ScaleDivisions scaleDivisions;
 	Font font = new Font("Monospaced", Font.PLAIN, 10);
 
 	Stroke divStroke = new BasicStroke();
@@ -76,7 +76,7 @@ public class Ruler extends JPanel {
 	public Ruler(PlotArea<?> forContent) {
 		this.content = forContent;
 		
-		scaleMarks = new ScaleMarks();
+		scaleDivisions = new ScaleDivisions();
 		setPreferredSize(new Dimension(width, 1));
 		setBackground(Color.WHITE);
 
@@ -85,7 +85,7 @@ public class Ruler extends JPanel {
 	}
 
 	public void setScale(double min, double max) {
-		scaleMarks.updateDivs(min, max);
+		scaleDivisions.updateDivs(min, max);
 		// TODO recalculate component minimum size...
 	}
 	
@@ -109,7 +109,7 @@ public class Ruler extends JPanel {
 		int fontheight=fm.getHeight();
 		setFont(font);
 
-		final ArrayList<Double> subdivs = scaleMarks.getDivisions();
+		final ArrayList<Double> subdivs = scaleDivisions.getDivisions();
 		
 		height = getHeight();
 		final double npix = height/subdivs.size();
@@ -130,7 +130,7 @@ public class Ruler extends JPanel {
 		
 		// TODO separate handling of CUSTOM subdivisions....
 		
-		final ArrayList<Double> divs = scaleMarks.getDivisions();
+		final ArrayList<Double> divs = scaleDivisions.getDivisions();
 		g2.setStroke(divStroke);
 		
 		// Find what decimal resolution is necessary...
@@ -165,7 +165,7 @@ public class Ruler extends JPanel {
 		
 	protected void calcDelta() {
 		delta = Double.POSITIVE_INFINITY;
-		final ArrayList<Double> divs = scaleMarks.getDivisions();
+		final ArrayList<Double> divs = scaleDivisions.getDivisions();
 		double last = divs.get(divs.size() - 1);
 		for(int i=divs.size()-1; --i >= 0; ) {
 			final double current = divs.get(i);

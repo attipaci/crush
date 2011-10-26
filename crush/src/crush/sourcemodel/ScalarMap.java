@@ -37,6 +37,7 @@ import util.astro.GalacticCoordinates;
 import util.astro.SourceCatalog;
 import util.data.Data2D;
 import util.data.Index2D;
+import util.data.SphericalGrid;
 import util.data.Statistics;
 import util.plot.ColorScheme;
 import util.plot.ImageArea;
@@ -139,14 +140,15 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		}
 		else projection.setReference(firstScan.equatorial);
 	
-		map.grid.projection = projection;
+		map.setGrid(new SphericalGrid());
+		map.getGrid().projection = projection;
 		map.setResolution(gridSize);
 		
 		setSize();
 
 		// Make the reference fall on pixel boundaries.
-		map.grid.refIndex.x = 0.5 - Math.rint(xRange.min/gridSize);
-		map.grid.refIndex.y = 0.5 - Math.rint(yRange.min/gridSize);
+		map.getGrid().refIndex.x = 0.5 - Math.rint(xRange.min/gridSize);
+		map.getGrid().refIndex.y = 0.5 - Math.rint(yRange.min/gridSize);
 			
 		map.printShortInfo();		
 		

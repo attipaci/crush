@@ -21,18 +21,48 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package util.data;
+package util;
 
-public interface Timed2D {
+import nom.tam.fits.Header;
+import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 
-	public double[][] getTime();
-	
-	public void setTime(double[][] image);
-	
-	public double getTime(int i, int j);
-	
-	public void setTime(int i, int j, double t);
-	
-	public void incrementTime(int i, int j, double dt);
-	
+public class DefaultProjection2D extends Projection2D<CoordinatePair> {
+
+	@Override
+	public CoordinatePair getCoordinateInstance() {
+		return new CoordinatePair();
+	}
+
+	@Override
+	public void project(CoordinatePair coords, CoordinatePair toProjected) {
+		toProjected.copy(coords);
+	}
+
+	@Override
+	public void deproject(CoordinatePair projected, CoordinatePair toCoords) {
+		toCoords.copy(projected);
+	}
+
+	@Override
+	public String getFitsID() {
+		return null;
+	}
+
+	@Override
+	public String getFullName() {
+		return "Cartesian";
+	}
+
+	@Override
+	public void parse(Header header, String alt) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void edit(Cursor cursor, String alt) throws HeaderCardException {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
