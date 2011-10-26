@@ -118,7 +118,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 		return text;
 	}
 	
-	public abstract double overlap(Channel channel, SourceModel<?,?> model);
+	public abstract double overlap(Channel channel, SourceModel model);
 	
 	public int getCriticalFlags() {
 		return FLAG_DEAD | FLAG_BLIND | FLAG_GAIN;

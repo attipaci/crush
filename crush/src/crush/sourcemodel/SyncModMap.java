@@ -31,10 +31,9 @@ import util.astro.CelestialProjector;
 import util.data.Index2D;
 
 
-public class SyncModMap<InstrumentType extends Instrument<?>, ScanType extends Scan<? extends InstrumentType, ?>>
-		extends ScalarMap<InstrumentType, ScanType> {
+public class SyncModMap extends ScalarMap {
 	
-	public SyncModMap(InstrumentType instrument) {
+	public SyncModMap(Instrument<?> instrument) {
 		super(instrument);
 	}
 	

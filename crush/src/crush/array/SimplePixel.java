@@ -65,7 +65,7 @@ public class SimplePixel extends Channel implements Pixel {
 	
 	@Override
 	// Assume Gaussian response with FWHM = resolution;
-	public double overlap(final Channel channel, SourceModel<?,?> model) {
+	public double overlap(final Channel channel, SourceModel model) {
 		if(independent) return 0.0;
 		
 		double sourceSize = model == null ? instrument.resolution : model.getPointSize(instrument);

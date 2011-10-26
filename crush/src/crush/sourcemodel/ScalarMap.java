@@ -45,7 +45,7 @@ import util.plot.ImageArea;
 import util.plot.colorscheme.Colorful;
 
 
-public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Scan<? extends InstrumentType,?>> extends SourceMap<InstrumentType, ScanType> {
+public class ScalarMap extends SourceMap {
 	public AstroMap map;
 	public double[][] base; 
 	public boolean[][] mask;
@@ -53,14 +53,13 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 	public boolean enableLevel = true;
 	public boolean enableBias = true;
 	
-	public ScalarMap(InstrumentType instrument) {
+	public ScalarMap(Instrument<?> instrument) {
 		super(instrument);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public void add(SourceModel<?, ?> model, double weight) {
-		ScalarMap<InstrumentType, ScanType> other = (ScalarMap<InstrumentType, ScanType>) model;
+	public void add(SourceModel model, double weight) {
+		ScalarMap other = (ScalarMap) model;
 		isValid = false;
 		map.addDirect(other.map, weight);
 		
@@ -73,8 +72,8 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 
 
 	@Override
-	public SourceModel<InstrumentType, ScanType> copy() {
-		ScalarMap<InstrumentType, ScanType> copy = (ScalarMap<InstrumentType, ScanType>) super.copy();
+	public SourceModel copy() {
+		ScalarMap copy = (ScalarMap) super.copy();
 		try { copy.map = (AstroMap) map.copy(); }
 		catch(OutOfMemoryError e) {
 			System.err.println("ERROR! Ran of of memory while making a copy of the source map.");
@@ -107,7 +106,7 @@ public class ScalarMap<InstrumentType extends Instrument<?>, ScanType extends Sc
 		double gridSize = instrument.resolution / 5.0;
 		if(hasOption("grid")) gridSize = option("grid").getDouble() * Unit.arcsec;
 
-		ScanType firstScan = scans.get(0);
+		Scan<?,?> firstScan = scans.get(0);
 		
 		for(Scan<?,?> scan : scans) map.scans.add(scan);	
 		

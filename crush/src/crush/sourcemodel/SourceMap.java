@@ -28,12 +28,8 @@ package crush.sourcemodel;
 import util.*;
 import util.astro.CelestialProjector;
 import util.astro.CoordinateEpoch;
-import util.astro.EclipticCoordinates;
 import util.astro.EquatorialCoordinates;
-import util.astro.GalacticCoordinates;
 import util.astro.Gnomonic;
-import util.astro.HorizontalCoordinates;
-import util.astro.SuperGalacticCoordinates;
 import util.data.Index2D;
 import util.data.Statistics;
 
@@ -42,30 +38,25 @@ import java.util.*;
 import crush.*;
 
 
-public abstract class SourceMap<InstrumentType extends Instrument<?>, ScanType extends Scan<? extends InstrumentType, ?>>
-extends SourceModel<InstrumentType, ScanType> {
+public abstract class SourceMap extends SourceModel {
 	
-	public SphericalProjection projection;
+	public Projection2D<SphericalCoordinates> projection;
 	public double integationTime = 0.0;
 	public double smoothing = 0.0;
 	public int signalMode = Frame.TOTAL_POWER;
 	
-	public SourceMap(InstrumentType instrument) {
+	public SourceMap(Instrument<?> instrument) {
 		super(instrument);
 	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public Object clone() {
-		SourceMap<InstrumentType, ScanType> clone = (SourceMap<InstrumentType, ScanType>) super.clone();
-		return clone;
-	}
+
 	
 	@Override
 	public void reset() {
 		super.reset();
 		setSmoothing();
 	}
+	
+	
 	
 	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
@@ -77,6 +68,7 @@ extends SourceModel<InstrumentType, ScanType> {
 		catch(Exception e) { projection = new Gnomonic(); }		
 	}
 	
+	/*
 	public boolean isHorizontal() {
 		return projection.getReference() instanceof HorizontalCoordinates;
 	}
@@ -96,6 +88,7 @@ extends SourceModel<InstrumentType, ScanType> {
 	public boolean isSuperGalactic() {
 		return projection.getReference() instanceof SuperGalacticCoordinates;
 	}
+	*/
 
 
 	public void setSmoothing() {

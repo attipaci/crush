@@ -215,8 +215,8 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 	}
 	
 	@Override
-	public SourceModel<?, ?> getSourceModelInstance() {
-		if(hasOption("chopped")) return new APEXChoppedPhotometry<APEXArray<?>, APEXArrayScan<APEXArray<?>,?>>(this);
+	public SourceModel getSourceModelInstance() {
+		if(hasOption("chopped")) return new APEXChoppedPhotometry(this);
 		else return super.getSourceModelInstance();
 	}
 	

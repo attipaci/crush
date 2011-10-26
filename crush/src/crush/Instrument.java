@@ -572,11 +572,11 @@ implements TableFormatter.Entries {
 	
 	public abstract Scan<?, ?> getScanInstance();
 	
-	public SourceModel<?, ?> getSourceModelInstance() {
+	public SourceModel getSourceModelInstance() {
 		if(hasOption("source.type")) {
 			String type = option("source.type").getValue();
-			if(type.equals("skydip")) return new SkyDip<Instrument<?>, Scan<?, ?>>(this);		
-			if(type.equals("map")) return new ScalarMap<Instrument<?>, Scan<?, ?>>(this);
+			if(type.equals("skydip")) return new SkyDip(this);		
+			if(type.equals("map")) return new ScalarMap(this);
 			if(type.equals("null")) return null;
 			return null;
 		}

@@ -31,20 +31,19 @@ import java.io.*;
 import java.util.*;
 
 // Bin the correlated signal by elevation...
-public class SkyDip<InstrumentType extends Instrument<?>, ScanType extends Scan<? extends InstrumentType, ?>>
-		extends SourceModel<InstrumentType, ScanType> {
+public class SkyDip extends SourceModel {
 	
 	WeightedPoint[] data;
 	double resolution;
 	WeightedPoint Tsky = new WeightedPoint(); // Assume the sky is at 0C.
 	
-	public SkyDip(InstrumentType instrument) {
+	public SkyDip(Instrument<?> instrument) {
 		super(instrument);
 	}
 	
 	@Override
-	public SourceModel<InstrumentType, ScanType> copy() {
-		SkyDip<InstrumentType, ScanType> copy = (SkyDip<InstrumentType, ScanType>) super.copy();
+	public SourceModel copy() {
+		SkyDip copy = (SkyDip) super.copy();
 		copy.data = new WeightedPoint[data.length];
 		if(Tsky != null) copy.Tsky = (WeightedPoint) Tsky.clone();
 		for(int i=0; i<data.length; i++) copy.data[i] = (WeightedPoint) data[i].clone();
@@ -76,10 +75,9 @@ public class SkyDip<InstrumentType extends Instrument<?>, ScanType extends Scan<
 		return (bin + 0.5) * resolution;
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
-	public void add(SourceModel<?, ?> model, double weight) {
-		SkyDip<InstrumentType, ScanType> other = (SkyDip<InstrumentType, ScanType>) model;
+	public void add(SourceModel model, double weight) {
+		SkyDip other = (SkyDip) model;
 		for(int i=0; i<data.length; i++) data[i].average(other.data[i]);
 	}
 

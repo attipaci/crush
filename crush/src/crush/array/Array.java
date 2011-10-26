@@ -76,10 +76,10 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	public abstract int maxPixels();
 	
 	@Override
-	public SourceModel<?, ?> getSourceModelInstance() {
+	public SourceModel getSourceModelInstance() {
 		if(hasOption("source.type")) {
 			String type = option("source.type").getValue();
-			if(type.equals("beammap")) return new BeamMap<Array<?, ?>, Scan<? extends Array<?,?>, ?>>(this);
+			if(type.equals("beammap")) return new BeamMap(this);
 			else return super.getSourceModelInstance();
 		}
 		else return super.getSourceModelInstance();

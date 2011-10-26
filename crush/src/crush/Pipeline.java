@@ -35,7 +35,7 @@ public class Pipeline extends Thread {
 	List<String> ordering = new ArrayList<String>();
 	boolean isRobust = false, isGainRobust = false;
 	
-	SourceModel<?,?> scanSource;
+	SourceModel scanSource;
 	
 	public Pipeline(CRUSH crush) {
 		this.crush = crush;

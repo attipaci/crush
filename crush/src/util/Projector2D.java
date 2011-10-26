@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,23 +20,31 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2010 Attila Kovacs 
 
-package crush.polarization;
+package util;
 
-import crush.array.Array;
-import crush.sourcemodel.ScalarMap;
-import crush.sourcemodel.SyncModMap;
-
-public class SyncPolarMap extends PolarMap {
-
-	public SyncPolarMap(Array<?, ?> instrument) {
-		super(instrument);
-		// TODO Auto-generated constructor stub
+public class Projector2D<CoordinateType extends CoordinatePair> {
+	
+	public Vector2D offset = new Vector2D();
+	
+	private Projection2D<CoordinateType> projection;
+	private CoordinateType coords;
+	
+	@SuppressWarnings("unchecked")
+	public Projector2D(Projection2D<CoordinateType> projection) {
+		this.projection = projection;
+		
+		CoordinateType reference = projection.getReference();
+		coords = (CoordinateType) reference.clone();
 	}
 
-	@Override
-	public ScalarMap getMapInstance() {
-		return new SyncModMap(instrument);
+	public CoordinateType getCoordinates() { return coords; }
+	
+	public void project() {
+		projection.project(coords, offset);
+	}
+	
+	public void deproject() {
+		projection.deproject(offset, coords);
 	}
 }

@@ -29,7 +29,7 @@ import util.data.*;
 
 import java.util.*;
 
-public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType extends APEXArrayScan<InstrumentType,?>> extends SourceModel<InstrumentType, ScanType> {
+public class APEXChoppedPhotometry extends SourceModel {
 	String sourceName;
 	double integrationTime;
 	WeightedPoint[] flux;
@@ -38,31 +38,32 @@ public class APEXChoppedPhotometry<InstrumentType extends APEXArray<?>, ScanType
 	//Hashtable<ScanType, WeightedPoint> scanFluxes = new Hashtable<ScanType, WeightedPoint>();
 	
 	@Override
-	public SourceModel<InstrumentType, ScanType> copy() {
-		APEXChoppedPhotometry<InstrumentType, ScanType> copy = (APEXChoppedPhotometry<InstrumentType, ScanType>) super.copy();
+	public SourceModel copy() {
+		APEXChoppedPhotometry copy = (APEXChoppedPhotometry) super.copy();
 		copy.sourceFlux = (WeightedPoint) sourceFlux.clone();
 		copy.flux = new WeightedPoint[flux.length];
 		for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = (WeightedPoint) flux[i].clone();
 		return copy;
 	}
 
-	public APEXChoppedPhotometry(InstrumentType instrument) {
+	public APEXChoppedPhotometry(APEXArray<?> instrument) {
 		super(instrument);
 		flux = new WeightedPoint[instrument.storeChannels+1];
 		for(int i=flux.length; --i >= 0; ) flux[i] = new WeightedPoint();
 	}
 	
+	public APEXArray<?> getAPEXArray() { return (APEXArray<?>) instrument; }
+	
 	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		super.createFrom(collection);
-		ScanType firstScan = scans.get(0);
+		Scan<?,?> firstScan = scans.get(0);
 		sourceName = firstScan.sourceName;
 	}
 	
 	@Override
-	public void add(SourceModel<?, ?> model, double weight) {
-		@SuppressWarnings("unchecked")
-		APEXChoppedPhotometry<InstrumentType, ScanType> other = (APEXChoppedPhotometry<InstrumentType, ScanType>) model;
+	public void add(SourceModel model, double weight) {
+		APEXChoppedPhotometry other = (APEXChoppedPhotometry) model;
 		for(int c=flux.length; --c >= 0; ) flux[c].average(other.flux[c]);
 		sourceFlux.average(other.sourceFlux);
 		integrationTime += other.integrationTime;
