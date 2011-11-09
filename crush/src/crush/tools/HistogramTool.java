@@ -28,9 +28,15 @@ import crush.astro.AstroImage;
 import crush.astro.AstroMap;
 import crush.sourcemodel.*;
 import util.*;
+import util.data.Data2D;
+import util.data.GridImage;
+import util.data.GridMap;
 
 import java.io.*;
 import java.util.*;
+
+import nom.tam.fits.BasicHDU;
+import nom.tam.fits.Fits;
 
 // TODO reinstate imagetool functionality...
 // TODO redo using Configurator engine
@@ -39,7 +45,7 @@ public class HistogramTool {
 	static String version = "0.1-1";
 	
 	double binres = 1.0;
-	AstroImage image;
+	Data2D image;
 	String type = "s2n";
 	String fileName;
 	
@@ -47,22 +53,43 @@ public class HistogramTool {
 		versionInfo();
 		if(args.length == 0) usage();
 
-		AstroMap map = new AstroMap();
 		HistogramTool histogramTool = new HistogramTool(); 
 		
 		try { 
-			map.read(args[args.length-1]); 
+			Fits fits = new Fits(new File(args[args.length-1])); 
+		
+			int N = fits.getNumberOfHDUs();
+			
+			for(int k=0; k < args.length-1; k++) histogramTool.option(args[k]);
+			
+			if(N > 4) {
+				try { histogramTool.readMap(fits); }
+				catch(Exception e) {
+					try { histogramTool.readImage(fits); }
+					catch(Exception e2) {// Perhaps it's not a CRUSH map after all...
+						e.printStackTrace();
+						System.exit(1);
+					}
+				}
+			}
+			else { 
+				try { histogramTool.readImage(fits); }
+				catch(Exception e) {
+					// Perhaps it's not a CRUSH map after all...
+					e.printStackTrace();
+					System.exit(1);
+				}
+			}
+			
 		}
 		catch(Exception e) {
-			e.printStackTrace();
+			System.err.println("ERROR: " + e.getMessage());
 			System.exit(1);
 		}
-		//ImageTool.image = map;
 		
-		for(int k=0; k < args.length-1; k++) histogramTool.option(args[k]);
-				
-		histogramTool.selectImage(map, histogramTool.type);
-		histogramTool.binres *= histogramTool.image.unit.value;
+		
+		//ImageTool.image = map;			
+		
 		
 		try { histogramTool.writeHistogram(); }
 		catch(IOException e) {
@@ -70,7 +97,38 @@ public class HistogramTool {
 		}
 	}
 	
-	public void selectImage(AstroMap map, String type) {
+	public void readImage(Fits fits) throws Exception {
+		image = new Data2D();
+		
+		int N = fits.getNumberOfHDUs();
+		if(N == 1) {
+			image.read(fits);
+			return;
+		}
+		
+		try {
+			int n = Integer.parseInt(type);
+			image.read(fits, n);
+		}
+		catch(NumberFormatException e) {
+			for(BasicHDU hdu : fits.read()) {
+				String extName = hdu.getHeader().getStringValue("EXTNAME");
+				if(extName != null) if(extName.equalsIgnoreCase(type)) {
+					image.read(hdu);
+					return;
+				}
+			}
+		}
+	}
+	
+	public void readMap(Fits fits) throws Exception {
+		GridMap<?> map = new GridMap<SphericalCoordinates>(); 
+		map.read(fits);
+		selectImage(map, type);
+		binres *= image.unit.value;		
+	}
+	
+	public void selectImage(GridMap<?> map, String type) {
 		if(type.equalsIgnoreCase("flux")) {}
 		else if(type.equalsIgnoreCase("s2n")) { image = map.getS2NImage(); }
 		else if(type.equalsIgnoreCase("rms")) { image = map.getRMSImage(); }

@@ -32,15 +32,12 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
-import crush.Instrument;
-import crush.astro.AstroImage;
-import crush.astro.AstroMap;
 import util.CoordinatePair;
 import util.Unit;
 import util.Util;
 import util.Vector2D;
 
-public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<CoordinateType> implements Weighted2D, Timed2D, Noise2D {
+public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<CoordinateType> implements Noise2D, Timed2D {
 	private double[][] weight, count;
 	public double weightFactor = 1.0;
 	
@@ -53,7 +50,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		contentType = "Signal";
 	}
 	
-	public GridMap(String fileName, Instrument<?> instrument) throws Exception { 
+	public GridMap(String fileName) throws Exception { 
 		read(fileName);		
 	}
 
@@ -72,6 +69,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	protected void copy(Data2D other, int i) {
 		super.copy(other, i); 
 		if(!(other instanceof GridMap)) return;
+		
 		final GridMap<?> image = (GridMap<?>) other;
 		System.arraycopy(image.weight[i], 0, weight[i], 0, sizeY()); 
 		System.arraycopy(image.count[i], 0, count[i], 0, sizeY()); 
@@ -84,7 +82,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		if(!(other instanceof GridMap)) return;
 		
 		GridMap<?> image = (GridMap<?>) other;
-		
+
 		// Make a copy of the fundamental data
 		setWeight(image.getWeight());
 		setTime(image.getTime());
@@ -152,9 +150,9 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		incrementWeight(i, j, w * g);
 		incrementTime(i, j, time);
 	}
-	
+		
 	public synchronized void addDirect(final GridMap<?> map, final double w) {
-		new Task<Void>() {
+		new Task<Void>() {		
 			@Override
 			public void process(int i, int j) {
 				if(map.isUnflagged(i, j)) {
@@ -167,8 +165,6 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 			}
 		}.process();
 	}
-
-	
 	
 	@Override
 	protected void sanitize(int i, int j) {
@@ -200,7 +196,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	
 	public void clipAboveRelativeRMS(double maxRelativeRMS, double refPercentile) {
 		final double[][] rms = getRMSImage().getData();
-		final double maxRMS = maxRelativeRMS * new AstroImage(rms).select(refPercentile);
+		final double maxRMS = maxRelativeRMS * new Data2D(rms).select(refPercentile);
 		
 		new Task<Void>() {
 			@Override
@@ -226,7 +222,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	}
 	
 	public void clipBelowRelativeExposure(double minRelativeExposure, double refPercentile) {
-		double minIntTime = minRelativeExposure * new AstroImage(getTime()).select(refPercentile);
+		double minIntTime = minRelativeExposure * new Data2D(getTime()).select(refPercentile);
 		clipBelowExposure(minIntTime);
 	}
 	
@@ -321,9 +317,13 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		final GridImage<CoordinateType> fromWeight = fromMap.getWeightImage();
 		final GridImage<CoordinateType> fromCount = fromMap.getTimeImage();
 		
-		final Vector2D v = new Vector2D();
-		
 		new InterpolatingTask() {
+			private Vector2D v;
+			@Override
+			public void init() { 
+				super.init();
+				v = new Vector2D(); 	
+			}
 			@Override
 			public void process(int i, int j) {
 				v.set(i, j);
@@ -331,14 +331,14 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 				from.toIndex(v);
 				
 				//System.err.println(i + "," + j + " <--" + Util.f1.format(v.x) + "," + Util.f1.format(v.y));
-			
+		
 				final InterpolatorData ipolData = getInterpolatorData();
 				setValue(i, j, fromMap.valueAtIndex(v.x, v.y, ipolData));
 				setWeight(i, j, fromWeight.valueAtIndex(v.x, v.y, ipolData));
-				setTime(i, j, fromCount.valueAtIndex(v.x, v.y, ipolData));
+				setTime(i, j, fromCount.valueAtIndex(v.x, v.y, ipolData));		
 				
 				if(isNaN(i, j)) flag(i, j);
-				else unflag(i, j);
+				else { unflag(i, j); }
 			}
 		}.process();
 	
@@ -349,38 +349,17 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	}
 	
 	public GridImage<CoordinateType> getTimeImage() { 
-		return getImage(getTime(), "Exposure",new Unit("s/pixel", Unit.s));
+		return getImage(getTime(), "Exposure", new Unit("s/pixel", Unit.s));
 	}
 	
-	// TODO revise...
-	public GridImage<CoordinateType> getS2NImage() { 
-		final GridImage<CoordinateType> rmsImage = getRMSImage();
-		rmsImage.contentType = "S/N";
-		rmsImage.unit = Unit.unity;
-		
-		new Task<Void>() {
-			@Override
-			public void process(int i, int j) {
-				rmsImage.setValue(i, j, getValue(i, j) / rmsImage.getValue(i, j)); 
-			}
-		}.process();
-		
-		return rmsImage;
-	}
-	
-	// TODO revise...
 	public GridImage<CoordinateType> getRMSImage() {
-		final double[][] rms = new double[sizeX()][sizeY()];
-		
-		new Task<Void>() {
-			@Override
-			public void process(int i, int j) { rms[i][j] = getRMS(i,j); }
-		}.process();
-		
-		return getImage(rms, "Noise", unit);
-		
+		return getImage(getRMS(), "Noise", unit);
 	}
-
+	
+	public GridImage<CoordinateType> getS2NImage() { 
+		return getImage(getS2N(), "S/N", Unit.unity);
+	}
+	
 	
 	@Override
 	public final double getRMS(final int i, final int j) {
@@ -470,23 +449,8 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		
 		return Statistics.median(point).value;
 	}
-	
-	public void scaleRMS(final double scalar) {
-		scaleWeight(1.0 / (scalar*scalar));
-	}
 
-	public void scaleWeight(final double scalar) {
-		if(scalar == 1.0) return;
-		
-		new Task<Void>() {
-			@Override
-			public void process(int i, int j) {
-				scaleWeight(i, j, scalar);
-			}
-		}.process();
-	}
-
-	public void weight(boolean robust) {
+	public void reweight(boolean robust) {
 		double weightCorrection = 1.0 / (robust ? getRobustChi2() : getChi2());
 		scaleWeight(weightCorrection);
 		weightFactor *= weightCorrection;
@@ -571,8 +535,8 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	}	
 	
 	@Override
-	public Fits getFits() throws HeaderCardException, FitsException, IOException {
-		Fits fits = super.getFits();
+	public Fits createFits() throws HeaderCardException, FitsException, IOException {
+		Fits fits = super.createFits();
 		fits.addHDU(getTimeImage().createHDU());
 		fits.addHDU(getRMSImage().createHDU());
 		fits.addHDU(getS2NImage().createHDU());
@@ -580,9 +544,9 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	}
 
 	@Override
-	public void read(String name) throws Exception {
+	public void read(Fits fits) throws Exception {
 		// Get the coordinate system information
-		BasicHDU[] HDU = getFits(name).read();
+		BasicHDU[] HDU = fits.read();
 		parseHeader(HDU[0].getHeader());	
 		readData(HDU);
 	}
@@ -598,7 +562,8 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 
 
 	private void readData(BasicHDU[] HDU) throws FitsException {
-		setImage(HDU[0]);
+		super.readData(HDU[0]);
+		
 		getTimeImage().setImage(HDU[1]);
 		
 		GridImage<CoordinateType> noise = getWeightImage();
@@ -630,7 +595,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 
 	public void despike(final double significance) {
 		final double[][] neighbours = {{ 0, 1, 0 }, { 1, 0, 1 }, { 0, 1, 0 }};
-		final AstroMap diff = (AstroMap) copy();
+		final GridMap<?> diff = (GridMap<?>) copy();
 		diff.smooth(neighbours);
 		
 		new Task<Void>() {	
@@ -764,6 +729,15 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		return weight[i][j];
 	}
 
+	public void scaleWeight(final double scalar) {
+		if(scalar == 1.0) return;
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) { scaleWeight(i, j, scalar); }
+		}.process();
+	}
+	
 	public final void setWeight(final int i, final int j, final double w) {
 		weight[i][j] = w;
 	}
@@ -771,34 +745,52 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	public final void incrementWeight(final int i, final int j, final double dw) {
 		weight[i][j] += dw;
 	}
-
+	
 	public void scaleWeight(final int i, final int j, final double factor) {
 		weight[i][j] *= factor;
 	}
 
 
 	public double[][] getRMS() {
-		// TODO Auto-generated method stub
-		return null;
+		final double[][] rms = new double[sizeX()][sizeY()];
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) { rms[i][j] = getRMS(i,j); }
+		}.process();
+		
+		return rms;
 	}
 	
-	public void setRMS(double[][] image) {
-		// TODO Auto-generated method stub	
+	public void setRMS(final double[][] image) {
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) { setRMS(i,j, image[i][j]); }
+		}.process();
 	}
 
+	public void scaleRMS(final double scalar) {
+		scaleWeight(1.0 / (scalar*scalar));
+	}
+	
 	public void setRMS(int i, int j, double sigma) {
-		// TODO Auto-generated method stub	
+		setWeight(i, j, 1.0 / (sigma * sigma));	
 	}
 
 	public void scaleRMS(int i, int j, double factor) {
-		// TODO Auto-generated method stub	
+		scaleWeight(i, j, 1.0 / (factor * factor));
 	}
 
 	public double[][] getS2N() {
-		// TODO Auto-generated method stub
-		return null;
+		final double[][] s2n = new double[sizeX()][sizeY()];
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) { s2n[i][j] = getS2N(i,j); }
+		}.process();
+		
+		return s2n;
 	}
-
 	
 }
 

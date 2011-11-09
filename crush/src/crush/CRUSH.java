@@ -41,7 +41,7 @@ import nom.tam.util.*;
  */
 public class CRUSH extends Configurator {
 	private static String version = "2.11-a1";
-	private static String revision = "devel.6";
+	private static String revision = "devel.8";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -81,7 +81,7 @@ public class CRUSH extends Configurator {
 		crush.init(args);
 		
 		try { crush.reduce(); }
-		catch(InterruptedException e) {}
+		catch(Exception e) { e.printStackTrace(); }
 	}
 
 	public CRUSH(String instrumentName) {
@@ -262,7 +262,7 @@ public class CRUSH extends Configurator {
 	}
 	
 
-	public void reduce() throws InterruptedException {	
+	public void reduce() throws Exception {	
 		int rounds = 0;
 	
 		System.out.println();
@@ -320,7 +320,7 @@ public class CRUSH extends Configurator {
 		System.err.println();
 	}
 	
-	public synchronized void iterate() throws InterruptedException {
+	public synchronized void iterate() throws Exception {
 		List<String> ordering = get("ordering").getLowerCaseList();
 		ArrayList<String> tasks = new ArrayList<String>();
 		
@@ -337,7 +337,7 @@ public class CRUSH extends Configurator {
 		System.err.println();
 	}
 	
-	public synchronized void iterate(List<String> tasks) throws InterruptedException {
+	public synchronized void iterate(List<String> tasks) throws Exception {
 		while(!queue.isEmpty()) wait();
 		
 		ArrayList<Pipeline> threads = new ArrayList<Pipeline>();
@@ -357,7 +357,6 @@ public class CRUSH extends Configurator {
 			if(threads.get(i).scans.size() == 0) threads.remove(i);
 			else i++;
 		}
-
 		
 		if(solveSource()) if(tasks.contains("source")) source.reset();
 				
@@ -549,7 +548,7 @@ public class CRUSH extends Configurator {
 			for(int i=0; i<8; i++) System.err.print("**********");
 			System.err.println();
 			System.err.println("WARNING! You appear to be running CRUSH with GNU Java (libgcj).");
-			System.err.println("         The GNU Java virtual machine is rather buggy and is known for");
+			System.err.println("         The GNU Java virtual machine is rather slow and is known for");
 			System.err.println("         producing unexpected errors during the reduction.");
 			System.err.println("         It is highly recommended that you install and use a more reliable");
 			System.err.println("         Java Runtime Environment (JRE).");
@@ -599,7 +598,8 @@ public class CRUSH extends Configurator {
 		
 		cursor.add(new HeaderCard("JAVA", Util.getProperty("java.vendor"), "Java vendor name."));
 		cursor.add(new HeaderCard("JAVAVER", Util.getProperty("java.version"), "The Java version."));
-		cursor.add(new HeaderCard("JAVAHOME", Util.getProperty("java.home"), "Java location."));
+		
+		Util.addLongFitsKey(cursor, "JAVAHOME", Util.getProperty("java.home"), "Java location.");
 		cursor.add(new HeaderCard("JRE", Util.getProperty("java.runtime.name"), "Java Runtime Environment."));
 		cursor.add(new HeaderCard("JREVER", Util.getProperty("java.runtime.version"), "JRE version."));
 		cursor.add(new HeaderCard("JVM", Util.getProperty("java.vm.name"), "Java Virtual Machine."));
@@ -610,8 +610,8 @@ public class CRUSH extends Configurator {
 		cursor.add(new HeaderCard("OSARCH", Util.getProperty("os.arch"), "OS architecture."));
 		
 		cursor.add(new HeaderCard("CPUS", Runtime.getRuntime().availableProcessors(), "Number of CPU cores/threads available."));
-		cursor.add(new HeaderCard("DMODEL", Util.getProperty("sun.arch.data.model"), "Bits in data model."));
-		cursor.add(new HeaderCard("CPUEND", Util.getProperty("sun.cpu.endian"), "CPU Endianness."));
+		cursor.add(new HeaderCard("DMBITS", Util.getProperty("sun.arch.data.model"), "Bits in data model."));
+		cursor.add(new HeaderCard("CPENDIAN", Util.getProperty("sun.cpu.endian"), "CPU Endianness."));
 		cursor.add(new HeaderCard("MAXMEM", Runtime.getRuntime().maxMemory() / (1024 * 1024), "MB of available memory."));
 			
 		cursor.add(new HeaderCard("COUNTRY", Util.getProperty("user.country"), "The user country."));

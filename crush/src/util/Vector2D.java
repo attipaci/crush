@@ -206,10 +206,6 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 		}
 	}
 
-	public final double distanceTo(Metric<? extends Vector2D> point) {
-		return distanceTo((Vector2D) point);
-	}
-	
 	public final double distanceTo(Vector2D point) {
 		return Math.hypot(point.x - x, point.y - y);
 	}

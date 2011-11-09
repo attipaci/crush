@@ -51,7 +51,7 @@ public class SkyDip extends SourceModel {
 	}
 	
 	@Override
-	public void reset() {
+	public synchronized void reset() {
 		super.reset();
 		for(int i=0; i<data.length; i++) data[i].noData();
 		Tsky.noData();
@@ -76,13 +76,13 @@ public class SkyDip extends SourceModel {
 	}
 	
 	@Override
-	public void add(SourceModel model, double weight) {
+	public synchronized void add(SourceModel model, double weight) {
 		SkyDip other = (SkyDip) model;
 		for(int i=0; i<data.length; i++) data[i].average(other.data[i]);
 	}
 
 	@Override
-	public void add(Integration<?, ?> integration) {
+	public synchronized void add(Integration<?, ?> integration) {
 		integration.comments += "[Dip] ";
 		
 		CorrelatedMode mode = (CorrelatedMode) integration.instrument.modalities.get("obs-channels").get(0);
@@ -108,7 +108,7 @@ public class SkyDip extends SourceModel {
 	}
 
 	@Override
-	public void setBase() {
+	public synchronized void setBase() {
 		// Unused...
 	}
 
@@ -118,7 +118,7 @@ public class SkyDip extends SourceModel {
 	}
 
 	@Override
-	public void process(Scan<?, ?> scan) {
+	public synchronized void process(Scan<?, ?> scan) {
 		for(int i=0; i<data.length; i++) if(data[i].weight > 0.0) data[i].value /= data[i].weight;
 		if(scan instanceof Weather) {
 			double ambientT = ((Weather) scan).getAmbientTemperature();

@@ -30,7 +30,7 @@ import java.util.*;
 
 import crush.*;
 import crush.astro.AstroMap;
-import crush.gui.AstroImageLayer;
+import crush.gui.GridImageLayer;
 import util.*;
 import util.astro.CelestialProjector;
 import util.astro.EclipticCoordinates;
@@ -58,9 +58,10 @@ public class ScalarMap extends SourceMap {
 	}
 
 	@Override
-	public void add(SourceModel model, double weight) {
+	public synchronized void add(SourceModel model, double weight) {
 		ScalarMap other = (ScalarMap) model;
 		isValid = false;
+	
 		map.addDirect(other.map, weight);
 		
 		enableLevel |= other.enableLevel;
@@ -112,8 +113,7 @@ public class ScalarMap extends SourceMap {
 		
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
-		map.creatorVersion = CRUSH.getFullVersion();
-		map.sourceName = firstScan.sourceName;
+		map.name = firstScan.sourceName;
 		map.commandLine = commandLine;
 		map.instrument = (Instrument<?>) instrument.copy();
 		map.correctingFWHM = map.getImageFWHM();	
@@ -155,13 +155,23 @@ public class ScalarMap extends SourceMap {
 		base = new double[map.sizeX()][map.sizeY()];
 		mask = new boolean[map.sizeX()][map.sizeY()];
 		
-		if(hasOption("indexing")) index();
+		if(hasOption("indexing")) {
+			try {index(); }
+			catch(Exception e) { 
+				System.err.println("WARNING! Indexing error:");
+				e.printStackTrace();
+			}
+		}
 		
 		if(hasOption("sources")) {
 			try { 
 				SourceCatalog<SphericalCoordinates> catalog = new SourceCatalog<SphericalCoordinates>();
 				catalog.read(Util.getSystemPath(option("sources").getValue()), map); 
-				insertSources(catalog);
+				try { insertSources(catalog); }
+				catch(Exception e) {
+					System.err.println("WARNING! Source insertion error:");
+					e.printStackTrace();
+				}
 				map.reset();
 			}
 			catch(IOException e) {
@@ -179,25 +189,22 @@ public class ScalarMap extends SourceMap {
 		
 	}
 	
-	public void insertSources(SourceCatalog<SphericalCoordinates> catalog) {
+	public synchronized void insertSources(SourceCatalog<SphericalCoordinates> catalog) throws Exception {
 		catalog.remove(map);
 		for(GaussianSource<?> source : catalog) source.peak.scale(-1.0);
 		
 		System.err.println(" Inserting test sources into data.");
-			
-		Parallel<Integration<?,?>> sync = new Parallel<Integration<?,?>>(CRUSH.maxThreads) {
+		
+		new IntegrationFork<Void>() {
 			@Override
-			public void process(Integration<?,?> integration, ProcessingThread thread) {
+			public void process(Integration<?,?> integration) {
 				sync(integration);
 				integration.sourceGeneration=0; // Reset the source generation...
 			}
-		};
-		
-		try { sync.process(getIntegrations()); }
-		catch(InterruptedException e) { System.err.println("WARNING! Source insertion was interrupted."); }
+		}.process();
 	}
 	
-	public void applyModel(String fileName) throws Exception {
+	public synchronized void applyModel(String fileName) throws Exception {
 		System.err.println(" Applying source model:");
 			
 		AstroMap model = new AstroMap(fileName, map.instrument);
@@ -222,35 +229,25 @@ public class ScalarMap extends SourceMap {
 		//for(int i=0; i<map.sizeX(); i++) Arrays.fill(base[i], 0.0);
 	}
 		
-	public void index() {
+	public void index() throws Exception {
 		System.err.print(" Indexing maps. ");
 	
-		Parallel<Integration<?,?>> indexing = new Parallel<Integration<?,?>>(CRUSH.maxThreads) {
-			Runtime runtime;
-			long maxUsed;
-			boolean saturated = false;
-			
+		final double maxUsage = hasOption("indexing.saturation") ? option("indexing.saturation").getDouble() : 0.5;
+		System.err.println(" (Up to " + Util.d1.format(100.0*maxUsage) + "% of RAM saturation.)");
+		
+		final Runtime runtime = Runtime.getRuntime();
+		long maxAvailable = runtime.maxMemory() - getReductionFootprint();
+		final long maxUsed = (long) (maxUsage * maxAvailable);
+		
+		new IntegrationFork<Void>() {
 			@Override
-			public void init() {
-				double maxUsage = hasOption("indexing.saturation") ? option("indexing.saturation").getDouble() : 0.5;
-				System.err.println(" (Up to " + Util.d1.format(100.0*maxUsage) + "% of RAM saturation.)");
+			public void process(final Integration<?,?> integration) {	
+				if(isInterrupted()) return;
 				
-				runtime = Runtime.getRuntime();
-				long maxAvailable = runtime.maxMemory() - getReductionFootprint();
-				maxUsed = (long) (maxUsage * maxAvailable);
-			}
-			
-			@Override
-			public void process(final Integration<?,?> integration, ProcessingThread thread) {	
-				if(saturated) return;
-				
-				if(runtime.totalMemory() - runtime.freeMemory() >= maxUsed) saturated = true;
+				if(runtime.totalMemory() - runtime.freeMemory() >= maxUsed) interruptAll();
 				else createLookup(integration);	
 			}
-		};
-	
-		try { indexing.process(getIntegrations()); }
-		catch(InterruptedException e) { System.err.println(" WARNING! Indexing was interrupted..."); }
+		}.process();
 	}
 	
 
@@ -276,7 +273,7 @@ public class ScalarMap extends SourceMap {
 	public Projection2D<SphericalCoordinates> getProjection() { return map.getProjection(); }
 	
 	@Override
-	public void process(Scan<?,?> scan) {
+	public synchronized void process(Scan<?,?> scan) {
 		map.normalize();
 		if(base != null) map.addImage(base);
 		
@@ -318,7 +315,7 @@ public class ScalarMap extends SourceMap {
 	}	
 	
 	@Override
-	public void postprocess(Scan<?,?> scan) {
+	public synchronized void postprocess(Scan<?,?> scan) {
 		super.postprocess(scan);
 		
 		if(hasOption("pointing")) if(option("pointing").equals("auto") || option("pointing").equals("suggest")) {
@@ -328,12 +325,12 @@ public class ScalarMap extends SourceMap {
 	
 			map.smoothTo(optimal);
 			if(hasOption("pointing.exposureclip")) map.clipBelowRelativeExposure(option("pointing.exposureclip").getDouble(), 0.1);
-			map.weight(true);
+			map.reweight(true);
 			scan.pointing = getPeakSource();
 		}
 	}
 	
-	public void filter() {
+	public synchronized void filter() {
 		if(!hasOption("source.filter") || getSourceSize(instrument) <= 0.0) {
 			map.extFilterFWHM = Double.NaN;
 			map.filterBlanking = Double.NaN;
@@ -397,7 +394,7 @@ public class ScalarMap extends SourceMap {
 	
 	
 	@Override
-	public synchronized void sync() throws InterruptedException {	
+	public synchronized void sync() throws Exception {	
 		process(true);
 		super.sync();	
 	}
@@ -487,10 +484,10 @@ public class ScalarMap extends SourceMap {
 
 
 	@Override
-	public void setBase() { map.copyTo(base); }
+	public synchronized void setBase() { map.copyTo(base); }
 
 	@Override
-	public void reset() {
+	public synchronized void reset() {
 		super.reset();
 		map.reset();
 		map.correctingFWHM = map.instrument.resolution;
@@ -545,7 +542,7 @@ public class ScalarMap extends SourceMap {
 
 	
 	@Override
-	protected int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
+	protected synchronized int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
 		int goodFrames = super.add(integration, pixels, sourceGain, filtering, signalMode);
 		map.integrationTime += goodFrames * integration.instrument.samplingInterval;
 		return goodFrames;
@@ -663,7 +660,7 @@ public class ScalarMap extends SourceMap {
 		// Re-level and weight map if allowed and not 'extended' or 'deep'.
 		if(!hasOption("extended") || hasOption("deep")) {
 			if(enableLevel) map.level(true);
-			if(enableWeighting) map.weight(true);
+			if(enableWeighting) map.reweight(true);
 		}
 
 		if(info) map.toString();
@@ -682,8 +679,8 @@ public class ScalarMap extends SourceMap {
 			AstroMap cropped = (AstroMap) map.copy();
 			cropped.autoCrop();
 			
-			final ImageArea<AstroImageLayer> imager = new ImageArea<AstroImageLayer>();
-			final AstroImageLayer image = new AstroImageLayer(cropped);
+			final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
+			final GridImageLayer image = new GridImageLayer(cropped);
 			imager.setContentLayer(image);
 			imager.setBackground(Color.LIGHT_GRAY);
 			
@@ -709,7 +706,7 @@ public class ScalarMap extends SourceMap {
 
 	@Override
 	public String getSourceName() {
-		return map.sourceName;
+		return map.name;
 	}
 
 	@Override

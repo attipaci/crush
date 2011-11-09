@@ -26,7 +26,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 
 import crush.*;
-import crush.sourcemodel.*;
 import crush.astro.AstroMap;
 import crush.gui.*;
 
@@ -44,10 +43,10 @@ public class ImagerTest {
 			Instrument<?> instrument = new GenericInstrument("generic");
 			AstroMap map = new AstroMap("/home/pumukli/data/sharc2/images/VESTA.8293.fits", instrument);
 			
-			AstroImageLayer image = new AstroImageLayer(map);
+			GridImageLayer image = new GridImageLayer(map);
 			image.colorScheme = new Colorful();
 			
-			final ImageArea<AstroImageLayer> imager = new ImageArea<AstroImageLayer>();
+			final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
 			imager.setContentLayer(image);
 			//imager.invertAxes(false, false);
 			

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -22,66 +22,40 @@
  ******************************************************************************/
 package test;
 
-import java.util.*;
 
 import util.*;
 import util.data.FFT;
-import util.data.WindowFunction;
 
-
-
-public class FFTTest {
+public class FFTTest3 {
 
 	public static void main(String[] args) {
+		final int repeats = 10000;
+		final int n = args.length > 0 ? Integer.parseInt(args[0]) : 16;
+		final int N = n * 1024;
+		final long ops = repeats * N * (int) Math.round((Math.log(N) / Math.log(2.0)));
+
+		final float[] fdata = new float[N];
+		for(int i=0; i<fdata.length; i++) fdata[i] = (float) Math.random();
+		long time = -System.currentTimeMillis();
+		for(int k=repeats; --k>=0; ) FFT.powerTransform(fdata, (k & 1) == 0);
+		time += System.currentTimeMillis();
+		System.err.println("float transform of " + repeats + " x " + n + "K points: " + time + "ms --> " + Util.f1.format(1e-3*ops/time) + " Mcycles/sec");
+
 		
-		double[] data = new double[16];
-		
-		data[0] = 1.0;
-		Complex[] spectrum = FFT.forward(data);
-		System.err.println("delta[0]:");
-		print(spectrum);
-		
-		Arrays.fill(data, 1.0);
-		spectrum = FFT.forward(data);
-		System.err.println("cons(1.0):");
-		print(spectrum);
-		
-		
-		for(int i=0; i<data.length; i++) data[i] = Math.cos(2.0 * Math.PI * i / data.length);
-		spectrum = FFT.forward(data);
-		System.err.println("cos1:");
-		print(spectrum);
-		
-		for(int i=0; i<data.length; i++) data[i] = Math.sin(4.0 * Math.PI * i / data.length);
-		spectrum = FFT.forward(data);
-		System.err.println("sin2:");
-		print(spectrum);		
-		
-		Random random = new Random();
-		data = new double[1024*1024];
-		for(int i=0; i<data.length; i++) data[i] = random.nextGaussian();
-		double[] power = FFT.averagePower(data, WindowFunction.getHamming(16));
-		System.err.println("pow:");
-		print(power);		
-		
-		System.err.println("Inplace real transform test:");
-		
-		float[] fdata = new float[16];
-		fdata[0] = 1.0F;
-		//for(int i=0; i<fdata.length; i+=4) fdata[i] = 1.0F;
-		
-		System.err.println("Original array");
-		print(fdata);
-		
-		FFT.forwardRealInplace(fdata);
-		
-		System.err.println("Frequency space");
-		print(fdata);
-		
-		System.err.println("Back transform...");
-		FFT.backRealInplace(fdata);
-		
-		print(fdata);
+		final double[] data = new double[N];
+		for(int i=0; i<data.length; i++) data[i] = Math.random();
+		time = -System.currentTimeMillis();
+		for(int k=repeats; --k>=0; ) FFT.powerTransform(data, (k & 1) == 0);
+		time += System.currentTimeMillis();
+		System.err.println("double transform of " + repeats + " x " + n + "K points: " + time + "ms --> " + Util.f1.format(1e-3*ops/time) + " Mcycles/sec");
+
+
+		final Complex[] cdata = new Complex[N/2];
+		for(int i=0; i<cdata.length; i++) cdata[i] = new Complex(Math.random(), Math.random());
+		time = -System.currentTimeMillis();
+		for(int k=repeats; --k>=0; ) FFT.powerTransform(cdata, (k & 1) == 0);
+		time += System.currentTimeMillis();
+		System.err.println("complex transform of " + repeats + " x " + n + "K points: " + time + "ms --> " + Util.f1.format(1e-3*ops/time) + " Mcycles/sec");
 		
 	}
 
@@ -90,17 +64,18 @@ public class FFTTest {
 			System.out.println("  " + i + ":\t" + data[i].toString(Util.f6));
 		System.out.println();
 	}
-	
+
 	public static void print(double[] data) {
 		for(int i=0; i<data.length; i++) 
 			System.out.println("  " + i + ":\t" + Util.e6.format(data[i]));
 		System.out.println();
 	}
-	
+
 	public static void print(float[] fdata) {
 		for(int i=0; i<fdata.length; i++) 
 			System.out.println("  " + i + ":\t" + Util.e6.format(fdata[i]));
 		System.out.println();
 	}
-	
+
 }
+

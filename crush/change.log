@@ -1,9 +1,5 @@
->> SCUBA-2 module to version 4 (change.log, web-page!)
->> Finish parallel in Data2D, GridImage, AstroImage, AstroMap...
->> Finish gridMap unimplemented methods.
->> Go through leftover TODO's from code reorganization...
->> Try SourceModel<CoordinateType>, SourceMap<CT>, ScalarMap<CT> ...
->> Instrument.getCoordinateInstance();
+2.11-a1 (alpha)
+
 
 	[NEW] Introducing a parallel processing framework for images. The goal 
 	is to speed up image processing functionality on modern multicore 
@@ -11,6 +7,11 @@
 	power. This will result in a small gain for reduction purposes, but 
 	should make the upcoming new 'show', 'imagetool' (etc.) more 
 	responsive, especially when handling large images...
+
+	[FIX] Multithreaded reductions on multicore systems could end up in
+	unpredictable race conditions while procuring the composite source
+	model. Luckily, the chances of this happening were tiny, so the fix
+	should be unnoticeable for the most part...
 
 	[FIX] {GISMO} 'pointing.model' and 'pointing.log' now accept path
 	specifications with shell variables. (Prior to the fix only literal 
@@ -21,6 +22,21 @@
 
 	[FIX] {SCUBA-2} Updated the SCUBA-2 proprietary module to work with
 	CRUSH v2.10 (module Version 4).
+
+	[FIX] Fixed problem with Complex FFTs whereby the real and imaginary
+	components got mixed up, as a result of changed iteration order. The
+	good news is that Complex FFTs were never used in CRUSH, so the bug
+	was completely harmless.
+
+	[FIX] If the path to the Java executable was too long, it could 
+	produce an error when trying to write that information to the FITS 
+	image. Now fixed.
+
+	[CHANGE] Some FITS keywords describing the Java environment running
+	crush has been changed to more intoitive keywords.
+
+	[TWEAK] {SCUBA-2} Slight tweaks to the SCUBA-2 configuration files to
+	enhance 'deep' mode reductions.
 
 	[TWEAK] Calibration and tau tables are loaded as necessary and stay
 	persistent. This speeds up the reading of sets of scans using the same 
@@ -37,9 +53,31 @@
 	[TWEAK] {GISMO} 'deep' reductions to whiten more aggressively than
 	usual.
 
+	[COSMETIC] Reorganized FITS header key ordering to bring the most 
+	important keys up front.
+
+	[CODE] Old Parallel architecture replaced by the new task-oriented
+	hieracrchy in source model tasks.
+
+	[CODE] HDU readers converted to new Parallel architecture. However,
+	only single threaded reads are used until concurrency is properly
+	debugged for these...
+	
+	[CODE] Avoid cloning of Threads (which is wrongly allowed in Java 
+	5 & 6) and use Runnables instead for implementing parallel tasks...
+	As a result of this 'fix' CRUSH now runs under Java 7 and with lesser
+	distinction also under the GNU Java (libgcj/gij).
+
+	[CODE] Added number formatting classes that omit trailing zeroes.
+	These will be likely used in the new display function...
+
+	[CODE] Made concurrent access (e.g. on multicore systems) to source
+	models more safe by requiring synchronization of all methods that
+	explicitly change the model data.
+
 	[CODE] {GISMO} PointingTable.Entry made into proper inner class.
 
-	[CODE] Made access to images more convetional by restrincting direct
+	[CODE] Made access to images more conventional by restrincting direct
 	access to fields, and using convenience methods instead.
 	
 	[CODE] Generalized projections, grids and images using grids.

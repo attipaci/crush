@@ -249,10 +249,6 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 		else if(value > 1.0) value = 1.0;
 		return Math.acos(value);
 	}
-	
-	public double distanceTo(Metric<? extends SphericalCoordinates> point) {
-		return distanceTo((SphericalCoordinates) point);
-	}
 
 	public double distanceTo(SphericalCoordinates point) {
 		double sindTheta = Math.sin(point.y - y);

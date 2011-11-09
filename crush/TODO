@@ -1,17 +1,45 @@
->> Data2D (.Float?, .Double?) 
-	-> Map2D (.Float?, .Double?)
+>> Integration.Fork extends Parallel...
+	Fork.Channels
+	Fork.Frames
+	Fork.Blocks
+	Fork.ChannelGroups
 
-   GridData2D<ImageType, GridType> (contains an image and a grid)
-	-> AstroData<ImageType> (GridType=SphericalGrid)
-		-> AstroImage (ImageType=Data2D)
-		-> AstroMap (ImageType=Map2D)
-	-> CartesianData2D<ImageType> (GridType=CartesianGrid)
-		-> CartesianMap2D (ImageType=Map2D)
+>> Pipeline to convert to Parallel...
+
+X> Synchronized access to Data2D, GridData...
+	Could slow things down unnecessarily. It's better to keep it 
+	non-thread safe, and be careful about access...
+
+>> Copy over the old header keys...
+
+>> FFT enclosing class
+	-> bitReverse n log n ---> n (only ~6-7% of computing time)
+	-> explore the use of mirroring arrays to simplify
+	   merge...
+
+>> Try SourceModel<CoordinateType>, SourceMap<CT>, ScalarMap<CT> ...
+   Need to separate generic from astronomical...
+	Frame<CoordinateType> --> AstroFrame (SphericalCoordinates)
+	Scan<CoordinateType...> --> AstroScan (...)
+	Integration<CoordinateType...> --> AstroIntegration (...)
+	Instrument --> TelescopeInstrument
+	
+>> standard fits keys (Data2D, or FitsImage wrapper?)
+
+X> Filter & MultiFilter to use FFT.Float for faster transform
+   !> It turns out that the lookup up the factors is slower than calculating
+       them...
 
 >> 'whiten.multires'?
 
 >> drifts, signal to remove with cubic spline
    drifts to store signals...
+ 	* Signals can have arbitrary resolution (not limited to powers of 2)
+	* Maybe drifts too, but then adjust whitening windowsize
+	  and range to connect (with overlap...)
+	* Implications on parameter accounting?
+	* Signals always full length? -- smooth to desired res?
+	  (smooth to account parameters?)
 
 >> 'filter.motion'
    * check for OTF/box scans...

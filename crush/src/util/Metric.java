@@ -25,6 +25,6 @@ package util;
 
 public interface Metric<Type> {
 
-	public double distanceTo(Metric<? extends Type> other);
+	public double distanceTo(Type other);
 	
 }

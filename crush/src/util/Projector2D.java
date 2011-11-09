@@ -33,9 +33,7 @@ public class Projector2D<CoordinateType extends CoordinatePair> {
 	@SuppressWarnings("unchecked")
 	public Projector2D(Projection2D<CoordinateType> projection) {
 		this.projection = projection;
-		
-		CoordinateType reference = projection.getReference();
-		coords = (CoordinateType) reference.clone();
+		coords = (CoordinateType) projection.getReference().clone();
 	}
 
 	public CoordinateType getCoordinates() { return coords; }

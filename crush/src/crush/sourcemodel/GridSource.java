@@ -50,9 +50,7 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	public Instrument<?> instrument;
 	public Vector<Scan<?, ?>> scans = new Vector<Scan<?, ?>>();
 
-	public String sourceName;
 	public String commandLine;
-	
 	
 	public int generation = 0;
 	public double integrationTime = 0.0;	
@@ -76,7 +74,7 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	}
 	
 	@Override
-	public synchronized void addDirect(final GridMap<?> map, final double w) {
+	public void addDirect(final GridMap<?> map, final double w) {
 		super.addDirect(map, w);
 		if(map instanceof GridSource) integrationTime += ((GridSource<?>) map).integrationTime;
 	}
@@ -113,8 +111,8 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	
 	
 	@Override
-	public Fits getFits() throws HeaderCardException, FitsException, IOException {
-		Fits fits = super.getFits();
+	public Fits createFits() throws HeaderCardException, FitsException, IOException {
+		Fits fits = super.createFits();
 		
 		if(instrument != null) if(instrument.hasOption("write.scandata")) 
 			for(Scan<?,?> scan : scans) fits.addHDU(scan.getSummaryHDU(instrument.options));
@@ -124,9 +122,9 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	
 	
 	@Override
-	public void write(Fits fits) throws HeaderCardException, FitsException, IOException {
-		if(fileName == null) fileName = CRUSH.workPath + File.separator + sourceName + ".fits";  
-		super.write(fits);
+	public void write() throws HeaderCardException, FitsException, IOException {
+		if(fileName == null) fileName = CRUSH.workPath + File.separator + name + ".fits";  
+		super.write();
 	}
 	
 	@Override
@@ -138,14 +136,11 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException, FitsException, IOException {
-		cursor.add(new HeaderCard("OBJECT", sourceName, "Source name as it appear in the raw data."));	
-		cursor.add(new HeaderCard("INTEGRTN", integrationTime / Unit.s, "The total integration time in seconds."));
-
-		// The number of scans contributing to this image
-		cursor.add(new HeaderCard("SCANS", scans.size(), "The number of scans in this composite image."));
-		
 		super.editHeader(cursor);
-			
+		
+		cursor.add(new HeaderCard("SCANS", scans.size(), "The number of scans in this composite image."));
+		cursor.add(new HeaderCard("INTEGRTN", integrationTime / Unit.s, "The total integration time in seconds."));
+		
 		// Add the command-line reduction options
 		if(commandLine != null) {
 			StringTokenizer args = new StringTokenizer(commandLine);
@@ -276,13 +271,13 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	
 	
 	public void printShortInfo() {
-		System.err.println("\n\n  [" + sourceName + "]\n" + super.toString());
+		System.err.println("\n\n  [" + name + "]\n" + super.toString());
 	}
 	
 	@Override
 	public String toString() {
 		String info = fileName == null ? "\n" : " Image File: " + fileName + ". ->" + "\n\n" + 
-			"  [" + sourceName + "]\n" +
+			"  [" + name + "]\n" +
 			super.toString() + 
 			"  Instrument Beam FWHM: " + Util.f2.format(instrument.resolution / Unit.arcsec) + " arcsec." + "\n" +
 			"  Applied Smoothing: " + Util.f2.format(smoothFWHM / Unit.arcsec) + " arcsec." + " (includes pixelization)\n" +

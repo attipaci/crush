@@ -22,55 +22,57 @@
  ******************************************************************************/
 package crush.fits;
 
+import util.Parallel;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
 
-public abstract class HDUReader extends Thread implements Cloneable {
-	protected HDUManager manager;
-
+public abstract class HDUReader extends Parallel {	
 	protected TableHDU hdu;
 	protected ColumnTable table;
-	protected int from, to;
-
+	
 	public HDUReader(TableHDU hdu) throws FitsException {
 		this.hdu = hdu;
 		this.table = (ColumnTable) hdu.getData().getData();
 	}
+
+	public abstract Reader getReader();
 	
-	public void setManager(HDUManager m) { 
-		this.manager = m; 
-	}
-	
-	@Override
-	public Object clone() {
-		try { return super.clone(); }
-		catch(CloneNotSupportedException e) { return null; }
-	}
-		
-	public void setRange(int from, int to) {	
-		this.from = from;
-		this.to = to;
-	}
-		
-	@Override
-	public void start() {
-		manager.queue(this);
-		super.start();
+	public void read() throws Exception {
+		//read(CRUSH.maxThreads);
+		read(1);
 	}
 	
-	@Override
-	public void run() {
-		try { 
-			read(); 
-			manager.checkout(this);
+	
+	public void read(int threadCount) throws Exception {
+		getReader().process(threadCount);
+	}
+
+	
+	public abstract class Task<ReturnType> extends Process<ReturnType> {
+		@Override
+		public void processIndex(int i, int threadCount) throws Exception {
+			final int frames = hdu.getNRows();
+			final int step = (int)Math.ceil((double) frames / threadCount);
+			
+			processRows(i*step, Math.min((i+1)*step, frames));
 		}
-		catch(FitsException e) { manager.readException(e); }
-		catch(Exception e) { 
-			System.err.println("WARNING! " + e.getMessage());
-			e.printStackTrace(); 
+		
+		public void processRows(int from, int to) throws Exception {
+			for(int i=from; i<to; i++) {
+				if(!isInterrupted()) processRow(i);
+				else break;
+			}
 		}
+		
+		public abstract void processRow(int i) throws Exception;
 	}
 	
-	public abstract void read() throws FitsException;
+	public abstract class Reader extends Task<Void> {
+		@Override
+		public void processRow(int i) throws Exception {
+			readRow(i);
+		}
+		public abstract void readRow(int i) throws FitsException;
+	};
 }

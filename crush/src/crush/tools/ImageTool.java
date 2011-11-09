@@ -238,7 +238,7 @@ public class ImageTool {
 		else if(key.equalsIgnoreCase("-noise")) {
 			String value = tokens.nextToken();
 			if(value.equalsIgnoreCase("data")) image.dataWeight();
-			else if(value.equalsIgnoreCase("image")) image.weight(true);
+			else if(value.equalsIgnoreCase("image")) image.reweight(true);
 			else return false;
 		}
 		else if(key.equalsIgnoreCase("-offset")) {

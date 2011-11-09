@@ -43,7 +43,7 @@ public class DetectionTool {
 	static String version = "0.1-1";
 	
 	AstroMap image;
-	SourceCatalog catalog;
+	SourceCatalog<?> catalog;
 	
 	double significance = 4.0;
 	

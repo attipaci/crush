@@ -95,7 +95,7 @@ public class PolarMap extends SourceModel {
 	
 	
 	@Override
-	public void add(SourceModel model, double weight) {
+	public synchronized void add(SourceModel model, double weight) {
 		PolarMap other = (PolarMap) model;
 		N.add(other.N, weight);
 		if(usePolarization()) {
@@ -118,7 +118,7 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public void add(Integration<?, ?> subscan) {
+	public synchronized void add(Integration<?, ?> subscan) {
 		removeBias(subscan);
 
 		//((Purifiable) subscan).purify();
@@ -133,7 +133,7 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public void setBase() {
+	public synchronized void setBase() {
 		N.setBase();
 		if(usePolarization()) {
 			Q.setBase();
@@ -142,7 +142,7 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public void process(Scan<?, ?> scan) {
+	public synchronized void process(Scan<?, ?> scan) {
 		N.process(scan);
 		if(usePolarization()) {
 			Q.process(scan);
@@ -151,7 +151,7 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public synchronized void sync() throws InterruptedException {
+	public synchronized void sync() throws Exception {
 		System.err.print("\n   [N] ");
 		N.sync();
 		if(usePolarization()) {
@@ -163,7 +163,7 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public void reset() {
+	public synchronized void reset() {
 		N.reset();
 		if(usePolarization()) {
 			Q.reset();
@@ -182,7 +182,7 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public void postprocess(Scan<?,?> scan) {
+	public synchronized void postprocess(Scan<?,?> scan) {
 		super.postprocess(scan);
 		
 		// Treat N as a regular total-power map, so do the post-processing accordingly...

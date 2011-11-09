@@ -48,6 +48,17 @@ public final class Util {
 	public final static DecimalFormat f7 = new DecimalFormat("0.0000000");
 	public final static DecimalFormat f8 = new DecimalFormat("0.00000000");
 	public final static DecimalFormat f9 = new DecimalFormat("0.000000000");
+	
+	public final static DecimalFormat F0 = new DecimalFormat("0");
+	public final static DecimalFormat F1 = new DecimalFormat("0.#");
+	public final static DecimalFormat F2 = new DecimalFormat("0.##");
+	public final static DecimalFormat F3 = new DecimalFormat("0.###");
+	public final static DecimalFormat F4 = new DecimalFormat("0.####");
+	public final static DecimalFormat F5 = new DecimalFormat("0.#####");
+	public final static DecimalFormat F6 = new DecimalFormat("0.######");
+	public final static DecimalFormat F7 = new DecimalFormat("0.#######");
+	public final static DecimalFormat F8 = new DecimalFormat("0.########");
+	public final static DecimalFormat F9 = new DecimalFormat("0.#########");
 
 	public final static DecimalFormat e0 = new DecimalFormat("0E0");
 	public final static DecimalFormat e1 = new DecimalFormat("0.0E0");
@@ -60,6 +71,17 @@ public final class Util {
 	public final static DecimalFormat e8 = new DecimalFormat("0.00000000E0");
 	public final static DecimalFormat e9 = new DecimalFormat("0.000000000E0");
 
+	public final static DecimalFormat E0 = new DecimalFormat("0E0");
+	public final static DecimalFormat E1 = new DecimalFormat("0.#E0");
+	public final static DecimalFormat E2 = new DecimalFormat("0.##E0");
+	public final static DecimalFormat E3 = new DecimalFormat("0.###E0");
+	public final static DecimalFormat E4 = new DecimalFormat("0.####E0");
+	public final static DecimalFormat E5 = new DecimalFormat("0.#####E0");
+	public final static DecimalFormat E6 = new DecimalFormat("0.######E0");
+	public final static DecimalFormat E7 = new DecimalFormat("0.#######E0");
+	public final static DecimalFormat E8 = new DecimalFormat("0.########E0");
+	public final static DecimalFormat E9 = new DecimalFormat("0.#########E0");
+	
 	public final static DecimalFormat d1 = new DecimalFormat("0");
 	public final static DecimalFormat d2 = new DecimalFormat("00");
 	public final static DecimalFormat d3 = new DecimalFormat("000");
@@ -81,6 +103,17 @@ public final class Util {
 	public final static SignificantFigures s9 = new SignificantFigures(9);
 	public final static SignificantFigures s10 = new SignificantFigures(10);
 	
+	public final static SignificantFigures S1 = new SignificantFigures(1, false);
+	public final static SignificantFigures S2 = new SignificantFigures(2, false);
+	public final static SignificantFigures S3 = new SignificantFigures(3, false);
+	public final static SignificantFigures S4 = new SignificantFigures(4, false);
+	public final static SignificantFigures S5 = new SignificantFigures(5, false);
+	public final static SignificantFigures S6 = new SignificantFigures(6, false);
+	public final static SignificantFigures S7 = new SignificantFigures(7, false);
+	public final static SignificantFigures S8 = new SignificantFigures(8, false);
+	public final static SignificantFigures S9 = new SignificantFigures(9, false);
+	public final static SignificantFigures S10 = new SignificantFigures(10, false);
+
 	public final static HourAngleFormat hf0 = new HourAngleFormat(0);
 	public final static HourAngleFormat hf1 = new HourAngleFormat(1);
 	public final static HourAngleFormat hf2 = new HourAngleFormat(2);
@@ -99,20 +132,32 @@ public final class Util {
 	
 	
 	public final static DecimalFormat[] e = { e0, e1, e2, e3, e4, e5, e6, e7, e8, e9 },
-	f = { f0, f1, f2, f3, f4, f5, f6, f7, f8, f9 },
-	d = { null, d1, d2, d3, d4, d5, d6, d7, d8, d9 },
-	s = { null, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10};
+		E = { E0, E1, E2, E3, E4, E5, E6, E7, E8, E9 },
+		f = { f0, f1, f2, f3, f4, f5, f6, f7, f8, f9 },
+		F = { F0, F1, F2, F3, F4, F5, F6, F7, F8, F9 },
+		d = { null, d1, d2, d3, d4, d5, d6, d7, d8, d9 },
+		s = { null, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10},
+		S = { null, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10}
+	;
 
 	public static DecimalFormat getDecimalFormat(double significance) {
-		return getDecimalFormat(significance, 6);
+		return getDecimalFormat(significance, 6, true);
+	}
+	
+	public static DecimalFormat getDecimalFormat(double significance, boolean trailingZeroes) {
+		return getDecimalFormat(significance, 6, trailingZeroes);
 	}
 	
 	public static DecimalFormat getDecimalFormat(double significance, int maxDecimals) {
-		if(Double.isNaN(significance)) return Util.f1;
-		if(significance == 0.0) return Util.f2;
+		return getDecimalFormat(significance, maxDecimals, true);
+	}
+	
+	public static DecimalFormat getDecimalFormat(double significance, int maxDecimals, boolean trailingZeroes) {
+		if(Double.isNaN(significance)) return trailingZeroes ?  f1 : F1;
+		if(significance == 0.0) return trailingZeroes ? f2 : F2;
 		int figures = Math.min(maxDecimals, (int) Math.floor(Math.log10(Math.abs(significance))) + 2);
 		figures = Math.max(1, figures);
-		return s[figures];
+		return trailingZeroes ? s[figures] : S[figures];
 	}
 	
 	/**

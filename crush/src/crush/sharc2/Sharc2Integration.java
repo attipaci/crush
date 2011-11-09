@@ -32,7 +32,6 @@ import java.net.*;
 
 import util.*;
 import util.astro.*;
-import crush.fits.HDUManager;
 import crush.fits.HDUReader;
 
 // TODO Split nod-phases into integrations...
@@ -227,7 +226,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 	
 	
 	
-	protected void read(BasicHDU[] HDU, int firstDataHDU) throws IllegalStateException, HeaderCardException, FitsException {
+	protected void read(BasicHDU[] HDU, int firstDataHDU) throws Exception {
 		
 		int nDataHDUs = HDU.length - firstDataHDU, records = 0;
 		for(int datahdu=0; datahdu<nDataHDUs; datahdu++) records += HDU[firstDataHDU + datahdu].getAxes()[0];
@@ -242,12 +241,10 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		clear();
 		ensureCapacity(records);
 		for(int t=records; --t>=0; ) add(null);
-		
-		HDUManager manager = new HDUManager(this);
-				
+					
 		for(int n=0, startIndex = 0; n<nDataHDUs; n++) {
 			BinaryTableHDU hdu = (BinaryTableHDU) HDU[firstDataHDU+n]; 
-			manager.read(new Sharc2Reader(hdu, startIndex));
+			new Sharc2Reader(hdu, startIndex).read();
 			startIndex += hdu.getNRows();
 		}
 		
@@ -265,7 +262,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		}
 		
 	}
-	
+		
 	class Sharc2Reader extends HDUReader {	
 		private boolean hasExtraTimingInfo, isDoubleUT;
 		private int offset;
@@ -274,6 +271,8 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		private double[] dUT, DT;
 		private int[] SN;
 		private int channels;
+		
+		private final Sharc2Scan sharcscan = (Sharc2Scan) scan;
 		
 		public Sharc2Reader(TableHDU hdu, int offset) throws FitsException {
 			super(hdu);
@@ -311,58 +310,63 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 			else fUT = (float[]) table.getColumn(iUT);
 			
 		}
-		
-		
+	
 		@Override
-		public void read() throws FitsException {	
-			final Sharc2Scan sharcscan = (Sharc2Scan) scan;
-			final Vector2D equatorialOffset = new Vector2D();
-		
-			for(int i=from; i<to; i++) {
-				if(isInterrupted()) break;
-				
-				final Sharc2Frame frame = new Sharc2Frame(sharcscan);
-				frame.parseData(data, i*channels, channels);
+		public Reader getReader() {
+			return new Reader() {
+				private Vector2D equatorialOffset;
 
-				final double UT = isDoubleUT ? dUT[i] * Unit.hour : fUT[i] * Unit.hour;
-				frame.MJD = sharcscan.iMJD + UT / Unit.day;
+				@Override
+				public void init() { 
+					super.init();
+					equatorialOffset = new Vector2D();
+				}
+				@Override
+				public void readRow(int i) throws FitsException {	
 
-				// Enforce the calculcation of the equatorial coordinates
-				frame.equatorial = null;
-				
-				frame.horizontal = new HorizontalCoordinates(
-						AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
-						EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
+					final Sharc2Frame frame = new Sharc2Frame(sharcscan);
+					frame.parseData(data, i*channels, channels);
 
-				final double pa = PA[i] * Unit.deg;
-				frame.sinPA = Math.sin(pa);
-				frame.cosPA = Math.cos(pa);
+					final double UT = isDoubleUT ? dUT[i] * Unit.hour : fUT[i] * Unit.hour;
+					frame.MJD = sharcscan.iMJD + UT / Unit.day;
 
-				frame.LST = LST[i] * Unit.hour;
+					// Enforce the calculcation of the equatorial coordinates
+					frame.equatorial = null;
 
-				if(hasExtraTimingInfo) {
-					frame.dspTime = DT[i] * Unit.sec;
-					frame.frameNumber = SN[i];
-				}		
+					frame.horizontal = new HorizontalCoordinates(
+							AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
+							EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
 
-				frame.horizontalOffset = new Vector2D(
-						(AZO[i] + AZE[i] * frame.horizontal.cosLat) * Unit.arcsec,
-						(ELO[i] + ELE[i]) * Unit.arcsec);
+					final double pa = PA[i] * Unit.deg;
+					frame.sinPA = Math.sin(pa);
+					frame.cosPA = Math.cos(pa);
 
-				frame.chopperPosition.x = chop[i] * Unit.arcsec;
-				chopCenter += frame.chopperPosition.x;	
+					frame.LST = LST[i] * Unit.hour;
 
-				// Add in the scanning offsets...
-				frame.horizontalOffset.add(sharcscan.horizontalOffset);
+					if(hasExtraTimingInfo) {
+						frame.dspTime = DT[i] * Unit.sec;
+						frame.frameNumber = SN[i];
+					}		
 
-				// Add in the equatorial sweeping offsets
-				// Watch out for the sign of the RA offset, which is counter to the native coordinate direction
-				equatorialOffset.set(RAO[i] * Unit.arcsec, DECO[i] * Unit.arcsec);			
-				frame.toHorizontal(equatorialOffset);
-				frame.horizontalOffset.add(equatorialOffset);
-				
-				set(offset + i, frame);
-			}
+					frame.horizontalOffset = new Vector2D(
+							(AZO[i] + AZE[i] * frame.horizontal.cosLat) * Unit.arcsec,
+							(ELO[i] + ELE[i]) * Unit.arcsec);
+
+					frame.chopperPosition.x = chop[i] * Unit.arcsec;
+					chopCenter += frame.chopperPosition.x;	
+
+					// Add in the scanning offsets...
+					frame.horizontalOffset.add(sharcscan.horizontalOffset);
+
+					// Add in the equatorial sweeping offsets
+					// Watch out for the sign of the RA offset, which is counter to the native coordinate direction
+					equatorialOffset.set(RAO[i] * Unit.arcsec, DECO[i] * Unit.arcsec);			
+					frame.toHorizontal(equatorialOffset);
+					frame.horizontalOffset.add(equatorialOffset);
+
+					set(offset + i, frame);
+				}
+			};
 		}
 	}
 

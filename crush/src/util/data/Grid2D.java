@@ -37,6 +37,7 @@ import util.astro.GalacticCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.astro.SuperGalacticCoordinates;
 import nom.tam.fits.*;
+import nom.tam.util.Cursor;
 
 public abstract class Grid2D<CoordinateType extends CoordinatePair> implements Cloneable {
 	public Projection2D<CoordinateType> projection;
@@ -177,12 +178,9 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair> implements C
 	public boolean isReverseY() { return false; }
 	
 	
-	public void addCoordinateInfo(BasicHDU hdu) throws HeaderCardException {
+	public void editHeader(Cursor cursor) throws HeaderCardException {
 		CoordinateType reference = projection.getReference();
-		
-		nom.tam.util.Cursor cursor = hdu.getHeader().iterator();
-		while(cursor.hasNext()) cursor.next();
-		
+			
 		// TODO 
 		projection.edit(cursor, alt);
 		reference.edit(cursor, alt);
@@ -210,7 +208,7 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair> implements C
 		
 	public abstract CoordinateType getCoordinateInstanceFor(String type) throws InstantiationException, IllegalAccessException;
 	
-	public void parseCoordinateInfo(Header header) throws HeaderCardException, InstantiationException, IllegalAccessException {
+	public void parseHeader(Header header) throws HeaderCardException, InstantiationException, IllegalAccessException {
 		String type = header.getStringValue("CTYPE1" + alt);
 	
 		try { parseProjection(header); }
