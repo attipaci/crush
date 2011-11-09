@@ -29,6 +29,7 @@ import crush.Instrument;
 import crush.sourcemodel.GridSource;
 import util.*;
 import util.astro.*;
+import util.data.SphericalGrid;
 
 
 public class AstroMap extends GridSource<SphericalCoordinates> implements SkyCoordinates {
@@ -43,6 +44,7 @@ public class AstroMap extends GridSource<SphericalCoordinates> implements SkyCoo
 	
 	public AstroMap(String fileName, Instrument<?> instrument) throws Exception { 
 		this(instrument);
+		setGrid(new SphericalGrid());
 		read(fileName);		
 	}
 

@@ -23,7 +23,7 @@
 
 package util.data;
 
-public interface Noise2D {
+public interface Noise2D extends Weighted2D {
 
 	public double[][] getRMS();
 	

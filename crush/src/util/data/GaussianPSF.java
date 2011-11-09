@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,40 +20,36 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush;
 
-import util.Parallel;
-import java.util.*;
+package util.data;
 
-public abstract class ParallelBlock extends Parallel<Integer> {
-	protected int blockSize = 1;
-	protected ArrayList<Frame> frames;
-	
-	public ParallelBlock(int maxThreads) {
-		super(maxThreads);
-	}
+import util.Util;
 
-	public synchronized void setBlockSize(int n) {
-		blockSize = n;
-	}
+public class GaussianPSF {
 
-	public synchronized void process(ArrayList<Frame> frames) throws InterruptedException {
-		this.frames = frames;
+	public static double[][] getBeam(double FWHM, Grid2D<?> grid) {
+		return getBeam(FWHM, grid, 3.0);
+	}	
+
+	public static double[][] getBeam(double FWHM, Grid2D<?> grid, double nBeams) {
+		int sizeX = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeX()) + 1;
+		int sizeY = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeY()) + 1;
 		
-		final int nt = frames.size();
-		final int nChunks = (int) Math.ceil((double) nt / blockSize);
-		ArrayList<Integer> startIndexes = new ArrayList<Integer>(nChunks);
+		final double[][] beam = new double[sizeX][sizeY];
+		final double sigma = FWHM / Util.sigmasInFWHM;
+		final double Ax = -0.5 * grid.pixelSizeX() * grid.pixelSizeX() / (sigma * sigma);
+		final double Ay = -0.5 * grid.pixelSizeY() * grid.pixelSizeY() / (sigma * sigma);
+		final double centerX = (sizeX-1) / 2.0;
+		final double centerY = (sizeY-1) / 2.0;
 		
-		for(int t=0; t<nt; t+=blockSize) startIndexes.add(t);
-		
-		process(startIndexes);
-	}
+		for(int i=sizeX; --i >= 0; ) for(int j=sizeY; --j >= 0; ) {
+			double dx = i - centerX;
+			double dy = j - centerY;
 
-	@Override
-	public void process(Integer from, ProcessingThread thread) {
-		process(from, Math.min(frames.size(), from+blockSize));		
+			beam[i][j] = Math.exp(Ax*dx*dx + Ay*dy*dy);
+		}
+		return beam;
+		
 	}
-	 
-	public abstract void process(int from, int to);
 	
 }

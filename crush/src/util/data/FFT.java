@@ -183,8 +183,9 @@ public class FFT {
 		fdata[N].x = norm * data[1];
 	
 		for(int i=N, ii=data.length; --i > 0; ) {
-			fdata[i].x = norm * data[--ii];
-			fdata[i].y = norm * data[--ii];
+			final Complex P = fdata[i];
+			P.y = norm * data[--ii];
+			P.x = norm * data[--ii];
 		}
 	}
 
@@ -201,8 +202,9 @@ public class FFT {
 		fdata[N].x = norm * data[1];
 	
 		for(int i=N, ii=data.length; --i > 0; ) {
-			fdata[i].x = norm * data[--ii];
-			fdata[i].y = norm * data[--ii];
+			final Complex P = fdata[i];
+			P.y = norm * data[--ii];
+			P.x = norm * data[--ii];
 		}
 	}
 
@@ -233,8 +235,9 @@ public class FFT {
 		data[1] = fdata[N].x;
 	
 		for(int i=N, ii=data.length; --i > 0; ) {
-			data[--ii] = fdata[i].x;
-			data[--ii] = fdata[i].y;
+			final Complex P = fdata[i];
+			data[--ii] = P.y;
+			data[--ii] = P.x;
 		}
 	
 		powerRealTransform(data, false);
@@ -247,8 +250,9 @@ public class FFT {
 		data[1] = (float) fdata[N].x;
 	
 		for(int i=N, ii=data.length; --i > 0; ) {
-			data[--ii] = (float) fdata[i].x;
-			data[--ii] = (float) fdata[i].y;
+			final Complex P = fdata[i];
+			data[--ii] = (float) P.y;
+			data[--ii] = (float) P.x;
 		}
 	
 		powerRealTransform(data, false);
@@ -438,8 +442,7 @@ public class FFT {
 		}
 	}
 
-	// TODO -- parallel processing within enclosing class...
-	// TODO -- optimize further...
+
 	public static void bitReverse(final double[] data) {
 		for(int i=0, j=0; i<data.length; i+=2) {
 			if(j > i) {	
@@ -455,6 +458,8 @@ public class FFT {
 			j += m;
 		}
 	}
+	
+
 
 	public static void bitReverse(final float[] data) {
 		for(int i=0, j=0; i<data.length; i+=2) {
@@ -472,6 +477,7 @@ public class FFT {
 		}
 	}
 
+	
 	public static void bitReverse(final Complex[] data) {
 		Complex temp = null;
 		final int halfLength = data.length >> 1;
@@ -487,12 +493,26 @@ public class FFT {
 		}	
 		
 	}
-
+	
+	/* Alternative bitreverse actually moves data around...
+	public static void bitReverse(final Complex[] data) {
+		Complex temp = new Complex();
+		final int halfLength = data.length >> 1;
+		
+		for(int i=0, j=0; i<data.length; i++) {
+			if (j > i) { temp.copy(data[i]); data[i].copy(data[j]); data[j].copy(temp); }
+			int k = halfLength;	
+			while(k > 0 && j >= k) {
+				j -= k;
+				k >>= 1;
+			}
+			j += k;
+		}	
+		
+	}
+	*/
+	
 	// Loosely based on the Numerical Recipes routine four1.c
-	// TODO -- Enclosing classes for customized transforms, resuing precalculated sin/cos terms...
-	// TODO -- parallel processing
-	// 			* for small block sizes (nBlocks >= nCPUs) parallel middle loop (m)
-	//          * for large blocks (nBlocks < nCPUs) parallel inner loop (i1)
 	// See also Chu, E: Computation Oriented Parallel FFT Algorithms (COPF)
 	public static void powerTransform(final double data[], final boolean isForward) {
 		bitReverse(data);
@@ -502,7 +522,7 @@ public class FFT {
 		final int N = data.length;
 		
 		while(blockSize < N) {
-			final int step = (blockSize << 1) - 1;
+			final int step = (blockSize << 1);
 			final double theta = sg2Pi / blockSize;
 			final double c = Math.cos(theta);
 			final double s = Math.sin(theta);
@@ -517,9 +537,27 @@ public class FFT {
 			// --> wr[N] --> wr[m' * nBlocks]
 			//
 			// - 5 ops per middle loop... <-- small gain...
+			// However lookup is slower than calculation... 
 			
 			for(int m=0; m<blockSize; m+=2) {
 				for(int i1=m; i1<N; i1+=step) {
+					int i2 = i1 + blockSize;
+					
+					final double d1r = data[i1];
+					final double d1i = data[++i1];
+					
+					final double d2r = data[i2];
+					final double d2i = data[++i2];
+					
+					final double xr = wr * d2r - wi * d2i;
+					final double xi = wr * d2i + wi * d2r;
+					
+					data[i2] = d1i - xi;
+					data[--i2] = d1r - xr;
+					
+					data[i1] += xi;
+					data[--i1] += xr;
+					/*
 					final int i2 = i1 + blockSize;
 					
 					final double d2r = data[i2];
@@ -532,6 +570,7 @@ public class FFT {
 					x = wr * d2i + wi * d2r;
 					data[i2+1] = data[++i1] - x;
 					data[i1] += x;
+					*/
 				}
 				final double temp = wr;
 				wr = temp * c - wi * s;
@@ -542,6 +581,8 @@ public class FFT {
 		}
 	}
 
+	
+	
 	public static void powerTransform(final float[] data, final boolean isForward) {
 		bitReverse(data);
 		
@@ -550,7 +591,7 @@ public class FFT {
 		final int N = data.length;
 		
 		while(blockSize < N) {
-			final int step = (blockSize << 1) - 1;
+			final int step = (blockSize << 1);
 			final double theta = sg2Pi / blockSize;
 			final double c = Math.cos(theta);
 			final double s = Math.sin(theta);
@@ -563,18 +604,22 @@ public class FFT {
 				final float fwi = (float) wi;
 				
 				for(int i1=m; i1<N; i1+=step) {
-					final int i2 = i1 + blockSize;
+					int i2 = i1 + blockSize;
+					
+					final float d1r = data[i1];
+					final float d1i = data[++i1];
 					
 					final float d2r = data[i2];
-					final float d2i = data[i2+1];
+					final float d2i = data[++i2];
 					
-					float x = fwr * d2r - fwi * d2i;
-					data[i2] = data[i1] - x;
-					data[i1] += x;
+					final float xr = fwr * d2r - fwi * d2i;
+					final float xi = fwr * d2i + fwi * d2r;
 					
-					x = fwr * d2i + fwi * d2r;
-					data[i2+1] = data[++i1] - x;
-					data[i1] += x;
+					data[i2] = d1i - xi;
+					data[--i2] = d1r - xr;
+					
+					data[i1] += xi;
+					data[--i1] += xr;
 				}
 				final double temp = wr;
 				wr = temp * c - wi * s;
@@ -606,8 +651,8 @@ public class FFT {
 	
 			for(int k=0; k<blockSize; k++) {
 				for(int i=k; i<N; i+=iStep) {
-					w.omegaFFT(data[i], data[i+blockSize]);
-					
+					w.mergeFFT(data[i], data[i+blockSize]);
+			
 					/*
 					final Complex di = data[i];
 					final Complex dj = data[i+blockSize];
@@ -627,10 +672,9 @@ public class FFT {
 			Thread.yield();
 		}
 	}
+	
 
 	// Loosely based on the Numberical Recipes routine realft.c
-	// TODO -- Enclosing classes with precalculated transform angles
-	// TODO -- parallel processing...
 	public static void powerRealTransform(final float data[], final boolean forward) {
 		if(forward) powerTransform(data, true);
 		
@@ -648,11 +692,14 @@ public class FFT {
 		for(int r1=2, r2=data.length-2; r1<N; r1+=2, r2-=2) {
 			final int i1 = r1 + 1;
 			final int i2 = r2 + 1;
-	
+			
+			final float fwr = (float) wr;
+			final float fwi = (float) wi;
+			
 			float hr = sh * (data[i1] + data[i2]);
 			float hi = sh * (data[r2] - data[r1]);
-			final float r = (float) (wr * hr - wi * hi);
-			final float i = (float) (wr * hi + wi * hr);
+			final float r = fwr * hr - fwi * hi;
+			final float i = fwr * hi + fwi * hr;
 	
 			hr = uh * (data[r1] + data[r2]);
 			hi = uh * (data[i1] - data[i2]);
@@ -750,119 +797,5 @@ public class FFT {
 	
 	public static final boolean FORWARD = true;
 	public static final boolean BACKWARD = true;
-	
-	public class Float {
-		private float[] data;
-		private float[] wr, wi;
-	
-		public void setData(float[] data) {
-			// TODO
-			
-		}
-		
-		public void calcFactors() {
-			int blockSize = 2;
-			final int N = data.length;
-			
-			final double theta = Constant.twoPI / N;
-			final double c = Math.cos(theta);
-			final double s = Math.sin(theta);
-				
-			double dwr = 1.0;
-			double dwi = 0.0;
-			
-			for(int i=0; i < N; i++) {
-				wr[i] = (float) dwr;
-				wi[i] = (float) dwi;
-				
-				final double temp = dwr;
-				dwr = temp * c - dwi * s;
-				dwi = dwi * c + temp * s;
-			}
-		}
-		
-		public void powerTransform(final boolean isForward) {
-			bitReverse(data);
-			
-			int blockSize = 2;
-			final float s = (isForward ? 1.0F : -1.0F);		
-			final int N = data.length;
-			
-			while(blockSize < N) {
-				final int step = (blockSize << 1) - 1;
-				int hnBlocks = (N / blockSize) >> 1;
-				
-				for(int m=0; m<blockSize; m+=2) for(int i1=m; i1<N; i1+=step) {
-					final int i2 = i1 + blockSize;
-					final int n = i1 * hnBlocks;
-					final float fwr = wr[n];
-					final float fwi = s * wi[n];
-
-					final float d2r = data[i2];
-					final float d2i = data[i2+1];
-
-					float x = fwr * d2r - fwi * d2i;
-					data[i2] = data[i1] - x;
-					data[i1] += x;
-
-					x = fwr * d2i + fwi * d2r;
-					data[i2+1] = data[++i1] - x;
-					data[i1] += x;
-				}
-				blockSize <<= 1;
-				Thread.yield();
-			}
-		}
-	}
-	
-	class BlockTask extends Thread implements Cloneable {
-		int index;
-		int threads;
-		
-		// These are initialized by Constructor...
-		private float[] data, wr, wi;
-		private float s;				// sign of transform direction...
-		private int N, blockSize;
-	
-		private int iBlock, nBlocks, hnBlocks, blockStep;
-			
-		private float fwr, fwi;
-		
-		public void setBlockSize(int size) {
-			this.blockSize = size;
-			blockStep = (blockSize << 1) - 1;
-			nBlocks = N / blockSize;
-			hnBlocks = nBlocks >> 1;
-			iBlock = -1;
-		}
-		
-		public void process(int i) {
-			setBlock(i / blockSize);
-			processBlockEntry(i % blockSize);
-		}
-		
-		private void setBlock(final int m) {
-			if(iBlock == m) return;
-			
-			final int n = m * hnBlocks;
-			fwr = wr[n];
-			fwi = s * wi[n];
-			iBlock = m;
-		}
-		
-		private void processBlockEntry(int i1) {
-			final int i2 = i1 + blockSize;
-			final float d2r = data[i2];
-			final float d2i = data[i2+1];
-
-			float x = fwr * d2r - fwi * d2i;
-			data[i2] = data[i1] - x;
-			data[i1] += x;
-
-			x = fwr * d2i + fwi * d2r;
-			data[i2+1] = data[++i1] - x;
-			data[i1] += x;
-		}		
-	}
 	
 }

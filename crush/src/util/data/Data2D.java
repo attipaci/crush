@@ -23,25 +23,47 @@
 
 package util.data;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
-import java.util.Vector;
+
+import crush.CRUSH;
+
+import nom.tam.fits.BasicHDU;
+import nom.tam.fits.Fits;
+import nom.tam.fits.FitsDate;
+import nom.tam.fits.FitsException;
+import nom.tam.fits.FitsFactory;
+import nom.tam.fits.Header;
+import nom.tam.fits.HeaderCard;
+import nom.tam.fits.HeaderCardException;
+import nom.tam.fits.ImageHDU;
+import nom.tam.util.BufferedDataOutputStream;
+import nom.tam.util.Cursor;
 
 import util.Range;
 import util.Unit;
 import util.Util;
 import util.Vector2D;
+import util.Parallel;
 
-public class Data2D implements Cloneable {
+public class Data2D extends Parallel implements Cloneable {
 	private double[][] data;
 	private int[][] flag;
 	private int parallelism = Runtime.getRuntime().availableProcessors();
 	
 	public Unit unit = Unit.unity;
-	public String contentType = "";
+	public String contentType = UNDEFINED;
 	public int interpolationType = BICUBIC_SPLINE;
 	public boolean verbose = false;
 	
+	public Header header;
+	
+	public String name = UNDEFINED;
+	public String fileName;
+	public String creator = "CRUSH " + CRUSH.getFullVersion();
 		
 	public Data2D() {
 		Locale.setDefault(Locale.US);
@@ -114,6 +136,8 @@ public class Data2D implements Cloneable {
 	
 	public void noParallel() { parallelism = 1; }
 	
+	public int getParallel() { return parallelism; }
+	
 	
 	// TODO 
 	// It may be practical to have these methods so more sophisticated algorithms can work on these
@@ -162,7 +186,7 @@ public class Data2D implements Cloneable {
 		
 		new Task<Void>() {
 			@Override
-			public void processIndex(int i) { copy(image, i); }
+			public void processX(int i) { copy(image, i); }
 			@Override
 			public void process(int i, int j) {}
 		}.process();	
@@ -177,16 +201,15 @@ public class Data2D implements Cloneable {
 		new Task<Void>() {
 			final int sizeY = sizeY();
 			@Override
-			public void processIndex(int i) { System.arraycopy(data[i], 0, dst[i], 0, sizeY); }
+			public void processX(int i) { System.arraycopy(data[i], 0, dst[i], 0, sizeY); }
 			@Override
 			public void process(int i, int j) {}
 		}.process();	
 	}
 	
-	public void setImage(Data2D image) {
-		data = image.data;
-		flag = image.flag;		
-	}
+	
+	
+	
 	
 	public final int sizeX() { return data.length; }
 	
@@ -198,7 +221,7 @@ public class Data2D implements Cloneable {
 		
 		new Task<Void>() {
 			@Override
-			public void processIndex(int i) { Arrays.fill(flag[i], 1); }
+			public void processX(int i) { Arrays.fill(flag[i], 1); }
 			@Override
 			public void process(int i, int j) {}
 		}.process();
@@ -212,7 +235,7 @@ public class Data2D implements Cloneable {
 		else {
 			new Task<Void>() {
 				@Override
-				public void processIndex(int i) { Arrays.fill(flag[i], value); }
+				public void processX(int i) { Arrays.fill(flag[i], value); }
 				@Override
 				public void process(int i, int j) {}
 			}.process();	
@@ -224,13 +247,18 @@ public class Data2D implements Cloneable {
 		else {
 			new Task<Void>() {
 				@Override
-				public void processIndex(int i) { Arrays.fill(data[i], value); }
+				public void processX(int i) { Arrays.fill(data[i], value); }
 				@Override
 				public void process(int i, int j) {}
 			}.process();	
 		}
 	}
 
+	
+	public void setImage(Data2D image) {
+		data = image.data;
+		flag = image.flag;
+	}
 	
 	public void addImage(final double[][] image, final double scale) {
 		new Task<Void>() {
@@ -378,41 +406,28 @@ public class Data2D implements Cloneable {
 		
 	// Performs a bicubic spline interpolation...
 	public double splineAt(final double ic, final double jc, InterpolatorData ipolData) {	
-		final double[] ax = ipolData.splineX.coeffs;
-		final double[] ay = ipolData.splineY.coeffs;
 		
-		final int i0 = (int)Math.floor(ic-1.0);
-		final int fromi = Math.max(0, i0);
-		final int toi = Math.min(sizeX(), i0+4);
+		ipolData.centerOn(ic, jc);
 		
-		// Calculate the spline coefficients (as necessary)...
-		if(ipolData.ic != ic) for(int i=toi; --i >= fromi; ) {
-			final double dx = Math.abs(i - ic);
-			ax[i-i0] = dx > 1.0 ? 
-					((-0.5 * dx + 2.5) * dx - 4.0) * dx + 2.0 : (1.5 * dx - 2.5) * dx * dx + 1.0;
-			ipolData.ic = ic;
-		}
-	
-		final int j0 = (int)Math.floor(jc-1.0);
-		final int fromj = Math.max(0, j0);
-		final int toj = Math.min(sizeY(), j0+4);
+		final SplineCoeffs splineX = ipolData.splineX;
+		final SplineCoeffs splineY = ipolData.splineY;
+			
+		final int fromi = Math.max(0, splineX.minIndex());
+		final int toi = Math.min(sizeX(), splineX.maxIndex());
 		
-		// Calculate the spline coefficients (as necessary)...
-		if(ipolData.jc != jc) for(int j=toj; --j >= fromj; ) {
-			final double dy = Math.abs(j - jc);
-			ay[j-j0] = dy > 1.0 ? 
-					((-0.5 * dy + 2.5) * dy - 4.0) * dy + 2.0 : (1.5 * dy - 2.5) * dy * dy + 1.0;
-			ipolData.jc = jc;
-		}
+		final int fromj = Math.max(0, splineY.minIndex());
+		final int toj = Math.min(sizeY(), splineY.maxIndex());
 		
 		// Do the spline convolution...
 		double sum = 0.0, sumw = 0.0;
-		for(int i=toi; --i >= fromi; ) for(int j=toj; --j >= fromj; ) if(flag[i][j] == 0) {
-			final double w = ax[i-i0]*ay[j-j0];
-			sum += w * data[i][j];
-			sumw += w;
+		for(int i=toi; --i >= fromi; ) {
+			final double ax = splineX.valueAt(i);
+			for(int j=toj; --j >= fromj; ) if(flag[i][j] == 0) {
+				final double w = ax * splineY.valueAt(j);
+				sum += w * data[i][j];
+				sumw += w;
+			}
 		}
-		
 		
 		return sum / sumw;
 	}
@@ -429,15 +444,13 @@ public class Data2D implements Cloneable {
 		}
 		
 		final Data2D antialiased = from;
-		
+
 		// Interpolate to new array...
 		new InterpolatingTask() {
 			@Override
 			public void process(int i, int j) {
-				if(flag[i][j]==0) {		
-					data[i][j] = antialiased.valueAtIndex(i*stretch.x, j*stretch.y, getInterpolatorData());
-					if(Double.isNaN(data[i][j])) flag[i][j] = 1;
-				}
+				data[i][j] = antialiased.valueAtIndex(i*stretch.x, j*stretch.y, getInterpolatorData());
+				flag[i][j] = Double.isNaN(data[i][j]) ?  1 : 0;
 			}
 		}.process();
 		
@@ -536,7 +549,7 @@ public class Data2D implements Cloneable {
 			@Override
 			public Double getResult() {
 				double globalMin = Double.POSITIVE_INFINITY;
-				for(Task<Double> task : parent.tasks) if(task.getPartialResult() < globalMin) globalMin = task.getPartialResult();
+				for(Process<Double> task : getWorkers()) if(task.getPartialResult() < globalMin) globalMin = task.getPartialResult();
 				return globalMin;
 			}
 		};
@@ -556,7 +569,7 @@ public class Data2D implements Cloneable {
 			@Override
 			public Double getResult() {
 				double globalMax = Double.NEGATIVE_INFINITY;
-				for(Task<Double> task : parent.tasks) if(task.getPartialResult() > globalMax) globalMax = task.getPartialResult();
+				for(Process<Double> task : getWorkers()) if(task.getPartialResult() > globalMax) globalMax = task.getPartialResult();
 				return globalMax;
 			}
 		};
@@ -581,7 +594,7 @@ public class Data2D implements Cloneable {
 			@Override
 			public Range getResult() {
 				Range globalRange = new Range();
-				for(Task<Range> task : parent.tasks) globalRange.include(task.getPartialResult());
+				for(Process<Range> task : getWorkers()) globalRange.include(task.getPartialResult());
 				return globalRange;
 			}
 		};
@@ -609,7 +622,7 @@ public class Data2D implements Cloneable {
 			public Index2D getResult() {
 				double globalPeak = Double.NEGATIVE_INFINITY;
 				Index2D globalIndex = null;
-				for(Task<Index2D> task : parent.tasks) {
+				for(Process<Index2D> task : getWorkers()) {
 					Index2D partial = task.getPartialResult();
 					if(partial != null) if(data[partial.i][partial.j] > globalPeak) {
 						globalIndex = partial;
@@ -644,7 +657,7 @@ public class Data2D implements Cloneable {
 			public Index2D getResult() {
 				double globalDev = 0.0;
 				Index2D globalIndex = null;
-				for(Task<Index2D> task : parent.tasks) {
+				for(Process<Index2D> task : getWorkers()) {
 					Index2D partial = task.getPartialResult();
 					if(partial == null) continue;
 					final double value = Math.abs(data[partial.i][partial.j]);
@@ -760,7 +773,7 @@ public class Data2D implements Cloneable {
 			@Override
 			public Integer getResult() {
 				int globalCount = 0;
-				for(Task<Integer> task : parent.tasks) globalCount += task.getPartialResult();
+				for(Process<Integer> task : getWorkers()) globalCount += task.getPartialResult();
 				return globalCount;
 			}
 		};
@@ -911,7 +924,6 @@ public class Data2D implements Cloneable {
 		if(beamw != null) {
 			weightImage = (Data2D) signalImage.clone();
 			weightImage.data = new double[nx][ny];
-			weightImage.interpolationType = interpolationType;
 		}
 			
 		for(int i=0, i1=0; i<sizeX(); i+=stepX, i1++) for(int j=0, j1=0; j<sizeY(); j+=stepY, j1++) {
@@ -945,7 +957,7 @@ public class Data2D implements Cloneable {
 		
 		return convolved;
 	}
-	
+		
 	
 	// Beam fitting: I' = C * sum(wBI) / sum(wB2)
 	// I(x) = I -> I' = I -> C = sum(wB2) / sum(wB)
@@ -970,6 +982,8 @@ public class Data2D implements Cloneable {
 		result.value = sum / sumw;
 		result.weight = sumw;
 	}
+	
+	
 	public int[][] getSkip(final double blankingValue) {
 		final int[][] skip = (int[][]) copyOf(getFlag());
 		
@@ -1017,119 +1031,234 @@ public class Data2D implements Cloneable {
 		return bin;
 	}
 	
-	protected class Parallel<ReturnType> {
-		/**
-		 * 
-		 */
-		int maxThreads;
-		public Vector<Task<ReturnType>> tasks = new Vector<Task<ReturnType>>();
+	
+	
+	public final void read(String fileName) throws Exception {	
+		read(fileName, 0);
+	}
 		
-		public Parallel(Task<ReturnType> task) {
-			this(task, parallelism);
-			//this(task, 1);
+	public final void read(String fileName, int hduIndex) throws Exception {	
+		read(findFits(fileName));
+	}
+	
+	public void read(Fits fits) throws Exception {
+		read(fits, 0);
+	}
+	
+	public final void read(Fits fits, int hduIndex) throws Exception {
+		read(fits.getHDU(hduIndex));
+	}
+	
+	public void read(BasicHDU hdu) throws Exception {
+		parseHeader(hdu.getHeader());
+	}
+	
+	public void readData(BasicHDU hdu) throws FitsException {
+		int sizeX = header.getIntValue("NAXIS1");
+		int sizeY = header.getIntValue("NAXIS2");
+		setSize(sizeX, sizeY);
+		setImage(hdu);		
+	}
+	
+	public void parseHeader(Header header) throws Exception {
+		this.header = header;
+		
+		creator = header.getStringValue("CREATOR");
+		if(creator == null) creator = UNDEFINED;
+	
+		name = header.getStringValue("OBJECT");
+		if(name == null) name = UNDEFINED;
+	}
+		
+	public Fits createFits() throws HeaderCardException, FitsException, IOException {
+		FitsFactory.setUseHierarch(true);
+		Fits fits = new Fits();	
+
+		fits.addHDU(createHDU());
+		editHeader(fits);
+	
+		return fits;
+	}
+
+	public Fits findFits(String name) throws FitsException, IOException {
+		FitsFactory.setUseHierarch(true);
+		Fits fits;
+	
+		try { 
+			fits = new Fits(new File(name)); 
+			fileName = name;
+		}
+		catch(Exception e) { 
+			fileName = CRUSH.workPath + name;
+			fits = new Fits(new File(fileName)); 
 		}
 		
-		public Parallel(Task<ReturnType> task, int maxThreads) {
-			this.maxThreads = maxThreads;
+		return fits;
+	}
+	
+
+	public void setImage(BasicHDU HDU) throws FitsException {		
+		Object image = HDU.getData().getData();
+	
+		try {
+			final float[][] fdata = (float[][]) image;
 			
-			tasks.ensureCapacity(maxThreads);
-			task.setOwner(this);
-			
-			// Use only copies of the task for calculation, leaving the template
-			// task in its original state, s.t. it may be reused again...
-			for(int i=0; i<maxThreads; i++) {
-				@SuppressWarnings("unchecked")
-				Task<ReturnType> t = (Task<ReturnType>) task.clone();
-				t.setIndex(i);
-				t.init();
-				tasks.add(t);
-			}
-		}
-		
-		public int size() { return tasks.size(); }
-		
-		public synchronized void process() {
-			for(Task<?> task : tasks) task.start();
-			
-			for(Task<?> task : tasks) {
-				try { 
-					task.join(); 
-					if(task.isAlive) {
-						System.err.println("WARNING! Premature conclusion of parallel image processing.");
-						System.err.println("         Please notify Attila Kovacs <kovacs@astro.umn.edu>.");
-						new Exception().printStackTrace();
+			new Task<Void>() {
+				@Override
+				public void process(int i, int j) {
+					if(!Float.isNaN(fdata[j][i])) {
+						setValue(i, j, fdata[j][i] * unit.value);	    
+						unflag(i, j);
 					}
 				}
-				catch(InterruptedException e) { 
-					System.err.println("WARNING! Parallel image processing was unexpectedly interrupted.");
-					System.err.println("         Please notify Attila Kovacs <kovacs@astro.umn.edu>.");
-					new Exception().printStackTrace();
-				}
-				
-			}
+			}.process();
+		}
+		catch(ClassCastException e) {
+			final double[][] ddata = (double[][]) image;
 			
-			for(Task<?> task : tasks) if(task.isAlive) System.err.println("!!! Alive...");
+			new Task<Void>() {
+				@Override
+				public void process(int i, int j) {
+					if(!Double.isNaN(ddata[j][i])) {
+						setValue(i, j, ddata[j][i] * unit.value);	    
+						unflag(i, j);
+					}
+				}
+			}.process();
 		}
 	}
 	
-	public abstract class Task<ReturnType> extends Thread implements Cloneable {			
-		/**
-		 * 
-		 */
+	public void write() throws HeaderCardException, FitsException, IOException {
+		write(fileName);
+	}
+
+	public void write(String name) throws HeaderCardException, FitsException, IOException {
+		Fits fits = createFits();	
+		BufferedDataOutputStream file = new BufferedDataOutputStream(new FileOutputStream(name));
+		fits.write(file);	
+		System.err.println(" Written " + name);
+	}
+	
+	public final void editHeader(Fits fits) throws HeaderCardException, FitsException, IOException {
+
+		nom.tam.util.Cursor cursor = fits.getHDU(0).getHeader().iterator();
+
+		// Go to the end of the header cards...
+		while(cursor.hasNext()) cursor.next();
+		editHeader(cursor);
+	}
 		
-		private static final long serialVersionUID = -3973614679104705385L;
-		public Parallel<ReturnType> parent;
+	// TODO what to do with CREATOR/CRUSHVER
+	// TODO what about duplicate keywords (that's a cursor issue...)
+	// ... Maybe check for duplicates...
+	// TODO copy over existing header keys (non-conflicting...) 
+	public void editHeader(Cursor cursor) throws HeaderCardException, FitsException, IOException {
+		cursor.add(new HeaderCard("OBJECT", name, "The source name."));
+		cursor.add(new HeaderCard("EXTNAME", contentType, "The type of data contained in this HDU"));
+		cursor.add(new HeaderCard("DATE", FitsDate.getFitsDateString(), "Time-stamp of creation."));
+		cursor.add(new HeaderCard("CREATOR", creator, "The software that created the image."));	
+			
+		Range range = getRange();
+
+		cursor.add(new HeaderCard("DATAMIN", range.min / unit.value, "The lowest value in the image"));
+		cursor.add(new HeaderCard("DATAMAX", range.max / unit.value, "The highest value in the image"));
+
+		cursor.add(new HeaderCard("BZERO", 0.0, "Zeroing level of the image data"));
+		cursor.add(new HeaderCard("BSCALE", 1.0, "Scaling of the image data"));
+		cursor.add(new HeaderCard("BUNIT", unit.name, "The image data unit."));
 		
-		boolean isAlive = false;
-		int offset;
+		//cursor.add(new HeaderCard("ORIGIN", "Caltech", "California Institute of Technology"));
+	}
+
+	public ImageHDU createHDU() throws HeaderCardException, FitsException {
+		final float[][] fitsImage = new float[sizeY()][sizeX()];
+		
+		new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(isUnflagged(i, j)) fitsImage[j][i] = (float) (getValue(i, j) / unit.value);
+				else fitsImage[j][i] = Float.NaN;
+			}
+		}.process();
+		
+		ImageHDU hdu = (ImageHDU)Fits.makeHDU(fitsImage);
+		
+		return hdu;
+	}
+	
+	public void addLongHierarchKey(Cursor cursor, String key, String value) throws FitsException, HeaderCardException {
+		addLongHierarchKey(cursor, key, 0, value);
+	}
+
+	public void addLongHierarchKey(Cursor cursor, String key, int part, String value) throws FitsException, HeaderCardException {
+		if(value.length() == 0) value = "true";
+
+		String alt = part > 0 ? "." + part : "";
+
+		int available = 69 - (key.length() + alt.length() + 3);
+
+		if(value.length() < available) cursor.add(new HeaderCard("HIERARCH." + key + alt, value, null));
+		else { 
+			if(alt.length() == 0) {
+				part = 1;
+				alt = "." + part;
+				available -= 2;
+			}
+
+			cursor.add(new HeaderCard("HIERARCH." + key + alt, value.substring(0, available), null));
+			addLongHierarchKey(cursor, key, (char)(part+1), value.substring(available)); 
+		}
+	}
+	
+	
+
+	public void setKey(String key, String value) throws HeaderCardException {
+		String comment = header.containsKey(key) ? header.findCard(key).getComment() : "Set bu user.";
+
+		// Try add as boolean, int or double -- fall back to String...
+		try{ header.addValue(key, Util.parseBoolean(value), comment); }
+		catch(NumberFormatException e1) { 
+			try{ header.addValue(key, Integer.parseInt(value), comment); }
+			catch(NumberFormatException e2) {
+				try{ header.addValue(key, Double.parseDouble(value), comment); }
+				catch(NumberFormatException e3) { header.addValue(key, value, comment); }
+			}
+		}
+	}
+
+	public void printHeader() {
+		header.dumpHeader(System.out);
+	}  
+	
+	
+	
+	public abstract class Task<ReturnType> extends Process<ReturnType> {			
+		
+		@Override
+		public void process(int threadCount) {
+			try { super.process(threadCount); }
+			catch(Exception e) { e.printStackTrace(); }
+		}
 		
 		public void process() {
-			Parallel<ReturnType> parallel = new Parallel<ReturnType>(this);
-			parallel.process();
+			process(parallelism);
 		}
 		
 		@Override
-		public Object clone() {
-			try { return super.clone(); }
-			catch(CloneNotSupportedException e) { return null; }
-		}
-		
-		public void init() {}
-		
-		public void setOwner(Parallel<ReturnType> p) {
-			this.parent = p;
-		}
-		
-		public void setIndex(int index) {
-			if(isAlive) throw new IllegalThreadStateException("Cannot change task index while running.");
-			this.offset = index;
-		}
-		
-		@Override
-		public void run() {
-			isAlive = true;
-			int step = parent.size();
+		public void processIndex(int index, int threadCount) {
 			final int sizeX = sizeX();
-			for(int i=offset; i<sizeX; i += step) {
-				processIndex(i);
+			for(int i=index; i<sizeX; i += threadCount) {
+				processX(i);
 				Thread.yield();
 			}
-			isAlive = false;
 		}
 	
-		public void processIndex(int i) {
+		public void processX(int i) {
 			for(int j=sizeY(); --j >= 0; ) process(i, j);
 		}
 		
 		public abstract void process(int i, int j);
 		
-		public ReturnType getPartialResult() {
-			return null;
-		}
-		
-		public ReturnType getResult() {
-			return null;
-		}	
 	}
 	
 	
@@ -1137,7 +1266,7 @@ public class Data2D implements Cloneable {
 		@Override
 		public WeightedPoint getResult() {
 			WeightedPoint ave = new WeightedPoint();
-			for(Task<WeightedPoint> task : parent.tasks) {
+			for(Process<WeightedPoint> task : getWorkers()) {
 				WeightedPoint partial = task.getPartialResult();
 				ave.value += partial.value;
 				ave.weight += partial.weight;
@@ -1155,20 +1284,19 @@ public class Data2D implements Cloneable {
 	}	
 	
 	
-	public class InterpolatorData {
-		double ic = Double.NaN, jc = Double.NaN;
+	public static class InterpolatorData {
 		SplineCoeffs splineX, splineY;
 		
 		public InterpolatorData() {
-			refresh();
+			splineX = new SplineCoeffs();
+			splineY = new SplineCoeffs();
 		}
 		
-		public void refresh() {
-			if(interpolationType == BICUBIC_SPLINE) {
-				if(splineX == null) splineX = new SplineCoeffs();
-				if(splineY == null) splineY = new SplineCoeffs();
-			}
-		}	
+		public void centerOn(double deltax, double deltay) {
+			splineX.centerOn(deltax);
+			splineY.centerOn(deltay);
+		}
+
 	}
 
 	
@@ -1195,6 +1323,7 @@ public class Data2D implements Cloneable {
 	// a = sqrt(2 pi) sigma
 	//   = sqrt(2 pi) fwhm / 2.35
 	public static double fwhm2size = Math.sqrt(2.0 * Math.PI) / Util.sigmasInFWHM;
+	public static String UNDEFINED = "<undefined>";
 	
 	public final static int NEAREST_NEIGHBOR = 0;
 	public final static int BILINEAR = 1;

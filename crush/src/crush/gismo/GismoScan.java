@@ -66,7 +66,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	}
 
 	@Override
-	public void read(String scanDescriptor, boolean readFully) throws HeaderCardException, FitsException , FileNotFoundException{
+	public void read(String scanDescriptor, boolean readFully) throws Exception {
 		read(getFits(scanDescriptor), readFully);
 	}
 
@@ -77,8 +77,6 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		double PA = 0.5 * (getFirstIntegration().getFirstFrame().getParallacticAngle() + getLastIntegration().getLastFrame().getParallacticAngle());
 		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");	
 	}
-	
-
 	
 	@Override
 	public Vector2D getPointingCorrection(Configurator option) {
@@ -197,7 +195,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		return new Fits(getFile(scanDescriptor), isCompressed);
 	}
 	
-	protected void read(Fits fits, boolean readFully) throws IllegalStateException, HeaderCardException, FitsException {
+	protected void read(Fits fits, boolean readFully) throws Exception {
 		// Read in entire FITS file
 		BasicHDU[] HDU = fits.read();
 

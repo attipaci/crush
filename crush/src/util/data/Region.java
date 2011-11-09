@@ -26,7 +26,6 @@ package util.data;
 
 import java.text.*;
 
-
 import util.CoordinatePair;
 
 public abstract class Region<CoordinateType extends CoordinatePair> implements Cloneable {

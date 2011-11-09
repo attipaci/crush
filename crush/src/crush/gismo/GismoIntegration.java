@@ -31,7 +31,6 @@ import util.astro.EquatorialCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.astro.JulianEpoch;
 import util.astro.Precession;
-import crush.fits.HDUManager;
 import crush.fits.HDUReader;
 
 import nom.tam.fits.*;
@@ -67,7 +66,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		return new GismoFrame((GismoScan) scan);
 	}
 	
-	protected void read(BinaryTableHDU hdu) throws IllegalStateException, HeaderCardException, FitsException {
+	protected void read(BinaryTableHDU hdu) throws Exception {
 		int records = hdu.getAxes()[0];
 
 		System.err.println(" Processing scan data:");		
@@ -82,15 +81,17 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		clear();
 		ensureCapacity(records);
 		
-		new HDUManager(this).read(new GismoReader(hdu));
+		new GismoReader(hdu).read();
 	}
 		
 	class GismoReader extends HDUReader {	
-		float[] DAC, RA, DEC, AZ, EL, AZE, ELE, LST;
-		double[] MJD;
-		int[] NS, SN, CAL;
-		byte[] SDI;
-		int channels;
+		private float[] DAC, RA, DEC, AZ, EL, AZE, ELE, LST;
+		private double[] MJD;
+		private int[] NS, SN, CAL;
+		private byte[] SDI;
+		private int channels;
+		
+		private final GismoScan gismoScan = (GismoScan) scan;
 		
 		public GismoReader(BinaryTableHDU hdu) throws FitsException {
 			super(hdu);
@@ -137,79 +138,85 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		}
 		
 		@Override
-		public void read() throws FitsException {
-			final GismoScan gismoScan = (GismoScan) scan;
-			
-			final HorizontalCoordinates trackingCenter = new HorizontalCoordinates();
-			final EquatorialCoordinates apparent = new EquatorialCoordinates();
-			Precession catalogToApparent = null;
+		public Reader getReader() {
+			return new Reader() {
+				private HorizontalCoordinates trackingCenter;
+				private EquatorialCoordinates apparent;
+				private Precession catalogToApparent;
 
-			for(int i=from; i<to; i++) {
-				if(isInterrupted()) break;
-				
-				final GismoFrame frame = new GismoFrame(gismoScan);
-
-				//final double UT = (((double[]) row[iUT])[0] * Unit.sec) % Unit.day;
-				frame.MJD = MJD[i];
-				frame.samples = NS[i];
-				
-				for(int bit=0, from=6*i; bit<6; bit++) if(SDI[from+bit] > 0) frame.digitalFlag |= 1 << bit;
-
-				//frame.diodeT = (float[]) row[iDT];
-				//frame.resistorT = (float[]) row[iRT];
-				//frame.diodeV = (float[]) row[iDV];
-
-				//frame.parseData((float[][]) row[iDAC]);
-				frame.parseData(DAC, i*channels, channels);
-
-				// This is the tracking center only...
-				// It's in the same epoch as the scan (checked!)
-				apparent.setLongitude(RA[i] * Unit.hourAngle);
-				apparent.setLatitude(DEC[i] * Unit.deg);
-				
-				if(catalogToApparent == null) {
-					CoordinateEpoch apparentEpoch = new JulianEpoch();
-					apparentEpoch.setMJD(frame.MJD);
-					catalogToApparent = new Precession(scan.equatorial.epoch, apparentEpoch);
+				@Override
+				public void init() {
+					super.init();
+					trackingCenter = new HorizontalCoordinates();
+					apparent = new EquatorialCoordinates();
 				}
-				catalogToApparent.precess(apparent);
 				
-				frame.LST = LST[i] * Unit.sec;
-
-				//frame.labviewTime = ((double[])row[iLT])[0] * Unit.sec;
-				frame.frameNumber = SN[i];
-
-				// Read the chopped position data...
-				//frame.chopperPosition.x = chop[i] * Unit.arcsec;
+				@Override
+				public void readRow(int i) {
 				
-				// Calculate the horizontal offset	
-				apparent.toHorizontal(trackingCenter, scan.site, frame.LST);
-				
-				//	frame.horizontalOffset = new Vector2D(AZO[i] * Unit.arcsec, ELO[i] * Unit.arcsec);
-				//	frame.horizontal = (HorizontalCoordinates) trackingCenter.clone();
-				//	frame.horizontal.addOffset(frame.horizontalOffset);
-				
-				frame.horizontal = new HorizontalCoordinates(
-						AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
-						EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
-				frame.horizontalOffset = frame.horizontal.getOffsetFrom(trackingCenter);
-				
-				// Add the chopper offet to the actual coordinates as well...
-				//final double chopOffset = frame.chopperPosition.x / frame.horizontal.cosLat;
-				//frame.horizontal.x += chopOffset;
-				//frame.horizontalOffset.x += chopOffset;
-					
-			    frame.calcParallacticAngle();
+					final GismoFrame frame = new GismoFrame(gismoScan);
 
-				// Force recalculation of the equatorial coordinates...
-				frame.equatorial = null;
+					//final double UT = (((double[]) row[iUT])[0] * Unit.sec) % Unit.day;
+					frame.MJD = MJD[i];
+					frame.samples = NS[i];
 
-				if(CAL != null) frame.calFlag = CAL[i];
+					for(int bit=0, from=6*i; bit<6; bit++) if(SDI[from+bit] > 0) frame.digitalFlag |= 1 << bit;
 
-				if(frame.isValid())	set(i, frame);
-				else set(i, null);	
-			}
+					//frame.diodeT = (float[]) row[iDT];
+					//frame.resistorT = (float[]) row[iRT];
+					//frame.diodeV = (float[]) row[iDV];
 
+					//frame.parseData((float[][]) row[iDAC]);
+					frame.parseData(DAC, i*channels, channels);
+
+					// This is the tracking center only...
+					// It's in the same epoch as the scan (checked!)
+					apparent.setLongitude(RA[i] * Unit.hourAngle);
+					apparent.setLatitude(DEC[i] * Unit.deg);
+
+					if(catalogToApparent == null) {
+						CoordinateEpoch apparentEpoch = new JulianEpoch();
+						apparentEpoch.setMJD(frame.MJD);
+						catalogToApparent = new Precession(scan.equatorial.epoch, apparentEpoch);
+					}
+					catalogToApparent.precess(apparent);
+
+					frame.LST = LST[i] * Unit.sec;
+
+					//frame.labviewTime = ((double[])row[iLT])[0] * Unit.sec;
+					frame.frameNumber = SN[i];
+
+					// Read the chopped position data...
+					//frame.chopperPosition.x = chop[i] * Unit.arcsec;
+
+					// Calculate the horizontal offset	
+					apparent.toHorizontal(trackingCenter, scan.site, frame.LST);
+
+					//	frame.horizontalOffset = new Vector2D(AZO[i] * Unit.arcsec, ELO[i] * Unit.arcsec);
+					//	frame.horizontal = (HorizontalCoordinates) trackingCenter.clone();
+					//	frame.horizontal.addOffset(frame.horizontalOffset);
+
+					frame.horizontal = new HorizontalCoordinates(
+							AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
+							EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
+					frame.horizontalOffset = frame.horizontal.getOffsetFrom(trackingCenter);
+
+					// Add the chopper offet to the actual coordinates as well...
+					//final double chopOffset = frame.chopperPosition.x / frame.horizontal.cosLat;
+					//frame.horizontal.x += chopOffset;
+					//frame.horizontalOffset.x += chopOffset;
+
+					frame.calcParallacticAngle();
+
+					// Force recalculation of the equatorial coordinates...
+					frame.equatorial = null;
+
+					if(CAL != null) frame.calFlag = CAL[i];
+
+					if(frame.isValid())	set(i, frame);
+					else set(i, null);	
+				}
+			};
 		}
 	}	
 

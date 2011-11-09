@@ -86,7 +86,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		}
 	}
 	
-	protected void read(Fits fits, boolean readFully) throws IllegalStateException, HeaderCardException, FitsException {
+	protected void read(Fits fits, boolean readFully) throws Exception {
 		// Read in entire FITS file		
 		BasicHDU[] HDU = fits.read();
 		
@@ -162,7 +162,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 	
 	
 	@Override
-	public void read(String scanDescriptor, boolean readFully) throws HeaderCardException, FitsException, FileNotFoundException {
+	public void read(String scanDescriptor, boolean readFully) throws Exception {
 		read(getFits(scanDescriptor), readFully);
 	}
 

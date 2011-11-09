@@ -30,6 +30,7 @@ package util.data;
 
 import java.io.*;
 import java.text.*;
+import java.util.Arrays;
 
 import util.Complex;
 import util.Util;
@@ -41,13 +42,13 @@ public final class Data {
 
 	public static void print(double[] data, DecimalFormat df) { print(data, System.out, df); }
 
-	public static void print(double[] data, PrintStream out, DecimalFormat df) {
-		for(int i=0; i<data.length; i++) out.println(df.format(data[i]));
+	public static void print(final double[] data, final PrintStream out, final NumberFormat nf) {
+		for(int i=0; i<data.length; i++) out.println(nf.format(data[i]));
 	}
 
 	// Interpret integral normalized spectrum as signal amplitudes
-	public static double[] amplitude(Complex[] data) {
-		double[] amp = new double[data.length];
+	public static double[] amplitude(final Complex[] data) {
+		final double[] amp = new double[data.length];
 		for(int i=data.length; --i >= 0; ) amp[i] = data[i].length();
 		amp[0] /= 2.0;
 		amp[amp.length - 1] /= 2.0;
@@ -55,15 +56,15 @@ public final class Data {
 	}
 
 	// Interpret integral normalized spectrum as noise amplitudes
-	public static double[] noiseAmplitude(Complex[] data) {
-		double[] amp = new double[data.length];
+	public static double[] noiseAmplitude(final Complex[] data) {
+		final double[] amp = new double[data.length];
 		for(int i=data.length; --i >= 0; ) amp[i] = data[i].length();
 		return amp;
 	}
 
 	// Interpret integral normalized spectrum as signal power
-	public static double[] norm(Complex[] data) {
-		double[] norm = new double[data.length];
+	public static double[] norm(final Complex[] data) {
+		final double[] norm = new double[data.length];
 		for(int i=data.length; --i >= 0; ) norm[i] = data[i].norm();
 		norm[0] /= 4.0;
 		norm[norm.length - 1] /= 4.0;	
@@ -71,22 +72,22 @@ public final class Data {
 	}
 
 	// Interpret integral normalized spectrum as noise power
-	public static double[] noiseNorm(Complex[] data) {
-		double[] norm = new double[data.length];
+	public static double[] noiseNorm(final Complex[] data) {
+		final double[] norm = new double[data.length];
 		for(int i=data.length; --i >= 0; ) norm[i] = data[i].norm();
 		return norm;
 	}
 
-	public static double[] real(Complex[] data) {
-		double[] real = new double[data.length];
+	public static double[] real(final Complex[] data) {
+		final double[] real = new double[data.length];
 		for(int i=data.length; --i >= 0; ) real[i] = data[i].x;
 		return real;
 	}
 
 	public static double[] re(Complex[] data) { return real(data); }
 
-	public static double[] imaginary(Complex[] data) {
-		double[] imaginary = new double[data.length];
+	public static double[] imaginary(final Complex[] data) {
+		final double[] imaginary = new double[data.length];
 		for(int i=data.length; --i >= 0; ) imaginary[i] = data[i].y;
 		return imaginary;
 	}
@@ -95,7 +96,7 @@ public final class Data {
 	public static double[] im(Complex[] data) { return imaginary(data); }
 
 	
-	public static void resample(float[] from, float[] to) {
+	public static void resample(float[] from, final float[] to) {
 		if(to.length == from.length) System.arraycopy(from, 0, to, 0, from.length);
 		
 		// Anti-alias filter as necessary...
@@ -106,7 +107,7 @@ public final class Data {
 	}
 	
 	
-	public static synchronized float valueAt(float[] data, float index) {
+	public static synchronized float valueAt(final float[] data, final float index) {
 		final int i0 = (int)Math.floor(index-1.0);
 
 		final int fromi = Math.max(0, i0);
@@ -127,7 +128,7 @@ public final class Data {
 		return sum / sumw;
 	}
 	
-	public static float[] getSmoothed(float[] data, float FWHM) {
+	public static float[] getSmoothed(final float[] data, final float FWHM) {
 		final double sigma = FWHM / Util.sigmasInFWHM;
 		final int nbeam = 1 + 2 * (int) Math.ceil(3.0 * sigma);
 		final int cbeam = nbeam / 2;
@@ -157,7 +158,7 @@ public final class Data {
 	}
 	
 	
-	public static void resample(double[] from, double[] to) {
+	public static void resample(double[] from, final double[] to) {
 		if(to.length == from.length) System.arraycopy(from, 0, to, 0, from.length);
 		
 		// Anti-alias filter as necessary...
@@ -168,7 +169,7 @@ public final class Data {
 	}
 	
 	
-	public static synchronized double valueAt(double[] data, double index) {
+	public static synchronized double valueAt(final double[] data, final double index) {
 		final int i0 = (int)Math.floor(index-1.0);
 
 		final int fromi = Math.max(0, i0);
@@ -189,7 +190,7 @@ public final class Data {
 		return sum / sumw;
 	}
 	
-	public static double[] getSmoothed(double[] data, double FWHM) {
+	public static double[] getSmoothed(final double[] data, final double FWHM) {
 		final double sigma = FWHM / Util.sigmasInFWHM;
 		final int nbeam = 1 + 2 * (int) Math.ceil(3.0 * sigma);
 		final int cbeam = nbeam / 2;
@@ -219,7 +220,7 @@ public final class Data {
 	}
 	
 	
-	public static int indexOfMax(float[] data) {
+	public static int indexOfMax(final float[] data) {
 		int index=0;
 		float max = 0.0F;
 		for(int i=data.length; --i > 0; ) if(data[i] > max) {
@@ -229,7 +230,7 @@ public final class Data {
 		return index;
 	}
 	
-	public static int indexOfMax(double[] data) {
+	public static int indexOfMax(final double[] data) {
 		int index=0;
 		double max = 0.0F;
 		for(int i=data.length; --i > 0; ) if(data[i] > max) {
@@ -239,5 +240,92 @@ public final class Data {
 		return index;
 	}
 	
+
+	public static double[] boxcar(final double[] data, final int n) {
+		final double[] smoothed = new double[data.length];
+		double sum = 0.0;
+		int pts = 0;
+
+		for(int i=n-1; --i >= 0; ) if(!Double.isNaN(data[i])) { sum += data[i]; pts++; }
+
+		for(int i=n,j=0; i<data.length; i++,j++) {	  
+			if(!Double.isNaN(data[i])) { sum += data[i]; pts++; }
+			smoothed[j] = pts > 0 ? sum / pts : Double.NaN;
+			if(!Double.isNaN(data[j])) { sum -= data[j]; pts--; }
+		}
+		
+		Arrays.fill(smoothed, data.length-n+1, data.length, Double.NaN);
 	
+		return smoothed;
+	}
+
+	
+
+	public static float[] boxcar(final float[] data, final int n) {
+		final float[] smoothed = new float[data.length];
+		double sum = 0.0;
+		int pts = 0;
+
+		for(int i=n-1; --i >= 0; ) if(!Float.isNaN(data[i])) { sum += data[i]; pts++; }
+
+		for(int i=n,j=0; i<data.length; i++,j++) {	  
+			if(!Float.isNaN(data[i])) { sum += data[i]; pts++; }
+			smoothed[j] = pts > 0 ? (float) (sum / pts) : Float.NaN;
+			if(!Float.isNaN(data[j])) { sum -= data[j]; pts--; }
+		}
+		
+		Arrays.fill(smoothed, data.length-n+1, data.length, Float.NaN);
+	
+		return smoothed;
+	}
+
+	
+	
+	public static double[] shift(final double[] data, final int n) {
+		if(n>0) {
+			for(int to=data.length-1; to >= n; to--) data[to] = data[to-n];
+			for(int i=n; --i >= 0; ) data[i] = Double.NaN;
+		}
+		else {
+			for(int from=n; from < data.length; from++) data[from-n] = data[from];
+			Arrays.fill(data, data.length-1-n, data.length, Double.NaN);
+		}
+
+		return data;
+	}
+
+
+	public static float[] shift(final float[] data, final int n) {
+		if(n>0) {
+			for(int to=data.length-1; to >= n; to--) data[to] = data[to-n];
+			for(int i=n; --i >= 0; ) data[i] = Float.NaN;
+		}
+		else {
+			for(int from=n; from < data.length; from++) data[from-n] = data[from];
+			Arrays.fill(data, data.length-1-n, data.length, Float.NaN);
+		}
+
+		return data;
+	}
+	
+
+	public static void shift(final double[] data, final double delta, final double precision) {
+		int n = (int) Math.round(1.0/precision);
+		int dN = (int) Math.round(delta/precision);
+		
+		double[] stretched = new double[n];
+		resample(data, stretched);
+		shift(stretched, dN);
+		resample(stretched, data);
+	}
+
+	public static void shift(final float[] data, final double delta, final double precision) {
+		int n = (int) Math.round(1.0/precision);
+		int dN = (int) Math.round(delta/precision);
+		
+		float[] stretched = new float[n];
+		resample(data, stretched);
+		shift(stretched, dN);
+		resample(stretched, data);
+	}
 }

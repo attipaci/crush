@@ -28,11 +28,9 @@ import java.text.*;
 import java.util.*;
 
 import crush.Instrument;
-import crush.astro.AstroMap;
 
 import util.*;
 import util.astro.CoordinateEpoch;
-import util.astro.EquatorialCoordinates;
 import util.astro.Precessing;
 import util.data.*;
 
@@ -74,7 +72,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		@SuppressWarnings("unchecked")
 		CoordinateType coords = (CoordinateType) map.getReference().clone();
 		map.getGrid().getCoords(new Vector2D(index.i, index.j), coords);
-		id = map instanceof GridSource ? ((GridSource<?>) map).sourceName : "[1]";
+		id = map instanceof GridSource ? ((GridSource<?>) map).name : "[1]";
 		setCenter(coords);
 		radius = new DataPoint(map.getImageFWHM(), Math.sqrt(map.getPixelArea()));	
 	}
@@ -92,7 +90,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	@Override
 	public DataPoint finetunePeak(GridImage<CoordinateType> image) {
 		
-		Data2D.InterpolatorData ipolData = image.new InterpolatorData();
+		Data2D.InterpolatorData ipolData = new Data2D.InterpolatorData();
 		peak = super.finetunePeak(image);
 		Vector2D centerIndex = getIndex(image.getGrid());
 		if(peak == null) {
@@ -178,8 +176,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		double filterFraction = 1.0 - 1.0 / image.getExtFilterCorrectionFactor(FWHM);
 		
 		// Consider that only the tip of the source might escape the filter...	
-		if(image instanceof AstroMap) {
-			AstroMap map = (AstroMap) image;
+		if(image instanceof GridMap) {
+			GridMap<?> map = (GridMap<?>) image;
 			filterFraction *= Double.isNaN(map.filterBlanking) ? 1.0 : Math.min(1.0, map.filterBlanking / peak.significance());	
 		}
 
@@ -247,6 +245,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	}
 
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void parse(String line, GridImage<CoordinateType> forImage) throws ParseException {
 		if(line == null) return;
@@ -259,14 +258,13 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 
 		setID(tokens.nextToken());
 
-		// TODO make it work with non equatorial coordinates...
-		coords = (CoordinateType) new EquatorialCoordinates();
-		coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " " + tokens.nextToken());
-	
-		if(forImage.getReference() instanceof Precessing) {
+		coords = (CoordinateType) forImage.getReference().clone();
+		if(coords instanceof Precessing) {
+			coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " " + tokens.nextToken());
 			CoordinateEpoch epoch = ((Precessing) forImage.getReference()).getEpoch();
 			((Precessing) coords).precess(epoch);
 		}
+		else coords.parse(tokens.nextToken() + " " + tokens.nextToken());
 		
 		radius = new DataPoint(Double.parseDouble(tokens.nextToken()) * Unit.arcsec, 0.0);
 		if(tokens.hasMoreTokens()) peak = new DataPoint(Double.parseDouble(tokens.nextToken()), 0.0);
@@ -445,29 +443,5 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		return info;
 	}
 	
-	public static double[][] getBeam(double FWHM, Grid2D<?> grid) {
-		return getBeam(FWHM, grid, 3.0);
-	}	
-
-	public static double[][] getBeam(double FWHM, Grid2D<?> grid, double nBeams) {
-		int sizeX = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeX()) + 1;
-		int sizeY = 2 * (int)Math.ceil(nBeams * FWHM/grid.pixelSizeY()) + 1;
-		
-		final double[][] beam = new double[sizeX][sizeY];
-		final double sigma = FWHM / Util.sigmasInFWHM;
-		final double Ax = -0.5 * grid.pixelSizeX() * grid.pixelSizeX() / (sigma * sigma);
-		final double Ay = -0.5 * grid.pixelSizeY() * grid.pixelSizeY() / (sigma * sigma);
-		final double centerX = (sizeX-1) / 2.0;
-		final double centerY = (sizeY-1) / 2.0;
-		
-		for(int i=sizeX; --i >= 0; ) for(int j=sizeY; --j >= 0; ) {
-			double dx = i - centerX;
-			double dy = j - centerY;
-
-			beam[i][j] = Math.exp(Ax*dx*dx + Ay*dy*dy);
-		}
-		return beam;
-		
-	}
 	
 }

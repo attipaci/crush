@@ -110,7 +110,7 @@ public class SyncModMap extends ScalarMap {
 	
 	
 	@Override
-	protected synchronized void sync(Integration<?,?> integration, Collection<? extends Pixel> pixels, double[] sourceGain, int signalMode) {
+	protected void sync(Integration<?,?> integration, Collection<? extends Pixel> pixels, double[] sourceGain, int signalMode) {
 		final CelestialProjector projector = new CelestialProjector(projection);
 		final Index2D index = new Index2D();
 		

@@ -71,13 +71,13 @@ public class BeamMap extends SourceMap {
 	public Array<?, ?> getArray() { return (Array<?, ?>) instrument; }
 	
 	@Override
-	public void reset() {
+	public synchronized void reset() {
 		super.reset();
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].reset();
 	}
 
 	@Override
-	public void add(SourceModel model, double weight) {
+	public synchronized void add(SourceModel model, double weight) {
 		if(!(model instanceof BeamMap)) throw new IllegalArgumentException("ERROR! Cannot add " + model.getClass().getSimpleName() + " to " + getClass().getSimpleName());
 		BeamMap other = (BeamMap) model;
 		
@@ -187,13 +187,13 @@ public class BeamMap extends SourceMap {
 
 
 	@Override
-	public void setBase() {
+	public synchronized void setBase() {
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].setBase();
 	}
 
 
 	@Override
-	public void process(Scan<?, ?> scan) {
+	public synchronized void process(Scan<?, ?> scan) {
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].process(scan);
 	}
 
@@ -208,7 +208,7 @@ public class BeamMap extends SourceMap {
 	}
 
 	@Override
-	public synchronized void sync() throws InterruptedException {	
+	public void sync() throws Exception {	
 		boolean verbose = true;
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) {
 			if(hasOption("beammap.process")) pixelMap[p].process(verbose);

@@ -29,7 +29,7 @@ import util.*;
 import java.util.*;
 
 
-public abstract class SourceModel implements Cloneable {
+public abstract class SourceModel extends Parallel implements Cloneable {
 	public Instrument<?> instrument;
 	private Configurator options; 
 		
@@ -104,59 +104,49 @@ public abstract class SourceModel implements Cloneable {
 		
 	public abstract void write(String path) throws Exception;
 	
-	public synchronized void extract() throws InterruptedException {	
+	public synchronized void extract() throws Exception {	
 		System.err.print("[Source] ");
 
 		reset();
+
+		new ScanFork<Void>() {
+			private SourceModel scanSource;
 			
-		Parallel<Scan<?,?>> extraction = new Parallel<Scan<?,?>>(CRUSH.maxThreads) {
 			@Override
-			public void process(Scan<?,?> scan, ProcessingThread thread) {
-				ExtractionThread extractor = (ExtractionThread) thread;
-				
-				extractor.scanSource.reset();
-				
-				for(Integration<?,?> integration : scan) extractor.scanSource.add(integration);
-				
-				extractor.scanSource.process(scan);
-				add(extractor.scanSource, scan.weight);
+			public void init() {
+				super.init();
+				scanSource = copy();
 			}
-			
-			class ExtractionThread extends ProcessingThread {
-				/**
-				 * 
-				 */
-				private static final long serialVersionUID = 4434473251287385757L;
-				SourceModel scanSource = copy();
-			
-				public ExtractionThread(Parallel<Scan<?,?>> p, int capacity) { super(p, capacity); }
-			}
-			
-		};
 	
-		
-		extraction.process(scans);
+			@Override
+			public void process(Scan<?,?> scan) {
+				scanSource.reset();
+				
+				for(Integration<?,?> integration : scan) scanSource.add(integration);
+				
+				scanSource.process(scan);
+				add(scanSource, scan.weight);
+			}
+		}.process();
 
 		sync();
 		
 		System.err.println();
 	}
 	
-	public synchronized void sync() throws InterruptedException {
+	public synchronized void sync() throws Exception {
 		// Coupled with blanking...
 		if(hasOption("source.nosync")) return;
 		if(hasOption("source.coupling")) System.err.print("(coupling) ");
 		
 		System.err.print("(sync) ");
 			
-		Parallel<Integration<?,?>> sync = new Parallel<Integration<?,?>>(CRUSH.maxThreads) {
+		new IntegrationFork<Void>() {
 			@Override
-			public void process(Integration<?,?> integration, ProcessingThread thread) {
+			public void process(Integration<?,?> integration) {
 				sync(integration);
 			}	
-		};
-		
-		sync.process(getIntegrations());
+		}.process();
 		
 		generation++;
 		
@@ -233,5 +223,38 @@ public abstract class SourceModel implements Cloneable {
 	}
 	
 	public abstract void noParallel();
+
+	public abstract class ScanFork<ReturnType> extends Process<ReturnType> {	
+		public ScanFork() {}
+		
+		public void process() throws Exception { process(CRUSH.maxThreads); }
+		
+		@Override
+		public void processIndex(int index, int threadCount) throws Exception {
+			for(int i=index; i<scans.size(); i += threadCount) {
+				process(scans.get(i));
+				Thread.yield();
+			}
+		}
+		
+		public abstract void process(Scan<?,?> scan) throws Exception;
+	}
+	
+	public abstract class IntegrationFork<ReturnType> extends Process<ReturnType> {	
+		public final ArrayList<Integration<?,?>> integrations = getIntegrations();
+		
+		public void process() throws Exception { process(CRUSH.maxThreads); }
+		
+		@Override
+		public void processIndex(int index, int threadCount) throws Exception {	
+			for(int i=index; i<integrations.size(); i += threadCount) {
+				process(integrations.get(i));
+				Thread.yield();
+			}
+		}
+		
+		public abstract void process(Integration<?,?> integration) throws Exception;
+	}
 	
 }
+

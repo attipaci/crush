@@ -31,8 +31,6 @@ import util.text.TableFormatter;
 import java.text.*;
 import java.util.*;
 
-import crush.astro.AstroMap;
-
 public class CircularRegion<CoordinateType extends CoordinatePair> extends Region<CoordinateType> implements TableFormatter.Entries {
 	public CoordinateType coords;
 	public DataPoint radius;
@@ -47,7 +45,7 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		coords = (CoordinateType) image.getReference().clone();
 		image.getProjection().deproject(offset, coords);
 		radius.value = r;
-		radius.setRMS(Math.sqrt(image.getPixelArea()) / (AstroMap.fwhm2size * Util.sigmasInFWHM));
+		radius.setRMS(Math.sqrt(image.getPixelArea()) / (GridImage.fwhm2size * Util.sigmasInFWHM));
 	}
 	
 	public CircularRegion(CoordinateType coords, double r) {
@@ -98,9 +96,8 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		return bounds;
 	}
 
-	public double distanceTo(CoordinateType pos) {
-		return coords instanceof Metric<?> ? 
-				((Metric<CoordinateType>) coords).distanceTo((Metric<CoordinateType>) pos) : Double.NaN;
+	public double distanceTo(Metric<CoordinateType> pos) {
+		return pos.distanceTo(coords);
 	}
 
 	@Override
@@ -136,7 +133,7 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	
 	public DataPoint finetunePeak(GridImage<CoordinateType> map) {
 		Vector2D centerIndex = getIndex(map.getGrid());
-		Data2D.InterpolatorData ipolData = map.new InterpolatorData();
+		Data2D.InterpolatorData ipolData = new Data2D.InterpolatorData();
 		
 		int i = (int) Math.round(centerIndex.x);
 		int j = (int) Math.round(centerIndex.y);

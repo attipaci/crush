@@ -62,7 +62,7 @@ public class APEXChoppedPhotometry extends SourceModel {
 	}
 	
 	@Override
-	public void add(SourceModel model, double weight) {
+	public synchronized void add(SourceModel model, double weight) {
 		APEXChoppedPhotometry other = (APEXChoppedPhotometry) model;
 		for(int c=flux.length; --c >= 0; ) flux[c].average(other.flux[c]);
 		sourceFlux.average(other.sourceFlux);
@@ -70,7 +70,7 @@ public class APEXChoppedPhotometry extends SourceModel {
 	}
 
 	@Override
-	public void add(Integration<?, ?> integration) {
+	public synchronized void add(Integration<?, ?> integration) {
 		integration.comments += "[Phot]";
 		APEXArraySubscan<?,?> subscan = (APEXArraySubscan<?,?>) integration;		
 		APEXArray<?> instrument = subscan.instrument;
@@ -78,7 +78,7 @@ public class APEXChoppedPhotometry extends SourceModel {
 	}
 
 	@Override
-	public void process(Scan<?, ?> scan) {		
+	public synchronized void process(Scan<?, ?> scan) {		
 		final WeightedPoint[] left = new WeightedPoint[flux.length];
 		final WeightedPoint[] right = new WeightedPoint[flux.length];
 		
@@ -155,7 +155,7 @@ public class APEXChoppedPhotometry extends SourceModel {
 	}
 	
 	@Override
-	public void reset() {
+	public synchronized void reset() {
 		super.reset();
 		for(int i=flux.length; --i >= 0; ) flux[i].noData();
 		sourceFlux.noData();

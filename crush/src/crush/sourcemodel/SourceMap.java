@@ -67,29 +67,6 @@ public abstract class SourceMap extends SourceModel {
 		try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
 		catch(Exception e) { projection = new Gnomonic(); }		
 	}
-	
-	/*
-	public boolean isHorizontal() {
-		return projection.getReference() instanceof HorizontalCoordinates;
-	}
-	
-	public boolean isEquatorial() {
-		return projection.getReference() instanceof EquatorialCoordinates;
-	}
-	
-	public boolean isEcliptic() {
-		return projection.getReference() instanceof EclipticCoordinates;
-	}
-	
-	public boolean isGalactic() {
-		return projection.getReference() instanceof GalacticCoordinates;
-	}
-	
-	public boolean isSuperGalactic() {
-		return projection.getReference() instanceof SuperGalacticCoordinates;
-	}
-	*/
-
 
 	public void setSmoothing() {
 		if(!hasOption("smooth")) return;
@@ -118,27 +95,23 @@ public abstract class SourceMap extends SourceModel {
 	public double getSourceSize(Instrument<?> instrument) { return Math.hypot(super.getSourceSize(instrument), smoothing); }
 	
 	
-	public synchronized void searchCorners() throws InterruptedException {
+	public synchronized void searchCorners() throws Exception {
+		final Vector2D fixedSize = new Vector2D(Double.NaN, Double.NaN);
 		final boolean fixSize = hasOption("map.size");
 		
-		Parallel<Integration<?,?>> boxing = new Parallel<Integration<?,?>>(CRUSH.maxThreads) {
-			double fixdX = Double.NaN, fixdY = Double.NaN;
-			
-			@Override
-			public void init() {
-				if(!fixSize) return;
-				
-				StringTokenizer sizes = new StringTokenizer(option("map.size").getValue(), " \t,:xX");
+		if(fixSize) {
+			StringTokenizer sizes = new StringTokenizer(option("map.size").getValue(), " \t,:xX");
 
-				fixdX = 0.5* Double.parseDouble(sizes.nextToken()) * Unit.arcsec;
-				fixdY = sizes.hasMoreTokens() ? 0.5 * Double.parseDouble(sizes.nextToken()) * Unit.arcsec : fixdX;
-				
-				xRange.setRange(-fixdX, fixdX);
-				yRange.setRange(-fixdY, fixdY);	
-			}
+			fixedSize.x = 0.5* Double.parseDouble(sizes.nextToken()) * Unit.arcsec;
+			fixedSize.y = sizes.hasMoreTokens() ? 0.5 * Double.parseDouble(sizes.nextToken()) * Unit.arcsec : fixedSize.x;
+
+			xRange.setRange(-fixedSize.x, fixedSize.x);
+			yRange.setRange(-fixedSize.y, fixedSize.y);	
+		}
 			
+		new IntegrationFork<Void>() {		
 			@Override
-			public void process(Integration<?,?> integration, ProcessingThread thread) {	
+			public void process(Integration<?,?> integration) {					
 				Scan<?,?> scan = integration.scan;
 				
 				// Try restrict boxing to the corners only...
@@ -167,8 +140,8 @@ public abstract class SourceMap extends SourceModel {
 							scan.latitudeRange.include(projector.offset.y);
 						}
 						else for(Channel channel : pixel) {
-							if(Math.abs(projector.offset.x) > fixdX) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
-							else if(Math.abs(projector.offset.y) > fixdY) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+							if(Math.abs(projector.offset.x) > fixedSize.x) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+							else if(Math.abs(projector.offset.y) > fixedSize.y) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
 							else valid = true;
 						}
 					}
@@ -176,9 +149,7 @@ public abstract class SourceMap extends SourceModel {
 					if(fixSize && !valid) exposure = null;
 				}
 			}
-		};
-			
-		boxing.process(getIntegrations());		
+		}.process();		
 	}
 	
 	public long getMemoryFootprint() {
@@ -203,7 +174,7 @@ public abstract class SourceMap extends SourceModel {
 		
 		// Figure out what offsets the corners of the map will have...
 		try { searchCorners(); }
-		catch(InterruptedException e) { 
+		catch(Exception e) { 
 			e.printStackTrace(); 
 			System.exit(1);
 		}

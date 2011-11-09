@@ -25,16 +25,15 @@ package util.data;
 
 import java.io.*;
 
+// TODO make independent of crush packages...
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
-import crush.CRUSH;
-import crush.sourcemodel.GaussianSource;
+
 import util.Complex;
 import util.ConfidenceCalculator;
 import util.CoordinatePair;
 import util.Projection2D;
-import util.Range;
 import util.Unit;
 import util.Util;
 import util.Vector2D;
@@ -47,10 +46,6 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	public double extFilterFWHM = Double.NaN;
 	public double correctingFWHM = Double.NaN;	
 
-	public String fileName;
-	public String creator = "CRUSH", creatorVersion = CRUSH.getFullVersion();
-	
-	public Header header;
 	
 	public GridImage() {
 	}
@@ -74,7 +69,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		double fwhm = Math.sqrt(grid.getPixelArea()) / fwhm2size;
 		if(smoothFWHM < fwhm) smoothFWHM = fwhm;	
 	}
-
+	
 	public void setResolution(double value) { 
 		getGrid().setResolution(value);
 		smoothFWHM = Math.max(smoothFWHM, value / fwhm2size);
@@ -223,8 +218,8 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	public void smooth(double FWHM) {
 		int stepX = (int)Math.ceil(FWHM/(5.0 * getGrid().pixelSizeX()));
 		int stepY = (int)Math.ceil(FWHM/(5.0 * getGrid().pixelSizeY()));
-		
-		fastSmooth(GaussianSource.getBeam(FWHM, getGrid(), 2.0), stepX, stepY);
+
+		fastSmooth(GaussianPSF.getBeam(FWHM, getGrid(), 2.0), stepX, stepY);
 		smoothFWHM = Math.hypot(smoothFWHM, FWHM);
 		
 		// The correcting FWHM is underlying FWHM...
@@ -239,7 +234,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	public double[][] getSmoothed(double FWHM) {
 		int stepX = (int)Math.ceil(FWHM/(5.0 * getGrid().pixelSizeX()));
 		int stepY = (int)Math.ceil(FWHM/(5.0 * getGrid().pixelSizeY()));
-		return getFastSmoothed(GaussianSource.getBeam(FWHM, getGrid(), 2.0), null, stepX, stepY);
+		return getFastSmoothed(GaussianPSF.getBeam(FWHM, getGrid(), 2.0), null, stepX, stepY);
 	}   
 
 	
@@ -249,7 +244,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		final GridImage<?> extended = (GridImage<?>) copy();
 		extended.setFlag(skip);
 		extended.smoothTo(FWHM);
-	
+		
 		new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
@@ -378,14 +373,9 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	
 	
 	public double[][] getBeam() {
-		return GaussianSource.getBeam(getImageFWHM(), getGrid(), 3.0);
+		return GaussianPSF.getBeam(getImageFWHM(), getGrid(), 3.0);
 	}
-	
-	
-	public void copyValueOf(final GridImage<CoordinateType> from, final double fromi, final double fromj, final int toi, final int toj) {
-		setValue(toi, toj, from.valueAtIndex(fromi, fromj));
-		if(isNaN(toi, toj)) setFlag(toi, toj, 1);
-	}
+
 
 	@SuppressWarnings("unchecked")
 	public void resample(GridImage<CoordinateType> from) {
@@ -467,9 +457,9 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	@SuppressWarnings("unchecked")
 	protected GridImage<CoordinateType> getRegrid(Grid2D<CoordinateType> toGrid, int nx, int ny) {	
 		GridImage<CoordinateType> regrid = (GridImage<CoordinateType>) clone();
+		
 		regrid.setGrid(toGrid);
 		regrid.setSize(nx, ny);
-		regrid.fillFlag(1);
 		regrid.resample(this);
 		regrid.sanitize();
 		
@@ -484,7 +474,6 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		smoothFWHM = regrid.smoothFWHM;
 	}
 
-	
 	public void regridTo(final GridImage<CoordinateType> image) throws IllegalStateException {
 		GridImage<CoordinateType> regrid = getRegrid(image.getGrid());
 
@@ -496,6 +485,10 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		regrid.crop(corner1.x, corner1.y, corner2.x, corner2.y); 
 
 		image.setImage(regrid);
+		
+		image.smoothFWHM = regrid.smoothFWHM;
+		image.correctingFWHM = regrid.correctingFWHM;
+		image.extFilterFWHM = regrid.extFilterFWHM;
 	}
 
 	public void clean() {
@@ -637,129 +630,21 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		return offset;
 	}
 	
-	public void read(String fileName) throws Exception {	
-		read(fileName, 0);
-	}
-		
-	public void read(String fileName, int hduIndex) throws Exception {	
-		Fits fits = new Fits(fileName);
-		setImage(fits.getHDU(hduIndex));
-	}
-		
-	public void setImage(BasicHDU HDU) throws FitsException {		
-		Object image = HDU.getData().getData();
-		noFlag();
-	
-		try {
-			final float[][] fdata = (float[][]) image;
-			new Task<Void>() {
-				@Override
-				public void process(int i, int j) {
-					if(Float.isNaN(fdata[j][i])) flag(i, j);
-					else setValue(i, j, fdata[j][i] * unit.value);	    
-				}
-			}.process();
-		}
-		catch(ClassCastException e) {
-			final double[][] ddata = (double[][]) image;
-			new Task<Void>() {
-				@Override
-				public void process(int i, int j) {
-					if(Double.isNaN(ddata[j][i])) flag(i, j);
-					else setValue(i, j, ddata[j][i] * unit.value);	    
-				}
-			}.process();
-		}
-	}
-
+	@Override
 	public ImageHDU createHDU() throws HeaderCardException, FitsException {
-		final float[][] fitsImage = new float[sizeY()][sizeX()];
+		ImageHDU hdu = super.createHDU();
 		
-		new Task<Void>() {
-			@Override
-			public void process(int i, int j) {
-				if(isUnflagged(i, j)) fitsImage[j][i] = (float) (getValue(i, j) / unit.value);
-				else fitsImage[j][i] = Float.NaN;
-			}
-		}.process();
-		
-		ImageHDU hdu = (ImageHDU)Fits.makeHDU(fitsImage);
-
-		hdu.addValue("EXTNAME", contentType, "The type of data contained in this HDU");
-		getGrid().addCoordinateInfo(hdu);
-
-		Range range = getRange();
-
-		hdu.addValue("DATAMIN", range.min / unit.value, "");
-		hdu.addValue("DATAMAX", range.max / unit.value, "");
-
-		hdu.addValue("BZERO", 0.0, "Zeroing level of the image data");
-		hdu.addValue("BSCALE", 1.0, "Scaling of the image data");
-		hdu.addValue("BUNIT", unit.name, "The image data unit.");
-
 		return hdu;
 	}
-
-
-	public void addLongHierarchKey(Cursor cursor, String key, String value) throws FitsException, HeaderCardException {
-		addLongHierarchKey(cursor, key, 0, value);
-	}
-
-	public void addLongHierarchKey(Cursor cursor, String key, int part, String value) throws FitsException, HeaderCardException {
-		if(value.length() == 0) value = "true";
-
-		String alt = part > 0 ? "." + part : "";
-
-		int available = 69 - (key.length() + alt.length() + 3);
-
-		if(value.length() < available) cursor.add(new HeaderCard("HIERARCH." + key + alt, value, null));
-		else { 
-			if(alt.length() == 0) {
-				part = 1;
-				alt = "." + part;
-				available -= 2;
-			}
-
-			cursor.add(new HeaderCard("HIERARCH." + key + alt, value.substring(0, available), null));
-			addLongHierarchKey(cursor, key, (char)(part+1), value.substring(available)); 
-		}
-	}
 	
-	public void write() throws HeaderCardException, FitsException, IOException { write(getFits()); }
-
-	public void write(Fits fits) throws HeaderCardException, FitsException, IOException {
-		BufferedDataOutputStream file = new BufferedDataOutputStream(new FileOutputStream(fileName));
-		fits.write(file);
-		System.err.println(" Written " + fileName);
-	}
 	
-	public void write(String name) throws HeaderCardException, FitsException, IOException {
-		Fits fits = new Fits();	
-
-		fits.addHDU(createHDU());
-		editHeader(fits);
-
-		BufferedDataOutputStream file = new BufferedDataOutputStream(new FileOutputStream(name));
-
-		fits.write(file);	
-		System.err.println(" Written Image to " + name);
-	}
-	
-	public final void editHeader(Fits fits) throws HeaderCardException, FitsException, IOException {
-
-		nom.tam.util.Cursor cursor = fits.getHDU(0).getHeader().iterator();
-
-		// Go to the end of the header cards...
-		while(cursor.hasNext()) cursor.next();
-		editHeader(cursor);
-	}
-		
+	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException, FitsException, IOException {
+		super.editHeader(cursor);
+		
+		getGrid().editHeader(cursor);
+		
 		double imageFWHM = getImageFWHM();
-
-		cursor.add(new HeaderCard("DATE", FitsDate.getFitsDateString(), "Time-stamp of creation."));
-		cursor.add(new HeaderCard("CREATOR", creator, "The software that created the image."));
-		//cursor.add(new HeaderCard("ORIGIN", "Caltech", "California Institute of Technology"));
 
 		cursor.add(new HeaderCard("BMAJ", imageFWHM, "The beam major axis (radians)"));
 		cursor.add(new HeaderCard("BMIN", imageFWHM, "The beam minor axis (radians)."));
@@ -775,57 +660,20 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 			cursor.add(new HeaderCard("CORRECTN", correctingFWHM / Unit.arcsec, "The FWHM (arcsec) for which fluxes are corrected."));
 	}
 	
+	@Override
 	public void parseHeader(Header header) throws Exception {
-		this.header = header;
-		
-		int sizeX = header.getIntValue("NAXIS1");
-		int sizeY = header.getIntValue("NAXIS2");
-
-		setSize(sizeX, sizeY);
-
-		getGrid().parseCoordinateInfo(header);
-
-		creator = header.getStringValue("CREATOR");
-		if(creator == null) creator = "unknown";
-		creatorVersion = "unknown";
+		super.parseHeader(header);
+	
+		// TODO how to instantiate the correct gridtype...
+		getGrid().parseHeader(header);
 
 		correctingFWHM = header.getDoubleValue("CORRECTN", Double.NaN) * Unit.arcsec;
-		creatorVersion = header.getStringValue("CRUSHVER");
-
+		
 		// get the map resolution
 		smoothFWHM = header.getDoubleValue("SMOOTH", 0.0) * Unit.arcsec;
 		if(smoothFWHM < Math.sqrt(getGrid().getPixelArea()) / fwhm2size) smoothFWHM = Math.sqrt(getGrid().getPixelArea()) / fwhm2size;
 		extFilterFWHM = header.getDoubleValue("EXTFLTR", Double.NaN) * Unit.arcsec;
 	}
-	
-	
-	public Fits getFits() throws HeaderCardException, FitsException, IOException {
-		FitsFactory.setUseHierarch(true);
-		Fits fits = new Fits();	
-
-		fits.addHDU(createHDU());
-		editHeader(fits);
-	
-		return fits;
-	}
-
-	public Fits getFits(String name) throws FitsException, IOException {
-		FitsFactory.setUseHierarch(true);
-		Fits fits;
-	
-		try { 
-			fits = new Fits(new File(name)); 
-			fileName = name;
-		}
-		catch(Exception e) { 
-			fileName = CRUSH.workPath + name;
-			fits = new Fits(new File(fileName)); 
-		}
-		
-		return fits;
-	}
-	
-	
 	
 	@Override
 	public String toString() {		
@@ -839,26 +687,6 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 			
 		return info;
 	}
-
-
-	public void setKey(String key, String value) throws HeaderCardException {
-		String comment = header.containsKey(key) ? header.findCard(key).getComment() : "Set bu user.";
-
-		// Try add as boolean, int or double -- fall back to String...
-		try{ header.addValue(key, Util.parseBoolean(value), comment); }
-		catch(NumberFormatException e1) { 
-			try{ header.addValue(key, Integer.parseInt(value), comment); }
-			catch(NumberFormatException e2) {
-				try{ header.addValue(key, Double.parseDouble(value), comment); }
-				catch(NumberFormatException e3) { header.addValue(key, value, comment); }
-			}
-		}
-	}
-
-	public void printHeader() {
-		header.dumpHeader(System.out);
-	}  
-	
 	
 	public void flag(Region<CoordinateType> region) { flag(region, 1); }
 

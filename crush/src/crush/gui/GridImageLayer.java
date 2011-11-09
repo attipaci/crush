@@ -20,24 +20,43 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+package crush.gui;
 
-package util.data;
+import java.awt.geom.NoninvertibleTransformException;
 
-import nom.tam.fits.Header;
-import nom.tam.fits.HeaderCardException;
-import util.*;
+import util.Vector2D;
+import util.data.GridImage;
+import util.plot.DoubleImageLayer;
 
-public class CartesianGrid2D extends Grid2D<CoordinatePair> {
-
-	@Override
-	public void parseProjection(Header header) throws HeaderCardException {
-		// TODO Auto-generated method stub	
-	}
-
-	@Override
-	public CoordinatePair getCoordinateInstanceFor(String type) {
-		return new CoordinatePair();
+public class GridImageLayer extends DoubleImageLayer {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5730801953668713086L;
+	
+	GridImage<?> image;
+	
+	public GridImageLayer(GridImage<?> image) {
+		super(image.getData());
+		this.image = image;
+		
+		try { this.setCoordinateTransform(image.getGrid().getLocalAffineTransform()); }
+		catch(NoninvertibleTransformException e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}
+	
+		defaults();
 	}
 	
+	@Override
+	public double getValue(int i, int j) {
+		return image.valueAtIndex(i+i0, j+j0);
+	}
+	
+	@Override
+	public Vector2D getReferencePoint() {
+		return image.getGrid().refIndex;
+	}
 	
 }
