@@ -26,6 +26,7 @@ package crush.polka;
 
 import crush.*;
 import crush.apex.APEXArrayScan;
+import crush.filters.Filter;
 import crush.polarization.*;
 import crush.laboca.*;
 import util.*;
@@ -45,6 +46,13 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Biased, Pu
 	
 	public PolKaSubscan(APEXArrayScan<Laboca, LabocaSubscan> parent) {
 		super(parent);
+	}
+	
+	@Override
+	public Filter getFilter(String name) {
+		name = name.toLowerCase();
+		if(name.equals("hwp")) return new HWPFilter(this, filter.getData());
+		else return super.getFilter(name);
 	}
 
 	public void regularAngles() {

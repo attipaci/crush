@@ -1,8 +1,18 @@
+>> Reanalyze chopped reductions...
+
+>> Mode.getGains/setGains --> channel.temp?
+>> Instrument.getSourceGains --> channel.temp?
+
+>> SCUBA-2 module to version 4 (change.log, web-page!)
+>> Try SourceModel<CoordinateType>, SourceMap<CT>, ScalarMap<CT> ...
+>> Instrument.getCoordinateInstance();
+
+
 >> Integration.Fork extends Parallel...
 	Fork.Channels
 	Fork.Frames
-	Fork.Blocks
-	Fork.ChannelGroups
+	Fork.Blocks?
+	Fork.ChannelGroups?
 
 >> Pipeline to convert to Parallel...
 

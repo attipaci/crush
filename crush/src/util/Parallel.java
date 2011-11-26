@@ -5,11 +5,6 @@ import java.util.Vector;
 public abstract class Parallel {
 
 	public abstract class Process<ReturnType> implements Runnable, Cloneable {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -3973614679104705385L;
-
 		private Thread thread;
 		private int index;
 		private boolean isInterrupted = false;
@@ -26,7 +21,7 @@ public abstract class Parallel {
 		public void process(int threadCount) throws Exception {
 			parallel = new Manager<ReturnType>(this);
 			parallel.process(threadCount);
-			if(exception != null) throw exception;
+			for(Process<?> process : getWorkers()) if(process.exception != null) throw process.exception;
 		}
 		
 		public Vector<Process<ReturnType>> getWorkers() {
@@ -39,11 +34,13 @@ public abstract class Parallel {
 		
 		public void init() {}
 			
-		public void interruptAll() {
-			for(Process<?> process : getWorkers()) {
-				process.isInterrupted = true;
-				process.notifyAll(); // Notify all blocked operations to make them aware of the interrupt.
-			}
+		public synchronized void interruptAll() {
+			for(Process<?> process : getWorkers()) process.interrupt();
+		}
+		
+		private synchronized void interrupt() {
+			isInterrupted = true;
+			notifyAll(); // Notify all blocked operations to make them aware of the interrupt.
 		}
 		
 		protected boolean isInterrupted() { return isInterrupted; }
@@ -72,16 +69,24 @@ public abstract class Parallel {
 		}
 		
 		public final void run() {
+			// clear the exception for reuse...
+			exception = null;
 			init();
-			try { processIndex(index, parallel.getThreadCount()); }
+			try { 
+				// Don't even start in case it has been interrupted already
+				if(!isInterrupted()) processIndex(index, parallel.getThreadCount()); 	
+			}
 			catch(Exception e) {
+				System.err.println("WARNING! Parallel processing error:");
+				//e.printStackTrace();
 				exception = e;
 				interruptAll();
 			}
+			// Clear the interrupt status for reuse...
+			isInterrupted = false;
 		}
 
-		protected synchronized void processIndex(int i, int threadCount) throws Exception {
-		}
+		protected abstract void processIndex(int i, int threadCount) throws Exception;
 	}
 	
 	
@@ -109,9 +114,10 @@ public abstract class Parallel {
 				@SuppressWarnings("unchecked")
 				Process<ReturnType> t = (Process<ReturnType>) template.clone();
 				t.setIndex(i);
-				t.start();
 				processes.add(t);
 			}
+			
+			for(Process<?> task : processes) task.start();
 			
 			for(Process<?> task : processes) {
 				try { 

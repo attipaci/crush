@@ -28,11 +28,6 @@ import util.Unit;
 import util.Util;
 
 public class DataPoint extends WeightedPoint {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6790662017622838033L;
-
 	public DataPoint() { super(); }
 
 	public DataPoint(double value, double rms) {

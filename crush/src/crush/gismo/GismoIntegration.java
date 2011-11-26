@@ -80,6 +80,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		
 		clear();
 		ensureCapacity(records);
+		for(int t=records; --t>=0; ) add(null);
 		
 		new GismoReader(hdu).read();
 	}
@@ -152,8 +153,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 				}
 				
 				@Override
-				public void readRow(int i) {
-				
+				public void readRow(int i) {			
 					final GismoFrame frame = new GismoFrame(gismoScan);
 
 					//final double UT = (((double[]) row[iUT])[0] * Unit.sec) % Unit.day;

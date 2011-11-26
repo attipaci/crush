@@ -265,22 +265,18 @@ public class Signal implements Cloneable {
 	public synchronized void smooth(double[] w) {
 		int ic = w.length / 2;
 		float[] smoothed = new float[value.length];
-		
-		double norm = 0.0;
-		for(int i=w.length; --i >= 0; ) norm += Math.abs(w[i]);
-		
-		for(int t=value.length; --t >= 0; ) {
 			
+		for(int t=value.length; --t >= 0; ) {		
 			int t1 = Math.max(0, t-ic); // the beginning index for the convolution
 			final int tot = Math.min(value.length, t + w.length - ic);
 			int i = ic + t - t1; // the beginning index for the weighting fn.
-			int n = 0;
+			double sum = 0.0, sumw = 0.0;
 			
 			for( ; t1<tot; t1++, i++) if(!Float.isNaN(value[t1])) {
-				smoothed[t] += value[t1];
-				n++;
+				sum += w[i] * value[t1];
+				sumw += Math.abs(w[i]);
 			}
-			if(n > 0) smoothed[t] /= n;
+			if(sumw > 0.0) smoothed[t] = (float) (sum / sumw);
 		}
 		value = smoothed;
 	}

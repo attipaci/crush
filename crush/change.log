@@ -1,4 +1,6 @@
-2.11-a1 (alpha)
+>> 'filter.hwp', filter.hwp.harmonics'
+
+2.11-a2 (alpha)
 
 
 	[NEW] Introducing a parallel processing framework for images. The goal 
@@ -7,6 +9,28 @@
 	power. This will result in a small gain for reduction purposes, but 
 	should make the upcoming new 'show', 'imagetool' (etc.) more 
 	responsive, especially when handling large images...
+
+	[NEW] {PolKa} Pipeline step 'purify' can now be added to the ordering
+	of possible operations to remove the total-power modulation at any
+	stage of the reduction. Note, that whether or not this option is used
+	the total-power modulation is always removed before constructing
+	Q and U maps...
+
+	[NEW] {PolKa} Added Fourier half-wave-plate (HWP) filter capability
+	for removing total power modulation when the waveplate angle is both
+	jittery and projected. The filter can be activated by 'filter.hwp'. As 
+	before, the jitter can be set by 'waveplate.jitter', while the number 
+	of harmonics filtered is set by 'filter.hwp.harmonics'. The filter may
+	be useful for early PolKa data, where the stored waveplate angles were
+	flaky. However, when the angles are stored correctly, 'purify' is the
+	preferred method for removing the total-power modulation.
+
+	[FIX] {SCUBA-2} When both an SDF and a FITS file were present in the
+	same directory for the same subscan, it was read twice in 2.11-a1.
+	Now, the SDF will be ignored, and only the FITS will be read, as
+	expected.
+
+	[FIX] {a1} GISMO reductions were broken in first alpha (2.11-a1).
 
 	[FIX] Multithreaded reductions on multicore systems could end up in
 	unpredictable race conditions while procuring the composite source
@@ -21,10 +45,10 @@
 	present for the same scan and in the same location.
 
 	[FIX] {SCUBA-2} Updated the SCUBA-2 proprietary module to work with
-	CRUSH v2.10 (module Version 4).
+	CRUSH v2.11 (module Version 4).
 
 	[FIX] Fixed problem with Complex FFTs whereby the real and imaginary
-	components got mixed up, as a result of changed iteration order. The
+	components got mixed up, as a result of reversed iteration order. The
 	good news is that Complex FFTs were never used in CRUSH, so the bug
 	was completely harmless.
 
@@ -32,8 +56,17 @@
 	produce an error when trying to write that information to the FITS 
 	image. Now fixed.
 
+	[FIX] Smoothing of fixed signals always used boxcar, not the specified
+	window function. It's not a feature that was much used, and the fix
+	should make little difference anyway.
+
 	[CHANGE] Some FITS keywords describing the Java environment running
-	crush has been changed to more intoitive keywords.
+	crush has been changed to more intuitive names.
+
+	[TWEAK] {PolKa}
+
+	[TWEAK] Various small performance tweaks: eliminating some temp arrays
+	and declaring more variables final.
 
 	[TWEAK] {SCUBA-2} Slight tweaks to the SCUBA-2 configuration files to
 	enhance 'deep' mode reductions.
@@ -42,7 +75,7 @@
 	persistent. This speeds up the reading of sets of scans using the same 
 	data.
 
-	[TWEAK] {GISMO} Pointing logs are loaded as necessary and persists, 
+	[TWEAK] {GISMO} Pointing logs are loaded as necessary and persist, 
 	making the reading of multiple scans more efficient.
 
 	[TWEAK] Motion filter frequency range restricted to <1Hz.
@@ -55,6 +88,11 @@
 
 	[COSMETIC] Reorganized FITS header key ordering to bring the most 
 	important keys up front.
+
+	[CODE] {a1} Improved error handling in new Parallel processing
+	architecture. In the first alpha, an IllegalMonitorState exception
+	was thrown rather than the trace of the real error that was at the
+	root of the problem.
 
 	[CODE] Old Parallel architecture replaced by the new task-oriented
 	hieracrchy in source model tasks.
@@ -88,10 +126,12 @@
 	images (perhaps sometime in the future...).
 
 	[CODE] Undid generic types on SourceModel. It did not really make sense
-	to use them here (no speccific reverse access to scans and instruments
+	to use them here (no specific reverse access to scans and instruments
 	is necessary, and restriction to instrument subclasses is easily done
 	through the constructor). At the same time, the lifting of the 
 	restriction makes for nicer code, and removes some annoying obstacles.
+
+	[CLEANUP] Removed some unused variables, spotted by Eclipse Indigo.
 
 	[CLEANUP] Removed obsoleted key 'whiten.neighbours' from configuration.
 

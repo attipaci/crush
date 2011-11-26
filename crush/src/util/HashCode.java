@@ -175,8 +175,7 @@ public final class HashCode {
 	public static int sampleFrom(int[] values) {
 		if(values.length < 64) return get(values, 0, values.length);;
 		int hash = get(values, 0, 16) ^ get(values, values.length-16, values.length);
-		int step = (values.length - 16) >> 4;
-		for(int i=0, j=16; i<16; i++, j+=step) hash ^= values[i] + (1<<i);
+		for(int i=0; i<16; i++) hash ^= values[i] + (1<<i);
 		return hash;
 	}
 	
@@ -184,8 +183,7 @@ public final class HashCode {
 	public static int sampleFrom(long[] values) {
 		if(values.length < 64) return get(values, 0, values.length);;
 		int hash = get(values, 0, 16) ^ get(values, values.length-16, values.length);
-		int step = (values.length - 16) >> 4;
-		for(int i=0, j=16; i<16; i++, j+=step) hash ^= get(values[i]) + (1<<i);
+		for(int i=0; i<16; i++) hash ^= get(values[i]) + (1<<i);
 		return hash;
 	}
 	
@@ -193,8 +191,7 @@ public final class HashCode {
 	public static int sampleFrom(float[] values) {
 		if(values.length < 64) return get(values, 0, values.length);;
 		int hash = get(values, 0, 16) ^ get(values, values.length-16, values.length);
-		int step = (values.length - 16) >> 4;
-		for(int i=0, j=16; i<16; i++, j+=step) hash ^= get(values[i]) + (1<<i);
+		for(int i=0; i<16; i++) hash ^= get(values[i]) + (1<<i);
 		return hash;
 	}
 	
@@ -202,8 +199,7 @@ public final class HashCode {
 	public static int sampleFrom(double[] values) {
 		if(values.length < 64) return get(values, 0, values.length);;
 		int hash = get(values, 0, 16) ^ get(values, values.length-16, values.length);
-		int step = (values.length - 16) >> 4;
-		for(int i=0, j=16; i<16; i++, j+=step) hash ^= get(values[i]) + (1<<i);
+		for(int i=0; i<16; i++) hash ^= get(values[i]) + (1<<i);
 		return hash;
 	}
 	
@@ -211,8 +207,7 @@ public final class HashCode {
 	public static int sampleFrom(Object[] values) {
 		if(values.length < 64) return get(values, 0, values.length);;
 		int hash = get(values, 0, 16) ^ get(values, values.length-16, values.length);
-		int step = (values.length - 16) >> 4;
-		for(int i=0, j=16; i<16; i++, j+=step) hash ^= values[i].hashCode() + (1<<i);
+		for(int i=0; i<16; i++) hash ^= values[i].hashCode() + (1<<i);
 		return hash;
 	}
 	

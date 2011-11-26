@@ -58,9 +58,15 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	@Override
 	public void read(String scanDescriptor, boolean readFully) throws IOException, HeaderCardException, FitsException, FileNotFoundException {
 		ArrayList<File> files = getFiles(scanDescriptor);
-
+		
 		for(int i=0; i<files.size(); i++) {
 			File file = files.get(i);
+
+			// If it's an SDF, check if an equivalent FITS exists also...
+			// If so, then we can skip the SDF, and wait for the FITS to be read...
+			if(file.getName().endsWith(".sdf"))
+				if(new File(getFitsName(file.getName())).exists()) continue;
+			
 			Fits fits = getFits(file);
 			if(fits == null) continue;
 			
@@ -206,9 +212,10 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			String outName = getFitsName(inName);
 				
 			// Check if the SDF has a FITS equivalent in the same directory...
-			// Return the existing FITS is exists...
 			File outFile = new File(outName);
 			if(outFile.exists()) return new Fits(outFile);
+			// We could also return null to just let go of the SDF, and wait for the FITS...
+			//if(outFile.exists()) return null;
 		
 			// Try the same in the default working directory of CRUSH...
 			String path = CRUSH.workPath;
@@ -257,7 +264,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	protected void readSubscan(Fits fits) throws IllegalStateException, HeaderCardException, FitsException {
 		// Read in entire FITS file
 		BasicHDU[] HDU = fits.read();
-		if(HDU == null) throw new IllegalStateException("FITS seem to have not content.");
+		if(HDU == null) throw new IllegalStateException("FITS has no content.");
 		
 		Scuba2Subscan integration = new Scuba2Subscan(this);	
 		integration.read((ImageHDU) HDU[0], getJcmtHDU(HDU));
