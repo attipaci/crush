@@ -126,7 +126,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	public void validate() {
 		if(isValid) return;		
-		
+	
 		System.err.println(" Processing integration " + getID() + ":");
 		
 		for(Frame frame : this) if(frame != null) frame.validate();
@@ -212,21 +212,21 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return n;
 	}
 	
-	
+	/* TODO
 	public void shiftData() {
 		double dt = option("shift").getDouble();
 		System.err.print(" Shifting by " + dt + " sec.");
 		//shift(dt * Unit.s);
 		System.err.println();		
 	}
-	
+	*/
 	
 	public void selectFrames() {
 		Range range = option("frames").getRange(true);
-		int from = (int)range.min;
-		int to = Math.min(size(), (int)range.max);
+		final int from = (int)range.min;
+		final int to = Math.min(size(), (int)range.max);
 		
-		ArrayList<FrameType> buffer = new ArrayList<FrameType>(to-from+1);
+		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(to-from+1);
 		
 		for(int t=from; t<to; t++) buffer.add(get(t));
 		clear();
@@ -240,10 +240,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		System.err.print("   Flagging out-of-range data. ");
 		
-		int[] n = new int[instrument.size()];
+		final int[] n = new int[instrument.size()];
 		int N = 0;
-		for(Frame exposure : this) if(exposure != null) {
-			for(Channel channel : instrument) if(!range.contains(exposure.data[channel.index])) {
+		for(final Frame exposure : this) if(exposure != null) {
+			for(final Channel channel : instrument) if(!range.contains(exposure.data[channel.index])) {
 				exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
 				n[channel.index]++;
 			}
@@ -256,8 +256,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 			
 		int flagged = 0;
-		double critical = option("range.flagfraction").getDouble();
-		for(Channel channel : instrument) {
+		final double critical = option("range.flagfraction").getDouble();
+		for(final Channel channel : instrument) {
 			if((double) n[channel.index] / N > critical) {
 				channel.flag(Channel.FLAG_DAC_RANGE | Channel.FLAG_DEAD);
 				flagged++;
@@ -363,9 +363,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else for(Frame frame : this) frame.transmission = (float) Math.exp(-value);
 	}
 	
-	
-	
-	
 	public void setZenithTau(double value) {
 		if(!(this instanceof GroundBased)) throw new UnsupportedOperationException("Only implementation of GroundBased can set a zenith tau.");
 		System.err.println("   Setting zenith tau to " + Util.f3.format(value));
@@ -405,7 +402,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 
 	public void pointingAt(Vector2D offset) {
-		for(Frame frame : this) if(frame != null) frame.pointingAt(offset);
+		for(final Frame frame : this) if(frame != null) frame.pointingAt(offset);
 	}
 	
 	
@@ -413,14 +410,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		System.err.println("   Configuring filters.");
 		List<String> ordering = option("filter.ordering").getList();
 		filter = new MultiFilter(this);
-		for(String name : ordering) {	
-			if(name.equals("motion")) filter.addFilter(new MotionFilter(this, filter.getData()));
-			else if(name.equals("kill")) filter.addFilter(new KillFilter(this, filter.getData()));
-			else if(name.equals("whiten")) filter.addFilter(new WhiteningFilter(this, filter.getData()));
-			else System.err.println(" WARNING! No filter for '" + name + "'.");
+		for(final String name : ordering) {	
+			Filter f = getFilter(name);
+			if(f == null) System.err.println(" WARNING! No filter for '" + name + "'.");
+			else filter.addFilter(f);
 		}	
 	}
 	
+	public Filter getFilter(String name) {
+		name = name.toLowerCase();
+		if(name.equals("motion")) return new MotionFilter(this, filter.getData());
+		else if(name.equals("kill")) return new KillFilter(this, filter.getData());
+		else if(name.equals("whiten")) return new WhiteningFilter(this, filter.getData());
+		else return null;
+	}
 	
 	public abstract FrameType getFrameInstance();
 	
@@ -502,9 +505,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void fillGaps() {
 		double lastMJD = Double.NaN;
 
-		ArrayList<FrameType> buffer = new ArrayList<FrameType>(2*size());
+		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(2*size());
 		
-		for(FrameType exposure : this) if(!Double.isNaN(lastMJD)) {
+		for(final FrameType exposure : this) if(!Double.isNaN(lastMJD)) {
 			final int gap = (int)Math.round((exposure.MJD - lastMJD) * Unit.day / instrument.samplingInterval) - 1;
 			if(gap > 0) {
 				System.err.println("   Inserting " + gap + " empty frames...");
@@ -539,7 +542,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(from == 0) for(int t=size(); --t >= to; ) remove(t);
 		else {
-			ArrayList<FrameType> frames = new ArrayList<FrameType>(to - from);
+			final ArrayList<FrameType> frames = new ArrayList<FrameType>(to - from);
 			for(int t=from; t<to; t++) frames.add(get(t));
 
 			clear();
@@ -554,21 +557,21 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public synchronized void slim() {
 		instrument.slim(false);
-		for(Frame frame : this) if(frame != null) frame.slimTo(instrument);	
+		for(final Frame frame : this) if(frame != null) frame.slimTo(instrument);	
 		instrument.reindex();
 	}
 	
 	public synchronized void scale(double factor) {
 		if(factor == 1.0) return;
-		for(Frame frame : this) if(frame != null) frame.scale(factor);
+		for(final Frame frame : this) if(frame != null) frame.scale(factor);
 	}
 	
 
 	public Range getRange(ChannelGroup<?> channels) {
 		Range range = new Range();
 		
-		for(Frame frame : this) if(frame != null) {
-			for(Channel channel : channels) if(frame.sampleFlag[channel.index] == 0) range.include(frame.data[channel.index]);
+		for(final Frame frame : this) if(frame != null) {
+			for(final Channel channel : channels) if(frame.sampleFlag[channel.index] == 0) range.include(frame.data[channel.index]);
 		}
 		return range;		
 	}
@@ -587,17 +590,17 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void removeDrifts(final ChannelGroup<?> channels, final int targetFrameResolution, final boolean robust, final boolean quick) {
 		//System.err.println("O >>> " + channels.size() + " > " + targetFrameResolution);
 		
-		int driftN = Math.min(size(), FFT.getPaddedSize(targetFrameResolution));
+		final int driftN = Math.min(size(), FFT.getPaddedSize(targetFrameResolution));
 		final int step = quick ? (int) Math.pow(driftN, 2.0/3.0) : 1;
 		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);
 		
-		Dependents parms = getDependents("drifts");
+		final Dependents parms = getDependents("drifts");
 		
 		WeightedPoint[] offsets = null; // The channel offsets for ML estimates
 		WeightedPoint[] buffer = null;	// The timestream for robust estimates
 			
-		WeightedPoint[] aveOffset = new WeightedPoint[instrument.size()];
-		for(int i=0; i<aveOffset.length; i++) aveOffset[i] = new WeightedPoint();
+		final WeightedPoint[] aveOffset = new WeightedPoint[instrument.size()];
+		for(int i=aveOffset.length; --i >= 0; ) aveOffset[i] = new WeightedPoint();
 		
 		if(driftN < size()) comments += (robust ? "[D]" : "D") + "(" + driftN + ")";
 		else comments += robust ? "[O]" : "O";
@@ -611,7 +614,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			for(int i=offsets.length; --i >= 0; ) offsets[i] = new WeightedPoint();
 		}
 		
-		int nt = size();
+		final int nt = size();
 		for(int from=0; from < nt; from += driftN) {
 			int to = Math.min(size(), from + driftN);
 			parms.clear(channels, from, to);
@@ -621,12 +624,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		
 		// Store the mean offset as a channel property...
-		for(Channel channel : channels) {
+		for(final Channel channel : channels) {
 			final double G = isDetectorStage ? channel.getHardwareGain() : 1.0;
 			channel.offset += G * aveOffset[channel.index].value;
 		}
 			
-		if(driftN < size()) for(Channel channel : channels) {
+		if(driftN < size()) for(final Channel channel : channels) {
 			double crossingTime = getPointCrossingTime();	
 			
 			if(!Double.isNaN(crossingTime) && !Double.isInfinite(crossingTime)) {
@@ -646,7 +649,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 		// Make sure signals are filtered the same as time-streams...
 		// TODO this is assuming all channels are filtered the same...
-		for(Signal signal : signals.values()) signal.removeDrifts();
+		for(final Signal signal : signals.values()) signal.removeDrifts();
 		
 		if(CRUSH.debug) checkForNaNs(channels, 0, size());
 	}
@@ -781,7 +784,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final ChannelGroup<?> liveChannels = instrument.getConnectedChannels();
 	
 		// Use the weight field for the weight-sum
-		for(Channel channel : liveChannels) channel.weight = 0.0;	
+		for(final Channel channel : liveChannels) channel.weight = 0.0;	
 		
 		final double[] var = new double[instrument.size()];
 		
@@ -811,7 +814,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final ChannelGroup<?> liveChannels = instrument.getConnectedChannels();
 		
 		// Use the weight field for the weight-sum...
-		for(Channel channel : liveChannels) channel.weight = 0.0;
+		for(final Channel channel : liveChannels) channel.weight = 0.0;
 		
 		final double[] var = new double[instrument.size()];
 		final int nT = size();
@@ -829,7 +832,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 		}
  
-		for(Channel channel : liveChannels) if(channel.weight > 0.0) {
+		for(final Channel channel : liveChannels) if(channel.weight > 0.0) {
 			channel.dof = Math.max(0.0, 1.0 - channel.dependents / channel.weight);
 			channel.variance = channel.weight > 0.0 ? 0.5 * var[channel.index] /  channel.weight : 0.0;
 			channel.weight = channel.variance > 0.0 ? channel.dof / channel.variance : 0.0;
@@ -1053,7 +1056,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(data.length > nt) for(int t=nt; t<data.length; t++) data[t] = weight[t] = 0.0F;
 	}
 
-	
+	/*
 	public double[] getPointSourceProfile(int nt) {
 		double sigma = getPointCrossingTime() / Util.sigmasInFWHM / instrument.samplingInterval;
 		double[] sourceProfile = new double[nt];
@@ -1067,6 +1070,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		return sourceProfile;
 	}
+	*/
 	
 	protected boolean despikedNeighbours = false;
 		
@@ -1112,7 +1116,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	
-	public void despikeNeighbouring(double significance) {
+	public void despikeNeighbouring(final double significance) {
 		comments += "dN";
 
 		//final int delta = framesFor(filterTimeScale);
@@ -1122,8 +1126,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
 		
-		final float[] level = new float[instrument.size()];
-		for(Channel channel : connectedChannels) level[channel.index] = (float) (significance * Math.sqrt(channel.variance));
+		for(final Channel channel : connectedChannels) channel.temp = (float) (significance * Math.sqrt(channel.variance));
 		
 		int nt = size();
 		for(int t=delta; t < nt; t++) {
@@ -1136,7 +1139,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				for(final Channel channel : connectedChannels) if(((exposure.sampleFlag[channel.index] | prior.sampleFlag[channel.index]) & excludeSamples) == 0) {
 					exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKY_NEIGHBOUR;
 
-					if(Math.abs(exposure.data[channel.index] - prior.data[channel.index]) > level[channel.index] * chi) {
+					if(Math.abs(exposure.data[channel.index] - prior.data[channel.index]) > channel.temp * chi) {
 						exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
 						prior.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
 					}
@@ -1146,19 +1149,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 	}
 
-	public void despikeAbsolute(double significance) {
+	public void despikeAbsolute(final double significance) {
 		comments += "dA";
 		
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
 		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
 		
-		final float[] level = new float[instrument.size()];
-		for(Channel channel : instrument) level[channel.index] = (float) (significance * Math.sqrt(channel.variance));
+		for(final Channel channel : instrument) channel.temp = (float) (significance * Math.sqrt(channel.variance));
 
 		for(final Frame exposure : this) if(exposure != null) {
 			final float frameChi = 1.0F / (float)Math.sqrt(exposure.relativeWeight);
 			for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0) {
-				if(Math.abs(exposure.data[channel.index]) > level[channel.index] * frameChi) 
+				if(Math.abs(exposure.data[channel.index]) > channel.temp * frameChi) 
 					exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
 				else 
 					exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKE;
@@ -1167,11 +1169,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 
-	public void despikeGradual(double significance, double depth) {
+	public void despikeGradual(final double significance, final double depth) {
 		comments += "dG";
 		
-		final float[] level = new float[instrument.size()];
-		for(Channel channel : instrument) level[channel.index] = (float) (significance * Math.sqrt(channel.variance));
+		for(final Channel channel : instrument) channel.temp = (float) (significance * Math.sqrt(channel.variance));
 		
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
 		
@@ -1188,7 +1189,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(maxdev > 0.0) {
 				double minSignal = depth * maxdev;
 				for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SOURCE_BLANK) == 0) {
-					final double critical = Math.max(channel.gain * minSignal, level[channel.index] * frameChi);
+					final double critical = Math.max(channel.gain * minSignal, channel.temp * frameChi);
 					if(Math.abs(exposure.data[channel.index]) > critical) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
 					else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKE;
 				}
@@ -1201,7 +1202,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		despikeFeatures(significance, framesFor(filterTimeScale));
 	}
 	
-	public void despikeFeatures(double significance, int maxBlockSize) {
+	public void despikeFeatures(final double significance, int maxBlockSize) {
 		if(maxBlockSize > size()) maxBlockSize = size();
 		comments += "dF";
 		
@@ -1215,7 +1216,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final DataPoint temp = new DataPoint();
 
 		// Clear the spiky feature flag...
-		for(Frame exposure : this) if(exposure != null) for(Channel channel : liveChannels) exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKY_FEATURE;		
+		for(final Frame exposure : this) if(exposure != null) for(final Channel channel : liveChannels) 
+				exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKY_FEATURE;		
 		
 		for(final Channel channel : instrument) {
 			getTimeStream(channel, data, weight);
@@ -1251,21 +1253,21 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	}
 	
-	public void flagSpikyChannels(int spikeTypes, double flagFraction, int minSpikes, int channelFlag) {
-		int maxChannelSpikes = Math.max(minSpikes, (int)Math.round(flagFraction * size()));
+	public void flagSpikyChannels(final int spikeTypes, final double flagFraction, final int minSpikes, final int channelFlag) {
+		final int maxChannelSpikes = Math.max(minSpikes, (int)Math.round(flagFraction * size()));
 		
 		// Flag spiky channels even if spikes are in spiky frames
 		//int frameFlags = LabocaFrame.MODELING_FLAGS & ~LabocaFrame.FLAG_SPIKY;
 		
 		// Only flag spiky channels if spikes are not in spiky frames
-		int frameFlags = Frame.MODELING_FLAGS;
+		final int frameFlags = Frame.MODELING_FLAGS;
 	
-		for(Channel channel : instrument) channel.spikes = 0;
+		for(final Channel channel : instrument) channel.spikes = 0;
 			
-		for(Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(frameFlags)) 
-			for(Channel channel : instrument) if((exposure.sampleFlag[channel.index] & spikeTypes) != 0) channel.spikes++;
+		for(final Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(frameFlags)) 
+			for(final Channel channel : instrument) if((exposure.sampleFlag[channel.index] & spikeTypes) != 0) channel.spikes++;
 			
-		for(Channel channel : instrument) {
+		for(final Channel channel : instrument) {
 			if(channel.spikes > maxChannelSpikes) channel.flag(channelFlag);
 			else channel.unflag(channelFlag);
 		}
@@ -1274,19 +1276,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		comments += instrument.mappingChannels;
 	}
 			
-	public void flagSpikyFrames(int spikeTypes, double minSpikes) {
+	public void flagSpikyFrames(final int spikeTypes, final double minSpikes) {
 		int spikyFrames = 0;
 		
 		// Flag spiky frames even if spikes are in spiky channels.
 		//int channelFlags = ~(LabocaPixel.FLAG_SPIKY | LabocaPixel.FLAG_FEATURES);
 		
 		// Flag spiky frames only if spikes are not in spiky channels.
-		int channelFlags = ~0;
+		final int channelFlags = ~0;
 		
-		for(Frame exposure : this) if(exposure != null) {
+		for(final Frame exposure : this) if(exposure != null) {
 			int frameSpikes = 0;
 
-			for(Channel channel : instrument) if(channel.isUnflagged(channelFlags))
+			for(final Channel channel : instrument) if(channel.isUnflagged(channelFlags))
 				if((exposure.sampleFlag[channel.index] & spikeTypes) != 0) frameSpikes++;
 
 			if(frameSpikes > minSpikes) {
@@ -1318,11 +1320,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public synchronized void detectorStage() { 
 		if(isDetectorStage) return;
 		
-		final float[] G = new float[instrument.size()];
-		for(Channel channel : instrument) G[channel.index] = (float) channel.getHardwareGain();
+		for(final Channel channel : instrument) channel.temp = (float) channel.getHardwareGain();
 		
-		for(Frame frame : this) if(frame != null) for(Channel channel : instrument)
-			frame.data[channel.index] /= G[channel.index];
+		for(final Frame frame : this) if(frame != null) for(final Channel channel : instrument)
+			frame.data[channel.index] /= channel.temp;
 		
 		isDetectorStage = true;		
 	}
@@ -1330,31 +1331,29 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public synchronized void readoutStage() { 
 		if(!isDetectorStage) return;
 		
-		final float[] G = new float[instrument.size()];
-		for(Channel channel : instrument) G[channel.index] = (float) channel.getHardwareGain();
+		for(final Channel channel : instrument) channel.temp = (float) channel.getHardwareGain();
 		
-		for(Frame frame : this) if(frame != null) for(Channel channel : instrument)
-			frame.data[channel.index] *= G[channel.index];
+		for(final Frame frame : this) if(frame != null) for(final Channel channel : instrument)
+			frame.data[channel.index] *= channel.temp;
 		
 		isDetectorStage = false;
 	}
 	
 	public synchronized void clearData() {
-		for(Frame exposure : this) if(exposure != null) for(Channel channel : instrument) exposure.data[channel.index] = 0.0F;
+		for(final Frame exposure : this) if(exposure != null) for(final Channel channel : instrument) exposure.data[channel.index] = 0.0F;
 	}
 	
 	public synchronized void randomData() {
-		Random random = new Random();
+		final Random random = new Random();
 		
-		float[] rms = new float[instrument.size()];
-		for(Channel channel : instrument) rms[channel.index] = (float)(Math.sqrt(1.0/channel.weight));
+		for(final Channel channel : instrument) channel.temp = (float)(Math.sqrt(1.0/channel.weight));
 		
 		for(Frame exposure : this) if(exposure != null) for(Channel channel : instrument)
-			exposure.data[channel.index] = rms[channel.index] * (float)random.nextGaussian();						
+			exposure.data[channel.index] = channel.temp * (float)random.nextGaussian();						
 	
 	}
 	
-	public void addCorrelated(CorrelatedSignal signal) throws IllegalAccessException {	
+	public void addCorrelated(final CorrelatedSignal signal) throws IllegalAccessException {	
 		final Mode mode = signal.getMode();
 		final float[] gain = mode.getGains();
 		final int nc = mode.channels.size();
@@ -1367,14 +1366,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	
 	public Vector2D[] getPositions(int type) {
-		Vector2D[] position = new Vector2D[size()];
-		SphericalCoordinates coords = new SphericalCoordinates();
+		final Vector2D[] position = new Vector2D[size()];
+		final SphericalCoordinates coords = new SphericalCoordinates();
 
 		for(int t=size(); --t >= 0; ) {
 			final Frame exposure = get(t);
 			if(exposure != null) {
 				position[t] = new Vector2D();
-				Vector2D pos = position[t];
+				final Vector2D pos = position[t];
 			
 				// Telescope motion should be w/o chopper...
 				// TELESCOPE motion with or w/o SCANNING and CHOPPER
@@ -1408,16 +1407,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public Vector2D[] getSmoothPositions(int type) {
-		double T = hasOption("positions.smooth") ? option("positions.smooth").getDouble() * Unit.s : instrument.samplingInterval;
+		final double T = hasOption("positions.smooth") ? option("positions.smooth").getDouble() * Unit.s : instrument.samplingInterval;
 		final int n = framesFor(T);
 
-		Vector2D[] pos = getPositions(type);
+		final Vector2D[] pos = getPositions(type);
 		if(n < 2) return pos;
 		
-		Vector2D[] smooth = new Vector2D[size()];
+		final Vector2D[] smooth = new Vector2D[size()];
 		int valids = n;
 
-		Vector2D sum = new Vector2D();
+		final Vector2D sum = new Vector2D();
 		
 		for(int t=n; --t >= 0; ) {
 			if(pos[t] == null) valids--;
@@ -1445,17 +1444,17 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	
-	public Signal getPositionSignal(Mode mode, int type, Motion direction) {
-		Vector2D[] pos = getSmoothPositions(type);
-		double[] data = new double[size()];	
+	public Signal getPositionSignal(Mode mode, final int type, final Motion direction) {
+		final Vector2D[] pos = getSmoothPositions(type);
+		final double[] data = new double[size()];	
 		for(int t=data.length; --t >= 0; ) data[t] = pos[t] == null ? Float.NaN : direction.getValue(pos[t]);
 		Signal signal = new Signal(mode, this, data, true);
 		return signal;
 	}
 	
 	public Vector2D[] getScanningVelocities() { 
-		Vector2D[] pos = getSmoothPositions(Motion.SCANNING | Motion.CHOPPER);
-		Vector2D[] v = new Vector2D[size()];
+		final Vector2D[] pos = getSmoothPositions(Motion.SCANNING | Motion.CHOPPER);
+		final Vector2D[] v = new Vector2D[size()];
 
 		final double i2dt = 0.5 / instrument.samplingInterval;
 		
@@ -1474,8 +1473,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public DataPoint getAverageScanningVelocity(double smoothT) {
-		Vector2D[] v = getScanningVelocities();		
-		float[] speed = new float[v.length];
+		final Vector2D[] v = getScanningVelocities();		
+		final float[] speed = new float[v.length];
 		
 		int n=0;
 		for(int t=v.length; --t >= 0; ) if(v[t] != null) speed[n++] = (float) v[t].length();
@@ -1491,10 +1490,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return new DataPoint(new WeightedPoint(avev, w));
 	}
 	
-	public int velocityCut(Range range) { 
+	public int velocityCut(final Range range) { 
 		System.err.print("   Discarding unsuitable mapping speeds. ");
 	
-		Vector2D[] v = getScanningVelocities();
+		final Vector2D[] v = getScanningVelocities();
 		
 		int flagged = 0;
 		int cut = 0;
@@ -1505,7 +1504,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				cut++;
 			}
 			else {	
-				double speed = v[t].length();
+				final double speed = v[t].length();
 				if(speed < range.min) {
 					get(t).flag(Frame.SKIP_SOURCE);
 					flagged++;
@@ -1523,14 +1522,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return cut;
 	}
 
-	public int accelerationCut(double maxA) {
+	public int accelerationCut(final double maxA) {
 		System.err.print("   Discarding excessive telescope accelerations. ");
 	
 		final Vector2D[] a = getAccelerations();
 
 		int cut = 0;
 		for(int t=size(); --t >= 0; ) if(get(t) != null) {
-			Vector2D value = a[t];
+			final Vector2D value = a[t];
 			
 			if(value == null) {
 				set(t, null);
@@ -1568,14 +1567,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	
-	public Signal getAccelerationSignal(Mode mode, Motion direction) {
-		Vector2D[] a = getAccelerations();
-		double[] data = new double[size()];	
+	public Signal getAccelerationSignal(Mode mode, final Motion direction) {
+		final Vector2D[] a = getAccelerations();
+		final double[] data = new double[size()];	
 		for(int t=data.length; --t >= 0; ) data[t] = a[t] == null ? Float.NaN : direction.getValue(a[t]);
 		return new Signal(mode, this, data, false);
 	}
 	
-
+	// Redo with Filter...
 	public synchronized void highPassFilter(double T) {
 		int Nt = FFT.getPaddedSize(size());
 	
@@ -1654,15 +1653,15 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 			
-	public void checkForNaNs(Iterable<? extends Channel> channels, final int from, int to) {
+	public void checkForNaNs(final Iterable<? extends Channel> channels, final int from, int to) {
 		comments += "?";
 		
 		to = Math.min(to, size());
 		
 		for(int t=to; --t >= from; ) {
-			Frame exposure = get(t);
+			final Frame exposure = get(t);
 			
-			if(exposure != null) for(Channel channel : channels) {
+			if(exposure != null) for(final Channel channel : channels) {
 
 				if(Float.isNaN(exposure.data[channel.index])) {
 					comments += "NaN: " + exposure.index + "," + channel.index;
@@ -1692,7 +1691,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	// uniform...
 	// The alternative would be to include sample count in weights everywhere...
 	@SuppressWarnings("unchecked")
-	public synchronized void downsample(int n) {
+	public synchronized void downsample(final int n) {
 		System.err.print("   Downsampling by " + n);
 		
 		final int windowSize = (int)Math.round(1.82 * WindowFunction.getEquivalenWidth("Hann")*n);
@@ -1708,7 +1707,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		final int nt = size();
 		
-		for(int T=0, to=windowSize; to <= nt; T++, to += n) {
+		for(int to=windowSize; to <= nt; to += n) {
 			FrameType central = get(to-centerOffset);
 			FrameType downsampled = null;
 			
@@ -1785,20 +1784,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	*/
 
-	public synchronized void offset(double value) {
-		for(Frame exposure : this) if(exposure != null) {
-			for(Channel channel : instrument) if(channel.flag == 0) exposure.data[channel.index] += value;			
+	public synchronized void offset(final double value) {
+		for(final Frame exposure : this) if(exposure != null) {
+			for(final Channel channel : instrument) if(channel.flag == 0) exposure.data[channel.index] += value;			
 		}
 	}
 
 
 	public void writeASCIITimeStream() throws IOException {
 		String filename = CRUSH.workPath + File.separator + scan.getID() + "-" + getID() + ".tms";
-		PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename), 1000000));
+		final PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename), 1000000));
 		out.println(Util.e3.format(1.0/instrument.samplingInterval));
 		final int nc = instrument.size();
 		
-		for(Frame exposure : this) {
+		for(final Frame exposure : this) {
 			boolean isEmpty = true;
 			if(exposure != null) if(exposure.isUnflagged(Frame.BAD_DATA)) {
 				isEmpty = false;
@@ -1817,10 +1816,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public double[][] getCovariance() {
 		System.err.print(" Calculating Covariance Matrix (this may take a while...)");
 		
-		double[][] covar = new double[instrument.size()][instrument.size()];
-		int[][] n = new int[instrument.size()][instrument.size()];
+		final double[][] covar = new double[instrument.size()][instrument.size()];
+		final int[][] n = new int[instrument.size()][instrument.size()];
 		
-		for(Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) {
+		for(final Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) {
 			for(int c1=instrument.size(); --c1>=0; ) if(instrument.get(c1).flag == 0) if(exposure.sampleFlag[c1] == 0) {
 				final double[] rowC = covar[c1];
 				final int[] rowN = n[c1];
@@ -1849,14 +1848,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		int n = 0;
 		for(ChannelGroup<?> channels : division) n+= channels.size();
 	
-		double[][] groupedCovar = new double[n][n];
+		final double[][] groupedCovar = new double[n][n];
 		for(int k=n; --k >= 0; ) Arrays.fill(groupedCovar[k], Double.NaN);
 	
 		
 		int k1 = 0;
-		for(ChannelGroup<?> g1 : division) for(Channel ch1 : g1) {
+		for(final ChannelGroup<?> g1 : division) for(Channel ch1 : g1) {
 			int k2 = 0;
-			for(ChannelGroup<?> g2 : division) for(Channel ch2 : g2) groupedCovar[k1][k2++] = covar[ch1.index][ch2.index];
+			for(final ChannelGroup<?> g2 : division) for(Channel ch2 : g2) groupedCovar[k1][k2++] = covar[ch1.index][ch2.index];
 			k1++;
 		}
 	
@@ -1865,11 +1864,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	public double[][] getFullCovariance(double[][] covar) {
 		
-		double[][] fullCovar = new double[instrument.storeChannels][instrument.storeChannels];
+		final double[][] fullCovar = new double[instrument.storeChannels][instrument.storeChannels];
 		
 		for(int i=fullCovar.length; --i >= 0; ) Arrays.fill(fullCovar[i], Double.NaN);
 		
-		for(Channel c1 : instrument) for(Channel c2 : instrument)
+		for(final Channel c1 : instrument) for(final Channel c2 : instrument)
 			fullCovar[c1.storeIndex-1][c2.storeIndex-1] = covar[c1.index][c2.index];
 			
 		return fullCovar;
@@ -1890,13 +1889,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	float[][] getSpectra(String windowName, int windowSize) {
-		double[] w = WindowFunction.get(windowName, windowSize);
+		final double[] w = WindowFunction.get(windowName, windowSize);
 
 		// System.err.println("  Calculating Power spectra.");
-		float[] data = new float[size()];
-		float[][] spectra = new float[instrument.size()][];
-		double df = 1.0 / (instrument.samplingInterval * windowSize);	
-		float Jy = gain * (float) instrument.janskyPerBeam();
+		final float[] data = new float[size()];
+		final float[][] spectra = new float[instrument.size()][];
+		final double df = 1.0 / (instrument.samplingInterval * windowSize);	
+		final float Jy = gain * (float) instrument.janskyPerBeam();
 		
 		final int nt = size();
 
@@ -1908,8 +1907,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				else if(exposure.sampleFlag[channel.index] != 0) data[t] = 0.0F;
 				else data[t] = exposure.data[channel.index];
 			}
-			float[] spectrum = FFT.averagePower(data, w);
-			float[] channelSpectrum = new float[spectrum.length];
+			final float[] spectrum = FFT.averagePower(data, w);
+			final float[] channelSpectrum = new float[spectrum.length];
 			
 			for(int i=spectrum.length; --i>=0; ) channelSpectrum[i] = (float) Math.sqrt(spectrum[i] / df) / Jy;
 			
@@ -1922,10 +1921,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void writeSpectra(String windowName, int windowSize) throws IOException {
 		String fileName = CRUSH.workPath + File.separator + scan.getID() + "-" + getID() + ".spec";
 
-		float[][] spectrum = getSpectra(windowName, windowSize);
-		double df = 1.0 / (instrument.samplingInterval * windowSize);
+		final float[][] spectrum = getSpectra(windowName, windowSize);
+		final double df = 1.0 / (instrument.samplingInterval * windowSize);
 		
-		PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(fileName), 1000000));
+		final PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(fileName), 1000000));
 
 		out.println("# CRUSH Residual Detector Power Spectra");
 		out.println();
@@ -1953,7 +1952,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void writeCovariances() {
 		String scanID = getFullID("-");
 		
-		double[][] covar = getCovariance(); 
+		final double[][] covar = getCovariance(); 
 		List<String> specs = hasOption("write.covar") ? option("write.covar").getList() : new ArrayList<String>();
 		String prefix = CRUSH.workPath + File.separator + "covar";
 		
@@ -2115,8 +2114,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		// Then the ArrayList
 		i = 0;
-		ArrayList<Frame> frames = new ArrayList<Frame>();
-		ArrayList<Channel> channels = new ArrayList<Channel>();
+		final ArrayList<Frame> frames = new ArrayList<Frame>();
+		final ArrayList<Channel> channels = new ArrayList<Channel>();
 		frames.addAll(this);
 		channels.addAll(instrument);
 		
@@ -2316,6 +2315,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(indexOf("filter") > indexOf("weighting")) getWeights();
 			updatePhases();
 		}
+		else if(task.equals("purify")) {
+			if(this instanceof Purifiable) ((Purifiable) this).purify();
+			comments += "P";
+		}
 		else return false;
 			
 		comments += " ";	
@@ -2385,5 +2388,42 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		else return instrument.getFormattedEntry(name, formatSpec);
 	}
+	
+	// TODO use forks by channelgroup(?) and by block(?)
+	// TODO implement forked processing where appropriate
+	public class Fork extends Parallel {
+	
+		public abstract class Frames<ReturnType> extends Process<ReturnType> {
+			@Override
+			public void processIndex(int index, int threadCount) {
+				for(int t=index; t<size(); t += threadCount) {
+					if(isInterrupted()) return;
+					process(get(t));
+					Thread.yield();
+				}
+			}
+			
+			public abstract void process(FrameType frame);
+		}
+		
+		public abstract class Channels<ReturnType> extends Process<ReturnType> {
+			private ChannelGroup<?> channels;
+	
+			public Channels(ChannelGroup<?> channels) { this.channels = channels; }
+				
+			@Override
+			public void processIndex(int index, int threadCount) {
+				for(int c=index; c<channels.size(); c+=threadCount) {
+					if(isInterrupted()) return;
+					process(channels.get(c));
+					Thread.yield();
+				}
+			}
+			
+			public abstract void process(Channel channel);
+		}
+	}
+	
+	public Fork parallel;
 	
 }

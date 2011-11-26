@@ -29,9 +29,8 @@ import util.Range;
 import crush.Integration;
 
 public class KillFilter extends FixedFilter {
-	boolean[] reject;
-	int components = 0;
-	
+	public boolean[] reject;
+		
 	public KillFilter(Integration<?,?> integration) {
 		super(integration);
 	}
@@ -52,10 +51,7 @@ public class KillFilter extends FixedFilter {
 		
 		if(fromf > tof) return;
 		
-		for(int f=fromf; f<=tof; f++) {
-			if(!reject[f]) components++;
-			reject[f] = true;
-		}
+		for(int f=fromf; f<=tof; f++) reject[f] = true;
 		
 		autoDFT();
 	}
@@ -72,7 +68,7 @@ public class KillFilter extends FixedFilter {
 	
 	public void autoDFT() {
 		// DFT 51 ops per datum, per rejected complex frequency...
-		int dftreq = 51 * components * integration.size();
+		int dftreq = 51 * (int) countParms() * integration.size();
 		
 		// 2xFFT (forth and back) with 31 ops each loop, 9.5 ops per datum, 34.5 ops per datum rearrange...
 		int fftreq = 2 * (31 * (int) Math.round(Math.log(data.length) / Math.log(2.0)) * data.length + 44 * data.length); 

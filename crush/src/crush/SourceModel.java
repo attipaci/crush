@@ -232,6 +232,7 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 		@Override
 		public void processIndex(int index, int threadCount) throws Exception {
 			for(int i=index; i<scans.size(); i += threadCount) {
+				if(isInterrupted()) return;
 				process(scans.get(i));
 				Thread.yield();
 			}
@@ -248,6 +249,7 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 		@Override
 		public void processIndex(int index, int threadCount) throws Exception {	
 			for(int i=index; i<integrations.size(); i += threadCount) {
+				if(isInterrupted()) return;
 				process(integrations.get(i));
 				Thread.yield();
 			}

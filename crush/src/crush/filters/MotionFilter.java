@@ -68,9 +68,7 @@ public class MotionFilter extends KillFilter {
 		for(int i=reject.length; --i >= 0; ) if(!reject[i]) pass++;
 		
 		System.err.print(Util.f2.format(100.0 * pass / reject.length) + "% pass. ");
-
-		components = reject.length - pass;
-		
+	
 		autoDFT();
 		
 		System.err.println("Preferring " + (dft ? "DFT" : "FFT") + ".");

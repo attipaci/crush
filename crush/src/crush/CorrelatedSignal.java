@@ -243,10 +243,7 @@ public class CorrelatedSignal extends Signal {
 		int ic = w.length / 2;
 		float[] smooth = new float[value.length];
 		float[] smoothw = new float[value.length];
-		
-		double norm = 0.0;
-		for(int i=w.length; --i >= 0; ) norm += Math.abs(w[i]);
-		
+			
 		for(int t=value.length; --t >= 0; ) {		
 			int t1 = Math.max(0, t-ic); // the beginning index for the convolution
 			int tot = Math.min(value.length, t + w.length - ic);

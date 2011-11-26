@@ -40,8 +40,8 @@ import nom.tam.util.*;
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.11-a1";
-	private static String revision = "devel.8";
+	private static String version = "2.11-a2";
+	private static String revision = "devel.2";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -461,8 +461,6 @@ public class CRUSH extends Configurator {
 			"     -faint        Use with faint sources (S/N < 10).\n" +
 			"     -deep         Use with deep fields (point sources).\n" +
 			"     -extended     Assume extended structures (>= FOV).\n" +
-			"     -point        Reduced pointing scans and suggest pointing corrections.\n" +
-			"     -skydip       Reduce skydips to obtain in-band tau.\n" +
 			"\n" +
 			"   Options for the output map:\n" +
 			"     -outpath=     Specify the directory where output files will go.\n" +

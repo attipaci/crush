@@ -60,8 +60,9 @@ public abstract class HDUReader extends Parallel {
 		
 		public void processRows(int from, int to) throws Exception {
 			for(int i=from; i<to; i++) {
-				if(!isInterrupted()) processRow(i);
-				else break;
+				if(isInterrupted()) return;
+				processRow(i);
+				Thread.yield();
 			}
 		}
 		
