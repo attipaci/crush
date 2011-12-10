@@ -53,9 +53,10 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		super(coords, r);
 	}
 	
-	public Bounds getBounds(GridImage<CoordinateType> image, double beams) {
+	public Bounds getBounds(GridImage<CoordinateType> image, double r) {
+		if(radius == null) radius = new DataPoint();
 		double origRadius = radius.value;
-		radius.value = beams * image.getImageFWHM();
+		radius.value = r;
 		Bounds bounds = getBounds(image);
 		radius.value = origRadius;
 		return bounds;
@@ -126,14 +127,15 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	}
 	
 	public void addGaussian(GridImage<CoordinateType> image, double FWHM, double scaling) {
-		Bounds bounds = getBounds(image, 3.0 * FWHM / image.getImageFWHM());
+		Bounds bounds = getBounds(image, 3.0 * FWHM);
+			
 		Vector2D centerIndex = getIndex(image.getGrid());
 		final Vector2D resolution = image.getResolution();
-		final double sigmaX = radius.value / Util.sigmasInFWHM / resolution.x;
-		final double sigmaY = radius.value / Util.sigmasInFWHM / resolution.y;
+		final double sigmaX = FWHM / Util.sigmasInFWHM / resolution.x;
+		final double sigmaY = FWHM / Util.sigmasInFWHM / resolution.y;
 		final double Ax = -0.5 / (sigmaX*sigmaX);
 		final double Ay = -0.5 / (sigmaY*sigmaY);
-			
+	
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) {
 			final double di = i-centerIndex.x;
 			final double dj = j-centerIndex.y;
@@ -321,7 +323,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	
 	
 	public void centroid(GridImage<CoordinateType> map) {
-		Bounds bounds = getBounds(map, 2.0);
+		Bounds bounds = getBounds(map, 2.0 * map.getImageFWHM());
 		Vector2D index = new Vector2D();
 		double sumw = 0.0;
 		

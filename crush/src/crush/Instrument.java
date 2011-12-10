@@ -117,6 +117,7 @@ implements TableFormatter.Entries {
 	public void validate(Scan<?,?> scan) {
 		setMJDOptions(scan.MJD);
 		setDateOptions(scan.MJD);
+		setSerialOptions(scan.serialNo);
 		setObjectOptions(scan.sourceName);
 		
 		validate();
@@ -216,7 +217,10 @@ implements TableFormatter.Entries {
 					mjdRange.max = spec.equals("*") ? Double.POSITIVE_INFINITY : AstroTime.forFitsTimeStamp(spec).getMJD();
 				}
 				
-				if(mjdRange.contains(MJD)) options.parse(settings.get(rangeSpec));
+				if(mjdRange.contains(MJD)) {
+					//System.err.println("### Setting options for " + rangeSpec);
+					options.parse(settings.get(rangeSpec));
+				}
 			}
 			catch(ParseException e) { System.err.println("   WARNING! " + e.getMessage()); }
 		}
@@ -229,8 +233,10 @@ implements TableFormatter.Entries {
 		
 		// Make options an independent set of options, setting MJD specifics...
 		Hashtable<String, Vector<String>> settings = option("serial").conditionals;
-		for(String rangeSpec : settings.keySet()) if(Range.parse(rangeSpec, true).contains(serialNo)) 
+		for(String rangeSpec : settings.keySet()) if(Range.parse(rangeSpec, true).contains(serialNo)) {
+			//System.err.println("### Setting options for " + rangeSpec);
 			options.parse(settings.get(rangeSpec));
+		}
 	}
 	
 	public void setObjectOptions(String sourceName) {
@@ -897,6 +903,9 @@ implements TableFormatter.Entries {
 		
 		return TableFormatter.NO_SUCH_DATA;
 	}
+	
+	@Override
+	public String toString() { return "Instrument " + name; }
 	
 	public final static int GAINS_SIGNED = 0;
 	public final static int GAINS_BIDIRECTIONAL = 1;

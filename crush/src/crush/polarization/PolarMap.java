@@ -52,7 +52,7 @@ public class PolarMap extends SourceModel {
 	}
 	
 	public boolean usePolarization() {
-		return usePolarization | hasOption("source.polarization");
+		return usePolarization | hasOption("source.polar");
 	}
 	
 	@Override
@@ -64,6 +64,7 @@ public class PolarMap extends SourceModel {
 		N.createFrom(scans);
 		N.signalMode = PolarModulation.N;
 		N.enableLevel = true;
+		N.enableBias = true; // Includes blanking from Q and U
 		N.enableWeighting = true;
 		N.id = "N";
 		
@@ -71,16 +72,16 @@ public class PolarMap extends SourceModel {
 		Q.standalone();
 		Q.signalMode = PolarModulation.Q;
 		Q.enableLevel = false;
+		Q.enableBias = false; // Prevents re-blanking on just Q
 		Q.enableWeighting = true;
-		Q.enableBias = false;
 		Q.id = "Q";
 		
 		U = (ScalarMap) N.copy();
 		U.standalone();
 		U.signalMode = PolarModulation.U;
 		U.enableLevel = false;
+		U.enableBias = false; // Prevents re-blanking on just U
 		U.enableWeighting = true;
-		U.enableBias = false;
 		U.id = "U";
 	}
 	
@@ -104,29 +105,15 @@ public class PolarMap extends SourceModel {
 			hasPolarization = true;
 		}
 	}
-
-	
-	public void removeBias(Integration<?, ?> subscan) {	
-		if(subscan instanceof Biased) {
-			double[] dG = subscan.instrument.getSourceGains(false);	
-			if(subscan.sourceSyncGain != null) 
-				for(int c=dG.length; --c >= 0; ) dG[c] -= subscan.sourceSyncGain[c];
-				
-			((Biased) subscan).removeBias(dG);
-			subscan.comments += " ";
-		}
-	}
 	
 	@Override
 	public synchronized void add(Integration<?, ?> subscan) {
-		removeBias(subscan);
-
-		//((Purifiable) subscan).purify();
+		((Purifiable) subscan).purify();
 		
 		N.add(subscan);	
 		
 		if(usePolarization()) {
-			((Purifiable) subscan).purify();
+			//((Purifiable) subscan).purify();
 			Q.add(subscan);
 			U.add(subscan);
 		}
@@ -151,14 +138,19 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public synchronized void sync() throws Exception {
-		System.err.print("\n   [N] ");
-		N.sync();
+	public synchronized void process(boolean verbose) throws Exception {		
+		if(verbose) System.err.print("\n   [N] ");
+		N.process(verbose);
 		if(usePolarization()) {
-			System.err.print("\n   [Q] ");
-			Q.sync();
-			System.err.print("\n   [U] ");
-			U.sync();
+			if(verbose) System.err.print("\n   [Q] ");
+			Q.process(verbose);
+			N.addMask(Q.getMask()); // Add the flagging data from Q
+			
+			if(verbose) System.err.print("\n   [U] ");
+			U.process(verbose);
+			N.addMask(U.getMask()); // Add the flagging data from U
+		
+			if(verbose) System.err.print("\n   ");	
 		}
 	}
 
@@ -189,7 +181,49 @@ public class PolarMap extends SourceModel {
 		N.postprocess(scan);
 	}
 	
-	// TODO redo with parallel...
+	
+	// Angles are measured East of North... 
+	public ScalarMap getAngles(ScalarMap P) {
+		final ScalarMap A = (ScalarMap) N.copy();
+		
+		final AstroMap q = Q.map;
+		final AstroMap u = U.map;
+		final AstroMap p = P.map;
+		final AstroMap a = A.map;
+		
+		a.new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(p.isFlagged(i,j)) {
+					a.flag(i, j);
+					return;
+				}
+				
+				double q0 = q.getValue(i, j);
+				double u0 = u.getValue(i, j);
+				double p0 = p.getValue(i, j);
+				
+				double sigma2Q = 1.0 / q.getWeight(i,j);
+				double sigma2U = 1.0 / u.getWeight(i,j);
+				
+				a.setValue(i, j, 0.5 * Math.atan2(u0, q0) / Unit.deg);
+				a.setWeight(i, j, 4.0 * Unit.deg2 * p0 * p0 * p0 * p0 / (sigma2U * q0 * q0 + sigma2Q * u0 * u0));
+			}
+		}.process();
+		
+		A.id = "A";
+		a.sanitize();
+		
+		A.enableLevel = false;
+		A.enableWeighting = false;
+		A.enableBias = false;
+		
+		a.unit = Unit.unity;
+		
+		return A;
+	}	
+	
+	
 	public ScalarMap getP() {
 		final ScalarMap P = (ScalarMap) N.copy();
 		
@@ -197,52 +231,69 @@ public class PolarMap extends SourceModel {
 		final AstroMap u = U.map;
 		final AstroMap p = P.map;
 		
-		for(int i=p.sizeX(); --i >= 0; ) for(int j=p.sizeY(); --j >= 0; ) {	
-			if(q.isUnflagged(i, j) && u.isUnflagged(i, j)) {
-				p.setValue(i, j, Math.hypot(q.getValue(i, j), u.getValue(i, j)));
+		p.new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(q.isFlagged(i, j) || u.isFlagged(i, j)) {
+					p.flag(i, j);
+					return;
+				}
+				
+				double q2 = q.getValue(i, j);
+				double u2 = u.getValue(i, j);
+				q2 *= q2; u2 *= u2;
+				
+				double sigma2Q = 1.0 / q.getWeight(i,j);
+				double sigma2U = 1.0 / u.getWeight(i,j);
+				
+				// De-bias the Rice distribution
+				// The following approximation is approximately correct
+				// for S/N > 4 according to Simmons & Stewart 1984
+				// Better approximations are numerically nasty.
+				double psigma2 = (q2*sigma2Q + u2*sigma2U) / (q2 + u2);
+				double pol2 = q2 + u2 - psigma2;
+				if(pol2 < 0.0) pol2 = 0.0;
 				
 				// Propagate errors properly...
-				if(p.getValue(i, j) > 0.0) {
-					final double pol = p.getValue(i, j);
-					final double qf = q.getValue(i, j) / pol;
-					final double uf = u.getValue(i, j) / pol;
-					p.setWeight(i, j, 1.0 / (qf*qf/q.getWeight(i, j) + uf*uf/u.getWeight(i, j)));
-				}
-				else p.setWeight(i, j, 2.0 / (1.0/q.getWeight(i, j) + 1.0/u.getWeight(i, j)));
- 				
+				p.setValue(i, j, Math.sqrt(pol2));
+				p.setWeight(i, j, 1.0 / psigma2);
 				p.unflag(i, j);
 			}
-			else p.flag(i, j);
-		}
+		}.process();
+		
 		P.id = "P";
 		p.sanitize();
 		return P;
-	}
+	}	
 	
 	public ScalarMap getI() {
 		return getI(getP());
 	}	
 	
-	// TODO redo with parallel...
 	public ScalarMap getI(ScalarMap P) {	
 		final ScalarMap I = (ScalarMap) N.copy();
 		final AstroMap n = N.map;
 		final AstroMap p = P.map;
 		final AstroMap t = I.map;
 		
-		for(int i=n.sizeX(); --i >= 0; ) for(int j=n.sizeY(); --j >= 0; ) {
-			if(n.isUnflagged(i, j) && p.isUnflagged(i, j)) {
-				t.setValue(i, j, n.getValue(i, j) + p.getValue(i, j));
-				t.setWeight(i, j, 1.0 / (1.0/n.getWeight(i, j) + 1.0/p.getWeight(i, j)));
+		t.new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(n.isUnflagged(i, j) && p.isUnflagged(i, j)) {
+					t.setValue(i, j, n.getValue(i, j) + p.getValue(i, j));
+					t.setWeight(i, j, 1.0 / (1.0/n.getWeight(i, j) + 1.0/p.getWeight(i, j)));
+				}
+				else t.flag(i, j);				
 			}
-			else t.flag(i, j);
-		}
+		}.process();
+
 		I.id = "I";
 		t.sanitize();
 		return I;
 	}
 	
-	// TODO redo with parallel...
+	
+
 	public ScalarMap getPolarFraction(ScalarMap P, ScalarMap I, double accuracy) {	
 		final ScalarMap F = (ScalarMap) P.copy();
 		final AstroMap p = P.map;
@@ -251,23 +302,30 @@ public class PolarMap extends SourceModel {
 		
 		final double minw = 1.0 / (accuracy * accuracy);
 		
-		for(int i=t.sizeX(); --i >= 0; ) for(int j=t.sizeY(); --j >= 0; ) {
-			if(t.isUnflagged(i, j) && p.isUnflagged(i, j)) {
+		f.new Task<Void>() {
+			@Override
+			public void process(int i, int j) {
+				if(t.isFlagged(i, j) || p.isFlagged(i, j)) {
+					f.flag(i, j);	
+					return;
+				}
+				
 				f.setValue(i, j, p.getValue(i, j) / t.getValue(i, j));
-			
+
 				// f = a/b --> df/db = -a/b^2 * db
 				// df2 = (da / b)^2 + (a db / b2)^2 = a/b * ((da/a)^2 + (db/b)^2)
 				// 1 / wf = 1/(wa * b2) + a2/(wb*b4) = a2/b2 * (1/(wa*a2) + 1/(wb*b2))
 				// wf = b2/a2 / (1/(wa*a2) + 1/(wb*b2))
-				final double p2 = p.getValue(i, j) * p.getValue(i, j);
-				final double t2 = t.getValue(i, j) * t.getValue(i, j);
-				f.setWeight(i, j, t2 / p2 / (1.0 / (p2 * p.getWeight(i, j)) + 1.0 / (t2 * t.getWeight(i, j))));
+				double p2 = p.getValue(i, j);
+				double t2 = t.getValue(i, j);
+				p2 *= p2; t2 *= t2;
 				
+				f.setWeight(i, j, t2 / p2 / (1.0 / (p2 * p.getWeight(i, j)) + 1.0 / (t2 * t.getWeight(i, j))));
+
 				// if sigma_f > accuracy than flag the datum
-				if(f.getWeight(i, j) < minw) f.flag(i, j);
+				if(f.getWeight(i, j) < minw) f.flag(i, j);			
 			}
-			else f.flag(i, j);
-		}
+		}.process();
 		
 		F.id = "F";
 		F.enableLevel = false;
@@ -302,10 +360,15 @@ public class PolarMap extends SourceModel {
 		ScalarMap I = getI(P);
 		I.write(path, false);	
 		
-		if(hasOption("source.polarization.fraction")) {
+		if(hasOption("source.polar.angles")) {
+			ScalarMap A = getAngles(P);
+			A.write(path, false);
+		}
+		
+		if(hasOption("source.polar.fraction")) {
 			// Write F (polarized fraction)
-			double accuracy = hasOption("source.polarization.fraction.rmsclip") ?
-					option("source.polarization.fraction.rmsclip").getDouble() : 0.03;
+			double accuracy = hasOption("source.polar.fraction.rmsclip") ?
+					option("source.polar.fraction.rmsclip").getDouble() : 0.03;
 			
 			ScalarMap F = getPolarFraction(P, I, accuracy);
 			F.write(path, false);
@@ -328,6 +391,19 @@ public class PolarMap extends SourceModel {
 		if(Q != null) Q.noParallel();
 		if(U != null) U.noParallel();
 	}
+
+	@Override
+	public int countPoints() {
+		return N.countPoints() + Q.countPoints() + U.countPoints();
+	}
 	
+	@Override
+	public void extract() throws Exception {
+		N.extract();
+		if(usePolarization()) {
+			Q.extract();
+			U.extract();
+		}		
+	}
 
 }

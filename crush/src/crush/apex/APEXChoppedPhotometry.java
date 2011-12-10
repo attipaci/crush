@@ -22,60 +22,18 @@
  ******************************************************************************/
 package crush.apex;
 
+import util.data.WeightedPoint;
 import crush.*;
+import crush.sourcemodel.Photometry;
 
-import util.*;
-import util.data.*;
-
-import java.util.*;
-
-public class APEXChoppedPhotometry extends SourceModel {
-	String sourceName;
-	double integrationTime;
-	WeightedPoint[] flux;
-	WeightedPoint sourceFlux = new WeightedPoint();
+public class APEXChoppedPhotometry extends Photometry {
 	
-	//Hashtable<ScanType, WeightedPoint> scanFluxes = new Hashtable<ScanType, WeightedPoint>();
-	
-	@Override
-	public SourceModel copy() {
-		APEXChoppedPhotometry copy = (APEXChoppedPhotometry) super.copy();
-		copy.sourceFlux = (WeightedPoint) sourceFlux.clone();
-		copy.flux = new WeightedPoint[flux.length];
-		for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = (WeightedPoint) flux[i].clone();
-		return copy;
-	}
-
 	public APEXChoppedPhotometry(APEXArray<?> instrument) {
 		super(instrument);
-		flux = new WeightedPoint[instrument.storeChannels+1];
-		for(int i=flux.length; --i >= 0; ) flux[i] = new WeightedPoint();
 	}
 	
 	public APEXArray<?> getAPEXArray() { return (APEXArray<?>) instrument; }
-	
-	@Override
-	public void createFrom(Collection<? extends Scan<?,?>> collection) {
-		super.createFrom(collection);
-		Scan<?,?> firstScan = scans.get(0);
-		sourceName = firstScan.sourceName;
-	}
-	
-	@Override
-	public synchronized void add(SourceModel model, double weight) {
-		APEXChoppedPhotometry other = (APEXChoppedPhotometry) model;
-		for(int c=flux.length; --c >= 0; ) flux[c].average(other.flux[c]);
-		sourceFlux.average(other.sourceFlux);
-		integrationTime += other.integrationTime;
-	}
 
-	@Override
-	public synchronized void add(Integration<?, ?> integration) {
-		integration.comments += "[Phot]";
-		APEXArraySubscan<?,?> subscan = (APEXArraySubscan<?,?>) integration;		
-		APEXArray<?> instrument = subscan.instrument;
-		integrationTime += subscan.chopper.efficiency * subscan.size() * instrument.integrationTime;
-	}
 
 	@Override
 	public synchronized void process(Scan<?, ?> scan) {		
@@ -133,45 +91,9 @@ public class APEXChoppedPhotometry extends SourceModel {
 		flux[refIndex].noData();		
 	}
 	
-
-	@Override
-	public void sync() {
-		double jansky = instrument.janskyPerBeam();	
-		
-		DataPoint F = new DataPoint(sourceFlux);
-		F.scale(1.0/jansky);
-		
-		System.err.print("Flux: " + F.toString(Util.e3) + " Jy/beam.");	
-	}
-
-
-	@Override
-	public void sync(Integration<?, ?> integration) {		
-	}
-
-
-	@Override
-	public void setBase() {
-	}
 	
 	@Override
-	public synchronized void reset() {
-		super.reset();
-		for(int i=flux.length; --i >= 0; ) flux[i].noData();
-		sourceFlux.noData();
-		integrationTime = 0.0;
-	}
-		
-	@Override
-	public void write(String path) throws Exception {
-		double jansky = instrument.janskyPerBeam();
-		
-		DataPoint F = new DataPoint(sourceFlux);
-		
-		Unit Jy = new Unit("Jy/beam", jansky);
-		Unit mJy = new Unit("mJy/beam", 1e-3 * jansky);
-		Unit uJy = new Unit("uJy/beam", 1e-6 * jansky);
-		
+	public void write(String path) throws Exception {	
 		System.out.println("  Note, that the results of the APEX chopped photometry reduction below include");
 		System.out.println("  the best estimate of the systematic errors, based on the true scatter of the");
 		System.out.println("  chopped photometry measurements. As such, these errors are higher than what");
@@ -179,34 +101,7 @@ public class APEXChoppedPhotometry extends SourceModel {
 		System.out.println("  uncertainty of the photometry more accurately.");
 		System.out.println();
 		
-		System.out.println("  [" + sourceName + "]");
-		System.out.println("  =====================================");
-		System.out.print("  Flux  : ");
-		
-		if(F.value > 1.0 * Jy.value) System.out.println(F.toString(Jy));
-		else if(F.value > 1.0 * mJy.value) System.out.println(F.toString(mJy));
-		else System.out.println(F.toString(uJy));
-		
-		System.out.println("  Time  : " + Util.f1.format(integrationTime/Unit.min) + " min.");
-		//System.out.println("  NEFD  : " + Util.f1.format(500.0 * F.rms() * Math.sqrt(integrationTime/Unit.s)) + " mJy sqrt(s).");
-		System.out.println("  =====================================");
-		
-	}
-
-	@Override
-	public String getSourceName() {
-		return sourceName;
-	}
-
-	@Override
-	public Unit getUnit() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void noParallel() {
-		// TODO Auto-generated method stub
+		super.write(path);
 		
 	}
 

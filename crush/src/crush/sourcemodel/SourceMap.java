@@ -56,8 +56,6 @@ public abstract class SourceMap extends SourceModel {
 		setSmoothing();
 	}
 	
-	
-	
 	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		super.createFrom(collection);
@@ -371,10 +369,6 @@ public abstract class SourceMap extends SourceModel {
 		}
 		
 		System.arraycopy(sourceGain, 0, integration.sourceSyncGain, 0, sourceGain.length);
-	
-		integration.sourceGeneration++;
-		integration.scan.sourcePoints = countPoints();
-
 	}
 
 
@@ -421,8 +415,6 @@ public abstract class SourceMap extends SourceModel {
 
 		if(CRUSH.debug) for(Pixel pixel : pixels) integration.checkForNaNs(pixel, 0, integration.size());
 	}
-
-	public abstract int countPoints();
 	
 	public abstract double covariantPoints();
 	

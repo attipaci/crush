@@ -27,24 +27,29 @@ package crush.astro;
 import util.*;
 import util.astro.*;
 import util.data.GridImage;
+import util.data.SphericalGrid;
 
 public class AstroImage extends GridImage<SphericalCoordinates> implements Cloneable, SkyCoordinates {
 
 	public AstroImage() {
+		setGrid(new SphericalGrid());
 	}
 
 	public AstroImage(int sizeX, int sizeY) {
 		super(sizeX, sizeY);
+		setGrid(new SphericalGrid());
 	}
 
 	public AstroImage(double[][] data) {
 		super(data);
+		setGrid(new SphericalGrid());
 	}
 
 	public AstroImage(double[][] data, int[][] flag) {
 		super(data, flag);
+		setGrid(new SphericalGrid());
 	}
-
+	
 	public boolean isHorizontal() {
 		return getReference() instanceof HorizontalCoordinates;
 	}

@@ -45,7 +45,6 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	 */
 	private static final long serialVersionUID = 6352446637906429368L;
 
-	public boolean isPlanetary = false;
 	//public boolean isChopped = false;
 	
 	public Class<? extends SphericalCoordinates> nativeSystem;
@@ -336,7 +335,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 			instrument.options.parse("chopped");
 		}
 					
-		isPlanetary = header.getBooleanValue("MOVEFRAM");	
+		//isPlanetary = header.getBooleanValue("MOVEFRAM");		
 		equatorial = null; horizontal = null;
 		
 		boolean hasNative = header.findCard("CTYPE1").getComment().contains("Native");

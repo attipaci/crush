@@ -38,6 +38,7 @@ import crush.CRUSH;
 import crush.GenericInstrument;
 import crush.Instrument;
 import crush.Scan;
+import util.Configurator;
 import util.CoordinatePair;
 import util.Unit;
 import util.Util;
@@ -181,6 +182,8 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 				if(header.containsKey("TELESCOP")) ((GenericInstrument) instrument).telescope = header.getStringValue("TELESCOP");
 			}
 		}
+		
+		if(instrument.options == null) instrument.options = new Configurator();
 
 		instrument.parseHeader(header);
 

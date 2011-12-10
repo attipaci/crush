@@ -65,7 +65,7 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		super.measureShape(map);
 		
 		Vector2D center = getIndex(map.getGrid());
-		Bounds bounds = getBounds(map, 1.0);
+		Bounds bounds = getBounds(map, 1.0 * map.getImageFWHM());
 		
 		double m0 = 0.0, m2c = 0.0, m2s = 0.0;
 		

@@ -42,12 +42,21 @@ public class PolKa extends Laboca {
 	 */
 	private static final long serialVersionUID = -5407116500180513583L;
 
-	float Q0 = 0.0F, U0 = 0.0F; // The intrinsic polarization of the instrument...
-	double wavePlateFrequency = 1.56 * Unit.Hz; // The default rotation frequency
+	float q0 = 0.0F, u0 = 0.0F; // The intrinsic polarization fraction of the instrument...
+	double waveplateFrequency = 1.56 * Unit.Hz; // The default rotation frequency
 	double jitter = 0.003;
-	double phi0 = 0.0;
-	boolean isOrthogonal = false;
-	Channel wavePlateChannel, frequencyChannel;
+	double referenceAngle = 0.0 * Unit.deg;
+	double horizontalAngle = 0.0 * Unit.deg;
+	double verticalAngle = 90.0 * Unit.deg;
+	double incidence = 0.0 * Unit.deg;
+	double incidencePhase = 0.0* Unit.deg;
+	double cosi;
+	
+	boolean isVertical = false;
+	boolean isCounterRotating = false;
+
+	
+	Channel offsetChannel, phaseChannel, frequencyChannel;
 	
 	public PolKa() {
 		super();
@@ -55,42 +64,59 @@ public class PolKa extends Laboca {
 	}
 	
 	@Override
-	public void initialize() {
-		super.initialize();
-	}
-	
-	@Override
 	public void validate(Scan<?,?> scan) {
 		System.err.println(" Parsing waveplate settings: ");
 		
 		if(hasOption("waveplate.frequency")) { 
-			wavePlateFrequency = option("waveplate.frequency").getDouble() * Unit.Hz;
-			System.err.println("  --> Frequency = " + Util.f3.format(wavePlateFrequency / Unit.Hz) + " Hz.");
+			waveplateFrequency = option("waveplate.frequency").getDouble() * Unit.Hz;
+			System.err.println("  --> Frequency = " + Util.f3.format(waveplateFrequency / Unit.Hz) + " Hz.");
 		}
+		else {	
+			if(hasOption("waveplate.channel")) {
+				int beIndex = option("waveplate.channel").getInt();
+				phaseChannel = get(beIndex-1);
+				if(phaseChannel != null) 
+					System.err.println("  --> Angles from channel " + phaseChannel.storeIndex + ".");
+			}
 			
+			if(hasOption("waveplate.fchannel")) {
+				int beIndex = option("waveplate.fchannel").getInt();
+				frequencyChannel = get(beIndex-1);
+				if(frequencyChannel != null) 
+					System.err.println("  --> Frequencies from channel " + frequencyChannel.storeIndex + ".");
+			}
+			
+			if(hasOption("waveplate.tchannel")) {
+				int beIndex = option("waveplate.tchannel").getInt();
+				offsetChannel = get(beIndex-1);
+				if(offsetChannel != null) 
+					System.err.println("  --> Crossing times from channel " + offsetChannel.storeIndex + ".");
+			}		
+		}
+		
 		if(hasOption("waveplate.jitter")) { 
 			jitter = option("waveplate.jitter").getDouble();
 			System.err.println("  --> Jitter = " + Util.f2.format(100.0 * jitter) + "%.");
 		}
-			
-		if(hasOption("waveplate.refangle")) {
-			phi0 = option("waveplate.refangle").getDouble() * Unit.deg;
-			System.err.println("  --> phi0 = " + Util.f1.format(phi0/Unit.deg) + " deg.");
+		
+		if(hasOption("waveplate.refangle")) referenceAngle = option("waveplate.refangle").getDouble();
+		
+		if(hasOption("waveplate.incidence")) {
+			incidence = option("waveplate.incidence").getDouble() * Unit.deg;
+			System.err.println("  --> incidence = " + Util.f1.format(incidence/Unit.deg) + " deg.");
 		}
 		
-		if(hasOption("waveplate.channel")) {
-			int beIndex = option("waveplate.channel").getInt();
-			wavePlateChannel = get(beIndex-1);
-			if(wavePlateChannel != null) 
-				System.err.println("  --> Angles from channel " + wavePlateChannel.storeIndex + ".");
+		if(hasOption("waveplate.incidence.phase")) {
+			incidencePhase = option("waveplate.incidence.phase").getDouble() * Unit.deg;
+			System.err.println("  --> incidence phase = " + Util.f1.format(incidencePhase/Unit.deg) + " deg.");
 		}
 		
-		if(hasOption("waveplate.fchannel")) {
-			int beIndex = option("waveplate.fchannel").getInt();
-			frequencyChannel = get(beIndex-1);
-			if(frequencyChannel != null) 
-				System.err.println("  --> Frequencies from channel " + frequencyChannel.storeIndex + ".");
-		}
+		isCounterRotating = hasOption("waveplate.counter");
+		
+		if(hasOption("analyzer.h")) horizontalAngle = option("analyzer.h").getDouble() * Unit.deg;
+		if(hasOption("analyzer.v")) verticalAngle = option("analyzer.v").getDouble() * Unit.deg;
+		
+		cosi = Math.cos(incidencePhase);
 			
 		super.validate(scan);
 	}
@@ -112,7 +138,7 @@ public class PolKa extends Laboca {
 			System.exit(1);
 		}
 		
-		System.err.println(" Analyzer grid orientation is " + (isOrthogonal ? "V" : "H"));
+		System.err.println(" Analyzer grid orientation is " + (isVertical ? "V" : "H"));
 	}
 	
 	public void setAnalyzer(char c) {
@@ -128,9 +154,9 @@ public class PolKa extends Laboca {
 			System.exit(1);
 			break;
 		case 'V' : 
-			isOrthogonal = true; break;
+			isVertical = true; break;
 		case 'H' :
-			isOrthogonal = false; break;
+			isVertical = false; break;
 		default :
 			System.err.println();
 			System.err.println("WARNING! Polarization analyzer position is undefined. Set the");

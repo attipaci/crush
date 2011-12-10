@@ -1,11 +1,49 @@
+>> what's the problem with date.[YYYY-MM-DDThh:mm:ss-...] parsing?
+
+>> MovingFrame reductions...
+	--> Force equatorial for celestial systems
+
+>> 'source.polarization.smooth'...
+
+>> tp waveform remove with spline...
+
+>> polka write waveforms
+
+>> polka log quantities
+	hwp. tsdelay, freq, jitter
+	pol (H/V/-) 
+
+>> Waveplate object (regulate, despike, meanTimeStampDelay...
+
+>> configurator root access for substitutions
+
+>> formatter access to configuration
+	{%key} --> configuration key
+	%key --> formatting value
+	escape % 
+
+>> Formatting multiples. E.g.: 
+	src.peak*1000.0(f3)
+	src.peak/1000.0(e2)	
+
+>> catalog.format
+
+>> Polarimetry --> N, QH, UH, QV, UV
+
+>> Photometry output file (ASCII vs. FITS)
+
+>> Messaging classes
+	--> Messages by owner (owner, sender, message)
+	--> console.errors .warnings .info .details .comments
+	--> timestamps (sorting Comparable)
+	--> GUI mode?
+
 >> Reanalyze chopped reductions...
 
 >> Mode.getGains/setGains --> channel.temp?
 >> Instrument.getSourceGains --> channel.temp?
 
 >> SCUBA-2 module to version 4 (change.log, web-page!)
->> Try SourceModel<CoordinateType>, SourceMap<CT>, ScalarMap<CT> ...
->> Instrument.getCoordinateInstance();
 
 
 >> Integration.Fork extends Parallel...
@@ -22,17 +60,14 @@ X> Synchronized access to Data2D, GridData...
 
 >> Copy over the old header keys...
 
->> FFT enclosing class
-	-> bitReverse n log n ---> n (only ~6-7% of computing time)
-	-> explore the use of mirroring arrays to simplify
-	   merge...
-
 >> Try SourceModel<CoordinateType>, SourceMap<CT>, ScalarMap<CT> ...
    Need to separate generic from astronomical...
 	Frame<CoordinateType> --> AstroFrame (SphericalCoordinates)
 	Scan<CoordinateType...> --> AstroScan (...)
 	Integration<CoordinateType...> --> AstroIntegration (...)
 	Instrument --> TelescopeInstrument
+
+>> Instrument.getCoordinateInstance();
 	
 >> standard fits keys (Data2D, or FitsImage wrapper?)
 
@@ -62,6 +97,7 @@ X> Filter & MultiFilter to use FFT.Float for faster transform
 
 >> Why do aperture fluxes have smaller error (e.g. in pointing) than peak
 fluxes?
+
 >> Smoothing in deep does not preserve point source fluxes...
 	-- is this corrected in 2.05-1?
 

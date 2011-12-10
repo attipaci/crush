@@ -32,14 +32,14 @@ import java.util.*;
 public abstract class SourceModel extends Parallel implements Cloneable {
 	public Instrument<?> instrument;
 	private Configurator options; 
-		
+	
 	public Vector<Scan<?,?>> scans;
-	public boolean isValid = false;
 	public int generation = 0;
+	public boolean isValid = false;
+	
 	public String commandLine;
 	public String id;	
-	
-	
+		
 	public SourceModel(Instrument<?> instrument) {
 		this.instrument = instrument;
 	}
@@ -129,10 +129,14 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 			}
 		}.process();
 
+		process(true);
 		sync();
 		
 		System.err.println();
 	}
+	
+		
+	public abstract void process(boolean verbose) throws Exception;
 	
 	public synchronized void sync() throws Exception {
 		// Coupled with blanking...
@@ -140,11 +144,15 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 		if(hasOption("source.coupling")) System.err.print("(coupling) ");
 		
 		System.err.print("(sync) ");
-			
+		
+		final int nParms = countPoints();
+		
 		new IntegrationFork<Void>() {
 			@Override
 			public void process(Integration<?,?> integration) {
 				sync(integration);
+				integration.sourceGeneration++;
+				integration.scan.sourcePoints = nParms;
 			}	
 		}.process();
 		
@@ -152,7 +160,7 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 		
 		setBase();
 	}
-
+	
 	public double getBlankingLevel() {
 		return hasOption("blank") ? option("blank").getDouble() : Double.NaN;
 	}
@@ -168,6 +176,8 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 	}
 	
 	public abstract String getSourceName();
+	
+	public abstract int countPoints();
 	
 	public abstract Unit getUnit();
 	

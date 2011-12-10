@@ -125,6 +125,14 @@ public class SkyDip extends SourceModel {
 			if(!Double.isNaN(ambientT)) Tsky.average(new WeightedPoint(ambientT, scan.getObservingTime()));
 		}
 	}
+	
+	@Override
+	public int countPoints() {
+		int n=0;
+		for(WeightedPoint point : data) if(point != null) if(point.weight > 0.0) n++;
+		return n;
+		
+	}
 
 	@Override
 	public void sync(Integration<?, ?> integration) {
@@ -188,6 +196,11 @@ public class SkyDip extends SourceModel {
 	public void noParallel() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void process(boolean verbose) throws Exception {
+		// TODO Auto-generated method stub
 	}
 	
 }

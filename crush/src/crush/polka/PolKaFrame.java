@@ -24,6 +24,7 @@
 
 package crush.polka;
 
+import util.Unit;
 import crush.apex.APEXArrayScan;
 import crush.laboca.*;
 import crush.polarization.*;
@@ -32,7 +33,7 @@ public class PolKaFrame extends LabocaFrame {
 	// phases for Q and U demodulation
 	float Q,U;
 	float Qh,Uh;
-	double wavePlateAngle = Double.NaN, wavePlateFrequency = Double.NaN;
+	double waveplateOffset = Double.NaN, waveplateAngle = Double.NaN, waveplateFrequency = Double.NaN;
 	
 	public PolKaFrame(APEXArrayScan<Laboca, LabocaSubscan> parent) {
 		super(parent);
@@ -41,11 +42,24 @@ public class PolKaFrame extends LabocaFrame {
 	@Override
 	public double getSourceGain(final int mode) {	
 		switch(mode) {
-		case PolarModulation.N : return super.getSourceGain(TOTAL_POWER);
-		case PolarModulation.Q : return Q * super.getSourceGain(TOTAL_POWER);
-		case PolarModulation.U : return U * super.getSourceGain(TOTAL_POWER);
+		case PolarModulation.N : return 0.5 * super.getSourceGain(TOTAL_POWER);
+		case PolarModulation.Q : return 0.5 * Q * super.getSourceGain(TOTAL_POWER);
+		case PolarModulation.U : return 0.5 * U * super.getSourceGain(TOTAL_POWER);
 		default: return super.getSourceGain(mode);
 		}
+	}
+	
+	public void loadWaveplateData() {
+		final PolKa polka = (PolKa) scan.instrument;
+		
+		if(polka.frequencyChannel != null) waveplateFrequency = data[polka.frequencyChannel.index];	
+		else waveplateFrequency = polka.waveplateFrequency;		
+		
+		if(polka.phaseChannel != null) waveplateAngle = data[polka.phaseChannel.index];
+		else waveplateAngle = 2.0 * Math.PI * (MJD - 54000.0) * Unit.day * waveplateFrequency;
+		
+		if(polka.offsetChannel != null) waveplateOffset = data[polka.offsetChannel.index];	
+		else waveplateOffset = Double.NaN;			
 	}
 	
 	@Override
@@ -54,27 +68,21 @@ public class PolKaFrame extends LabocaFrame {
 		
 		final PolKa polka = (PolKa) scan.instrument;
 		
-		if(polka.wavePlateChannel != null) wavePlateAngle = data[polka.wavePlateChannel.index];	
-		if(polka.frequencyChannel != null) wavePlateFrequency = data[polka.frequencyChannel.index];	
-				
-		Qh = (float) Math.cos(4.0 * wavePlateAngle);
-		Uh = (float) Math.sin(4.0 * wavePlateAngle);
-			
-		// calculate Q and U phases on sky based on the H and V phases...
+		if(polka.isCounterRotating) waveplateAngle *= -1.0;
+		
+		final double dA = waveplateAngle - polka.referenceAngle - polka.incidencePhase;
+		final double projected = polka.incidencePhase + Math.atan2(-Math.sin(dA), polka.cosi * Math.cos(dA));
+		final double theta = 4.0 * projected - 2.0 * (polka.isVertical ? polka.verticalAngle : polka.horizontalAngle);
+		
+		Qh = (float) Math.cos(theta);
+		Uh = (float) Math.sin(theta);
+		
+		// calculate Q and U phases on sky based on the horizontal orientation...
 		final float cos2PA = (float)(cosPA*cosPA - sinPA*sinPA);
 		final float sin2PA = (float)(2.0 * sinPA * cosPA);
 		
+		// Rotate by PA 
 		Q = cos2PA * Qh - sin2PA * Uh;
 		U = sin2PA * Qh + cos2PA * Uh;
-		
-		if(((PolKa) scan.instrument).isOrthogonal) {
-			Q *= -1;
-			U *= -1;
-		}
-		
-		
 	}
-
-	
-	
 }
