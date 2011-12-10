@@ -36,12 +36,12 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.11-a1
+ * @version 2.11-a6
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.11-a2";
-	private static String revision = "devel.2";
+	private static String version = "2.11-a7";
+	private static String revision = "devel.4";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -349,7 +349,7 @@ public class CRUSH extends Configurator {
 			Pipeline thread = new Pipeline(this);
 			thread.setOrdering(tasks);
 			threads.add(thread);
-		}
+		}// If the frequency is set manually, then calculate angles based on it...
 		
 		for(int i=0; i<scans.size(); i++) threads.get(i % maxThreads).addScan(scans.get(i));
 		
@@ -366,6 +366,7 @@ public class CRUSH extends Configurator {
 		
 		if(solveSource()) if(tasks.contains("source")) {
 			System.err.print("  [Source] ");
+			source.process(true);
 			source.sync();
 		}
 		

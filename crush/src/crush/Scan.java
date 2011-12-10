@@ -71,6 +71,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public Range longitudeRange, latitudeRange;
 	public boolean isTracking = false;
+	public boolean isPlanetary = false;
 	
 	public SourceModel sourceModel;
 	public double weight = 1.0;
@@ -93,6 +94,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public void validate() {	
 		System.err.println(" Processing scan data:");
+		
+		isPlanetary |= hasOption("planetary");
 		
 		if(Double.isNaN(MJD)) MJD = 0.5 * (getFirstIntegration().getFirstFrame().MJD + getLastIntegration().getLastFrame().MJD);
 		if(Double.isNaN(LST)) LST = 0.5 * (getFirstIntegration().getFirstFrame().LST + getLastIntegration().getLastFrame().LST);
@@ -707,5 +710,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		return nasmyth;
 	}
+	
+	@Override
+	public String toString() { return "Scan " + getID(); }
 	
 }

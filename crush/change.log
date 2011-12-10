@@ -1,7 +1,27 @@
+>> 'planetary'
+>> 'source.polarization' -> 'source.polar' (check all)
+>> 'source.polar.angles'
 >> 'filter.hwp', filter.hwp.harmonics'
+>> 'waveplate.tchannel'
+>> 'waveplate.regulate', 'waveplate.despike'
+>> 'waveplate.counter'
+>> 'waveplate.tpchar', 'waveplate.tpchannel', 'waveplate.tpharmonic'
+>> 'analyzer.horizontal', 'analyzer.vertical'
+>> 'waveplate.incidence', 'waveplate.incidence.phase'
+>> 'purify'
+>> update laboca/saboca flags!
+>> polka levelling in faithful rounds???
+>> check all reduction modes, normal, beammap, skydip, photo, polar
+>> N x 2 calibration
+>> polarization calibration
+>> why don't date settings work for PolKa prevalidate?
+>> add polka waveplate/analyzer into loggable quantities
+>> comissioning: large-enough scan pattern for extended pol.
 
-2.11-a2 (alpha)
+2.11-a7 (alpha)
 
+
+	[NEW] Reductions in moving frames (e.g. planets, Moons).
 
 	[NEW] Introducing a parallel processing framework for images. The goal 
 	is to speed up image processing functionality on modern multicore 
@@ -16,14 +36,47 @@
 	the total-power modulation is always removed before constructing
 	Q and U maps...
 
-	[NEW] {PolKa} Added Fourier half-wave-plate (HWP) filter capability
-	for removing total power modulation when the waveplate angle is both
-	jittery and projected. The filter can be activated by 'filter.hwp'. As 
-	before, the jitter can be set by 'waveplate.jitter', while the number 
-	of harmonics filtered is set by 'filter.hwp.harmonics'. The filter may
-	be useful for early PolKa data, where the stored waveplate angles were
-	flaky. However, when the angles are stored correctly, 'purify' is the
-	preferred method for removing the total-power modulation.
+	[NEW] {PolKa} Reimplemented Fourier half-wave-plate (HWP) filter 
+	capability for removing total power modulation when the waveplate angle
+	is both jittery and projected. The filter can be activated by 
+	'filter.hwp'. As before, the jitter can be set by 'waveplate.jitter', 
+	while the number of harmonics filtered is set by 
+	'filter.hwp.harmonics'. The filter may be useful for early PolKa data, 
+	where the stored waveplate angles were flaky. However, when the angles 
+	are stored correctly, 'purify' is the preferred method for removing the
+	total-power modulation.
+
+	[NEW] {PolKa} An image with the polarization angles (A) can be produced
+	using the 'source.polar.angles' option, or with the shorthand 'spa'.
+
+	[FIX] {PolKa} Parallactic angle rotation of polarization seems to have
+	been in the wrong direction...
+
+	[FIX] Conditional by serial number were not activated by default.
+
+	[FIX] {PolKa} Polarized power (P) is now properly de-biased for the 
+	Rice distribution. The points where the polarization cannot be 
+	determined are flagged.
+
+	[FIX] {PolKa} All Stokes parameters now correctly include the 50% loss 
+	due to the analyzer grid (as of 2.11-a6).
+
+	[FIX] {PolKa} 'waveplate.jitter' overrides the value caluclated from 
+	the stored frequencies.
+
+	[FIX] Scan maps were zero-leveled in every iteration, whereas this is
+	meant to happen only once at the beginning.
+	
+	[FIX] Counting source parameters, and source generations for each
+	integration has been made more universal. Previously only scalar maps
+	and subclassed took care of this.
+
+	[FIX] {PolKa} Various fixes since 2.11-a1. If 'waveplate.frequency' is 
+	manually set, then 'waveplate.channel' and 'waveplate.fchannel' are 
+	ignored. Also fixed reduction error when waveplate channels are not 
+	defined. Previously, all channels werre flagged in the second iteration
+	when this was the case. Finally, waveplate data is correctly 
+	extrapolated when waveplate data is not directly available.
 
 	[FIX] {SCUBA-2} When both an SDF and a FITS file were present in the
 	same directory for the same subscan, it was read twice in 2.11-a1.
@@ -63,7 +116,12 @@
 	[CHANGE] Some FITS keywords describing the Java environment running
 	crush has been changed to more intuitive names.
 
-	[TWEAK] {PolKa}
+	[TWEAK] {PolKa} Polarized power P is now zero-leveled, i.e. effectively
+	debiased.
+
+	[TWEAK] {PolKa} Q and U can be ietrated without interference to total-
+	power blanking. Also, the blanking mask includes significant portions 
+	of the Q/U maps.
 
 	[TWEAK] Various small performance tweaks: eliminating some temp arrays
 	and declaring more variables final.
@@ -88,6 +146,13 @@
 
 	[COSMETIC] Reorganized FITS header key ordering to bring the most 
 	important keys up front.
+
+	[CODE] {PolKa} Polarization products are now prepared using Parallel.
+
+	[CODE] ScalarMap masking overhauled. masks can be composited, e.g.
+	from diffent submaps (e.g. I, Q, U).
+
+	[CODE] {a1} Source model processing separated from synching.
 
 	[CODE] {a1} Improved error handling in new Parallel processing
 	architecture. In the first alpha, an IllegalMonitorState exception
@@ -130,6 +195,9 @@
 	is necessary, and restriction to instrument subclasses is easily done
 	through the constructor). At the same time, the lifting of the 
 	restriction makes for nicer code, and removes some annoying obstacles.
+
+	[CODE] {2.11-a1} Various fixes in image/instrument initialization, and
+	gaussian source insertion/removal.
 
 	[CLEANUP] Removed some unused variables, spotted by Eclipse Indigo.
 

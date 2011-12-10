@@ -35,6 +35,7 @@ import util.data.SphericalGrid;
 public class AstroMap extends GridSource<SphericalCoordinates> implements SkyCoordinates {
 	
 	public AstroMap() { 
+		setGrid(new SphericalGrid());
 	}
 	
 	public AstroMap(Instrument<?> instrument) { 
@@ -44,12 +45,12 @@ public class AstroMap extends GridSource<SphericalCoordinates> implements SkyCoo
 	
 	public AstroMap(String fileName, Instrument<?> instrument) throws Exception { 
 		this(instrument);
-		setGrid(new SphericalGrid());
 		read(fileName);		
 	}
 
 	public AstroMap(int i, int j) { 
 		super(i, j);
+		setGrid(new SphericalGrid());
 	}
 	
 	public void filterCorrect() {

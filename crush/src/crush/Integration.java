@@ -2389,6 +2389,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else return instrument.getFormattedEntry(name, formatSpec);
 	}
 	
+	@Override
+	public String toString() { return "Integration " + getFullID("|"); }
+	
+	
 	// TODO use forks by channelgroup(?) and by block(?)
 	// TODO implement forked processing where appropriate
 	public class Fork extends Parallel {

@@ -76,6 +76,8 @@ public class Mode {
 		return name.hashCode();
 	}
 
+	public String getName() { return name; }
+	
 	public void setGainField(Field f) {
 		gainField = f;
 	}	

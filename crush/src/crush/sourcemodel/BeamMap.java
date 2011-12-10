@@ -191,7 +191,6 @@ public class BeamMap extends SourceMap {
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].setBase();
 	}
 
-
 	@Override
 	public synchronized void process(Scan<?, ?> scan) {
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].process(scan);
@@ -208,13 +207,11 @@ public class BeamMap extends SourceMap {
 	}
 
 	@Override
-	public void sync() throws Exception {	
-		boolean verbose = true;
+	public void process(boolean verbose) throws Exception {	
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) {
 			if(hasOption("beammap.process")) pixelMap[p].process(verbose);
 			verbose = false;
 		}
-		super.sync();		
 	}
 	
 	// TODO for non AstroMap and non spherical coordinates...

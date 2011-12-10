@@ -47,11 +47,12 @@ import util.plot.colorscheme.Colorful;
 
 public class ScalarMap extends SourceMap {
 	public AstroMap map;
-	public double[][] base; 
-	public boolean[][] mask;
+	private double[][] base; 
+	private boolean[][] mask;
+		
 	public boolean enableWeighting = true;
 	public boolean enableLevel = true;
-	public boolean enableBias = true;
+	public boolean enableBias = true;	
 	
 	public ScalarMap(Instrument<?> instrument) {
 		super(instrument);
@@ -64,9 +65,9 @@ public class ScalarMap extends SourceMap {
 	
 		map.addDirect(other.map, weight);
 		
-		enableLevel |= other.enableLevel;
-		enableWeighting |= other.enableWeighting;
-		enableBias |= other.enableBias;
+		enableLevel &= other.enableLevel;
+		enableWeighting &= other.enableWeighting;
+		enableBias &= other.enableBias;
 		
 		generation = Math.max(generation, other.generation);
 	}
@@ -95,7 +96,7 @@ public class ScalarMap extends SourceMap {
 	
 	public void standalone() {
 		base = new double[map.sizeX()][map.sizeY()];
-		mask = new boolean[map.sizeX()][map.sizeY()];
+		createMask();
 	}
 
 	@Override
@@ -123,6 +124,11 @@ public class ScalarMap extends SourceMap {
 		String system = hasOption("system") ? option("system").getValue().toLowerCase() : "equatorial";
 		
 		if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
+		else if(firstScan.isPlanetary) {
+			System.err.println(" Forcing equatorial for moving object.");
+			instrument.options.process("system", "equatorial");
+			projection.setReference(firstScan.equatorial);
+		}
 		else if(system.equals("ecliptic")) {
 			EclipticCoordinates ecliptic = new EclipticCoordinates();
 			ecliptic.fromEquatorial(firstScan.equatorial);
@@ -153,7 +159,7 @@ public class ScalarMap extends SourceMap {
 		map.printShortInfo();		
 		
 		base = new double[map.sizeX()][map.sizeY()];
-		mask = new boolean[map.sizeX()][map.sizeY()];
+		createMask();
 		
 		if(hasOption("indexing")) {
 			try {index(); }
@@ -281,7 +287,7 @@ public class ScalarMap extends SourceMap {
 		if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
 		
 		if(enableLevel && scan.getSourceGeneration() == 0) map.level(true);
-		else enableLevel = false;
+		else enableLevel = false;	
 		
 		if(hasOption("source.despike")) {
 			Configurator despike = option("source.despike");
@@ -394,12 +400,7 @@ public class ScalarMap extends SourceMap {
 	
 	
 	@Override
-	public synchronized void sync() throws Exception {	
-		process(true);
-		super.sync();	
-	}
-	
-	public synchronized void process(boolean verbose) {
+	public synchronized void process(boolean verbose) {	
 		map.normalize();
 		map.generation++; // Increment the map generation...
 		
@@ -472,8 +473,9 @@ public class ScalarMap extends SourceMap {
 		if(!sourceOption.isConfigured("nosync")) {
 			if(hasOption("blank") && enableBias) {
 				if(verbose) System.err.print("(blank:" + blankingLevel + ") ");
-				mask = map.getMask(getBlankingLevel(), 3);
+				setMask(map.getMask(getBlankingLevel(), 3));
 			}
+			else map.getMask(Double.NaN, 3);
 		}
 		
 		isValid = true;
@@ -483,6 +485,51 @@ public class ScalarMap extends SourceMap {
 	}
 
 
+	public void clearMask() {
+		if(mask == null) return;
+		map.new Task<Void>() {
+			@Override
+			public void processX(int i) { Arrays.fill(mask[i], false); }
+			@Override
+			public void process(int i, int j) {}
+		}.process();
+	}
+	
+	public void setMask(boolean[][] mask) {
+		this.mask = mask;
+	}
+	
+	public void addMask(final boolean[][] m) {
+		if(mask == null) mask = m;
+		map.new Task<Void>() {
+			@Override
+			public void process(int i, int j) { mask[i][j] |= m[i][j]; }
+		}.process();
+	}
+	
+	public void copyMask(final boolean[][] m) {
+		if(mask == null) createMask();
+		map.new Task<Void>() {
+			@Override
+			public void processX(int i) { System.arraycopy(m[i], 0, mask[i], 0, m[i].length); }
+			@Override
+			public void process(int i, int j) {}
+		}.process();
+	}
+	
+	public void createMask() {
+		mask = new boolean[map.sizeX()][map.sizeY()];
+	}
+	
+	public boolean[][] getMask() { return mask; }
+
+	public final boolean isMasked(final int i, final int j) { return mask[i][j]; }
+	
+	@Override
+	public final boolean isMasked(Index2D index) {
+		return mask[index.i][index.j];
+	}
+	
 	@Override
 	public synchronized void setBase() { map.copyTo(base); }
 
@@ -517,10 +564,7 @@ public class ScalarMap extends SourceMap {
 		}
 	}
 
-	@Override
-	public final boolean isMasked(Index2D index) {
-		return mask[index.i][index.j];
-	}
+	
 	
 	public void createLookup(Integration<?,?> integration) {	
 		final CelestialProjector projector = new CelestialProjector(projection);

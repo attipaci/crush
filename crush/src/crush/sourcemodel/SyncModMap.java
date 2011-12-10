@@ -94,7 +94,7 @@ public class SyncModMap extends ScalarMap {
 					midFrame.project(pixel.getPosition(), projector);
 					map.getIndex(projector.offset, index);
 			
-					final float fGC = (mask[index.i][index.j] ? 1.0F : (float)filtering) * midFrame.transmission;
+					final float fGC = (isMasked(index) ? 1.0F : (float)filtering) * midFrame.transmission;
 					
 					for(final Channel channel : pixel) if(!Float.isNaN(value[channel.index])) {
 						value[channel.index] /= integral;
@@ -140,7 +140,7 @@ public class SyncModMap extends ScalarMap {
 						exposure.data[channel.index] -= getIncrement(index, channel, fG * integration.sourceSyncGain[channel.index], fG * sourceGain[channel.index]);
 
 						// Do the blanking here...
-						if(mask[index.i][index.j]) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
+						if(isMasked(index)) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
 						else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SOURCE_BLANK;
 					}
 				}

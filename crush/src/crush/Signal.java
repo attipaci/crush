@@ -439,4 +439,7 @@ public class Signal implements Cloneable {
 		return Math.sqrt(C2);
 	}
 	
+	@Override
+	public String toString() { return "Signal " + integration.getFullID("|") + "." + mode.getName(); }
+	
 }

@@ -49,15 +49,16 @@ public class HWPFilter extends KillFilter {
 		// Use filter.hwp.harmonics
 		PolKa polka = (PolKa) integration.instrument;
 		
-		double f0 = polka.wavePlateFrequency;
-		double df = f0 * polka.jitter;
+		double f0 = polka.waveplateFrequency;
+		double d = f0 * polka.jitter;
 		
-		int harmonics = hasOption("harmonics") ? option("harmonics").getInt() : 2;
+		// polarization is modulated at 4-theta...
+		int harmonics = hasOption("harmonics") ? option("harmonics").getInt() : 8;
 		
 		System.err.print(harmonics + " harmonics, ");
 		
 		for(int n=1; n<=harmonics; n++)	
-			kill(new Range(n * (f0 - 2.0 * df), n * (f0 + 2.0 * df)));
+			kill(new Range(n * (f0 - 2.0 * d), n * (f0 + 2.0 * d)));
 		
 		System.err.println(Util.f2.format(100.0 * (1.0 - countParms() / reject.length)) + "% pass. ");
 	}

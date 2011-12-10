@@ -207,8 +207,15 @@ public abstract class Frame implements Cloneable {
 		return cosA * position.y + sinA * position.x;	
 	}
 	
+	EquatorialCoordinates zero = new EquatorialCoordinates(0.0, 0.0);
+	
 	public final void project(final Vector2D position, final CelestialProjector projector) {
 		if(projector.isHorizontal()) getHorizontalOffset(position, projector.offset);
+		else if(scan.isPlanetary) {
+			// TODO what about planetary in non-equatorial frames?
+			getEquatorialOffset(position, projector.offset);
+			projector.offset.invert();
+		}
 		else {
 			getEquatorial(position, projector.getEquatorial());
 			projector.project();
