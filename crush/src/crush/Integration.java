@@ -329,13 +329,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void setTau(String id, double value) {
 		Vector2D t = (Vector2D) getTauCoefficients(id);
-		Vector2D inband = (Vector2D) getTauCoefficients(instrument.name);
+		Vector2D inband = (Vector2D) getTauCoefficients(instrument.getName());
 		setZenithTau(inband.x / t.x * (value - t.y) + inband.y);
 	}
 	
 	public double getTau(String id, double value) {
 		Vector2D t = (Vector2D) getTauCoefficients(id);
-		Vector2D inband = (Vector2D) getTauCoefficients(instrument.name);
+		Vector2D inband = (Vector2D) getTauCoefficients(instrument.getName());
 		return t.x / inband.x * (value - inband.y) + t.y;
 	}
 	
@@ -428,8 +428,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public abstract FrameType getFrameInstance();
 	
 	public double getCrossingTime() {
-		if(scan.sourceModel == null) return instrument.getSourceSize();
-		return scan.sourceModel.getSourceSize(instrument);
+		if(scan.sourceModel == null) return getCrossingTime(instrument.getSourceSize());
+		return getCrossingTime(scan.sourceModel.getSourceSize(instrument));
 	}
 	
 	public double getCrossingTime(double sourceSize) {		
@@ -2255,11 +2255,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	public String getASCIIHeader() {
 		return 
-			"# Instrument: " + instrument.name + "\n" +
+			"# Instrument: " + instrument.getName() + "\n" +
 			"# Scan: " + scan.getID() + "\n" +
 			(scan.size() > 1 ? "# Integration: " + (integrationNo + 1) + "\n" : "") +
-			"# Object: " + scan.sourceName + "\n" +
-			"# Date: " + scan.timeStamp + " (MJD: " + scan.MJD + ")\n" +
+			"# Object: " + scan.getSourceName() + "\n" +
+			"# Date: " + scan.timeStamp + " (MJD: " + scan.getMJD() + ")\n" +
 			"# Project: " + scan.project + "\n" +
 			"# Exposure: " + (getFrameCount(Frame.SOURCE_FLAGS) * instrument.integrationTime) + " s.\n" +
 			"# Equatorial: " + scan.equatorial + "\n" +

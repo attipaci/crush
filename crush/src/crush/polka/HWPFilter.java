@@ -49,6 +49,14 @@ public class HWPFilter extends KillFilter {
 		// Use filter.hwp.harmonics
 		PolKa polka = (PolKa) integration.instrument;
 		
+		if(!(polka.waveplateFrequency > 0.0)) {
+			System.err.println();
+			System.err.println("     WARNING! Waveplate rotation not detected. Assuming total-power mode.");
+			System.err.println("              Blacklisting 'filter.hwp'.");
+			polka.options.process("blacklist", "filter.hwp");
+			return;
+		}
+		
 		double f0 = polka.waveplateFrequency;
 		double d = f0 * polka.jitter;
 		

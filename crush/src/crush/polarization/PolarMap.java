@@ -199,12 +199,18 @@ public class PolarMap extends SourceModel {
 					return;
 				}
 				
-				double q0 = q.getValue(i, j);
-				double u0 = u.getValue(i, j);
-				double p0 = p.getValue(i, j);
+				final double p0 = p.getValue(i, j);
 				
-				double sigma2Q = 1.0 / q.getWeight(i,j);
-				double sigma2U = 1.0 / u.getWeight(i,j);
+				if(p0 == 0.0) {
+					a.flag(i, j);
+					return;
+				}
+				
+				final double q0 = q.getValue(i, j);
+				final double u0 = u.getValue(i, j);
+				
+				final double sigma2Q = 1.0 / q.getWeight(i,j);
+				final double sigma2U = 1.0 / u.getWeight(i,j);
 				
 				a.setValue(i, j, 0.5 * Math.atan2(u0, q0) / Unit.deg);
 				a.setWeight(i, j, 4.0 * Unit.deg2 * p0 * p0 * p0 * p0 / (sigma2U * q0 * q0 + sigma2Q * u0 * u0));
@@ -317,6 +323,12 @@ public class PolarMap extends SourceModel {
 				// 1 / wf = 1/(wa * b2) + a2/(wb*b4) = a2/b2 * (1/(wa*a2) + 1/(wb*b2))
 				// wf = b2/a2 / (1/(wa*a2) + 1/(wb*b2))
 				double p2 = p.getValue(i, j);
+				
+				if(p2 == 0.0) {
+					f.flag(i, j);	
+					return;
+				}
+				
 				double t2 = t.getValue(i, j);
 				p2 *= p2; t2 *= t2;
 				

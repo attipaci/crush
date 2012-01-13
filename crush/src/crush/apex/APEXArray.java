@@ -139,7 +139,7 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 		final APEXArrayScan<?,?> firstScan = (APEXArrayScan<?,?>) scans.get(0);
 		final APEXArraySubscan<?,?> firstSubscan = firstScan.get(0);
 		final EquatorialCoordinates reference = firstScan.equatorial;
-		final String sourceName = firstScan.sourceName;
+		final String sourceName = firstScan.getSourceName();
 		
 		final double pointingTolerance = resolution / 5.0;
 		
@@ -147,12 +147,12 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 		
 	
 		if(isChopped) {
-			System.err.println("Setting chopped reduction mode.");
-			System.err.println("Target is [" + sourceName + "] at " + reference.toString());
+			System.err.println(" Chopped photometry reduction mode.");
+			System.err.println(" Target is [" + sourceName + "] at " + reference.toString());
 			options.parse("chopped");
 		}
 		else if(sourceName.equalsIgnoreCase("SKYDIP")) {
-			System.err.println("Setting skydip reduction mode.");
+			System.err.println(" Skydip reduction mode.");
 			options.parse("skydip");
 			
 			if(scans.size() > 1) {
@@ -173,16 +173,16 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 			APEXArraySubscan<?,?> subscan = scan.get(0);
 			
 			// Throw out any subsequent skydips...
-			if(scan.sourceName.equalsIgnoreCase("SKYDIP")) {
-				System.err.println("  WARNING! Scan " + scan.serialNo + " is a skydip. Dropping from dataset.");
+			if(scan.getSourceName().equalsIgnoreCase("SKYDIP")) {
+				System.err.println("  WARNING! Scan " + scan.getSerial() + " is a skydip. Dropping from dataset.");
 				scans.remove(i);
 			}
 			
 			boolean subscanChopped = subscan.chopper != null;
 			
 			if(subscanChopped != isChopped) {	
-				if(isChopped) System.err.println("  WARNING! Scan " + scan.serialNo + " is not a chopped scan. Dropping from dataset.");
-				else System.err.println("  WARNING! Scan " + scan.serialNo + " is a chopped scan. Dropping from dataset.");
+				if(isChopped) System.err.println("  WARNING! Scan " + scan.getSerial() + " is not a chopped scan. Dropping from dataset.");
+				else System.err.println("  WARNING! Scan " + scan.getSerial() + " is a chopped scan. Dropping from dataset.");
 				scans.remove(i);
 				continue;
 			}
@@ -190,12 +190,12 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 			if(isChopped) {
 				if(!scan.isPlanetary) {
 					if(scan.equatorial.distanceTo(reference) > pointingTolerance) {
-						System.err.println("  WARNING! Scan " + scan.serialNo + " observed at a different position. Dropping from dataset.");
+						System.err.println("  WARNING! Scan " + scan.getSerial() + " observed at a different position. Dropping from dataset.");
 						scans.remove(i);
 					}
 				}
-				else if(!scan.sourceName.equalsIgnoreCase(sourceName)) {
-					System.err.println("  WARNING! Scan " + scan.serialNo + " is on a different object. Dropping from dataset.");
+				else if(!scan.getSourceName().equalsIgnoreCase(sourceName)) {
+					System.err.println("  WARNING! Scan " + scan.getSerial() + " is on a different object. Dropping from dataset.");
 					scans.remove(i);
 				}
 			}

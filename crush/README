@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 			  <kovacs[AT]astro.umn.edu>
 
-			  Last updated: 22 Jun 2011
+			  Last updated: 12 Jan 2012
 
 
 
@@ -1670,10 +1670,20 @@ options on the console.
    
    PolKa specific log entries
    --------------------------
+	
+	analyzer	The analyzer in place ('H', 'V' or '-')
+
+	wpdelay		The mean time-stamping delay (ms) of the waveplate 
+			reference crossings based on the linear fit from 
+			'waveplate.regulate'
+
+	wpdir		Direction of waveplate rotation ('+' or '-')
 
 	wpfreq		Waveplate frequency (Hz).
 
 	wpjitter	Fractional jitter of the waveplate.
+
+	wpok		Whether or not the scan has valid waveplate data.
 
 
    SHARC-2 specific log entries

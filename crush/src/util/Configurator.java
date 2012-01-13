@@ -81,28 +81,10 @@ public class Configurator implements Cloneable {
 	}
 	
 	public void parse(String line) {
-		Entry entry = getEntry(line);
+		Entry entry = Entry.parse(line);
 		if(entry != null) process(entry.key, entry.value);
 	}
 	
-	protected Entry getEntry(String line) {
-		StringTokenizer tokens = new StringTokenizer(line," \t=:");
-		if(!tokens.hasMoreTokens()) return null;
-		Entry entry = new Entry();
-		entry.key = tokens.nextToken().toLowerCase();
-		String value = tokens.hasMoreTokens() ? line.substring(line.indexOf(tokens.nextToken(), entry.key.length())).trim() : "";
-
-		// Remove quotes from around the argument
-		if(value.length() == 0);
-		else if(value.charAt(0) == '"' && value.charAt(value.length()-1) == '"')
-			value = value.substring(1, value.length() - 1);
-		else if(value.charAt(0) == '\'' && value.charAt(value.length()-1) == '\'')
-			value = value.substring(1, value.length() - 1);
-		
-		entry.value = value;
-		
-		return entry;
-	}
 	
 	/*
 	protected String resolve(String value) {
@@ -965,4 +947,70 @@ public class Configurator implements Cloneable {
 class Entry {
 	String key;
 	String value;
+	
+	public static Entry parse(String line) {
+		final Entry entry = new Entry();
+		final StringBuffer keyBuffer = new StringBuffer();
+		
+		int openCurved = 0;
+		int openCurly = 0;
+		int openSquare = 0;
+		
+		line = line.trim();
+		
+		int index = 0;
+				
+		boolean foundSeparator = false;
+		
+		for(; index < line.length(); index++) {
+			final char c = line.charAt(index);
+			switch(c) {
+			case '(' : openCurved++; break;
+			case ')' : openCurved--; break;
+			case '{' : openCurly++; break;
+			case '}' : openCurly--; break;
+			case '[' : openSquare++; break;
+			case ']' : openSquare--; break;
+			default :
+				if(c == ' ' || c == '\t' || c == ':' || c == '=') {
+					if(openCurved <= 0 && openCurly <= 0 && openSquare <= 0) {
+						foundSeparator = true;
+						entry.key = new String(keyBuffer).toLowerCase();
+						break;
+					}
+				}	
+			}
+			if(foundSeparator) break;
+			else keyBuffer.append(c);
+		}
+		
+		// If it's just a key without an argument, then return an entry with an empty argument...
+		if(index == line.length()) {
+			entry.key = new String(keyBuffer).toLowerCase();
+			entry.value = "";
+			return entry;
+		}
+	
+		// Otherwise, skip trailing spaces and assigners after the key... 
+		for(; index < line.length(); index++) {
+			char c = line.charAt(index);
+			if(c != ' ') if(c != '\t') if(c != '=') if(c != ':') break;
+		}
+		
+		// The remaining is the 'raw' argument...
+		String value = line.substring(index);
+	
+		// Remove quotes from around the argument
+		if(value.length() == 0);
+		else if(value.charAt(0) == '"' && value.charAt(value.length()-1) == '"')
+			value = value.substring(1, value.length() - 1);
+		else if(value.charAt(0) == '\'' && value.charAt(value.length()-1) == '\'')
+			value = value.substring(1, value.length() - 1);
+		
+		entry.value = value;
+			
+		return entry;
+	}
+	
+	
 }

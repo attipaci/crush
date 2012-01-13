@@ -37,7 +37,7 @@ public class ChannelDivision<ChannelType extends Channel> extends Vector<Channel
 	public ChannelDivision(String name) { this.name = name; }
 	
 	public ChannelDivision(ChannelGroup<ChannelType> group) { 
-		this(group.name);
+		this(group.getName());
 		add(group);
 		setDefaultNames();
 	}
@@ -55,7 +55,7 @@ public class ChannelDivision<ChannelType extends Channel> extends Vector<Channel
 	}
 	
 	public void setDefaultNames() {
-		for(int i=size(); --i >= 0; ) get(i).name = name + "-" + (i+1);
+		for(int i=size(); --i >= 0; ) get(i).setName(name + "-" + (i+1));
 	}
 	
 }

@@ -258,7 +258,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		for(int i=scans.size(); --i > 0; ) {
 			GismoScan scan = (GismoScan) scans.get(i);
 			if(scan.obsType.equalsIgnoreCase("tip")) {
-				System.err.println("  WARNING! Scan " + scan.serialNo + " is a skydip. Dropping from dataset.");
+				System.err.println("  WARNING! Scan " + scan.getID() + " is a skydip. Dropping from dataset.");
 				scans.remove(i);
 			}
 		}

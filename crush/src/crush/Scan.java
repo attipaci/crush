@@ -55,10 +55,12 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	private static final long serialVersionUID = 8967822331907667222L;
 	public InstrumentType instrument;
 	
-	public int serialNo = -1;
+	private int serialNo = -1;
+	private double MJD = Double.NaN;
+	private String sourceName;
 	
-	public double MJD = Double.NaN, LST = Double.NaN;
-	public String sourceName;
+	public double LST = Double.NaN;
+	
 	public String timeStamp;
 	public String descriptor;
 	public String observer, project, creator;
@@ -133,7 +135,31 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(instrument.options.containsKey("pointing")) pointingAt(getPointingCorrection(option("pointing")));
 	}
 	
+	public int getSerial() { return serialNo; }
 
+	public void setSerial(int n) { 
+		serialNo = n;
+		instrument.setSerialOptions(n);
+	}
+	
+	public double getMJD() {
+		return MJD;
+	}
+	
+	public void setMJD(double MJD) {
+		this.MJD = MJD;
+		instrument.setDateOptions(MJD);
+		instrument.setMJDOptions(MJD);
+	}
+	
+	public String getSourceName() {
+		return sourceName;
+	}
+	
+	public void setSourceName(String value) {
+		sourceName = value;
+		instrument.setObjectOptions(sourceName);
+	}
 	
 	public Vector2D getPointingCorrection(Configurator option) {
 		if(!option.isEnabled) return null;
@@ -311,7 +337,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		header.addValue("EXTNAME", "Scan-" + getID(), "Scan data");
 		
-		header.addValue("INSTRUME", instrument.name, "The instrument name");
+		header.addValue("INSTRUME", instrument.getName(), "The instrument name");
 		
 		if(serialNo > 0) header.addValue("SCANNO", serialNo, "Serial number for the scan");
 		if(descriptor != null) header.addValue("SCANSPEC", descriptor, "Specifier by which the scan was invoked.");
@@ -479,7 +505,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		printPointing();
 		
 		if(hasOption("log")) {
-			try { writeLog(option("log"), CRUSH.workPath + File.separator + instrument.name + ".log"); }
+			try { writeLog(option("log"), CRUSH.workPath + File.separator + instrument.getName() + ".log"); }
 			catch(IOException e) {
 				System.err.println(" WARNING! Could not write log.");
 				if(CRUSH.debug) e.printStackTrace();

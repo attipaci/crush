@@ -26,11 +26,14 @@ package crush.polka;
 
 import util.Unit;
 import util.Util;
+import util.text.TableFormatter;
 import crush.*;
 import crush.laboca.*;
 import crush.polarization.*;
 
 import java.io.*;
+import java.text.NumberFormat;
+import java.util.Vector;
 
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;
@@ -43,7 +46,7 @@ public class PolKa extends Laboca {
 	private static final long serialVersionUID = -5407116500180513583L;
 
 	float q0 = 0.0F, u0 = 0.0F; // The intrinsic polarization fraction of the instrument...
-	double waveplateFrequency = 1.56 * Unit.Hz; // The default rotation frequency
+	double waveplateFrequency; // The default rotation frequency
 	double jitter = 0.003;
 	double referenceAngle = 0.0 * Unit.deg;
 	double horizontalAngle = 0.0 * Unit.deg;
@@ -52,16 +55,55 @@ public class PolKa extends Laboca {
 	double incidencePhase = 0.0* Unit.deg;
 	double cosi;
 	
+	boolean hasAnalyzer = false;
 	boolean isVertical = false;
 	boolean isCounterRotating = false;
-
 	
 	Channel offsetChannel, phaseChannel, frequencyChannel;
 	
 	public PolKa() {
 		super();
-		name = "polka";
+		setName("polka");
 	}
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+	
+		if(name.equals("wpfreq")) return Util.defaultFormat(waveplateFrequency / Unit.Hz, f);
+		else if(name.equals("wpjitter")) return Util.defaultFormat(jitter, f);
+		else if(name.equals("wpdir")) return isCounterRotating ? "-" : "+";
+		else if(name.equals("analyzer")) {
+			if(!hasAnalyzer) return "-";
+			else return isVertical ? "V" : "H";
+		}
+		else return super.getFormattedEntry(name, formatSpec);
+	}
+
+	@Override
+	public void validate(Vector<Scan<?,?>> scans) throws Exception {
+		super.validate(scans);
+		
+		final PolKaScan firstScan = (PolKaScan) scans.get(0);
+		final PolKa polka = (PolKa) firstScan.instrument;
+		
+		if(polka.hasAnalyzer) System.err.println(" Polarized reduction mode (H or V analyzer).");
+		else System.err.println(" Total-power reduction mode (no analyzer grid).");
+			
+		// Make sure the rest of the list conform to the first scan...
+		for(int i=scans.size(); --i > 0; ) {
+			PolKaScan scan = (PolKaScan) scans.get(i);
+			if(((PolKa) scan.instrument).hasAnalyzer != polka.hasAnalyzer) {
+				System.err.println("  WARNING! Scan " + scan.getSerial() + " is " 
+						+ (polka.hasAnalyzer ? "total-power (no analyzer)" : "is polarized")
+						+ ". Dropping from dataset.");
+				scans.remove(i);
+			}
+		}
+		
+	}
+	
+	
 	
 	@Override
 	public void validate(Scan<?,?> scan) {
@@ -133,30 +175,26 @@ public class PolKa extends Laboca {
 		}
 		else if(iAnalyzer > 0) setAnalyzer(((String) hdu.getRow(0)[iAnalyzer]).charAt(0));
 		else {
-			System.err.println("ERROR! Analyzer position is not defined. Use 'analyzer' option to");
-			System.err.println("       to manually set it to 'H' or 'V'.");
-			System.exit(1);
+			hasAnalyzer = false;
+			System.err.println("  WARNING! Analyzer position is not defined. Assuming LABOCA total-power mode.");
+			System.err.println("           Use 'analyzer' option to to manually set 'H' or 'V'.");
+			
 		}
 		
-		System.err.println(" Analyzer grid orientation is " + (isVertical ? "V" : "H"));
+		if(hasAnalyzer) System.err.println(" Analyzer grid orientation is " + (isVertical ? "V" : "H"));
 	}
 	
 	public void setAnalyzer(char c) {
 		switch(c) {
 		case 'N' : 
-			System.err.println();
-			System.err.println("WARNING! It appears you are trying to reduce total-power data in");
-			System.err.println("         polarization mode. You should use 'laboca' as your instrument");
-			System.err.println("         instead of 'polka'. Otherwise, if you are reducing 2010 data");
-			System.err.println("         use the 'analyzer' key to set 'H' or 'V' analyzer positions");
-			System.err.println("         manually. Exiting.");
-			System.err.println();
-			System.exit(1);
+			hasAnalyzer = false;
+			System.err.println("  WARNING! Total-power data. You really should use 'laboca' as your instrument");
+			System.err.println("           However, 'polka' will try its best to reduce it anyway...");
 			break;
 		case 'V' : 
-			isVertical = true; break;
+			hasAnalyzer = true; isVertical = true; break;
 		case 'H' :
-			isVertical = false; break;
+			hasAnalyzer = true; isVertical = false; break;
 		default :
 			System.err.println();
 			System.err.println("WARNING! Polarization analyzer position is undefined. Set the");
@@ -174,7 +212,8 @@ public class PolKa extends Laboca {
 	
 	@Override
 	public SourceModel getSourceModelInstance() {
-		if(hasOption("source.synchronized")) return new SyncPolarMap(this);
+		if(!hasAnalyzer) return super.getSourceModelInstance();
+		else if(hasOption("source.synchronized")) return new SyncPolarMap(this);
 		else return new PolarMap(this);
 	}  
 	
