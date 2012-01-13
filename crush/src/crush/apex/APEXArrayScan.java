@@ -283,14 +283,15 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		// Read in the full HDU data
 		//hdu.getData().getData();
 		
-		serialNo = header.getIntValue("SCANNUM");
+		setSerial(header.getIntValue("SCANNUM"));
 		type = header.getStringValue("SCANTYPE");
 		mode = header.getStringValue("SCANMODE");
 		geometry = header.getStringValue("SCANGEOM");
 		direction = header.getStringValue("SCANDIR");
-		sourceName = header.getStringValue("OBJECT");
+		String sourceName = header.getStringValue("OBJECT");
 		timeStamp = header.getStringValue("DATE-OBS");
 		if(sourceName == null) sourceName = "Undefined";
+		setSourceName(sourceName);
 		
 		if(sourceName.equalsIgnoreCase("SKYDIP")) {
 			System.err.println(" Setting options for skydip");
@@ -314,13 +315,13 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 		if(project == null) project = "Unknown";
 		
-		System.err.println(" [" + sourceName + "] observed on " + dateString + " at " + timeString + " UT by " + observer);
+		System.err.println(" [" + getSourceName() + "] observed on " + dateString + " at " + timeString + " UT by " + observer);
 		
 		site = new GeodeticCoordinates(header.getDoubleValue("SITELONG") * Unit.deg, 
 					header.getDoubleValue("SITELAT") * Unit.deg);
 		
 		LST = header.getDoubleValue("LST") * Unit.sec;
-		MJD = header.getDoubleValue("MJD");
+		setMJD(header.getDoubleValue("MJD"));
 		
 		//instrument.setMJDOptions(MJD);
 		

@@ -36,7 +36,7 @@ public class ScriptGenerator {
 				{ "x35", "x45", "x55" },
 		};
 		
-		// 1 x 4 x 2 x 3 = 36
+		// 4 x 3 x 3 = 36
 		
 		System.out.println("CRUSH=\"$HOME/src/crush/crush\"");
 		System.out.println("REDUCE=\"./GDF-generic.sh\"");

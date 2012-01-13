@@ -178,9 +178,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		Header header = hdu.getHeader();
 
 		// Scan Info
-		serialNo = header.getIntValue("SCANNO");
-		
-		if(instrument.options.containsKey("serial")) instrument.setSerialOptions(serialNo);
+		setSerial(header.getIntValue("SCANNO"));
 		
 		//site = new GeodesicCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
 		//System.err.println("   Location: " + site);
@@ -205,8 +203,9 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		humidity = header.getDoubleValue("HUMIDITY");
 
 		// Source Information
-		sourceName = header.getStringValue("OBJECT");
+		String sourceName = header.getStringValue("OBJECT");
 		if(sourceName == null) sourceName = "Unknown";
+		setSourceName(sourceName);
 		
 		timeStamp = header.getStringValue("DATE-OBS");
 		
@@ -325,7 +324,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 	public String getPointingString(Vector2D pointing) {	
 		return super.getPointingString(pointing) + "\n\n" +
 			"  FAZO --> " + Util.f1.format((pointing.x + fixedOffset.x) / Unit.arcsec) +
-			", FZAO --> " + Util.f1.format((pointing.y - fixedOffset.y) / Unit.arcsec);		
+			", FZAO --> " + Util.f1.format(-(pointing.y + fixedOffset.y) / Unit.arcsec);		
 	}
 	
 	@Override

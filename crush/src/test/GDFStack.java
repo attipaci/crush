@@ -4,14 +4,20 @@ import java.io.*;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import util.CoordinatePair;
+import util.Parallel.Process;
+import util.Range;
 import util.SphericalCoordinates;
 import util.Unit;
+import util.Util;
+import util.Vector2D;
 import util.astro.CoordinateEpoch;
 import util.astro.EquatorialCoordinates;
+import util.data.CartesianGrid;
+import util.data.Data2D.Task;
 import util.data.DataPoint;
+import util.data.GridMap;
 
-import crush.GenericInstrument;
-import crush.Instrument;
 import crush.astro.AstroMap;
 import crush.sourcemodel.GaussianSource;
 
@@ -22,16 +28,30 @@ public class GDFStack {
 	public static void main(String[] args) {
 		String fileName = args[0];
 		String catalogName = args[1];
-		double minS24 = Double.parseDouble(args[2]);
-		
-		GDFStack stack = new GDFStack();
+			
+		GDFStack stacker = new GDFStack();
 		
 		try {
-			stack.readMap(fileName);
-			stack.testSource();
-			stack.readSources(catalogName, minS24);
-			stack.makeModel();
-			stack.model.write();
+			stacker.readMap(fileName);
+
+			if(args.length > 2) {
+				if(args[2].equalsIgnoreCase("rel")) {
+					stacker.readMIPSSources(catalogName);
+					catalogName += ".rel";
+				}
+				else {
+					Range range = Range.parse(args[2], true);
+					stacker.readMIPSSources(catalogName, range);
+					catalogName += "." + range.min + "--" + range.max;
+				}
+			}
+			else stacker.readSources(catalogName);
+			
+			stacker.makeModel();
+			GridMap<?> stack = stacker.getStack();			
+			
+			try { stack.write(catalogName + ".fits"); }
+			catch(Exception e) { e.printStackTrace(); }
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -39,26 +59,108 @@ public class GDFStack {
 		
 	}
 	
+	public GridMap<CoordinatePair> getStack() {
+		int size = 1 + 2 * (int)Math.ceil(3.0 * map.getImageFWHM() / map.getResolution().x);
+		GridMap<CoordinatePair> stack = new GridMap<CoordinatePair>(size, size);
+		stack.setGrid(new CartesianGrid());
+		stack.setResolution(map.getResolution().x);
+		stack.name = "stack";
+		final int c = size / 2;
+		stack.getGrid().setReferenceIndex(new Vector2D(c, c));
+		stack.setReference(new Vector2D());
+		
+		for(int i=size; --i >= 0; ) for(int j=size; --j >=0; ) {
+			DataPoint mean = getMeanFlux(i - c, j - c);		
+			stack.setValue(i, j, mean.value);
+			stack.setWeight(i, j, mean.weight);
+			stack.unflag(i, j);
+		}
+		
+		System.err.println("Mean = " + getMeanFlux(0, 0).toString(Util.e3) + " " + map.unit.name);
+		
+		return stack;
+	}
+	
+	public DataPoint getMeanFlux(final int di, final int dj) {
+		final double npts = map.getPointsPerSmoothingBeam();
+		
+		Task<DataPoint> stack = map.new Task<DataPoint>() {
+			DataPoint mean;
+			@Override 
+			public void init() { mean = new DataPoint(); }
+			
+			@Override
+			public void process(int i, int j) {
+				final int i1 = i + di;
+				if(i1 < 0) return;
+				if(i1 >= map.sizeX()) return;
+				
+				final int j1 = j + dj;
+				if(j1 < 0) return;
+				if(j1 >= map.sizeY()) return;
+				
+				if(map.isFlagged(i1, j1)) return;
+				
+				double G = model.getValue(i, j);
+				double wG = map.getWeight(i1, j1) / npts * G;
+				mean.value += wG * map.getValue(i1, j1);
+				mean.weight += wG * G;
+			}
+			
+			@Override
+			public DataPoint getPartialResult() {
+				return mean;
+			}
+			
+			@Override
+			public DataPoint getResult() {
+				DataPoint combined = new DataPoint();
+				for(Process<DataPoint> task : getWorkers()) {
+					DataPoint partial = task.getPartialResult();
+					combined.value += partial.value;
+					combined.weight += partial.weight;
+				}
+				combined.value /= combined.weight;
+				return combined;
+			}	
+		};
+		
+		stack.process();
+		DataPoint result = stack.getResult();
+		result.scale(1.0 / map.unit.value);
+		
+		return result;
+		
+	}
+	
 	
 	public void readMap(String fileName) throws Exception {
-		//Instrument<?> instrument = new GenericInstrument("generic");
-		//map = new AstroMap(fileName, instrument);
 		map = new AstroMap();
 		map.read(fileName);
 	}
 	
-	public void testSource() throws Exception {
-		GaussianSource<SphericalCoordinates> source = new GaussianSource<SphericalCoordinates>();
-		source.coords = new EquatorialCoordinates();
-		source.coords.parse("12:36:55.12 62:14:10.0 (J2000.0)");
-		source.id = "test";
-		source.peak = new DataPoint();
-		source.peak.value = 1.0;
-		//source.radius = new DataPoint();
-		sources.add(source);
+	public void readSources(String fileName) throws IOException {
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+		String line;
+		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+			StringTokenizer tokens = new StringTokenizer(line);
+			GaussianSource<SphericalCoordinates> source = new GaussianSource<SphericalCoordinates>();
+
+			source.id = tokens.nextToken();
+			source.coords = new EquatorialCoordinates(line.replace('+', ' '));
+			source.peak = new DataPoint();
+			source.peak.value = 1.0;
+			source.radius = new DataPoint();
+			source.radius.value = map.getImageFWHM();
+			
+			sources.add(source);
+		}
+		
+		System.err.println(">>> " + sources.size() + " sources.");
 	}
 	
-	public void readSources(String fileName, double minS24) throws IOException {
+	
+	public void readMIPSSources(String fileName, Range rangeS24) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		String line;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
@@ -70,6 +172,7 @@ public class GDFStack {
 					Double.parseDouble(tokens.nextToken()) * Unit.deg,
 					Double.parseDouble(tokens.nextToken()) * Unit.deg,
 					CoordinateEpoch.J2000);
+	
 			source.peak = new DataPoint();
 			source.peak.value = 1.0;
 			source.radius = new DataPoint();
@@ -82,14 +185,47 @@ public class GDFStack {
 			S24.value = Double.parseDouble(tokens.nextToken());
 			S24.setRMS(Double.parseDouble(tokens.nextToken()));	
 			
-			if(S24.value > minS24) {
+				
+			if(rangeS24.contains(S24.value))
 				sources.add(source);
-				System.err.println("   " + source.toCrushString(map));
-			}
 		}
 		
 		System.err.println(">>> " + sources.size() + " sources.");
 	}
+	
+	public void readMIPSSources(String fileName) throws IOException {
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+		String line;
+		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+			StringTokenizer tokens = new StringTokenizer(line);
+			GaussianSource<SphericalCoordinates> source = new GaussianSource<SphericalCoordinates>();
+
+			source.id = tokens.nextToken();
+			source.coords = new EquatorialCoordinates(
+					Double.parseDouble(tokens.nextToken()) * Unit.deg,
+					Double.parseDouble(tokens.nextToken()) * Unit.deg,
+					CoordinateEpoch.J2000);
+	
+			source.peak = new DataPoint();
+			source.peak.value = 1.0;
+			source.radius = new DataPoint();
+			source.radius.value = map.getImageFWHM();
+			
+			tokens.nextToken();
+			tokens.nextToken();
+			
+			DataPoint S24 = new DataPoint();
+			S24.value = Double.parseDouble(tokens.nextToken());
+			S24.setRMS(Double.parseDouble(tokens.nextToken()));	
+			source.peak.value = S24.value * 1e-6 * map.unit.value;
+				
+			sources.add(source);
+		}
+		
+		System.err.println(">>> " + sources.size() + " sources.");
+	}
+	
+	
 	
 	public void makeModel() throws Exception {
 		 model = (AstroMap) map.copy();
@@ -98,7 +234,7 @@ public class GDFStack {
 		 
 		 for(GaussianSource<SphericalCoordinates> source : sources) {
 			 source.addPoint(model);
-			 break;
+			 //System.err.println("   " + source.coords);
 		 }
 		 
 		 //model.smoothTo(map.smoothFWHM);

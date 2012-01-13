@@ -36,12 +36,12 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.11-a6
+ * @version 2.11-b1
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.11-a7";
-	private static String revision = "devel.4";
+	private static String version = "2.11-b1";
+	private static String revision = "beta";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -94,7 +94,7 @@ public class CRUSH extends Configurator {
 			System.exit(1);
 		}
 		
-		System.err.println("Instrument is " + instrument.name.toUpperCase());
+		System.err.println("Instrument is " + instrument.getName().toUpperCase());
 		instrument.options = this;
 	}
 	
@@ -145,7 +145,7 @@ public class CRUSH extends Configurator {
 		
 		// read the instrument overriderrs (if any).
 		try { 
-			super.readConfig(userConfPath + instrument.name + File.separator + fileName); 
+			super.readConfig(userConfPath + instrument.getName() + File.separator + fileName); 
 			found = true;
 		}
 		catch(IOException e) {}
@@ -206,7 +206,7 @@ public class CRUSH extends Configurator {
 				Scan<?,?> scan = (Scan<?,?>) instrument.getScanInstance();
 				if(isConfigured("obslog")) {
 					scan.read(scanID, false);
-					scan.writeLog(get("obslog"),  workPath + File.separator + instrument.name + ".obs.log");
+					scan.writeLog(get("obslog"),  workPath + File.separator + instrument.getName() + ".obs.log");
 				}
 				else { 
 					scan.read(scanID, true);
@@ -267,7 +267,7 @@ public class CRUSH extends Configurator {
 	
 		System.out.println();
 		
-		source = ((Instrument<?>) instrument.copy()).getSourceModelInstance();
+		source = ((Instrument<?>) scans.get(0).instrument.copy()).getSourceModelInstance();
 		
 		if(source != null) {
 			source.commandLine = commandLine;
@@ -349,8 +349,8 @@ public class CRUSH extends Configurator {
 			Pipeline thread = new Pipeline(this);
 			thread.setOrdering(tasks);
 			threads.add(thread);
-		}// If the frequency is set manually, then calculate angles based on it...
-		
+		}
+			
 		for(int i=0; i<scans.size(); i++) threads.get(i % maxThreads).addScan(scans.get(i));
 		
 		for(int i=1; i<maxThreads && i<threads.size();) {

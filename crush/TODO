@@ -1,9 +1,23 @@
->> what's the problem with date.[YYYY-MM-DDThh:mm:ss-...] parsing?
+>> polka levelling in faithful rounds???
+>> check all reduction modes, normal, beammap, skydip, photo, polar
+>> N x 2 calibration
+>> polarization calibration
+>> comissioning: large-enough scan pattern for extended pol.
+>> analyzer and waveplate objects?
+
+>> validate(scans) to automatically compare source types.
+	-- remove specific source type comparisons?...
+
+>> polarization in horizontal?...
+
+>> Autodetect APEX planets?
+
+>> 'waveplate.accuracy' --> add to angles error...
 
 >> MovingFrame reductions...
 	--> Force equatorial for celestial systems
 
->> 'source.polarization.smooth'...
+>> 'source.polar.smooth'...
 
 >> tp waveform remove with spline...
 

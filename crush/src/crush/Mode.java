@@ -84,7 +84,7 @@ public class Mode {
 	
 	public void setChannels(ChannelGroup<?> group) {
 		channels = group;
-		name = group.name;
+		name = group.getName();
 	}
 	
 	public int[] getChannelIndex() {

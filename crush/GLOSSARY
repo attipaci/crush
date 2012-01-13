@@ -80,6 +80,40 @@
 			detected. You can still use 'analyzer' to override the
 			recorded setting.
 
+:: analyzer.h=X		@Instrument: PolKa
+			@Expert
+			@Since: 2.11
+			Set the H analyzer angle (in degrees).
+			@See: 'analyzer.v'
+
+:: analyzer.h.phase=X	@Instrument: PolKa
+			@Expert
+			@Since: 2.11
+			Set the relative phase (degrees) of the total-power 
+			modulation for waveplate phase reconstruction with the 
+			H analyzer. These phases can be measured using
+			'waveplate.tpchar' when the waveplate data is normally
+			present.
+			@See: 'waveplate.tpchannel', 'waveplate.tpharmonic'
+			      'waveplate.tpchar', 'analyzer.v.phase' 	
+
+:: analyzer.v=X		@Instrument: PolKa
+			@Expert
+			@Since: 2.11
+			Set the V analyzer angle (in degrees).
+			@See: 'analyzer.h'
+
+:: analyzer.v.phase=X	@Instrument: PolKa
+			@Expert
+			@Since: 2.11
+			Set the relative phase (degrees) of the total-power 
+			modulation for waveplate phase reconstruction with the 
+			V analyzer. These phases can be measured using
+			'waveplate.tpchar' when the waveplate data is normally
+			present.
+			@See: 'waveplate.tpchannel', 'waveplate.tpharmonic'
+			      'waveplate.tpchar', 'analyzer.h.phase' 	
+
 :: array		@Alias -> 'correlated.obs-channels'
 			@Advanced
 			Decorrelate on all the radiation-sensitive channels of
@@ -710,8 +744,31 @@
 			Activate spectral filtering of time-streams. The 
 			filter components are set by 'filter.ordering' and can
 			be configured activated separately.
-			@See: 'filter.ordering', 'filter.motion', 
+			@See: 'filter.ordering', 'filter.hwp', 'filter.motion', 
 			'filter.kill', 'filter.whiten'
+
+:: filter.hwp		@Instrument: PolKa
+			@Advanced
+			@Since: 2.11
+			Use FFT filtering to get rid of the total-power
+			modulation by the half-waveplate rotation. Can be used
+			together with, or instead of, 'purify'. The advantage
+			of the FFT filtering is that it works even if the 
+			waveplate data is not entirely accurate (i.e. jittery).
+			However, if the waveplate phase is fully known, then
+			'purify' should be the prefered method for rejecting
+			the unwanted total-power modulation. The number of
+			harmonics (over the rotation frequency) is controlled
+			by the 'harmonics' subkey.
+			@See: 'filter.hwp.harmonics', 'waveplate.jitter'
+			      'purify', 'waveplate.frequency'
+
+:: filter.hwp.harmonics	@Instrument: PolKa
+			@Expert
+			@Since: 2.11
+			Specify how many harmonics of the waveplate rotation
+			frequency to use in the half-waveplate filter.
+			@See: 'filter.hwp'
 
 :: filter.kill		@Since: 2.10
 			@Expert
@@ -1541,6 +1598,20 @@
 			nonger be assumed).
 			@See: 'rcp', 'pcenter', 'rcenter'
 
+:: planetary		@Since: 2.11
+			Specify, explicitly, that the object is moving in the
+			celestial frame (such as solar system objects, like
+			planets, asteroids, comets and moons). This way, data
+			will be properly aligned on the coordinates of the 
+			first scan. If the data headers are correctly set up
+			(and interpreted by crush) moving objects can be auto
+			detected. This option is there, in case, things do not
+			work as expected (e.g. if you notice that your solar
+			system object smears or moves across the image with the
+			default reduction.
+			Currently, the option forces equatorial coordinates.
+			@See: 'system'
+
 :: point		@Since: 2.00-b4
 			This is a convenience key for triggering settings for
 			reducing pointing scans. Currently, it invokes
@@ -1657,7 +1728,7 @@
 			sources to provide a valid pointing result. If the
 			option is not set, a value of 5.0 is assumed.
 
-:: pol			@Alias --> 'source.polarization'
+:: pol			@Alias --> 'source.polar'
 			@Since: 2.10
 
 :: poll[=<key>]		Whenever unsure what options are set at any given stage,
@@ -1712,6 +1783,21 @@
 				GLS  --  Radio (aka Global Sinusoidal)
 
 			@See: 'system', 'grid', 'mapsize'
+
+:: purify		@Instrument: PolKa
+			@Advanced
+			@Since: 2.11
+			Really a generic option for getting rid of unwanted
+			signals before the mapping step. The exact action may 
+			be different from one instrument to another. For now, 
+			only PolKa uses this option for removing the total-
+			power modulation before producing the Q and U maps. The
+			method uses a template of the modulation as a function
+			of the phase. It should work perfectly, if the 
+			waveplate angles are accurately known. However, FFT
+			filtering (via 'filter.hwp') is more suited for
+			uncertainties in the waveplate angles.
+			@See: 'filter.hwp'
 
 :: radec		@Alias -> system=equatorial
 			Reduce using equatorial coordinates (for mapping).
@@ -2242,7 +2328,7 @@
 			'write.spectrum'
 			@See: 'write.covar', 'write.ascii', 'write.spectrum'
 
-:: source.polarization  @Instrument: PolKa
+:: source.polar  	@Instrument: PolKa
 			@Advanced
 			Specify to yield polarization data (I,Q and U)
 			rather than simply producing a total-power image. The
@@ -2253,25 +2339,32 @@
 			@See: 'pol', 'spf', 'source.synchronized', 
 			      'waveplate.refangle', 'analyzer'
 
-:: source.polarization.fraction		@Since: 2.10
-					@Instrument: PolKa
-					@Advanced
+:: source.polar.angles		@Instrument: PolKa
+				@Since: 2.11
+				@Advanced
+			Write an image of the polarization angles also. The
+			shorthand 'spa' can also be used.
+			@See: 'spa'
+
+:: source.polar.fraction	@Since: 2.10
+				@Instrument: PolKa
+				@Advanced
 			Write an image of the polarized power fraction as well
 			as the default polarization products (N, Q, U and the
 			derivatives I & P). You can also use the shorthand 
 			'spf' to the same effect, and can control the clipping 
 			of the noisy bits via the 'rmsclip' sub-option.
-			@See: 'spf', 'source.polarization', 
-			      'source.polarization.fration.rmsclip'
+			@See: 'spf', 'source.polar', 
+			      'source.polar.fration.rmsclip'
 
-:: source.polarization.fraction.rmsclip=X	@Since: 2.10
-						@Instrument: PolKa
-						@Expert
+:: source.polar.fraction.rmsclip=X	@Since: 2.10
+					@Instrument: PolKa
+					@Expert
 			Set the maximum rms for the unflagged points in the
 			polarization fraction image. The default value is 0.03
 			(i.e. 3% rms). You can also use the shorthand version
 			'spf.rmsclip'.
-			@See: 'spf', 'source.polarization.fraction' 
+			@See: 'spf', 'source.polar.fraction' 
 
 :: source.redundancy=N	@Expert
 			Specify the minimum redundancy (N samples) that
@@ -2352,7 +2445,10 @@
 			point-like compact sources are assumed.	
 			@See: 'faint', 'extended', 'sourcesize'
 
-:: spf			@Alias --> 'source.polarization.fraction'
+:: spa			@Alias --> 'source.polar.angles'
+			@Since: 2.11
+
+:: spf			@Alias --> 'source.polar.fraction'
 			@Since: 2.10
 
 :: split		A convenience key for adjusting options for very large
@@ -2580,7 +2676,23 @@
 			phases are critical to recovering the polarization
 			information from the data.
 			@See: 'waveplate.fchannel', 'waveplate.refangle'
-	
+
+:: waveplate.counter	@Instrument: PolKa
+			@Advanced
+			@Since: 2.11
+			Occasionally the waveplate spins backwards. This option
+			lets you reduce such data, provided you know when this
+			happened.
+
+:: waveplate.despike=X	@Instrument: PolKa
+			@Expert
+			@Since: 2.11
+			When fitting the timestamp data, assuming regular
+			waveplate rotation (see 'waveplate.regulate'), this
+			option can set a despiking level.
+			@See: 'waveplate.regulate'
+			
+
 :: waveplate.fchannel=N	@Instrument: PolKa
 			@Expert
 			The LABOCA channel number (counting from 1),
@@ -2600,6 +2712,20 @@
 			frame can be set via 'waveplate.refangle'.
 			@See: 'waveplate.channel', 'waveplate.refangle'
  
+:: waveplate.incidence=X	@Instrument: PolKa
+				@Expert
+				@Since: 2.11
+			The waveplate incidence angle from normal, in degrees.
+			@See: 'waveplate.incidence.phase'
+
+:: waveplate.incidence.phase=X	@Instrument: PolKa
+				@Expert
+				@Since: 2.11
+			The waveplate phase (in degrees) of the plane of
+			incidence, measured from the reference position in the
+			direction of waveplate rotation.
+			@See: 'waveplate.incidence'
+
 :: waveplate.jitter=X	@Instrument: PolKa
 			@Expert
 			@Obsolete
@@ -2635,6 +2761,47 @@
 			requires measurements on sources of known polarization
 			(e.g. a wire grid in the pupil)
 			@See: 'waveplate.channel'
+
+:: waveplate.regulate	@Instrument: PolKa
+			@Advanced
+			@Since: 2.11
+			Provide a workaround to the innacuracy of the waveplate
+			timestaps, by assuming that the waveplate motion is
+			regular. A linear fit to the timestamp data will be 
+			used instead of the original timestamps. The quality of
+			the fit may be improved with despiking the data via
+			'waveplate.despike'. Requires timestamp information via
+			'waveplate.tchannel'.
+			@See: 'waveplate.despike', 'waveplate.tchannel' 
+
+:: waveplate.tchannel=N	@Instrument: PolKa
+			@Expert
+			@Since: 2.11
+			The channel that holds the timing offsets to the last
+			waveplate timestamp. This information can be used by
+			CRUSH to fully reconstruct the waveplate motion (at
+			least to the timestamping accuracy).
+
+:: waveplate.tpchannel=N	@Instrument: PolKa
+				@Expert
+				@Since: 2.11
+			Reconstruct the waveplate data, when this is not
+			recorded (such as for two days in Dec 2011), from the
+			total power-modulation of the specified channel.
+			The harmonic and relative phase of the total power
+			modulation (for H and V analyzers respectively) are set
+			by 'waveplate.tpharmonic', 'analyzer.h.phase' and 
+			'analyzer.v.phase'
+			@See: 'waceplate.tpharmonic', 'analyzer.h.phase'
+			      'analyzer.v.phase'
+
+:: waveplate.tpharmonic=N	@Instrument: PolKa
+				@Expert
+				@Since: 2.11
+			The harmonic of the waveplate frequency that should be
+			used for the waveplate phase reconstruction, when the
+			waveplate phase data is not recorded.
+			@See: 'waveplate.tpchannel'
 
 :: weighting		Derive pixel weights based on the rms of the unmodelled
 			timestream signals.

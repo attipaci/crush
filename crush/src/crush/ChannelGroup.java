@@ -33,7 +33,7 @@ public class ChannelGroup<ChannelType extends Channel> extends ArrayList<Channel
 	 */
 	private static final long serialVersionUID = -922794075467674753L;
 	
-	public String name;
+	private String name;
 	
 	public ChannelGroup(String name) {
 		this.name = name;
@@ -58,6 +58,9 @@ public class ChannelGroup<ChannelType extends Channel> extends ArrayList<Channel
 		return copy;
 	}
 
+	public String getName() { return name; }
+	
+	public void setName(String value) { name = value; }
 
 	public ChannelGroup<ChannelType> getChannels() {
 		// All good channels

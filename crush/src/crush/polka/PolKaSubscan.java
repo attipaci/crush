@@ -41,10 +41,20 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 	 * 
 	 */
 	private static final long serialVersionUID = -901946410688579472L;
-	double meanTimeStampDelay = 0.0;
+	double meanTimeStampDelay = Double.NaN;
+	boolean hasTimeStamps = true;
 	
 	public PolKaSubscan(APEXArrayScan<Laboca, LabocaSubscan> parent) {
 		super(parent);
+	}
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+	
+		if(name.equals("wpdelay")) return Util.defaultFormat(meanTimeStampDelay / Unit.ms, f);
+		else if(name.equals("wpok")) return Boolean.toString(hasTimeStamps);
+		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
 	@Override
@@ -56,16 +66,29 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 
 	
 	public int getPeriod(int mode) {
-		return (int)Math.round(instrument.samplingInterval / (4.0*getWavePlateFrequency()));
+		return (int)Math.round(instrument.samplingInterval / (4.0*getWaveplateFrequency()));
 	}
 	
-	public double getWavePlateFrequency() {
+	public double getWaveplateFrequency() {
 		return ((PolKa) instrument).waveplateFrequency;
 	}
-
+	
+	/*
+	@Override
+	public double getCrossingTime(double sourceSize) {		
+		return 1.0 / (1.0/super.getCrossingTime() + 4.0 * getWaveplateFrequency());
+	}
+	*/
 	
 	@Override
 	public void validate() {
+		PolKa polka = (PolKa) instrument;
+		
+		if(!polka.hasAnalyzer) {
+			super.validate();
+			return;
+		}
+		
 		reindex();
 		
 		for(Frame exposure : this) if(exposure != null) ((PolKaFrame) exposure).loadWaveplateData();
@@ -73,6 +96,8 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		// TODO could it be that MJD options not yet set here?
 		
 		if(!isWaveplateValid()) { 
+			hasTimeStamps = false;
+			System.err.println("     WARNING! Invalid waveplate data. Will attempt workaround...");
 			calcMeanWavePlateFrequency();
 			Channel channel = hasOption("waveplate.tpchannel") ?
 					instrument.getChannelLookup().get(option("waveplate.tpchannel").getInt()) :
@@ -81,7 +106,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		}
 		else if(hasOption("waveplate.regulate")) regularAngles();
 		else if(hasOption("waveplate.frequency")) {
-			System.err.println("   Setting waveplate frequency " + Util.f3.format(getWavePlateFrequency()) + " Hz.");
+			System.err.println("   Setting waveplate frequency " + Util.f3.format(getWaveplateFrequency()) + " Hz.");
 			System.err.println("   WARNING! Phaseless polarization (i.e. uncalibrated angles).");
 		}
 		else {
@@ -139,6 +164,9 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 	
 	public void removeTPModulation() {
 		PolKa polka = (PolKa) instrument;
+		
+		// If the waveplate is not rotating, then there is nothing to do...
+		if(!(polka.waveplateFrequency > 0.0)) return;
 		
 		if(tpWaveform == null) {
 			double oversample = hasOption("waveplate.oversample") ? option("waveplate.oversample").getDouble() : 1.0;
@@ -235,20 +263,11 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		
 	@Override
 	public Vector2D getTauCoefficients(String id) {
-		if(id.equals(instrument.name)) return getTauCoefficients("laboca");
+		if(id.equals(instrument.getName())) return getTauCoefficients("laboca");
 		else return super.getTauCoefficients(id);
 	}
 		
-	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-		PolKa polka = (PolKa) instrument;
-		
-		if(name.equals("wpfreq")) return Util.defaultFormat(polka.waveplateFrequency / Unit.Hz, f);
-		else if(name.equals("wpjitter")) return Util.defaultFormat(polka.jitter, f);
-		else return super.getFormattedEntry(name, formatSpec);
-	}
-
+	
 	public void regularAngles() throws IllegalStateException {	
 		PolKa polka = (PolKa) instrument;
 		Channel offsetChannel = polka.offsetChannel;
@@ -427,15 +446,20 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		final int c = channel.index;
 		final double w = 2.0 * Math.PI * freq * instrument.integrationTime;
 		double sumc = 0.0, sums = 0.0;
+		int n = 0;
 		
 		for(Frame exposure : this) if(exposure != null) {
-			final double value = channel.weight * exposure.data[c];
+			final double value = exposure.data[c];
 			final double theta = w * exposure.index;
 			sumc += Math.cos(theta) * value;
 			sums += Math.sin(theta) * value;
+			n++;
 		}
+		sumc *= 2.0/n;
+		sums *= 2.0/n;
 		
-		System.err.println("   ---> TP: " + Util.e3.format(Math.hypot(sums, sumc)));
+		System.err.println("   ---> TP: " + Util.e3.format(Math.hypot(sums, sumc))
+				+ " @ " + Util.f3.format(freq) + "Hz");
 		
 		return Math.atan2(sums, sumc);
 	}

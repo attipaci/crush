@@ -1,27 +1,15 @@
->> 'planetary'
->> 'source.polarization' -> 'source.polar' (check all)
->> 'source.polar.angles'
->> 'filter.hwp', filter.hwp.harmonics'
->> 'waveplate.tchannel'
->> 'waveplate.regulate', 'waveplate.despike'
->> 'waveplate.counter'
->> 'waveplate.tpchar', 'waveplate.tpchannel', 'waveplate.tpharmonic'
->> 'analyzer.horizontal', 'analyzer.vertical'
->> 'waveplate.incidence', 'waveplate.incidence.phase'
->> 'purify'
->> update laboca/saboca flags!
->> polka levelling in faithful rounds???
->> check all reduction modes, normal, beammap, skydip, photo, polar
->> N x 2 calibration
->> polarization calibration
->> why don't date settings work for PolKa prevalidate?
->> add polka waveplate/analyzer into loggable quantities
->> comissioning: large-enough scan pattern for extended pol.
 
-2.11-a7 (alpha)
+2.11-b1 (beta)
 
+	[BUG] {SHARC-2} suggested FZAO pointing offsets were wrongly calculated
+	(sign error)
 
-	[NEW] Reductions in moving frames (e.g. planets, Moons).
+	[BUG] Crossing times were not correctly calculated (returned size, not
+	actual crossing time...). Fixed.
+
+	[NEW] Reductions in moving frames (e.g. planets, Moons). The option
+	'planetary' can be used to specify movinf frames, if these aren't
+	automatically detected based on the scan headers.
 
 	[NEW] Introducing a parallel processing framework for images. The goal 
 	is to speed up image processing functionality on modern multicore 
@@ -29,6 +17,46 @@
 	power. This will result in a small gain for reduction purposes, but 
 	should make the upcoming new 'show', 'imagetool' (etc.) more 
 	responsive, especially when handling large images...
+
+	[NEW] {PolKa} New loggable quantities 'analyzer', 'wpdelay', 'wpdir', 
+	'wpok'. See the logging section of the README for details.
+
+	[NEW] {PolKa} A map of the polarization angles can now be produced also
+	via the 'source.polar.angles' option or the 'spa' shorthand.
+	
+	[NEW] {PolKa} Now taking into account the non-sinusoidal modulation of
+	polarized light resulting from the oblique incidence on the waveplate.
+	The incidence angle can be set by 'waveplate.incidence', while the
+	direction of the incidence is set by 'waveplate.incidence.phase'.
+
+	[NEW] {PolKa} The angles (in the horizontal frame of the C-cabin) of
+	the analyzer grids can now be set separately via 'analyzer.v' and
+	'analyzer.h'.
+
+	[NEW] {PolKa} A workaround for missing waveplate data during the 2011
+	December run. Waveplate angles can be reconstructed using the total-
+	power modulation of a specified channel ('waveplate.tpchannel') using
+	a specified harmonic of the waveplate frequency 
+	('waveplate.tpharmonic'), and using the phases 'analyzer.h.phase' and
+	'analyzer.v.phase' (which can be measured via 'waveplate.tpchar' when
+	the waveplate data is there).
+
+	[NEW] {PolKa} As of 2011 Dec, the time offset to the last available 
+	waveplate crossing is stored in one of the unused LABOCA channels. The
+	option 'waveplate.tchannel' can be used to specify which channel that 
+	is, allowing a full reconctruction of the waveplate crossings.
+
+	[NEW] {PolKa} There is still a problem with the accuracy of the 
+	waveplate timestamps, which impacts how accurately the waveplate angles
+	are reconstructed. Luckily, the physical rotation of the waveplate
+	seems extremely uniform. Thus, one can use 'waveplate.regulate' to use
+	a linear fit to the timestamps rather than the inaccurate timestamps
+	themselves. The quality of the fit can be improved by despiking via
+	'waveplate.despike'.
+
+	[NEW] {PolKa} Occasionally, the waveplate restarts in the wrong 
+	direction. If this is properly diagnosed, the data can be reduced 
+	correctly with the 'waveplate.counter' option.
 
 	[NEW] {PolKa} Pipeline step 'purify' can now be added to the ordering
 	of possible operations to remove the total-power modulation at any
@@ -48,6 +76,27 @@
 
 	[NEW] {PolKa} An image with the polarization angles (A) can be produced
 	using the 'source.polar.angles' option, or with the shorthand 'spa'.
+
+	[NEW] {PolKa} If analyzer is not in place (total-power mode) then 
+	polka reductions revert back to pseudo-laboca mode. This is similar but
+	not the same as normal laboca reductions, since the configurations are
+	modified by polka. The main purpose of the new feature is to allow
+	batch reductions of scans (e.g. for logging) without prior knowledge
+	of whether or not polarization or total-power mode was observed.
+
+	[NEW] {PolKa} Check to make sure that polarized scans (with horizontal
+	or vertical analyzer in place) are not reduced together with total-
+	power scans (without analyzer). When both type of scans are submitted
+	the first scan determines the reduction mode (polarization or total-
+	power), and subsequent incompatible scans are discarded.
+
+	[FIX] Source model type now determined by first scan, allowing dynamic
+	changes depending on the preprocessing of the scans.
+
+	[FIX] Updated parsing of configuration entries to take into account
+	bracketed expressions properly. Previously spaces, tabs and : and =
+	characters inside conditional brackets did not work as expected. Now,
+	they should...
 
 	[FIX] {PolKa} Parallactic angle rotation of polarization seems to have
 	been in the wrong direction...
@@ -116,12 +165,18 @@
 	[CHANGE] Some FITS keywords describing the Java environment running
 	crush has been changed to more intuitive names.
 
+	[TWEAK] Obsoleted key 'filter.whiten.neighbours' removed from 
+	configuration.
+
 	[TWEAK] {PolKa} Polarized power P is now zero-leveled, i.e. effectively
 	debiased.
 
 	[TWEAK] {PolKa} Q and U can be ietrated without interference to total-
 	power blanking. Also, the blanking mask includes significant portions 
 	of the Q/U maps.
+
+	[TWEAK] Polarization angles and fractions are not calculated when the
+	polarization fraction is estimated to be zero.
 
 	[TWEAK] Various small performance tweaks: eliminating some temp arrays
 	and declaring more variables final.
@@ -146,6 +201,12 @@
 
 	[COSMETIC] Reorganized FITS header key ordering to bring the most 
 	important keys up front.
+
+	[CODE] Access to serial numbers, mjd and source name are through
+	getters and setters only. It allows invoking conditional automatically
+	as soon as these values are defined.
+
+	[CODE] Instrument name access through getter/setter only.
 
 	[CODE] {PolKa} Polarization products are now prepared using Parallel.
 

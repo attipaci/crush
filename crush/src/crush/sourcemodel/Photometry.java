@@ -56,7 +56,7 @@ public abstract class Photometry extends SourceModel {
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		super.createFrom(collection);
 		Scan<?,?> firstScan = scans.get(0);
-		sourceName = firstScan.sourceName;
+		sourceName = firstScan.getSourceName();
 	}
 	
 	@Override

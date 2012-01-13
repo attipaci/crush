@@ -85,7 +85,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		
 		if(option.isConfigured("model")) {
 			try { 
-				double UT = (MJD % 1.0) * Unit.day;
+				double UT = (getMJD() % 1.0) * Unit.day;
 				model = new IRAMPointingModel(Util.getSystemPath(option.get("model").getValue()));
 						
 				if(option.isConfigured("model.static")) model.setStatic(true);
@@ -110,7 +110,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			try { 
 				if(model == null) model = new IRAMPointingModel();
 				String logName = Util.getSystemPath(option.get("log").getValue()); 
-				Vector2D increment = PointingTable.get(logName).getIncrement(MJD, horizontal, model);
+				Vector2D increment = PointingTable.get(logName).getIncrement(getMJD(), horizontal, model);
 				//increment.rotate(-horizontal.EL());
 				correction.add(increment);
 			}
@@ -225,9 +225,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		Header header = hdu.getHeader();
 
 		// Scan Info
-		serialNo = header.getIntValue("SCANNO");
-		
-		if(instrument.options.containsKey("serial")) instrument.setSerialOptions(serialNo);
+		int serial = header.getIntValue("SCANNO");
 		
 		//site = new GeodeticCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
 		//System.err.println(" Telescope Location: " + site);
@@ -258,9 +256,11 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		else {
 			StringTokenizer tokens = new StringTokenizer(scanID, ".");
 			tokens.nextToken(); // Date...
-			serialNo = Integer.parseInt(tokens.nextToken());
+			serial = Integer.parseInt(tokens.nextToken());
 		}
-		serialNo = header.getIntValue("SCANNUM", serialNo);
+		serial = header.getIntValue("SCANNUM", serial);
+		
+		setSerial(serial);
 		
 		// Weather
 		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();
@@ -277,9 +277,11 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		windDirection = header.getDoubleValue("WIND_DIR") * Unit.deg;
 	
 		// Source Information
+		String sourceName = null;
 		if(hasOption("object")) sourceName = option("object").getValue();
 		else sourceName = header.getStringValue("OBJECT");
 		if(sourceName == null) sourceName = descriptor;
+		setSourceName(sourceName);
 		
 		date = header.getStringValue("DATE-OBS");
 		startTime = header.getStringValue("UTCSTART");
@@ -293,11 +295,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		else if(startTime == null) timeStamp = date + "T" + startTime;
 		else timeStamp = date;
 		
-		try { 
-			MJD = AstroTime.forFitsTimeStamp(timeStamp).getMJD();
-			instrument.setMJDOptions(MJD);
-			instrument.setDateOptions(MJD);
-		}
+		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
 		catch(ParseException e) { System.err.println("WARNING! " + e.getMessage()); }
 		
 		CoordinateEpoch epoch = hasOption("epoch") ? 
@@ -388,8 +386,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		try {
 			int dateComp = dateFormat.parse(date).compareTo(dateFormat.parse(((GismoScan) scan).date));
 			if(dateComp != 0) return dateComp;
-			if(serialNo == scan.serialNo) return 0;
-			return serialNo < scan.serialNo ? -1 : 1;
+			if(getSerial() == scan.getSerial()) return 0;
+			return getSerial() < scan.getSerial() ? -1 : 1;
 		}
 		catch(ParseException e) {
 			System.err.println("WARNING! Cannot parse date: '" + date + "' or '" + ((GismoScan) scan).date + "'.");
@@ -413,7 +411,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		String sizeName = instrument.getDefaultSizeName();
 	
 		// X and Y are absolute pointing offsets including the static pointing model...
-		Vector2D corr = observingModel.getCorrection(horizontal, (MJD % 1.0) * Unit.day);
+		Vector2D corr = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day);
 		if(pointingCorrection != null) corr.add(pointingCorrection);
 		
 		data.add(new Datum("X", (pointingOffset.x + corr.x) / sizeUnit, sizeName));
@@ -436,10 +434,10 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 		
 		if(name.equals("obstype")) return obsType;
-		else if(name.equals("modelX")) return Util.defaultFormat(observingModel.getDX(horizontal, (MJD % 1) * Unit.day), f);
-		else if(name.equals("modelY")) return Util.defaultFormat(observingModel.getDY(horizontal, (MJD % 1) * Unit.day), f);
-		else if(name.equals("tiltX")) return Util.defaultFormat(tiltCorrections.getDX(horizontal, (MJD % 1) * Unit.day), f);
-		else if(name.equals("tiltY")) return Util.defaultFormat(tiltCorrections.getDY(horizontal, (MJD % 1) * Unit.day), f);
+		else if(name.equals("modelX")) return Util.defaultFormat(observingModel.getDX(horizontal, (getMJD() % 1) * Unit.day), f);
+		else if(name.equals("modelY")) return Util.defaultFormat(observingModel.getDY(horizontal, (getMJD() % 1) * Unit.day), f);
+		else if(name.equals("tiltX")) return Util.defaultFormat(tiltCorrections.getDX(horizontal, (getMJD() % 1) * Unit.day), f);
+		else if(name.equals("tiltY")) return Util.defaultFormat(tiltCorrections.getDY(horizontal, (getMJD() % 1) * Unit.day), f);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

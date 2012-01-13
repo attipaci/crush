@@ -114,7 +114,7 @@ public class ScalarMap extends SourceMap {
 		
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
-		map.name = firstScan.sourceName;
+		map.name = firstScan.getSourceName();
 		map.commandLine = commandLine;
 		map.instrument = (Instrument<?>) instrument.copy();
 		map.correctingFWHM = map.getImageFWHM();	
@@ -311,7 +311,7 @@ public class ScalarMap extends SourceMap {
 		}
 
 		if(hasOption("scanmaps")) {
-			map.fileName = CRUSH.workPath + "/scan-" + (int)scan.MJD + "-" + scan.getID() + ".fits";
+			map.fileName = CRUSH.workPath + "/scan-" + (int)scan.getMJD() + "-" + scan.getID() + ".fits";
 			if(hasOption("unit")) map.setUnit(option("unit").getValue());
 			try { map.write(); }
 			catch(Exception e) { e.printStackTrace(); }

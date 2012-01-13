@@ -115,11 +115,6 @@ implements TableFormatter.Entries {
 	}
 	
 	public void validate(Scan<?,?> scan) {
-		setMJDOptions(scan.MJD);
-		setDateOptions(scan.MJD);
-		setSerialOptions(scan.serialNo);
-		setObjectOptions(scan.sourceName);
-		
 		validate();
 	}
 	
@@ -327,7 +322,7 @@ implements TableFormatter.Entries {
 	}
 	
 	public String getDefaultConfigPath() {
-		return CRUSH.home + File.separator + name + File.separator;
+		return CRUSH.home + File.separator + getName() + File.separator;
 	}
 	
 	public ChannelGroup<ChannelType> getConnectedChannels() {
@@ -618,7 +613,7 @@ implements TableFormatter.Entries {
 	
 	
 	public void addGroup(ChannelGroup<ChannelType> group) {
-		groups.put(group.name, group);		
+		groups.put(group.getName(), group);		
 	}
 	
 	public void addGroup(String name, ChannelGroup<ChannelType> group) {
@@ -846,7 +841,7 @@ implements TableFormatter.Entries {
 	
 	public void editImageHeader(Cursor cursor) throws HeaderCardException {
 		cursor.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
-		cursor.add(new HeaderCard("INSTRUME", name, "The instrument used."));	
+		cursor.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
 		
 		// The data descriptors
 		cursor.add(new HeaderCard("BEAM", resolution / Unit.arcsec, "The instrument FWHM (arcsec) of the beam."));
@@ -905,7 +900,7 @@ implements TableFormatter.Entries {
 	}
 	
 	@Override
-	public String toString() { return "Instrument " + name; }
+	public String toString() { return "Instrument " + getName(); }
 	
 	public final static int GAINS_SIGNED = 0;
 	public final static int GAINS_BIDIRECTIONAL = 1;

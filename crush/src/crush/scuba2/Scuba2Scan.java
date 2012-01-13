@@ -288,8 +288,8 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		Header header = hdu.getHeader();
 
 		// Scan Info
-		serialNo = header.getIntValue("OBSNUM");
-		if(instrument.options.containsKey("serial")) instrument.setSerialOptions(serialNo);
+		setSerial(header.getIntValue("OBSNUM"));
+		if(instrument.options.containsKey("serial")) instrument.setSerialOptions(getSerial());
 	
 		site = new GeodeticCoordinates(header.getDoubleValue("LONG-OBS") * Unit.deg, header.getDoubleValue("LAT-OBS") * Unit.deg);
 		creator = header.getStringValue("ORIGIN");
@@ -302,7 +302,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		if(observer == null) observer = "Unknown";
 		if(project == null) project = "Unknown";
 		
-		sourceName = header.getStringValue("OBJECT");
+		setSourceName(header.getStringValue("OBJECT"));
 		date = header.getStringValue("DATE-OBS");
 		endTime = header.getStringValue("DATE-END");
 		iDate = header.getIntValue("UTDATE");
@@ -312,7 +312,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		
 		// INSTAP_X, Y instrument aperture offsets. Kinda like FAZO, FZAO?
 		
-		System.err.println(" [" + sourceName + "] observed on " + date);
+		System.err.println(" [" + getSourceName() + "] observed on " + date);
 		String trackingSystem = header.getStringValue("TRACKSYS");
 		
 		if(trackingSystem == null) {
@@ -405,14 +405,14 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	public int compareTo(Scan<?,?> scan) {
 		Scuba2Scan scubascan = (Scuba2Scan) scan;
 		if(iDate != scubascan.iDate) return iDate < scubascan.iDate ? -1 : 1;
-		if(serialNo == scan.serialNo) return 0;
-		return serialNo < scan.serialNo ? -1 : 1;
+		if(getSerial() == scan.getSerial()) return 0;
+		return getSerial() < scan.getSerial() ? -1 : 1;
 		
 	}
 	
 	@Override
 	public String getID() {
-		return iDate + "." + serialNo;
+		return iDate + "." + getSerial();
 	}
 	
 	@Override

@@ -34,7 +34,7 @@ public class GradientMode extends CorrelatedMode {
 		super(group);
 		this.horizontal = isHorizontal;
 		fixedGains = true;
-		name = group.name + "-" + (horizontal ? "x" : "y");
+		name = group.getName() + "-" + (horizontal ? "x" : "y");
 	}
 
 	boolean horizontal = true;
