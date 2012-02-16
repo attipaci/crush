@@ -302,7 +302,7 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	public static Class<? extends SphericalCoordinates> getFITSClass(String spec) {
 		spec = spec.toUpperCase();
 		
-		if(spec.startsWith("RA--")) return util.astro.EquatorialCoordinates.class;
+		if(spec.startsWith("RA-")) return util.astro.EquatorialCoordinates.class;
 		else if(spec.startsWith("DEC-")) return util.astro.EquatorialCoordinates.class;
 		else if(spec.substring(1).startsWith("LON")) {
 			switch(spec.charAt(0)) {

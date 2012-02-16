@@ -26,18 +26,11 @@ package crush.devel;
 
 import crush.*;
 import crush.astro.AstroImage;
-import crush.gui.AstroImageLayer;
-import crush.gui.InfoPanel;
+import crush.gui.*;
 import crush.sourcemodel.*;
 import util.*;
 import util.data.Region;
-import util.plot.AxisLabel;
-import util.plot.ColorBar;
-import util.plot.ColorScheme;
-import util.plot.Imager;
-import util.plot.Plot;
-import util.plot.Ruler;
-
+import util.plot.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -52,10 +45,10 @@ class MapPanel extends JComponent {
 	private static final long serialVersionUID = 8619921669585536452L;
 	
 	JComponent root;
+	
+	ImageArea<GridImageLayer> imager;
+	
 	Box scaleBox;
-	
-	Imager<AstroImageLayer> imager;
-	
 	InfoPanel infobar;
 	ColorBar colorScale;
 	Ruler ruler;

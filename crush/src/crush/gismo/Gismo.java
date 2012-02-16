@@ -49,12 +49,10 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	//Vector2D pointingCenterOffset = new Vector2D(); // The offset of the pointing center rel. to the rotation center...
 	//double nativeSamplingInterval;
 	
-	double rotation;
+	//double rotation;
 	
-	double focusX, focusY, focusZ;
-	double focusYOffset, focusZOffset;
-	String focusMode;
-	
+	double focusXOffset, focusYOffset, focusZOffset;
+
 	public Gismo() {
 		super("gismo", pixels);
 		resolution = 16.7 * Unit.arcsec;
@@ -188,15 +186,10 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		Header header = hdu.getHeader();
 			
 		// Focus
-		focusX =  header.getDoubleValue("FOCUS_X") * Unit.mm;
-		focusY =  header.getDoubleValue("FOCUS_Y") * Unit.mm;
-		focusZ =  header.getDoubleValue("FOCUS_Z") * Unit.mm;
-
+		focusXOffset =  header.getDoubleValue("FOCUS_XO") * Unit.mm;
 		focusYOffset =  header.getDoubleValue("FOCUS_YO") * Unit.mm;
 		focusZOffset =  header.getDoubleValue("FOCUS_ZO") * Unit.mm;
 
-		focusMode = header.getStringValue("FOCMODE");
-		if(focusMode == null) focusMode = "Unknown";
 		
 		nasmythOffset = new Vector2D(
 				header.getDoubleValue("RXHORI", Double.NaN) + header.getDoubleValue("RXHORICO", 0.0),
@@ -206,7 +199,50 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		System.err.println(" Focus: dZ = " + Util.f2.format(focusZOffset / Unit.mm) + " mm.");
 	}
 	
+	
+	protected void parseOldScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+		Header header = hdu.getHeader();
+			
+		// Focus
+		focusXOffset =  header.getDoubleValue("FOCUS_XO") * Unit.mm;
+		focusYOffset =  header.getDoubleValue("FOCUS_YO") * Unit.mm;
+		focusZOffset =  header.getDoubleValue("FOCUS_ZO") * Unit.mm;
+	
+		nasmythOffset = new Vector2D(
+				header.getDoubleValue("RXHORI", Double.NaN) + header.getDoubleValue("RXHORICO", 0.0),
+				header.getDoubleValue("RXVERT", Double.NaN) + header.getDoubleValue("RXVERTCO", 0.0)
+				);
+		
+		System.err.println(" Focus: dZ = " + Util.f2.format(focusZOffset / Unit.mm) + " mm.");
+	}
+	
+	
+	
+	
 	protected void parseHardwareHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
+		Object[] row = hdu.getRow(0);
+			
+		if(!isEmpty()) clear();
+		ensureCapacity(pixels);
+		for(int c=0; c<pixels; c++) add(new GismoPixel(this, c));
+		
+		int iMask = hdu.findColumn("PIXMASK");
+		
+		if(iMask < 0) return;
+		
+		try {
+			short[] mask = (short[]) row[iMask];
+			for(Channel channel : this) if(mask[channel.storeIndex-1] == 0) channel.flag(Channel.FLAG_DEAD); 
+		}
+		catch(ClassCastException e) {
+			byte[] mask = (byte[]) row[iMask];
+			for(Channel channel : this) if(mask[channel.storeIndex-1] == 0) channel.flag(Channel.FLAG_DEAD);
+		}
+	
+	}
+
+	
+	protected void parseOldHardwareHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
 		Object[] row = hdu.getRow(0);
 			
 		if(!isEmpty()) clear();
@@ -271,14 +307,13 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 	
-		if(name.equals("focX")) return Util.defaultFormat(focusX / Unit.mm, f);
-		else if(name.equals("focY")) return Util.defaultFormat(focusY / Unit.mm, f);
-		else if(name.equals("focZ")) return Util.defaultFormat(focusZ / Unit.mm, f);
+		if(name.equals("focX")) return Util.defaultFormat(focusXOffset / Unit.mm, f);
+		else if(name.equals("focY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
+		else if(name.equals("focZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
 		else if(name.equals("focDY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
 		else if(name.equals("focDZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
 		else if(name.equals("nasX")) return Util.defaultFormat(nasmythOffset.x / Unit.arcsec, f);
 		else if(name.equals("nasY")) return Util.defaultFormat(nasmythOffset.y / Unit.arcsec, f);
-		else if(name.equals("rot")) return Util.defaultFormat(rotation / Unit.deg, f);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

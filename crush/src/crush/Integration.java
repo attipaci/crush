@@ -129,6 +129,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 		System.err.println(" Processing integration " + getID() + ":");
 		
+		// Incorporate the relative instrument gain (under loading) in the scan gain...
+		gain *= instrument.sourceGain;	
+		
 		for(Frame frame : this) if(frame != null) frame.validate();
 		
 		int gapTolerance = hasOption("gap-tolerance") ? framesFor(Double.parseDouble("gap-tolerance") * Unit.s) : 0;

@@ -115,11 +115,13 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	
 	public void calcEquatorial() {
 		// This assumes that the object is tracked on sky...
+		// Uses the scanning offsets, on top of the tracking coordinate of the scan...
 		if(scan.isTracking) {
 			if(equatorial == null) equatorial = (EquatorialCoordinates) scan.equatorial.clone();
 			equatorial.setNativeLongitude(scan.equatorial.x + (cosPA * horizontalOffset.x - sinPA * horizontalOffset.y) / scan.equatorial.cosLat);
 			equatorial.setNativeLatitude(scan.equatorial.y + (cosPA * horizontalOffset.y + sinPA * horizontalOffset.x));	
 		}
+		// Otherwise do the proper conversion....
 		else {
 			equatorial = horizontal.toEquatorial(scan.site, LST);
 			scan.fromApparent.precess(equatorial);

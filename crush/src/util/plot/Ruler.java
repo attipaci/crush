@@ -57,8 +57,10 @@ public class Ruler extends JPanel {
 	 */
 	private static final long serialVersionUID = 228962325800810360L;
 
+		
 	PlotArea<?> content;
-	ScaleDivisions scaleDivisions;
+	ScaleDivisions mainDivisions, subDivisions;
+	
 	Font font = new Font("Monospaced", Font.PLAIN, 10);
 
 	Stroke divStroke = new BasicStroke();
@@ -69,14 +71,18 @@ public class Ruler extends JPanel {
 	
 	boolean isLabeled = true;
 	NumberFormat nf;	// null if automatic...
+
 	
 	private int height;
 	private double delta = Double.NaN;
 
+
 	public Ruler(PlotArea<?> forContent) {
 		this.content = forContent;
 		
-		scaleDivisions = new ScaleDivisions();
+		mainDivisions = new ScaleDivisions();
+		subDivisions = new ScaleDivisions(10);
+		
 		setPreferredSize(new Dimension(width, 1));
 		setBackground(Color.WHITE);
 
@@ -85,7 +91,8 @@ public class Ruler extends JPanel {
 	}
 
 	public void setScale(double min, double max) {
-		scaleDivisions.updateDivs(min, max);
+		mainDivisions.update(min, max);
+		subDivisions.update(min, max);
 		// TODO recalculate component minimum size...
 	}
 	
@@ -109,7 +116,7 @@ public class Ruler extends JPanel {
 		int fontheight=fm.getHeight();
 		setFont(font);
 
-		final ArrayList<Double> subdivs = scaleDivisions.getDivisions();
+		final ArrayList<Double> subdivs = subDivisions.getDivisions();
 		
 		height = getHeight();
 		final double npix = height/subdivs.size();
@@ -130,7 +137,7 @@ public class Ruler extends JPanel {
 		
 		// TODO separate handling of CUSTOM subdivisions....
 		
-		final ArrayList<Double> divs = scaleDivisions.getDivisions();
+		final ArrayList<Double> divs = mainDivisions.getDivisions();
 		g2.setStroke(divStroke);
 		
 		// Find what decimal resolution is necessary...
@@ -165,7 +172,7 @@ public class Ruler extends JPanel {
 		
 	protected void calcDelta() {
 		delta = Double.POSITIVE_INFINITY;
-		final ArrayList<Double> divs = scaleDivisions.getDivisions();
+		final ArrayList<Double> divs = mainDivisions.getDivisions();
 		double last = divs.get(divs.size() - 1);
 		for(int i=divs.size()-1; --i >= 0; ) {
 			final double current = divs.get(i);

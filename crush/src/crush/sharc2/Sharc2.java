@@ -62,8 +62,6 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	String dsosVersion;
 	
 	double excessLoad = 0.0;
-	double averagePixelGain = 1.0;
-	
 	
 	public Sharc2() {
 		super("sharc2", pixels);
@@ -448,11 +446,11 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		}
 		
 		if(sumwG > 0.0) {
-			averagePixelGain = sumwG2 / sumwG;
-			for(Sharc2Pixel pixel : this) pixel.gain /= averagePixelGain;
+			sourceGain = sumwG2 / sumwG;
+			for(Sharc2Pixel pixel : this) pixel.gain /= sourceGain;
 		}
 		
-		System.err.println(" Gain compression is " + Util.f3.format(averagePixelGain));
+		System.err.println(" Gain compression is " + Util.f3.format(sourceGain));
 	}
 	
 	// TODO convert to robust estimate?...
