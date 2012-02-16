@@ -356,22 +356,21 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		String keyword = confused ? "CTYPE1B" : "CTYPE1";
 		basisSystem = SphericalCoordinates.getFITSClass(header.getStringValue(keyword));
 						
+		double lon = header.getDoubleValue("BLONGOBJ") * Unit.deg;
+		double lat = header.getDoubleValue("BLATOBJ") * Unit.deg;
+		
 		if(basisSystem == EquatorialCoordinates.class) {
-			equatorial = new EquatorialCoordinates(
-					header.getDoubleValue("BLONGOBJ") * Unit.deg, 
-					header.getDoubleValue("BLATOBJ") * Unit.deg,
-					CoordinateEpoch.J2000);	
+			equatorial = new EquatorialCoordinates(lon, lat, CoordinateEpoch.J2000);	
 			calcHorizontal();	
 		}
 		else if(basisSystem == HorizontalCoordinates.class) {
-			horizontal = new HorizontalCoordinates(
-				header.getDoubleValue("BLONGOBJ") * Unit.deg, 
-				header.getDoubleValue("BLATOBJ") * Unit.deg);	
+			horizontal = new HorizontalCoordinates(lon, lat);
 			calcEquatorial();
 		}
 		else {
 			try { 
-				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.newInstance(); 
+				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.newInstance();
+				basisCoords.set(lon,  lat);
 				equatorial = basisCoords.toEquatorial();
 				calcHorizontal();
 			}

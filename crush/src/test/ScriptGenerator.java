@@ -25,14 +25,16 @@ public class ScriptGenerator {
 		*/
 		
 		String[][] options = {
-				{ "-rounds=15", "-rounds=20", "-rounds=25", "-rounds=30" },
+				{ "-rounds=10", "-rounds=20", "-rounds=30" },
 				{ "-stability=2.5", "-stability=5.0", "-stability=10.0" },
+				{ "-forget=filter.motion", "-filter.motion.above=0.1", "-filter.motion.above=0.2" },
 				{ "-source.filter.fwhm=35", "-source.filter.fwhm=45", "-source.filter.fwhm=55" }
 		};
 	
 		String[][] names = {
-				{ "r15", "r20", "r25", "r30" },
+				{ "r10", "r20", "r30" },
 				{ "S3", "S5", "S10" },
+				{ "nMF", "MF010", "MF020" },
 				{ "x35", "x45", "x55" },
 		};
 		

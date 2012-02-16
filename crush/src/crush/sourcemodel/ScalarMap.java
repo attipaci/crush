@@ -324,6 +324,8 @@ public class ScalarMap extends SourceMap {
 	public synchronized void postprocess(Scan<?,?> scan) {
 		super.postprocess(scan);
 		
+		if(countPoints() == 0) return;
+		
 		if(hasOption("pointing")) if(option("pointing").equals("auto") || option("pointing").equals("suggest")) {
 			double optimal = hasOption("smooth.optimal") ? 
 					option("smooth.optimal").getDouble() * scan.instrument.getDefaultSizeUnit() :

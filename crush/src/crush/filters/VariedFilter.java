@@ -60,7 +60,7 @@ public abstract class VariedFilter extends Filter {
 	
 	@Override
 	protected void preFilter(Channel channel) {
-		final double response = getPointResponse(channel);
+		final double response = pointResponse[channel.index];
 		if(response > 0.0) {
 			channel.directFiltering /= response;
 			channel.sourceFiltering /= response;

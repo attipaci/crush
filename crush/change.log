@@ -1,14 +1,14 @@
 
-2.11-b1 (beta)
+2.11-1 (16 Feb 2011)
 
 	[BUG] {SHARC-2} suggested FZAO pointing offsets were wrongly calculated
-	(sign error)
+	(sign error). Fixed.
 
 	[BUG] Crossing times were not correctly calculated (returned size, not
 	actual crossing time...). Fixed.
 
 	[NEW] Reductions in moving frames (e.g. planets, Moons). The option
-	'planetary' can be used to specify movinf frames, if these aren't
+	'planetary' can be used to specify moving frames, if these aren't
 	automatically detected based on the scan headers.
 
 	[NEW] Introducing a parallel processing framework for images. The goal 
@@ -17,6 +17,10 @@
 	power. This will result in a small gain for reduction purposes, but 
 	should make the upcoming new 'show', 'imagetool' (etc.) more 
 	responsive, especially when handling large images...
+
+	[NEW] {GISMO} Implemented new merged data reading. The new FITS files
+	(ver. 1.7) correspond more closely with the original IRAM data, and 
+	thus hopefully fix the pointing problems we experienced earlier.
 
 	[NEW] {PolKa} New loggable quantities 'analyzer', 'wpdelay', 'wpdir', 
 	'wpok'. See the logging section of the README for details.
@@ -90,6 +94,38 @@
 	the first scan determines the reduction mode (polarization or total-
 	power), and subsequent incompatible scans are discarded.
 
+	[NEW] Ranges now accept '<' and '>' to specify open-ended ranges. E.g
+	The following ways of specifying ranges are all acceptable:
+
+		<456.0
+		>3.1415
+		*
+		*:456.0
+		3.1415:*
+		3.1415:456.0
+		3.1415-456.0 (positive only!)
+
+	[NEW] {GISMO} It is now possible to set options for GISMO based on the
+	FITS merge version (currently 1.7), using the 'ver' key and a range
+	specification in the conditional. E.g.
+
+		ver.[<1.7] pointing.model=old.model	
+		ver.[1.6-1.7] forget=pointing.model.static
+
+	You can also force specify the version via 'ver=X' option. When used
+	CRUSH will ignore the version information stored in the FITS and use
+	the explicitly defined value.
+
+	[FIX] APEX scans in unusual coordinates systems (e.g. ecliptic, 
+	galactic did not set coordinates as expected. These were always (0,0).
+	Fixed.	
+
+	[FIX] {SHARC-2} The gain compression under load is now correctly
+	reflected in the NEFD values.
+
+	[FIX] {b1} Undoing of prior point-source filtering was not using stored
+	and applied value but a recalculating filtering.	
+
 	[FIX] Source model type now determined by first scan, allowing dynamic
 	changes depending on the preprocessing of the scans.
 
@@ -98,19 +134,21 @@
 	characters inside conditional brackets did not work as expected. Now,
 	they should...
 
-	[FIX] {PolKa} Parallactic angle rotation of polarization seems to have
-	been in the wrong direction...
+	[FIX] {PolKa} Direction of waveplate rotation was wrongly assumed, 
+	resulting in wrong parallactic angle derotations.
 
 	[FIX] Conditional by serial number were not activated by default.
 
-	[FIX] {PolKa} Polarized power (P) is now properly de-biased for the 
-	Rice distribution. The points where the polarization cannot be 
-	determined are flagged.
+	[FIX] {PolKa} Polarized power (P) is now more-or-less properly 
+	de-biased for the Rice distribution. The points where the polarization 
+	cannot be determined are flagged. More rigorous de-biasing is left for
+	later, but this makes only a slight difference in the low-S/N (<4) 
+	regime only.
 
 	[FIX] {PolKa} All Stokes parameters now correctly include the 50% loss 
 	due to the analyzer grid (as of 2.11-a6).
 
-	[FIX] {PolKa} 'waveplate.jitter' overrides the value caluclated from 
+	[FIX] {PolKa} 'waveplate.jitter' overrides the value calculated from 
 	the stored frequencies.
 
 	[FIX] Scan maps were zero-leveled in every iteration, whereas this is
@@ -168,15 +206,12 @@
 	[TWEAK] Obsoleted key 'filter.whiten.neighbours' removed from 
 	configuration.
 
-	[TWEAK] {PolKa} Polarized power P is now zero-leveled, i.e. effectively
-	debiased.
-
-	[TWEAK] {PolKa} Q and U can be ietrated without interference to total-
+	[TWEAK] {PolKa} Q and U can be iterated without interference to total-
 	power blanking. Also, the blanking mask includes significant portions 
 	of the Q/U maps.
 
-	[TWEAK] Polarization angles and fractions are not calculated when the
-	polarization fraction is estimated to be zero.
+	[TWEAK] {PolKa} Polarization angles and fractions are not calculated 
+	when the polarization fraction is estimated to be zero.
 
 	[TWEAK] Various small performance tweaks: eliminating some temp arrays
 	and declaring more variables final.
@@ -202,8 +237,13 @@
 	[COSMETIC] Reorganized FITS header key ordering to bring the most 
 	important keys up front.
 
+	[CODE] Cleaned up old GISMO frame parsing...
+
+	[CODE] {b1} Instrument.sourceGain now generalized to all instruments, 
+	not only SHARC-2.
+
 	[CODE] Access to serial numbers, mjd and source name are through
-	getters and setters only. It allows invoking conditional automatically
+	getters and setters only. It allows invoking conditionals automatically
 	as soon as these values are defined.
 
 	[CODE] Instrument name access through getter/setter only.
@@ -264,6 +304,15 @@
 
 	[CLEANUP] Removed obsoleted key 'whiten.neighbours' from configuration.
 
+	[UPDATE] {GISMO} Updated the Run 4 (April 2011) configuration files 
+	with the  much improved pointing of the new merge. (Gone are the 
+	mysterious pointing drifts[!] which were probably the result of 
+	tilt-corrections not being properly included in the absolute AZ/EL 
+	coordinates.)
+
+	[UPDATE] {APEX} Updated LABOCA and SABOCA configurations (opacities,
+	calibration scalings and RCPs). LABOCA data is good thru 2011.12.08.
+	SABOCA data is good thru 2011.10.25.
 
 
 2.10-1 (15 Oct 2011)

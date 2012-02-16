@@ -29,17 +29,15 @@ import java.util.*;
 // TODO Better handling of custom divisions (all vs within range)
 
 public class ScaleDivisions implements Cloneable {
-	protected Range range;
-	protected int type = LINEAR;
+	private Range range;
+	private int type = LINEAR;
+	private int overSampling = 1;
 	
-	protected ArrayList<Double> divisions = new ArrayList<Double>();
-	protected ArrayList<Double> subDivisions = new ArrayList<Double>();
+	private ArrayList<Double> divisions = new ArrayList<Double>();
 	
 	public ScaleDivisions () {}
-
-	public ScaleDivisions(double setmin, double setmax) {
-		updateDivs(setmin, setmax);
-	}
+	
+	public ScaleDivisions (int oversampling) { this.overSampling = oversampling; }
 
 	@Override
 	public Object clone() {
@@ -48,13 +46,13 @@ public class ScaleDivisions implements Cloneable {
 	}
 	
 	
-	public void linear() { type = LINEAR; updateDivs(); }
+	public void linear() { type = LINEAR; update(); }
 	
-	public void log() { type = LOGARITHMIC; updateDivs(); }
+	public void log() { type = LOGARITHMIC; update(); }
 	
-	public void sqrt() { type = SQRT; updateDivs(); }
+	public void sqrt() { type = SQRT; update(); }
 	
-	public void power() { type = POWER; updateDivs(); }
+	public void power() { type = POWER; update(); }
 	
 	
 	public boolean isCustom() { return type == CUSTOM; }
@@ -67,16 +65,22 @@ public class ScaleDivisions implements Cloneable {
 
 	public boolean isPower() { return type == POWER; }
 	
+	public int overSample(int n) { 
+		if(overSampling != n) {
+			overSampling = Math.min(1, n);
+			update();
+		}
+		return overSampling;
+	}
+	
+	public int getOverSampling() { return overSampling; }
 	
 	public ArrayList<Double> getDivisions() { return divisions; }
-	
-	public ArrayList<Double> getSubDivisions() { return subDivisions; }
 	
 	
 	public void clear() { 
 		type = CUSTOM;
 		divisions.clear();
-		subDivisions.clear();
 	}
 	
 	public void addDivisions(Collection<Double> divs) {
@@ -86,56 +90,49 @@ public class ScaleDivisions implements Cloneable {
 
 	public void addSubDivisions(Collection<Double> divs) {
 		type = CUSTOM;
-		for(double level : divs) subDivisions.add(level);
 	}
 
-	public void updateDivs() {
-		updateDivs(range);
+	public void update() {
+		if(range == null) return;
+		update(range);
 	}
 	
-	public void updateDivs(Range range) {
-		updateDivs(range.min, range.max);
+	public void update(Range range) {
+		update(range.min, range.max);
 	}
 	
 	
-	public void updateDivs(double setmin, double setmax) {
+	public void update(double setmin, double setmax) {
 		range.setRange(setmin, setmax);
 		
 		if(isCustom()) return;
 		
 		divisions.clear();
-		subDivisions.clear();		
 		
 		if(isLogarithmic()) {
-			final int loOrder = (int) Math.floor(Math.log10(Math.abs(range.min)));
-			final int hiOrder = (int) Math.ceil(Math.log10(Math.abs(range.max)));
+			final int from = (int) Math.floor(overSampling * Math.log10(Math.abs(range.min)));
+			final int to = (int) Math.ceil(overSampling * Math.log10(Math.abs(range.max)));
 
-			double level = Math.pow(10.0, loOrder);
-			for(int order = loOrder; order <= hiOrder; order++) {
+			final double increment = Math.pow(10.0, 1.0 / overSampling);
+			double level = Math.pow(increment, from);
+			
+			for(int order = from; order <= to; order++) {
 				divisions.add(level);
-				subDivisions.add(level);
-				for(int multiple = 2; multiple < 10; multiple++) subDivisions.add(multiple * level);
-				level *= 10.0;
-			}
-	
+				level *= increment;
+			}	
 		}
 		else {
 			final int order = (int)Math.floor(Math.log10(0.5*range.span()));
 			
-			final double bigdiv = Math.pow(10.0, order);
-			final double smalldiv = bigdiv / 10.0;
-			final int fromi = (int)Math.floor(range.min/bigdiv);
-			final int toi = (int)Math.ceil(range.max/bigdiv);
+			final double div = Math.pow(10.0, order) / overSampling;
+			final int fromi = (int)Math.floor(range.min/div);
+			final int toi = (int)Math.ceil(range.max/div);
 			
-			double level = fromi * bigdiv;
+			double level = fromi * div;
 			
 			for(int i=fromi; i<=toi; i++) {
 				divisions.add(level);
-				subDivisions.add(level);
-				for(int step=10; --step > 0; ) {
-					level += smalldiv;
-					subDivisions.add(level);
-				}
+				level += div;
 			}
 		}
 	}

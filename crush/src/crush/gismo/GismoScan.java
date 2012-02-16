@@ -28,9 +28,11 @@ import crush.*;
 import nom.tam.fits.*;
 import util.*;
 import util.astro.AstroTime;
+import util.astro.CelestialCoordinates;
 import util.astro.CoordinateEpoch;
 import util.astro.EquatorialCoordinates;
 import util.astro.GeodeticCoordinates;
+import util.astro.HorizontalCoordinates;
 import util.astro.JulianEpoch;
 import util.astro.Weather;
 import util.text.TableFormatter;
@@ -50,11 +52,14 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	
 	double tau225GHz;
 	double ambientT, pressure, humidity, windAve, windPeak, windDirection;
-	String scanID, obsType;
+	double fitsVersion = Double.NaN;
+	String scanID, obsType, operator;
 	IRAMPointingModel observingModel, tiltCorrections;
 	
 	Vector2D appliedPointing = new Vector2D();
 	
+	public Class<? extends SphericalCoordinates> basisSystem;
+	public Class<? extends SphericalCoordinates> offsetSystem;
 	
 	public GismoScan(Gismo instrument) {
 		super(instrument);
@@ -195,23 +200,47 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		return new Fits(getFile(scanDescriptor), isCompressed);
 	}
 	
+	public void setVersionOptions(double ver) {
+		if(!instrument.options.containsKey("ver")) return;
+		
+		// Make options an independent set of options, setting version specifics...
+		instrument.options = instrument.options.copy();
+		fitsVersion = ver;
+		
+		Hashtable<String, Vector<String>> settings = option("mjd").conditionals;
+		
+		for(String rangeSpec : settings.keySet()) 
+			if(Range.parse(rangeSpec, true).contains(fitsVersion)) instrument.options.parse(settings.get(rangeSpec));
+	}
+	
 	protected void read(Fits fits, boolean readFully) throws Exception {
 		// Read in entire FITS file
 		BasicHDU[] HDU = fits.read();
 
-		parseScanPrimaryHDU(HDU[0]);
-		instrument.parseScanPrimaryHDU(HDU[1]);
-		instrument.parseHardwareHDU((BinaryTableHDU) HDU[1]);
+		if(hasOption("ver")) setVersionOptions(option("ver").getDouble());
+		else setVersionOptions(HDU[0].getHeader().getDoubleValue("MRGVER", 0.0));	
+		boolean isOldFormat = fitsVersion < 1.7;
+		
+		if(isOldFormat) {
+			parseOldScanPrimaryHDU(HDU[0]);
+			instrument.parseOldScanPrimaryHDU(HDU[1]);
+			instrument.parseOldHardwareHDU((BinaryTableHDU) HDU[1]);	
+		}
+		else {
+			parseScanPrimaryHDU(HDU[0]);
+			instrument.parseScanPrimaryHDU(HDU[1]);
+			instrument.parseHardwareHDU((BinaryTableHDU) HDU[1]);
+		}
+		
 		instrument.validate(this);	
 		clear();
-		
+
 		GismoIntegration integration = new GismoIntegration(this);
-		integration.read((BinaryTableHDU) HDU[2]);
+		integration.read((BinaryTableHDU) HDU[2], isOldFormat);
+		add(integration);
 		
 		try { fits.getStream().close(); }
 		catch(IOException e) {}
-		
-		add(integration);
 		
 		instrument.samplingInterval = integration.instrument.samplingInterval;
 		instrument.integrationTime = integration.instrument.integrationTime;
@@ -222,6 +251,149 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 
 	
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+		Header header = hdu.getHeader();
+
+		// Scan Info
+		int serial = header.getIntValue("SCANNO");
+		
+		//site = new GeodeticCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
+		//System.err.println(" Telescope Location: " + site);
+		
+		// IRAM Pico Veleta PDF 
+		//site = new GeodeticCoordinates("-03d23m33.7s, 37d03m58.3s");
+		
+		// Google maps and Wikipedia...
+		//site = new GeodeticCoordinates("-03d23m58.1s, 37d04m05.6s");
+		
+		// Antenna amymuth axis coordinates from Juan Penalver
+		//latitude: N 37d 4m 6.29s
+		//longitude: W 3d 23m 55.51s 
+		site = new GeodeticCoordinates("-03d23m55.51s, 37d04m06.29s");
+		
+		creator = header.getStringValue("CREATOR");
+		observer = header.getStringValue("OBSERVER");
+		operator = header.getStringValue("OPERATOR");
+		project = header.getStringValue("PROJECT");
+		descriptor = header.getStringValue("DESCRIPT");
+		scanID = header.getStringValue("SCANID");
+		obsType = header.getStringValue("OBSTYPE");
+		
+		if(creator == null) creator = "Unknown";
+		if(observer == null) observer = "Unknown";
+		if(project == null) project = "Unknown";
+		if(obsType == null) obsType = "Unknown";
+		if(scanID == null) scanID = "Unknown";
+		else {
+			StringTokenizer tokens = new StringTokenizer(scanID, ".");
+			tokens.nextToken(); // Date...
+			serial = Integer.parseInt(tokens.nextToken());
+		}
+		serial = header.getIntValue("SCANNUM", serial);
+		
+		setSerial(serial);
+		
+		// Weather
+		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();
+		else {
+			tau225GHz = header.getDoubleValue("TAU225GH");
+			instrument.options.process("tau.225ghz", tau225GHz + "");
+		}
+
+		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + 273.16 * Unit.K;
+		pressure = header.getDoubleValue("PRESSURE") * Unit.hPa;
+		humidity = header.getDoubleValue("HUMIDITY");
+		windAve = header.getDoubleValue("WIND_AVE") * Unit.m / Unit.s;
+		windPeak = header.getDoubleValue("WIND_PK") * Unit.m / Unit.s;
+		windDirection = header.getDoubleValue("WIND_DIR") * Unit.deg;
+	
+		// Source Information
+		String sourceName = null;
+		if(hasOption("object")) sourceName = option("object").getValue();
+		else sourceName = header.getStringValue("OBJECT");
+		if(sourceName == null) sourceName = descriptor;
+		setSourceName(sourceName);
+		
+		date = header.getStringValue("DATE-OBS");
+		startTime = header.getStringValue("UTCSTART");
+		endTime = header.getStringValue("UTCEND");
+		
+		if(date.contains("T")) {
+			timeStamp = date;
+			date = timeStamp.substring(0, timeStamp.indexOf('T'));
+			startTime = timeStamp.substring(timeStamp.indexOf('T') + 1);
+		}
+		else if(startTime == null) timeStamp = date + "T" + startTime;
+		else timeStamp = date;
+		
+		setMJD(header.getDoubleValue("MJD-OBS"));
+		
+		// TODO use UTC, TAI, TT offsets to configure AstroTime?...
+		/*
+		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
+		catch(ParseException e) { System.err.println("WARNING! " + e.getMessage()); }
+		*/
+		
+		double lon = header.getDoubleValue("LONGOBJ", Double.NaN) * Unit.deg;
+		double lat = header.getDoubleValue("LATOBJ", Double.NaN) * Unit.deg;
+		basisSystem = SphericalCoordinates.getFITSClass(header.getStringValue("CTYPE1"));
+		
+		LST = header.getDoubleValue("LST", Double.NaN) * Unit.hour;
+		
+		if(basisSystem == EquatorialCoordinates.class) {
+			CoordinateEpoch epoch = hasOption("epoch") ? 
+					CoordinateEpoch.forString(option("epoch").getValue()) 
+				: new JulianEpoch(header.getDoubleValue("EQUINOX"));
+			
+			equatorial = new EquatorialCoordinates(lon, lat, epoch);	
+			calcHorizontal();	
+		}
+		else if(basisSystem == HorizontalCoordinates.class) {
+			horizontal = new HorizontalCoordinates(lon, lat);
+			calcEquatorial();
+		}
+		else {
+			try { 
+				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.newInstance(); 
+				basisCoords.set(lon, lat);
+				equatorial = basisCoords.toEquatorial();
+				calcHorizontal();
+			}
+			catch(Exception e) {
+				throw new IllegalStateException("Error instantiating " + basisSystem.getName() +
+						": " + e.getMessage());
+			}
+		}
+		
+		System.err.println(" [" + sourceName + "] observed on " + date + " at " + startTime + " by " + observer);
+		System.err.println(" Equatorial: " + equatorial.toString());	
+		System.err.println(" Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
+		
+		String offsetSystemName = header.getStringValue("SYSTEMOF").toLowerCase();
+		if(offsetSystemName.contains("horizontal")) offsetSystem = HorizontalCoordinates.class;
+		else if(offsetSystemName.contains("equatorial")) offsetSystem = EquatorialCoordinates.class;
+		else throw new IllegalStateException("Offset system '" + offsetSystemName + "' is not implemented.");
+		
+		// TODO This is empty... why?
+		isPlanetary = header.getBooleanValue("MOVEFRAM", false);
+		
+		// Read the effective pointing model
+		// Static constant *AND* tilt-meter corrections...
+		observingModel = new IRAMPointingModel();
+		tiltCorrections = new IRAMPointingModel();
+		for(int i=1; i<=9; i++) {
+			observingModel.P[i] = (header.getDoubleValue("PCONST" + i, 0.0) + header.getDoubleValue("P" + i + "COR", 0.0)) / Unit.arcsec;			
+			tiltCorrections.P[i] = header.getDoubleValue("P" + i + "CORINC", 0.0) / Unit.arcsec;
+		}
+		// TODO
+		// Where are the nasmyth receiver offsets really stored?
+		observingModel.P[10] = (header.getDoubleValue("RXHORI", 0.0) + header.getDoubleValue("RXHORICO", 0.0)) / Unit.arcsec;
+		observingModel.P[11] = (header.getDoubleValue("RXVERT", 0.0) + header.getDoubleValue("RXVERTCO", 0.0)) / Unit.arcsec;
+		
+		isTracking = true;
+		
+	}
+	
+	protected void parseOldScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 
 		// Scan Info
@@ -310,36 +482,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			
 		System.err.println(" [" + sourceName + "] observed on " + date + " at " + startTime + " by " + observer);
 		System.err.println(" Equatorial: " + equatorial.toString());	
-	
-		// Add on the various additional offsets
+		System.err.println(" Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
 		
-		horizontalOffset = new Vector2D(
-				header.getDoubleValue("AZO") * Unit.arcsec,
-				-header.getDoubleValue("ZAO") * Unit.arcsec);
-		horizontalOffset.x += header.getDoubleValue("AZO_MAP") * Unit.arcsec;
-		horizontalOffset.y -= header.getDoubleValue("ZAO_MAP") * Unit.arcsec;
-		horizontalOffset.x += header.getDoubleValue("AZO_CHOP") * Unit.arcsec;		
-		horizontalOffset.y -= header.getDoubleValue("ZAO_CHOP") * Unit.arcsec;
-		horizontalOffset.x += header.getDoubleValue("CHPOFFST") * Unit.arcsec;
-		
-		Vector2D eqOffset = new Vector2D( 
-				header.getDoubleValue("RAO") * Unit.arcsec,
-				header.getDoubleValue("DECO") * Unit.arcsec);		
-		eqOffset.x += header.getDoubleValue("RAO_MAP") * Unit.arcsec;
-		eqOffset.y += header.getDoubleValue("DECO_MAP") * Unit.arcsec;
-		eqOffset.x += header.getDoubleValue("RAO_FLD") * Unit.arcsec;
-		eqOffset.y += header.getDoubleValue("DECO_FLD") * Unit.arcsec;
-	
-		DecimalFormat f3_1 = new DecimalFormat(" 0.0;-0.0");
-
-		System.err.println("   AZO =" + f3_1.format(horizontalOffset.x/Unit.arcsec)
-				+ "\tELO =" + f3_1.format(horizontalOffset.y/Unit.arcsec)
-				+ "\tRAO =" + f3_1.format(eqOffset.x/Unit.arcsec)
-				+ "\tDECO=" + f3_1.format(eqOffset.y/Unit.arcsec)
-		);
-		
-		equatorial.addOffset(eqOffset);
-	
 		// Read the effective pointing model
 		// Static constant *AND* tilt-meter corrections...
 		observingModel = new IRAMPointingModel();
@@ -356,6 +500,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		isTracking = true;
 		
 	}
+	
 	
 	public double getAmbientHumidity() {
 		return humidity;

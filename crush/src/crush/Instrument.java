@@ -52,7 +52,8 @@ implements TableFormatter.Entries {
 	public double samplingInterval;
 	
 	public double resolution;
-	public double gain = 1.0;
+	public double gain = 1.0; // The electronic amplification
+	public double sourceGain = 1.0;
 	public double MJD;
 	
 	public int nonDetectorFlags = Channel.FLAG_DEAD;
@@ -749,13 +750,13 @@ implements TableFormatter.Entries {
 	public void flagWeights() {
 		if(mappingChannels == 0) throw new IllegalStateException("----");
 		
-		Range wRange = new Range();
-		wRange.fullRange();
+		Range weightRange = new Range();
+		weightRange.full();
 		
 		if(hasOption("weighting.noiserange")) {
 			Range noiseRange = option("weighting.noiserange").getRange(true);
-			wRange.min = 1.0 / (noiseRange.max * noiseRange.max);
-			if(noiseRange.min != 0.0) wRange.max = 1.0 / (noiseRange.min * noiseRange.min);
+			weightRange.min = 1.0 / (noiseRange.max * noiseRange.max);
+			if(noiseRange.min != 0.0) weightRange.max = 1.0 / (noiseRange.min * noiseRange.min);
 		}
 	
 		// Flag channels with insufficient degrees of freedom
@@ -772,8 +773,8 @@ implements TableFormatter.Entries {
 		
 		// Use robust mean (with 10% tails) to estimate average weight.
 		double aveSW = n > 0 ? Statistics.robustMean(weights, 0, n, 0.1) : 0.0;	
-		double maxWeight = wRange.max * aveSW;
-		double minWeight = wRange.min * aveSW;	
+		double maxWeight = weightRange.max * aveSW;
+		double minWeight = weightRange.min * aveSW;	
 		double sumw = 0.0;
 		
 		// Flag out channels with unrealistically small or large source weights
@@ -795,7 +796,7 @@ implements TableFormatter.Entries {
 		for(Channel channel : getObservingChannels()) if(channel.flag == 0 && channel.variance > 0.0)
 			sumpw += channel.sourceFiltering * channel.sourceFiltering / channel.variance;
 	
-		return Math.sqrt(size()*integrationTime/sumpw) / janskyPerBeam();
+		return Math.sqrt(size()*integrationTime/sumpw) / (sourceGain * janskyPerBeam());
 	}
 	
 

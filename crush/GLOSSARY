@@ -2662,6 +2662,22 @@
 			speeds.
 			@See: 'aclip', 'resolution'
 
+:: ver.[<range>] key=value	@Since: 2.11
+				@Instrument: GISMO
+				@Expert
+			Set options depending on the FITS merge version. E.g.
+			
+			   ver.[<1.7] pointing.model=old.model
+			   ver.[1.6--1.7] forget=pointing.model.static
+
+			@See: 'ver'
+
+:: ver=X		@Since: 2.11
+			@Instrument: GISMO
+			@Expert
+			Manually override the FITS merge version, and ignore
+			the information stored in the FITS itself.
+
 :: wafers		@Alias: -> correlated.wafers
 			@Instrument: ASZCA
 			@Advanced

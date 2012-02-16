@@ -99,9 +99,23 @@ public class Range {
 	
 	public static Range parse(String text, boolean isPositive) {
 		Range range = new Range();
+			
 		StringTokenizer tokens = new StringTokenizer(text, " \t:" + (isPositive ? "-" : ""));
 		
-		if(tokens.hasMoreTokens()) {
+		if(tokens.countTokens() == 1) {
+			String spec = tokens.nextToken();
+			if(spec.equals("*")) range.full();
+			else if(spec.startsWith("<")) {
+				range.min = Double.NEGATIVE_INFINITY;
+				range.max = Double.parseDouble(spec.substring(1));
+			}
+			else if(spec.startsWith(">")) {
+				range.min = Double.parseDouble(spec.substring(1));
+				range.max = Double.POSITIVE_INFINITY;
+			}
+		}
+		
+		if(tokens.hasMoreTokens()) {	
 			String spec = tokens.nextToken();
 			if(spec.equals("*")) range.min = Double.NEGATIVE_INFINITY;
 			else range.min = Double.parseDouble(spec);
@@ -127,9 +141,5 @@ public class Range {
 		return nf.format(min) + ":" + nf.format(max);
 	}
 	
-	public void fullRange() {
-		min = Double.NEGATIVE_INFINITY;
-		max = Double.POSITIVE_INFINITY;
-	}
 	
 }

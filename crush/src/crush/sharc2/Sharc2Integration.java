@@ -50,11 +50,8 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 
 	@Override
 	public void validate() {	
-		reindex();
-		
-		// Incorporate the relative instrument gain (under loading) in the scan gain...
-		gain *= instrument.averagePixelGain;
-		
+		reindex();		
+			
 		// Add the residual offsets to the DAC values...
 		// Must do this before tau estimates...
 		removeOffsets(true, true);

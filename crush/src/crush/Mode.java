@@ -57,7 +57,7 @@ public class Mode {
 		
 	public Mode() {
 		name = "mode-" + (++counter);
-		gainRange.fullRange();
+		gainRange.full();
 	}
 
 	public Mode(ChannelGroup<?> group) {

@@ -4,7 +4,7 @@
 			      Attila Kovacs
 			<kovacs[AT]astro.umn.edu>
 
-			Last updated: 28 Apr 2011
+			Last updated: 31 Jan 2012
 
 
 
@@ -157,6 +157,14 @@ few arcseconds. Below is a detailed explanation on how to use these methods.
 
    The actual pointing correction calculated from the supplied pointing model
    are reported on the console output during the processing of each scan.
+
+   UPDATE: 31.01.2012 ---->
+
+   The new GISMO FITS format (ver 1.7) now includes all IRAM coordinate 
+   columns. As a result, crush uses the scanning offsets rather than absolute
+   AZ/EL positions for mapping. This seems to solve the pointing problems
+   experieced earlier, and provides excellent (<3" rms) pointing in both 
+   directions with static pointing constants only. 
 
 
 3.2. Differential Pointing Model
@@ -361,6 +369,19 @@ For a general overview of channel divisions, please consult Section 3.
 			option allows to group together <n> consecutive 
 			samples, to combine pixels read in some time-interval.
 			@See: 'pins'
+
+   ver.[<range>]	@Since: 2.11
+			@Expert
+			Set options for specific FITS merge versions. E.g.
+			
+			  ver.[<1.7] pointing.model=old.model
+
+			@See: 'ver'
+
+   ver=X		@Since: 2.11
+			@Expert
+			Force setting the merge version to X, ignoring the
+			value stored in the FITS.
 
 ------------------------------------------------------------------------------
 Copyright (C)2010 -- Attila Kovacs <kovacs@astro.umn.edu>
