@@ -27,11 +27,13 @@ public class Scuba2Frame extends HorizontalFrame {
 		setSize(Scuba2.pixels);
 	}
 	
+	/*
 	// TODO see if there are any sanity checks...
 	public final boolean isValid() {
 		if(Double.isNaN(horizontal.x) && Double.isNaN(equatorial.x)) return false;
 		return true;
 	}
+	*/
 	
 	public void parseData(int[][] DAC) {
 		final int blankingValue = ((Scuba2Scan) scan).blankingValue;

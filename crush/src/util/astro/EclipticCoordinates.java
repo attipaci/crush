@@ -159,6 +159,8 @@ public class EclipticCoordinates extends CelestialCoordinates implements Precess
 
 	public CoordinateEpoch getEpoch() { return epoch; }
 
+	public void setEpoch(CoordinateEpoch epoch) { this.epoch = epoch; }
+	
 	public void precess(CoordinateEpoch toEpoch) {
 		if(epoch.equals(toEpoch)) return;
 		

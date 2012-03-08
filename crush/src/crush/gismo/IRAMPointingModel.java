@@ -75,8 +75,12 @@ public class IRAMPointingModel {
 		double H = P(10, UT);
 		double V = P(11, UT);
 		
-		return P(1, UT) * cosE + P(2, UT) + P(3, UT) * sinE + (P(4, UT) * cosA + P(5, UT) * sinA) * sinE + P(6, UT) * sinA
-			+ H * cosE - V * sinE;
+		// 2012-03-06
+		// Nasmyth offsets H & V are now equivalent to pointing model (P11/P12).
+		// Note, that Juan's fit gives V = -P12!
+		return P(1, UT) * cosE + P(2, UT) + P(3, UT) * sinE 
+			+ (P(4, UT) * cosA + P(5, UT) * sinA) * sinE + P(6, UT) * sinA
+			- H * cosE - V * sinE;
 	}
 	
 	public double getDY(HorizontalCoordinates horizontal, double UT) {
@@ -87,7 +91,11 @@ public class IRAMPointingModel {
 		double H = P(10, UT);
 		double V = P(11, UT);
 		
-		return -P(4, UT) * sinA + (P(5, UT) + P(6,UT) * sinE) * cosA + P(7, UT) + P(8, UT) * cosE + P(9, UT) * sinE - H * sinE - V * cosE;
+		// 2012-03-06
+		// Nasmyth offsets H & V are now equivalent to pointing model (P11/P12).
+		// Note, that Juan's fit gives V = -P12!
+		return -P(4, UT) * sinA + (P(5, UT) + P(6, UT) * sinE) * cosA + P(7, UT) 
+			+ P(8, UT) * cosE + P(9, UT) * sinE + H * sinE - V * cosE;
 	}
 	
 	public void write(String fileName) throws IOException {

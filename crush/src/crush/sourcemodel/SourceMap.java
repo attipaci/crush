@@ -38,9 +38,7 @@ import java.util.*;
 import crush.*;
 
 
-public abstract class SourceMap extends SourceModel {
-	
-	public Projection2D<SphericalCoordinates> projection;
+public abstract class SourceMap extends SourceModel {	
 	public double integationTime = 0.0;
 	public double smoothing = 0.0;
 	public int signalMode = Frame.TOTAL_POWER;
@@ -62,8 +60,8 @@ public abstract class SourceMap extends SourceModel {
 		
 		System.out.print(" Initializing Source Map. ");	
 		
-		try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
-		catch(Exception e) { projection = new Gnomonic(); }		
+		try { setProjection(hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic()); }
+		catch(Exception e) { setProjection(new Gnomonic()); }		
 	}
 
 	public void setSmoothing() {
@@ -123,7 +121,7 @@ public abstract class SourceMap extends SourceModel {
 				scan.longitudeRange = new Range();
 				scan.latitudeRange = new Range();
 
-				final CelestialProjector projector = new CelestialProjector(projection);
+				final CelestialProjector projector = new CelestialProjector(getProjection());
 
 				for(Frame exposure : integration) if(exposure != null) {
 					boolean valid = false;
@@ -197,6 +195,8 @@ public abstract class SourceMap extends SourceModel {
 	public abstract void setSize(int sizeX, int sizeY);
 	
 	public abstract Projection2D<SphericalCoordinates> getProjection(); 
+	
+	public abstract void setProjection(Projection2D<SphericalCoordinates> projection); 
 	
 	public void memoryError(int sizeX, int sizeY) {
 		int diagonal = (int) Math.hypot(sizeX, sizeY);
@@ -294,7 +294,7 @@ public abstract class SourceMap extends SourceModel {
 		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
 		final double samplingInterval = integration.instrument.samplingInterval;
 
-		final CelestialProjector projector = new CelestialProjector(projection);
+		final CelestialProjector projector = new CelestialProjector(getProjection());
 		final Index2D index = new Index2D();
 		
 		for(final Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) {
@@ -355,7 +355,7 @@ public abstract class SourceMap extends SourceModel {
 	protected abstract void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, double[] syncGain, final boolean isMasked);
 	
 	protected void sync(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
-		final CelestialProjector projector = new CelestialProjector(projection);
+		final CelestialProjector projector = new CelestialProjector(getProjection());
 		final Index2D index = new Index2D();
 				
 		for(final Frame exposure : integration) if(exposure != null) {

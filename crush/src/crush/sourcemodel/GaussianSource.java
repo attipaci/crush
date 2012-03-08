@@ -175,7 +175,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		final double filterFWHM = Math.hypot(FWHM, image.extFilterFWHM);			
 
 		// Correct for filtering.
-		double filterFraction = 1.0 - 1.0 / image.getExtFilterCorrectionFactor(FWHM);
+		double filterFraction = 1.0 - 1.0 / image.getFilterCorrectionFactor(FWHM);
 		
 		// Consider that only the tip of the source might escape the filter...	
 		if(image instanceof GridMap) {
@@ -216,7 +216,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		// Consider that only the tip of the source might escape the filter...
 		if(!Double.isNaN(map.extFilterFWHM)) {
 			double filterFraction = Double.isNaN(map.filterBlanking) ? 1.0 : Math.min(1.0, map.filterBlanking / peak.significance());
-			double filtering = 1.0 - 1.0 / map.getExtFilterCorrectionFactor(FWHM);;
+			double filtering = 1.0 - 1.0 / map.getFilterCorrectionFactor(FWHM);;
 			correction *= 1.0 / (1.0 - filtering * filterFraction);
 		}
 		

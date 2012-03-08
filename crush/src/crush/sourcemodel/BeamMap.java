@@ -90,7 +90,6 @@ public class BeamMap extends SourceMap {
 		}
 	}
 
-
 	@Override
 	public long baseFootprint() {
 		return pixelMap.length * template.baseFootprint();
@@ -152,6 +151,10 @@ public class BeamMap extends SourceMap {
 		return template.getProjection();
 	}
 
+	@Override
+	public void setProjection(Projection2D<SphericalCoordinates> projection) {
+		if(template != null) template.setProjection(projection);
+	}
 
 	@Override
 	public boolean isMasked(Index2D index) {
@@ -318,6 +321,6 @@ public class BeamMap extends SourceMap {
 
 	@Override
 	public void noParallel() {
-		for(ScalarMap map : pixelMap) map.noParallel();
+		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) map.noParallel();
 	}	
 }

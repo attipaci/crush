@@ -252,8 +252,8 @@ public class AstroTime {
 	//protected final static double leap2000 = 32.0 * Unit.sec;
 	//protected static double leap = 34.0 * Unit.sec;
 	
-	protected static double TAI2TT = 32.184 * Unit.s;
-	protected static double GPS2TAI = -19.0 * Unit.s;
+	protected double TAI2TT = 32.184 * Unit.s;
+	protected double GPS2TAI = -19.0 * Unit.s;
 	
 	public static TimeZone UTC = TimeZone.getTimeZone("UTC");
 	

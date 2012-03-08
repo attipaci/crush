@@ -1,5 +1,89 @@
+>> adjust/disable source.filter.blank...
+>> dataname.end is now a prioritized list...
+>> Gismo rotation necessary?
+>> Gismo synth rcp gains...
 
-2.11-1 (16 Feb 2011)
+
+	[BUG] {beammap} Beammap function did not work. Now fixed.
+
+	[NEW] The 'poll' command now recognises and expands aliases. 
+
+	[NEW] {GISMO} Now handling scans with exotic coordinate basis (e.g.
+	ecliptic, galactic or supergalactic frame).	
+
+	[FIX] {GISMO} 'rotation' key had no effect. Fixed.
+	
+	[FIX] Long values to full length (8 character) standard FITS keywords
+	resulted in a exception. Now fixed.
+
+	[FIX] Date-dependent configurations sometimes left an unconfigured day
+	between connecting intervals. In principle, the end date of one 
+	interval should match exactly the starting date of the next interval
+	since both are interpreted as 00:00:00 UT, when the time is not 
+	specified explicitly. E.g.:
+
+		date.[2012.03.01--2012.04.01] march2012
+		date.[2012.04.01--2012.05.01] april2012
+
+	[FIX] {GISMO} Scans in equatorial coordinates could not be processed 
+	before because the rotation of scanning offsets into native horizontal 
+	offsets preceded the prerequisite calculation of the parallactic angle.
+	Fixed.
+
+	[FIX] {GISMO} Tracking errors were missing from scanning positions!
+	(Also, in the old version these errors were assumed with the wrong
+	sign. Untypically, the values are commanded minus actual.)
+
+	[FIX] {GISMO} Version-specific conditionals were not parsed as 
+	advertised. Now fixed.
+
+	[FIX] {GISMO} Automatic merge version detection failed with old FITS
+	format (ver 1.6) unless explicitly set by the 'ver' option.
+	
+	[FIX] {APEX} Photometry formatting of negative fluxes always produced
+	results in uJy/beam. Fixed.
+
+	[TWEAK] Slight speedup of scan reading, but skipping processing
+	of FITS rows with no telescope data (or if invalid otherwise).
+
+	[TWEAK] {GISMO} The time window for high quality incremental pointing 
+	correction has been expanded to 1 hour. This mitigates the effect of
+	a single pointing datum with anomalous refraction.
+
+	[TWEAK] {GISMO} Sign convention of GISMO Nasmyth offsets made to 
+	conform with IRAM's convention, both for the pointing model and the
+	suggested offsets. Note, however, that Juan's poiting fir gives a V
+	that has an opposite sign compared to P12.
+
+	[TWEAK] If (for wahetever reason) the FITS merge version does not 
+	appear in the FITS file, assume the latest version possible...
+
+	[TWEAK] 'faint' and 'deep' no longer switch to 'absolute' despiking
+	after the first iteration. This is to prevent over-zelous despiking.
+
+	[TWEAK] Source extraction via 'detect' now offers two types of false
+        detection rates (one based on purely Gaussian statistics, and one with
+        guesstimate corrections for actual distribution of sources/negatives).
+        In its output it also offers some explanation as to what these values
+        and confidence percentages mean.
+
+	[TWEAK] Source extraction 'detect' now does a cleanup round, to
+        ensure no additional sources can be found inside the filter bowls of
+        the last successful extraction round.
+
+	[TWEAK] {GISMO} Using a new synthetic RCP, based on the measured one
+	on Neptune, with positions for all pixels, not only the ones detecting
+	during the beammap.
+	
+	[CODE] Configurator.Entry made into a proper inner class.
+
+	[UPDATE] {GISMO} Updated static pointing model for new FITS. merge.
+	Should be good to 2.5" rms in both directions, for the April 2011 run.
+
+	[UPDATE] {GISMO} Run 5 (starting 2012-03-03) configuration added.
+
+
+2.11-1 (16 Feb 2012)
 
 	[BUG] {SHARC-2} suggested FZAO pointing offsets were wrongly calculated
 	(sign error). Fixed.
@@ -200,6 +284,10 @@
 	window function. It's not a feature that was much used, and the fix
 	should make little difference anyway.
 
+	[FIX] The function of 'B' and 'b' keys (i.e. brightness control) in
+        'show' was not working as expected in sqrt scaling, due to a sign bug.
+        Now fixed.
+
 	[CHANGE] Some FITS keywords describing the Java environment running
 	crush has been changed to more intuitive names.
 
@@ -311,7 +399,7 @@
 	coordinates.)
 
 	[UPDATE] {APEX} Updated LABOCA and SABOCA configurations (opacities,
-	calibration scalings and RCPs). LABOCA data is good thru 2011.12.08.
+	calibration scalings and RCPs). LABOCA data is good thru 2012.11.08.
 	SABOCA data is good thru 2011.10.25.
 
 

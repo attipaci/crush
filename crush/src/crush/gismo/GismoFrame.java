@@ -40,10 +40,12 @@ public class GismoFrame extends HorizontalFrame {
 		setSize(Gismo.pixels);
 	}
 	
+	/*
 	public final boolean isValid() {		
 		//if(digitalFlag != 0) { System.err.print(" " + digitalFlag); }
 		return horizontal.EL() > 0.0 && calFlag == 0 && (digitalFlag & DIGITAL_IRIG) != 0;
 	}
+	*/
 	
 	public void parseData(float[][] DAC) {
 		for(int bol=0; bol<Gismo.pixels; bol++) data[bol] = DAC[bol/8][bol%8];		

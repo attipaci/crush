@@ -119,7 +119,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		return A*A;		
 	}
 	
-	public double getExtFilterCorrectionFactor(double FWHM) {
+	public double getFilterCorrectionFactor(double FWHM) {
 		if(Double.isNaN(extFilterFWHM)) return 1.0;
 		double effectiveFilterFWHM2 = FWHM*FWHM + extFilterFWHM*extFilterFWHM;
 		double effectiveFWHM2 = FWHM*FWHM + smoothFWHM*smoothFWHM;
@@ -344,7 +344,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	public void filterCorrect(double FWHM, final int[][] skip) {
 		if(!Double.isNaN(correctingFWHM)) return;
 		
-		final double filterC = getExtFilterCorrectionFactor(FWHM);
+		final double filterC = getFilterCorrectionFactor(FWHM);
 		
 		new Task<Void>() {
 			@Override
@@ -359,7 +359,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	public void undoFilterCorrect(double FWHM, final int[][] skip) {
 		if(!Double.isNaN(correctingFWHM)) return;
 		
-		final double iFilterC = getExtFilterCorrectionFactor(FWHM);
+		final double iFilterC = getFilterCorrectionFactor(FWHM);
 		
 		new Task<Void>() {
 			@Override

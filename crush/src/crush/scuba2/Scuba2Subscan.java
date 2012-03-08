@@ -119,9 +119,11 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		
 		//final Vector2D equatorialChop = new Vector2D();
 		
-		boolean isValid = false;
-		
 		for(int i=0; i<data.length; i++) {
+			// Check to see if the frame has valid astrometry...
+			if(Double.isNaN(AZ[i])) { add(null); return; }
+			if(Double.isNaN(RA[i])) { add(null); return; }
+			
 			final Scuba2Frame frame = new Scuba2Frame(scuba2Scan);
 
 			// parse the data:
@@ -152,16 +154,11 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 			frame.frameNumber = SN[i];
 			if(DT != null) frame.detectorT = DT[i];
 			
-			if(frame.isValid()) {
-				isValid = true;
-				add(frame);
-			}
-			else if(isValid) add(null);	
+			add(frame);
 		}
 
 		if(isEmpty()) {
 			System.err.println("   Subscan has no ancillary coordinate information. Dropping subscan.");
-			
 		}
 	}
 
