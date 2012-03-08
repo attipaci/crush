@@ -137,17 +137,20 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		}
 
 		setPlateScale(pixelSize);
-		
+			
 		super.loadChannelData();
 	}
 	
 	public void setPlateScale(Vector2D size) {
 		// Make all pixels the same size. Also calculate their positions...
 		for(GismoPixel pixel : this) pixel.size = size;
+		
 		Vector2D center = GismoPixel.getPosition(size, arrayPointingCenter.x - 1.0, arrayPointingCenter.y - 1.0);			
 		
 		// Set the pointing center...
 		setReferencePosition(center);
+		
+		if(hasOption("rotation")) rotate(option("rotation").getDouble() * Unit.deg);
 	}
 	
 	public void rotate(double angle) {

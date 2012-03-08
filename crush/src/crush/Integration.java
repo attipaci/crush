@@ -159,9 +159,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Automatic downsampling after vclipping...
 		if(hasOption("downsample")) if(option("downsample").equals("auto")) downsample();
 	
+		
 		// Discard invalid frames at the beginning and end of the integration...
 		trim();
-		
+			
 		// Continue only if integration is long enough to be processed...
 		int minFrames = hasOption("subscan.minlength") ? (int) Math.floor(option("subscan.minlength").getDouble() / instrument.samplingInterval) : 2;
 		int mappingFrames = getFrameCount(Frame.SOURCE_FLAGS);

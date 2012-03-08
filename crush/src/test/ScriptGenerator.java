@@ -25,17 +25,17 @@ public class ScriptGenerator {
 		*/
 		
 		String[][] options = {
-				{ "-rounds=10", "-rounds=20", "-rounds=30" },
-				{ "-stability=2.5", "-stability=5.0", "-stability=10.0" },
-				{ "-forget=filter.motion", "-filter.motion.above=0.1", "-filter.motion.above=0.2" },
-				{ "-source.filter.fwhm=35", "-source.filter.fwhm=45", "-source.filter.fwhm=55" }
+				{ "-rounds=20" },
+				{ "-stability=10.0", "-stability=20.0" },
+				{ "-filter.motion.above=0.05", "-filter.motion.above=0.1", "-filter.motion.above=0.2" },
+				{ "-source.filter.fwhm=30", "-source.filter.fwhm=40", "-source.filter.fwhm=60" }
 		};
 	
 		String[][] names = {
-				{ "r10", "r20", "r30" },
-				{ "S3", "S5", "S10" },
-				{ "nMF", "MF010", "MF020" },
-				{ "x35", "x45", "x55" },
+				{ "r20" },
+				{ "S10", "S20" },
+				{ "MF005", "MF010", "MF020" },
+				{ "x30", "x40", "x60" },
 		};
 		
 		// 4 x 3 x 3 = 36

@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.util.*;
 import java.text.ParseException;
 
+import crush.CRUSH;
+
 import util.LogFile;
 import util.Range;
 import util.Unit;
@@ -48,7 +50,7 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 	public Range sizeRange = new Range(15.0 * Unit.arcsec, 25.0 * Unit.arcsec);
 	
 	public double searchRadius = 15.0 * Unit.deg;
-	public double timeWindow = 0.5 * Unit.hour;
+	public double timeWindow = 1.0 * Unit.hour;
 	
 	private static Hashtable<String, PointingTable> tables = new Hashtable<String, PointingTable>();
 	
@@ -58,7 +60,6 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 			table = new PointingTable(fileName);
 			tables.put(fileName, table);
 		}
-		
 		return table;
 	}
 	
@@ -71,6 +72,7 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 		if(fileName.equals(this.fileName)) return;
 		
 		System.err.print("   [Loading pointing log.] ");
+		if(CRUSH.debug) System.err.print("\n   ---> " + fileName);
 		
 		for(LogFile.Row row : LogFile.read(fileName)) {
 			Entry pointing = new Entry();

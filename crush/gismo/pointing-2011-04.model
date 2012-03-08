@@ -1,6 +1,6 @@
 # Absolute Pointing Model for 2011-April run
 # (using the new merge with scanning offsets!)
-# Good to ~3" rms in both directions for the
+# Good to ~2.5" rms in both directions for the
 # entire run. Based on ~430 pointing measurements
 # over 7 days and nights.
 # Adjusted constants: 
@@ -14,11 +14,11 @@
 P1 =   -3.15
 P2 =   -8.40
 P3 =   -0.18
-P4 =   -8.55
-P5 =  -14.98
-P6 =     0.0
+P4 =  -12.19
+P5 =  -16.54
+P6 =    0.0
 P7 =  -14.15
-P8 =  -81.88
-P9 =  -12.61
-P10 = -21.67
-P11 =  -3.03
+P8 =  -82.22
+P9 =  -11.58
+P10 =  21.55
+P11 =  -2.13

@@ -322,6 +322,8 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 				public void readRow(int i) throws FitsException {	
 
 					final Sharc2Frame frame = new Sharc2Frame(sharcscan);
+					frame.index = i;
+					
 					frame.parseData(data, i*channels, channels);
 
 					final double UT = isDoubleUT ? dUT[i] * Unit.hour : fUT[i] * Unit.hour;

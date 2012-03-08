@@ -322,9 +322,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 		LST = header.getDoubleValue("LST") * Unit.sec;
 		setMJD(header.getDoubleValue("MJD"));
-		
-		//instrument.setMJDOptions(MJD);
-		
+	
 		if(header.getBooleanValue("WOBUSED")) {
 			chopper = new Chopper();
 			// WOBDIR ('NONE', ?)
@@ -370,7 +368,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		else {
 			try { 
 				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.newInstance();
-				basisCoords.set(lon,  lat);
+				basisCoords.set(lon, lat);
 				equatorial = basisCoords.toEquatorial();
 				calcHorizontal();
 			}

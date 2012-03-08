@@ -26,10 +26,12 @@ package crush.gismo;
 
 import crush.*;
 import util.*;
+import util.astro.CelestialCoordinates;
 import util.astro.CoordinateEpoch;
 import util.astro.EquatorialCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.astro.JulianEpoch;
+import util.astro.Precessing;
 import util.astro.Precession;
 import crush.fits.HDUReader;
 
@@ -88,8 +90,8 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		
 	class GismoReader extends HDUReader {	
 		private float[] DAC;
-		private double[] MJD, LST, dX, dY;
-		//private double[] X0, Y0, AZ, EL, cAZ, cEL, tAZ, tEL, PA;
+		private double[] MJD, LST, dX, dY, AZE, ELE;
+		private double[] X0, Y0, cEL; //AZ, EL, cAZ, cEL, tAZ, tEL, posA;
 		private int[] NS, SN, CAL;
 		private byte[] SDI;
 		private int channels;
@@ -105,17 +107,27 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 			// The IRAM coordinate data...
 			MJD = (double[]) table.getColumn(hdu.findColumn("MJD"));
 			LST = (double[]) table.getColumn(hdu.findColumn("LST"));
-			//PA = (double[]) table.getColumn(hdu.findColumn("PARANGLE"));
-			//X0 = (double[]) table.getColumn(hdu.findColumn("BASLONG"));
-			//Y0 = (double[]) table.getColumn(hdu.findColumn("BASLAT"));
+			
+			// This is a position angle, not parallactic angle!
+			//posA = (double[]) table.getColumn(hdu.findColumn("PARANGLE"));
+			
+			// The tracking center in the basis coordinates of the scan (usually RA/DEC)
+			X0 = (double[]) table.getColumn(hdu.findColumn("BASLONG"));
+			Y0 = (double[]) table.getColumn(hdu.findColumn("BASLAT"));
+			
+			// The scanning offsets in the offset system (usually AZ/EL)
 			dX = (double[]) table.getColumn(hdu.findColumn("LONGOFF"));
 			dY = (double[]) table.getColumn(hdu.findColumn("LATOFF"));
+			
+			// The encoder AZ/EL. These are not astronomical AZ/EL!!!
 			//AZ = (double[]) table.getColumn(hdu.findColumn("AZIMUTH"));
 			//EL = (double[]) table.getColumn(hdu.findColumn("ELEVATION"));
+			
+			// The commanded encoder AZ/EL. These are not astronomical AZ/EL!!!!
 			//cAZ = (double[]) table.getColumn(hdu.findColumn("CAZIMUTH"));
-			//cEL = (double[]) table.getColumn(hdu.findColumn("CELEVATIO"));
-			//tAZ = (double[]) table.getColumn(hdu.findColumn("TRACKING_AZ"));
-			//tEL = (double[]) table.getColumn(hdu.findColumn("TRACKING_EL"));
+			cEL = (double[]) table.getColumn(hdu.findColumn("CELEVATIO"));
+			AZE = (double[]) table.getColumn(hdu.findColumn("TRACKING_AZ"));
+			ELE = (double[]) table.getColumn(hdu.findColumn("TRACKING_EL"));
 			
 			// The GISMO data
 			DAC = (float[]) table.getColumn(iDAC);
@@ -126,13 +138,18 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 			int iCAL = hdu.findColumn("CalFlag"); // 0=none, 1=shutter, 2=ivcurve
 			if(iCAL > 0) CAL = (int[]) table.getColumn(iCAL);
 			
+			//iSAE = hdu.findColumn("SAE");
+			
+			// These columns below have been retired in March 2012
+			// But even before that, these did not carry actual data, as thermometry
+			// was disconnected during observations...
+			
 			//iLT = hdu.findColumn("LABVIEWTIME");
 			//iDT = hdu.findColumn("DIODE_TEMPERATURES");
 			//iRT = hdu.findColumn("RESISTOR_TEMPERATURES");
 			//iDV = hdu.findColumn("DIODE_VOLTS");
 			//iRO = hdu.findColumn("RESISTOR_OHMS");
 			//iMRT = hdu.findColumn("MAIN_RESISTOR_TEMPERATURE");
-			//iSAE = hdu.findColumn("SAE");
 		}
 		
 		@Override
@@ -140,56 +157,94 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 			return new Reader() {
 				
 				@Override
-				public void readRow(int i) {			
+				public void readRow(int i) {
+					set(i, null);
+					
+					int calFlag = 0, digitalFlag = 0;
+					
+					// Do not process frames with no coordinate information...
+					if(cEL[i] <= 0.0) return;
+					
+					// Skip processing frames with non-zero cal flag...
+					if(CAL != null) {
+						calFlag = CAL[i];	
+						if(calFlag != 0) return;
+					}
+						
+					// Skip data with invalid flags 
+					for(int bit=0, from=6*i; bit<6; bit++) if(SDI[from+bit] > 0) digitalFlag |= 1 << bit;
+					if((digitalFlag & GismoFrame.DIGITAL_IRIG) == 0) return;
+								
+					// Create the frame object only if it cleared the above hurdles...
 					final GismoFrame frame = new GismoFrame(gismoScan);
-
-					//final double UT = (((double[]) row[iUT])[0] * Unit.sec) % Unit.day;
+					frame.index = i;
+					
+					// Set the frame flags...
+					frame.calFlag = calFlag;
+					frame.digitalFlag = digitalFlag;
+					
+					// Read the pixel data
+					frame.parseData(DAC, i*channels, channels);	
+					
+					// Add in the astrometry...
 					frame.MJD = MJD[i];
-					frame.LST = LST[i] * Unit.sec;
+					frame.LST = LST[i] * Unit.sec;				
 					
 					// Use ALWAYS the scanning offsets around the object coordinate...
 					// First make sure the horizontal coordinates of the tracking center
 					// are correct even if tracking (e.g. equatorial). 
 					if(gismoScan.basisSystem == HorizontalCoordinates.class) 
-						frame.horizontal = scan.horizontal;
-					else {
-						frame.equatorial = scan.equatorial;
+						//frame.horizontal = scan.horizontal;
+						frame.horizontal = new HorizontalCoordinates(X0[i], Y0[i]);
+					else if(gismoScan.basisSystem == EquatorialCoordinates.class) {
+						//frame.equatorial = scan.equatorial;
+						frame.equatorial = new EquatorialCoordinates(X0[i], Y0[i], scan.equatorial.epoch);
 						frame.calcHorizontal();	
 					}
+					else {
+						try {
+							CelestialCoordinates coords = (CelestialCoordinates) gismoScan.basisSystem.newInstance();
+							coords.set(X0[i], Y0[i]);
+							if(coords instanceof Precessing) ((Precessing) coords).setEpoch(gismoScan.epoch);
+							frame.equatorial = coords.toEquatorial();
+							frame.calcHorizontal();
+						}
+						catch(InstantiationException e) { e.printStackTrace(); }
+						catch(IllegalAccessException e) { e.printStackTrace(); }
+					}
+					
+					// Calculate the parallactic angle
+					frame.calcParallacticAngle();
+					
+					// Load the scanning offsets...
+					frame.horizontalOffset = new Vector2D(dX[i], dY[i]);
+					
+					// Convert scanning offsets to horizontal if necessary...
+					if(gismoScan.offsetSystem == EquatorialCoordinates.class)
+						frame.toHorizontal(frame.horizontalOffset);
+							
+					// Verified that offsets are correctly projected...
+					frame.horizontal.addOffset(frame.horizontalOffset);
+					
+					// Add the tracking errors (confirmed raw AZ differences).
+					// Errors are commanded - actual;
+					frame.horizontal.x -= AZE[i];
+					frame.horizontal.y -= ELE[i];
 					
 					// Force recalculation of the equatorial coordinates...
 					frame.equatorial = null;
 					
-					// Load the scanning offsets into the EQ offset variable...
-					frame.horizontalOffset = new Vector2D(dX[i], dY[i]);
-					
-					// Convert scanning offsets always horizontal...
-					if(gismoScan.offsetSystem == EquatorialCoordinates.class) 
-						frame.toHorizontal(frame.horizontalOffset);
-					
-					frame.horizontal.addOffset(frame.horizontalOffset);
-					
-					// Calculate the parallactic angle...
-					frame.calcParallacticAngle();
-					
 					// The GISMO-specific data
 					frame.samples = NS[i];
 					frame.frameNumber = SN[i];
-					if(CAL != null) frame.calFlag = CAL[i];
-					
-					for(int bit=0, from=6*i; bit<6; bit++) if(SDI[from+bit] > 0) frame.digitalFlag |= 1 << bit;
-
+				
 					//frame.diodeT = (float[]) row[iDT];
 					//frame.resistorT = (float[]) row[iRT];
 					//frame.diodeV = (float[]) row[iDV];
-
 					//frame.parseData((float[][]) row[iDAC]);
-					frame.parseData(DAC, i*channels, channels);	
-
 					//frame.labviewTime = ((double[])row[iLT])[0] * Unit.sec;
-
-					if(frame.isValid())	set(i, frame);
-					else set(i, null);	
+					
+					set(i, frame);
 				}
 			};
 		}
@@ -265,8 +320,34 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 				
 				@Override
 				public void readRow(int i) {			
+					set(i, null);
+					
+					int calFlag = 0, digitalFlag = 0;
+					
+					// Do not process frames with no coordinate information...
+					if(EL[i] <= 0.0) return;
+					
+					// Skip processing frames with non-zero cal flag...
+					if(CAL != null) {
+						calFlag = CAL[i];	
+						if(CAL[i] != 0) return;
+					}
+						
+					// Skip data with invalid flags 
+					for(int bit=0, from=6*i; bit<6; bit++) if(SDI[from+bit] > 0) digitalFlag |= 1 << bit;
+					if((digitalFlag & GismoFrame.DIGITAL_IRIG) == 0) return;
+								
+					// Create the frame object only if it cleared the above hurdles...
 					final GismoFrame frame = new GismoFrame(gismoScan);
-
+					
+					// Set the frame flags...
+					frame.calFlag = calFlag;
+					frame.digitalFlag = digitalFlag;
+					
+					// Read in the detector data...
+					//frame.parseData((float[][]) row[iDAC]);
+					frame.parseData(DAC, i*channels, channels);
+					
 					//final double UT = (((double[]) row[iUT])[0] * Unit.sec) % Unit.day;
 					frame.MJD = MJD[i];
 					frame.LST = LST[i] * Unit.sec;
@@ -289,10 +370,11 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 
 					// Calculate the horizontal offset	
 					apparent.toHorizontal(trackingCenter, scan.site, frame.LST);
-					
+
 					frame.horizontal = new HorizontalCoordinates(
-							AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
-							EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
+							AZ[i] * Unit.deg - AZE[i] * Unit.arcsec,
+							EL[i] * Unit.deg - ELE[i] * Unit.arcsec);
+					
 					frame.horizontalOffset = frame.horizontal.getOffsetFrom(trackingCenter);
 
 					// Add the chopper offet to the actual coordinates as well...
@@ -303,25 +385,17 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					// Force recalculation of the equatorial coordinates...
 					frame.equatorial = null;	
 					frame.calcParallacticAngle();
-
-					// Read in the detector data...
-					//frame.parseData((float[][]) row[iDAC]);
-					frame.parseData(DAC, i*channels, channels);
-					
+	
 					// The GISMO specific columns...
 					frame.frameNumber = SN[i];
 					frame.samples = NS[i];
 					
-					if(CAL != null) frame.calFlag = CAL[i];
-					for(int bit=0, from=6*i; bit<6; bit++) if(SDI[from+bit] > 0) frame.digitalFlag |= 1 << bit;
-
 					//frame.diodeT = (float[]) row[iDT];
 					//frame.resistorT = (float[]) row[iRT];
 					//frame.diodeV = (float[]) row[iDV];
 					//frame.labviewTime = ((double[])row[iLT])[0] * Unit.sec;	
 
-					if(frame.isValid())	set(i, frame);
-					else set(i, null);	
+					set(i, frame);
 				}
 			};
 		}

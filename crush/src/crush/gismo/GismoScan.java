@@ -27,14 +27,7 @@ package crush.gismo;
 import crush.*;
 import nom.tam.fits.*;
 import util.*;
-import util.astro.AstroTime;
-import util.astro.CelestialCoordinates;
-import util.astro.CoordinateEpoch;
-import util.astro.EquatorialCoordinates;
-import util.astro.GeodeticCoordinates;
-import util.astro.HorizontalCoordinates;
-import util.astro.JulianEpoch;
-import util.astro.Weather;
+import util.astro.*;
 import util.text.TableFormatter;
 
 import java.io.*;
@@ -47,7 +40,6 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	 */
 	private static final long serialVersionUID = 1608680718251250629L;
 	
-	Vector2D horizontalOffset;
 	String date, startTime, endTime;
 	
 	double tau225GHz;
@@ -58,6 +50,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	
 	Vector2D appliedPointing = new Vector2D();
 	
+	public CoordinateEpoch epoch;
 	public Class<? extends SphericalCoordinates> basisSystem;
 	public Class<? extends SphericalCoordinates> offsetSystem;
 	
@@ -137,12 +130,17 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		String path = getDataPath();
 		descriptor = scanDescriptor;
 
-		String ending = hasOption("dataname.end") ? option("dataname.end").getValue() : "GISMO-IRAM-condensed.fits";
-		
+		List<String> endings = null;
+		if(hasOption("dataname.end")) endings = option("dataname.end").getList();
+		else {
+			endings = new ArrayList<String>();
+			endings.add("GISMO.fits");
+		}
+			
 		// Try to read scan number with the help of 'object' and 'date' keys...
 		try {
 			int scanNo = Integer.parseInt(scanDescriptor);
-			if(hasOption("date") && hasOption("object")) {
+			if(hasOption("date") && hasOption("object")) {	
 				String dirName = path + option("object").getValue() + File.separator + option("date").getValue() + "." + scanNo;
 				File directory = new File(dirName);
 
@@ -158,13 +156,17 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 				}
 				else {
 					String[] files = directory.list();
-					for(int i=0; i<files.length; i++) if(files[i].endsWith(ending))
-						return new File(dirName + File.separator + files[i]);
+					for(int i=0; i<files.length; i++) for(String ending : endings)
+						if(files[i].endsWith(ending))
+							return new File(dirName + File.separator + files[i]);
 					
-					String message = "Cannot find file ending with '" + ending + "' in " + dirName +
+					String message = "Cannot find file with the specified endings in " + dirName +
 						"\n    * Check that 'datapath' and 'dataname.end' are correct:" +
 						"\n      --> datapath = '" + path + "'" +
-						"\n      --> dataname.end = '" + ending + "'";		
+						"\n      --> dataname.end = '";
+					
+					if(hasOption("dataname.end")) message += option("dataname.end").getValue() + "'";
+					else message += endings.get(0);
 					
 					throw new FileNotFoundException(message);
 				}
@@ -201,13 +203,13 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	}
 	
 	public void setVersionOptions(double ver) {
-		if(!instrument.options.containsKey("ver")) return;
-		
 		// Make options an independent set of options, setting version specifics...
+		if(!instrument.options.containsKey("ver")) return;
+			
 		instrument.options = instrument.options.copy();
 		fitsVersion = ver;
 		
-		Hashtable<String, Vector<String>> settings = option("mjd").conditionals;
+		Hashtable<String, Vector<String>> settings = option("ver").conditionals;
 		
 		for(String rangeSpec : settings.keySet()) 
 			if(Range.parse(rangeSpec, true).contains(fitsVersion)) instrument.options.parse(settings.get(rangeSpec));
@@ -218,7 +220,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		BasicHDU[] HDU = fits.read();
 
 		if(hasOption("ver")) setVersionOptions(option("ver").getDouble());
-		else setVersionOptions(HDU[0].getHeader().getDoubleValue("MRGVER", 0.0));	
+		else setVersionOptions(HDU[0].getHeader().getDoubleValue("MRGVER", Double.POSITIVE_INFINITY));
+			
 		boolean isOldFormat = fitsVersion < 1.7;
 		
 		if(isOldFormat) {
@@ -324,7 +327,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		}
 		else if(startTime == null) timeStamp = date + "T" + startTime;
 		else timeStamp = date;
-		
+	
 		setMJD(header.getDoubleValue("MJD-OBS"));
 		
 		// TODO use UTC, TAI, TT offsets to configure AstroTime?...
@@ -339,11 +342,11 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		
 		LST = header.getDoubleValue("LST", Double.NaN) * Unit.hour;
 		
+		epoch = hasOption("epoch") ? 
+				CoordinateEpoch.forString(option("epoch").getValue()) 
+			: new JulianEpoch(header.getDoubleValue("EQUINOX", 2000.0));
+		
 		if(basisSystem == EquatorialCoordinates.class) {
-			CoordinateEpoch epoch = hasOption("epoch") ? 
-					CoordinateEpoch.forString(option("epoch").getValue()) 
-				: new JulianEpoch(header.getDoubleValue("EQUINOX"));
-			
 			equatorial = new EquatorialCoordinates(lon, lat, epoch);	
 			calcHorizontal();	
 		}
@@ -355,6 +358,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			try { 
 				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.newInstance(); 
 				basisCoords.set(lon, lat);
+				if(basisCoords instanceof Precessing) ((Precessing) basisCoords).setEpoch(epoch);
 				equatorial = basisCoords.toEquatorial();
 				calcHorizontal();
 			}
@@ -465,12 +469,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			startTime = timeStamp.substring(timeStamp.indexOf('T') + 1);
 		}
 		else if(startTime == null) timeStamp = date + "T" + startTime;
-		else timeStamp = date;
+		else timeStamp = date;	
 		
-		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
-		catch(ParseException e) { System.err.println("WARNING! " + e.getMessage()); }
-		
-		CoordinateEpoch epoch = hasOption("epoch") ? 
+		epoch = hasOption("epoch") ? 
 				CoordinateEpoch.forString(option("epoch").getValue()) 
 			: new JulianEpoch(header.getDoubleValue("EQUINOX"));
 		
@@ -479,7 +480,11 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 				header.getDoubleValue("RAEP") * Unit.hourAngle,
 				header.getDoubleValue("DECEP") * Unit.deg,
 				epoch);
-			
+	
+		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
+		catch(ParseException e) { System.err.println("WARNING! " + e.getMessage()); }
+	
+		
 		System.err.println(" [" + sourceName + "] observed on " + date + " at " + startTime + " by " + observer);
 		System.err.println(" Equatorial: " + equatorial.toString());	
 		System.err.println(" Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
@@ -567,10 +572,12 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		return data;
 	}
 	
+	// 2012-03-06 Conforms to IRAM pointing model convention (P11/P12)
 	@Override
 	public Vector2D getNasmythOffset(Vector2D nativeOffset) {
-		// TODO Flip axes and signs as necessary to conform to IRAM convention
-		return super.getNasmythOffset(nativeOffset);
+		Vector2D nasmythOffset = super.getNasmythOffset(nativeOffset);
+		nasmythOffset.invert();
+		return nasmythOffset;
 	}
 	
 	

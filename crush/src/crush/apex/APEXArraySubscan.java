@@ -324,37 +324,43 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				
 				@Override
 				public void readRow(int t) throws FitsException {
+					set(t, null);
+					
+					// Continue only if the basis coordinates are valid...
+					// APEX uses -999 deg to mark invalid data...
+					final double x = X[t] * Unit.deg;
+					if(x < m900deg) return;
+					
+					final double y = Y[t] * Unit.deg;
+					if(y < m900deg) return;
 
+					// Continue only if the scanning offsets are valid...
+					// APEX uses -999 deg to mark invalid data...
+					final double dx = DX[t] * Unit.deg;
+					if(dx < m900deg) return;
+					
+					final double dy = DY[t] * Unit.deg;
+					if(dy < m900deg) return;
+			
+					// Create the frame object once the hurdles above are cleared...
 					final FrameType exposure = getFrameInstance();
 					exposure.index = t;
 
 					exposure.MJD = MJD[t];
 					exposure.LST = LST[t];
-
-					// Continue only if the basis coordinates are valid...
-					// APEX uses -999 deg to mark invalid data...
-					double x = X[t] * Unit.deg;
-					double y = Y[t] * Unit.deg;
-					if(x < m900deg || y < m900deg) { set(t, null); return; }
-
+					
 					if(basisCoords != null) {
 						basisCoords.set(x, y);
 						exposure.equatorial = basisCoords.toEquatorial();
 						exposure.calcHorizontal();
-					}			
+					}	
 					else if(apexScan.basisSystem == EquatorialCoordinates.class) {
 						exposure.equatorial = new EquatorialCoordinates(x, y, scan.equatorial.epoch);
 						exposure.calcHorizontal();
 					}
 					else exposure.horizontal = new HorizontalCoordinates(x, y);
 
-					// Continue only if the scanning offsets are valid...
-					// APEX uses -999 deg to mark invalid data...
-					x = DX[t] * Unit.deg;
-					y = DY[t] * Unit.deg;
-					if(x < m900deg || y < m900deg) { set(t, null); return; }
-
-					exposure.horizontalOffset = new Vector2D(x, y);
+					exposure.horizontalOffset = new Vector2D(dx, dy);
 					exposure.calcParallacticAngle();
 
 					// Make scanning offsets always horizontal...
@@ -375,22 +381,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 						exposure.toEquatorial(tempOffset);
 						exposure.equatorial.addOffset(tempOffset);
 					}
-
-					// If the RA,DEC coords are readily available, then just use them...
-					/*
-				if(RA != null) {
-					double ra = RA[t] * Unit.deg;
-					double dec = DEC[t] * Unit.deg;
-
-					if(ra < APEXFrame.m900deg) ra = Double.NaN;
-					if(dec < APEXFrame.m900deg) dec = Double.NaN;
-
-					exposure.equatorial = new EquatorialCoordinates(ra, dec, scan.equatorial.epoch);
-					exposure.calcHorizontal();
-				}
-					 */
-					// Otherwise calculate the equatorial coordinates from the horizontal ones...
-					//exposure.calcEquatorial();
 
 					// Scrambling produces a messed-up map, which is suitable for  studying the noise properties
 					// If the scanning is more or less centrally symmetric, the resulting 'noise' map is

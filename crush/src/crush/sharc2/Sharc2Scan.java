@@ -240,9 +240,8 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 			try { iMJD = (int)(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
 			catch(ParseException e) { throw new HeaderCardException(e.getMessage()); }
 		}
-		
-		// Add on the various additional offsets
-		
+			
+		// Add on the various additional offsets	
 		horizontalOffset = new Vector2D(
 				header.getDoubleValue("AZO") * Unit.arcsec,
 				-header.getDoubleValue("ZAO") * Unit.arcsec);

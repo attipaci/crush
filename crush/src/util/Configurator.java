@@ -81,7 +81,7 @@ public class Configurator implements Cloneable {
 	}
 	
 	public void parse(String line) {
-		Entry entry = Entry.parse(line);
+		Entry entry = new Entry(line);
 		if(entry != null) process(entry.key, entry.value);
 	}
 	
@@ -182,7 +182,7 @@ public class Configurator implements Cloneable {
 			catch(IOException e) { System.err.println("WARNING! Configuration file '" + argument + "' no found."); }
 		}
 		else if(key.equals("poll")) {
-			poll(argument.length() > 0 ? argument : null);
+			poll(argument.length() > 0 ? unaliasedKey(argument) : null);
 		}
 		else if(key.equals("conditions")) {
 			pollConditions(argument.length() > 0 ? argument : null);
@@ -939,78 +939,86 @@ public class Configurator implements Cloneable {
 		}
 		
 		if(!blacklist.isEmpty()) Util.addLongHierarchKey(cursor, "blacklist", new String(keys));
-	}
-	
- }
+	}	
 
-
-class Entry {
-	String key;
-	String value;
-	
-	public static Entry parse(String line) {
-		final Entry entry = new Entry();
-		final StringBuffer keyBuffer = new StringBuffer();
+	class Entry {
+		String key;
+		String value;
 		
-		int openCurved = 0;
-		int openCurly = 0;
-		int openSquare = 0;
+		public Entry() {}
 		
-		line = line.trim();
-		
-		int index = 0;
-				
-		boolean foundSeparator = false;
-		
-		for(; index < line.length(); index++) {
-			final char c = line.charAt(index);
-			switch(c) {
-			case '(' : openCurved++; break;
-			case ')' : openCurved--; break;
-			case '{' : openCurly++; break;
-			case '}' : openCurly--; break;
-			case '[' : openSquare++; break;
-			case ']' : openSquare--; break;
-			default :
-				if(c == ' ' || c == '\t' || c == ':' || c == '=') {
-					if(openCurved <= 0 && openCurly <= 0 && openSquare <= 0) {
-						foundSeparator = true;
-						entry.key = new String(keyBuffer).toLowerCase();
-						break;
-					}
-				}	
-			}
-			if(foundSeparator) break;
-			else keyBuffer.append(c);
+		public Entry(String key, String value) {
+			this();
+			this.key = key;
+			this.value = value;
 		}
 		
-		// If it's just a key without an argument, then return an entry with an empty argument...
-		if(index == line.length()) {
-			entry.key = new String(keyBuffer).toLowerCase();
-			entry.value = "";
-			return entry;
-		}
-	
-		// Otherwise, skip trailing spaces and assigners after the key... 
-		for(; index < line.length(); index++) {
-			char c = line.charAt(index);
-			if(c != ' ') if(c != '\t') if(c != '=') if(c != ':') break;
+		public Entry (String line) {
+			this();
+			parse(line);
 		}
 		
-		// The remaining is the 'raw' argument...
-		String value = line.substring(index);
-	
-		// Remove quotes from around the argument
-		if(value.length() == 0);
-		else if(value.charAt(0) == '"' && value.charAt(value.length()-1) == '"')
-			value = value.substring(1, value.length() - 1);
-		else if(value.charAt(0) == '\'' && value.charAt(value.length()-1) == '\'')
-			value = value.substring(1, value.length() - 1);
-		
-		entry.value = value;
+		public void parse(String line) {
+			final StringBuffer keyBuffer = new StringBuffer();
 			
-		return entry;
+			int openCurved = 0;
+			int openCurly = 0;
+			int openSquare = 0;
+			
+			line = line.trim();
+			
+			int index = 0;
+					
+			boolean foundSeparator = false;
+			
+			for(; index < line.length(); index++) {
+				final char c = line.charAt(index);
+				switch(c) {
+				case '(' : openCurved++; break;
+				case ')' : openCurved--; break;
+				case '{' : openCurly++; break;
+				case '}' : openCurly--; break;
+				case '[' : openSquare++; break;
+				case ']' : openSquare--; break;
+				default :
+					if(c == ' ' || c == '\t' || c == ':' || c == '=') {
+						if(openCurved <= 0 && openCurly <= 0 && openSquare <= 0) {
+							foundSeparator = true;
+							key = new String(keyBuffer).toLowerCase();
+							break;
+						}
+					}	
+				}
+				if(foundSeparator) break;
+				else keyBuffer.append(c);
+			}
+			
+			// If it's just a key without an argument, then return an entry with an empty argument...
+			if(index == line.length()) {
+				key = new String(keyBuffer).toLowerCase();
+				value = "";
+				return;
+			}
+		
+			// Otherwise, skip trailing spaces and assigners after the key... 
+			for(; index < line.length(); index++) {
+				char c = line.charAt(index);
+				if(c != ' ') if(c != '\t') if(c != '=') if(c != ':') break;
+			}
+			
+			// The remaining is the 'raw' argument...
+			value = line.substring(index).trim();
+		
+			// Remove quotes from around the argument
+			if(value.length() == 0);
+			else if(value.charAt(0) == '"' && value.charAt(value.length()-1) == '"')
+				value = value.substring(1, value.length() - 1);
+			else if(value.charAt(0) == '\'' && value.charAt(value.length()-1) == '\'')
+				value = value.substring(1, value.length() - 1);	
+		}
+		
 	}
-	
-	
+
 }
+
+

@@ -28,6 +28,8 @@ public interface Precessing {
 	
 	public CoordinateEpoch getEpoch();
 	
+	public void setEpoch(CoordinateEpoch epoch);
+	
 	public void precess(CoordinateEpoch epoch);
 	
 }

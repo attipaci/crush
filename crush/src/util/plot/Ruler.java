@@ -71,7 +71,6 @@ public class Ruler extends JPanel {
 	
 	boolean isLabeled = true;
 	NumberFormat nf;	// null if automatic...
-
 	
 	private int height;
 	private double delta = Double.NaN;

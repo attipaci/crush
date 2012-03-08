@@ -101,13 +101,13 @@ public class ScalarMap extends SourceMap {
 
 	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
-		super.createFrom(collection);
-		
 		map = new AstroMap();
 		
+		super.createFrom(collection);
+				
 		double gridSize = instrument.resolution / 5.0;
 		if(hasOption("grid")) gridSize = option("grid").getDouble() * Unit.arcsec;
-
+	
 		Scan<?,?> firstScan = scans.get(0);
 		
 		for(Scan<?,?> scan : scans) map.scans.add(scan);	
@@ -122,6 +122,8 @@ public class ScalarMap extends SourceMap {
 		if(hasOption("unit")) map.setUnit(option("unit").getValue());
 		
 		String system = hasOption("system") ? option("system").getValue().toLowerCase() : "equatorial";
+		
+		Projection2D<SphericalCoordinates> projection = getProjection();
 		
 		if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
 		else if(firstScan.isPlanetary) {
@@ -277,6 +279,11 @@ public class ScalarMap extends SourceMap {
 	
 	@Override
 	public Projection2D<SphericalCoordinates> getProjection() { return map.getProjection(); }
+	
+	@Override
+	public void setProjection(Projection2D<SphericalCoordinates> projection) {
+		if(map != null) map.setProjection(projection);
+	}
 	
 	@Override
 	public synchronized void process(Scan<?,?> scan) {
@@ -569,7 +576,7 @@ public class ScalarMap extends SourceMap {
 	
 	
 	public void createLookup(Integration<?,?> integration) {	
-		final CelestialProjector projector = new CelestialProjector(projection);
+		final CelestialProjector projector = new CelestialProjector(getProjection());
 		final Index2D index = new Index2D();
 		final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 		final int n = integration.instrument.getPixelCount();
@@ -613,7 +620,7 @@ public class ScalarMap extends SourceMap {
 
 	@Override
 	protected void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain) {
-		final CelestialProjector projector = new CelestialProjector(projection);
+		final CelestialProjector projector = new CelestialProjector(getProjection());
 		final Index2D index = new Index2D();
 
 		final double[] sumIM = new double[sourceGain.length];

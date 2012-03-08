@@ -1,9 +1,34 @@
+>> override keys!
+
+>> Reorganize data reading e.g.
+	
+
+>> Switch to standard FITS long keys (after updating FITS libs)
+	-- Retain the ability to read crush-style long keys through Util...
+
+
+>> Messages redesign:
+	* owner, sender, type, importance, message, details... 
+	* message server.
+	--> to console (always)
+	--> To message client (if connected)
+	    (client [e.g. graphical] can launch crush, and connect to its
+	    message server)
+
+>> track progress
+	? through message server
+	? other server, with data products?
+
+>> data product server
+	? poll/send data products
+	--> to display
+	--> summary information
+
 >> SHARC-2 rows.nogains...
 >> sourcecounts bug hunt?
 
 >> polka levelling in faithful rounds???
 >> check all reduction modes, normal, beammap, skydip, photo, polar
->> N x 2 calibration
 >> polarization calibration
 >> comissioning: large-enough scan pattern for extended pol.
 >> analyzer and waveplate objects?

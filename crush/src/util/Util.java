@@ -456,7 +456,7 @@ public final class Util {
 
 	static int minFitsValueLength = 5;
 	
-	public static String getAbbreviatedFitsKey(String key) {
+	public static String getAbbreviatedHierarchKey(String key) {
 		int max = 66 - minFitsValueLength;
 		if(key.length() <= max) return key;
 		
@@ -465,7 +465,7 @@ public final class Util {
 	}
 	
 	public static void addLongHierarchKey(Cursor cursor, String key, int part, String value) throws FitsException, HeaderCardException {	
-		key = getAbbreviatedFitsKey(key);
+		key = getAbbreviatedHierarchKey(key);
 		if(value.length() == 0) value = "true";
 		
 		String alt = part > 0 ? "." + part : "";
@@ -498,7 +498,8 @@ public final class Util {
 	}
 
 	public static String getLongFitsKey(Header header, String key) {
-		key = getAbbreviatedFitsKey(key);
+		if(key.length() >= 8) key = key.substring(0, 6) + "-";
+	
 		String value = header.getStringValue(key);
 
 		if(value == null) {
@@ -519,7 +520,8 @@ public final class Util {
 
 	public static void addLongFitsKey(Cursor cursor, String key, String value, String comment) 
 	throws FitsException, HeaderCardException {
-		key = getAbbreviatedFitsKey(key);
+		if(key.length() >= 8) key = key.substring(0, 6) + "-";
+		
 		final int size = 65 - comment.length();
 
 		if(value.length() <= size) {

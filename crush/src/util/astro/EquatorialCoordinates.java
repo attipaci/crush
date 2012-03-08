@@ -158,7 +158,7 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 		horizontal.setNativeLatitude(asin(equatorial.sinLat * site.sinLat + equatorial.cosLat * site.cosLat * cosH));
 		double asinA = -Math.sin(H) * equatorial.cosLat;
 		double acosA = site.cosLat * equatorial.sinLat - site.sinLat * equatorial.cosLat * cosH;
-		horizontal.x = Math.atan2(asinA, acosA);
+		horizontal.setLongitude(Math.atan2(asinA, acosA));
 	}
 
 	public void precess(CoordinateEpoch newEpoch) {
@@ -223,4 +223,6 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 	private static EquatorialCoordinates equatorialPole = new EquatorialCoordinates(0.0, Constant.rightAngle);
 
 	public CoordinateEpoch getEpoch() { return epoch; }
+	
+	public void setEpoch(CoordinateEpoch epoch) { this.epoch = epoch; }
 }
