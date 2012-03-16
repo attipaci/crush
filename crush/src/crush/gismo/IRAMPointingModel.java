@@ -37,7 +37,7 @@ public class IRAMPointingModel {
 	
 	boolean isStatic = false;
 	
-	public final static int CONSTANTS = 11;
+	public final static int CONSTANTS = 16;
 	
 	public IRAMPointingModel() {}
 	
@@ -67,20 +67,29 @@ public class IRAMPointingModel {
 		isStatic = value;
 	}
 	
+	public void addNasmythOffset(Vector2D offset) {
+		P[10] += offset.x;
+		P[11] += offset.y;
+	}
+	
 	public double getDX(HorizontalCoordinates horizontal, double UT) {
 		double cosE = horizontal.cosLat;
 		double sinE = horizontal.sinLat;
 		double sinA = Math.sin(horizontal.x);
 		double cosA = Math.cos(horizontal.x);
+		double sin2A = Math.sin(2.0 * horizontal.x);
+		double cos2A = Math.cos(2.0 * horizontal.x);
+		
 		double H = P(10, UT);
 		double V = P(11, UT);
 		
 		// 2012-03-06
-		// Nasmyth offsets H & V are now equivalent to pointing model (P11/P12).
-		// Note, that Juan's fit gives V = -P12!
+		// Nasmyth offsets H & V are now equivalent to pointing model (P10/P11).
+		// Note, that Juan's fit gives V = -P11!
 		return P(1, UT) * cosE + P(2, UT) + P(3, UT) * sinE 
 			+ (P(4, UT) * cosA + P(5, UT) * sinA) * sinE + P(6, UT) * sinA
-			- H * cosE - V * sinE;
+			- H * cosE - V * sinE 
+			+ P(12, UT) * sin2A + P(13, UT) * cos2A;
 	}
 	
 	public double getDY(HorizontalCoordinates horizontal, double UT) {
@@ -88,14 +97,18 @@ public class IRAMPointingModel {
 		double sinE = horizontal.sinLat;
 		double sinA = Math.sin(horizontal.x);
 		double cosA = Math.cos(horizontal.x);
+		double sin2A = Math.sin(2.0 * horizontal.x);
+		double cos2A = Math.cos(2.0 * horizontal.x);
+		
 		double H = P(10, UT);
 		double V = P(11, UT);
 		
 		// 2012-03-06
-		// Nasmyth offsets H & V are now equivalent to pointing model (P11/P12).
-		// Note, that Juan's fit gives V = -P12!
+		// Nasmyth offsets H & V are now equivalent to pointing model (P10/P11).
+		// Note, that Juan's fit gives V = -P11!
 		return -P(4, UT) * sinA + (P(5, UT) + P(6, UT) * sinE) * cosA + P(7, UT) 
-			+ P(8, UT) * cosE + P(9, UT) * sinE + H * sinE - V * cosE;
+			+ P(8, UT) * cosE + P(9, UT) * sinE + H * sinE - V * cosE 
+			+ P(14, UT) * cosE/sinE + P(15, UT) * sin2A + P(16, UT) * cos2A;
 	}
 	
 	public void write(String fileName) throws IOException {
@@ -123,4 +136,5 @@ public class IRAMPointingModel {
 		}
 		
 	}
+	
 }

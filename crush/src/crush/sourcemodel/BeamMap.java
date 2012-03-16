@@ -114,9 +114,7 @@ public class BeamMap extends SourceMap {
 
 	@Override
 	protected void calcCoupling(Integration<?, ?> integration, Collection<? extends Pixel> pixels, double[] sourceGain, double[] syncGain) {
-		// TODO
 	}
-
 
 	@Override
 	public int countPoints() {
@@ -246,7 +244,7 @@ public class BeamMap extends SourceMap {
 		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
 			int i = pixel.getDataIndex();
 			ScalarMap beamMap = pixelMap[i];
-			if(beamMap != null) {
+			if(beamMap != null) if(!beamMap.isEmpty()) {
 				AstroMap map = beamMap.map;
 				if(smooth) map.smoothTo(instrument.resolution);
 				GaussianSource<SphericalCoordinates> source = beamMap.getPeakSource();

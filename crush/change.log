@@ -1,15 +1,54 @@
->> adjust/disable source.filter.blank...
->> dataname.end is now a prioritized list...
->> Gismo rotation necessary?
->> Gismo synth rcp gains...
+2.11-2 (16 March 2012)
+
+
+	Overview
+	======================================================================
+	This is a maintenance update of CRUSH 2.11, fixing the broken 'beammap'
+	function, and fixing many smaller issues of the previous release. 
+	Some improvements (esp. for GISMO) are included also.
+	======================================================================
 
 
 	[BUG] {beammap} Beammap function did not work. Now fixed.
 
 	[NEW] The 'poll' command now recognises and expands aliases. 
 
+	[NEW] 'write.png.plane' can be used to select which image plane is
+	dispalyed in the PNG image. The argument can be one of 'flux', 'noise'
+	'weight', 'time', or 's2n'. The default value is 'flux'.
+
+	[NEW] 'write.png.bg' now accepts 'transparent' as an argument.
+
+	[NEW] 'write.png' now enabled by default, s.t. a PNG preview image is
+	generated with every FITS file. This makes it easier to 'browse' crush
+	images. The default size is 500x500 pixels, the color scheme is 
+	'colorful' and background is 'transparent'. These settings can be 
+	overwritten by the various sub-options of 'write.png'. Also, to provide
+	a high quality preview, the preview images are always smoothed by 1/2 
+	beam (resulting in just 12% degradation in resolution), even if the 
+	FITS image itself is not smoothed, and are presented as S/N, to 
+	de-emphasise the noisy edges.
+
 	[NEW] {GISMO} Now handling scans with exotic coordinate basis (e.g.
 	ecliptic, galactic or supergalactic frame).	
+
+	[NEW] {GIDMO} Now using PNTROW, and PNTCOL keywords to determine the
+	pointing center on the array, allowing, in principle, to center the
+	source anywhere on the array. The changing of the pointing center
+	does not affect the pointing model, which is referenced to the 
+	geometric array center (but this needs to be tested, though!!!).
+
+	[NEW] {GISMO} Improved conformance to IRAM FITS files: (1) support for
+	raw scanning offsets (not 'True' angles); (2) parsing of static 
+	scanning offsets, and the nasmyth offset (set by user in PAKO); (3)
+	Now using telescope location from FITS (having had confirmed that these 
+	agree with Juan's values). (4) Nasmyth offset incorporated into 
+	pointing (but it does not actually center source on array!)
+
+	[CHANGE] {GISMO} 'pointing.log' key renamed to 'pointing.table'.
+
+	[CHANGE] {GISMO} 'dataname.end' now accepts a comma-separated list of
+	filename endings, which are tried in order until a match is found.
 
 	[FIX] {GISMO} 'rotation' key had no effect. Fixed.
 	
@@ -43,8 +82,15 @@
 	[FIX] {APEX} Photometry formatting of negative fluxes always produced
 	results in uJy/beam. Fixed.
 
-	[TWEAK] Slight speedup of scan reading, but skipping processing
-	of FITS rows with no telescope data (or if invalid otherwise).
+	[TWEAK] 'write.png' now smoothes thumbnail image by half a beam (12%
+	degradation of resolution) and presents S/N to give the preview image
+	a higher quality visual appearance.
+
+	[TWEAK] {GISMO} Pointing model expanded to 16 constants, with terms
+	dependent on 2AZ, as well as refraction correction.
+
+	[TWEAK] Slight speedup of scan reading, by skipping processing of FITS 
+	rows with no telescope data (or if invalid otherwise).
 
 	[TWEAK] {GISMO} The time window for high quality incremental pointing 
 	correction has been expanded to 1 hour. This mitigates the effect of
@@ -52,11 +98,11 @@
 
 	[TWEAK] {GISMO} Sign convention of GISMO Nasmyth offsets made to 
 	conform with IRAM's convention, both for the pointing model and the
-	suggested offsets. Note, however, that Juan's poiting fir gives a V
-	that has an opposite sign compared to P12.
+	suggested offsets. Note, however, that Juan's poiting fit gives a V
+	that has an opposite sign compared to P11.
 
-	[TWEAK] If (for wahetever reason) the FITS merge version does not 
-	appear in the FITS file, assume the latest version possible...
+	[TWEAK] {GISMO} If (for wahetever reason) the FITS merge version does 
+	not appear in the FITS file, assume the latest version possible...
 
 	[TWEAK] 'faint' and 'deep' no longer switch to 'absolute' despiking
 	after the first iteration. This is to prevent over-zelous despiking.
@@ -81,9 +127,20 @@
 	Should be good to 2.5" rms in both directions, for the April 2011 run.
 
 	[UPDATE] {GISMO} Run 5 (starting 2012-03-03) configuration added.
-
+	However, with the issues we were experiencing with M5 and M6, there is
+	not much use for this configuration...
+	
 
 2.11-1 (16 Feb 2012)
+
+	Overview
+	===================================================================
+	This is a major update of CRUSH. It fixes a but on reporting pointing
+	offsets for SHARC-2, provides much better support for PolKa, based on 
+	the Dec 2011 run. It also fixes various other issues, and offers
+	improvements (esp. for GISMO). Under the hood, a lot of code was
+	restructured for cleaner and faster operation.
+	===================================================================
 
 	[BUG] {SHARC-2} suggested FZAO pointing offsets were wrongly calculated
 	(sign error). Fixed.

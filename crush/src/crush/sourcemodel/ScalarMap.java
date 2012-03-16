@@ -37,6 +37,7 @@ import util.astro.EclipticCoordinates;
 import util.astro.GalacticCoordinates;
 import util.astro.SourceCatalog;
 import util.data.Data2D;
+import util.data.GridImage;
 import util.data.Index2D;
 import util.data.SphericalGrid;
 import util.data.Statistics;
@@ -149,7 +150,7 @@ public class ScalarMap extends SourceMap {
 		else projection.setReference(firstScan.equatorial);
 	
 		map.setGrid(new SphericalGrid());
-		map.getGrid().projection = projection;
+		map.setProjection(projection);
 		map.setResolution(gridSize);
 		
 		setSize();
@@ -679,6 +680,10 @@ public class ScalarMap extends SourceMap {
 		return map.countPoints();
 	}
 
+	public boolean isEmpty() {
+		return map.isEmpty();
+	}
+
 	@Override
 	public void write(String path) throws Exception {
 		write(path, true);
@@ -729,20 +734,39 @@ public class ScalarMap extends SourceMap {
 				width = Integer.parseInt(tokens.nextToken());
 				height = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : width;
 			}
-			AstroMap cropped = (AstroMap) map.copy();
-			cropped.autoCrop();
+			AstroMap thumbnail = (AstroMap) map.copy();
+			thumbnail.autoCrop();
+			
+			// Smooth thumbnail by half a beam for nicer appearance
+			thumbnail.smoothTo(0.5 * instrument.resolution);
+			
+			GridImage<?> plane = thumbnail;
+			
+			if(hasOption("write.png.plane")) {
+				String spec = option("write.png.plane").getValue().toLowerCase();
+				if(spec.equals("s2n")) plane = thumbnail.getS2NImage();
+				else if(spec.equals("s/n")) plane = thumbnail.getS2NImage();
+				else if(spec.equals("time")) plane = thumbnail.getTimeImage();
+				else if(spec.equals("noise")) plane = thumbnail.getRMSImage();
+				else if(spec.equals("rms")) plane = thumbnail.getRMSImage();
+				else if(spec.equals("weight")) plane = thumbnail.getWeightImage();
+			}
 			
 			final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
-			final GridImageLayer image = new GridImageLayer(cropped);
+			final GridImageLayer image = new GridImageLayer(plane);
+
 			imager.setContentLayer(image);
 			imager.setBackground(Color.LIGHT_GRAY);
 			
 			ColorScheme scheme = new Colorful();
 			
 			if(hasOption("write.png.bg")) {
-				String spec = option("write.png.bg").getValue();
-				try { imager.setBackground(new Color(Integer.decode(spec))); }
-				catch(NumberFormatException e) { imager.setBackground(Color.getColor(spec)); }
+				String spec = option("write.png.bg").getValue().toLowerCase();
+				if(spec.equals("transparent")) imager.setTransparent(true);
+				else {
+					try { imager.setBackground(new Color(Integer.decode(spec))); }
+					catch(NumberFormatException e) { imager.setBackground(Color.getColor(spec)); }
+				}
 			}
 			
 			if(hasOption("write.png.color")) {

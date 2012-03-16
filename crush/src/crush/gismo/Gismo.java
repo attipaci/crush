@@ -45,7 +45,8 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	
 	// Array is 16x8 (rows x cols)
 	
-	private Vector2D arrayPointingCenter = new Vector2D(8.5, 4.5); // row,col
+	private static Vector2D defaultPointingCenter = new Vector2D(8.5, 4.5); // row, col
+	private Vector2D arrayPointingCenter; // row,col
 	//Vector2D pointingCenterOffset = new Vector2D(); // The offset of the pointing center rel. to the rotation center...
 	//double nativeSamplingInterval;
 	
@@ -56,6 +57,8 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	public Gismo() {
 		super("gismo", pixels);
 		resolution = 16.7 * Unit.arcsec;
+		
+		arrayPointingCenter = (Vector2D) defaultPointingCenter.clone();
 		
 		// TODO calculate this?
 		integrationTime = samplingInterval = 0.1 * Unit.sec;
@@ -157,6 +160,14 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		for(GismoPixel pixel : this) pixel.position.rotate(angle);
 	}
 	
+	// Calculates the offset of the pointing center from the nominal center of the array
+	public Vector2D getPointingCenterOffset() {
+		Vector2D offset = (Vector2D) arrayPointingCenter.clone();
+		offset.subtract(defaultPointingCenter);
+		if(hasOption("rotation")) offset.rotate(option("rotation").getDouble() * Unit.deg);
+		return offset;
+	}
+	
 	@Override
 	public void readWiring(String fileName) throws IOException {
 		System.err.println(" Loading wiring data from " + fileName);
@@ -189,10 +200,12 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		Header header = hdu.getHeader();
 			
 		// Focus
-		focusXOffset =  header.getDoubleValue("FOCUS_XO") * Unit.mm;
-		focusYOffset =  header.getDoubleValue("FOCUS_YO") * Unit.mm;
-		focusZOffset =  header.getDoubleValue("FOCUS_ZO") * Unit.mm;
+		focusXOffset = header.getDoubleValue("FOCUS_XO") * Unit.mm;
+		focusYOffset = header.getDoubleValue("FOCUS_YO") * Unit.mm;
+		focusZOffset = header.getDoubleValue("FOCUS_ZO") * Unit.mm;
 
+		arrayPointingCenter.x = header.getDoubleValue("PNTROW", 8.5);
+		arrayPointingCenter.y = header.getDoubleValue("PNTCOL", 4.5);
 		
 		nasmythOffset = new Vector2D(
 				header.getDoubleValue("RXHORI", Double.NaN) + header.getDoubleValue("RXHORICO", 0.0),

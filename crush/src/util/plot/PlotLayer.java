@@ -34,18 +34,13 @@ public abstract class PlotLayer extends JComponent {
 	 */
 	private static final long serialVersionUID = -1331038094866703152L;
 
-	boolean transparent = false;
 	protected PlotArea<?> plotArea;
 	
 	public abstract void defaults();
 	
 	@Override
 	public void paintComponent(Graphics g) {
-		if(!transparent) super.paintComponent(g);	
-	}
-	
-	public void setTransparent(boolean value) {
-		transparent = value;
+		super.paintComponent(g);	
 	}
 	
 

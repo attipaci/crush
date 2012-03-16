@@ -446,7 +446,7 @@
 			decorrelation branches (and modalities) to 1 second.
 			@See: 'correlated.<?>', 'resolution'
 
-:: dataname.end=<name>	@Instrument: GISMO
+:: dataname.end=<list>	@Instrument: GISMO
 			@Expert
 			@Since: 2.05
 			Allows specifying the naming convention of merged
@@ -455,6 +455,10 @@
 
 			   dataname.end GISO-IRAM-condensed.fits 
 
+			To accomodate different naming conventions, the option
+			can take a comma sparated list of possible endings,
+			which are tried in order until a suitable match is
+			found inside the scan directory.
 			@See: 'datapath', 'object', 'date'
 
 :: datapath=<dir>	Start looking for raw data in directory <dir>. Some
@@ -1652,22 +1656,6 @@
 			used for deriving the pointing internally.
 			@See: 'exposureclip'	
 
-:: pointing.log=<name>	@Advanced
-			@Instrumment: GISMO
-			@Since: 2.04
-			Use a pointing log (obtained via the 'log' option) to
-			derive residual pointing corrections, on top of the
-			pointing model. You can still use 'pointing' to add yet
-			another increment. For the residual correction to
-			work, the log file must contain the columns 'id', 'AZ',
-			'EL', 'pnt.X', 'pnt.Y', 'src.peak', 'src.dpeak', and
-			'src.FWHM'. The routine will weight pointing data by
-			distance to source, and by distance in time of 
-			observation. When using this option, you should make
-			sure to remove or comment out any entries with 
-			unreliable pointing results.
-			@See: 'pointing', 'pointing.model'
-
 :: pointing.method=<value>	@Since: 2.00-b4
 				@Expert		
 			Specify the method used for obtaining positions of 
@@ -1702,7 +1690,7 @@
 			also possible to supply incremental constants if the
 			'pointing.model.incremental' option is also set.
 			@See: 'pointing', 'pointing.model.incremental'
-			      'pointing.model.static'
+			      'pointing.model.static', 'pointing.table'
 
 :: pointing.model.incremental	@Instrument: GISMO
 				@Since: 2.04-2
@@ -1727,6 +1715,22 @@
 			Set the significance (S/N) level required for pointing
 			sources to provide a valid pointing result. If the
 			option is not set, a value of 5.0 is assumed.
+
+:: pointing.table=<name>	@Advanced
+				@Instrumment: GISMO
+				@Since: 2.04
+			Use a pointing table (obtained via the 'log' option) to
+			derive residual pointing corrections, on top of the
+			pointing model. You can still use 'pointing' to add yet
+			another increment. For the residual correction to
+			work, the log file must contain the columns 'id', 'AZ',
+			'EL', 'pnt.X', 'pnt.Y', 'src.peak', 'src.dpeak', and
+			'src.FWHM'. The routine will weight pointing data by
+			distance to source, and by distance in time of 
+			observation. When using this option, you should make
+			sure to remove or comment out any entries with 
+			unreliable pointing results.
+			@See: 'pointing', 'pointing.model'
 
 :: pol			@Alias --> 'source.polar'
 			@Since: 2.10
@@ -2971,8 +2975,7 @@
 :: write.png.bg=<value>		@Since: 2.04
 				Set the background color of the PNG image. You
 			can use hexadecimal values, e.g. '0xFFFFFF' (in RGB) 
-			for white, or equivalently the word 'white' to the 
-			same effect.
+			for white. The value 'transparent' can be used also.
 			@See: 'write.png.color'
 
 :: write.png.color=<name>	@Since: 2.04
@@ -2985,6 +2988,13 @@
 			   'orange'
 
 			The default is 'colorful'.
+			@See: 'write.png'
+
+:: write.png.plane=<name>	@Since: 2.11-2
+				Selects the image plane to write into the PNG.
+				The argument can be one of: 'flux', 'noise',
+			'weight', 'time', or 's2n'. For other values, CRUSH
+			defaults to writing the 'flux' image.
 			@See: 'write.png'
 
 :: write.png.size=<size>	@Since: 2.04
