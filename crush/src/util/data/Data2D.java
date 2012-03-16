@@ -782,6 +782,8 @@ public class Data2D extends Parallel implements Cloneable {
 		return counter.getResult();
 	}
 	
+	public boolean isEmpty() { return countPoints() == 0; }
+	
 	protected void crop(int imin, int jmin, int imax, int jmax) {
 		if(verbose) System.err.println("Cropping to " + (imax - imin + 1) + "x" + (jmax - jmin + 1));
 

@@ -1,7 +1,7 @@
              *** CRUSH User's Manual for the SCUBA-2 Plugin ***
 
                               Attila Kovacs
-                        <kovacs[AT]astro.umn.edu>
+                        <attila[AT]submm.caltech.edu>
 
                         Last updated: 17 Sep 2010
 
@@ -33,7 +33,7 @@ Table of Contents
 
 The SCUBA-2 plugin of CRUSH are proprietary and strictly private. You should
 use only the modules prepared specifically for you. You can obtain your
-personalized plugin from Attila Kovacs <kovacs[AT]astro.umn.edu>. By using
+personalized plugin from Attila Kovacs <attila[AT]submm.caltech.edu>. By using
 the software, you agree to
 
   * not share your copy of the plugin with anyone, even accidentally (e.g. by
@@ -82,7 +82,7 @@ The plugins are intended for use with the designated version of crush (and its
 updates). While it is possible that the same plugin may work with other CRUSH 
 versions also, there is no guarantee to it. If you want to upgrade CRUSH to the 
 latest release, you can request a corresponding update of the plugin from 
-<kovacs[AT]astro.umn.edu>.
+<attila[AT]submm.caltech.edu>.
 
 To protect the privacy of the plugin, you should install crush only on your
 own machine, or on a personal computer account.
@@ -113,7 +113,7 @@ limit access to the plugin archive by:
    (the plugin version is reported immediately under the CRUSH banner), or
    refer to the version number in your personal archive (if you still have it).
    To update to the current version, request new modules from 
-   <kovacs[AT]astro.umn.edu>.
+   <attila[AT]submm.caltech.edu>.
 
 
 
@@ -353,4 +353,4 @@ of nearby calibrator sources.
 
 
 -----------------------------------------------------------------------------
-Copyright (C)2010 Attila Kovacs <kovacs[AT]astro.umn.edu>
+Copyright (C)2010 Attila Kovacs <attila[AT]submm.caltech.edu>

@@ -71,7 +71,7 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 	private void read(String fileName) throws IOException {
 		if(fileName.equals(this.fileName)) return;
 		
-		System.err.print("   [Loading pointing log.] ");
+		System.err.print("   [Loading pointing table.] ");
 		if(CRUSH.debug) System.err.print("\n   ---> " + fileName);
 		
 		for(LogFile.Row row : LogFile.read(fileName)) {
@@ -134,7 +134,7 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 
 			Entry pointing = get(i);
 			Vector2D increment = getIncrementalPointing(pointing, pointingModel);
-			//increment.rotate(pointing.horizontal.EL());
+			
 			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
 				
 			dX.average(new WeightedPoint(increment.x, weight));

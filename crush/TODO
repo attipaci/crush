@@ -1,7 +1,14 @@
->> override keys!
 
->> Reorganize data reading e.g.
-	
+
+>> Make SyntheticRCP generic, with nominal positions?
+
+>> override keys via 'static'. E.g. static.tau=0.33
+
+>> Reorganize data reading? e.g.
+	GismoFits -- handles FITS, HDUs, columns etc.
+		& checks rows if valid before passing to GismoFrame to parse
+	GismoFrame -- parses FITS row with the help of GismoFits+Integration?
+	GismoIntegration -- just iterates through frames for read...
 
 >> Switch to standard FITS long keys (after updating FITS libs)
 	-- Retain the ability to read crush-style long keys through Util...

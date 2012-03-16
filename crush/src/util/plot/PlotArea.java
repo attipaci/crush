@@ -35,13 +35,13 @@ import java.io.IOException;
 import java.util.Vector;
 
 import javax.imageio.ImageIO;
-import javax.swing.JComponent;
+import javax.swing.JPanel;
 
 
 import util.CoordinatePair;
 import util.Vector2D;
 
-public class PlotArea<ContentType extends ContentLayer> extends JComponent {
+public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 	/**
 	 * 
 	 */
@@ -56,6 +56,7 @@ public class PlotArea<ContentType extends ContentLayer> extends JComponent {
 	boolean flipX = false, flipY = false;
 	
 	public int zoomMode = ZOOM_STRETCH;	
+	public boolean transparent = false;
 	
 	protected AffineTransform toDisplay, toCoordinates = null;
 	
@@ -230,6 +231,10 @@ public class PlotArea<ContentType extends ContentLayer> extends JComponent {
 		return toCoordinates.transform(point, point);
 	}
 	
+	public void setTransparent(boolean value) { transparent = value; }
+	
+	public boolean isTransparent() { return transparent; }
+	
 	@Override
 	public void paintComponent(Graphics g) {	
 		if(!initialized) {
@@ -240,7 +245,7 @@ public class PlotArea<ContentType extends ContentLayer> extends JComponent {
 	
 		updateTransforms();
 
-		super.paintComponent(g);
+		if(!transparent) super.paintComponent(g);
 		
 		for(PlotLayer layer : layers) layer.paintComponent(g);
 	}
@@ -250,7 +255,7 @@ public class PlotArea<ContentType extends ContentLayer> extends JComponent {
 		setSize(width, height);
 		
 		// Create a buffered image in which to draw
-	    BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+	    BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 	    
 	    // Create a graphics contents on the buffered image
 	    Graphics2D g2d = bufferedImage.createGraphics();  
@@ -267,10 +272,11 @@ public class PlotArea<ContentType extends ContentLayer> extends JComponent {
 	public void saveAs(String fileName, int width, int height) throws IOException {
 		File file = new File(fileName);
 		int iExt = fileName.lastIndexOf(".");
-		String type = iExt > 0 && iExt < fileName.length() - 1 ? fileName.substring(iExt + 1) : "gif";
+		String type = iExt > 0 && iExt < fileName.length() - 1 ? fileName.substring(iExt + 1) : "gif";    
 		ImageIO.write(getRenderedImage(width, height), type, file);
 		System.err.println(" Written " + fileName);
 	}
+
 	
 	public static final int ZOOM_FIXED = 0;
 	public static final int ZOOM_FIT = 1;

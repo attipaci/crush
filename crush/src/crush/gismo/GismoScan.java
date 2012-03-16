@@ -53,6 +53,10 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	public CoordinateEpoch epoch;
 	public Class<? extends SphericalCoordinates> basisSystem;
 	public Class<? extends SphericalCoordinates> offsetSystem;
+	public boolean projectedOffsets = true;
+	
+	public Vector2D nasmythOffset, equatorialOffset, horizontalOffset;
+	public Vector2D basisOffset = new Vector2D();
 	
 	public GismoScan(Gismo instrument) {
 		super(instrument);
@@ -76,6 +80,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");	
 	}
 	
+	
 	@Override
 	public Vector2D getPointingCorrection(Configurator option) {
 		Vector2D correction = super.getPointingCorrection(option);
@@ -85,7 +90,11 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			try { 
 				double UT = (getMJD() % 1.0) * Unit.day;
 				model = new IRAMPointingModel(Util.getSystemPath(option.get("model").getValue()));
-						
+			
+				// Keep the pointing model referenced to the nominal array center even if
+				// pointing on a different location on the array...
+				model.addNasmythOffset(instrument.getPointingCenterOffset());	
+				
 				if(option.isConfigured("model.static")) model.setStatic(true);
 				
 				Vector2D modelCorr = model.getCorrection(horizontal, UT);
@@ -104,13 +113,11 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			}
 		}
 			
-		if(option.isConfigured("log")) {
+		if(option.isConfigured("table")) {
 			try { 
 				if(model == null) model = new IRAMPointingModel();
-				String logName = Util.getSystemPath(option.get("log").getValue()); 
-				Vector2D increment = PointingTable.get(logName).getIncrement(getMJD(), horizontal, model);
-				//increment.rotate(-horizontal.EL());
-				correction.add(increment);
+				String logName = Util.getSystemPath(option.get("table").getValue()); 
+				correction.add(PointingTable.get(logName).getIncrement(getMJD(), horizontal, model));
 			}
 			catch(Exception e) {
 				System.err.println("WARNING! No incremental correction: " + e.getMessage());
@@ -259,7 +266,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		// Scan Info
 		int serial = header.getIntValue("SCANNO");
 		
-		//site = new GeodeticCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
+		site = new GeodeticCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
 		//System.err.println(" Telescope Location: " + site);
 		
 		// IRAM Pico Veleta PDF 
@@ -271,7 +278,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		// Antenna amymuth axis coordinates from Juan Penalver
 		//latitude: N 37d 4m 6.29s
 		//longitude: W 3d 23m 55.51s 
-		site = new GeodeticCoordinates("-03d23m55.51s, 37d04m06.29s");
+		//site = new GeodeticCoordinates("-03d23m55.51s, 37d04m06.29s");
 		
 		creator = header.getStringValue("CREATOR");
 		observer = header.getStringValue("OBSERVER");
@@ -372,13 +379,41 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		System.err.println(" Equatorial: " + equatorial.toString());	
 		System.err.println(" Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
 		
+		// Figure out how scanning offsets are mean to be used...
 		String offsetSystemName = header.getStringValue("SYSTEMOF").toLowerCase();
-		if(offsetSystemName.contains("horizontal")) offsetSystem = HorizontalCoordinates.class;
-		else if(offsetSystemName.contains("equatorial")) offsetSystem = EquatorialCoordinates.class;
+		projectedOffsets = true;
+		if(offsetSystemName.equals("horizontal")) {
+			offsetSystem = HorizontalCoordinates.class;
+			projectedOffsets = false;
+		}
+		else if(offsetSystemName.equals("horizontaltrue")) offsetSystem = HorizontalCoordinates.class;
+		else if(offsetSystemName.equals("projection")) offsetSystem = EquatorialCoordinates.class;
+		else if(offsetSystemName.equals("equatorial")) offsetSystem = EquatorialCoordinates.class;
 		else throw new IllegalStateException("Offset system '" + offsetSystemName + "' is not implemented.");
 		
-		// TODO This is empty... why?
-		isPlanetary = header.getBooleanValue("MOVEFRAM", false);
+		System.err.println(" Angles are " + (projectedOffsets ? "" : "not ") + " projected");
+		
+		// NOT Used...
+		//isPlanetary = header.getBooleanValue("MOVEFRAM", false);
+		
+		// parse the static offsets
+		for(int n = 1; ; n++) {
+			if(!header.containsKey("SYSOFF" + n)) break;
+			
+			String type = header.getStringValue("SYSOFF" + n).toLowerCase();
+			Vector2D offset = new Vector2D(
+					header.getDoubleValue("XOFFSET" + n),
+					header.getDoubleValue("YOFFSET" + n)
+			);
+			
+			if(type.equals("nasmyth")) nasmythOffset = offset;
+			else if(type.equals("truehorizontal")) horizontalOffset = offset;
+			else if(type.equals("projection")) equatorialOffset = offset;
+			// The following are not yet implemented in PAKO (as of 2012-03).
+			else if(type.equals("equatorial")) equatorialOffset = offset;
+			else if(type.equals("basis")) basisOffset = offset;
+		}
+		
 		
 		// Read the effective pointing model
 		// Static constant *AND* tilt-meter corrections...
@@ -388,10 +423,19 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			observingModel.P[i] = (header.getDoubleValue("PCONST" + i, 0.0) + header.getDoubleValue("P" + i + "COR", 0.0)) / Unit.arcsec;			
 			tiltCorrections.P[i] = header.getDoubleValue("P" + i + "CORINC", 0.0) / Unit.arcsec;
 		}
-		// TODO
-		// Where are the nasmyth receiver offsets really stored?
+		
 		observingModel.P[10] = (header.getDoubleValue("RXHORI", 0.0) + header.getDoubleValue("RXHORICO", 0.0)) / Unit.arcsec;
 		observingModel.P[11] = (header.getDoubleValue("RXVERT", 0.0) + header.getDoubleValue("RXVERTCO", 0.0)) / Unit.arcsec;
+	
+		// Works with 2011 April data.
+		if(nasmythOffset != null) {
+			observingModel.P[10] -= nasmythOffset.x / Unit.arcsec;
+			observingModel.P[11] -= nasmythOffset.y / Unit.arcsec;
+		}	
+	
+		// Keep the pointing model referenced to the nominal array center even if
+		// pointing on a different location on the array...
+		observingModel.addNasmythOffset(instrument.getPointingCenterOffset());
 		
 		isTracking = true;
 		
@@ -497,11 +541,10 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			observingModel.P[i] = (header.getDoubleValue("PCONST" + i, 0.0) + header.getDoubleValue("P" + i + "COR", 0.0)) / Unit.arcsec;			
 			tiltCorrections.P[i] = header.getDoubleValue("P" + i + "CORINC", 0.0) / Unit.arcsec;
 		}
-		// TODO
-		// Where are the nasmyth receiver offsets really stored?
+
 		observingModel.P[10] = (header.getDoubleValue("RXHORI", 0.0) + header.getDoubleValue("RXHORICO", 0.0)) / Unit.arcsec;
 		observingModel.P[11] = (header.getDoubleValue("RXVERT", 0.0) + header.getDoubleValue("RXVERTCO", 0.0)) / Unit.arcsec;
-		
+	
 		isTracking = true;
 		
 	}
@@ -563,6 +606,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		// X and Y are absolute pointing offsets including the static pointing model...
 		Vector2D corr = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day);
 		if(pointingCorrection != null) corr.add(pointingCorrection);
+		
 		
 		data.add(new Datum("X", (pointingOffset.x + corr.x) / sizeUnit, sizeName));
 		data.add(new Datum("Y", (pointingOffset.y + corr.y) / sizeUnit, sizeName));

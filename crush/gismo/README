@@ -2,9 +2,9 @@
 	      *** CRUSH User's Manual Extension for GISMO ***
 
 			      Attila Kovacs
-			<kovacs[AT]astro.umn.edu>
+			<attila[AT]submm.caltech.edu>
 
-			Last updated: 31 Jan 2012
+			Last updated: 11 Mar 2012
 
 
 
@@ -131,8 +131,9 @@ few arcseconds. Below is a detailed explanation on how to use these methods.
    You can use the 'pointing.model' option to specify a file containing the
    effective IRAM pointing constants. These are the P1 through P9 as decribed 
    by Greve, A., et al. A&A, 115, 379, (1996), and the two Nasmyth offsets P10 
-   and P11. The argument of the 'pointing.model' option should be a file 
-   containing all relevant constants, one per line. E.g.:
+   and P11. Additionally P12-P16 contain terms with 2AZ dependence, and 
+   refraction correction. The argument of the 'pointing.model' option should be
+   a file containing all relevant constants, one per line. E.g.:
 
 	P1 = -3.15
 	P2 = -8.41
@@ -197,7 +198,7 @@ few arcseconds. Below is a detailed explanation on how to use these methods.
    source, the more reliable will be the derived corrections, which are 
    weighted by their relative proximity on sky and in time.
 
-   To apply residual corrections, use the 'pointing.log' option whose 
+   To apply residual corrections, use the 'pointing.table' option whose 
    argument should specify the pointing log file. Such log files, containing
    pointing information are automatically generated during GISMO runs. However,
    you should use an edited copy of this log, making sure to remove, or comment
@@ -324,8 +325,8 @@ For a general overview of channel divisions, please consult Section 3.
 			rectangular pixels.
 			@See: 'rcp', 'rotation', 'pcenter'
 
-   pointing.log=<file>	@Advanced
-			@Since: 2.04
+   pointing.table=<file>	@Advanced
+				@Since: 2.04
 			Specify the reduction log file (produced via the 'log'
 			option) to use for applying incremental pointing
 			corrections base on the nearby pointing observations. 
@@ -340,7 +341,7 @@ For a general overview of channel divisions, please consult Section 3.
 			pointing constants (i.e. relative to those used by IRAM
 			during the observations). See Section 3.1 (above) for
 			details on the file format.
-			@See: 'pointing.log', 'pointing'
+			@See: 'pointing.table', 'pointing'
 
    rotation=<deg>	@Expert
 			Specify the array rotation (in degrees), when pixel 

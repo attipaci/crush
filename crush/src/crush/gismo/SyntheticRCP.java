@@ -29,20 +29,30 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.StringTokenizer;
 
+import util.Unit;
 import util.Util;
+import util.Vector2D;
 
 public class SyntheticRCP {
 	ArrayList<Coefficient> xcoeffs = new ArrayList<Coefficient>();
 	ArrayList<Coefficient> ycoeffs = new ArrayList<Coefficient>();
 	
+	Hashtable<Integer,Double> sourceGains;
+	Hashtable<Integer,Double> skyGains;
+	
+	double rotate = 0.0;
 	
 	public static void main(String[] args) {
 		SyntheticRCP distortion = new SyntheticRCP();
 		
 		try {
+			if(args.length == 0) usage();
 			distortion.parse(args[0]);
+			if(args.length > 1) distortion.gainsFrom(args[1]);
+			if(args.length > 2) distortion.rotate = Double.parseDouble(args[2]) * Unit.deg;
 			distortion.print();
 		}
 		catch(Exception e) { e.printStackTrace(); }
@@ -77,6 +87,25 @@ public class SyntheticRCP {
 		in.close();
 	}
 
+	public void gainsFrom(String rcpFile) throws IOException {
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(rcpFile)));
+		String line = null;
+		
+		System.err.println("Loading gains from " + rcpFile);
+		
+		sourceGains = new Hashtable<Integer, Double>();
+		skyGains = new Hashtable<Integer, Double>();
+		
+		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+			StringTokenizer tokens = new StringTokenizer(line);
+			int channel = Integer.parseInt(tokens.nextToken());
+			sourceGains.put(channel, Double.parseDouble(tokens.nextToken()));
+			if(tokens.hasMoreTokens()) skyGains.put(channel, Double.parseDouble(tokens.nextToken()));
+		}
+	
+		in.close();
+	}
+	
 	public double getValue(ArrayList<Coefficient> coeffs, double x, double y) {
 		double value = 0.0;
 		for(Coefficient c : coeffs) value += c.valueAt(x, y);
@@ -89,9 +118,23 @@ public class SyntheticRCP {
 			double dc = i % 8 - 3.5;
 			double dr = i / 8 - 7.5;
 			
-			System.out.print((i+1) + "\t1.0\t1.0\t");
-			System.out.print(Util.f1.format(getValue(xcoeffs, dc, dr)) + "\t");
-			System.out.print(Util.f1.format(getValue(ycoeffs, dc, dr)) + "\n");
+			int channel = (i+1);
+			double sourceGain = 1.0;
+			double skyGain = 1.0;
+			
+			if(sourceGains != null) if(sourceGains.containsKey(channel)) sourceGain = sourceGains.get(channel);
+			if(skyGains != null) if(skyGains.containsKey(channel)) skyGain = skyGains.get(channel);
+			
+			Vector2D pos = new Vector2D(
+						getValue(xcoeffs, dc, dr),
+						getValue(ycoeffs, dc, dr)
+					);
+			
+			pos.rotate(rotate);
+			
+			System.out.print(channel + "\t" + sourceGain + "\t" + skyGain + "\t");
+			System.out.print(Util.f1.format(pos.x) + "\t");
+			System.out.print(Util.f1.format(pos.y) + "\n");
 		}
 	}
 	
@@ -139,5 +182,20 @@ public class SyntheticRCP {
 		
 	}
 	
-	
+	public static void usage() {
+		System.err.println();
+		String info = 
+			"  -------------------------------------------------------------------------\n" +
+			"  SyntheticRCP -- RCP generation tool for GISMO.\n" +
+			"                  Copyright (C)2011 Attila Kovacs <kovacs[AT]astro.umn.edu>\n" +
+			"  -------------------------------------------------------------------------\n" +	
+			"\n" +
+			"  Usage: java crush.gismo.SyntheticRCP <distortion> [rcp]\n" +
+			"\n" +
+			"    <distortion>  A list of distortion parameters. See 'gismo/distortion.dat'.\n" +
+			"    [rcp]         (optional) An observed RCP file for source gains.\n";
+			
+		System.out.println(info);
+		System.exit(0);
+	}
 }

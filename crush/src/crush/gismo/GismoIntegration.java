@@ -155,6 +155,12 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		@Override
 		public Reader getReader() {
 			return new Reader() {
+				private Vector2D offset;
+				
+				@Override
+				public void init() {
+					offset = new Vector2D();
+				}
 				
 				@Override
 				public void readRow(int i) {
@@ -188,25 +194,32 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					
 					// Add in the astrometry...
 					frame.MJD = MJD[i];
-					frame.LST = LST[i] * Unit.sec;				
+					frame.LST = LST[i] * Unit.sec; 
 					
 					// Use ALWAYS the scanning offsets around the object coordinate...
 					// First make sure the horizontal coordinates of the tracking center
 					// are correct even if tracking (e.g. equatorial). 
-					if(gismoScan.basisSystem == HorizontalCoordinates.class) 
-						//frame.horizontal = scan.horizontal;
+					if(gismoScan.basisSystem == HorizontalCoordinates.class) {
 						frame.horizontal = new HorizontalCoordinates(X0[i], Y0[i]);
+						if(gismoScan.basisOffset != null) 
+							frame.horizontal.addOffset(gismoScan.basisOffset);
+					}
 					else if(gismoScan.basisSystem == EquatorialCoordinates.class) {
-						//frame.equatorial = scan.equatorial;
 						frame.equatorial = new EquatorialCoordinates(X0[i], Y0[i], scan.equatorial.epoch);
+						if(gismoScan.basisOffset != null) 
+							frame.equatorial.addOffset(gismoScan.basisOffset);
 						frame.calcHorizontal();	
 					}
 					else {
 						try {
-							CelestialCoordinates coords = (CelestialCoordinates) gismoScan.basisSystem.newInstance();
-							coords.set(X0[i], Y0[i]);
-							if(coords instanceof Precessing) ((Precessing) coords).setEpoch(gismoScan.epoch);
-							frame.equatorial = coords.toEquatorial();
+							CelestialCoordinates celestial = (CelestialCoordinates) gismoScan.basisSystem.newInstance();
+							celestial.set(X0[i], Y0[i]);
+							if(gismoScan.basisOffset != null) 
+								celestial.addOffset(gismoScan.basisOffset);
+							
+							if(celestial instanceof Precessing) ((Precessing) celestial).setEpoch(gismoScan.epoch);
+					
+							frame.equatorial = celestial.toEquatorial();
 							frame.calcHorizontal();
 						}
 						catch(InstantiationException e) { e.printStackTrace(); }
@@ -214,10 +227,11 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					}
 					
 					// Calculate the parallactic angle
-					frame.calcParallacticAngle();
-					
+					frame.calcParallacticAngle();	
+		
 					// Load the scanning offsets...
 					frame.horizontalOffset = new Vector2D(dX[i], dY[i]);
+					if(!gismoScan.projectedOffsets) frame.horizontalOffset.y *= frame.horizontal.cosLat;
 					
 					// Convert scanning offsets to horizontal if necessary...
 					if(gismoScan.offsetSystem == EquatorialCoordinates.class)
@@ -225,6 +239,16 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 							
 					// Verified that offsets are correctly projected...
 					frame.horizontal.addOffset(frame.horizontalOffset);
+					
+					// Add the static horizontal offsets
+					if(gismoScan.horizontalOffset != null) frame.horizontal.addOffset(gismoScan.horizontalOffset);
+					
+					// Add the static equatorial offset
+					if(gismoScan.equatorialOffset != null) {
+						offset.copy(gismoScan.equatorialOffset);
+						frame.toHorizontal(offset);
+						frame.horizontal.addOffset(offset);
+					}
 					
 					// Add the tracking errors (confirmed raw AZ differences).
 					// Errors are commanded - actual;
