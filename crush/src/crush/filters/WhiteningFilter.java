@@ -137,17 +137,17 @@ public class WhiteningFilter extends AdaptiveFilter {
 			
 			// Set the amplitude equal to the rms power...
 			// The full power is the sum of real and imaginary components...
-			A[F].value = pts > 0 ? Math.sqrt(2.0 * sumP / pts) : 0.0;
-			A[F].weight = pts;
+			A[F].setValue(pts > 0 ? Math.sqrt(2.0 * sumP / pts) : 0.0);
+			A[F].setWeight(pts);
 		}	
 
 		// Add the Nyquist component to the last bin...
 		// Skip if it has been killed by KillFilter...
 		if(data[nF - 1] != 0.0) {
 			final DataPoint nyquist = A[nF-1];
-			nyquist.value = nyquist.weight * nyquist.value * nyquist.value + 2.0 * data[1] * data[1];
-			nyquist.weight += 1.0;
-			nyquist.value = Math.sqrt(nyquist.value / nyquist.weight);
+			nyquist.setValue(nyquist.weight() * nyquist.value() * nyquist.value() + 2.0 * data[1] * data[1]);
+			nyquist.addWeight(1.0);
+			nyquist.setValue(Math.sqrt(nyquist.value() / nyquist.weight()));
 		}		
 	
 	}
@@ -159,7 +159,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 		
 		// Calculate the median amplitude
 		System.arraycopy(A, 0, temp, 0, A.length);	
-		final double medA = Statistics.median(temp, whiteFrom, whiteTo).value;
+		final double medA = Statistics.median(temp, whiteFrom, whiteTo).value();
 		final double critical = level * medA;
 		
 		// sigmaP = medP / sqrt(pts)
@@ -168,27 +168,27 @@ public class WhiteningFilter extends AdaptiveFilter {
 		// sigmaA = 0.5 / medA * sigmaP = 0.5 * medA / sqrt(pts)
 		// wA = 4 * pts / (medA * medA) 
 		final double weightScale = 4.0 / (medA * medA);
-		for(int F=nF; --F >= 0; ) A[F].weight *= weightScale;
+		for(int F=nF; --F >= 0; ) A[F].scaleWeight(weightScale);
 		
 		// Only whiten those frequencies which have a significant excess power
 		// when compared to the specified level over the median spectral power.
 		for(int F=nF; --F >= 1; ) {
-			if(A[F].weight > 0.0) {
-				final double dev = (A[F].value / lastProfile[F] - critical) / A[F].rms();
+			if(A[F].weight() > 0.0) {
+				final double dev = (A[F].value() / lastProfile[F] - critical) / A[F].rms();
 				
 				// Check if there is excess/deficit power that needs filtering...
-				if(dev > significance) profile[F] = (float) (medA / A[F].value);
+				if(dev > significance) profile[F] = (float) (medA / A[F].value());
 				else if(boost && dev < -significance) {
-					profile[F] = (float) (medA / A[F].value);
+					profile[F] = (float) (medA / A[F].value());
 					// Make sure not too overboost...
 					if(profile[F]*lastProfile[F] > maxBoost) profile[F] = (float) maxBoost / lastProfile[F];
 				}
 				// If there is no significant deviation, undo the last filtering...
 				else profile[F] = 1.0F / lastProfile[F];
 					
-				A[F].value *= profile[F];
+				A[F].scale(profile[F]);
 			}
-			else A[F].value = medA;
+			else A[F].setValue(medA);
 		}
 		
 		// Do a neighbour based round as well, with different resolutions

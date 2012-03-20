@@ -66,10 +66,10 @@ public abstract class Region<CoordinateType extends CoordinatePair> implements C
 		final Bounds bounds = getBounds(map);
 		WeightedPoint sum = new WeightedPoint();
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.isUnflagged(i, j)) {
-			sum.value += map.getValue(i, j);	
-			sum.weight += 1.0 / map.getWeight(i, j);
+			sum.add(map.getValue(i, j));	
+			sum.addWeight(1.0 / map.getWeight(i, j));
 		}
-		sum.weight = 1.0 / sum.weight;	
+		sum.setWeight(1.0 / sum.weight());	
 		return sum;
 	}
 	

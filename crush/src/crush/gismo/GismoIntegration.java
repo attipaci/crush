@@ -252,8 +252,8 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					
 					// Add the tracking errors (confirmed raw AZ differences).
 					// Errors are commanded - actual;
-					frame.horizontal.decrementX(AZE[i]);
-					frame.horizontal.decrementY(ELE[i]);
+					frame.horizontal.subtractX(AZE[i]);
+					frame.horizontal.subtractY(ELE[i]);
 					
 					// Force recalculation of the equatorial coordinates...
 					frame.equatorial = null;

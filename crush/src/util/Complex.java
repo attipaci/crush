@@ -82,8 +82,8 @@ public class Complex extends Vector2D {
 		d2.setX(d1.getX() - mx);
 		d2.setY(d1.getY() - my);
 		
-		d1.incrementX(mx);
-		d1.incrementY(my);	
+		d1.addX(mx);
+		d1.addY(my);	
 	}
 
 	public final void pow(double b) {
@@ -256,8 +256,8 @@ public class Complex extends Vector2D {
 	@Override
 	public final void math(char op, double b) throws IllegalArgumentException {
 		switch(op) {
-		case '+': incrementX(b); break;
-		case '-': decrementX(b); break;
+		case '+': addX(b); break;
+		case '-': subtractX(b); break;
 		case '^': pow(b); break;	    
 		default: super.math(op, b);
 		}

@@ -141,17 +141,17 @@ public class CorrelatedSignal extends Signal {
 		
 		// v[n] = f'[n+0.5]
 		for(int t=0; t<nm1; t++) {
-			p1.value = value[t];
-			p1.weight = weight[t];
+			p1.setValue(value[t]);
+			p1.setWeight(weight[t]);
 			
-			p2.value = value[t+1];
-			p2.weight = weight[t+1];
+			p2.setValue(value[t+1]);
+			p2.setWeight(weight[t+1]);
 		
 			p2.subtract(p1);
 			p2.scale(idt);
 		
-			value[t] = (float) p2.value;
-			weight[t] = (float) p2.weight;
+			value[t] = (float) p2.value();
+			weight[t] = (float) p2.weight();
 		}
 
 		// the last value is based on the last difference...
@@ -161,16 +161,16 @@ public class CorrelatedSignal extends Signal {
 		// otherwise, it's:
 		// v[n] = (f'[n+0.5] + f'[n-0.5]) = v[n] + v[n-1]
 		for(int t=nm1; --t > 0; ) {
-			p1.value = value[t];
-			p1.weight = weight[t];
+			p1.setValue(value[t]);
+			p1.setWeight(weight[t]);
 			
-			p2.value = value[t-1];
-			p2.weight = weight[t-1];
+			p2.setValue(value[t-1]);
+			p2.setWeight(weight[t-1]);
 			
 			p2.average(p1);
 			
-			value[t] = (float) p2.value;
-			weight[t] = (float) p2.weight;
+			value[t] = (float) p2.value();
+			weight[t] = (float) p2.weight();
 		}
 	}
 	
@@ -186,15 +186,15 @@ public class CorrelatedSignal extends Signal {
 		
 		for(int t=0; t<value.length; t++) {
 			// Calculate next half increment of h/2 * f[t]
-			halfNext.value = value[t];
-			halfNext.weight = weight[t];
+			halfNext.setValue(value[t]);
+			halfNext.setWeight(weight[t]);
 			halfNext.scale(0.5 * dt);
 			
 			// Add half increments from below and above 
 			I.add(halfLast);
 			I.add(halfNext);
-			value[t] = (float) I.value / dt;
-			weight[t] = (float) I.weight * dt2;
+			value[t] = (float) I.value() / dt;
+			weight[t] = (float) I.weight() * dt2;
 			
 			// Switch the last and next storages...
 			WeightedPoint temp = halfLast;
@@ -327,14 +327,14 @@ public class CorrelatedSignal extends Signal {
 			if(isRobust) getRobustCorrelated(goodChannels, from, to, increment, buffer);
 			else getMLCorrelated(goodChannels, from, to, increment);
 			
-			if(increment.weight <= 0.0) continue;
+			if(increment.weight() <= 0.0) continue;
 			
 			// Cast the incremental value into float for speed...
 			final float C = value[T];
-			final float dC = (float) increment.value;
+			final float dC = (float) increment.value();
 
 			// precalculate the channel dependences...
-			for(final Channel pixel : goodChannels) pixel.temp = pixel.tempWG2 / (float) increment.weight;
+			for(final Channel pixel : goodChannels) pixel.temp = pixel.tempWG2 / (float) increment.weight();
 
 			// sync to data and calculate dependeces...
 			for(int t=to; --t >= from; ) {
@@ -354,7 +354,7 @@ public class CorrelatedSignal extends Signal {
 				
 			// Update the correlated signal model...	
 			value[T] += dC;
-			weight[T] = (float) increment.weight;
+			weight[T] = (float) increment.weight();
 		}
 		
 		// Update the gain values used for signal extraction...
@@ -389,8 +389,8 @@ public class CorrelatedSignal extends Signal {
 			}
 		}
 	
-		increment.value = sum / sumw;
-		increment.weight = sumw;
+		increment.setValue(sum / sumw);
+		increment.setWeight(sumw);
 	}
 		
 
@@ -403,11 +403,12 @@ public class CorrelatedSignal extends Signal {
 			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
 				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
 					final WeightedPoint point = buffer[n++];
-					point.value = (exposure.data[channel.index] / channel.tempG);
-					increment.weight += (point.weight = (exposure.relativeWeight * channel.tempWG2));
+					point.setValue(exposure.data[channel.index] / channel.tempG);
+					point.setWeight(exposure.relativeWeight * channel.tempWG2);
+					increment.addWeight(point.weight());
 					
-					assert !Double.isNaN(point.value);
-					assert !Double.isInfinite(point.value);
+					assert !Double.isNaN(point.value());
+					assert !Double.isInfinite(point.value());
 				}
 			}
 		}

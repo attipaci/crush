@@ -96,8 +96,8 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 	
 	@Override
 	public void setDefaultCoordinates() {
-		coordinateSystem = EquatorialCoordinates.defaultCoordinateSystem;
-    	localCoordinateSystem = EquatorialCoordinates.defaultLocalCoordinateSystem;		
+		setCoordinateSystem(EquatorialCoordinates.defaultCoordinateSystem);
+		setLocalCoordinateSystem(EquatorialCoordinates.defaultLocalCoordinateSystem);		
 	}
 
 	@Override

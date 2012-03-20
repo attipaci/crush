@@ -40,14 +40,14 @@ public class RadioProjection extends SphericalProjection {
 	
 	@Override
 	public final void project(final SphericalCoordinates coords, final CoordinatePair toProjected) {
-		toProjected.setX(Math.IEEEremainder(coords.getX() - reference.getX(), twoPI) * coords.cosLat());
-		toProjected.setY(coords.getY() - reference.getY());
+		toProjected.setX(Math.IEEEremainder(coords.getX() - getReference().getX(), twoPI) * coords.cosLat());
+		toProjected.setY(coords.getY() - getReference().getY());
 	}
 	
 	@Override
 	public final void deproject(final CoordinatePair projected, final SphericalCoordinates toCoords) {
-		toCoords.setNativeLatitude(reference.getY() + projected.getY());
-		toCoords.setNativeLongitude(reference.getX() + projected.getX() / toCoords.cosLat());
+		toCoords.setNativeLatitude(getReference().getY() + projected.getY());
+		toCoords.setNativeLongitude(getReference().getX() + projected.getX() / toCoords.cosLat());
 	}
 	
 	

@@ -386,7 +386,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		};
 			
 		avew.process();		
-		return Math.sqrt(1.0 / avew.getResult().value);
+		return Math.sqrt(1.0 / avew.getResult().value());
 	}
 	
 	
@@ -433,7 +433,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		};
 		
 		meanIntTime.process();
-		return meanIntTime.getResult().value;
+		return meanIntTime.getResult().value();
 	}
 	
 	@Override
@@ -446,7 +446,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		for(int i=sizeX(); --i >= 0; ) for(int j=sizeY(); --j >= 0; ) if(isUnflagged(i, j))
 			point[k++] = new WeightedPoint(getValue(i, j), getWeight(i, j));
 		
-		return Statistics.median(point).value;
+		return Statistics.median(point).value();
 	}
 
 	public void reweight(boolean robust) {
@@ -496,7 +496,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		};
 		
 		rChi2.process();
-		return rChi2.getResult().value;
+		return rChi2.getResult().value();
 	}
 	
 	
@@ -607,10 +607,10 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 			@Override
 			public void process(final int i, final int j) {
 				if(isUnflagged(i, j)) {
-					point.value = getValue(i, j);
-					point.weight = getWeight(i, j);
-					surrounding.value = diff.getValue(i, j);
-					surrounding.weight = diff.getWeight(i, j);
+					point.setValue(getValue(i, j));
+					point.setWeight(getWeight(i, j));
+					surrounding.setValue(diff.getValue(i, j));
+					surrounding.setWeight(diff.getWeight(i, j));
 					point.subtract(surrounding);
 					if(DataPoint.significanceOf(point) > significance) flag(i, j);			
 				}	

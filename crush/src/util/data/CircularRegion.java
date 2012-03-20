@@ -44,15 +44,14 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	public CircularRegion(GridImage<CoordinateType> image, Vector2D offset, double r) {
 		coords = (CoordinateType) image.getReference().clone();
 		image.getProjection().deproject(offset, coords);
-		radius.value = r;
+		setRadius(r);
 		radius.setRMS(Math.sqrt(image.getPixelArea()) / (GridImage.fwhm2size * Util.sigmasInFWHM));
 	}
 	
 	public CircularRegion(CoordinateType coords, double r) {
 		setCenter(coords);
 		radius = new DataPoint();
-		radius.value = r;
-		radius.weight = 0.0;
+		setRadius(r);
 	}
 	
 	public CircularRegion(String line, GridImage<CoordinateType> forImage) throws ParseException { super(line, forImage); }
@@ -85,8 +84,8 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		Vector2D centerIndex = getIndex(image.getGrid());
 		Bounds bounds = new Bounds();
 		Vector2D resolution = image.getResolution();
-		double deltaX = radius.value / resolution.getX();
-		double deltaY = radius.value / resolution.getY();
+		double deltaX = radius.value() / resolution.getX();
+		double deltaY = radius.value() / resolution.getY();
 		
 		bounds.fromi = Math.max(0, (int)Math.floor(centerIndex.getX() - deltaX));
 		bounds.toi = Math.min(image.sizeX()-1, (int)Math.ceil(centerIndex.getX() + deltaX));
@@ -103,7 +102,7 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	@Override
 	public boolean isInside(Grid2D<CoordinateType> grid, double i, double j) {
 		Vector2D centerIndex = getIndex(grid);
-		return Math.hypot(centerIndex.getX() - i, centerIndex.getY() - j) <= radius.value;
+		return Math.hypot(centerIndex.getX() - i, centerIndex.getY() - j) <= radius.value();
 	}
 	
 	public void moveToPeak(GridImage<CoordinateType> map) throws IllegalStateException {
@@ -206,8 +205,8 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	
 	public void setRadius(double r) { 
 		if(radius == null) radius = new DataPoint();
-		else radius.weight = 0.0;
-		radius.value = r;
+		else radius.setWeight(0.0);
+		radius.setValue(r);
 	}
 	
 	public String toCrushString(GridImage<CoordinateType> image) {
@@ -215,18 +214,19 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		
 		if(coords instanceof SphericalCoordinates) {
 			SphericalCoordinates spherical = (SphericalCoordinates) coords;
-			((AngleFormat) spherical.coordinateSystem.get(0).format).colons();
-			((AngleFormat) spherical.coordinateSystem.get(1).format).colons();
-			return getID() + "\t" + coords.toString() + "  " + Util.f1.format(radius.value/Unit.arcsec) + " # " + getComment();
+			CoordinateSystem axes = spherical.getCoordinateSystem();
+			((AngleFormat) axes.get(0).format).colons();
+			((AngleFormat) axes.get(1).format).colons();
+			return getID() + "\t" + coords.toString() + "  " + Util.f1.format(radius.value()/Unit.arcsec) + " # " + getComment();
 		}
-		else return getID() + "\t" + coords.getX() + "\t" + coords.getY() + "\t" + radius.value + "\t# " + getComment();
+		else return getID() + "\t" + coords.getX() + "\t" + coords.getY() + "\t" + radius.value() + "\t# " + getComment();
 	}
 
 	public String toGregString(GridImage<CoordinateType> image) {
 		CoordinatePair offset = new CoordinatePair();
 		useGrid.projection.project(coords, offset);
 		
-		return "ellipse " + Util.f1.format(radius.value/Unit.arcsec) + " /user " +
+		return "ellipse " + Util.f1.format(radius.value()/Unit.arcsec) + " /user " +
 		Util.f1.format(offset.getX() / Unit.arcsec) + " " + Util.f1.format(offset.getY() / Unit.arcsec);
 	}
 	
@@ -235,15 +235,16 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	
 		if(coords instanceof SphericalCoordinates) {
 			SphericalCoordinates spherical = (SphericalCoordinates) coords;
-			((AngleFormat) spherical.coordinateSystem.get(0).format).colons();
-			((AngleFormat) spherical.coordinateSystem.get(1).format).colons();
+			CoordinateSystem axes = spherical.getCoordinateSystem();
+			((AngleFormat) axes.get(0).format).colons();
+			((AngleFormat) axes.get(1).format).colons();
 		
 			return "circle(" 
-				+ spherical.coordinateSystem.get(0).format(coords.getX()) + ","
-				+ spherical.coordinateSystem.get(1).format(coords.getY()) + ","
-				+ Util.f3.format(radius.value / Unit.arcsec) + "\")";
+				+ axes.get(0).format(coords.getX()) + ","
+				+ axes.get(1).format(coords.getY()) + ","
+				+ Util.f3.format(radius.value() / Unit.arcsec) + "\")";
 		}
-		else return "circle(" + coords.getX() + "," + coords.getY() + "," + radius.value + ")";		
+		else return "circle(" + coords.getX() + "," + coords.getY() + "," + radius.value() + ")";		
 	}
 	
 	
@@ -253,8 +254,9 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	
 		if(coords instanceof SphericalCoordinates) {
 			SphericalCoordinates reference = (SphericalCoordinates) useGrid.getReference();
-			CoordinateAxis x = reference.localCoordinateSystem.get(0);
-			CoordinateAxis y = reference.localCoordinateSystem.get(1);
+			CoordinateSystem axes = reference.getLocalCoordinateSystem();
+			CoordinateAxis x = axes.get(0);
+			CoordinateAxis y = axes.get(1);
 		
 			return x.label + " = " + x.format(offset.getX()) + "\t" + y.label + " = " + y.format(offset.getY());
 		}
@@ -283,21 +285,20 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		
 		if(coords instanceof SphericalCoordinates) {
 			SphericalCoordinates spherical = (SphericalCoordinates) coords;
-			((AngleFormat) spherical.coordinateSystem.get(0).format).colons();
-			((AngleFormat) spherical.coordinateSystem.get(1).format).colons();
+			CoordinateSystem axes = spherical.getCoordinateSystem();
+			((AngleFormat) axes.get(0).format).colons();
+			((AngleFormat) axes.get(1).format).colons();
 		
 			coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " " + tokens.nextToken());
 			setCenter(coords);
-			radius.value = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
-			
+			setRadius(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
 		}
 		else {
 			coords.setX(Double.parseDouble(tokens.nextToken()));
 			coords.setY(Double.parseDouble(tokens.nextToken()));			
 		}
 		
-		
-		radius.weight = 0.0;	
+		radius.setWeight(0.0);	
 		
 		if(line.contains("#")) setComment(line.substring(line.indexOf('#') + 2));
 	
@@ -309,8 +310,8 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		if(!tokens.nextToken().equalsIgnoreCase("ellipse"))
 			throw new IllegalArgumentException("WARNING! " + getClass().getSimpleName() + " can parse 'ellipse' only.");
 		
-		radius.value = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
-		radius.weight = 0.0;
+		setRadius(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
+
 		// TODO What if not '/user' coordinates?
 		tokens.nextToken(); // Assumed to be '/user';
 		
@@ -329,9 +330,9 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		
 		if(coords instanceof SphericalCoordinates) {
 			SphericalCoordinates spherical = (SphericalCoordinates) coords;
-		
-			((AngleFormat) spherical.coordinateSystem.get(0).format).colons();
-			((AngleFormat) spherical.coordinateSystem.get(1).format).colons();
+			CoordinateSystem axes = spherical.getCoordinateSystem();
+			((AngleFormat) axes.get(0).format).colons();
+			((AngleFormat) axes.get(1).format).colons();
 	
 			coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " (J2000)");
 		}
@@ -343,12 +344,11 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		if(isCircle) {
 			String R = tokens.nextToken();
 			char unit = R.charAt(R.length() - 1);
-			radius.value = Double.parseDouble(R.substring(0, R.length()-1));
-			if(unit == '\'') radius.value *= Unit.arcmin;
-			else if(unit == '"') radius.value *= Unit.arcsec;
-			radius.weight = 0.0;
+			setRadius(Double.parseDouble(R.substring(0, R.length()-1)));
+			if(unit == '\'') radius.scale(Unit.arcmin);
+			else if(unit == '"') radius.scale(Unit.arcsec);
 		}
-		else radius.value = Double.NaN;
+		else setRadius(Double.NaN);
 	}
 	
 	
@@ -365,7 +365,7 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat nf = TableFormatter.getNumberFormat(formatSpec);
 		
-		if(name.equals("r")) return nf.format(radius.value);
+		if(name.equals("r")) return nf.format(radius.value());
 		else if(name.equals("dr")) return nf.format(radius.rms());
 		if(name.equals("dr")) return nf.format(radius.rms());
 		else return TableFormatter.NO_SUCH_DATA;

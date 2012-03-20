@@ -168,7 +168,7 @@ public class Mode {
 				integration.signals.get(this).getGainIncrement(isRobust);
 				
 		for(int i=G0.length; --i >= 0; ) {
-			if(G[i] != null) G[i].value += G0[i];
+			if(G[i] != null) G[i].add(G0[i]);
 			else G[i] = new WeightedPoint(G0[i], 0.0);
 		}
 		return G;		

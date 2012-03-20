@@ -82,13 +82,13 @@ public class CoordinatePair implements Cloneable {
 	
 	public void setY(double value) { y = value; }
 	
-	public void incrementX(double value) { x += value; }
+	public void addX(double value) { x += value; }
 	
-	public void incrementY(double value) { y += value; }
+	public void addY(double value) { y += value; }
 	
-	public void decrementX(double value) { x -= value; }
+	public void subtractX(double value) { x -= value; }
 	
-	public void decrementY(double value) { y -= value; }
+	public void subtractY(double value) { y -= value; }
 	
 	public final void scaleX(double value) { x *= value; }
 	

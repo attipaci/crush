@@ -20,12 +20,11 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package util;
+package util.data;
 
 import java.text.*;
 import java.util.*;
 
-import util.data.WeightedPoint;
 
 
 public class Parameter extends WeightedPoint {
@@ -33,28 +32,28 @@ public class Parameter extends WeightedPoint {
 
 	public Parameter(String name) { 
 		this.name = name; 
-		value = Double.NaN;
+		setValue(Double.NaN);
 		exact();
 	}
 	
-	public Parameter(String name, double value) { this(name); this.value = value; }
+	public Parameter(String name, double value) { this(name); this.setValue(value); }
 
 	@Override
 	public String toString() {
-		return name + " = " + (isExact() ? Double.toString(value) : super.toString());		
+		return name + " = " + (isExact() ? Double.toString(value()) : super.toString());		
 	}
 	
 	@Override
 	public String toString(DecimalFormat f) {
-		return name + " = " + (isExact() ? f.format(value) : super.toString(f));		
+		return name + " = " + (isExact() ? f.format(value()) : super.toString(f));		
 	}
 	
 	public void parse(String text) {
 		StringTokenizer tokens = new StringTokenizer(text, " \t:");
-		value = Double.parseDouble(tokens.nextToken());
+		setValue(Double.parseDouble(tokens.nextToken()));
 		if(tokens.hasMoreTokens()) {
-			weight = Double.parseDouble(tokens.nextToken());
-			weight = 1.0 / (weight * weight);
+			double rms = Double.parseDouble(tokens.nextToken());
+			setWeight(1.0 / (rms * rms));
 		}
 		else exact();
 	}

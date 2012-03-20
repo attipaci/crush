@@ -277,7 +277,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Keep to the rule of thumb of at least 2.5 samples per beam
 		if(option("downsample").equals("auto")) {
 			// Choose downsampling to accomodate at least 90% of scanning speeds... 
-			double maxv = aveScanSpeed.value + 1.25 * aveScanSpeed.rms();
+			double maxv = aveScanSpeed.value() + 1.25 * aveScanSpeed.rms();
 			// Choose downsampling to accomodate at ~98% of scanning speeds... 
 			//double maxv = aveScanSpeed.value + 2.0 * aveScanSpeed.rms();
 			double maxInt = 0.4 * instrument.resolution / maxv;
@@ -377,7 +377,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void calcScanSpeedStats() {
 		aveScanSpeed = getAverageScanningVelocity(0.5 * Unit.s);
 		System.err.println("   Typical scanning speeds are " 
-				+ Util.f1.format(aveScanSpeed.value/(instrument.getDefaultSizeUnit()/Unit.s)) 
+				+ Util.f1.format(aveScanSpeed.value()/(instrument.getDefaultSizeUnit()/Unit.s)) 
 				+ " +- " + Util.f1.format(aveScanSpeed.rms()/(instrument.getDefaultSizeUnit()/Unit.s)) 
 				+ " " + instrument.getDefaultSizeName() + "/s");
 	}
@@ -437,8 +437,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public double getCrossingTime(double sourceSize) {		
-		if(chopper != null) return Math.min(chopper.stareDuration(), sourceSize / aveScanSpeed.value);
-		return sourceSize / aveScanSpeed.value;		
+		if(chopper != null) return Math.min(chopper.stareDuration(), sourceSize / aveScanSpeed.value());
+		return sourceSize / aveScanSpeed.value();		
 	}
 
 	public double getPointSize() {
@@ -630,7 +630,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Store the mean offset as a channel property...
 		for(final Channel channel : channels) {
 			final double G = isDetectorStage ? channel.getHardwareGain() : 1.0;
-			channel.offset += G * aveOffset[channel.index].value;
+			channel.offset += G * aveOffset[channel.index].value();
 		}
 			
 		if(driftN < size()) for(final Channel channel : channels) {
@@ -670,8 +670,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
 				for(final Channel channel : group) if(exposure.sampleFlag[channel.index] == 0) {
 					final WeightedPoint increment = buffer[channel.index];
-					increment.value += (exposure.relativeWeight * exposure.data[channel.index]);
-					increment.weight += exposure.relativeWeight;
+					increment.add(exposure.relativeWeight * exposure.data[channel.index]);
+					increment.addWeight(exposure.relativeWeight);
 				}
 			}
 		}
@@ -679,8 +679,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Calculate the maximum-likelihood offsets and the channel dependence...
 		for(final Channel channel : group) {
 			final WeightedPoint offset = buffer[channel.index];
-			if(offset.weight > 0.0) {
-				offset.value /= offset.weight;
+			if(offset.weight() > 0.0) {
+				offset.scaleValue(1.0 / offset.weight());
 				parms.add(channel, 1.0);
 				aveOffset[channel.index].average(offset);
 			}
@@ -693,9 +693,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 			for(final Channel channel : group) {
 				final WeightedPoint offset = buffer[channel.index];
-				if(offset.weight > 0.0) { 
-					exposure.data[channel.index] -= offset.value;
-					parms.add(exposure, exposure.relativeWeight / offset.weight); 
+				if(offset.weight() > 0.0) { 
+					exposure.data[channel.index] -= offset.value();
+					parms.add(exposure, exposure.relativeWeight / offset.weight()); 
 				}
 			}
 		}
@@ -716,8 +716,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				final Frame exposure = get(t);
 				if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0) {
 					final WeightedPoint point = buffer[n++];
-					point.value = exposure.data[c];
-					sumw += (point.weight = exposure.relativeWeight);
+					point.setValue(exposure.data[c]);
+					point.setWeight(exposure.relativeWeight);
+					sumw += point.weight();
 				}
 			}
 
@@ -728,7 +729,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				for(int t=fromt; t<tot; t+=step) {
 					final Frame exposure = get(t);
 					if(exposure == null) continue;
-					exposure.data[c] -= offset.value;
+					exposure.data[c] -= offset.value();
 					parms.add(exposure, exposure.relativeWeight / sumw);
 				}
 				parms.add(channel, 1.0);
@@ -1035,8 +1036,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			else if(exposure.sampleFlag[c] != 0) data[t].noData();
 			else {
 				final WeightedPoint point = data[t];
-				point.value = (exposure.relativeWeight * exposure.data[c]);
-				point.weight = exposure.relativeWeight;
+				point.setValue(exposure.relativeWeight * exposure.data[c]);
+				point.setWeight(exposure.relativeWeight);
 			}
 		}
 		// Pad if necessary...
@@ -1230,10 +1231,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			int n = size();
 			for(int blockSize = 1; blockSize <= maxBlockSize; blockSize *= 2) {
 				for(int T=1; T < n; T++) if(T < n) {
-					diff.value = data[T];
-					diff.weight = weight[T];
-					temp.value = data[T-1];
-					temp.weight = weight[T-1];
+					diff.setValue(data[T]);
+					diff.setWeight(weight[T]);
+					temp.setValue(data[T-1]);
+					temp.setWeight(weight[T-1]);
 					
 					diff.subtract(temp);
 					if(diff.significance() > significance) {
@@ -2375,7 +2376,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			String id = name.substring(4).toLowerCase();
 			return Util.defaultFormat(getTau(id), f);
 		}
-		else if(name.equals("scanspeed")) return Util.defaultFormat(aveScanSpeed.value / (Unit.arcsec / Unit.s), f);
+		else if(name.equals("scanspeed")) return Util.defaultFormat(aveScanSpeed.value() / (Unit.arcsec / Unit.s), f);
 		else if(name.equals("rmsspeed")) return Util.defaultFormat(aveScanSpeed.rms() / (Unit.arcsec / Unit.s), f);
 		else if(name.equals("hipass")) return Util.defaultFormat(filterTimeScale / Unit.s, f);
 		else if(name.equals("chopfreq")) {

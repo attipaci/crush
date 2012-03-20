@@ -24,6 +24,7 @@ package crush.sourcemodel;
 
 import util.*;
 import util.data.AmoebaMinimizer;
+import util.data.Parameter;
 
 import java.util.*;
 
@@ -75,29 +76,29 @@ public class SkyDipModel {
 	}
 	
 	public double valueAt(double EL) {
-		double eps = -Math.expm1(-tau.value / Math.sin(EL));
-		double Tobs = eps * Tsky.value;
-		return offset.value + Tobs * Kelvin.value;
+		double eps = -Math.expm1(-tau.value() / Math.sin(EL));
+		double Tobs = eps * Tsky.value();
+		return offset.value() + Tobs * Kelvin.value();
 	}
 	
 	protected void initialize(AmoebaMinimizer minimizer, SkyDip skydip) {
 		double lowest = Double.NaN;
-		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight > 0.0) {
-			lowest = skydip.data[i].value;
+		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight() > 0.0) {
+			lowest = skydip.data[i].value();
 			break;
 		}
 		double highest = Double.NaN;
-		for(int i=skydip.data.length-1; i>=0; i--) if(skydip.data[i].weight > 0.0) {
-			highest = skydip.data[i].value;
+		for(int i=skydip.data.length-1; i>=0; i--) if(skydip.data[i].weight() > 0.0) {
+			highest = skydip.data[i].value();
 			break;
 		}
 		
-		if(options.isConfigured("tsky")) Tsky.value = options.get("tsky").getDouble() * Unit.K;
-		else if(skydip.Tsky.weight > 0.0) Tsky.value = skydip.Tsky.value;
+		if(options.isConfigured("tsky")) Tsky.setValue(options.get("tsky").getDouble() * Unit.K);
+		else if(skydip.Tsky.weight() > 0.0) Tsky.setValue(skydip.Tsky.value());
 		
 		// Set some reasonable initial values for the offset and conversion...
-		if(Double.isNaN(offset.value)) offset.value = highest;
-		if(Double.isNaN(Kelvin.value)) Kelvin.value = (lowest - highest) / Tsky.value;
+		if(Double.isNaN(offset.value())) offset.setValue(highest);
+		if(Double.isNaN(Kelvin.value())) Kelvin.setValue((lowest - highest) / Tsky.value());
 		
 		minimizer.verbose = true;
 		minimizer.precision = 1e-10;
@@ -109,20 +110,20 @@ public class SkyDipModel {
 	
 	public double[] getParms() {
 		double[] parm = new double[parameters.size()];
-		for(int p=0; p<parameters.size(); p++) parm[p] = parameters.get(p).value;
+		for(int p=0; p<parameters.size(); p++) parm[p] = parameters.get(p).value();
 		return parm;
 	}
 	
 	public void setParms(double[] tryparm) {
-		for(int p=0; p<parameters.size(); p++) parameters.get(p).value = tryparm[p];
+		for(int p=0; p<parameters.size(); p++) parameters.get(p).setValue(tryparm[p]);
 	}
 	
 	public double getDeviationFrom(SkyDip skydip) {
 		double sumdev = 0.0;
-		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight > 0.0) {
+		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight() > 0.0) {
 			double EL = skydip.getEL(i);
-			double w = skydip.data[i].weight;
-			double dev = (valueAt(EL) - skydip.data[i].value);
+			double w = skydip.data[i].weight();
+			double dev = (valueAt(EL) - skydip.data[i].value());
 			sumdev += w * Math.abs(dev * dev) * chi2Scale;
 		}
 		return sumdev;
@@ -145,7 +146,7 @@ public class SkyDipModel {
 		
 		
 		int dof = 0;
-		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight > 0.0) dof++;
+		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight() > 0.0) dof++;
 		
 		if(dof > parameters.size()) {
 			chi2Scale = (dof - parameters.size()) / minimizer.getChi2();	
@@ -153,11 +154,11 @@ public class SkyDipModel {
 		
 			for(int i=0; i<parameters.size(); i++) {
 				Parameter p = parameters.get(i);
-				double rms = minimizer.getTotalError(i, 0.01 * p.value);
-				p.weight = 1.0 / (rms * rms);
+				double rms = minimizer.getTotalError(i, 0.01 * p.value());
+				p.setWeight(1.0 / (rms * rms));
 			}
 		}
-		else for(Parameter p : parameters) p.weight = 0.0;
+		else for(Parameter p : parameters) p.setWeight(0.0);
 	}
 	
 	@Override

@@ -88,13 +88,13 @@ public class PhaseSignal {
 			if(isRobust) offsets.getRobustCorrelated(mode, G, temp, dC);
 			else offsets.getMLCorrelated(mode, G, dC);
 			
-			if(dC.weight <= 0.0) continue;
+			if(dC.weight() <= 0.0) continue;
 			
 			for(int k=G.length; --k >= 0; )
-				offsets.value[channels.get(k).index] -= dG[k] * value[i] + G[k] * dC.value;
+				offsets.value[channels.get(k).index] -= dG[k] * value[i] + G[k] * dC.value();
 			
-			value[i] += dC.value;
-			weight[i] = dC.weight;	
+			value[i] += dC.value();
+			weight[i] = dC.weight();	
 		}		
 		
 		generation++;

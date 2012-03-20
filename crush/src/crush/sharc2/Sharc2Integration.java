@@ -249,13 +249,13 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 
 		// Add to the offsets the centered chopper signal.
 		for(Sharc2Frame frame : this) {
-			frame.chopperPosition.decrementX(chopCenter);
+			frame.chopperPosition.subtractX(chopCenter);
 			
 			// The chopper position is uncentered so better leave it out unless needed...
-			frame.horizontalOffset.incrementX(frame.chopperPosition.getX());
+			frame.horizontalOffset.addX(frame.chopperPosition.getX());
 
 			// Add the chopper offet to the actual coordinates as well...
-			frame.horizontal.incrementX(frame.chopperPosition.getX() / frame.horizontal.cosLat());
+			frame.horizontal.addX(frame.chopperPosition.getX() / frame.horizontal.cosLat());
 		}
 		
 	}

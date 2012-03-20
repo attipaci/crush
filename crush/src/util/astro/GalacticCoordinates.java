@@ -65,8 +65,8 @@ public class GalacticCoordinates extends CelestialCoordinates {
     
     @Override
 	public void setDefaultCoordinates() {
-    	coordinateSystem = GalacticCoordinates.defaultCoordinateSystem;
-    	localCoordinateSystem = GalacticCoordinates.defaultLocalCoordinateSystem; 
+    	setCoordinateSystem(GalacticCoordinates.defaultCoordinateSystem);
+    	setLocalCoordinateSystem(GalacticCoordinates.defaultLocalCoordinateSystem); 
     }
     
     public static final EquatorialCoordinates equatorialPole = new EquatorialCoordinates(12.0 * Unit.hourAngle + 49.0 * Unit.minuteAngle, 27.4 * Unit.deg, "B1950.0");

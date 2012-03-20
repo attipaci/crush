@@ -43,7 +43,7 @@ public class PolarVector2D extends CoordinatePair {
 
 	public final void scale(double value) { scaleX(value); }
 
-	public final void rotate(double angle) { incrementY(angle); }
+	public final void rotate(double angle) { addY(angle); }
 
 	public final double dot(PolarVector2D v) { return dot(this, v); }
 
@@ -69,7 +69,7 @@ public class PolarVector2D extends CoordinatePair {
 		return n;
 	}
 
-	public final void invert() { incrementY(Math.PI); }
+	public final void invert() { addY(Math.PI); }
 
 	public static PolarVector2D project(PolarVector2D v1, PolarVector2D v2) {
 		PolarVector2D v = new PolarVector2D(v1);

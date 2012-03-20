@@ -127,11 +127,11 @@ public class PolygonalRegion<CoordinateType extends CoordinatePair> extends Regi
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
 			if(image.isUnflagged(i, j)) if(isInside(image.getGrid(), i, j)) {
-				flux.value += image.getValue(i, j);
-				flux.weight += image.getWeight(i, j);
+				flux.add(image.getValue(i, j));
+				flux.addWeight(image.getWeight(i, j));
 			}
 		
-		flux.weight = 1.0 / flux.weight;
+		flux.setWeight(1.0 / flux.weight());
 		flux.scale(image.getPixelArea() / image.getImageBeamArea());
 		
 		return flux;

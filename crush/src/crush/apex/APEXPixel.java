@@ -122,7 +122,7 @@ public abstract class APEXPixel extends SimplePixel {
 			if((offsets.phase & Frame.CHOP_LEFT) == 0) continue;
 
 			WeightedPoint LR = getRelativeOffset(phases, i);
-			LR.value -= mean;
+			LR.subtract(mean);
 
 			final double chi = DataPoint.significanceOf(LR);
 			chi2 += chi * chi;
@@ -140,7 +140,7 @@ public abstract class APEXPixel extends SimplePixel {
 			if((offsets.phase & Frame.CHOP_LEFT) == 0) continue;
 
 			WeightedPoint LR = getCorrectedLROffset(phases, i, neighbours);
-			LR.value -= mean;
+			LR.subtract(mean);
 
 			final double chi = DataPoint.significanceOf(LR);
 			chi2 += chi * chi;

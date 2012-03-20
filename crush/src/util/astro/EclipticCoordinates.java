@@ -85,8 +85,8 @@ public class EclipticCoordinates extends CelestialCoordinates implements Precess
 	
     @Override
 	public void setDefaultCoordinates() {
-    	coordinateSystem = EclipticCoordinates.defaultCoordinateSystem;
-    	localCoordinateSystem = EclipticCoordinates.defaultLocalCoordinateSystem;
+    	setCoordinateSystem(EclipticCoordinates.defaultCoordinateSystem);
+    	setLocalCoordinateSystem(EclipticCoordinates.defaultLocalCoordinateSystem);
     }
     
     @Override

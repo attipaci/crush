@@ -688,7 +688,7 @@ public class Data2D extends Parallel implements Cloneable {
 		};
 		
 		average.process();
-		return average.getResult().value;	
+		return average.getResult().value();	
 	}
 	
 	public double median() {
@@ -723,7 +723,7 @@ public class Data2D extends Parallel implements Cloneable {
 		};
 		
 		rms.process();
-		return rms.getResult().value;	
+		return rms.getResult().value();	
 	}
 	
 	public double getRobustRMS() {
@@ -894,8 +894,8 @@ public class Data2D extends Parallel implements Cloneable {
 			public void process(int i, int j) {
 				if(flag[i][j] == 0) {
 					getSmoothedValueAt(i, j, beam, ic, jc, result);
-					convolved[i][j] = result.value;
-					if(beamw != null) beamw[i][j] = result.weight;
+					convolved[i][j] = result.value();
+					if(beamw != null) beamw[i][j] = result.weight();
 				}
 			}
 		}.process();
@@ -928,9 +928,9 @@ public class Data2D extends Parallel implements Cloneable {
 			
 		for(int i=0, i1=0; i<sizeX(); i+=stepX, i1++) for(int j=0, j1=0; j<sizeY(); j+=stepY, j1++) {
 			getSmoothedValueAt(i, j, beam, ic, jc, result);
-			signalImage.data[i1][j1] = result.value;
-			if(beamw != null) weightImage.data[i1][j1] = result.weight;
-			signalImage.flag[i1][j1] = result.weight > 0.0 ? 0 : 1;
+			signalImage.data[i1][j1] = result.value();
+			if(beamw != null) weightImage.data[i1][j1] = result.weight();
+			signalImage.flag[i1][j1] = result.weight() > 0.0 ? 0 : 1;
 		}
 		
 		final double[][] convolved = new double[sizeX()][sizeY()];
@@ -979,8 +979,8 @@ public class Data2D extends Parallel implements Cloneable {
 			sumw += Math.abs(wB);		    
 		}
 
-		result.value = sum / sumw;
-		result.weight = sumw;
+		result.setValue(sum / sumw);
+		result.setWeight(sumw);
 	}
 	
 	
@@ -1024,7 +1024,7 @@ public class Data2D extends Parallel implements Cloneable {
 		new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
-				if(flag[i][j] == 0) bin[(int)Math.round(image[i][j] / binSize)].incrementY(1.0);
+				if(flag[i][j] == 0) bin[(int)Math.round(image[i][j] / binSize)].addY(1.0);
 			}
 		}.process();
 		
@@ -1268,10 +1268,10 @@ public class Data2D extends Parallel implements Cloneable {
 			WeightedPoint ave = new WeightedPoint();
 			for(Process<WeightedPoint> task : getWorkers()) {
 				WeightedPoint partial = task.getPartialResult();
-				ave.value += partial.value;
-				ave.weight += partial.weight;
+				ave.add(partial.value());
+				ave.addWeight(partial.weight());
 			}
-			if(ave.weight > 0.0) ave.value /= ave.weight;
+			if(ave.weight() > 0.0) ave.scaleValue(1.0 / ave.weight());
 			return ave;
 		}
 	}

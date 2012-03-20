@@ -31,12 +31,12 @@ import util.SphericalProjection;
 public abstract class ZenithalProjection extends SphericalProjection {
 
 	public ZenithalProjection() { 
-		referenceNative.setNative(0.0, rightAngle);
+		getNativeReference().setNative(0.0, rightAngle);
 	}
 	
 	@Override 
 	public void calcCelestialPole() {
-		pole = reference;
+		setCelestialPole(getReference());
 	}
 	
 	@Override

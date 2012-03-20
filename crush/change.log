@@ -1,4 +1,8 @@
 >> check that incremental pointing is correctly applied...
+>> Updating WeightedPoint changed reductions. Check!
+
+	[FIX] The results of pointing reductions (via 'point') were ever so 
+	slightly incorrect. No change to reduction!
 
 	[FIX] PolarVector2D power op was wrongly defined. However, since this
 	feature was never used in CRUSH, there was no damage done by it.
