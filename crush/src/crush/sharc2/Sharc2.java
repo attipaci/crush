@@ -177,8 +177,8 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		if(hasOption("pixelsize")) {
 			pixelSize = new Vector2D();
 			StringTokenizer tokens = new StringTokenizer(option("pixelsize").getValue(), " \t,:xX");
-			pixelSize.x = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
-			pixelSize.y = tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x;
+			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
+			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.getX());
 		}
 
 		calcPositions(pixelSize);
@@ -195,7 +195,7 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		Vector2D arrayRotationCenter = new Vector2D(6.5, 16.5);
 		if(hasOption("rcenter")) arrayRotationCenter = option("rcenter").getVector2D();
 	
-		return Sharc2Pixel.getPosition(pixelSize, arrayPointingCenter.x - arrayRotationCenter.x, arrayPointingCenter.y - arrayRotationCenter.y);
+		return Sharc2Pixel.getPosition(pixelSize, arrayPointingCenter.getX() - arrayRotationCenter.getX(), arrayPointingCenter.getY() - arrayRotationCenter.getY());
 	}
 	
 	private void calcPositions(Vector2D size) {
@@ -205,7 +205,7 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 			pixel.size = size;
 			pixel.calcPosition();
 		}
-		Vector2D center = Sharc2Pixel.getPosition(size, arrayPointingCenter.x - 1.0, arrayPointingCenter.y - 1.0);
+		Vector2D center = Sharc2Pixel.getPosition(size, arrayPointingCenter.getX() - 1.0, arrayPointingCenter.getY() - 1.0);
 		setReferencePosition(center);
 	}
 	
@@ -405,8 +405,8 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		
 		// Pointing Center
 		arrayPointingCenter = new Vector2D();
-		arrayPointingCenter.x = header.getDoubleValue("CRPIX3", 6.5) - 1.0;
-		arrayPointingCenter.y = header.getDoubleValue("CRPIX2", 16.5) - 1.0;
+		arrayPointingCenter.setX(header.getDoubleValue("CRPIX3", 6.5) - 1.0);
+		arrayPointingCenter.setY(header.getDoubleValue("CRPIX2", 16.5) - 1.0);
 	}
 	
 	public void loadGainCoefficients(String fileName) throws IOException {

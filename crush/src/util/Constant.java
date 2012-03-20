@@ -24,10 +24,8 @@
 
 package util;
 
-
+// TODO Convert to Enum?
 public class Constant {
-
-    public Constant() {}
 
     // Mathematical Constants
     public final static double PI = Math.PI;

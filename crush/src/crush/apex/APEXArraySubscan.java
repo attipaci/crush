@@ -110,7 +110,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		for(Frame exposure : this) if(exposure != null) {
 			exposure.flag &= ~Frame.CHOP_FLAGS;
 			
-			if(Math.abs(exposure.chopperPosition.x + chopper.amplitude) < tolerance) {
+			if(Math.abs(exposure.chopperPosition.getX() + chopper.amplitude) < tolerance) {
 				exposure.flag |= Frame.CHOP_LEFT;
 				if(current.phase != Frame.CHOP_LEFT) {
 					current = new PhaseOffsets(this);
@@ -124,7 +124,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				else current.end = exposure;
 				usable++;
 			}
-			else if(Math.abs(exposure.chopperPosition.x - chopper.amplitude) < tolerance) {
+			else if(Math.abs(exposure.chopperPosition.getX() - chopper.amplitude) < tolerance) {
 				exposure.flag |= Frame.CHOP_RIGHT;
 				if(current.phase != Frame.CHOP_RIGHT) {
 					current = new PhaseOffsets(this);
@@ -367,15 +367,15 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 					if(apexScan.nativeSystem == EquatorialCoordinates.class) 
 						exposure.toHorizontal(exposure.horizontalOffset);
 
-					if(chop != null) exposure.chopperPosition.x = chop[t] * Unit.deg;
+					if(chop != null) exposure.chopperPosition.setX(chop[t] * Unit.deg);
 					exposure.chopperPhase = phase[t];			
 					exposure.zenithTau = (float) zenithTau;
 					exposure.nodFlag = nodPhase;
 
 					if(chopper != null) if(!chopperIncluded) {
 						// Add the chopping offsets to the horizontal coordinates and offsets
-						exposure.horizontal.x += exposure.chopperPosition.x / exposure.horizontal.cosLat;
-						exposure.horizontalOffset.x += exposure.chopperPosition.x;
+						exposure.horizontal.incrementX(exposure.chopperPosition.getX() / exposure.horizontal.cosLat());
+						exposure.horizontalOffset.incrementX(exposure.chopperPosition.getX());
 						// Add to the equatorial coordinate also...
 						tempOffset.copy(exposure.chopperPosition);
 						exposure.toEquatorial(tempOffset);
@@ -387,7 +387,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 					// representative of the non-scrambled map...
 					if(hasOption("scramble")) {
 						exposure.horizontalOffset.invert();
-						exposure.chopperPosition.x *= -1.0;
+						exposure.chopperPosition.scaleX(-1.0);
 						exposure.sinPA *= -1.0;
 						exposure.cosPA *= -1.0;
 						exposure.calcEquatorial();

@@ -40,18 +40,18 @@ public class PlateCarree extends SphericalProjection {
 
 	@Override
 	public final void getOffsets(double theta, double phi, CoordinatePair toOffset) {
-		toOffset.x = phi;
-		toOffset.y = theta;
+		toOffset.setX(phi);
+		toOffset.setY(theta);
 	}
 
 	@Override
 	public final double phi(CoordinatePair offset) { 
-		return offset.x;
+		return offset.getX();
 	}
 
 	@Override
 	public final double theta(CoordinatePair offset) {
-		return offset.y;
+		return offset.getY();
 	}
 
 	

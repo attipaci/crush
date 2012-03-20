@@ -56,13 +56,30 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair> implements C
 	public boolean equals(Object o, double precision) {
 		if(!(o instanceof Grid2D)) return false;
 		Grid2D<?> grid = (Grid2D<?>) o;
+		
 		if(!grid.projection.equals(projection)) return false;
-		if(Math.abs(grid.m11 / m11 - 1.0) > precision) return false;
-		if(Math.abs(grid.m12 / m12 - 1.0) > precision) return false;
-		if(Math.abs(grid.m21 / m21 - 1.0) > precision) return false;
-		if(Math.abs(grid.m22 / m22 - 1.0) > precision) return false;
-		if(Math.abs(grid.refIndex.x / refIndex.x - 1.0) > precision) return false;
-		if(Math.abs(grid.refIndex.y / refIndex.y - 1.0) > precision) return false;
+		if(!grid.refIndex.equals(refIndex, precision)) return false;
+		
+		if(m11 == 0.0) {
+			if(Math.abs(grid.m11) > precision) return false; 
+		}
+		else if(Math.abs(grid.m11 / m11 - 1.0) > precision) return false;
+		
+		if(m12 == 0.0) {
+			if(Math.abs(grid.m12) > precision) return false; 
+		}
+		else if(Math.abs(grid.m12 / m12 - 1.0) > precision) return false;
+		
+		if(m21 == 0.0) {
+			if(Math.abs(grid.m21) > precision) return false; 
+		}
+		else if(Math.abs(grid.m21 / m21 - 1.0) > precision) return false;
+		
+		if(m22 == 0.0) {
+			if(Math.abs(grid.m22) > precision) return false; 
+		}
+		else if(Math.abs(grid.m22 / m22 - 1.0) > precision) return false;
+		
 		return true;
 	}
 	
@@ -189,8 +206,8 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair> implements C
 		if(isReverseX()) { a11 *= -1.0; a21 *= -1.0; }
 		if(isReverseY()) { a22 *= -1.0; a12 *= -1.0; }
 		
-		cursor.add(new HeaderCard("CRPIX1" + alt, refIndex.x + 1, "Reference grid position"));
-		cursor.add(new HeaderCard("CRPIX2" + alt, refIndex.y + 1, "Reference grid position"));
+		cursor.add(new HeaderCard("CRPIX1" + alt, refIndex.getX() + 1, "Reference grid position"));
+		cursor.add(new HeaderCard("CRPIX2" + alt, refIndex.getY() + 1, "Reference grid position"));
 		
 		if(m12 == 0.0 && m21 == 0.0) {
 			cursor.add(new HeaderCard("CDELT1" + alt, a11/Unit.deg, "Grid spacing (deg)"));	
@@ -254,8 +271,8 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair> implements C
 		if(isReverseX()) { m11 *= -1.0; m21 *= -1.0; }
 		if(isReverseY()) { m22 *= -1.0; m12 *= -1.0; }
 		
-		refIndex.x = header.getDoubleValue("CRPIX1" + alt) - 1;
-		refIndex.y = header.getDoubleValue("CRPIX2" + alt) - 1;
+		refIndex.setX(header.getDoubleValue("CRPIX1" + alt) - 1.0);
+		refIndex.setY(header.getDoubleValue("CRPIX2" + alt) - 1.0);
 		
 		calcInverseTransform();
 	}
@@ -277,18 +294,17 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair> implements C
 	
 	public final void toIndex(final Vector2D offset) {
 		// transform here...
-		final double x = offset.x;
-		offset.x = i11 * x + i12 * offset.y + refIndex.x;
-		offset.y = i21 * x + i22 * offset.y + refIndex.y;
+		final double x = offset.getX();
+		offset.setX(i11 * x + i12 * offset.getY() + refIndex.getX());
+		offset.setY(i21 * x + i22 * offset.getY() + refIndex.getY());
 	}
 	
 	public final void toOffset(final Vector2D index) {
-		index.x -= refIndex.x;
-		index.y -= refIndex.y;
+		index.subtract(refIndex);
 
-		final double x = index.x;
-		index.x = m11 * x + m12 * index.y;
-		index.y = m21 * x + m22 * index.y;
+		final double x = index.getX();
+		index.setX(m11 * x + m12 * index.getY());
+		index.setY(m21 * x + m22 * index.getY());
 	}
 	
     public final CoordinateType getReference() { return projection.getReference(); }
@@ -307,26 +323,24 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair> implements C
     }
    
     public void getCoords(Vector2D index, CoordinateType coords) {
-    	double i = index.x;
-    	double j = index.y; 
+    	double i = index.getX();
+    	double j = index.getY(); 
     	
     	toOffset(index);
     	projection.deproject(index, coords);
     	
-    	index.x = i;
-    	index.y = j;
+    	index.set(i, j);
     }
     
     public void toggleNative(Vector2D offset) {
-    	if(isReverseX()) offset.x *= -1.0;
-    	if(isReverseY()) offset.y *= -1.0;
+    	if(isReverseX()) offset.scaleX(-1.0);
+    	if(isReverseY()) offset.scaleY(-1.0);
     }
     
     
     public void shift(Vector2D offset) {
     	toIndex(offset);
-    	refIndex.x += offset.x;
-    	refIndex.y += offset.y;
+    	refIndex.add(offset);
     }
     
     

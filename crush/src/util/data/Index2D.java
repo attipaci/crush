@@ -26,21 +26,45 @@ package util.data;
 
 import util.*;
 
-public class Index2D {
-	public int i,j;
+public class Index2D implements Cloneable {
+	private int i,j;
 	
 	public Index2D() {}
 	
 	public Index2D(int i, int j) {
-		this.i = i;
-		this.j = j;
+		set(i, j);
 	}
 	
 	public Index2D(Vector2D index) {
-		i = (int)Math.round(index.x);
-		j = (int)Math.round(index.y);
+		this((int)Math.round(index.getX()), (int)Math.round(index.getY()));
 	}
 
+	@Override
+	public Object clone() {
+		try { return super.clone(); }
+		catch(CloneNotSupportedException e) { return null; }
+	}
+	
+	@Override
+	public int hashCode() {
+		return i ^ ~j;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(!(o instanceof Index2D)) return false;
+		Index2D index = (Index2D) o;
+		if(index.i != i) return false;
+		if(index.j != j) return false;
+		return true;		
+	}
+	
+	public void set(int i, int j) { this.i = i; this.j = j; }
+	
+	public final int i() { return i; }
+	
+	public final int j() { return j; }
+ 	
 	@Override
 	public String toString() {
 		return i + "," + j;

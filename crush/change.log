@@ -1,3 +1,12 @@
+>> check that incremental pointing is correctly applied...
+
+	[FIX] PolarVector2D power op was wrongly defined. However, since this
+	feature was never used in CRUSH, there was no damage done by it.
+
+	[CODE] Many classes are updated to hide private fields, and access them
+	through getters/setters only. This makes for safer code.
+
+
 2.11-2 (16 March 2012)
 
 

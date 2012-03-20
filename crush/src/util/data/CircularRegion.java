@@ -32,8 +32,8 @@ import java.text.*;
 import java.util.*;
 
 public class CircularRegion<CoordinateType extends CoordinatePair> extends Region<CoordinateType> implements TableFormatter.Entries {
-	public CoordinateType coords;
-	public DataPoint radius;
+	private CoordinateType coords;
+	private DataPoint radius;
 	
 	private Grid2D<CoordinateType> useGrid = null;
 	private Vector2D gridIndex = new Vector2D();
@@ -85,13 +85,13 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		Vector2D centerIndex = getIndex(image.getGrid());
 		Bounds bounds = new Bounds();
 		Vector2D resolution = image.getResolution();
-		double deltaX = radius.value / resolution.x;
-		double deltaY = radius.value / resolution.y;
+		double deltaX = radius.value / resolution.getX();
+		double deltaY = radius.value / resolution.getY();
 		
-		bounds.fromi = Math.max(0, (int)Math.floor(centerIndex.x - deltaX));
-		bounds.toi = Math.min(image.sizeX()-1, (int)Math.ceil(centerIndex.x + deltaX));
-		bounds.fromj = Math.max(0, (int)Math.floor(centerIndex.y - deltaY));
-		bounds.toj = Math.min(image.sizeY()-1, (int)Math.ceil(centerIndex.y + deltaY));
+		bounds.fromi = Math.max(0, (int)Math.floor(centerIndex.getX() - deltaX));
+		bounds.toi = Math.min(image.sizeX()-1, (int)Math.ceil(centerIndex.getX() + deltaX));
+		bounds.fromj = Math.max(0, (int)Math.floor(centerIndex.getY() - deltaY));
+		bounds.toj = Math.min(image.sizeY()-1, (int)Math.ceil(centerIndex.getY() + deltaY));
 		
 		return bounds;
 	}
@@ -103,40 +103,39 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	@Override
 	public boolean isInside(Grid2D<CoordinateType> grid, double i, double j) {
 		Vector2D centerIndex = getIndex(grid);
-		return Math.hypot(centerIndex.x - i, centerIndex.y - j) <= radius.value;
+		return Math.hypot(centerIndex.getX() - i, centerIndex.getY() - j) <= radius.value;
 	}
 	
 	public void moveToPeak(GridImage<CoordinateType> map) throws IllegalStateException {
 		Bounds bounds = getBounds(map);
 		Vector2D centerIndex = getIndex(map.getGrid());
 		
-		if(!map.containsIndex(centerIndex.x, centerIndex.y)) throw new IllegalStateException("Region falls outside of map.");
+		if(!map.containsIndex(centerIndex.getX(), centerIndex.getY())) throw new IllegalStateException("Region falls outside of map.");
 		Index2D index = new Index2D(centerIndex);
 		
-		double significance = map.getS2N(index.i, index.j);
+		double significance = map.getS2N(index.i(), index.j());
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
 			if(map.isUnflagged(i, j)) if(map.getS2N(i,j) > significance) if(isInside(map.getGrid(), i, j)) {
 				significance = map.getS2N(i,j);
-				index.i = i;
-				index.j = j;				
+				index.set(i, j);			
 			}
 		
-		if(map.isFlagged(index.i, index.j)) throw new IllegalStateException("No valid peak in search area. ");
+		if(map.isFlagged(index.i(), index.j())) throw new IllegalStateException("No valid peak in search area. ");
 		
-		centerIndex.x = index.i;
-		centerIndex.y = index.j;
+		centerIndex.setX(index.i());
+		centerIndex.setY(index.j());
 		
-		if(isInside(map.getGrid(), index.i+1, index.j)) if(isInside(map.getGrid(), index.i-1, index.j)) 
-			if(isInside(map.getGrid(), index.i, index.j+1)) if(isInside(map.getGrid(), index.i, index.j-1)) finetunePeak(map);
+		if(isInside(map.getGrid(), index.i()+1, index.j())) if(isInside(map.getGrid(), index.i()-1, index.j())) 
+			if(isInside(map.getGrid(), index.i(), index.j()+1)) if(isInside(map.getGrid(), index.i(), index.j()-1)) finetunePeak(map);
 	}
 	
 	public DataPoint finetunePeak(GridImage<CoordinateType> map) {
 		Vector2D centerIndex = getIndex(map.getGrid());
 		Data2D.InterpolatorData ipolData = new Data2D.InterpolatorData();
 		
-		int i = (int) Math.round(centerIndex.x);
-		int j = (int) Math.round(centerIndex.y);
+		int i = (int) Math.round(centerIndex.getX());
+		int j = (int) Math.round(centerIndex.getY());
 		
 		double a=0.0,b=0.0,c=0.0,d=0.0;
 			
@@ -163,8 +162,8 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		if(Math.abs(di) > 0.5 || Math.abs(dj) > 0.5) 
 			throw new IllegalStateException("Position is not an S/N peak.");
 		
-		centerIndex.x = i + di;
-		centerIndex.y = j + dj;
+		centerIndex.setX(i + di);
+		centerIndex.setY(j + dj);
 		
 		double peak = map.valueAtIndex(i+di, j+dj, ipolData);
 	
@@ -197,19 +196,30 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		return coords;
 	}
 	
+	public void setCoordinates(CoordinateType coords) {
+		this.coords = coords;
+	}
+	
+	public DataPoint getRadius() { return radius; }
+	
+	public void setRadius(DataPoint r) { this.radius = r; }
+	
+	public void setRadius(double r) { 
+		if(radius == null) radius = new DataPoint();
+		else radius.weight = 0.0;
+		radius.value = r;
+	}
 	
 	public String toCrushString(GridImage<CoordinateType> image) {
-		CoordinateType coords = getCoordinates();
-		
-		
+		CoordinateType coords = getCoordinates();	
 		
 		if(coords instanceof SphericalCoordinates) {
 			SphericalCoordinates spherical = (SphericalCoordinates) coords;
 			((AngleFormat) spherical.coordinateSystem.get(0).format).colons();
 			((AngleFormat) spherical.coordinateSystem.get(1).format).colons();
-			return id + "\t" + coords.toString() + "  " + Util.f1.format(radius.value/Unit.arcsec) + " # " + comment;
+			return getID() + "\t" + coords.toString() + "  " + Util.f1.format(radius.value/Unit.arcsec) + " # " + getComment();
 		}
-		else return id + "\t" + coords.x + "\t" + coords.y + "\t" + radius.value + "\t# " + comment;
+		else return getID() + "\t" + coords.getX() + "\t" + coords.getY() + "\t" + radius.value + "\t# " + getComment();
 	}
 
 	public String toGregString(GridImage<CoordinateType> image) {
@@ -217,7 +227,7 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		useGrid.projection.project(coords, offset);
 		
 		return "ellipse " + Util.f1.format(radius.value/Unit.arcsec) + " /user " +
-		Util.f1.format(offset.x / Unit.arcsec) + " " + Util.f1.format(offset.y / Unit.arcsec);
+		Util.f1.format(offset.getX() / Unit.arcsec) + " " + Util.f1.format(offset.getY() / Unit.arcsec);
 	}
 	
 	public String toDS9String(GridImage<CoordinateType> image) {
@@ -229,11 +239,11 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 			((AngleFormat) spherical.coordinateSystem.get(1).format).colons();
 		
 			return "circle(" 
-				+ spherical.coordinateSystem.get(0).format(coords.x) + ","
-				+ spherical.coordinateSystem.get(1).format(coords.y) + ","
+				+ spherical.coordinateSystem.get(0).format(coords.getX()) + ","
+				+ spherical.coordinateSystem.get(1).format(coords.getY()) + ","
 				+ Util.f3.format(radius.value / Unit.arcsec) + "\")";
 		}
-		else return "circle(" + coords.x + "," + coords.y + "," + radius.value + ")";		
+		else return "circle(" + coords.getX() + "," + coords.getY() + "," + radius.value + ")";		
 	}
 	
 	
@@ -246,13 +256,9 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 			CoordinateAxis x = reference.localCoordinateSystem.get(0);
 			CoordinateAxis y = reference.localCoordinateSystem.get(1);
 		
-			return x.label + " = " + x.format(offset.x) + "\t" + y.label + " = " + y.format(offset.y);
+			return x.label + " = " + x.format(offset.getX()) + "\t" + y.label + " = " + y.format(offset.getY());
 		}
-		else return "dx = " + offset.x + "\tdy = " + offset.y;
-	}
-	
-	public String getComment() {
-		return "";
+		else return "dx = " + offset.getX() + "\tdy = " + offset.getY();
 	}
 	
 	@Override
@@ -273,7 +279,7 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		CoordinateType coords = getCoordinates();
 		
 		StringTokenizer tokens = new StringTokenizer(line);
-		id = tokens.nextToken();
+		setID(tokens.nextToken());
 		
 		if(coords instanceof SphericalCoordinates) {
 			SphericalCoordinates spherical = (SphericalCoordinates) coords;
@@ -286,14 +292,14 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 			
 		}
 		else {
-			coords.x = Double.parseDouble(tokens.nextToken());
-			coords.y = Double.parseDouble(tokens.nextToken());			
+			coords.setX(Double.parseDouble(tokens.nextToken()));
+			coords.setY(Double.parseDouble(tokens.nextToken()));			
 		}
 		
 		
 		radius.weight = 0.0;	
 		
-		if(line.contains("#")) comment = line.substring(line.indexOf('#') + 2);
+		if(line.contains("#")) setComment(line.substring(line.indexOf('#') + 2));
 	
 		return tokens;
 	}
@@ -309,8 +315,8 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		tokens.nextToken(); // Assumed to be '/user';
 		
 		Vector2D centerIndex = new Vector2D();
-		centerIndex.x = -Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
-		centerIndex.y = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
+		centerIndex.setX(-Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
+		centerIndex.setY(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
 		
 		forImage.getGrid().getCoords(centerIndex, coords);
 	}
@@ -330,8 +336,8 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 			coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " (J2000)");
 		}
 		else {
-			coords.x = Double.parseDouble(tokens.nextToken());
-			coords.y = Double.parseDouble(tokens.nextToken());
+			coords.setX(Double.parseDouble(tokens.nextToken()));
+			coords.setY(Double.parseDouble(tokens.nextToken()));
 		}
 				
 		if(isCircle) {

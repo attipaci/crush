@@ -67,8 +67,8 @@ public class RCPFile {
 
 	public void subtract(Vector2D offset) {
 		for(Entry entry : table.values()) {
-			entry.x -= offset.x;
-			entry.y -= offset.y;			
+			entry.x -= offset.getX();
+			entry.y -= offset.getY();			
 		}
 	}
 	

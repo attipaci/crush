@@ -62,14 +62,14 @@ public class AIPSLegacyProjection extends SphericalProjection {
 	@Override
 	public final void project(SphericalCoordinates coords, CoordinatePair toProjected) {
 		baseProjection.project(coords, toProjected);
-		toProjected.x -= referenceOffsets.x;
-		toProjected.y -= referenceOffsets.y;
+		toProjected.decrementX(referenceOffsets.getX());
+		toProjected.decrementY(referenceOffsets.getY());
 	}
 	
 	@Override
 	public final void deproject(CoordinatePair projected, SphericalCoordinates toCoords) {
-		projected.x += referenceOffsets.x;
-		projected.y += referenceOffsets.y;
+		projected.incrementX(referenceOffsets.getX());
+		projected.incrementY(referenceOffsets.getY());
 		baseProjection.deproject(projected, toCoords);		
 	}
 	

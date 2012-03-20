@@ -67,7 +67,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 			double eps = (measuredLoad - instrument.excessLoad) / ((Sharc2Scan) scan).ambientT;
 			double tauLOS = -Math.log(1.0-eps);
 			System.err.println("   Tau from bolometers (not used):");
-			printEquivalentTaus(tauLOS * scan.horizontal.sinLat);
+			printEquivalentTaus(tauLOS * scan.horizontal.sinLat());
 			
 			if(!hasOption("excessload")) instrument.excessLoad = measuredLoad - getSkyLoadTemperature();
 			System.err.println("   Excess optical load on bolometers is " + Util.f1.format(instrument.excessLoad) + " K. (not used)");		
@@ -103,7 +103,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		System.err.println("   --->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz", value))
 				+ ", tau(350um):" + Util.f3.format(getTau("350um", value))
-				+ ", tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat)
+				+ ", tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv", value)) + "mm"
 		);		
 	}
@@ -184,7 +184,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		printEquivalentTaus(zenithTau);
 		
 		// TODO move to obslog...
-		double tauLOS = zenithTau / scan.horizontal.sinLat;
+		double tauLOS = zenithTau / scan.horizontal.sinLat();
 		System.err.println("   Optical load is " + Util.f1.format(((Sharc2Scan) scan).ambientT * (1.0 - Math.exp(-tauLOS))) + " K.");
 	
 	}
@@ -249,13 +249,13 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 
 		// Add to the offsets the centered chopper signal.
 		for(Sharc2Frame frame : this) {
-			frame.chopperPosition.x -= chopCenter;
+			frame.chopperPosition.decrementX(chopCenter);
 			
 			// The chopper position is uncentered so better leave it out unless needed...
-			frame.horizontalOffset.x += frame.chopperPosition.x;
+			frame.horizontalOffset.incrementX(frame.chopperPosition.getX());
 
 			// Add the chopper offet to the actual coordinates as well...
-			frame.horizontal.x += frame.chopperPosition.x / frame.horizontal.cosLat;
+			frame.horizontal.incrementX(frame.chopperPosition.getX() / frame.horizontal.cosLat());
 		}
 		
 	}
@@ -348,11 +348,11 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 					}		
 
 					frame.horizontalOffset = new Vector2D(
-							(AZO[i] + AZE[i] * frame.horizontal.cosLat) * Unit.arcsec,
+							(AZO[i] + AZE[i] * frame.horizontal.cosLat()) * Unit.arcsec,
 							(ELO[i] + ELE[i]) * Unit.arcsec);
 
-					frame.chopperPosition.x = chop[i] * Unit.arcsec;
-					chopCenter += frame.chopperPosition.x;	
+					frame.chopperPosition.setX(chop[i] * Unit.arcsec);
+					chopCenter += frame.chopperPosition.getX();	
 
 					// Add in the scanning offsets...
 					frame.horizontalOffset.add(sharcscan.horizontalOffset);
@@ -427,7 +427,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 
 	public double getDirectTau() { 
 		double eps = (instrument.getLoadTemperature() - instrument.excessLoad) / ((Sharc2Scan) scan).ambientT; 	
-		return -Math.log(1.0-eps) * scan.horizontal.sinLat;
+		return -Math.log(1.0-eps) * scan.horizontal.sinLat();
 	}
 
 	@Override

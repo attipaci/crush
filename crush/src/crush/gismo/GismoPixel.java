@@ -57,7 +57,7 @@ public class GismoPixel extends SimplePixel {
 	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {
-		return new Vector2D(size.x * col, -size.y * row);
+		return new Vector2D(size.getX() * col, -size.getY() * row);
 	}
 	
 	@Override

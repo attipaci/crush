@@ -108,8 +108,8 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	}
 	
 	public void setSubarray(int fromi, int fromj, int toi, int toj) {
-		referenceIndex.x -= fromi - i0;
-		referenceIndex.y -= fromj - j0; 
+		referenceIndex.decrementX(fromi - i0);
+		referenceIndex.decrementY(fromj - j0); 
 		i0 = fromi;
 		j0 = fromj;
 		createBuffer(toi - fromi, toj - fromj);

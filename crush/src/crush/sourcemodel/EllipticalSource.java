@@ -32,8 +32,8 @@ import util.data.DataPoint;
 import util.data.GridImage;
 
 public class EllipticalSource<CoordinateType extends CoordinatePair> extends GaussianSource<CoordinateType> {
-	public DataPoint elongation = new DataPoint();
-	public DataPoint angle = new DataPoint();
+	private DataPoint elongation = new DataPoint();
+	private DataPoint angle = new DataPoint();
 	
 	public EllipticalSource() {
 		super();
@@ -60,6 +60,10 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		// TODO Auto-generated constructor stub
 	}
 	
+	public DataPoint getElongation() { return elongation; }
+	
+	public DataPoint getAngle() { return angle; }
+	
 	@Override
 	public void measureShape(GridImage<CoordinateType> map) {	
 		super.measureShape(map);
@@ -72,7 +76,7 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.isUnflagged(i, j)) {
 			double p = Math.abs(map.getS2N(i,j));
 			//p *= p;
-			double theta = 2.0 * Math.atan2(j - center.y, i - center.x);
+			double theta = 2.0 * Math.atan2(j - center.getY(), i - center.getX());
 			
 			m2c += p * Math.cos(theta);
 			m2s += p * Math.sin(theta);
@@ -101,8 +105,8 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 	}
 	
 	public void getAxes(Range axes) {
-		axes.min = radius.value * (1.0 - elongation.value);
-		axes.max = radius.value * (1.0 + elongation.value);
+		axes.min = getRadius().value * (1.0 - elongation.value);
+		axes.max = getRadius().value * (1.0 + elongation.value);
 		// Renormalize to keep area unchanged...
 		axes.scale(1.0 / (1.0 - elongation.value * elongation.value));	
 	}
@@ -112,8 +116,8 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		DataTable data = super.getData(map);
 		Range axes = getAxes();
 		
-		double da = radius.weight > 0.0 ? Math.hypot(radius.rms(), axes.max * elongation.rms()) : Double.NaN;
-		double db = radius.weight > 0.0 ? Math.hypot(radius.rms(), axes.min * elongation.rms()) : Double.NaN;
+		double da = getRadius().weight > 0.0 ? Math.hypot(getRadius().rms(), axes.max * elongation.rms()) : Double.NaN;
+		double db = getRadius().weight > 0.0 ? Math.hypot(getRadius().rms(), axes.min * elongation.rms()) : Double.NaN;
 		
 		double sizeUnit = 1.0;
 		String sizeName = "pixels"; 
@@ -141,8 +145,8 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		String info = super.pointingInfo(map);
 		Range axes = getAxes();
 		
-		double da = radius.weight > 0.0 ? Math.hypot(radius.rms(), axes.max * elongation.rms()) : Double.NaN;
-		double db = radius.weight > 0.0 ? Math.hypot(radius.rms(), axes.min * elongation.rms()) : Double.NaN;
+		double da = getRadius().weight > 0.0 ? Math.hypot(getRadius().rms(), axes.max * elongation.rms()) : Double.NaN;
+		double db = getRadius().weight > 0.0 ? Math.hypot(getRadius().rms(), axes.min * elongation.rms()) : Double.NaN;
 		
 		double sizeUnit = 1.0;
 			

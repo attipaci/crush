@@ -68,17 +68,17 @@ public class IRAMPointingModel {
 	}
 	
 	public void addNasmythOffset(Vector2D offset) {
-		P[10] += offset.x;
-		P[11] += offset.y;
+		P[10] += offset.getX();
+		P[11] += offset.getY();
 	}
 	
 	public double getDX(HorizontalCoordinates horizontal, double UT) {
-		double cosE = horizontal.cosLat;
-		double sinE = horizontal.sinLat;
-		double sinA = Math.sin(horizontal.x);
-		double cosA = Math.cos(horizontal.x);
-		double sin2A = Math.sin(2.0 * horizontal.x);
-		double cos2A = Math.cos(2.0 * horizontal.x);
+		double cosE = horizontal.cosLat();
+		double sinE = horizontal.sinLat();
+		double sinA = Math.sin(horizontal.getX());
+		double cosA = Math.cos(horizontal.getX());
+		double sin2A = Math.sin(2.0 * horizontal.getX());
+		double cos2A = Math.cos(2.0 * horizontal.getX());
 		
 		double H = P(10, UT);
 		double V = P(11, UT);
@@ -93,12 +93,12 @@ public class IRAMPointingModel {
 	}
 	
 	public double getDY(HorizontalCoordinates horizontal, double UT) {
-		double cosE = horizontal.cosLat;
-		double sinE = horizontal.sinLat;
-		double sinA = Math.sin(horizontal.x);
-		double cosA = Math.cos(horizontal.x);
-		double sin2A = Math.sin(2.0 * horizontal.x);
-		double cos2A = Math.cos(2.0 * horizontal.x);
+		double cosE = horizontal.cosLat();
+		double sinE = horizontal.sinLat();
+		double sinA = Math.sin(horizontal.getX());
+		double cosA = Math.cos(horizontal.getX());
+		double sin2A = Math.sin(2.0 * horizontal.getX());
+		double cos2A = Math.cos(2.0 * horizontal.getX());
 		
 		double H = P(10, UT);
 		double V = P(11, UT);

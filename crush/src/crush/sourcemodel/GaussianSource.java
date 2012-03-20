@@ -36,8 +36,8 @@ import util.data.*;
 
 
 public class GaussianSource<CoordinateType extends CoordinatePair> extends CircularRegion<CoordinateType> {
-	public DataPoint peak;
-	public boolean isCorrected = false;
+	private DataPoint peak;
+	private boolean isCorrected = false;
 	
 	public GaussianSource() { }
 
@@ -54,28 +54,41 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	}
 	
 	public Bounds getBounds(GridImage<CoordinateType> image, double r) {
-		if(radius == null) radius = new DataPoint();
-		double origRadius = radius.value;
-		radius.value = r;
+		DataPoint origRadius = getRadius();
+		setRadius(new DataPoint(r, 0.0));
 		Bounds bounds = getBounds(image);
-		radius.value = origRadius;
+		setRadius(origRadius);
 		return bounds;
 	}
 	
-	public DataPoint getFWHM() { return radius; }
+	public DataPoint getPeak() { return peak; }
 	
-	public void setFWHM(double value) { radius.value = value; radius.weight = 0.0; }
+	public void setPeak(DataPoint value) { peak = value; }
 	
-	public void setFWHM(DataPoint value) { radius = value; }
+	public void setPeak(double value) { 
+		if(peak == null) peak = new DataPoint();
+		else peak.weight = 0.0;
+		peak.value = value;
+	}
+	
+	public boolean isCorrected() { return isCorrected; }
+	
+	public void setCorrected(boolean value) { isCorrected = value; }
+	
+	public DataPoint getFWHM() { return getRadius(); }
+	
+	public void setFWHM(double value) { setRadius(value); }
+	
+	public void setFWHM(DataPoint value) { setRadius(value); }
 	
 	public void setPeakPixel(GridImage<CoordinateType> map) {
 		Index2D index = map instanceof GridMap ? ((GridMap<?>) map).getS2NImage().indexOfMax() : map.indexOfMax();
 		@SuppressWarnings("unchecked")
 		CoordinateType coords = (CoordinateType) map.getReference().clone();
-		map.getGrid().getCoords(new Vector2D(index.i, index.j), coords);
-		id = map instanceof GridSource ? ((GridSource<?>) map).name : "[1]";
+		map.getGrid().getCoords(new Vector2D(index.i(), index.j()), coords);
+		setID(map instanceof GridSource ? ((GridSource<?>) map).name : "[1]");
 		setCenter(coords);
-		radius = new DataPoint(map.getImageFWHM(), Math.sqrt(map.getPixelArea()));	
+		setRadius(new DataPoint(map.getImageFWHM(), Math.sqrt(map.getPixelArea())));	
 	}
 	
 	public void setPeak(GridImage<CoordinateType> map) {
@@ -112,14 +125,14 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		Bounds bounds = getBounds(map);
 		Vector2D centerIndex = getIndex(map.getGrid());
 		final Vector2D resolution = map.getResolution();
-		final double sigmaX = radius.value / Util.sigmasInFWHM / resolution.x;
-		final double sigmaY = radius.value / Util.sigmasInFWHM / resolution.y;
+		final double sigmaX = getRadius().value / Util.sigmasInFWHM / resolution.getX();
+		final double sigmaY = getRadius().value / Util.sigmasInFWHM / resolution.getY();
 		final double Ax = -0.5 / (sigmaX*sigmaX);
 		final double Ay = -0.5 / (sigmaY*sigmaY);
 
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.isUnflagged(i, j)) {
-			final double di = i-centerIndex.x;
-			final double dj = j-centerIndex.y;
+			final double di = i-centerIndex.getX();
+			final double dj = j-centerIndex.getY();
 			final double dev = (map.getValue(i, j) - level - peak.value * Math.exp(Ax*di*di + Ay*dj*dj)) / map.getRMS(i, j);
 			chi2.value += dev * dev;
 			chi2.weight += 1.0;
@@ -131,14 +144,14 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 			
 		Vector2D centerIndex = getIndex(image.getGrid());
 		final Vector2D resolution = image.getResolution();
-		final double sigmaX = FWHM / Util.sigmasInFWHM / resolution.x;
-		final double sigmaY = FWHM / Util.sigmasInFWHM / resolution.y;
+		final double sigmaX = FWHM / Util.sigmasInFWHM / resolution.getX();
+		final double sigmaY = FWHM / Util.sigmasInFWHM / resolution.getY();
 		final double Ax = -0.5 / (sigmaX*sigmaX);
 		final double Ay = -0.5 / (sigmaY*sigmaY);
 	
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) {
-			final double di = i-centerIndex.x;
-			final double dj = j-centerIndex.y;
+			final double di = i-centerIndex.getX();
+			final double dj = j-centerIndex.getY();
 			image.increment(i, j, scaling * peak.value * Math.exp(Ax*di*di + Ay*dj*dj));
 		}
 		
@@ -146,7 +159,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	
 	public void add(GridImage<CoordinateType> image) { add(image, null); }
 	
-	public void add(GridImage<CoordinateType> image, Collection<Region<CoordinateType>> others) { add(image, radius.value, 1.0, others); }
+	public void add(GridImage<CoordinateType> image, Collection<Region<CoordinateType>> others) { add(image, getRadius().value, 1.0, others); }
 	
 	public void addPoint(GridImage<CoordinateType> image) { addPoint(image, null); }
 	
@@ -154,7 +167,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	
 	public void subtract(GridImage<CoordinateType> image) { subtract(image, null); }
 	
-	public void subtract(GridImage<CoordinateType> image, Collection<Region<CoordinateType>> others) { add(image, radius.value, -1.0, others); }
+	public void subtract(GridImage<CoordinateType> image, Collection<Region<CoordinateType>> others) { add(image, getRadius().value, -1.0, others); }
 	
 	public void subtractPoint(GridImage<CoordinateType> image) { subtractPoint(image, null); }
 	
@@ -188,8 +201,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 
 		// Now adjust prior detections for the bias caused by this source's filtering...
 		final Vector2D resolution = image.getResolution();
-		final double sigmai = filterFWHM / Util.sigmasInFWHM / resolution.x;
-		final double sigmaj = filterFWHM / Util.sigmasInFWHM / resolution.y;
+		final double sigmai = filterFWHM / Util.sigmasInFWHM / resolution.getX();
+		final double sigmaj = filterFWHM / Util.sigmasInFWHM / resolution.getY();
 		final double Ai = -0.5 / (sigmai*sigmai);
 		final double Aj = -0.5 / (sigmaj*sigmaj);	
 
@@ -200,8 +213,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		if(others != null) for(Region<CoordinateType> region : others) if(region instanceof GaussianSource) if(region != this) {
 			GaussianSource<CoordinateType> source = (GaussianSource<CoordinateType>) region;
 			Vector2D sourceIndex = source.getIndex(image.getGrid());
-			final double di = sourceIndex.x - centerIndex.x;
-			final double dj = sourceIndex.y - centerIndex.y;
+			final double di = sourceIndex.getX() - centerIndex.getX();
+			final double dj = sourceIndex.getY() - centerIndex.getY();
 			
 			if(!Double.isNaN(image.extFilterFWHM))
 				source.peak.value -= filterPeak * Math.exp(Ai*di*di + Aj*dj*dj);
@@ -243,7 +256,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	// Formula from Kovacs et al. (2006)
 	public void setSearchRadius(GridSource<CoordinateType> image, double pointingRMS) {
 		double beamSigma = image.instrument.resolution / Util.sigmasInFWHM;
-		radius.value = Math.sqrt(4.0 * pointingRMS * pointingRMS - 2.0 * beamSigma * beamSigma * Math.log(1.0 - 2.0 / peak.significance()));
+		getRadius().value = Math.sqrt(4.0 * pointingRMS * pointingRMS - 2.0 * beamSigma * beamSigma * Math.log(1.0 - 2.0 / peak.significance()));
 	}
 
 	
@@ -260,7 +273,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 
 		setID(tokens.nextToken());
 
-		coords = (CoordinateType) forImage.getReference().clone();
+		CoordinateType coords = (CoordinateType) forImage.getReference().clone();
+		setCoordinates(coords);
 		if(coords instanceof Precessing) {
 			coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " " + tokens.nextToken());
 			CoordinateEpoch epoch = ((Precessing) forImage.getReference()).getEpoch();
@@ -268,7 +282,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		}
 		else coords.parse(tokens.nextToken() + " " + tokens.nextToken());
 		
-		radius = new DataPoint(Double.parseDouble(tokens.nextToken()) * Unit.arcsec, 0.0);
+		setRadius(new DataPoint(Double.parseDouble(tokens.nextToken()) * Unit.arcsec, 0.0));
 		if(tokens.hasMoreTokens()) peak = new DataPoint(Double.parseDouble(tokens.nextToken()), 0.0);
 		
 		String nextArg = tokens.hasMoreTokens() ? tokens.nextToken() : null;
@@ -289,14 +303,14 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 			peak.scale(unit.value);
 		}
 			
-		while(tokens.hasMoreTokens()) comment += tokens.nextToken() + " ";
-		comment.trim();
+		while(tokens.hasMoreTokens()) addComment(tokens.nextToken() + " ");
+		setComment(getComment().trim());
 		
 	}
 
 	@Override
 	public String toCrushString(GridImage<CoordinateType> image) {
-		return id + "\t" + super.toCrushString(image) + "  " + DataPoint.toString(peak, image.unit);
+		return getID() + "\t" + super.toCrushString(image) + "  " + DataPoint.toString(peak, image.unit);
 	}
 	
 	@Override
@@ -329,19 +343,19 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.isUnflagged(i, j)) {
 			double w = Math.abs(map.getS2N(i,j));
-			index.x += w * i;
-			index.y += w * j;
+			index.incrementX(w * i);
+			index.incrementY(w * j);
 			sumw += w;
 		}
 		index.scale(1.0/sumw);
-		map.getGrid().getCoords(index, coords);
+		map.getGrid().getCoords(index, getCoordinates());
 	}
 	
 	// Increase the aperture until it captures >98% of the flux
 	// Then estimate the spread by comparing the peak flux to the integrated flux
 	// with an equivalent Gaussian source profile...
 	public WeightedPoint getAdaptiveIntegral(GridImage<CoordinateType> map) {
-		double origRadius = radius.value;		
+		double origRadius = getRadius().value;
 		WeightedPoint I = getIntegral(map);
 
 		// 20 iterations on 20% increases covers ~40-fold increase in radius
@@ -349,13 +363,13 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		for(int i=0; i<20; i++) {
 			// A 20% increase in radius is ~40% increase in area.
 			// Look for less than 5% change in amplitude --> 0.05*0.4 == 0.02 --> 2% change in integral
-			radius.value *= 1.2;
+			getRadius().value *= 1.2;
 			WeightedPoint I1 = getIntegral(map);
 			if(I1.value > 1.01 * I.value) I = I1;
 			else break;
 		}
 		
-		radius.value = origRadius;
+		getRadius().value = origRadius;
 		return I;
 	}
 	
@@ -365,8 +379,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	}
 	
 	public void measureShape(GridImage<CoordinateType> map) {	
-		radius.value = spread(map) * Util.sigmasInFWHM;
-		radius.setRMS(radius.value / peak.significance());
+		getRadius().value = spread(map) * Util.sigmasInFWHM;
+		getRadius().setRMS(getRadius().value / peak.significance());
 		
 		// the FWHM scales inversely with sqrt(peak), so sigma(FWHM)^2 ~ 0.5 sigma(peak)^2
 		// but FWHM0 = sqrt(FWHM^2 - smooth^2)
@@ -374,8 +388,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		//                   ~ F2 / (F^2 - S^2) * sigmaF^2
 		//                   ~ 1 + (S^2 / F0^2) * sigmaF^2
 		if(map instanceof GridSource) {
-			double SF0 = Math.min(1.0, ((GridSource<?>) map).instrument.resolution / radius.value);
-			radius.weight *= 2.0 / (1.0 + SF0 * SF0);
+			double SF0 = Math.min(1.0, ((GridSource<?>) map).instrument.resolution / getRadius().value);
+			getRadius().weight *= 2.0 / (1.0 + SF0 * SF0);
 		}
 	}
 	
@@ -405,8 +419,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		data.add(new Datum("dint", F.rms() * beamScaling / map.unit.value, map.unit.name));
 		data.add(new Datum("intS2N", F.significance(), ""));
 		
-		data.add(new Datum("FWHM", radius.value / sizeUnit, sizeName));
-		data.add(new Datum("dFWHM", radius.rms() / sizeUnit, sizeName));
+		data.add(new Datum("FWHM", getRadius().value / sizeUnit, sizeName));
+		data.add(new Datum("dFWHM", getRadius().rms() / sizeUnit, sizeName));
 		
 		return data;
 	}
@@ -437,8 +451,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		
 		info += "  Int.: " + F.toString() + "\n";
 		
-		info += "  FWHM: " + Util.f1.format(radius.value / sizeUnit) 
-				+ (radius.weight > 0.0 ? " +- " + Util.f1.format(radius.rms() / sizeUnit) : "")
+		info += "  FWHM: " + Util.f1.format(getRadius().value / sizeUnit) 
+				+ (getRadius().weight > 0.0 ? " +- " + Util.f1.format(getRadius().rms() / sizeUnit) : "")
 				+ " " + sizeName;
 	
 		

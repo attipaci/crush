@@ -174,7 +174,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(correction == null) return;
 		double sizeUnit = instrument.getDefaultSizeUnit();
 		System.err.println("   Adjusting pointing by " + 
-				Util.f1.format(correction.x / sizeUnit) + ", " + Util.f1.format(correction.y / sizeUnit) +
+				Util.f1.format(correction.getX() / sizeUnit) + ", " + Util.f1.format(correction.getY() / sizeUnit) +
 				" " + instrument.getDefaultSizeName() + ".");
 		
 		for(Integration<?,?> integration : this) integration.pointingAt(correction);
@@ -191,9 +191,13 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		//System.err.println("### pointing at " + arcsecs);
 		
 		// Reset the source coordinates to the pointing center
-		if(pointing.coords instanceof HorizontalCoordinates) pointing.coords = (SphericalCoordinates) horizontal.clone();
-		else if(pointing.coords instanceof EquatorialCoordinates) pointing.coords = (SphericalCoordinates) equatorial.clone();
-		else ((CelestialCoordinates) pointing.coords).fromEquatorial(equatorial);
+		if(pointing.getCoordinates() instanceof HorizontalCoordinates) 
+			pointing.setCoordinates((SphericalCoordinates) horizontal.clone());
+
+		else if(pointing.getCoordinates() instanceof EquatorialCoordinates) 
+			pointing.setCoordinates((SphericalCoordinates) equatorial.clone());
+
+		else ((CelestialCoordinates) pointing.getCoordinates()).fromEquatorial(equatorial);
 		
 		if(pointingCorrection == null) pointingCorrection = differential;
 		else pointingCorrection.add(differential);
@@ -619,25 +623,25 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		double sizeUnit = instrument.getDefaultSizeUnit();
 		String sizeName = instrument.getDefaultSizeName();
 		
-		data.add(new Datum("dX", pointingOffset.x / sizeUnit, sizeName));
-		data.add(new Datum("dY", pointingOffset.y / sizeUnit, sizeName));
+		data.add(new Datum("dX", pointingOffset.getX() / sizeUnit, sizeName));
+		data.add(new Datum("dY", pointingOffset.getY() / sizeUnit, sizeName));
 		
-		data.add(new Datum("d" + nameX, pointingOffset.x / sizeUnit, sizeName));
-		data.add(new Datum("d" + nameY, pointingOffset.y / sizeUnit, sizeName));
+		data.add(new Datum("d" + nameX, pointingOffset.getX() / sizeUnit, sizeName));
+		data.add(new Datum("d" + nameY, pointingOffset.getY() / sizeUnit, sizeName));
 		
-		data.add(new Datum(nameX, absolute.x / sizeUnit, sizeName));
-		data.add(new Datum(nameY, absolute.y / sizeUnit, sizeName));
+		data.add(new Datum(nameX, absolute.getX() / sizeUnit, sizeName));
+		data.add(new Datum(nameY, absolute.getY() / sizeUnit, sizeName));
 		
 		// Also print Nasmyth offsets if applicable...
 		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
 			Vector2D nasmyth = getNasmythOffset(pointingOffset);
 			
-			data.add(new Datum("dNasX", nasmyth.x / sizeUnit, sizeName));
-			data.add(new Datum("dNasY", nasmyth.y / sizeUnit, sizeName));
+			data.add(new Datum("dNasX", nasmyth.getX() / sizeUnit, sizeName));
+			data.add(new Datum("dNasY", nasmyth.getY() / sizeUnit, sizeName));
 			
 			nasmyth = getNasmythOffset(absolute);
-			data.add(new Datum("NasX", nasmyth.x / sizeUnit, sizeName));
-			data.add(new Datum("NasY", nasmyth.y / sizeUnit, sizeName));
+			data.add(new Datum("NasX", nasmyth.getX() / sizeUnit, sizeName));
+			data.add(new Datum("NasY", nasmyth.getY() / sizeUnit, sizeName));
 		}
 		
 		return data;
@@ -663,14 +667,14 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		String sizeName = instrument.getDefaultSizeName();
 		
 		text += "  Offset: ";
-		text += Util.f1.format(pointingOffset.x / sizeUnit) + ", " + Util.f1.format(pointingOffset.y / sizeUnit) + " " 
+		text += Util.f1.format(pointingOffset.getX() / sizeUnit) + ", " + Util.f1.format(pointingOffset.getY() / sizeUnit) + " " 
 			+ sizeName + " (" + (this instanceof GroundBased ? "az,el" : "ra,dec") + ")";
 		
 		// Also print Nasmyth offsets if applicable...
 		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
 			Vector2D nasmyth = getNasmythOffset(pointingOffset);
 			text += "\n  Offset: ";		
-			text += Util.f1.format(nasmyth.x / sizeUnit) + ", " + Util.f1.format(nasmyth.y / sizeUnit) + " " 
+			text += Util.f1.format(nasmyth.getX() / sizeUnit) + ", " + Util.f1.format(nasmyth.getY() / sizeUnit) + " " 
 				+ sizeName + " (nasmyth)";
 		}
 		
@@ -681,13 +685,13 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public Vector2D getEquatorialPointing(GaussianSource<SphericalCoordinates> source) {
 		EquatorialCoordinates sourceCoords = null;
 		
-		if(source.coords instanceof EquatorialCoordinates) {
-			sourceCoords = (EquatorialCoordinates) source.coords;
+		if(source.getCoordinates() instanceof EquatorialCoordinates) {
+			sourceCoords = (EquatorialCoordinates) source.getCoordinates();
 			if(!sourceCoords.epoch.equals(equatorial.epoch)) sourceCoords.precess(equatorial.epoch);
 		}
 		else {
 			sourceCoords = (EquatorialCoordinates) equatorial.clone();
-			((CelestialCoordinates) source.coords).toEquatorial(sourceCoords);
+			((CelestialCoordinates) source.getCoordinates()).toEquatorial(sourceCoords);
 		}
 		
 		return sourceCoords.getOffsetFrom(equatorial);
@@ -701,7 +705,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public Vector2D getNativePointingIncrement(GaussianSource<SphericalCoordinates> source) {
 		if(instrument instanceof GroundBased) {
-			if(source.coords instanceof HorizontalCoordinates) return source.coords.getOffsetFrom(horizontal);			
+			if(source.getCoordinates() instanceof HorizontalCoordinates) 
+				return source.getCoordinates().getOffsetFrom(horizontal);			
 			else {
 				Vector2D offset = getEquatorialPointing(source);
 				// Rotate to Horizontal...
@@ -709,15 +714,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 				((HorizontalFrame) getFirstIntegration().getFirstFrame()).toHorizontal(from);
 				Vector2D to = (Vector2D) offset.clone();
 				((HorizontalFrame) getLastIntegration().getLastFrame()).toHorizontal(to);
-				offset.x = 0.5 * (from.x + to.x);
-				offset.y = 0.5 * (from.y + to.y);
+				offset.setX(0.5 * (from.getX() + to.getX()));
+				offset.setY(0.5 * (from.getY() + to.getY()));
 				return offset;
 			}
 		}	
-		else if(source.coords instanceof EquatorialCoordinates) 
-			return source.coords.getOffsetFrom(equatorial);
+		else if(source.getCoordinates() instanceof EquatorialCoordinates) 
+			return source.getCoordinates().getOffsetFrom(equatorial);
 		else {
-			EquatorialCoordinates sourceEq = ((CelestialCoordinates) source.coords).toEquatorial();
+			EquatorialCoordinates sourceEq = ((CelestialCoordinates) source.getCoordinates()).toEquatorial();
 			return sourceEq.getOffsetFrom(equatorial);
 		}
 	}
@@ -726,13 +731,13 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	// Inverse rotation from Native to Nasmyth...
 	public Vector2D getNasmythOffset(Vector2D nativeOffset) {
 		SphericalCoordinates coords = this instanceof GroundBased ? horizontal : equatorial;
-		double sinA = instrument.mount == Mount.LEFT_NASMYTH ? -coords.sinLat : coords.sinLat;
-		double cosA = coords.cosLat;
+		double sinA = instrument.mount == Mount.LEFT_NASMYTH ? -coords.sinLat() : coords.sinLat();
+		double cosA = coords.cosLat();
 		
 		// Inverse rotation from Native to Nasmyth...
 		Vector2D nasmyth = new Vector2D();
-		nasmyth.x = cosA * nativeOffset.x + sinA * nativeOffset.y;
-		nasmyth.y = cosA * nativeOffset.y - sinA * nativeOffset.x ;
+		nasmyth.setX(cosA * nativeOffset.getX() + sinA * nativeOffset.getY());
+		nasmyth.setY(cosA * nativeOffset.getY() - sinA * nativeOffset.getX());
 		
 		return nasmyth;
 	}

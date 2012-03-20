@@ -47,7 +47,7 @@ public class GradientMode extends CorrelatedMode {
 		for(Channel channel : channels) {
 			SimplePixel pixel = (SimplePixel) channel;
 			if(pixel.flag == 0) {
-				aveg += pixel.weight * (horizontal ? pixel.position.x : pixel.position.y);
+				aveg += pixel.weight * (horizontal ? pixel.position.getX() : pixel.position.getY());
 				sumw += pixel.weight;
 			}
 		}
@@ -55,7 +55,7 @@ public class GradientMode extends CorrelatedMode {
 
 		for(int c=channels.size(); --c >= 0; ) {
 			SimplePixel pixel = (SimplePixel) channels.get(c);
-			gains[c] = (float)((horizontal ? pixel.position.x : pixel.position.y) - aveg);
+			gains[c] = (float)((horizontal ? pixel.position.getX() : pixel.position.getY()) - aveg);
 		}
 
 		return gains;

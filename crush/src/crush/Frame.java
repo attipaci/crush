@@ -136,11 +136,11 @@ public abstract class Frame implements Cloneable {
 		case CASSEGRAIN: sinA = 0.0; cosA = 1.0; break;
 		case LEFT_NASMYTH: {
 			SphericalCoordinates nativeCoords = getNativeCoords();
-			sinA = -nativeCoords.sinLat; cosA = nativeCoords.cosLat; break;
+			sinA = -nativeCoords.sinLat(); cosA = nativeCoords.cosLat(); break;
 		}
 		case RIGHT_NASMYTH: {
 			SphericalCoordinates nativeCoords = getNativeCoords();
-			sinA = nativeCoords.sinLat; cosA = nativeCoords.cosLat; break;
+			sinA = nativeCoords.sinLat(); cosA = nativeCoords.cosLat(); break;
 		}
 		default: sinA = 0.0; cosA = 1.0;
 		}		
@@ -200,11 +200,11 @@ public abstract class Frame implements Cloneable {
 	}
 	
 	public final double getX(final Vector2D position) {
-		return cosA * position.x - sinA * position.y;	
+		return cosA * position.getX() - sinA * position.getY();	
 	}
 	
 	public final double getY(final Vector2D position) {
-		return cosA * position.y + sinA * position.x;	
+		return cosA * position.getY() + sinA * position.getX();	
 	}
 	
 	EquatorialCoordinates zero = new EquatorialCoordinates(0.0, 0.0);

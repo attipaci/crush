@@ -250,12 +250,12 @@ public class BeamMap extends SourceMap {
 				GaussianSource<SphericalCoordinates> source = beamMap.getPeakSource();
 				
 				// Get the source peak in the pixel.
-				pixelPeak[i] = (float) source.peak.value;
+				pixelPeak[i] = (float) source.getPeak().value;
 				peaks[k++] = pixelPeak[i];
 				
 				// Get the offset position if it makes sense, or set as NaN otherwise...
 				pixel.getPosition().set(Double.NaN, Double.NaN);  
-				map.getProjection().project(source.coords, pixel.getPosition());				
+				map.getProjection().project(source.getCoordinates(), pixel.getPosition());				
 				
 				// Derotate to array coordinates...
 				pixel.getPosition().rotate(-rotation);
@@ -292,7 +292,8 @@ public class BeamMap extends SourceMap {
 		
 		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
 			Vector2D position = pixel.getPosition();
-			String positionString = Util.f1.format(position.x / Unit.arcsec) + "\t" + Util.f1.format(position.y / Unit.arcsec);
+			String positionString = Util.f1.format(position.getX() / Unit.arcsec) 
+					+ "\t" + Util.f1.format(position.getY() / Unit.arcsec);
 			
 			if(pixelMap[pixel.getDataIndex()] != null) for(Channel channel : pixel) {			
 				out.println(channel.storeIndex + "\t" + 

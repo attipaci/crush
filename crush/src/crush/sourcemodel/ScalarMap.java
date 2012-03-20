@@ -156,8 +156,8 @@ public class ScalarMap extends SourceMap {
 		setSize();
 
 		// Make the reference fall on pixel boundaries.
-		map.getGrid().refIndex.x = 0.5 - Math.rint(xRange.min/gridSize);
-		map.getGrid().refIndex.y = 0.5 - Math.rint(yRange.min/gridSize);
+		map.getGrid().refIndex.setX(0.5 - Math.rint(xRange.min/gridSize));
+		map.getGrid().refIndex.setY(0.5 - Math.rint(yRange.min/gridSize));
 			
 		map.printShortInfo();		
 		
@@ -200,7 +200,7 @@ public class ScalarMap extends SourceMap {
 	
 	public synchronized void insertSources(SourceCatalog<SphericalCoordinates> catalog) throws Exception {
 		catalog.remove(map);
-		for(GaussianSource<?> source : catalog) source.peak.scale(-1.0);
+		for(GaussianSource<?> source : catalog) source.getPeak().scale(-1.0);
 		
 		System.err.println(" Inserting test sources into data.");
 		
@@ -394,13 +394,13 @@ public class ScalarMap extends SourceMap {
 		source.setPeak(map);	
 
 		// Rescale the peak to an equivalent unsmoothed value...
-		source.peak.scale(map.getImageBeamArea() / map.getInstrumentBeamArea());
+		source.getPeak().scale(map.getImageBeamArea() / map.getInstrumentBeamArea());
 		
 		// Alternative is to use the centroid around that peak...
 		if(hasOption("pointing.method")) if(option("pointing.method").equals("centroid")) source.centroid(map);	
 		
 		double criticalS2N = hasOption("pointing.significance") ? option("pointing.significance").getDouble() : 5.0;
-		if(source.peak.significance() < criticalS2N) return null;
+		if(source.getPeak().significance() < criticalS2N) return null;
 		
 		// Finally, calculate the FWHM from the observed beam spread...
 		source.measureShape(map);
@@ -537,7 +537,7 @@ public class ScalarMap extends SourceMap {
 	
 	@Override
 	public final boolean isMasked(Index2D index) {
-		return mask[index.i][index.j];
+		return mask[index.i()][index.j()];
 	}
 	
 	@Override
@@ -558,7 +558,7 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {
-		map.addPointAt(index.i, index.j, exposure.data[channel.index], G, exposure.relativeWeight/channel.variance, dt);
+		map.addPointAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight/channel.variance, dt);
 	}
 	
 	@Override
@@ -569,8 +569,7 @@ public class ScalarMap extends SourceMap {
 		}
 		else {
 			int linearIndex = exposure.sourceIndex[pixel.getIndex()];
-			index.j = linearIndex / map.sizeX();
-			index.i = linearIndex % map.sizeX();
+			index.set(linearIndex % map.sizeX(), linearIndex / map.sizeX());
 		}
 	}
 
@@ -589,7 +588,7 @@ public class ScalarMap extends SourceMap {
 			for(final Pixel pixel : pixels) {
 				exposure.project(pixel.getPosition(), projector);
 				map.getIndex(offset, index);
-				exposure.sourceIndex[pixel.getIndex()] = map.sizeX() * index.j + index.i;
+				exposure.sourceIndex[pixel.getIndex()] = map.sizeX() * index.j() + index.i();
 			}
 		}
 	}
@@ -603,7 +602,7 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	protected double getIncrement(final Index2D index, final Channel channel, final double oldG, final double G) {
-		return G * map.getValue(index.i, index.j) - oldG * base[index.i][index.j];	
+		return G * map.getValue(index.i(), index.j()) - oldG * base[index.i()][index.j()];	
 	}
 	
 	@Override
@@ -633,8 +632,8 @@ public class ScalarMap extends SourceMap {
 			// Remove source from all but the blind channels...
 			for(final Pixel pixel : pixels)  {
 				getIndex(exposure, pixel, projector, index);
-				final int i = index.i;
-				final int j = index.j;
+				final int i = index.i();
+				final int j = index.j();
 				
 				// The use of iterables is a minor performance hit only (~3% overall)
 				if(isMasked(index)) for(final Channel channel : pixel) {
@@ -754,10 +753,10 @@ public class ScalarMap extends SourceMap {
 			
 			final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
 			final GridImageLayer image = new GridImageLayer(plane);
-
+	
 			imager.setContentLayer(image);
 			imager.setBackground(Color.LIGHT_GRAY);
-			
+		
 			ColorScheme scheme = new Colorful();
 			
 			if(hasOption("write.png.bg")) {

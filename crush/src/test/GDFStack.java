@@ -60,10 +60,10 @@ public class GDFStack {
 	}
 	
 	public GridMap<CoordinatePair> getStack() {
-		int size = 1 + 2 * (int)Math.ceil(3.0 * map.getImageFWHM() / map.getResolution().x);
+		int size = 1 + 2 * (int)Math.ceil(3.0 * map.getImageFWHM() / map.getResolution().getX());
 		GridMap<CoordinatePair> stack = new GridMap<CoordinatePair>(size, size);
 		stack.setGrid(new CartesianGrid());
-		stack.setResolution(map.getResolution().x);
+		stack.setResolution(map.getResolution().getX());
 		stack.name = "stack";
 		final int c = size / 2;
 		stack.getGrid().setReferenceIndex(new Vector2D(c, c));
@@ -146,12 +146,10 @@ public class GDFStack {
 			StringTokenizer tokens = new StringTokenizer(line);
 			GaussianSource<SphericalCoordinates> source = new GaussianSource<SphericalCoordinates>();
 
-			source.id = tokens.nextToken();
-			source.coords = new EquatorialCoordinates(line.replace('+', ' '));
-			source.peak = new DataPoint();
-			source.peak.value = 1.0;
-			source.radius = new DataPoint();
-			source.radius.value = map.getImageFWHM();
+			source.setID(tokens.nextToken());
+			source.setCoordinates(new EquatorialCoordinates(line.replace('+', ' ')));
+			source.setPeak(1.0);
+			source.setRadius(map.getImageFWHM());
 			
 			sources.add(source);
 		}
@@ -167,16 +165,14 @@ public class GDFStack {
 			StringTokenizer tokens = new StringTokenizer(line);
 			GaussianSource<SphericalCoordinates> source = new GaussianSource<SphericalCoordinates>();
 
-			source.id = tokens.nextToken();
-			source.coords = new EquatorialCoordinates(
+			source.setID(tokens.nextToken());
+			source.setCoordinates(new EquatorialCoordinates(
 					Double.parseDouble(tokens.nextToken()) * Unit.deg,
 					Double.parseDouble(tokens.nextToken()) * Unit.deg,
-					CoordinateEpoch.J2000);
+					CoordinateEpoch.J2000));
 	
-			source.peak = new DataPoint();
-			source.peak.value = 1.0;
-			source.radius = new DataPoint();
-			source.radius.value = map.getImageFWHM();
+			source.setPeak(1.0);
+			source.setRadius(map.getImageFWHM());
 			
 			tokens.nextToken();
 			tokens.nextToken();
@@ -200,16 +196,14 @@ public class GDFStack {
 			StringTokenizer tokens = new StringTokenizer(line);
 			GaussianSource<SphericalCoordinates> source = new GaussianSource<SphericalCoordinates>();
 
-			source.id = tokens.nextToken();
-			source.coords = new EquatorialCoordinates(
+			source.setID(tokens.nextToken());
+			source.setCoordinates(new EquatorialCoordinates(
 					Double.parseDouble(tokens.nextToken()) * Unit.deg,
 					Double.parseDouble(tokens.nextToken()) * Unit.deg,
-					CoordinateEpoch.J2000);
+					CoordinateEpoch.J2000));
 	
-			source.peak = new DataPoint();
-			source.peak.value = 1.0;
-			source.radius = new DataPoint();
-			source.radius.value = map.getImageFWHM();
+			source.setPeak(1.0);
+			source.setRadius(map.getImageFWHM());
 			
 			tokens.nextToken();
 			tokens.nextToken();
@@ -217,7 +211,7 @@ public class GDFStack {
 			DataPoint S24 = new DataPoint();
 			S24.value = Double.parseDouble(tokens.nextToken());
 			S24.setRMS(Double.parseDouble(tokens.nextToken()));	
-			source.peak.value = S24.value * 1e-6 * map.unit.value;
+			source.setPeak(S24.value * 1e-6 * map.unit.value);
 				
 			sources.add(source);
 		}

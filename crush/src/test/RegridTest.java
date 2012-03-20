@@ -2,17 +2,12 @@ package test;
 
 import util.Unit;
 import util.data.Data2D;
-import crush.GenericInstrument;
-import crush.Instrument;
 import crush.astro.AstroMap;
 
 public class RegridTest {
 
 	public static void main(String[] args) {
 		try {
-			//Instrument<?> instrument = new GenericInstrument("generic");
-			//AstroMap map = new AstroMap("/home/pumukli/data/sharc2/images/VESTA.8293.fits", instrument);
-			
 			AstroMap map = new AstroMap();
 			map.read("/home/pumukli/data/sharc2/images/VESTA.8293.fits");
 			

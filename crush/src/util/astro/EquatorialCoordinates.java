@@ -119,9 +119,9 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 
 	public double rightAscension() { return RA(); }
 
-	public double DEC() { return y; }
+	public double DEC() { return latitude(); }
 
-	public double declination() { return y; }
+	public double declination() { return latitude(); }
 
 	public void setRA(double RA) { setLongitude(RA); }
 
@@ -129,8 +129,8 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 
 	public double getParallacticAngle(GeodeticCoordinates site, double LST) {
 		double H = LST * Unit.timeAngle - RA();
-		double cosasinq = site.cosLat * Math.sin(H);
-		double cosacosq = site.sinLat * cosLat - site.cosLat * sinLat * Math.cos(H);
+		double cosasinq = site.cosLat() * Math.sin(H);
+		double cosacosq = site.sinLat() * cosLat() - site.cosLat() * sinLat() * Math.cos(H);
 		return Math.atan2(cosasinq, cosacosq);
 	}
 	
@@ -148,16 +148,16 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 	}
 
 	public static void toHorizontalOffset(Vector2D offset, double PA) {
-		offset.x *= -1.0;
+		offset.scaleX(-1.0);
 		offset.rotate(-PA);
 	}
 	
 	public static void toHorizontal(EquatorialCoordinates equatorial, HorizontalCoordinates horizontal, GeodeticCoordinates site, double LST) {
 		double H = LST * Unit.timeAngle - equatorial.RA();
 		double cosH = Math.cos(H);
-		horizontal.setNativeLatitude(asin(equatorial.sinLat * site.sinLat + equatorial.cosLat * site.cosLat * cosH));
-		double asinA = -Math.sin(H) * equatorial.cosLat;
-		double acosA = site.cosLat * equatorial.sinLat - site.sinLat * equatorial.cosLat * cosH;
+		horizontal.setNativeLatitude(asin(equatorial.sinLat() * site.sinLat() + equatorial.cosLat() * site.cosLat() * cosH));
+		double asinA = -Math.sin(H) * equatorial.cosLat();
+		double acosA = site.cosLat() * equatorial.sinLat() - site.sinLat() * equatorial.cosLat() * cosH;
 		horizontal.setLongitude(Math.atan2(asinA, acosA));
 	}
 

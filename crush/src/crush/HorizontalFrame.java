@@ -53,22 +53,22 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 		// However, APECS uses cos(DEC0)
 		final double x = getX(position);
 		final double y = getY(position);
-		coords.setNativeLongitude(equatorial.x + (cosPA * x - sinPA * y) / scan.equatorial.cosLat);
-		coords.setNativeLatitude(equatorial.y + (cosPA * y + sinPA * x));
+		coords.setNativeLongitude(equatorial.getX() + (cosPA * x - sinPA * y) / scan.equatorial.cosLat());
+		coords.setNativeLatitude(equatorial.getY() + (cosPA * y + sinPA * x));
 	}
 	
 	@Override
 	public void getHorizontal(final Vector2D position, final HorizontalCoordinates coords) {
 		// The proper GLS convention uses actual cos(DEC)
 		// However, APECS uses cos(DEC0)
-		coords.setNativeLongitude(horizontal.x + getX(position) / scan.horizontal.cosLat);
-		coords.setNativeLatitude(horizontal.y + getY(position));
+		coords.setNativeLongitude(horizontal.getX() + getX(position) / scan.horizontal.cosLat());
+		coords.setNativeLatitude(horizontal.getY() + getY(position));
 	}
 	
 	@Override
 	public void getHorizontalOffset(final Vector2D position, final Vector2D offset) {
-		offset.x = horizontalOffset.x + getX(position);
-		offset.y = horizontalOffset.y + getY(position);
+		offset.setX(horizontalOffset.getX() + getX(position));
+		offset.setY(horizontalOffset.getY() + getY(position));
 	}
 	
 	
@@ -118,8 +118,8 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 		// Uses the scanning offsets, on top of the tracking coordinate of the scan...
 		if(scan.isTracking) {
 			if(equatorial == null) equatorial = (EquatorialCoordinates) scan.equatorial.clone();
-			equatorial.setNativeLongitude(scan.equatorial.x + (cosPA * horizontalOffset.x - sinPA * horizontalOffset.y) / scan.equatorial.cosLat);
-			equatorial.setNativeLatitude(scan.equatorial.y + (cosPA * horizontalOffset.y + sinPA * horizontalOffset.x));	
+			equatorial.setNativeLongitude(scan.equatorial.getX() + (cosPA * horizontalOffset.getX() - sinPA * horizontalOffset.getY()) / scan.equatorial.cosLat());
+			equatorial.setNativeLatitude(scan.equatorial.getY() + (cosPA * horizontalOffset.getY() + sinPA * horizontalOffset.getX()));	
 		}
 		// Otherwise do the proper conversion....
 		else {
@@ -136,22 +136,22 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	
 	public void setZenithTau(double value) {
 		zenithTau = value;
-		transmission = (float) Math.exp(-zenithTau/horizontal.sinLat);
+		transmission = (float) Math.exp(-zenithTau/horizontal.sinLat());
 	}
 	
 	// Rotate by PA
 	public final void toEquatorial(Vector2D offset) {
-		final double x = offset.x;
-		offset.x = cosPA * x - sinPA * offset.y;
-		offset.y = cosPA * offset.y + sinPA * x;
-		offset.x *= -1.0;
+		final double x = offset.getX();
+		offset.setX(cosPA * x - sinPA * offset.getY());
+		offset.setY(cosPA * offset.getY() + sinPA * x);
+		offset.scaleX(-1.0);
 	}
 	
 	// Rotate by -PA
 	public final void toHorizontal(Vector2D offset) {
-		final double x = -offset.x;
-		offset.x = cosPA * x + sinPA * offset.y;
-		offset.y = cosPA * offset.y - sinPA * x;
+		final double x = -offset.getX();
+		offset.setX(cosPA * x + sinPA * offset.getY());
+		offset.setY(cosPA * offset.getY() - sinPA * x);
 	}
 	
 	@Override

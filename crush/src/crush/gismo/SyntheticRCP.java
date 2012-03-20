@@ -133,8 +133,8 @@ public class SyntheticRCP {
 			pos.rotate(rotate);
 			
 			System.out.print(channel + "\t" + sourceGain + "\t" + skyGain + "\t");
-			System.out.print(Util.f1.format(pos.x) + "\t");
-			System.out.print(Util.f1.format(pos.y) + "\n");
+			System.out.print(Util.f1.format(pos.getX()) + "\t");
+			System.out.print(Util.f1.format(pos.getY()) + "\n");
 		}
 	}
 	

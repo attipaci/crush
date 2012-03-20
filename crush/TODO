@@ -3,6 +3,7 @@
 >> Make SyntheticRCP generic, with nominal positions?
 
 >> override keys via 'static'. E.g. static.tau=0.33
+   or, 'lock/unlock' keys/branches preventing from changing...
 
 >> Reorganize data reading? e.g.
 	GismoFits -- handles FITS, HDUs, columns etc.
@@ -12,7 +13,6 @@
 
 >> Switch to standard FITS long keys (after updating FITS libs)
 	-- Retain the ability to read crush-style long keys through Util...
-
 
 >> Messages redesign:
 	* owner, sender, type, importance, message, details... 

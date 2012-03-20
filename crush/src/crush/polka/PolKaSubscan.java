@@ -309,8 +309,8 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		
 		setMinDelay(crossings, coeffs);
 		
-		double MJD0 = coeffs.x;
-		double dMJDdn = coeffs.y;
+		double MJD0 = coeffs.getX();
+		double dMJDdn = coeffs.getY();
 		double freq = 1.0 / (dMJDdn * Unit.day);
 		System.err.println("f = " + Util.f3.format(freq) + " Hz.");
 		
@@ -371,8 +371,8 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 	}
 	
 	public void setMinDelay(ArrayList<Double> crossings, Vector2D coeffs) {
-		double MJD0 = coeffs.x;
-		double dMJDdn = coeffs.y;
+		double MJD0 = coeffs.getX();
+		double dMJDdn = coeffs.getY();
 		double mindMJD = 0.0;
 		for(int i=crossings.size(); --i >= 0; ) {
 			double dMJD = crossings.get(i) - (MJD0 + dMJDdn * i);
@@ -383,7 +383,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		
 		System.err.print("dt = " + Util.f1.format(meanTimeStampDelay / Unit.ms) + "ms, ");
 		
-		coeffs.x += mindMJD;
+		coeffs.incrementX(mindMJD);
 	}
 	
 	// Check the waveplate for the bridge error during 2011 Dec 6-8, when 

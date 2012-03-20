@@ -82,7 +82,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 	public void setZenithTau(double value) {	
 		super.setZenithTau(value);
 		System.err.println("   --->"
-				+ " tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat)
+				+ " tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv", zenithTau)) + "mm"
 		);		
 	}
@@ -174,8 +174,8 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		
 			if(((String) row[iLABEL]).equals("LABOCA_HE3TEMP")) {
 				final Vector2D entry = new Vector2D();
-				entry.x = ((double[]) row[iMJD])[0];
-				entry.y = ((double[]) row[iVALUE])[0];
+				entry.setX(((double[]) row[iMJD])[0]);
+				entry.setY(((double[]) row[iVALUE])[0]);
 				table.add(entry);
 			}
 		}
@@ -195,16 +195,16 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 			double MJD0 = exposure.MJD;
 	
 			// Adjust the smoothing window...
-			while(MJD0 - table.get(from).x > windowSize || from == table.size()-1) from++;
-			while(table.get(to).x - MJD0 < windowSize || to == table.size()-1) to++;
+			while(MJD0 - table.get(from).getX() > windowSize || from == table.size()-1) from++;
+			while(table.get(to).getX() - MJD0 < windowSize || to == table.size()-1) to++;
 	
 			double sum = 0.0, sumw = 0.0;
 	
 			for(int tt=from; tt<=to; tt++) {
 				Vector2D entry = table.get(tt);
-				double dev = (MJD0 - entry.x) / sigma;
+				double dev = (MJD0 - entry.getX()) / sigma;
 				double w = Math.exp(-0.5*dev*dev);
-				sum += w * entry.y;
+				sum += w * entry.getY();
 				sumw += w;
 			}
 

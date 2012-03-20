@@ -72,9 +72,9 @@ public class Precession {
 	public void precess(EquatorialCoordinates equatorial) {		
 		if(P == null) return;
 		
-		v[0] = (float) (equatorial.cosLat * Math.cos(equatorial.RA())); 
-		v[1] = (float) (equatorial.cosLat * Math.sin(equatorial.RA()));
-		v[2] = (float) equatorial.sinLat;
+		v[0] = (float) (equatorial.cosLat() * Math.cos(equatorial.RA())); 
+		v[1] = (float) (equatorial.cosLat() * Math.sin(equatorial.RA()));
+		v[2] = (float) equatorial.sinLat();
 
 		for(int i=l.length; --i >= 0; ) {
 			float sum = 0.0F;

@@ -36,58 +36,58 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 
 	public Vector2D(Vector2D template) { super(template); }
 
-	public final void add(final Vector2D v) { x += v.x; y += v.y; }
+	public final void add(final Vector2D v) { incrementX(v.getX()); incrementY(v.getY()); }
 
 	public static Vector2D sum(Vector2D a, Vector2D b) {
-		return new Vector2D(a.x + b.x, a.y + b.y);
+		return new Vector2D(a.getX() + b.getX(), a.getY() + b.getY());
 	}
+	
+	public final void subtract(final Vector2D v) { decrementX(v.getX()); decrementY(v.getY()); }
 
-	public final void subtract(final Vector2D v) { x -= v.x; y -= v.y; }
-
-	public final void isubtract(final Vector2D v) { x = v.x - x; y = v.y - y; }
+	public final void isubtract(final Vector2D v) { setX(v.getX() - getX()); setY(v.getY() - getY()); }
 	
 	public final void addMultipleOf(final Vector2D vector, final double factor) {
-		x += factor * vector.x;
-		y += factor * vector.y;
+		incrementX(factor * vector.getX());
+		incrementY(factor * vector.getY());
 	}
 	
-	public static Vector2D difference(Vector2D a, Vector2D b) {
+	public static Vector2D difference(final Vector2D a, final Vector2D b) {
 		Vector2D value = new Vector2D();
-		value.x = a.x - b.x;
-		value.y = a.y - b.y;
+		value.setX(a.getX() - b.getX());
+		value.setY(a.getY() - b.getY());
 		return value;
 	}
 
-	public final void scale(final double value) { x *= value; y *= value; }    
+	public final void scale(final double value) { scaleX(value); scaleY(value); }    
 
-	public final void rotate(double alpha) {
-		double cosA = Math.cos(alpha);
-		double sinA = Math.sin(alpha);
+	public final void rotate(final double alpha) {
+		final double cosA = Math.cos(alpha);
+		final double sinA = Math.sin(alpha);
 
-		double newx = x * cosA - y * sinA;
-		y           = x * sinA + y * cosA;
-		x = newx;
+		final double x = getX();
+		setX(x * cosA - getY() * sinA);
+		setY(x * sinA + getY() * cosA);
 	}
 
 	public final double dot(Vector2D v) { return dot(this, v); }
 
 	public static double dot(Vector2D v1, Vector2D v2) {
-		return v1.x*v2.x + v1.y*v2.y;
+		return v1.getX() * v2.getX() + v1.getY() * v2.getY();
 	}
 
-	public final double norm() { return x*x + y*y; }
+	public final double norm() { return getX() * getX() + getY() * getY(); }
 
-	public final double length() { return Math.hypot(x, y); }
+	public final double length() { return Math.hypot(getX(), getY()); }
 
 	public final double angle() {
 		if(isNull()) return Double.NaN;
-		return Math.atan2(y,x);
+		return Math.atan2(getY(), getX());
 	}
 	
 	public final void normalize() throws IllegalStateException { 
 		if(isNull()) throw new IllegalStateException("Null Vector");
-		double il = 1.0 / norm(); 
-		x *= il; y *= il; 
+		double inorm = 1.0 / norm(); 
+		scaleX(inorm); scaleY(inorm); 
 	}
 
 	public final Vector2D normalized(Vector2D v) {
@@ -96,15 +96,15 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 		return n;
 	}
 
-	public final void invert() { x *= -1; y *= -1; }	
+	public final void invert() { scaleX(-1.0); scaleY(-1.0); }	
 
-	public static Vector2D inverseOf(Vector2D v) { return new Vector2D(-v.x, -v.y); }
+	public static Vector2D inverseOf(Vector2D v) { return new Vector2D(-v.getX(), -v.getY()); }
 
 	public static Vector2D project(Vector2D v1, Vector2D v2) {
 		Vector2D v = new Vector2D(v1);
 		double alpha = v2.angle();
 		v.rotate(-alpha);
-		v.y = 0.0;
+		v.setY(0.0);
 		v.rotate(alpha);
 		return v;
 	}
@@ -112,7 +112,7 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 	public final void projectOn(Vector2D v) {
 		double alpha = v.angle();
 		rotate(-alpha);
-		y = 0.0;
+		setY(0.0);
 		rotate(alpha);
 	}
 
@@ -120,7 +120,7 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 		Vector2D v = new Vector2D(v1);
 		double alpha = v2.angle();
 		v.rotate(-alpha);
-		v.y *= -1.0;
+		v.scaleY(-1.0);
 		v.rotate(alpha);
 		return v;
 	}
@@ -128,23 +128,23 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 	public final void reflectOn(Vector2D v) {
 		double alpha = v.angle();
 		rotate(-alpha);
-		y *= -1.0;
+		scaleY(-1.0);
 		rotate(alpha);
 	}
 
 
 	public final PolarVector2D polar() {
 		PolarVector2D p = new PolarVector2D();
-		p.x = length();
-		p.y = angle();	
+		p.setX(length());
+		p.setY(angle());	
 		return p;
 	}
 
 
 	public void math(char op, Vector2D v) throws IllegalArgumentException {
 		switch(op) {
-		case '+': x += v.x; y += v.y; break;
-		case '-': x -= v.x; y -= v.y; break;
+		case '+': incrementX(v.getX()); incrementY(v.getY()); break;
+		case '-': decrementX(v.getX()); decrementY(v.getY()); break;
 		default: throw new IllegalArgumentException("Illegal Operation: " + op);
 		}
 	}
@@ -154,8 +154,8 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 		Vector2D result = new Vector2D();
 
 		switch(op) {
-		case '+': result.x = a.x + b.x; result.y = a.y + b.y; break;
-		case '-': result.x = a.x - b.x; result.y = a.y - b.y; break;
+		case '+': result.setX(a.getX() + b.getX()); result.setY(a.getY() + b.getY()); break;
+		case '-': result.setX(a.getX() - b.getX()); result.setY(a.getY() - b.getY()); break;
 		default: throw new IllegalArgumentException("Illegal Operation: " + op);
 		}
 
@@ -164,9 +164,9 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 
 	public void math(char op, double b) throws IllegalArgumentException {
 		switch(op) {
-		case '*': x *= b; y *= b; break;
-		case '/': x /= b; y /= b; break;
-		case '^': x = Math.pow(x, b); y = Math.pow(y, b); break;
+		case '*': scaleX(b); break;
+		case '/': scaleX(1.0/b); break;
+		case '^': setX(Math.pow(getX(), b)); setY(Math.pow(getY(), b)); break;
 		default: throw new IllegalArgumentException("Illegal Operation: " + op);	    
 		}
 	}
@@ -176,9 +176,9 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 		Vector2D result = new Vector2D();
 
 		switch(op) {
-		case '*': result.x = a.x * b; result.y = a.y * b; break;
-		case '/': result.x = a.x / b; result.y = a.y / b; break;
-		case '^': result.x = Math.pow(a.x, b); result.y = Math.pow(a.y, b); break;
+		case '*': result.setX(a.getX() * b); result.setY(a.getY() * b); break;
+		case '/': result.setX(a.getX() / b); result.setY(a.getY() / b); break;
+		case '^': result.setX(Math.pow(a.getX(), b)); result.setY(Math.pow(a.getY(), b)); break;
 		default: throw new IllegalArgumentException("Illegal Operation: " + op);	    
 		}
 
@@ -207,7 +207,7 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 	}
 
 	public final double distanceTo(Vector2D point) {
-		return Math.hypot(point.x - x, point.y - y);
+		return Math.hypot(point.getX() - getX(), point.getY() - getY());
 	}
 	
 	public static final int LENGTH = 2;

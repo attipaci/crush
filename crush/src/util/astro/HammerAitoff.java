@@ -41,24 +41,24 @@ public class HammerAitoff extends SphericalProjection {
 	@Override
 	public final void getOffsets(double theta, double phi, CoordinatePair toOffset) {
 		double gamma = gamma(theta, phi);
-		toOffset.x = 2.0 * gamma * Math.cos(theta) * Math.sin(0.5*phi);
-		toOffset.y = gamma * Math.sin(theta);
+		toOffset.setX(2.0 * gamma * Math.cos(theta) * Math.sin(0.5*phi));
+		toOffset.setY(gamma * Math.sin(theta));
 	}
 
 	@Override
 	public final double phi(CoordinatePair offset) {
 		double Z2 = Z2(offset);
 		double Z = Math.sqrt(Z2);
-		return 2.0 * Math.atan2(0.5*Z*offset.x, 2.0*Z2 - 1.0);
+		return 2.0 * Math.atan2(0.5*Z*offset.getX(), 2.0*Z2 - 1.0);
 	}
 
 	@Override
 	public final double theta(CoordinatePair offset) {
-		return asin(offset.y * Math.sqrt(Z2(offset)));
+		return asin(offset.getY() * Math.sqrt(Z2(offset)));
 	}
 	
 	public final double Z2(CoordinatePair offset) {
-		return 1.0 - (offset.x * offset.x)/16.0 - (offset.y*offset.y)/4.0;
+		return 1.0 - (offset.getX() * offset.getX())/16.0 - (offset.getY()*offset.getY())/4.0;
 	}
 	
 	public final double gamma(double theta, double phi) {

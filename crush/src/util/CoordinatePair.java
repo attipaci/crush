@@ -35,34 +35,69 @@ import nom.tam.util.Cursor;
 //Add parsing
 
 public class CoordinatePair implements Cloneable {
-	public double x, y;
+	private double x, y;
 
 	public CoordinatePair() {}
 	
-	public CoordinatePair(Point2D point) { x = point.getX(); y = point.getY(); }
+	public CoordinatePair(Point2D point) { setX(point.getX()); setY(point.getY()); }
 	
 	public CoordinatePair(String text) { parse(text); }
 
-	public CoordinatePair(double X, double Y) { set(X,Y); }
+	public CoordinatePair(double X, double Y) { setX(X); setY(Y); }
 
-	public CoordinatePair(CoordinatePair template) { x = template.x; y = template.y; }
-
-	public void copy(final CoordinatePair template) { x = template.x; y = template.y; }
+	public CoordinatePair(CoordinatePair template) { setX(template.x); setY(template.y); }
 
 	@Override
 	public boolean equals(Object o) {
-		if(o instanceof CoordinatePair) return equals((CoordinatePair) o);
-		else return false;
+		return equals(o, 1e-10);
 	}
+	
+	public boolean equals(Object o, double precision) {
+		if(!(o instanceof CoordinatePair)) return false;
+		final CoordinatePair coord = (CoordinatePair) o;
+			
+		if(x == 0.0) {
+			if(Math.abs(coord.x) > precision) return false;
+		}
+		else if(Math.abs(coord.x / x - 1.0) > precision) return false;
+		
+		if(y == 0.0) {
+			if(Math.abs(coord.y) > precision) return false;
+		}
+		else if(Math.abs(coord.y / y - 1.0) > precision) return false;
+		
+		return true;
+	}
+	
+	
+	public void copy(final CoordinatePair template) { setX(template.x); setY(template.y); }
+	
+	
+	// Access methods...
+	public final double getX() { return x; }
+	
+	public final double getY() { return y; }
+	
+	public void setX(double value) { x = value; }
+	
+	public void setY(double value) { y = value; }
+	
+	public void incrementX(double value) { x += value; }
+	
+	public void incrementY(double value) { y += value; }
+	
+	public void decrementX(double value) { x -= value; }
+	
+	public void decrementY(double value) { y -= value; }
+	
+	public final void scaleX(double value) { x *= value; }
+	
+	public final void scaleY(double value) { y *= value; }
+	
 	
 	@Override
 	public int hashCode() {
 		return HashCode.get(x) ^ ~HashCode.get(y);
-	}
-
-	public boolean equals(CoordinatePair c) {
-		if(c.x == x && c.y == y) return true;
-		else return c.isNaN() && isNaN();
 	}
 
 	@Override
@@ -83,7 +118,7 @@ public class CoordinatePair implements Cloneable {
 		x = point.getX(); y = point.getY();
 	}
 	
-	public void set(final double X, final double Y) { x = X; y = Y; }
+	public void set(final double X, final double Y) { setX(X); setY(Y); }
 
 	public void zero() { x = y = 0.0; }
 

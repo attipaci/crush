@@ -135,8 +135,8 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		if(hasOption("pixelsize")) {
 			pixelSize = new Vector2D();
 			StringTokenizer tokens = new StringTokenizer(option("pixelsize").getValue(), " \t,:xX");
-			pixelSize.x = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
-			pixelSize.y = tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x;
+			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
+			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.getX());
 		}
 
 		setPlateScale(pixelSize);
@@ -148,7 +148,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		// Make all pixels the same size. Also calculate their positions...
 		for(GismoPixel pixel : this) pixel.size = size;
 		
-		Vector2D center = GismoPixel.getPosition(size, arrayPointingCenter.x - 1.0, arrayPointingCenter.y - 1.0);			
+		Vector2D center = GismoPixel.getPosition(size, arrayPointingCenter.getX() - 1.0, arrayPointingCenter.getY() - 1.0);			
 		
 		// Set the pointing center...
 		setReferencePosition(center);
@@ -204,8 +204,8 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		focusYOffset = header.getDoubleValue("FOCUS_YO") * Unit.mm;
 		focusZOffset = header.getDoubleValue("FOCUS_ZO") * Unit.mm;
 
-		arrayPointingCenter.x = header.getDoubleValue("PNTROW", 8.5);
-		arrayPointingCenter.y = header.getDoubleValue("PNTCOL", 4.5);
+		arrayPointingCenter.setX(header.getDoubleValue("PNTROW", 8.5));
+		arrayPointingCenter.setY(header.getDoubleValue("PNTCOL", 4.5));
 		
 		nasmythOffset = new Vector2D(
 				header.getDoubleValue("RXHORI", Double.NaN) + header.getDoubleValue("RXHORICO", 0.0),
@@ -328,8 +328,8 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		else if(name.equals("focZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
 		else if(name.equals("focDY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
 		else if(name.equals("focDZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
-		else if(name.equals("nasX")) return Util.defaultFormat(nasmythOffset.x / Unit.arcsec, f);
-		else if(name.equals("nasY")) return Util.defaultFormat(nasmythOffset.y / Unit.arcsec, f);
+		else if(name.equals("nasX")) return Util.defaultFormat(nasmythOffset.getX() / Unit.arcsec, f);
+		else if(name.equals("nasY")) return Util.defaultFormat(nasmythOffset.getY() / Unit.arcsec, f);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

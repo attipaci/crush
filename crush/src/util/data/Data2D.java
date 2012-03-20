@@ -148,11 +148,11 @@ public class Data2D extends Parallel implements Cloneable {
 	
 	public double getS2N(int i, int j) { return valueAtIndex(i, j); }
 	
-	public final double getWeight(final Index2D index) { return getWeight(index.i, index.j); }
+	public final double getWeight(final Index2D index) { return getWeight(index.i(), index.j()); }
 	
-	public final double getRMS(final Index2D index) { return getRMS(index.i, index.j); }
+	public final double getRMS(final Index2D index) { return getRMS(index.i(), index.j()); }
 	
-	public final double getS2N(final Index2D index) { return getS2N(index.i, index.j); }
+	public final double getS2N(final Index2D index) { return getS2N(index.i(), index.j()); }
 	
 	
 	
@@ -293,17 +293,17 @@ public class Data2D extends Parallel implements Cloneable {
 	}
 
 	public final double valueAt(final Index2D index) {
-		return valueAtIndex(index.i, index.j);
+		return valueAtIndex(index.i(), index.j());
 	}
 	
 	public double valueAtIndex(int i, int j) { return flag[i][j] == 0 ? data[i][j] : Double.NaN; }
 	
 	public double valueAtIndex(Vector2D index) {
-		return valueAtIndex(index.x, index.y, null);
+		return valueAtIndex(index.getX(), index.getY(), null);
 	}
 	
 	public double valueAtIndex(Vector2D index, InterpolatorData ipolData) {
-		return valueAtIndex(index.x, index.y, ipolData);
+		return valueAtIndex(index.getX(), index.getY(), ipolData);
 	}
 		
 	public double valueAtIndex(double ic, double jc) {
@@ -436,10 +436,10 @@ public class Data2D extends Parallel implements Cloneable {
 		final Vector2D stretch = new Vector2D(sizeX() / from.sizeX(), sizeY() / from.sizeY());
 	
 		// Antialias filter
-		if(stretch.x > 1.0 || stretch.y > 1.0) {
+		if(stretch.getX() > 1.0 || stretch.getY() > 1.0) {
 			from = (Data2D) from.copy();
-			double a = Math.sqrt(stretch.x * stretch.x - 1.0);
-			double b = Math.sqrt(stretch.y * stretch.y - 1.0);
+			double a = Math.sqrt(stretch.getX() * stretch.getX() - 1.0);
+			double b = Math.sqrt(stretch.getY() * stretch.getY() - 1.0);
 			from.smooth(getGaussian(a, b));
 		}
 		
@@ -449,7 +449,7 @@ public class Data2D extends Parallel implements Cloneable {
 		new InterpolatingTask() {
 			@Override
 			public void process(int i, int j) {
-				data[i][j] = antialiased.valueAtIndex(i*stretch.x, j*stretch.y, getInterpolatorData());
+				data[i][j] = antialiased.valueAtIndex(i*stretch.getX(), j*stretch.getY(), getInterpolatorData());
 				flag[i][j] = Double.isNaN(data[i][j]) ?  1 : 0;
 			}
 		}.process();
@@ -612,8 +612,7 @@ public class Data2D extends Parallel implements Cloneable {
 				if(flag[i][j] == 0) if(data[i][j] > peak) {
 					peak = data[i][j];
 					if(index == null) index = new Index2D();
-					index.i = i;
-					index.j = j;
+					index.set(i, j);
 				}
 			}
 			@Override 
@@ -624,9 +623,9 @@ public class Data2D extends Parallel implements Cloneable {
 				Index2D globalIndex = null;
 				for(Process<Index2D> task : getWorkers()) {
 					Index2D partial = task.getPartialResult();
-					if(partial != null) if(data[partial.i][partial.j] > globalPeak) {
+					if(partial != null) if(data[partial.i()][partial.j()] > globalPeak) {
 						globalIndex = partial;
-						globalPeak = data[partial.i][partial.j];
+						globalPeak = data[partial.i()][partial.j()];
 					}
 				}
 				return globalIndex;
@@ -647,8 +646,7 @@ public class Data2D extends Parallel implements Cloneable {
 				if(flag[i][j] == 0) if(value > dev) {
 					dev = value;
 					if(index == null) index = new Index2D();
-					index.i = i;
-					index.j = j;
+					index.set(i, j);
 				}
 			}
 			@Override 
@@ -660,7 +658,7 @@ public class Data2D extends Parallel implements Cloneable {
 				for(Process<Index2D> task : getWorkers()) {
 					Index2D partial = task.getPartialResult();
 					if(partial == null) continue;
-					final double value = Math.abs(data[partial.i][partial.j]);
+					final double value = Math.abs(data[partial.i()][partial.j()]);
 					if(value > globalDev) {
 						globalIndex = partial;
 						globalDev = value;
@@ -1026,7 +1024,7 @@ public class Data2D extends Parallel implements Cloneable {
 		new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
-				if(flag[i][j] == 0) bin[(int)Math.round(image[i][j] / binSize)].y++;
+				if(flag[i][j] == 0) bin[(int)Math.round(image[i][j] / binSize)].incrementY(1.0);
 			}
 		}.process();
 		

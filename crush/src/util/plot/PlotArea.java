@@ -122,7 +122,7 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 	
 	public Vector2D getScale() { return scale; }
 	
-	public void setScale(CoordinatePair s) { setScale(s.x, s.y); }
+	public void setScale(CoordinatePair s) { setScale(s.getX(), s.getY()); }
 	
 	public void setScale(double x, double y) { this.scale.set(x, y); }
 	
@@ -130,20 +130,18 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 		if(verbose) System.err.println("Setting render size to " + width + "x" + height);
 		Vector2D range = contentLayer.getPlotRanges();
 		System.err.println("range is " + range);
-		scale.x = width / range.x;
-		scale.y = height / range.y;
+		scale.set(width / range.getX(), height / range.getY());
 		zoomMode = ZOOM_FIXED;
 	}
 	
 	public void moveReference(double dx, double dy) {
-		referencePoint.x -= dx / getWidth();
-		referencePoint.y -= dy / getHeight();
+		referencePoint.decrementX(dx / getWidth());
+		referencePoint.decrementY(dy / getHeight());
 	}
 	
 	public void setZoom(double value) {
 		if(verbose) System.err.println("Setting zoom to " + value);
-		scale.x = value;
-		scale.y = value;
+		scale.set(value, value);
 		zoomMode = ZOOM_FIXED;
 	}
 
@@ -166,14 +164,14 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 	
 	public void fitInside() {
 		Vector2D range = contentLayer.getPlotRanges();
-		double zoom = Math.min((double) getWidth() / range.x, (double) getHeight() / range.y);
+		double zoom = Math.min((double) getWidth() / range.getX(), (double) getHeight() / range.getY());
 		setZoom(zoom);
 		zoomMode = ZOOM_FIT;
 	}
 	
 	public void fillInside() {
 		Vector2D range = contentLayer.getPlotRanges();
-		double zoom = Math.max((double) getWidth() / range.x, (double) getHeight() / range.y);
+		double zoom = Math.max((double) getWidth() / range.getX(), (double) getHeight() / range.getY());
 		setZoom(zoom);
 		zoomMode = ZOOM_FILL;
 	}
@@ -201,14 +199,14 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 		updateZoom();
 			
 		toDisplay.translate(
-				referencePoint.x * getWidth(), 
-				referencePoint.y * getHeight()
+				referencePoint.getX() * getWidth(), 
+				referencePoint.getY() * getHeight()
 		);	// Move image to the referencepoint of the panel.
 			
 		if(flipX) toDisplay.scale(-1.0, 1.0);	// invert axes as desired
 		if(!flipY) toDisplay.scale(1.0, -1.0);	// invert axes as desired
 		
-		toDisplay.scale(scale.x, scale.y);		// Rescale to image size
+		toDisplay.scale(scale.getX(), scale.getY());		// Rescale to image size
 		toDisplay.rotate(rotation);				// Rotate by the desired amount
 		
 		if(contentLayer != null) {
@@ -216,7 +214,7 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 				toDisplay.concatenate(((Transforming) contentLayer).getTransform());
 			}
 			Vector2D contentRef = contentLayer.getReferencePoint();
-			toDisplay.translate(-contentRef.x, -contentRef.y); // Move to the reference point of the content layer
+			toDisplay.translate(-contentRef.getX(), -contentRef.getY()); // Move to the reference point of the content layer
 		}
 		
 		try { toCoordinates = toDisplay.createInverse(); }

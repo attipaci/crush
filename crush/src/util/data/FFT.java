@@ -179,13 +179,13 @@ public class FFT {
 	
 		powerRealTransform(data, true);
 	
-		fdata[0].x = norm * data[0];
-		fdata[N].x = norm * data[1];
+		fdata[0].setX(norm * data[0]);
+		fdata[N].setX(norm * data[1]);
 	
 		for(int i=N, ii=data.length; --i > 0; ) {
 			final Complex P = fdata[i];
-			P.y = norm * data[--ii];
-			P.x = norm * data[--ii];
+			P.setY(norm * data[--ii]);
+			P.setX(norm * data[--ii]);
 		}
 	}
 
@@ -198,13 +198,13 @@ public class FFT {
 	
 		powerRealTransform(data, true);
 	
-		fdata[0].x = norm * data[0];
-		fdata[N].x = norm * data[1];
+		fdata[0].setX(norm * data[0]);
+		fdata[N].setX(norm * data[1]);
 	
 		for(int i=N, ii=data.length; --i > 0; ) {
 			final Complex P = fdata[i];
-			P.y = norm * data[--ii];
-			P.x = norm * data[--ii];
+			P.setY(norm * data[--ii]);
+			P.setX(norm * data[--ii]);
 		}
 	}
 
@@ -231,13 +231,13 @@ public class FFT {
 	public static void uncheckedBackward(final Complex[] fdata, final double[] data) {
 		final int N = data.length>>1;
 	
-		data[0] = fdata[0].x;
-		data[1] = fdata[N].x;
+		data[0] = fdata[0].getX();
+		data[1] = fdata[N].getX();
 	
 		for(int i=N, ii=data.length; --i > 0; ) {
 			final Complex P = fdata[i];
-			data[--ii] = P.y;
-			data[--ii] = P.x;
+			data[--ii] = P.getY();
+			data[--ii] = P.getX();
 		}
 	
 		powerRealTransform(data, false);
@@ -246,13 +246,13 @@ public class FFT {
 	public static void uncheckedBackward(final Complex[] fdata, final float[] data) {
 		final int N = data.length>>1;
 	
-		data[0] = (float) fdata[0].x;
-		data[1] = (float) fdata[N].x;
+		data[0] = (float) fdata[0].getX();
+		data[1] = (float) fdata[N].getX();
 	
 		for(int i=N, ii=data.length; --i > 0; ) {
 			final Complex P = fdata[i];
-			data[--ii] = (float) P.y;
-			data[--ii] = (float) P.x;
+			data[--ii] = (float) P.getY();
+			data[--ii] = (float) P.getX();
 		}
 	
 		powerRealTransform(data, false);
@@ -344,8 +344,8 @@ public class FFT {
 			final double[] datai = data[i];
 			for(int j=Math.min(nv, ny); --j >= 0; ) {
 				final Complex value = cdatai[j];
-				value.x = datai[j];
-				value.y = 0.0;
+				value.setX(datai[j]);
+				value.setY(0.0);
 			}
 		} 
 	
@@ -356,7 +356,7 @@ public class FFT {
 		int nx = data.length;
 		int ny = data[0].length;
 	
-		for(int i=nx; --i >= 0; ) for(int j=ny; --j >= 0; ) data[i][j] = cdata[i][j].x;
+		for(int i=nx; --i >= 0; ) for(int j=ny; --j >= 0; ) data[i][j] = cdata[i][j].getX();
 	}
 
 	public static double[][] amplitude(Complex[][] data) {
@@ -619,7 +619,7 @@ public class FFT {
 					data[--i2] = d1r - xr;
 					
 					data[i1] += xi;
-					data[--i1] += xr;
+					data[--i1] += xr;	
 				}
 				final double temp = wr;
 				wr = temp * c - wi * s;
@@ -628,8 +628,8 @@ public class FFT {
 			blockSize <<= 1;
 			Thread.yield();
 		}
-	}
-
+	}	
+	
 	// First element is both the zero freq and the cutoff freq!
 	public static void powerTransform(final Complex data[], boolean isForward) {
 		bitReverse(data);
