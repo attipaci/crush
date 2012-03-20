@@ -135,8 +135,8 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 	}
 	
 	public void moveReference(double dx, double dy) {
-		referencePoint.decrementX(dx / getWidth());
-		referencePoint.decrementY(dy / getHeight());
+		referencePoint.subtractX(dx / getWidth());
+		referencePoint.subtractY(dy / getHeight());
 	}
 	
 	public void setZoom(double value) {

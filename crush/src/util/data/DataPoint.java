@@ -38,24 +38,24 @@ public class DataPoint extends WeightedPoint {
 		super(template);
 	}
 	
-	public double rms() { return 1.0/Math.sqrt(weight); }
+	public double rms() { return 1.0/Math.sqrt(weight()); }
 
-	public void setRMS(double value) { weight = 1.0 / (value * value); }
+	public void setRMS(double value) { setWeight(1.0 / (value * value)); }
 	
 	public String toString(Unit unit) { return toString(this, unit); }
 
 	public final double significance() { return significanceOf(this); }
 	
 	public static double significanceOf(WeightedPoint point) {
-		return Math.abs(point.value) * Math.sqrt(point.weight);
+		return Math.abs(point.value()) * Math.sqrt(point.weight());
 	}
 	
 	public static String toString(DataPoint point, Unit unit) {
-		double value = point.value / unit.value;
+		double value = point.value() / unit.value;
 		double rms = point.rms() / unit.value;
 		double res = Math.pow(10.0, 2 - errorFigures + Math.floor(Math.log10(rms)));
 		
-		return Util.getDecimalFormat(Math.abs(value) / res, 6).format(point.value / unit.value) 
+		return Util.getDecimalFormat(Math.abs(value) / res, 6).format(point.value() / unit.value) 
 			+ " +- " + Util.s[errorFigures].format(rms) + " " + unit.name;   
 	}
 	

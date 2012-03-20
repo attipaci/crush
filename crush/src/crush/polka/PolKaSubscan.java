@@ -200,16 +200,16 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).waveplateAngle, 2.0 * Math.PI) + Math.PI;
 				final WeightedPoint point = dw[(int)Math.floor(normAngle / dAngle)];
 				
-				point.value += exposure.relativeWeight * exposure.data[c];
-				point.weight += exposure.relativeWeight;
+				point.add(exposure.relativeWeight * exposure.data[c]);
+				point.addWeight(exposure.relativeWeight);
 			}
 			
 			for(int i=dw.length; --i >= 0; ) {
 				final WeightedPoint point = dw[i];
-				if(point.weight > 0.0) {
-					point.value /= point.weight;
-					tpWaveform[i].value += point.value;
-					tpWaveform[i].weight = point.weight;
+				if(point.weight() > 0.0) {
+					point.scaleValue(1.0 / point.weight());
+					tpWaveform[i].add(point.value());
+					tpWaveform[i].setWeight(point.weight());
 					parms.add(channel, 1.0);
 				}
 			}
@@ -218,9 +218,9 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).waveplateAngle, 2.0 * Math.PI) + Math.PI;
 				final WeightedPoint point = dw[(int)Math.floor(normAngle / dAngle)];
 				
-				exposure.data[c] -= point.value;
-				if(point.weight > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] != 0)
-					parms.add(channel, exposure.relativeWeight / point.weight);
+				exposure.data[c] -= point.value();
+				if(point.weight() > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] != 0)
+					parms.add(channel, exposure.relativeWeight / point.weight());
 			}
 		}
 		
@@ -383,7 +383,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		
 		System.err.print("dt = " + Util.f1.format(meanTimeStampDelay / Unit.ms) + "ms, ");
 		
-		coeffs.incrementX(mindMJD);
+		coeffs.addX(mindMJD);
 	}
 	
 	// Check the waveplate for the bridge error during 2011 Dec 6-8, when 

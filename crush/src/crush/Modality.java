@@ -123,8 +123,8 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 			
 			for(int k=fG.length; --k >= 0; ) {
 				final WeightedPoint channelGain = G[mode.channels.get(k).storeIndex];
-				fG[k] = (float) channelGain.value;
-				sumwC2[k] = (float) channelGain.weight;
+				fG[k] = (float) channelGain.value();
+				sumwC2[k] = (float) channelGain.weight();
 			}
 			
 			try { 

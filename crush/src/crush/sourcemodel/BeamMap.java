@@ -250,7 +250,7 @@ public class BeamMap extends SourceMap {
 				GaussianSource<SphericalCoordinates> source = beamMap.getPeakSource();
 				
 				// Get the source peak in the pixel.
-				pixelPeak[i] = (float) source.getPeak().value;
+				pixelPeak[i] = (float) source.getPeak().value();
 				peaks[k++] = pixelPeak[i];
 				
 				// Get the offset position if it makes sense, or set as NaN otherwise...

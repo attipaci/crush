@@ -37,7 +37,7 @@ import nom.tam.util.*;
 public class SphericalCoordinates extends CoordinatePair implements Metric<SphericalCoordinates> {
 	private double cosLat, sinLat;
 	
-	public CoordinateSystem coordinateSystem, localCoordinateSystem;
+	private CoordinateSystem coordinateSystem, localCoordinateSystem;
 
 	static CoordinateAxis longitudeAxis, latitudeAxis, longitudeOffsetAxis, latitudeOffsetAxis;
 	static CoordinateSystem defaultCoordinateSystem, defaultLocalCoordinateSystem;
@@ -82,6 +82,14 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	
 	public final double cosLat() { return cosLat; }
 	
+	public final CoordinateSystem getCoordinateSystem() { return coordinateSystem; }
+	
+	public final CoordinateSystem getLocalCoordinateSystem() { return localCoordinateSystem; }
+	
+	public void setCoordinateSystem(CoordinateSystem c) { this.coordinateSystem = c; }
+	
+	public void setLocalCoordinateSystem(CoordinateSystem c) { this.localCoordinateSystem = c; }
+	
 	@Override
 	public boolean equals(Object o) {
 		if(o.getClass().equals(getClass())) return false;
@@ -105,7 +113,7 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	}
 	
 	@Override
-	public final void incrementY(final double value) { 
+	public final void addY(final double value) { 
 		super.setY(Math.IEEEremainder(value, Math.PI));
 		cosLat = Math.cos(getY());
 		sinLat = Math.sin(getY());
@@ -160,27 +168,27 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	
 	
 	public void addNativeOffset(final Vector2D offset) {
-		incrementX(offset.getX() / cosLat);
-		incrementY(offset.getY());
+		addX(offset.getX() / cosLat);
+		addY(offset.getY());
 	}
 	
 	public void addOffset(final Vector2D offset) {
-		if(isReverseLongitude()) decrementX(offset.getX() / cosLat);
-		else incrementX(offset.getX() / cosLat);
-		if(isReverseLatitude()) decrementY(offset.getY());
-		else incrementY(offset.getY());
+		if(isReverseLongitude()) subtractX(offset.getX() / cosLat);
+		else addX(offset.getX() / cosLat);
+		if(isReverseLatitude()) subtractY(offset.getY());
+		else addY(offset.getY());
 	}
 	
 	public void subtractNativeOffset(final Vector2D offset) {
-		decrementX(offset.getX() / cosLat);
-		decrementY(offset.getY());
+		subtractX(offset.getX() / cosLat);
+		subtractY(offset.getY());
 	}
 	
 	public void subtractOffset(final Vector2D offset) {
-		if(isReverseLongitude()) incrementX(offset.getX() / cosLat);
-		else decrementX(offset.getX() / cosLat);
-		if(isReverseLatitude()) incrementY(offset.getY());
-		else decrementY(offset.getY());
+		if(isReverseLongitude()) addX(offset.getX() / cosLat);
+		else subtractX(offset.getX() / cosLat);
+		if(isReverseLatitude()) addY(offset.getY());
+		else subtractY(offset.getY());
 	}
 	
 	

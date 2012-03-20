@@ -79,7 +79,7 @@ public final class Statistics {
 		double wt = 0.0, wmax = 0.0;
 		
 		for(int i=to; --i >= from; ) {
-			final double w = data[i].weight;
+			final double w = data[i].weight();
 			if(w > wmax) wmax = w;
 			if(w > 0.0) wt += w;
 		}
@@ -88,14 +88,14 @@ public final class Statistics {
 		if(wmax >= maxDependence * wt) {
 			double sum=0.0, sumw=0.0;
 			for(int i = to; --i >= from; ) {
-				final double w = data[i].weight;
+				final double w = data[i].weight();
 				if(w > 0.0) {
-					sum += w * data[i].value;
+					sum += w * data[i].value();
 					sumw += w;
 				}
 			}
-			result.value = sum/sumw;
-			result.weight = sumw;
+			result.setValue(sum/sumw);
+			result.setWeight(sumw);
 			return;
 		}
 		
@@ -103,10 +103,10 @@ public final class Statistics {
 		// This should never happen, but just in case...
 		if(wt == 0.0) {
 			final int n = to - from;
-			result.value = n % 2 == 0 ? 
-					0.5F * (data[from + n/2-1].value + data[from + n/2].value) 
-					: data[from + (n-1)/2].value;
-			result.weight = 0.0;
+			result.setValue(n % 2 == 0 ? 
+					0.5F * (data[from + n/2-1].value() + data[from + n/2].value()) 
+					: data[from + (n-1)/2].value());
+			result.setWeight(0.0);
 			return;
 		}
 	
@@ -117,20 +117,20 @@ public final class Statistics {
 		WeightedPoint last = WeightedPoint.NaN;
 		WeightedPoint point = data[from];
 	
-		double wi = point.weight;
+		double wi = point.weight();
 		
-		while(wi < midw) if(data[++ig].weight > 0.0) {
+		while(wi < midw) if(data[++ig].weight() > 0.0) {
 			last = point;
 			point = data[ig];	    
-			wi += 0.5 * (last.weight + point.weight);    
+			wi += 0.5 * (last.weight() + point.weight());    
 		}
 		
 		double wplus = wi;
-		double wminus = wi - 0.5 * (last.weight + point.weight);
+		double wminus = wi - 0.5 * (last.weight() + point.weight());
 		
 		double w1 = (wplus - midw) / (wplus + wminus);
-		result.value = w1 * last.value + (1.0-w1) * point.value;
-		result.weight = wt;
+		result.setValue(w1 * last.value() + (1.0-w1) * point.value());
+		result.setWeight(wt);
 	}
 
 	public static double select(double[] data, double fraction, int fromIndex, int toIndex) {
@@ -224,11 +224,11 @@ public final class Statistics {
 		double sum = 0.0, sumw = 0.0;
 		while(--to >= from) {
 			final WeightedPoint point = data[to];
-			sum += point.weight * point.value;
-			sumw += point.weight;
+			sum += point.weight() * point.value();
+			sumw += point.weight();
 		}
-		result.value = sum / sumw;
-		result.weight = sumw;
+		result.setValue(sum / sumw);
+		result.setWeight(sumw);
 	}
 
 }

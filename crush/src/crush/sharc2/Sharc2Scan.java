@@ -245,19 +245,19 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		horizontalOffset = new Vector2D(
 				header.getDoubleValue("AZO") * Unit.arcsec,
 				-header.getDoubleValue("ZAO") * Unit.arcsec);
-		horizontalOffset.incrementX(header.getDoubleValue("AZO_MAP") * Unit.arcsec);
-		horizontalOffset.decrementY(header.getDoubleValue("ZAO_MAP") * Unit.arcsec);
-		horizontalOffset.incrementX(header.getDoubleValue("AZO_CHOP") * Unit.arcsec);		
-		horizontalOffset.decrementY(header.getDoubleValue("ZAO_CHOP") * Unit.arcsec);
-		horizontalOffset.incrementX(header.getDoubleValue("CHPOFFST") * Unit.arcsec);
+		horizontalOffset.addX(header.getDoubleValue("AZO_MAP") * Unit.arcsec);
+		horizontalOffset.subtractY(header.getDoubleValue("ZAO_MAP") * Unit.arcsec);
+		horizontalOffset.addX(header.getDoubleValue("AZO_CHOP") * Unit.arcsec);		
+		horizontalOffset.subtractY(header.getDoubleValue("ZAO_CHOP") * Unit.arcsec);
+		horizontalOffset.addX(header.getDoubleValue("CHPOFFST") * Unit.arcsec);
 		
 		Vector2D eqOffset = new Vector2D( 
 				header.getDoubleValue("RAO") * Unit.arcsec,
 				header.getDoubleValue("DECO") * Unit.arcsec);		
-		eqOffset.incrementX(header.getDoubleValue("RAO_MAP") * Unit.arcsec);
-		eqOffset.incrementY(header.getDoubleValue("DECO_MAP") * Unit.arcsec);
-		eqOffset.incrementX(header.getDoubleValue("RAO_FLD") * Unit.arcsec);
-		eqOffset.incrementY(header.getDoubleValue("DECO_FLD") * Unit.arcsec);
+		eqOffset.addX(header.getDoubleValue("RAO_MAP") * Unit.arcsec);
+		eqOffset.addY(header.getDoubleValue("DECO_MAP") * Unit.arcsec);
+		eqOffset.addX(header.getDoubleValue("RAO_FLD") * Unit.arcsec);
+		eqOffset.addY(header.getDoubleValue("DECO_FLD") * Unit.arcsec);
 
 		fixedOffset = new Vector2D(header.getDoubleValue("FAZO") * Unit.arcsec, -header.getDoubleValue("FZAO") * Unit.arcsec);	
 		
@@ -279,12 +279,12 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		// Add pointing corrections...
 		if(hasOption("fazo")) {
 			double fazo = option("fazo").getDouble() * Unit.arcsec;
-			horizontalOffset.incrementX(fixedOffset.getX() - fazo);
+			horizontalOffset.addX(fixedOffset.getX() - fazo);
 			fixedOffset.setX(fazo);
 		}
 		if(hasOption("fzao")) {
 			double felo = -option("fzao").getDouble() * Unit.arcsec;
-			horizontalOffset.incrementY(fixedOffset.getY() - felo);
+			horizontalOffset.addY(fixedOffset.getY() - felo);
 			fixedOffset.setY(felo);
 		}
 		

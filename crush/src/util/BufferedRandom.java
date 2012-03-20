@@ -27,7 +27,7 @@ import java.util.Random;
 
 
 public class BufferedRandom extends Random {
-	int[][] buffer;
+	private int[][] buffer;
 	
 	public BufferedRandom() {
 		this(100);

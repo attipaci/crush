@@ -36,19 +36,19 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 
 	public Vector2D(Vector2D template) { super(template); }
 
-	public final void add(final Vector2D v) { incrementX(v.getX()); incrementY(v.getY()); }
+	public final void add(final Vector2D v) { addX(v.getX()); addY(v.getY()); }
 
 	public static Vector2D sum(Vector2D a, Vector2D b) {
 		return new Vector2D(a.getX() + b.getX(), a.getY() + b.getY());
 	}
 	
-	public final void subtract(final Vector2D v) { decrementX(v.getX()); decrementY(v.getY()); }
+	public final void subtract(final Vector2D v) { subtractX(v.getX()); subtractY(v.getY()); }
 
 	public final void isubtract(final Vector2D v) { setX(v.getX() - getX()); setY(v.getY() - getY()); }
 	
 	public final void addMultipleOf(final Vector2D vector, final double factor) {
-		incrementX(factor * vector.getX());
-		incrementY(factor * vector.getY());
+		addX(factor * vector.getX());
+		addY(factor * vector.getY());
 	}
 	
 	public static Vector2D difference(final Vector2D a, final Vector2D b) {
@@ -143,8 +143,8 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 
 	public void math(char op, Vector2D v) throws IllegalArgumentException {
 		switch(op) {
-		case '+': incrementX(v.getX()); incrementY(v.getY()); break;
-		case '-': decrementX(v.getX()); decrementY(v.getY()); break;
+		case '+': addX(v.getX()); addY(v.getY()); break;
+		case '-': subtractX(v.getX()); subtractY(v.getY()); break;
 		default: throw new IllegalArgumentException("Illegal Operation: " + op);
 		}
 	}

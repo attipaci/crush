@@ -155,12 +155,12 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 		}
 		
 		System.err.println("   Incremental Pointing is " + 
-				Util.f1.format(dX.value / Unit.arcsec) + "," +
-				Util.f1.format(dY.value / Unit.arcsec) + 
-				" (quality:" + Util.f2.format(dX.weight) + ")."
+				Util.f1.format(dX.value() / Unit.arcsec) + "," +
+				Util.f1.format(dY.value() / Unit.arcsec) + 
+				" (quality:" + Util.f2.format(dX.weight()) + ")."
 				);
 		
-		return new Vector2D(dX.value, dY.value);
+		return new Vector2D(dX.value(), dY.value());
 		
 	}
 	

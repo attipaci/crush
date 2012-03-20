@@ -166,8 +166,8 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		super.crop(imin, jmin, imax, jmax);
 		Vector2D refIndex = getGrid().getReferenceIndex();
 		
-		refIndex.decrementX(imin);
-		refIndex.decrementY(jmin);
+		refIndex.subtractX(imin);
+		refIndex.subtractY(jmin);
 	}
 	
 	public void growFlags(final double radius, final int pattern) {
@@ -325,7 +325,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		FFT.uncheckedForward(cdata, false);
 		FFT.unload(cdata, extended);
 	
-		double avew = ecalc.getResult().value;
+		double avew = ecalc.getResult().value();
 		if(avew > 0.0) {
 			final double norm = 1.0 / avew;
 			new Task<Void>() {

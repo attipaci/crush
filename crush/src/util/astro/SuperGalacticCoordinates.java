@@ -67,8 +67,8 @@ public class SuperGalacticCoordinates extends CelestialCoordinates {
     
     @Override
 	public void setDefaultCoordinates() {
-    	coordinateSystem = SuperGalacticCoordinates.defaultCoordinateSystem;
-    	localCoordinateSystem = SuperGalacticCoordinates.defaultLocalCoordinateSystem;  
+    	setCoordinateSystem(SuperGalacticCoordinates.defaultCoordinateSystem);
+    	setLocalCoordinateSystem(SuperGalacticCoordinates.defaultLocalCoordinateSystem);  
     }
     
     public final static GalacticCoordinates galacticPole = new GalacticCoordinates(47.37*Unit.deg, 6.32*Unit.deg);

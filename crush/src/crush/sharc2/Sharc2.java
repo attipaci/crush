@@ -472,12 +472,12 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		for(Sharc2Pixel pixel : this) if(pixel.isUnflagged()) {
 			double dVdT = pixel.getAreaFactor() * pixel.V0 / pixel.T0;
 			WeightedPoint T = new WeightedPoint();
-			T.value = (pixel.V0 - pixel.offset / pixel.getHardwareGain()) / dVdT;
-			T.weight = pixel.weight * dVdT * dVdT;
+			T.setValue((pixel.V0 - pixel.offset / pixel.getHardwareGain()) / dVdT);
+			T.setWeight(pixel.weight * dVdT * dVdT);
 			data[n++] = T;
 		}
 		
-		return Statistics.smartMedian(data, 0, n, 0.25).value - excessLoad;
+		return Statistics.smartMedian(data, 0, n, 0.25).value() - excessLoad;
 	}
 	
 	public void calcGainCoefficients(double loadT) {

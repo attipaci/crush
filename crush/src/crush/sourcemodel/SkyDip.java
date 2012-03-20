@@ -101,8 +101,8 @@ public class SkyDip extends SourceModel {
 			HorizontalFrame exposure = (HorizontalFrame) frame;
 			WeightedPoint bin = data[getBin(exposure.horizontal.EL())];
 			double w = exposure.relativeWeight * C.weightAt(frame);
-			bin.value += w * C.valueAt(frame);
-			bin.weight += w;
+			bin.add(w * C.valueAt(frame));
+			bin.addWeight(w);
 		}
 
 	}
@@ -119,7 +119,7 @@ public class SkyDip extends SourceModel {
 
 	@Override
 	public synchronized void process(Scan<?, ?> scan) {
-		for(int i=0; i<data.length; i++) if(data[i].weight > 0.0) data[i].value /= data[i].weight;
+		for(int i=0; i<data.length; i++) if(data[i].weight() > 0.0) data[i].scaleValue(1.0 / data[i].weight());
 		if(scan instanceof Weather) {
 			double ambientT = ((Weather) scan).getAmbientTemperature();
 			if(!Double.isNaN(ambientT)) Tsky.average(new WeightedPoint(ambientT, scan.getObservingTime()));
@@ -129,7 +129,7 @@ public class SkyDip extends SourceModel {
 	@Override
 	public int countPoints() {
 		int n=0;
-		for(WeightedPoint point : data) if(point != null) if(point.weight > 0.0) n++;
+		for(WeightedPoint point : data) if(point != null) if(point.weight() > 0.0) n++;
 		return n;
 		
 	}
@@ -169,7 +169,7 @@ public class SkyDip extends SourceModel {
 		for(int i=0; i<data.length; i++) {
 			out.print(Util.f3.format(getEL(i) / Unit.deg) + "\t");
 			//out.print(data[i].weight > 0.0 ? Util.e3.format(data[i].value / model.Kelvin.value) : "...");
-			out.print(data[i].weight > 0.0 ? Util.e3.format(data[i].value) : "...");
+			out.print(data[i].weight() > 0.0 ? Util.e3.format(data[i].value()) : "...");
 			out.print("\t");
 			//out.print(Util.e3.format(model.valueAt(getEL(i)) / model.Kelvin.value));
 			out.print(Util.e3.format(model.valueAt(getEL(i))));

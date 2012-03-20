@@ -245,7 +245,7 @@ public class Signal implements Cloneable {
 	
 	public synchronized void level(boolean isRobust) {
 		WeightedPoint center = isRobust ? getMedian() : getMean();
-		float fValue = (float) center.value;
+		float fValue = (float) center.value();
 		for(int t=value.length; --t >= 0; ) value[t] -= fValue;
 	}
 
@@ -316,14 +316,14 @@ public class Signal implements Cloneable {
 				final int c = channelIndex[k];
 				if(exposure.sampleFlag[c] == 0) {
 					final WeightedPoint increment = dG[k];
-					increment.value += (exposure.tempWC * exposure.data[c]);
-					increment.weight += exposure.tempWC2;
+					increment.add(exposure.tempWC * exposure.data[c]);
+					increment.addWeight(exposure.tempWC2);
 				}
 			}
 		}
 		for(int k=dG.length; --k >= 0; ) {
 			final WeightedPoint increment = dG[k];
-			if(increment.weight > 0.0) increment.value /= increment.weight;
+			if(increment.weight() > 0.0) increment.scaleValue(1.0 / increment.weight());
 		}
 		
 		return dG;
@@ -346,11 +346,12 @@ public class Signal implements Cloneable {
 			for(final Frame exposure : integration) if(exposure != null) 
 				if(exposure.tempWC2 > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)  {
 					final WeightedPoint point = gainData[n++];
-					point.value = (exposure.data[c] / exposure.tempC);
-					increment.weight += (point.weight = exposure.tempWC2);
+					point.setValue(exposure.data[c] / exposure.tempC);
+					point.setWeight(exposure.tempWC2);
+					increment.addWeight(point.weight());
 					
-					assert !Double.isNaN(point.value);
-					assert !Double.isInfinite(point.value);
+					assert !Double.isNaN(point.value());
+					assert !Double.isInfinite(point.value());
 				}
 			Statistics.smartMedian(gainData, 0, n, 0.25, increment);
 		}

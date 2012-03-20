@@ -27,7 +27,7 @@ package util.data;
 import java.text.*;
 
 public class WeightedPoint implements Comparable<WeightedPoint>, Cloneable {
-	public double value, weight;
+	private double value, weight;
 
 	public WeightedPoint() {}
 
@@ -49,6 +49,24 @@ public class WeightedPoint implements Comparable<WeightedPoint>, Cloneable {
 	public int compareTo(WeightedPoint point) throws ClassCastException {
 		return Double.compare(value, point.value);
 	}
+	
+	public final double value() { return value; }
+	
+	public final double weight() { return weight; }
+	
+	public void setValue(double x) { this.value = x; }
+	
+	public void setWeight(double w) { this.weight = w; }
+	
+	public void add(double dx) { value += dx; }
+	
+	public void subtract(double dx) { value -= dx; }
+	
+	public void addWeight(double dw) { weight += dw; }
+	
+	public void scaleValue(double factor) { value *= factor; }
+	
+	public void scaleWeight(double factor) { weight *= factor; }
 
 	public void noData() { 
 		value = weight = 0.0;

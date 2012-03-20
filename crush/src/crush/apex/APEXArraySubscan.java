@@ -374,8 +374,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 
 					if(chopper != null) if(!chopperIncluded) {
 						// Add the chopping offsets to the horizontal coordinates and offsets
-						exposure.horizontal.incrementX(exposure.chopperPosition.getX() / exposure.horizontal.cosLat());
-						exposure.horizontalOffset.incrementX(exposure.chopperPosition.getX());
+						exposure.horizontal.addX(exposure.chopperPosition.getX() / exposure.horizontal.cosLat());
+						exposure.horizontalOffset.addX(exposure.chopperPosition.getX());
 						// Add to the equatorial coordinate also...
 						tempOffset.copy(exposure.chopperPosition);
 						exposure.toEquatorial(tempOffset);

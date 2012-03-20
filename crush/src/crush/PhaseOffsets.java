@@ -129,15 +129,15 @@ public class PhaseOffsets {
 			sumw += (wG * G[k]);
 		}
 			
-		increment.value = sum / sumw;
-		increment.weight = sumw;
+		increment.setValue(sum / sumw);
+		increment.setWeight(sumw);
 	}
 	
 	protected void getRobustCorrelated(CorrelatedMode mode, final float[] G, final WeightedPoint[] temp, final WeightedPoint increment) {
 		final int skipChannels = mode.skipChannels;
 		
 		int n=0;
-		increment.weight = 0.0;
+		increment.setWeight(0.0);
 		
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.channels.get(k);
@@ -149,11 +149,12 @@ public class PhaseOffsets {
 			if(wG2 == 0.0F) continue;
 			
 			final WeightedPoint point = temp[n++];
-			point.value = (value[channel.index] / Gk);
-			increment.weight += (point.weight = wG2);
+			point.setValue(value[channel.index] / Gk);
+			point.setWeight(wG2);
+			increment.addWeight(point.weight());
 			
-			assert !Double.isNaN(point.value);
-			assert !Double.isInfinite(point.value);
+			assert !Double.isNaN(point.value());
+			assert !Double.isInfinite(point.value());
 			
 		}
 		Statistics.smartMedian(temp, 0, n, 0.25, increment);

@@ -29,7 +29,7 @@ import nom.tam.util.Cursor;
 
 public abstract class Projection2D<CoordinateType extends CoordinatePair> implements Cloneable  {
 
-	protected CoordinateType reference;
+	private CoordinateType reference;
 	
 	@Override
 	public Object clone() {

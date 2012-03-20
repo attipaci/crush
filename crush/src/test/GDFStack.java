@@ -71,8 +71,8 @@ public class GDFStack {
 		
 		for(int i=size; --i >= 0; ) for(int j=size; --j >=0; ) {
 			DataPoint mean = getMeanFlux(i - c, j - c);		
-			stack.setValue(i, j, mean.value);
-			stack.setWeight(i, j, mean.weight);
+			stack.setValue(i, j, mean.value());
+			stack.setWeight(i, j, mean.weight());
 			stack.unflag(i, j);
 		}
 		
@@ -103,8 +103,8 @@ public class GDFStack {
 				
 				double G = model.getValue(i, j);
 				double wG = map.getWeight(i1, j1) / npts * G;
-				mean.value += wG * map.getValue(i1, j1);
-				mean.weight += wG * G;
+				mean.add(wG * map.getValue(i1, j1));
+				mean.addWeight(wG * G);
 			}
 			
 			@Override
@@ -117,10 +117,10 @@ public class GDFStack {
 				DataPoint combined = new DataPoint();
 				for(Process<DataPoint> task : getWorkers()) {
 					DataPoint partial = task.getPartialResult();
-					combined.value += partial.value;
-					combined.weight += partial.weight;
+					combined.add(partial.value());
+					combined.addWeight(partial.weight());
 				}
-				combined.value /= combined.weight;
+				combined.scaleValue(1.0 / combined.weight());
 				return combined;
 			}	
 		};
@@ -178,11 +178,11 @@ public class GDFStack {
 			tokens.nextToken();
 			
 			DataPoint S24 = new DataPoint();
-			S24.value = Double.parseDouble(tokens.nextToken());
+			S24.setValue(Double.parseDouble(tokens.nextToken()));
 			S24.setRMS(Double.parseDouble(tokens.nextToken()));	
 			
 				
-			if(rangeS24.contains(S24.value))
+			if(rangeS24.contains(S24.value()))
 				sources.add(source);
 		}
 		
@@ -209,9 +209,9 @@ public class GDFStack {
 			tokens.nextToken();
 			
 			DataPoint S24 = new DataPoint();
-			S24.value = Double.parseDouble(tokens.nextToken());
+			S24.setValue(Double.parseDouble(tokens.nextToken()));
 			S24.setRMS(Double.parseDouble(tokens.nextToken()));	
-			source.setPeak(S24.value * 1e-6 * map.unit.value);
+			source.setPeak(S24.value() * 1e-6 * map.unit.value);
 				
 			sources.add(source);
 		}

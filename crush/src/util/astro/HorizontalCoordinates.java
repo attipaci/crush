@@ -62,8 +62,8 @@ public class HorizontalCoordinates extends SphericalCoordinates {
 
 	@Override
 	public void setDefaultCoordinates() {
-		coordinateSystem = defaultCoordinateSystem;
-		localCoordinateSystem = defaultLocalCoordinateSystem;		
+		setCoordinateSystem(defaultCoordinateSystem);
+		setLocalCoordinateSystem(defaultLocalCoordinateSystem);		
 	}
 
 	public double AZ() { return nativeLongitude(); }
