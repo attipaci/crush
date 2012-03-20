@@ -29,8 +29,8 @@ import java.text.*;
 import util.CoordinatePair;
 
 public abstract class Region<CoordinateType extends CoordinatePair> implements Cloneable {
-	public String id;
-	public String comment = "";
+	private String id;
+	private String comment = "";
 	
 	public static int counter = 1;
 	
@@ -47,6 +47,12 @@ public abstract class Region<CoordinateType extends CoordinatePair> implements C
 	public String getID() { return id; }
 	
 	public void setID(String id) { this.id = id; }
+	
+	public String getComment() { return comment; }
+	
+	public void setComment(String value) { comment = value; }
+	
+	public void addComment(String value) { comment += value; }
 	
 	public abstract Bounds getBounds(GridImage<CoordinateType> image);
 	

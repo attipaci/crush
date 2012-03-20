@@ -50,7 +50,7 @@ public class LinearCombinationStore extends DataStore<Double> {
 		
 		for(int i=0; i<terms.size(); i++) {
 			Vector2D coeff = coeffs.get(i);
-			value += terms.get(i).get(Math.round(n * indexScale.get(i))).doubleValue() * coeff.x + coeff.y;
+			value += terms.get(i).get(Math.round(n * indexScale.get(i))).doubleValue() * coeff.getX() + coeff.getY();
 		}
 		
 		return value;

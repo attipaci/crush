@@ -73,9 +73,11 @@ public class PolygonalRegion<CoordinateType extends CoordinatePair> extends Regi
 			grid.toIndex(from);
 			grid.toIndex(to);
 			
-			double mini = Math.min(from.x, to.x);
-			double maxi = Math.max(from.x, to.x);
-			double intersect = i < mini || i > maxi ? Double.NaN : from.y + (to.y-from.y)*(i-from.x)/(to.x - from.x);
+			double mini = Math.min(from.getX(), to.getX());
+			double maxi = Math.max(from.getX(), to.getX());
+			double intersect = i < mini || i > maxi ? 
+					Double.NaN : 
+					from.getY() + (to.getY()-from.getY())*(i-from.getX())/(to.getX() - from.getX());
 
 			if(intersect <= j) below++;
 		}
@@ -95,24 +97,24 @@ public class PolygonalRegion<CoordinateType extends CoordinatePair> extends Regi
 		for(CoordinateType coords : points) {
 			projection.project(coords, vertex);
 			
-			if(vertex.x < min.x) min.x = vertex.x;
-			else if(vertex.x > max.x) max.x = vertex.x;
+			if(vertex.getX() < min.getX()) min.setX(vertex.getX());
+			else if(vertex.getX() > max.getX()) max.setX(vertex.getX());
 			
-			if(vertex.y < min.y) min.y = vertex.y;			
-			else if(vertex.y > max.y) max.y = vertex.y;				
+			if(vertex.getY() < min.getY()) min.setY(vertex.getY());			
+			else if(vertex.getY() > max.getY()) max.setY(vertex.getY());				
 		}
 		
 		Vector2D delta = image.getGrid().getResolution();
-		min.x /= delta.x;
-		min.y /= delta.y;
-		max.x /= delta.x;
-		max.y /= delta.y;
+		min.scaleX(1.0 / delta.getX());
+		min.scaleY(1.0 / delta.getY());
+		max.scaleX(1.0 / delta.getX());
+		max.scaleY(1.0 / delta.getY());
 		
 		Bounds bounds = new Bounds();
-		bounds.fromi = (int) Math.floor(Math.min(min.x, max.x));
-		bounds.toi = (int) Math.ceil(Math.max(min.x, max.x));
-		bounds.fromj = (int) Math.floor(Math.min(min.y, max.y));
-		bounds.toj = (int) Math.ceil(Math.max(min.y, max.y));
+		bounds.fromi = (int) Math.floor(Math.min(min.getX(), max.getX()));
+		bounds.toi = (int) Math.ceil(Math.max(min.getX(), max.getX()));
+		bounds.fromj = (int) Math.floor(Math.min(min.getY(), max.getY()));
+		bounds.toj = (int) Math.ceil(Math.max(min.getY(), max.getY()));
 		
 		return bounds;
 	}

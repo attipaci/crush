@@ -58,7 +58,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 	public void printEquivalentTaus() {
 		System.err.println("   --->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
-				+ ", tau(LOS):" + Util.f3.format(zenithTau / scan.horizontal.sinLat)
+				+ ", tau(LOS):" + Util.f3.format(zenithTau / scan.horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
 		);		
 	}
@@ -231,7 +231,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		
 					// Load the scanning offsets...
 					frame.horizontalOffset = new Vector2D(dX[i], dY[i]);
-					if(!gismoScan.projectedOffsets) frame.horizontalOffset.y *= frame.horizontal.cosLat;
+					if(!gismoScan.projectedOffsets) frame.horizontalOffset.scaleY(frame.horizontal.cosLat());
 					
 					// Convert scanning offsets to horizontal if necessary...
 					if(gismoScan.offsetSystem == EquatorialCoordinates.class)
@@ -252,8 +252,8 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					
 					// Add the tracking errors (confirmed raw AZ differences).
 					// Errors are commanded - actual;
-					frame.horizontal.x -= AZE[i];
-					frame.horizontal.y -= ELE[i];
+					frame.horizontal.decrementX(AZE[i]);
+					frame.horizontal.decrementY(ELE[i]);
 					
 					// Force recalculation of the equatorial coordinates...
 					frame.equatorial = null;

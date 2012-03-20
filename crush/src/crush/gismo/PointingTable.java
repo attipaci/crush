@@ -137,8 +137,8 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 			
 			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
 				
-			dX.average(new WeightedPoint(increment.x, weight));
-			dY.average(new WeightedPoint(increment.y, weight));
+			dX.average(new WeightedPoint(increment.getX(), weight));
+			dY.average(new WeightedPoint(increment.getY(), weight));
 			
 		}
 	
@@ -150,8 +150,8 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 			//increment.rotate(pointing.horizontal.EL());
 			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
 				
-			dX.average(new WeightedPoint(increment.x, weight));
-			dY.average(new WeightedPoint(increment.y, weight));
+			dX.average(new WeightedPoint(increment.getX(), weight));
+			dY.average(new WeightedPoint(increment.getY(), weight));
 		}
 		
 		System.err.println("   Incremental Pointing is " + 
@@ -166,8 +166,8 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 	
 	public Vector2D getIncrementalPointing(Entry pointing, IRAMPointingModel pointingModel) {			
 		Vector2D model = pointingModel.getCorrection(pointing.horizontal, (pointing.MJD % 1.0) * Unit.day);
-		model.x = pointing.offset.x - model.x;
-		model.y = pointing.offset.y - model.y;
+		model.setX(pointing.offset.getX() - model.getX());
+		model.setY(pointing.offset.getY() - model.getY());
 		return model;
 	}
 	

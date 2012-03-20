@@ -40,19 +40,15 @@ public class Complex extends Vector2D {
 
 	public Complex(double real) { super(real, 0.0); }
 
-	public final double real() { return x; }
+	public final double re() { return getX(); }
 
-	public final double imaginary() { return y; }
-
-	public final double re() { return x; }
-
-	public final double im() { return y; }
+	public final double im() { return getY(); }
 
 	public final double abs() { return length(); }
 
 	public final double arg() { return angle(); }
 
-	public final void conjugate() { y *= -1; }
+	public final void conjugate() { scaleY(-1.0); }
 
 	public static Complex conjugate(Complex arg) {
 		Complex c = new Complex(arg);
@@ -72,29 +68,29 @@ public class Complex extends Vector2D {
 	}
 
 	public final void multiplyBy(final Complex c) {
-		final double x0 = x;
-		x = x * c.x - y * c.y;
-		y = x0 * c.y + y * c.x;
+		final double x0 = getX();
+		setX(getX() * c.getX() - getY() * c.getY());
+		setY(x0 * c.getY() + getY() * c.getX());
 	}
 	
 	// This is almost exactly the same speed as separating the operations
 	// I.e. the overheads are in accessing the complex fields...
 	public final void mergeFFT(final Complex d1, final Complex d2) {	
-		final double mx = x * d2.x - y * d2.y;
-		final double my = x * d2.y + y * d2.x;
+		final double mx = getX() * d2.getX() - getY() * d2.getY();
+		final double my = getX() * d2.getY() + getY() * d2.getX();
 		
-		d2.x = d1.x - mx;
-		d2.y = d1.y - my;
+		d2.setX(d1.getX() - mx);
+		d2.setY(d1.getY() - my);
 		
-		d1.x += mx;
-		d1.y += my;	
+		d1.incrementX(mx);
+		d1.incrementY(my);	
 	}
 
 	public final void pow(double b) {
 		final double r = Math.pow(length(), b);
 		final double phi = angle() * b;
-		x = r * Math.cos(phi);
-		y = r * Math.sin(phi);
+		setX(r * Math.cos(phi));
+		setY(r * Math.sin(phi));
 	}
 
 	public static Complex pow(Complex arg, double exp) {
@@ -113,9 +109,9 @@ public class Complex extends Vector2D {
 	}	
 
 	public final void exp() {
-		double r = Math.exp(x);
-		x = r * Math.cos(y);
-		y = r * Math.sin(y);
+		double r = Math.exp(getX());
+		setX(r * Math.cos(getY()));
+		setY(r * Math.sin(getY()));
 	}	
 
 	public static Complex exp(Complex arg) {
@@ -127,8 +123,8 @@ public class Complex extends Vector2D {
 
 	public final void log() {
 		double r = length();
-		x = Math.log(r);
-		y = angle();
+		setX(Math.log(r));
+		setY(angle());
 	}
 
 	public static Complex log(Complex arg) {
@@ -219,14 +215,14 @@ public class Complex extends Vector2D {
 
 		switch(op) {
 		case '*': 
-			ax = x;
-			x = ax * b.x - y * b.y;
-			y = y * b.x + ax * b.y;
+			ax = getX();
+			setX(ax * b.getX() - getY() * b.getY());
+			setY(getY() * b.getX() + ax * b.getY());
 			break;
 		case '/': 
-			ax = x;
-			x = ax * b.x - y * b.y;
-			y = y * b.x - ax * b.y;
+			ax = getX();
+			setX(ax * b.getX() - getY() * b.getY());
+			setY(getY() * b.getX() - ax * b.getY());
 			scale(1.0 / b.norm());
 			break;
 		default: 
@@ -240,17 +236,17 @@ public class Complex extends Vector2D {
 
 		switch(op) {
 		case '*': 
-			result.x = a.x * b.x - a.y * b.y; 
-			result.y = a.y * b.x + a.x * b.y; 
+			result.setX(a.getX() * b.getX() - a.getY() * b.getY()); 
+			result.setY(a.getY() * b.getX() + a.getX() * b.getY()); 
 			break;
 		case '/': 
-			result.x = a.x * b.x - a.y * b.y; 
-			result.y = a.y * b.x - a.x * b.y; 
+			result.setX(a.getX() * b.getX() - a.getY() * b.getY()); 
+			result.setY(a.getY() * b.getX() - a.getX() * b.getY()); 
 			result.scale(1.0 / b.norm());
 			break;
 		default: 
 			Vector2D v = Vector2D.math(a, op, b);
-		result.x = v.x; result.y = v.y;
+			result.setX(v.getX()); result.setY(v.getY());
 		}
 
 		return result;
@@ -260,8 +256,8 @@ public class Complex extends Vector2D {
 	@Override
 	public final void math(char op, double b) throws IllegalArgumentException {
 		switch(op) {
-		case '+': x += b; break;
-		case '-': x -= b; break;
+		case '+': incrementX(b); break;
+		case '-': decrementX(b); break;
 		case '^': pow(b); break;	    
 		default: super.math(op, b);
 		}
@@ -271,12 +267,12 @@ public class Complex extends Vector2D {
 		Complex result = new Complex(a);
 
 		switch(op) {
-		case '+': result.x = a.x + b; result.y = a.y; break;
-		case '-': result.x = a.x - b; result.y = a.y; break;
+		case '+': result.setX(a.getX() + b); result.setY(a.getY()); break;
+		case '-': result.setX(a.getX() - b); result.setY(a.getY()); break;
 		case '^': result.pow(b); break;	    
 		default: 
 			Vector2D v = Vector2D.math(a, op, b);
-		result.x = v.x; result.y = v.y;	    
+			result.setX(v.getX()); result.setY(v.getY());	    
 		}
 
 		return result;
@@ -287,10 +283,10 @@ public class Complex extends Vector2D {
 		return math(new Complex(a), op, b);
 	}
 
-	public final String toString(DecimalFormat df) { return df.format(x) + (y < 0 ? "" : "+") + df.format(y) + "i"; }
+	public final String toString(DecimalFormat df) { return df.format(getX()) + (getY() < 0 ? "" : "+") + df.format(getY()) + "i"; }
 
 	@Override
-	public final String toString() { return x + (y < 0 ? "" : "+") + y + "i"; }
+	public final String toString() { return getX() + (getY() < 0 ? "" : "+") + getY() + "i"; }
 
 	final static Complex i = new Complex(0.0, 1.0);
 }

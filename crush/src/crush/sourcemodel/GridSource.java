@@ -213,7 +213,7 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 				Unit u = Unit.get(name);
 				if(u != null) return u.value;
 				// Else assume there is a standard multiplier in front, such as k, M, m, u...
-				else return  Unit.getMultiplier(name.charAt(0)) * getUnit(name.substring(1));
+				else return  Unit.getMultiplier(name.charAt(0)).getValue() * getUnit(name.substring(1));
 			}
 		}
 	}

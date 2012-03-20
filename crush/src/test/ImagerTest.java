@@ -71,7 +71,7 @@ public class ImagerTest {
 				}
 			};
 		
-			image.setTransparent(true);
+			imager.setTransparent(true);
 			
 			JComponent root = new JComponent() {
 				/**

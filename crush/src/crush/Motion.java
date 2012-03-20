@@ -47,12 +47,12 @@ public enum Motion {
 	
 	public double getValue(Vector2D v) {
 		switch(this) {
-		case X: return v.x;
-		case Y: return v.y;
-		case X2 : return v.x * v.x;
-		case Y2 : return v.y * v.y;
-		case X_MAGNITUDE : return Math.abs(v.x);
-		case Y_MAGNITUDE : return Math.abs(v.y);
+		case X: return v.getX();
+		case Y: return v.getY();
+		case X2 : return v.getX() * v.getX();
+		case Y2 : return v.getY() * v.getY();
+		case X_MAGNITUDE : return Math.abs(v.getX());
+		case Y_MAGNITUDE : return Math.abs(v.getY());
 		case MAGNITUDE : return v.length();
 		case NORM : return v.norm(); 
 		default : return Double.NaN;

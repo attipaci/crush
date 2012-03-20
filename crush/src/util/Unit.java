@@ -26,6 +26,7 @@ package util;
 
 import java.util.*;
 
+// TODO Convert to Enum?
 public class Unit implements Cloneable {
 	protected final static Hashtable<String, Unit> table = new Hashtable<String, Unit>();
 
@@ -66,7 +67,7 @@ public class Unit implements Cloneable {
 		u = table.get(id.substring(1));
 		if(u == null) throw new IllegalArgumentException("No such unit: '" + id + "'.");
 		
-		double multiplier = getMultiplier(id.charAt(0)) ;
+		double multiplier = getMultiplier(id.charAt(0)).value ;
 		if(Double.isNaN(multiplier)) throw new IllegalArgumentException("No such unit: '" + id + "'.");
 		
 		return new Unit(id, multiplier * u.value);
@@ -92,6 +93,8 @@ public class Unit implements Cloneable {
 	public final static double pico = 1.0e-12;
 	public final static double femto = 1.0e-15;
 	public final static double atto = 1.0e-18;
+	public final static double zepto = 1.0e-21;
+	public final static double yocto = 1.0e-24;
 
 	public final static double deka = 10.0;
 	public final static double hecto = 100.0;
@@ -101,8 +104,12 @@ public class Unit implements Cloneable {
 	public final static double tera = 1.0e12;
 	public final static double peta = 1.0e15;
 	public final static double exa = 1.0e18;
+	public final static double zetta = 1.0e21;  // Z
+	public final static double yotta = 1.0e24;  // Y
 
-	public static char getMultiplierChar(double value) {	
+	public static char getMultiplierChar(double value) {
+		if(value < 1e-21) return 'y';
+		if(value < 1e-18) return 'z';
 		if(value < 1e-15) return 'a';
 		if(value < 1e-12) return 'f';
 		if(value < 1e-9) return 'p';
@@ -115,29 +122,34 @@ public class Unit implements Cloneable {
 		if(value < 1e12) return 'G';
 		if(value < 1e15) return 'T';
 		if(value < 1e18) return 'P';
-		return 'E';
+		if(value < 1e21) return 'E';
+		if(value < 1e24) return 'Z';
+		return 'Y';
 	}
 	
 
-	public static double getMultiplier(char c) {
+	public static Multiplier getMultiplier(char c) {
 		switch(c) {
-		case ' ': return 1.0;
-		case 'd': return deci; // could also be deka
-		case 'c': return centi;
-		case 'm': return milli;
-		case 'u': return micro;
-		case 'n': return nano;
-		case 'p': return pico;
-		case 'f': return femto;
-		case 'a': return atto;
-		case 'h': return hecto;
-		case 'k': return kilo;
-		case 'M': return mega;
-		case 'G': return giga;
-		case 'T': return tera;
-		case 'P': return peta;
-		case 'E': return exa;
-		default: return Double.NaN;
+		case ' ': return Multiplier.unity;
+		case 'd': return Multiplier.deci; // could also be deka
+		case 'c': return Multiplier.centi;
+		case 'm': return Multiplier.milli;
+		case 'u': return Multiplier.micro;
+		case 'n': return Multiplier.nano;
+		case 'p': return Multiplier.pico;
+		case 'f': return Multiplier.femto;
+		case 'a': return Multiplier.atto;
+		case 'z': return Multiplier.zepto;
+		case 'h': return Multiplier.hecto;
+		case 'k': return Multiplier.kilo;
+		case 'M': return Multiplier.mega;
+		case 'G': return Multiplier.giga;
+		case 'T': return Multiplier.tera;
+		case 'P': return Multiplier.peta;
+		case 'E': return Multiplier.exa;
+		case 'Z': return Multiplier.zetta;
+		case 'Y': return Multiplier.yotta;
+		default: return null;
 		}
 	}
 
@@ -215,6 +227,8 @@ public class Unit implements Cloneable {
 	public final static double uA = micro * ampere;
 	public final static double nA = nano * ampere;
 	public final static double pA = pico * ampere;
+	public final static double A2 = A * A;
+	public final static double A3 = A2 * A;
 
 	public final static double kelvin = 1.0;
 	public final static double K = kelvin;
@@ -639,6 +653,48 @@ public class Unit implements Cloneable {
 		register(mpg, "mpg, MPG");
 	}
 
+	// TODO convert to Enum...
+	public enum Multiplier {
+		unity ("", 1.0, ""),
+		
+		deci ("d", 0.1, "deci"),
+		centi ("c", 1.0e-2, "centi"),
+		milli ("m", 1.0e-3, "milli"),
+		micro ("u", 1.0e-6, "micro"), 
+		nano ("n", 1.0e-9, "nano"),
+		pico ("p", 1.0e-12, "pico"),
+		femto ("f", 1.0e-15, "femto"), 
+		atto ("a", 1.0e-18, "atto"), 
+		zepto ("z", 1.0e-21, "zepto"), 
+		yocto ("y", 1.0e-24, "yocto"), 
+
+		deka ("dk", 10.0, "deka"),
+		hecto ("h", 100.0, "hecto"),
+		kilo ("k", 1.0e3, "kilo"),
+		mega ("M", 1.0e6, "Mega"), 
+		giga ("G", 1.0e9, "Giga"),
+		tera ("T", 1.0e12, "Tera"), 
+		peta ("P", 1.0e15, "Peta"), 
+		exa ("E", 1.0e18, "Exa"),
+		zetta ("Z", 1.0e21, "Zetta"),
+		yotta ("Y", 1.0e24, "Yotta");
+		
+		final double value;
+		final String letterCode;
+		final String name;
+		
+		private Multiplier(String c, double multiplier, String name) {
+			this.letterCode = c;
+			this.value = multiplier;
+			this.name = name;
+		}
+		
+		public double getValue() { return value; }
+		
+		public String getLetterCode() { return letterCode; }
+		
+		public String getName() { return name; }
+	}
 }
 
 

@@ -79,7 +79,7 @@ public class GalacticCoordinates extends CelestialCoordinates {
     	EquatorialCoordinates equatorialZero = zero.toEquatorial();
     	equatorialZero.precess(CoordinateEpoch.J2000);
     	zero.fromEquatorial(equatorialZero);
-    	phi0 = -zero.x;
+    	phi0 = -zero.getX();
     	equatorialPole.precess(CoordinateEpoch.J2000);
     }
   

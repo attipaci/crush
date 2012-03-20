@@ -101,8 +101,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 				if(!option.isConfigured("model.incremental")) modelCorr.subtract(observingModel.getCorrection(horizontal, UT));	
 				
 				System.err.println("   Got pointing from model: " + 
-						Util.f1.format(modelCorr.x / Unit.arcsec) + ", " +
-						Util.f1.format(modelCorr.y / Unit.arcsec) + " arcsec."
+						Util.f1.format(modelCorr.getX() / Unit.arcsec) + ", " +
+						Util.f1.format(modelCorr.getY() / Unit.arcsec) + " arcsec."
 				);
 
 				if(correction == null) correction = modelCorr;
@@ -429,8 +429,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	
 		// Works with 2011 April data.
 		if(nasmythOffset != null) {
-			observingModel.P[10] -= nasmythOffset.x / Unit.arcsec;
-			observingModel.P[11] -= nasmythOffset.y / Unit.arcsec;
+			observingModel.P[10] -= nasmythOffset.getX() / Unit.arcsec;
+			observingModel.P[11] -= nasmythOffset.getY() / Unit.arcsec;
 		}	
 	
 		// Keep the pointing model referenced to the nominal array center even if
@@ -608,10 +608,10 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		if(pointingCorrection != null) corr.add(pointingCorrection);
 		
 		
-		data.add(new Datum("X", (pointingOffset.x + corr.x) / sizeUnit, sizeName));
-		data.add(new Datum("Y", (pointingOffset.y + corr.y) / sizeUnit, sizeName));
-		data.add(new Datum("NasX", (instrument.nasmythOffset.x + nasmyth.x) / sizeUnit, sizeName));
-		data.add(new Datum("NasY", (instrument.nasmythOffset.y + nasmyth.y) / sizeUnit, sizeName));
+		data.add(new Datum("X", (pointingOffset.getX() + corr.getX()) / sizeUnit, sizeName));
+		data.add(new Datum("Y", (pointingOffset.getY() + corr.getY()) / sizeUnit, sizeName));
+		data.add(new Datum("NasX", (instrument.nasmythOffset.getX() + nasmyth.getX()) / sizeUnit, sizeName));
+		data.add(new Datum("NasY", (instrument.nasmythOffset.getY() + nasmyth.getY()) / sizeUnit, sizeName));
 		
 		return data;
 	}

@@ -134,7 +134,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 			
 			frame.horizontal = new HorizontalCoordinates(AZ[i], EL[i]);
 			if(isEquatorial) frame.equatorial = new EquatorialCoordinates(RA[i], DEC[i], scan.equatorial.epoch);
-			frame.horizontalOffset = new Vector2D((AZ[i] - tAZ[i]) * frame.horizontal.cosLat, EL[i] - tEL[i]);
+			frame.horizontalOffset = new Vector2D((AZ[i] - tAZ[i]) * frame.horizontal.cosLat(), EL[i] - tEL[i]);
 			
 			/*
 			frame.chopperPosition.x = ((double[])row[iCX])[0] + ((double[])row[iJX])[0];

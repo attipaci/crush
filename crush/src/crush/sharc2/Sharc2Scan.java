@@ -245,33 +245,33 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		horizontalOffset = new Vector2D(
 				header.getDoubleValue("AZO") * Unit.arcsec,
 				-header.getDoubleValue("ZAO") * Unit.arcsec);
-		horizontalOffset.x += header.getDoubleValue("AZO_MAP") * Unit.arcsec;
-		horizontalOffset.y -= header.getDoubleValue("ZAO_MAP") * Unit.arcsec;
-		horizontalOffset.x += header.getDoubleValue("AZO_CHOP") * Unit.arcsec;		
-		horizontalOffset.y -= header.getDoubleValue("ZAO_CHOP") * Unit.arcsec;
-		horizontalOffset.x += header.getDoubleValue("CHPOFFST") * Unit.arcsec;
+		horizontalOffset.incrementX(header.getDoubleValue("AZO_MAP") * Unit.arcsec);
+		horizontalOffset.decrementY(header.getDoubleValue("ZAO_MAP") * Unit.arcsec);
+		horizontalOffset.incrementX(header.getDoubleValue("AZO_CHOP") * Unit.arcsec);		
+		horizontalOffset.decrementY(header.getDoubleValue("ZAO_CHOP") * Unit.arcsec);
+		horizontalOffset.incrementX(header.getDoubleValue("CHPOFFST") * Unit.arcsec);
 		
 		Vector2D eqOffset = new Vector2D( 
 				header.getDoubleValue("RAO") * Unit.arcsec,
 				header.getDoubleValue("DECO") * Unit.arcsec);		
-		eqOffset.x += header.getDoubleValue("RAO_MAP") * Unit.arcsec;
-		eqOffset.y += header.getDoubleValue("DECO_MAP") * Unit.arcsec;
-		eqOffset.x += header.getDoubleValue("RAO_FLD") * Unit.arcsec;
-		eqOffset.y += header.getDoubleValue("DECO_FLD") * Unit.arcsec;
+		eqOffset.incrementX(header.getDoubleValue("RAO_MAP") * Unit.arcsec);
+		eqOffset.incrementY(header.getDoubleValue("DECO_MAP") * Unit.arcsec);
+		eqOffset.incrementX(header.getDoubleValue("RAO_FLD") * Unit.arcsec);
+		eqOffset.incrementY(header.getDoubleValue("DECO_FLD") * Unit.arcsec);
 
 		fixedOffset = new Vector2D(header.getDoubleValue("FAZO") * Unit.arcsec, -header.getDoubleValue("FZAO") * Unit.arcsec);	
 		
 		DecimalFormat f3_1 = new DecimalFormat(" 0.0;-0.0");
 
-		System.err.println("   AZO =" + f3_1.format(horizontalOffset.x/Unit.arcsec)
-				+ "\tELO =" + f3_1.format(horizontalOffset.y/Unit.arcsec)
-				+ "\tRAO =" + f3_1.format(eqOffset.x/Unit.arcsec)
-				+ "\tDECO=" + f3_1.format(eqOffset.y/Unit.arcsec)
+		System.err.println("   AZO =" + f3_1.format(horizontalOffset.getX()/Unit.arcsec)
+				+ "\tELO =" + f3_1.format(horizontalOffset.getY()/Unit.arcsec)
+				+ "\tRAO =" + f3_1.format(eqOffset.getX()/Unit.arcsec)
+				+ "\tDECO=" + f3_1.format(eqOffset.getY()/Unit.arcsec)
 				
 		);
 		
-		System.err.println("   FAZO=" + f3_1.format(fixedOffset.x/Unit.arcsec)
-				+ "\tFZAO=" + f3_1.format(-fixedOffset.y/Unit.arcsec)
+		System.err.println("   FAZO=" + f3_1.format(fixedOffset.getX()/Unit.arcsec)
+				+ "\tFZAO=" + f3_1.format(-fixedOffset.getY()/Unit.arcsec)
 		);
 		
 		equatorial.addOffset(eqOffset);
@@ -279,13 +279,13 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		// Add pointing corrections...
 		if(hasOption("fazo")) {
 			double fazo = option("fazo").getDouble() * Unit.arcsec;
-			horizontalOffset.x += fixedOffset.x - fazo;
-			fixedOffset.x = fazo;
+			horizontalOffset.incrementX(fixedOffset.getX() - fazo);
+			fixedOffset.setX(fazo);
 		}
 		if(hasOption("fzao")) {
 			double felo = -option("fzao").getDouble() * Unit.arcsec;
-			horizontalOffset.y += fixedOffset.y - felo;
-			fixedOffset.y = felo;
+			horizontalOffset.incrementY(fixedOffset.getY() - felo);
+			fixedOffset.setY(felo);
 		}
 		
 		
@@ -296,8 +296,8 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 	public void editScanHeader(Header header) throws FitsException {	
 		super.editScanHeader(header);
 		header.addValue("MJD", iMJD, "Modified Julian Day.");
-		header.addValue("FAZO", fixedOffset.x / Unit.arcsec, "Fixed AZ pointing offset.");
-		header.addValue("FZAO", -fixedOffset.y / Unit.arcsec, "Fixed ZA pointing offset.");
+		header.addValue("FAZO", fixedOffset.getX() / Unit.arcsec, "Fixed AZ pointing offset.");
+		header.addValue("FZAO", -fixedOffset.getY() / Unit.arcsec, "Fixed ZA pointing offset.");
 		header.addValue("ELGAIN", elevationResponse, "Relative response at elevation.");
 		header.addValue("TEMPERAT", ambientT / Unit.K, "Ambient temperature (K).");
 		header.addValue("PRESSURE", pressure / Unit.mbar, "Atmospheric pressure (mbar).");
@@ -312,8 +312,8 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		double sizeUnit = instrument.getDefaultSizeUnit();
 		String sizeName = instrument.getDefaultSizeName();
 		
-		data.add(new Datum("FAZO", (pointingOffset.x + fixedOffset.x) / sizeUnit, sizeName));
-		data.add(new Datum("FZAO", (pointingOffset.y - fixedOffset.y) / sizeUnit, sizeName));
+		data.add(new Datum("FAZO", (pointingOffset.getX() + fixedOffset.getX()) / sizeUnit, sizeName));
+		data.add(new Datum("FZAO", (pointingOffset.getY() - fixedOffset.getY()) / sizeUnit, sizeName));
 		
 		return data;
 	}
@@ -321,16 +321,16 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 	@Override
 	public String getPointingString(Vector2D pointing) {	
 		return super.getPointingString(pointing) + "\n\n" +
-			"  FAZO --> " + Util.f1.format((pointing.x + fixedOffset.x) / Unit.arcsec) +
-			", FZAO --> " + Util.f1.format(-(pointing.y + fixedOffset.y) / Unit.arcsec);		
+			"  FAZO --> " + Util.f1.format((pointing.getX() + fixedOffset.getX()) / Unit.arcsec) +
+			", FZAO --> " + Util.f1.format(-(pointing.getY() + fixedOffset.getY()) / Unit.arcsec);		
 	}
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 	
-		if(name.equals("FAZO")) return Util.defaultFormat(fixedOffset.x / Unit.arcsec, f);
-		else if(name.equals("FZAO")) return Util.defaultFormat(-fixedOffset.y / Unit.arcsec, f);
+		if(name.equals("FAZO")) return Util.defaultFormat(fixedOffset.getX() / Unit.arcsec, f);
+		else if(name.equals("FZAO")) return Util.defaultFormat(-fixedOffset.getY() / Unit.arcsec, f);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

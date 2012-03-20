@@ -98,11 +98,11 @@ public abstract class SourceMap extends SourceModel {
 		if(fixSize) {
 			StringTokenizer sizes = new StringTokenizer(option("map.size").getValue(), " \t,:xX");
 
-			fixedSize.x = 0.5* Double.parseDouble(sizes.nextToken()) * Unit.arcsec;
-			fixedSize.y = sizes.hasMoreTokens() ? 0.5 * Double.parseDouble(sizes.nextToken()) * Unit.arcsec : fixedSize.x;
+			fixedSize.setX(0.5* Double.parseDouble(sizes.nextToken()) * Unit.arcsec);
+			fixedSize.setY(sizes.hasMoreTokens() ? 0.5 * Double.parseDouble(sizes.nextToken()) * Unit.arcsec : fixedSize.getX());
 
-			xRange.setRange(-fixedSize.x, fixedSize.x);
-			yRange.setRange(-fixedSize.y, fixedSize.y);	
+			xRange.setRange(-fixedSize.getX(), fixedSize.getX());
+			yRange.setRange(-fixedSize.getY(), fixedSize.getY());	
 		}
 			
 		new IntegrationFork<Void>() {		
@@ -130,14 +130,14 @@ public abstract class SourceMap extends SourceModel {
 						exposure.project(pixel.getPosition(), projector);
 
 						if(!fixSize) {
-							xRange.include(projector.offset.x);
-							yRange.include(projector.offset.y);
-							scan.longitudeRange.include(projector.offset.x);
-							scan.latitudeRange.include(projector.offset.y);
+							xRange.include(projector.offset.getX());
+							yRange.include(projector.offset.getY());
+							scan.longitudeRange.include(projector.offset.getX());
+							scan.latitudeRange.include(projector.offset.getY());
 						}
 						else for(Channel channel : pixel) {
-							if(Math.abs(projector.offset.x) > fixedSize.x) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
-							else if(Math.abs(projector.offset.y) > fixedSize.y) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+							if(Math.abs(projector.offset.getX()) > fixedSize.getX()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+							else if(Math.abs(projector.offset.getY()) > fixedSize.getY()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
 							else valid = true;
 						}
 					}
@@ -274,7 +274,7 @@ public abstract class SourceMap extends SourceModel {
 	
 	public Collection<Scan<?,?>> findSlewing(int pixels) {
 		ArrayList<Scan<?,?>> slews = new ArrayList<Scan<?,?>>();
-		double cosLat = getProjection().getReference().cosLat;
+		double cosLat = getProjection().getReference().cosLat();
 		
 		for(Scan<?,?> scan : scans) {
 			double span = Math.hypot(scan.longitudeRange.span() * cosLat, scan.latitudeRange.span());

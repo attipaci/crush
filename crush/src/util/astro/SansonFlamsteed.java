@@ -39,18 +39,18 @@ public class SansonFlamsteed extends SphericalProjection {
 
 	@Override
 	public final void getOffsets(double theta, double phi, CoordinatePair toOffset) {
-		toOffset.x = phi * Math.cos(theta);
-		toOffset.y = theta;
+		toOffset.setX(phi * Math.cos(theta));
+		toOffset.setY(theta);
 	}
 
 	@Override
 	public final double phi(CoordinatePair offset) {
-		return offset.x / Math.cos(offset.y);
+		return offset.getX() / Math.cos(offset.getY());
 	}
 
 	@Override
 	public final double theta(CoordinatePair offset) {
-		return offset.y;
+		return offset.getY();
 	}
 
 	

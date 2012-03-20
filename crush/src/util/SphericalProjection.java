@@ -90,33 +90,33 @@ public abstract class SphericalProjection extends Projection2D<SphericalCoordina
 	}
 	
 	public boolean isRightAnglePole() {
-		return SphericalCoordinates.equalAngles(Math.abs(pole.y), rightAngle);
+		return SphericalCoordinates.equalAngles(Math.abs(pole.getY()), rightAngle);
 	}
 	
 	// Global projection
 	@Override
 	public void project(final SphericalCoordinates coords, final CoordinatePair toProjected) {		
-		final double dLON = coords.x - pole.x;
+		final double dLON = coords.getX() - pole.getX();
 		double phi = Double.NaN, theta = Double.NaN;
 		
 		if(isRightAnglePole()) {
-			if(pole.y > 0.0) {
-				phi = poleNative.x + dLON + Math.PI;
-				theta = coords.y;
+			if(pole.getY() > 0.0) {
+				phi = poleNative.getX() + dLON + Math.PI;
+				theta = coords.getY();
 			}
 			else {
-				phi = poleNative.x - dLON;
-				theta = -coords.y;
+				phi = poleNative.getX() - dLON;
+				theta = -coords.getY();
 			}	
 		}
 		else {
 			final double cosdLON = Math.cos(dLON);
 			
-			phi = poleNative.x + Math.atan2(
-					-coords.cosLat * Math.sin(dLON),
-					coords.sinLat * pole.cosLat - coords.cosLat * pole.sinLat * cosdLON);
+			phi = poleNative.getX() + Math.atan2(
+					-coords.cosLat() * Math.sin(dLON),
+					coords.sinLat() * pole.cosLat() - coords.cosLat() * pole.sinLat() * cosdLON);
 			
-			theta = asin(coords.sinLat * pole.sinLat + coords.cosLat * pole.cosLat * cosdLON);
+			theta = asin(coords.sinLat() * pole.sinLat() + coords.cosLat() * pole.cosLat() * cosdLON);
 		}
 	
 		phi = Math.IEEEremainder(phi, twoPI);
@@ -131,16 +131,16 @@ public abstract class SphericalProjection extends Projection2D<SphericalCoordina
 	public void deproject(final CoordinatePair projected, final SphericalCoordinates toCoords) {
 		final double theta = theta(projected);
 		final double phi = phi(projected);
-		final double dPhi = phi - poleNative.x;
+		final double dPhi = phi - poleNative.getX();
 		
 		if(isRightAnglePole()) {
-			if(pole.y > 0.0) {
-				toCoords.x = pole.x + dPhi - Math.PI;
-				toCoords.y = theta;
+			if(pole.getY() > 0.0) {
+				toCoords.setX(pole.getX() + dPhi - Math.PI);
+				toCoords.setY(theta);
 			}
 			else {
-				toCoords.x = pole.x - dPhi;
-				toCoords.y = -theta;
+				toCoords.setX(pole.getX() - dPhi);
+				toCoords.setY(-theta);
 			}	
 		}
 		else {
@@ -148,11 +148,11 @@ public abstract class SphericalProjection extends Projection2D<SphericalCoordina
 			final double sinTheta = Math.sin(theta);
 			final double cosPhi = Math.cos(dPhi);
 					
-			toCoords.setNativeLongitude(pole.x + Math.atan2(
+			toCoords.setNativeLongitude(pole.getX() + Math.atan2(
 					-cosTheta * Math.sin(dPhi),
-					sinTheta * pole.cosLat - cosTheta * pole.sinLat * cosPhi));	
+					sinTheta * pole.cosLat() - cosTheta * pole.sinLat() * cosPhi));	
 			
-			toCoords.setNativeLatitude(asin(sinTheta * pole.sinLat + cosTheta * pole.cosLat * cosPhi));
+			toCoords.setNativeLatitude(asin(sinTheta * pole.sinLat() + cosTheta * pole.cosLat() * cosPhi));
 		}
 		
 		toCoords.standardize();
@@ -174,7 +174,7 @@ public abstract class SphericalProjection extends Projection2D<SphericalCoordina
 		super.setReference(celestialCoords);
 		referenceNative = nativeCoords; 
 		
-		if(!userPole) poleNative.setNativeLongitude(reference.y >= referenceNative.y ? 0 : Math.PI); 
+		if(!userPole) poleNative.setNativeLongitude(reference.getY() >= referenceNative.getY() ? 0 : Math.PI); 
 			
 		calcCelestialPole();	
 	}
@@ -182,13 +182,14 @@ public abstract class SphericalProjection extends Projection2D<SphericalCoordina
 	public void calcCelestialPole() {
 		pole = new SphericalCoordinates();	
 		
-		double sindPhi = Math.sin(poleNative.x - referenceNative.x);
-		double cosdPhi = Math.cos(poleNative.x - referenceNative.x);
+		final double dPhi = poleNative.getX() - referenceNative.getX();
+		final double sindPhi = Math.sin(dPhi);
+		final double cosdPhi = Math.cos(dPhi);
 		
-		double deltap = Math.atan2(referenceNative.sinLat, referenceNative.cosLat * cosdPhi);
-		double cs = referenceNative.cosLat * sindPhi;
+		double deltap = Math.atan2(referenceNative.sinLat(), referenceNative.cosLat() * cosdPhi);
+		double cs = referenceNative.cosLat() * sindPhi;
 		
-		double deltab = acos(reference.sinLat / Math.sqrt(1.0 - cs*cs));
+		double deltab = acos(reference.sinLat() / Math.sqrt(1.0 - cs*cs));
 		
 		double delta1 = deltap + deltab;
 		double delta2 = deltap - deltab;
@@ -206,7 +207,7 @@ public abstract class SphericalProjection extends Projection2D<SphericalCoordina
 		if(Math.abs(delta1) <= rightAngle) { pole.setNativeLatitude(delta1); solutions++; }
 		if(Math.abs(delta2) <= rightAngle) {
 			// If two solutions exists, chose the one closer to the native pole...
-			if(solutions == 0 || Math.abs(delta2 - poleNative.y) < Math.abs(delta1 - poleNative.y)) pole.setNativeLatitude(delta2); 
+			if(solutions == 0 || Math.abs(delta2 - poleNative.getY()) < Math.abs(delta1 - poleNative.getY())) pole.setNativeLatitude(delta2); 
 			solutions++;
 		}
 		if(solutions == 0) throw new IllegalArgumentException("No solutions for celestial pole.");
@@ -214,16 +215,17 @@ public abstract class SphericalProjection extends Projection2D<SphericalCoordina
 		
 		//System.err.println(solutions + " solution(s)");
 		
-		if(SphericalCoordinates.equalAngles(Math.abs(reference.y), rightAngle)) pole.x = reference.x;
-		else if(SphericalCoordinates.equalAngles(Math.abs(pole.y), rightAngle)) {
-			pole.setNativeLongitude(reference.x + (pole.y > 0 ? 
-						poleNative.x - referenceNative.x - Math.PI :
-						referenceNative.x - poleNative.x));
+		if(SphericalCoordinates.equalAngles(Math.abs(reference.getY()), rightAngle)) 
+			pole.setX(reference.getX());
+		else if(SphericalCoordinates.equalAngles(Math.abs(pole.getY()), rightAngle)) {
+			pole.setNativeLongitude(reference.getX() + (pole.getY() > 0 ? 
+						poleNative.getX() - referenceNative.getX() - Math.PI :
+						referenceNative.getX() - poleNative.getX()));
 		}
 		else {
-			double sindLON = sindPhi * referenceNative.cosLat / reference.cosLat;
-			double cosdLON = (referenceNative.sinLat - pole.sinLat * reference.sinLat) / (pole.cosLat * reference.cosLat);
-			pole.setNativeLongitude(reference.x - Math.atan2(sindLON, cosdLON));
+			double sindLON = sindPhi * referenceNative.cosLat() / reference.cosLat();
+			double cosdLON = (referenceNative.sinLat() - pole.sinLat() * reference.sinLat()) / (pole.cosLat() * reference.cosLat());
+			pole.setNativeLongitude(reference.getX() - Math.atan2(sindLON, cosdLON));
 		}
 		
 		pole.standardize();
@@ -257,12 +259,12 @@ public abstract class SphericalProjection extends Projection2D<SphericalCoordina
 		}
 		
 		if(userPole) {
-			cursor.add(new HeaderCard("LONPOLE" + alt, poleNative.x / Unit.deg, "The longitude (deg) of the native pole."));
-			cursor.add(new HeaderCard("LATPOLE" + alt, poleNative.y / Unit.deg, "The latitude (deg) of the native pole."));
+			cursor.add(new HeaderCard("LONPOLE" + alt, poleNative.getX() / Unit.deg, "The longitude (deg) of the native pole."));
+			cursor.add(new HeaderCard("LATPOLE" + alt, poleNative.getY() / Unit.deg, "The latitude (deg) of the native pole."));
 		}
 		if(userReference) {
-			cursor.add(new HeaderCard("PV1_1" + alt, referenceNative.x / Unit.deg, "The longitude (deg) of the native reference."));
-			cursor.add(new HeaderCard("PV1_2" + alt, referenceNative.y / Unit.deg, "The latitude (deg) of the native reference."));			
+			cursor.add(new HeaderCard("PV1_1" + alt, referenceNative.getX() / Unit.deg, "The longitude (deg) of the native reference."));
+			cursor.add(new HeaderCard("PV1_2" + alt, referenceNative.getY() / Unit.deg, "The latitude (deg) of the native reference."));			
 			// TODO should calculate and write PV0_j offsets
 		}	
 	}

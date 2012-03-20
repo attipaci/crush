@@ -42,8 +42,8 @@ public class GeodeticCoordinates extends SphericalCoordinates {
 	// Marik: Csillagaszat (1989)
 	// based on Woolard & Clemence: Spherical Astronomy (1966)
 	public GeodeticCoordinates(GeocentricCoordinates geocentric) {
-		setNativeLongitude(geocentric.x);
-		setNativeLatitude(geocentric.y + X * Math.sin(2.0 * geocentric.y));
+		setNativeLongitude(geocentric.getX());
+		setNativeLatitude(geocentric.getY() + X * Math.sin(2.0 * geocentric.getY()));
 	}
 	
 	public final static double a = 6378137.0 * Unit.m; // Earth major axis

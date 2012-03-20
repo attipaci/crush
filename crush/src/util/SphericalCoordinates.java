@@ -35,7 +35,7 @@ import nom.tam.util.*;
 // TODO add BinaryTableIO interface (with projections...)
 
 public class SphericalCoordinates extends CoordinatePair implements Metric<SphericalCoordinates> {
-	public double cosLat, sinLat;
+	private double cosLat, sinLat;
 	
 	public CoordinateSystem coordinateSystem, localCoordinateSystem;
 
@@ -78,21 +78,39 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 		localCoordinateSystem = SphericalCoordinates.defaultLocalCoordinateSystem;
 	}
 	
+	public final double sinLat() { return sinLat; }
+	
+	public final double cosLat() { return cosLat; }
+	
 	@Override
 	public boolean equals(Object o) {
 		if(o.getClass().equals(getClass())) return false;
 		SphericalCoordinates coords = (SphericalCoordinates) o;
-		if(!equalAngles(coords.x, x)) return false;
-		if(!equalAngles(coords.y, y)) return false;
+		if(!equalAngles(coords.getX(), getX())) return false;
+		if(!equalAngles(coords.getY(), getY())) return false;
 		return true;		
 	}
 	
 	@Override
 	public void copy(CoordinatePair coords) {
-		setNativeLongitude(coords.x);
-		setNativeLatitude(coords.y);
+		setNativeLongitude(coords.getX());
+		setNativeLatitude(coords.getY());
 	}
-
+	
+	@Override
+	public final void setY(final double value) { 
+		super.setY(Math.IEEEremainder(value, Math.PI));
+		cosLat = Math.cos(getY());
+		sinLat = Math.sin(getY());
+	}
+	
+	@Override
+	public final void incrementY(final double value) { 
+		super.setY(Math.IEEEremainder(value, Math.PI));
+		cosLat = Math.cos(getY());
+		sinLat = Math.sin(getY());
+	}
+	
 	@Override
 	public void zero() { super.zero(); cosLat = 1.0; sinLat = 0.0; }
 
@@ -104,9 +122,9 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	
 	public void setNative(double lon, double lat) { setNativeLongitude(lon); setNativeLatitude(lat); }	
 	
-	public final double nativeLongitude() { return x; }
+	public final double nativeLongitude() { return getX(); }
 	
-	public final double nativeLatitude() { return y; }
+	public final double nativeLatitude() { return getY(); }
 	
 	public final boolean isReverseLongitude() { return coordinateSystem.get(0).isReverse(); }
 	
@@ -118,13 +136,9 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	
 	public final double latitude() { return isReverseLatitude() ? coordinateSystem.get(1).reverseFrom-nativeLatitude() : nativeLatitude(); }
 	
-	public final void setNativeLongitude(final double value) { x = Math.IEEEremainder(value, 2.0*Math.PI); }
-	
-	public final void setNativeLatitude(final double value) { 
-		y = Math.IEEEremainder(value, Math.PI);
-		cosLat = Math.cos(y);
-		sinLat = Math.sin(y);
-	}
+	public final void setNativeLongitude(final double value) { setX(value); }
+		
+	public final void setNativeLatitude(final double value) { setY(value); }
 
 	public final void setLongitude(final double value) {
 		setNativeLongitude(isReverseLongitude() ? coordinateSystem.get(0).reverseFrom-value : value);
@@ -133,11 +147,6 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	public final void setLatitude(final double value) {
 		setNativeLatitude(isReverseLatitude() ? coordinateSystem.get(1).reverseFrom-value : value);
 	}
-	
-	public double getCosLat() { return cosLat; }
-	
-	public double getSinLat() { return sinLat; }
-
 	
 	public void project(SphericalProjection projection, CoordinatePair toNativeOffset) {
 		projection.project(this, toNativeOffset);
@@ -151,27 +160,27 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	
 	
 	public void addNativeOffset(final Vector2D offset) {
-		x += offset.x / cosLat;
-		setNativeLatitude(y + offset.y);
+		incrementX(offset.getX() / cosLat);
+		incrementY(offset.getY());
 	}
 	
 	public void addOffset(final Vector2D offset) {
-		if(isReverseLongitude()) x -= offset.x / cosLat;
-		else x += offset.x / cosLat;
-		if(isReverseLatitude()) setNativeLatitude(y - offset.y);
-		else setNativeLatitude(y + offset.y);
+		if(isReverseLongitude()) decrementX(offset.getX() / cosLat);
+		else incrementX(offset.getX() / cosLat);
+		if(isReverseLatitude()) decrementY(offset.getY());
+		else incrementY(offset.getY());
 	}
 	
 	public void subtractNativeOffset(final Vector2D offset) {
-		x -= offset.x / cosLat;
-		setNativeLatitude(y - offset.y);
+		decrementX(offset.getX() / cosLat);
+		decrementY(offset.getY());
 	}
 	
 	public void subtractOffset(final Vector2D offset) {
-		if(isReverseLongitude()) x += offset.x / cosLat;
-		else x -= offset.x / cosLat;
-		if(isReverseLatitude()) setNativeLatitude(y + offset.y);
-		else setNativeLatitude(y - offset.y);
+		if(isReverseLongitude()) incrementX(offset.getX() / cosLat);
+		else decrementX(offset.getX() / cosLat);
+		if(isReverseLatitude()) incrementY(offset.getY());
+		else decrementY(offset.getY());
 	}
 	
 	
@@ -189,19 +198,19 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	
 	
 	public final void getNativeOffsetFrom(final SphericalCoordinates reference, final Vector2D toOffset) {
-		toOffset.x = Math.IEEEremainder(x - reference.x, Constant.twoPI) * reference.cosLat;
-		toOffset.y = y - reference.y;
+		toOffset.setX(Math.IEEEremainder(getX() - reference.getX(), Constant.twoPI) * reference.cosLat);
+		toOffset.setY(getY() - reference.getY());
 	}
 	
 	public void getOffsetFrom(final SphericalCoordinates reference, final Vector2D toOffset) {
 		getNativeOffsetFrom(reference, toOffset);
-		if(isReverseLongitude()) toOffset.x *= -1.0;
-		if(isReverseLatitude()) toOffset.y *= -1.0;
+		if(isReverseLongitude()) toOffset.scaleX(-1.0);
+		if(isReverseLatitude()) toOffset.scaleY(-1.0);
 	}
 		
 	public void standardize() {
-		x = Math.IEEEremainder(x, Constant.twoPI);
-		y = Math.IEEEremainder(y, Math.PI);
+		setX(Math.IEEEremainder(getX(), Constant.twoPI));
+		setY(Math.IEEEremainder(getY(), Math.PI));
 	}
 	
 	public String[] getFitsAxisNames(SphericalProjection projection) {
@@ -213,7 +222,7 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	
 	@Override
 	public String toString() {
-		return coordinateSystem.get(0).format(x) + " " + coordinateSystem.get(1).format(y);
+		return coordinateSystem.get(0).format(getX()) + " " + coordinateSystem.get(1).format(getY());
 	}
 	
 	@Override
@@ -251,8 +260,8 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	}
 
 	public double distanceTo(SphericalCoordinates point) {
-		double sindTheta = Math.sin(point.y - y);
-		double sindPhi = Math.sin(point.x - x);
+		double sindTheta = Math.sin(point.getY() - getY());
+		double sindPhi = Math.sin(point.getX() - getX());
 		return 2.0 * asin(Math.sqrt(sindTheta * sindTheta + cosLat * point.cosLat * sindPhi * sindPhi));
 	}
 
@@ -282,7 +291,7 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	
 	
 	public static final void transform(final SphericalCoordinates from, final SphericalCoordinates newPole, final double phi0, final SphericalCoordinates to) {		
-		final double dL = from.x - newPole.x;
+		final double dL = from.getX() - newPole.getX();
 		final double cosdL = Math.cos(dL);	
 		to.setNativeLatitude(asin(newPole.sinLat * from.sinLat + newPole.cosLat * from.cosLat * cosdL));
 		to.setNativeLongitude(Constant.rightAngle - phi0 +
@@ -291,11 +300,11 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	}
 	
 	public static final void inverseTransform(final SphericalCoordinates from, final SphericalCoordinates pole, final double phi0, final SphericalCoordinates to) {		
-		final double dL = from.x + phi0;
+		final double dL = from.getX() + phi0;
 		final double cosdL = Math.cos(dL);
 		
 		to.setNativeLatitude(asin(pole.sinLat * from.sinLat + pole.cosLat * from.cosLat * cosdL));
-		to.setNativeLongitude(pole.x + Constant.rightAngle + 
+		to.setNativeLongitude(pole.getX() + Constant.rightAngle + 
 				Math.atan2(-from.sinLat * pole.cosLat + from.cosLat * pole.sinLat * cosdL, -from.cosLat * Math.sin(dL)));	
 	}
 	

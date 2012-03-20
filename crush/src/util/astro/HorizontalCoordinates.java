@@ -78,7 +78,7 @@ public class HorizontalCoordinates extends SphericalCoordinates {
 
 	public double zenithAngle() { return ZA(); }
 
-	public double cosEL() { return cosLat; }
+	public double cosEL() { return cosLat(); }
 
 	public void setAZ(double AZ) { setNativeLongitude(AZ); }
 
@@ -95,16 +95,16 @@ public class HorizontalCoordinates extends SphericalCoordinates {
 	public void toEquatorial(EquatorialCoordinates toCoords, GeodeticCoordinates site, double LST) { toEquatorial(this, toCoords, site, LST); }
 	
 	public double getParallacticAngle(GeodeticCoordinates site) {
-		double cosdsinq = -site.cosLat * Math.sin(x);
-		double cosdcosq = site.sinLat * cosLat - site.cosLat * sinLat * Math.cos(x);
+		double cosdsinq = -site.cosLat() * Math.sin(getX());
+		double cosdcosq = site.sinLat() * cosLat() - site.cosLat() * sinLat() * Math.cos(getX());
 		return Math.atan2(cosdsinq, cosdcosq);
 	}
 	
 	public static void toEquatorial(HorizontalCoordinates horizontal, EquatorialCoordinates equatorial, GeodeticCoordinates site, double LST) {
-		double cosAZ = Math.cos(horizontal.x);
-		equatorial.setNativeLatitude(asin(horizontal.sinLat * site.sinLat + horizontal.cosLat * site.cosLat * cosAZ));
-		final double asinH = -Math.sin(horizontal.x) * horizontal.cosLat;
-		final double acosH = site.cosLat * horizontal.sinLat - site.sinLat * horizontal.cosLat * cosAZ;
+		double cosAZ = Math.cos(horizontal.getX());
+		equatorial.setNativeLatitude(asin(horizontal.sinLat() * site.sinLat() + horizontal.cosLat() * site.cosLat() * cosAZ));
+		final double asinH = -Math.sin(horizontal.getX()) * horizontal.cosLat();
+		final double acosH = site.cosLat() * horizontal.sinLat() - site.sinLat() * horizontal.cosLat() * cosAZ;
 		equatorial.setRA(LST * Unit.timeAngle - Math.atan2(asinH, acosH));
 	}
 
@@ -115,7 +115,7 @@ public class HorizontalCoordinates extends SphericalCoordinates {
 
 	public static void toEquatorialOffset(Vector2D offset, double PA) {
 		offset.rotate(PA);
-		offset.x *= -1.0;
+		offset.scaleX(-1.0);
 	}    
 
 }

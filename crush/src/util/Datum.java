@@ -26,9 +26,9 @@ package util;
 import java.text.NumberFormat;
 
 public class Datum {
-	public double value;
-	public String name, unitName;
-	public String comment;
+	private double value;
+	private String name, unitName;
+	private String comment;
 	
 	public Datum(String name, double value, String unitName) {
 		this(name, value, unitName, "");
@@ -41,6 +41,22 @@ public class Datum {
 		this.comment = comment;
 	}
 
+	public double getValue() { return value; }
+	
+	public String getName() { return name; }
+	
+	public String getUnitName() { return unitName; }
+	
+	public String getComment() { return comment; }
+	
+	public void setValue(double x) { this.value = x; }
+	
+	public void setName(String value) { this.name = value; }
+	
+	public void setUnitName(String value) { this.unitName = value; }
+	
+	public void setComment(String value) { this.comment = value; }
+	
 	@Override
 	public String toString() {
 		return name + " = " + value + " " + unitName + (comment.length() > 0 ? " (" + comment + ")" : "");

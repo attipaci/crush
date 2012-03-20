@@ -127,8 +127,8 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 					}
 
 					Vector2D position = pixel.getPosition();
-					position.x = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
-					position.y = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
+					position.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
+					position.setY(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
 				}
 				catch(NumberFormatException e){}
 			}
@@ -176,8 +176,8 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 				out.print(Util.f3.format(channel.gain) + "\t");
 			}
 			Vector2D position = pixel.getPosition();
-			System.out.print(Util.f2.format(position.x / Unit.arcsec) + "  ");
-			System.out.print(Util.f2.format(position.y / Unit.arcsec));
+			System.out.print(Util.f2.format(position.getX() / Unit.arcsec) + "  ");
+			System.out.print(Util.f2.format(position.getY() / Unit.arcsec));
 			out.println();
 		}
 	}

@@ -34,14 +34,12 @@ public class DataTable extends Hashtable<String, Datum> implements TableFormatte
 	private static final long serialVersionUID = 2131139489959923852L;
 
 	public void add(Datum datum) {
-		put(datum.name, datum);		
+		put(datum.getName(), datum);		
 	}
 	
 	public String getFormattedEntry(String name, String formatSpec) {
 		if(!containsKey(name)) return TableFormatter.NO_SUCH_DATA;
-		return Util.defaultFormat(get(name).value, TableFormatter.getNumberFormat(formatSpec));
+		return Util.defaultFormat(get(name).getValue(), TableFormatter.getNumberFormat(formatSpec));
 	}
-	
-	
-	
+
 }

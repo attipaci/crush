@@ -39,18 +39,18 @@ public class Mercator extends SphericalProjection {
 
 	@Override
 	public final void getOffsets(double theta, double phi, CoordinatePair toOffset) {
-		toOffset.x = phi;
-		toOffset.y = Math.log(Math.tan(0.5*(rightAngle + theta)));
+		toOffset.setX(phi);
+		toOffset.setY(Math.log(Math.tan(0.5*(rightAngle + theta))));
 	}
 
 	@Override
 	public final double phi(CoordinatePair offset) { 
-		return offset.x;
+		return offset.getX();
 	}
 
 	@Override
 	public final double theta(CoordinatePair offset) {
-		return 2.0 * Math.atan(Math.exp(offset.y)) - rightAngle;
+		return 2.0 * Math.atan(Math.exp(offset.getY())) - rightAngle;
 	}
 
 	

@@ -158,7 +158,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		Index2D c1 = getIndex(new Vector2D(dXmin, dYmin));
 		Index2D c2 = getIndex(new Vector2D(dXmax, dYmax));
 		
-		crop(c1.i, c1.j, c2.i, c2.j);
+		crop(c1.i(), c1.j(), c2.i(), c2.j());
 	}
 
 	@Override
@@ -166,8 +166,8 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		super.crop(imin, jmin, imax, jmax);
 		Vector2D refIndex = getGrid().getReferenceIndex();
 		
-		refIndex.x -= imin;
-		refIndex.y -= jmin;
+		refIndex.decrementX(imin);
+		refIndex.decrementY(jmin);
 	}
 	
 	public void growFlags(final double radius, final int pattern) {
@@ -398,7 +398,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 					toOffset(v);
 					antialiased.toIndex(v);
 				
-					setValue(i, j, antialiased.valueAtIndex(v.x, v.y, getInterpolatorData()));
+					setValue(i, j, antialiased.valueAtIndex(v.getX(), v.getY(), getInterpolatorData()));
 					if(isNaN(i, j)) setFlag(i, j, 1);
 				}				
 			}
@@ -410,23 +410,23 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	}
 
 	public GridImage<CoordinateType> getRegrid(final Vector2D resolution) throws IllegalStateException {	
-		Vector2D dRes = new Vector2D(resolution.x / getGrid().pixelSizeX(), resolution.y / getGrid().pixelSizeY());
+		Vector2D dRes = new Vector2D(resolution.getX() / getGrid().pixelSizeX(), resolution.getY() / getGrid().pixelSizeY());
 		Grid2D<CoordinateType> toGrid = (Grid2D<CoordinateType>) getGrid().copy();
 		
 		Vector2D refIndex = toGrid.getReferenceIndex();
 		
 		if(verbose) System.err.print(" Reference index: " + refIndex.toString(Util.f1));
 		
-		refIndex.x /= dRes.x;
-		refIndex.y /= dRes.y;
+		refIndex.scaleX(1.0 / dRes.getX());
+		refIndex.scaleY(1.0 / dRes.getY());
 		
 		if(verbose) System.err.println(" --> " + refIndex.toString(Util.f1));
 		
 		double[][] M = getGrid().getTransform();
-		M[0][0] *= dRes.x;
-		M[0][1] *= dRes.y;
-		M[1][0] *= dRes.x;
-		M[1][1] *= dRes.y;
+		M[0][0] *= dRes.getX();
+		M[0][1] *= dRes.getY();
+		M[1][0] *= dRes.getX();
+		M[1][1] *= dRes.getY();
 		toGrid.setTransform(M);
 		
 		//System.err.println(" M = {{" + M[0][0] + ", " + M[0][1] + "}, {" + M[1][0] + "," + M[1][1] + "}}");
@@ -482,7 +482,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		image.toOffset(corner1);
 		image.toOffset(corner2);
 
-		regrid.crop(corner1.x, corner1.y, corner2.x, corner2.y); 
+		regrid.crop(corner1.getX(), corner1.getY(), corner2.getX(), corner2.getY()); 
 
 		image.setImage(regrid);
 		
@@ -528,13 +528,13 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 
 		// Find the peak
 		Index2D index = search.indexOfMaxDev();
-		double peakValue = search.getValue(index.i, index.j);
+		double peakValue = search.getValue(index.i(), index.j());
 		double ave = Math.abs(peakValue);
 
 		do {			    
 			// Get the peak value	 
-			final int i = index.i;
-			final int j = index.j;
+			final int i = index.i();
+			final int j = index.j();
 			final int i0 = i - ic;	// The map index where the patch would start on...
 			final int j0 = j - jc;
 
@@ -603,18 +603,15 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	public void toOffset(Vector2D index) { getGrid().toOffset(index); }
 
 	public void getIndex(Vector2D offset, Index2D index) {
-		final double x = offset.x;
-		final double y = offset.y;
+		final double x = offset.getX();
+		final double y = offset.getY();
 		toIndex(offset);
-		index.i = (int) Math.round(offset.x);
-		index.j = (int) Math.round(offset.y);
-		offset.x = x;
-		offset.y = y;		
+		index.set((int) Math.round(offset.getX()), (int) Math.round(offset.getY()));
+		offset.set(x, y);
 	}
 	
 	public void getOffset(Index2D index, Vector2D offset) {
-		offset.x = index.i;
-		offset.y = index.j;
+		offset.set(index.i(), index.j());
 		toOffset(offset);		
 	}
 

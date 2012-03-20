@@ -130,18 +130,17 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	}
 	
 	public final void addPointAt(Vector2D mapOffset, final double value, final double g, final double w, final double time) {
-		double x = mapOffset.x;
-		double y = mapOffset.y;
+		double x = mapOffset.getX();
+		double y = mapOffset.getY();
 		toIndex(mapOffset);
-		addPointAt((int)Math.round(mapOffset.x), (int)Math.round(mapOffset.y), value, g, w, time);
-		mapOffset.x = x;
-		mapOffset.y = y;
+		addPointAt((int)Math.round(mapOffset.getX()), (int)Math.round(mapOffset.getY()), value, g, w, time);
+		mapOffset.set(x, y);
 	}
 	
 	public final void addPointAt(CoordinateType coords, final double value, final double g, final double w, final double time) {
 		getProjection().project(coords, reuseOffset);
 		toIndex(reuseOffset);
-		addPointAt((int)Math.round(reuseOffset.x), (int)Math.round(reuseOffset.y), value, g, w, time);
+		addPointAt((int)Math.round(reuseOffset.getX()), (int)Math.round(reuseOffset.getY()), value, g, w, time);
 	}
 
 	public final void addPointAt(final int i, final int j, final double value, final double g, double w, final double time) {
@@ -333,9 +332,9 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 				//System.err.println(i + "," + j + " <--" + Util.f1.format(v.x) + "," + Util.f1.format(v.y));
 		
 				final InterpolatorData ipolData = getInterpolatorData();
-				setValue(i, j, fromMap.valueAtIndex(v.x, v.y, ipolData));
-				setWeight(i, j, fromWeight.valueAtIndex(v.x, v.y, ipolData));
-				setTime(i, j, fromCount.valueAtIndex(v.x, v.y, ipolData));		
+				setValue(i, j, fromMap.valueAtIndex(v.getX(), v.getY(), ipolData));
+				setWeight(i, j, fromWeight.valueAtIndex(v.getX(), v.getY(), ipolData));
+				setTime(i, j, fromCount.valueAtIndex(v.getX(), v.getY(), ipolData));		
 				
 				if(isNaN(i, j)) flag(i, j);
 				else { unflag(i, j); }

@@ -80,7 +80,7 @@ public final class Data {
 
 	public static double[] real(final Complex[] data) {
 		final double[] real = new double[data.length];
-		for(int i=data.length; --i >= 0; ) real[i] = data[i].x;
+		for(int i=data.length; --i >= 0; ) real[i] = data[i].getX();
 		return real;
 	}
 
@@ -88,7 +88,7 @@ public final class Data {
 
 	public static double[] imaginary(final Complex[] data) {
 		final double[] imaginary = new double[data.length];
-		for(int i=data.length; --i >= 0; ) imaginary[i] = data[i].y;
+		for(int i=data.length; --i >= 0; ) imaginary[i] = data[i].getY();
 		return imaginary;
 	}
 
