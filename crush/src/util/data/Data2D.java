@@ -54,14 +54,14 @@ public class Data2D extends Parallel implements Cloneable {
 	private int[][] flag;
 	private int parallelism = Runtime.getRuntime().availableProcessors();
 	
-	public Unit unit = Unit.unity;
-	public String contentType = UNDEFINED;
-	public int interpolationType = BICUBIC_SPLINE;
-	public boolean verbose = false;
+	private Unit unit = Unit.unity;
+	private String contentType = UNDEFINED;
+	private int interpolationType = BICUBIC_SPLINE;
+	private boolean verbose = false;
 	
 	public Header header;
 	
-	public String name = UNDEFINED;
+	private String name = UNDEFINED;
 	public String fileName;
 	public String creator = "CRUSH " + CRUSH.getFullVersion();
 		
@@ -87,7 +87,26 @@ public class Data2D extends Parallel implements Cloneable {
 		this.flag = flag;
 	}
 	
-
+	public String getName() { return name; }
+	
+	public void setName(String name) { this.name = name; }
+	
+	public Unit getUnit() { return unit; }
+	
+	public void setUnit(Unit u) { this.unit = u; }
+	
+	public String getContentType() { return contentType; }
+	
+	public void setContentType(String value) { contentType = value; }
+	
+	public int getInterpolationType() { return interpolationType; }
+	
+	public void setInterpolationType(int value) { this.interpolationType = value; }
+	
+	public boolean isVerbose() { return verbose; }
+	
+	public void setVerbose(boolean value) { verbose = value; }
+	
 	public final double[][] getData() { return data; }
 	
 	public final int[][] getFlag() { return flag; }
@@ -514,7 +533,7 @@ public class Data2D extends Parallel implements Cloneable {
 		if(!isValid(i, j)) return "";
 		String type = "";
 		if(contentType != null) if(contentType.length() != 0) type = contentType + "> ";
-		return type + Util.getDecimalFormat(1e3).format(data[i][j]) + " " + unit.name;
+		return type + Util.getDecimalFormat(1e3).format(data[i][j]) + " " + unit.name();
 	}
 	
 	public final void scale(final double value) {
@@ -531,11 +550,6 @@ public class Data2D extends Parallel implements Cloneable {
 	public void scale(int i, int j, double factor) {
 		data[i][j] *= factor;
 	}
-	
-	public void setUnit(Unit u) {
-		unit = u;
-	}
-	
 
 	public double getMin() { 
 		Task<Double> search = new Task<Double>() {
@@ -1017,7 +1031,7 @@ public class Data2D extends Parallel implements Cloneable {
 	public Vector2D[] getHistogram(final double[][] image, final double binSize) {
 		Range range = getRange();
 		
-		int bins = 1 + (int)Math.round(range.max / binSize) - (int)Math.round(range.min / binSize);
+		int bins = 1 + (int)Math.round(range.max() / binSize) - (int)Math.round(range.min() / binSize);
 		final Vector2D[] bin = new Vector2D[bins];
 		for(int i=0; i<bins; i++) bin[i] = new Vector2D(i*binSize, 0.0);
 		
@@ -1107,7 +1121,7 @@ public class Data2D extends Parallel implements Cloneable {
 				@Override
 				public void process(int i, int j) {
 					if(!Float.isNaN(fdata[j][i])) {
-						setValue(i, j, fdata[j][i] * unit.value);	    
+						setValue(i, j, fdata[j][i] * unit.value());	    
 						unflag(i, j);
 					}
 				}
@@ -1120,7 +1134,7 @@ public class Data2D extends Parallel implements Cloneable {
 				@Override
 				public void process(int i, int j) {
 					if(!Double.isNaN(ddata[j][i])) {
-						setValue(i, j, ddata[j][i] * unit.value);	    
+						setValue(i, j, ddata[j][i] * unit.value());	    
 						unflag(i, j);
 					}
 				}
@@ -1160,12 +1174,12 @@ public class Data2D extends Parallel implements Cloneable {
 			
 		Range range = getRange();
 
-		cursor.add(new HeaderCard("DATAMIN", range.min / unit.value, "The lowest value in the image"));
-		cursor.add(new HeaderCard("DATAMAX", range.max / unit.value, "The highest value in the image"));
+		cursor.add(new HeaderCard("DATAMIN", range.min() / unit.value(), "The lowest value in the image"));
+		cursor.add(new HeaderCard("DATAMAX", range.max() / unit.value(), "The highest value in the image"));
 
 		cursor.add(new HeaderCard("BZERO", 0.0, "Zeroing level of the image data"));
 		cursor.add(new HeaderCard("BSCALE", 1.0, "Scaling of the image data"));
-		cursor.add(new HeaderCard("BUNIT", unit.name, "The image data unit."));
+		cursor.add(new HeaderCard("BUNIT", unit.name(), "The image data unit."));
 		
 		//cursor.add(new HeaderCard("ORIGIN", "Caltech", "California Institute of Technology"));
 	}
@@ -1176,7 +1190,7 @@ public class Data2D extends Parallel implements Cloneable {
 		new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
-				if(isUnflagged(i, j)) fitsImage[j][i] = (float) (getValue(i, j) / unit.value);
+				if(isUnflagged(i, j)) fitsImage[j][i] = (float) (getValue(i, j) / unit.value());
 				else fitsImage[j][i] = Float.NaN;
 			}
 		}.process();

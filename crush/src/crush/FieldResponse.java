@@ -25,8 +25,8 @@ package crush;
 import java.lang.reflect.*;
 
 public class FieldResponse extends Response {
-	Field field;
-	boolean isFloating = false;
+	private Field field;
+	private boolean isFloating = false;
 	
 	public FieldResponse(Field field) {
 		this.field = field;
@@ -36,6 +36,12 @@ public class FieldResponse extends Response {
 		this(field);
 		this.isFloating = isFloating;
 	}
+	
+	public Field getField() { return field; }
+	
+	public boolean isFloating() { return isFloating; }
+	
+	public void setFloating(boolean value) { isFloating = value; }
 	
 	@Override
 	public Signal getSignal(Integration<?, ?> integration) {

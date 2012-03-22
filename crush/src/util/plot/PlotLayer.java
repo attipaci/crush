@@ -24,6 +24,7 @@
 package util.plot;
 
 import java.awt.Graphics;
+import java.awt.geom.AffineTransform;
 
 import javax.swing.JComponent;
 
@@ -34,9 +35,17 @@ public abstract class PlotLayer extends JComponent {
 	 */
 	private static final long serialVersionUID = -1331038094866703152L;
 
-	protected PlotArea<?> plotArea;
+	private PlotArea<?> plotArea;
 	
 	public abstract void defaults();
+	
+	public PlotArea<?> getPlotArea() { return plotArea; }
+	
+	public void setPlotArea(PlotArea<?> area) { this.plotArea = area; }
+	
+	public AffineTransform toDisplay() { return getPlotArea().toDisplay(); }
+	
+	public AffineTransform toCoordinates() { return getPlotArea().toCoordinates(); }
 	
 	@Override
 	public void paintComponent(Graphics g) {

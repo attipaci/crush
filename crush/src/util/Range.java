@@ -28,7 +28,7 @@ import java.text.NumberFormat;
 import java.util.*;
 
 public class Range {
-	public double min, max;
+	private double min, max;
 	
 	public Range() { empty(); }
 	
@@ -51,6 +51,14 @@ public class Range {
 	public int hashCode() {
 		return HashCode.get(min) ^ HashCode.get(max);
 	}
+	
+	public double min() { return min; }
+	
+	public double max() { return max; }
+	
+	public void setMin(double value) { min = value; }
+	
+	public void setMax(double value) { max = value; }
 	
 	public void empty() {
 		min=Double.POSITIVE_INFINITY; max=Double.NEGATIVE_INFINITY;		

@@ -26,37 +26,30 @@ import java.awt.geom.NoninvertibleTransformException;
 
 import util.Vector2D;
 import util.data.GridImage;
-import util.plot.DoubleImageLayer;
+import util.plot.Data2DLayer;
 
-public class GridImageLayer extends DoubleImageLayer {
+public class GridImageLayer extends Data2DLayer {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 5730801953668713086L;
-	
-	GridImage<?> image;
-	
+		
 	public GridImageLayer(GridImage<?> image) {
-		super(image.getData());
-		this.image = image;
+		super(image);
 		
 		try { this.setCoordinateTransform(image.getGrid().getLocalAffineTransform()); }
 		catch(NoninvertibleTransformException e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
-	
-		defaults();
+		
 	}
 	
-	@Override
-	public double getValue(int i, int j) {
-		return image.valueAtIndex(i+i0, j+j0);
-	}
+	public GridImage<?> getGridImage() { return (GridImage<?>) getData2D(); }
 	
 	@Override
 	public Vector2D getReferencePoint() {
-		return image.getGrid().refIndex;
+		return getGridImage().getGrid().refIndex;
 	}
 	
 }

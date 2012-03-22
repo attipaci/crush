@@ -80,8 +80,8 @@ public class MotionFilter extends KillFilter {
 		
 		Range range = option("range").getRange(true);
 				
-		int mini = ((int) Math.floor(range.min / df));
-		int maxi = ((int) Math.ceil(range.max / df));
+		int mini = ((int) Math.floor(range.min() / df));
+		int maxi = ((int) Math.ceil(range.max() / df));
 		
 		Arrays.fill(reject, 0, Math.min(mini, reject.length), false);
 		if(maxi < reject.length) Arrays.fill(reject, maxi, reject.length, false);

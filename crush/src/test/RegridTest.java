@@ -11,8 +11,8 @@ public class RegridTest {
 			AstroMap map = new AstroMap();
 			map.read("/home/pumukli/data/sharc2/images/VESTA.8293.fits");
 			
-			map.verbose = true;
-			map.interpolationType = Data2D.BICUBIC_SPLINE;
+			map.setVerbose(true);
+			map.setInterpolationType(Data2D.BICUBIC_SPLINE);
 			map.regrid(1.0 * Unit.arcsec);
 			//map.clean();
 			map.fileName = "test.fits";

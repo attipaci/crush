@@ -23,6 +23,7 @@
 
 package util.plot;
 
+
 public class ImageArea<ContentType extends ImageLayer> extends PlotArea<ContentType> {
 
 	/**
@@ -32,10 +33,18 @@ public class ImageArea<ContentType extends ImageLayer> extends PlotArea<ContentT
 
 	public ImageArea() {
 		// Fit the image into the plottable area...
-		zoomMode = ZOOM_FIT;
+		setZoomMode(ZOOM_FIT);
 		// Set the reference at the center of the plot...
-		referencePoint.set(0.5, 0.5);
+		getReferencePoint().set(0.5, 0.5);
 	}
-
+	
+	/*
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		System.err.println("size " + getSize());
+		System.err.println("array size " + getContentLayer().getArraySize());
+		System.err.println("plot ref " + getContentLayer().getReferencePoint());		
+	}
+	*/
 	
 }

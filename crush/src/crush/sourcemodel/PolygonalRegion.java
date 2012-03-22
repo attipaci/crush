@@ -60,7 +60,7 @@ public class PolygonalRegion<CoordinateType extends CoordinatePair> extends Regi
 
 	@Override
 	public boolean isInside(Grid2D<CoordinateType> grid, double i, double j) {
-		Projection2D<CoordinateType> projection = grid.projection;
+		Projection2D<CoordinateType> projection = grid.getProjection();
 		int below = 0;
 
 		final Vector2D from = reuseFrom;

@@ -9,7 +9,7 @@ import nom.tam.fits.HeaderCardException;
 public class CartesianGrid extends Grid2D<CoordinatePair> {
 
 	public CartesianGrid() {
-		projection = new DefaultProjection2D();
+		setProjection(new DefaultProjection2D());
 	}
 	
 	@Override

@@ -227,8 +227,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void selectFrames() {
 		Range range = option("frames").getRange(true);
-		final int from = (int)range.min;
-		final int to = Math.min(size(), (int)range.max);
+		final int from = (int)range.min();
+		final int to = Math.min(size(), (int)range.max());
 		
 		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(to-from+1);
 		
@@ -394,7 +394,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			vRange = option.getRange(true);
 			vRange.scale(Unit.arcsec / Unit.s);
 		}
-		if(hasOption("chopped")) vRange.min = 0.0;
+		if(hasOption("chopped")) vRange.setMin(0.0);
 		
 		velocityCut(vRange);
 	}
@@ -1510,11 +1510,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			else {	
 				final double speed = v[t].length();
-				if(speed < range.min) {
+				if(speed < range.min()) {
 					get(t).flag(Frame.SKIP_SOURCE);
 					flagged++;
 				}
-				else if(speed > range.max) {
+				else if(speed > range.max()) {
 					set(t, null);
 					cut++;
 				}

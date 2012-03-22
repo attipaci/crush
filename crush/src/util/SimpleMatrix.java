@@ -24,8 +24,6 @@
 
 package util;
 
-//package crush.util;
-
 public class SimpleMatrix {
 	public float[][] value; 
 

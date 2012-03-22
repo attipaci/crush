@@ -26,64 +26,98 @@ package util.plot;
 
 import java.awt.*;
 
-import util.*;
+import util.Range;
 
-
-public class ColorBar extends PlotArea<FloatImageLayer> {
+public class ColorBar extends ImageArea<ImageLayer> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 460851913543807978L;
 	
-	PlotArea<? extends ImageLayer> imager;
-	int direction = VERTICAL;
-	public static int defaultShades = 512;
-	int width;
+	private PlotArea<? extends ImageLayer> imager;
+	private int orientation = VERTICAL;
 	
-	public ColorBar(PlotArea<? extends ImageLayer> imager, int dir, int width) { this(imager, dir, width, defaultShades); }
+	private int shades;
+	private int width;
 	
-	public ColorBar(PlotArea<? extends ImageLayer> imager, int dir, int width, int shades) {
-		
-		FloatImageLayer bar = new FloatImageLayer(new float[1][shades]);
-		setContentLayer(bar);
-		this.imager = imager;
-		this.direction = dir;
-		this.width = width;
-		
-		//setBorder(Math.max(1, imager.border));
-		bar.range = new Range(0.0, 1.0);
-		
-		setRotation(0.0);
-		
-		for(int j=bar.data[0].length, height=j; --j >=0; ) bar.data[0][j] = (float) j/(height-1);	
+	public ColorBar(PlotArea<? extends ImageLayer> imager, int dir) { 
+		this(imager, dir, defaultWidth, defaultShades);
 	}
 	
+	public ColorBar(PlotArea<? extends ImageLayer> imager, int dir, int width, int shades) {
+		this.imager = imager;
+		this.orientation = dir;
+		this.width = width;
+		setShades(shades);
+		setRotation(0.0);
+		setTransparent(false);
+		setZoomMode(ImageArea.ZOOM_STRETCH);
+	}
+	
+	public int getShades() { return shades; }
+	
+	public void setShades(int n) {
+		this.shades = n;
+		create();
+	}
+	
+	public int getOrientation() { return orientation; }
+	
+	public void setOrientation(int value) { orientation = value; }
+	
+	private void create() {	
+		float[][] data = new float[1][shades];
+		for(int j=shades; --j >=0; ) data[0][j] = (float) j/(shades-1);
+		
+		ImageLayer.Float array = new ImageLayer.Float(data);
+		array.defaults();
+		array.setSpline();
+		array.setRange(new Range(0.0, 1.0));
+		
+		setContentLayer(array);	
+	}
+	
+	@Override
+	public Dimension getPreferredSize() {
+		if(orientation == VERTICAL) return new Dimension(width, 100);
+		return new Dimension(100, width);
+	}
+	
+	public void setWidth(int pixels) { this.width = pixels; }
+	
 	public void invert() {
-		if(direction == HORIZONTAL) invertAxes(true, false);
-		else if(direction == VERTICAL) invertAxes(false, true);
+		if(orientation == HORIZONTAL) invertAxes(true, false);
+		else if(orientation == VERTICAL) invertAxes(false, true);
 	}
 	
 	@Override
 	public void setRotation(double angle) {
-		double prerotate = 0.0;
-		if(direction == HORIZONTAL) prerotate = 0.5 * Math.PI;
+		double prerotate = orientation == HORIZONTAL ? 0.5 * Math.PI : 0.0;
 		super.setRotation(prerotate + angle);		
 	}
 	
 	@Override 
 	public void setRenderSize(int width, int height) {
-		if(direction == HORIZONTAL) super.setRenderSize(height, width);
+		if(orientation == HORIZONTAL) super.setRenderSize(height, width);
 		else super.setRenderSize(width, height);
 	}
 	
 	@Override
-	public void paintComponent(Graphics g) {
-		getContentLayer().colorScheme = imager.getContentLayer().colorScheme;
+	public void paintComponent(Graphics g) {	
+		getContentLayer().setColorScheme(imager.getContentLayer().getColorScheme());
+		
 		super.paintComponent(g);
+		
+		g.drawLine(0, 0, getWidth(), getHeight());
+		g.drawLine(0, getHeight(), getWidth(), 0);
 	}
 	
 	public static final int HORIZONTAL = 0;
 	public static final int VERTICAL = 1;
+
+	private static int defaultWidth = 20;
+	private static int defaultShades = 256;
+	
 
 }
 

@@ -28,8 +28,8 @@ import java.util.Arrays;
 
 
 public class Dependents {
-	String name;
-	Integration<?, ?> integration;
+	private String name;
+	private Integration<?, ?> integration;
 	private double[] forFrame, forChannel;
 	
 	public Dependents(Integration<?, ?> owner, String name) {
@@ -39,6 +39,12 @@ public class Dependents {
 		forChannel = new double[integration.instrument.size()];
 		integration.dependents.put(name, this);
 	}
+	
+	public String getName() { return name; }
+	
+	public void setName(String value) { this.name = value; }
+	
+	public Integration<?, ?> getIntegration() { return integration; }
 	
 	public void clear(final Iterable<? extends Channel> channels, final int from, int to) { 
 		while(--to >= from) {

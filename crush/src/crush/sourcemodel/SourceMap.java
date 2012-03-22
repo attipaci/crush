@@ -182,8 +182,8 @@ public abstract class SourceMap extends SourceModel {
 		yRange.min -= margin;
 		*/
 
-		int sizeX = (int)Math.ceil((xRange.max - xRange.min)/resolution()) + 2;
-		int sizeY = (int)Math.ceil((yRange.max - yRange.min)/resolution()) + 2;
+		int sizeX = (int)Math.ceil((xRange.max() - xRange.min())/resolution()) + 2;
+		int sizeY = (int)Math.ceil((yRange.max() - yRange.min())/resolution()) + 2;
 	
 		try { 
 			checkForStorage(sizeX, sizeY);	

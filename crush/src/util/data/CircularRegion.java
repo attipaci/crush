@@ -224,7 +224,7 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 
 	public String toGregString(GridImage<CoordinateType> image) {
 		CoordinatePair offset = new CoordinatePair();
-		useGrid.projection.project(coords, offset);
+		useGrid.getProjection().project(coords, offset);
 		
 		return "ellipse " + Util.f1.format(radius.value()/Unit.arcsec) + " /user " +
 		Util.f1.format(offset.getX() / Unit.arcsec) + " " + Util.f1.format(offset.getY() / Unit.arcsec);

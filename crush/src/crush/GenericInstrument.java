@@ -32,7 +32,7 @@ public class GenericInstrument extends Instrument<Channel> {
 	 * 
 	 */
 	private static final long serialVersionUID = -7286113017649967311L;
-	public String telescope;
+	private String telescope;
 	
 	public GenericInstrument(String name, int size) {
 		super(name, size);
@@ -44,6 +44,8 @@ public class GenericInstrument extends Instrument<Channel> {
 		// TODO Auto-generated constructor stub
 	}
 
+	public void setTelescopeName(String value) { telescope = value; }
+	
 	@Override
 	public String getTelescopeName() {
 		return telescope;

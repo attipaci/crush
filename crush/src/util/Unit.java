@@ -35,8 +35,8 @@ public class Unit implements Cloneable {
 	//    2. To convert arcsecs to radians : radians = arcsecs * Unit.acsec
 	//    3. To convert degrees to hourangle : hourAngle = (degrees * Unit.deg) / Unit.hourAngle
 
-	public String name = "";
-	public double value = Double.NaN;
+	private String name = "";
+	private double value = Double.NaN;
 
 	public Unit() {}
 
@@ -47,6 +47,14 @@ public class Unit implements Cloneable {
 	
 	public Unit(String text) { parse(text); }
 
+	public String name() { return name; }
+	
+	public double value() { return value; }
+	
+	public void setName(String value) { this.name = value; }
+
+	public void setValue(double x) { this.value = x; }
+	
 	@Override
 	public Object clone() {
 		try { return super.clone(); }

@@ -685,9 +685,9 @@ public class Configurator implements Cloneable {
 			try { ints.add(Integer.decode(entry)); }
 			catch(NumberFormatException e) {
 				Range range = Range.parse(entry, true);
-				if(Double.isInfinite(range.min) || Double.isInfinite(range.max)) throw e;
-				int from = (int)Math.ceil(range.min);
-				int to = (int)Math.floor(range.max);
+				if(Double.isInfinite(range.min()) || Double.isInfinite(range.max())) throw e;
+				int from = (int)Math.ceil(range.min());
+				int to = (int)Math.floor(range.max());
 				for(int i=from; i<=to; i++) ints.add(i);	
 			}
 		}

@@ -24,12 +24,8 @@
 package crush.tools;
 
 import crush.*;
-import crush.astro.AstroImage;
-import crush.astro.AstroMap;
-import crush.sourcemodel.*;
 import util.*;
 import util.data.Data2D;
-import util.data.GridImage;
 import util.data.GridMap;
 
 import java.io.*;
@@ -125,7 +121,7 @@ public class HistogramTool {
 		GridMap<?> map = new GridMap<SphericalCoordinates>(); 
 		map.read(fits);
 		selectImage(map, type);
-		binres *= image.unit.value;		
+		binres *= image.getUnit().value();		
 	}
 	
 	public void selectImage(GridMap<?> map, String type) {
@@ -150,16 +146,16 @@ public class HistogramTool {
 			count[bin]++;
 		}
 
-		if(fileName == null) fileName = CRUSH.workPath + "histogram-" + type + "." + image.sourceName + ".dat"; 
+		if(fileName == null) fileName = CRUSH.workPath + "histogram-" + type + "." + image.getName() + ".dat"; 
 
 		PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(fileName)));
 
 		out.println("# histogram for " + image.fileName);
-		out.println("# bin resolution is " + (binres / image.unit.value) + " " + image.unit.name);
+		out.println("# bin resolution is " + (binres / image.getUnit().value()) + " " + image.getUnit().name());
 		out.println("# bin\t" + type + "\tcount");
 		out.println("# ----\t-----\t------");
 
-		for(int i=0; i<bins; i++) out.println((i+1) + "\t" + Util.e5.format((i-zeroBin) * (binres / image.unit.value)) + "\t" + count[i]);
+		for(int i=0; i<bins; i++) out.println((i+1) + "\t" + Util.e5.format((i-zeroBin) * (binres / image.getUnit().value())) + "\t" + count[i]);
 
 		out.close();
 

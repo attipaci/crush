@@ -30,7 +30,6 @@ import java.util.*;
 
 import crush.*;
 import crush.astro.AstroMap;
-import crush.gui.GridImageLayer;
 import util.*;
 import util.astro.CelestialProjector;
 import util.astro.EclipticCoordinates;
@@ -42,6 +41,7 @@ import util.data.Index2D;
 import util.data.SphericalGrid;
 import util.data.Statistics;
 import util.plot.ColorScheme;
+import util.plot.Data2DLayer;
 import util.plot.ImageArea;
 import util.plot.colorscheme.Colorful;
 
@@ -115,7 +115,7 @@ public class ScalarMap extends SourceMap {
 		
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
-		map.name = firstScan.getSourceName();
+		map.setName(firstScan.getSourceName());
 		map.commandLine = commandLine;
 		map.instrument = (Instrument<?>) instrument.copy();
 		map.correctingFWHM = map.getImageFWHM();	
@@ -156,8 +156,8 @@ public class ScalarMap extends SourceMap {
 		setSize();
 
 		// Make the reference fall on pixel boundaries.
-		map.getGrid().refIndex.setX(0.5 - Math.rint(xRange.min/gridSize));
-		map.getGrid().refIndex.setY(0.5 - Math.rint(yRange.min/gridSize));
+		map.getGrid().refIndex.setX(0.5 - Math.rint(xRange.min()/gridSize));
+		map.getGrid().refIndex.setY(0.5 - Math.rint(yRange.min()/gridSize));
 			
 		map.printShortInfo();		
 		
@@ -362,16 +362,16 @@ public class ScalarMap extends SourceMap {
 		if(filter.isConfigured("interpolation")) {
 			String spec = filter.get("interpolation").getValue().toLowerCase();
 			// The default terminology...
-			if(spec.equals("nearest")) map.interpolationType = Data2D.NEAREST_NEIGHBOR;
-			else if(spec.equals("linear")) map.interpolationType = Data2D.BILINEAR;
-			else if(spec.equals("quadratic")) map.interpolationType = Data2D.PIECEWISE_QUADRATIC;
-			else if(spec.equals("cubic")) map.interpolationType = Data2D.BICUBIC_SPLINE;
+			if(spec.equals("nearest")) map.setInterpolationType(Data2D.NEAREST_NEIGHBOR);
+			else if(spec.equals("linear")) map.setInterpolationType(Data2D.BILINEAR);
+			else if(spec.equals("quadratic")) map.setInterpolationType(Data2D.PIECEWISE_QUADRATIC);
+			else if(spec.equals("cubic")) map.setInterpolationType(Data2D.BICUBIC_SPLINE);
 			// And alternative names...
-			else if(spec.equals("none")) map.interpolationType = Data2D.NEAREST_NEIGHBOR;
-			else if(spec.equals("bilinear")) map.interpolationType = Data2D.BILINEAR;
-			else if(spec.equals("piecewise")) map.interpolationType = Data2D.PIECEWISE_QUADRATIC;
-			else if(spec.equals("bicubic")) map.interpolationType = Data2D.BICUBIC_SPLINE;
-			else if(spec.equals("spline")) map.interpolationType = Data2D.BICUBIC_SPLINE;
+			else if(spec.equals("none")) map.setInterpolationType(Data2D.NEAREST_NEIGHBOR);
+			else if(spec.equals("bilinear")) map.setInterpolationType(Data2D.BILINEAR);
+			else if(spec.equals("piecewise")) map.setInterpolationType(Data2D.PIECEWISE_QUADRATIC);
+			else if(spec.equals("bicubic")) map.setInterpolationType(Data2D.BICUBIC_SPLINE);
+			else if(spec.equals("spline")) map.setInterpolationType(Data2D.BICUBIC_SPLINE);
 		}
 		
 		if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
@@ -751,8 +751,10 @@ public class ScalarMap extends SourceMap {
 				else if(spec.equals("weight")) plane = thumbnail.getWeightImage();
 			}
 			
-			final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
-			final GridImageLayer image = new GridImageLayer(plane);
+			final ImageArea<Data2DLayer> imager = new ImageArea<Data2DLayer>();
+			final Data2DLayer image = new Data2DLayer(plane);
+			
+			if(hasOption("write.png.spline")) image.setSpline();
 	
 			imager.setContentLayer(image);
 			imager.setBackground(Color.LIGHT_GRAY);
@@ -774,7 +776,7 @@ public class ScalarMap extends SourceMap {
 					scheme = ColorScheme.getInstanceFor(schemeName);
 			}
 				
-			image.colorScheme = scheme;
+			image.setColorScheme(scheme);
 			imager.saveAs(map.fileName + ".png", width, height);	
 		}
 		
@@ -782,12 +784,12 @@ public class ScalarMap extends SourceMap {
 
 	@Override
 	public String getSourceName() {
-		return map.name;
+		return map.getName();
 	}
 
 	@Override
 	public Unit getUnit() {
-		return map.unit;
+		return map.getUnit();
 	}
 
 	@Override

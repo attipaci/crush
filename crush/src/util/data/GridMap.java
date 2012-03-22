@@ -47,7 +47,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	private Vector2D reuseOffset = new Vector2D();
 	
 	public GridMap() { 
-		contentType = "Signal";
+		setContentType("Signal");
 	}
 	
 	public GridMap(String fileName) throws Exception { 
@@ -99,8 +99,8 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	public String getPixelInfo(int i, int j) {
 		if(!isValid(i, j)) return "";
 		String type = "";
-		if(contentType != null) if(contentType.length() != 0) type = contentType + "> ";
-		return type + Util.getDecimalFormat(getS2N(i, j)).format(getValue(i, j)) + " +- " + Util.s2.format(getRMS(i, j)) + " " + unit.name;
+		if(getContentType() != null) if(getContentType().length() != 0) type = getContentType() + "> ";
+		return type + Util.getDecimalFormat(getS2N(i, j)).format(getValue(i, j)) + " +- " + Util.s2.format(getRMS(i, j)) + " " + getUnit().name();
 	}
 	
 	@Override
@@ -310,7 +310,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 			return;
 		}
 		
-		if(verbose) System.err.println(" Resampling map to "+ sizeX() + "x" + sizeY() + ".");
+		if(isVerbose()) System.err.println(" Resampling map to "+ sizeX() + "x" + sizeY() + ".");
 		
 		final GridMap<CoordinateType> fromMap = (GridMap<CoordinateType>) from;
 		final GridImage<CoordinateType> fromWeight = fromMap.getWeightImage();
@@ -344,7 +344,8 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	}
 	
 	public GridImage<CoordinateType> getWeightImage() { 
-		return getImage(getWeight(), "Weight", new Unit("[" + unit.name + "]**(-2)", 1.0 / (unit.value * unit.value)));
+		double unit = getUnit().value();
+		return getImage(getWeight(), "Weight", new Unit("[" + getUnit().name() + "]**(-2)", 1.0 / (unit * unit)));
 	}
 	
 	public GridImage<CoordinateType> getTimeImage() { 
@@ -352,7 +353,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	}
 	
 	public GridImage<CoordinateType> getRMSImage() {
-		return getImage(getRMS(), "Noise", unit);
+		return getImage(getRMS(), "Noise", getUnit());
 	}
 	
 	public GridImage<CoordinateType> getS2NImage() { 
@@ -566,7 +567,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		getTimeImage().setImage(HDU[1]);
 		
 		GridImage<CoordinateType> noise = getWeightImage();
-		noise.unit = unit;
+		noise.setUnit(getUnit());
 		noise.setImage(HDU[2]);
 		
 		new Task<Void>() {

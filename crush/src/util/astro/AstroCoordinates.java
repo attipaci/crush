@@ -20,40 +20,18 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package util.plot;
 
-import java.awt.Dimension;
+package util.astro;
 
-
-public class FloatImageLayer extends ImageLayer {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -341608880761068245L;
-	float[][] data;
+public interface AstroCoordinates {
 	
-	public FloatImageLayer(float[][] data) {
-		setData(data);
-	}
+	public boolean isHorizontal();
+
+	public boolean isEquatorial();
 	
-	public void setData(float[][] data) {
-		this.data = data;
-	}
+	public boolean isEcliptic();
+
+	public boolean isGalactic();
 	
-	@Override
-	public Dimension getArraySize() {
-		return new Dimension(data.length, data[0].length);
-	}
-
-	@Override
-	public double getValue(int i, int j) {
-		return data[i][j];
-	}
-
-	@Override
-	public void initialize() {
-		// TODO Auto-generated method stub
-		
-	}
-
+	public boolean isSuperGalactic();
 }

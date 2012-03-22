@@ -23,8 +23,12 @@
 
 package util.plot;
 
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Stroke;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -37,7 +41,24 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	 */
 	private static final long serialVersionUID = -1434685464605442072L;
 	
-	PlotArea<? extends ContentType> content;
+	private PlotArea<? extends ContentType> plotArea;
+
+	public PlotPane center, left, right, top, bottom;
+	public PlotPane topLeft, topRight, bottomLeft, bottomRight;
+	
+	private Stroke stroke;
+	
+	// containers for each sub-panel...
+	// getComponentAt/findComponentAt --> the top-most visible component at the position.
+	// validate()? (does layout, but how is it different from paintComponent?...)
+	
+	// TODO
+	// constructors:
+	//   Plot(float[][])
+	//   Plot(double[][])
+	//   Plot(Data2D)
+	//   Plot(GridImage<?>)
+	//   ...
 	
 	// Top:
 	//  * Title
@@ -60,56 +81,133 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	//  * (ColorBar.Horizontal, ...)
 	//  * (...)
 	
+	GridBagLayout layout = new GridBagLayout();
+	
 	public Plot() {
+		setLayout(layout);
+
+		// The central plot area
+		center = new PlotPane(this);
+		add(center, 1, 1, GridBagConstraints.BOTH, 1.0, 1.0);
+	
+		// The sides...
+		left = new PlotPane(this);
+		add(left, 0, 1, GridBagConstraints.VERTICAL, 0.0, 0.0);
+					
+		right = new PlotPane(this);
+		add(right, 2, 1, GridBagConstraints.VERTICAL, 0.0, 0.0);
 		
+		top = new PlotPane(this);
+		add(top, 1, 0, GridBagConstraints.HORIZONTAL, 0.0, 0.0);
+		
+		bottom = new PlotPane(this);
+		add(bottom, 1, 2, GridBagConstraints.HORIZONTAL, 0.0, 0.0);
+	
+		// The corners...
+		topLeft = new PlotPane(this);
+		add(topLeft, 0, 0, GridBagConstraints.BOTH, 0.0, 0.0);	
+		
+		topRight = new PlotPane(this);
+		add(topRight, 2, 0, GridBagConstraints.BOTH, 0.0, 0.0);
+		
+		bottomLeft = new PlotPane(this);
+		add(bottomLeft, 0, 2, GridBagConstraints.BOTH, 0.0, 0.0);
+	
+		bottomRight = new PlotPane(this);
+		add(bottomRight, 2, 2, GridBagConstraints.BOTH, 0.0, 0.0);
+		
+		defaults();
+	}
+
+	public PlotPane getCenterPane() { return center; }
+	
+	public PlotPane getLeftane() { return left; }
+	
+	public PlotPane getRightPane() { return right; }
+	
+	public PlotPane getTopPane() { return top; }
+	
+	public PlotPane getBottomPane() { return bottom; }
+	
+	public PlotPane getTopLeftPane() { return topLeft; }
+	
+	public PlotPane getTopRightPane() { return topRight; }
+	
+	public PlotPane getBottomLeftPane() { return bottomLeft; }
+	
+	public PlotPane getBottomRightPane() { return bottomRight; }
+	
+	
+	
+	public void defaults() {
+		setFont(defaultFont);
 	}
 	
-	private void add(JComponent component, int x, int y, int fill) {
-		GridBagLayout gridbag = new GridBagLayout();
+	
+	public void setTransparent(boolean value) {
+		for(Component c : getComponents()) if(c instanceof PlotPane) 
+			((PlotPane) c).setTransparent(value);
+	}
+	
+	@Override
+	public void paintComponent(Graphics g) {
+		validate();
+		plotArea.setSize(center.getSize());
+		super.paintComponent(g);
+	}
+	
+	public PlotArea<? extends ContentType> getPlotArea() { return plotArea; }
+	
+	public void setPlotArea(PlotArea<? extends ContentType> area) { 
+		if(this.plotArea != null) center.remove(this.plotArea);
+		this.plotArea = area; 
+		center.add(area);
+	}
+	
+	private void add(JComponent component, int x, int y, int fill, double weightx, double weighty) {	
         GridBagConstraints c = new GridBagConstraints();
-        
+        c.weightx = weightx;
+        c.weighty = weighty;
         c.gridx = x;
         c.gridy = y;
         c.fill = fill;
-        gridbag.setConstraints(component, c);
+        layout.setConstraints(component, c);
         add(component);
 	}
 	
-	public void addCenter(JComponent component) {
-		add(component, 1, 1, GridBagConstraints.BOTH);
+	public Stroke getStroke() { return stroke; }
+
+	public void setStroke(Stroke s) { this.stroke = s; }
+	
+	public float getFontSize() { return getFont().getSize2D(); }
+	
+	
+	public void setFontSize(float size) {
+		setFont(getFont().deriveFont(size));
 	}
 	
-	public void addTop(JComponent component) {
-		add(component, 1, 0, GridBagConstraints.HORIZONTAL);
+	public void setFontBold(boolean value) {
+		int style = getFont().getStyle();
+		if(value) style |= Font.BOLD;
+		else style &= ~Font.BOLD;
+		setFont(getFont().deriveFont(style));
 	}
 	
-	public void addBottom(JComponent component) {
-		add(component, 1, 2, GridBagConstraints.HORIZONTAL);
+	public void setFontItalic(boolean value) {
+		int style = getFont().getStyle();
+		if(value) style |= Font.ITALIC;
+		else style &= ~Font.ITALIC;
+		setFont(getFont().deriveFont(style));
 	}
 	
-	public void addLeft(JComponent component) {
-		add(component, 0, 1, GridBagConstraints.VERTICAL);
+	public boolean isFontItalic() {
+		return (getFont().getStyle() & Font.ITALIC) != 0;
 	}
 	
-	public void addRight(JComponent component) {
-		add(component, 2, 1, GridBagConstraints.VERTICAL);
+	public boolean isFontBold() {
+		return (getFont().getStyle() & Font.BOLD) != 0;
 	}
 	
-	public void addTopLeft(JComponent component) {
-		add(component, 0, 0, GridBagConstraints.BOTH);
-	}
-	
-	public void addTopRight(JComponent component) {
-		add(component, 2, 0, GridBagConstraints.BOTH);
-	}
-	
-	public void addBottomLeft(JComponent component) {
-		add(component, 0, 2, GridBagConstraints.BOTH);
-	}
-	
-	public void addBottomRight(JComponent component) {
-		add(component, 0, 2, GridBagConstraints.BOTH);
-	}
-	
+	public static Font defaultFont = new Font("SansSerif", Font.BOLD, 15);
 	
 }

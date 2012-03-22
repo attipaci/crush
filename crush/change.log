@@ -1,6 +1,13 @@
 >> check that incremental pointing is correctly applied...
 >> Updating WeightedPoint changed reductions. Check!
+>> write.png.spline
 
+	[FIX] PNG centering: previously, PNG images were centered on the 
+	nominal tracking center, not the image center, sometimes resulting
+	in images that were shifted to one side and part of it cut off on the
+	other side. From now, the PNG images are always properly filling the
+	allotted image area.
+	
 	[FIX] The results of pointing reductions (via 'point') were ever so 
 	slightly incorrect. No change to reduction!
 
@@ -10,6 +17,8 @@
 	[CODE] Many classes are updated to hide private fields, and access them
 	through getters/setters only. This makes for safer code.
 
+	[CODE] More work on imaging classes. The day of native CRUSH-2 image
+	tools is getting ever closer...
 
 2.11-2 (16 March 2012)
 
