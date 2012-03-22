@@ -98,7 +98,7 @@ public class ScaleDivisions implements Cloneable {
 	}
 	
 	public void update(Range range) {
-		update(range.min, range.max);
+		update(range.min(), range.max());
 	}
 	
 	
@@ -110,8 +110,8 @@ public class ScaleDivisions implements Cloneable {
 		divisions.clear();
 		
 		if(isLogarithmic()) {
-			final int from = (int) Math.floor(overSampling * Math.log10(Math.abs(range.min)));
-			final int to = (int) Math.ceil(overSampling * Math.log10(Math.abs(range.max)));
+			final int from = (int) Math.floor(overSampling * Math.log10(Math.abs(range.min())));
+			final int to = (int) Math.ceil(overSampling * Math.log10(Math.abs(range.max())));
 
 			final double increment = Math.pow(10.0, 1.0 / overSampling);
 			double level = Math.pow(increment, from);
@@ -125,8 +125,8 @@ public class ScaleDivisions implements Cloneable {
 			final int order = (int)Math.floor(Math.log10(0.5*range.span()));
 			
 			final double div = Math.pow(10.0, order) / overSampling;
-			final int fromi = (int)Math.floor(range.min/div);
-			final int toi = (int)Math.ceil(range.max/div);
+			final int fromi = (int)Math.floor(range.min()/div);
+			final int toi = (int)Math.ceil(range.max()/div);
 			
 			double level = fromi * div;
 			

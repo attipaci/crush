@@ -35,13 +35,13 @@ import java.io.IOException;
 import java.util.Vector;
 
 import javax.imageio.ImageIO;
-import javax.swing.JPanel;
+import javax.swing.OverlayLayout;
 
 
 import util.CoordinatePair;
 import util.Vector2D;
 
-public class PlotArea<ContentType extends ContentLayer> extends JPanel {
+public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel {
 	/**
 	 * 
 	 */
@@ -50,24 +50,24 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 	private Vector<PlotLayer> layers = new Vector<PlotLayer>();
 	private ContentType contentLayer;
 	
-	Vector2D referencePoint = new Vector2D(0.0, 1.0); // lower left corner...
-	Vector2D scale = new Vector2D();
-	double rotation = 0.0;
-	boolean flipX = false, flipY = false;
+	private Vector2D referencePoint = new Vector2D(0.0, 1.0); // lower left corner...
+	private Vector2D scale = new Vector2D();
+	private double rotation = 0.0;
+	private boolean flipX = false, flipY = false;
 	
-	public int zoomMode = ZOOM_STRETCH;	
-	public boolean transparent = false;
+	private int zoomMode = ZOOM_STRETCH;
 	
-	protected AffineTransform toDisplay, toCoordinates = null;
+	private AffineTransform toDisplay, toCoordinates = null;
 	
-	boolean initialized = false;
-	boolean verbose = false;
+	private boolean initialized = false;
+	private boolean verbose = false;
 	
 	public PlotArea() {}
 	
 	public PlotArea(ContentType content) {
 		this();
 		setContentLayer(content);
+		setLayout(new OverlayLayout(this));
 	}
 	
 	/**
@@ -77,6 +77,14 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 	public void defaults() {
 		initialized = true;
 	}
+	
+	public AffineTransform toDisplay() { return toDisplay; }
+	
+	public AffineTransform toCoordinates() { return toCoordinates; }
+	
+	public Vector2D getReferencePoint() { return referencePoint; }
+	
+	public void setReferencePoint(Vector2D v) { referencePoint = v; }
 	
 	public ContentType getContentLayer() {
 		return contentLayer;		
@@ -94,12 +102,12 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 	}
 	
 	public void addLayer(PlotLayer layer) {
-		layer.plotArea = this;
+		layer.setPlotArea(this);
 		layers.add(layer);
 	}
 	
 	public void insertLayer(PlotLayer layer, int pos) {
-		layer.plotArea = this;
+		layer.setPlotArea(this);
 		layers.insertElementAt(layer, pos);
 	}
 	
@@ -129,7 +137,6 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 	public void setRenderSize(int width, int height) {
 		if(verbose) System.err.println("Setting render size to " + width + "x" + height);
 		Vector2D range = contentLayer.getPlotRanges();
-		System.err.println("range is " + range);
 		scale.set(width / range.getX(), height / range.getY());
 		zoomMode = ZOOM_FIXED;
 	}
@@ -138,6 +145,10 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 		referencePoint.subtractX(dx / getWidth());
 		referencePoint.subtractY(dy / getHeight());
 	}
+	
+	public int getZoomMode() { return zoomMode; }
+	
+	public void setZoomMode(int value) { zoomMode = value; }
 	
 	public void setZoom(double value) {
 		if(verbose) System.err.println("Setting zoom to " + value);
@@ -229,9 +240,6 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 		return toCoordinates.transform(point, point);
 	}
 	
-	public void setTransparent(boolean value) { transparent = value; }
-	
-	public boolean isTransparent() { return transparent; }
 	
 	@Override
 	public void paintComponent(Graphics g) {	
@@ -242,8 +250,8 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 		}
 	
 		updateTransforms();
-
-		if(!transparent) super.paintComponent(g);
+			
+		super.paintComponent(g);
 		
 		for(PlotLayer layer : layers) layer.paintComponent(g);
 	}
@@ -275,6 +283,14 @@ public class PlotArea<ContentType extends ContentLayer> extends JPanel {
 		System.err.println(" Written " + fileName);
 	}
 
+	
+	public boolean isVerbose() { return verbose; }
+	
+	public void setVerbose(boolean value) { verbose = value; }
+	
+	protected boolean isInitialized() { return initialized; }
+	
+	protected void setInitialized() { initialized = true; }
 	
 	public static final int ZOOM_FIXED = 0;
 	public static final int ZOOM_FIT = 1;

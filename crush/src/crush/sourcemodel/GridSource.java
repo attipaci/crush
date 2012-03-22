@@ -124,14 +124,14 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	
 	@Override
 	public void write() throws HeaderCardException, FitsException, IOException {
-		if(fileName == null) fileName = CRUSH.workPath + File.separator + name + ".fits";  
+		if(fileName == null) fileName = CRUSH.workPath + File.separator + getName() + ".fits";  
 		super.write();
 	}
 	
 	@Override
 	public GridImage<CoordinateType> getRegrid(final Grid2D<CoordinateType> toGrid) throws IllegalStateException {	
 		GridSource<CoordinateType> regrid = (GridSource<CoordinateType>) super.getRegrid(toGrid);
-		regrid.setUnit(unit.name);
+		regrid.setUnit(getUnit().name());
 		return regrid;
 	}
 
@@ -174,12 +174,12 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 				instrument = Instrument.forName(header.getStringValue("INSTRUME"));
 				if(instrument == null) {
 					instrument = new GenericInstrument(header.getStringValue("INSTRUME"));
-					if(header.containsKey("TELESCOP")) ((GenericInstrument) instrument).telescope = header.getStringValue("TELESCOP");
+					if(header.containsKey("TELESCOP")) ((GenericInstrument) instrument).setTelescopeName(header.getStringValue("TELESCOP"));
 				}
 			}
 			else {
 				instrument = new GenericInstrument("unknown");
-				if(header.containsKey("TELESCOP")) ((GenericInstrument) instrument).telescope = header.getStringValue("TELESCOP");
+				if(header.containsKey("TELESCOP")) ((GenericInstrument) instrument).setTelescopeName(header.getStringValue("TELESCOP"));
 			}
 		}
 		
@@ -207,11 +207,11 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 		}
 		else {
 			Unit dataUnit = instrument.getDataUnit();
-			if(name.equalsIgnoreCase(dataUnit.name)) return dataUnit.value * getInstrumentBeamArea();
+			if(name.equalsIgnoreCase(dataUnit.name())) return dataUnit.value() * getInstrumentBeamArea();
 			else if(name.equalsIgnoreCase("Jy") || name.equalsIgnoreCase("jansky")) return instrument.janskyPerBeam() * getInstrumentBeamArea();
 			else {
 				Unit u = Unit.get(name);
-				if(u != null) return u.value;
+				if(u != null) return u.value();
 				// Else assume there is a standard multiplier in front, such as k, M, m, u...
 				else return  Unit.getMultiplier(name.charAt(0)).getValue() * getUnit(name.substring(1));
 			}
@@ -238,7 +238,7 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 
 
 	public void setUnit(String name) {
-		unit = new Unit(name, getUnit(name));
+		setUnit(new Unit(name, getUnit(name)));
 	}
 
 
@@ -246,7 +246,7 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	@Override
 	public void smooth(double FWHM) {
 		super.smooth(FWHM);
-		setUnit(unit.name);
+		setUnit(getUnit().name());
 	}
 
 	@Override
@@ -274,13 +274,13 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	
 	
 	public void printShortInfo() {
-		System.err.println("\n\n  [" + name + "]\n" + super.toString());
+		System.err.println("\n\n  [" + getName() + "]\n" + super.toString());
 	}
 	
 	@Override
 	public String toString() {
 		String info = fileName == null ? "\n" : " Image File: " + fileName + ". ->" + "\n\n" + 
-			"  [" + name + "]\n" +
+			"  [" + getName() + "]\n" +
 			super.toString() + 
 			"  Instrument Beam FWHM: " + Util.f2.format(instrument.resolution / Unit.arcsec) + " arcsec." + "\n" +
 			"  Applied Smoothing: " + Util.f2.format(smoothFWHM / Unit.arcsec) + " arcsec." + " (includes pixelization)\n" +

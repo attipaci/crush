@@ -22,8 +22,8 @@
  ******************************************************************************/
 package test;
 
-import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.*;
+import java.awt.event.*;
 
 import crush.*;
 import crush.astro.AstroMap;
@@ -31,8 +31,10 @@ import crush.gui.*;
 
 import javax.swing.*;
 
-import util.plot.AxisLabel;
-import util.plot.ColorBar;
+import util.Unit;
+import util.Vector2D;
+import util.plot.ImageLayer;
+import util.plot.PlotLabel;
 import util.plot.ImageArea;
 import util.plot.colorscheme.*;
 
@@ -43,15 +45,39 @@ public class ImagerTest {
 			Instrument<?> instrument = new GenericInstrument("generic");
 			AstroMap map = new AstroMap("/home/pumukli/data/sharc2/images/VESTA.8293.fits", instrument);
 			
-			GridImageLayer image = new GridImageLayer(map);
-			image.colorScheme = new Colorful();
+			float[][] data = new float[10][10];
+			for(int i=data.length; --i >= 0; ) for(int j=data[0].length; --j >= 0; )
+				data[i][j] = (float) Math.random();
 			
+			
+			GridImageLayer image = new GridImageLayer(map);
 			final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
+			
+			//ImageLayer image = new ImageLayer.Float(data);
+			//image.defaults();
+			//final ImageArea<ImageLayer> imager = new ImageArea<ImageLayer>();
+			
+			
+			image.setColorScheme(new Colorful());
 			imager.setContentLayer(image);
 			//imager.invertAxes(false, false);
 			
 			//ColorBar colorbar = new ColorBar(imager, ColorBar.VERTICAL, 20);
-			AxisLabel label = new AxisLabel(map.unit.name, ColorBar.VERTICAL);
+			final PlotLabel plotLabel = new PlotLabel("Test Label") {
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public Vector2D getPosition() {
+					return new Vector2D(0.5 * getWidth(), 0.5 * getHeight());
+				}
+			};
+			
+			plotLabel.setHorizontalTextAlign(PlotLabel.ALIGN_CENTER);
+			plotLabel.setVerticalTextAlign(PlotLabel.ALIGN_MIDRISE);
+			plotLabel.setRotation(45.0 * Unit.deg);
 			
 			final JComponent cross = new JComponent() {
 				/**
@@ -81,24 +107,52 @@ public class ImagerTest {
 
 				@Override
 				public void paintComponent(Graphics g) {
+					// Set sizes of all subcomponents to make sure they are the same...
 					imager.setSize(getSize());
 					cross.setSize(getSize());
+					plotLabel.setSize(getSize());
+					
+					// Set before rendering, otherwise not guaranteed
+					setComponentZOrder(plotLabel, 0);
+					setComponentZOrder(cross, 1);
+					setComponentZOrder(imager, 2);
+					
+					//Turn on/off subcomponent visibility...
+					//imager.setVisible(false);
+					
 					super.paintComponent(g);
 				}
 			};
 			
+			root.add(plotLabel);
 			root.add(cross);
 			root.add(imager);
+			
+			/*
+			root.setComponentZOrder(label, 0);
+			root.setComponentZOrder(cross, 1);
+			root.setComponentZOrder(imager, 2);
+			*/
 			
 			JFrame frame = new JFrame();
 			frame.setSize(600, 600);
 			
-			Box box = Box.createHorizontalBox();
+
+			frame.addWindowListener(new WindowAdapter() {
+				@Override
+				public void windowClosing(WindowEvent e) {
+					System.err.println();
+					System.err.println();
+					System.exit(0);
+				}
+			});	
+			
+			//Box box = Box.createHorizontalBox();
 			//box.add(colorbar);
-			box.add(label);	
+			//box.add(label);	
 			
 			frame.add(root, "Center");
-			frame.add(box, "East");
+			//frame.add(box, "East");
 		
 			frame.setVisible(true);
 		}

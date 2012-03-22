@@ -27,7 +27,7 @@ package crush;
 import java.lang.reflect.*;
 
 public class FieldGradientMode extends CorrelatedMode {
-	Field field;
+	private Field field;
 
 	public FieldGradientMode(Field field) {
 		this.field = field;
@@ -37,6 +37,8 @@ public class FieldGradientMode extends CorrelatedMode {
 		this.field = field;
 		setChannels(channels);
 	}
+	
+	public Field getField() { return field; }
 
 	@Override
 	public void setChannels(ChannelGroup<?> channels) {

@@ -32,6 +32,7 @@ import java.awt.image.BufferedImage;
 
 
 import util.*;
+import util.data.Index2D;
 import util.plot.colorscheme.GreyScale;
 
 public abstract class ImageLayer extends ContentLayer implements Transforming {
@@ -40,21 +41,17 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	 */
 	private static final long serialVersionUID = 1451020511179557736L;
 	
-	
-	BufferedImage buffer;
-	int interpolationType = AffineTransformOp.TYPE_NEAREST_NEIGHBOR;
-	public Vector2D referenceIndex = new Vector2D();
-	public CoordinateSystem coordinateSystem;
-	public ColorScheme colorScheme = new GreyScale();
-	public Range range;
-
-	public boolean verbose = false;
-	
-	public int i0 = 0, j0 = 0;	// The subarray offset to image
+	private BufferedImage buffer;
+	private int interpolationType = AffineTransformOp.TYPE_NEAREST_NEIGHBOR;
+	private CoordinateSystem coordinateSystem;
+	private ColorScheme colorScheme = new GreyScale();
+	private Range range;
+	private boolean verbose = false;	
+	private Index2D fromIndex = new Index2D();	// The subarray offset to image
 	
 	private AffineTransform toCoordinates = new AffineTransform();
 	private AffineTransform toIndex = new AffineTransform();
-
+	
 	public abstract Dimension getArraySize();
 	
 	public abstract double getValue(int i, int j);
@@ -64,11 +61,11 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	}
 	
 	protected double getScaled(double value) {
-		return (value - range.min) / range.span();
+		return (value - range.min()) / range.span();
 	}
 	
 	public int getRGB(double value) {
-		return Double.isNaN(value) ? colorScheme.noData : colorScheme.getRGB(getScaled(value));
+		return java.lang.Double.isNaN(value) ? colorScheme.noData : colorScheme.getRGB(getScaled(value));
 	}
 	
 	public void createBuffer(int width, int height) {
@@ -78,7 +75,7 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	
 	protected void drawImage(Graphics g) {	
 		Graphics2D g2 = (Graphics2D) g;
-		AffineTransformOp op = new AffineTransformOp(plotArea.toDisplay, interpolationType);
+		AffineTransformOp op = new AffineTransformOp(getPlotArea().toDisplay(), interpolationType);
 		g2.drawImage(buffer, op, 0, 0);				
 	}
 	
@@ -97,7 +94,7 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 		Range range = new Range();
 		for(int i=buffer.getWidth(); --i >=0; ) for(int j=buffer.getHeight(); --j >=0; ) {
 			final double value = getValue(i, j);
-			if(!Double.isNaN(value)) range.include(value);
+			if(!java.lang.Double.isNaN(value)) range.include(value);
 		}
 		return range;	
 	}
@@ -108,10 +105,7 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	}
 	
 	public void setSubarray(int fromi, int fromj, int toi, int toj) {
-		referenceIndex.subtractX(fromi - i0);
-		referenceIndex.subtractY(fromj - j0); 
-		i0 = fromi;
-		j0 = fromj;
+		fromIndex.set(fromi, fromj);
 		createBuffer(toi - fromi, toj - fromj);
 		if(verbose) System.err.println("Selecting " + fromi + "," + fromj + " -- " + toi + "," + toj);	
 	}
@@ -152,6 +146,116 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 		toCoordinates.transform(c1, c1);
 		toCoordinates.transform(c2, c2);
 		return new Vector2D(Math.abs(c2.getX() - c1.getX()), Math.abs(c2.getY() - c1.getY()));
+	}
+
+	
+	public BufferedImage getBufferedImage() { return buffer; }
+	
+	public void setBufferedImage(BufferedImage im) { this.buffer = im; }
+	
+	public int getInterpolationType() { return interpolationType; }
+	
+	public void setInterpolationType(int value) { interpolationType = value; }
+	
+	public void setPixelized() { setInterpolationType(AffineTransformOp.TYPE_NEAREST_NEIGHBOR); }
+
+	public void setSpline() { setInterpolationType(AffineTransformOp.TYPE_BICUBIC); }
+	
+	public CoordinateSystem getCoordinateSystem() { return coordinateSystem; }
+	
+	public void setCoordinateSystem(CoordinateSystem c) { coordinateSystem = c; }
+	
+	public ColorScheme getColorScheme() { return colorScheme; }
+	
+	public void setColorScheme(ColorScheme scheme) { this.colorScheme = scheme; }
+	
+	public Range getRange() { return range; }
+	
+	public void setRange(Range r) { this.range = r; }
+	
+	public boolean isVerbose() { return verbose; }
+	
+	public void setVerbose(boolean value) { verbose = value; }
+	
+	public Index2D getSubarrayOffset() { return fromIndex; }
+	
+	public void setSubarrayOffset(Index2D index) { this.fromIndex = index; }
+	
+	public void setSubarrayOffset(int i, int j) { fromIndex.set(i,  j); }
+	
+
+	public static class Double extends ImageLayer {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 6276800154911203125L;
+		private double[][] data;
+		
+		public Double() {}
+		
+		public Double(double[][] data) {
+			setData(data);
+		}
+		
+		public double[][] getData() { return data; }
+		
+		public void setData(double[][] data) {
+			this.data = data;
+			defaults();
+		}
+		
+		@Override
+		public Dimension getArraySize() {
+			return new Dimension(data.length, data[0].length);
+		}
+
+		@Override
+		public double getValue(int i, int j) {
+			return data[i + getSubarrayOffset().i()][j + getSubarrayOffset().j()];
+		}
+
+		@Override
+		public void initialize() {
+			updateBuffer();
+		}
+	}
+	
+	
+	public static class Float extends ImageLayer {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -341608880761068245L;
+		private float[][] data;
+		
+		public Float() {}
+		
+		public Float(float[][] data) {
+			setData(data);
+		}
+		
+		public float[][] getData() { return data; }
+		
+		public void setData(float[][] data) {
+			this.data = data;
+			defaults();
+		}
+		
+		@Override
+		public Dimension getArraySize() {
+			return new Dimension(data.length, data[0].length);
+		}
+
+		@Override
+		public double getValue(int i, int j) {
+			return data[i + getSubarrayOffset().i()][j + getSubarrayOffset().j()];
+		}
+
+		@Override
+		public void initialize() {
+			updateBuffer();
+		}
+
 	}
 
 }

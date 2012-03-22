@@ -32,7 +32,7 @@ import util.astro.*;
 import util.data.SphericalGrid;
 
 
-public class AstroMap extends GridSource<SphericalCoordinates> implements SkyCoordinates {
+public class AstroMap extends GridSource<SphericalCoordinates> implements AstroCoordinates {
 	
 	public AstroMap() { 
 		setGrid(new SphericalGrid());

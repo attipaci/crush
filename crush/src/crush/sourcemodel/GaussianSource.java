@@ -86,7 +86,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		@SuppressWarnings("unchecked")
 		CoordinateType coords = (CoordinateType) map.getReference().clone();
 		map.getGrid().getCoords(new Vector2D(index.i(), index.j()), coords);
-		setID(map instanceof GridSource ? ((GridSource<?>) map).name : "[1]");
+		setID(map instanceof GridSource ? ((GridSource<?>) map).getName() : "[1]");
 		setCenter(coords);
 		setRadius(new DataPoint(map.getImageFWHM(), Math.sqrt(map.getPixelArea())));	
 	}
@@ -300,7 +300,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 			Unit unit = nextArg == null ? 
 					new Unit("Jy/beam", sourceMap.getUnit("Jy/beam")) :
 					new Unit(nextArg, sourceMap.getUnit(nextArg));
-			peak.scale(unit.value);
+			peak.scale(unit.value());
 		}
 			
 		while(tokens.hasMoreTokens()) addComment(tokens.nextToken() + " ");
@@ -310,7 +310,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 
 	@Override
 	public String toCrushString(GridImage<CoordinateType> image) {
-		return getID() + "\t" + super.toCrushString(image) + "  " + DataPoint.toString(peak, image.unit);
+		return getID() + "\t" + super.toCrushString(image) + "  " + DataPoint.toString(peak, image.getUnit());
 	}
 	
 	@Override
@@ -408,15 +408,15 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 			beamScaling = sourceMap.getInstrumentBeamArea() / sourceMap.getImageBeamArea();
 		}
 			
-		data.add(new Datum("peak", peak.value() * beamScaling / map.unit.value, map.unit.name));
-		data.add(new Datum("dpeak", peak.rms() * beamScaling / map.unit.value, map.unit.name));
+		data.add(new Datum("peak", peak.value() * beamScaling / map.getUnit().value(), map.getUnit().name()));
+		data.add(new Datum("dpeak", peak.rms() * beamScaling / map.getUnit().value(), map.getUnit().name()));
 		data.add(new Datum("peakS2N", peak.significance(), ""));
 		
 		DataPoint F = new DataPoint(getAdaptiveIntegral(map));
 		F.scale(map.getPixelArea() / map.getImageBeamArea());
 		
-		data.add(new Datum("int", F.value() * beamScaling / map.unit.value, map.unit.name));
-		data.add(new Datum("dint", F.rms() * beamScaling / map.unit.value, map.unit.name));
+		data.add(new Datum("int", F.value() * beamScaling / map.getUnit().value(), map.getUnit().name()));
+		data.add(new Datum("dint", F.rms() * beamScaling / map.getUnit().value(), map.getUnit().name()));
 		data.add(new Datum("intS2N", F.significance(), ""));
 		
 		data.add(new Datum("FWHM", getRadius().value() / sizeUnit, sizeName));
@@ -440,14 +440,14 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		
 		peak.scale(beamScaling);
 		
-		String info = "  Peak: " + DataPoint.toString(peak, map.unit) 
+		String info = "  Peak: " + DataPoint.toString(peak, map.getUnit()) 
 			+ " (S/N ~ " + Util.f1.format(peak.significance()) + ")\n";
 	
 		peak.scale(1.0 / beamScaling);
 		
 		DataPoint F = new DataPoint(getAdaptiveIntegral(map));
 		F.scale(map.getPixelArea() / map.getImageBeamArea());
-		F.scale(1.0 / map.unit.value);
+		F.scale(1.0 / map.getUnit().value());
 		
 		info += "  Int.: " + F.toString() + "\n";
 		

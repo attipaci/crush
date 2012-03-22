@@ -66,25 +66,23 @@ public class HorizontalCoordinates extends SphericalCoordinates {
 		setLocalCoordinateSystem(defaultLocalCoordinateSystem);		
 	}
 
-	public double AZ() { return nativeLongitude(); }
+	public final double AZ() { return nativeLongitude(); }
 
-	public double azimuth() { return nativeLongitude(); }
+	public final double azimuth() { return nativeLongitude(); }
 
-	public double EL() { return nativeLatitude(); }
+	public final double EL() { return nativeLatitude(); }
 
-	public double elevation() { return nativeLatitude(); }
+	public final double elevation() { return nativeLatitude(); }
 
-	public double ZA() { return 90.0 * Unit.deg - nativeLatitude(); }
+	public final double ZA() { return 90.0 * Unit.deg - nativeLatitude(); }
 
-	public double zenithAngle() { return ZA(); }
+	public final double zenithAngle() { return ZA(); }
 
-	public double cosEL() { return cosLat(); }
+	public final void setAZ(double AZ) { setNativeLongitude(AZ); }
 
-	public void setAZ(double AZ) { setNativeLongitude(AZ); }
+	public final void setEL(double EL) { setNativeLatitude(EL); }
 
-	public void setEL(double EL) { setNativeLatitude(EL); }
-
-	public void setZA(double ZA) { setNativeLatitude(90.0 * Unit.deg - ZA); }
+	public final void setZA(double ZA) { setNativeLatitude(90.0 * Unit.deg - ZA); }
 
 	public EquatorialCoordinates toEquatorial(GeodeticCoordinates site, double LST) {
 		EquatorialCoordinates equatorial = new EquatorialCoordinates();

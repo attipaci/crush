@@ -224,7 +224,7 @@ public class PolarMap extends SourceModel {
 		A.enableWeighting = false;
 		A.enableBias = false;
 		
-		a.unit = Unit.unity;
+		a.setUnit(Unit.unity);
 		
 		return A;
 	}	
@@ -344,7 +344,7 @@ public class PolarMap extends SourceModel {
 		F.enableWeighting = false;
 		F.enableBias = false;
 		
-		f.unit = Unit.unity;
+		f.setUnit(Unit.unity);
 		f.sanitize();
 		return F;
 	}

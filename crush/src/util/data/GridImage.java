@@ -82,7 +82,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	
 	public Projection2D<CoordinateType> getProjection() { return getGrid().getProjection(); }
 	
-	public void setProjection(Projection2D<CoordinateType> projection) { getGrid().projection = projection; }
+	public void setProjection(Projection2D<CoordinateType> projection) { getGrid().setProjection(projection); }
 	
 	public CoordinateType getReference() { return getGrid().getReference(); }
 	
@@ -92,13 +92,13 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		@SuppressWarnings("unchecked")
 		GridImage<CoordinateType> image = (GridImage<CoordinateType>) clone();
 		image.setData(data);
-		image.contentType = contentType;
-		image.unit = unit;
+		image.setContentType(contentType);
+		image.setUnit(unit);
 		return image;		
 	}
 
 	public GridImage<CoordinateType> getFluxImage() {
-		return getImage(getData(), "Flux", unit);
+		return getImage(getData(), "Flux", getUnit());
 	}
 	
 	public double getPixelArea() {
@@ -153,7 +153,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		if(dXmin > dXmax) { double temp = dXmin; dXmin = dXmax; dXmax=temp; }
 		if(dYmin > dYmax) { double temp = dYmin; dYmin = dYmax; dYmax=temp; }
 	
-		if(verbose) System.err.println("Will crop to " + ((dXmax - dXmin)/Unit.arcsec) + "x" + ((dYmax - dYmin)/Unit.arcsec) + " arcsec.");
+		if(isVerbose()) System.err.println("Will crop to " + ((dXmax - dXmin)/Unit.arcsec) + "x" + ((dYmax - dYmin)/Unit.arcsec) + " arcsec.");
 			
 		Index2D c1 = getIndex(new Vector2D(dXmin, dYmin));
 		Index2D c2 = getIndex(new Vector2D(dXmax, dYmax));
@@ -171,7 +171,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	}
 	
 	public void growFlags(final double radius, final int pattern) {
-		if(verbose) System.err.println("Growing flagged areas.");
+		if(isVerbose()) System.err.println("Growing flagged areas.");
 		
 		final double dx = getGrid().pixelSizeX();
 		final double dy = getGrid().pixelSizeY();
@@ -379,7 +379,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 
 	@SuppressWarnings("unchecked")
 	public void resample(GridImage<CoordinateType> from) {
-		if(verbose) System.err.println(" Resampling image to "+ sizeX() + "x" + sizeY() + ".");
+		if(isVerbose()) System.err.println(" Resampling image to "+ sizeX() + "x" + sizeY() + ".");
 		final Vector2D v = new Vector2D();
 		
 		// Antialias filter first...
@@ -415,12 +415,12 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		
 		Vector2D refIndex = toGrid.getReferenceIndex();
 		
-		if(verbose) System.err.print(" Reference index: " + refIndex.toString(Util.f1));
+		if(isVerbose()) System.err.print(" Reference index: " + refIndex.toString(Util.f1));
 		
 		refIndex.scaleX(1.0 / dRes.getX());
 		refIndex.scaleY(1.0 / dRes.getY());
 		
-		if(verbose) System.err.println(" --> " + refIndex.toString(Util.f1));
+		if(isVerbose()) System.err.println(" --> " + refIndex.toString(Util.f1));
 		
 		double[][] M = getGrid().getTransform();
 		M[0][0] *= dRes.getX();
@@ -440,13 +440,13 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		// Add directly if it is...
 
 		if(toGrid.equals(getGrid(), 1e-10)) {
-			if(verbose) System.err.println(" Matching grids.");
+			if(isVerbose()) System.err.println(" Matching grids.");
 			return this;
 		}
 
 		final int nx = (int) Math.ceil(sizeX() * getGrid().pixelSizeX() / toGrid.pixelSizeX());
 		final int ny = (int) Math.ceil(sizeY() * getGrid().pixelSizeY() / toGrid.pixelSizeY());
-		if(verbose) {
+		if(isVerbose()) {
 			System.err.println(" Regrid size: " + nx + "x" + ny);
 			System.err.println(" Resolution = " + Vector2D.toString(toGrid.getResolution(), Unit.get("arcsec"), 2));
 		}
@@ -504,7 +504,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	}
 
 	public int clean(GridImage<CoordinateType> search, double[][] beam, double gain, double replacementFWHM) {
-		if(verbose) System.err.println("Deconvolving to " + Util.f1.format(replacementFWHM/Unit.arcsec) + " arcsec resolution.");
+		if(isVerbose()) System.err.println("Deconvolving to " + Util.f1.format(replacementFWHM/Unit.arcsec) + " arcsec resolution.");
 
 		int ic = beam.length / 2;
 		int jc = beam[0].length / 2;
@@ -578,7 +578,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		
 		//if(verbose) System.err.println("\r " + components + " components removed. (Last: " + Util.f2.format(peakValue) + "-sigma, Ave: " + Util.f2.format(ave) + "-sigma)   ");
 
-		if(verbose) System.err.println(" " + components + " components removed. (Last: " + Util.f2.format(peakValue) + "-sigma, Ave: " + Util.f2.format(ave) + "-sigma)   ");
+		if(isVerbose()) System.err.println(" " + components + " components removed. (Last: " + Util.f2.format(peakValue) + "-sigma, Ave: " + Util.f2.format(ave) + "-sigma)   ");
 
 		
 		GridImage<?> cleanImage = (GridImage<?>) clone();
@@ -591,7 +591,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 
 		smoothFWHM = Math.sqrt(getGrid().getPixelArea()) / fwhm2size;
 
-		if(verbose) System.err.println();
+		if(isVerbose()) System.err.println();
 
 		return components;
 	}

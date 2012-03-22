@@ -127,8 +127,8 @@ public abstract class Photometry extends SourceModel {
 		
 		double mag = Math.max(Math.abs(F.value()), F.rms()) ;
 		
-		if(mag > 1.0 * Jy.value) System.out.println(F.toString(Jy));
-		else if(mag > 1.0 * mJy.value) System.out.println(F.toString(mJy));
+		if(mag > 1.0 * Jy.value()) System.out.println(F.toString(Jy));
+		else if(mag > 1.0 * mJy.value()) System.out.println(F.toString(mJy));
 		else System.out.println(F.toString(uJy));
 		
 		System.out.println("  Time  : " + Util.f1.format(integrationTime/Unit.min) + " min.");

@@ -222,8 +222,8 @@ public class CoordinatePair implements Cloneable {
 	}
 	
 	public static String toString(CoordinatePair coords, Unit unit, int decimals) {
-		return Util.f[decimals].format(coords.x / unit.value) + " " + unit.name + 
-		", " + Util.f[decimals].format(coords.y / unit.value) + " " + unit.name;
+		return Util.f[decimals].format(coords.x / unit.value()) + " " + unit.name() + 
+		", " + Util.f[decimals].format(coords.y / unit.value()) + " " + unit.name();
 	}
 	
 	

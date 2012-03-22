@@ -29,7 +29,7 @@ import util.astro.*;
 import util.data.GridImage;
 import util.data.SphericalGrid;
 
-public class AstroImage extends GridImage<SphericalCoordinates> implements Cloneable, SkyCoordinates {
+public class AstroImage extends GridImage<SphericalCoordinates> implements Cloneable, AstroCoordinates {
 
 	public AstroImage() {
 		setGrid(new SphericalGrid());

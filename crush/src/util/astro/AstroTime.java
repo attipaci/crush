@@ -47,7 +47,7 @@ import util.text.TimeFormat;
 //  only UTC <===> (MJD, TT) conversion is approximate...
 //  Use (quadratic) fit to leap? This should give some accuracy for UTC...
 public class AstroTime {
-	double MJD = Double.NaN; // Assuming that MJD goes with TT
+	private double MJD = Double.NaN; // Assuming that MJD goes with TT
 	
 	public AstroTime() {}
 	

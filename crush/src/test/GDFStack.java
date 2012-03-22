@@ -42,7 +42,7 @@ public class GDFStack {
 				else {
 					Range range = Range.parse(args[2], true);
 					stacker.readMIPSSources(catalogName, range);
-					catalogName += "." + range.min + "--" + range.max;
+					catalogName += "." + range.min() + "--" + range.max();
 				}
 			}
 			else stacker.readSources(catalogName);
@@ -64,7 +64,7 @@ public class GDFStack {
 		GridMap<CoordinatePair> stack = new GridMap<CoordinatePair>(size, size);
 		stack.setGrid(new CartesianGrid());
 		stack.setResolution(map.getResolution().getX());
-		stack.name = "stack";
+		stack.setName("stack");
 		final int c = size / 2;
 		stack.getGrid().setReferenceIndex(new Vector2D(c, c));
 		stack.setReference(new Vector2D());
@@ -76,7 +76,7 @@ public class GDFStack {
 			stack.unflag(i, j);
 		}
 		
-		System.err.println("Mean = " + getMeanFlux(0, 0).toString(Util.e3) + " " + map.unit.name);
+		System.err.println("Mean = " + getMeanFlux(0, 0).toString(Util.e3) + " " + map.getUnit().name());
 		
 		return stack;
 	}
@@ -127,7 +127,7 @@ public class GDFStack {
 		
 		stack.process();
 		DataPoint result = stack.getResult();
-		result.scale(1.0 / map.unit.value);
+		result.scale(1.0 / map.getUnit().value());
 		
 		return result;
 		
@@ -211,7 +211,7 @@ public class GDFStack {
 			DataPoint S24 = new DataPoint();
 			S24.setValue(Double.parseDouble(tokens.nextToken()));
 			S24.setRMS(Double.parseDouble(tokens.nextToken()));	
-			source.setPeak(S24.value() * 1e-6 * map.unit.value);
+			source.setPeak(S24.value() * 1e-6 * map.getUnit().value());
 				
 			sources.add(source);
 		}

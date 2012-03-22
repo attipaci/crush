@@ -40,8 +40,8 @@ import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
 public abstract class Grid2D<CoordinateType extends CoordinatePair> implements Cloneable {
-	public Projection2D<CoordinateType> projection;
-	public String alt = ""; // The FITS alternative coordinate system specifier... 
+	private Projection2D<CoordinateType> projection;
+	private String alt = ""; // The FITS alternative coordinate system specifier... 
 	
 	public Vector2D refIndex = new Vector2D();
 	
@@ -316,7 +316,13 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair> implements C
     public void setReferenceIndex(Vector2D v) { refIndex = v; }
     
     public final Projection2D<CoordinateType> getProjection() { return projection; }
-
+    
+    public void setProjection(Projection2D<CoordinateType> p) { this.projection = p; }
+    
+    public final String getFITSAlt() { return alt; }
+    
+    public final void setFITSAlt(String ver) { this.alt = ver; }
+    
     public void getIndex(CoordinateType coords, Vector2D index) {
     	projection.project(coords, index);
     	toIndex(index);

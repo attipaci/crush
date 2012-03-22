@@ -46,8 +46,8 @@ public class KillFilter extends FixedFilter {
 	}
 	
 	public void kill(Range fRange) {
-		int fromf = Math.max(0, (int)Math.floor(fRange.min / df));
-		int tof = Math.min(nf, (int)Math.ceil(fRange.max / df));
+		int fromf = Math.max(0, (int)Math.floor(fRange.min() / df));
+		int tof = Math.min(nf, (int)Math.ceil(fRange.max() / df));
 		
 		if(fromf > tof) return;
 		

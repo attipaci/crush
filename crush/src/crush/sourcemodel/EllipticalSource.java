@@ -105,8 +105,8 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 	}
 	
 	public void getAxes(Range axes) {
-		axes.min = getRadius().value() * (1.0 - elongation.value());
-		axes.max = getRadius().value() * (1.0 + elongation.value());
+		axes.setMin(getRadius().value() * (1.0 - elongation.value()));
+		axes.setMax(getRadius().value() * (1.0 + elongation.value()));
 		// Renormalize to keep area unchanged...
 		axes.scale(1.0 / (1.0 - elongation.value() * elongation.value()));	
 	}
@@ -116,8 +116,8 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		DataTable data = super.getData(map);
 		Range axes = getAxes();
 		
-		double da = getRadius().weight() > 0.0 ? Math.hypot(getRadius().rms(), axes.max * elongation.rms()) : Double.NaN;
-		double db = getRadius().weight() > 0.0 ? Math.hypot(getRadius().rms(), axes.min * elongation.rms()) : Double.NaN;
+		double da = getRadius().weight() > 0.0 ? Math.hypot(getRadius().rms(), axes.max() * elongation.rms()) : Double.NaN;
+		double db = getRadius().weight() > 0.0 ? Math.hypot(getRadius().rms(), axes.min() * elongation.rms()) : Double.NaN;
 		
 		double sizeUnit = 1.0;
 		String sizeName = "pixels"; 
@@ -129,8 +129,8 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 			sizeName = instrument.getDefaultSizeName();
 		}
 		
-		data.add(new Datum("a", axes.max / sizeUnit, sizeName));
-		data.add(new Datum("b", axes.min / sizeUnit, sizeName));
+		data.add(new Datum("a", axes.max() / sizeUnit, sizeName));
+		data.add(new Datum("b", axes.min() / sizeUnit, sizeName));
 		data.add(new Datum("angle", angle.value() / sizeUnit, sizeName));
 		data.add(new Datum("dangle", angle.rms() / sizeUnit, sizeName));
 		
@@ -145,8 +145,8 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		String info = super.pointingInfo(map);
 		Range axes = getAxes();
 		
-		double da = getRadius().weight() > 0.0 ? Math.hypot(getRadius().rms(), axes.max * elongation.rms()) : Double.NaN;
-		double db = getRadius().weight() > 0.0 ? Math.hypot(getRadius().rms(), axes.min * elongation.rms()) : Double.NaN;
+		double da = getRadius().weight() > 0.0 ? Math.hypot(getRadius().rms(), axes.max() * elongation.rms()) : Double.NaN;
+		double db = getRadius().weight() > 0.0 ? Math.hypot(getRadius().rms(), axes.min() * elongation.rms()) : Double.NaN;
 		
 		double sizeUnit = 1.0;
 			
@@ -157,9 +157,9 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		}
 			
 		info += " (a="
-				+ Util.f1.format(axes.max / sizeUnit) + "+-" + Util.f1.format(da / sizeUnit) 
+				+ Util.f1.format(axes.max() / sizeUnit) + "+-" + Util.f1.format(da / sizeUnit) 
 				+ ", b=" 
-				+ Util.f1.format(axes.min / sizeUnit) + "+-" + Util.f1.format(db / sizeUnit) 
+				+ Util.f1.format(axes.min() / sizeUnit) + "+-" + Util.f1.format(db / sizeUnit) 
 				+ ", angle="
 				+ Util.d1.format(angle.value() / Unit.deg) + "+-" + Util.d1.format(angle.rms() / Unit.deg)
 				+ " deg)";

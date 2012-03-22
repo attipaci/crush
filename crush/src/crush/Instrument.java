@@ -169,7 +169,7 @@ implements TableFormatter.Entries {
 		if(hasOption("jansky")) {
 			double jansky = option("jansky").getDouble();
 			if(hasOption("jansky.inverse")) jansky = 1.0 / jansky;
-			return jansky / getDataUnit().value;
+			return jansky / getDataUnit().value();
 		}
 		else return 1.0; // Safety pin...
 	}
@@ -206,11 +206,11 @@ implements TableFormatter.Entries {
 				StringTokenizer tokens = new StringTokenizer(rangeSpec, "-");
 				Range mjdRange = new Range();
 				String spec = tokens.nextToken().replace('.', '-');
-				mjdRange.min = spec.equals("*") ? Double.NEGATIVE_INFINITY : AstroTime.forFitsTimeStamp(spec).getMJD();
-				mjdRange.max = Double.POSITIVE_INFINITY;
+				mjdRange.setMin(spec.equals("*") ? Double.NEGATIVE_INFINITY : AstroTime.forFitsTimeStamp(spec).getMJD());
+				mjdRange.setMax(Double.POSITIVE_INFINITY);
 				if(tokens.hasMoreTokens()) {
 					spec = tokens.nextToken().replace('.', '-');
-					mjdRange.max = spec.equals("*") ? Double.POSITIVE_INFINITY : AstroTime.forFitsTimeStamp(spec).getMJD();
+					mjdRange.setMax(spec.equals("*") ? Double.POSITIVE_INFINITY : AstroTime.forFitsTimeStamp(spec).getMJD());
 				}
 				
 				if(mjdRange.contains(MJD)) {
@@ -755,8 +755,8 @@ implements TableFormatter.Entries {
 		
 		if(hasOption("weighting.noiserange")) {
 			Range noiseRange = option("weighting.noiserange").getRange(true);
-			weightRange.min = 1.0 / (noiseRange.max * noiseRange.max);
-			if(noiseRange.min != 0.0) weightRange.max = 1.0 / (noiseRange.min * noiseRange.min);
+			weightRange.setMin(1.0 / (noiseRange.max() * noiseRange.max()));
+			if(noiseRange.min() != 0.0) weightRange.setMax(1.0 / (noiseRange.min() * noiseRange.min()));
 		}
 	
 		// Flag channels with insufficient degrees of freedom
@@ -773,8 +773,8 @@ implements TableFormatter.Entries {
 		
 		// Use robust mean (with 10% tails) to estimate average weight.
 		double aveSW = n > 0 ? Statistics.robustMean(weights, 0, n, 0.1) : 0.0;	
-		double maxWeight = weightRange.max * aveSW;
-		double minWeight = weightRange.min * aveSW;	
+		double maxWeight = weightRange.max() * aveSW;
+		double minWeight = weightRange.min() * aveSW;	
 		double sumw = 0.0;
 		
 		// Flag out channels with unrealistically small or large source weights

@@ -115,17 +115,17 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 		epoch = (CoordinateEpoch) equatorial.epoch.clone();
 	}
 	
-	public double RA() { return longitude(); }
+	public final double RA() { return longitude(); }
 
-	public double rightAscension() { return RA(); }
+	public final double rightAscension() { return longitude(); }
 
-	public double DEC() { return latitude(); }
+	public final double DEC() { return latitude(); }
 
-	public double declination() { return latitude(); }
+	public final double declination() { return latitude(); }
 
-	public void setRA(double RA) { setLongitude(RA); }
+	public final void setRA(double RA) { setLongitude(RA); }
 
-	public void setDEC(double DEC) { setLatitude(DEC); }
+	public final void setDEC(double DEC) { setLatitude(DEC); }
 
 	public double getParallacticAngle(GeodeticCoordinates site, double LST) {
 		double H = LST * Unit.timeAngle - RA();
