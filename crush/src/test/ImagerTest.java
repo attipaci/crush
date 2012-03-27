@@ -27,12 +27,13 @@ import java.awt.event.*;
 
 import crush.*;
 import crush.astro.AstroMap;
-import crush.gui.*;
 
 import javax.swing.*;
 
 import util.Unit;
 import util.Vector2D;
+import util.plot.Data2DLayer;
+import util.plot.GridImageLayer;
 import util.plot.ImageLayer;
 import util.plot.PlotLabel;
 import util.plot.ImageArea;
@@ -50,17 +51,18 @@ public class ImagerTest {
 				data[i][j] = (float) Math.random();
 			
 			
-			GridImageLayer image = new GridImageLayer(map);
-			final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
+			//GridImageLayer image = new GridImageLayer(map);
+			//final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
 			
 			//ImageLayer image = new ImageLayer.Float(data);
 			//image.defaults();
-			//final ImageArea<ImageLayer> imager = new ImageArea<ImageLayer>();
+			final Data2DLayer image = new Data2DLayer(map);
+			final ImageArea<ImageLayer> imager = new ImageArea<ImageLayer>();
 			
 			
 			image.setColorScheme(new Colorful());
 			imager.setContentLayer(image);
-			//imager.invertAxes(false, false);
+			//imager.invertAxes(true, true);
 			
 			//ColorBar colorbar = new ColorBar(imager, ColorBar.VERTICAL, 20);
 			final PlotLabel plotLabel = new PlotLabel("Test Label") {

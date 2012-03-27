@@ -1,6 +1,8 @@
 package util.plot;
 
-import util.Vector2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+
 
 public abstract class ContentLayer extends PlotLayer {
 	/**
@@ -14,9 +16,9 @@ public abstract class ContentLayer extends PlotLayer {
 
 	}
 	
-	public abstract Vector2D getReferencePoint();
+	public abstract Point2D getCoordinateReference();
 	
-	public abstract Vector2D getPlotRanges();
+	public abstract Rectangle2D getCoordinateBounds();
 	
 	public abstract void initialize();
 

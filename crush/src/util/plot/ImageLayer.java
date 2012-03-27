@@ -27,6 +27,7 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 
@@ -126,26 +127,35 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 		toIndex = transform.createInverse();
 	}
 	
-	public Point2D toCoordinates(Point2D point) {
+	public Point2D indexToCoordinates(Point2D point) {
 		return toCoordinates.transform(point, point);
 	}
 
-	public Point2D toIndex(Point2D point) {
+	public Point2D coordinatesToIndex(Point2D point) {
 		return toIndex.transform(point, point);
 	}	
 	
 	@Override
-	public Vector2D getReferencePoint() {
-		return new Vector2D(0.5 * buffer.getWidth(), 0.5 * buffer.getHeight());
+	public Point2D getCoordinateReference() {
+		return indexToCoordinates(new Point2D.Double(0.5 * buffer.getWidth(), 0.5 * buffer.getHeight()));
 	}
 
 	@Override
-	public Vector2D getPlotRanges() {
-		Point2D c1 = new Point2D.Double(0, 0);
-		Point2D c2 = new Point2D.Double(buffer.getWidth(), buffer.getHeight());
-		toCoordinates.transform(c1, c1);
-		toCoordinates.transform(c2, c2);
-		return new Vector2D(Math.abs(c2.getX() - c1.getX()), Math.abs(c2.getY() - c1.getY()));
+	public Rectangle2D getCoordinateBounds() {	
+		Point2D lb = indexToCoordinates(new Point2D.Double(0, buffer.getHeight()));
+		Point2D lt = indexToCoordinates(new Point2D.Double(0, 0));
+		Point2D rb = indexToCoordinates(new Point2D.Double(buffer.getWidth(), buffer.getHeight()));
+		Point2D rt = indexToCoordinates(new Point2D.Double(buffer.getWidth(), 0));
+		
+		double minX = Math.min(lt.getX(), lb.getX());
+		double maxX = Math.max(rt.getX(), rb.getX());
+		double minY = Math.min(lb.getY(), rb.getY());
+		double maxY = Math.max(lt.getY(), rt.getY());
+		
+		if(minX > maxX) { double temp = minX; minX = maxX; maxX = temp; }	
+		if(minY > maxY) { double temp = minY; minY = maxY; maxY = temp; }
+		
+		return new Rectangle2D.Double(minX, minY, maxX - minX, maxY - minY);
 	}
 
 	
