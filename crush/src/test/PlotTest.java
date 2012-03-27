@@ -6,6 +6,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 
 import util.plot.ColorBar;
+import util.plot.GridImageLayer;
 import util.plot.ImageArea;
 import util.plot.ImageLayer;
 import util.plot.Plot;
@@ -13,7 +14,6 @@ import util.plot.colorscheme.Colorful;
 import crush.GenericInstrument;
 import crush.Instrument;
 import crush.astro.AstroMap;
-import crush.gui.GridImageLayer;
 
 public class PlotTest {
 	
@@ -26,7 +26,7 @@ public class PlotTest {
 	
 	public void test() throws Exception {
 		Instrument<?> instrument = new GenericInstrument("generic");
-		AstroMap map = new AstroMap("/home/pumukli/data/sharc2/images/VESTA.8293.fits", instrument);
+		AstroMap map = new AstroMap("/home/pumukli/data/sharc2/images/ARP220.9713.fits", instrument);
 		
 		GridImageLayer image = new GridImageLayer(map);
 		image.setColorScheme(new Colorful());

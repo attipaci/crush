@@ -41,7 +41,7 @@ import nom.tam.util.*;
  */
 public class CRUSH extends Configurator {
 	private static String version = "2.12-0";
-	private static String revision = "devel.3";
+	private static String revision = "devel.4";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;

@@ -28,6 +28,7 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
@@ -52,6 +53,8 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 	
 	private Vector2D referencePoint = new Vector2D(0.0, 1.0); // lower left corner...
 	private Vector2D scale = new Vector2D();
+	private Vector2D userOffset = new Vector2D(); // alignment...
+	
 	private double rotation = 0.0;
 	private boolean flipX = false, flipY = false;
 	
@@ -78,9 +81,9 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 		initialized = true;
 	}
 	
-	public AffineTransform toDisplay() { return toDisplay; }
+	public final AffineTransform toDisplay() { return toDisplay; }
 	
-	public AffineTransform toCoordinates() { return toCoordinates; }
+	public final AffineTransform toCoordinates() { return toCoordinates; }
 	
 	public Vector2D getReferencePoint() { return referencePoint; }
 	
@@ -136,9 +139,8 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 	
 	public void setRenderSize(int width, int height) {
 		if(verbose) System.err.println("Setting render size to " + width + "x" + height);
-		Vector2D range = contentLayer.getPlotRanges();
-		scale.set(width / range.getX(), height / range.getY());
-		zoomMode = ZOOM_FIXED;
+		Rectangle2D bounds = contentLayer.getCoordinateBounds();
+		scale.set(width / bounds.getWidth(), height / bounds.getHeight());
 	}
 	
 	public void moveReference(double dx, double dy) {
@@ -146,6 +148,7 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 		referencePoint.subtractY(dy / getHeight());
 	}
 	
+
 	public int getZoomMode() { return zoomMode; }
 	
 	public void setZoomMode(int value) { zoomMode = value; }
@@ -153,40 +156,64 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 	public void setZoom(double value) {
 		if(verbose) System.err.println("Setting zoom to " + value);
 		scale.set(value, value);
-		zoomMode = ZOOM_FIXED;
 	}
 
 	public void zoom(double relative) {
 		if(verbose) System.err.println("Zooming by " + relative);
 		scale.scale(relative);
-		zoomMode = ZOOM_FIXED;
 	}
 	
 	protected void updateZoom() {
+		Rectangle2D bounds = null;
 		switch(zoomMode) {
-		case ZOOM_FIT : fitInside(); break;
-		case ZOOM_FILL : fillInside(); break; 
-		case ZOOM_STRETCH : setRenderSize(getWidth(), getHeight()); zoomMode = ZOOM_STRETCH; break;
+		case ZOOM_FIT : 
+			bounds = contentLayer.getCoordinateBounds();
+			setZoom(Math.min((double) getWidth() / bounds.getWidth(), (double) getHeight() / bounds.getHeight()));
+			center();
+			break;
+		case ZOOM_FILL : 
+			bounds = contentLayer.getCoordinateBounds();
+			setZoom(Math.min((double) getWidth() / bounds.getWidth(), (double) getHeight() / bounds.getHeight()));		
+			center();
+			break; 
+		case ZOOM_STRETCH : setRenderSize(getWidth(), getHeight()); break;
 		case ZOOM_FIXED : break;	// Nothing to do, it stays where it was set by setZoom or setRenderSize
 		default : setRenderSize(300, 300);
 		}		
 	}
 	
-	
-	public void fitInside() {
-		Vector2D range = contentLayer.getPlotRanges();
-		double zoom = Math.min((double) getWidth() / range.getX(), (double) getHeight() / range.getY());
-		setZoom(zoom);
-		zoomMode = ZOOM_FIT;
+	public void fit() { 	
+		setZoomMode(ZOOM_FIT);
+		updateZoom();
 	}
 	
-	public void fillInside() {
-		Vector2D range = contentLayer.getPlotRanges();
-		double zoom = Math.max((double) getWidth() / range.getX(), (double) getHeight() / range.getY());
-		setZoom(zoom);
-		zoomMode = ZOOM_FILL;
+
+	public void fill() { 
+		setZoomMode(ZOOM_FILL);
+		updateZoom();
 	}
 	
+	
+	public void center() {	
+		Rectangle2D bounds = contentLayer.getCoordinateBounds();
+			
+		// Get the nominal center as the middle of the bounding box
+		// in the native coordinates...
+		Vector2D center = new Vector2D(new Point2D.Double(
+				bounds.getMinX() + 0.5 * bounds.getWidth(),
+				bounds.getMinY() + 0.5 * bounds.getHeight()
+		));
+			
+		center.subtract(new Vector2D(contentLayer.getCoordinateReference()));
+		
+		userOffset.copy(center);
+	}
+	
+	public Vector2D getUserOffset() { return userOffset; }
+	
+	public void setUserOffset(Vector2D v) { this.userOffset = v; }
+	
+	public void align() { userOffset.zero(); }
 	public void setRotation(double angle) {
 		rotation = angle;
 	}
@@ -208,7 +235,7 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 		toDisplay = new AffineTransform();
 			
 		updateZoom();
-			
+				
 		toDisplay.translate(
 				referencePoint.getX() * getWidth(), 
 				referencePoint.getY() * getHeight()
@@ -221,12 +248,15 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 		toDisplay.rotate(rotation);				// Rotate by the desired amount
 		
 		if(contentLayer != null) {
+			toDisplay.translate(-userOffset.getX(), -userOffset.getY()); // Move by the desired offset in user coordinates...
+			
 			if(contentLayer instanceof Transforming) {
 				toDisplay.concatenate(((Transforming) contentLayer).getTransform());
 			}
-			Vector2D contentRef = contentLayer.getReferencePoint();
+			
+			Point2D contentRef = contentLayer.getCoordinateReference();
 			toDisplay.translate(-contentRef.getX(), -contentRef.getY()); // Move to the reference point of the content layer
-		}
+		}		
 		
 		try { toCoordinates = toDisplay.createInverse(); }
 		catch(NoninvertibleTransformException e) { toCoordinates = null; }

@@ -1,8 +1,6 @@
 package util.plot;
 
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import javax.swing.OverlayLayout;
 
@@ -29,13 +27,6 @@ public class PlotPane extends TransparentPanel {
 		for(Component c : getComponents()) c.setSize(getSize());
 		super.paintComponent(g);
 	}
-
-	/*
-	@Override
-	public Dimension getPreferredSize() {
-		return new Dimension(50, 50);
-	}
-	*/
 	
 	
 }

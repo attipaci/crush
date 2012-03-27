@@ -24,6 +24,8 @@
 
 package util;
 
+import java.awt.geom.Point2D;
+
 //Add parsing
 
 public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
@@ -36,6 +38,8 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 
 	public Vector2D(Vector2D template) { super(template); }
 
+	public Vector2D(Point2D point) { super(point); }
+	
 	public final void add(final Vector2D v) { addX(v.getX()); addY(v.getY()); }
 
 	public static Vector2D sum(Vector2D a, Vector2D b) {

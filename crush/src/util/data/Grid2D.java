@@ -152,9 +152,8 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair> implements C
 		return getReference() instanceof SuperGalacticCoordinates;
 	}
 	
-	
 	public AffineTransform getLocalAffineTransform() {
-		return new AffineTransform(m11, m12, m21, m22, 0.0, 0.0);
+		return new AffineTransform(m11, m12, m21, m22, -refIndex.getX() / i11, -refIndex.getY() / i22);
 	}
 	
 	public Vector2D getResolution() {

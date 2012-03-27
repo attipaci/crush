@@ -20,36 +20,33 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.gui;
+package util.plot;
 
 import java.awt.geom.NoninvertibleTransformException;
 
-import util.Vector2D;
+import util.data.Grid2D;
 import util.data.GridImage;
-import util.plot.Data2DLayer;
 
 public class GridImageLayer extends Data2DLayer {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 5730801953668713086L;
-		
+	private Grid2D<?> grid;
+	
 	public GridImageLayer(GridImage<?> image) {
 		super(image);
 		
-		try { this.setCoordinateTransform(image.getGrid().getLocalAffineTransform()); }
+		grid = image.getGrid();
+		
+		try { setCoordinateTransform(grid.getLocalAffineTransform()); }
 		catch(NoninvertibleTransformException e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
 		
 	}
-	
+		
 	public GridImage<?> getGridImage() { return (GridImage<?>) getData2D(); }
-	
-	@Override
-	public Vector2D getReferencePoint() {
-		return getGridImage().getGrid().refIndex;
-	}
-	
+
 }
