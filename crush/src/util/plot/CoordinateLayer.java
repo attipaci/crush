@@ -41,7 +41,7 @@ public class CoordinateLayer extends PlotLayer {
 		Graphics2D g2 = (Graphics2D) g;	
 		g2.setColor(penColor);
 		g2.setStroke(new BasicStroke(borderWidth, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER));
-		g2.draw(new Rectangle(0, 0, getPlotArea().getWidth(), getPlotArea().getHeight()));
+		g2.draw(new Rectangle(0, 0, getContentArea().getWidth(), getContentArea().getHeight()));
 	}
 
 	@Override

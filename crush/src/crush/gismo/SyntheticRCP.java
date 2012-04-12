@@ -190,11 +190,12 @@ public class SyntheticRCP {
 			"                  Copyright (C)2011 Attila Kovacs <kovacs[AT]astro.umn.edu>\n" +
 			"  -------------------------------------------------------------------------\n" +	
 			"\n" +
-			"  Usage: java crush.gismo.SyntheticRCP <distortion> [rcp]\n" +
+			"  Usage: java crush.gismo.SyntheticRCP <distortion> [rcp [rotation]]\n" +
 			"\n" +
 			"    <distortion>  A list of distortion parameters. See 'gismo/distortion.dat'.\n" +
-			"    [rcp]         (optional) An observed RCP file for source gains.\n";
-			
+			"    [rcp]         (optional) An observed RCP file for source gains.\n" +
+			"    [rotation]	   (optional) Presume a rotation in degrees.\n";
+		
 		System.out.println(info);
 		System.exit(0);
 	}

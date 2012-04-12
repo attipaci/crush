@@ -29,7 +29,7 @@ import java.util.*;
 // TODO Better handling of custom divisions (all vs within range)
 
 public class ScaleDivisions implements Cloneable {
-	private Range range;
+	private Range range = new Range();
 	private int type = LINEAR;
 	private int overSampling = 1;
 	
@@ -38,14 +38,13 @@ public class ScaleDivisions implements Cloneable {
 	public ScaleDivisions () {}
 	
 	public ScaleDivisions (int oversampling) { this.overSampling = oversampling; }
-
+	
 	@Override
 	public Object clone() {
 		try { return super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
 	}
-	
-	
+		
 	public void linear() { type = LINEAR; update(); }
 	
 	public void log() { type = LOGARITHMIC; update(); }
@@ -77,6 +76,7 @@ public class ScaleDivisions implements Cloneable {
 	
 	public ArrayList<Double> getDivisions() { return divisions; }
 	
+	public int size() { return divisions.size(); }
 	
 	public void clear() { 
 		type = CUSTOM;
@@ -105,16 +105,18 @@ public class ScaleDivisions implements Cloneable {
 	public void update(double setmin, double setmax) {
 		range.setRange(setmin, setmax);
 		
+		//System.err.println("### ScaleDivisions: setting range " + range);
+		
 		if(isCustom()) return;
 		
 		divisions.clear();
 		
 		if(isLogarithmic()) {
-			final int from = (int) Math.floor(overSampling * Math.log10(Math.abs(range.min())));
-			final int to = (int) Math.ceil(overSampling * Math.log10(Math.abs(range.max())));
+			final int from = (int) Math.floor(Math.log10(Math.abs(range.min())));
+			final int to = (int) Math.ceil(Math.log10(Math.abs(range.max())));
 
 			final double increment = Math.pow(10.0, 1.0 / overSampling);
-			double level = Math.pow(increment, from);
+			double level = Math.pow(10.0, from);
 			
 			for(int order = from; order <= to; order++) {
 				divisions.add(level);
@@ -122,13 +124,18 @@ public class ScaleDivisions implements Cloneable {
 			}	
 		}
 		else {
-			final int order = (int)Math.floor(Math.log10(0.5*range.span()));
+			final int order = (int)Math.floor(Math.log10(0.5*range.span()));	
 			
-			final double div = Math.pow(10.0, order) / overSampling;
-			final int fromi = (int)Math.floor(range.min()/div);
-			final int toi = (int)Math.ceil(range.max()/div);
-			
+			// Snap to the nearest big division (no oversampling)
+			double div = Math.pow(10.0, order);
+			int fromi = (int) Math.floor(range.min() / div);
+			int toi = (int) Math.ceil(range.max() / div);
 			double level = fromi * div;
+			
+			// Then oversample...
+			fromi *= overSampling;
+			toi *= overSampling;
+			div /= overSampling;
 			
 			for(int i=fromi; i<=toi; i++) {
 				divisions.add(level);

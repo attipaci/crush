@@ -20,6 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+
 package util.plot;
 
 import java.awt.geom.NoninvertibleTransformException;
@@ -36,7 +37,7 @@ public class GridImageLayer extends Data2DLayer {
 	
 	public GridImageLayer(GridImage<?> image) {
 		super(image);
-		
+			
 		grid = image.getGrid();
 		
 		try { setCoordinateTransform(grid.getLocalAffineTransform()); }
@@ -46,7 +47,9 @@ public class GridImageLayer extends Data2DLayer {
 		}
 		
 	}
+	
+	public Grid2D<?> getGrid() { return grid; }
 		
 	public GridImage<?> getGridImage() { return (GridImage<?>) getData2D(); }
-
+	
 }

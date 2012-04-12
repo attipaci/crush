@@ -35,17 +35,17 @@ public abstract class PlotLayer extends JComponent {
 	 */
 	private static final long serialVersionUID = -1331038094866703152L;
 
-	private PlotArea<?> plotArea;
+	private ContentArea<?> contentArea;
 	
 	public abstract void defaults();
 	
-	public PlotArea<?> getPlotArea() { return plotArea; }
+	public ContentArea<?> getContentArea() { return contentArea; }
 	
-	public void setPlotArea(PlotArea<?> area) { this.plotArea = area; }
+	public void setContentArea(ContentArea<?> area) { this.contentArea = area; }
 	
-	public AffineTransform toDisplay() { return getPlotArea().toDisplay(); }
+	public AffineTransform toDisplay() { return getContentArea().toDisplay(); }
 	
-	public AffineTransform toCoordinates() { return getPlotArea().toCoordinates(); }
+	public AffineTransform toCoordinates() { return getContentArea().toCoordinates(); }
 	
 	@Override
 	public void paintComponent(Graphics g) {

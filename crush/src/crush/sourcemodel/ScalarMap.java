@@ -287,7 +287,7 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	@Override
-	public synchronized void process(Scan<?,?> scan) {
+	public synchronized void process(Scan<?,?> scan) {	
 		map.normalize();
 		if(base != null) map.addImage(base);
 		
@@ -411,15 +411,16 @@ public class ScalarMap extends SourceMap {
 	
 	@Override
 	public synchronized void process(boolean verbose) {	
+		
 		map.normalize();
 		map.generation++; // Increment the map generation...
-		
+			
 		double blankingLevel = getBlankingLevel();
 		
 		if(hasOption("source.redundancy")) System.err.print("{check} ");
 		
 		if(verbose) if(enableLevel) System.err.print("{level} ");
-
+		
 		if(verbose) if(hasOption("source.despike")) System.err.print("{despike} ");
 
 		if(hasOption("source.filter") && getSourceSize(instrument) > 0.0) {
@@ -487,6 +488,8 @@ public class ScalarMap extends SourceMap {
 			}
 			else map.getMask(Double.NaN, 3);
 		}
+		
+		
 		
 		isValid = true;
 		
@@ -557,7 +560,7 @@ public class ScalarMap extends SourceMap {
 			addPoint(index, channel, exposure, fGC * sourceGain[channel.index], dt);
 	}
 	
-	protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {
+	protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {		
 		map.addPointAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight/channel.variance, dt);
 	}
 	
@@ -777,6 +780,7 @@ public class ScalarMap extends SourceMap {
 			}
 				
 			image.setColorScheme(scheme);
+			imager.setSize(width, height);
 			imager.saveAs(map.fileName + ".png", width, height);	
 		}
 		

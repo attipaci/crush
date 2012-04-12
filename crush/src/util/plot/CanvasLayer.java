@@ -41,7 +41,7 @@ public class CanvasLayer extends PlotLayer {
 		g2.setColor(color);
 		g2.setStroke(new BasicStroke(0));
 		
-		g2.fill(new Rectangle(0, 0, getPlotArea().getWidth(), getPlotArea().getHeight()));
+		g2.fill(new Rectangle(0, 0, getContentArea().getWidth(), getContentArea().getHeight()));
 	}
 
 	@Override

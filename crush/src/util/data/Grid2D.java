@@ -153,7 +153,9 @@ public abstract class Grid2D<CoordinateType extends CoordinatePair> implements C
 	}
 	
 	public AffineTransform getLocalAffineTransform() {
-		return new AffineTransform(m11, m12, m21, m22, -refIndex.getX() / i11, -refIndex.getY() / i22);
+		double dx = m11 * refIndex.getX() + m12 * refIndex.getY();
+		double dy = m22 * refIndex.getY() + m21 * refIndex.getX();
+		return new AffineTransform(m11, m12, m21, m22, -dx, -dy);
 	}
 	
 	public Vector2D getResolution() {

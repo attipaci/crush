@@ -105,16 +105,17 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 		setNativeLatitude(coords.getY());
 	}
 	
+	
 	@Override
 	public final void setY(final double value) { 
 		super.setY(Math.IEEEremainder(value, Math.PI));
-		cosLat = Math.cos(getY());
-		sinLat = Math.sin(getY());
+		cosLat = Math.cos(value);
+		sinLat = Math.sin(value);
 	}
 	
 	@Override
 	public final void addY(final double value) { 
-		super.setY(Math.IEEEremainder(value, Math.PI));
+		super.addY(Math.IEEEremainder(value, Math.PI));
 		cosLat = Math.cos(getY());
 		sinLat = Math.sin(getY());
 	}
@@ -127,8 +128,8 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 
 	@Override
 	public void set(double lon, double lat) { setLongitude(lon); setLatitude(lat); }
-	
-	public void setNative(double lon, double lat) { setNativeLongitude(lon); setNativeLatitude(lat); }	
+		
+	public void setNative(double x, double y) { super.set(x,  y); }
 	
 	public final double nativeLongitude() { return getX(); }
 	

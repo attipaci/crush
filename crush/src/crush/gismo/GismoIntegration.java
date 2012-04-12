@@ -225,7 +225,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 						catch(InstantiationException e) { e.printStackTrace(); }
 						catch(IllegalAccessException e) { e.printStackTrace(); }
 					}
-					
+						
 					// Calculate the parallactic angle
 					frame.calcParallacticAngle();	
 		
@@ -236,19 +236,19 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					// Convert scanning offsets to horizontal if necessary...
 					if(gismoScan.offsetSystem == EquatorialCoordinates.class)
 						frame.toHorizontal(frame.horizontalOffset);
-							
-					// Verified that offsets are correctly projected...
-					frame.horizontal.addOffset(frame.horizontalOffset);
 					
 					// Add the static horizontal offsets
-					if(gismoScan.horizontalOffset != null) frame.horizontal.addOffset(gismoScan.horizontalOffset);
-					
+					if(gismoScan.horizontalOffset != null) frame.horizontalOffset.add(gismoScan.horizontalOffset);
+										
 					// Add the static equatorial offset
 					if(gismoScan.equatorialOffset != null) {
 						offset.copy(gismoScan.equatorialOffset);
 						frame.toHorizontal(offset);
-						frame.horizontal.addOffset(offset);
+						frame.horizontalOffset.add(offset);
 					}
+					
+					// Verified that offsets are correctly projected...
+					frame.horizontal.addOffset(frame.horizontalOffset);	
 					
 					// Add the tracking errors (confirmed raw AZ differences).
 					// Errors are commanded - actual;

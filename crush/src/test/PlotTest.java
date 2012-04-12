@@ -4,12 +4,15 @@ import java.awt.Color;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import util.plot.ColorBar;
+import util.plot.Data2DLayer;
 import util.plot.GridImageLayer;
 import util.plot.ImageArea;
 import util.plot.ImageLayer;
 import util.plot.Plot;
+import util.plot.PlotSideRuler;
 import util.plot.colorscheme.Colorful;
 import crush.GenericInstrument;
 import crush.Instrument;
@@ -26,22 +29,22 @@ public class PlotTest {
 	
 	public void test() throws Exception {
 		Instrument<?> instrument = new GenericInstrument("generic");
-		AstroMap map = new AstroMap("/home/pumukli/data/sharc2/images/ARP220.9713.fits", instrument);
+		AstroMap map = new AstroMap("/home/pumukli/data/sharc2/images/VESTA.8293.fits", instrument);
 		
-		GridImageLayer image = new GridImageLayer(map);
+		GridImageLayer image = new GridImageLayer(map.getS2NImage());
 		image.setColorScheme(new Colorful());
 		
 		final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
 		imager.setContentLayer(image);
+		imager.setTransparent(true);
 		
 		Plot<ImageLayer> plot = new Plot<ImageLayer>();
-		plot.setPlotArea(imager);
-		plot.setBackground(Color.YELLOW);
+		plot.setContent(imager);
+		plot.setBackground(Color.WHITE);
 		
-		ColorBar c = new ColorBar(imager, ColorBar.VERTICAL);
+		ColorBar c = new ColorBar(imager);
 		//c.setRotation(1*Unit.deg);
-		c.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
-		plot.right.add(c);
+		plot.right.setCenter(c);
 		
 		//plot.setTransparent(true);
 		
