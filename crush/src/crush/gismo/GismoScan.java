@@ -116,7 +116,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		if(option.isConfigured("table")) {
 			try { 
 				if(model == null) model = new IRAMPointingModel();
-				String logName = Util.getSystemPath(option.get("table").getValue()); 
+				String logName = Util.getSystemPath(option.get("table").getValue());
 				correction.add(PointingTable.get(logName).getIncrement(getMJD(), horizontal, model));
 			}
 			catch(Exception e) {
@@ -129,7 +129,16 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		
 	}
 	
-	
+	@Override
+	public String getPointingString(Vector2D pointing) {
+		Vector2D nasmyth = getNasmythOffset(pointing);
+		if(nasmythOffset != null) nasmyth.add(nasmythOffset);
+		
+		return super.getPointingString(pointing) + "\n\n" +
+			"  PaKo> offsets " + Util.f1.format(nasmyth.getX() / Unit.arcsec) + " " 
+				+ Util.f1.format(nasmyth.getY() / Unit.arcsec) + " /system nasmyth";
+		
+	}
 
 	public File getFile(String scanDescriptor) throws FileNotFoundException {
 		File scanFile;
@@ -336,7 +345,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		else timeStamp = date;
 	
 		setMJD(header.getDoubleValue("MJD-OBS"));
-		
+			
 		// TODO use UTC, TAI, TT offsets to configure AstroTime?...
 		/*
 		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
@@ -397,14 +406,19 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		//isPlanetary = header.getBooleanValue("MOVEFRAM", false);
 		
 		// parse the static offsets
-		for(int n = 1; ; n++) {
+		for(int n = 0; ; n++) {
 			if(!header.containsKey("SYSOFF" + n)) break;
 			
-			String type = header.getStringValue("SYSOFF" + n).toLowerCase();
+			String type = header.getStringValue("SYSOFF" + n);
+			
 			Vector2D offset = new Vector2D(
 					header.getDoubleValue("XOFFSET" + n),
 					header.getDoubleValue("YOFFSET" + n)
 			);
+			
+			System.err.println(" " + type + " offset --> " + Vector2D.toString(offset, Unit.get("arcsec"), 1));
+			
+			type = type.toLowerCase();
 			
 			if(type.equals("nasmyth")) nasmythOffset = offset;
 			else if(type.equals("truehorizontal")) horizontalOffset = offset;
@@ -413,7 +427,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			else if(type.equals("equatorial")) equatorialOffset = offset;
 			else if(type.equals("basis")) basisOffset = offset;
 		}
-		
+			
 		
 		// Read the effective pointing model
 		// Static constant *AND* tilt-meter corrections...
@@ -604,12 +618,12 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		String sizeName = instrument.getDefaultSizeName();
 	
 		// X and Y are absolute pointing offsets including the static pointing model...
-		Vector2D corr = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day);
-		if(pointingCorrection != null) corr.add(pointingCorrection);
+		Vector2D obs = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day);
+		if(pointingCorrection != null) obs.add(pointingCorrection);
 		
 		
-		data.add(new Datum("X", (pointingOffset.getX() + corr.getX()) / sizeUnit, sizeName));
-		data.add(new Datum("Y", (pointingOffset.getY() + corr.getY()) / sizeUnit, sizeName));
+		data.add(new Datum("X", (pointingOffset.getX() + obs.getX()) / sizeUnit, sizeName));
+		data.add(new Datum("Y", (pointingOffset.getY() + obs.getY()) / sizeUnit, sizeName));
 		data.add(new Datum("NasX", (instrument.nasmythOffset.getX() + nasmyth.getX()) / sizeUnit, sizeName));
 		data.add(new Datum("NasY", (instrument.nasmythOffset.getY() + nasmyth.getY()) / sizeUnit, sizeName));
 		
@@ -620,7 +634,6 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	@Override
 	public Vector2D getNasmythOffset(Vector2D nativeOffset) {
 		Vector2D nasmythOffset = super.getNasmythOffset(nativeOffset);
-		nasmythOffset.invert();
 		return nasmythOffset;
 	}
 	

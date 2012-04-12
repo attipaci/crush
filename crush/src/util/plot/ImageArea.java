@@ -23,8 +23,7 @@
 
 package util.plot;
 
-
-public class ImageArea<ContentType extends ImageLayer> extends PlotArea<ContentType> {
+public class ImageArea<ContentType extends ImageLayer> extends ContentArea<ContentType> {
 
 	/**
 	 * 
@@ -37,6 +36,7 @@ public class ImageArea<ContentType extends ImageLayer> extends PlotArea<ContentT
 		// Set the reference at the center of the plot...
 		getReferencePoint().set(0.5, 0.5);
 	}
+	
 	
 	/*
 	public void paintComponent(Graphics g) {

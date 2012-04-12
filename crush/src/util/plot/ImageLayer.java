@@ -36,7 +36,7 @@ import util.*;
 import util.data.Index2D;
 import util.plot.colorscheme.GreyScale;
 
-public abstract class ImageLayer extends ContentLayer implements Transforming {
+public abstract class ImageLayer extends ContentLayer {
 	/**
 	 * 
 	 */
@@ -48,17 +48,25 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	private ColorScheme colorScheme = new GreyScale();
 	private Range range;
 	private boolean verbose = false;	
-	private Index2D fromIndex = new Index2D();	// The subarray offset to image
+	private Index2D startIndex = new Index2D();	// The subarray offset to image
 	
-	private AffineTransform toCoordinates = new AffineTransform();
-	private AffineTransform toIndex = new AffineTransform();
+	private AffineTransform indexToCoords = new AffineTransform();
+	private AffineTransform coordsToIndex = new AffineTransform();
 	
-	public abstract Dimension getArraySize();
+	public abstract Dimension getDataSize();
+	
+	public final Dimension getBufferSize() { 
+		return new Dimension(getBufferedImage().getWidth(), getBufferedImage().getHeight());
+	}
 	
 	public abstract double getValue(int i, int j);
 
-	public AffineTransform getTransform() {
-		return toCoordinates;
+	public AffineTransform indexToCoords() {
+		return indexToCoords;
+	}
+	
+	public AffineTransform coordsToIndex() {
+		return coordsToIndex;
 	}
 	
 	protected double getScaled(double value) {
@@ -76,13 +84,20 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	
 	protected void drawImage(Graphics g) {	
 		Graphics2D g2 = (Graphics2D) g;
-		AffineTransformOp op = new AffineTransformOp(getPlotArea().toDisplay(), interpolationType);
+		
+		if(getContentArea() == null) System.err.println("!!! content area"); 
+		if(getContentArea().toDisplay() == null) System.err.println("!!! transform"); 
+		
+		AffineTransform indexToDisplay = new AffineTransform(getContentArea().toDisplay());
+		indexToDisplay.concatenate(indexToCoords());
+		AffineTransformOp op = new AffineTransformOp(indexToDisplay, interpolationType);
 		g2.drawImage(buffer, op, 0, 0);				
 	}
 	
 	@Override
 	public void paintComponent(Graphics g) {
-		super.paintComponent(g);		
+		super.paintComponent(g);
+		//System.err.println("### layer " + getSize());
 		drawImage(g);
 	}
 	
@@ -106,7 +121,7 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	}
 	
 	public void setSubarray(int fromi, int fromj, int toi, int toj) {
-		fromIndex.set(fromi, fromj);
+		startIndex.set(fromi, fromj);
 		createBuffer(toi - fromi, toj - fromj);
 		if(verbose) System.err.println("Selecting " + fromi + "," + fromj + " -- " + toi + "," + toj);	
 	}
@@ -118,28 +133,23 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	}
 		
 	public void setFullArray() {
-		Dimension size = getArraySize();
+		Dimension size = getDataSize();
 		setSubarray(0, 0, size.width, size.height);
 	}	
 	
 	public void setCoordinateTransform(AffineTransform transform) throws NoninvertibleTransformException  {
-		toCoordinates = transform;
-		toIndex = transform.createInverse();
+		indexToCoords = transform;
+		coordsToIndex = transform.createInverse();
 	}
 	
 	public Point2D indexToCoordinates(Point2D point) {
-		return toCoordinates.transform(point, point);
+		return indexToCoords.transform(point, point);
 	}
 
 	public Point2D coordinatesToIndex(Point2D point) {
-		return toIndex.transform(point, point);
+		return coordsToIndex.transform(point, point);
 	}	
 	
-	@Override
-	public Point2D getCoordinateReference() {
-		return indexToCoordinates(new Point2D.Double(0.5 * buffer.getWidth(), 0.5 * buffer.getHeight()));
-	}
-
 	@Override
 	public Rectangle2D getCoordinateBounds() {	
 		Point2D lb = indexToCoordinates(new Point2D.Double(0, buffer.getHeight()));
@@ -187,11 +197,11 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 	
 	public void setVerbose(boolean value) { verbose = value; }
 	
-	public Index2D getSubarrayOffset() { return fromIndex; }
+	public Index2D getSubarrayOffset() { return startIndex; }
 	
-	public void setSubarrayOffset(Index2D index) { this.fromIndex = index; }
+	public void setSubarrayOffset(Index2D index) { this.startIndex = index; }
 	
-	public void setSubarrayOffset(int i, int j) { fromIndex.set(i,  j); }
+	public void setSubarrayOffset(int i, int j) { startIndex.set(i,  j); }
 	
 
 	public static class Double extends ImageLayer {
@@ -215,7 +225,7 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 		}
 		
 		@Override
-		public Dimension getArraySize() {
+		public Dimension getDataSize() {
 			return new Dimension(data.length, data[0].length);
 		}
 
@@ -252,7 +262,7 @@ public abstract class ImageLayer extends ContentLayer implements Transforming {
 		}
 		
 		@Override
-		public Dimension getArraySize() {
+		public Dimension getDataSize() {
 			return new Dimension(data.length, data[0].length);
 		}
 

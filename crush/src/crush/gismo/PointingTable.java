@@ -78,10 +78,9 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 			Entry pointing = new Entry();
 			try { 
 				pointing.id = row.get("id").getValue();
-				AstroTime time = AstroTime.forFitsTimeStamp(pointing.id.substring(0, 10));
-				
+				AstroTime time = AstroTime.forFitsTimeStamp(pointing.id.substring(0, 10));			
 				pointing.MJD = Math.round(time.getMJD()) + row.get("UTh").getDouble() * Unit.hour / Unit.day;
-				
+					
 				pointing.horizontal = new HorizontalCoordinates(
 						row.get("AZd").getDouble() * Unit.deg,
 						row.get("ELd").getDouble() * Unit.deg

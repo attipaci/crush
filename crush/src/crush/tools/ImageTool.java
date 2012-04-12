@@ -122,7 +122,7 @@ public class ImageTool {
 				}
 				else if(spec.equals("weight")) {
 					System.err.println("Replacing weight plane.");
-					plane.unit = new Unit("weight", 1.0 / (image.unit.value * image.unit.value));
+					plane.unit = new Unit("weight", 1.0 / (image.unit.text * image.unit.text));
 					plane.setImage(hdu);
 					image.setWeight(plane.getData());
 				}
@@ -242,7 +242,7 @@ public class ImageTool {
 			else return false;
 		}
 		else if(key.equalsIgnoreCase("-offset")) {
-			image.addValue(Double.parseDouble(tokens.nextToken()) * image.unit.value);
+			image.addValue(Double.parseDouble(tokens.nextToken()) * image.unit.text);
 		}
 		else if(key.equalsIgnoreCase("-origin")) {
 			String x = tokens.nextToken();
@@ -358,7 +358,7 @@ public class ImageTool {
 			System.exit(0);
 		}
 		else if(key.equalsIgnoreCase("-depth")) {
-			System.err.println("Average depth " + Util.e2.format(image.getTypicalRMS()/image.unit.value) + " " + image.unit.name);
+			System.err.println("Average depth " + Util.e2.format(image.getTypicalRMS()/image.unit.text) + " " + image.unit.name);
 		}
 		else if(key.equalsIgnoreCase("-beam")) {
 			image.instrument.resolution = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;

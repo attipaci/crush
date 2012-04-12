@@ -23,12 +23,15 @@
 
 package util.plot;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Stroke;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -41,10 +44,10 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	 */
 	private static final long serialVersionUID = -1434685464605442072L;
 	
-	private PlotArea<? extends ContentType> plotArea;
+	private ContentArea<? extends ContentType> contentArea;
 
-	public PlotPane center, left, right, top, bottom;
-	public PlotPane topLeft, topRight, bottomLeft, bottomRight;
+	public PlotSidePane left, right, top, bottom;
+	public PlotPane center,topLeft, topRight, bottomLeft, bottomRight;
 	
 	private Stroke stroke;
 	
@@ -91,16 +94,16 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 		add(center, 1, 1, GridBagConstraints.BOTH, 1.0, 1.0);
 	
 		// The sides...
-		left = new PlotPane(this);
+		left = new PlotSidePane(this, Plot.LEFT_SIDE);
 		add(left, 0, 1, GridBagConstraints.VERTICAL, 0.0, 0.0);
 					
-		right = new PlotPane(this);
+		right = new PlotSidePane(this, Plot.RIGHT_SIDE);
 		add(right, 2, 1, GridBagConstraints.VERTICAL, 0.0, 0.0);
 		
-		top = new PlotPane(this);
+		top = new PlotSidePane(this, Plot.TOP_SIDE);
 		add(top, 1, 0, GridBagConstraints.HORIZONTAL, 0.0, 0.0);
 		
-		bottom = new PlotPane(this);
+		bottom = new PlotSidePane(this, Plot.BOTTOM_SIDE);
 		add(bottom, 1, 2, GridBagConstraints.HORIZONTAL, 0.0, 0.0);
 	
 		// The corners...
@@ -119,6 +122,12 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 		defaults();
 	}
 
+	@Override
+	public void setBackground(Color color) {
+		super.setBackground(color);
+		for(Component c : getComponents()) c.setBackground(color);
+	}
+	
 	public PlotPane getCenterPane() { return center; }
 	
 	public PlotPane getLeftane() { return left; }
@@ -137,12 +146,9 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	
 	public PlotPane getBottomRightPane() { return bottomRight; }
 	
-	
-	
 	public void defaults() {
 		setFont(defaultFont);
 	}
-	
 	
 	public void setTransparent(boolean value) {
 		for(Component c : getComponents()) if(c instanceof PlotPane) 
@@ -151,16 +157,51 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	
 	@Override
 	public void paintComponent(Graphics g) {
-		validate();
-		plotArea.setSize(center.getSize());
+		contentArea.setSize(center.getSize());
 		super.paintComponent(g);
 	}
 	
-	public PlotArea<? extends ContentType> getPlotArea() { return plotArea; }
+	public Rectangle2D getCoordinateBounds(int side) {
+		
+		Point2D c1 = null, c2 = null; 
+		
+		switch(side) {
+		case(Plot.LEFT_SIDE):
+			c1 = new Point2D.Double(0.0, getHeight());
+			c2 = new Point2D.Double(0.0, 0.0);
+			break;
+		case(Plot.RIGHT_SIDE):
+			c1 = new Point2D.Double(getWidth(), getHeight());
+			c2 = new Point2D.Double(getWidth(), 0.0);
+			break;
+		case(Plot.TOP_SIDE):
+			c1 = new Point2D.Double(0, 0.0);
+			c2 = new Point2D.Double(getWidth(), 0.0);
+			break;
+		case(Plot.BOTTOM_SIDE):
+			c1 = new Point2D.Double(0, 0.0);
+			c2 = new Point2D.Double(getWidth(), 0.0);
+			break;
+		default: return null;
+		}
+		
+		contentArea.toCoordinates(c1);
+		contentArea.toCoordinates(c2);
+		
+		return new Rectangle2D.Double(
+			Math.min(c1.getX(), c2.getX()),
+			Math.min(c1.getY(), c2.getY()),
+			Math.abs(c1.getX() - c2.getX()),
+			Math.abs(c1.getY() - c2.getY())
+		);
+	}
 	
-	public void setPlotArea(PlotArea<? extends ContentType> area) { 
-		if(this.plotArea != null) center.remove(this.plotArea);
-		this.plotArea = area; 
+	
+	public ContentArea<? extends ContentType> getContent() { return contentArea; }
+	
+	public void setContent(ContentArea<? extends ContentType> area) { 
+		if(this.contentArea != null) center.remove(this.contentArea);
+		this.contentArea = area; 
 		center.add(area);
 	}
 	
@@ -209,5 +250,12 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	}
 	
 	public static Font defaultFont = new Font("SansSerif", Font.BOLD, 15);
+	
+	public final static int SIDE_UNDEFINED = -1;
+	public final static int TOP_SIDE = 0;
+	public final static int BOTTOM_SIDE = 1;
+	public final static int LEFT_SIDE = 2;
+	public final static int RIGHT_SIDE = 3;
+	
 	
 }

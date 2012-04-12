@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2012 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -21,11 +21,17 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
+
 package util.plot;
 
-import java.awt.geom.AffineTransform;
+public interface PlotSide {
 
-public interface Transforming {
-
-	public AffineTransform getTransform();
+	public int getSide();
+	
+	public void setSide(int side);
+		
+	public boolean isHorizontal();
+	
+	public boolean isVertical(); 
+	
 }

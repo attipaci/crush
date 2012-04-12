@@ -53,6 +53,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	//double rotation;
 	
 	double focusXOffset, focusYOffset, focusZOffset;
+	int[] biasValue;
 
 	public Gismo() {
 		super("gismo", pixels);
@@ -243,18 +244,43 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		for(int c=0; c<pixels; c++) add(new GismoPixel(this, c));
 		
 		int iMask = hdu.findColumn("PIXMASK");
+		int iBias = hdu.findColumn("DETECTORBIAS");
 		
-		if(iMask < 0) return;
+		if(iMask >= 0) {
+			try {
+				short[] mask = (short[]) row[iMask];
+				for(Channel channel : this) if(mask[channel.storeIndex-1] == 0) channel.flag(Channel.FLAG_DEAD); 
+			}
+			catch(ClassCastException e) {
+				byte[] mask = (byte[]) row[iMask];
+				for(Channel channel : this) if(mask[channel.storeIndex-1] == 0) channel.flag(Channel.FLAG_DEAD);
+			}
+		}
 		
-		try {
-			short[] mask = (short[]) row[iMask];
-			for(Channel channel : this) if(mask[channel.storeIndex-1] == 0) channel.flag(Channel.FLAG_DEAD); 
+		if(iBias >= 0) {
+			biasValue = (int[]) row[iBias]; 
+			setBiasOptions();
 		}
-		catch(ClassCastException e) {
-			byte[] mask = (byte[]) row[iMask];
-			for(Channel channel : this) if(mask[channel.storeIndex-1] == 0) channel.flag(Channel.FLAG_DEAD);
-		}
+	}
 	
+	
+	public void setBiasOptions() {	
+		if(!options.containsKey("bias")) return;
+			
+		int bias = biasValue[0];
+		for(int i=1; i<biasValue.length; i++) if(biasValue[i] != bias) {
+			System.err.println(" WARNING! Inconsistent bias values. Calibration may be bad!");
+			CRUSH.countdown(5);
+		}
+			
+		Hashtable<String, Vector<String>> settings = option("bias").conditionals;
+			
+		if(settings.containsKey(bias + "")) {
+			System.err.println(" Setting options for bias " + bias);
+			// Make options an independent set of options, setting MJD specifics...
+			options = options.copy();
+			options.parse(settings.get(bias + ""));
+		}
 	}
 
 	

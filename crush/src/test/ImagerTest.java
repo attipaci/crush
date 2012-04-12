@@ -35,7 +35,7 @@ import util.Vector2D;
 import util.plot.Data2DLayer;
 import util.plot.GridImageLayer;
 import util.plot.ImageLayer;
-import util.plot.PlotLabel;
+import util.plot.SimpleLabel;
 import util.plot.ImageArea;
 import util.plot.colorscheme.*;
 
@@ -51,13 +51,18 @@ public class ImagerTest {
 				data[i][j] = (float) Math.random();
 			
 			
+			
+			
 			//GridImageLayer image = new GridImageLayer(map);
 			//final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
 			
 			//ImageLayer image = new ImageLayer.Float(data);
 			//image.defaults();
+			
+			
+			
 			final Data2DLayer image = new Data2DLayer(map);
-			final ImageArea<ImageLayer> imager = new ImageArea<ImageLayer>();
+			final ImageArea<Data2DLayer> imager = new ImageArea<Data2DLayer>();
 			
 			
 			image.setColorScheme(new Colorful());
@@ -65,21 +70,7 @@ public class ImagerTest {
 			//imager.invertAxes(true, true);
 			
 			//ColorBar colorbar = new ColorBar(imager, ColorBar.VERTICAL, 20);
-			final PlotLabel plotLabel = new PlotLabel("Test Label") {
-				/**
-				 * 
-				 */
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public Vector2D getPosition() {
-					return new Vector2D(0.5 * getWidth(), 0.5 * getHeight());
-				}
-			};
 			
-			plotLabel.setHorizontalTextAlign(PlotLabel.ALIGN_CENTER);
-			plotLabel.setVerticalTextAlign(PlotLabel.ALIGN_MIDRISE);
-			plotLabel.setRotation(45.0 * Unit.deg);
 			
 			final JComponent cross = new JComponent() {
 				/**
@@ -101,6 +92,24 @@ public class ImagerTest {
 		
 			imager.setTransparent(true);
 			
+			final SimpleLabel simpleLabel = new SimpleLabel(imager, "Test Label") {
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public Vector2D getPosition() {
+					return new Vector2D(0.5 * imager.getWidth(), 0.5 * imager.getHeight());
+				}
+			};
+			
+			simpleLabel.setHorizontalTextAlign(SimpleLabel.ALIGN_CENTER);
+			simpleLabel.setVerticalTextAlign(SimpleLabel.ALIGN_MIDRISE);
+			simpleLabel.setRotation(45.0 * Unit.deg);
+			
+			
+			
 			JComponent root = new JComponent() {
 				/**
 				 * 
@@ -112,23 +121,25 @@ public class ImagerTest {
 					// Set sizes of all subcomponents to make sure they are the same...
 					imager.setSize(getSize());
 					cross.setSize(getSize());
-					plotLabel.setSize(getSize());
 					
 					// Set before rendering, otherwise not guaranteed
-					setComponentZOrder(plotLabel, 0);
-					setComponentZOrder(cross, 1);
-					setComponentZOrder(imager, 2);
+					//setComponentZOrder(cross, 0);
+					//setComponentZOrder(imager, 1);
 					
 					//Turn on/off subcomponent visibility...
-					//imager.setVisible(false);
+					//imager.setVisible(true);
 					
 					super.paintComponent(g);
+					
+					//simpleLabel.paint();
 				}
 			};
 			
-			root.add(plotLabel);
+			
+			
 			root.add(cross);
 			root.add(imager);
+			
 			
 			/*
 			root.setComponentZOrder(label, 0);
@@ -157,6 +168,7 @@ public class ImagerTest {
 			//frame.add(box, "East");
 		
 			frame.setVisible(true);
+		
 		}
 		catch(Exception e) {
 			e.printStackTrace();			

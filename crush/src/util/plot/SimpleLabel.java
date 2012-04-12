@@ -39,12 +39,12 @@ import util.Vector2D;
 //  *   multiline labels (manually break lines and layout...)
 
 
-public abstract class PlotLabel extends JComponent {
+public abstract class SimpleLabel {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 3484653302434799694L;
-	
+	private JComponent canvas;
+	private Font font;
 	private String label = "";
 		
 	private int alignX = ALIGN_CENTER;
@@ -52,30 +52,42 @@ public abstract class PlotLabel extends JComponent {
 	
 	private double rotation = 0.0; // clockwise rotation
 	
-	public PlotLabel() {
+	public SimpleLabel(JComponent canvas) {
+		this.canvas = canvas;
 		setFont(defaultFont);
 	}
 
-	public PlotLabel(String text) {
-		this();
+	public SimpleLabel(JComponent canvas, String text) {
+		this(canvas);
 		this.label = text;
 	}
 
-	public PlotLabel(String text, int alignX, int alignY) {
-		this(text);
+	public SimpleLabel(JComponent canvas, String text, int alignX, int alignY) {
+		this(canvas, text);
 		this.alignX = alignX;
 		this.alignY = alignY;
 	}	
 	
 	public abstract Vector2D getPosition();
+
+	public void setFont(Font f) { this.font = f; }
 	
-	@Override
-	public void paintComponent(Graphics g){
-		super.paintComponent(g); 
+	public Font getFont() { return font == null ? canvas.getFont() : font; }
 	
+	public Rectangle2D getBounds() {
+		Graphics g = canvas.getGraphics();
+		Graphics2D g2 = (Graphics2D) g;
+		if(font != null) g.setFont(font);
+		TextLayout layout = new TextLayout(label, getFont(), g2.getFontRenderContext());
+		return layout.getBounds();
+	}
+	
+	public void paint() {
+		Graphics g = canvas.getGraphics();
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		
+		if(font != null) g.setFont(font);
 		TextLayout layout = new TextLayout(label, getFont(), g2.getFontRenderContext());
 		Rectangle2D bounds = layout.getBounds();	
 		//FontMetrics fm = g.getFontMetrics(getFont());
@@ -113,7 +125,7 @@ public abstract class PlotLabel extends JComponent {
 		
 		int x0 = (int)Math.round(position.getX() - refX);
 		int y0 = (int)Math.round(position.getY() - refY);
-	
+		
 		// Rotate around the anchored position....
 		g2.rotate(rotation, position.getX(), position.getY());
 		
@@ -130,9 +142,9 @@ public abstract class PlotLabel extends JComponent {
 	
 	public void setVerticalTextAlign(int value) { alignY = value; }
 	
-	public String getLabel() { return label; }
+	public String getText() { return label; }
 	
-	public void setLabel(String text) { this.label = text; }
+	public void setText(String text) { this.label = text; }
 	
 	public double getRotation() { return rotation; }
 	

@@ -3,6 +3,21 @@
 >> use GC to update 'extended' config.
 >> update 'gismo' deep with fewer iterations?
 
+	[NEW] {GISMO} Bias-dependent settings are now allowed via conditionals
+	under the 'bias' key. E.g. to define different conversion values
+	(from counts to jansky):
+
+		bias.[8000] jansky 36.6
+		bias.[10000] jansky 24.67
+
+	[NEW] {GISMO} Pointing reductions now suggest Nasmyth offsets for PaKo.
+
+	[FIX] {GISMO} Fixed treating horizontal and equatorial (projection)
+	offsets.
+
+	[FIX] {GISMO} Suggested Nasmyth pointing offsets sign fixed and 
+	confirmed.
+
 	[FIX] Fixed and cleaned up rendering transformations and zooming of 
 	various image classes used by CRUSH to make parts work that weren't 
 	really used before.
@@ -25,6 +40,9 @@
 
 	[CODE] More work on imaging classes. The day of native CRUSH-2 image
 	tools is getting ever closer...
+
+	[UPDATE] Updated 'extended' configuration based on AtlasGal.
+
 
 2.11-2 (16 March 2012)
 

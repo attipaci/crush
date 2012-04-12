@@ -291,6 +291,7 @@ public abstract class SourceMap extends SourceModel {
 	
 	protected int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
 		int goodFrames = 0;
+		
 		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
 		final double samplingInterval = integration.instrument.samplingInterval;
 
@@ -300,6 +301,8 @@ public abstract class SourceMap extends SourceModel {
 		for(final Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) {
 			final double fG = integration.gain * exposure.getSourceGain(signalMode);
 			final double fGC = (isMasked(index) ? 1.0 : filtering) * fG;
+				
+			if(fGC == 0.0) continue;
 			
 			goodFrames++;
 
@@ -308,6 +311,9 @@ public abstract class SourceMap extends SourceModel {
 				add(exposure, pixel, index, fGC, sourceGain, samplingInterval, excludeSamples);
 			}
 		}
+		
+		if(CRUSH.debug) System.err.println("### mapping frames:" + goodFrames);
+		
 		return goodFrames;
 	}
 	

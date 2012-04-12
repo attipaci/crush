@@ -23,6 +23,7 @@
 
 package util.plot;
 
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
@@ -33,7 +34,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Vector;
 
 import javax.imageio.ImageIO;
 import javax.swing.OverlayLayout;
@@ -42,18 +42,18 @@ import javax.swing.OverlayLayout;
 import util.CoordinatePair;
 import util.Vector2D;
 
-public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel {
+public class ContentArea<ContentType extends ContentLayer> extends TransparentPanel {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 5175315778375641551L;
 
-	private Vector<PlotLayer> layers = new Vector<PlotLayer>();
 	private ContentType contentLayer;
+
 	
 	private Vector2D referencePoint = new Vector2D(0.0, 1.0); // lower left corner...
 	private Vector2D scale = new Vector2D();
-	private Vector2D userOffset = new Vector2D(); // alignment...
+	
 	
 	private double rotation = 0.0;
 	private boolean flipX = false, flipY = false;
@@ -65,12 +65,13 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 	private boolean initialized = false;
 	private boolean verbose = false;
 	
-	public PlotArea() {}
+	public ContentArea() {
+		setLayout(new OverlayLayout(this));
+	}
 	
-	public PlotArea(ContentType content) {
+	public ContentArea(ContentType content) {
 		this();
 		setContentLayer(content);
-		setLayout(new OverlayLayout(this));
 	}
 	
 	/**
@@ -85,50 +86,30 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 	
 	public final AffineTransform toCoordinates() { return toCoordinates; }
 	
-	public Vector2D getReferencePoint() { return referencePoint; }
+	public Vector2D getReferencePoint() { return referencePoint; }	
 	
 	public void setReferencePoint(Vector2D v) { referencePoint = v; }
+	
+	public Vector2D getReferencePixel() {
+		Vector2D ref = getReferencePoint(); 
+		ref.scaleX(getWidth());
+		ref.scaleY(getHeight());
+		return ref;
+	}
+	
+	public void setReferencePixel(Vector2D v) {
+		setReferencePoint(new Vector2D(v.getX() / getWidth(), v.getY() / getHeight()));
+	}
 	
 	public ContentType getContentLayer() {
 		return contentLayer;		
 	}
 	
 	public void setContentLayer(ContentType layer) {
-		if(!contains(layer)) insertLayer(layer, 0); 
+		if(contentLayer != null) remove(contentLayer);
 		contentLayer = layer;
-	}
-	
-	public void setContentLayer(ContentType layer, int index) {
-		if(contains(layer)) layers.remove(contentLayer);
-		insertLayer(layer, index); 
-		contentLayer = layer;
-	}
-	
-	public void addLayer(PlotLayer layer) {
-		layer.setPlotArea(this);
-		layers.add(layer);
-	}
-	
-	public void insertLayer(PlotLayer layer, int pos) {
-		layer.setPlotArea(this);
-		layers.insertElementAt(layer, pos);
-	}
-	
-	public void removeLayer(int index) {
-		layers.remove(index);
-	}
-	
-	public boolean contains(PlotLayer layer) {
-		return layers.contains(layer);
-	}
-	
-	public int indexOf(PlotLayer layer) {
-		return layers.indexOf(layer);
-	}
-	
-	public void remove(PlotLayer layer) {
-		int index = indexOf(layer);
-		if(index >= 0) removeLayer(index);
+		contentLayer.setContentArea(this);
+		add(contentLayer);
 	}
 	
 	public Vector2D getScale() { return scale; }
@@ -147,6 +128,7 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 		referencePoint.subtractX(dx / getWidth());
 		referencePoint.subtractY(dy / getHeight());
 	}
+	
 	
 
 	public int getZoomMode() { return zoomMode; }
@@ -169,12 +151,12 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 		case ZOOM_FIT : 
 			bounds = contentLayer.getCoordinateBounds();
 			setZoom(Math.min((double) getWidth() / bounds.getWidth(), (double) getHeight() / bounds.getHeight()));
-			center();
+			contentLayer.center();
 			break;
 		case ZOOM_FILL : 
 			bounds = contentLayer.getCoordinateBounds();
 			setZoom(Math.min((double) getWidth() / bounds.getWidth(), (double) getHeight() / bounds.getHeight()));		
-			center();
+			contentLayer.center();
 			break; 
 		case ZOOM_STRETCH : setRenderSize(getWidth(), getHeight()); break;
 		case ZOOM_FIXED : break;	// Nothing to do, it stays where it was set by setZoom or setRenderSize
@@ -193,27 +175,6 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 		updateZoom();
 	}
 	
-	
-	public void center() {	
-		Rectangle2D bounds = contentLayer.getCoordinateBounds();
-			
-		// Get the nominal center as the middle of the bounding box
-		// in the native coordinates...
-		Vector2D center = new Vector2D(new Point2D.Double(
-				bounds.getMinX() + 0.5 * bounds.getWidth(),
-				bounds.getMinY() + 0.5 * bounds.getHeight()
-		));
-			
-		center.subtract(new Vector2D(contentLayer.getCoordinateReference()));
-		
-		userOffset.copy(center);
-	}
-	
-	public Vector2D getUserOffset() { return userOffset; }
-	
-	public void setUserOffset(Vector2D v) { this.userOffset = v; }
-	
-	public void align() { userOffset.zero(); }
 	public void setRotation(double angle) {
 		rotation = angle;
 	}
@@ -222,7 +183,11 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 		flipX = x;
 		flipY = y;
 	}
-	 
+	
+	public boolean isInvertedX() { return flipX; }
+	
+	public boolean isInvertedY() { return flipY; }
+	
 	public int getCenterX() {
 		return (int) Math.round(0.5 * getWidth());
 	}
@@ -231,7 +196,14 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 		return (int) Math.round(0.5 * getHeight());
 	}
 
-	public void updateTransforms() {
+	@Override
+	public void setSize(int w, int h) {
+		super.setSize(w, h);
+		for(Component c : getComponents()) c.setSize(w, h);
+		updateTransforms();
+	}
+	
+	protected void updateTransforms() {
 		toDisplay = new AffineTransform();
 			
 		updateZoom();
@@ -247,16 +219,13 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 		toDisplay.scale(scale.getX(), scale.getY());		// Rescale to image size
 		toDisplay.rotate(rotation);				// Rotate by the desired amount
 		
-		if(contentLayer != null) {
-			toDisplay.translate(-userOffset.getX(), -userOffset.getY()); // Move by the desired offset in user coordinates...
-			
-			if(contentLayer instanceof Transforming) {
-				toDisplay.concatenate(((Transforming) contentLayer).getTransform());
-			}
-			
-			Point2D contentRef = contentLayer.getCoordinateReference();
-			toDisplay.translate(-contentRef.getX(), -contentRef.getY()); // Move to the reference point of the content layer
-		}		
+		Vector2D userOffset = contentLayer.getUserOffset();
+		if(contentLayer != null) toDisplay.translate(-userOffset.getX(), -userOffset.getY()); // Move by the desired offset in user coordinates...
+		
+		/*
+		Point2D coordRef = contentLayer.getCoordinateReference();
+		toDisplay.translate(-coordRef.getX(), -coordRef.getY());
+		*/
 		
 		try { toCoordinates = toDisplay.createInverse(); }
 		catch(NoninvertibleTransformException e) { toCoordinates = null; }
@@ -278,12 +247,10 @@ public class PlotArea<ContentType extends ContentLayer> extends TransparentPanel
 			contentLayer.initialize();
 			initialized = true;
 		}
-	
-		updateTransforms();
 			
-		super.paintComponent(g);
+		contentLayer.paintComponent(g);
 		
-		for(PlotLayer layer : layers) layer.paintComponent(g);
+		super.paintComponent(g);
 	}
 	
 	// Returns a generated image.
