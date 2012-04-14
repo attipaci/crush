@@ -51,17 +51,21 @@ public class DataPoint extends WeightedPoint {
 	}
 	
 	public static String toString(DataPoint point, Unit unit) {
+		return toString(point, unit, " +- ", " ");
+	}
+	
+	public static String toString(DataPoint point, Unit unit, String before, String after) {
 		double value = point.value() / unit.value();
 		double rms = point.rms() / unit.value();
 		double res = Math.pow(10.0, 2 - errorFigures + Math.floor(Math.log10(rms)));
 		
 		return Util.getDecimalFormat(Math.abs(value) / res, 6).format(point.value() / unit.value()) 
-			+ " +- " + Util.s[errorFigures].format(rms) + " " + unit.name();   
+			+ before + Util.s[errorFigures].format(rms) + after + unit.name();   
 	}
 	
 	@Override
-	public String toString() {
-		return toString(this, Unit.unity);
+	public String toString(String before, String after) {
+		return toString(this, Unit.unity, before, after);
 	}
 	
 	public static int errorFigures = 2;

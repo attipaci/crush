@@ -384,7 +384,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			}
 		}
 		
-		System.err.println(" [" + sourceName + "] observed on " + date + " at " + startTime + " by " + observer);
+		System.err.println(" [" + sourceName + "] of project " + project + " observed on " + date + " at " + startTime + " by " + observer);
 		System.err.println(" Equatorial: " + equatorial.toString());	
 		System.err.println(" Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
 		
@@ -648,6 +648,14 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		else if(name.equals("tiltX")) return Util.defaultFormat(tiltCorrections.getDX(horizontal, (getMJD() % 1) * Unit.day), f);
 		else if(name.equals("tiltY")) return Util.defaultFormat(tiltCorrections.getDY(horizontal, (getMJD() % 1) * Unit.day), f);
 		else return super.getFormattedEntry(name, formatSpec);
+	}
+
+	@Override
+	public void editScanHeader(Header header) throws FitsException {	
+		super.editScanHeader(header);
+		header.addValue("PROJECT", project, "The project ID for this scan");
+		header.addValue("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan.");
+		
 	}
 	
 	public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");

@@ -36,6 +36,7 @@ import util.astro.AstroTime;
 import util.astro.EquatorialCoordinates;
 import util.astro.GeodeticCoordinates;
 import util.astro.Weather;
+import util.data.DataPoint;
 import util.text.TableFormatter;
 
 public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements GroundBased, Weather {
@@ -356,6 +357,43 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 
 	public double getWindSpeed() {
 		return Double.NaN;
+	}
+	
+	@Override
+	protected String getFocusString(InstantFocus focus) {
+		String info = "";
+		
+		/*
+		info += "\n";
+		info += "  Note: The instant focus feature of CRUSH is still very experimental.\n" +
+				"        The feature may be used to guesstimate focus corrections on truly\n" +
+				"        point-like sources (D < 4\"). However, the essential focusing\n" +
+				"        coefficients need to be better determined in the future.\n" +
+				"        Use only with extreme caution, and check suggestions for sanity!\n\n";
+		*/
+		
+		focus = new InstantFocus(focus);
+		
+		if(focus.getX() != null) {
+			DataPoint x = focus.getX();
+			x.add(instrument.focusX);
+			info += "\n  UIP> x_position " + Util.f2.format(x.value()) 
+					+ "       \t[+-" + Util.f2.format(x.rms()) + "]";			
+		}
+		if(focus.getY() != null) {
+			DataPoint dy = focus.getY();
+			dy.add(instrument.focusYOffset);
+			info += "\n  UIP> y_position /offset " + Util.f2.format(dy.value())
+					+ "\t[+-" + Util.f2.format(dy.rms()) + "]";	
+		}
+		if(focus.getZ() != null) {
+			DataPoint dz = focus.getZ();
+			dz.add(instrument.focusZOffset);
+			info += "\n  UIP> focus /offset " + Util.f2.format(dz.value())
+					+ "    \t[+-" + Util.f2.format(dz.rms()) + "]";
+		}
+			
+		return info;
 	}
 	
 }

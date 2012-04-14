@@ -25,6 +25,8 @@ package util.data;
 
 import java.io.*;
 
+import crush.sourcemodel.GaussianSource;
+
 // TODO make independent of crush packages...
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -722,5 +724,11 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		return sum;			
 	}
 
-	
+	public Asymmetry2D getAsymmetry(CircularRegion<CoordinateType> region, double angle, double maxr) {
+		if(region instanceof GaussianSource) ((GaussianSource<CoordinateType>) region).centroid(this);
+		Asymmetry2D asym = new Asymmetry2D();
+		asym.setX(region.getAsymmetry(this, angle, maxr));
+		asym.setY(region.getAsymmetry(this, angle + 90.0 * Unit.deg, maxr));
+		return asym;
+	}
 }

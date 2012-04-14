@@ -70,6 +70,9 @@ public class AstroImage extends GridImage<SphericalCoordinates> implements Clone
 		return getReference() instanceof SuperGalacticCoordinates;
 	}
 
-
+	
+	
+	
+	
 }
 

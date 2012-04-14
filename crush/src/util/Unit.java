@@ -569,6 +569,8 @@ public class Unit implements Cloneable {
 	
 	static {
 		register(1.0, "count, counts, ct, piece, pieces, pcs, 1");
+		register(0.01, "%, percent");
+		
 		register(m, "m, meter, metre");
 		//register(kg, "kg, kilogram"); register gramms, since that has valid multiples...
 		register(s, "s, sec, second");

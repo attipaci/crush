@@ -387,6 +387,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	@Override
 	public void editScanHeader(Header header) throws FitsException {	
 		super.editScanHeader(header);
+		header.addValue("PROJECT", project, "The project ID for this scan");
 		header.addValue("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan.");
 	}
 	
