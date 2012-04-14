@@ -80,7 +80,7 @@ public class AstroMap extends GridSource<SphericalCoordinates> implements AstroC
 	public boolean isSuperGalactic() {
 		return getReference() instanceof SuperGalacticCoordinates;
 	}
-	
+		
 }
 
 

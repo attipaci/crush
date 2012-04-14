@@ -69,27 +69,33 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		super.measureShape(map);
 		
 		Vector2D center = getIndex(map.getGrid());
+		Vector2D delta = map.getResolution();
 		Bounds bounds = getBounds(map, 1.0 * map.getImageFWHM());
 		
-		double m0 = 0.0, m2c = 0.0, m2s = 0.0;
+		double m0 = 0.0, m2c = 0.0, m2s = 0.0, sumw = 0.0;
+		
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.isUnflagged(i, j)) {
-			double p = Math.abs(map.getS2N(i,j));
-			//p *= p;
-			double theta = 2.0 * Math.atan2(j - center.getY(), i - center.getX());
+			double w = map.getWeight(i, j);
+			double wp = w * Math.abs(map.getS2N(i,j));
+			double dx = (i - center.getX()) / delta.getX();
+			double dy = (j - center.getY()) / delta.getY();
+			double theta = 2.0 * Math.atan2(dy, dx);
 			
-			m2c += p * Math.cos(theta);
-			m2s += p * Math.sin(theta);
-			m0 += p;
+			m2c += wp * Math.cos(theta);
+			m2s += wp * Math.sin(theta);
+			m0 += wp;
+			sumw += w;
 		}
 		if(m0 > 0.0) {
 			m2c *= 1.0 / m0;
 			m2s *= 1.0 / m0;
 			
 			elongation.setValue(2.0 * Math.hypot(m2s, m2c));
-			elongation.setRMS(2.0 / Math.sqrt(m0));
+			//elongation.setRMS(2.0 * Math.sqrt(sumw / m0));
+			elongation.setRMS(2.0 * Math.abs(sumw / m0));
 			
-			angle.setValue(Math.atan2(m2s, m2c) / 2.0);
+			angle.setValue(0.5 * Math.atan2(m2s, m2c));
 			angle.setRMS(elongation.rms() / elongation.value());
 		}
 		else {

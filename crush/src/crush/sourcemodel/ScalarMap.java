@@ -785,7 +785,7 @@ public class ScalarMap extends SourceMap {
 		}
 		
 	}
-
+	
 	@Override
 	public String getSourceName() {
 		return map.getName();

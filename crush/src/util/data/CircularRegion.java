@@ -94,6 +94,14 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		
 		return bounds;
 	}
+	
+	public Bounds getBounds(GridImage<CoordinateType> image, double r) {
+		DataPoint origRadius = getRadius();
+		setRadius(new DataPoint(r, 0.0));
+		Bounds bounds = getBounds(image);
+		setRadius(origRadius);
+		return bounds;
+	}
 
 	public double distanceTo(Metric<CoordinateType> pos) {
 		return pos.distanceTo(coords);
@@ -351,6 +359,32 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		else setRadius(Double.NaN);
 	}
 	
+	public DataPoint getAsymmetry(GridImage<CoordinateType> map, double angle, double maxr) {	
+		Vector2D center = getIndex(map.getGrid());
+		Bounds bounds = getBounds(map, maxr * map.getImageFWHM());
+		Vector2D delta = map.getResolution();
+		
+		double m0 = 0.0, mc = 0.0, c2 = 0.0;
+		
+		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) if(map.isUnflagged(i, j)) {
+			double dx = (i - center.getX()) / delta.getX();
+			double dy = (j - center.getY()) / delta.getY();
+			double w = map.getWeight(i, j);
+			
+			double p = Math.abs(map.getS2N(i,j));
+			double theta = Math.atan2(dy, dx);
+			
+			// cos term is gain-like
+			double c = Math.cos(theta - angle);
+			double wc = w * c;
+			
+			mc += wc * p;
+			c2 += wc * wc;
+			m0 += w * p;
+		}
+		if(m0 > 0.0) return new DataPoint(mc / m0, Math.sqrt(c2) / m0);
+		return new DataPoint();	
+	}
 	
 	
 	

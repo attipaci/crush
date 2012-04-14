@@ -144,11 +144,19 @@ public class WeightedPoint implements Comparable<WeightedPoint>, Cloneable {
 
 	@Override
 	public String toString() {
-		return value + " +- " + Math.sqrt(1.0 / weight); 
+		return toString(" +- ", ""); 
+	}
+	
+	public String toString(String before, String after) {
+		return value + before + Math.sqrt(1.0 / weight) + after; 
 	}
 
 	public String toString(final DecimalFormat df) {
-		return df.format(value) + " +- " + df.format(Math.sqrt(1.0 / weight)); 
+		return toString(df, " +- ", "");
+	}
+	
+	public String toString(final DecimalFormat df, String before, String after) {
+		return df.format(value) + before + df.format(Math.sqrt(1.0 / weight)) + after; 
 	}
 
 	public static float[] floatValues(WeightedPoint[] data) {

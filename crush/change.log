@@ -1,7 +1,20 @@
->> check that incremental pointing is correctly applied...
 >> write.png.spline
 >> use GC to update 'extended' config.
 >> update 'gismo' deep with fewer iterations?
+>> 'focus' force focus even if source is too large/small.
+>> focus.xcoeff, focus.ycoeff, focus.zcoeff
+>> focus.xpointing, focus.ypointing
+>> focus.fluxcoeff?
+
+
+	[NEW] Pointing reductions now measure the source shape in a more
+	sophisticated way, providing a measure of the x and y asymmetry of the
+	source (and lobes!). This, in principle allows focusing on a single
+	image of a point source, provided that it is characterized how the
+	source shape changes with focus settings. The conversion of shape 
+	parameters (asymmetry and elongation) into focus changes is contorlled
+	by the new configuration keys 'focus.xcoeff', 'focus.ycoeff' and 
+	'focus.zcoeff'. The definition of these is still in progress.
 
 	[NEW] {GISMO} Bias-dependent settings are now allowed via conditionals
 	under the 'bias' key. E.g. to define different conversion values
@@ -34,6 +47,8 @@
 
 	[FIX] PolarVector2D power op was wrongly defined. However, since this
 	feature was never used in CRUSH, there was no damage done by it.
+
+	[TWEAK] Uncertainty calculation of elongation measure improved.
 
 	[CODE] Many classes are updated to hide private fields, and access them
 	through getters/setters only. This makes for safer code.

@@ -53,13 +53,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		super(coords, r);
 	}
 	
-	public Bounds getBounds(GridImage<CoordinateType> image, double r) {
-		DataPoint origRadius = getRadius();
-		setRadius(new DataPoint(r, 0.0));
-		Bounds bounds = getBounds(image);
-		setRadius(origRadius);
-		return bounds;
-	}
+	
 	
 	public DataPoint getPeak() { return peak; }
 	

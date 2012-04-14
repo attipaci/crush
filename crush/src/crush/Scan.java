@@ -44,6 +44,9 @@ import util.astro.HorizontalCoordinates;
 import util.astro.JulianEpoch;
 import util.astro.Precession;
 import util.astro.Weather;
+import util.data.Asymmetry2D;
+import util.data.CircularRegion;
+import util.data.DataPoint;
 import util.data.WeightedPoint;
 import util.text.TableFormatter;
 
@@ -506,6 +509,9 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public void writeProducts() {
 		for(Integration<?,?> integration : this) integration.writeProducts();
+		
+		printFocus();
+		
 		printPointing();
 		
 		if(hasOption("log")) {
@@ -516,6 +522,22 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			}
 		}
 	}
+	
+	public void printFocus() {
+		if(pointing != null) {
+			System.out.println();
+			System.out.println(" Instant Focus Results for Scan " + getID() + ":");
+			System.out.println();
+			System.out.println(getFocusString() + "\n");
+		}
+		else if(hasOption("pointing")) {
+			Configurator pointingOption = option("pointing");
+			if(pointingOption.equals("suggest") || pointingOption.equals("auto")) {
+				System.out.println(" WARNING! Cannot suggest focus for scan " + getID() + ": S/N is below critical.");
+			}
+		}
+	}
+	
 	
 	public void printPointing() {
 		if(pointing != null) {
@@ -658,6 +680,78 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		info += getPointingString(getNativePointingIncrement(pointing));
 		return info;
 	}
+	
+	
+	public Asymmetry2D getSourceAsymmetry(CircularRegion<SphericalCoordinates> region) {
+		if(!(sourceModel instanceof ScalarMap)) return null;
+		
+		AstroMap map = ((ScalarMap) sourceModel).map;
+		if(!(map.isEquatorial() || map.isHorizontal())) return map.getAsymmetry(region, 0.0, 2.5);;
+
+		boolean isGroundEquatorial = this instanceof GroundBased && map.isEquatorial();
+		double angle = isGroundEquatorial ? this.getPA() : 0.0;
+
+		return map.getAsymmetry(region, angle, 2.5);
+	}
+	
+	public DataPoint getSourceElongationX(EllipticalSource<SphericalCoordinates> ellipse) {
+		DataPoint elongation = new DataPoint(ellipse.getElongation());
+		DataPoint angle = new DataPoint(ellipse.getAngle());
+		
+		if(instrument instanceof GroundBased && pointing.getCoordinates() instanceof EquatorialCoordinates) {
+			angle.add(-getPA());
+		}
+		
+		elongation.scale(Math.cos(2.0 * angle.value()));
+		//elongation.setWeight(1.0 / (1.0 / elongation.weight() + elongation.value() * elongation.value() * 4.0 / angle.weight()));
+		
+		return elongation;		
+	}
+	
+	protected String getFocusString() {
+		Asymmetry2D asym = getSourceAsymmetry(pointing);
+					
+		DataPoint elongation = pointing instanceof EllipticalSource ? 
+				getSourceElongationX((EllipticalSource<SphericalCoordinates>) pointing) : null;
+		
+		return getFocusString(asym, elongation);
+	}
+	
+	protected String getFocusString(Asymmetry2D asym, DataPoint elongation) {
+		String info = asym == null ? "" : asym.toString() + "\n";
+		
+		if(elongation != null) info += "  Elongation: " + elongation.toString(Unit.get("%")) + "\n";			
+		
+		double relFWHM = pointing.getFWHM().value() / instrument.resolution;
+		boolean force = hasOption("focus");
+		
+		if(force || (relFWHM > 0.8 && relFWHM <= 1.5)) {
+			InstantFocus focus = new InstantFocus();
+			focus.deriveFrom(asym, elongation, instrument.options);
+			info += getFocusString(focus);
+		}
+		else {
+			info += "\n";
+			if(relFWHM <= 0.8) info += "  WARNING! Source FWHM unrealistically low.\n";
+			else info += "  WARNING! Source is either too extended or too defocused.\n";
+			info += "           No focus correction is suggested. You can force calculate\n"
+					+ "           suggested focus values by setting the 'focus' option when\n" 
+					+ "           running CRUSH.\n\n";
+		}
+		
+		return info;
+	}
+	
+	protected String getFocusString(InstantFocus focus) {
+		String info = "";
+		
+		if(focus.getX() != null) info += "\n  Focus.dX --> " + focus.getX().toString();			
+		if(focus.getY() != null) info += "\n  Focus.dY --> " + focus.getY().toString();			
+		if(focus.getX() != null) info += "\n  Focus.dZ --> " + focus.getZ().toString();
+			
+		return info;
+	}
+	
 	
 	protected String getPointingString(Vector2D pointingOffset) {	
 		// Print the native pointing offsets...
