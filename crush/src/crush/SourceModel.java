@@ -30,8 +30,7 @@ import java.util.*;
 
 
 public abstract class SourceModel extends Parallel implements Cloneable {
-	public Instrument<?> instrument;
-	private Configurator options; 
+	private Instrument<?> instrument;
 	
 	public Vector<Scan<?,?>> scans;
 	public int generation = 0;
@@ -39,17 +38,9 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 	
 	public String commandLine;
 	public String id;	
-		
+
 	public SourceModel(Instrument<?> instrument) {
-		this.instrument = instrument;
-	}
-	
-	public void setOptions(Configurator options) {
-		this.options = options;
-	}
-	
-	public Configurator getOptions() {
-		return options;
+		setInstrument(instrument);		
 	}
 	
 	@Override
@@ -59,31 +50,30 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 	}	
 	
 	public boolean hasOption(String name) {
-		return options.isConfigured(name);
+		return instrument.options.isConfigured(name);
 	}
 
 	public Configurator option(String name) {
-		return options.get(name);
+		return instrument.options.get(name);
 	}
+	
+	public Configurator getOptions() { return instrument.options; }
 	
 	public SourceModel copy() {
 		SourceModel copy = (SourceModel) clone();
 		return copy;
 	}
 	
+	public Instrument<?> getInstrument() { return instrument; }
+	
+	public void setInstrument(Instrument<?> instrument) {
+		this.instrument = instrument;	
+	}
+		
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
-		this.scans = new Vector<Scan<?,?>>();
-		for(Scan<?,?> scan : collection) scans.add(scan);
-		
-		double janskyPerBeam = scans.get(0).instrument.janskyPerBeam();
-		for(Scan<?,?> scan : scans) {
-			scan.setSourceModel(this);
-			for(Integration<?,?> integration : scan)
-				integration.gain *= janskyPerBeam / integration.instrument.janskyPerBeam();
-		}
-		
-		// Set the global units to those of the first scan...
-		instrument.options.process("jansky", Double.toString(janskyPerBeam));
+		scans = new Vector<Scan<?,?>>(collection);
+		setInstrument(scans.get(0).instrument);
+		for(Scan<?,?> scan : scans) scan.setSourceModel(this);
 	}
 
 	public void reset() {

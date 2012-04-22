@@ -43,9 +43,6 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	public static int pixels = 128;
 	public Vector2D nasmythOffset;
 	
-	// Array is 16x8 (rows x cols)
-	
-	private static Vector2D defaultPointingCenter = new Vector2D(8.5, 4.5); // row, col
 	private Vector2D arrayPointingCenter; // row,col
 	//Vector2D pointingCenterOffset = new Vector2D(); // The offset of the pointing center rel. to the rotation center...
 	//double nativeSamplingInterval;
@@ -70,7 +67,12 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	@Override
 	public Instrument<GismoPixel> copy() {
 		Gismo copy = (Gismo) super.copy();
-		copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
+		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
+		if(nasmythOffset != null) copy.nasmythOffset = (Vector2D) nasmythOffset.clone();
+		if(biasValue != null) {
+			copy.biasValue = new int[biasValue.length];
+			System.arraycopy(biasValue, 0, copy.biasValue, 0, biasValue.length);
+		}
 		return copy;
 	}
 	
@@ -201,9 +203,9 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		Header header = hdu.getHeader();
 			
 		// Focus
-		focusXOffset = header.getDoubleValue("FOCUS_XO") * Unit.mm;
-		focusYOffset = header.getDoubleValue("FOCUS_YO") * Unit.mm;
-		focusZOffset = header.getDoubleValue("FOCUS_ZO") * Unit.mm;
+		focusXOffset = header.getDoubleValue("FOCUS_XO", Double.NaN) * Unit.mm;
+		focusYOffset = header.getDoubleValue("FOCUS_YO", Double.NaN) * Unit.mm;
+		focusZOffset = header.getDoubleValue("FOCUS_ZO", Double.NaN) * Unit.mm;
 
 		arrayPointingCenter.setX(header.getDoubleValue("PNTROW", 8.5));
 		arrayPointingCenter.setY(header.getDoubleValue("PNTCOL", 4.5));
@@ -221,9 +223,9 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		Header header = hdu.getHeader();
 			
 		// Focus
-		focusXOffset =  header.getDoubleValue("FOCUS_XO") * Unit.mm;
-		focusYOffset =  header.getDoubleValue("FOCUS_YO") * Unit.mm;
-		focusZOffset =  header.getDoubleValue("FOCUS_ZO") * Unit.mm;
+		focusXOffset = header.getDoubleValue("FOCUS_XO") * Unit.mm;
+		focusYOffset = header.getDoubleValue("FOCUS_YO") * Unit.mm;
+		focusZOffset = header.getDoubleValue("FOCUS_ZO") * Unit.mm;
 	
 		nasmythOffset = new Vector2D(
 				header.getDoubleValue("RXHORI", Double.NaN) + header.getDoubleValue("RXHORICO", 0.0),
@@ -349,15 +351,21 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 	
-		if(name.equals("focX")) return Util.defaultFormat(focusXOffset / Unit.mm, f);
-		else if(name.equals("focY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
-		else if(name.equals("focZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
-		else if(name.equals("focDY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
-		else if(name.equals("focDZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
+		if(name.equals("foc.dX")) return Util.defaultFormat(focusXOffset / Unit.mm, f);
+		else if(name.equals("foc.dY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
+		else if(name.equals("foc.dZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
 		else if(name.equals("nasX")) return Util.defaultFormat(nasmythOffset.getX() / Unit.arcsec, f);
 		else if(name.equals("nasY")) return Util.defaultFormat(nasmythOffset.getY() / Unit.arcsec, f);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
+	@Override
+	public String getDataLocationHelp() {
+		return super.getDataLocationHelp() +
+				"     -object=      The object catalog name as entered in PaKo.\n" +
+				"     -date=        YYYY-MM-DD when the data was collected.\n";
+	}
 	
+	// Array is 16x8 (rows x cols);
+	private static Vector2D defaultPointingCenter = new Vector2D(8.5, 4.5); // row, col
 }

@@ -190,6 +190,7 @@ implements TableFormatter.Entries {
 		
 		for(String rangeSpec : settings.keySet()) 
 			if(Range.parse(rangeSpec, true).contains(MJD)) options.parse(settings.get(rangeSpec));
+			
 	}
 	
 	public void setDateOptions(double MJD) {
@@ -250,6 +251,13 @@ implements TableFormatter.Entries {
 		}
 	}
 	
+	public String getDataLocationHelp() {
+		return "";
+	}
+	
+	public String getCommonHelp() {
+		return "";
+	}
 	
 	public boolean hasOption(String name) {
 		return options.isConfigured(name);

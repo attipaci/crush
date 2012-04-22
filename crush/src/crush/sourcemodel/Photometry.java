@@ -62,7 +62,13 @@ public abstract class Photometry extends SourceModel {
 	@Override
 	public synchronized void add(SourceModel model, double weight) {
 		Photometry other = (Photometry) model;
-		for(int c=flux.length; --c >= 0; ) flux[c].average(other.flux[c]);
+		double G = getInstrument().janskyPerBeam() / other.getInstrument().janskyPerBeam();
+		
+		for(int c=flux.length; --c >= 0; ) {
+			WeightedPoint F = new WeightedPoint(other.flux[c]);
+			F.scale(G);
+			flux[c].average(F);
+		}
 		sourceFlux.average(other.sourceFlux);
 		integrationTime += other.integrationTime;
 	}
@@ -84,7 +90,7 @@ public abstract class Photometry extends SourceModel {
 	public void process(boolean verbose) throws Exception {
 		super.sync();
 		
-		double jansky = instrument.janskyPerBeam();	
+		double jansky = getInstrument().janskyPerBeam();	
 		
 		DataPoint F = new DataPoint(sourceFlux);
 		F.scale(1.0/jansky);
@@ -113,7 +119,7 @@ public abstract class Photometry extends SourceModel {
 		
 	@Override
 	public void write(String path) throws Exception {
-		double jansky = instrument.janskyPerBeam();
+		double jansky = getInstrument().janskyPerBeam();
 		
 		DataPoint F = new DataPoint(sourceFlux);
 		

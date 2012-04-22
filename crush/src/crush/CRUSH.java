@@ -36,12 +36,12 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.12-0 (devel.7)
+ * @version 2.12-a1 (alpha)
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.12-0";
-	private static String revision = "devel.7";
+	private static String version = "2.12-a1";
+	private static String revision = "rc1";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -68,7 +68,7 @@ public class CRUSH extends Configurator {
 		}
 		
 		if(args[0].equalsIgnoreCase("-help")) {
-			help();
+			help(null);
 			System.exit(0);	
 		}
 		
@@ -109,6 +109,7 @@ public class CRUSH extends Configurator {
 				String option = args[i].substring(1);
 				parse(option);
 				if(option.equals("debug")) debug=true;
+				if(option.equals("help")) help(instrument);
 			}
 			else {
 				if(!instrument.initialized) instrument.initialize();
@@ -267,11 +268,10 @@ public class CRUSH extends Configurator {
 	
 		System.out.println();
 		
-		source = ((Instrument<?>) scans.get(0).instrument.copy()).getSourceModelInstance();
+		source = scans.get(0).instrument.getSourceModelInstance();
 		
 		if(source != null) {
 			source.commandLine = commandLine;
-			source.setOptions(this);
 			source.createFrom(scans);
 		}
 	
@@ -427,7 +427,7 @@ public class CRUSH extends Configurator {
 			"  crush -- Reduction and imaging tool for bolometer arrays.\n" +
 			"           Version " + getFullVersion() + "\n" + 
 			"           http://www.submm.caltech.edu/~sharc/crush\n" +
-			"           Copyright (C)2011 Attila Kovacs <kovacs[AT]astro.umn.edu>\n" +
+			"           Copyright (C)2012 Attila Kovacs <attila[AT]caltech.edu>\n" +
 			"  ----------------------------------------------------------------------\n";	
 		System.err.println(info);
 	}
@@ -437,7 +437,10 @@ public class CRUSH extends Configurator {
 			"\n" +
 			"    <instrument>    'sharc2', 'laboca', 'saboca', 'aszca', 'p-artemis',\n" +
 			"                    'polka', 'gismo' (or 'scuba2').\n" +
-			"    [options]       various configuration options. See README for details.\n" +
+			"    [options]       Various configuration options. See README for details.\n" +
+			"                    Global settings must precede all scans on argument list.\n" +
+			"                    Each scan will use all options listed before it on the\n" +
+			"                    command line.\n" +
 			"    <scanlist>      A list of scan numbers (or names) to reduce. Can mix\n" +
 			"                    file names, individual scan numbers, and ranges. E.g.\n" +
 			"                       10628-10633 11043 myscan.fits\n" +
@@ -449,13 +452,13 @@ public class CRUSH extends Configurator {
 	}
 	
 	// TODO Update most common options
-	public static void help() {
+	public static void help(Instrument<?> instrument) {
 		String info = 
 			" Some commonly used options. For full and detailed description of all options.\n" +
 			" please consult the GLOSSARY.\n\n" +
 			"   Location of raw data:\n" +
 			"     -datapath=    Specify the path to the raw data.\n" +
-			"     -project=     Specify the project ID (APEX only) in upper case.\n" +
+			(instrument != null ? instrument.getDataLocationHelp() : "") +
 			"\n" +
 			"   Optimize reduction by source type:\n" +
 			"     -bright       Reduce bright sources (S/N > 1000).\n" +
@@ -474,6 +477,7 @@ public class CRUSH extends Configurator {
 			"     -tau=         Specify a zenith tau to use.\n" +
 			"     -scale=       Apply a calibration factor to the scan(s).\n" +
 			"     -pointing=    x,y pointing corrections in arcsec.\n" +
+			(instrument != null ? instrument.getCommonHelp() : "") +
 			"\n" +
 			"   Alternative reduction modes:\n" +
 			"     -point        Reduced pointing scans and suggest pointing corrections.\n" +

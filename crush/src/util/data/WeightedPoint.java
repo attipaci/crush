@@ -102,8 +102,12 @@ public class WeightedPoint implements Comparable<WeightedPoint>, Cloneable {
 	}
 	
 	public void average(final WeightedPoint x) {
-		value = weight * value + x.weight * x.value;
-		weight += x.weight;
+		average(x.value, x.weight);
+	}
+	
+	public void average(final double v, final double w) {
+		value = weight * value + w * v;
+		weight += w;
 		if(weight > 0.0) value /= weight;		
 	}
 

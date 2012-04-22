@@ -47,7 +47,7 @@ import util.plot.colorscheme.Colorful;
 
 
 public class ScalarMap extends SourceMap {
-	public AstroMap map;
+	public AstroMap map = new AstroMap();
 	private double[][] base; 
 	private boolean[][] mask;
 		
@@ -77,6 +77,7 @@ public class ScalarMap extends SourceMap {
 	@Override
 	public SourceModel copy() {
 		ScalarMap copy = (ScalarMap) super.copy();
+		
 		try { copy.map = (AstroMap) map.copy(); }
 		catch(OutOfMemoryError e) {
 			System.err.println("ERROR! Ran of of memory while making a copy of the source map.");
@@ -101,27 +102,34 @@ public class ScalarMap extends SourceMap {
 	}
 
 	@Override
+	public void setInstrument(Instrument<?> instrument) {
+		super.setInstrument(instrument);
+		if(map != null) {
+			map.instrument = instrument;
+			map.setUnit(option("unit").getValue());
+		}
+	}
+	
+	
+	
+	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
-		map = new AstroMap();
-		
 		super.createFrom(collection);
 				
-		double gridSize = instrument.resolution / 5.0;
+		double gridSize = getInstrument().resolution / 5.0;
 		if(hasOption("grid")) gridSize = option("grid").getDouble() * Unit.arcsec;
 	
 		Scan<?,?> firstScan = scans.get(0);
 		
 		for(Scan<?,?> scan : scans) map.scans.add(scan);	
 		
+		setInstrument(getInstrument());
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
 		map.setName(firstScan.getSourceName());
 		map.commandLine = commandLine;
-		map.instrument = (Instrument<?>) instrument.copy();
 		map.correctingFWHM = map.getImageFWHM();	
-		
-		if(hasOption("unit")) map.setUnit(option("unit").getValue());
-		
+			
 		String system = hasOption("system") ? option("system").getValue().toLowerCase() : "equatorial";
 		
 		Projection2D<SphericalCoordinates> projection = getProjection();
@@ -129,7 +137,7 @@ public class ScalarMap extends SourceMap {
 		if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
 		else if(firstScan.isPlanetary) {
 			System.err.println(" Forcing equatorial for moving object.");
-			instrument.options.process("system", "equatorial");
+			getOptions().process("system", "equatorial");
 			projection.setReference(firstScan.equatorial);
 		}
 		else if(system.equals("ecliptic")) {
@@ -291,7 +299,7 @@ public class ScalarMap extends SourceMap {
 		map.normalize();
 		if(base != null) map.addImage(base);
 		
-		double minIntTime = instrument.integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
+		double minIntTime = getInstrument().integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
 		if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
 		
 		if(enableLevel && scan.getSourceGeneration() == 0) map.level(true);
@@ -347,7 +355,7 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	public synchronized void filter() {
-		if(!hasOption("source.filter") || getSourceSize(instrument) <= 0.0) {
+		if(!hasOption("source.filter") || getSourceSize(getInstrument()) <= 0.0) {
 			map.extFilterFWHM = Double.NaN;
 			map.filterBlanking = Double.NaN;
 			return;
@@ -377,7 +385,7 @@ public class ScalarMap extends SourceMap {
 		if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
 		
 		double filterScale = directive.equals("auto") ? 
-				5.0 * getSourceSize(instrument) : Double.parseDouble(directive) * instrument.getDefaultSizeUnit();
+				5.0 * getSourceSize(getInstrument()) : Double.parseDouble(directive) * getInstrument().getDefaultSizeUnit();
 			
 		double filterBlanking = filter.isConfigured("blank") ? filter.get("blank").getDouble() : Double.NaN;
 
@@ -423,7 +431,7 @@ public class ScalarMap extends SourceMap {
 		
 		if(verbose) if(hasOption("source.despike")) System.err.print("{despike} ");
 
-		if(hasOption("source.filter") && getSourceSize(instrument) > 0.0) {
+		if(hasOption("source.filter") && getSourceSize(getInstrument()) > 0.0) {
 			if(verbose) System.err.print("{filter} ");
 		}
 		
@@ -740,7 +748,7 @@ public class ScalarMap extends SourceMap {
 			thumbnail.autoCrop();
 			
 			// Smooth thumbnail by half a beam for nicer appearance
-			thumbnail.smoothTo(0.5 * instrument.resolution);
+			thumbnail.smoothTo(0.5 * getInstrument().resolution);
 			
 			GridImage<?> plane = thumbnail;
 			

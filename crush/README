@@ -1499,11 +1499,23 @@ options on the console.
 
 	PAd		Mean parallactic angle in degrees.
 
+	pnt.angle	Source elongation angle on map (degrees).
+
+	pnt.asymX	Asymmetry in telescope X (%). 
+
+	pnt.asymY	Asymmetry in telescope Y (%). `
+
 	pnt.AZ		Azymuth pointing (arcsec).
 
 	pnt.EL          Elevation pointing (arcsec).
 
 	pnt.DEC		Declination pointing (arcsec).
+
+	pnt.dasymX      Asymmetry uncertainty in telescope X (%).
+
+        pnt.dasymY      Asymmetry uncertainty in telescope Y (%). `
+
+	pnt.dangle	Source elongation angle error (deg).
 
 	pnt.dAZ		Azymuth pointing residual (if available).
 
@@ -1511,6 +1523,10 @@ options on the console.
 	
 	pnt.dEL		Elevation pointing residual (if available).
 
+	pnt.delong	Source elongation error (%).
+
+	pnt.delongX	Source elongation error in telescope X direction (%).
+	
 	pnt.dNasX	Pointing residual in the Nasmyth X dir (if available).
 
 	pnt.dNasY	Pointing residual in the Nasmyth Y dir (if available).
@@ -1520,6 +1536,10 @@ options on the console.
 	pnt.dX		Pointing residual in native X direction.
 
 	pnt.dY		Pointing residual in native Y direction.
+
+	pnt.elong	Source elongation (%).
+
+	pnt.elongX	Source elongation in telescope X direction (%).
 
 	pnt.RA		RA pointing (arcsec).
 
@@ -1635,15 +1655,12 @@ options on the console.
    GISMO specific log entries
    --------------------------
 
-        focDY           Focus Y offset (mm).
 
-        focDZ           Focus Z offset (mm).
-
-        focX            Focus X (mm).
-
-        focY            Focus Y (mm).
-
-        focZ            Focus Z (mm).
+        foc.dX           Focus X offset (mm).
+        
+	foc.dY           Focus Y offset (mm).
+        
+	foc.dZ           Focus Z offset (mm).
 
 	modelX		Static pointing model correction in azimuth (arcsec).
 
@@ -1697,17 +1714,17 @@ options on the console.
 
 	filter		Filter setting.
 
-	focDY		Focus Y offset (mm).
+	foc.mode	Focum mode.
 
-	focDZ		Focus Z offset (mm).
+	foc.dY		Focus Y offset (mm).
 
-	focmode		Focum mode.
+	foc.dZ		Focus Z offset (mm).
 
-	focX		Focus X (mm).
+	foc.X		Focus X (mm).
 
-	focY		Focus Y (mm).
+	foc.Y		Focus Y (mm).
 
-	focZ		Focus Z (mm).
+	foc.Z		Focus Z (mm).
 
 	load		The excess optical load in K (calculated or assumed).
 
@@ -1729,11 +1746,11 @@ options on the console.
 
 	filter		The observing wavelength.		
 
-	focX		Focus X.
+	foc.X		Focus X.
 
-	focY		Focus Y.
+	foc.Y		Focus Y.
 	
-	focZ		Focus Z.
+	foc.Z		Focus Z.
 
 
 

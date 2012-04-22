@@ -245,6 +245,7 @@ public abstract class Frame implements Cloneable {
 	public static int FLAG_WEIGHT = 1 << nextFlag++;
 	public static int FLAG_SPIKY = 1 << nextFlag++;
 	public static int FLAG_DOF = 1 << nextFlag++;
+	public static int FLAG_LEVEL = 1 << nextFlag++;
 	
 
 	public static int SKIP_SOURCE = 1 << nextFlag++;
@@ -261,7 +262,7 @@ public abstract class Frame implements Cloneable {
 	public static int NOD_LEFT = 1 << nextFlag++;
 	public static int NOD_RIGHT = 1 << nextFlag++;
 
-	public static int BAD_DATA = FLAG_SPIKY;
+	public static int BAD_DATA = FLAG_SPIKY | FLAG_LEVEL;
 	public static int MODELING_FLAGS = SKIP_MODELS | BAD_DATA | FLAG_DOF | FLAG_WEIGHT;
 	public static int SOURCE_FLAGS = SKIP_SOURCE | MODELING_FLAGS;
 	public static int WEIGHTING_FLAGS = SKIP_WEIGHTING | MODELING_FLAGS;

@@ -434,8 +434,10 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		
 		peak.scale(beamScaling);
 		
-		String info = "  Peak: " + DataPoint.toString(peak, map.getUnit()) 
-			+ " (S/N ~ " + Util.f1.format(peak.significance()) + ")\n";
+		StringBuffer info = new StringBuffer();
+		//info.append("  [" + getID() + "]\n");
+		info.append("  Peak: " + DataPoint.toString(peak, map.getUnit())
+			+ " (S/N ~ " + Util.f1.format(peak.significance()) + ")\n");
 	
 		peak.scale(1.0 / beamScaling);
 		
@@ -443,14 +445,15 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		F.scale(map.getPixelArea() / map.getImageBeamArea());
 		F.scale(1.0 / map.getUnit().value());
 		
-		info += "  Int.: " + F.toString() + "\n";
+		info.append("  Int.: " + F.toString() + "\n");
 		
-		info += "  FWHM: " + Util.f1.format(getRadius().value() / sizeUnit) 
+		info.append("  FWHM: " + Util.f1.format(getRadius().value() / sizeUnit) 
 				+ (getRadius().weight() > 0.0 ? " +- " + Util.f1.format(getRadius().rms() / sizeUnit) : "")
-				+ " " + sizeName;
-	
+				+ " " + sizeName);
 		
-		return info;
+		
+		
+		return new String(info);
 	}
 	
 	

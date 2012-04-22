@@ -42,8 +42,8 @@ public abstract class Filter {
 	private ChannelGroup<?> channels;
 	
 	protected float[] data;
-	protected int nf, points;
-	protected double df;
+	protected int nf;
+	protected double df, points;
 	
 	boolean dft = false;
 	boolean isEnabled = false;
@@ -186,7 +186,7 @@ public abstract class Filter {
 	protected void loadTimeStream(Channel channel) {
 		final int c = channel.index;
 		
-		points = 0;
+		points = 0.0;
 		
 		// Load the channel data into the data array
 		for(int t = integration.size(); --t >= 0; ) {
@@ -197,7 +197,7 @@ public abstract class Filter {
 			else if(exposure.sampleFlag[c] != 0) data[t] = Float.NaN;
 			else {
 				data[t] = exposure.relativeWeight * exposure.data[c];
-				points++;
+				points += exposure.relativeWeight;
 			}
 		}
 			
@@ -287,7 +287,8 @@ public abstract class Filter {
 		
 	protected void levelFor(Channel channel, float[] signal) {
 		final int c = channel.index;
-		double sum = 0.0, sumw = 0.0;
+		double sum = 0.0;
+		int n = 0;
 		
 		for(int t=integration.size(); --t >= 0; ) {
 			final Frame exposure = integration.get(t);
@@ -295,12 +296,12 @@ public abstract class Filter {
 			if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
 			if(exposure.sampleFlag[c] != 0) continue;
 			
-			sum += exposure.relativeWeight * signal[t];
-			sumw += exposure.relativeWeight;
+			sum += signal[t];
+			n++;
 		}
-		if(sumw <= 0.0) Arrays.fill(signal, 0, integration.size(), 0.0F);
+		if(!(n > 0)) Arrays.fill(signal, 0, integration.size(), 0.0F);
 		else {
-			float ave = (float) (sum / sumw);
+			float ave = (float) (sum / n);
 			for(int t=integration.size(); --t >= 0; ) signal[t] -= ave;			
 		}
 	}
@@ -308,19 +309,17 @@ public abstract class Filter {
 	protected void levelData() { level(data); }
 	
 	protected void level(float[] signal) {
-		double sum = 0.0, sumw = 0.0;
+		double sum = 0.0;
+		int n = 0;
 
 		for(int i=integration.size(); --i >= 0; ) if(!Float.isNaN(signal[i])) {
-			Frame exposure = integration.get(i);
-			if(exposure == null) continue;
-
 			sum += signal[i];
-			sumw += integration.get(i).relativeWeight;
+			n++;
 		}
 
-		final float level = (float) (sum / sumw);
+		final float level = (float) (sum / n);
 
-		for(int i=integration.size(); --i >= 0; ) {
+		if(n > 0) for(int i=integration.size(); --i >= 0; ) {
 			if(Float.isNaN(signal[i])) signal[i] = 0.0F;
 			else signal[i] -= level;
 		}

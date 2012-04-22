@@ -630,7 +630,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	}
 	
 	@Override
-	public ImageHDU createHDU() throws HeaderCardException, FitsException {
+	public ImageHDU createHDU() throws HeaderCardException, FitsException, IOException {
 		ImageHDU hdu = super.createHDU();
 		
 		return hdu;

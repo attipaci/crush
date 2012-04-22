@@ -58,9 +58,7 @@ public abstract class FixedFilter extends Filter {
 	
 	@Override
 	protected void postFilter() {
-		super.postFilter();
-		
-		
+		super.postFilter();	
 	}
 	
 	@Override
@@ -80,11 +78,13 @@ public abstract class FixedFilter extends Filter {
 		
 		parms.add(channel, rejected);
 		
-		final double dp = (double) rejected / points;
-		final int c = channel.index;
-		for(Frame exposure : integration) if(exposure != null) 
-			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)
-				parms.add(exposure, dp);
+		if(points > 0.0) {
+			final double dp = rejected / points;
+			final int c = channel.index;
+			for(Frame exposure : integration) if(exposure != null) 
+				if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)
+					parms.add(exposure, exposure.relativeWeight * dp);
+		}
 	}
 	
 	

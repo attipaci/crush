@@ -44,9 +44,8 @@ public abstract class SourceMap extends SourceModel {
 	public int signalMode = Frame.TOTAL_POWER;
 	
 	public SourceMap(Instrument<?> instrument) {
-		super(instrument);
+		super(instrument);		
 	}
-
 	
 	@Override
 	public void reset() {
@@ -66,15 +65,15 @@ public abstract class SourceMap extends SourceModel {
 
 	public void setSmoothing() {
 		if(!hasOption("smooth")) return;
-		double sizeUnit = instrument.getDefaultSizeUnit();
+		double sizeUnit = getInstrument().getDefaultSizeUnit();
 		Configurator option = option("smooth");
-		if(option.equals("beam")) setSmoothing(instrument.resolution);
-		else if(option.equals("halfbeam")) setSmoothing(0.5 * instrument.resolution);
-		else if(option.equals("2/3beam")) setSmoothing(instrument.resolution / 1.5);
-		else if(option.equals("minimal")) setSmoothing(0.3 * instrument.resolution);
+		if(option.equals("beam")) setSmoothing(getInstrument().resolution);
+		else if(option.equals("halfbeam")) setSmoothing(0.5 * getInstrument().resolution);
+		else if(option.equals("2/3beam")) setSmoothing(getInstrument().resolution / 1.5);
+		else if(option.equals("minimal")) setSmoothing(0.3 * getInstrument().resolution);
 		else if(option.equals("optimal")) {
 			setSmoothing(hasOption("smooth.optimal") ? 
-					option("smooth.optimal").getDouble() * sizeUnit : instrument.resolution);
+					option("smooth.optimal").getDouble() * sizeUnit : getInstrument().resolution);
 		}
 		else setSmoothing(Math.max(0.0, option.getDouble()) * sizeUnit);
 	}

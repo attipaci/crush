@@ -45,10 +45,10 @@ public class PolarMap extends SourceModel {
 		super(instrument);	
 	}
 	
-	public Array<?,?> getArray() { return (Array<?,?>) instrument; }
+	public Array<?,?> getArray() { return (Array<?,?>) getInstrument(); }
 
 	public ScalarMap getMapInstance() {
-		return new ScalarMap(instrument);
+		return new ScalarMap(getInstrument());
 	}
 	
 	public boolean usePolarization() {
@@ -60,7 +60,6 @@ public class PolarMap extends SourceModel {
 		super.createFrom(scans);
 		
 		N = getMapInstance();
-		N.setOptions(getOptions());
 		N.createFrom(scans);
 		N.signalMode = PolarModulation.N;
 		N.enableLevel = true;

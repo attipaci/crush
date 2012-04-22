@@ -119,7 +119,7 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 		return -1;
 	}
 	
-	public Vector2D getIncrement(double MJD, HorizontalCoordinates horizontal, IRAMPointingModel pointingModel) {
+	public Vector2D getIncrement(double MJD, double Tamb, HorizontalCoordinates horizontal, IRAMPointingModel pointingModel) {
 		int i0 = indexBefore(MJD);
 		if(i0 < 0) throw new IllegalStateException("No pointing data available for the specified time.");
 		
@@ -132,7 +132,7 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 			if(MJD - get(i).MJD > dMJD) break;
 
 			Entry pointing = get(i);
-			Vector2D increment = getIncrementalPointing(pointing, pointingModel);
+			Vector2D increment = getIncrementalPointing(pointing, pointingModel, Tamb);
 			
 			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
 				
@@ -145,7 +145,7 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 			if(get(i).MJD - MJD > dMJD) break;
 	
 			Entry pointing = get(i);
-			Vector2D increment = getIncrementalPointing(pointing, pointingModel);
+			Vector2D increment = getIncrementalPointing(pointing, pointingModel, Tamb);
 			//increment.rotate(pointing.horizontal.EL());
 			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
 				
@@ -163,8 +163,8 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 		
 	}
 	
-	public Vector2D getIncrementalPointing(Entry pointing, IRAMPointingModel pointingModel) {			
-		Vector2D model = pointingModel.getCorrection(pointing.horizontal, (pointing.MJD % 1.0) * Unit.day);
+	public Vector2D getIncrementalPointing(Entry pointing, IRAMPointingModel pointingModel, double ambientT) {			
+		Vector2D model = pointingModel.getCorrection(pointing.horizontal, (pointing.MJD % 1.0) * Unit.day, ambientT);
 		model.setX(pointing.offset.getX() - model.getX());
 		model.setY(pointing.offset.getY() - model.getY());
 		return model;

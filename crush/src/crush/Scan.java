@@ -528,7 +528,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			System.out.println();
 			System.out.println(" Instant Focus Results for Scan " + getID() + ":");
 			System.out.println();
-			System.out.println(getFocusString() + "\n");
+			System.out.println(getFocusString());
 		}
 		else if(hasOption("pointing")) {
 			Configurator pointingOption = option("pointing");
@@ -666,12 +666,34 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			data.add(new Datum("NasY", nasmyth.getY() / sizeUnit, sizeName));
 		}
 		
+		Asymmetry2D asym = getSourceAsymmetry(pointing);
+		data.add(new Datum("asymX", 100.0 * asym.getX().value(), "%"));
+		data.add(new Datum("asymY", 100.0 * asym.getY().value(), "%"));
+		data.add(new Datum("dasymX", 100.0 * asym.getX().rms(), "%"));
+		data.add(new Datum("dasymY", 100.0 * asym.getY().rms(), "%"));
+	
+		if(pointing instanceof EllipticalSource) {
+			EllipticalSource<?> ellipse = (EllipticalSource<?>) pointing;
+			
+			DataPoint elongation = ellipse.getElongation();
+			data.add(new Datum("elongX", 100.0 * elongation.value(), "%"));
+			data.add(new Datum("delongX", 100.0 * elongation.rms(), "%"));
+			
+			DataPoint angle = ellipse.getAngle();
+			data.add(new Datum("angle", angle.value() / Unit.deg, "%"));
+			data.add(new Datum("dangle", angle.value() / Unit.deg, "%"));
+			
+			DataPoint elongationX = getSourceElongationX(ellipse);
+			data.add(new Datum("elongX", 100.0 * elongationX.value(), "%"));
+			data.add(new Datum("delongX", 100.0 * elongationX.rms(), "%"));	
+		}
+		
 		return data;
 	}	
 	
 	public String getPointingString() {
 		String info = "";
-		
+			
 		if(sourceModel instanceof ScalarMap) {
 			AstroMap map = ((ScalarMap) sourceModel).map;
 			info += pointing.pointingInfo(map) + "\n";
@@ -694,7 +716,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		return map.getAsymmetry(region, angle, 2.5);
 	}
 	
-	public DataPoint getSourceElongationX(EllipticalSource<SphericalCoordinates> ellipse) {
+	public DataPoint getSourceElongationX(EllipticalSource<?> ellipse) {
 		DataPoint elongation = new DataPoint(ellipse.getElongation());
 		DataPoint angle = new DataPoint(ellipse.getAngle());
 		
@@ -718,9 +740,9 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	}
 	
 	protected String getFocusString(Asymmetry2D asym, DataPoint elongation) {
-		String info = asym == null ? "" : asym.toString() + "\n";
+		StringBuffer info = new StringBuffer(asym == null ? "" : asym.toString() + "\n");
 		
-		if(elongation != null) info += "  Elongation: " + elongation.toString(Unit.get("%")) + "\n";			
+		if(elongation != null) info.append("  Elongation: " + elongation.toString(Unit.get("%")) + "\n");			
 		
 		double relFWHM = pointing.getFWHM().value() / instrument.resolution;
 		boolean force = hasOption("focus");
@@ -728,18 +750,20 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(force || (relFWHM > 0.8 && relFWHM <= 1.5)) {
 			InstantFocus focus = new InstantFocus();
 			focus.deriveFrom(asym, elongation, instrument.options);
-			info += getFocusString(focus);
+			info.append(getFocusString(focus));
 		}
 		else {
-			info += "\n";
-			if(relFWHM <= 0.8) info += "  WARNING! Source FWHM unrealistically low.\n";
-			else info += "  WARNING! Source is either too extended or too defocused.\n";
-			info += "           No focus correction is suggested. You can force calculate\n"
-					+ "           suggested focus values by setting the 'focus' option when\n" 
-					+ "           running CRUSH.\n\n";
+			info.append("\n");
+			if(relFWHM <= 0.8) info.append("  WARNING! Source FWHM unrealistically low.\n");
+			else {
+				info.append("  WARNING! Source is either too extended or too defocused.\n");
+				info.append("           No focus correction is suggested. You can force calculate\n");
+				info.append("           suggested focus values by setting the 'focus' option when\n");
+				info.append("           running CRUSH.\n");
+			}
 		}
 		
-		return info;
+		return new String(info);
 	}
 	
 	protected String getFocusString(InstantFocus focus) {
