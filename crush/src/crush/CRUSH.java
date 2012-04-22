@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.12-a1 (alpha)
+ * @version 2.12-a1 (rc1)
  * 
  */
 public class CRUSH extends Configurator {
