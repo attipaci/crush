@@ -1087,9 +1087,7 @@ public class Data2D extends Parallel implements Cloneable {
 	public Fits createFits() throws HeaderCardException, FitsException, IOException {
 		FitsFactory.setUseHierarch(true);
 		Fits fits = new Fits();	
-
 		fits.addHDU(createHDU());
-		editHeader(fits);
 	
 		return fits;
 	}
@@ -1153,10 +1151,9 @@ public class Data2D extends Parallel implements Cloneable {
 		System.err.println(" Written " + name);
 	}
 	
-	public final void editHeader(Fits fits) throws HeaderCardException, FitsException, IOException {
-
-		nom.tam.util.Cursor cursor = fits.getHDU(0).getHeader().iterator();
-
+	public final void editHeader(BasicHDU hdu) throws HeaderCardException, FitsException, IOException {
+		nom.tam.util.Cursor cursor = hdu.getHeader().iterator();
+		
 		// Go to the end of the header cards...
 		while(cursor.hasNext()) cursor.next();
 		editHeader(cursor);
@@ -1184,7 +1181,7 @@ public class Data2D extends Parallel implements Cloneable {
 		//cursor.add(new HeaderCard("ORIGIN", "Caltech", "California Institute of Technology"));
 	}
 
-	public ImageHDU createHDU() throws HeaderCardException, FitsException {
+	public ImageHDU createHDU() throws HeaderCardException, FitsException, IOException {
 		final float[][] fitsImage = new float[sizeY()][sizeX()];
 		
 		new Task<Void>() {
@@ -1196,6 +1193,7 @@ public class Data2D extends Parallel implements Cloneable {
 		}.process();
 		
 		ImageHDU hdu = (ImageHDU)Fits.makeHDU(fitsImage);
+		editHeader(hdu);
 		
 		return hdu;
 	}

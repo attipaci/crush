@@ -151,13 +151,16 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	}
 		
 	public synchronized void addDirect(final GridMap<?> map, final double w) {
+		final double G = map.getUnit().value() / getUnit().value();
+		final double G2 = G * G;
+		
 		new Task<Void>() {		
 			@Override
 			public void process(int i, int j) {
 				if(map.isUnflagged(i, j)) {
 					final double ww = w * map.getWeight(i, j);
-					increment(i, j, ww * map.getValue(i, j));
-					incrementWeight(i, j, ww);
+					increment(i, j, ww * G * map.getValue(i, j));
+					incrementWeight(i, j, ww * G2);
 					incrementTime(i, j, map.getTime(i, j));
 					unflag(i, j);
 				}

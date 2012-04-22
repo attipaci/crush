@@ -73,12 +73,12 @@ public class Pipeline extends Thread {
 	public synchronized void iterate(Scan<?,?> scan) throws InterruptedException {		
 		for(Integration<?, ?> integration: scan) integration.comments = new String();
 
-		for(String task : ordering) if(hasOption(task)) scan.perform(task);
+		for(String task : ordering) if(scan.hasOption(task)) scan.perform(task);
 				
 		// Extract source ALWAYS at the end, independently of what was requested...
 		// The supplier of the tasks should generally make sure that the source
 		// is extracted at the end.
-		if(ordering.contains("source")) if(hasOption("source")) getSource(scan);
+		if(ordering.contains("source")) if(scan.hasOption("source")) getSource(scan);
 
 		for(Integration<?, ?> integration : scan) crush.checkout(integration);
 	}
@@ -89,10 +89,13 @@ public class Pipeline extends Thread {
 		
 		scanSource.reset();
 		boolean contributeSource = false;
-				
+			
+		scanSource.setInstrument(scan.instrument);
+		
 		for(Integration<?, ?> integration: scan) {						
 			boolean mapping = true;
-			if(hasOption("source.nefd")) if(!option("source.nefd").getRange(true).contains(integration.nefd)) mapping = false;
+			
+			if(integration.hasOption("source.nefd")) if(!integration.option("source.nefd").getRange(true).contains(integration.nefd)) mapping = false;
 			if(mapping) {
 				if(integration.hasOption("jackknife")) integration.comments += integration.gain > 0.0 ? "+" : "-";
 				else if(integration.gain < 0.0) integration.comments += "-";

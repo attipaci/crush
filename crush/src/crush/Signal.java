@@ -159,6 +159,23 @@ public class Signal implements Cloneable {
 	}
 	
 	
+	public synchronized void level(int from, int to) {
+		from = (int) Math.floor((double) from / resolution);
+		to = (int) Math.ceil((double) from / resolution);
+		
+		double sum = 0.0;
+		int n=0;
+		
+		for(int t=from; t<to; t++) {
+			sum += value[t];
+			n++;
+		}
+		if(n > 0) {
+			double ave = sum / n;
+			for(int t=from; t<to; t++) value[t] -= ave;
+		}
+	}
+		
 	public WeightedPoint getMedian() {
 		final float[] temp = new float[value.length];
 		for(int t=value.length; --t >= 0; ) if(!Float.isNaN(value[t])) temp[t] = value[t];

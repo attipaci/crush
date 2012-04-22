@@ -110,6 +110,22 @@ public class CorrelatedSignal extends Signal {
 		}
 	}
 	
+	@Override
+	public synchronized void level(int from, int to) {
+		from = (int) Math.floor((double) from / resolution);
+		to = (int) Math.ceil((double) from / resolution);
+		
+		double sum = 0.0, sumw=0;
+		for(int t=from; t<to; t++) {
+			sum += weight[t] * value[t];
+			sumw += weight[t];
+		}
+		if(sumw > 0.0) {
+			double ave = sum / sumw;
+			for(int t=from; t<to; t++) value[t] -= ave;
+		}
+	}
+	
 	
 	@Override
 	public WeightedPoint getMedian() {

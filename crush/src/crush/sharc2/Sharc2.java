@@ -560,12 +560,12 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 	
 		if(name.equals("dsos?")) return Boolean.toString(dsosUsed);
-		else if(name.equals("focY")) return Util.defaultFormat(focusX / Unit.mm, f);
-		else if(name.equals("focY")) return Util.defaultFormat(focusY / Unit.mm, f);
-		else if(name.equals("focZ")) return Util.defaultFormat(focusZ / Unit.mm, f);
-		else if(name.equals("focDY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
-		else if(name.equals("focDZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
-		else if(name.equals("focmode")) return focusMode;
+		else if(name.equals("foc.X")) return Util.defaultFormat(focusX / Unit.mm, f);
+		else if(name.equals("foc.Y")) return Util.defaultFormat(focusY / Unit.mm, f);
+		else if(name.equals("foc.Z")) return Util.defaultFormat(focusZ / Unit.mm, f);
+		else if(name.equals("foc.dY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
+		else if(name.equals("foc.dZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
+		else if(name.equals("foc.mode")) return focusMode;
 		else if(name.equals("rot")) return Util.defaultFormat(rotatorAngle / Unit.deg, f);
 		else if(name.equals("rot0")) return Util.defaultFormat(rotatorZeroAngle / Unit.deg, f);
 		else if(name.equals("rotoff")) return Util.defaultFormat(rotatorOffset / Unit.deg, f);
@@ -574,7 +574,17 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		else if(name.equals("filter")) return filterName;
 		else return super.getFormattedEntry(name, formatSpec);
 	}
-
+	
+	@Override
+	public String getCommonHelp() {
+		return super.getCommonHelp() + 
+				"     -fazo=        Correct the pointing with this FAZO value.\n" +
+				"     -fzao=        Correct the pointing with this FZAO value.\n" +
+				"     -350um        Select 450um imaging mode (default).\n" +
+				"     -450um        Select 450um imaging mode.\n" +
+				"     -850um        Select 850um imaging mode.\n";
+	}
+	
 	
 }
 

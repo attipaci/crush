@@ -44,6 +44,8 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 	private static final long serialVersionUID = -6513008414302600380L;
 	
 	HorizontalCoordinates reuseTrackingCenter = new HorizontalCoordinates();
+	boolean ignoreIRIG = false;
+	
 	
 	public GismoIntegration(GismoScan parent) {
 		super(parent);
@@ -160,6 +162,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 				@Override
 				public void init() {
 					offset = new Vector2D();
+					if(hasOption("ignoreirig")) ignoreIRIG = true;
 				}
 				
 				@Override
@@ -179,7 +182,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 						
 					// Skip data with invalid flags 
 					for(int bit=0, from=6*i; bit<6; bit++) if(SDI[from+bit] > 0) digitalFlag |= 1 << bit;
-					if((digitalFlag & GismoFrame.DIGITAL_IRIG) == 0) return;
+					if(!ignoreIRIG) if((digitalFlag & GismoFrame.DIGITAL_IRIG) == 0) return;
 								
 					// Create the frame object only if it cleared the above hurdles...
 					final GismoFrame frame = new GismoFrame(gismoScan);

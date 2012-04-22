@@ -264,10 +264,29 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 	
 		if(name.equals("filter")) return filter;
-		else if(name.equals("focX")) return Util.defaultFormat(focusXOffset, f);
-		else if(name.equals("focY")) return Util.defaultFormat(focusYOffset, f);
-		else if(name.equals("focZ")) return Util.defaultFormat(focusZOffset, f);
+		else if(name.equals("foc.X")) return Util.defaultFormat(focusXOffset, f);
+		else if(name.equals("foc.Y")) return Util.defaultFormat(focusYOffset, f);
+		else if(name.equals("foc.Z")) return Util.defaultFormat(focusZOffset, f);
 		else return super.getFormattedEntry(name, formatSpec);
+	}
+	
+	@Override
+	public String getCommonHelp() {
+		return super.getCommonHelp() + 
+				"     -450um        Select 450um imaging mode.\n" +
+				"     -850um        Select 850um imaging mode (default).\n";
+	}
+	
+	@Override
+	public String getDataLocationHelp() {
+		return super.getDataLocationHelp() +
+				"     -date=        YYYYMMDD when the data was collected.\n" +
+				"     -ndf2fits=    The path to the ndf2fits executable. Required for\n" +
+				"                   reading native SDF data.\n" +
+				"     -convert      Convert the listed scans from SDF to FITS and exit.\n" +
+				"                   (no reduction wil take place with this option.)\n" +
+				"                   The FITS files will be writter to the location set\n" +
+				"                   by the 'outpath' option.\n";
 	}
 	
 }

@@ -235,6 +235,14 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
+	@Override
+	public String getDataLocationHelp() {
+		return super.getDataLocationHelp() +
+				"                   'datapath' can be either the directory containing the\n" +
+				"                   scans (FITS files or scan folders) themselves, or the\n" +
+				"                   location in which project sub-directories reside.\n" +
+				"     -project=     The project ID in upper case (e.g T-79.F-0002-2007).\n";
+	}
 	
 	
 }

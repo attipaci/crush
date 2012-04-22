@@ -35,9 +35,11 @@ public class IRAMPointingModel {
 	double[] c = new double[1+CONSTANTS];
 	double[] s = new double[1+CONSTANTS];
 	
+	double dydT = 0.0, y0 = 0.0;
+	
+	
 	boolean isStatic = false;
 	
-	public final static int CONSTANTS = 16;
 	
 	public IRAMPointingModel() {}
 	
@@ -46,8 +48,8 @@ public class IRAMPointingModel {
 		read(fileName);
 	}
 	
-	public Vector2D getCorrection(HorizontalCoordinates horizontal, double UT) {
-		return new Vector2D(getDX(horizontal, UT) * Unit.arcsec, getDY(horizontal, UT) * Unit.arcsec);
+	public Vector2D getCorrection(HorizontalCoordinates horizontal, double UT, double Tamb) {
+		return new Vector2D(getDX(horizontal, UT) * Unit.arcsec, getDY(horizontal, UT, Tamb) * Unit.arcsec);
 	}
 	
 	public double P(int n, double UT) {
@@ -79,42 +81,38 @@ public class IRAMPointingModel {
 		double cosA = Math.cos(horizontal.getX());
 		double sin2A = Math.sin(2.0 * horizontal.getX());
 		double cos2A = Math.cos(2.0 * horizontal.getX());
-		
-		double H = P(10, UT);
-		double V = P(11, UT);
+	
 		
 		// 2012-03-06
 		// Nasmyth offsets H & V are now equivalent to pointing model (P10/P11).
 		// Note, that Juan's fit gives V = -P11!
-		return P(1, UT) * cosE + P(2, UT) + P(3, UT) * sinE 
-			+ (P(4, UT) * cosA + P(5, UT) * sinA) * sinE + P(6, UT) * sinA
-			- H * cosE - V * sinE 
-			+ P(12, UT) * sin2A + P(13, UT) * cos2A;
+		return P(AZ_ENC_OFFSET, UT) * cosE + P(AZ_POINTING, UT) + P(INCL_EL_AXIS, UT) * sinE 
+			+ (P(INCL_AZ_AXIS_NS, UT) * cosA + P(INCL_AZ_AXIS_EW, UT) * sinA) * sinE + P(DEC_ERROR, UT) * sinA
+			- P(NASMYTH_H, UT) * cosE - P(NASMYTH_V, UT) * sinE 
+			+ P(AZ_ECCENT_COS, UT) * sin2A + P(AZ_ECCENT_SIN, UT) * cos2A;
 	}
 	
-	public double getDY(HorizontalCoordinates horizontal, double UT) {
+	public double getDY(HorizontalCoordinates horizontal, double UT, double Tamb) {
 		double cosE = horizontal.cosLat();
 		double sinE = horizontal.sinLat();
 		double sinA = Math.sin(horizontal.getX());
 		double cosA = Math.cos(horizontal.getX());
-		double sin2A = Math.sin(2.0 * horizontal.getX());
-		double cos2A = Math.cos(2.0 * horizontal.getX());
-		
-		double H = P(10, UT);
-		double V = P(11, UT);
 		
 		// 2012-03-06
 		// Nasmyth offsets H & V are now equivalent to pointing model (P10/P11).
 		// Note, that Juan's fit gives V = -P11!
-		return -P(4, UT) * sinA + (P(5, UT) + P(6, UT) * sinE) * cosA + P(7, UT) 
-			+ P(8, UT) * cosE + P(9, UT) * sinE + H * sinE - V * cosE 
-			+ P(14, UT) * cosE/sinE + P(15, UT) * sin2A + P(16, UT) * cos2A;
+		return -P(INCL_AZ_AXIS_NS, UT) * sinA + (P(INCL_AZ_AXIS_EW, UT) + P(DEC_ERROR, UT) * sinE) * cosA 
+			+ P(EL_POINTING, UT) + P(GRAV_BENDING_COS, UT) * cosE + P(GRAV_BENDING_SIN, UT) * sinE 
+			+ P(NASMYTH_H, UT) * sinE - P(NASMYTH_V, UT) * cosE 
+			+ P(THIRD_REFRACT, UT) * cosE/sinE
+			+ dydT * (Tamb - 273.16 * Unit.K);
 	}
 	
 	public void write(String fileName) throws IOException {
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 		for(int i=1; i<P.length; i++) 
 			out.println("P" + i + " = " + Util.f2.format(P[i]) + ", " + Util.f2.format(c[i]) + ", " + Util.f2.format(s[i])); 
+		out.println("T = " + Util.f2.format(dydT));
 		out.close();
 	}
 	
@@ -132,9 +130,27 @@ public class IRAMPointingModel {
 					if(tokens.hasMoreTokens()) c[i] = Double.parseDouble(tokens.nextToken());
 					if(tokens.hasMoreTokens()) s[i] = Double.parseDouble(tokens.nextToken());
 				}
+				else if(constant.equals("t")) dydT = Double.parseDouble(tokens.nextToken());
 			}
 		}
 		
 	}
+	
+	public final static int CONSTANTS = 14;
+	
+	public final static int AZ_ENC_OFFSET = 1;
+	public final static int AZ_POINTING = 2;
+	public final static int INCL_EL_AXIS = 3;
+	public final static int INCL_AZ_AXIS_NS = 4;
+	public final static int INCL_AZ_AXIS_EW = 5;
+	public final static int DEC_ERROR = 6;
+	public final static int EL_POINTING = 7;
+	public final static int GRAV_BENDING_COS = 8;
+	public final static int GRAV_BENDING_SIN = 9;
+	public final static int NASMYTH_H = 10;
+	public final static int NASMYTH_V = 11;
+	public final static int AZ_ECCENT_COS = 12;
+	public final static int AZ_ECCENT_SIN = 13;
+	public final static int THIRD_REFRACT = 14;
 	
 }

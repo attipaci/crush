@@ -63,17 +63,19 @@ public class InstantFocus implements Cloneable {
 	
 	public void deriveFrom(Asymmetry2D asym, DataPoint xElongation, Configurator options) {
 		x = y = z = null;
-		double s2n = options.containsKey("focus.significance") ? options.get("focus.significance").getDouble() : 3.0;
+		double s2n = options.isConfigured("focus.significance") ? options.get("focus.significance").getDouble() : 3.0;
 			
-		if(options.isConfigured("focus.xcoeff")) if(asym.getX().significance() > s2n) {
-			x = new DataPoint(asym.getX());
-			x.scale(-1.0 / options.get("focus.xcoeff").getDouble());		
+		if(asym != null) {
+			if(options.isConfigured("focus.xcoeff")) if(asym.getX().significance() > s2n) {
+				x = new DataPoint(asym.getX());
+				x.scale(-1.0 / options.get("focus.xcoeff").getDouble());		
+			}
+			if(options.isConfigured("focus.ycoeff")) if(asym.getY().significance() > s2n) {
+				y = new DataPoint(asym.getY());
+				y.scale(-1.0 / options.get("focus.ycoeff").getDouble());			
+			}
 		}
-		if(options.isConfigured("focus.ycoeff")) if(asym.getY().significance() > s2n) {
-			y = new DataPoint(asym.getY());
-			y.scale(-1.0 / options.get("focus.ycoeff").getDouble());			
-		}
-		if(options.isConfigured("focus.zcoeff")) if(xElongation != null) if(xElongation.significance() > s2n) {
+		if(xElongation != null) if(xElongation.significance() > s2n) if(options.isConfigured("focus.zcoeff")) {
 			z = new DataPoint(xElongation);
 			z.scale(-1.0 / options.get("focus.zcoeff").getDouble());
 		}	

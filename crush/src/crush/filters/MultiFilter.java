@@ -163,6 +163,7 @@ public class MultiFilter extends VariedFilter {
 			// A safety check to make sure the filter uses the spectrum from the master data array...
 			if(filter.data != data) filter.data = data;
 			
+			filter.points = points;
 			filter.preFilter(channel);
 			filter.updateProfile(channel);
 			

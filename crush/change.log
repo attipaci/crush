@@ -1,11 +1,20 @@
 >> write.png.spline
->> use GC to update 'extended' config.
 >> update 'gismo' deep with fewer iterations?
 >> 'focus' force focus even if source is too large/small.
 >> focus.xcoeff, focus.ycoeff, focus.zcoeff
 >> focus.xpointing, focus.ypointing
 >> focus.fluxcoeff?
+>> time weighting / filter interaction.
+>> 'dejump' and subkeys.
+>> 'drifts = max'
+>> Why does alias.run6a mjd.[...]; run6a ...; not work???
+>> changed how source models access instrument settings and coadd...
+   check that it works for all instruments and data types!!!
+>> updated crush man page. Check!
 
+	[NEW] Pipeline elements can be activated/deactivated scan-by-scan, and
+	conditionally induced by date, MJD or serial number. As before, global
+	options should precede the listing of scans.
 
 	[NEW] Pointing reductions now measure the source shape in a more
 	sophisticated way, providing a measure of the x and y asymmetry of the
@@ -24,6 +33,31 @@
 		bias.[10000] jansky 24.67
 
 	[NEW] {GISMO} Pointing reductions now suggest Nasmyth offsets for PaKo.
+
+	[NEW] New logging entries for source elongation and angle, as well as
+	projected elongation in the telescope x direction. See README for
+	details.
+
+	[CHANGE] Naming of focus quantities for logging has been changed.
+
+	[FIX] {GISMO} All pointing information in FITS is nor correctly 
+	interpreted. Looks like Nasmyth offsets in CRUSH model are inverted
+	w.r.t. the IRAM constants. Oh, well, it works, so probably leave it as
+	is...
+
+	[FIX] All HDUs in the FITS now contain header information as expected.
+
+	[FIX] Found reason why filters did not work together with time
+	weighting. The problem was that MultiFilter did not propagate the
+	number of points to its children, which ended up with Infinite 
+	frame dependents as a result. The fix includes checking to make sure
+	that dependents are valid, and propagating the number of data points
+	to children. 
+
+	[FIX] {GISMO} Focus and Nasmyth offsets were not parsed correctly. 
+	(Was looking for these values in the wrong HDU.)
+
+	[FIX] Filter levelling was not taking frame weights into account.
 
 	[FIX] {GISMO} Fixed treating horizontal and equatorial (projection)
 	offsets.
@@ -48,7 +82,27 @@
 	[FIX] PolarVector2D power op was wrongly defined. However, since this
 	feature was never used in CRUSH, there was no damage done by it.
 
+	[TWEAK] Time-weighting renormalization adjusted.
+
 	[TWEAK] Uncertainty calculation of elongation measure improved.
+
+	[CONFIG] {GISMO} Updated 'deep' configuration to run for fewer (12) 
+	iterations. Nevertheless, the best deep maps are usually obtained with
+	25--30 iterations. Set 'rounds' manually if more iterations are 
+	desired.
+
+	[CONFIG] {GISMO} Gradients re-enabled in 'deep' mode. LSS filter 
+	cannot completely replace gradients because of 'edge' effects...
+	
+	[CONFIG] {GISMO} tau(225GHz) to PWV conversion changed to match that on
+	IRAM's weather page (ATM07).
+	
+	[CONFIG] Updated 'extended' configuration based on AtlasGal.
+
+	[CONFIG] {GISMO} Added pointing model for the main part of the April
+	2012 run.
+
+	[CODE] Gismo.copy() updated to correctly deal with fields.
 
 	[CODE] Many classes are updated to hide private fields, and access them
 	through getters/setters only. This makes for safer code.
@@ -56,7 +110,6 @@
 	[CODE] More work on imaging classes. The day of native CRUSH-2 image
 	tools is getting ever closer...
 
-	[UPDATE] Updated 'extended' configuration based on AtlasGal.
 
 
 2.11-2 (16 March 2012)

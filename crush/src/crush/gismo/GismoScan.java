@@ -97,8 +97,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 				
 				if(option.isConfigured("model.static")) model.setStatic(true);
 				
-				Vector2D modelCorr = model.getCorrection(horizontal, UT);
-				if(!option.isConfigured("model.incremental")) modelCorr.subtract(observingModel.getCorrection(horizontal, UT));	
+				Vector2D modelCorr = model.getCorrection(horizontal, UT, ambientT);
+				if(!option.isConfigured("model.incremental")) modelCorr.subtract(observingModel.getCorrection(horizontal, UT, ambientT));	
 				
 				System.err.println("   Got pointing from model: " + 
 						Util.f1.format(modelCorr.getX() / Unit.arcsec) + ", " +
@@ -117,7 +117,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			try { 
 				if(model == null) model = new IRAMPointingModel();
 				String logName = Util.getSystemPath(option.get("table").getValue());
-				correction.add(PointingTable.get(logName).getIncrement(getMJD(), horizontal, model));
+				correction.add(PointingTable.get(logName).getIncrement(getMJD(), ambientT, horizontal, model));
 			}
 			catch(Exception e) {
 				System.err.println("WARNING! No incremental correction: " + e.getMessage());
@@ -131,12 +131,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	
 	@Override
 	public String getPointingString(Vector2D pointing) {
-		Vector2D nasmyth = getNasmythOffset(pointing);
-		if(nasmythOffset != null) nasmyth.add(nasmythOffset);
-		
 		return super.getPointingString(pointing) + "\n\n" +
-			"  PaKo> offsets " + Util.f1.format(nasmyth.getX() / Unit.arcsec) + " " 
-				+ Util.f1.format(nasmyth.getY() / Unit.arcsec) + " /system nasmyth";
+			"  PaKo> set pointing " + Util.f1.format(pointing.getX() / Unit.arcsec) + " " 
+				+ Util.f1.format(pointing.getY() / Unit.arcsec);
 		
 	}
 
@@ -242,12 +239,12 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		
 		if(isOldFormat) {
 			parseOldScanPrimaryHDU(HDU[0]);
-			instrument.parseOldScanPrimaryHDU(HDU[1]);
+			instrument.parseOldScanPrimaryHDU(HDU[0]);
 			instrument.parseOldHardwareHDU((BinaryTableHDU) HDU[1]);	
 		}
 		else {
 			parseScanPrimaryHDU(HDU[0]);
-			instrument.parseScanPrimaryHDU(HDU[1]);
+			instrument.parseScanPrimaryHDU(HDU[0]);
 			instrument.parseHardwareHDU((BinaryTableHDU) HDU[1]);
 		}
 		
@@ -301,8 +298,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		if(observer == null) observer = "Unknown";
 		if(project == null) project = "Unknown";
 		if(obsType == null) obsType = "Unknown";
+		
 		if(scanID == null) scanID = "Unknown";
-		else {
+		else if(!scanID.equals("undefined")) {
 			StringTokenizer tokens = new StringTokenizer(scanID, ".");
 			tokens.nextToken(); // Date...
 			serial = Integer.parseInt(tokens.nextToken());
@@ -345,7 +343,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		else timeStamp = date;
 	
 		setMJD(header.getDoubleValue("MJD-OBS"));
-			
+				
 		// TODO use UTC, TAI, TT offsets to configure AstroTime?...
 		/*
 		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
@@ -354,6 +352,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		
 		double lon = header.getDoubleValue("LONGOBJ", Double.NaN) * Unit.deg;
 		double lat = header.getDoubleValue("LATOBJ", Double.NaN) * Unit.deg;
+		
 		basisSystem = SphericalCoordinates.getFITSClass(header.getStringValue("CTYPE1"));
 		
 		LST = header.getDoubleValue("LST", Double.NaN) * Unit.hour;
@@ -438,21 +437,24 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			tiltCorrections.P[i] = header.getDoubleValue("P" + i + "CORINC", 0.0) / Unit.arcsec;
 		}
 		
-		observingModel.P[10] = (header.getDoubleValue("RXHORI", 0.0) + header.getDoubleValue("RXHORICO", 0.0)) / Unit.arcsec;
-		observingModel.P[11] = (header.getDoubleValue("RXVERT", 0.0) + header.getDoubleValue("RXVERTCO", 0.0)) / Unit.arcsec;
+		// IRAM Nasmyth offsets are inverted from CRUSH definition... Ooops...
+		observingModel.P[10] = -(header.getDoubleValue("RXHORI", 0.0) - header.getDoubleValue("RXHORICO", 0.0)) / Unit.arcsec;
+		observingModel.P[11] = -(header.getDoubleValue("RXVERT", 0.0) - header.getDoubleValue("RXVERTCO", 0.0)) / Unit.arcsec;
 	
-		// Works with 2011 April data.
+		// Add in the PaKo pointing offsets... 
+		// XOFFSET, and YOFFSET are the same as the Nasmyth offsets!!!
+		
+		// Works with 2011 April data. 
 		if(nasmythOffset != null) {
 			observingModel.P[10] -= nasmythOffset.getX() / Unit.arcsec;
 			observingModel.P[11] -= nasmythOffset.getY() / Unit.arcsec;
 		}	
-	
+		
 		// Keep the pointing model referenced to the nominal array center even if
 		// pointing on a different location on the array...
 		observingModel.addNasmythOffset(instrument.getPointingCenterOffset());
 		
 		isTracking = true;
-		
 	}
 	
 	protected void parseOldScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
@@ -618,15 +620,13 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		String sizeName = instrument.getDefaultSizeName();
 	
 		// X and Y are absolute pointing offsets including the static pointing model...
-		Vector2D obs = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day);
+		Vector2D obs = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day, ambientT);
 		if(pointingCorrection != null) obs.add(pointingCorrection);
-		
 		
 		data.add(new Datum("X", (pointingOffset.getX() + obs.getX()) / sizeUnit, sizeName));
 		data.add(new Datum("Y", (pointingOffset.getY() + obs.getY()) / sizeUnit, sizeName));
 		data.add(new Datum("NasX", (instrument.nasmythOffset.getX() + nasmyth.getX()) / sizeUnit, sizeName));
 		data.add(new Datum("NasY", (instrument.nasmythOffset.getY() + nasmyth.getY()) / sizeUnit, sizeName));
-		
 		return data;
 	}
 	
@@ -644,9 +644,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		
 		if(name.equals("obstype")) return obsType;
 		else if(name.equals("modelX")) return Util.defaultFormat(observingModel.getDX(horizontal, (getMJD() % 1) * Unit.day), f);
-		else if(name.equals("modelY")) return Util.defaultFormat(observingModel.getDY(horizontal, (getMJD() % 1) * Unit.day), f);
+		else if(name.equals("modelY")) return Util.defaultFormat(observingModel.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
 		else if(name.equals("tiltX")) return Util.defaultFormat(tiltCorrections.getDX(horizontal, (getMJD() % 1) * Unit.day), f);
-		else if(name.equals("tiltY")) return Util.defaultFormat(tiltCorrections.getDY(horizontal, (getMJD() % 1) * Unit.day), f);
+		else if(name.equals("tiltY")) return Util.defaultFormat(tiltCorrections.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 

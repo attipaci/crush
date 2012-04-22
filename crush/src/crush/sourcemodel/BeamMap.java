@@ -61,14 +61,13 @@ public class BeamMap extends SourceMap {
 		
 		super.createFrom(collection);
 		
-		template = new ScalarMap(instrument);
-		template.setOptions(getOptions());
+		template = new ScalarMap(getInstrument());
 		template.createFrom(collection);
 		
 		pixelMap = new ScalarMap[getArray().maxPixels() + 1];
 	}
 	
-	public Array<?, ?> getArray() { return (Array<?, ?>) instrument; }
+	public Array<?, ?> getArray() { return (Array<?, ?>) getInstrument(); }
 	
 	@Override
 	public synchronized void reset() {
@@ -217,7 +216,7 @@ public class BeamMap extends SourceMap {
 	
 	// TODO for non AstroMap and non spherical coordinates...
 	public void calcPixelData(boolean smooth) {
-		float[] peaks = new float[instrument.storeChannels];
+		float[] peaks = new float[getInstrument().storeChannels];
 		float[] pixelPeak = new float[pixelMap.length];
 		
 		// Calculate mean rotation angle from sinA and cosA
@@ -246,7 +245,7 @@ public class BeamMap extends SourceMap {
 			ScalarMap beamMap = pixelMap[i];
 			if(beamMap != null) if(!beamMap.isEmpty()) {
 				AstroMap map = beamMap.map;
-				if(smooth) map.smoothTo(instrument.resolution);
+				if(smooth) map.smoothTo(getInstrument().resolution);
 				GaussianSource<SphericalCoordinates> source = beamMap.getPeakSource();
 				
 				// Get the source peak in the pixel.
