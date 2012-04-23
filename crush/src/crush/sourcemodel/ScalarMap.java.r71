@@ -47,7 +47,7 @@ import util.plot.colorscheme.Colorful;
 
 
 public class ScalarMap extends SourceMap {
-	public AstroMap map;
+	public AstroMap map = new AstroMap();
 	private double[][] base; 
 	private boolean[][] mask;
 		
@@ -57,12 +57,6 @@ public class ScalarMap extends SourceMap {
 	
 	public ScalarMap(Instrument<?> instrument) {
 		super(instrument);
-	}
-	
-	@Override
-	public void setInstrument(Instrument<?> instrument) {
-		super.setInstrument(instrument);
-		if(map != null) map.instrument = instrument;
 	}
 
 	@Override
@@ -83,6 +77,7 @@ public class ScalarMap extends SourceMap {
 	@Override
 	public SourceModel copy() {
 		ScalarMap copy = (ScalarMap) super.copy();
+		
 		try { copy.map = (AstroMap) map.copy(); }
 		catch(OutOfMemoryError e) {
 			System.err.println("ERROR! Ran of of memory while making a copy of the source map.");
@@ -107,28 +102,34 @@ public class ScalarMap extends SourceMap {
 	}
 
 	@Override
+	public void setInstrument(Instrument<?> instrument) {
+		super.setInstrument(instrument);
+		if(map != null) {
+			map.instrument = instrument;
+			map.setUnit(option("unit").getValue());
+		}
+	}
+	
+	
+	
+	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
-		map = new AstroMap();
-		
-		setInstrument(instrument);
-		
 		super.createFrom(collection);
 				
-		double gridSize = instrument.resolution / 5.0;
+		double gridSize = getInstrument().resolution / 5.0;
 		if(hasOption("grid")) gridSize = option("grid").getDouble() * Unit.arcsec;
 	
 		Scan<?,?> firstScan = scans.get(0);
 		
 		for(Scan<?,?> scan : scans) map.scans.add(scan);	
 		
-		if(hasOption("unit")) map.setUnit(option("unit").getValue());
-		
+		setInstrument(getInstrument());
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
 		map.setName(firstScan.getSourceName());
 		map.commandLine = commandLine;
 		map.correctingFWHM = map.getImageFWHM();	
-		
+			
 		String system = hasOption("system") ? option("system").getValue().toLowerCase() : "equatorial";
 		
 		Projection2D<SphericalCoordinates> projection = getProjection();
@@ -136,7 +137,7 @@ public class ScalarMap extends SourceMap {
 		if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
 		else if(firstScan.isPlanetary) {
 			System.err.println(" Forcing equatorial for moving object.");
-			instrument.options.process("system", "equatorial");
+			getOptions().process("system", "equatorial");
 			projection.setReference(firstScan.equatorial);
 		}
 		else if(system.equals("ecliptic")) {
@@ -297,7 +298,10 @@ public class ScalarMap extends SourceMap {
 	public synchronized void process(Scan<?,?> scan) {	
 		map.normalize();
 		if(base != null) map.addImage(base);
-			
+		
+		double minIntTime = getInstrument().integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
+		if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
+		
 		if(enableLevel && scan.getSourceGeneration() == 0) map.level(true);
 		else enableLevel = false;	
 		
@@ -324,6 +328,7 @@ public class ScalarMap extends SourceMap {
 
 		if(hasOption("scanmaps")) {
 			map.fileName = CRUSH.workPath + "/scan-" + (int)scan.getMJD() + "-" + scan.getID() + ".fits";
+			if(hasOption("unit")) map.setUnit(option("unit").getValue());
 			try { map.write(); }
 			catch(Exception e) { e.printStackTrace(); }
 		}
@@ -339,7 +344,7 @@ public class ScalarMap extends SourceMap {
 		
 		if(hasOption("pointing")) if(option("pointing").equals("auto") || option("pointing").equals("suggest")) {
 			double optimal = hasOption("smooth.optimal") ? 
-					option("smooth.optimal").getDouble() * scan.instrument.getSizeUnit() :
+					option("smooth.optimal").getDouble() * scan.instrument.getDefaultSizeUnit() :
 					scan.instrument.resolution;
 	
 			map.smoothTo(optimal);
@@ -350,7 +355,7 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	public synchronized void filter() {
-		if(!hasOption("source.filter") || getSourceSize() <= 0.0) {
+		if(!hasOption("source.filter") || getSourceSize(getInstrument()) <= 0.0) {
 			map.extFilterFWHM = Double.NaN;
 			map.filterBlanking = Double.NaN;
 			return;
@@ -380,7 +385,7 @@ public class ScalarMap extends SourceMap {
 		if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
 		
 		double filterScale = directive.equals("auto") ? 
-				5.0 * getSourceSize() : Double.parseDouble(directive) * instrument.getSizeUnit();
+				5.0 * getSourceSize(getInstrument()) : Double.parseDouble(directive) * getInstrument().getDefaultSizeUnit();
 			
 		double filterBlanking = filter.isConfigured("blank") ? filter.get("blank").getDouble() : Double.NaN;
 
@@ -420,22 +425,19 @@ public class ScalarMap extends SourceMap {
 			
 		double blankingLevel = getBlankingLevel();
 		
+		if(hasOption("source.redundancy")) System.err.print("{check} ");
+		
 		if(verbose) if(enableLevel) System.err.print("{level} ");
 		
 		if(verbose) if(hasOption("source.despike")) System.err.print("{despike} ");
-		
-		if(hasOption("source.filter") && getSourceSize() > 0.0) {
+
+		if(hasOption("source.filter") && getSourceSize(getInstrument()) > 0.0) {
 			if(verbose) System.err.print("{filter} ");
 		}
 		
 		if(verbose) if(enableWeighting) if(hasOption("weighting.scans"))
 			for(Scan<?,?> scan : scans) System.err.print("{" + Util.f2.format(scan.weight) + "} ");
-		
-		if(hasOption("source.redundancy"))  {
-			if(hasOption("source.redundancy")) System.err.print("(check) ");
-			double minIntTime = instrument.integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
-			if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
-		}
+
 
 		if(hasOption("smooth") && !hasOption("smooth.external")) {
 			if(verbose) System.err.print("(smooth) ");
@@ -746,7 +748,7 @@ public class ScalarMap extends SourceMap {
 			thumbnail.autoCrop();
 			
 			// Smooth thumbnail by half a beam for nicer appearance
-			thumbnail.smoothTo(0.5 * instrument.resolution);
+			thumbnail.smoothTo(0.5 * getInstrument().resolution);
 			
 			GridImage<?> plane = thumbnail;
 			

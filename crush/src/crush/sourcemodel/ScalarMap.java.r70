@@ -58,12 +58,6 @@ public class ScalarMap extends SourceMap {
 	public ScalarMap(Instrument<?> instrument) {
 		super(instrument);
 	}
-	
-	@Override
-	public void setInstrument(Instrument<?> instrument) {
-		super.setInstrument(instrument);
-		if(map != null) map.instrument = instrument;
-	}
 
 	@Override
 	public synchronized void add(SourceModel model, double weight) {
@@ -110,8 +104,6 @@ public class ScalarMap extends SourceMap {
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		map = new AstroMap();
 		
-		setInstrument(instrument);
-		
 		super.createFrom(collection);
 				
 		double gridSize = instrument.resolution / 5.0;
@@ -121,13 +113,14 @@ public class ScalarMap extends SourceMap {
 		
 		for(Scan<?,?> scan : scans) map.scans.add(scan);	
 		
-		if(hasOption("unit")) map.setUnit(option("unit").getValue());
-		
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
 		map.setName(firstScan.getSourceName());
 		map.commandLine = commandLine;
+		map.instrument = (Instrument<?>) instrument.copy();
 		map.correctingFWHM = map.getImageFWHM();	
+		
+		if(hasOption("unit")) map.setUnit(option("unit").getValue());
 		
 		String system = hasOption("system") ? option("system").getValue().toLowerCase() : "equatorial";
 		
@@ -297,7 +290,10 @@ public class ScalarMap extends SourceMap {
 	public synchronized void process(Scan<?,?> scan) {	
 		map.normalize();
 		if(base != null) map.addImage(base);
-			
+		
+		double minIntTime = instrument.integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
+		if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
+		
 		if(enableLevel && scan.getSourceGeneration() == 0) map.level(true);
 		else enableLevel = false;	
 		
@@ -324,6 +320,7 @@ public class ScalarMap extends SourceMap {
 
 		if(hasOption("scanmaps")) {
 			map.fileName = CRUSH.workPath + "/scan-" + (int)scan.getMJD() + "-" + scan.getID() + ".fits";
+			if(hasOption("unit")) map.setUnit(option("unit").getValue());
 			try { map.write(); }
 			catch(Exception e) { e.printStackTrace(); }
 		}
@@ -339,7 +336,7 @@ public class ScalarMap extends SourceMap {
 		
 		if(hasOption("pointing")) if(option("pointing").equals("auto") || option("pointing").equals("suggest")) {
 			double optimal = hasOption("smooth.optimal") ? 
-					option("smooth.optimal").getDouble() * scan.instrument.getSizeUnit() :
+					option("smooth.optimal").getDouble() * scan.instrument.getDefaultSizeUnit() :
 					scan.instrument.resolution;
 	
 			map.smoothTo(optimal);
@@ -350,7 +347,7 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	public synchronized void filter() {
-		if(!hasOption("source.filter") || getSourceSize() <= 0.0) {
+		if(!hasOption("source.filter") || getSourceSize(instrument) <= 0.0) {
 			map.extFilterFWHM = Double.NaN;
 			map.filterBlanking = Double.NaN;
 			return;
@@ -380,7 +377,7 @@ public class ScalarMap extends SourceMap {
 		if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
 		
 		double filterScale = directive.equals("auto") ? 
-				5.0 * getSourceSize() : Double.parseDouble(directive) * instrument.getSizeUnit();
+				5.0 * getSourceSize(instrument) : Double.parseDouble(directive) * instrument.getDefaultSizeUnit();
 			
 		double filterBlanking = filter.isConfigured("blank") ? filter.get("blank").getDouble() : Double.NaN;
 
@@ -420,22 +417,19 @@ public class ScalarMap extends SourceMap {
 			
 		double blankingLevel = getBlankingLevel();
 		
+		if(hasOption("source.redundancy")) System.err.print("{check} ");
+		
 		if(verbose) if(enableLevel) System.err.print("{level} ");
 		
 		if(verbose) if(hasOption("source.despike")) System.err.print("{despike} ");
-		
-		if(hasOption("source.filter") && getSourceSize() > 0.0) {
+
+		if(hasOption("source.filter") && getSourceSize(instrument) > 0.0) {
 			if(verbose) System.err.print("{filter} ");
 		}
 		
 		if(verbose) if(enableWeighting) if(hasOption("weighting.scans"))
 			for(Scan<?,?> scan : scans) System.err.print("{" + Util.f2.format(scan.weight) + "} ");
-		
-		if(hasOption("source.redundancy"))  {
-			if(hasOption("source.redundancy")) System.err.print("(check) ");
-			double minIntTime = instrument.integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
-			if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
-		}
+
 
 		if(hasOption("smooth") && !hasOption("smooth.external")) {
 			if(verbose) System.err.print("(smooth) ");

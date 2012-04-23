@@ -292,8 +292,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		if(forImage instanceof GridSource) {
 			GridSource<CoordinateType> sourceMap = (GridSource<CoordinateType>) forImage;
 			Unit unit = nextArg == null ? 
-					new Unit("Jy/beam", sourceMap.getUnit("Jy/beam")) :
-					new Unit(nextArg, sourceMap.getUnit(nextArg));
+					sourceMap.getCompoundUnit("Jy/beam") :
+					sourceMap.getCompoundUnit(nextArg);
 			peak.scale(unit.value());
 		}
 			
@@ -324,7 +324,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		}
 		
 		if(forImage instanceof GridSource)
-			peak.scale(((GridSource<CoordinateType>) forImage).getUnit(next));
+			peak.scale(((GridSource<CoordinateType>) forImage).getCompoundUnit(next).value());
 		
 		return tokens;
 	}
@@ -393,24 +393,26 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		double sizeUnit = 1.0; 
 		String sizeName = "pixels"; 
 		double beamScaling = 1.0;
+		double mapUnitValue = map.getUnit().value();
+		String mapUnitName = map.getUnit().name();
 		
 		if(map instanceof GridSource) {
 			GridSource<?> sourceMap = ((GridSource<?>) map);
 			Instrument<?> instrument = sourceMap.instrument;
-			sizeUnit = instrument.getDefaultSizeUnit();
-			sizeName = instrument.getDefaultSizeName();
+			sizeUnit = instrument.getSizeUnit();
+			sizeName = instrument.getSizeName();
 			beamScaling = sourceMap.getInstrumentBeamArea() / sourceMap.getImageBeamArea();
 		}
 			
-		data.add(new Datum("peak", peak.value() * beamScaling / map.getUnit().value(), map.getUnit().name()));
-		data.add(new Datum("dpeak", peak.rms() * beamScaling / map.getUnit().value(), map.getUnit().name()));
+		data.add(new Datum("peak", peak.value() * beamScaling / mapUnitValue, mapUnitName));
+		data.add(new Datum("dpeak", peak.rms() * beamScaling / mapUnitValue, mapUnitName));
 		data.add(new Datum("peakS2N", peak.significance(), ""));
 		
 		DataPoint F = new DataPoint(getAdaptiveIntegral(map));
 		F.scale(map.getPixelArea() / map.getImageBeamArea());
 		
-		data.add(new Datum("int", F.value() * beamScaling / map.getUnit().value(), map.getUnit().name()));
-		data.add(new Datum("dint", F.rms() * beamScaling / map.getUnit().value(), map.getUnit().name()));
+		data.add(new Datum("int", F.value() * beamScaling / mapUnitValue, mapUnitName));
+		data.add(new Datum("dint", F.rms() * beamScaling / mapUnitValue, mapUnitName));
 		data.add(new Datum("intS2N", F.significance(), ""));
 		
 		data.add(new Datum("FWHM", getRadius().value() / sizeUnit, sizeName));
@@ -427,8 +429,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		if(map instanceof GridSource) {
 			GridSource<?> sourceMap = ((GridSource<?>) map);
 			Instrument<?> instrument = sourceMap.instrument;
-			sizeUnit = instrument.getDefaultSizeUnit();
-			sizeName = instrument.getDefaultSizeName();
+			sizeUnit = instrument.getSizeUnit();
+			sizeName = instrument.getSizeName();
 			beamScaling = sourceMap.getInstrumentBeamArea() / sourceMap.getImageBeamArea();
 		}
 		
