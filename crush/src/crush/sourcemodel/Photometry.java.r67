@@ -62,11 +62,7 @@ public abstract class Photometry extends SourceModel {
 	@Override
 	public synchronized void add(SourceModel model, double weight) {
 		Photometry other = (Photometry) model;
-		for(int c=flux.length; --c >= 0; ) {
-			WeightedPoint F = other.flux[c];
-			F.scale(instrument.janskyPerBeam() / other.instrument.janskyPerBeam());
-			flux[c].average(F);
-		}
+		for(int c=flux.length; --c >= 0; ) flux[c].average(other.flux[c]);
 		sourceFlux.average(other.sourceFlux);
 		integrationTime += other.integrationTime;
 	}
