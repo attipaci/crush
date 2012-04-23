@@ -169,16 +169,16 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		String value = option.getValue().toLowerCase();
 		if(value.equals("auto") || value.equals("suggest")) return null;
 		Vector2D correction = option.getVector2D(); 
-		correction.scale(instrument.getDefaultSizeUnit());
+		correction.scale(instrument.getSizeUnit());
 		return correction;
 	}
 	
 	public void pointingAt(Vector2D correction) {
 		if(correction == null) return;
-		double sizeUnit = instrument.getDefaultSizeUnit();
+		double sizeUnit = instrument.getSizeUnit();
 		System.err.println("   Adjusting pointing by " + 
 				Util.f1.format(correction.getX() / sizeUnit) + ", " + Util.f1.format(correction.getY() / sizeUnit) +
-				" " + instrument.getDefaultSizeName() + ".");
+				" " + instrument.getSizeName() + ".");
 		
 		for(Integration<?,?> integration : this) integration.pointingAt(correction);
 		if(pointingCorrection == null) pointingCorrection = correction;
@@ -642,8 +642,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		String nameX = this instanceof GroundBased ? "AZ" : "RA";
 		String nameY = this instanceof GroundBased ? "EL" : "DEC";
 		
-		double sizeUnit = instrument.getDefaultSizeUnit();
-		String sizeName = instrument.getDefaultSizeName();
+		double sizeUnit = instrument.getSizeUnit();
+		String sizeName = instrument.getSizeName();
 		
 		data.add(new Datum("dX", pointingOffset.getX() / sizeUnit, sizeName));
 		data.add(new Datum("dY", pointingOffset.getY() / sizeUnit, sizeName));
@@ -781,8 +781,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		// Print the native pointing offsets...
 		String text = "";
 		
-		double sizeUnit = instrument.getDefaultSizeUnit();
-		String sizeName = instrument.getDefaultSizeName();
+		double sizeUnit = instrument.getSizeUnit();
+		String sizeName = instrument.getSizeName();
 		
 		text += "  Offset: ";
 		text += Util.f1.format(pointingOffset.getX() / sizeUnit) + ", " + Util.f1.format(pointingOffset.getY() / sizeUnit) + " " 

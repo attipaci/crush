@@ -47,13 +47,13 @@ public abstract class MonoArray<ChannelType extends SimplePixel> extends
 
 	@Override
 	public void initialize() {
-		if(hasOption("beam")) resolution = option("beam").getDouble() * getDefaultSizeUnit();
+		if(hasOption("beam")) resolution = option("beam").getDouble() * getSizeUnit();
 		super.initialize();
 	}
 	
 	@Override
 	public void validate() {
-		if(hasOption("beam")) resolution = option("beam").getDouble() * getDefaultSizeUnit();
+		if(hasOption("beam")) resolution = option("beam").getDouble() * getSizeUnit();
 		super.validate();
 		//for(SimplePixel pixel : this) pixel.instrument = this;
 	}

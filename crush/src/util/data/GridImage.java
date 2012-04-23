@@ -48,6 +48,8 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	public double extFilterFWHM = Double.NaN;
 	public double correctingFWHM = Double.NaN;	
 
+	public Unit beamArea = new BeamArea();
+	public Unit pixelArea = new PixelArea();
 	
 	public GridImage() {
 	}
@@ -701,8 +703,15 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 			if(region.isInside(getGrid(), i, j)) unflag(i, j, pattern);
 	}
 
+	@Override
+	public Unit getBasicUnit(String value) {
+		if(value.equals("beam") || value.equals("bm"))
+			return beamArea;
+		else if(value.equals("pixel") || value.equals("pix"))
+			return pixelArea;
+		else return super.getBasicUnit(value);
+	}
 	
-
 	public double getLevel(Region<CoordinateType> region) {
 		final Bounds bounds = region.getBounds(this);
 		double sum = 0.0, sumw = 0.0;
@@ -730,5 +739,19 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		asym.setX(region.getAsymmetry(this, angle, maxr));
 		asym.setY(region.getAsymmetry(this, angle + 90.0 * Unit.deg, maxr));
 		return asym;
+	}
+	
+	private class BeamArea extends Unit {
+		private BeamArea() { super("beam", Double.NaN); }
+		
+		@Override
+		public double value() { return getImageBeamArea(); }
+	}
+	
+	private class PixelArea extends Unit {
+		private PixelArea() { super("pixel", Double.NaN); }
+		
+		@Override
+		public double value() { return getPixelArea(); }
 	}
 }

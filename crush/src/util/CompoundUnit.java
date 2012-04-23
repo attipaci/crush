@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2012 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,23 +20,42 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2010 Attila Kovacs 
 
-package crush.polarization;
+package util;
 
-import crush.array.Array;
-import crush.sourcemodel.ScalarMap;
-import crush.sourcemodel.SyncModMap;
+import java.util.ArrayList;
 
-public class SyncPolarMap extends PolarMap {
-
-	public SyncPolarMap(Array<?, ?> instrument) {
-		super(instrument);
-		// TODO Auto-generated constructor stub
-	}
-
+public class CompoundUnit extends Unit {
+	public ArrayList<Unit> factors = new ArrayList<Unit>();
+	public ArrayList<Unit> divisors = new ArrayList<Unit>();
+	
 	@Override
-	public ScalarMap getMapInstance() {
-		return new SyncModMap(instrument);
+	public String name() {
+		StringBuffer name = new StringBuffer();
+		
+		if(factors.isEmpty()) name.append("1.0");
+		else for(int i=0; i<factors.size(); i++) {
+			if(i != 0) name.append(" ");
+			name.append(factors.get(i).name());
+		}
+		
+		if(!divisors.isEmpty()) {
+			name.append("/");
+			for(int i=0; i<divisors.size(); i++) {
+				if(i != 0) name.append(" ");
+				name.append(divisors.get(i).name());
+			}
+		}
+		
+		return new String(name);
 	}
+	
+	@Override
+	public double value() {
+		double num = 1.0, denom = 1.0;
+		for(Unit u : factors) num *= u.value();
+		for(Unit u : divisors) denom *= u.value();
+		return num / denom;
+	}
+	
 }

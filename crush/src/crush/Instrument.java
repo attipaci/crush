@@ -82,7 +82,7 @@ implements TableFormatter.Entries {
 		
 	// Load the static instrument settings, which are not meant to be date-dependent...
 	public void initialize() {
-		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getDefaultSizeUnit();
+		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnit();
 		initialized = true;
 	}
 	
@@ -124,7 +124,7 @@ implements TableFormatter.Entries {
 		startupOptions = options.copy();
 		reindex();
 	
-		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getDefaultSizeUnit();
+		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnit();
 		if(hasOption("gain")) gain = option("gain").getDouble();
 		
 		loadChannelData();
@@ -321,16 +321,16 @@ implements TableFormatter.Entries {
 	
 	public abstract void readWiring(String fileName) throws IOException;
 	
-	public abstract double getDefaultSizeUnit();
+	public abstract double getSizeUnit();
 	
-	public abstract String getDefaultSizeName();
+	public abstract String getSizeName();
 	
 	public void census() {
 		mappingChannels = 0;
 		for(Channel channel : this) if(channel.flag == 0) if(channel.weight > 0.0) mappingChannels++;
 	}
 	
-	public String getDefaultConfigPath() {
+	public String getConfigPath() {
 		return CRUSH.home + File.separator + getName() + File.separator;
 	}
 	
@@ -814,13 +814,6 @@ implements TableFormatter.Entries {
 		return 10.0 * Unit.s;
 	}
 	
-	public double getSourceSize() {
-		double sourceSize = hasOption("sourcesize") ? 
-				option("sourcesize").getDouble() * getDefaultSizeUnit() : resolution;
-		if(sourceSize < resolution) sourceSize = resolution;
-		return sourceSize;
-	}
-	
 	
 	public void getFitsData(LinkedHashMap<String, Object> data) {
 		float[] gains = new float[storeChannels];
@@ -898,12 +891,12 @@ implements TableFormatter.Entries {
 		else if(name.equals("channels")) return Integer.toString(size());
 		else if(name.equals("maxchannels")) return Integer.toString(storeChannels);
 		else if(name.equals("mount")) return mount.name();
-		else if(name.equals("resolution")) return Util.defaultFormat(resolution / getDefaultSizeUnit(), f);
-		else if(name.equals("sizeunit")) return getDefaultSizeName();
+		else if(name.equals("resolution")) return Util.defaultFormat(resolution / getSizeUnit(), f);
+		else if(name.equals("sizeunit")) return getSizeName();
 		else if(name.equals("ptfilter")) return Util.defaultFormat(getAverageFiltering(), f);
-		else if(name.equals("FWHM")) return Util.defaultFormat(getAverageBeamFWHM() / getDefaultSizeUnit(), f);
-		else if(name.equals("minFWHM")) return Util.defaultFormat(getMinBeamFWHM() / getDefaultSizeUnit(), f);
-		else if(name.equals("maxFWHM")) return Util.defaultFormat(getMaxBeamFWHM() / getDefaultSizeUnit(), f);
+		else if(name.equals("FWHM")) return Util.defaultFormat(getAverageBeamFWHM() / getSizeUnit(), f);
+		else if(name.equals("minFWHM")) return Util.defaultFormat(getMinBeamFWHM() / getSizeUnit(), f);
+		else if(name.equals("maxFWHM")) return Util.defaultFormat(getMaxBeamFWHM() / getSizeUnit(), f);
 		
 		return TableFormatter.NO_SUCH_DATA;
 	}

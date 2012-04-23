@@ -55,11 +55,12 @@ public class DataPoint extends WeightedPoint {
 	}
 	
 	public static String toString(DataPoint point, Unit unit, String before, String after) {
-		double value = point.value() / unit.value();
-		double rms = point.rms() / unit.value();
+		double u = unit.value();
+		double value = point.value() / u;
+		double rms = point.rms() / u;
 		double res = Math.pow(10.0, 2 - errorFigures + Math.floor(Math.log10(rms)));
 		
-		return Util.getDecimalFormat(Math.abs(value) / res, 6).format(point.value() / unit.value()) 
+		return Util.getDecimalFormat(Math.abs(value) / res, 6).format(point.value() / u) 
 			+ before + Util.s[errorFigures].format(rms) + after + unit.name();   
 	}
 	

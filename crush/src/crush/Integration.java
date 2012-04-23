@@ -377,9 +377,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void calcScanSpeedStats() {
 		aveScanSpeed = getAverageScanningVelocity(0.5 * Unit.s);
 		System.err.println("   Typical scanning speeds are " 
-				+ Util.f1.format(aveScanSpeed.value()/(instrument.getDefaultSizeUnit()/Unit.s)) 
-				+ " +- " + Util.f1.format(aveScanSpeed.rms()/(instrument.getDefaultSizeUnit()/Unit.s)) 
-				+ " " + instrument.getDefaultSizeName() + "/s");
+				+ Util.f1.format(aveScanSpeed.value()/(instrument.getSizeUnit()/Unit.s)) 
+				+ " +- " + Util.f1.format(aveScanSpeed.rms()/(instrument.getSizeUnit()/Unit.s)) 
+				+ " " + instrument.getSizeName() + "/s");
 	}
 	
 	public void velocityClip() {
@@ -432,8 +432,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public abstract FrameType getFrameInstance();
 	
 	public double getCrossingTime() {
-		if(scan.sourceModel == null) return getCrossingTime(instrument.getSourceSize());
-		return getCrossingTime(scan.sourceModel.getSourceSize(instrument));
+		if(scan.sourceModel == null) return getCrossingTime(scan.sourceModel.getSourceSize());
+		return getCrossingTime(scan.sourceModel.getSourceSize());
 	}
 	
 	public double getCrossingTime(double sourceSize) {		
@@ -442,7 +442,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	public double getPointSize() {
-		return scan.sourceModel == null ? instrument.resolution : scan.sourceModel.getPointSize(instrument);
+		return scan.sourceModel == null ? instrument.resolution : scan.sourceModel.getPointSize();
 	}
 	
 	public double getPointCrossingTime() { 
@@ -2502,7 +2502,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		else if(name.equals("chopthrow")) {
 			if(chopper == null) return "---";
-			else return  Util.defaultFormat(2.0 * chopper.amplitude / instrument.getDefaultSizeUnit(), f);
+			else return  Util.defaultFormat(2.0 * chopper.amplitude / instrument.getSizeUnit(), f);
 		}
 		else if(name.equals("chopeff")) {
 			if(chopper == null) return "---";

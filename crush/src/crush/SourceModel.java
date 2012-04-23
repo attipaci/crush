@@ -30,7 +30,8 @@ import java.util.*;
 
 
 public abstract class SourceModel extends Parallel implements Cloneable {
-	private Instrument<?> instrument;
+	public Instrument<?> instrument;
+	private Configurator options; 
 	
 	public Vector<Scan<?,?>> scans;
 	public int generation = 0;
@@ -38,9 +39,23 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 	
 	public String commandLine;
 	public String id;	
-
+		
 	public SourceModel(Instrument<?> instrument) {
-		setInstrument(instrument);		
+		setInstrument(instrument);
+	}
+	
+	public void setInstrument(Instrument<?> instrument) {
+		this.instrument = instrument;
+	}
+	
+	//public Instrument<?> getInstrument() { return instrument; }
+	
+	public void setOptions(Configurator options) {
+		this.options = options;
+	}
+	
+	public Configurator getOptions() {
+		return options;
 	}
 	
 	@Override
@@ -50,30 +65,32 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 	}	
 	
 	public boolean hasOption(String name) {
-		return instrument.options.isConfigured(name);
+		return options.isConfigured(name);
 	}
 
 	public Configurator option(String name) {
-		return instrument.options.get(name);
+		return options.get(name);
 	}
-	
-	public Configurator getOptions() { return instrument.options; }
 	
 	public SourceModel copy() {
 		SourceModel copy = (SourceModel) clone();
 		return copy;
 	}
 	
-	public Instrument<?> getInstrument() { return instrument; }
-	
-	public void setInstrument(Instrument<?> instrument) {
-		this.instrument = instrument;	
-	}
-		
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
-		scans = new Vector<Scan<?,?>>(collection);
-		setInstrument(scans.get(0).instrument);
-		for(Scan<?,?> scan : scans) scan.setSourceModel(this);
+		this.scans = new Vector<Scan<?,?>>(collection);
+		for(Scan<?,?> scan : scans) scan.setSourceModel(this);		
+		
+		// TODO remove this if source.setInstrument works in Pipeline...
+		double janskyPerBeam = scans.get(0).instrument.janskyPerBeam();
+		for(Scan<?,?> scan : scans) {
+			scan.setSourceModel(this);
+			for(Integration<?,?> integration : scan)
+				integration.gain *= integration.instrument.janskyPerBeam() / janskyPerBeam;
+		}
+		
+		// Set the global units to those of the first scan...
+		//instrument.options.process("jansky", Double.toString(janskyPerBeam));
 	}
 
 	public void reset() {
@@ -159,11 +176,15 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 		return hasOption("clip") ? option("clip").getDouble() : Double.NaN;
 	}
 	
-	public double getPointSize(Instrument<?> instrument) { return instrument.resolution; }
+	public double getPointSize() { return instrument.resolution; }
 
-	public double getSourceSize(Instrument<?> instrument) {
-		return instrument.getSourceSize();
+	public double getSourceSize() {
+		double sourceSize = hasOption("sourcesize") ? 
+				option("sourcesize").getDouble() * instrument.getSizeUnit() : instrument.resolution;
+		if(sourceSize < instrument.resolution) sourceSize = instrument.resolution;
+		return sourceSize;
 	}
+	
 	
 	public abstract String getSourceName();
 	

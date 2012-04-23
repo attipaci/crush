@@ -616,8 +616,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		Vector2D pointingOffset = getNativePointingIncrement(pointing);
 		Vector2D nasmyth = getNasmythOffset(pointingOffset);
 		
-		double sizeUnit = instrument.getDefaultSizeUnit();
-		String sizeName = instrument.getDefaultSizeName();
+		double sizeUnit = instrument.getSizeUnit();
+		String sizeName = instrument.getSizeName();
 	
 		// X and Y are absolute pointing offsets including the static pointing model...
 		Vector2D obs = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day, ambientT);
