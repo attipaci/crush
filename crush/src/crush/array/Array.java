@@ -64,12 +64,12 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	}
 		
 	@Override
-	public String getDefaultSizeName() {
+	public String getSizeName() {
 		return "arcsec";
 	}
 
 	@Override
-	public double getDefaultSizeUnit() {
+	public double getSizeUnit() {
 		return Unit.arcsec;
 	}
 	

@@ -151,8 +151,11 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	}
 		
 	public synchronized void addDirect(final GridMap<?> map, final double w) {
-		final double G = map.getUnit().value() / getUnit().value();
-		final double G2 = G * G;
+		// TODO enable when SourceModel scaling is disabled...
+		//final double G = map.getUnit().value() / getUnit().value();
+		//final double G2 = G * G;
+		final double G = 1.0;
+		final double G2 = 1.0;
 		
 		new Task<Void>() {		
 			@Override

@@ -86,16 +86,18 @@ public class Pipeline extends Thread {
 	
 	protected void getSource(Scan<?,?> scan) {
 		if(scanSource == null) return;
-		
+	
+		// Reset smoothing etc. for raw map.
 		scanSource.reset();
-		boolean contributeSource = false;
-			
+		boolean contributeSource = false;	
+		
+		// TODO why doesn't this work...
 		scanSource.setInstrument(scan.instrument);
 		
 		for(Integration<?, ?> integration: scan) {						
 			boolean mapping = true;
 			
-			if(integration.hasOption("source.nefd")) if(!integration.option("source.nefd").getRange(true).contains(integration.nefd)) mapping = false;
+			if(hasOption("source.nefd")) if(!option("source.nefd").getRange(true).contains(integration.nefd)) mapping = false;
 			if(mapping) {
 				if(integration.hasOption("jackknife")) integration.comments += integration.gain > 0.0 ? "+" : "-";
 				else if(integration.gain < 0.0) integration.comments += "-";

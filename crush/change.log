@@ -11,10 +11,9 @@
 >> changed how source models access instrument settings and coadd...
    check that it works for all instruments and data types!!!
 >> updated crush man page. Check!
+>> crop option?
+>> why addDirect does not scale by relative conversion factor...
 
-	[NEW] Pipeline elements can be activated/deactivated scan-by-scan, and
-	conditionally induced by date, MJD or serial number. As before, global
-	options should precede the listing of scans.
 
 	[NEW] Pointing reductions now measure the source shape in a more
 	sophisticated way, providing a measure of the x and y asymmetry of the
@@ -25,6 +24,10 @@
 	by the new configuration keys 'focus.xcoeff', 'focus.ycoeff' and 
 	'focus.zcoeff'. The definition of these is still in progress.
 
+	[NEW] Pipeline elements can be activated/deactivated scan-by-scan, and
+	conditionally induced by date, MJD or serial number. As before, global
+	options should precede the listing of scans.
+
 	[NEW] {GISMO} Bias-dependent settings are now allowed via conditionals
 	under the 'bias' key. E.g. to define different conversion values
 	(from counts to jansky):
@@ -32,24 +35,26 @@
 		bias.[8000] jansky 36.6
 		bias.[10000] jansky 24.67
 
-	[NEW] {GISMO} Pointing reductions now suggest Nasmyth offsets for PaKo.
-
 	[NEW] New logging entries for source elongation and angle, as well as
 	projected elongation in the telescope x direction. See README for
 	details.
 
-	[CHANGE] Naming of focus quantities for logging has been changed.
+	[CHANGE] Naming of focus quantities for logging has been changed. See
+	the logging section of the README for details.
 
-	[FIX] {GISMO} All pointing information in FITS is nor correctly 
-	interpreted. Looks like Nasmyth offsets in CRUSH model are inverted
-	w.r.t. the IRAM constants. Oh, well, it works, so probably leave it as
-	is...
+	[CHANGE] Map redundancy check moved from scan to compound map.
 
-	[FIX] All HDUs in the FITS now contain header information as expected.
+	[FIX] {GISMO} All pointing information in FITS is now correctly 
+	interpreted (or so I hope). Looks like Nasmyth offsets in CRUSH model 
+	are inverted w.r.t. the IRAM constants. it works, so probably leave it 
+	as is...
+
+	[FIX] All HDUs in the output image FITS now contain the full header 
+	information as expected.
 
 	[FIX] Found reason why filters did not work together with time
 	weighting. The problem was that MultiFilter did not propagate the
-	number of points to its children, which ended up with Infinite 
+	number of data points to its children, which ended up with infinite 
 	frame dependents as a result. The fix includes checking to make sure
 	that dependents are valid, and propagating the number of data points
 	to children. 
@@ -67,7 +72,9 @@
 
 	[FIX] Fixed and cleaned up rendering transformations and zooming of 
 	various image classes used by CRUSH to make parts work that weren't 
-	really used before.
+	really used before. These will eventually provide the imaging for 
+	the upcoming native crush-2 'show' tool. (We are still using the
+	CRUSH-1.xx 'show' and other tools).
 
 	[FIX] PNG centering: previously, PNG images were centered on the 
 	nominal tracking center, not the image center, sometimes resulting
@@ -102,10 +109,15 @@
 	[CONFIG] {GISMO} Added pointing model for the main part of the April
 	2012 run.
 
+	[CODE] Data2D and children now use Comppound units and dynamically 
+	evaluated 'jansky', 'beam', and 'pixel' units. This makes life a whole
+	lot easier when doing operations like smoothing/regridding...
+
 	[CODE] Gismo.copy() updated to correctly deal with fields.
 
 	[CODE] Many classes are updated to hide private fields, and access them
-	through getters/setters only. This makes for safer code.
+	through getters/setters only. The change reduces the propensity for 
+	nasty bugs.
 
 	[CODE] More work on imaging classes. The day of native CRUSH-2 image
 	tools is getting ever closer...

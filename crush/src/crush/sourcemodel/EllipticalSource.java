@@ -131,8 +131,8 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		if(map instanceof GridSource) {
 			GridSource<?> sourceMap = ((GridSource<?>) map);
 			Instrument<?> instrument = sourceMap.instrument;
-			sizeUnit = instrument.getDefaultSizeUnit();
-			sizeName = instrument.getDefaultSizeName();
+			sizeUnit = instrument.getSizeUnit();
+			sizeName = instrument.getSizeName();
 		}
 		
 		data.add(new Datum("a", axes.max() / sizeUnit, sizeName));
@@ -159,7 +159,7 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		if(map instanceof GridSource) {
 			GridSource<?> sourceMap = ((GridSource<?>) map);
 			Instrument<?> instrument = sourceMap.instrument;
-			sizeUnit = instrument.getDefaultSizeUnit();
+			sizeUnit = instrument.getSizeUnit();
 		}
 			
 		info += " (a="

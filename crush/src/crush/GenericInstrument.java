@@ -57,13 +57,13 @@ public class GenericInstrument extends Instrument<Channel> {
 	}
 
 	@Override
-	public String getDefaultSizeName() {
+	public String getSizeName() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public double getDefaultSizeUnit() {
+	public double getSizeUnit() {
 		// TODO Auto-generated method stub
 		return 0;
 	}

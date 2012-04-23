@@ -32,7 +32,7 @@ public class APEXChoppedPhotometry extends Photometry {
 		super(instrument);
 	}
 	
-	public APEXArray<?> getAPEXArray() { return (APEXArray<?>) getInstrument(); }
+	public APEXArray<?> getAPEXArray() { return (APEXArray<?>) instrument; }
 
 
 	@Override

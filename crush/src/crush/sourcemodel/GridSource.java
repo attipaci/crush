@@ -56,6 +56,7 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	public int generation = 0;
 	public double integrationTime = 0.0;	
 	
+	private Unit jansky = new Jansky();
 	
 	public GridSource() {
 	}
@@ -131,7 +132,6 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	@Override
 	public GridImage<CoordinateType> getRegrid(final Grid2D<CoordinateType> toGrid) throws IllegalStateException {	
 		GridSource<CoordinateType> regrid = (GridSource<CoordinateType>) super.getRegrid(toGrid);
-		regrid.setUnit(getUnit().name());
 		return regrid;
 	}
 
@@ -196,51 +196,18 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 			instrument.resolution = 3.0 * Math.sqrt(getGrid().getPixelArea());
 	}
 
-
-
-	protected double getUnit(String name) {
-		if(name.contains("/")) {
-			int index = name.lastIndexOf('/');
-			String baseUnit = name.substring(0, index);
-			String area = name.substring(index + 1).toLowerCase();
-			return getUnit(baseUnit) / getAreaUnit(area);
-		}
-		else {
-			Unit dataUnit = instrument.getDataUnit();
-			if(name.equalsIgnoreCase(dataUnit.name())) return dataUnit.value() * getInstrumentBeamArea();
-			else if(name.equalsIgnoreCase("Jy") || name.equalsIgnoreCase("jansky")) return instrument.janskyPerBeam() * getInstrumentBeamArea();
-			else {
-				Unit u = Unit.get(name);
-				if(u != null) return u.value();
-				// Else assume there is a standard multiplier in front, such as k, M, m, u...
-				else return  Unit.getMultiplier(name.charAt(0)).getValue() * getUnit(name.substring(1));
-			}
-		}
-	}
-
-	public double getAreaUnit(String area) {	
-		if(area.equals("beam") || area.equals("bm"))
-			return getImageBeamArea();
-		if(area.equals("arcsec**2") || area.equals("arcsec2") || area.equals("arcsec^2") || area.equals("sqarcsec"))
-			return Unit.arcsec2;
-		else if(area.equals("arcmin**2") || area.equals("arcmin2") || area.equals("arcmin^2") || area.equals("sqarcmin"))
-			return Unit.arcmin2;
-		else if(area.equals("deg**2") || area.equals("deg2") || area.equals("deg^2") || area.equals("sqdeg"))
-			return Unit.deg2;
-		else if(area.equals("rad**2") || area.equals("rad2") || area.equals("rad^2") || area.equals("sr"))
-			return Unit.sr;
-		else if(area.equals("mas") || area.equals("mas2") || area.equals("mas^2") || area.equals("sqmas"))
-			return Unit.mas * Unit.mas;
-		else if(area.equals("pixel") || area.equals("pix"))
-			return getPixelArea();
-		else return Double.NaN;
+	
+	@Override
+	public Unit getBasicUnit(String value) {
+		if(value.equals("jansky") || value.equals("Jy")) 
+			return jansky;
+		else return super.getBasicUnit(value);
 	}
 
 
 	public void setUnit(String name) {
-		setUnit(new Unit(name, getUnit(name)));
+		setUnit(getCompoundUnit(name));
 	}
-
 
 	
 	@Override
@@ -289,6 +256,11 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 		return info;
 	}
 	
-
+	private class Jansky extends Unit {
+		private Jansky() { super("Jy", Double.NaN); }
+		
+		@Override
+		public double value() { return instrument.janskyPerBeam() * getInstrumentBeamArea(); }
+	}
 	
 }

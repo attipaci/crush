@@ -28,6 +28,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.StringTokenizer;
 
 import crush.CRUSH;
 
@@ -43,6 +44,7 @@ import nom.tam.fits.ImageHDU;
 import nom.tam.util.BufferedDataOutputStream;
 import nom.tam.util.Cursor;
 
+import util.CompoundUnit;
 import util.Range;
 import util.Unit;
 import util.Util;
@@ -94,6 +96,22 @@ public class Data2D extends Parallel implements Cloneable {
 	public Unit getUnit() { return unit; }
 	
 	public void setUnit(Unit u) { this.unit = u; }
+	
+	public CompoundUnit getCompoundUnit(String name) {
+		int index = name.contains("/") ? name.lastIndexOf('/') : name.length();
+		StringTokenizer numerator = new StringTokenizer(name.substring(0, index));
+		StringTokenizer denominator = new StringTokenizer(name.substring(index+1, name.length()));
+
+		CompoundUnit unit = new CompoundUnit();
+		while(numerator.hasMoreTokens()) unit.factors.add(getBasicUnit(numerator.nextToken()));
+		while(denominator.hasMoreTokens()) unit.divisors.add(getBasicUnit(denominator.nextToken()));
+		
+		return unit;
+	}
+	
+	protected Unit getBasicUnit(String value) {
+		return Unit.get(value);
+	}
 	
 	public String getContentType() { return contentType; }
 	
@@ -1111,6 +1129,7 @@ public class Data2D extends Parallel implements Cloneable {
 
 	public void setImage(BasicHDU HDU) throws FitsException {		
 		Object image = HDU.getData().getData();
+		final double u = unit.value();
 	
 		try {
 			final float[][] fdata = (float[][]) image;
@@ -1119,7 +1138,7 @@ public class Data2D extends Parallel implements Cloneable {
 				@Override
 				public void process(int i, int j) {
 					if(!Float.isNaN(fdata[j][i])) {
-						setValue(i, j, fdata[j][i] * unit.value());	    
+						setValue(i, j, fdata[j][i] * u);	    
 						unflag(i, j);
 					}
 				}
@@ -1132,7 +1151,7 @@ public class Data2D extends Parallel implements Cloneable {
 				@Override
 				public void process(int i, int j) {
 					if(!Double.isNaN(ddata[j][i])) {
-						setValue(i, j, ddata[j][i] * unit.value());	    
+						setValue(i, j, ddata[j][i] * u);	    
 						unflag(i, j);
 					}
 				}
@@ -1183,11 +1202,12 @@ public class Data2D extends Parallel implements Cloneable {
 
 	public ImageHDU createHDU() throws HeaderCardException, FitsException, IOException {
 		final float[][] fitsImage = new float[sizeY()][sizeX()];
+		final double u = unit.value();
 		
 		new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
-				if(isUnflagged(i, j)) fitsImage[j][i] = (float) (getValue(i, j) / unit.value());
+				if(isUnflagged(i, j)) fitsImage[j][i] = (float) (getValue(i, j) / u);
 				else fitsImage[j][i] = Float.NaN;
 			}
 		}.process();

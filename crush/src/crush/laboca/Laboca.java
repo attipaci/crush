@@ -198,7 +198,7 @@ public class Laboca extends APEXArray<LabocaPixel> {
 		super.loadChannelData();
 		
 		if(hasOption("he3")) if(!option("he3").equals("calc")) {
-			String fileName = hasOption("he3.gains") ? Util.getSystemPath(option("he3.gains").getValue()) : getDefaultConfigPath() + "he3-gains.dat";
+			String fileName = hasOption("he3.gains") ? Util.getSystemPath(option("he3.gains").getValue()) : getConfigPath() + "he3-gains.dat";
 			
 			try { readTemperatureGains(fileName); }
 			catch(IOException e) {

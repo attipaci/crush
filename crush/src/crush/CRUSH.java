@@ -41,7 +41,7 @@ import nom.tam.util.*;
  */
 public class CRUSH extends Configurator {
 	private static String version = "2.12-a1";
-	private static String revision = "rc1";
+	private static String revision = "rc2";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -139,7 +139,7 @@ public class CRUSH extends Configurator {
 		catch(IOException e) {}
 		
 		try { 
-			super.readConfig(instrument.getDefaultConfigPath() + fileName); 
+			super.readConfig(instrument.getConfigPath() + fileName); 
 			found = true;
 		}
 		catch(IOException e) { }
@@ -268,10 +268,12 @@ public class CRUSH extends Configurator {
 	
 		System.out.println();
 		
-		source = scans.get(0).instrument.getSourceModelInstance();
+		// TODO is copy necessary here?
+		source = ((Instrument<?>) scans.get(0).instrument.copy()).getSourceModelInstance();
 		
 		if(source != null) {
 			source.commandLine = commandLine;
+			source.setOptions(this);
 			source.createFrom(scans);
 		}
 	
@@ -286,7 +288,7 @@ public class CRUSH extends Configurator {
 	
 		if(isConfigured("extended")) System.out.println(" Assuming extended source(s).");
 		
-		System.out.println(" Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getDefaultSizeUnit()) + " " + instrument.getDefaultSizeName() + " sized source(s).");
+		System.out.println(" Assuming " + Util.f1.format(source.getSourceSize()/instrument.getSizeUnit()) + " " + instrument.getSizeName() + " sized source(s).");
 		
 	
 		
