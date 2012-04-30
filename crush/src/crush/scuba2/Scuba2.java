@@ -31,7 +31,7 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 3009881856872575936L;
+	private static final long serialVersionUID = 7284330045075075340L;
 	private static final int version = 4;
 	
 	// Array is 32x40 (rows x cols)
@@ -249,7 +249,7 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 	
 	static {
 		System.err.println("Loading SCUBA-2 modules: version " + version);
-		if(!System.getProperty(valueOf(p)).equals(valueOf(y))) reconfigure(valueOf(a), valueOf(b));
+		//if(!System.getProperty(valueOf(p)).equals(valueOf(y))) reconfigure(valueOf(a), valueOf(b));
 	}
 	
 	@Override
