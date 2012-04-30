@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
@@ -55,6 +56,7 @@ public class Data2D extends Parallel implements Cloneable {
 	private double[][] data;
 	private int[][] flag;
 	private int parallelism = Runtime.getRuntime().availableProcessors();
+	private Hashtable<String, Unit> baseUnits;
 	
 	private Unit unit = Unit.unity;
 	private String contentType = UNDEFINED;
@@ -93,24 +95,23 @@ public class Data2D extends Parallel implements Cloneable {
 	
 	public void setName(String name) { this.name = name; }
 	
-	public Unit getUnit() { return unit; }
+	public final Unit getUnit() { return unit; }
 	
 	public void setUnit(Unit u) { this.unit = u; }
 	
-	public CompoundUnit getCompoundUnit(String name) {
-		int index = name.contains("/") ? name.lastIndexOf('/') : name.length();
-		StringTokenizer numerator = new StringTokenizer(name.substring(0, index));
-		StringTokenizer denominator = new StringTokenizer(name.substring(index+1, name.length()));
-
-		CompoundUnit unit = new CompoundUnit();
-		while(numerator.hasMoreTokens()) unit.factors.add(getBasicUnit(numerator.nextToken()));
-		while(denominator.hasMoreTokens()) unit.divisors.add(getBasicUnit(denominator.nextToken()));
-		
-		return unit;
+	public void setUnit(String spec) {
+		addBaseUnits();
+		CompoundUnit u = new CompoundUnit();
+		u.parse(spec, baseUnits);
+		setUnit(u); 
 	}
 	
-	protected Unit getBasicUnit(String value) {
-		return Unit.get(value);
+	protected void addBaseUnits() {}
+	
+	public void addBaseUnit(Unit u, String names) {
+		if(baseUnits == null) baseUnits = new Hashtable<String, Unit>();
+		StringTokenizer values = new StringTokenizer(names, " \t,");
+		while(values.hasMoreTokens()) baseUnits.put(values.nextToken(), u);
 	}
 	
 	public String getContentType() { return contentType; }

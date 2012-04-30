@@ -24,31 +24,55 @@
 package util;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.StringTokenizer;
 
 public class CompoundUnit extends Unit {
-	public ArrayList<Unit> factors = new ArrayList<Unit>();
-	public ArrayList<Unit> divisors = new ArrayList<Unit>();
+	public ArrayList<PowerUnit> factors = new ArrayList<PowerUnit>();
+	public ArrayList<PowerUnit> divisors = new ArrayList<PowerUnit>();
+	
+	public CompoundUnit() {}
+	
+	public CompoundUnit(String spec, PowerUnit template) { super(spec); }
 	
 	@Override
 	public String name() {
 		StringBuffer name = new StringBuffer();
 		
-		if(factors.isEmpty()) name.append("1.0");
+		if(factors.isEmpty()) name.append("1");
 		else for(int i=0; i<factors.size(); i++) {
 			if(i != 0) name.append(" ");
-			name.append(factors.get(i).name());
+			String uName = factors.get(i).name();
+			if(uName.length() > 0) name.append(uName);
 		}
 		
 		if(!divisors.isEmpty()) {
 			name.append("/");
 			for(int i=0; i<divisors.size(); i++) {
 				if(i != 0) name.append(" ");
-				name.append(divisors.get(i).name());
+				String uName = divisors.get(i).name();
+				if(uName.length() > 0) name.append(uName);
 			}
 		}
 		
 		return new String(name);
 	}
+	
+	public void multiplyBy(Unit u) {
+		if(divisors.contains(u)) divisors.remove(u);
+		
+		for(PowerUnit pu : divisors) if(pu.getBase().equals(u)) {
+			pu.setExponent(pu.getExponent() - 1.0);
+			return;
+		}
+		
+		for(PowerUnit pu : factors) if(pu.getBase().equals(u)) {
+			pu.setExponent(pu.getExponent() + 1.0);
+			return;
+		}
+		
+	}
+	
 	
 	@Override
 	public double value() {
@@ -57,5 +81,26 @@ public class CompoundUnit extends Unit {
 		for(Unit u : divisors) denom *= u.value();
 		return num / denom;
 	}
+	
+	@Override
+	public void setMultiplier(Multiplier m) { 
+		if(!factors.isEmpty()) factors.get(0).setMultiplier(m);	
+	}
+	
+	public void parse(String spec, Hashtable<String, Unit> baseUnits) {	
+		if(factors == null) factors = new ArrayList<PowerUnit>();
+		else factors.clear();
+		
+		if(divisors == null) divisors = new ArrayList<PowerUnit>();
+		else divisors.clear();
+		
+		int index = spec.contains("/") ? spec.lastIndexOf('/') : spec.length();
+		StringTokenizer numerator = new StringTokenizer(spec.substring(0, index));
+		StringTokenizer denominator = new StringTokenizer(spec.substring(index+1, spec.length()));
+		
+		while(numerator.hasMoreTokens()) factors.add(PowerUnit.get(numerator.nextToken(), baseUnits));
+		while(denominator.hasMoreTokens()) divisors.add(PowerUnit.get(denominator.nextToken(), baseUnits));
+	}
+	
 	
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2012 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,42 +20,27 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush;
 
-import java.lang.reflect.Field;
+package crush.laboca;
 
-import util.data.WeightedPoint;
+import crush.Channel;
+import crush.GradientGains;
 
-public abstract class Response extends Mode {
+/**
+ * @author pumukli
+ *
+ */
+public class CableTwist extends GradientGains {
+	double center = 0.0;
 
-	public Response() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-
-	public Response(ChannelGroup<?> group, Field gainField) {
-		super(group, gainField);
-		// TODO Auto-generated constructor stub
-	}
-
-	public Response(ChannelGroup<?> group) {
-		super(group);
-		// TODO Auto-generated constructor stub
-	}
-
-	public abstract Signal getSignal(Integration<?, ?> integration);
-	
 	@Override
-	public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
-		Signal signal = integration.signals.get(this);
-		
-		if(signal == null) {
-			signal = getSignal(integration);
-			if(signal.isFloating) signal.level(isRobust);
-			integration.signals.put(this, signal);	
-		}
-		
-		return super.deriveGains(integration, isRobust);
-	}	
-	
+	public double getRawGain(Channel c) throws Exception {
+		LabocaPixel pixel = (LabocaPixel) c;
+		return pixel.pin - center;
+	}
+
+	@Override
+	public void setRawGain(Channel c, double value) throws Exception {
+		throw new UnsupportedOperationException("Cannot set twisting gains.");
+	}
 }

@@ -25,7 +25,6 @@
 package crush;
 
 import java.lang.reflect.*;
-
 import util.Configurator;
 import util.Range;
 
@@ -38,7 +37,7 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 	public boolean solveSignal = true;
 	public Range gainRange = new Range();
 	
-	protected CorrelatedModality(String name, String id) {
+	public CorrelatedModality(String name, String id) {
 		super(name, id);
 	}
 	
@@ -47,7 +46,11 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 	}
 	
 	public CorrelatedModality(String name, String id, ChannelDivision<?> division, Field gainField) { 
-		super(name, id, division, gainField, CorrelatedMode.class);
+		this(name, id, division, new FieldGainProvider(gainField));
+	}
+	
+	public CorrelatedModality(String name, String id, ChannelDivision<?> division, GainProvider gainSource) { 
+		super(name, id, division, gainSource, CorrelatedMode.class);
 	}
 	
 	public CorrelatedModality(String name, String id, ChannelDivision<?> division, Class<? extends CorrelatedMode> modeClass) {
@@ -55,7 +58,11 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 	}
 	
 	public CorrelatedModality(String name, String id, ChannelDivision<?> division, Field gainField, Class<? extends CorrelatedMode> modeClass) {
-		super(name, id, division, gainField, modeClass);
+		this(name, id, division, new FieldGainProvider(gainField), modeClass);
+	}
+	
+	public CorrelatedModality(String name, String id, ChannelDivision<?> division, GainProvider gainSource, Class<? extends CorrelatedMode> modeClass) {
+		super(name, id, division, gainSource, modeClass);
 	}
 	
 	@Override
@@ -72,12 +79,40 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 	}
 	
 
-	public void updateAllSignals(Integration<?, ?> integration, boolean isRobust) {
+	public void updateSignals(Integration<?, ?> integration, boolean isRobust) {	
 		for(CorrelatedMode mode : this) if(!mode.fixedSignal) {
 			if(!Double.isNaN(resolution)) mode.resolution = resolution;
-			try { mode.updateAllSignals(integration, isRobust); }
-			catch(IllegalAccessException e) { e.printStackTrace(); }
+			try { mode.updateSignals(integration, isRobust); }
+			catch(Exception e) { e.printStackTrace(); }
 		}
+	}
+	
+	public class Spinoff extends CorrelatedModality {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 866119477552433909L;
+		
+		/*
+		public SubModality(String name, String id) {
+			super(name, id);
+			this.parent = parent;
+			for(Mode mode : parent) add(mode.new SubMode(mode));
+			setDefaultNames();
+		}
+		*/
+		
+		public Spinoff(String name, String id, Field gainField) {
+			this(name, id, new FieldGainProvider(gainField));
+		}
+
+		public Spinoff(String name, String id, GainProvider source) {
+			super(name, id);
+			for(CorrelatedMode mode : CorrelatedModality.this) Spinoff.this.add(mode.new Spinoff(source));
+			Spinoff.this.setDefaultNames();
+		}
+		
 	}
 	
 }

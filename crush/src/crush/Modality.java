@@ -47,14 +47,18 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	public boolean phaseGains = false;
 	public double resolution = Double.NaN;
 	
-	protected Modality(String name, String id) {
+	public Modality(String name, String id) {
 		this.name = name;
 		this.id = id;
 	}
 	
 	public Modality(String name, String id, ChannelDivision<?> division, Field gainField, Class<? extends ModeType> modeClass) { 
+		this(name, id, division, new FieldGainProvider(gainField), modeClass);
+	}
+	
+	public Modality(String name, String id, ChannelDivision<?> division, GainProvider gainProvider, Class<? extends ModeType> modeClass) { 
 		this(name, id, division, modeClass);
-		for(Mode mode : this) mode.setGainField(gainField);
+		for(Mode mode : this) mode.setGainProvider(gainProvider);
 	}
 	
 	public Modality(String name, String id, ChannelDivision<?> division, Class<? extends ModeType> modeClass) {
@@ -71,7 +75,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	}
 		
 	public void setDefaultNames() {
-		for(int i=size(); --i >= 0; ) get(i).name = name + ":" + get(i).channels.getName();
+		for(int i=size(); --i >= 0; ) get(i).name = name + ":" + get(i).getChannels().getName();
 	}
 	
 	public void setOptions(Configurator option) {	
@@ -87,7 +91,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		setGainDirection(option.isConfigured("signed") ? Instrument.GAINS_SIGNED : Instrument.GAINS_BIDIRECTIONAL);
 		
 		for(Mode mode : this) {
-			if(noGainField) mode.gainField = null;
+			if(noGainField) mode.setGainProvider(null);
 			mode.phaseGains = phaseGains;
 		}
 	}
@@ -105,24 +109,24 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	}
 	
 	// Gains are stored according to dataIndex
-	public void averageGains(WeightedPoint[] G, Integration<?,?> integration, boolean isRobust) throws IllegalAccessException {
+	public void averageGains(WeightedPoint[] G, Integration<?,?> integration, boolean isRobust) throws Exception {
 		for(Mode mode : this) if(!mode.fixedGains) {
-			final ChannelGroup<?> channels = mode.channels;
-			final WeightedPoint[] modeGain = mode.getGains(integration, isRobust);
+			final ChannelGroup<?> channels = mode.getChannels();
+			final WeightedPoint[] modeGain = mode.deriveGains(integration, isRobust);
 			for(int k=modeGain.length; --k >= 0; ) G[channels.get(k).storeIndex].average(modeGain[k]);
 		}
 	}
 	
 	// Gain arrays is according to dataIndex
-	public boolean applyGains(WeightedPoint[] G, Integration<?,?> integration) throws IllegalAccessException {
+	public boolean applyGains(WeightedPoint[] G, Integration<?,?> integration) throws Exception {
 		boolean isFlagging = false;
 		
 		for(Mode mode : this) if(!mode.fixedGains) {
-			final float[] fG = new float[mode.channels.size()];
-			final float[] sumwC2 = new float[mode.channels.size()];
+			final float[] fG = new float[mode.size()];
+			final float[] sumwC2 = new float[mode.size()];
 			
 			for(int k=fG.length; --k >= 0; ) {
-				final WeightedPoint channelGain = G[mode.channels.get(k).storeIndex];
+				final WeightedPoint channelGain = G[mode.getChannel(k).storeIndex];
 				fG[k] = (float) channelGain.value();
 				sumwC2[k] = (float) channelGain.weight();
 			}
@@ -143,11 +147,11 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		
 		for(Mode mode : this) if(!mode.fixedGains) {	
 			try {
-				WeightedPoint[] G = mode.getGains(integration, isRobust);
+				WeightedPoint[] G = mode.deriveGains(integration, isRobust);
 				isFlagging |= mode.setGains(WeightedPoint.floatValues(G));
 				mode.syncAllGains(integration, WeightedPoint.floatWeights(G), true);
 			}
-			catch(IllegalAccessException e) { e.printStackTrace(); }
+			catch(Exception e) { e.printStackTrace(); }
 		}
 		
 		return isFlagging;
@@ -160,5 +164,6 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 			description += "  " + get(i).toString() + "\n";
 		return description; 
 	}
+	
 	
 }

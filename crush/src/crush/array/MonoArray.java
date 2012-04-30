@@ -65,12 +65,12 @@ public abstract class MonoArray<ChannelType extends SimplePixel> extends
 	
 	@Override
 	public Collection<? extends Pixel> getPixels() {
-		return getChannels();
+		return copyGroup();
 	}
 	
 	@Override
 	public Collection<? extends Pixel> getMappingPixels() {
-		return getObservingChannels().getChannels().discard(~0);
+		return getObservingChannels().copyGroup().discard(~0);
 	}
 	
 	

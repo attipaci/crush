@@ -1,3 +1,17 @@
+>> write.png.spline
+>> 'focus' force focus even if source is too large/small.
+>> focus.xcoeff, focus.ycoeff, focus.zcoeff
+>> focus.xpointing, focus.ypointing
+>> focus.fluxcoeff?
+>> Why does alias.run6a mjd.[...]; run6a ...; not work???
+>> changed how source models access instrument settings and coadd...
+   check that it works for all instruments and data types!!!
+>> updated crush man page. Check!
+>> crop option?
+>> why addDirect does not scale by relative conversion factor...
+
+
+
 >> Add OpenCL FFTs?
 
 >> Make SyntheticRCP generic, with nominal positions?

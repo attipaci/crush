@@ -62,7 +62,7 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 		return signals.get(mode).getGainIncrement();
 	}
 	
-	protected synchronized void syncGains(final Mode mode) throws IllegalAccessException {		
+	protected synchronized void syncGains(final Mode mode) throws Exception {		
 		signals.get(mode).syncGains();
 	}
 	

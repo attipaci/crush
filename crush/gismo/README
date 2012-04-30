@@ -259,6 +259,12 @@ For a general overview of channel divisions, please consult Section 3.
 		correlated signals are present on these quadrants. The
 		decorrelating on 'mux' groups is default in GISMO reductions
 
+   flips	A modality based on the 'mux' division of pixels, for 
+		decorrelating the pairwise alternating currents on the SQUID
+		muxes. By design nearby pixels on the readout have wriring 
+		traces s.t. the direction of current is flipped between one
+		set and the other.
+
    pins		The GISMO multiplexing scheme is implemented in the time-domain
 		Thus, the first channels of each SQUID are read out at the same
 		time, followed by the second channel in each group etc. Thus,

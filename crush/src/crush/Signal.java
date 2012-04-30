@@ -43,7 +43,7 @@ public class Signal implements Cloneable {
 		this.mode = mode;
 		this.integration = integration;
 		if(mode != null) {
-			syncGains = new float[mode.channels.size()];
+			syncGains = new float[mode.size()];
 			integration.signals.put(mode, this);
 		}
 	}
@@ -325,7 +325,7 @@ public class Signal implements Cloneable {
 	protected final WeightedPoint[] getMLGainIncrement() {
 		final int[] channelIndex = mode.getChannelIndex();
 		
-		final WeightedPoint[] dG = new WeightedPoint[mode.channels.size()];
+		final WeightedPoint[] dG = new WeightedPoint[mode.size()];
 		for(int k=dG.length; --k >= 0; ) dG[k] = new WeightedPoint();
 		
 		for(final Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {	
@@ -376,19 +376,36 @@ public class Signal implements Cloneable {
 		return dG;
 	}
 
+	protected synchronized void resyncGains() throws Exception {
+		final ChannelGroup<?> channels = mode.getChannels();
+		final int nc = channels.size();
+		final int[] channelIndex = mode.getChannelIndex();
+		
+		final float[] dG = syncGains;	
+		final float[] G = mode.getGains();
+		for(int k=nc; --k >=0; ) dG[k] = G[k] - dG[k];
+		
+		// Sync to data and calculate dependeces...
+		for(final Frame exposure : integration) if(exposure != null) for(int k=nc; --k >=0; ) 
+			exposure.data[channelIndex[k]] -= dG[k] * valueAt(exposure);
+		
+		// Register the gains as the ones used for the signal...
+		setSyncGains(G);
+			
+	}
 	
 
-	protected synchronized void syncGains(float[] sumwC2, boolean isTempReady) throws IllegalAccessException {
-		Mode mode = getMode();
+	protected synchronized void syncGains(float[] sumwC2, boolean isTempReady) throws Exception {
 		if(mode.fixedGains) throw new IllegalStateException("WARNING! Cannot change gains for fixed gain modes.");
 		
-		final ChannelGroup<?> channels = mode.channels;
+		final ChannelGroup<?> channels = mode.getChannels();
 		final int nc = channels.size();
 		final Dependents parms = integration.getDependents("gains-" + mode.name);
 		
+		final int[] channelIndex = mode.getChannelIndex();
 		final float[] G = mode.getGains();
 		final float[] dG = syncGains;
-		final int[] channelIndex = mode.getChannelIndex();
+		
 		
 		for(int k=nc; --k >=0; ) dG[k] = G[k] - dG[k];
 		
@@ -428,7 +445,7 @@ public class Signal implements Cloneable {
 	}
 	
 	public double getCovariance() {
-		ChannelGroup<?> channels = mode.channels.getChannels().discard(~0);
+		ChannelGroup<?> channels = mode.getChannels().copyGroup().discard(~0);
 		int nc = integration.instrument.size();
 		
 		final double[] sumXS = new double[nc];

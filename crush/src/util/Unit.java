@@ -28,32 +28,50 @@ import java.util.*;
 
 // TODO Convert to Enum?
 public class Unit implements Cloneable {
-	protected final static Hashtable<String, Unit> table = new Hashtable<String, Unit>();
+	protected final static Hashtable<String, Unit> standardUnits = new Hashtable<String, Unit>();
 
 	// Usage Examples:
 	//    1. To convert radians to arcsecs : arcsecs = radians / Unit.acsec
 	//    2. To convert arcsecs to radians : radians = arcsecs * Unit.acsec
 	//    3. To convert degrees to hourangle : hourAngle = (degrees * Unit.deg) / Unit.hourAngle
 
+	private Multiplier multiplier = Multiplier.unity;
 	private String name = "";
 	private double value = Double.NaN;
 
 	public Unit() {}
 
+	public Unit(String name) {
+		parse(name);
+	}
+	
 	public Unit(String name, double value) { 
 		this.value = value; 
 		this.name = name; 
 	}
 	
-	public Unit(String text) { parse(text); }
-
-	public String name() { return name; }
+	@Override
+	public boolean equals(Object o) {
+		if(!(o instanceof Unit)) return false;
+		Unit u = (Unit) o;
+		if(!u.name().equals(name())) return false;
+		if(u.value() != value()) return false;
+		if(u.multiplier.equals(multiplier)) return false;
+		return true;
+	}
 	
-	public double value() { return value; }
+	@Override
+	public int hashCode() {
+		return name.hashCode() ^ ~HashCode.get(value) ^ multiplier.hashCode();
+	}
 	
-	public void setName(String value) { this.name = value; }
-
-	public void setValue(double x) { this.value = x; }
+	public String name() { return multiplier.getLetterCode() + name; }
+	
+	public double value() { return multiplier.value * value; }
+		
+	public void setMultiplier(Multiplier m) { this.multiplier = m; }
+	
+	public Multiplier getMultiplier() { return multiplier; }
 	
 	@Override
 	public Object clone() {
@@ -62,36 +80,50 @@ public class Unit implements Cloneable {
 	}
 	
 	public void register() {
-		if(name == null) table.put("unity", this);
-		else table.put(name, this);
+		if(name == null) standardUnits.put("unity", this);
+		else standardUnits.put(name, this);
 	}
 	
-	public static Unit get(String id) throws IllegalArgumentException {
-		Unit u = table.get(id);
-		if(u != null) return u;
+	public static Unit get(String id) {
+		return fetch(id, standardUnits);
+	}
+	
+	public static Unit get(String id, Hashtable<String, Unit> baseUnits) throws IllegalArgumentException {		
+		if(baseUnits == null) return fetch(id, standardUnits);
+		try { return fetch(id, baseUnits); }
+		catch(IllegalArgumentException e) { return fetch(id, standardUnits); }
+	}
+	
+	private static Unit fetch(String id, Hashtable<String, Unit> baseUnits) throws IllegalArgumentException {		
+		Unit u = (Unit) baseUnits.get(id);
+		if(u != null) return (Unit) u.clone();
+		
 		if(id.length() < 2) throw new IllegalArgumentException("No such unit: '" + id + "'.");
 		
 		// Try unit with multiplier...
-		u = table.get(id.substring(1));
+		u = baseUnits.get(id.substring(1));
 		if(u == null) throw new IllegalArgumentException("No such unit: '" + id + "'.");
+		u = (Unit) u.clone();		
 		
-		double multiplier = getMultiplier(id.charAt(0)).value ;
-		if(Double.isNaN(multiplier)) throw new IllegalArgumentException("No such unit: '" + id + "'.");
-		
-		return new Unit(id, multiplier * u.value);
-	}
+		u.multiplier = getMultiplier(id.charAt(0)) ;
+		if(u.multiplier == null) throw new IllegalArgumentException("No unit multiplier: '" + id.charAt(0) + "'.");
 
-	// TODO need to implement....
-	public void parse(String text) {
-
+		return u;
 	}
 	
-
+	public void parse(String name) {
+		Unit u = get(name);
+		this.name = u.name;
+		this.value = u.value;
+		this.multiplier = u.multiplier;
+	}
+	
 	@Override
 	public String toString() {
-		return "[" + name + "] = " + value;
+		return "[" + name() + "] = " + value();
 	}
 
+	
 	// Unit Prefixes
 	public final static double deci = 0.1;
 	public final static double centi = 1.0e-2;
@@ -115,39 +147,22 @@ public class Unit implements Cloneable {
 	public final static double zetta = 1.0e21;  // Z
 	public final static double yotta = 1.0e24;  // Y
 
-	public static char getMultiplierChar(double value) {
-		if(value < 1e-21) return 'y';
-		if(value < 1e-18) return 'z';
-		if(value < 1e-15) return 'a';
-		if(value < 1e-12) return 'f';
-		if(value < 1e-9) return 'p';
-		if(value < 1e-6) return 'n';
-		if(value < 1e-3) return 'u';
-		if(value < 1.0) return 'm';
-		if(value < 1e3) return ' ';
-		if(value < 1e6) return 'k';
-		if(value < 1e9) return 'M';
-		if(value < 1e12) return 'G';
-		if(value < 1e15) return 'T';
-		if(value < 1e18) return 'P';
-		if(value < 1e21) return 'E';
-		if(value < 1e24) return 'Z';
-		return 'Y';
-	}
 	
 
-	public static Multiplier getMultiplier(char c) {
+	public static Multiplier getMultiplier(char c) {	
 		switch(c) {
 		case ' ': return Multiplier.unity;
 		case 'd': return Multiplier.deci; // could also be deka
 		case 'c': return Multiplier.centi;
 		case 'm': return Multiplier.milli;
 		case 'u': return Multiplier.micro;
+		case Symbol.mu: return Multiplier.micro;
 		case 'n': return Multiplier.nano;
 		case 'p': return Multiplier.pico;
 		case 'f': return Multiplier.femto;
 		case 'a': return Multiplier.atto;
 		case 'z': return Multiplier.zepto;
+		case 'y': return Multiplier.yocto;
 		case 'h': return Multiplier.hecto;
 		case 'k': return Multiplier.kilo;
 		case 'M': return Multiplier.mega;
@@ -568,22 +583,20 @@ public class Unit implements Cloneable {
 
 	
 	static {
-		register(1.0, "count, counts, ct, piece, pieces, pcs, 1");
+		register(1.0, "count, counts, cts, piece, pcs, unit, 1");
 		register(0.01, "%, percent");
 		
 		register(m, "m, meter, metre");
-		//register(kg, "kg, kilogram"); register gramms, since that has valid multiples...
 		register(s, "s, sec, second");
 		register(A, "A, amp, ampere");
-		register(K, "K, kelvin");
+		register(K, "K, " + Symbol.degree + "K, kelvin");
 		register(cd, "cd, candela");
 		
 		register(rad, "rad, radian");
 		register(sr, "sr, steradian");
-		register(mol, "mol");
+		register(mol, "mol, mole");
 		
 		register(g, "g, gramm");
-		register(dkg, "dkg, dekagramm");
 		register(Hz, "Hz, hertz");
 		register(N, "N, newton");
 		register(Pa, "Pa, pascal");
@@ -603,17 +616,22 @@ public class Unit implements Cloneable {
 		register(Gy, "Gy, gray");
 		register(Sv, "Sv, sievert");
 
-		register(deg, "deg, degree");
-		register(arcmin, "arcmin, am");
+		register(barn, "b, barn");
+		register(angstrom, Symbol.Acircle + ", angstrom");
+		register(um, "micron");
+		
+		register(deg, "deg, " + Symbol.degree + ", degree");
+		register(arcmin, "arcmin");
 		register(arcsec, "arcsec, as");
 		// ...
 		register(min, "min, minute");
-		register(hour, "hour");
-		register(day, "day");
+		register(hour, "h, hr, hour");
+		register(day, "dy, day");
 		register(year, "year, yr");
 		register(century, "century, cent");
 		register(julianCentury, "juliancentury");
-		register(angstrom, "angstrom");
+		
+		
 		register(Rsun, "Rsun, solarradius");
 		register(Rearth, "Rearth, earthradius");
 		register(AU, "AU, astronomicalunit");
@@ -625,14 +643,13 @@ public class Unit implements Cloneable {
 		register(yd, "yd, yard");
 		register(mi, "mi, mile");
 		register(pt, "pt");
-		register(barn, "barn");
 		register(l, "l, L, litre, liter");
 		register(gal, "gal, gallon");
 		register(quart, "quart");
 		register(pint, "pint");
 		register(cup, "cup");
 		register(fl_oz, "fl.oz, floz, fluidounce");
-		// ...
+	
 		register(englishPint, "englishpint");
 		register(Msun, "Msun, solarmass");
 		register(Mearth, "Mearth, earthmass");
@@ -645,15 +662,15 @@ public class Unit implements Cloneable {
 		register(Gs, "Gs, gauss");
 		register(rpm, "rpm");
 		register(waveNumber, "wavenumber");
-		register(dyn, "dyn");
+		register(dyn, "dyn, dyne");
 		register(psi, "psi");
 		register(atm, "atm, atmosphere");
 		register(bar, "bar");
 		register(torr, "mmHg, torr");
-
+		
 		register(erg, "erg");
 		register(cal, "cal, calorie");
-		register(BTU, "BTU, therm");
+		register(BTU, "Btu, BTU, therm");
 
 		register(eV, "eV, electronvolt");
 		register(Lsun, "Lsun, solarluminosity");
@@ -662,6 +679,7 @@ public class Unit implements Cloneable {
 		register(Jy, "Jy, jansky");
 		register(mpg, "mpg, MPG");
 	}
+	
 
 	// TODO convert to Enum...
 	public enum Multiplier {
@@ -704,6 +722,27 @@ public class Unit implements Cloneable {
 		public String getLetterCode() { return letterCode; }
 		
 		public String getName() { return name; }
+		
+		public static Multiplier getMultiplier(double value) {
+			if(value < 1e-21) return yocto;
+			if(value < 1e-18) return zepto;
+			if(value < 1e-15) return atto;
+			if(value < 1e-12) return femto;
+			if(value < 1e-9) return pico;
+			if(value < 1e-6) return nano;
+			if(value < 1e-3) return micro;
+			if(value < 1.0) return milli;
+			if(value < 1e3) return unity;
+			if(value < 1e6) return kilo;
+			if(value < 1e9) return mega;
+			if(value < 1e12) return giga;
+			if(value < 1e15) return tera;
+			if(value < 1e18) return peta;
+			if(value < 1e21) return exa;
+			if(value < 1e24) return zetta;
+			return yotta;
+		}
+		
 	}
 }
 

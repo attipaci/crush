@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2012 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,37 +20,14 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2010 Attila Kovacs 
 
-package crush.laboca;
+package crush;
 
-import crush.*;
+public interface GainProvider {
 
-public class TwistingMode extends CorrelatedMode {
-
-	public TwistingMode() {
-		fixedGains = true;
-	}
-
-	@Override
-	public float[] getGains() throws IllegalAccessException {
-		float[] gains = super.getGains();
-
-		double sumwg = 0.0, sumw = 0.0;
-		for(Channel channel : channels) {
-			LabocaPixel pixel = (LabocaPixel) channel;
-			if(pixel.flag == 0) {
-				sumwg += pixel.weight * pixel.cableGain * pixel.pin;
-				sumw += pixel.weight;
-			}
-		}
-		float aveg = sumw > 0.0 ?  (float) (sumwg / sumw) : 0.0F;
-
-		for(int c=channels.size(); --c >= 0; ) {
-			LabocaPixel pixel = (LabocaPixel) channels.get(c);
-			gains[c] = (float) pixel.cableGain * pixel.pin - aveg;
-		}
-
-		return gains;
-	}
+	public double getGain(Channel c) throws Exception;
+	
+	public void setGain(Channel c, double value) throws Exception;
+	
+	public void validate(Mode mode) throws Exception;
 }

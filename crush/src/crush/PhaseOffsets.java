@@ -119,7 +119,7 @@ public class PhaseOffsets {
 		double sum = 0.0, sumw = 0.0;
 		
 		for(int k=G.length; --k >= 0; ) {
-			final Channel channel = mode.channels.get(k);
+			final Channel channel = mode.getChannel(k);
 
 			if(channel.isFlagged(skipChannels)) continue;
 			if(channel.sourcePhase != 0) continue;
@@ -140,7 +140,7 @@ public class PhaseOffsets {
 		increment.setWeight(0.0);
 		
 		for(int k=G.length; --k >= 0; ) {
-			final Channel channel = mode.channels.get(k);
+			final Channel channel = mode.getChannel(k);
 			if(channel.isFlagged(skipChannels)) continue;
 			if(channel.sourcePhase != 0) continue;
 

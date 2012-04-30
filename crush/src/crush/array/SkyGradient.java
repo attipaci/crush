@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2012 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,27 +20,30 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package crush.array;
 
-import crush.ChannelDivision;
-import crush.ChannelGroup;
-import crush.CorrelatedModality;
+import crush.Channel;
+import crush.GradientGains;
 
-public class GradientModality extends CorrelatedModality {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -5173363949944068920L;
+public class SkyGradient extends GradientGains {
+	private double center = 0.0;
+	public boolean horizontal = true;
 	
-	public GradientModality(String name, String id, ChannelDivision<?> division) {
-		super(name, id);
-		
-		for(ChannelGroup<?> group : division) {
-			add(new GradientMode(group, true)); // The horizontal gradient
-			add(new GradientMode(group, false)); // The vertical gradient
-		}
-		setDefaultNames();
+	public SkyGradient(boolean isHorizontal) {
+		this.horizontal = isHorizontal;
 	}
+	
+	@Override
+	public double getRawGain(Channel c) throws Exception {
+		SimplePixel pixel = (SimplePixel) c;
+		return (horizontal ? pixel.position.getX() : pixel.position.getY()) - center;
+	}
+
+	@Override
+	public void setRawGain(Channel c, double value) throws Exception {
+		throw new UnsupportedOperationException("Cannot change gradient gains.");
+	}
+
+
 }

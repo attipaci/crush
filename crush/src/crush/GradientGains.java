@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2012 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,42 +20,36 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+
 package crush;
 
-import java.lang.reflect.Field;
-
-import util.data.WeightedPoint;
-
-public abstract class Response extends Mode {
-
-	public Response() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-
-	public Response(ChannelGroup<?> group, Field gainField) {
-		super(group, gainField);
-		// TODO Auto-generated constructor stub
-	}
-
-	public Response(ChannelGroup<?> group) {
-		super(group);
-		// TODO Auto-generated constructor stub
-	}
-
-	public abstract Signal getSignal(Integration<?, ?> integration);
+public abstract class GradientGains implements GainProvider {
+	double center = 0.0;
 	
-	@Override
-	public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
-		Signal signal = integration.signals.get(this);
-		
-		if(signal == null) {
-			signal = getSignal(integration);
-			if(signal.isFloating) signal.level(isRobust);
-			integration.signals.put(this, signal);	
+	public final double getGain(Channel c) throws Exception {
+		return getRawGain(c) - center;
+	}
+	
+	public final void setGain(Channel c, double value) throws Exception {
+		setRawGain(c, center + value);
+	}
+	
+	public abstract double getRawGain(Channel c) throws Exception;
+	
+	public abstract void setRawGain(Channel c, double value) throws Exception;
+	
+	public void validate(Mode mode) throws Exception {
+		float[] gains = mode.getGains(false);
+
+		double sum = 0.0, sumw = 0.0;
+		for(int k=gains.length; --k >= 0; ) {
+			Channel channel = mode.getChannel(k);
+			if(channel.isUnflagged()) {
+				sum += channel.weight * gains[k];
+				sumw += channel.weight;
+			}
 		}
-		
-		return super.deriveGains(integration, isRobust);
-	}	
-	
+		if(sumw > 0.0) center += sum / sumw;
+	}
+
 }

@@ -44,8 +44,20 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	
 	@Override
 	public void addModalities() {
-		super.addModalities(); 	
-		addModality(new GradientModality("gradients", "G", divisions.get("obs-channels"))); 
+		super.addModalities(); 
+		
+		CorrelatedMode common = (CorrelatedMode) modalities.get("obs-channels").get(0);
+			
+		CorrelatedMode.Spinoff gx = common.new Spinoff(new SkyGradient(true));
+		gx.name = "gradients:x";
+		CorrelatedMode.Spinoff gy = common.new Spinoff(new SkyGradient(false));
+		gy.name = "gradients:y";
+		
+		CorrelatedModality gradients = new CorrelatedModality("gradients", "G");
+		gradients.add(gx);
+		gradients.add(gy);
+		
+		addModality(gradients);
 	}
 
 	public Array(String name) {

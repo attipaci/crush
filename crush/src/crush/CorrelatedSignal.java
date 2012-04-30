@@ -44,10 +44,10 @@ public class CorrelatedSignal extends Signal {
 	
 	public CorrelatedSignal(CorrelatedMode mode, Integration<?, ?> integration) {
 		super(mode, integration);
-		syncGains = new float[mode.channels.size()];
+		syncGains = new float[mode.size()];
 		dependents = new Dependents(integration, mode.name);
 		resolution = mode.getFrameResolution(integration);
-		value = new float[mode.getSize(integration)];
+		value = new float[mode.signalLength(integration)];
 		weight = new float[value.length];
 	}
 	
@@ -223,7 +223,7 @@ public class CorrelatedSignal extends Signal {
 	public void calcFiltering() {
 		// Create the filtering srorage if necessary...
 		if(sourceFiltering == null) {
-			sourceFiltering = new float[getMode().channels.size()];
+			sourceFiltering = new float[getMode().size()];
 			Arrays.fill(sourceFiltering, 1.0F);
 		}
 		
@@ -231,14 +231,14 @@ public class CorrelatedSignal extends Signal {
 		int nP = getParms();
 		
 		final CorrelatedMode mode = (CorrelatedMode) getMode();
-		final ChannelGroup<?> channels = mode.channels;
+		final ChannelGroup<?> channels = mode.getChannels();
 		int skipFlags = mode.skipChannels;
 		
 		for(int k=channels.size(); --k >= 0; ) {
 			Channel channel = channels.get(k);
 			double phi = 0.0;
 			// Every pixel that sees the source contributes to the filtering...
-			if(channel.isUnflagged(skipFlags)) for(Channel other : mode.channels) if(other.isUnflagged(skipFlags))
+			if(channel.isUnflagged(skipFlags)) for(Channel other : channels) if(other.isUnflagged(skipFlags))
 				phi += channel.overlap(other, integration.scan.sourceModel) * dependents.get(other);
 
 			if(nP > 0) phi /= nP;
@@ -292,10 +292,10 @@ public class CorrelatedSignal extends Signal {
 	
 	// Get correlated for all frames even those that are no good...
 	// But use only channels that are valid, and skip over flagged samples...
-	public synchronized void update(boolean isRobust) throws IllegalAccessException {
+	public synchronized void update(boolean isRobust) throws Exception {
 		// work on only a selected subset of not critically flagged channels only (for speed)
 		final CorrelatedMode mode = (CorrelatedMode) getMode();
-		final ChannelGroup<?> channels = mode.channels;
+		final ChannelGroup<?> channels = mode.getChannels();
 		final ChannelGroup<?> goodChannels = mode.getValidChannels();
 		final int nc = channels.size();
 		
@@ -304,7 +304,7 @@ public class CorrelatedSignal extends Signal {
 		
 		final int resolution = mode.getFrameResolution(integration);
 		final int nt = integration.size();
-		final int nT = mode.getSize(integration);
+		final int nT = mode.signalLength(integration);
 		
 		// Clear the dependents in all mode channels...
 		dependents.clear(channels, 0, integration.size());
@@ -379,7 +379,7 @@ public class CorrelatedSignal extends Signal {
 		// Free up the temporary storage, which is used for calculating medians
 		noTempStorage();
 		
-		if(CRUSH.debug) integration.checkForNaNs(mode.channels, 0, integration.size());
+		if(CRUSH.debug) integration.checkForNaNs(mode.getChannels(), 0, integration.size());
 		
 		generation++;
 		
