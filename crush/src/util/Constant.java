@@ -129,7 +129,7 @@ public class Constant {
 
     // some constants of questionable accuracy
 
-    public static double h0 = 0.65;
+    public static double h0 = 0.71;
     public static double h_0 = h0;
     public static double Hubble = 100.0 * h0 * Unit.km / Unit.s / Unit.Mpc;
     public static double H0 = Hubble;

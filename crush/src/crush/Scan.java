@@ -592,7 +592,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 				modality.averageGains(G, integration, isRobust);
 				gotGains = true;
 			}	
-			catch(IllegalAccessException e) { e.printStackTrace(); }	
+			catch(Exception e) { e.printStackTrace(); }	
 		}
 		
 		if(!gotGains) return;
@@ -603,7 +603,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			boolean isFlagging = false; 
 			
 			try { isFlagging |= modality.applyGains(G, integration); }
-			catch(IllegalAccessException e) { e.printStackTrace(); }
+			catch(Exception e) { e.printStackTrace(); }
 			
 			if(isFlagging) {
 				integration.instrument.census();

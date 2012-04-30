@@ -26,6 +26,7 @@ package crush;
 
 import java.lang.reflect.*;
 import java.util.Collection;
+import java.util.Vector;
 
 
 // Gains can be linked to a channel's field, or can be internal...
@@ -35,6 +36,8 @@ public class CorrelatedMode extends Mode {
 	public boolean fixedSignal = false;
 	public boolean solvePhases = false;
 	public int skipChannels = ~0;
+
+	Vector<Spinoff> spinoffs;
 	
 	public CorrelatedMode() {}
 	
@@ -46,15 +49,27 @@ public class CorrelatedMode extends Mode {
 		super(group, gainField);
 	}
 	
+	private void addSpinoff(Spinoff m) {
+		if(spinoffs == null) spinoffs = new Vector<Spinoff>();
+		spinoffs.add(m);		
+	}
+	
+	@Override
+	public void setChannels(ChannelGroup<?> group) {
+		super.setChannels(group);
+		if(spinoffs != null) for(Spinoff mode : spinoffs) mode.setChannels(group);
+	}
+	
 	// TODO How to solve the indexing of valid channels...
 	public ChannelGroup<?> getValidChannels() {
-		return channels.getChannels().discard(skipChannels);		
+		return getChannels().copyGroup().discard(skipChannels);		
 	}	
+		
 	
 	// TODO Gain normalization is not safe during reduction, it is meant solely
 	// for use at the end of reduction, for creating a normalized gain set for writing.
 	// To make it safe, it should properly rescale all dependent signals and gains...
-	public synchronized void renormalizeGains(Collection<Integration<?,?>> integrations, int gainFlag) throws IllegalAccessException {
+	public synchronized void renormalizeGains(Collection<Integration<?,?>> integrations, int gainFlag) throws Exception {
 		final float aveG = (float) getAverageGain(gainFlag);
 		float[] G = getGains();
 		
@@ -77,7 +92,7 @@ public class CorrelatedMode extends Mode {
 		}
 	}
 	
-	public synchronized void updateAllSignals(Integration<?, ?> integration, boolean isRobust) throws IllegalAccessException {
+	public synchronized void updateSignals(Integration<?, ?> integration, boolean isRobust) throws Exception {
 		if(fixedSignal) throw new IllegalStateException("WARNING! Cannot decorrelate fixed signal modes.");
 
 		CorrelatedSignal signal = (CorrelatedSignal) integration.signals.get(this);
@@ -91,5 +106,55 @@ public class CorrelatedMode extends Mode {
 			pSignal.update(isRobust);
 		}
 	}	
+	
+	@Override
+	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws Exception {			
+		super.syncAllGains(integration, sumwC2, isTempReady);
+		
+		// Sync the gains to all the dependent modes too... 
+		if(spinoffs != null) for(Spinoff mode : spinoffs) {
+			Signal signal = integration.signals.get(mode);
+			if(signal != null) signal.resyncGains();
+		}
+	}
+
+
+	public class Spinoff extends CorrelatedMode {
+		
+		public Spinoff() {
+			super(CorrelatedMode.this.getChannels());
+			fixedGains = true;
+			addSpinoff(this);
+		}
+		
+		public Spinoff(float[] gains) throws Exception {
+			this();
+			super.setGains(gains);
+		}
+		
+		public Spinoff(Field gainField) {
+			this();
+			setGainProvider(new FieldGainProvider(gainField));
+		}
+		
+		public Spinoff(GainProvider gains) { 
+			this();
+			setGainProvider(gains);
+		}
+			
+		@Override
+		public synchronized float[] getGains() throws Exception {
+			final float[] parentgains = CorrelatedMode.this.getGains();
+			final float[] gain = super.getGains();
+			for(int i=gain.length; --i>=0; ) gain[i] *= parentgains[i];
+			return gain;
+		}
+		
+		@Override
+		public synchronized boolean setGains(float[] gain) throws IllegalAccessException {
+			throw new UnsupportedOperationException("Cannot adjust gains in Spinoff Modes.");
+		}
+	}
+
 	
 }

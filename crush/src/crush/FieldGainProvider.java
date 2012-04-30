@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2012 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,42 +20,28 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+
 package crush;
 
 import java.lang.reflect.Field;
 
-import util.data.WeightedPoint;
-
-public abstract class Response extends Mode {
-
-	public Response() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-
-	public Response(ChannelGroup<?> group, Field gainField) {
-		super(group, gainField);
-		// TODO Auto-generated constructor stub
-	}
-
-	public Response(ChannelGroup<?> group) {
-		super(group);
-		// TODO Auto-generated constructor stub
-	}
-
-	public abstract Signal getSignal(Integration<?, ?> integration);
+public class FieldGainProvider implements GainProvider {
+	private Field gainField;
 	
-	@Override
-	public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
-		Signal signal = integration.signals.get(this);
-		
-		if(signal == null) {
-			signal = getSignal(integration);
-			if(signal.isFloating) signal.level(isRobust);
-			integration.signals.put(this, signal);	
-		}
-		
-		return super.deriveGains(integration, isRobust);
-	}	
+	public FieldGainProvider(Field f) {
+		this.gainField = f;
+	}
+	
+	public double getGain(Channel c) throws IllegalAccessException {
+		return (float) gainField.getDouble(c);
+	}
+	
+	public void setGain(Channel c, double value) throws IllegalAccessException {
+		Class<?> fieldClass = gainField.getClass();
+		if(fieldClass.equals(float.class)) gainField.setFloat(c, (float) value);
+		else gainField.setDouble(c, value);
+	}
+	
+	public void validate(Mode mode) throws Exception {}
 	
 }

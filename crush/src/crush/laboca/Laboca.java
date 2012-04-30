@@ -98,14 +98,16 @@ public class Laboca extends APEXArray<LabocaPixel> {
 		try { addModality(new CorrelatedModality("boxes", "B", divisions.get("boxes"), LabocaPixel.class.getField("boxGain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
-		try { addModality(new CorrelatedModality("cables", "c", divisions.get("cables"), LabocaPixel.class.getField("cableGain"))); }
+		try {
+			CorrelatedModality cables = new CorrelatedModality("cables", "c", divisions.get("cables"), LabocaPixel.class.getField("cableGain"));
+			addModality(cables);
+			addModality(cables.new Spinoff("twisting", "t", new CableTwist()));
+		}			
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
 		try { addModality(new CorrelatedModality("amps", "a", divisions.get("amps"), LabocaPixel.class.getField("ampGain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
-		
-		addModality(new CorrelatedModality("twisting", "t", divisions.get("cables"), TwistingMode.class));
-
+	
 		try { addModality(new Modality<LabocaHe3Response>("temperature", "T", divisions.get("detectors"), LabocaPixel.class.getField("temperatureGain"), LabocaHe3Response.class));	}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
@@ -233,7 +235,8 @@ public class Laboca extends APEXArray<LabocaPixel> {
 		return super.getPixelDataHeader() + "\tGbox\tGcable\tbox\tcable\tamp";
 	}
 	
-
+	
+	
 }
 
 

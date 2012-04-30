@@ -91,7 +91,7 @@ public class SkyDip extends SourceModel {
 		if(C == null) {
 			C = new CorrelatedSignal(mode, integration);
 			try { C.update(false); }
-			catch(IllegalAccessException e) { 
+			catch(Exception e) { 
 				System.err.println("ERROR! Cannot decorrelate sky channels: " + e.getMessage());
 			}
 			C = (CorrelatedSignal) integration.signals.get(mode);

@@ -515,6 +515,31 @@
 			(smoothed) for point sources.
 			@See: 'config', 'bright', 'faint'
 
+:: dejump		@Since: 2.12
+			@Expert
+			Allows identifying places in the data stream where
+			detectors jump together (esp. SQUIDs under a transient
+			B-field fluctuation) by the perceived increase in 
+			residual detector noise. Sub-settings are 'level'
+			and 'minlength'
+			@See: 'dejump.level', 'dejump.minlength', 'despike'
+
+::dejump.level=X	@Since: 2.12
+			@Expert
+			The relative noise level at which jumps are identified.
+			The value should be strictly greater than 1, with 2.0
+			being a safe starting point. Change with extreme 
+			caution, if at all.
+			@See: 'dejump'
+
+::dejump.minlength=X	@Since:2.12
+			@Expert
+			The minimum length (in seconds) of a coincident 
+			detector jump that is kept alive in the data. Jumps
+			longer than this threshold will be re-levelled, 
+			wheareas shorter jumps will be flagged out entirely.
+			@See: 'dejump'
+ 
 :: despike		Use despiking. CRUSH allows the use of up to three
 	 		different despiking steps, each configurable on its
 			own, to specify a despiking method, S/N level and
@@ -642,6 +667,9 @@
 			You can also use 'auto' to determine the filtering
 			timescales automatically, based on 'sourcesize', 
 			scanning speeds, and instrument 'stability' time-scales.
+			@Version: 2.12
+			As of version 2.12, the value 'max' is also accepted
+			producing results identical to that of 'offsets'.
 			@See: 'sourcesize', 'stability', 'offsets
 	
 :: drifts.method=<name>	@Advanced
@@ -938,6 +966,17 @@
 			   
 			Indeces normally start at 1 (i.e. not C-style!).
 			@See: 'noslim', 'blind' 
+
+:: flips		@Alias -> correlated.flips
+			@Instrument: GISMO
+			@Since: 2.12
+			@Advanced
+			This modality allows decorrelating SQUID mux signals 
+			with inverted current directions on every other pair
+			of channels. Seems to work well on the SQUID level
+			fluctuations seen in April 2012, esp. when used
+			together with 'mux' decorrelation.
+			@See: 'mux'
 
 :: forget=<list>...	Forget the priorly set values for the listed options 
 			as if they were never defined. E.g. 

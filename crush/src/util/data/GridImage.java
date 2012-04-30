@@ -704,12 +704,10 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	}
 
 	@Override
-	public Unit getBasicUnit(String value) {
-		if(value.equals("beam") || value.equals("bm"))
-			return beamArea;
-		else if(value.equals("pixel") || value.equals("pix"))
-			return pixelArea;
-		else return super.getBasicUnit(value);
+	public void addBaseUnits() {
+		super.addBaseUnits();
+		addBaseUnit(beamArea, "beam, bm");
+		addBaseUnit(pixelArea, "pixel, pix");
 	}
 	
 	public double getLevel(Region<CoordinateType> region) {

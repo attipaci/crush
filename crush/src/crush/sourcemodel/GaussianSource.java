@@ -291,10 +291,9 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 
 		if(forImage instanceof GridSource) {
 			GridSource<CoordinateType> sourceMap = (GridSource<CoordinateType>) forImage;
-			Unit unit = nextArg == null ? 
-					sourceMap.getCompoundUnit("Jy/beam") :
-					sourceMap.getCompoundUnit(nextArg);
-			peak.scale(unit.value());
+			if(nextArg == null) sourceMap.setUnit("Jy/beam");
+			else sourceMap.setUnit(nextArg);
+			peak.scale(sourceMap.getUnit().value());
 		}
 			
 		while(tokens.hasMoreTokens()) addComment(tokens.nextToken() + " ");
@@ -323,9 +322,10 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 			next = tokens.nextToken();
 		}
 		
-		if(forImage instanceof GridSource)
-			peak.scale(((GridSource<CoordinateType>) forImage).getCompoundUnit(next).value());
-		
+		if(forImage instanceof GridSource) {
+			forImage.setUnit(next);
+			peak.scale(forImage.getUnit().value());
+		}
 		return tokens;
 	}
 	
@@ -392,7 +392,6 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		
 		double sizeUnit = 1.0; 
 		String sizeName = "pixels"; 
-		double beamScaling = 1.0;
 		double mapUnitValue = map.getUnit().value();
 		String mapUnitName = map.getUnit().name();
 		
@@ -401,18 +400,18 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 			Instrument<?> instrument = sourceMap.instrument;
 			sizeUnit = instrument.getSizeUnit();
 			sizeName = instrument.getSizeName();
-			beamScaling = sourceMap.getInstrumentBeamArea() / sourceMap.getImageBeamArea();
+			//mapUnitValue *= sourceMap.getImageBeamArea() / sourceMap.getInstrumentBeamArea();
 		}
 			
-		data.add(new Datum("peak", peak.value() * beamScaling / mapUnitValue, mapUnitName));
-		data.add(new Datum("dpeak", peak.rms() * beamScaling / mapUnitValue, mapUnitName));
+		data.add(new Datum("peak", peak.value() / mapUnitValue, mapUnitName));
+		data.add(new Datum("dpeak", peak.rms() / mapUnitValue, mapUnitName));
 		data.add(new Datum("peakS2N", peak.significance(), ""));
 		
 		DataPoint F = new DataPoint(getAdaptiveIntegral(map));
 		F.scale(map.getPixelArea() / map.getImageBeamArea());
 		
-		data.add(new Datum("int", F.value() * beamScaling / mapUnitValue, mapUnitName));
-		data.add(new Datum("dint", F.rms() * beamScaling / mapUnitValue, mapUnitName));
+		data.add(new Datum("int", F.value() / mapUnitValue, mapUnitName));
+		data.add(new Datum("dint", F.rms() / mapUnitValue, mapUnitName));
 		data.add(new Datum("intS2N", F.significance(), ""));
 		
 		data.add(new Datum("FWHM", getRadius().value() / sizeUnit, sizeName));

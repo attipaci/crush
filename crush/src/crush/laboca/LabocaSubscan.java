@@ -130,7 +130,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		removeDrifts(blindChannels, size(), false, false);
 		
 		CorrelatedMode blindMode = (CorrelatedMode) instrument.modalities.get("blinds").get(0);
-		try { blindMode.gainField = LabocaPixel.class.getField("temperatureGain"); }
+		try { blindMode.setGainProvider(new FieldGainProvider(LabocaPixel.class.getField("temperatureGain"))); }
 		catch(NoSuchFieldException e) { return; }
 		
 		blindMode.resolution = blindTimeScale;
@@ -141,8 +141,8 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		// Calculate the RMS temperature fluctuation...
 		CorrelatedSignal signal = new CorrelatedSignal(blindMode, this);
 		
-		try { blindMode.updateAllSignals(this, false); }
-		catch(IllegalAccessException e) { 
+		try { blindMode.updateSignals(this, false); }
+		catch(Exception e) { 
 			e.printStackTrace(); 
 			return;
 		}

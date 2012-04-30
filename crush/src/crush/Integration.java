@@ -736,11 +736,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 
 	public boolean decorrelate(final String modalityName, final boolean isRobust) {
+		
 		Modality<?> modality = instrument.modalities.get(modalityName);
 		modality.solveGains = hasOption("gains");
 		modality.phaseGains = hasOption("phasegains");
 		modality.setOptions(option("correlated." + modality.name));
-			
+		
 		if(modality.trigger != null) if(!hasOption(modality.trigger)) return false;
 		
 		String left = isRobust ? "[" : "";
@@ -749,11 +750,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		comments += left + modality.id + right;
 		int frameResolution = power2FramesFor(modality.resolution);
 		if(frameResolution > 1) comments += "(" + frameResolution + ")";	
-		
-		
+			
 		if(modality instanceof CorrelatedModality) {
 			CorrelatedModality correlated = (CorrelatedModality) modality;
-			if(correlated.solveSignal) correlated.updateAllSignals(this, isRobust);
+			if(correlated.solveSignal) correlated.updateSignals(this, isRobust);
 		}	
 		
 		// Continue to solve gains only if gains are derived per integration
@@ -1466,14 +1466,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	}
 	
-	public void addCorrelated(final CorrelatedSignal signal) throws IllegalAccessException {	
+	public void addCorrelated(final CorrelatedSignal signal) throws Exception {	
 		final Mode mode = signal.getMode();
 		final float[] gain = mode.getGains();
-		final int nc = mode.channels.size();
+		final int nc = mode.size();
 		
 		for(final Frame exposure : this) {
 			final float C = signal.valueAt(exposure);
-			for(int k=nc; --k >= 0; ) exposure.data[mode.channels.get(k).index] += gain[k] * C;
+			for(int k=nc; --k >= 0; ) exposure.data[mode.getChannel(k).index] += gain[k] * C;
 		}
 	}
 	

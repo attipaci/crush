@@ -39,7 +39,7 @@ public class PhaseSignal {
 		value = new double[phases.size()];
 		weight = new double[phases.size()];
 		
-		syncGains = new float[mode.channels.size()];
+		syncGains = new float[mode.size()];
 		
 		phases.signals.put(mode, this);
 	}
@@ -62,14 +62,14 @@ public class PhaseSignal {
 	}
 	
 	
-	protected synchronized void update(boolean isRobust) throws IllegalAccessException {
+	protected synchronized void update(boolean isRobust) throws Exception {
 		final float[] G = mode.getGains();
 		final float[] dG = syncGains;
 	
 		// Make syncGains carry the gain increment since last sync...
 		for(int k=G.length; --k >= 0; ) dG[k] = G[k] - dG[k];
 			
-		final ChannelGroup<?> channels = mode.channels;
+		final ChannelGroup<?> channels = mode.getChannels();
 		final WeightedPoint dC = new WeightedPoint(); 
 		
 		// Always use maximum-likelihood gains...
@@ -102,7 +102,7 @@ public class PhaseSignal {
 	}
 	
 	public synchronized WeightedPoint[] getGainIncrement() {
-		final ChannelGroup<?> channels = mode.channels;
+		final ChannelGroup<?> channels = mode.getChannels();
 		final WeightedPoint[] dG = new WeightedPoint[channels.size()];
 		
 		for(int k=channels.size(); --k >= 0; ) dG[k] = getGainIncrement(channels.get(k));
@@ -131,8 +131,8 @@ public class PhaseSignal {
 		System.arraycopy(G, 0, syncGains, 0, G.length);
 	}
 	
-	protected void syncGains() throws IllegalAccessException {
-		final ChannelGroup<?> channels = mode.channels;
+	protected void syncGains() throws Exception {
+		final ChannelGroup<?> channels = mode.getChannels();
 		final float[] G = mode.getGains();		
 		final float[] dG = syncGains;
 		

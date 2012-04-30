@@ -355,12 +355,12 @@ implements TableFormatter.Entries {
 	}
 	
 	public void addGroups() {
-		addGroup("all", getChannels());
-		addGroup("connected", getChannels().discard(Channel.FLAG_DEAD));
-		addGroup("detectors", getChannels().discard(nonDetectorFlags));
-		addGroup("obs-channels", getChannels().discard(nonDetectorFlags | Channel.FLAG_BLIND));
-		addGroup("sensitive", getChannels().discard(nonDetectorFlags | Channel.FLAG_BLIND | Channel.FLAG_SENSITIVITY));
-		addGroup("blinds", getChannels().discard(nonDetectorFlags).discard(Channel.FLAG_BLIND, ChannelGroup.KEEP_ANY_FLAG));
+		addGroup("all", copyGroup());
+		addGroup("connected", copyGroup().discard(Channel.FLAG_DEAD));
+		addGroup("detectors", copyGroup().discard(nonDetectorFlags));
+		addGroup("obs-channels", copyGroup().discard(nonDetectorFlags | Channel.FLAG_BLIND));
+		addGroup("sensitive", copyGroup().discard(nonDetectorFlags | Channel.FLAG_BLIND | Channel.FLAG_SENSITIVITY));
+		addGroup("blinds", copyGroup().discard(nonDetectorFlags).discard(Channel.FLAG_BLIND, ChannelGroup.KEEP_ANY_FLAG));
 		
 		if(options.containsKey("group")) {
 			Hashtable<Integer, ChannelType> lookup = getChannelLookup();
@@ -688,7 +688,7 @@ implements TableFormatter.Entries {
 		Hashtable<Integer, ChannelType> lookup = getChannelLookup();
 		for(String name : groups.keySet()) slimGroup(groups.get(name), lookup);
 		for(String name : divisions.keySet()) for(ChannelGroup<?> group : divisions.get(name)) slimGroup(group, lookup);  
-		for(String name : modalities.keySet()) for(Mode mode : modalities.get(name)) slimGroup(mode.channels, lookup); 	
+		for(String name : modalities.keySet()) for(Mode mode : modalities.get(name)) slimGroup(mode.getChannels(), lookup); 	
 	}
 	
 	public void slimGroup(ChannelGroup<?> group, Hashtable<Integer, ChannelType> lookup) {

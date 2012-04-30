@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2012 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,42 +20,23 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush;
 
-import java.lang.reflect.Field;
+package crush.gismo;
 
-import util.data.WeightedPoint;
+import crush.Channel;
+import crush.GainProvider;
+import crush.Mode;
 
-public abstract class Response extends Mode {
+public class TraceFlip implements GainProvider {
 
-	public Response() {
-		super();
-		// TODO Auto-generated constructor stub
+	public double getGain(Channel c) throws Exception {
+		return ((GismoPixel) c).flipGain;
 	}
 
-	public Response(ChannelGroup<?> group, Field gainField) {
-		super(group, gainField);
-		// TODO Auto-generated constructor stub
+	public void setGain(Channel c, double value) throws Exception {
+		throw new UnsupportedOperationException("Cannot set wire trace flip gains.");
 	}
 
-	public Response(ChannelGroup<?> group) {
-		super(group);
-		// TODO Auto-generated constructor stub
-	}
+	public void validate(Mode mode) {}
 
-	public abstract Signal getSignal(Integration<?, ?> integration);
-	
-	@Override
-	public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
-		Signal signal = integration.signals.get(this);
-		
-		if(signal == null) {
-			signal = getSignal(integration);
-			if(signal.isFloating) signal.level(isRobust);
-			integration.signals.put(this, signal);	
-		}
-		
-		return super.deriveGains(integration, isRobust);
-	}	
-	
 }

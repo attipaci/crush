@@ -1,32 +1,56 @@
->> write.png.spline
->> update 'gismo' deep with fewer iterations?
->> 'focus' force focus even if source is too large/small.
->> focus.xcoeff, focus.ycoeff, focus.zcoeff
->> focus.xpointing, focus.ypointing
->> focus.fluxcoeff?
->> time weighting / filter interaction.
->> 'dejump' and subkeys.
->> 'drifts = max'
->> Why does alias.run6a mjd.[...]; run6a ...; not work???
->> changed how source models access instrument settings and coadd...
-   check that it works for all instruments and data types!!!
->> updated crush man page. Check!
->> crop option?
->> why addDirect does not scale by relative conversion factor...
+>> re-enabled mux.gains...
+>> deep --> back to median first, stability = faint.
+>> Link MUX gains to flips, pattern?
 
+
+	
+
+
+2.12-a2 (rc1)
+
+
+	Overview
+	=====================================================================
+	This release brings CRUSH up-to-date with GISMO's 2012 April run,
+	with new features, improvements and a current configuration for the
+	finalized state of the instrument. There are also fixes and 
+	improvements for the function of other instruments, and to CRUSH in
+	general. This is still a test (alpha) release. As such, some bugs may
+	exist, and this and that can change. Please report any issues and bugs
+	that you may encounter. Thanks -- A.	
+	=====================================================================
+
+	[NEW] {since a1} Gain changes are immediately applied to all signals
+	that rely on the same set of gains. This adds a refinement on the
+	removal of gradients (all arrays), the LABOCA twisting mode or the
+	GISMO wiring-trace 'flip' mode. 
 
 	[NEW] Pointing reductions now measure the source shape in a more
 	sophisticated way, providing a measure of the x and y asymmetry of the
 	source (and lobes!). This, in principle allows focusing on a single
 	image of a point source, provided that it is characterized how the
 	source shape changes with focus settings. The conversion of shape 
-	parameters (asymmetry and elongation) into focus changes is contorlled
+	parameters (asymmetry and elongation) into focus changes is controlled
 	by the new configuration keys 'focus.xcoeff', 'focus.ycoeff' and 
 	'focus.zcoeff'. The definition of these is still in progress.
 
 	[NEW] Pipeline elements can be activated/deactivated scan-by-scan, and
 	conditionally induced by date, MJD or serial number. As before, global
 	options should precede the listing of scans.
+
+	[NEW] {GISMO} Two new pipeline features have been added, to help deal 
+	with the observed jumps in detector levels (probably due to E-M pickup
+	on the SQUID muxes). The first of these is the addition of a 'flips'
+	modalility, that can be decorrelated. These model signals on muxes with
+	alternating gains on pairs of pixels. The model is preliminary and 
+	awaits confirmation from Dominic Benford who designed the wiring traces
+	that give rise to these current flips. The second new feature is
+	'dejump', which looks for sudden transient changes in the readout 
+	levels (somewhat similarly to how 'despike' works). The critical level
+	can be set by the 'level' subkey, as a relative noise threshold (>1.0)
+	while the length of jumps that are shorter than the 'minlength' setting
+	(in seconds) will be flagged, whereas longer jumps will be re-levelled
+	and kept.
 
 	[NEW] {GISMO} Bias-dependent settings are now allowed via conditionals
 	under the 'bias' key. E.g. to define different conversion values
@@ -38,6 +62,10 @@
 	[NEW] New logging entries for source elongation and angle, as well as
 	projected elongation in the telescope x direction. See README for
 	details.
+
+	[NEW] 'drifts' can now take the value 'max', which fits just a single
+	offset value for the timestream of a detector channel. As such the
+	setting is identical in functionality to 'offsets'.
 
 	[CHANGE] Naming of focus quantities for logging has been changed. See
 	the logging section of the README for details.
@@ -89,9 +117,29 @@
 	[FIX] PolarVector2D power op was wrongly defined. However, since this
 	feature was never used in CRUSH, there was no damage done by it.
 
+	[TWEAK] {since-a1} Decorrelation of sky gradients now properly includes
+	the measured common-mode gains. (Essentially a Spinoff of the common
+	mode).
+
+	[TWEAK] {since-a1} 'flips' gains linked to 'mux' gains and are applied
+	on top of those, without intependent fitting.
+
 	[TWEAK] Time-weighting renormalization adjusted.
 
 	[TWEAK] Uncertainty calculation of elongation measure improved.
+
+	[CONFIG] {since-a1} Reenabled MUX gain modelling. It is necessary to
+	reach white-noise limit.
+
+	[CONFIG] Finalized pointing model, and pointing log (for incremental
+	corrections) for the 2012 April run. The model is good to ~3" rms
+	in both directions for the entire run, while the incremental
+	corrections should further reduce the pointing uncertainty to ~1--2"
+	rms.
+
+	[CONFIG] {GISMO} Enabled decorrelation on 'flips' (flipped current
+	readout on the SQUIDs), and as a result disabled MUX gains modeling
+	for stability.
 
 	[CONFIG] {GISMO} Updated 'deep' configuration to run for fewer (12) 
 	iterations. Nevertheless, the best deep maps are usually obtained with
@@ -109,7 +157,27 @@
 	[CONFIG] {GISMO} Added pointing model for the main part of the April
 	2012 run.
 
-	[CODE] Data2D and children now use Comppound units and dynamically 
+	[CONFIG] {GISMO} Finalized RCP and pixel data for April 2012 run.
+
+	[CONFIG] {GISMO} Finalized conversion factors (for bias settings 
+	8000, 10000, and 12000) based on Mars and Neptune. Good to ~1% or
+	better.
+
+	[CONFIG] {GISMO} Finalized pointing models for the 2012 April run. The
+	model gives a blind pointing to 3" rms accuracy in both directions for
+	the entire duration of the run. On top of that incremental pointing 
+	corrections are applied based on nearby pointing sources, s.t. the 
+	final pointing accuracy of CRUSH for the 2012 April run ought to be 
+	around 1--2" rms or better.
+
+	[CODE] {since-a1} Modes that share gains with other correlated modes
+	are now Spinoff modes of the parent gain provider mode. Also, new code
+	allows for more flexibility in specifying mode gains.
+	
+	[CODE] Units completely revamped, with smarter parsing & compounding.
+	Better integration with Data2D and derived classes.
+
+	[CODE] Data2D and children now use Compound units and dynamically 
 	evaluated 'jansky', 'beam', and 'pixel' units. This makes life a whole
 	lot easier when doing operations like smoothing/regridding...
 

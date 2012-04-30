@@ -100,31 +100,28 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		
 		try { addDivision(getDivision("pins", GismoPixel.class.getField("pin"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
-		
-		try { addDivision(getDivision("rows", GismoPixel.class.getField("row"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }	
-		
-		try { addDivision(getDivision("cols", GismoPixel.class.getField("col"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }	
 	}
 	
 	@Override
 	public void addModalities() {
 		super.addModalities();
 		
-		try { addModality(new CorrelatedModality("mux", "m", divisions.get("mux"), GismoPixel.class.getField("muxGain"))); }
+		try { 
+			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), GismoPixel.class.getField("muxGain"));
+			muxMode.setGainFlag(GismoPixel.FLAG_MUX);
+			addModality(muxMode);		
+			addModality(muxMode.new Spinoff("flips", "f", new TraceFlip()));
+		}
+		catch(NoSuchFieldException e) { e.printStackTrace(); }	
+			
+		try { 
+			Modality<?> pinMode = new CorrelatedModality("pins", "p", divisions.get("pins"), GismoPixel.class.getField("pinGain")); 
+			pinMode.setGainFlag(GismoPixel.FLAG_PIN);
+			addModality(pinMode);
+		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
-		
-		try { addModality(new CorrelatedModality("pins", "p", divisions.get("pins"), GismoPixel.class.getField("pinGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
-		
-		addModality(new CorrelatedModality("rows", "r", divisions.get("rows")));
-		addModality(new CorrelatedModality("cols", "c", divisions.get("cols")));
-		
-		modalities.get("mux").setGainFlag(GismoPixel.FLAG_MUX);
-		modalities.get("rows").setGainFlag(GismoPixel.FLAG_ROW);
-		modalities.get("cols").setGainFlag(GismoPixel.FLAG_COL);
-		modalities.get("pins").setGainFlag(GismoPixel.FLAG_PIN);
+			
+	
 	}
 	
 	@Override
@@ -180,7 +177,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		Hashtable<Integer, GismoPixel> lookup = getChannelLookup();
 		
 		int pinGroup = hasOption("correlated.pins.group") ? option("correlated.pins.group").getInt() : 1;
-	
+		
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
@@ -366,6 +363,12 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 				"     -date=        YYYY-MM-DD when the data was collected.\n";
 	}
 	
+	@Override
+	public String getPixelDataHeader() {
+		return super.getPixelDataHeader() + "\tGmux";
+	}
+	
+
 	// Array is 16x8 (rows x cols);
 	private static Vector2D defaultPointingCenter = new Vector2D(8.5, 4.5); // row, col
 }

@@ -33,8 +33,8 @@ import util.data.WeightedPoint;
 
 public class Mode {
 	public String name;
-	public ChannelGroup<?> channels;
-	public Field gainField;
+	private ChannelGroup<?> channels;
+	public GainProvider gainProvider;
 
 	public boolean fixedGains = false;
 	public boolean phaseGains = false;
@@ -53,7 +53,6 @@ public class Mode {
 	// Calculating an offset average (under compression) can mitigate the
 	// biasing effect of many nearly blind detectors... 
 	public double gainAveragingOffset = 0.0;
-	
 		
 	public Mode() {
 		name = "mode-" + (++counter);
@@ -65,27 +64,37 @@ public class Mode {
 		setChannels(group);
 	}
 	
-	public Mode(ChannelGroup<?> group, Field gainField) { 
-		this();
-		setGainField(gainField);
-		setChannels(group);
+	public Mode(ChannelGroup<?> group, GainProvider gainProvider) { 
+		this(group);
+		setGainProvider(gainProvider);
 	}
+	
+	public Mode(ChannelGroup<?> group, Field gainField) { 
+		this(group, new FieldGainProvider(gainField));
+	}
+	
+	
+	public void setGainProvider(GainProvider source) {
+		this.gainProvider = source;
+	}	
 	
 	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}
 
-	public String getName() { return name; }
+	public String getName() { return name; }	
 	
-	public void setGainField(Field f) {
-		gainField = f;
-	}	
+	public ChannelGroup<?> getChannels() { return channels; }
 	
 	public void setChannels(ChannelGroup<?> group) {
 		channels = group;
 		name = group.getName();
 	}
+	
+	public Channel getChannel(int k) { return channels.get(k); }
+	
+	public int size() { return channels.size(); }
 	
 	public int[] getChannelIndex() {
 		final int[] index = new int[channels.size()];
@@ -93,8 +102,12 @@ public class Mode {
 		return index;
 	}
 	
-	public synchronized float[] getGains() throws IllegalAccessException {
-		if(gainField == null) {
+	public float[] getGains() throws Exception {
+		return getGains(true);
+	}
+		
+	public synchronized float[] getGains(boolean validate) throws Exception {
+		if(gainProvider == null) {
 			if(gain == null) {
 				gain = new float[channels.size()];
 				Arrays.fill(gain, 1.0F);
@@ -102,31 +115,28 @@ public class Mode {
 			return gain;
 		}
 		else {
+			if(validate) gainProvider.validate(this);
 			if(gain == null) gain = new float[channels.size()];
 			if(gain.length != channels.size()) gain = new float[channels.size()];
-			for(int c=channels.size(); --c >= 0; ) gain[c] = (float) gainField.getDouble(channels.get(c));
+			for(int c=channels.size(); --c >= 0; ) gain[c] = (float) gainProvider.getGain(channels.get(c));
 			return gain;
 		}
 	}
 	
 	// Return true if flagging...
-	public synchronized boolean setGains(float[] gain) throws IllegalAccessException {
-		if(gainField == null) this.gain = gain;
-		else {
-			Class<?> fieldClass = gainField.getClass();
-			if(fieldClass.equals(float.class)) for(int c=channels.size(); --c >=0; ) gainField.setFloat(channels.get(c), gain[c]);
-			else for(int c=channels.size(); --c>=0; ) gainField.setDouble(channels.get(c), gain[c]);
-		}
+	public synchronized boolean setGains(float[] gain) throws Exception {
+		if(gainProvider == null) this.gain = gain;
+		else for(int c=channels.size(); --c>=0; ) gainProvider.setGain(channels.get(c), gain[c]);
 		return flagGains();
 	}
 		
-	public void uniformGains() throws IllegalAccessException {
+	public void uniformGains() throws Exception {
 		float[] G = new float[channels.size()];
 		Arrays.fill(G, 1.0F);
 		setGains(G);
 	}
 	
-	protected synchronized boolean flagGains() throws IllegalAccessException {
+	protected synchronized boolean flagGains() throws Exception {
 		if(gainFlag == 0) return false;
 			
 		final float[] gain = getGains();
@@ -144,7 +154,7 @@ public class Mode {
 		return true;
 	}
 	
-	public double getAverageGain(int gainFlag) throws IllegalAccessException {
+	public double getAverageGain(int gainFlag) throws Exception {
 		float[] G = getGains();
 		
 		double[] value = new double[channels.size()];
@@ -159,7 +169,7 @@ public class Mode {
 		return Math.pow(aveG, 1.0/dynamicalCompression) - gainAveragingOffset;	
 	}
 	
-	public WeightedPoint[] getGains(Integration<?, ?> integration, boolean isRobust) throws IllegalAccessException {
+	public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
 		if(fixedGains) throw new IllegalStateException("WARNING! Cannot solve gains for fixed gain modes.");
 		
 		float[] G0 = getGains();
@@ -174,7 +184,7 @@ public class Mode {
 		return G;		
 	}
 	
-	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws IllegalAccessException {			
+	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws Exception {			
 		integration.signals.get(this).syncGains(sumwC2, isTempReady);
 		
 		// Solve for the correlated phases also, if required
@@ -186,7 +196,7 @@ public class Mode {
 		return integration.power2FramesFor(resolution/Math.sqrt(2.0));
 	}
 	
-	public int getSize(Integration<?, ?> integration) {
+	public int signalLength(Integration<?, ?> integration) {
 		return (int)Math.ceil((double) integration.size() / getFrameResolution(integration));
 	}
 	

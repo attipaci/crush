@@ -47,19 +47,19 @@ public class FieldGradientMode extends CorrelatedMode {
 	}
 	
 	@Override
-	public float[] getGains() throws IllegalAccessException {
+	public float[] getGains() throws Exception {
 		float[] gains = super.getGains();
 		
 		double sumwg = 0.0, sumw = 0.0;
-		for(Channel channel : channels) if(channel.flag == 0) {
+		for(Channel channel : getChannels()) if(channel.flag == 0) {
 			sumwg += channel.weight * field.getDouble(channel);
 			sumw += channel.weight;	
 		}
 		
 		float aveg = sumw > 0.0 ? (float)(sumwg / sumw) : 0.0F;
 
-		for(int c=channels.size(); --c >= 0; ) {
-			Channel channel = channels.get(c);
+		for(int c=size(); --c >= 0; ) {
+			Channel channel = getChannel(c);
 			gains[c] = field.getFloat(channel) - aveg;
 		}
 

@@ -24,6 +24,8 @@
 
 package crush.gismo;
 
+import java.util.StringTokenizer;
+
 import crush.Channel;
 import crush.array.SimplePixel;
 import util.*;
@@ -31,7 +33,7 @@ import util.*;
 public class GismoPixel extends SimplePixel {
 	public int row, col, mux, pin;
 	public Vector2D size = defaultSize;
-	public double muxGain = 1.0, pinGain = 1.0;
+	public double muxGain = 1.0, pinGain = 1.0, flipGain = 1.0;
 	
 	// 16 x 8 (rows x cols)
 	
@@ -39,6 +41,11 @@ public class GismoPixel extends SimplePixel {
 		super(array, zeroIndex+1);
 		row = zeroIndex / 8;
 		col = zeroIndex % 8;
+		// mux & pin filled when reading 'wiring.dat'
+		
+		int j = (zeroIndex & 0x2) >> 1;
+		flipGain = j == 0 ? 1.0 : -1.0;
+		
 		calcPosition();
 		// TODO This is just a workaround...
 		variance = 1.0;
@@ -72,12 +79,24 @@ public class GismoPixel extends SimplePixel {
 		pinGain = 1.0;
 	}
 	
+	@Override
+	public String toString() {
+		return super.toString() + "\t" + Util.f3.format(muxGain);
+	}
+	
+	@Override
+	public void parseValues(StringTokenizer tokens) {	
+		super.parseValues(tokens);
+		if(tokens.hasMoreTokens()) muxGain = Double.parseDouble(tokens.nextToken());
+	}
+	
+	
 	public static Vector2D defaultSize = new Vector2D(13.9 * Unit.arcsec, 10.56 * Unit.arcsec);
 	
 	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
+	public final static int FLAG_FLIP = 1 << nextSoftwareFlag++;
 	public final static int FLAG_PIN = 1 << nextSoftwareFlag++;
-	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
-	public final static int FLAG_COL = 1 << nextSoftwareFlag++;
+
 	
 	
 }

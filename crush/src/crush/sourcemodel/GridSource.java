@@ -198,15 +198,9 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 
 	
 	@Override
-	public Unit getBasicUnit(String value) {
-		if(value.equals("jansky") || value.equals("Jy")) 
-			return jansky;
-		else return super.getBasicUnit(value);
-	}
-
-
-	public void setUnit(String name) {
-		setUnit(getCompoundUnit(name));
+	public void addBaseUnits() {
+		super.addBaseUnits();
+		addBaseUnit(jansky, "Jy, jansky");
 	}
 
 	

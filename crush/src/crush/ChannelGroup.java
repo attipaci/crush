@@ -62,7 +62,7 @@ public class ChannelGroup<ChannelType extends Channel> extends ArrayList<Channel
 	
 	public void setName(String value) { name = value; }
 
-	public ChannelGroup<ChannelType> getChannels() {
+	public ChannelGroup<ChannelType> copyGroup() {
 		// All good channels
 		ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>(name, size());
 		channels.addAll(this);
