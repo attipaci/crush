@@ -45,10 +45,10 @@ public class PolarMap extends SourceModel {
 		super(instrument);	
 	}
 	
-	public Array<?,?> getArray() { return (Array<?,?>) instrument; }
+	public Array<?,?> getArray() { return (Array<?,?>) getInstrument(); }
 
 	public ScalarMap getMapInstance() {
-		return new ScalarMap(instrument);
+		return new ScalarMap(getInstrument());
 	}
 	
 	public boolean usePolarization() {

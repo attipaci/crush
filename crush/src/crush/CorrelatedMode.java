@@ -37,7 +37,7 @@ public class CorrelatedMode extends Mode {
 	public boolean solvePhases = false;
 	public int skipChannels = ~0;
 
-	Vector<Spinoff> spinoffs;
+	Vector<CoupledMode> coupledModes;
 	
 	public CorrelatedMode() {}
 	
@@ -49,15 +49,15 @@ public class CorrelatedMode extends Mode {
 		super(group, gainField);
 	}
 	
-	private void addSpinoff(Spinoff m) {
-		if(spinoffs == null) spinoffs = new Vector<Spinoff>();
-		spinoffs.add(m);		
+	private void addCoupledMode(CoupledMode m) {
+		if(coupledModes == null) coupledModes = new Vector<CoupledMode>();
+		coupledModes.add(m);		
 	}
 	
 	@Override
 	public void setChannels(ChannelGroup<?> group) {
 		super.setChannels(group);
-		if(spinoffs != null) for(Spinoff mode : spinoffs) mode.setChannels(group);
+		if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.setChannels(group);
 	}
 	
 	// TODO How to solve the indexing of valid channels...
@@ -112,32 +112,38 @@ public class CorrelatedMode extends Mode {
 		super.syncAllGains(integration, sumwC2, isTempReady);
 		
 		// Sync the gains to all the dependent modes too... 
-		if(spinoffs != null) for(Spinoff mode : spinoffs) {
-			Signal signal = integration.signals.get(mode);
-			if(signal != null) signal.resyncGains();
-		}
+		if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.resyncGains(integration);
+	}
+	
+	// Recursively resync all dependent modes...
+	protected void resyncGains(Integration<?,?> integration) throws Exception {
+		Signal signal = integration.signals.get(this);
+		if(signal != null) signal.resyncGains();
+		
+		// Sync the gains to all the dependent modes too... 
+		if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.resyncGains(integration);
 	}
 
 
-	public class Spinoff extends CorrelatedMode {
+	public class CoupledMode extends CorrelatedMode {
 		
-		public Spinoff() {
+		public CoupledMode() {
 			super(CorrelatedMode.this.getChannels());
 			fixedGains = true;
-			addSpinoff(this);
+			CorrelatedMode.this.addCoupledMode(this);
 		}
 		
-		public Spinoff(float[] gains) throws Exception {
+		public CoupledMode(float[] gains) throws Exception {
 			this();
 			super.setGains(gains);
 		}
 		
-		public Spinoff(Field gainField) {
+		public CoupledMode(Field gainField) {
 			this();
 			setGainProvider(new FieldGainProvider(gainField));
 		}
 		
-		public Spinoff(GainProvider gains) { 
+		public CoupledMode(GainProvider gains) { 
 			this();
 			setGainProvider(gains);
 		}

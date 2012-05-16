@@ -110,11 +110,11 @@ public class ScalarMap extends SourceMap {
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		map = new AstroMap();
 		
-		setInstrument(instrument);
+		setInstrument(getInstrument());
 		
 		super.createFrom(collection);
 				
-		double gridSize = instrument.resolution / 5.0;
+		double gridSize = getInstrument().resolution / 5.0;
 		if(hasOption("grid")) gridSize = option("grid").getDouble() * Unit.arcsec;
 	
 		Scan<?,?> firstScan = scans.get(0);
@@ -136,7 +136,7 @@ public class ScalarMap extends SourceMap {
 		if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
 		else if(firstScan.isPlanetary) {
 			System.err.println(" Forcing equatorial for moving object.");
-			instrument.options.process("system", "equatorial");
+			getOptions().process("system", "equatorial");
 			projection.setReference(firstScan.equatorial);
 		}
 		else if(system.equals("ecliptic")) {
@@ -380,7 +380,7 @@ public class ScalarMap extends SourceMap {
 		if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
 		
 		double filterScale = directive.equals("auto") ? 
-				5.0 * getSourceSize() : Double.parseDouble(directive) * instrument.getSizeUnit();
+				5.0 * getSourceSize() : Double.parseDouble(directive) * getInstrument().getSizeUnit();
 			
 		double filterBlanking = filter.isConfigured("blank") ? filter.get("blank").getDouble() : Double.NaN;
 
@@ -433,7 +433,7 @@ public class ScalarMap extends SourceMap {
 		
 		if(hasOption("source.redundancy"))  {
 			if(hasOption("source.redundancy")) System.err.print("(check) ");
-			double minIntTime = instrument.integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
+			double minIntTime = getInstrument().integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
 			if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
 		}
 
@@ -746,7 +746,7 @@ public class ScalarMap extends SourceMap {
 			thumbnail.autoCrop();
 			
 			// Smooth thumbnail by half a beam for nicer appearance
-			thumbnail.smoothTo(0.5 * instrument.resolution);
+			thumbnail.smoothTo(0.5 * getInstrument().resolution);
 			
 			GridImage<?> plane = thumbnail;
 			

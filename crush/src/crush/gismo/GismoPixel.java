@@ -43,10 +43,11 @@ public class GismoPixel extends SimplePixel {
 		col = zeroIndex % 8;
 		// mux & pin filled when reading 'wiring.dat'
 		
-		int j = (zeroIndex & 0x2) >> 1;
-		flipGain = j == 0 ? 1.0 : -1.0;
+		int group = (zeroIndex >> 1) & 1;
+		flipGain = group == 0 ? 1.0 : -1.0;
 		
 		calcPosition();
+		
 		// TODO This is just a workaround...
 		variance = 1.0;
 	}

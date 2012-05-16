@@ -101,7 +101,7 @@ public class Laboca extends APEXArray<LabocaPixel> {
 		try {
 			CorrelatedModality cables = new CorrelatedModality("cables", "c", divisions.get("cables"), LabocaPixel.class.getField("cableGain"));
 			addModality(cables);
-			addModality(cables.new Spinoff("twisting", "t", new CableTwist()));
+			addModality(cables.new CoupledModality("twisting", "t", new CableTwist()));
 		}			
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		

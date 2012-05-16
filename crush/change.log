@@ -1,12 +1,5 @@
->> re-enabled mux.gains...
->> deep --> back to median first, stability = faint.
->> Link MUX gains to flips, pattern?
 
-
-	
-
-
-2.12-a2 (rc1)
+2.12-b1 (2012 May 15)
 
 
 	Overview
@@ -15,10 +8,24 @@
 	with new features, improvements and a current configuration for the
 	finalized state of the instrument. There are also fixes and 
 	improvements for the function of other instruments, and to CRUSH in
-	general. This is still a test (alpha) release. As such, some bugs may
+	general. This is still a test (beta) release. As such, some bugs may
 	exist, and this and that can change. Please report any issues and bugs
 	that you may encounter. Thanks -- A.	
 	=====================================================================
+
+	[NEW] {since-a1} Added some new color schemes to 'show' (hint: you can 
+	cycle through the colors by pressing 'k' or 'K' (for reverse cycle) in 
+	the 'show' display', while pressing 'h' brings up a help screen with 
+	all the functions!).
+
+	[NEW] {since-a1} {GISMO} Ability to set options based on IRAM scan IDs.
+	These work just like the 'serial' options, but use the IRAM specific
+	format of scan IDs that include the date ('YYYY-MM-DD.nnn'). E.g.
+	
+	   id.[2012-04-11.132:2012-04-13.26] jansky 18.6
+
+	sets the conversion factor (counts/Jy) to 18.6 starting scan #136 on
+	2012-04-11 until (but not including!) scan #26 on 2012-04-13.
 
 	[NEW] {since a1} Gain changes are immediately applied to all signals
 	that rely on the same set of gains. This adds a refinement on the
@@ -66,6 +73,10 @@
 	[NEW] 'drifts' can now take the value 'max', which fits just a single
 	offset value for the timestream of a detector channel. As such the
 	setting is identical in functionality to 'offsets'.
+
+	[CHANGE] {since a1} Changes to keystrokes in 'show': 'K' now works with
+	'k' to toggle colorschemes back and forth, while convolving to beam is 
+        performed by 'Q' (paired with devoncolution 'q').
 
 	[CHANGE] Naming of focus quantities for logging has been changed. See
 	the logging section of the README for details.
@@ -117,16 +128,29 @@
 	[FIX] PolarVector2D power op was wrongly defined. However, since this
 	feature was never used in CRUSH, there was no damage done by it.
 
+	[TWEAK] {since-a1} {GISMO} Refined the way de-jumping counts its
+	parameters dependecies (used for obtaining proper noise weights).
+
+	[TWEAK] {since-a1} De-jumping produced unintended time-weighting 
+	residues. Now, at the end of the de-jumping algorithm, the previous 
+	time weights are reinstated, except in the re-levelled regions, where
+	uniform weights are presumed (until more correct weights are assigned).
+
 	[TWEAK] {since-a1} Decorrelation of sky gradients now properly includes
 	the measured common-mode gains. (Essentially a Spinoff of the common
 	mode).
 
 	[TWEAK] {since-a1} 'flips' gains linked to 'mux' gains and are applied
-	on top of those, without intependent fitting.
+	on top of those, without independent fitting.
 
 	[TWEAK] Time-weighting renormalization adjusted.
 
 	[TWEAK] Uncertainty calculation of elongation measure improved.
+
+	[CONFIG] {since-a1} {GISMO} Recalibrated pre-2012 configs for 17.5" 
+	FWHM beam (previous 16.7" was assumed but was quite certainly too 
+	low!). The new calibration is simply a rescaled version of the old 
+	calibration for the different beam size.
 
 	[CONFIG] {since-a1} Reenabled MUX gain modelling. It is necessary to
 	reach white-noise limit.
@@ -136,10 +160,6 @@
 	in both directions for the entire run, while the incremental
 	corrections should further reduce the pointing uncertainty to ~1--2"
 	rms.
-
-	[CONFIG] {GISMO} Enabled decorrelation on 'flips' (flipped current
-	readout on the SQUIDs), and as a result disabled MUX gains modeling
-	for stability.
 
 	[CONFIG] {GISMO} Updated 'deep' configuration to run for fewer (12) 
 	iterations. Nevertheless, the best deep maps are usually obtained with
@@ -170,6 +190,11 @@
 	final pointing accuracy of CRUSH for the 2012 April run ought to be 
 	around 1--2" rms or better.
 
+	[CODE] {since-a1} Cleaned up access to associated instrument properties
+	in source model.
+
+	[CODE] {since-a1} Added equals() for Mode to go with its hashCode().
+	
 	[CODE] {since-a1} Modes that share gains with other correlated modes
 	are now Spinoff modes of the parent gain provider mode. Also, new code
 	allows for more flexibility in specifying mode gains.

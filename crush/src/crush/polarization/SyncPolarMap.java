@@ -37,6 +37,6 @@ public class SyncPolarMap extends PolarMap {
 
 	@Override
 	public ScalarMap getMapInstance() {
-		return new SyncModMap(instrument);
+		return new SyncModMap(getInstrument());
 	}
 }

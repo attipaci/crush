@@ -49,7 +49,6 @@ public class ChannelGroup<ChannelType extends Channel> extends ArrayList<Channel
 		addAll(channelList);
 	}
 	
-	
 	@SuppressWarnings("unchecked")
 	public ChannelGroup<ChannelType> copy() {
 		ChannelGroup<ChannelType> copy = (ChannelGroup<ChannelType>) clone();

@@ -39,7 +39,6 @@ public class PlotPane extends TransparentPanel {
 
 	public PlotPane(Plot<?> plot) { 
 		setPlot(plot);
-		setLayout(new OverlayLayout(this));
 	}
 	
 	public void setPlot(Plot<?> plot) { this.plot = plot; }

@@ -30,7 +30,7 @@ import java.util.*;
 
 
 public abstract class SourceModel extends Parallel implements Cloneable {
-	public Instrument<?> instrument;
+	private Instrument<?> instrument;
 	private Configurator options; 
 	
 	public Vector<Scan<?,?>> scans;
@@ -48,7 +48,7 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 		this.instrument = instrument;
 	}
 	
-	//public Instrument<?> getInstrument() { return instrument; }
+	public Instrument<?> getInstrument() { return instrument; }
 	
 	public void setOptions(Configurator options) {
 		this.options = options;
@@ -89,8 +89,6 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 				integration.gain *= integration.instrument.janskyPerBeam() / janskyPerBeam;
 		}
 		
-		// Set the global units to those of the first scan...
-		//instrument.options.process("jansky", Double.toString(janskyPerBeam));
 	}
 
 	public void reset() {
