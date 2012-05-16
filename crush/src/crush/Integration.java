@@ -891,7 +891,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void getTimeWeights(final int blockSize) { getTimeWeights(blockSize, true, true); }
 	
 	public void getTimeWeights(final int blockSize, boolean report, boolean flag) {
-		if(report) comments += "tW(" + blockSize + ")";
+		if(report) {
+			comments += "tW";
+			if(blockSize > 1) comments += "(" + blockSize + ")";
+		}
 
 		final ChannelGroup<?> detectorChannels = instrument.getDetectorChannels();
 		
@@ -995,10 +998,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(hasOption("estimator")) if(option("estimator").equals("median")) robust=true;
 		
+		// Save the old time weights
+		for(Frame exposure : this) if(exposure != null) exposure.tempC = exposure.relativeWeight;
+		
 		getTimeWeights(resolution, false, false);
 			
 		comments += robust ? "[J]" : "J";
-		
+	
 		final Dependents parms = getDependents("jumps");
 		
 		WeightedPoint[] buffer = null;	// The timestream for robust estimates
@@ -1014,6 +1020,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Convert level from rms to weight....
 		level = 1.0 / (level * level);
 		
+		// Make sure that the level is significant at the 3-sigma level...
+		level = Math.min(1.0 - 9.0 / instrument.mappingChannels, level);
+		
 		final int nt = size();
 		
 		int from = 0;
@@ -1025,14 +1034,27 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			to = nextWeightTransit(from, level, 1);
 			
 			if(to - from > minFrames) {
+				
+				// Clear dependecies of any prior de-jumping. Will use new dependecies
+				// on the currently obtained level for the interval.
+				for(int t=from; t<to; t++) {
+					final Frame exposure = get(t);
+					if(exposure != null) parms.clear(exposure);
+				}
+				
 				if(robust) medianLevel(instrument, parms, from, to, 1, buffer, aveOffset);		
 				else meanLevel(instrument, parms, from, to, 1, aveOffset);
 				
 				for(Signal signal : signals.values()) signal.level(from, to); 
+					
+				// Mark weights temporarily as NaN -- then these will be reset to 1.0 later...
+				for(int t=from; t<to; t++) {
+					Frame exposure = get(t);
+					if(get(t) == null) continue;
+					exposure.relativeWeight = Float.NaN;
+				}
 				
 				parms.apply(instrument, from, to);
-				
-				for(int t=from; t<to; t++) if(get(t) != null) get(t).relativeWeight = 1.0F;
 				
 				levelled++;
 				
@@ -1043,6 +1065,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			
 		}
+		
+		// Reinstate the old time weights
+		for(Frame exposure : this) if(exposure != null) 
+			exposure.relativeWeight = Float.isNaN(exposure.relativeWeight) ? 1.0F : exposure.tempC;
+				
 			
 		comments += levelled + ":" + removed;
 	}

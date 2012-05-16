@@ -1115,6 +1115,26 @@
 			or for beam mapping.
 			@See: 'system', 'center', 'beammap', 'fazo', 'fzao'
 
+:: id.[<range>]		@Instrument: GISMO
+			@Advanced
+			@Since: 2.12-b1
+			Set conditions based on IRAM Scan ID ranges (of format
+			'YYYY-MM-DD.nnn'. Asterix ('*') denotes an open-ended
+			range as usual. The lower bound is inclusive, but the
+			upper bound is not. 
+
+			E.g.:
+
+			  id.[2012-04-11.132:2012-04-12.23] jansky 32.8
+			  id.[2012-04-14.25:*] janky 28.6 			
+					
+			Sets different conversion factors (counts/Jy) for the
+			two id ranges. Note, that the first range does not 
+			include scan 23 taken on 2012-04-12 itself. The second
+			line shown an open-ended range starting with scan 25
+			on 2012-04-14.
+			@See: 'mjd.[]', 'serial.[]', 'date.[]' 
+
 :: indexing		@Expert
 			Allows the use of data indexing to speed up coordinate
 			calculations for mapping. Without indexing the map

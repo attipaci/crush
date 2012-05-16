@@ -24,7 +24,7 @@
 package crush;
 
 public abstract class GradientGains implements GainProvider {
-	double center = 0.0;
+	private double center = 0.0;
 	
 	public final double getGain(Channel c) throws Exception {
 		return getRawGain(c) - center;
@@ -39,7 +39,7 @@ public abstract class GradientGains implements GainProvider {
 	public abstract void setRawGain(Channel c, double value) throws Exception;
 	
 	public void validate(Mode mode) throws Exception {
-		float[] gains = mode.getGains(false);
+		final float[] gains = mode.getGains(false);
 
 		double sum = 0.0, sumw = 0.0;
 		for(int k=gains.length; --k >= 0; ) {

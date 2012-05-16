@@ -48,9 +48,9 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		
 		CorrelatedMode common = (CorrelatedMode) modalities.get("obs-channels").get(0);
 			
-		CorrelatedMode.Spinoff gx = common.new Spinoff(new SkyGradient(true));
+		CorrelatedMode gx = common.new CoupledMode(new SkyGradient.X());
 		gx.name = "gradients:x";
-		CorrelatedMode.Spinoff gy = common.new Spinoff(new SkyGradient(false));
+		CorrelatedMode gy = common.new CoupledMode(new SkyGradient.Y());
 		gy.name = "gradients:y";
 		
 		CorrelatedModality gradients = new CorrelatedModality("gradients", "G");

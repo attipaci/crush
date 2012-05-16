@@ -87,30 +87,22 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 		}
 	}
 	
-	public class Spinoff extends CorrelatedModality {
+	public class CoupledModality extends CorrelatedModality {
 
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = 866119477552433909L;
+
 		
-		/*
-		public SubModality(String name, String id) {
-			super(name, id);
-			this.parent = parent;
-			for(Mode mode : parent) add(mode.new SubMode(mode));
-			setDefaultNames();
-		}
-		*/
-		
-		public Spinoff(String name, String id, Field gainField) {
+		public CoupledModality(String name, String id, Field gainField) {
 			this(name, id, new FieldGainProvider(gainField));
 		}
 
-		public Spinoff(String name, String id, GainProvider source) {
+		public CoupledModality(String name, String id, GainProvider source) {
 			super(name, id);
-			for(CorrelatedMode mode : CorrelatedModality.this) Spinoff.this.add(mode.new Spinoff(source));
-			Spinoff.this.setDefaultNames();
+			for(CorrelatedMode mode : CorrelatedModality.this) CoupledModality.this.add(mode.new CoupledMode(source));
+			CoupledModality.this.setDefaultNames();
 		}
 		
 	}

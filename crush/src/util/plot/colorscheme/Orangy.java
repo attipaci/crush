@@ -45,7 +45,5 @@ public class Orangy extends ColorScheme {
 
 		if(scaled < 0.5) return Color.HSBtoRGB(1.0F/15.0F, 1.0F, 2.0F * (float) scaled);
 		else return Color.HSBtoRGB(1.0F/15.0F, 2.0F - 2.0F * (float) scaled, 1.0F);
-
-
 	}
 }

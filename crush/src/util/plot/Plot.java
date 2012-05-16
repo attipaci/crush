@@ -35,6 +35,7 @@ import java.awt.geom.Rectangle2D;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.OverlayLayout;
 
 // TODO dragging boundaries to adjust component sizes?
 
@@ -91,6 +92,7 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 
 		// The central plot area
 		center = new PlotPane(this);
+		center.setLayout(new OverlayLayout(center));
 		add(center, 1, 1, GridBagConstraints.BOTH, 1.0, 1.0);
 	
 		// The sides...

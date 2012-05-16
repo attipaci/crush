@@ -67,8 +67,8 @@ public abstract class SourceMap extends SourceModel {
 	public void setSmoothing() {
 		if(!hasOption("smooth")) return;
 		
-		double sizeUnit = instrument.getSizeUnit();
-		double beam = instrument.resolution;
+		double sizeUnit = getInstrument().getSizeUnit();
+		double beam = getInstrument().resolution;
 		
 		Configurator option = option("smooth");
 		if(option.equals("beam")) setSmoothing(beam);
@@ -88,7 +88,7 @@ public abstract class SourceMap extends SourceModel {
 
 
 	@Override
-	public double getPointSize() { return Math.hypot(instrument.resolution, smoothing); }
+	public double getPointSize() { return Math.hypot(getInstrument().resolution, smoothing); }
 	
 	@Override
 	public double getSourceSize() { return Math.hypot(super.getSourceSize(), smoothing); }

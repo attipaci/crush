@@ -228,6 +228,23 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			if(Range.parse(rangeSpec, true).contains(fitsVersion)) instrument.options.parse(settings.get(rangeSpec));
 	}
 	
+	public void setScanIDOptions(String id) {
+		if(!instrument.options.containsKey("id")) return;
+	
+		// Make options an independent set of options, setting MJD specifics...
+		instrument.options = instrument.options.copy();
+		double fid = new IRAMScanID(id).asDouble();
+		
+		Hashtable<String, Vector<String>> settings = option("id").conditionals;
+			
+		for(String rangeSpec : settings.keySet()) {
+			if(IRAMScanID.rangeFor(rangeSpec).contains(fid)) {
+				//System.err.println("### Setting options for " + rangeSpec);
+				instrument.options.parse(settings.get(rangeSpec));
+			}
+		}
+	}
+	
 	protected void read(Fits fits, boolean readFully) throws Exception {
 		// Read in entire FITS file
 		BasicHDU[] HDU = fits.read();
@@ -301,6 +318,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		
 		if(scanID == null) scanID = "Unknown";
 		else if(!scanID.equals("undefined")) {
+			setScanIDOptions(scanID);
 			StringTokenizer tokens = new StringTokenizer(scanID, ".");
 			tokens.nextToken(); // Date...
 			serial = Integer.parseInt(tokens.nextToken());
@@ -489,7 +507,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		if(project == null) project = "Unknown";
 		if(obsType == null) obsType = "Unknown";
 		if(scanID == null) scanID = "Unknown";
-		else {
+		else if(!scanID.equals("undefined")) {
+			setScanIDOptions(scanID);
 			StringTokenizer tokens = new StringTokenizer(scanID, ".");
 			tokens.nextToken(); // Date...
 			serial = Integer.parseInt(tokens.nextToken());
@@ -654,7 +673,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	public void editScanHeader(Header header) throws FitsException {	
 		super.editScanHeader(header);
 		header.addValue("PROJECT", project, "The project ID for this scan");
-		header.addValue("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan.");
+		if(basisSystem != null) header.addValue("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan.");
 		
 	}
 	

@@ -44,11 +44,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	public Vector2D nasmythOffset;
 	
 	private Vector2D arrayPointingCenter; // row,col
-	//Vector2D pointingCenterOffset = new Vector2D(); // The offset of the pointing center rel. to the rotation center...
-	//double nativeSamplingInterval;
-	
-	//double rotation;
-	
+
 	double focusXOffset, focusYOffset, focusZOffset;
 	int[] biasValue;
 
@@ -110,18 +106,23 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), GismoPixel.class.getField("muxGain"));
 			muxMode.setGainFlag(GismoPixel.FLAG_MUX);
 			addModality(muxMode);		
-			addModality(muxMode.new Spinoff("flips", "f", new TraceFlip()));
+			addModality(muxMode.new CoupledModality("flips", "f", new TraceFlip()));
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }	
-			
+		
+		// Flips not coupled to MUX gains?
+		/*
+		try { addModality(new CorrelatedModality("flips", "f", divisions.get("mux"), GismoPixel.class.getField("flipGain"))); }
+		catch(NoSuchFieldException e) { e.printStackTrace(); }	
+		*/
+		
 		try { 
 			Modality<?> pinMode = new CorrelatedModality("pins", "p", divisions.get("pins"), GismoPixel.class.getField("pinGain")); 
 			pinMode.setGainFlag(GismoPixel.FLAG_PIN);
 			addModality(pinMode);
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
-			
-	
+		
 	}
 	
 	@Override
@@ -183,7 +184,9 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 			StringTokenizer tokens = new StringTokenizer(line);
 		 	GismoPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
 			pixel.mux = Integer.parseInt(tokens.nextToken());
-		 	pixel.pin = Integer.parseInt(tokens.nextToken()) % pinGroup;
+		 	pixel.pin = Integer.parseInt(tokens.nextToken());
+		 	pixel.flipGain = (pixel.pin & 1) == 0 ? 1.0 : 0.0;
+		 	pixel.pin %= pinGroup;
 		}
 		
 		in.close();

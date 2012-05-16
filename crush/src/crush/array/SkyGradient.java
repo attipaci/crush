@@ -27,17 +27,16 @@ import crush.Channel;
 import crush.GradientGains;
 
 public class SkyGradient extends GradientGains {
-	private double center = 0.0;
-	public boolean horizontal = true;
+	private boolean horizontal = true;
 	
-	public SkyGradient(boolean isHorizontal) {
+	private SkyGradient(boolean isHorizontal) {
 		this.horizontal = isHorizontal;
 	}
 	
 	@Override
 	public double getRawGain(Channel c) throws Exception {
 		SimplePixel pixel = (SimplePixel) c;
-		return (horizontal ? pixel.position.getX() : pixel.position.getY()) - center;
+		return (horizontal ? pixel.position.getX() : pixel.position.getY());
 	}
 
 	@Override
@@ -45,5 +44,12 @@ public class SkyGradient extends GradientGains {
 		throw new UnsupportedOperationException("Cannot change gradient gains.");
 	}
 
+	public static class X extends SkyGradient {
+		public X() { super(true); }
+	}
+	
+	public static class Y extends SkyGradient {
+		public Y() { super(false); }
+	}
 
 }

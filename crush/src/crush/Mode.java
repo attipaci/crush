@@ -79,6 +79,13 @@ public class Mode {
 	}	
 	
 	@Override
+	public boolean equals(Object o) {
+		if(!super.equals(o)) return false;
+		Mode m = (Mode) o;
+		return name.equals(m.name);
+	}
+	
+	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}
