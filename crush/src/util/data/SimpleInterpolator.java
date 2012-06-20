@@ -52,6 +52,8 @@ public class SimpleInterpolator extends Interpolator {
 			}
 			catch(Exception e) {}			
 		}
+		
+		in.close();
 	}
 
 }

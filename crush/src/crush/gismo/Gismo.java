@@ -96,6 +96,13 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		
 		try { addDivision(getDivision("pins", GismoPixel.class.getField("pin"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
+		
+		try { addDivision(getDivision("cols", GismoPixel.class.getField("col"), Channel.FLAG_DEAD)); }
+		catch(Exception e) { e.printStackTrace(); }	
+		
+		try { addDivision(getDivision("rows", GismoPixel.class.getField("row"), Channel.FLAG_DEAD)); }
+		catch(Exception e) { e.printStackTrace(); }	
+		
 	}
 	
 	@Override
@@ -110,16 +117,29 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }	
 		
-		// Flips not coupled to MUX gains?
-		/*
-		try { addModality(new CorrelatedModality("flips", "f", divisions.get("mux"), GismoPixel.class.getField("flipGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }	
-		*/
+		// Flips not coupled to MUX gains?		
+		//try { addModality(new CorrelatedModality("flips", "f", divisions.get("mux"), GismoPixel.class.getField("flipGain"))); }
+		//catch(NoSuchFieldException e) { e.printStackTrace(); }	
+
 		
 		try { 
 			Modality<?> pinMode = new CorrelatedModality("pins", "p", divisions.get("pins"), GismoPixel.class.getField("pinGain")); 
 			pinMode.setGainFlag(GismoPixel.FLAG_PIN);
 			addModality(pinMode);
+		}
+		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		
+		try { 
+			Modality<?> colMode = new CorrelatedModality("cols", "c", divisions.get("cols"), GismoPixel.class.getField("colGain")); 
+			colMode.setGainFlag(GismoPixel.FLAG_COL);
+			addModality(colMode);
+		}
+		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		
+		try { 
+			Modality<?> rowMode = new CorrelatedModality("rows", "r", divisions.get("rows"), GismoPixel.class.getField("rowGain")); 
+			rowMode.setGainFlag(GismoPixel.FLAG_ROW);
+			addModality(rowMode);
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
@@ -172,21 +192,18 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	@Override
 	public void readWiring(String fileName) throws IOException {
 		System.err.println(" Loading wiring data from " + fileName);
-		fileName = Util.getSystemPath(fileName);
-		
+			
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		Hashtable<Integer, GismoPixel> lookup = getChannelLookup();
 		
-		int pinGroup = hasOption("correlated.pins.group") ? option("correlated.pins.group").getInt() : 1;
+		int groupPins = hasOption("correlated.pins.group") ? option("correlated.pins.group").getInt() : 1;
 		
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
 		 	GismoPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
 			pixel.mux = Integer.parseInt(tokens.nextToken());
-		 	pixel.pin = Integer.parseInt(tokens.nextToken());
-		 	pixel.flipGain = (pixel.pin & 1) == 0 ? 1.0 : 0.0;
-		 	pixel.pin %= pinGroup;
+		 	pixel.pin = Integer.parseInt(tokens.nextToken()) % groupPins;
 		}
 		
 		in.close();

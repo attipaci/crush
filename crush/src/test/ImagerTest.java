@@ -48,10 +48,7 @@ public class ImagerTest {
 			
 			float[][] data = new float[10][10];
 			for(int i=data.length; --i >= 0; ) for(int j=data[0].length; --j >= 0; )
-				data[i][j] = (float) Math.random();
-			
-			
-			
+				data[i][j] = (float) Math.random();	
 			
 			//GridImageLayer image = new GridImageLayer(map);
 			//final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
@@ -90,7 +87,7 @@ public class ImagerTest {
 				}
 			};
 		
-			imager.setTransparent(true);
+			imager.setOpaque(false);
 			
 			final SimpleLabel simpleLabel = new SimpleLabel(imager, "Test Label") {
 				/**
@@ -137,15 +134,15 @@ public class ImagerTest {
 			
 			
 			
-			root.add(cross);
-			root.add(imager);
+			
+			root.add(imager, 0);
+			root.add(cross, 0);
 			
 			
-			/*
-			root.setComponentZOrder(label, 0);
-			root.setComponentZOrder(cross, 1);
-			root.setComponentZOrder(imager, 2);
-			*/
+			//root.setComponentZOrder(label, 0);
+			//root.setComponentZOrder(cross, 0);
+			//root.setComponentZOrder(imager, 1);
+		
 			
 			JFrame frame = new JFrame();
 			frame.setSize(600, 600);

@@ -125,7 +125,7 @@ public abstract class BasicRuler extends JComponent implements PlotSide {
 	}
 	
 	
-	public class Marks extends TransparentPanel {
+	public class Marks extends JComponent {
 		/**
 		 * 
 		 */
@@ -194,8 +194,8 @@ public abstract class BasicRuler extends JComponent implements PlotSide {
 			if(npix > 0.4) {
 				// Figure out how many of the subdivisions to actually draw...
 				int subStep = 1;
-				if(npix < 5 && npix > 2.5) subStep = 2; 
-				else if(npix <= 2.5 ) subStep=5;
+				if(npix < 5 && npix > 2) subStep = 2; 
+				else if(npix <= 2 ) subStep=5;
 				
 				// Set the stroke rendering
 				((Graphics2D) g).setStroke(smallStroke);
@@ -231,9 +231,9 @@ public abstract class BasicRuler extends JComponent implements PlotSide {
 	protected void toPlotSide(Point2D pos) {
 		// snap to the appropriate display edge...
 		switch(getSide()) {
-		case Plot.TOP_SIDE: pos.setLocation(pos.getX(), getHeight()); break;
+		case Plot.TOP_SIDE: pos.setLocation(pos.getX(), getHeight()-1); break;
 		case Plot.BOTTOM_SIDE: pos.setLocation(pos.getX(), 0); break;
-		case Plot.LEFT_SIDE: pos.setLocation(getWidth(), pos.getY()); break;
+		case Plot.LEFT_SIDE: pos.setLocation(getWidth()-1, pos.getY()); break;
 		case Plot.RIGHT_SIDE: pos.setLocation(0, pos.getY()); break;
 		default: pos.setLocation(Double.NaN, Double.NaN);
 		}

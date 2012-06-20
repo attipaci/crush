@@ -29,19 +29,19 @@ import java.net.*;
 import java.util.*;
 
 import util.*;
-import util.text.VersionInformation;
+import util.text.VersionString;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
 /**
  * 
  * @author Attila Kovacs
- * @version 2.12-b1 (beta)
+ * @version 2.12-1
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.12-b1";
-	private static String revision = "(beta)";
+	private static String version = "2.12-1";
+	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -54,7 +54,7 @@ public class CRUSH extends Configurator {
 	public static int maxThreads = 1;
 	
 	static { 
-		Locale.setDefault(Locale.US); 
+		Locale.setDefault(Locale.US);
 		Header.setLongStringsEnabled(true);
 	}
 	
@@ -161,6 +161,12 @@ public class CRUSH extends Configurator {
 		}
 	}
 	
+	@Override
+	public String getProperty(String name) {
+		if(name.equals("instrument")) return instrument.getName();
+		else return super.getProperty(name);
+	}
+	
 	public void validate() {			
 		if(scans.size() == 0) {
 			System.err.println("No scans to reduce. Exiting.");
@@ -192,7 +198,7 @@ public class CRUSH extends Configurator {
 		if(isConfigured("reservecpus")) maxThreads -= get("reservecpus").getInt();
 		maxThreads = Math.max(maxThreads, 1);
 		
-		if(containsKey("outpath")) workPath = Util.getSystemPath(get("outpath").getValue()); 
+		if(containsKey("outpath")) workPath = get("outpath").getPath(); 
 	}
 
 	public void read(String scanID) {
@@ -524,8 +530,8 @@ public class CRUSH extends Configurator {
 		String releaseVersion = getReleaseVersion();
 		if(releaseVersion == null) return;
 		
-		VersionInformation release = new VersionInformation(releaseVersion);
-		if(release.compareTo(new VersionInformation(version)) <= 0) return; 
+		VersionString release = new VersionString(releaseVersion);
+		if(release.compareTo(new VersionString(version)) <= 0) return; 
 
 		for(int i=0; i<8; i++) System.err.print("**********");
 		System.err.println();

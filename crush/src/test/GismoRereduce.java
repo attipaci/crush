@@ -51,6 +51,8 @@ public class GismoRereduce {
 			}
 			else System.out.println("echo \"" + line + "\" >> $LOGFILE");
 		}
+		
+		in.close();
 	}
 	
 	

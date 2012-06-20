@@ -145,7 +145,6 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 	@Override
 	public void readWiring(String fileName) throws IOException {
 		System.err.println(" Loading wiring data from " + fileName);
-		fileName = Util.getSystemPath(fileName);
 		System.err.println("WARNING! processing of wiring data not (yet) implemented!.");
 	}
 	

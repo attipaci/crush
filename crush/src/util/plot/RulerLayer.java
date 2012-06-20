@@ -84,6 +84,7 @@ public class RulerLayer extends PlotLayer {
 	
 	@Override
 	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
 		// Make sure the rulers are the same size as the plot itself...
 		Dimension size = getSize();
 		

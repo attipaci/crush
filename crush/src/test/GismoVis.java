@@ -54,11 +54,12 @@ public class GismoVis {
 				if((flag & 0x203) == 0) image[channel/8][channel%8] = (float) value;	
 			}
 			
+			in.close();
+			
 			Fits fits = new Fits();
 			fits.addHDU(Fits.makeHDU(image));
 			
 			BufferedDataOutputStream file = new BufferedDataOutputStream(new FileOutputStream("gismovis.fits"));
-
 			fits.write(file);	
 		}
 		catch(Exception e) { e.printStackTrace(); }

@@ -27,11 +27,13 @@ package util.plot;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JPanel;
 
-public class PlotSidePane extends PlotPane implements PlotSide {
+public class PlotSidePane extends PlotPane implements PlotSide, Arrangeable {
 	/**
 	 * 
 	 */
@@ -64,7 +66,7 @@ public class PlotSidePane extends PlotPane implements PlotSide {
 		arrange();
 	}
 	
-	private void arrange() {
+	public void arrange() {
 		removeAll();
 		
 		if(side == Plot.TOP_SIDE || side == Plot.LEFT_SIDE) {
@@ -121,6 +123,26 @@ public class PlotSidePane extends PlotPane implements PlotSide {
 	public void setBackground(Color color) {
 		super.setBackground(color);
 		for(Component c : getComponents()) c.setBackground(color);
+	}
+	
+	public class Spacer extends JPanel {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1112347113472103728L;
+		private int size = 0;
+		
+		public Spacer(int width) { setSpacing(width); }
+		
+		public int getSpacing() { return size; }
+		
+		public void setSpacing(int width) { this.size = width; }
+		
+		@Override
+		public Dimension getPreferredSize() {
+			if(isHorizontal()) return new Dimension(0, size);
+			else return new Dimension(size, 0);
+		}
 	}
 	
 }

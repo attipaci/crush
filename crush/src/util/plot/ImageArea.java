@@ -37,14 +37,4 @@ public class ImageArea<ContentType extends ImageLayer> extends ContentArea<Conte
 		getReferencePoint().set(0.5, 0.5);
 	}
 	
-	
-	/*
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		System.err.println("size " + getSize());
-		System.err.println("array size " + getContentLayer().getArraySize());
-		System.err.println("plot ref " + getContentLayer().getReferencePoint());		
-	}
-	*/
-	
 }

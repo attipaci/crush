@@ -32,7 +32,6 @@ import java.io.*;
 import java.util.*;
 
 import util.Unit;
-import util.Util;
 
 
 public class Aszca extends APEXArray<AszcaPixel> {
@@ -103,8 +102,7 @@ public class Aszca extends APEXArray<AszcaPixel> {
 	@Override
 	public void readWiring(String fileName) throws IOException {
 		System.err.println(" Loading wiring data from " + fileName);
-		fileName = Util.getSystemPath(fileName);
-		
+			
 		String[] waferNames = { "e1", "e5", "e8", "ed", "f0", "f3" };
 		int boxStartAddress = Integer.decode("0xe1");
 		

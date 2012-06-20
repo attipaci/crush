@@ -49,6 +49,7 @@ public class CorrelatedSignal extends Signal {
 		resolution = mode.getFrameResolution(integration);
 		value = new float[mode.signalLength(integration)];
 		weight = new float[value.length];
+		driftN = value.length;
 	}
 	
 	public WeightedPoint[] getTempStorage(ChannelGroup<?> channels) {
@@ -94,19 +95,22 @@ public class CorrelatedSignal extends Signal {
 		driftN = N;
 		drifts = new float[(int) Math.ceil((double) value.length / driftN)];
 		
-		for(int fromt=0, T=0; fromt < value.length; fromt += driftN) {
-			double sum = 0.0, sumw = 0.0;
+		for(int T=0, fromt=0; fromt < value.length; T++) {
 			final int tot = Math.min(fromt + driftN, value.length);
 			
+			double sum = 0.0, sumw = 0.0;			
 			for(int t=tot; --t >= fromt; ) if(weight[t] > 0.0){
 				sum += weight[t] * value[t];
 				sumw += weight[t];
 			}
+			
 			if(sumw > 0.0) {
 				float fValue = (float) (sum /= sumw);
 				for(int t=tot; --t >= fromt; ) value[t] -= fValue;
-				drifts[T++] = fValue;
+				drifts[T] = fValue;
 			}
+			
+			fromt = tot;
 		}
 	}
 	
@@ -228,7 +232,7 @@ public class CorrelatedSignal extends Signal {
 		}
 		
 		// Calculate the source filtering for this mode...
-		int nP = getParms();
+		double nP = getParms();
 		
 		final CorrelatedMode mode = (CorrelatedMode) getMode();
 		final ChannelGroup<?> channels = mode.getChannels();
@@ -283,10 +287,10 @@ public class CorrelatedSignal extends Signal {
 	
 	public void noTempStorage() { temp = null; }
 	
-	public int getParms() {
+	public double getParms() {
 		int n = 0;
-		for(int i=value.length; --i >= 0; ) if(weight[i] > 0.0) n++;
-		return n;
+		for(int i=value.length; --i >= 0; ) if(weight[i] > 0.0) n++;	
+		return n * (1.0 - 1.0 / driftN);
 	}
 
 	

@@ -24,12 +24,12 @@ package util.text;
 
 import java.util.*;
 
-public class VersionInformation implements Comparable<VersionInformation> {
+public class VersionString implements Comparable<VersionString> {
 	int major, minor, update, type;
 
-	public VersionInformation(String text) { parse(text); }
+	public VersionString(String text) { parse(text); }
 	
-	public int compareTo(VersionInformation other) {
+	public int compareTo(VersionString other) {
 		if(major > other.major) return 1;
 		else if(major < other.major) return -1;
 		

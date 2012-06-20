@@ -24,7 +24,6 @@
 
 package util.dirfile;
 
-import util.*;
 import util.data.SimpleInterpolator;
 
 import java.io.*;

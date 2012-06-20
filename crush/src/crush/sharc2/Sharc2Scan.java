@@ -75,7 +75,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 	
 		if(hasOption("elevation-response")) {
 			try { 
-				String fileName = Util.getSystemPath(option("elevation-response").getValue());
+				String fileName = option("elevation-response").getPath();
 				elevationResponse = new ElevationCouplingCurve(fileName).getValue(horizontal.elevation()); 
 				System.err.println("   Relative beam efficiency is " + Util.f3.format(elevationResponse));
 				for(Sharc2Integration integration : this) integration.gain *= elevationResponse;

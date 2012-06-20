@@ -117,7 +117,7 @@ public class IRAMPointingModel {
 	}
 	
 	public void read(String fileName) throws IOException {
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Util.getSystemPath(fileName))));
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		String line;
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
@@ -134,6 +134,7 @@ public class IRAMPointingModel {
 			}
 		}
 		
+		in.close();
 	}
 	
 	public final static int CONSTANTS = 14;

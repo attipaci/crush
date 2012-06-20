@@ -23,14 +23,12 @@
 
 package util.plot;
 
-import java.awt.Component;
-import java.awt.Graphics;
 import java.awt.geom.Point2D;
 
-import javax.swing.OverlayLayout;
+import javax.swing.JComponent;
 
 
-public class PlotPane extends TransparentPanel {
+public class PlotPane extends JComponent {
 	/**
 	 * 
 	 */
@@ -50,13 +48,6 @@ public class PlotPane extends TransparentPanel {
 	public void toCoordinates(Point2D point) { getContentArea().toCoordinates(point); }
 	
 	public void toDisplay(Point2D point) { getContentArea().toCoordinates(point); }
-	
-	/*
-	@Override
-	public void setSize(int w, int h) {
-		super.setSize(w, h);
-		for(Component c : getComponents()) c.setSize(w, h);
-	}
-	*/
+
 	
 }

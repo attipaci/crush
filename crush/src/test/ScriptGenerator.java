@@ -25,20 +25,20 @@ public class ScriptGenerator {
 		*/
 		
 		String[][] options = {
-				{ "-rounds=20" },
-				{ "-stability=10.0", "-stability=20.0" },
+				{ "-rounds=10", "-rounds=20" },
+				{ "-stability=3.0", "-stability=5.0", "-stability=10.0" },
 				{ "-filter.motion.above=0.05", "-filter.motion.above=0.1", "-filter.motion.above=0.2" },
-				{ "-source.filter.fwhm=30", "-source.filter.fwhm=40", "-source.filter.fwhm=60" }
+				{ "-source.filter.fwhm=35", "-source.filter.fwhm=45", "-source.filter.fwhm=60" }
 		};
 	
 		String[][] names = {
-				{ "r20" },
-				{ "S10", "S20" },
+				{ "r10", "r20" },
+				{ "S3", "S5", "S10" },
 				{ "MF005", "MF010", "MF020" },
-				{ "x30", "x40", "x60" },
+				{ "x35", "x45", "x60" },
 		};
 		
-		// 4 x 3 x 3 = 36
+		// 2 x 3 x 3 x 3 = 54
 		
 		System.out.println("CRUSH=\"$HOME/src/crush/crush\"");
 		System.out.println("REDUCE=\"./GDF-generic.sh\"");

@@ -39,7 +39,7 @@ public class PlotSideRuler extends FancyRuler {
 	public PlotSideRuler(Plot<?> plot, int edge) {
 		super(edge);
 		setPlot(plot);
-		//System.err.println("### created side ruler...");
+		//System.err.println("### created side ruler " + edge);
 	}
 	
 	public Plot<?> getPlot() { return plot; }

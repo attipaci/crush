@@ -129,8 +129,8 @@ public class CorrelatedMode extends Mode {
 		
 		public CoupledMode() {
 			super(CorrelatedMode.this.getChannels());
-			fixedGains = true;
 			CorrelatedMode.this.addCoupledMode(this);
+			fixedGains = true;
 		}
 		
 		public CoupledMode(float[] gains) throws Exception {
@@ -151,9 +151,9 @@ public class CorrelatedMode extends Mode {
 		@Override
 		public synchronized float[] getGains() throws Exception {
 			final float[] parentgains = CorrelatedMode.this.getGains();
-			final float[] gain = super.getGains();
-			for(int i=gain.length; --i>=0; ) gain[i] *= parentgains[i];
-			return gain;
+			final float[] gains = super.getGains();
+			for(int i=gains.length; --i>=0; ) gains[i] *= parentgains[i];
+			return gains;
 		}
 		
 		@Override

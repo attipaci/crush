@@ -32,6 +32,7 @@ import java.util.*;
 
 
 public class Configurator implements Cloneable {
+	private Configurator root;
 	private String value;
 	public boolean isEnabled = false;
 	public boolean wasUsed = false;
@@ -45,7 +46,9 @@ public class Configurator implements Cloneable {
 	private static int counter = 0;	
 	public static boolean verbose = false;
 	
-	public Configurator() {}
+	public Configurator() { root = this; }
+	
+	public Configurator(Configurator root) { this.root = root; }
 	
 	@Override
 	public Object clone() {
@@ -157,13 +160,77 @@ public class Configurator implements Cloneable {
 		return key;
 	}
 	
+	protected String resolve(String argument, String marker, String endmarker) {
+		int index = 0;
+		
+		// If these is nothing to resolve, just return the argument as is...
+		if(!argument.contains(marker)) return argument;
+		
+		// Now for the hard part...
+		StringBuffer resolved = new StringBuffer();
+		
+		for(;;) {
+			if(index >= argument.length()) break;
+			int i = argument.indexOf(marker, index);
+			if(i < 0) {
+				resolved.append(argument, index, argument.length());
+				break;
+			}				
+			resolved.append(argument, index, i);
+			
+			int from = i + marker.length();
+			int to = argument.indexOf(endmarker, from);
+			
+			if(to < 0) {
+				resolved.append(argument, index, argument.length());
+				break;
+			}
+			if(to == from) resolved.append(getValue());
+			else {
+				String key = argument.substring(from, to);
+				String property = getProperty(key, marker);
+				if(property != null) resolved.append(property);
+				else resolved.append(argument, i, to + endmarker.length());
+			}
+			index = to + endmarker.length();			
+		}
+		return new String(resolved);
+	}
+	
+	protected String getProperty(String name, String marker) {
+		if(marker.charAt(0) != '{') return null;
+		char c = marker.charAt(1);
+		
+		switch(c) {
+		case '?' :
+		case '&' :
+			return getProperty(name.toLowerCase());
+		case '@' :
+			return System.getenv(name);
+		case '#' :
+			return System.getProperty(name);
+		default : return null;
+		}
+	}
+	
+	public String getProperty(String name) {
+		return containsKey(name) ? get(name).getValue() : null;		
+	}
 	
 	public void process(String key, String argument) {	
 		String substitute = unalias(key);
+	
 		if(!key.equals(substitute)) {
 			key = new StringTokenizer(substitute.toLowerCase(), " \t=:").nextToken();
 			if(substitute.length() > key.length()) argument = substitute.substring(key.length()+1) + argument;
+			// TODO uncomment to support compound aliasing...
+			// process(key, argument);
+			// return;
 		}
+	
+		argument = resolve(argument, "{&", "}"); // Resolve static references
+		argument = resolve(argument, "{@", "}"); // Resolve environment variables.
+		argument = resolve(argument, "{#", "}"); // Resolve Java properties.
 		
 		if(key.equals("forget")) for(String name : getList(argument)) forget(name);
 		else if(key.equals("recall")) for(String name : getList(argument)) recall(name);
@@ -187,6 +254,9 @@ public class Configurator implements Cloneable {
 		else if(key.equals("conditions")) {
 			pollConditions(argument.length() > 0 ? argument : null);
 		}
+		else if(key.equals("echo")) {
+			System.out.println(resolve(argument, "{?", "}"));
+		}
 		else {
 			String branchName = getBranchName(key);
 			if(verbose) System.err.println("<.> " + branchName);
@@ -205,7 +275,7 @@ public class Configurator implements Cloneable {
 
 	private void set(String branchName, String key, String argument) {
 		setCondition(key, argument);
-		Configurator branch = branches.containsKey(branchName) ? branches.get(branchName) : new Configurator();
+		Configurator branch = branches.containsKey(branchName) ? branches.get(branchName) : new Configurator(root);
 		if(key.length() == branchName.length()) {
 			if(verbose) System.err.println("<=> " + argument);
 			branch.value = argument;
@@ -391,7 +461,7 @@ public class Configurator implements Cloneable {
 	}
 	
 	public Configurator getRemoved() {
-		if(!branches.containsKey("removed")) branches.put("removed", new Configurator());
+		if(!branches.containsKey("removed")) branches.put("removed", new Configurator(root));
 		return branches.get("removed");
 	}
 	
@@ -433,7 +503,7 @@ public class Configurator implements Cloneable {
 		
 		if(key.contains(".")) blacklist(key + getRemainder(arg, branchName.length()));
 		else {
-			if(!branches.containsKey(key)) branches.put(key, new Configurator());
+			if(!branches.containsKey(key)) branches.put(key, new Configurator(root));
 			Configurator branch = branches.get(key);
 			if(arg.length() != branchName.length()) branch.blacklist(getRemainder(arg, branchName.length() + 1));
 			else {
@@ -577,7 +647,7 @@ public class Configurator implements Cloneable {
 	
 	// TODO Difference conditionals and blacklists too...
 	public Configurator difference(Configurator options) {
-		Configurator difference = new Configurator();
+		Configurator difference = new Configurator(root);
 
 		for(String key : getKeys()) {
 			if(!options.containsKey(key)) difference.parse(key + " " + get(key).value);
@@ -611,7 +681,11 @@ public class Configurator implements Cloneable {
 	}
 	
 	public String getValue() {
-		return value; 
+		return root.resolve(resolve(getRawValue(), "{?", "}"), "{?", "}"); 
+	}
+	
+	public String getRawValue() {
+		return value;
 	}
 	
 	public double getDouble() {
@@ -628,6 +702,10 @@ public class Configurator implements Cloneable {
 	
 	public boolean getBoolean() {
 		return Util.parseBoolean(getValue());
+	}
+	
+	public String getPath() {
+		return Util.getSystemPath(getValue());
 	}
 	
 	public Range getRange() {
@@ -906,6 +984,7 @@ public class Configurator implements Cloneable {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(configFile)));
 			String line = null;
 			while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') parse(line);
+			in.close();
 		}
 		else throw new FileNotFoundException(fileName);
 	}

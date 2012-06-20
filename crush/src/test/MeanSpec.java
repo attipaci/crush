@@ -49,7 +49,7 @@ public class MeanSpec {
 				n++;
 			}
 		}
-		
+		in.close();
 	}
 	
 	
