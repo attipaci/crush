@@ -153,6 +153,7 @@ public class GDFStack {
 			
 			sources.add(source);
 		}
+		in.close();
 		
 		System.err.println(">>> " + sources.size() + " sources.");
 	}
@@ -185,6 +186,7 @@ public class GDFStack {
 			if(rangeS24.contains(S24.value()))
 				sources.add(source);
 		}
+		in.close();
 		
 		System.err.println(">>> " + sources.size() + " sources.");
 	}
@@ -215,6 +217,7 @@ public class GDFStack {
 				
 			sources.add(source);
 		}
+		in.close();
 		
 		System.err.println(">>> " + sources.size() + " sources.");
 	}

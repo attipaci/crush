@@ -33,7 +33,7 @@ import util.*;
 public class GismoPixel extends SimplePixel {
 	public int row, col, mux, pin;
 	public Vector2D size = defaultSize;
-	public double muxGain = 1.0, pinGain = 1.0, flipGain = 1.0;
+	public double muxGain = 1.0, pinGain = 1.0, flipGain = 1.0, colGain = 1.0, rowGain = 1.0;
 	
 	// 16 x 8 (rows x cols)
 	
@@ -43,8 +43,7 @@ public class GismoPixel extends SimplePixel {
 		col = zeroIndex % 8;
 		// mux & pin filled when reading 'wiring.dat'
 		
-		int group = (zeroIndex >> 1) & 1;
-		flipGain = group == 0 ? 1.0 : -1.0;
+		flipGain = (col & 2) == 0 ? 1.0 : -1.0;
 		
 		calcPosition();
 		
@@ -97,6 +96,8 @@ public class GismoPixel extends SimplePixel {
 	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
 	public final static int FLAG_FLIP = 1 << nextSoftwareFlag++;
 	public final static int FLAG_PIN = 1 << nextSoftwareFlag++;
+	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
+	public final static int FLAG_COL = 1 << nextSoftwareFlag++;
 
 	
 	

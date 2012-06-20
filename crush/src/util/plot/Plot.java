@@ -27,15 +27,17 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Stroke;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.OverlayLayout;
 
 // TODO dragging boundaries to adjust component sizes?
 
@@ -88,11 +90,11 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	GridBagLayout layout = new GridBagLayout();
 	
 	public Plot() {
+		setOpaque(false);
 		setLayout(layout);
 
 		// The central plot area
 		center = new PlotPane(this);
-		center.setLayout(new OverlayLayout(center));
 		add(center, 1, 1, GridBagConstraints.BOTH, 1.0, 1.0);
 	
 		// The sides...
@@ -152,15 +154,10 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 		setFont(defaultFont);
 	}
 	
-	public void setTransparent(boolean value) {
-		for(Component c : getComponents()) if(c instanceof PlotPane) 
-			((PlotPane) c).setTransparent(value);
-	}
-	
 	@Override
-	public void paintComponent(Graphics g) {
+	public void paint(Graphics g) {
 		contentArea.setSize(center.getSize());
-		super.paintComponent(g);
+		super.paint(g);
 	}
 	
 	public Rectangle2D getCoordinateBounds(int side) {
@@ -250,6 +247,27 @@ public class Plot<ContentType extends ContentLayer> extends JPanel {
 	public boolean isFontBold() {
 		return (getFont().getStyle() & Font.BOLD) != 0;
 	}
+	
+	// Returns a generated image.
+	public RenderedImage getRenderedImage(int width, int height) {
+		setSize(width, height);
+
+		// Create a buffered image in which to draw
+		BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+		// Create a graphics contents on the buffered image
+		Graphics2D g2 = bufferedImage.createGraphics();  
+
+		// Draw graphics
+		paint(g2);
+
+		// Graphics context no longer needed so dispose it
+		g2.dispose();
+
+		return bufferedImage;
+	}
+
+	
 	
 	public static Font defaultFont = new Font("SansSerif", Font.BOLD, 15);
 	

@@ -264,7 +264,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public abstract IntegrationType getIntegrationInstance();
 	
 	public String getDataPath() {
-		return hasOption("datapath") ? Util.getSystemPath(option("datapath").getValue()) + File.separator : "";
+		return hasOption("datapath") ? option("datapath").getPath() + File.separator : "";
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -405,7 +405,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		option.mapValueTo("file");
 		
 		String fileName = option.isConfigured("file") ? 
-				Util.getSystemPath(option.get("file").getValue()) : defaultFileName;
+				option.get("file").getPath() : defaultFileName;
 
 		String format = option.isConfigured("format") ? 
 				option.get("format").getValue() : 

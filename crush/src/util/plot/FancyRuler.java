@@ -23,17 +23,17 @@
 
 package util.plot;
 
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 
 import util.Util;
 
-public abstract class FancyRuler extends BasicRuler {
+public abstract class FancyRuler extends BasicRuler implements Arrangeable {
 	/**
 	 * 
 	 */
@@ -72,7 +72,7 @@ public abstract class FancyRuler extends BasicRuler {
 		arrange();
 	}
 	
-	private void arrange() {
+	public void arrange() {
 		this.removeAll();
 		
 		int edge = getSide();
@@ -89,15 +89,8 @@ public abstract class FancyRuler extends BasicRuler {
 		}			
 	}
 	
-	@Override
-	public void setBackground(Color color) {
-		super.setBackground(color);
-		if(labels != null) labels.setBackground(color);
-		if(title != null) title.setBackground(color);
-	}
 	
-	
-	public class Labels extends TransparentPanel {
+	public class Labels extends JComponent {
 		/**
 		 * 
 		 */
@@ -150,7 +143,7 @@ public abstract class FancyRuler extends BasicRuler {
 		
 	}
 	
-	public class Title extends TransparentPanel {
+	public class Title extends JComponent {
 		/**
 		 * 
 		 */
@@ -171,6 +164,8 @@ public abstract class FancyRuler extends BasicRuler {
 			simpleLabel.setFont(f);
 			//setPreferredSize();
 		}
+		
+		
 		
 		@Override
 		public Font getFont() { return simpleLabel.getFont(); }

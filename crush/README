@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 			  <attila[AT]submm.caltech.edu>
 
-			  Last updated: 12 Jan 2012
+			  Last updated: 19 Jun 2012
 
 
 
@@ -669,6 +669,74 @@ options on the console.
     spaces aren't allowed unless placed in a literal quote.)
 
 
+    References
+    ----------
+    As of version 2.12, CRUSH allows static and dynamics references to be used
+    when setting values. References are placed inside curly brackets. After the
+    opening '{' a special character is used to define what 
+    type of reference is used:
+
+	Table. Referencing
+	--------------------------------------------------------------
+	Description			Symbol		Example		
+        ==============================================================
+	Static reference to another	&		{&datapath}
+	configuration value/property
+	--------------------------------------------------------------
+	Dynamic reference to a
+	configuration value/property	?		{?tau.225GHz}
+	--------------------------------------------------------------
+	Shell environment variable	@		{@HOME}
+	--------------------------------------------------------------
+	Java property			#		{#user.home}
+	--------------------------------------------------------------
+
+   Thus, for example, you can set the path to the output data (e.g. images)
+   relative to the raw (input) data (which is specified by datapath. E.g.:
+
+	outpath = {&datapath}/images
+
+   So, if your 'datapath' was set to '/data/myobservations', then CRUSH will 
+   write its output into '/data/myobservations/images'. You could have also 
+   used:
+
+	outpath = {?datapath}/images
+
+   also. The difference is that the former is evaluated only once, when the
+   statement is parsed, substituting whatever value 'datapath' had at that 
+   particular point. In contrast, the latter, dynamic statement is evaluated 
+   every time it is queried by CRUSH, always substituting the current value of 
+   'datapath'. While the two forms can have effectively identical results if 
+   'datapath' remains unchanged, there are particular scenarios when you might 
+   need one or the other form specifically. Here are two examples:
+
+      * Static reference: Suppose you want to amend a previously defined value. 
+	For example, you want to read data from a sub-directory of the current
+	datapath. This requires the new datapath to refer back to its prior
+	value. If it is done with a dynamic reference, it will result in an
+	infinite recursion. So, you will need to always use static 
+	self-references instead:
+
+	   datapath = {&datapath}/jan2012
+
+      * Dynamic reference: Suppose you want to refer to a value that has not
+	yet been defined. An example would be to try write output into sub-
+	folders by object name (e.g. for GISMO, where object name is usually
+	defined for locating scans). Then, you would write:
+
+	   datapath = /home/images/{?object}
+
+	So by setting this statement ahead of time (e.g. in a global 
+	configuration file), it can have its desired effect always.
+
+    In addition to querying configuration settings the same syntax can be used
+    to look up other CRUSH properties. Currently, only the 'instrument'
+    property is defined, thus you can, for example set the output directory
+    by instrument name, E.g.:
+
+      outpath = {&outpath}/{&instrument}    
+
+
     Path Names
     ----------
     Path names generally follow the rules of your OS. However, in order to
@@ -677,19 +745,21 @@ options on the console.
     result, you should avoid using path names that contain '/' characters 
     (even in quoted or escaped forms!) other than those separating directories.
 
-    Additionally, crush allows the use of environment variables in
-    path specifications. These variables should appear in curly brackets
-    with a $-sign, e.g. as {$HOME} (for UNIX home directories) or {$HOMEPATH}
-    (for a user's home under Windows). 
+    Since CRUSH allows the use of environment variables when defining values
+    (see above), you can have use [@HOME] (for UNIX home directories) or 
+    [@HOMEPATH] (for a user's home under Windows). The same can be achieved
+    universally by using the [#user.home], which substitutes the Java property
+    that holds the home directory.
 
-    The '~' is understood to mean your home folder. Additionally the UNIX-like
-    '~johndoe' may specify johndoe's home directory as long as it shares the 
-    same parent directory with the user (e.g. both reside under a common 
-    '/home' or 'C:\Documents and Settings'). 
+    The '~' is also universally understood to mean your home folder. 
+    Additionally the UNIX-like '~johndoe' may specify johndoe's home directory 
+    as long as it shares the same parent directory with the user (e.g. both 
+    reside under a common '/home' or 'C:\Documents and Settings'). 
 	
     Thus, in UNIX systems (including MacOS), you may use:
 
-	datapath={$HOME}/mydata			# environment variables
+	datapath=[@HOME]/mydata			# environment variables
+	datapath=[#user.home]/mydata		# Java properties
 	datapath=~/mydata			# the '~' shorthand
 	datapath=~johndoe/data			# relative to another user
 	datapath=/mnt/data/2010			# Fully qualified path names
@@ -697,7 +767,8 @@ options on the console.
     while in Windows any of the following are acceptable:
 
 	datapath="~\My Data"			# Using the '~' shorthand
-	datapath="{$HOMEPATH}\My Data"		# Using environment variables
+	datapath="[$HOMEPATH]\My Data"		# Using environment variables
+	datapath="[#user.home]\My Data"		# Java properties
 	datapath=D:/data/Sharc2/2010		# UNIX-style paths
 	datapath=D:\data\Sharc2\2010		# proper Windows paths
 	datapath="~John Doe\Data"		# relative to another user
@@ -867,11 +938,14 @@ options on the console.
 	p		Decorrelating on (virtual) amplifier pins (e.g. GISMO)
 	am		Solving for the acceleration response of pixels.
 			(m indicating magnitude)
-
-   wh(x.xx)		Noise whitening. The average source throughput factor
+	J		De-jumping frames (e.g. for GISMO). Followed by two
+			colon (:) separated numbers: the first, the number of
+			de-jumped blocks that were re-levelled and kept; and
+			the number of blocks flagged. 		
+   	wh(x.xx)	Noise whitening. The average source throughput factor
 			from the whitening is shown.
 	
-   Map			Calculating source map from scan. The effective point
+   	Map		Calculating source map from scan. The effective point
 			source NEV/NEFD of the instrument is shown in the 
 			brackets (e.g. as Jy sqrt(s)).
 	[C1~#.##]	Filtering corrections are applied directly and are

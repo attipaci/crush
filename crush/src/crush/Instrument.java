@@ -303,15 +303,15 @@ implements TableFormatter.Entries {
 	
 	public void loadChannelData() {
 		if(hasOption("pixeldata")) {
-			String arg = option("pixeldata").getValue();
-			if(!arg.equalsIgnoreCase("write")) {
-				try { loadPixelData(Util.getSystemPath(arg)); }
+			Configurator c = option("pixeldata");
+			if(!c.getValue().equalsIgnoreCase("write")) {
+				try { loadPixelData(c.getPath()); }
 				catch(IOException e) { System.err.println("WARNING! Cannot read pixel data. Using default gains & flags."); }
 			}
 		}	
 		
 		if(hasOption("wiring")) { 
-			try { readWiring(Util.getSystemPath(option("wiring").getValue())); }	
+			try { readWiring(option("wiring").getPath()); }	
 			catch(IOException e) {
 				System.err.println("ERROR! Cannot read wiring data. Specific channel divisions not established.");
 				return;
@@ -868,6 +868,7 @@ implements TableFormatter.Entries {
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
 			String className = in.readLine();
+			in.close();
 			return (Instrument<?>) Class.forName(className).newInstance(); 
 		}
 		catch(IOException e) {

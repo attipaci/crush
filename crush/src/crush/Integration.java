@@ -295,7 +295,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void setScaling() {
 		try { setScaling(option("scale").getDouble()); }
 		catch(NumberFormatException noworry) {
-			String calName = Util.getSystemPath(option("scale").getValue());
+			String calName = option("scale").getPath();
 			try { setScaling(1.0 / CalibrationTable.get(calName).getValue(getMJD())); }
 			catch(ArrayIndexOutOfBoundsException e) { System.err.println("     WARNING! " + e.getMessage()); }
 			catch(IOException e) { System.err.println("WARNING! Calibration table could not be read."); }
@@ -319,7 +319,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			String scaling = source.toLowerCase();
 			if(hasOption("tau." + scaling)) setTau(scaling, option("tau." + scaling).getDouble());
 			else {
-				String tauName = Util.getSystemPath(option("tau").getValue());
+				String tauName = option("tau").getPath();
 				try { setTau(TauInterpolator.get(tauName).getValue(getMJD())); }
 				catch(ArrayIndexOutOfBoundsException e) { System.err.println("     WARNING! " + e.getMessage()); }
 				catch(IOException e) { System.err.println("WARNING! Tau interpolator table could not be read."); }
@@ -648,7 +648,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			channel.filterTimeScale = Math.min(filterTimeScale, channel.filterTimeScale);	
 		}		
 			
-			
+				
 		// Make sure signals are filtered the same as time-streams...
 		// TODO this is assuming all channels are filtered the same...
 		for(final Signal signal : signals.values()) signal.removeDrifts();
@@ -888,14 +888,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		comments += "(" + Util.e2.format(nefd) + ")";	
 	}
 
-	public void getTimeWeights(final int blockSize) { getTimeWeights(blockSize, true, true); }
+	public void getTimeWeights(final int blockSize) { 
+		comments += "tW";
+		if(blockSize > 1) comments += "(" + blockSize + ")";
+		getTimeWeights(blockSize, true); 
+	}
 	
-	public void getTimeWeights(final int blockSize, boolean report, boolean flag) {
-		if(report) {
-			comments += "tW";
-			if(blockSize > 1) comments += "(" + blockSize + ")";
-		}
-
+	public void getTimeWeights(final int blockSize, boolean flag) {
 		final ChannelGroup<?> detectorChannels = instrument.getDetectorChannels();
 		
 		final int nT = (int)Math.ceil((float)size() / blockSize);
@@ -903,13 +902,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		double sumfw = 0.0;
 		int n = 0;
 		
-		for(int T=0; T<nT; T++) {
+		for(int T=0,fromt=0; T<nT; T++) {
 			int points = 0;
 			double deps = 0.0;
 			double sumChi2 = 0.0;
 			
-			final int fromt = T*blockSize;
-			final int tot = Math.min(size(), fromt+blockSize);
+			final int tot = Math.min(fromt + blockSize, size());
 			
 			for(int t=tot; --t >= fromt; ) {
 				final Frame exposure = get(t);
@@ -925,8 +923,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			if(points > deps && sumChi2 > 0.0) {
 				final double dof = 1.0 - deps / points;
-				final float fw = (float) ((points-deps) / sumChi2);
-						
+				final float fw = (float) ((points-deps) / sumChi2);					
 				
 				for(int t=tot; --t >= fromt; ) {
 					final Frame exposure = get(t);
@@ -947,6 +944,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					exposure.flag(Frame.FLAG_DOF);
 				}
 			}
+			
+			fromt = tot;
 		}
 		
 		
@@ -989,9 +988,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	
-	public void dejump() {
+	public void dejumpFrames() {
 		final int resolution = hasOption("dejump.resolution") ? framesFor(option("dejump.resolution").getDouble() * Unit.sec) : 1;
-		final int minFrames = framesFor(hasOption("dejump.minlength") ? option("dejump.minlength").getDouble() * Unit.sec : 1.0 * Unit.sec);
+		final double levelLength = hasOption("dejump.minlength") ? option("dejump.minlength").getDouble() * Unit.sec : 1.0 * Unit.sec;
+		
+		int minFrames = (int) Math.round(levelLength / instrument.samplingInterval);
+		if(minFrames < 2) minFrames = Integer.MAX_VALUE;
 		
 		double level = hasOption("dejump.level") ? option("dejump.level").getDouble() : 2.0;
 		boolean robust = false;
@@ -1001,7 +1003,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Save the old time weights
 		for(Frame exposure : this) if(exposure != null) exposure.tempC = exposure.relativeWeight;
 		
-		getTimeWeights(resolution, false, false);
+		getTimeWeights(resolution, false);
 			
 		comments += robust ? "[J]" : "J";
 	
@@ -1045,6 +1047,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				if(robust) medianLevel(instrument, parms, from, to, 1, buffer, aveOffset);		
 				else meanLevel(instrument, parms, from, to, 1, aveOffset);
 				
+				// Level all correlated signals
 				for(Signal signal : signals.values()) signal.level(from, to); 
 					
 				// Mark weights temporarily as NaN -- then these will be reset to 1.0 later...
@@ -1438,7 +1441,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			else exposure.flag &= ~Frame.FLAG_SPIKY;
 		}
 		
-		comments += "(" + Util.f1.format(100.0*spikyFrames/size()) + "%)";
+		//comments += "(" + Util.f1.format(100.0*spikyFrames/size()) + "%)";
+		comments += "(" + spikyFrames + ")";
 	}
 	
 	
@@ -2466,7 +2470,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			comments += "P";
 		}
 		else if(task.equals("dejump")) {
-			dejump();
+			dejumpFrames();
 		}
 		else return false;
 			

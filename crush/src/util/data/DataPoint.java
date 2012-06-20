@@ -55,18 +55,18 @@ public class DataPoint extends WeightedPoint {
 	}
 	
 	public static String toString(DataPoint point, Unit unit, String before, String after) {
-		double u = unit.value();
+		double u = unit == null ? 1.0 : unit.value();
 		double value = point.value() / u;
 		double rms = point.rms() / u;
 		double res = Math.pow(10.0, 2 - errorFigures + Math.floor(Math.log10(rms)));
 		
 		return Util.getDecimalFormat(Math.abs(value) / res, 6).format(point.value() / u) 
-			+ before + Util.s[errorFigures].format(rms) + after + unit.name();   
+			+ before + Util.s[errorFigures].format(rms) + after + (unit == null ? "" : unit.name());   
 	}
 	
 	@Override
 	public String toString(String before, String after) {
-		return toString(this, Unit.unity, before, after);
+		return toString(this, null, before, after);
 	}
 	
 	public static int errorFigures = 2;

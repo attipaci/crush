@@ -53,7 +53,7 @@ public class Signal implements Cloneable {
 		resolution = (int) Math.ceil((double) integration.size() / values.length);
 		this.value = new float[values.length];
 		for(int i=values.length; --i >= 0; ) this.value[i] = (float) values[i];
-		driftN = values.length+1;
+		driftN = values.length;
 	}
 	
 	
@@ -99,9 +99,10 @@ public class Signal implements Cloneable {
 	public synchronized void addDrifts() {
 		if(drifts == null) return;
 		
-		for(int fromt=0, T=0; fromt<value.length; fromt+=driftN) {
+		for(int T=0, fromt=0; fromt<value.length; T++) {
 			final int tot = Math.min(fromt + driftN, value.length);
 			for(int t=tot; --t >= fromt; ) value[t] += drifts[T];
+			fromt = tot;
 		}
 		
 		drifts = null;
@@ -141,7 +142,7 @@ public class Signal implements Cloneable {
 		driftN = N;
 		drifts = new float[(int) Math.ceil((double) value.length / driftN)];
 		
-		for(int fromt=0, T=0; fromt<value.length; fromt+=driftN) {
+		for(int T=0, fromt=0; fromt<value.length; T++) {
 			double sum = 0.0;
 			int n = 0;
 			final int tot = Math.min(fromt + driftN, value.length);
@@ -153,8 +154,10 @@ public class Signal implements Cloneable {
 			if(n > 0) {
 				float fValue = (float) (sum / n);
 				for(int t=tot; --t >= fromt; ) value[t] -= fValue;
-				drifts[T++] = fValue;
+				drifts[T] = fValue;
 			}
+			
+			fromt = tot;
 		}
 	}
 	
@@ -171,7 +174,7 @@ public class Signal implements Cloneable {
 			n++;
 		}
 		if(n > 0) {
-			double ave = sum / n;
+			float ave = (float) (sum / n);
 			for(int t=from; t<to; t++) value[t] -= ave;
 		}
 	}
@@ -399,13 +402,12 @@ public class Signal implements Cloneable {
 		if(mode.fixedGains) throw new IllegalStateException("WARNING! Cannot change gains for fixed gain modes.");
 		
 		final ChannelGroup<?> channels = mode.getChannels();
-		final int nc = channels.size();
+		final int nc = mode.size();
 		final Dependents parms = integration.getDependents("gains-" + mode.name);
 		
 		final int[] channelIndex = mode.getChannelIndex();
 		final float[] G = mode.getGains();
 		final float[] dG = syncGains;
-		
 		
 		for(int k=nc; --k >=0; ) dG[k] = G[k] - dG[k];
 		
@@ -423,7 +425,10 @@ public class Signal implements Cloneable {
 		}
 
 		// Account for the one gain parameter per channel...
-		for(int k=nc; --k >= 0; ) if(sumwC2[k] > 0.0) parms.add(channels.get(k), 1.0);
+		// minus the overall gain renormalization...
+		// TODO calculate more properly with weights...
+		double channelDependence = 1.0 - 1.0 / nc;
+		for(int k=nc; --k >= 0; ) if(sumwC2[k] > 0.0) parms.add(channels.get(k), channelDependence);
 		
 		// Apply the mode dependeces...
 		parms.apply(channels, 0, integration.size());

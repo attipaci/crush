@@ -30,26 +30,28 @@ public class PlotTest {
 	public void test() throws Exception {
 		Instrument<?> instrument = new GenericInstrument("generic");
 		AstroMap map = new AstroMap("/home/pumukli/data/sharc2/images/VESTA.8293.fits", instrument);
+		map.autoCrop();
 		
 		GridImageLayer image = new GridImageLayer(map.getS2NImage());
 		image.setColorScheme(new Colorful());
 		
 		final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
 		imager.setContentLayer(image);
-		imager.setTransparent(true);
+		imager.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		
 		Plot<ImageLayer> plot = new Plot<ImageLayer>();
 		plot.setContent(imager);
 		plot.setBackground(Color.WHITE);
+		plot.setOpaque(true);
 		
 		ColorBar c = new ColorBar(imager);
 		//c.setRotation(1*Unit.deg);
 		plot.right.setCenter(c);
-		
-		//plot.setTransparent(true);
+
 		
 		JFrame frame = new JFrame();
 		frame.setSize(600, 600);
+		frame.setBackground(Color.WHITE);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	
 		frame.add(plot, "Center");

@@ -124,7 +124,6 @@ public class Laboca extends APEXArray<LabocaPixel> {
 	@Override
 	public void readWiring(String fileName) throws IOException {	
 		System.err.println(" Loading wiring data from " + fileName);
-		fileName = Util.getSystemPath(fileName);
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		Hashtable<Integer, LabocaPixel> lookup = getChannelLookup();
@@ -200,7 +199,7 @@ public class Laboca extends APEXArray<LabocaPixel> {
 		super.loadChannelData();
 		
 		if(hasOption("he3")) if(!option("he3").equals("calc")) {
-			String fileName = hasOption("he3.gains") ? Util.getSystemPath(option("he3.gains").getValue()) : getConfigPath() + "he3-gains.dat";
+			String fileName = hasOption("he3.gains") ? option("he3.gains").getPath() : getConfigPath() + "he3-gains.dat";
 			
 			try { readTemperatureGains(fileName); }
 			catch(IOException e) {

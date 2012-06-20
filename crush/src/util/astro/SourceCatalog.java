@@ -52,6 +52,7 @@ public class SourceCatalog<CoordinateType extends CoordinatePair> extends Vector
 			try { add(new GaussianSource<CoordinateType>(line, map)); }
 			catch(ParseException e) { System.err.println("WARNING! Cannot parse: " + line); }
 		}
+		in.close();
 		System.err.println(" Source catalog loaded: " + size() + " source(s).");
 	}
 }

@@ -162,7 +162,7 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		// Load the Gain Non-linearity coefficients
 		if(hasOption("response")) {
 			try {
-				loadGainCoefficients(Util.getSystemPath(option("response").getValue()));
+				loadGainCoefficients(option("response").getPath());
 				calcPixelGains();
 			}
 			catch(IOException e) { System.err.println(" WARNING! Problem parsing nonlinearity file."); }		

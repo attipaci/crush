@@ -1,3 +1,5 @@
+>> deprecate {$HOME} syntax -- in a while...
+
 >> write.png.spline
 >> 'focus' force focus even if source is too large/small.
 >> focus.xcoeff, focus.ycoeff, focus.zcoeff

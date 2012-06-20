@@ -182,7 +182,7 @@ public class ScalarMap extends SourceMap {
 		if(hasOption("sources")) {
 			try { 
 				SourceCatalog<SphericalCoordinates> catalog = new SourceCatalog<SphericalCoordinates>();
-				catalog.read(Util.getSystemPath(option("sources").getValue()), map); 
+				catalog.read(option("sources").getPath(), map); 
 				try { insertSources(catalog); }
 				catch(Exception e) {
 					System.err.println("WARNING! Source insertion error:");
@@ -699,7 +699,7 @@ public class ScalarMap extends SourceMap {
 
 	public String getCoreName() {
 		if(hasOption("name")) {
-			String fileName = Util.getSystemPath(option("name").getValue());
+			String fileName = option("name").getPath();
 			if(fileName.toLowerCase().endsWith(".fits")) return fileName.substring(0, fileName.length()-5);
 			else return fileName;
 		}
@@ -767,12 +767,13 @@ public class ScalarMap extends SourceMap {
 	
 			imager.setContentLayer(image);
 			imager.setBackground(Color.LIGHT_GRAY);
-		
+			imager.setOpaque(true);
+			
 			ColorScheme scheme = new Colorful();
 			
 			if(hasOption("write.png.bg")) {
 				String spec = option("write.png.bg").getValue().toLowerCase();
-				if(spec.equals("transparent")) imager.setTransparent(true);
+				if(spec.equals("transparent")) imager.setOpaque(false);
 				else {
 					try { imager.setBackground(new Color(Integer.decode(spec))); }
 					catch(NumberFormatException e) { imager.setBackground(Color.getColor(spec)); }

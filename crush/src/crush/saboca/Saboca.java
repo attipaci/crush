@@ -32,7 +32,6 @@ import java.io.*;
 import java.util.*;
 
 import util.Unit;
-import util.Util;
 
 
 public class Saboca extends APEXArray<SabocaPixel> {
@@ -84,7 +83,6 @@ public class Saboca extends APEXArray<SabocaPixel> {
 	@Override
 	public void readWiring(String fileName) throws IOException {
 		System.err.println(" Loading wiring data from " + fileName);
-		fileName = Util.getSystemPath(fileName);
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		Hashtable<Integer, SabocaPixel> lookup = getChannelLookup();

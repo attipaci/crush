@@ -24,6 +24,7 @@
 package util.plot;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
@@ -34,22 +35,25 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import javax.imageio.ImageIO;
+import javax.swing.JPanel;
 import javax.swing.OverlayLayout;
+
 
 
 import util.CoordinatePair;
 import util.Vector2D;
 
-public class ContentArea<ContentType extends ContentLayer> extends TransparentPanel {
+public class ContentArea<ContentType extends ContentLayer> extends JPanel implements Arrangeable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 5175315778375641551L;
 
 	private ContentType contentLayer;
-
 	
 	private Vector2D referencePoint = new Vector2D(0.0, 1.0); // lower left corner...
 	private Vector2D scale = new Vector2D();
@@ -66,6 +70,7 @@ public class ContentArea<ContentType extends ContentLayer> extends TransparentPa
 	private boolean verbose = false;
 	
 	public ContentArea() {
+		setOpaque(false);
 		setLayout(new OverlayLayout(this));
 	}
 	
@@ -78,10 +83,11 @@ public class ContentArea<ContentType extends ContentLayer> extends TransparentPa
 	 * Called before the first rendering of the image. Otherwise, it can be called before rendering, allowing
 	 * to override the rendering parameters (e.g. rendering size, data scaling, subarray selection etc.)
 	 */
-	public void defaults() {
+	public void initialize() {
+		if(contentLayer != null) contentLayer.initialize();
 		initialized = true;
 	}
-	
+
 	public final AffineTransform toDisplay() { return toDisplay; }
 	
 	public final AffineTransform toCoordinates() { return toCoordinates; }
@@ -106,10 +112,32 @@ public class ContentArea<ContentType extends ContentLayer> extends TransparentPa
 	}
 	
 	public void setContentLayer(ContentType layer) {
-		if(contentLayer != null) remove(contentLayer);
+		if(contentLayer != null) {
+			if(layer == contentLayer) return; // Nothing to do...
+			remove(contentLayer);
+		}
 		contentLayer = layer;
 		contentLayer.setContentArea(this);
+		//add(contentLayer, IMAGE_LAYER);
 		add(contentLayer);
+	}
+	
+	public Component[] getLayers() {
+		Component[] layers = getComponents();
+		Arrays.sort(layers, new Comparator<Component>() {
+			public int compare(Component c1, Component c2) {
+				int z1 = getComponentZOrder(c1);
+				int z2 = getComponentZOrder(c2);
+				if(z1 == z2) return 0;
+				return z1 < z2 ? -1 : 1;
+			}
+		});
+		return layers;
+	}
+	
+	public void arrange() {
+		Component[] layers = getLayers();
+		for(int i=layers.length; --i >= 0; ) setComponentZOrder(layers[i], i);
 	}
 	
 	public Vector2D getScale() { return scale; }
@@ -241,16 +269,14 @@ public class ContentArea<ContentType extends ContentLayer> extends TransparentPa
 	
 	
 	@Override
-	public void paintComponent(Graphics g) {	
-		if(!initialized) {
-			defaults();
-			contentLayer.initialize();
-			initialized = true;
-		}
+	public void paint(Graphics g) {	
+		if(!initialized) initialize();
 			
-		contentLayer.paintComponent(g);
+		// Make sure all children are the same size...
+		Dimension d = getSize();
+		for(Component c : getComponents()) c.setSize(d);
 		
-		super.paintComponent(g);
+		super.paint(g);
 	}
 	
 	// Returns a generated image.
@@ -261,13 +287,13 @@ public class ContentArea<ContentType extends ContentLayer> extends TransparentPa
 	    BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 	    
 	    // Create a graphics contents on the buffered image
-	    Graphics2D g2d = bufferedImage.createGraphics();  
+	    Graphics2D g2 = bufferedImage.createGraphics();  
 	    
 	    // Draw graphics
-	    paintComponent(g2d);
+	    paint(g2);
 
 	    // Graphics context no longer needed so dispose it
-	    g2d.dispose();
+	    g2.dispose();
 
 	    return bufferedImage;
 	}
@@ -288,12 +314,15 @@ public class ContentArea<ContentType extends ContentLayer> extends TransparentPa
 	protected boolean isInitialized() { return initialized; }
 	
 	protected void setInitialized() { initialized = true; }
+
+	// Assume that children overlap...
+	@Override
+	public boolean isOptimizedDrawingEnabled() { return false; }
 	
 	public static final int ZOOM_FIXED = 0;
 	public static final int ZOOM_FIT = 1;
 	public static final int ZOOM_FILL = 2;
 	public static final int ZOOM_STRETCH = 3;
-	
 
 	
 }

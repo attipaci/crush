@@ -38,17 +38,24 @@ public abstract class GradientGains implements GainProvider {
 	
 	public abstract void setRawGain(Channel c, double value) throws Exception;
 	
-	public void validate(Mode mode) throws Exception {
+	public void validate(Mode mode) throws Exception {	
 		final float[] gains = mode.getGains(false);
 
 		double sum = 0.0, sumw = 0.0;
 		for(int k=gains.length; --k >= 0; ) {
-			Channel channel = mode.getChannel(k);
-			if(channel.isUnflagged()) {
-				sum += channel.weight * gains[k];
-				sumw += channel.weight;
-			}
+			final Channel channel = mode.getChannel(k);
+			if(channel.isFlagged()) continue;
+
+			final double x = getGain(channel);
+			if(x == 0.0) continue;
+			
+			final double g = gains[k] / x;
+			final double wg2 = channel.weight * g * g;
+			
+			sum += wg2 * x;
+			sumw += wg2;
 		}
+		
 		if(sumw > 0.0) center += sum / sumw;
 	}
 

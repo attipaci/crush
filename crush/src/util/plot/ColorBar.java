@@ -29,28 +29,30 @@ import java.awt.geom.Point2D;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.OverlayLayout;
+import javax.swing.JComponent;
 
 import util.Range;
 
 
-public class ColorBar extends TransparentPanel implements PlotSide {
+public class ColorBar extends JComponent implements PlotSide {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 460851913543807978L;
 	
 	private ImageArea<?> imager;
+
 	private Stripe stripe;
+	private Ruler ruler;
+	
 	private int side = Plot.SIDE_UNDEFINED;
-	//private Ruler ruler;
+	
 	
 		
 	public ColorBar(ImageArea<?> imager) { 
 		this.imager = imager;
-		stripe = new Stripe(defaultWidth, defaultShades);
-		//ruler = new Ruler();
+		stripe = new Stripe(defaultWidth);
+		ruler = new Ruler();
 		//TODO set the unit on the ruler to that of the image...
 	}
 	
@@ -62,11 +64,9 @@ public class ColorBar extends TransparentPanel implements PlotSide {
 		
 	public void setSide(int side) {
 		if(side == this.side) return;
-		this.side = side;
+		this.side = side;	
 		
-		if(stripe != null) stripe.create();		
-		
-		//if(ruler != null) ruler.setSide(side);
+		if(ruler != null) ruler.setSide(side);
 			
 		if(isHorizontal()) setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		else if(isVertical()) setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
@@ -78,82 +78,60 @@ public class ColorBar extends TransparentPanel implements PlotSide {
 		removeAll();
 		
 		if(side == Plot.TOP_SIDE || side == Plot.LEFT_SIDE) {
-			//add(ruler);
+			if(ruler != null) add(ruler);
 			if(stripe != null) add(stripe);			
-			add(new JPanel());
 		}
 		else if(side == Plot.BOTTOM_SIDE || side == Plot.RIGHT_SIDE) {
-			add(new JPanel());
 			if(stripe != null) add(stripe);
-			//add(ruler);
+			if(ruler != null) add(ruler);
 		}
 	}
+		
 	
-	public int getShades() { return stripe.getShades(); }
-	
-	public void setShades(int n) { stripe.setShades(n); }
-	
-	
-	
-	
-	public class Stripe extends ImageArea<ImageLayer> {	
+	public class Stripe extends JComponent {	
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = 5950901962993328368L;
-		private int shades;
 		private int width;
+		private boolean inverted = false;
 
-		private Stripe(int width, int shades) {	
+		private Stripe(int width) {	
 			this.width = width;
-			setShades(shades);
-			setRotation(0.0);
-			setTransparent(false);
-			setZoomMode(ImageArea.ZOOM_STRETCH);
 			setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
 		}
 		
 		@Override
 		public void paintComponent(Graphics g) {
-			//System.err.println(getSize());
-			getContentLayer().setColorScheme(imager.getContentLayer().getColorScheme());
-			updateTransforms();	
-			//System.err.println(toDisplay());	
 			super.paintComponents(g);
-		}
-		
-		public int getShades() { return shades; }
-		
-		public void setShades(int n) {
-			if(shades == n) return;
-			shades = n;
-			if(side != Plot.SIDE_UNDEFINED) create();
-		}
-		
-		protected void create() {
-			float[][] data = isHorizontal() ? getHorizontalData() : getVerticalData();
 			
-			ImageLayer.Float image = new ImageLayer.Float(data);
-			image.defaults();
-			image.center();
-			image.setSpline();
-			image.setRange(new Range(0.0, 1.0));
+			if(isHorizontal()) drawHorizontal(g);
+			else drawVertical(g);
+		}
+		
+		private void drawVertical(Graphics g) {
+			ColorScheme colors = imager.getContentLayer().getColorScheme();	
+			double scale = 1.0 / getHeight();
 			
-			setContentLayer(image);	
+			for(int y = getHeight() - 1; --y >= 0; ) {
+				double value = inverted ? scale * y : 1.0 - scale * y;
+				g.setColor(new Color(colors.getRGB(value)));
+				g.drawRect(0, y, width, 1);
+			}	
 		}
 		
-		private float[][] getVerticalData() {	
-			float[][] data = new float[1][shades];
-			for(int j=shades; --j >=0; ) data[0][j] = (float) j/(shades-1);
-			return data;
+		private void drawHorizontal(Graphics g) {
+			ColorScheme colors = imager.getContentLayer().getColorScheme();	
+			double scale = 1.0 / getWidth();
+			
+			for(int x = getWidth() - 1; --x >= 0; ) {
+				double value = inverted ? 1.0 - scale * x : scale * x;
+				g.setColor(new Color(colors.getRGB(value)));
+				g.drawRect(x, 0, 1, width);
+			}	
 		}
 		
-		private float[][] getHorizontalData() {	
-			float[][] data = new float[shades][1];
-			for(int j=shades; --j >=0; ) data[j][0] = (float) j/(shades-1);
-			return data;
-		}
-		
+
 		@Override
 		public Dimension getPreferredSize() {
 			if(isVertical()) return new Dimension(width, 2);
@@ -164,8 +142,7 @@ public class ColorBar extends TransparentPanel implements PlotSide {
 		public void setWidth(int pixels) { this.width = pixels; }
 		
 		public void invert() {
-			if(isHorizontal()) invertAxes(true, false);
-			else if(isVertical()) invertAxes(false, true);
+			inverted = !inverted;
 		}		
 		
 	}
@@ -203,8 +180,10 @@ public class ColorBar extends TransparentPanel implements PlotSide {
 		}	
 	}
 	
+	
+	
+	
 	private static int defaultWidth = 20;
-	private static int defaultShades = 256;
 	
 
 }

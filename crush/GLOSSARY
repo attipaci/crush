@@ -683,6 +683,17 @@
 			It is slower, and its computation requirement scales 
 			with N log N.
 
+:: echo=<text>		@Advanced
+			@Since: 2.12
+			Print <text> onto the error stream. This <text> can
+			include references to other settings, environment
+			variables or Java properties. The <text> value will 
+			appear on the error stream as soon as the echo 
+			statement is parse by CRUSH, making 'echo' a useful
+			tool for checking if and when configuration values are
+			actually loaded.
+			@See: 'poll'
+
 :: ecliptic		@Alias -> system=ecliptic
 			Reduce using ecliptic coordinates (for mapping).
 			@See: 'system', 'altaz', 'equatorial'

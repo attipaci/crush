@@ -100,7 +100,7 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	@Override
 	public void loadChannelData() {	
 		if(hasOption("rcp")) {
-			try { readRCP(Util.getSystemPath(option("rcp").getValue())); }
+			try { readRCP(option("rcp").getPath()); }
 			catch(IOException e) { System.err.println("WARNING! Cannot update pixel RCP data. Using values from FITS."); }
 		}
 		

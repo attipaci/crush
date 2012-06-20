@@ -89,7 +89,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		if(option.isConfigured("model")) {
 			try { 
 				double UT = (getMJD() % 1.0) * Unit.day;
-				model = new IRAMPointingModel(Util.getSystemPath(option.get("model").getValue()));
+				model = new IRAMPointingModel(option.get("model").getPath());
 			
 				// Keep the pointing model referenced to the nominal array center even if
 				// pointing on a different location on the array...
@@ -116,7 +116,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		if(option.isConfigured("table")) {
 			try { 
 				if(model == null) model = new IRAMPointingModel();
-				String logName = Util.getSystemPath(option.get("table").getValue());
+				String logName = option.get("table").getPath();
 				correction.add(PointingTable.get(logName).getIncrement(getMJD(), ambientT, horizontal, model));
 			}
 			catch(Exception e) {
