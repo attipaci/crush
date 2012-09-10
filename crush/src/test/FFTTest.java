@@ -43,7 +43,7 @@ public class FFTTest {
 		
 		Arrays.fill(data, 1.0);
 		spectrum = FFT.forward(data);
-		System.err.println("cons(1.0):");
+		System.err.println("const(1.0):");
 		print(spectrum);
 		
 		

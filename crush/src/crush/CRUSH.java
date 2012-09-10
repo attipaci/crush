@@ -36,11 +36,11 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.12-1
+ * @version 2.12-2
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.12-1";
+	private static String version = "2.12-2";
 	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
@@ -97,6 +97,12 @@ public class CRUSH extends Configurator {
 		System.err.println("Instrument is " + instrument.getName().toUpperCase());
 		instrument.options = this;
 	}
+	
+	public boolean hasOption(String name) {
+		return isConfigured(name);
+	}
+	
+	public Configurator option(String name) { return get(name); }
 	
 	public void init(String[] args) {
 		readConfig("default.cfg");
@@ -441,7 +447,7 @@ public class CRUSH extends Configurator {
 	}
 
 	public static void usage() {
-		String info = "  Usage: crush <instrument> [options] <scanslist> [[options] <scanlist> ...]\n" +
+		String info = "  Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
 			"\n" +
 			"    <instrument>    'sharc2', 'laboca', 'saboca', 'aszca', 'p-artemis',\n" +
 			"                    'polka', 'gismo' (or 'scuba2').\n" +

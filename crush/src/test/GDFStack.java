@@ -5,7 +5,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import util.CoordinatePair;
-import util.Parallel.Process;
+import util.Parallel;
 import util.Range;
 import util.SphericalCoordinates;
 import util.Unit;
@@ -115,7 +115,7 @@ public class GDFStack {
 			@Override
 			public DataPoint getResult() {
 				DataPoint combined = new DataPoint();
-				for(Process<DataPoint> task : getWorkers()) {
+				for(Parallel<DataPoint> task : getWorkers()) {
 					DataPoint partial = task.getPartialResult();
 					combined.add(partial.value());
 					combined.addWeight(partial.weight());

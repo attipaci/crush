@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2012 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,31 +20,49 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2007 Attila Kovacs 
 
 package util.plot.colorscheme;
 
-import java.awt.*;
+import java.awt.Color;
 
 import util.plot.ColorScheme;
 
 
-public class Colorful extends ColorScheme {
-
+public class Rainbow extends ColorScheme {
 	@Override
-	public int getRGB(double scaled) {
-		if(Double.isNaN(scaled)) return noData;
-
-		if(scaled < 0.0) scaled=0.0;
-		else if(scaled > 1.0) scaled=1.0;
+	public int getRGB(double scaledI) {
+		if(Double.isNaN(scaledI)) return Color.DARK_GRAY.getRGB();
+		float I = (float) scaledI;
+		if(I > 1.0F) I = 1.0F;
+		if(I < 0.0F) I = 0.0F;
 		
-		if(scaled < 0.2) return Color.HSBtoRGB(0.8F, 1.0F, 5.0F * (float) scaled);
-		else if(scaled >= 0.8) return Color.HSBtoRGB(0.0F, 5.0F - 5.0F * (float) scaled, 1.0F);
-		else return Color.HSBtoRGB(4.0F/3.0F*(0.8F - (float)scaled), 1.0F, 1.0F);		
+		float r, g, b;
+
+		if(I < 0.25) {
+			b = I / 0.25F;
+			g = r = 0.0F;
+		}
+		else if(I < 0.5) {
+			b = 1.0F;
+			g = (I - 0.25F) / 0.25F;
+			r = 0.0F;			
+		}
+		else if(I < 0.75) {
+			b = 1.0F - (I - 0.5F) / 0.25F;
+			g = 1.0F;
+			r = (I - 0.5F) / 0.25F;
+		}
+		else {
+			b = 0.0F;
+			g = 1.0F - (I - 0.75F) / 0.25F;
+			r = 1.0F;
+		}
+		
+		return ColorScheme.getRGB(r, g, b);	
 	}
 
 	@Override
 	public Color getHighlight() {
-		return Color.GRAY;
+		return Color.WHITE;
 	}
 }

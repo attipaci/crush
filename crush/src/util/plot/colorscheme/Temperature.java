@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2012 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,31 +20,65 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2007 Attila Kovacs 
 
 package util.plot.colorscheme;
 
-import java.awt.*;
+import java.awt.Color;
 
 import util.plot.ColorScheme;
 
 
-public class Colorful extends ColorScheme {
-
+public class Temperature extends ColorScheme {
+	
 	@Override
-	public int getRGB(double scaled) {
-		if(Double.isNaN(scaled)) return noData;
-
-		if(scaled < 0.0) scaled=0.0;
-		else if(scaled > 1.0) scaled=1.0;
+	public int getRGB(double scaledI) {
+		if(Double.isNaN(scaledI)) return Color.DARK_GRAY.getRGB();
+		float I = (float) scaledI;
+		if(I > 1.0F) I = 1.0F;
+		if(I < 0.0F) I = 0.0F;
 		
-		if(scaled < 0.2) return Color.HSBtoRGB(0.8F, 1.0F, 5.0F * (float) scaled);
-		else if(scaled >= 0.8) return Color.HSBtoRGB(0.0F, 5.0F - 5.0F * (float) scaled, 1.0F);
-		else return Color.HSBtoRGB(4.0F/3.0F*(0.8F - (float)scaled), 1.0F, 1.0F);		
-	}
+		float r, g, b;
 
+		if(I < fifth) {
+			// red rise
+			r = I / fifth;
+			g = b = 0.0F;
+		}
+		else if(I < 2 * fifth) {
+			// green rise
+			r = 1.0F;
+			g = (I - fifth) / fifth;
+			b = 0.0F;			
+		}
+		else if(I < 3 * fifth) {
+			// blue rise
+			r = 1.0F;
+			g = 1.0F;
+			b = (I - 2 * fifth) / fifth;
+		}
+		else if(I < 4 * fifth) {
+			// red fall
+			r = 1.0F - (I - 3 * fifth) / fifth;
+			g = 1.0F;
+			b = 1.0F;
+		}
+		else {
+			// green fall
+			r = 0.0F;
+			g = 1.0F - (I - 4 * fifth) / fifth;
+			b = 1.0F;
+		}
+
+		return ColorScheme.getRGB(r, g, b);	
+	}
+	
 	@Override
 	public Color getHighlight() {
 		return Color.GRAY;
 	}
+	
+	
+	private static float fifth = 0.2F;
+
+	
 }

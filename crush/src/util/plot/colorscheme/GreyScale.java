@@ -31,11 +31,6 @@ import util.plot.ColorScheme;
 
 public class GreyScale extends ColorScheme {
 
-	public GreyScale() {
-		schemename= "GreyScale";
-		highlight = Color.RED.getRGB();
-	}
-
 	@Override
 	public int getRGB(double scaled) {
 		if(Double.isNaN(scaled)) return noData;
@@ -46,6 +41,11 @@ public class GreyScale extends ColorScheme {
 		final float value = (float) scaled;
 		
 		return Color.HSBtoRGB(0.0F, 0.0F, value);
+	}
+
+	@Override
+	public Color getHighlight() {
+		return Color.red;
 	}
 
 }

@@ -40,7 +40,8 @@ public class FFTTest2 {
 		long time = -System.currentTimeMillis();
 		FFT.powerTransform(fdata, true);
 		time += System.currentTimeMillis();
-		System.err.println("float transform of " + n + "M points: " + time + "ms --> " + Util.f1.format(1e-3*ops/time) + " Mcycles/sec");
+		double speed = 1e3 / time;
+		System.err.println("float transform of " + n + "M points: " + Util.f2.format(speed) + " FFTs/s");
 
 		
 		double[] data = new double[N];
@@ -48,7 +49,8 @@ public class FFTTest2 {
 		time = -System.currentTimeMillis();
 		FFT.powerTransform(data, true);
 		time += System.currentTimeMillis();
-		System.err.println("double transform of " + n + "M points: " + time + "ms --> " + Util.f1.format(1e-3*ops/time) + " Mcycles/sec");
+		speed = 1e3 / time;
+		System.err.println("double transform of " + n + "M points: " + Util.f2.format(speed) + " FFTs/s");
 
 
 		Complex[] cdata = new Complex[N/2];
@@ -57,8 +59,8 @@ public class FFTTest2 {
 		time = -System.currentTimeMillis();
 		FFT.powerTransform(cdata, true);
 		time += System.currentTimeMillis();
-		System.err.println("complex transform of " + n + "M points: " + time + "ms --> " + Util.f1.format(1e-3*ops/time) + " Mcycles/sec");
-		
+		speed = 1e3 / time;
+		System.err.println("complex transform of " + n + "M points: " + Util.f2.format(speed) + " FFTs/s");	
 	}
 
 	public static void print(Complex[] data) {

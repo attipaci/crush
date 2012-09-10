@@ -2546,41 +2546,84 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public String toString() { return "Integration " + getFullID("|"); }
 	
 	
-	// TODO use forks by channelgroup(?) and by block(?)
-	// TODO implement forked processing where appropriate
-	public class Fork extends Parallel {
-	
-		public abstract class Frames<ReturnType> extends Process<ReturnType> {
-			@Override
-			public void processIndex(int index, int threadCount) {
-				for(int t=index; t<size(); t += threadCount) {
-					if(isInterrupted()) return;
-					process(get(t));
-					Thread.yield();
-				}
+
+	public abstract class FrameFork<ReturnType> extends Parallel<ReturnType> {
+		@Override
+		public void processIndex(int index, int threadCount) {
+			for(int t=index; t<size(); t += threadCount) {
+				if(isInterrupted()) return;
+				process(get(t));
+				Thread.yield();
 			}
-			
-			public abstract void process(FrameType frame);
 		}
-		
-		public abstract class Channels<ReturnType> extends Process<ReturnType> {
-			private ChannelGroup<?> channels;
+
+		public abstract void process(FrameType frame);
+	}
+
 	
-			public Channels(ChannelGroup<?> channels) { this.channels = channels; }
-				
-			@Override
-			public void processIndex(int index, int threadCount) {
-				for(int c=index; c<channels.size(); c+=threadCount) {
-					if(isInterrupted()) return;
-					process(channels.get(c));
-					Thread.yield();
-				}
+	public abstract class BlockFork<ReturnType> extends Parallel<ReturnType> {
+		private int blocksize;
+
+		public BlockFork(int blocksize) { this.blocksize = blocksize; }
+
+		@Override
+		public void processIndex(int index, int threadCount) {
+			final int nt = size();
+			for(int from=index*blocksize; from < nt; from += threadCount*blocksize) {
+				if(isInterrupted()) return;
+				process(from, Math.min(nt, from + blocksize));
+				Thread.yield();
 			}
-			
-			public abstract void process(Channel channel);
 		}
+
+		public abstract void process(int from, int to);
+	}
+
+	public abstract class ChannelFork<ReturnType> extends Parallel<ReturnType> {
+		private ChannelGroup<?> channels;
+
+		public ChannelFork(ChannelGroup<?> channels) { this.channels = channels; }
+
+		@Override
+		public void processIndex(int index, int threadCount) {
+			final int nc = channels.size();
+			for(int c = index; c < nc; c += threadCount) {
+				if(isInterrupted()) return;
+				process(channels.get(c));
+				Thread.yield();
+			}
+		}
+
+		public abstract void process(Channel channel);
 	}
 	
-	public Fork parallel;
 	
+	public abstract class ChannelBlockFork<ReturnType> extends Parallel<ReturnType> {
+		private ChannelGroup<?> channels;
+		private int blocksize;
+		
+		public ChannelBlockFork(ChannelGroup<?> channels, int blocksize) { 
+			this.channels = channels; 
+			this.blocksize = blocksize;
+		}
+
+		@Override
+		public void processIndex(int index, int threadCount) {
+			final int nc = channels.size();
+			final int nt = size();
+			final int nblocks = (int) Math.ceil((double) nt / blocksize);
+			final int N = nblocks * nc;
+			
+			for(int i=index; i<N; i+=threadCount) {
+				final int from = (i / nc) * blocksize;
+				
+				if(isInterrupted()) return;
+				process(channels.get(i % nc), from, Math.min(nt, from));
+				Thread.yield();
+			}
+		}
+
+		public abstract void process(Channel channel, int from, int to);
+	}
+
 }

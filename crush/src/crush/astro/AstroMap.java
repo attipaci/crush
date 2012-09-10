@@ -58,7 +58,7 @@ public class AstroMap extends GridSource<SphericalCoordinates> implements AstroC
 	}
 	
 	public void undoFilterCorrect() {
-		undoFilterCorrect(instrument.resolution, getSkip(filterBlanking));
+		undoFilterCorrect(getSkip(filterBlanking));
 	}
 	
 	public boolean isHorizontal() {

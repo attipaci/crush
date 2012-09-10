@@ -39,10 +39,10 @@ import util.Vector2D;
 
 public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<CoordinateType> implements Noise2D, Timed2D {
 	private double[][] weight, count;
-	public double weightFactor = 1.0;
+	private double weightFactor = 1.0;
 	
 	public double filterBlanking = Double.NaN;
-	public double clippingS2N = Double.NaN;
+	private double clippingS2N = Double.NaN;
 	
 	private Vector2D reuseOffset = new Vector2D();
 	
@@ -57,6 +57,10 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	public GridMap(int i, int j) { 
 		super(i, j);
 	}
+	
+	public double getWeightScale() { return weightFactor; }
+	
+	public double getS2NClipLevel() { return clippingS2N; }
 	
 	@Override
 	public Object clone() {
@@ -169,6 +173,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 				}
 			}
 		}.process();
+	
 	}
 	
 	@Override
@@ -256,6 +261,8 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 				if(isUnflagged(i, j)) if(getS2N(i,j) > level) flag(i, j);
 			}
 		}.process();
+		
+		clippingS2N = level;
 	}
 
 

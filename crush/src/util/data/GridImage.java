@@ -41,15 +41,14 @@ import util.Util;
 import util.Vector2D;
 
 public abstract class GridImage<CoordinateType extends CoordinatePair> extends Data2D {
-	Grid2D<CoordinateType> grid;
+	private Grid2D<CoordinateType> grid;
 	
-	// TODO make private...
-	public double smoothFWHM;  
-	public double extFilterFWHM = Double.NaN;
-	public double correctingFWHM = Double.NaN;	
+	private double smoothFWHM;  
+	private double extFilterFWHM = Double.NaN;
+	private double correctingFWHM = Double.NaN;	
 
-	public Unit beamArea = new BeamArea();
-	public Unit pixelArea = new PixelArea();
+	private Unit beamArea = new BeamArea();
+	private Unit pixelArea = new PixelArea();
 	
 	public GridImage() {
 	}
@@ -74,6 +73,10 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		if(smoothFWHM < fwhm) smoothFWHM = fwhm;	
 	}
 	
+	public Unit getBeamAreaUnit() { return beamArea; }
+	
+	public Unit getPixelAreaUnit() { return pixelArea; }
+	
 	public void setResolution(double value) { 
 		getGrid().setResolution(value);
 		smoothFWHM = Math.max(smoothFWHM, value / fwhm2size);
@@ -83,7 +86,14 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		return getGrid().getResolution();
 	}
 	
+	public double getSmoothFWHM() { return smoothFWHM; } 
 	
+	public double getExtFilterFWHM() { return extFilterFWHM; }
+	
+	public double getCorrectingFWHM() { return correctingFWHM; }
+	
+	public void noExtFilter() { extFilterFWHM = Double.NaN; }
+
 	public Projection2D<CoordinateType> getProjection() { return getGrid().getProjection(); }
 	
 	public void setProjection(Projection2D<CoordinateType> projection) { getGrid().setProjection(projection); }
@@ -258,6 +268,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		
 		if(Double.isNaN(extFilterFWHM)) extFilterFWHM = FWHM;
 		else extFilterFWHM = 1.0/Math.sqrt(1.0/(extFilterFWHM * extFilterFWHM) + 1.0/(FWHM*FWHM));
+		
 	}
 	
 	//	 8/20/07 Changed to use blanking 
@@ -341,13 +352,16 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		}
 		
 		if(Double.isNaN(extFilterFWHM)) extFilterFWHM = FWHM;
-		else extFilterFWHM = 1.0/Math.sqrt(1.0/(extFilterFWHM * extFilterFWHM) + 1.0/(FWHM*FWHM));
+		else extFilterFWHM = 1.0/Math.sqrt(1.0/(extFilterFWHM * extFilterFWHM) + 1.0/(FWHM*FWHM));	
 	}
 	
 	
 	public void filterCorrect(double FWHM, final int[][] skip) {
-		if(!Double.isNaN(correctingFWHM)) return;
-		
+		// Undo prior corrections if necessary
+		if(!Double.isNaN(correctingFWHM)) { 
+			if(FWHM == correctingFWHM) return;
+			else undoFilterCorrect(skip);
+		}
 		final double filterC = getFilterCorrectionFactor(FWHM);
 		
 		new Task<Void>() {
@@ -360,11 +374,11 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		correctingFWHM = FWHM;
 	}
 	
-	public void undoFilterCorrect(double FWHM, final int[][] skip) {
-		if(!Double.isNaN(correctingFWHM)) return;
+	public void undoFilterCorrect(final int[][] skip) {
+		if(Double.isNaN(correctingFWHM)) return;
 		
-		final double iFilterC = getFilterCorrectionFactor(FWHM);
-		
+		final double iFilterC = 1.0 / getFilterCorrectionFactor(correctingFWHM);
+			
 		new Task<Void>() {
 			@Override
 			public void process(int i, int j) {

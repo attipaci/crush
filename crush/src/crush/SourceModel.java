@@ -29,7 +29,7 @@ import util.*;
 import java.util.*;
 
 
-public abstract class SourceModel extends Parallel implements Cloneable {
+public abstract class SourceModel implements Cloneable {
 	private Instrument<?> instrument;
 	private Configurator options; 
 	
@@ -243,7 +243,7 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 	
 	public abstract void noParallel();
 
-	public abstract class ScanFork<ReturnType> extends Process<ReturnType> {	
+	public abstract class ScanFork<ReturnType> extends Parallel<ReturnType> {	
 		public ScanFork() {}
 		
 		public void process() throws Exception { process(CRUSH.maxThreads); }
@@ -260,7 +260,7 @@ public abstract class SourceModel extends Parallel implements Cloneable {
 		public abstract void process(Scan<?,?> scan) throws Exception;
 	}
 	
-	public abstract class IntegrationFork<ReturnType> extends Process<ReturnType> {	
+	public abstract class IntegrationFork<ReturnType> extends Parallel<ReturnType> {	
 		public final ArrayList<Integration<?,?>> integrations = getIntegrations();
 		
 		public void process() throws Exception { process(CRUSH.maxThreads); }
