@@ -29,7 +29,7 @@ import util.data.FFT;
 public class FFTTest3 {
 
 	public static void main(String[] args) {
-		final int repeats = 10000;
+		final int repeats = 32;
 		final int n = args.length > 0 ? Integer.parseInt(args[0]) : 16;
 		final int N = n * 1024;
 		final long ops = repeats * N * Math.round((Math.log(N) / Math.log(2.0)));
@@ -39,22 +39,25 @@ public class FFTTest3 {
 		long time = -System.currentTimeMillis();
 		for(int k=repeats; --k>=0; ) FFT.powerTransform(fdata, (k & 1) == 0);
 		time += System.currentTimeMillis();
-		System.err.println("float transform of " + repeats + " x " + n + "K points: " + time + "ms --> " + Util.f1.format(1e-3*ops/time) + " Mcycles/sec");
-
+		double speed = repeats / (1e-3*time);
+		System.err.println("float transform of " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");
+		
 		final double[] data = new double[N];
 		for(int i=0; i<data.length; i++) data[i] = Math.random();
 		time = -System.currentTimeMillis();
 		for(int k=repeats; --k>=0; ) FFT.powerTransform(data, (k & 1) == 0);
 		time += System.currentTimeMillis();
-		System.err.println("double transform of " + repeats + " x " + n + "K points: " + time + "ms --> " + Util.f1.format(1e-3*ops/time) + " Mcycles/sec");
-
+		speed = repeats / (1e-3*time);
+		System.err.println("double transform of " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");
+	
 		final Complex[] cdata = new Complex[N>>1];
 		for(int i=0; i<cdata.length; i++) cdata[i] = new Complex(Math.random(), Math.random());
 		time = -System.currentTimeMillis();
 		for(int k=repeats; --k>=0; ) FFT.powerTransform(cdata, (k & 1) == 0);
 		time += System.currentTimeMillis();
-		System.err.println("complex transform of " + repeats + " x " + n + "K points: " + time + "ms --> " + Util.f1.format(1e-3*ops/time) + " Mcycles/sec");
-		
+		speed = repeats / (1e-3*time);
+		System.err.println("complex transform of " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");
+	
 	}
 
 	public static void print(Complex[] data) {

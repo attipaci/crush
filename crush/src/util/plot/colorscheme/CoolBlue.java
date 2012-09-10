@@ -31,11 +31,6 @@ import util.plot.ColorScheme;
 
 public class CoolBlue extends ColorScheme {
 
-	public CoolBlue() {
-		schemename= "CoolBlue";
-		highlight = Color.ORANGE.getRGB();
-	}
-
 	@Override
 	public int getRGB(double scaled) {
 		if(Double.isNaN(scaled)) return noData;
@@ -45,6 +40,12 @@ public class CoolBlue extends ColorScheme {
 	
 		if(scaled < 0.5) return Color.HSBtoRGB(0.75F, 1.0F, 2.0F * (float) scaled);
 		else return Color.HSBtoRGB(0.75F, 2.0F - 2.0F * (float) scaled, 1.0F);
-
 	}
+
+	@Override
+	public Color getHighlight() {
+		return Color.ORANGE;
+	}
+	
+	
 }

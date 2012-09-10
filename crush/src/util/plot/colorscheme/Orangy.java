@@ -31,11 +31,6 @@ import util.plot.ColorScheme;
 
 public class Orangy extends ColorScheme {
 
-	public Orangy() {
-		schemename= "Orangy";
-		highlight = Color.CYAN.getRGB();
-	}
-
 	@Override
 	public int getRGB(double scaled) {
 		if(Double.isNaN(scaled)) return noData;
@@ -45,5 +40,10 @@ public class Orangy extends ColorScheme {
 
 		if(scaled < 0.5) return Color.HSBtoRGB(1.0F/15.0F, 1.0F, 2.0F * (float) scaled);
 		else return Color.HSBtoRGB(1.0F/15.0F, 2.0F - 2.0F * (float) scaled, 1.0F);
+	}
+
+	@Override
+	public Color getHighlight() {
+		return Color.CYAN;
 	}
 }

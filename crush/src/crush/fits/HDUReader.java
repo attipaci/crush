@@ -27,7 +27,7 @@ import nom.tam.fits.*;
 import nom.tam.util.*;
 
 
-public abstract class HDUReader extends Parallel {	
+public abstract class HDUReader {	
 	protected TableHDU hdu;
 	protected ColumnTable table;
 	
@@ -49,7 +49,7 @@ public abstract class HDUReader extends Parallel {
 	}
 
 	
-	public abstract class Task<ReturnType> extends Process<ReturnType> {
+	public abstract class Task<ReturnType> extends Parallel<ReturnType> {
 		@Override
 		public void processIndex(int i, int threadCount) throws Exception {
 			final int frames = hdu.getNRows();

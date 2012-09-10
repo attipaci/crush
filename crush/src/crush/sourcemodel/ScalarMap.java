@@ -127,7 +127,6 @@ public class ScalarMap extends SourceMap {
 		map.creator = CRUSH.class.getSimpleName();
 		map.setName(firstScan.getSourceName());
 		map.commandLine = commandLine;
-		map.correctingFWHM = map.getImageFWHM();	
 		
 		String system = hasOption("system") ? option("system").getValue().toLowerCase() : "equatorial";
 		
@@ -351,7 +350,7 @@ public class ScalarMap extends SourceMap {
 	
 	public synchronized void filter() {
 		if(!hasOption("source.filter") || getSourceSize() <= 0.0) {
-			map.extFilterFWHM = Double.NaN;
+			map.noExtFilter();
 			map.filterBlanking = Double.NaN;
 			return;
 		}
@@ -387,7 +386,6 @@ public class ScalarMap extends SourceMap {
 		if(mode.equalsIgnoreCase("fft")) map.fftFilterAbove(filterScale, filterBlanking);
 		else map.filterAbove(filterScale, filterBlanking);
 			
-		map.extFilterFWHM = filterScale;
 		map.filterBlanking = filterBlanking;
 	}
 	
@@ -445,8 +443,9 @@ public class ScalarMap extends SourceMap {
 		// Apply the filtering to the final map, to reflect the correct blanking
 		// level...
 		if(hasOption("source.filter")) if(verbose) System.err.print("(filter) ");
-		filter();
 		
+		filter();
+		map.filterCorrect();
 		
 		// Noise and exposure clip after smoothing for evened-out coverage...
 		// Eposure clip
@@ -466,7 +465,6 @@ public class ScalarMap extends SourceMap {
 			double clipLevel = option("clip").getDouble();
 			if(verbose) System.err.print("(clip:" + clipLevel + ") ");
 			map.s2nClipBelow(clipLevel);
-			map.clippingS2N = clipLevel;
 		}
 
 		// Fill the map with zeroes at the flagged locations, s.t. it can be directly
@@ -556,7 +554,6 @@ public class ScalarMap extends SourceMap {
 	public synchronized void reset() {
 		super.reset();
 		map.reset();
-		map.correctingFWHM = map.instrument.resolution;
 	}
 	
 	@Override

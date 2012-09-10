@@ -174,12 +174,12 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	
 	public void add(GridImage<CoordinateType> image, final double FWHM, final double scaling, final Collection<Region<CoordinateType>> others) {
 		// Remove the Gaussian main beam...
-		addGaussian(image, Math.hypot(FWHM, image.smoothFWHM), scaling);
+		addGaussian(image, Math.hypot(FWHM, image.getSmoothFWHM()), scaling);
 		
 		// If an LSS filter was used, also correct for the Gaussian bowl around the source...
-		if(Double.isNaN(image.extFilterFWHM)) return;
+		if(Double.isNaN(image.getExtFilterFWHM())) return;
 		
-		final double filterFWHM = Math.hypot(FWHM, image.extFilterFWHM);			
+		final double filterFWHM = Math.hypot(FWHM, image.getExtFilterFWHM());			
 
 		// Correct for filtering.
 		double filterFraction = 1.0 - 1.0 / image.getFilterCorrectionFactor(FWHM);
@@ -210,7 +210,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 			final double di = sourceIndex.getX() - centerIndex.getX();
 			final double dj = sourceIndex.getY() - centerIndex.getY();
 			
-			if(!Double.isNaN(image.extFilterFWHM))
+			if(!Double.isNaN(image.getExtFilterFWHM()))
 				source.peak.subtract(filterPeak * Math.exp(Ai*di*di + Aj*dj*dj));
 		}
 		
@@ -221,7 +221,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		
 		// Correct for filtering.
 		// Consider that only the tip of the source might escape the filter...
-		if(!Double.isNaN(map.extFilterFWHM)) {
+		if(!Double.isNaN(map.getExtFilterFWHM())) {
 			double filterFraction = Double.isNaN(map.filterBlanking) ? 1.0 : Math.min(1.0, map.filterBlanking / peak.significance());
 			double filtering = 1.0 - 1.0 / map.getFilterCorrectionFactor(FWHM);;
 			correction *= 1.0 / (1.0 - filtering * filterFraction);

@@ -83,7 +83,7 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	
 	@Override
 	public double getImageFWHM() {
-		return Math.hypot(instrument.resolution, smoothFWHM);
+		return Math.hypot(instrument.resolution, getSmoothFWHM());
 	}
 
 	public double getInstrumentBeamArea() {
@@ -213,13 +213,11 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	@Override
 	public void filterAbove(double FWHM, int[][] skip) {
 		super.filterAbove(FWHM, skip);
-		filterCorrect(instrument.resolution, skip);
 	}
 	
 	@Override
 	public void fftFilterAbove(double FWHM, int[][] skip) {
 		super.fftFilterAbove(FWHM, skip);
-		filterCorrect(instrument.resolution, skip);
 	}
 
 	
@@ -244,7 +242,7 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 			"  [" + getName() + "]\n" +
 			super.toString() + 
 			"  Instrument Beam FWHM: " + Util.f2.format(instrument.resolution / Unit.arcsec) + " arcsec." + "\n" +
-			"  Applied Smoothing: " + Util.f2.format(smoothFWHM / Unit.arcsec) + " arcsec." + " (includes pixelization)\n" +
+			"  Applied Smoothing: " + Util.f2.format(getSmoothFWHM() / Unit.arcsec) + " arcsec." + " (includes pixelization)\n" +
 			"  Image Resolution (FWHM): " + Util.f2.format(getImageFWHM() / Unit.arcsec) + " arcsec. (includes smoothing)" + "\n";
 			
 		return info;

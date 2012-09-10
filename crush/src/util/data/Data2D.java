@@ -52,7 +52,7 @@ import util.Util;
 import util.Vector2D;
 import util.Parallel;
 
-public class Data2D extends Parallel implements Cloneable {
+public class Data2D implements Cloneable {
 	private double[][] data;
 	private int[][] flag;
 	private int parallelism = Runtime.getRuntime().availableProcessors();
@@ -582,7 +582,7 @@ public class Data2D extends Parallel implements Cloneable {
 			@Override
 			public Double getResult() {
 				double globalMin = Double.POSITIVE_INFINITY;
-				for(Process<Double> task : getWorkers()) if(task.getPartialResult() < globalMin) globalMin = task.getPartialResult();
+				for(Parallel<Double> task : getWorkers()) if(task.getPartialResult() < globalMin) globalMin = task.getPartialResult();
 				return globalMin;
 			}
 		};
@@ -602,7 +602,7 @@ public class Data2D extends Parallel implements Cloneable {
 			@Override
 			public Double getResult() {
 				double globalMax = Double.NEGATIVE_INFINITY;
-				for(Process<Double> task : getWorkers()) if(task.getPartialResult() > globalMax) globalMax = task.getPartialResult();
+				for(Parallel<Double> task : getWorkers()) if(task.getPartialResult() > globalMax) globalMax = task.getPartialResult();
 				return globalMax;
 			}
 		};
@@ -627,7 +627,7 @@ public class Data2D extends Parallel implements Cloneable {
 			@Override
 			public Range getResult() {
 				Range globalRange = new Range();
-				for(Process<Range> task : getWorkers()) globalRange.include(task.getPartialResult());
+				for(Parallel<Range> task : getWorkers()) globalRange.include(task.getPartialResult());
 				return globalRange;
 			}
 		};
@@ -654,7 +654,7 @@ public class Data2D extends Parallel implements Cloneable {
 			public Index2D getResult() {
 				double globalPeak = Double.NEGATIVE_INFINITY;
 				Index2D globalIndex = null;
-				for(Process<Index2D> task : getWorkers()) {
+				for(Parallel<Index2D> task : getWorkers()) {
 					Index2D partial = task.getPartialResult();
 					if(partial != null) if(data[partial.i()][partial.j()] > globalPeak) {
 						globalIndex = partial;
@@ -688,7 +688,7 @@ public class Data2D extends Parallel implements Cloneable {
 			public Index2D getResult() {
 				double globalDev = 0.0;
 				Index2D globalIndex = null;
-				for(Process<Index2D> task : getWorkers()) {
+				for(Parallel<Index2D> task : getWorkers()) {
 					Index2D partial = task.getPartialResult();
 					if(partial == null) continue;
 					final double value = Math.abs(data[partial.i()][partial.j()]);
@@ -804,7 +804,7 @@ public class Data2D extends Parallel implements Cloneable {
 			@Override
 			public Integer getResult() {
 				int globalCount = 0;
-				for(Process<Integer> task : getWorkers()) globalCount += task.getPartialResult();
+				for(Parallel<Integer> task : getWorkers()) globalCount += task.getPartialResult();
 				return globalCount;
 			}
 		};
@@ -1265,7 +1265,7 @@ public class Data2D extends Parallel implements Cloneable {
 	
 	
 	
-	public abstract class Task<ReturnType> extends Process<ReturnType> {			
+	public abstract class Task<ReturnType> extends Parallel<ReturnType> {			
 		
 		@Override
 		public void process(int threadCount) {
@@ -1299,7 +1299,7 @@ public class Data2D extends Parallel implements Cloneable {
 		@Override
 		public WeightedPoint getResult() {
 			WeightedPoint ave = new WeightedPoint();
-			for(Process<WeightedPoint> task : getWorkers()) {
+			for(Parallel<WeightedPoint> task : getWorkers()) {
 				WeightedPoint partial = task.getPartialResult();
 				ave.add(partial.value());
 				ave.addWeight(partial.weight());

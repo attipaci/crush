@@ -13,7 +13,7 @@ import util.plot.ImageArea;
 import util.plot.ImageLayer;
 import util.plot.Plot;
 import util.plot.PlotSideRuler;
-import util.plot.colorscheme.Colorful;
+import util.plot.colorscheme.*;
 import crush.GenericInstrument;
 import crush.Instrument;
 import crush.astro.AstroMap;
@@ -33,7 +33,7 @@ public class PlotTest {
 		map.autoCrop();
 		
 		GridImageLayer image = new GridImageLayer(map.getS2NImage());
-		image.setColorScheme(new Colorful());
+		image.setColorScheme(new Temperature());
 		
 		final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
 		imager.setContentLayer(image);
