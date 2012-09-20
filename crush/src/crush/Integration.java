@@ -33,6 +33,7 @@ import crush.filters.*;
 
 import util.*;
 import util.data.*;
+import util.fft.FloatFFT;
 import util.text.TableFormatter;
 
 import nom.tam.fits.*;
@@ -83,6 +84,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	protected boolean isDetectorStage = false;
 	protected boolean isValid = false;
 		
+	private FloatFFT fft = null;
+	
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
 	// The constructor of Integration thus copies the Scan instrument for private use...
 	@SuppressWarnings("unchecked")
@@ -99,7 +102,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		clone.dependents = new Hashtable<String, Dependents>(); 
 		clone.signals = new Hashtable<Mode, Signal>();
 		clone.filter = null;
-
+		clone.fft = null;
 		return clone;
 	}
 
@@ -196,6 +199,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		isValid = true;
 		
 		if(hasOption("speedtest")) speedTest();
+	}
+	
+	public FloatFFT getFFT() { 
+		if(fft == null) fft = new FloatFFT();
+		return fft; 
 	}
 	
 	public void invert() {
@@ -461,7 +469,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}	
 	
 	public int power2FramesFor(double time) {
-		return FFT.getPaddedSize(Math.max(1, Math.min(size(), (int)Math.round(Math.min(time, filterTimeScale) / instrument.samplingInterval / Math.sqrt(2.0)))));	
+		return OldFFT.getPaddedSize(Math.max(1, Math.min(size(), (int)Math.round(Math.min(time, filterTimeScale) / instrument.samplingInterval / Math.sqrt(2.0)))));	
 	}
 	
 	public int filterFramesFor(String spec, double defaultValue) {
@@ -485,7 +493,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		frames = Math.max(1, framesFor(driftT));
 		frames = Math.min(frames, size());
 		
-		return FFT.getPaddedSize(frames);
+		return OldFFT.getPaddedSize(frames);
 	}
 
 	public FrameType getFirstFrame() {
@@ -597,7 +605,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void removeDrifts(final ChannelGroup<?> channels, final int targetFrameResolution, final boolean robust, final boolean quick) {
 		//System.err.println("O >>> " + channels.size() + " > " + targetFrameResolution);
 		
-		final int driftN = Math.min(size(), FFT.getPaddedSize(targetFrameResolution));
+		final int driftN = Math.min(size(), OldFFT.getPaddedSize(targetFrameResolution));
 		final int step = quick ? (int) Math.pow(driftN, 2.0/3.0) : 1;
 		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);
 		
@@ -1720,7 +1728,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	// Redo with Filter...
 	public synchronized void highPassFilter(double T) {
-		int Nt = FFT.getPaddedSize(size());
+		int Nt = OldFFT.getPaddedSize(size());
 	
 		// sigmat sigmaw = 1 ->
 		// Dt sigmaw = 2.35 
@@ -1744,17 +1752,17 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public synchronized void filter(ChannelGroup<? extends Channel> channels, double[] response) {
 		comments += "F";
 		
-		float[] signal = new float[FFT.getPaddedSize(size())];
+		float[] signal = new float[OldFFT.getPaddedSize(size())];
 		
 		for(final Channel channel : channels) {
 			final int c = channel.index;
 			getWeightedTimeStream(channel, signal);
 			
-			FFT.forwardRealInplace(signal);
+			getFFT().real2Amplitude(signal);
 			
 			toRejected(signal, response);
 			
-			FFT.backRealInplace(signal);
+			getFFT().amplitude2Real(signal);
 			
 			// Re-level the useful part of the signal
 			level(signal, channel);
@@ -2057,7 +2065,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				else if(exposure.sampleFlag[channel.index] != 0) data[t] = 0.0F;
 				else data[t] = exposure.data[channel.index];
 			}
-			final float[] spectrum = FFT.averagePower(data, w);
+			final double[] spectrum = getFFT().averagePower(data, w);
 			final float[] channelSpectrum = new float[spectrum.length];
 			
 			for(int i=spectrum.length; --i>=0; ) channelSpectrum[i] = (float) Math.sqrt(spectrum[i] / df) / Jy;
@@ -2178,7 +2186,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		data.put("Relative_Gain", new double[] { gain });
 		data.put("NEFD", new double[] { nefd } );
 		data.put("Hipass_Timescale", new double[] { filterTimeScale / Unit.s } );
-		data.put("Filter_Resolution", new double[] { 0.5/FFT.getPaddedSize(framesFor(filterTimeScale)) } );
+		data.put("Filter_Resolution", new double[] { 0.5/OldFFT.getPaddedSize(framesFor(filterTimeScale)) } );
 	}
 	
 	
@@ -2453,7 +2461,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		else if(task.equals("weighting.frames")) {
 			int n = hasOption("weighting.frames.resolution") ? filterFramesFor(option("weighting.frames.resolution").getValue(), 10.0 * Unit.s) : 1;
-			getTimeWeights(FFT.getPaddedSize(n));
+			getTimeWeights(OldFFT.getPaddedSize(n));
 			updatePhases();
 		}
 		else if(task.startsWith("despike")) {

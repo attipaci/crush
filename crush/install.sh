@@ -19,10 +19,19 @@ fi
 
 
 # The location where the binaries should be installed
-BINDIR=$INSTALL_ROOT/bin
+if [ -z "$BINDIR" ] ; then 
+	BINDIR=$INSTALL_ROOT/bin
+	echo BINDIR set automatically to $BINDIR
+fi
 
 # The location for the man pages
-MANDIR=$INSTALL_ROOT/share/man
+if [ -z "$MANDIR" ] ; then 
+	MANDIR=$INSTALL_ROOT/share/man
+	echo MANDIR set automatically to $MANDIR
+fi
+
+echo "### $BINDIR"
+echo "### $MANDIR"
 
 # Determine where the script is being run from...
 NAME=$0
@@ -32,29 +41,40 @@ if [ -L $NAME ]; then
 fi
 
 CURRENT_DIR=`pwd`
+
+
+# FIRST install the man pages
+# Go to the directory from where this script was called from (i.e. CRUSH)
 cd `dirname $NAME`
-CRUSH=`pwd`
+
+echo Installing CRUSH manuals to $MANDIR...
+mkdir -p $MANDIR
+cp -a man/* $MANDIR
+
+cd $CURRENT_DIR
 
 
-# First create the links to the binaries
+# Now install the symbolic links to the binaries. Use the relative path
+# if it is defined, or else use the absolute path to CRUSH
+if [ -z "$BIN_TO_CRUSH" ] ; then
+	BIN_TO_CRUSH=`pwd`
+	echo Found path to CRUSH: $BIN_TO_CRUSH
+fi
+
 echo Installing CRUSH binaries to $BINDIR...
 mkdir -p $BINDIR
 cd $BINDIR
-ln -sf $CRUSH/crush .
-ln -sf $CRUSH/coadd .
-ln -sf $CRUSH/detect .
-ln -sf $CRUSH/difference .
-ln -sf $CRUSH/histogram .
-ln -sf $CRUSH/imagetool .
-ln -sf $CRUSH/jiggle .
-ln -sf $CRUSH/show .
-cd $CRUSH
-
-# Now install the man pages
-echo Installing CRUSH manuals to $MANDIR...
-mkdir -p $MANDIR
-cp -a $CRUSH/man/* $MANDIR
-
+ln -sf $BIN_TO_CRUSH/crush .
+ln -sf $BIN_TO_CRUSH/coadd .
+ln -sf $BIN_TO_CRUSH/detect .
+ln -sf $BIN_TO_CRUSH/difference .
+ln -sf $BIN_TO_CRUSH/esorename .
+ln -sf $BIN_TO_CRUSH/histogram .
+ln -sf $BIN_TO_CRUSH/imagetool .
+ln -sf $BIN_TO_CRUSH/jiggle .
+ln -sf $BIN_TO_CRUSH/show .
 cd $CURRENT_DIR
+
+
 echo Done!
 

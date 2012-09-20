@@ -1,30 +1,51 @@
 #!/bin/bash
-
-# To use a java other than the default version on the system adjust by
-# by commentting/uncommenting and/or altering the desired JAVA line. 
 #
-# It is recommended that you use SUN's latest java, which is generally 
-# installed into the default location:
-#JAVA="/usr/java/latest/bin/java"
-# 
-# However, some linux systems come with other java (or other install location)
-# which is why the default is to try to use the system default. Note, however,
-# that GNU's java is rather buggy and may not run CRUSH correctly.
+# ===========================================================================
+# Description: Java configuration wrapper script for CRUSH tools.
+# Author: Attila Kovacs <attila@submm.caltech.edu>
+# Updated: 26 June 2012
+# ===========================================================================  
+
+
+# Most computers come with a suitable version of Java (Oracle, OpenJDK/IcedTea)
+# these days. Therefore, using the system default Java should work out of
+# the box in most cases: 
+
 JAVA="java"
 
-# Here you can specify the options passed to the Java Runtime Environment
-# For 64-bit machines use first line instead of second...
-# Also, adjust the -Xmx value to reflect the amount of memory in your
-# system that you wish to make available to java.
-#
-# Uncomment and edit the line below for IBM Java.
-#JAVAOPTS="-Xbatch -Xmx4000M"
-# 
-# Uncomment and edit the line below for 64-bit SUN Java on 64-bit Unix OS
-#JAVAOPTS="-d64 -server -Xbatch -Xmx4000M"
-# 
-# Default SUN Java setup. Comment if using one of the other configs from above.
+
+# Alternatively, If you experience problems with the default version of Java 
+# (esp. GNU's buggy and sluggish gcj/gij), or you want to use a specific Java
+# version on your system, just uncomment the JAVA setting below and modify,
+# if you wish, to your preference.
+# It is recommended that you use Oracle's latest Java, which is generally 
+# found (on UNIX platforms) at:
+
+#JAVA="/usr/java/latest/bin/java"
+
+
+# Now, specify the options passed to the Java Runtime Environment
+# The default is 32-bit mode with 1GB of RAM for the VM.
+# Adjust the -Xmx value to reflect the amount of memory in you wish to make 
+# available to Java.
+# Default options for Oracle and OpenJDK/IcedTea VMs:
+
 JAVAOPTS="-server -Xbatch -Xmx1000M"
+
+
+# To run in 64-bit mode (needed for accessing RAM beyond 2GB but requires 
+# both a 64-bit OS *AND* a 64-bit version of Java), uncomment and edit:
+
+#JAVAOPTS="-d64 -server -Xbatch -Xmx4000M"
+
+
+# Uncomment and edit the line below if you are using IBM Java:
+
+#JAVAOPTS="-Xbatch -Xmx4000M"
+
+
+
+# --------------------- DO NOT CHANGE BELOW THIS LINE -----------------------
 
 NAME=$0
 
@@ -35,7 +56,6 @@ fi
 CRUSH=`dirname $NAME`
 export CRUSH
 
-# This line defines where java will look for the relevant source files. Leave
-# it as is, unless you have a good reason to change it...
-declare -x CLASSPATH="$CRUSH/crush.jar:$CRUSH/fits.jar:$CRUSH/bin"
+CLASSPATH="$CRUSH/crush.jar:$CRUSH/fits.jar:$CRUSH/bin"
 
+# ---------------------------- END OF SCRIPT --------------------------------

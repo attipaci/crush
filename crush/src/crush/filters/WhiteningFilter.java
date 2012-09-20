@@ -27,7 +27,7 @@ import java.util.Arrays;
 
 import util.Range;
 import util.data.DataPoint;
-import util.data.FFT;
+import util.data.OldFFT;
 import util.data.Statistics;
 
 import crush.Channel;
@@ -75,7 +75,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 		// Specify critical level as power, but use as amplitude...
 		if(hasOption("level")) level = Math.max(1.0, Math.sqrt(option("level").getDouble()));
 		
-		int windowSize = FFT.getPaddedSize(2 * nF);
+		int windowSize = OldFFT.getPaddedSize(2 * nF);
 		int n = data.length;
 		if(n < windowSize) windowSize = n;
 		windows = n / windowSize;

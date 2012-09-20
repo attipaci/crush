@@ -1,17 +1,94 @@
+	[SPEED] Filters now use newly implemented split-radix FFTs. These are
+	not only faster than the old, and inefficiently coded radix-2, but also
+	more precise for large datasets.
 
-2.12-b1 (2012 May 15)
+	[CODE] Efficient, parallel radix-4, and split-radix FFT algorithms 
+	implemented. The new split-radix algorithm is about 5 times faster than
+	the old radix-2 one when running on a single thread, and up to 12x 
+	faster with 24 threads (12 cores with hyper-threading). At the same 
+	time, the new algorithm is also more precise, especially for large 
+	datasets, and allows precision control (at the price of trading 
+	performance).
+
+	[CODE] New functions added to Util class, helping rounding integers
+	to near powers of 2.
+
+
+2.12-2 (10 Sep 2012)
 
 
 	Overview
 	=====================================================================
-	This release brings CRUSH up-to-date with GISMO's 2012 April run,
+	This is a bug-fix update of the 2.12 release. One major bug was found
+	and fixed relating to the use of the Large-Scale Structure (LSS)
+	filter in 'deep' mode reduction. The intention was for the filter to
+	preserve point-source fluxes, by applying an appropriate correction.
+	However, a badly constructed 'if' statement meant that no corrections
+	were applied, resulting in 5-30% reduced point source fluxes, depending
+	on the filter setting.
+	Also updated the GISMO 'faint' and 'deep' configurations, and bringing
+	a few more fixes and improvements.
+	=====================================================================
+
+	[BUG] {deep} LSS filter corrections were inadvertently not applied. 
+	This resulted in a 5-30% underestimation of 'deep' mode fluxes 
+	(depending on the filter width relative to the beam size). Now fixed. 
+	Several other issues also fixed and cleaned-up relating to the filter 
+	correction scheme.
+
+	[NEW] New 'show' colors now fully ported to CRUSH-2, and are available
+	to 'write.png.color' (see GLOSSARY for details).
+
+	[CONFIG] {faint} {deep} Despiking by 'absolute' deviations starting
+	from the 2nd iteration is reinstated. It seems to produce higher
+	quality deep maps.
+
+	[CONFIG] {GISMO} {faint} {deep} Updated the GISMO 'faint' and 'deep'
+	configurations based on the GDF data, including the 2012 April run.
+	The changes include a delayed switch from median to maximum-likelihood
+	estimators for correlated signals, a relaxed motion filter, and 15
+	iterations.
+
+	[COSMETIC] Updated 'wrapper.sh' to make it even easier to configure
+	Java runtime settings. The updated version is structured in a more
+	logical fashion.
+
+	[PACKAGE] Cleaned & fixed spec file used for making RPM packages.
+
+	[CODE] Some structural changes to parallel processing framework.
+
+
+2.12-1 (20 Jun 2012)
+
+
+	Overview
+	=====================================================================
+	A new experimental feature allows including dynamic references in 
+	configuration key/value statements, to other config settings, shell
+	environment variables or Java properties, making for smarter scripting.
+	New colors have been added to 'show' (still the old 1.xx version). 
+	Also, the release brings CRUSH up-to-date with GISMO's 2012 April run,
 	with new features, improvements and a current configuration for the
 	finalized state of the instrument. There are also fixes and 
 	improvements for the function of other instruments, and to CRUSH in
-	general. This is still a test (beta) release. As such, some bugs may
-	exist, and this and that can change. Please report any issues and bugs
-	that you may encounter. Thanks -- A.	
+	general.	
 	=====================================================================
+
+	[NEW] {since-b1} New 'echo' command added allowing to print user's
+	statements to the error stream as configuration settings are parsed.
+	Together with the experimental new feature to include references (see
+	further below), 'echo' can be used to track actual values (in some way 
+	similarly to 'poll', but resolving dynamic references also, and 
+	including other user-specified information). E.g.:
+
+	   crush [...] -echo="### Check: Jy = {?jansky} {?dataunit}" [...]
+
+	The above line, when used with 2007 LABOCA data would print to the
+	console:
+	
+	   ### Check: Jy = 1.78e-7 V
+
+	right when the parser reaches the 'echo' statement.
 
 	[NEW] {since-a1} Added some new color schemes to 'show' (hint: you can 
 	cycle through the colors by pressing 'k' or 'K' (for reverse cycle) in 
@@ -74,6 +151,49 @@
 	offset value for the timestream of a detector channel. As such the
 	setting is identical in functionality to 'offsets'.
 
+	[EXPERIMENTAL] {since-b1} New configuration syntax allows to 
+	incorporate references (to other configuration values or environment 
+	variables) directly in script or in command-line using square brackets 
+	to indicate references (in general). E.g. if you want to set the output
+	folder relative to the location of the raw data, you can now do it by 
+	enclosing 'datapath', whose value will be substituted, between 
+	curly {}'s with a ?:
+
+		outpath={?datapath}/images
+
+	The ?'s specify that the 'datapath' variable should be substituted when
+	evaluated. The substitution will happen dynamically, i.e. every time the
+	'outpath' value is accessed. This will not work for recursive 
+	substitutions (which will be stuck in an infinite loop!). Instead you
+	can use & for static subsitutions, E.g.
+
+		outpath={&outpath}/2012
+
+	This second type of expression is evaluated only once, at parsing, when
+	the substitution is made once and for all. The above line would set the
+	new outpath to the '2012' subfolder of the old 'outpath'.
+	In addition to configuration values you can also query the 'instrument'
+	value the same way. E.g.:
+
+		> crush laboca -config="~/{?instrument}/myconfig.cfg" ...
+
+	will load the configuration from "~/laboca/myconfig.cfg"
+
+	Finally, the same way you can now always access environment variables
+	with @, or Java properties with #. E.g.
+
+		outpath={@HOME}/images
+		outpath={#user.home}/images
+
+	The old way of incorporating environment variables (e.g. as {$HOME})
+	will be deprecated downstream. The old way worked only with a few
+	options (unlike the new method which works universally), and also 
+	conflicted with the shell (bash) syntax, when used on the command-line.
+	The new syntax is more shell (bash) friendly.
+	Note, this new feature is still at an experimental stage, because the 
+	syntax may evolve for better command-line integration across platforms 
+	and shells.
+
 	[CHANGE] {since a1} Changes to keystrokes in 'show': 'K' now works with
 	'k' to toggle colorschemes back and forth, while convolving to beam is 
         performed by 'Q' (paired with devoncolution 'q').
@@ -82,6 +202,23 @@
 	the logging section of the README for details.
 
 	[CHANGE] Map redundancy check moved from scan to compound map.
+
+	[FIX] {since-b1} {GISMO} 'dejump.minlength' was not working exactly
+	as advertised, maxing out at the current 1/f filter time-scale. Now
+	fixed.
+
+	[FIX] {since-b1} {GISMO} Decorrelating 'flips' was not working as
+	intended in 2.12-b1 because of a residue from abandoned code. Should
+	be OK now.
+
+	[FIX] {since-b1} Changing signal resolution during reduction was not
+	handled well under certain flagging conditions. Now fixed.
+
+	[FIX] {since-b1} Changed the way gradient gains are centered, such that
+	they are orthogonal to the underlying correlated component.
+
+	[FIX] {since-b1} Values with errors printed funny by default when no 
+	unit was specified.
 
 	[FIX] {GISMO} All pointing information in FITS is now correctly 
 	interpreted (or so I hope). Looks like Nasmyth offsets in CRUSH model 
@@ -128,7 +265,12 @@
 	[FIX] PolarVector2D power op was wrongly defined. However, since this
 	feature was never used in CRUSH, there was no damage done by it.
 
-	[TWEAK] {since-a1} {GISMO} Refined the way de-jumping counts its
+	[TWEAK] {since-b1} Slight adjustment of parameter accounting for 
+	correlated signals, now taking into account the effect of 1/f 
+	filtering and gain normalization (which make the values less than fully 
+	independent!)
+
+	[TWEAK] {since-b1} {GISMO} Refined the way de-jumping counts its
 	parameters dependecies (used for obtaining proper noise weights).
 
 	[TWEAK] {since-a1} De-jumping produced unintended time-weighting 
@@ -146,6 +288,14 @@
 	[TWEAK] Time-weighting renormalization adjusted.
 
 	[TWEAK] Uncertainty calculation of elongation measure improved.
+
+	[CONFIG] {since-b1} {GISMO} Tweaked faint/deep-mode configurations
+	based on the set of faint sources of 249-11. Dejumping mainly by 
+	flagging, no wire-trace flips (these are too much of a guess-work
+	anyway), longer 7.5 sec stability for 'deep', and no frame-weighting.
+
+	[CONFIG] {since-b1} {GISMO} Solving for MUX gains delayed until the 2nd
+	iteration. It results in better and more stable reductions.
 
 	[CONFIG] {since-a1} {GISMO} Recalibrated pre-2012 configs for 17.5" 
 	FWHM beam (previous 16.7" was assumed but was quite certainly too 
@@ -174,9 +324,6 @@
 	
 	[CONFIG] Updated 'extended' configuration based on AtlasGal.
 
-	[CONFIG] {GISMO} Added pointing model for the main part of the April
-	2012 run.
-
 	[CONFIG] {GISMO} Finalized RCP and pixel data for April 2012 run.
 
 	[CONFIG] {GISMO} Finalized conversion factors (for bias settings 
@@ -189,6 +336,25 @@
 	corrections are applied based on nearby pointing sources, s.t. the 
 	final pointing accuracy of CRUSH for the 2012 April run ought to be 
 	around 1--2" rms or better.
+
+	[COSMETIC] Despiking now reports the number of spikes removed rather 
+	than a percentage of frames.
+
+	[CODE] {since-b1} Made sure all open streams are closed when no longer 
+	used. Thanks to Eclipse JUNO for finding the trouble spots!
+
+	[CODE] {since-b1} Configured paths now uniformly accessed through
+	Configurator.getPath().
+
+	[CODE] {since-b1} Improved rendering and transparency handling of PNG 
+	(and display) images. PNG output can now handle complex components
+	(e.g. with coordinates, labels, colorbars) not just pure images. Most
+	of these changes will not be visible to the user until the new 'show'
+	tool is released (soon...).
+
+	[CODE] {since-b1} Each configuration banch now has direct access to the
+	root of the configuration tree (needed for resolving dynamic 
+	references).
 
 	[CODE] {since-a1} Cleaned up access to associated instrument properties
 	in source model.
@@ -215,6 +381,14 @@
 	[CODE] More work on imaging classes. The day of native CRUSH-2 image
 	tools is getting ever closer...
 
+	[PACKAGE] Added java7-runtime as acceptable dependence for Debian 
+	packages.	
+
+	[PACKAGE] Fixed bad RPM symlinks to executables.
+
+	[UPDATE] Updated configs to use the new environment variable reference
+	scheme. The old syntax is also accepted, although it may eventually be
+	phased out.
 
 
 2.11-2 (16 March 2012)

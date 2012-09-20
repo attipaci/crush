@@ -3053,9 +3053,16 @@
 			PNG image. The following schemes are supported:
 
 			   'colorful'
+			   'rainbow'
+			   'temperature'
+			   'doppler'
 			   'grayscale'
+			   'daytime'
+			   'nighttime'
 			   'blue'
+			   'glacier'
 			   'orange'
+			   'bb'
 
 			The default is 'colorful'.
 			@See: 'write.png'
