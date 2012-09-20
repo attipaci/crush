@@ -25,6 +25,7 @@ package util.data;
 
 import java.io.*;
 
+
 import crush.sourcemodel.GaussianSource;
 
 // TODO make independent of crush packages...
@@ -306,8 +307,8 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		};
 		ecalc.process();
 		
-		Complex[][] cdata = FFT.load(extended);
-		FFT.uncheckedForward(cdata, true);
+		Complex[][] cdata = OldFFT.load(extended);
+		OldFFT.uncheckedForward(cdata, true);
 
 		final int nx = cdata.length;
 		final int ny = cdata[0].length;
@@ -337,8 +338,8 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		cdata[1][0].scale(Math.exp(ax));
 		cdata[0][1].scale(Math.exp(ay));
 		
-		FFT.uncheckedForward(cdata, false);
-		FFT.unload(cdata, extended);
+		OldFFT.uncheckedForward(cdata, false);
+		OldFFT.unload(cdata, extended);
 	
 		double avew = ecalc.getResult().value();
 		if(avew > 0.0) {

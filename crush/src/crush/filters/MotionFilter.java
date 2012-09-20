@@ -31,7 +31,6 @@ import crush.Motion;
 import util.Range;
 import util.Util;
 import util.Vector2D;
-import util.data.FFT;
 import util.data.Statistics;
 
 // TODO account for point-source filtering, and Dependents...
@@ -98,7 +97,7 @@ public class MotionFilter extends KillFilter {
 		levelData();
 		
 		// FFT to get the scanning spectra
-		FFT.forwardRealInplace(data);
+		integration.getFFT().real2Amplitude(data);
 		
 		// Never
 		data[0] = 0.0F;

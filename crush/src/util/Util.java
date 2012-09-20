@@ -348,6 +348,36 @@ public final class Util {
 		System.out.println("-------------------------------------------------------------");
 	}
 
+	public static int msb(int value) {
+		return log2floor(value);
+	}
+	
+	public static int log2floor(int value) {		
+		int bits = 0;
+		while((value >> bits) > 0) bits++;
+		return bits-1;
+	}
+	
+	public static int log2ceil(int value) {
+		int p = log2floor(value);
+		return 1<<p == value ? p : p+1;
+	}
+	
+	public static int log2round(int value) {
+		int pfloor = log2floor(value);
+		int floor = 1<<pfloor;
+		if(value == floor) return pfloor;
+		
+		return (double) value / floor < (double)(floor<<1) / value ? pfloor : pfloor + 1;
+	}
+	
+	public static int pow2floor(int value) { return 1 << log2floor(value); }
+	
+	public static int pow2ceil(int value) { return 1 << log2ceil(value); }
+	
+	public static int pow2round(int value) { return 1 << log2round(value); }
+
+	
 	/*
     public static double fitsDouble(double value) {
 	if(value < 0.0 && value > -1.0) {

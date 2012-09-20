@@ -26,8 +26,6 @@ package crush.filters;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import util.data.FFT;
-
 import crush.Channel;
 import crush.ChannelGroup;
 import crush.Frame;
@@ -151,7 +149,7 @@ public class MultiFilter extends VariedFilter {
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		Arrays.fill(filtered, 0.0F);
 		
-		FFT.forwardRealInplace(data);	
+		integration.getFFT().real2Amplitude(data);	
 		data[0] = 0.0F;
 		
 		// Apply the filters sequentially...
@@ -187,7 +185,7 @@ public class MultiFilter extends VariedFilter {
 		}
 		
 		// Convert to rejected signal...
-		FFT.backRealInplace(filtered);
+		integration.getFFT().amplitude2Real(filtered);
 		
 		// Remove the DC component...
 		levelFor(channel, filtered);

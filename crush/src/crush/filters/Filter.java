@@ -34,7 +34,7 @@ import crush.Integration;
 import util.Configurator;
 import util.Constant;
 import util.Util;
-import util.data.FFT;
+import util.data.OldFFT;
 
 public abstract class Filter {
 	protected Integration<?,?> integration;
@@ -85,7 +85,7 @@ public abstract class Filter {
 	protected void setIntegration(Integration<?,?> integration) {
 		this.integration = integration;
 		
-		int nt = FFT.getPaddedSize(integration.size());
+		int nt = OldFFT.getPaddedSize(integration.size());
 		
 		if(data == null) data = new float[nt];
 		else if(data.length != nt) data = new float[nt];
@@ -211,7 +211,7 @@ public abstract class Filter {
 		// Pad with zeroes as necessary...
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		
-		FFT.forwardRealInplace(data);
+		integration.getFFT().real2Amplitude(data);
 		
 		updateProfile(channel);
 		
@@ -224,7 +224,7 @@ public abstract class Filter {
 			data[i++] *= rejection; 	
 		}
 		
-		FFT.backRealInplace(data);
+		integration.getFFT().amplitude2Real(data);
 	}
 	
 	// Convert data into a rejected signal (unlevelled)

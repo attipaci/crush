@@ -1,3 +1,20 @@
+>> update html copyright in headers...
+
+>> inverse colors (e.g. for write.png).
+
+>> Inetgration ops -> Integration.Task 
+     - Migrate operations (crush.task)
+     - Parallel / massively parallel
+     - plugin architecture
+
+>> util -> kovacs.util
+   util.astro -> kovacs.astro or kovacs.util.astro
+   ...
+
+>> Split out kovacs.util as a separate util project, but link source into
+   crush, and package together with crush...
+
+
 >> deprecate {$HOME} syntax -- in a while...
 
 >> write.png.spline

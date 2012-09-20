@@ -1,21 +1,20 @@
 package test;
 
 import util.Util;
-import util.fft.DoubleFFT;
+import util.fft.FloatFFT;
 
-public class FFTTest4 {
+public class FFTTest4A {
 	
 	public static void main(String[] args) {
 		final int total = 256 * 1024 * 1024;
 		final int n = args.length > 0 ? Integer.parseInt(args[0]) : 16;
 		final int N = n * 1024;
 		final int repeats = Math.max(total / N, 1);
-
-		int errorbits = args.length > 1 ? Integer.parseInt(args[1]) : 3;
+		
 		
 		//final long ops = repeats * N * Math.round((Math.log(N) / Math.log(2.0)));
 
-		final double[] data = new double[N];
+		final float[] data = new float[N];
 		long time = 0L;
 		double speed = Double.NaN;
 		
@@ -28,10 +27,9 @@ public class FFTTest4 {
 		System.err.println("sequent'l " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");
 		*/
 		
-		DoubleFFT fft = new DoubleFFT();
-		fft.setErrorBits(errorbits);
+		FloatFFT fft = new FloatFFT();
 		
-		for(int i=0; i<data.length; i++) data[i] = Math.random();
+		for(int i=0; i<data.length; i++) data[i] = (float) Math.random();
 		time = -System.currentTimeMillis();
 		for(int k=repeats; --k>=0; ) {
 			try { fft.complexTransform(data, (k & 1) == 0); }
@@ -45,7 +43,7 @@ public class FFTTest4 {
 		System.err.println("seqt'l 2  " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");
 		
 		
-		for(int i=0; i<data.length; i++) data[i] = Math.random();
+		for(int i=0; i<data.length; i++) data[i] = (float) Math.random();
 		time = -System.currentTimeMillis();
 		for(int k=repeats; --k>=0; ) {
 			try { fft.complexTransform(data, (k & 1) == 0, 1); }
@@ -59,7 +57,7 @@ public class FFTTest4 {
 		System.err.println("1 thread  " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");
 		
 			
-		for(int i=0; i<data.length; i++) data[i] = Math.random();
+		for(int i=0; i<data.length; i++) data[i] = (float) Math.random();
 		time = -System.currentTimeMillis();
 		for(int k=repeats; --k>=0; ) {
 			try { fft.complexTransform(data, (k & 1) == 0, 2); }
@@ -72,7 +70,7 @@ public class FFTTest4 {
 		speed = repeats / (1e-3*time);
 		System.err.println("2 threads " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");
 
-		for(int i=0; i<data.length; i++) data[i] = Math.random();
+		for(int i=0; i<data.length; i++) data[i] = (float) Math.random();
 		time = -System.currentTimeMillis();
 		for(int k=repeats; --k>=0; ) {
 			try { fft.complexTransform(data, (k & 1) == 0, 4); }
@@ -85,7 +83,7 @@ public class FFTTest4 {
 		speed = repeats / (1e-3*time);
 		System.err.println("4 threads " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");
 	
-		for(int i=0; i<data.length; i++) data[i] = Math.random();
+		for(int i=0; i<data.length; i++) data[i] = (float) Math.random();
 		time = -System.currentTimeMillis();
 		for(int k=repeats; --k>=0; ) {
 			try { fft.complexTransform(data, (k & 1) == 0, 8); }
@@ -103,7 +101,7 @@ public class FFTTest4 {
 		if(cpus <= 4) { fft.shutdown(); return; }
 		if(cpus == 8) { fft.shutdown(); return; }
 		
-		for(int i=0; i<data.length; i++) data[i] = Math.random();
+		for(int i=0; i<data.length; i++) data[i] = (float) Math.random();
 		time = -System.currentTimeMillis();
 		for(int k=repeats; --k>=0; ) {
 			try { fft.complexTransform(data, (k & 1) == 0, cpus/2); }
@@ -116,7 +114,7 @@ public class FFTTest4 {
 		speed = repeats / (1e-3*time);
 		System.err.println((cpus/2) + " threads " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");
 		
-		for(int i=0; i<data.length; i++) data[i] = Math.random();
+		for(int i=0; i<data.length; i++) data[i] = (float) Math.random();
 		time = -System.currentTimeMillis();
 		for(int k=repeats; --k>=0; ) {
 			try { fft.complexTransform(data, (k & 1) == 0, cpus); }
