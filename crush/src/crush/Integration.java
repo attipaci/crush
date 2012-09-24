@@ -202,7 +202,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public FloatFFT getFFT() { 
-		if(fft == null) fft = new FloatFFT();
+		if(fft == null) {
+			fft = new FloatFFT();
+			fft.setSequential();
+		}
 		return fft; 
 	}
 	
@@ -340,14 +343,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public void setTau(String id, double value) {
-		Vector2D t = (Vector2D) getTauCoefficients(id);
-		Vector2D inband = (Vector2D) getTauCoefficients(instrument.getName());
+		Vector2D t = getTauCoefficients(id);
+		Vector2D inband = getTauCoefficients(instrument.getName());
 		setZenithTau(inband.getX() / t.getX() * (value - t.getY()) + inband.getY());
 	}
 	
 	public double getTau(String id, double value) {
-		Vector2D t = (Vector2D) getTauCoefficients(id);
-		Vector2D inband = (Vector2D) getTauCoefficients(instrument.getName());
+		Vector2D t = getTauCoefficients(id);
+		Vector2D inband = getTauCoefficients(instrument.getName());
 		return t.getX() / inband.getX() * (value - inband.getY()) + t.getY();
 	}
 	
@@ -1727,7 +1730,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	// Redo with Filter...
-	public synchronized void highPassFilter(double T) {
+	public synchronized void highPassFilter(double T) throws InterruptedException {
 		int Nt = OldFFT.getPaddedSize(size());
 	
 		// sigmat sigmaw = 1 ->
@@ -1749,7 +1752,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	
-	public synchronized void filter(ChannelGroup<? extends Channel> channels, double[] response) {
+	public synchronized void filter(ChannelGroup<? extends Channel> channels, double[] response) throws InterruptedException {
 		comments += "F";
 		
 		float[] signal = new float[OldFFT.getPaddedSize(size())];
@@ -2065,12 +2068,17 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				else if(exposure.sampleFlag[channel.index] != 0) data[t] = 0.0F;
 				else data[t] = exposure.data[channel.index];
 			}
-			final double[] spectrum = getFFT().averagePower(data, w);
-			final float[] channelSpectrum = new float[spectrum.length];
+			try { 
+				final double[] spectrum = getFFT().averagePower(data, w); 	
+				final float[] channelSpectrum = new float[spectrum.length];	
+				for(int i=spectrum.length; --i>=0; ) channelSpectrum[i] = (float) Math.sqrt(spectrum[i] / df) / Jy;	
+				spectra[channel.index] = channelSpectrum;
+			}
+			catch(InterruptedException e) {
+				System.err.println("ERROR! Unexpected interrupt.");
+				throw new Error(e);
+			}
 			
-			for(int i=spectrum.length; --i>=0; ) channelSpectrum[i] = (float) Math.sqrt(spectrum[i] / df) / Jy;
-			
-			spectra[channel.index] = channelSpectrum;
 		}
   
 		return spectra;
@@ -2449,7 +2457,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			Configurator driftOptions = option("drifts");
 			String method = driftOptions.isConfigured("method") ? driftOptions.get("method").getValue() : "blocks"; 
 			int driftN = filterFramesFor(option("drifts").getValue(), 10.0*Unit.sec);
-			if(method.equalsIgnoreCase("fft")) highPassFilter(driftN * instrument.samplingInterval);
+			if(method.equalsIgnoreCase("fft")) {
+				try { highPassFilter(driftN * instrument.samplingInterval); }
+				catch(InterruptedException e) {
+					System.err.println("ERROR! Unexpected interrupt.");
+					throw new Error(e);
+				}
+			}
 			else removeDrifts(instrument, driftN, isRobust, false);
 		}
 		else if(task.startsWith("correlated.")) {	

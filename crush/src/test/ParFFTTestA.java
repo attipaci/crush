@@ -9,13 +9,13 @@ public static void main(String[] args) {
 		System.err.println("FFT test for floats...");
 	
 		float[] data = new float[32];
-		
-		int threads = 3;
+
 		FloatFFT fft = new FloatFFT();
+		fft.setParallel(3);
 		
 		System.err.println("delta[0]:");
 		data[0] = 1.0F;
-		try { fft.complexTransform(data, true, threads); }
+		try { fft.complexTransform(data, true); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
@@ -24,7 +24,7 @@ public static void main(String[] args) {
 			data[i] = 1.0F;
 			data[i+1] = 0.0F;
 		}
-		try { fft.complexTransform(data, true, threads); }
+		try { fft.complexTransform(data, true); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
@@ -34,7 +34,7 @@ public static void main(String[] args) {
 			data[i] = (float) Math.cos(2.0 * Math.PI * i / data.length);
 			data[i+1] = 0.0F;
 		}
-		try { fft.complexTransform(data, true, threads); }
+		try { fft.complexTransform(data, true); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
@@ -43,7 +43,7 @@ public static void main(String[] args) {
 			data[i] = (float) Math.sin(4.0 * Math.PI * i / data.length);
 			data[i+1] = 0.0F;
 		}
-		try { fft.complexTransform(data, true, threads); }
+		try { fft.complexTransform(data, true); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
@@ -61,12 +61,12 @@ public static void main(String[] args) {
 		print(data);
 		
 		System.err.println("r2a:");
-		try { fft.real2Amplitude(data, threads); }
+		try { fft.real2Amplitude(data); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
 		System.err.println("a2r:");
-		try { fft.amplitude2Real(data, threads); }
+		try { fft.amplitude2Real(data); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		

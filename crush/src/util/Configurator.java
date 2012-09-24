@@ -413,7 +413,7 @@ public class Configurator implements Cloneable {
 		String branchName = getBranchName(arg);
 		
 		if(branchName.equals("*")) {
-			for(String name : new ArrayList<String>(branches.keySet())) remove(name + getRemainder(arg, 1));;
+			for(String name : new ArrayList<String>(branches.keySet())) remove(name + getRemainder(arg, 1));
 		}
 		else if(branchName.startsWith("[") && branchName.endsWith("]")) {
 			branchName = branchName.substring(1, branchName.length()-1).trim();
@@ -439,7 +439,7 @@ public class Configurator implements Cloneable {
 		String branchName = getBranchName(arg);
 		
 		if(branchName.equals("*")) {
-			for(String name : new ArrayList<String>(branches.keySet())) purge(name + getRemainder(arg, 1));;
+			for(String name : new ArrayList<String>(branches.keySet())) purge(name + getRemainder(arg, 1));
 		}
 		else if(branchName.startsWith("[") && branchName.endsWith("]")) {
 			branchName = branchName.substring(1, branchName.length()-1).trim();

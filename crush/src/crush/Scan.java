@@ -708,7 +708,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(!(sourceModel instanceof ScalarMap)) return null;
 		
 		AstroMap map = ((ScalarMap) sourceModel).map;
-		if(!(map.isEquatorial() || map.isHorizontal())) return map.getAsymmetry(region, 0.0, 2.5);;
+		if(!(map.isEquatorial() || map.isHorizontal())) return map.getAsymmetry(region, 0.0, 2.5);
 
 		boolean isGroundEquatorial = this instanceof GroundBased && map.isEquatorial();
 		double angle = isGroundEquatorial ? this.getPA() : 0.0;

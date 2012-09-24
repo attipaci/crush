@@ -31,6 +31,32 @@ import util.data.WindowFunction;
 
 public abstract class FFT<Type> {
 	private ThreadPoolExecutor pool;
+	private int chunksPerThread = 2;
+	private boolean autoThread = false;
+	
+	private int lastAddressBits;
+	
+	int getOptimalThreadBits() { return 15; }
+	
+	int getMaxThreads() { return Runtime.getRuntime().availableProcessors(); }
+	
+	public int getChunksPerThread() { return chunksPerThread; }
+	
+	public void setChunksPerThread(int n) { this.chunksPerThread = n; }
+	
+	
+	// TODO clone pools properly...
+	@Override
+	public Object clone() {
+		try { 
+			@SuppressWarnings("unchecked")
+			FFT<Type> clone = (FFT<Type>) super.clone(); 
+			clone.pool = null;
+			return clone;
+		}
+		catch(CloneNotSupportedException e) { return null; }
+	}
+	
 	
 	protected class Queue {
 		private Vector<Task> tasks = new Vector<Task>();
@@ -67,6 +93,7 @@ public abstract class FFT<Type> {
 		}
 		
 		public final void run() {
+			//Thread.yield();
 			process(data, from, to);
 			queue.checkout();
 		}
@@ -78,51 +105,69 @@ public abstract class FFT<Type> {
 		public abstract void process(Type data, int from, int to);
 	}
 	
+
 	
-	// Sequential transform
-	public abstract void complexTransform(Type data, boolean isForward);
+	abstract void sequentialComplexTransform(Type data, boolean isForward);
 	
-	public abstract void complexTransform(Type data, boolean isForward, int threads) throws InterruptedException;
+	abstract void complexTransform(Type data, boolean isForward, int threads) throws InterruptedException;
+	
+	abstract int sizeOf(Type data);
+	
+	abstract int addressSizeOf(Type data);
+	
+	public final void complexForward(Type data) throws InterruptedException { complexTransform(data, FORWARD); }
+	
+	public final void complexBack(Type data) throws InterruptedException { complexTransform(data, BACK); }
+	
+	int getAddressBits(Type data) {
+		int n = addressSizeOf(data);
+		if(n == 1 << lastAddressBits) return lastAddressBits;
+		
+		int bits = 0;
+		while((n >>= 1) != 0) bits++;
+		return bits;
+	}
+		
 	
 	public abstract Type getPadded(Type data, int n);
 	
-	public abstract int sizeOf(Type data);
+	abstract double[] averagePower(Type data, double[] w) throws InterruptedException;
 	
-	public abstract double[] averagePower(Type data, double[] w, int threads) throws InterruptedException;
-	
-	
-	
-	public double[] averagePower(Type data, int windowSize) {
-		try { return averagePower(data, windowSize, 1); }
-		catch(InterruptedException e) {
-			System.err.println("Unexpected interrupt exception!");
-			e.printStackTrace();
-			System.exit(1);			
-		}
-		return null;
-	}
-	
-	public double[] averagePower(Type data, int windowSize, int threads) throws InterruptedException {
-		if(sizeOf(data) < windowSize) return averagePower(getPadded(data, windowSize), windowSize, threads);
-		return averagePower(data, WindowFunction.getHamming(windowSize), threads);
-	}
 
-	public double[] averagePower(Type data, double[] w) {
-		try { return averagePower(data, w, 1); }
-		catch(InterruptedException e) {
-			System.err.println("Unexpected interrupt exception!");
-			e.printStackTrace();
-			System.exit(1);			
-		}
-		return null;
+	public void complexTransform(Type data, boolean isForward) throws InterruptedException {
+		updateThreads(data);
+		int chunks = getChunks();
+		if(chunks == 1) sequentialComplexTransform(data, isForward);
+		else complexTransform(data, isForward, chunks);
+	}
+	
+	void updateThreads(Type data) {	
+		if(!autoThread) return;
+		setParallel(getOptimalThreads(getAddressBits(data)));
+		autoThread = true;
 	}
 	
 
+	public double[] averagePower(Type data, int windowSize) throws InterruptedException {
+		if(sizeOf(data) < windowSize) return averagePower(getPadded(data, windowSize), windowSize);
+		return averagePower(data, WindowFunction.getHamming(windowSize));			
+	}
+	
 	public int getParallel() { 
-		return pool == null ? 0 : pool.getCorePoolSize();
+		return pool == null ? 1 : pool.getCorePoolSize();
+	}
+	
+	public int getChunks() { 
+		return pool == null ? 1 : chunksPerThread * pool.getCorePoolSize();
+	}
+	
+	public void setSequential() {
+		pool = null;
 	}
 	
 	public void setParallel(int threads) {
+		autoThread = false;
+		
 		if(pool != null) {
 			if(pool.getCorePoolSize() != threads) {
 				pool.shutdown();
@@ -131,10 +176,22 @@ public abstract class FFT<Type> {
 			else return;
 		}
 		
-		pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads);
+		if(threads == 1) pool = null;
+		else pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(threads);
 		//pool.prestartAllCoreThreads();
 	}
 
+	public void autoThread() { autoThread = true; }
+	
+	public boolean isAutoThreaded() { return autoThread; }
+	
+	private int getOptimalThreads(int addressBits) {
+		int optimalThreadBits = getOptimalThreadBits();
+		if(addressBits > optimalThreadBits) return Math.min(getMaxThreads(), 1<<(addressBits - optimalThreadBits));
+		else return 1;
+	}
+	
+	@Override
 	protected void finalize() throws Throwable {
 		pool.shutdown();
 		super.finalize();
@@ -168,9 +225,15 @@ public abstract class FFT<Type> {
 		  0x0F, 0x8F, 0x4F, 0xCF, 0x2F, 0xAF, 0x6F, 0xEF, 0x1F, 0x9F, 0x5F, 0xDF, 0x3F, 0xBF, 0x7F, 0xFF
 		};
 	
+
+	
 	public static final boolean FORWARD = true;
 	public static final boolean BACK = false;
 	
 	
-	
+	final static double twoPi = 2.0 * Math.PI;
+
+
+
 }
+ 

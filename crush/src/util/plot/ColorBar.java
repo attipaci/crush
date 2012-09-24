@@ -173,8 +173,8 @@ public class ColorBar extends JComponent implements PlotSide {
 			Range range = imager.getContentLayer().getRange();
 			
 			double frac = isHorizontal() ?
-					(double) pos.getX() / getWidth() :
-					1.0 - (double) pos.getY() / getHeight();
+					pos.getX() / getWidth() :
+					1.0 - pos.getY() / getHeight();
 					
 			return range.min() + frac * range.span();
 		}	
