@@ -140,7 +140,7 @@ public abstract class FFT<Type> {
 		super.finalize();
 	}
 	
-	public void shutdown() { pool.shutdown(); }
+	public void shutdown() { if(pool != null) pool.shutdown(); }
 	
 	public static final int bitReverse(final int i, final int bits) {
 		if(bits <= 8) return br[i] >> (8 - bits);

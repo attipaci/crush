@@ -81,27 +81,25 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 	
 
 	// Sequential transform
-	public void complexTransform(final double[] data, final boolean isForward) {
+	public void complexTransform(final double[] data, final boolean isForward) {	
 		prepare(data.length, isForward);
 
 		bitReverse(data, 0, data.length);
 		
-		int N = data.length >> 1;
+		int blkbit = 0;
 
-			int blkbit = 0;
+		if((addressBits & 1) != 0) merge2(data, 0, data.length, isForward, blkbit++);
 
-			if((addressBits & 1) != 0) merge2(data, 0, N, isForward, blkbit++);
-
-			while(blkbit < addressBits) {	
-				merge4(data, 0, N, isForward, blkbit);
-				blkbit += 2;
-			}
+		while(blkbit < addressBits) {	
+			merge4(data, 0, data.length, isForward, blkbit);
+			blkbit += 2;
+		}
 	}
 
 	// TODO measure performance of threads vs. size, to figure out what critical size to allocate extra threads for...	
 	public synchronized void complexTransform(final double[] data, final boolean isForward, int threads) throws InterruptedException {
 		// Don't make more threads than there are processing blocks...
-		threads = Math.min(threads, data.length >> 2);
+		threads = Math.min(threads, data.length >> 3);
 		
 		if(threads < 2) {
 			complexTransform(data, isForward);
@@ -119,8 +117,8 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 		final int[] to = new int[threads];
 
 		for(int k=threads; --k >= 0; ) {
-			from[k] = (int)Math.round(k * dn) << 2;
-			to[k] = (int)Math.round((k+1) * dn) << 2;
+			from[k] = (int)Math.round(k * dn) << 3;
+			to[k] = (int)Math.round((k+1) * dn) << 3;
 		}
 		
 		class BitReverser extends Task {
@@ -176,23 +174,25 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 	}
 
 
-
-	// Merge is called with abstract data indices.
-	// Here from, to, are complex data indices. double array indices are 2x bigger...
 	// Blockbit is the size of a merge block in bit shifts (e.g. size 2 is bit 1, size 4 is bit 2, etc.)
 	// Two consecutive blocks are merged by the algorithm into one larger block...
 	private void merge2(final double[] data, int from, int to, boolean isForward, int blkbit) {	
 		// Change from abstract index to double[] storage index (x2)
 		blkbit++; 
-
+	
 		// The double[] block size
 		final int blk = 1 << blkbit;
 		final int blkmask = blk - 1;
-
-		// make from and to become double indeces for i1...
+		
+		// make from and to compactified indices for i1
+		from >>= 1;
+		to >>= 1;
+		
+		// convert to sprase indices for i1...
 		from = ((from >> blkbit) << (blkbit + 1)) + (from & blkmask);
 		to = ((to >> blkbit) << (blkbit + 1)) + (to & blkmask);
-	
+			
+		
 		// <------------------ Processing Block Starts Here ------------------------>
 		// 
 		// This one calculates the twiddle factors on the fly, using generators,
@@ -262,12 +262,13 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 
 
 	
-	
-	// Merge is called with abstract data indices.
-	// Here from, to, are complex data indices. double array indices are 2x bigger...
+
 	// Blockbit is the size of a merge block in bit shifts (e.g. size 2 is bit 1, size 4 is bit 2, etc.)
 	// Two consecutive blocks are merged by the algorithm into one larger block...
-	private void merge4(final double[] data, int from, int to, boolean isForward, int blkbit) {
+	private void merge4(final double[] data, int from, int to, boolean isForward, int blkbit) {	
+		//System.err.println("### merge4> blkbit=" + blkbit + ", " + from + ":" + to);
+		
+		
 		// Change from abstract index to double[] storage index (x2)
 		blkbit++; 
 
@@ -276,15 +277,16 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 		final int skip = 3 * blk;
 		final int blkmask = blk - 1;
 
-		// make from and to become double indices for i1...
-		from >>= 1;
-		to >>= 1;
-
-		// make from and to become double indices for i1...
-		from = ((from >> blkbit) << (blkbit + 1)) + (from & blkmask);
-		to = ((to >> blkbit) << (blkbit + 1)) + (to & blkmask);
+		// make from and to compactified indices for i1 (0...N/4)
+		from >>= 2;
+		to >>= 2;
 		
-
+		// convert to sprase indices for i1...
+		from = ((from >> blkbit) << (blkbit + 2)) + (from & blkmask);
+		to = ((to >> blkbit) << (blkbit + 2)) + (to & blkmask);
+			
+		
+	
 		// <------------------ Processing Block Starts Here ------------------------>
 		// 
 		// This one calculates the twiddle factors on the fly, using generators,
@@ -295,8 +297,8 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 		final double s = Math.sin(theta);
 		
 		int m = (from & blkmask) >> 1;
-		double wr1 = m == 0 ? 1.0 : Math.cos(m * theta);
-		double wi1 = m == 0 ? 0.0 : Math.sin(m * theta);
+		double wr1 = Math.cos(m * theta);
+		double wi1 = Math.sin(m * theta);
 		
 		final int clcmask = getErrorMask();
 			
@@ -308,7 +310,7 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 				wr1 = 1.0;
 				wi1 = 0.0;
 			}
-
+			
 			//->0:    f0 = F0
 
 			final double f0r = data[i0];
@@ -397,7 +399,6 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 
 			y2r = f1r + f3r;
 			y2i = f1i + f3i;
-
 			
 			data[i2] = y0r - y2r;
 			data[i2+1] = y0i - y2i;
@@ -411,17 +412,16 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 		// <------------------- Processing Block Ends Here ------------------------->
 
 
+		//System.err.println();
 	}
 	
-	// Called with complex indices...
 	private void loadReal(final double[] data, int from, int to, boolean isForward) {
-		
-		from = Math.max(from, 2);
+	
 		to = Math.min(to, data.length);
 		
-		// Make from and to even...
-		from &= ~1;
-		to &= ~1;
+		// Make from and to even indices 0...N/2
+		from = Math.max(2, (from >> 2) << 1);
+		to = (to >> 2) << 1;
 		
 		final double theta = (isForward ? 1.0 : -1.0) * twoPi / data.length;
 		final double c = Math.cos(theta);
@@ -467,6 +467,8 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 
 
 	public synchronized void realTransform(final double data[], final boolean isForward, int threads) throws InterruptedException {
+		threads = Math.min(data.length >> 1, threads);
+		
 		if(threads < 2) {
 			realTransform(data, isForward);
 			return;
@@ -485,7 +487,7 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 		
 		Queue queue = new Queue();
 		
-		double dn = (double) (data.length>>1) / threads;
+		double dn = (double) data.length / threads;
 		
 		for(int k=threads; --k >= 0; ) {
 			int from = (int)Math.round(k * dn);
@@ -513,7 +515,7 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 		
 		if(isForward) complexTransform(data, true);
 
-		loadReal(data, 0, data.length>>1, isForward);
+		loadReal(data, 0, data.length, isForward);
 		
 		final double d0 = data[0];
 
@@ -568,6 +570,7 @@ public class DoubleFFT extends FFT<double[]> implements Cloneable, RealFFT<doubl
 	}
 
 	public void real2Amplitude(final double[] data, int threads) throws InterruptedException {
+		threads = Math.min(data.length, threads);
 		realTransform(data, true, threads);
 		scale(data, 2.0 / data.length, threads);
 	}
