@@ -95,7 +95,7 @@ public class Unit implements Cloneable {
 	}
 	
 	private static Unit fetch(String id, Hashtable<String, Unit> baseUnits) throws IllegalArgumentException {		
-		Unit u = (Unit) baseUnits.get(id);
+		Unit u = baseUnits.get(id);
 		if(u != null) return (Unit) u.clone();
 		
 		if(id.length() < 2) throw new IllegalArgumentException("No such unit: '" + id + "'.");
@@ -188,7 +188,7 @@ public class Unit implements Cloneable {
 	public final static double um = micro * metre;
 	public final static double nm = nano * metre;
 
-	public final static double m2 = m * m;    ;
+	public final static double m2 = m * m;
 	public final static double m3 = m2 * m;
 	public final static double m4 = m3 * m;
 	public final static double m5 = m4 * m;

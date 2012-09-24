@@ -646,7 +646,7 @@ public class ScalarMap extends SourceMap {
 					final int c = channel.index;
 					if((exposure.sampleFlag[c] & Frame.SAMPLE_SKIP) == 0) {
 						final double mapValue = fG * sourceGain[c] * map.getValue(i, j);
-						final double value = exposure.data[c] + fG * syncGain[c] * base[i][j];;
+						final double value = exposure.data[c] + fG * syncGain[c] * base[i][j];
 						sumIM[c] += exposure.relativeWeight * value * mapValue;
 						sumM2[c] += exposure.relativeWeight * mapValue * mapValue;			
 					}

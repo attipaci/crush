@@ -173,17 +173,19 @@ public class ContentArea<ContentType extends ContentLayer> extends JPanel implem
 		scale.scale(relative);
 	}
 	
+	
 	protected void updateZoom() {
+		
 		Rectangle2D bounds = null;
 		switch(zoomMode) {
 		case ZOOM_FIT : 
 			bounds = contentLayer.getCoordinateBounds();
-			setZoom(Math.min((double) getWidth() / bounds.getWidth(), (double) getHeight() / bounds.getHeight()));
+			setZoom(Math.min(getWidth() / bounds.getWidth(), getHeight() / bounds.getHeight()));
 			contentLayer.center();
 			break;
 		case ZOOM_FILL : 
 			bounds = contentLayer.getCoordinateBounds();
-			setZoom(Math.min((double) getWidth() / bounds.getWidth(), (double) getHeight() / bounds.getHeight()));		
+			setZoom(Math.min(getWidth() / bounds.getWidth(), getHeight() / bounds.getHeight()));		
 			contentLayer.center();
 			break; 
 		case ZOOM_STRETCH : setRenderSize(getWidth(), getHeight()); break;

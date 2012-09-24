@@ -97,7 +97,11 @@ public class MotionFilter extends KillFilter {
 		levelData();
 		
 		// FFT to get the scanning spectra
-		integration.getFFT().real2Amplitude(data);
+		try { integration.getFFT().real2Amplitude(data); }
+		catch(InterruptedException e) {
+			System.err.println("ERROR! Unexpected interrupt.");
+			throw new Error(e);
+		}
 		
 		// Never
 		data[0] = 0.0F;

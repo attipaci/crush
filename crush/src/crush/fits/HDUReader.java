@@ -75,5 +75,5 @@ public abstract class HDUReader {
 			readRow(i);
 		}
 		public abstract void readRow(int i) throws FitsException;
-	};
+	}
 }

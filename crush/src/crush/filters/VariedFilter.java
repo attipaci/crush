@@ -102,7 +102,7 @@ public abstract class VariedFilter extends Filter {
 	}
 	
 	@Override
-	protected void fftFilter(Channel channel) {				
+	protected void fftFilter(Channel channel) throws InterruptedException {				
 		super.fftFilter(channel);	
 	}
 	

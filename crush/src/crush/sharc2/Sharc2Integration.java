@@ -412,6 +412,8 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		in.close();
 		out.close();
 		
+		tauServer.close();
+		
 		if(Double.isNaN(value)) throw new NumberFormatException("No " + id + " value for date in MaiTau database.");
 		
 		return value;

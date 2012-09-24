@@ -223,7 +223,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		// Consider that only the tip of the source might escape the filter...
 		if(!Double.isNaN(map.getExtFilterFWHM())) {
 			double filterFraction = Double.isNaN(map.filterBlanking) ? 1.0 : Math.min(1.0, map.filterBlanking / peak.significance());
-			double filtering = 1.0 - 1.0 / map.getFilterCorrectionFactor(FWHM);;
+			double filtering = 1.0 - 1.0 / map.getFilterCorrectionFactor(FWHM);
 			correction *= 1.0 / (1.0 - filtering * filterFraction);
 		}
 		

@@ -41,7 +41,7 @@ import nom.tam.util.*;
  */
 public class CRUSH extends Configurator {
 	private static String version = "2.12-3";
-	private static String revision = "devel.2";
+	private static String revision = "devel.3";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -216,7 +216,7 @@ public class CRUSH extends Configurator {
 		}
 		else { 
 			try {
-				Scan<?,?> scan = (Scan<?,?>) instrument.getScanInstance();
+				Scan<?,?> scan = instrument.getScanInstance();
 				if(isConfigured("obslog")) {
 					scan.read(scanID, false);
 					scan.writeLog(get("obslog"),  workPath + File.separator + instrument.getName() + ".obs.log");
@@ -596,7 +596,7 @@ public class CRUSH extends Configurator {
 		for(int i=seconds; i>0; i--) {
 			System.err.print("\rWill continue in " + i + " seconds.");
 			try { Thread.sleep(1000); }
-			catch(InterruptedException e) {};
+			catch(InterruptedException e) {}
 		}
 		System.err.println("\rContinuing...                          ");
 	}

@@ -7,13 +7,13 @@ public class ParFFTTest {
 public static void main(String[] args) {
 		double[] data = new double[64];
 		
-		int threads = 3;
 		DoubleFFT fft = new DoubleFFT();
+		fft.setParallel(3);
 		fft.setErrorBits(3);
 		
 		System.err.println("delta[0]:");
 		data[0] = 1.0;
-		try { fft.complexTransform(data, true, threads); }
+		try { fft.complexTransform(data, true); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
@@ -22,7 +22,7 @@ public static void main(String[] args) {
 			data[i] = 1.0;
 			data[i+1] = 0.0;
 		}
-		try { fft.complexTransform(data, true, threads); }
+		try { fft.complexTransform(data, true); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
@@ -32,7 +32,7 @@ public static void main(String[] args) {
 			data[i] = Math.cos(2.0 * Math.PI * i / data.length);
 			data[i+1] = 0.0;
 		}
-		try { fft.complexTransform(data, true, threads); }
+		try { fft.complexTransform(data, true); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
@@ -41,7 +41,7 @@ public static void main(String[] args) {
 			data[i] = Math.sin(4.0 * Math.PI * i / data.length);
 			data[i+1] = 0.0;
 		}
-		try { fft.complexTransform(data, true, threads); }
+		try { fft.complexTransform(data, true); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
@@ -61,12 +61,12 @@ public static void main(String[] args) {
 		print(data);
 		
 		System.err.println("r2a:");
-		try { fft.real2Amplitude(data, threads); }
+		try { fft.real2Amplitude(data); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
 		System.err.println("a2r:");
-		try { fft.amplitude2Real(data, threads); }
+		try { fft.amplitude2Real(data); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
