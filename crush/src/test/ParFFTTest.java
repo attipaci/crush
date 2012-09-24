@@ -5,11 +5,11 @@ import util.fft.DoubleFFT;
 
 public class ParFFTTest {
 public static void main(String[] args) {
-		double[] data = new double[16];
+		double[] data = new double[64];
 		
-		int threads = 2;
+		int threads = 3;
 		DoubleFFT fft = new DoubleFFT();
-		fft.setErrorBits(1);
+		fft.setErrorBits(3);
 		
 		System.err.println("delta[0]:");
 		data[0] = 1.0;
@@ -54,11 +54,19 @@ public static void main(String[] args) {
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
-			
-		System.err.println("amp real cos2:");
-		for(int i=0; i<data.length; i++) data[i] = Math.cos(4.0 * Math.PI * i / data.length);
 		
+		int m = 8, k = 8;
+		System.err.println("amp real cos" + m + ", sin" + k);
+		for(int i=0; i<data.length; i++) data[i] = Math.cos(2.0 * m * Math.PI * i / data.length) + Math.sin(2.0 * k * Math.PI * i / data.length);
+		print(data);
+		
+		System.err.println("r2a:");
 		try { fft.real2Amplitude(data, threads); }
+		catch(Exception e) { e.printStackTrace(); }
+		print(data);
+		
+		System.err.println("a2r:");
+		try { fft.amplitude2Real(data, threads); }
 		catch(Exception e) { e.printStackTrace(); }
 		print(data);
 		
