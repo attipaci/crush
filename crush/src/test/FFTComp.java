@@ -17,15 +17,13 @@ public class FFTComp {
 		float[] a = copyOf(data);
 		float[] b = copyOf(data);
 	
-		OldFFT.forwardRealInplace(a);
-		try { fft.real2Amplitude(b); }
-		catch(Exception e) { e.printStackTrace(); }
+		OldFFT.forwardRealInPlace(a);
+		fft.real2Amplitude(b);
 		
 		System.err.println(" Forward: " + (compare(a,b, 1e-4F) ? "OK" : "FAILED!"));
 		
 		OldFFT.backRealInplace(a);
-		try { fft.amplitude2Real(b); }
-		catch(Exception e) { e.printStackTrace(); }
+		fft.amplitude2Real(b);
 		
 		System.err.println(" Back: " + (compare(a,b, 1e-4F) ? "OK" : "FAILED!"));
 	
