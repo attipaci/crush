@@ -24,7 +24,7 @@ package test;
 
 
 import util.*;
-import util.data.FFT;
+import util.data.OldFFT;
 
 public class FFTTest3 {
 
@@ -32,12 +32,11 @@ public class FFTTest3 {
 		final int repeats = 32;
 		final int n = args.length > 0 ? Integer.parseInt(args[0]) : 16;
 		final int N = n * 1024;
-		final long ops = repeats * N * Math.round((Math.log(N) / Math.log(2.0)));
-
+	
 		final float[] fdata = new float[N];
 		for(int i=0; i<fdata.length; i++) fdata[i] = (float) Math.random();
 		long time = -System.currentTimeMillis();
-		for(int k=repeats; --k>=0; ) FFT.powerTransform(fdata, (k & 1) == 0);
+		for(int k=repeats; --k>=0; ) OldFFT.powerTransform(fdata, (k & 1) == 0);
 		time += System.currentTimeMillis();
 		double speed = repeats / (1e-3*time);
 		System.err.println("float transform of " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");
@@ -45,7 +44,7 @@ public class FFTTest3 {
 		final double[] data = new double[N];
 		for(int i=0; i<data.length; i++) data[i] = Math.random();
 		time = -System.currentTimeMillis();
-		for(int k=repeats; --k>=0; ) FFT.powerTransform(data, (k & 1) == 0);
+		for(int k=repeats; --k>=0; ) OldFFT.powerTransform(data, (k & 1) == 0);
 		time += System.currentTimeMillis();
 		speed = repeats / (1e-3*time);
 		System.err.println("double transform of " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");
@@ -53,7 +52,7 @@ public class FFTTest3 {
 		final Complex[] cdata = new Complex[N>>1];
 		for(int i=0; i<cdata.length; i++) cdata[i] = new Complex(Math.random(), Math.random());
 		time = -System.currentTimeMillis();
-		for(int k=repeats; --k>=0; ) FFT.powerTransform(cdata, (k & 1) == 0);
+		for(int k=repeats; --k>=0; ) OldFFT.powerTransform(cdata, (k & 1) == 0);
 		time += System.currentTimeMillis();
 		speed = repeats / (1e-3*time);
 		System.err.println("complex transform of " + repeats + " x " + n + "k points: " + Util.f2.format(speed) + " FFTs/s");

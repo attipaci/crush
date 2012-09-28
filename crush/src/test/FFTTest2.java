@@ -24,7 +24,7 @@ package test;
 
 
 import util.*;
-import util.data.FFT;
+import util.data.OldFFT;
 
 
 public class FFTTest2 {
@@ -33,12 +33,11 @@ public class FFTTest2 {
 		
 		int n = args.length > 0 ? Integer.parseInt(args[0]) : 16;
 		int N = n * 1024*1024;
-		int ops = N * (int) (Math.log(N) / Math.log(2.0));
-
+		
 		float[] fdata = new float[N];
 		for(int i=0; i<fdata.length; i++) fdata[i] = (float) Math.random();
 		long time = -System.currentTimeMillis();
-		FFT.powerTransform(fdata, true);
+		OldFFT.powerTransform(fdata, true);
 		time += System.currentTimeMillis();
 		double speed = 1e3 / time;
 		System.err.println("float transform of " + n + "M points: " + Util.f2.format(speed) + " FFTs/s");
@@ -47,7 +46,7 @@ public class FFTTest2 {
 		double[] data = new double[N];
 		for(int i=0; i<data.length; i++) data[i] = Math.random();
 		time = -System.currentTimeMillis();
-		FFT.powerTransform(data, true);
+		OldFFT.powerTransform(data, true);
 		time += System.currentTimeMillis();
 		speed = 1e3 / time;
 		System.err.println("double transform of " + n + "M points: " + Util.f2.format(speed) + " FFTs/s");
@@ -57,7 +56,7 @@ public class FFTTest2 {
 		for(int i=0; i<cdata.length; i++) cdata[i] = new Complex(Math.random(), Math.random());
 	
 		time = -System.currentTimeMillis();
-		FFT.powerTransform(cdata, true);
+		OldFFT.powerTransform(cdata, true);
 		time += System.currentTimeMillis();
 		speed = 1e3 / time;
 		System.err.println("complex transform of " + n + "M points: " + Util.f2.format(speed) + " FFTs/s");	

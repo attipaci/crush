@@ -112,7 +112,8 @@ public class WindowFunction {
 		final double[] w = new double[n];
 		double norm = 0.0;
 		for(int i=n; --i >= 0; ) {
-			for(int k=coeff.length; --k >= 0; ) w[i] += coeff[k] * Math.cos(i * k * Constant.twoPI / (n-1.0));
+			final double A = i * Constant.twoPI / (n - 1);
+			for(int k=coeff.length; --k >= 0; ) w[i] += coeff[k] * Math.cos(A * k);
 			norm += w[i]*w[i];
 		}
 		for(int i=n; --i >= 0; ) w[i] /= norm;

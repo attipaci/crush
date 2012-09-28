@@ -25,7 +25,7 @@ package test;
 import java.util.*;
 
 import util.*;
-import util.data.FFT;
+import util.data.OldFFT;
 import util.data.WindowFunction;
 
 
@@ -37,30 +37,30 @@ public class FFTTest {
 		double[] data = new double[16];
 		
 		data[0] = 1.0;
-		Complex[] spectrum = FFT.forward(data);
+		Complex[] spectrum = OldFFT.forward(data);
 		System.err.println("delta[0]:");
 		print(spectrum);
 		
 		Arrays.fill(data, 1.0);
-		spectrum = FFT.forward(data);
+		spectrum = OldFFT.forward(data);
 		System.err.println("const(1.0):");
 		print(spectrum);
 		
 		
 		for(int i=0; i<data.length; i++) data[i] = Math.cos(2.0 * Math.PI * i / data.length);
-		spectrum = FFT.forward(data);
+		spectrum = OldFFT.forward(data);
 		System.err.println("cos1:");
 		print(spectrum);
 		
 		for(int i=0; i<data.length; i++) data[i] = Math.sin(4.0 * Math.PI * i / data.length);
-		spectrum = FFT.forward(data);
+		spectrum = OldFFT.forward(data);
 		System.err.println("sin2:");
 		print(spectrum);		
 		
 		Random random = new Random();
 		data = new double[1024*1024];
 		for(int i=0; i<data.length; i++) data[i] = random.nextGaussian();
-		double[] power = FFT.averagePower(data, WindowFunction.getHamming(16));
+		double[] power = OldFFT.averagePower(data, WindowFunction.getHamming(16));
 		System.err.println("pow:");
 		print(power);		
 		
@@ -73,13 +73,13 @@ public class FFTTest {
 		System.err.println("Original array");
 		print(fdata);
 		
-		FFT.forwardRealInplace(fdata);
+		OldFFT.forwardRealInplace(fdata);
 		
 		System.err.println("Frequency space");
 		print(fdata);
 		
 		System.err.println("Back transform...");
-		FFT.backRealInplace(fdata);
+		OldFFT.backRealInplace(fdata);
 		
 		print(fdata);
 		

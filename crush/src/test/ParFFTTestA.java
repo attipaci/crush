@@ -11,7 +11,7 @@ public static void main(String[] args) {
 		float[] data = new float[32];
 
 		FloatFFT fft = new FloatFFT();
-		fft.setParallel(3);
+		fft.setSequential();
 		
 		System.err.println("delta[0]:");
 		data[0] = 1.0F;
@@ -55,7 +55,7 @@ public static void main(String[] args) {
 		try { fft.realTransform(data, true); }
 		catch(Exception e) { e.printStackTrace(); }
 			
-		int m = 1, k = 2;
+		int m = 5, k = 7;
 		System.err.println("amp real cos" + m + ", sin" + k);
 		for(int i=0; i<data.length; i++) data[i] = (float) Math.cos(2.0 * m * Math.PI * i / data.length) + (float) Math.sin(2.0 * k * Math.PI * i / data.length);
 		print(data);

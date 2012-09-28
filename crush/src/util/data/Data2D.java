@@ -475,7 +475,7 @@ public class Data2D implements Cloneable {
 	
 		// Antialias filter
 		if(stretch.getX() > 1.0 || stretch.getY() > 1.0) {
-			from = (Data2D) from.copy();
+			from = from.copy();
 			double a = Math.sqrt(stretch.getX() * stretch.getX() - 1.0);
 			double b = Math.sqrt(stretch.getY() * stretch.getY() - 1.0);
 			from.smooth(getGaussian(a, b));

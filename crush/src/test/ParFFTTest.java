@@ -9,7 +9,7 @@ public static void main(String[] args) {
 		
 		DoubleFFT fft = new DoubleFFT();
 		fft.setParallel(3);
-		fft.setErrorBits(3);
+		fft.setTwiddleErrorBits(3);
 		
 		System.err.println("delta[0]:");
 		data[0] = 1.0;

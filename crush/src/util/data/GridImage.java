@@ -430,7 +430,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 
 	public GridImage<CoordinateType> getRegrid(final Vector2D resolution) throws IllegalStateException {	
 		Vector2D dRes = new Vector2D(resolution.getX() / getGrid().pixelSizeX(), resolution.getY() / getGrid().pixelSizeY());
-		Grid2D<CoordinateType> toGrid = (Grid2D<CoordinateType>) getGrid().copy();
+		Grid2D<CoordinateType> toGrid = getGrid().copy();
 		
 		Vector2D refIndex = toGrid.getReferenceIndex();
 		

@@ -36,23 +36,22 @@ import util.Util;
  */
 
 public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
-	private int errorBits = 3;
+	private int twiddleErrorBits = 3;
 	
 	@Override
 	int getOptimalThreadBits() { return 14; }
 	
-	public void setErrorBits(int value) {
+	public void setTwiddleErrorBits(int value) {
 		if(value < 0) value = -1; // At most precise, the error bit is the unrecorded bit, i.e. -1.
-		this.errorBits = value;
+		this.twiddleErrorBits = value;
 	}
 
-
-	private int getErrorMask() {
+	private int getTwiddleMask() {
 		// 1 bit from single cycle arithmetic
 		// n/2 - 1 bits from cycles
 		// -1 bit from k index incrementing by 2
 		// --> n/2 - 1 bits total...
-		return (1 << ((errorBits+1) << 1)) - 1;
+		return (1 << ((twiddleErrorBits+1) << 1)) - 1;
 	}
 	
 	private void bitReverse(final double[] data, final int from, final int to) {
@@ -75,7 +74,6 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 		
 		final int addressBits = getAddressBits(data);
 		int blkbit = 0;
-		
 
 		if((addressBits & 1) != 0) merge2(data, 0, data.length, isForward, blkbit++);
 
@@ -87,8 +85,8 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 
 	
 	@Override
-	void complexTransform(final double[] data, final boolean isForward, int threads) throws InterruptedException {
-		// Don't make more threads than there are processing blocks...
+	void complexTransform(final double[] data, final boolean isForward, int threads) {
+		// Don't make more chunks than there are processing blocks...
 		threads = Math.min(threads, data.length >> 3);
 		final int addressBits = getAddressBits(data);
 
@@ -162,7 +160,7 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 
 	// Blockbit is the size of a merge block in bit shifts (e.g. size 2 is bit 1, size 4 is bit 2, etc.)
 	// Two consecutive blocks are merged by the algorithm into one larger block...
-	private void merge2(final double[] data, int from, int to, boolean isForward, int blkbit) {	
+	private void merge2(final double[] data, int from, int to, final boolean isForward, int blkbit) {	
 		// Change from abstract index to double[] storage index (x2)
 		blkbit++; 
 	
@@ -192,7 +190,7 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 		double r = m == 0 ? 1.0 : Math.cos(m * theta);
 		double i = m == 0 ? 0.0 : Math.sin(m * theta);
 
-		final int clcmask = getErrorMask();
+		final int clcmask = getTwiddleMask();
 	
 		for(int i1=from; i1<to; i1+=2) {
 			// Skip over the odd blocks...
@@ -251,7 +249,7 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 
 	// Blockbit is the size of a merge block in bit shifts (e.g. size 2 is bit 1, size 4 is bit 2, etc.)
 	// Two consecutive blocks are merged by the algorithm into one larger block...
-	private void merge4(final double[] data, int from, int to, boolean isForward, int blkbit) {	
+	private void merge4(final double[] data, int from, int to, final boolean isForward, int blkbit) {	
 		// Change from abstract index to double[] storage index (x2)
 		blkbit++; 
 
@@ -283,7 +281,7 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 		double wr1 = Math.cos(m * theta);
 		double wi1 = Math.sin(m * theta);
 		
-		final int clcmask = getErrorMask();
+		final int clcmask = getTwiddleMask();
 			
 		for(int i0=from; i0<to; i0 += 2) {
 			// Skip over the 2nd, 3rd, and 4th blocks...
@@ -397,8 +395,7 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 		//System.err.println();
 	}
 	
-	private void loadReal(final double[] data, int from, int to, boolean isForward) {
-	
+	private void loadReal(final double[] data, int from, int to, final boolean isForward) {
 		to = Math.min(to, data.length);
 		
 		// Make from and to even indices 0...N/2
@@ -409,7 +406,7 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 		final double c = Math.cos(theta);
 		final double s = Math.sin(theta);
 		final double sh = isForward ? 0.5 : -0.5;
-		final int clcmask = getErrorMask();
+		final int clcmask = getTwiddleMask();
 			
 		double a = (from>>1) * theta;
 		double wr = from == 2 ? c : Math.cos(a);
@@ -448,14 +445,17 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 	}
 
 
-	public void realTransform(final double data[], final boolean isForward) throws InterruptedException {
+	public void realTransform(final double data[], final boolean isForward) {
 		updateThreads(data);
-		int chunks = getChunks();
+
+		// Don't make more chunks than there are processing blocks...
+		int chunks = Math.min(getChunks(), data.length >> 2);
 		
 		if(chunks == 1) {
 			sequentialRealTransform(data, isForward);
 			return;
 		}
+		
 		setParallel(chunks);
 		if(isForward) complexTransform(data, true, chunks);
 
@@ -492,10 +492,7 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 	}
 
 	private void sequentialRealTransform(final double[] data, final boolean isForward) {
-		if(isForward) {
-			try { complexTransform(data, true); }
-			catch(InterruptedException e) { e.printStackTrace(); } // This really should not happen...
-		}
+		if(isForward) complexTransform(data, true); 
 
 		loadReal(data, 0, data.length, isForward);
 		
@@ -508,13 +505,12 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 		else {
 			data[0] = 0.5 * (d0 + data[1]);
 			data[1] = 0.5 * (d0 - data[1]);
-			try { complexTransform(data, true); }
-			catch(InterruptedException e) { e.printStackTrace(); } // This really should not happen...
+			complexTransform(data, false);
 		}
 	}
 	
 	
-	private void scale(final double[] data, final double value, int threads) throws InterruptedException {
+	private void scale(final double[] data, final double value, int threads) {
 		if(threads < 2) {
 			for(int i=data.length; --i >= 0; ) data[i] *= value;
 			return;
@@ -545,21 +541,20 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 	}
 	
 
-	public void real2Amplitude(final double[] data) throws InterruptedException {
+	public void real2Amplitude(final double[] data) {
 		realTransform(data, true);
 		scale(data, 2.0 / data.length, getChunks());
 	}
 	
 	
-	public void amplitude2Real(final double[] data) throws InterruptedException { 
+	public void amplitude2Real(final double[] data) { 
 		realTransform(data, false); 
 	}
 
 	
-	
 	// Rewritten to skip costly intermediate Complex storage...
 	@Override
-	public double[] averagePower(double[] data, double[] w) throws InterruptedException {
+	public double[] averagePower(final double[] data, final double[] w) {
 		int windowSize = w.length;
 		int stepSize = windowSize >> 1;
 		final double[] block = new double[Util.pow2ceil(w.length)];
@@ -614,6 +609,32 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 		System.arraycopy(data, 0, padded, 0, N);
 
 		return padded;
+	}
+
+	@Override
+	public double getMaxErrorBitsFor(double[] data) {
+		// radix-4: 6 ops per 4 cycle
+		// radix-2: 4 ops per 2 cycle
+		
+		int ops = 3 * Math.min(data.length, getTwiddleMask());
+	
+		int bits = getAddressBits(data);
+		if((bits & 1) != 0) {
+			ops += 4;
+			bits--;
+		}
+		while(bits > 0) {
+			ops += 6;
+			bits -= 2;
+		}
+		
+		return 0.5 * Math.log(1+ops) / Math.log(2.0);
+		
+	}
+
+	@Override
+	final int getFloatingPointBits() {
+		return 53;	
 	}
 	
 

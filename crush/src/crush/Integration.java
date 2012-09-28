@@ -77,6 +77,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public Chopper chopper;
 	public DataPoint aveScanSpeed;
 	public MultiFilter filter;
+	private FloatFFT fft;
 	
 	public double filterTimeScale = Double.POSITIVE_INFINITY;
 	public double nefd = Double.NaN; // It is readily cast into the Jy sqrt(s) units!!!
@@ -84,8 +85,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	protected boolean isDetectorStage = false;
 	protected boolean isValid = false;
 		
-	private FloatFFT fft = null;
-	
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
 	// The constructor of Integration thus copies the Scan instrument for private use...
 	@SuppressWarnings("unchecked")
@@ -102,7 +101,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		clone.dependents = new Hashtable<String, Dependents>(); 
 		clone.signals = new Hashtable<Mode, Signal>();
 		clone.filter = null;
-		clone.fft = null;
+
 		return clone;
 	}
 
@@ -199,14 +198,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		isValid = true;
 		
 		if(hasOption("speedtest")) speedTest();
-	}
-	
-	public FloatFFT getFFT() { 
-		if(fft == null) {
-			fft = new FloatFFT();
-			fft.setSequential();
-		}
-		return fft; 
 	}
 	
 	public void invert() {
@@ -438,6 +429,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else if(name.equals("kill")) return new KillFilter(this, filter.getData());
 		else if(name.equals("whiten")) return new WhiteningFilter(this, filter.getData());
 		else return null;
+	}
+	
+	public FloatFFT getFFT() {
+		if(fft == null) {
+			fft = new FloatFFT();
+			fft.setSequential();
+		}
+		return fft;
 	}
 	
 	public abstract FrameType getFrameInstance();
@@ -1730,7 +1729,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	// Redo with Filter...
-	public synchronized void highPassFilter(double T) throws InterruptedException {
+	public synchronized void highPassFilter(double T) {
 		int Nt = OldFFT.getPaddedSize(size());
 	
 		// sigmat sigmaw = 1 ->
@@ -1752,25 +1751,25 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	
-	public synchronized void filter(ChannelGroup<? extends Channel> channels, double[] response) throws InterruptedException {
+	public synchronized void filter(ChannelGroup<? extends Channel> channels, double[] response) {
 		comments += "F";
 		
 		float[] signal = new float[OldFFT.getPaddedSize(size())];
 		
+		
 		for(final Channel channel : channels) {
 			final int c = channel.index;
 			getWeightedTimeStream(channel, signal);
-			
+
 			getFFT().real2Amplitude(signal);
-			
 			toRejected(signal, response);
-			
 			getFFT().amplitude2Real(signal);
-			
+
 			// Re-level the useful part of the signal
 			level(signal, channel);
-				
+
 			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= signal[exposure.index];
+
 		}
 	}
 
@@ -1819,7 +1818,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		to = Math.min(to, size());
 		
-		for(int t=to; --t >= from; ) {
+ 		for(int t=to; --t >= from; ) {
 			final Frame exposure = get(t);
 			
 			if(exposure != null) for(final Channel channel : channels) {
@@ -2068,17 +2067,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				else if(exposure.sampleFlag[channel.index] != 0) data[t] = 0.0F;
 				else data[t] = exposure.data[channel.index];
 			}
-			try { 
-				final double[] spectrum = getFFT().averagePower(data, w); 	
-				final float[] channelSpectrum = new float[spectrum.length];	
-				for(int i=spectrum.length; --i>=0; ) channelSpectrum[i] = (float) Math.sqrt(spectrum[i] / df) / Jy;	
-				spectra[channel.index] = channelSpectrum;
-			}
-			catch(InterruptedException e) {
-				System.err.println("ERROR! Unexpected interrupt.");
-				throw new Error(e);
-			}
 			
+			final double[] spectrum = getFFT().averagePower(data, w);
+			final float[] channelSpectrum = new float[spectrum.length];
+			for(int i=spectrum.length; --i>=0; ) channelSpectrum[i] = (float) Math.sqrt(spectrum[i] / df) / Jy;		
+			spectra[channel.index] = channelSpectrum;
+
 		}
   
 		return spectra;
@@ -2457,13 +2451,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			Configurator driftOptions = option("drifts");
 			String method = driftOptions.isConfigured("method") ? driftOptions.get("method").getValue() : "blocks"; 
 			int driftN = filterFramesFor(option("drifts").getValue(), 10.0*Unit.sec);
-			if(method.equalsIgnoreCase("fft")) {
-				try { highPassFilter(driftN * instrument.samplingInterval); }
-				catch(InterruptedException e) {
-					System.err.println("ERROR! Unexpected interrupt.");
-					throw new Error(e);
-				}
-			}
+			if(method.equalsIgnoreCase("fft")) highPassFilter(driftN * instrument.samplingInterval);
 			else removeDrifts(instrument, driftN, isRobust, false);
 		}
 		else if(task.startsWith("correlated.")) {	
