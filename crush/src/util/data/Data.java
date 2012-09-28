@@ -117,7 +117,7 @@ public final class Data {
 		float sum = 0.0F, sumw = 0.0F;
 		
 		for(int i=fromi; i<toi; i++) if(!Float.isNaN(data[i])) {
-			final float dx = (float) Math.abs(i - index);
+			final float dx = Math.abs(i - index);
 			final float spline = dx > 1.0F ? 
 					((-0.5F * dx + 2.5F) * dx - 4.0F) * dx + 2.0F : (1.5F * dx - 2.5F) * dx * dx + 1.0F;
 					

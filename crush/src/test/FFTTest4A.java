@@ -28,7 +28,10 @@ public class FFTTest4A {
 		*/
 		
 		FloatFFT fft = new FloatFFT();
-		
+		System.err.println("error bits: " + Util.f2.format(fft.getMaxErrorBitsFor(data)));
+		System.err.println("precision: " + Util.e2.format(fft.getMinPrecisionFor(data)));
+		System.err.println("dynamic range: " + Util.f1.format(-20.0 * Math.log10(fft.getMinPrecisionFor(data))) + " dB");
+	
 		
 		
 		for(int i=0; i<data.length; i++) data[i] = (float) Math.random();

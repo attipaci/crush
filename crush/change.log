@@ -1,6 +1,10 @@
+1.12-3 (alpha)
+
+
 	[SPEED] Filters now use newly implemented split-radix FFTs. These are
-	not only faster than the old, and inefficiently coded radix-2, but also
-	more precise for large datasets.
+	not only faster than the old, and less efficient radix-2, but also
+	do not accumulate errors as much resulting in better precision for 
+	large datasets.
 
 	[CODE] Efficient, parallel radix-4, and split-radix FFT algorithms 
 	implemented. The new split-radix algorithm is about 5 times faster than
@@ -12,6 +16,8 @@
 
 	[CODE] New functions added to Util class, helping rounding integers
 	to near powers of 2.
+	
+	[CODE] Removed unnecessary empty statements.
 
 
 2.12-2 (10 Sep 2012)

@@ -145,7 +145,7 @@ public class MultiFilter extends VariedFilter {
 	}
 	
 	@Override
-	protected synchronized void fftFilter(Channel channel) throws InterruptedException {				
+	protected synchronized void fftFilter(Channel channel) {				
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		Arrays.fill(filtered, 0.0F);
 		

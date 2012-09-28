@@ -101,10 +101,6 @@ public abstract class VariedFilter extends Filter {
 		throw new UnsupportedOperationException("No DFT for adaptive filters.");
 	}
 	
-	@Override
-	protected void fftFilter(Channel channel) throws InterruptedException {				
-		super.fftFilter(channel);	
-	}
 	
 	protected double getPointResponse(Channel channel) {
 		return pointResponse[channel.index];

@@ -25,10 +25,10 @@ package util.fft;
 
 public interface RealFFT<Type> {
 	
-	public void realTransform(Type data, boolean isForward) throws InterruptedException;
+	public void realTransform(Type data, boolean isForward);
 
-	public void real2Amplitude(Type data) throws InterruptedException;
+	public void real2Amplitude(Type data);
 	
-	public void amplitude2Real(Type data) throws InterruptedException; 
+	public void amplitude2Real(Type data); 
 
 }

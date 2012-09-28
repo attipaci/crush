@@ -67,11 +67,17 @@ public abstract class FFT<Type> {
 			tasks.add(task); 
 		}
 		
-		protected synchronized void process() throws InterruptedException {
+		protected synchronized void process() {
 			active += tasks.size();
 			for(Task task : tasks) pool.execute(task);
 			tasks.clear();
-			while(active > 0) wait();
+			while(active > 0) {
+				try { wait(); }
+				catch(InterruptedException e) {
+					System.err.println("WARNING! Unexpected interrupt.");
+					e.printStackTrace();
+				}
+			}
 		}
 		
 		protected synchronized void checkout() {
@@ -105,11 +111,14 @@ public abstract class FFT<Type> {
 		public abstract void process(Type data, int from, int to);
 	}
 	
-
+	
+	public abstract double getMaxErrorBitsFor(Type data);
+	
+	abstract int getFloatingPointBits();
 	
 	abstract void sequentialComplexTransform(Type data, boolean isForward);
 	
-	abstract void complexTransform(Type data, boolean isForward, int threads) throws InterruptedException;
+	abstract void complexTransform(Type data, boolean isForward, int threads);
 	
 	abstract int sizeOf(Type data);
 	
@@ -119,6 +128,20 @@ public abstract class FFT<Type> {
 	
 	public final void complexBack(Type data) throws InterruptedException { complexTransform(data, BACK); }
 	
+	
+	public double getMinPrecisionFor(Type data) {
+		return Math.pow(2.0, getMaxErrorBitsFor(data)) / Math.pow(2.0, getFloatingPointBits());
+	}
+	
+	public double getMinSignificantBits(Type data) {
+		return getFloatingPointBits() - getMaxErrorBitsFor(data); 
+	}
+
+	public double getDynamicRange(Type data) {
+		return -20.0 * Math.log10(getMinPrecisionFor(data));
+	}
+
+
 	int getAddressBits(Type data) {
 		int n = addressSizeOf(data);
 		if(n == 1 << lastAddressBits) return lastAddressBits;
@@ -131,10 +154,10 @@ public abstract class FFT<Type> {
 	
 	public abstract Type getPadded(Type data, int n);
 	
-	abstract double[] averagePower(Type data, double[] w) throws InterruptedException;
+	abstract double[] averagePower(Type data, double[] w);
 	
 
-	public void complexTransform(Type data, boolean isForward) throws InterruptedException {
+	public void complexTransform(Type data, boolean isForward) {
 		updateThreads(data);
 		int chunks = getChunks();
 		if(chunks == 1) sequentialComplexTransform(data, isForward);
@@ -148,7 +171,7 @@ public abstract class FFT<Type> {
 	}
 	
 
-	public double[] averagePower(Type data, int windowSize) throws InterruptedException {
+	public double[] averagePower(Type data, int windowSize) {
 		if(sizeOf(data) < windowSize) return averagePower(getPadded(data, windowSize), windowSize);
 		return averagePower(data, WindowFunction.getHamming(windowSize));			
 	}
@@ -197,7 +220,11 @@ public abstract class FFT<Type> {
 		super.finalize();
 	}
 	
-	public void shutdown() { if(pool != null) pool.shutdown(); }
+	public void shutdown() { 
+		if(pool == null) return;
+		pool.shutdown(); 
+		pool = null;
+	}
 	
 	public static final int bitReverse(final int i, final int bits) {
 		if(bits <= 8) return br[i] >> (8 - bits);

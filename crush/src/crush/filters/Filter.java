@@ -137,13 +137,7 @@ public abstract class Filter {
 			
 			// Apply the filter, with the rejected signal written to the local data array
 			if(dft) dftFilter(channel);
-			else {
-				try { fftFilter(channel); }
-				catch(InterruptedException e) { 
-					System.err.println("ERROR! Unexpected interrupt.");
-					throw new Error(e);
-				}
-			}
+			else fftFilter(channel);
 			
 			postFilter(channel);
 			
@@ -213,11 +207,11 @@ public abstract class Filter {
 	
 	
 	// Convert data into a rejected signal (unlevelled)
-	protected synchronized void fftFilter(Channel channel) throws InterruptedException {
+	protected synchronized void fftFilter(Channel channel) {
 		// Pad with zeroes as necessary...
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		
-		integration.getFFT().real2Amplitude(data);		
+		integration.getFFT().real2Amplitude(data);
 		
 		updateProfile(channel);
 		
@@ -259,7 +253,7 @@ public abstract class Filter {
 		// Start from the 1/f filter cutoff
 		int minf = getHipassIndex();
 		
-		double sum = 0.0, norm = 0.0;
+		double sum = 0.0, norm = 0.0;;
 		
 		// just calculate x=0 component -- O(N)
 		// Below the hipass time-scale, the filter has no effect, so count it as such...

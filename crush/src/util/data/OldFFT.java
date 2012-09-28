@@ -31,11 +31,11 @@ import util.fft.FloatFFT;
 public class OldFFT {	
 
 	// Rewritten to skip costly intermediate Complex storage...
-	public static double[] convolve(double[] data, double[] beam) {
+	public static double[] convolve(double[] data, double[] beam) throws InterruptedException {
 		return convolve(data, beam, false);		
 	}
 
-	public static double[] convolve(double[] A, double[] B, boolean inPlace) {
+	public static double[] convolve(double[] A, double[] B, boolean inPlace) throws InterruptedException {
 		final int n = inPlace ? A.length : getPaddedSize(A.length + B.length);
 		
 		DoubleFFT fft = new DoubleFFT();
@@ -47,7 +47,8 @@ public class OldFFT {
 			System.arraycopy(A, 0, a, 0, A.length);
 			System.arraycopy(B, 0, b, 0, A.length);
 		}
-			
+		
+		
 		fft.realTransform(a, FFT.FORWARD);
 		fft.realTransform(b, FFT.FORWARD);
 	
@@ -66,7 +67,7 @@ public class OldFFT {
 		return a;
 	}
 
-	public static double[] autoCorrelate(double[] data) { return convolve(data, data); }
+	public static double[] autoCorrelate(double[] data) throws InterruptedException { return convolve(data, data); }
 
 	public static double[][] backward(Complex[][] spectrum) {
 		return null;
@@ -84,7 +85,7 @@ public class OldFFT {
 			data[--ii] = P.getX();
 		}
 	
-		new DoubleFFT().realTransform(data, false);
+		new DoubleFFT().realTransform(data, false); 
 	}
 
 	public static void uncheckedBackward(final Complex[] fdata, final float[] data) {

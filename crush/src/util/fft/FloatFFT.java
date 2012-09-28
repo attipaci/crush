@@ -73,7 +73,7 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 
 	
 	@Override
-	void complexTransform(final float[] data, final boolean isForward, int threads) throws InterruptedException {
+	void complexTransform(final float[] data, final boolean isForward, int threads) {
 		// Don't make more threads than there are processing blocks...
 		threads = Math.min(threads, data.length >> 3);
 		final int addressBits = getAddressBits(data);
@@ -148,7 +148,7 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 
 	// Blockbit is the size of a merge block in bit shifts (e.g. size 2 is bit 1, size 4 is bit 2, etc.)
 	// Two consecutive blocks are merged by the algorithm into one larger block...
-	private void merge2(final float[] data, int from, int to, boolean isForward, int blkbit) {	
+	private void merge2(final float[] data, int from, int to, final boolean isForward, int blkbit) {	
 		// Change from abstract index to double[] storage index (x2)
 		blkbit++; 
 	
@@ -232,7 +232,7 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 
 	// Blockbit is the size of a merge block in bit shifts (e.g. size 2 is bit 1, size 4 is bit 2, etc.)
 	// Two consecutive blocks are merged by the algorithm into one larger block...
-	private void merge4(final float[] data, int from, int to, boolean isForward, int blkbit) {	
+	private void merge4(final float[] data, int from, int to, final boolean isForward, int blkbit) {	
 		// Change from abstract index to double[] storage index (x2)
 		blkbit++; 
 
@@ -376,7 +376,7 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 		//System.err.println();
 	}
 	
-	private void loadReal(final float[] data, int from, int to, boolean isForward) {
+	private void loadReal(final float[] data, int from, int to, final boolean isForward) {
 	
 		to = Math.min(to, data.length);
 		
@@ -422,9 +422,11 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 	}
 
 
-	public void realTransform(final float data[], final boolean isForward) throws InterruptedException {
+	public void realTransform(final float data[], final boolean isForward) {
 		updateThreads(data);
-		int chunks = getChunks();
+		
+		// Don't make more chunks than there are processing blocks...
+		int chunks = Math.min(getChunks(), data.length >> 2);
 		
 		if(chunks == 1) {
 			sequentialRealTransform(data, isForward);
@@ -466,10 +468,7 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 	}
 
 	private void sequentialRealTransform(final float[] data, final boolean isForward) {
-		if(isForward) {
-			try { complexTransform(data, true); }
-			catch(InterruptedException e) { e.printStackTrace(); } // This really should not happen...
-		}
+		if(isForward) complexTransform(data, true);
 
 		loadReal(data, 0, data.length, isForward);
 		
@@ -482,13 +481,12 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 		else {
 			data[0] = 0.5F * (d0 + data[1]);
 			data[1] = 0.5F * (d0 - data[1]);
-			try { complexTransform(data, true); }
-			catch(InterruptedException e) { e.printStackTrace(); } // This really should not happen...
+			complexTransform(data, false);
 		}
 	}
 	
 	
-	private void scale(final float[] data, final float value, int threads) throws InterruptedException {
+	private void scale(final float[] data, final float value, int threads) {
 		if(threads < 2) {
 			for(int i=data.length; --i >= 0; ) data[i] *= value;
 			return;
@@ -519,13 +517,13 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 	}
 	
 
-	public void real2Amplitude(final float[] data) throws InterruptedException {
+	public void real2Amplitude(final float[] data) {
 		realTransform(data, true);
 		scale(data, 2.0F / data.length, getChunks());
 	}
 	
 	
-	public void amplitude2Real(final float[] data) throws InterruptedException { 
+	public void amplitude2Real(final float[] data) { 
 		realTransform(data, false); 
 	}
 
@@ -533,7 +531,7 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 	
 	// Rewritten to skip costly intermediate Complex storage...
 	@Override
-	public double[] averagePower(float[] data, double[] w) throws InterruptedException {
+	public double[] averagePower(float[] data, final double[] w) {
 		int windowSize = w.length;
 		int stepSize = windowSize >> 1;
 		final float[] block = new float[Util.pow2ceil(w.length)];
@@ -588,6 +586,32 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 		System.arraycopy(data, 0, padded, 0, N);
 
 		return padded;
+	}
+	
+	@Override
+	public double getMaxErrorBitsFor(float[] data) {
+		// radix-4: 6 ops per 4 cycle
+		// radix-2: 4 ops per 2 cycle
+		
+		int ops = 0;
+	
+		int bits = getAddressBits(data);
+		if((bits & 1) != 0) {
+			ops += 4;
+			bits--;
+		}
+		while(bits > 0) {
+			ops += 6;
+			bits -= 2;
+		}
+		
+		return 0.5 * Math.log(1+ops) / Math.log(2.0);
+		
+	}
+
+	@Override
+	final int getFloatingPointBits() {
+		return 24;	
 	}
 	
 
