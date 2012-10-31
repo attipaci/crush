@@ -55,7 +55,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	public Class<? extends SphericalCoordinates> offsetSystem;
 	public boolean projectedOffsets = true;
 	
-	public Vector2D nasmythOffset, equatorialOffset, horizontalOffset;
+	public Vector2D nasmythOffset, equatorialOffset, horizontalOffset, pakoOffsets;
 	public Vector2D basisOffset = new Vector2D();
 	
 	public GismoScan(Gismo instrument) {
@@ -132,9 +132,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	@Override
 	public String getPointingString(Vector2D pointing) {
 		return super.getPointingString(pointing) + "\n\n" +
-			"  PaKo> set pointing " + Util.f1.format(pointing.getX() / Unit.arcsec) + " " 
-				+ Util.f1.format(pointing.getY() / Unit.arcsec);
-		
+			"  PaKo> set pointing " + Util.f1.format((pointing.getX() + pakoOffsets.getX()) / Unit.arcsec) + " " 
+				+ Util.f1.format((pointing.getY() + pakoOffsets.getY()) / Unit.arcsec);
 	}
 
 	public File getFile(String scanDescriptor) throws FileNotFoundException {
@@ -444,16 +443,19 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			else if(type.equals("equatorial")) equatorialOffset = offset;
 			else if(type.equals("basis")) basisOffset = offset;
 		}
-			
 		
 		// Read the effective pointing model
 		// Static constant *AND* tilt-meter corrections...
 		observingModel = new IRAMPointingModel();
 		tiltCorrections = new IRAMPointingModel();
+				
 		for(int i=1; i<=9; i++) {
 			observingModel.P[i] = (header.getDoubleValue("PCONST" + i, 0.0) + header.getDoubleValue("P" + i + "COR", 0.0)) / Unit.arcsec;			
 			tiltCorrections.P[i] = header.getDoubleValue("P" + i + "CORINC", 0.0) / Unit.arcsec;
 		}
+	
+		// The pointing offsets entered into PaKo
+		pakoOffsets = new Vector2D(header.getDoubleValue("P2COR"), header.getDoubleValue("P7COR"));
 		
 		// IRAM Nasmyth offsets are inverted from CRUSH definition... Ooops...
 		observingModel.P[10] = -(header.getDoubleValue("RXHORI", 0.0) - header.getDoubleValue("RXHORICO", 0.0)) / Unit.arcsec;

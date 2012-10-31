@@ -7,8 +7,8 @@
      - Parallel / massively parallel
      - plugin architecture
 
->> util -> kovacs.util
-   util.astro -> kovacs.astro or kovacs.util.astro
+>> util -> attila.util
+   util.astro -> attila.astro or attila.util.astro
    ...
 
 >> Split out kovacs.util as a separate util project, but link source into

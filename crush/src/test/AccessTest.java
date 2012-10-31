@@ -5,7 +5,7 @@ package test;
 // to 1%.
 
 public class AccessTest {
-	public final static int rounds = 100000000;
+	public final static int rounds = 1000000000;
 	public final static double s3o2 = 0.5 * Math.sqrt(3.0);
 	
 	public static void main(String[] args) {

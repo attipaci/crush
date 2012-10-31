@@ -28,22 +28,58 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+// Last updated on 31 Oct 2012
+//  -- Historical Leap seconds lookup added and fixed.
+
+// NOTE: Under no circumstances should one query a NIST server more frequently than once every 4 seconds!!!
+
+
 public final class LeapSeconds {
 	private static ArrayList<LeapEntry> list;
 	
 	public final static long millis1900 = -2208988800000L; // "1900-01-01T00:00:00.000" UTC
+	public static String dataFile = null;
+	public static boolean verbose = false;
 	
-	private static long releaseEpoch = 3427142400L;
-	private static long expirationEpoch = 3534019200L;
-	private static long expirationMillis = expirationEpoch + millis1900;
+	private static int currentLeap = 35;
 	
-	private static int currentLeap = 34;
-	private static long currentSinceMillis = 3439756800000L + millis1900; 
-
+	private static long releaseEpoch = 3535228800L;			// seconds since 1900
+	private static long expirationEpoch = 3581366400L;		// seconds since 1900
+	private static long expirationMillis = millis1900 + 1000L * expirationEpoch;
+	private static long currentSinceMillis = millis1900 + 1000L * 3550089600L; 
+	private final static long firstLeapMillis = millis1900 + 1000L * 2272060800L;	// 1 January 1972
+	
 	public static int get(long timestamp) {
+	
 		if(timestamp >= currentSinceMillis) return currentLeap;
+		if(timestamp < firstLeapMillis) return 0;
 		
-		//if(list == null) return currentLeap;
+		if(list == null) {
+			if(dataFile == null) {
+				System.err.println("WARNING! No historical leap-seconds data. Will use: " + currentLeap + " s.");
+				return currentLeap;
+			}
+			
+			try { read(dataFile); }
+			catch(IOException e) {
+				System.err.println("WARNING! Could not real leap seconds data: " + dataFile);
+				System.err.println("         Problem: " + e.getMessage());
+				System.err.println("         Will use current default value: " + currentLeap + " s.");
+				return currentLeap;
+			}
+			
+			if(timestamp >= expirationMillis) {
+				System.err.println("WARNING! Leap seconds data is no longer current.");
+				System.err.println("         To fix it, update '" + dataFile + "'.");
+			}
+
+		}
+		
+		if(timestamp > expirationMillis) {
+			System.err.println("WARNING! Leap data expired: " + dataFile);
+			System.err.println("         Will use the current default value: " + currentLeap + " s");
+			
+		}
 		
 		int lower = 0, upper = list.size()-1;
 		
@@ -74,7 +110,7 @@ public final class LeapSeconds {
 		if(list == null) list = new ArrayList<LeapEntry>();
 		else list.clear();
 		
-		System.err.println("Reading leap seconds table from " + fileName);
+		if(verbose) System.err.println("Reading leap seconds table from " + fileName);
 		
 		while((line=in.readLine()) != null) if(line.length() > 2) {
 			StringTokenizer tokens = new StringTokenizer(line);
@@ -101,12 +137,14 @@ public final class LeapSeconds {
 		currentLeap = current.leap;
 		currentSinceMillis = current.timestamp;
 		
-		System.err.println("--> Found " + list.size() + " leap-second entries.");
+		if(verbose) {
+			System.err.println("--> Found " + list.size() + " leap-second entries.");
 		
-		DateFormat tf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-		tf.setTimeZone(TimeZone.getTimeZone("UTC"));
-		System.err.println("--> Released: " + tf.format(1000L * releaseEpoch + millis1900));
-		System.err.println("--> Expires: " + tf.format(expirationMillis));
+			DateFormat tf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+			tf.setTimeZone(TimeZone.getTimeZone("UTC"));
+			System.err.println("--> Released: " + tf.format(1000L * releaseEpoch + millis1900));
+			System.err.println("--> Expires: " + tf.format(expirationMillis));
+		}
 		
 		in.close();
 	}	

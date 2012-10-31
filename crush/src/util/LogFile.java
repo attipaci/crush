@@ -59,7 +59,8 @@ public class LogFile {
 					
 		// Otherwise check if the headers match...
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(getFile())));
-		if(readHeader(in).equals(format)) return;
+		try { if(readHeader(in).equals(format)) return; }
+		catch(IllegalStateException e) { System.err.println("WARNING! " + e.getMessage()); }
 		
 		// Conflict...
 		if(conflictPolicy == CONFLICT_OVERWRITE) {

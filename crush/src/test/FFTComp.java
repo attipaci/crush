@@ -8,21 +8,22 @@ import util.fft.FloatFFT;
 public class FFTComp {
 
 	public static void main(String[] args) {
-		float[] data = new float[32];
+		float[] data = new float[1024];
 		Random random = new Random();
 		for(int i=0; i<data.length; i++) data[i] = (float) random.nextGaussian();
 		
 		FloatFFT fft = new FloatFFT();
+		fft.setThreads(3);
 		
 		float[] a = copyOf(data);
 		float[] b = copyOf(data);
 	
-		OldFFT.forwardRealInPlace(a);
+		//OldFFT.forwardRealInPlace(a);
 		fft.real2Amplitude(b);
 		
-		System.err.println(" Forward: " + (compare(a,b, 1e-4F) ? "OK" : "FAILED!"));
+		//System.err.println(" Forward: " + (compare(a,b, 1e-4F) ? "OK" : "FAILED!"));
 		
-		OldFFT.backRealInplace(a);
+		//OldFFT.backRealInplace(a);
 		fft.amplitude2Real(b);
 		
 		System.err.println(" Back: " + (compare(a,b, 1e-4F) ? "OK" : "FAILED!"));

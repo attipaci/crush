@@ -386,8 +386,6 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 			data[i0] = y0r + y2r;
 			data[i0+1] = y0i + y2i;
 			
-			
-			
 		}
 		// <------------------- Processing Block Ends Here ------------------------->
 
@@ -456,7 +454,7 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 			return;
 		}
 		
-		setParallel(chunks);
+		setThreads(chunks);
 		if(isForward) complexTransform(data, true, chunks);
 
 
@@ -628,12 +626,12 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 			bits -= 2;
 		}
 		
-		return 0.5 * Math.log(1+ops) / Math.log(2.0);
+		return 0.5 * Util.log2(1+ops);
 		
 	}
 
 	@Override
-	final int getFloatingPointBits() {
+	final int getMaxSignificantBits() {
 		return 53;	
 	}
 	

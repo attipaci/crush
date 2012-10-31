@@ -1,21 +1,34 @@
-1.12-3 (alpha)
+>> Fix log file header creation...
 
 
-	[SPEED] Filters now use newly implemented split-radix FFTs. These are
-	not only faster than the old, and less efficient radix-2, but also
-	do not accumulate errors as much resulting in better precision for 
-	large datasets.
+2.12-3 (alpha)
 
-	[CODE] Efficient, parallel radix-4, and split-radix FFT algorithms 
-	implemented. The new split-radix algorithm is about 5 times faster than
-	the old radix-2 one when running on a single thread, and up to 12x 
-	faster with 24 threads (12 cores with hyper-threading). At the same 
-	time, the new algorithm is also more precise, especially for large 
-	datasets, and allows precision control (at the price of trading 
-	performance).
+	[BUG] 'beammap' option was once again broken due to a non-inheritance
+	of the options. Now fixed.
+
+	[FIX] {GISMO} Suggested PaKo pointing offsets now can be entered as 
+	shown. Prior to the fix, these were really incremental values.
+
+	[FIX] Leap-seconds lookup threw an exception. Now fixed. Also, 
+	the current historical list of leap second data are now parsed from
+	'data/leap-seconds.list' for accurate conversion between UTC calendar 
+	dates and MJD dates. This file has to be updated manually. 
+
+	[IMPROVE] Logging no longer produces an error if it encounters an
+	invalid log file. Instead, it will produce a warning, and proceed
+	with the specified conflict policy (overwrite, or versioning) to
+	create a new valid log file.
+
+	[SPEED] Filters now use newly implemented, state-of-the-art 
+	split-radix FFTs. These are not only faster than the old, and less 
+	efficient radix-2, but also do not accumulate errors as much, resulting 
+	in better precision for large datasets. The new FFT performance matches 
+	that of the FFTW libraries (allegedly the fastest FFTs) when running on
+	a single-thread, and significantly exceeds FFTW when run parallelized 
+	on multi-core CPUs.
 
 	[CODE] New functions added to Util class, helping rounding integers
-	to near powers of 2.
+	to nearest powers of 2.
 	
 	[CODE] Removed unnecessary empty statements.
 
