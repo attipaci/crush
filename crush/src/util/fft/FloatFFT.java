@@ -148,7 +148,7 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 
 	// Blockbit is the size of a merge block in bit shifts (e.g. size 2 is bit 1, size 4 is bit 2, etc.)
 	// Two consecutive blocks are merged by the algorithm into one larger block...
-	private void merge2(final float[] data, int from, int to, final boolean isForward, int blkbit) {	
+	void merge2(final float[] data, int from, int to, final boolean isForward, int blkbit) {	
 		// Change from abstract index to double[] storage index (x2)
 		blkbit++; 
 	
@@ -232,7 +232,7 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 
 	// Blockbit is the size of a merge block in bit shifts (e.g. size 2 is bit 1, size 4 is bit 2, etc.)
 	// Two consecutive blocks are merged by the algorithm into one larger block...
-	private void merge4(final float[] data, int from, int to, final boolean isForward, int blkbit) {	
+	void merge4(final float[] data, int from, int to, final boolean isForward, int blkbit) {	
 		// Change from abstract index to double[] storage index (x2)
 		blkbit++; 
 
@@ -376,7 +376,7 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 		//System.err.println();
 	}
 	
-	private void loadReal(final float[] data, int from, int to, final boolean isForward) {
+	void loadReal(final float[] data, int from, int to, final boolean isForward) {
 	
 		to = Math.min(to, data.length);
 		
@@ -432,7 +432,7 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 			sequentialRealTransform(data, isForward);
 			return;
 		}
-		setParallel(chunks);
+		setThreads(chunks);
 		if(isForward) complexTransform(data, true, chunks);
 
 
@@ -605,12 +605,12 @@ public class FloatFFT extends FFT<float[]> implements RealFFT<float[]> {
 			bits -= 2;
 		}
 		
-		return 0.5 * Math.log(1+ops) / Math.log(2.0);
+		return 0.5 * Util.log2(1+ops);
 		
 	}
 
 	@Override
-	final int getFloatingPointBits() {
+	final int getMaxSignificantBits() {
 		return 24;	
 	}
 	

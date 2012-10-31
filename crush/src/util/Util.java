@@ -680,9 +680,13 @@ public final class Util {
 		return new String(buffer);
 	}
 	
+
 	public static double sinc(double x) { return x == 0.0 ? 1.0 : Math.sin(x) / x; } 
 	
+	public static double log2(double x) { return Math.log(x) / log2; }
+	
 	public static final double sigmasInFWHM = 2.0*Math.sqrt(2.0*Math.log(2.0));
+	public static final double log2 = 0.693147180559945;
 }
 
 

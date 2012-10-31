@@ -8,7 +8,7 @@ public static void main(String[] args) {
 		double[] data = new double[64];
 		
 		DoubleFFT fft = new DoubleFFT();
-		fft.setParallel(3);
+		fft.setThreads(3);
 		fft.setTwiddleErrorBits(3);
 		
 		System.err.println("delta[0]:");

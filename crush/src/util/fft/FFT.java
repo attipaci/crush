@@ -23,7 +23,7 @@
 
 package util.fft;
 
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -114,7 +114,7 @@ public abstract class FFT<Type> {
 	
 	public abstract double getMaxErrorBitsFor(Type data);
 	
-	abstract int getFloatingPointBits();
+	abstract int getMaxSignificantBits();
 	
 	abstract void sequentialComplexTransform(Type data, boolean isForward);
 	
@@ -130,11 +130,11 @@ public abstract class FFT<Type> {
 	
 	
 	public double getMinPrecisionFor(Type data) {
-		return Math.pow(2.0, getMaxErrorBitsFor(data)) / Math.pow(2.0, getFloatingPointBits());
+		return Math.pow(2.0, getMaxErrorBitsFor(data)) / Math.pow(2.0, getMaxSignificantBits());
 	}
 	
 	public double getMinSignificantBits(Type data) {
-		return getFloatingPointBits() - getMaxErrorBitsFor(data); 
+		return getMaxSignificantBits() - getMaxErrorBitsFor(data); 
 	}
 
 	public double getDynamicRange(Type data) {
@@ -166,7 +166,7 @@ public abstract class FFT<Type> {
 	
 	void updateThreads(Type data) {	
 		if(!autoThread) return;
-		setParallel(getOptimalThreads(getAddressBits(data)));
+		setThreads(getOptimalThreads(getAddressBits(data)));
 		autoThread = true;
 	}
 	
@@ -176,19 +176,18 @@ public abstract class FFT<Type> {
 		return averagePower(data, WindowFunction.getHamming(windowSize));			
 	}
 	
-	public int getParallel() { 
-		return pool == null ? 1 : pool.getCorePoolSize();
-	}
 	
 	public int getChunks() { 
 		return pool == null ? 1 : chunksPerThread * pool.getCorePoolSize();
 	}
 	
-	public void setSequential() {
-		pool = null;
+	
+	public int getThreads() { 
+		return pool == null ? 1 : pool.getCorePoolSize();
 	}
 	
-	public void setParallel(int threads) {
+	
+	public void setThreads(int threads) {
 		autoThread = false;
 		
 		if(pool != null) {
@@ -204,6 +203,12 @@ public abstract class FFT<Type> {
 		//pool.prestartAllCoreThreads();
 	}
 
+	
+	public void setSequential() {
+		pool = null;
+	}
+	
+	
 	public void autoThread() { autoThread = true; }
 	
 	public boolean isAutoThreaded() { return autoThread; }
@@ -233,6 +238,13 @@ public abstract class FFT<Type> {
 		return (br[(i >> 24)] | br[(i >> 16) & 0xFF] << 8 | br[(i >> 8) & 0xFF] << 16 | br[i & 0xFF] << 24) >> (32 - bits);
 	}
 	
+	public static FFT<?> createFor(Object data) {
+		if(data instanceof float[]) return new FloatFFT();
+		else if(data instanceof double[]) return new DoubleFFT();
+		throw new IllegalArgumentException("No FFT for type " + data.getClass().getSimpleName() + ".");
+	}
+	
+	
 	private static final int[] br = {
 		  0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0, 0x10, 0x90, 0x50, 0xD0, 0x30, 0xB0, 0x70, 0xF0, 
 		  0x08, 0x88, 0x48, 0xC8, 0x28, 0xA8, 0x68, 0xE8, 0x18, 0x98, 0x58, 0xD8, 0x38, 0xB8, 0x78, 0xF8, 
@@ -252,7 +264,6 @@ public abstract class FFT<Type> {
 		  0x0F, 0x8F, 0x4F, 0xCF, 0x2F, 0xAF, 0x6F, 0xEF, 0x1F, 0x9F, 0x5F, 0xDF, 0x3F, 0xBF, 0x7F, 0xFF
 		};
 	
-
 	
 	public static final boolean FORWARD = true;
 	public static final boolean BACK = false;
@@ -263,4 +274,4 @@ public abstract class FFT<Type> {
 
 
 }
- 
+   

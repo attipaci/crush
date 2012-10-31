@@ -29,6 +29,7 @@ import java.net.*;
 import java.util.*;
 
 import util.*;
+import util.astro.LeapSeconds;
 import util.text.VersionString;
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -41,7 +42,7 @@ import nom.tam.util.*;
  */
 public class CRUSH extends Configurator {
 	private static String version = "2.12-3";
-	private static String revision = "devel.4";
+	private static String revision = "beta1";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -76,6 +77,8 @@ public class CRUSH extends Configurator {
 		
 		home = System.getenv("CRUSH");
 		if(home == null) home = ".";
+		
+		LeapSeconds.dataFile = home + File.separator + "data" + File.separator + "leap-seconds.list";
 		
 		CRUSH crush = new CRUSH(args[0]);
 		crush.init(args);
