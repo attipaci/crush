@@ -204,7 +204,7 @@ iterations.clear		remove=iteration
 jansky				jansky + jansky.inverse (!)
 maxHe3rms			He3.maxrms
 MEM.lambda			source.mem.lambda
-nefd-range			source.nefd
+nefd-range			---
 relative-noise-range		weighting.noiserange
 scanmap-correction		source.correct		
 scanmap-redundancy		source.redundancy

@@ -71,8 +71,8 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 	private void read(String fileName) throws IOException {
 		if(fileName.equals(this.fileName)) return;
 		
-		System.err.print("   [Loading pointing table.] ");
-		if(CRUSH.debug) System.err.print("\n   ---> " + fileName);
+		System.err.print("   [Loading pointing table.]");
+		if(CRUSH.debug) System.err.print(" >> " + fileName + " >> ");
 		
 		for(LogFile.Row row : LogFile.read(fileName)) {
 			Entry pointing = new Entry();
@@ -111,7 +111,7 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 		
 		Collections.sort(this);
 		
-		System.err.println("-- " + size() + " valid records found.");	
+		System.err.println(" -- " + size() + " valid records found.");	
 	}
 	
 	public int indexBefore(double MJD) {

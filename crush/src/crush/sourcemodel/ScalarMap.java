@@ -68,7 +68,7 @@ public class ScalarMap extends SourceMap {
 	@Override
 	public synchronized void add(SourceModel model, double weight) {
 		ScalarMap other = (ScalarMap) model;
-		isValid = false;
+		isReady = false;
 	
 		map.addDirect(other.map, weight);
 		
@@ -227,7 +227,7 @@ public class ScalarMap extends SourceMap {
 		model.regridTo(map);	
 		map.generation = 1;
 		map.sanitize();
-		isValid = true;
+		isReady = true;
 			
 		double blankingLevel = getBlankingLevel();
 		if(!Double.isNaN(blankingLevel)) System.err.println("  --> Blanking positions above " + Util.f2.format(blankingLevel) + " sigma in source model.");
@@ -327,7 +327,7 @@ public class ScalarMap extends SourceMap {
 			catch(Exception e) { e.printStackTrace(); }
 		}
 		
-		isValid = true;
+		isReady = true;
 	}	
 	
 	@Override
@@ -495,7 +495,7 @@ public class ScalarMap extends SourceMap {
 		
 		
 		
-		isValid = true;
+		isReady = true;
 		
 		// Run the garbage collector
 		System.gc();
@@ -703,6 +703,12 @@ public class ScalarMap extends SourceMap {
 		else return getDefaultCoreName();
 	}
 	
+	@Override
+	public boolean isValid() {
+		if(map.isEmpty()) return false;
+		return true;
+	}
+	
 	public void write(String path, boolean info) throws Exception {		
 		// Remove the intermediate image file...
 		File intermediate = new File(path + File.separator + "intermediate." + id + ".fits");
@@ -713,7 +719,7 @@ public class ScalarMap extends SourceMap {
 
 		map.fileName = path + File.separator + getCoreName() + idExt + ".fits";
 		
-		if(!isValid) {
+		if(!isReady) {
 			System.err.println(" WARNING! Source" + idExt + " is empty. Skipping");
 			File file = new File(map.fileName);
 			if(file.exists()) file.delete();

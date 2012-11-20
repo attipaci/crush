@@ -1587,6 +1587,12 @@
 			in UNIX specifies the 'images' subdirectory inside a
 			user's home.
 
+:: outpath.create	@Since: 2.13
+			When specified, the output path will be automatically
+			created as necessary. If not set, CRUSH will exit
+			with an error if the output path does not exist.
+			@See: 'outpath'
+
 :: pcenter=row,col	@Instrument: SHARC-2, GISMO
 			@Advanced
 			Defines the pointing center used, in terms of the
@@ -2384,14 +2390,6 @@
 			@WARNING: This feature is not yet thorougly tested.
 		 		  Use at you own risk... 
 			@See: 'smooth.external', 'clip', 'blank'
-
-:: source.nefd=min:max	@Advanced
-			Specify a range of acceptable NEFDs in "Jy sqrt(s)" 
-			units. All scans with NEFD outside this range will not 
-			contribute to the composite map. If the optional 'min' 
-			value is not given, then it is assumed to be 0. ('-' 
-			may also be used in place of ':' for separating min and
-			max values.) 
 
 :: source.nosync	@Expert
 			Do not bother synching the source solution back into the

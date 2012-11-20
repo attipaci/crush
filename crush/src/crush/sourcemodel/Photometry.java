@@ -163,5 +163,11 @@ public abstract class Photometry extends SourceModel {
 		return 1;
 	}
 
+	@Override
+	public boolean isValid() {
+		if(sourceFlux == null) return false;
+		if(sourceFlux.isNaN()) return false;
+		return true;
+	}
 	
 }

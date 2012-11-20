@@ -1,23 +1,68 @@
->> Fix log file header creation...
 
-
-2.12-3 (alpha)
+2.13-b1 (beta)
 
 	[BUG] 'beammap' option was once again broken due to a non-inheritance
-	of the options. Now fixed.
+	of the configuration options. Now fixed.
+
+	[NEW] Added troubleshooting information for failed reductions, when the 
+	reduction does not result in a valid source model. Suggestions are
+	also provided for improvement when not all of the scans are 
+	contributing to the source.
+
+	[NEW] 'outpath.create' can be used to automatically create, as needed, 
+	the path specified by 'outpath'.
+
+	[NEW] {GISMO} Added 'bias' as a log quantity.
+
+	[NEW] Added 'version' and 'fullversion' to CRUSH properties. This 
+	allows, for example, to set output paths, which are version dependent.
+	E.g.:
+
+	   outpath ~/data/{&version}
+
+	will place the output into '~/data/2.13-1' for the 2.13-1 release. The 
+	'fullversion' propertry also contains the extended release info, e.g. 
+	'2.13-b1 (devel.6)'.
 
 	[FIX] {GISMO} Suggested PaKo pointing offsets now can be entered as 
-	shown. Prior to the fix, these were really incremental values.
+	shown. Prior to the fix, these were incremental values, which had to
+	be added to the values already applied.
 
 	[FIX] Leap-seconds lookup threw an exception. Now fixed. Also, 
 	the current historical list of leap second data are now parsed from
 	'data/leap-seconds.list' for accurate conversion between UTC calendar 
 	dates and MJD dates. This file has to be updated manually. 
 
-	[IMPROVE] Logging no longer produces an error if it encounters an
+	[TWEAK] CRUSH will exit with an error if the specified output path is 
+	invalid. It will also offer suggestions fo making it work.
+
+	[TWEAK] Noise weighting proceeds even if all channels are flagged on
+	entry, since the re-weighting might result in the unflagging of some
+	of these.
+
+	[TWEAK] Logging no longer produces an error if it encounters an
 	invalid log file. Instead, it will produce a warning, and proceed
 	with the specified conflict policy (overwrite, or versioning) to
 	create a new valid log file.
+
+	[TWEAK] {imagetool} Added improved '-masks=extract' functionality,
+	which can be used for extracting counterparts to a given catalog. The
+	extraction routine properly accounts for the search area, based on the
+	error circle radius specified in the catalog file and the S/N of the
+	nearest peak within, and calculates detection confidence levels 
+	accordingly.
+
+	[DEPRECATE] Deprecated 'source.nefd' option. Low NEFD scans are not
+	necessarily bad, and are automatically downweighted by the reduction
+	making this crude flagging generally unnecessary. It was also the 
+	source of trouble to users, who sometimes had trouble with why the
+	reduction produced no map. The option therefore is no longer 
+	supported.
+
+	[CHANGE] When all pixels are flagged after noise weighting the 
+	message in place of the NEFD number is changed to 'FLAG' to make it
+	more indicative. One may try to adjust the noise flagging via
+	'weighting.noiseRange'.
 
 	[SPEED] Filters now use newly implemented, state-of-the-art 
 	split-radix FFTs. These are not only faster than the old, and less 
@@ -26,6 +71,17 @@
 	that of the FFTW libraries (allegedly the fastest FFTs) when running on
 	a single-thread, and significantly exceeds FFTW when run parallelized 
 	on multi-core CPUs.
+
+	[CONFIG] {GISMO} Calibration for bias 16000 has been derived and
+	added to run6.cfg. It is based on comparison of a quasar flux with
+	both the Run6 setting for 12K, and the 16K bias. The value is expected
+	to be accurate on the 1% level.
+
+	[CONFIG] {GISMO} Now has pointing model and incremental corrections,
+	based on the pointing measurements, for the 2012 November run. The
+	model is good to 2.8" in AZ and 3.8" in EL (rms) for most of the run.
+	There were large excursions from the model on Nov 10-12 (probably
+	wind-related). Be extra cautious when reducing data from that period.
 
 	[CODE] New functions added to Util class, helping rounding integers
 	to nearest powers of 2.

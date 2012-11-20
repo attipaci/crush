@@ -530,7 +530,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			System.out.println();
 			System.out.println(getFocusString());
 		}
-		else if(hasOption("pointing")) {
+		else if(hasOption("pointing")) if(sourceModel.isValid()) {
 			Configurator pointingOption = option("pointing");
 			if(pointingOption.equals("suggest") || pointingOption.equals("auto")) {
 				System.out.println(" WARNING! Cannot suggest focus for scan " + getID() + ": S/N is below critical.");
@@ -546,7 +546,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			System.out.println();
 			System.out.println(getPointingString() + "\n");
 		}
-		else if(hasOption("pointing")) {
+		else if(hasOption("pointing")) if(sourceModel.isValid()) {
 			Configurator pointingOption = option("pointing");
 			if(pointingOption.equals("suggest") || pointingOption.equals("auto")) {
 				System.out.println(" WARNING! Cannot suggest pointing for scan " + getID() + ": S/N is below critical.");

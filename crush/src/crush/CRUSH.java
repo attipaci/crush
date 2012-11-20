@@ -41,8 +41,8 @@ import nom.tam.util.*;
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.12-3";
-	private static String revision = "beta1";
+	private static String version = "2.13-b1";
+	private static String revision = "beta";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -173,6 +173,8 @@ public class CRUSH extends Configurator {
 	@Override
 	public String getProperty(String name) {
 		if(name.equals("instrument")) return instrument.getName();
+		else if(name.equals("version")) return version;
+		else if(name.equals("fullversion")) return getFullVersion();
 		else return super.getProperty(name);
 	}
 	
@@ -207,7 +209,39 @@ public class CRUSH extends Configurator {
 		if(isConfigured("reservecpus")) maxThreads -= get("reservecpus").getInt();
 		maxThreads = Math.max(maxThreads, 1);
 		
-		if(containsKey("outpath")) workPath = get("outpath").getPath(); 
+		if(containsKey("outpath")) setOutpath();
+	}
+	
+	public void setOutpath() {
+		workPath = get("outpath").getPath();
+		File workFolder = new File(workPath);	
+		if(workFolder.exists()) return;	
+		
+		System.err.println(" WARNING! The specified output folder does not exists:");
+		System.err.println("          '" + workPath + "'");
+
+		if(!hasOption("outpath.create")) {
+			System.err.println(" ERROR! Invalid output path. Try:");
+			System.err.println();
+			System.err.println("        * change 'outpath' to an existing directory, or");
+			System.err.println("        * set 'outpath.create' to create the path automatically.");
+			System.err.println();
+			System.exit(1);
+		}
+
+		System.err.println(" -------> Creating output folder.");	
+		try {
+			if(!workFolder.mkdirs()) {
+				System.err.println(" ERROR! Output path could not be created: unknown error.");
+				System.err.println("        Try change 'outpath'.");
+				System.exit(1);
+			}
+		}
+		catch(SecurityException e) {
+			System.err.println(" ERROR! Output path could not be created: " + e.getMessage());
+			System.err.println("        Try change 'outpath'.");
+			System.exit(1);
+		}
 	}
 
 	public void read(String scanID) {
@@ -328,9 +362,15 @@ public class CRUSH extends Configurator {
 		
 		
 		if(source != null) {
-			try { source.write(workPath); }
-			catch(Exception e) { e.printStackTrace(); }
- 		}
+			source.suggestions();
+			
+			if(source.isValid()) {
+				try { source.write(workPath); }
+				catch(Exception e) { e.printStackTrace(); }
+			}
+			else System.err.println(" WARNING! The reduction did not result in a valid source model.");
+		}
+		
 		
 		for(Scan<?,?> scan : scans) scan.writeProducts();	
 		
@@ -552,7 +592,7 @@ public class CRUSH extends Configurator {
 		System.err.println("  Get it from:  www.submm.caltech.edu/~sharc/crush");
 		System.err.println();
 		System.err.println("  You should always update to the latest release to take advantage of critical");
-		System.err.println("  bug fixes, improvements and new features.");
+		System.err.println("  bug fixes, improvements, and new features.");
 		
 		for(int i=0; i<8; i++) System.err.print("**********");
 		System.err.println();
