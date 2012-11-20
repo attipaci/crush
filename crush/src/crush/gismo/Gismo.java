@@ -373,6 +373,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		else if(name.equals("foc.dZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
 		else if(name.equals("nasX")) return Util.defaultFormat(nasmythOffset.getX() / Unit.arcsec, f);
 		else if(name.equals("nasY")) return Util.defaultFormat(nasmythOffset.getY() / Unit.arcsec, f);
+		else if(name.equals("bias")) return Integer.toString(biasValue[0]);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

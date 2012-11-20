@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 			  <attila[AT]submm.caltech.edu>
 
-			  Last updated: 19 Jun 2012
+			  Last updated: 13 Nov 2012
 
 
 
@@ -137,7 +137,7 @@ upon specific request and/or arrangement...
   
    UNIX (POSIX) and MacOS Installation (from tarball)
    --------------------------------------------------
-   After unpacking in the desired locatiom, you may optionally wish to run 
+   After unpacking in the desired location, you may optionally wish to run 
    'install.sh' (as root or with 'sudo') to install the CRUSH man pages and 
    allow global access to the executables, by creating links to them in 
    '/usr/bin'. Check the success of the installation by typing 'man crush'. 
@@ -624,9 +624,9 @@ options on the console.
     blacklists 'clip' whenever a source model is defined (via 'source.model').
     On the other hand,
 
-       	  source.[model] nefd 0.1--1.0
+       	  source.[model] filter
 
-    can be used to adjust 'source.nefd' when 'source.model' is defined.
+    can be used to activate the 'source.filter' when 'source.model' is defined.
 
     It is possible to clear all conditional settings by:
 
@@ -730,11 +730,24 @@ options on the console.
 	configuration file), it can have its desired effect always.
 
     In addition to querying configuration settings the same syntax can be used
-    to look up other CRUSH properties. Currently, only the 'instrument'
-    property is defined, thus you can, for example set the output directory
-    by instrument name, E.g.:
+    to look up other CRUSH properties. Currently, the following are defined:
 
-      outpath = {&outpath}/{&instrument}    
+	instrument		The name of the instrument providing the data.
+
+	version			The CRUSH version (e.g. 2.13-1).
+
+	fullversion		The CRUSH version including extra revision
+				information. E.g. '2.13-1 (beta1)'
+
+
+    Thus you can, for example set the output directory by instrument name and 
+    CRUSH version, E.g.:
+
+      outpath = {&outpath}/{&instrument}/{&version}
+
+    So, if you took data with LABOCA and reduced with CRUSH 2.13-1, then the
+    output will go to the 'laboca/2.13-1' subfolder within the the directory
+    specified by 'outpath'.
 
 
     Path Names
@@ -1729,12 +1742,13 @@ options on the console.
    GISMO specific log entries
    --------------------------
 
+	bias		The detector bias value (for column 0).
 
-        foc.dX           Focus X offset (mm).
+        foc.dX          Focus X offset (mm).
         
-	foc.dY           Focus Y offset (mm).
+	foc.dY          Focus Y offset (mm).
         
-	foc.dZ           Focus Z offset (mm).
+	foc.dZ          Focus Z offset (mm).
 
 	modelX		Static pointing model correction in azimuth (arcsec).
 

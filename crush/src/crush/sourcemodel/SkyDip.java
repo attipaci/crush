@@ -202,5 +202,10 @@ public class SkyDip extends SourceModel {
 	public void process(boolean verbose) throws Exception {
 		// TODO Auto-generated method stub
 	}
+
+	@Override
+	public boolean isValid() {
+		return countPoints() > 0;
+	}
 	
 }

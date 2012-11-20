@@ -428,7 +428,14 @@ public abstract class SourceMap extends SourceModel {
 	public abstract double covariantPoints();
 	
 	protected abstract void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain);
-
+	
+	@Override
+	public void suggestMakeValid() {
+		super.suggestMakeValid();
+		System.err.println("            * Increase 'grid' for a coarser map pixellization.");
+		if(hasOption("source.redundancy")) System.err.println("            * Disable redundancy checking ('forget=source.redundancy').");
+	}
+	
 	public Range xRange = new Range();
 	public Range yRange = new Range();
 	

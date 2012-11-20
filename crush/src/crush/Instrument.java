@@ -756,8 +756,6 @@ implements TableFormatter.Entries {
 	
 	// Flag according to noise weights (but not source weights)
 	public void flagWeights() {
-		if(mappingChannels == 0) throw new IllegalStateException("----");
-		
 		Range weightRange = new Range();
 		weightRange.full();
 		
@@ -787,14 +785,17 @@ implements TableFormatter.Entries {
 		
 		// Flag out channels with unrealistically small or large source weights
 		for(Channel channel : getDetectorChannels()) {
-			double w = channel.weight * channel.gain * channel.gain;
-			
 			channel.unflag(Channel.FLAG_SENSITIVITY);	
+			double w = channel.weight * channel.gain * channel.gain;
 			if(w > maxWeight) channel.flag(Channel.FLAG_SENSITIVITY);
 			else if(w <= minWeight) channel.flag(Channel.FLAG_SENSITIVITY);		
 			else if(channel.isUnflagged()) sumw += w;
 		}
-		if(sumw <= 0.0) throw new IllegalStateException("NEFD");
+		
+		if(sumw == 0.0) {
+			if(mappingChannels > 0) throw new IllegalStateException("FLAG");
+			else throw new IllegalStateException("----");
+		}
 		
 		census();
 	}
@@ -904,6 +905,19 @@ implements TableFormatter.Entries {
 	
 	@Override
 	public String toString() { return "Instrument " + getName(); }
+	
+	public void troubleshootFewPixels() {
+		System.err.println("            * Disable gain estimation for one or more modalities. E.g.:");
+		
+		for(String modName : getModalityNames()) if(hasOption("correlated." + modName)) if(!hasOption("correlated." + modName + ".nogains"))
+			System.err.println("                '-correlated." + modName + ".noGains'");
+		
+		if(hasOption("gains")) System.err.println("            * Disable gain estimation globally with '-forget=gains'."); 
+		if(hasOption("despike")) System.err.println("            * Disable despiking with '-forget=despike'.");
+		if(hasOption("weighting")) if(hasOption("weighting.noiseRange")) 
+			System.err.println("            * Adjust noise flagging via 'weighting.noiseRange'.");
+		
+	}
 	
 	public final static int GAINS_SIGNED = 0;
 	public final static int GAINS_BIDIRECTIONAL = 1;

@@ -106,4 +106,5 @@ public class APEXChoppedPhotometry extends Photometry {
 	}
 
 	
+	
 }

@@ -44,8 +44,8 @@ public abstract class FancyRuler extends BasicRuler implements Arrangeable {
 	
 	public FancyRuler(int edge) {
 		super(edge);		
-		//labels = new Labels();
-		//title = new Title();
+		labels = new Labels();
+		title = new Title();
 	}
 	
 	public Labels getLabels() { return labels; }
