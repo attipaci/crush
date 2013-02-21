@@ -298,6 +298,11 @@ public class Unit implements Cloneable {
 	public final static double Hz6 = Hz5 * Hz;
 
 
+	// Samples per second
+	public final static double kSPS = kilo / sec;
+	public final static double MSPS = mega / sec;
+	public final static double GSPS = giga / sec;
+	
 	public final static double newton = kg * m / s2;
 	public final static double N = newton;
 	public final static double kN = kilo * newton;
@@ -597,7 +602,7 @@ public class Unit implements Cloneable {
 		register(mol, "mol, mole");
 		
 		register(g, "g, gramm");
-		register(Hz, "Hz, hertz");
+		register(Hz, "Hz, hertz, SPS");
 		register(N, "N, newton");
 		register(Pa, "Pa, pascal");
 		register(J, "J, joule");
@@ -678,6 +683,7 @@ public class Unit implements Cloneable {
 
 		register(Jy, "Jy, jansky");
 		register(mpg, "mpg, MPG");
+
 	}
 	
 

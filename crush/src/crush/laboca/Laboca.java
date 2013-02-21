@@ -207,14 +207,16 @@ public class Laboca extends APEXArray<LabocaPixel> {
 				options.purge("he3");
 			}
 		}
-		
-		// Unflag 1MOhm resistors as blinds, since these will be flagged as dead by markBlinds() [and removed by slim()] 
-		// when blind channels are explicitly defined via the 'blind' option.
-		for(LabocaPixel pixel : this) if(pixel.isFlagged(LabocaPixel.FLAG_RESISTOR)) pixel.unflag(Channel.FLAG_BLIND);
-		
-		if(hasOption("noresistors"))
-			for(LabocaPixel pixel : this) if(pixel.isFlagged(LabocaPixel.FLAG_RESISTOR)) pixel.flag(Channel.FLAG_DEAD);
 			
+		if(hasOption("noresistors")) {
+			for(LabocaPixel pixel : this) if(pixel.isFlagged(LabocaPixel.FLAG_RESISTOR)) pixel.flag(Channel.FLAG_DEAD);
+		}
+		else {
+			// Unflag 1MOhm resistors as blinds, since these will be flagged as dead by markBlindChannels() 
+			// [and removed by slim()] when blind channels are explicitly defined via the 'blind' option.
+			for(LabocaPixel pixel : this) if(pixel.isFlagged(LabocaPixel.FLAG_RESISTOR)) pixel.unflag(Channel.FLAG_BLIND);
+		}
+		
 	}
 	
 

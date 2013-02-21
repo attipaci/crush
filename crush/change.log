@@ -1,3 +1,69 @@
+2.13-b2 (beta)
+
+	TODO >> update laboca photometry data and docs
+
+	[NEW] {GISMO} 'tau.225GHz' can now specify a file containing skydip
+        indormation (in the format of Gabrielle Bruni). From this, CRUSH
+        calculates an appropriate tau for each scan based on a Gaussian 
+        weighted sum of the measuremens with FWHM of 10 minutes around each 
+        scan. This method of tau determination is now default for the 2012
+        November run.
+
+	[BUG] {APEX} Error estimates were quite wrong in LABOCA/SABOCA 
+	photometry.
+
+	[FIX] {SHARC2} The rarely used horizontal scanning offsets were already
+	included for Nov 2002 data (but need to be added afterwards). New
+	configuration key 'offsets.add' can be used to specify when the static
+	offsets have to be added explicitly to the coordinates. Same goes for
+	chopper offsets.
+
+	[FIX] Levelling of chopper signals used medians, but because it's
+	bimodal, the mean is better.
+
+	[FIX] {log} Logging of dates could be wrong, when run in a non-UTC
+	timezone. Fixed it by forcing UTC time-zones always to give proper
+	UTC dates.
+	
+	[FIX] Some sanity checks for automatic downsampling.
+
+	[FIX] {SHARC2} Stale equatorial coordinates are ignored when reducing
+	non-tracking scans.
+	
+	[FIX] {SHARC2} Logging of 'pnt.FZAO' was incorrect.
+	
+	[FIX] {SHARC2} Logging focus quantities wrote them in microns rather
+	than the expected mm units. Now fixed.
+
+	[FIX] {SHARC2} Fixes for processing very early data from the beginning
+	of Nov 2002, when the data format was not yet finalized. The fixes 
+	include:
+
+	  * Missing source coordinates in FITS header.
+	  * Missing rotator information.
+	  * RA/DEC columns in radians rather than expected units.
+	  * Incorrect source names.
+
+	As a result nearly all scans from Nov 2002 can now be reduced correctly
+	and without problems.
+
+	[TWEAK] {SHARC2} Adjusted 'faint' + 'extended' configuration, based on
+	the Cygnus X dataset bu F. Motte.
+
+	[TWEAK] Default 'mappingfraction' changed to 0.5 (from 0.67), requiring
+	at least half of non-dead pixels to be healthy for mapping to proceed
+	 
+	[TWEAK] Maximum-likelihood estimators are now default from the start,
+	except for GISMO, which retains median estimators for the first 
+	iteration.
+
+	[TWEAK] {SHARC-2} Chopper response, when chopper is used, is estimated 
+	for 'faint' and 'deep' mode reductions only. Previously it was default
+	at all brightness levels.
+
+	[UPDATE] {LABOCA} Pixel gain/weight/flag data updated. The photometry
+	reductions especially are sensitive on how such pixel data are derived.
+
 
 2.13-b1 (beta)
 

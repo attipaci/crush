@@ -66,10 +66,9 @@ public class APEXChoppedPhotometry extends Photometry {
 				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.storeIndex];
 				else continue;
 					
-				
 				WeightedPoint df = pixel.getLROffset(phases);
 					
-				df.scaleWeight(Math.max(1.0, pixel.getLRChi2(phases, df.value())));
+				df.scaleWeight(Math.min(1.0, 1.0 / pixel.getLRChi2(phases, df.value())));
 				df.scale(1.0 / (transmission * subscan.gain * sourceGain[pixel.index]));
 				
 				point.average(df);

@@ -26,6 +26,7 @@ package crush;
 
 import util.*;
 
+import java.util.Hashtable;
 import java.util.StringTokenizer;
 
 
@@ -143,7 +144,19 @@ public abstract class Channel implements Cloneable, Comparable<Channel> {
 		coupling = 1.0;
 	}
 	
-
+	public static int getFlag(String name) {
+		Integer value = flagValues.get(name);
+		return value == null ? 0 : value;
+	}
+	
+	public static String getFlagName(int value) {
+		return flagNames.get(value);
+	}
+	
+	private static Hashtable<String, Integer> flagValues = new Hashtable<String, Integer>();
+	private static Hashtable<Integer, String> flagNames = new Hashtable<Integer, String>();
+	
+	
 	public static int nextHardwareFlag = 0;
 	public final static int FLAG_DEAD = 1 << nextHardwareFlag++;
 	public final static int FLAG_BLIND = 1 << nextHardwareFlag++;

@@ -282,8 +282,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			double maxv = aveScanSpeed.value() + 1.25 * aveScanSpeed.rms();
 			// Choose downsampling to accomodate at ~98% of scanning speeds... 
 			//double maxv = aveScanSpeed.value + 2.0 * aveScanSpeed.rms();
+			if(maxv == 0.0) { 
+				System.err.println("   WARNING! No automatic downsampling for zero scan speed.");
+				return; 
+			}
 			double maxInt = 0.4 * instrument.resolution / maxv;
 			int factor = (int)Math.floor(maxInt / instrument.samplingInterval);
+			if(factor == Integer.MAX_VALUE) {
+				System.err.println("   WARNING! No automatic downsampling for negligible scan speed.");
+				return;
+			}
 			if(factor > 1) downsample(factor);
 			else return;
 		}
@@ -1852,12 +1860,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	// The alternative would be to include sample count in weights everywhere...
 	@SuppressWarnings("unchecked")
 	public synchronized void downsample(final int n) {
-		System.err.print("   Downsampling by " + n);
 		
 		final int windowSize = (int)Math.round(1.82 * WindowFunction.getEquivalenWidth("Hann")*n);
 		final int centerOffset = windowSize/2 + 1;
 		final double[] w = WindowFunction.get("Hann", windowSize);
-		final ArrayList<FrameType> buffer = new ArrayList<FrameType>((size()-windowSize)/n+1); 
+		
+		int N = (size()-windowSize) / n + 1;
+		if(N <= 0) {
+			System.err.println("   WARNING! Time stream too short to downsample by specified amount.");
+			return;
+		}
+	
+		System.err.print("   Downsampling by " + n);
+		
+		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(N); 
 		final double[] value = new double[instrument.size()];
 		
 		// Normalize window function to absolute intergral 1
@@ -2327,8 +2343,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Signal x = getPositionSignal(null, Motion.CHOPPER, Motion.X);
 		Signal y = getPositionSignal(null, Motion.CHOPPER, Motion.Y);
 		
-		x.level(true);
-		y.level(true);
+		x.level(false);
+		y.level(false);
 		
 		int xTransitions = 0, yTransitions = 0;
 		int xFrom = -1, xTo = -1, yFrom = -1, yTo = -1;
@@ -2343,7 +2359,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		float[] distance = new float[nt];
 		final double threshold = instrument.getMinBeamFWHM() / 2.5;
 		int n=0;
-			
+				
 		for(int t=1; t<nt; t++) {
 			final Frame exposure = get(t);
 			if(exposure == null) continue;

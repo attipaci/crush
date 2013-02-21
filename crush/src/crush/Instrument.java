@@ -128,7 +128,7 @@ implements TableFormatter.Entries {
 		if(hasOption("gain")) gain = option("gain").getDouble();
 		
 		loadChannelData();
-		if(hasOption("blind")) markBlinds(option("blind").getIntegers()); 
+		if(hasOption("blind")) setBlindChannels(option("blind").getIntegers()); 
 		if(hasOption("flag")) flagPixels(option("flag").getIntegers()); 
 		
 		addGroups();
@@ -281,16 +281,25 @@ implements TableFormatter.Entries {
 		for(int beIndex : list) if(lookup.containsKey(beIndex)) lookup.get(beIndex).flag(Channel.FLAG_DEAD);
 	}
 	
-	public void markBlinds(Collection<Integer> list) {
+	public void killChannels(int pattern, int ignorePattern) {
 		// Anything flagged as blind so far should be flagged as dead instead...
-		for(Channel channel : this) if(channel.isFlagged(Channel.FLAG_BLIND)) {
-			channel.unflag(Channel.FLAG_BLIND);
+		for(Channel channel : this) if(channel.isFlagged(pattern)) if(channel.isUnflagged(ignorePattern)) {
+			channel.unflag(pattern);
 			channel.flag(Channel.FLAG_DEAD);
 		}
+	}
+	
+	public void killChannels(int pattern) {
+		killChannels(pattern, 0);
+	}
+	
+	
+	public void setBlindChannels(Collection<Integer> list) {
+		killChannels(Channel.FLAG_BLIND);
+		
+		System.err.println(" Defining " + list.size() + " blind channels.");		
 		
 		Hashtable<Integer, ChannelType> lookup = getChannelLookup();
-		
-		System.err.println(" Marking " + list.size() + " channels as blind.");		
 		
 		for(int beIndex : list) {
 			ChannelType channel = lookup.get(beIndex);
@@ -506,7 +515,14 @@ implements TableFormatter.Entries {
 		fixedSourceGains = true;
 	}
 	
-	// create the channel groups based on the wiring scheme.
+		
+	// Replace the listed flag types with DEAD...
+	public void killChannels(List<String> killTypes, List<String> ignoreTypes) {
+		int killPattern = 0, ignorePattern = 0;
+		for(String name : killTypes) killPattern |= Channel.getFlag(name);
+		for(String name : ignoreTypes) ignorePattern |= Channel.getFlag(name);
+		killChannels(killPattern, ignorePattern);
+	}
 	
 	public String getPixelDataHeader() {
 		return "ch\tgain\tweight\t\tflag";
@@ -534,6 +550,8 @@ implements TableFormatter.Entries {
 	}
 
 	// The pixel data file should contain the blind channel information as well...
+	// create the channel groups based on the wiring scheme.
+
 	public void loadPixelData(String fileName) throws IOException {
 		System.err.println(" Loading pixel data from " + fileName);
 			

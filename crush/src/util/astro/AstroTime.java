@@ -263,6 +263,7 @@ public class AstroTime {
 	private static TimeFormat fitsTimeFormat = new TimeFormat(3); 
 	
 	static {
+		isoFormatter.setTimeZone(UTC);
 		fitsDateFormatter.setTimeZone(UTC);
 		defaultFormatter.setTimeZone(UTC);
 		fitsTimeFormat.colons();
