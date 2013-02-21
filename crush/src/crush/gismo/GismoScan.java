@@ -327,11 +327,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		setSerial(serial);
 		
 		// Weather
-		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();
-		else {
-			tau225GHz = header.getDoubleValue("TAU225GH");
-			instrument.options.process("tau.225ghz", tau225GHz + "");
-		}
+		
 
 		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + 273.16 * Unit.K;
 		pressure = header.getDoubleValue("PRESSURE") * Unit.hPa;
@@ -360,13 +356,16 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		else timeStamp = date;
 	
 		setMJD(header.getDoubleValue("MJD-OBS"));
-				
+			
 		// TODO use UTC, TAI, TT offsets to configure AstroTime?...
 		/*
 		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
 		catch(ParseException e) { System.err.println("WARNING! " + e.getMessage()); }
 		*/
+
 		
+		
+			
 		double lon = header.getDoubleValue("LONGOBJ", Double.NaN) * Unit.deg;
 		double lat = header.getDoubleValue("LATOBJ", Double.NaN) * Unit.deg;
 		
@@ -443,6 +442,32 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			else if(type.equals("equatorial")) equatorialOffset = offset;
 			else if(type.equals("basis")) basisOffset = offset;
 		}
+		
+		
+		// Tau
+		tau225GHz = Double.NaN;
+		
+		if(hasOption("tau.225ghz")) {
+			try { tau225GHz = option("tau.225ghz").getDouble(); }
+			catch(NumberFormatException e) {
+				try {
+					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath());
+					tau225GHz = table.getTau(getMJD());
+					instrument.options.process("tau.225ghz", tau225GHz + "");
+				}
+				catch(IOException e2) { 
+					System.err.println("WARNING! Cannot read tau table.");
+					if(CRUSH.debug) e.printStackTrace(); 
+					tau225GHz = Double.NaN;
+				}
+			}
+		}
+		
+		if(Double.isNaN(tau225GHz)) {
+			tau225GHz = header.getDoubleValue("TAU225GH");
+			instrument.options.process("tau.225ghz", tau225GHz + "");
+		}
+	
 		
 		// Read the effective pointing model
 		// Static constant *AND* tilt-meter corrections...

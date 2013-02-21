@@ -35,6 +35,7 @@ import util.*;
 import util.astro.AstroTime;
 import util.astro.EquatorialCoordinates;
 import util.astro.GeodeticCoordinates;
+import util.astro.HorizontalCoordinates;
 import util.astro.Weather;
 import util.data.DataPoint;
 import util.text.TableFormatter;
@@ -49,11 +50,15 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 	double elevationResponse = 1.0;
 	double ambientT, pressure, humidity;
 	
+	boolean addOffsets = true;
+	
 	Vector2D horizontalOffset, fixedOffset;
 	
 	public int iMJD;	
 	public long fileSize = -1;
 
+	private double raUnit = Unit.hourAngle;
+	private double decUnit = Unit.deg;
 	
 	public Sharc2Scan(Sharc2 instrument) {
 		super(instrument);
@@ -68,6 +73,29 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		return new Sharc2Integration(this);
 	}
 	
+	@Override
+	public void calcHorizontal() {
+		Sharc2Frame firstFrame = getFirstIntegration().getFirstFrame();
+		Sharc2Frame lastFrame = getLastIntegration().getLastFrame();
+		
+		horizontal = new HorizontalCoordinates(
+				0.5 * (firstFrame.horizontal.getX() + lastFrame.horizontal.getX()),  
+				0.5 * (firstFrame.horizontal.getY() + lastFrame.horizontal.getY())
+		);
+			
+		// When the telescope is not tracking, the equatorial coordinates may be bogus...
+		// Use the horizontal coordinates to make sure the equatorial ones make sense...
+		EquatorialCoordinates eq2 = horizontal.toEquatorial(site, LST);
+		eq2.epoch = apparent.epoch;		
+		eq2.precess(equatorial.epoch);
+		
+		if(eq2.distanceTo(equatorial) > 5.0 * Unit.deg) {
+			System.err.println("   >>> Fix: invalid (stale) equatorial coordinates.");
+			equatorial = eq2;
+			apparent = horizontal.toEquatorial(site, LST);
+		}
+		
+	}
 	
 	@Override
 	public void validate() {
@@ -94,6 +122,8 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		int i = 4; 
 		BasicHDU firstDataHDU = null;
 		while( !(firstDataHDU = HDU[i]).getHeader().getStringValue("EXTNAME").equalsIgnoreCase("SHARC2 Data") ) i++;
+		
+		checkPrematureFits(HDU[0], (BinaryTableHDU) firstDataHDU);
 		
 		parseScanPrimaryHDU(HDU[0]);
 		clear();
@@ -174,7 +204,74 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		System.out.println(" Reading " + file.getPath() + "...");
 		return new Fits(getFile(scanDescriptor), isCompressed);
 	}
+	
+	protected void checkPrematureFits(BasicHDU main, BinaryTableHDU data) throws FitsException {
+		equatorial = null;
+		Header header = main.getHeader();
+		if(header.containsKey("RAEP") && header.containsKey("DECEP")) return;
+		
+		System.err.println(" >>> Fix: Assuming early JSharc data format.");
+		System.err.println(" >>> Fix: Source coordinates obtained from antenna stream.");
+		
+		instrument.prematureFITS = true;
+		double epoch = header.getDoubleValue("EQUINOX", 2000.0);
+		header = data.getHeader();
+		float RA = ((float[]) data.getElement(0, data.findColumn("RA")))[0];
+		float DEC = ((float[]) data.getElement(0, data.findColumn("DEC")))[0];
+		
+		equatorial = new EquatorialCoordinates(
+				RA * raUnit,
+				DEC * decUnit,
+				(epoch < 1984.0 ? "B" : "J") + epoch);
+	}
+	
+	@Override
+	public void setSerial(int number) {
+		// Fix for early Nov 2002 scans, where RA/DEC are in incorrect units.
+		if(number < 7320) {
+			System.err.println(" >>> Fix: RA/DEC column in unexpected units.");
+			raUnit = 1.0;
+			decUnit = 1.0;
+		}
+		else {
+			raUnit = Unit.hourAngle;
+			decUnit = Unit.deg;
+		}
+	
+		super.setSerial(number);
+	}
 
+	@Override
+	public void setSourceName(String name) {
+		// For early SHARC-2 data, the source name was sometimes lagging, and therefore not always correct. 
+		// (JSharc got the source name from the UIP at the beginning of the scan, rather than at the end)
+		// This happened only before scan 7320. For these early scans, we can recover the correct source name
+		// based on a correction list definition...
+		if(getSerial() < 7320) name = fixSourceName(name);
+		super.setSourceName(name);		
+	}
+	
+	private String fixSourceName(String name) {
+		int serial = getSerial();
+		String fileName = instrument.getConfigPath() + "sourcename-2002.fix";
+		try { 
+			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+			String line = null;
+			while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+				StringTokenizer tokens = new StringTokenizer(line);
+				if(Integer.parseInt(tokens.nextToken()) == serial) {
+					name = tokens.nextToken();
+					System.err.println(" Fix: source name changed to " + name);
+					in.close();
+					return name;
+				}
+			}
+			in.close();
+		}
+		catch(IOException e) { System.err.println(" >>> Fix: WARNING! Cannot find name fix list specification file. No fix."); }
+		return name;
+	}
+	
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 
@@ -207,12 +304,13 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		String sourceName = header.getStringValue("OBJECT");
 		if(sourceName == null) sourceName = "Unknown";
 		setSourceName(sourceName);
+		sourceName = getSourceName(); // Confirm the source name setting...
 		
 		timeStamp = header.getStringValue("DATE-OBS");
 		
 		// increment month by 1 to correct JSharc FITS bug
 		if(creator.equalsIgnoreCase("JSharc")) {
-			System.err.println(" Fixing JSharc Time Stamp.");
+			System.err.println(" >>> Fix: FITS libraries BUG in JSharc timestamp.");
 			String modDate = timeStamp.substring(0, 5);
 			modDate += Util.d2.format(Integer.parseInt(timeStamp.substring(5,7)) + 1 );
 			modDate += timeStamp.substring(7);
@@ -221,9 +319,9 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		}
 		double epoch = header.getDoubleValue("EQUINOX");
 		
-		equatorial = new EquatorialCoordinates(
-				header.getDoubleValue("RAEP") * Unit.hourAngle,
-				header.getDoubleValue("DECEP") * Unit.deg,
+		if(equatorial == null) equatorial = new EquatorialCoordinates(
+				header.getDoubleValue("RAEP") * raUnit,
+				header.getDoubleValue("DECEP") * decUnit,
 				(epoch < 1984.0 ? "B" : "J") + epoch);
 	
 		// Print out some of the information...
@@ -232,17 +330,19 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		String timeString = tokens.nextToken() + ":" + tokens.nextToken() + " UT";
 		
 		System.err.println(" [" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
-		System.err.println(" Equatorial: " + equatorial.toString());	
+		if(equatorial != null) System.err.println(" Equatorial: " + equatorial.toString());	
 		
 		// iMJD does not exist in earlier scans
 		// convert DATE-OBS into MJD...
 		if(header.containsKey("JUL_DAY")) iMJD = header.getIntValue("JUL_DAY");
 		else {
-			try { iMJD = (int)(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
+			try { iMJD = (int)(AstroTime.forFitsTimeStamp(timeStamp).getMJD());	}
 			catch(ParseException e) { throw new HeaderCardException(e.getMessage()); }
 		}
 			
-		// Add on the various additional offsets	
+		addOffsets = hasOption("offsets.add");
+		
+		// Add on the various additional offsets
 		horizontalOffset = new Vector2D(
 				header.getDoubleValue("AZO") * Unit.arcsec,
 				-header.getDoubleValue("ZAO") * Unit.arcsec);
@@ -314,7 +414,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		String sizeName = instrument.getSizeName();
 		
 		data.add(new Datum("FAZO", (pointingOffset.getX() + fixedOffset.getX()) / sizeUnit, sizeName));
-		data.add(new Datum("FZAO", (pointingOffset.getY() - fixedOffset.getY()) / sizeUnit, sizeName));
+		data.add(new Datum("FZAO", -(pointingOffset.getY() + fixedOffset.getY()) / sizeUnit, sizeName));
 		
 		return data;
 	}

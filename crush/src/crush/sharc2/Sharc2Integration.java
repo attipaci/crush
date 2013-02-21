@@ -32,6 +32,7 @@ import java.net.*;
 
 import util.*;
 import util.astro.*;
+import util.data.DataPoint;
 import crush.fits.HDUReader;
 
 // TODO Split nod-phases into integrations...
@@ -42,7 +43,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 	private static final long serialVersionUID = 2387643745464766162L;
 	
 	public boolean hasExtraTimingInfo = false;
-	private double chopCenter = 0.0;
+	private DataPoint chopZero = new DataPoint();
 	
 	public Sharc2Integration(Sharc2Scan parent) {
 		super(parent);
@@ -245,18 +246,19 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 			startIndex += hdu.getNRows();
 		}
 		
-		if(!isEmpty()) chopCenter /= size();
-
-		// Add to the offsets the centered chopper signal.
-		for(Sharc2Frame frame : this) {
-			frame.chopperPosition.subtractX(chopCenter);
-			
-			// The chopper position is uncentered so better leave it out unless needed...
-			frame.horizontalOffset.addX(frame.chopperPosition.getX());
-
-			// Add the chopper offet to the actual coordinates as well...
-			frame.horizontal.addX(frame.chopperPosition.getX() / frame.horizontal.cosLat());
+		//if(!isEmpty()) if(chopZero.weight() > 0.0) chopZero.scaleValue(1.0 / chopZero.weight());
+		
+		Sharc2Scan sharcscan = (Sharc2Scan) scan;
+		
+		if(sharcscan.addOffsets) for(Sharc2Frame frame : this) {
+			// Remove the small zero offset from the chopper signal.
+			frame.chopperPosition.subtractX(chopZero.value());	
+			// Add chopper offset to the aggregated horizontal offset...
+			frame.horizontalOffset.add(frame.chopperPosition);
+			// Add the chopper offset to the absolute coordinates also...
+			frame.horizontal.addOffset(frame.chopperPosition);
 		}
+	
 		
 	}
 		
@@ -284,10 +286,10 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 			ELE = (float[]) table.getColumn(hdu.findColumn("EL_ERROR"));
 			PA = (float[]) table.getColumn(hdu.findColumn("Parallactic Angle"));
 			LST = (float[]) table.getColumn(hdu.findColumn("LST"));
-			RAO = (float[]) table.getColumn(hdu.findColumn("RAO"));
-			DECO = (float[]) table.getColumn(hdu.findColumn("DECO"));
-			AZO = (float[]) table.getColumn(hdu.findColumn("AZO"));
-			ELO = (float[]) table.getColumn(hdu.findColumn("ELO"));
+			RAO = (float[]) table.getColumn(Math.max(hdu.findColumn("RAO"), hdu.findColumn("RA_OFFSET")));
+			DECO = (float[]) table.getColumn(Math.max(hdu.findColumn("DECO"), hdu.findColumn("DEC_OFFSET")));
+			AZO = (float[]) table.getColumn(Math.max(hdu.findColumn("AZO"), hdu.findColumn("AZ_OFFSET")));
+			ELO = (float[]) table.getColumn(Math.max(hdu.findColumn("ELO"), hdu.findColumn("EL_OFFSET")));
 			chop = (float[]) table.getColumn(hdu.findColumn("CHOP_OFFSET"));
 			
 			//iFlag = hdu.findColumn("Celestial");
@@ -328,14 +330,14 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 
 					final double UT = isDoubleUT ? dUT[i] * Unit.hour : fUT[i] * Unit.hour;
 					frame.MJD = sharcscan.iMJD + UT / Unit.day;
-
+	
 					// Enforce the calculcation of the equatorial coordinates
 					frame.equatorial = null;
 
 					frame.horizontal = new HorizontalCoordinates(
 							AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
 							EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
-
+					
 					final double pa = PA[i] * Unit.deg;
 					frame.sinPA = Math.sin(pa);
 					frame.cosPA = Math.cos(pa);
@@ -350,19 +352,23 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 					frame.horizontalOffset = new Vector2D(
 							(AZO[i] + AZE[i] * frame.horizontal.cosLat()) * Unit.arcsec,
 							(ELO[i] + ELE[i]) * Unit.arcsec);
-
+				
 					frame.chopperPosition.setX(chop[i] * Unit.arcsec);
-					chopCenter += frame.chopperPosition.getX();	
+					
+					//chopZero.add(frame.chopperPosition.getX());
+					//chopZero.addWeight(1.0);
 
 					// Add in the scanning offsets...
-					frame.horizontalOffset.add(sharcscan.horizontalOffset);
+					if(sharcscan.addOffsets) frame.horizontalOffset.add(sharcscan.horizontalOffset);	
 
 					// Add in the equatorial sweeping offsets
 					// Watch out for the sign of the RA offset, which is counter to the native coordinate direction
-					equatorialOffset.set(RAO[i] * Unit.arcsec, DECO[i] * Unit.arcsec);			
+					equatorialOffset.set(RAO[i] * Unit.arcsec, DECO[i] * Unit.arcsec);	
+					
+					
 					frame.toHorizontal(equatorialOffset);
 					frame.horizontalOffset.add(equatorialOffset);
-
+		
 					set(offset + i, frame);
 				}
 			};

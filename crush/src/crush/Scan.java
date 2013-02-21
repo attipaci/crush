@@ -476,7 +476,9 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		else if(name.equals("date")) {
 			AstroTime time = new AstroTime();
 			time.setMJD(MJD);
-			return new SimpleDateFormat(formatSpec).format(time.getDate());
+			DateFormat dateFormat = new SimpleDateFormat(formatSpec);
+			dateFormat.setTimeZone(AstroTime.UTC);
+			return dateFormat.format(time.getDate());
 		}
 		else if(name.equals("obstime")) return Util.defaultFormat(getObservingTime() / Unit.sec, f);
 		else if(name.equals("obsmins")) return Util.defaultFormat(getObservingTime() / Unit.min, f);

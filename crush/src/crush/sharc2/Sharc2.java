@@ -63,6 +63,8 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	
 	double excessLoad = 0.0;
 	
+	boolean prematureFITS = true;
+	
 	public Sharc2() {
 		super("sharc2", pixels);
 		resolution = 8.5 * Unit.arcsec;
@@ -116,6 +118,11 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		// Check the instrument rotation...
 		if(hasOption("rot0")) rotatorZeroAngle = option("rot0").getDouble() * Unit.deg;
 		if(hasOption("rotation")) rotatorAngle = option("rotation").getDouble() * Unit.deg;	
+		
+		if(Double.isNaN(rotatorAngle)) {
+			System.err.println(" >>> Fix: Unknown rotator value --> Assuming rotator not used.");
+			rotatorAngle = rotatorZeroAngle;			
+		}
 		
 		if(mount == Mount.CASSEGRAIN) {
 			System.out.println(" Rotator = " + Util.f1.format(rotatorAngle/Unit.deg) + " RotZero = " 
@@ -313,7 +320,9 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	
 	
 	protected void parseDSPHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
-		nativeSamplingInterval = hdu.getHeader().getDoubleValue("FRAMESPC", 36.0) * Unit.ms;
+		nativeSamplingInterval = prematureFITS ?
+				3.0 * hdu.getHeader().getDoubleValue("AVERAGE") * Unit.ms :
+				hdu.getHeader().getDoubleValue("FRAMESPC") * Unit.ms;
 	}
 
 	protected void parsePixelHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
@@ -366,30 +375,45 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		
 		System.err.println(" " + mount.name + " mount assumed.");
 		
-		rotatorAngle = header.getDoubleValue("ROTATOR", 0.0) * Unit.deg;
+		rotatorZeroAngle = header.getDoubleValue("ROTZERO") * Unit.deg;
+		rotatorAngle = header.getDoubleValue("ROTATOR", rotatorZeroAngle / Unit.deg) * Unit.deg;
 		rotatorOffset = header.getDoubleValue("ROTOFFST") * Unit.deg;
 		rotatorMode = header.getStringValue("ROTMODE");
-		
-		rotatorZeroAngle = header.getDoubleValue("ROTZERO") * Unit.deg;
+	
 		if(rotatorMode == null) rotatorMode = "Unknown";
-		
+			
+		// Various fixes for premature FITS files, without valid rotator information
+		// These typically have 1000 values.
+		if(rotatorZeroAngle == 1000.0 * Unit.deg) {
+			rotatorZeroAngle = 16.0 * Unit.deg;
+			System.err.println(" >>> Fix: missing rotator zero angle set to 16.0 deg.");
+		}
+		if(rotatorAngle == 1000.0 * Unit.deg) {
+			rotatorAngle = Double.NaN;
+			System.err.println(" >>> Fix: missing rotator angle..");
+		}
+		if(rotatorOffset == 1000.0 * Unit.deg) {
+			rotatorOffset = 0.0;
+			System.err.println(" >>> Fix: assuming no rotator offset.");
+		}
+			
 		// Focus
-		focusX =  header.getDoubleValue("FOCUS_X");
-		focusY =  header.getDoubleValue("FOCUS_Y");
-		focusZ =  header.getDoubleValue("FOCUS_Z");
+		focusX =  header.getDoubleValue("FOCUS_X") * Unit.mm;
+		focusY =  header.getDoubleValue("FOCUS_Y") * Unit.mm;
+		focusZ =  header.getDoubleValue("FOCUS_Z") * Unit.mm;
 
-		focusYOffset =  header.getDoubleValue("FOCUS_YO");
-		focusZOffset =  header.getDoubleValue("FOCUS_ZO");
+		focusYOffset =  header.getDoubleValue("FOCUS_YO") * Unit.mm;
+		focusZOffset =  header.getDoubleValue("FOCUS_ZO") * Unit.mm;
 
 		focusMode = header.getStringValue("FOCMODE");
 		if(focusMode == null) focusMode = "Unknown";
 		
 		System.err.println(" Focus [" + focusMode + "]"
-				+ " X=" + Util.f2.format(focusX)
-				+ " Y=" + Util.f2.format(focusY)
-				+ " Z=" + Util.f2.format(focusZ)
-				+ " Yoff=" + Util.f2.format(focusYOffset) 
-				+ " Zoff=" + Util.f2.format(focusZOffset)
+				+ " X=" + Util.f2.format(focusX / Unit.mm)
+				+ " Y=" + Util.f2.format(focusY / Unit.mm)
+				+ " Z=" + Util.f2.format(focusZ / Unit.mm)
+				+ " Yoff=" + Util.f2.format(focusYOffset / Unit.mm) 
+				+ " Zoff=" + Util.f2.format(focusZOffset / Unit.mm)
 		);
 
 		// DSOS
@@ -401,6 +425,12 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	}
 	
 	protected void parseDataHeader(Header header) throws HeaderCardException, FitsException {
+		if(prematureFITS) {
+			samplingInterval = integrationTime = nativeSamplingInterval;
+			arrayPointingCenter = new Vector2D(6.5, 16.5);
+			return;
+		}
+		
 		samplingInterval = integrationTime = header.getDoubleValue("CDELT1") * Unit.ms;
 		
 		// Pointing Center
