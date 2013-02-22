@@ -2086,8 +2086,19 @@
 
 					      scale={$HOME]}/laboca/scaling.dat
 
-			@See: 'tau', 'gain', 'invert', 'jackknife'
+			Note, that not all instruments support the <filename>
+			argument!
 
+			@See: 'scale.window', 'tau', 'gain', 'invert', 
+			      'jackknife'
+
+:: scale.window=X	@Expert
+			@Instrument: APEX
+			@Since: 2.13
+			Set the 1-sigma Gaussian weighting window for deriving
+			local weighted average scaling values from a table
+			of calibrattion measurements.
+			@See: 'scale', 'tau.window'
 
 :: scanmaps		@Advanced
 			When specified, a map will be written for each scan
@@ -2691,6 +2702,14 @@
 			Set the offset value in a linear tau scaling 
 			relationship.
 			@See: 'tau.<?>.a' for details.
+
+:: tau.window=X		@Expert
+			@Instrument: APEX, GISMO
+			@Since: 2.13
+			Set the 1-sigma Gaussian weighting window for deriving
+			local weighted average tau values from a table
+			of skydip/tau measurements.
+			@See: 'tau', 'scale.window'
 
 :: time-weighting	@Alias: -> weighting.frames
 			@Advanced

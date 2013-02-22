@@ -7,10 +7,12 @@ import java.util.*;
 import util.*;
 import util.astro.AstroTime;
 import util.data.DataPoint;
-import util.data.WeightedPoint;
+import util.data.LocalAverage;
+import util.data.Locality;
+import util.data.LocalizedData;
 import crush.CRUSH;
 
-public class IRAMTauTable extends ArrayList<IRAMTauTable.Entry> {
+public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 	
 	/**
 	 * 
@@ -39,7 +41,7 @@ public class IRAMTauTable extends ArrayList<IRAMTauTable.Entry> {
 	
 	private void read(String fileName) throws IOException {
 		if(fileName.equals(this.fileName)) return;
-		
+			
 		System.err.print(" [Loading skydip tau values.]");
 		if(CRUSH.debug) System.err.print(" >> " + fileName + " >> ");
 		
@@ -58,8 +60,9 @@ public class IRAMTauTable extends ArrayList<IRAMTauTable.Entry> {
 				try { 
 					dateSpec = tokens.nextToken() + " " + tokens.nextToken();
 					Date date = df.parse(dateSpec);
-					skydip.MJD = AstroTime.getMJD(date.getTime());			
-					skydip.tau = new DataPoint(Double.parseDouble(tokens.nextToken()), Double.parseDouble(tokens.nextToken()));				
+					skydip.timeStamp = new TimeStamp(AstroTime.getMJD(date.getTime()));			
+					skydip.tau.setValue(Double.parseDouble(tokens.nextToken()));
+					skydip.tau.setRMS(Double.parseDouble(tokens.nextToken()));				
 	
 					add(skydip);
 				}
@@ -77,64 +80,61 @@ public class IRAMTauTable extends ArrayList<IRAMTauTable.Entry> {
 		System.err.println(" -- " + size() + " valid records found.");	
 	}
 	
-	public int indexBefore(double MJD) {
-		for(int i=size(); --i >= 0; ) if(get(i).MJD < MJD) return i;
-		return -1;
-	}
-	
 	public double getTau(double MJD) {
-		int i0 = indexBefore(MJD);
-		if(i0 < 0) throw new IllegalStateException("No skydip data available for the specified time.");
-		
-		WeightedPoint tau = new WeightedPoint();
-		
-		double dMJD = 3.0 * timeWindow / Unit.day;
-		int n = 0;
-		
-		for(int i = i0; i >= 0; i--) {
-			if(MJD - get(i).MJD > dMJD) break;
-
-			Entry skydip = get(i);
-			DataPoint value = skydip.getTau();
-			value.scaleWeight(getRelativeWeight(MJD - get(i).MJD));
-			
-			tau.average(value);
-			n++;
-		}
-	
-		for(int i = i0+1; i<size(); i++) {
-			if(get(i).MJD - MJD > dMJD) break;
-	
-			Entry skydip = get(i);
-			DataPoint value = skydip.getTau();
-			value.scaleWeight(getRelativeWeight(MJD - get(i).MJD));
-			
-			tau.average(value);
-			n++;
-		}
-		
-		System.err.println(" Tau(225GHz) = " + tau.toString(Util.f3) + " (from " + n + " measurements)");
-		
-		return tau.value();
-		
+		Entry mean = getLocalAverage(new TimeStamp(MJD));
+		System.err.println(" Local average tau(225GHz) = " + mean.tau.toString(Util.f3) + " (from " + mean.measurements + " measurements)");
+		return mean.tau.value();
 	}
 	
-	public double getRelativeWeight(double dMJD) {
-		double devX = dMJD * Unit.day / timeWindow;		
-		return Math.exp(-0.5 * (devX * devX));
-	}
-
-	class Entry implements Comparable<Entry> {
+	
+	class TimeStamp extends Locality {
 		double MJD;
-		DataPoint tau;
 		
-		public int compareTo(Entry arg0) {
-			return Double.compare(MJD, arg0.MJD);
+		public TimeStamp(double MJD) { this.MJD = MJD; }
+		
+		public double distanceTo(Locality other) {
+			return(Math.abs((((TimeStamp) other).MJD - MJD) * Unit.day / timeWindow));
+		}
+
+		public int compareTo(Locality o) {
+			return Double.compare(MJD, ((TimeStamp) o).MJD);
 		}
 		
-		DataPoint getTau() { return tau; }
-	}	
-	
+		@Override
+		public String toString() { return Double.toString(MJD); }
+
+		@Override
+		public double sortingDistanceTo(Locality other) {
+			return distanceTo(other);
+		}
+	}
+
+	class Entry extends LocalizedData {
+		TimeStamp timeStamp;
+		DataPoint tau = new DataPoint();
+		
+		@Override
+		public Locality getLocality() {
+			return timeStamp;
+		}
+
+		@Override
+		public void setLocality(Locality loc) {
+			timeStamp = (TimeStamp) loc;
+		}
+
+		@Override
+		protected void averageWidth(LocalizedData other, Object env, double relativeWeight) {
+			Entry point = (Entry) other;	
+			tau.average(point.tau.value(), relativeWeight * point.tau.weight());
+		}
+	}
+
+	@Override
+	public Entry getLocalizedDataInstance() {
+		return new Entry();
+	}
+
 	
 	
 }

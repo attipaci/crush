@@ -52,6 +52,36 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		super(parent);
 	}
 	
+	@Override
+	public void setTau() throws Exception {	
+		try { super.setTau(); }
+		catch(ArrayIndexOutOfBoundsException e) {
+			String tauName = option("tau").getPath();
+			try { 
+				APEXTauInterpolator tauTable = APEXTauInterpolator.get(tauName);
+				if(hasOption("tau.window")) tauTable.timeWindow = option("tau.window").getDouble() * Unit.hour;
+				setTau(tauTable.getTau(getMJD()));
+			}
+			catch(ArrayIndexOutOfBoundsException ie) { System.err.println("     WARNING! " + e.getMessage()); }
+			catch(IOException io) { System.err.println("WARNING! Tau interpolator table could not be read."); }
+		}
+	}
+	
+	@Override
+	public void setScaling() throws Exception {
+		try { super.setScaling(); }
+		catch(NumberFormatException noworry) {
+			String calName = option("scale").getPath();
+			try { 
+				APEXCalibrationTable calTable = APEXCalibrationTable.get(calName);
+				if(hasOption("scale.window")) calTable.timeWindow = option("scale.window").getDouble() * Unit.hour;
+				setScaling(calTable.getScaling(getMJD())); 
+			}
+			catch(ArrayIndexOutOfBoundsException e) { System.err.println("     WARNING! " + e.getMessage()); }
+			catch(IOException e) { System.err.println("WARNING! Calibration table could not be read."); }
+		}
+	}
+	
 	public void markChopped() {
 		if(nodPhase == 0) 
 			throw new IllegalStateException("Merged subscan contains mixed nod phases. Cannot process chopper.");

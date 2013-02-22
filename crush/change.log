@@ -1,6 +1,25 @@
+>> update laboca photometry data and docs
+
+	[NEW] New configuration keys 'tau.window' and 'scale.window' can be
+	used to specify the 1-sigma Gaussian time window (in hours) for 
+	obtaining locally averaged tau and scaling values from lookup tables.
+
+	[CHANGE] {APEX} Changed the way tau and calibration tables are 
+	processed, to use weighted local averages instead of the old linear
+	interpolation method. The new keywords 'tau.window' and 'scale.window'
+	can be used to set the 1-sigma weighting window in hours.
+
+	[TWEAK] {GISMO} More efficient pointing table lookup and tau table 
+	lookup, changed from O(N) to O(log2 N).
+
+	[CODE] Locally averaged data (pointing tables, tau taubles, etc.) now
+	have a common framework, with O(log2 N) lookup time, and a common 
+	distance-based weighting scheme (with a default Gaussian profile).
+
+
+
 2.13-b2 (beta)
 
-	TODO >> update laboca photometry data and docs
 
 	[NEW] {GISMO} 'tau.225GHz' can now specify a file containing skydip
         indormation (in the format of Gabrielle Bruni). From this, CRUSH

@@ -29,6 +29,8 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
+import crush.apex.APEXTauInterpolator;
+import crush.apex.APEXCalibrationTable;
 import crush.filters.*;
 
 import util.*;
@@ -178,10 +180,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(hasOption("tau")) {
 			try { setTau(); }
-			catch(Exception e) { System.err.println("   WARNING! Problem setting tau: " + e.getMessage()); }
+			catch(Exception e) { 
+				System.err.println("   WARNING! Problem setting tau: " + e.getMessage()); 
+				if(CRUSH.debug) e.printStackTrace();
+			}
 		}
 	
-		if(hasOption("scale")) setScaling();
+		if(hasOption("scale")) {
+			try { setScaling(); }
+			catch(Exception e) {
+				System.err.println("   WARNING! Problem setting calibration scaling: " + e.getMessage()); 
+				if(CRUSH.debug) e.printStackTrace();
+			}
+		}
 		if(hasOption("invert")) gain *= -1.0;
 		
 		if(!hasOption("noslim")) slim();
@@ -302,14 +313,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		trim();		
 	}
 	
-	public void setScaling() {
-		try { setScaling(option("scale").getDouble()); }
-		catch(NumberFormatException noworry) {
-			String calName = option("scale").getPath();
-			try { setScaling(1.0 / CalibrationTable.get(calName).getValue(getMJD())); }
-			catch(ArrayIndexOutOfBoundsException e) { System.err.println("     WARNING! " + e.getMessage()); }
-			catch(IOException e) { System.err.println("WARNING! Calibration table could not be read."); }
-		}
+	public void setScaling() throws Exception {
+		setScaling(option("scale").getDouble());
 	}
 
 	public void setScaling(double value) {
@@ -325,19 +330,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		String source = option("tau").getValue();
 		
 		try { setTau(Double.parseDouble(source)); }
-		catch(NumberFormatException notanumber) {
+		catch(Exception notanumber) {
 			String scaling = source.toLowerCase();
 			if(hasOption("tau." + scaling)) setTau(scaling, option("tau." + scaling).getDouble());
 			else {
 				String tauName = option("tau").getPath();
-				try { setTau(TauInterpolator.get(tauName).getValue(getMJD())); }
-				catch(ArrayIndexOutOfBoundsException e) { System.err.println("     WARNING! " + e.getMessage()); }
-				catch(IOException e) { System.err.println("WARNING! Tau interpolator table could not be read."); }
+				setTau(APEXTauInterpolator.get(tauName).getTau(getMJD()));
 			}
-		}
-		catch(Exception e) { 
-			System.err.println("    WARNING! " + e.getMessage()); 
-			throw(e);
 		}
 	}
 	
