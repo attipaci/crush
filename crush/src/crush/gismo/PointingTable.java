@@ -36,9 +36,12 @@ import util.Util;
 import util.Vector2D;
 import util.astro.AstroTime;
 import util.astro.HorizontalCoordinates;
+import util.data.LocalAverage;
+import util.data.Locality;
+import util.data.LocalizedData;
 import util.data.WeightedPoint;
 
-public class PointingTable extends ArrayList<PointingTable.Entry> {
+public class PointingTable extends LocalAverage<PointingTable.Entry> {
 	/**
 	 * 
 	 */
@@ -79,19 +82,23 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 			try { 
 				pointing.id = row.get("id").getValue();
 				AstroTime time = AstroTime.forFitsTimeStamp(pointing.id.substring(0, 10));			
-				pointing.MJD = Math.round(time.getMJD()) + row.get("UTh").getDouble() * Unit.hour / Unit.day;
+				
+				double MJD = Math.round(time.getMJD()) + row.get("UTh").getDouble() * Unit.hour / Unit.day;
 					
-				pointing.horizontal = new HorizontalCoordinates(
+				HorizontalCoordinates horizontal = new HorizontalCoordinates(
 						row.get("AZd").getDouble() * Unit.deg,
 						row.get("ELd").getDouble() * Unit.deg
 				);	
 				
+				pointing.location = new Location(MJD, horizontal);
+				
 				try {
-					pointing.offset = new Vector2D(
-							row.get("pnt.X").getDouble() * Unit.arcsec,
-							row.get("pnt.Y").getDouble() * Unit.arcsec
-					);
-
+					pointing.dx.setValue(row.get("pnt.X").getDouble() * Unit.arcsec);
+					pointing.dy.setValue(row.get("pnt.Y").getDouble() * Unit.arcsec);
+					
+					pointing.dx.setWeight(1.0);
+					pointing.dy.setWeight(1.0);
+						
 					pointing.significance = row.get("src.peak").getDouble() / row.get("src.dpeak").getDouble();
 
 					pointing.FWHM = row.get("src.FWHM").getDouble() * Unit.arcsec;
@@ -114,80 +121,98 @@ public class PointingTable extends ArrayList<PointingTable.Entry> {
 		System.err.println(" -- " + size() + " valid records found.");	
 	}
 	
-	public int indexBefore(double MJD) {
-		for(int i=size(); --i >= 0; ) if(get(i).MJD < MJD) return i;
-		return -1;
-	}
 	
-	public Vector2D getIncrement(double MJD, double Tamb, HorizontalCoordinates horizontal, IRAMPointingModel pointingModel) {
-		int i0 = indexBefore(MJD);
-		if(i0 < 0) throw new IllegalStateException("No pointing data available for the specified time.");
-		
-		WeightedPoint dX = new WeightedPoint();
-		WeightedPoint dY = new WeightedPoint();
-		
-		double dMJD = 3.0 * timeWindow / Unit.day;
-		
-		for(int i = i0; i >= 0; i--) {
-			if(MJD - get(i).MJD > dMJD) break;
-
-			Entry pointing = get(i);
-			Vector2D increment = getIncrementalPointing(pointing, pointingModel, Tamb);
-			
-			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
-				
-			dX.average(new WeightedPoint(increment.getX(), weight));
-			dY.average(new WeightedPoint(increment.getY(), weight));
-			
-		}
-	
-		for(int i = i0+1; i<size(); i++) {
-			if(get(i).MJD - MJD > dMJD) break;
-	
-			Entry pointing = get(i);
-			Vector2D increment = getIncrementalPointing(pointing, pointingModel, Tamb);
-			//increment.rotate(pointing.horizontal.EL());
-			double weight = getWeight(MJD - pointing.MJD, horizontal.distanceTo(pointing.horizontal));
-				
-			dX.average(new WeightedPoint(increment.getX(), weight));
-			dY.average(new WeightedPoint(increment.getY(), weight));
-		}
+	public Vector2D getIncrement(double MJD, double Tamb, HorizontalCoordinates horizontal, IRAMPointingModel pointingModel) {		
+		Entry mean = getLocalAverage(new Location(MJD, horizontal), new Model(pointingModel, Tamb));
 		
 		System.err.println("   Incremental Pointing is " + 
-				Util.f1.format(dX.value() / Unit.arcsec) + "," +
-				Util.f1.format(dY.value() / Unit.arcsec) + 
-				" (quality:" + Util.f2.format(dX.weight()) + ")."
+				Util.f1.format(mean.dx.value() / Unit.arcsec) + "," +
+				Util.f1.format(mean.dy.value() / Unit.arcsec) + 
+				" (quality:" + Util.f2.format(mean.dx.weight()) + ")."
 				);
 		
-		return new Vector2D(dX.value(), dY.value());
+		return new Vector2D(mean.dx.value(), mean.dy.value());
 		
 	}
 	
-	public Vector2D getIncrementalPointing(Entry pointing, IRAMPointingModel pointingModel, double ambientT) {			
-		Vector2D model = pointingModel.getCorrection(pointing.horizontal, (pointing.MJD % 1.0) * Unit.day, ambientT);
-		model.setX(pointing.offset.getX() - model.getX());
-		model.setY(pointing.offset.getY() - model.getY());
-		return model;
-	}
-	
-	public double getWeight(double dMJD, double distance) {
-		double devX = dMJD * Unit.day / timeWindow;
-		double devT = distance / searchRadius;
+	class Model {
+		IRAMPointingModel pointingModel;
+		double ambientT;
 		
-		return Math.exp(-0.5 * (devX * devX + devT * devT));
+		public Model(IRAMPointingModel pointingModel, double ambientT) {
+			this.pointingModel = pointingModel;
+			this.ambientT = ambientT;			
+		}
+			
+		public Vector2D getCorrection(Entry pointing) {			
+			return pointingModel.getCorrection(pointing.location.horizontal, (pointing.location.MJD % 1.0) * Unit.day, ambientT);
+		}
 	}
 
-	class Entry implements Comparable<Entry> {
-		String id;
+	class Location extends Locality {
 		double MJD;
 		HorizontalCoordinates horizontal;
-		Vector2D offset;
+		
+		public Location(double MJD, HorizontalCoordinates horizontal) { 
+			this.MJD = MJD; 
+			this.horizontal = horizontal;
+		}
+		
+		public double distanceTo(Locality other) {
+			double devT = (((Location) other).MJD - MJD) * Unit.day / timeWindow;
+			double devX = ((Location) other).horizontal.distanceTo(horizontal) / searchRadius;
+			
+			return Math.hypot(devT, devX);
+		}
+
+		public int compareTo(Locality o) {
+			return Double.compare(MJD, ((Location) o).MJD);
+		}
+		
+		@Override
+		public String toString() { return Double.toString(MJD) + " : " + horizontal; }
+
+		@Override
+		public double sortingDistanceTo(Locality other) {
+			return Math.abs((((Location) other).MJD - MJD) * Unit.day / timeWindow);
+		}
+	}
+
+	
+	class Entry extends LocalizedData {
+		Location location;
+		String id;
+		
+		WeightedPoint dx = new WeightedPoint();
+		WeightedPoint dy = new WeightedPoint();
 		double significance;
 		double FWHM;
 		
-		public int compareTo(Entry arg0) {
-			return Double.compare(MJD, arg0.MJD);
+		
+		@Override
+		public Locality getLocality() {
+			return location;
 		}
+		@Override
+		public void setLocality(Locality loc) {
+			location = (Location) loc;
+		}
+		@Override
+		protected void averageWidth(LocalizedData other, Object env, double relativeWeight) {
+			Entry entry = (Entry) other;
+			
+			Vector2D corr = env == null ? new Vector2D() : ((Model) env).getCorrection(entry);
+			
+			dx.average(entry.dx.value() - corr.getX(), relativeWeight * entry.dx.weight());
+			dy.average(entry.dy.value() - corr.getY(), relativeWeight * entry.dy.weight());
+		}
+	
+	}
+
+
+	@Override
+	public Entry getLocalizedDataInstance() {
+		return new Entry();
 	}	
 	
 }

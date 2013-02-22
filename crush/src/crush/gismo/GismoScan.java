@@ -34,6 +34,7 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 
+
 public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBased, Weather {
 	/**
 	 * 
@@ -545,12 +546,6 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		setSerial(serial);
 		
 		// Weather
-		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();
-		else {
-			tau225GHz = header.getDoubleValue("TAU225GH");
-			instrument.options.process("tau.225ghz", tau225GHz + "");
-		}
-
 		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + 273.16 * Unit.K;
 		pressure = header.getDoubleValue("PRESSURE") * Unit.hPa;
 		humidity = header.getDoubleValue("HUMIDITY");
@@ -594,6 +589,25 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		System.err.println(" [" + sourceName + "] observed on " + date + " at " + startTime + " by " + observer);
 		System.err.println(" Equatorial: " + equatorial.toString());	
 		System.err.println(" Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
+		
+		// Tau
+		tau225GHz = Double.NaN;
+		
+		if(hasOption("tau.225ghz")) {
+			try { tau225GHz = option("tau.225ghz").getDouble(); }
+			catch(NumberFormatException e) {
+				try {
+					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath());
+					tau225GHz = table.getTau(getMJD());
+					instrument.options.process("tau.225ghz", tau225GHz + "");
+				}
+				catch(IOException e2) { 
+					System.err.println("WARNING! Cannot read tau table.");
+					if(CRUSH.debug) e.printStackTrace(); 
+					tau225GHz = Double.NaN;
+				}
+			}
+		}
 		
 		// Read the effective pointing model
 		// Static constant *AND* tilt-meter corrections...
