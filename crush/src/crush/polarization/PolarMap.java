@@ -51,6 +51,17 @@ public class PolarMap extends SourceModel {
 		return new ScalarMap(getInstrument());
 	}
 	
+	@Override
+	public boolean isValid() {
+		if(!N.isValid()) return false;
+		if(hasPolarization) {
+			if(!Q.isValid()) return false;
+			if(!U.isValid()) return false;
+		}
+		return true;
+	}
+
+	
 	public boolean usePolarization() {
 		return usePolarization | hasOption("source.polar");
 	}
@@ -417,4 +428,5 @@ public class PolarMap extends SourceModel {
 		}		
 	}
 
+	
 }

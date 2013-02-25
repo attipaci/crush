@@ -55,10 +55,10 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	@Override
 	public void setTau() throws Exception {	
 		try { super.setTau(); }
-		catch(ArrayIndexOutOfBoundsException e) {
+		catch(IllegalArgumentException e) {
 			String tauName = option("tau").getPath();
 			try { 
-				APEXTauInterpolator tauTable = APEXTauInterpolator.get(tauName);
+				APEXTauTable tauTable = APEXTauTable.get(tauName);
 				if(hasOption("tau.window")) tauTable.timeWindow = option("tau.window").getDouble() * Unit.hour;
 				setTau(tauTable.getTau(getMJD()));
 			}

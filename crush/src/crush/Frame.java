@@ -30,7 +30,7 @@ import util.astro.EquatorialCoordinates;
 import util.astro.HorizontalCoordinates;
 
 
-public abstract class Frame implements Cloneable {
+public abstract class Frame implements Cloneable, Flagging {
 	public Scan<?, ?> scan;
 	public int index;
 	
@@ -102,6 +102,10 @@ public abstract class Frame implements Cloneable {
 	
 	public final void unflag(final int pattern) {
 		flag &= ~pattern;
+	}
+	
+	public final void unflag() {
+		unflag(~0);
 	}
 	
 	public void slimTo(Instrument<?> instrument) {

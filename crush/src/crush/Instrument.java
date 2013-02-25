@@ -515,7 +515,7 @@ implements TableFormatter.Entries {
 		fixedSourceGains = true;
 	}
 	
-		
+	/* TODO
 	// Replace the listed flag types with DEAD...
 	public void killChannels(List<String> killTypes, List<String> ignoreTypes) {
 		int killPattern = 0, ignorePattern = 0;
@@ -523,6 +523,7 @@ implements TableFormatter.Entries {
 		for(String name : ignoreTypes) ignorePattern |= Channel.getFlag(name);
 		killChannels(killPattern, ignorePattern);
 	}
+	*/
 	
 	public String getPixelDataHeader() {
 		return "ch\tgain\tweight\t\tflag";

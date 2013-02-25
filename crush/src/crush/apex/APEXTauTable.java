@@ -36,27 +36,27 @@ import util.data.Locality;
 import util.data.LocalizedData;
 
 
-public class APEXTauInterpolator extends LocalAverage<APEXTauInterpolator.Entry> {
+public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -7962217110619389946L;
 	
-	private static Hashtable<String, APEXTauInterpolator> tables = new Hashtable<String, APEXTauInterpolator>();
+	private static Hashtable<String, APEXTauTable> tables = new Hashtable<String, APEXTauTable>();
 
 	public String fileName;
 	public double timeWindow = 1.5 * Unit.hour;
 	
-	public static APEXTauInterpolator get(String fileName) throws IOException {
-		APEXTauInterpolator table = tables.get(fileName);
+	public static APEXTauTable get(String fileName) throws IOException {
+		APEXTauTable table = tables.get(fileName);
 		if(table == null) {
-			table = new APEXTauInterpolator(fileName);
+			table = new APEXTauTable(fileName);
 			tables.put(fileName, table);
 		}
 		return table;
 	}
 	
-	private APEXTauInterpolator(String fileName) throws IOException {
+	private APEXTauTable(String fileName) throws IOException {
 		read(fileName);
 	}
 	
@@ -87,9 +87,17 @@ public class APEXTauInterpolator extends LocalAverage<APEXTauInterpolator.Entry>
 		Entry mean = getLocalAverage(new TimeStamp(MJD));
 		
 		if(mean.tau.weight() == 0.0) {
-			System.err.println("   ... expanding tau lookup window to 6 hours.");
-			timeWindow = 6.0 * Unit.hour;
-			mean = getLocalAverage(new TimeStamp(MJD));
+			System.err.println("   ... No skydip data was found in specified time window.");
+			
+			if(timeWindow < 6.0 * Unit.hour) {
+				System.err.println("   ... expanding tau lookup window to 6 hours.");
+				timeWindow = 6.0 * Unit.hour;
+				mean = getLocalAverage(new TimeStamp(MJD));
+			}
+			else {
+				System.err.println("   WARNING! Tau is unknown.");
+				return 0.0;
+			}
 		}
 		
 		System.err.println("   Local average tau = " + Util.f3.format(mean.tau.value()) + " (from " + mean.measurements + " skydips)");

@@ -86,10 +86,16 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 		Entry mean = getLocalAverage(new TimeStamp(MJD));
 		
 		if(mean.scaling.weight() == 0.0) {
-			System.err.println("   ... expanding calibration scaling lookup window to 6 hours.");
-			timeWindow = 6.0 * Unit.hour;
-			mean = getLocalAverage(new TimeStamp(MJD));
+			System.err.println("   ... No calibration data was found in specified time window.");
+			
+			if(timeWindow < 6.0 * Unit.hour) {
+				System.err.println("   ... expanding scaling lookup window to 6 hours.");
+				timeWindow = 6.0 * Unit.hour;
+				mean = getLocalAverage(new TimeStamp(MJD));
+			}
+			else return 1.0;
 		}
+		
 		
 		System.err.println("   Local average scaling = " + Util.f3.format(mean.scaling.value()) + " (from " + mean.measurements + " cal scans)");
 		return mean.scaling.value();
