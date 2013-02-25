@@ -29,8 +29,6 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
-import crush.apex.APEXTauInterpolator;
-import crush.apex.APEXCalibrationTable;
 import crush.filters.*;
 
 import util.*;
@@ -327,16 +325,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	//   2. scaling relation, e.g. "225GHz", provided "tau.225GHz" is defined.
 	//	 
 	public void setTau() throws Exception {	
-		String source = option("tau").getValue();
+		String spec = option("tau").getValue();
 		
-		try { setTau(Double.parseDouble(source)); }
+		try { setTau(Double.parseDouble(spec)); }
 		catch(Exception notanumber) {
-			String scaling = source.toLowerCase();
-			if(hasOption("tau." + scaling)) setTau(scaling, option("tau." + scaling).getDouble());
-			else {
-				String tauName = option("tau").getPath();
-				setTau(APEXTauInterpolator.get(tauName).getTau(getMJD()));
-			}
+			String id = spec.toLowerCase();
+			if(hasOption("tau." + id)) setTau(id, option("tau." + id).getDouble());
+			else throw new IllegalArgumentException("Supplied tau is neither a number nor a known subtype.");
 		}
 	}
 	

@@ -2634,11 +2634,11 @@
 
 			  > crush [...] -tau=0.344 [...]			
 
-			Alternatively, the argument can also specify a 
+			For some instruments, the argument can also specify a 
 			file-name with lookup information (usually containing 
 			tau values from the radiometer or from the skydips),
 			or tau in another band (See 'tau.<?>' option) with an
-			approporate scaling relation to in-band values (see
+			appropriate scaling relation to in-band values (see
 			'tau.<?>.a' and 'tau.<?>.b' options).
 			
 			When lookup tables are used, the tau values will be 
@@ -2704,7 +2704,7 @@
 			@See: 'tau.<?>.a' for details.
 
 :: tau.window=X		@Expert
-			@Instrument: APEX, GISMO
+			@Instrument: APEX
 			@Since: 2.13
 			Set the 1-sigma Gaussian weighting window for deriving
 			local weighted average tau values from a table

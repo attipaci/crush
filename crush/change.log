@@ -1,7 +1,9 @@
+>> Smarter channel flags...
+
 >> update laboca photometry data and docs
 
-	[NEW] New configuration keys 'tau.window' and 'scale.window' can be
-	used to specify the 1-sigma Gaussian time window (in hours) for 
+	[NEW] {APEX} New configuration keys 'tau.window' and 'scale.window' can 
+	be used to specify the 1-sigma Gaussian time window (in hours) for 
 	obtaining locally averaged tau and scaling values from lookup tables.
 
 	[CHANGE] {APEX} Changed the way tau and calibration tables are 
@@ -16,6 +18,9 @@
 	have a common framework, with O(log2 N) lookup time, and a common 
 	distance-based weighting scheme (with a default Gaussian profile).
 
+	[CODE] Infrastructure for new smarter handling of channel flags. The
+	main purpose is to be able to use letter codes (and/or names) in 
+	datafiles instead of the obscure binary values.
 
 
 2.13-b2 (beta)

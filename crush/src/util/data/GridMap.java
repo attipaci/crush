@@ -703,8 +703,11 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 	
 	@Override
 	public String toString() {	
+	
 		String info = super.toString() +
-			"  Noise Estimate from: " + (weightFactor == 1.0 ? "data" : "image (" + Util.f2.format(1.0 / weightFactor) + "x data)") + "\n"; 
+			(weightFactor == 1.0 ? 
+					"" : 
+					"  Noise Re-scaling: " + Util.f2.format(Math.sqrt(1.0 / weightFactor)) + "x (from image variance).\n"); 
 
 		return info;
 	}
