@@ -884,14 +884,17 @@ public class Configurator implements Cloneable {
 			while(pattern.endsWith("*")) pattern = pattern.substring(0, pattern.length()-1);
 		}
 		
-		out.println();
+		List<String> list = getForgottenKeys();
+		if(list.isEmpty()) return;
 		
+		out.println();
+
 		if(pattern == null) out.println(prefix + " Recallable configuration keys are: ");
 		else out.println(prefix + " Recallable keys starting with '" + pattern + "': ");
 		
 		out.println(prefix + " --------------------------------------------------------------------");
 		
-		List<String> list = getForgottenKeys();
+		
 		Collections.sort(list);
 		
 		for(String key : list) {

@@ -25,6 +25,8 @@ package util.data;
 import java.text.*;
 import java.util.*;
 
+import util.Util;
+
 public abstract class AmoebaMinimizer extends Minimizer implements Cloneable {
 	double[] parameter; // The full parameter list (fitted or not).
 	double[] startSize; // The target box size for the initial amoeba...
@@ -41,6 +43,7 @@ public abstract class AmoebaMinimizer extends Minimizer implements Cloneable {
 	
 	public boolean verbose = false;	
 	public boolean converged = false;
+	public boolean retry = false;
 	
 
 	public AmoebaMinimizer() {}
@@ -255,15 +258,18 @@ public abstract class AmoebaMinimizer extends Minimizer implements Cloneable {
 				for(int k=0; k<fitList.size(); k++) parameter[fitList.get(k)] = fitParm[k];
 				
 				if(savevalue != null) {
-					if(value[ilo] < savevalue[saveilo]) save();
+					if(value[ilo] > small) if(value[ilo] < savevalue[saveilo]) save();
 					else restore();
 				}
 				else save();
 			}
-			catch(IllegalStateException e) {}
+			catch(IllegalStateException e) {
+				if(verbose) System.err.println(e.getMessage());
+				if(retry) i--; 
+			}
 		}
 
-		if(!converged) System.err.println("WARNING! downhill simplex has not converged.");
+		if(!converged) throw new IllegalStateException("WARNING! downhill simplex has not converged.");
 		
 		if(verbose) System.err.println("\rMinimizer> Final   chi^2=" + new DecimalFormat("0.00E0").format(getChi2()) + " in " + totalSteps + " steps.");
 	
@@ -327,11 +333,10 @@ public abstract class AmoebaMinimizer extends Minimizer implements Cloneable {
 			} 
 			else --steps;
 			
-			if(verbose) System.err.print("\r" + steps + " --> " + e6.format(value[ilo]) + "     ");
+			if(verbose) System.err.print("\r" + steps + " --> " + Util.e6.format(value[ilo]) + "     ");
 		}
 	}
 
-	DecimalFormat e6 = new DecimalFormat("0.000000E0");
 	
 	private double[] ptry;
 	private double[] psum;

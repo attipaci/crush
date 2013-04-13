@@ -42,19 +42,21 @@ public class SkyDip extends SourceModel {
 	}
 	
 	@Override
-	public SourceModel copy() {
-		SkyDip copy = (SkyDip) super.copy();
+	public SourceModel copy(boolean withContents) {
+		SkyDip copy = (SkyDip) super.copy(withContents);
 		copy.data = new WeightedPoint[data.length];
 		if(Tsky != null) copy.Tsky = (WeightedPoint) Tsky.clone();
-		for(int i=0; i<data.length; i++) copy.data[i] = (WeightedPoint) data[i].clone();
+		if(withContents) for(int i=0; i<data.length; i++) copy.data[i] = (WeightedPoint) data[i].clone();
 		return copy;
 	}
 	
 	@Override
-	public synchronized void reset() {
-		super.reset();
-		for(int i=0; i<data.length; i++) data[i].noData();
-		Tsky.noData();
+	public synchronized void reset(boolean clearContent) {
+		super.reset(clearContent);
+		if(clearContent) {
+			for(int i=0; i<data.length; i++) data[i].noData();
+			Tsky.noData();
+		}
 	}
 	
 	@Override

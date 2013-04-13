@@ -70,8 +70,8 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 	}
 	
 	@Override
-	public void reset() {
-		super.reset();
+	public void reset(boolean clearContent) {
+		super.reset(clearContent);
 		integrationTime = 0.0;
 	}
 	

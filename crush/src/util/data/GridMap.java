@@ -74,9 +74,9 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		super.copy(other, i); 
 		if(!(other instanceof GridMap)) return;
 		
-		final GridMap<?> image = (GridMap<?>) other;
-		System.arraycopy(image.weight[i], 0, weight[i], 0, sizeY()); 
-		System.arraycopy(image.count[i], 0, count[i], 0, sizeY()); 
+		final GridMap<?> map = (GridMap<?>) other;
+		System.arraycopy(map.weight[i], 0, weight[i], 0, sizeY()); 
+		System.arraycopy(map.count[i], 0, count[i], 0, sizeY()); 
 	}
 	
 
@@ -90,6 +90,13 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		// Make a copy of the fundamental data
 		setWeight(image.getWeight());
 		setTime(image.getTime());
+	}
+	
+	@Override
+	public void annihilate() {
+		super.annihilate();
+		weight = null;
+		count = null;
 	}
 	
 	@Override
@@ -608,7 +615,7 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 
 	public void despike(final double significance) {
 		final double[][] neighbours = {{ 0, 1, 0 }, { 1, 0, 1 }, { 0, 1, 0 }};
-		final GridMap<?> diff = (GridMap<?>) copy();
+		final GridMap<?> diff = (GridMap<?>) copy(true);
 		diff.smooth(neighbours);
 		
 		new Task<Void>() {	

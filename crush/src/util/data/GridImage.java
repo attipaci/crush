@@ -141,8 +141,8 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		return 1.0 / (1.0 - effectiveFWHM2/effectiveFilterFWHM2);
 	}
 	
-	public void reset() {
-		clear();
+	public void reset(boolean clearContent) {
+		if(clearContent) clear();
 		smoothFWHM = Math.sqrt(getPixelArea()) / fwhm2size;
 		extFilterFWHM = Double.NaN;
 		correctingFWHM = Double.NaN;
@@ -256,7 +256,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 	public void filterAbove(double FWHM) { filterAbove(FWHM, getFlag()); }
 
 	public void filterAbove(double FWHM, int[][] skip) {
-		final GridImage<?> extended = (GridImage<?>) copy();
+		final GridImage<?> extended = (GridImage<?>) copy(true);
 		extended.setFlag(skip);
 		extended.smoothTo(FWHM);
 		
@@ -403,7 +403,7 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		
 		// Antialias filter first...
 		if(from.smoothFWHM < smoothFWHM) {
-			from = (GridImage<CoordinateType>) from.copy();
+			from = (GridImage<CoordinateType>) from.copy(true);
 			from.smoothTo(smoothFWHM);
 		}
 		

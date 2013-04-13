@@ -78,7 +78,7 @@ public class PolarMap extends SourceModel {
 		N.enableWeighting = true;
 		N.id = "N";
 		
-		Q = (ScalarMap) N.copy();
+		Q = (ScalarMap) N.copy(false);
 		Q.standalone();
 		Q.signalMode = PolarModulation.Q;
 		Q.enableLevel = false;
@@ -86,7 +86,7 @@ public class PolarMap extends SourceModel {
 		Q.enableWeighting = true;
 		Q.id = "Q";
 		
-		U = (ScalarMap) N.copy();
+		U = (ScalarMap) N.copy(false);
 		U.standalone();
 		U.signalMode = PolarModulation.U;
 		U.enableLevel = false;
@@ -96,11 +96,11 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public SourceModel copy() {
-		PolarMap copy = (PolarMap) super.copy();
-		copy.N = (ScalarMap) N.copy();
-		copy.Q = (ScalarMap) Q.copy();
-		copy.U = (ScalarMap) U.copy();
+	public SourceModel copy(boolean withContents) {
+		PolarMap copy = (PolarMap) super.copy(withContents);
+		copy.N = (ScalarMap) N.copy(withContents);
+		copy.Q = (ScalarMap) Q.copy(withContents);
+		copy.U = (ScalarMap) U.copy(withContents);
 		return copy;
 	}
 	
@@ -165,11 +165,11 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public synchronized void reset() {
-		N.reset();
+	public synchronized void reset(boolean clearContent) {
+		N.reset(clearContent);
 		if(usePolarization()) {
-			Q.reset();
-			U.reset();
+			Q.reset(clearContent);
+			U.reset(clearContent);
 		}
 	}
 	
@@ -194,7 +194,7 @@ public class PolarMap extends SourceModel {
 	
 	// Angles are measured East of North... 
 	public ScalarMap getAngles(ScalarMap P) {
-		final ScalarMap A = (ScalarMap) N.copy();
+		final ScalarMap A = (ScalarMap) N.copy(false);
 		
 		final AstroMap q = Q.map;
 		final AstroMap u = U.map;
@@ -241,7 +241,7 @@ public class PolarMap extends SourceModel {
 	
 	
 	public ScalarMap getP() {
-		final ScalarMap P = (ScalarMap) N.copy();
+		final ScalarMap P = (ScalarMap) N.copy(false);
 		
 		final AstroMap q = Q.map;
 		final AstroMap u = U.map;
@@ -287,7 +287,7 @@ public class PolarMap extends SourceModel {
 	}	
 	
 	public ScalarMap getI(ScalarMap P) {	
-		final ScalarMap I = (ScalarMap) N.copy();
+		final ScalarMap I = (ScalarMap) N.copy(false);
 		final AstroMap n = N.map;
 		final AstroMap p = P.map;
 		final AstroMap t = I.map;
@@ -311,7 +311,7 @@ public class PolarMap extends SourceModel {
 	
 
 	public ScalarMap getPolarFraction(ScalarMap P, ScalarMap I, double accuracy) {	
-		final ScalarMap F = (ScalarMap) P.copy();
+		final ScalarMap F = (ScalarMap) P.copy(false);
 		final AstroMap p = P.map;
 		final AstroMap t = I.map;
 		final AstroMap f = F.map;
@@ -419,14 +419,6 @@ public class PolarMap extends SourceModel {
 		return N.countPoints() + Q.countPoints() + U.countPoints();
 	}
 	
-	@Override
-	public void extract() throws Exception {
-		N.extract();
-		if(usePolarization()) {
-			Q.extract();
-			U.extract();
-		}		
-	}
 
 	
 }
