@@ -72,7 +72,7 @@ public abstract class SourceModel implements Cloneable {
 		return options.get(name);
 	}
 
-	public SourceModel copy() {
+	public SourceModel copy(boolean copyContents) {
 		SourceModel copy = (SourceModel) clone();
 		return copy;
 	}
@@ -91,7 +91,7 @@ public abstract class SourceModel implements Cloneable {
 
 	}
 
-	public void reset() {
+	public void reset(boolean clearContent) {
 		isReady = false;
 	}
 
@@ -150,39 +150,8 @@ public abstract class SourceModel implements Cloneable {
 		System.err.println("            * Check the console output for any problems when reading scans.");
 	}
 	
-	public synchronized void extract() throws Exception {	
-		System.err.print("[Source] ");
-
-		reset();
-
-		new ScanFork<Void>() {
-			private SourceModel scanSource;
-
-			@Override
-			public void init() {
-				super.init();
-				scanSource = copy();
-			}
-
-			@Override
-			public void process(Scan<?,?> scan) {
-				scanSource.reset();
-
-				for(Integration<?,?> integration : scan) scanSource.add(integration);
-
-				scanSource.process(scan);
-				add(scanSource, scan.weight);
-			}
-		}.process();
-
-		process(true);
-		sync();
-
-		System.err.println();
-	}
-
-
 	public abstract void process(boolean verbose) throws Exception;
+
 
 	public synchronized void sync() throws Exception {
 		// Coupled with blanking...

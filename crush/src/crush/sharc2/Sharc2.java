@@ -435,8 +435,8 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		
 		// Pointing Center
 		arrayPointingCenter = new Vector2D();
-		arrayPointingCenter.setX(header.getDoubleValue("CRPIX3", 6.5) - 1.0);
-		arrayPointingCenter.setY(header.getDoubleValue("CRPIX2", 16.5) - 1.0);
+		arrayPointingCenter.setX(header.getDoubleValue("CRPIX3", 6.5));
+		arrayPointingCenter.setY(header.getDoubleValue("CRPIX2", 16.5));
 	}
 	
 	public void loadGainCoefficients(String fileName) throws IOException {

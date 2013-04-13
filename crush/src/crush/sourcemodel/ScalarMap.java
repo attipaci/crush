@@ -81,11 +81,14 @@ public class ScalarMap extends SourceMap {
 
 
 	@Override
-	public SourceModel copy() {
-		ScalarMap copy = (ScalarMap) super.copy();
-		try { copy.map = (AstroMap) map.copy(); }
+	public SourceModel copy(boolean withContents) {
+		ScalarMap copy = (ScalarMap) super.copy(withContents);
+		try { copy.map = (AstroMap) map.copy(withContents); }
 		catch(OutOfMemoryError e) {
 			System.err.println("ERROR! Ran of of memory while making a copy of the source map.");
+			System.err.println();
+			System.err.println("   * Check that the map size is reasonable for the area mapped and that");
+			System.err.println("     all scans reduced together belong to the same source or region.");
 			System.err.println();
 			System.err.println("   * Increase the amount of memory available to crush, by editing the '-Xmx'");
 			System.err.println("     option to Java in 'wrapper.sh' (or 'wrapper.bat' for Windows).");
@@ -187,7 +190,7 @@ public class ScalarMap extends SourceMap {
 					System.err.println("WARNING! Source insertion error:");
 					e.printStackTrace();
 				}
-				map.reset();
+				map.reset(true);
 			}
 			catch(IOException e) {
 				System.err.println("WARNING! Cannot read sources: " + e.getMessage());
@@ -551,9 +554,9 @@ public class ScalarMap extends SourceMap {
 	public synchronized void setBase() { map.copyTo(base); }
 
 	@Override
-	public synchronized void reset() {
-		super.reset();
-		map.reset();
+	public synchronized void reset(boolean clearContent) {
+		super.reset(clearContent);
+		map.reset(clearContent);
 	}
 	
 	@Override
@@ -705,8 +708,7 @@ public class ScalarMap extends SourceMap {
 	
 	@Override
 	public boolean isValid() {
-		if(map.isEmpty()) return false;
-		return true;
+		return !isEmpty();
 	}
 	
 	public void write(String path, boolean info) throws Exception {		
@@ -745,7 +747,7 @@ public class ScalarMap extends SourceMap {
 				width = Integer.parseInt(tokens.nextToken());
 				height = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : width;
 			}
-			AstroMap thumbnail = (AstroMap) map.copy();
+			AstroMap thumbnail = (AstroMap) map.copy(true);
 			thumbnail.autoCrop();
 			
 			// Smooth thumbnail by half a beam for nicer appearance

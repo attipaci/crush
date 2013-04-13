@@ -49,8 +49,8 @@ public abstract class SourceMap extends SourceModel {
 
 	
 	@Override
-	public void reset() {
-		super.reset();
+	public void reset(boolean clearContent) {
+		super.reset(clearContent);
 		setSmoothing();
 	}
 	
@@ -152,7 +152,7 @@ public abstract class SourceMap extends SourceModel {
 	}
 	
 	public long getMemoryFootprint() {
-		return (long) (pixels() * getPixelFootprint());
+		return (long) (pixels() * getPixelFootprint() + baseFootprint());
 	}
 	
 	public long getReductionFootprint() {
@@ -206,7 +206,7 @@ public abstract class SourceMap extends SourceModel {
 		
 		System.err.println("\n");
 		System.err.println("ERROR! Map is too large to fit into memory (" + sizeX + "x" + sizeY + " pixels).");
-		System.err.println("       Requires " + ((long) (pixels() * getPixelFootprint()) >> 20) + " MB free memory."); 
+		System.err.println("       Requires " + (getMemoryFootprint() >> 20) + " MB free memory."); 
 		System.err.println();
 		
 		if(scans.size() > 1) {

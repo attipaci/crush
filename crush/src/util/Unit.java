@@ -175,7 +175,17 @@ public class Unit implements Cloneable {
 		default: return null;
 		}
 	}
+	
+	// Generic Dimensionless units
+	public final static double percent = 0.01;
+	public final static double ppm = 1e-6;
+	public final static double ppb = 1e-9;
+	public final static double ppt = 1e-12;
+	public final static double ppq = 1e-15;
 
+	// SI Dimensionless unit Uno
+	public final static double uno = 1.0;
+	
 	// Basics (SI) and common scales
 
 	public final static double metre = 1.0;
@@ -590,6 +600,12 @@ public class Unit implements Cloneable {
 	static {
 		register(1.0, "count, counts, cts, piece, pcs, unit, 1");
 		register(0.01, "%, percent");
+		register(ppm, "ppm");
+		register(ppb, "ppb");
+		register(ppt, "ppt");
+		register(ppq, "ppq");
+		
+		register(uno, "U, uno");
 		
 		register(m, "m, meter, metre");
 		register(s, "s, sec, second");

@@ -36,13 +36,13 @@ public class Pipeline extends Thread {
 	boolean isRobust = false, isGainRobust = false;
 	
 	SourceModel scanSource;
+	boolean isReused = false;
 	
 	public Pipeline(CRUSH crush) {
 		this.crush = crush;
-		if(crush.source != null) {
-			scanSource = crush.source.copy();
-			scanSource.noParallel();
-		}
+		scanSource = crush.source.copy(false);
+		scanSource.noParallel();
+		scanSource.reset(false);
 	}
 
 	public boolean hasOption(String name) {
@@ -83,12 +83,16 @@ public class Pipeline extends Thread {
 		for(Integration<?, ?> integration : scan) crush.checkout(integration);
 	}
 	
-	
 	protected void getSource(Scan<?,?> scan) {
-		if(scanSource == null) return;
+		if(crush.source == null) return;
 	
 		// Reset smoothing etc. for raw map.
-		scanSource.reset();	
+		if(scanSource == null) {
+			scanSource = crush.source.copy(false);
+			scanSource.noParallel();
+			scanSource.reset(false);
+		}
+		else scanSource.reset(true);
 		
 		// TODO why doesn't this work...
 		scanSource.setInstrument(scan.instrument);
@@ -96,15 +100,14 @@ public class Pipeline extends Thread {
 		for(Integration<?, ?> integration: scan) {						
 			if(integration.hasOption("jackknife")) integration.comments += integration.gain > 0.0 ? "+" : "-";
 			else if(integration.gain < 0.0) integration.comments += "-";
-
 			scanSource.add(integration);
 		}		
 
 		scanSource.process(scan);	
-		crush.source.add(scanSource, scan.weight);
+		crush.source.add(scanSource, scan.weight);	
 		scanSource.postprocess(scan);
+		
 		Thread.yield();
-	
 	}
 	
 }

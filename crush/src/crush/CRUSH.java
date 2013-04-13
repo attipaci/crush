@@ -37,11 +37,11 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.13-b3
+ * @version 2.13-1
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.13-b3";
+	private static String version = "2.13-1";
 	private static String revision = "(devel.2)";
 	public static String workPath = ".";
 	public static String home = ".";
@@ -415,7 +415,7 @@ public class CRUSH extends Configurator {
 			else i++;
 		}
 		
-		if(solveSource()) if(tasks.contains("source")) source.reset();
+		if(solveSource()) if(tasks.contains("source")) source.reset(true);
 				
 		for(Pipeline thread : threads) thread.start();
 	

@@ -1,10 +1,20 @@
->> Smarter channel flags...
-
->> update laboca photometry data and docs
+2.13-1	(13 April 2013)
 
 	[NEW] {APEX} New configuration keys 'tau.window' and 'scale.window' can 
 	be used to specify the 1-sigma Gaussian time window (in hours) for 
 	obtaining locally averaged tau and scaling values from lookup tables.
+
+	[BUG] {beammap} beammaps could not be iterated due to an ill-defined
+	accumulation operation. Now fixed.
+	
+	[BUG] {beammap} Validation was broken. Now fixed.
+
+	[FIX] {beammap} Flagged pixels could result in error.
+
+	[FIX] {SHARC-2} Parsing of the pointing center from the FITS was off
+	by 1 pixels in both directions (Java vs FITS indexing). This caused
+	no trouble in general since the pointing center was defined in the
+	config file, overriding the FITS values.
 
 	[CHANGE] {APEX} Changed the way tau and calibration tables are 
 	processed, to use weighted local averages instead of the old linear
@@ -14,6 +24,12 @@
 	[TWEAK] {GISMO} More efficient pointing table lookup and tau table 
 	lookup, changed from O(N) to O(log2 N).
 
+	[TWEAK] 'poll' lists 'forgotten' keys, only if these exist.
+
+	[SPEED] Smarter sourcemodel copies are made, by skipping content copy
+	when not necessary. Same goes for resets. These results in a small 
+	performance gain, especially for large source maps...
+
 	[CODE] Locally averaged data (pointing tables, tau taubles, etc.) now
 	have a common framework, with O(log2 N) lookup time, and a common 
 	distance-based weighting scheme (with a default Gaussian profile).
@@ -21,6 +37,14 @@
 	[CODE] Infrastructure for new smarter handling of channel flags. The
 	main purpose is to be able to use letter codes (and/or names) in 
 	datafiles instead of the obscure binary values.
+
+	[CODE] {SHARC-2} Eliminated some dead (commented-out) code.
+
+	[CODE] Some cleanup of imaging classes. Safer copies by annihilating 
+	before setSize().
+
+	[UPDATE] {LABOCA} 'tau.dat' and 'calibration.dat' updated to current
+	as of what wad available on 8 April 2013.
 
 
 2.13-b2 (beta)

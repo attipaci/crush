@@ -24,6 +24,7 @@ package crush.sourcemodel;
 
 import java.io.*;
 import java.util.Collection;
+import java.util.StringTokenizer;
 
 import util.*;
 import util.astro.CelestialProjector;
@@ -36,17 +37,19 @@ import crush.astro.AstroMap;
 public class BeamMap extends SourceMap {
 	
 	ScalarMap[] pixelMap;
-	ScalarMap template;
+	private ScalarMap template;
 	
 	public BeamMap(Array<?, ?> instrument) {
 		super(instrument);
 	}
 
 	@Override
-	public SourceModel copy() {
-		BeamMap copy = (BeamMap) super.copy();
+	public SourceModel copy(boolean withContents) {
+		BeamMap copy = (BeamMap) super.copy(withContents);
 		copy.pixelMap = new ScalarMap[pixelMap.length];
-		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) copy.pixelMap[p] = (ScalarMap) pixelMap[p].copy();
+		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) {
+			copy.pixelMap[p] = (ScalarMap) pixelMap[p].copy(withContents);
+		}
 		return copy;
 	}
 
@@ -71,9 +74,9 @@ public class BeamMap extends SourceMap {
 	public Array<?, ?> getArray() { return (Array<?, ?>) getInstrument(); }
 	
 	@Override
-	public synchronized void reset() {
-		super.reset();
-		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].reset();
+	public synchronized void reset(boolean clearContent) {
+		super.reset(clearContent);
+		for(ScalarMap map : pixelMap) if(map != null) map.reset(clearContent);
 	}
 
 	@Override
@@ -82,33 +85,27 @@ public class BeamMap extends SourceMap {
 		BeamMap other = (BeamMap) model;
 		
 		for(int p=0; p<pixelMap.length; p++) if(other.pixelMap[p] != null) {
-			if(pixelMap[p] == null) {
-				pixelMap[p] = (ScalarMap) other.pixelMap[p].copy();
-				pixelMap[p].map.scaleWeight(weight);
-			}
-			else pixelMap[p].add(other.pixelMap[p], weight);
+			if(pixelMap[p] == null) pixelMap[p] = (ScalarMap) other.pixelMap[p].copy(false);
+			pixelMap[p].add(other.pixelMap[p], weight);
 		}
+		
+		generation = Math.max(generation, other.generation);
 	}
 
-	@Override
-	public long baseFootprint() {
-		return pixelMap.length * template.baseFootprint();
-	}
-	
-	
+
 	@Override
 	protected void add(Frame exposure, Pixel pixel, Index2D index, double fGC, double[] sourceGain, double dt, int excludeSamples) {
 		int i = pixel.getDataIndex();
 		ScalarMap map = pixelMap[i];
 		
 		if(map == null) {
-			map = (ScalarMap) template.copy();
+			map = (ScalarMap) template.copy(false);
 			map.id = Integer.toString(i);
 			map.standalone();
 			pixelMap[i] = map;
 		}
 			
-		pixelMap[i].add(exposure, pixel, index, fGC, sourceGain, dt, excludeSamples);
+		map.add(exposure, pixel, index, fGC, sourceGain, dt, excludeSamples);
 	}
 
 
@@ -119,15 +116,13 @@ public class BeamMap extends SourceMap {
 	@Override
 	public int countPoints() {
 		int points = 0;
-		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) points += pixelMap[p].countPoints();
+		for(ScalarMap map : pixelMap) if(map != null) points += map.countPoints();
 		return points;
 	}
 
-	
-
 	@Override
 	public double covariantPoints() {
-		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) return pixelMap[p].covariantPoints();
+		for(ScalarMap map : pixelMap) if(map != null) return map.covariantPoints();
 		return 1.0;
 	}
 
@@ -143,6 +138,11 @@ public class BeamMap extends SourceMap {
 		return pixelMap.length * template.getPixelFootprint();
 	}
 
+	@Override
+	public long baseFootprint() {
+		return pixelMap.length * template.baseFootprint();
+	}
+	
 
 	@Override
 	public Projection2D<SphericalCoordinates> getProjection() {
@@ -162,9 +162,7 @@ public class BeamMap extends SourceMap {
 
 	@Override
 	public long pixels() {
-		int pixels = 0;
-		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixels += pixelMap[p].pixels();
-		return pixels;
+		return template.pixels();
 	}
 
 
@@ -176,9 +174,8 @@ public class BeamMap extends SourceMap {
 
 	@Override
 	public void setSize(int sizeX, int sizeY) {
-		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].setSize(sizeX, sizeY);
+		for(ScalarMap map : pixelMap) if(map != null) map.setSize(sizeX, sizeY);
 	}
-
 
 	@Override
 	protected void sync(Frame exposure, Pixel pixel, Index2D index, double fG, double[] sourceGain, double[] syncGain, boolean isMasked) {
@@ -189,19 +186,31 @@ public class BeamMap extends SourceMap {
 
 	@Override
 	public synchronized void setBase() {
-		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].setBase();
+		for(ScalarMap map : pixelMap) if(map != null) map.setBase();
 	}
 
 	@Override
 	public synchronized void process(Scan<?, ?> scan) {
-		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].process(scan);
+		for(ScalarMap map : pixelMap) if(map != null) map.process(scan);
 	}
 
 
 	@Override
 	public void write(String path) throws Exception {
 		if(hasOption("beammap.writemaps")) {
-			for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].write(path, false);
+			int from = 0;
+			int to = pixelMap.length;
+			
+			String spec = option("beammap.writemaps").getValue();
+			
+			if(spec.length() > 0) {
+				StringTokenizer tokens = new StringTokenizer(spec, ":");
+				from = Integer.parseInt(tokens.nextToken());
+				if(tokens.hasMoreTokens()) to = Math.min(pixelMap.length, 1 + Integer.parseInt(tokens.nextToken()));
+				else to = from+1;
+			}
+			
+			for(int p=from; p<to; p++) if(pixelMap[p] != null) if(pixelMap[p].isValid()) pixelMap[p].write(path, false);
 		}
 		calcPixelData(false);
 		writePixelData();	
@@ -209,8 +218,14 @@ public class BeamMap extends SourceMap {
 
 	@Override
 	public void process(boolean verbose) throws Exception {	
-		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) {
-			if(hasOption("beammap.process")) pixelMap[p].process(verbose);
+		boolean process = hasOption("beammap.process");	
+		
+		for(ScalarMap map : pixelMap) if(map != null) {	
+			if(process) map.process(verbose);
+			else {
+				map.map.normalize();
+				map.map.generation++; // Increment the map generation...
+			}
 			verbose = false;
 		}
 	}
@@ -244,22 +259,26 @@ public class BeamMap extends SourceMap {
 		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
 			int i = pixel.getDataIndex();
 			ScalarMap beamMap = pixelMap[i];
-			if(beamMap != null) if(!beamMap.isEmpty()) {
+			
+			pixel.getPosition().set(Double.NaN, Double.NaN);
+			
+			if(beamMap != null) if(beamMap.isValid()) {
 				AstroMap map = beamMap.map;
 				if(smooth) map.smoothTo(getInstrument().resolution);
 				GaussianSource<SphericalCoordinates> source = beamMap.getPeakSource();
 				
-				// Get the source peak in the pixel.
-				pixelPeak[i] = (float) source.getPeak().value();
-				peaks[k++] = pixelPeak[i];
-				
-				// Get the offset position if it makes sense, or set as NaN otherwise...
-				pixel.getPosition().set(Double.NaN, Double.NaN);  
-				map.getProjection().project(source.getCoordinates(), pixel.getPosition());				
-				
-				// Derotate to array coordinates...
-				pixel.getPosition().rotate(-rotation);
-				pixel.getPosition().invert();
+				if(source != null) {
+					// Get the source peak in the pixel.
+					pixelPeak[i] = (float) source.getPeak().value();
+					peaks[k++] = pixelPeak[i];
+
+					// Get the offset position if it makes sense, or set as NaN otherwise... 
+					map.getProjection().project(source.getCoordinates(), pixel.getPosition());				
+
+					// Derotate to array coordinates...
+					pixel.getPosition().rotate(-rotation);
+					pixel.getPosition().invert();
+				}
 			}
 		}
 		if(k == 0) return;
@@ -326,7 +345,8 @@ public class BeamMap extends SourceMap {
 	@Override
 	public boolean isValid() {
 		if(pixelMap == null) return false;
-		for(ScalarMap map : pixelMap) if(map.isValid()) return true;
+		// Require at least one valid pixel map.
+		for(ScalarMap map : pixelMap) if(map != null) if(map.isValid()) return true;
 		return false;
 	}	
 }

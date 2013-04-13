@@ -38,11 +38,11 @@ public abstract class Photometry extends SourceModel {
 	//Hashtable<ScanType, WeightedPoint> scanFluxes = new Hashtable<ScanType, WeightedPoint>();
 	
 	@Override
-	public SourceModel copy() {
-		Photometry copy = (Photometry) super.copy();
+	public SourceModel copy(boolean withContents) {
+		Photometry copy = (Photometry) super.copy(withContents);
 		copy.sourceFlux = (WeightedPoint) sourceFlux.clone();
 		copy.flux = new WeightedPoint[flux.length];
-		for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = (WeightedPoint) flux[i].clone();
+		if(withContents) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = (WeightedPoint) flux[i].clone();
 		return copy;
 	}
 
@@ -108,10 +108,12 @@ public abstract class Photometry extends SourceModel {
 	}
 	
 	@Override
-	public synchronized void reset() {
-		super.reset();
-		for(int i=flux.length; --i >= 0; ) flux[i].noData();
-		sourceFlux.noData();
+	public synchronized void reset(boolean clearContent) {
+		super.reset(clearContent);
+		if(clearContent) {
+			for(int i=flux.length; --i >= 0; ) flux[i].noData();
+			sourceFlux.noData();
+		}
 		integrationTime = 0.0;
 	}
 		

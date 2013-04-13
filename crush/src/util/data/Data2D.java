@@ -205,11 +205,17 @@ public class Data2D implements Cloneable {
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
-	public Data2D copy() {
+	public Data2D copy(boolean copyContent) {
 		Data2D copy = (Data2D) clone();
+		copy.annihilate();
 		copy.setSize(sizeX(), sizeY());
-		copy.copyImageOf(this);
+		if(copyContent) copy.copyImageOf(this);
 		return copy;
+	}
+	
+	public void annihilate() {
+		data = null;
+		flag = null;
 	}
 
 	public boolean conformsTo(Data2D image) {
@@ -245,9 +251,7 @@ public class Data2D implements Cloneable {
 		}.process();	
 	}
 	
-	
-	
-	
+
 	
 	public final int sizeX() { return data.length; }
 	
@@ -475,7 +479,7 @@ public class Data2D implements Cloneable {
 	
 		// Antialias filter
 		if(stretch.getX() > 1.0 || stretch.getY() > 1.0) {
-			from = from.copy();
+			from = from.copy(true);
 			double a = Math.sqrt(stretch.getX() * stretch.getX() - 1.0);
 			double b = Math.sqrt(stretch.getY() * stretch.getY() - 1.0);
 			from.smooth(getGaussian(a, b));
