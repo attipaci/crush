@@ -46,7 +46,7 @@ public class PixelAssignment extends ArrayList<ResonanceID> {
 	private static final long serialVersionUID = -3011775640230135691L;
 	
 	public double alpha = 0.0;
-	public Range alphaRange = new Range(0.0, 1.0);
+	public Range alphaRange = new Range(-3.0, 0.3);
 	public int attempts = 3;
 
 	public PixelAssignment() {}
@@ -109,14 +109,14 @@ public class PixelAssignment extends ArrayList<ResonanceID> {
 			}	
 		};
 		
-		opt.init(new double[] { 0.5 });
+		opt.init(new double[] { 0.0 });
 		opt.setStartSize(new double[] { 0.1 });
 		opt.precision = 1e-10;
 		opt.verbose = false;
 		opt.minimize(attempts);
 		
 		double rchi = Math.sqrt(opt.getChi2() / size());
-		if(CRUSH.verbose) System.err.println(" Pixels assignment rms = " + Util.e3.format(1e6 * rchi) + " ppm.");
+		if(CRUSH.verbose) System.err.println(" Tone-pixel assignment rms = " + Util.e3.format(1e6 * rchi) + " ppm.");
 		
 		alpha = opt.getFitParameters()[0];
 	}

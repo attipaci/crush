@@ -1,4 +1,5 @@
-2.13-1	(13 April 2013)
+
+2.13-1	(14 April 2013)
 
 	[NEW] {APEX} New configuration keys 'tau.window' and 'scale.window' can 
 	be used to specify the 1-sigma Gaussian time window (in hours) for 
