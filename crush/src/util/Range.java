@@ -140,6 +140,12 @@ public class Range {
 		return max - min;
 	}
 	
+	public void grow(double factor) {
+		double span = span();
+		min -= factor * span;
+		max += factor * span;		
+	}
+	
 	@Override
 	public String toString() {
 		return min + ":" + max;

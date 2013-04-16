@@ -1,6 +1,7 @@
 package crush;
 
 import util.Configurator;
+import util.Unit;
 import util.data.Asymmetry2D;
 import util.data.DataPoint;
 
@@ -68,16 +69,16 @@ public class InstantFocus implements Cloneable {
 		if(asym != null) {
 			if(options.isConfigured("focus.xcoeff")) if(asym.getX().significance() > s2n) {
 				x = new DataPoint(asym.getX());
-				x.scale(-1.0 / options.get("focus.xcoeff").getDouble());		
+				x.scale(-Unit.mm / options.get("focus.xcoeff").getDouble());		
 			}
 			if(options.isConfigured("focus.ycoeff")) if(asym.getY().significance() > s2n) {
 				y = new DataPoint(asym.getY());
-				y.scale(-1.0 / options.get("focus.ycoeff").getDouble());			
+				y.scale(-Unit.mm / options.get("focus.ycoeff").getDouble());			
 			}
 		}
 		if(xElongation != null) if(xElongation.significance() > s2n) if(options.isConfigured("focus.zcoeff")) {
 			z = new DataPoint(xElongation);
-			z.scale(-1.0 / options.get("focus.zcoeff").getDouble());
+			z.scale(-Unit.mm / options.get("focus.zcoeff").getDouble());
 		}	
 	}
 	

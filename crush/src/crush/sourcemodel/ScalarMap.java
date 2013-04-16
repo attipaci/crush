@@ -795,7 +795,7 @@ public class ScalarMap extends SourceMap {
 			imager.setSize(width, height);
 			imager.saveAs(map.fileName + ".png", width, height);	
 		}
-		
+		System.err.println();
 	}
 	
 	@Override

@@ -44,16 +44,29 @@ public class SkyDipModel {
 
 	Parameter Tsky = new Parameter("Tsky", 273.0 * Unit.K); // 0 C
 	Parameter offset = new Parameter("offset");
-	Parameter Kelvin = new Parameter("Kelvin");
-	Parameter tau = new Parameter("tau", 1.0);
+	Parameter kelvin = new Parameter("kelvin");
+	Parameter tau = new Parameter("tau", 0.3);
 
-	double chi2Scale = 1.0;
+	String dataUnit = "[dataunit]";
+
+	int usePoints = 0;
+	double rmsDev = 1.0;
+	boolean uniformWeights = false;
 	boolean fitOK = false;
+	
+	Range elRange;
 	
 	Vector<Parameter> parameters = new Vector<Parameter>();
 	
 	public void setOptions(Configurator options) {
 		this.options = options;	
+		
+		if(options.isConfigured("elrange")) {
+			elRange = options.get("elrange").getRange(true);
+			elRange.scale(Unit.deg);
+		}
+		
+		uniformWeights = options.isConfigured("uniform");
 		
 		parameters.clear();
 		
@@ -64,21 +77,22 @@ public class SkyDipModel {
 				
 				if(name.equals("tau")) parameters.add(tau);
 				else if(name.equals("offset")) parameters.add(offset);
-				else if(name.equals("data2k")) parameters.add(Kelvin);
+				else if(name.equals("data2k")) parameters.add(kelvin);
+				else if(name.equals("kelvin")) parameters.add(kelvin);
 				else if(name.equals("tsky")) parameters.add(Tsky);
 			}
 		}
 		else {
 			parameters.add(tau);
 			parameters.add(offset);
-			parameters.add(Kelvin);
+			parameters.add(kelvin);
 		}
 	}
 	
 	public double valueAt(double EL) {
 		double eps = -Math.expm1(-tau.value() / Math.sin(EL));
 		double Tobs = eps * Tsky.value();
-		return offset.value() + Tobs * Kelvin.value();
+		return offset.value() + Tobs * kelvin.value();
 	}
 	
 	protected void initialize(AmoebaMinimizer minimizer, SkyDip skydip) {
@@ -94,11 +108,11 @@ public class SkyDipModel {
 		}
 		
 		if(options.isConfigured("tsky")) Tsky.setValue(options.get("tsky").getDouble() * Unit.K);
-		else if(skydip.Tsky.weight() > 0.0) Tsky.setValue(skydip.Tsky.value());
-		
+		else if(skydip.Tamb.weight() > 0.0) Tsky.setValue(skydip.Tamb.value());
+			
 		// Set some reasonable initial values for the offset and conversion...
 		if(Double.isNaN(offset.value())) offset.setValue(highest);
-		if(Double.isNaN(Kelvin.value())) Kelvin.setValue((lowest - highest) / Tsky.value());
+		if(Double.isNaN(kelvin.value())) kelvin.setValue((lowest - highest) / Tsky.value());
 		
 		minimizer.verbose = true;
 		minimizer.precision = 1e-10;
@@ -118,54 +132,80 @@ public class SkyDipModel {
 		for(int p=0; p<parameters.size(); p++) parameters.get(p).setValue(tryparm[p]);
 	}
 	
-	public double getDeviationFrom(SkyDip skydip) {
-		double sumdev = 0.0;
-		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight() > 0.0) {
-			double EL = skydip.getEL(i);
-			double w = skydip.data[i].weight();
-			double dev = (valueAt(EL) - skydip.data[i].value());
-			sumdev += w * Math.abs(dev * dev) * chi2Scale;
+	public double getDeviationFrom(SkyDip skydip, int from, int to) {
+		double sumdev = 0.0, sumw = 0.0;
+		for(int i=from; i<to; i++) if(skydip.data[i].weight() > 0.0) {
+			final double dev = (valueAt(skydip.getEL(i)) - skydip.data[i].value()) / rmsDev;
+			final double w = uniformWeights ? 1.0 : skydip.data[i].weight();
+			sumdev += w * dev * dev;
+			sumw += w;
 		}
-		return sumdev;
+		return sumdev / sumw;
 	}
 
 	
 	public void fit(final SkyDip skydip) {
+		
 		AmoebaMinimizer minimizer = new AmoebaMinimizer() {
+			int fromBin = 0;
+			int toBin = skydip.data.length;
+			
+			@Override
+			public void init(double[] p) {
+				super.init(p);
+				if(elRange != null) {
+					fromBin = Math.max(0,  skydip.getBin(elRange.min()));
+					toBin = Math.min(skydip.data.length, skydip.getBin(elRange.max()));
+					usePoints = 0;
+					for(int i=fromBin; i<toBin; i++) if(skydip.data[i].weight() > 0.0) usePoints++;
+				}
+			}
+			
 			@Override
 			public double evaluate(double[] tryparm) {
 				setParms(tryparm);
-				return getDeviationFrom(skydip);
+				return getDeviationFrom(skydip, fromBin, toBin);
 			}
 		};
 		
 		initialize(minimizer, skydip);
 		minimizer.verbose = false;
-		minimizer.minimize();
+		minimizer.minimize(3);
 		fitOK = minimizer.converged;
+
+		final int dof = usePoints - parameters.size();
 		
-		
-		int dof = 0;
-		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight() > 0.0) dof++;
-		
-		if(dof > parameters.size()) {
-			chi2Scale = (dof - parameters.size()) / minimizer.getChi2();	
-			minimizer.rescaleChi2(chi2Scale);
-		
+		if(dof > 0.0) {
+			rmsDev = Math.sqrt(minimizer.getChi2() / dof);	
+			minimizer.rescaleChi2(1.0 / (rmsDev * rmsDev));
+			
 			for(int i=0; i<parameters.size(); i++) {
-				Parameter p = parameters.get(i);
-				double rms = minimizer.getTotalError(i, 0.01 * p.value());
+				final Parameter p = parameters.get(i);
+				final double rms = minimizer.getTotalError(i, 0.01 * p.value());
 				p.setWeight(1.0 / (rms * rms));
-			}
+			}		
 		}
 		else for(Parameter p : parameters) p.setWeight(0.0);
+		
+		double[] fitted = minimizer.getFitParameters();
+		for(int i=0; i<fitted.length; i++) parameters.get(i).setValue(fitted[i]);
+		
 	}
 	
 	@Override
-	public String toString() {
-		String text = tau.toString(Util.f3) + "\n" +
-			Tsky.toString(Util.f1) + " K" + "\n" +
-			Kelvin.toString(Util.e3) + " [dataunit]";
-		return text;
+	public String toString() {	
+		if(!fitOK) return "WARNING! The fit has not converged. Try again!";
+	
+		StringBuffer text = new StringBuffer();
+		
+		
+		if(parameters.contains(tau)) text.append("  " + tau.toString(Util.f3) + "\n");
+		if(parameters.contains(Tsky)) text.append("  " + Tsky.toString(Util.f1) + " K" + "\n");
+		if(parameters.contains(kelvin)) text.append("  " + kelvin.toString(Util.s3) + " " + dataUnit + "\n");
+
+		text.append("\t\t\t\t[" + Util.s3.format(rmsDev / kelvin.value()) + " K rms]\n");
+		
+		return new String(text);
 	}
+
 }

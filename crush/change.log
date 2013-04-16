@@ -1,3 +1,33 @@
+>> 'gnuplot', 'kelvin', 'K2Jy' to GLOSSARY
+
+
+	[NEW] New options 'K2Jy' and 'kelvin' are introduced. 'K2Jy' can be
+	used to set a Jy/K conversion value, whereas 'kelvin' can be used
+	alternatively to set a conversion from data units directly to kelvin,
+	similarly to how the 'jansky' option works. Currently only the skydip
+	model uses the 'kelvin' scale, but it may be added as an alternative
+	unit for all source models in the future.
+
+	[NEW] New option 'skydip.ELrange' can restrict what elevation range
+	to use from the skydip data. E.g.:
+
+		skydip.ELrange = 15:65
+
+	Will restrict the fitting to between 25 deg and 55 deg elevation.	
+
+	[BUG] {skydip} Uninitialized copies of SkyDip data resulted in an error 
+	during reduction. Fixed.
+
+	[FIX] {SHARC-2} Instant focus suggested incorrect x_position due to
+	a units conversion issue. Now, the instant focus uses proper units to
+	avoid further confusion. 
+
+	[TWEAK] Changed [beammap] conditions in configs to the more properly
+	formulated [source.type?beammap] condition.
+
+	[CLEAN] The sub-key 'data2k' changed to 'kelvin' (which was in the
+	GLOSSARY) on skydip and skydip.kelvin. 
+
 
 2.13-1	(14 April 2013)
 

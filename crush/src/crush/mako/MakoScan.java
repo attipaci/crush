@@ -386,20 +386,20 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 		if(focus.getX() != null) {
 			DataPoint x = focus.getX();
 			x.add(instrument.focusX);
-			info += "\n  UIP> x_position " + Util.f2.format(x.value()) 
-					+ "       \t[+-" + Util.f2.format(x.rms()) + "]";			
+			info += "\n  UIP> x_position " + Util.f2.format(x.value() / Unit.mm) 
+					+ "       \t[+-" + Util.f2.format(x.rms() / Unit.mm) + "]";			
 		}
 		if(focus.getY() != null) {
 			DataPoint dy = focus.getY();
 			dy.add(instrument.focusYOffset);
-			info += "\n  UIP> y_position /offset " + Util.f2.format(dy.value())
-					+ "\t[+-" + Util.f2.format(dy.rms()) + "]";	
+			info += "\n  UIP> y_position /offset " + Util.f2.format(dy.value() / Unit.mm)
+					+ "\t[+-" + Util.f2.format(dy.rms() / Unit.mm) + "]";	
 		}
 		if(focus.getZ() != null) {
 			DataPoint dz = focus.getZ();
 			dz.add(instrument.focusZOffset);
-			info += "\n  UIP> focus /offset " + Util.f2.format(dz.value())
-					+ "    \t[+-" + Util.f2.format(dz.rms()) + "]";
+			info += "\n  UIP> focus /offset " + Util.f2.format(dz.value() / Unit.mm)
+					+ "    \t[+-" + Util.f2.format(dz.rms() / Unit.mm) + "]";
 		}
 			
 		return info;
