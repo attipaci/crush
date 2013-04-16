@@ -2159,16 +2159,27 @@
 			reason for not using an alias in this case, is to 
 			retain, independently, 'skydip' option branches.
 
+:: skydip.elRange=<min>:<max>	@Advanced
+				@Since: 2.14
+			Set the elevation range (in degress) to use for fitting
+			the skydip model. In some cases either the data may be
+			corrupted either at low elevations, or at high 
+			elevations, or both, making it a useful option to 
+			restrict the skydip data to the desired elevation 
+			range. Use with caution to keep the skydip results
+			robust!
+			@See: 'skydip'
+
 :: skydip.fit=<list>	@Expert
 			Specify the list of parameters to fit for the skydip 
 			model. The standard model is
 
-			 y(EL) = Kelvin * Tsky * (1-exp(-tau/sin(EL))) + offset
+			 y(EL) = kelvin * Tsky * (1-exp(-tau/sin(EL))) + offset
 
 		        where:
 
-			   Kelvin	conversion from Kelvin to dataunits.
-				   	(see: skydip.Kelvin)
+			   kelvin	conversion from Kelvin to dataunits.
+				   	(see: 'kelvin' and 'K2Jy')
 
 			   Tsky	  	Sky temperature (in Kelvin).
 				   	(see: 'skydip.Tsky')
@@ -2179,19 +2190,14 @@
 			   offset	An offset in dataunits 
 			   		(see 'skydip.offset')
 
-			The default is to fit Kelvin, tau, and offset, and 
-			assume that the sky temperature is close to ambient. 
-			(The assumption on the sky temperature is not critical 
-			as long as the conversion factor 'Kelvin' is fitted to 
-			absorb an overall scaling).
-			@See: 'skydip.Kelvin', 'skydip.offset', 'skydip.tau', 
-			      'skydip.Tsky', 'dataunit'
+			The default is to fit 'kelvin', 'tau', and 'offset', 
+			and assume that the sky temperature is close to 
+			ambient. (The assumption on the sky temperature is not 
+			critical as long as the conversion factor 'kelvin' is 
+			fitted to absorb an overall scaling).
+			@See: 'skydip.offset', 'skydip.tau', 'skydip.Tsky', 
+			      'kelvin', 'K2Jy', 'dataunit'
 					  
-:: skydip.Kelvin=X	@Expert
-			Specify the (initial) value X to convert from Kelvins 
-			to dataunits.
-			@See: 'skydip.fit'
-
 :: skydip.offset=X	@Expert
 			Specify the (initial) offset value in dataunits
 			@See: 'skydip.fit'

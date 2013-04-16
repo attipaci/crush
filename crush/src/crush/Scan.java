@@ -527,7 +527,6 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public void printFocus() {
 		if(pointing != null) {
-			System.out.println();
 			System.out.println(" Instant Focus Results for Scan " + getID() + ":");
 			System.out.println();
 			System.out.println(getFocusString());

@@ -28,14 +28,17 @@ import util.astro.Weather;
 import util.data.WeightedPoint;
 
 import java.io.*;
+import java.text.NumberFormat;
 import java.util.*;
+
+import javax.management.modelmbean.ModelMBean;
 
 // Bin the correlated signal by elevation...
 public class SkyDip extends SourceModel {
 	
 	WeightedPoint[] data;
 	double resolution;
-	WeightedPoint Tsky = new WeightedPoint(); // Assume the sky is at 0C.
+	WeightedPoint Tamb = new WeightedPoint(); // Assume the sky is at 0C.
 	
 	public SkyDip(Instrument<?> instrument) {
 		super(instrument);
@@ -45,17 +48,23 @@ public class SkyDip extends SourceModel {
 	public SourceModel copy(boolean withContents) {
 		SkyDip copy = (SkyDip) super.copy(withContents);
 		copy.data = new WeightedPoint[data.length];
-		if(Tsky != null) copy.Tsky = (WeightedPoint) Tsky.clone();
-		if(withContents) for(int i=0; i<data.length; i++) copy.data[i] = (WeightedPoint) data[i].clone();
+		if(Tamb != null) copy.Tamb = (WeightedPoint) Tamb.clone();
+		
+		if(withContents) {
+			for(int i=0; i<data.length; i++) copy.data[i] = (WeightedPoint) data[i].clone();
+		}
+		else {
+			for(int i=0; i<data.length; i++) copy.data[i] = new WeightedPoint();
+		}
 		return copy;
 	}
 	
 	@Override
 	public synchronized void reset(boolean clearContent) {
 		super.reset(clearContent);
-		if(clearContent) {
-			for(int i=0; i<data.length; i++) data[i].noData();
-			Tsky.noData();
+		if(clearContent) if(data != null) {
+			for(int i=0; i<data.length; i++) if(data[i] != null) data[i].noData();
+			Tamb.noData();
 		}
 	}
 	
@@ -80,6 +89,7 @@ public class SkyDip extends SourceModel {
 	@Override
 	public synchronized void add(SourceModel model, double weight) {
 		SkyDip other = (SkyDip) model;
+		Tamb.average(other.Tamb);
 		for(int i=0; i<data.length; i++) data[i].average(other.data[i]);
 	}
 
@@ -124,8 +134,8 @@ public class SkyDip extends SourceModel {
 		for(int i=0; i<data.length; i++) if(data[i].weight() > 0.0) data[i].scaleValue(1.0 / data[i].weight());
 		if(scan instanceof Weather) {
 			double ambientT = ((Weather) scan).getAmbientTemperature();
-			if(!Double.isNaN(ambientT)) Tsky.average(new WeightedPoint(ambientT, scan.getObservingTime()));
-		}
+			if(!Double.isNaN(ambientT)) Tamb.average(new WeightedPoint(ambientT, scan.getObservingTime()));
+		}	
 	}
 	
 	@Override
@@ -144,13 +154,21 @@ public class SkyDip extends SourceModel {
 	@Override
 	public void write(String path) throws Exception {
 		SkyDipModel model = new SkyDipModel();
+	
+		if(hasOption("kelvin"))
+			model.kelvin.setValue(option("kelvin").getDouble());
+		else if(hasOption("k2jy"))
+			model.kelvin.setValue(option("k2jy").getDouble() * getInstrument().janskyPerBeam());
+		
+		model.dataUnit = getInstrument().getDataUnit().name();
+		
 		fit(model);
 		
 		if(model.fitOK) {
 			System.out.println();
 			System.out.println("Skydip result:");
 			System.out.println("=================================================");
-			System.out.println(model.toString());
+			System.out.print(model.toString());
 			System.out.println("=================================================");
 			System.out.println();
 		}
@@ -159,7 +177,9 @@ public class SkyDip extends SourceModel {
 		}
 			
 		String fileName = hasOption("name") ? option("name").getValue() : getDefaultCoreName();
-		fileName = CRUSH.workPath + File.separator + fileName + ".dat";
+		String coreName = CRUSH.workPath + File.separator + fileName;
+		fileName = coreName + ".dat";
+		
 		
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 		StringTokenizer header = new StringTokenizer(model.toString(), "\n");
@@ -182,6 +202,74 @@ public class SkyDip extends SourceModel {
 		out.close();
 		
 		System.err.println("Written " + fileName);
+		
+		gnuplot(coreName, fileName, model);
+	}
+	
+	public Range getRange() {
+		Range range = new Range();
+		for(WeightedPoint point : data) if(point.weight() > 0.0) range.include(point.value());
+		return range;
+	}
+	
+	public Range getElevationRange() {
+		Range range = new Range();
+		for(int i=data.length; --i >= 0; ) if(data[i].weight() > 0.0) range.include(getEL(i));
+		return range;
+	}
+	
+	public void gnuplot(String coreName, String dataName, SkyDipModel model) throws IOException {
+		String plotName = coreName + ".plt";
+		PrintWriter plot = new PrintWriter(new FileOutputStream(plotName));
+		
+		plot.println("set xla 'Elevation (deg)");
+		plot.println("set yla 'Mean Pixel Response (" + getInstrument().getDataUnit().name() + ")");
+		
+		Range dataRange = getRange();
+		dataRange.grow(0.05);
+		
+		Range elRange = getElevationRange();
+		elRange.grow(0.05);
+		elRange.scale(1.0 / Unit.deg);
+		
+		plot.println("set xra [" + elRange.min() + ":" + elRange.max() + "]");
+		plot.println("set yra [" + dataRange.min() + ":" + dataRange.max() + "]");
+		
+		if(model.elRange != null) {		
+			plot.println("set arrow 1 from " + (model.elRange.min() / Unit.deg) + ", " + dataRange.min()
+					+ " to " + (model.elRange.min() / Unit.deg) + ", " + dataRange.max() + " nohead lt 0 lw 3");
+			plot.println("set arrow 2 from " + (model.elRange.max() / Unit.deg) + ", " + dataRange.min()
+					+ " to " + (model.elRange.max() / Unit.deg) + ", " + dataRange.max() + " nohead lt 0 lw 3");
+		}
+	
+		plot.println("set term post eps enh col sol 18");
+		plot.println("set out '" + coreName + ".eps'");
+		
+		plot.println("plot \\");
+		plot.println("  '" + dataName + "' using 1:2 title 'Skydip " + scans.get(0).getID() + "' lt 1, \\");
+		plot.println("  '" + dataName + "' using 1:3 title 'tau = " + Util.f3.format(model.tau.value()) + " +- " 
+				+ Util.f3.format(model.tau.rms()) + "' with lines lt 9 lw 3");
+	
+		plot.println("print 'Written " + coreName + ".eps'");
+		
+		plot.println("set out");
+		plot.println("set term wxt");
+		plot.println("replot");
+		
+		plot.close();
+		
+		System.err.println("Written " + plotName);
+		
+		if(hasOption("gnuplot")) {
+			String command = option("gnuplot").getValue();
+			if(command.length() == 0) command = "gnuplot";
+			else command = Util.getSystemPath(command);
+			
+			Runtime runtime = Runtime.getRuntime();
+			runtime.exec(command + " -p " + plotName);
+			
+			System.err.println("Written " + coreName + ".eps");
+		}
 	}
 
 	public void fit(SkyDipModel model) {

@@ -27,7 +27,7 @@ import java.util.*;
 
 
 
-public class Parameter extends WeightedPoint {
+public class Parameter extends DataPoint {
 	String name;
 
 	public Parameter(String name) { 
