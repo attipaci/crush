@@ -180,9 +180,11 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 	class MakoReader extends HDUReader {	
 		private int offset;
 
-		private float[] data, intTime, AZ, EL, AZO, ELO, AZE, ELE, RAO, DECO, LST, PA, chop;
+		private float[] data, intTime, chop;
+		private int[] AZ, EL, dX, dY, AZE, ELE, LST, PA, MJD, ticks;
 		private int[] SN, UTseconds, UTnanosec;
 		private int channels;
+		private boolean[] isEquatorial;
 		
 		private final MakoScan sharcscan = (MakoScan) scan;
 		
@@ -195,29 +197,30 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 			data = (float[]) table.getColumn(hdu.findColumn("Shift"));
 			
 			SN = (int[]) table.getColumn(hdu.findColumn("Sequence Number"));
-			UTseconds = (int[]) table.getColumn(hdu.findColumn("UTC seconds"));
-			UTnanosec = (int[]) table.getColumn(hdu.findColumn("UTC nanoseconds"));
+			UTseconds = (int[]) table.getColumn(hdu.findColumn("Detector UTC seconds (2000/1/1)"));
+			UTnanosec = (int[]) table.getColumn(hdu.findColumn("Detector UTC nanoseconds"));
 			intTime = (float[]) table.getColumn(hdu.findColumn("Integration Time"));
 			
-			AZ = (float[]) table.getColumn(hdu.findColumn("AZ"));
-			EL = (float[]) table.getColumn(hdu.findColumn("EL"));
-			AZE = (float[]) table.getColumn(hdu.findColumn("AZ_ERROR"));
-			ELE = (float[]) table.getColumn(hdu.findColumn("EL_ERROR"));
-			PA = (float[]) table.getColumn(hdu.findColumn("Parallactic Angle"));
-			LST = (float[]) table.getColumn(hdu.findColumn("LST"));
-			RAO = (float[]) table.getColumn(Math.max(hdu.findColumn("RAO"), hdu.findColumn("RA_OFFSET")));
-			DECO = (float[]) table.getColumn(Math.max(hdu.findColumn("DECO"), hdu.findColumn("DEC_OFFSET")));
-			AZO = (float[]) table.getColumn(Math.max(hdu.findColumn("AZO"), hdu.findColumn("AZ_OFFSET")));
-			ELO = (float[]) table.getColumn(Math.max(hdu.findColumn("ELO"), hdu.findColumn("EL_OFFSET")));
-			chop = (float[]) table.getColumn(hdu.findColumn("CHOP_OFFSET"));
+			AZ = (int[]) table.getColumn(hdu.findColumn("Requested AZ"));
+			EL = (int[]) table.getColumn(hdu.findColumn("Requested EL"));
+			AZE = (int[]) table.getColumn(hdu.findColumn("Error in AZ"));
+			ELE = (int[]) table.getColumn(hdu.findColumn("Error in EL"));
+			PA = (int[]) table.getColumn(hdu.findColumn("Parallactic Angle"));
+			LST = (int[]) table.getColumn(hdu.findColumn("Local Apparent Sidereal Time"));
+			dX = (int[]) table.getColumn(Math.max(hdu.findColumn("AZO"), hdu.findColumn("X Offset")));
+			dY = (int[]) table.getColumn(Math.max(hdu.findColumn("ELO"), hdu.findColumn("Y Offset")));
+			MJD = (int[]) table.getColumn(hdu.findColumn("Antenna MJD"));
+			ticks = (int[]) table.getColumn(hdu.findColumn("N Ticks From Midnight"));
+			//chop = (float[]) table.getColumn(hdu.findColumn("CHOP_OFFSET"));
 			
+			isEquatorial = (boolean[]) table.getColumn(hdu.findColumn("Equatorial Offset"));
 		}
 	
 		@Override
 		public Reader getReader() {
 			return new Reader() {
 				private Vector2D equatorialOffset;
-				AstroTime time = new AstroTime();
+				//AstroTime time = new AstroTime();
 				
 				@Override
 				public void init() { 
@@ -233,21 +236,23 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 					
 					frame.parseData(data, i*channels, channels);
 
-					time.setMillis(AstroTime.millisJ2000 + 1000L * UTseconds[i] + (UTnanosec[i] / 1000000L));
-					frame.MJD = time.getMJD();
+					//time.setMillis(AstroTime.millisJ2000 + 1000L * UTseconds[i] + (UTnanosec[i] / 1000000L));
+					//frame.MJD = time.getMJD();
 	
+					frame.MJD = MJD[i] + ticks[i] * antennaTick;
+					
 					// Enforce the calculation of the equatorial coordinates
 					frame.equatorial = null;
 
 					frame.horizontal = new HorizontalCoordinates(
-							AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
-							EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
+							(AZ[i] + AZE[i]) * tenthArcsec,
+							(EL[i] + ELE[i]) * tenthArcsec);
 					
-					final double pa = PA[i] * Unit.deg;
+					final double pa = PA[i] * tenthArcsec;
 					frame.sinPA = Math.sin(pa);
 					frame.cosPA = Math.cos(pa);
 
-					frame.LST = LST[i] * Unit.hour;
+					frame.LST = LST[i] * antennaTick;
 		
 					frame.integrationTime = intTime[i] * Unit.s;
 					
@@ -257,22 +262,25 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 					
 					frame.frameNumber = SN[i];
 
-					frame.horizontalOffset = new Vector2D(
-							(AZO[i] + AZE[i] * frame.horizontal.cosLat()) * Unit.arcsec,
-							(ELO[i] + ELE[i]) * Unit.arcsec);
-				
-					frame.chopperPosition.setX(chop[i] * Unit.arcsec);
-					
+					if(isEquatorial[i]) {
+						frame.horizontalOffset = new Vector2D(
+							AZE[i] * frame.horizontal.cosLat() * tenthArcsec,
+							ELE[i] * tenthArcsec);
+						equatorialOffset.set(dX[i] * tenthArcsec, dY[i] * tenthArcsec);	
+					}
+					else {
+						frame.horizontalOffset = new Vector2D(
+							(dX[i] + AZE[i] * frame.horizontal.cosLat()) * tenthArcsec,
+							(dY[i] + ELE[i]) * tenthArcsec);
+						equatorialOffset.zero();
+					}
+						
+					//frame.chopperPosition.setX(chop[i] * Unit.arcsec);
 					//chopZero.add(frame.chopperPosition.getX());
 					//chopZero.addWeight(1.0);
 
 					// Add in the scanning offsets...
-					if(sharcscan.addOffsets) frame.horizontalOffset.add(sharcscan.horizontalOffset);	
-
-					// Add in the equatorial sweeping offsets
-					// Watch out for the sign of the RA offset, which is counter to the native coordinate direction
-					equatorialOffset.set(RAO[i] * Unit.arcsec, DECO[i] * Unit.arcsec);	
-					
+					if(sharcscan.addOffsets) frame.horizontalOffset.add(sharcscan.horizontalOffset);		
 					
 					frame.toHorizontal(equatorialOffset);
 					frame.horizontalOffset.add(equatorialOffset);
@@ -348,4 +356,7 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 	public String getFullID(String separator) {
 		return scan.getID();
 	}
+	
+	public final float antennaTick = (float) (0.01 * Unit.s);
+	public final float tenthArcsec = (float) (0.1 * Unit.arcsec);
 }

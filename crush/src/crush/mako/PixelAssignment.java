@@ -71,7 +71,8 @@ public class PixelAssignment extends ArrayList<ResonanceID> {
 			id.freq = Double.parseDouble(tokens.nextToken());
 			id.row = Integer.parseInt(tokens.nextToken()) - 1;
 			id.col = Integer.parseInt(tokens.nextToken()) - 1;
-			id.delta = Double.parseDouble(tokens.nextToken());
+			//id.delta = Double.parseDouble(tokens.nextToken());
+			id.delta = 1e-4 * id.freq;
 			
 			add(id);
 		}
