@@ -1282,6 +1282,22 @@
 			in crush-1.xx and minicrush.
 			@See: 'jansky'
 
+:: K2Jy=X		@Advanced
+			@Since: 2.14
+			Set the Jy/K conversion factor to X. This allows CRUSH
+			to calculate a data conversion to 'kelvin' units if
+			'jansky' is also defined. Alternatively the conversion
+			to kelvins can be specified directly via the 'kelvin'
+			key.
+			@See: 'kelvin', 'jansky'
+
+:: kelvin=X		@Advanced
+			@Since: 2.14
+			Set the conversion to 'kelvin' units (or more precisely
+			to 'K/beam' units). X defines the equivalent value of
+			1 K/beam expressed in the native data units.
+			@See: 'dataunit', 'jansky', 'K2Jy'
+
 :: log			@Advanced
 			@Since: 2.03
 			Log the scans after the reduction. (Similar logging
@@ -2212,6 +2228,15 @@
 			be used. This option can be use to override with a
 			specific value.
 			@See: 'skydip.fit'
+
+:: show			@Since: 2.14-a2
+			Try show the result of the reduction, if possible. 
+			As of the introduction of this option, only skydip
+			reductions use it (requires 'gnuplot' option to be set 
+			also and gnuplot be installed.)
+			Maps are expected to follow this directive soon also.
+			Bath reductions should disable 'show'.
+			@See: 'gnuplot'
 
 :: smooth=X		@Advanced
 			Smooth the map by X arcsec FWHM beam. Smoothing

@@ -27,11 +27,9 @@ import util.*;
 import util.astro.Weather;
 import util.data.WeightedPoint;
 
+import java.awt.Color;
 import java.io.*;
-import java.text.NumberFormat;
 import java.util.*;
-
-import javax.management.modelmbean.ModelMBean;
 
 // Bin the correlated signal by elevation...
 public class SkyDip extends SourceModel {
@@ -241,20 +239,23 @@ public class SkyDip extends SourceModel {
 			plot.println("set arrow 2 from " + (model.elRange.max() / Unit.deg) + ", " + dataRange.min()
 					+ " to " + (model.elRange.max() / Unit.deg) + ", " + dataRange.max() + " nohead lt 0 lw 3");
 		}
-	
-		plot.println("set term post eps enh col sol 18");
-		plot.println("set out '" + coreName + ".eps'");
+		
+		plot.println("set term push");
+		plot.println("set term unknown");
 		
 		plot.println("plot \\");
-		plot.println("  '" + dataName + "' using 1:2 title 'Skydip " + scans.get(0).getID() + "' lt 1, \\");
+		plot.println("  '" + dataName + "' using 1:2 title 'Skydip " + scans.get(0).getID() + "'with linesp lt 1 pt 5 lw 1, \\");
 		plot.println("  '" + dataName + "' using 1:3 title 'tau = " + Util.f3.format(model.tau.value()) + " +- " 
-				+ Util.f3.format(model.tau.rms()) + "' with lines lt 9 lw 3");
+				+ Util.f3.format(model.tau.rms()) + "' with lines lt -1 lw 3");
+
 	
-		plot.println("print 'Written " + coreName + ".eps'");
+		if(hasOption("write.eps")) gnuplotEPS(plot, coreName);
+				
+		if(hasOption("write.png")) gnuplotPNG(plot, coreName);
 		
 		plot.println("set out");
-		plot.println("set term wxt");
-		plot.println("replot");
+		plot.println("set term pop");
+		plot.println((hasOption("show") ? "" : "#")  + "replot");
 		
 		plot.close();
 		
@@ -267,11 +268,45 @@ public class SkyDip extends SourceModel {
 			
 			Runtime runtime = Runtime.getRuntime();
 			runtime.exec(command + " -p " + plotName);
-			
-			System.err.println("Written " + coreName + ".eps");
 		}
 	}
 
+	public void gnuplotEPS(PrintWriter plot, String coreName) {
+		plot.println("set term post eps enh col sol 18");
+		plot.println("set out '" + coreName + ".eps'");
+		plot.println("replot");
+		
+		plot.println("print 'Written " + coreName + ".eps'");
+		System.err.println("Written " + coreName + ".eps");	
+	}
+	
+	public void gnuplotPNG(PrintWriter plot, String coreName) {
+		boolean isTransparent = false;
+		int bgColor = Color.WHITE.getRGB();
+		if(hasOption("write.png.bg")) {
+			String spec = option("write.png.bg").getValue().toLowerCase();
+			
+			if(spec.equals("transparent")) isTransparent = true;
+			else bgColor = Color.getColor(spec).getRGB(); 
+		}
+		
+		int sizeX = 640;
+		int sizeY = 480;
+		if(hasOption("write.png.size")) {
+			String spec = option("write.png.size").getValue();
+			StringTokenizer tokens = new StringTokenizer(spec, "xX:,");
+			sizeX = sizeY = Integer.parseInt(tokens.nextToken());
+			if(tokens.hasMoreTokens()) sizeY = Integer.parseInt(tokens.nextToken());				
+		}
+		
+		plot.println("set term png enh " + (isTransparent ? "" : "no") + "transparent truecolor interlace" +
+				" background '#" + Integer.toHexString(bgColor).substring(2) + "' size " + sizeX + "," + sizeY);
+		plot.println("set out '" + coreName + ".png'");
+		plot.println("replot");
+		plot.println("print 'Written " + coreName + ".png'");	
+		System.err.println("Written " + coreName + ".png");
+	}
+	
 	public void fit(SkyDipModel model) {
 		model.setOptions(option("skydip"));
 		model.fit(this);

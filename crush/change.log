@@ -1,5 +1,19 @@
->> 'gnuplot', 'kelvin', 'K2Jy' to GLOSSARY
+>> 'write.eps'
 
+	[NEW] Option 'show' is introduced to control whether to try display 
+	the source model. Currently, only the 'skydip' model uses that to
+	control whether to bring up a persistent gnuplot window. However, in
+	the future, other models (like maps) may use this directive also.
+
+2.14-a1 (16 April 2013)
+
+
+	[NEW] New option 'gnuplot' allows using gnuplot as an external plotting
+	tool (e.g. for skydip reductions). If gnuplot is in your path, the
+	option does not need an argument. Otherwise, the optional argument
+	can point to the gnuplot executable to use, e.g.:
+
+		gnuplot /usr/bin/gnuplot
 
 	[NEW] New options 'K2Jy' and 'kelvin' are introduced. 'K2Jy' can be
 	used to set a Jy/K conversion value, whereas 'kelvin' can be used

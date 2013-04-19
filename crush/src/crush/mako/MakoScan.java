@@ -57,6 +57,8 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 
 	private double raUnit = Unit.hourAngle;
 	private double decUnit = Unit.deg;
+
+	File file;
 	
 	public MakoScan(Mako instrument) {
 		super(instrument);
@@ -108,6 +110,42 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	
 	protected void read(Fits fits, boolean readFully) throws Exception {
 		// Read in entire FITS file		
+		Header header = fits.getHDU(0).getHeader();
+		
+		// Check that FITS file is MAKO FITS...
+		if(!header.getStringValue("INSTRUME").equalsIgnoreCase("MAKO")) 
+			throw new IllegalStateException("Not a MAKO FITS file.");
+		
+		
+		// If it's not a converted file, try see if a converted version exists, 
+		if(!header.containsKey("CONVSOFT")) {
+			String fileName = file.getPath();
+			int iExt = fileName.lastIndexOf('.');
+			String naming = hasOption("convert.naming") ? option("convert.naming").getValue() : "converted";
+			String convertedName = fileName.substring(0, iExt) + "." + naming + fileName.substring(iExt);
+			File converted = new File(convertedName);
+			
+			if(converted.exists()) {
+				System.err.println(" Will read existing IQ --> shift converted file instead...");
+			}
+			else if(hasOption("convert")) {	
+				String iqconv = option("convert").getPath();
+				
+				if(CRUSH.verbose) System.err.println(" Converting IQ --> shift...");
+				Runtime.getRuntime().exec(iqconv + " -naming=converted " + file.getPath());
+			}
+			else throw new IllegalStateException("Specified file is not a IQ --> shift converted FITS.");
+		
+			// Close the IQ fits.
+			fits.getStream().close();
+			
+			// Read the converted FITS instead...
+			read(convertedName, readFully);
+				
+			return;
+		}
+			
+		
 		BasicHDU[] HDU = fits.read();
 		
 		int i = 4; 
@@ -161,7 +199,8 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 		}	
 
 		fileSize = scanFile.length();
-
+		
+		file = scanFile;
 		return scanFile;
 	}
 
