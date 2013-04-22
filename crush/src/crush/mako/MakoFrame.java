@@ -28,7 +28,6 @@ import crush.*;
 public class MakoFrame extends HorizontalFrame {
 	int frameNumber;
 	int telescopeFlags = 0;
-	double integrationTime;
 	
 	public MakoFrame(MakoScan parent) {
 		super(parent);
@@ -36,9 +35,13 @@ public class MakoFrame extends HorizontalFrame {
 	
 	public void parseData(float[] value, int from, int channels) {
 		setSize(channels);
+			
 		for(int c=channels; --c >= 0; ) {
 			data[c] = -value[from + c];
-			if(Float.isNaN(data[c])) sampleFlag[c] = Frame.SAMPLE_SKIP;
+			if(Float.isNaN(data[c])) {
+				data[c] = 0.0F;
+				sampleFlag[c] = Frame.SAMPLE_SKIP;
+			}
 		}
 	}
 }

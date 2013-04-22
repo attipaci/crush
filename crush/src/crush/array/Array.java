@@ -106,6 +106,7 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		
 		super.loadChannelData();
 	}
+		
 	
 	public void readRCP(String fileName)  throws IOException {		
 		System.err.println(" Reading RCP from " + fileName);
@@ -166,34 +167,24 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		
 	}
 	
-
-	public void generateRCPFrom(String rcpFileName, String pixelFileName) throws IOException {
-		readRCP(rcpFileName);
-		loadPixelData(pixelFileName);
-		printPixelRCP(System.out, null);
-	}
+	public String getRCPHeader() { return "ch\t[Gpnt]\t[Gsky]ch\t[dX\"]\t[dY\"]"; }
 	
 	public void printPixelRCP(PrintStream out, String header)  throws IOException {
 		out.println("# CRUSH Receiver Channel Parameter (RCP) Data File.");
 		out.println("#");
 		if(header != null) out.println(header);
 		out.println("#");
-		out.println("# ch\t[Gpnt]\t[Gsky]\tdX(\")\tdY(\")");
+		out.println("# " + getRCPHeader());
 		
-		for(Pixel pixel : getMappingPixels()) {
-			out.print(pixel.getDataIndex() + "\t");
-			if(pixel instanceof Channel) {
-				Channel channel = (Channel) pixel;
-				out.print(Util.f3.format(channel.gain * channel.coupling) + "\t");
-				out.print(Util.f3.format(channel.gain) + "\t");
-			}
-			Vector2D position = pixel.getPosition();
-			System.out.print(Util.f2.format(position.getX() / Unit.arcsec) + "  ");
-			System.out.print(Util.f2.format(position.getY() / Unit.arcsec));
-			out.println();
-		}
+		for(Pixel pixel : getMappingPixels()) if(pixel.getPosition() != null)
+			if(!pixel.getPosition().isNaN()) out.println(pixel.getRCPString());
 	}
-	
+
+	public void generateRCPFrom(String rcpFileName, String pixelFileName) throws IOException {
+		readRCP(rcpFileName);
+		loadChannelData(pixelFileName);
+		printPixelRCP(System.out, null);
+	}
 	
 	public void flagInvalidPositions() {
 		for(Pixel pixel : getPixels()) if(pixel.getPosition().length() > 1 * Unit.deg) 

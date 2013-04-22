@@ -28,6 +28,7 @@ import java.util.*;
 
 import crush.*;
 
+import util.Unit;
 import util.Util;
 import util.Vector2D;
 
@@ -102,6 +103,14 @@ public class SimplePixel extends Channel implements Pixel {
 	public final Channel getChannel(int i) {
 		return i == 0 ? this : null; 
 	}
-
+	
+	public String getRCPString() {
+		Vector2D position = getPosition();
+		return getDataIndex() + 
+				"\t" + Util.f3.format(gain * coupling) + 
+				"\t" + Util.f3.format(gain) + 
+				"\t" + Util.f1.format(position.getX() / Unit.arcsec) + 
+				"  " + Util.f1.format(position.getY() / Unit.arcsec);
+	}
 	
 }

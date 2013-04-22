@@ -54,6 +54,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 	
 	Vector2D horizontalOffset, fixedOffset;
 	
+	public int scanCoordType = SCAN_UNDEFINED;
 	public int iMJD;	
 	public long fileSize = -1;
 
@@ -324,6 +325,8 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 				header.getDoubleValue("DECEP") * decUnit,
 				(epoch < 1984.0 ? "B" : "J") + epoch);
 	
+		if(header.containsKey("SCANCOORD")) scanCoordType = header.getIntValue("SCANCOORD");
+		
 		// Print out some of the information...
 		StringTokenizer tokens = new StringTokenizer(timeStamp, ":T");
 		String dateString = tokens.nextToken();
@@ -495,5 +498,12 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 			
 		return info;
 	}
+	
+	public static final int SCAN_UNDEFINED = -1;
+	public static final int SCAN_ALTAZ = 0;
+	public static final int SCAN_EQ2000 = 1;
+	public static final int SCAN_GAL = 2;
+	public static final int SCAN_APPARENT_EQ = 3;
+	public static final int SCAN_EQ1950 = 4;
 	
 }

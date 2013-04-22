@@ -46,6 +46,8 @@ public interface Pixel extends Iterable<Channel> {
 	
 	public void setIndependent(boolean value);
 	
+	public String getRCPString();
+	
 	public final static int FLAG_XACCEL = 1 << 0;
 	public final static int FLAG_YACCEL = 1 << 1;
 	

@@ -90,8 +90,8 @@ public class Aszca extends APEXArray<AszcaPixel> {
 	}
 
 	@Override
-	public String getPixelDataHeader() {
-		return super.getPixelDataHeader() + "\tGwafer\tGsquid";
+	public String getChannelDataHeader() {
+		return super.getChannelDataHeader() + "\tGwafer\tGsquid";
 	}
 
 	@Override

@@ -60,6 +60,16 @@ public class Range {
 	
 	public void setMax(double value) { max = value; }
 	
+	public void restrict(Range bounds) {
+		restrict(bounds.min, bounds.max);	
+	}
+	
+	public void restrict(double min, double max) {
+		if(this.min < min) this.min = min;
+		if(this.max > max) this.max = max;
+	}
+	
+	
 	public void empty() {
 		min=Double.POSITIVE_INFINITY; max=Double.NEGATIVE_INFINITY;		
 	}

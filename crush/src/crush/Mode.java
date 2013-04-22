@@ -28,6 +28,7 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 
 import util.Range;
+import util.Util;
 import util.data.Statistics;
 import util.data.WeightedPoint;
 
@@ -48,7 +49,7 @@ public class Mode {
 	
 	// Compressing the dynamical range of gains helps arrive at the better 'mean' value
 	// when the gains are scattered...
-	public double dynamicalCompression = 1.0; 
+	public double dynamicalCompression = 0.1; 
 	
 	// Calculating an offset average (under compression) can mitigate the
 	// biasing effect of many nearly blind detectors... 
@@ -147,7 +148,7 @@ public class Mode {
 		if(gainFlag == 0) return false;
 			
 		final float[] gain = getGains();
-		
+			
 		for(int k=channels.size(); --k >= 0; ) {
 			final Channel channel = channels.get(k);
 			
@@ -166,7 +167,7 @@ public class Mode {
 		
 		double[] value = new double[channels.size()];
 		int n = 0;
-		for(int k=channels.size(); --k >= 0; ) if(channels.get(k).isUnflagged(gainFlag)) 
+		for(int k=channels.size(); --k >= 0; ) if(channels.get(k).isUnflagged(gainFlag)) if(gainRange.contains(G[k]))
 			value[n++] = Math.pow(gainAveragingOffset + Math.abs(G[k]), dynamicalCompression);
 		
 		// Use a robust mean (with 10% tails) to calculate the average gain...
@@ -180,6 +181,7 @@ public class Mode {
 		if(fixedGains) throw new IllegalStateException("WARNING! Cannot solve gains for fixed gain modes.");
 		
 		float[] G0 = getGains();
+		
 		WeightedPoint[] G = phaseGains ? 
 				integration.getPhases().getGainIncrement(this) : 
 				integration.signals.get(this).getGainIncrement(isRobust);
@@ -188,6 +190,7 @@ public class Mode {
 			if(G[i] != null) G[i].add(G0[i]);
 			else G[i] = new WeightedPoint(G0[i], 0.0);
 		}
+		
 		return G;		
 	}
 	

@@ -2003,7 +2003,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(int c1=instrument.size(); --c1>=0; ) {
 			final double[] rowC = covar[c1];
 			final int[] rowN = n[c1];
-			for(int c2=instrument.size(); --c2 > c1; ) {
+			for(int c2=instrument.size(); --c2 >= c1; ) {
 				rowC[c2] *= Math.sqrt(instrument.get(c1).weight * instrument.get(c2).weight) / rowN[c2];
 				covar[c2][c1] = rowC[c2];
 			}
@@ -2154,7 +2154,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 		if(hasOption("write.pixeldata")) {
 			String fileName = CRUSH.workPath + File.separator + "pixel-" + scanID + ".dat";
-			try { instrument.writePixelData(fileName, getASCIIHeader()); }
+			try { instrument.writeChannelData(fileName, getASCIIHeader()); }
 			catch(Exception e) { e.printStackTrace(); }
 		}
 
