@@ -76,8 +76,8 @@ public class Saboca extends APEXArray<SabocaPixel> {
 	}
 
 	@Override
-	public String getPixelDataHeader() {
-		return super.getPixelDataHeader() + "\tGsquid";
+	public String getChannelDataHeader() {
+		return super.getChannelDataHeader() + "\tGsquid";
 	}
 	
 	@Override

@@ -69,14 +69,17 @@ public class CorrelatedMode extends Mode {
 	// TODO Gain normalization is not safe during reduction, it is meant solely
 	// for use at the end of reduction, for creating a normalized gain set for writing.
 	// To make it safe, it should properly rescale all dependent signals and gains...
-	public synchronized void renormalizeGains(Collection<Integration<?,?>> integrations, int gainFlag) throws Exception {
+	/*
+	protected synchronized void renormalizeGains(Integration<?,?> integration) throws Exception {
+		if(fixedSignal) return;
 		final float aveG = (float) getAverageGain(gainFlag);
 		float[] G = getGains();
 		
 		for(int i=G.length; --i >= 0; ) G[i] /= aveG;
 		
-		for(Integration<?,?> integration : integrations) scaleSignals(integration, aveG);
+		scaleSignals(integration, aveG);
 	}
+	*/
 
 	
 	public synchronized void scaleSignals(Integration<?,?> integration, double aveG) {
@@ -108,7 +111,8 @@ public class CorrelatedMode extends Mode {
 	}	
 	
 	@Override
-	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws Exception {			
+	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws Exception {
+		
 		super.syncAllGains(integration, sumwC2, isTempReady);
 		
 		// Sync the gains to all the dependent modes too... 

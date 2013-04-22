@@ -68,7 +68,7 @@ public class MakoPixel extends SimplePixel {
 	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {
-		return new Vector2D(-size.getX() * col, size.getY() * row);
+		return new Vector2D(size.getX() * col, size.getY() * row);
 	}
 		
 	@Override
@@ -79,7 +79,7 @@ public class MakoPixel extends SimplePixel {
 	
 	@Override
 	public String toString() {
-		return super.toString() + "\t" + Util.f3.format(coupling) + Util.f1.format(toneFrequency);
+		return super.toString() + "\t" + Util.f3.format(coupling) + "\t" + Util.f1.format(toneFrequency);
 	}
 	
 	public double getAreaFactor() {
@@ -91,7 +91,13 @@ public class MakoPixel extends SimplePixel {
 		super.uniformGains();
 	}
 	
-	public static Vector2D defaultSize = new Vector2D(3.88 * Unit.arcsec, 6.89 * Unit.arcsec);
+	@Override
+	public String getRCPString() {
+		return super.getRCPString() + "\t" + Util.f2.format(toneFrequency / Unit.Hz);
+	}
+
+	
+	public static Vector2D defaultSize = new Vector2D(3.86 * Unit.arcsec, 7.21 * Unit.arcsec);
 	
 	public final static int FLAG_UNASSIGNED = 1 << nextSoftwareFlag++;
 	

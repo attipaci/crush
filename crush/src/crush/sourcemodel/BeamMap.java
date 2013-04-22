@@ -303,29 +303,16 @@ public class BeamMap extends SourceMap {
 		String fileName = CRUSH.workPath + File.separator + getDefaultCoreName() + ".rcp";
 		PrintStream out = new PrintStream(new FileOutputStream(fileName));
 		
-		out.println("# CRUSH Receiver Channel Parameter (RCP) Data File");
-		out.println("#");
-		out.println(scan.getFirstIntegration().getASCIIHeader());
-		out.println("#");
-		out.println("# ch\tGpnt\tGsky\tdX(\")\tdY(\")");
+		Array<?,?> array = (Array<?,?>) scans.get(0).instrument;
+		for(Channel channel : array) channel.coupling = sourceGain[channel.index] / channel.gain;
+	
+		array.printPixelRCP(out, scan.getFirstIntegration().getASCIIHeader());
 		
-		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
-			Vector2D position = pixel.getPosition();
-			String positionString = Util.f1.format(position.getX() / Unit.arcsec) 
-					+ "\t" + Util.f1.format(position.getY() / Unit.arcsec);
-			
-			if(pixelMap[pixel.getDataIndex()] != null) for(Channel channel : pixel) {			
-				out.println(channel.storeIndex + "\t" + 
-						Util.f3.format(sourceGain[channel.index]) + "\t" +
-						Util.f3.format(channel.gain) + "\t" +
-						positionString
-				);
-			}
-		}
 		out.flush();
 		out.close();
 		System.err.println("Written " + fileName);
 	}
+
 
 	@Override
 	public String getSourceName() {

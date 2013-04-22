@@ -385,8 +385,8 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	}
 	
 	@Override
-	public String getPixelDataHeader() {
-		return super.getPixelDataHeader() + "\tGmux";
+	public String getChannelDataHeader() {
+		return super.getChannelDataHeader() + "\tGmux";
 	}
 	
 

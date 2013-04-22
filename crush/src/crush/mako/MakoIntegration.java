@@ -52,7 +52,13 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 			
 		// Add the residual offsets to the DAC values...
 		// Must do this before tau estimates...
+		System.err.println(" Removing DC offsets.");
 		removeOffsets(true, true);
+		
+		if(!hasOption("pixeldata")) if(hasOption("weighting")) {
+			System.err.println(" Deriving initial pixel weights");
+			perform("weighting");
+		}
 		
 		// Tau is set here...
 		super.validate();	
@@ -65,11 +71,13 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 			double eps = (measuredLoad - instrument.excessLoad) / ((MakoScan) scan).ambientT;
 			double tauLOS = -Math.log(1.0-eps);
 			
-			System.err.println("   Tau from bolometers (not used):");
-			printEquivalentTaus(tauLOS * scan.horizontal.sinLat());
+			// TODO
+			//System.err.println("   Tau from bolometers (not used):");
+			//printEquivalentTaus(tauLOS * scan.horizontal.sinLat());
+			
 			
 			if(!hasOption("excessload")) instrument.excessLoad = measuredLoad - getSkyLoadTemperature();
-			System.err.println("   Excess optical load on bolometers is " + Util.f1.format(instrument.excessLoad) + " K. (not used)");		
+			//System.err.println("   Excess optical load on bolometers is " + Util.f1.format(instrument.excessLoad) + " K. (not used)");		
 		}
 	}
 	
@@ -142,6 +150,12 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 	protected void read(BasicHDU[] HDU, int firstDataHDU) throws Exception {
 		
 		int nDataHDUs = HDU.length - firstDataHDU, records = 0;
+		
+		if(hasOption("skiplast")) {
+			System.err.println("   WARNING! Skipping last stream HDU...");
+			nDataHDUs--; 
+		}
+	
 		for(int datahdu=0; datahdu<nDataHDUs; datahdu++) records += HDU[firstDataHDU + datahdu].getAxes()[0];
 
 		System.err.println(" Processing scan data:");
@@ -154,13 +168,13 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 		clear();
 		ensureCapacity(records);
 		for(int t=records; --t>=0; ) add(null);
-					
+	
 		for(int n=0, startIndex = 0; n<nDataHDUs; n++) {
 			BinaryTableHDU hdu = (BinaryTableHDU) HDU[firstDataHDU+n]; 
 			new MakoReader(hdu, startIndex).read();
 			startIndex += hdu.getNRows();
 		}
-		
+			
 		//if(!isEmpty()) if(chopZero.weight() > 0.0) chopZero.scaleValue(1.0 / chopZero.weight());
 		
 		MakoScan sharcscan = (MakoScan) scan;
@@ -184,7 +198,7 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 		private int[] AZ, EL, dX, dY, AZE, ELE, LST, PA, MJD, ticks;
 		private int[] SN, UTseconds, UTnanosec;
 		private int channels;
-		private boolean[] isEquatorial;
+		private byte[] isEquatorial;
 		
 		private final MakoScan sharcscan = (MakoScan) scan;
 		
@@ -192,28 +206,29 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 			super(hdu);
 			this.offset = offset;			
 
-			channels = table.getSizes()[0];
+			int cData = hdu.findColumn("Shift");
+			channels = table.getSizes()[cData];
 			
-			data = (float[]) table.getColumn(hdu.findColumn("Shift"));
+			data = (float[]) table.getColumn(cData);
 			
 			SN = (int[]) table.getColumn(hdu.findColumn("Sequence Number"));
 			UTseconds = (int[]) table.getColumn(hdu.findColumn("Detector UTC seconds (2000/1/1)"));
 			UTnanosec = (int[]) table.getColumn(hdu.findColumn("Detector UTC nanoseconds"));
-			intTime = (float[]) table.getColumn(hdu.findColumn("Integration Time"));
+			//intTime = (float[]) table.getColumn(hdu.findColumn("Integration Time"));
 			
 			AZ = (int[]) table.getColumn(hdu.findColumn("Requested AZ"));
 			EL = (int[]) table.getColumn(hdu.findColumn("Requested EL"));
-			AZE = (int[]) table.getColumn(hdu.findColumn("Error in AZ"));
-			ELE = (int[]) table.getColumn(hdu.findColumn("Error in EL"));
+			AZE = (int[]) table.getColumn(hdu.findColumn("Error In AZ"));
+			ELE = (int[]) table.getColumn(hdu.findColumn("Error In EL"));
 			PA = (int[]) table.getColumn(hdu.findColumn("Parallactic Angle"));
-			LST = (int[]) table.getColumn(hdu.findColumn("Local Apparent Sidereal Time"));
-			dX = (int[]) table.getColumn(Math.max(hdu.findColumn("AZO"), hdu.findColumn("X Offset")));
-			dY = (int[]) table.getColumn(Math.max(hdu.findColumn("ELO"), hdu.findColumn("Y Offset")));
+			LST = (int[]) table.getColumn(hdu.findColumn("LST"));
+			dX = (int[]) table.getColumn(hdu.findColumn("X Offset"));
+			dY = (int[]) table.getColumn(hdu.findColumn("Y Offset"));
 			MJD = (int[]) table.getColumn(hdu.findColumn("Antenna MJD"));
 			ticks = (int[]) table.getColumn(hdu.findColumn("N Ticks From Midnight"));
 			//chop = (float[]) table.getColumn(hdu.findColumn("CHOP_OFFSET"));
 			
-			isEquatorial = (boolean[]) table.getColumn(hdu.findColumn("Equatorial Offset"));
+			isEquatorial = (byte[]) table.getColumn(hdu.findColumn("Equatorial Offset"));
 		}
 	
 		@Override
@@ -226,7 +241,6 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 				public void init() { 
 					super.init();
 					equatorialOffset = new Vector2D();
-					instrument.integrationTime = 0.0;
 				}
 				@Override
 				public void readRow(int i) throws FitsException {	
@@ -253,16 +267,10 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 					frame.cosPA = Math.cos(pa);
 
 					frame.LST = LST[i] * antennaTick;
-		
-					frame.integrationTime = intTime[i] * Unit.s;
-					
-					// Make the instrument integration time be that of the longest frame...
-					if(frame.integrationTime > instrument.integrationTime) 
-						instrument.integrationTime = frame.integrationTime;
-					
+			
 					frame.frameNumber = SN[i];
-
-					if(isEquatorial[i]) {
+					
+					if(isEquatorial[i] == 84) {
 						frame.horizontalOffset = new Vector2D(
 							AZE[i] * frame.horizontal.cosLat() * tenthArcsec,
 							ELE[i] * tenthArcsec);
@@ -284,7 +292,7 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 					
 					frame.toHorizontal(equatorialOffset);
 					frame.horizontalOffset.add(equatorialOffset);
-		
+	
 					set(offset + i, frame);
 				}
 			};
@@ -359,4 +367,5 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 	
 	public final float antennaTick = (float) (0.01 * Unit.s);
 	public final float tenthArcsec = (float) (0.1 * Unit.arcsec);
+	public final float rightAngle = (float) (0.5 * Math.PI);
 }

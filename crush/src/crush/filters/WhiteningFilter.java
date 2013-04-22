@@ -81,15 +81,18 @@ public class WhiteningFilter extends AdaptiveFilter {
 		windows = n / windowSize;
 		
 		Range measure = hasOption("proberange") ? option("proberange").getRange(true) : new Range(0, nF); 
-		whiteFrom = measure == null ? 1 : Math.max(1, (int) Math.floor(measure.min() / dF));
-		whiteTo = measure == null ? nF : Math.min(nF, (int) Math.ceil(measure.max() / dF) + 1);
+		measure.restrict(0, nF);
+		
+		whiteFrom = Math.max(1, (int) Math.floor(measure.min() / dF));
+		whiteTo = Math.min(nF, (int) Math.ceil(measure.max() / dF) + 1);
 		
 		// Make sure the probing range is contains enough channels
 		// and that the range is valid...
 		int minProbeChannels = hasOption("minchannels") ? option("minchannels").getInt() : 16;
 		if(whiteFrom > whiteTo - minProbeChannels + 1) whiteFrom = whiteTo - minProbeChannels + 1;
 		if(whiteFrom < 0) whiteFrom = 0;
-		if(whiteFrom > whiteTo - minProbeChannels + 1) whiteTo = Math.min(minProbeChannels + 1, nF);	
+		if(whiteFrom > whiteTo - minProbeChannels + 1) whiteTo = Math.min(minProbeChannels + 1, nF);
+		
 		
 	}
 	

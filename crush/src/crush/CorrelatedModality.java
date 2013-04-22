@@ -25,6 +25,8 @@
 package crush;
 
 import java.lang.reflect.*;
+import java.util.Collection;
+
 import util.Configurator;
 import util.Range;
 
@@ -86,6 +88,7 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 			catch(Exception e) { e.printStackTrace(); }
 		}
 	}
+
 	
 	public class CoupledModality extends CorrelatedModality {
 

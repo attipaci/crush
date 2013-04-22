@@ -47,6 +47,8 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	double tau225GHz;
 	double elevationResponse = 1.0;
 	double ambientT, pressure, humidity;
+	int scanCoordType = SCAN_ALTAZ;
+	String id;
 	
 	boolean addOffsets = true;
 	
@@ -131,10 +133,13 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 			else if(hasOption("convert")) {	
 				String iqconv = option("convert").getPath();
 				
-				if(CRUSH.verbose) System.err.println(" Converting IQ --> shift...");
-				Runtime.getRuntime().exec(iqconv + " -naming=converted " + file.getPath());
+				if(CRUSH.verbose) System.err.println(" Converting I/Q --> frequency shift...");
+				System.err.println("> " + iqconv + " " + file.getPath());
+				Process process = Runtime.getRuntime().exec(iqconv + " " + file.getPath());
+				process.waitFor();
+				if(process.exitValue() != 0) throw new IllegalStateException("I/Q --> frequency shift conversion error.");
 			}
-			else throw new IllegalStateException("Specified file is not a IQ --> shift converted FITS.");
+			else throw new IllegalStateException("Not an I/Q --> frequency shift converted FITS.");
 		
 			// Close the IQ fits.
 			fits.getStream().close();
@@ -150,7 +155,7 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 		
 		int i = 4; 
 		BasicHDU firstDataHDU = null;
-		while( !(firstDataHDU = HDU[i]).getHeader().getStringValue("EXTNAME").equalsIgnoreCase("MAKO Data") ) i++;
+		while(!(firstDataHDU = HDU[i]).getHeader().getStringValue("EXTNAME").startsWith("STREAM")) i++;
 		
 		parseScanPrimaryHDU(HDU[0]);
 		clear();
@@ -213,7 +218,7 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 		fits.skipHDU(3);
 
 		BasicHDU nextHDU = fits.readHDU();
-		while(!nextHDU.getHeader().getStringValue("EXTNAME").equalsIgnoreCase("MAKO Data") ) nextHDU = fits.readHDU();
+		while(!nextHDU.getHeader().getStringValue("EXTNAME").startsWith("STREAM") ) nextHDU = fits.readHDU();
 		instrument.parseDataHeader(nextHDU.getHeader());
 	}
 	
@@ -265,6 +270,7 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 		
 		timeStamp = header.getStringValue("DATE-OBS");
 	
+		
 		double epoch = header.getDoubleValue("EQUINOX");
 		
 		if(equatorial == null) equatorial = new EquatorialCoordinates(
@@ -272,10 +278,15 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 				header.getDoubleValue("DECEP") * decUnit,
 				(epoch < 1984.0 ? "B" : "J") + epoch);
 	
+		if(header.containsKey("SCANCOORD")) scanCoordType = header.getIntValue("SCANCOORD");
+		
 		// Print out some of the information...
 		StringTokenizer tokens = new StringTokenizer(timeStamp, ":T");
 		String dateString = tokens.nextToken();
-		String timeString = tokens.nextToken() + ":" + tokens.nextToken() + " UT";
+		String timeMins = tokens.nextToken() + ":" + tokens.nextToken();
+		String timeString = timeMins + " UT";
+		
+		id = dateString + "." + timeMins;
 		
 		System.err.println(" [" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
 		if(equatorial != null) System.err.println(" Equatorial: " + equatorial.toString());	
@@ -443,5 +454,15 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 			
 		return info;
 	}
+	
+	@Override
+	public String getID() { return id; }
+	
+	public static final int SCAN_UNDEFINED = -1;
+	public static final int SCAN_ALTAZ = 0;
+	public static final int SCAN_EQ2000 = 1;
+	public static final int SCAN_GAL = 2;
+	public static final int SCAN_APP = 3;
+	public static final int SCAN_EQ1950 = 4;
 	
 }

@@ -1,9 +1,32 @@
 >> 'write.eps'
+>> 'mirror', 'zoom', 'skew' 
+>> How to properly renormalize gains accross scans and integrations
+>> move up level and initial weighting 
+>> assignment problem...
+>> gain flagging --> wG2 (sensitivity) flagging...
+
+	[NEW] Initial MAKO support.
 
 	[NEW] Option 'show' is introduced to control whether to try display 
 	the source model. Currently, only the 'skydip' model uses that to
 	control whether to bring up a persistent gnuplot window. However, in
 	the future, other models (like maps) may use this directive also.
+
+	[FIX] Noise whitening filter went berserk when 'whiten.proberange'
+	was set to '*'. Now fixed.
+	
+	[FIX] Diagonals of covariance matrices were not flagged out as
+	intended.
+
+	[CODE] RCP formatting is now decentralized similar to writing channel
+	information via 'pixeldata'. Allows more flexible instrument-specific
+	formatting. 
+
+	[CODE] Beammap RCP writing uses array's RCP writing, removing a silly
+	duplicity.
+
+
+
 
 2.14-a1 (16 April 2013)
 

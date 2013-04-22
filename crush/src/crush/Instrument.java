@@ -314,7 +314,7 @@ implements TableFormatter.Entries {
 		if(hasOption("pixeldata")) {
 			Configurator c = option("pixeldata");
 			if(!c.getValue().equalsIgnoreCase("write")) {
-				try { loadPixelData(c.getPath()); }
+				try { loadChannelData(c.getPath()); }
 				catch(IOException e) { System.err.println("WARNING! Cannot read pixel data. Using default gains & flags."); }
 			}
 		}	
@@ -525,11 +525,11 @@ implements TableFormatter.Entries {
 	}
 	*/
 	
-	public String getPixelDataHeader() {
+	public String getChannelDataHeader() {
 		return "ch\tgain\tweight\t\tflag";
 	}
 	
-	public void writePixelData(String filename, String header) throws IOException {
+	public void writeChannelData(String filename, String header) throws IOException {
 		PrintWriter out = new PrintWriter(new FileOutputStream(filename));
 		
 		out.println("# CRUSH Pixel Data File");
@@ -538,7 +538,7 @@ implements TableFormatter.Entries {
 			out.println(header);
 			out.println("#");
 		}	
-		out.println("# " + getPixelDataHeader());
+		out.println("# " + getChannelDataHeader());
 		
 		standardWeights();
 		
@@ -553,7 +553,7 @@ implements TableFormatter.Entries {
 	// The pixel data file should contain the blind channel information as well...
 	// create the channel groups based on the wiring scheme.
 
-	public void loadPixelData(String fileName) throws IOException {
+	public void loadChannelData(String fileName) throws IOException {
 		System.err.println(" Loading pixel data from " + fileName);
 			
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
@@ -833,7 +833,6 @@ implements TableFormatter.Entries {
 		if(hasOption("stability")) return option("stability").getDouble();
 		return 10.0 * Unit.s;
 	}
-	
 	
 	public void getFitsData(LinkedHashMap<String, Object> data) {
 		float[] gains = new float[storeChannels];

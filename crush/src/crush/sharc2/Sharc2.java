@@ -154,8 +154,8 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	}	
 
 	@Override
-	public String getPixelDataHeader() {
-		return super.getPixelDataHeader() + "\teff\tgRow";
+	public String getChannelDataHeader() {
+		return super.getChannelDataHeader() + "\teff\tgRow";
 	}
 
 	@Override

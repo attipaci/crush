@@ -42,7 +42,7 @@ import nom.tam.util.*;
  */
 public class CRUSH extends Configurator {
 	private static String version = "2.14-a1";
-	private static String revision = "devel.2";
+	private static String revision = "devel.4";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -306,7 +306,11 @@ public class CRUSH extends Configurator {
 				System.err.println(" ERROR! " + e.getMessage());
 				if(debug) e.printStackTrace();
 			}
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) {
+				System.err.println(" ERROR! " + e.getMessage());
+				if(debug) e.printStackTrace(); 
+				else System.err.println("        (use '-debug' to obtain additional information on this error.)");
+			}
 
 		}	
 	}

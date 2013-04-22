@@ -132,8 +132,8 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 	}	
 
 	@Override
-	public String getPixelDataHeader() {
-		return super.getPixelDataHeader() + "\teff\ttonefreq";
+	public String getChannelDataHeader() {
+		return super.getChannelDataHeader() + "\teff\ttonefreq";
 	}
 
 	@Override
@@ -166,7 +166,14 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
 			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.getX());
 		}
-
+		if(hasOption("mirror")) { pixelSize.scaleX(-1.0); }
+		if(hasOption("zoom")) { pixelSize.scale(option("zoom").getDouble()); }
+		if(hasOption("skew")) { 
+			double skew = option("skew").getDouble();
+			pixelSize.scaleX(skew);
+			pixelSize.scaleY(1.0/skew);
+		}
+		
 		calcPositions(pixelSize);
 	
 		checkRotation();
@@ -222,16 +229,18 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		double binWidth = header.getDoubleValue("BININHZ") * Unit.Hz;
 		
 		// read in the pixel data...
-		int n = hdu.getNRows();
+		pixels = hdu.getNRows();
 		if(!isEmpty()) clear();
-		ensureCapacity(n);
+		ensureCapacity(pixels);
 		
 		int iBin = hdu.findColumn("Tone Bin");
 		int iPts = hdu.findColumn("Points");
 		int iErr = hdu.findColumn("Fit Error");
 		
-		for(int c=0; c<n; c++) {
-			MakoPixel pixel = new MakoPixel(this, -c);
+		System.err.println(" MAKO has " + pixels + " tones");
+		
+		for(int c=0; c<pixels; c++) {
+			MakoPixel pixel = new MakoPixel(this, c);
 			Object[] row = hdu.getRow(c);
 			
 			pixel.toneBin = ((int[]) row[iBin])[0];
@@ -247,6 +256,8 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 		
+		samplingInterval = integrationTime = 1.0 / header.getDoubleValue("SAMPLING");
+		
 		// Platform
 		String platform = header.getStringValue("PLATFORM");
 		if(platform == null) platform = "Cassegrain";
@@ -255,10 +266,11 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		
 		System.err.println(" " + mount.name + " mount assumed.");
 		
-		rotatorZeroAngle = header.getDoubleValue("ROTZERO") * Unit.deg;
-		rotatorAngle = header.getDoubleValue("ROTATOR", rotatorZeroAngle / Unit.deg) * Unit.deg;
-		rotatorOffset = header.getDoubleValue("ROTOFFST") * Unit.deg;
-		rotatorMode = header.getStringValue("ROTMODE");
+		
+		//rotatorZeroAngle = header.getDoubleValue("ROTZERO") * Unit.deg;
+		//rotatorAngle = header.getDoubleValue("ROTATOR", rotatorZeroAngle / Unit.deg) * Unit.deg;
+		//rotatorOffset = header.getDoubleValue("ROTOFFST") * Unit.deg;
+		//rotatorMode = header.getStringValue("ROTMODE");
 	
 		if(rotatorMode == null) rotatorMode = "Unknown";
 		
@@ -290,8 +302,6 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 	}
 	
 	protected void parseDataHeader(Header header) throws HeaderCardException, FitsException {
-		samplingInterval = integrationTime = header.getDoubleValue("CDELT1") * Unit.ms;
-		
 		// Pointing Center
 		arrayPointingCenter = new Vector2D();
 		arrayPointingCenter.setX(header.getDoubleValue("CRPIX3", (rows + 1) / 2.0));
@@ -305,6 +315,7 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 	
 	public void assignTones(String fileSpec) throws IOException {
 		PixelAssignment assignment = new PixelAssignment(fileSpec);
+		if(hasOption("assign.max")) assignment.maxDeviation = option("assign.max").getDouble();
 		assignment.match(new ToneList(this));
 		alpha = assignment.alpha;
 		if(CRUSH.verbose) System.err.println(" Loading constant alpha = " + Util.f3.format(alpha));
@@ -359,9 +370,12 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 				"     -fzao=        Correct the pointing with this FZAO value.\n";
 	}
 	
+	@Override
+	public String getRCPHeader() { return super.getRCPHeader() + "\tKIDfreq"; }
+	
 	public static int rows = 16;
 	public static int cols = 27;
-	public final static int pixels = rows * cols;
+	public static int pixels = 2 * rows * cols;
 
 	
 }

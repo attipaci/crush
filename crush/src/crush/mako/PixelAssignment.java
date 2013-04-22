@@ -46,9 +46,11 @@ public class PixelAssignment extends ArrayList<ResonanceID> {
 	private static final long serialVersionUID = -3011775640230135691L;
 	
 	public double alpha = 0.0;
-	public Range alphaRange = new Range(-3.0, 0.3);
-	public int attempts = 3;
-
+	public Range alphaRange = new Range(-10.0, 1.0);
+	public int attempts = 10;
+	public double rchi;
+	public double maxDeviation = 3.0;
+	
 	public PixelAssignment() {}
 	
 	public PixelAssignment(String fileName) throws IOException {
@@ -72,7 +74,7 @@ public class PixelAssignment extends ArrayList<ResonanceID> {
 			id.row = Integer.parseInt(tokens.nextToken()) - 1;
 			id.col = Integer.parseInt(tokens.nextToken()) - 1;
 			//id.delta = Double.parseDouble(tokens.nextToken());
-			id.delta = 1e-4 * id.freq;
+			id.delta = 1e-4 * id.freq; // Assuming Q=1e5 and 10 linewidths movement...
 			
 			add(id);
 		}
@@ -110,29 +112,39 @@ public class PixelAssignment extends ArrayList<ResonanceID> {
 			}	
 		};
 		
-		opt.init(new double[] { 0.0 });
-		opt.setStartSize(new double[] { 0.1 });
+		opt.init(new double[] { -1.0 });
+		opt.setStartSize(new double[] { 1.0 });
 		opt.precision = 1e-10;
 		opt.verbose = false;
 		opt.minimize(attempts);
 		
-		double rchi = Math.sqrt(opt.getChi2() / size());
-		if(CRUSH.verbose) System.err.println(" Tone-pixel assignment rms = " + Util.e3.format(1e6 * rchi) + " ppm.");
-		
+		rchi = Math.sqrt(opt.getChi2() / size());
 		alpha = opt.getFitParameters()[0];
+		
+		System.err.println(" Tone-pixel assignment rms = " + Util.s3.format(1e6 * rchi) + " ppm.");
+		System.err.println(" --> alpha = " + Util.s4.format(alpha));
+		
+		
 	}
 	
 	protected void assign(ToneList pixels) {
-		for(ResonanceID id : PixelAssignment.this) {
+		int assigned = 0;
+		
+		for(ResonanceID id : this) {
 			double f = id.freq + alpha * id.delta;
 			int i = pixels.getNearestIndex(f);
 			MakoPixel pixel = pixels.get(i);
+			if((pixel.toneFrequency - f) / rchi > maxDeviation) continue;
+			
 			pixel.association = id;
 			pixel.row = id.row;
 			pixel.col = id.col;
 			pixel.storeIndex = pixel.row * Mako.cols + pixel.col;
 			pixel.unflag(MakoPixel.FLAG_UNASSIGNED);
+			assigned++;
 		}	
+		
+		System.err.println(" Assigned " + assigned + " of " + size() + " resonances.");
 	}
 	
 }

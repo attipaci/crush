@@ -232,8 +232,8 @@ public class Laboca extends APEXArray<LabocaPixel> {
 	}
 
 	@Override
-	public String getPixelDataHeader() {
-		return super.getPixelDataHeader() + "\tGbox\tGcable\tbox\tcable\tamp";
+	public String getChannelDataHeader() {
+		return super.getChannelDataHeader() + "\tGbox\tGcable\tbox\tcable\tamp";
 	}
 	
 	
