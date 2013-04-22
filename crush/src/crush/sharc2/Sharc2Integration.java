@@ -51,12 +51,6 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 
 	@Override
 	public void validate() {	
-		reindex();		
-			
-		// Add the residual offsets to the DAC values...
-		// Must do this before tau estimates...
-		removeOffsets(true, true);
-		
 		// Tau is set here...
 		super.validate();	
 			

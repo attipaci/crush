@@ -176,6 +176,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		detectorStage();
 		
+		// Remove the DC offsets, either if explicitly requested
+		// or to allow bootstrapping pixel weights when pixeldata is not defined.
+		// Must do this before direct tau estimates...
+		if(hasOption("level") || !hasOption("pixeldata")) {
+			System.err.println("   Removing DC offsets.");
+			removeOffsets(true, true);
+		}
+			
 		if(hasOption("tau")) {
 			try { setTau(); }
 			catch(Exception e) { 
@@ -202,6 +210,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(hasOption("jackknife.frames")) {
 			System.err.println("   JACKKNIFE! Randomly inverted frames in source.");
 			for(Frame exposure : this) exposure.jackknife();
+		}
+		
+		if(!hasOption("pixeldata")) if(hasOption("weighting")) {
+			System.err.println("   Bootstrapping pixel weights");
+			perform("weighting");
 		}
 		
 		isValid = true;

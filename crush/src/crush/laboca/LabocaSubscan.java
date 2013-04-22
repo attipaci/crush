@@ -56,8 +56,6 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		super.validate();
 	
 		if(hasOption("he3")) {
-			reindex();
-			
 			Configurator he3 = option("he3");
 			if(he3.equals("blinds")) blindTemperatures();
 			
@@ -127,7 +125,8 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 			return;
 		}
 		
-		removeDrifts(blindChannels, size(), false, false);
+		// Remove DC offsets now, if has not been done already...
+		if(!hasOption("level")) removeDrifts(blindChannels, size(), false, false);
 		
 		CorrelatedMode blindMode = (CorrelatedMode) instrument.modalities.get("blinds").get(0);
 		try { blindMode.setGainProvider(new FieldGainProvider(LabocaPixel.class.getField("temperatureGain"))); }
