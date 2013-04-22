@@ -234,10 +234,12 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		ensureCapacity(pixels);
 		
 		int iBin = hdu.findColumn("Tone Bin");
+		int iFlag = hdu.findColumn("Tone Flags");
 		int iPts = hdu.findColumn("Points");
 		int iErr = hdu.findColumn("Fit Error");
 		
 		System.err.println(" MAKO has " + pixels + " tones");
+		if(iFlag < 0) System.err.println(" WARNING! Data has no information on blind tones.");
 		
 		for(int c=0; c<pixels; c++) {
 			MakoPixel pixel = new MakoPixel(this, c);
@@ -247,6 +249,7 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 			pixel.toneFrequency = binWidth * pixel.toneBin;
 			pixel.validCalPositions = ((int[]) row[iPts])[0];
 			pixel.calError = ((float[]) row[iErr])[0];
+			if(iFlag >= 0) if(((int[]) row[iFlag])[0] != 0) pixel.flag(Channel.FLAG_BLIND);
 		
 			add(pixel);
 		}	

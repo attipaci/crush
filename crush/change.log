@@ -12,11 +12,21 @@
 	control whether to bring up a persistent gnuplot window. However, in
 	the future, other models (like maps) may use this directive also.
 
+	[NEW] The option 'level' removes detector DC levels before entering
+	the pipeline analysis.
+
 	[FIX] Noise whitening filter went berserk when 'whiten.proberange'
 	was set to '*'. Now fixed.
 	
 	[FIX] Diagonals of covariance matrices were not flagged out as
 	intended.
+
+	[TWEAK] Changed the method of average gain calculation to log-based. 
+	This mutes the effect of insane pixels/channels messing up the gain
+	flagging step. As a result, gain flagging should become more robust.
+
+	[TWEAK] Removal of DC levels and bootstrap pixel weight estimation
+	(if 'pixeldata' is not set) are now common features to all instruments.
 
 	[CODE] RCP formatting is now decentralized similar to writing channel
 	information via 'pixeldata'. Allows more flexible instrument-specific

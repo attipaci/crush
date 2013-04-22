@@ -25,7 +25,6 @@
 package crush;
 
 import java.lang.reflect.*;
-import java.util.Collection;
 
 import util.Configurator;
 import util.Range;

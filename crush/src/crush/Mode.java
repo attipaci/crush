@@ -28,7 +28,6 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 
 import util.Range;
-import util.Util;
 import util.data.Statistics;
 import util.data.WeightedPoint;
 
@@ -46,14 +45,6 @@ public class Mode {
 
 	private static int counter = 0;
 	private float[] gain;
-	
-	// Compressing the dynamical range of gains helps arrive at the better 'mean' value
-	// when the gains are scattered...
-	public double dynamicalCompression = 0.1; 
-	
-	// Calculating an offset average (under compression) can mitigate the
-	// biasing effect of many nearly blind detectors... 
-	public double gainAveragingOffset = 0.0;
 		
 	public Mode() {
 		name = "mode-" + (++counter);
@@ -168,13 +159,13 @@ public class Mode {
 		double[] value = new double[channels.size()];
 		int n = 0;
 		for(int k=channels.size(); --k >= 0; ) if(channels.get(k).isUnflagged(gainFlag)) if(gainRange.contains(G[k]))
-			value[n++] = Math.pow(gainAveragingOffset + Math.abs(G[k]), dynamicalCompression);
+			value[n++] = Math.log(1.0 + Math.abs(G[k]));
 		
 		// Use a robust mean (with 10% tails) to calculate the average gain...
 		double aveG = Statistics.robustMean(value, 0, n, 0.1);
 		if(Double.isNaN(aveG)) return 1.0;
  
-		return Math.pow(aveG, 1.0/dynamicalCompression) - gainAveragingOffset;	
+		return Math.exp(aveG) - 1.0;	
 	}
 	
 	public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {

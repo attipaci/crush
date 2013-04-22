@@ -47,19 +47,7 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 	}
 
 	@Override
-	public void validate() {	
-		reindex();		
-			
-		// Add the residual offsets to the DAC values...
-		// Must do this before tau estimates...
-		System.err.println(" Removing DC offsets.");
-		removeOffsets(true, true);
-		
-		if(!hasOption("pixeldata")) if(hasOption("weighting")) {
-			System.err.println(" Deriving initial pixel weights");
-			perform("weighting");
-		}
-		
+	public void validate() {		
 		// Tau is set here...
 		super.validate();	
 		
