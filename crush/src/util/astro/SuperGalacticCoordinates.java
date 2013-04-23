@@ -85,4 +85,7 @@ public class SuperGalacticCoordinates extends CelestialCoordinates {
 	public double getZeroLongitude() {
 		return phi0;
 	}
+	
+	@Override
+	public boolean isSuperGalactic() { return true; }
 }

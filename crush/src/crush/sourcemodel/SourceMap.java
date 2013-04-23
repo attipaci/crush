@@ -32,6 +32,7 @@ import util.astro.EquatorialCoordinates;
 import util.astro.Gnomonic;
 import util.data.Index2D;
 import util.data.Statistics;
+import util.text.TableFormatter;
 
 import java.util.*;
 
@@ -434,6 +435,12 @@ public abstract class SourceMap extends SourceModel {
 		super.suggestMakeValid();
 		System.err.println("            * Increase 'grid' for a coarser map pixellization.");
 		if(hasOption("source.redundancy")) System.err.println("            * Disable redundancy checking ('forget=source.redundancy').");
+	}
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		if(name.equals("smooth")) return TableFormatter.getNumberFormat(formatSpec).format(smoothing / getInstrument().getSizeUnit());
+		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
 	public Range xRange = new Range();

@@ -46,6 +46,7 @@ import util.plot.ImageArea;
 import util.plot.colorscheme.Colorful;
 
 
+
 public class ScalarMap extends SourceMap {
 	public AstroMap map;
 	private double[][] base; 
@@ -811,6 +812,12 @@ public class ScalarMap extends SourceMap {
 	@Override
 	public void noParallel() {
 		map.noParallel();
+	}
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {	
+		if(name.startsWith("map.")) return map.getFormattedEntry(name.substring(4), formatSpec);
+		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
 }

@@ -27,9 +27,9 @@ package crush;
 import util.*;
 
 import java.util.*;
+import util.text.TableFormatter;
 
-
-public abstract class SourceModel implements Cloneable {
+public abstract class SourceModel implements Cloneable, TableFormatter.Entries {
 	private Instrument<?> instrument;
 	private Configurator options; 
 
@@ -287,5 +287,9 @@ public abstract class SourceModel implements Cloneable {
 		public abstract void process(Integration<?,?> integration) throws Exception;
 	}
 
+	
+	public String getFormattedEntry(String name, String formatSpec) {
+		return null;
+	}
 }
 

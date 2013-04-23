@@ -168,5 +168,8 @@ public class EclipticCoordinates extends CelestialCoordinates implements Precess
 		equatorial.precess(toEpoch);
 		fromEquatorial(equatorial);
 	}
+	
+	@Override
+	public boolean isEcliptic() { return true; }
     
 }

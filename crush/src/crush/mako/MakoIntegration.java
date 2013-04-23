@@ -182,11 +182,10 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 	class MakoReader extends HDUReader {	
 		private int offset;
 
-		private float[] data, intTime, chop;
-		private int[] AZ, EL, dX, dY, AZE, ELE, LST, PA, MJD, ticks;
-		private int[] SN, UTseconds, UTnanosec;
+		private byte[] ch;
+		private float[] data; //intTime, chop;
+		private int[] SN, AZ, EL, dX, dY, AZE, ELE, LST, PA, MJD, ticks; // UTseconds, UTnanosec;
 		private int channels;
-		private byte[] isEquatorial;
 		
 		private final MakoScan sharcscan = (MakoScan) scan;
 		
@@ -200,10 +199,11 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 			data = (float[]) table.getColumn(cData);
 			
 			SN = (int[]) table.getColumn(hdu.findColumn("Sequence Number"));
-			UTseconds = (int[]) table.getColumn(hdu.findColumn("Detector UTC seconds (2000/1/1)"));
-			UTnanosec = (int[]) table.getColumn(hdu.findColumn("Detector UTC nanoseconds"));
+			//UTseconds = (int[]) table.getColumn(hdu.findColumn("Detector UTC seconds (2000/1/1)"));
+			//UTnanosec = (int[]) table.getColumn(hdu.findColumn("Detector UTC nanoseconds"));
 			//intTime = (float[]) table.getColumn(hdu.findColumn("Integration Time"));
 			
+			ch = (byte[]) table.getColumn(hdu.findColumn("Channel"));
 			AZ = (int[]) table.getColumn(hdu.findColumn("Requested AZ"));
 			EL = (int[]) table.getColumn(hdu.findColumn("Requested EL"));
 			AZE = (int[]) table.getColumn(hdu.findColumn("Error In AZ"));
@@ -216,13 +216,13 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 			ticks = (int[]) table.getColumn(hdu.findColumn("N Ticks From Midnight"));
 			//chop = (float[]) table.getColumn(hdu.findColumn("CHOP_OFFSET"));
 			
-			isEquatorial = (byte[]) table.getColumn(hdu.findColumn("Equatorial Offset"));
 		}
 	
 		@Override
 		public Reader getReader() {
 			return new Reader() {
 				private Vector2D equatorialOffset;
+				private boolean isEquatorial = EquatorialCoordinates.class.isAssignableFrom(((MakoScan) scan).scanSystem);
 				//AstroTime time = new AstroTime();
 				
 				@Override
@@ -232,7 +232,8 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 				}
 				@Override
 				public void readRow(int i) throws FitsException {	
-
+					if(ch[i] == 255) return;
+					
 					final MakoFrame frame = new MakoFrame(sharcscan);
 					frame.index = i;
 					
@@ -258,7 +259,7 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 			
 					frame.frameNumber = SN[i];
 					
-					if(isEquatorial[i] == 84) {
+					if(isEquatorial) {
 						frame.horizontalOffset = new Vector2D(
 							AZE[i] * frame.horizontal.cosLat() * tenthArcsec,
 							ELE[i] * tenthArcsec);

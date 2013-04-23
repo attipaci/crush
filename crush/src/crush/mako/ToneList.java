@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import crush.Channel;
+
 public class ToneList extends ArrayList<MakoPixel> {
 	/**
 	 * 
@@ -60,13 +62,19 @@ public class ToneList extends ArrayList<MakoPixel> {
 			step >>= 1;
 		}
 		
+		while(get(i).isFlagged(Channel.FLAG_BLIND)) if(--i < 0) return i; 
+		
 		return i;
 	}
 	
 	public int getNearestIndex(double f) {	
 		try {
-			int lower = indexBefore(f);
+			int lower = indexBefore(f);		
 			int upper = lower+1;
+		
+			while(get(upper).isFlagged(Channel.FLAG_BLIND)) if(++upper == size()) return lower;	
+			if(lower < 0) return upper;
+			
 			if(f - get(lower).toneFrequency < get(upper).toneFrequency - f) return lower;
 			return upper;
 		}

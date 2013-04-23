@@ -34,7 +34,7 @@ import util.data.SphericalGrid;
 
 public class AstroMap extends GridSource<SphericalCoordinates> implements AstroCoordinates {
 	
-	public AstroMap() { 
+	public AstroMap() {
 		setGrid(new SphericalGrid());
 	}
 	
@@ -80,7 +80,12 @@ public class AstroMap extends GridSource<SphericalCoordinates> implements AstroC
 	public boolean isSuperGalactic() {
 		return getReference() instanceof SuperGalacticCoordinates;
 	}
-		
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		if(name.equals("system")) return AstroCoordinateID.getSimpleID(this);
+		else return super.getFormattedEntry(name, formatSpec);
+	}
 }
 
 

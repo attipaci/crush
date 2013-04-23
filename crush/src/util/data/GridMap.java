@@ -36,6 +36,7 @@ import util.CoordinatePair;
 import util.Unit;
 import util.Util;
 import util.Vector2D;
+import util.text.TableFormatter;
 
 public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<CoordinateType> implements Noise2D, Timed2D {
 	private double[][] weight, count;
@@ -813,6 +814,12 @@ public class GridMap<CoordinateType extends CoordinatePair> extends GridImage<Co
 		}.process();
 		
 		return s2n;
+	}
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		if(name.equals("depth")) return TableFormatter.getNumberFormat(formatSpec).format(getTypicalRMS() / getUnit().value());
+		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
 }

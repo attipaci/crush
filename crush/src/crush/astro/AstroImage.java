@@ -70,6 +70,11 @@ public class AstroImage extends GridImage<SphericalCoordinates> implements Clone
 		return getReference() instanceof SuperGalacticCoordinates;
 	}
 
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		if(name.equals("coords")) return AstroCoordinateID.getSimpleID(this);
+		else return super.getFormattedEntry(name, formatSpec);
+	}
 	
 	
 	

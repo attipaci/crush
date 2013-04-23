@@ -707,6 +707,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		else if(name.equals("modelY")) return Util.defaultFormat(observingModel.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
 		else if(name.equals("tiltX")) return Util.defaultFormat(tiltCorrections.getDX(horizontal, (getMJD() % 1) * Unit.day), f);
 		else if(name.equals("tiltY")) return Util.defaultFormat(tiltCorrections.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
+		else if(name.equals("dir")) return AstroCoordinateID.getSimpleID(basisSystem);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 

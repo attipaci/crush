@@ -31,8 +31,10 @@ import java.util.*;
 import java.text.*;
 
 import util.*;
+import util.astro.AstroCoordinateID;
 import util.astro.AstroTime;
 import util.astro.EquatorialCoordinates;
+import util.astro.GalacticCoordinates;
 import util.astro.GeodeticCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.astro.Weather;
@@ -48,6 +50,7 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	double elevationResponse = 1.0;
 	double ambientT, pressure, humidity;
 	int scanCoordType = SCAN_ALTAZ;
+	Class<? extends SphericalCoordinates> scanSystem;
 	String id;
 	
 	boolean addOffsets = true;
@@ -279,6 +282,17 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 				(epoch < 1984.0 ? "B" : "J") + epoch);
 	
 		if(header.containsKey("SCANCOORD")) scanCoordType = header.getIntValue("SCANCOORD");
+		switch(scanCoordType) {
+		case SCAN_ALTAZ: scanSystem = HorizontalCoordinates.class;
+		case SCAN_EQ2000:
+		case SCAN_EQ1950: 
+		case SCAN_APPARENT_EQ: scanSystem = EquatorialCoordinates.class;
+		case SCAN_GAL: scanSystem = GalacticCoordinates.class;
+		default: 
+			if(header.containsKey("ALTAZ")) 
+				scanSystem = header.getBooleanValue("ALTAZ") ? HorizontalCoordinates.class : EquatorialCoordinates.class;
+			else scanSystem = HorizontalCoordinates.class;
+		}
 		
 		// Print out some of the information...
 		StringTokenizer tokens = new StringTokenizer(timeStamp, ":T");
@@ -391,6 +405,7 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	
 		if(name.equals("FAZO")) return Util.defaultFormat(fixedOffset.getX() / Unit.arcsec, f);
 		else if(name.equals("FZAO")) return Util.defaultFormat(-fixedOffset.getY() / Unit.arcsec, f);
+		else if(name.equals("dir")) return AstroCoordinateID.getSimpleID(scanSystem);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
@@ -462,7 +477,7 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	public static final int SCAN_ALTAZ = 0;
 	public static final int SCAN_EQ2000 = 1;
 	public static final int SCAN_GAL = 2;
-	public static final int SCAN_APP = 3;
+	public static final int SCAN_APPARENT_EQ = 3;
 	public static final int SCAN_EQ1950 = 4;
 	
 }

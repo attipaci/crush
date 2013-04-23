@@ -147,22 +147,16 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 
 	public void math(char op, Vector2D v) throws IllegalArgumentException {
 		switch(op) {
-		case '+': addX(v.getX()); addY(v.getY()); break;
-		case '-': subtractX(v.getX()); subtractY(v.getY()); break;
+		case '+': add(v); break;
+		case '-': subtract(v); break;
 		default: throw new IllegalArgumentException("Illegal Operation: " + op);
 		}
 	}
 
 
 	public static Vector2D math(Vector2D a, char op, Vector2D b) throws IllegalArgumentException {
-		Vector2D result = new Vector2D();
-
-		switch(op) {
-		case '+': result.setX(a.getX() + b.getX()); result.setY(a.getY() + b.getY()); break;
-		case '-': result.setX(a.getX() - b.getX()); result.setY(a.getY() - b.getY()); break;
-		default: throw new IllegalArgumentException("Illegal Operation: " + op);
-		}
-
+		final Vector2D result = (Vector2D) a.clone();
+		result.math(op, b);
 		return result;
 	}
 
@@ -170,22 +164,14 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 		switch(op) {
 		case '*': scaleX(b); break;
 		case '/': scaleX(1.0/b); break;
-		case '^': setX(Math.pow(getX(), b)); setY(Math.pow(getY(), b)); break;
 		default: throw new IllegalArgumentException("Illegal Operation: " + op);	    
 		}
 	}
 
 
 	public static Vector2D math(Vector2D a, char op, double b) throws IllegalArgumentException {
-		Vector2D result = new Vector2D();
-
-		switch(op) {
-		case '*': result.setX(a.getX() * b); result.setY(a.getY() * b); break;
-		case '/': result.setX(a.getX() / b); result.setY(a.getY() / b); break;
-		case '^': result.setX(Math.pow(a.getX(), b)); result.setY(Math.pow(a.getY(), b)); break;
-		default: throw new IllegalArgumentException("Illegal Operation: " + op);	    
-		}
-
+		final Vector2D result = (Vector2D) a.clone();
+		result.math(op, b);
 		return result;
 	}
 	

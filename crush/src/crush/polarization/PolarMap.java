@@ -418,6 +418,14 @@ public class PolarMap extends SourceModel {
 	public int countPoints() {
 		return N.countPoints() + Q.countPoints() + U.countPoints();
 	}
+
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		if(name.startsWith("N.")) return N.getFormattedEntry(name.substring(2), formatSpec);
+		else if(name.startsWith("Q.")) return Q.getFormattedEntry(name.substring(2), formatSpec);
+		else if(name.startsWith("U.")) return U.getFormattedEntry(name.substring(2), formatSpec);
+		else return super.getFormattedEntry(name, formatSpec);
+	}
 	
 
 	

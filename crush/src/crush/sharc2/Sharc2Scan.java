@@ -32,8 +32,10 @@ import java.util.*;
 import java.text.*;
 
 import util.*;
+import util.astro.AstroCoordinateID;
 import util.astro.AstroTime;
 import util.astro.EquatorialCoordinates;
+import util.astro.GalacticCoordinates;
 import util.astro.GeodeticCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.astro.Weather;
@@ -55,6 +57,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 	Vector2D horizontalOffset, fixedOffset;
 	
 	public int scanCoordType = SCAN_UNDEFINED;
+	Class<? extends SphericalCoordinates> scanSystem;
 	public int iMJD;	
 	public long fileSize = -1;
 
@@ -326,6 +329,17 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 				(epoch < 1984.0 ? "B" : "J") + epoch);
 	
 		if(header.containsKey("SCANCOORD")) scanCoordType = header.getIntValue("SCANCOORD");
+		switch(scanCoordType) {
+		case SCAN_ALTAZ: scanSystem = HorizontalCoordinates.class;
+		case SCAN_EQ2000:
+		case SCAN_EQ1950: 
+		case SCAN_APPARENT_EQ: scanSystem = EquatorialCoordinates.class;
+		case SCAN_GAL: scanSystem = GalacticCoordinates.class;
+		default: 
+			if(header.containsKey("ALTAZ")) 
+				scanSystem = header.getBooleanValue("ALTAZ") ? HorizontalCoordinates.class : EquatorialCoordinates.class;
+			else scanSystem = HorizontalCoordinates.class;
+		}
 		
 		// Print out some of the information...
 		StringTokenizer tokens = new StringTokenizer(timeStamp, ":T");
@@ -435,6 +449,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 	
 		if(name.equals("FAZO")) return Util.defaultFormat(fixedOffset.getX() / Unit.arcsec, f);
 		else if(name.equals("FZAO")) return Util.defaultFormat(-fixedOffset.getY() / Unit.arcsec, f);
+		else if(name.equals("dir")) return AstroCoordinateID.getSimpleID(scanSystem);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

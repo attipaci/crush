@@ -29,7 +29,7 @@ import util.SphericalCoordinates;
 
 // This is an abstract class for coordinate systems that are fixed (except perhaps a precession)
 // w.r.t the distant stars (quasars)...
-public abstract class CelestialCoordinates extends SphericalCoordinates {
+public abstract class CelestialCoordinates extends SphericalCoordinates implements AstroCoordinates {
 
 	public CelestialCoordinates() { super(); }
 	
@@ -143,6 +143,26 @@ public abstract class CelestialCoordinates extends SphericalCoordinates {
 		EquatorialCoordinates equatorialZero = from.toEquatorial();
     	to.fromEquatorial(equatorialZero);
     	return to.nativeLongitude();		
+	}
+
+	public boolean isHorizontal() {
+		return false;
+	}
+
+	public boolean isEquatorial() {
+		return false;
+	}
+
+	public boolean isEcliptic() {
+		return false;
+	}
+
+	public boolean isGalactic() {
+		return false;
+	}
+
+	public boolean isSuperGalactic() {
+		return false;
 	}
 	
 	
