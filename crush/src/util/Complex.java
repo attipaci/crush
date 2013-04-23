@@ -50,8 +50,8 @@ public class Complex extends Vector2D {
 
 	public final void conjugate() { scaleY(-1.0); }
 
-	public static Complex conjugate(Complex arg) {
-		Complex c = new Complex(arg);
+	public static Complex conjugate(final Complex arg) {
+		final Complex c = (Complex) arg.clone();
 		c.conjugate();
 		return c;
 	}
@@ -61,8 +61,8 @@ public class Complex extends Vector2D {
 		scale(1.0 / norm());
 	}
 
-	public static Complex inverse(Complex arg) {
-		Complex c = new Complex(arg);
+	public static Complex inverse(final Complex arg) {
+		final Complex c = (Complex) arg.clone();
 		c.inverse();
 		return c;
 	}
@@ -71,6 +71,21 @@ public class Complex extends Vector2D {
 		final double x0 = getX();
 		setX(getX() * c.getX() - getY() * c.getY());
 		setY(x0 * c.getY() + getY() * c.getX());
+	}
+	
+	public final void divideBy(final Complex c) {
+		final double ax = getX();
+		setX(ax * c.getX() - getY() * c.getY());
+		setY(getY() * c.getX() - ax * c.getY());
+		scale(1.0 / c.norm());
+	}
+	
+	public final void multiplyByI() {
+		set(-getY(), getX());
+	}
+	
+	public final void divideByI() {
+		set(getY(), -getX());
 	}
 	
 	// This is almost exactly the same speed as separating the operations
@@ -86,15 +101,15 @@ public class Complex extends Vector2D {
 		d1.addY(my);	
 	}
 
-	public final void pow(double b) {
+	public final void pow(final double b) {
 		final double r = Math.pow(length(), b);
 		final double phi = angle() * b;
 		setX(r * Math.cos(phi));
 		setY(r * Math.sin(phi));
 	}
 
-	public static Complex pow(Complex arg, double exp) {
-		Complex c = new Complex(arg);
+	public static Complex pow(final Complex arg, final double exp) {
+		final Complex c = (Complex) arg.clone();
 		c.pow(exp);
 		return c;
 	}
@@ -102,153 +117,134 @@ public class Complex extends Vector2D {
 
 	public final void sqrt() { pow(0.5); }
 
-	public static Complex sqrt(Complex arg) {
-		Complex c = new Complex(arg);
+	public static Complex sqrt(final Complex arg) {
+		final Complex c = (Complex) arg.clone();
 		c.sqrt();
 		return c;
 	}	
 
 	public final void exp() {
-		double r = Math.exp(getX());
+		final double r = Math.exp(getX());
 		setX(r * Math.cos(getY()));
 		setY(r * Math.sin(getY()));
 	}	
 
-	public static Complex exp(Complex arg) {
-		Complex c = new Complex(arg);
+	public static Complex exp(final Complex arg) {
+		final Complex c = (Complex) arg.clone();
 		c.exp();
 		return c;
 	}
 
 
 	public final void log() {
-		double r = length();
-		setX(Math.log(r));
+		setX(Math.log(length()));
 		setY(angle());
 	}
 
-	public static Complex log(Complex arg) {
-		Complex c = new Complex(arg);
+	public static Complex log(final Complex arg) {
+		final Complex c = (Complex) arg.clone();
 		c.log();
 		return c;
 	}
 
 
 	public final void cos() {
-		Complex e = math(i, '*', this); 
+		final Complex e = (Complex) clone();
+		e.multiplyByI();
 		e.exp();
 		e.add(inverse(e));
-		e.math('/', 2.0);
+		e.scale(0.5);
 	}
 
-	public static Complex cos(Complex arg) {
-		Complex c = new Complex(arg);
+	public static Complex cos(final Complex arg) {
+		final Complex c = (Complex) arg.clone();
 		c.cos();
 		return c;
 	}
 
 	public final void sin() {
-		Complex e = math(i, '*', this);
+		final Complex e = (Complex) clone();
+		e.multiplyByI();
 		e.exp();
 		e.subtract(inverse(e));
-		e.math('/', new Complex(0.0, 2.0));
+		e.scale(0.5);
+		e.divideByI();
 	}
 
-	public static Complex sin(Complex arg) {
-		Complex c = new Complex(arg);
+	public static Complex sin(final Complex arg) {
+		final Complex c = (Complex) arg.clone();
 		c.sin();
 		return c;
 	}
 
 	public final void tan() {
-		Complex c = cos(this);
+		final Complex c = cos(this);
 		sin();
-		math('/', c);
+		divideBy(c);
 	}
 
-	public static Complex tan(Complex arg) {
-		Complex c = new Complex(arg);
+	public static Complex tan(final Complex arg) {
+		final Complex c = (Complex) arg.clone();
 		c.tan();
 		return c;
 	}
 
 
 	public final void cosh() {
-		Complex e = exp(this);
+		final Complex e = exp(this);
 		e.add(inverse(e));
-		e.math('/', 2.0);
+		e.scale(0.5);
 	}
 
-	public static Complex cosh(Complex arg) {
-		Complex c = new Complex(arg);
+	public static Complex cosh(final Complex arg) {
+		final Complex c = (Complex) arg.clone();
 		c.cos();
 		return c;
 	}
 
 	public final void sinh() {
-		Complex e = exp(this);
+		final Complex e = exp(this);
 		e.subtract(inverse(e));
-		e.math('/', new Complex(0.0, 2.0));
+		e.scale(0.5);
+		e.divideByI();
 	}
 
-	public static Complex sinh(Complex arg) {
-		Complex c = new Complex(arg);
+	public static Complex sinh(final Complex arg) {
+		final Complex c = (Complex) arg.clone();
 		c.sin();
 		return c;
 	}
 
 	public final void tanh() {
-		Complex c = cos(this);
+		final Complex c = cos(this);
 		sin();
-		math('/', c);
+		divideBy(c);
 	}
 
-	public static Complex tanh(Complex arg) {
-		Complex c = new Complex(arg);
+	public static Complex tanh(final Complex arg) {
+		final Complex c = (Complex) arg.clone();
 		c.tan();
 		return c;
 	}
 
 
-	public final void math(char op, Complex b) throws IllegalArgumentException {
-		double ax;
-
+	public final void math(final char op, final Complex c) throws IllegalArgumentException {
 		switch(op) {
 		case '*': 
-			ax = getX();
-			setX(ax * b.getX() - getY() * b.getY());
-			setY(getY() * b.getX() + ax * b.getY());
+			multiplyBy(c);
 			break;
 		case '/': 
-			ax = getX();
-			setX(ax * b.getX() - getY() * b.getY());
-			setY(getY() * b.getX() - ax * b.getY());
-			scale(1.0 / b.norm());
+			divideBy(c);
 			break;
 		default: 
-			super.math(op, b);
+			super.math(op, c);
 		}
 	}
 
 
 	public static Complex math(Complex a, char op, Complex b) throws IllegalArgumentException {
-		Complex result = new Complex();
-
-		switch(op) {
-		case '*': 
-			result.setX(a.getX() * b.getX() - a.getY() * b.getY()); 
-			result.setY(a.getY() * b.getX() + a.getX() * b.getY()); 
-			break;
-		case '/': 
-			result.setX(a.getX() * b.getX() - a.getY() * b.getY()); 
-			result.setY(a.getY() * b.getX() - a.getX() * b.getY()); 
-			result.scale(1.0 / b.norm());
-			break;
-		default: 
-			Vector2D v = Vector2D.math(a, op, b);
-			result.setX(v.getX()); result.setY(v.getY());
-		}
-
+		final Complex result = (Complex) a.clone();
+		result.math(op, b);
 		return result;
 	}
 
@@ -264,24 +260,11 @@ public class Complex extends Vector2D {
 	}
 
 	public static Complex math(Complex a, char op, double b) throws IllegalArgumentException {
-		Complex result = new Complex(a);
-
-		switch(op) {
-		case '+': result.setX(a.getX() + b); result.setY(a.getY()); break;
-		case '-': result.setX(a.getX() - b); result.setY(a.getY()); break;
-		case '^': result.pow(b); break;	    
-		default: 
-			Vector2D v = Vector2D.math(a, op, b);
-			result.setX(v.getX()); result.setY(v.getY());	    
-		}
-
+		Complex result = (Complex) a.clone();
+		result.math(op, b);
 		return result;
 	}
 
-	public static Complex math(double a, char op, Complex b) throws IllegalArgumentException {
-		if(op == '*' || op == '+') return math(b, op, a);
-		return math(new Complex(a), op, b);
-	}
 
 	public final String toString(DecimalFormat df) { return df.format(getX()) + (getY() < 0 ? "" : "+") + df.format(getY()) + "i"; }
 

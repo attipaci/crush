@@ -40,6 +40,7 @@ import util.Projection2D;
 import util.Unit;
 import util.Util;
 import util.Vector2D;
+import util.text.TableFormatter;
 
 public abstract class GridImage<CoordinateType extends CoordinatePair> extends Data2D {
 	private Grid2D<CoordinateType> grid;
@@ -767,4 +768,11 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		@Override
 		public double value() { return getPixelArea(); }
 	}
+	
+	@Override
+	public String getFormattedEntry(String name, String formatSpec) {
+		if(name.equals("beams")) return TableFormatter.getNumberFormat(formatSpec).format(countBeams());
+		else return super.getFormattedEntry(name, formatSpec);
+	}
+
 }

@@ -431,7 +431,13 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 		
+		
 		if(horizontal == null) horizontal = equatorial.toHorizontal(site, LST);
+		
+		
+		String modelEntry = null;
+		if(sourceModel != null) modelEntry = sourceModel.getFormattedEntry(name, formatSpec);
+		if(modelEntry != null) return modelEntry;
 		
 		if(name.startsWith("?")) {
 			name = name.substring(1).toLowerCase();

@@ -34,4 +34,5 @@ public interface AstroCoordinates {
 	public boolean isGalactic();
 	
 	public boolean isSuperGalactic();
+	
 }

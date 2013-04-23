@@ -46,8 +46,8 @@ public class PixelAssignment extends ArrayList<ResonanceID> {
 	private static final long serialVersionUID = -3011775640230135691L;
 	
 	public double alpha = 0.0;
-	public Range alphaRange = new Range(-10.0, 1.0);
-	public int attempts = 10;
+	public Range alphaRange = new Range(-30.0, 0.1);
+	public int attempts = 100;
 	public double rchi;
 	public double maxDeviation = 3.0;
 	
@@ -74,7 +74,7 @@ public class PixelAssignment extends ArrayList<ResonanceID> {
 			id.row = Integer.parseInt(tokens.nextToken()) - 1;
 			id.col = Integer.parseInt(tokens.nextToken()) - 1;
 			//id.delta = Double.parseDouble(tokens.nextToken());
-			id.delta = 1e-4 * id.freq; // Assuming Q=1e5 and 10 linewidths movement...
+			id.delta = 1e-4 * id.freq; // Assuming 10 linewidths for Q~10^5...
 			
 			add(id);
 		}
@@ -98,28 +98,29 @@ public class PixelAssignment extends ArrayList<ResonanceID> {
 				double chi2 = 0.0;
 				
 				for(ResonanceID id : PixelAssignment.this) {
-					double f = id.freq + alpha * id.delta;
-					int i = channels.getNearestIndex(f);
-					double dev = (channels.get(i).toneFrequency - f) / f;
-					chi2 += dev * dev;
+					double fExp = id.freq + alpha * id.delta;
+					int i = channels.getNearestIndex(fExp);
+					double dev = (channels.get(i).toneFrequency - fExp) / fExp;
+					chi2 += Math.abs(dev);
 				}
 				
-				if(alpha < alphaRange.min()) alpha *= Math.exp(alphaRange.min()-alpha);
-				else if(alpha > alphaRange.max()) alpha *= Math.exp(alpha - alphaRange.max());
+				if(alpha < alphaRange.min()) chi2 *= Math.exp(alphaRange.min() - alpha);
+				else if(alpha > alphaRange.max()) chi2 *= Math.exp(alpha - alphaRange.max());
 				
 				return chi2;
 				
 			}	
 		};
 		
-		opt.init(new double[] { -1.0 });
-		opt.setStartSize(new double[] { 1.0 });
+		opt.init(new double[] { -3.0 });
+		opt.setStartSize(new double[] { 2.0 });
 		opt.precision = 1e-10;
 		opt.verbose = false;
 		opt.minimize(attempts);
 		
-		rchi = Math.sqrt(opt.getChi2() / size());
-		alpha = opt.getFitParameters()[0];
+		//rchi = Math.sqrt(opt.getChi2() / size());
+		rchi = opt.getChi2() / size();
+		//alpha = opt.getFitParameters()[0];
 		
 		System.err.println(" Tone-pixel assignment rms = " + Util.s3.format(1e6 * rchi) + " ppm.");
 		System.err.println(" --> alpha = " + Util.s4.format(alpha));
@@ -127,14 +128,14 @@ public class PixelAssignment extends ArrayList<ResonanceID> {
 		
 	}
 	
-	protected void assign(ToneList pixels) {
+	protected void assign(ToneList tones) {
 		int assigned = 0;
 		
 		for(ResonanceID id : this) {
-			double f = id.freq + alpha * id.delta;
-			int i = pixels.getNearestIndex(f);
-			MakoPixel pixel = pixels.get(i);
-			if((pixel.toneFrequency - f) / rchi > maxDeviation) continue;
+			double fExp = id.freq + alpha * id.delta;
+			MakoPixel pixel = tones.get(tones.getNearestIndex(fExp));
+			
+			if(Math.abs(pixel.toneFrequency - fExp) > rchi * maxDeviation * fExp) continue;
 			
 			pixel.association = id;
 			pixel.row = id.row;

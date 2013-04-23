@@ -31,6 +31,7 @@ import java.io.*;
 import java.util.*;
 
 import util.*;
+import util.astro.AstroCoordinateID;
 import util.astro.CelestialCoordinates;
 import util.astro.CoordinateEpoch;
 import util.astro.EquatorialCoordinates;
@@ -406,6 +407,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		else if(name.equals("planet?")) return Boolean.toString(isPlanetary);
 		else if(name.equals("obsmode")) return mode;
 		else if(name.equals("obstype")) return type;
+		else if(name.equals("dir")) return AstroCoordinateID.getSimpleID(basisSystem);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

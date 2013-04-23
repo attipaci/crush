@@ -51,8 +51,9 @@ import util.Unit;
 import util.Util;
 import util.Vector2D;
 import util.Parallel;
+import util.text.*;
 
-public class Data2D implements Cloneable {
+public class Data2D implements Cloneable, TableFormatter.Entries {
 	private double[][] data;
 	private int[][] flag;
 	private int parallelism = Runtime.getRuntime().availableProcessors();
@@ -1355,6 +1356,23 @@ public class Data2D implements Cloneable {
 
 		return null;
 	}
+	
+	public String getFormattedEntry(String name, String formatSpec) {
+		if(name.equals("name")) return getName();
+		else if(name.equals("contentType")) return contentType;
+		else if(name.equals("creator")) return creator;
+		else if(name.equals("unit")) return getUnit().name();
+		else if(name.equals("filename")) return fileName;
+		else if(name.equals("size")) return sizeX() + "x" + sizeY();
+		else if(name.equals("sizeX")) return Integer.toString(sizeX());
+		else if(name.equals("sizeY")) return Integer.toString(sizeY());
+		else if(name.equals("points")) return Integer.toString(countPoints());
+		else if(name.equals("min")) return TableFormatter.getNumberFormat(formatSpec).format(getMin() / getUnit().value());
+		else if(name.equals("max")) return TableFormatter.getNumberFormat(formatSpec).format(getMax() / getUnit().value());
+		else if(name.equals("rms")) return TableFormatter.getNumberFormat(formatSpec).format(getRobustRMS() / getUnit().value());
+		else return "n/a";
+	}
+	
 	
 	// 2 pi sigma^2 = a^2
 	// a = sqrt(2 pi) sigma

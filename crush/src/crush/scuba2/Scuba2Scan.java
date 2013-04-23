@@ -18,6 +18,7 @@ package crush.scuba2;
 import crush.*;
 import nom.tam.fits.*;
 import util.*;
+import util.astro.AstroCoordinateID;
 import util.astro.CoordinateEpoch;
 import util.astro.EquatorialCoordinates;
 import util.astro.GeodeticCoordinates;
@@ -428,6 +429,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	public String getFormattedEntry(String name, String formatSpec) {
 		if(name.equals("obsmode")) return obsMode;
 		else if(name.equals("obspattern")) return scanPattern;
+		else if(name.equals("dir")) return AstroCoordinateID.getSimpleID(trackingClass);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 

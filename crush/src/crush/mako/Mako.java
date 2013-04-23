@@ -241,6 +241,8 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		System.err.println(" MAKO has " + pixels + " tones");
 		if(iFlag < 0) System.err.println(" WARNING! Data has no information on blind tones.");
 		
+		int blinds = 0;
+		
 		for(int c=0; c<pixels; c++) {
 			MakoPixel pixel = new MakoPixel(this, c);
 			Object[] row = hdu.getRow(c);
@@ -249,10 +251,16 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 			pixel.toneFrequency = binWidth * pixel.toneBin;
 			pixel.validCalPositions = ((int[]) row[iPts])[0];
 			pixel.calError = ((float[]) row[iErr])[0];
-			if(iFlag >= 0) if(((int[]) row[iFlag])[0] != 0) pixel.flag(Channel.FLAG_BLIND);
-		
+			
+			if(iFlag >= 0) if(((int[]) row[iFlag])[0] != 0) {
+				pixel.flag(Channel.FLAG_BLIND);
+				blinds++;
+			}
+	
 			add(pixel);
 		}	
+		
+		System.err.println(" Contains " + blinds + " blind tones.");
 	}
 	
 	
@@ -326,7 +334,7 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 
 	@Override
 	public int maxPixels() {
-		return pixels;
+		return 2*rows*cols;
 	}
 
 	@Override
@@ -375,10 +383,11 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 	
 	@Override
 	public String getRCPHeader() { return super.getRCPHeader() + "\tKIDfreq"; }
+
 	
 	public static int rows = 16;
 	public static int cols = 27;
-	public static int pixels = 2 * rows * cols;
+	public static int pixels = rows * cols;
 
 	
 }
