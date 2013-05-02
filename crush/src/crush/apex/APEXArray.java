@@ -230,7 +230,7 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 	
-		if(name.equals("ref")) return Integer.toString(referencePixel.storeIndex);
+		if(name.equals("ref")) return Integer.toString(referencePixel.getFixedIndex());
 		else if(name.equals("rot")) return Util.defaultFormat(rotation / Unit.deg, f);
 		else return super.getFormattedEntry(name, formatSpec);
 	}

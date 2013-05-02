@@ -117,11 +117,11 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			
 			if(position.distanceTo(left) < tolerance) for(Channel channel : pixel) {
 				channel.sourcePhase |= Frame.CHOP_LEFT;
-				System.err.print(" L" + channel.storeIndex);
+				System.err.print(" L" + channel.getFixedIndex());
 			}
 			else if(position.distanceTo(right) < tolerance) for(Channel channel : pixel) {
 				channel.sourcePhase |= Frame.CHOP_RIGHT;
-				System.err.print(" R" + channel.storeIndex); 
+				System.err.print(" R" + channel.getFixedIndex()); 
 			}
 			else for(Channel channel : pixel) channel.sourcePhase &= ~Frame.CHOP_FLAGS;
 		}
@@ -235,7 +235,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			final Object[] row = hdu.getRow(exposure.index);
 			final float[][] data = (float[][]) row[iData];
 			for(int c=0; c<data.length; c++) data[c][0] = 0.0F;
-			for(Channel channel : instrument) data[channel.storeIndex][0] = exposure.data[channel.index];
+			for(Channel channel : instrument) data[channel.getFixedIndex()-1][0] = exposure.data[channel.index];
 			hdu.setRow(exposure.index, row);
 		}	
 			

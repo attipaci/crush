@@ -140,7 +140,7 @@ public class PixelAssignment extends ArrayList<ResonanceID> {
 			pixel.association = id;
 			pixel.row = id.row;
 			pixel.col = id.col;
-			pixel.storeIndex = pixel.row * Mako.cols + pixel.col;
+			pixel.setFixedIndex(pixel.row * Mako.cols + pixel.col);
 			pixel.unflag(MakoPixel.FLAG_UNASSIGNED);
 			assigned++;
 		}	

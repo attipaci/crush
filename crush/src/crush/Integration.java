@@ -2052,7 +2052,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(int i=fullCovar.length; --i >= 0; ) Arrays.fill(fullCovar[i], Double.NaN);
 		
 		for(final Channel c1 : instrument) for(final Channel c2 : instrument)
-			fullCovar[c1.storeIndex-1][c2.storeIndex-1] = covar[c1.index][c2.index];
+			fullCovar[c1.getFixedIndex()-1][c2.getFixedIndex()-1] = covar[c1.index][c2.index];
 			
 		return fullCovar;
 	}
@@ -2231,7 +2231,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		float[][] filterProfile = whitener == null ? null : new float[instrument.size()][];
 		
 		for(Channel channel : instrument) {
-			dataIndex[channel.index] = channel.storeIndex;
+			dataIndex[channel.index] = channel.getFixedIndex();
 			channelGain[channel.index] = (float) channel.gain;
 			channelOffset[channel.index] = (float) channel.offset;
 			channelWeight[channel.index] = (float) channel.weight;

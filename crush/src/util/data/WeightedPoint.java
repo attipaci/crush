@@ -132,10 +132,10 @@ public class WeightedPoint implements Comparable<WeightedPoint>, Cloneable {
 
 	public void math(final char op, final double x) throws IllegalArgumentException {
 		switch(op) {
-		case '+' : value += x; break;
-		case '-' : value -= x; break;
-		case '*' : value *= x; weight /= x*x; break;
-		case '/' : value /= x; weight *= x*x; break;
+		case '+' : add(x); break;
+		case '-' : subtract(x); break;
+		case '*' : scale(x); break;
+		case '/' : scale(1.0/x); break;
 		default: throw new IllegalArgumentException("Illegal Operation: " + op);
 		}
 	}

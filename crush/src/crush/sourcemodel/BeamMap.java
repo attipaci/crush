@@ -95,7 +95,7 @@ public class BeamMap extends SourceMap {
 
 	@Override
 	protected void add(Frame exposure, Pixel pixel, Index2D index, double fGC, double[] sourceGain, double dt, int excludeSamples) {
-		int i = pixel.getDataIndex();
+		int i = pixel.getFixedIndex();
 		ScalarMap map = pixelMap[i];
 		
 		if(map == null) {
@@ -179,7 +179,7 @@ public class BeamMap extends SourceMap {
 
 	@Override
 	protected void sync(Frame exposure, Pixel pixel, Index2D index, double fG, double[] sourceGain, double[] syncGain, boolean isMasked) {
-		ScalarMap map = pixelMap[pixel.getDataIndex()];
+		ScalarMap map = pixelMap[pixel.getFixedIndex()];
 		if(map != null) map.sync(exposure, pixel, index, fG, sourceGain, syncGain, isMasked);	
 	}
 
@@ -257,7 +257,7 @@ public class BeamMap extends SourceMap {
 		int k = 0;
 		
 		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
-			int i = pixel.getDataIndex();
+			int i = pixel.getFixedIndex();
 			ScalarMap beamMap = pixelMap[i];
 			
 			pixel.getPosition().set(Double.NaN, Double.NaN);
@@ -286,7 +286,7 @@ public class BeamMap extends SourceMap {
 		double mean = Statistics.median(peaks, 0, k);
 		
 		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
-			int i = pixel.getDataIndex();
+			int i = pixel.getFixedIndex();
 			ScalarMap map = pixelMap[i];
 			if(map != null) {
 				final double rel = pixelPeak[i] / mean;

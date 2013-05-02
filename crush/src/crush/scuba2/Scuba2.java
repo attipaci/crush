@@ -238,7 +238,7 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 		out.println("# BEch\tGain");
 		out.println("#     \t(counts/K)");
 		out.println("# ----\t----------");
-		for(Scuba2Pixel pixel : this) out.println(pixel.storeIndex + "\t" + Util.e6.format(pixel.temperatureGain));
+		for(Scuba2Pixel pixel : this) out.println(pixel.getFixedIndex() + "\t" + Util.e6.format(pixel.temperatureGain));
 		
 		out.flush();
 		out.close();

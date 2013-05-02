@@ -185,7 +185,7 @@ public class Laboca extends APEXArray<LabocaPixel> {
 		out.println("# BEch\tGain");
 		out.println("#     \t(V/K)");
 		out.println("# ----\t-----");
-		for(LabocaPixel pixel : this) out.println(pixel.storeIndex + "\t" + Util.e6.format(pixel.temperatureGain));
+		for(LabocaPixel pixel : this) out.println(pixel.getFixedIndex() + "\t" + Util.e6.format(pixel.temperatureGain));
 		
 		out.flush();
 		out.close();

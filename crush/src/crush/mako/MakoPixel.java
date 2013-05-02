@@ -37,6 +37,7 @@ public class MakoPixel extends SimplePixel {
 	public int row, col;
 	public Vector2D size;
 	
+	int toneIndex;
 	public int toneBin;
 	public int validCalPositions;
 	public double toneFrequency;
@@ -46,6 +47,7 @@ public class MakoPixel extends SimplePixel {
 	
 	public MakoPixel(Mako array, int zeroIndex) {
 		super(array, zeroIndex+1);
+		toneIndex = zeroIndex;
 		flag(FLAG_UNASSIGNED);
 		size = defaultSize;
 	}

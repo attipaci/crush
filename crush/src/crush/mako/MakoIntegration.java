@@ -237,7 +237,7 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 					final MakoFrame frame = new MakoFrame(sharcscan);
 					frame.index = i;
 					
-					frame.parseData(data, i*channels, channels);
+					frame.parseData(data, i*channels, instrument);
 
 					//time.setMillis(AstroTime.millisJ2000 + 1000L * UTseconds[i] + (UTnanosec[i] / 1000000L));
 					//frame.MJD = time.getMJD();

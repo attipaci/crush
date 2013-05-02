@@ -238,7 +238,7 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		int iPts = hdu.findColumn("Points");
 		int iErr = hdu.findColumn("Fit Error");
 		
-		System.err.println(" MAKO has " + pixels + " tones");
+		System.err.println(" MAKO stream has " + pixels + " tones");
 		if(iFlag < 0) System.err.println(" WARNING! Data has no information on blind tones.");
 		
 		int blinds = 0;
@@ -256,11 +256,12 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 				pixel.flag(Channel.FLAG_BLIND);
 				blinds++;
 			}
-	
-			add(pixel);
+			else add(pixel);
 		}	
 		
-		System.err.println(" Contains " + blinds + " blind tones.");
+		if(blinds > 0) System.err.println(" Ignoring " + blinds + " blind tones.");
+		else System.err.println(" Stream contains no blind tones :-).");
+		
 	}
 	
 	
@@ -334,7 +335,7 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 
 	@Override
 	public int maxPixels() {
-		return 2*rows*cols;
+		return rows*cols;
 	}
 
 	@Override

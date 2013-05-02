@@ -9,22 +9,27 @@
 >> MAKO options to GLOSSARY
 >> 'dir' for all instruments.
 >> GLOSSARY --> @Instrument
+>> Check MAKO equatorial/celestial flags. Try invoke planetary automatically.
+>> Check equatorial Moon scan.
 
 	[NEW] Initial MAKO support.
 
 	[NEW] Option 'show' is introduced to control whether to try display 
 	the source model. Currently, only the 'skydip' model uses that to
-	control whether to bring up a persistent gnuplot window. However, in
-	the future, other models (like maps) may use this directive also.
+	to bring up a persistent gnuplot window. However, in the future, other 
+	models (like maps) may use this directive also.
 
 	[NEW] The option 'level' removes detector DC levels before entering
-	the pipeline analysis.
+	the pipeline analysis. Now default for all currently supported 
+	instruments.
 
 	[FIX] Noise whitening filter went berserk when 'whiten.proberange'
 	was set to '*'. Now fixed.
 	
 	[FIX] Diagonals of covariance matrices were not flagged out as
 	intended.
+
+	[TWEAK] {b1} {MAKO} Blind tones are ignored.
 
 	[TWEAK] Changed the method of average gain calculation to log-based. 
 	This mutes the effect of insane pixels/channels messing up the gain
@@ -40,7 +45,10 @@
 	[CODE] Beammap RCP writing uses array's RCP writing, removing a silly
 	duplicity.
 
+	[CODE] Updated Vector2D and Complex classes. Cleanup and performance
+	tweaks.
 
+	[CODE] channel.fixedIndex access via safer get/set methods only.
 
 
 2.14-a1 (16 April 2013)
