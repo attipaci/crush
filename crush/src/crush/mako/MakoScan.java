@@ -31,7 +31,7 @@ import java.util.*;
 import java.text.*;
 
 import util.*;
-import util.astro.AstroCoordinateID;
+import util.astro.AstroSystem;
 import util.astro.AstroTime;
 import util.astro.EquatorialCoordinates;
 import util.astro.GalacticCoordinates;
@@ -67,6 +67,7 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	
 	public MakoScan(Mako instrument) {
 		super(instrument);
+		setSerial(++serialCounter);
 		site = new GeodeticCoordinates(
 				-(155.0 * Unit.deg + 28.0 * Unit.arcmin + 33.0 * Unit.arcsec), 
 				19.0 * Unit.deg  + 49.0 * Unit.arcmin + 21.0 * Unit.arcsec);
@@ -76,6 +77,11 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	@Override
 	public MakoIntegration getIntegrationInstance() {
 		return new MakoIntegration(this);
+	}
+	
+	@Override
+	public int compareTo(Scan<?, ?> other) {
+		return Double.compare(getMJD(), other.getMJD());
 	}
 	
 	@Override
@@ -183,30 +189,29 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	
 	
 	public File getFile(String scanDescriptor) throws FileNotFoundException {
-		File scanFile;
-
+		
 		String path = getDataPath();
 		descriptor = scanDescriptor;
 		
-		try { 
-			int scanNo = Integer.parseInt(scanDescriptor);
-			String fileName = path + "mako-" + Util.d6.format(scanNo) + ".fits";
-			scanFile = new File(fileName);
-			if(!scanFile.exists()) {
-				fileName += ".gz";
-				scanFile = new File(fileName);
-				if(!scanFile.exists()) throw new FileNotFoundException("Could Not find scan " + scanDescriptor); 
-			}
-		} 
-		catch(NumberFormatException e) {
-			scanFile = new File(scanDescriptor) ;	
-			if(!scanFile.exists()) {
-				scanFile = new File(path + scanDescriptor);
-				if(!scanFile.exists()) throw new FileNotFoundException("Could Not find scan " + scanDescriptor); 
-			} 
-		}	
-
-		fileSize = scanFile.length();
+		if(hasOption("date")) {
+			String dateSpec = option("date").getValue().replaceAll("-", "");
+			String timeSpec = scanDescriptor.replaceAll(":", "");
+			String id = "mako" + dateSpec + "_" +  timeSpec;
+			File datadir = new File(path);
+			for(File file : datadir.listFiles()) {
+				String name = file.getName();
+				if(name.startsWith(id)) if(name.endsWith("Stream.fits") || name.endsWith("Stream.fits.gz")) {
+					this.file = file;
+					return file;				
+				}
+			}		
+		}
+			
+		File scanFile = new File(scanDescriptor) ;	
+		if(!scanFile.exists()) {
+			scanFile = new File(path + scanDescriptor);
+			if(!scanFile.exists()) throw new FileNotFoundException("Could Not find scan " + scanDescriptor); 
+		}
 		
 		file = scanFile;
 		return scanFile;
@@ -234,6 +239,8 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	
 	public Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
 		File file = getFile(scanDescriptor);
+		fileSize = file.length();
+		
 		boolean isCompressed = file.getName().endsWith(".gz");
 		System.out.println(" Reading " + file.getPath() + "...");
 		return new Fits(getFile(scanDescriptor), isCompressed);
@@ -405,7 +412,7 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	
 		if(name.equals("FAZO")) return Util.defaultFormat(fixedOffset.getX() / Unit.arcsec, f);
 		else if(name.equals("FZAO")) return Util.defaultFormat(-fixedOffset.getY() / Unit.arcsec, f);
-		else if(name.equals("dir")) return AstroCoordinateID.getSimpleID(scanSystem);
+		else if(name.equals("dir")) return AstroSystem.getID(scanSystem);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
@@ -469,6 +476,8 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 			
 		return info;
 	}
+	
+	private int serialCounter = 0;
 	
 	@Override
 	public String getID() { return id; }

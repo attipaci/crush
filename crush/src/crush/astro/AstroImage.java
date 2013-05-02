@@ -29,7 +29,7 @@ import util.astro.*;
 import util.data.GridImage;
 import util.data.SphericalGrid;
 
-public class AstroImage extends GridImage<SphericalCoordinates> implements Cloneable, AstroCoordinates {
+public class AstroImage extends GridImage<SphericalCoordinates> implements Cloneable {
 
 	public AstroImage() {
 		setGrid(new SphericalGrid());
@@ -50,29 +50,14 @@ public class AstroImage extends GridImage<SphericalCoordinates> implements Clone
 		setGrid(new SphericalGrid());
 	}
 	
-	public boolean isHorizontal() {
-		return getReference() instanceof HorizontalCoordinates;
+	@SuppressWarnings("unchecked")
+	public AstroSystem astroSystem() {
+		return new AstroSystem((Class<? extends SphericalCoordinates>) coordinateSystem());
 	}
-
-	public boolean isEquatorial() {
-		return getReference() instanceof EquatorialCoordinates;
-	}
-
-	public boolean isEcliptic() {
-		return getReference() instanceof EclipticCoordinates;
-	}
-
-	public boolean isGalactic() {
-		return getReference() instanceof GalacticCoordinates;
-	}
-
-	public boolean isSuperGalactic() {
-		return getReference() instanceof SuperGalacticCoordinates;
-	}
-
+	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
-		if(name.equals("coords")) return AstroCoordinateID.getSimpleID(this);
+		if(name.equals("coords")) return astroSystem().getID();
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

@@ -93,7 +93,5 @@ public class GalacticCoordinates extends CelestialCoordinates {
 	public double getZeroLongitude() {
 		return phi0;
 	}
-	
-	@Override
-	public boolean isGalactic() { return true; }
+
 }

@@ -32,7 +32,7 @@ import util.astro.*;
 import util.data.SphericalGrid;
 
 
-public class AstroMap extends GridSource<SphericalCoordinates> implements AstroCoordinates {
+public class AstroMap extends GridSource<SphericalCoordinates> {
 	
 	public AstroMap() {
 		setGrid(new SphericalGrid());
@@ -61,29 +61,14 @@ public class AstroMap extends GridSource<SphericalCoordinates> implements AstroC
 		undoFilterCorrect(getSkip(filterBlanking));
 	}
 	
-	public boolean isHorizontal() {
-		return getReference() instanceof HorizontalCoordinates;
-	}
-
-	public boolean isEquatorial() {
-		return getReference() instanceof EquatorialCoordinates;
-	}
-
-	public boolean isEcliptic() {
-		return getReference() instanceof EclipticCoordinates;
-	}
-
-	public boolean isGalactic() {
-		return getReference() instanceof GalacticCoordinates;
-	}
-
-	public boolean isSuperGalactic() {
-		return getReference() instanceof SuperGalacticCoordinates;
+	@SuppressWarnings("unchecked")
+	public AstroSystem astroSystem() {
+		return new AstroSystem((Class<? extends SphericalCoordinates>) coordinateSystem());
 	}
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
-		if(name.equals("system")) return AstroCoordinateID.getSimpleID(this);
+		if(name.equals("system")) return astroSystem().getID();
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 }

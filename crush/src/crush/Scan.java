@@ -35,6 +35,7 @@ import crush.astro.AstroMap;
 import crush.sourcemodel.*;
 import util.*;
 import util.DataTable;
+import util.astro.AstroSystem;
 import util.astro.AstroTime;
 import util.astro.CelestialCoordinates;
 import util.astro.CoordinateEpoch;
@@ -714,10 +715,11 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public Asymmetry2D getSourceAsymmetry(CircularRegion<SphericalCoordinates> region) {
 		if(!(sourceModel instanceof ScalarMap)) return null;
 		
-		AstroMap map = ((ScalarMap) sourceModel).map;
-		if(!(map.isEquatorial() || map.isHorizontal())) return map.getAsymmetry(region, 0.0, 2.5);
-
-		boolean isGroundEquatorial = this instanceof GroundBased && map.isEquatorial();
+		AstroMap map = ((ScalarMap) sourceModel).map; 
+		AstroSystem system = map.astroSystem();
+		if(!(system.isEquatorial() || system.isHorizontal())) return map.getAsymmetry(region, 0.0, 2.5);
+		
+		boolean isGroundEquatorial = this instanceof GroundBased && system.isEquatorial();
 		double angle = isGroundEquatorial ? this.getPA() : 0.0;
 
 		return map.getAsymmetry(region, angle, 2.5);

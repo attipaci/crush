@@ -769,6 +769,8 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		public double value() { return getPixelArea(); }
 	}
 	
+	public Class<? extends CoordinatePair> coordinateSystem() { return getReference().getClass(); }
+	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
 		if(name.equals("beams")) return TableFormatter.getNumberFormat(formatSpec).format(countBeams());

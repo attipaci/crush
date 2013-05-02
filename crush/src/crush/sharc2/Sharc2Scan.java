@@ -32,7 +32,7 @@ import java.util.*;
 import java.text.*;
 
 import util.*;
-import util.astro.AstroCoordinateID;
+import util.astro.AstroSystem;
 import util.astro.AstroTime;
 import util.astro.EquatorialCoordinates;
 import util.astro.GalacticCoordinates;
@@ -449,7 +449,7 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 	
 		if(name.equals("FAZO")) return Util.defaultFormat(fixedOffset.getX() / Unit.arcsec, f);
 		else if(name.equals("FZAO")) return Util.defaultFormat(-fixedOffset.getY() / Unit.arcsec, f);
-		else if(name.equals("dir")) return AstroCoordinateID.getSimpleID(scanSystem);
+		else if(name.equals("dir")) return AstroSystem.getID(scanSystem);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

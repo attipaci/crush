@@ -424,7 +424,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		double phase = getMeanTPPhase(channel, harmonic * polka.waveplateFrequency);
 		double alpha = (delta - phase) / harmonic;
 		
-		System.err.println("   ---> Using phase " + Util.f1.format(delta / Unit.deg) + " deg for pixel " + channel.storeIndex + ".");
+		System.err.println("   ---> Using phase " + Util.f1.format(delta / Unit.deg) + " deg for pixel " + channel.getFixedIndex() + ".");
 		
 		if(hasOption("waveplate.tpchar")) {
 			PolKaFrame firstFrame = (PolKaFrame) get(0);

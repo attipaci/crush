@@ -48,11 +48,6 @@ public class SimplePixel extends Channel implements Pixel {
 		return clone;
 	}
 	
-	public boolean isValid() { return isFlagged(); }
-	
-	public final int getIndex() { return index; }
-	
-	public final int getDataIndex() { return storeIndex; }
 	
 	public final Vector2D getPosition() { return position; }
 	
@@ -106,7 +101,7 @@ public class SimplePixel extends Channel implements Pixel {
 	
 	public String getRCPString() {
 		Vector2D position = getPosition();
-		return getDataIndex() + 
+		return getFixedIndex() + 
 				"\t" + Util.f3.format(gain * coupling) + 
 				"\t" + Util.f3.format(gain) + 
 				"\t" + Util.f1.format(position.getX() / Unit.arcsec) + 

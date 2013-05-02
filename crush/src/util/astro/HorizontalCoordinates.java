@@ -31,7 +31,7 @@ import util.Unit;
 import util.Vector2D;
 import util.text.AngleFormat;
 
-public class HorizontalCoordinates extends SphericalCoordinates implements AstroCoordinates {
+public class HorizontalCoordinates extends SphericalCoordinates {
 	static CoordinateAxis azimuthAxis, elevationAxis, azimuthOffsetAxis, elevationOffsetAxis;
 	static CoordinateSystem defaultCoordinateSystem, defaultLocalCoordinateSystem;
 
@@ -116,24 +116,6 @@ public class HorizontalCoordinates extends SphericalCoordinates implements Astro
 		offset.scaleX(-1.0);
 	}
 
-	public boolean isHorizontal() {
-		return true;
-	}
 
-	public boolean isEquatorial() {
-		return false;
-	}
-
-	public boolean isEcliptic() {
-		return false;
-	}
-
-	public boolean isGalactic() {
-		return false;
-	}
-
-	public boolean isSuperGalactic() {
-		return false;
-	}    
 
 }

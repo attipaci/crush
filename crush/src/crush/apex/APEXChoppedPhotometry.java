@@ -62,8 +62,8 @@ public class APEXChoppedPhotometry extends Photometry {
 
 				//ArrayList<APEXPixel> neighbours = subscan.instrument.getNeighbours(pixel, 5.0 * pixel.getResolution());
 				
-				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.storeIndex];
-				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.storeIndex];
+				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.getFixedIndex()];
+				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.getFixedIndex()];
 				else continue;
 					
 				WeightedPoint df = pixel.getLROffset(phases);
@@ -77,7 +77,7 @@ public class APEXChoppedPhotometry extends Photometry {
 		
 		
 		Channel refPixel = ((APEXArrayScan<?,?>) scan).get(0).instrument.referencePixel;
-		int refIndex = refPixel.storeIndex;
+		int refIndex = refPixel.getFixedIndex();
 		
 		for(int c=flux.length; --c >=0; ) {
 			flux[c] = (WeightedPoint) left[c].clone();

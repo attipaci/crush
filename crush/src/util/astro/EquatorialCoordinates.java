@@ -226,6 +226,5 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 	
 	public void setEpoch(CoordinateEpoch epoch) { this.epoch = epoch; }
 	
-	@Override
-	public boolean isEquatorial() { return true; }
+
 }

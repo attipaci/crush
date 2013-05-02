@@ -204,7 +204,7 @@ public class Mode {
 	@Override
 	public String toString() {
 		String description = name + ":";
-		for(Channel channel : channels) description += " " + channel.storeIndex;
+		for(Channel channel : channels) description += " " + channel.getFixedIndex();
 		return description;
 	}
 	

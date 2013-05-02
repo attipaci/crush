@@ -30,7 +30,7 @@ public interface Pixel extends Iterable<Channel> {
 
 	public int getIndex();
 	
-	public int getDataIndex();
+	public int getFixedIndex();
 
 	public boolean isValid();
 	

@@ -248,6 +248,7 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 		return info;
 	}
 	
+	
 	private class Jansky extends Unit {
 		private Jansky() { super("Jy", Double.NaN); }
 		

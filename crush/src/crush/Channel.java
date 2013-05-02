@@ -33,7 +33,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	public Instrument<?> instrument;
 	
 	public int index;
-	public int storeIndex;
+	private int storeIndex;
 	public int flag = 0;
 	public int sourcePhase = 0;
 	
@@ -56,7 +56,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	
 	public Channel(Instrument<?> instrument, int dataIndex) {
 		this.instrument = instrument;
-		this.storeIndex = dataIndex;
+		setFixedIndex(dataIndex);
 	}
 	
 	@Override
@@ -75,6 +75,10 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 		Channel copy = (Channel) clone();
 		return copy;
 	}
+	
+
+	public boolean isValid() { return isFlagged(); }
+	
 	
 	public final boolean isFlagged(final int pattern) {
 		return (flag & pattern) != 0;
@@ -103,6 +107,12 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	public final void unflag() {
 		flag = 0;
 	}
+	
+	public final int getIndex() { return index; }
+	
+	public final int getFixedIndex() { return storeIndex; }
+	
+	public final void setFixedIndex(int i) { storeIndex = i; }
 	
 	public double getHardwareGain() {
 		return instrument.gain;

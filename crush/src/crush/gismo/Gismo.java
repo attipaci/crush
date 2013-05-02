@@ -268,11 +268,11 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		if(iMask >= 0) {
 			try {
 				short[] mask = (short[]) row[iMask];
-				for(Channel channel : this) if(mask[channel.storeIndex-1] == 0) channel.flag(Channel.FLAG_DEAD); 
+				for(Channel channel : this) if(mask[channel.getFixedIndex()-1] == 0) channel.flag(Channel.FLAG_DEAD); 
 			}
 			catch(ClassCastException e) {
 				byte[] mask = (byte[]) row[iMask];
-				for(Channel channel : this) if(mask[channel.storeIndex-1] == 0) channel.flag(Channel.FLAG_DEAD);
+				for(Channel channel : this) if(mask[channel.getFixedIndex()-1] == 0) channel.flag(Channel.FLAG_DEAD);
 			}
 		}
 		
@@ -316,11 +316,11 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		
 		try {
 			short[] mask = (short[]) row[iMask];
-			for(Channel channel : this) if(mask[channel.storeIndex-1] == 0) channel.flag(Channel.FLAG_DEAD); 
+			for(Channel channel : this) if(mask[channel.getFixedIndex()-1] == 0) channel.flag(Channel.FLAG_DEAD); 
 		}
 		catch(ClassCastException e) {
 			byte[] mask = (byte[]) row[iMask];
-			for(Channel channel : this) if(mask[channel.storeIndex-1] == 0) channel.flag(Channel.FLAG_DEAD);
+			for(Channel channel : this) if(mask[channel.getFixedIndex()-1] == 0) channel.flag(Channel.FLAG_DEAD);
 		}
 	
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -25,9 +25,32 @@ package util.astro;
 
 import util.SphericalCoordinates;
 
-public final class AstroCoordinateID {
+public class AstroSystem {
+	private Class<? extends SphericalCoordinates> system;
+	
+	public AstroSystem(Class<? extends SphericalCoordinates> coordType) {
+		this.system = coordType;
+	}
+	
+	public boolean isHorizontal() { return HorizontalCoordinates.class.isAssignableFrom(system); }
 
-	public static String getSimpleID(Class<? extends SphericalCoordinates> coordType) {
+	public boolean isEquatorial() { return EquatorialCoordinates.class.isAssignableFrom(system); }
+	
+	public boolean isEcliptic() { return EclipticCoordinates.class.isAssignableFrom(system); }
+
+	public boolean isGalactic()  { return GalacticCoordinates.class.isAssignableFrom(system); }
+	
+	public boolean isSuperGalactic()  { return SuperGalacticCoordinates.class.isAssignableFrom(system); }
+	
+	public String getID() { return getID(system); }
+	
+	public SphericalCoordinates getCoordinateInstance() {
+		if(system == null) return null;
+		try { return system.newInstance(); } 
+		catch(Exception e) { return null; }
+	}
+	
+	public static String getID(Class<? extends SphericalCoordinates> coordType) {
 		if(HorizontalCoordinates.class.isAssignableFrom(coordType)) return "HO";
 		else if(EquatorialCoordinates.class.isAssignableFrom(coordType)) return "EQ";
 		else if(EclipticCoordinates.class.isAssignableFrom(coordType)) return "EC";
@@ -36,7 +59,7 @@ public final class AstroCoordinateID {
 		else return "--";
 	}
 	
-	public static String getSimpleID(AstroCoordinates coords) {
+	public static String getID(AstroSystem coords) {
 		if(coords.isHorizontal()) return "HO";
 		if(coords.isEquatorial()) return "EQ";
 		if(coords.isEcliptic()) return "EC";
@@ -46,7 +69,7 @@ public final class AstroCoordinateID {
 	}
 	
 	public static Class<? extends SphericalCoordinates> getCoordinateClass(String id) {
-		id = id.toLowerCase();
+		id = id.toUpperCase();
 		if(id.equals("ho")) return HorizontalCoordinates.class;
 		if(id.equals("eq")) return EquatorialCoordinates.class;
 		if(id.equals("ec")) return EclipticCoordinates.class;
@@ -60,6 +83,7 @@ public final class AstroCoordinateID {
 		if(coordType == null) return null;
 		try { return coordType.newInstance(); } 
 		catch(Exception e) { return null; }
-		
 	}
+	
+	
 }

@@ -71,7 +71,7 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	
 	public Hashtable<Integer, Pixel> getPixelLookup() {
 		Hashtable<Integer, Pixel> table = new Hashtable<Integer, Pixel>();
-		for(Pixel pixel : getPixels()) table.put(pixel.getDataIndex(), pixel);
+		for(Pixel pixel : getPixels()) table.put(pixel.getFixedIndex(), pixel);
 		return table;
 	}
 		
