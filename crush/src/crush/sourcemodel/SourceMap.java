@@ -67,20 +67,20 @@ public abstract class SourceMap extends SourceModel {
 	
 	public void setSmoothing() {
 		if(!hasOption("smooth")) return;
-		
+		setSmoothing(getSmoothing(option("smooth").getValue()));
+	}
+	
+	public double getSmoothing(String spec) {
 		double sizeUnit = getInstrument().getSizeUnit();
 		double beam = getInstrument().resolution;
 		
-		Configurator option = option("smooth");
-		if(option.equals("beam")) setSmoothing(beam);
-		else if(option.equals("halfbeam")) setSmoothing(0.5 * beam);
-		else if(option.equals("2/3beam")) setSmoothing(beam / 1.5);
-		else if(option.equals("minimal")) setSmoothing(0.3 * beam);
-		else if(option.equals("optimal")) {
-			setSmoothing(hasOption("smooth.optimal") ? 
-					option("smooth.optimal").getDouble() * sizeUnit : beam);
-		}
-		else setSmoothing(Math.max(0.0, option.getDouble()) * sizeUnit);
+
+		if(spec.equals("beam")) return beam;
+		else if(spec.equals("halfbeam")) return 0.5 * beam;
+		else if(spec.equals("2/3beam")) return beam / 1.5;
+		else if(spec.equals("minimal")) return 0.3 * beam;
+		else if(spec.equals("optimal")) return hasOption("smooth.optimal") ? option("smooth.optimal").getDouble() * sizeUnit : beam;
+		else return Math.max(0.0, Double.parseDouble(spec) * sizeUnit);
 	}
 	
 	public void setSmoothing(double value) { smoothing = value; }

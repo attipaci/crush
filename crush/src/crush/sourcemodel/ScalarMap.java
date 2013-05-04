@@ -137,6 +137,7 @@ public class ScalarMap extends SourceMap {
 		Projection2D<SphericalCoordinates> projection = getProjection();
 		
 		if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
+		else if(system.equals("focalplane")) projection.setReference(new FocalPlaneCoordinates()); 
 		else if(firstScan.isPlanetary) {
 			System.err.println(" Forcing equatorial for moving object.");
 			getOptions().process("system", "equatorial");
@@ -442,6 +443,12 @@ public class ScalarMap extends SourceMap {
 		if(hasOption("smooth") && !hasOption("smooth.external")) {
 			if(verbose) System.err.print("(smooth) ");
 			map.smoothTo(getSmoothing());
+		}
+		
+		if(hasOption("smooth.weights")) {
+			AstroMap copy = (AstroMap) map.copy(true);
+			copy.smooth(getSmoothing(option("smooth.weights").getValue()));
+			map.setWeight(copy.getWeight());
 		}
 
 		// Apply the filtering to the final map, to reflect the correct blanking

@@ -43,13 +43,15 @@ public class MakoPixel extends SimplePixel {
 	public double toneFrequency;
 	public double calError;
 	
-	ResonanceID association;
+	ResonanceID id;
 	
 	public MakoPixel(Mako array, int zeroIndex) {
 		super(array, zeroIndex+1);
 		toneIndex = zeroIndex;
-		flag(FLAG_UNASSIGNED);
+		flag(FLAG_NOTONEID | FLAG_UNASSIGNED);
 		size = defaultSize;
+		row = -1;
+		col = -1;
 	}
 	
 	@Override
@@ -57,6 +59,10 @@ public class MakoPixel extends SimplePixel {
 		MakoPixel copy = (MakoPixel) super.copy();
 		if(size != null) copy.size = (Vector2D) size.clone();
 		return copy;		
+	}
+	
+	public String getID() {
+		return Util.f1.format(id.freq);
 	}
 	
 	@Override
@@ -80,8 +86,17 @@ public class MakoPixel extends SimplePixel {
 	}
 	
 	@Override
+	public void parseValues(StringTokenizer tokens, int criticalFlags) {
+		id = new ResonanceID(-1);
+		id.freq = Double.parseDouble(tokens.nextToken());
+		id.delta = -Double.parseDouble(tokens.nextToken());
+		super.parseValues(tokens, criticalFlags);
+		//if(tokens.hasMoreTokens()) coupling = Double.parseDouble(tokens.nextToken());
+	}
+	
+	@Override
 	public String toString() {
-		return super.toString() + "\t" + Util.f3.format(coupling) + "\t" + Util.f1.format(toneFrequency);
+		return getID() + "\t" + Util.f3.format(-id.delta) + "\t" + super.toString() + "\t" + Util.f3.format(coupling);
 	}
 	
 	public double getAreaFactor() {
@@ -95,12 +110,13 @@ public class MakoPixel extends SimplePixel {
 	
 	@Override
 	public String getRCPString() {
-		return super.getRCPString() + "\t" + Util.f2.format(toneFrequency / Unit.Hz);
+		return super.getRCPString() + "\t" + getID();
 	}
 
 	
 	public static Vector2D defaultSize = new Vector2D(3.86 * Unit.arcsec, 7.21 * Unit.arcsec);
-	
+
+	public final static int FLAG_NOTONEID = 1 << nextSoftwareFlag++;
 	public final static int FLAG_UNASSIGNED = 1 << nextSoftwareFlag++;
 	
 }

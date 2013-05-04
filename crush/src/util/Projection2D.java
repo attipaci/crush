@@ -31,6 +31,7 @@ public abstract class Projection2D<CoordinateType extends CoordinatePair> implem
 
 	private CoordinateType reference;
 	
+	
 	@Override
 	public Object clone() {
 		try { return super.clone(); }

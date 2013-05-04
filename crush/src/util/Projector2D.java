@@ -30,6 +30,7 @@ public class Projector2D<CoordinateType extends CoordinatePair> {
 	private Projection2D<CoordinateType> projection;
 	private CoordinateType coords;
 	
+	
 	@SuppressWarnings("unchecked")
 	public Projector2D(Projection2D<CoordinateType> projection) {
 		this.projection = projection;
@@ -45,4 +46,6 @@ public class Projector2D<CoordinateType extends CoordinatePair> {
 	public void deproject() {
 		projection.deproject(offset, coords);
 	}
+	
+	protected Projection2D<CoordinateType> getProjection() { return projection; }
 }

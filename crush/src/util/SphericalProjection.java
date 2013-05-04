@@ -127,7 +127,7 @@ public abstract class SphericalProjection extends Projection2D<SphericalCoordina
 	
 	// Global deprojection
 	@Override
-	public void deproject(final CoordinatePair projected, final SphericalCoordinates toCoords) {
+	public void deproject(final CoordinatePair projected, final SphericalCoordinates toCoords) {		
 		final double theta = theta(projected);
 		final double phi = phi(projected);
 		final double dPhi = phi - nativePole.getX();
@@ -156,7 +156,7 @@ public abstract class SphericalProjection extends Projection2D<SphericalCoordina
 		
 		toCoords.standardize();
 	}
-
+	
 	
 	public abstract double phi(CoordinatePair offset);
 	

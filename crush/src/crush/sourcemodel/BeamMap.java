@@ -56,12 +56,13 @@ public class BeamMap extends SourceMap {
 	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		// Set all pixel positions to zero...
-		for(Scan<?,?> scan : collection) for(Integration<?,?> integration : scan) 
+		for(Scan<?,?> scan : collection) for(Integration<?,?> integration : scan) {
 			for(Pixel pixel : integration.instrument.getMappingPixels()) {
 				pixel.getPosition().zero();
 				pixel.setIndependent(true);
 			}
-		
+		}
+			
 		super.createFrom(collection);
 		
 		template = new ScalarMap(getInstrument());
@@ -235,25 +236,6 @@ public class BeamMap extends SourceMap {
 		float[] peaks = new float[getInstrument().storeChannels];
 		float[] pixelPeak = new float[pixelMap.length];
 		
-		// Calculate mean rotation angle from sinA and cosA
-		// First check if angles are close to +-180 to see if need to branch at zero
-		double A0 = scans.get(0).getFirstIntegration().getFirstFrame().getRotation();
-		boolean zeroBranch = Math.abs(Math.PI - Math.abs(A0)) < Math.PI/6.0;
-		
-		double sumA = 0.0;
-		int n = 0;
-		for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) for(Frame exposure : integration) if(exposure != null) {
-			double A = exposure.getRotation();
-			if(zeroBranch) {
-				A += Math.PI;
-				A = Math.IEEEremainder(A, 2.0 * Math.PI);
-			}
-			sumA += A;
-			n++;
-		}
-		double rotation = n > 0 ? sumA /= n : 0.0;
-		if(zeroBranch) rotation -= Math.PI;
-		
 		int k = 0;
 		
 		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
@@ -275,8 +257,7 @@ public class BeamMap extends SourceMap {
 					// Get the offset position if it makes sense, or set as NaN otherwise... 
 					map.getProjection().project(source.getCoordinates(), pixel.getPosition());				
 
-					// Derotate to array coordinates...
-					pixel.getPosition().rotate(-rotation);
+					// The pixel position is the opposite of its apparent offset.
 					pixel.getPosition().invert();
 				}
 			}

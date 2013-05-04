@@ -103,8 +103,8 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	
 	@Override
 	public void validate() {
-		super.validate();
-	
+		super.validate();	
+		
 		if(hasOption("elevation-response")) {
 			try { 
 				String fileName = option("elevation-response").getPath();
