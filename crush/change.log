@@ -11,6 +11,10 @@
 >> GLOSSARY --> @Instrument
 >> Check MAKO equatorial/celestial flags. Try invoke planetary automatically.
 >> Check equatorial Moon scan.
+>> projection.angle
+>> system=focalplane
+>> Frame.equatorial, HF.horizontal/hOffset -> nativeCoords, nativeOffset
+       
 
 	[NEW] Initial MAKO support.
 
@@ -23,11 +27,24 @@
 	the pipeline analysis. Now default for all currently supported 
 	instruments.
 
+	[BUG] The option '-planetary' produced images upside down.
+
 	[FIX] Noise whitening filter went berserk when 'whiten.proberange'
 	was set to '*'. Now fixed.
 	
 	[FIX] Diagonals of covariance matrices were not flagged out as
 	intended.
+
+	[TWEAK] {b1} {beammap} Scan maps are properly derotated frame-by-frame
+	s.t. the resulting maps are fully aligned in array coordinates.
+
+	[TWEAK] {b1} {MAKO} Two-step pixel assignment. First, assign tones with
+	a static toneid based on hot/cold measurements. Then, match the pixel
+	identifications to these. This way, only uniquely identified tones
+	get pixel assignment for mapping, and beammaps are possible with
+	fixed tone-ids across different loading conditions.
+
+	[TWEAK] {b1} {MAKO} Eliminated possible duplicate tone assignments.
 
 	[TWEAK] {b1} {MAKO} Blind tones are ignored.
 
@@ -49,6 +66,9 @@
 	tweaks.
 
 	[CODE] channel.fixedIndex access via safer get/set methods only.
+	
+	[CODE] Frame/HorizontalFrame updates.
+
 
 
 2.14-a1 (16 April 2013)

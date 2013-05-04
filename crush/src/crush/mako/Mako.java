@@ -63,8 +63,9 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 	String calModelName;
 	String calVersion;
 	
-	double alpha = Double.NaN;
+	double Tsky = Double.NaN;
 	
+	ToneIdentifier identifier;
 	
 	public Mako() {
 		super("mako", pixels);
@@ -133,7 +134,7 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 
 	@Override
 	public String getChannelDataHeader() {
-		return super.getChannelDataHeader() + "\teff\ttonefreq";
+		return "toneid\t" + super.getChannelDataHeader() + "\teff";
 	}
 
 	@Override
@@ -141,14 +142,36 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		return new MakoScan(this);
 	}
 
+	public Hashtable<String, MakoPixel> idLookup() {
+		Hashtable<String, MakoPixel> lookup = new Hashtable<String, MakoPixel>(pixels);
+		for(MakoPixel pixel : this) if(pixel.id != null) lookup.put(pixel.getID(), pixel);
+		return lookup;
+	}
+	
 	@Override
 	public void loadChannelData() {
 		
-		if(hasOption("assign")) {
-			try { assignTones(option("assign").getValue()); }
-			catch(IOException e) { System.err.println(" WARNING! Cannot assign pixels from '" + option("assign").getValue() + "'."); }
+		if(hasOption("toneid")) {
+			try {
+				identifier = new ToneIdentifier(option("toneid"));
+				double guessT = (hasOption("toneid.guesst") ? option("toneid.guesst").getDouble() : 150.0) * Unit.K;
+				Tsky = identifier.match(new ResonanceList(this), guessT);
+			}
+			catch(IOException e) {
+				System.err.println(" WARNING! Cannot identify tones from '" + option("toneid").getValue() + "'."); 
+				if(CRUSH.debug) e.printStackTrace();
+			}
+		}
+			
+		if(identifier != null && hasOption("assign")) {	
+			try { assignPixels(option("assign").getValue()); }
+			catch(IOException e) { 
+				System.err.println(" WARNING! Cannot assign pixels from '" + option("assign").getValue() + "'."); 
+				if(CRUSH.debug) e.printStackTrace();
+			}
 		}
 		else System.err.println(" WARNING! Tones are not assigned to pixels. Cannot make regular maps.");
+		
 		
 		// Do not flag unassigned pixels when beam-mapping...
 		if(hasOption("source.type")) if(option("source.type").equals("beammap")) 
@@ -168,20 +191,57 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		}
 		if(hasOption("mirror")) { pixelSize.scaleX(-1.0); }
 		if(hasOption("zoom")) { pixelSize.scale(option("zoom").getDouble()); }
-		if(hasOption("skew")) { 
-			double skew = option("skew").getDouble();
+		if(hasOption("stretch")) { 
+			double skew = option("stretch").getDouble();
 			pixelSize.scaleX(skew);
 			pixelSize.scaleY(1.0/skew);
 		}
 		
 		calcPositions(pixelSize);
-	
+		
 		checkRotation();
 		
 		super.loadChannelData();
 		
 	}
 	
+	@Override
+	public Hashtable<Integer, Pixel> getPixelLookup() {
+		Hashtable<Integer, Pixel> table = new Hashtable<Integer, Pixel>();
+		for(MakoPixel pixel : this) if(pixel.id != null) table.put(pixel.id.index, pixel);
+		return table;
+	}
+	
+	public void assignPixels(String fileSpec) throws IOException {
+		if(identifier == null) throw new IllegalStateException(" Assigning pixels requires tone identifications first.");
+		
+		System.err.println(" Loading pixel assignments from " + fileSpec);
+
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Util.getSystemPath(fileSpec))));
+		String line = null;
+		
+		ResonanceList associations = new ResonanceList(pixels);
+		
+		double guessT = (hasOption("toneid.guesst") ? option("toneid.guesst").getDouble() : 300.0) * Unit.K;
+		
+		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+			StringTokenizer tokens = new StringTokenizer(line, ", \t");
+			MakoPixel pixel = new MakoPixel(this, -1);
+			
+			pixel.toneFrequency = Double.parseDouble(tokens.nextToken());
+			pixel.row = Integer.parseInt(tokens.nextToken()) - 1;
+			pixel.col = Integer.parseInt(tokens.nextToken()) - 1;
+
+			associations.add(pixel);
+		}
+
+		in.close();
+
+		System.err.println(" Found pixel assignments for " + associations.size() + " resonances.");
+		
+		identifier.match(associations, guessT);
+		associations.assign(this);
+	}
 	
 	
 	@Override
@@ -202,6 +262,7 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		}
 		Vector2D center = MakoPixel.getPosition(size, arrayPointingCenter.getX() - 1.0, arrayPointingCenter.getY() - 1.0);
 		setReferencePosition(center);
+		
 	}
 	
 	@Override
@@ -324,14 +385,6 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 	
 	@Override
 	public void readWiring(String fileName) throws IOException {}
-	
-	public void assignTones(String fileSpec) throws IOException {
-		PixelAssignment assignment = new PixelAssignment(fileSpec);
-		if(hasOption("assign.max")) assignment.maxDeviation = option("assign.max").getDouble();
-		assignment.match(new ToneList(this));
-		alpha = assignment.alpha;
-		if(CRUSH.verbose) System.err.println(" Loading constant alpha = " + Util.f3.format(alpha));
-	}
 
 	@Override
 	public int maxPixels() {
@@ -352,7 +405,7 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		double Tcold = 4.2 * Unit.K;
 		double Thot = 295.16 * Unit.K;
 		
-		return Tcold + alpha * (Thot - Tcold);
+		return Tcold + Tsky * (Thot - Tcold);
 		
 	}
 	

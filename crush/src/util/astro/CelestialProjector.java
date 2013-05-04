@@ -28,6 +28,7 @@ import util.Projection2D;
 import util.Projector2D;
 import util.SphericalCoordinates;
 
+
 public class CelestialProjector extends Projector2D<SphericalCoordinates> {
 	private EquatorialCoordinates equatorial;
 	private CelestialCoordinates celestial;
@@ -51,7 +52,7 @@ public class CelestialProjector extends Projector2D<SphericalCoordinates> {
 	public EquatorialCoordinates getEquatorial() { return equatorial; }
 	
 	public final boolean isHorizontal() {
-		return celestial == null;
+		return getCoordinates() instanceof HorizontalCoordinates;
 	}
 	
 	@Override

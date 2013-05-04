@@ -1560,8 +1560,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				// Scanning includes the chopper motion
 				// SCANNING with or without CHOPPER
 				else if((type & Motion.SCANNING) != 0) {
-					exposure.getEquatorialOffset(pos);
-					exposure.equatorialToNative(pos);
+					exposure.getEquatorialNativeOffset(pos);
+					exposure.equatorialNativeToNative(pos);
 					// Subtract the chopper motion if it is not requested...
 					if((type & Motion.CHOPPER) == 0) pos.subtract(exposure.chopperPosition);
 				}	

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,11 +20,11 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009,2010 Attila Kovacs
 
 package crush;
 
 import util.*;
+import util.astro.CelestialProjector;
 import util.astro.EquatorialCoordinates;
 import util.astro.HorizontalCoordinates;
 
@@ -57,7 +57,6 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 		coords.setNativeLatitude(equatorial.getY() + (cosPA * y + sinPA * x));
 	}
 	
-	@Override
 	public void getHorizontal(final Vector2D position, final HorizontalCoordinates coords) {
 		// The proper GLS convention uses actual cos(DEC)
 		// However, APECS uses cos(DEC0)
@@ -65,15 +64,23 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 		coords.setNativeLatitude(horizontal.getY() + getY(position));
 	}
 	
-	@Override
 	public void getHorizontalOffset(final Vector2D position, final Vector2D offset) {
 		offset.setX(horizontalOffset.getX() + getX(position));
 		offset.setY(horizontalOffset.getY() + getY(position));
 	}
 	
+	@Override
+	public void getNativeOffset(final Vector2D position, final Vector2D offset) {
+		getHorizontalOffset(position, offset);
+	}
 	
 	@Override
-	public final void getEquatorialOffset(final Vector2D position, final Vector2D offset) {
+	public void getNativeOffset(final Vector2D offset) {
+		offset.copy(horizontalOffset);
+	}
+		
+	@Override
+	public final void getEquatorialNativeOffset(final Vector2D position, final Vector2D offset) {
 		getHorizontalOffset(position, offset);
 		toEquatorial(offset);
 	}
@@ -87,6 +94,15 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	public Vector2D getNativeOffset() {
 		return horizontalOffset;
 	}	
+	
+	@Override
+	public void project(final Vector2D position, final CelestialProjector projector) {
+		if(projector.isHorizontal()) {
+			getHorizontalOffset(position, projector.offset);
+		}
+		else super.project(position, projector);
+	}
+	
 	
 	// Calculates the parallactic angle from the site and the horizontal coordinates...
 	public void calcParallacticAngle() {
@@ -144,23 +160,22 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 		final double x = offset.getX();
 		offset.setX(cosPA * x - sinPA * offset.getY());
 		offset.setY(cosPA * offset.getY() + sinPA * x);
-		offset.scaleX(-1.0);
 	}
 	
 	// Rotate by -PA
 	public final void toHorizontal(Vector2D offset) {
-		final double x = -offset.getX();
+		final double x = offset.getX();
 		offset.setX(cosPA * x + sinPA * offset.getY());
 		offset.setY(cosPA * offset.getY() - sinPA * x);
 	}
 	
 	@Override
-	public final void nativeToEquatorial(Vector2D offset) {
+	public final void nativeToEquatorialNative(Vector2D offset) {
 		toEquatorial(offset);
 	}
 	
 	@Override
-	public final void equatorialToNative(Vector2D offset) {
+	public final void equatorialNativeToNative(Vector2D offset) {
 		toHorizontal(offset);
 	}
 	

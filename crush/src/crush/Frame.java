@@ -27,7 +27,6 @@ package crush;
 import util.*;
 import util.astro.CelestialProjector;
 import util.astro.EquatorialCoordinates;
-import util.astro.HorizontalCoordinates;
 
 
 public abstract class Frame implements Cloneable, Flagging {
@@ -149,22 +148,40 @@ public abstract class Frame implements Cloneable, Flagging {
 		default: sinA = 0.0; cosA = 1.0;
 		}		
 	}
-	
-	public abstract void getEquatorial(final Vector2D position, final EquatorialCoordinates coords);
-	
-	public abstract void getHorizontal(final Vector2D position, final HorizontalCoordinates coords);
-	
-	public abstract void getHorizontalOffset(final Vector2D position, final Vector2D offset);
-	
-	public abstract void getEquatorialOffset(final Vector2D position, final Vector2D offset);
-	
-	public void getEquatorialOffset(Vector2D offset) {
-		equatorial.getOffsetFrom(scan.equatorial, offset);		
+
+	public void getEquatorial(final Vector2D position, final EquatorialCoordinates coords) {
+		coords.setNativeLongitude(equatorial.getX() + getX(position) / scan.equatorial.cosLat());
+		coords.setNativeLatitude(equatorial.getY() + getY(position));
 	}
 	
-	public Vector2D getEquatorialOffset() {
+	public void getEquatorialNativeOffset(final Vector2D position, final Vector2D offset) {
+		getEquatorialNativeOffset(offset);
+		offset.setX(offset.getX() + getX(position));
+		offset.setY(offset.getY() + getY(position));
+	}
+		
+	public void getNativeOffset(final Vector2D position, final Vector2D offset) {
+		getEquatorialNativeOffset(position, offset);
+	}
+	
+	public void getNativeOffset(final Vector2D offset) {
+		getEquatorialNativeOffset(offset);
+	}
+	
+	public void getFocalPlaneOffset(final Vector2D position, final Vector2D offset) {
+		getNativeOffset(offset);
+		double x = offset.getX();
+		offset.setX(position.getX() + x * cosA + offset.getY() * sinA);
+		offset.setY(position.getY() + offset.getY() * cosA - x * sinA);
+	}
+	
+	public void getEquatorialNativeOffset(Vector2D offset) {
+		equatorial.getNativeOffsetFrom(scan.equatorial, offset);		
+	}
+	
+	public Vector2D getEquatorialNativeOffset() {
 		Vector2D offset = new Vector2D();
-		getEquatorialOffset(offset);
+		getEquatorialNativeOffset(offset);
 		return offset;
 	}
 	
@@ -213,28 +230,36 @@ public abstract class Frame implements Cloneable, Flagging {
 	
 	EquatorialCoordinates zero = new EquatorialCoordinates(0.0, 0.0);
 	
-	public final void project(final Vector2D position, final CelestialProjector projector) {
-		if(projector.isHorizontal()) getHorizontalOffset(position, projector.offset);
+	public void project(final Vector2D position, final CelestialProjector projector) {
+			
+		if(projector.getCoordinates() instanceof FocalPlaneCoordinates) {
+			getFocalPlaneOffset(position, projector.offset);
+		}
 		else if(scan.isPlanetary) {
 			// TODO what about planetary in non-equatorial frames?
-			getEquatorialOffset(position, projector.offset);
-			projector.offset.invert();
+			getEquatorialNativeOffset(position, projector.offset);
 		}
 		else {
 			getEquatorial(position, projector.getEquatorial());
-			projector.project();
+			projector.project();		
 		}
+	
 	}	
 	
-	// Native offsets are in standard directions (e.g. -RA, DEC)
-	public abstract void nativeToEquatorial(Vector2D offset);
 	
 	// Native offsets are in standard directions (e.g. -RA, DEC)
-	public abstract void equatorialToNative(Vector2D offset);
+	public void nativeToEquatorialNative(Vector2D offset) {}
 	
-	public abstract void nativeToEquatorial(SphericalCoordinates coords, EquatorialCoordinates equatorial);
+	// Native offsets are in standard directions (e.g. -RA, DEC)
+	public void equatorialNativeToNative(Vector2D offset) {}
 	
-	public abstract void equatorialToNative(EquatorialCoordinates equatorial, SphericalCoordinates coords);
+	public void nativeToEquatorial(SphericalCoordinates coords, EquatorialCoordinates equatorial) {
+		equatorial.copy(coords);
+	}
+	
+	public void equatorialToNative(EquatorialCoordinates equatorial, SphericalCoordinates coords) {
+		coords.copy(equatorial);
+	}
 	
 	public static int nextSampleFlag = 0;
 	public static byte SAMPLE_SOURCE_BLANK = (byte) (1 << nextSampleFlag++);

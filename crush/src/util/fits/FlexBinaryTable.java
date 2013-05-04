@@ -69,8 +69,8 @@ public class FlexBinaryTable {
 		Object[] data = new Object[columns.size()];
 		for(int c=columns.size(); --c >= 0; ) data[c] = columns.get(c).data;
 	
-		// Make the HDU from the stripped header and data.
-		// This should add the TFORM/TDIM keys...
+		// Make the HDU from the data.
+		// This should create the TFORM/TDIM keys...
 		BinaryTableHDU hdu = (BinaryTableHDU) Fits.makeHDU(new BinaryTable(data));
 		
 		Cursor cursor = hdu.getHeader().iterator();
@@ -84,6 +84,7 @@ public class FlexBinaryTable {
 		old.setKey("TFIELDS");
 		old.next();
 			
+		// Copy over the old header keys, to just after TFIELDS...
 		while(old.hasNext()) cursor.add(old.next());
 		
 		return hdu;

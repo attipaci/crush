@@ -26,23 +26,56 @@ package crush.mako;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Hashtable;
 
 import crush.Channel;
 
-public class ToneList extends ArrayList<MakoPixel> {
+public class ResonanceList extends ArrayList<MakoPixel> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 7951574970001263947L;
 
-	public ToneList(Mako mako) {
+	public ResonanceList(int size) {
+		ensureCapacity(size);
+	}
+	
+	public ResonanceList(Mako mako) {
 		addAll(mako);
 		
+	}
+	
+	public void sort() {
 		Collections.sort(this, new Comparator<MakoPixel>() {
 			public int compare(MakoPixel arg0, MakoPixel arg1) {
 				return Double.compare(arg0.toneFrequency, arg1.toneFrequency);
 			}
-		});
+		});	
+	}
+	
+	public void assign(Mako mako) {
+		int assigned = 0;
+		
+		Hashtable<ResonanceID, MakoPixel> lookup = new Hashtable<ResonanceID, MakoPixel>(mako.size());
+		for(MakoPixel channel : mako) if(channel.id != null) lookup.put(channel.id, channel);
+		
+		for(MakoPixel pixel : this) {
+			if(pixel.id == null) continue;
+			if(pixel.row < 0) continue;
+			if(pixel.col < 0) continue;
+			
+			MakoPixel channel = lookup.get(pixel.id);
+			if(channel == null) continue;
+			
+			channel.row = pixel.row;
+			channel.col = pixel.col;
+			channel.setFixedIndex(pixel.row * Mako.cols + pixel.col);
+			channel.unflag(MakoPixel.FLAG_UNASSIGNED);
+			
+			assigned++;
+		}	
+		
+		System.err.println(" Assigned " + assigned + " of " + size() + " resonances to pixels.");		
 	}
 	
 	public int indexBefore(double f) throws ArrayIndexOutOfBoundsException {
@@ -65,6 +98,10 @@ public class ToneList extends ArrayList<MakoPixel> {
 		while(get(i).isFlagged(Channel.FLAG_BLIND)) if(--i < 0) return i; 
 		
 		return i;
+	}
+	
+	public MakoPixel getNearest(double f) {
+		return get(getNearestIndex(f));
 	}
 	
 	public int getNearestIndex(double f) {	

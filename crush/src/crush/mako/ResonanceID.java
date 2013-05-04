@@ -23,13 +23,33 @@
 
 package crush.mako;
 
+import util.HashCode;
+
 public class ResonanceID implements Comparable<ResonanceID> {
-	double freq, delta;
-	int row, col;
+	int index;
+	double T0, freq, delta;
+	
+	public ResonanceID(int index) {
+		this.index = index;
+	}
 	
 	public int compareTo(ResonanceID other) {
 		return Double.compare(freq, other.freq);
 	}
 	
+	@Override
+	public int hashCode() {
+		return HashCode.get(freq);
+	}
 	
+	@Override
+	public boolean equals(Object o) {
+		if(!(o instanceof ResonanceID)) return false;
+		ResonanceID id = (ResonanceID) o;
+		return freq == id.freq;
+	}
+	
+	public double expectedFreqFor(double T) {
+		return freq + (T - T0) * delta;
+	}
 }
