@@ -104,8 +104,9 @@ public class Complex extends Vector2D {
 	public final void pow(final double b) {
 		final double r = Math.pow(length(), b);
 		final double phi = angle() * b;
-		setX(r * Math.cos(phi));
+		
 		setY(r * Math.sin(phi));
+		setX(r * Math.cos(phi));
 	}
 
 	public static Complex pow(final Complex arg, final double exp) {

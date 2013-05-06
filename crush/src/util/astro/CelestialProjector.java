@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package util.astro;
 
@@ -40,13 +39,14 @@ public class CelestialProjector extends Projector2D<SphericalCoordinates> {
 		// otherwise it's used for converting to and from equatorial...
 		if(getCoordinates() instanceof EquatorialCoordinates) 
 			equatorial = (EquatorialCoordinates) getCoordinates();
-		else equatorial = new EquatorialCoordinates();
-
+		
 		// celestial is the same as coords if coords itself is celestial
 		// otherwise celestial is null, indicating horizontal projection...
-		if(getCoordinates() instanceof CelestialCoordinates)
+		else if(getCoordinates() instanceof CelestialCoordinates) {
 			celestial = (CelestialCoordinates) getCoordinates();
-		
+			equatorial = new EquatorialCoordinates();
+		}
+
 	}
 	
 	public EquatorialCoordinates getEquatorial() { return equatorial; }
@@ -56,14 +56,20 @@ public class CelestialProjector extends Projector2D<SphericalCoordinates> {
 	}
 	
 	@Override
+	public void setReferenceCoords() {
+		super.setReferenceCoords();
+		if(celestial != null) celestial.toEquatorial(equatorial);		
+	}
+	
+	@Override
 	public final void project() {
-		if(getCoordinates() != equatorial) celestial.fromEquatorial(equatorial);
+		if(celestial != null) celestial.fromEquatorial(equatorial);
 		super.project();
 	}
 	
 	@Override
 	public final void deproject() {
 		super.deproject();
-		if(getCoordinates() != equatorial) celestial.toEquatorial(equatorial);
+		if(celestial != null) celestial.toEquatorial(equatorial);
 	}
 }

@@ -681,12 +681,14 @@ public final class Util {
 	}
 	
 
-	public static double sinc(double x) { return x == 0.0 ? 1.0 : Math.sin(x) / x; } 
+	public final static double sinc(double x) { return x == 0.0 ? 1.0 : Math.sin(x) / x; } 
 	
-	public static double log2(double x) { return Math.log(x) / log2; }
+	public final static double log2(double x) { return Math.log(x) / log2; }
 	
 	public static final double sigmasInFWHM = 2.0*Math.sqrt(2.0*Math.log(2.0));
 	public static final double log2 = 0.693147180559945;
+	public static final double twoPi = 2.0 * Math.PI;
+	public static final double rightAngle = 0.5 * Math.PI;
 }
 
 

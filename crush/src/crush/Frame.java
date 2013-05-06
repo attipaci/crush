@@ -228,20 +228,23 @@ public abstract class Frame implements Cloneable, Flagging {
 		return cosA * position.getY() + sinA * position.getX();	
 	}
 	
-	EquatorialCoordinates zero = new EquatorialCoordinates(0.0, 0.0);
-	
 	public void project(final Vector2D position, final CelestialProjector projector) {
 			
 		if(projector.getCoordinates() instanceof FocalPlaneCoordinates) {
 			getFocalPlaneOffset(position, projector.offset);
+			projector.setReferenceCoords();
+			projector.getCoordinates().addNativeOffset(projector.offset);
+			projector.project();
 		}
 		else if(scan.isPlanetary) {
-			// TODO what about planetary in non-equatorial frames?
 			getEquatorialNativeOffset(position, projector.offset);
+			projector.setReferenceCoords();
+			projector.getCoordinates().addNativeOffset(projector.offset);
+			projector.project();
 		}
 		else {
-			getEquatorial(position, projector.getEquatorial());
-			projector.project();		
+			getEquatorial(position, projector.getEquatorial());		
+			projector.project();
 		}
 	
 	}	

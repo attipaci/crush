@@ -27,7 +27,14 @@
 	the pipeline analysis. Now default for all currently supported 
 	instruments.
 
-	[BUG] The option '-planetary' produced images upside down.
+	[BUG] The option '-planetary' produced images upside down. Ooops.
+
+	[FIX] Previously, projections did not apply to horizontal maps or
+	moving objects (reduced with -planetary). Those were always produced
+	in the default projection (GLS, or as the old-fashioned tend to call
+	it: SFL). From now on, the projection directive is always followed,
+	even in focal-plane coordinates. (It makes things a tiny bit slower
+	but these are not the typical reduction modes anyway...) 
 
 	[FIX] Noise whitening filter went berserk when 'whiten.proberange'
 	was set to '*'. Now fixed.

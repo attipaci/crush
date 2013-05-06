@@ -183,9 +183,9 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 		// with precision readjustments as necessary.
 
 		final double theta = (isForward ? 1.0 : -1.0) * twoPi / blk;
-		final double c = Math.cos(theta);
 		final double s = Math.sin(theta);
-
+		final double c = Math.cos(theta);
+		
 		int m = (from & blkmask) >> 1;
 		double r = m == 0 ? 1.0 : Math.cos(m * theta);
 		double i = m == 0 ? 0.0 : Math.sin(m * theta);
@@ -274,8 +274,8 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 		// with precision readjustments as necessary.
 
 		final double theta = (isForward ? 1.0 : -1.0) * twoPi / (blk << 1);
-		final double c = Math.cos(theta);
 		final double s = Math.sin(theta);
+		final double c = Math.cos(theta);
 		
 		int m = (from & blkmask) >> 1;
 		double wr1 = Math.cos(m * theta);
@@ -401,8 +401,9 @@ public class DoubleFFT extends FFT<double[]> implements RealFFT<double[]> {
 		to = (to >> 2) << 1;
 		
 		final double theta = (isForward ? 1.0 : -1.0) * twoPi / data.length;
-		final double c = Math.cos(theta);
 		final double s = Math.sin(theta);
+		final double c = Math.cos(theta);
+		
 		final double sh = isForward ? 0.5 : -0.5;
 		final int clcmask = getTwiddleMask();
 			
