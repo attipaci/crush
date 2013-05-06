@@ -109,15 +109,15 @@ public class SphericalCoordinates extends CoordinatePair implements Metric<Spher
 	@Override
 	public final void setY(final double value) { 
 		super.setY(Math.IEEEremainder(value, Math.PI));
-		cosLat = Math.cos(value);
 		sinLat = Math.sin(value);
+		cosLat = Math.cos(value);
 	}
 	
 	@Override
 	public final void addY(final double value) { 
 		super.addY(Math.IEEEremainder(value, Math.PI));
-		cosLat = Math.cos(getY());
 		sinLat = Math.sin(getY());
+		cosLat = Math.cos(getY());
 	}
 	
 	@Override

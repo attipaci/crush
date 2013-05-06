@@ -39,6 +39,10 @@ public class Projector2D<CoordinateType extends CoordinatePair> {
 
 	public CoordinateType getCoordinates() { return coords; }
 	
+	public void setReferenceCoords() {
+		coords.copy(getProjection().getReference());
+	}
+	
 	public void project() {
 		projection.project(coords, offset);
 	}
@@ -47,5 +51,5 @@ public class Projector2D<CoordinateType extends CoordinatePair> {
 		projection.deproject(offset, coords);
 	}
 	
-	protected Projection2D<CoordinateType> getProjection() { return projection; }
+	public Projection2D<CoordinateType> getProjection() { return projection; }
 }

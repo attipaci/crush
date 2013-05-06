@@ -46,12 +46,12 @@ public abstract class ZenithalProjection extends SphericalProjection {
 	
 	@Override
 	public final double theta(final CoordinatePair offset) {
-		return thetaOfR(Math.sqrt(offset.getX()*offset.getX() + offset.getY()*offset.getY()));
+		return thetaOfR(Math.hypot(offset.getX(), offset.getY()));
 	}
 	
 	@Override
 	public final void getOffsets(final double theta, final double phi, final CoordinatePair toOffset) {
-		double R = R(theta);
+		final double R = R(theta);
 		// What is in Calabretta and Greisen 2002
 		toOffset.setX(R * Math.sin(phi));
 		toOffset.setY(-R * Math.cos(phi));

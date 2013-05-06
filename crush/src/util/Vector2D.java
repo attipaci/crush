@@ -65,8 +65,8 @@ public class Vector2D extends CoordinatePair implements Metric<Vector2D> {
 	public final void scale(final double value) { scaleX(value); scaleY(value); }    
 
 	public final void rotate(final double alpha) {
-		final double cosA = Math.cos(alpha);
 		final double sinA = Math.sin(alpha);
+		final double cosA = Math.cos(alpha);
 
 		final double x = getX();
 		setX(x * cosA - getY() * sinA);

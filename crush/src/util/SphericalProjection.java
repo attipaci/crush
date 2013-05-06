@@ -143,8 +143,8 @@ public abstract class SphericalProjection extends Projection2D<SphericalCoordina
 			}	
 		}
 		else {
-			final double cosTheta = Math.cos(theta);
 			final double sinTheta = Math.sin(theta);
+			final double cosTheta = Math.cos(theta);			
 			final double cosPhi = Math.cos(dPhi);
 					
 			toCoords.setNativeLongitude(pole.getX() + Math.atan2(

@@ -35,7 +35,6 @@ import crush.array.*;
 import crush.astro.AstroMap;
 
 public class BeamMap extends SourceMap {
-	
 	ScalarMap[] pixelMap;
 	private ScalarMap template;
 	
@@ -80,6 +79,8 @@ public class BeamMap extends SourceMap {
 		for(ScalarMap map : pixelMap) if(map != null) map.reset(clearContent);
 	}
 
+	
+		
 	@Override
 	public synchronized void add(SourceModel model, double weight) {
 		if(!(model instanceof BeamMap)) throw new IllegalArgumentException("ERROR! Cannot add " + model.getClass().getSimpleName() + " to " + getClass().getSimpleName());
@@ -95,11 +96,11 @@ public class BeamMap extends SourceMap {
 
 
 	@Override
-	protected void add(Frame exposure, Pixel pixel, Index2D index, double fGC, double[] sourceGain, double dt, int excludeSamples) {
-		int i = pixel.getFixedIndex();
+	protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain, final double dt, final int excludeSamples) {		
+		final int i = pixel.getFixedIndex();
 		ScalarMap map = pixelMap[i];
 		
-		if(map == null) {
+		if(map == null) {	
 			map = (ScalarMap) template.copy(false);
 			map.id = Integer.toString(i);
 			map.standalone();
@@ -179,8 +180,8 @@ public class BeamMap extends SourceMap {
 	}
 
 	@Override
-	protected void sync(Frame exposure, Pixel pixel, Index2D index, double fG, double[] sourceGain, double[] syncGain, boolean isMasked) {
-		ScalarMap map = pixelMap[pixel.getFixedIndex()];
+	protected void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, final double[] syncGain, final boolean isMasked) {
+		final ScalarMap map = pixelMap[pixel.getFixedIndex()];
 		if(map != null) map.sync(exposure, pixel, index, fG, sourceGain, syncGain, isMasked);	
 	}
 

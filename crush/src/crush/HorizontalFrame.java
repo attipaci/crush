@@ -42,7 +42,6 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	public void validate() {
 		if(equatorial == null) calcEquatorial();
 		else if(horizontal == null) calcHorizontal();
-		
 		super.validate();
 	}
 	
@@ -99,8 +98,11 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	public void project(final Vector2D position, final CelestialProjector projector) {
 		if(projector.isHorizontal()) {
 			getHorizontalOffset(position, projector.offset);
+			projector.setReferenceCoords();
+			projector.getCoordinates().addNativeOffset(projector.offset);
+			projector.project();
 		}
-		else super.project(position, projector);
+		else super.project(position, projector);		
 	}
 	
 	
