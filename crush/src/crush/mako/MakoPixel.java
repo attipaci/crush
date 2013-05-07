@@ -72,7 +72,7 @@ public class MakoPixel extends SimplePixel {
 	
 	public void calcPosition() {
 		// ALt/Az maps show this to be correct...
-		position = getPosition(size, row, col);
+		position = getPosition(size, row - 0.5 * (Mako.rows-1), col - 0.5 * (Mako.cols-1));
 	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {
