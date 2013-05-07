@@ -181,6 +181,7 @@ public class ToneIdentifier extends ArrayList<ResonanceID> implements Cloneable 
 	
 	private int assign(ResonanceList tones, double T, int rounds) {
 		if(rounds == 0) return 0;
+		if(tones.isEmpty()) return 0; 
 	
 		int ids = 0;
 		
