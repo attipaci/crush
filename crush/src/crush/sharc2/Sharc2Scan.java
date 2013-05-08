@@ -349,13 +349,14 @@ public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements Groun
 		System.err.println(" [" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
 		if(equatorial != null) System.err.println(" Equatorial: " + equatorial.toString());	
 		
+		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
+		catch(ParseException e) { e.printStackTrace(); }
+		
+		iMJD = (int) Math.floor(getMJD());
+		
 		// iMJD does not exist in earlier scans
 		// convert DATE-OBS into MJD...
-		if(header.containsKey("JUL_DAY")) iMJD = header.getIntValue("JUL_DAY");
-		else {
-			try { iMJD = (int)(AstroTime.forFitsTimeStamp(timeStamp).getMJD());	}
-			catch(ParseException e) { throw new HeaderCardException(e.getMessage()); }
-		}
+		//if(header.containsKey("JUL_DAY")) iMJD = header.getIntValue("JUL_DAY");
 			
 		addOffsets = hasOption("offsets.add");
 		

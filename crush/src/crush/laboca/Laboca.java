@@ -126,7 +126,7 @@ public class Laboca extends APEXArray<LabocaPixel> {
 		System.err.println(" Loading wiring data from " + fileName);
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<Integer, LabocaPixel> lookup = getChannelLookup();
+		Hashtable<Integer, LabocaPixel> lookup = getFixedIndexLookup();
 		
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
@@ -162,7 +162,7 @@ public class Laboca extends APEXArray<LabocaPixel> {
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		String line;
 		
-		Hashtable<Integer, LabocaPixel> lookup = getChannelLookup();
+		Hashtable<Integer, LabocaPixel> lookup = getFixedIndexLookup();
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);

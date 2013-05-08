@@ -125,6 +125,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 			}
 			
 			CSOTauTable table = CSOTauTable.get(((Sharc2Scan) scan).iMJD, file.getPath());
+			table.setOptions(option("tau"));
 			setTau("225GHz", table.getTau(getMJD()));	
 		
 		}
@@ -338,7 +339,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 					equatorialOffset.set(RAO[i] * Unit.arcsec, DECO[i] * Unit.arcsec);	
 					
 					
-					frame.toHorizontal(equatorialOffset);
+					frame.equatorialToHorizontal(equatorialOffset);
 					frame.horizontalOffset.add(equatorialOffset);
 		
 					set(offset + i, frame);

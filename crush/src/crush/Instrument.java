@@ -276,7 +276,7 @@ implements TableFormatter.Entries {
 	// TODO ability to flag groups divisions...
 	// perhaps flag.group, and flag.division...
 	public void flagPixels(Collection<Integer> list) {
-		Hashtable<Integer, ChannelType> lookup = getChannelLookup();
+		Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
 		System.err.println(" Flagging " + list.size() + " channels");
 		for(int beIndex : list) if(lookup.containsKey(beIndex)) lookup.get(beIndex).flag(Channel.FLAG_DEAD);
 	}
@@ -299,7 +299,7 @@ implements TableFormatter.Entries {
 		
 		System.err.println(" Defining " + list.size() + " blind channels.");		
 		
-		Hashtable<Integer, ChannelType> lookup = getChannelLookup();
+		Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
 		
 		for(int beIndex : list) {
 			ChannelType channel = lookup.get(beIndex);
@@ -372,7 +372,7 @@ implements TableFormatter.Entries {
 		addGroup("blinds", copyGroup().discard(nonDetectorFlags).discard(Channel.FLAG_BLIND, ChannelGroup.KEEP_ANY_FLAG));
 		
 		if(options.containsKey("group")) {
-			Hashtable<Integer, ChannelType> lookup = getChannelLookup();
+			Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
 			Configurator option = option("group");
 			for(String name : option.getTimeOrderedKeys()) {
 				ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>(name);
@@ -559,7 +559,7 @@ implements TableFormatter.Entries {
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		String line;
 	
-		Hashtable<Integer, ChannelType> lookup = getChannelLookup();
+		Hashtable<String, ChannelType> lookup = getIDLookup();
 	
 		// Channels not contained in the data file are assumed dead...
 		for(Channel channel : this) channel.flag(Channel.FLAG_DEAD);
@@ -567,7 +567,7 @@ implements TableFormatter.Entries {
 		while((line=in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {	
 			try {
 				StringTokenizer tokens = new StringTokenizer(line);
-				ChannelType channel = lookup.get(Integer.parseInt(tokens.nextToken()));
+				ChannelType channel = lookup.get(tokens.nextToken());
 				if(channel != null) {
 					// Channels in the file are not dead after all, or let ChannelType.parse decide that....
 					channel.unflag(Channel.FLAG_DEAD);
@@ -618,9 +618,15 @@ implements TableFormatter.Entries {
 	
 	public abstract Collection<? extends Pixel> getMappingPixels();
 	
-	public Hashtable<Integer, ChannelType> getChannelLookup() {
+	public Hashtable<Integer, ChannelType> getFixedIndexLookup() {
 		Hashtable<Integer, ChannelType> lookup = new Hashtable<Integer, ChannelType>();
 		for(ChannelType channel : this) lookup.put(channel.getFixedIndex(), channel);
+		return lookup;
+	}
+	
+	public Hashtable<String, ChannelType> getIDLookup() {
+		Hashtable<String, ChannelType> lookup = new Hashtable<String, ChannelType>();
+		for(ChannelType channel : this) lookup.put(channel.getID(), channel);
 		return lookup;
 	}
 	
@@ -649,7 +655,7 @@ implements TableFormatter.Entries {
 	}
 	
 	public synchronized void addGroup(String name, Vector<Integer> backendIndexes) {
-		Hashtable<Integer, ChannelType> lookup = getChannelLookup();
+		Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
 		ChannelGroup<ChannelType> group = new ChannelGroup<ChannelType>(name);
 		for(int be : backendIndexes) {
 			ChannelType pixel = lookup.get(be);
@@ -704,7 +710,7 @@ implements TableFormatter.Entries {
 	}
 	
 	public void slimGroups() {
-		Hashtable<Integer, ChannelType> lookup = getChannelLookup();
+		Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
 		for(String name : groups.keySet()) slimGroup(groups.get(name), lookup);
 		for(String name : divisions.keySet()) for(ChannelGroup<?> group : divisions.get(name)) slimGroup(group, lookup);  
 		for(String name : modalities.keySet()) for(Mode mode : modalities.get(name)) slimGroup(mode.getChannels(), lookup); 	

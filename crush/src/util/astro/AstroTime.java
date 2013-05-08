@@ -217,7 +217,7 @@ public class AstroTime {
 	
 	public static AstroTime forFitsTimeStamp(String text) throws ParseException {
 		AstroTime time = new AstroTime();
-		
+			
 		time.parseFitsTimeStamp(text.substring(0, 10));
 		time.MJD = Math.round(time.MJD);
 		if(text.length() > 11) {

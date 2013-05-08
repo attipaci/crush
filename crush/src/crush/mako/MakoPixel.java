@@ -61,8 +61,9 @@ public class MakoPixel extends SimplePixel {
 		return copy;		
 	}
 	
+	@Override
 	public String getID() {
-		return Util.f1.format(id.freq);
+		return id == null ? "---" : Util.f1.format(id.freq);
 	}
 	
 	@Override
@@ -78,24 +79,17 @@ public class MakoPixel extends SimplePixel {
 		return new Vector2D(size.getX() * (col - 0.5 * (Mako.cols-1)), size.getY() * (row - 0.5 * (Mako.rows-1)));
 	}
 		
-	@Override
-	public void parseValues(StringTokenizer tokens) {
-		super.parseValues(tokens);
-		coupling = Double.parseDouble(tokens.nextToken());
-	}
-	
+
 	@Override
 	public void parseValues(StringTokenizer tokens, int criticalFlags) {
-		id = new ResonanceID(-1);
-		id.freq = Double.parseDouble(tokens.nextToken());
-		id.delta = -Double.parseDouble(tokens.nextToken());
+		tokens.nextToken(); // fixed index -- set by pixel matching...
 		super.parseValues(tokens, criticalFlags);
-		//if(tokens.hasMoreTokens()) coupling = Double.parseDouble(tokens.nextToken());
+		if(tokens.hasMoreTokens()) coupling = Double.parseDouble(tokens.nextToken());
 	}
 	
 	@Override
 	public String toString() {
-		return getID() + "\t" + Util.f3.format(-id.delta) + "\t" + super.toString() + "\t" + Util.f3.format(coupling);
+		return getID() + "\t" + super.toString() + "\t" + Util.f3.format(coupling);
 	}
 	
 	public double getAreaFactor() {

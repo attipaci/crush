@@ -29,6 +29,7 @@ package crush.cso;
 import java.io.*;
 import java.util.*;
 
+import util.Configurator;
 import util.Unit;
 import util.Util;
 import util.data.DataPoint;
@@ -59,6 +60,10 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
 	
 	private CSOTauTable(int iMJD, String fileName) throws IOException {
 		read(iMJD, fileName);	
+	}
+	
+	public void setOptions(Configurator options) {
+		if(options.containsKey("window")) timeWindow = options.get("window").getDouble() * Unit.hour;
 	}
 	
 	protected void read(int iMJD, String fileName) throws IOException {

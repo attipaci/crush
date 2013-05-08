@@ -100,7 +100,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 			System.err.println("     WARNING! Invalid waveplate data. Will attempt workaround...");
 			calcMeanWavePlateFrequency();
 			Channel channel = hasOption("waveplate.tpchannel") ?
-					instrument.getChannelLookup().get(option("waveplate.tpchannel").getInt()) :
+					instrument.getFixedIndexLookup().get(option("waveplate.tpchannel").getInt()) :
 					instrument.referencePixel;
 			setTPPhases(channel);
 		}
@@ -118,7 +118,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 			trim();
 			
 			Channel channel = hasOption("waveplate.tpchannel") ?
-					instrument.getChannelLookup().get(option("waveplate.tpchannel").getInt()) :
+					instrument.getFixedIndexLookup().get(option("waveplate.tpchannel").getInt()) :
 					instrument.referencePixel;
 					
 			measureTPPhases(channel);

@@ -238,7 +238,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					
 					// Convert scanning offsets to horizontal if necessary...
 					if(gismoScan.offsetSystem == EquatorialCoordinates.class)
-						frame.toHorizontal(frame.horizontalOffset);
+						frame.equatorialToHorizontal(frame.horizontalOffset);
 					
 					// Add the static horizontal offsets
 					if(gismoScan.horizontalOffset != null) frame.horizontalOffset.add(gismoScan.horizontalOffset);
@@ -246,7 +246,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					// Add the static equatorial offset
 					if(gismoScan.equatorialOffset != null) {
 						offset.copy(gismoScan.equatorialOffset);
-						frame.toHorizontal(offset);
+						frame.equatorialToHorizontal(offset);
 						frame.horizontalOffset.add(offset);
 					}
 					

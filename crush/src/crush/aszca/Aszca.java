@@ -107,7 +107,7 @@ public class Aszca extends APEXArray<AszcaPixel> {
 		int boxStartAddress = Integer.decode("0xe1");
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<Integer, AszcaPixel> lookup = getChannelLookup();
+		Hashtable<Integer, AszcaPixel> lookup = getFixedIndexLookup();
 		
 		String line;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {

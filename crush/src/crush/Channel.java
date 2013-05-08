@@ -114,6 +114,8 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	
 	public final void setFixedIndex(int i) { storeIndex = i; }
 	
+	public String getID() { return Integer.toString(getFixedIndex()); }
+	
 	public double getHardwareGain() {
 		return instrument.gain;
 	}

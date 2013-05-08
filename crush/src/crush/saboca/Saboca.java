@@ -85,7 +85,7 @@ public class Saboca extends APEXArray<SabocaPixel> {
 		System.err.println(" Loading wiring data from " + fileName);
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<Integer, SabocaPixel> lookup = getChannelLookup();
+		Hashtable<Integer, SabocaPixel> lookup = getFixedIndexLookup();
 		
 		String line;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {

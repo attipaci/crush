@@ -34,4 +34,9 @@ public class GeocentricCoordinates extends SphericalCoordinates {
 	
 	public GeocentricCoordinates(double lon, double lat) { super(lon, lat); }
 	
+	public final static int NORTH = 1;
+	public final static int SOUTH = -1;
+	public final static int EAST = 1;
+	public final static int WEST = -1;
+
 }
