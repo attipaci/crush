@@ -312,6 +312,7 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 		System.err.println(" [" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
 		if(equatorial != null) System.err.println(" Equatorial: " + equatorial.toString());	
 		
+		
 		// iMJD does not exist in earlier scans
 		// convert DATE-OBS into MJD...
 		if(header.containsKey("JUL_DAY")) iMJD = header.getIntValue("JUL_DAY");

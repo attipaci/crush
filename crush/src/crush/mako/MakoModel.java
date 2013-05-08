@@ -170,7 +170,7 @@ public class MakoModel {
 		
 		System.out.println("# rms = " + Util.s4.format(Math.sqrt(opt.getChi2())) + " arcsec.");
 		System.out.println("#");
-		System.out.println("# rotation = " + Util.f3.format(p[0] / Unit.deg) + "deg.");
+		System.out.println("# rotation = " + Util.f3.format(-p[0] / Unit.deg) + "deg.");
 		
 		for(int i=0, index = 1; i<=order; i++) for(int j=0; j<=order-i; j++) {
 			System.out.println("# " + i + "," + j + ":\t" + Util.s4.format(p[index++]) + "\t" + Util.s4.format(p[index++]));

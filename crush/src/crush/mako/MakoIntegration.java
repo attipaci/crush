@@ -32,6 +32,7 @@ import java.net.*;
 import util.*;
 import util.astro.*;
 import util.data.DataPoint;
+import crush.cso.CSOTauTable;
 import crush.fits.HDUReader;
 
 public class MakoIntegration extends Integration<Mako, MakoFrame> implements GroundBased {
@@ -84,7 +85,25 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 	public void setTau() throws Exception {
 		String source = option("tau").getValue().toLowerCase();
 		
-		if(source.equals("direct")) setZenithTau(getDirectTau());
+		if(source.equals("tables")) {
+			source = hasOption("tau.tables") ? option("tau.tables").getValue() : ".";
+			String date = scan.getID().substring(0, scan.getID().indexOf('.'));
+			String spec = date.substring(2, 4) + date.substring(5, 7) + date.substring(8, 10);
+			
+			File file = new File(Util.getSystemPath(source) + File.separator + spec + ".dat");
+			if(!file.exists()) {
+				System.err.print("   WARNING! No tau table found for " + date + "...");
+				System.err.print("            Using default tau.");
+				instrument.options.remove("tau");
+				setTau();
+				return;
+			}
+			
+			CSOTauTable table = CSOTauTable.get(((MakoScan) scan).iMJD, file.getPath());
+			setTau("225GHz", table.getTau(getMJD()));	
+		
+		}
+		else if(source.equals("direct")) setZenithTau(getDirectTau());
 		else {
 			if(source.equals("maitau")) {
 				try {
@@ -240,9 +259,9 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 					frame.parseData(data, i*channels, instrument);
 
 					//time.setMillis(AstroTime.millisJ2000 + 1000L * UTseconds[i] + (UTnanosec[i] / 1000000L));
-					//frame.MJD = time.getMJD();
-	
-					frame.MJD = MJD[i] + ticks[i] * antennaTick;
+					//frame.MJD = time.getMJD();	
+					
+					frame.MJD = MJD[i] + ticks[i] * antennaTick / Unit.day;
 					
 					// Enforce the calculation of the equatorial coordinates
 					frame.equatorial = null;

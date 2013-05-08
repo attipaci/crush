@@ -14,7 +14,8 @@
 >> projection.angle
 >> system=focalplane
 >> Frame.equatorial, HF.horizontal/hOffset -> nativeCoords, nativeOffset
-       
+>> distortion, coeffs, unit
+>> tau = tables, tau.tables=<path> 
 
 	[NEW] Initial MAKO support.
 
