@@ -395,7 +395,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 
 					// Make scanning offsets always horizontal...
 					if(apexScan.nativeSystem == EquatorialCoordinates.class) 
-						exposure.toHorizontal(exposure.horizontalOffset);
+						exposure.equatorialToHorizontal(exposure.horizontalOffset);
 
 					if(chop != null) exposure.chopperPosition.setX(chop[t] * Unit.deg);
 					exposure.chopperPhase = phase[t];			
@@ -408,7 +408,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 						exposure.horizontalOffset.addX(exposure.chopperPosition.getX());
 						// Add to the equatorial coordinate also...
 						tempOffset.copy(exposure.chopperPosition);
-						exposure.toEquatorial(tempOffset);
+						exposure.horizontalToEquatorial(tempOffset);
 						exposure.equatorial.addOffset(tempOffset);
 					}
 

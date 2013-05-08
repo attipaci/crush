@@ -115,7 +115,4 @@ public class HorizontalCoordinates extends SphericalCoordinates {
 		offset.rotate(PA);
 		offset.scaleX(-1.0);
 	}
-
-
-
 }

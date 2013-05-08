@@ -213,7 +213,7 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		String line;
 		
-		Hashtable<Integer, Scuba2Pixel> lookup = getChannelLookup();
+		Hashtable<Integer, Scuba2Pixel> lookup = getFixedIndexLookup();
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);

@@ -194,7 +194,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		System.err.println(" Loading wiring data from " + fileName);
 			
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<Integer, GismoPixel> lookup = getChannelLookup();
+		Hashtable<Integer, GismoPixel> lookup = getFixedIndexLookup();
 		
 		int groupPins = hasOption("correlated.pins.group") ? option("correlated.pins.group").getInt() : 1;
 		

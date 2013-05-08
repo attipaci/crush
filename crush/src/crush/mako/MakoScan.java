@@ -34,7 +34,6 @@ import util.*;
 import util.astro.AstroSystem;
 import util.astro.AstroTime;
 import util.astro.EquatorialCoordinates;
-import util.astro.GalacticCoordinates;
 import util.astro.GeodeticCoordinates;
 import util.astro.HorizontalCoordinates;
 import util.astro.Weather;
@@ -49,7 +48,7 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 	double tau225GHz;
 	double elevationResponse = 1.0;
 	double ambientT, pressure, humidity;
-	int scanCoordType = SCAN_ALTAZ;
+	//int scanCoordType = SCAN_ALTAZ;
 	Class<? extends SphericalCoordinates> scanSystem;
 	String id;
 	
@@ -175,6 +174,8 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 		instrument.parseDataHeader(firstDataHDU.getHeader());
 		instrument.validate(this);
 		
+		parseScanDataHDU((BinaryTableHDU) HDU[i]);
+		
 		MakoIntegration integration = new MakoIntegration(this);
 		integration.read(HDU, i);
 		add(integration);
@@ -246,7 +247,18 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 		return new Fits(getFile(scanDescriptor), isCompressed);
 	}
 	
-	
+	protected void parseScanDataHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
+		int iEq = hdu.findColumn("Equatorial Offset");
+		if(iEq > 0) {
+			boolean isEquatorial = ((boolean[]) hdu.getElement(0, iEq))[0];
+			scanSystem = isEquatorial ? EquatorialCoordinates.class : HorizontalCoordinates.class;
+		}
+		else {
+			System.err.println(" WARNING! Scan direction undefined. Assuming /altaz.");
+			scanSystem = HorizontalCoordinates.class;		
+		}
+	}
+		
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 
@@ -287,7 +299,8 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 				header.getDoubleValue("RAEP") * raUnit,
 				header.getDoubleValue("DECEP") * decUnit,
 				(epoch < 1984.0 ? "B" : "J") + epoch);
-	
+
+		/*
 		if(header.containsKey("SCANCOORD")) scanCoordType = header.getIntValue("SCANCOORD");
 		switch(scanCoordType) {
 		case SCAN_ALTAZ: scanSystem = HorizontalCoordinates.class;
@@ -300,6 +313,7 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 				scanSystem = header.getBooleanValue("ALTAZ") ? HorizontalCoordinates.class : EquatorialCoordinates.class;
 			else scanSystem = HorizontalCoordinates.class;
 		}
+		*/
 		
 		// Print out some of the information...
 		StringTokenizer tokens = new StringTokenizer(timeStamp, ":T");
@@ -312,15 +326,15 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 		System.err.println(" [" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
 		if(equatorial != null) System.err.println(" Equatorial: " + equatorial.toString());	
 		
+		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
+		catch(ParseException e) { e.printStackTrace(); }
+		
+		iMJD = (int) Math.floor(getMJD());
 		
 		// iMJD does not exist in earlier scans
 		// convert DATE-OBS into MJD...
-		if(header.containsKey("JUL_DAY")) iMJD = header.getIntValue("JUL_DAY");
-		else {
-			try { iMJD = (int)(AstroTime.forFitsTimeStamp(timeStamp).getMJD());	}
-			catch(ParseException e) { throw new HeaderCardException(e.getMessage()); }
-		}
-			
+		//if(header.containsKey("JUL_DAY")) iMJD = header.getIntValue("JUL_DAY");
+		
 		addOffsets = hasOption("offsets.add");
 		
 		// Add on the various additional offsets

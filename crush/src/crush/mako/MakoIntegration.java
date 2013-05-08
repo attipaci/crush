@@ -100,6 +100,7 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 			}
 			
 			CSOTauTable table = CSOTauTable.get(((MakoScan) scan).iMJD, file.getPath());
+			table.setOptions(option("tau"));
 			setTau("225GHz", table.getTau(getMJD()));	
 		
 		}
@@ -298,7 +299,7 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 					// Add in the scanning offsets...
 					if(sharcscan.addOffsets) frame.horizontalOffset.add(sharcscan.horizontalOffset);		
 					
-					frame.toHorizontal(equatorialOffset);
+					frame.equatorialToHorizontal(equatorialOffset);
 					frame.horizontalOffset.add(equatorialOffset);
 	
 					set(offset + i, frame);

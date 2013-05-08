@@ -226,5 +226,9 @@ public class EquatorialCoordinates extends CelestialCoordinates implements Prece
 	
 	public void setEpoch(CoordinateEpoch epoch) { this.epoch = epoch; }
 	
+	public final static int NORTH = 1;
+	public final static int SOUTH = -1;
+	public final static int EAST = -1;
+	public final static int WEST = 1;
 
 }

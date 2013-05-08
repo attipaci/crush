@@ -253,8 +253,18 @@ public abstract class Frame implements Cloneable, Flagging {
 	// Native offsets are in standard directions (e.g. -RA, DEC)
 	public void nativeToEquatorialNative(Vector2D offset) {}
 	
+	public final void nativeToEquatorial(Vector2D offset) {
+		nativeToEquatorialNative(offset);
+		offset.scaleX(-1.0);
+	}
+	
 	// Native offsets are in standard directions (e.g. -RA, DEC)
 	public void equatorialNativeToNative(Vector2D offset) {}
+	
+	public final void equatorialToNative(Vector2D offset) {
+		offset.scaleX(-1.0);
+		equatorialNativeToNative(offset);
+	}
 	
 	public void nativeToEquatorial(SphericalCoordinates coords, EquatorialCoordinates equatorial) {
 		equatorial.copy(coords);

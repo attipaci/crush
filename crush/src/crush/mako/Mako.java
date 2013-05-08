@@ -126,7 +126,6 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		
 	}
 
-
 	@Override
 	public MakoPixel getChannelInstance(int backendIndex) {
 		return new MakoPixel(this, backendIndex);
@@ -141,7 +140,7 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 	public Scan<?, ?> getScanInstance() {
 		return new MakoScan(this);
 	}
-
+	
 	public Hashtable<String, MakoPixel> idLookup() {
 		Hashtable<String, MakoPixel> lookup = new Hashtable<String, MakoPixel>(pixels);
 		for(MakoPixel pixel : this) if(pixel.id != null) lookup.put(pixel.getID(), pixel);

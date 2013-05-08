@@ -326,7 +326,7 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	}
 
 	protected void parsePixelHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
-		Hashtable<Integer, Sharc2Pixel> lookup = getChannelLookup();
+		Hashtable<Integer, Sharc2Pixel> lookup = getFixedIndexLookup();
 		
 		int iGain = hdu.findColumn("Relative Pixel Gains");
 		int iFlag = hdu.findColumn("Pixel Flags");
@@ -443,7 +443,7 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		System.out.print(" Loading nonlinearities from " + fileName + ".");
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<Integer, Sharc2Pixel> lookup = getChannelLookup();
+		Hashtable<Integer, Sharc2Pixel> lookup = getFixedIndexLookup();
 		
 		String line;
 		

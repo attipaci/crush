@@ -836,11 +836,13 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 				return source.getCoordinates().getOffsetFrom(horizontal);			
 			else {
 				Vector2D offset = getEquatorialPointing(source);
+				// Convert to native equatorial (-RA, DEC)...
+				
 				// Rotate to Horizontal...
 				Vector2D from = (Vector2D) offset.clone();
-				((HorizontalFrame) getFirstIntegration().getFirstFrame()).toHorizontal(from);
+				((HorizontalFrame) getFirstIntegration().getFirstFrame()).equatorialToHorizontal(from);
 				Vector2D to = (Vector2D) offset.clone();
-				((HorizontalFrame) getLastIntegration().getLastFrame()).toHorizontal(to);
+				((HorizontalFrame) getLastIntegration().getLastFrame()).equatorialToHorizontal(to);
 				offset.setX(0.5 * (from.getX() + to.getX()));
 				offset.setY(0.5 * (from.getY() + to.getY()));
 				return offset;
