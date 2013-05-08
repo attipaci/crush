@@ -23,6 +23,8 @@
 
 package crush.array;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
 
 import util.Configurator;
@@ -35,7 +37,7 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Vector2D> {
 	 * 
 	 */
 	private static final long serialVersionUID = 2378434929629074050L;
-	Unit unit = Unit.unity;
+	private Unit unit = Unit.unity;
 	
 	public void setOptions(Configurator options) {
 		clear();
@@ -55,6 +57,10 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Vector2D> {
 			unit = Unit.get(options.get("unit").getValue());
 		}
 	}
+	
+	public Unit getUnit() { return unit; }
+	
+	public void setUnit(Unit u) { this.unit = u; }
 	
 	public void scale(double x) {
 		for(Vector2D c : values()) c.scale(x);
@@ -95,28 +101,55 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Vector2D> {
 		return sum;	
 	}
 
-	public class Term {
-		int expX, expY;
+	@Override
+	public String toString() {
+		ArrayList<Term> sorted = new ArrayList<Term>(keySet());
+		Collections.sort(sorted);
 		
-		public Term(int expX, int expY) { this.expX = expX; this.expY = expY; }
+		StringBuffer buf = new StringBuffer();
+		
+		for(Term term : sorted) {
+			buf.append("  " + term.toString() + ": ");
+			buf.append(get(term).toString() + "\n");
+		}
+		
+		return "Distortion:\n" + new String(buf);
+	}
+	
+	public class Term implements Comparable<Term> {
+		int xExp, yExp;
+		
+		public Term(int expX, int expY) { this.xExp = expX; this.yExp = expY; }
 
 		@Override
 		public boolean equals(Object o) {
 			if(!(o instanceof Term)) return false;
 			Term term = (Term) o;
-			if(term.expX != expX) return false;
-			if(term.expY != expY) return false;
+			if(term.xExp != xExp) return false;
+			if(term.yExp != yExp) return false;
 			return true;			
 		}
 		
 		@Override
 		public int hashCode() {
-			return HashCode.get(expX) ^ HashCode.get(expY);
+			return HashCode.get(xExp) ^ HashCode.get(yExp);
 		}
 		
 		public double getValue(double x, double y) {
-			return Math.pow(x, expX) * Math.pow(y, expY);			
+			return Math.pow(x, xExp) * Math.pow(y, yExp);			
+		}
+
+		public int compareTo(Term arg0) {
+			if(equals(arg0)) return 0;
+			if(xExp < arg0.xExp) return -1;
+			if(xExp > arg0.xExp) return 1;
+			if(yExp < arg0.yExp) return -1;
+			return 1;
 		}
 		
+		@Override
+		public String toString() {
+			return xExp + "," + yExp;
+		}
 	}
 }

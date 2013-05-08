@@ -1,3 +1,4 @@
+
 /*******************************************************************************
  * Copyright (c) 2013 Attila Kovacs <attila_kovacs@post.harvard.edu>.
  * All rights reserved. 
@@ -22,7 +23,8 @@
  ******************************************************************************/
 
 
-package crush.apex;
+package crush.cso;
+
 
 import java.io.*;
 import java.util.*;
@@ -35,54 +37,56 @@ import util.data.Locality;
 import util.data.LocalizedData;
 
 
-public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
+public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -7962217110619389946L;
 	
-	private static Hashtable<String, APEXTauTable> tables = new Hashtable<String, APEXTauTable>();
+	private static Hashtable<String, CSOTauTable> tables = new Hashtable<String, CSOTauTable>();
 
 	public String fileName;
-	public double timeWindow = 1.5 * Unit.hour;
+	public double timeWindow = 0.5 * Unit.hour;
 	
-	public static APEXTauTable get(String fileName) throws IOException {
-		APEXTauTable table = tables.get(fileName);
+	public static CSOTauTable get(int iMJD, String fileName) throws IOException {
+		CSOTauTable table = tables.get(fileName);
 		if(table == null) {
-			table = new APEXTauTable(fileName);
+			table = new CSOTauTable(iMJD, fileName);
 			tables.put(fileName, table);
 		}
 		return table;
 	}
 	
-	private APEXTauTable(String fileName) throws IOException {
-		read(fileName);
+	private CSOTauTable(int iMJD, String fileName) throws IOException {
+		read(iMJD, fileName);	
 	}
 	
-	protected void read(String fileName) throws IOException {
+	protected void read(int iMJD, String fileName) throws IOException {
 		System.err.print("   [Loading tau data] ");
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		
 		String line = null;
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') if(line.charAt(0) != ' ') {
 			StringTokenizer tokens = new StringTokenizer(line);
 			Entry skydip = new Entry();
-			tokens.nextToken();
-			tokens.nextToken();
-			skydip.timeStamp = new TimeStamp(Double.parseDouble(tokens.nextToken()));
+			skydip.timeStamp = new TimeStamp(iMJD, tokens.nextToken());
 			skydip.tau.setValue(Double.parseDouble(tokens.nextToken()));
-			skydip.tau.setRMS(1.0);
+			tokens.nextToken();
+			skydip.tau.setRMS(Math.hypot(0.005, Double.parseDouble(tokens.nextToken())));
 			add(skydip);
 		}
 		in.close();
 		
+		System.err.println("-- " + size() + " values parsed.");
+		
 		this.fileName = fileName;
 		
-		System.err.println("-- " + size() + " values parsed.");
+		
 	}	
 	
 	public double getTau(double MJD) {
+			
 		Entry mean = getLocalAverage(new TimeStamp(MJD));
 		
 		if(mean.tau.weight() == 0.0) {
@@ -99,7 +103,7 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 			}
 		}
 		
-		System.err.println("   Local average tau = " + Util.f3.format(mean.tau.value()) + " (from " + mean.measurements + " skydips)");
+		System.err.println("   Local average tau = " + Util.f3.format(mean.tau.value()) + " (from " + mean.measurements + " measurements)");
 		return mean.tau.value();
 	}
 	
@@ -107,6 +111,10 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 		double MJD;
 		
 		public TimeStamp(double MJD) { this.MJD = MJD; }
+		
+		public TimeStamp(int iMJD, String hhmm) { 
+			this.MJD = iMJD + (Integer.parseInt(hhmm.substring(0, 2)) * Unit.hour + Integer.parseInt(hhmm.substring(2)) * Unit.min) / Unit.day; 
+		}
 		
 		public double distanceTo(Locality other) {
 			return(Math.abs((((TimeStamp) other).MJD - MJD) * Unit.day / timeWindow));

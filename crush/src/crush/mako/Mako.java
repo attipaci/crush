@@ -255,20 +255,23 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 	
 	private void calcPositions(Vector2D size) {
 		pixelSize = size;
-		// Make all pixels the same size. Also calculate their positions...
+		// Make all pixels the same size. Also calculate their distortionless positions...
 		for(MakoPixel pixel : this) {
 			pixel.size = size;
 			pixel.calcPosition();
 		}
 		
+		Vector2D center = MakoPixel.getPosition(size, arrayPointingCenter.getX() - 1.0, arrayPointingCenter.getY() - 1.0);
+		
 		if(hasOption("distortion")) {
 			System.err.println(" Correcting for focal-plane distortion.");
 			DistortionModel model = new DistortionModel();
-			model.setOptions(option("distortion"));
+			model.setOptions(option("distortion"));	
+			
 			for(MakoPixel pixel : this) model.distort(pixel.getPosition());
+			model.distort(center);
 		}
 		
-		Vector2D center = MakoPixel.getPosition(size, arrayPointingCenter.getX() - 1.0, arrayPointingCenter.getY() - 1.0);
 		setReferencePosition(center);
 	}
 	
