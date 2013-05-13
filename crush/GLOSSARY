@@ -327,9 +327,10 @@
 			@See: 'bright', 'faint', 'deep'
 	
 
-:: convert		@Instrument: SCUBA-2
-			@Since: 2.01-3
+:: convert		@Since: 2.01-3
 			@Advanced
+
+			@Instrument : SCUBA2
 			Just convert all the SDF files to FITS, then exit. 
 			Batch conversion is useful if you are going to reduce
 			the same dataset many times over (e.g. to optimize
@@ -340,6 +341,10 @@
 			(in the above order, depending on which is defined). 
 			@See: 'ndf2fits', 'outpath', 'datapath'
 
+			@Instrument: MAKO
+			The path to the executable that converts I/Q Fits
+			into frequency shift, e.g. 'iqconv'.
+			
 :: correlated.<?>	Remove the correlated noise term accross the entire
 			array. The <?> stands for the name of the modality on
 			which decorrelation is performed. E.g. 'obs-channels', 
@@ -485,7 +490,7 @@
 			in the data reduction is set by 'unit'.
 			@See: 'unit', 'jansky'
 
-:: date=YYYY-MM-DD	@Instrument: GISMO
+:: date=YYYY-MM-DD	@Instrument: GISMO, MAKO
 			Specify the date of observation for GISMO data, which 
 			can be used along with 'object' to help locate scan 
 			data using scans numbers (and ranges). The date must be
@@ -608,6 +613,44 @@
 			steps for chopped data.
 			@See: 'correlated.<?>.trigger'
 
+:: distortion		@Expert
+			@Since: 2.14
+			@Instrument: MAKO ...
+			Correct nominal pixel positions for the 2D focal-plane
+			distortion.
+			@See: 'distortion.x??', 'distortion.y??', 
+			      'distortion.unit'
+
+:: distortion.unit=<name>	@Expert
+				@Since: 2.14
+				@Instrument: MAKO ...
+			The unit in which focal plane positions are defined for
+			the distortion coefficients. E.g. 'arcsec'. If not
+			specified, unity (or dimensionless) is assumed.
+			@See: 'distortion', 'distortion.x??', 'distortion.y??'
+
+:: distortion.x??	@Expert
+			@Since: 2.14
+			@Instrument: MAKO ...
+			Define a distortion coefficient for the x-coordinate.
+			'x' is followed by two integers (0-9) defining the
+			x,y exponents of the distortion term for which this
+			coefficient applies. E.g.: x31 specifies the term
+			
+				dx = x01 * x^3 * y^1
+
+			dx, x, and y are all in the units defined by
+			'distortion.unit'
+
+			@See: 'distortion.y??', 'distortion', 'distortion.unit'
+
+:: distortion.y??	@Expert
+			@Since: 2.14
+			@Instrument: MAKO ...
+			Same as 'distortion.x??' but for calculating distortion
+			in the y-direction.
+			@See: 'distortion.x??'
+
 :: division.<?>=<list> 	@Expert
 			Specify a new pixel division <?> from a list of pixel 
 			groups, separated by commas. For example, if the pixel 
@@ -698,7 +741,7 @@
 			Reduce using ecliptic coordinates (for mapping).
 			@See: 'system', 'altaz', 'equatorial'
 
-:: elevation-response   @Instrument: SHARC-2
+:: elevation-response   @Instrument: SHARC-2, MAKO
 			@Expert
 			Load and use an lookup table for the elevation 
 			dependent forward efficiency of the telecscope. The 
@@ -768,7 +811,7 @@
 			'faint.cfg'.
 			@See: 'bright', 'deep'
 
-:: fazo			@Instrument: SHARC-2, GISMO
+:: fazo			@Instrument: SHARC-2, MAKO
 			An alternative to 'center' for providing pointing 
 			corrections. As opposed to 'center', which specifies 
 			incremental corrections, this option takes an absolute 
@@ -951,12 +994,18 @@
 :: filter.whiten.proberange=from:to	@Since: 2.10
 					@Was: 'whiten.proberange'
 					@Expert
-			Specify the spectral range (in Hz), in which to measure
-			the white-noise level before whitening. It is best to 
-			use the truly flat part of the available spectral 
-			range, with no 1/f, resonances or lopass roloff are 
-			present. Wildcards '*' can be used for specifying open 
-			ranges.
+			Specify the spectral range as <from>:<to> (in Hz), 
+			in which to measure the white-noise level before 
+			whitening. It is best to use the truly flat part of the
+	 		available spectral range, with no 1/f, resonances or 
+			lowpass roloff are present. Wildcards '*' can be used 
+			for specifying open ranges.
+		
+                        @Since: 2.14
+			Introduced 'auto' setting, to adjust the probing range
+			automatically to the upper part of the spectrum
+			occupied by point sources.
+
 			@See: 'filter.whiten', 'filter.whiten.minchannels'
 		
 
@@ -989,6 +1038,15 @@
 			together with 'mux' decorrelation.
 			@See: 'mux'
 
+:: focalplane		@Alias -> system=focalplane
+			@Since: 2.14
+			@Expert
+			Produce maps in focal-plane coordinates. This is 
+			practical only for beam-mapping. Thus, focal-plane
+			coordinates are default when 'source.type' is set to
+			'beammap'
+			@See: 'beammap', 'source.type'
+
 :: forget=<list>...	Forget the priorly set values for the listed options 
 			as if they were never defined. E.g. 
 		     		
@@ -1012,7 +1070,7 @@
 			useful for quick peeks at the data without processing
 			the full scan, or when a part of the data is corrupted.
 
-:: fzao			@Instrument: SHARC-2, GISMO
+:: fzao			@Instrument: SHARC-2, MAKO
 			Specify a zenith pointing offset.
 			@See: 'fazo'
 
@@ -1070,6 +1128,14 @@
 :: galactic 		@Alias -> system=galactic
 			Reduce using new galactic coordinates (for mapping).
 			@See: 'system', 'equatorial', 'altaz'
+
+:: gnuplot=<path>	@Since: 2.14
+			The path to the gnuplot executable, if available.
+			Some reduction modes (e.g. skydip reductions) may use 
+			'gnuplot' to plot the result. Both PNG and EPS outputs
+			may be produced, depending on whether 'write.png' 
+			and/or 'write.eps' are set.
+			@See: 'skydip', 'write.eps', 'write.png'
 
 :: gradients		@Alias -> correlated.gradients
 			@Advanced
@@ -1472,6 +1538,13 @@
 			Clearly, you will need a functional installation
 			of the Starlink software or, at minimumm it conversion
 			package, for this option to work.
+
+:: nefd.map		@Since: 2.14
+			@Expert
+			Try use the apparent map noise (if available, e.g. via
+			'weighting.scans') to refine the reported NEFD estimate
+			(e.g. for loggig via 'log'). Else, the NEFD estimate
+			will be based on the timestream noise alone. 
 			
 :: noiseclip=X		Flag (clip) map pixel with a noise level that is more
 			than X times higher than the deepest covered parts
@@ -1609,7 +1682,7 @@
 			with an error if the output path does not exist.
 			@See: 'outpath'
 
-:: pcenter=row,col	@Instrument: SHARC-2, GISMO
+:: pcenter=row,col	@Instrument: SHARC-2, GISMO, MAKO
 			@Advanced
 			Defines the pointing center used, in terms of the
 			instrument pixel row and colum coordinates. Pixel 1,1
@@ -1685,7 +1758,7 @@
 			determined without prior bias).
 			@See: 'gainnoise', 'uniform', 'flag', 'blind'
 
-:: pixelsize=X,Y	@Instrument: SHARC-2, GISMO, P-ArTeMiS
+:: pixelsize=X,Y	@Instrument: SHARC-2, GISMO, P-ArTeMiS, MAKO
 			@Expert
 			Specify the size of rectangular pixels in a grid. This
 			is used for calculating pixel positions on a rectangular
@@ -1923,7 +1996,7 @@
 			that channel is flagged and removed from the reduction.
 			@See: 'range'
 
-:: rcenter=dX,dY	@Instrument: SHARC-2	
+:: rcenter=dX,dY	@Instrument: SHARC-2, MAKO
 			@Expert
 			Specify a rotation center, in the coordinate system of
 			the array (AZ,EL or Nasmyth coordinates). Works 
@@ -2051,7 +2124,7 @@
 			tree to its prior state.
 			@See: 'remove'
 
-:: rot0			@Instrument: SHARC-2
+:: rot0			@Instrument: SHARC-2, MAKO
 			@Expert
 			Specifies the reference (zero point) of the rotator (if
 			available). This option applies only for the early 
@@ -2111,9 +2184,9 @@
 :: scale.window=X	@Expert
 			@Instrument: APEX
 			@Since: 2.13
-			Set the 1-sigma Gaussian weighting window for deriving
-			local weighted average scaling values from a table
-			of calibrattion measurements.
+			Set the 1-sigma Gaussian weighting window (in hours)
+			for deriving local weighted average scaling values from 
+			a table of calibrattion measurements.
 			@See: 'scale', 'tau.window'
 
 :: scanmaps		@Advanced
@@ -2659,7 +2732,8 @@
 			   
 			as a shorthand for '-system=galactic'.
 			@See: 'altaz', 'equatorial', 'ecliptic', 'galactic',
-			      'supergalactic', 'radec', 'horizontal'	       
+			      'supergalactic', 'radec', 'horizontal', 
+			      'focalplane'	       
 
 :: tau=<arg>		Specify an in-band zenith opacity value to use. E.g.:
 
@@ -2694,7 +2768,12 @@
 			SHARC-2 also allows for setting tau to 'direct', for
 			a calibrated conversion of bolometer DC levels to
 			in-band line-of-sight opacities, when in '350um' mode.
-			@see: 'tau.<?>', 'tau.<?>.a', 'tau.<?>.b'
+	
+			The argument may also be 'tables' for SHARC-2 and MAKO
+			to specify CSO tau tables. See 'tau.tables' for 
+			details.
+
+			@see: 'tau.<?>', 'tau.<?>.a', 'tau.<?>.b', 'tau.tables'
 
 
 :: tau.<?>=X		@Advanced
@@ -2734,12 +2813,24 @@
 			relationship.
 			@See: 'tau.<?>.a' for details.
 
+:: tau.tables=<path>	@Since: 2.14
+			@Instrument: SHARC2, MAKO
+			Path to the directory containing the CSO tau tables.
+			The files are assumed to be named by date as 
+			<yyMMdd>.dat, e.g.: '130421.dat'.
+			The tables are usually found at:
+			   
+			  kilauea:/bigdisk/opt/uip/data/opacity/		
+
+			@See: 'tau', 'tau.window'
+
+
 :: tau.window=X		@Expert
-			@Instrument: APEX
+			@Instrument: APEX, SHARC-2, MAKO
 			@Since: 2.13
-			Set the 1-sigma Gaussian weighting window for deriving
-			local weighted average tau values from a table
-			of skydip/tau measurements.
+			Set the 1-sigma Gaussian weighting window (in hours) 
+			for deriving local weighted average tau values from a 
+			table of skydip/tau measurements.
 			@See: 'tau', 'scale.window'
 
 :: time-weighting	@Alias: -> weighting.frames
@@ -3033,7 +3124,7 @@
 			@Expert
 			@Since 2.00-b2
 
-:: whiten.proberange=from:to	@Alias -> 'filter.whiten.proberange'
+:: whiten.proberange=<spec>	@Alias -> 'filter.whiten.proberange'
 				@Expert
 				@Since 2.00-b2
 
@@ -3071,6 +3162,11 @@
 			those that were used in the reduction (see 'noslim').
 			@See: 'division.<?>', 'noslim'
 
+:: write.eps		@Since: 2.14
+			Write final result into an EPS image, if available.
+			As of 2.14, only 'skydip' reductions support EPS output
+			and only when the 'gnuplot' options is also set.
+			@See: 'gnuplot', 'write.png', 'skydip'
 
 :: write.pixeldata	@Expert
 			Write the pixel data file (gains, weights, 
@@ -3085,10 +3181,11 @@
 			@See: 'rcp', 'wiring'
 
 :: write.png		@Since: 2.04
-			Write a PNG thumbnail for every FITS image. The PNG
-			image has the same name as the FITS file but with
+			Write a PNG thumbnail for the final result. The PNG
+			image has the same name as the output file but with
 			'.png' appended.
-			@See: 'write.png.size', 'write.png.color'
+			@See: 'write.png.size', 'write.png.color', 
+			      'write.png.bg', 'write.png.plane'
 
 :: write.png.bg=<value>		@Since: 2.04
 				Set the background color of the PNG image. You
@@ -3116,10 +3213,10 @@
 			@See: 'write.png'
 
 :: write.png.plane=<name>	@Since: 2.11-2
-				Selects the image plane to write into the PNG.
-				The argument can be one of: 'flux', 'noise',
-			'weight', 'time', or 's2n'. For other values, CRUSH
-			defaults to writing the 'flux' image.
+				Selects the FITS image plane to write into the 
+				PNG. The argument can be one of: 'flux', 
+			'noise', 'weight', 'time', or 's2n'. For other values, 
+			CRUSH defaults to writing the 'flux' image.
 			@See: 'write.png'
 
 :: write.png.size=<size>	@Since: 2.04

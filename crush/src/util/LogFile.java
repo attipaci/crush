@@ -152,6 +152,30 @@ public class LogFile {
 		public int getInt() { return Integer.parseInt(value); }
 	}
 	
+	/*
+	class Column extends ArrayList<String> {
+		String name;
+		String formatSpec;
+		
+		boolean getBoolean(int i) { return Util.parseBoolean(get(i)); }
+		
+		byte getByte(int i) { return Byte.decode(get(i)); }
+		
+		short getShort(int i) { return Short.decode(get(i)); }
+		
+		int getInt(int i) { return Integer.decode(get(i)); }
+		
+		long getLong(int i) { return Long.decode(get(i)); }
+		
+		float getFloat(int i) { return Float.parseFloat(get(i)); }
+		
+		double getDouble(int i) { return Double.parseDouble(get(i)); }
+		
+		Vector2D getVector2D(int i) { return new Vector2D(get(i)); }
+		
+	}
+	*/
+
 	public static class Row extends Hashtable<String, Entry> {	
 		/**
 		 * 
@@ -171,6 +195,7 @@ public class LogFile {
 		String header = readHeader(in);
 		StringTokenizer tokens = new StringTokenizer(header);
 		ArrayList<String> labels = new ArrayList<String>();
+		
 		while(tokens.hasMoreTokens()) {
 			String label = tokens.nextToken();
 			if(label.contains("(")) label = label.substring(0, label.indexOf("("));

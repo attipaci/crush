@@ -693,11 +693,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Calculate the weight sums for every pixel...
 		for(int t=fromt; t<tot; t+=step) {
 			final Frame exposure = get(t);
-			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
-				if(exposure.sampleFlag[channel.index] == 0) {
-					sum += exposure.relativeWeight * exposure.data[channel.index];
-					sumw += exposure.relativeWeight;
-				}
+			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0) {
+				sum += exposure.relativeWeight * exposure.data[channel.index];
+				sumw += exposure.relativeWeight;
 			}
 		}
 
@@ -910,6 +908,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void calcSourceNEFD() {
 		nefd = instrument.getSourceNEFD();
+		if(hasOption("nefd.map")) nefd /= Math.sqrt(scan.weight);
 		comments += "(" + Util.e2.format(nefd) + ")";	
 	}
 

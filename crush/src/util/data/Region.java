@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package util.data;
 
@@ -36,7 +35,7 @@ public abstract class Region<CoordinateType extends CoordinatePair> implements C
 	
 	public Region() { id = "[" + (counter++) + "]"; }
 	
-	public Region(String line, GridImage<CoordinateType> forImage) throws ParseException { parse(line, forImage); }
+	public Region(String line, int format, GridImage<CoordinateType> forImage) throws ParseException { parse(line, format, forImage); }
 	
 	@Override
 	public Object clone() {
@@ -58,7 +57,7 @@ public abstract class Region<CoordinateType extends CoordinatePair> implements C
 	
 	public abstract boolean isInside(Grid2D<CoordinateType> grid, double i, double j);	
 	
-	public abstract void parse(String line, GridImage<CoordinateType> forImage) throws ParseException;
+	public abstract void parse(String line, int format, GridImage<CoordinateType> forImage) throws ParseException;
 	
 	public abstract String toString(GridImage<CoordinateType> image);
 	
@@ -78,5 +77,12 @@ public abstract class Region<CoordinateType extends CoordinatePair> implements C
 		integral.scale(map.getPixelArea() / map.getImageBeamArea());
 		return integral;
 	}
+	
+	public final static int FORMAT_CRUSH = 0;
+	public final static int FORMAT_OFFSET = 3;
+	public final static int FORMAT_GREG = 1;
+	public final static int FORMAT_DS9 = 2;
+	
+
 	
 }

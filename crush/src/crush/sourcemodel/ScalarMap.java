@@ -199,6 +199,8 @@ public class ScalarMap extends SourceMap {
 			}	
 		}
 		
+		// TODO Apply mask to data either via flag.inside or flag.outside + mask file.
+		
 		if(hasOption("source.model")) {
 			try { applyModel(option("source.model").getValue()); }
 			catch(Exception e) { 
@@ -208,7 +210,7 @@ public class ScalarMap extends SourceMap {
 		}
 		
 	}
-	
+		
 	public synchronized void insertSources(SourceCatalog<SphericalCoordinates> catalog) throws Exception {
 		catalog.remove(map);
 		for(GaussianSource<?> source : catalog) source.getPeak().scale(-1.0);
@@ -410,7 +412,7 @@ public class ScalarMap extends SourceMap {
 		
 		// Finally, calculate the FWHM from the observed beam spread...
 		source.measureShape(map);
-		
+			
 		return source;
 	}
 	

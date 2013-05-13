@@ -57,7 +57,7 @@ public class AstroImage extends GridImage<SphericalCoordinates> implements Clone
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
-		if(name.equals("coords")) return astroSystem().getID();
+		if(name.equals("system")) return astroSystem().getID();
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

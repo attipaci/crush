@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 			  <attila[AT]submm.caltech.edu>
 
-			  Last updated: 13 Nov 2012
+			  Last updated: 12 May 2013
 
 
 
@@ -1525,6 +1525,8 @@ options on the console.
 	descriptor	A descriptor string for the scan (e.g. the scan number
 			or file name used to invoke the scan).
 
+	dir		Scanning direction. E.g. 'HO', 'EQ', 'EC', 'GL', 'SG'.
+
 	EL		Elevation coordinate (in radians). 
 	
 	ELd		Elevation coordinate (in degrees).
@@ -1718,6 +1720,40 @@ options on the console.
 	zenithtau	In-band opacity at zenith.
 
 
+   Source model specific log entries
+   ---------------------------------
+
+	map.beams	  Number of (smoothed) beams in the map.
+
+	map.contentType	  Type of data stored in the map.
+
+	map.creator	  Creator's name or description.
+	
+	map.depth	  Weighted average depth of the map in map units.
+
+	map.max		  Maximum value in map units.
+
+	map.min		  Minimum value in map units.
+
+	map.name	  Name of map data (e.g. object's name)
+
+	map.points	  Number of pixels in the map.
+
+	map.rms		  Typical RMS of the map in map units.
+
+	map.size	  Size of the map in pixels e.g. '121x432'.
+
+	map.sizeX   	  Map size in the 'x' direction (pixels).
+
+	map.sizeY   	  Map size in the 'y' direction (pixels).
+
+	map.system	  Coordtinate system id, e.g. 'HO', 'EQ', 'GL' etc.
+
+	map.unit	  Name of map unit, e.g. 'Jy/beam'.
+
+	smooth		  Smoothing applied, in the default size unit of
+			  the instrument (e.g. in arcsecs).
+
 
    APEX specific log entries
    -------------------------
@@ -1793,6 +1829,8 @@ options on the console.
 
    SHARC-2 specific log entries
    ----------------------------
+
+	bias		The bias amplitude (mV) of the first detector row.
 
 	dsos?		Whether DSOS was used.
 
