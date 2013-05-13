@@ -50,6 +50,7 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	double nativeSamplingInterval;
 	double[] rowGain;
 	boolean[] isHiGain;
+	double bias0;
 	
 	double rotatorAngle, rotatorZeroAngle, rotatorOffset;
 	String rotatorMode;
@@ -300,10 +301,13 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 
 		// Read the Bias Voltages
 		float[][] rowBias = (float[][])hdu.getColumn("Bias Voltage");
+		
 		if(rowBias == null) {
 			rowBias = new float[12][2];
 			for(int row=0; row<12; row++) rowBias[row][0] = 1000.0F;
 		}
+		
+		bias0 = rowBias[0][0] * Unit.mV;
 		
 		// Add the pixels here...
 		if(!isEmpty()) clear();
@@ -589,7 +593,8 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 	
-		if(name.equals("dsos?")) return Boolean.toString(dsosUsed);
+		if(name.equals("bias")) return f.format(bias0 / Unit.mV);
+		else if(name.equals("dsos?")) return Boolean.toString(dsosUsed);
 		else if(name.equals("foc.X")) return Util.defaultFormat(focusX / Unit.mm, f);
 		else if(name.equals("foc.Y")) return Util.defaultFormat(focusY / Unit.mm, f);
 		else if(name.equals("foc.Z")) return Util.defaultFormat(focusZ / Unit.mm, f);

@@ -1,21 +1,12 @@
->> 'write.eps'
 >> 'mirror', 'zoom', 'skew' 
->> How to properly renormalize gains accross scans and integrations
->> move up level and initial weighting 
->> assignment problem...
 >> gain flagging --> wG2 (sensitivity) flagging...
->> new log entries for source model...
 >> MAKO doc to README
->> MAKO options to GLOSSARY
 >> 'dir' for all instruments.
->> GLOSSARY --> @Instrument
->> Check MAKO equatorial/celestial flags. Try invoke planetary automatically.
->> Check equatorial Moon scan.
->> projection.angle
->> system=focalplane
->> Frame.equatorial, HF.horizontal/hOffset -> nativeCoords, nativeOffset
->> distortion, coeffs, unit
->> tau = tables, tau.tables=<path> 
+>> Check pointing offsets OK, horizontal OK...
+>> distortion for all arrays...
+>> flag.inside=<mask> flag.outside=<mask>
+>> LogFile to store columns...
+>> check LABOCA reductions...
 
 	[NEW] Initial MAKO support.
 
@@ -26,9 +17,34 @@
 
 	[NEW] The option 'level' removes detector DC levels before entering
 	the pipeline analysis. Now default for all currently supported 
-	instruments.
+				instruments.
+
+	[NEW] New log entries for the source model (map), such as size, rms
+	min, max, depth etc. See README for details.
+
+	[NEW] Option 'nefd.map' records NEFD estimates rescaled by map noise,
+	when 'weighting.scans' is also set. Without this option, the NEFD 
+	estimates will be based on time-stream noise alone. (It's mainly useful
+	for logging the desired NEFD measure via 'log').
 
 	[BUG] The option '-planetary' produced images upside down. Ooops.
+
+	[BUG] Suggested pointing corrections were sometimes wrong, when PNG
+	thumbnail writing was on. It was a case a bad inheritance, by which
+	the cropping of the PNG image messed up the coordinate system of the
+	working image. Fixed.
+
+	[FIX] CircularRegion.fineTunePeak to update coordinates. Used for 
+	pointing fit via 'peak' method.
+
+	[FIX] {b1} {MAKO} Equatorial scans OK.
+
+	[FIX] {SHARC-2} Date- or MJD-specific conditions were not applied, 
+	since the scan date was not set via the prescribed method. This was
+	not a big problem, since only serial-number-specific conditionals were
+	(are) used in the SHARC-2 configuration. Nevertheless, the possibility
+	for date- and MJD-specific conditions should be left open for all
+	instruments, including SHARC-2.
 
 	[FIX] Previously, projections did not apply to horizontal maps or
 	moving objects (reduced with -planetary). Those were always produced
@@ -42,6 +58,13 @@
 	
 	[FIX] Diagonals of covariance matrices were not flagged out as
 	intended.
+
+	[TWEAK] 'whiten.proberange' can be set to 'auto' to automatically 
+	ajust the probing range for point sources. This is now default for
+	all instruments, except LABOCA where microphonics avoidance requires
+	a fixed probing range.
+
+	[TWEAK] NEFD measure to include scan weight.
 
 	[TWEAK] {b1} {beammap} Scan maps are properly derotated frame-by-frame
 	s.t. the resulting maps are fully aligned in array coordinates.
@@ -62,6 +85,8 @@
 
 	[TWEAK] Removal of DC levels and bootstrap pixel weight estimation
 	(if 'pixeldata' is not set) are now common features to all instruments.
+
+	[CONFIG] 'offsets' and 'drifts' made mutually exclusive, by default.
 
 	[CODE] RCP formatting is now decentralized similar to writing channel
 	information via 'pixeldata'. Allows more flexible instrument-specific

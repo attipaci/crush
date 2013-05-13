@@ -43,8 +43,8 @@ public class PolygonalRegion<CoordinateType extends CoordinatePair> extends Regi
 	
 	public PolygonalRegion() {}
 	
-	public PolygonalRegion(String fileName, GridImage<CoordinateType> forImage) throws ParseException {
-		parse(fileName, forImage); 
+	public PolygonalRegion(String fileName, int format, GridImage<CoordinateType> forImage) throws ParseException {
+		parse(fileName, format, forImage); 
 	}
 	
 	@Override
@@ -172,10 +172,10 @@ public class PolygonalRegion<CoordinateType extends CoordinatePair> extends Regi
 	
 	@Override
 	// TODO for non spherical coordinates also...
-	public void parse(String line, GridImage<CoordinateType> forImage) throws ParseException {
+	public void parse(String spec, int format, GridImage<CoordinateType> forImage) throws ParseException {
 		points.clear();
 		
-		StringTokenizer tokens = new StringTokenizer(line, ";");
+		StringTokenizer tokens = new StringTokenizer(spec, ";\n");
 		CoordinateType reference = forImage.getReference();
 		
 		while(tokens.hasMoreTokens()) {

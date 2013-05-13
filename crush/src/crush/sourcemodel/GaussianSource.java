@@ -41,8 +41,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	
 	public GaussianSource() { }
 
-	public GaussianSource(String line, GridImage<CoordinateType> forImage) throws ParseException {
-		super(line, forImage);
+	public GaussianSource(String line, int format, GridImage<CoordinateType> forImage) throws ParseException {
+		super(line, format, forImage);
 	}
 	
 	public GaussianSource(GridImage<CoordinateType> map, Vector2D offset, double r) {
@@ -81,7 +81,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 		CoordinateType coords = (CoordinateType) map.getReference().clone();
 		map.getGrid().getCoords(new Vector2D(index.i(), index.j()), coords);
 		setID(map instanceof GridSource ? ((GridSource<?>) map).getName() : "[1]");
-		setCenter(coords);
+		setCoordinates(coords);
 		setRadius(new DataPoint(map.getImageFWHM(), Math.sqrt(map.getPixelArea())));	
 	}
 	
@@ -97,10 +97,10 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	
 	@Override
 	public DataPoint finetunePeak(GridImage<CoordinateType> image) {
-		
 		Data2D.InterpolatorData ipolData = new Data2D.InterpolatorData();
 		peak = super.finetunePeak(image);
 		Vector2D centerIndex = getIndex(image.getGrid());
+
 		if(peak == null) {
 			peak.setValue(image.valueAtIndex(centerIndex, ipolData));
 			if(image instanceof GridMap)
@@ -256,7 +256,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public void parse(String line, GridImage<CoordinateType> forImage) throws ParseException {
+	public void parse(String line, int format, GridImage<CoordinateType> forImage) throws ParseException {
 		if(line == null) return;
 		if(line.length() == 0) return;
 		if(line.charAt(0) == '#' || line.charAt(0) == '!') return;
@@ -330,7 +330,7 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 	}
 	
 	
-	public void centroid(GridImage<CoordinateType> map) {
+	public void centroid(GridImage<CoordinateType> map) {	
 		Bounds bounds = getBounds(map, 2.0 * map.getImageFWHM());
 		Vector2D index = new Vector2D();
 		double sumw = 0.0;
@@ -342,7 +342,8 @@ public class GaussianSource<CoordinateType extends CoordinatePair> extends Circu
 			sumw += w;
 		}
 		index.scale(1.0/sumw);
-		map.getGrid().getCoords(index, getCoordinates());
+		
+		moveTo(map, index);		
 	}
 	
 	// Increase the aperture until it captures >98% of the flux

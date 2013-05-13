@@ -49,12 +49,12 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	}
 	
 	public CircularRegion(CoordinateType coords, double r) {
-		setCenter(coords);
+		setCoordinates(coords);
 		radius = new DataPoint();
 		setRadius(r);
 	}
 	
-	public CircularRegion(String line, GridImage<CoordinateType> forImage) throws ParseException { super(line, forImage); }
+	public CircularRegion(String line, int format, GridImage<CoordinateType> forImage) throws ParseException { super(line, format, forImage); }
 	
 	@Override
 	public Object clone() {
@@ -67,11 +67,6 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	public Vector2D getIndex(Grid2D<CoordinateType> grid) {
 		if(useGrid != grid) indexFor(grid);
 		return gridIndex;
-	}
-	
-	public void setCenter(CoordinateType coords) {
-		this.coords = coords;
-		useGrid = null;
 	}
 	
 	private void indexFor(Grid2D<CoordinateType> grid) {	
@@ -172,11 +167,16 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		centerIndex.setX(i + di);
 		centerIndex.setY(j + dj);
 		
+		moveTo(map, centerIndex);
+		
 		double peak = map.valueAtIndex(i+di, j+dj, ipolData);
 	
 		return new DataPoint(peak, peak / significance);
 	}
 
+	protected void moveTo(GridImage<CoordinateType> image, Vector2D index) {
+		image.getGrid().getCoords(index, coords);
+	}
 	
 	@Override
 	public String toString(GridImage<CoordinateType> image) {
@@ -205,6 +205,7 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	
 	public void setCoordinates(CoordinateType coords) {
 		this.coords = coords;
+		useGrid = null;
 	}
 	
 	public DataPoint getRadius() { return radius; }
@@ -270,13 +271,10 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		}
 		else return "dx = " + offset.getX() + "\tdy = " + offset.getY();
 	}
+
 	
 	@Override
-	public void parse(String line, GridImage<CoordinateType> forImage) throws ParseException {
-		parseCrush(line, forImage);
-	}
-	
-	public void parse(String line, int format, GridImage<CoordinateType> forImage) {	
+	public void parse(String line, int format, GridImage<CoordinateType> forImage) throws ParseException {	
 		switch(format) {
 		case FORMAT_CRUSH : parseCrush(line, forImage); break;
 		//case FORMAT_OFFSET : parseOffset(line); break;
@@ -298,7 +296,7 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 			((AngleFormat) axes.get(1).format).colons();
 		
 			coords.parse(tokens.nextToken() + " " + tokens.nextToken() + " " + tokens.nextToken());
-			setCenter(coords);
+			setCoordinates(coords);
 			setRadius(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
 		}
 		else {
@@ -386,15 +384,6 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		return new DataPoint();	
 	}
 	
-	
-	
-	public final static int FORMAT_CRUSH = 0;
-	public final static int FORMAT_GREG = 1;
-	public final static int FORMAT_DS9 = 2;
-	public final static int FORMAT_OFFSET = 3;
-	public final static int FORMAT_POINTING = 4; // TODO
-	public final static int FORMAT_DISPLAY = 5; // TODO
-	public final static int FORMAT_LONG = 6; // TODO
 
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat nf = TableFormatter.getNumberFormat(formatSpec);

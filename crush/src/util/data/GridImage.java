@@ -67,6 +67,14 @@ public abstract class GridImage<CoordinateType extends CoordinatePair> extends D
 		super(data, flag);
 	}
 	
+	@SuppressWarnings({ "unchecked", "cast" })
+	@Override
+	public Data2D copy(boolean copyContent) {
+		GridImage<CoordinateType> copy = (GridImage<CoordinateType>) super.copy(copyContent);
+		copy.grid = (Grid2D<CoordinateType>) grid.copy();
+		return copy;
+	}
+	
 	public Grid2D<CoordinateType> getGrid() { return grid; }
 	
 	public void setGrid(Grid2D<CoordinateType> grid) { 

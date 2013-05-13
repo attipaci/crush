@@ -54,9 +54,8 @@ public class EllipticalSource<CoordinateType extends CoordinatePair> extends Gau
 		// TODO Auto-generated constructor stub
 	}
 	
-	public EllipticalSource(String line, GridImage<CoordinateType> forImage)
-			throws ParseException {
-		super(line, forImage);
+	public EllipticalSource(String line, int format, GridImage<CoordinateType> forImage) throws ParseException {
+		super(line, format, forImage);
 		// TODO Auto-generated constructor stub
 	}
 	

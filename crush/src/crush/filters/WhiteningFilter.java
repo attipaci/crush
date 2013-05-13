@@ -25,6 +25,7 @@ package crush.filters;
 
 import java.util.Arrays;
 
+import util.Configurator;
 import util.Range;
 import util.data.DataPoint;
 import util.data.OldFFT;
@@ -80,11 +81,21 @@ public class WhiteningFilter extends AdaptiveFilter {
 		if(n < windowSize) windowSize = n;
 		windows = n / windowSize;
 		
-		Range measure = hasOption("proberange") ? option("proberange").getRange(true) : new Range(0, nF); 
-		measure.restrict(0, nF);
+		Range probe = new Range(0.0, nF * dF);
+				
+		if(hasOption("proberange")) { 
+			Configurator spec = option("proberange");
+			if(spec.getValue().equalsIgnoreCase("auto")) {
+				double fPnt = 1.0 / integration.getPointCrossingTime();
+				probe =  new Range(0.3 * fPnt, fPnt);
+			}
+			else probe = option("proberange").getRange(true);
+		}
 		
-		whiteFrom = Math.max(1, (int) Math.floor(measure.min() / dF));
-		whiteTo = Math.min(nF, (int) Math.ceil(measure.max() / dF) + 1);
+		probe.restrict(0, nF);
+		
+		whiteFrom = Math.max(1, (int) Math.floor(probe.min() / dF));
+		whiteTo = Math.min(nF, (int) Math.ceil(probe.max() / dF) + 1);
 		
 		// Make sure the probing range is contains enough channels
 		// and that the range is valid...

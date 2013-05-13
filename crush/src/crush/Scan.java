@@ -706,7 +706,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			AstroMap map = ((ScalarMap) sourceModel).map;
 			info += pointing.pointingInfo(map) + "\n";
 		}
-			
+		
 		info += getPointingString(getNativePointingIncrement(pointing));
 		return info;
 	}
@@ -820,7 +820,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			sourceCoords = (EquatorialCoordinates) equatorial.clone();
 			((CelestialCoordinates) source.getCoordinates()).toEquatorial(sourceCoords);
 		}
-		
+			
 		return sourceCoords.getOffsetFrom(equatorial);
 	}
 	
@@ -834,10 +834,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(instrument instanceof GroundBased) {
 			if(source.getCoordinates() instanceof HorizontalCoordinates) 
 				return source.getCoordinates().getOffsetFrom(horizontal);			
-			else {
+			else {			
 				Vector2D offset = getEquatorialPointing(source);
 				// Convert to native equatorial (-RA, DEC)...
-				
+					
 				// Rotate to Horizontal...
 				Vector2D from = (Vector2D) offset.clone();
 				((HorizontalFrame) getFirstIntegration().getFirstFrame()).equatorialToHorizontal(from);
