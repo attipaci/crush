@@ -47,7 +47,7 @@ public class ToneIdentifier extends ArrayList<ResonanceID> implements Cloneable 
 	 */
 	private static final long serialVersionUID = -3011775640230135691L;
 	
-	public double Thot = 285.0 * Unit.K;	// Temperature at which 'hot' ids are derived...
+	public double Thot = 273.16 * Unit.K;	// Temperature at which 'hot' ids are derived...
 	public Range TRange = new Range(-1000.0, 1000.0 * Unit.K);
 	public int attempts = 100;
 	public double rchi;
@@ -81,6 +81,7 @@ public class ToneIdentifier extends ArrayList<ResonanceID> implements Cloneable 
 		clear();
 		
 		// Assuming 12 C for the hot load...
+		// and 195 K for the cold
 		double dT = Thot - 75.0 * Unit.K;
 		
 		int index = 1;

@@ -141,6 +141,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		return isFlagging;
 	}
 	
+	
 	public boolean updateAllGains(Integration<?, ?> integration, boolean isRobust) {
 		if(!solveGains) return false;
 		boolean isFlagging = false;

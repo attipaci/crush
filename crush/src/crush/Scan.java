@@ -605,6 +605,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		if(!gotGains) return;
 		
+		
 		// Apply the gain increment
 		for(IntegrationType integration : this) {
 			Modality<?> modality = integration.instrument.modalities.get(modalityName);

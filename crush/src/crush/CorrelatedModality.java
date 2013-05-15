@@ -79,6 +79,11 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 		for(CorrelatedMode mode : this) mode.skipChannels = pattern;
 	}
 	
+	/*
+	public void scaleSignals(Integration<?,?> integration, double aveG) {
+		for(CorrelatedMode mode : this) if(!mode.fixedSignal) mode.scaleSignals(integration, aveG);
+	}
+	*/
 
 	public void updateSignals(Integration<?, ?> integration, boolean isRobust) {	
 		for(CorrelatedMode mode : this) if(!mode.fixedSignal) {

@@ -12,7 +12,8 @@ Table of Contents
 
 1. Introduction
 2. Locating Scans
-3. Glossary of MAKO-specific options
+3. Extinction Correction
+4. Glossary of MAKO-specific options
 
 
 
@@ -59,11 +60,29 @@ multiple files from different days, e.g. as:
    crush mako -date=2013-04-21 09:37 09:55 -date=2013-04-22 1259 13:11 1324 
 
 
+#####################################################################
+3. Extinction correction
+#####################################################################
+
+By default, MAKO uses a weighting local average value of the 225 GHz tau tipper
+record from the CSO, to calculate an appropriate in-band (using SHARC-2's 350um
+tau scaling relation), line-of-sight extinction correction. You can adjust the 
+1-sigma time-window for the Gaussian weighting function via the 'tau.window'
+keyword. The default setting is 0.5 (hours).
+
+Alternatively, you can manually set tau values. E.g.:
+
+   > crush [...] -tau.225GHz=0.055 -tau=225GHz <scans>
+
+(The first option specifies a 225GHz tau value, while the second option tells
+CRUSH to use the 225 GHz value for calculating the in-band tau. Other than
+'225GHz' you can specify '350um' tau values, or 'PWV' (precipitable water 
+vapor vales in mm), as well as direct in-band 'mako' zenith tau values.
 
 
 
 #####################################################################
-3. Glossary of GISMO-specific options
+4. Glossary of MAKO-specific options
 #####################################################################
 
 The MAKO modules of CRUSH share much of their DNA with the SHARC-2 module.

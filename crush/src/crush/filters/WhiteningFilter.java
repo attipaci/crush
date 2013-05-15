@@ -87,7 +87,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 			Configurator spec = option("proberange");
 			if(spec.getValue().equalsIgnoreCase("auto")) {
 				double fPnt = 1.0 / integration.getPointCrossingTime();
-				probe =  new Range(0.3 * fPnt, fPnt);
+				probe = new Range(0.5 * fPnt, fPnt);
 			}
 			else probe = option("proberange").getRange(true);
 		}

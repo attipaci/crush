@@ -152,7 +152,7 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		
 		if(hasOption("toneid")) {
 			try {
-				identifier = new ToneIdentifier(option("toneid"));
+				identifier = new ToneIdentifier(option("toneid"));	
 				double guessT = (hasOption("toneid.guesst") ? option("toneid.guesst").getDouble() : 150.0) * Unit.K;
 				Tsky = identifier.match(new ResonanceList(this), guessT);
 			}
@@ -434,6 +434,7 @@ public class Mako extends RotatingArray<MakoPixel> implements GroundBased {
 		else if(name.equals("rotoff")) return Util.defaultFormat(rotatorOffset / Unit.deg, f);
 		else if(name.equals("rotMode")) return rotatorMode;
 		else if(name.equals("load")) return Util.defaultFormat(excessLoad / Unit.K, f);
+		else if(name.equals("Tres")) return Util.defaultFormat(Tsky / Unit.K, f);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
