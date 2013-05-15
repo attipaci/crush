@@ -34,9 +34,6 @@ import java.util.*;
 public class CircularRegion<CoordinateType extends CoordinatePair> extends Region<CoordinateType> implements TableFormatter.Entries {
 	private CoordinateType coords;
 	private DataPoint radius;
-	
-	private Grid2D<CoordinateType> useGrid = null;
-	private Vector2D gridIndex = new Vector2D();
 
 	public CircularRegion() {}
 
@@ -59,19 +56,14 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	@Override
 	public Object clone() {
 		CircularRegion<?> clone = (CircularRegion<?>) super.clone();
-		clone.useGrid = null;
-		clone.gridIndex = new Vector2D();
 		return clone;
 	}
+
 	
 	public Vector2D getIndex(Grid2D<CoordinateType> grid) {
-		if(useGrid != grid) indexFor(grid);
-		return gridIndex;
-	}
-	
-	private void indexFor(Grid2D<CoordinateType> grid) {	
-		grid.getIndex(coords, gridIndex);
-		useGrid = grid;
+		Vector2D index = new Vector2D();
+		grid.getIndex(coords, index);
+		return index;
 	}
 	
 	@Override
@@ -205,7 +197,6 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 	
 	public void setCoordinates(CoordinateType coords) {
 		this.coords = coords;
-		useGrid = null;
 	}
 	
 	public DataPoint getRadius() { return radius; }
@@ -233,7 +224,7 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 
 	public String toGregString(GridImage<CoordinateType> image) {
 		CoordinatePair offset = new CoordinatePair();
-		useGrid.getProjection().project(coords, offset);
+		image.getProjection().project(coords, offset);
 		
 		return "ellipse " + Util.f1.format(radius.value()/Unit.arcsec) + " /user " +
 		Util.f1.format(offset.getX() / Unit.arcsec) + " " + Util.f1.format(offset.getY() / Unit.arcsec);
@@ -262,7 +253,7 @@ public class CircularRegion<CoordinateType extends CoordinatePair> extends Regio
 		image.getProjection().project(coords, offset);
 	
 		if(coords instanceof SphericalCoordinates) {
-			SphericalCoordinates reference = (SphericalCoordinates) useGrid.getReference();
+			SphericalCoordinates reference = (SphericalCoordinates) image.getReference();
 			CoordinateSystem axes = reference.getLocalCoordinateSystem();
 			CoordinateAxis x = axes.get(0);
 			CoordinateAxis y = axes.get(1);

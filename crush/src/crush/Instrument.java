@@ -779,6 +779,7 @@ implements TableFormatter.Entries {
 		return averageFiltering;
 	}
 	
+	
 	// Flag according to noise weights (but not source weights)
 	public void flagWeights() {
 		Range weightRange = new Range();
@@ -796,21 +797,21 @@ implements TableFormatter.Entries {
 		for(Channel channel : getDetectorChannels()) {
 			if(channel.dof > 0.0) {
 				channel.unflag(Channel.FLAG_DOF);
-				if(channel.isUnflagged(Channel.FLAG_GAIN)) weights[n++] = channel.weight * channel.gain * channel.gain;
+				if(channel.isUnflagged(Channel.FLAG_GAIN)) weights[n++] = Math.log(1.0 + channel.weight * channel.gain * channel.gain);
 			}
 			else channel.flag(Channel.FLAG_DOF);
 		}
 		if(n == 0) throw new IllegalStateException("DOF?");
 		
 		// Use robust mean (with 10% tails) to estimate average weight.
-		double aveSW = n > 0 ? Statistics.robustMean(weights, 0, n, 0.1) : 0.0;	
-		double maxWeight = weightRange.max() * aveSW;
-		double minWeight = weightRange.min() * aveSW;	
+		double aveW = n > 0 ? Math.exp(Statistics.robustMean(weights, 0, n, 0.1)) - 1.0 : 0.0;	
+		double maxWeight = weightRange.max() * aveW;
+		double minWeight = weightRange.min() * aveW;	
 		double sumw = 0.0;
 		
 		// Flag out channels with unrealistically small or large source weights
 		for(Channel channel : getDetectorChannels()) {
-			channel.unflag(Channel.FLAG_SENSITIVITY);	
+			channel.unflag(Channel.FLAG_SENSITIVITY);
 			double w = channel.weight * channel.gain * channel.gain;
 			if(w > maxWeight) channel.flag(Channel.FLAG_SENSITIVITY);
 			else if(w <= minWeight) channel.flag(Channel.FLAG_SENSITIVITY);		

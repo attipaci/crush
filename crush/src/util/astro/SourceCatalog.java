@@ -28,6 +28,7 @@ import java.text.*;
 
 import util.CoordinatePair;
 import util.data.GridImage;
+import util.data.Region;
 
 import crush.sourcemodel.GaussianSource;
 
@@ -49,7 +50,7 @@ public class SourceCatalog<CoordinateType extends CoordinatePair> extends Vector
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			try { add(new GaussianSource<CoordinateType>(line, map)); }
+			try { add(new GaussianSource<CoordinateType>(line, Region.FORMAT_CRUSH, map)); }
 			catch(ParseException e) { System.err.println("WARNING! Cannot parse: " + line); }
 		}
 		in.close();

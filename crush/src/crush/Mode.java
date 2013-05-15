@@ -139,30 +139,30 @@ public class Mode {
 		if(gainFlag == 0) return false;
 			
 		final float[] gain = getGains();
-			
+		final float aveG = (float) getAverageGain(~gainFlag);
+		
 		for(int k=channels.size(); --k >= 0; ) {
 			final Channel channel = channels.get(k);
 			
 			float G = Float.NaN;
-			if(gainType == Instrument.GAINS_SIGNED) G = gain[k];
-			else if(gainType == Instrument.GAINS_BIDIRECTIONAL) G = Math.abs(gain[k]);
+			if(gainType == Instrument.GAINS_SIGNED) G = gain[k] / aveG;
+			else if(gainType == Instrument.GAINS_BIDIRECTIONAL) G = Math.abs(gain[k] / aveG);
 
 			if(!gainRange.contains(G)) channel.flag(gainFlag);
 			else channel.unflag(gainFlag);
 		}
 		return true;
-	}
+	}	
 	
-	public double getAverageGain(int gainFlag) throws Exception {
-		float[] G = getGains();
-		
-		double[] value = new double[channels.size()];
+	public double getAverageGain(int excludeFlag) throws Exception {
+		final float[] G = getGains();
+		final double[] values = new double[channels.size()];
 		int n = 0;
-		for(int k=channels.size(); --k >= 0; ) if(channels.get(k).isUnflagged(gainFlag)) if(gainRange.contains(G[k]))
-			value[n++] = Math.log(1.0 + Math.abs(G[k]));
+		for(int k=channels.size(); --k >= 0; ) if(channels.get(k).isUnflagged(excludeFlag))
+			values[n++] = Math.log(1.0 + Math.abs(G[k]));
 		
 		// Use a robust mean (with 10% tails) to calculate the average gain...
-		double aveG = Statistics.robustMean(value, 0, n, 0.1);
+		double aveG = Statistics.robustMean(values, 0, n, 0.1);
 		if(Double.isNaN(aveG)) return 1.0;
  
 		return Math.exp(aveG) - 1.0;	

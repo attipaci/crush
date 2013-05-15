@@ -63,28 +63,13 @@ public class CorrelatedMode extends Mode {
 	public ChannelGroup<?> getValidChannels() {
 		return getChannels().copyGroup().discard(skipChannels);		
 	}	
-		
-	
-	// TODO Gain normalization is not safe during reduction, it is meant solely
-	// for use at the end of reduction, for creating a normalized gain set for writing.
-	// To make it safe, it should properly rescale all dependent signals and gains...
-	/*
-	protected synchronized void renormalizeGains(Integration<?,?> integration) throws Exception {
-		if(fixedSignal) return;
-		final float aveG = (float) getAverageGain(gainFlag);
-		float[] G = getGains();
-		
-		for(int i=G.length; --i >= 0; ) G[i] /= aveG;
-		
-		scaleSignals(integration, aveG);
-	}
-	*/
-
 	
 	public synchronized void scaleSignals(Integration<?,?> integration, double aveG) {
-		if(fixedGains) throw new IllegalStateException("Correlate mode '" + name + "' has non-adjustable gains.");
+		if(fixedSignal) throw new IllegalStateException("Correlate mode '" + name + "' has non-adjustable signal.");
 		
 		Signal signal = integration.signals.get(this);
+		if(signal == null) return;
+		
 		signal.scale(aveG);
 		
 		PhaseSet phases = integration.getPhases();
@@ -92,11 +77,21 @@ public class CorrelatedMode extends Mode {
 			PhaseSignal pSignal = phases.signals.get(this);
 			if(pSignal != null) pSignal.scale(aveG);
 		}
+		
+		if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.scaleSignals(integration, aveG);
 	}
 	
 	public synchronized void updateSignals(Integration<?, ?> integration, boolean isRobust) throws Exception {
 		if(fixedSignal) throw new IllegalStateException("WARNING! Cannot decorrelate fixed signal modes.");
 
+		// Renormalize the extraction gains before estimating signal...
+		if(!fixedGains) {
+			double aveG = getAverageGain(~gainFlag);
+			float[] gains = getGains();
+			for(int i=gains.length; --i >= 0; ) gains[i] /= aveG;
+			setGains(gains);
+		}
+			
 		CorrelatedSignal signal = (CorrelatedSignal) integration.signals.get(this);
 		if(signal == null) signal = new CorrelatedSignal(this, integration);
 		signal.update(isRobust); 	

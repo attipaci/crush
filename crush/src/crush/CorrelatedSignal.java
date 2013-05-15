@@ -292,7 +292,6 @@ public class CorrelatedSignal extends Signal {
 		for(int i=value.length; --i >= 0; ) if(weight[i] > 0.0) n++;	
 		return n * (1.0 - 1.0 / driftN);
 	}
-
 	
 	// Get correlated for all frames even those that are no good...
 	// But use only channels that are valid, and skip over flagged samples...
