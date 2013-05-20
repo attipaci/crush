@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-
 // (C)2007 Attila Kovacs <attila@submm.caltech.edu>
 
 package util;

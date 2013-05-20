@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,8 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2007,2008,2009,2010 Attila Kovacs
-
 package crush;
 
 import java.io.*;
@@ -37,7 +35,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.14-b1
+ * @version 2.14-b2
  * 
  */
 public class CRUSH extends Configurator {

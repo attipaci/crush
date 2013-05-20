@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -83,14 +83,6 @@ public class CorrelatedMode extends Mode {
 	
 	public synchronized void updateSignals(Integration<?, ?> integration, boolean isRobust) throws Exception {
 		if(fixedSignal) throw new IllegalStateException("WARNING! Cannot decorrelate fixed signal modes.");
-
-		// Renormalize the extraction gains before estimating signal...
-		if(!fixedGains) {
-			double aveG = getAverageGain(~gainFlag);
-			float[] gains = getGains();
-			for(int i=gains.length; --i >= 0; ) gains[i] /= aveG;
-			setGains(gains);
-		}
 			
 		CorrelatedSignal signal = (CorrelatedSignal) integration.signals.get(this);
 		if(signal == null) signal = new CorrelatedSignal(this, integration);

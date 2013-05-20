@@ -1,3 +1,5 @@
+>> 'flatweights'
+
 2.14-b1 (12 May 2013)
 
 	[BUG] The option '-planetary' produced images upside down. Ooops.
@@ -16,18 +18,20 @@
 
 	[NEW] The option 'level' removes detector DC levels before entering
 	the pipeline analysis. Now default for all currently supported 
-				instruments.
+	instruments.
 
 	[NEW] New log entries for the source model (map), such as size, rms
 	min, max, depth etc. See README for details.
 
 	[NEW] Option 'nefd.map' records NEFD estimates rescaled by map noise,
 	when 'weighting.scans' is also set. Without this option, the NEFD 
-	estimates will be based on time-stream noise alone. (It's mainly useful
-	for logging the desired NEFD measure via 'log').
+	estimates will be based on time-stream noise alone. Thus, if 'nefd.map'
+	is not set, there is no change in behaviour to prior versions. (The new
+	option is mainly useful for logging the desired NEFD measure via 
+	'log').
 
 	[FIX] {2.14-1} Log-based average gain normalization was not used for
-	gain flagging. Now fixed.
+	gain flagging. Now it is :-).
 
 	[FIX] CircularRegion.fineTunePeak to update coordinates. Used for 
 	pointing fit via 'peak' method.
@@ -54,9 +58,6 @@
 	[FIX] Diagonals of covariance matrices were not flagged out as
 	intended.
 
-	[TWEAK] {2.14-1} Found an elegant solution for enforcing average 
-	<gain>=1 for all decorrelated modes.
-
 	[TWEAK] log based average sensitivity calculation for weight flagging.
 	Should make noise range flagging more robust.
 
@@ -64,8 +65,6 @@
 	ajust the probing range for point sources. This is now default for
 	all instruments, except LABOCA where microphonics avoidance requires
 	a fixed probing range.
-
-	[TWEAK] NEFD measure to include scan weight.
 
 	[TWEAK] {b1} {beammap} Beam maps are now procured in focal-plane
 	coordinates. Thus, scan maps are properly derotated frame-by-frame

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of the proprietary SCUBA-2 modules of crush.
