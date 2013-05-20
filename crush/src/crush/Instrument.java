@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -134,6 +134,9 @@ implements TableFormatter.Entries {
 		addGroups();
 		addDivisions();
 		addModalities();
+		
+		
+		if(hasOption("flatweights")) flattenWeights();
 		
 		if(hasOption("uniform")) uniformGains();
 		if(hasOption("gainnoise")) {
@@ -499,6 +502,19 @@ implements TableFormatter.Entries {
 		return keys;
 	}
 	
+	public void flattenWeights() {
+		System.err.println(" Switching to flat channel weights.");
+		double sum = 0.0, sumG2 = 0.0;
+		for(Channel channel : this) if(channel.isUnflagged(Channel.HARDWARE_FLAGS)) {
+			double G2 = channel.gain * channel.gain;
+			sum += channel.weight * G2;
+			sumG2 += G2;
+		}
+		double w = sumG2 > 0.0 ? sum / sumG2 : 1.0;
+		
+		for(Channel channel : this) channel.weight = w;
+	}
+	
 	public void uniformGains() {
 		for(Channel channel : this) channel.uniformGains();	
 	}
@@ -580,6 +596,7 @@ implements TableFormatter.Entries {
 		in.close();
 		
 		standardWeights = true;
+		
 		if(integrationTime > 0.0) dataWeights();
 	}
 	
