@@ -1027,6 +1027,14 @@
 			Indeces normally start at 1 (i.e. not C-style!).
 			@See: 'noslim', 'blind' 
 
+:: flatweights		@Since: 2.14
+			@Advanced
+			Override the channels weights from 'pixeldata' with
+			their average value. This way all channels carry the
+			same uniformized initial weight. It can be useful when
+			the 'pixeldata' weights are suspect for some reason.
+			@See: 'pixeldata'
+
 :: flips		@Alias -> correlated.flips
 			@Instrument: GISMO
 			@Since: 2.12

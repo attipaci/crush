@@ -1,6 +1,16 @@
->> 'flatweights'
 
-2.14-b1 (12 May 2013)
+2.14-1 (2 June 2013)
+
+
+	Overview
+	======================================================================
+	The release fixes a couple of embarrasing bugs, and introduces a host
+	of new features, including initial support for MAKO based on the
+	April 2013 run; and improved 'beammap' and 'skydip' reduction modes -- 
+	the latter now supporting EPS and PNG image outputs. There are many 
+	smaller fixes, improvements, and some under-the-hood code changes also.
+	======================================================================
+
 
 	[BUG] The option '-planetary' produced images upside down. Ooops.
 
@@ -9,7 +19,15 @@
 	the cropping of the PNG image messed up the coordinate system of the
 	working image. Fixed.
 
+	[BUG] {skydip} Uninitialized copies of SkyDip data resulted in an error 
+	during reduction. Fixed.	
+
 	[NEW] Initial MAKO support.
+
+	[NEW] Option 'flatweights' overrrides weights from 'pixeldata' with
+	their uniformized average, s.t. each channel carries the same initial
+	weight. This can be useful sometimes when the 'pixeldata' weights are 
+	not applicable for some reason.
 
 	[NEW] Option 'show' is introduced to control whether to try display 
 	the source model. Currently, only the 'skydip' model uses that to
@@ -29,6 +47,27 @@
 	is not set, there is no change in behaviour to prior versions. (The new
 	option is mainly useful for logging the desired NEFD measure via 
 	'log').
+
+	[NEW] New option 'gnuplot' allows using gnuplot as an external plotting
+	tool (e.g. for skydip reductions). If gnuplot is in your path, the
+	option does not need an argument. Otherwise, the optional argument
+	can point to the gnuplot executable to use, e.g.:
+
+		gnuplot /usr/bin/gnuplot
+
+	[NEW] New options 'K2Jy' and 'kelvin' are introduced. 'K2Jy' can be
+	used to set a Jy/K conversion value, whereas 'kelvin' can be used
+	alternatively to set a conversion from data units directly to kelvin,
+	similarly to how the 'jansky' option works. Currently only the skydip
+	model uses the 'kelvin' scale, but it may be added as an alternative
+	unit for all source models in the future.
+
+	[NEW] New option 'skydip.ELrange' can restrict what elevation range
+	to use from the skydip data. E.g.:
+
+		skydip.ELrange = 15:65
+
+	Will restrict the fitting to between 25 deg and 55 deg elevation.	
 
 	[FIX] {2.14-1} Log-based average gain normalization was not used for
 	gain flagging. Now it is :-).
@@ -57,6 +96,10 @@
 	
 	[FIX] Diagonals of covariance matrices were not flagged out as
 	intended.
+
+	[FIX] {SHARC-2} Instant focus suggested incorrect x_position due to
+	a units conversion issue. Now, the instant focus uses proper units to
+	avoid further confusion. 
 	
 	[TWEAK] {2.14-1} {MAKO} Assumed cold-load temperature changed to 112.2 
 	K, based on the sky-load fit.
@@ -90,6 +133,9 @@
 	[TWEAK] Removal of DC levels and bootstrap pixel weight estimation
 	(if 'pixeldata' is not set) are now common features to all instruments.
 
+	[TWEAK] Changed [beammap] conditions in configs to the more properly
+	formulated [source.type?beammap] condition.
+	
 	[CONFIG] 'offsets' and 'drifts' made mutually exclusive, by default.
 
 	[CODE] RCP formatting is now decentralized similar to writing channel
@@ -111,43 +157,9 @@
 	
 	[CODE] Updated copyright headers for all source files.
 
-
-2.14-a1 (16 April 2013)
-
-
-	[NEW] New option 'gnuplot' allows using gnuplot as an external plotting
-	tool (e.g. for skydip reductions). If gnuplot is in your path, the
-	option does not need an argument. Otherwise, the optional argument
-	can point to the gnuplot executable to use, e.g.:
-
-		gnuplot /usr/bin/gnuplot
-
-	[NEW] New options 'K2Jy' and 'kelvin' are introduced. 'K2Jy' can be
-	used to set a Jy/K conversion value, whereas 'kelvin' can be used
-	alternatively to set a conversion from data units directly to kelvin,
-	similarly to how the 'jansky' option works. Currently only the skydip
-	model uses the 'kelvin' scale, but it may be added as an alternative
-	unit for all source models in the future.
-
-	[NEW] New option 'skydip.ELrange' can restrict what elevation range
-	to use from the skydip data. E.g.:
-
-		skydip.ELrange = 15:65
-
-	Will restrict the fitting to between 25 deg and 55 deg elevation.	
-
-	[BUG] {skydip} Uninitialized copies of SkyDip data resulted in an error 
-	during reduction. Fixed.
-
-	[FIX] {SHARC-2} Instant focus suggested incorrect x_position due to
-	a units conversion issue. Now, the instant focus uses proper units to
-	avoid further confusion. 
-
-	[TWEAK] Changed [beammap] conditions in configs to the more properly
-	formulated [source.type?beammap] condition.
-
 	[CLEAN] The sub-key 'data2k' changed to 'kelvin' (which was in the
 	GLOSSARY) on skydip and skydip.kelvin. 
+
 
 
 2.13-1	(14 April 2013)

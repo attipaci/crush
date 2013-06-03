@@ -761,8 +761,8 @@ options on the console.
     (even in quoted or escaped forms!) other than those separating directories.
 
     Since CRUSH allows the use of environment variables when defining values
-    (see above), you can have use [@HOME] (for UNIX home directories) or 
-    [@HOMEPATH] (for a user's home under Windows). The same can be achieved
+    (see above), you can have use {@HOME} (for UNIX home directories) or 
+    {@HOMEPATH} (for a user's home under Windows). The same can be achieved
     universally by using the [#user.home], which substitutes the Java property
     that holds the home directory.
 
@@ -773,8 +773,8 @@ options on the console.
 	
     Thus, in UNIX systems (including MacOS), you may use:
 
-	datapath=[@HOME]/mydata			# environment variables
-	datapath=[#user.home]/mydata		# Java properties
+	datapath={@HOME}/mydata			# environment variables
+	datapath={#user.home}/mydata		# Java properties
 	datapath=~/mydata			# the '~' shorthand
 	datapath=~johndoe/data			# relative to another user
 	datapath=/mnt/data/2010			# Fully qualified path names
@@ -782,8 +782,8 @@ options on the console.
     while in Windows any of the following are acceptable:
 
 	datapath="~\My Data"			# Using the '~' shorthand
-	datapath="[$HOMEPATH]\My Data"		# Using environment variables
-	datapath="[#user.home]\My Data"		# Java properties
+	datapath="{$HOMEPATH}\My Data"		# Using environment variables
+	datapath="{#user.home}\My Data"		# Java properties
 	datapath=D:/data/Sharc2/2010		# UNIX-style paths
 	datapath=D:\data\Sharc2\2010		# proper Windows paths
 	datapath="~John Doe\Data"		# relative to another user
