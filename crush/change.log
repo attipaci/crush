@@ -57,6 +57,9 @@
 	
 	[FIX] Diagonals of covariance matrices were not flagged out as
 	intended.
+	
+	[TWEAK] {2.14-1} {MAKO} Assumed cold-load temperature changed to 112.2 
+	K, based on the sky-load fit.
 
 	[TWEAK] log based average sensitivity calculation for weight flagging.
 	Should make noise range flagging more robust.
@@ -103,6 +106,10 @@
 	
 	[CODE] Frame/HorizontalFrame updates.
 
+	[CODE] Eliminated unnecessary instrument copy for source instance
+	generation.
+	
+	[CODE] Updated copyright headers for all source files.
 
 
 2.14-a1 (16 April 2013)

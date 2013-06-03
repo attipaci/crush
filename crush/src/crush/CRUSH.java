@@ -35,12 +35,12 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.14-b2
+ * @version 2.14-1
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.14-b2";
-	private static String revision = "devel.1";
+	private static String version = "2.14-1";
+	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -319,8 +319,8 @@ public class CRUSH extends Configurator {
 	
 		System.out.println();
 		
-		// TODO is copy necessary here?
-		source = ((Instrument<?>) scans.get(0).instrument.copy()).getSourceModelInstance();
+
+		source = scans.get(0).instrument.getSourceModelInstance();
 		
 		if(source != null) {
 			source.commandLine = commandLine;
@@ -341,7 +341,6 @@ public class CRUSH extends Configurator {
 		
 		System.out.println(" Assuming " + Util.f1.format(source.getSourceSize()/instrument.getSizeUnit()) + " " + instrument.getSizeName() + " sized source(s).");
 		
-	
 		
 		if(isConfigured("rounds")) rounds = get("rounds").getInt();
 		
@@ -510,7 +509,7 @@ public class CRUSH extends Configurator {
 		System.out.println(info);
 	}
 	
-	// TODO Update most common options
+
 	public static void help(Instrument<?> instrument) {
 		String info = 
 			" Some commonly used options. For full and detailed description of all options.\n" +
@@ -619,7 +618,7 @@ public class CRUSH extends Configurator {
 			System.err.println("         http://www.submm.caltech.edu/~sharc/crush/download.html");
 			System.err.println("         for possible Java downloads.");
 			System.err.println();
-			System.err.println("         If you already have alternative Java installations on your system");
+			System.err.println("         If you already have another Java installations on your system");
 			System.err.println("         you can edit the 'JAVA' variable in 'wrapper.sh', inside the CRUSH");
 			System.err.println("         distribution directory to point to the desired java executable");
 			for(int i=0; i<8; i++) System.err.print("**********");
