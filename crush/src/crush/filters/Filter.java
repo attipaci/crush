@@ -24,16 +24,17 @@ package crush.filters;
 
 import java.util.Arrays;
 
+import kovacs.util.Configurator;
+import kovacs.util.Constant;
+import kovacs.util.Util;
+import kovacs.util.data.OldFFT;
+
 import crush.Channel;
 import crush.ChannelGroup;
 import crush.Dependents;
 import crush.Frame;
 import crush.Integration;
 
-import util.Configurator;
-import util.Constant;
-import util.Util;
-import util.data.OldFFT;
 
 public abstract class Filter {
 	protected Integration<?,?> integration;

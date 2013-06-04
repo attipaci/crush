@@ -26,14 +26,15 @@ package crush.apex;
 
 import java.util.Collection;
 
+import kovacs.util.*;
+import kovacs.util.data.DataPoint;
+import kovacs.util.data.WeightedPoint;
+
 import crush.Channel;
 import crush.Frame;
 import crush.PhaseOffsets;
 import crush.PhaseSet;
 import crush.array.SimplePixel;
-import util.*;
-import util.data.DataPoint;
-import util.data.WeightedPoint;
 
 public abstract class APEXPixel extends SimplePixel {
 	public Vector2D fitsPosition;

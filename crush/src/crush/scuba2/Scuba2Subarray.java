@@ -15,9 +15,10 @@
  ******************************************************************************/
 package crush.scuba2;
 
-import util.*;
 
 import java.util.*;
+
+import kovacs.util.*;
 
 public class Scuba2Subarray implements Cloneable {
 	String id;

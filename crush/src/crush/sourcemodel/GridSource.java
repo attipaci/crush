@@ -27,6 +27,14 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import kovacs.util.Configurator;
+import kovacs.util.CoordinatePair;
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import kovacs.util.data.Grid2D;
+import kovacs.util.data.GridImage;
+import kovacs.util.data.GridMap;
+
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
@@ -37,13 +45,6 @@ import crush.CRUSH;
 import crush.GenericInstrument;
 import crush.Instrument;
 import crush.Scan;
-import util.Configurator;
-import util.CoordinatePair;
-import util.Unit;
-import util.Util;
-import util.data.Grid2D;
-import util.data.GridImage;
-import util.data.GridMap;
 
 
 public abstract class GridSource<CoordinateType extends CoordinatePair> extends GridMap<CoordinateType> implements Cloneable {
@@ -247,6 +248,9 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 		return info;
 	}
 	
+	
+	@Override
+	public double getUnderlyingFWHM() { return instrument.resolution; }
 	
 	private class Jansky extends Unit {
 		private Jansky() { super("Jy", Double.NaN); }

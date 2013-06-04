@@ -24,15 +24,15 @@
 
 package crush.gismo;
 
+import kovacs.util.*;
+import kovacs.util.astro.CelestialCoordinates;
+import kovacs.util.astro.CoordinateEpoch;
+import kovacs.util.astro.EquatorialCoordinates;
+import kovacs.util.astro.HorizontalCoordinates;
+import kovacs.util.astro.JulianEpoch;
+import kovacs.util.astro.Precessing;
+import kovacs.util.astro.Precession;
 import crush.*;
-import util.*;
-import util.astro.CelestialCoordinates;
-import util.astro.CoordinateEpoch;
-import util.astro.EquatorialCoordinates;
-import util.astro.HorizontalCoordinates;
-import util.astro.JulianEpoch;
-import util.astro.Precessing;
-import util.astro.Precession;
 import crush.fits.HDUReader;
 
 import nom.tam.fits.*;

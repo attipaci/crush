@@ -24,11 +24,12 @@ package crush.filters;
 
 import java.util.Arrays;
 
-import util.Configurator;
-import util.Range;
-import util.data.DataPoint;
-import util.data.OldFFT;
-import util.data.Statistics;
+import kovacs.util.Configurator;
+import kovacs.util.Range;
+import kovacs.util.data.DataPoint;
+import kovacs.util.data.OldFFT;
+import kovacs.util.data.Statistics;
+
 
 import crush.Channel;
 import crush.Integration;

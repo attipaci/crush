@@ -26,13 +26,14 @@ package crush.gismo;
 
 import crush.*;
 import nom.tam.fits.*;
-import util.*;
-import util.astro.*;
-import util.text.TableFormatter;
 
 import java.io.*;
 import java.text.*;
 import java.util.*;
+
+import kovacs.util.*;
+import kovacs.util.astro.*;
+import kovacs.util.text.TableFormatter;
 
 
 public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBased, Weather {

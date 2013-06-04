@@ -26,9 +26,10 @@ package crush.gismo;
 
 import java.util.StringTokenizer;
 
+import kovacs.util.*;
+
 import crush.Channel;
 import crush.array.SimplePixel;
-import util.*;
 
 public class GismoPixel extends SimplePixel {
 	public int row, col, mux, pin;

@@ -26,7 +26,8 @@ package crush;
 
 import java.util.*;
 
-import util.*;
+import kovacs.util.*;
+
 
 public class Pipeline extends Thread {
 	Vector<Scan<?, ?>> scans = new Vector<Scan<?, ?>>();

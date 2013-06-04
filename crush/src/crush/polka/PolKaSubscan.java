@@ -29,12 +29,13 @@ import crush.apex.APEXArrayScan;
 import crush.filters.Filter;
 import crush.polarization.*;
 import crush.laboca.*;
-import util.*;
-import util.data.WeightedPoint;
-import util.text.TableFormatter;
 
 import java.text.NumberFormat;
 import java.util.*;
+
+import kovacs.util.*;
+import kovacs.util.data.WeightedPoint;
+import kovacs.util.text.TableFormatter;
 
 public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable {
 	/**

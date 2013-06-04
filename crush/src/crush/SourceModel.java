@@ -24,10 +24,11 @@
 
 package crush;
 
-import util.*;
 
 import java.util.*;
-import util.text.TableFormatter;
+
+import kovacs.util.*;
+import kovacs.util.text.TableFormatter;
 
 public abstract class SourceModel implements Cloneable, TableFormatter.Entries {
 	private Instrument<?> instrument;

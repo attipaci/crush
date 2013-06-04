@@ -25,9 +25,10 @@ package crush.array;
 import java.io.*;
 import java.util.*;
 
+import kovacs.util.*;
+
 import crush.*;
 import crush.sourcemodel.*;
-import util.*;
 
 
 public abstract class Array<PixelType extends Pixel, ChannelType extends Channel> extends Instrument<ChannelType> {

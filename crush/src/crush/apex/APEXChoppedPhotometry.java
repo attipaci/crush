@@ -22,7 +22,7 @@
  ******************************************************************************/
 package crush.apex;
 
-import util.data.WeightedPoint;
+import kovacs.util.data.WeightedPoint;
 import crush.*;
 import crush.sourcemodel.Photometry;
 

@@ -29,9 +29,10 @@ import crush.array.SimplePixel;
 
 import java.util.StringTokenizer;
 
-import util.Unit;
-import util.Util;
-import util.Vector2D;
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import kovacs.util.Vector2D;
+
 
 
 public class Sharc2Pixel extends SimplePixel {

@@ -31,9 +31,10 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
-import util.Unit;
-import util.Util;
-import util.Vector2D;
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import kovacs.util.Vector2D;
+
 
 public class SyntheticRCP {
 	ArrayList<Coefficient> xcoeffs = new ArrayList<Coefficient>();

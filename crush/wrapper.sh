@@ -56,6 +56,6 @@ fi
 CRUSH=`dirname $NAME`
 export CRUSH
 
-CLASSPATH="$CRUSH/crush.jar:$CRUSH/fits.jar:$CRUSH/bin"
+CLASSPATH="$CRUSH/crush.jar:$CRUSH/fits.jar:$CRUSH/util.jar:$CRUSH/crush2.jar"
 
 # ---------------------------- END OF SCRIPT --------------------------------

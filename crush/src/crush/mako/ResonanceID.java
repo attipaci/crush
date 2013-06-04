@@ -22,7 +22,7 @@
  ******************************************************************************/
 package crush.mako;
 
-import util.HashCode;
+import kovacs.util.HashCode;
 
 public class ResonanceID implements Comparable<ResonanceID> {
 	int index;

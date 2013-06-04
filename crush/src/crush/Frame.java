@@ -24,9 +24,9 @@
 
 package crush;
 
-import util.*;
-import util.astro.CelestialProjector;
-import util.astro.EquatorialCoordinates;
+import kovacs.util.*;
+import kovacs.util.astro.CelestialProjector;
+import kovacs.util.astro.EquatorialCoordinates;
 
 
 public abstract class Frame implements Cloneable, Flagging {

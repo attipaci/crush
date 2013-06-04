@@ -26,10 +26,10 @@ import java.io.*;
 import java.util.Collection;
 import java.util.StringTokenizer;
 
-import util.*;
-import util.astro.CelestialProjector;
-import util.data.Index2D;
-import util.data.Statistics;
+import kovacs.util.*;
+import kovacs.util.astro.CelestialProjector;
+import kovacs.util.data.*;
+
 import crush.*;
 import crush.array.*;
 import crush.astro.AstroMap;

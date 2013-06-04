@@ -25,8 +25,9 @@ package crush;
 import java.io.*;
 import java.util.*;
 
-import util.Util;
-import util.data.WeightedPoint;
+import kovacs.util.Util;
+import kovacs.util.data.WeightedPoint;
+
 
 public class PhaseSet extends ArrayList<PhaseOffsets> {
 	/**

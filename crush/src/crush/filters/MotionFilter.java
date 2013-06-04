@@ -24,13 +24,14 @@ package crush.filters;
 
 import java.util.Arrays;
 
+import kovacs.util.Range;
+import kovacs.util.Util;
+import kovacs.util.Vector2D;
+import kovacs.util.data.Statistics;
+
 import crush.Integration;
 import crush.Motion;
 
-import util.Range;
-import util.Util;
-import util.Vector2D;
-import util.data.Statistics;
 
 // TODO account for point-source filtering, and Dependents...
 // TODO write filter data into scan header?...

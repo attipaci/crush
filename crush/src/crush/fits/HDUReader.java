@@ -22,7 +22,7 @@
  ******************************************************************************/
 package crush.fits;
 
-import util.Parallel;
+import kovacs.util.Parallel;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 

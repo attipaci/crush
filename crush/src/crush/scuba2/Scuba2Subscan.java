@@ -16,14 +16,15 @@
 package crush.scuba2;
 
 import crush.*;
-import util.*;
-import util.astro.EquatorialCoordinates;
-import util.astro.HorizontalCoordinates;
 
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
 import java.io.*;
+
+import kovacs.util.*;
+import kovacs.util.astro.EquatorialCoordinates;
+import kovacs.util.astro.HorizontalCoordinates;
 
 public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements GroundBased {
 	/**

@@ -26,13 +26,14 @@ package crush.cso;
 import java.io.*;
 import java.util.*;
 
-import util.Configurator;
-import util.Unit;
-import util.Util;
-import util.data.DataPoint;
-import util.data.LocalAverage;
-import util.data.Locality;
-import util.data.LocalizedData;
+import kovacs.util.Configurator;
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import kovacs.util.data.DataPoint;
+import kovacs.util.data.LocalAverage;
+import kovacs.util.data.Locality;
+import kovacs.util.data.LocalizedData;
+
 
 
 public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {

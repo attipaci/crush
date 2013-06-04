@@ -32,8 +32,9 @@ import crush.sourcemodel.ScalarMap;
 
 import java.util.*;
 
-import util.Purifiable;
-import util.Unit;
+import kovacs.util.Purifiable;
+import kovacs.util.Unit;
+
 
 public class PolarMap extends SourceModel {
 

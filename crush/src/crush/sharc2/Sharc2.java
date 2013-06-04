@@ -32,10 +32,11 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
-import util.*;
-import util.data.Statistics;
-import util.data.WeightedPoint;
-import util.text.TableFormatter;
+import kovacs.util.*;
+import kovacs.util.data.Statistics;
+import kovacs.util.data.WeightedPoint;
+import kovacs.util.text.TableFormatter;
+
 
 public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	/**

@@ -26,11 +26,12 @@ package crush.array;
 
 import java.util.*;
 
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import kovacs.util.Vector2D;
+
 import crush.*;
 
-import util.Unit;
-import util.Util;
-import util.Vector2D;
 
 public class SimplePixel extends Channel implements Pixel {
 	public Vector2D position;

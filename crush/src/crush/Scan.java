@@ -31,25 +31,23 @@ import java.io.*;
 import java.util.*;
 import java.text.*;
 
+import kovacs.util.*;
+import kovacs.util.DataTable;
+import kovacs.util.astro.AstroSystem;
+import kovacs.util.astro.AstroTime;
+import kovacs.util.astro.CelestialCoordinates;
+import kovacs.util.astro.CoordinateEpoch;
+import kovacs.util.astro.EquatorialCoordinates;
+import kovacs.util.astro.GeodeticCoordinates;
+import kovacs.util.astro.HorizontalCoordinates;
+import kovacs.util.astro.JulianEpoch;
+import kovacs.util.astro.Precession;
+import kovacs.util.astro.Weather;
+import kovacs.util.data.*;
+import kovacs.util.text.TableFormatter;
+
 import crush.astro.AstroMap;
 import crush.sourcemodel.*;
-import util.*;
-import util.DataTable;
-import util.astro.AstroSystem;
-import util.astro.AstroTime;
-import util.astro.CelestialCoordinates;
-import util.astro.CoordinateEpoch;
-import util.astro.EquatorialCoordinates;
-import util.astro.GeodeticCoordinates;
-import util.astro.HorizontalCoordinates;
-import util.astro.JulianEpoch;
-import util.astro.Precession;
-import util.astro.Weather;
-import util.data.Asymmetry2D;
-import util.data.CircularRegion;
-import util.data.DataPoint;
-import util.data.WeightedPoint;
-import util.text.TableFormatter;
 
 public abstract class Scan<InstrumentType extends Instrument<?>, IntegrationType extends Integration<InstrumentType, ?>>
 extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatter.Entries {
@@ -457,7 +455,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			if(pointing == null) return "---";
 			if(!(sourceModel instanceof ScalarMap)) return "---";
 			AstroMap map = ((ScalarMap) sourceModel).map;
-			return pointing.getData(map).getFormattedEntry(name.substring(4), formatSpec);
+			return pointing.getData(map, instrument.getSizeName(), instrument.getSizeUnit()).getFormattedEntry(name.substring(4), formatSpec);
 		}
 		else if(name.equals("object")) return sourceName;
 		else if(name.equals("id")) return getID();
@@ -705,7 +703,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			
 		if(sourceModel instanceof ScalarMap) {
 			AstroMap map = ((ScalarMap) sourceModel).map;
-			info += pointing.pointingInfo(map) + "\n";
+			info += pointing.pointingInfo(map, instrument.getSizeName(), instrument.getSizeUnit()) + "\n";
 		}
 		
 		info += getPointingString(getNativePointingIncrement(pointing));

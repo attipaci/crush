@@ -48,14 +48,15 @@ package crush.tools;
 
 import java.util.*;
 
+import kovacs.util.ConfidenceCalculator;
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import kovacs.util.astro.SourceCatalog;
+import kovacs.util.data.Region;
+
 import crush.CRUSH;
 import crush.astro.AstroMap;
 
-import util.ConfidenceCalculator;
-import util.Unit;
-import util.Util;
-import util.astro.SourceCatalog;
-import util.data.Region;
 
 //noise-peaks
 //N_beam * Q = N_max -- limiting the number of false detections

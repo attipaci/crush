@@ -32,9 +32,10 @@ import nom.tam.fits.*;
 import java.io.*;
 import java.util.*;
 
-import util.Range;
-import util.Unit;
-import util.Util;
+import kovacs.util.Range;
+import kovacs.util.Unit;
+import kovacs.util.Util;
+
 
 
 public class Laboca extends APEXArray<LabocaPixel> {

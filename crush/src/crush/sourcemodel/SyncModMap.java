@@ -26,9 +26,10 @@ package crush.sourcemodel;
 
 import java.util.*;
 
+import kovacs.util.astro.CelestialProjector;
+import kovacs.util.data.Index2D;
+
 import crush.*;
-import util.astro.CelestialProjector;
-import util.data.Index2D;
 
 
 public class SyncModMap extends ScalarMap {

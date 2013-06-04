@@ -28,22 +28,19 @@ import java.awt.Color;
 import java.io.*;
 import java.util.*;
 
+import kovacs.util.*;
+import kovacs.util.astro.CelestialProjector;
+import kovacs.util.astro.EclipticCoordinates;
+import kovacs.util.astro.GalacticCoordinates;
+import kovacs.util.astro.SourceCatalog;
+import kovacs.util.data.*;
+import kovacs.util.plot.ColorScheme;
+import kovacs.util.plot.Data2DLayer;
+import kovacs.util.plot.ImageArea;
+import kovacs.util.plot.colorscheme.Colorful;
+
 import crush.*;
 import crush.astro.AstroMap;
-import util.*;
-import util.astro.CelestialProjector;
-import util.astro.EclipticCoordinates;
-import util.astro.GalacticCoordinates;
-import util.astro.SourceCatalog;
-import util.data.Data2D;
-import util.data.GridImage;
-import util.data.Index2D;
-import util.data.SphericalGrid;
-import util.data.Statistics;
-import util.plot.ColorScheme;
-import util.plot.Data2DLayer;
-import util.plot.ImageArea;
-import util.plot.colorscheme.Colorful;
 
 
 
@@ -129,6 +126,7 @@ public class ScalarMap extends SourceMap {
 		
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
+		map.workPath = CRUSH.workPath;
 		map.setName(firstScan.getSourceName());
 		map.commandLine = commandLine;
 		
