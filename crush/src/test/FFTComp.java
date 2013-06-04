@@ -24,8 +24,9 @@ package test;
 
 import java.util.*;
 
-import util.data.OldFFT;
-import util.fft.FloatFFT;
+import kovacs.util.data.OldFFT;
+import kovacs.util.fft.FloatFFT;
+
 
 public class FFTComp {
 

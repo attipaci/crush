@@ -22,9 +22,9 @@
  ******************************************************************************/
 package test;
 
-import util.PowerUnit;
-import util.Symbol;
-import util.Unit;
+import kovacs.util.PowerUnit;
+import kovacs.util.Symbol;
+import kovacs.util.Unit;
 
 public class UnitTest {
 

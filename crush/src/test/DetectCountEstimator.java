@@ -22,8 +22,8 @@
  ******************************************************************************/
 package test;
 
-import util.ConfidenceCalculator;
-import util.Unit;
+import kovacs.util.ConfidenceCalculator;
+import kovacs.util.Unit;
 
 public class DetectCountEstimator {
 

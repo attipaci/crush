@@ -22,11 +22,12 @@
  ******************************************************************************/
 package test;
 
-import util.astro.AstroTime;
-import util.astro.LeapSeconds;
 
 import java.text.*;
 import java.util.*;
+
+import kovacs.util.astro.AstroTime;
+import kovacs.util.astro.LeapSeconds;
 
 public class TimeTest {
 

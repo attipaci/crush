@@ -25,7 +25,8 @@ package test;
 import java.io.*;
 import java.util.*;
 
-import util.Util;
+import kovacs.util.Util;
+
 
 public class MeanSpec {
 	double binf = 0.25;
