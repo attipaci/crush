@@ -26,10 +26,11 @@ package crush.partemis;
 
 import crush.*;
 import crush.array.*;
-import util.*;
 import crush.apex.*;
 
 import java.util.*;
+
+import kovacs.util.*;
 
 public class PArtemis extends APEXArray<PArtemisPixel> {
 	/**

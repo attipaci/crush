@@ -22,7 +22,7 @@
  ******************************************************************************/
 package crush;
 
-import util.data.WeightedPoint;
+import kovacs.util.data.WeightedPoint;
 
 public class PhaseSignal {
 	PhaseSet phases;

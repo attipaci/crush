@@ -24,7 +24,8 @@ package crush.filters;
 
 import java.util.List;
 
-import util.Range;
+import kovacs.util.Range;
+
 import crush.Integration;
 
 public class KillFilter extends FixedFilter {

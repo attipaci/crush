@@ -24,7 +24,7 @@
 
 package crush;
 
-import util.*;
+import kovacs.util.*;
 
 public interface Pixel extends Iterable<Channel> {
 

@@ -34,11 +34,12 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Vector;
 
-import util.Unit;
-import util.Util;
-import util.Vector2D;
-import util.astro.EquatorialCoordinates;
-import util.text.TableFormatter;
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import kovacs.util.Vector2D;
+import kovacs.util.astro.EquatorialCoordinates;
+import kovacs.util.text.TableFormatter;
+
 
 public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray<ChannelType> implements GroundBased {
 	/**

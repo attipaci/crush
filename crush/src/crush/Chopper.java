@@ -22,7 +22,7 @@
  ******************************************************************************/
 package crush;
 
-import util.*;
+import kovacs.util.*;
 
 
 public class Chopper implements Cloneable {

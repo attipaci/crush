@@ -15,8 +15,8 @@
  ******************************************************************************/
 package crush.scuba2;
 
+import kovacs.util.*;
 import crush.array.SimplePixel;
-import util.*;
 
 public class Scuba2Pixel extends SimplePixel {
 	public int mux, pin, block=0;

@@ -19,10 +19,11 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
+import kovacs.util.*;
+import kovacs.util.text.TableFormatter;
+
 import crush.*;
 import crush.array.*;
-import util.*;
-import util.text.TableFormatter;
 
 import nom.tam.fits.*;
 import nom.tam.util.*;

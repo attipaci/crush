@@ -28,9 +28,9 @@ import crush.*;
 import crush.astro.AstroImage;
 import crush.gui.*;
 import crush.sourcemodel.*;
-import util.*;
-import util.data.Region;
-import util.plot.*;
+import kovacs.util.*;
+import kovacs.util.data.Region;
+import kovacs.util.plot.*;
 
 import java.awt.*;
 import java.awt.event.*;

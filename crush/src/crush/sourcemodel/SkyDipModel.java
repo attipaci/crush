@@ -22,11 +22,12 @@
  ******************************************************************************/
 package crush.sourcemodel;
 
-import util.*;
-import util.data.AmoebaMinimizer;
-import util.data.Parameter;
 
 import java.util.*;
+
+import kovacs.util.*;
+import kovacs.util.data.AmoebaMinimizer;
+import kovacs.util.data.Parameter;
 
 // Simple sky dip:
 //

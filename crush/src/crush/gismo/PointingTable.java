@@ -26,19 +26,20 @@ import java.io.IOException;
 import java.util.*;
 import java.text.ParseException;
 
+import kovacs.util.LogFile;
+import kovacs.util.Range;
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import kovacs.util.Vector2D;
+import kovacs.util.astro.AstroTime;
+import kovacs.util.astro.HorizontalCoordinates;
+import kovacs.util.data.LocalAverage;
+import kovacs.util.data.Locality;
+import kovacs.util.data.LocalizedData;
+import kovacs.util.data.WeightedPoint;
+
 import crush.CRUSH;
 
-import util.LogFile;
-import util.Range;
-import util.Unit;
-import util.Util;
-import util.Vector2D;
-import util.astro.AstroTime;
-import util.astro.HorizontalCoordinates;
-import util.data.LocalAverage;
-import util.data.Locality;
-import util.data.LocalizedData;
-import util.data.WeightedPoint;
 
 public class PointingTable extends LocalAverage<PointingTable.Entry> {
 	/**

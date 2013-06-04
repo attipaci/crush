@@ -30,13 +30,14 @@ import nom.tam.fits.*;
 import java.io.*;
 import java.util.*;
 
-import util.*;
-import util.astro.AstroSystem;
-import util.astro.CelestialCoordinates;
-import util.astro.CoordinateEpoch;
-import util.astro.EquatorialCoordinates;
-import util.astro.GeodeticCoordinates;
-import util.astro.HorizontalCoordinates;
+import kovacs.util.*;
+import kovacs.util.astro.AstroSystem;
+import kovacs.util.astro.CelestialCoordinates;
+import kovacs.util.astro.CoordinateEpoch;
+import kovacs.util.astro.EquatorialCoordinates;
+import kovacs.util.astro.GeodeticCoordinates;
+import kovacs.util.astro.HorizontalCoordinates;
+
 
 
 public class APEXArrayScan<InstrumentType extends APEXArray<?>, SubscanType extends APEXArraySubscan<InstrumentType, ?>> 

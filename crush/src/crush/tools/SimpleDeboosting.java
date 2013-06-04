@@ -2,8 +2,9 @@ package crush.tools;
 
 import java.io.IOException;
 
-import util.*;
-import util.data.*;
+import kovacs.util.*;
+import kovacs.util.data.*;
+
 
 public class SimpleDeboosting {
 	//static String fileName = "dn_ds_lapi.txt";

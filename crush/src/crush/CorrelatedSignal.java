@@ -26,8 +26,9 @@ package crush;
 
 import java.util.Arrays;
 
-import util.data.Statistics;
-import util.data.WeightedPoint;
+import kovacs.util.data.Statistics;
+import kovacs.util.data.WeightedPoint;
+
 
 
 public class CorrelatedSignal extends Signal {

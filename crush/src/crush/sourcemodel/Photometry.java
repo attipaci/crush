@@ -24,10 +24,11 @@ package crush.sourcemodel;
 
 import crush.*;
 
-import util.*;
-import util.data.*;
 
 import java.util.*;
+
+import kovacs.util.*;
+import kovacs.util.data.*;
 
 public abstract class Photometry extends SourceModel {
 	public String sourceName;

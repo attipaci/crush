@@ -27,11 +27,12 @@ package crush;
 import java.lang.reflect.*;
 import java.util.*;
 
+import kovacs.util.Configurator;
+import kovacs.util.Range;
+import kovacs.util.Unit;
+import kovacs.util.data.WeightedPoint;
 
-import util.Configurator;
-import util.Range;
-import util.Unit;
-import util.data.WeightedPoint;
+
 
 public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	/**

@@ -22,8 +22,8 @@
  ******************************************************************************/
 package crush.polka;
 
-import util.Range;
-import util.Util;
+import kovacs.util.Range;
+import kovacs.util.Util;
 import crush.Integration;
 import crush.filters.KillFilter;
 

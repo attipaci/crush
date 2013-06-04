@@ -25,8 +25,9 @@ package crush.gismo;
 
 import java.util.StringTokenizer;
 
-import util.Range;
-import util.Util;
+import kovacs.util.Range;
+import kovacs.util.Util;
+
 
 // 2012-04-12.138
 // 01234567890123

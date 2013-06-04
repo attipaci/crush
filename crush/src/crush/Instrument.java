@@ -29,10 +29,11 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.text.*;
 
-import util.*;
-import util.astro.AstroTime;
-import util.data.Statistics;
-import util.text.TableFormatter;
+import kovacs.util.*;
+import kovacs.util.astro.AstroTime;
+import kovacs.util.data.Statistics;
+import kovacs.util.text.TableFormatter;
+
 import crush.sourcemodel.*;
 
 import nom.tam.fits.*;

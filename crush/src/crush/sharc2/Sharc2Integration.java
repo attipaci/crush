@@ -30,9 +30,10 @@ import nom.tam.fits.*;
 import java.io.*;
 import java.net.*;
 
-import util.*;
-import util.astro.*;
-import util.data.DataPoint;
+import kovacs.util.*;
+import kovacs.util.astro.*;
+import kovacs.util.data.DataPoint;
+
 import crush.cso.CSOTauTable;
 import crush.fits.HDUReader;
 

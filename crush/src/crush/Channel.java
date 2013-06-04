@@ -24,9 +24,10 @@
 
 package crush;
 
-import util.*;
 
 import java.util.StringTokenizer;
+
+import kovacs.util.*;
 
 
 public abstract class Channel implements Cloneable, Comparable<Channel>, Flagging {

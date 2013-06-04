@@ -30,11 +30,12 @@ import nom.tam.util.*;
 
 import java.io.*;
 
-import util.*;
-import util.astro.CelestialCoordinates;
-import util.astro.EquatorialCoordinates;
-import util.astro.HorizontalCoordinates;
-import util.data.WeightedPoint;
+import kovacs.util.*;
+import kovacs.util.astro.CelestialCoordinates;
+import kovacs.util.astro.EquatorialCoordinates;
+import kovacs.util.astro.HorizontalCoordinates;
+import kovacs.util.data.WeightedPoint;
+
 import crush.fits.HDUReader;
 
 public class APEXArraySubscan<InstrumentType extends APEXArray<?>, FrameType extends APEXFrame> 

@@ -1,0 +1,6 @@
+<project name="crush" default="createjar">    
+  <property name="projectHome" location="." />
+  <target name="createjar">
+    <jar destfile="${projectHome}/crush2.jar" basedir="${projectHome}/bin" />
+  </target>    
+</project>

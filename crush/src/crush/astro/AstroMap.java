@@ -25,11 +25,11 @@
 package crush.astro;
 
 
+import kovacs.util.*;
+import kovacs.util.astro.*;
+import kovacs.util.data.SphericalGrid;
 import crush.Instrument;
 import crush.sourcemodel.GridSource;
-import util.*;
-import util.astro.*;
-import util.data.SphericalGrid;
 
 
 public class AstroMap extends GridSource<SphericalCoordinates> {

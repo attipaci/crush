@@ -25,16 +25,17 @@
 package crush.sourcemodel;
 
 
-import util.*;
-import util.astro.CelestialProjector;
-import util.astro.CoordinateEpoch;
-import util.astro.EquatorialCoordinates;
-import util.astro.Gnomonic;
-import util.data.Index2D;
-import util.data.Statistics;
-import util.text.TableFormatter;
 
 import java.util.*;
+
+import kovacs.util.*;
+import kovacs.util.astro.CelestialProjector;
+import kovacs.util.astro.CoordinateEpoch;
+import kovacs.util.astro.EquatorialCoordinates;
+import kovacs.util.astro.Gnomonic;
+import kovacs.util.data.Index2D;
+import kovacs.util.data.Statistics;
+import kovacs.util.text.TableFormatter;
 
 import crush.*;
 

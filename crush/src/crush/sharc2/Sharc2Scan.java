@@ -31,16 +31,17 @@ import java.io.*;
 import java.util.*;
 import java.text.*;
 
-import util.*;
-import util.astro.AstroSystem;
-import util.astro.AstroTime;
-import util.astro.EquatorialCoordinates;
-import util.astro.GalacticCoordinates;
-import util.astro.GeodeticCoordinates;
-import util.astro.HorizontalCoordinates;
-import util.astro.Weather;
-import util.data.DataPoint;
-import util.text.TableFormatter;
+import kovacs.util.*;
+import kovacs.util.astro.AstroSystem;
+import kovacs.util.astro.AstroTime;
+import kovacs.util.astro.EquatorialCoordinates;
+import kovacs.util.astro.GalacticCoordinates;
+import kovacs.util.astro.GeodeticCoordinates;
+import kovacs.util.astro.HorizontalCoordinates;
+import kovacs.util.astro.Weather;
+import kovacs.util.data.DataPoint;
+import kovacs.util.text.TableFormatter;
+
 
 public class Sharc2Scan extends Scan<Sharc2, Sharc2Integration> implements GroundBased, Weather {
 	/**

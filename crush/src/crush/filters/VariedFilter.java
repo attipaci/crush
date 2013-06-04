@@ -24,8 +24,9 @@ package crush.filters;
 
 import java.util.Arrays;
 
-import util.Constant;
-import util.Util;
+import kovacs.util.Constant;
+import kovacs.util.Util;
+
 
 import crush.Channel;
 import crush.Frame;

@@ -22,7 +22,7 @@
  ******************************************************************************/
 package crush;
 
-import util.Vector2D;
+import kovacs.util.Vector2D;
 
 public enum Motion {
 	X("x"), Y("y"), Z("z"), 

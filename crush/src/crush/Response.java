@@ -24,7 +24,8 @@ package crush;
 
 import java.lang.reflect.Field;
 
-import util.data.WeightedPoint;
+import kovacs.util.data.WeightedPoint;
+
 
 public abstract class Response extends Mode {
 

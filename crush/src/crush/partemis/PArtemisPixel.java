@@ -24,7 +24,7 @@
 
 package crush.partemis;
 
-import util.*;
+import kovacs.util.*;
 import crush.apex.APEXPixel;
 
 public class PArtemisPixel extends APEXPixel {

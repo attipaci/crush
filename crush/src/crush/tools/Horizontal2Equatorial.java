@@ -22,7 +22,7 @@
  ******************************************************************************/
 package crush.tools;
 
-import util.astro.*;
+import kovacs.util.astro.*;
 
 public class Horizontal2Equatorial {
 

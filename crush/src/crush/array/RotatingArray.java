@@ -25,8 +25,8 @@
 package crush.array;
 
 
+import kovacs.util.*;
 import crush.*;
-import util.*;
 
 public abstract class RotatingArray<PixelType extends SimplePixel> extends MonoArray<PixelType> {
 	/**

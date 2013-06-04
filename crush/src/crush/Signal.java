@@ -24,11 +24,12 @@
 
 package crush;
 
-import util.Util;
-import util.data.Statistics;
-import util.data.WeightedPoint;
 
 import java.io.*;
+
+import kovacs.util.Util;
+import kovacs.util.data.Statistics;
+import kovacs.util.data.WeightedPoint;
 
 public class Signal implements Cloneable {
 	private Mode mode;

@@ -26,8 +26,9 @@ package crush;
 
 import java.lang.reflect.*;
 
-import util.Configurator;
-import util.Range;
+import kovacs.util.Configurator;
+import kovacs.util.Range;
+
 
 public class CorrelatedModality extends Modality<CorrelatedMode> {
 	/**

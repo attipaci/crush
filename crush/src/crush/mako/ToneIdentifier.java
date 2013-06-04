@@ -31,12 +31,13 @@ import java.util.Collections;
 
 import java.util.StringTokenizer;
 
-import util.Configurator;
-import util.Range;
-import util.Unit;
-import util.Util;
-import util.data.AmoebaMinimizer;
-import util.data.Statistics;
+import kovacs.util.Configurator;
+import kovacs.util.Range;
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import kovacs.util.data.AmoebaMinimizer;
+import kovacs.util.data.Statistics;
+
 
 
 public class ToneIdentifier extends ArrayList<ResonanceID> implements Cloneable {

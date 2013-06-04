@@ -24,9 +24,6 @@
 
 package crush.polka;
 
-import util.Unit;
-import util.Util;
-import util.text.TableFormatter;
 import crush.*;
 import crush.laboca.*;
 import crush.polarization.*;
@@ -34,6 +31,10 @@ import crush.polarization.*;
 import java.io.*;
 import java.text.NumberFormat;
 import java.util.Vector;
+
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import kovacs.util.text.TableFormatter;
 
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;

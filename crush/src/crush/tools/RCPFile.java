@@ -25,7 +25,8 @@ package crush.tools;
 import java.io.*;
 import java.util.*;
 
-import util.*;
+import kovacs.util.*;
+
 
 public class RCPFile {
 	Hashtable<Integer, Entry> table = new Hashtable<Integer, Entry>();

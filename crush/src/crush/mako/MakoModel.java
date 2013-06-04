@@ -29,10 +29,11 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.io.*;
 
+import kovacs.util.*;
+import kovacs.util.data.AmoebaMinimizer;
+
 import crush.array.DistortionModel;
 
-import util.*;
-import util.data.AmoebaMinimizer;
 
 public class MakoModel {
 	double rotation = 0.0;

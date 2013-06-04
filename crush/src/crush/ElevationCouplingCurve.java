@@ -27,8 +27,9 @@ package crush;
 import java.io.*;
 import java.util.*;
 
-import util.Unit;
-import util.data.Interpolator;
+import kovacs.util.Unit;
+import kovacs.util.data.Interpolator;
+
 
 public class ElevationCouplingCurve extends Interpolator {
 	/**

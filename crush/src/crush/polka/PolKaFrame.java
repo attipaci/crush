@@ -24,7 +24,7 @@
 
 package crush.polka;
 
-import util.Unit;
+import kovacs.util.Unit;
 import crush.apex.APEXArrayScan;
 import crush.laboca.*;
 import crush.polarization.*;

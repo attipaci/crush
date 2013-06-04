@@ -31,8 +31,9 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
-import util.*;
-import util.text.TableFormatter;
+import kovacs.util.*;
+import kovacs.util.text.TableFormatter;
+
 
 import nom.tam.fits.*;
 

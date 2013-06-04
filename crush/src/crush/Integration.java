@@ -29,12 +29,13 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
+import kovacs.util.*;
+import kovacs.util.data.*;
+import kovacs.util.fft.FloatFFT;
+import kovacs.util.text.TableFormatter;
+
 import crush.filters.*;
 
-import util.*;
-import util.data.*;
-import util.fft.FloatFFT;
-import util.text.TableFormatter;
 
 import nom.tam.fits.*;
 import nom.tam.util.*;
