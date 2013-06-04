@@ -22,8 +22,8 @@
  ******************************************************************************/
 package test;
 
-import util.Util;
-import util.fft.FloatFFT;
+import kovacs.util.Util;
+import kovacs.util.fft.FloatFFT;
 
 public class ParFFTTestA {
 public static void main(String[] args) {

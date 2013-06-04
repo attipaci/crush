@@ -30,14 +30,15 @@ import crush.astro.AstroMap;
 
 import javax.swing.*;
 
-import util.Unit;
-import util.Vector2D;
-import util.plot.Data2DLayer;
-import util.plot.GridImageLayer;
-import util.plot.ImageLayer;
-import util.plot.SimpleLabel;
-import util.plot.ImageArea;
-import util.plot.colorscheme.*;
+import kovacs.util.Unit;
+import kovacs.util.Vector2D;
+import kovacs.util.plot.Data2DLayer;
+import kovacs.util.plot.GridImageLayer;
+import kovacs.util.plot.ImageArea;
+import kovacs.util.plot.ImageLayer;
+import kovacs.util.plot.SimpleLabel;
+import kovacs.util.plot.colorscheme.*;
+
 
 public class ImagerTest {
 

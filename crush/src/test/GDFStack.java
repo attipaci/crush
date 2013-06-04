@@ -26,19 +26,20 @@ import java.io.*;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import util.CoordinatePair;
-import util.Parallel;
-import util.Range;
-import util.SphericalCoordinates;
-import util.Unit;
-import util.Util;
-import util.Vector2D;
-import util.astro.CoordinateEpoch;
-import util.astro.EquatorialCoordinates;
-import util.data.CartesianGrid;
-import util.data.Data2D.Task;
-import util.data.DataPoint;
-import util.data.GridMap;
+import kovacs.util.CoordinatePair;
+import kovacs.util.Parallel;
+import kovacs.util.Range;
+import kovacs.util.SphericalCoordinates;
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import kovacs.util.Vector2D;
+import kovacs.util.astro.CoordinateEpoch;
+import kovacs.util.astro.EquatorialCoordinates;
+import kovacs.util.data.CartesianGrid;
+import kovacs.util.data.DataPoint;
+import kovacs.util.data.GridMap;
+import kovacs.util.data.Data2D.Task;
+
 
 import crush.astro.AstroMap;
 import crush.sourcemodel.GaussianSource;

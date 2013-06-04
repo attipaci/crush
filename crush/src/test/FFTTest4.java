@@ -22,8 +22,8 @@
  ******************************************************************************/
 package test;
 
-import util.Util;
-import util.fft.DoubleFFT;
+import kovacs.util.Util;
+import kovacs.util.fft.DoubleFFT;
 
 public class FFTTest4 {
 	
