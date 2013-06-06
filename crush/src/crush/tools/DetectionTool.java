@@ -49,6 +49,7 @@ package crush.tools;
 import java.util.*;
 
 import kovacs.util.ConfidenceCalculator;
+import kovacs.util.Constant;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 import kovacs.util.astro.SourceCatalog;
@@ -379,7 +380,7 @@ public class DetectionTool {
 	
 	public Vector<Region> findPeaks(final int dir, double S2N) {
 		// Estimate how much of the peak may be missed due to regridding...
-		final double sigma = image.getImageFWHM() / Util.sigmasInFWHM;
+		final double sigma = image.getImageFWHM() / Constant.sigmasInFWHM;
 		final double halfpixeldev = delta / (2.0 * sigma);
 		final double searchS2N = S2N * Math.exp(-halfpixeldev * halfpixeldev / 2.0); // maximum peak position error is a half-diagonal pixel.
 		

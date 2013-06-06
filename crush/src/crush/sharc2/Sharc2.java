@@ -25,11 +25,10 @@
 package crush.sharc2;
 
 import crush.*;
-import crush.array.*;
+import crush.cso.CSOArray;
 import nom.tam.fits.*;
 
 import java.io.*;
-import java.text.NumberFormat;
 import java.util.*;
 
 import kovacs.util.*;
@@ -38,7 +37,7 @@ import kovacs.util.data.WeightedPoint;
 import kovacs.util.text.TableFormatter;
 
 
-public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
+public class Sharc2 extends CSOArray<Sharc2Pixel> {
 	/**
 	 * 
 	 */
@@ -52,18 +51,7 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	double[] rowGain;
 	boolean[] isHiGain;
 	double bias0;
-	
-	double rotatorAngle, rotatorZeroAngle, rotatorOffset;
-	String rotatorMode;
-	
-	double focusX, focusY, focusZ;
-	double focusYOffset, focusZOffset;
-	String focusMode;
-	
-	boolean dsosUsed;
-	String dsosVersion;
-	
-	double excessLoad = 0.0;
+
 	
 	boolean prematureFITS = true;
 	
@@ -72,10 +60,6 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		resolution = 8.5 * Unit.arcsec;
 	}
 	
-	@Override
-	public String getTelescopeName() {
-		return "CSO";
-	}
 	
 	@Override
 	public Instrument<Sharc2Pixel> copy() {
@@ -107,46 +91,6 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		else if(hasOption("850um")) filter = "850um";
 		
 		System.err.println("SHARC-2 Filter set to " + filter);
-	}
-
-	@Override
-	public void validate() {
-		if(hasOption("excessload")) excessLoad = option("excessload").getDouble() * Unit.K;	
-		super.validate();
-	}
-	
-	
-	private void checkRotation() {
-		// Check the instrument rotation...
-		if(hasOption("rot0")) rotatorZeroAngle = option("rot0").getDouble() * Unit.deg;
-		if(hasOption("rotation")) rotatorAngle = option("rotation").getDouble() * Unit.deg;	
-		
-		if(Double.isNaN(rotatorAngle)) {
-			System.err.println(" >>> Fix: Unknown rotator value --> Assuming rotator not used.");
-			rotatorAngle = rotatorZeroAngle;			
-		}
-		
-		if(mount == Mount.CASSEGRAIN) {
-			System.out.println(" Rotator = " + Util.f1.format(rotatorAngle/Unit.deg) + " RotZero = " 
-					+ Util.f1.format(rotatorZeroAngle/Unit.deg));
-	
-			if(Math.abs(rotatorAngle - rotatorZeroAngle) > 5.0 * Unit.deg) {
-				System.err.println(" *****************************************************************************");
-				System.err.println(" WARNING! SHARC-2 is in non-standard orientation. Will assume that pointing");
-				if(hasOption("rcenter")) {
-					System.err.println("          was performed in the horizontal orientation. To override this and to");
-					System.err.println("          assume pointing in this rotation, use '-forget=rcenter'.");
-				}
-				else {
-					System.err.println("          was performed in the same orientration. To override this and to");
-					System.err.println("          assume pointing in horizontal orientation, set the 'rcenter' option.");
-				}
-				System.err.println(" *****************************************************************************");
-			}
-		}
-		else System.out.println(" Mounted at " + Util.f1.format(rotatorZeroAngle/Unit.deg) + " deg.");
-		
-		
 	}
 
 
@@ -218,10 +162,6 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		setReferencePosition(center);
 	}
 	
-	@Override
-	public double getRotation() {
-		return (mount == Mount.CASSEGRAIN ? rotatorAngle : 0.0) - rotatorZeroAngle;
-	}
 	
 	@Override
 	public void addDivisions() {
@@ -369,65 +309,6 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		}
 	} 
 	
-	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
-		Header header = hdu.getHeader();
-		
-		// Platform
-		String platform = header.getStringValue("PLATFORM");
-		if(platform == null) platform = "Cassegrain";
-		
-		mount =  platform.equalsIgnoreCase("NASMYTH") ? Mount.RIGHT_NASMYTH : Mount.CASSEGRAIN;
-		
-		System.err.println(" " + mount.name + " mount assumed.");
-		
-		rotatorZeroAngle = header.getDoubleValue("ROTZERO") * Unit.deg;
-		rotatorAngle = header.getDoubleValue("ROTATOR", rotatorZeroAngle / Unit.deg) * Unit.deg;
-		rotatorOffset = header.getDoubleValue("ROTOFFST") * Unit.deg;
-		rotatorMode = header.getStringValue("ROTMODE");
-	
-		if(rotatorMode == null) rotatorMode = "Unknown";
-			
-		// Various fixes for premature FITS files, without valid rotator information
-		// These typically have 1000 values.
-		if(rotatorZeroAngle == 1000.0 * Unit.deg) {
-			rotatorZeroAngle = 16.0 * Unit.deg;
-			System.err.println(" >>> Fix: missing rotator zero angle set to 16.0 deg.");
-		}
-		if(rotatorAngle == 1000.0 * Unit.deg) {
-			rotatorAngle = Double.NaN;
-			System.err.println(" >>> Fix: missing rotator angle..");
-		}
-		if(rotatorOffset == 1000.0 * Unit.deg) {
-			rotatorOffset = 0.0;
-			System.err.println(" >>> Fix: assuming no rotator offset.");
-		}
-			
-		// Focus
-		focusX =  header.getDoubleValue("FOCUS_X") * Unit.mm;
-		focusY =  header.getDoubleValue("FOCUS_Y") * Unit.mm;
-		focusZ =  header.getDoubleValue("FOCUS_Z") * Unit.mm;
-
-		focusYOffset =  header.getDoubleValue("FOCUS_YO") * Unit.mm;
-		focusZOffset =  header.getDoubleValue("FOCUS_ZO") * Unit.mm;
-
-		focusMode = header.getStringValue("FOCMODE");
-		if(focusMode == null) focusMode = "Unknown";
-		
-		System.err.println(" Focus [" + focusMode + "]"
-				+ " X=" + Util.f2.format(focusX / Unit.mm)
-				+ " Y=" + Util.f2.format(focusY / Unit.mm)
-				+ " Z=" + Util.f2.format(focusZ / Unit.mm)
-				+ " Yoff=" + Util.f2.format(focusYOffset / Unit.mm) 
-				+ " Zoff=" + Util.f2.format(focusZOffset / Unit.mm)
-		);
-
-		// DSOS
-		dsosUsed = header.getBooleanValue("DSOS");
-		dsosVersion = header.getStringValue("DSOSVER");
-		
-		if(dsosUsed) System.err.println(" DSOS version " + dsosVersion);
-		
-	}
 	
 	protected void parseDataHeader(Header header) throws HeaderCardException, FitsException {
 		if(prematureFITS) {
@@ -500,6 +381,7 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	}
 
 
+	@Override
 	public double getLoadTemperature() {
 		WeightedPoint[] data = new WeightedPoint[size()];
 		int n = 0;
@@ -565,10 +447,6 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 	}
 
 	
-	
-	public final static int pixels = 384;
-
-
 	@Override
 	public void readWiring(String fileName) throws IOException {
 		// TODO the amplifier wiring...
@@ -579,34 +457,11 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 		return storeChannels;
 	}
 
-	@Override
-	public void validate(Vector<Scan<?,?>> scans) throws Exception {
-		
-		final Sharc2Scan firstScan = (Sharc2Scan) scans.get(0);
-		
-		if(scans.size() == 1) if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
-		
-		super.validate(scans);
-	}
-	
+
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-	
-		if(name.equals("bias")) return f.format(bias0 / Unit.mV);
-		else if(name.equals("dsos?")) return Boolean.toString(dsosUsed);
-		else if(name.equals("foc.X")) return Util.defaultFormat(focusX / Unit.mm, f);
-		else if(name.equals("foc.Y")) return Util.defaultFormat(focusY / Unit.mm, f);
-		else if(name.equals("foc.Z")) return Util.defaultFormat(focusZ / Unit.mm, f);
-		else if(name.equals("foc.dY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
-		else if(name.equals("foc.dZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
-		else if(name.equals("foc.mode")) return focusMode;
-		else if(name.equals("rot")) return Util.defaultFormat(rotatorAngle / Unit.deg, f);
-		else if(name.equals("rot0")) return Util.defaultFormat(rotatorZeroAngle / Unit.deg, f);
-		else if(name.equals("rotoff")) return Util.defaultFormat(rotatorOffset / Unit.deg, f);
-		else if(name.equals("rotMode")) return rotatorMode;
-		else if(name.equals("load")) return Util.defaultFormat(excessLoad / Unit.K, f);
+	public String getFormattedEntry(String name, String formatSpec) {	
+		if(name.equals("bias")) return TableFormatter.getNumberFormat(formatSpec).format(bias0 / Unit.mV);
 		else if(name.equals("filter")) return filterName;
 		else return super.getFormattedEntry(name, formatSpec);
 	}
@@ -621,6 +476,9 @@ public class Sharc2 extends RotatingArray<Sharc2Pixel> implements GroundBased {
 				"     -850um        Select 850um imaging mode.\n";
 	}
 	
+	public final static int pixels = 384;
+
+
 	
 }
 

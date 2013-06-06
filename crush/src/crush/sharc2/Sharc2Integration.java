@@ -28,17 +28,16 @@ import crush.*;
 import nom.tam.fits.*;
 
 import java.io.*;
-import java.net.*;
 
 import kovacs.util.*;
 import kovacs.util.astro.*;
 import kovacs.util.data.DataPoint;
 
-import crush.cso.CSOTauTable;
+import crush.cso.CSOIntegration;
 import crush.fits.HDUReader;
 
 // TODO Split nod-phases into integrations...
-public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implements GroundBased {
+public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	/**
 	 * 
 	 */
@@ -61,7 +60,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		
 		if(!directTau) {		
 			double measuredLoad = instrument.getLoadTemperature(); 
-			double eps = (measuredLoad - instrument.excessLoad) / ((Sharc2Scan) scan).ambientT;
+			double eps = (measuredLoad - instrument.excessLoad) / ((Sharc2Scan) scan).getAmbientTemperature();
 			double tauLOS = -Math.log(1.0-eps);
 			System.err.println("   Tau from bolometers (not used):");
 			printEquivalentTaus(tauLOS * scan.horizontal.sinLat());
@@ -95,76 +94,6 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 			catch(IOException e) { System.err.println("   WARNING! Error writing nonlinearity coefficients: " + e.getMessage()); }
 		}
 	}
-	
-	public void printEquivalentTaus(double value) {	
-		System.err.println("   --->"
-				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz", value))
-				+ ", tau(350um):" + Util.f3.format(getTau("350um", value))
-				+ ", tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat())
-				+ ", PWV:" + Util.f2.format(getTau("pwv", value)) + "mm"
-		);		
-	}
-	
-	
-	
-	@Override
-	public void setTau() throws Exception {
-		String source = option("tau").getValue().toLowerCase();
-			
-		if(source.equals("tables")) {
-			source = hasOption("tau.tables") ? option("tau.tables").getValue() : ".";
-			String date = scan.getID().substring(0, scan.getID().indexOf('.'));
-			String spec = date.substring(2, 4) + date.substring(5, 7) + date.substring(8, 10);
-			
-			File file = new File(Util.getSystemPath(source) + File.separator + spec + ".dat");
-			if(!file.exists()) {
-				System.err.print("   WARNING! No tau table found for " + date + "...");
-				System.err.print("            Using default tau.");
-				instrument.options.remove("tau");
-				setTau();
-				return;
-			}
-			
-			CSOTauTable table = CSOTauTable.get(((Sharc2Scan) scan).iMJD, file.getPath());
-			table.setOptions(option("tau"));
-			setTau("225GHz", table.getTau(getMJD()));	
-		
-		}
-		else if(source.equals("direct")) setZenithTau(getDirectTau());
-		else {
-			if(source.equals("maitau")) {
-				try {
-					try { setTau("350um", getMaiTau("350um")); }
-					catch(NumberFormatException no350) { setTau("225GHz", getMaiTau("225GHz")); }
-				}	
-				catch(Exception e) {
-					if(hasOption("maitau.fallback")) {
-						System.err.print("   WARNING! MaiTau lookup failed. ");
-						source = option("maitau.fallback").getValue().toLowerCase();
-						if(source.equals("maitau")) {
-							System.err.println("Deadlocked fallback option.");
-							throw e;
-						}	
-						System.err.println("Falling back to '" + source + "'.");
-						instrument.options.process("tau", source);
-						setTau();
-						return;
-					}
-					else throw e;				
-				}
-			}
-			else super.setTau();
-		}
-		
-		printEquivalentTaus(zenithTau);
-		
-		// TODO move to obslog...
-		double tauLOS = zenithTau / scan.horizontal.sinLat();
-		System.err.println("   Optical load is " + Util.f1.format(((Sharc2Scan) scan).ambientT * (1.0 - Math.exp(-tauLOS))) + " K.");
-	
-	}
-
-	
 	
 	public void trimToGap() {
 		Sharc2Frame first = getFirstFrame();
@@ -349,68 +278,7 @@ public class Sharc2Integration extends Integration<Sharc2, Sharc2Frame> implemen
 		}
 	}
 
-	public double getMaiTau(String id) throws IOException {
-		// Return immediately if ID does not match 225GHz or 350um, which are the only values in
-		// the Mai-Tau lookup at present
-		if(!id.equalsIgnoreCase("225GHz") && !id.equalsIgnoreCase("350um")) 
-			throw new IllegalArgumentException("No MaiTau lookup for '" + id + "'.");
-		
-		if(!hasOption("maitau.server")) 
-			throw new IllegalArgumentException(" WARNING! MaiTau server not set. Use 'maitau.server' configuration key.");
-		
-		Socket tauServer = new Socket();
-		tauServer.setSoTimeout(3000);
-		tauServer.setTcpNoDelay(true); 
-		//tauServer.setPerformancePreferences(0, 1, 2); // connection time, latency, throughput
-		tauServer.setTrafficClass(0x10); // low latency
-		tauServer.connect(new InetSocketAddress(option("maitau.server").getValue(), 63225));
-		
-		PrintWriter out = new PrintWriter(tauServer.getOutputStream(), true);
-		BufferedReader in = new BufferedReader(new InputStreamReader(tauServer.getInputStream()));
-
-		while(in.read() != '>'); // Seek for prompt
-
-		out.println("set noexit"); // Enter into interactive mode (do not disconnect after first command).
-
-		while(in.read() != '>'); // Seek for prompt
-
-		out.println("set " + id); // Select which tau value to query...
-
-		while(in.read() != '>'); // Seek for prompt
-
-		out.println("get tau " + scan.timeStamp); // Request tau for the specified date	
-		
-		double value = Double.NaN;
-		
-		try { 
-			value = Double.parseDouble(in.readLine().trim());
-			System.err.println("   Got MaiTau! tau(" + id + ") = " + Util.f3.format(value));
-		}
-		catch(NumberFormatException e) {}
-		
-		out.println("exit"); // Disconnect from Mai-Tau server 
-		in.close();
-		out.close();
-		
-		tauServer.close();
-		
-		if(Double.isNaN(value)) throw new NumberFormatException("No " + id + " value for date in MaiTau database.");
-		
-		return value;
-	}
-
 	
-	public double getSkyLoadTemperature() {
-		double transmission = 0.5 * (getFirstFrame().transmission + getLastFrame().transmission);
-		return (1.0 - transmission) * ((Sharc2Scan) scan).ambientT;
-	}
-
-
-	public double getDirectTau() { 
-		double eps = (instrument.getLoadTemperature() - instrument.excessLoad) / ((Sharc2Scan) scan).ambientT; 	
-		return -Math.log(1.0-eps) * scan.horizontal.sinLat();
-	}
-
 	@Override
 	public String getFullID(String separator) {
 		return scan.getID();

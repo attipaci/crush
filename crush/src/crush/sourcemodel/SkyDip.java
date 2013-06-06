@@ -72,7 +72,7 @@ public class SkyDip extends SourceModel {
 		super.createFrom(collection);
 		
 		resolution = hasOption("grid") ? option("grid").getDouble() * Unit.arcsec : 0.25 * Unit.deg;
-		int bins = (int) Math.ceil(Util.rightAngle / resolution);
+		int bins = (int) Math.ceil(Constant.rightAngle / resolution);
 		data = new WeightedPoint[bins];
 		for(int i=0; i<bins; i++) data[i] = new WeightedPoint();
 	}

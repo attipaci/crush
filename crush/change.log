@@ -1,8 +1,14 @@
+
 	[PACKAGE] The streamlined packaging of CRUSH no longer includes the
 	hundreds of individual source and binary files. Instead, it includes
 	a handful of JAR archives. The source code, no longer bundled, remains
 	available through the SourceForge project page (click the Project tab
 	on top of the CRUSH homepage.)
+
+	[CODE] {SHARC-2} {MAKO} Removed duplicate code between SHARC-2 and
+	MAKO via designated common ancestors. This should also reduce the 
+	chance of one or the other having bugs due to unspotted small 
+	differences.
 
 	[CODE] Compliance with kovacs.util 0.02-1.
 

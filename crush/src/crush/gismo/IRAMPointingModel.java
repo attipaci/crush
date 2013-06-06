@@ -25,6 +25,7 @@ package crush.gismo;
 import java.io.*;
 import java.util.StringTokenizer;
 
+import kovacs.util.Constant;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 import kovacs.util.Vector2D;
@@ -53,7 +54,7 @@ public class IRAMPointingModel {
 	}
 	
 	public double P(int n, double UT) {
-		double theta = UT * (Util.twoPi / Unit.day);
+		double theta = UT * (Constant.twoPi / Unit.day);
 		return P[n] + (isStatic ? 0.0 : c[n] * Math.cos(theta) + s[n] * Math.sin(theta));
 	}
 	

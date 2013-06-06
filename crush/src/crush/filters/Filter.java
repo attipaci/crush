@@ -247,7 +247,7 @@ public abstract class Filter {
 		// sigmaF = sigmaf / df = 2.35/2Pi * n dt / T; 
 		
 		final double T = integration.getPointCrossingTime();
-		final double sigma = Util.sigmasInFWHM / (Constant.twoPI * T * df);
+		final double sigma = Constant.sigmasInFWHM / (Constant.twoPI * T * df);
 		final double a = -0.5 / (sigma * sigma);
 		
 		// Start from the 1/f filter cutoff
@@ -334,7 +334,7 @@ public abstract class Filter {
 		
 		if(F == 0) F = data.length >> 1;
 		
-		final double theta = F * Util.twoPi / data.length;
+		final double theta = F * Constant.twoPi / data.length;
 		final double s0 = Math.sin(theta);
 		final double c0 = Math.cos(theta);
 		

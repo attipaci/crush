@@ -180,7 +180,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 				dw[i] = new WeightedPoint();
 			}
 				
-			dAngle = Util.twoPi / n;
+			dAngle = Constant.twoPi / n;
 		}
 		else for(int i=dw.length; --i >= 0; ) dw[i].noData();
 		
@@ -198,7 +198,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 			for(LabocaFrame exposure : this) if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
 				if(exposure.sampleFlag[c] != 0) continue;
 				
-				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).waveplateAngle, Util.twoPi) + Math.PI;
+				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).waveplateAngle, Constant.twoPi) + Math.PI;
 				final WeightedPoint point = dw[(int)Math.floor(normAngle / dAngle)];
 				
 				point.add(exposure.relativeWeight * exposure.data[c]);
@@ -216,7 +216,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 			}
 			
 			for(LabocaFrame exposure : this) if(exposure != null) {
-				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).waveplateAngle, Util.twoPi) + Math.PI;
+				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).waveplateAngle, Constant.twoPi) + Math.PI;
 				final WeightedPoint point = dw[(int)Math.floor(normAngle / dAngle)];
 				
 				exposure.data[c] -= point.value();
@@ -317,7 +317,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		
 		for(Frame exposure : this) if(exposure != null) {
 			PolKaFrame frame = (PolKaFrame) exposure;
-			frame.waveplateAngle = Util.twoPi * Math.IEEEremainder((frame.MJD - MJD0) / dMJDdn, 1.0);
+			frame.waveplateAngle = Constant.twoPi * Math.IEEEremainder((frame.MJD - MJD0) / dMJDdn, 1.0);
 			frame.waveplateFrequency = freq;
 		}
 		
@@ -405,9 +405,9 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		double phase4 = getMeanTPPhase(channel, 4.0 * polka.waveplateFrequency) + 4.0 * firstFrame.waveplateAngle;
 		
 		System.err.println("   Measured TP Phases: "
-				+ Util.f1.format(Math.IEEEremainder(phase1, Util.twoPi) / Unit.deg) + ", "
-				+ Util.f1.format(Math.IEEEremainder(phase2, Util.twoPi) / Unit.deg) + ", "
- 				+ Util.f1.format(Math.IEEEremainder(phase4, Util.twoPi) / Unit.deg) + " deg"
+				+ Util.f1.format(Math.IEEEremainder(phase1, Constant.twoPi) / Unit.deg) + ", "
+				+ Util.f1.format(Math.IEEEremainder(phase2, Constant.twoPi) / Unit.deg) + ", "
+ 				+ Util.f1.format(Math.IEEEremainder(phase4, Constant.twoPi) / Unit.deg) + " deg"
 				);
 	}
 	
@@ -430,14 +430,14 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		if(hasOption("waveplate.tpchar")) {
 			PolKaFrame firstFrame = (PolKaFrame) get(0);
 			System.err.println("   Reconstruction error: " + 
-					Util.f1.format(Math.IEEEremainder(alpha - firstFrame.waveplateAngle, Util.twoPi) / Unit.deg) +
+					Util.f1.format(Math.IEEEremainder(alpha - firstFrame.waveplateAngle, Constant.twoPi) / Unit.deg) +
 					" deg.");
 		}
 		
-		final double w = Util.twoPi * polka.waveplateFrequency * instrument.integrationTime;
+		final double w = Constant.twoPi * polka.waveplateFrequency * instrument.integrationTime;
 		for(Frame exposure : this) if(exposure != null) {
 			PolKaFrame frame = (PolKaFrame) exposure;
-			frame.waveplateAngle = Math.IEEEremainder(alpha + w * frame.index, Util.twoPi);
+			frame.waveplateAngle = Math.IEEEremainder(alpha + w * frame.index, Constant.twoPi);
 		}
 		
 	}
@@ -445,7 +445,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 	// Calculate the average TP phases at a given frequency...
 	public double getMeanTPPhase(Channel channel, double freq) {		
 		final int c = channel.index;
-		final double w = Util.twoPi * freq * instrument.integrationTime;
+		final double w = Constant.twoPi * freq * instrument.integrationTime;
 		double sumc = 0.0, sums = 0.0;
 		int n = 0;
 		

@@ -188,7 +188,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		// plus or minus in days;
 		double smoothFWHM = he3TimeScale / Unit.day;
 		double windowSize = 2.0 * smoothFWHM;
-		double sigma = smoothFWHM / Util.sigmasInFWHM;
+		double sigma = smoothFWHM / Constant.sigmasInFWHM;
 	
 		int from = 0, to=0;
 		for(LabocaFrame exposure : this) if(exposure != null) {

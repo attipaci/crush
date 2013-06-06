@@ -24,8 +24,8 @@
 
 package crush.polka;
 
+import kovacs.util.Constant;
 import kovacs.util.Unit;
-import kovacs.util.Util;
 import crush.apex.APEXArrayScan;
 import crush.laboca.*;
 import crush.polarization.*;
@@ -57,7 +57,7 @@ public class PolKaFrame extends LabocaFrame {
 		else waveplateFrequency = polka.waveplateFrequency;		
 		
 		if(polka.phaseChannel != null) waveplateAngle = data[polka.phaseChannel.index];
-		else waveplateAngle = Util.twoPi * (MJD - 54000.0) * Unit.day * waveplateFrequency;
+		else waveplateAngle = Constant.twoPi * (MJD - 54000.0) * Unit.day * waveplateFrequency;
 		
 		if(polka.offsetChannel != null) waveplateOffset = data[polka.offsetChannel.index];	
 		else waveplateOffset = Double.NaN;			
