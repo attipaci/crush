@@ -1,6 +1,21 @@
 <project name="crush" default="createjar">    
   <property name="projectHome" location="." />
   <target name="createjar">
-    <jar destfile="${projectHome}/crush2.jar" basedir="${projectHome}/bin" />
+    <jar 
+	destfile="${projectHome}/crush2.jar" 
+	basedir="${projectHome}/bin"
+	includes="**/*.class" 
+	excludes="**/scuba2/*,**/ebex/*,**/test/*,**/devel/*,**/*~" 
+	index="true"
+	level="9" 
+    />
+    <jar 
+	destfile="${projectHome}/crush2-src.jar" 
+	basedir="${projectHome}/src"
+	includes="**/*.java" 
+	excludes="**/scuba2/*,**/ebex/*,**/test/*,**/devel/*,**/*~" 
+	index="true"
+	level="9" 
+    />
   </target>    
 </project>

@@ -408,8 +408,8 @@ public class MakoScan extends Scan<Mako, MakoIntegration> implements GroundBased
 		double sizeUnit = instrument.getSizeUnit();
 		String sizeName = instrument.getSizeName();
 		
-		data.add(new Datum("FAZO", (pointingOffset.getX() + fixedOffset.getX()) / sizeUnit, sizeName));
-		data.add(new Datum("FZAO", -(pointingOffset.getY() + fixedOffset.getY()) / sizeUnit, sizeName));
+		data.new Entry("FAZO", (pointingOffset.getX() + fixedOffset.getX()) / sizeUnit, sizeName);
+		data.new Entry("FZAO", -(pointingOffset.getY() + fixedOffset.getY()) / sizeUnit, sizeName);
 		
 		return data;
 	}

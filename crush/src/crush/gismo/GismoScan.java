@@ -684,10 +684,10 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		Vector2D obs = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day, ambientT);
 		if(pointingCorrection != null) obs.add(pointingCorrection);
 		
-		data.add(new Datum("X", (pointingOffset.getX() + obs.getX()) / sizeUnit, sizeName));
-		data.add(new Datum("Y", (pointingOffset.getY() + obs.getY()) / sizeUnit, sizeName));
-		data.add(new Datum("NasX", (instrument.nasmythOffset.getX() + nasmyth.getX()) / sizeUnit, sizeName));
-		data.add(new Datum("NasY", (instrument.nasmythOffset.getY() + nasmyth.getY()) / sizeUnit, sizeName));
+		data.new Entry("X", (pointingOffset.getX() + obs.getX()) / sizeUnit, sizeName);
+		data.new Entry("Y", (pointingOffset.getY() + obs.getY()) / sizeUnit, sizeName);
+		data.new Entry("NasX", (instrument.nasmythOffset.getX() + nasmyth.getX()) / sizeUnit, sizeName);
+		data.new Entry("NasY", (instrument.nasmythOffset.getY() + nasmyth.getY()) / sizeUnit, sizeName);
 		return data;
 	}
 	

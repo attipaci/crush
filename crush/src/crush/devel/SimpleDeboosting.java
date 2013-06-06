@@ -1,4 +1,4 @@
-package crush.tools;
+package crush.devel;
 
 import java.io.IOException;
 

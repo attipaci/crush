@@ -376,5 +376,5 @@ public class MakoIntegration extends Integration<Mako, MakoFrame> implements Gro
 	
 	public final float antennaTick = (float) (0.01 * Unit.s);
 	public final float tenthArcsec = (float) (0.1 * Unit.arcsec);
-	public final float rightAngle = (float) (0.5 * Math.PI);
+	public final float rightAngle = (float) (Util.rightAngle);
 }

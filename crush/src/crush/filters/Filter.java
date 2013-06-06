@@ -334,7 +334,7 @@ public abstract class Filter {
 		
 		if(F == 0) F = data.length >> 1;
 		
-		final double theta = F * 2.0 * Math.PI / data.length;
+		final double theta = F * Util.twoPi / data.length;
 		final double s0 = Math.sin(theta);
 		final double c0 = Math.cos(theta);
 		

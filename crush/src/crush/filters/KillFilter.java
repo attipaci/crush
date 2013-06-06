@@ -25,6 +25,7 @@ package crush.filters;
 import java.util.List;
 
 import kovacs.util.Range;
+import kovacs.util.Util;
 
 import crush.Integration;
 
@@ -71,7 +72,7 @@ public class KillFilter extends FixedFilter {
 		int dftreq = 51 * (int) countParms() * integration.size();
 		
 		// 2xFFT (forth and back) with 31 ops each loop, 9.5 ops per datum, 34.5 ops per datum rearrange...
-		int fftreq = 2 * (31 * (int) Math.round(Math.log(data.length) / Math.log(2.0)) * data.length + 44 * data.length); 
+		int fftreq = 2 * (31 * (int) Math.round(Math.log(data.length) / Util.log2) * data.length + 44 * data.length); 
 	
 		setDFT(dftreq < fftreq);
 	}
