@@ -53,7 +53,7 @@ public class IRAMPointingModel {
 	}
 	
 	public double P(int n, double UT) {
-		double theta = UT * (2.0 * Math.PI / Unit.day);
+		double theta = UT * (Util.twoPi / Unit.day);
 		return P[n] + (isStatic ? 0.0 : c[n] * Math.cos(theta) + s[n] * Math.sin(theta));
 	}
 	

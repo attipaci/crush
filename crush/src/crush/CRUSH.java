@@ -41,7 +41,7 @@ import nom.tam.util.*;
  */
 public class CRUSH extends Configurator {
 	private static String version = "2.14-2";
-	private static String revision = "devel.1";
+	private static String revision = "devel.2";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -484,7 +484,8 @@ public class CRUSH extends Configurator {
 		String info = "\n" +
 			"  ----------------------------------------------------------------------\n" +
 			"  crush -- Reduction and imaging tool for bolometer arrays.\n" +
-			"           Version " + getFullVersion() + "\n" + 
+			"           Version: " + getFullVersion() + "\n" + 
+			"           Utilities: " + Util.getFullVersion() + "\n" +
 			"           http://www.submm.caltech.edu/~sharc/crush\n" +
 			"           Copyright (C)2012 Attila Kovacs <attila[AT]caltech.edu>\n" +
 			"  ----------------------------------------------------------------------\n";	

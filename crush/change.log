@@ -1,3 +1,16 @@
+	[PACKAGE] The streamlined packaging of CRUSH no longer includes the
+	hundreds of individual source and binary files. Instead, it includes
+	a handful of JAR archives. The source code, no longer bundled, remains
+	available through the SourceForge project page (click the Project tab
+	on top of the CRUSH homepage.)
+
+	[CODE] Compliance with kovacs.util 0.02-1.
+
+	[CODE] Java utilities previously included in crush are now managed
+	separately from crush under the 'kovacs.util' project, and are imported
+	into crush through a JAR.
+
+
 
 2.14-1 (2 June 2013)
 

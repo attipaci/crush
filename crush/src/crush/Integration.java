@@ -1753,7 +1753,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// df = 1/(Nt*dt);
 		// sigmaf / df = 2.35/2Pi * (Nt*dt)/Dt 
 	
-		double sigma_f = 2.35/(2.0*Math.PI) * Nt * instrument.samplingInterval / T;	
+		double sigma_f = 2.35 / Util.twoPi * Nt * instrument.samplingInterval / T;	
 		
 		double A = 0.5/(sigma_f*sigma_f);
 		double[] response = new double[Nt >> 1];

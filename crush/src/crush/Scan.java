@@ -455,7 +455,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			if(pointing == null) return "---";
 			if(!(sourceModel instanceof ScalarMap)) return "---";
 			AstroMap map = ((ScalarMap) sourceModel).map;
-			return pointing.getData(map, instrument.getSizeName(), instrument.getSizeUnit()).getFormattedEntry(name.substring(4), formatSpec);
+			Unit sizeUnit = new Unit(instrument.getSizeName(), instrument.getSizeUnit());
+			return pointing.getData(map, sizeUnit).getFormattedEntry(name.substring(4), formatSpec);
 		}
 		else if(name.equals("object")) return sourceName;
 		else if(name.equals("id")) return getID();
@@ -652,47 +653,47 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		double sizeUnit = instrument.getSizeUnit();
 		String sizeName = instrument.getSizeName();
 		
-		data.add(new Datum("dX", pointingOffset.getX() / sizeUnit, sizeName));
-		data.add(new Datum("dY", pointingOffset.getY() / sizeUnit, sizeName));
+		data.new Entry("dX", pointingOffset.getX() / sizeUnit, sizeName);
+		data.new Entry("dY", pointingOffset.getY() / sizeUnit, sizeName);
 		
-		data.add(new Datum("d" + nameX, pointingOffset.getX() / sizeUnit, sizeName));
-		data.add(new Datum("d" + nameY, pointingOffset.getY() / sizeUnit, sizeName));
+		data.new Entry("d" + nameX, pointingOffset.getX() / sizeUnit, sizeName);
+		data.new Entry("d" + nameY, pointingOffset.getY() / sizeUnit, sizeName);
 		
-		data.add(new Datum(nameX, absolute.getX() / sizeUnit, sizeName));
-		data.add(new Datum(nameY, absolute.getY() / sizeUnit, sizeName));
+		data.new Entry(nameX, absolute.getX() / sizeUnit, sizeName);
+		data.new Entry(nameY, absolute.getY() / sizeUnit, sizeName);
 		
 		// Also print Nasmyth offsets if applicable...
 		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
 			Vector2D nasmyth = getNasmythOffset(pointingOffset);
 			
-			data.add(new Datum("dNasX", nasmyth.getX() / sizeUnit, sizeName));
-			data.add(new Datum("dNasY", nasmyth.getY() / sizeUnit, sizeName));
+			data.new Entry("dNasX", nasmyth.getX() / sizeUnit, sizeName);
+			data.new Entry("dNasY", nasmyth.getY() / sizeUnit, sizeName);
 			
 			nasmyth = getNasmythOffset(absolute);
-			data.add(new Datum("NasX", nasmyth.getX() / sizeUnit, sizeName));
-			data.add(new Datum("NasY", nasmyth.getY() / sizeUnit, sizeName));
+			data.new Entry("NasX", nasmyth.getX() / sizeUnit, sizeName);
+			data.new Entry("NasY", nasmyth.getY() / sizeUnit, sizeName);
 		}
 		
 		Asymmetry2D asym = getSourceAsymmetry(pointing);
-		data.add(new Datum("asymX", 100.0 * asym.getX().value(), "%"));
-		data.add(new Datum("asymY", 100.0 * asym.getY().value(), "%"));
-		data.add(new Datum("dasymX", 100.0 * asym.getX().rms(), "%"));
-		data.add(new Datum("dasymY", 100.0 * asym.getY().rms(), "%"));
+		data.new Entry("asymX", 100.0 * asym.getX().value(), "%");
+		data.new Entry("asymY", 100.0 * asym.getY().value(), "%");
+		data.new Entry("dasymX", 100.0 * asym.getX().rms(), "%");
+		data.new Entry("dasymY", 100.0 * asym.getY().rms(), "%");
 	
 		if(pointing instanceof EllipticalSource) {
 			EllipticalSource<?> ellipse = (EllipticalSource<?>) pointing;
 			
 			DataPoint elongation = ellipse.getElongation();
-			data.add(new Datum("elongX", 100.0 * elongation.value(), "%"));
-			data.add(new Datum("delongX", 100.0 * elongation.rms(), "%"));
+			data.new Entry("elongX", 100.0 * elongation.value(), "%");
+			data.new Entry("delongX", 100.0 * elongation.rms(), "%");
 			
 			DataPoint angle = ellipse.getAngle();
-			data.add(new Datum("angle", angle.value() / Unit.deg, "%"));
-			data.add(new Datum("dangle", angle.value() / Unit.deg, "%"));
+			data.new Entry("angle", angle.value() / Unit.deg, "%");
+			data.new Entry("dangle", angle.value() / Unit.deg, "%");
 			
 			DataPoint elongationX = getSourceElongationX(ellipse);
-			data.add(new Datum("elongX", 100.0 * elongationX.value(), "%"));
-			data.add(new Datum("delongX", 100.0 * elongationX.rms(), "%"));	
+			data.new Entry("elongX", 100.0 * elongationX.value(), "%");
+			data.new Entry("delongX", 100.0 * elongationX.rms(), "%");	
 		}
 		
 		return data;
@@ -703,7 +704,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			
 		if(sourceModel instanceof ScalarMap) {
 			AstroMap map = ((ScalarMap) sourceModel).map;
-			info += pointing.pointingInfo(map, instrument.getSizeName(), instrument.getSizeUnit()) + "\n";
+			Unit sizeUnit = new Unit(instrument.getSizeName(), instrument.getSizeUnit());
+			info += pointing.pointingInfo(map, sizeUnit) + "\n";
 		}
 		
 		info += getPointingString(getNativePointingIncrement(pointing));

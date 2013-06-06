@@ -126,7 +126,6 @@ public class ScalarMap extends SourceMap {
 		
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
-		map.workPath = CRUSH.workPath;
 		map.setName(firstScan.getSourceName());
 		map.commandLine = commandLine;
 		
