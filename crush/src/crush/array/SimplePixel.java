@@ -26,6 +26,7 @@ package crush.array;
 
 import java.util.*;
 
+import kovacs.util.Constant;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 import kovacs.util.Vector2D;
@@ -68,7 +69,7 @@ public class SimplePixel extends Channel implements Pixel {
 		double sourceSize = model == null ? instrument.resolution : model.getPointSize();
 		
 		if(channel instanceof Pixel) {
-			double dev = distanceTo((Pixel) channel) * Util.sigmasInFWHM / sourceSize;
+			double dev = distanceTo((Pixel) channel) * Constant.sigmasInFWHM / sourceSize;
 			return Math.exp(-0.5 * dev * dev);
 		}
 		// If other channel is not a pixel assume it is independent...

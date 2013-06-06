@@ -25,7 +25,6 @@ package crush.filters;
 import java.util.Arrays;
 
 import kovacs.util.Constant;
-import kovacs.util.Util;
 
 
 import crush.Channel;
@@ -131,7 +130,7 @@ public abstract class VariedFilter extends Filter {
 		// sigmaF = sigmaf / df = 2.35/2Pi * n dt / T; 
 		
 		final double T = integration.getPointCrossingTime();
-		final double sigma = Util.sigmasInFWHM / (Constant.twoPI * T * df);
+		final double sigma = Constant.sigmasInFWHM / (Constant.twoPI * T * df);
 		final double a = -0.5 / (sigma * sigma);
 		
 		sourceNorm = 0.0;

@@ -27,6 +27,7 @@ package crush;
 
 import java.io.*;
 
+import kovacs.util.Constant;
 import kovacs.util.Util;
 import kovacs.util.data.Statistics;
 import kovacs.util.data.WeightedPoint;
@@ -276,7 +277,7 @@ public class Signal implements Cloneable {
 		int N = 2 * (int)Math.ceil(FWHM / resolution) + 1;
 		double[] w = new double[N];
 		int ic = N/2;
-		double sigma = FWHM/resolution/Util.sigmasInFWHM;
+		double sigma = FWHM/resolution/Constant.sigmasInFWHM;
 		double A = -0.5 / (sigma * sigma);
 		for(int i=N; --i >= 0; ) w[i] = Math.exp(A*(i-ic)*(i-ic));
 		smooth(w);
