@@ -31,10 +31,11 @@ import nom.tam.fits.*;
 import java.io.*;
 import java.util.*;
 
+import kovacs.data.Statistics;
+import kovacs.data.WeightedPoint;
+import kovacs.math.Vector2D;
+import kovacs.text.TableFormatter;
 import kovacs.util.*;
-import kovacs.util.data.Statistics;
-import kovacs.util.data.WeightedPoint;
-import kovacs.util.text.TableFormatter;
 
 
 public class Sharc2 extends CSOArray<Sharc2Pixel> {

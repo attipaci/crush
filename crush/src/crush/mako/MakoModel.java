@@ -29,8 +29,9 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.io.*;
 
+import kovacs.data.fitting.AmoebaMinimizer;
+import kovacs.math.Vector2D;
 import kovacs.util.*;
-import kovacs.util.data.AmoebaMinimizer;
 
 import crush.array.DistortionModel;
 

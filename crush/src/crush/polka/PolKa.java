@@ -32,9 +32,9 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.Vector;
 
+import kovacs.text.TableFormatter;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-import kovacs.util.text.TableFormatter;
 
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;

@@ -26,17 +26,17 @@ import java.io.IOException;
 import java.util.*;
 import java.text.ParseException;
 
+import kovacs.astro.AstroTime;
+import kovacs.astro.HorizontalCoordinates;
+import kovacs.data.LocalAverage;
+import kovacs.data.Locality;
+import kovacs.data.LocalizedData;
+import kovacs.data.WeightedPoint;
+import kovacs.math.Range;
+import kovacs.math.Vector2D;
 import kovacs.util.LogFile;
-import kovacs.util.Range;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-import kovacs.util.Vector2D;
-import kovacs.util.astro.AstroTime;
-import kovacs.util.astro.HorizontalCoordinates;
-import kovacs.util.data.LocalAverage;
-import kovacs.util.data.Locality;
-import kovacs.util.data.LocalizedData;
-import kovacs.util.data.WeightedPoint;
 
 import crush.CRUSH;
 

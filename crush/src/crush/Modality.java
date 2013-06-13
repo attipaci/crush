@@ -27,10 +27,10 @@ package crush;
 import java.lang.reflect.*;
 import java.util.*;
 
+import kovacs.data.WeightedPoint;
+import kovacs.math.Range;
 import kovacs.util.Configurator;
-import kovacs.util.Range;
 import kovacs.util.Unit;
-import kovacs.util.data.WeightedPoint;
 
 
 

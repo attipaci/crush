@@ -30,6 +30,7 @@ import crush.apex.*;
 
 import java.util.*;
 
+import kovacs.math.Vector2D;
 import kovacs.util.*;
 
 public class PArtemis extends APEXArray<PArtemisPixel> {

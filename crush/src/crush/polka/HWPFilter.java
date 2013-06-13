@@ -22,7 +22,7 @@
  ******************************************************************************/
 package crush.polka;
 
-import kovacs.util.Range;
+import kovacs.math.Range;
 import kovacs.util.Util;
 import crush.Integration;
 import crush.filters.KillFilter;

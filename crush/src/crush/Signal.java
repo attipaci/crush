@@ -27,10 +27,10 @@ package crush;
 
 import java.io.*;
 
+import kovacs.data.Statistics;
+import kovacs.data.WeightedPoint;
 import kovacs.util.Constant;
 import kovacs.util.Util;
-import kovacs.util.data.Statistics;
-import kovacs.util.data.WeightedPoint;
 
 public class Signal implements Cloneable {
 	private Mode mode;

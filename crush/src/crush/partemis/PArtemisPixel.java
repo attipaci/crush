@@ -24,6 +24,7 @@
 
 package crush.partemis;
 
+import kovacs.math.Vector2D;
 import kovacs.util.*;
 import crush.apex.APEXPixel;
 

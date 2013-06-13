@@ -30,13 +30,15 @@ import nom.tam.fits.*;
 import java.io.*;
 import java.util.*;
 
+import kovacs.astro.AstroSystem;
+import kovacs.astro.CelestialCoordinates;
+import kovacs.astro.CoordinateEpoch;
+import kovacs.astro.EquatorialCoordinates;
+import kovacs.astro.GeodeticCoordinates;
+import kovacs.astro.HorizontalCoordinates;
+import kovacs.math.SphericalCoordinates;
+import kovacs.math.Vector2D;
 import kovacs.util.*;
-import kovacs.util.astro.AstroSystem;
-import kovacs.util.astro.CelestialCoordinates;
-import kovacs.util.astro.CoordinateEpoch;
-import kovacs.util.astro.EquatorialCoordinates;
-import kovacs.util.astro.GeodeticCoordinates;
-import kovacs.util.astro.HorizontalCoordinates;
 
 
 

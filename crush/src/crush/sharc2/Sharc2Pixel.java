@@ -29,9 +29,9 @@ import crush.array.SimplePixel;
 
 import java.util.StringTokenizer;
 
+import kovacs.math.Vector2D;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-import kovacs.util.Vector2D;
 
 
 

@@ -30,11 +30,12 @@ import nom.tam.util.*;
 
 import java.io.*;
 
+import kovacs.astro.CelestialCoordinates;
+import kovacs.astro.EquatorialCoordinates;
+import kovacs.astro.HorizontalCoordinates;
+import kovacs.data.WeightedPoint;
+import kovacs.math.Vector2D;
 import kovacs.util.*;
-import kovacs.util.astro.CelestialCoordinates;
-import kovacs.util.astro.EquatorialCoordinates;
-import kovacs.util.astro.HorizontalCoordinates;
-import kovacs.util.data.WeightedPoint;
 
 import crush.fits.HDUReader;
 

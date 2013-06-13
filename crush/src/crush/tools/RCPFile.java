@@ -25,6 +25,7 @@ package crush.tools;
 import java.io.*;
 import java.util.*;
 
+import kovacs.math.Vector2D;
 import kovacs.util.*;
 
 

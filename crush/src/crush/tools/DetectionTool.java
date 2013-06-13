@@ -48,12 +48,12 @@ package crush.tools;
 
 import java.util.*;
 
+import kovacs.astro.SourceCatalog;
+import kovacs.data.Region;
 import kovacs.util.ConfidenceCalculator;
 import kovacs.util.Constant;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-import kovacs.util.astro.SourceCatalog;
-import kovacs.util.data.Region;
 
 import crush.CRUSH;
 import crush.astro.AstroMap;

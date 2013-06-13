@@ -31,9 +31,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import kovacs.astro.SourceCatalog;
+import kovacs.data.Region;
+import kovacs.math.SphericalCoordinates;
+import kovacs.math.Vector2D;
 import kovacs.util.*;
-import kovacs.util.astro.SourceCatalog;
-import kovacs.util.data.Region;
 import nom.tam.fits.*;
 
 public class ImageTool {

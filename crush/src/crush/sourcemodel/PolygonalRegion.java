@@ -25,15 +25,17 @@ package crush.sourcemodel;
 import java.util.*;
 import java.text.ParseException;
 
-import kovacs.util.*;
-import kovacs.util.data.Bounds;
-import kovacs.util.data.Grid2D;
-import kovacs.util.data.GridImage;
-import kovacs.util.data.Region;
-import kovacs.util.data.WeightedPoint;
+import kovacs.data.Bounds;
+import kovacs.data.Grid2D;
+import kovacs.data.GridImage;
+import kovacs.data.Region;
+import kovacs.data.WeightedPoint;
+import kovacs.math.Coordinate2D;
+import kovacs.math.Vector2D;
+import kovacs.projection.Projection2D;
 
 
-public class PolygonalRegion<CoordinateType extends CoordinatePair> extends Region<CoordinateType> {
+public class PolygonalRegion<CoordinateType extends Coordinate2D> extends Region<CoordinateType> {
 	Vector<CoordinateType> points = new Vector<CoordinateType>();
 	
 	//String name = "polygon";

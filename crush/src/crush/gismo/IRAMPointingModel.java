@@ -25,11 +25,11 @@ package crush.gismo;
 import java.io.*;
 import java.util.StringTokenizer;
 
+import kovacs.astro.HorizontalCoordinates;
+import kovacs.math.Vector2D;
 import kovacs.util.Constant;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-import kovacs.util.Vector2D;
-import kovacs.util.astro.HorizontalCoordinates;
 
 public class IRAMPointingModel {
 	double[] P = new double[1+CONSTANTS];

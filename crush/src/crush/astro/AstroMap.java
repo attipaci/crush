@@ -25,9 +25,9 @@
 package crush.astro;
 
 
-import kovacs.util.*;
-import kovacs.util.astro.*;
-import kovacs.util.data.SphericalGrid;
+import kovacs.astro.*;
+import kovacs.data.SphericalGrid;
+import kovacs.math.SphericalCoordinates;
 import crush.Instrument;
 import crush.sourcemodel.GridSource;
 

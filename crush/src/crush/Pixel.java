@@ -24,7 +24,7 @@
 
 package crush;
 
-import kovacs.util.*;
+import kovacs.math.Vector2D;
 
 public interface Pixel extends Iterable<Channel> {
 

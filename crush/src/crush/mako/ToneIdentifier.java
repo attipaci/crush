@@ -31,12 +31,12 @@ import java.util.Collections;
 
 import java.util.StringTokenizer;
 
+import kovacs.data.Statistics;
+import kovacs.data.fitting.AmoebaMinimizer;
+import kovacs.math.Range;
 import kovacs.util.Configurator;
-import kovacs.util.Range;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-import kovacs.util.data.AmoebaMinimizer;
-import kovacs.util.data.Statistics;
 
 
 
@@ -153,8 +153,8 @@ public class ToneIdentifier extends ArrayList<ResonanceID> implements Cloneable 
 		};
 		
 		opt.init(new double[] { guessT });
-		opt.setStartSize(new double[] { 0.2 * TRange.span() });
-		opt.precision = 1e-10;
+		opt.setStartSize(new double[] { 0.5 * TRange.span() });
+		opt.precision = 1e-12;
 		opt.verbose = false;
 		opt.minimize(attempts);
 		

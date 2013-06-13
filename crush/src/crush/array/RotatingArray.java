@@ -25,6 +25,7 @@
 package crush.array;
 
 
+import kovacs.math.Vector2D;
 import kovacs.util.*;
 import crush.*;
 

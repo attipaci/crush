@@ -32,7 +32,6 @@ import crush.sourcemodel.ScalarMap;
 
 import java.util.*;
 
-import kovacs.util.Purifiable;
 import kovacs.util.Unit;
 
 

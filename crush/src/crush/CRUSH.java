@@ -26,9 +26,10 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import kovacs.astro.LeapSeconds;
+import kovacs.fits.FitsExtras;
+import kovacs.text.VersionString;
 import kovacs.util.*;
-import kovacs.util.astro.LeapSeconds;
-import kovacs.util.text.VersionString;
 
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -41,7 +42,7 @@ import nom.tam.util.*;
  */
 public class CRUSH extends Configurator {
 	private static String version = "2.14-2";
-	private static String revision = "devel.3";
+	private static String revision = "devel.5";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -662,7 +663,7 @@ public class CRUSH extends Configurator {
 		cursor.add(new HeaderCard("JAVA", Util.getProperty("java.vendor"), "Java vendor name."));
 		cursor.add(new HeaderCard("JAVAVER", Util.getProperty("java.version"), "The Java version."));
 		
-		Util.addLongFitsKey(cursor, "JAVAHOME", Util.getProperty("java.home"), "Java location.");
+		FitsExtras.addLongKey(cursor, "JAVAHOME", Util.getProperty("java.home"), "Java location.");
 		cursor.add(new HeaderCard("JRE", Util.getProperty("java.runtime.name"), "Java Runtime Environment."));
 		cursor.add(new HeaderCard("JREVER", Util.getProperty("java.runtime.version"), "JRE version."));
 		cursor.add(new HeaderCard("JVM", Util.getProperty("java.vm.name"), "Java Virtual Machine."));

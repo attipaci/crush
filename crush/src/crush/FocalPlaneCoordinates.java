@@ -22,10 +22,10 @@
  ******************************************************************************/
 package crush;
 
+import kovacs.math.SphericalCoordinates;
+import kovacs.text.AngleFormat;
 import kovacs.util.CoordinateAxis;
 import kovacs.util.CoordinateSystem;
-import kovacs.util.SphericalCoordinates;
-import kovacs.util.text.AngleFormat;
 
 public class FocalPlaneCoordinates extends SphericalCoordinates {
 	static CoordinateAxis xAxis, yAxis, xOffsetAxis, yOffsetAxis;

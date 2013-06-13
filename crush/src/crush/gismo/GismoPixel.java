@@ -26,6 +26,7 @@ package crush.gismo;
 
 import java.util.StringTokenizer;
 
+import kovacs.math.Vector2D;
 import kovacs.util.*;
 
 import crush.Channel;

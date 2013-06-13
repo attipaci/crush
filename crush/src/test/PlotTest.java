@@ -28,14 +28,14 @@ import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import kovacs.util.plot.ColorBar;
-import kovacs.util.plot.Data2DLayer;
-import kovacs.util.plot.GridImageLayer;
-import kovacs.util.plot.ImageArea;
-import kovacs.util.plot.ImageLayer;
-import kovacs.util.plot.Plot;
-import kovacs.util.plot.PlotSideRuler;
-import kovacs.util.plot.colorscheme.*;
+import kovacs.plot.ColorBar;
+import kovacs.plot.Data2DLayer;
+import kovacs.plot.GridImageLayer;
+import kovacs.plot.ImageArea;
+import kovacs.plot.ImageLayer;
+import kovacs.plot.Plot;
+import kovacs.plot.PlotSideRuler;
+import kovacs.plot.colorscheme.*;
 
 import crush.GenericInstrument;
 import crush.Instrument;

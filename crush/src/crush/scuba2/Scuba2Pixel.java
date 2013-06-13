@@ -15,6 +15,7 @@
  ******************************************************************************/
 package crush.scuba2;
 
+import kovacs.math.Vector2D;
 import kovacs.util.*;
 import crush.array.SimplePixel;
 

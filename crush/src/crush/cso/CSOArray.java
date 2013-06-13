@@ -1,3 +1,25 @@
+/*******************************************************************************
+ * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * All rights reserved. 
+ * 
+ * This file is part of crush.
+ * 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ * 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ * 
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ ******************************************************************************/
 package crush.cso;
 
 import java.text.NumberFormat;
@@ -8,15 +30,14 @@ import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
 
+import kovacs.text.TableFormatter;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-import kovacs.util.text.TableFormatter;
 import crush.GroundBased;
 import crush.Mount;
 import crush.Scan;
 import crush.array.RotatingArray;
 import crush.array.SimplePixel;
-import crush.sharc2.Sharc2Scan;
 
 public abstract class CSOArray<PixelType extends SimplePixel> extends RotatingArray<PixelType> implements GroundBased {
 	/**
@@ -57,7 +78,7 @@ public abstract class CSOArray<PixelType extends SimplePixel> extends RotatingAr
 	@Override
 	public void validate(Vector<Scan<?,?>> scans) throws Exception {
 		
-		final Sharc2Scan firstScan = (Sharc2Scan) scans.get(0);
+		final CSOScan<?,?> firstScan = (CSOScan<?,?>) scans.get(0);
 		
 		if(scans.size() == 1) if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
 		

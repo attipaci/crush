@@ -16,6 +16,8 @@
 	separately from crush under the 'kovacs.util' project, and are imported
 	into crush through a JAR.
 
+	[UPDATE] Leap seconds data good until 28 Dec 2013. (No new leap second
+	was added in June 2013).
 
 
 2.14-1 (2 June 2013)

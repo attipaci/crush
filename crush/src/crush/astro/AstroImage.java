@@ -24,10 +24,10 @@
 
 package crush.astro;
 
-import kovacs.util.*;
-import kovacs.util.astro.*;
-import kovacs.util.data.GridImage;
-import kovacs.util.data.SphericalGrid;
+import kovacs.astro.*;
+import kovacs.data.GridImage;
+import kovacs.data.SphericalGrid;
+import kovacs.math.SphericalCoordinates;
 
 public class AstroImage extends GridImage<SphericalCoordinates> implements Cloneable {
 

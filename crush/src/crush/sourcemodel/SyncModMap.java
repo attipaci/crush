@@ -26,8 +26,8 @@ package crush.sourcemodel;
 
 import java.util.*;
 
-import kovacs.util.astro.CelestialProjector;
-import kovacs.util.data.Index2D;
+import kovacs.astro.CelestialProjector;
+import kovacs.data.Index2D;
 
 import crush.*;
 

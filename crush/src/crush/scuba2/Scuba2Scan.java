@@ -21,13 +21,14 @@ import nom.tam.fits.*;
 import java.io.*;
 import java.util.*;
 
+import kovacs.astro.AstroSystem;
+import kovacs.astro.CoordinateEpoch;
+import kovacs.astro.EquatorialCoordinates;
+import kovacs.astro.GeodeticCoordinates;
+import kovacs.astro.HorizontalCoordinates;
+import kovacs.astro.Weather;
+import kovacs.math.SphericalCoordinates;
 import kovacs.util.*;
-import kovacs.util.astro.AstroSystem;
-import kovacs.util.astro.CoordinateEpoch;
-import kovacs.util.astro.EquatorialCoordinates;
-import kovacs.util.astro.GeodeticCoordinates;
-import kovacs.util.astro.HorizontalCoordinates;
-import kovacs.util.astro.Weather;
 
 
 public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBased, Weather {

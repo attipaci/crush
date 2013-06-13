@@ -30,8 +30,9 @@ import nom.tam.fits.*;
 import java.io.*;
 import java.util.*;
 
+import kovacs.math.Vector2D;
+import kovacs.text.TableFormatter;
 import kovacs.util.*;
-import kovacs.util.text.TableFormatter;
 
 
 public class Mako extends CSOArray<MakoPixel> {

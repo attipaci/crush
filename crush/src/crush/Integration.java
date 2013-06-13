@@ -29,10 +29,14 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
+import kovacs.data.*;
+import kovacs.fft.FloatFFT;
+import kovacs.math.Complex;
+import kovacs.math.Range;
+import kovacs.math.SphericalCoordinates;
+import kovacs.math.Vector2D;
+import kovacs.text.TableFormatter;
 import kovacs.util.*;
-import kovacs.util.data.*;
-import kovacs.util.fft.FloatFFT;
-import kovacs.util.text.TableFormatter;
 
 import crush.filters.*;
 
@@ -1725,7 +1729,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(pos[t] == null || pos[t+1] == null || pos[t-1] == null) a[t] = null;
 			else {
 				a[t] = new Vector2D(
-						Math.cos(pos[t].getY()) * Math.IEEEremainder(pos[t+1].getX() + pos[t-1].getX() - 2.0*pos[t].getX(), Constant.twoPI),
+						Math.cos(pos[t].getY()) * Math.IEEEremainder(pos[t+1].getX() + pos[t-1].getX() - 2.0*pos[t].getX(), Constant.twoPi),
 						pos[t+1].getY() + pos[t-1].getY() - 2.0*pos[t].getY()
 				);
 				a[t].scale(idt);

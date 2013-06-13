@@ -25,8 +25,8 @@ package crush;
 
 import java.text.NumberFormat;
 
-import kovacs.util.data.Statistics;
-import kovacs.util.data.WeightedPoint;
+import kovacs.data.Statistics;
+import kovacs.data.WeightedPoint;
 
 
 public class PhaseOffsets {

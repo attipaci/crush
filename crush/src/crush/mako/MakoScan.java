@@ -30,10 +30,11 @@ import java.io.*;
 import java.util.*;
 import java.text.*;
 
+import kovacs.astro.AstroTime;
+import kovacs.astro.EquatorialCoordinates;
+import kovacs.astro.HorizontalCoordinates;
+import kovacs.math.Vector2D;
 import kovacs.util.*;
-import kovacs.util.astro.AstroTime;
-import kovacs.util.astro.EquatorialCoordinates;
-import kovacs.util.astro.HorizontalCoordinates;
 
 
 public class MakoScan extends CSOScan<Mako, MakoIntegration> {

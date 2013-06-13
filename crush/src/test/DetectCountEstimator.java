@@ -22,7 +22,7 @@
  ******************************************************************************/
 package test;
 
-import kovacs.util.ConfidenceCalculator;
+import kovacs.math.specialfunctions.CumulativeNormalDistribution;
 import kovacs.util.Unit;
 
 public class DetectCountEstimator {
@@ -48,7 +48,7 @@ public class DetectCountEstimator {
 		
 		for(double F=0.0; F<upperlim; F += dF) {
 			double dev = (fluxlimit - F) / rms;
-			double completeness = ConfidenceCalculator.getProbabilityOutsideOf(dev);
+			double completeness = CumulativeNormalDistribution.inverseComplementAt(dev);
 			if(dev < 0.0) completeness = 1.0 - completeness;
 			//System.err.println(("c(" + Util.f3.format(F / rms)) + ") = " + Util.f3.format(completeness));
 			
