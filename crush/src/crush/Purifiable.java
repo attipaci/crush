@@ -2,40 +2,35 @@
  * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
- * This file is part of crush.
+ * This file is part of kovacs.util.
  * 
- *     crush is free software: you can redistribute it and/or modify
+ *     kovacs.util is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
  * 
- *     crush is distributed in the hope that it will be useful,
+ *     kovacs.util is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
  * 
  *     You should have received a copy of the GNU General Public License
- *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ *     along with kovacs.util.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.tools;
+package crush;
 
-import kovacs.astro.*;
+// TODO: Auto-generated Javadoc
+/**
+ * The Interface Purifiable.
+ */
+public interface Purifiable {
 
-public class Horizontal2Equatorial {
-
-	public static void main(String[] args) {
-		GeodeticCoordinates site = new GeodeticCoordinates("-03d23m55.51s, 37d04m06.29s");
-		AstroTime time = new AstroTime();
-		time.now();
-		double LST = time.getLST(site.longitude());
-		
-		HorizontalCoordinates horizontal = new HorizontalCoordinates(Double.parseDouble(args[0]), Double.parseDouble(args[1]));
-		EquatorialCoordinates equatorial = horizontal.toEquatorial(site, LST);
-		
-		System.err.println(equatorial);
-	}
+	/**
+	 * Purify.
+	 */
+	public void purify();
 	
 }

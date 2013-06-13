@@ -24,10 +24,10 @@ package crush.filters;
 
 import java.util.Arrays;
 
+import kovacs.data.OldFFT;
 import kovacs.util.Configurator;
 import kovacs.util.Constant;
 import kovacs.util.Util;
-import kovacs.util.data.OldFFT;
 
 import crush.Channel;
 import crush.ChannelGroup;
@@ -247,7 +247,7 @@ public abstract class Filter {
 		// sigmaF = sigmaf / df = 2.35/2Pi * n dt / T; 
 		
 		final double T = integration.getPointCrossingTime();
-		final double sigma = Constant.sigmasInFWHM / (Constant.twoPI * T * df);
+		final double sigma = Constant.sigmasInFWHM / (Constant.twoPi * T * df);
 		final double a = -0.5 / (sigma * sigma);
 		
 		// Start from the 1/f filter cutoff

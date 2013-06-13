@@ -33,9 +33,10 @@ import crush.laboca.*;
 import java.text.NumberFormat;
 import java.util.*;
 
+import kovacs.data.WeightedPoint;
+import kovacs.math.Vector2D;
+import kovacs.text.TableFormatter;
 import kovacs.util.*;
-import kovacs.util.data.WeightedPoint;
-import kovacs.util.text.TableFormatter;
 
 public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable {
 	/**

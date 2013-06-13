@@ -26,8 +26,8 @@ package crush;
 
 import java.util.Arrays;
 
-import kovacs.util.data.Statistics;
-import kovacs.util.data.WeightedPoint;
+import kovacs.data.Statistics;
+import kovacs.data.WeightedPoint;
 
 
 
@@ -79,9 +79,11 @@ public class CorrelatedSignal extends Signal {
 	@Override
 	public double getUnderlyingVariance() {
 		double sum = 0.0, sumw = 0.0;
-		for(int t=value.length; --t >= 0; ) if(weight[t] > 0.0) {
-			sum += weight[t] * value[t] * value[t] - 1.0;
-			sumw += value[t];
+		for(int t=value.length; --t >= 0; ) {
+			if(weight[t] <= 0.0) continue;
+			final float xt = value[t];
+			sum += weight[t] * xt * xt - 1.0;
+			sumw += xt;
 		}	
 		return sum / sumw;
 	}
@@ -100,9 +102,11 @@ public class CorrelatedSignal extends Signal {
 			final int tot = Math.min(fromt + driftN, value.length);
 			
 			double sum = 0.0, sumw = 0.0;			
-			for(int t=tot; --t >= fromt; ) if(weight[t] > 0.0){
-				sum += weight[t] * value[t];
-				sumw += weight[t];
+			for(int t=tot; --t >= fromt; ) {
+				final float wt = weight[t];
+				if(wt <= 0.0) continue;
+				sum += wt * value[t];
+				sumw += wt;
 			}
 			
 			if(sumw > 0.0) {
@@ -360,15 +364,12 @@ public class CorrelatedSignal extends Signal {
 			for(int t=to; --t >= from; ) {
 				final Frame exposure = integration.get(t);
 				if(exposure == null) continue;
-
-				final float[] data = exposure.data;
-				final float fw = exposure.relativeWeight;
 				
 				for(int k=nc; --k >= 0; ) {
 					final Channel channel = channels.get(k);
 					// Here usedGains carries the gain increment dG from the last correlated signal removal
-					data[channel.index] -= dG[k] * C + channel.tempG * dC;
-					if(channel.temp > 0.0F) dependents.add(exposure, channel, fw * channel.temp);
+					exposure.data[channel.index] -= dG[k] * C + channel.tempG * dC;
+					if(channel.temp > 0.0F) dependents.add(exposure, channel, exposure.relativeWeight * channel.temp);
 				}
 			}
 				
@@ -438,8 +439,5 @@ public class CorrelatedSignal extends Signal {
 	
 	
 	// TODO Use estimators...
-	
-	
-	
 	
 }

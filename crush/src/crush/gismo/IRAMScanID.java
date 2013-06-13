@@ -25,7 +25,7 @@ package crush.gismo;
 
 import java.util.StringTokenizer;
 
-import kovacs.util.Range;
+import kovacs.math.Range;
 import kovacs.util.Util;
 
 

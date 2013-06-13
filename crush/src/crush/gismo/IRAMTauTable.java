@@ -26,12 +26,12 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 
+import kovacs.astro.AstroTime;
+import kovacs.data.DataPoint;
+import kovacs.data.LocalAverage;
+import kovacs.data.Locality;
+import kovacs.data.LocalizedData;
 import kovacs.util.*;
-import kovacs.util.astro.AstroTime;
-import kovacs.util.data.DataPoint;
-import kovacs.util.data.LocalAverage;
-import kovacs.util.data.Locality;
-import kovacs.util.data.LocalizedData;
 
 import crush.CRUSH;
 

@@ -31,9 +31,9 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
+import kovacs.math.Vector2D;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-import kovacs.util.Vector2D;
 
 
 public class SyntheticRCP {

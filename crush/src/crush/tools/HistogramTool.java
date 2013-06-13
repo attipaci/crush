@@ -27,9 +27,10 @@ import crush.*;
 import java.io.*;
 import java.util.*;
 
+import kovacs.data.Data2D;
+import kovacs.data.GridMap;
+import kovacs.math.SphericalCoordinates;
 import kovacs.util.*;
-import kovacs.util.data.Data2D;
-import kovacs.util.data.GridMap;
 
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.Fits;

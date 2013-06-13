@@ -24,8 +24,8 @@ package crush.filters;
 
 import java.util.List;
 
+import kovacs.math.Range;
 import kovacs.util.Constant;
-import kovacs.util.Range;
 
 import crush.Integration;
 

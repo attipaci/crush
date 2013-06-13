@@ -26,10 +26,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
 
+import kovacs.math.Vector2D;
 import kovacs.util.Configurator;
 import kovacs.util.HashCode;
 import kovacs.util.Unit;
-import kovacs.util.Vector2D;
 
 
 public class DistortionModel extends Hashtable<DistortionModel.Term, Vector2D> {

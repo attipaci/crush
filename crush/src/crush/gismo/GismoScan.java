@@ -31,9 +31,12 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 
+import kovacs.astro.*;
+import kovacs.math.Range;
+import kovacs.math.SphericalCoordinates;
+import kovacs.math.Vector2D;
+import kovacs.text.TableFormatter;
 import kovacs.util.*;
-import kovacs.util.astro.*;
-import kovacs.util.text.TableFormatter;
 
 
 public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBased, Weather {

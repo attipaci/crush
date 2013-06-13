@@ -27,13 +27,14 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import kovacs.data.Grid2D;
+import kovacs.data.GridImage;
+import kovacs.data.GridMap;
+import kovacs.fits.FitsExtras;
+import kovacs.math.Coordinate2D;
 import kovacs.util.Configurator;
-import kovacs.util.CoordinatePair;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-import kovacs.util.data.Grid2D;
-import kovacs.util.data.GridImage;
-import kovacs.util.data.GridMap;
 
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
@@ -47,7 +48,7 @@ import crush.Instrument;
 import crush.Scan;
 
 
-public abstract class GridSource<CoordinateType extends CoordinatePair> extends GridMap<CoordinateType> implements Cloneable {
+public abstract class GridSource<CoordinateType extends Coordinate2D> extends GridMap<CoordinateType> implements Cloneable {
 	public Instrument<?> instrument;
 	public Vector<Scan<?, ?>> scans = new Vector<Scan<?, ?>>();
 
@@ -147,7 +148,7 @@ public abstract class GridSource<CoordinateType extends CoordinatePair> extends 
 			StringTokenizer args = new StringTokenizer(commandLine);
 			cursor.add(new HeaderCard("ARGS", args.countTokens(), "The number of arguments passed from the command line."));
 			int i=1;
-			while(args.hasMoreTokens()) Util.addLongFitsKey(cursor, "ARG" + (i++), args.nextToken(), "Command-line argument.");
+			while(args.hasMoreTokens()) FitsExtras.addLongKey(cursor, "ARG" + (i++), args.nextToken(), "Command-line argument.");
 		}
 		
 		cursor.add(new HeaderCard("V2JY", instrument.janskyPerBeam(), "1 Jy/beam in instrument data units."));	

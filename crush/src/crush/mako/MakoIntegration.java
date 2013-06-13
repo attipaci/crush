@@ -25,9 +25,10 @@ package crush.mako;
 import nom.tam.fits.*;
 
 
+import kovacs.astro.*;
+import kovacs.data.DataPoint;
+import kovacs.math.Vector2D;
 import kovacs.util.*;
-import kovacs.util.astro.*;
-import kovacs.util.data.DataPoint;
 
 import crush.cso.CSOIntegration;
 import crush.fits.HDUReader;

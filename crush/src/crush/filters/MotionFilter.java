@@ -24,10 +24,10 @@ package crush.filters;
 
 import java.util.Arrays;
 
-import kovacs.util.Range;
+import kovacs.data.Statistics;
+import kovacs.math.Range;
+import kovacs.math.Vector2D;
 import kovacs.util.Util;
-import kovacs.util.Vector2D;
-import kovacs.util.data.Statistics;
 
 import crush.Integration;
 import crush.Motion;

@@ -26,9 +26,9 @@ package crush.apex;
 
 import java.util.Collection;
 
-import kovacs.util.*;
-import kovacs.util.data.DataPoint;
-import kovacs.util.data.WeightedPoint;
+import kovacs.data.DataPoint;
+import kovacs.data.WeightedPoint;
+import kovacs.math.Vector2D;
 
 import crush.Channel;
 import crush.Frame;

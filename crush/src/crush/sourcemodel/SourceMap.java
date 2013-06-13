@@ -28,14 +28,19 @@ package crush.sourcemodel;
 
 import java.util.*;
 
+import kovacs.astro.CelestialProjector;
+import kovacs.astro.CoordinateEpoch;
+import kovacs.astro.EquatorialCoordinates;
+import kovacs.data.Index2D;
+import kovacs.data.Statistics;
+import kovacs.math.Range;
+import kovacs.math.SphericalCoordinates;
+import kovacs.math.Vector2D;
+import kovacs.projection.Gnomonic;
+import kovacs.projection.Projection2D;
+import kovacs.projection.SphericalProjection;
+import kovacs.text.TableFormatter;
 import kovacs.util.*;
-import kovacs.util.astro.CelestialProjector;
-import kovacs.util.astro.CoordinateEpoch;
-import kovacs.util.astro.EquatorialCoordinates;
-import kovacs.util.astro.Gnomonic;
-import kovacs.util.data.Index2D;
-import kovacs.util.data.Statistics;
-import kovacs.util.text.TableFormatter;
 
 import crush.*;
 

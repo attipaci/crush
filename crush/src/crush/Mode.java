@@ -27,9 +27,9 @@ package crush;
 import java.lang.reflect.*;
 import java.util.Arrays;
 
-import kovacs.util.Range;
-import kovacs.util.data.Statistics;
-import kovacs.util.data.WeightedPoint;
+import kovacs.data.Statistics;
+import kovacs.data.WeightedPoint;
+import kovacs.math.Range;
 
 
 public class Mode {

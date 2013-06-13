@@ -32,7 +32,7 @@ import nom.tam.fits.*;
 import java.io.*;
 import java.util.*;
 
-import kovacs.util.Range;
+import kovacs.math.Range;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 

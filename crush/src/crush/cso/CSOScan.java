@@ -1,3 +1,25 @@
+/*******************************************************************************
+ * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * All rights reserved. 
+ * 
+ * This file is part of crush.
+ * 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ * 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ * 
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ ******************************************************************************/
 package crush.cso;
 
 import java.io.IOException;
@@ -11,17 +33,17 @@ import crush.GroundBased;
 import crush.HorizontalFrame;
 import crush.InstantFocus;
 import crush.Scan;
+import kovacs.astro.AstroSystem;
+import kovacs.astro.GeodeticCoordinates;
+import kovacs.astro.HorizontalCoordinates;
+import kovacs.astro.Weather;
+import kovacs.data.DataPoint;
+import kovacs.math.SphericalCoordinates;
+import kovacs.math.Vector2D;
+import kovacs.text.TableFormatter;
 import kovacs.util.DataTable;
-import kovacs.util.SphericalCoordinates;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-import kovacs.util.Vector2D;
-import kovacs.util.astro.AstroSystem;
-import kovacs.util.astro.GeodeticCoordinates;
-import kovacs.util.astro.HorizontalCoordinates;
-import kovacs.util.astro.Weather;
-import kovacs.util.data.DataPoint;
-import kovacs.util.text.TableFormatter;
 
 public abstract class CSOScan<InstrumentType extends CSOArray<?>, IntegrationType extends CSOIntegration<InstrumentType,?>> 
 extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {

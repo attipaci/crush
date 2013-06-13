@@ -22,8 +22,8 @@
  ******************************************************************************/
 package test;
 
+import kovacs.data.Data2D;
 import kovacs.util.Unit;
-import kovacs.util.data.Data2D;
 import crush.astro.AstroMap;
 
 public class RegridTest {

@@ -24,9 +24,11 @@
 
 package crush;
 
+import kovacs.astro.CelestialProjector;
+import kovacs.astro.EquatorialCoordinates;
+import kovacs.math.SphericalCoordinates;
+import kovacs.math.Vector2D;
 import kovacs.util.*;
-import kovacs.util.astro.CelestialProjector;
-import kovacs.util.astro.EquatorialCoordinates;
 
 
 public abstract class Frame implements Cloneable, Flagging {

@@ -28,9 +28,10 @@ import java.awt.Color;
 import java.io.*;
 import java.util.*;
 
+import kovacs.astro.Weather;
+import kovacs.data.WeightedPoint;
+import kovacs.math.Range;
 import kovacs.util.*;
-import kovacs.util.astro.Weather;
-import kovacs.util.data.WeightedPoint;
 
 // Bin the correlated signal by elevation...
 public class SkyDip extends SourceModel {

@@ -26,9 +26,11 @@ import java.io.*;
 import java.util.Collection;
 import java.util.StringTokenizer;
 
+import kovacs.astro.CelestialProjector;
+import kovacs.data.*;
+import kovacs.math.SphericalCoordinates;
+import kovacs.projection.Projection2D;
 import kovacs.util.*;
-import kovacs.util.astro.CelestialProjector;
-import kovacs.util.data.*;
 
 import crush.*;
 import crush.array.*;
