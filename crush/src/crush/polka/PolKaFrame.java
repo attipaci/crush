@@ -41,11 +41,11 @@ public class PolKaFrame extends LabocaFrame {
 	}
 	
 	@Override
-	public double getSourceGain(final int mode) {	
+	public float getSourceGain(final int mode) {	
 		switch(mode) {
-		case PolarModulation.N : return 0.5 * super.getSourceGain(TOTAL_POWER);
-		case PolarModulation.Q : return 0.5 * Q * super.getSourceGain(TOTAL_POWER);
-		case PolarModulation.U : return 0.5 * U * super.getSourceGain(TOTAL_POWER);
+		case PolarModulation.N : return 0.5F * super.getSourceGain(TOTAL_POWER);
+		case PolarModulation.Q : return 0.5F * Q * super.getSourceGain(TOTAL_POWER);
+		case PolarModulation.U : return 0.5F * U * super.getSourceGain(TOTAL_POWER);
 		default: return super.getSourceGain(mode);
 		}
 	}

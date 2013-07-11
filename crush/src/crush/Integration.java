@@ -186,7 +186,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Must do this before direct tau estimates...
 		if(hasOption("level") || !hasOption("pixeldata")) {
 			System.err.println("   Removing DC offsets.");
-			removeOffsets(true, true);
+			removeOffsets(true, false);
 		}
 			
 		if(hasOption("tau")) {
@@ -372,7 +372,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public Vector2D getTauCoefficients(String id) {
 		String key = "tau." + id.toLowerCase();
 		
-		if(!hasOption(key + ".a")) throw new IllegalStateException("   WARNING! " + key + " has undefined relationship.");
+		if(!hasOption(key + ".a")) throw new IllegalStateException("   WARNING! " + key + " has no scaling relation.");
 		
 		Vector2D coeff = new Vector2D();
 		coeff.setX(option(key + ".a").getDouble());
@@ -620,15 +620,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public void removeOffsets(final boolean robust, final boolean quick) {
-		removeDrifts(instrument, size(), robust, quick);
+		removeDrifts(instrument, size(), robust);
 	}
 	
 	
-	public void removeDrifts(final ChannelGroup<?> channels, final int targetFrameResolution, final boolean robust, final boolean quick) {
+	public void removeDrifts(final ChannelGroup<?> channels, final int targetFrameResolution, final boolean robust) {
 		//System.err.println("O >>> " + channels.size() + " > " + targetFrameResolution);
 		
 		final int driftN = Math.min(size(), OldFFT.getPaddedSize(targetFrameResolution));
-		final int step = quick ? (int) Math.pow(driftN, 2.0/3.0) : 1;
 		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);
 		
 		final Dependents parms = getDependents("drifts");
@@ -642,7 +641,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else comments += robust ? "[O]" : "O";
 		
 		if(robust) {
-			buffer = new WeightedPoint[(int) Math.ceil((double)size()/step)];
+			buffer = new WeightedPoint[size()];
 			for(int i=buffer.length; --i >= 0; ) buffer[i] = new WeightedPoint();
 		}
 		
@@ -650,8 +649,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(int from=0; from < nt; from += driftN) {
 			int to = Math.min(size(), from + driftN);
 			parms.clear(channels, from, to);
-			if(robust) medianLevel(channels, parms, from, to, step, buffer, aveOffset);
-			else meanLevel(channels, parms, from, to, step, aveOffset);
+			if(robust) medianLevel(channels, parms, from, to, buffer, aveOffset);
+			else meanLevel(channels, parms, from, to, aveOffset);
 			parms.apply(channels, from, to);
 		}
 		
@@ -686,22 +685,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(CRUSH.debug) checkForNaNs(channels, 0, size());
 	}
 	
-	private synchronized void meanLevel(final ChannelGroup<?> group, final Dependents parms, final int fromt, int tot, final int step, final WeightedPoint[] aveOffset) {
-		for(Channel channel : group) meanLevel(channel, parms, fromt, tot, step, aveOffset[channel.index]);
+	private synchronized void meanLevel(final ChannelGroup<?> group, final Dependents parms, final int fromt, int tot, final WeightedPoint[] aveOffset) {
+		for(Channel channel : group) meanLevel(channel, parms, fromt, tot, aveOffset[channel.index]);
 	}
 	
-	private synchronized void meanLevel(Channel channel, final Dependents parms, final int fromt, int tot, final int step, WeightedPoint aveOffset) {
+	private synchronized void meanLevel(Channel channel, final Dependents parms, final int fromt, int tot, WeightedPoint aveOffset) {
 		tot = Math.min(tot, size());
 		
 		double sum = 0.0, sumw = 0.0;
 		
 		// Calculate the weight sums for every pixel...
-		for(int t=fromt; t<tot; t+=step) {
-			final Frame exposure = get(t);
-			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0) {
+		for(final Frame exposure : this) if(exposure != null) 
+			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0) {
 				sum += exposure.relativeWeight * exposure.data[channel.index];
 				sumw += exposure.relativeWeight;
-			}
 		}
 
 		// Calculate the maximum-likelihood offsets and the channel dependence...
@@ -711,24 +708,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(aveOffset != null) aveOffset.average(sum, sumw);
 		}
 
-		// Remove offsets from data and account frame dependence...
-		for(int t=fromt; t<tot; t+=step) {
-			final Frame exposure = get(t);
-			if(exposure == null) continue;
-
-			if(sumw > 0.0) { 
-				exposure.data[channel.index] -= sum;
-				parms.add(exposure, exposure.relativeWeight / sumw); 
-			}
+		// Remove offsets from data and account frame dependence...	
+		if(sumw > 0.0) for(final Frame exposure : this) if(exposure != null) {
+			exposure.data[channel.index] -= sum;
+			parms.add(exposure, exposure.relativeWeight / sumw); 
 		}
 	}
 	
-	private synchronized void medianLevel(final ChannelGroup<?> group, final Dependents parms, final int fromt, int tot, final int step, final WeightedPoint[] buffer, final WeightedPoint[] aveOffset) {
+	private synchronized void medianLevel(final ChannelGroup<?> group, final Dependents parms, final int fromt, int tot, final WeightedPoint[] buffer, final WeightedPoint[] aveOffset) {
 		tot = Math.min(tot, size());	
-		for(final Channel channel : group) medianLevel(channel, parms, fromt, tot, step, buffer, aveOffset[channel.index]);
+		for(final Channel channel : group) medianLevel(channel, parms, fromt, tot, buffer, aveOffset[channel.index]);
 	}
 	
-	private synchronized void medianLevel(Channel channel, final Dependents parms, final int fromt, int tot, final int step, final WeightedPoint[] buffer, final WeightedPoint aveOffset) {
+	private synchronized void medianLevel(Channel channel, final Dependents parms, final int fromt, int tot, final WeightedPoint[] buffer, final WeightedPoint aveOffset) {
 		tot = Math.min(tot, size());
 	
 		final WeightedPoint offset = new WeightedPoint();
@@ -738,23 +730,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		final int c = channel.index;
 		
-		for(int t=fromt; t<tot; t+=step) {
-			final Frame exposure = get(t);
-			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0) {
+		for(final Frame exposure : this) if(exposure != null) 
+			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0) {
 				final WeightedPoint point = buffer[n++];
 				point.setValue(exposure.data[c]);
 				point.setWeight(exposure.relativeWeight);
 				sumw += point.weight();
-			}
 		}
+		
 
 		if(sumw > 0.0) {
 			Statistics.smartMedian(buffer, 0, n, 0.25, offset);				
 			if(aveOffset != null) aveOffset.average(offset);
 
-			for(int t=fromt; t<tot; t+=step) {
-				final Frame exposure = get(t);
-				if(exposure == null) continue;
+			for(final Frame exposure : this) if(exposure != null) {
 				exposure.data[c] -= offset.value();
 				parms.add(exposure, exposure.relativeWeight / sumw);
 			}
@@ -1073,8 +1062,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					if(exposure != null) parms.clear(exposure);
 				}
 				
-				if(robust) medianLevel(instrument, parms, from, to, 1, buffer, aveOffset);		
-				else meanLevel(instrument, parms, from, to, 1, aveOffset);
+				if(robust) medianLevel(instrument, parms, from, to, buffer, aveOffset);		
+				else meanLevel(instrument, parms, from, to, aveOffset);
 				
 				// Level all correlated signals
 				for(Signal signal : signals.values()) signal.level(from, to); 
@@ -1872,7 +1861,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	@SuppressWarnings("unchecked")
 	public synchronized void downsample(final int n) {
 		
-		final int windowSize = (int)Math.round(1.82 * WindowFunction.getEquivalenWidth("Hann")*n);
+		final int windowSize = (int)Math.round(1.82 * WindowFunction.getEquivalentWidth("Hann")*n);
 		final int centerOffset = windowSize/2 + 1;
 		final double[] w = WindowFunction.get("Hann", windowSize);
 		
@@ -2471,7 +2460,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust = true;
 			
 		if(task.equals("offsets")) {
-			removeDrifts(instrument, size(), isRobust, isRobust);	    
+			removeDrifts(instrument, size(), isRobust);	    
 		}
 		else if(task.equals("drifts")) {
 			if(isPhaseModulated()) return false;
@@ -2479,7 +2468,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			String method = driftOptions.isConfigured("method") ? driftOptions.get("method").getValue() : "blocks"; 
 			int driftN = filterFramesFor(option("drifts").getValue(), 10.0*Unit.sec);
 			if(method.equalsIgnoreCase("fft")) highPassFilter(driftN * instrument.samplingInterval);
-			else removeDrifts(instrument, driftN, isRobust, false);
+			else removeDrifts(instrument, driftN, isRobust);
 		}
 		else if(task.startsWith("correlated.")) {	
 			String modalityName = task.substring(task.indexOf('.')+1);

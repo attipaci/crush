@@ -42,7 +42,7 @@ import nom.tam.util.*;
  */
 public class CRUSH extends Configurator {
 	private static String version = "2.14-2";
-	private static String revision = "devel.5";
+	private static String revision = "devel.8";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -556,31 +556,43 @@ public class CRUSH extends Configurator {
 		System.out.println(info);
 	}
 	
-	public static String getReleaseVersion() {       
+	public static String getReleaseVersion() {  
+		String version = null;
+		
 		try {
 			URL versionURL = new URL("http://www.submm.caltech.edu/~sharc/crush/v2/release.version");
 			URLConnection connection = versionURL.openConnection();
 			try {
 				connection.setConnectTimeout(3000);
-				connection.setReadTimeout(3000);
+				connection.setReadTimeout(2000);
+				connection.connect();
+				
 				BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-				return in.readLine();
+				version = in.readLine();
+				in.close();
 			} 
 			catch(IOException e) {
-				System.err.println("WARNING! Timed out while awaiting version update information.");
+				if(e instanceof SocketTimeoutException) 
+					System.err.println("WARNING! Timed out while awaiting version update information.");
+				else 
+					System.err.println("WARNING! Could not get version update information.");
+				
+				if(debug) e.printStackTrace();
 			}
+			
 		}
 		catch(MalformedURLException e) { e.printStackTrace(); }
 		catch(IOException e) {
 			System.err.println("WARNING! No connection to version update server.");
+			if(debug) e.printStackTrace();
 		}
-
-		return null;
+		
+		return version;
 	}
 	  
 	
 	public static void checkForUpdates() {	
-		String releaseVersion = getReleaseVersion();
+		String releaseVersion = getReleaseVersion();	
 		if(releaseVersion == null) return;
 		
 		VersionString release = new VersionString(releaseVersion);
@@ -693,6 +705,8 @@ public class CRUSH extends Configurator {
 			try {
 				connection.setConnectTimeout(3000);
 				connection.setReadTimeout(3000);
+				connection.connect();
+				
 				BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 				String line = "";
 
@@ -700,6 +714,8 @@ public class CRUSH extends Configurator {
 				System.err.println("[www] Message from www.submm.caltech.edu/~sharc/crush/v2: ");
 				while((line = in.readLine()) != null) System.err.println("[CRUSH] " + line);
 				System.err.println();
+				
+				in.close();
 			}
 			catch(IOException e) {
 				System.err.println("WARNING! Timed out while awaiting messages from CRUSH server.");

@@ -30,7 +30,7 @@ import java.util.*;
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
 
-public abstract class SourceModel implements Cloneable, TableFormatter.Entries {
+public abstract class SourceModel implements Cloneable, TableFormatter.Entries, CopiableContent<SourceModel> {
 	private Instrument<?> instrument;
 	private Configurator options; 
 
@@ -73,6 +73,8 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries {
 		return options.get(name);
 	}
 
+	public final SourceModel copy() { return copy(true); }
+	
 	public SourceModel copy(boolean copyContents) {
 		SourceModel copy = (SourceModel) clone();
 		return copy;

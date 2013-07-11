@@ -177,7 +177,7 @@ public class ScalarMap extends SourceMap {
 		createMask();
 		
 		if(hasOption("indexing")) {
-			try {index(); }
+			try { index(); }
 			catch(Exception e) { 
 				System.err.println("WARNING! Indexing error:");
 				e.printStackTrace();
@@ -316,7 +316,7 @@ public class ScalarMap extends SourceMap {
 			map.despike(level);
 		}
 		
-		filter();
+		filter(false);
 		map.sanitize();
 
 		scan.weight = 1.0;				
@@ -356,7 +356,7 @@ public class ScalarMap extends SourceMap {
 		}
 	}
 	
-	public synchronized void filter() {
+	public synchronized void filter(boolean allowBlanking) {
 		if(!hasOption("source.filter") || getSourceSize() <= 0.0) {
 			map.noExtFilter();
 			map.filterBlanking = Double.NaN;
@@ -389,8 +389,8 @@ public class ScalarMap extends SourceMap {
 		double filterScale = directive.equals("auto") ? 
 				5.0 * getSourceSize() : Double.parseDouble(directive) * getInstrument().getSizeUnit();
 			
-		double filterBlanking = filter.isConfigured("blank") ? filter.get("blank").getDouble() : Double.NaN;
-
+		double filterBlanking = (allowBlanking && filter.isConfigured("blank")) ? filter.get("blank").getDouble() : Double.NaN;
+		
 		if(mode.equalsIgnoreCase("fft")) map.fftFilterAbove(filterScale, filterBlanking);
 		else map.filterAbove(filterScale, filterBlanking);
 			
@@ -458,7 +458,7 @@ public class ScalarMap extends SourceMap {
 		// level...
 		if(hasOption("source.filter")) if(verbose) System.err.print("(filter) ");
 		
-		filter();
+		filter(true);
 		map.filterCorrect();
 		
 		// Noise and exposure clip after smoothing for evened-out coverage...

@@ -30,10 +30,12 @@ import kovacs.math.Vector2D;
 
 
 public abstract class HorizontalFrame extends Frame implements GroundBased {
-	public HorizontalCoordinates horizontal; // includes chopping offsets
-	public Vector2D horizontalOffset; // includes chopping offsets
-	public double cosPA, sinPA;
-		
+	public HorizontalCoordinates horizontal; 	// includes chopping offsets
+	public Vector2D horizontalOffset; 			// includes chopping offsets
+	public double cosPA, sinPA;					// parallactic angle.
+	
+	public double zenithTau = 0.0;
+	
 	public HorizontalFrame(Scan<?, ?> parent) {
 		super(parent);
 	}
@@ -44,7 +46,6 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 		else if(horizontal == null) calcHorizontal();
 		super.validate();
 	}
-	
 	
 	@Override
 	public void getEquatorial(final Vector2D position, final EquatorialCoordinates coords) {
