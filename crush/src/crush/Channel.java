@@ -30,7 +30,7 @@ import java.util.StringTokenizer;
 import kovacs.util.*;
 
 
-public abstract class Channel implements Cloneable, Comparable<Channel>, Flagging {
+public abstract class Channel implements Cloneable, Comparable<Channel>, Flagging, Copiable<Channel> {
 	public Instrument<?> instrument;
 	
 	public int index;

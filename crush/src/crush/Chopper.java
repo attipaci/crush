@@ -25,7 +25,7 @@ package crush;
 import kovacs.util.*;
 
 
-public class Chopper implements Cloneable {
+public class Chopper implements Cloneable, Copiable<Chopper> {
 	public int positions = 0; // 0 for indeterminate, -1 for sweeping mode
 	public double frequency = Double.NaN;
 	public double amplitude = 0.0;

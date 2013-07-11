@@ -40,16 +40,14 @@ public abstract class Frame implements Cloneable, Flagging {
 	
 	public double MJD, LST;
 	public double sinA = Double.NaN, cosA = Double.NaN; // These are the projected array rotation...
-	
-	public double zenithTau = 0.0;
-	public float transmission = 1.0F;
-	
+
 	public int flag = 0;
 	public double dof = 1.0;
 	public double dependents = 0.0;
 	public float relativeWeight = 1.0F;
 	
 	public int sign = 1;
+	public float transmission = 1.0F;
 	
 	// Some temporary fields to speed up some operations...
 	public float tempC, tempWC, tempWC2;
@@ -128,7 +126,7 @@ public abstract class Frame implements Cloneable, Flagging {
 		sign = Math.random() < 0.5 ? -1 : 1;
 	}
 		
-	public double getSourceGain(int mode) throws IllegalArgumentException {
+	public float getSourceGain(final int mode) throws IllegalArgumentException {
 		if(mode == TOTAL_POWER) return sign * transmission;
 		else throw new IllegalArgumentException(getClass().getSimpleName() + " does not define signal mode " + mode);
 	}

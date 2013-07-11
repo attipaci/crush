@@ -420,7 +420,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		else if(offsetSystemName.equals("equatorial")) offsetSystem = EquatorialCoordinates.class;
 		else throw new IllegalStateException("Offset system '" + offsetSystemName + "' is not implemented.");
 		
-		System.err.println(" Angles are " + (projectedOffsets ? "" : "not ") + " projected");
+		System.err.println(" Angles are " + (projectedOffsets ? "" : "not ") + "projected");
 		
 		// NOT Used...
 		//isPlanetary = header.getBooleanValue("MOVEFRAM", false);

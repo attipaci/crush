@@ -1,9 +1,46 @@
 
+2.14-2 (devel.8)
+
+
+	Overview
+	=====================================================================
+	This update fixes a critical bug introduced in the last release, which
+	could affect calibration and result in excess noise.
+	Other than the bug fix, there is not much change in functionality.
+	However, a lot of work happened under the hood. CRUSH packages have
+	become simpler (though larger), while the utility classed that used to 
+	be an integral part of CRUSH have started an existence on their own as
+	the 'kovacs.util' project. This way, many of the powerful Java tools 
+	developed for CRUSH can benefit other projects also. The new 
+	kovacs.util classes are currently undergoing some rapid development. 
+	Many bits of old code have been cleaned up and re-optimized to work 
+	ever faster...
+	=====================================================================	
+
+
+	[CRITICAL] The quick-and-dirty DC levelling that removed DC offsets 
+	from a subset of frames only. Ouch! Unfortunately the effect of this 
+	bug propagated to the sky-noise removal and gain estimation, which in 
+	turn could affect calibration and produce excess noise. Not all 
+	instruments and all scans were affected equally. But, everyone using 
+	version 2.14-1 is advised to update to this new release as soon
+	as possible.
+
 	[PACKAGE] The streamlined packaging of CRUSH no longer includes the
 	hundreds of individual source and binary files. Instead, it includes
-	a handful of JAR archives. The source code, no longer bundled, remains
-	available through the SourceForge project page (click the Project tab
-	on top of the CRUSH homepage.)
+	a handful of JAR archives. The source code is also included as a JAR
+	, and remains available through the SourceForge project page (click 
+	the Project tab on top of the CRUSH homepage.)
+
+	[TWEAK] LSS filtering tweaked such that filter blanking is applied
+	only for the composite map, but not on a per-scan basis. This should
+	not result in any noticeable change for 'deep' mode reductions, where
+	filtering is normally used, since individual scans should not have
+	any features bright enough to exceed the blanking threshold, by
+	definition. 
+
+	[TWEAK] Modified connection procedure for checking updates. Hopefully
+	this resolves the hanging when crush is run with a stale connection.
 
 	[CODE] {SHARC-2} {MAKO} Removed duplicate code between SHARC-2 and
 	MAKO via designated common ancestors. This should also reduce the 
@@ -15,6 +52,17 @@
 	[CODE] Java utilities previously included in crush are now managed
 	separately from crush under the 'kovacs.util' project, and are imported
 	into crush through a JAR.
+
+	[CODE] zenithTau moved Frame -> HorizontalFrame.
+
+	[CODE] Frame.getSourceGain(mode) return type changed from double to
+	float. It was normally used in a context with other floats, making
+	the extra precision unnecessary, while requiring a typecast.	
+
+	[CONFIG] LSS filter blanking is now disabled by default, even in deep
+	mode. This way, the filtered map has a constant PSF rather than the
+	S/N-dependent filtered PSF shape when blanking was used. Users can 
+	enable blanking if they desire.
 
 	[UPDATE] Leap seconds data good until 28 Dec 2013. (No new leap second
 	was added in June 2013).
@@ -33,7 +81,8 @@
 	======================================================================
 
 
-	[BUG] The option '-planetary' produced images upside down. Ooops.
+	[BUG] The option '-planetary' produced RA/DEC images upside down. 
+	Ooops.
 
 	[BUG] Suggested pointing corrections were sometimes wrong, when PNG
 	thumbnail writing was on. It was a case a bad inheritance, by which

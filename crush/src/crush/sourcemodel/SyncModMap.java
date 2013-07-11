@@ -95,7 +95,7 @@ public class SyncModMap extends ScalarMap {
 					midFrame.project(pixel.getPosition(), projector);
 					map.getIndex(projector.offset, index);
 			
-					final float fGC = (isMasked(index) ? 1.0F : (float)filtering) * midFrame.transmission;
+					final float fGC = (isMasked(index) ? 1.0F : (float) filtering) * midFrame.getSourceGain(signalMode);
 					
 					for(final Channel channel : pixel) if(!Float.isNaN(value[channel.index])) {
 						value[channel.index] /= integral;
@@ -129,7 +129,7 @@ public class SyncModMap extends ScalarMap {
 				final Frame exposure = integration.get(t);	
 				if(exposure == null) continue;
 				
-				final float fG = waveform[blockt] * integration.gain * exposure.transmission; 
+				final float fG = waveform[blockt] * integration.gain * exposure.getSourceGain(signalMode); 
 				
 				if(exposure != null) for(Pixel pixel : pixels) { 
 					getIndex(exposure, pixel, projector, index);

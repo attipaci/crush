@@ -425,7 +425,7 @@ public abstract class SourceMap extends SourceModel {
 			parms.add(channel, np * sourceGain[channel.index] * sourceGain[channel.index] / channel.variance);
 
 		for(Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) 
-			parms.add(exposure, nf * exposure.relativeWeight * exposure.transmission);
+			parms.add(exposure, nf * exposure.relativeWeight * Math.abs(exposure.getSourceGain(signalMode)));
 
 		for(Pixel pixel : pixels) parms.apply(pixel, 0, integration.size());
 
