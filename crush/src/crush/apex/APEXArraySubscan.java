@@ -185,7 +185,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			if(exposure != null) if(exposure.isFlagged(Frame.CHOP_TRANSIT)) set(i, null);
 		}
 		
-		removeOffsets(true, false);
+		removeOffsets(false);
 		
 		// Get the initial phase data...
 		updatePhases();

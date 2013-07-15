@@ -61,6 +61,18 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	}
 	
 	@Override
+	public boolean equals(Object o) {
+		if(!super.equals(o)) return false;
+		Channel c = (Channel) o;
+		if(c.instrument != instrument) return false;
+		return c.storeIndex == storeIndex; 
+	}
+	
+	@Override
+	public int hashCode() { return storeIndex; }
+	
+	
+	@Override
 	public Object clone() {
 		try { return super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }		

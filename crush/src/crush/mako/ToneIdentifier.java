@@ -153,7 +153,7 @@ public class ToneIdentifier extends ArrayList<ResonanceID> implements Cloneable 
 		};
 		
 		opt.init(new double[] { guessT });
-		opt.setStartSize(new double[] { 0.5 * TRange.span() });
+		opt.setStartSize(new double[] { 0.3 * TRange.span() });
 		opt.precision = 1e-12;
 		opt.verbose = false;
 		opt.minimize(attempts);

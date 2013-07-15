@@ -89,7 +89,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	protected boolean isDetectorStage = false;
 	protected boolean isValid = false;
-		
+	
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
 	// The constructor of Integration thus copies the Scan instrument for private use...
 	@SuppressWarnings("unchecked")
@@ -186,7 +186,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Must do this before direct tau estimates...
 		if(hasOption("level") || !hasOption("pixeldata")) {
 			System.err.println("   Removing DC offsets.");
-			removeOffsets(true, false);
+			removeOffsets(false);
 		}
 			
 		if(hasOption("tau")) {
@@ -289,9 +289,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 			
 		int flagged = 0;
+		final double f = 1.0 / N;
 		final double critical = option("range.flagfraction").getDouble();
 		for(final Channel channel : instrument) {
-			if((double) n[channel.index] / N > critical) {
+			if(f * n[channel.index] > critical) {
 				channel.flag(Channel.FLAG_DAC_RANGE | Channel.FLAG_DEAD);
 				flagged++;
 			}
@@ -532,7 +533,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	public boolean hasGaps(int tolerance) {
 		double lastMJD = Double.NaN;
-		for(FrameType exposure : this) if(!Double.isNaN(lastMJD)) {
+		for(final Frame exposure : this) if(!Double.isNaN(lastMJD)) {
 			final int gap = (int)Math.round((exposure.MJD - lastMJD) * Unit.day / instrument.samplingInterval) - 1;
 			if(gap > tolerance) return true;
 		}
@@ -542,7 +543,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void fillGaps() {
 		double lastMJD = Double.NaN;
 
-		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(2*size());
+		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(size() << 1);
 		
 		for(final FrameType exposure : this) if(!Double.isNaN(lastMJD)) {
 			final int gap = (int)Math.round((exposure.MJD - lastMJD) * Unit.day / instrument.samplingInterval) - 1;
@@ -619,7 +620,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return 0.5 * (Math.atan2(first.sinPA, first.cosPA) + Math.atan2(last.sinPA, last.cosPA));
 	}
 	
-	public void removeOffsets(final boolean robust, final boolean quick) {
+	public void removeOffsets(final boolean robust) {
 		removeDrifts(instrument, size(), robust);
 	}
 	
@@ -689,38 +690,47 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(Channel channel : group) meanLevel(channel, parms, fromt, tot, aveOffset[channel.index]);
 	}
 	
-	private synchronized void meanLevel(Channel channel, final Dependents parms, final int fromt, int tot, WeightedPoint aveOffset) {
+	private synchronized void meanLevel(final Channel channel, final Dependents parms, final int fromt, int tot, WeightedPoint aveOffset) {
 		tot = Math.min(tot, size());
 		
 		double sum = 0.0, sumw = 0.0;
 		
 		// Calculate the weight sums for every pixel...
-		for(final Frame exposure : this) if(exposure != null) 
+		for(int t=fromt; t<tot; t++) {
+			final Frame exposure = get(t);
+			if(exposure == null) continue; 
+		
 			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0) {
 				sum += exposure.relativeWeight * exposure.data[channel.index];
 				sumw += exposure.relativeWeight;
+			}
 		}
 
 		// Calculate the maximum-likelihood offsets and the channel dependence...
 		if(sumw > 0.0) {
 			sum /= sumw;
-			parms.add(channel, 1.0);
 			if(aveOffset != null) aveOffset.average(sum, sumw);
-		}
+		
+			// Remove offsets from data and account frame dependence...	
+			for(int t=fromt; t<tot; t++) {
+				final Frame exposure = get(t);
+				if(exposure == null) continue;
 
-		// Remove offsets from data and account frame dependence...	
-		if(sumw > 0.0) for(final Frame exposure : this) if(exposure != null) {
-			exposure.data[channel.index] -= sum;
-			parms.add(exposure, exposure.relativeWeight / sumw); 
+				exposure.data[channel.index] -= sum;
+
+				if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0)
+					parms.add(exposure, exposure.relativeWeight / sumw); 
+			}
+			parms.add(channel, 1.0);
 		}
 	}
-	
+
 	private synchronized void medianLevel(final ChannelGroup<?> group, final Dependents parms, final int fromt, int tot, final WeightedPoint[] buffer, final WeightedPoint[] aveOffset) {
 		tot = Math.min(tot, size());	
 		for(final Channel channel : group) medianLevel(channel, parms, fromt, tot, buffer, aveOffset[channel.index]);
 	}
 	
-	private synchronized void medianLevel(Channel channel, final Dependents parms, final int fromt, int tot, final WeightedPoint[] buffer, final WeightedPoint aveOffset) {
+	private synchronized void medianLevel(final Channel channel, final Dependents parms, final int fromt, int tot, final WeightedPoint[] buffer, final WeightedPoint aveOffset) {
 		tot = Math.min(tot, size());
 	
 		final WeightedPoint offset = new WeightedPoint();
@@ -730,12 +740,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		final int c = channel.index;
 		
-		for(final Frame exposure : this) if(exposure != null) 
+		for(int t=fromt; t<tot; t++) {
+			final Frame exposure = get(t);
+			if(exposure == null) continue; 
+		
 			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0) {
 				final WeightedPoint point = buffer[n++];
 				point.setValue(exposure.data[c]);
 				point.setWeight(exposure.relativeWeight);
 				sumw += point.weight();
+			}
 		}
 		
 
@@ -743,9 +757,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			Statistics.smartMedian(buffer, 0, n, 0.25, offset);				
 			if(aveOffset != null) aveOffset.average(offset);
 
-			for(final Frame exposure : this) if(exposure != null) {
+			for(int t=fromt; t<tot; t++) {
+				final Frame exposure = get(t);
+				if(exposure == null) continue;
+			
 				exposure.data[c] -= offset.value();
-				parms.add(exposure, exposure.relativeWeight / sumw);
+				
+				if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)
+					parms.add(exposure, exposure.relativeWeight / sumw);
 			}
 			parms.add(channel, 1.0);
 		}
@@ -927,7 +946,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			final int tot = Math.min(fromt + blockSize, size());
 			
-			for(int t=tot; --t >= fromt; ) {
+			for(int t=fromt; t < tot; t++) {
 				final Frame exposure = get(t);
 				if(exposure == null) continue;
 
@@ -937,7 +956,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					points++;
 				}
 				deps += exposure.dependents;
-			}
+			}		
 			
 			if(points > deps && sumChi2 > 0.0) {
 				final double dof = 1.0 - deps / points;
@@ -956,6 +975,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			else for(int t=tot; --t >= fromt; ) {
 				final Frame exposure = get(t);
 				if(exposure == null) continue;
+				
+				exposure.dof = 0.0F;
+				
 				if(points > deps) exposure.relativeWeight = Float.NaN;
 				else {
 					exposure.relativeWeight = 0.0F;
@@ -974,13 +996,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(hasOption("weighting.frames.noiserange")) wRange = option("weighting.frames.noiserange").getRange(true);
 		else wRange.full();
-		
-		/*
-		PrintStream out = null;
-		try { out = new PrintStream(new FileOutputStream("frames.dat")); }
-		catch(IOException e) { e.printStackTrace(); }
-		*/
-		 
+			 
 		for(Frame exposure : this) if(exposure != null) {
 			if(Float.isNaN(exposure.relativeWeight)) exposure.relativeWeight = 1.0F;
 			else exposure.relativeWeight *= inorm;
@@ -991,18 +1007,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			else exposure.unflag(Frame.FLAG_WEIGHT);
 			
-			/*
-			out.println(exposure.index
-					+ "\t" + exposure.isFlagged(Frame.FLAG_WEIGHT) 
-					+ "\t" + exposure.relativeWeight 
-					+ "\t" + exposure.dependents
-					+ "\t" + exposure.dof
-			); 
-			*/
-			
 		}
-		
-		//out.close();
 	}
 	
 	
@@ -1101,7 +1106,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		int nt = size();
 			
 		for(int t=fromt; t<nt; t++) {	
-			Frame exposure = get(t);
+			final Frame exposure = get(t);
 			if(exposure == null) continue;
 			if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
 			if(exposure.relativeWeight <= 0.0) continue;
@@ -1251,7 +1256,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else if(method.equalsIgnoreCase("absolute")) despikeAbsolute(level);
 		else if(method.equalsIgnoreCase("gradual")) despikeGradual(level, 0.1);
 		else if(method.equalsIgnoreCase("features")) {
-			int maxT = framesFor(filterTimeScale) / 2;
+			int maxT = framesFor(filterTimeScale) >> 1;
 			
 			if(despike.isConfigured("width")) if(!despike.get("width").equals("auto"))
 				maxT = (int)Math.ceil(despike.get("width").getDouble() * Unit.s / instrument.samplingInterval);
@@ -1385,7 +1390,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			// check and divide...
 			int n = size();
-			for(int blockSize = 1; blockSize <= maxBlockSize; blockSize *= 2) {
+			for(int blockSize = 1; blockSize <= maxBlockSize; blockSize <<= 1) {
 				for(int T=1; T < n; T++) if(T < n) {
 					diff.setValue(data[T]);
 					diff.setWeight(weight[T]);
@@ -1401,7 +1406,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					}
 				}
 				
-				n /= 2;
+				n >>= 1;
 				
 				for(int to=0, from=0; to < n; to++, from += 2) {
 					// to = average(from, from+1)
@@ -1585,7 +1590,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			else sum.add(pos[t]);
 		}
 
-		final int nm = n/2;
+		final int nm = n >> 1;
 		final int np = n - nm;
 		final int tot = size()-np-1;
 		
@@ -1606,7 +1611,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	
-	public Signal getPositionSignal(Mode mode, final int type, final Motion direction) {
+	public Signal getPositionSignal(final Mode mode, final int type, final Motion direction) {
 		final Vector2D[] pos = getSmoothPositions(type);
 		final double[] data = new double[size()];	
 		for(int t=data.length; --t >= 0; ) data[t] = pos[t] == null ? Float.NaN : direction.getValue(pos[t]);
@@ -1769,6 +1774,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			final int c = channel.index;
 			getWeightedTimeStream(channel, signal);
 
+			// Level the signal to avoid DC spectral leakage from padding...
+			level(signal, channel);
+			
 			getFFT().real2Amplitude(signal);
 			toRejected(signal, response);
 			getFFT().amplitude2Real(signal);
@@ -1861,7 +1869,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	@SuppressWarnings("unchecked")
 	public synchronized void downsample(final int n) {
 		
-		final int windowSize = (int)Math.round(1.82 * WindowFunction.getEquivalentWidth("Hann")*n);
+		final int windowSize = (int)Math.round(1.82 * n * WindowFunction.getEquivalentWidth("Hann"));
 		final int centerOffset = windowSize/2 + 1;
 		final double[] w = WindowFunction.get("Hann", windowSize);
 		

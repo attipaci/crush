@@ -452,8 +452,8 @@ public class Signal implements Cloneable {
 	}
 	
 	public double getCovariance() {
-		ChannelGroup<?> channels = mode.getChannels().copyGroup().discard(~0);
-		int nc = integration.instrument.size();
+		final ChannelGroup<?> channels = mode.getChannels().copyGroup().discard(~0);
+		final int nc = integration.instrument.size();
 		
 		final double[] sumXS = new double[nc];
 		final double[] sumX2 = new double[nc];
@@ -461,19 +461,18 @@ public class Signal implements Cloneable {
 		
 		for(final Frame exposure : integration) if(exposure != null) {
 			for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
-				final int c = channel.index;
-				final float x = exposure.data[c];
 				final float S = valueAt(exposure);
 				if(!Float.isNaN(S)) {
-					sumXS[c] += channel.weight * x * S;
-					sumX2[c] += channel.weight * x * x;
-					sumS2[c] += channel.weight * S * S;
+					final float x = exposure.data[channel.index];
+					sumX2[channel.index] += channel.weight * x * x;
+					sumXS[channel.index] += channel.weight * x * S;
+					sumS2[channel.index] += channel.weight * S * S;
 				}
 			}	
 		}
 		
 		double C2 = 0.0;
-		for(Channel channel : channels) {
+		for(final Channel channel : channels) {
 			final int c = channel.index;
 			if(sumS2[c] > 0.0) C2 += sumXS[c] * sumXS[c] / (sumX2[c] * sumS2[c]);
 		}

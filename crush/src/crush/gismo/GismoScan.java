@@ -136,9 +136,15 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	
 	@Override
 	public String getPointingString(Vector2D pointing) {
-		return super.getPointingString(pointing) + "\n\n" +
-			"  PaKo> set pointing " + Util.f1.format((pointing.getX() + pakoOffsets.getX()) / Unit.arcsec) + " " 
+		String info = super.getPointingString(pointing) + "\n\n";
+		
+		if(hasOption("pointing.model") || hasOption("pointing.log")) 
+			info += "  (For PaKo pointing corrections blacklist 'pointing.model' and 'pointing.log')";
+		else
+			info += "  PaKo> set pointing " + Util.f1.format((pointing.getX() + pakoOffsets.getX()) / Unit.arcsec) + " " 
 				+ Util.f1.format((pointing.getY() + pakoOffsets.getY()) / Unit.arcsec);
+		
+		return info;
 	}
 
 	public File getFile(String scanDescriptor) throws FileNotFoundException {

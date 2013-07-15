@@ -58,6 +58,15 @@ public class ChannelGroup<ChannelType extends Channel> extends ArrayList<Channel
 		for(ChannelType channel : this) copy.add((ChannelType) channel.copy());
 		return copy;
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(!super.equals(o)) return false;
+		return ((ChannelGroup<?>) o).name.equals(name);
+	}
+	
+	@Override
+	public int hashCode() { return name.hashCode(); }
 
 	public String getName() { return name; }
 	
