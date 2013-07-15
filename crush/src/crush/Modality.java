@@ -53,6 +53,17 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		this.id = id;
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		if(!super.equals(o)) return false;
+		return ((Modality<?>) o).name.equals(name);
+	}
+	
+	@Override
+	public int hashCode() {
+		return name.hashCode();
+	}
+	
 	public Modality(String name, String id, ChannelDivision<?> division, Field gainField, Class<? extends ModeType> modeClass) { 
 		this(name, id, division, new FieldGainProvider(gainField), modeClass);
 	}

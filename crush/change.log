@@ -1,12 +1,12 @@
 
-2.14-2 (devel.8)
+2.14-2 (15 July 2013)
 
 
 	Overview
 	=====================================================================
 	This update fixes a critical bug introduced in the last release, which
 	could affect calibration and result in excess noise.
-	Other than the bug fix, there is not much change in functionality.
+	Other than the bug fix, there is little change in functionality.
 	However, a lot of work happened under the hood. CRUSH packages have
 	become simpler (though larger), while the utility classed that used to 
 	be an integral part of CRUSH have started an existence on their own as
@@ -28,9 +28,27 @@
 
 	[PACKAGE] The streamlined packaging of CRUSH no longer includes the
 	hundreds of individual source and binary files. Instead, it includes
-	a handful of JAR archives. The source code is also included as a JAR
-	, and remains available through the SourceForge project page (click 
-	the Project tab on top of the CRUSH homepage.)
+	a handful of JAR archives. The source code is also included as a JAR,
+	and remains available via SVN through the SourceForge project page 
+	(click the Project tab on top of the CRUSH homepage.)
+
+	[UTIL] Including kovacs.util classes with version 0.02-1.
+
+	[FIX] {LABOCA} RCP configuration was incorrect for 2008-05-16 to 
+	2008-06-15 due to a typo in the configuration file (laboca/default.cfg)
+
+	[FIX] Parameter accounting of pixel drift/offset removal was sloppy.
+	Now fixed.
+
+	[FIX] {MAKO} 'assign.guessT' was not used. Fixed.
+
+	[TWEAK] {GISMO} PaKo pointing corrections suggested only if no 
+	pointing model override (via 'pointing.model') and no incremental
+	corrections (via 'pointing.log') have been applied.
+
+	[TWEAK] {LABOCA} Chopped photometry DC levelling through mean not 
+	median. Median can get ugly with bimodal distributions, such as is the
+	chopper signal. The mean is a safer bet here.
 
 	[TWEAK] LSS filtering tweaked such that filter blanking is applied
 	only for the composite map, but not on a per-scan basis. This should
@@ -41,6 +59,10 @@
 
 	[TWEAK] Modified connection procedure for checking updates. Hopefully
 	this resolves the hanging when crush is run with a stale connection.
+
+	[CONFIG] {MAKO} 'gradients' enabled for 'faint' and 'deep' reductions.
+
+	[CONFIG] {MAKO} Updated calibration.
 
 	[CODE] {SHARC-2} {MAKO} Removed duplicate code between SHARC-2 and
 	MAKO via designated common ancestors. This should also reduce the 
@@ -59,6 +81,14 @@
 	float. It was normally used in a context with other floats, making
 	the extra precision unnecessary, while requiring a typecast.	
 
+	[CONFIG] {GISMO} Added pointing model and incremental corrections
+	table for the 20143 April run. The pointing is good to 2.5" rms in AZ
+	and 2.9" rms in EL for the entire run. Based on 1107 pointing 
+	observations.
+
+	[CONFIG] {LABOCA} {SABOCA} Configurations (RCP, tau and calibration
+	data) are updated to what is available as of 2013-07-15.
+
 	[CONFIG] LSS filter blanking is now disabled by default, even in deep
 	mode. This way, the filtered map has a constant PSF rather than the
 	S/N-dependent filtered PSF shape when blanking was used. Users can 
@@ -66,6 +96,8 @@
 
 	[UPDATE] Leap seconds data good until 28 Dec 2013. (No new leap second
 	was added in June 2013).
+
+
 
 
 2.14-1 (2 June 2013)

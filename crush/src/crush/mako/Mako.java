@@ -166,7 +166,7 @@ public class Mako extends CSOArray<MakoPixel> {
 		
 		ResonanceList associations = new ResonanceList(pixels);
 		
-		double guessT = (hasOption("toneid.guesst") ? option("toneid.guesst").getDouble() : 300.0) * Unit.K;
+		double guessT = (hasOption("assign.guesst") ? option("assign.guesst").getDouble() : 300.0) * Unit.K;
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line, ", \t");
