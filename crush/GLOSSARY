@@ -3172,8 +3172,9 @@
 
 :: write.eps		@Since: 2.14
 			Write final result into an EPS image, if available.
-			As of 2.14, only 'skydip' reductions support EPS output
-			and only when the 'gnuplot' options is also set.
+			As of 2.15, both photometry and 'skydip' reductions 
+			support EPS output but only when the 'gnuplot' options 
+			is also set.
 			@See: 'gnuplot', 'write.png', 'skydip'
 
 :: write.pixeldata	@Expert

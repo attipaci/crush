@@ -99,10 +99,10 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		try { addDivision(getDivision("pins", GismoPixel.class.getField("pin"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
 		
-		try { addDivision(getDivision("cols", GismoPixel.class.getField("col"), Channel.FLAG_DEAD)); }
+		try { addDivision(getDivision("cols", GismoPixel.class.getField("colGroup"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
 		
-		try { addDivision(getDivision("rows", GismoPixel.class.getField("row"), Channel.FLAG_DEAD)); }
+		try { addDivision(getDivision("rows", GismoPixel.class.getField("rowGroup"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
 		
 	}
@@ -110,19 +110,20 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	@Override
 	public void addModalities() {
 		super.addModalities();
-		
-		try { 
-			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), GismoPixel.class.getField("muxGain"));
+			
+		try {
+			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), GismoPixel.class.getField("muxGain"));		
+			muxMode.solveGains = false;
 			muxMode.setGainFlag(GismoPixel.FLAG_MUX);
 			addModality(muxMode);		
 			addModality(muxMode.new CoupledModality("flips", "f", new TraceFlip()));
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }	
 		
+		
 		// Flips not coupled to MUX gains?		
 		//try { addModality(new CorrelatedModality("flips", "f", divisions.get("mux"), GismoPixel.class.getField("flipGain"))); }
 		//catch(NoSuchFieldException e) { e.printStackTrace(); }	
-
 		
 		try { 
 			Modality<?> pinMode = new CorrelatedModality("pins", "p", divisions.get("pins"), GismoPixel.class.getField("pinGain")); 
@@ -262,7 +263,17 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 			
 		if(!isEmpty()) clear();
 		ensureCapacity(pixels);
-		for(int c=0; c<pixels; c++) add(new GismoPixel(this, c));
+		
+		int rowGrouping = hasOption("correlated.rows.group") ? option("correlated.rows.group").getInt() : 1;
+		int colGrouping = hasOption("correlated.cols.group") ? option("correlated.cols.group").getInt() : 1;
+			
+		
+		for(int c = 0; c<pixels; c++) {
+			GismoPixel pixel = new GismoPixel(this, c);
+			pixel.rowGroup = pixel.row / rowGrouping;
+			pixel.colGroup = pixel.col / colGrouping;
+			add(pixel);
+		}
 		
 		int iMask = hdu.findColumn("PIXMASK");
 		int iBias = hdu.findColumn("DETECTORBIAS");

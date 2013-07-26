@@ -186,7 +186,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Must do this before direct tau estimates...
 		if(hasOption("level") || !hasOption("pixeldata")) {
 			System.err.println("   Removing DC offsets.");
-			removeOffsets(false);
+			boolean robust = false;
+			if(hasOption("estimator")) if(option("estimator").equals("median")) robust=true;
+			removeOffsets(robust);
 		}
 			
 		if(hasOption("tau")) {
@@ -398,7 +400,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	public void calcScanSpeedStats() {
-		aveScanSpeed = getAverageScanningVelocity(0.5 * Unit.s);
+		aveScanSpeed = getMedianScanningVelocity(0.5 * Unit.s);
 		System.err.println("   Typical scanning speeds are " 
 				+ Util.f1.format(aveScanSpeed.value()/(instrument.getSizeUnit()/Unit.s)) 
 				+ " +- " + Util.f1.format(aveScanSpeed.rms()/(instrument.getSizeUnit()/Unit.s)) 
@@ -1639,7 +1641,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return v;
 	}
 	
-	public DataPoint getAverageScanningVelocity(double smoothT) {
+	public DataPoint getMedianScanningVelocity(double smoothT) {
 		final Vector2D[] v = getScanningVelocities();		
 		final float[] speed = new float[v.length];
 		

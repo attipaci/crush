@@ -33,9 +33,9 @@ import crush.Channel;
 import crush.array.SimplePixel;
 
 public class GismoPixel extends SimplePixel {
-	public int row, col, mux, pin;
+	public int row, col, mux, pin, colGroup, rowGroup;
 	public Vector2D size = defaultSize;
-	public double muxGain = 1.0, pinGain = 1.0, flipGain = 1.0, colGain = 1.0, rowGain = 1.0;
+	public double muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0, flipGain, blockGain;
 	
 	// 16 x 8 (rows x cols)
 	
@@ -43,9 +43,11 @@ public class GismoPixel extends SimplePixel {
 		super(array, zeroIndex+1);
 		row = zeroIndex / 8;
 		col = zeroIndex % 8;
-		// mux & pin filled when reading 'wiring.dat'
 		
+		// mux & pin filled when reading 'wiring.dat'
+	
 		flipGain = (col & 2) == 0 ? 1.0 : -1.0;
+		blockGain = (row & 4) == 0 ? 1.0 : -1.0;
 		
 		calcPosition();
 		
@@ -93,7 +95,7 @@ public class GismoPixel extends SimplePixel {
 	}
 	
 	
-	public static Vector2D defaultSize = new Vector2D(13.9 * Unit.arcsec, 10.56 * Unit.arcsec);
+	public static Vector2D defaultSize = new Vector2D(13.88 * Unit.arcsec, 13.77 * Unit.arcsec);
 	
 	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
 	public final static int FLAG_FLIP = 1 << nextSoftwareFlag++;

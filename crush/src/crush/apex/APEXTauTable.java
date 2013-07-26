@@ -93,9 +93,13 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 				mean = getLocalAverage(new TimeStamp(MJD));
 			}
 			else {
-				System.err.println("   WARNING! Tau is unknown.");
+				System.err.println("   WARNING! Local tau is unknown.");
 				return 0.0;
 			}
+		}
+		else if(Double.isInfinite(mean.tau.value())) {
+			System.err.println("   WARNING! Inifinite local tau.");
+			return 0.0;
 		}
 		
 		System.err.println("   Local average tau = " + Util.f3.format(mean.tau.value()) + " (from " + mean.measurements + " skydips)");

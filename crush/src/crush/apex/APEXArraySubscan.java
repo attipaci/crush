@@ -96,6 +96,10 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		
 		Vector2D left = new Vector2D(nodPhase == Frame.CHOP_LEFT ? 0.0 : 2.0 * chopper.amplitude, 0.0);
 		Vector2D right = new Vector2D(nodPhase == Frame.CHOP_LEFT ? -2.0 * chopper.amplitude : 0.0, 0.0);
+		
+		// 1/5 beams ~90% on the boundary
+		// 1/4 beams ~85% on the boundary
+		// 1/3 beams ~75% on the boundary
 		double tolerance = instrument.resolution / 5.0;
 		
 		markChopped(left, right, tolerance);

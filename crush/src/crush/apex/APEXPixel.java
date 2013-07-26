@@ -51,68 +51,76 @@ public abstract class APEXPixel extends SimplePixel {
 		return copy;
 	}
 	
-	public WeightedPoint getCorrectedLROffset(PhaseSet phases, int i, Collection<APEXPixel> neighbours) {
-		WeightedPoint base = new WeightedPoint();
-		for(APEXPixel pixel : neighbours) {
-			WeightedPoint bias = pixel.getRelativeOffset(phases, i);
-			bias.scale(1.0 / pixel.gain);
-			base.average(bias);
+
+	public WeightedPoint getRelativeOffset(PhaseSet phases, int i) {
+		int phase = phases.get(i).phase;
+		
+		final WeightedPoint signal = phases.get(i).getValue(this);		
+		final WeightedPoint base = new WeightedPoint();
+		
+		if(phases.get(i-1).phase != phase) base.average(phases.get(i-1).getValue(this));
+		if(phases.get(i+1).phase != phase) base.average(phases.get(i+1).getValue(this));
+		
+		signal.subtract(base);		
+		return signal;
+	}
+	
+	public WeightedPoint getCorrectedRelativeOffset(final PhaseSet phases, final int i, final Collection<APEXPixel> neighbours, final double[] G) {
+		final WeightedPoint base = new WeightedPoint();
+		
+		for(final APEXPixel pixel : neighbours) if(!pixel.isFlagged()) if(pixel != this) {
+			final WeightedPoint lr = pixel.getRelativeOffset(phases, i);
+			if(G[pixel.index] == 0.0) continue;
+			lr.scale(1.0 / G[pixel.index]);
+			base.average(lr);
 		}
 
-		WeightedPoint value = getRelativeOffset(phases, i);
-		value.scale(1.0 / gain);
+		final WeightedPoint value = getRelativeOffset(phases, i);
 		
+		base.scale(G[this.index]);	
 		value.subtract(base);
-		value.scale(gain);
 		
 		return value;
 	}
 
 	
-	
-	public WeightedPoint getRelativeOffset(PhaseSet phases, int i) {
-		final WeightedPoint signal = phases.get(i).getValue(this);	
-		final WeightedPoint base = phases.get(i-1).getValue(this);
-		base.average(phases.get(i+1).getValue(this));
-		signal.subtract(base);		
-		return signal;
-	}
-	
 	/*
-	public void updateLROffset(PhaseSet phases) {
+	@Override
+	public void update(PhaseSet phases) {
 		if(LROffset == null) LROffset = new WeightedPoint();
-		WeightedPoint increment = getLROffset(phases);
-		if(increment.weight <= 0.0) return;
-		
-		for(PhaseOffsets offsets : phases) offsets.value[index] -= increment.value;
-		
-		LROffset.value += increment.value;
-		LROffset.weight = increment.weight;
+		WeightedPoint increment = getLRIncrement(phases);
+		if(increment.weight() > 0.0) {
+			for(PhaseOffsets offsets : phases) if(offsets.phase == Frame.CHOP_LEFT) offsets.value[index] -= increment.value();
+			LROffset.add(increment.value());
+			LROffset.setWeight(increment.weight());
+		}
+		phases.level(this);
 	}
 	*/
 	
-	
 	public WeightedPoint getLROffset(PhaseSet phases) {
-		final WeightedPoint bias = new WeightedPoint();
+		final WeightedPoint lr = new WeightedPoint();
 		
 		for(int i=phases.size()-1; --i > 0; ) {
 			final PhaseOffsets offsets = phases.get(i);
-			if((offsets.phase & Frame.CHOP_LEFT) != 0) bias.average(getRelativeOffset(phases, i));
+			if((offsets.phase & Frame.CHOP_LEFT) != 0) lr.average(getRelativeOffset(phases, i));
 		}
 		
-		return bias;
+		return lr;
 	}
 
-	public WeightedPoint getCorrectedLROffset(PhaseSet phases, Collection<APEXPixel> neighbours) {
-		final WeightedPoint bias = new DataPoint();
+	
+	public WeightedPoint getCorrectedLROffset(PhaseSet phases, Collection<APEXPixel> neighbours, double[] sourceGain) {
+		final WeightedPoint lr = new DataPoint();
 		
 		for(int i=phases.size()-1; --i > 0; ) {
 			final PhaseOffsets offsets = phases.get(i);
-			if((offsets.phase & Frame.CHOP_LEFT) != 0) bias.average(getCorrectedLROffset(phases, i, neighbours));
+			if((offsets.phase & Frame.CHOP_LEFT) != 0) lr.average(getCorrectedRelativeOffset(phases, i, neighbours, sourceGain));
 		}
 		
-		return bias;
+		return lr;
 	}
+
 	
 	
 	public double getLRChi2(PhaseSet phases, double mean) {	
@@ -132,15 +140,15 @@ public abstract class APEXPixel extends SimplePixel {
 		
 		return n > 1 ? chi2/(n-1) : Double.NaN;
 	}
-	
-	public double getCorrectedLRChi2(PhaseSet phases, Collection<APEXPixel> neighbours, double mean) {	
+
+	public double getCorrectedLRChi2(PhaseSet phases, Collection<APEXPixel> neighbours, double mean, double[] sourceGain) {	
 		double chi2 = 0.0;
 		int n = 0;
 		for(int i=phases.size()-1; --i > 0; ) {
 			final PhaseOffsets offsets = phases.get(i);
 			if((offsets.phase & Frame.CHOP_LEFT) == 0) continue;
 
-			WeightedPoint LR = getCorrectedLROffset(phases, i, neighbours);
+			WeightedPoint LR = getCorrectedRelativeOffset(phases, i, neighbours, sourceGain);
 			LR.subtract(mean);
 
 			final double chi = DataPoint.significanceOf(LR);
@@ -150,5 +158,5 @@ public abstract class APEXPixel extends SimplePixel {
 		
 		return n > 1 ? chi2/(n-1) : Double.NaN;
 	}
-	
+
 }

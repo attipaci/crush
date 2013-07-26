@@ -49,8 +49,7 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 	public synchronized void update(ChannelGroup<?> channels) {
 		for(PhaseOffsets offsets : this) offsets.update(channels, dependents);	
 		
-		// Discard the DC component of the phases...
-		for(Channel channel : channels) level(channel); 
+		for(Channel channel : channels) level(channel);
 		
 		generation++;
 	}
@@ -63,12 +62,12 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 		return signals.get(mode).getGainIncrement();
 	}
 	
-	protected synchronized void syncGains(final Mode mode) throws Exception {		
-		signals.get(mode).syncGains();
+	protected synchronized void syncGains(final Mode mode) throws Exception {
+		if(signals.containsKey(mode)) signals.get(mode).syncGains();
 	}
 	
 	// TODO levelling on just the left frames...
-	protected synchronized void level(final Channel channel) {
+	public synchronized void level(final Channel channel) {
 		final int c = channel.index;
 		double sum = 0.0, sumw = 0.0;
 		for(PhaseOffsets offsets : this) if(offsets.flag == 0) {			

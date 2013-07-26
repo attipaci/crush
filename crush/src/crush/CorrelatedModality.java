@@ -113,6 +113,7 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 			CoupledModality.this.setDefaultNames();
 		}
 		
+		
 	}
 	
 }

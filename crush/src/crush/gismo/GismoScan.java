@@ -410,7 +410,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			}
 		}
 		
-		System.err.println(" [" + sourceName + "] of project " + project + " observed on " + date + " at " + startTime + " by " + observer);
+		System.err.println(" [" + sourceName + "] of project " + project);
+		System.err.println(" Observed on " + date + " at " + startTime + " by " + observer);
 		System.err.println(" Equatorial: " + equatorial.toString());	
 		System.err.println(" Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
 		

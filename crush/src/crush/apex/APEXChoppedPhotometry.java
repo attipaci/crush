@@ -22,6 +22,9 @@
  ******************************************************************************/
 package crush.apex;
 
+import java.util.ArrayList;
+
+import kovacs.data.DataPoint;
 import kovacs.data.WeightedPoint;
 import crush.*;
 import crush.sourcemodel.Photometry;
@@ -57,20 +60,21 @@ public class APEXChoppedPhotometry extends Photometry {
 			// Proceed only if there are enough pixels to do the job...
 			if(!checkPixelCount(integration)) continue;
 			
+			
 			for(APEXPixel pixel : subscan.instrument.getObservingChannels()) if(pixel.sourcePhase != 0) {
 				WeightedPoint point = null;
-
-				//ArrayList<APEXPixel> neighbours = subscan.instrument.getNeighbours(pixel, 5.0 * pixel.getResolution());
+	
+				ArrayList<APEXPixel> neighbours = subscan.instrument.getNeighbours(pixel, 5.0 * pixel.getResolution());
 				
 				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.getFixedIndex()];
 				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.getFixedIndex()];
 				else continue;
 					
-				WeightedPoint df = pixel.getLROffset(phases);
+				WeightedPoint df = pixel.getCorrectedLROffset(phases, neighbours, sourceGain);	
+				df.scaleWeight(Math.min(1.0, 1.0 / pixel.getCorrectedLRChi2(phases, neighbours, df.value(), sourceGain)));
 					
-				df.scaleWeight(Math.min(1.0, 1.0 / pixel.getLRChi2(phases, df.value())));
 				df.scale(1.0 / (transmission * subscan.gain * sourceGain[pixel.index]));
-				
+					
 				point.average(df);
 			}
 		}
@@ -87,18 +91,32 @@ public class APEXChoppedPhotometry extends Photometry {
 	
 		// TODO add all pixels chopping over the source to the source flux...
 		sourceFlux.copy(flux[refIndex]);
-		flux[refIndex].noData();		
+		flux[refIndex].noData();
+		
+		DataPoint F = new DataPoint(sourceFlux);
+		F.scale(1.0 / getInstrument().janskyPerBeam());
+		scanFluxes.put(scan, F);
+		
+		scan.getLastIntegration().comments += "\n  [" + scan.getID() + ": " + F.toString() + " Jy/beam]\n";
 	}
 	
 	
 	@Override
 	public void write(String path) throws Exception {	
 		System.out.println("  Note, that the results of the APEX chopped photometry reduction below include");
-		System.out.println("  the best estimate of the systematic errors, based on the true scatter of the");
-		System.out.println("  chopped photometry measurements. As such, these errors are higher than what");
-		System.out.println("  is expected from the nominal NEFD values alone, and reflect the true");
-		System.out.println("  uncertainty of the photometry more accurately.");
+		System.out.println("  an estimate of the systematic errors, based on the true scatter of the");
+		System.out.println("  chopped photometry measurements in each nod cycle. As such, these errors are");
+		System.out.println("  higher than expected from the nominal NEFD values alone, and reflect the");
+		System.out.println("  photometric uncertainty more accurately.");
 		System.out.println();
+		
+		if(scans.size() > 1) {
+			System.out.println("  Scan-to-scan scatter is measured by the reduced chi value. When |rChi| > 1,"); 
+			System.out.println("  you can multiply the quoted uncertainty by it to arrive at a more robust");
+			System.out.println("  estimate of the total measurement uncertainty.");
+			System.out.println();
+		}
+		
 		
 		super.write(path);
 		

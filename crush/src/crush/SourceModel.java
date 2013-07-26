@@ -290,6 +290,25 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 		public abstract void process(Integration<?,?> integration) throws Exception;
 	}
 
+	public String getASCIIHeader() {
+		StringBuffer header = new StringBuffer(
+			"# CRUSH version: " + CRUSH.getFullVersion() + "\n" +
+			"# Instrument: " + instrument.getName() + "\n" +
+			"# Object: " + getSourceName() + "\n" +
+			"# Scans: ");
+		
+		for(int i=0; i<scans.size(); i++) header.append(scans.get(i).getID() + " ");
+		header.append("\n");
+		
+		if(!scans.isEmpty()) {
+			Scan<?,?> firstScan = scans.get(0);
+			
+			header.append("# Equatorial: " + firstScan.equatorial);
+		}
+		
+		return new String(header);
+	}
+	
 	
 	public String getFormattedEntry(String name, String formatSpec) {
 		return null;

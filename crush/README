@@ -649,11 +649,11 @@ options on the console.
 
 	array.resolution=1.0
 
-    is resolved by CRUSH into
+    is translated by CRUSH into
 
 	correlated.obs-channels.resolution=1.0
 
-    Aliases, are literal substitutions. Therefore, they can also be used
+    Aliases are literal substitutions. Therefore, they can also be used
     to shorthand full (or partial) statements. In this way 'altaz' is
     is defined to be a shorthand for 'system=horizontal'. You can find this 
     definition (in 'default.cfg') as:

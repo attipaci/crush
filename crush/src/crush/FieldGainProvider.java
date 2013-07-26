@@ -32,7 +32,7 @@ public class FieldGainProvider implements GainProvider {
 	}
 	
 	public double getGain(Channel c) throws IllegalAccessException {
-		return (float) gainField.getDouble(c);
+		return gainField.getDouble(c);
 	}
 	
 	public void setGain(Channel c, double value) throws IllegalAccessException {

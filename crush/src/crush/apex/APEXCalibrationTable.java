@@ -94,9 +94,15 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 				timeWindow = 6.0 * Unit.hour;
 				mean = getLocalAverage(new TimeStamp(MJD));
 			}
-			else return 1.0;
+			else {
+				System.err.println("   WARNING! Local calibration scaling is unknown.");
+				return 1.0;
+			}
 		}
-		
+		else if(Double.isInfinite(mean.scaling.value())) {
+			System.err.println("   WARNING! Inifinite local calibration scaling.");
+			return 1.0;
+		}
 		
 		System.err.println("   Local average scaling = " + Util.f3.format(mean.scaling.value()) + " (from " + mean.measurements + " cal scans)");
 		return mean.scaling.value();

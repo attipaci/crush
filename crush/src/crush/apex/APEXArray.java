@@ -175,14 +175,14 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 			
 			// Throw out any subsequent skydips...
 			if(scan.getSourceName().equalsIgnoreCase("SKYDIP")) {
-				System.err.println("  WARNING! Scan " + scan.getSerial() + " is a skydip. Dropping from dataset.");
+				System.err.println("  WARNING! Scan " + scan.getID() + " is a skydip. Dropping from dataset.");
 				scans.remove(i);
 			}
 			
 			boolean subscanChopped = subscan.chopper != null;
 			
 			if(subscanChopped != isChopped) {	
-				if(isChopped) System.err.println("  WARNING! Scan " + scan.getSerial() + " is not a chopped scan. Dropping from dataset.");
+				if(isChopped) System.err.println("  WARNING! Scan " + scan.getID() + " is not a chopped scan. Dropping from dataset.");
 				else System.err.println("  WARNING! Scan " + scan.getSerial() + " is a chopped scan. Dropping from dataset.");
 				scans.remove(i);
 				continue;
@@ -191,12 +191,13 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 			if(isChopped) {
 				if(!scan.isPlanetary) {
 					if(scan.equatorial.distanceTo(reference) > pointingTolerance) {
-						System.err.println("  WARNING! Scan " + scan.getSerial() + " observed at a different position. Dropping from dataset.");
+						System.err.println("  WARNING! Scan " + scan.getID() + " observed at a different position. Dropping from dataset.");
+						System.err.println("           (You can use 'planetary' to keep and reduce anyway.)");
 						scans.remove(i);
 					}
 				}
 				else if(!scan.getSourceName().equalsIgnoreCase(sourceName)) {
-					System.err.println("  WARNING! Scan " + scan.getSerial() + " is on a different object. Dropping from dataset.");
+					System.err.println("  WARNING! Scan " + scan.getID() + " is on a different object. Dropping from dataset.");
 					scans.remove(i);
 				}
 			}
