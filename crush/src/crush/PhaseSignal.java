@@ -22,6 +22,7 @@
  ******************************************************************************/
 package crush;
 
+import crush.CorrelatedMode.CoupledMode;
 import kovacs.data.WeightedPoint;
 
 public class PhaseSignal {
@@ -54,10 +55,13 @@ public class PhaseSignal {
 			value[i] *= factor;
 			weight[i] /= f2;
 		}
-		// Rescale the corresponding synching gains also to keep the product intact
-		for(int k=syncGains.length; --k >= 0; ) syncGains[k] /= factor;
 		
-		// TODO What about signals of gain dependent modes? 
+		// Rescale the signals in the coupled modes also...
+		for(CoupledMode coupled : mode.coupledModes)
+			if(phases.signals.containsKey(coupled)) phases.signals.get(coupled).scale(factor);
+		
+		// Rescale the corresponding synching gains also to keep the product intact
+		for(int k=syncGains.length; --k >= 0; ) syncGains[k] /= factor;	
 	}
 	
 	
@@ -66,12 +70,16 @@ public class PhaseSignal {
 		final float[] dG = syncGains;
 	
 		// Make syncGains carry the gain increment since last sync...
-		for(int k=G.length; --k >= 0; ) dG[k] = G[k] - dG[k];
+		boolean resyncGains = false;
+		for(int k=G.length; --k >= 0; ) {
+			dG[k] = G[k] - dG[k];
+			if(dG[k] != 0.0) resyncGains = true;
+		}
 			
 		final ChannelGroup<?> channels = mode.getChannels();
 		final WeightedPoint dC = new WeightedPoint(); 
 		
-		// Always use maximum-likelihood gains...
+		// Allow phases.estimator to override the default estimator request
 		if(phases.integration.hasOption("phases.estimator")) 
 			isRobust = phases.integration.option("phases.estimator").equals("median");
 		
@@ -83,14 +91,16 @@ public class PhaseSignal {
 		
 		for(int i=phases.size(); --i >= 0; ) {
 			final PhaseOffsets offsets = phases.get(i);
+			
+			// Resync gain changes if needed.
+			if(resyncGains) for(int k=G.length; --k >= 0; ) offsets.value[channels.get(k).index] -= dG[k] * value[i];
 				
 			if(isRobust) offsets.getRobustCorrelated(mode, G, temp, dC);
 			else offsets.getMLCorrelated(mode, G, dC);
 			
 			if(dC.weight() <= 0.0) continue;
 			
-			for(int k=G.length; --k >= 0; )
-				offsets.value[channels.get(k).index] -= dG[k] * value[i] + G[k] * dC.value();
+			for(int k=G.length; --k >= 0; ) offsets.value[channels.get(k).index] -= G[k] * dC.value();
 			
 			value[i] += dC.value();
 			weight[i] = dC.weight();	
@@ -109,7 +119,7 @@ public class PhaseSignal {
 		return dG;
 	}
 	
-	protected WeightedPoint getGainIncrement(Channel channel) {
+	protected WeightedPoint getGainIncrement(final Channel channel) {
 		double sum = 0.0, sumw = 0.0;
 
 		for(int i=phases.size(); --i >= 0; ) {
@@ -126,7 +136,7 @@ public class PhaseSignal {
 	
 	// TODO robust gains?...
 	
-	protected synchronized void setSyncGains(float[] G) {
+	protected synchronized void setSyncGains(final float[] G) {
 		System.arraycopy(G, 0, syncGains, 0, G.length);
 	}
 	

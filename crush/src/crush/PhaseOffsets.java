@@ -42,15 +42,10 @@ public class PhaseOffsets {
 	}
 	
 	public boolean validate() {
-		boolean isValid = end.index - start.index > 0;
-		if(!isValid) {
-			final int to = end.index + 1;
-			for(int t=start.index; t<to; t++) integration.set(t, null);
-		}
-		return isValid;
+		return end.index - start.index > 0;
 	}
 	
-	public void update(ChannelGroup<?> channels, Dependents parms) {
+	public void update(final ChannelGroup<?> channels, final Dependents parms) {
 		if(end.index - start.index < 1) return;
 		
 		final int nc = integration.instrument.size();
@@ -105,7 +100,7 @@ public class PhaseOffsets {
 		}
 	
 		
-		for(Channel channel : channels) weight[channel.index] *= channel.weight;
+		for(final Channel channel : channels) weight[channel.index] *= channel.weight;
 		
 		parms.apply(channels, start.index, to);
 	}
@@ -114,7 +109,7 @@ public class PhaseOffsets {
 		return new WeightedPoint(value[channel.index], weight[channel.index]);
 	}
 	
-	protected void getMLCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint increment) {	
+	protected void getMLCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint correlated) {	
 		final int skipChannels = mode.skipChannels;
 
 		double sum = 0.0, sumw = 0.0;
@@ -130,15 +125,15 @@ public class PhaseOffsets {
 			sumw += (wG * G[k]);
 		}
 			
-		increment.setValue(sum / sumw);
-		increment.setWeight(sumw);
+		correlated.setValue(sum / sumw);
+		correlated.setWeight(sumw);
 	}
 	
-	protected void getRobustCorrelated(CorrelatedMode mode, final float[] G, final WeightedPoint[] temp, final WeightedPoint increment) {
+	protected void getRobustCorrelated(CorrelatedMode mode, final float[] G, final WeightedPoint[] temp, final WeightedPoint correlated) {
 		final int skipChannels = mode.skipChannels;
 		
 		int n=0;
-		increment.setWeight(0.0);
+		correlated.setWeight(0.0);
 		
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.getChannel(k);
@@ -152,13 +147,13 @@ public class PhaseOffsets {
 			final WeightedPoint point = temp[n++];
 			point.setValue(value[channel.index] / Gk);
 			point.setWeight(wG2);
-			increment.addWeight(point.weight());
+			correlated.addWeight(point.weight());
 			
 			assert !Double.isNaN(point.value());
 			assert !Double.isInfinite(point.value());
 			
 		}
-		Statistics.smartMedian(temp, 0, n, 0.25, increment);
+		Statistics.smartMedian(temp, 0, n, 0.25, correlated);
 	}
 	
 	public String toString(NumberFormat nf) {

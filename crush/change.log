@@ -1,4 +1,70 @@
 
+
+2.15-a1
+
+
+	[BUG] {LABOCA} Photometry reductions broken in 2.14 (and perhaps also
+	in 2.13) due to an unchecked null pointer. Now fixed!
+
+	[NEW] {photometry} Photometry reductions now write the final result, 
+	as well as a scan-by-scan breakdown into a data file. Additionally, if 
+	'gnuplot' is configured, it is possible to write also a PNG and EPS 
+	output, showing the mean value and the scan-by-scan scatter. The option
+	'show' can then be used to automatically display this plot at the end 
+	of reduction. (All these functionalities work the same as introduced 
+	for skydip reductions in 2.14).
+
+	[NEW] {APEX} {LABOCA} {SABOCA} Photometry now reports the flux derived
+	from each scan also, to allow users to evaluate how each scan 
+	contributes to the aggregate photometry.
+
+	[FIX] {LABOCA} Calibration and tau table lookup now check for infinite
+	values and return defaults instead.
+
+	[TWEAK] Improved correlated noise removal by first updating the signal
+	for any unsynchronized gain changes, before estimating the new
+	correlated signal.
+
+	[TWEAK] {APEX} {photometry} Nearby pixels are used to refine photometry
+	estimate.
+
+	[TWEAK] {APEX} {photometry} Number of iterations for photometry changed
+	to 4. Photometry reductions do not have the redundancies of mapping, 
+	nor do they use whitening filters. Thus, convergence is achieved
+	faster than for mapping reductions. At the same time iterating longer
+	allows more chance for unwanted signals to leak back into the source
+	model (flux), so it's best to keep things short...
+
+	[TWEAK] Initial DC levelling via 'level' now abides by the 'estimator'
+	setting to determine whether it should use median or maximum-likelihood
+	estimates.	
+
+	[TWEAK] {GISMO} No more exlusivity between gradients and LSS filtering.
+
+	[CONFIG] {LABOCA} The calibration table supplied with 2.14 (and probably
+	many other recent releases) had most of 2012 missing. Fixed.
+
+	[CONFIG] {LABOCA} {photometry} Reconfigured photometry reduction mode
+	based on the 2009 commissioning data. Number of iterations changed to 
+	5, 'twisting' is no longer used for 'faint' mode, gains are estimated
+	from phases for both the correlated 'boxes' and 'cables', and solving
+	the 'cable' gains is delayed until the 2nd iteration.
+
+	[MAN] Added 'MAKO' crush man page.
+	
+	[MAN] Specific HTML descriptions for the UNIX-style online manual 
+	pages.
+
+	[MAN] Author hyperlinked in online man pages :-).
+
+	[CODE] {GISMO} Default pixel size updated to April 2012 value, for
+	the permanent mount and finalized optics configuration.
+
+	[CODE] Introducing SourceModel.getASCIIHeader().
+
+
+
+
 2.14-2 (15 July 2013)
 
 
@@ -8,7 +74,7 @@
 	could affect calibration and result in excess noise.
 	Other than the bug fix, there is little change in functionality.
 	However, a lot of work happened under the hood. CRUSH packages have
-	become simpler (though larger), while the utility classed that used to 
+	become simpler (though larger), while the utility classes that used to 
 	be an integral part of CRUSH have started an existence on their own as
 	the 'kovacs.util' project. This way, many of the powerful Java tools 
 	developed for CRUSH can benefit other projects also. The new 

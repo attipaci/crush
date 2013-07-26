@@ -321,7 +321,11 @@ public class CorrelatedSignal extends Signal {
 		final float[] dG = syncGains;
 		
 		// Make syncGains carry the gain increment from last sync...
-		for(int k=nc; --k >= 0; ) dG[k] = G[k] - dG[k];
+		boolean resyncGains = false;
+		for(int k=nc; --k >= 0; ) {
+			dG[k] = G[k] - dG[k];
+			if(dG[k] != 0.0) resyncGains = true;
+		}
 		
 		// Precalculate the gain-weight products...
 		for(int k=nc; --k >= 0; ) {
@@ -347,14 +351,21 @@ public class CorrelatedSignal extends Signal {
 		
 		for(int T=0, from=0; T < nT; T++, from += resolution) {
 			final int to = Math.min(from + resolution, nt);
+			final float C = value[T];
+			
+			// Resync gains, if necessary...
+			if(resyncGains) for(int t=to; --t >= from; ) {
+				final Frame exposure = integration.get(t);
+				if(exposure == null) continue;			
+				for(int k=nc; --k >= 0; ) exposure.data[channels.get(k).index] -= dG[k] * C;
+			}
 			
 			if(isRobust) getRobustCorrelated(goodChannels, from, to, increment, buffer);
 			else getMLCorrelated(goodChannels, from, to, increment);
 			
 			if(increment.weight() <= 0.0) continue;
 			
-			// Cast the incremental value into float for speed...
-			final float C = value[T];
+			// Cast the incremental value into float for speed...	
 			final float dC = (float) increment.value();
 
 			// precalculate the channel dependences...
@@ -368,7 +379,7 @@ public class CorrelatedSignal extends Signal {
 				for(int k=nc; --k >= 0; ) {
 					final Channel channel = channels.get(k);
 					// Here usedGains carries the gain increment dG from the last correlated signal removal
-					exposure.data[channel.index] -= dG[k] * C + channel.tempG * dC;
+					exposure.data[channel.index] -= channel.tempG * dC;
 					if(channel.temp > 0.0F) dependents.add(exposure, channel, exposure.relativeWeight * channel.temp);
 				}
 			}

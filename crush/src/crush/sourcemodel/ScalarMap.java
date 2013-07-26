@@ -197,6 +197,7 @@ public class ScalarMap extends SourceMap {
 			}
 			catch(IOException e) {
 				System.err.println("WARNING! Cannot read sources: " + e.getMessage());
+				if(CRUSH.debug) e.printStackTrace();
 			}	
 		}
 		

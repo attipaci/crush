@@ -26,20 +26,28 @@ import java.io.*;
 import java.util.*;
 
 public class ManEdit {
+	String name;
 	
 	public static void main(String[] args) {
 		ArrayList<String> lines = new ArrayList<String>();
+		ManEdit man = new ManEdit(args[0]);
 		
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(args[0])));
 			String line = null;
 			while((line = in.readLine()) != null) lines.add(line);
-			edit(lines);			
+			in.close();
+			man.edit(lines);	
 		} 
 		catch(IOException e) { e.printStackTrace(); }
 	}
 	
-	public static void edit(ArrayList<String> lines) {
+	public ManEdit(String manName) {
+		if(manName.contains(".")) this.name = manName.substring(0, manName.indexOf('.'));
+		else this.name = manName;		
+	}
+	
+	public void edit(ArrayList<String> lines) {
 		int i=0;
 
 		ArrayList<String> edited = new ArrayList<String>();
@@ -59,7 +67,7 @@ public class ManEdit {
 		// First edit the header...
 		edited.add("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">");
 		edited.add("<meta name=\"author\" content=\"Attila Kov&aacute;cs\">");
-		edited.add("<meta name=\"description\" content=\"CRUSH Tool Manual.\">");
+		edited.add("<meta name=\"description\" content=\"Online Manual for " + name + " - part of the CRUSH Suite of Tools for Astronomical Data Reduction and Imaging.\">");
 		edited.add("<meta name=\"google-site-verification\" content=\"aEd2DeoMQVvdlcp7KeNN6V3T-iqd1m1QMRbBGJ7EYrQ\" />");
 		edited.add("<meta name=\"y_key\" content=\"57760f7ff87efc45\">");
 		edited.add("<link rel=\"shortcut icon\" href=\"../../crush-tiny.ico\">");				
@@ -155,6 +163,7 @@ public class ManEdit {
 			line = line.replace("<DT><DD>", "");
 			line = line.replace("<I>GLOSSARY</I>", "<a href=\"../../v2/GLOSSARY\">GLOSSARY</a>");
 			line = line.replace("<I>README</I>", "<a href=\"../../v2/README\">README</a>");
+			line = line.replace("Attila Kovacs", "<a href=\"http://www.physics.umn.edu/people/kovacs.html\" rel=\"friend\" target=\"_blank\">Attila Kov&aacute;cs</a>");
 			
 			if(line.contains("</BODY>")) System.out.println("</small>");
 			

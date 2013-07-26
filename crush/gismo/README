@@ -4,7 +4,7 @@
 			      Attila Kovacs
 			<attila[AT]submm.caltech.edu>
 
-			Last updated: 11 Mar 2012
+			Last updated: 19 July 2013
 
 
 
@@ -274,8 +274,19 @@ For a general overview of channel divisions, please consult Section 3.
 		is little evidence for these, but the reduction of very faint
 		compact sources may benefit from the additional decorrelation
 		on these groups.
+		You can group neighboring 'pins' together for decorrelation
+		via the 'correlated.pins.group' option, or the equivalent
+		'pins.group' shorthand.
 
+   rows		Geometric rows of the array (it has 16 rows and 8 columns).
+		You can also group n rows together for the decorrelation via
+		the 'correlated.rows.group=n' option, or the equivalent
+		'rows.group=n' shorthand.
 
+   cols		Geometric columns of the array (it has 16 rows and 8 columns).
+		You can also group n columns together for the decorrelation via
+		the 'correlated.cols.group=n' option, or the equivalent
+		'cols.group=n' shorthand.
 
 
 
@@ -297,12 +308,30 @@ For a general overview of channel divisions, please consult Section 3.
 7. Glossary of GISMO-specific options
 #####################################################################
 
+   cols                 @Alias: 'correlated.cols'
+                        @Expert
+                        Specifies the grouping of channels by their geometric
+			location of the array divided into columns.
+                        @See: 'correlated.<?>', 'rows'
+
+   cols.group=<n>       @Alias: 'correlated.cols.group'
+                        @Expert
+                        Geometric columns can be grouped together for
+			decorrelation.
+			@See: 'cols'
+
    date=YYYY-MM-DD	Specify the observing date (UT) in the format
 			YYYY-MM-DD. This is used for constructing the IRAM 
 			scan IDs by combining with scan numbers.
 			You also need to specify the 'object' and 'datapath' 
 			before CRUSH will be able to find scans by number.
 			@See: 'datapath', 'object'
+   
+   mux			@Alias: 'correlated.mux'
+			@Expert
+			Specifies the grouping of channels by the SQUID 
+			multiplexing.
+			@See: 'correlated.<?>'
 
    object=<name>	Give the IRAM catalog name (case sensitive) of the 
 			observed object. Use together with 'datapath' and 
@@ -356,12 +385,6 @@ For a general overview of channel divisions, please consult Section 3.
 			their rotation via 'rcp.rotate'.
 			@See: 'rcp', 'rcp.rotate', 'pixelsize'
 
-   mux			@Alias: 'correlated.mux'
-			@Expert
-			Specifies the grouping of channels by the SQUID 
-			multiplexing.
-			@See: 'correlated.<?>'
-
    pins			@Alias: 'correlated.pins'
 			@Expert
 			Specifies the grouping of channels by their virtual 
@@ -376,6 +399,18 @@ For a general overview of channel divisions, please consult Section 3.
 			option allows to group together <n> consecutive 
 			samples, to combine pixels read in some time-interval.
 			@See: 'pins'
+
+   rows                 @Alias: 'correlated.rows'
+                        @Expert
+                        Specifies the grouping of channels by their geometric
+                        location of the array divided into rows.
+                        @See: 'correlated.<?>', 'cols'
+
+   rows.group=<n>       @Alias: 'correlated.rows.group'
+                        @Expert
+			Geometric rows can be grouped together for 
+			decorrelation.
+                        @See: 'rows'
 
    ver.[<range>]	@Since: 2.11
 			@Expert
