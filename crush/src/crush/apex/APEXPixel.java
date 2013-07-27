@@ -32,13 +32,14 @@ import kovacs.math.Vector2D;
 
 import crush.Channel;
 import crush.Frame;
-import crush.PhaseOffsets;
+import crush.PhaseData;
 import crush.PhaseSet;
+import crush.PhaseWeighting;
 import crush.array.SimplePixel;
 
-public abstract class APEXPixel extends SimplePixel {
+public abstract class APEXPixel extends SimplePixel implements PhaseWeighting {
 	public Vector2D fitsPosition;
-	//public WeightedPoint LROffset;
+	public double phaseWeight = 1.0;
 	
 	public APEXPixel(APEXArray<?> array, int backendIndex) {
 		super(array, backendIndex);
@@ -52,84 +53,73 @@ public abstract class APEXPixel extends SimplePixel {
 	}
 	
 
-	public WeightedPoint getRelativeOffset(PhaseSet phases, int i) {
+	public void derivePhaseWeights(PhaseSet phases) {	
+		//double chi2 = Math.max(1.0, getLRChi2(phases, getLROffset(phases).value()));
+		//double chi2 = getLRChi2(phases, getLROffset(phases).value());
+		//phaseWeight /= chi2;
+		//for(PhaseData offsets : phases) offsets.weight[this.index] /= chi2;
+	}
+	
+	public double getPhaseWeight() { return phaseWeight; }
+	
+	
+	public WeightedPoint getRelativeOffset(final PhaseSet phases, final int i) {
 		int phase = phases.get(i).phase;
 		
 		final WeightedPoint signal = phases.get(i).getValue(this);		
-		final WeightedPoint base = new WeightedPoint();
+			
+		if(phases.get(i-1).phase != phase) signal.subtract(phases.get(i-1).getValue(this));
+		else signal.setWeight(0.0);
 		
+		/*
+		final WeightedPoint base = new WeightedPoint();
 		if(phases.get(i-1).phase != phase) base.average(phases.get(i-1).getValue(this));
 		if(phases.get(i+1).phase != phase) base.average(phases.get(i+1).getValue(this));
+		signal.subtract(base);	
+		*/
 		
-		signal.subtract(base);		
+		if((phase & Frame.CHOP_LEFT) == 0) signal.scale(-1.0);
 		return signal;
 	}
 	
-	public WeightedPoint getCorrectedRelativeOffset(final PhaseSet phases, final int i, final Collection<APEXPixel> neighbours, final double[] G) {
-		final WeightedPoint base = new WeightedPoint();
+	
+	public WeightedPoint getCorrectedRelativeOffset(final PhaseSet phases, final int i, final Collection<APEXPixel> bgPixels, final double[] G) {
+		final WeightedPoint bg = new WeightedPoint();
 		
-		for(final APEXPixel pixel : neighbours) if(!pixel.isFlagged()) if(pixel != this) {
+		for(final APEXPixel pixel : bgPixels) if(!pixel.isFlagged()) if(pixel != this) {
 			final WeightedPoint lr = pixel.getRelativeOffset(phases, i);
 			if(G[pixel.index] == 0.0) continue;
 			lr.scale(1.0 / G[pixel.index]);
-			base.average(lr);
+			bg.average(lr);
 		}
 
 		final WeightedPoint value = getRelativeOffset(phases, i);
 		
-		base.scale(G[this.index]);	
-		value.subtract(base);
+		bg.scale(G[this.index]);	
+		value.subtract(bg);
 		
 		return value;
 	}
 
-	
-	/*
-	@Override
-	public void update(PhaseSet phases) {
-		if(LROffset == null) LROffset = new WeightedPoint();
-		WeightedPoint increment = getLRIncrement(phases);
-		if(increment.weight() > 0.0) {
-			for(PhaseOffsets offsets : phases) if(offsets.phase == Frame.CHOP_LEFT) offsets.value[index] -= increment.value();
-			LROffset.add(increment.value());
-			LROffset.setWeight(increment.weight());
-		}
-		phases.level(this);
-	}
-	*/
-	
-	public WeightedPoint getLROffset(PhaseSet phases) {
+	public WeightedPoint getLROffset(final PhaseSet phases) {
 		final WeightedPoint lr = new WeightedPoint();
-		
-		for(int i=phases.size()-1; --i > 0; ) {
-			final PhaseOffsets offsets = phases.get(i);
-			if((offsets.phase & Frame.CHOP_LEFT) != 0) lr.average(getRelativeOffset(phases, i));
-		}
-		
+		for(int i=phases.size()-1; i > 0; i-=2) lr.average(getRelativeOffset(phases, i));
+		//lr.scaleWeight(0.5);
 		return lr;
 	}
-
 	
-	public WeightedPoint getCorrectedLROffset(PhaseSet phases, Collection<APEXPixel> neighbours, double[] sourceGain) {
+	public WeightedPoint getCorrectedLROffset(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double[] sourceGain) {
 		final WeightedPoint lr = new DataPoint();
-		
-		for(int i=phases.size()-1; --i > 0; ) {
-			final PhaseOffsets offsets = phases.get(i);
-			if((offsets.phase & Frame.CHOP_LEFT) != 0) lr.average(getCorrectedRelativeOffset(phases, i, neighbours, sourceGain));
-		}
-		
+		for(int i=phases.size()-1; i > 0; i-=2) lr.average(getCorrectedRelativeOffset(phases, i, bgPixels, sourceGain));
+		//lr.scaleWeight(0.5);
 		return lr;
 	}
 
 	
-	
-	public double getLRChi2(PhaseSet phases, double mean) {	
+	public double getLRChi2(final PhaseSet phases, final double mean) {	
 		double chi2 = 0.0;
 		int n = 0;
-		for(int i=phases.size()-1; --i > 0; ) {
-			final PhaseOffsets offsets = phases.get(i);
-			if((offsets.phase & Frame.CHOP_LEFT) == 0) continue;
-
+		for(int i=phases.size()-1; i > 0; i-=2) {
 			WeightedPoint LR = getRelativeOffset(phases, i);
 			LR.subtract(mean);
 
@@ -138,25 +128,27 @@ public abstract class APEXPixel extends SimplePixel {
 			n++;
 		}
 		
-		return n > 1 ? chi2/(n-1) : Double.NaN;
+		double dof = n * (1.0 - (double) phases.driftParms / phases.size());
+		dof = Math.min(dof, phases.size() - 1);
+		
+		return dof > 0.0 ? chi2/dof : Double.NaN;
 	}
 
-	public double getCorrectedLRChi2(PhaseSet phases, Collection<APEXPixel> neighbours, double mean, double[] sourceGain) {	
+	public double getCorrectedLRChi2(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double mean, final double[] sourceGain) {	
 		double chi2 = 0.0;
 		int n = 0;
-		for(int i=phases.size()-1; --i > 0; ) {
-			final PhaseOffsets offsets = phases.get(i);
-			if((offsets.phase & Frame.CHOP_LEFT) == 0) continue;
-
-			WeightedPoint LR = getCorrectedRelativeOffset(phases, i, neighbours, sourceGain);
+		for(int i=phases.size()-1; i > 0; i-=2) {
+			WeightedPoint LR = getCorrectedRelativeOffset(phases, i, bgPixels, sourceGain);
 			LR.subtract(mean);
 
 			final double chi = DataPoint.significanceOf(LR);
 			chi2 += chi * chi;
 			n++;
 		}
+		double dof = n * (1.0 - (double) phases.driftParms / phases.size());
+		dof = Math.min(dof, phases.size() - 1);
 		
-		return n > 1 ? chi2/(n-1) : Double.NaN;
+		return dof > 0.0 ? chi2/dof : Double.NaN;
 	}
 
 }

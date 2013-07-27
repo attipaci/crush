@@ -28,6 +28,7 @@ import kovacs.data.WeightedPoint;
 public class PhaseSignal {
 	PhaseSet phases;
 	CorrelatedMode mode;
+
 	double[] value, weight;
 	float[] syncGains;
 	int generation = 0;
@@ -40,7 +41,7 @@ public class PhaseSignal {
 		weight = new double[phases.size()];
 		
 		syncGains = new float[mode.size()];
-		
+	
 		phases.signals.put(mode, this);
 	}
 	
@@ -79,6 +80,7 @@ public class PhaseSignal {
 		final ChannelGroup<?> channels = mode.getChannels();
 		final WeightedPoint dC = new WeightedPoint(); 
 		
+		
 		// Allow phases.estimator to override the default estimator request
 		if(phases.integration.hasOption("phases.estimator")) 
 			isRobust = phases.integration.option("phases.estimator").equals("median");
@@ -90,7 +92,7 @@ public class PhaseSignal {
 		}
 		
 		for(int i=phases.size(); --i >= 0; ) {
-			final PhaseOffsets offsets = phases.get(i);
+			final PhaseData offsets = phases.get(i);
 			
 			// Resync gain changes if needed.
 			if(resyncGains) for(int k=G.length; --k >= 0; ) offsets.value[channels.get(k).index] -= dG[k] * value[i];
@@ -99,8 +101,11 @@ public class PhaseSignal {
 			else offsets.getMLCorrelated(mode, G, dC);
 			
 			if(dC.weight() <= 0.0) continue;
-			
-			for(int k=G.length; --k >= 0; ) offsets.value[channels.get(k).index] -= G[k] * dC.value();
+				
+			for(int k=G.length; --k >= 0; ) {
+				Channel channel = channels.get(k);	
+				offsets.value[channel.index] -= G[k] * dC.value();
+			}
 			
 			value[i] += dC.value();
 			weight[i] = dC.weight();	
@@ -123,7 +128,7 @@ public class PhaseSignal {
 		double sum = 0.0, sumw = 0.0;
 
 		for(int i=phases.size(); --i >= 0; ) {
-			final PhaseOffsets offsets = phases.get(i);
+			final PhaseData offsets = phases.get(i);
 			if(offsets.flag != 0) continue;
 			
 			final double C = value[i];
@@ -148,7 +153,7 @@ public class PhaseSignal {
 		for(int k=G.length; --k >= 0; ) dG[k] = G[k] - dG[k];
 			
 		for(int i=phases.size(); --i >= 0; ) {
-			final PhaseOffsets offsets = phases.get(i);
+			final PhaseData offsets = phases.get(i);
 			for(int k=G.length; --k >= 0; ) if(weight[i] > 0.0)
 				offsets.value[channels.get(k).index] -= dG[k] * value[i];
 		}

@@ -244,19 +244,23 @@ public class SkyDip extends SourceModel {
 		
 		plot.println("set term push");
 		plot.println("set term unknown");
+	
+		plot.println("set label 1 'Produced by CRUSH " + CRUSH.getFullVersion() + "' at graph 0.99,0.04 right font ',12'");
+		
 		
 		plot.println("plot \\");
 		plot.println("  '" + dataName + "' using 1:2 title 'Skydip " + scans.get(0).getID() + "'with linesp lt 1 pt 5 lw 1, \\");
 		plot.println("  '" + dataName + "' using 1:3 title 'tau = " + Util.f3.format(model.tau.value()) + " +- " 
 				+ Util.f3.format(model.tau.rms()) + "' with lines lt -1 lw 3");
-
-	
+		
 		if(hasOption("write.eps")) gnuplotEPS(plot, coreName);
 				
 		if(hasOption("write.png")) gnuplotPNG(plot, coreName);
 		
 		plot.println("set out");
 		plot.println("set term pop");
+		
+		plot.println("unset label 1");
 		plot.println((hasOption("show") ? "" : "#")  + "replot");
 		
 		plot.close();

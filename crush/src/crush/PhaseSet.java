@@ -26,10 +26,11 @@ import java.io.*;
 import java.util.*;
 
 import kovacs.data.WeightedPoint;
+import kovacs.util.Unit;
 import kovacs.util.Util;
 
 
-public class PhaseSet extends ArrayList<PhaseOffsets> {
+public class PhaseSet extends ArrayList<PhaseData> {
 	/**
 	 * 
 	 */
@@ -37,25 +38,42 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 	
 	protected Integration<?,?> integration;
 	protected Hashtable<Mode, PhaseSignal> signals = new Hashtable<Mode, PhaseSignal>();
-	Dependents dependents;
-	int generation = 0;
-	
+		
+	Dependents globalDependents;
+	int generation = 0;	
+	public int driftParms = 0;
 	
 	public PhaseSet(Integration<?,?> integration) {
 		this.integration = integration;	
-		dependents = new Dependents(integration, "phases");
+		globalDependents = new Dependents(integration, "phases");
 	}
 	
+	
 	public synchronized void update(ChannelGroup<?> channels) {
-		for(PhaseOffsets offsets : this) offsets.update(channels, dependents);	
 		
-		for(Channel channel : channels) level(channel);
+		for(PhaseData offsets : this) offsets.update(channels, globalDependents);	
+		
+		int N = size();
+		if(integration.hasOption("stability")) {
+			double T = (integration.instrument.integrationTime * integration.size()) / size();	
+			N = (int) Math.ceil(integration.option("stability").getDouble() * Unit.s / T);
+			if((N & 1) != 0) N++;
+			if(N > size()) N = size();
+		}
+		
+		/*
+		if(N == size()) integration.comments += "PO";
+		else integration.comments += " PD(" + N + ")";
+		*/
+		
+		removeDrifts(channels, N);
 		
 		generation++;
 	}
 	
 	public void validate() {
 		for(int i=size(); --i >=0; ) if(!get(i).validate()) remove(i);
+		for(int i=size(); --i >=0; ) get(i).index = i;
 	}
 		
 	public synchronized WeightedPoint[] getGainIncrement(Mode mode) {
@@ -66,18 +84,51 @@ public class PhaseSet extends ArrayList<PhaseOffsets> {
 		if(signals.containsKey(mode)) signals.get(mode).syncGains();
 	}
 	
+	public void getWeights() {
+		for(Channel channel : integration.instrument)
+			if(channel instanceof PhaseWeighting) ((PhaseWeighting) channel).derivePhaseWeights(this); 
+	}
+	
+	public void removeDrifts(ChannelGroup<? extends Channel> channels, int nPhases) {
+		driftParms = (int)Math.ceil((double) size() / nPhases);
+		for(Channel channel : channels) removeDrifts(channel, nPhases);		
+	}
+	
+	private void removeDrifts(Channel channel, int nPhases) {		
+		
+		for(int N=0; N<driftParms; N++) {
+			double sum = 0.0, sumw = 0.0;
+			final int from = N * nPhases;
+			final int to = Math.min(size(), from+nPhases);
+			
+			for(int n=from; n<to; n++) {
+				PhaseData offsets = get(n);			
+				sum += offsets.weight[channel.index] * offsets.value[channel.index];
+				sumw += offsets.weight[channel.index];
+			}
+			
+			if(sumw > 0.0) {
+				double level = (float) (sum / sumw);
+				for(int n=from; n<to; n++) get(n).value[channel.index] -= level;
+			}			
+		}		
+	}
+	
 	// TODO levelling on just the left frames...
+	// TODO Use removeDrifts for dependence 
 	public synchronized void level(final Channel channel) {
+		driftParms = Math.max(driftParms, 1);
+		
 		final int c = channel.index;
 		double sum = 0.0, sumw = 0.0;
-		for(PhaseOffsets offsets : this) if(offsets.flag == 0) {			
+		for(PhaseData offsets : this) if(offsets.flag == 0) {			
 			sum += offsets.weight[c] * offsets.value[c];
 			sumw += offsets.weight[c];
 		}
 		if(sumw == 0.0) return;
 		final double ave = sum / sumw;
 		
-		for(PhaseOffsets offsets : this) offsets.value[c] -= ave;
+		for(PhaseData offsets : this) offsets.value[c] -= ave;
 	}
 	
 	public void write() throws IOException {

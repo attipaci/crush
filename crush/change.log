@@ -1,7 +1,7 @@
+>> Update photometry document
 
 
-2.15-a1
-
+2.15-a2
 
 	[BUG] {LABOCA} Photometry reductions broken in 2.14 (and perhaps also
 	in 2.13) due to an unchecked null pointer. Now fixed!
@@ -16,24 +16,28 @@
 
 	[NEW] {APEX} {LABOCA} {SABOCA} Photometry now reports the flux derived
 	from each scan also, to allow users to evaluate how each scan 
-	contributes to the aggregate photometry.
+	contributes to the aggregate photometry result.
 
 	[FIX] {LABOCA} Calibration and tau table lookup now check for infinite
 	values and return defaults instead.
 
-	[TWEAK] Improved correlated noise removal by first updating the signal
-	for any unsynchronized gain changes, before estimating the new
-	correlated signal.
+	[TWEAK] {APEX} {photometry} Overhauled photometry reduction algorithms.
+	1/f drifts are now removed from the chopper phases based on the
+	'stability' setting, while chopping DC offsets are estimated from 
+	pairwise chops instead of the previous 3-point method. (The pairwise 
+	approach, while generally weaker than the 3-point method, works better 
+	with the drift removal scheme.)
+
+	[TWEAK] {APEX} {photometry} Photometry is extracted from all pixels
+	that happen to chop over the source, even if it's not the reference
+	pixel itself.
+
+	[TWEAK] Improved correlated noise removal by updating residuals for any
+	unsynchronized gain changes before estimating the new correlated 
+	signal.
 
 	[TWEAK] {APEX} {photometry} Nearby pixels are used to refine photometry
 	estimate.
-
-	[TWEAK] {APEX} {photometry} Number of iterations for photometry changed
-	to 4. Photometry reductions do not have the redundancies of mapping, 
-	nor do they use whitening filters. Thus, convergence is achieved
-	faster than for mapping reductions. At the same time iterating longer
-	allows more chance for unwanted signals to leak back into the source
-	model (flux), so it's best to keep things short...
 
 	[TWEAK] Initial DC levelling via 'level' now abides by the 'estimator'
 	setting to determine whether it should use median or maximum-likelihood

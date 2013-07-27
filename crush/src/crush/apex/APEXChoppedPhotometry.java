@@ -55,16 +55,18 @@ public class APEXChoppedPhotometry extends Photometry {
 			final PhaseSet phases = integration.getPhases();
 		
 			// To be sure one could update the phases one last time...
-			//integration.updatePhases();
+			integration.updatePhases();
+			
+			// Update the phase weights also
+			integration.getPhases().getWeights();
 			
 			// Proceed only if there are enough pixels to do the job...
 			if(!checkPixelCount(integration)) continue;
 			
-			
 			for(APEXPixel pixel : subscan.instrument.getObservingChannels()) if(pixel.sourcePhase != 0) {
 				WeightedPoint point = null;
 	
-				ArrayList<APEXPixel> neighbours = subscan.instrument.getNeighbours(pixel, 5.0 * pixel.getResolution());
+				ArrayList<APEXPixel> neighbours = subscan.instrument.getNeighbours(pixel, 7.0 * pixel.getResolution());
 				
 				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.getFixedIndex()];
 				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.getFixedIndex()];
@@ -72,32 +74,28 @@ public class APEXChoppedPhotometry extends Photometry {
 					
 				WeightedPoint df = pixel.getCorrectedLROffset(phases, neighbours, sourceGain);	
 				df.scaleWeight(Math.min(1.0, 1.0 / pixel.getCorrectedLRChi2(phases, neighbours, df.value(), sourceGain)));
-					
+				//df.scaleWeight(1.0 / pixel.getCorrectedLRChi2(phases, neighbours, df.value(), sourceGain));	
+				
 				df.scale(1.0 / (transmission * subscan.gain * sourceGain[pixel.index]));
 					
 				point.average(df);
 			}
 		}
 		
-		
-		Channel refPixel = ((APEXArrayScan<?,?>) scan).get(0).instrument.referencePixel;
-		int refIndex = refPixel.getFixedIndex();
+		sourceFlux.noData();	
 		
 		for(int c=flux.length; --c >=0; ) {
 			flux[c] = (WeightedPoint) left[c].clone();
 			flux[c].subtract(right[c]);
 			flux[c].scale(0.5);
+			if(flux[c].weight() > 0.0) sourceFlux.average(flux[c]);
 		}
 	
-		// TODO add all pixels chopping over the source to the source flux...
-		sourceFlux.copy(flux[refIndex]);
-		flux[refIndex].noData();
-		
 		DataPoint F = new DataPoint(sourceFlux);
 		F.scale(1.0 / getInstrument().janskyPerBeam());
 		scanFluxes.put(scan, F);
 		
-		scan.getLastIntegration().comments += "\n  [" + scan.getID() + ": " + F.toString() + " Jy/beam]\n";
+		scan.getLastIntegration().comments += " " + F.toString();
 	}
 	
 	
