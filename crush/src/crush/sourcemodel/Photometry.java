@@ -83,7 +83,7 @@ public abstract class Photometry extends SourceModel {
 		final PhaseSet phases = integration.getPhases();
 	
 		int frames = 0;
-		for(PhaseOffsets offset : phases) frames += offset.end.index - offset.start.index;
+		for(PhaseData offset : phases) frames += offset.end.index - offset.start.index;
 	
 		integrationTime += frames * instrument.integrationTime;
 	}
@@ -166,7 +166,7 @@ public abstract class Photometry extends SourceModel {
 		System.out.println("  Time  : " + Util.f1.format(integrationTime/Unit.min) + " min.");
 		
 		double chi2 = getReducedChi2();
-		if(!Double.isNaN(chi2)) System.out.println("  |rChi| : " + Util.s3.format(Math.sqrt(chi2)));
+		if(!Double.isNaN(chi2)) System.out.println("  |rChi|: " + Util.s3.format(Math.sqrt(chi2)));
 		
 		//System.out.println("  NEFD  : " + Util.f1.format(500.0 * F.rms() * Math.sqrt(integrationTime/Unit.s)) + " mJy sqrt(s).");
 		System.out.println("  =====================================");
@@ -208,11 +208,11 @@ public abstract class Photometry extends SourceModel {
 		out.println("# Final Combined Photometry:");
 		out.println("# =============================================================================");
 		out.println("# [" + sourceName + "]");
-		out.println("Flux  " + getFinalizedSourceFlux().toString(Jy));	
-		out.println("Time  " + Util.f1.format(integrationTime/Unit.min) + " min.");
+		out.println("Flux    " + getFinalizedSourceFlux().toString(Jy));	
+		out.println("Time    " + Util.f1.format(integrationTime/Unit.min) + " min.");
 		
 		double chi2 = getReducedChi2();
-		if(!Double.isNaN(chi2)) out.println("  |rChi| : " + Util.s3.format(Math.sqrt(chi2)));
+		if(!Double.isNaN(chi2)) out.println("|rChi|  " + Util.s3.format(Math.sqrt(chi2)));
 	
 		
 		out.close();
@@ -258,14 +258,27 @@ public abstract class Photometry extends SourceModel {
 		String plotName = coreName + ".plt";
 		PrintWriter plot = new PrintWriter(new FileOutputStream(plotName));
 		
+		DataPoint F = new DataPoint(sourceFlux);
+	
+		double jansky = getInstrument().janskyPerBeam();
+		Unit Jy = new Unit("Jy/beam", jansky);
+		Unit mJy = new Unit("mJy/beam", 1e-3 * jansky);
+		Unit uJy = new Unit("uJy/beam", 1e-6 * jansky);
+		
+		String printValue = null;
+		double mag = Math.max(Math.abs(F.value()), F.rms()) ;		
+		if(mag > 1.0 * Jy.value()) printValue = F.toString(Jy);
+		else if(mag > 1.0 * mJy.value()) printValue = F.toString(mJy);
+		else printValue = F.toString(uJy);
+		
+		F.scale(1.0 / jansky);	
+		
+		plot.println("set title '" + sourceName + " / " + getInstrument().getName().toUpperCase() + "    " + printValue + "'");
 		plot.println("set xla 'Scans");
 		plot.println("set yla 'Photometry (Jy/beam)'");
 		
 		plot.println("set term push");
 		plot.println("set term unknown");
-		
-		DataPoint F = new DataPoint(sourceFlux);
-		F.scale(1.0 / getInstrument().janskyPerBeam());	
 		
 		plot.print("set xtics rotate by 45" + " right (");
 		for(int i=0; i<scans.size(); i++) {
@@ -276,13 +289,14 @@ public abstract class Photometry extends SourceModel {
 		plot.println(")");
 		
 		plot.println("set xra [-0.5:" + (scans.size() - 0.5) + "]");
+				
+		plot.println("set label 1 'Produced by CRUSH " + CRUSH.getFullVersion() + "' at graph 0.99,0.04 right font ',12'");
 		
 		plot.println("plot \\");
 		plot.println("  " + F.value() + " notitle lt -1, \\");
 		plot.println("  " + (F.value() - F.rms()) + " notitle lt 0, \\");
 		plot.println("  " + (F.value() + F.rms()) + " notitle lt 0, \\");
 		plot.println("  '" + dataName + "' index 0 using :2:4 notitle with yerr lt 1 pt 5 lw 1");
-		
 	
 		if(hasOption("write.eps")) gnuplotEPS(plot, coreName);
 				
@@ -290,6 +304,8 @@ public abstract class Photometry extends SourceModel {
 		
 		plot.println("set out");
 		plot.println("set term pop");
+		
+		plot.println("unset label 1");		
 		plot.println((hasOption("show") ? "" : "#")  + "replot");
 		
 		plot.close();

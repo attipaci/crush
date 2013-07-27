@@ -29,15 +29,18 @@ import kovacs.data.Statistics;
 import kovacs.data.WeightedPoint;
 
 
-public class PhaseOffsets {
+public class PhaseData {
 	protected Integration<?,?> integration;
+	public int index;
 	
 	public double[] value, weight;
 	public Frame start, end;
 	public int phase = 0;
 	public int flag = 0;
 	
-	public PhaseOffsets(Integration<?,?> integration){
+	public double dependents = 0.0;
+	
+	public PhaseData(Integration<?,?> integration){
 		this.integration = integration;
 	}
 	
@@ -100,7 +103,10 @@ public class PhaseOffsets {
 		}
 	
 		
-		for(final Channel channel : channels) weight[channel.index] *= channel.weight;
+		for(final Channel channel : channels) {
+			weight[channel.index] *= channel.weight;
+			if(channel instanceof PhaseWeighting) weight[channel.index] *= ((PhaseWeighting) channel).getPhaseWeight();
+		}
 		
 		parms.apply(channels, start.index, to);
 	}
@@ -116,7 +122,7 @@ public class PhaseOffsets {
 		
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.getChannel(k);
-
+			
 			if(channel.isFlagged(skipChannels)) continue;
 			if(channel.sourcePhase != 0) continue;
 	
@@ -137,12 +143,13 @@ public class PhaseOffsets {
 		
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.getChannel(k);
+		
 			if(channel.isFlagged(skipChannels)) continue;
 			if(channel.sourcePhase != 0) continue;
 
 			final float Gk = G[k];
 			final double wG2 = weight[channel.index] * Gk * Gk;
-			if(wG2 == 0.0F) continue;
+			if(wG2 == 0.0) continue;
 			
 			final WeightedPoint point = temp[n++];
 			point.setValue(value[channel.index] / Gk);
@@ -164,3 +171,4 @@ public class PhaseOffsets {
 
 	public static final int SKIP_GAINS = 1;
 }
+ 

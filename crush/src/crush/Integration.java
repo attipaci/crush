@@ -2540,6 +2540,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(weighting.isConfigured("method")) method = weighting.get("method").getValue().toLowerCase();
 		
 		getWeights(method);
+		
+		PhaseSet phases = getPhases();
+		if(phases != null) phases.getWeights();
+
 	}
 	
 	public void getWeights(String method) {
