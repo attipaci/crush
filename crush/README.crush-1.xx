@@ -317,7 +317,7 @@ CRUSH-1.xx	CRUSH-1.xx key		CRUSH-2
 -pcenter=	POINTING_CENTER		pcenter
 -pixelCoeffs=	NONLINEARITY_COEFFICIENTS  response
 -pixelData=	PIXEL_DATA		pixeldata
--planetary	PLANETARY=TRUE		---
+-planetary	PLANETARY=TRUE		moving
 -platescale=	SHARC2_PIXEL_SIZE	pixelsize
 -point		LOAD_CONFIG=point.cfg	point
 -precess=	REDUCED_MAP_EPOCH	---
@@ -339,7 +339,7 @@ CRUSH-1.xx	CRUSH-1.xx key		CRUSH-2
 -scanmaps	WRITE_SCAN_MAPS		scanmaps
 -scale=		---			scale
 -scramble	---			scramble
--show		SHOW_FINAL_MAP=true	---
+-show		SHOW_FINAL_MAP=true	show
 -skyOrder=	SKY_POLYNOMIAL_ORDER	--- (see 'source.filter')
 -skySpectrum=	---			---
 -skyT=		SKY_POLYNOMIAL_T	gradients.resolution (in seconds!)
@@ -350,7 +350,7 @@ CRUSH-1.xx	CRUSH-1.xx key		CRUSH-2
 -spectrum=	---			write.spectrum, write.spectrum.size
 -spikelevel=	DESPIKE_LEVEL		despike.level
 -spikefraction=	REJECT_SPIKE_FRACTION	despike.flagfraction
--static		PLANETARY=false		---
+-static		PLANETARY=false		(forget=moving)
 -TCscale=	---			--- (see 'correlated.<?>.resolution')
 -tau=id:value	---			tau.id=value \
 					(tau, tau.225GHz, tau.350um, tau.pwv)

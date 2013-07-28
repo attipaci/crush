@@ -139,7 +139,7 @@ public class ScalarMap extends SourceMap {
 		
 		if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
 		else if(system.equals("focalplane")) projection.setReference(new FocalPlaneCoordinates()); 
-		else if(firstScan.isPlanetary) {
+		else if(firstScan.isMovingObject) {
 			System.err.println(" Forcing equatorial for moving object.");
 			getOptions().process("system", "equatorial");
 			projection.setReference(firstScan.equatorial);

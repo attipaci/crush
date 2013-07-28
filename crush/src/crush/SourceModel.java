@@ -294,18 +294,18 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 		StringBuffer header = new StringBuffer(
 			"# CRUSH version: " + CRUSH.getFullVersion() + "\n" +
 			"# Instrument: " + instrument.getName() + "\n" +
-			"# Object: " + getSourceName() + "\n" +
-			"# Scans: ");
+			"# Object: " + getSourceName() + "\n");
+		
+		if(!scans.isEmpty()) {
+			Scan<?,?> firstScan = scans.get(0);	
+			header.append("# Equatorial: " + firstScan.equatorial + "\n");
+		}
+		
+		header.append("# Scans: ");
 		
 		for(int i=0; i<scans.size(); i++) header.append(scans.get(i).getID() + " ");
 		header.append("\n");
-		
-		if(!scans.isEmpty()) {
-			Scan<?,?> firstScan = scans.get(0);
-			
-			header.append("# Equatorial: " + firstScan.equatorial);
-		}
-		
+	
 		return new String(header);
 	}
 	

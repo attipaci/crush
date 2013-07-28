@@ -32,7 +32,6 @@ import kovacs.math.Vector2D;
 
 import crush.Channel;
 import crush.Frame;
-import crush.PhaseData;
 import crush.PhaseSet;
 import crush.PhaseWeighting;
 import crush.array.SimplePixel;
@@ -86,7 +85,7 @@ public abstract class APEXPixel extends SimplePixel implements PhaseWeighting {
 	public WeightedPoint getCorrectedRelativeOffset(final PhaseSet phases, final int i, final Collection<APEXPixel> bgPixels, final double[] G) {
 		final WeightedPoint bg = new WeightedPoint();
 		
-		for(final APEXPixel pixel : bgPixels) if(!pixel.isFlagged()) if(pixel != this) {
+		for(final APEXPixel pixel : bgPixels) if(!pixel.isFlagged()) if(pixel != this) if(pixel.sourcePhase == 0) {
 			final WeightedPoint lr = pixel.getRelativeOffset(phases, i);
 			if(G[pixel.index] == 0.0) continue;
 			lr.scale(1.0 / G[pixel.index]);
@@ -120,7 +119,7 @@ public abstract class APEXPixel extends SimplePixel implements PhaseWeighting {
 		double chi2 = 0.0;
 		int n = 0;
 		for(int i=phases.size()-1; i > 0; i-=2) {
-			WeightedPoint LR = getRelativeOffset(phases, i);
+			final WeightedPoint LR = getRelativeOffset(phases, i);
 			LR.subtract(mean);
 
 			final double chi = DataPoint.significanceOf(LR);
@@ -138,7 +137,7 @@ public abstract class APEXPixel extends SimplePixel implements PhaseWeighting {
 		double chi2 = 0.0;
 		int n = 0;
 		for(int i=phases.size()-1; i > 0; i-=2) {
-			WeightedPoint LR = getCorrectedRelativeOffset(phases, i, bgPixels, sourceGain);
+			final WeightedPoint LR = getCorrectedRelativeOffset(phases, i, bgPixels, sourceGain);
 			LR.subtract(mean);
 
 			final double chi = DataPoint.significanceOf(LR);
