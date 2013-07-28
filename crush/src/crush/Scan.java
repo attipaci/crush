@@ -78,7 +78,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public Range longitudeRange, latitudeRange;
 	public boolean isTracking = false;
-	public boolean isPlanetary = false;
+	public boolean isMovingObject = false;
 	
 	public SourceModel sourceModel;
 	public double weight = 1.0;
@@ -102,7 +102,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public void validate() {	
 		System.err.println(" Processing scan data:");
 		
-		isPlanetary |= hasOption("planetary");
+		isMovingObject |= hasOption("moving");
 		
 		if(Double.isNaN(MJD)) MJD = 0.5 * (getFirstIntegration().getFirstFrame().MJD + getLastIntegration().getLastFrame().MJD);
 		if(Double.isNaN(LST)) LST = 0.5 * (getFirstIntegration().getFirstFrame().LST + getLastIntegration().getLastFrame().LST);
@@ -542,8 +542,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		else if(hasOption("pointing")) if(sourceModel.isValid()) {
 			Configurator pointingOption = option("pointing");
-			if(pointingOption.equals("suggest") || pointingOption.equals("auto")) {
-				System.out.println(" WARNING! Cannot suggest focus for scan " + getID() + ": S/N is below critical.");
+ 			if(pointingOption.equals("suggest") || pointingOption.equals("auto")) {
+				System.out.println(" WARNING! Cannot suggest focus for scan " + getID() + ".");
 			}
 		}
 	}
@@ -559,7 +559,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		else if(hasOption("pointing")) if(sourceModel.isValid()) {
 			Configurator pointingOption = option("pointing");
 			if(pointingOption.equals("suggest") || pointingOption.equals("auto")) {
-				System.out.println(" WARNING! Cannot suggest pointing for scan " + getID() + ": S/N is below critical.");
+				System.out.println(" WARNING! Cannot suggest pointing for scan " + getID() + ".");
 			}
 		}
 	}

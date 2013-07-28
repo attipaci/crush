@@ -189,10 +189,10 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 			}
 			
 			if(isChopped) {
-				if(!scan.isPlanetary) {
+				if(!scan.isMovingObject) {
 					if(scan.equatorial.distanceTo(reference) > pointingTolerance) {
 						System.err.println("  WARNING! Scan " + scan.getID() + " observed at a different position. Dropping from dataset.");
-						System.err.println("           (You can use 'planetary' to keep and reduce anyway.)");
+						System.err.println("           (You can use 'moving' to keep and reduce anyway.)");
 						scans.remove(i);
 					}
 				}

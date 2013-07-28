@@ -1505,6 +1505,22 @@
 			used.
 			@See: 'date.[...]', 'serial.[...]'
 
+:: moving		@Since: 2.15
+			Specify, explicitly, that the object is moving in the
+			celestial frame (such as solar system objects, like
+			planets, asteroids, comets and moons). This way, data
+			will be properly aligned on the coordinates of the 
+			first scan. If the data headers are correctly set up
+			(and interpreted by crush) moving objects can be auto
+			detected. This option is there, in case, things do not
+			work as expected (e.g. if you notice that your solar
+			system object smears or moves across the image with the
+			default reduction.
+			Currently, the option forces equatorial coordinates.
+			The options is also aliased as 'planetary', to keep
+			compatibility with earlier releases.
+			@See: 'system'
+
 :: mux			@Alias -> decorrelate.mux
 			@Instrument: SHARC-2, GISMO, SCUBA-2
 			@Advanced
@@ -1776,18 +1792,8 @@
 			@See: 'rcp', 'pcenter', 'rcenter'
 
 :: planetary		@Since: 2.11
-			Specify, explicitly, that the object is moving in the
-			celestial frame (such as solar system objects, like
-			planets, asteroids, comets and moons). This way, data
-			will be properly aligned on the coordinates of the 
-			first scan. If the data headers are correctly set up
-			(and interpreted by crush) moving objects can be auto
-			detected. This option is there, in case, things do not
-			work as expected (e.g. if you notice that your solar
-			system object smears or moves across the image with the
-			default reduction.
-			Currently, the option forces equatorial coordinates.
-			@See: 'system'
+			@Deprecated: 2.15
+			@Alias -> moving
 
 :: point		@Since: 2.00-b4
 			This is a convenience key for triggering settings for

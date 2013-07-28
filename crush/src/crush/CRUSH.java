@@ -41,8 +41,8 @@ import nom.tam.util.*;
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.15-a2";
-	private static String revision = "devel.1";
+	private static String version = "2.15-b1";
+	private static String revision = "beta";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -517,7 +517,7 @@ public class CRUSH extends Configurator {
 		String info = 
 			" Some commonly used options. For full and detailed description of all options.\n" +
 			" please consult the GLOSSARY.\n\n" +
-			"   Location of raw data:\n" +
+			"   Location of input files:\n" +
 			"     -datapath=    Specify the path to the raw data.\n" +
 			(instrument != null ? instrument.getDataLocationHelp() : "") +
 			"\n" +
@@ -526,6 +526,7 @@ public class CRUSH extends Configurator {
 			"     -faint        Use with faint sources (S/N < 10).\n" +
 			"     -deep         Use with deep fields (point sources).\n" +
 			"     -extended     Assume extended structures (>= FOV).\n" +
+			"     -moving       Target is a moving object (e.g. planet, asteroid, or moon).\n"	+	
 			"\n" +
 			"   Options for the output map:\n" +
 			"     -outpath=     Specify the directory where output files will go.\n" +
@@ -541,12 +542,13 @@ public class CRUSH extends Configurator {
 			(instrument != null ? instrument.getCommonHelp() : "") +
 			"\n" +
 			"   Alternative reduction modes:\n" +
-			"     -point        Reduced pointing scans and suggest pointing corrections.\n" +
-			"     -skydip       Reduce skydips to obtain in-band tau.\n" +
+			"     -point        Reduce pointing scans and suggest pointing corrections.\n" +
+			"     -skydip       Reduce skydips to obtain in-band zenith opacity.\n" +
 			"     -beammap      Derive pixel position data from beam maps.\n" +
 			"     -split        Indicate that the scans are part of a larger dataset.\n" +
 			"\n" +
 			"   Other useful options:\n" +
+			"     -show         Display the result (if possible) at the end.\n" +
 			"     -forget=      Comma separated list of options to unset.\n" +
 			"     -blacklist=   Comma separated list of options to ignore.\n" +
 			"     -config=      Load configuration file.\n" +

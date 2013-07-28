@@ -407,7 +407,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		if(name.equals("chop?")) return Boolean.toString(chopper == null ? false : true);
 		else if(name.equals("dir")) return direction;
 		else if(name.equals("geom")) return geometry;
-		else if(name.equals("planet?")) return Boolean.toString(isPlanetary);
+		else if(name.equals("planet?")) return Boolean.toString(isMovingObject);
 		else if(name.equals("obsmode")) return mode;
 		else if(name.equals("obstype")) return type;
 		else if(name.equals("dir")) return AstroSystem.getID(basisSystem);

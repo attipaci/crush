@@ -236,7 +236,7 @@ public abstract class Frame implements Cloneable, Flagging {
 			projector.getCoordinates().addNativeOffset(projector.offset);
 			projector.project();
 		}
-		else if(scan.isPlanetary) {
+		else if(scan.isMovingObject) {
 			getEquatorialNativeOffset(position, projector.offset);
 			projector.setReferenceCoords();
 			projector.getCoordinates().addNativeOffset(projector.offset);

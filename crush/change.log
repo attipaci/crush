@@ -1,7 +1,17 @@
->> Update photometry document
 
+2.15-b1 (beta)
 
-2.15-a2
+	Overview
+	=====================================================================
+	Major improvements to photometry reductions of the BOCAs (LABOCA
+	and SABOCA). Much effort went into improving the reliability and
+	reproducibility of the photometry result. Photometry reductions now 
+	produce output tables and plots (multi-scan reductions only) that can
+	be displayed automatically via the 'show' option.
+	Beyond photometry, the removal of correlated noise has got a boost,
+	resulting in a few percent improvement in sensitivity, typically.
+	Please report bugs back to me <attila[AT]submm.caltech.edu>.
+	=====================================================================
 
 	[BUG] {LABOCA} Photometry reductions broken in 2.14 (and perhaps also
 	in 2.13) due to an unchecked null pointer. Now fixed!
@@ -17,6 +27,11 @@
 	[NEW] {APEX} {LABOCA} {SABOCA} Photometry now reports the flux derived
 	from each scan also, to allow users to evaluate how each scan 
 	contributes to the aggregate photometry result.
+
+	[CHANGE] The option 'planetary' has been renamed to the more
+	descriptive 'moving' (as it applies to all objects that move relative
+	to the celestial frame). However, the options remains aliased as
+	'planetary' for full backward compatibility.
 
 	[FIX] {LABOCA} Calibration and tau table lookup now check for infinite
 	values and return defaults instead.
@@ -49,10 +64,16 @@
 	many other recent releases) had most of 2012 missing. Fixed.
 
 	[CONFIG] {LABOCA} {photometry} Reconfigured photometry reduction mode
-	based on the 2009 commissioning data. Number of iterations changed to 
-	5, 'twisting' is no longer used for 'faint' mode, gains are estimated
-	from phases for both the correlated 'boxes' and 'cables', and solving
-	the 'cable' gains is delayed until the 2nd iteration.
+	based on the 2009 commissioning data. 'twisting' is no longer used for 
+	'faint' mode, gains are estimated from phases for both the correlated 
+	'boxes' and 'cables', and solving the 'cable' gains is delayed until 
+	the 2nd iteration.
+
+	[MAN] The 'show' optin is added to the crush man page, and help screen,
+	as one of the principal options to crush.
+
+	[MAN] The 'moving' option is added to the crush man page, and help 
+	screen, as one of the principal reduction options.
 
 	[MAN] Added 'MAKO' crush man page.
 	
@@ -60,6 +81,9 @@
 	pages.
 
 	[MAN] Author hyperlinked in online man pages :-).
+
+	[CODE] {skydip} {photometry} PNG and EPS outputs have CRUSH version
+	printed on.
 
 	[CODE] {GISMO} Default pixel size updated to April 2012 value, for
 	the permanent mount and finalized optics configuration.

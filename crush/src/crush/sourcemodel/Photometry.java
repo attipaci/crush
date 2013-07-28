@@ -185,25 +185,11 @@ public abstract class Photometry extends SourceModel {
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 		out.println("# CRUSH Photometry Data File");
 		out.println("# =============================================================================");
-		out.println("#");
 		out.println(getASCIIHeader());
-		out.println("# =============================================================================");
 		out.println();
-		out.println();
-		
+
 		double jansky = getInstrument().janskyPerBeam();
-		
-		if(scanFluxes != null && scans.size() > 1) {
-			out.println("# Photometry breakdown by scan:");
-			out.println("# =============================================================================");
-			for(int i=0; i<scans.size(); i++) {
-				Scan<?,?> scan = scans.get(i);
-				out.println(scan.getID() + "\t" + scanFluxes.get(scan) + " Jy/beam");
-			}
-			out.println();
-			out.println();
-		}
-			
+	
 		Unit Jy = new Unit("Jy/beam", jansky);
 		out.println("# Final Combined Photometry:");
 		out.println("# =============================================================================");
@@ -213,6 +199,20 @@ public abstract class Photometry extends SourceModel {
 		
 		double chi2 = getReducedChi2();
 		if(!Double.isNaN(chi2)) out.println("|rChi|  " + Util.s3.format(Math.sqrt(chi2)));
+	
+		out.println();
+		out.println();
+		
+		if(scanFluxes != null && scans.size() > 1) {
+			out.println("# Photometry breakdown by scan:");
+			out.println("# =============================================================================");
+			for(int i=0; i<scans.size(); i++) {
+				Scan<?,?> scan = scans.get(i);
+				out.println(scan.getID() + "\t" + scanFluxes.get(scan) + " Jy/beam");
+			}
+			
+		}
+			
 	
 		
 		out.close();
@@ -296,7 +296,7 @@ public abstract class Photometry extends SourceModel {
 		plot.println("  " + F.value() + " notitle lt -1, \\");
 		plot.println("  " + (F.value() - F.rms()) + " notitle lt 0, \\");
 		plot.println("  " + (F.value() + F.rms()) + " notitle lt 0, \\");
-		plot.println("  '" + dataName + "' index 0 using :2:4 notitle with yerr lt 1 pt 5 lw 1");
+		plot.println("  '" + dataName + "' index 1 using :2:4 notitle with yerr lt 1 pt 5 lw 1");
 	
 		if(hasOption("write.eps")) gnuplotEPS(plot, coreName);
 				
@@ -323,7 +323,17 @@ public abstract class Photometry extends SourceModel {
 	}
 
 	public void gnuplotEPS(PrintWriter plot, String coreName) {
-		plot.println("set term post eps enh col sol 18");
+		int fontSize = 18;
+		
+		// Adjust the font size to fit the scans (as much as possible)...
+		// Max ~70 scans will fit on the plot with the smallest font...
+		if(scans.size() > 54) fontSize = 8;
+		else if(scans.size() > 45) fontSize = 10;
+		else if(scans.size() > 39) fontSize = 12; 
+		else if(scans.size() > 34) fontSize = 14;
+		else if(scans.size() > 30) fontSize = 16;
+		
+		plot.println("set term post eps enh col sol " + fontSize);
 		plot.println("set out '" + coreName + ".eps'");
 		plot.println("replot");
 		
@@ -333,6 +343,8 @@ public abstract class Photometry extends SourceModel {
 	
 	public void gnuplotPNG(PrintWriter plot, String coreName) {
 		boolean isTransparent = false;
+		
+		
 		int bgColor = Color.WHITE.getRGB();
 		if(hasOption("write.png.bg")) {
 			String spec = option("write.png.bg").getValue().toLowerCase();
@@ -350,8 +362,19 @@ public abstract class Photometry extends SourceModel {
 			if(tokens.hasMoreTokens()) sizeY = Integer.parseInt(tokens.nextToken());				
 		}
 		
+
+		double dpc = (double) sizeX / scans.size();
+		
+		double fontScale = 1.0;
+		if(dpc < 16.0) fontScale = 0.33;
+		if(dpc < 20.0) fontScale = 0.4;
+		if(dpc < 24.0 ) fontScale = 0.5;
+		if(dpc < 32.0) fontScale = 0.6;
+		if(dpc < 40.0) fontScale = 0.8;
+		
+		
 		plot.println("set term png enh " + (isTransparent ? "" : "no") + "transparent truecolor interlace" +
-				" background '#" + Integer.toHexString(bgColor).substring(2) + "' size " + sizeX + "," + sizeY);
+				" background '#" + Integer.toHexString(bgColor).substring(2) + "' fontscale " + fontScale + " size " + sizeX + "," + sizeY);
 		plot.println("set out '" + coreName + ".png'");
 		plot.println("replot");
 		plot.println("print '  Written " + coreName + ".png'");	
