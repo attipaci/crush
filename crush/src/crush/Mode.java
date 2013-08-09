@@ -40,7 +40,7 @@ public class Mode {
 	public boolean fixedGains = false;
 	public boolean phaseGains = false;
 	public double resolution;
-	public Range gainRange = new Range();
+	public Range gainRange = Range.getFullRange();
 	public int gainFlag = 0;
 	public int gainType = Instrument.GAINS_BIDIRECTIONAL;
 
@@ -49,7 +49,6 @@ public class Mode {
 		
 	public Mode() {
 		name = "mode-" + (++counter);
-		gainRange.full();
 	}
 
 	public Mode(ChannelGroup<?> group) {
@@ -174,8 +173,9 @@ public class Mode {
 		
 		float[] G0 = getGains();
 		
-		WeightedPoint[] G = phaseGains ? 
-				integration.getPhases().getGainIncrement(this) : 
+		
+		WeightedPoint[] G = phaseGains && integration.isPhaseModulated() ?  
+				((PhaseModulated) integration).getPhases().getGainIncrement(this) : 
 				integration.signals.get(this).getGainIncrement(isRobust);
 				
 		for(int i=G0.length; --i >= 0; ) {
@@ -191,7 +191,7 @@ public class Mode {
 		
 		// Solve for the correlated phases also, if required
 		if(integration.isPhaseModulated()) if(integration.hasOption("phases"))
-			integration.getPhases().syncGains(this);
+			((PhaseModulated) integration).getPhases().syncGains(this);
 	}
 	
 	public int getFrameResolution(Integration<?, ?> integration) {

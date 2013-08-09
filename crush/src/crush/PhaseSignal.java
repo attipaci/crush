@@ -67,23 +67,17 @@ public class PhaseSignal {
 	
 	
 	protected synchronized void update(boolean isRobust) throws Exception {
-		final float[] G = mode.getGains();
-		final float[] dG = syncGains;
-	
 		// Make syncGains carry the gain increment since last sync...
-		boolean resyncGains = false;
-		for(int k=G.length; --k >= 0; ) {
-			dG[k] = G[k] - dG[k];
-			if(dG[k] != 0.0) resyncGains = true;
-		}
-			
+		syncGains();
+		
+		final float[] G = mode.getGains();
 		final ChannelGroup<?> channels = mode.getChannels();
 		final WeightedPoint dC = new WeightedPoint(); 
-		
+		final Integration<?,?> integration = phases.getIntegration();
 		
 		// Allow phases.estimator to override the default estimator request
-		if(phases.integration.hasOption("phases.estimator")) 
-			isRobust = phases.integration.option("phases.estimator").equals("median");
+		if(integration.hasOption("phases.estimator")) 
+			isRobust = integration.option("phases.estimator").equals("median");
 		
 		WeightedPoint[] temp = null;
 		if(isRobust) {
@@ -91,12 +85,12 @@ public class PhaseSignal {
 			for(int i=temp.length; --i >= 0; ) temp[i] = new WeightedPoint();
 		}
 		
+		final PhaseDependents parms = phases.getPhaseDependents(mode.getName());
+		parms.clear(channels, 0, phases.size());
+		
 		for(int i=phases.size(); --i >= 0; ) {
 			final PhaseData offsets = phases.get(i);
 			
-			// Resync gain changes if needed.
-			if(resyncGains) for(int k=G.length; --k >= 0; ) offsets.value[channels.get(k).index] -= dG[k] * value[i];
-				
 			if(isRobust) offsets.getRobustCorrelated(mode, G, temp, dC);
 			else offsets.getMLCorrelated(mode, G, dC);
 			
@@ -108,14 +102,19 @@ public class PhaseSignal {
 			}
 			
 			value[i] += dC.value();
-			weight[i] = dC.weight();	
-		}		
+			weight[i] = dC.weight();
+			
+			offsets.addChannelDependence(parms, mode, G, dC);
+			parms.add(offsets, 1.0);
+		}	
+		
+		parms.apply(channels, 0, phases.size());
 		
 		generation++;
 		setSyncGains(G);
 	}
 	
-	public synchronized WeightedPoint[] getGainIncrement() {
+	public synchronized WeightedPoint[] getGainIncrement() {	
 		final ChannelGroup<?> channels = mode.getChannels();
 		final WeightedPoint[] dG = new WeightedPoint[channels.size()];
 		
@@ -129,10 +128,11 @@ public class PhaseSignal {
 
 		for(int i=phases.size(); --i >= 0; ) {
 			final PhaseData offsets = phases.get(i);
-			if(offsets.flag != 0) continue;
+			
+			if(offsets.channelFlag[channel.index] != 0) continue;
 			
 			final double C = value[i];
-			final double wC = offsets.weight[channel.index] * C;
+			final double wC = weight[i] * C;
 			sum += (wC * offsets.value[channel.index]);
 			sumw += (wC * C);
 		}
@@ -150,12 +150,16 @@ public class PhaseSignal {
 		final float[] G = mode.getGains();		
 		final float[] dG = syncGains;
 		
-		for(int k=G.length; --k >= 0; ) dG[k] = G[k] - dG[k];
+		boolean changed = false;
+		for(int k=G.length; --k >= 0; ) {
+			dG[k] = G[k] - dG[k];
+			if(dG[k] != 0.0F) changed = true;
+		}
+		if(!changed) return;
 			
-		for(int i=phases.size(); --i >= 0; ) {
+		for(int i=phases.size(); --i >= 0; ) if(weight[i] > 0.0) {
 			final PhaseData offsets = phases.get(i);
-			for(int k=G.length; --k >= 0; ) if(weight[i] > 0.0)
-				offsets.value[channels.get(k).index] -= dG[k] * value[i];
+			for(int k=G.length; --k >= 0; ) offsets.value[channels.get(k).index] -= dG[k] * value[i];
 		}
 		
 		setSyncGains(G);

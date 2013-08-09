@@ -62,6 +62,7 @@ public class CorrelatedSignal extends Signal {
 		return temp;
 	}
 
+	@Override
 	public final float weightAt(Frame frame) {
 		return weight[frame.index / resolution]; 
 	}

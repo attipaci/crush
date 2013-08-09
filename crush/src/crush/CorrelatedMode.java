@@ -72,10 +72,12 @@ public class CorrelatedMode extends Mode {
 		
 		signal.scale(aveG);
 		
-		PhaseSet phases = integration.getPhases();
-		if(phases != null) {
-			PhaseSignal pSignal = phases.signals.get(this);
-			if(pSignal != null) pSignal.scale(aveG);
+		if(integration.isPhaseModulated()) {
+			PhaseSet phases = ((PhaseModulated) integration).getPhases();
+			if(phases != null) {
+				PhaseSignal pSignal = phases.signals.get(this);
+				if(pSignal != null) pSignal.scale(aveG);
+			}
 		}
 		
 		if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.scaleSignals(integration, aveG);
@@ -90,8 +92,8 @@ public class CorrelatedMode extends Mode {
 
 		// Solve for the correlated phases also, if required
 		if(integration.isPhaseModulated()) if(integration.hasOption("phases") || solvePhases) {
-			PhaseSignal pSignal = integration.getPhases().signals.get(this);
-			if(pSignal == null) pSignal = new PhaseSignal(integration.getPhases(), this);
+			PhaseSignal pSignal = ((PhaseModulated) integration).getPhases().signals.get(this);
+			if(pSignal == null) pSignal = new PhaseSignal(((PhaseModulated) integration).getPhases(), this);
 			pSignal.update(isRobust);
 		}
 	}	

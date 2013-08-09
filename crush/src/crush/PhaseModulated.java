@@ -22,10 +22,8 @@
  ******************************************************************************/
 package crush;
 
-public interface PhaseWeighting {
+public interface PhaseModulated {
 
-	public void deriveRelativePhaseWeights(PhaseSet phases);
-	
-	public double getRelativePhaseWeight();
+	public PhaseSet getPhases();
 	
 }

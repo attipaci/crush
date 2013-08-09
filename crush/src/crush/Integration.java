@@ -79,7 +79,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public int sourceGeneration = 0;
 	public double[] sourceSyncGain;
 	
-	public Chopper chopper;
 	public DataPoint aveScanSpeed;
 	public MultiFilter filter;
 	private FloatFFT fft;
@@ -106,7 +105,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		clone.dependents = new Hashtable<String, Dependents>(); 
 		clone.signals = new Hashtable<Mode, Signal>();
 		clone.filter = null;
-
+		if(this instanceof Chopping) ((Chopping) this).setChopper(null);
+		
 		return clone;
 	}
 
@@ -470,7 +470,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public double getCrossingTime(double sourceSize) {		
-		if(chopper != null) return Math.min(chopper.stareDuration(), sourceSize / aveScanSpeed.value());
+		if(this instanceof Chopping) {
+			Chopper chopper = ((Chopping) this).getChopper();
+			if(chopper != null) return Math.min(chopper.stareDuration(), sourceSize / aveScanSpeed.value());
+		}
 		return sourceSize / aveScanSpeed.value();		
 	}
 
@@ -1281,6 +1284,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else if(despikedNeighbours) flagSpikyChannels(regularSpikes, 2*flagFraction, 2*flagCount, Channel.FLAG_SPIKY);
 		else flagSpikyChannels(regularSpikes, flagFraction, flagCount, Channel.FLAG_SPIKY);
 	
+		
+		if(isPhaseModulated()) if(hasOption("phasedespike")) {
+			PhaseSet phases = ((PhaseModulated) this).getPhases();
+			if(phases != null) phases.despike(level);
+		}
 	}
 	
 	
@@ -2182,7 +2190,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		
 		if(hasOption("write.phases")) if(isPhaseModulated()) {
-			try { getPhases().write(); }
+			try { ((PhaseModulated) this).getPhases().write(); }
 			catch(Exception e) { e.printStackTrace(); }
 		}
 		
@@ -2349,6 +2357,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public void detectChopper() {
+		if(!(this instanceof Chopping)) return;
 		
 		Signal x = getPositionSignal(null, Motion.CHOPPER, Motion.X);
 		Signal y = getPositionSignal(null, Motion.CHOPPER, Motion.Y);
@@ -2414,7 +2423,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			double dt = get(to).MJD - get(from).MJD;
 			dt *= Unit.day;
 			
-			chopper = new Chopper();
+			Chopper chopper = new Chopper();
 			chopper.amplitude = Statistics.median(distance, 0, n);
 			if(chopper.amplitude < threshold) {
 				chopper = null;
@@ -2429,6 +2438,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			int steady = 0;
 			for(int k=0; k<n; k++) if(Math.abs(distance[k] - chopper.amplitude) < threshold) steady++;
 			chopper.efficiency = (double)steady / n;
+			
+			((Chopping) this).setChopper(chopper);
 			
 			System.err.println("   Chopper detected: " + chopper.toString());
 			instrument.options.process("chopped", "");
@@ -2518,18 +2529,15 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	public boolean isPhaseModulated() {
-		if(chopper == null) return false;
-		if(chopper.phases == null) return false;
-		if(chopper.phases.isEmpty()) return false;
+		if(!(this instanceof PhaseModulated)) return false;
+		PhaseSet phases = ((PhaseModulated) this).getPhases();
+		if(phases == null) return false;
+		if(phases.isEmpty()) return false;
 		return true;
 	}
 	
 	public void updatePhases() {
-		if(isPhaseModulated()) getPhases().update(instrument);
-	}
-	
-	public PhaseSet getPhases() {
-		return chopper == null ? null : chopper.phases;
+		if(isPhaseModulated()) ((PhaseModulated) this).getPhases().update(instrument);
 	}
 	
 	public void getWeights() {
@@ -2541,9 +2549,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		getWeights(method);
 		
-		PhaseSet phases = getPhases();
-		if(phases != null) phases.getWeights();
-
+		if(isPhaseModulated()) if(hasOption("phaseweights")) {
+			PhaseSet phases = ((PhaseModulated) this).getPhases();
+			if(phases != null) phases.getWeights();
+		}
 	}
 	
 	public void getWeights(String method) {
@@ -2568,14 +2577,17 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else if(name.equals("rmsspeed")) return Util.defaultFormat(aveScanSpeed.rms() / (Unit.arcsec / Unit.s), f);
 		else if(name.equals("hipass")) return Util.defaultFormat(filterTimeScale / Unit.s, f);
 		else if(name.equals("chopfreq")) {
+			Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;
 			if(chopper == null) return "---";
 			else return  Util.defaultFormat(chopper.frequency / Unit.Hz, f);
 		}
 		else if(name.equals("chopthrow")) {
+			Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;
 			if(chopper == null) return "---";
 			else return  Util.defaultFormat(2.0 * chopper.amplitude / instrument.getSizeUnit(), f);
 		}
 		else if(name.equals("chopeff")) {
+			Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;
 			if(chopper == null) return "---";
 			else return  Util.defaultFormat(chopper.efficiency, f);
 		}

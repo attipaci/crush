@@ -78,6 +78,10 @@ public class Signal implements Cloneable {
 	public final float valueAt(final Frame frame) {
 		return value[frame.index / resolution]; 
 	}
+	
+	public float weightAt(final Frame exposure) {
+		return 1.0F;
+	}
 		
 	public synchronized void scale(double factor) {
 		float fValue = (float) factor;
@@ -411,14 +415,19 @@ public class Signal implements Cloneable {
 		final float[] G = mode.getGains();
 		final float[] dG = syncGains;
 		
-		for(int k=nc; --k >=0; ) dG[k] = G[k] - dG[k];
+		boolean changed = false;
+		for(int k=nc; --k >=0; ) {
+			dG[k] = G[k] - dG[k];
+			if(dG[k] != 0.0) changed = true;
+		}
+		if(!changed) return;
 		
 		parms.clear(channels, 0, integration.size());
 
 		// Precalculate the gain-weight products...
 		if(!isTempReady) prepareFrameTempFields();
 
-		// Sync to data and calculate dependeces...
+		// Sync to data and calculate dependences...
 		for(final Frame exposure : integration) if(exposure != null) {
 			for(int k=nc; --k >=0; ) if(sumwC2[k] > 0.0) {
 				exposure.data[channelIndex[k]] -= dG[k] * exposure.tempC;

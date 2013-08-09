@@ -1569,6 +1569,17 @@
 			'weighting.scans') to refine the reported NEFD estimate
 			(e.g. for loggig via 'log'). Else, the NEFD estimate
 			will be based on the timestream noise alone. 
+
+:: neighbours.radius=X	@Expert
+			@Since: 2.15
+			Specifies the local neighbourhood of a pixel relative 
+			to the beam-size, within which other pixels are used 
+			for a localized flux correction of the photometry. Not 
+			setting this option, or a value of 0.0 will disable 
+			neighbour-based photometry corrections.
+			The setting has no effect outside of photometry 
+			reductions.
+			@See: 'phases', 'chopped'
 			
 :: noiseclip=X		Flag (clip) map pixel with a noise level that is more
 			than X times higher than the deepest covered parts
@@ -1739,6 +1750,14 @@
 			phases also.
 			@See: 'estimator'
 
+:: phasedespike		@Expert
+			@Since: 2.15
+			When set, the phase data (such as position-switched
+			phases) will be despiked together with the regular
+			high-frequency despiking. The despiking level is the
+			same as for the 'despike' option.
+			@See: 'despike', 'despike.level', 'phaseweights'
+
 :: phasegains		@Expert
 			@Since: 2.04
 			Use the information in the phases to calculate gains
@@ -1747,6 +1766,16 @@
 			can set this property separately for each correlated
 			modality.
 			@See: 'correlated.<?>.phasegains'
+
+:: phaseweights		@Expert
+			@Since: 2.15
+			When set, CRUSH will calculate proper noise weights
+			for the phase data as well as the high-frequency 
+			time-stream, under the expectation that the phase
+			noise can be dominated by 1/f-type behaviour on the
+			relevant timescales. The calculation of phase weights
+			improves the reliability of the photometry.
+			@See: 'weighting', 'phases', 'chopped'
 	
 :: pins			@Alias -> correlated.pins
 			@Instrument: GISMO, SCUBA-2
@@ -1888,6 +1917,17 @@
 			time variability will be ignored, and only the static
 			values are used.
 			@See: 'pointing.model'
+
+:: pointing.tolerance=X		@Since: 2.15
+				@Expert
+			Control how close (relative to beam FWHM) the 
+			telescope pointing must be to its target position for 
+			determining the photometry. A distance of 1/5 beams
+			can result in 10% degradation on the boundaries, while 
+			the signal would degrade by 25% at 1/3 beams distance.
+			The setting has no effect outside of photometry
+			reductions.
+			@See: 'phases', 'chopped'
 
 :: pointing.significance=X	@Since: 2.00-0
 				@Expert

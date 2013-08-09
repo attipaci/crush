@@ -20,12 +20,10 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+
 package crush;
 
-public interface PhaseWeighting {
+public interface PhaseDespiking {
 
-	public void deriveRelativePhaseWeights(PhaseSet phases);
-	
-	public double getRelativePhaseWeight();
-	
+	int despike(PhaseSet phases, double level);
 }

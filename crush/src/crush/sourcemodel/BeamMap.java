@@ -267,14 +267,14 @@ public class BeamMap extends SourceMap {
 		}
 		if(k == 0) return;
 		
-		double mean = Statistics.median(peaks, 0, k);
+		final double mean = Statistics.median(peaks, 0, k);
 		
-		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
+		for(final Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
 			int i = pixel.getFixedIndex();
 			ScalarMap map = pixelMap[i];
 			if(map != null) {
 				final double rel = pixelPeak[i] / mean;
-				for(Channel channel : pixel) channel.coupling *= rel;
+				for(final Channel channel : pixel) channel.coupling *= rel;
 			}
 		}
 	}

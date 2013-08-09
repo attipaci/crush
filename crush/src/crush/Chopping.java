@@ -22,10 +22,10 @@
  ******************************************************************************/
 package crush;
 
-public interface PhaseWeighting {
-
-	public void deriveRelativePhaseWeights(PhaseSet phases);
+public interface Chopping extends PhaseModulated {
 	
-	public double getRelativePhaseWeight();
+	public Chopper getChopper();
+	
+	public void setChopper(Chopper chopper);
 	
 }
