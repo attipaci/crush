@@ -99,7 +99,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		
 		boolean noGainField = option.isConfigured("nofield");
 		
-		setGainRange(option.isConfigured("gainrange") ? option.get("gainrange").getRange() : new Range());
+		setGainRange(option.isConfigured("gainrange") ? option.get("gainrange").getRange() : Range.getFullRange());
 		setGainDirection(option.isConfigured("signed") ? Instrument.GAINS_SIGNED : Instrument.GAINS_BIDIRECTIONAL);
 		
 		for(Mode mode : this) {

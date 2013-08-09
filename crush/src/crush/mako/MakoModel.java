@@ -41,8 +41,9 @@ public class MakoModel {
 	DistortionModel distortion = new DistortionModel();
 	Mako model = new Mako();
 	Hashtable<Double, Vector2D> positions = new Hashtable<Double, Vector2D>();
+	Hashtable<Double, Double> sourceGains = new Hashtable<Double, Double>();
 	Vector2D offset = new Vector2D();
-	int order = 1;
+	int order = 2;
 	//double tolerance = 8.0;
 	
 	public static void main(String[] args) {
@@ -94,9 +95,12 @@ public class MakoModel {
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
-			for(int i=0; i<3; i++) tokens.nextToken();
+			tokens.nextToken(); // serial
+			double sourceGain = Double.parseDouble(tokens.nextToken());
+			tokens.nextToken(); // sky gain
 			Vector2D pos = new Vector2D(Double.parseDouble(tokens.nextToken()), Double.parseDouble(tokens.nextToken()));
 			Double f = Double.parseDouble(tokens.nextToken());
+			sourceGains.put(f, sourceGain);
 			positions.put(f, pos);
 			offset.add(pos);
 		}
@@ -155,7 +159,7 @@ public class MakoModel {
 		
 		initSize[0] = 0.01;
 		for(int i=0, index = 1; i<=order; i++) for(int j=0; j<=order-i; j++) {
-			double l = Math.pow(0.01, (i+j+1));
+			double l = Math.pow(0.01, 0.5*(i+j+1));
 			initSize[index++] = l;
 			initSize[index++] = l;
 		}
@@ -187,7 +191,9 @@ public class MakoModel {
 			System.out.print(Util.f1.format(f) + "\t");
 			MakoPixel pixel = findNearest(positions.get(f));
 			System.out.print((pixel.row+1) + "\t" + (pixel.col+1) + "\t");
-			System.out.println(Util.f1.format(pixel.getPosition().getX()) + "\t" + Util.f1.format(pixel.getPosition().getY()));
+			System.out.println(Util.f1.format(pixel.getPosition().getX()) 
+					+ "\t" + Util.f1.format(pixel.getPosition().getY())
+					+ "\t" + Util.f3.format(sourceGains.get(f)));
 		}
 	}
 	

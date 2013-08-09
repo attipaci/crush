@@ -40,15 +40,15 @@ import kovacs.util.*;
 import crush.fits.HDUReader;
 
 public class APEXArraySubscan<InstrumentType extends APEXArray<?>, FrameType extends APEXFrame> 
-extends Integration<InstrumentType, FrameType> implements GroundBased {
+extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 2929947229904002745L;
 	public int nodPhase = 0;
 	protected Thread thread;
-	
 	protected WeightedPoint[] tempPhase;
+	private Chopper chopper;
 	
 	public APEXArraySubscan(APEXArrayScan<InstrumentType, ?> parent) {
 		super(parent);
@@ -94,13 +94,16 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		//System.err.println("on phase is " + integration[i][k].onPhase);
 		
 		
-		Vector2D left = new Vector2D(nodPhase == Frame.CHOP_LEFT ? 0.0 : 2.0 * chopper.amplitude, 0.0);
+		
+		Vector2D left = new Vector2D(nodPhase == Frame.CHOP_LEFT ? 0.0 : 2.0 * getChopper().amplitude, 0.0);
 		Vector2D right = new Vector2D(nodPhase == Frame.CHOP_LEFT ? -2.0 * chopper.amplitude : 0.0, 0.0);
 		
 		// 1/5 beams ~90% on the boundary
 		// 1/4 beams ~85% on the boundary
 		// 1/3 beams ~75% on the boundary
 		double tolerance = instrument.resolution / 5.0;
+		if(hasOption("pointing.tolerance")) tolerance = option("pointing.tolerance").getDouble() * instrument.resolution;
+		
 		
 		markChopped(left, right, tolerance);
 		
@@ -446,5 +449,18 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	public void fitsRCP() {
 		System.err.println("   Using RCP data contained in the FITS.");
 		for(APEXPixel pixel : instrument) pixel.position = (Vector2D) pixel.fitsPosition.clone();
+	}
+
+	public PhaseSet getPhases() {
+		Chopper chopper = getChopper();
+		return chopper == null ? null : chopper.phases;
+	}
+
+	public Chopper getChopper() {
+		return chopper;
+	}
+
+	public void setChopper(Chopper chopper) {
+		this.chopper = chopper;
 	}
 }

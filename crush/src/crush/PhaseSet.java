@@ -36,22 +36,33 @@ public class PhaseSet extends ArrayList<PhaseData> {
 	 */
 	private static final long serialVersionUID = 3448515171055358173L;
 	
-	protected Integration<?,?> integration;
+	private Integration<?,?> integration;
 	protected Hashtable<Mode, PhaseSignal> signals = new Hashtable<Mode, PhaseSignal>();
-		
-	Dependents globalDependents;
+	protected Hashtable<String, PhaseDependents> phaseDeps = new Hashtable<String, PhaseDependents>();
+	
+	public double[] channelParms;
+	
+	Dependents integrationDeps;
 	int generation = 0;	
-	public int driftParms = 0;
+	//public int driftParms = 0;
 	
 	public PhaseSet(Integration<?,?> integration) {
 		this.integration = integration;	
-		globalDependents = new Dependents(integration, "phases");
+		integrationDeps = new Dependents(integration, "phases");
+		channelParms = new double[integration.instrument.size()];
 	}
 	
+	public Integration<?,?> getIntegration() { return integration; }
+	
+	public PhaseDependents getPhaseDependents(String name) {
+		return phaseDeps.containsKey(name) ? phaseDeps.get(name) : new PhaseDependents(this, name);
+	}
 	
 	public synchronized void update(ChannelGroup<?> channels) {
 		
-		for(PhaseData offsets : this) offsets.update(channels, globalDependents);	
+		integration.comments += "|P";
+		
+		for(PhaseData offsets : this) offsets.update(channels, integrationDeps);	
 		
 		int N = size();
 		if(integration.hasOption("stability")) {
@@ -85,43 +96,67 @@ public class PhaseSet extends ArrayList<PhaseData> {
 	}
 	
 	public void getWeights() {
+		integration.comments += "|wP";
+		
 		for(Channel channel : integration.instrument)
-			if(channel instanceof PhaseWeighting) ((PhaseWeighting) channel).derivePhaseWeights(this); 
+			if(channel instanceof PhaseWeighting) ((PhaseWeighting) channel).deriveRelativePhaseWeights(this); 
+	}
+	
+	public void despike(double level) {
+		integration.comments += "|dP";
+		
+		int spikes = 0;
+		
+		for(Channel channel : integration.instrument)
+			if(channel instanceof PhaseDespiking) spikes += ((PhaseDespiking) channel).despike(this, level); 
+		
+		integration.comments += "(" + spikes + ")";
 	}
 	
 	public void removeDrifts(ChannelGroup<? extends Channel> channels, int nPhases) {
-		driftParms = (int)Math.ceil((double) size() / nPhases);
+		//integration.comments += "|DP(" + nPhases + ")";
 		for(Channel channel : channels) removeDrifts(channel, nPhases);		
 	}
 	
-	private void removeDrifts(Channel channel, int nPhases) {		
+	private void removeDrifts(final Channel channel, final int nPhases) {		
+		final PhaseDependents parms = getPhaseDependents("drifts");
+		parms.clear(channel);
 		
-		for(int N=0; N<driftParms; N++) {
+		int nParms = (int)Math.ceil((double) size() / nPhases);
+		
+		for(int N=0; N < nParms; N++) {
 			double sum = 0.0, sumw = 0.0;
 			final int from = N * nPhases;
 			final int to = Math.min(size(), from+nPhases);
 			
 			for(int n=from; n<to; n++) {
-				PhaseData offsets = get(n);			
+				PhaseData offsets = get(n);
 				sum += offsets.weight[channel.index] * offsets.value[channel.index];
 				sumw += offsets.weight[channel.index];
 			}
 			
 			if(sumw > 0.0) {
 				double level = (float) (sum / sumw);
-				for(int n=from; n<to; n++) get(n).value[channel.index] -= level;
-			}			
+				for(int n=from; n<to; n++) {
+					PhaseData offsets = get(n);
+					offsets.value[channel.index] -= level;
+					parms.add(offsets, offsets.weight[channel.index] / sumw);
+				}
+			}	
+			parms.add(channel, 1.0);
 		}		
+		
+		parms.apply(channel);
 	}
 	
 	// TODO levelling on just the left frames...
 	// TODO Use removeDrifts for dependence 
 	public synchronized void level(final Channel channel) {
-		driftParms = Math.max(driftParms, 1);
+		//driftParms = Math.max(driftParms, 1);
 		
 		final int c = channel.index;
 		double sum = 0.0, sumw = 0.0;
-		for(PhaseData offsets : this) if(offsets.flag == 0) {			
+		for(PhaseData offsets : this) {			
 			sum += offsets.weight[c] * offsets.value[c];
 			sumw += offsets.weight[c];
 		}

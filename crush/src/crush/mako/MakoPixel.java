@@ -97,11 +97,6 @@ public class MakoPixel extends SimplePixel {
 	}
 	
 	@Override
-	public void uniformGains() {
-		super.uniformGains();
-	}
-	
-	@Override
 	public String getRCPString() {
 		return super.getRCPString() + "\t" + getID();
 	}

@@ -34,9 +34,9 @@ public class PhaseData {
 	public int index;
 	
 	public double[] value, weight;
+	public int[] channelFlag;
 	public Frame start, end;
 	public int phase = 0;
-	public int flag = 0;
 	
 	public double dependents = 0.0;
 	
@@ -55,6 +55,7 @@ public class PhaseData {
 		if(value == null) {
 			value = new double[nc];
 			weight = new double[nc];
+			channelFlag = new int[nc];
 		}
 		
 		final int to = end.index + 1;
@@ -105,15 +106,30 @@ public class PhaseData {
 		
 		for(final Channel channel : channels) {
 			weight[channel.index] *= channel.weight;
-			if(channel instanceof PhaseWeighting) weight[channel.index] *= ((PhaseWeighting) channel).getPhaseWeight();
+			if(channel instanceof PhaseWeighting) weight[channel.index] *= ((PhaseWeighting) channel).getRelativePhaseWeight();
 		}
 		
 		parms.apply(channels, start.index, to);
 	}
 	
-	public WeightedPoint getValue(Channel channel) {
+	public final WeightedPoint getChannelValue(final Channel channel) {
 		return new WeightedPoint(value[channel.index], weight[channel.index]);
 	}
+	
+	protected void addChannelDependence(final PhaseDependents parms, final CorrelatedMode mode, final float[] G, final WeightedPoint increment) {
+		final int skipChannels = mode.skipChannels;
+		for(int k=G.length; --k >= 0; ) {
+			final Channel channel = mode.getChannel(k);
+			
+			if(channel.isFlagged(skipChannels)) continue;
+			if(channel.sourcePhase != 0) continue;
+			if(channelFlag[channel.index] != 0) continue;
+			
+			parms.add(channel, weight[channel.index] * G[k] * G[k] / increment.weight());
+		}
+	}
+		
+	
 	
 	protected void getMLCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint correlated) {	
 		final int skipChannels = mode.skipChannels;
@@ -125,6 +141,7 @@ public class PhaseData {
 			
 			if(channel.isFlagged(skipChannels)) continue;
 			if(channel.sourcePhase != 0) continue;
+			if(channelFlag[channel.index] != 0) continue;
 	
 			final double wG = weight[channel.index] * G[k];
 			sum += (wG * value[channel.index]);
@@ -146,6 +163,7 @@ public class PhaseData {
 		
 			if(channel.isFlagged(skipChannels)) continue;
 			if(channel.sourcePhase != 0) continue;
+			if(channelFlag[channel.index] != 0) continue;
 
 			final float Gk = G[k];
 			final double wG2 = weight[channel.index] * Gk * Gk;
@@ -169,6 +187,8 @@ public class PhaseData {
 		return new String(text);
 	}
 
-	public static final int SKIP_GAINS = 1;
+	public static final int FLAG_SPIKE = 1;
+
+	
 }
  

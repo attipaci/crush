@@ -1,10 +1,44 @@
 For 2.15
 
+	- Look at chopper signal and spectrum. See if there are subharmonics
+	  resonances or noise. (may want to Fourier filter the leveled 
+	  bolometer timestreams to remove any undesired pollution.).
 	- Update photometry document.
 
 
 For 2.16
 	- Update nom.tam.fits to 1.11 (Requires Java 6!!!)
 	  (check!!!)
-	- force. keywords
+	- freeze. keywords
+	- parallelize validation tasks
+		frame.validate()
+		reindex()
+		selectFrames()
+		? downsample()
+		velocityClip(), accelerationClip()
+		calcScanSpeedStats()
+		checkRange()
+		? setupFilters()
+		detectorStage() / readoutStage()
+		removeOffsets(...)
+		slim()
+	- Redo FITS reading
+		- eliminate HDUReader? (good for reading select rows...)
+		- read all into Object[][], or by rows 
+		  (using e.g. using model row and direct i/o)
+		- separate read from validation.
+
+	- 	
 	
+2.17 (Improved threading)
+
+	- Integration.Task
+		- task-specific local storage
+		- core method (on single cell data)
+		- tiling for multiprocessors or single-thread
+		- execute(), exectute(int maxThreads)
+		- Use global threadpool (per Integration)?
+		- re-implement all complex operations...
+	- Signal.Task
+		- similar to above...
+	- SourceModel.Task?

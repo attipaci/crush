@@ -1,5 +1,5 @@
 
-2.15-b1 (beta)
+2.15-b2 (beta)
 
 	Overview
 	=====================================================================
@@ -15,6 +15,28 @@
 
 	[BUG] {LABOCA} Photometry reductions broken in 2.14 (and perhaps also
 	in 2.13) due to an unchecked null pointer. Now fixed!
+	
+	[NEW] {b1} {photometry} Deriving proper weights for the position switch
+	phases, when the 'phaseweights' options is set. This way, the phase
+	data is combined with proper accounting of the 1/f excess (if any).
+
+	[NEW] {b1} {photometry} Despiking of position switched phase data when
+	the 'phasedespike' option is set.
+
+	[NEW] {b1} {photometry} The new key 'pointing.tolerance' can be used
+	to control how close the wobbler must be (relative to beam FWHM) to its
+ 	target position for determining the photometry. A distance of 1/5 beams
+	can result in 10% degradation on the boundaries, while the signal would
+	degrade by 25% at 1/3 beams distance.
+
+	[NEW] {b1} {photometry} The new option 'neighbours.radius' specifies
+	the local neighbourhood of a pixel relative to the beam-size, within
+	which other pixels are used for a localized flux correction. Not
+	setting this option, or a value of 0.0 will disable neighbour-based
+	photometry corrections.
+
+	[NEW] {b1} {photometry} Additional sanity check to photometry, and
+	proper degrees-of-freedom accounting and checking.
 
 	[NEW] {photometry} Photometry reductions now write the final result, 
 	as well as a scan-by-scan breakdown into a data file. Additionally, if 
@@ -32,6 +54,15 @@
 	descriptive 'moving' (as it applies to all objects that move relative
 	to the celestial frame). However, the options remains aliased as
 	'planetary' for full backward compatibility.
+
+	[FIX] {b1} {photometry} Changed the weighting in gain increment 
+	calculation. Weights now carry both the correlated signal weight 
+	and the data weight.
+
+	[FIX] {b1} {photometry} Photometry was not optimal if the subscan had
+	non-integer chop cycles. Luckily, it seems APECS did not let this 
+	happen, so the fix should not result in any change in the photometry 
+	from the beta release.
 
 	[FIX] {LABOCA} Calibration and tau table lookup now check for infinite
 	values and return defaults instead.
@@ -60,6 +91,12 @@
 
 	[TWEAK] {GISMO} No more exlusivity between gradients and LSS filtering.
 
+	[CONFIG] {GISMO} {b1} Run 7 (Nov 2012) configuration changed to 
+	reenable decorrelation on SQUID MUX and also dejumping. Although there
+	were no phase jumps (thanks to a clean ground) in Nov 2012 or since,
+	the dejumping is also effective at flagging out the periodic IRIG
+	interference. Therefore, it's good to leave it activated.
+
 	[CONFIG] {LABOCA} The calibration table supplied with 2.14 (and probably
 	many other recent releases) had most of 2012 missing. Fixed.
 
@@ -82,6 +119,21 @@
 
 	[MAN] Author hyperlinked in online man pages :-).
 
+	[PACKAGE] Gnuplot dependecies added for RPM and Debian packages. While
+	gnuplot is not strictly required to run crush, it enables some plotting
+	features for photometry and skydip reductions. Package managers will 
+	have no trouble locating and installing gnuplot along with crush, so
+	it does not hurt to make it a required dependicy. For now, no version
+	requirement is placed on the gnuplot packages though...
+	Also, java dependencies updated for Debian package. 
+
+	[CODE] Phase-based and Chopped data are not commonly assumed for all
+	instruments, only those that implement the appropriate PhaseModulated
+	or Chopping interfaces.
+
+	[CODE] {APEX} Routines to write out nod-cycle data and spectra. These
+	are meant for debugging use only, and not (yet) accessible to users.
+
 	[CODE] {skydip} {photometry} PNG and EPS outputs have CRUSH version
 	printed on.
 
@@ -90,6 +142,7 @@
 
 	[CODE] Introducing SourceModel.getASCIIHeader().
 
+	[UTIL] Compliance with kovacs.util 0.02-2.
 
 
 
@@ -128,6 +181,9 @@
 
 	[UTIL] Including kovacs.util classes with version 0.02-1.
 
+	[FIX] Not setting a gainRange for correlated signals was not working
+	due to a badly defined default range. Now fixed.
+
 	[FIX] {LABOCA} RCP configuration was incorrect for 2008-05-16 to 
 	2008-06-15 due to a typo in the configuration file (laboca/default.cfg)
 
@@ -135,6 +191,10 @@
 	Now fixed.
 
 	[FIX] {MAKO} 'assign.guessT' was not used. Fixed.
+
+	[TWEAK] {APEX} {photometry} {b1} calculated relative phase weights for
+	channels now takes into account the lost degrees of freedom from 
+	modeling.
 
 	[TWEAK] {GISMO} PaKo pointing corrections suggested only if no 
 	pointing model override (via 'pointing.model') and no incremental
@@ -153,6 +213,9 @@
 
 	[TWEAK] Modified connection procedure for checking updates. Hopefully
 	this resolves the hanging when crush is run with a stale connection.
+
+	[CONFIG] {LABOCA} Adjusted gain range for correlated 'boxes' and 
+	'cables' to allow nearly 0 response.
 
 	[CONFIG] {MAKO} 'gradients' enabled for 'faint' and 'deep' reductions.
 

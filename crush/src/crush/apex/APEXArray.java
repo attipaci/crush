@@ -144,7 +144,7 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 		
 		final double pointingTolerance = resolution / 5.0;
 		
-		final boolean isChopped = firstSubscan.chopper != null;
+		final boolean isChopped = firstSubscan.getChopper() != null;
 		
 	
 		if(isChopped) {
@@ -167,6 +167,7 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 			setPointing(firstScan);
 		}
 		
+		if(hasOption("nochecks")) return;
 		
 		// Make sure the rest of the list conform to the first scan...
 		for(int i=scans.size(); --i > 0; ) {
@@ -179,7 +180,7 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 				scans.remove(i);
 			}
 			
-			boolean subscanChopped = subscan.chopper != null;
+			boolean subscanChopped = subscan.getChopper() != null;
 			
 			if(subscanChopped != isChopped) {	
 				if(isChopped) System.err.println("  WARNING! Scan " + scan.getID() + " is not a chopped scan. Dropping from dataset.");

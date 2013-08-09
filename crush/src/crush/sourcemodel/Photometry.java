@@ -73,14 +73,16 @@ public abstract class Photometry extends SourceModel {
 			flux[c].average(F);
 		}
 		sourceFlux.average(other.sourceFlux);
-		integrationTime += other.integrationTime;
+		if(other.sourceFlux.weight() > 0.0) integrationTime += other.integrationTime;
 	}
 
 	@Override
 	public synchronized void add(Integration<?, ?> integration) {
+		if(!integration.isPhaseModulated()) return;
+		
 		integration.comments += "[Phot]";
 		Instrument<?> instrument = integration.instrument;
-		final PhaseSet phases = integration.getPhases();
+		final PhaseSet phases = ((PhaseModulated) integration).getPhases();
 	
 		int frames = 0;
 		for(PhaseData offset : phases) frames += offset.end.index - offset.start.index;
@@ -97,7 +99,8 @@ public abstract class Photometry extends SourceModel {
 		DataPoint F = new DataPoint(sourceFlux);
 		F.scale(1.0/jansky);
 		
-		System.err.print("Flux: " + F.toString(Util.e3) + " Jy/beam.");	
+		if(F.weight() > 0.0) System.err.print("Flux: " + F.toString(Util.e3) + " Jy/beam.");	
+		else System.err.println("<<invalid>>");
 	}
 	
 	@Override
@@ -166,7 +169,7 @@ public abstract class Photometry extends SourceModel {
 		System.out.println("  Time  : " + Util.f1.format(integrationTime/Unit.min) + " min.");
 		
 		double chi2 = getReducedChi2();
-		if(!Double.isNaN(chi2)) System.out.println("  |rChi|: " + Util.s3.format(Math.sqrt(chi2)));
+		if(!Double.isNaN(chi2)) System.out.println("  |rChi|: " + (chi2 < 1.0 ? "<1 :-)" : Util.s3.format(Math.sqrt(chi2))));
 		
 		//System.out.println("  NEFD  : " + Util.f1.format(500.0 * F.rms() * Math.sqrt(integrationTime/Unit.s)) + " mJy sqrt(s).");
 		System.out.println("  =====================================");
