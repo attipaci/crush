@@ -152,7 +152,7 @@ public class PhaseData {
 		correlated.setWeight(sumw);
 	}
 	
-	protected void getRobustCorrelated(CorrelatedMode mode, final float[] G, final WeightedPoint[] temp, final WeightedPoint correlated) {
+	protected void getRobustCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint[] temp, final WeightedPoint correlated) {
 		final int skipChannels = mode.skipChannels;
 		
 		int n=0;

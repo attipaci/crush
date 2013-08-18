@@ -25,7 +25,7 @@ package crush.sourcemodel;
 import java.util.*;
 import java.text.ParseException;
 
-import kovacs.data.Bounds;
+import kovacs.data.IndexBounds2D;
 import kovacs.data.Grid2D;
 import kovacs.data.GridImage;
 import kovacs.data.Region;
@@ -89,7 +89,7 @@ public class PolygonalRegion<CoordinateType extends Coordinate2D> extends Region
 	
 
 	@Override
-	public Bounds getBounds(GridImage<CoordinateType> image) {
+	public IndexBounds2D getBounds(GridImage<CoordinateType> image) {
 		Vector2D min = (Vector2D) points.get(0).clone();
 		Vector2D max = (Vector2D) points.get(0).clone();
 		
@@ -112,7 +112,7 @@ public class PolygonalRegion<CoordinateType extends Coordinate2D> extends Region
 		max.scaleX(1.0 / delta.getX());
 		max.scaleY(1.0 / delta.getY());
 		
-		Bounds bounds = new Bounds();
+		IndexBounds2D bounds = new IndexBounds2D();
 		bounds.fromi = (int) Math.floor(Math.min(min.getX(), max.getX()));
 		bounds.toi = (int) Math.ceil(Math.max(min.getX(), max.getX()));
 		bounds.fromj = (int) Math.floor(Math.min(min.getY(), max.getY()));
@@ -125,7 +125,7 @@ public class PolygonalRegion<CoordinateType extends Coordinate2D> extends Region
 	public WeightedPoint getFlux(GridImage<CoordinateType> image) {
 		WeightedPoint flux = new WeightedPoint();
 		
-		Bounds bounds = getBounds(image);
+		IndexBounds2D bounds = getBounds(image);
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++)
 			if(image.isUnflagged(i, j)) if(isInside(image.getGrid(), i, j)) {
@@ -141,7 +141,7 @@ public class PolygonalRegion<CoordinateType extends Coordinate2D> extends Region
 	
 	public double getInsideLevel(GridImage<CoordinateType> image) {
 		double sum = 0.0, sumw = 0.0;
-		Bounds bounds = getBounds(image);
+		IndexBounds2D bounds = getBounds(image);
 		
 		for(int i=bounds.fromi; i<=bounds.toi; i++) for(int j=bounds.fromj; j<=bounds.toj; j++) 
 			if(image.isUnflagged(i, j)) if(isInside(image.getGrid(), i, j)) {
@@ -155,7 +155,7 @@ public class PolygonalRegion<CoordinateType extends Coordinate2D> extends Region
 	
 	public double getRMS(GridImage<CoordinateType> image) {
 		double level = getInsideLevel(image);
-		Bounds bounds = getBounds(image);
+		IndexBounds2D bounds = getBounds(image);
 		
 		double var = 0.0;
 		int n = 0;

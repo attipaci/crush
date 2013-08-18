@@ -49,6 +49,10 @@ import crush.Scan;
 
 
 public abstract class GridSource<CoordinateType extends Coordinate2D> extends GridMap<CoordinateType> implements Cloneable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7928156781161894347L;
 	public Instrument<?> instrument;
 	public Vector<Scan<?, ?>> scans = new Vector<Scan<?, ?>>();
 
@@ -254,6 +258,11 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	public double getUnderlyingFWHM() { return instrument.resolution; }
 	
 	private class Jansky extends Unit {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -2228932903204574146L;
+
 		private Jansky() { super("Jy", Double.NaN); }
 		
 		@Override
