@@ -1,10 +1,3 @@
-For 2.15
-
-	- Look at chopper signal and spectrum. See if there are subharmonics
-	  resonances or noise. (may want to Fourier filter the leveled 
-	  bolometer timestreams to remove any undesired pollution.).
-	- Update photometry document.
-
 
 For 2.16
 	- Update nom.tam.fits to 1.11 (Requires Java 6!!!)
@@ -28,17 +21,31 @@ For 2.16
 		  (using e.g. using model row and direct i/o)
 		- separate read from validation.
 
-	- 	
-	
-2.17 (Improved threading)
+For 2.20
 
-	- Integration.Task
-		- task-specific local storage
-		- core method (on single cell data)
-		- tiling for multiprocessors or single-thread
-		- execute(), exectute(int maxThreads)
-		- Use global threadpool (per Integration)?
-		- re-implement all complex operations...
-	- Signal.Task
-		- similar to above...
-	- SourceModel.Task?
+	- Upstream photometry architecture, common for all instruments.
+		- PhaseSet > PhaseGroup > PhaseData
+		- PhaseGroup.getValue(Channel c)
+	  	- Weighting/Despiking move to PhaseSet
+
+	- APEXChoppedPhotometry --> Photometry
+
+
+For 2.20 (Architecture Improvements...)
+	
+	- Estimator
+		- MaximumLikelihood, Median, Trimean...
+	- kovacs.util.Ensemble<Type> (<- ArrayList<Ensemble.Entry>)
+		-> Sorted vs Unsorted, Regular vs Irregular
+		-> Entry implements Flagging... 
+		-> FloatEnsemble, DoubleEnsemble, WeightedEnseble?
+                   (or WeightedPoint Only...)
+		-> mean, median, trimean, variance, rms, despike (methods)
+		-> scale, add, subtract, average...
+	- Integration.Cell (<- Ensemble)
+		- Cell Task.getCell();
+		- reset(), hasNext(), next();		
+  		- DriftCell, ModeCell, ChannelCell...
+
+
+

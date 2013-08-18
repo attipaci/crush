@@ -31,6 +31,11 @@ import kovacs.math.SphericalCoordinates;
 
 public class AstroImage extends GridImage<SphericalCoordinates> implements Cloneable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5580580559151175614L;
+
 	public AstroImage() {
 		setGrid(new SphericalGrid());
 	}

@@ -37,12 +37,17 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.15-b2
+ * @version 2.15-1
  * 
  */
 public class CRUSH extends Configurator {
-	private static String version = "2.15-b2";
-	private static String revision = "beta";
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6284421525275783456L;
+	
+	private static String version = "2.15-1";
+	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;

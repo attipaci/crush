@@ -169,7 +169,7 @@ public abstract class Photometry extends SourceModel {
 		System.out.println("  Time  : " + Util.f1.format(integrationTime/Unit.min) + " min.");
 		
 		double chi2 = getReducedChi2();
-		if(!Double.isNaN(chi2)) System.out.println("  |rChi|: " + (chi2 < 1.0 ? "<1 :-)" : Util.s3.format(Math.sqrt(chi2))));
+		if(!Double.isNaN(chi2)) System.out.println("  |rChi|: " + (chi2 < 1.0 ? "<= 1   :-)" : Util.s3.format(Math.sqrt(chi2))));
 		
 		//System.out.println("  NEFD  : " + Util.f1.format(500.0 * F.rms() * Math.sqrt(integrationTime/Unit.s)) + " mJy sqrt(s).");
 		System.out.println("  =====================================");
@@ -224,7 +224,7 @@ public abstract class Photometry extends SourceModel {
 		
 		if(scans.size() > 1) gnuplot(coreName, fileName);
 		
-		System.err.println();
+		//System.err.println();
 	}
 
 	@Override

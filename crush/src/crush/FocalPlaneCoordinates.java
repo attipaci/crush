@@ -28,6 +28,10 @@ import kovacs.util.CoordinateAxis;
 import kovacs.util.CoordinateSystem;
 
 public class FocalPlaneCoordinates extends SphericalCoordinates {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6324566580599103464L;
 	static CoordinateAxis xAxis, yAxis, xOffsetAxis, yOffsetAxis;
 	static CoordinateSystem defaultCoordinateSystem, defaultLocalCoordinateSystem;
 

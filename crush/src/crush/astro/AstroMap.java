@@ -34,6 +34,11 @@ import crush.sourcemodel.GridSource;
 
 public class AstroMap extends GridSource<SphericalCoordinates> {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1928269463718310661L;
+
 	public AstroMap() {
 		setGrid(new SphericalGrid());
 	}

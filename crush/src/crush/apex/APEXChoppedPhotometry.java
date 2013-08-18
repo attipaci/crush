@@ -57,22 +57,8 @@ public class APEXChoppedPhotometry extends Photometry {
 			// Proceed only if there are enough pixels to do the job...
 			if(!checkPixelCount(integration)) continue;		
 			
-			// To be sure one could update the phases one last time...
-			//integration.updatePhases();
+			double radius = hasOption("neighbours.radius") ? option("neighbours.radius").getDouble() : 0.0;	
 			
-			// Update the phase weights too, if used...
-			//if(integration.hasOption("phaseweights")) phases.getWeights();
-			
-			// Update the phase weights too, if used...
-			/*
-			if(integration.hasOption("despike")) if(integration.hasOption("phasedespike")) {
-				double level = integration.hasOption("despike.level") ? integration.option("despike.level").getDouble() : 10.0;
-				phases.despike(level);
-			}
-			*/
-			
-			double radius = hasOption("neighbours.radius") ? option("neighbours.radius").getDouble() : 0.0;
-				
 			for(APEXPixel pixel : subscan.instrument.getObservingChannels()) if(pixel.sourcePhase != 0) {
 				WeightedPoint point = null;
 	
