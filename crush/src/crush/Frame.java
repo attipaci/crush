@@ -150,14 +150,14 @@ public abstract class Frame implements Cloneable, Flagging {
 	}
 
 	public void getEquatorial(final Vector2D position, final EquatorialCoordinates coords) {
-		coords.setNativeLongitude(equatorial.getX() + getX(position) / scan.equatorial.cosLat());
-		coords.setNativeLatitude(equatorial.getY() + getY(position));
+		coords.setNativeLongitude(equatorial.x() + getX(position) / scan.equatorial.cosLat());
+		coords.setNativeLatitude(equatorial.y() + getY(position));
 	}
 	
 	public void getEquatorialNativeOffset(final Vector2D position, final Vector2D offset) {
 		getEquatorialNativeOffset(offset);
-		offset.setX(offset.getX() + getX(position));
-		offset.setY(offset.getY() + getY(position));
+		offset.setX(offset.x() + getX(position));
+		offset.setY(offset.y() + getY(position));
 	}
 		
 	public void getNativeOffset(final Vector2D position, final Vector2D offset) {
@@ -170,9 +170,9 @@ public abstract class Frame implements Cloneable, Flagging {
 	
 	public void getFocalPlaneOffset(final Vector2D position, final Vector2D offset) {
 		getNativeOffset(offset);
-		double x = offset.getX();
-		offset.setX(position.getX() + x * cosA + offset.getY() * sinA);
-		offset.setY(position.getY() + offset.getY() * cosA - x * sinA);
+		final double x = offset.x();
+		offset.setX(position.x() + x * cosA + offset.y() * sinA);
+		offset.setY(position.y() + offset.y() * cosA - x * sinA);
 	}
 	
 	public void getEquatorialNativeOffset(Vector2D offset) {
@@ -221,11 +221,11 @@ public abstract class Frame implements Cloneable, Flagging {
 	}
 	
 	public final double getX(final Vector2D position) {
-		return cosA * position.getX() - sinA * position.getY();	
+		return cosA * position.x() - sinA * position.y();	
 	}
 	
 	public final double getY(final Vector2D position) {
-		return cosA * position.getY() + sinA * position.getX();	
+		return cosA * position.y() + sinA * position.x();	
 	}
 	
 	public void project(final Vector2D position, final CelestialProjector projector) {

@@ -106,8 +106,8 @@ public class SimplePixel extends Channel implements Pixel {
 		return getFixedIndex() + 
 				"\t" + Util.f3.format(gain * coupling) + 
 				"\t" + Util.f3.format(gain) + 
-				"\t" + Util.f1.format(position.getX() / Unit.arcsec) + 
-				"  " + Util.f1.format(position.getY() / Unit.arcsec);
+				"\t" + Util.f1.format(position.x() / Unit.arcsec) + 
+				"  " + Util.f1.format(position.y() / Unit.arcsec);
 	}
 	
 }

@@ -71,7 +71,7 @@ public class Sharc2Pixel extends SimplePixel {
 	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {
-		return new Vector2D(-size.getX() * col, size.getY() * row);
+		return new Vector2D(-size.x() * col, size.y() * row);
 	}
 		
 	@Override
@@ -87,7 +87,7 @@ public class Sharc2Pixel extends SimplePixel {
 	}
 	
 	public double getAreaFactor() {
-		return size.getX() * size.getY() / (defaultSize.getX() * defaultSize.getY());	
+		return size.x() * size.y() / (defaultSize.x() * defaultSize.y());	
 	}
 	
 	@Override

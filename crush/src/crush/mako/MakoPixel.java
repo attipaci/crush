@@ -76,7 +76,7 @@ public class MakoPixel extends SimplePixel {
 	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {
-		return new Vector2D(size.getX() * (col - 0.5 * (Mako.cols-1)), size.getY() * (row - 0.5 * (Mako.rows-1)));
+		return new Vector2D(size.x() * (col - 0.5 * (Mako.cols-1)), size.y() * (row - 0.5 * (Mako.rows-1)));
 	}
 		
 
@@ -93,7 +93,7 @@ public class MakoPixel extends SimplePixel {
 	}
 	
 	public double getAreaFactor() {
-		return size.getX() * size.getY() / (defaultSize.getX() * defaultSize.getY());	
+		return size.x() * size.y() / (defaultSize.x() * defaultSize.y());	
 	}
 	
 	@Override

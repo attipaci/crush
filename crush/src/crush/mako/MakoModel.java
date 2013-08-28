@@ -152,8 +152,8 @@ public class MakoModel {
 		};
 		
 		double[] parms = new double[2 * distortion.size() + 1];
-		parms[1] = offset.getX();
-		parms[2] = offset.getY();
+		parms[1] = offset.x();
+		parms[2] = offset.y();
 		
 		double[] initSize = new double[parms.length];
 		
@@ -191,8 +191,8 @@ public class MakoModel {
 			System.out.print(Util.f1.format(f) + "\t");
 			MakoPixel pixel = findNearest(positions.get(f));
 			System.out.print((pixel.row+1) + "\t" + (pixel.col+1) + "\t");
-			System.out.println(Util.f1.format(pixel.getPosition().getX()) 
-					+ "\t" + Util.f1.format(pixel.getPosition().getY())
+			System.out.println(Util.f1.format(pixel.getPosition().x()) 
+					+ "\t" + Util.f1.format(pixel.getPosition().y())
 					+ "\t" + Util.f3.format(sourceGains.get(f)));
 		}
 	}

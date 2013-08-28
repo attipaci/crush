@@ -52,8 +52,8 @@ public class Scuba2Subarray implements Cloneable {
 	}
 	
 	public void getPixelPosition(double mux, double pin, Vector2D position) {
-		position.setX((isMirrored ? -1.0 : 1.0) * pixelSize.getX() * (pin - 19.5));
-		position.setY(pixelSize.getY() * (mux - 15.5));
+		position.setX((isMirrored ? -1.0 : 1.0) * pixelSize.x() * (pin - 19.5));
+		position.setY(pixelSize.y() * (mux - 15.5));
 		position.rotate(orientation);
 		position.add(apertureOffset);
 	}
@@ -63,7 +63,7 @@ public class Scuba2Subarray implements Cloneable {
 			pixelSize = new Vector2D();
 			StringTokenizer tokens = new StringTokenizer(scuba2.option(id + ".pixelsize").getValue(), " \t,:xX");
 			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.getX());
+			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
 		}
 		if(scuba2.hasOption(id + ".rotation"))
 			orientation = scuba2.option(id + ".rotation").getDouble() * Unit.deg;

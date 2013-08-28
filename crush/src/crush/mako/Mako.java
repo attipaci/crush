@@ -131,7 +131,7 @@ public class Mako extends CSOArray<MakoPixel> {
 			pixelSize = new Vector2D();
 			StringTokenizer tokens = new StringTokenizer(option("pixelsize").getValue(), " \t,:xX");
 			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.getX());
+			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
 		}
 		if(hasOption("mirror")) { pixelSize.scaleX(-1.0); }
 		if(hasOption("zoom")) { pixelSize.scale(option("zoom").getDouble()); }
@@ -194,7 +194,7 @@ public class Mako extends CSOArray<MakoPixel> {
 		Vector2D arrayRotationCenter = new Vector2D((rows + 1)/2.0, (cols+1)/2.0);
 		if(hasOption("rcenter")) arrayRotationCenter = option("rcenter").getVector2D();
 	
-		return MakoPixel.getPosition(pixelSize, arrayPointingCenter.getX() - arrayRotationCenter.getX(), arrayPointingCenter.getY() - arrayRotationCenter.getY());
+		return MakoPixel.getPosition(pixelSize, arrayPointingCenter.x() - arrayRotationCenter.x(), arrayPointingCenter.y() - arrayRotationCenter.y());
 	}
 	
 	private void calcPositions(Vector2D size) {
@@ -205,7 +205,7 @@ public class Mako extends CSOArray<MakoPixel> {
 			pixel.calcPosition();
 		}
 		
-		Vector2D center = MakoPixel.getPosition(size, arrayPointingCenter.getX() - 1.0, arrayPointingCenter.getY() - 1.0);
+		Vector2D center = MakoPixel.getPosition(size, arrayPointingCenter.x() - 1.0, arrayPointingCenter.y() - 1.0);
 		
 		if(hasOption("distortion")) {
 			System.err.println(" Correcting for focal-plane distortion.");

@@ -359,13 +359,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void setTau(String id, double value) {
 		Vector2D t = getTauCoefficients(id);
 		Vector2D inband = getTauCoefficients(instrument.getName());
-		setZenithTau(inband.getX() / t.getX() * (value - t.getY()) + inband.getY());
+		setZenithTau(inband.x() / t.x() * (value - t.y()) + inband.y());
 	}
 	
 	public double getTau(String id, double value) {
 		Vector2D t = getTauCoefficients(id);
 		Vector2D inband = getTauCoefficients(instrument.getName());
-		return t.getX() / inband.getX() * (value - inband.getY()) + t.getY();
+		return t.x() / inband.x() * (value - inband.y()) + t.y();
 	}
 	
 	public double getTau(String id) {
@@ -1558,8 +1558,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					coords.copy(exposure.getNativeCoords());
 					// Subtract the chopper motion if it is not requested...
 					if((type & Motion.CHOPPER) == 0) coords.subtractNativeOffset(exposure.chopperPosition);
-					pos.setX(coords.getX());
-					pos.setY(coords.getY());
+					pos.setX(coords.x());
+					pos.setY(coords.y());
 					
 					if((type & Motion.PROJECT_GLS) != 0) pos.scaleX(coords.cosLat());
 				}
@@ -1639,8 +1639,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(pos[t+1] == null || pos[t-1] == null) v[t] = null;
 			else {
 				v[t] = new Vector2D(
-						pos[t+1].getX() - pos[t-1].getX(),
-						pos[t+1].getY() - pos[t-1].getY()
+						pos[t+1].x() - pos[t-1].x(),
+						pos[t+1].y() - pos[t-1].y()
 				);
 				v[t].scale(i2dt);
 			}
@@ -1733,8 +1733,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(pos[t] == null || pos[t+1] == null || pos[t-1] == null) a[t] = null;
 			else {
 				a[t] = new Vector2D(
-						Math.cos(pos[t].getY()) * Math.IEEEremainder(pos[t+1].getX() + pos[t-1].getX() - 2.0*pos[t].getX(), Constant.twoPi),
-						pos[t+1].getY() + pos[t-1].getY() - 2.0*pos[t].getY()
+						Math.cos(pos[t].y()) * Math.IEEEremainder(pos[t+1].x() + pos[t-1].x() - 2.0*pos[t].x(), Constant.twoPi),
+						pos[t+1].y() + pos[t-1].y() - 2.0*pos[t].y()
 				);
 				a[t].scale(idt);
 			}

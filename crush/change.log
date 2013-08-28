@@ -1,3 +1,44 @@
+>> source.sign (GLOSSARY) 
+>> SZ (GLOSSARY)
+
+	[NEW] The option 'source.sign' can be used to specify if and when the
+	physical type of source(s) have a definite signedness. The argument
+	can be negative, zero, or positive, and also '-', '*', and '+'. The
+	default is to assume that all sources are seen in emission, i.e. have
+	a positive signature. The signature affects how clipping (via 'clip')
+	and blanking (via 'blank') behave on the intermediate source models. 
+
+	[NEW] {GISMO} The condition 'SZ' can be used to tune the reduction for
+	SZ clusters. By default sources are assumed to be seen in emission only.
+	Clusters also tend to be more extended than point sources and they
+	can benefit from some iterating. Thus, the configuration 
+	(gismo/default.cfg) has been tweaked such that using the 'SZ' option
+	tunes things a little differently from normal reductions. If you
+	want to detect galaxies and SZ clusters at the same time, it is
+	recommended to reset 'source.sign=0' after the 'SZ' option.
+
+	[FIX] Supplying an initial source model (via 'source.model') did not
+	work as intended, when the model was not exactly on the same grid 
+	as the reduction image (i.e. if it was not produced by a similar 
+	reduction itself.).
+
+	[FIX] If the reduction is given an initial 'source.model' at a 
+	different resolution than the instrument beam, then the fluxes are
+	rescaled appropriately for the instrument resolution.
+
+	[TWEAK] {GISMO} Decorreating sky gradients (in 'faint' and 'deep'
+	reductions) is now disabled by default. Instead, 'deep' reductions
+	now decorrelate on physical detector columns, which probably have
+	correlated heat transfer.
+
+	[CODE] Updating source synchronization gains is now on a pixel-by-pixel
+	basis instead of globally.
+	
+	[1.xx] Fixed imagetool's '-profile' option to center on sources as was 
+	intended.
+
+
+
 
 2.15-1 (19 August 2013)
 

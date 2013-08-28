@@ -43,14 +43,14 @@ public class AstroMap extends GridSource<SphericalCoordinates> {
 		setGrid(new SphericalGrid());
 	}
 	
-	public AstroMap(Instrument<?> instrument) { 
-		this(); 
+	public AstroMap(Instrument<?> instrument) {
+		this();
 		this.instrument = instrument;
 	}
 	
 	public AstroMap(String fileName, Instrument<?> instrument) throws Exception { 
 		this(instrument);
-		read(fileName);		
+		read(fileName);
 	}
 
 	public AstroMap(int i, int j) { 

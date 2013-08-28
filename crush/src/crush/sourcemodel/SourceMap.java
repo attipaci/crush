@@ -109,10 +109,10 @@ public abstract class SourceMap extends SourceModel {
 			StringTokenizer sizes = new StringTokenizer(option("map.size").getValue(), " \t,:xX");
 
 			fixedSize.setX(0.5* Double.parseDouble(sizes.nextToken()) * Unit.arcsec);
-			fixedSize.setY(sizes.hasMoreTokens() ? 0.5 * Double.parseDouble(sizes.nextToken()) * Unit.arcsec : fixedSize.getX());
+			fixedSize.setY(sizes.hasMoreTokens() ? 0.5 * Double.parseDouble(sizes.nextToken()) * Unit.arcsec : fixedSize.x());
 
-			xRange.setRange(-fixedSize.getX(), fixedSize.getX());
-			yRange.setRange(-fixedSize.getY(), fixedSize.getY());	
+			xRange.setRange(-fixedSize.x(), fixedSize.x());
+			yRange.setRange(-fixedSize.y(), fixedSize.y());	
 		}
 			
 		new IntegrationFork<Void>() {		
@@ -140,14 +140,14 @@ public abstract class SourceMap extends SourceModel {
 						exposure.project(pixel.getPosition(), projector);
 
 						if(!fixSize) {
-							xRange.include(projector.offset.getX());
-							yRange.include(projector.offset.getY());
-							scan.longitudeRange.include(projector.offset.getX());
-							scan.latitudeRange.include(projector.offset.getY());
+							xRange.include(projector.offset.x());
+							yRange.include(projector.offset.y());
+							scan.longitudeRange.include(projector.offset.x());
+							scan.latitudeRange.include(projector.offset.y());
 						}
 						else for(Channel channel : pixel) {
-							if(Math.abs(projector.offset.getX()) > fixedSize.getX()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
-							else if(Math.abs(projector.offset.getY()) > fixedSize.getY()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+							if(Math.abs(projector.offset.x()) > fixedSize.x()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+							else if(Math.abs(projector.offset.y()) > fixedSize.y()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
 							else valid = true;
 						}
 					}
@@ -306,8 +306,8 @@ public abstract class SourceMap extends SourceModel {
 		final double samplingInterval = integration.instrument.samplingInterval;
 
 		final CelestialProjector projector = new CelestialProjector(getProjection());
-		final Index2D index = new Index2D();
-		
+		final Index2D index = new Index2D();	
+			
 		for(final Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) {
 			final double fG = integration.gain * exposure.getSourceGain(signalMode);
 			final double fGC = (isMasked(index) ? 1.0 : filtering) * fG;
@@ -317,11 +317,12 @@ public abstract class SourceMap extends SourceModel {
 			goodFrames++;
 
 			for(final Pixel pixel : pixels) {
-				getIndex(exposure, pixel, projector, index);
+				getIndex(exposure, pixel, projector, index);		
 				add(exposure, pixel, index, fGC, sourceGain, samplingInterval, excludeSamples);
 			}
 		}
 		
+			
 		if(CRUSH.debug) System.err.println("### mapping frames:" + goodFrames);
 		
 		return goodFrames;
@@ -356,7 +357,7 @@ public abstract class SourceMap extends SourceModel {
 	
 		double averageFiltering = instrument.getAverageFiltering();
 		double C = filterCorrection && !signalCorrection ? averageFiltering : 1.0;
-	
+		
 		add(integration, pixels, sourceGain, C, signalMode);
 
 		if(signalCorrection)
@@ -368,7 +369,14 @@ public abstract class SourceMap extends SourceModel {
 		integration.comments += " ";
 	}
 	
+
+	
 	protected abstract void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, double[] syncGain, final boolean isMasked);
+	
+	public void setSyncGains(final Integration<?,?> integration, final Pixel pixel, final double[] sourceGain) {
+		if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
+		for(Channel channel : pixel) integration.sourceSyncGain[channel.index] = sourceGain[channel.index];
+	}
 	
 	protected void sync(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
 		final CelestialProjector projector = new CelestialProjector(getProjection());
@@ -383,10 +391,7 @@ public abstract class SourceMap extends SourceModel {
 				sync(exposure, pixel, index, fG, sourceGain, integration.sourceSyncGain, isMasked(index));
 			}
 		}
-		
-		System.arraycopy(sourceGain, 0, integration.sourceSyncGain, 0, sourceGain.length);
 	}
-
 
 	@Override
 	public void sync(Integration<?,?> integration) {
@@ -419,15 +424,20 @@ public abstract class SourceMap extends SourceModel {
 		double nf = sumfw > 0 ? N / sumfw : 0.0;
 
 		Dependents parms = integration.dependents.containsKey("source") ? integration.dependents.get("source") : new Dependents(integration, "source");
-		for(Pixel pixel : pixels) parms.clear(pixel, 0, integration.size());
-
-		for(Pixel pixel : pixels) for(Channel channel : pixel) if(channel.flag == 0) 
-			parms.add(channel, np * sourceGain[channel.index] * sourceGain[channel.index] / channel.variance);
-
+		for(Pixel pixel : pixels) {
+			parms.clear(pixel, 0, integration.size());
+			
+			for(Channel channel : pixel) if(channel.flag == 0) 
+				parms.add(channel, np * sourceGain[channel.index] * sourceGain[channel.index] / channel.variance);
+		}
+			
 		for(Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) 
 			parms.add(exposure, nf * exposure.relativeWeight * Math.abs(exposure.getSourceGain(signalMode)));
 
-		for(Pixel pixel : pixels) parms.apply(pixel, 0, integration.size());
+		for(Pixel pixel : pixels) {
+			parms.apply(pixel, 0, integration.size());
+			setSyncGains(integration, pixel, sourceGain);
+		}
 
 		if(CRUSH.debug) for(Pixel pixel : pixels) integration.checkForNaNs(pixel, 0, integration.size());
 	}

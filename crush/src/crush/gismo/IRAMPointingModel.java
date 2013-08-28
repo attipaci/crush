@@ -71,17 +71,17 @@ public class IRAMPointingModel {
 	}
 	
 	public void addNasmythOffset(Vector2D offset) {
-		P[10] += offset.getX();
-		P[11] += offset.getY();
+		P[10] += offset.x();
+		P[11] += offset.y();
 	}
 	
 	public double getDX(HorizontalCoordinates horizontal, double UT) {
 		double cosE = horizontal.cosLat();
 		double sinE = horizontal.sinLat();
-		double sinA = Math.sin(horizontal.getX());
-		double cosA = Math.cos(horizontal.getX());
-		double sin2A = Math.sin(2.0 * horizontal.getX());
-		double cos2A = Math.cos(2.0 * horizontal.getX());
+		double sinA = Math.sin(horizontal.x());
+		double cosA = Math.cos(horizontal.x());
+		double sin2A = Math.sin(2.0 * horizontal.x());
+		double cos2A = Math.cos(2.0 * horizontal.x());
 	
 		
 		// 2012-03-06
@@ -96,8 +96,8 @@ public class IRAMPointingModel {
 	public double getDY(HorizontalCoordinates horizontal, double UT, double Tamb) {
 		double cosE = horizontal.cosLat();
 		double sinE = horizontal.sinLat();
-		double sinA = Math.sin(horizontal.getX());
-		double cosA = Math.cos(horizontal.getX());
+		double sinA = Math.sin(horizontal.x());
+		double cosA = Math.cos(horizontal.x());
 		
 		// 2012-03-06
 		// Nasmyth offsets H & V are now equivalent to pointing model (P10/P11).

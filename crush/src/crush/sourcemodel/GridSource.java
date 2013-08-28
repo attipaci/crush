@@ -48,7 +48,7 @@ import crush.Instrument;
 import crush.Scan;
 
 
-public abstract class GridSource<CoordinateType extends Coordinate2D> extends GridMap<CoordinateType> implements Cloneable {
+public abstract class GridSource<CoordinateType extends Coordinate2D> extends GridMap<CoordinateType> {
 	/**
 	 * 
 	 */
@@ -63,12 +63,8 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	
 	private Unit jansky = new Jansky();
 	
-	public GridSource() {
-	}
+	public GridSource() {}
 	
-	public GridSource(String fileName, Instrument<?> instrument) throws Exception { 
-		read(fileName);		
-	}
 
 	public GridSource(int sizeX, int sizeY) {
 		super(sizeX, sizeY);

@@ -203,8 +203,8 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 			
 			Vector2D corr = env == null ? new Vector2D() : ((Model) env).getCorrection(entry);
 			
-			dx.average(entry.dx.value() - corr.getX(), relativeWeight * entry.dx.weight());
-			dy.average(entry.dy.value() - corr.getY(), relativeWeight * entry.dy.weight());
+			dx.average(entry.dx.value() - corr.x(), relativeWeight * entry.dx.weight());
+			dy.average(entry.dy.value() - corr.y(), relativeWeight * entry.dy.weight());
 		}
 	
 	}

@@ -81,8 +81,8 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		HorizontalFrame lastFrame = getLastIntegration().getLastFrame();
 		
 		horizontal = new HorizontalCoordinates(
-				0.5 * (firstFrame.horizontal.getX() + lastFrame.horizontal.getX()),  
-				0.5 * (firstFrame.horizontal.getY() + lastFrame.horizontal.getY())
+				0.5 * (firstFrame.horizontal.x() + lastFrame.horizontal.x()),  
+				0.5 * (firstFrame.horizontal.y() + lastFrame.horizontal.y())
 		);
 			
 	}
@@ -110,8 +110,8 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	public void editScanHeader(Header header) throws FitsException {	
 		super.editScanHeader(header);
 		header.addValue("MJD", iMJD, "Modified Julian Day.");
-		header.addValue("FAZO", fixedOffset.getX() / Unit.arcsec, "Fixed AZ pointing offset.");
-		header.addValue("FZAO", -fixedOffset.getY() / Unit.arcsec, "Fixed ZA pointing offset.");
+		header.addValue("FAZO", fixedOffset.x() / Unit.arcsec, "Fixed AZ pointing offset.");
+		header.addValue("FZAO", -fixedOffset.y() / Unit.arcsec, "Fixed ZA pointing offset.");
 		header.addValue("ELGAIN", elevationResponse, "Relative response at elevation.");
 		header.addValue("TEMPERAT", ambientT / Unit.K, "Ambient temperature (K).");
 		header.addValue("PRESSURE", pressure / Unit.mbar, "Atmospheric pressure (mbar).");
@@ -127,8 +127,8 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		double sizeUnit = instrument.getSizeUnit();
 		String sizeName = instrument.getSizeName();
 		
-		data.new Entry("FAZO", (pointingOffset.getX() + fixedOffset.getX()) / sizeUnit, sizeName);
-		data.new Entry("FZAO", -(pointingOffset.getY() + fixedOffset.getY()) / sizeUnit, sizeName);
+		data.new Entry("FAZO", (pointingOffset.x() + fixedOffset.x()) / sizeUnit, sizeName);
+		data.new Entry("FZAO", -(pointingOffset.y() + fixedOffset.y()) / sizeUnit, sizeName);
 		
 		return data;
 	}
@@ -136,16 +136,16 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	@Override
 	public String getPointingString(Vector2D pointing) {	
 		return super.getPointingString(pointing) + "\n\n" +
-			"  FAZO --> " + Util.f1.format((pointing.getX() + fixedOffset.getX()) / Unit.arcsec) +
-			", FZAO --> " + Util.f1.format(-(pointing.getY() + fixedOffset.getY()) / Unit.arcsec);		
+			"  FAZO --> " + Util.f1.format((pointing.x() + fixedOffset.x()) / Unit.arcsec) +
+			", FZAO --> " + Util.f1.format(-(pointing.y() + fixedOffset.y()) / Unit.arcsec);		
 	}
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 	
-		if(name.equals("FAZO")) return Util.defaultFormat(fixedOffset.getX() / Unit.arcsec, f);
-		else if(name.equals("FZAO")) return Util.defaultFormat(-fixedOffset.getY() / Unit.arcsec, f);
+		if(name.equals("FAZO")) return Util.defaultFormat(fixedOffset.x() / Unit.arcsec, f);
+		else if(name.equals("FZAO")) return Util.defaultFormat(-fixedOffset.y() / Unit.arcsec, f);
 		else if(name.equals("dir")) return AstroSystem.getID(scanSystem);
 		else return super.getFormattedEntry(name, formatSpec);
 	}

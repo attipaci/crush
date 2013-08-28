@@ -120,8 +120,8 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 
 		if(horizontal == null) {
 			horizontal = new HorizontalCoordinates();
-			horizontal.setLongitude(0.5*(firstFrame.horizontal.getX() + lastFrame.horizontal.getX()));
-			horizontal.setLatitude(0.5*(firstFrame.horizontal.getY() + lastFrame.horizontal.getY()));
+			horizontal.setLongitude(0.5*(firstFrame.horizontal.x() + lastFrame.horizontal.x()));
+			horizontal.setLatitude(0.5*(firstFrame.horizontal.y() + lastFrame.horizontal.y()));
 		}
 			
 		double PA = 0.5 * (firstFrame.getParallacticAngle() + lastFrame.getParallacticAngle());
