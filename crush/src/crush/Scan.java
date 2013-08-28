@@ -179,7 +179,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(correction == null) return;
 		double sizeUnit = instrument.getSizeUnit();
 		System.err.println("   Adjusting pointing by " + 
-				Util.f1.format(correction.getX() / sizeUnit) + ", " + Util.f1.format(correction.getY() / sizeUnit) +
+				Util.f1.format(correction.x() / sizeUnit) + ", " + Util.f1.format(correction.y() / sizeUnit) +
 				" " + instrument.getSizeName() + ".");
 		
 		for(Integration<?,?> integration : this) integration.pointingAt(correction);
@@ -656,25 +656,25 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		double sizeUnit = instrument.getSizeUnit();
 		String sizeName = instrument.getSizeName();
 		
-		data.new Entry("dX", pointingOffset.getX() / sizeUnit, sizeName);
-		data.new Entry("dY", pointingOffset.getY() / sizeUnit, sizeName);
+		data.new Entry("dX", pointingOffset.x() / sizeUnit, sizeName);
+		data.new Entry("dY", pointingOffset.y() / sizeUnit, sizeName);
 		
-		data.new Entry("d" + nameX, pointingOffset.getX() / sizeUnit, sizeName);
-		data.new Entry("d" + nameY, pointingOffset.getY() / sizeUnit, sizeName);
+		data.new Entry("d" + nameX, pointingOffset.x() / sizeUnit, sizeName);
+		data.new Entry("d" + nameY, pointingOffset.y() / sizeUnit, sizeName);
 		
-		data.new Entry(nameX, absolute.getX() / sizeUnit, sizeName);
-		data.new Entry(nameY, absolute.getY() / sizeUnit, sizeName);
+		data.new Entry(nameX, absolute.x() / sizeUnit, sizeName);
+		data.new Entry(nameY, absolute.y() / sizeUnit, sizeName);
 		
 		// Also print Nasmyth offsets if applicable...
 		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
 			Vector2D nasmyth = getNasmythOffset(pointingOffset);
 			
-			data.new Entry("dNasX", nasmyth.getX() / sizeUnit, sizeName);
-			data.new Entry("dNasY", nasmyth.getY() / sizeUnit, sizeName);
+			data.new Entry("dNasX", nasmyth.x() / sizeUnit, sizeName);
+			data.new Entry("dNasY", nasmyth.y() / sizeUnit, sizeName);
 			
 			nasmyth = getNasmythOffset(absolute);
-			data.new Entry("NasX", nasmyth.getX() / sizeUnit, sizeName);
-			data.new Entry("NasY", nasmyth.getY() / sizeUnit, sizeName);
+			data.new Entry("NasX", nasmyth.x() / sizeUnit, sizeName);
+			data.new Entry("NasY", nasmyth.y() / sizeUnit, sizeName);
 		}
 		
 		Asymmetry2D asym = getSourceAsymmetry(pointing);
@@ -798,14 +798,14 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		String sizeName = instrument.getSizeName();
 		
 		text += "  Offset: ";
-		text += Util.f1.format(pointingOffset.getX() / sizeUnit) + ", " + Util.f1.format(pointingOffset.getY() / sizeUnit) + " " 
+		text += Util.f1.format(pointingOffset.x() / sizeUnit) + ", " + Util.f1.format(pointingOffset.y() / sizeUnit) + " " 
 			+ sizeName + " (" + (this instanceof GroundBased ? "az,el" : "ra,dec") + ")";
 		
 		// Also print Nasmyth offsets if applicable...
 		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
 			Vector2D nasmyth = getNasmythOffset(pointingOffset);
 			text += "\n  Offset: ";		
-			text += Util.f1.format(nasmyth.getX() / sizeUnit) + ", " + Util.f1.format(nasmyth.getY() / sizeUnit) + " " 
+			text += Util.f1.format(nasmyth.x() / sizeUnit) + ", " + Util.f1.format(nasmyth.y() / sizeUnit) + " " 
 				+ sizeName + " (nasmyth)";
 		}
 		
@@ -847,8 +847,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 				((HorizontalFrame) getFirstIntegration().getFirstFrame()).equatorialToHorizontal(from);
 				Vector2D to = (Vector2D) offset.clone();
 				((HorizontalFrame) getLastIntegration().getLastFrame()).equatorialToHorizontal(to);
-				offset.setX(0.5 * (from.getX() + to.getX()));
-				offset.setY(0.5 * (from.getY() + to.getY()));
+				offset.setX(0.5 * (from.x() + to.x()));
+				offset.setY(0.5 * (from.y() + to.y()));
 				return offset;
 			}
 		}	
@@ -869,8 +869,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		// Inverse rotation from Native to Nasmyth...
 		Vector2D nasmyth = new Vector2D();
-		nasmyth.setX(cosA * nativeOffset.getX() + sinA * nativeOffset.getY());
-		nasmyth.setY(cosA * nativeOffset.getY() - sinA * nativeOffset.getX());
+		nasmyth.setX(cosA * nativeOffset.x() + sinA * nativeOffset.y());
+		nasmyth.setY(cosA * nativeOffset.y() - sinA * nativeOffset.x());
 		
 		return nasmyth;
 	}

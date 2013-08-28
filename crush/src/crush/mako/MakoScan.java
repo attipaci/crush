@@ -311,15 +311,15 @@ public class MakoScan extends CSOScan<Mako, MakoIntegration> {
 		
 		DecimalFormat f3_1 = new DecimalFormat(" 0.0;-0.0");
 
-		System.err.println("   AZO =" + f3_1.format(horizontalOffset.getX()/Unit.arcsec)
-				+ "\tELO =" + f3_1.format(horizontalOffset.getY()/Unit.arcsec)
-				+ "\tRAO =" + f3_1.format(eqOffset.getX()/Unit.arcsec)
-				+ "\tDECO=" + f3_1.format(eqOffset.getY()/Unit.arcsec)
+		System.err.println("   AZO =" + f3_1.format(horizontalOffset.x()/Unit.arcsec)
+				+ "\tELO =" + f3_1.format(horizontalOffset.y()/Unit.arcsec)
+				+ "\tRAO =" + f3_1.format(eqOffset.x()/Unit.arcsec)
+				+ "\tDECO=" + f3_1.format(eqOffset.y()/Unit.arcsec)
 				
 		);
 		
-		System.err.println("   FAZO=" + f3_1.format(fixedOffset.getX()/Unit.arcsec)
-				+ "\tFZAO=" + f3_1.format(-fixedOffset.getY()/Unit.arcsec)
+		System.err.println("   FAZO=" + f3_1.format(fixedOffset.x()/Unit.arcsec)
+				+ "\tFZAO=" + f3_1.format(-fixedOffset.y()/Unit.arcsec)
 		);
 		
 		equatorial.addOffset(eqOffset);
@@ -327,12 +327,12 @@ public class MakoScan extends CSOScan<Mako, MakoIntegration> {
 		// Add pointing corrections...
 		if(hasOption("fazo")) {
 			double fazo = option("fazo").getDouble() * Unit.arcsec;
-			horizontalOffset.addX(fixedOffset.getX() - fazo);
+			horizontalOffset.addX(fixedOffset.x() - fazo);
 			fixedOffset.setX(fazo);
 		}
 		if(hasOption("fzao")) {
 			double felo = -option("fzao").getDouble() * Unit.arcsec;
-			horizontalOffset.addY(fixedOffset.getY() - felo);
+			horizontalOffset.addY(fixedOffset.y() - felo);
 			fixedOffset.setY(felo);
 		}
 		

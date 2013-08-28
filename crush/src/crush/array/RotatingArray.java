@@ -66,8 +66,8 @@ public abstract class RotatingArray<PixelType extends SimplePixel> extends MonoA
 		
 		if(mount == Mount.CASSEGRAIN) {
 			Vector2D dP = getPointingCenterOffset();	
-			offset.setX(dP.getX() * (1.0 - cosA) + dP.getY() * sinA);
-			offset.setY(dP.getX() * sinA + dP.getY() * (1.0 - cosA));
+			offset.setX(dP.x() * (1.0 - cosA) + dP.y() * sinA);
+			offset.setY(dP.x() * sinA + dP.y() * (1.0 - cosA));
 		}
 		return offset;
 	}

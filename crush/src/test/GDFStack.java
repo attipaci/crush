@@ -84,10 +84,10 @@ public class GDFStack {
 	}
 	
 	public GridMap<Coordinate2D> getStack() {
-		int size = 1 + 2 * (int)Math.ceil(3.0 * map.getImageFWHM() / map.getResolution().getX());
+		int size = 1 + 2 * (int)Math.ceil(3.0 * map.getImageFWHM() / map.getResolution().x());
 		GridMap<Coordinate2D> stack = new GridMap<Coordinate2D>(size, size);
 		stack.setGrid(new CartesianGrid());
-		stack.setResolution(map.getResolution().getX());
+		stack.setResolution(map.getResolution().x());
 		stack.setName("stack");
 		final int c = size / 2;
 		stack.getGrid().setReferenceIndex(new Vector2D(c, c));

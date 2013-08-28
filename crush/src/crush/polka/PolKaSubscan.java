@@ -311,8 +311,8 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		
 		setMinDelay(crossings, coeffs);
 		
-		double MJD0 = coeffs.getX();
-		double dMJDdn = coeffs.getY();
+		double MJD0 = coeffs.x();
+		double dMJDdn = coeffs.y();
 		double freq = 1.0 / (dMJDdn * Unit.day);
 		System.err.println("f = " + Util.f3.format(freq) + " Hz.");
 		
@@ -373,8 +373,8 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 	}
 	
 	public void setMinDelay(ArrayList<Double> crossings, Vector2D coeffs) {
-		double MJD0 = coeffs.getX();
-		double dMJDdn = coeffs.getY();
+		double MJD0 = coeffs.x();
+		double dMJDdn = coeffs.y();
 		double mindMJD = 0.0;
 		for(int i=crossings.size(); --i >= 0; ) {
 			double dMJD = crossings.get(i) - (MJD0 + dMJDdn * i);

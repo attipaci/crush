@@ -106,8 +106,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 				if(!option.isConfigured("model.incremental")) modelCorr.subtract(observingModel.getCorrection(horizontal, UT, ambientT));	
 				
 				System.err.println("   Got pointing from model: " + 
-						Util.f1.format(modelCorr.getX() / Unit.arcsec) + ", " +
-						Util.f1.format(modelCorr.getY() / Unit.arcsec) + " arcsec."
+						Util.f1.format(modelCorr.x() / Unit.arcsec) + ", " +
+						Util.f1.format(modelCorr.y() / Unit.arcsec) + " arcsec."
 				);
 
 				if(correction == null) correction = modelCorr;
@@ -141,8 +141,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		if(hasOption("pointing.model") || hasOption("pointing.log")) 
 			info += "  (For PaKo pointing corrections blacklist 'pointing.model' and 'pointing.log')";
 		else
-			info += "  PaKo> set pointing " + Util.f1.format((pointing.getX() + pakoOffsets.getX()) / Unit.arcsec) + " " 
-				+ Util.f1.format((pointing.getY() + pakoOffsets.getY()) / Unit.arcsec);
+			info += "  PaKo> set pointing " + Util.f1.format((pointing.x() + pakoOffsets.x()) / Unit.arcsec) + " " 
+				+ Util.f1.format((pointing.y() + pakoOffsets.y()) / Unit.arcsec);
 		
 		return info;
 	}
@@ -503,8 +503,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		
 		// Works with 2011 April data. 
 		if(nasmythOffset != null) {
-			observingModel.P[10] -= nasmythOffset.getX() / Unit.arcsec;
-			observingModel.P[11] -= nasmythOffset.getY() / Unit.arcsec;
+			observingModel.P[10] -= nasmythOffset.x() / Unit.arcsec;
+			observingModel.P[11] -= nasmythOffset.y() / Unit.arcsec;
 		}	
 		
 		// Keep the pointing model referenced to the nominal array center even if
@@ -694,10 +694,10 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		Vector2D obs = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day, ambientT);
 		if(pointingCorrection != null) obs.add(pointingCorrection);
 		
-		data.new Entry("X", (pointingOffset.getX() + obs.getX()) / sizeUnit, sizeName);
-		data.new Entry("Y", (pointingOffset.getY() + obs.getY()) / sizeUnit, sizeName);
-		data.new Entry("NasX", (instrument.nasmythOffset.getX() + nasmyth.getX()) / sizeUnit, sizeName);
-		data.new Entry("NasY", (instrument.nasmythOffset.getY() + nasmyth.getY()) / sizeUnit, sizeName);
+		data.new Entry("X", (pointingOffset.x() + obs.x()) / sizeUnit, sizeName);
+		data.new Entry("Y", (pointingOffset.y() + obs.y()) / sizeUnit, sizeName);
+		data.new Entry("NasX", (instrument.nasmythOffset.x() + nasmyth.x()) / sizeUnit, sizeName);
+		data.new Entry("NasY", (instrument.nasmythOffset.y() + nasmyth.y()) / sizeUnit, sizeName);
 		return data;
 	}
 	

@@ -87,7 +87,7 @@ public class ScalarMap extends SourceMap {
 		ScalarMap copy = (ScalarMap) super.copy(withContents);
 		try { copy.map = (AstroMap) map.copy(withContents); }
 		catch(OutOfMemoryError e) {
-			System.err.println("ERROR! Ran of of memory while making a copy of the source map.");
+			System.err.println("ERROR! Ran out of memory while making a copy of the source map.");
 			System.err.println();
 			System.err.println("   * Check that the map size is reasonable for the area mapped and that");
 			System.err.println("     all scans reduced together belong to the same source or region.");
@@ -105,6 +105,7 @@ public class ScalarMap extends SourceMap {
 		}
 		return copy;
 	}
+	
 	
 	public void standalone() {
 		base = new double[map.sizeX()][map.sizeY()];
@@ -231,11 +232,22 @@ public class ScalarMap extends SourceMap {
 	public synchronized void applyModel(String fileName) throws Exception {
 		System.err.println(" Applying source model:");
 			
+		
 		AstroMap model = new AstroMap(fileName, map.instrument);
+		
+		/*
+		double renorm = map.getImageBeamArea() / model.getImageBeamArea();
+		if(renorm != 1.0) {
+			System.err.println("  --> Rescaling model to instrument resolution: " + Util.s3.format(renorm) + "x");
+			model.scale(renorm);
+		}
+		*/
+	
+		model.regridTo(map);
 			
-		model.regridTo(map);	
 		map.generation = 1;
 		map.sanitize();
+		
 		isReady = true;
 			
 		double blankingLevel = getBlankingLevel();
@@ -249,6 +261,7 @@ public class ScalarMap extends SourceMap {
 		catch(Exception e) { e.printStackTrace(); }
 	
 		System.err.println();
+		
 		// For testing the removal of the model...
 		//for(int i=0; i<map.sizeX(); i++) Arrays.fill(base[i], 0.0);
 	}
@@ -479,7 +492,8 @@ public class ScalarMap extends SourceMap {
 		if(hasOption("clip") && enableBias) {	
 			double clipLevel = option("clip").getDouble();
 			if(verbose) System.err.print("(clip:" + clipLevel + ") ");
-			map.s2nClipBelow(clipLevel);
+			final int sign = hasOption("source.sign") ? option("source.sign").getSign() : 0;
+			map.s2nClipBelow(clipLevel, sign);
 		}
 
 		// Fill the map with zeroes at the flagged locations, s.t. it can be directly
@@ -503,9 +517,10 @@ public class ScalarMap extends SourceMap {
 		if(!sourceOption.isConfigured("nosync")) {
 			if(hasOption("blank") && enableBias) {
 				if(verbose) System.err.print("(blank:" + blankingLevel + ") ");
-				setMask(map.getMask(getBlankingLevel(), 3));
+				final int sign = hasOption("source.sign") ? option("source.sign").getSign() : 0;
+				setMask(map.getMask(getBlankingLevel(), 3, sign));
 			}
-			else map.getMask(Double.NaN, 3);
+			else map.getMask(Double.NaN, 3, 0);
 		}
 		
 		
@@ -578,7 +593,7 @@ public class ScalarMap extends SourceMap {
 			addPoint(index, channel, exposure, fGC * sourceGain[channel.index], dt);
 	}
 	
-	protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {		
+	protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {	
 		map.addPointAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight/channel.variance, dt);
 	}
 	

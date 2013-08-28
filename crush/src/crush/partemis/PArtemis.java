@@ -79,7 +79,7 @@ public class PArtemis extends APEXArray<PArtemisPixel> {
 			pixelSize = new Vector2D();
 			StringTokenizer tokens = new StringTokenizer(option("pixelsize").getValue(), " \t,:xX");
 			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.getX());
+			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
 		}
 
 		setPlateScale(pixelSize);

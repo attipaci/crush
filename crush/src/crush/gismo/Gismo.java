@@ -124,13 +124,14 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		// Flips not coupled to MUX gains?		
 		//try { addModality(new CorrelatedModality("flips", "f", divisions.get("mux"), GismoPixel.class.getField("flipGain"))); }
 		//catch(NoSuchFieldException e) { e.printStackTrace(); }	
-		
+			
 		try { 
 			Modality<?> pinMode = new CorrelatedModality("pins", "p", divisions.get("pins"), GismoPixel.class.getField("pinGain")); 
 			pinMode.setGainFlag(GismoPixel.FLAG_PIN);
 			addModality(pinMode);
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		
 		
 		try { 
 			Modality<?> colMode = new CorrelatedModality("cols", "c", divisions.get("cols"), GismoPixel.class.getField("colGain")); 
@@ -160,7 +161,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 			pixelSize = new Vector2D();
 			StringTokenizer tokens = new StringTokenizer(option("pixelsize").getValue(), " \t,:xX");
 			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.getX());
+			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
 		}
 
 		setPlateScale(pixelSize);
@@ -172,7 +173,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		// Make all pixels the same size. Also calculate their positions...
 		for(GismoPixel pixel : this) pixel.size = size;
 		
-		Vector2D center = GismoPixel.getPosition(size, arrayPointingCenter.getX() - 1.0, arrayPointingCenter.getY() - 1.0);			
+		Vector2D center = GismoPixel.getPosition(size, arrayPointingCenter.x() - 1.0, arrayPointingCenter.y() - 1.0);			
 		
 		// Set the pointing center...
 		setReferencePosition(center);
@@ -384,8 +385,8 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		if(name.equals("foc.dX")) return Util.defaultFormat(focusXOffset / Unit.mm, f);
 		else if(name.equals("foc.dY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
 		else if(name.equals("foc.dZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
-		else if(name.equals("nasX")) return Util.defaultFormat(nasmythOffset.getX() / Unit.arcsec, f);
-		else if(name.equals("nasY")) return Util.defaultFormat(nasmythOffset.getY() / Unit.arcsec, f);
+		else if(name.equals("nasX")) return Util.defaultFormat(nasmythOffset.x() / Unit.arcsec, f);
+		else if(name.equals("nasY")) return Util.defaultFormat(nasmythOffset.y() / Unit.arcsec, f);
 		else if(name.equals("bias")) return Integer.toString(biasValue[0]);
 		else return super.getFormattedEntry(name, formatSpec);
 	}

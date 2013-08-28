@@ -149,7 +149,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		for(Frame exposure : this) if(exposure != null) {
 			exposure.flag &= ~Frame.CHOP_FLAGS;
 			
-			if(Math.abs(exposure.chopperPosition.getX() + chopper.amplitude) < tolerance) {
+			if(Math.abs(exposure.chopperPosition.x() + chopper.amplitude) < tolerance) {
 				exposure.flag |= Frame.CHOP_LEFT;
 				if(current.phase != Frame.CHOP_LEFT) {
 					current = new PhaseData(this);
@@ -163,7 +163,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 				else current.end = exposure;
 				usable++;
 			}
-			else if(Math.abs(exposure.chopperPosition.getX() - chopper.amplitude) < tolerance) {
+			else if(Math.abs(exposure.chopperPosition.x() - chopper.amplitude) < tolerance) {
 				exposure.flag |= Frame.CHOP_RIGHT;
 				if(current.phase != Frame.CHOP_RIGHT) {
 					current = new PhaseData(this);
@@ -413,8 +413,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 
 					if(chopper != null) if(!chopperIncluded) {
 						// Add the chopping offsets to the horizontal coordinates and offsets
-						exposure.horizontal.addX(exposure.chopperPosition.getX() / exposure.horizontal.cosLat());
-						exposure.horizontalOffset.addX(exposure.chopperPosition.getX());
+						exposure.horizontal.addX(exposure.chopperPosition.x() / exposure.horizontal.cosLat());
+						exposure.horizontalOffset.addX(exposure.chopperPosition.x());
 						// Add to the equatorial coordinate also...
 						tempOffset.copy(exposure.chopperPosition);
 						exposure.horizontalToEquatorial(tempOffset);

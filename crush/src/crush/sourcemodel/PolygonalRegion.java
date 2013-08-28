@@ -36,6 +36,11 @@ import kovacs.projection.Projection2D;
 
 
 public class PolygonalRegion<CoordinateType extends Coordinate2D> extends Region<CoordinateType> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7872681437465288221L;
+
 	Vector<CoordinateType> points = new Vector<CoordinateType>();
 	
 	//String name = "polygon";
@@ -75,11 +80,11 @@ public class PolygonalRegion<CoordinateType extends Coordinate2D> extends Region
 			grid.toIndex(from);
 			grid.toIndex(to);
 			
-			double mini = Math.min(from.getX(), to.getX());
-			double maxi = Math.max(from.getX(), to.getX());
+			double mini = Math.min(from.x(), to.x());
+			double maxi = Math.max(from.x(), to.x());
 			double intersect = i < mini || i > maxi ? 
 					Double.NaN : 
-					from.getY() + (to.getY()-from.getY())*(i-from.getX())/(to.getX() - from.getX());
+					from.y() + (to.y()-from.y())*(i-from.x())/(to.x() - from.x());
 
 			if(intersect <= j) below++;
 		}
@@ -99,24 +104,24 @@ public class PolygonalRegion<CoordinateType extends Coordinate2D> extends Region
 		for(CoordinateType coords : points) {
 			projection.project(coords, vertex);
 			
-			if(vertex.getX() < min.getX()) min.setX(vertex.getX());
-			else if(vertex.getX() > max.getX()) max.setX(vertex.getX());
+			if(vertex.x() < min.x()) min.setX(vertex.x());
+			else if(vertex.x() > max.x()) max.setX(vertex.x());
 			
-			if(vertex.getY() < min.getY()) min.setY(vertex.getY());			
-			else if(vertex.getY() > max.getY()) max.setY(vertex.getY());				
+			if(vertex.y() < min.y()) min.setY(vertex.y());			
+			else if(vertex.y() > max.y()) max.setY(vertex.y());				
 		}
 		
 		Vector2D delta = image.getGrid().getResolution();
-		min.scaleX(1.0 / delta.getX());
-		min.scaleY(1.0 / delta.getY());
-		max.scaleX(1.0 / delta.getX());
-		max.scaleY(1.0 / delta.getY());
+		min.scaleX(1.0 / delta.x());
+		min.scaleY(1.0 / delta.y());
+		max.scaleX(1.0 / delta.x());
+		max.scaleY(1.0 / delta.y());
 		
 		IndexBounds2D bounds = new IndexBounds2D();
-		bounds.fromi = (int) Math.floor(Math.min(min.getX(), max.getX()));
-		bounds.toi = (int) Math.ceil(Math.max(min.getX(), max.getX()));
-		bounds.fromj = (int) Math.floor(Math.min(min.getY(), max.getY()));
-		bounds.toj = (int) Math.ceil(Math.max(min.getY(), max.getY()));
+		bounds.fromi = (int) Math.floor(Math.min(min.x(), max.x()));
+		bounds.toi = (int) Math.ceil(Math.max(min.x(), max.x()));
+		bounds.fromj = (int) Math.floor(Math.min(min.y(), max.y()));
+		bounds.toj = (int) Math.ceil(Math.max(min.y(), max.y()));
 		
 		return bounds;
 	}

@@ -91,7 +91,7 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Vector2D> {
 	public void distort(Vector2D v) { v.add(getValue(v)); }
 	
 	public Vector2D getValue(Vector2D v) {
-		return getValue(v.getX(), v.getY());
+		return getValue(v.x(), v.y());
 	}
 	
 	public Vector2D getValue(double x, double y) {

@@ -132,7 +132,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> {
 			pixelSize = new Vector2D();
 			StringTokenizer tokens = new StringTokenizer(option("pixelsize").getValue(), " \t,:xX");
 			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.getX());
+			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
 		}
 
 		calcPositions(pixelSize);
@@ -149,7 +149,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> {
 		Vector2D arrayRotationCenter = new Vector2D(6.5, 16.5);
 		if(hasOption("rcenter")) arrayRotationCenter = option("rcenter").getVector2D();
 	
-		return Sharc2Pixel.getPosition(pixelSize, arrayPointingCenter.getX() - arrayRotationCenter.getX(), arrayPointingCenter.getY() - arrayRotationCenter.getY());
+		return Sharc2Pixel.getPosition(pixelSize, arrayPointingCenter.x() - arrayRotationCenter.x(), arrayPointingCenter.y() - arrayRotationCenter.y());
 	}
 	
 	private void calcPositions(Vector2D size) {
@@ -159,7 +159,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> {
 			pixel.size = size;
 			pixel.calcPosition();
 		}
-		Vector2D center = Sharc2Pixel.getPosition(size, arrayPointingCenter.getX() - 1.0, arrayPointingCenter.getY() - 1.0);
+		Vector2D center = Sharc2Pixel.getPosition(size, arrayPointingCenter.x() - 1.0, arrayPointingCenter.y() - 1.0);
 		setReferencePosition(center);
 	}
 	
