@@ -252,13 +252,13 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 						frame.horizontalOffset.add(offset);
 					}
 					
-					// Verified that offsets are correctly projected...
-					frame.horizontal.addOffset(frame.horizontalOffset);	
-					
 					// Add the tracking errors (confirmed raw AZ differences).
 					// Errors are commanded - actual;
-					frame.horizontal.subtractX(AZE[i]);
-					frame.horizontal.subtractY(ELE[i]);
+					frame.horizontalOffset.subtractX(AZE[i]);
+					frame.horizontalOffset.subtractY(ELE[i]);
+					
+					// Verified that offsets are correctly projected...
+					frame.horizontal.addOffset(frame.horizontalOffset);	
 					
 					// Force recalculation of the equatorial coordinates...
 					frame.equatorial = null;
@@ -402,11 +402,13 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					apparent.toHorizontal(trackingCenter, scan.site, frame.LST);
 
 					frame.horizontal = new HorizontalCoordinates(
-							AZ[i] * Unit.deg - AZE[i] * Unit.arcsec,
-							EL[i] * Unit.deg - ELE[i] * Unit.arcsec);
+							AZ[i] * Unit.deg,
+							EL[i] * Unit.deg);
 					
 					frame.horizontalOffset = frame.horizontal.getOffsetFrom(trackingCenter);
-
+					frame.horizontalOffset.subtractX(AZE[i] * Unit.arcsec);
+					frame.horizontalOffset.subtractY(ELE[i] * Unit.arcsec);
+					
 					// Add the chopper offet to the actual coordinates as well...
 					//final double chopOffset = frame.chopperPosition.x / frame.horizontal.cosLat;
 					//frame.horizontal.x += chopOffset;
