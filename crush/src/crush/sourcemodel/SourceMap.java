@@ -30,7 +30,9 @@ import java.util.*;
 
 import kovacs.astro.CelestialProjector;
 import kovacs.astro.CoordinateEpoch;
+import kovacs.astro.EclipticCoordinates;
 import kovacs.astro.EquatorialCoordinates;
+import kovacs.astro.GalacticCoordinates;
 import kovacs.data.Index2D;
 import kovacs.data.Statistics;
 import kovacs.math.Range;
@@ -66,9 +68,41 @@ public abstract class SourceMap extends SourceModel {
 		super.createFrom(collection);
 		
 		System.out.print(" Initializing Source Map. ");	
+				
+		String system = hasOption("system") ? option("system").getValue().toLowerCase() : "equatorial";
+
+		Projection2D<SphericalCoordinates> projection = null;
 		
-		try { setProjection(hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic()); }
-		catch(Exception e) { setProjection(new Gnomonic()); }		
+		try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
+		catch(Exception e) { projection = new Gnomonic(); }		
+		
+		Scan<?,?> firstScan = scans.get(0);
+		
+		if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
+		else if(system.equals("focalplane")) projection.setReference(new FocalPlaneCoordinates()); 
+		else if(firstScan.isMovingObject) {
+			System.err.println(" Forcing equatorial for moving object.");
+			getOptions().process("system", "equatorial");
+			projection.setReference(firstScan.equatorial);
+		}
+		else if(system.equals("ecliptic")) {
+			EclipticCoordinates ecliptic = new EclipticCoordinates();
+			ecliptic.fromEquatorial(firstScan.equatorial);
+			projection.setReference(ecliptic);
+		}
+		else if(system.equals("galactic")) {
+			GalacticCoordinates galactic = new GalacticCoordinates();
+			galactic.fromEquatorial(firstScan.equatorial);
+			projection.setReference(galactic);
+		}
+		else if(system.equals("supergalactic")) {
+			EclipticCoordinates sg = new EclipticCoordinates();
+			sg.fromEquatorial(firstScan.equatorial);
+			projection.setReference(sg);
+		}
+		else projection.setReference(firstScan.equatorial);
+		
+		setProjection(projection);
 	}
 	
 	public void setSmoothing() {
@@ -130,7 +164,7 @@ public abstract class SourceMap extends SourceModel {
 				Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 				scan.longitudeRange = new Range();
 				scan.latitudeRange = new Range();
-
+	
 				final CelestialProjector projector = new CelestialProjector(getProjection());
 
 				for(Frame exposure : integration) if(exposure != null) {
@@ -158,20 +192,20 @@ public abstract class SourceMap extends SourceModel {
 		}.process();		
 	}
 	
-	public long getMemoryFootprint() {
-		return (long) (pixels() * getPixelFootprint() + baseFootprint());
+	public long getMemoryFootprint(long pixels) {
+		return (long) (pixels * getPixelFootprint() + baseFootprint(pixels));
 	}
 	
-	public long getReductionFootprint() {
+	public long getReductionFootprint(long pixels) {
 		// The composite map + one copy for each thread, plus base image (double)
-		return (CRUSH.maxThreads + 1) * getMemoryFootprint() + baseFootprint();
+		return (CRUSH.maxThreads + 1) * getMemoryFootprint(pixels) + baseFootprint(pixels);
 	}
 	
 	public abstract double getPixelFootprint();
 	
-	public abstract long baseFootprint();
+	public abstract long baseFootprint(long pixels);
 	
-	public abstract long pixels();
+	public abstract int pixels();
 	
 	public abstract double resolution();
 	
@@ -213,34 +247,38 @@ public abstract class SourceMap extends SourceModel {
 		
 		System.err.println("\n");
 		System.err.println("ERROR! Map is too large to fit into memory (" + sizeX + "x" + sizeY + " pixels).");
-		System.err.println("       Requires " + (getMemoryFootprint() >> 20) + " MB free memory."); 
+		System.err.println("       Requires " + (getMemoryFootprint((long) sizeX * sizeY) >> 20) + " MB free memory."); 
 		System.err.println();
+		
+		boolean foundSuspects = false;
 		
 		if(scans.size() > 1) {
 			// Check if there is a scan at least half long edge away from the median center...
 			Collection<Scan<?,?>> suspects = findOutliers(diagonal >> 2);
 			if(!suspects.isEmpty()) {
+				foundSuspects = true;
 				System.err.println("   * Check that all scans observe the same area on sky.");
 				System.err.println("     Remove scans, which are far from your source.");	
 				System.err.println("     Suspect scan(s): ");
-				for(Scan<?,?> scan : suspects) System.err.println("\t--> " + scan.descriptor);
+				for(Scan<?,?> scan : suspects) System.err.println("\t--> " + scan.getID());
 				System.err.println();
 			}
 		}
-		else {
-			// Check if there is a scan that spans at least a half long edge... 
-			Collection<Scan<?,?>> suspects = findSlewing(diagonal >> 1);
-			if(!suspects.isEmpty()) {
-				System.err.println("   * Was data acquired during telescope slew?");	
-				System.err.println("     Suspect scan(s):");
-				for(Scan<?,?> scan : suspects) System.err.println("\t--> " + scan.descriptor);
-				System.err.println();
-			}
-			else {	
-				System.err.println("   * Could there be an unflagged pixel with an invalid position?");
-				System.err.println("     check your instrument configuration and pixel data files.");
-				System.err.println();
-			}
+
+		// Check if there is a scan that spans at least a half long edge... 
+		Collection<Scan<?,?>> suspects = findSlewing(diagonal >> 1);
+		if(!suspects.isEmpty()) {
+			foundSuspects = true;
+			System.err.println("   * Was data acquired during telescope slew?");	
+			System.err.println("     Suspect scan(s):");
+			for(Scan<?,?> scan : suspects) System.err.println("\t--> " + scan.getID());
+			System.err.println();
+		}
+		
+		if(!foundSuspects) {	
+			System.err.println("   * Could there be an unflagged pixel with an invalid position?");
+			System.err.println("     check your instrument configuration and pixel data files.");
+			System.err.println();
 		}
 			
 		System.err.println("   * Increase the amount of memory available to crush, by editing the '-Xmx'");

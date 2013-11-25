@@ -2,7 +2,10 @@
 For 2.16
 	- Update nom.tam.fits to 1.11 (Requires Java 6!!!)
 	  (check!!!)
-	- freeze. keywords
+	- freeze. or force. keywords
+	- write residuals back to fits
+		append '.residual.' to filename
+		NaNs instead of flagged channels/samples.
 	- parallelize validation tasks
 		frame.validate()
 		reindex()

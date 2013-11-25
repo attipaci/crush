@@ -172,6 +172,8 @@ public class SkyDipModel {
 		
 		initialize(minimizer, skydip);
 		minimizer.verbose = false;
+		minimizer.retry = false;
+		minimizer.maxSteps = 1000;
 		minimizer.minimize(3);
 		fitOK = minimizer.converged;
 

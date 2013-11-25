@@ -46,8 +46,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.16-a1";
-	private static String revision = "devel.1";
+	private static String version = "2.15-2";
+	private static String revision = "beta";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -211,7 +211,13 @@ public class CRUSH extends Configurator {
 	
 	public void update() {
 		maxThreads = Runtime.getRuntime().availableProcessors();
-		if(isConfigured("reservecpus")) maxThreads -= get("reservecpus").getInt();
+		if(isConfigured("idle")) {
+			String spec = get("idle").getValue();
+			if(spec.charAt(spec.length() - 1) == '%') 
+					maxThreads -= (int)Math.round(0.01 * Double.parseDouble(spec.substring(0, spec.length()-1)) * maxThreads);
+			else 
+					maxThreads -= get("idle").getInt();
+		}
 		maxThreads = Math.max(maxThreads, 1);
 		
 		if(containsKey("outpath")) setOutpath();
@@ -376,7 +382,7 @@ public class CRUSH extends Configurator {
 				try { source.write(workPath); }
 				catch(Exception e) { e.printStackTrace(); }
 			}
-			else System.err.println(" WARNING! The reduction did not result in a valid source model.");
+			else System.err.println(" WARNING! The reduction did not result in a source model.");
 		}
 		
 		

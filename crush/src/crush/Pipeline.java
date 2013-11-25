@@ -63,6 +63,12 @@ public class Pipeline extends Thread {
 	public void run() {
 		try { iterate(); }
 		catch(InterruptedException e) { System.err.println("\nInterrupted!"); }
+		catch(Exception e) { 
+			System.err.println("ERROR! " + e.getMessage()); 
+			e.printStackTrace();
+			System.err.println("Exiting.");
+			System.exit(1);
+		}
 	}
 
 	public void setOrdering(List<String> ordering) { this.ordering = ordering; }

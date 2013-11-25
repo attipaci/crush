@@ -29,8 +29,6 @@ import java.io.*;
 import java.util.*;
 
 import kovacs.astro.CelestialProjector;
-import kovacs.astro.EclipticCoordinates;
-import kovacs.astro.GalacticCoordinates;
 import kovacs.astro.SourceCatalog;
 import kovacs.data.*;
 import kovacs.math.Range;
@@ -115,14 +113,16 @@ public class ScalarMap extends SourceMap {
 	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		map = new AstroMap();
+		map.setGrid(new SphericalGrid());
 		
 		setInstrument(getInstrument());
 		
 		super.createFrom(collection);
-				
+		
 		double gridSize = getInstrument().resolution / 5.0;
 		if(hasOption("grid")) gridSize = option("grid").getDouble() * Unit.arcsec;
-	
+		map.setResolution(gridSize);
+		
 		Scan<?,?> firstScan = scans.get(0);
 		
 		for(Scan<?,?> scan : scans) map.scans.add(scan);	
@@ -133,39 +133,7 @@ public class ScalarMap extends SourceMap {
 		map.creator = CRUSH.class.getSimpleName();
 		map.setName(firstScan.getSourceName());
 		map.commandLine = commandLine;
-		
-		String system = hasOption("system") ? option("system").getValue().toLowerCase() : "equatorial";
-		
-		Projection2D<SphericalCoordinates> projection = getProjection();
-		
-		if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
-		else if(system.equals("focalplane")) projection.setReference(new FocalPlaneCoordinates()); 
-		else if(firstScan.isMovingObject) {
-			System.err.println(" Forcing equatorial for moving object.");
-			getOptions().process("system", "equatorial");
-			projection.setReference(firstScan.equatorial);
-		}
-		else if(system.equals("ecliptic")) {
-			EclipticCoordinates ecliptic = new EclipticCoordinates();
-			ecliptic.fromEquatorial(firstScan.equatorial);
-			projection.setReference(ecliptic);
-		}
-		else if(system.equals("galactic")) {
-			GalacticCoordinates galactic = new GalacticCoordinates();
-			galactic.fromEquatorial(firstScan.equatorial);
-			projection.setReference(galactic);
-		}
-		else if(system.equals("supergalactic")) {
-			EclipticCoordinates sg = new EclipticCoordinates();
-			sg.fromEquatorial(firstScan.equatorial);
-			projection.setReference(sg);
-		}
-		else projection.setReference(firstScan.equatorial);
 	
-		map.setGrid(new SphericalGrid());
-		map.setProjection(projection);
-		map.setResolution(gridSize);
-		
 		setSize();
 
 		// Make the reference fall on pixel boundaries.
@@ -273,7 +241,7 @@ public class ScalarMap extends SourceMap {
 		System.err.println(" (Up to " + Util.d1.format(100.0*maxUsage) + "% of RAM saturation.)");
 		
 		final Runtime runtime = Runtime.getRuntime();
-		long maxAvailable = runtime.maxMemory() - getReductionFootprint();
+		long maxAvailable = runtime.maxMemory() - getReductionFootprint(pixels());
 		final long maxUsed = (long) (maxUsage * maxAvailable);
 		
 		new IntegrationFork<Void>() {
@@ -293,7 +261,7 @@ public class ScalarMap extends SourceMap {
 	public double getPixelFootprint() { return 8*3 + 4 + 1.0/8.0; }
 	
 	@Override
-	public long baseFootprint() { return 8L * pixels(); }
+	public long baseFootprint(long pixels) { return 8L * pixels; }
 
 	@Override
 	public void setSize(int sizeX, int sizeY) {
@@ -301,7 +269,7 @@ public class ScalarMap extends SourceMap {
 	}
 
 	@Override
-	public long pixels() { return (long) map.sizeX() * map.sizeY(); }
+	public int pixels() { return map.sizeX() * map.sizeY(); }
 	
 	@Override
 	public double resolution() { return Math.sqrt(map.getPixelArea()); }
