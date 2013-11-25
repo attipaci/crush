@@ -1,5 +1,5 @@
 
-2.15-2 (beta)
+2.15-2 (beta2)
 
 
 	Overview
@@ -13,6 +13,9 @@
 	configurational compatibility to the prior 2.15 release).
 	=====================================================================
 
+
+	[BUG] {GISMO} Tracking errors were not fully incorporated into the
+	GISMO astrometry. Thanks to Robert Zylka for figuring this out.
 
 	[NEW] 'filter.motion' has new option 'stability' to adjust the filter
 	for AM noise. The argument is a stability timescale in seconds. E.g.
