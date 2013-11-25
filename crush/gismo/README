@@ -412,6 +412,14 @@ For a general overview of channel divisions, please consult Section 3.
 			decorrelation.
                         @See: 'rows'
 
+   SZ			@Since: 2.15-2
+			Optimize reduction for the detection of Sunyaev-
+			Zel'dovich signals (decrements). The SZ option is 
+			really just a trigger condition for activating other
+			settings. Check the configuration files under
+			the gismo/ crush folder (esp. 'default.cfg) to see
+			what this does exactly.
+
    ver.[<range>]	@Since: 2.11
 			@Expert
 			Set options for specific FITS merge versions. E.g.

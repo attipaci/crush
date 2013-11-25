@@ -180,7 +180,9 @@ public abstract class Filter {
 	}
 	
 	public void report() {
-		integration.comments += "(" + Util.f2.format(getMeanPointResponse()) + ")";
+		integration.comments += integration.instrument.mappingChannels > 0 ? 
+				"(" + Util.f2.format(getMeanPointResponse()) + ")" :
+				"(---)";
 	}
 	
 	protected void loadTimeStream(Channel channel) {

@@ -72,7 +72,7 @@ public class SkyDip extends SourceModel {
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		super.createFrom(collection);
 		
-		resolution = hasOption("grid") ? option("grid").getDouble() * Unit.arcsec : 0.25 * Unit.deg;
+		resolution = hasOption("grid") ? Math.abs(option("grid").getDouble()) * Unit.arcsec : 0.25 * Unit.deg;
 		int bins = (int) Math.ceil(Constant.rightAngle / resolution);
 		data = new WeightedPoint[bins];
 		for(int i=0; i<bins; i++) data[i] = new WeightedPoint();
@@ -109,12 +109,16 @@ public class SkyDip extends SourceModel {
 			C = (CorrelatedSignal) integration.signals.get(mode);
 		}
 		
-		for(Frame frame : integration) if(frame != null) {
-			HorizontalFrame exposure = (HorizontalFrame) frame;
-			WeightedPoint bin = data[getBin(exposure.horizontal.EL())];
+		for(final Frame frame : integration) if(frame != null) {
+			final HorizontalFrame exposure = (HorizontalFrame) frame;
+			
+			int bin = getBin(exposure.horizontal.EL());
+			if(bin < 0 || bin >= data.length) continue;
+			
+			final WeightedPoint point = data[bin];
 			double w = exposure.relativeWeight * C.weightAt(frame);
-			bin.add(w * C.valueAt(frame));
-			bin.addWeight(w);
+			point.add(w * C.valueAt(frame));
+			point.addWeight(w);
 		}
 
 	}

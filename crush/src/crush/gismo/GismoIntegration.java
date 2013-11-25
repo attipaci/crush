@@ -82,7 +82,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		instrument.integrationTime = instrument.samplingInterval = header.getDoubleValue("CDELT1") * Unit.ms;
 		System.err.println("   Sampling at " + Util.f1.format(instrument.integrationTime / Unit.ms) + " ms ---> " 
 				+ Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
-		
+			
 		clear();
 		ensureCapacity(records);
 		for(int t=records; --t>=0; ) add(null);
@@ -169,11 +169,12 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 				@Override
 				public void readRow(int i) {
 					set(i, null);
+
+					// Do not process frames with no coordinate information...
+					if(cEL[i] <= minElevation) return;
+					if(cEL[i] >= maxElevation) return;					
 					
 					int calFlag = 0, digitalFlag = 0;
-					
-					// Do not process frames with no coordinate information...
-					if(cEL[i] <= 0.0) return;
 					
 					// Skip processing frames with non-zero cal flag...
 					if(CAL != null) {
@@ -353,7 +354,8 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					int calFlag = 0, digitalFlag = 0;
 					
 					// Do not process frames with no coordinate information...
-					if(EL[i] <= 0.0) return;
+					if(EL[i] <= minElevation) return;
+					if(EL[i] >= maxElevation) return;
 					
 					// Skip processing frames with non-zero cal flag...
 					if(CAL != null) {
@@ -434,4 +436,6 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		return scan.getID();
 	}
 	
+	private static final double minElevation = 0.0 * Unit.deg;
+	private static final double maxElevation = 90.0 * Unit.deg;
 }

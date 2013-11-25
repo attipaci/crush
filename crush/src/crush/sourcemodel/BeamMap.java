@@ -143,8 +143,8 @@ public class BeamMap extends SourceMap {
 	}
 
 	@Override
-	public long baseFootprint() {
-		return pixelMap.length * template.baseFootprint();
+	public long baseFootprint(long pixels) {
+		return pixelMap.length * template.baseFootprint(pixels);
 	}
 	
 
@@ -165,7 +165,7 @@ public class BeamMap extends SourceMap {
 
 
 	@Override
-	public long pixels() {
+	public int pixels() {
 		return template.pixels();
 	}
 

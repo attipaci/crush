@@ -154,7 +154,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(hasOption("aclip")) accelerationClip();
 
 		calcScanSpeedStats();
-	
+		
 		// Flag out-of-range data
 		if(hasOption("range")) checkRange();
 
@@ -1991,14 +1991,21 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		out.println("# " + Util.e3.format(1.0/instrument.samplingInterval));
 		final int nc = instrument.size();
 		
+		String flagValue = "---";
+		
 		for(final Frame exposure : this) {
 			boolean isEmpty = true;
+			
+			//if(exposure != null) out.print(Util.f1.format(exposure.getNativeOffset().y() / Unit.arcsec) + "\t");
+			//else out.print("0.0\t");
+			
 			if(exposure != null) if(exposure.isUnflagged(Frame.BAD_DATA)) {
 				isEmpty = false;
 				for(int c=0; c<nc; c++) 
-					out.print(Util.e5.format((exposure.sampleFlag[c] & Frame.SAMPLE_SPIKE_FLAGS) != 0 ? Double.NaN : exposure.data[c]) + "\t");
+					out.print((exposure.sampleFlag[c] & Frame.SAMPLE_SPIKE_FLAGS) != 0 ? flagValue + "\t\t" : Util.e5.format(exposure.data[c]) + "\t");
 			}
-			if(isEmpty) for(int c=0; c<nc; c++) out.print(Double.NaN + "\t\t");
+			if(isEmpty) for(int c=0; c<nc; c++) out.print(flagValue + "\t\t");
+		
 			out.println();
 				
 		}
@@ -2176,6 +2183,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void writeProducts() {
 		String scanID = getFullID("-");
 
+		if(hasOption("write.pattern")) {
+			try { writeScanPattern(); }
+			catch(Exception e) { e.printStackTrace(); }
+		}
+		
 		if(hasOption("write.pixeldata")) {
 			String fileName = CRUSH.workPath + File.separator + "pixel-" + scanID + ".dat";
 			try { instrument.writeChannelData(fileName, getASCIIHeader()); }
@@ -2193,6 +2205,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			try { ((PhaseModulated) this).getPhases().write(); }
 			catch(Exception e) { e.printStackTrace(); }
 		}
+		
 		
 		if(hasOption("write.spectrum")) {
 			Configurator spectrumOption = option("write.spectrum");
@@ -2213,6 +2226,27 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			catch(IOException e) {}
 		}
+		
+		
+	}
+	
+	public void writeScanPattern() throws IOException {
+		String fileName = CRUSH.workPath + File.separator + "pattern-" + getFullID(":") + ".dat";
+		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
+		
+		for(int i=0; i<size(); i++) {
+			Frame exposure = get(i);
+			if(exposure == null) out.println("---\t---");
+			else if(exposure.isFlagged()) out.println("...\t...");
+			else {
+				Vector2D offset = exposure.getNativeOffset();
+				out.println(Util.f1.format(offset.x() / Unit.arcsec) + "\t" + Util.f1.format(offset.y() / Unit.arcsec));
+			}
+		}
+		out.close();
+		
+		System.err.println("Written " + fileName);
+		
 	}
 	
 	public void getFitsData(LinkedHashMap<String, Object> data) {

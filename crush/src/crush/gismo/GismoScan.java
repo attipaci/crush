@@ -52,9 +52,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	double fitsVersion = Double.NaN;
 	String scanID, obsType, operator;
 	IRAMPointingModel observingModel, tiltCorrections;
-	
-	Vector2D appliedPointing = new Vector2D();
-	
+		
 	public CoordinateEpoch epoch;
 	public Class<? extends SphericalCoordinates> basisSystem;
 	public Class<? extends SphericalCoordinates> offsetSystem;
@@ -367,7 +365,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		else timeStamp = date;
 	
 		setMJD(header.getDoubleValue("MJD-OBS"));
-			
+				
 		// TODO use UTC, TAI, TT offsets to configure AstroTime?...
 		/*
 		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
@@ -375,8 +373,6 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		*/
 
 		
-		
-			
 		double lon = header.getDoubleValue("LONGOBJ", Double.NaN) * Unit.deg;
 		double lat = header.getDoubleValue("LATOBJ", Double.NaN) * Unit.deg;
 		

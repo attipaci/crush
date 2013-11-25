@@ -1,21 +1,66 @@
->> source.sign (GLOSSARY) 
->> SZ (GLOSSARY)
+
+2.15-2 (beta)
+
+
+	Overview
+	=====================================================================
+	This is a maintenance re-release of CRUSH-2.15. It contains no critical
+	changes, just a few smaller fixes (see below). The main change is
+	up-to-date configuration for GISMO for the 2013 October/November run,
+	with <3" rms pointing, and locally averaged tau lookup.
+	Also introduces some new experimental features for the adventurous,
+	none of which are activated by default (thus maintaining 
+	configurational compatibility to the prior 2.15 release).
+	=====================================================================
+
+
+	[NEW] 'filter.motion' has new option 'stability' to adjust the filter
+	for AM noise. The argument is a stability timescale in seconds. E.g.
+	
+	  filter.motion.stability = 10.0 
+	
+	to set a 10-second stability timescale. The longer the stability the
+	less agressive the motion filter. If the option is not set (default)
+	then no filter adjustment is made for AM noise. Currently, no 
+	instrument is configured with this option.
+
+	[NEW] The motion filter can now discard harmonics of the dominant
+	motion frequencies also. This is useful if the detector response is
+	non-linear with the motion. You can use 'filter.motion.harmonics' to
+	specify how many harmonics to consider, and use 'filter.motion.odd'
+	to reject only the odd harmonics. Currently, none of the default
+	configurations use these new options.
 
 	[NEW] The option 'source.sign' can be used to specify if and when the
 	physical type of source(s) have a definite signedness. The argument
 	can be negative, zero, or positive, and also '-', '*', and '+'. The
-	default is to assume that all sources are seen in emission, i.e. have
-	a positive signature. The signature affects how clipping (via 'clip')
-	and blanking (via 'blank') behave on the intermediate source models. 
+	default configuration is to assume that all sources are seen in 
+	emission, i.e. have a positive signature. The signature affects how 
+	clipping (via 'clip') and blanking (via 'blank') behave on the 
+	intermediate source models. 
 
 	[NEW] {GISMO} The condition 'SZ' can be used to tune the reduction for
-	SZ clusters. By default sources are assumed to be seen in emission only.
+	SZ clusters. E.g.:
+
+	   > crush gismo [...] -sz <scans> ... 
+
+	By default sources are assumed to be seen in emission only.
 	Clusters also tend to be more extended than point sources and they
-	can benefit from some iterating. Thus, the configuration 
-	(gismo/default.cfg) has been tweaked such that using the 'SZ' option
-	tunes things a little differently from normal reductions. If you
-	want to detect galaxies and SZ clusters at the same time, it is
-	recommended to reset 'source.sign=0' after the 'SZ' option.
+	can benefit from iterating. Thus, the configuration (gismo/default.cfg)
+	has been tweaked such that using the 'SZ' option tunes things a little 
+	differently from normal reductions. If you want to detect galaxies and 
+	SZ clusters at the same time, it is recommended to reset 
+	'source.sign=0' after the 'SZ' option.
+
+	[FIX] {GISMO} Occasionally there are garbage coordinates in the FITS
+	table (a crate firmware issue, which can be prevented by rebooting the
+	crate every day...). CRUSH now checks the elevation coordinate to 
+	identify and flag invalid data.
+
+	[FIX] Errors occuring during the pipeline reduction no longer hang 
+	crush. The error is reported with a trace and crush exists.
+
+	[FIX] Checking for scans that caused outsized maps was broken. Fixed.
 
 	[FIX] Supplying an initial source model (via 'source.model') did not
 	work as intended, when the model was not exactly on the same grid 
@@ -26,13 +71,43 @@
 	different resolution than the instrument beam, then the fluxes are
 	rescaled appropriately for the instrument resolution.
 
-	[TWEAK] {GISMO} Decorreating sky gradients (in 'faint' and 'deep'
-	reductions) is now disabled by default. Instead, 'deep' reductions
-	now decorrelate on physical detector columns, which probably have
-	correlated heat transfer.
+	[CHANGE] The keyword 'reservecpus' renamed to the simpler 'idle'. The
+	old command remains acceptable as it is aliased to the new keyword. 
+	Also, the argument can either be the number of CPU cores that are to
+	be idled, or expressed as a percentage of the available core count.
+	E.g. 'idle=2' or 'idle=50%'
+
+	[TWEAK] ASCII timestream output (via 'write.ascii') now prints '---'
+	in place of flagged data.
+
+	[TWEAK] If source modelling is disabled, do not suggest ways to make
+	the source model valid.
+
+	[CONFIG] {GISMO} Updated configuration for Run 9 (2013 Oct-Nov), with
+	pointing model, incremental pointing corrections, and locally averaged
+	tau values (Gaussian window function with +/- 15 minutes 1-sigma 
+	width).
+	
+	[CONFIG] {GISMO} Recalibrated with Uranus based on Bendo et al. 2013
+	model. The new calibration agrees with the old within 2%, 4% and 9%
+	at 8K, 10K, and 12K bias respectively.
+
+	[CONFIG] {GISMO} Added configuration for Run 9 (2013 Oct 22 -- Nov 5)
+	and created a 'current' configuration for the future. 
+
+	[CONFIG] {GISMO} Minimum valid scan length changed 30s --> 10s.
+	
+	[CONFIG] {PolKa} Added HWP analyzer angles, as determined by Helmut
+	Wiesemeyer from the 2011 March data.
+
+	[CODE] Source map coordinate system setting moved up from ScalarMap to 
+	SourceMap. Also, Scalarmap defines a grid before super.createFrom()
+	sets the projection...
 
 	[CODE] Updating source synchronization gains is now on a pixel-by-pixel
 	basis instead of globally.
+
+	[UTIL] Utilities updated to 0.02-3.
 	
 	[1.xx] Fixed imagetool's '-profile' option to center on sources as was 
 	intended.

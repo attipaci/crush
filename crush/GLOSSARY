@@ -902,6 +902,22 @@
 			@See: 'filter.motion', 'filter.motion.s2n', 
 			'filter.motion.range'
 
+:: filter.motion.harmonics=n	@Since:2.15-2
+				@Expert
+				Kill not just the dominant motion frequencies
+				but also up to n harmonics of these. This may
+			be useful when the motion response is non-linear. 
+			Otherwise it's an overkill.
+			@See: 'filter.motion.odd'
+
+:: filter.motion.odd	@Since:2.15-2
+			@Expert
+			When defined, together with the 'harmonics' setting,
+			this option instructs crush to restrict the motion
+			filter to the odd harmonics only of the principal
+			frequencies of the scanning motion.
+			@See: 'filter.motion.harmonics'	
+
 :: filter.motion.range=min:max	@Since: 2.10
 				@Expert
 			Set the frequency range (Hz) in which the motion filter
@@ -915,6 +931,19 @@
 			component to be considered for filtering.
 			@See: 'filter.motion', 'filter.motion.above', 
 			'filter.motion.range'
+
+:: filter.motion.stability=X	@Since: 2.15-2
+				@Expert
+				Define a stability timescale (in seconds) for
+				the motion response. When not set, it is 
+			assumed that the detectors respond the same amount to
+			the vibrations induced by the scanning motion during
+			the entire duration of a scan. If a timescale shorter
+			than the scan length is set, then the filtering will
+			become more aggressive to incorporate the AM modulation
+			of detector signals on timescales shorter than this
+			stability value.
+			@See: 'filter.motion.range', 'filter.motion.stability'	
 
 :: filter.ordering=<list>	@Since: 2.10
 				@Expert
@@ -1219,6 +1248,18 @@
 			line shown an open-ended range starting with scan 25
 			on 2012-04-14.
 			@See: 'mjd.[]', 'serial.[]', 'date.[]' 
+
+:: idle=N		@Since: 2.15-2
+   idle=x%		Instruct crush to avoid using N number of CPU cores, or
+			x percent of the available processors. By default crush
+			will try to use all processing cores in your machine 
+			for maximum performance. This option allows to modify 
+			this behavior according to need. 
+			Note, that at least 1 CPU will always be used by crush, 
+			independent of this setting. The number of actual 
+			parallel threads will be the smaller of the allowed 
+			number of CPUs and the number of scans processed.
+
 
 :: indexing		@Expert
 			Allows the use of data indexing to speed up coordinate
@@ -2139,16 +2180,7 @@
 			the 'restore' command.
 			@See: 'forget', 'restore'
 
-:: reservecpus=N	Instruct crush NOT to use N number of CPU cores of the 
-			machine. By default crush will try to use all 
-			processing cores in your machine for maximum 
-			performance. This option allows to modify this behavior 
-			according to need. 
-			Note, that at least 1 CPU will always be used by crush, 
-			independent of this setting. The number of actual 
-			parallel threads will be the smaller of the allowed 
-			number of CPUs and the number of scans processed.
-
+:: reservecpus=N	@Alias: 'idle'
 
 :: resolution=X		@Advanced
 			Define the resolution of the instrument. For single-
@@ -2614,6 +2646,21 @@
 			this critical value will be flagged an not used in
 			the composite source mapmaking.
 
+:: source.sign=<spec>	@Since:2.15-2
+			Most astronomical sources have a definite signedness.
+			For continuum, we expect to see emission, except when
+			looking at SZ clusters at 2-mm, which have a unique
+			negative signature. CRUSH can do a better job if the
+			signature of the source is predetermined. The sign
+			specification can be '+', '-' or '*', or 'positive'
+			'negative', 'pos', 'neg', 'plus', 'minus' or 'any' as
+			well as a number (positive, negative or zero).
+			When not set, the default is to assume that sources may
+			be of either sign (same as '*', '0', or 'any').
+			The signature determines how source clipping and
+			blanking are implemented.
+			@See: 'clip', 'blank'
+
 :: source.synchronized 	@Instrument: PolKa
 			@Advanced
 			CRUSH offers two methods of analyzing 
@@ -2684,7 +2731,13 @@
 			source-size...
 			If 'sourcesize' or 'extended' is not specified, then 
 			point-like compact sources are assumed.	
-			@See: 'faint', 'extended', 'sourcesize'
+			The sourcesize helps tune the 1/f filter (see 'drifts')
+			optimally. The 1/f timescale is set to be the larger
+			of the 'stability' timescale or 5 times the typical 
+			source crossing time (calculated via 'sourcesize').
+			Note, that noise whitening will mute the effect of
+			this setting almost completely...
+			@See: 'faint', 'extended', 'whiten'
 
 :: spa			@Alias --> 'source.polar.angles'
 			@Since: 2.11
@@ -2788,6 +2841,15 @@
 			@See: 'altaz', 'equatorial', 'ecliptic', 'galactic',
 			      'supergalactic', 'radec', 'horizontal', 
 			      'focalplane'	       
+
+:: SZ                   @Instrument: GISMO
+			@Since: 2.15-2
+                        Optimize reduction for the detection of Sunyaev-
+                        Zel'dovich signals (decrements). The SZ option is
+                        really just a trigger condition for activating other
+                        settings. Check the configuration files under
+                        the gismo/ crush folder (esp. 'default.cfg) to see
+                        what this does exactly.
 
 :: tau=<arg>		Specify an in-band zenith opacity value to use. E.g.:
 

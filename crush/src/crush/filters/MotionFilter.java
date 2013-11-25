@@ -27,6 +27,7 @@ import java.util.Arrays;
 import kovacs.data.Statistics;
 import kovacs.math.Range;
 import kovacs.math.Vector2D;
+import kovacs.util.Unit;
 import kovacs.util.Util;
 
 import crush.Integration;
@@ -39,6 +40,9 @@ import crush.Motion;
 
 public class MotionFilter extends KillFilter {
 	float critical = 10.0F;
+	double halfWidth = 0.0;	// for AM noise on >5s.
+	int harmonics = 1;
+	boolean oddHarmonicsOnly = false;
 	
 	public MotionFilter(Integration<?,?> integration) {
 		super(integration);
@@ -55,11 +59,17 @@ public class MotionFilter extends KillFilter {
 		System.err.print("   Motion filter: ");
 		
 		if(hasOption("s2n")) critical = option("s2n").getFloat();
+		if(hasOption("stability")) halfWidth = 0.5 / Math.abs(option("stability").getDouble() * Unit.s);
+		if(hasOption("harmonics")) harmonics = Math.max(1, option("harmonics").getInt());
+		oddHarmonicsOnly = hasOption("odd");
 		
 		Vector2D[] pos = integration.getSmoothPositions(Motion.SCANNING);
 		
 		addFilter(pos, Motion.X);
 		addFilter(pos, Motion.Y);
+		
+		expandFilter();
+		harmonize();
 		
 		rangeCheck();
 		
@@ -133,6 +143,42 @@ public class MotionFilter extends KillFilter {
 		System.err.print(dir.id + " @ " + Util.f1.format(1000.0 * f) + " mHz, ");
 	}
 	
+	private void expandFilter() {
+		// Calculate the HWHM of the AM noise...
+		int d = (int) Math.round(halfWidth / df);
+		if(d < 1) return;
+		
+		final boolean[] expanded = new boolean[reject.length];
+		
+		int lastFrom = reject.length-1;
+		
+		for(int i=reject.length; --i >= 0; ) if(reject[i]) {
+			final int from = Math.max(0, i-d);
+			final int to = Math.min(lastFrom, i + d);
+			for(int j=from; j<=to; j++) expanded[j] = true;		
+			lastFrom = from;
+		}
+		
+		reject = expanded;
+	}
+	
+	private void harmonize() {
+		if(harmonics < 2) return;
+		
+		final boolean[] spread = new boolean[reject.length];
+		final int step = oddHarmonicsOnly ? 2 : 1;
+		
+		for(int i=reject.length; --i >= 0; ) if(reject[i]) {
+			for(int k=1; k <= harmonics; k += step) {
+				final int j = k * i;
+				if(j >= spread.length) break;
+				spread[j] = true;
+			}
+		}
+		
+		reject = spread;
+	}
+	
 	private float getRMS(float[] spectrum) {
 		float[] vars = new float[spectrum.length];
 		
@@ -141,6 +187,8 @@ public class MotionFilter extends KillFilter {
 		}
 		return (float) Math.sqrt(Statistics.median(vars, 0, (spectrum.length >> 1) - 1) / 0.454937);
 	}
+	
+	
 	
 	
 	@Override

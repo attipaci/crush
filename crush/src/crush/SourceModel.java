@@ -116,27 +116,57 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 
 
 	public void suggestions() {
+		boolean scanningProblemOnly = false;
+		
 		int scansWithFewPixels = 0;
 		for(Scan<?, ?> scan : scans) for(Integration<?, ?> integration : scan) if(!checkPixelCount(integration)) {
 			scansWithFewPixels++;
 			break;
 		}
-		if(scansWithFewPixels > 0) troubleshootFewPixels();
-		else if(!isValid()) suggestMakeValid();
+		if(scansWithFewPixels > 0) scanningProblemOnly = troubleshootFewPixels();
+		else if(!isValid() && generation > 0) suggestMakeValid();
 		else return; // no problems, so nothing left to do...
 		
 		System.err.println();
-		System.err.println("          Please consult the README and/or the GLOSSARY for details.");
-		System.err.println();
+		
+		if(!scanningProblemOnly) {
+			System.err.println("          Please consult the README and/or the GLOSSARY for details.");
+			System.err.println();
+		}
 	}
 
-	public void troubleshootFewPixels() {
+	public boolean isScanningProblemOnly() {
+		boolean speedProblemOnly = true;
+		
+		for(int i=0; i<scans.size(); i++) {
+			Scan<?,?> scan = scans.get(i);
+			boolean lowSpeed = false;
+			
+			for(Integration<?,?> integration : scan) if(!checkPixelCount(integration)) {
+				int driftN = (int) Math.round(integration.filterTimeScale / integration.instrument.samplingInterval);
+				if(driftN <= 1) lowSpeed = true;
+				else speedProblemOnly = false;
+			}
+			
+			if(lowSpeed) System.err.println("            * Low scanning speed in " + scan.getID() + ".");
+		}
+		
+		return speedProblemOnly;
+	}
+	
+	public boolean troubleshootFewPixels() {
 		System.err.println(" WARNING! It seems that one or more scans contain too few valid pixels for");
 		System.err.println("          contributing to the source model. This may be just fine, and probably");
 		System.err.println("          indicates that something was sub-optimal with the affected scan(s).");
-		System.err.println("          If you feel that CRUSH should try harder to use those scans also,");
-		System.err.println("          you may try:");
 		System.err.println();
+		
+		if(isScanningProblemOnly()) return true;
+		
+		System.err.println();
+		System.err.println("          If you feel that CRUSH should try harder with the scans flagged");
+		System.err.println("          otherwise, you may try:");
+		System.err.println();
+		
 		if(hasOption("deep")) System.err.println("            * Reduce with 'faint' instead of 'deep'.");
 		else if(hasOption("faint")) System.err.println("            * Reduce with default settings instead of 'faint'.");
 		else if(!hasOption("bright")) System.err.println("            * Reduce with 'bright'.");
@@ -147,6 +177,8 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 			System.err.println("            * Adjust 'mappingpixels' or 'mappigfraction' to allow source ");
 			System.err.println("              extraction with fewer pixels.");
 		}
+		
+		return false;
 	}
 
 	public void suggestMakeValid() {

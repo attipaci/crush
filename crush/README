@@ -2158,7 +2158,7 @@ necessary.) The commands are:
 			reduction. Thus, in the above example the beam 
 			smoothing will always override the other two settings.
 
-	reservecpus=N	Instruct crush NOT to use N number of CPUs of the 
+	idle=N		Instruct crush NOT to use N number of CPUs of the 
 			machine. By default crush will try to use all 
 			processors in your machine for maximum performance. 
 			This option allows to modify this behavior according 

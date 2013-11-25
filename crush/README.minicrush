@@ -206,6 +206,7 @@ maxHe3rms			He3.maxrms
 MEM.lambda			source.mem.lambda
 nefd-range			---
 relative-noise-range		weighting.noiserange
+reservecpus			idle
 scanmap-correction		source.correct		
 scanmap-redundancy		source.redundancy
 scanmapdespike			source.despike
