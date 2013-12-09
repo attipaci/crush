@@ -4,7 +4,7 @@
 			      Attila Kovacs
 			<attila[AT]submm.caltech.edu>
 
-			Last updated: 19 July 2013
+		       Last updated: 25 November 2013
 
 
 
@@ -412,6 +412,16 @@ For a general overview of channel divisions, please consult Section 3.
 			decorrelation.
                         @See: 'rows'
 
+   skipFWFix		@Expert
+			@Since: 2.15-2
+			During 2013 Oct/Nov we had lost some data due to 
+			firmware problems. Steve has attempted to reconstruct
+			as much of the affected frames as possible. At the same
+			the the reconstructed astrometry is flagged 
+			accordingly. Therefore, it is possile for CRUSH to
+			ignore the reconstructed data if the user wishes to do
+			so.
+
    SZ			@Since: 2.15-2
 			Optimize reduction for the detection of Sunyaev-
 			Zel'dovich signals (decrements). The SZ option is 
@@ -419,6 +429,13 @@ For a general overview of channel divisions, please consult Section 3.
 			settings. Check the configuration files under
 			the gismo/ crush folder (esp. 'default.cfg) to see
 			what this does exactly.
+
+   tau.timezone=AAA	@Advanced
+			@Since: 2.15-2
+			Specify the timezone in which skydip lookup tables
+			were compiled. For example the table compiled by G.
+			Bruni for 2012 Nov were in 'CET' whereas the table
+			by Israel Hermelo for 2013 Oct/Nov is in 'UTC'.
 
    ver.[<range>]	@Since: 2.11
 			@Expert

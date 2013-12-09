@@ -47,7 +47,6 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 	HorizontalCoordinates reuseTrackingCenter = new HorizontalCoordinates();
 	boolean ignoreIRIG = false;
 	
-	
 	public GismoIntegration(GismoScan parent) {
 		super(parent);
 	}	
@@ -80,6 +79,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		Header header = hdu.getHeader();
 		
 		instrument.integrationTime = instrument.samplingInterval = header.getDoubleValue("CDELT1") * Unit.ms;
+		
 		System.err.println("   Sampling at " + Util.f1.format(instrument.integrationTime / Unit.ms) + " ms ---> " 
 				+ Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
 			
@@ -169,18 +169,22 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 				@Override
 				public void readRow(int i) {
 					set(i, null);
-
+					
 					// Do not process frames with no coordinate information...
 					if(cEL[i] <= minElevation) return;
 					if(cEL[i] >= maxElevation) return;					
 					
+					// Zero scanning offsets are typically outside of the scan.
+					// (The normal scanning motion should never go through 0.0 exactly).
+					if(dX[i] == 0.0 && dY[i] == 0.0) return;
+						
 					int calFlag = 0, digitalFlag = 0;
 					
 					// Skip processing frames with non-zero cal flag...
 					if(CAL != null) {
-						calFlag = CAL[i];	
-						if(calFlag != 0) return;
-					}
+						calFlag = CAL[i];
+						if(CAL[i] != 0) if(gismoScan.skipReconstructed || calFlag != reconstructedDataCalFlag) return;
+					}	
 						
 					// Skip data with invalid flags 
 					for(int bit=0, from=6*i; bit<6; bit++) if(SDI[from+bit] > 0) digitalFlag |= 1 << bit;
@@ -438,6 +442,8 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		return scan.getID();
 	}
 	
-	private static final double minElevation = 0.0 * Unit.deg;
+	private static final int reconstructedDataCalFlag = 10;
+	
+	private static final double minElevation = 0.001 * Unit.deg;
 	private static final double maxElevation = 90.0 * Unit.deg;
 }

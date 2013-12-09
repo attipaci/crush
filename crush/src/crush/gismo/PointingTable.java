@@ -207,6 +207,7 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 			dy.average(entry.dy.value() - corr.y(), relativeWeight * entry.dy.weight());
 		}
 	
+		
 	}
 
 
