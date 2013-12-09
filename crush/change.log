@@ -1,5 +1,5 @@
 
-2.15-2 (beta2)
+2.15-2 (9 December 2013)
 
 
 	Overview
@@ -13,9 +13,21 @@
 	configurational compatibility to the prior 2.15 release).
 	=====================================================================
 
+	[BUG] {b2} {GISMO} Tau lookup of the second beta was wrongly assuming 
+	CET timezone for skydip data (like Gabrielle's file for 2012 November)
+	whereas Israel's file is in UT. To fix this, the new option 
+	'tau.timezone' was introduced, which may be set to any timezone
+	specification, like 'UTC' or 'CET'. 
 
 	[BUG] {GISMO} Tracking errors were not fully incorporated into the
 	GISMO astrometry. Thanks to Robert Zylka for figuring this out.
+
+	[NEW] {GISMO} The option 'tau.window' is now used also for GISMO,
+	describing the 1-sigma Gaussian window in hours over which to average
+	tau values.
+
+	[NEW] {GISMO} Tau lookup from skydip table is now despiked at 5 sigma
+	to yield more accurate and consistent values.
 
 	[NEW] 'filter.motion' has new option 'stability' to adjust the filter
 	for AM noise. The argument is a stability timescale in seconds. E.g.
@@ -55,13 +67,21 @@
 	SZ clusters at the same time, it is recommended to reset 
 	'source.sign=0' after the 'SZ' option.
 
+	[FIX] {GISMO} CalFlag 10 (reconstructed astrometry) is no longer
+	skipped by the reduction, unless the 'skipFWFix' option is set.
+
+	[FIX] {GISMO} Scanning offsets 0.0,0.0 are considered to be invalid
+	scan data. These exact offsets should never really occur during regular
+	scanning, but they can be used to diagnose data outside of the 
+	official scanning period (when the offset is explicitly set to be 0).
+
 	[FIX] {GISMO} Occasionally there are garbage coordinates in the FITS
 	table (a crate firmware issue, which can be prevented by rebooting the
 	crate every day...). CRUSH now checks the elevation coordinate to 
-	identify and flag invalid data.
+	identify and flag invalid data when present.
 
 	[FIX] Errors occuring during the pipeline reduction no longer hang 
-	crush. The error is reported with a trace and crush exists.
+	CRUSH. The error is reported with a trace and crush exists.
 
 	[FIX] Checking for scans that caused outsized maps was broken. Fixed.
 
@@ -92,8 +112,9 @@
 	width).
 	
 	[CONFIG] {GISMO} Recalibrated with Uranus based on Bendo et al. 2013
-	model. The new calibration agrees with the old within 2%, 4% and 9%
-	at 8K, 10K, and 12K bias respectively.
+	model (finalized for 2.15-2 release on 9 December 2013). The new 
+	calibration agrees with the old within 4%, 3%, and 10% at 8K, 10K, and 
+	12K biases respectively.
 
 	[CONFIG] {GISMO} Added configuration for Run 9 (2013 Oct 22 -- Nov 5)
 	and created a 'current' configuration for the future. 
@@ -103,6 +124,9 @@
 	[CONFIG] {PolKa} Added HWP analyzer angles, as determined by Helmut
 	Wiesemeyer from the 2011 March data.
 
+	[CONFIG] {LABOCA} Skydip and calibration tables updated with the
+	latest available data, up to and including 2013 November 24.
+
 	[CODE] Source map coordinate system setting moved up from ScalarMap to 
 	SourceMap. Also, Scalarmap defines a grid before super.createFrom()
 	sets the projection...
@@ -110,7 +134,7 @@
 	[CODE] Updating source synchronization gains is now on a pixel-by-pixel
 	basis instead of globally.
 
-	[UTIL] Utilities updated to 0.02-3.
+	[UTIL] Utilities updated to 0.03-1.
 	
 	[1.xx] Fixed imagetool's '-profile' option to center on sources as was 
 	intended.

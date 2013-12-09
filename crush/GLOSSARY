@@ -2397,6 +2397,16 @@
 			Bath reductions should disable 'show'.
 			@See: 'gnuplot'
 
+:: skipFWFix            @Instrument: GISMO
+			@Expert
+                        @Since: 2.15-2
+                        During 2013 Oct/Nov we had lost some data due to
+                        firmware problems. Steve has attempted to reconstruct
+                        as much of the affected frames as possible. At the same
+                        the the reconstructed astrometry is flagged
+                        accordingly. Therefore, it is possile for CRUSH to
+                        ignore the reconstructed data if the user wishes to do
+
 :: smooth=X		@Advanced
 			Smooth the map by X arcsec FWHM beam. Smoothing
 			helps improve visual appearance, but is also useful
@@ -2941,12 +2951,20 @@
 			@See: 'tau', 'tau.window'
 
 
+:: tau.timezone=AAA	@Advanced
+			@Instrument: GISMO			
+			@Since: 2.15-2
+			Specify the timezone, such as 'UTC' or 'CET' in which
+			the tau lookup table is specified.
+			@See: 'tau.window'
+
 :: tau.window=X		@Expert
-			@Instrument: APEX, SHARC-2, MAKO
+			@Instrument: APEX, SHARC-2, MAKO, GISMO
 			@Since: 2.13
 			Set the 1-sigma Gaussian weighting window (in hours) 
 			for deriving local weighted average tau values from a 
 			table of skydip/tau measurements.
+			@GISMO: since 2.15-2.
 			@See: 'tau', 'scale.window'
 
 :: time-weighting	@Alias: -> weighting.frames

@@ -57,6 +57,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	public Class<? extends SphericalCoordinates> basisSystem;
 	public Class<? extends SphericalCoordinates> offsetSystem;
 	public boolean projectedOffsets = true;
+	public boolean skipReconstructed = false;
 	
 	public Vector2D nasmythOffset, equatorialOffset, horizontalOffset, pakoOffsets;
 	public Vector2D basisOffset = new Vector2D();
@@ -262,6 +263,8 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			
 		boolean isOldFormat = fitsVersion < 1.7;
 		
+		skipReconstructed = hasOption("skipfwfix");
+		
 		if(isOldFormat) {
 			parseOldScanPrimaryHDU(HDU[0]);
 			instrument.parseOldScanPrimaryHDU(HDU[0]);
@@ -459,7 +462,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			try { tau225GHz = option("tau.225ghz").getDouble(); }
 			catch(NumberFormatException e) {
 				try {
-					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath());
+					String timeZone = hasOption("tau.timezone") ? option("tau.timezone").getValue() : "UTC";
+					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath(), timeZone);
+					if(hasOption("tau.window")) table.timeWindow = option("tau.window").getDouble() * Unit.hour;
 					tau225GHz = table.getTau(getMJD());
 					instrument.options.process("tau.225ghz", tau225GHz + "");
 				}
@@ -604,7 +609,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 			try { tau225GHz = option("tau.225ghz").getDouble(); }
 			catch(NumberFormatException e) {
 				try {
-					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath());
+					String timeZone = hasOption("tau.timezone") ? option("tau.timezone").getValue() : "UTC";
+					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath(), timeZone);
+					if(hasOption("tau.window")) table.timeWindow = option("tau.window").getDouble() * Unit.hour;
 					tau225GHz = table.getTau(getMJD());
 					instrument.options.process("tau.225ghz", tau225GHz + "");
 				}

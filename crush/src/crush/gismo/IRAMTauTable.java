@@ -48,21 +48,21 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 	
 	private static Hashtable<String, IRAMTauTable> tables = new Hashtable<String, IRAMTauTable>();
 
-	public static IRAMTauTable get(String fileName) throws IOException {
+	public static IRAMTauTable get(String fileName, String timeZone) throws IOException {
 		IRAMTauTable table = tables.get(fileName);
 		if(table == null) {
-			table = new IRAMTauTable(fileName);
+			table = new IRAMTauTable(fileName, timeZone);
 			tables.put(fileName, table);
 		}
 		return table;
 	}
 	
 		
-	private IRAMTauTable(String fileName) throws IOException {
-		read(fileName);
+	private IRAMTauTable(String fileName, String timeZone) throws IOException {
+		read(fileName, timeZone);
 	}
 	
-	private void read(String fileName) throws IOException {
+	private void read(String fileName, String timeZone) throws IOException {
 		if(fileName.equals(this.fileName)) return;
 			
 		System.err.print(" [Loading skydip tau values.]");
@@ -72,7 +72,7 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 		String line = null;
 		
 		SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss yyyy-MM-dd");
-		df.setTimeZone(TimeZone.getTimeZone("CET"));
+		df.setTimeZone(TimeZone.getTimeZone(timeZone));
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
@@ -104,7 +104,7 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 	}
 	
 	public double getTau(double MJD) {
-		Entry mean = getLocalAverage(new TimeStamp(MJD));
+		Entry mean = getCheckedLocalAverage(new TimeStamp(MJD));
 		System.err.println(" Local average tau(225GHz) = " + mean.tau.toString(Util.f3) + " (from " + mean.measurements + " measurements)");
 		return mean.tau.value();
 	}
@@ -147,9 +147,17 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 		}
 
 		@Override
-		protected void averageWidth(LocalizedData other, Object env, double relativeWeight) {
+		protected void averageWidth(LocalizedData other, Object env, double relativeWeight) {	
 			Entry point = (Entry) other;	
 			tau.average(point.tau.value(), relativeWeight * point.tau.weight());
+		}
+
+		@Override
+		public boolean isConsistentWith(LocalizedData other) {
+			Entry entry = (Entry) other;
+			DataPoint difference = (DataPoint) entry.tau.copy();
+			difference.subtract(tau);	
+			return Math.abs(difference.significance()) < 5.0;
 		}
 	}
 
