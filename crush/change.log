@@ -1,3 +1,61 @@
+>>> disable 'saedata' and 'sae', by default...
+
+>>> 'read.sae' 'correlated.sae'/'sae', 'sae.smooth', 'sae.hipass', 'log.saegains', 'write.saegains', write.saegains.spec', 'write.saegains.spec.size'
+
+>>> sae output to use lookups not to rely on 'noslim'
+
+>>> compound decorrelation
+	* inversion matrix data[] -> all non-fixed signal modes
+	* full resolution signals
+	* gain solution to include all non-fixed-gain responses too.
+	* smooth signals as desired
+	* compound remove
+	- activate on first decorrelation in pipeline, skip after...
+
+
+2.15-3 (devel.3)
+
+	[NEW] {GISMO} Decorrelation of SAE signals is not available via
+	the 'correlated.sae' option or 'sae' shorthand, and is enabled by
+	default.
+
+	[NEW] {GISMO} 2nd and 3rd stage tuning parameters (bias and feedback)
+	are now parsed from the FITS.
+
+	[NEW] {GISMO} Ability to measure SAE correlations to residuals. Both
+	correlation coefficients, and correlation spectra can be measured via
+	the 'log.saecorr' and 'write.saecorrspec' keywords.
+
+	[FIX] {GISMO} 'pins.group' did not work as desired.
+
+	[FIX] Skydip parameter errors were infinite if 'skydip.elRange' was
+	not explicitly set. Now fixed.
+
+	[TWEAK] Decorrelation dependecies calculation now takes into account
+	the lost degrees of freedom due to filtering (both hipass via 'drifts'
+	and FFT filters like whitening and motion filtering.
+
+	[DEPRECATE] {GISMO} 'flips' decorrelation is deprecated, it no longer
+	has any effect. 'correlated.rows.group' and 'correlated.cols.group'
+	are also deprecated.
+
+	[CONFIG} {GISMO} MUX decorrelation replaces gradients removal in
+	'faint' mode; MUX gained not solved until 4th iteration; MUX resolution
+	set to 0.25s for 'faint'; reinstated time-weighting at full resolution 
+	in 'faint' mode; dejumping re-enabled for 2013 October; 'faint'-mode 
+	stability timescale increased to 15s.
+
+	[CODE] Slimming only if there are dead pixels to be eliminated.
+
+	[CODE] Downsampling made more generic, allowing instrument
+	subclasses to easily add extra quantities to downsample.
+
+	[CODE] Kelvin units now recognised by all instruments if the conversion
+	from data units is set either directly via the 'kelvin' option or
+	indirectly via the combination of 'jansky' and 'K2Jy' options.
+
+	[CODE] Some simplification and clean-up of the drift removal code.
+	
 
 2.15-2 (9 December 2013)
 

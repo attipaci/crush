@@ -31,7 +31,6 @@ import java.util.*;
 import kovacs.math.Vector2D;
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
-
 import crush.*;
 import crush.array.*;
 import nom.tam.fits.*;
@@ -48,8 +47,12 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	private Vector2D arrayPointingCenter; // row,col
 
 	double focusXOffset, focusYOffset, focusZOffset;
-	int[] biasValue;
-
+	
+	int[] detectorBias;
+	int[] secondStageBias, secondStageFeedback;
+	int[] thirdStageBias, thirdStageFeedback;
+	
+	
 	public Gismo() {
 		super("gismo", pixels);
 		resolution = 16.7 * Unit.arcsec;
@@ -67,9 +70,9 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		Gismo copy = (Gismo) super.copy();
 		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
 		if(nasmythOffset != null) copy.nasmythOffset = (Vector2D) nasmythOffset.clone();
-		if(biasValue != null) {
-			copy.biasValue = new int[biasValue.length];
-			System.arraycopy(biasValue, 0, copy.biasValue, 0, biasValue.length);
+		if(detectorBias != null) {
+			copy.detectorBias = new int[detectorBias.length];
+			System.arraycopy(detectorBias, 0, copy.detectorBias, 0, detectorBias.length);
 		}
 		return copy;
 	}
@@ -93,16 +96,28 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	public void addDivisions() {
 		super.addDivisions();
 		
-		try { addDivision(getDivision("mux", GismoPixel.class.getField("mux"), Channel.FLAG_DEAD)); }
+		try { addDivision(getDivision("mux", GismoPixel.class.getField("mux"), Channel.FLAG_DEAD)); 
+			ChannelDivision<GismoPixel> muxDivision = divisions.get("mux");
+			
+			// Order mux channels in pin order...
+			for(ChannelGroup<GismoPixel> mux : muxDivision) {
+				Collections.sort(mux, new Comparator<GismoPixel>() {
+					public int compare(GismoPixel o1, GismoPixel o2) {
+						if(o1.pin == o2.pin) return 0;
+						return o1.pin > o2.pin ? 1 : -1;
+					}	
+				});
+			}
+		}
 		catch(Exception e) { e.printStackTrace(); }
 		
 		try { addDivision(getDivision("pins", GismoPixel.class.getField("pin"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
 		
-		try { addDivision(getDivision("cols", GismoPixel.class.getField("colGroup"), Channel.FLAG_DEAD)); }
+		try { addDivision(getDivision("cols", GismoPixel.class.getField("col"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
 		
-		try { addDivision(getDivision("rows", GismoPixel.class.getField("rowGroup"), Channel.FLAG_DEAD)); }
+		try { addDivision(getDivision("rows", GismoPixel.class.getField("row"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
 		
 	}
@@ -110,20 +125,14 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	@Override
 	public void addModalities() {
 		super.addModalities();
-			
+		
 		try {
 			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), GismoPixel.class.getField("muxGain"));		
 			muxMode.solveGains = false;
 			muxMode.setGainFlag(GismoPixel.FLAG_MUX);
-			addModality(muxMode);		
-			addModality(muxMode.new CoupledModality("flips", "f", new TraceFlip()));
+			addModality(muxMode);
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }	
-		
-		
-		// Flips not coupled to MUX gains?		
-		//try { addModality(new CorrelatedModality("flips", "f", divisions.get("mux"), GismoPixel.class.getField("flipGain"))); }
-		//catch(NoSuchFieldException e) { e.printStackTrace(); }	
 			
 		try { 
 			Modality<?> pinMode = new CorrelatedModality("pins", "p", divisions.get("pins"), GismoPixel.class.getField("pinGain")); 
@@ -131,7 +140,6 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 			addModality(pinMode);
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
-		
 		
 		try { 
 			Modality<?> colMode = new CorrelatedModality("cols", "c", divisions.get("cols"), GismoPixel.class.getField("colGain")); 
@@ -147,6 +155,10 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
+		if(hasOption("read.sae")) {
+			try { addModality(new SAEModality(this)); }
+			catch(NoSuchFieldException e) { e.printStackTrace(); }
+		}
 	}
 	
 	@Override
@@ -207,7 +219,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 			StringTokenizer tokens = new StringTokenizer(line);
 		 	GismoPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
 			pixel.mux = Integer.parseInt(tokens.nextToken());
-		 	pixel.pin = Integer.parseInt(tokens.nextToken()) % groupPins;
+		 	pixel.pin = Integer.parseInt(tokens.nextToken()) / groupPins;
 		}
 		
 		in.close();
@@ -265,19 +277,14 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		if(!isEmpty()) clear();
 		ensureCapacity(pixels);
 		
-		int rowGrouping = hasOption("correlated.rows.group") ? option("correlated.rows.group").getInt() : 1;
-		int colGrouping = hasOption("correlated.cols.group") ? option("correlated.cols.group").getInt() : 1;
-			
-		
-		for(int c = 0; c<pixels; c++) {
-			GismoPixel pixel = new GismoPixel(this, c);
-			pixel.rowGroup = pixel.row / rowGrouping;
-			pixel.colGroup = pixel.col / colGrouping;
-			add(pixel);
-		}
+		for(int c = 0; c<pixels; c++) add(new GismoPixel(this, c));
 		
 		int iMask = hdu.findColumn("PIXMASK");
 		int iBias = hdu.findColumn("DETECTORBIAS");
+		int i2Bias = hdu.findColumn("SECONDSTAGEBIAS");
+		int i3Bias = hdu.findColumn("THIRDSTAGEBIAS");
+		int i2Feedback = hdu.findColumn("SECONDSTAGEFEEDBACK");
+		int i3Feedback = hdu.findColumn("THIRDSTAGEFEEDBACK");
 		
 		if(iMask >= 0) {
 			try {
@@ -291,17 +298,23 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		}
 		
 		if(iBias >= 0) {
-			biasValue = (int[]) row[iBias]; 
+			detectorBias = (int[]) row[iBias]; 
 			setBiasOptions();
 		}
+		
+		if(i2Bias >= 0) secondStageBias = (int[]) row[i2Bias]; 
+		if(i3Bias >= 0) thirdStageBias = (int[]) row[i3Bias]; 
+		if(i2Feedback >= 0) secondStageFeedback = (int[]) row[i2Feedback]; 
+		if(i3Feedback >= 0) thirdStageFeedback = (int[]) row[i3Feedback]; 
+		
 	}
 	
 	
 	public void setBiasOptions() {	
 		if(!options.containsKey("bias")) return;
 			
-		int bias = biasValue[0];
-		for(int i=1; i<biasValue.length; i++) if(biasValue[i] != bias) {
+		int bias = detectorBias[0];
+		for(int i=1; i<detectorBias.length; i++) if(detectorBias[i] != bias) {
 			System.err.println(" WARNING! Inconsistent bias values. Calibration may be bad!");
 			CRUSH.countdown(5);
 		}
@@ -378,6 +391,15 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	}
 	
 	
+	private String toString(int[] values) {
+		StringBuffer buf = new StringBuffer();
+		for(int i=0; i<values.length; i++) {
+			if(i > 0) buf.append(' ');
+			buf.append(Integer.toString(values[i]));
+		}
+		return new String(buf);
+	}
+	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
@@ -387,7 +409,11 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		else if(name.equals("foc.dZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
 		else if(name.equals("nasX")) return Util.defaultFormat(nasmythOffset.x() / Unit.arcsec, f);
 		else if(name.equals("nasY")) return Util.defaultFormat(nasmythOffset.y() / Unit.arcsec, f);
-		else if(name.equals("bias")) return Integer.toString(biasValue[0]);
+		else if(name.equals("bias")) return Integer.toString(detectorBias[0]);
+		else if(name.equals("stage2.biases")) return toString(secondStageBias);
+		else if(name.equals("stage2.feedbacks")) return toString(secondStageFeedback);
+		else if(name.equals("stage3.biases")) return toString(thirdStageBias);	
+		else if(name.equals("stage3.feedbacks")) return toString(thirdStageFeedback);	
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

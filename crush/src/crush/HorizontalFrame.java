@@ -41,6 +41,16 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	}
 	
 	@Override
+	public Frame copy(boolean withContents) {
+		HorizontalFrame copy = (HorizontalFrame) super.copy(withContents);
+		
+		if(horizontal != null) copy.horizontal = (HorizontalCoordinates) horizontal.copy();
+		if(horizontalOffset != null) copy.horizontalOffset = (Vector2D) horizontalOffset.copy();
+		
+		return copy;
+	}
+	
+	@Override
 	public void validate() {
 		if(equatorial == null) calcEquatorial();
 		else if(horizontal == null) calcHorizontal();
@@ -155,7 +165,7 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	
 	public void setZenithTau(double value) {
 		zenithTau = value;
-		transmission = (float) Math.exp(-zenithTau/horizontal.sinLat());
+		setTransmission(Math.exp(-zenithTau/horizontal.sinLat()));
 	}
 	
 	// Rotate by PA

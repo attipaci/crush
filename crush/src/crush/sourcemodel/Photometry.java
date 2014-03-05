@@ -67,9 +67,10 @@ public abstract class Photometry extends SourceModel {
 	@Override
 	public synchronized void add(SourceModel model, double weight) {
 		Photometry other = (Photometry) model;
+		double renorm = getInstrument().janskyPerBeam() / other.getInstrument().janskyPerBeam();
 		for(int c=flux.length; --c >= 0; ) {
 			WeightedPoint F = other.flux[c];
-			F.scale(getInstrument().janskyPerBeam() / other.getInstrument().janskyPerBeam());
+			F.scale(renorm);
 			flux[c].average(F);
 		}
 		sourceFlux.average(other.sourceFlux);
@@ -93,11 +94,9 @@ public abstract class Photometry extends SourceModel {
 	@Override
 	public void process(boolean verbose) throws Exception {
 		super.sync();
-		
-		double jansky = getInstrument().janskyPerBeam();	
-		
+			
 		DataPoint F = new DataPoint(sourceFlux);
-		F.scale(1.0/jansky);
+		F.scale(1.0 / getInstrument().janskyPerBeam());
 		
 		if(F.weight() > 0.0) System.err.print("Flux: " + F.toString(Util.e3) + " Jy/beam.");	
 		else System.err.println("<<invalid>>");
@@ -191,9 +190,7 @@ public abstract class Photometry extends SourceModel {
 		out.println(getASCIIHeader());
 		out.println();
 
-		double jansky = getInstrument().janskyPerBeam();
-	
-		Unit Jy = new Unit("Jy/beam", jansky);
+		Unit Jy = new Unit("Jy/beam", getInstrument().janskyPerBeam());
 		out.println("# Final Combined Photometry:");
 		out.println("# =============================================================================");
 		out.println("# [" + sourceName + "]");

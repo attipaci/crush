@@ -24,6 +24,8 @@
 
 package crush;
 
+import java.util.Arrays;
+
 import kovacs.astro.CelestialProjector;
 import kovacs.astro.EquatorialCoordinates;
 import kovacs.math.SphericalCoordinates;
@@ -47,7 +49,7 @@ public abstract class Frame implements Cloneable, Flagging {
 	public float relativeWeight = 1.0F;
 	
 	public int sign = 1;
-	public float transmission = 1.0F;
+	private float transmission = 1.0F;
 	
 	// Some temporary fields to speed up some operations...
 	public float tempC, tempWC, tempWC2;
@@ -65,6 +67,30 @@ public abstract class Frame implements Cloneable, Flagging {
 	public Object clone() {
 		try { return super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
+	}
+	
+	public Frame copy(boolean withContents) {
+		Frame copy = (Frame) clone();
+		
+		if(equatorial != null) copy.equatorial = (EquatorialCoordinates) equatorial.copy();
+		if(chopperPosition != null) copy.chopperPosition = (Vector2D) chopperPosition.copy();
+		
+		if(data != null) {
+			copy.data = new float[data.length];
+			if(withContents) System.arraycopy(data, 0, copy.data, 0, data.length);
+		}
+		
+		if(sampleFlag != null) {
+			copy.sampleFlag = new byte[sampleFlag.length];
+			if(withContents) System.arraycopy(sampleFlag, 0, copy.sampleFlag, 0, sampleFlag.length);
+		}
+		
+		if(sourceIndex != null) {
+			copy.sourceIndex = new int[sourceIndex.length];
+			if(withContents) System.arraycopy(sourceIndex, 0, copy.sourceIndex, 0, sourceIndex.length);
+		}
+		
+		return copy;
 	}
 	
 	@Override
@@ -107,6 +133,16 @@ public abstract class Frame implements Cloneable, Flagging {
 		unflag(~0);
 	}
 	
+	public float getTransmission() { return transmission; }
+	
+	protected void setTransmission(float value) { transmission = value; }
+	
+	protected final void setTransmission(double value) { setTransmission((float) value); }
+	
+	public float getTransmissionCorrection(Signal atm, float C2eps) {
+		return atm.valueAt(this) * C2eps;
+	}
+	
 	public void slimTo(Instrument<?> instrument) {
 		float[] reduced = new float[instrument.size()];
 		byte[] newSampleFlag = new byte[instrument.size()];
@@ -127,7 +163,7 @@ public abstract class Frame implements Cloneable, Flagging {
 	}
 		
 	public float getSourceGain(final int mode) throws IllegalArgumentException {
-		if(mode == TOTAL_POWER) return sign * transmission;
+		if(mode == TOTAL_POWER) return sign * getTransmission();
 		else throw new IllegalArgumentException(getClass().getSimpleName() + " does not define signal mode " + mode);
 	}
 
@@ -205,7 +241,11 @@ public abstract class Frame implements Cloneable, Flagging {
 	}
 
 	public void scale(double factor) {
-		for(int i=data.length; --i >= 0; ) data[i] *= factor;	
+		if(factor == 0.0) Arrays.fill(data, 0.0F);
+		else {
+			final float fScale = (float) factor;
+			for(int i=data.length; --i >= 0; ) data[i] *= fScale;	
+		}
 	}
 	
 	public void invert() { scale(-1.0); }
@@ -226,6 +266,16 @@ public abstract class Frame implements Cloneable, Flagging {
 	
 	public final double getY(final Vector2D position) {
 		return cosA * position.y() + sinA * position.x();	
+	}
+	
+	public void addDataFrom(final Frame other, final double scaling) {
+		if(scaling == 0.0) return;
+		final float fScale = (float) scaling;
+		
+		for(int i=data.length; --i >=0; ) {
+			data[i] += fScale * other.data[i];
+			sampleFlag[i] |= other.sampleFlag[i];
+		}
 	}
 	
 	public void project(final Vector2D position, final CelestialProjector projector) {
@@ -274,6 +324,7 @@ public abstract class Frame implements Cloneable, Flagging {
 		coords.copy(equatorial);
 	}
 	
+
 	public static int nextSampleFlag = 0;
 	public static byte SAMPLE_SOURCE_BLANK = (byte) (1 << nextSampleFlag++);
 	public static byte SAMPLE_SPIKE = (byte) (1 << nextSampleFlag++);

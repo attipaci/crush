@@ -579,7 +579,6 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		return scans;
 	}
-	
 
 	public synchronized void updateGains(final String modalityName) {		
 		boolean isRobust = false;

@@ -149,18 +149,20 @@ public class SkyDipModel {
 	public void fit(final SkyDip skydip) {
 		
 		AmoebaMinimizer minimizer = new AmoebaMinimizer() {
-			int fromBin = 0;
-			int toBin = skydip.data.length;
+			int fromBin, toBin;
 			
 			@Override
 			public void init(double[] p) {
 				super.init(p);
+				
 				if(elRange != null) {
 					fromBin = Math.max(0,  skydip.getBin(elRange.min()));
 					toBin = Math.min(skydip.data.length, skydip.getBin(elRange.max()));
-					usePoints = 0;
-					for(int i=fromBin; i<toBin; i++) if(skydip.data[i].weight() > 0.0) usePoints++;
 				}
+				else { fromBin = 0; toBin = skydip.data.length; }
+					
+				usePoints = 0;
+				for(int i=fromBin; i<toBin; i++) if(skydip.data[i].weight() > 0.0) usePoints++;
 			}
 			
 			@Override
@@ -190,7 +192,7 @@ public class SkyDipModel {
 			}		
 		}
 		else for(Parameter p : parameters) p.setWeight(0.0);
-		
+			
 		double[] fitted = minimizer.getFitParameters();
 		for(int i=0; i<fitted.length; i++) parameters.get(i).setValue(fitted[i]);
 		

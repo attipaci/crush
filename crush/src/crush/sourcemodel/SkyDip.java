@@ -159,11 +159,7 @@ public class SkyDip extends SourceModel {
 	public void write(String path) throws Exception {
 		SkyDipModel model = new SkyDipModel();
 	
-		if(hasOption("kelvin"))
-			model.kelvin.setValue(option("kelvin").getDouble());
-		else if(hasOption("k2jy"))
-			model.kelvin.setValue(option("k2jy").getDouble() * getInstrument().janskyPerBeam());
-		
+		model.kelvin.setValue(getInstrument().kelvin());	
 		model.dataUnit = getInstrument().getDataUnit().name();
 		
 		fit(model);
