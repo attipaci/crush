@@ -61,7 +61,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	
 	
 	public double getSkyLoadTemperature() {
-		double transmission = 0.5 * (getFirstFrame().transmission + getLastFrame().transmission);
+		double transmission = 0.5 * (getFirstFrame().getTransmission() + getLastFrame().getTransmission());
 		return (1.0 - transmission) * ((CSOScan<?,?>) scan).getAmbientTemperature();
 	}
 	

@@ -41,7 +41,7 @@ public class Signal implements Cloneable {
 	int driftN;
 	boolean isFloating = false;
 	
-	Signal(Mode mode, Integration<?, ?> integration) {
+	public Signal(Mode mode, Integration<?, ?> integration) {
 		this.mode = mode;
 		this.integration = integration;
 		if(mode != null) {
@@ -50,11 +50,11 @@ public class Signal implements Cloneable {
 		}
 	}
 	
-	Signal(Mode mode, Integration<?, ?> integration, double[] values, boolean isFloating) {
+	
+	public Signal(Mode mode, Integration<?, ?> integration, float[] values, boolean isFloating) {
 		this(mode, integration);
 		resolution = (int) Math.ceil((double) integration.size() / values.length);
-		this.value = new float[values.length];
-		for(int i=values.length; --i >= 0; ) this.value[i] = (float) values[i];
+		this.value = values;
 		driftN = values.length;
 	}
 	
@@ -138,15 +138,18 @@ public class Signal implements Cloneable {
 		return sum / n;
 	}
 	
-	
 	public synchronized void removeDrifts() {
-		int N = integration.framesFor(integration.filterTimeScale) / resolution;
+		removeDrifts((int) Math.ceil(integration.framesFor(integration.filterTimeScale) / resolution), true);
+	}
+	
+	
+	public synchronized void removeDrifts(int N, boolean isReconstructible) {	
 		if(N == driftN) return;
 		
 		addDrifts();
 		
 		driftN = N;
-		drifts = new float[(int) Math.ceil((double) value.length / driftN)];
+		if(isReconstructible) drifts = new float[(int) Math.ceil((double) value.length / driftN)];
 		
 		for(int T=0, fromt=0; fromt<value.length; T++) {
 			double sum = 0.0;
@@ -160,7 +163,7 @@ public class Signal implements Cloneable {
 			if(n > 0) {
 				float fValue = (float) (sum / n);
 				for(int t=tot; --t >= fromt; ) value[t] -= fValue;
-				drifts[T] = fValue;
+				if(isReconstructible) drifts[T] = fValue;
 			}
 			
 			fromt = tot;
@@ -390,8 +393,9 @@ public class Signal implements Cloneable {
 		final int nc = channels.size();
 		final int[] channelIndex = mode.getChannelIndex();
 		
-		final float[] dG = syncGains;	
 		final float[] G = mode.getGains();
+		final float[] dG = syncGains;	
+		
 		for(int k=nc; --k >=0; ) dG[k] = G[k] - dG[k];
 		
 		// Sync to data and calculate dependeces...
@@ -421,7 +425,7 @@ public class Signal implements Cloneable {
 			if(dG[k] != 0.0) changed = true;
 		}
 		if(!changed) return;
-		
+			
 		parms.clear(channels, 0, integration.size());
 
 		// Precalculate the gain-weight products...

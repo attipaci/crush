@@ -50,7 +50,7 @@ public class APEXChoppedPhotometry extends Photometry {
 	
 		for(Integration<?,?> integration : scan) {
 			final APEXArraySubscan<?,?> subscan = (APEXArraySubscan<?,?>) integration;
-			final double transmission = 0.5 * (subscan.getFirstFrame().transmission + subscan.getLastFrame().transmission);
+			final double transmission = 0.5 * (subscan.getFirstFrame().getTransmission() + subscan.getLastFrame().getTransmission());
 			final double[] sourceGain = subscan.instrument.getSourceGains(false);
 			final PhaseSet phases = subscan.getPhases();
 		

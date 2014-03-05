@@ -1064,17 +1064,6 @@
 			the 'pixeldata' weights are suspect for some reason.
 			@See: 'pixeldata'
 
-:: flips		@Alias -> correlated.flips
-			@Instrument: GISMO
-			@Since: 2.12
-			@Advanced
-			This modality allows decorrelating SQUID mux signals 
-			with inverted current directions on every other pair
-			of channels. Seems to work well on the SQUID level
-			fluctuations seen in April 2012, esp. when used
-			together with 'mux' decorrelation.
-			@See: 'mux'
-
 :: focalplane		@Alias -> system=focalplane
 			@Since: 2.14
 			@Expert

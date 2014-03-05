@@ -2,9 +2,9 @@
 	      *** CRUSH User's Manual Extension for GISMO ***
 
 			      Attila Kovacs
-			<attila[AT]submm.caltech.edu>
+		      <attila[AT]submm.caltech.edu>
 
-		       Last updated: 25 November 2013
+		       Last updated: 4 March 2014
 
 
 
@@ -23,6 +23,7 @@ Table of Contents
 5. GISMO-specific pixel divisions
 6. Runs 1 & 2 Peculiarities
 7. Glossary of GISMO-specific options
+8. GISMO-specific log quantities
 
 
 
@@ -259,12 +260,6 @@ For a general overview of channel divisions, please consult Section 3.
 		correlated signals are present on these quadrants. The
 		decorrelating on 'mux' groups is default in GISMO reductions
 
-   flips	A modality based on the 'mux' division of pixels, for 
-		decorrelating the pairwise alternating currents on the SQUID
-		muxes. By design nearby pixels on the readout have wriring 
-		traces s.t. the direction of current is flipped between one
-		set and the other.
-
    pins		The GISMO multiplexing scheme is implemented in the time-domain
 		Thus, the first channels of each SQUID are read out at the same
 		time, followed by the second channel in each group etc. Thus,
@@ -313,12 +308,6 @@ For a general overview of channel divisions, please consult Section 3.
                         Specifies the grouping of channels by their geometric
 			location of the array divided into columns.
                         @See: 'correlated.<?>', 'rows'
-
-   cols.group=<n>       @Alias: 'correlated.cols.group'
-                        @Expert
-                        Geometric columns can be grouped together for
-			decorrelation.
-			@See: 'cols'
 
    date=YYYY-MM-DD	Specify the observing date (UT) in the format
 			YYYY-MM-DD. This is used for constructing the IRAM 
@@ -406,12 +395,6 @@ For a general overview of channel divisions, please consult Section 3.
                         location of the array divided into rows.
                         @See: 'correlated.<?>', 'cols'
 
-   rows.group=<n>       @Alias: 'correlated.rows.group'
-                        @Expert
-			Geometric rows can be grouped together for 
-			decorrelation.
-                        @See: 'rows'
-
    skipFWFix		@Expert
 			@Since: 2.15-2
 			During 2013 Oct/Nov we had lost some data due to 
@@ -449,6 +432,46 @@ For a general overview of channel divisions, please consult Section 3.
 			@Expert
 			Force setting the merge version to X, ignoring the
 			value stored in the FITS.
+
+
+#####################################################################
+8. GISMO-specific log quantities
+#####################################################################
+
+
+	bias		The detector bias value (for column 0).
+
+        foc.dX          Focus X offset (mm).
+        
+	foc.dY          Focus Y offset (mm).
+        
+	foc.dZ          Focus Z offset (mm).
+
+	modelX		Static pointing model correction in azimuth (arcsec).
+
+	modelY		Static pointing model correction in elevation (arcsec). 
+
+	nasX		Nasmyth X position of instrument.
+
+	nasY		Nasmyth Y position of instrument.
+
+	obstype		Type of observation.
+
+	rot		Rotation of the instrument (deg).
+
+	stage2.biases	Second stage biases (4 integers)
+
+	stage2.feedbacks Second stage feedbacks (4 integers)
+	
+	stage3.biases	Third stage biases (4 integers)
+
+	stage4.feedbacks Third stage feedbacks (4 integers)
+
+	tiltX		Azymuth pointing correction from inclinometer (arcsec).
+
+	tiltY		Elevation pointing correction from inclinometer 
+			(arcsec).
+
 
 ------------------------------------------------------------------------------
 Copyright (C)2012 -- Attila Kovacs <kovacs@astro.umn.edu>

@@ -62,6 +62,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	public double integrationTime = 0.0;	
 	
 	private Unit jansky = new Jansky();
+	private Unit kelvin = new Kelvin();
 	
 	public GridSource() {}
 	
@@ -202,6 +203,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	public void addBaseUnits() {
 		super.addBaseUnits();
 		addBaseUnit(jansky, "Jy, jansky");
+		addBaseUnit(kelvin, "K, kelvin");
 	}
 
 	
@@ -263,6 +265,19 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		
 		@Override
 		public double value() { return instrument.janskyPerBeam() * getInstrumentBeamArea(); }
+	}
+	
+	private class Kelvin extends Unit {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -847015844453378556L;
+		
+
+		private Kelvin() { super("K", Double.NaN); }
+		
+		@Override
+		public double value() { return instrument.kelvin(); }	
 	}
 	
 }

@@ -370,9 +370,14 @@ public class CorrelatedSignal extends Signal {
 			final float dC = (float) increment.value();
 
 			// precalculate the channel dependences...
-			for(final Channel pixel : goodChannels) pixel.temp = pixel.tempWG2 / (float) increment.weight();
-
-			// sync to data and calculate dependences...
+			
+			final double duration = integration.getDuration();
+			for(final Channel pixel : goodChannels) {
+				final float filterFactor = (float) (pixel.directFiltering * (1.0 - pixel.filterTimeScale / duration));
+				pixel.temp = filterFactor * pixel.tempWG2 / (float) increment.weight();			
+			}
+			
+			// sync to data and calculate dependences...float filterFactor = (float) (1.0 - integration.filterTimeScale / integration.getDuration());
 			for(int t=to; --t >= from; ) {
 				final Frame exposure = integration.get(t);
 				if(exposure == null) continue;

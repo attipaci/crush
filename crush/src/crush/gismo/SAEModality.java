@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,40 +20,31 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush;
 
-import java.lang.reflect.*;
+package crush.gismo;
 
-public class FieldResponse extends Response {
-	private Field field;
-	private boolean isFloating = false;
+import crush.Modality;
+
+public class SAEModality extends Modality<SAEResponse> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1188101098766206152L;
 	
-	public FieldResponse(Field field) {
-		this.field = field;
+	public SAEModality(Gismo instrument) throws NoSuchFieldException {
+		super("sae", "E");
+		if(!instrument.hasOption("read.sae")) return;
+		
+		for(GismoPixel pixel : instrument) add(new SAEResponse(pixel));
+		setGainFlag(GismoPixel.FLAG_SAE);
 	}
 	
-	public FieldResponse(Field field, boolean isFloating) {
-		this(field);
-		this.isFloating = isFloating;
-	}
-	
-	public Field getField() { return field; }
-	
-	public boolean isFloating() { return isFloating; }
-	
-	public void setFloating(boolean value) { isFloating = value; }
-	
-	@Override
-	public Signal getSignal(Integration<?, ?> integration) {
-		float[] data = new float[integration.size()];	
-		try {
-			for(int t=data.length; --t >= 0; ) {
-				final Frame exposure = integration.get(t);
-				data[t] = exposure == null ? Float.NaN : field.getFloat(exposure);
-			}
+	public synchronized void init(GismoIntegration integration) {
+		for(int i=size(); --i >= 0; ) {
+			SAEResponse r = get(i);
+			if(r.getChannelCount() > 0) r.initSignal(integration);
+			else remove(i);
 		}
-		catch(Exception e) { System.err.println("WARNING! No field named " + field.getName() + " for signal."); }
-		return new Signal(this, integration, data, isFloating);
 	}
 
 }

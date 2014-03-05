@@ -24,18 +24,21 @@
 
 package crush.gismo;
 
-import kovacs.astro.CelestialCoordinates;
-import kovacs.astro.CoordinateEpoch;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.HorizontalCoordinates;
-import kovacs.astro.JulianEpoch;
-import kovacs.astro.Precessing;
-import kovacs.astro.Precession;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
+
+import kovacs.astro.*;
+import kovacs.data.FauxComplexArray;
+import kovacs.data.WindowFunction;
+import kovacs.fft.FloatFFT;
+import kovacs.math.Complex;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
 import crush.*;
 import crush.fits.HDUReader;
-
 import nom.tam.fits.*;
 
 public class GismoIntegration extends Integration<Gismo, GismoFrame> implements GroundBased {
@@ -50,6 +53,23 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 	public GismoIntegration(GismoScan parent) {
 		super(parent);
 	}	
+	
+	@Override
+	public void validate() {
+		super.validate();
+		
+		if(hasOption("read.sae")) {
+			levelSAE();
+			
+			SAEModality saeMode = (SAEModality) instrument.modalities.get("sae");
+			if(saeMode != null) {
+				System.err.println("   Initializing SAE signals for decorrelation");
+				saeMode.init(this);
+			}
+		
+			discardSAEData();
+		}
+	}
 	
 	@Override
 	public void setTau() throws Exception {
@@ -92,7 +112,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 	}
 		
 	class GismoReader extends HDUReader {	
-		private float[] DAC;
+		private float[] DAC, SAE;
 		private double[] MJD, LST, dX, dY, AZE, ELE;
 		private double[] X0, Y0, cEL; //AZ, EL, cAZ, cEL, tAZ, tEL, posA;
 		private int[] NS, SN, CAL;
@@ -105,6 +125,8 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 			super(hdu);
 		
 			int iDAC = hdu.findColumn("DAC");
+			int iSAE = hdu.findColumn("SAE");
+			
 			channels = table.getSizes()[iDAC];
 			
 			// The IRAM coordinate data...
@@ -141,8 +163,9 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 			int iCAL = hdu.findColumn("CalFlag"); // 0=none, 1=shutter, 2=ivcurve
 			if(iCAL > 0) CAL = (int[]) table.getColumn(iCAL);
 			
-			//iSAE = hdu.findColumn("SAE");
+			if(hasOption("read.sae")) if(iSAE > 0) SAE = (float[]) table.getColumn(iSAE);
 			
+				
 			// These columns below have been retired in March 2012
 			// But even before that, these did not carry actual data, as thermometry
 			// was disconnected during observations...
@@ -171,8 +194,8 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					set(i, null);
 					
 					// Do not process frames with no coordinate information...
-					if(cEL[i] <= minElevation) return;
-					if(cEL[i] >= maxElevation) return;					
+					if(cEL[i] <= MIN_ELEVATION) return;
+					if(cEL[i] >= MAX_ELEVATION) return;					
 					
 					// Zero scanning offsets are typically outside of the scan.
 					// (The normal scanning motion should never go through 0.0 exactly).
@@ -183,7 +206,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					// Skip processing frames with non-zero cal flag...
 					if(CAL != null) {
 						calFlag = CAL[i];
-						if(CAL[i] != 0) if(gismoScan.skipReconstructed || calFlag != reconstructedDataCalFlag) return;
+						if(CAL[i] != 0) if(gismoScan.skipReconstructed || calFlag != CALFLAG_RECONSTRUCTED) return;
 					}	
 						
 					// Skip data with invalid flags 
@@ -200,6 +223,11 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					
 					// Read the pixel data
 					frame.parseData(DAC, i*channels, channels);	
+					
+					if(SAE != null) {
+						frame.SAE = new float[frame.data.length];
+						frame.parseSAE(SAE, i*channels, channels);
+					}
 					
 					// Add in the astrometry...
 					frame.MJD = MJD[i];
@@ -358,8 +386,8 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					int calFlag = 0, digitalFlag = 0;
 					
 					// Do not process frames with no coordinate information...
-					if(EL[i] <= minElevation) return;
-					if(EL[i] >= maxElevation) return;
+					if(EL[i] <= MIN_ELEVATION) return;
+					if(EL[i] >= MAX_ELEVATION) return;
 					
 					// Skip processing frames with non-zero cal flag...
 					if(CAL != null) {
@@ -436,14 +464,258 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 			};
 		}
 	}	
+	
+	
+	void levelSAE() { for(GismoPixel pixel : instrument) levelSAE(pixel); }
+	
+	void levelSAE(GismoPixel channel) {
+		double sum = 0.0;
+		int n=0;
+		for(GismoFrame exposure : this) if(exposure != null) {
+			sum += exposure.SAE[channel.index];
+			n++;
+		}
+		float ave = n > 0 ? (float) (sum / n) : 0.0F;
+		for(GismoFrame exposure : this) if(exposure != null) exposure.SAE[channel.index] -= ave;		
+	}
 
+	
+	@Override
+	public void writeProducts() {
+		super.writeProducts();
+		
+		if(hasOption("write.saegains.spec")) {
+			try { writeSAECorrelationSpectrum(); }
+			catch(IOException e) { e.printStackTrace(); }
+		}
+		
+		if(hasOption("write.saegains")) {
+			try { writeSAEGains(); }
+			catch(IOException e) { e.printStackTrace(); }
+		}
+		
+		if(hasOption("log.saegains")) {
+			try { logSAEGains(); }
+			catch(IOException e) { e.printStackTrace(); }
+		}
+		
+	}
+	
+	public void discardSAEData() {
+		for(GismoFrame exposure : this) if(exposure != null) exposure.SAE = null;
+	}
+	
+	private boolean checkSAEComplete() {
+		boolean isOK = true;
+		if(!hasOption("read.sae")) { isOK = false; System.err.println("WARNING! SAE values not parsed. Use 'read.sae' option."); }
+		if(!hasOption("noslim")) { isOK = false; System.err.println("WARNING! Use 'noslim' option to write complete SAE data."); }
+		return isOK;
+	}
+	
+	void logSAEGains() throws IOException {
+		if(!checkSAEComplete()) return;
+		
+		String fileName = CRUSH.workPath + File.separator + "saegain.log";
+		PrintWriter out = new PrintWriter(new FileOutputStream(fileName, true));
+		
+		out.println(this.getASCIIHeader());
+		out.println("#");
+		out.println("# ID\ttau\tbias\t2nd-stage-bias(x4)\t2nd-stage-feedback(x4)\t3rd-stage-bias(x4)\t3rd-stage-feedback(x4)");
+		
+		out.print(scan.getID() + "\t" + Util.f3.format(zenithTau / Math.sin(scan.horizontal.EL())));
+		out.print("\t" + instrument.detectorBias[0]);
+		for(int i=0; i<4; i++) out.print("\t" + instrument.secondStageBias[i]);
+		for(int i=0; i<4; i++) out.print("\t" + instrument.secondStageFeedback[i]);
+		for(int i=0; i<4; i++) out.print("\t" + instrument.thirdStageBias[i]);
+		for(int i=0; i<4; i++) out.print("\t" + instrument.thirdStageFeedback[i]);
+		
+		for(int c=0; c<instrument.size(); c++) {
+			GismoPixel pixel = instrument.get(c);
+			out.print("\t" + Util.e3.format(pixel.saeGain));
+		}
+		out.println();
+		
+		out.close();
+		
+		System.err.println(" Logged to " + fileName);
+	}
+	
+	void writeSAEGains() throws IOException {	
+		if(!hasOption("correlated.sae")) return;
+		
+		String fileName = CRUSH.workPath + File.separator + scan.getID() + ".saegain.dat";
+		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
+		
+		out.println(this.getASCIIHeader());
+		out.println();
+	
+		for(int c=0; c<instrument.size(); c++) {
+			GismoPixel pixel = instrument.get(c);
+			out.println(c + "\t" + Util.e3.format(pixel.saeGain));
+		}
+		
+		out.close();
+		
+		System.err.println(" Written " + fileName);
+	}
+	
+	
+	void writeSAECorrelationSpectrum() throws IOException {	
+		int windowSize = hasOption("write.saegains.spec.windowsize") ? option("write.saegains.spec.windowsize").getInt() : framesFor(filterTimeScale);
+		Complex[][] C = getSAECorrelationSpectrum(windowSize);
+		
+		int nF = C[0].length;
+		double df = 1.0 / (windowSize * instrument.samplingInterval);
+		
+		String fileName = CRUSH.workPath + File.separator + scan.getID() + ".saegain.spec";
+		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
+		
+		out.println(this.getASCIIHeader());
+		out.println();
+		
+		Complex z = new Complex();
+		
+		for(int c=0; c<C.length; c++) {
+			z.set(C[c][0].x(), 0.0);
+			out.print(Util.f5.format(0.0) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
+		}
+		
+		for(int f=1; f<nF; f++) {
+			out.print(Util.f5.format(f*df));
+			for(int c=0; c<C.length; c++) out.print("\t" + Util.e3.format(C[c][f].length()) + "\t" + Util.f3.format(C[c][f].angle()));
+			out.println();
+		}
+		
+		for(int c=0; c<C.length; c++) {
+			z.set(C[c][0].y(), 0.0);
+			out.print(Util.f5.format(nF * df) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
+		}
+			
+		out.close();
+		
+		System.err.println(" Written " + fileName);
+		
+		writeSAEDelayCorrelation(C);
+	}
+	
+	void writeSAEDelayCorrelation(Complex[][] spectrum) throws IOException {
+		int nF = spectrum[0].length;
+		
+		FauxComplexArray.Float C = new FauxComplexArray.Float(nF);
+		FloatFFT fft = new FloatFFT();
+		
+		float[][] delay = new float[spectrum.length][nF << 1];
+		
+		for(int c=spectrum.length; --c >= 0; ) {
+			for(int f=nF; --f >= 0; ) C.set(f, spectrum[c][f]);
+			fft.amplitude2Real(C.getData());
+			System.arraycopy(C.getData(), 0, delay[c], 0, nF << 1);		
+		}
+		
+		String fileName = CRUSH.workPath + File.separator + scan.getID() + ".saegain.delay";
+		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
+		
+		out.println(this.getASCIIHeader());
+		out.println();
+		
+		int n = nF << 1;
+		
+		for(int t=0; t<n; t++) {
+			out.print(Util.f5.format(t * instrument.samplingInterval));
+			for(int c=0; c<spectrum.length; c++) out.print("\t" + Util.e3.format(delay[c][t]));
+			out.println();
+		}
+		
+		out.close();
+		
+		System.err.println(" Written " + fileName);
+	}
+	
+	
+	Complex[][] getSAECorrelationSpectrum(int windowSize) {
+		double[] w = WindowFunction.getHann(windowSize);
+		
+		Complex[][] C = new Complex[instrument.size()][];
+		for(int c = instrument.size(); --c >= 0; ) {
+			GismoPixel channel = instrument.get(c);
+			C[c] = getSAECorrelationSpectrum(c, w);
+			if(channel.isFlagged()) for(Complex z : C[c]) z.zero();
+		}
+		return C;
+	}
+	
+	
+	Complex[] getSAECorrelationSpectrum(int channel, double[] w) {
+		int windowSize = w.length;
+		windowSize = ExtraMath.pow2ceil(windowSize);
+		int step = windowSize >> 1;
+		int nt = size();
+		int nF = windowSize >> 1;
+		
+		Complex[] c = new Complex[nF];
+		for(int i=nF; --i >= 0; ) c[i] = new Complex();
+		
+		FauxComplexArray.Float D = new FauxComplexArray.Float(nF);
+		FauxComplexArray.Float S = new FauxComplexArray.Float(nF);
+
+		float[] d = D.getData();
+		float[] s = S.getData();
+		
+		Complex dComponent = new Complex();
+		Complex sComponent = new Complex();
+		
+		FloatFFT fft = new FloatFFT();
+		double norm = 0.0;
+		
+		final GismoPixel pixel = instrument.get(channel);
+		final Mode mode = instrument.modalities.get("sae").get(channel);
+		final Signal saeSignal = signals.get(mode);
+				
+ 		for(int from = 0; from < nt; from+=step) {
+			int to = from + windowSize;
+			if(to > nt) break;
+			
+			Arrays.fill(d, 0.0F);
+			Arrays.fill(s, 0.0F);
+			
+			for(int k=windowSize; --k >= 0; ) {
+				GismoFrame exposure = get(from + k);
+				if(exposure == null) continue;
+				if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+				s[k] = (float) w[k] * saeSignal.valueAt(exposure);
+				d[k] = (float) (w[k] * exposure.data[channel] + pixel.saeGain * s[k]);
+			}
+			
+			fft.real2Amplitude(d);
+			fft.real2Amplitude(s);
+			
+			for(int f=nF; --f >= 0; ) {
+				D.get(f, dComponent);
+				S.get(f, sComponent);
+				norm += sComponent.norm();
+				
+				sComponent.conjugate();
+				dComponent.multiplyBy(sComponent);
+				c[f].add(dComponent);
+			}	
+		}
+
+		if(norm > 0.0) norm  = 1.0 / norm; 
+		
+		for(int i=nF; --i >= 0; ) c[i].scale(norm);
+		
+		return c;
+	}
+	
+	
+	
 	@Override
 	public String getFullID(String separator) {
 		return scan.getID();
 	}
 	
-	private static final int reconstructedDataCalFlag = 10;
+	private static final int CALFLAG_RECONSTRUCTED = 10;
 	
-	private static final double minElevation = 0.001 * Unit.deg;
-	private static final double maxElevation = 90.0 * Unit.deg;
+	private static final double MIN_ELEVATION = 0.001 * Unit.deg;
+	private static final double MAX_ELEVATION = 90.0 * Unit.deg;
 }

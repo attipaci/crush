@@ -46,8 +46,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.15-2";
-	private static String revision = "";
+	private static String version = "2.16-a1";
+	private static String revision = "devel.4";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -273,6 +273,14 @@ public class CRUSH extends Configurator {
 					scan.read(scanID, true);
 					if(scan.size() == 0) System.err.println(" WARNING! Scan " + scan.getID() + " contains no valid data. Skipping.");
 					else if(isConfigured("subscans.split")) scans.addAll(scan.split());
+					/*
+					else if(isConfigured("split")) {
+						double segmentTime = 30.0 * Unit.s;
+						try { segmentTime = scan.split(option("split").getDouble() * Unit.s); }
+						catch(Exception e) {}
+						scans.addAll(scan.split(segmentTime));
+					}
+					*/
 					else scans.add(scan);	
 					System.gc();		
 				}

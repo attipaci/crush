@@ -86,6 +86,8 @@ public class Mode {
 	
 	public ChannelGroup<?> getChannels() { return channels; }
 	
+	public int getChannelCount() { return channels.size(); }
+	
 	public void setChannels(ChannelGroup<?> group) {
 		channels = group;
 		name = group.getName();
@@ -172,7 +174,6 @@ public class Mode {
 		if(fixedGains) throw new IllegalStateException("WARNING! Cannot solve gains for fixed gain modes.");
 		
 		float[] G0 = getGains();
-		
 		
 		WeightedPoint[] G = phaseGains && integration.isPhaseModulated() ?  
 				((PhaseModulated) integration).getPhases().getGainIncrement(this) : 

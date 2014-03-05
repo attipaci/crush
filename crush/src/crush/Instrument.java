@@ -179,6 +179,14 @@ implements TableFormatter.Entries {
 		else return 1.0; // Safety pin...
 	}
 	
+	
+	public double kelvin() {
+		if(hasOption("kelvin")) return option("kelvin").getDouble();
+		else if(hasOption("k2jy")) return option("k2jy").getDouble() * janskyPerBeam();
+		else return Double.NaN;		
+		// TODO safety return 1.0?
+	}
+	
 	public Unit getDataUnit() {
 		if(hasOption("dataunit")) return Unit.get(option("dataunit").getValue());
 		return Unit.counts;		
