@@ -30,10 +30,8 @@ import nom.tam.fits.*;
 import java.io.*;
 
 import kovacs.astro.*;
-import kovacs.data.DataPoint;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
-
 import crush.cso.CSOIntegration;
 import crush.fits.HDUReader;
 
@@ -45,7 +43,6 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	private static final long serialVersionUID = 2387643745464766162L;
 	
 	public boolean hasExtraTimingInfo = false;
-	private DataPoint chopZero = new DataPoint();
 	
 	public Sharc2Integration(Sharc2Scan parent) {
 		super(parent);
@@ -144,25 +141,12 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		ensureCapacity(records);
 		for(int t=records; --t>=0; ) add(null);
 					
+		
 		for(int n=0, startIndex = 0; n<nDataHDUs; n++) {
 			BinaryTableHDU hdu = (BinaryTableHDU) HDU[firstDataHDU+n]; 
 			new Sharc2Reader(hdu, startIndex).read();
 			startIndex += hdu.getNRows();
-		}
-		
-		//if(!isEmpty()) if(chopZero.weight() > 0.0) chopZero.scaleValue(1.0 / chopZero.weight());
-		
-		Sharc2Scan sharcscan = (Sharc2Scan) scan;
-		
-		if(sharcscan.addOffsets) for(Sharc2Frame frame : this) {
-			// Remove the small zero offset from the chopper signal.
-			frame.chopperPosition.subtractX(chopZero.value());	
-			// Add chopper offset to the aggregated horizontal offset...
-			frame.horizontalOffset.add(frame.chopperPosition);
-			// Add the chopper offset to the absolute coordinates also...
-			frame.horizontal.addOffset(frame.chopperPosition);
-		}
-	
+		}	
 		
 	}
 		
@@ -263,7 +247,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 					//chopZero.addWeight(1.0);
 
 					// Add in the scanning offsets...
-					if(sharcscan.addOffsets) frame.horizontalOffset.add(sharcscan.horizontalOffset);	
+					if(sharcscan.addStaticOffsets) frame.horizontalOffset.add(sharcscan.horizontalOffset);	
 
 					// Add in the equatorial sweeping offsets
 					// Watch out for the sign of the RA offset, which is counter to the native coordinate direction

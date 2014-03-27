@@ -28,6 +28,7 @@ import java.util.Arrays;
 
 import kovacs.astro.CelestialProjector;
 import kovacs.astro.EquatorialCoordinates;
+import kovacs.astro.FocalPlaneCoordinates;
 import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
 import kovacs.util.*;

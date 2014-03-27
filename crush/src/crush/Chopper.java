@@ -23,7 +23,7 @@
 package crush;
 
 import kovacs.util.*;
-
+import kovacs.math.*;
 
 public class Chopper implements Cloneable, Copiable<Chopper> {
 	public int positions = 0; // 0 for indeterminate, -1 for sweeping mode
@@ -31,6 +31,7 @@ public class Chopper implements Cloneable, Copiable<Chopper> {
 	public double amplitude = 0.0;
 	public double efficiency = Double.NaN;
 	public double angle = Double.NaN;
+	public Vector2D offset = new Vector2D();
 	public PhaseSet phases;
 	
 	@Override
@@ -42,6 +43,7 @@ public class Chopper implements Cloneable, Copiable<Chopper> {
 	public Chopper copy() {
 		Chopper copy = (Chopper) clone();
 		copy.phases = null;
+		copy.offset = (Vector2D) offset.copy();
 		return copy;
 	}
 	

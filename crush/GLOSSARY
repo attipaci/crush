@@ -2026,14 +2026,16 @@
 :: projection=		Choose a map projection to use. The following 
 			projections are supported:
 
+				SFL  --  Sanson-Flamsteed
 				SIN  --  Slant Orthographic
 				TAN  --  Gnomonic
 				ZEA  --  Zenithal Equal Area
-				SFL  --  Sanson-Flamsteed
 				MER  --  Mercator
 				CAR  --  Plate-Carree
 				AIT  --  Hammer-Aitoff
-				GLS  --  Radio (aka Global Sinusoidal)
+				GLS  --  Global Sinusoidal
+				STG  --  Stereographic		(since 2.16)
+				ARC  --  Zenithal Equidistant	(since 2.16)
 
 			@See: 'system', 'grid', 'mapsize'
 

@@ -837,10 +837,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(instrument instanceof GroundBased) {
 			if(source.getCoordinates() instanceof HorizontalCoordinates) 
 				return source.getCoordinates().getOffsetFrom(horizontal);			
-			else {			
+			else {	
+				// Equatorial offset (RA/DEC)
 				Vector2D offset = getEquatorialPointing(source);
-				// Convert to native equatorial (-RA, DEC)...
-					
+				
 				// Rotate to Horizontal...
 				Vector2D from = (Vector2D) offset.clone();
 				((HorizontalFrame) getFirstIntegration().getFirstFrame()).equatorialToHorizontal(from);

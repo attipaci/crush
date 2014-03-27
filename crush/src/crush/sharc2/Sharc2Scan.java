@@ -319,7 +319,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		// convert DATE-OBS into MJD...
 		//if(header.containsKey("JUL_DAY")) iMJD = header.getIntValue("JUL_DAY");
 			
-		addOffsets = hasOption("offsets.add");
+		addStaticOffsets = hasOption("offsets.add");
 		
 		// Add on the various additional offsets
 		horizontalOffset = new Vector2D(

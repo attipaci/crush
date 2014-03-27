@@ -26,7 +26,6 @@ import nom.tam.fits.*;
 
 
 import kovacs.astro.*;
-import kovacs.data.DataPoint;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
 
@@ -38,8 +37,6 @@ public class MakoIntegration extends CSOIntegration<Mako, MakoFrame> {
 	 * 
 	 */
 	private static final long serialVersionUID = -2439173655341594018L;
-
-	private DataPoint chopZero = new DataPoint();
 	
 	public MakoIntegration(MakoScan parent) {
 		super(parent);
@@ -102,20 +99,6 @@ public class MakoIntegration extends CSOIntegration<Mako, MakoFrame> {
 			new MakoReader(hdu, startIndex).read();
 			startIndex += hdu.getNRows();
 		}
-			
-		//if(!isEmpty()) if(chopZero.weight() > 0.0) chopZero.scaleValue(1.0 / chopZero.weight());
-		
-		MakoScan sharcscan = (MakoScan) scan;
-		
-		if(sharcscan.addOffsets) for(MakoFrame frame : this) {
-			// Remove the small zero offset from the chopper signal.
-			frame.chopperPosition.subtractX(chopZero.value());	
-			// Add chopper offset to the aggregated horizontal offset...
-			frame.horizontalOffset.add(frame.chopperPosition);
-			// Add the chopper offset to the absolute coordinates also...
-			frame.horizontal.addOffset(frame.chopperPosition);
-		}
-	
 		
 	}
 		
@@ -217,7 +200,7 @@ public class MakoIntegration extends CSOIntegration<Mako, MakoFrame> {
 					//chopZero.addWeight(1.0);
 
 					// Add in the scanning offsets...
-					if(makoscan.addOffsets) frame.horizontalOffset.add(makoscan.horizontalOffset);		
+					if(makoscan.addStaticOffsets) frame.horizontalOffset.add(makoscan.horizontalOffset);		
 					
 					frame.equatorialToHorizontal(equatorialOffset);
 					frame.horizontalOffset.add(equatorialOffset);

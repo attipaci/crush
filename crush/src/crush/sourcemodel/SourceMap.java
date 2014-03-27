@@ -32,6 +32,7 @@ import kovacs.astro.CelestialProjector;
 import kovacs.astro.CoordinateEpoch;
 import kovacs.astro.EclipticCoordinates;
 import kovacs.astro.EquatorialCoordinates;
+import kovacs.astro.FocalPlaneCoordinates;
 import kovacs.astro.GalacticCoordinates;
 import kovacs.data.Index2D;
 import kovacs.data.Statistics;
@@ -43,7 +44,6 @@ import kovacs.projection.Projection2D;
 import kovacs.projection.SphericalProjection;
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
-
 import crush.*;
 
 

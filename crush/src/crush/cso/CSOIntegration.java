@@ -36,7 +36,7 @@ import crush.GroundBased;
 import crush.HorizontalFrame;
 import crush.Integration;
 import crush.Scan;
-import crush.mako.MakoScan;
+
 
 public abstract class CSOIntegration<InstrumentType extends CSOArray<?>, FrameType extends HorizontalFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased {
@@ -49,6 +49,58 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		super(parent);
 
 	}
+	
+	@Override
+	public void validate() {	
+		removeChopperDCOffset();	
+		super.validate();
+	}
+	
+	private void removeChopperDCOffset() {
+		double threshold = instrument.getMinBeamFWHM() / 2.5;
+		double sumP = 0.0, sumM = 0.0;
+		int nP = 0, nM = 0;
+		
+		
+		for(FrameType frame : this) if(frame != null) {
+			sumP += frame.chopperPosition.x();
+			nP++;			
+		}
+		if(nP == 0) return;
+		
+		final double mean = sumP / nP;
+		sumP = 0.0;
+		nP = 0;
+		
+		for(FrameType frame : this) if(frame != null) {
+			frame.chopperPosition.subtractX(mean);
+			final double dx = frame.chopperPosition.x();
+			
+			if(dx > threshold) {
+				sumP += dx;
+				nP++;	
+			}
+			else if(dx < -threshold) {
+				sumM += dx;
+				nM++;				
+			}
+		}
+		
+		if(nP == 0 || nM == 0) return;
+		
+		final double level = 0.5 * (sumP / nP + sumM / nM);
+		
+		for(FrameType frame : this) if(frame != null) {
+			frame.chopperPosition.subtractX(level);
+			// Add chopper offset to the aggregated horizontal offset...
+			frame.horizontalOffset.add(frame.chopperPosition);
+			// Add the chopper offset to the absolute coordinates also...
+			frame.horizontal.addOffset(frame.chopperPosition);
+		}
+		
+		return;
+	}
+	
 	
 	public void printEquivalentTaus(double value) {	
 		System.err.println("   --->"
@@ -176,7 +228,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	@Override
 	public String getASCIIHeader() {
 		double eps = 1.0 - Math.exp(-zenithTau / scan.horizontal.sinLat());
-		double Tload = ((MakoScan) scan).getAmbientTemperature();
+		double Tload = ((CSOScan<?, ?>) scan).getAmbientTemperature();
 		
 		return super.getASCIIHeader() + "\n" 
 				+ "# tau(225GHz) = " + Util.f3.format(this.getTau("225ghz")) + "\n"
