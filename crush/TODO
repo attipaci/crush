@@ -1,3 +1,14 @@
+>>> compound decorrelation
+        * inversion matrix data[] -> all non-fixed signal modes
+        * full resolution signals
+        * gain solution to include all non-fixed-gain responses too.
+        * smooth signals as desired
+        * compound remove
+        - activate on first decorrelation in pipeline, skip after...
+
+
+
+
 >> 'mirror', 'zoom', 'skew'
 >> MAKO doc to README
 >> 'dir' for all instruments.

@@ -60,7 +60,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	public Vector2D horizontalOffset, fixedOffset;
 	public double elevationResponse = 1.0;
 
-	public boolean addOffsets = true;
+	public boolean addStaticOffsets = true;
 	public int iMJD;	
 
 	
