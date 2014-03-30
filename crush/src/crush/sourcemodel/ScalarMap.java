@@ -28,7 +28,7 @@ import java.awt.Color;
 import java.io.*;
 import java.util.*;
 
-import kovacs.astro.CelestialProjector;
+import kovacs.astro.AstroProjector;
 import kovacs.astro.SourceCatalog;
 import kovacs.data.*;
 import kovacs.math.Range;
@@ -566,13 +566,13 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	@Override
-	public final void getIndex(final Frame exposure, final Pixel pixel, final CelestialProjector projector, final Index2D index) {
+	public final void getIndex(final Frame exposure, final Pixel pixel, final AstroProjector projector, final Index2D index) {
 		if(exposure.sourceIndex == null) {
 			exposure.project(pixel.getPosition(), projector);
 			map.getIndex(projector.offset, index);
 		}
 		else {
-			int linearIndex = exposure.sourceIndex[pixel.getIndex()];
+			final int linearIndex = exposure.sourceIndex[pixel.getIndex()];
 			index.set(linearIndex % map.sizeX(), linearIndex / map.sizeX());
 		}
 	}
@@ -580,7 +580,7 @@ public class ScalarMap extends SourceMap {
 	
 	
 	public void createLookup(Integration<?,?> integration) {	
-		final CelestialProjector projector = new CelestialProjector(getProjection());
+		final AstroProjector projector = new AstroProjector(getProjection());
 		final Index2D index = new Index2D();
 		final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 		final int n = integration.instrument.getPixelCount();
@@ -624,7 +624,7 @@ public class ScalarMap extends SourceMap {
 
 	@Override
 	protected void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain) {
-		final CelestialProjector projector = new CelestialProjector(getProjection());
+		final AstroProjector projector = new AstroProjector(getProjection());
 		final Index2D index = new Index2D();
 
 		final double[] sumIM = new double[sourceGain.length];

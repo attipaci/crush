@@ -26,7 +26,7 @@ import java.io.*;
 import java.util.Collection;
 import java.util.StringTokenizer;
 
-import kovacs.astro.CelestialProjector;
+import kovacs.astro.AstroProjector;
 import kovacs.data.*;
 import kovacs.math.SphericalCoordinates;
 import kovacs.projection.Projection2D;
@@ -132,7 +132,7 @@ public class BeamMap extends SourceMap {
 
 
 	@Override
-	public void getIndex(Frame exposure, Pixel pixel, CelestialProjector projector, Index2D index) {
+	public void getIndex(Frame exposure, Pixel pixel, AstroProjector projector, Index2D index) {
 		template.getIndex(exposure, pixel, projector, index);
 	}
 

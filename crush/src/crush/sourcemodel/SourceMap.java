@@ -28,7 +28,7 @@ package crush.sourcemodel;
 
 import java.util.*;
 
-import kovacs.astro.CelestialProjector;
+import kovacs.astro.AstroProjector;
 import kovacs.astro.CoordinateEpoch;
 import kovacs.astro.EclipticCoordinates;
 import kovacs.astro.EquatorialCoordinates;
@@ -165,7 +165,7 @@ public abstract class SourceMap extends SourceModel {
 				scan.longitudeRange = new Range();
 				scan.latitudeRange = new Range();
 	
-				final CelestialProjector projector = new CelestialProjector(getProjection());
+				final AstroProjector projector = new AstroProjector(getProjection());
 
 				for(Frame exposure : integration) if(exposure != null) {
 					boolean valid = false;
@@ -331,7 +331,7 @@ public abstract class SourceMap extends SourceModel {
 		return slews;
 	}
 	
-	public abstract void getIndex(final Frame exposure, final Pixel pixel, final CelestialProjector projector, final Index2D index);
+	public abstract void getIndex(final Frame exposure, final Pixel pixel, final AstroProjector projector, final Index2D index);
 	
 	protected abstract void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain, final double dt, final int excludeSamples);
 	
@@ -343,7 +343,7 @@ public abstract class SourceMap extends SourceModel {
 		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
 		final double samplingInterval = integration.instrument.samplingInterval;
 
-		final CelestialProjector projector = new CelestialProjector(getProjection());
+		final AstroProjector projector = new AstroProjector(getProjection());
 		final Index2D index = new Index2D();	
 			
 		for(final Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) {
@@ -417,7 +417,7 @@ public abstract class SourceMap extends SourceModel {
 	}
 	
 	protected void sync(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
-		final CelestialProjector projector = new CelestialProjector(getProjection());
+		final AstroProjector projector = new AstroProjector(getProjection());
 		final Index2D index = new Index2D();
 				
 		for(final Frame exposure : integration) if(exposure != null) {

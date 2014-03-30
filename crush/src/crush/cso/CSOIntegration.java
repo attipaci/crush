@@ -61,6 +61,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		double sumP = 0.0, sumM = 0.0;
 		int nP = 0, nM = 0;
 		
+		System.err.println("   Removing chopper signal DC offset.");
 		
 		for(FrameType frame : this) if(frame != null) {
 			sumP += frame.chopperPosition.x();
@@ -71,6 +72,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		final double mean = sumP / nP;
 		sumP = 0.0;
 		nP = 0;
+		
+		System.err.print("   --> mean: " + Util.f1.format(mean / Unit.arcsec) + "\", ");
 		
 		for(FrameType frame : this) if(frame != null) {
 			frame.chopperPosition.subtractX(mean);
@@ -86,9 +89,15 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			}
 		}
 		
-		if(nP == 0 || nM == 0) return;
+		if(nP == 0 || nM == 0) {
+			System.err.println("not chopped.");
+			instrument.options.forget("detect.chopped");
+			return;
+		}
 		
 		final double level = 0.5 * (sumP / nP + sumM / nM);
+		
+		System.err.println(" res: " + Util.f1.format(level / Unit.arcsec) + "\".");
 		
 		for(FrameType frame : this) if(frame != null) {
 			frame.chopperPosition.subtractX(level);
@@ -143,7 +152,9 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		}
 		else if(source.equals("direct")) setZenithTau(getDirectTau());
 		else {
-			if(source.equals("maitau")) {
+			if(source.equals("maitau") && hasOption("maitau.server")) {				
+				System.err.println("   Requesing MaiTau via " + option("maitau.server") + "...");
+				
 				try {
 					try { setTau("350um", getMaiTau("350um")); }
 					catch(NumberFormatException no350) { setTau("225GHz", getMaiTau("225GHz")); }
@@ -177,6 +188,9 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	public double getMaiTau(String id) throws IOException {
 		// Return immediately if ID does not match 225GHz or 350um, which are the only values in
 		// the Mai-Tau lookup at present
+		final int timeout = 3000;
+		
+		
 		if(!id.equalsIgnoreCase("225GHz") && !id.equalsIgnoreCase("350um")) 
 			throw new IllegalArgumentException("No MaiTau lookup for '" + id + "'.");
 		
@@ -184,12 +198,13 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			throw new IllegalArgumentException(" WARNING! MaiTau server not set. Use 'maitau.server' configuration key.");
 		
 		Socket tauServer = new Socket();
-		tauServer.setSoTimeout(3000);
+		tauServer.setSoTimeout(timeout);
 		tauServer.setTcpNoDelay(true);
 		tauServer.setReuseAddress(true);
 		//tauServer.setPerformancePreferences(0, 1, 2); // connection time, latency, throughput
 		tauServer.setTrafficClass(0x10); // low latency
-		tauServer.connect(new InetSocketAddress(option("maitau.server").getValue(), 63225));
+		tauServer.connect(new InetSocketAddress(option("maitau.server").getValue(), 63225), timeout);
+		
 		
 		PrintWriter out = new PrintWriter(tauServer.getOutputStream(), true);
 		BufferedReader in = new BufferedReader(new InputStreamReader(tauServer.getInputStream()));
@@ -210,7 +225,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		
 		try { 
 			value = Double.parseDouble(in.readLine().trim());
-			System.err.println("   Got MaiTau! tau(" + id + ") = " + Util.f3.format(value));
+			if(!Double.isNaN(value)) System.err.println("   ---> MaiTau(" + id + ") = " + Util.f3.format(value));
 		}
 		catch(NumberFormatException e) {}
 		
