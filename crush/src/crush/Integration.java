@@ -137,7 +137,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Incorporate the relative instrument gain (under loading) in the scan gain...
 		gain *= instrument.sourceGain;	
 		
-		if(hasOption("detect.chopped")) detectChopper();
 		
 		for(Frame frame : this) if(frame != null) frame.validate();
 		
@@ -145,8 +144,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(hasGaps(gapTolerance)) fillGaps();
 		else reindex();
 		
+		if(hasOption("detect.chopped")) detectChopper();
+		
 		//if(hasOption("shift")) shiftData();
 		if(hasOption("frames")) selectFrames();
+		
 		// Explicit downsampling should precede v-clipping
 		if(hasOption("downsample")) if(!option("downsample").equals("auto")) downsample();
 		if(hasOption("vclip")) velocityClip();
@@ -156,7 +158,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		// Flag out-of-range data
 		if(hasOption("range")) checkRange();
-
 		// Continue only if enough valid channels remain...
 		int minChannels = hasOption("mappingpixels") ? option("mappingpixels").getInt() : 2;
 		if(instrument.mappingChannels < minChannels)

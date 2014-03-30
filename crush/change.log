@@ -1,3 +1,5 @@
+>>> signal coupling coefficients and coupling spectra to made generic beyond GISMO.
+
 >>> disable 'saedata' and 'sae', by default...
 
 >>> 'read.sae' 'correlated.sae'/'sae', 'sae.smooth', 'sae.hipass', 'log.saegains', 'write.saegains', write.saegains.spec', 'write.saegains.spec.size'
@@ -7,10 +9,23 @@
 >>> Native 'show', 'imagetool', 'detect', 'histogram' ...
 
 
-2.16-a1 (devel.3)
+2.16-a2 (devel.1)
 
+	[BUG] Non-equatorial celestial mapping (e.g. ecliptic coordinates) of 
+	moving-frame objects (e.g. planets and asteroids) was buggy. Fixed.
+	(Also made AstroProjector a bit more transparent.)
 
-	[NEW] {GISMO} Decorrelation of SAE signals is not available via
+	[BUG] {SHARC-2} Pointing was incorrect due to lack of chopper zeroing,
+	which was disabled in 2.13-b2 (around 2012 Dec), partly because the
+	zeroing was somewhat flawed for chopped scans. A new two round approach
+	is implemented for chopper levelling, which should provide a better 
+	measure of the true zero level even when only a few chopper cycles are 
+	recorded in the data. Also, the adding of the chopper offsets is no 
+	longer linked to the 'offsets.add' option, which, in turn, exclusively 
+	refers to static mapping and chopper offsets, as it should have been 
+	from the start.
+
+	[NEW] {GISMO} Decorrelation of SAE signals is now available via
 	the 'correlated.sae' option or 'sae' shorthand, and is enabled by
 	default.
 
@@ -21,25 +36,18 @@
 	correlation coefficients, and correlation spectra can be measured via
 	the 'log.saecorr' and 'write.saecorrspec' keywords.
 
-	[FIX] {SHARC-2} New two round approach for chopper levelling, which 
-	should provide a better measure of the true zero level even when only
-	a few chopper cycles are recorded in the data. Also, the adding of
-	the chopper offsets is no longer linked to the 'offsets.add' option,
-	which, in turn, exclusively refers to static mapping and chopper 
-	offsets, as it should have been from the start.
-
 	[FIX] {GISMO} 'pins.group' did not work as desired.
 
 	[FIX] Skydip parameter errors were infinite if 'skydip.elRange' was
 	not explicitly set. Now fixed.
 
-	[TWEAK] Chopper detection moved up in the validation chain to precede
-	frame validation. This allows adjusting the chopper, before coordinates
-	are re-calculated for each frame.
+	[TWEAK] {CSO} MaiTau server connection attempt times out after 3 
+	seconds if a connection cannot be established. Also, MaiTau console
+	logging made more traceable.
 
 	[TWEAK] 'SFL' is now the default map projection, replacing 'GLS'. 
 	'GLS' projection is the fastest to calculate, which is why it was
-	preferred so far, but it's a legacy projection that isn't well 
+	preferred thus far, but it's a legacy projection that isn't well 
 	supported by many current programs (including IDL).
 
 	[TWEAK] Maps created in focal-plane coordinates now carry the axis
@@ -62,6 +70,10 @@
 
 	[CRUSH-1.xx] New projections added to CRUSH-1.xx toolset (e.g.
 	'show', 'imagetool', etc...).
+
+	[CODE] {CSO} Chopper levelling is now common prevalidation step for
+	CSO instruments (MAKO, SHARC-2). It also avoids superflous chopper
+	detection when data was not a chopped observation.
 
 	[CODE] Slimming only if there are dead pixels to be eliminated.
 

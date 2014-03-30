@@ -26,7 +26,7 @@ package crush.sourcemodel;
 
 import java.util.*;
 
-import kovacs.astro.CelestialProjector;
+import kovacs.astro.AstroProjector;
 import kovacs.data.Index2D;
 
 import crush.*;
@@ -48,7 +48,7 @@ public class SyncModMap extends ScalarMap {
 	protected synchronized int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
 		int goodFrames = 0;
 		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
-		final CelestialProjector projector = new CelestialProjector(getProjection());
+		final AstroProjector projector = new AstroProjector(getProjection());
 		final Index2D index = new Index2D();
 		
 		final float[] value = new float[integration.instrument.size()];
@@ -112,7 +112,7 @@ public class SyncModMap extends ScalarMap {
 	
 	@Override
 	protected void sync(Integration<?,?> integration, Collection<? extends Pixel> pixels, double[] sourceGain, int signalMode) {
-		final CelestialProjector projector = new CelestialProjector(getProjection());
+		final AstroProjector projector = new AstroProjector(getProjection());
 		final Index2D index = new Index2D();
 		
 		final int last = integration.size();

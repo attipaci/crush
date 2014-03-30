@@ -22,7 +22,7 @@
  ******************************************************************************/
 package crush;
 
-import kovacs.astro.CelestialProjector;
+import kovacs.astro.AstroProjector;
 import kovacs.astro.EquatorialCoordinates;
 import kovacs.astro.HorizontalCoordinates;
 import kovacs.math.SphericalCoordinates;
@@ -106,10 +106,10 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	}	
 	
 	@Override
-	public void project(final Vector2D position, final CelestialProjector projector) {
+	public void project(final Vector2D position, final AstroProjector projector) {
 		if(projector.isHorizontal()) {
-			getHorizontalOffset(position, projector.offset);
 			projector.setReferenceCoords();
+			getHorizontalOffset(position, projector.offset);
 			projector.getCoordinates().addNativeOffset(projector.offset);
 			projector.project();
 		}

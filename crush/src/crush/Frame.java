@@ -26,9 +26,8 @@ package crush;
 
 import java.util.Arrays;
 
-import kovacs.astro.CelestialProjector;
+import kovacs.astro.AstroProjector;
 import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.FocalPlaneCoordinates;
 import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
@@ -279,23 +278,23 @@ public abstract class Frame implements Cloneable, Flagging {
 		}
 	}
 	
-	public void project(final Vector2D position, final CelestialProjector projector) {
+	public void project(final Vector2D position, final AstroProjector projector) {
 			
-		if(projector.getCoordinates() instanceof FocalPlaneCoordinates) {
-			getFocalPlaneOffset(position, projector.offset);
+		if(projector.isFocalPlane()) {
 			projector.setReferenceCoords();
+			getFocalPlaneOffset(position, projector.offset);
 			projector.getCoordinates().addNativeOffset(projector.offset);
 			projector.project();
 		}
 		else if(scan.isMovingObject) {
-			getEquatorialNativeOffset(position, projector.offset);
 			projector.setReferenceCoords();
-			projector.getCoordinates().addNativeOffset(projector.offset);
-			projector.project();
+			getEquatorialNativeOffset(position, projector.offset);
+			projector.getEquatorial().addNativeOffset(projector.offset);
+			projector.projectFromEquatorial();
 		}
 		else {
 			getEquatorial(position, projector.getEquatorial());		
-			projector.project();
+			projector.projectFromEquatorial();
 		}
 	
 	}	

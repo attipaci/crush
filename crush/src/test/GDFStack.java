@@ -28,7 +28,7 @@ import java.util.Vector;
 
 import kovacs.astro.CoordinateEpoch;
 import kovacs.astro.EquatorialCoordinates;
-import kovacs.data.CartesianGrid;
+import kovacs.data.CartesianGrid2D;
 import kovacs.data.DataPoint;
 import kovacs.data.GaussianSource;
 import kovacs.data.GridMap;
@@ -86,7 +86,7 @@ public class GDFStack {
 	public GridMap<Coordinate2D> getStack() {
 		int size = 1 + 2 * (int)Math.ceil(3.0 * map.getImageFWHM() / map.getResolution().x());
 		GridMap<Coordinate2D> stack = new GridMap<Coordinate2D>(size, size);
-		stack.setGrid(new CartesianGrid());
+		stack.setGrid(new CartesianGrid2D());
 		stack.setResolution(map.getResolution().x());
 		stack.setName("stack");
 		final int c = size / 2;
