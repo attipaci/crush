@@ -66,7 +66,7 @@ implements TableFormatter.Entries {
 	public Hashtable<String, ChannelGroup<ChannelType>> groups = new Hashtable<String, ChannelGroup<ChannelType>>();
 	public Hashtable<String, ChannelDivision<ChannelType>> divisions = new Hashtable<String, ChannelDivision<ChannelType>>();
 	public Hashtable<String, Modality<?>> modalities = new Hashtable<String, Modality<?>>();	
-		
+			
 	public boolean initialized = false, validated = false;
 	
 	public Mount mount;
