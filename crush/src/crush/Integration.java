@@ -2193,6 +2193,15 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			catch(Exception e) { e.printStackTrace(); }
 		}
 		
+		if(hasOption("write.signals")) for(Mode mode : signals.keySet()) {
+			try { 
+				PrintStream out = new PrintStream(new FileOutputStream(mode.name + ".tms"));
+				signals.get(mode).print(out);
+				System.err.println("Written " + mode.name + ".tms");
+				out.close();
+			}
+			catch(IOException e) {}
+		}
 		
 		if(hasOption("write.spectrum")) {
 			Configurator spectrumOption = option("write.spectrum");
@@ -2204,15 +2213,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			catch(Exception e) { e.printStackTrace(); }
 		}
 		
-		if(hasOption("write.signals")) for(Mode mode : signals.keySet()) {
-			try { 
-				PrintStream out = new PrintStream(new FileOutputStream(mode.name + ".tms"));
-				signals.get(mode).print(out);
-				System.err.println("Written " + mode.name + ".tms");
-				out.close();
-			}
-			catch(IOException e) {}
-		}
+		
+		if(hasOption("write.coupling")) writeCouplingGains(option("write.coupling").getList()); 
+		
+		if(hasOption("write.coupling.spec")) writeCouplingSpectrum(option("write.coupling.spec").getList()); 
 		
 		
 	}
@@ -2582,6 +2586,224 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(method.equals("robust")) getRobustPixelWeights();
 		else if(method.equals("differential")) getDifferencialPixelWeights();
 		else getPixelWeights();	
+	}
+	
+	
+	void writeCouplingGains(List<String> signalNames) {
+		for(String name : signalNames) {
+			Signal signal = signals.get(name);
+			if(signal == null) continue;
+			try { writeCouplingGains(signal); }
+			catch(Exception e) { 
+				System.err.println("WARNING! coupling for '" + name + "' could not be written: " + e.getMessage());
+				if(CRUSH.debug) e.printStackTrace();
+			}
+		}	
+	}
+	
+	void writeCouplingGains(Signal signal) throws Exception {	
+		
+		String fileName = CRUSH.workPath + File.separator + scan.getID() + "." + signal.getMode().getName() + "-coupling.dat";
+		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
+		
+		out.println(this.getASCIIHeader());
+		out.println();
+		
+		GainProvider gainProvider = signal.getMode().gainProvider;
+		
+		Hashtable<Integer, ? extends Channel> lookup = instrument.getFixedIndexLookup();
+		
+		for(int c=0; c<instrument.getPixelCount(); c++) {
+			Channel channel = lookup.get(c);
+			out.println(c + "\t" + (channel == null ? "---" : Util.e3.format(gainProvider.getGain(channel))));
+		}
+		
+		out.close();
+		
+		System.err.println(" Written " + fileName);
+	}
+	
+	
+	void writeCouplingSpectrum(List<String> signalNames) {
+		for(String name : signalNames) {
+			Signal signal = signals.get(name);
+			if(signal == null) continue;
+			try { writeCouplingSpectrum(signal); }
+			catch(Exception e) { 
+				System.err.println("WARNING! coupling for '" + name + "' could not be written: " + e.getMessage());
+				if(CRUSH.debug) e.printStackTrace();
+			}
+		}	
+	}
+	
+	void writeCouplingSpectrum(Signal signal) throws Exception {	
+		int windowSize = hasOption("write.coupling.spec.windowsize") ? option("write.couplig.spec.windowsize").getInt() : framesFor(filterTimeScale);
+		Complex[][] C = getCouplingSpectrum(signal, windowSize);
+		
+		int nF = C[0].length;
+		double df = 1.0 / (windowSize * instrument.samplingInterval);
+		
+		String fileName = CRUSH.workPath + File.separator + scan.getID() + "." + signal.getMode().getName() + "-coupling.spec";
+		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
+		
+		out.println(this.getASCIIHeader());
+		out.println();
+		
+		Complex z = new Complex();
+		
+		Hashtable<Integer, ? extends Channel> lookup = instrument.getFixedIndexLookup();
+		
+		final int nc = instrument.getPixelCount();
+		
+		// Write the zero frequency component
+		for(int c=0; c < nc; c++) {
+			Channel channel = lookup.get(c);			
+			z.set(channel == null ? 0.0 : C[channel.index][0].x(), 0.0);
+			out.print(Util.f5.format(0.0) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
+		}
+		out.println();
+		
+		// Write the bulk of the spectrum...
+		for(int f=1; f<nF; f++) {
+			out.print(Util.f5.format(f*df));
+			for(int c=0; c < nc; c++) {
+				Channel channel = lookup.get(c);
+				if(channel == null) z.zero();
+				else z.copy(C[channel.index][f]);	
+				out.print("\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));		
+			}
+			out.println();
+		}
+		
+		// Write the Nyquist frequency component;
+		for(int c=0; c < nc; c++) {
+			Channel channel = lookup.get(c);
+			z.set(channel == null ? 0.0 : C[channel.index][0].y(), 0.0);
+			out.print(Util.f5.format(nF * df) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
+		}
+		out.println();	
+		
+		out.close();
+		
+		System.err.println(" Written " + fileName);
+		
+		writeDelayedCoupling(signal.getMode().getName(), C);
+	}
+	
+	
+		
+	void writeDelayedCoupling(String name, Complex[][] spectrum) throws IOException {
+		int nF = spectrum[0].length;
+		
+		FauxComplexArray.Float C = new FauxComplexArray.Float(nF);
+		FloatFFT fft = new FloatFFT();
+		
+		float[][] delay = new float[spectrum.length][nF << 1];
+		
+		for(int c=spectrum.length; --c >= 0; ) {
+			for(int f=nF; --f >= 0; ) C.set(f, spectrum[c][f]);
+			fft.amplitude2Real(C.getData());
+			System.arraycopy(C.getData(), 0, delay[c], 0, nF << 1);		
+		}
+		
+		String fileName = CRUSH.workPath + File.separator + scan.getID() + "." + name + "-coupling.delay";
+		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
+		
+		out.println(this.getASCIIHeader());
+		out.println();
+		
+		int n = nF << 1;
+		
+		Hashtable<Integer, ? extends Channel> lookup = instrument.getFixedIndexLookup();
+		final int nc = instrument.getPixelCount();
+		
+		for(int t=0; t<n; t++) {
+			out.print(Util.f5.format(t * instrument.samplingInterval));
+			for(int c=0; c<nc; c++) {
+				Channel channel = lookup.get(c);
+				if(channel == null) out.print("\t---   ");					
+				else out.print("\t" + Util.e3.format(delay[channel.index][t]));
+			}
+			out.println();
+		}
+		
+		out.close();
+		
+		System.err.println(" Written " + fileName);
+	}
+	
+	
+	Complex[][] getCouplingSpectrum(Signal signal, int windowSize) throws Exception {
+		double[] w = WindowFunction.getHann(windowSize);
+		
+		Complex[][] C = new Complex[instrument.size()][];
+		for(int c = instrument.size(); --c >= 0; ) {
+			Channel channel = instrument.get(c);
+			C[c] = getCouplingSpectrum(signal, channel, w);
+			if(channel.isFlagged()) for(Complex z : C[c]) z.zero();
+		}
+		return C;
+	}
+	
+	
+	Complex[] getCouplingSpectrum(Signal signal, Channel channel, double[] w) throws Exception {
+		int windowSize = w.length;
+		windowSize = ExtraMath.pow2ceil(windowSize);
+		int step = windowSize >> 1;
+		int nt = size();
+		int nF = windowSize >> 1;
+		
+		double gain = signal.getMode().gainProvider.getGain(channel);
+		
+		Complex[] c = new Complex[nF];
+		for(int i=nF; --i >= 0; ) c[i] = new Complex();
+		
+		FauxComplexArray.Float D = new FauxComplexArray.Float(nF);
+		FauxComplexArray.Float S = new FauxComplexArray.Float(nF);
+
+		float[] d = D.getData();
+		float[] s = S.getData();
+		
+		Complex dComponent = new Complex();
+		Complex sComponent = new Complex();
+		
+		FloatFFT fft = new FloatFFT();
+		double norm = 0.0;
+				
+ 		for(int from = 0; from < nt; from+=step) {
+			int to = from + windowSize;
+			if(to > nt) break;
+			
+			Arrays.fill(d, 0.0F);
+			Arrays.fill(s, 0.0F);
+			
+			for(int k=windowSize; --k >= 0; ) {
+				Frame exposure = get(from + k);
+				if(exposure == null) continue;
+				if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+				s[k] = (float) w[k] * signal.valueAt(exposure);
+				d[k] = (float) (w[k] * exposure.data[channel.index] + gain * s[k]);
+			}
+			
+			fft.real2Amplitude(d);
+			fft.real2Amplitude(s);
+			
+			for(int f=nF; --f >= 0; ) {
+				D.get(f, dComponent);
+				S.get(f, sComponent);
+				norm += sComponent.norm();
+				
+				sComponent.conjugate();
+				dComponent.multiplyBy(sComponent);
+				c[f].add(dComponent);
+			}	
+		}
+
+		if(norm > 0.0) norm  = 1.0 / norm; 
+		
+		for(int i=nF; --i >= 0; ) c[i].scale(norm);
+		
+		return c;
 	}
 	
 

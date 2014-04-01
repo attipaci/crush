@@ -1,15 +1,11 @@
->>> signal coupling coefficients and coupling spectra to made generic beyond GISMO.
 
->>> disable 'saedata' and 'sae', by default...
-
->>> 'read.sae' 'correlated.sae'/'sae', 'sae.smooth', 'sae.hipass', 'log.saegains', 'write.saegains', write.saegains.spec', 'write.saegains.spec.size'
-
->>> sae output to use lookups not to rely on 'noslim'
-
->>> Native 'show', 'imagetool', 'detect', 'histogram' ...
+>>> 'read.sae' 
+>>> 'correlated.sae'/'sae', 'sae.smooth', 'sae.hipass', 'log.saegains'
+>>> 'write.coupling', write.coupling.spec', 'write.coupling.spec.windowsize'
+>>> disable 'read.sae' and 'correlated.sae', by default...
 
 
-2.16-a2 (devel.1)
+2.16-a2 (alpha.2)
 
 	[BUG] Non-equatorial celestial mapping (e.g. ecliptic coordinates) of 
 	moving-frame objects (e.g. planets and asteroids) was buggy. Fixed.
@@ -25,6 +21,18 @@
 	refers to static mapping and chopper offsets, as it should have been 
 	from the start.
 
+	[NEW] Ability to measure coupling to signals. Both coupling 
+	coefficients, and coupling spectra (including time delay form) can be 
+	measured via and 'write.coupling' and 'write.coupling.spec' keywords.
+	The argument to both these options is a list of signal names for
+	which channel couplings are measured. E.g.
+
+	  write.coupling = telescope-accel-mag, chopper-x
+
+	Additionally the you can set the spectral window size via 
+	'write.coupling.spec.windowsize' option. The default is to set the
+	window size to the 1/f filter timescale (i.e. 'drifts' option).
+
 	[NEW] {GISMO} Decorrelation of SAE signals is now available via
 	the 'correlated.sae' option or 'sae' shorthand, and is enabled by
 	default.
@@ -32,9 +40,9 @@
 	[NEW] {GISMO} 2nd and 3rd stage tuning parameters (bias and feedback)
 	are now parsed from the FITS.
 
-	[NEW] {GISMO} Ability to measure SAE correlations to residuals. Both
-	correlation coefficients, and correlation spectra can be measured via
-	the 'log.saecorr' and 'write.saecorrspec' keywords.
+	[NEW] {GISMO} SAE coupling coefficients can be logged against 
+	line-of-sight tau, detector bias, and tuning parameters, using the
+	'log.saegains' keyword.
 
 	[FIX] {GISMO} 'pins.group' did not work as desired.
 
@@ -67,6 +75,8 @@
 	set to 0.25s for 'faint'; reinstated time-weighting at full resolution 
 	in 'faint' mode; dejumping re-enabled for 2013 October; 'faint'-mode 
 	stability timescale increased to 15s.
+
+	[CINFIG] {GISMO} Created configuration for Run 10 (1-11 April 2014).
 
 	[CRUSH-1.xx] New projections added to CRUSH-1.xx toolset (e.g.
 	'show', 'imagetool', etc...).

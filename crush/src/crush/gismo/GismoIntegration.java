@@ -28,13 +28,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
 
 import kovacs.astro.*;
-import kovacs.data.FauxComplexArray;
-import kovacs.data.WindowFunction;
-import kovacs.fft.FloatFFT;
-import kovacs.math.Complex;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
 import crush.*;
@@ -67,7 +62,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 				saeMode.init(this);
 			}
 		
-			discardSAEData();
+			discardSAEFields();
 		}
 	}
 	
@@ -484,16 +479,6 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 	public void writeProducts() {
 		super.writeProducts();
 		
-		if(hasOption("write.saegains.spec")) {
-			try { writeSAECorrelationSpectrum(); }
-			catch(IOException e) { e.printStackTrace(); }
-		}
-		
-		if(hasOption("write.saegains")) {
-			try { writeSAEGains(); }
-			catch(IOException e) { e.printStackTrace(); }
-		}
-		
 		if(hasOption("log.saegains")) {
 			try { logSAEGains(); }
 			catch(IOException e) { e.printStackTrace(); }
@@ -501,7 +486,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		
 	}
 	
-	public void discardSAEData() {
+	public void discardSAEFields() {
 		for(GismoFrame exposure : this) if(exposure != null) exposure.SAE = null;
 	}
 	
@@ -540,172 +525,6 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		System.err.println(" Logged to " + fileName);
 	}
 	
-	void writeSAEGains() throws IOException {	
-		if(!hasOption("correlated.sae")) return;
-		
-		String fileName = CRUSH.workPath + File.separator + scan.getID() + ".saegain.dat";
-		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-		
-		out.println(this.getASCIIHeader());
-		out.println();
-	
-		for(int c=0; c<instrument.size(); c++) {
-			GismoPixel pixel = instrument.get(c);
-			out.println(c + "\t" + Util.e3.format(pixel.saeGain));
-		}
-		
-		out.close();
-		
-		System.err.println(" Written " + fileName);
-	}
-	
-	
-	void writeSAECorrelationSpectrum() throws IOException {	
-		int windowSize = hasOption("write.saegains.spec.windowsize") ? option("write.saegains.spec.windowsize").getInt() : framesFor(filterTimeScale);
-		Complex[][] C = getSAECorrelationSpectrum(windowSize);
-		
-		int nF = C[0].length;
-		double df = 1.0 / (windowSize * instrument.samplingInterval);
-		
-		String fileName = CRUSH.workPath + File.separator + scan.getID() + ".saegain.spec";
-		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-		
-		out.println(this.getASCIIHeader());
-		out.println();
-		
-		Complex z = new Complex();
-		
-		for(int c=0; c<C.length; c++) {
-			z.set(C[c][0].x(), 0.0);
-			out.print(Util.f5.format(0.0) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
-		}
-		
-		for(int f=1; f<nF; f++) {
-			out.print(Util.f5.format(f*df));
-			for(int c=0; c<C.length; c++) out.print("\t" + Util.e3.format(C[c][f].length()) + "\t" + Util.f3.format(C[c][f].angle()));
-			out.println();
-		}
-		
-		for(int c=0; c<C.length; c++) {
-			z.set(C[c][0].y(), 0.0);
-			out.print(Util.f5.format(nF * df) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
-		}
-			
-		out.close();
-		
-		System.err.println(" Written " + fileName);
-		
-		writeSAEDelayCorrelation(C);
-	}
-	
-	void writeSAEDelayCorrelation(Complex[][] spectrum) throws IOException {
-		int nF = spectrum[0].length;
-		
-		FauxComplexArray.Float C = new FauxComplexArray.Float(nF);
-		FloatFFT fft = new FloatFFT();
-		
-		float[][] delay = new float[spectrum.length][nF << 1];
-		
-		for(int c=spectrum.length; --c >= 0; ) {
-			for(int f=nF; --f >= 0; ) C.set(f, spectrum[c][f]);
-			fft.amplitude2Real(C.getData());
-			System.arraycopy(C.getData(), 0, delay[c], 0, nF << 1);		
-		}
-		
-		String fileName = CRUSH.workPath + File.separator + scan.getID() + ".saegain.delay";
-		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-		
-		out.println(this.getASCIIHeader());
-		out.println();
-		
-		int n = nF << 1;
-		
-		for(int t=0; t<n; t++) {
-			out.print(Util.f5.format(t * instrument.samplingInterval));
-			for(int c=0; c<spectrum.length; c++) out.print("\t" + Util.e3.format(delay[c][t]));
-			out.println();
-		}
-		
-		out.close();
-		
-		System.err.println(" Written " + fileName);
-	}
-	
-	
-	Complex[][] getSAECorrelationSpectrum(int windowSize) {
-		double[] w = WindowFunction.getHann(windowSize);
-		
-		Complex[][] C = new Complex[instrument.size()][];
-		for(int c = instrument.size(); --c >= 0; ) {
-			GismoPixel channel = instrument.get(c);
-			C[c] = getSAECorrelationSpectrum(c, w);
-			if(channel.isFlagged()) for(Complex z : C[c]) z.zero();
-		}
-		return C;
-	}
-	
-	
-	Complex[] getSAECorrelationSpectrum(int channel, double[] w) {
-		int windowSize = w.length;
-		windowSize = ExtraMath.pow2ceil(windowSize);
-		int step = windowSize >> 1;
-		int nt = size();
-		int nF = windowSize >> 1;
-		
-		Complex[] c = new Complex[nF];
-		for(int i=nF; --i >= 0; ) c[i] = new Complex();
-		
-		FauxComplexArray.Float D = new FauxComplexArray.Float(nF);
-		FauxComplexArray.Float S = new FauxComplexArray.Float(nF);
-
-		float[] d = D.getData();
-		float[] s = S.getData();
-		
-		Complex dComponent = new Complex();
-		Complex sComponent = new Complex();
-		
-		FloatFFT fft = new FloatFFT();
-		double norm = 0.0;
-		
-		final GismoPixel pixel = instrument.get(channel);
-		final Mode mode = instrument.modalities.get("sae").get(channel);
-		final Signal saeSignal = signals.get(mode);
-				
- 		for(int from = 0; from < nt; from+=step) {
-			int to = from + windowSize;
-			if(to > nt) break;
-			
-			Arrays.fill(d, 0.0F);
-			Arrays.fill(s, 0.0F);
-			
-			for(int k=windowSize; --k >= 0; ) {
-				GismoFrame exposure = get(from + k);
-				if(exposure == null) continue;
-				if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
-				s[k] = (float) w[k] * saeSignal.valueAt(exposure);
-				d[k] = (float) (w[k] * exposure.data[channel] + pixel.saeGain * s[k]);
-			}
-			
-			fft.real2Amplitude(d);
-			fft.real2Amplitude(s);
-			
-			for(int f=nF; --f >= 0; ) {
-				D.get(f, dComponent);
-				S.get(f, sComponent);
-				norm += sComponent.norm();
-				
-				sComponent.conjugate();
-				dComponent.multiplyBy(sComponent);
-				c[f].add(dComponent);
-			}	
-		}
-
-		if(norm > 0.0) norm  = 1.0 / norm; 
-		
-		for(int i=nF; --i >= 0; ) c[i].scale(norm);
-		
-		return c;
-	}
 	
 	
 	
