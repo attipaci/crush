@@ -119,7 +119,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		Fits fits = super.createFits();
 		
 		if(instrument != null) if(instrument.hasOption("write.scandata")) 
-			for(Scan<?,?> scan : scans) fits.addHDU(scan.getSummaryHDU(instrument.options));
+			for(Scan<?,?> scan : scans) fits.addHDU(scan.getSummaryHDU(instrument.getOptions()));
 		
 		return fits;
 	}
@@ -156,7 +156,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		
 		if(instrument != null) {
 			instrument.editImageHeader(cursor);
-			if(instrument.options != null) instrument.options.editHeader(cursor);
+			if(instrument.getOptions() != null) instrument.getOptions().editHeader(cursor);
 		}
 	}
 
@@ -185,7 +185,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 			}
 		}
 		
-		if(instrument.options == null) instrument.options = new Configurator();
+		if(instrument.getOptions() == null) instrument.setOptions(new Configurator());
 
 		instrument.parseHeader(header);
 

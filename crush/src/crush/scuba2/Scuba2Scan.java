@@ -290,7 +290,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 
 		// Scan Info
 		setSerial(header.getIntValue("OBSNUM"));
-		if(instrument.options.containsKey("serial")) instrument.setSerialOptions(getSerial());
+		if(instrument.getOptions().containsKey("serial")) instrument.setSerialOptions(getSerial());
 	
 		site = new GeodeticCoordinates(header.getDoubleValue("LONG-OBS") * Unit.deg, header.getDoubleValue("LAT-OBS") * Unit.deg);
 		creator = header.getStringValue("ORIGIN");
@@ -348,13 +348,13 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		if(hasOption("tau.186ghz")) tau186GHz = option("tau.186ghz").getDouble();
 		else {
 			tau186GHz = 0.5 * (header.getDoubleValue("WVMTAUST") + header.getDoubleValue("WVMTAUEN"));
-			instrument.options.process("tau.186ghz", tau186GHz + "");
+			instrument.setOption("tau.186ghz=" + tau186GHz);
 		}
 		
 		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();
 		else {
 			tau225GHz = 0.5 * (header.getDoubleValue("TAU225ST") + header.getDoubleValue("TAU225EN"));
-			instrument.options.process("tau.225ghz", tau225GHz + "");
+			instrument.setOption("tau.225ghz=" + tau225GHz);
 		}
 		
 		System.err.println(" tau(225GHz)=" + Util.f3.format(tau225GHz) + ", tau(186GHz)=" + Util.f3.format(tau186GHz));

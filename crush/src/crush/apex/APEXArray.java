@@ -150,11 +150,11 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 		if(isChopped) {
 			System.err.println(" Chopped photometry reduction mode.");
 			System.err.println(" Target is [" + sourceName + "] at " + reference.toString());
-			options.parse("chopped");
+			setOption("chopped");
 		}
 		else if(sourceName.equalsIgnoreCase("SKYDIP")) {
 			System.err.println(" Skydip reduction mode.");
-			options.parse("skydip");
+			setOption("skydip");
 			
 			if(scans.size() > 1) {
 				System.err.println("Ignoring all but first scan in list (for skydip).");

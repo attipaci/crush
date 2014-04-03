@@ -30,7 +30,6 @@ import kovacs.astro.LeapSeconds;
 import kovacs.fits.FitsExtras;
 import kovacs.text.VersionString;
 import kovacs.util.*;
-
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
@@ -61,7 +60,7 @@ public class CRUSH extends Configurator {
 	
 	static { 
 		Locale.setDefault(Locale.US);
-		Header.setLongStringsEnabled(true);
+		Header.setLongStringsEnabled(true);		
 	}
 	
 	public static void main(String[] args) {
@@ -96,6 +95,7 @@ public class CRUSH extends Configurator {
 		checkForUpdates();
 	
 		instrument = Instrument.forName(instrumentName.toLowerCase());
+		instrument.setOptions(this);
 		
 		if(instrument == null) {
 			System.err.println("Warning! Unknown instrument " + instrumentName);
@@ -103,7 +103,7 @@ public class CRUSH extends Configurator {
 		}
 		
 		System.err.println("Instrument is " + instrument.getName().toUpperCase());
-		instrument.options = this;
+		
 		
 	}
 	
@@ -113,7 +113,7 @@ public class CRUSH extends Configurator {
 	
 	public Configurator option(String name) { return get(name); }
 	
-	public void init(String[] args) {
+	public void init(String[] args) {	
 		readConfig("default.cfg");
 		commandLine = args[0];
 		
@@ -123,11 +123,10 @@ public class CRUSH extends Configurator {
 			if(args[i].charAt(0) == '-') {
 				String option = args[i].substring(1);
 				parse(option);
-				if(option.equals("debug")) debug=true;
-				if(option.equals("help")) help(instrument);
+				
 			}
 			else {
-				if(!instrument.initialized) instrument.initialize();
+				instrument.setOptions(this);
 				read(args[i]);
 			}
 		}	
@@ -137,7 +136,9 @@ public class CRUSH extends Configurator {
 	
 	@Override
 	public void process(String key, String value) {
-		if(key.equals("list.divisions")) instrument.printCorrelatedModalities(System.err);
+		if(key.equals("debug")) debug=true;
+		else if(key.equals("help")) help(instrument);
+		else if(key.equals("list.divisions")) instrument.printCorrelatedModalities(System.err);
 		else if(key.equals("list.response")) instrument.printResponseModalities(System.err);
 		else super.process(key, value);
 	}
@@ -206,7 +207,7 @@ public class CRUSH extends Configurator {
 		}
 		
 		// Keep only the non-specific global options here...
-		for(Scan<?,?> scan : scans) instrument.options.intersect(scan.instrument.options); 		
+		for(Scan<?,?> scan : scans) instrument.getOptions().intersect(scan.instrument.getOptions()); 		
 		for(int i=0; i<scans.size(); i++) if(scans.get(i).isEmpty()) scans.remove(i--);
 		
 		//Collections.sort(scans);
@@ -379,9 +380,9 @@ public class CRUSH extends Configurator {
 			setIteration(iteration, rounds);	
 			
 			for(Scan<?,?> scan : scans) {
-				scan.instrument.options.setIteration(iteration, rounds);	
+				scan.instrument.getOptions().setIteration(iteration, rounds);	
 				for(Integration<?,?> integration : scan) if(integration.instrument != scan.instrument)  
-				integration.instrument.options.setIteration(iteration, rounds);	
+				integration.instrument.getOptions().setIteration(iteration, rounds);	
 			}
 			
 			iterate();	

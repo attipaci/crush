@@ -35,7 +35,6 @@ import java.util.Vector;
 import kovacs.text.TableFormatter;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.HeaderCardException;
@@ -103,7 +102,6 @@ public class PolKa extends Laboca {
 		}
 		
 	}
-	
 	
 	
 	@Override

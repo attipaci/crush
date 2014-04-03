@@ -48,16 +48,16 @@ public class Saboca extends APEXArray<SabocaPixel> {
 	}
 	
 	@Override
-	public void addDivisions() {
-		super.addDivisions();
+	public void initDivisions() {
+		super.initDivisions();
 		
 		try { addDivision(getDivision("squids", SabocaPixel.class.getField("squid"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }
 	}
 	
 	@Override
-	public void addModalities() {
-		super.addModalities();
+	public void initModalities() {
+		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("squids", "q", divisions.get("squids"), SabocaPixel.class.getField("squidGain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
@@ -92,7 +92,7 @@ public class Saboca extends APEXArray<SabocaPixel> {
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
 			SabocaPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
-			if(pixel == null) return;
+			if(pixel == null) continue;
 			
 			if(pixel != null) {
 				pixel.squid = Integer.parseInt(tokens.nextToken());
@@ -101,6 +101,7 @@ public class Saboca extends APEXArray<SabocaPixel> {
 				// TODO maybe should be used for blind flagging...
 			}
 		}
+		
 		in.close();
 	}	
 	

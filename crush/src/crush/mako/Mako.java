@@ -94,6 +94,7 @@ public class Mako extends CSOArray<MakoPixel> {
 	
 	@Override
 	public void loadChannelData() {
+		if(size() == 0) return;
 		
 		if(hasOption("toneid")) {
 			try {

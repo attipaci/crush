@@ -85,8 +85,8 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 	}
 
 	@Override
-	public void addDivisions() {
-		super.addDivisions();
+	public void initDivisions() {
+		super.initDivisions();
 		
 		try { addDivision(getDivision("mux", Scuba2Pixel.class.getField("mux"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }
@@ -108,8 +108,8 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 	}
 	
 	@Override
-	public void addModalities() {
-		super.addModalities();
+	public void initModalities() {
+		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("mux", "m", divisions.get("mux"), Scuba2Pixel.class.getField("muxGain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }

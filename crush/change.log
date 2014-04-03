@@ -1,5 +1,7 @@
- 
-2.16-a2 (alpha.2)
+>>> verify dynamic options on mixed scans...
+
+
+2.16-a3 (alpha.3)
 
 	[BUG] Non-equatorial celestial mapping (e.g. ecliptic coordinates) of 
 	moving-frame objects (e.g. planets and asteroids) was buggy. Fixed.
@@ -93,6 +95,10 @@
 	has any effect. 'correlated.rows.group' and 'correlated.cols.group'
 	are also deprecated.
 
+	[CONFIG] {GISMO} Run7 (Nov 2012) tau smoothing window increased from
+	0.25 to 0.5 hour because the smaller window did not always result in
+	a tau estimate.
+
 	[CONFIG} {GISMO} MUX decorrelation replaces gradients removal in
 	'faint' mode; MUX gained not solved until 4th iteration; MUX resolution
 	set to 0.25s for 'faint'; reinstated time-weighting at full resolution 
@@ -103,6 +109,13 @@
 
 	[CRUSH-1.xx] New projections added to CRUSH-1.xx toolset (e.g.
 	'show', 'imagetool', etc...).
+
+	[CODE] Instrument validation/initialization changes. Removed 
+	unnecessary configuration copies. Changed when and how pixel groups,
+	divisions and modalities are initialized.
+
+	[CODE] Instrument group, divisions, and modalities added on 
+	initialization rather than at validation.
 
 	[CODE] flagInvalidPixels() in Array.readRCP() was wrongly placed, 
 	being called more often than necessary. Fixed.

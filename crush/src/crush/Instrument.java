@@ -46,7 +46,7 @@ implements TableFormatter.Entries {
 	 */
 	private static final long serialVersionUID = -7651803433436713372L;
 	
-	public Configurator options, startupOptions;
+	private Configurator options, startupOptions;
 	
 	public double integrationTime;
 	public double samplingInterval;
@@ -61,11 +61,11 @@ implements TableFormatter.Entries {
 	public int storeChannels; // The number of channels stored in the data files...
 	public int mappingChannels;
 	
-	public Hashtable<String, ChannelGroup<ChannelType>> groups = new Hashtable<String, ChannelGroup<ChannelType>>();
-	public Hashtable<String, ChannelDivision<ChannelType>> divisions = new Hashtable<String, ChannelDivision<ChannelType>>();
-	public Hashtable<String, Modality<?>> modalities = new Hashtable<String, Modality<?>>();	
+	public Hashtable<String, ChannelGroup<ChannelType>> groups;
+	public Hashtable<String, ChannelDivision<ChannelType>> divisions;
+	public Hashtable<String, Modality<?>> modalities;
 			
-	public boolean initialized = false, validated = false;
+	public boolean isInitialized = false, isValid = false;
 	
 	public Mount mount;
 	
@@ -81,10 +81,22 @@ implements TableFormatter.Entries {
 	}
 		
 	// Load the static instrument settings, which are not meant to be date-dependent...
-	public void initialize() {
+	public void setOptions(Configurator options) {
+		this.options = options;
+		
+		isValid = false;
+		isInitialized = false;
+		startupOptions = null;
+		
 		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnit();
-		initialized = true;
+		if(hasOption("gain")) gain = option("gain").getDouble();
 	}
+	
+	public Configurator getOptions() {
+		return options;
+	}
+	
+	public Configurator getStartupOptions() { return startupOptions; }
 	
 	// TODO check for incompatible scans
 	public void validate(Vector<Scan<?,?>> scans) throws Exception {
@@ -100,42 +112,37 @@ implements TableFormatter.Entries {
 		Instrument<ChannelType> copy = (Instrument<ChannelType>) super.copy();
 		
 		for(Channel channel : copy) channel.instrument = copy;
-		
+	
 		// TODO this needs to be done properly???
-		if(options != null) copy.options = options.copy();
-		copy.groups = new Hashtable<String, ChannelGroup<ChannelType>>();
-		copy.divisions = new Hashtable<String, ChannelDivision<ChannelType>>();
-		copy.modalities = new Hashtable<String, Modality<?>>();
+		if(options != null) copy.setOptions(options.copy());
+		copy.groups = null;
+		copy.divisions = null;
+		copy.modalities = null;
 		
-		// TODO what should instrument.copy() do with the calibration and tau tables?
-		copy.addGroups();
-		copy.addDivisions();
-		copy.addModalities();
+		if(isInitialized) copy.initialize();
 		
 		return copy;
 	}
 	
-	public void validate(Scan<?,?> scan) {
-		validate();
+	public void initialize() {		
+		reindex();
+		
+		initGroups();
+		initDivisions();
+		initModalities();		
+		
+		isInitialized = true;
 	}
 	
-	// Instrument validation should happen sometime during reading...
-	public void validate() {
+	public void validate(Scan<?,?> scan) {
 		startupOptions = options.copy();
-		reindex();
-	
-		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnit();
-		if(hasOption("gain")) gain = option("gain").getDouble();
+		
+		initialize();
 		
 		loadChannelData();
+		
 		if(hasOption("blind")) setBlindChannels(option("blind").getIntegers()); 
-		if(hasOption("flag")) flagPixels(option("flag").getIntegers()); 
-		
-		addGroups();
-		addDivisions();
-		addModalities();
-		
-		
+		if(hasOption("flag")) flagPixels(option("flag").getIntegers()); 	
 		if(hasOption("flatweights")) flattenWeights();
 		
 		if(hasOption("uniform")) uniformGains();
@@ -163,7 +170,7 @@ implements TableFormatter.Entries {
 
 		census();
 		
-		validated = true;
+		isValid = true;
 	}
 	
 	public abstract String getTelescopeName();
@@ -193,8 +200,6 @@ implements TableFormatter.Entries {
 	public void setMJDOptions(double MJD) {
 		if(!options.containsKey("mjd")) return;
 		
-		// Make options an independent set of options, setting MJD specifics...
-		options = options.copy();
 		this.MJD = MJD;
 		
 		Hashtable<String, Vector<String>> settings = option("mjd").conditionals;
@@ -207,8 +212,6 @@ implements TableFormatter.Entries {
 	public void setDateOptions(double MJD) {
 		if(!options.containsKey("date")) return;
 	
-		// Make options an independent set of options, setting MJD specifics...
-		options = options.copy();
 		this.MJD = MJD;
 		
 		Hashtable<String, Vector<String>> settings = option("date").conditionals;
@@ -236,9 +239,7 @@ implements TableFormatter.Entries {
 	
 	public void setSerialOptions(int serialNo) {
 		if(!options.containsKey("serial")) return;
-		
-		options = options.copy();
-		
+			
 		// Make options an independent set of options, setting MJD specifics...
 		Hashtable<String, Vector<String>> settings = option("serial").conditionals;
 		for(String rangeSpec : settings.keySet()) if(Range.parse(rangeSpec, true).contains(serialNo)) {
@@ -252,9 +253,7 @@ implements TableFormatter.Entries {
 		sourceName = sourceName.toLowerCase();
 		
 		if(!options.containsKey("object")) return;
-		
-		options = options.copy();
-		
+			
 		// Make options an independent set of options, setting object specifics...
 		Hashtable<String, Vector<String>> settings = option("object").conditionals;
 		for(String spec : settings.keySet()) if(sourceName.startsWith(spec)) {
@@ -276,6 +275,14 @@ implements TableFormatter.Entries {
 	
 	public Configurator option(String name) {
 		return options.get(name);
+	}
+	
+	public void setOption(String line) {
+		options.parse(line);
+	}
+	
+	public void forget(String key) {
+		options.forget(key);
 	}
 	
 	public Scan<?, ?> readScan(String descriptor) throws Exception {
@@ -374,7 +381,9 @@ implements TableFormatter.Entries {
 		return groups.get("blinds");
 	}
 	
-	public void addGroups() {
+	public void initGroups() {
+		groups = new Hashtable<String, ChannelGroup<ChannelType>>();
+		
 		addGroup("all", copyGroup());
 		addGroup("connected", copyGroup().discard(Channel.FLAG_DEAD));
 		addGroup("detectors", copyGroup().discard(nonDetectorFlags));
@@ -396,7 +405,9 @@ implements TableFormatter.Entries {
 		}
 	}
 	
-	public void addDivisions() {
+	public void initDivisions() {
+		divisions = new Hashtable<String, ChannelDivision<ChannelType>>();
+		
 		addDivision(new ChannelDivision<ChannelType>("all", groups.get("all")));
 		addDivision(new ChannelDivision<ChannelType>("connected", groups.get("connected")));
 		addDivision(new ChannelDivision<ChannelType>("detectors", groups.get("detectors")));
@@ -418,7 +429,9 @@ implements TableFormatter.Entries {
 		}
 	}
 	
-	public void addModalities() {
+	public void initModalities() {
+		modalities = new Hashtable<String, Modality<?>>();
+		
 		try { addModality(new CorrelatedModality("all", "Ca", divisions.get("all"), Channel.class.getField("gain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
@@ -713,7 +726,7 @@ implements TableFormatter.Entries {
 	}
 	
 	public void printCorrelatedModalities(PrintStream out) {
-		if(!validated) validate();
+		if(!isInitialized) initialize();
 		
 		List<String> names = listModalities();
 		out.println("\nAvailable pixel divisions for " + getName() + ": \n");
@@ -729,7 +742,7 @@ implements TableFormatter.Entries {
 	}
 	
 	public void printResponseModalities(PrintStream out) {
-		if(!validated) validate();
+		if(!isInitialized) initialize();
 		
 		List<String> names = listModalities();
 		out.println("\nAvailable response modalities for " + getName() + ": \n");

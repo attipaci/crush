@@ -27,6 +27,7 @@ package crush.array;
 
 import java.util.*;
 
+import kovacs.util.Configurator;
 import crush.*;
 
 
@@ -46,16 +47,9 @@ public abstract class MonoArray<ChannelType extends SimplePixel> extends
 	}
 
 	@Override
-	public void initialize() {
+	public void setOptions(Configurator options) {
+		super.setOptions(options);	
 		if(hasOption("beam")) resolution = option("beam").getDouble() * getSizeUnit();
-		super.initialize();
-	}
-	
-	@Override
-	public void validate() {
-		if(hasOption("beam")) resolution = option("beam").getDouble() * getSizeUnit();
-		super.validate();
-		//for(SimplePixel pixel : this) pixel.instrument = this;
 	}
 	
 	@Override

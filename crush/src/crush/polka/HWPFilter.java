@@ -52,7 +52,7 @@ public class HWPFilter extends KillFilter {
 			System.err.println();
 			System.err.println("     WARNING! Waveplate rotation not detected. Assuming total-power mode.");
 			System.err.println("              Blacklisting 'filter.hwp'.");
-			polka.options.process("blacklist", "filter.hwp");
+			polka.setOption("blacklist=filter.hwp");
 			return;
 		}
 		

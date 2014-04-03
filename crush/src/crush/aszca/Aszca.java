@@ -47,8 +47,8 @@ public class Aszca extends APEXArray<AszcaPixel> {
 	}
 	
 	@Override
-	public void addDivisions() {
-		super.addDivisions();
+	public void initDivisions() {
+		super.initDivisions();
 		
 		try { addDivision(getDivision("wafers", AszcaPixel.class.getField("wafer"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }
@@ -64,8 +64,8 @@ public class Aszca extends APEXArray<AszcaPixel> {
 	}
 	
 	@Override
-	public void addModalities() {
-		super.addModalities();
+	public void initModalities() {
+		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("wafers", "V", divisions.get("wafers"), AszcaPixel.class.getField("waferGain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
