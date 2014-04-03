@@ -132,7 +132,9 @@ public class Laboca extends APEXArray<LabocaPixel> {
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
-		 	LabocaPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
+		 	LabocaPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken())); 	
+		 	if(pixel == null) continue;
+		 	
 			pixel.box = Integer.parseInt(tokens.nextToken());
 			pixel.cable = Integer.parseInt(tokens.nextToken());
 			tokens.nextToken(); // amp line

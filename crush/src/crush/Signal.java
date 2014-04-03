@@ -46,7 +46,7 @@ public class Signal implements Cloneable {
 		this.integration = integration;
 		if(mode != null) {
 			syncGains = new float[mode.size()];
-			integration.signals.put(mode, this);
+			integration.addSignal(this);
 		}
 	}
 	

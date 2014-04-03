@@ -196,7 +196,7 @@
 
 			   block=4x6
 
-			will decorrelate signals on blocks that are 4 columns 
+			will correlated.signals on blocks that are 4 columns 
 			wide and 6 rows tall (i.e. there will be 16 such blocks
 			on the 32x12 SHARC-2 array).
 			@See: 'blocks'
@@ -250,9 +250,9 @@
 			displacement. Since most telescopes chop in the 
 			horizontal 'x' direction only, the 'chopper' keyword is
 			aliased to decorrelation on motion in that direction. 
-			When a 2D chopper is used, you should decorrelate in 
+			When a 2D chopper is used, you should correlated.in 
 			both the 'x' and 'y' directions.
-			@See: 'decorrelate.<?>', 'detect.chopped'
+			@See: 'correlated.<?>', 'detect.chopped'
 
 :: clip=X		@Expert
 			In early generations of the source map, force map
@@ -358,7 +358,8 @@
 			controlled by a number of subkeys (see below). 
 			The given decorrelation step must also appear in the
 			pipeline 'ordering' before it can be used.
-			@See: 'modality', 'ordering'
+			@See: 'division', 'ordering', 'list.divisions'
+				'list.response'
 
 :: correlated.<?>.gainrange=min:max	@Expert
 					Specify a range of acceptable gains to 
@@ -662,7 +663,8 @@
 			creates a division from these two groups. For every
 			division created this way, CRUSH will also create a
 			correlated modality with the same name.
-			@See: 'correlated.<?>', group.<?> 
+			@See: 'correlated.<?>', group.<?>, 'list.divisions'
+				'list.response' 
 
 :: division.<?>.id=<ID>	@Expert
 			Specify a designated ID for the pixel division <?>. 
@@ -1402,6 +1404,20 @@
 			1 K/beam expressed in the native data units.
 			@See: 'dataunit', 'jansky', 'K2Jy'
 
+:: list.divisions	@Since: 2.16
+			@Advanced
+			Print out the names of all available pixel divisions
+			which can be decorrelated.
+			@See: 'correlated.<?>', 'write.coupling', 
+				'list.response'
+
+:: list.response	@Since: 2.16
+			@Advanced
+			Print out the names of all available response 
+			modalities (to known signals).
+			@See: 'correlated.<?>', 'write.coupling'
+				'list.divisions'
+
 :: log			@Advanced
 			@Since: 2.03
 			Log the scans after the reduction. (Similar logging
@@ -1452,6 +1468,17 @@
 			Please refer to the README for more details on the
 			available options
 			@See: 'log', 'log.file', 'log.format'
+
+:: log.saegains		@Instrument: GISMO
+			@Since: 2.16
+			@Expert
+			Log the SAE coupling coefficients against line-of-sight
+			tau, detector bias, and tuning settings. This is
+			primarily a diagnostic option for checking and/or
+			finetuning the feedback parameters of GISMO. The
+			option requires 'read.sae' be set also, or else it
+			has no effect.
+			@See: 'read.sae'
 
 :: maitau.fallback=<type>	@Instrument: SHARC-2
 				@Advanced
@@ -1551,11 +1578,11 @@
 			compatibility with earlier releases.
 			@See: 'system'
 
-:: mux			@Alias -> decorrelate.mux
+:: mux			@Alias -> correlated.mux
 			@Instrument: SHARC-2, GISMO, SCUBA-2
 			@Advanced
 			Decorrelate on MUXes, or set options for it.
-			@See: 'decorrelate.<?>'
+			@See: 'correlated.<?>'
 
 :: name=		Specify the output image file name, relative to the
 			directory specified by 'outpath'. When not given
@@ -1725,7 +1752,7 @@
 			Specify the order of pipeline elements as a comma
 			separated list of keys.
 			@See: 'offsets', 'drifts', 'weighting', 'despike'
-			      'source', 'decorrelate.<?>', 'whiten',
+			      'source', 'correlated.<?>', 'whiten',
 			      'time-weighting'
 
 :: outpath=<path>	Specify the output path, where all CRUSH output will be 
@@ -1812,7 +1839,7 @@
 			@Advanced
 			Decorrelate on readout address lines (across the MUXes)
 			or set options for it.
-			@See: 'decorrelate.<?>', 'pins.group', 'mux'
+			@See: 'correlated.<?>', 'pins.group', 'mux'
 
 :: pins.group=N		@Instrument: GISMO
 			@Expert
@@ -2153,6 +2180,20 @@
 			@See: 'datapath', @APEX:'project', @GISMO:'date',
 			      @GISMO:'object'
 
+:: read.sae		@Instrument: GISMO
+			@Expert
+			@Since: 2.16
+			The GISMO FITS contains both the TES feedback DAC
+			values (proportional to the flux, if the feedback is
+			working as expected) and an error term 'SAE'. By
+			default CRUSH does not parse the SAE data, since it is
+			large, and not usually useful. However, this option
+			enables parsing the SAE signals, which is a 
+			prerequisite for using it, e.g. for decorrelating
+			(e.g. 'correlated.sae'), or measuring couplings
+			(e.g. 'write.coupling=sae').
+			@See: 'sae'
+
 
 :: recall=<option>	Undoes 'forget', and reinstates the <option> to its 
 			old value.
@@ -2224,11 +2265,34 @@
 			used).
 			@See: 'iteration.[?]', 'extended', 'faint', 'deep'
 
-:: rows			@Alias: -> decorrelate.rows
+:: rows			@Alias: -> correlated.rows
 			@Instrument: SHARC-2, P-ArTeMiS
 			@Advanced
 			Decorrelate on detector rows, or set options for it.
-			@See: 'decorrelate.<?>'
+			@See: 'correlated.<?>'
+
+:: sae			@Alias: -> correlated.sae
+			@Instrument: GISMO
+			@Expert
+			@Since: 2.16
+			Remove signals correlated to the SAE (feed back loop
+			error). Also requires 'read.sae' to be set, otherwise
+			this option has no effect on its own.
+			@See: 'read.sae'
+
+:: sae.hipass=X		@Instrument: GISMO
+			@Expert
+			@Since: 2.16
+			Hipass filter the SAE feedback loop error signal via
+			a Gaussian kernel with X seconds FWHM.
+			@See: 'read.sae', 'sae.smooth'
+
+:: sae.smooth=X		@Instrument: GISMO
+			@Expert
+			@Since: 2.16
+			Smooth the SAE feedback loop error signal with a 
+			Gaussian kernel with X seconds FWHM.
+			@See: 'read.sae', 'sae.hipass'
 
 :: scale=<arg>		Set the calibration scaling of the data. The option
 			can take as argument, either:
@@ -3287,6 +3351,44 @@
 			those that were used in the reduction (see 'noslim').
 			@See: 'division.<?>', 'noslim'
 
+:: write.coupling=<list>	@Since: 2.16
+				@Advanced
+			Measure and write coupling gains to the given signals.
+			(Coupling gains are similar to correlation coefficients
+			but normalized differently so that they can be used
+			directly to remove the correlated signal from the
+			timestreams).
+			E.g.
+
+			  write.coupling=telescope-x,accel-mag
+
+			will write out the coupling gains of each detector to
+			the telescope azimuth motion ('telescope-x') and
+			scalar acceleration ('accel-mag').
+			@See: 'list.modalities', 'correlated.<?>',
+				'write.coupling.spec'
+
+
+:: write.coupling.spec=<list>	@Since: 2.16
+				@Advanced
+			Measure and write coupling specta (similar to 
+			correlation spectra, but with a gain-type normalization
+			so that the values can be interpreted directly as gains
+			by which the correlated signal can be removed from the
+			timestream data). The argument is a list of modality
+			names, such as 'telescope-x' or 'accel-mag'
+			@See: 'write.coupling.spec.windowsize', 
+			 	'list.modalities', 'correlated.<?>',
+                                'write.coupling.spec'
+
+:: write.coupling.spec.windowsize=N	@Since: 2.16
+					@Expert
+			Specify the window size (as N downsampled samples) on
+			which to measure the coupling spectra. The default
+			is to measure on the longest meaningful timescale
+			as defined by 'drifts'.
+			@See: 'write.coupling.spec', 'drifts'
+
 :: write.eps		@Since: 2.14
 			Write final result into an EPS image, if available.
 			As of 2.15, both photometry and 'skydip' reductions 
@@ -3352,6 +3454,18 @@
 			The default size is 300x300.
 			@See: 'write.png'
 
+:: write.png.scaling=<type>	@Since: 2.16
+				Specify what scaling method to use for 
+			generating the PNG image output. The <type> argument
+			can be one of the following scaling relations:
+
+				linear	Linear scaling
+				log	Logarithmic 
+				sqrt	Square-root scaling
+
+			The default value is 'linear'.
+			@See: 'write.png'
+	
 :: write.signals	@Expert
 			Write out all the correlated signals that were
 			calculated in the reduction as ASCII timestreams.

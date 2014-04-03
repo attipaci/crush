@@ -92,6 +92,8 @@ public class Saboca extends APEXArray<SabocaPixel> {
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
 			SabocaPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
+			if(pixel == null) return;
+			
 			if(pixel != null) {
 				pixel.squid = Integer.parseInt(tokens.nextToken());
 				pixel.pin = Integer.parseInt(tokens.nextToken());

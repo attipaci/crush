@@ -1,5 +1,5 @@
 
-For 2.16
+For 2.20
 	- Update nom.tam.fits to 1.11 (Requires Java 6!!!)
 	  (check!!!)
 	- freeze. or force. keywords
@@ -24,7 +24,7 @@ For 2.16
 		  (using e.g. using model row and direct i/o)
 		- separate read from validation.
 
-For 2.20
+For 2.30
 
 	- Upstream photometry architecture, common for all instruments.
 		- PhaseSet > PhaseGroup > PhaseData
@@ -34,7 +34,7 @@ For 2.20
 	- APEXChoppedPhotometry --> Photometry
 
 
-For 2.20 (Architecture Improvements...)
+For 2.30 (Architecture Improvements...)
 	
 	- Estimator
 		- MaximumLikelihood, Median, Trimean...

@@ -381,8 +381,8 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					int calFlag = 0, digitalFlag = 0;
 					
 					// Do not process frames with no coordinate information...
-					if(EL[i] <= MIN_ELEVATION) return;
-					if(EL[i] >= MAX_ELEVATION) return;
+					if(EL[i] <= MIN_ELEVATION / Unit.deg) return;
+					if(EL[i] >= MAX_ELEVATION / Unit.deg) return;
 					
 					// Skip processing frames with non-zero cal flag...
 					if(CAL != null) {

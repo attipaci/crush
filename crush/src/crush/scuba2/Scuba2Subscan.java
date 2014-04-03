@@ -169,7 +169,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		System.err.println("   Correcting for temperature drifts.");
 		
 		Response mode = (Response) instrument.modalities.get("temperature").get(0);
-		Signal signal = signals.get(mode);
+		Signal signal = getSignal(mode);
 		if(signal == null) signal = mode.getSignal(this);
 		
 		signal.level(false);

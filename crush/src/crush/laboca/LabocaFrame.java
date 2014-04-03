@@ -27,7 +27,7 @@ import crush.apex.*;
 
 public class LabocaFrame extends APEXFrame {
 
-	public double he3Temp;
+	public float he3Temp;
 	
 	public LabocaFrame(APEXArrayScan<Laboca, LabocaSubscan> parent) { 
 		super(parent); 

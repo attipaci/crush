@@ -91,7 +91,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		System.err.println("   Correcting for He3 temperature drifts.");
 		
 		Response mode = (Response) instrument.modalities.get("temperature").get(0);
-		Signal signal = signals.get(mode);
+		Signal signal = getSignal(mode);
 		if(signal == null) signal = mode.getSignal(this);
 		
 		signal.level(false);
@@ -209,7 +209,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 				sumw += w;
 			}
 
-			exposure.he3Temp = sumw > 0.3 ? sum/sumw : Double.NaN;
+			exposure.he3Temp = sumw > 0.3 ? (float) (sum/sumw) : Float.NaN;
 		}
 
 		// Shift by a number of frames...

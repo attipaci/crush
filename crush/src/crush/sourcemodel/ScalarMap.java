@@ -37,10 +37,10 @@ import kovacs.math.Vector2D;
 import kovacs.plot.ColorScheme;
 import kovacs.plot.Data2DLayer;
 import kovacs.plot.ImageArea;
+import kovacs.plot.ImageLayer;
 import kovacs.plot.colorscheme.Colorful;
 import kovacs.projection.Projection2D;
 import kovacs.util.*;
-
 import crush.*;
 import crush.astro.AstroMap;
 
@@ -762,6 +762,12 @@ public class ScalarMap extends SourceMap {
 			
 			final ImageArea<Data2DLayer> imager = new ImageArea<Data2DLayer>();
 			final Data2DLayer image = new Data2DLayer(plane);
+			
+			if(hasOption("write.png.scaling")) {
+				String spec = option("write.png.scaling").getValue().toLowerCase();
+				if(spec.equals("log")) image.setScaling(ImageLayer.SCALE_LOG);
+				if(spec.equals("sqrt")) image.setScaling(ImageLayer.SCALE_SQRT);
+			}
 			
 			if(hasOption("write.png.spline")) image.setSpline();
 	

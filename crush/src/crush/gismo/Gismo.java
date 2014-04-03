@@ -218,6 +218,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
 		 	GismoPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
+		 	if(pixel == null) continue;
 			pixel.mux = Integer.parseInt(tokens.nextToken());
 		 	pixel.pin = Integer.parseInt(tokens.nextToken()) / groupPins;
 		}

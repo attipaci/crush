@@ -98,7 +98,7 @@ public class SkyDip extends SourceModel {
 		integration.comments += "[Dip] ";
 		
 		CorrelatedMode mode = (CorrelatedMode) integration.instrument.modalities.get("obs-channels").get(0);
-		CorrelatedSignal C = (CorrelatedSignal) integration.signals.get(mode);
+		CorrelatedSignal C = (CorrelatedSignal) integration.getSignal(mode);
 	
 		if(C == null) {
 			C = new CorrelatedSignal(mode, integration);
@@ -106,7 +106,7 @@ public class SkyDip extends SourceModel {
 			catch(Exception e) { 
 				System.err.println("ERROR! Cannot decorrelate sky channels: " + e.getMessage());
 			}
-			C = (CorrelatedSignal) integration.signals.get(mode);
+			C = (CorrelatedSignal) integration.getSignal(mode);
 		}
 		
 		for(final Frame frame : integration) if(frame != null) {

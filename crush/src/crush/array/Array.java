@@ -128,26 +128,29 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 			StringTokenizer tokens = new StringTokenizer(line);
 			int columns = tokens.countTokens();
 			Pixel pixel = backends.get(Integer.parseInt(tokens.nextToken()));
-			if(pixel != null) {
-				try {
-					if(pixel instanceof Channel) {
-						Channel channel = (Channel) pixel;
-						double sourceGain = Double.parseDouble(tokens.nextToken());
-						double coupling = (columns == 3 || columns > 4) ? sourceGain / Double.parseDouble(tokens.nextToken()) : sourceGain / channel.gain;
-						
-						if(useGains) channel.coupling = coupling;
-						if(sourceGain != 0.0) channel.unflag(Channel.FLAG_BLIND);
-					}
-
-					Vector2D position = pixel.getPosition();
-					position.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-					position.setY(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
+			
+			if(pixel == null) continue;
+			
+			try {
+				if(pixel instanceof Channel) {
+					Channel channel = (Channel) pixel;
+					double sourceGain = Double.parseDouble(tokens.nextToken());
+					double coupling = (columns == 3 || columns > 4) ? sourceGain / Double.parseDouble(tokens.nextToken()) : sourceGain / channel.gain;
+					
+					if(useGains) channel.coupling = coupling;
+					if(sourceGain != 0.0) channel.unflag(Channel.FLAG_BLIND);
 				}
-				catch(NumberFormatException e){}
+
+				Vector2D position = pixel.getPosition();
+				position.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
+				position.setY(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
 			}
-			flagInvalidPositions();
+			catch(NumberFormatException e){}
+		
 		}
 		in.close();
+		
+		flagInvalidPositions();
 		
 		if(hasOption("rcp.center")) {
 			Vector2D offset = option("rcp.center").getVector2D();
