@@ -67,7 +67,7 @@ public class CorrelatedMode extends Mode {
 	public synchronized void scaleSignals(Integration<?,?> integration, double aveG) {
 		if(fixedSignal) throw new IllegalStateException("Correlate mode '" + name + "' has non-adjustable signal.");
 		
-		Signal signal = integration.signals.get(this);
+		Signal signal = integration.getSignal(this);
 		if(signal == null) return;
 		
 		signal.scale(aveG);
@@ -86,7 +86,7 @@ public class CorrelatedMode extends Mode {
 	public synchronized void updateSignals(Integration<?, ?> integration, boolean isRobust) throws Exception {
 		if(fixedSignal) throw new IllegalStateException("WARNING! Cannot decorrelate fixed signal modes.");
 			
-		CorrelatedSignal signal = (CorrelatedSignal) integration.signals.get(this);
+		CorrelatedSignal signal = (CorrelatedSignal) integration.getSignal(this);
 		if(signal == null) signal = new CorrelatedSignal(this, integration);
 		signal.update(isRobust); 	
 
@@ -109,7 +109,7 @@ public class CorrelatedMode extends Mode {
 	
 	// Recursively resync all dependent modes...
 	protected void resyncGains(Integration<?,?> integration) throws Exception {
-		Signal signal = integration.signals.get(this);
+		Signal signal = integration.getSignal(this);
 		if(signal != null) signal.resyncGains();
 		
 		// Sync the gains to all the dependent modes too... 

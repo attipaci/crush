@@ -177,7 +177,7 @@ public class Mode {
 		
 		WeightedPoint[] G = phaseGains && integration.isPhaseModulated() ?  
 				((PhaseModulated) integration).getPhases().getGainIncrement(this) : 
-				integration.signals.get(this).getGainIncrement(isRobust);
+				integration.getSignal(this).getGainIncrement(isRobust);
 				
 		for(int i=G0.length; --i >= 0; ) {
 			if(G[i] != null) G[i].add(G0[i]);
@@ -188,7 +188,7 @@ public class Mode {
 	}
 	
 	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws Exception {			
-		integration.signals.get(this).syncGains(sumwC2, isTempReady);
+		integration.getSignal(this).syncGains(sumwC2, isTempReady);
 		
 		// Solve for the correlated phases also, if required
 		if(integration.isPhaseModulated()) if(integration.hasOption("phases"))

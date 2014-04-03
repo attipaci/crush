@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 			  <attila[AT]submm.caltech.edu>
 
-			  Last updated: 2 Jun 2013
+			  Last updated: 2 Apr 2014
 
 
 
@@ -536,7 +536,7 @@ options on the console.
 
     The basic condition is the existence of an option key. For example,
 
-	[extended] forget decorrelate.gradients	
+	[extended] forget correlated.gradients	
 
     will disable the decorrelation of gradient sky-noise if or when the 
     'extended' key is defined, e.g. by
@@ -2012,7 +2012,12 @@ necessary.) The commands are:
 				prior to '-poll' in the command line.
 
 
+	list.divisions		List all pixels divisions, which can be
+				decorrelated for the instrument.
 
+	list.response		List all response modalities for the
+				instrument (to known signals, such as
+				telescope movement, or temperature data).
 
 
 3.2 Pipeline Configuration
@@ -2533,7 +2538,7 @@ the correlated signals) may be part of the second step of the decorrelation.
 
    (Of course, the same keyword must also appear in the pipeline 'ordering', 
    for the step to actually take place during the reduction process -- 
-   otherwise crush will not know when to decorrelate the chopper signals.)
+   otherwise crush will not know when to correlated.the chopper signals.)
 
    You can fine-tune how CRUSH deals with each correlated mode. For example, 
    the following lines:
@@ -2542,7 +2547,7 @@ the correlated signals) may be part of the second step of the decorrelation.
        correlated.obs-channels.gainrange 0.3--3.0
 
    Specifies that atmospheric signals, which appear in all observing channels, 
-   should be decorrelated only every second (vs. the default every available 
+   should be correlated. only every second (vs. the default every available 
    frame), and that any channel that exhibits a response outside of 0.3--3.0 
    times the 'average' response of the array, should be flagged, and ignored 
    in the reduction afterwards.
@@ -2567,7 +2572,7 @@ the correlated signals) may be part of the second step of the decorrelation.
    from pixel indexes and ranges, while the last line creates a division 
    ('my-division') from these pixel groupings. CRUSH will also create a 
    correlated modality with the same name as the division. So, given the 
-   definitions above you can decorrelate on 'my-division' by:
+   definitions above you can correlated.on 'my-division' by:
 
        correlated.my-division
 

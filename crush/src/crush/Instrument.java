@@ -34,9 +34,7 @@ import kovacs.data.Statistics;
 import kovacs.math.Range;
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
-
 import crush.sourcemodel.*;
-
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
@@ -700,6 +698,49 @@ implements TableFormatter.Entries {
 
 	public void addModality(Modality<?> modality) {
 		modalities.put(modality.name, modality);
+	}
+	
+	public List<String> listModalities() {
+		ArrayList<String> names = new ArrayList<String>(modalities.keySet());
+		Collections.sort(names);
+		return names;
+	}
+	
+	public List<String> listDivisions() {
+		ArrayList<String> names = new ArrayList<String>(divisions.keySet());
+		Collections.sort(names);
+		return names;
+	}
+	
+	public void printCorrelatedModalities(PrintStream out) {
+		if(!validated) validate();
+		
+		List<String> names = listModalities();
+		out.println("\nAvailable pixel divisions for " + getName() + ": \n");
+		for(String name : names) {
+			Modality<?> modality = modalities.get(name);
+			if(modality instanceof CorrelatedModality) {
+				out.print(hasOption("correlated." + name) ? " (*) " : "     ");
+				out.println(name);
+			}
+		}
+		out.println();
+		
+	}
+	
+	public void printResponseModalities(PrintStream out) {
+		if(!validated) validate();
+		
+		List<String> names = listModalities();
+		out.println("\nAvailable response modalities for " + getName() + ": \n");
+		for(String name : names) {
+			Modality<?> modality = modalities.get(name);
+			if(!(modality instanceof CorrelatedModality)) {
+				out.print(hasOption("correlated." + name) ? " (*) " : "     ");
+				out.println(name);
+			}
+		}
+		out.println();
 	}
 	
 	/*

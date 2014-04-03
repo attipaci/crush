@@ -89,7 +89,6 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 		return copy;
 	}
 	
-
 	public boolean isValid() { return isFlagged(); }
 	
 	

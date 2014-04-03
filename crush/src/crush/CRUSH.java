@@ -46,8 +46,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.16-a2";
-	private static String revision = "alpha.2";
+	private static String version = "2.16-a3";
+	private static String revision = "alpha.3";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -104,6 +104,7 @@ public class CRUSH extends Configurator {
 		
 		System.err.println("Instrument is " + instrument.getName().toUpperCase());
 		instrument.options = this;
+		
 	}
 	
 	public boolean hasOption(String name) {
@@ -134,6 +135,12 @@ public class CRUSH extends Configurator {
 		validate();
 	}
 	
+	@Override
+	public void process(String key, String value) {
+		if(key.equals("list.divisions")) instrument.printCorrelatedModalities(System.err);
+		else if(key.equals("list.response")) instrument.printResponseModalities(System.err);
+		else super.process(key, value);
+	}
 
 	@Override
 	public void readConfig(String fileName) {
@@ -507,7 +514,7 @@ public class CRUSH extends Configurator {
 			"           Version: " + getFullVersion() + "\n" + 
 			"           Utilities: " + Util.getFullVersion() + "\n" +
 			"           http://www.submm.caltech.edu/~sharc/crush\n" +
-			"           Copyright (C)2012 Attila Kovacs <attila[AT]caltech.edu>\n" +
+			"           Copyright (C)2014 Attila Kovacs <attila[AT]caltech.edu>\n" +
 			"  ----------------------------------------------------------------------\n";	
 		System.err.println(info);
 	}

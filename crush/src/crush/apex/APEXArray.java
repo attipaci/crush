@@ -67,7 +67,7 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 	public void readRCP(String fileName)  throws IOException {		
 		super.readRCP(fileName);
 	
-		setReferencePosition(referencePixel.position);	
+		if(referencePixel != null) setReferencePosition(referencePixel.position);	
 		// Take dewar rotation into account...
 		for(SimplePixel pixel : this) pixel.position.rotate(rotation);
 	}

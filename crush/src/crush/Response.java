@@ -24,8 +24,6 @@ package crush;
 
 import java.lang.reflect.Field;
 
-import kovacs.data.WeightedPoint;
-
 
 public abstract class Response extends Mode {
 
@@ -46,17 +44,5 @@ public abstract class Response extends Mode {
 
 	public abstract Signal getSignal(Integration<?, ?> integration);
 	
-	@Override
-	public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
-		Signal signal = integration.signals.get(this);
-		
-		if(signal == null) {
-			signal = getSignal(integration);
-			if(signal.isFloating) signal.level(isRobust);
-			integration.signals.put(this, signal);	
-		}
-		
-		return super.deriveGains(integration, isRobust);
-	}	
 	
 }

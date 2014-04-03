@@ -71,7 +71,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public double zenithTau = 0.0;
 	
 	public Hashtable<String, Dependents> dependents = new Hashtable<String, Dependents>(); 
-	public Hashtable<Mode, Signal> signals = new Hashtable<Mode, Signal>();	
+	private Hashtable<Mode, Signal> signals = new Hashtable<Mode, Signal>();	
 	
 	public boolean approximateSourceMap = false;
 	public int sourceGeneration = 0;
@@ -636,8 +636,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void removeDrifts(final ChannelGroup<?> channels, final int targetFrameResolution, final boolean robust) {
 		
 		final int driftN = Math.min(size(), OldFFT.getPaddedSize(targetFrameResolution));
-		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);
 		
+		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);
+			
 		final Dependents parms = getDependents("drifts");
 
 		WeightedPoint[] buffer = null;	// The timestream for robust estimates
@@ -657,6 +658,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final int nt = size();
 		for(int from=0; from < nt; from += driftN) {
 			int to = Math.min(size(), from + driftN);
+			
 			parms.clear(channels, from, to);
 			
 			for(Channel channel : channels) {
@@ -681,18 +683,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(!Double.isNaN(crossingTime) && !Double.isInfinite(crossingTime)) {
 				// Undo prior drift corrections....
 				if(!Double.isInfinite(channel.filterTimeScale)) {
-					if(channel.filterTimeScale > 0.0) 
-						channel.sourceFiltering /= 1.0 - crossingTime / channel.filterTimeScale;
+					if(channel.filterTimeScale > 0.0) channel.sourceFiltering /= 1.0 - crossingTime / channel.filterTimeScale;
 					else channel.sourceFiltering = 0.0;
 				}
 				// Apply the new drift correction
-				channel.sourceFiltering *= 1.0 - crossingTime / Math.min(filterTimeScale, channel.filterTimeScale);
+				channel.sourceFiltering *= 1.0 - crossingTime / channel.filterTimeScale;
 			}
 			else channel.sourceFiltering = 0.0;
-			channel.filterTimeScale = Math.min(filterTimeScale, channel.filterTimeScale);	
+			
+			channel.filterTimeScale = Math.min(filterTimeScale, channel.filterTimeScale);
 		}		
 			
-				
+		
+		
 		// Make sure signals are filtered the same as time-streams...
 		// TODO this is assuming all channels are filtered the same...
 		for(final Signal signal : signals.values()) signal.removeDrifts();
@@ -713,8 +716,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0)
 				parms.add(exposure, exposure.relativeWeight / increment.weight()); 
 					
-			parms.add(channel, 1.0);	
 		}
+		
+		parms.add(channel, 1.0);	
 	}
 	
 	
@@ -828,7 +832,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				channel.weight += exposure.relativeWeight;
 			}
 		}
-
+		
+	
 		for(final Channel channel : liveChannels) if(channel.weight > 0.0) {
 			channel.dof = Math.max(0.0, 1.0 - channel.dependents / channel.weight);
 			channel.variance = channel.weight > 0.0 ? var[channel.index] / channel.weight : 0.0;
@@ -865,6 +870,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 		}
  
+		
 		for(final Channel channel : liveChannels) if(channel.weight > 0.0) {
 			channel.dof = Math.max(0.0, 1.0 - channel.dependents / channel.weight);
 			channel.variance = channel.weight > 0.0 ? 0.5 * var[channel.index] /  channel.weight : 0.0;
@@ -879,6 +885,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 		final float[] dev2 = new float[size()];
 
+		
 		for(final Channel channel : instrument.getConnectedChannels()) {
 			int points = 0;
 			
@@ -2218,7 +2225,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(hasOption("write.coupling.spec")) writeCouplingSpectrum(option("write.coupling.spec").getList()); 
 		
-		
 	}
 	
 	public void writeScanPattern() throws IOException {
@@ -2587,107 +2593,147 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else if(method.equals("differential")) getDifferencialPixelWeights();
 		else getPixelWeights();	
 	}
+
+	public void addSignal(Signal signal) {
+		signals.put(signal.getMode(), signal);
+	}
 	
+	public Signal getSignal(Mode mode) {
+		Signal signal = signals.get(mode);
+		if(signal == null) if(mode instanceof Response) {
+			signal = ((Response) mode).getSignal(this);
+			if(signal.isFloating) signal.level(false);
+			signal.removeDrifts();
+		}
+		return signal;
+	}
 	
 	void writeCouplingGains(List<String> signalNames) {
 		for(String name : signalNames) {
-			Signal signal = signals.get(name);
-			if(signal == null) continue;
-			try { writeCouplingGains(signal); }
-			catch(Exception e) { 
-				System.err.println("WARNING! coupling for '" + name + "' could not be written: " + e.getMessage());
+			try { writeCouplingGains(name); }
+			catch(Exception e) {
+				System.err.println("WARNING! Couplings for '" + name + "' not written: " + e.getMessage());
 				if(CRUSH.debug) e.printStackTrace();
 			}
-		}	
+		}
 	}
 	
-	void writeCouplingGains(Signal signal) throws Exception {	
+	void writeCouplingGains(String name) throws Exception { 
+		Modality<?> modality = instrument.modalities.get(name);
+		if(modality == null) return;
 		
-		String fileName = CRUSH.workPath + File.separator + scan.getID() + "." + signal.getMode().getName() + "-coupling.dat";
+		modality.updateAllGains(this, false);
+		
+		double[] g = new double[instrument.size()];
+		
+		for(Mode mode : modality) getCouplingGains(getSignal(mode), g);
+		
+		String fileName = CRUSH.workPath + File.separator + scan.getID() + "." + name + "-coupling.dat";
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-		
 		out.println(this.getASCIIHeader());
-		out.println();
+		out.println("#");
+		out.println("# ch\tgain");
 		
-		GainProvider gainProvider = signal.getMode().gainProvider;
-		
-		Hashtable<Integer, ? extends Channel> lookup = instrument.getFixedIndexLookup();
-		
-		for(int c=0; c<instrument.getPixelCount(); c++) {
-			Channel channel = lookup.get(c);
-			out.println(c + "\t" + (channel == null ? "---" : Util.e3.format(gainProvider.getGain(channel))));
+		for(int c=0; c<instrument.size(); c++) {
+			Channel channel = instrument.get(c);
+			if(g[c] != 0.0) out.println(channel.getFixedIndex() + "\t" + Util.f3.format(g[c]));
 		}
 		
-		out.close();
-		
 		System.err.println(" Written " + fileName);
+		
+		out.close();	
+	}
+	
+	private void getCouplingGains(Signal signal, double[] g) throws Exception {	
+		Mode mode = signal.getMode();
+		
+		int[] ch = mode.getChannelIndex();
+		float[] gains = mode.getGains();
+		
+		for(int k=0; k<mode.size(); k++) g[ch[k]] = gains[k];
 	}
 	
 	
 	void writeCouplingSpectrum(List<String> signalNames) {
+		int windowSize = hasOption("write.coupling.spec.windowsize") ? option("write.couplig.spec.windowsize").getInt() : framesFor(filterTimeScale);
+		
 		for(String name : signalNames) {
-			Signal signal = signals.get(name);
-			if(signal == null) continue;
-			try { writeCouplingSpectrum(signal); }
-			catch(Exception e) { 
-				System.err.println("WARNING! coupling for '" + name + "' could not be written: " + e.getMessage());
+			try { writeCouplingSpectrum(name, windowSize); }
+			catch(Exception e) {
+				System.err.println("WARNING! coupling spectra for '" + name + "' not written: " + e.getMessage());
 				if(CRUSH.debug) e.printStackTrace();
 			}
-		}	
-	}
+		}
+	}	
 	
-	void writeCouplingSpectrum(Signal signal) throws Exception {	
-		int windowSize = hasOption("write.coupling.spec.windowsize") ? option("write.couplig.spec.windowsize").getInt() : framesFor(filterTimeScale);
-		Complex[][] C = getCouplingSpectrum(signal, windowSize);
+	void writeCouplingSpectrum(String name, int windowSize) throws Exception {
+		Modality<?> modality = instrument.modalities.get(name);
+		if(modality == null) return;
+
+		modality.updateAllGains(this, false);
 		
-		int nF = C[0].length;
-		double df = 1.0 / (windowSize * instrument.samplingInterval);
-		
-		String fileName = CRUSH.workPath + File.separator + scan.getID() + "." + signal.getMode().getName() + "-coupling.spec";
+		String fileName = CRUSH.workPath + File.separator + scan.getID() + "." + name + "-coupling.spec";
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 		
 		out.println(this.getASCIIHeader());
 		out.println();
 		
+		Complex[][] C = new Complex[instrument.size()][];
+		
+		Channel[] allChannels = new Channel[instrument.storeChannels];
+		for(Channel channel : instrument) allChannels[channel.getFixedIndex()-1] = channel;
+		
+		for(Mode mode : modality) getCouplingSpectrum(getSignal(mode), windowSize, C);
+			
 		Complex z = new Complex();
-		
-		Hashtable<Integer, ? extends Channel> lookup = instrument.getFixedIndexLookup();
-		
-		final int nc = instrument.getPixelCount();
-		
-		// Write the zero frequency component
-		for(int c=0; c < nc; c++) {
-			Channel channel = lookup.get(c);			
+
+		int nF = C[0].length;
+		double df = 1.0 / (windowSize * instrument.samplingInterval);
+
+
+		for(int c=0; c < instrument.storeChannels; c++) {
+			Channel channel = allChannels[c];
 			z.set(channel == null ? 0.0 : C[channel.index][0].x(), 0.0);
 			out.print(Util.f5.format(0.0) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
 		}
 		out.println();
-		
+
 		// Write the bulk of the spectrum...
 		for(int f=1; f<nF; f++) {
 			out.print(Util.f5.format(f*df));
-			for(int c=0; c < nc; c++) {
-				Channel channel = lookup.get(c);
+			for(int c=0; c < instrument.storeChannels; c++) {
+				Channel channel = allChannels[c];
 				if(channel == null) z.zero();
 				else z.copy(C[channel.index][f]);	
 				out.print("\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));		
 			}
 			out.println();
 		}
-		
+
 		// Write the Nyquist frequency component;
-		for(int c=0; c < nc; c++) {
-			Channel channel = lookup.get(c);
+		for(int c=0; c < instrument.storeChannels; c++) {
+			Channel channel = allChannels[c];
 			z.set(channel == null ? 0.0 : C[channel.index][0].y(), 0.0);
 			out.print(Util.f5.format(nF * df) + "\t" + Util.e3.format(z.length()) + "\t" + Util.f3.format(z.angle()));
 		}
 		out.println();	
 		
+		System.err.println(" Written " + fileName);
 		out.close();
 		
-		System.err.println(" Written " + fileName);
+		writeDelayedCoupling(name, C);
+	}
+	
+	void getCouplingSpectrum(Signal signal, int windowSize, Complex[][] C) throws Exception {	
+		Complex[][] spectrum = getCouplingSpectrum(signal, windowSize);
 		
-		writeDelayedCoupling(signal.getMode().getName(), C);
+		Mode mode = signal.getMode();
+		ChannelGroup<? extends Channel> channels = mode.getChannels();
+		
+		for(int k=mode.size(); --k >= 0; ) {
+			Channel channel = channels.get(k);
+			C[channel.index] = spectrum[k];
+		}
 	}
 	
 	
@@ -2699,6 +2745,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		FloatFFT fft = new FloatFFT();
 		
 		float[][] delay = new float[spectrum.length][nF << 1];
+		
+		Channel[] allChannels = new Channel[instrument.storeChannels];		
+		for(Channel channel : instrument) allChannels[channel.getFixedIndex()-1] = channel;
+		
 		
 		for(int c=spectrum.length; --c >= 0; ) {
 			for(int f=nF; --f >= 0; ) C.set(f, spectrum[c][f]);
@@ -2713,14 +2763,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		out.println();
 		
 		int n = nF << 1;
-		
-		Hashtable<Integer, ? extends Channel> lookup = instrument.getFixedIndexLookup();
+				
 		final int nc = instrument.getPixelCount();
 		
 		for(int t=0; t<n; t++) {
 			out.print(Util.f5.format(t * instrument.samplingInterval));
 			for(int c=0; c<nc; c++) {
-				Channel channel = lookup.get(c);
+				Channel channel = allChannels[c];
 				if(channel == null) out.print("\t---   ");					
 				else out.print("\t" + Util.e3.format(delay[channel.index][t]));
 			}
@@ -2736,24 +2785,27 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	Complex[][] getCouplingSpectrum(Signal signal, int windowSize) throws Exception {
 		double[] w = WindowFunction.getHann(windowSize);
 		
-		Complex[][] C = new Complex[instrument.size()][];
-		for(int c = instrument.size(); --c >= 0; ) {
-			Channel channel = instrument.get(c);
-			C[c] = getCouplingSpectrum(signal, channel, w);
-			if(channel.isFlagged()) for(Complex z : C[c]) z.zero();
+		Mode mode = signal.getMode();
+		ChannelGroup<? extends Channel> channels = mode.getChannels();
+		float[] gain = mode.getGains();
+		
+		Complex[][] C = new Complex[mode.size()][];
+			
+		for(int k = mode.size(); --k >= 0; ) {
+			Channel channel = channels.get(k);
+			C[k] = getCouplingSpectrum(signal, channel, gain[k], w);
+			if(channel.isFlagged()) for(Complex z : C[k]) z.zero();
 		}
 		return C;
 	}
 	
 	
-	Complex[] getCouplingSpectrum(Signal signal, Channel channel, double[] w) throws Exception {
+	Complex[] getCouplingSpectrum(Signal signal, Channel channel, float gain, double[] w) throws Exception {
 		int windowSize = w.length;
 		windowSize = ExtraMath.pow2ceil(windowSize);
 		int step = windowSize >> 1;
 		int nt = size();
 		int nF = windowSize >> 1;
-		
-		double gain = signal.getMode().gainProvider.getGain(channel);
 		
 		Complex[] c = new Complex[nF];
 		for(int i=nF; --i >= 0; ) c[i] = new Complex();

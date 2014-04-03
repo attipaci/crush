@@ -1,10 +1,4 @@
-
->>> 'read.sae' 
->>> 'correlated.sae'/'sae', 'sae.smooth', 'sae.hipass', 'log.saegains'
->>> 'write.coupling', write.coupling.spec', 'write.coupling.spec.windowsize'
->>> disable 'read.sae' and 'correlated.sae', by default...
-
-
+ 
 2.16-a2 (alpha.2)
 
 	[BUG] Non-equatorial celestial mapping (e.g. ecliptic coordinates) of 
@@ -13,7 +7,7 @@
 
 	[BUG] {SHARC-2} Pointing was incorrect due to lack of chopper zeroing,
 	which was disabled in 2.13-b2 (around 2012 Dec), partly because the
-	zeroing was somewhat flawed for chopped scans. A new two round approach
+	zeroing was somewhat flawed for chopped scans. A new two-round approach
 	is implemented for chopper levelling, which should provide a better 
 	measure of the true zero level even when only a few chopper cycles are 
 	recorded in the data. Also, the adding of the chopper offsets is no 
@@ -21,20 +15,31 @@
 	refers to static mapping and chopper offsets, as it should have been 
 	from the start.
 
+	[NEW] 'write.png.scaling' can be used to determine what scaling to
+	use for the PNG thumbnails. Valid values are 'linear', 'log', or
+	'sqrt'. The default is linear scaling.
+
+	[NEW] New option 'list.divisions' will print out a list of available
+	pixel divisions (and correlated modalities) for the instrument, which 
+	may be decorrelated in the reduction. 
+
+	[NEW] New option 'list.response' will print out a list of available
+	correlated responses (to known signals).
+
 	[NEW] Ability to measure coupling to signals. Both coupling 
 	coefficients, and coupling spectra (including time delay form) can be 
 	measured via and 'write.coupling' and 'write.coupling.spec' keywords.
 	The argument to both these options is a list of signal names for
 	which channel couplings are measured. E.g.
 
-	  write.coupling = telescope-accel-mag, chopper-x
+	  write.coupling = accel-mag, chopper-x
 
 	Additionally the you can set the spectral window size via 
 	'write.coupling.spec.windowsize' option. The default is to set the
 	window size to the 1/f filter timescale (i.e. 'drifts' option).
 
 	[NEW] {GISMO} Decorrelation of SAE signals is now available via
-	the 'correlated.sae' option or 'sae' shorthand, and is enabled by
+	the 'correlated.sae' option or 'sae' shorthand, which is disabled by
 	default.
 
 	[NEW] {GISMO} 2nd and 3rd stage tuning parameters (bias and feedback)
@@ -44,10 +49,28 @@
 	line-of-sight tau, detector bias, and tuning parameters, using the
 	'log.saegains' keyword.
 
-	[FIX] {GISMO} 'pins.group' did not work as desired.
+	[FIX] Pixel offset/drift removal had a dependents accounting bug,
+	which resulted in understated DOF and overstated NEFDs. The bug was 
+	probably introduced early on in the 2.16 development, so it should
+	not affect the previous stable release(s).
+
+	[FIX] {LABOCA} He3 temperature decorrelation using blind detectors did
+	not take place as expected. Now fixed.
+
+	[FIX] {GISMO} Old FITS format processing was broken due to bad
+	elevation constraint. Now fixed.
+
+	[FIX] {GISMO} 'pins.group' did not work as desired. The option is
+	not used by default, so the bug had no real impact.
 
 	[FIX] Skydip parameter errors were infinite if 'skydip.elRange' was
 	not explicitly set. Now fixed.
+
+	[FIX] Decorrelation of motion signals fixed. Previously these did
+	nothing.
+
+	[TWEAK] {LABOCA} decorrelating He3 temperatures is now enabled by
+	default.
 
 	[TWEAK] {CSO} MaiTau server connection attempt times out after 3 
 	seconds if a connection cannot be established. Also, MaiTau console
@@ -76,10 +99,13 @@
 	in 'faint' mode; dejumping re-enabled for 2013 October; 'faint'-mode 
 	stability timescale increased to 15s.
 
-	[CINFIG] {GISMO} Created configuration for Run 10 (1-11 April 2014).
+	[CONFIG] {GISMO} Created configuration for Run 10 (1-11 April 2014).
 
 	[CRUSH-1.xx] New projections added to CRUSH-1.xx toolset (e.g.
 	'show', 'imagetool', etc...).
+
+	[CODE] flagInvalidPixels() in Array.readRCP() was wrongly placed, 
+	being called more often than necessary. Fixed.
 
 	[CODE] {CSO} Chopper levelling is now common prevalidation step for
 	CSO instruments (MAKO, SHARC-2). It also avoids superflous chopper
