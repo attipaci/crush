@@ -91,7 +91,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		
 		if(nP == 0 || nM == 0) {
 			System.err.println("not chopped.");
-			instrument.options.forget("detect.chopped");
+			instrument.forget("detect.chopped");
 			return;
 		}
 		
@@ -140,7 +140,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			if(!file.exists()) {
 				System.err.print("   WARNING! No tau table found for " + date + "...");
 				System.err.print("            Using default tau.");
-				instrument.options.remove("tau");
+				instrument.getOptions().remove("tau");
 				setTau();
 				return;
 			}
@@ -168,7 +168,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 							throw e;
 						}	
 						System.err.println("Falling back to '" + source + "'.");
-						instrument.options.process("tau", source);
+						instrument.setOption("tau=" + source);
 						setTau();
 						return;
 					}

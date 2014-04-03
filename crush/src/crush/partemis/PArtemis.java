@@ -45,8 +45,8 @@ public class PArtemis extends APEXArray<PArtemisPixel> {
 	}
 	
 	@Override
-	public void addDivisions() {
-		super.addDivisions();
+	public void initDivisions() {
+		super.initDivisions();
 		
 		try { addDivision(getDivision("rows", PArtemisPixel.class.getField("row"), nonDetectorFlags)); }
 		catch(Exception e) { e.printStackTrace(); }	
@@ -56,8 +56,8 @@ public class PArtemis extends APEXArray<PArtemisPixel> {
 	}
 	
 	@Override
-	public void addModalities() {
-		super.addModalities();
+	public void initModalities() {
+		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("rows", "r", divisions.get("rows"), PArtemisPixel.class.getField("rowGain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }

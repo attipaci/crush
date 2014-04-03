@@ -43,8 +43,8 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	}
 	
 	@Override
-	public void addModalities() {
-		super.addModalities(); 
+	public void initModalities() {
+		super.initModalities(); 
 		
 		CorrelatedMode common = (CorrelatedMode) modalities.get("obs-channels").get(0);
 			
@@ -197,8 +197,8 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	protected void setPointing(Scan<?,?> scan) {
 		if(hasOption("point")) return;
 		System.err.println(" Setting 'point' option to obtain pointing/calibration data.");
-		options.parse("point");
-		scan.instrument.options.parse("point");		
+		setOption("point");
+		scan.instrument.setOption("point");		
 	}
 	
 }

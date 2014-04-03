@@ -93,8 +93,8 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	}
 
 	@Override
-	public void addDivisions() {
-		super.addDivisions();
+	public void initDivisions() {
+		super.initDivisions();
 		
 		try { addDivision(getDivision("mux", GismoPixel.class.getField("mux"), Channel.FLAG_DEAD)); 
 			ChannelDivision<GismoPixel> muxDivision = divisions.get("mux");
@@ -123,8 +123,8 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	}
 	
 	@Override
-	public void addModalities() {
-		super.addModalities();
+	public void initModalities() {
+		super.initModalities();
 		
 		try {
 			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), GismoPixel.class.getField("muxGain"));		
@@ -312,7 +312,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	
 	
 	public void setBiasOptions() {	
-		if(!options.containsKey("bias")) return;
+		if(!getOptions().containsKey("bias")) return;
 			
 		int bias = detectorBias[0];
 		for(int i=1; i<detectorBias.length; i++) if(detectorBias[i] != bias) {
@@ -324,9 +324,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 			
 		if(settings.containsKey(bias + "")) {
 			System.err.println(" Setting options for bias " + bias);
-			// Make options an independent set of options, setting MJD specifics...
-			options = options.copy();
-			options.parse(settings.get(bias + ""));
+			getOptions().parse(settings.get(bias + ""));
 		}
 	}
 
@@ -369,7 +367,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		if(scans.size() == 1) {
 			if(firstScan.obsType.equalsIgnoreCase("tip")) {
 				System.err.println("Setting skydip reduction mode.");
-				options.parse("skydip");
+				setOption("skydip");
 
 				if(scans.size() > 1) {
 					System.err.println("Ignoring all but first scan in list (for skydip).");

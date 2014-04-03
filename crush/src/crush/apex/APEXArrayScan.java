@@ -299,7 +299,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 		if(sourceName.equalsIgnoreCase("SKYDIP")) {
 			System.err.println(" Setting options for skydip");
-			instrument.options.parse("skydip");
+			instrument.setOption("skydip");
 		}
 		
 		pointingOffset = new Vector2D(header.getDoubleValue("IA"), header.getDoubleValue("IE"));
@@ -335,7 +335,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 			chopper.positions = 2;
 			chopper.angle = 0.0 * Unit.degree;
 			System.err.println(" Setting options for chopped photometry.");
-			instrument.options.parse("chopped");
+			instrument.setOption("chopped");
 		}
 					
 		//isPlanetary = header.getBooleanValue("MOVEFRAM");		

@@ -29,8 +29,8 @@ import nom.tam.fits.BasicHDU;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
-
 import kovacs.text.TableFormatter;
+import kovacs.util.Configurator;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 import crush.GroundBased;
@@ -86,9 +86,9 @@ public abstract class CSOArray<PixelType extends SimplePixel> extends RotatingAr
 	}
 	
 	@Override
-	public void validate() {
+	public void setOptions(Configurator options) {
+		super.setOptions(options);
 		if(hasOption("excessload")) excessLoad = option("excessload").getDouble() * Unit.K;	
-		super.validate();
 	}
 	
 	

@@ -226,22 +226,22 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	
 	public void setVersionOptions(double ver) {
 		// Make options an independent set of options, setting version specifics...
-		if(!instrument.options.containsKey("ver")) return;
+		if(!instrument.getOptions().containsKey("ver")) return;
 			
-		instrument.options = instrument.options.copy();
+		instrument.setOptions(instrument.getOptions().copy());
 		fitsVersion = ver;
 		
 		Hashtable<String, Vector<String>> settings = option("ver").conditionals;
 		
 		for(String rangeSpec : settings.keySet()) 
-			if(Range.parse(rangeSpec, true).contains(fitsVersion)) instrument.options.parse(settings.get(rangeSpec));
+			if(Range.parse(rangeSpec, true).contains(fitsVersion)) instrument.getOptions().parse(settings.get(rangeSpec));
 	}
 	
 	public void setScanIDOptions(String id) {
-		if(!instrument.options.containsKey("id")) return;
+		if(!instrument.getOptions().containsKey("id")) return;
 	
 		// Make options an independent set of options, setting MJD specifics...
-		instrument.options = instrument.options.copy();
+		instrument.setOptions(instrument.getOptions().copy());
 		double fid = new IRAMScanID(id).asDouble();
 		
 		Hashtable<String, Vector<String>> settings = option("id").conditionals;
@@ -249,7 +249,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		for(String rangeSpec : settings.keySet()) {
 			if(IRAMScanID.rangeFor(rangeSpec).contains(fid)) {
 				//System.err.println("### Setting options for " + rangeSpec);
-				instrument.options.parse(settings.get(rangeSpec));
+				instrument.getOptions().parse(settings.get(rangeSpec));
 			}
 		}
 	}
@@ -466,7 +466,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath(), timeZone);
 					if(hasOption("tau.window")) table.timeWindow = option("tau.window").getDouble() * Unit.hour;
 					tau225GHz = table.getTau(getMJD());
-					instrument.options.process("tau.225ghz", tau225GHz + "");
+					instrument.getOptions().process("tau.225ghz", tau225GHz + "");
 				}
 				catch(IOException e2) { 
 					System.err.println("WARNING! Cannot read tau table.");
@@ -478,7 +478,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		
 		if(Double.isNaN(tau225GHz)) {
 			tau225GHz = header.getDoubleValue("TAU225GH");
-			instrument.options.process("tau.225ghz", tau225GHz + "");
+			instrument.getOptions().process("tau.225ghz", tau225GHz + "");
 		}
 	
 		
@@ -613,7 +613,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath(), timeZone);
 					if(hasOption("tau.window")) table.timeWindow = option("tau.window").getDouble() * Unit.hour;
 					tau225GHz = table.getTau(getMJD());
-					instrument.options.process("tau.225ghz", tau225GHz + "");
+					instrument.getOptions().process("tau.225ghz", tau225GHz + "");
 				}
 				catch(IOException e2) { 
 					System.err.println("WARNING! Cannot read tau table.");

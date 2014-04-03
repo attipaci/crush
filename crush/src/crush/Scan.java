@@ -121,7 +121,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(horizontal == null && site != null) calcHorizontal();
 		
 		if(horizontal != null) System.err.println("   Horizontal: " + horizontal.toString());
-	
+		
 		for(int i=0; i<size(); ) {
 			Integration<InstrumentType, ?> integration = get(i);
 			try { 
@@ -135,9 +135,9 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			}
 		}
 		
-		if(instrument.options.containsKey("jackknife")) sourceName += "-JK";
+		if(instrument.getOptions().containsKey("jackknife")) sourceName += "-JK";
 		
-		if(instrument.options.containsKey("pointing")) pointingAt(getPointingCorrection(option("pointing")));
+		if(instrument.getOptions().containsKey("pointing")) pointingAt(getPointingCorrection(option("pointing")));
 	}
 	
 	public int getSerial() { return serialNo; }
@@ -335,7 +335,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			cursor.add(new HeaderCard("TTYPE" + (k++), name, "The column name"));
 		}
 
-		instrument.startupOptions.difference(global).editHeader(cursor);	
+		instrument.getStartupOptions().difference(global).editHeader(cursor);	
 		
 		return hdu;
 	}
@@ -761,7 +761,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		if(force || (relFWHM > 0.8 && relFWHM <= 1.5)) {
 			InstantFocus focus = new InstantFocus();
-			focus.deriveFrom(asym, elongation, instrument.options);
+			focus.deriveFrom(asym, elongation, instrument.getOptions());
 			info.append(getFocusString(focus));
 		}
 		else {

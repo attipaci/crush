@@ -229,7 +229,7 @@ public class MakoScan extends CSOScan<Mako, MakoIntegration> {
 		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();
 		else {
 			tau225GHz = header.getDoubleValue("TAU225GH");
-			instrument.options.process("tau.225ghz", tau225GHz + "");
+			instrument.setOption("tau.225ghz=" + tau225GHz);
 		}
 
 		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + 273.16 * Unit.K;

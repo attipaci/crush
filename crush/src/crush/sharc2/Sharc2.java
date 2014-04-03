@@ -165,8 +165,8 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> {
 	
 	
 	@Override
-	public void addDivisions() {
-		super.addDivisions();
+	public void initDivisions() {
+		super.initDivisions();
 		
 		try { addDivision(getDivision("rows", Sharc2Pixel.class.getField("row"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }
@@ -192,8 +192,8 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> {
 	}
 	
 	@Override
-	public void addModalities() {
-		super.addModalities();
+	public void initModalities() {
+		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("rows", "r", divisions.get("rows"), Sharc2Pixel.class.getField("rowGain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }

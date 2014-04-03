@@ -134,9 +134,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 		System.err.println(" Processing integration " + getID() + ":");
 		
+		instrument.initialize();
+		
 		// Incorporate the relative instrument gain (under loading) in the scan gain...
 		gain *= instrument.sourceGain;	
-		
 		
 		for(Frame frame : this) if(frame != null) frame.validate();
 		
@@ -2461,7 +2462,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(chopper.amplitude < threshold) {
 				chopper = null;
 				System.err.println("   Small chopper fluctuations (assuming chopper not used).");
-				instrument.options.forget("chopped");
+				instrument.forget("chopped");
 				return;
 			}
 			chopper.positions = 2;
@@ -2475,11 +2476,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			((Chopping) this).setChopper(chopper);
 			
 			System.err.println("   Chopper detected: " + chopper.toString());
-			instrument.options.process("chopped", "");
+			instrument.setOption("chopped");
 		}
 		else {
 			System.err.println("   Chopper not used.");
-			instrument.options.forget("chopped");
+			instrument.forget("chopped");
 		}	
 	}
 

@@ -71,15 +71,15 @@ public class Laboca extends APEXArray<LabocaPixel> {
 			float G = ((float[]) row[hdu.findColumn("BEGAIN")])[0];
 			range.scale(1.0 / G);
 			System.err.println(" Setting ADC range to " + range.toString() + "(V)");
-			options.process("range", range.toString());
+			setOption("range=" + range.toString());
 		}
 		
 		super.readPar(hdu);
 	}
 	
 	@Override
-	public void addDivisions() {
-		super.addDivisions();
+	public void initDivisions() {
+		super.initDivisions();
 		
 		try { addDivision(getDivision("boxes", LabocaPixel.class.getField("box"), nonDetectorFlags)); }
 		catch(Exception e) { e.printStackTrace(); }
@@ -93,8 +93,8 @@ public class Laboca extends APEXArray<LabocaPixel> {
 	}
 	
 	@Override
-	public void addModalities() {
-		super.addModalities();
+	public void initModalities() {
+		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("boxes", "B", divisions.get("boxes"), LabocaPixel.class.getField("boxGain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
@@ -207,7 +207,7 @@ public class Laboca extends APEXArray<LabocaPixel> {
 			try { readTemperatureGains(fileName); }
 			catch(IOException e) {
 				System.err.println(" WARNING! File not found. Skipping temperature correction.");
-				options.purge("he3");
+				getOptions().purge("he3");
 			}
 		}
 			

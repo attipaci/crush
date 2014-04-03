@@ -41,7 +41,6 @@ public class ResonanceList extends ArrayList<MakoPixel> {
 	
 	public ResonanceList(Mako mako) {
 		addAll(mako);
-		
 	}
 	
 	public void sort() {
