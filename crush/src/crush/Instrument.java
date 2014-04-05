@@ -137,7 +137,7 @@ implements TableFormatter.Entries {
 	public void validate(Scan<?,?> scan) {
 		startupOptions = options.copy();
 		
-		initialize();
+		if(!isInitialized) initialize();
 		
 		loadChannelData();
 		
@@ -922,6 +922,16 @@ implements TableFormatter.Entries {
 		return 10.0 * Unit.s;
 	}
 	
+	
+	public double getOneOverFStat() {
+		double sum = 0.0, sumw = 0.0;
+		for(Channel channel : getObservingChannels()) if(channel.isUnflagged()) if(!Double.isNaN(channel.oneOverFStat)) {
+			sum += channel.weight * channel.oneOverFStat * channel.oneOverFStat;
+			sumw += channel.weight;
+		}
+		return Math.sqrt(sum / sumw);
+	}
+	
 	public void getFitsData(LinkedHashMap<String, Object> data) {
 		float[] gains = new float[storeChannels];
 		float[] weights = new float[storeChannels];
@@ -1005,9 +1015,26 @@ implements TableFormatter.Entries {
 		else if(name.equals("FWHM")) return Util.defaultFormat(getAverageBeamFWHM() / getSizeUnit(), f);
 		else if(name.equals("minFWHM")) return Util.defaultFormat(getMinBeamFWHM() / getSizeUnit(), f);
 		else if(name.equals("maxFWHM")) return Util.defaultFormat(getMaxBeamFWHM() / getSizeUnit(), f);
+		else if(name.equals("stat1f")) return Util.defaultFormat(getOneOverFStat(), f);
 		
 		return TableFormatter.NO_SUCH_DATA;
 	}
+	
+	public String getFocusString(InstantFocus focus) {
+		
+		if(focus == null) return " No instant focus.";
+		
+		String info = "";
+		
+		Unit mm = Unit.get("mm");
+		
+		if(focus.getX() != null) info += "\n  Focus.dX --> " + focus.getX().toString(mm);			
+		if(focus.getY() != null) info += "\n  Focus.dY --> " + focus.getY().toString(mm);			
+		if(focus.getZ() != null) info += "\n  Focus.dZ --> " + focus.getZ().toString(mm);
+			
+		return info;
+	}
+	
 	
 	@Override
 	public String toString() { return "Instrument " + getName(); }

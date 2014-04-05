@@ -46,6 +46,8 @@ public class WhiteningFilter extends AdaptiveFilter {
 	private int windows; // The number of stacked windows...
 	private int whiteFrom, whiteTo; // The frequency channel indexes of the white-level measuring range
 	
+	private int oneOverFBin;
+	private int whiteNoiseBin;
 	
 	public WhiteningFilter(Integration<?, ?> integration) {
 		super(integration);
@@ -96,6 +98,9 @@ public class WhiteningFilter extends AdaptiveFilter {
 		
 		whiteFrom = Math.max(1, (int) Math.floor(probe.min() / dF));
 		whiteTo = Math.min(nF, (int) Math.ceil(probe.max() / dF) + 1);
+		
+		oneOverFBin = Math.min(nF, hasOption("1overf.lo") ? Math.max(1, (int) Math.floor(option("1overf.lo").getDouble() / dF)) : 2);
+		whiteNoiseBin = Math.min(nF, hasOption("1overf.ref") ? Math.max(1, (int) Math.floor(option("1overf.ref").getDouble() / dF)) : nF>>1);		
 		
 		// Make sure the probing range is contains enough channels
 		// and that the range is valid...
@@ -219,6 +224,8 @@ public class WhiteningFilter extends AdaptiveFilter {
 		//double norm = medA / Statistics.median(temp, whiteFrom, whiteTo).value;
 		//if(Double.isNaN(norm)) norm = 1.0;		
 		//for(int F = nF; --F >= 0; ) profile[F] *= norm;
+		
+		channel.oneOverFStat = profile[whiteNoiseBin] / profile[oneOverFBin];
 		
 	}
 	

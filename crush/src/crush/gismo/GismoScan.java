@@ -32,6 +32,8 @@ import java.text.*;
 import java.util.*;
 
 import kovacs.astro.*;
+import kovacs.data.Asymmetry2D;
+import kovacs.data.DataPoint;
 import kovacs.math.Range;
 import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
@@ -732,6 +734,16 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		if(basisSystem != null) header.addValue("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan.");
 		
 	}
+	
+	// IRAM's x and y focus directions are inverted, x being vertical, y being horizontal...
+	@Override
+	protected String getFocusString(Asymmetry2D asym, DataPoint elongation) {
+		Asymmetry2D a2 = new Asymmetry2D();
+		a2.setX(asym.getY());
+		a2.setY(asym.getX());
+		return super.getFocusString(a2, elongation);
+	}
+	
 	
 	public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	

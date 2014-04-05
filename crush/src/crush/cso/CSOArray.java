@@ -29,11 +29,13 @@ import nom.tam.fits.BasicHDU;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
+import kovacs.data.DataPoint;
 import kovacs.text.TableFormatter;
 import kovacs.util.Configurator;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 import crush.GroundBased;
+import crush.InstantFocus;
 import crush.Mount;
 import crush.Scan;
 import crush.array.RotatingArray;
@@ -182,6 +184,43 @@ public abstract class CSOArray<PixelType extends SimplePixel> extends RotatingAr
 		
 		if(dsosUsed) System.err.println(" DSOS version " + dsosVersion);
 		
+	}
+	
+	@Override
+	public String getFocusString(InstantFocus focus) {
+		String info = "";
+		
+		/*
+		info += "\n";
+		info += "  Note: The instant focus feature of CRUSH is still very experimental.\n" +
+				"        The feature may be used to guesstimate focus corrections on truly\n" +
+				"        point-like sources (D < 4\"). However, the essential focusing\n" +
+				"        coefficients need to be better determined in the future.\n" +
+				"        Use only with extreme caution, and check suggestions for sanity!\n\n";
+		*/
+		
+		focus = new InstantFocus(focus);
+		
+		if(focus.getX() != null) {
+			DataPoint x = focus.getX();
+			x.add(focusX);
+			info += "\n  UIP> x_position " + Util.f2.format(x.value() / Unit.mm) 
+					+ "       \t[+-" + Util.f2.format(x.rms() / Unit.mm) + "]";			
+		}
+		if(focus.getY() != null) {
+			DataPoint dy = focus.getY();
+			dy.add(focusYOffset);
+			info += "\n  UIP> y_position /offset " + Util.f2.format(dy.value() / Unit.mm)
+					+ "\t[+-" + Util.f2.format(dy.rms() / Unit.mm) + "]";	
+		}
+		if(focus.getZ() != null) {
+			DataPoint dz = focus.getZ();
+			dz.add(focusZOffset);
+			info += "\n  UIP> focus /offset " + Util.f2.format(dz.value() / Unit.mm)
+					+ "    \t[+-" + Util.f2.format(dz.rms() / Unit.mm) + "]";
+		}
+			
+		return info;
 	}
 	
 	

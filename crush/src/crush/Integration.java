@@ -134,8 +134,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 		System.err.println(" Processing integration " + getID() + ":");
 		
-		instrument.initialize();
-		
 		// Incorporate the relative instrument gain (under loading) in the scan gain...
 		gain *= instrument.sourceGain;	
 		

@@ -686,8 +686,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			EllipticalSource<?> ellipse = (EllipticalSource<?>) pointing;
 			
 			DataPoint elongation = ellipse.getElongation();
-			data.new Entry("elongX", 100.0 * elongation.value(), "%");
-			data.new Entry("delongX", 100.0 * elongation.rms(), "%");
+			data.new Entry("elong", 100.0 * elongation.value(), "%");
+			data.new Entry("delong", 100.0 * elongation.rms(), "%");
 			
 			DataPoint angle = ellipse.getAngle();
 			data.new Entry("angle", angle.value() / Unit.deg, "%");
@@ -718,14 +718,16 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public Asymmetry2D getSourceAsymmetry(CircularRegion<SphericalCoordinates> region) {
 		if(!(sourceModel instanceof ScalarMap)) return null;
 		
+		double r = hasOption("focus.r") ? option("focus.r").getDouble() : 2.5;
+		
 		AstroMap map = ((ScalarMap) sourceModel).map; 
 		AstroSystem system = map.astroSystem();
-		if(!(system.isEquatorial() || system.isHorizontal())) return map.getAsymmetry(region, 0.0, 2.5);
+		if(!(system.isEquatorial() || system.isHorizontal())) return map.getAsymmetry(region, 0.0, 0.0, r);
 		
 		boolean isGroundEquatorial = this instanceof GroundBased && system.isEquatorial();
 		double angle = isGroundEquatorial ? this.getPA() : 0.0;
 
-		return map.getAsymmetry(region, angle, 2.5);
+		return map.getAsymmetry(region, angle, 0.0, r);
 	}
 	
 	public DataPoint getSourceElongationX(EllipticalSource<?> ellipse) {
@@ -737,8 +739,6 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		
 		elongation.scale(Math.cos(2.0 * angle.value()));
-		//elongation.setWeight(1.0 / (1.0 / elongation.weight() + elongation.value() * elongation.value() * 4.0 / angle.weight()));
-		
 		return elongation;		
 	}
 	
@@ -762,7 +762,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(force || (relFWHM > 0.8 && relFWHM <= 1.5)) {
 			InstantFocus focus = new InstantFocus();
 			focus.deriveFrom(asym, elongation, instrument.getOptions());
-			info.append(getFocusString(focus));
+			info.append(instrument.getFocusString(focus));
 		}
 		else {
 			info.append("\n");
@@ -778,15 +778,6 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		return new String(info);
 	}
 	
-	protected String getFocusString(InstantFocus focus) {
-		String info = "";
-		
-		if(focus.getX() != null) info += "\n  Focus.dX --> " + focus.getX().toString();			
-		if(focus.getY() != null) info += "\n  Focus.dY --> " + focus.getY().toString();			
-		if(focus.getX() != null) info += "\n  Focus.dZ --> " + focus.getZ().toString();
-			
-		return info;
-	}
 	
 	
 	protected String getPointingString(Vector2D pointingOffset) {	

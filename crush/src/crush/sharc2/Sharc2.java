@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package crush.sharc2;
 
@@ -91,7 +90,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> {
 		else if(hasOption("450um")) filter = "450um";
 		else if(hasOption("850um")) filter = "850um";
 		
-		System.err.println("SHARC-2 Filter set to " + filter);
+		System.err.println(" SHARC-2 Filter set to " + filter);
 	}
 
 

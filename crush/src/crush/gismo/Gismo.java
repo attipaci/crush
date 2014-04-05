@@ -28,6 +28,7 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
+import kovacs.data.DataPoint;
 import kovacs.math.Vector2D;
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
@@ -398,6 +399,46 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		}
 		return new String(buf);
 	}
+	
+	@Override
+	public String getFocusString(InstantFocus focus) {	
+		double s2n = hasOption("focus.s2n") ? option("focus.s2n").getDouble() : 2.0;
+		
+		StringBuffer info = new StringBuffer(super.getFocusString(focus));
+		
+		/*
+		info += "\n";
+		info += "  Note: The instant focus feature of CRUSH is still very experimental.\n" +
+				"        The feature may be used to guesstimate focus corrections on truly\n" +
+				"        point-like sources (D < 4\"). However, the essential focusing\n" +
+				"        coefficients need to be better determined in the future.\n" +
+				"        Use only with extreme caution, and check suggestions for sanity!\n\n";
+		*/
+	
+		info.append("\n");
+		
+		InstantFocus compound = new InstantFocus(focus);
+		
+		if(focus.getX() != null) if(focus.getX().significance() > s2n) {
+			DataPoint dx = compound.getX();
+			dx.add(focusXOffset);
+			info.append("\n  PaKo> set focus " + Util.f1.format(dx.value() / Unit.mm) + " /dir x"); 			
+		}
+		if(focus.getY() != null) if(focus.getY().significance() > s2n) {
+			DataPoint dy = compound.getY();
+			dy.add(focusYOffset);
+			info.append("\n  PaKo> set focus " + Util.f1.format(dy.value() / Unit.mm) + " /dir y"); 
+		}
+		if(focus.getZ() != null) if(focus.getZ().significance() > s2n) {
+			DataPoint dz = compound.getZ();
+			dz.add(focusZOffset);
+			info.append("\n  PaKo> set focus " + Util.f1.format(dz.value() / Unit.mm));
+				//	+ "    \t[+-" + Util.f2.format(dz.rms() / Unit.mm) + "]");
+		}
+			
+		return new String(info);
+	}
+	
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
