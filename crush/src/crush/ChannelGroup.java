@@ -29,7 +29,8 @@ import java.util.*;
 
 import kovacs.util.Copiable;
 
-public class ChannelGroup<ChannelType extends Channel> extends ArrayList<ChannelType> implements Copiable<ChannelGroup<ChannelType>> {
+public class ChannelGroup<ChannelType extends Channel> extends ArrayList<ChannelType> 
+implements Copiable<ChannelGroup<ChannelType>> {
 	/**
 	 * 
 	 */
@@ -62,11 +63,15 @@ public class ChannelGroup<ChannelType extends Channel> extends ArrayList<Channel
 	@Override
 	public boolean equals(Object o) {
 		if(!super.equals(o)) return false;
-		return ((ChannelGroup<?>) o).name.equals(name);
+		ChannelGroup<?> group = (ChannelGroup<?>) o;
+		if(size() != group.size()) return false;
+		if(!group.name.equals(name)) return false;
+		for(int i=size(); --i >=0; ) if(!group.get(i).equals(get(i))) return false;
+		return true;
 	}
 	
 	@Override
-	public int hashCode() { return name.hashCode(); }
+	public int hashCode() { return name.hashCode() ^ size(); }
 
 	public String getName() { return name; }
 	
