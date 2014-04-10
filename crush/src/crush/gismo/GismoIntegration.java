@@ -50,6 +50,13 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 	}	
 	
 	@Override
+	public Object clone() {
+		GismoIntegration clone = (GismoIntegration) super.clone();
+		clone.reuseTrackingCenter = new HorizontalCoordinates();
+		return clone;
+	}
+	
+	@Override
 	public void validate() {
 		super.validate();
 		
@@ -509,6 +516,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 		
 		out.print(scan.getID() + "\t" + Util.f3.format(zenithTau / Math.sin(scan.horizontal.EL())));
 		out.print("\t" + instrument.detectorBias[0]);
+		
 		for(int i=0; i<4; i++) out.print("\t" + instrument.secondStageBias[i]);
 		for(int i=0; i<4; i++) out.print("\t" + instrument.secondStageFeedback[i]);
 		for(int i=0; i<4; i++) out.print("\t" + instrument.thirdStageBias[i]);

@@ -94,6 +94,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		this.instrument = (InstrumentType) instrument.copy();
 	}
 	
+	
 	public int compareTo(Scan<?, ?> other) {
 		if(serialNo == other.serialNo) return 0;
 		return serialNo < other.serialNo ? -1 : 1;

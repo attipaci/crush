@@ -1,7 +1,19 @@
 >>> verify dynamic options on mixed scans...
+>>> focus.s2n, focus.[x,y,z]coeff, focus.[x,y,z]scatter
+>>> focus.r, focus.rmin, focus.elong0
 
 
-2.16-a3 (alpha.3)
+
+
+2.16-a6 (alpha.6)
+
+	[BUG] Cylindrical and pseudo-cylindrical spherical projections (CAR, 
+	MER, SFL, AIT) have been wrong for a while now, due to an incorrectly
+	set native pole. Zenithal (e.g. SIN, TAN, ZEA) and the previously 
+	default GLS projections were fine all along.
+
+	[BUG] Projection class copy bug could cause map alignment problems
+	when scans with different catalog coordinates were processed together.
 
 	[BUG] Non-equatorial celestial mapping (e.g. ecliptic coordinates) of 
 	moving-frame objects (e.g. planets and asteroids) was buggy. Fixed.
@@ -17,6 +29,27 @@
 	refers to static mapping and chopper offsets, as it should have been 
 	from the start.
 
+	[NEW] CRUSH can now log a glocal 1/f statistics for the array using
+	the 'stat1f' quantity in the log (see README for details of the 
+	logging support). The new option '1overf.lo' can be used to define
+	the frequency (Hz) where the 1/f is measured. The default is 1 over the
+	'stability' timescale. The option '1overf.ref' sets the reference 
+	frequency at which white noise behaviour is assumed. The metric is
+	the relative amplitude of these two, averaged over the array.
+
+	[NEW] {GISMO} Instant focus in X and Y has been calibrated and
+	enabled.
+
+	[NEW] 'focus.r' can specify the radius as a multiple of FWHM of the
+	circular aperture on which X and Y focus is measured. The default is
+	2.5 (i.e. radius = 2.5 * FWHM).
+
+	[NEW] 'focus.xscatter', 'focus.yscatter', and 'focus.zscatter' can
+	specify the typical extrinsic scatter of instant-focus values, which
+	is then incorporated in the total error in quadrature to the 
+	statistical measurement error. Specifying the true extrinsic scatter
+	will lead to more reliable focus corrections and uncertainties.
+
 	[NEW] 'write.png.scaling' can be used to determine what scaling to
 	use for the PNG thumbnails. Valid values are 'linear', 'log', or
 	'sqrt'. The default is linear scaling.
@@ -26,7 +59,8 @@
 	may be decorrelated in the reduction. 
 
 	[NEW] New option 'list.response' will print out a list of available
-	correlated responses (to known signals).
+	correlated responses (to known signals), which can also be decorrelated
+	during reduction.
 
 	[NEW] Ability to measure coupling to signals. Both coupling 
 	coefficients, and coupling spectra (including time delay form) can be 
@@ -40,16 +74,26 @@
 	'write.coupling.spec.windowsize' option. The default is to set the
 	window size to the 1/f filter timescale (i.e. 'drifts' option).
 
+	[NEW] {GISMO} The new option 'read.sae' instructs CRUSH to parse the
+	SAE data from the FITS, which is a prerequisite for a number of new
+	features relating to SAE coupling. The option is disabled by default.
+
 	[NEW] {GISMO} Decorrelation of SAE signals is now available via
-	the 'correlated.sae' option or 'sae' shorthand, which is disabled by
-	default.
+	the 'correlated.sae' option or 'sae' shorthand. The new option is 
+	disabled by default. The option also requires the also new 'read.sae'
+	option to be set.
 
 	[NEW] {GISMO} 2nd and 3rd stage tuning parameters (bias and feedback)
 	are now parsed from the FITS.
 
 	[NEW] {GISMO} SAE coupling coefficients can be logged against 
 	line-of-sight tau, detector bias, and tuning parameters, using the
-	'log.saegains' keyword.
+	'log.saegains' keyword (requires 'read.sae' to be set also).
+
+	[FIX] Fixed point-source asymmetry and elongation error estimation.
+
+	[FIX] Instant focus z suggestion was dependent on the x by mistake.
+	Fixed.
 
 	[FIX] Pixel offset/drift removal had a dependents accounting bug,
 	which resulted in understated DOF and overstated NEFDs. The bug was 
@@ -70,6 +114,10 @@
 
 	[FIX] Decorrelation of motion signals fixed. Previously these did
 	nothing.
+
+	[TWEAK] Source shape measurement (used for instant focus suggestion)
+	is always calculated on circular apertures. Previously some stats
+	were calculated on square areas.
 
 	[TWEAK] {LABOCA} decorrelating He3 temperatures is now enabled by
 	default.
@@ -95,6 +143,8 @@
 	has any effect. 'correlated.rows.group' and 'correlated.cols.group'
 	are also deprecated.
 
+	[CONFIG] {LABOCA} Re-enabled 'gradients' in 'faint' and 'deep' modes.
+
 	[CONFIG] {GISMO} Run7 (Nov 2012) tau smoothing window increased from
 	0.25 to 0.5 hour because the smaller window did not always result in
 	a tau estimate.
@@ -109,6 +159,8 @@
 
 	[CRUSH-1.xx] New projections added to CRUSH-1.xx toolset (e.g.
 	'show', 'imagetool', etc...).
+
+	[CODE] Some small tweaks to instant-focus.
 
 	[CODE] Instrument validation/initialization changes. Removed 
 	unnecessary configuration copies. Changed when and how pixel groups,

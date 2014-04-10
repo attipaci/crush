@@ -71,10 +71,12 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		Gismo copy = (Gismo) super.copy();
 		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
 		if(nasmythOffset != null) copy.nasmythOffset = (Vector2D) nasmythOffset.clone();
-		if(detectorBias != null) {
-			copy.detectorBias = new int[detectorBias.length];
-			System.arraycopy(detectorBias, 0, copy.detectorBias, 0, detectorBias.length);
-		}
+		
+		copy.detectorBias = null;
+		copy.secondStageBias = null;
+		copy.secondStageFeedback = null;
+		copy.thirdStageBias = null;
+		copy.thirdStageFeedback = null;
 		return copy;
 	}
 	
@@ -320,7 +322,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 			System.err.println(" WARNING! Inconsistent bias values. Calibration may be bad!");
 			CRUSH.countdown(5);
 		}
-			
+		
 		Hashtable<String, Vector<String>> settings = option("bias").conditionals;
 			
 		if(settings.containsKey(bias + "")) {

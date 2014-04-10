@@ -279,7 +279,6 @@ public abstract class Frame implements Cloneable, Flagging {
 	}
 	
 	public void project(final Vector2D position, final AstroProjector projector) {
-			
 		if(projector.isFocalPlane()) {
 			projector.setReferenceCoords();
 			getFocalPlaneOffset(position, projector.offset);
