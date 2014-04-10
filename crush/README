@@ -1721,6 +1721,8 @@ options on the console.
 
 	src.peak	Peak source flux (Jy/beam).
 
+	stat1f		A measure of the 1/f noise averaged over the array.
+
 	Tamb		Ambient temperature (if recorded) in degrees C.
 
 	tau		The in-band, line-of-sight opacity value.
