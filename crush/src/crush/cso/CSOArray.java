@@ -190,34 +190,45 @@ public abstract class CSOArray<PixelType extends SimplePixel> extends RotatingAr
 	public String getFocusString(InstantFocus focus) {
 		String info = "";
 		
-		/*
-		info += "\n";
-		info += "  Note: The instant focus feature of CRUSH is still very experimental.\n" +
-				"        The feature may be used to guesstimate focus corrections on truly\n" +
-				"        point-like sources (D < 4\"). However, the essential focusing\n" +
-				"        coefficients need to be better determined in the future.\n" +
-				"        Use only with extreme caution, and check suggestions for sanity!\n\n";
-		*/
-		
 		focus = new InstantFocus(focus);
+		
+		boolean largeLateral = false;
+		boolean suggested = false;
+		boolean suggestX = true;
 		
 		if(focus.getX() != null) {
 			DataPoint x = focus.getX();
+			//if(x.significance() > 2.0) largeLateral = true;
 			x.add(focusX);
 			info += "\n  UIP> x_position " + Util.f2.format(x.value() / Unit.mm) 
-					+ "       \t[+-" + Util.f2.format(x.rms() / Unit.mm) + "]";			
+					+ "       \t[+-" + Util.f2.format(x.rms() / Unit.mm) + "]";	
+			suggested = true;
 		}
 		if(focus.getY() != null) {
 			DataPoint dy = focus.getY();
+			//if(dy.significance() > 2.0) largeLateral = true;
 			dy.add(focusYOffset);
 			info += "\n  UIP> y_position /offset " + Util.f2.format(dy.value() / Unit.mm)
 					+ "\t[+-" + Util.f2.format(dy.rms() / Unit.mm) + "]";	
+			suggested = true;
 		}
-		if(focus.getZ() != null) {
+		if(focus.getZ() != null && !largeLateral) {			
 			DataPoint dz = focus.getZ();
 			dz.add(focusZOffset);
 			info += "\n  UIP> focus /offset " + Util.f2.format(dz.value() / Unit.mm)
 					+ "    \t[+-" + Util.f2.format(dz.rms() / Unit.mm) + "]";
+			suggested = true;
+		}
+		
+		if(suggested) info += "\n  UIP> focus \t\t\t!!! apply settings !!!";
+		if(suggestX) info += "\n  UIP> focus /constant \t\t!!! IMPORTANT when x-focus is changed !!!";
+		
+		if(suggested) {
+			info += "\n\n";
+			info += "  Note: The instant focus feature of CRUSH is very experimental.\n" +
+				"        It may be used to guesstimate focus corrections on truly point-like\n" +
+				"        sources (D < 4\"). You should always verify that the beam shape is\n" +
+				"        round and symmetric after applying any of the suggested corrections.";
 		}
 			
 		return info;

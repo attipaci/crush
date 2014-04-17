@@ -36,7 +36,7 @@ public class IRAMPointingModel {
 	double[] c = new double[1+CONSTANTS];
 	double[] s = new double[1+CONSTANTS];
 	
-	double dydT = 0.0, y0 = 0.0;
+	double dydT = 0.0, dxdT = 0.0, y0 = 0.0;
 	
 	
 	boolean isStatic = false;
@@ -50,7 +50,7 @@ public class IRAMPointingModel {
 	}
 	
 	public Vector2D getCorrection(HorizontalCoordinates horizontal, double UT, double Tamb) {
-		return new Vector2D(getDX(horizontal, UT) * Unit.arcsec, getDY(horizontal, UT, Tamb) * Unit.arcsec);
+		return new Vector2D(getDX(horizontal, UT, Tamb) * Unit.arcsec, getDY(horizontal, UT, Tamb) * Unit.arcsec);
 	}
 	
 	public double P(int n, double UT) {
@@ -75,7 +75,7 @@ public class IRAMPointingModel {
 		P[11] += offset.y();
 	}
 	
-	public double getDX(HorizontalCoordinates horizontal, double UT) {
+	public double getDX(HorizontalCoordinates horizontal, double UT, double Tamb) {
 		double cosE = horizontal.cosLat();
 		double sinE = horizontal.sinLat();
 		double sinA = Math.sin(horizontal.x());
@@ -90,7 +90,8 @@ public class IRAMPointingModel {
 		return P(AZ_ENC_OFFSET, UT) * cosE + P(AZ_POINTING, UT) + P(INCL_EL_AXIS, UT) * sinE 
 			+ (P(INCL_AZ_AXIS_NS, UT) * cosA + P(INCL_AZ_AXIS_EW, UT) * sinA) * sinE + P(DEC_ERROR, UT) * sinA
 			- P(NASMYTH_H, UT) * cosE - P(NASMYTH_V, UT) * sinE 
-			+ P(AZ_ECCENT_COS, UT) * sin2A + P(AZ_ECCENT_SIN, UT) * cos2A;
+			+ P(AZ_ECCENT_COS, UT) * sin2A + P(AZ_ECCENT_SIN, UT) * cos2A
+			+ dxdT * (Tamb - 273.16 * Unit.K);
 	}
 	
 	public double getDY(HorizontalCoordinates horizontal, double UT, double Tamb) {
@@ -113,7 +114,8 @@ public class IRAMPointingModel {
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 		for(int i=1; i<P.length; i++) 
 			out.println("P" + i + " = " + Util.f2.format(P[i]) + ", " + Util.f2.format(c[i]) + ", " + Util.f2.format(s[i])); 
-		out.println("T = " + Util.f2.format(dydT));
+		out.println("TX = " + Util.f2.format(dxdT));
+		out.println("TY = " + Util.f2.format(dydT));
 		out.close();
 	}
 	
@@ -132,6 +134,8 @@ public class IRAMPointingModel {
 					if(tokens.hasMoreTokens()) s[i] = Double.parseDouble(tokens.nextToken());
 				}
 				else if(constant.equals("t")) dydT = Double.parseDouble(tokens.nextToken());
+				else if(constant.equals("tx")) dxdT = Double.parseDouble(tokens.nextToken());
+				else if(constant.equals("ty")) dydT = Double.parseDouble(tokens.nextToken());
 			}
 		}
 		

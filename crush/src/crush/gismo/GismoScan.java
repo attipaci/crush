@@ -719,9 +719,9 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 		
 		if(name.equals("obstype")) return obsType;
-		else if(name.equals("modelX")) return Util.defaultFormat(observingModel.getDX(horizontal, (getMJD() % 1) * Unit.day), f);
+		else if(name.equals("modelX")) return Util.defaultFormat(observingModel.getDX(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
 		else if(name.equals("modelY")) return Util.defaultFormat(observingModel.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
-		else if(name.equals("tiltX")) return Util.defaultFormat(tiltCorrections.getDX(horizontal, (getMJD() % 1) * Unit.day), f);
+		else if(name.equals("tiltX")) return Util.defaultFormat(tiltCorrections.getDX(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
 		else if(name.equals("tiltY")) return Util.defaultFormat(tiltCorrections.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
 		else if(name.equals("dir")) return AstroSystem.getID(basisSystem);
 		else return super.getFormattedEntry(name, formatSpec);

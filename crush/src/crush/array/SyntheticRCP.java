@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.gismo;
+package crush.array;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -113,7 +113,7 @@ public class SyntheticRCP {
 	}
 	
 	public void print() {
-		System.out.println("# Synthetic RCP for GISMO ");
+		System.out.println("# Synthetic RCP ");
 		for(int i=0; i<128; i++) {
 			double dc = i % 8 - 3.5;
 			double dr = i / 8 - 7.5;
@@ -186,13 +186,13 @@ public class SyntheticRCP {
 		System.err.println();
 		String info = 
 			"  -------------------------------------------------------------------------\n" +
-			"  SyntheticRCP -- RCP generation tool for GISMO.\n" +
+			"  SyntheticRCP -- RCP generation tool.\n" +
 			"                  Copyright (C)2011 Attila Kovacs <kovacs[AT]astro.umn.edu>\n" +
 			"  -------------------------------------------------------------------------\n" +	
 			"\n" +
-			"  Usage: java crush.gismo.SyntheticRCP <distortion> [rcp [rotation]]\n" +
+			"  Usage: java crush.array.SyntheticRCP <distortion> [rcp [rotation]]\n" +
 			"\n" +
-			"    <distortion>  A list of distortion parameters. See 'gismo/distortion.dat'.\n" +
+			"    <distortion>  A list of distortion parameters. See e.g. 'gismo/distortion.dat'.\n" +
 			"    [rcp]         (optional) An observed RCP file for source gains.\n" +
 			"    [rotation]	   (optional) Presume a rotation in degrees.\n";
 		

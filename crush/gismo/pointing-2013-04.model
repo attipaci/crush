@@ -1,12 +1,10 @@
 # Absolute Pointing Model for the main part of the 2013-April run
 # Good to <3" rms in both directions. 
-# This model correct the shifted observing model.
 # Adjusted constants: 
 #   P3        -- Tilt of Elevation axis 
 #   P4, P5    -- Tilt of Azymuth axis
 #   P8, P9    -- Gravitational bending
 #   P10, P11  -- Receiver Nasmyth offsets...
-#   T         -- dEL vs Tamb slope
 #
 # -- by Attila Kovacs
 #
@@ -21,4 +19,3 @@ P8 =  -72.05
 P9 =  -17.46
 P10 =  -9.33
 P11 =   6.49
-T = 0.0

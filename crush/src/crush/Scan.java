@@ -719,16 +719,17 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public Asymmetry2D getSourceAsymmetry(CircularRegion<SphericalCoordinates> region) {
 		if(!(sourceModel instanceof ScalarMap)) return null;
 		
-		double r = hasOption("focus.r") ? option("focus.r").getDouble() : 2.5;
+		double minr = instrument.resolution;
+		double maxr = (hasOption("focus.r") ? option("focus.r").getDouble() : 2.5) * instrument.resolution;
 		
 		AstroMap map = ((ScalarMap) sourceModel).map; 
 		AstroSystem system = map.astroSystem();
-		if(!(system.isEquatorial() || system.isHorizontal())) return map.getAsymmetry(region, 0.0, 0.0, r);
+		if(!(system.isEquatorial() || system.isHorizontal())) return map.getAsymmetry(region, 0.0, minr, maxr);
 		
 		boolean isGroundEquatorial = this instanceof GroundBased && system.isEquatorial();
 		double angle = isGroundEquatorial ? this.getPA() : 0.0;
 
-		return map.getAsymmetry(region, angle, 0.0, r);
+		return map.getAsymmetry(region, angle, minr, maxr);
 	}
 	
 	public DataPoint getSourceElongationX(EllipticalSource<?> ellipse) {
@@ -758,9 +759,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(elongation != null) info.append("  Elongation: " + elongation.toString(Unit.get("%")) + "\n");			
 		
 		double relFWHM = pointing.getFWHM().value() / instrument.resolution;
+			
 		boolean force = hasOption("focus");
 		
-		if(force || (relFWHM > 0.8 && relFWHM <= 1.5)) {
+		if(force || (relFWHM > 0.8 && relFWHM <= 2.0)) {
 			InstantFocus focus = new InstantFocus();
 			focus.deriveFrom(asym, elongation, instrument.getOptions());
 			info.append(instrument.getFocusString(focus));

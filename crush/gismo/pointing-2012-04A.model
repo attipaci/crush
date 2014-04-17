@@ -1,6 +1,6 @@
 # Absolute Pointing Model for the first days of the 2012-April run
 # Good to <3" rms in both directions. 
-# This model correct the shifted observing model.
+# This model corrects the shifted observing model.
 # Adjusted constants: 
 #   P3        -- Tilt of Elevation axis 
 #   P4, P5    -- Tilt of Azymuth axis

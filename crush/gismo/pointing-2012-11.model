@@ -6,7 +6,6 @@
 #   P4, P5    -- Tilt of Azymuth axis
 #   P8, P9    -- Gravitational bending
 #   P10, P11  -- Receiver Nasmyth offsets...
-#   T         -- dEL vs Tamb slope
 #
 # -- by Attila Kovacs
 #
@@ -21,4 +20,3 @@ P8 =  -70.42
 P9 =  -14.47
 P10 =  -8.87
 P11 =   8.31
-T = 0.0
