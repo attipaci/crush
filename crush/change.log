@@ -1,7 +1,7 @@
 >>> verify dynamic options on mixed scans...
 >>> focus.s2n, focus.[x,y,z]coeff, focus.[x,y,z]scatter
 >>> focus.r, focus.rmin, focus.elong0
-
+>>> adjust beam / calibration
 
 
 
@@ -10,7 +10,8 @@
 	[BUG] Cylindrical and pseudo-cylindrical spherical projections (CAR, 
 	MER, SFL, AIT) have been wrong for a while now, due to an incorrectly
 	set native pole. Zenithal (e.g. SIN, TAN, ZEA) and the previously 
-	default GLS projections were fine all along.
+	default GLS projections were fine all along. (b1: SFL, BON deprojection 
+	bug, introduced in a6, also fixed.)
 
 	[BUG] Projection class copy bug could cause map alignment problems
 	when scans with different catalog coordinates were processed together.
@@ -36,6 +37,9 @@
 	'stability' timescale. The option '1overf.ref' sets the reference 
 	frequency at which white noise behaviour is assumed. The metric is
 	the relative amplitude of these two, averaged over the array.
+
+	[NEW] {GISMO} Pointing model now contains both X and Y temperature
+	terms.
 
 	[NEW] {GISMO} Instant focus in X and Y has been calibrated and
 	enabled.
@@ -115,6 +119,12 @@
 	[FIX] Decorrelation of motion signals fixed. Previously these did
 	nothing.
 
+	[TWEAK] Source asymmetry (used for instant focus) is now measured 
+	outside of the main beam, resulting in reduced scatter.
+
+	[TWEAK] {SHARC-2} {GISMO} Instant z-focus is suggested only if the
+	lateral focus is relatively good.
+
 	[TWEAK] Source shape measurement (used for instant focus suggestion)
 	is always calculated on circular apertures. Previously some stats
 	were calculated on square areas.
@@ -143,6 +153,12 @@
 	has any effect. 'correlated.rows.group' and 'correlated.cols.group'
 	are also deprecated.
 
+	[CONFIG] {GISMO} Pointing model and calibration for the 2014 April
+	run.
+
+	[CONFIG] {SHARC-2} Instant forcus calubration based on observations
+	of Ceres and Pallas on 2014-04-14.
+
 	[CONFIG] {LABOCA} Re-enabled 'gradients' in 'faint' and 'deep' modes.
 
 	[CONFIG] {GISMO} Run7 (Nov 2012) tau smoothing window increased from
@@ -160,6 +176,8 @@
 	[CRUSH-1.xx] New projections added to CRUSH-1.xx toolset (e.g.
 	'show', 'imagetool', etc...).
 
+	[CODE] SyntheticRCP tool moved from crush.gismo to crush.array.
+
 	[CODE] Some small tweaks to instant-focus.
 
 	[CODE] Instrument validation/initialization changes. Removed 
@@ -174,7 +192,8 @@
 
 	[CODE] {CSO} Chopper levelling is now common prevalidation step for
 	CSO instruments (MAKO, SHARC-2). It also avoids superflous chopper
-	detection when data was not a chopped observation.
+	detection when data was not a chopped observation. (b1: chopper signal
+	always added to pointing after levelling). 
 
 	[CODE] Slimming only if there are dead pixels to be eliminated.
 

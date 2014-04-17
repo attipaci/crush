@@ -28,6 +28,8 @@ import crush.*;
 import crush.astro.AstroImage;
 import crush.gui.*;
 import crush.sourcemodel.*;
+import kovacs.math.CoordinateAxis;
+import kovacs.math.CoordinateSystem;
 import kovacs.math.Range;
 import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
@@ -38,6 +40,7 @@ import kovacs.util.plot.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+
 import javax.swing.*;
 
 

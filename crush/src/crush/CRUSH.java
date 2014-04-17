@@ -45,8 +45,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.16-a6";
-	private static String revision = "alpha.6";
+	private static String version = "2.16-a7";
+	private static String revision = "alpha.7";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -103,8 +103,6 @@ public class CRUSH extends Configurator {
 		}
 		
 		System.err.println("Instrument is " + instrument.getName().toUpperCase());
-		
-		
 	}
 	
 	public boolean hasOption(String name) {

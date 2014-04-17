@@ -35,7 +35,7 @@ import kovacs.math.Range;
 import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
 import kovacs.plot.ColorScheme;
-import kovacs.plot.Data2DLayer;
+import kovacs.plot.GridImageLayer;
 import kovacs.plot.ImageArea;
 import kovacs.plot.ImageLayer;
 import kovacs.plot.colorscheme.Colorful;
@@ -760,8 +760,8 @@ public class ScalarMap extends SourceMap {
 				else if(spec.equals("weight")) plane = thumbnail.getWeightImage();
 			}
 			
-			final ImageArea<Data2DLayer> imager = new ImageArea<Data2DLayer>();
-			final Data2DLayer image = new Data2DLayer(plane);
+			final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
+			final GridImageLayer image = new GridImageLayer(plane);
 			
 			if(hasOption("write.png.scaling")) {
 				String spec = option("write.png.scaling").getValue().toLowerCase();

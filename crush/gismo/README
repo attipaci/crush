@@ -187,6 +187,10 @@ few arcseconds. Below is a detailed explanation on how to use these methods.
    the observations to calculate pointing corrections. Otherwise, the behaviour
    is the same as described above.
 
+   In addition to the standard IRAM pointing model above, TX and TY define
+   two linear temperature coefficients for the X and Y pointing respectively,
+   such that TX = dX(arcsec) / dT(C), and TY = dY(arcsec) / dT(C).
+
 
 3.3 Residual Pointing Corrections
 =================================

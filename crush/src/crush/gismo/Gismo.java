@@ -419,19 +419,24 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	
 		info.append("\n");
 		
+		
 		InstantFocus compound = new InstantFocus(focus);
+		
+		boolean largeLateral = false;
 		
 		if(focus.getX() != null) if(focus.getX().significance() > s2n) {
 			DataPoint dx = compound.getX();
+			//if(dx.significance() > 2.0) largeLateral = true;
 			dx.add(focusXOffset);
 			info.append("\n  PaKo> set focus " + Util.f1.format(dx.value() / Unit.mm) + " /dir x"); 			
 		}
 		if(focus.getY() != null) if(focus.getY().significance() > s2n) {
 			DataPoint dy = compound.getY();
+			//if(dy.significance() > 2.0) largeLateral = true;
 			dy.add(focusYOffset);
 			info.append("\n  PaKo> set focus " + Util.f1.format(dy.value() / Unit.mm) + " /dir y"); 
 		}
-		if(focus.getZ() != null) if(focus.getZ().significance() > s2n) {
+		if(focus.getZ() != null) if(focus.getZ().significance() > s2n) if(!largeLateral) {
 			DataPoint dz = compound.getZ();
 			dz.add(focusZOffset);
 			info.append("\n  PaKo> set focus " + Util.f1.format(dz.value() / Unit.mm));
