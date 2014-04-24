@@ -405,6 +405,8 @@ public class ScalarMap extends SourceMap {
 		
 		map.normalize();
 		map.generation++; // Increment the map generation...
+		
+		map.instrument.resolution = getAverageResolution();
 			
 		double blankingLevel = getBlankingLevel();
 		
@@ -743,10 +745,27 @@ public class ScalarMap extends SourceMap {
 				height = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : width;
 			}
 			AstroMap thumbnail = (AstroMap) map.copy(true);
-			thumbnail.autoCrop();
 			
+			if(hasOption("write.png.crop")) {
+				List<Double> offsets = option("write.png.crop").getDoubles();
+				if(offsets.isEmpty()) thumbnail.autoCrop();
+				else {
+					double sizeUnit = getInstrument().getSizeUnit();
+					double dXmin = offsets.get(0) * sizeUnit;
+					double dYmin = offsets.size() > 0 ? offsets.get(1) * sizeUnit : dXmin;
+					double dXmax = offsets.size() > 1 ? offsets.get(2) * sizeUnit : -dXmin;
+					double dYmax = offsets.size() > 2 ? offsets.get(3) * sizeUnit : -dYmin;
+					thumbnail.crop(dXmin, dYmin, dXmax, dYmax);
+				}
+			}
+			else thumbnail.autoCrop(); 
+				
 			// Smooth thumbnail by half a beam for nicer appearance
-			thumbnail.smoothTo(0.5 * getInstrument().resolution);
+			if(hasOption("write.png.smooth")) {
+				String arg = option("write.png.smooth").getValue();
+				double fwhm = arg.length() > 0 ? getSmoothing(arg) : 0.5 * getInstrument().resolution;
+				thumbnail.smoothTo(fwhm);
+			}
 			
 			GridImage<?> plane = thumbnail;
 			

@@ -3440,6 +3440,26 @@
 			The default is 'colorful'.
 			@See: 'write.png'
 
+:: write.png.crop=<corners>	@Since: 2.16
+				Set rectangular bounds to the PNG output image
+			in the instrument's native size unit (usually arcsecs).
+			The argument is usually a comma separated list of
+			corners, relative to the source position:
+
+				dXmin,dYmin,dXmax,dYmax
+				
+			If a single value is given then the PNG output will 
+			be a square area with +/- that size in X and Y. If
+			2 or 3 values are supplied, the missing offsets will
+			be assumed to be the the negative equivalent to the
+			coordinates given. Thus:
+
+				90 = 90,90,-90,-90
+				90,60 = 90,60,-90,-60
+				90,60,-45 = 90,60,-45,-60
+
+			@See: 'write.png'		
+
 :: write.png.plane=<name>	@Since: 2.11-2
 				Selects the FITS image plane to write into the 
 				PNG. The argument can be one of: 'flux', 
@@ -3453,6 +3473,15 @@
 			two integers separated by 'x' or ',' e.g. '640x480'.
 			The default size is 300x300.
 			@See: 'write.png'
+
+:: write.png.smooth=<spec>	@Since: 2.16
+				Specify how much to smooth the PNG output. The
+			option works the same as the regular 'smooth' option
+			for FITS images, but is not completely independent from
+			it. PNG images are always smoothed as much as required
+			by 'smooth', and this option is only effective if the
+			PNG smoothing is larger.
+			@See: 'smooth'
 
 :: write.png.scaling=<type>	@Since: 2.16
 				Specify what scaling method to use for 

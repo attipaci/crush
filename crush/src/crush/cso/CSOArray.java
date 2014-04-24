@@ -194,7 +194,9 @@ public abstract class CSOArray<PixelType extends SimplePixel> extends RotatingAr
 		
 		boolean largeLateral = false;
 		boolean suggested = false;
-		boolean suggestX = true;
+		boolean suggestX = false;
+		//boolean suggestY = false;
+		
 		
 		if(focus.getX() != null) {
 			DataPoint x = focus.getX();
@@ -203,6 +205,7 @@ public abstract class CSOArray<PixelType extends SimplePixel> extends RotatingAr
 			info += "\n  UIP> x_position " + Util.f2.format(x.value() / Unit.mm) 
 					+ "       \t[+-" + Util.f2.format(x.rms() / Unit.mm) + "]";	
 			suggested = true;
+			suggestX = true;
 		}
 		if(focus.getY() != null) {
 			DataPoint dy = focus.getY();
@@ -211,6 +214,7 @@ public abstract class CSOArray<PixelType extends SimplePixel> extends RotatingAr
 			info += "\n  UIP> y_position /offset " + Util.f2.format(dy.value() / Unit.mm)
 					+ "\t[+-" + Util.f2.format(dy.rms() / Unit.mm) + "]";	
 			suggested = true;
+			//suggestY = true;
 		}
 		if(focus.getZ() != null && !largeLateral) {			
 			DataPoint dz = focus.getZ();
@@ -222,6 +226,7 @@ public abstract class CSOArray<PixelType extends SimplePixel> extends RotatingAr
 		
 		if(suggested) info += "\n  UIP> focus \t\t\t!!! apply settings !!!";
 		if(suggestX) info += "\n  UIP> focus /constant \t\t!!! IMPORTANT when x-focus is changed !!!";
+		
 		
 		if(suggested) {
 			info += "\n\n";

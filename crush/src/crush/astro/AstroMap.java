@@ -68,7 +68,7 @@ public class AstroMap extends GridSource<SphericalCoordinates> {
 	
 	@SuppressWarnings("unchecked")
 	public AstroSystem astroSystem() {
-		return new AstroSystem((Class<? extends SphericalCoordinates>) coordinateSystem());
+		return new AstroSystem((Class<? extends SphericalCoordinates>) getCoordinateClass());
 	}
 	
 	@Override
