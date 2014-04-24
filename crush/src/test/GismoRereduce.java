@@ -33,13 +33,15 @@ public class GismoRereduce {
 	public static void main(String[] args) {
 		GismoRereduce reducer = new GismoRereduce();
 		//System.err.println("# Rereduce script...");
-		try { reducer.rereduce(args[0]); }
+		double minObsMins = args.length > 1 ? Double.parseDouble(args[1]) : 0.0;
+		
+		try { reducer.rereduce(args[0], minObsMins); }
 		catch(IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public void rereduce(String logFileName) throws IOException {
+	public void rereduce(String logFileName, double minObsMins) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(logFileName)));
 		
 		System.out.println("#!/bin/bash");
@@ -53,6 +55,8 @@ public class GismoRereduce {
 		String line = null;
 		in.readLine();
 		
+		boolean firstLine = true;
+		
 		while((line = in.readLine()) != null) if(line.length() > 0) {
 			if(line.charAt(0) != '#') {
 				StringTokenizer tokens = new StringTokenizer(line);
@@ -60,18 +64,27 @@ public class GismoRereduce {
 					String id = tokens.nextToken();
 					String sourceName = tokens.nextToken();
 
-					StringTokenizer idbits = new StringTokenizer(id, ".");
-					String date = idbits.nextToken();
-					String scanNo = idbits.nextToken();
+					tokens.nextToken(); // project
+					tokens.nextToken(); // UT
+					
+					double obsmins = Double.parseDouble(tokens.nextToken());
+					if(obsmins >= minObsMins) {
+					
+						StringTokenizer idbits = new StringTokenizer(id, ".");
+						String date = idbits.nextToken();
+						String scanNo = idbits.nextToken();
+						
+						String cmdLine = "$CRUSH gismo $OPTIONS -object=" + sourceName + " -date=" + date + " " + scanNo;
+						//Runtime runtime = Runtime.getRuntime();
 
-					String cmdLine = "$CRUSH gismo $OPTIONS -object=" + sourceName + " -date=" + date + " " + scanNo;
-					//Runtime runtime = Runtime.getRuntime();
-
-					System.out.println(cmdLine);
-					//runtime.exec(cmdLine);
+						System.out.println(cmdLine);
+						//runtime.exec(cmdLine);
+					}
+				
 				}
 			}
-			else System.out.println("echo \"" + line + "\" >> $LOGFILE");
+			else System.out.println("echo \"" + line + "\" "+ (firstLine ? ">" : ">>") + " $LOGFILE");
+			firstLine = false;
 		}
 		
 		in.close();

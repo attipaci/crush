@@ -1,20 +1,26 @@
->>> verify dynamic options on mixed scans...
->>> focus.s2n, focus.[x,y,z]coeff, focus.[x,y,z]scatter
->>> focus.r, focus.rmin, focus.elong0
->>> adjust beam / calibration
+
+2.16-b1 (24 April 2014)
 
 
+	Overview
+	=====================================================================
+	This release fixes a few critical bugs from the prior release(s). Some
+	map projections (CAR, MER, SFL, and AIT) were wrong for a while now.
+	SHARC-2 had a pointing bug due to the lack of chopper levelling, and
+	moving-frame objects (planets, asteroids, moons) were not mapped 
+	correctly to non-equatorial celestial coordinates.
+	Apart from the major bug fixes, there are several new and improved
+	features, some smaller fixes, tweaks and streamlined code. The instant 
+	focus feature has been much improved.
+	The release also offers up-to-date configuration for the GISMO
+	2014 April run.
+	=====================================================================
 
-2.16-a6 (alpha.6)
-
-	[BUG] Cylindrical and pseudo-cylindrical spherical projections (CAR, 
-	MER, SFL, AIT) have been wrong for a while now, due to an incorrectly
-	set native pole. Zenithal (e.g. SIN, TAN, ZEA) and the previously 
-	default GLS projections were fine all along. (b1: SFL, BON deprojection 
-	bug, introduced in a6, also fixed.)
-
-	[BUG] Projection class copy bug could cause map alignment problems
-	when scans with different catalog coordinates were processed together.
+	[CRITICAL] Cylindrical and pseudo-cylindrical spherical projections 
+	(CAR, MER, SFL, AIT) have been wrong for a while now, due to an 
+	incorrectly set native pole. Zenithal (e.g. SIN, TAN, ZEA) and the 
+	previously default GLS projections were fine all along. (b1: SFL, BON 
+	deprojection bug, introduced in a6, also fixed.)
 
 	[BUG] Non-equatorial celestial mapping (e.g. ecliptic coordinates) of 
 	moving-frame objects (e.g. planets and asteroids) was buggy. Fixed.
@@ -29,6 +35,12 @@
 	longer linked to the 'offsets.add' option, which, in turn, exclusively 
 	refers to static mapping and chopper offsets, as it should have been 
 	from the start.
+
+	[NEW] Ability to mix-and-match different beam sizes as illuminations
+	evolve. CRUSH will now calculate a representative beam size for maps.
+
+	[NEW] New options 'write.png.crop' and 'write.png.smooth' to allow
+	further control over the PNG thumbnail output.
 
 	[NEW] CRUSH can now log a glocal 1/f statistics for the array using
 	the 'stat1f' quantity in the log (see README for details of the 
@@ -104,6 +116,8 @@
 	probably introduced early on in the 2.16 development, so it should
 	not affect the previous stable release(s).
 
+	[FIX] Projection class copy bug found and fixed.
+
 	[FIX] {LABOCA} He3 temperature decorrelation using blind detectors did
 	not take place as expected. Now fixed.
 
@@ -121,9 +135,6 @@
 
 	[TWEAK] Source asymmetry (used for instant focus) is now measured 
 	outside of the main beam, resulting in reduced scatter.
-
-	[TWEAK] {SHARC-2} {GISMO} Instant z-focus is suggested only if the
-	lateral focus is relatively good.
 
 	[TWEAK] Source shape measurement (used for instant focus suggestion)
 	is always calculated on circular apertures. Previously some stats
@@ -152,6 +163,11 @@
 	[DEPRECATE] {GISMO} 'flips' decorrelation is deprecated, it no longer
 	has any effect. 'correlated.rows.group' and 'correlated.cols.group'
 	are also deprecated.
+
+	[CONFIG] {GISMO} Update calibration for 2014 April.
+
+	[CONFIG] {GISMO} Beam FWHM set to 16.0" starting April 2014, since
+	the telescope pupil was enlarged.
 
 	[CONFIG] {GISMO} Pointing model and calibration for the 2014 April
 	run.

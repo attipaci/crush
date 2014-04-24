@@ -65,15 +65,8 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> {
 	public Instrument<Sharc2Pixel> copy() {
 		Sharc2 copy = (Sharc2) super.copy();
 		
-		if(rowGain != null) {
-			copy.rowGain = new double[rowGain.length];
-			System.arraycopy(rowGain, 0, copy.rowGain, 0, rowGain.length);
-		}
-		
-		if(isHiGain != null) {
-			copy.isHiGain = new boolean[isHiGain.length];
-			System.arraycopy(isHiGain, 0, copy.isHiGain, 0, isHiGain.length);
-		}
+		if(rowGain != null) copy.rowGain = Util.copyOf(rowGain);	
+		if(isHiGain != null) copy.isHiGain = Util.copyOf(isHiGain);
 		
 		copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
 		

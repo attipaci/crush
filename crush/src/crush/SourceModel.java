@@ -91,7 +91,18 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 			for(Integration<?,?> integration : scan)
 				integration.gain *= integration.instrument.janskyPerBeam() / janskyPerBeam;
 		}
-
+	}
+	
+	public double getAverageResolution() {
+		double sum = 0.0, sumw = 0.0;
+		
+		for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) if(integration.instrument != instrument) {
+			double wG2 = scan.weight * integration.gain * integration.gain;
+			sum += wG2 * integration.instrument.resolution * integration.instrument.resolution;
+			sumw += wG2;
+		}
+		
+		return sumw > 0.0 ? Math.sqrt(sum / sumw) : instrument.resolution;
 	}
 
 	public void reset(boolean clearContent) {

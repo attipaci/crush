@@ -57,7 +57,7 @@ public class AstroImage extends GridImage<SphericalCoordinates> implements Clone
 	
 	@SuppressWarnings("unchecked")
 	public AstroSystem astroSystem() {
-		return new AstroSystem((Class<? extends SphericalCoordinates>) coordinateSystem());
+		return new AstroSystem((Class<? extends SphericalCoordinates>) getCoordinateClass());
 	}
 	
 	@Override

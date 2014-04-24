@@ -72,11 +72,12 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
 		if(nasmythOffset != null) copy.nasmythOffset = (Vector2D) nasmythOffset.clone();
 		
-		copy.detectorBias = null;
-		copy.secondStageBias = null;
-		copy.secondStageFeedback = null;
-		copy.thirdStageBias = null;
-		copy.thirdStageFeedback = null;
+		copy.detectorBias = Util.copyOf(detectorBias);
+		copy.secondStageBias = Util.copyOf(secondStageBias);
+		copy.secondStageFeedback = Util.copyOf(secondStageFeedback);
+		copy.thirdStageBias = Util.copyOf(thirdStageBias);
+		copy.thirdStageFeedback = Util.copyOf(thirdStageFeedback);
+		
 		return copy;
 	}
 	

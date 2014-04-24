@@ -75,20 +75,20 @@ public class ManEdit {
 		edited.add("<link rel=\"stylesheet\" type=\"text/css\" href=\"man.css\">");
 		edited.add(lines.get(i++)); // </HEAD><BODY>		
 		
+		
 		edited.add("");
-		edited.add("<script type=\"text/javascript\">");
+		edited.add("<!-- Google Analytics -->");
+		edited.add("<script>");
+		edited.add("   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){");
+		edited.add("   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),");
+		edited.add("   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)");
+		edited.add("   })(window,document,'script','//www.google-analytics.com/analytics.js','ga');");
 		edited.add("");
-		edited.add("  var _gaq = _gaq || [];");
-		edited.add("  _gaq.push(['_setAccount', 'UA-16668543-1']);");
-		edited.add("  _gaq.push(['_trackPageview']);");
-		edited.add("");
-		edited.add("  (function() {");
-		edited.add("    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;");
-		edited.add("    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';");
-		edited.add("    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);");
-		edited.add("  })();");
+		edited.add("   ga('create', 'UA-16668543-1', 'caltech.edu');");
+		edited.add("   ga('send', 'pageview');");
 		edited.add("");
 		edited.add("</script>");
+		edited.add("<!-- End Google Analytics -->");
 		edited.add("");
 		
 		// Remove between <HR> and <A NAME="lbAB">
