@@ -29,9 +29,9 @@ import java.util.StringTokenizer;
 import kovacs.astro.AstroProjector;
 import kovacs.data.*;
 import kovacs.math.SphericalCoordinates;
+import kovacs.math.Vector2D;
 import kovacs.projection.Projection2D;
 import kovacs.util.*;
-
 import crush.*;
 import crush.array.*;
 import crush.astro.AstroMap;
@@ -171,7 +171,7 @@ public class BeamMap extends SourceMap {
 
 
 	@Override
-	public double resolution() {
+	public Vector2D resolution() {
 		return template.resolution();
 	}
 

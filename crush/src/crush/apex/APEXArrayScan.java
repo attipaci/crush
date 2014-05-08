@@ -121,6 +121,10 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	}
 	
 	public String getFileName(String path, String spec, String projectID) throws FileNotFoundException {
+		if(path == null) throw new FileNotFoundException("Undefined 'datapath'. ");
+		if(spec == null) throw new FileNotFoundException("Undefined scan specification. Need a filename, scan number, or range. ");
+		if(projectID == null) throw new FileNotFoundException("Undefined 'project'. ");
+		
 		// Check if there's an exact match to the specification...
 		File match = new File(spec);
 		if(match.exists()) return spec;

@@ -48,7 +48,8 @@ import crush.astro.AstroMap;
 
 public class ScalarMap extends SourceMap {
 	public AstroMap map;
-	private double[][] base; 
+	
+	protected Data2D base; 
 	private boolean[][] mask;
 		
 	public boolean enableWeighting = true;
@@ -106,7 +107,7 @@ public class ScalarMap extends SourceMap {
 	
 	
 	public void standalone() {
-		base = new double[map.sizeX()][map.sizeY()];
+		base = new Data2D(map.sizeX(), map.sizeY());
 		createMask();
 	}
 
@@ -119,9 +120,17 @@ public class ScalarMap extends SourceMap {
 		
 		super.createFrom(collection);
 		
-		double gridSize = getInstrument().resolution / 5.0;
-		if(hasOption("grid")) gridSize = option("grid").getDouble() * Unit.arcsec;
-		map.setResolution(gridSize);
+		double resolution = getInstrument().resolution / 5.0;
+		Vector2D gridSize = new Vector2D(resolution, resolution);
+	
+		if(hasOption("grid")) {
+			List<Double> values = option("grid").getDoubles();
+			if(values.size() == 1) gridSize.set(values.get(0), values.get(0));
+			else gridSize.set(values.get(0), values.get(1));
+			gridSize.scale(getInstrument().getSizeUnit());
+		}
+		
+		map.getGrid().setResolution(gridSize.x(), gridSize.y());
 		
 		Scan<?,?> firstScan = scans.get(0);
 		
@@ -137,12 +146,16 @@ public class ScalarMap extends SourceMap {
 		setSize();
 
 		// Make the reference fall on pixel boundaries.
-		map.getGrid().refIndex.setX(0.5 - Math.rint(xRange.min()/gridSize));
-		map.getGrid().refIndex.setY(0.5 - Math.rint(yRange.min()/gridSize));
+		map.getGrid().refIndex.setX(0.5 - Math.rint(xRange.min()/gridSize.x()));
+		map.getGrid().refIndex.setY(0.5 - Math.rint(yRange.min()/gridSize.y()));
 			
-		map.printShortInfo();		
 		
-		base = new double[map.sizeX()][map.sizeY()];
+		map.printShortInfo();
+		
+		System.err.println("# " + ArrayUtil.toString(map.getGrid().getTransform()));
+		System.err.println("# " + ArrayUtil.toString(map.getGrid().getInverseTransform()));
+		
+		base = new Data2D(map.sizeX(), map.sizeY());
 		createMask();
 		
 		if(hasOption("indexing")) {
@@ -272,8 +285,7 @@ public class ScalarMap extends SourceMap {
 	public int pixels() { return map.sizeX() * map.sizeY(); }
 	
 	@Override
-	public double resolution() { return Math.sqrt(map.getPixelArea()); }
-	
+	public Vector2D resolution() { return map.getResolution(); }
 	@Override
 	public Projection2D<SphericalCoordinates> getProjection() { return map.getProjection(); }
 	
@@ -285,7 +297,7 @@ public class ScalarMap extends SourceMap {
 	@Override
 	public synchronized void process(Scan<?,?> scan) {	
 		map.normalize();
-		if(base != null) map.addImage(base);
+		if(base != null) map.addImage(base.getData());
 			
 		if(enableLevel && scan.getSourceGeneration() == 0) map.level(true);
 		else enableLevel = false;	
@@ -548,7 +560,7 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	@Override
-	public synchronized void setBase() { map.copyTo(base); }
+	public synchronized void setBase() { map.copyTo(base.getData()); }
 
 	@Override
 	public synchronized void reset(boolean clearContent) {
@@ -593,7 +605,7 @@ public class ScalarMap extends SourceMap {
 			
 			for(final Pixel pixel : pixels) {
 				exposure.project(pixel.getPosition(), projector);
-				map.getIndex(offset, index);
+				map.getIndex(offset, index);		
 				exposure.sourceIndex[pixel.getIndex()] = map.sizeX() * index.j() + index.i();
 			}
 		}
@@ -608,7 +620,7 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	protected double getIncrement(final Index2D index, final Channel channel, final double oldG, final double G) {
-		return G * map.getValue(index.i(), index.j()) - oldG * base[index.i()][index.j()];	
+		return G * map.getValue(index.i(), index.j()) - oldG * base.getValue(index.i(), index.j());	
 	}
 	
 	@Override
@@ -646,7 +658,7 @@ public class ScalarMap extends SourceMap {
 					final int c = channel.index;
 					if((exposure.sampleFlag[c] & Frame.SAMPLE_SKIP) == 0) {
 						final double mapValue = fG * sourceGain[c] * map.getValue(i, j);
-						final double value = exposure.data[c] + fG * syncGain[c] * base[i][j];
+						final double value = exposure.data[c] + fG * syncGain[c] * base.getValue(i, j);
 						sumIM[c] += exposure.relativeWeight * value * mapValue;
 						sumM2[c] += exposure.relativeWeight * mapValue * mapValue;			
 					}

@@ -209,6 +209,7 @@ implements TableFormatter.Entries {
 			
 	}
 	
+	
 	public void setDateOptions(double MJD) {
 		if(!options.containsKey("date")) return;
 	
@@ -347,6 +348,14 @@ implements TableFormatter.Entries {
 	}
 	
 	public abstract void readWiring(String fileName) throws IOException;
+	
+	public double getPointSize() { return resolution; }
+
+	public double getSourceSize() {
+		double sourceSize = hasOption("sourcesize") ? 
+				Math.hypot(option("sourcesize").getDouble() * getSizeUnit(), resolution) : resolution;
+				return sourceSize;
+	}
 	
 	public abstract double getSizeUnit();
 	
@@ -639,6 +648,12 @@ implements TableFormatter.Entries {
 	
 	public abstract Scan<?, ?> getScanInstance();
 	
+	public Scan<?, ?> readScan(String descriptor, boolean readFully) throws Exception {
+		Scan<?, ?> scan = getScanInstance();
+		scan.read(descriptor, readFully);
+		return scan;
+	}
+	
 	public SourceModel getSourceModelInstance() {
 		if(hasOption("source.type")) {
 			String type = option("source.type").getValue();
@@ -866,6 +881,7 @@ implements TableFormatter.Entries {
 		Range weightRange = new Range();
 		weightRange.full();
 		
+		
 		if(hasOption("weighting.noiserange")) {
 			Range noiseRange = option("weighting.noiserange").getRange(true);
 			weightRange.setMin(1.0 / (noiseRange.max() * noiseRange.max()));
@@ -878,14 +894,14 @@ implements TableFormatter.Entries {
 		for(Channel channel : getDetectorChannels()) {
 			if(channel.dof > 0.0) {
 				channel.unflag(Channel.FLAG_DOF);
-				if(channel.isUnflagged(Channel.FLAG_GAIN)) weights[n++] = Math.log(1.0 + channel.weight * channel.gain * channel.gain);
+				if(channel.isUnflagged(Channel.FLAG_GAIN)) weights[n++] = Math.log1p(channel.weight * channel.gain * channel.gain);
 			}
 			else channel.flag(Channel.FLAG_DOF);
 		}
 		if(n == 0) throw new IllegalStateException("DOF?");
 		
 		// Use robust mean (with 10% tails) to estimate average weight.
-		double aveW = n > 0 ? Math.exp(Statistics.robustMean(weights, 0, n, 0.1)) - 1.0 : 0.0;	
+		double aveW = Math.expm1(n > 10 ? Statistics.robustMean(weights, 0, n, 0.1) : Statistics.median(weights));	
 		double maxWeight = weightRange.max() * aveW;
 		double minWeight = weightRange.min() * aveW;	
 		double sumw = 0.0;
@@ -895,23 +911,25 @@ implements TableFormatter.Entries {
 			channel.unflag(Channel.FLAG_SENSITIVITY);
 			double w = channel.weight * channel.gain * channel.gain;
 			if(w > maxWeight) channel.flag(Channel.FLAG_SENSITIVITY);
-			else if(w <= minWeight) channel.flag(Channel.FLAG_SENSITIVITY);		
+			else if(w < minWeight) channel.flag(Channel.FLAG_SENSITIVITY);		
 			else if(channel.isUnflagged()) sumw += w;
 		}
+		
+		census();
 		
 		if(sumw == 0.0) {
 			if(mappingChannels > 0) throw new IllegalStateException("FLAG");
 			else throw new IllegalStateException("----");
 		}
 		
-		census();
+		
 	}
 	
 	public double getSourceNEFD() {		
 		double sumpw = 0.0;
 		for(Channel channel : getObservingChannels()) if(channel.flag == 0 && channel.variance > 0.0)
 			sumpw += channel.sourceFiltering * channel.sourceFiltering / channel.variance;
-	
+		
 		return Math.sqrt(size()*integrationTime/sumpw) / (sourceGain * janskyPerBeam());
 	}
 	

@@ -360,7 +360,7 @@ public class ImageTool {
 			System.exit(0);
 		}
 		else if(key.equalsIgnoreCase("-depth")) {
-			System.err.println("Average depth " + Util.e2.format(image.getTypicalRMS()/image.unit.text) + " " + image.unit.name);
+			System.err.println("Average depth " + Util.e2.format(image.getTypicalRMS()/image.unit.text) + " " + image.unit.object);
 		}
 		else if(key.equalsIgnoreCase("-beam")) {
 			image.instrument.resolution = Double.parseDouble(tokens.nextToken()) * Unit.arcsec;
