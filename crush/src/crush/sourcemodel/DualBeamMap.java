@@ -1,10 +1,8 @@
 package crush.sourcemodel;
 
-import java.io.IOException;
 import java.util.Collection;
 
 import kovacs.data.CartesianGrid2D;
-import kovacs.data.Data2D;
 import kovacs.data.GridMap;
 import kovacs.data.Index2D;
 import kovacs.fft.MultiFFT;
@@ -40,6 +38,7 @@ public class DualBeamMap extends ScalarMap {
 		deconvolved.id = "deconvolved";
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public SourceModel copy(boolean withContents) {
 		DualBeamMap copy = (DualBeamMap) super.copy(withContents);
@@ -60,6 +59,7 @@ public class DualBeamMap extends ScalarMap {
 		if(clearContent) if(transformer != null) transformer.clear();
 	}
 
+	@Override
 	public void standalone() {
 		super.standalone();
 		deconvolved.standalone();
@@ -89,11 +89,13 @@ public class DualBeamMap extends ScalarMap {
 		transformer.getGrid().setResolution(1.0 / (nx * delta.x()), 1.0 / (ny * delta.y()));
 	}
 	
+	@Override
 	public void setOptions(Configurator options) {
 		super.setOptions(options);
 		deconvolved.setOptions(options);
 	}
 	
+	@Override
 	public void setBase() {
 		super.setBase();
 		deconvolved.setBase();
@@ -301,6 +303,7 @@ public class DualBeamMap extends ScalarMap {
 	}
 	
 
+	@Override
 	protected double getIncrement(final Index2D index, final Channel channel, final double oldG, final double G) {
 		double i = index.i() + currentThrow.x();
 		double j = index.j() + currentThrow.y();
@@ -337,6 +340,7 @@ public class DualBeamMap extends ScalarMap {
 		currentThrow = null;
 	}	
 	
+	@Override
 	public void write(String path, boolean info) throws Exception {		
 		super.write(path, info);
 		deconvolved.write(path, info);
