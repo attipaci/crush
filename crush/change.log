@@ -1,3 +1,6 @@
+>> Check tau timezone...
+>> check calibration with new rcp...
+>> 'nochopper'
 
 2.16-b1 (24 April 2014)
 
@@ -35,6 +38,12 @@
 	longer linked to the 'offsets.add' option, which, in turn, exclusively 
 	refers to static mapping and chopper offsets, as it should have been 
 	from the start.
+
+	[NEW] {2.16-1} The possibility of using non-square pixel grids, which
+	can be specified by two comma-separated pixelization values, e.g. as
+	'grid=<dx>,<dy>'. However, be advised that 'show' does not yet
+	recognize non-square grids, and neither does ds9. Thus, your viewer
+	may show such images as elongated in one direction...
 
 	[NEW] Ability to mix-and-match different beam sizes as illuminations
 	evolve. CRUSH will now calculate a representative beam size for maps.
@@ -106,6 +115,9 @@
 	line-of-sight tau, detector bias, and tuning parameters, using the
 	'log.saegains' keyword (requires 'read.sae' to be set also).
 
+	[FIX] {2.16-1} {APEX} Better error messages when 'project' or 
+	'datapath' are not defined.
+
 	[FIX] Fixed point-source asymmetry and elongation error estimation.
 
 	[FIX] Instant focus z suggestion was dependent on the x by mistake.
@@ -132,6 +144,20 @@
 
 	[FIX] Decorrelation of motion signals fixed. Previously these did
 	nothing.
+
+	[TWEAK] {2.16-1} {sourcesize} 'sourcesize' defines an underlying source
+	size. Thus it may be 0 for point sources.
+
+	[TWEAK] {2.16-1} {sourcesize} {vclip} Changed automatic velocity 
+	clipping to use 'sourcesize' when it is defined.
+
+	[TWEAK] {2.16-1} Exlicit use of expm1 and log1p in flagWeights().
+
+	[TWEAK] {2.16-1} Tweaks to time-weighting, hopefully increasing	
+	stability.
+
+	[TWEAK] {2.16-1} {GISMO} Disabled time-weighting. It was a source
+	of instability.
 
 	[TWEAK] Source asymmetry (used for instant focus) is now measured 
 	outside of the main beam, resulting in reduced scatter.
@@ -164,6 +190,9 @@
 	has any effect. 'correlated.rows.group' and 'correlated.cols.group'
 	are also deprecated.
 
+	[CONFIG] {2.16-1} {GISMO} New synthetic RCP for April 2014 based on 
+	measured pixel positions from 3C345 on 2014-04-09.
+
 	[CONFIG] {GISMO} Update calibration for 2014 April.
 
 	[CONFIG] {GISMO} Beam FWHM set to 16.0" starting April 2014, since
@@ -191,6 +220,11 @@
 
 	[CRUSH-1.xx] New projections added to CRUSH-1.xx toolset (e.g.
 	'show', 'imagetool', etc...).
+
+	[CODE] Initial and rudimentary support for old SHARC data, including
+	some basic dual-beam deconvolution...
+
+	[CODE] Changed how scans are invoked to accomodate old SHARC.
 
 	[CODE] SyntheticRCP tool moved from crush.gismo to crush.array.
 

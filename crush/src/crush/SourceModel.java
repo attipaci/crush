@@ -230,15 +230,9 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 		return hasOption("clip") ? option("clip").getDouble() : Double.NaN;
 	}
 
-	public double getPointSize() { return instrument.resolution; }
+	public double getPointSize() { return instrument.getPointSize(); }
 
-	public double getSourceSize() {
-		double sourceSize = hasOption("sourcesize") ? 
-				option("sourcesize").getDouble() * instrument.getSizeUnit() : instrument.resolution;
-				if(sourceSize < instrument.resolution) sourceSize = instrument.resolution;
-				return sourceSize;
-	}
-
+	public double getSourceSize() { return instrument.getSourceSize(); }
 
 	public abstract String getSourceName();
 

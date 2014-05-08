@@ -52,15 +52,17 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	
 	@Override
 	public void validate() {	
-		removeChopperDCOffset();
-		
-		for(FrameType frame : this) if(frame != null) {
-			// Add chopper offset to the aggregated horizontal offset...
-			frame.horizontalOffset.add(frame.chopperPosition);
-			// Add the chopper offset to the absolute coordinates also...
-			frame.horizontal.addOffset(frame.chopperPosition);
+		if(!hasOption("nochopper")) {
+			removeChopperDCOffset();
+
+			for(FrameType frame : this) if(frame != null) {
+				// Add chopper offset to the aggregated horizontal offset...
+				frame.horizontalOffset.add(frame.chopperPosition);
+				// Add the chopper offset to the absolute coordinates also...
+				frame.horizontal.addOffset(frame.chopperPosition);
+			}
 		}
-		
+			
 		super.validate();
 	}
 	

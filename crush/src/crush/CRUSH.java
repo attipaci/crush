@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.16-b1
+ * @version 2.16-1
  * 
  */
 public class CRUSH extends Configurator {
@@ -45,8 +45,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.16-b1";
-	private static String revision = "beta.1";
+	private static String version = "2.16-1";
+	private static String revision = "(devel.2)";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -270,13 +270,13 @@ public class CRUSH extends Configurator {
 		}
 		else { 
 			try {
-				Scan<?,?> scan = instrument.getScanInstance();
+				Scan<?,?> scan = null;
 				if(isConfigured("obslog")) {
-					scan.read(scanID, false);
+					scan = instrument.readScan(scanID, false);
 					scan.writeLog(get("obslog"),  workPath + File.separator + instrument.getName() + ".obs.log");
 				}
 				else { 
-					scan.read(scanID, true);
+					scan = instrument.readScan(scanID, true);
 					if(scan.size() == 0) System.err.println(" WARNING! Scan " + scan.getID() + " contains no valid data. Skipping.");
 					else if(isConfigured("subscans.split")) scans.addAll(scan.split());
 					/*
@@ -366,7 +366,7 @@ public class CRUSH extends Configurator {
 	
 		if(isConfigured("extended")) System.out.println(" Assuming extended source(s).");
 		
-		System.out.println(" Assuming " + Util.f1.format(source.getSourceSize()/instrument.getSizeUnit()) + " " + instrument.getSizeName() + " sized source(s).");
+		System.out.println(" Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getSizeUnit()) + " " + instrument.getSizeName() + " sized source(s).");
 		
 		
 		if(isConfigured("rounds")) rounds = get("rounds").getInt();
@@ -411,6 +411,7 @@ public class CRUSH extends Configurator {
 		
 		for(String task : ordering) {
 			tasks.add(task);
+			
 			if(solveSource()) if(task.startsWith("source"))  {
 				iterate(tasks);
 				tasks.clear();

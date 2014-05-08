@@ -32,10 +32,7 @@ import crush.ElevationCouplingCurve;
 import crush.GroundBased;
 import crush.HorizontalFrame;
 import crush.Scan;
-import kovacs.astro.AstroSystem;
-import kovacs.astro.GeodeticCoordinates;
-import kovacs.astro.HorizontalCoordinates;
-import kovacs.astro.Weather;
+import kovacs.astro.*;
 import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
 import kovacs.text.TableFormatter;
@@ -170,6 +167,17 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 
 	public double getWindSpeed() {
 		return Double.NaN;
+	}
+	
+	public static Class<? extends SphericalCoordinates> getScanSystem(int id) {
+		switch(id) {
+		case SCAN_ALTAZ: return HorizontalCoordinates.class;
+		case SCAN_EQ2000:
+		case SCAN_EQ1950: 
+		case SCAN_APPARENT_EQ: return EquatorialCoordinates.class;
+		case SCAN_GAL: return GalacticCoordinates.class;
+		default: return null;
+		}
 	}
 	
 	

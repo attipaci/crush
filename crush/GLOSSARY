@@ -1177,6 +1177,11 @@
 			smaller than 2/5 beam is recommended. The default is
 			~1/5 beam pixelization.
 
+:: grid=dx,dy		@Since: 2.16-1
+			@Advanced
+			Set a non-square map pixelization. Not all FITS viewers
+			support it though...
+
 :: group.<?>=<list>     @Expert
 			Specify a list of channels, by index, that belong
 			to a group with name <?>. The list can contain

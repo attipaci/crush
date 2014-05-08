@@ -412,10 +412,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Range vRange = null;
 		Configurator option = option("vclip");
 		
-		if(option.equals("auto"))
-			// Move at least 5 beams over the stability timescale
+		if(option.equals("auto")) {	
+			// Move at least 3 fwhms over the stability timescale
 			// But less that 1/2.5 beams per sample to avoid smearing
-			vRange = new Range(0.2*instrument.resolution / instrument.getStability(), 0.4 * instrument.resolution / instrument.samplingInterval);	
+			vRange = new Range(3.0 * instrument.getSourceSize() / instrument.getStability(), 0.4 * instrument.resolution / instrument.samplingInterval);
+		}
 		else {
 			vRange = option.getRange(true);
 			vRange.scale(Unit.arcsec / Unit.s);
@@ -466,8 +467,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public abstract FrameType getFrameInstance();
 	
 	public double getCrossingTime() {
-		if(scan.sourceModel == null) return getCrossingTime(scan.sourceModel.getSourceSize());
-		return getCrossingTime(scan.sourceModel.getSourceSize());
+		return getCrossingTime(scan.sourceModel == null ? instrument.getSourceSize() : scan.sourceModel.getSourceSize());
 	}
 	
 	public double getCrossingTime(double sourceSize) {		
@@ -478,16 +478,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return sourceSize / aveScanSpeed.value();		
 	}
 
-	public double getPointSize() {
-		return scan.sourceModel == null ? instrument.resolution : scan.sourceModel.getPointSize();
-	}
-	
+
 	public double getPointCrossingTime() { 
-		return getCrossingTime(getPointSize()); 
+		return getCrossingTime(scan.sourceModel == null ? instrument.getPointSize() : scan.sourceModel.getPointSize()); 
 	}
-	
-	//public abstract double getSourceFootprint();
-		
+			
 	public double getMJD() {
 		return 0.5 * (getFirstFrame().MJD + getLastFrame().MJD);	
 	}
@@ -633,8 +628,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	
 	public void removeDrifts(final ChannelGroup<?> channels, final int targetFrameResolution, final boolean robust) {
-		
-		final int driftN = Math.min(size(), OldFFT.getPaddedSize(targetFrameResolution));
+		final int driftN = Math.min(size(), ExtraMath.pow2ceil(targetFrameResolution));
 		
 		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);
 			
@@ -831,7 +825,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				channel.weight += exposure.relativeWeight;
 			}
 		}
-		
 	
 		for(final Channel channel : liveChannels) if(channel.weight > 0.0) {
 			channel.dof = Math.max(0.0, 1.0 - channel.dependents / channel.weight);
@@ -946,7 +939,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			final int tot = Math.min(fromt + blockSize, size());
 			
-			for(int t=fromt; t < tot; t++) {
+			for(int t=tot; --t >= fromt; ) {
 				final Frame exposure = get(t);
 				if(exposure == null) continue;
 
@@ -958,9 +951,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				deps += exposure.dependents;
 			}		
 			
-			if(points > deps && sumChi2 > 0.0) {
+			if(points > deps) {
 				final double dof = 1.0 - deps / points;
-				final float fw = (float) ((points-deps) / sumChi2);					
+				final float fw = sumChi2 > 0.0 ? (float) ((points-deps) / sumChi2) : 1.0F;					
 				
 				for(int t=tot; --t >= fromt; ) {
 					final Frame exposure = get(t);
@@ -978,7 +971,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				
 				exposure.dof = 0.0F;
 				
-				if(points > deps) exposure.relativeWeight = Float.NaN;
+				if(points > deps) {
+					exposure.relativeWeight = Float.NaN;
+				}
 				else {
 					exposure.relativeWeight = 0.0F;
 					exposure.flag(Frame.FLAG_DOF);
@@ -2501,7 +2496,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public String getFullID(String separator) {
-		return scan.getID() + separator + (integrationNo+1);		
+		return scan.getID() + separator + (integrationNo + 1);		
 	}
 	
 	public String getDisplayID() {
@@ -2513,7 +2508,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust = true;
 			
 		if(task.equals("offsets")) {
-			removeDrifts(instrument, size(), isRobust);	    
+			removeOffsets(isRobust);	    
 		}
 		else if(task.equals("drifts")) {
 			if(isPhaseModulated()) return false;

@@ -66,7 +66,7 @@ public class SimplePixel extends Channel implements Pixel {
 	public double overlap(final Channel channel, SourceModel model) {
 		if(independent) return 0.0;
 		
-		double sourceSize = model == null ? instrument.resolution : model.getPointSize();
+		double sourceSize = model == null ? instrument.getPointSize() : model.getPointSize();
 		
 		if(channel instanceof Pixel) {
 			double dev = distanceTo((Pixel) channel) * Constant.sigmasInFWHM / sourceSize;

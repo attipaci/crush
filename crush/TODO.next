@@ -1,5 +1,5 @@
 
-
+>>> Check time weighting (DOF, higher noise)...
 >>> focus.s2n, focus.[x,y,z]coeff, focus.[x,y,z]scatter
 >>> focus.r, focus.rmin, focus.elong0
 

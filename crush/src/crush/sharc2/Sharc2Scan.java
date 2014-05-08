@@ -33,7 +33,6 @@ import java.text.*;
 
 import kovacs.astro.AstroTime;
 import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.GalacticCoordinates;
 import kovacs.astro.HorizontalCoordinates;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
@@ -45,7 +44,6 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 	 */
 	private static final long serialVersionUID = -2008390740743369604L;
 
-	public int scanCoordType = SCAN_UNDEFINED;
 	public long fileSize = -1;
 
 	private double raUnit = Unit.hourAngle;
@@ -289,18 +287,9 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 				header.getDoubleValue("DECEP") * decUnit,
 				(epoch < 1984.0 ? "B" : "J") + epoch);
 	
-		if(header.containsKey("SCANCOORD")) scanCoordType = header.getIntValue("SCANCOORD");
-		switch(scanCoordType) {
-		case SCAN_ALTAZ: scanSystem = HorizontalCoordinates.class;
-		case SCAN_EQ2000:
-		case SCAN_EQ1950: 
-		case SCAN_APPARENT_EQ: scanSystem = EquatorialCoordinates.class;
-		case SCAN_GAL: scanSystem = GalacticCoordinates.class;
-		default: 
-			if(header.containsKey("ALTAZ")) 
-				scanSystem = header.getBooleanValue("ALTAZ") ? HorizontalCoordinates.class : EquatorialCoordinates.class;
-			else scanSystem = HorizontalCoordinates.class;
-		}
+		
+		if(header.containsKey("SCANCOORD")) scanSystem = getScanSystem(header.getIntValue("SCANCOORD", SCAN_UNDEFINED));
+		if(scanSystem == null) scanSystem = HorizontalCoordinates.class;
 		
 		// Print out some of the information...
 		StringTokenizer tokens = new StringTokenizer(timeStamp, ":T");

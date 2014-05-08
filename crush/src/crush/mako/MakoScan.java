@@ -252,20 +252,10 @@ public class MakoScan extends CSOScan<Mako, MakoIntegration> {
 				header.getDoubleValue("DECEP") * decUnit,
 				(epoch < 1984.0 ? "B" : "J") + epoch);
 
-		/*
-		if(header.containsKey("SCANCOORD")) scanCoordType = header.getIntValue("SCANCOORD");
-		switch(scanCoordType) {
-		case SCAN_ALTAZ: scanSystem = HorizontalCoordinates.class;
-		case SCAN_EQ2000:
-		case SCAN_EQ1950: 
-		case SCAN_APPARENT_EQ: scanSystem = EquatorialCoordinates.class;
-		case SCAN_GAL: scanSystem = GalacticCoordinates.class;
-		default: 
-			if(header.containsKey("ALTAZ")) 
-				scanSystem = header.getBooleanValue("ALTAZ") ? HorizontalCoordinates.class : EquatorialCoordinates.class;
-			else scanSystem = HorizontalCoordinates.class;
-		}
-		*/
+
+		//if(header.containsKey("SCANCOORD")) scanSystem = getScanSystem(header.getIntValue("SCANCOORD", SCAN_UNDEFINED));
+		//if(scanSystem == null) scanSystem = HorizontalCoordinates.class;
+
 		
 		// Print out some of the information...
 		StringTokenizer tokens = new StringTokenizer(timeStamp, ":T");

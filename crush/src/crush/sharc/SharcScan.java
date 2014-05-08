@@ -1,0 +1,359 @@
+package crush.sharc;
+
+import java.io.DataInput;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.StringTokenizer;
+import java.io.File;
+
+import kovacs.astro.AstroTime;
+import kovacs.astro.BesselianEpoch;
+import kovacs.astro.CoordinateEpoch;
+import kovacs.astro.EquatorialCoordinates;
+import kovacs.astro.FocalPlaneCoordinates;
+import kovacs.astro.HorizontalCoordinates;
+import kovacs.astro.JulianEpoch;
+import kovacs.math.Coordinate2D;
+import kovacs.math.Vector2D;
+import kovacs.text.FixedLengthFormat;
+import kovacs.text.TimeFormat;
+import kovacs.util.Unit;
+import kovacs.util.Util;
+import crush.Channel;
+import crush.DualBeam;
+import crush.cso.CSOScan;
+
+public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualBeam {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1872788122815053272L;
+
+	SharcFile file;
+	String qual;
+	EquatorialCoordinates trackingEquatorial;
+	HorizontalCoordinates horizontalStart, horizontalEnd;
+	Vector2D equatorialOffset;
+	int index;
+
+	short header_records;
+	int year, ut_day;
+	short otype, npixels, reference_pixel, badpixels[] = new short[2 * Sharc.pixels];
+	short first_scan, quadrature, sumrs, ncycles;
+	int nsamples, chops_per_integer, number;
+	float filter;
+	double chop_frequency, ut_time;
+	double glo, gbo;
+	float focus, focus_offset;
+	double chopper_throw;
+	float scale_factor, otf_longitude_rate;
+	float otf_latitude_rate, otf_longitude_step, otf_latitude_step;
+	
+	double[][] offsets; // records x pixels
+	
+	
+	
+	public SharcScan(Sharc instrument, SharcFile file) {
+		super(instrument);
+		this.file = file;
+	}
+	
+	@Override
+	public String getID() {
+		AstroTime time = new AstroTime();
+		time.setMJD(getMJD());
+		return time.getFitsDate() + "-" + super.getID();
+	}
+	
+	public void readScanRow(DataInput in) throws IOException {
+		ensureCapacity(ncycles);
+		SharcIntegration integration = new SharcIntegration(this);
+		integration.readFrom(in);
+		add(integration);
+	}
+	
+	
+	public void readHeader(DataInput in, int index) throws IOException {		
+		this.index = index;
+		
+		// Populate instrument with pixels...
+		for(int c=0; c<Sharc.pixels; c++) instrument.add(new SharcPixel(instrument, c+1));
+		
+		byte[] nameBytes = new byte[20];
+		byte[] qualBytes = new byte[10];
+		
+		in.readFully(nameBytes);
+		in.readFully(qualBytes);
+		
+		setSourceName(new String(nameBytes).trim());
+		qual = new String(qualBytes).trim();
+		
+		header_records = (short) (in.readShort() - 2);
+		year = in.readInt();
+		ut_day = in.readInt();
+		
+		otype = in.readShort();
+		npixels = in.readShort();
+		reference_pixel = in.readShort();
+		for(int i=0; i<badpixels.length; i++) badpixels[i] = in.readShort();
+		for(int c=0; c<Sharc.pixels; c++) instrument.get(c).isBad = (badpixels[c] != 0) ;
+		
+		scanSystem = getScanSystem(in.readShort());
+		first_scan = in.readShort();
+		quadrature = in.readShort();
+		sumrs = in.readShort();
+		ncycles = in.readShort();
+		
+		nsamples = in.readInt();
+		chops_per_integer = in.readInt();
+		number = in.readInt();
+		setSerial(index);
+		
+		filter = in.readFloat();
+		
+		chop_frequency = in.readDouble();
+		instrument.samplingInterval = chops_per_integer / chop_frequency;
+		if(quadrature != 0) instrument.samplingInterval *= 0.5;
+		instrument.integrationTime = instrument.samplingInterval;
+		
+		ut_time = in.readDouble();
+		LST = in.readDouble() * Unit.hour;
+			
+		int dy = year - 2000;
+		int days = dy * 365 + (dy/4) + ut_day - 1;
+		
+		
+		double mjd = AstroTime.mjdJ2000 + days + (ut_time * Unit.hour) / Unit.day;
+		setMJD(mjd);
+		AstroTime time = new AstroTime();
+		time.setMJD(mjd);
+		timeStamp = time.getFitsTimeStamp();
+		
+		iMJD = (int)Math.floor(getMJD());
+		
+		equatorial = new EquatorialCoordinates(in.readDouble(), in.readDouble());
+		double epoch = in.readDouble();
+		equatorial.epoch = epoch < 1984.0 ? new BesselianEpoch(epoch) : new JulianEpoch(epoch);
+		equatorial.precess(CoordinateEpoch.J2000);
+		trackingEquatorial = (EquatorialCoordinates) equatorial.clone();
+		
+		horizontalStart = new HorizontalCoordinates(in.readDouble(), in.readDouble());
+		horizontalEnd = new HorizontalCoordinates(in.readDouble(), in.readDouble());
+			
+		double rao = in.readDouble();
+		double deco = in.readDouble();
+		double maprao = in.readDouble();
+		double mapdeco = in.readDouble();
+		double fieldrao = in.readDouble();
+		double fielddeco = in.readDouble();
+		
+		equatorialOffset = new Vector2D(rao + maprao + fieldrao, deco + mapdeco + fielddeco);	
+		equatorial.addOffset(equatorialOffset);
+		
+		glo = in.readDouble();
+		gbo = in.readDouble();
+		
+		horizontalOffset = new Vector2D(in.readDouble(), -in.readDouble());
+		fixedOffset = new Vector2D(in.readFloat(), -in.readFloat());
+		
+		if(hasOption("fazo")) {
+			double fazo = option("fazo").getDouble() * Unit.arcsec;
+			horizontalOffset.addX(fixedOffset.x() - fazo);
+			fixedOffset.setX(fazo);
+		}
+		if(hasOption("fzao")) {
+			double felo = -option("fzao").getDouble() * Unit.arcsec;
+			horizontalOffset.addY(fixedOffset.y() - felo);
+			fixedOffset.setY(felo);
+		}
+		
+		focus = in.readFloat();
+		focus_offset = in.readFloat();
+		
+		chopper_throw = in.readDouble();
+		instrument.rotatorAngle = in.readDouble();
+		instrument.rotatorMode = "n/a";
+		
+		scale_factor = in.readFloat();	
+		
+		// Weather
+		tau225GHz = in.readFloat();
+		
+		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();
+		else instrument.setOption("tau.225ghz=" + tau225GHz);
+		
+		otf_longitude_rate = in.readFloat();
+		otf_latitude_rate = in.readFloat();
+		otf_longitude_step = in.readFloat();
+		otf_latitude_step = in.readFloat();
+		
+		if(quadrature != 0) otf_longitude_step *= 0.5;
+		
+		//System.err.println("# " + getSourceName() + " " + ncycles + " " + nsamples);
+		
+		if(header_records < 0) throw new IOException("corrupted data?");
+
+		if(header_records > 0) {
+			offsets = new double[header_records][Sharc.pixels];
+			for(int i=0; i<header_records; i++) for(int c=0; c<Sharc.pixels; c++) offsets[i][c] = in.readDouble();
+		}
+	}
+	
+	public void printInfo(PrintStream out) {
+		String fileName = file == null ? "<unknown>" : new File(file.fileName).getName();
+		
+		out.println(" Scan #" + getSerial() + " in " + fileName); 
+		
+
+		// Print out some of the information...
+		StringTokenizer tokens = new StringTokenizer(timeStamp, ":T");
+		String dateString = tokens.nextToken();
+		String timeString = tokens.nextToken() + ":" + tokens.nextToken() + " UT";
+				
+		out.println("   [" + getSourceName() + "] observed on " + dateString + " at " + timeString);
+
+		out.println("   Equatorial: " + trackingEquatorial);
+		
+		horizontal = new HorizontalCoordinates(
+			0.5 * (horizontalStart.x() + horizontalEnd.x()),
+			0.5 * (horizontalStart.y() + horizontalEnd.y())
+		);
+		
+		out.println("   Horizontal: " + horizontal);
+		
+		DecimalFormat f3_1 = new DecimalFormat(" 0.0;-0.0");
+		
+		out.println("   AZO =" + f3_1.format(horizontalOffset.x()/Unit.arcsec)
+				+ "\tELO =" + f3_1.format(horizontalOffset.y()/Unit.arcsec)
+				+ "\tRAO =" + f3_1.format(equatorialOffset.x()/Unit.arcsec)
+				+ "\tDECO=" + f3_1.format(equatorialOffset.y()/Unit.arcsec)
+				
+		);
+		
+		out.println("   FAZO=" + f3_1.format(fixedOffset.x()/Unit.arcsec)
+				+ "\tFZAO=" + f3_1.format(-fixedOffset.y()/Unit.arcsec)
+		);
+		
+		
+		//out.println(" Records: " + header_records);
+		//out.println(" Year: " + year);
+		
+		//out.println(" Obs type: " + otype);
+		//out.println(" Pixels: " + npixels);
+		//out.println("   Size: " + ncycles + " x " + nsamples);
+		out.println("   Filter: " + (int)filter);
+		out.println("   Reference pixel: " + reference_pixel);
+		
+		//for(int i=0; i<badpixels.length; i++) badpixels[i] = in.readShort();
+		
+		double delta = otf_longitude_step * nsamples;
+		if(quadrature != 0) delta *= 2.0;
+		out.println("   OTF: " + (int)Math.round(delta / Unit.arcsec) + "\" in " + scanSystem.getSimpleName());
+		//out.println("   First scan: " + first_scan);
+		//out.println(" Quadrature: " + quadrature);
+		//out.println(" SumRS: " + sumrs);
+		
+		
+	
+		//out.println(" Chops-per-int: " + chops_per_integer);
+		
+		
+		out.println("   Chop: " + Util.f1.format(chopper_throw / Unit.arcsec) + "\" at " + Util.f3.format(chop_frequency) + " Hz");
+		//out.println(" UT: " + ut_time);
+		//out.println(" LST: " + LST / Unit.hour);
+		
+		
+		//az_start = in.readDouble();
+		//el_start = in.readDouble();
+		//az_end = in.readDouble();
+		//el_end = in.readDouble();
+		
+		
+		//maprao = in.readDouble();
+		//mapdeco = in.readDouble();
+		//fieldrao = in.readDouble();
+		//fielddeco = in.readDouble();
+		//glo = in.readDouble();
+		//gbo = in.readDouble();
+		//azo = in.readDouble();
+		//zao = in.readDouble();
+			
+		//fazo = in.readFloat();
+		//fzao = in.readFloat();
+		
+		out.println("   Focus: " + focus + " mm, offset: " + focus_offset + " mm.");
+		
+		//out.println(" Chop throw: " + chopper_throw);
+		out.println("   Rotation: " + Util.f1.format(instrument.rotatorAngle / Unit.deg) + " deg.");
+		
+		//out.println(" Scale: " + scale_factor);
+		out.println("   Tau(225GHz): " + Util.f3.format(tau225GHz));
+		
+		
+		//out.println(" OTF rate: " + otf_longitude_rate + ", " + otf_latitude_rate);
+		//out.println(" OTF step: " + otf_longitude_step + ", " + otf_latitude_step);
+		
+		
+		//otf_longitude_rate = in.readFloat();
+		//otf_latitude_rate = in.readFloat();
+		//otf_longitude_step = in.readFloat();
+		//otf_latitude_step = in.readFloat();
+		
+		out.println();
+		
+	}
+	
+
+	@Override
+	public void read(String descriptor, boolean readFully) throws Exception {
+		throw new UnsupportedOperationException("Use instrument.readScan() instead.");
+	}
+
+	@Override
+	public SharcIntegration getIntegrationInstance() {
+		return new SharcIntegration(this);
+	}
+
+	
+	
+	// TODO a 1-line summary of the scan...
+	@Override
+	public String toString() {
+		NumberFormat serialFormat = new FixedLengthFormat(new DecimalFormat("#"), 4);
+		NumberFormat sizeFormat = new FixedLengthFormat(new DecimalFormat("#"), 3);
+		TimeFormat tf = new TimeFormat(0);
+		tf.colons();
+		
+		AstroTime time = new AstroTime();
+		time.setMJD(getMJD());
+		
+		String name = getSourceName() + "            ";
+		name = name.substring(0, 12);
+		
+		//
+		
+		return serialFormat.format(getSerial())
+				+ " " + time.getFitsDate() 
+				+ " " + tf.format(ut_time * 3600.0)
+				+ " " + name
+				+ " " + Util.f3.format(tau225GHz)
+				+ " " + sizeFormat.format(ncycles) + " x " + sizeFormat.format(nsamples)
+				+ " " + Util.f1.format(chopper_throw / Unit.arcsec) + "\" " + Util.f3.format(chop_frequency) + " Hz";
+	}
+
+	public double getChopSeparation() {
+		return chopper_throw;
+	}
+
+	public double getChopAngle(Coordinate2D coordinates) {
+		if(coordinates instanceof HorizontalCoordinates) return 0.0;
+		if(coordinates instanceof FocalPlaneCoordinates) return -instrument.rotatorAngle;
+		if(coordinates instanceof EquatorialCoordinates) return getPA();
+		return Double.NaN;
+	}
+	
+	
+}

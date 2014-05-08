@@ -140,7 +140,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 		String info = super.getPointingString(pointing) + "\n\n";
 		
 		if(hasOption("pointing.model") || hasOption("pointing.log")) 
-			info += "  (For PaKo pointing corrections blacklist 'pointing.model' and 'pointing.log')";
+			info += "  For PaKo pointing corrections blacklist 'pointing.model' and 'pointing.table'";
 		else
 			info += "  PaKo> set pointing " + Util.f1.format((pointing.x() + pakoOffsets.x()) / Unit.arcsec) + " " 
 				+ Util.f1.format((pointing.y() + pakoOffsets.y()) / Unit.arcsec);

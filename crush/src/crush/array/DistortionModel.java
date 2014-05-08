@@ -32,6 +32,7 @@ import kovacs.util.HashCode;
 import kovacs.util.Unit;
 
 
+
 public class DistortionModel extends Hashtable<DistortionModel.Term, Vector2D> {
 	/**
 	 * 
@@ -152,4 +153,5 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Vector2D> {
 			return xExp + "," + yExp;
 		}
 	}
+	
 }

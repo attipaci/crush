@@ -207,7 +207,7 @@ public abstract class SourceMap extends SourceModel {
 	
 	public abstract int pixels();
 	
-	public abstract double resolution();
+	public abstract Vector2D resolution();
 	
 	public void setSize() {
 		//double margin = hasOption("map.margin") ? option("map.margin").getDouble() * instrument.getDefaultSizeUnit() : 0.0;
@@ -226,8 +226,10 @@ public abstract class SourceMap extends SourceModel {
 		yRange.min -= margin;
 		*/
 
-		int sizeX = (int)Math.ceil((xRange.max() - xRange.min())/resolution()) + 2;
-		int sizeY = (int)Math.ceil((yRange.max() - yRange.min())/resolution()) + 2;
+		Vector2D resolution = resolution();
+		
+		int sizeX = (int)Math.ceil((xRange.max() - xRange.min())/resolution.x()) + 2;
+		int sizeY = (int)Math.ceil((yRange.max() - yRange.min())/resolution.y()) + 2;
 	
 		try { 
 			checkForStorage(sizeX, sizeY);	
@@ -243,7 +245,9 @@ public abstract class SourceMap extends SourceModel {
 	public abstract void setProjection(Projection2D<SphericalCoordinates> projection); 
 	
 	public void memoryError(int sizeX, int sizeY) {
-		int diagonal = (int) Math.hypot(sizeX, sizeY);
+		
+		Vector2D resolution = resolution();
+		double diagonal = Math.hypot(sizeX * resolution.x(), sizeY * resolution.y());
 		
 		System.err.println("\n");
 		System.err.println("ERROR! Map is too large to fit into memory (" + sizeX + "x" + sizeY + " pixels).");
@@ -254,7 +258,7 @@ public abstract class SourceMap extends SourceModel {
 		
 		if(scans.size() > 1) {
 			// Check if there is a scan at least half long edge away from the median center...
-			Collection<Scan<?,?>> suspects = findOutliers(diagonal >> 2);
+			Collection<Scan<?,?>> suspects = findOutliers(diagonal / 2.0);
 			if(!suspects.isEmpty()) {
 				foundSuspects = true;
 				System.err.println("   * Check that all scans observe the same area on sky.");
@@ -266,7 +270,7 @@ public abstract class SourceMap extends SourceModel {
 		}
 
 		// Check if there is a scan that spans at least a half long edge... 
-		Collection<Scan<?,?>> suspects = findSlewing(diagonal >> 1);
+		Collection<Scan<?,?>> suspects = findSlewing(diagonal / 2.0);
 		if(!suspects.isEmpty()) {
 			foundSuspects = true;
 			System.err.println("   * Was data acquired during telescope slew?");	
@@ -297,7 +301,7 @@ public abstract class SourceMap extends SourceModel {
 		if(used + required > max) memoryError(sizeX, sizeY); 
 	}
 	
-	public Collection<Scan<?,?>> findOutliers(int pixels) {
+	public Collection<Scan<?,?>> findOutliers(double maxDistance) {
 		ArrayList<Scan<?,?>> outliers = new ArrayList<Scan<?,?>>();
 
 		float[] ra = new float[scans.size()];
@@ -315,18 +319,18 @@ public abstract class SourceMap extends SourceModel {
 			EquatorialCoordinates equatorial = (EquatorialCoordinates) scan.equatorial.clone();
 			equatorial.precess(CoordinateEpoch.J2000);
 			double d = equatorial.distanceTo(median);
-			if(d > pixels * resolution()) outliers.add(scan);
+			if(d > maxDistance) outliers.add(scan);
 		}
 		return outliers;
 	}
 	
-	public Collection<Scan<?,?>> findSlewing(int pixels) {
+	public Collection<Scan<?,?>> findSlewing(double maxDistance) {
 		ArrayList<Scan<?,?>> slews = new ArrayList<Scan<?,?>>();
 		double cosLat = getProjection().getReference().cosLat();
 		
 		for(Scan<?,?> scan : scans) {
 			double span = Math.hypot(scan.longitudeRange.span() * cosLat, scan.latitudeRange.span());
-			if(span > pixels * resolution()) slews.add(scan);
+			if(span > maxDistance) slews.add(scan);
 		}
 		return slews;
 	}
