@@ -3,6 +3,14 @@
 >>> focus.s2n, focus.[x,y,z]coeff, focus.[x,y,z]scatter
 >>> focus.r, focus.rmin, focus.elong0
 
+>>> renames (with aliases for backward compatibility):
+
+	clip -> source.clip
+	blank -> source.blank
+	smooth -> source.smooth
+
+>>> pointing on any celestial map
+
 
 For 2.20
 	- Update nom.tam.fits to 1.11 (Requires Java 6!!!)

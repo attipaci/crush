@@ -42,6 +42,7 @@ public class SkyDip extends SourceModel {
 	
 	public SkyDip(Instrument<?> instrument) {
 		super(instrument);
+		preferredStem = "skydip";
 	}
 	
 	@Override
