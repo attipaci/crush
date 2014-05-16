@@ -1,6 +1,8 @@
 >> Check tau timezone...
 >> check calibration with new rcp...
 >> 'nochopper'
+>> source.margin...
+
 
 2.16-b1 (24 April 2014)
 
@@ -220,6 +222,10 @@
 
 	[CRUSH-1.xx] New projections added to CRUSH-1.xx toolset (e.g.
 	'show', 'imagetool', etc...).
+
+	[CODE] Different source models can have preferred options under their
+	own branch. When these are defined they override the default source 
+	option for these.
 
 	[CODE] Initial and rudimentary support for old SHARC data, including
 	some basic dual-beam deconvolution...

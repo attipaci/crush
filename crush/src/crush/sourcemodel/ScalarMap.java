@@ -55,6 +55,8 @@ public class ScalarMap extends SourceMap {
 	public boolean enableWeighting = true;
 	public boolean enableLevel = true;
 	public boolean enableBias = true;	
+
+	protected boolean isNormalized = false;
 	
 	public ScalarMap(Instrument<?> instrument) {
 		super(instrument);
@@ -72,6 +74,7 @@ public class ScalarMap extends SourceMap {
 		isReady = false;
 	
 		map.addDirect(other.map, weight);
+		isNormalized = false;
 		
 		enableLevel &= other.enableLevel;
 		enableWeighting &= other.enableWeighting;
@@ -151,14 +154,11 @@ public class ScalarMap extends SourceMap {
 			
 		
 		map.printShortInfo();
-		
-		System.err.println("# " + ArrayUtil.toString(map.getGrid().getTransform()));
-		System.err.println("# " + ArrayUtil.toString(map.getGrid().getInverseTransform()));
-		
+			
 		base = new Data2D(map.sizeX(), map.sizeY());
 		createMask();
 		
-		if(hasOption("indexing")) {
+		if(allowIndexing) if(hasOption("indexing")) {
 			try { index(); }
 			catch(Exception e) { 
 				System.err.println("WARNING! Indexing error:");
@@ -295,15 +295,19 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	@Override
-	public synchronized void process(Scan<?,?> scan) {	
-		map.normalize();
+	public synchronized void process(Scan<?,?> scan) {			
+		if(!isNormalized) {
+			map.normalize();
+			isNormalized = true;
+		}
+		
 		if(base != null) map.addImage(base.getData());
 			
 		if(enableLevel && scan.getSourceGeneration() == 0) map.level(true);
 		else enableLevel = false;	
 		
-		if(hasOption("source.despike")) {
-			Configurator despike = option("source.despike");
+		if(hasSourceOption("despike")) {
+			Configurator despike = sourceOption("despike");
 			double level = 10.0;
 			despike.mapValueTo("level");
 			if(despike.isConfigured("level")) level = despike.get("level").getDouble();
@@ -351,13 +355,13 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	public synchronized void filter(boolean allowBlanking) {
-		if(!hasOption("source.filter") || getSourceSize() <= 0.0) {
+		if(!hasSourceOption("filter") || getSourceSize() <= 0.0) {
 			map.noExtFilter();
 			map.filterBlanking = Double.NaN;
 			return;
 		}
 			
-		Configurator filter = option("source.filter");
+		Configurator filter = sourceOption("filter");
 		filter.mapValueTo("fwhm");
 			
 		String mode = filter.isConfigured("type") ? filter.get("type").getValue() : "convolution";
@@ -415,7 +419,10 @@ public class ScalarMap extends SourceMap {
 	@Override
 	public synchronized void process(boolean verbose) {	
 		
-		map.normalize();
+		if(!isNormalized) {
+			map.normalize();
+			isNormalized = true;
+		}
 		map.generation++; // Increment the map generation...
 		
 		map.instrument.resolution = getAverageResolution();
@@ -426,15 +433,15 @@ public class ScalarMap extends SourceMap {
 		
 		if(verbose) if(hasOption("source.despike")) System.err.print("{despike} ");
 		
-		if(hasOption("source.filter") && getSourceSize() > 0.0) {
+		if(hasSourceOption("filter") && getSourceSize() > 0.0) {
 			if(verbose) System.err.print("{filter} ");
 		}
 		
 		if(verbose) if(enableWeighting) if(hasOption("weighting.scans"))
 			for(Scan<?,?> scan : scans) System.err.print("{" + Util.f2.format(scan.weight) + "} ");
 		
-		if(hasOption("source.redundancy"))  {
-			if(hasOption("source.redundancy")) System.err.print("(check) ");
+		if(hasSourceOption("redundancy"))  {
+			System.err.print("(check) ");
 			double minIntTime = getInstrument().integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
 			if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
 		}
@@ -452,7 +459,7 @@ public class ScalarMap extends SourceMap {
 
 		// Apply the filtering to the final map, to reflect the correct blanking
 		// level...
-		if(hasOption("source.filter")) if(verbose) System.err.print("(filter) ");
+		if(hasSourceOption("filter")) if(verbose) System.err.print("(filter) ");
 		
 		filter(true);
 		map.filterCorrect();
@@ -474,7 +481,7 @@ public class ScalarMap extends SourceMap {
 		if(hasOption("clip") && enableBias) {	
 			double clipLevel = option("clip").getDouble();
 			if(verbose) System.err.print("(clip:" + clipLevel + ") ");
-			final int sign = hasOption("source.sign") ? option("source.sign").getSign() : 0;
+			final int sign = hasSourceOption("sign") ? sourceOption("sign").getSign() : 0;
 			map.s2nClipBelow(clipLevel, sign);
 		}
 
@@ -482,24 +489,23 @@ public class ScalarMap extends SourceMap {
 		// subtracted from the data...
 		map.sanitize();
 
-		Configurator sourceOption = option("source");
-		if(sourceOption.isConfigured("mem")) {
+		if(hasSourceOption("mem")) {
 			if(verbose) System.err.print("(MEM) ");
-			double lambda = sourceOption.isConfigured("mem.lambda") ? sourceOption.get("mem.lambda").getDouble() : 0.1;
+			double lambda = hasSourceOption("mem.lambda") ? sourceOption("mem.lambda").getDouble() : 0.1;
 			map.MEM(lambda, true);
 		}
 
-		if(sourceOption.isConfigured("intermediates")) {
+		if(hasSourceOption("intermediates")) {
 			map.fileName = "intermediate.fits";
 			try { map.write(); }
 			catch(Exception e) { e.printStackTrace(); }
 		}
 
 		// Coupled with blanking...
-		if(!sourceOption.isConfigured("nosync")) {
+		if(!hasSourceOption("nosync")) {
 			if(hasOption("blank") && enableBias) {
 				if(verbose) System.err.print("(blank:" + blankingLevel + ") ");
-				final int sign = hasOption("source.sign") ? option("source.sign").getSign() : 0;
+				final int sign = hasSourceOption("sign") ? sourceOption("sign").getSign() : 0;
 				setMask(map.getMask(getBlankingLevel(), 3, sign));
 			}
 			else map.getMask(Double.NaN, 3, 0);
@@ -616,6 +622,7 @@ public class ScalarMap extends SourceMap {
 	protected synchronized int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
 		int goodFrames = super.add(integration, pixels, sourceGain, filtering, signalMode);
 		map.integrationTime += goodFrames * integration.instrument.samplingInterval;
+		isNormalized = false;
 		return goodFrames;
 	}
 	

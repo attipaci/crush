@@ -42,6 +42,7 @@ public class BeamMap extends SourceMap {
 	
 	public BeamMap(Array<?, ?> instrument) {
 		super(instrument);
+		preferredStem = "beammap";
 	}
 
 	@Override
@@ -201,11 +202,11 @@ public class BeamMap extends SourceMap {
 
 	@Override
 	public void write(String path) throws Exception {
-		if(hasOption("beammap.writemaps")) {
+		if(hasSourceOption("writemaps")) {
 			int from = 0;
 			int to = pixelMap.length;
 			
-			String spec = option("beammap.writemaps").getValue();
+			String spec = sourceOption("writemaps").getValue();
 			
 			if(spec.length() > 0) {
 				StringTokenizer tokens = new StringTokenizer(spec, ":");
@@ -222,7 +223,7 @@ public class BeamMap extends SourceMap {
 
 	@Override
 	public void process(boolean verbose) throws Exception {	
-		boolean process = hasOption("beammap.process");	
+		boolean process = hasSourceOption("process");	
 		
 		for(ScalarMap map : pixelMap) if(map != null) {	
 			if(process) map.process(verbose);

@@ -42,6 +42,14 @@ public abstract class Photometry extends SourceModel {
 	
 	protected Hashtable<Scan<?,?>, DataPoint> scanFluxes = new Hashtable<Scan<?,?>, DataPoint>();
 
+	public Photometry(Instrument<?> instrument) {
+		super(instrument);
+		preferredStem = "photometry";
+		flux = new WeightedPoint[instrument.storeChannels+1];
+		for(int i=flux.length; --i >= 0; ) flux[i] = new WeightedPoint();
+	}
+	
+	
 	@Override
 	public SourceModel copy(boolean withContents) {
 		Photometry copy = (Photometry) super.copy(withContents);
@@ -51,11 +59,6 @@ public abstract class Photometry extends SourceModel {
 		return copy;
 	}
 
-	public Photometry(Instrument<?> instrument) {
-		super(instrument);
-		flux = new WeightedPoint[instrument.storeChannels+1];
-		for(int i=flux.length; --i >= 0; ) flux[i] = new WeightedPoint();
-	}
 	
 	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {

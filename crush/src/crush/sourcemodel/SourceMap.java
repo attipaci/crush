@@ -52,6 +52,10 @@ public abstract class SourceMap extends SourceModel {
 	public double smoothing = 0.0;
 	public int signalMode = Frame.TOTAL_POWER;
 	
+	public boolean allowIndexing = true;
+	public int marginX = 0, marginY = 0;
+	
+	
 	public SourceMap(Instrument<?> instrument) {
 		super(instrument);
 	}
@@ -210,7 +214,14 @@ public abstract class SourceMap extends SourceModel {
 	public abstract Vector2D resolution();
 	
 	public void setSize() {
-		//double margin = hasOption("map.margin") ? option("map.margin").getDouble() * instrument.getDefaultSizeUnit() : 0.0;
+		Vector2D margin = new Vector2D();
+		
+		if(hasSourceOption("margin")) {
+			List<Double> values = sourceOption("margin").getDoubles();
+			margin.setX(values.get(0));
+			margin.setY(values.size() > 1 ? values.get(1) : margin.x());
+			margin.scale(getInstrument().getSizeUnit());
+		}
 		
 		// Figure out what offsets the corners of the map will have...
 		try { searchCorners(); }
@@ -219,17 +230,15 @@ public abstract class SourceMap extends SourceModel {
 			System.exit(1);
 		}
 		
-		/*
-		xRange.max += margin;
-		xRange.min -= margin;
-		yRange.max += margin;
-		yRange.min -= margin;
-		*/
-
+		xRange.setMax(xRange.max() + margin.x());
+		xRange.setMin(xRange.min() - margin.x());
+		yRange.setMax(yRange.max() + margin.y());
+		yRange.setMin(yRange.min() - margin.y());
+		
 		Vector2D resolution = resolution();
 		
-		int sizeX = (int)Math.ceil((xRange.max() - xRange.min())/resolution.x()) + 2;
-		int sizeY = (int)Math.ceil((yRange.max() - yRange.min())/resolution.y()) + 2;
+		int sizeX = 2 + (int)Math.ceil((xRange.max() - xRange.min()) / resolution.x());
+		int sizeY = 2 + (int)Math.ceil((yRange.max() - yRange.min()) / resolution.y());
 	
 		try { 
 			checkForStorage(sizeX, sizeY);	
@@ -449,7 +458,7 @@ public abstract class SourceMap extends SourceModel {
 		
 		Collection<? extends Pixel> pixels = instrument.getMappingPixels();
 		
-		if(hasOption("source.coupling")) calcCoupling(integration, pixels, sourceGain, integration.sourceSyncGain);
+		if(hasSourceOption("coupling")) calcCoupling(integration, pixels, sourceGain, integration.sourceSyncGain);
 		sync(integration, pixels, sourceGain, signalMode);
 
 		// Do an approximate accounting of the source dependence...
@@ -492,7 +501,7 @@ public abstract class SourceMap extends SourceModel {
 	public void suggestMakeValid() {
 		super.suggestMakeValid();
 		System.err.println("            * Increase 'grid' for a coarser map pixellization.");
-		if(hasOption("source.redundancy")) System.err.println("            * Disable redundancy checking ('forget=source.redundancy').");
+		if(hasSourceOption("redundancy")) System.err.println("            * Disable redundancy checking ('forget=source.redundancy').");
 	}
 	
 	@Override

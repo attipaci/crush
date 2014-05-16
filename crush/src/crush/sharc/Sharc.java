@@ -26,6 +26,8 @@ package crush.sharc;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import kovacs.math.Vector2D;
 import kovacs.util.Unit;
@@ -33,7 +35,7 @@ import crush.Mount;
 import crush.Scan;
 import crush.SourceModel;
 import crush.cso.CSOArray;
-import crush.sourcemodel.DualBeamMap;
+import crush.sourcemodel.MultiBeamMap;
 
 public class Sharc extends CSOArray<SharcPixel> {
 	/**
@@ -91,15 +93,34 @@ public class Sharc extends CSOArray<SharcPixel> {
 			if(!hasOption("datapath")) throw e;
 			file = SharcFile.get(this, option("datapath").getPath() + File.separator + spec);
 		}
-		SharcScan scan = file.get(Integer.parseInt(descriptor));
-		if(scan == null) throw new FileNotFoundException("Invalid scan index.");
+		
+		StringTokenizer tokens = new StringTokenizer(descriptor, "-");
+		int from = Integer.parseInt(tokens.nextToken());
+		int to = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : from;
+		if(to < from) throw new IllegalStateException("Invalid scan number range: " + descriptor);
+		
+		ArrayList<SharcScan> scans = new ArrayList<SharcScan>(to - from + 1);
+		for(int i=from; i<=to; i++) {
+			SharcScan scan = file.get(i);
+			if(scan == null) break;	
+			scans.add(scan);
+		}
+		
+		if(scans.isEmpty()) throw new FileNotFoundException("No such scans in file: " + descriptor);
+		
+		// Merge them into one scan...
+		SharcScan scan = scans.get(0);
+		for(int i=1; i<scans.size(); i++) {
+			SharcIntegration integration = scans.get(i).get(0);
+			scan.add(integration);
+			integration.scan = scan;
+			integration.integrationNo = i;
+		}
 		
 		scan.instrument.validate(scan);
 		for(SharcIntegration integration : scan) integration.instrument = (Sharc) scan.instrument.copy();
 		
 		scan.validate();
-		
-		
 		
 		return scan;
 	}
@@ -109,7 +130,7 @@ public class Sharc extends CSOArray<SharcPixel> {
 	public SourceModel getSourceModelInstance() {
 		if(hasOption("source.type")) {
 			String type = option("source.type").getValue();
-			if(type.equals("deconvolved")) return new DualBeamMap(this);		
+			if(type.equals("multibeam")) return new MultiBeamMap(this, SharcPixel.spacing);		
 			else return super.getSourceModelInstance();
 		}
 		return super.getSourceModelInstance();

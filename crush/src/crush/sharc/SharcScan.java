@@ -33,6 +33,7 @@ import java.io.File;
 
 import kovacs.astro.AstroTime;
 import kovacs.astro.BesselianEpoch;
+import kovacs.astro.CelestialCoordinates;
 import kovacs.astro.CoordinateEpoch;
 import kovacs.astro.EquatorialCoordinates;
 import kovacs.astro.FocalPlaneCoordinates;
@@ -87,7 +88,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 	public String getID() {
 		AstroTime time = new AstroTime();
 		time.setMJD(getMJD());
-		return time.getFitsDate() + "-" + super.getID();
+		return time.getFitsDate() + "." + super.getID();
 	}
 	
 	public void readScanRow(DataInput in) throws IOException {
@@ -373,7 +374,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 	public double getChopAngle(Coordinate2D coordinates) {
 		if(coordinates instanceof HorizontalCoordinates) return 0.0;
 		if(coordinates instanceof FocalPlaneCoordinates) return -instrument.rotatorAngle;
-		if(coordinates instanceof EquatorialCoordinates) return getPA();
+		if(coordinates instanceof CelestialCoordinates) return getPA() - ((CelestialCoordinates) coordinates).getEquatorialPositionAngle();
 		return Double.NaN;
 	}
 	

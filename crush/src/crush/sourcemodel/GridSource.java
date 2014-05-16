@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import kovacs.data.Data2D;
 import kovacs.data.Grid2D;
 import kovacs.data.GridImage;
 import kovacs.data.GridMap;
@@ -35,7 +36,6 @@ import kovacs.math.Coordinate2D;
 import kovacs.util.Configurator;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
@@ -78,9 +78,9 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	}
 	
 	@Override
-	public void addDirect(final GridMap<?> map, final double w) {
-		super.addDirect(map, w);
-		if(map instanceof GridSource) integrationTime += ((GridSource<?>) map).integrationTime;
+	public void addDirect(final Data2D data, final double w) {
+		super.addDirect(data, w);
+		if(data instanceof GridSource) integrationTime += ((GridSource<?>) data).integrationTime;
 	}
 	
 	@Override
@@ -161,8 +161,8 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	}
 
 	@Override
-	public void parseHeader(Header header) throws Exception {		
-		super.parseHeader(header);
+	public void parseHeader(Header header, String alt) throws Exception {		
+		super.parseHeader(header, alt);
 		
 		integrationTime = header.getDoubleValue("INTEGRTN", Double.NaN) * Unit.s;
 		parseInstrumentData(header);

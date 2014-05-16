@@ -39,8 +39,10 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	public boolean isReady = false;
 
 	public String commandLine;
-	public String id;	
-
+	public String id;
+	
+	public String preferredStem = null;
+	
 	public SourceModel(Instrument<?> instrument) {
 		setInstrument(instrument);
 	}
@@ -66,13 +68,30 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	}	
 
 	public boolean hasOption(String name) {
-		return options.isConfigured(name);
+		if(hasSourceOption(name)) return true;
+		if(options.isConfigured(name)) return true;
+		return false;
 	}
 
 	public Configurator option(String name) {
-		return options.get(name);
+		Configurator option = sourceOption(name);
+		if(option == null) return options.get(name);
+		return option;
 	}
 
+	public boolean hasSourceOption(String name) {
+		if(preferredStem != null) if(options.isConfigured(preferredStem + "." + name)) return true;
+		if(options.isConfigured("source." + name)) return true;
+		return false;
+	}
+
+	public Configurator sourceOption(String name) {
+		Configurator option = null;
+		if(preferredStem != null) option = options.get(preferredStem + "." + name);
+		if(option == null) option = options.get("source." + name);
+		return option;
+	}
+	
 	public final SourceModel copy() { return copy(true); }
 	
 	public SourceModel copy(boolean copyContents) {
@@ -201,8 +220,8 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 
 	public synchronized void sync() throws Exception {
 		// Coupled with blanking...
-		if(hasOption("source.nosync")) return;
-		if(hasOption("source.coupling")) System.err.print("(coupling) ");
+		if(hasSourceOption("nosync")) return;
+		if(hasSourceOption("coupling")) System.err.print("(coupling) ");
 
 		System.err.print("(sync) ");
 
