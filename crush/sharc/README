@@ -1,0 +1,144 @@
+             *** CRUSH User's Manual Extension for SHARC ***
+
+                              Attila Kovacs
+                      <attila[AT]submm.caltech.edu>
+
+                       Last updated: 20 May 2014
+
+
+
+
+Table of Contents
+=================
+
+1. Introduction
+  1.1 Notes of curiosity	
+2. Locating Scans
+3. Pointing and Extinction Corrections
+4. Glossary of SHARC-specific options
+
+
+
+
+#####################################################################
+1. Introduction
+#####################################################################
+
+
+This document contains information specific to using CRUSH-2 to reduce SHARC
+data. It is assumed that you are already familiar with the contents of the main
+CRUSH-2 README (inside the distribution directory), especially its Section 1
+(Getting Started).
+
+If you run into difficulty understanding the concepts in this document, you
+will probably find it useful to study the main README document a little longer.
+
+
+
+1.1 Notes of curiousity
+=======================
+
+SHARC represented a particular challenge for integrating into CRUSH (which is
+why it was interesting), since CRUSH was designed for total-power data, whereas
+SHARC produces only a dual-beam differential stream via a chop, which requires
+the extra step of deconvolution. The deconvolution, and map accumulation, 
+happens in Fourier domain, and the dual-beam image for the synchronization to 
+the time-stream has to be dynamically generated in each iteration for each 
+scan. 
+
+The deconvolution method is essentially an Emerson II (Emerson 1995) type algorithm with some extra use of well-placed noise weighting. The new SHARC module 
+mainly serves as a demo for what CRUSH can do for dual-beam (and multibeam) 
+reductions in general. CRUSH can be further tweaked to work with arbitrary 
+wobble patterns too, if there is desire to adapt it...
+
+
+
+#####################################################################
+2. Locating Scans
+#####################################################################
+
+
+SHARC scans were stored in user-specified data files (stored in poorly 
+documented VAX-binary format), with each file containing data from multiple 
+scans. So, before  accessing any given scan, you must specify the data file via
+the 'file' option, or via the combination of 'datapath' and file. E.g., say 
+your data file is '/home/sharc/mydata.dat'. Then you can specify this file 
+either as:
+
+   crush sharc [...] -file=/home/sharc/mydata.dat [...]
+
+or as:
+
+   crush sharc [...] -datapath=/home/sharc -file=mydata.dat [..]
+
+(Clearly, the second is advantageous when you want to reduce scans from 
+multiple files in the same location.)
+
+Next you can obtain a listing of the scans in any given file using the 'list' directive. E.g.
+
+   crush sharc [...] -file=myfile.dat list
+
+will list the scan entries stored in 'myfile.dat'.
+
+Every row of an OTF scan constitutes a separate scan entry in the data file. 
+While the scan headers state how many OTF rows each complete scan should have, 
+the number of rows recorded in the data may often be fewer (aborted scans or 
+crashes) or more (often by +1). Therefore, there is no fool-proof automatic 
+detection of which scan rows 'belong' together. Instead you can specify which
+entries to treat as belonging to the same 'master' scan. Suppose you judge
+that entries 3-12 are part of the same OTF, and 15-19 another, and 22 is a
+single pass over the same data. Then you may reduce these together as:
+
+   crush sharc [...] -file=myfile.dat 3-12 15-19 22
+
+I.e., unlike for other instruments, ranges for SHARC specify entries that are
+to be treated as one scan (not a range of scans as for other instruments).
+
+
+
+#####################################################################
+3. Pointing and Extinction Corrections
+#####################################################################
+
+This works the same way as for SHARC-2, so you should read the corresponding
+section of sharc2/README. But, in short you can 'fazo' and 'fzao' to correct
+the pointing, and 'tau.225GHz' to set a 225GHz tau value. E.g.:
+
+   crush sharc [...] -fazo=-49.5 -fzao=10.2 -tau.225GHz=0.043 3-12 [...]
+
+There is one small difference, however, is that the 'sharc' tau relation
+includes the bolometer nonlinearity (which for SHARC-2 is treated separately).
+
+
+
+#####################################################################
+4. Glossary of SHARC-specific options
+#####################################################################
+
+   chopper.throw=X	@Advanced
+			Overrider. Specify the chopper throw (arcsecs) to use 
+			instead of the value recorded in the data file.
+
+   deconvolve.above=X	@Expert
+			Set the deconvolution threshold to X. Usually 0<X<2.
+			When the transfer function (Fourier transform) of the 
+			chop pattern is below this value, the corresponding
+			Fourier components are considered no measured (i.e.
+			set to zero). 		
+
+   file=<path>		Specify the data file either as a fully specified
+			path, or relative to the path set by the 'datapath'
+			option.	
+
+   pixelsize=X		@Advanced
+			Set the SHARC pixel spacing to X arcseconds. By 
+			default, the nominal 5" spacing is assumed.
+
+   source.type=multibeam	Setting the source type to 'multibeam' 
+				(default) will produce deconvolved maps. 
+				Otherwise, CRUSH will produce dual-beam
+				maps.
+
+
+------------------------------------------------------------------------------
+Copyright (C)2014 -- Attila Kovacs <kovacs@astro.umn.edu>

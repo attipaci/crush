@@ -49,11 +49,12 @@ public class SharcFrame extends HorizontalFrame {
 		final double UT = sharcScan.ut_time + index * scan.instrument.samplingInterval;
 		MJD = sharcScan.iMJD + UT / Unit.day;
 		LST = sharcScan.LST + index * scan.instrument.samplingInterval;
-		
+			
 		// Enforce the calculation of the equatorial coordinates
 		equatorial = null;
 
 		horizontal = sharcScan.equatorial.toHorizontal(sharcScan.site, LST);
+		
 		double PA = sharcScan.equatorial.getParallacticAngle(sharcScan.site, LST);
 		
 		sinPA = Math.sin(PA);
@@ -70,6 +71,7 @@ public class SharcFrame extends HorizontalFrame {
 		
 	}
 	
+
 	public static int scanIndexOffset = 0;
 }
  

@@ -2,6 +2,9 @@
 >> check calibration with new rcp...
 >> 'nochopper'
 >> source.margin...
+>> AstroTime.getFitsDate() and getFitsTimeStamp do not return the same date...
+
+>> SHARC: 'file', 'multibeam', [list], 'deconvolve.above', 'chopper.throw'
 
 
 2.16-b1 (24 April 2014)
@@ -10,9 +13,9 @@
 	Overview
 	=====================================================================
 	This release fixes a few critical bugs from the prior release(s). Some
-	map projections (CAR, MER, SFL, and AIT) were wrong for a while now.
-	SHARC-2 had a pointing bug due to the lack of chopper levelling, and
-	moving-frame objects (planets, asteroids, moons) were not mapped 
+	map projections (CAR, MER, SFL, and AIT) were upside-down for a while 
+	now. SHARC-2 had a pointing bug due to the lack of chopper levelling, 
+	and moving-frame objects (planets, asteroids, moons) were not mapped 
 	correctly to non-equatorial celestial coordinates.
 	Apart from the major bug fixes, there are several new and improved
 	features, some smaller fixes, tweaks and streamlined code. The instant 
@@ -192,6 +195,9 @@
 	has any effect. 'correlated.rows.group' and 'correlated.cols.group'
 	are also deprecated.
 
+	[CONFIG] {LABOCA} Skydip opacities and calibration data included up to
+	1 May 2014.
+
 	[CONFIG] {2.16-1} {GISMO} New synthetic RCP for April 2014 based on 
 	measured pixel positions from 3C345 on 2014-04-09.
 
@@ -222,6 +228,8 @@
 
 	[CRUSH-1.xx] New projections added to CRUSH-1.xx toolset (e.g.
 	'show', 'imagetool', etc...).
+
+	[CODE] Simplified point-source corrections switches.
 
 	[CODE] Different source models can have preferred options under their
 	own branch. When these are defined they override the default source 

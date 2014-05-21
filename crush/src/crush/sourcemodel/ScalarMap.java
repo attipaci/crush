@@ -73,7 +73,7 @@ public class ScalarMap extends SourceMap {
 		ScalarMap other = (ScalarMap) model;
 		isReady = false;
 	
-		map.addDirect(other.map, weight);
+		map.addWeightedDirect(other.map, weight);
 		isNormalized = false;
 		
 		enableLevel &= other.enableLevel;
