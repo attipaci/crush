@@ -78,8 +78,8 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	}
 	
 	@Override
-	public void addDirect(final Data2D data, final double w) {
-		super.addDirect(data, w);
+	public void addWeightedDirect(final Data2D data, final double w) {
+		super.addWeightedDirect(data, w);
 		if(data instanceof GridSource) integrationTime += ((GridSource<?>) data).integrationTime;
 	}
 	

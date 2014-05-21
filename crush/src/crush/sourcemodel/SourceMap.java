@@ -388,7 +388,7 @@ public abstract class SourceMap extends SourceModel {
 		Configurator option = option("source");
 		Instrument<?> instrument = integration.instrument; 
 
-		boolean filterCorrection = option.isConfigured("correct");
+		boolean mapCorrection = option.isConfigured("correct");
 	
 		integration.comments += "Map";
 		if(id != null) integration.comments += "." + id;
@@ -403,18 +403,16 @@ public abstract class SourceMap extends SourceModel {
 		integration.calcSourceNEFD();
 
 		// For the first source generation, apply the point source correction directly to the signals...
-		final boolean signalCorrection = integration.sourceGeneration == 0;
+		final boolean signalCorrection = integration.sourceGeneration == 0 && !mapCorrection;
 		final double[] sourceGain = instrument.getSourceGains(signalCorrection);
 	
-		double averageFiltering = instrument.getAverageFiltering();
-		double C = filterCorrection && !signalCorrection ? averageFiltering : 1.0;
-		
-		add(integration, pixels, sourceGain, C, signalMode);
+		double averageFiltering = instrument.getAverageFiltering();		
+		add(integration, pixels, sourceGain, signalCorrection ? averageFiltering : 1.0, signalMode);
 
 		if(signalCorrection)
 			integration.comments += "[C1~" + Util.f2.format(1.0/averageFiltering) + "] ";
-		else if(filterCorrection) {
-			integration.comments += "[C2=" + Util.f2.format(1.0/C) + "] ";
+		else if(mapCorrection) {
+			integration.comments += "[C2=" + Util.f2.format(1.0/averageFiltering) + "] ";
 		}
 		
 		integration.comments += " ";

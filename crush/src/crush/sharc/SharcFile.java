@@ -23,6 +23,7 @@
 
 package crush.sharc;
 
+import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -75,14 +76,20 @@ public class SharcFile extends Hashtable<Integer, SharcScan> {
 		if(id.contains("."));
 		id = id.substring(0, id.lastIndexOf('.'));
 		
-		in = new VAXDataInputStream(new FileInputStream(fileName));
+		in = new VAXDataInputStream(new BufferedInputStream(new FileInputStream(fileName), bufferSize));
 		readFully();
+		System.err.println();
+		
 		files.put(fileName, this);
 	}
 	
 	protected void readFully() throws IOException {
 		readHeader();
 		//printInfo(System.out);
+		
+		System.out.println();
+		System.out.println(" [" + fileName + "]");
+		System.out.println();
 		
 		try { for(;;) readScan(); }
 		catch(EOFException e) {}
@@ -146,4 +153,5 @@ public class SharcFile extends Hashtable<Integer, SharcScan> {
 		return file == null ? new SharcFile(sharc, fileName) : file;
 	}
 	
+	public static int bufferSize = 1<<22;	// 4 MB
 }

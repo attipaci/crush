@@ -46,7 +46,7 @@ public class CRUSH extends Configurator {
 	private static final long serialVersionUID = 6284421525275783456L;
 	
 	private static String version = "2.16-1";
-	private static String revision = "(devel.3)";
+	private static String revision = "(devel.4)";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -128,7 +128,7 @@ public class CRUSH extends Configurator {
 				read(args[i]);
 			}
 		}	
-
+		
 		validate();
 	}
 	

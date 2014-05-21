@@ -1,37 +1,59 @@
+/*******************************************************************************
+ * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * All rights reserved. 
+ * 
+ * This file is part of crush.
+ * 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ * 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ * 
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ ******************************************************************************/
+
+
 package crush.sourcemodel;
 
 import java.util.Collection;
 
-import kovacs.data.ArrayUtil;
 import kovacs.data.CartesianGrid2D;
 import kovacs.data.Data2D;
-import kovacs.data.GridMap;
 import kovacs.data.Data2D.Task;
+import kovacs.data.GridMap;
 import kovacs.fft.MultiFFT;
 import kovacs.math.Coordinate2D;
 import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
-import kovacs.util.Configurator;
 import kovacs.util.Constant;
 import kovacs.util.ExtraMath;
-import kovacs.util.Unit;
-import kovacs.util.Util;
+import kovacs.util.Parallel;
 import crush.DualBeam;
 import crush.Instrument;
 import crush.Integration;
 import crush.Pixel;
 import crush.Scan;
 import crush.SourceModel;
-import crush.astro.AstroMap;
 
 public class MultiBeamMap extends ScalarMap {
 	GridMap<Coordinate2D> transformer;
 	Class<SphericalCoordinates> scanningSystem;
 	MultiFFT fft = new MultiFFT();
-	
+
 	
 	double trackSpacing;
 	boolean isSpectrum = false;
+
+	double sumScanWeight = 0.0;
 	
 	public MultiBeamMap(Instrument<?> instrument, double trackSpacing) {
 		super(instrument);
@@ -40,6 +62,7 @@ public class MultiBeamMap extends ScalarMap {
 		//preferredStem = "multibeam";
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public SourceModel copy(boolean withContents) {
 		MultiBeamMap copy = (MultiBeamMap) super.copy(withContents);
@@ -86,9 +109,11 @@ public class MultiBeamMap extends ScalarMap {
 		MultiBeamMap multibeam = (MultiBeamMap) model;
 		super.add(multibeam, weight);
 		
+		sumScanWeight += weight;
+		
 		if(!multibeam.isSpectrum) throw new IllegalStateException("Expecting spectrum to accumulate.");
 		
-		transformer.addDirect(multibeam.transformer, weight);		
+		transformer.addWeightedDirect(multibeam.transformer, weight);		
 		isSpectrum = true;
 	}
 
@@ -115,8 +140,10 @@ public class MultiBeamMap extends ScalarMap {
 		double[][] beam = Data2D.getGaussian(sigma / delta.x(), sigma / delta.y(), angle, Constant.sigmasInFWHM / Constant.sqrt2);
 			
 		map.smooth(beam, trackSpacing);
+		trim();
+			
 		map.sanitize();
-	
+		
 		/*
 		try { map.write("increment.fits"); }
 		catch(Exception e) { e.printStackTrace(); }
@@ -141,16 +168,41 @@ public class MultiBeamMap extends ScalarMap {
 		if(isSpectrum) throw new IllegalStateException("Expecting map to transform forward.");
 		
 		transformer.clear();
+		
+		// TODO convert weights into a normalized window function s.t. transform is essentially a PSD.
+		// TODO also keep track of total weight s.t. add(sourceModel) properly takes it into account.
 
-		// calculate the dual-beam image;
-		map.new Task<Void>() {
+	
+		Task<Double> loader = map.new Task<Double>() {	
+			double sumw;
+			
+			@Override
+			public void init() { sumw = 0.0; }
+			
 			@Override
 			public void process(int i, int j) {	
-				transformer.setValue(i, j, map.getValue(i,  j) * map.getWeight(i, j));
+				final double w = map.getWeight(i, j);
+				sumw += w;
+				transformer.setValue(i, j, w * map.getValue(i,  j));
 			}
-		}.process();
-
+			
+			@Override 
+			public Double getPartialResult() { return sumw; }
+			
+			@Override
+			public Double getResult() {
+				double globalSumW = 0.0;
+				for(Parallel<Double> task : getWorkers()) globalSumW += task.getPartialResult();
+				return globalSumW;
+			}
+			
+		};
+		
+		loader.process();
+		
 		transformer.unflag();
+		transformer.setWeight(loader.getResult()); // All frequencies have equal weight before deconvolution
+
 		
 		/*
 		try { 
@@ -160,8 +212,7 @@ public class MultiBeamMap extends ScalarMap {
 		catch(Exception e) { e.printStackTrace(); }
 		*/
 	
-		transformer.setWeight(1.0); // All frequencies have equal weight before deconvolution
-		
+			
 		fft.real2Amplitude(transformer.getData());
 		isSpectrum = true;
 	}
@@ -176,7 +227,7 @@ public class MultiBeamMap extends ScalarMap {
 		map.new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
-				if(map.getWeight(i, j) > 0.0) map.setValue(i, j, transformer.getValue(i,  j) / map.getWeight(i, j));
+				if(map.getWeight(i, j) > 0.0) map.setValue(i, j, transformer.getValue(i,  j) * sumScanWeight / map.getWeight(i, j));
 				else map.setValue(i,  j, 0.0);
 			}
 		}.process();
@@ -188,6 +239,7 @@ public class MultiBeamMap extends ScalarMap {
 	public void deconvolve(DualBeam scan) {
 		if(!isSpectrum) throw new IllegalStateException("Expecting spectrum to deconvolve.");
 		
+		final double threshold = hasOption("deconvolve.above") ? option("deconvolve.above").getDouble() : 0.1;
 		
 		double l = 0.5 * scan.getChopSeparation();
 		double a = scan.getChopAngle(map.getReference());
@@ -198,7 +250,7 @@ public class MultiBeamMap extends ScalarMap {
 
 		final int Nx = transformer.sizeX() >> 1;
 
-		transformer.new Task<Void>() {				
+		transformer.new Task<Void>() {		
 			@Override
 			public void process(int i, int j) {				
 				if((j & 1) != 0) return;
@@ -211,72 +263,88 @@ public class MultiBeamMap extends ScalarMap {
 				int fi = i;
 				if(i > Nx) fi = i - (Nx<<1);
 
-				double T = 0.5 * Math.sin(fi * wx + fj * wy);
+				final double T = 2.0 * Math.sin(fi * wx + fj * wy);
 				
-				if(Math.abs(T) < 0.1) {
+				if(Math.abs(T) < threshold) {
 					transformer.clear(i, j);
 					transformer.clear(i, j+1);
 				}
 				else {
-					transformer.scale(i, j, T);
-					transformer.scale(i, j+1, T);
-
+					final double iT = 1.0 / T;
+					transformer.scale(i, j, iT);
+					transformer.scale(i, j+1, iT);
+							
 					// multiply by i...
 					double temp = transformer.getValue(i,  j);
 					transformer.setValue(i,  j, -transformer.getValue(i, j+1));
 					transformer.setValue(i,  j+1, temp);
 				}			
 			}
+		
+	
 		}.process();
+
+		
 	}
 	
-	public void normalizeTransformer() {
+	private void normalizeTransformer() {
 		//if(!isSpectrum) throw new IllegalStateException("Expecting spectrum to normalize.");
-
+		
 		// The transformer now contains the weighted sum of the deconvolved spectrum.	
 		// w = 1/T^2 --> sum T^2 = sum 1/w
-		double sumiw = 0.0;
-		int n = 0;
+		//double sumiw = 0.0;
+		//int n = 0;
 		for(int i=transformer.sizeX(); --i >= 0; ) for(int j=transformer.sizeY(); --j >= 0; ) {
-			double w = transformer.getWeight(i, j);
+			final double w = transformer.getWeight(i, j);
 			if(w == 0.0) continue;
-			sumiw += 1.0 / w;
-			n++;			
+			transformer.scaleValue(i,  j, 1.0 / w);
+			//sumiw += 1.0 / w;
+			//n++;			
 		}
-
-		transformer.scale(sumiw / n);
+		
+		//transformer.scale(sumiw / n);
 	}
 	
 
 	private MultiBeamMap getDualBeam(DualBeam scan) {
+	
+		base.unflag();
 		
-		final MultiBeamMap dual = (MultiBeamMap) copy(true);	
+		final MultiBeamMap dual = (MultiBeamMap) copy(true);
+		dual.standalone();
 		
 		final double l = 0.5 * scan.getChopSeparation();
 		final double a = getPositionAngle(scan);
 		final Vector2D delta = map.getResolution();
 		
-		final double di = l * Math.cos(a) / delta.x();
-		final double dj = l * Math.sin(a) / delta.y();
+		final int di = (int) Math.round(l * Math.cos(a) / delta.x());
+		final int dj = (int) Math.round(l * Math.sin(a) / delta.y());	
 		
 		// calculate the dual-beam image;
 		dual.map.new Task<Void>() {		
 			@Override
 			public void process(int i, int j) {
-				if(dual.map.isUnflagged(i, j)) {
-					
-					double l = map.valueAtIndex(i + di, j + dj);
-					double r = map.valueAtIndex(i - di, j - dj);
-					
-					if(Double.isNaN(l)) l = 0.0;
-					if(Double.isNaN(r)) r = 0.0;
-					
-					dual.map.setValue(i,  j, l - r);
-				}
+				
+				double l = map.containsIndex(i + di,  j + dj) ? map.getValue(i + di, j + dj) : 0.0;
+				double r = map.containsIndex(i - di,  j - dj) ? map.getValue(i - di, j - dj) : 0.0;
+
+				//if(Double.isNaN(l)) l = 0.0;
+				//if(Double.isNaN(r)) r = 0.0;
+
+				dual.map.setValue(i, j, l - r);
+
+				l = base.containsIndex(i + di,  j + dj) ? base.getValue(i + di, j + dj) : 0.0;
+				r = base.containsIndex(i - di,  j - dj) ? base.getValue(i - di, j - dj) : 0.0;
+				
+				//if(Double.isNaN(l)) l = 0.0;
+				//if(Double.isNaN(r)) r = 0.0;
+
+				dual.base.setValue(i, j, l - r);
+				dual.base.unflag(i, j);
 			}
 		}.process();
 
-		dual.map.sanitize();
+		//dual.map.sanitize();
 		
 		return dual;
 	}
@@ -292,6 +360,14 @@ public class MultiBeamMap extends ScalarMap {
 		}
 		catch(Exception e) { e.printStackTrace(); }
 		*/
+
+		/*
+		try { 
+			dual.base.write("base-dual.fits");
+			System.err.println(" Written base-dual.fits");
+		}
+		catch(Exception e) { e.printStackTrace(); }
+		*/
 		
 		dual.syncSuper(integration);
 	}
@@ -302,16 +378,38 @@ public class MultiBeamMap extends ScalarMap {
 		
 	@Override
 	public void reset(boolean clearContent) {
+		sumScanWeight = 0.0;
 		super.reset(clearContent);
 		if(clearContent) transformer.clear();
 	}
 
+	public void trim() {
+		// Trim the outer pixels...
+		map.new Task<Void>() {	
+			@Override
+			public void process(int i, int j) {
+				if(map.getWeight(i, j) == 0.0) return;
+				int neighbors = -1;
+				
+				for(int di = -1; di <= 1; di++) for(int dj = -1; dj <= 1; dj++) if(map.containsIndex(i + di, j + dj))
+					if(map.getWeight(i + di, j + dj) > 0.0) neighbors++;
+				
+				if(neighbors < 8) map.flag(i, j);		
+			}
+					
+		}.process();
+		
+		//map.sanitize();	
+	}
+	
+	
 	@Override
 	public void process(boolean verbose) {		
 		normalizeTransformer();
 		isNormalized = true;
 		
 		backTransform();
+		
 		
 		if(base != null) map.addImage(base.getData());
 		
@@ -322,6 +420,8 @@ public class MultiBeamMap extends ScalarMap {
 		}
 		catch(Exception e) { e.printStackTrace(); }
 		*/
+		
+		//enableLevel = false;
 		
 		super.process(verbose);
 		

@@ -137,7 +137,7 @@ public abstract class Frame implements Cloneable, Flagging {
 	
 	protected void setTransmission(float value) { transmission = value; }
 	
-	protected final void setTransmission(double value) { setTransmission((float) value); }
+	protected void setTransmission(double value) { setTransmission((float) value); }
 	
 	public float getTransmissionCorrection(Signal atm, float C2eps) {
 		return atm.valueAt(this) * C2eps;

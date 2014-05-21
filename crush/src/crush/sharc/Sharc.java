@@ -94,6 +94,11 @@ public class Sharc extends CSOArray<SharcPixel> {
 			file = SharcFile.get(this, option("datapath").getPath() + File.separator + spec);
 		}
 		
+		if(descriptor.equalsIgnoreCase("list")) {
+			System.err.println();
+			System.exit(0);
+		}
+		
 		StringTokenizer tokens = new StringTokenizer(descriptor, "-");
 		int from = Integer.parseInt(tokens.nextToken());
 		int to = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : from;

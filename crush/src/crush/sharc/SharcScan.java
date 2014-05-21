@@ -43,6 +43,7 @@ import kovacs.math.Coordinate2D;
 import kovacs.math.Vector2D;
 import kovacs.text.FixedLengthFormat;
 import kovacs.text.TimeFormat;
+import kovacs.util.Configurator;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 import crush.DualBeam;
@@ -77,8 +78,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 	
 	double[][] offsets; // records x pixels
 	
-	
-	
+		
 	public SharcScan(Sharc instrument, SharcFile file) {
 		super(instrument);
 		this.file = file;
@@ -99,8 +99,22 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 	}
 	
 	
+	@Override
+	public void validate() {
+		
+		if(hasOption("chopper.throw")) chopper_throw = option("chopper.throw").getDouble() * instrument.getSizeUnit();
+		
+		super.validate();	
+		
+		if(hasOption("info")) printInfo(System.out);
+	}
+	
 	public void readHeader(DataInput in, int index) throws IOException {		
 		this.index = index;
+		setSerial(index);
+		
+		// Turn off configuration verbosity...
+		Configurator.verbose = false;
 		
 		// Populate instrument with pixels...
 		for(int c=0; c<Sharc.pixels; c++) instrument.add(new SharcPixel(instrument, c+1));
@@ -112,6 +126,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		in.readFully(qualBytes);
 		
 		setSourceName(new String(nameBytes).trim());
+		
 		qual = new String(qualBytes).trim();
 		
 		header_records = (short) (in.readShort() - 2);
@@ -133,32 +148,33 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		nsamples = in.readInt();
 		chops_per_integer = in.readInt();
 		number = in.readInt();
-		setSerial(index);
 		
 		filter = in.readFloat();
 		
 		chop_frequency = in.readDouble();
+		
 		instrument.samplingInterval = chops_per_integer / chop_frequency;
 		if(quadrature != 0) instrument.samplingInterval *= 0.5;
 		instrument.integrationTime = instrument.samplingInterval;
 		
-		ut_time = in.readDouble();
-		LST = in.readDouble() * Unit.hour;
-			
-		int dy = year - 2000;
-		int days = dy * 365 + (dy/4) + ut_day - 1;
+		ut_time = 12.0 * in.readDouble() / Math.PI;
+		LST = 12.0 * Unit.hour * in.readDouble() / Math.PI;
 		
+		int dy = year - 2000;
+		int days = dy * 365 + (dy/4) + (ut_day - 1);
 		
 		double mjd = AstroTime.mjdJ2000 + days + (ut_time * Unit.hour) / Unit.day;
-		setMJD(mjd);
 		AstroTime time = new AstroTime();
 		time.setMJD(mjd);
 		timeStamp = time.getFitsTimeStamp();
+		setMJD(mjd);
 		
-		iMJD = (int)Math.floor(getMJD());
 		
-		equatorial = new EquatorialCoordinates(in.readDouble(), in.readDouble());
+		iMJD = (int)Math.floor(getMJD());	
+		
+		equatorial = new EquatorialCoordinates((hasOption("moving") ? -1.0 : 1.0) * in.readDouble(), in.readDouble());
 		double epoch = in.readDouble();
+		if(hasOption("moving")) epoch = year + ut_day / 365.25;
 		equatorial.epoch = epoch < 1984.0 ? new BesselianEpoch(epoch) : new JulianEpoch(epoch);
 		equatorial.precess(CoordinateEpoch.J2000);
 		trackingEquatorial = (EquatorialCoordinates) equatorial.clone();
@@ -223,13 +239,15 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 			offsets = new double[header_records][Sharc.pixels];
 			for(int i=0; i<header_records; i++) for(int c=0; c<Sharc.pixels; c++) offsets[i][c] = in.readDouble();
 		}
+		
+		// Turn back on the configuration verbosity...
+		Configurator.verbose = true;
 	}
 	
 	public void printInfo(PrintStream out) {
 		String fileName = file == null ? "<unknown>" : new File(file.fileName).getName();
 		
 		out.println(" Scan #" + getSerial() + " in " + fileName); 
-		
 
 		// Print out some of the information...
 		StringTokenizer tokens = new StringTokenizer(timeStamp, ":T");
@@ -286,7 +304,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		
 		out.println("   Chop: " + Util.f1.format(chopper_throw / Unit.arcsec) + "\" at " + Util.f3.format(chop_frequency) + " Hz");
 		//out.println(" UT: " + ut_time);
-		//out.println(" LST: " + LST / Unit.hour);
+		out.println(" LST: " + LST / Unit.hour);
 		
 		
 		//az_start = in.readDouble();
@@ -315,6 +333,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		//out.println(" Scale: " + scale_factor);
 		out.println("   Tau(225GHz): " + Util.f3.format(tau225GHz));
 		
+		out.println("   Scaling: " + scale_factor);
 		
 		//out.println(" OTF rate: " + otf_longitude_rate + ", " + otf_latitude_rate);
 		//out.println(" OTF step: " + otf_longitude_step + ", " + otf_latitude_step);
@@ -355,10 +374,8 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		
 		String name = getSourceName() + "            ";
 		name = name.substring(0, 12);
-		
-		//
-		
-		return serialFormat.format(getSerial())
+			
+		return serialFormat.format(index)
 				+ " " + time.getFitsDate() 
 				+ " " + tf.format(ut_time * 3600.0)
 				+ " " + name

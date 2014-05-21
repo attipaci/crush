@@ -93,7 +93,7 @@ public class MakoScan extends CSOScan<Mako, MakoIntegration> {
 			else if(hasOption("convert")) {	
 				String iqconv = option("convert").getPath();
 				
-				if(CRUSH.verbose) System.err.println(" Converting I/Q --> frequency shift...");
+				if(CRUSH.details) System.err.println(" Converting I/Q --> frequency shift...");
 				System.err.println("> " + iqconv + " " + file.getPath());
 				Process process = Runtime.getRuntime().exec(iqconv + " " + file.getPath());
 				process.waitFor();
