@@ -42,14 +42,14 @@ SHARC represented a particular challenge for integrating into CRUSH (which is
 why it was interesting), since CRUSH was designed for total-power data, whereas
 SHARC produces only a dual-beam differential stream via a chop, which requires
 the extra step of deconvolution. The deconvolution, and map accumulation, 
-happens in Fourier domain, and the dual-beam image for the synchronization to 
-the time-stream has to be dynamically generated in each iteration for each 
-scan. 
+happens in Fourier domain, and the dual-beam image that is synchronized to the
+time-stream is dynamically generated in each iteration, for each scan. 
 
-The deconvolution method is essentially an Emerson II (Emerson 1995) type algorithm with some extra use of well-placed noise weighting. The new SHARC module 
-mainly serves as a demo for what CRUSH can do for dual-beam (and multibeam) 
-reductions in general. CRUSH can be further tweaked to work with arbitrary 
-wobble patterns too, if there is desire to adapt it...
+The deconvolution method is essentially an Emerson II (Emerson 1995) type 
+algorithm with some extra use of well-placed noise weighting. The new SHARC 
+module mainly serves as a demo for what CRUSH can do for dual-beam (and 
+multibeam) reductions in general. CRUSH can be further tweaked to work with 
+arbitrary wobble patterns too, if there is desire to adapt it...
 
 
 
@@ -130,11 +130,12 @@ includes the bolometer nonlinearity (which for SHARC-2 is treated separately).
 			path, or relative to the path set by the 'datapath'
 			option.	
 
-   pixelsize=X		@Advanced
+   pixelsize=X		@Expert
 			Set the SHARC pixel spacing to X arcseconds. By 
 			default, the nominal 5" spacing is assumed.
 
-   source.type=multibeam	Setting the source type to 'multibeam' 
+   source.type=multibeam	@Advanced
+				Setting the source type to 'multibeam' 
 				(default) will produce deconvolved maps. 
 				Otherwise, CRUSH will produce dual-beam
 				maps.

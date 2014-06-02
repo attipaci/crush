@@ -28,7 +28,6 @@ import kovacs.astro.*;
 import kovacs.data.GridImage;
 import kovacs.data.SphericalGrid;
 import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
 
 public class AstroImage extends GridImage<SphericalCoordinates> implements Cloneable {
 

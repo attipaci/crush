@@ -40,6 +40,7 @@ import kovacs.astro.FocalPlaneCoordinates;
 import kovacs.astro.HorizontalCoordinates;
 import kovacs.astro.JulianEpoch;
 import kovacs.math.Coordinate2D;
+import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
 import kovacs.text.FixedLengthFormat;
 import kovacs.text.TimeFormat;
@@ -101,12 +102,17 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 	
 	@Override
 	public void validate() {
+		System.out.println();
 		
 		if(hasOption("chopper.throw")) chopper_throw = option("chopper.throw").getDouble() * instrument.getSizeUnit();
 		
-		super.validate();	
+		printInfo(System.out);
 		
-		if(hasOption("info")) printInfo(System.out);
+		String filterName = Integer.toString((int)filter) + "um";
+		System.err.println(" Setting options for " + filterName + " filter.");
+		if(!hasOption(filterName)) instrument.getOptions().parse(filterName);
+		
+		super.validate();		
 	}
 	
 	public void readHeader(DataInput in, int index) throws IOException {		
@@ -156,17 +162,20 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		instrument.samplingInterval = chops_per_integer / chop_frequency;
 		if(quadrature != 0) instrument.samplingInterval *= 0.5;
 		instrument.integrationTime = instrument.samplingInterval;
-		
+			
 		ut_time = 12.0 * in.readDouble() / Math.PI;
 		LST = 12.0 * Unit.hour * in.readDouble() / Math.PI;
 		
-		int dy = year - 2000;
-		int days = dy * 365 + (dy/4) + (ut_day - 1);
 		
-		double mjd = AstroTime.mjdJ2000 + days + (ut_time * Unit.hour) / Unit.day;
+		int dy = year - 2000;
+		int leapDays = dy > 0 ?  (dy+3)/4 : dy/4 - 1;
+		int days2000 = dy * 365 + leapDays + (ut_day - 1);
+		
+		double mjd = AstroTime.mjdJ2000 + days2000 + (ut_time * Unit.hour) / Unit.day;
 		AstroTime time = new AstroTime();
 		time.setMJD(mjd);
 		timeStamp = time.getFitsTimeStamp();
+		
 		setMJD(mjd);
 		
 		
@@ -267,85 +276,33 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		
 		DecimalFormat f3_1 = new DecimalFormat(" 0.0;-0.0");
 		
-		out.println("   AZO =" + f3_1.format(horizontalOffset.x()/Unit.arcsec)
+		out.println("     AZO =" + f3_1.format(horizontalOffset.x()/Unit.arcsec)
 				+ "\tELO =" + f3_1.format(horizontalOffset.y()/Unit.arcsec)
 				+ "\tRAO =" + f3_1.format(equatorialOffset.x()/Unit.arcsec)
 				+ "\tDECO=" + f3_1.format(equatorialOffset.y()/Unit.arcsec)
 				
 		);
 		
-		out.println("   FAZO=" + f3_1.format(fixedOffset.x()/Unit.arcsec)
+		out.println("     FAZO=" + f3_1.format(fixedOffset.x()/Unit.arcsec)
 				+ "\tFZAO=" + f3_1.format(-fixedOffset.y()/Unit.arcsec)
+				+ "\tFocZ= " + focus + " mm\tdZ  = " + focus_offset + " mm."
 		);
 		
 		
-		//out.println(" Records: " + header_records);
-		//out.println(" Year: " + year);
-		
-		//out.println(" Obs type: " + otype);
-		//out.println(" Pixels: " + npixels);
-		//out.println("   Size: " + ncycles + " x " + nsamples);
-		out.println("   Filter: " + (int)filter);
-		out.println("   Reference pixel: " + reference_pixel);
-		
-		//for(int i=0; i<badpixels.length; i++) badpixels[i] = in.readShort();
+		out.println("   Filter: " + (int)filter + "um, Rotation: " + Util.f1.format(instrument.rotatorAngle / Unit.deg) + " deg, Reference pixel: " + reference_pixel);
 		
 		double delta = otf_longitude_step * nsamples;
 		if(quadrature != 0) delta *= 2.0;
-		out.println("   OTF: " + (int)Math.round(delta / Unit.arcsec) + "\" in " + scanSystem.getSimpleName());
-		//out.println("   First scan: " + first_scan);
-		//out.println(" Quadrature: " + quadrature);
-		//out.println(" SumRS: " + sumrs);
 		
+		SphericalCoordinates basisCoords = new HorizontalCoordinates();
+		try { basisCoords = scanSystem.newInstance(); }
+		catch(Exception e) {}
+		String longitudeName = basisCoords.getCoordinateSystem().get(0).label;
+		
+		out.println("   Chop: " + Util.f1.format(chopper_throw / Unit.arcsec) + "\" at " + Util.f3.format(chop_frequency) + " Hz" +
+				", Scan: " + (int)Math.round(delta / Unit.arcsec) + "\" in " + longitudeName);
 		
 	
-		//out.println(" Chops-per-int: " + chops_per_integer);
-		
-		
-		out.println("   Chop: " + Util.f1.format(chopper_throw / Unit.arcsec) + "\" at " + Util.f3.format(chop_frequency) + " Hz");
-		//out.println(" UT: " + ut_time);
-		out.println(" LST: " + LST / Unit.hour);
-		
-		
-		//az_start = in.readDouble();
-		//el_start = in.readDouble();
-		//az_end = in.readDouble();
-		//el_end = in.readDouble();
-		
-		
-		//maprao = in.readDouble();
-		//mapdeco = in.readDouble();
-		//fieldrao = in.readDouble();
-		//fielddeco = in.readDouble();
-		//glo = in.readDouble();
-		//gbo = in.readDouble();
-		//azo = in.readDouble();
-		//zao = in.readDouble();
-			
-		//fazo = in.readFloat();
-		//fzao = in.readFloat();
-		
-		out.println("   Focus: " + focus + " mm, offset: " + focus_offset + " mm.");
-		
-		//out.println(" Chop throw: " + chopper_throw);
-		out.println("   Rotation: " + Util.f1.format(instrument.rotatorAngle / Unit.deg) + " deg.");
-		
-		//out.println(" Scale: " + scale_factor);
-		out.println("   Tau(225GHz): " + Util.f3.format(tau225GHz));
-		
-		out.println("   Scaling: " + scale_factor);
-		
-		//out.println(" OTF rate: " + otf_longitude_rate + ", " + otf_latitude_rate);
-		//out.println(" OTF step: " + otf_longitude_step + ", " + otf_latitude_step);
-		
-		
-		//otf_longitude_rate = in.readFloat();
-		//otf_latitude_rate = in.readFloat();
-		//otf_longitude_step = in.readFloat();
-		//otf_latitude_step = in.readFloat();
-		
-		out.println();
-		
 	}
 	
 
@@ -376,7 +333,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		name = name.substring(0, 12);
 			
 		return serialFormat.format(index)
-				+ " " + time.getFitsDate() 
+				+ " " + time.getFitsDate()
 				+ " " + tf.format(ut_time * 3600.0)
 				+ " " + name
 				+ " " + Util.f3.format(tau225GHz)

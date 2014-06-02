@@ -99,7 +99,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 		whiteFrom = Math.max(1, (int) Math.floor(probe.min() / dF));
 		whiteTo = Math.min(nF, (int) Math.ceil(probe.max() / dF) + 1);
 		
-		oneOverFBin = Math.min(nF, hasOption("1overf.lo") ? Math.max(1, (int) Math.floor(option("1overf.lo").getDouble() / dF)) : 2);
+		oneOverFBin = Math.min(nF, hasOption("1overf.freq") ? Math.max(1, (int) Math.floor(option("1overf.freq").getDouble() / dF)) : 2);
 		whiteNoiseBin = Math.min(nF, hasOption("1overf.ref") ? Math.max(1, (int) Math.floor(option("1overf.ref").getDouble() / dF)) : nF>>1);		
 		
 		// Make sure the probing range is contains enough channels
@@ -108,7 +108,6 @@ public class WhiteningFilter extends AdaptiveFilter {
 		if(whiteFrom > whiteTo - minProbeChannels + 1) whiteFrom = whiteTo - minProbeChannels + 1;
 		if(whiteFrom < 0) whiteFrom = 0;
 		if(whiteFrom > whiteTo - minProbeChannels + 1) whiteTo = Math.min(minProbeChannels + 1, nF);
-		
 		
 	}
 	

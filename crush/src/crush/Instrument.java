@@ -216,7 +216,7 @@ implements TableFormatter.Entries {
 		this.MJD = MJD;
 		
 		Hashtable<String, Vector<String>> settings = option("date").conditionals;
-			
+		
 		for(String rangeSpec : settings.keySet()) {
 			try {			
 				StringTokenizer tokens = new StringTokenizer(rangeSpec, "-");

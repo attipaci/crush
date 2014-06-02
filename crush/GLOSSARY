@@ -1,4 +1,22 @@
 
+:: 1overf.freq=X	@Since: 2.16
+			@Advanced
+			The target frequency (Hz) at which the 1/f is measured 
+			for logging global 1/f noise statistics. The logged 
+			quantity is the ratio of the PSD measured at this 
+			frequency to that at the reference frequency. The 
+			actual measurement frequency will always be above the
+			filter cutoff of 'drifts' filtering.
+			@See: '1overf.ref', 'log'
+
+:: 1overf.ref=X		@Since: 2.16
+			@Advanced
+			The white noise reference frequency used when providing
+			1/f noise statistics. If the value exceeds the Nyquist
+			frequency of the time-stream, then the Nyquist value
+			will be used instead.
+			@See: '1overf.freq'
+
 :: 350um		@Instrument: SHARC-2
 			Specify that the 350um filter was used (default). This 
 			adjuts conversion factors, tau scaling relations for 
@@ -1642,7 +1660,12 @@
 			The setting has no effect outside of photometry 
 			reductions.
 			@See: 'phases', 'chopped'
-			
+		
+:: nochopper		@Instrument: SHARC-2, MAKO
+			@Advanced
+			@Since:2.16-1
+			Ignore the chopper position signal (if at all present).
+
 :: noiseclip=X		Flag (clip) map pixel with a noise level that is more
 			than X times higher than the deepest covered parts
 			of the map.
@@ -2620,6 +2643,13 @@
 			the evolution of maps iteration-to-iteration. Each 
 			iteration will overwrite this temporary file, and it 
 			will be erased at the end of the reduction.
+
+:: source.margin=<pix>	@Advanced
+			@Since: 2.16-1
+			Add the specified number of pixels around the edges of
+			the source map. It can be useful where the the map
+			undergoes extrapolation which may place valid flux into
+			these map pixels on the margins.
 
 :: source.mem		@Advanced
 			Use maximum-entropy method (MEM) correction to the

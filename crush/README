@@ -1722,6 +1722,9 @@ options on the console.
 	src.peak	Peak source flux (Jy/beam).
 
 	stat1f		A measure of the 1/f noise averaged over the array.
+			The configurations options '1overf.freq' and 
+			'1overf.ref' define the frequencies for the 1/f
+			measurement and white-noise reference respectively.
 
 	Tamb		Ambient temperature (if recorded) in degrees C.
 

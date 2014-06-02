@@ -1,13 +1,5 @@
->> Check tau timezone...
->> check calibration with new rcp...
->> 'nochopper'
->> source.margin...
->> AstroTime.getFitsDate() and getFitsTimeStamp do not return the same date...
 
->> SHARC: 'file', 'multibeam', [list], 'deconvolve.above', 'chopper.throw'
-
-
-2.16-b1 (24 April 2014)
+2.16-1 (2 June 2014)
 
 
 	Overview
@@ -44,6 +36,14 @@
 	refers to static mapping and chopper offsets, as it should have been 
 	from the start.
 
+	[NEW] {2.16-1} {CSO} The option 'nochopper' can be used to ignore the
+	chopper position signal altogether (if present).
+
+	[NEW] {2.16-1} The new option 'source.margin' adds a specified number 
+	of pixels around the edges of the source map. It can be useful where 
+	the the map undergoes extrapolation which may place valid flux into
+	these map pixels on the margins.
+
 	[NEW] {2.16-1} The possibility of using non-square pixel grids, which
 	can be specified by two comma-separated pixelization values, e.g. as
 	'grid=<dx>,<dy>'. However, be advised that 'show' does not yet
@@ -56,9 +56,9 @@
 	[NEW] New options 'write.png.crop' and 'write.png.smooth' to allow
 	further control over the PNG thumbnail output.
 
-	[NEW] CRUSH can now log a glocal 1/f statistics for the array using
+	[NEW] CRUSH can now log a global 1/f statistics for the array using
 	the 'stat1f' quantity in the log (see README for details of the 
-	logging support). The new option '1overf.lo' can be used to define
+	logging support). The new option '1overf.freq' can be used to define
 	the frequency (Hz) where the 1/f is measured. The default is 1 over the
 	'stability' timescale. The option '1overf.ref' sets the reference 
 	frequency at which white noise behaviour is assumed. The metric is
@@ -156,7 +156,8 @@
 	[TWEAK] {2.16-1} {sourcesize} {vclip} Changed automatic velocity 
 	clipping to use 'sourcesize' when it is defined.
 
-	[TWEAK] {2.16-1} Exlicit use of expm1 and log1p in flagWeights().
+	[TWEAK] {2.16-1} Explicit use of the built-in math functions expm1() 
+	and log1p() in flagWeights().
 
 	[TWEAK] {2.16-1} Tweaks to time-weighting, hopefully increasing	
 	stability.
@@ -197,6 +198,15 @@
 
 	[CONFIG] {LABOCA} Skydip opacities and calibration data included up to
 	1 May 2014.
+
+	[CONFIG] {2.16-1} {GISMO} New tau table includes 2014-03-31 also.
+	Thanks Israel :-).
+
+	[CONFIG] {2.16-1} {GISMO} Calibration updated for 2014 April using
+	a modified methodology on Mars including less of the error beam into
+	the calibration, and thus providing a more accurate measure for 
+	standard (non-bright) reductions. The change is of order 8.5% relative
+	to the beta release.
 
 	[CONFIG] {2.16-1} {GISMO} New synthetic RCP for April 2014 based on 
 	measured pixel positions from 3C345 on 2014-04-09.

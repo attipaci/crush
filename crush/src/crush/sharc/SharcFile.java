@@ -153,5 +153,5 @@ public class SharcFile extends Hashtable<Integer, SharcScan> {
 		return file == null ? new SharcFile(sharc, fileName) : file;
 	}
 	
-	public static int bufferSize = 1<<22;	// 4 MB
+	public static int bufferSize = 1<<20;	// 1 MB
 }
