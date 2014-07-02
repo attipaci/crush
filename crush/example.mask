@@ -1,4 +1,43 @@
-CALLISTO	08:43:17.3 -19:03:28.1	2003.3	4.5
-CALLISTO	08:43:17.3 -19:03:28.1	2003.3	4.5	5.2 Jy/beam
-CALLISTO	08:43:17.3 -19:03:28.1	2003.3	4.5	5.2 +- 0.3 Jy/beam
+###############################################################################
+#
+#  An example CRUSH mask file -- by Attila Kovacs
+#
+###############################################################################
+
+# Description: Mask files in CRUSH serve a dual purpose:
+# 
+#  a. They can be an output of crush tools, such as a source catalog generated 
+#     by 'detect', or circular regions selected in 'show'.
+# 
+#  b. They can be input for CRUSH tools, including a reduction, defining test
+#     sources, or regions for flagging, or filter avoidance, or source profile
+#     generation (see the 'sources' option in the GLOSSARY, and 'imagetool').
+#
+# The format is space (or tab) separated columns as follows:
+#
+#    col 1: Source ID (no spaces)
+#    col 2: RA as hh:mm:ss.s[...] (any number of decimals places)
+#    col 3: DEC as dd:mm:ss.s[...] (any number of decimal places)
+#    col 4: coordinate epoch, e.g. '(J2000.0)', '(B1950.0)', 2000.0, or 1950.0
+#    col 5: FWHM or radius (depending whether it defines a point source or a
+#           circular region of some radius) in arcsec.
+#    col 6+: (optional) Peak flux. (needed only for inserting test sources
+#            into reductions). Optionally with uncertainty when used with
+#            '+-' and separating spaces. such as '0.983 +- 0.021'.
+#    col 7: (optional) Peak flux unit, such as 'Jy/beam'.
+#
+# Lines beginning with '#' are used for comment lines. Empty lines are skipped.
+
+
+# ID	RA          DEC        epoch      FWHM	[peak (+- dpeak) unit]
+# ===========================================================================
+3C345	16:42:58.81 39:48:37.1 (J2000.0)  16.0	
+3C345A	16:42:58.81 39:48:37.1 (J2000.0)  16.0	1.237 Jy/beam  
+3C345B	16:42:58.81 39:48:37.1 (J2000.0)  16.0	1.237 +- 0.013 Jy/beam  
+
+# Thus all lines above are acceptable definitions of 3C345 as a GISMO [2-mm] 
+# point source (16.0" FWHM). The first line merely defines the location and 
+# size of the source whilei the variants A and B also specify peak fluxes (with
+# and without uncertainty), which can be used to add (or remove) sources to 
+# (from) the timestream prior to reduction.
 

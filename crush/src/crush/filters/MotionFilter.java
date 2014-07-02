@@ -83,6 +83,10 @@ public class MotionFilter extends KillFilter {
 		System.err.println("Preferring " + (dft ? "DFT" : "FFT") + ".");
 	}
 	
+	public double getShortestPeriod() {
+		for(int i=reject.length; --i >= 0; ) if(reject[i]) return 1.0 / (df * i);
+		return Double.POSITIVE_INFINITY;
+	}
 	
 	private void rangeCheck() {
 		if(!hasOption("range")) return;
@@ -95,7 +99,7 @@ public class MotionFilter extends KillFilter {
 		Arrays.fill(reject, 0, Math.min(mini, reject.length), false);
 		if(maxi < reject.length) Arrays.fill(reject, maxi, reject.length, false);
 	}
-	
+
 	
 	private void addFilter(Vector2D[] pos, Motion dir) {	
 		for(int t=pos.length; --t >= 0; )

@@ -10,4 +10,4 @@ CRUSH=`dirname $NAME`
 
 source $CRUSH/wrapper.sh
 
-$JAVA $JAVAOPTS -classpath $CLASSPATH SourceExtractor ${1+"$@"}
+$JAVA $JAVAOPTS -classpath $CLASSPATH crushtools.SourceExtractor ${1+"$@"}

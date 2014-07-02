@@ -159,6 +159,12 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 			difference.subtract(tau);	
 			return Math.abs(difference.significance()) < 5.0;
 		}
+		
+		@Override
+		public String toString() { 
+			return timeStamp.toString() + ": " + tau.toString();
+		}
+		
 	}
 
 	@Override
@@ -166,7 +172,6 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 		return new Entry();
 	}
 
-	
 	
 }
 

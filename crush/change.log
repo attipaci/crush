@@ -1,4 +1,104 @@
 
+2.17-b1 (2 July 2014)
+
+	[NEW] Initial support for SHARC.
+
+	[NEW] {show} Masks now work with non-equatorial maps (but mask 
+	coordinates remain equatorial defined.)
+
+	[NEW] {show} Dragging with right button pressed can be used to drag 
+	image.
+
+	[NEW] {show} Hotkey 'D' deletes the last circular region in show.
+
+	[NEW] {show} The 'show' tool can now display CRUSH maps, in all 
+	spherical coordinate systems, including those in Ecliptic, Galactic, 
+	SuperGalactic or FocalPlane coordinates.
+
+	[FIX] {b1} {show} Writing of equatorial regions had offset sign error.
+
+	[FIX] {b1} {show} Regions weren't parsed correctly when mask entry had 
+	peak flux in non-basic units, such as 'Jy/beam'.
+
+	[FIX] {show} Resampling onto a finer grid (by pressing 's') was broken.
+	Now fixed.
+
+	[TWEAK] {show} Circular regions and polygons now update while drawing
+	is in progress.
+
+	[TWEAK] {show} Gaussian source fitting output made more elegant.
+
+	[TWEAK] {show} Improved polygon drawing.
+
+	[TWEAK] {show} Showing only useful significant figures for aperture
+	fluxes inside polygons.
+
+	[CODE] {tools} The old CRUSH 1.xx tools have been streamlined 
+	into a new much smaller tools.jar replacing the old crush.jar. Gone is
+	all the old SHARC2-specific code, and the duplicate classes (which 
+	were often a source of problems). The new tools are already more 
+	generic (e.g. 'show' can handle galactic, ecliptic, etc. coordinates)
+	and rely on the kovacs.util classes directly. 
+
+
+
+2.16-3 (2 July 2014)
+
+	Overview
+	=====================================================================
+	This latest update provides a fix for the 'deep' mode point-source
+	flux correction bugs in the previous 2.16 releases. If you want to use
+	'deep' mode for reducing your data, be sure to upgrade immediately.
+	=====================================================================
+
+	[CRITICAL] 'deep' mode point source correction (and point source
+	corrections below clipping level in other modes) was broken in previous
+	2.16 releases. One part malformed 'if' statement about when such 
+	corrections were to be applied, but also because imminent 'smoothing'
+	was no taken into account.
+
+	[FIX] Maps resolution now correctly reflects the true average 
+	resolution of the image.
+
+	[FIX] Effective smoothing from map pixellization was not accounted for
+	since allowing different x and y resolutions. Also if 'smooth' option
+	was smaller than the pixelization...
+
+	[CALIBRATION] {GISMO} Recalibrated 2014 April. The new calibration is
+	on average ~3% different from the earlier one.
+
+	[README] Added new section about filtering corrections and transfer
+	functions into the README (Sec. 2.1).
+
+
+
+2.16-2 (19 June 2014)
+
+	Overview
+	=====================================================================
+	This update fixes two obscure bugs, both of which trigger under 
+	special circumtances only.
+	=====================================================================
+
+	[FIX] {GISMO} 2014 April tau tables switched to UTC. There seems to 
+	have been an internal Java bug when dealing with CET tables around 
+	12:00pm (CET). Something of an off-by-1-hour sort of bug...
+
+	[FIX] {util} Sources in mask files with declination between 0 and -1
+	degrees were incorrectly parsed. Fixed.
+
+	[UPDATE] The example mask file 'example.mask' included in CRUSH has
+	been updated, with some much needed explanatory comments.
+
+	[CONFIG] Updates 'wrapper.sh' for easy selection of VMs. On 
+	non-desktop systems (such as the ARM-based Raspberry Pi or the Jetson 
+	TK1) the default 'server' VM runs in interpreted mode, which makes it
+	painfully slow. It is better to use a light-weight VM, such as 'avian'
+	or 'jamvm' instead -- depending on what is available. Now you can
+	simply change the JVM variable to indicate which VM you prefer to use.
+
+
+
 2.16-1 (2 June 2014)
 
 

@@ -54,8 +54,7 @@ public abstract class SourceMap extends SourceModel {
 	
 	public boolean allowIndexing = true;
 	public int marginX = 0, marginY = 0;
-	
-	
+		
 	public SourceMap(Instrument<?> instrument) {
 		super(instrument);
 	}
@@ -114,29 +113,41 @@ public abstract class SourceMap extends SourceModel {
 		setSmoothing(getSmoothing(option("smooth").getValue()));
 	}
 	
+	public double getRequestedSmoothing(Configurator option) {
+		if(option == null) return smoothing;
+		if(!option.isEnabled) return smoothing;
+		String spec = option.getValue();	
+		if(spec.length() == 0) return smoothing;
+		return getSmoothing(spec);
+	}
+	
 	public double getSmoothing(String spec) {
 		double sizeUnit = getInstrument().getSizeUnit();
 		double beam = getInstrument().resolution;
+		double pixelSmoothing = getPixelizationSmoothing();
+		double fwhm = 0.0;
 		
-
-		if(spec.equals("beam")) return beam;
-		else if(spec.equals("halfbeam")) return 0.5 * beam;
-		else if(spec.equals("2/3beam")) return beam / 1.5;
-		else if(spec.equals("minimal")) return 0.3 * beam;
-		else if(spec.equals("optimal")) return hasOption("smooth.optimal") ? option("smooth.optimal").getDouble() * sizeUnit : beam;
-		else return Math.max(0.0, Double.parseDouble(spec) * sizeUnit);
+		if(spec.equals("beam")) fwhm = beam;
+		else if(spec.equals("halfbeam")) fwhm = 0.5 * beam;
+		else if(spec.equals("2/3beam")) fwhm = beam / 1.5;
+		else if(spec.equals("minimal")) fwhm = 0.3 * beam;
+		else if(spec.equals("optimal")) fwhm = hasOption("smooth.optimal") ? option("smooth.optimal").getDouble() * sizeUnit : beam;
+		else fwhm = Math.max(0.0, Double.parseDouble(spec) * sizeUnit);
+		
+		return fwhm > pixelSmoothing ? fwhm : pixelSmoothing;
 	}
 	
 	public void setSmoothing(double value) { smoothing = value; }
 	
 	public double getSmoothing() { return smoothing; }
 
+	public abstract double getPixelizationSmoothing();
 
 	@Override
-	public double getPointSize() { return Math.hypot(getInstrument().resolution, smoothing); }
+	public double getPointSize() { return Math.hypot(getInstrument().resolution, getRequestedSmoothing(option("smooth"))); }
 	
 	@Override
-	public double getSourceSize() { return Math.hypot(super.getSourceSize(), smoothing); }
+	public double getSourceSize() { return Math.hypot(super.getSourceSize(), getRequestedSmoothing(option("smooth"))); }
 	
 	
 	public synchronized void searchCorners() throws Exception {
@@ -350,7 +361,7 @@ public abstract class SourceMap extends SourceModel {
 	
 	public abstract boolean isMasked(Index2D index); 
 	
-	protected int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
+	protected synchronized int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
 		int goodFrames = 0;
 		
 		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
@@ -388,7 +399,9 @@ public abstract class SourceMap extends SourceModel {
 		Configurator option = option("source");
 		Instrument<?> instrument = integration.instrument; 
 
-		boolean mapCorrection = option.isConfigured("correct");
+		// For the first source generation, apply the point source correction directly to the signals.
+		final boolean signalCorrection = integration.sourceGeneration == 0;
+		boolean mapCorrection = option.isConfigured("correct") && !signalCorrection;
 	
 		integration.comments += "Map";
 		if(id != null) integration.comments += "." + id;
@@ -402,13 +415,12 @@ public abstract class SourceMap extends SourceModel {
 		// Calculate the effective source NEFD based on the latest weights and the current filtering
 		integration.calcSourceNEFD();
 
-		// For the first source generation, apply the point source correction directly to the signals...
-		final boolean signalCorrection = integration.sourceGeneration == 0 && !mapCorrection;
 		final double[] sourceGain = instrument.getSourceGains(signalCorrection);
 	
-		double averageFiltering = instrument.getAverageFiltering();		
-		add(integration, pixels, sourceGain, signalCorrection ? averageFiltering : 1.0, signalMode);
-
+		double averageFiltering = instrument.getAverageFiltering();			
+	
+		add(integration, pixels, sourceGain, mapCorrection ? averageFiltering : 1.0, signalMode);
+			
 		if(signalCorrection)
 			integration.comments += "[C1~" + Util.f2.format(1.0/averageFiltering) + "] ";
 		else if(mapCorrection) {
@@ -417,9 +429,7 @@ public abstract class SourceMap extends SourceModel {
 		
 		integration.comments += " ";
 	}
-	
-
-	
+		
 	protected abstract void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, double[] syncGain, final boolean isMasked);
 	
 	public void setSyncGains(final Integration<?,?> integration, final Pixel pixel, final double[] sourceGain) {

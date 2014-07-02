@@ -123,9 +123,11 @@ public class ScalarMap extends SourceMap {
 		
 		super.createFrom(collection);
 		
-		double resolution = getInstrument().resolution / 5.0;
-		Vector2D gridSize = new Vector2D(resolution, resolution);
+		double defaultGridSize = getInstrument().resolution / 5.0;
+		Vector2D gridSize = new Vector2D(defaultGridSize, defaultGridSize);
 	
+		getInstrument().resolution = getAverageResolution();
+		
 		if(hasOption("grid")) {
 			List<Double> values = option("grid").getDoubles();
 			if(values.size() == 1) gridSize.set(values.get(0), values.get(0));
@@ -133,7 +135,7 @@ public class ScalarMap extends SourceMap {
 			gridSize.scale(getInstrument().getSizeUnit());
 		}
 		
-		map.getGrid().setResolution(gridSize.x(), gridSize.y());
+		map.setResolution(gridSize.x(), gridSize.y());
 		
 		Scan<?,?> firstScan = scans.get(0);
 		
@@ -152,7 +154,6 @@ public class ScalarMap extends SourceMap {
 		map.getGrid().refIndex.setX(0.5 - Math.rint(xRange.min()/gridSize.x()));
 		map.getGrid().refIndex.setY(0.5 - Math.rint(yRange.min()/gridSize.y()));
 			
-		
 		map.printShortInfo();
 			
 		base = new Data2D(map.sizeX(), map.sizeY());
@@ -175,7 +176,6 @@ public class ScalarMap extends SourceMap {
 					System.err.println("WARNING! Source insertion error:");
 					e.printStackTrace();
 				}
-				map.reset(true);
 			}
 			catch(IOException e) {
 				System.err.println("WARNING! Cannot read sources: " + e.getMessage());
@@ -196,8 +196,16 @@ public class ScalarMap extends SourceMap {
 	}
 		
 	public synchronized void insertSources(SourceCatalog<SphericalCoordinates> catalog) throws Exception {
+		// Since the synching step is removal, the sources should be inserted with a negative sign to add into the
+		// timestream.
+		double resolution = getAverageResolution();
+		
+		for(GaussianSource<?> source : catalog) if(source.getRadius().value() < resolution) {
+			System.err.println("   ! Source '" + source.getID() + "' FWHM increased to match map resolution.");
+			source.setRadius(resolution);
+		}
+			
 		catalog.remove(map);
-		for(GaussianSource<?> source : catalog) source.getPeak().scale(-1.0);
 		
 		System.err.println(" Inserting test sources into data.");
 		
@@ -208,6 +216,8 @@ public class ScalarMap extends SourceMap {
 				integration.sourceGeneration=0; // Reset the source generation...
 			}
 		}.process();
+		
+		map.reset(true);
 	}
 	
 	public synchronized void applyModel(String fileName) throws Exception {
@@ -268,7 +278,11 @@ public class ScalarMap extends SourceMap {
 		}.process();
 	}
 	
-
+	@Override
+	public double getPixelizationSmoothing() {
+		return Math.sqrt(map.getGrid().getPixelArea()) / GridImage.fwhm2size;
+	}
+	
 	// 3 double maps (signal, weight, integrationTime), one int (flag) and one boolean (maks)
 	@Override
 	public double getPixelFootprint() { return 8*3 + 4 + 1.0/8.0; }
@@ -293,6 +307,7 @@ public class ScalarMap extends SourceMap {
 	public void setProjection(Projection2D<SphericalCoordinates> projection) {
 		if(map != null) map.setProjection(projection);
 	}
+	
 	
 	@Override
 	public synchronized void process(Scan<?,?> scan) {			
@@ -577,7 +592,7 @@ public class ScalarMap extends SourceMap {
 	@Override
 	protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain, final double dt, final int excludeSamples) {
 		// The use of iterables is a minor performance hit only (~3% overall)
-		for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0) 	
+		for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0)	
 			addPoint(index, channel, exposure, fGC * sourceGain[channel.index], dt);
 	}
 	

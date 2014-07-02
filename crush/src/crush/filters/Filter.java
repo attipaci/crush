@@ -264,9 +264,9 @@ public abstract class Filter {
 		
 		// Calculate the true source filtering above the hipass timescale...
 		for(int f=minf; f <= nf; f++) {
-			double A = Math.exp(a*f*f);
-			sum += A * responseAt(f);
-			norm += A;
+			double sourceResponse = Math.exp(a*f*f);
+			sum += sourceResponse * responseAt(f);
+			norm += sourceResponse;
 		}
 		
 		return sum / norm;

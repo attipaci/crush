@@ -479,7 +479,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 
-	public double getPointCrossingTime() { 
+	public double getPointCrossingTime() {
 		return getCrossingTime(scan.sourceModel == null ? instrument.getPointSize() : scan.sourceModel.getPointSize()); 
 	}
 			

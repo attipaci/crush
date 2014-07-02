@@ -3,7 +3,7 @@
 # ===========================================================================
 # Description: Java configuration wrapper script for CRUSH tools.
 # Author: Attila Kovacs <attila@submm.caltech.edu>
-# Updated: 26 June 2012
+# Updated: 13 June 2014
 # ===========================================================================  
 
 
@@ -12,7 +12,6 @@
 # the box in most cases: 
 
 JAVA="java"
-
 
 # Alternatively, If you experience problems with the default version of Java 
 # (esp. GNU's buggy and sluggish gcj/gij), or you want to use a specific Java
@@ -24,19 +23,33 @@ JAVA="java"
 #JAVA="/usr/java/latest/bin/java"
 
 
+# Chose a VM implementation (if more than one is available). For desktop
+# systems the 'server' VM is recommended. For ARM-based platforms (such as
+# the Raspberry Pi or the NVIDIA Jetson TK1), one of the light-weight native 
+# VMs such as 'avian' or 'jamvm' may work better, since the 'server' (default) 
+# VM may run in interpreted mode. (On the Tegra TK1, 'jamvm' is thus about
+# 5x faster than the crippled 'server', and 'avian' is not available).
+# To see what VM options are available, run 'java -help'. The VM options are
+# listed near the top of the resulting help screen.
+
+JVM="server"
+#JVM="jamvm"
+#JVM="avian"
+
+
 # Now, specify the options passed to the Java Runtime Environment
 # The default is 32-bit mode with 1GB of RAM for the VM.
 # Adjust the -Xmx value to reflect the amount of memory in you wish to make 
 # available to Java.
 # Default options for Oracle and OpenJDK/IcedTea VMs:
 
-JAVAOPTS="-server -Xbatch -Xmx1000M"
+JAVAOPTS="-$JVM -Xbatch -Xmx1000M"
 
 
 # To run in 64-bit mode (needed for accessing RAM beyond 2GB but requires 
 # both a 64-bit OS *AND* a 64-bit version of Java), uncomment and edit:
 
-#JAVAOPTS="-d64 -server -Xbatch -Xmx4000M"
+#JAVAOPTS="-$JVM -d64 -Xbatch -Xmx4000M"
 
 
 # Uncomment and edit the line below if you are using IBM Java:
@@ -56,6 +69,6 @@ fi
 CRUSH=`dirname $NAME`
 export CRUSH
 
-CLASSPATH="$CRUSH/crush.jar:$CRUSH/fits.jar:$CRUSH/util.jar:$CRUSH/crush2.jar"
+CLASSPATH="$CRUSH/tools.jar:$CRUSH/fits.jar:$CRUSH/util.jar:$CRUSH/crush2.jar"
 
 # ---------------------------- END OF SCRIPT --------------------------------

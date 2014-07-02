@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 			  <attila[AT]submm.caltech.edu>
 
-			  Last updated: 2 Apr 2014
+			  Last updated: 2 July 2014
 
 
 
@@ -21,13 +21,14 @@ Table of Contents
 
 2. Advanced Topics
 
-  2.1 Making Sense of the Console Output
-  2.2 Pointing Corrections
-  2.3 Recovery of Extended Emission
-  2.4 Pixellization and Smoothing
-  2.5 Image Processing Post-Reduction
-  2.6 Reducing Very Large Datasets (to do...)
-  2.7 Custom Logging Support
+  2.1 Filtering corrections, transfer functions, etc.
+  2.2 Making Sense of the Console Output
+  2.3 Pointing Corrections
+  2.4 Recovery of Extended Emission
+  2.5 Pixellization and Smoothing
+  2.6 Image Processing Post-Reduction
+  2.7 Reducing Very Large Datasets (to do...)
+  2.8 Custom Logging Support
 
 3. Advanced Configuration
 
@@ -97,8 +98,14 @@ the following instruments (in alphabetical order):
 
     SCUBA-2	(450um, 850um) Submillimetre Common User Bolometer Array 2
 		www.roe.ac.uk/ukatc/projects/scubatwo
+		[Module available upon special request only]
 
-    SHARC-2	(350um) Submillimeter High-Angular Resolution Camera 2
+    SHARC	(350um, 450um) Submillimeter High-Angular Resolution Camera
+		Caltech, Pasadena, CA
+		http://www.submm.caltech.edu/cso/sharc/cso_sharc.html
+
+    SHARC-2	(350um, 450um, 850um) The second-generation Submillimeter 
+		High-Angular Resolution Camera
     		Caltech, Pasadena, CA
     		www.submm.caltech.edu:/~sharc
 
@@ -892,7 +899,71 @@ options on the console.
 #####################################################################
 
 
-2.1 Making Sense of the console output
+
+2.1 Filtering corrections, transfer functions, etc.
+===================================================
+
+    Most reduction steps (decorrelation, 1/f drift removal, spectral filtering) 
+    will impact different spatial frequencies of the source structure 
+    differently. In general, the low spatial frequency components are most 
+    affected (suppressed). E.g. decorrelating the full array will reject 
+    scales larger than the field-of-view, while 1/f filtering will result in
+    1/f spatial filtering of the map due to the scanning motion, which more
+    or less directly maps temporal frequencies into spatial frequencies.
+
+    The approach of CRUSH is to apply appropriate point-source corrections
+    (rescaling) such that point sources in the map yield the same fluxes no
+    matter how (i.e. with what options exactly) the source was reduced. 
+    While the corrections will be readily sufficient for a large fraction of 
+    the science cases in this simple form, there are two notable exceptions
+    to this rule: (i) extended emission, and (ii) small, fast maps reduced
+    in 'deep' mode (when the source is scanned over the same detector more than
+    once over the 'stability' timescale). 
+
+    The better approach for these cases is to measure a transfer function, or 
+    otherwise check the reduction of a similar simulated source.
+
+
+    Transfer functions and simulated sources
+    ----------------------------------------
+    The 'sources' option provides a means for inserting test sources into
+    CRUSH maps, while one of the 'jackknife' options can be used to remove
+    any real emission beforehand but retaining the signal and noise structure
+    of the data otherwise (which is important in order to get a representative
+    measure of the transfer function). E.g.
+
+       > crush [...] -jackknife.alternate -sources=test.mask ...
+
+    will apply an alternating jackknife to the input scans, and insert sources
+    specified in the mask file 'test.mask' (See 'example.mask' on the format
+    of mask files, and the GLOSSARY for more on jackknifing options).
+
+    To measure transfer functions (i.e. complete spatial characterization of
+    the point-source response) you would want to insert a single beam-sized 
+    point source. Alternatively, you can insert one or more Gaussian-shaped 
+    source(s) with a range of FWHMs to create a simulated source structure that
+    resembles the structure you expect your source(s) to have.
+
+    Make sure your test source is bright enough to see with high S/N, but not
+    too bright to trigger unintended flagging, or despiking. In general, a S/N
+    between 100 and 1000 should be fine for default reductions, and 100 to 300 
+    for 'faint' or 'deep' modes.
+
+    Additionally, in 'faint' or 'deep' modes, you may want to disable some 
+    features which may affect your relatively bright test sources differently
+    than your much fainter real science target(s). Thus, the following are
+    recommended for reducing 'faint' and 'deep' test sources:
+
+   	> crush [...] -blacklist=clip,blank,source.filter.blank    
+
+    Note also that the spatial filtering (transfer function) will be varying
+    with location on the map (since the scanning speed and directions will
+    themselves be non-uniform over the map). Therefore, it is strongly 
+    recommended that test sources are inserted near the same locations as the
+    real sources in the field.
+    
+    
+2.2 Making sense of the console output
 ======================================
 
    Say you are reducing two scans with the command:
@@ -983,7 +1054,7 @@ options on the console.
 
      
    	Map		Calculating source map from scan. The effective point
-	source NEV/NEFD of the instrument is shown in the 
+			source NEV/NEFD of the instrument is shown in the 
 			brackets (e.g. as Jy sqrt(s)).
 	[C1~#.##]	Filtering corrections are applied directly and are
 			#.## on average.
@@ -1016,15 +1087,15 @@ options on the console.
    Are interpreted as such... In the 4th iteration, the following steps are
    performed on scan 11564: 
 
-	D(128)       -- 1/f filtering (on 128 frame timescales), removing
-   	C245         -- the correlated noise from the array with 245 pixels 
-		         surviving the gain cut.
+	D(128)       -- 1/f filtering (on 128 frame timescale)
+   	C245         -- removing the correlated noise from the array with 
+			245 pixels surviving the gain range criterion.
 	W(8.44E0-2)  -- Deriving pixel weights with the 'rms' method. The
 			average sensitivity of the array is estimated to be
 			84.4 mJy sqrt(s).
 	dN(0.0%)245  -- Despiking via the 'neighbours' method, with 0.0% of the
 			data flagged as spikes, and 245 pixels surviving the
-			flagging for being too spiky.
+			flagging of pixels with too many spikes.
 	B245	     -- Decorrelating on amplifier boxes, with 245 pixels 
 			having acceptable gains to the correlated signals.
 	c245	     -- Decorrelating on electronic cables, with 245 pixels
@@ -1050,7 +1121,7 @@ options on the console.
 
 
 
-2.2 Pointing Corrections
+2.3 Pointing Corrections
 ========================
 
    Reducing the data with the correct pointing can be crucial (esp. when 
@@ -1121,7 +1192,7 @@ options on the console.
 
 
 
-2.3 Recovery of Extended Emission
+2.4 Recovery of Extended Emission
 ==================================
 
    As a general rule, ground based instruments (in the mm and submm) are only 
@@ -1206,7 +1277,7 @@ options on the console.
 
 
 
-2.4 Pixelization and Smoothing
+2.5 Pixelization and Smoothing
 ===============================
 
    There seem to be many misconceptions about the 'correct' choice of 
@@ -1341,7 +1412,7 @@ options on the console.
 
 
 
-2.5 Image processing post-reduction
+2.6 Image processing post-reduction
 ====================================
 
    CRUSH also provides 'imagetool' for post-processing images after reduction. 
@@ -1377,7 +1448,7 @@ options on the console.
 
 
     
-2.6 Reducing Very Large Datasets
+2.7 Reducing Very Large Datasets
 ================================
 
    Coming soon...
@@ -1388,7 +1459,7 @@ options on the console.
 
 
 
-2.7 Custom Logging Support
+2.8 Custom Logging Support
 ==========================
 
    CRUSH (as of version 2.03 really) provides a poweful scan/reduction logging
@@ -2778,5 +2849,5 @@ I hope you'll find this helpful and may you end up with beautiful images!!!
 
 
 ===============================================================================
-Copyright (C)2010 -- Attila Kovacs 
+Copyright (C)2014 -- Attila Kovacs 
 

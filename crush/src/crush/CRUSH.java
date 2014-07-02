@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.16-1
+ * @version 2.17-b1
  * 
  */
 public class CRUSH extends Configurator {
@@ -45,7 +45,7 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.16-1";
+	private static String version = "2.17-b1";
 	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
@@ -522,8 +522,8 @@ public class CRUSH extends Configurator {
 	public static void usage() {
 		String info = "  Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
 			"\n" +
-			"    <instrument>    'sharc2', 'laboca', 'saboca', 'aszca', 'p-artemis',\n" +
-			"                    'polka', 'gismo', 'mako' (or 'scuba2').\n" +
+			"    <instrument>    'sharc', 'sharc2', 'laboca', 'saboca', 'aszca',\n" +
+			"                    'p-artemis', 'polka', 'gismo', 'mako' (or 'scuba2').\n" +
 			"    [options]       Various configuration options. See README for details.\n" +
 			"                    Global settings must precede all scans on argument list.\n" +
 			"                    Each scan will use all options listed before it on the\n" +
