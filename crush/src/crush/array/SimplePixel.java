@@ -37,7 +37,7 @@ import crush.*;
 public class SimplePixel extends Channel implements Pixel {
 	public Vector2D position;
 	public Vector<? extends SimplePixel> neighbours;
-	public boolean independent = false;
+	public boolean isIndependent = false;
 	
 	public SimplePixel(Instrument<? extends SimplePixel> instrument, int backendIndex) { 
 		super(instrument, backendIndex); 
@@ -54,22 +54,23 @@ public class SimplePixel extends Channel implements Pixel {
 	public final Vector2D getPosition() { return position; }
 	
 	public final double distanceTo(final Pixel pixel) {
-		return position.distanceTo(pixel.getPosition());
+		return getPosition().distanceTo(pixel.getPosition());
 	}
 	
 	public void setIndependent(boolean value) {
-		independent = value;
+		isIndependent = value;
 	}
 	
 	@Override
 	// Assume Gaussian response with FWHM = resolution;
 	public double overlap(final Channel channel, SourceModel model) {
-		if(independent) return 0.0;
+		if(isIndependent) return 0.0;
 		
-		double sourceSize = model == null ? instrument.getPointSize() : model.getPointSize();
+		final double fwhm = model == null ? instrument.getPointSize() : model.getPointSize();
+		final double isigma = Constant.sigmasInFWHM / fwhm;
 		
 		if(channel instanceof Pixel) {
-			double dev = distanceTo((Pixel) channel) * Constant.sigmasInFWHM / sourceSize;
+			final double dev = distanceTo((Pixel) channel) * isigma;
 			return Math.exp(-0.5 * dev * dev);
 		}
 		// If other channel is not a pixel assume it is independent...

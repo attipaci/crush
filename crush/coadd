@@ -10,4 +10,4 @@ CRUSH=`dirname $NAME`
 
 source $CRUSH/wrapper.sh
 
-java $JAVAOPTS -classpath $CLASSPATH SkyMapCoadder ${1+"$@"}
+java $JAVAOPTS -classpath $CLASSPATH crushtools.SkyMapCoadder ${1+"$@"}

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry excluding="crush/ebex/|crush/tools/ArrayView.java|crush/tools/DataSimulator.java" kind="src" path="src"/>
-	<classpathentry kind="lib" path="crush.jar"/>
 	<classpathentry kind="lib" path="fits.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/kovacs.util"/>

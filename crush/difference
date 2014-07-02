@@ -10,4 +10,4 @@ CRUSH=`dirname $NAME`
 
 source $CRUSH/wrapper.sh
 
-java $JAVAOPTS -classpath $CLASSPATH SkyMapDifferencer ${1+"$@"}
+java $JAVAOPTS -classpath $CLASSPATH crushtools.SkyMapDifferencer ${1+"$@"}

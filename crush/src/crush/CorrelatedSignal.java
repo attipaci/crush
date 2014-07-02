@@ -242,7 +242,11 @@ public class CorrelatedSignal extends Signal {
 		
 		final CorrelatedMode mode = (CorrelatedMode) getMode();
 		final ChannelGroup<?> channels = mode.getChannels();
-		int skipFlags = mode.skipChannels;
+		final int skipFlags = mode.skipChannels;
+		
+		// The reduced filtering effect due to model time-resolution
+		//final double T =  (resolution - 1) * integration.instrument.samplingInterval;
+		//final double phit = 1.0 - T / (T + integration.getPointCrossingTime());
 		
 		for(int k=channels.size(); --k >= 0; ) {
 			Channel channel = channels.get(k);
@@ -251,6 +255,8 @@ public class CorrelatedSignal extends Signal {
 			if(channel.isUnflagged(skipFlags)) for(Channel other : channels) if(other.isUnflagged(skipFlags))
 				phi += channel.overlap(other, integration.scan.sourceModel) * dependents.get(other);
 
+			//phi *= phit;
+			
 			if(nP > 0) phi /= nP;
 			if(phi > 1.0) phi = 1.0;
 		

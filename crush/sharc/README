@@ -3,7 +3,7 @@
                               Attila Kovacs
                       <attila[AT]submm.caltech.edu>
 
-                       Last updated: 20 May 2014
+                       Last updated: 2 June 2014
 
 
 
@@ -58,10 +58,10 @@ arbitrary wobble patterns too, if there is desire to adapt it...
 #####################################################################
 
 
-SHARC scans were stored in user-specified data files (stored in poorly 
+SHARC scans were stored in user-specified data files (stored in a poorly 
 documented VAX-binary format), with each file containing data from multiple 
 scans. So, before  accessing any given scan, you must specify the data file via
-the 'file' option, or via the combination of 'datapath' and file. E.g., say 
+the 'file' option, or via the combination of 'datapath' and 'file'. E.g., say 
 your data file is '/home/sharc/mydata.dat'. Then you can specify this file 
 either as:
 
@@ -71,10 +71,11 @@ or as:
 
    crush sharc [...] -datapath=/home/sharc -file=mydata.dat [..]
 
-(Clearly, the second is advantageous when you want to reduce scans from 
-multiple files in the same location.)
+(Clearly, the second approach is advantageous when you want to reduce scans 
+from  multiple files stored in the same location.)
 
-Next you can obtain a listing of the scans in any given file using the 'list' directive. E.g.
+Next you can obtain a listing of the scans in any given file using the 'list' 
+directive. E.g.
 
    crush sharc [...] -file=myfile.dat list
 
@@ -101,8 +102,8 @@ to be treated as one scan (not a range of scans as for other instruments).
 #####################################################################
 
 This works the same way as for SHARC-2, so you should read the corresponding
-section of sharc2/README. But, in short you can 'fazo' and 'fzao' to correct
-the pointing, and 'tau.225GHz' to set a 225GHz tau value. E.g.:
+section of sharc2/README. But, in short you can use 'fazo' and 'fzao' to 
+correct the pointing, and 'tau.225GHz' to set a 225GHz tau value. E.g.:
 
    crush sharc [...] -fazo=-49.5 -fzao=10.2 -tau.225GHz=0.043 3-12 [...]
 
@@ -116,15 +117,16 @@ includes the bolometer nonlinearity (which for SHARC-2 is treated separately).
 #####################################################################
 
    chopper.throw=X	@Advanced
-			Overrider. Specify the chopper throw (arcsecs) to use 
-			instead of the value recorded in the data file.
+			Specify the chopper throw (arcsecs) to use instead of 
+			the value recorded in the data file.
 
    deconvolve.above=X	@Expert
 			Set the deconvolution threshold to X. Usually 0<X<2.
 			When the transfer function (Fourier transform) of the 
 			chop pattern is below this value, the corresponding
-			Fourier components are considered no measured (i.e.
-			set to zero). 		
+			Fourier components are considered not measured (i.e.
+			set to zero). See the default value in 
+			'sharc/default.cfg'	
 
    file=<path>		Specify the data file either as a fully specified
 			path, or relative to the path set by the 'datapath'

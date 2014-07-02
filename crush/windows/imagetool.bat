@@ -10,4 +10,4 @@ if not defined CRUSH set CRUSH=%CD%
 call "%CRUSH%\wrapper.bat"
 
 :: Run tool with the supplied arguments...
-%JAVA% %JAVAOPTS% -classpath %CLASSPATH% ImageTool %*
+%JAVA% %JAVAOPTS% -classpath %CLASSPATH% crushtools.ImageTool %*
