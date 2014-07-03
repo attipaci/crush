@@ -25,10 +25,12 @@ package crush;
 public abstract class GradientGains implements GainProvider {
 	private double center = 0.0;
 	
+	@Override
 	public final double getGain(Channel c) throws Exception {
 		return getRawGain(c) - center;
 	}
 	
+	@Override
 	public final void setGain(Channel c, double value) throws Exception {
 		setRawGain(c, center + value);
 	}
@@ -37,6 +39,7 @@ public abstract class GradientGains implements GainProvider {
 	
 	public abstract void setRawGain(Channel c, double value) throws Exception;
 	
+	@Override
 	public void validate(Mode mode) throws Exception {	
 		final float[] gains = mode.getGains(false);
 

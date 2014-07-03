@@ -105,30 +105,37 @@ public abstract class Frame implements Cloneable, Flagging {
 		sampleFlag = new byte[size];
 	}
 	
+	@Override
 	public final boolean isFlagged(final int pattern) {
 		return (flag & pattern) != 0;
 	}
 	
+	@Override
 	public final boolean isUnflagged(final int pattern) {
 		return (flag & pattern) == 0;
 	}
 	
+	@Override
 	public final boolean isFlagged() {
 		return flag != 0;
 	}
 		
+	@Override
 	public final boolean isUnflagged() {
 		return flag == 0;
 	}
 	
+	@Override
 	public final void flag(final int pattern) {
 		flag |= pattern;
 	}
 	
+	@Override
 	public final void unflag(final int pattern) {
 		flag &= ~pattern;
 	}
 	
+	@Override
 	public final void unflag() {
 		unflag(~0);
 	}

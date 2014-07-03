@@ -76,6 +76,7 @@ public class IRAMScanID implements Comparable<IRAMScanID> {
 		return 1e4 * year + 100.0 * month + day + 1e-4 * scanNumber;
 	}
 
+	@Override
 	public int compareTo(IRAMScanID other) {
 		if(year != other.year) return year < other.year ? -1 : 1;
 		if(month != other.month) return month < other.month ? -1 : 1;

@@ -158,6 +158,7 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 			this.horizontal = horizontal;
 		}
 		
+		@Override
 		public double distanceTo(Locality other) {
 			double devT = (((Location) other).MJD - MJD) * Unit.day / timeWindow;
 			double devX = ((Location) other).horizontal.distanceTo(horizontal) / searchRadius;
@@ -165,6 +166,7 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 			return Math.hypot(devT, devX);
 		}
 
+		@Override
 		public int compareTo(Locality o) {
 			return Double.compare(MJD, ((Location) o).MJD);
 		}

@@ -145,26 +145,32 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
+	@Override
 	public double getAmbientHumidity() {
 		return humidity;
 	}
 
+	@Override
 	public double getAmbientPressure() {
 		return pressure;
 	}
 
+	@Override
 	public double getAmbientTemperature() {
 		return ambientT;
 	}
 
+	@Override
 	public double getWindDirection() {
 		return Double.NaN;
 	}
 
+	@Override
 	public double getWindPeak() {
 		return Double.NaN;
 	}
 
+	@Override
 	public double getWindSpeed() {
 		return Double.NaN;
 	}

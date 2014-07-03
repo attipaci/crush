@@ -377,26 +377,32 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		
 	}
 	
+	@Override
 	public double getAmbientHumidity() {
 		return humidity;
 	}
 
+	@Override
 	public double getAmbientPressure() {
 		return pressure;
 	}
 
+	@Override
 	public double getAmbientTemperature() {
 		return ambientT;
 	}
 
+	@Override
 	public double getWindDirection() {
 		return windDirection;
 	}
 
+	@Override
 	public double getWindPeak() {
 		return windPeak;
 	}
 
+	@Override
 	public double getWindSpeed() {
 		return windAve;
 	}

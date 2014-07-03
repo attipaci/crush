@@ -61,6 +61,7 @@ public abstract class APEXPixel extends SimplePixel implements PhaseWeighting, P
 	}
 	
 
+	@Override
 	public void deriveRelativePhaseWeights(final PhaseSet phases) {	
 		double chi2 = getLRChi2(phases, getLROffset(phases).value());
 		
@@ -82,6 +83,7 @@ public abstract class APEXPixel extends SimplePixel implements PhaseWeighting, P
 		for(PhaseData offsets : phases) offsets.weight[this.index] /= chi2;
 	}
 	
+	@Override
 	public double getRelativePhaseWeight() { return relativePhaseWeight; }
 	
 	
@@ -246,6 +248,7 @@ public abstract class APEXPixel extends SimplePixel implements PhaseWeighting, P
 		return dof > 0.0 ? chi2/dof : Double.NaN;
 	}
 	
+	@Override
 	public int despike(PhaseSet phases, double level) {
 		final int N = phases.size();
 		final double mean = getLROffset(phases).value();

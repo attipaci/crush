@@ -119,10 +119,12 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
 			this.MJD = iMJD + (Integer.parseInt(hhmm.substring(0, 2)) * Unit.hour + Integer.parseInt(hhmm.substring(2)) * Unit.min) / Unit.day; 
 		}
 		
+		@Override
 		public double distanceTo(Locality other) {
 			return(Math.abs((((TimeStamp) other).MJD - MJD) * Unit.day / timeWindow));
 		}
 
+		@Override
 		public int compareTo(Locality o) {
 			return Double.compare(MJD, ((TimeStamp) o).MJD);
 		}

@@ -45,6 +45,7 @@ public class ResonanceList extends ArrayList<MakoPixel> {
 	
 	public void sort() {
 		Collections.sort(this, new Comparator<MakoPixel>() {
+			@Override
 			public int compare(MakoPixel arg0, MakoPixel arg1) {
 				return Double.compare(arg0.toneFrequency, arg1.toneFrequency);
 			}

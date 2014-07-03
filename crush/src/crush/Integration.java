@@ -109,6 +109,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	
+	@Override
 	public int compareTo(Integration<InstrumentType, FrameType> other) {
 		if(integrationNo == other.integrationNo) return 0;
 		else return integrationNo < other.integrationNo ? -1 : 1;
@@ -2853,6 +2854,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 
+	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 			

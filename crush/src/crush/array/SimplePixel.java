@@ -51,23 +51,25 @@ public class SimplePixel extends Channel implements Pixel {
 	}
 	
 	
+	@Override
 	public final Vector2D getPosition() { return position; }
 	
+	@Override
 	public final double distanceTo(final Pixel pixel) {
 		return getPosition().distanceTo(pixel.getPosition());
 	}
 	
+	@Override
 	public void setIndependent(boolean value) {
 		isIndependent = value;
 	}
 	
 	@Override
 	// Assume Gaussian response with FWHM = resolution;
-	public double overlap(final Channel channel, SourceModel model) {
+	public double overlap(final Channel channel, double pointSize) {
 		if(isIndependent) return 0.0;
 		
-		final double fwhm = model == null ? instrument.getPointSize() : model.getPointSize();
-		final double isigma = Constant.sigmasInFWHM / fwhm;
+		final double isigma = Constant.sigmasInFWHM / pointSize;
 		
 		if(channel instanceof Pixel) {
 			final double dev = distanceTo((Pixel) channel) * isigma;
@@ -77,31 +79,38 @@ public class SimplePixel extends Channel implements Pixel {
 		return 0.0;
 	}
 	
+	@Override
 	public final Iterator<Channel> iterator() {
 		final Channel channel = this;
 		
 		return new Iterator<Channel>() {
 			boolean unused = true;
 			
+			@Override
 			public final boolean hasNext() { return unused; }
 
+			@Override
 			public Channel next() {
 				unused = false;
 				return channel;
 			}
 
+			@Override
 			public void remove() {}
 		};			
 	}
 
+	@Override
 	public final int channels() {
 		return 1;
 	}
 
+	@Override
 	public final Channel getChannel(int i) {
 		return i == 0 ? this : null; 
 	}
 	
+	@Override
 	public String getRCPString() {
 		Vector2D position = getPosition();
 		return getFixedIndex() + 

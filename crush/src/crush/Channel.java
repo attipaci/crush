@@ -80,11 +80,13 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	}
 	
 	// By default, channels can be sorted by backend-index
+	@Override
 	public int compareTo(Channel channel) {
 		if(channel.storeIndex == storeIndex) return 0;
 		else return storeIndex < channel.storeIndex ? -1 : 1;
 	}
 	
+	@Override
 	public Channel copy() {
 		Channel copy = (Channel) clone();
 		return copy;
@@ -93,30 +95,37 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	public boolean isValid() { return isFlagged(); }
 	
 	
+	@Override
 	public final boolean isFlagged(final int pattern) {
 		return (flag & pattern) != 0;
 	}
 	
+	@Override
 	public final boolean isUnflagged(final int pattern) {
 		return (flag & pattern) == 0;
 	}
 
+	@Override
 	public final boolean isFlagged() {
 		return flag != 0;
 	}
 	
+	@Override
 	public final boolean isUnflagged() {
 		return flag == 0; 
 	}
 	
+	@Override
 	public final void flag(final int pattern) {
 		flag |= pattern;
 	}
 	
+	@Override
 	public final void unflag(final int pattern) {
 		flag &= ~pattern;
 	}
 
+	@Override
 	public final void unflag() {
 		flag = 0;
 	}
@@ -143,7 +152,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 		return text;
 	}
 	
-	public abstract double overlap(Channel channel, SourceModel model);
+	public abstract double overlap(Channel channel, double pointSize);
 	
 	public int getCriticalFlags() {
 		return FLAG_DEAD | FLAG_BLIND | FLAG_GAIN;

@@ -32,6 +32,7 @@ public class ResonanceID implements Comparable<ResonanceID> {
 		this.index = index;
 	}
 	
+	@Override
 	public int compareTo(ResonanceID other) {
 		return Double.compare(freq, other.freq);
 	}

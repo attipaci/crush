@@ -642,26 +642,32 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	}
 	
 	
+	@Override
 	public double getAmbientHumidity() {
 		return humidity;
 	}
 
+	@Override
 	public double getAmbientPressure() {
 		return pressure;
 	}
 
+	@Override
 	public double getAmbientTemperature() {
 		return ambientT;
 	}
 
+	@Override
 	public double getWindDirection() {
 		return windDirection;
 	}
 
+	@Override
 	public double getWindPeak() {
 		return windPeak;
 	}
 
+	@Override
 	public double getWindSpeed() {
 		return windAve;
 	}
