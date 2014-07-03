@@ -31,16 +31,19 @@ public class FieldGainProvider implements GainProvider {
 		this.gainField = f;
 	}
 	
+	@Override
 	public double getGain(Channel c) throws IllegalAccessException {
 		return gainField.getDouble(c);
 	}
 	
+	@Override
 	public void setGain(Channel c, double value) throws IllegalAccessException {
 		Class<?> fieldClass = gainField.getClass();
 		if(fieldClass.equals(float.class)) gainField.setFloat(c, (float) value);
 		else gainField.setDouble(c, value);
 	}
 	
+	@Override
 	public void validate(Mode mode) throws Exception {}
 	
 }

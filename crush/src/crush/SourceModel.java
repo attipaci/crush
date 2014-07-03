@@ -92,8 +92,10 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 		return option;
 	}
 	
+	@Override
 	public final SourceModel copy() { return copy(true); }
 	
+	@Override
 	public SourceModel copy(boolean copyContents) {
 		SourceModel copy = (SourceModel) clone();
 		return copy;
@@ -366,6 +368,7 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	}
 	
 	
+	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
 		return null;
 	}

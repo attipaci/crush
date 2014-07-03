@@ -1017,6 +1017,7 @@ implements TableFormatter.Entries {
 		}
 	}
 	
+	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 		

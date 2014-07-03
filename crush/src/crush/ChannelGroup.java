@@ -52,6 +52,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
 		addAll(channelList);
 	}
 	
+	@Override
 	@SuppressWarnings("unchecked")
 	public ChannelGroup<ChannelType> copy() {
 		ChannelGroup<ChannelType> copy = (ChannelGroup<ChannelType>) clone();
@@ -99,6 +100,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
 	public void order(final Field field) {
 		
 		Comparator<ChannelType> ordering = new Comparator<ChannelType>() {
+			@Override
 			public int compare(ChannelType c1, ChannelType c2) {
 				try {
 					if(field.getInt(c1) < field.getInt(c2)) return -1;

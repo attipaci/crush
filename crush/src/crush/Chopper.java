@@ -40,6 +40,7 @@ public class Chopper implements Cloneable, Copiable<Chopper> {
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
+	@Override
 	public Chopper copy() {
 		Chopper copy = (Chopper) clone();
 		copy.phases = null;

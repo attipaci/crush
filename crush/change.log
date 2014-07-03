@@ -23,6 +23,8 @@
 	[FIX] {show} Resampling onto a finer grid (by pressing 's') was broken.
 	Now fixed.
 
+	[TWEAK] {2.17-1} Streamlined channel overlap calculation.
+
 	[TWEAK] {show} Circular regions and polygons now update while drawing
 	is in progress.
 
@@ -40,6 +42,7 @@
 	generic (e.g. 'show' can handle galactic, ecliptic, etc. coordinates)
 	and rely on the kovacs.util classes directly. 
 
+	[JAVA] Recompiled for Java 1.6.
 
 
 2.16-3 (2 July 2014)

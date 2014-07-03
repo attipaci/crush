@@ -67,6 +67,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 	}
 
 	
+	@Override
 	public int getPeriod(int mode) {
 		return (int)Math.round(instrument.samplingInterval / (4.0*getWaveplateFrequency()));
 	}
@@ -231,6 +232,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 	}
 
 	
+	@Override
 	public void getWaveForm(int mode, int index, float[] waveform) {	
 		
 		if(mode == PolarModulation.N) Arrays.fill(waveform, 1.0F);
@@ -253,9 +255,10 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		else throw new IllegalArgumentException("Mode " + mode + " is undefined for " + getClass().getSimpleName());
 	}
 	
+	@Override
 	public void purify() {
 		//if(!hasOption("filter.hwp")) 
-			if(hasOption("purify")) removeTPModulation();
+		if(hasOption("purify")) removeTPModulation();
 	}
 
 	@Override

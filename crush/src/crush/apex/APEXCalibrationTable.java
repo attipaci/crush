@@ -113,10 +113,12 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 		
 		public TimeStamp(double MJD) { this.MJD = MJD; }
 		
+		@Override
 		public double distanceTo(Locality other) {
 			return(Math.abs((((TimeStamp) other).MJD - MJD) * Unit.day / timeWindow));
 		}
 
+		@Override
 		public int compareTo(Locality o) {
 			return Double.compare(MJD, ((TimeStamp) o).MJD);
 		}

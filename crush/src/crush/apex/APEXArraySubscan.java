@@ -451,15 +451,18 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		for(APEXPixel pixel : instrument) pixel.position = (Vector2D) pixel.fitsPosition.clone();
 	}
 
+	@Override
 	public PhaseSet getPhases() {
 		Chopper chopper = getChopper();
 		return chopper == null ? null : chopper.phases;
 	}
 
+	@Override
 	public Chopper getChopper() {
 		return chopper;
 	}
 
+	@Override
 	public void setChopper(Chopper chopper) {
 		this.chopper = chopper;
 	}

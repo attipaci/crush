@@ -106,6 +106,7 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 			// Order mux channels in pin order...
 			for(ChannelGroup<GismoPixel> mux : muxDivision) {
 				Collections.sort(mux, new Comparator<GismoPixel>() {
+					@Override
 					public int compare(GismoPixel o1, GismoPixel o2) {
 						if(o1.pin == o2.pin) return 0;
 						return o1.pin > o2.pin ? 1 : -1;

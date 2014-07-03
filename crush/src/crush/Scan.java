@@ -94,7 +94,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		this.instrument = (InstrumentType) instrument.copy();
 	}
 	
-	
+	@Override
 	public int compareTo(Scan<?, ?> other) {
 		if(serialNo == other.serialNo) return 0;
 		return serialNo < other.serialNo ? -1 : 1;
@@ -431,6 +431,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	}
 	
 	
+	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 		

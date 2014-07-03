@@ -341,10 +341,12 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 				+ " " + Util.f1.format(chopper_throw / Unit.arcsec) + "\" " + Util.f3.format(chop_frequency) + " Hz";
 	}
 
+	@Override
 	public double getChopSeparation() {
 		return chopper_throw;
 	}
 
+	@Override
 	public double getChopAngle(Coordinate2D coordinates) {
 		if(coordinates instanceof HorizontalCoordinates) return 0.0;
 		if(coordinates instanceof FocalPlaneCoordinates) return -instrument.rotatorAngle;

@@ -140,6 +140,7 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Vector2D> {
 			return Math.pow(x, xExp) * Math.pow(y, yExp);			
 		}
 
+		@Override
 		public int compareTo(Term arg0) {
 			if(equals(arg0)) return 0;
 			if(xExp < arg0.xExp) return -1;

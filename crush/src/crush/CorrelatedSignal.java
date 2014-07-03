@@ -248,12 +248,14 @@ public class CorrelatedSignal extends Signal {
 		//final double T =  (resolution - 1) * integration.instrument.samplingInterval;
 		//final double phit = 1.0 - T / (T + integration.getPointCrossingTime());
 		
+		double pointSize = integration.scan.sourceModel.getPointSize();
+		
 		for(int k=channels.size(); --k >= 0; ) {
 			Channel channel = channels.get(k);
 			double phi = 0.0;
 			// Every pixel that sees the source contributes to the filtering...
 			if(channel.isUnflagged(skipFlags)) for(Channel other : channels) if(other.isUnflagged(skipFlags))
-				phi += channel.overlap(other, integration.scan.sourceModel) * dependents.get(other);
+				phi += channel.overlap(other, pointSize) * dependents.get(other);
 
 			//phi *= phit;
 			
