@@ -128,7 +128,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		}
 		
 		// Remove DC offsets now, if has not been done already...
-		if(!hasOption("level")) removeDrifts(blindChannels, size(), false);
+		if(!hasOption("level")) removeChannelDrifts(blindChannels, size(), false);
 		
 		CorrelatedMode blindMode = (CorrelatedMode) instrument.modalities.get("blinds").get(0);
 		try { blindMode.setGainProvider(new FieldGainProvider(LabocaPixel.class.getField("temperatureGain"))); }

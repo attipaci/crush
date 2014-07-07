@@ -259,9 +259,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		clear();
 		ensureCapacity(frames);
 		for(int i=frames; --i >= 0; ) add(null);
-	
-		instrument.integrationTime = ((double[]) hdu.getRow(0)[hdu.findColumn("INTEGTIM")])[0] * Unit.s;
-		instrument.samplingInterval = instrument.integrationTime;
+		
+		instrument.samplingInterval = instrument.integrationTime = ((double[]) hdu.getRow(0)[hdu.findColumn("INTEGTIM")])[0] * Unit.s;
 		// Use the integrationTime to convert to data weights...
 		instrument.dataWeights();
 		
@@ -275,7 +274,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		
 		new DataParTable(hdu).read(); 
 	}
-		
+	
 	class DataParTable extends HDUReader {
 		private double[] MJD, LST, X, Y, DX, DY, chop;
 		private int[] phase;
@@ -286,7 +285,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		public DataParTable(TableHDU hdu) throws FitsException {
 			super(hdu);
 
-			final APEXArrayScan<InstrumentType, ?> apexScan = (APEXArrayScan<InstrumentType, ?>) scan;
 			final Header header = hdu.getHeader();		
 
 			MJD = (double[]) table.getColumn(hdu.findColumn("MJD"));
@@ -346,7 +344,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 			return new Reader() {				
 				private Vector2D tempOffset;
 				private CelestialCoordinates basisCoords;
-
+				private boolean scramble = hasOption("scramble");
+				
 				@Override
 				public void init() {
 					super.init();
@@ -363,8 +362,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 				
 				@Override
 				public void readRow(int t) throws FitsException {
-					set(t, null);
-					
+				
 					// Continue only if the basis coordinates are valid...
 					// APEX uses -999 deg to mark invalid data...
 					final double x = X[t] * Unit.deg;
@@ -424,7 +422,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 					// Scrambling produces a messed-up map, which is suitable for  studying the noise properties
 					// If the scanning is more or less centrally symmetric, the resulting 'noise' map is
 					// representative of the non-scrambled map...
-					if(hasOption("scramble")) {
+					if(scramble) {
 						exposure.horizontalOffset.invert();
 						exposure.chopperPosition.scaleX(-1.0);
 						exposure.sinPA *= -1.0;

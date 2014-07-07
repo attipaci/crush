@@ -1,6 +1,7 @@
 
 2.17-b1 (2 July 2014)
 
+
 	[NEW] Initial support for SHARC.
 
 	[NEW] {show} Masks now work with non-equatorial maps (but mask 
@@ -23,7 +24,9 @@
 	[FIX] {show} Resampling onto a finer grid (by pressing 's') was broken.
 	Now fixed.
 
-	[TWEAK] {2.17-1} Streamlined channel overlap calculation.
+	[TWEAK] Simplified equatorial->equatorial conversions.
+
+	[TWEAK] Streamlined channel overlap calculation.
 
 	[TWEAK] {show} Circular regions and polygons now update while drawing
 	is in progress.
@@ -35,12 +38,31 @@
 	[TWEAK] {show} Showing only useful significant figures for aperture
 	fluxes inside polygons.
 
-	[CODE] {tools} The old CRUSH 1.xx tools have been streamlined 
+	[SPEED] Parallel offset removal during subscan validation. (Also moved
+	getPointCrossingTime() outside of loop.)
+
+	[SPEED] Parallel frame reading and frame validation.
+
+	[SPEED] {show} Faster rendering while drawing/dragging (no antialiasing
+	and optimized for speed).
+
+	[COSMETIC] {show} 'Temperature' colorscheme was added twice to list of
+	color schemes.
+
+	[COSMETIC] {show} Higher quality rendering and sans-serif fonts instead
+	of monospaced. Finer zooming, antialiased rendering (can toggle with 
+	'a').
+
+	[TOOLS] The old CRUSH 1.xx tools have been streamlined 
 	into a new much smaller tools.jar replacing the old crush.jar. Gone is
 	all the old SHARC2-specific code, and the duplicate classes (which 
 	were often a source of problems). The new tools are already more 
 	generic (e.g. 'show' can handle galactic, ecliptic, etc. coordinates)
 	and rely on the kovacs.util classes directly. 
+
+	[MAN] Updated UNIX man pages for 'crush' and 'show'.
+
+	[FITS] nom.tam.fits package updated to v 1.11.
 
 	[JAVA] Recompiled for Java 1.6.
 
