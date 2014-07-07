@@ -138,7 +138,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Incorporate the relative instrument gain (under loading) in the scan gain...
 		gain *= instrument.sourceGain;	
 		
-		for(Frame frame : this) if(frame != null) frame.validate();
+		try {
+			new FrameFork<Void>() {
+				@Override
+				public void process(FrameType frame) { if(frame != null) frame.validate(); }
+			}.process(CRUSH.maxThreads);
+		}
+		catch(Exception e) { e.printStackTrace(); }
+			
 		
 		int gapTolerance = hasOption("gap-tolerance") ? framesFor(Double.parseDouble("gap-tolerance") * Unit.s) : 0;
 		if(hasGaps(gapTolerance)) fillGaps();
@@ -186,9 +193,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Must do this before direct tau estimates...
 		if(hasOption("level") || !hasOption("pixeldata")) {
 			System.err.println("   Removing DC offsets.");
-			boolean robust = false;
-			if(hasOption("estimator")) if(option("estimator").equals("median")) robust=true;
-			removeOffsets(robust);
+			boolean isRobust = false;
+			if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust=true;
+			removeOffsets(isRobust, CRUSH.maxThreads);
 		}
 			
 		if(hasOption("tau")) {
@@ -624,56 +631,108 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public void removeOffsets(final boolean robust) {
-		removeDrifts(instrument, size(), robust);
+		removeOffsets(robust, 1);
+	}
+	
+	public void removeOffsets(final boolean robust, int threads) {
+		removeDrifts(size(), robust, threads);
 	}
 	
 	
-	public void removeDrifts(final ChannelGroup<?> channels, final int targetFrameResolution, final boolean robust) {
+	public void removeDrifts(final int targetFrameResolution, final boolean robust) {
+		removeDrifts(targetFrameResolution, robust, 1);
+	}
+	
+	public void removeDrifts(final int targetFrameResolution, final boolean robust, int threads) {
+		if(threads < 1) threads = 1;
+		if(threads > instrument.size()) threads = instrument.size();
+		
 		final int driftN = Math.min(size(), ExtraMath.pow2ceil(targetFrameResolution));
 		
 		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);
 			
 		final Dependents parms = getDependents("drifts");
+		
+		if(driftN < size()) comments += (robust ? "[D]" : "D") + "(" + driftN + ")";
+		else comments += robust ? "[O]" : "O";
+		
+		
+		try {
+			new Parallel<Void>() {
+
+				@Override
+				protected void processIndex(int i, int threadCount) throws Exception {
+					final int nc = instrument.size();
+					ChannelGroup<Channel> g = new ChannelGroup<Channel>("parchannel-" + i);
+					g.ensureCapacity(ExtraMath.roundupRatio(instrument.size(), threadCount));
+					for(int c = i; c < nc; c += threadCount) g.add(instrument.get(c));
+								
+					// Remove drifts from a parallel group of channels...
+					removeChannelDrifts(g, parms, driftN, robust);			
+					
+					ArrayList<Signal> sigs = new ArrayList<Signal>(signals.values());
+					
+					// Remove drifts from signals too...
+					for(int k = i; k < sigs.size(); k += threadCount) sigs.get(k).removeDrifts();
+				}
+				
+			}.process(threads);
+		}
+		catch(Exception e) { e.printStackTrace(); }
+	}
+	
+	
+	public void removeChannelDrifts(final ChannelGroup<? extends Channel> channels, final int targetFrameResolution, final boolean robust) {
+		final int driftN = Math.min(size(), ExtraMath.pow2ceil(targetFrameResolution));
+		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);	
+		removeChannelDrifts(channels, getDependents("drifts"), driftN, robust);
+		
+	}
+	
+	public void removeChannelDrifts(final ChannelGroup<? extends Channel> channels, final Dependents parms, final int driftN, final boolean robust) {
 
 		WeightedPoint[] buffer = null;	// The timestream for robust estimates
 
 		final WeightedPoint increment = new WeightedPoint();	
-		final WeightedPoint[] aveOffset = new WeightedPoint[instrument.size()];
-		for(int i=aveOffset.length; --i >= 0; ) aveOffset[i] = new WeightedPoint();
 		
-		if(driftN < size()) comments += (robust ? "[D]" : "D") + "(" + driftN + ")";
-		else comments += robust ? "[O]" : "O";
+		final WeightedPoint[] aveOffset = new WeightedPoint[channels.size()];
+		for(int i=aveOffset.length; --i >= 0; ) aveOffset[i] = new WeightedPoint();
+	
 		
 		if(robust) {
 			buffer = new WeightedPoint[size()];
 			for(int i=buffer.length; --i >= 0; ) buffer[i] = new WeightedPoint();
 		}
-		
+				
 		final int nt = size();
 		for(int from=0; from < nt; from += driftN) {
 			int to = Math.min(size(), from + driftN);
 			
 			parms.clear(channels, from, to);
 			
-			for(Channel channel : channels) {
+			for(int k=channels.size(); --k >= 0; ) {
+				final Channel channel = channels.get(k);
+					
 				if(robust) getMedianLevel(channel, from, to, buffer, increment);
 				else getMeanLevel(channel, from, to, increment);
 			
-				aveOffset[channel.index].average(increment);
+				aveOffset[k].average(increment);
+				
 				removeOffset(channel, from, to, parms, increment);
 			}
 			parms.apply(channels, from, to);
 		}
-		
+			
 		// Store the mean offset as a channel property...
-		for(final Channel channel : channels) {
+		for(int k=channels.size(); --k >= 0; ) {
+			final Channel channel = channels.get(k);
 			final double G = isDetectorStage ? channel.getHardwareGain() : 1.0;
-			channel.offset += G * aveOffset[channel.index].value();
+			channel.offset += G * aveOffset[k].value();
 		}
 			
+		final double crossingTime = getPointCrossingTime();	
+	
 		if(driftN < size()) for(final Channel channel : channels) {
-			final double crossingTime = getPointCrossingTime();	
-			
 			if(!Double.isNaN(crossingTime) && !Double.isInfinite(crossingTime)) {
 				// Undo prior drift corrections....
 				if(!Double.isInfinite(channel.filterTimeScale)) {
@@ -687,14 +746,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			channel.filterTimeScale = Math.min(filterTimeScale, channel.filterTimeScale);
 		}		
-			
 		
-		
-		// Make sure signals are filtered the same as time-streams...
-		// TODO this is assuming all channels are filtered the same...
-		for(final Signal signal : signals.values()) signal.removeDrifts();
 		
 		if(CRUSH.debug) checkForNaNs(channels, 0, size());
+		
 	}
 	
 	private void removeOffset(final Channel channel, final int from, final int to, final Dependents parms, final WeightedPoint increment) {
@@ -713,10 +768,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		
 		parms.add(channel, 1.0);	
+		
+		Thread.yield();
 	}
 	
 	
-	private synchronized void getMeanLevel(final Channel channel, final int fromt, int tot, final WeightedPoint increment) {
+	private void getMeanLevel(final Channel channel, final int fromt, int tot, final WeightedPoint increment) {
 		tot = Math.min(tot, size());
 		
 		increment.noData();
@@ -735,7 +792,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	
-	private synchronized void getMedianLevel(final Channel channel, final int fromt, int tot, final WeightedPoint[] buffer, final WeightedPoint increment) {
+	private void getMedianLevel(final Channel channel, final int fromt, int tot, final WeightedPoint[] buffer, final WeightedPoint increment) {
 		tot = Math.min(tot, size());
 						
 		int n = 0;
@@ -755,7 +812,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 		}
 		
-
 		if(sumw > 0.0) Statistics.smartMedian(buffer, 0, n, 0.25, increment);				
 	}
 	
@@ -2517,7 +2573,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			String method = driftOptions.isConfigured("method") ? driftOptions.get("method").getValue() : "blocks"; 
 			int driftN = filterFramesFor(option("drifts").getValue(), 10.0*Unit.sec);
 			if(method.equalsIgnoreCase("fft")) highPassFilter(driftN * instrument.samplingInterval);
-			else removeDrifts(instrument, driftN, isRobust);
+			else removeDrifts(driftN, isRobust);
 		}
 		else if(task.startsWith("correlated.")) {	
 			String modalityName = task.substring(task.indexOf('.')+1);

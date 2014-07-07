@@ -22,6 +22,8 @@
  ******************************************************************************/
 package crush.fits;
 
+import crush.CRUSH;
+import kovacs.util.ExtraMath;
 import kovacs.util.Parallel;
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -39,8 +41,8 @@ public abstract class HDUReader {
 	public abstract Reader getReader();
 	
 	public void read() throws Exception {
-		//read(CRUSH.maxThreads);
-		read(1);
+		read(CRUSH.maxThreads);
+		//read(1);
 	}
 	
 	
@@ -53,7 +55,7 @@ public abstract class HDUReader {
 		@Override
 		public void processIndex(int i, int threadCount) throws Exception {
 			final int frames = hdu.getNRows();
-			final int step = (int)Math.ceil((double) frames / threadCount);
+			final int step = ExtraMath.roundupRatio(frames, threadCount);
 			
 			processRows(i*step, Math.min((i+1)*step, frames));
 		}
@@ -71,9 +73,8 @@ public abstract class HDUReader {
 	
 	public abstract class Reader extends Task<Void> {
 		@Override
-		public void processRow(int i) throws Exception {
-			readRow(i);
-		}
+		public void processRow(int i) throws Exception { readRow(i); }
+		
 		public abstract void readRow(int i) throws FitsException;
 	}
 }

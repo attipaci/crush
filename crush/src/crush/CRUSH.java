@@ -45,7 +45,7 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.17-b1";
+	private static String version = "2.17-b2";
 	private static String revision = "beta";
 	public static String workPath = ".";
 	public static String home = ".";
@@ -279,14 +279,16 @@ public class CRUSH extends Configurator {
 					scan = instrument.readScan(scanID, true);
 					if(scan.size() == 0) System.err.println(" WARNING! Scan " + scan.getID() + " contains no valid data. Skipping.");
 					else if(isConfigured("subscans.split")) scans.addAll(scan.split());
+					
 					/*
-					else if(isConfigured("split")) {
-						double segmentTime = 30.0 * Unit.s;
-						try { segmentTime = scan.split(option("split").getDouble() * Unit.s); }
+					else if(isConfigured("segment")) {
+						double segmentTime = 60.0 * Unit.s;
+						try { segmentTime = option("segment").getDouble() * Unit.s; }
 						catch(Exception e) {}
-						scans.addAll(scan.split(segmentTime));
+						scans.addAll(scan.segmentTo(segmentTime));
 					}
 					*/
+					
 					else scans.add(scan);	
 					System.gc();		
 				}
@@ -522,14 +524,14 @@ public class CRUSH extends Configurator {
 	public static void usage() {
 		String info = "  Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
 			"\n" +
-			"    <instrument>    'sharc', 'sharc2', 'laboca', 'saboca', 'aszca',\n" +
-			"                    'p-artemis', 'polka', 'gismo', 'mako' (or 'scuba2').\n" +
-			"    [options]       Various configuration options. See README for details.\n" +
-			"                    Global settings must precede all scans on argument list.\n" +
-			"                    Each scan will use all options listed before it on the\n" +
-			"                    command line.\n" +
-			"    <scanlist>      A list of scan numbers (or names) to reduce. Can mix\n" +
-			"                    file names, individual scan numbers, and ranges. E.g.\n" +
+			"    <instrument>     'sharc', 'sharc2', 'laboca', 'saboca', 'aszca',\n" +
+			"                     'p-artemis', 'polka', 'gismo', 'mako' (or 'scuba2').\n" +
+			"    [options]        Various configuration options. See README for details.\n" +
+			"                     Global settings must precede all scans on argument list.\n" +
+			"                     Each scan will use all options listed before it on the\n" +
+			"                     command line.\n" +
+			"    <scanlist>       A list of scan numbers (or names) to reduce. Can mix\n" +
+			"                     file names, individual scan numbers, and ranges. E.g.\n" +
 			"                       10628-10633 11043 myscan.fits\n" +
 			"\n" +
 			"   Try 'crush <instrument> -poll' for a list of current settings.\n" +
@@ -544,41 +546,49 @@ public class CRUSH extends Configurator {
 			" Some commonly used options. For full and detailed description of all options.\n" +
 			" please consult the GLOSSARY.\n\n" +
 			"   Location of input files:\n" +
-			"     -datapath=    Specify the path to the raw data.\n" +
+			"     -datapath=     Specify the path to the raw data.\n" +
 			(instrument != null ? instrument.getDataLocationHelp() : "") +
 			"\n" +
 			"   Optimize reduction by source type:\n" +
-			"     -bright       Reduce bright sources (S/N > 1000).\n" +
-			"     -faint        Use with faint sources (S/N < 10).\n" +
-			"     -deep         Use with deep fields (point sources).\n" +
-			"     -extended     Assume extended structures (>= FOV).\n" +
-			"     -moving       Target is a moving object (e.g. planet, asteroid, or moon).\n"	+	
+			"     -bright        Reduce bright sources (S/N > 1000).\n" +
+			"     -faint         Use with faint sources (S/N < 10).\n" +
+			"     -deep          Use with deep fields (point sources).\n" +
+			"     -extended      Assume extended structures (>= FOV/2).\n" +
+			"     -moving        Target is a moving object (e.g. planet, asteroid, or moon).\n"	+	
 			"\n" +
 			"   Options for the output map:\n" +
-			"     -outpath=     Specify the directory where output files will go.\n" +
-			"     -name=        Specify the output FITS map file name (rel. to outpath).\n" +
-			"     -projection=  The spherical projection to use (e.g. SIN, TAN, SFL...)\n" +
-			"     -grid=        The map pixelization (arcsec).\n" +
-			"     -altaz        Reduce in horizontal coordinates (e.g. for pointing).\n" +
+			"     -outpath=      Specify the directory where output files will go.\n" +
+			"     -name=         Specify the output FITS map file name (rel. to outpath).\n" +
+			"     -projection=   The spherical projection to use (e.g. SIN, TAN, SFL...)\n" +
+			"     -grid=         The map pixelization (arcsec).\n" +
+			"     -altaz         Reduce in horizontal coordinates (e.g. for pointing).\n" +
+			"     -ecliptic      Reduce in Ecliptic coordinates.\n" +
+			"     -galactic      Reduce in Galactic coordinates.\n" +
+			"     -final:smooth= Smoothing in the final iteration, either as FWHM (arcsec)\n" +
+			"                    or one of: 'minimal', '2/3beam, 'beam'\n" +
 			"\n" +
 			"   Commonly used options for scans:\n" +
-			"     -tau=         Specify a zenith tau to use.\n" +
-			"     -scale=       Apply a calibration factor to the scan(s).\n" +
-			"     -pointing=    x,y pointing corrections in arcsec.\n" +
+			"     -tau=          Specify an in-band zenith tau, source ID, or interpolation\n" +
+			"                    table to use. E.g.: '1.036', '225GHz', or '~/tau.dat'.\n" +
+			"     -tau.<id>=     Specify a zenith tau value or interpolation table for <id>.\n" +
+			"                    E.g. 'tau.225GHz=0.075'.\n" +
+			"     -scale=        Apply a calibration correction factor to the scan(s).\n" +
+			"     -pointing=     x,y pointing corrections in arcsec.\n" +
 			(instrument != null ? instrument.getCommonHelp() : "") +
 			"\n" +
 			"   Alternative reduction modes:\n" +
-			"     -point        Reduce pointing scans and suggest pointing corrections.\n" +
-			"     -skydip       Reduce skydips to obtain in-band zenith opacity.\n" +
-			"     -beammap      Derive pixel position data from beam maps.\n" +
-			"     -split        Indicate that the scans are part of a larger dataset.\n" +
+			"     -point         Reduce pointing/calibration scans.\n" +
+			"     -skydip        Reduce skydips to obtain in-band zenith opacity.\n" +
+			"     -beammap       Derive pixel position data from beam maps.\n" +
+			"     -split         Indicate that the scans are part of a larger dataset.\n" +
 			"\n" +
 			"   Other useful options:\n" +
-			"     -show         Display the result (if possible) at the end.\n" +
-			"     -forget=      Comma separated list of options to unset.\n" +
-			"     -blacklist=   Comma separated list of options to ignore.\n" +
-			"     -config=      Load configuration file.\n" +
-			"     -poll         Poll the currently set options.\n" +
+			"     -show          Display the result (if possible) at the end.\n" +
+			"     -forget=       Comma separated list of options to unset.\n" +
+			"     -blacklist=    Comma separated list of options to ignore.\n" +
+			"     -config=       Load configuration file.\n" +
+			"     -poll          Poll the currently set options.\n" +
+			"     -conditions    List all conditional settings.\n" +
 			"\n";
 		
 		System.out.println(info);

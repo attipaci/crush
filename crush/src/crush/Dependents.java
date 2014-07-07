@@ -79,7 +79,7 @@ public class Dependents {
 		forChannel[channel.index] += dp; 
 	}
 	
-	public void apply(final Iterable<? extends Channel> channels, final int from, int to) {
+	public synchronized void apply(final Iterable<? extends Channel> channels, final int from, int to) {
 		while(--to >= from) {
 			final Frame exposure = integration.get(to);
 			if(exposure != null) exposure.dependents += forFrame[to];

@@ -146,7 +146,7 @@ public class ManEdit {
 		String lastLine = "";
 		for(i=0; i<edited.size(); i++) {
 			String line = edited.get(i);
-			
+				
 			// Remove references to the index...
 			line = line.replace("<A HREF=\"#index\">Index</A>", "");
 			// Change java reference to regular boldface
@@ -164,6 +164,8 @@ public class ManEdit {
 			line = line.replace("<I>GLOSSARY</I>", "<a href=\"../../v2/GLOSSARY\">GLOSSARY</a>");
 			line = line.replace("<I>README</I>", "<a href=\"../../v2/README\">README</a>");
 			line = line.replace("Attila Kovacs", "<a href=\"http://www.physics.umn.edu/people/kovacs.html\" rel=\"friend\" target=\"_blank\">Attila Kov&aacute;cs</a>");
+			
+			//line = line.replace(" --", " &mdash;");
 			
 			if(line.contains("</BODY>")) System.out.println("</small>");
 			

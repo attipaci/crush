@@ -248,7 +248,8 @@ public class CorrelatedSignal extends Signal {
 		//final double T =  (resolution - 1) * integration.instrument.samplingInterval;
 		//final double phit = 1.0 - T / (T + integration.getPointCrossingTime());
 		
-		double pointSize = integration.scan.sourceModel.getPointSize();
+		SourceModel model = integration.scan.sourceModel;
+		double pointSize = model == null ? integration.instrument.getPointSize() : model.getPointSize();
 		
 		for(int k=channels.size(); --k >= 0; ) {
 			Channel channel = channels.get(k);
