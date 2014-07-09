@@ -317,6 +317,11 @@ public class BeamMap extends SourceMap {
 	public void noParallel() {
 		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) map.noParallel();
 	}
+	
+	@Override
+	public void setParallel(int threads) {
+		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) map.setParallel(threads);
+	}
 
 	@Override
 	public boolean isValid() {

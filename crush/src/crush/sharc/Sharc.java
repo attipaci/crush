@@ -133,12 +133,8 @@ public class Sharc extends CSOArray<SharcPixel> {
 
 	@Override
 	public SourceModel getSourceModelInstance() {
-		if(hasOption("source.type")) {
-			String type = option("source.type").getValue();
-			if(type.equals("multibeam")) return new MultiBeamMap(this, SharcPixel.spacing);		
-			else return super.getSourceModelInstance();
-		}
-		return super.getSourceModelInstance();
+		if(hasOption("deconvolve")) return new MultiBeamMap(this, SharcPixel.spacing);		
+		else return super.getSourceModelInstance();
 	}  
 	
 	

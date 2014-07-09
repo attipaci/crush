@@ -1,10 +1,4 @@
->>> add crush logo for show window...
->>> GreekLetter/Symbol to become Enum (uucode, name)
->>> actually package and use tools.jar
 	
-
->>> SHARC: 'file', 'multibeam', [list], 'deconvolve.above', 'chopper.throw'
->>> Check time weighting (DOF, higher noise)...
 >>> focus.s2n, focus.[x,y,z]coeff, focus.[x,y,z]scatter
 >>> focus.r, focus.rmin, focus.elong0
 
@@ -14,28 +8,13 @@
 	blank -> source.blank
 	smooth -> source.smooth
 
->>> pointing on any celestial map
 
 
 For 2.20
-	- Update nom.tam.fits to 1.11 (Requires Java 6!!!)
-	  (check!!!)
 	- freeze. or force. keywords
 	- write residuals back to fits
 		append '.residual.' to filename
 		NaNs instead of flagged channels/samples.
-	- parallelize validation tasks
-		frame.validate()
-		reindex()
-		selectFrames()
-		? downsample()
-		velocityClip(), accelerationClip()
-		calcScanSpeedStats()
-		checkRange()
-		? setupFilters()
-		detectorStage() / readoutStage()
-		removeOffsets(...)
-		slim()
 	- Redo FITS reading
 		- eliminate HDUReader? (good for reading select rows...)
 		- read all into Object[][], or by rows 

@@ -182,7 +182,7 @@ public class HistogramTool {
 		System.out.println("             Version: " + version);
 		System.out.println("             part of crush " + CRUSH.getFullVersion());
 		System.out.println("             http://www.submm.caltech.edu/~sharc/crush");
-		System.out.println("             Copyright (C)2011 Attila Kovacs <kovacs[AT]astro.umn.edu>");
+		System.out.println("             Copyright (C)2011 Attila Kovacs <attila[AT]submm.caltech.edu>");
 		System.out.println();
 	}
 

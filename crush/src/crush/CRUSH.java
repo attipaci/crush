@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.17-b1
+ * @version 2.17-b2
  * 
  */
 public class CRUSH extends Configurator {
@@ -446,7 +446,10 @@ public class CRUSH extends Configurator {
 			else i++;
 		}
 		
-		if(solveSource()) if(tasks.contains("source")) source.reset(true);
+		if(solveSource()) if(tasks.contains("source")) {
+			source.setParallel(CRUSH.maxThreads);
+			source.reset(true);
+		}
 				
 		for(Pipeline thread : threads) thread.start();
 	
@@ -454,6 +457,7 @@ public class CRUSH extends Configurator {
 		
 		if(solveSource()) if(tasks.contains("source")) {
 			System.err.print("  [Source] ");
+			source.setParallel(CRUSH.maxThreads);
 			source.process(true);
 			source.sync();
 		}

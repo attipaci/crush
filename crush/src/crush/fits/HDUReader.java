@@ -75,6 +75,6 @@ public abstract class HDUReader {
 		@Override
 		public void processRow(int i) throws Exception { readRow(i); }
 		
-		public abstract void readRow(int i) throws FitsException;
+		public abstract void readRow(int i) throws Exception;
 	}
 }

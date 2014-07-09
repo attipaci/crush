@@ -1,8 +1,7 @@
 
-2.17-b1 (2 July 2014)
+2.17-b2 (9 July 2014)
 
-
-	[NEW] Initial support for SHARC.
+	[NEW] Initial support for SHARC. See 'sharc/README' for details.
 
 	[NEW] {show} Masks now work with non-equatorial maps (but mask 
 	coordinates remain equatorial defined.)
@@ -24,6 +23,14 @@
 	[FIX] {show} Resampling onto a finer grid (by pressing 's') was broken.
 	Now fixed.
 
+	[TWEAK] {show} Infobar on top of map now displays the region name and
+	center coordinates and current radius, while drawing circular regions.
+
+	[TWEAK] {show} Eliminated slow point-rms to beam-rms conversion. As
+	a result 'show' opens crush maps a lot faster.
+
+	[TWEAK] Small tweaks to time-weighting, aiming to increase stability.
+
 	[TWEAK] Simplified equatorial->equatorial conversions.
 
 	[TWEAK] Streamlined channel overlap calculation.
@@ -38,13 +45,31 @@
 	[TWEAK] {show} Showing only useful significant figures for aperture
 	fluxes inside polygons.
 
+	[SPEED] Parallel compound source model processing.
+
 	[SPEED] Parallel offset removal during subscan validation. (Also moved
 	getPointCrossingTime() outside of loop.)
 
-	[SPEED] Parallel frame reading and frame validation.
+	[SPEED] Parallel frame reading, frame validation, and frame slimming.
+
+	[SPEED] {show} Reversed loops for better performance.
+
+	[SPEED] {show} When drawing/dragging large images in quality rendering
+	mode, use a coarser sampling for speed until the operation is either
+	finished or comes to a halt. Also when resizing...
+
+	[SPEED] {show} Further performance enhancement via precalculated
+	scaled maps.
 
 	[SPEED] {show} Faster rendering while drawing/dragging (no antialiasing
 	and optimized for speed).
+
+	[SPEED] {show} Aim to draw only 1 map pixel per display pixel, esp.
+	at very low zooms.
+
+	[COSMETIC] {show} labeling of polygonal apertures.
+
+	[COSMETIC] {show} Map continuously updates as colorscale is dragged.
 
 	[COSMETIC] {show} 'Temperature' colorscheme was added twice to list of
 	color schemes.
