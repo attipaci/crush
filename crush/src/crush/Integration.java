@@ -215,7 +215,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		if(hasOption("invert")) gain *= -1.0;
 		
-		if(!hasOption("noslim")) slim();
+		if(!hasOption("noslim")) slim(CRUSH.maxThreads);
 		
 		if(hasOption("jackknife")) if(Math.random() < 0.5) {
 			System.err.println("   JACKKNIFE! This integration will produce an inverted source.");
@@ -587,7 +587,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			return;
 		}
 		
-		if(from == 0) for(int t=size(); --t >= to; ) remove(t);
+		if(from == 0) {
+			for(int t=size(); --t >= to; ) remove(t);
+		}
 		else {
 			final ArrayList<FrameType> frames = new ArrayList<FrameType>(to - from);
 			for(int t=from; t<to; t++) frames.add(get(t));
@@ -602,9 +604,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		System.err.println("   Trimmed to " + size() + " frames.");
 	}
 	
-	public synchronized void slim() {
+	public synchronized void slim(int threads) {
 		if(instrument.slim(false)) {
-			for(final Frame frame : this) if(frame != null) frame.slimTo(instrument);	
+			try {
+				new FrameFork<Void>() {
+					@Override
+					public void process(FrameType frame) { if(frame != null) frame.slimTo(instrument); }
+				}.process(threads);
+			}
+			catch(Exception e) { e.printStackTrace(); }
+		
 			instrument.reindex();
 		}
 	}
@@ -752,12 +761,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 	}
 	
-	private void removeOffset(final Channel channel, final int from, final int to, final Dependents parms, final WeightedPoint increment) {
+	private void removeOffset(final Channel channel, final int from, int to, final Dependents parms, final WeightedPoint increment) {
 		final float delta = (float) increment.value();
 				
 		// Remove offsets from data and account frame dependence...	
-		for(int t=from; t<to; t++) {
-			final Frame exposure = get(t);
+		while(--to >= from) {
+			final Frame exposure = get(to);
 			if(exposure == null) continue;
 			
 			exposure.data[channel.index] -= delta;
@@ -773,14 +782,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	
-	private void getMeanLevel(final Channel channel, final int fromt, int tot, final WeightedPoint increment) {
-		tot = Math.min(tot, size());
+	private void getMeanLevel(final Channel channel, final int from, int to, final WeightedPoint increment) {
+		to = Math.min(to, size());
 		
 		increment.noData();
 		
 		// Calculate the weight sums for every pixel...
-		for(int t=fromt; t<tot; t++) {
-			final Frame exposure = get(t);
+		while(--to >= from) {
+			final Frame exposure = get(to);
 			if(exposure == null) continue; 
 		
 			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0) {
@@ -792,16 +801,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	
-	private void getMedianLevel(final Channel channel, final int fromt, int tot, final WeightedPoint[] buffer, final WeightedPoint increment) {
-		tot = Math.min(tot, size());
+	private void getMedianLevel(final Channel channel, final int from, int to, final WeightedPoint[] buffer, final WeightedPoint increment) {
+		to = Math.min(to, size());
 						
 		int n = 0;
 		double sumw = 0.0;
 		
 		final int c = channel.index;
 		
-		for(int t=fromt; t<tot; t++) {
-			final Frame exposure = get(t);
+		while(--to >= from) {
+			final Frame exposure = get(to);
 			if(exposure == null) continue; 
 		
 			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0) {
@@ -984,7 +993,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void getTimeWeights(final int blockSize, boolean flag) {
 		final ChannelGroup<?> detectorChannels = instrument.getDetectorChannels();
 		
-		final int nT = (int)Math.ceil((float)size() / blockSize);
+		final int nT = ExtraMath.roundupRatio(size(), blockSize);
 		
 		double sumfw = 0.0;
 		int n = 0;
@@ -1009,12 +1018,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}		
 			
 			if(points > deps) {
+				final float fw = sumChi2 > 0.0 ? (float) ((points-deps) / sumChi2) : 1.0F;	
 				final double dof = 1.0 - deps / points;
-				final float fw = sumChi2 > 0.0 ? (float) ((points-deps) / sumChi2) : 1.0F;					
 				
 				for(int t=tot; --t >= fromt; ) {
 					final Frame exposure = get(t);
 					if(exposure == null) continue;
+					
 					exposure.unflag(Frame.FLAG_DOF);
 					exposure.dof = dof;
 					exposure.relativeWeight = fw;
@@ -1025,16 +1035,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			else for(int t=tot; --t >= fromt; ) {
 				final Frame exposure = get(t);
 				if(exposure == null) continue;
-				
+		
+				exposure.flag(Frame.FLAG_DOF);
 				exposure.dof = 0.0F;
-				
-				if(points > deps) {
-					exposure.relativeWeight = Float.NaN;
-				}
-				else {
-					exposure.relativeWeight = 0.0F;
-					exposure.flag(Frame.FLAG_DOF);
-				}
+				exposure.relativeWeight = Float.NaN; //	These will be set to 1.0 when renormalizing below...			
 			}
 			
 			fromt = tot;
@@ -1042,7 +1046,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		
 		// Renormalize the time weights s.t. the pixel weights remain representative...
-		final float inorm = n > 0 ? (float) (n / sumfw) : 1.0F; 
+		final float inorm = sumfw > 0.0 ? (float) (n / sumfw) : 1.0F; 
 			
 		Range wRange = new Range();
 		

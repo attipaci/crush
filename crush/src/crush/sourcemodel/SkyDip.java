@@ -327,9 +327,13 @@ public class SkyDip extends SourceModel {
 	@Override
 	public void noParallel() {
 		// TODO Auto-generated method stub
-		
 	}
 
+	@Override
+	public void setParallel(int threads) {
+		// TODO Auto-generated method stub
+	}
+	
 	@Override
 	public void process(boolean verbose) throws Exception {
 		// TODO Auto-generated method stub

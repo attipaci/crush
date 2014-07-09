@@ -414,6 +414,13 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
+	public void setParallel(int threads) {
+		if(N != null) N.setParallel(threads);
+		if(Q != null) Q.setParallel(threads);
+		if(U != null) U.setParallel(threads);
+	}
+	
+	@Override
 	public int countPoints() {
 		return N.countPoints() + Q.countPoints() + U.countPoints();
 	}

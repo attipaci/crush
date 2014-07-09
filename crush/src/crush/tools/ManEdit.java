@@ -163,7 +163,7 @@ public class ManEdit {
 			line = line.replace("<DT><DD>", "");
 			line = line.replace("<I>GLOSSARY</I>", "<a href=\"../../v2/GLOSSARY\">GLOSSARY</a>");
 			line = line.replace("<I>README</I>", "<a href=\"../../v2/README\">README</a>");
-			line = line.replace("Attila Kovacs", "<a href=\"http://www.physics.umn.edu/people/kovacs.html\" rel=\"friend\" target=\"_blank\">Attila Kov&aacute;cs</a>");
+			line = line.replace("Attila Kovacs", "<a href=\"http://www.submm.caltech.edu/~attila\" rel=\"friend\" target=\"_blank\">Attila Kov&aacute;cs</a>");
 			
 			//line = line.replace(" --", " &mdash;");
 			

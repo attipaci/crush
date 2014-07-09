@@ -313,6 +313,8 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	}
 
 	public abstract void noParallel();
+	
+	public abstract void setParallel(int threads);
 
 	public abstract class ScanFork<ReturnType> extends Parallel<ReturnType> {	
 		public ScanFork() {}

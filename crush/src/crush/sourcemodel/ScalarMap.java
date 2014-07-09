@@ -868,6 +868,11 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	@Override
+	public void setParallel(int threads) {
+		map.setParallel(threads);
+	}
+	
+	@Override
 	public String getFormattedEntry(String name, String formatSpec) {	
 		if(name.startsWith("map.")) return map.getFormattedEntry(name.substring(4), formatSpec);
 		else return super.getFormattedEntry(name, formatSpec);

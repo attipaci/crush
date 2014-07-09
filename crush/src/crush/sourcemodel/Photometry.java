@@ -245,6 +245,11 @@ public abstract class Photometry extends SourceModel {
 	}
 
 	@Override
+	public void setParallel(int threads) {
+		// TODO Auto-generated method stub
+	}
+	
+	@Override
 	public int countPoints() {
 		return 1;
 	}

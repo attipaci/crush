@@ -272,6 +272,20 @@
 			both the 'x' and 'y' directions.
 			@See: 'correlated.<?>', 'detect.chopped'
 
+:: chopper.throw=X	@Instrument: SHARC
+			@Since: 2.17
+			@Advanced
+			Deconvolve with this chopper throw (arcsec) instead
+			of the value stored in the file. The chopper throws 
+			that appear in SHARC data are often approximate only.
+			You can "determine" the effective throw by minimizing
+			deconvolution lobes while reducing bright pointing
+			sources. You can then apply the same values to the
+			science data, assuming that the chopper controller
+			was left in the same state (which is a reasonable
+			assumption :-).
+			@See: 'deconvolve'
+
 :: clip=X		@Expert
 			In early generations of the source map, force map
 			pixels with flux below signal-to-noise level X to zero.
@@ -529,6 +543,26 @@
 			Can be used to specify an inverted thousand-fold
 			instrumental gain starting from Dec 10, 2009.
 			@See: 'mjd', 'serial'
+
+:: deconvolve		@Instrument: SHARC
+			@Since: 2.17
+			@Advanced
+			Procude deconvolved maps. Otherwise, CRUSH will produce
+                        dual-beam maps. Specifying the "correct" chopper throw
+			may be crutial in getting optimal deconvolution 
+			results.
+			@See: 'chopper.throw'
+
+:: deconvolve.above=X 	@Instrument: SHARC
+			@Since: 2.17
+			@Expert
+			Set the deconvolution threshold to X. Usually 0<X<2.
+                        When the transfer function (Fourier transform) of the
+                        chop pattern is below this value, the corresponding
+                        Fourier components are considered not measured (i.e.
+                        set to zero). See the default value in
+                        'sharc/default.cfg'
+			@See: 'deconvolve'
 
 :: deep			Use for very faint sources which are not at all 
 			detected in single scans, or if you think
@@ -844,6 +878,17 @@
 			@Expert
 			Defines the frontend-backend combination to use. 
 			E.g. for LABOCA, this would be set to 'LABOCA-ABBA'.
+
+:: file=<name>		@Instrument: SHARC
+			@Since: 2.17
+			Specify the data file (relative to 'datapath') 
+			containing the SHARC scans. You can then refer to 
+			specific scans inside the file by number or range.
+			(Note, that a ranges for SHARC are treated as rows
+			belonging to the same master scan). You can also
+			use 'list' after this option to provide just a listing
+			of the scan entries contained in the data file.
+			@See: 'datapath'
 
 :: filter		@Since: 2.10
 			@Advanced
@@ -1601,6 +1646,8 @@
 			compatibility with earlier releases.
 			@See: 'system'
 
+:: multibeam		@Alias -> source.type=multibeam
+
 :: mux			@Alias -> correlated.mux
 			@Instrument: SHARC-2, GISMO, SCUBA-2
 			@Advanced
@@ -1895,6 +1942,11 @@
 			may want to specify 'forget=pixeldata' s.t. flags are
 			determined without prior bias).
 			@See: 'gainnoise', 'uniform', 'flag', 'blind'
+
+:: pixelsize=X		@Instrument: SHARC
+			@Since: 2.17
+			@Expert
+			Specify the pixel spacing in arcseconds.
 
 :: pixelsize=X,Y	@Instrument: SHARC-2, GISMO, P-ArTeMiS, MAKO
 			@Expert
@@ -2794,7 +2846,7 @@
 			   beammap	Create individual maps for every
 					pixel, and use it to determine their
 					location in the field of view.
-		
+
 			   null		Do not generate a source model.
 					Useful for lab/diagnostic reductions.
 	

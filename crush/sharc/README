@@ -117,8 +117,19 @@ includes the bolometer nonlinearity (which for SHARC-2 is treated separately).
 #####################################################################
 
    chopper.throw=X	@Advanced
-			Specify the chopper throw (arcsecs) to use instead of 
-			the value recorded in the data file.
+			Deconvolve with this chopper throw (arcsec) instead
+                        of the value stored in the file. The chopper throws
+                        that appear in SHARC data are often approximate only.
+                        You can "determine" the effective throw by minimizing
+                        deconvolution lobes while reducing bright pointing
+                        sources. You can then apply the same values to the
+                        science data, assuming that the chopper controller
+                        was left in the same state (which is a reasonable
+                        assumption :-).
+ 
+   deconvolve		@Advanced
+			Procude deconvolved maps. Otherwise, CRUSH will produce
+			dual-beam maps.
 
    deconvolve.above=X	@Expert
 			Set the deconvolution threshold to X. Usually 0<X<2.
@@ -136,12 +147,6 @@ includes the bolometer nonlinearity (which for SHARC-2 is treated separately).
 			Set the SHARC pixel spacing to X arcseconds. By 
 			default, the nominal 5" spacing is assumed.
 
-   source.type=multibeam	@Advanced
-				Setting the source type to 'multibeam' 
-				(default) will produce deconvolved maps. 
-				Otherwise, CRUSH will produce dual-beam
-				maps.
-
 
 ------------------------------------------------------------------------------
-Copyright (C)2014 -- Attila Kovacs <kovacs@astro.umn.edu>
+Copyright (C)2014 -- Attila Kovacs <attila[AT]submm.caltech.edu>

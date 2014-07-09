@@ -185,10 +185,10 @@ public class SyntheticRCP {
 	public static void usage() {
 		System.err.println();
 		String info = 
-			"  -------------------------------------------------------------------------\n" +
+			"  -----------------------------------------------------------------------------\n" +
 			"  SyntheticRCP -- RCP generation tool.\n" +
-			"                  Copyright (C)2011 Attila Kovacs <kovacs[AT]astro.umn.edu>\n" +
-			"  -------------------------------------------------------------------------\n" +	
+			"                  Copyright (C)2011 Attila Kovacs <attila[AT]submm.caltech.edu>\n" +
+			"  -----------------------------------------------------------------------------\n" +	
 			"\n" +
 			"  Usage: java crush.array.SyntheticRCP <distortion> [rcp [rotation]]\n" +
 			"\n" +
