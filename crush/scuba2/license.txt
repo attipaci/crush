@@ -43,7 +43,7 @@ SCUBA-2 plugin of CRUSH are as follows:
 	   binaries included in your software modules.
 
 	4. By using the SCUBA-2 plugin modules of CRUSH, you agree to offer
-	   authorship to Attila Kovacs <kovacs[AT]astro.umn.edu> on all 
+	   authorship to Attila Kovacs <attila[AT]submm.caltech.edu> on all 
 	   publications (including posters and presentations) that result from 
 	   using the SCUBA-2 plugin modules of CRUSH.
 
@@ -77,5 +77,5 @@ remove any copies of these modules you may have, immediately after reading this
 license agreement.
 
 -------------------------------------------------------------------------------
-Copyright (c) 2010 Attila Kovacs <kovacs[AT]astro.umn.edu>.
+Copyright (c) 2010 Attila Kovacs <attila[AT]submm.caltech.edu>.
 All rights reserved. 
