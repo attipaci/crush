@@ -3,6 +3,12 @@
 
 	[NEW] Initial support for SHARC. See 'sharc/README' for details.
 
+	[NEW] Mouse wheel (and two-finger scroll) gestures. On the image, the
+	scrolling can be used to finely control the zoom. On the scalebar ruler
+	it can be used to finely changed the offset. The wheel gestures are
+	similar to pressing 'Z'/'z' or 'B'/'b', respectively, but offer finer
+	control of the zoom and image "brightness".
+
 	[NEW] {show} Masks now work with non-equatorial maps (but mask 
 	coordinates remain equatorial defined.)
 
@@ -22,6 +28,12 @@
 
 	[FIX] {show} Resampling onto a finer grid (by pressing 's') was broken.
 	Now fixed.
+
+	[TWEAK] {show} {b3} NaNs render same as low end displayed for log 
+	scaled images.
+
+	[TWEAK] {show} {b3} Faster rendering using BufferedImage. Obsoleted
+	coarse render from before.
 
 	[TWEAK] {show} Infobar on top of map now displays the region name and
 	center coordinates and current radius, while drawing circular regions.
