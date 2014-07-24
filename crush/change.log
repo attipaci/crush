@@ -1,42 +1,87 @@
 
-2.17-b2 (9 July 2014)
+2.20-1 (24 July 2014)
+
+	Overview
+	======================================================================
+	This release of CRUSH comes with a version bumped to 2.20 mainly 
+	because it requires Java 6 to run due to the update of the bundled FITS 
+	libraries (nom.tam.fits). There are other leaps also, justifying the 
+	bumped up version: The old CRUSH libraries have been replaced with a 
+	much streamlined version, and the 'show' tool (for displaying FITS 
+	images) has seen many improvements, both in terms of performance and 
+	new features. Plus, the release adds support for SHARC.
+	All these new things should make it an exciting release to play with.
+	======================================================================
+
+	[BUG] Parsing of mask files (used for inserting test sources) was still
+	buggy for negative declinations. Fixed at last.
 
 	[NEW] Initial support for SHARC. See 'sharc/README' for details.
 
-	[NEW] Mouse wheel (and two-finger scroll) gestures. On the image, the
-	scrolling can be used to finely control the zoom. On the scalebar ruler
-	it can be used to finely changed the offset. The wheel gestures are
-	similar to pressing 'Z'/'z' or 'B'/'b', respectively, but offer finer
-	control of the zoom and image "brightness".
+	[NEW] {show} Desktop launcher (Linux only) is included in the
+	distribution. It is automatically set up if CRUSH is installed from
+	a package (RPM or Debian). Otherwise, it is included in the system-wide
+	installation when running 'install.sh'. It also associates FITS images
+	with the tool (without making it a default FITS viewer).
+	
+	[NEW] {show} A tab on top of the color scale now shows which image 
+	plane is being displayed.
+
+	[NEW] {show} Use arrows to reposition image in steps (or drag with
+        mouse [see below] for finer control).
+
+	[NEW] {show} Pressing Control key (Ctrl) together with mouse button is
+        the same a a right button press, while Alt+button is the same as a
+        middle button press. This makes things easier for the MacOS folks.
+
+	[NEW] {show} can now be launched without an argument, bringing up the
+	GUI without a preloaded image.
+
+	[NEW] {show} Menus now support many operations (some of which are new).
+
+	[NEW] {show} Mouse wheel (and two-finger scroll) gestures. On the 
+	image, scrolling can be used to finely control the zoom. On the 
+	scalebar ruler it can be used to finely changed the offset. The wheel 
+	gestures are similar to pressing 'Z'/'z' or 'B'/'b', respectively, but 
+	offer finer control of the zoom and image "brightness".
 
 	[NEW] {show} Masks now work with non-equatorial maps (but mask 
-	coordinates remain equatorial defined.)
+	coordinates remain equatorial defined, for now.)
 
 	[NEW] {show} Dragging with right button pressed can be used to drag 
 	image.
 
 	[NEW] {show} Hotkey 'D' deletes the last circular region in show.
 
-	[NEW] {show} The 'show' tool can now display CRUSH maps, in all 
+	[NEW] {show} The 'show' tool can now display CRUSH maps in all 
 	spherical coordinate systems, including those in Ecliptic, Galactic, 
 	SuperGalactic or FocalPlane coordinates.
 
-	[FIX] {b1} {show} Writing of equatorial regions had offset sign error.
+	[NEW] {show} The 'show' window now carries a CRUSH icon instead of the
+	generic Java one.
 
-	[FIX] {b1} {show} Regions weren't parsed correctly when mask entry had 
-	peak flux in non-basic units, such as 'Jy/beam'.
+	[FIX] {imagetool} In v2.20 test releases imagetool (and hence show)
+	wrote FITS images with crucial coordinate information missing from the
+	header. Fixed.
+
+	[FIX] {show} In v2.20 test releases, the newly streamlined tools
+	write incomplete coordinate information into the FITS headers. Fixed. 
+
+	[FIX] {show} Middle and Right mouse clicks now detected for MacOS.
+
+	[FIX] {show} Writing of equatorial regions had offset sign error.
+
+	[FIX] {show} Regions weren't parsed correctly when mask entry had peak 
+	flux in non-basic units, such as 'Jy/beam'.
 
 	[FIX] {show} Resampling onto a finer grid (by pressing 's') was broken.
 	Now fixed.
 
-	[TWEAK] {show} {b3} NaNs render same as low end displayed for log 
-	scaled images.
+	[TWEAK] {imagetool} Flagging now applies to both circular and polygonal
+	regions.
 
-	[TWEAK] {show} {b3} Faster rendering using BufferedImage. Obsoleted
-	coarse render from before.
-
-	[TWEAK] {show} Infobar on top of map now displays the region name and
-	center coordinates and current radius, while drawing circular regions.
+	[TWEAK] {imagetool} Retired the -fftFilter option. It was broken
+	anyway...
 
 	[TWEAK] {show} Eliminated slow point-rms to beam-rms conversion. As
 	a result 'show' opens crush maps a lot faster.
@@ -47,22 +92,15 @@
 
 	[TWEAK] Streamlined channel overlap calculation.
 
-	[TWEAK] {show} Circular regions and polygons now update while drawing
-	is in progress.
-
-	[TWEAK] {show} Gaussian source fitting output made more elegant.
-
-	[TWEAK] {show} Improved polygon drawing.
-
-	[TWEAK] {show} Showing only useful significant figures for aperture
-	fluxes inside polygons.
-
 	[SPEED] Parallel compound source model processing.
 
 	[SPEED] Parallel offset removal during subscan validation. (Also moved
 	getPointCrossingTime() outside of loop.)
 
 	[SPEED] Parallel frame reading, frame validation, and frame slimming.
+
+	[SPEED] {show} Faster rendering using BufferedImage. Obsoleted coarse 
+	render from before.
 
 	[SPEED] {show} Reversed loops for better performance.
 
@@ -78,6 +116,25 @@
 
 	[SPEED] {show} Aim to draw only 1 map pixel per display pixel, esp.
 	at very low zooms.
+
+	[COSMETIC] {show} Cleaner and more informative output for aperture 		fluxes (hotkey 'F').
+
+	[COSMETIC] {show} NaNs render same as low end displayed for log 
+	scaled images.
+
+	[COSMETIC] {show} Gaussian source fitting output made more elegant.
+
+	[COSMETIC] {show} Improved polygon drawing.
+
+	[COSMETIC] {show} Circular regions and polygons now update while 
+	drawing is in progress.
+
+	[COSMETIC] {show} Infobar on top of map now displays the region name 
+	and center coordinates and current radius, while drawing circular 
+	regions.
+
+	[COSMETIC] {show} Showing only useful significant figures for aperture
+	fluxes inside polygons.
 
 	[COSMETIC] {show} labeling of polygonal apertures.
 
@@ -97,11 +154,25 @@
 	generic (e.g. 'show' can handle galactic, ecliptic, etc. coordinates)
 	and rely on the kovacs.util classes directly. 
 
+	[PACKAGE] Linux RPM and .deb packages no longer include the source 
+	code. However, the source code remains included in the standard tarball
+	for anyone interested in it. Packages are also updated to correctly
+	reflect dependecies.
+
+	[INSTALL] Cleaned up installation script (install.sh).
+
+	[MAN] SELinux context for man pages properly set. (It was causing
+	SELinux denials on /usr/bin/mandb before.).
+
 	[MAN] Updated UNIX man pages for 'crush' and 'show'.
 
+	[MAN] Updated permissions. Also, ownership is fixed when copying by
+	'install.sh'.
+	
 	[FITS] nom.tam.fits package updated to v 1.11.
 
 	[JAVA] Recompiled for Java 1.6.
+
 
 
 2.16-3 (2 July 2014)

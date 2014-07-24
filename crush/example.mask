@@ -16,9 +16,9 @@
 # The format is space (or tab) separated columns as follows:
 #
 #    col 1: Source ID (no spaces)
-#    col 2: RA as hh:mm:ss.s[...] (any number of decimals places)
-#    col 3: DEC as dd:mm:ss.s[...] (any number of decimal places)
-#    col 4: coordinate epoch, e.g. '(J2000.0)', '(B1950.0)', 2000.0, or 1950.0
+#    col 2: RA as hh:mm:ss[.s...] (any number of decimals places)
+#    col 3: DEC as dd:mm:ss[.s...] (any number of decimal places)
+#    col 4: coordinate epoch, e.g. '(J2000.0)', '(B1950.0)', 2000.0, or 1950
 #    col 5: FWHM or radius (depending whether it defines a point source or a
 #           circular region of some radius) in arcsec.
 #    col 6+: (optional) Peak flux. (needed only for inserting test sources
@@ -37,7 +37,7 @@
 
 # Thus all lines above are acceptable definitions of 3C345 as a GISMO [2-mm] 
 # point source (16.0" FWHM). The first line merely defines the location and 
-# size of the source whilei the variants A and B also specify peak fluxes (with
+# size of the source while the variants A and B also specify peak fluxes (with
 # and without uncertainty), which can be used to add (or remove) sources to 
 # (from) the timestream prior to reduction.
 

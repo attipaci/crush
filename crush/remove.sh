@@ -24,6 +24,9 @@ BINDIR=$INSTALL_ROOT/bin
 # The location for the man pages
 MANDIR=$INSTALL_ROOT/share/man
 
+# The share directory
+SHAREDIR=$INSTALL_ROOT/share
+
 # Determine where the script is being run from...
 NAME=$0
 
@@ -50,6 +53,14 @@ cd $CRUSH/man
 for page in man1/* ; do
         rm -f $MANDIR/$page
 done
+
+# [Linux only] Remove icons and application launcher(s)
+OSNAME=`uname`
+if [ $OSNAME == "Linux" ] ; then
+	echo Removing CRUSH icons and launchers from $SHAREDIR
+	rm -f $SHAREDIR/applications/crush*.desktop
+	rm -f $SHAREDIR/icons/hicolor/*/*/crush.png
+fi
 
 cd $CURRENT_DIR
 

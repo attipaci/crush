@@ -6,7 +6,7 @@
 # the bin/ and share/man/ directories under <install-root> (if specified), or 
 # under /usr, if no argument is given.
 #
-# You may also edit the BINDIR and MANDIR variables for more customized
+# You may also edit the BINDIR, MANDIR, SHAREDIR variables for more customized
 # installation paths.
 #
 # The script may require root privileges to complete.
@@ -30,8 +30,13 @@ if [ -z "$MANDIR" ] ; then
 	echo MANDIR set automatically to $MANDIR
 fi
 
-echo "### $BINDIR"
-echo "### $MANDIR"
+# The location for the shared data
+if [ -z "$SHAREDIR" ] ; then 
+	SHAREDIR=$INSTALL_ROOT/share
+	echo SHAREDIR set automatically to $SHAREDIR
+fi
+
+
 
 # Determine where the script is being run from...
 NAME=$0
@@ -47,32 +52,46 @@ CURRENT_DIR=`pwd`
 # Go to the directory from where this script was called from (i.e. CRUSH)
 cd `dirname $NAME`
 
+# Make CRUSHDIR carry the absolute path to CRUSH
+CRUSHDIR=`pwd`
+echo CRUSH is located at $CRUSHDIR
+
 echo Installing CRUSH manuals to $MANDIR...
+
+# Set the proper SELinux context for the man directory and its contents
+chcon -R -u system_u man
+chcon -R -t man_t man 
+
+# Now copy the man pages to their destination.
 mkdir -p $MANDIR
-cp -a man/* $MANDIR
+cp -r man/* $MANDIR
 
-cd $CURRENT_DIR
+# [Linux only] Also install the icons and desktop launchers now...
+OSNAME=`uname`
+if [ $OSNAME == "Linux" ] ; then
+	echo Installing Icons and desktop launchers under $SHAREDIR...
+	
+	chcon -R -u system_u share
+	chcon -R -t usr_t share
+
+	mkdir -p $SHAREDIR
+	cp -r share/* $SHAREDIR
+fi 
 
 
-# Now install the symbolic links to the binaries. Use the relative path
-# if it is defined, or else use the absolute path to CRUSH
-if [ -z "$BIN_TO_CRUSH" ] ; then
-	BIN_TO_CRUSH=`pwd`
-	echo Found path to CRUSH: $BIN_TO_CRUSH
-fi
-
+# Now install the symbolic links to the binaries. 
 echo Installing CRUSH binaries to $BINDIR...
 mkdir -p $BINDIR
 cd $BINDIR
-ln -sf $BIN_TO_CRUSH/crush .
-ln -sf $BIN_TO_CRUSH/coadd .
-ln -sf $BIN_TO_CRUSH/detect .
-ln -sf $BIN_TO_CRUSH/difference .
-ln -sf $BIN_TO_CRUSH/esorename .
-ln -sf $BIN_TO_CRUSH/histogram .
-ln -sf $BIN_TO_CRUSH/imagetool .
-ln -sf $BIN_TO_CRUSH/jiggle .
-ln -sf $BIN_TO_CRUSH/show .
+ln -sf $CRUSHDIR/crush .
+ln -sf $CRUSHDIR/coadd .
+ln -sf $CRUSHDIR/detect .
+ln -sf $CRUSHDIR/difference .
+ln -sf $CRUSHDIR/esorename .
+ln -sf $CRUSHDIR/histogram .
+ln -sf $CRUSHDIR/imagetool .
+ln -sf $CRUSHDIR/show .
+
 cd $CURRENT_DIR
 
 
