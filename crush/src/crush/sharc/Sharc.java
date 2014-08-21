@@ -138,6 +138,25 @@ public class Sharc extends CSOArray<SharcPixel> {
 	}  
 	
 	
+	@Override
+	public String getCommonHelp() {
+		return super.getCommonHelp() + 
+				"     -fazo=         Correct the pointing with this FAZO value.\n" +
+				"     -fzao=         Correct the pointing with this FZAO value.\n" +
+				"     -350um         Select 450um imaging mode (default).\n" +
+				"     -450um         Select 450um imaging mode.\n" +
+				"     -850um         Select 850um imaging mode.\n" +
+				"     -chopper.throw=  Chopper throw for the deconvolution (arcsec).\n";
+	}
+	
+	
+	@Override
+	public String getDataLocationHelp() {
+		return super.getDataLocationHelp() +
+				"     -file=         Datafile name relative to 'datapath'.\n";
+	}
+	
+	
 	public final static int pixels = 24;
 	public final static int fileID = 10;
 }
