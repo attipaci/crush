@@ -469,8 +469,8 @@ public class Gismo extends MonoArray<GismoPixel> implements GroundBased {
 	@Override
 	public String getDataLocationHelp() {
 		return super.getDataLocationHelp() +
-				"     -object=      The object catalog name as entered in PaKo.\n" +
-				"     -date=        YYYY-MM-DD when the data was collected.\n";
+				"     -object=       The object catalog name as entered in PaKo.\n" +
+				"     -date=         YYYY-MM-DD when the data was collected.\n";
 	}
 	
 	@Override

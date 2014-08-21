@@ -45,7 +45,7 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.20-1";
+	private static String version = "2.20-3";
 	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
@@ -569,7 +569,7 @@ public class CRUSH extends Configurator {
 			"     -ecliptic      Reduce in Ecliptic coordinates.\n" +
 			"     -galactic      Reduce in Galactic coordinates.\n" +
 			"     -final:smooth= Smoothing in the final iteration, either as FWHM (arcsec)\n" +
-			"                    or one of: 'minimal', '2/3beam, 'beam'\n" +
+			"                    or one of: 'minimal', 'halfbeam', '2/3beam, 'beam'\n" +
 			"\n" +
 			"   Commonly used options for scans:\n" +
 			"     -tau=          Specify an in-band zenith tau, source ID, or interpolation\n" +

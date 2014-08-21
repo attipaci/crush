@@ -37,7 +37,7 @@ import kovacs.math.Vector2D;
 import kovacs.plot.ColorScheme;
 import kovacs.plot.GridImageLayer;
 import kovacs.plot.ImageArea;
-import kovacs.plot.ImageLayer;
+import kovacs.plot.BufferedImageLayer;
 import kovacs.plot.colorscheme.Colorful;
 import kovacs.projection.Projection2D;
 import kovacs.util.*;
@@ -818,8 +818,8 @@ public class ScalarMap extends SourceMap {
 			
 			if(hasOption("write.png.scaling")) {
 				String spec = option("write.png.scaling").getValue().toLowerCase();
-				if(spec.equals("log")) image.setScaling(ImageLayer.SCALE_LOG);
-				if(spec.equals("sqrt")) image.setScaling(ImageLayer.SCALE_SQRT);
+				if(spec.equals("log")) image.setScaling(BufferedImageLayer.SCALE_LOG);
+				if(spec.equals("sqrt")) image.setScaling(BufferedImageLayer.SCALE_SQRT);
 			}
 			
 			if(hasOption("write.png.spline")) image.setSpline();

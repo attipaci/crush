@@ -28,7 +28,7 @@ JAVA="java"
 # the Raspberry Pi or the NVIDIA Jetson TK1), one of the light-weight native 
 # VMs such as 'avian' or 'jamvm' may work better, since the 'server' (default) 
 # VM may run in interpreted mode. (On the Tegra TK1, 'jamvm' is thus about
-# 5x faster than the crippled 'server', and 'avian' is not available).
+# 5x faster than the crippled 'server', while 'avian' is not available).
 # To see what VM options are available, run 'java -help'. The VM options are
 # listed near the top of the resulting help screen.
 
@@ -40,7 +40,8 @@ JVM="server"
 # Now, specify the options passed to the Java Runtime Environment
 # The default is 32-bit mode with 1GB of RAM for the VM.
 # Adjust the -Xmx value to reflect the amount of memory in you wish to make 
-# available to Java.
+# available to Java. 
+# Note, that the 32-bit VM can use below 2GB only!
 # Default options for Oracle and OpenJDK/IcedTea VMs:
 
 JAVAOPTS="-$JVM -Xbatch -Xmx1000M"

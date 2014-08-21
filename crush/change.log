@@ -1,3 +1,35 @@
+2.20-3 (21 August 2014)
+
+	[FIX] Polygon display inadvertently broken in previous update. Fixed.
+
+
+2.20-2 (6 August 2014)
+
+
+	[BUG] {show} The displayed equatorial coordinates in 'show' were
+	inadvertently the complement angles. The bug was introduced in the 
+	prior release, and affected only the 'show' tool's equatorial 
+	coordinate display. Now fixed.
+
+	[NEW] {show} Distance measure mode is added. In that mode, dragging
+	will measure distances between two points on the map. The measure mode
+	can be toggled on/off in the Tools menu, or via the hotkey 'm'.
+
+	[FIX] {show} Changing color scaling or switching between image planes
+	resulted in lost re-alignment. Now image stays aligned as expected.
+
+	[TWEAK] {APEX} The 'project' option now accepts lower-case project
+	names also, which are automatically converted to upper case when
+	searching for matching file-names/directories.
+	
+	[TWEAK] {SHARC} Data locator options shown with '-help'.
+
+	[COSMETIC] {show} Made region lines a bit thicker and antialiased for
+	better appearance.
+
+	[COSMETIC] Fixed identation on instrument-specific help screens.
+
+
 
 2.20-1 (24 July 2014)
 
