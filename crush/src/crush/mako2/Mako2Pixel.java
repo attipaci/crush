@@ -1,0 +1,75 @@
+/*******************************************************************************
+ * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * All rights reserved. 
+ * 
+ * This file is part of crush.
+ * 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ * 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ * 
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ ******************************************************************************/
+
+package crush.mako2;
+
+import java.util.StringTokenizer;
+
+import kovacs.util.Util;
+import crush.mako.Mako1;
+import crush.mako.MakoPixel;
+
+public class Mako2Pixel extends MakoPixel {
+
+	public Mako2Pixel(Mako2 array, int zeroIndex) {
+		super(array, zeroIndex);
+		this.array = Mako2.ARRAY_350;
+	}
+
+	
+	@Override
+	public void setRowCol(int row, int col) {
+		this.row = row;
+		this.col = col;
+		setFixedIndex(row * Mako1.cols + col);
+	}	
+	
+
+	@Override
+	public void calcNominalPosition() {
+		if(row == -1 || col == -1) return;		
+		position = ((Mako2) instrument).getPixelPosition(size, array, row, col);
+	}
+
+	@Override
+	public void parseValues(StringTokenizer tokens, int criticalFlags) {
+		tokens.nextToken(); // fixed index -- set by pixel matching...
+		tokens.nextToken(); // subarray string...
+		super.parseValues(tokens, criticalFlags);
+		if(tokens.hasMoreTokens()) coupling = Double.parseDouble(tokens.nextToken());
+	}
+	
+	public String getSubarrayString() {
+		if(array == Mako2.ARRAY_350) return "350um";
+		else if(array == Mako2.ARRAY_850) return "850um";
+		return "???";
+	}
+	
+	@Override
+	public String toString() {
+		return getID() + "\t" + getSubarrayString() + "\t" + super.toString() + "\t" + Util.f3.format(coupling);
+	}
+	
+	
+}
+

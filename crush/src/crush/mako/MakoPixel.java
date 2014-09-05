@@ -25,27 +25,26 @@ package crush.mako;
 import crush.Channel;
 import crush.array.SimplePixel;
 
-import java.util.StringTokenizer;
-
 import kovacs.math.Vector2D;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 
 
 
-public class MakoPixel extends SimplePixel {
+public abstract class MakoPixel extends SimplePixel {
+	public int array = Mako.DEFAULT_ARRAY;
 	public int row, col;
 	public Vector2D size;
 	
-	int toneIndex;
+	public int toneIndex;
 	public int toneBin;
 	public int validCalPositions;
 	public double toneFrequency;
 	public double calError;
 	
-	ResonanceID id;
+	public ResonanceID id;
 	
-	public MakoPixel(Mako array, int zeroIndex) {
+	public MakoPixel(Mako<?> array, int zeroIndex) {
 		super(array, zeroIndex+1);
 		toneIndex = zeroIndex;
 		flag(FLAG_NOTONEID | FLAG_UNASSIGNED);
@@ -71,26 +70,8 @@ public class MakoPixel extends SimplePixel {
 		return 1.0;
 	}
 	
-	public void calcPosition() {
-		position = getPosition(size, row, col);
-	}
+	public abstract void calcNominalPosition();
 	
-	public static Vector2D getPosition(Vector2D size, double row, double col) {
-		return new Vector2D(size.x() * (col - 0.5 * (Mako.cols-1)), size.y() * (row - 0.5 * (Mako.rows-1)));
-	}
-		
-
-	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {
-		tokens.nextToken(); // fixed index -- set by pixel matching...
-		super.parseValues(tokens, criticalFlags);
-		if(tokens.hasMoreTokens()) coupling = Double.parseDouble(tokens.nextToken());
-	}
-	
-	@Override
-	public String toString() {
-		return getID() + "\t" + super.toString() + "\t" + Util.f3.format(coupling);
-	}
 	
 	public double getAreaFactor() {
 		return size.x() * size.y() / (defaultSize.x() * defaultSize.y());	
@@ -101,10 +82,13 @@ public class MakoPixel extends SimplePixel {
 		return super.getRCPString() + "\t" + getID();
 	}
 
+	public abstract void setRowCol(int row, int col);
+	
 	
 	public static Vector2D defaultSize = new Vector2D(3.86 * Unit.arcsec, 7.21 * Unit.arcsec);
 
 	public final static int FLAG_NOTONEID = 1 << nextSoftwareFlag++;
 	public final static int FLAG_UNASSIGNED = 1 << nextSoftwareFlag++;
+	
 	
 }

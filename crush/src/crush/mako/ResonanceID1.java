@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,27 +20,17 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+
 package crush.mako;
 
-import crush.*;
-
-public class MakoFrame extends HorizontalFrame {
-	int frameNumber;
-	int telescopeFlags = 0;
+public class ResonanceID1 extends ResonanceID {
+	double T0, delta;
 	
-	public MakoFrame(MakoScan<?> parent) {
-		super(parent);
+	public ResonanceID1(int index) {
+		super(index);
 	}
 	
-	public void parseData(float[] value, int from, Mako<?> mako) {
-		setSize(mako.size());
-		
-		for(int c=mako.size(); --c >= 0; ) {
-			data[c] = -value[from + ((MakoPixel) mako.get(c)).toneIndex];
-			if(Float.isNaN(data[c])) {
-				data[c] = 0.0F;
-				sampleFlag[c] = Frame.SAMPLE_SKIP;
-			}
-		}
+	public double expectedFreqFor(double T) {
+		return freq + (T - T0) * delta;
 	}
 }

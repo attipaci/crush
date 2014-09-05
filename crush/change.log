@@ -1,3 +1,19 @@
+>> '850um.maxfreq'
+
+	[NEW] {MAKO2} Initial support for MAKO2.
+
+	[FIX] {MAKO} The MAKO configurations file (mako/default.cfg) had 
+	'offsets.add' misspelled. Fixed. 
+
+	[TWEAK] {MAKO} Changed how resonance chi^2 is calculated in the
+	resonance match. First, if the nearest channel is too far from a
+	known resonance, then it is not considered in the fit. Secodly, it
+	minimizes the reduced chi2 instead of the raw chi2.
+
+	[CODE] Pixels with null positions are now processed without error.
+
+
+
 2.20-3 (21 August 2014)
 
 	[FIX] Polygon display inadvertently broken in previous update. Fixed.

@@ -25,8 +25,8 @@ package crush.mako;
 import kovacs.util.HashCode;
 
 public class ResonanceID implements Comparable<ResonanceID> {
-	int index;
-	double T0, freq, delta;
+	public int index;
+	public double freq;
 	
 	public ResonanceID(int index) {
 		this.index = index;
@@ -49,7 +49,5 @@ public class ResonanceID implements Comparable<ResonanceID> {
 		return freq == id.freq;
 	}
 	
-	public double expectedFreqFor(double T) {
-		return freq + (T - T0) * delta;
-	}
+	
 }
