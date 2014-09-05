@@ -32,14 +32,15 @@ import java.io.*;
 import kovacs.data.fitting.AmoebaMinimizer;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
-
 import crush.array.DistortionModel;
+import crush.mako2.Mako2;
+import crush.mako2.Mako2Pixel;
 
 
-public class MakoModel {
+public class MakoModel<PixelType extends MakoPixel> {
 	double rotation = 0.0;
 	DistortionModel distortion = new DistortionModel();
-	Mako model = new Mako();
+	Mako<PixelType> model;
 	Hashtable<Double, Vector2D> positions = new Hashtable<Double, Vector2D>();
 	Hashtable<Double, Double> sourceGains = new Hashtable<Double, Double>();
 	Vector2D offset = new Vector2D();
@@ -47,21 +48,22 @@ public class MakoModel {
 	//double tolerance = 8.0;
 	
 	public static void main(String[] args) {
-		MakoModel model = new MakoModel();
+		MakoModel<?> model = null;
+		
+		int ver = Integer.parseInt(args[0]);
+		if(ver == 1) model = new MakoModel<Mako1Pixel>(new Mako1());
+		if(ver == 2) model = new MakoModel<Mako2Pixel>(new Mako2());
+		
 		try {
-			model.readRCP(args[0]);
+			model.readRCP(args[1]);
 			model.fit();
 		}
 		catch(Exception e) { e.printStackTrace(); }
 	}
 
-	public MakoModel() {
-		for(int row = 0, index = 0; row < Mako.rows; row++) for(int col=0; col<Mako.cols; col++, index++) {
-			MakoPixel pixel = new MakoPixel(model, index);
-			pixel.row = row;
-			pixel.col = col;
-			model.add(pixel);
-		}
+	public MakoModel(Mako<PixelType> mako) {
+		this.model = mako;
+		for(int index=0; index< model.pixels; index++) model.add(model.getChannelInstance(index));
 	}
 	
 	public MakoPixel findNearest(Vector2D pixelPos) {
@@ -79,7 +81,7 @@ public class MakoModel {
 	
 	private void recalc() {
 		for(MakoPixel pixel : model) {
-			pixel.calcPosition();
+			pixel.calcNominalPosition();
 			pixel.getPosition().scale(1.0 / Unit.arcsec);
 			distortion.distort(pixel.getPosition());
 			pixel.getPosition().rotate(rotation);			

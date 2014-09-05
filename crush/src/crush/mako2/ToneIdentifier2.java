@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,7 +20,8 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.mako;
+
+package crush.mako2;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -28,50 +29,64 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
-
 import java.util.StringTokenizer;
 
-import kovacs.data.Statistics;
+import crush.mako.MakoPixel;
+import crush.mako.ResonanceList;
 import kovacs.data.fitting.AmoebaMinimizer;
 import kovacs.math.Range;
+import kovacs.math.Vector2D;
 import kovacs.util.Configurator;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 
 
 
-public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable {
+public class ToneIdentifier2 extends ArrayList<ResonanceID2> implements Cloneable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -3011775640230135691L;
-	
-	public double Thot = 285.0 * Unit.K;	// Temperature at which 'hot' ids are derived...
-	public double Tcold = 112.2 * Unit.K;	// Effective cold-load temperature of hot/cold measurements.
-	
-	public Range TRange = new Range(0.0, 350.0 * Unit.K);
+		
+	public Range deltaRange = new Range(-1e-4, 1e-4);
 	public int attempts = 100;
 	public double rchi;
 	public double maxDeviation = 3.0;
 	public double power = 1.0;
 	
-	public ToneIdentifier() {}
 	
-	public ToneIdentifier(Configurator options) throws IOException {
+	public ToneIdentifier2() {}
+	
+	public ToneIdentifier2(Configurator options) throws IOException {
 		this(options.getValue());
-		if(options.isConfigured("uniform")) uniformize();
 		if(options.isConfigured("power")) power = options.get("power").getDouble();
-		if(options.isConfigured("trange")) {
-			TRange = options.get("trange").getRange();
-			TRange.scale(Unit.K);
-		}
+		if(options.isConfigured("deltarange")) deltaRange = options.get("deltarange").getRange();
 		if(options.isConfigured("max")) maxDeviation = options.get("max").getDouble();
 	}
 	
-	public ToneIdentifier(String fileName) throws IOException {
+	public ToneIdentifier2(String fileName) throws IOException {
 		this();
 		read(fileName);
 	}
+	
+	public void discardAbove(double freq) {
+		int n = size();
+		for(int i=size(); --i >= 0; ) {
+			ResonanceID2 id = get(i);
+			if(id.freq >= freq) remove(i);
+		}
+		System.err.println(" Discarded " + (n-size()) + ", kept " + size() + " tones above " + (freq / Unit.MHz) + "MHz.");
+	}
+	 
+	public void discardBelow(double freq) {
+		int n = size();
+		for(int i=size(); --i >= 0; ) {
+			ResonanceID2 id = get(i);
+			if(id.freq < freq) remove(i);
+		}
+		System.err.println(" Discarded " + (n-size()) + ", kept " + size() + " tones below " + (freq / Unit.MHz) + "MHz.");
+	}
+	 
 	
 	public void read(String fileSpec) throws IOException {
 		System.err.println(" Loading resonance identifications from " + fileSpec);
@@ -80,21 +95,17 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 		String line = null;
 
 		clear();
-		
-		// Assuming 12 C for the hot load...
-		// and 195 K for the cold
-		double dT = Thot - Tcold;
-		
+			
 		int index = 1;
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line, ", \t");
-			ResonanceID1 id = new ResonanceID1(index++);
+			ResonanceID2 id = new ResonanceID2(index++);
 			
-			double fcold = Double.parseDouble(tokens.nextToken());
 			id.freq = Double.parseDouble(tokens.nextToken());
-			id.delta = (id.freq - fcold) / dT; 
-			id.T0 = Thot;
+			id.position = new Vector2D(Double.parseDouble(tokens.nextToken()), Double.parseDouble(tokens.nextToken()));
+			id.position.scale(Unit.arcsec);
+			//if(tokens.hasMoreTokens()) id.gain = Double.parseDouble(tokens.nextToken());
 			
 			add(id);
 		}
@@ -106,43 +117,27 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 		System.err.println(" Got IDs for " + size() + " resonances.");
 	}
 	
-	public void uniformize() {
-		double[] deltas = new double[size()];
-		for(int i=size(); --i >= 0; ) {
-			ResonanceID1 id = get(i);
-			deltas[i] = id.delta / id.freq;
-		}
-		
-		double ave = Statistics.median(deltas);
-		System.err.println(" Median hot/cold response is " + Util.s3.format(1e6 * ave) + " ppm / K");
-		
-		for(int i=size(); --i >= 0; ) {
-			ResonanceID1 id = get(i);
-			id.delta = ave * id.freq;
-		}
+	
+	public double match(ResonanceList<Mako2Pixel> channels) {
+		double delta = fit(channels);
+		assign(channels, delta);
+		return delta;
 	}
 	
-	public double match(ResonanceList<Mako1Pixel> channels, double guessT) {
-		double T = fit(channels, guessT);
-		assign(channels, T);
-		return T;
-	}
-	
-	protected double fit(final ResonanceList<Mako1Pixel> channels, double guessT) {
+	protected double fit(final ResonanceList<Mako2Pixel> channels) {
 		channels.sort();
 			
-		final double maxSearchDev = maxDeviation * TRange.span();
+		final double maxSearchDev = maxDeviation * 0.5 * deltaRange.span();
 		
 		AmoebaMinimizer opt = new AmoebaMinimizer() {
-
 			@Override
 			public double evaluate(double[] tryparms) {
-				double T = tryparms[0];
+				double delta = tryparms[0];
 				double chi2 = 0.0;
 				int n = 0;
 				
-				for(ResonanceID1 id : ToneIdentifier.this) {
-					double fExp = id.freq + (T - Thot) * id.delta;
+				for(ResonanceID2 id : ToneIdentifier2.this) {
+					double fExp = id.freq * (1.0 + delta);
 					double dev = (channels.getNearest(fExp).toneFrequency - fExp) / fExp;
 					if(Math.abs(dev) < maxSearchDev) {
 						chi2 += Math.pow(Math.abs(dev), power);
@@ -150,42 +145,42 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 					}
 				}
 				
-				if(T < TRange.min()) chi2 *= Math.exp(TRange.min() - T);
-				else if(T > TRange.max()) chi2 *= Math.exp(T - TRange.max());
+				if(delta < deltaRange.min()) chi2 *= Math.exp(deltaRange.min() - delta);
+				else if(delta > deltaRange.max()) chi2 *= Math.exp(delta - deltaRange.max());
 				
 				return chi2 / n;
-				
 			}	
 		};
 		
-		opt.init(new double[] { guessT });
-		opt.setStartSize(new double[] { 0.3 * TRange.span() });
+		opt.init(new double[] { 0.5 * (deltaRange.min() + deltaRange.max()) });
+		opt.setStartSize(new double[] { 0.3 * deltaRange.span() });
 		opt.precision = 1e-12;
 		opt.verbose = false;
 		opt.minimize(attempts);
 		
 		rchi = Math.pow(opt.getChi2(), 1.0 / power);
 		
-		double T = opt.getFitParameters()[0];
+		double delta = opt.getFitParameters()[0];
 		
 		System.err.println("   Tone assignment rms = " + Util.s3.format(1e6 * rchi) + " ppm.");
-		System.err.println("   --> T(id) = " + Util.s4.format(T / Unit.K) + " K.");
+		System.err.println("   --> df/f (id) = " + Util.s4.format(1e6 * delta) + "ppm.");
 		
-		return T;
+		return delta;
 	}
 	
-	protected void assign(ResonanceList<Mako1Pixel> tones, double T) {
-		for(MakoPixel pixel : tones) {
+	protected void assign(ResonanceList<Mako2Pixel> tones, double delta) {
+		for(Mako2Pixel pixel : tones) {
 			pixel.id = null;
-			pixel.flag(MakoPixel.FLAG_NOTONEID);
+			pixel.flag(Mako2Pixel.FLAG_NOTONEID);
 		}
-		int n = assign(tones, T, 5);
+		int n = assign(tones, delta, 5);
 		System.err.println("   Identified " + n + " resonances.");
 		
-		for(MakoPixel pixel : tones) if(pixel.id != null) pixel.unflag(MakoPixel.FLAG_NOTONEID);
+		for(Mako2Pixel pixel : tones) if(pixel.id != null) pixel.unflag(Mako2Pixel.FLAG_NOTONEID);
+		
 	}
 	
-	private int assign(ResonanceList<Mako1Pixel> tones, double T, int rounds) {
+	private int assign(ResonanceList<Mako2Pixel> tones, double delta, int rounds) {
 		if(rounds == 0) return 0;
 		if(tones.isEmpty()) return 0; 
 	
@@ -193,9 +188,9 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 		
 		final double maxShift = rchi * maxDeviation;
 		
-		for(ResonanceID1 id : this) {
-			double fExp = id.expectedFreqFor(T);
-			Mako1Pixel tone = tones.getNearest(fExp);
+		for(ResonanceID2 id : this) {
+			double fExp = id.freq * (1.0 - delta);
+			Mako2Pixel tone = tones.getNearest(fExp);
 			double adf = Math.abs(tone.toneFrequency - fExp);
 			
 			// If the nearest tone is too far, then do not assign...
@@ -203,16 +198,23 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 			
 			// If there is a better existing id, then leave it...
 			if(tone.id == null) ids++;
-			else if(Math.abs(tone.toneFrequency - ((ResonanceID1) tone.id).expectedFreqFor(T)) < adf) continue;						
+			else if(Math.abs(tone.toneFrequency - tone.id.freq * (1.0 + delta)) < adf) continue;						
 			
 			tone.id = id;
+			tone.position = id.position;
+			tone.row = -1;
+			tone.col = -1;
+				
+			tone.unflag(MakoPixel.FLAG_UNASSIGNED);
+			
+			if(!Double.isNaN(id.gain)) tone.gain = id.gain;
 		}
 		
-		ResonanceList<Mako1Pixel> remaining = new ResonanceList<Mako1Pixel>(tones.size());
-		ToneIdentifier extraIDs = (ToneIdentifier) clone();
+		ResonanceList<Mako2Pixel> remaining = new ResonanceList<Mako2Pixel>(tones.size());
+		ToneIdentifier2 extraIDs = (ToneIdentifier2) clone();
 		
 		for(int i=0; i<tones.size(); i++) {
-			Mako1Pixel tone = tones.get(i);
+			Mako2Pixel tone = tones.get(i);
 			if(tone.id == null) remaining.add(tone);
 			else extraIDs.remove(tone.id);
 		}
@@ -220,10 +222,10 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 		
 		//System.err.println("     +" + ids + " resonances.");
 		
-		return ids + extraIDs.assign(remaining, T, rounds-1);
-		
-		
+		return ids + extraIDs.assign(remaining, delta, rounds-1);	
 	}
+	
+	
 	public int indexBefore(double f) throws ArrayIndexOutOfBoundsException {
 		int i = 0;
 		int step = size() >> 1;
@@ -260,5 +262,7 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 			return size() - 1;
 		}
 	}
+
+	public static double initDelta = 3.0 * Unit.kHz;
 	
 }

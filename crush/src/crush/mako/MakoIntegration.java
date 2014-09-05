@@ -23,22 +23,19 @@
 package crush.mako;
 
 import nom.tam.fits.*;
-
-
 import kovacs.astro.*;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
-
 import crush.cso.CSOIntegration;
 import crush.fits.HDUReader;
 
-public class MakoIntegration extends CSOIntegration<Mako, MakoFrame> {
+public class MakoIntegration<MakoType extends Mako<?>> extends CSOIntegration<MakoType, MakoFrame> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -2439173655341594018L;
 	
-	public MakoIntegration(MakoScan parent) {
+	public MakoIntegration(MakoScan<MakoType> parent) {
 		super(parent);
 	}
 
@@ -68,7 +65,7 @@ public class MakoIntegration extends CSOIntegration<Mako, MakoFrame> {
 	
 	@Override
 	public MakoFrame getFrameInstance() {
-		return new MakoFrame((MakoScan) scan);
+		return new MakoFrame((MakoScan<?>) scan);
 	}
 		
 	
@@ -110,7 +107,7 @@ public class MakoIntegration extends CSOIntegration<Mako, MakoFrame> {
 		private int[] SN, AZ, EL, dX, dY, AZE, ELE, LST, PA, MJD, ticks; // UTseconds, UTnanosec;
 		private int channels;
 		
-		private final MakoScan makoscan = (MakoScan) scan;
+		private final MakoScan<?> makoscan = (MakoScan<?>) scan;
 		
 		public MakoReader(TableHDU hdu, int offset) throws FitsException {
 			super(hdu);
@@ -145,7 +142,7 @@ public class MakoIntegration extends CSOIntegration<Mako, MakoFrame> {
 		public Reader getReader() {
 			return new Reader() {
 				private Vector2D equatorialOffset;
-				private boolean isEquatorial = EquatorialCoordinates.class.isAssignableFrom(((MakoScan) scan).scanSystem);
+				private boolean isEquatorial = EquatorialCoordinates.class.isAssignableFrom(((MakoScan<?>) scan).scanSystem);
 				//AstroTime time = new AstroTime();
 				
 				@Override

@@ -91,7 +91,7 @@ public abstract class RotatingArray<PixelType extends SimplePixel> extends MonoA
 		Vector2D priorOffset = getPointingOffset(appliedRotation);
 		Vector2D newOffset = getPointingOffset(angle);
 		
-		for(SimplePixel pixel : this) {
+		for(SimplePixel pixel : this) if(pixel.position != null) {
 			// Center positions on the rotation center...
 			pixel.position.subtract(priorOffset);
 			// Do the rotation...

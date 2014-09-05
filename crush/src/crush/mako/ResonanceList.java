@@ -26,10 +26,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
+import java.util.List;
 
 import crush.Channel;
 
-public class ResonanceList extends ArrayList<MakoPixel> {
+public class ResonanceList<MakoPixelType extends MakoPixel> extends ArrayList<MakoPixelType> {
 	/**
 	 * 
 	 */
@@ -39,36 +40,34 @@ public class ResonanceList extends ArrayList<MakoPixel> {
 		ensureCapacity(size);
 	}
 	
-	public ResonanceList(Mako mako) {
+	public ResonanceList(List<MakoPixelType> mako) {
 		addAll(mako);
 	}
 	
 	public void sort() {
-		Collections.sort(this, new Comparator<MakoPixel>() {
+		Collections.sort(this, new Comparator<MakoPixelType>() {
 			@Override
-			public int compare(MakoPixel arg0, MakoPixel arg1) {
+			public int compare(MakoPixelType arg0, MakoPixelType arg1) {
 				return Double.compare(arg0.toneFrequency, arg1.toneFrequency);
 			}
 		});	
 	}
 	
-	public void assign(Mako mako) {
+	public void assign(List<MakoPixelType> mako) {
 		int assigned = 0;
 		
-		Hashtable<ResonanceID, MakoPixel> lookup = new Hashtable<ResonanceID, MakoPixel>(mako.size());
-		for(MakoPixel channel : mako) if(channel.id != null) lookup.put(channel.id, channel);
+		Hashtable<ResonanceID, MakoPixelType> lookup = new Hashtable<ResonanceID, MakoPixelType>(mako.size());
+		for(MakoPixelType channel : mako) if(channel.id != null) lookup.put(channel.id, channel);
 		
-		for(MakoPixel pixel : this) {
+		for(MakoPixelType pixel : this) {
 			if(pixel.id == null) continue;
 			if(pixel.row < 0) continue;
 			if(pixel.col < 0) continue;
 			
-			MakoPixel channel = lookup.get(pixel.id);
+			MakoPixelType channel = lookup.get(pixel.id);
 			if(channel == null) continue;
 			
-			channel.row = pixel.row;
-			channel.col = pixel.col;
-			channel.setFixedIndex(pixel.row * Mako.cols + pixel.col);
+			channel.setRowCol(pixel.row, pixel.col);
 			channel.unflag(MakoPixel.FLAG_UNASSIGNED);
 			
 			assigned++;
@@ -99,7 +98,7 @@ public class ResonanceList extends ArrayList<MakoPixel> {
 		return i;
 	}
 	
-	public MakoPixel getNearest(double f) {
+	public MakoPixelType getNearest(double f) {
 		return get(getNearestIndex(f));
 	}
 	

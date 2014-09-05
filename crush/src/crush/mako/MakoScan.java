@@ -37,7 +37,7 @@ import kovacs.math.Vector2D;
 import kovacs.util.*;
 
 
-public class MakoScan extends CSOScan<Mako, MakoIntegration> {
+public class MakoScan<MakoType extends Mako<?>> extends CSOScan<MakoType, MakoIntegration<MakoType>> {
 	/**
 	 * 
 	 */
@@ -52,14 +52,14 @@ public class MakoScan extends CSOScan<Mako, MakoIntegration> {
 
 	File file;
 	
-	public MakoScan(Mako instrument) {
+	public MakoScan(MakoType instrument) {
 		super(instrument);
 		setSerial(++serialCounter);
 	}
 
 	@Override
-	public MakoIntegration getIntegrationInstance() {
-		return new MakoIntegration(this);
+	public MakoIntegration<MakoType> getIntegrationInstance() {
+		return new MakoIntegration<MakoType>(this);
 	}
 	
 	@Override
@@ -115,20 +115,20 @@ public class MakoScan extends CSOScan<Mako, MakoIntegration> {
 		
 		int i = 4; 
 		BasicHDU firstDataHDU = null;
-		while(!(firstDataHDU = HDU[i]).getHeader().getStringValue("EXTNAME").startsWith("STREAM")) i++;
+		while(!(firstDataHDU = HDU[i]).getHeader().getStringValue("EXTNAME").toUpperCase().startsWith("STREAM")) i++;
 		
 		parseScanPrimaryHDU(HDU[0]);
 		clear();
 		
 		// Load the instrument settings...
 		instrument.parseScanPrimaryHDU(HDU[0]);
-		instrument.parseCalibrationHDU((BinaryTableHDU) HDU[1]);
+		instrument.parseReadoutHDU((BinaryTableHDU) HDU[1]);
 		instrument.parseDataHeader(firstDataHDU.getHeader());
 		instrument.validate(this);
 		
 		parseScanDataHDU((BinaryTableHDU) HDU[i]);
 		
-		MakoIntegration integration = new MakoIntegration(this);
+		MakoIntegration<MakoType> integration = new MakoIntegration<MakoType>(this);
 		integration.read(HDU, i);
 		add(integration);
 		
