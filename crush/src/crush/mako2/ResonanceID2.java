@@ -32,10 +32,7 @@ public class ResonanceID2 extends ResonanceID {
 	
 	public ResonanceID2(int index) {
 		super(index);
-	}
-
-
-	
+	}	
 }
 
 

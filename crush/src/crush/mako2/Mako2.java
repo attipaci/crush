@@ -76,7 +76,7 @@ public class Mako2 extends Mako<Mako2Pixel> {
 	
 	@Override
 	public Scan<?, ?> getScanInstance() {
-		return new MakoScan<Mako2>(this);
+		return new Mako2Scan(this);
 	}
 	
 	public List<Mako2Pixel> get350Pixels() {
@@ -98,25 +98,24 @@ public class Mako2 extends Mako<Mako2Pixel> {
 		if(hasOption("offset.350")) offset350 = option("offset.350").getVector2D();
 		if(hasOption("offset.850")) offset350 = option("offset.850").getVector2D();
 		
-		double max850Frequency = hasOption("850um.maxfreq") ? option("850um.maxfreq").getDouble() * Unit.mHz : 100.0 * Unit.mHz;
+		double max850Frequency = hasOption("850um.maxfreq") ? option("850um.maxfreq").getDouble() * Unit.MHz : 100.0 * Unit.MHz;
 		for(Mako2Pixel pixel : this) pixel.array = pixel.toneFrequency > max850Frequency ? Mako2.ARRAY_350 : Mako2.ARRAY_850;
 		
 		
 		if(hasOption("toneid")) {
 			try {
-				
 				List<Mako2Pixel> pixels350 = get350Pixels();
 				List<Mako2Pixel> pixels850 = get850Pixels();
 				
 				if(pixels350 != null) {
 					identifier = new ToneIdentifier2(option("toneid"));
 					identifier.discardBelow(max850Frequency);
-					meanResonatorShift350 = identifier.match(new ResonanceList<Mako2Pixel>(pixels350));
+					if(!identifier.isEmpty()) meanResonatorShift350 = identifier.match(new ResonanceList<Mako2Pixel>(pixels350));
 				}
 				if(pixels850 != null) {
 					identifier = new ToneIdentifier2(option("toneid"));
 					identifier.discardAbove(max850Frequency);
-					meanResonatorShift850 = identifier.match(new ResonanceList<Mako2Pixel>(pixels850));
+					if(!identifier.isEmpty()) meanResonatorShift850 = identifier.match(new ResonanceList<Mako2Pixel>(pixels850));
 				}
 				
 				realign();
@@ -150,13 +149,12 @@ public class Mako2 extends Mako<Mako2Pixel> {
 		
 		for(Mako2Pixel pixel : this) {
 			if(map850um) {
-				if(pixel.array != ARRAY_850) pixel.flag(Channel.FLAG_DEAD);
+				if(pixel.array != ARRAY_850) pixel.flag(Channel.FLAG_DISCARD);
 			}
 			else {
-				if(pixel.array != ARRAY_350) pixel.flag(Channel.FLAG_DEAD);
+				if(pixel.array != ARRAY_350) pixel.flag(Channel.FLAG_DISCARD);
 			}
 		}
-		
 		
 	}
 	

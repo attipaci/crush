@@ -183,6 +183,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	public final static int HARDWARE_FLAGS = 0xFF;
 	
 	public static int nextSoftwareFlag = 8;
+	public final static int FLAG_DISCARD = 1 << nextSoftwareFlag++;
 	public final static int FLAG_GAIN = 1 << nextSoftwareFlag++;
 	public final static int FLAG_SENSITIVITY = 1 << nextSoftwareFlag++;
 	public final static int FLAG_DOF = 1 << nextSoftwareFlag++;
