@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,36 +20,28 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.array;
 
-import crush.Channel;
-import crush.GradientGains;
+package crush.mako2;
 
-public class SkyGradient extends GradientGains {
-	private boolean horizontal = true;
-	
-	private SkyGradient(boolean isHorizontal) {
-		this.horizontal = isHorizontal;
+import crush.SourceModel;
+import crush.mako.MakoScan;
+
+public class Mako2Scan extends MakoScan<Mako2> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 9146779622501912860L;
+
+
+	public Mako2Scan(Mako2 instrument) {
+		super(instrument);
 	}
+	
 	
 	@Override
-	public double getRawGain(Channel c) throws Exception {
-		SimplePixel pixel = (SimplePixel) c;
-		if(pixel.position == null) return 0.0;
-		return (horizontal ? pixel.position.x() : pixel.position.y());
-	}
-
-	@Override
-	public void setRawGain(Channel c, double value) throws Exception {
-		throw new UnsupportedOperationException("Cannot change gradient gains.");
-	}
-
-	public static class X extends SkyGradient {
-		public X() { super(true); }
-	}
+	public void setSourceModel(SourceModel model) {
+		super.setSourceModel(model);
+		sourceModel.id = hasOption("850um") ? "850um" : "350um";
+	}	
 	
-	public static class Y extends SkyGradient {
-		public Y() { super(false); }
-	}
-
 }

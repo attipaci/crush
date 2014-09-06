@@ -48,7 +48,7 @@ public class ToneIdentifier2 extends ArrayList<ResonanceID2> implements Cloneabl
 	 */
 	private static final long serialVersionUID = -3011775640230135691L;
 		
-	public Range deltaRange = new Range(-1e-4, 1e-4);
+	public Range deltaRange = new Range(-1e-3, 1e-3);
 	public int attempts = 100;
 	public double rchi;
 	public double maxDeviation = 3.0;
@@ -75,7 +75,7 @@ public class ToneIdentifier2 extends ArrayList<ResonanceID2> implements Cloneabl
 			ResonanceID2 id = get(i);
 			if(id.freq >= freq) remove(i);
 		}
-		System.err.println(" Discarded " + (n-size()) + ", kept " + size() + " tones above " + (freq / Unit.MHz) + "MHz.");
+		System.err.println(" Discarded " + (n-size()) + ", kept " + size() + " tones below " + (freq / Unit.MHz) + "MHz.");
 	}
 	 
 	public void discardBelow(double freq) {
@@ -84,7 +84,7 @@ public class ToneIdentifier2 extends ArrayList<ResonanceID2> implements Cloneabl
 			ResonanceID2 id = get(i);
 			if(id.freq < freq) remove(i);
 		}
-		System.err.println(" Discarded " + (n-size()) + ", kept " + size() + " tones below " + (freq / Unit.MHz) + "MHz.");
+		System.err.println(" Discarded " + (n-size()) + ", kept " + size() + " tones above " + (freq / Unit.MHz) + "MHz.");
 	}
 	 
 	
@@ -163,7 +163,7 @@ public class ToneIdentifier2 extends ArrayList<ResonanceID2> implements Cloneabl
 		double delta = opt.getFitParameters()[0];
 		
 		System.err.println("   Tone assignment rms = " + Util.s3.format(1e6 * rchi) + " ppm.");
-		System.err.println("   --> df/f (id) = " + Util.s4.format(1e6 * delta) + "ppm.");
+		System.err.println("   --> df/f (id) = " + Util.s4.format(1e6 * delta) + " ppm.");
 		
 		return delta;
 	}

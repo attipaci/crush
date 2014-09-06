@@ -1,4 +1,6 @@
+>> add mako2 to pages and man
 >> '850um.maxfreq'
+
 
 	[NEW] {MAKO2} Initial support for MAKO2.
 
@@ -12,6 +14,8 @@
 
 	[CODE] Pixels with null positions are now processed without error.
 
+	[CODE] ChannelGroup.slim() now removes channels soft-flagged to be
+	discarded. Also made a bit faster.
 
 
 2.20-3 (21 August 2014)
