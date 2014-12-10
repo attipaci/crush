@@ -153,7 +153,25 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			CSOTauTable table = CSOTauTable.get(((CSOScan<?,?>) scan).iMJD, file.getPath());
 			table.setOptions(option("tau"));
 			setTau("225GHz", table.getTau(getMJD()));	
-		
+		}
+		else if(source.equals("jctables")) {
+			source = hasOption("tau.jctables") ? option("tau.jctables").getValue() : ".";
+			String date = scan.getID().substring(0, scan.getID().indexOf('.'));
+			String spec = date.substring(0, 10);
+			
+			File file = new File(Util.getSystemPath(source) + File.separator + spec + ".jcmt-183-ghz.dat");
+			if(!file.exists()) {
+				System.err.println("   WARNING! No tau table found for " + date + "...");
+				System.err.println("            Using default tau.");
+				System.err.println("            " + file.getPath());
+				instrument.getOptions().remove("tau");
+				setTau();
+				return;
+			}
+			
+			JCMTTauTable table = JCMTTauTable.get(((CSOScan<?,?>) scan).iMJD, file.getPath());
+			table.setOptions(option("tau"));
+			setTau("225GHz", table.getTau(getMJD()));	
 		}
 		else if(source.equals("direct")) setZenithTau(getDirectTau());
 		else {

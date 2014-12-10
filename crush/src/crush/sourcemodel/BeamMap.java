@@ -42,16 +42,14 @@ public class BeamMap extends SourceMap {
 	
 	public BeamMap(Array<?, ?> instrument) {
 		super(instrument);
-		preferredStem = "beammap";
 	}
 
 	@Override
 	public SourceModel copy(boolean withContents) {
 		BeamMap copy = (BeamMap) super.copy(withContents);
 		copy.pixelMap = new ScalarMap[pixelMap.length];
-		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) {
-			copy.pixelMap[p] = (ScalarMap) pixelMap[p].copy(withContents);
-		}
+		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null)
+			copy.pixelMap[p] = (ScalarMap) pixelMap[p].copy(withContents);	
 		return copy;
 	}
 

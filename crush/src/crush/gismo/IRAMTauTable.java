@@ -66,7 +66,7 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 		if(fileName.equals(this.fileName)) return;
 			
 		System.err.print(" [Loading skydip tau values.]");
-		if(CRUSH.debug) System.err.print(" >> " + fileName + " >> ");
+		if(CRUSH.debug) System.err.print(" >> " + fileName + " >> ");		
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		String line = null;
@@ -84,10 +84,14 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 					dateSpec = tokens.nextToken() + " " + tokens.nextToken();
 					Date date = df.parse(dateSpec);
 					skydip.timeStamp = new TimeStamp(AstroTime.getMJD(date.getTime()));			
-					skydip.tau.setValue(Double.parseDouble(tokens.nextToken()));
-					skydip.tau.setRMS(Double.parseDouble(tokens.nextToken()));				
-	
-					add(skydip);
+					
+					try { 
+						skydip.tau.setValue(Double.parseDouble(tokens.nextToken())); 	
+						skydip.tau.setRMS(Double.parseDouble(tokens.nextToken()));
+						add(skydip);
+					}
+					catch(NumberFormatException e) {}
+					
 				}
 				catch(ParseException e) {
 					System.err.println("WARNING! Cannot parse date " + dateSpec);

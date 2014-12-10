@@ -49,7 +49,9 @@ public abstract class GradientGains implements GainProvider {
 			if(channel.isFlagged()) continue;
 
 			final double x = getGain(channel);
+			
 			if(x == 0.0) continue;
+			else if(Double.isNaN(x)) continue;
 			
 			final double g = gains[k] / x;
 			final double wg2 = channel.weight * g * g;

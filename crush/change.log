@@ -1,11 +1,57 @@
->> add mako2 to pages and man
->> '850um.maxfreq'
+2.21-b1	(9 December 2014)		
 
 
 	[NEW] {MAKO2} Initial support for MAKO2.
 
+	[NEW] {MAKO} {MAKO2} New option 'toneid.attempts' lets you control
+	how many fitting attempts are made before the best is chosen for
+	tone identifications (the default is 100).
+
+	[BUG] {crushtools} Equatorial (RA/DEC) image output had the wrong 
+	CDELT1 sign (should have been negative, but was written positive). As 
+	such, maps produced by 'imagetool', 'coadd', 'difference', or 'detect'
+	all appeared inverted.
+
+	[FIX] Reporting the configurations loading on console is reinstated.
+	Also, it now shows hierarchical configuration loading (when one
+	config file is spawned from another).
+
+	[FIX] {beammap} Beam-map was broken due to some erroneous processing
+	of branched source options (E.g. 'blank' vs 'beammap.blank' or
+	'source.redundancy' vs 'beammap.redundancy'). [Note, that support for
+	branched source options has been revoked. See further below.]
+
 	[FIX] {MAKO} The MAKO configurations file (mako/default.cfg) had 
 	'offsets.add' misspelled. Fixed. 
+
+	[DEPRECATE] Branched source options, introduced in 2.16, has
+	been deprecated, and no longer supported. It is not used in the current
+	code, and it has unnecessarily increased the complexity of configuring,
+	reducing transparency and making the source model(s) more bug prone as 
+	a result.
+
+	[CONFIG] {GISMO} Recalibrated based on Uranus on 2014-10-23, and the
+	Bendo et al. 2013 temperature model. The calibration is applied 
+	retroactively from April 2014.
+
+	[CONFIG] {GISMO} Previous bias 16K calibration reinstated (uncommented)
+	and appropriately re-scaled.
+
+	[CONFIG] {GISMO} New calibration for 9K bias, based on 1800+400 
+	observed both with 9K and 10K biases on 2014-10-23. 
+	
+	[CONFIG] {GISMO} There was something funny with the 2014-04 
+	calibration, which was based on Mars. Everything else indicates that
+	this calibration resulted in fluxes ~40% too low. Therefore, the
+	run 10 calibration is changed assuming the same optical state as
+	the following run in 2014 October.
+
+	[TWEAK] {GISMO} More information printed on console in case of errors
+	while reading tau tables. Also, entries with invalid values are now
+	skipped rather than produce an error.
+
+	[TWEAK] {CSO} Site coordinates updated to match those of the antenna
+	computer.
 
 	[TWEAK] {MAKO} Changed how resonance chi^2 is calculated in the
 	resonance match. First, if the nearest channel is too far from a

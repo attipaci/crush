@@ -471,7 +471,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 					instrument.getOptions().process("tau.225ghz", tau225GHz + "");
 				}
 				catch(IOException e2) { 
-					System.err.println("WARNING! Cannot read tau table.");
+					System.err.println("\n WARNING! Cannot read tau table: " + e2.getMessage());
 					if(CRUSH.debug) e.printStackTrace(); 
 					tau225GHz = Double.NaN;
 				}

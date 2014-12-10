@@ -185,8 +185,8 @@ public class ScalarMap extends SourceMap {
 		
 		// TODO Apply mask to data either via flag.inside or flag.outside + mask file.
 		
-		if(hasOption("source.model")) {
-			try { applyModel(option("source.model").getValue()); }
+		if(hasSourceOption("model")) {
+			try { applyModel(sourceOption("model").getValue()); }
 			catch(Exception e) { 
 				System.err.println("WARNING! Cannot read source model. Check the file name and path."); 
 				e.printStackTrace();
@@ -446,7 +446,7 @@ public class ScalarMap extends SourceMap {
 		
 		if(verbose) if(enableLevel) System.err.print("{level} ");
 		
-		if(verbose) if(hasOption("source.despike")) System.err.print("{despike} ");
+		if(verbose) if(hasSourceOption("despike")) System.err.print("{despike} ");
 		
 		if(hasSourceOption("filter") && getSourceSize() > 0.0) {
 			if(verbose) System.err.print("{filter} ");
@@ -457,7 +457,7 @@ public class ScalarMap extends SourceMap {
 		
 		if(hasSourceOption("redundancy"))  {
 			System.err.print("(check) ");
-			double minIntTime = getInstrument().integrationTime * (hasOption("source.redundancy") ? option("source.redundancy").getInt() : 0);
+			double minIntTime = getInstrument().integrationTime * sourceOption("redundancy").getInt();
 			if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
 		}
 
@@ -701,8 +701,8 @@ public class ScalarMap extends SourceMap {
 		}
 	
 		// If the coupling falls out of range, then revert to the default of 1.0	
-		if(hasOption("source.coupling.range")) {
-			Range range = option("source.coupling.range").getRange();
+		if(hasSourceOption("coupling.range")) {
+			Range range = sourceOption("coupling.range").getRange();
 			for(final Pixel pixel : pixels) for(final Channel channel : pixel) if(channel.isUnflagged())
 				if(!range.contains(channel.coupling)) channel.coupling = 1.0;
 		}
@@ -759,7 +759,7 @@ public class ScalarMap extends SourceMap {
 			return;
 		}
 		
-		// Re-level and weight map if allowed and not 'extended' or 'deep'.
+		// Re-level and weight map if allowed and 'deep' or not 'extended'.
 		if(!hasOption("extended") || hasOption("deep")) {
 			if(enableLevel) map.level(true);
 			if(enableWeighting) map.reweight(true);

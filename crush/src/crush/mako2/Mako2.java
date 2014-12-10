@@ -33,7 +33,6 @@ import crush.Scan;
 import crush.array.DistortionModel;
 import crush.mako.Mako;
 import crush.mako.MakoPixel;
-import crush.mako.MakoScan;
 import crush.mako.ResonanceList;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
@@ -102,18 +101,18 @@ public class Mako2 extends Mako<Mako2Pixel> {
 		for(Mako2Pixel pixel : this) pixel.array = pixel.toneFrequency > max850Frequency ? Mako2.ARRAY_350 : Mako2.ARRAY_850;
 		
 		
-		if(hasOption("toneid")) {
+		if(hasOption("pixelid")) {
 			try {
 				List<Mako2Pixel> pixels350 = get350Pixels();
 				List<Mako2Pixel> pixels850 = get850Pixels();
 				
 				if(pixels350 != null) {
-					identifier = new ToneIdentifier2(option("toneid"));
+					identifier = new ToneIdentifier2(option("pixelid"));
 					identifier.discardBelow(max850Frequency);
 					if(!identifier.isEmpty()) meanResonatorShift350 = identifier.match(new ResonanceList<Mako2Pixel>(pixels350));
 				}
 				if(pixels850 != null) {
-					identifier = new ToneIdentifier2(option("toneid"));
+					identifier = new ToneIdentifier2(option("pixelid"));
 					identifier.discardAbove(max850Frequency);
 					if(!identifier.isEmpty()) meanResonatorShift850 = identifier.match(new ResonanceList<Mako2Pixel>(pixels850));
 				}
@@ -121,7 +120,7 @@ public class Mako2 extends Mako<Mako2Pixel> {
 				realign();
 			}
 			catch(IOException e) {
-				System.err.println(" WARNING! Cannot identify tones from '" + option("toneid").getValue() + "'."); 
+				System.err.println(" WARNING! Cannot identify tones from '" + option("pixelid").getValue() + "'."); 
 				if(CRUSH.debug) e.printStackTrace();
 			}
 		}
@@ -144,7 +143,7 @@ public class Mako2 extends Mako<Mako2Pixel> {
 		super.loadChannelData();
 		
 		boolean map850um = hasOption("850um");
-		System.err.println("Map with " + (map850um ? "850um" : "350um") + " subarray only.");
+		System.err.println(" Map with " + (map850um ? "850um" : "350um") + " subarray only.");
 		
 		
 		for(Mako2Pixel pixel : this) {
@@ -159,20 +158,20 @@ public class Mako2 extends Mako<Mako2Pixel> {
 	}
 	
 	public void realign() {
-		if(hasOption("toneid.center")) {
-			Vector2D offset = option("toneid.center").getVector2D();
+		if(hasOption("pixelid.center")) {
+			Vector2D offset = option("pixelid.center").getVector2D();
 			offset.scale(Unit.arcsec);
 			for(Mako2Pixel pixel : this) if(pixel.position != null) pixel.position.subtract(offset);
 		}
-		if(hasOption("toneid.zoom")) {
-			double zoom = option("toneid.zoom").getDouble();
+		if(hasOption("pixelid.zoom")) {
+			double zoom = option("pixelid.zoom").getDouble();
 			for(Mako2Pixel pixel : this) if(pixel.position != null) pixel.position.scale(zoom);
 		}
-		if(hasOption("toneid.mirror")) {
+		if(hasOption("pixelid.mirror")) {
 			for(Mako2Pixel pixel : this) if(pixel.position != null) pixel.position.scaleX(-1.0);
 		}
-		if(hasOption("toneid.rotate")) {
-			double angle = option("toneid.rotate").getDouble() * Unit.deg;
+		if(hasOption("pixelid.rotate")) {
+			double angle = option("pixelid.rotate").getDouble() * Unit.deg;
 			for(Mako2Pixel pixel : this) if(pixel.position != null) pixel.position.rotate(angle);
 		}	
 	}
@@ -272,7 +271,7 @@ public class Mako2 extends Mako<Mako2Pixel> {
 	
 	@Override
 	public String getChannelDataHeader() {
-		return "toneid\tarray\t" + super.getChannelDataHeader() + "\teff";
+		return "pixelid\tarray\t" + super.getChannelDataHeader() + "\teff";
 	}
 
 

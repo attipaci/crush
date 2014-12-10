@@ -93,7 +93,10 @@ public class MakoIntegration<MakoType extends Mako<?>> extends CSOIntegration<Ma
 	
 		for(int n=0, startIndex = 0; n<nDataHDUs; n++) {
 			BinaryTableHDU hdu = (BinaryTableHDU) HDU[firstDataHDU+n]; 
-			new MakoReader(hdu, startIndex).read();
+			
+			if(hasOption("chirp")) new MakoChirpReader(hdu, startIndex).read();
+			else new MakoReader(hdu, startIndex).read();
+			
 			startIndex += hdu.getNRows();
 		}
 		
@@ -189,6 +192,109 @@ public class MakoIntegration<MakoType extends Mako<?>> extends CSOIntegration<Ma
 						frame.horizontalOffset = new Vector2D(
 							(dX[i] + AZE[i] * frame.horizontal.cosLat()) * tenthArcsec,
 							(dY[i] + ELE[i]) * tenthArcsec);
+						equatorialOffset.zero();
+					}
+						
+					//frame.chopperPosition.setX(chop[i] * Unit.arcsec);
+					//chopZero.add(frame.chopperPosition.getX());
+					//chopZero.addWeight(1.0);
+
+					// Add in the scanning offsets...
+					if(makoscan.addStaticOffsets) frame.horizontalOffset.add(makoscan.horizontalOffset);		
+					
+					frame.equatorialToHorizontal(equatorialOffset);
+					frame.horizontalOffset.add(equatorialOffset);
+	
+					set(offset + i, frame);
+				}
+			};
+		}
+	}
+
+	
+	class MakoChirpReader extends HDUReader {	
+		private int offset;
+
+		private byte[] ch;
+		private float[] data; //intTime, chop;
+		private double[] MJD;
+		private int[] SN;
+		private float[] AZ, EL, dX, dY, AZE, ELE, LST, PA; // UTseconds, UTnanosec;
+		private int channels;
+		
+		private final MakoScan<?> makoscan = (MakoScan<?>) scan;
+		
+		public MakoChirpReader(TableHDU hdu, int offset) throws FitsException {
+			super(hdu);
+			this.offset = offset;			
+
+			int cData = hdu.findColumn("Data");
+			channels = table.getSizes()[cData];
+			
+			data = (float[]) table.getColumn(cData);
+			
+			SN = (int[]) table.getColumn(hdu.findColumn("Serial Number"));
+			ch = (byte[]) table.getColumn(hdu.findColumn("Channel"));
+			AZ = (float[]) table.getColumn(hdu.findColumn("Azimuth"));
+			EL = (float[]) table.getColumn(hdu.findColumn("Elevation"));
+			AZE = (float[]) table.getColumn(hdu.findColumn("AZ Error"));
+			ELE = (float[]) table.getColumn(hdu.findColumn("EL Error"));
+			PA = (float[]) table.getColumn(hdu.findColumn("Parallactic Angle"));
+			LST = (float[]) table.getColumn(hdu.findColumn("LST"));
+			dX = (float[]) table.getColumn(hdu.findColumn("X Offset"));
+			dY = (float[]) table.getColumn(hdu.findColumn("Y Offset"));
+			MJD = (double[]) table.getColumn(hdu.findColumn("MJD"));
+			
+		}
+	
+		@Override
+		public Reader getReader() {
+			return new Reader() {
+				private Vector2D equatorialOffset;
+				private boolean isEquatorial = EquatorialCoordinates.class.isAssignableFrom(((MakoScan<?>) scan).scanSystem);
+				//AstroTime time = new AstroTime();
+				
+				@Override
+				public void init() { 
+					super.init();
+					equatorialOffset = new Vector2D();
+				}
+				@Override
+				public void readRow(int i) throws FitsException {	
+					if(ch[i] == 255) return;
+					
+					final MakoFrame frame = new MakoFrame(makoscan);
+					frame.index = i;
+					
+					frame.parseData(data, i*channels, instrument);
+	
+					frame.MJD = MJD[i];
+					
+					// Enforce the calculation of the equatorial coordinates
+					frame.equatorial = null;
+
+					frame.horizontal = new HorizontalCoordinates(
+							AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
+							EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
+					
+					final double pa = PA[i] * Unit.deg;
+					frame.sinPA = Math.sin(pa);
+					frame.cosPA = Math.cos(pa);
+
+					frame.LST = LST[i] * Unit.hourAngle;
+			
+					frame.frameNumber = SN[i];
+					
+					if(isEquatorial) {
+						frame.horizontalOffset = new Vector2D(
+							AZE[i] * frame.horizontal.cosLat() * Unit.arcsec,
+							ELE[i] * Unit.arcsec);
+						equatorialOffset.set(dX[i] * Unit.arcsec, dY[i] * Unit.arcsec);	
+					}
+					else {
+						frame.horizontalOffset = new Vector2D(
+							(dX[i] + AZE[i] * frame.horizontal.cosLat()) * Unit.arcsec,
+							(dY[i] + ELE[i]) * Unit.arcsec);
 						equatorialOffset.zero();
 					}
 						

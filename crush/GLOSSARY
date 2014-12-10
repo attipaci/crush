@@ -17,7 +17,7 @@
 			will be used instead.
 			@See: '1overf.freq'
 
-:: 350um		@Instrument: SHARC-2
+:: 350um		@Instrument: SHARC-2, MAKO-2
 			Specify that the 350um filter was used (default). This 
 			adjuts conversion factors, tau scaling relations for 
 			calculating in-band line-of sight opacitites, and beam 
@@ -26,13 +26,23 @@
 
 :: 450um		@Instrument: SHARC-2, SCUBA-2 
 			Use if the 450um filter was used to observe with 
-			SHARC-2, or to specify 450um imaging with SCUBA-2
+			SHARC-2, or to specify 450um imaging with SCUBA-2 and
+			MAKO-2.
 			@See: '350um' and '850um'
 
-:: 850um		@Instrument: SHARC-2, SCUBA-2
+:: 850um		@Instrument: SHARC-2, SCUBA-2, MAKO-2
 			Specify that data was taken at 850um with SHARC-2, or
-			to reduce the data from the 850um array of SCUBA-2.
+			to reduce the data from the 850um array of SCUBA-2 and
+			MAKO-2.
 			@See: '350um' and '450um'
+
+:: 850um.maxfreq=X	@Instrument: MAKO-2
+			@Since: 2.21
+			@Expert
+			Specify a readout frequency (in MHz) below which are
+			the 850um channels. CRUSH uses this frequency boundary
+			to determine which channels are assigned to which 
+			subarray.	
 
 :: accel		@Alias -> 'correlated.accel-mag'
 			@Advanced
@@ -1943,6 +1953,69 @@
 			determined without prior bias).
 			@See: 'gainnoise', 'uniform', 'flag', 'blind'
 
+:: pixelid=<file>	@Instrument: MAKO, MAKO-2
+			@Since: 2.21
+			@Advanced
+			Specify the file that contains the pixel frequency ids.
+			After matching the readout channels to the available
+			ids, these become the standard pixel id used by CRUSH
+			for all other purposes. Note, that MAKO and MAKO-2 have
+			different file specifications for the argument.		
+
+:: pixelid.attempts=N	@Instrument: MAKO, MAKO-2
+			@Since: 2.21
+			@Advanced
+			Set the number of fitting attempts for matching
+			readout frequencies to pixelid values. Each attempt
+			starts off from a random fitting position within
+			'pixelid.deltarange'. Thus, the more attempts are
+			taken, the less likely it is that the best fit will
+			be stuck in a local minimum value. The final fit will	
+			be chosen as the one with the lowest minimum out of
+			N attempts.
+
+:: pixelid.center=x,y	@Instrument: MAKO-2
+			@Since: 2.21
+			@Advanced
+			Set the nominal array center position (in arcsecs) for 
+			the pixel positions contained in the 'pixelid' file. 
+
+:: pixelid.deltarange=min:max	@Instrument: MAKO, MAKO-2
+				@Since: 2.21
+				@Expert
+			Set the range of tolerated mean fractional frequency
+			shift when matching readout frequencies to a list
+			of 'pixelid' values.
+
+:: pixelid.max=X	@Instrument: MAKO, MAKO-2
+			@Since: 2.21
+			@Expert
+			Specify a maximum normalized deviation (relative to the
+			mean deviation under the given cost function) for valid
+			pixel identification. Pixels, whose closest frequency
+			match is outside this range will remain unassigned.
+
+:: pixelid.power=X	@Instrument: MAKO, MAKO-2
+			@Since: 2.21
+			@Expert
+			Change the power exponent used when caluclating the
+			cost function for matching pixel ids to observed 
+			readout frequencies. A value of 2.0 corresponds to a
+			standard chi-squared. A value of 1.0 minimizes
+			absolute deviation.
+
+:: pixelid.rotate=X	@Instrument: MAKO-2
+			Rotate the pixel positions in the 'pixelid' file by
+			X degrees to obtain proper orientation on the focal 
+			plane.
+
+:: pixelid.zoom=X	@Instrument: MAKO-2
+			@Since: 2.21
+			@Advanced
+			Specify a scaling (zoom) factor to apply to the 
+			positions in the 'pixelid' file. Use this to scale
+			the positions to physical size of the array in arcsecs.
+			
 :: pixelsize=X		@Instrument: SHARC
 			@Since: 2.17
 			@Expert

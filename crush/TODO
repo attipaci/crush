@@ -1,3 +1,6 @@
+>> MAKO chirp readout table to be more similar to ROACH calibration table...
+!>> crushtools: Fix single image noise estimation
+
 >>> compound decorrelation
         * inversion matrix data[] -> all non-fixed signal modes
         * full resolution signals

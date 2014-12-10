@@ -41,7 +41,6 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	public String commandLine;
 	public String id;
 	
-	public String preferredStem = null;
 	
 	public SourceModel(Instrument<?> instrument) {
 		setInstrument(instrument);
@@ -60,37 +59,29 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	public Configurator getOptions() {
 		return options;
 	}
-
+	
+	
 	@Override
 	public Object clone() {
 		try { return super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
 	}	
 
+	
+
 	public boolean hasOption(String name) {
-		if(hasSourceOption(name)) return true;
-		if(options.isConfigured(name)) return true;
-		return false;
+		return options.isConfigured(name);
 	}
 
 	public Configurator option(String name) {
-		Configurator option = sourceOption(name);
-		if(option == null) return options.get(name);
-		return option;
+		return options.get(name);
 	}
-
-	public boolean hasSourceOption(String name) {
-		if(preferredStem != null) if(options.isConfigured(preferredStem + "." + name)) return true;
-		if(options.isConfigured("source." + name)) return true;
-		return false;
-	}
-
-	public Configurator sourceOption(String name) {
-		Configurator option = null;
-		if(preferredStem != null) option = options.get(preferredStem + "." + name);
-		if(option == null) option = options.get("source." + name);
-		return option;
-	}
+	
+	public boolean hasSourceOption(String name) { return hasOption("source." + name); }
+	
+	public Configurator sourceOption(String name) { return option("source." + name); }
+	
+	
 	
 	@Override
 	public final SourceModel copy() { return copy(true); }
@@ -199,9 +190,9 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 		System.err.println("          otherwise, you may try:");
 		System.err.println();
 		
-		if(hasOption("deep")) System.err.println("            * Reduce with 'faint' instead of 'deep'.");
-		else if(hasOption("faint")) System.err.println("            * Reduce with default settings instead of 'faint'.");
-		else if(!hasOption("bright")) System.err.println("            * Reduce with 'bright'.");
+		if(options.isConfigured("deep")) System.err.println("            * Reduce with 'faint' instead of 'deep'.");
+		else if(options.isConfigured("faint")) System.err.println("            * Reduce with default settings instead of 'faint'.");
+		else if(!options.isConfigured("bright")) System.err.println("            * Reduce with 'bright'.");
 	
 		instrument.troubleshootFewPixels();
 		

@@ -102,14 +102,14 @@ public class Mako1 extends Mako<Mako1Pixel> {
 	public void loadChannelData() {
 		if(size() == 0) return;
 		
-		if(hasOption("toneid")) {
+		if(hasOption("pixelid")) {
 			try {
-				identifier = new ToneIdentifier(option("toneid"));	
-				double guessT = (hasOption("toneid.guesst") ? option("toneid.guesst").getDouble() : 150.0) * Unit.K;
-				Tsky = identifier.match(new ResonanceList<Mako1Pixel>(this), guessT);
+				identifier = new ToneIdentifier(option("pixelid"));	
+				double guessT = (hasOption("pixelid.guesst") ? option("pixelid.guesst").getDouble() : 150.0) * Unit.K;
+				Tsky = identifier.match(new ResonanceList<Mako1Pixel>(getObservingChannels()), guessT);
 			}
 			catch(IOException e) {
-				System.err.println(" WARNING! Cannot identify tones from '" + option("toneid").getValue() + "'."); 
+				System.err.println(" WARNING! Cannot identify tones from '" + option("pixelid").getValue() + "'."); 
 				if(CRUSH.debug) e.printStackTrace();
 			}
 		}
@@ -227,7 +227,7 @@ public class Mako1 extends Mako<Mako1Pixel> {
 	
 	@Override
 	public String getChannelDataHeader() {
-		return "toneid\t" + super.getChannelDataHeader() + "\teff";
+		return "pixelid\t" + super.getChannelDataHeader() + "\teff";
 	}
 
 	
