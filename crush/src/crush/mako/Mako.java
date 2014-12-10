@@ -107,7 +107,8 @@ public abstract class Mako<MakoPixelType extends MakoPixel> extends CSOArray<Mak
 	}
 		
 	protected void parseReadoutHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
-		parseCalibrationHDU(hdu);
+		if(hasOption("chirp")) parseChirpReadoutHDU(hdu);
+		else parseCalibrationHDU(hdu);
 	}
 	
 	protected void parseCalibrationHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
@@ -153,6 +154,27 @@ public abstract class Mako<MakoPixelType extends MakoPixel> extends CSOArray<Mak
 		else if(blinds > 0) System.err.println(" Ignoring " + blinds + " blind tones.");
 		else System.err.println(" Stream contains no blind tones :-).");
 		
+	}
+	
+	protected void parseChirpReadoutHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {			
+		//int iFreq = hdu.findColumn("Resonance Frequency");
+		
+		float[] freqs = (float[]) hdu.getRow(0)[0];
+			
+		// read in the pixel data...
+		pixels = freqs.length;
+		if(!isEmpty()) clear();
+		ensureCapacity(pixels);
+			
+		System.err.print(" MAKO chirp stream has " + pixels + " resonances. ");
+		
+		for(int c=0; c<pixels; c++) {
+			MakoPixelType pixel = getChannelInstance(c);
+			
+			pixel.toneFrequency = freqs[c];
+			add(pixel);
+		}	
+			
 	}
 	
 

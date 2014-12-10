@@ -62,6 +62,7 @@ public class ToneIdentifier2 extends ArrayList<ResonanceID2> implements Cloneabl
 		if(options.isConfigured("power")) power = options.get("power").getDouble();
 		if(options.isConfigured("deltarange")) deltaRange = options.get("deltarange").getRange();
 		if(options.isConfigured("max")) maxDeviation = options.get("max").getDouble();
+		if(options.isConfigured("attempts")) attempts = options.get("attempts").getInt();
 	}
 	
 	public ToneIdentifier2(String fileName) throws IOException {

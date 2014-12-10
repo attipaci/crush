@@ -75,12 +75,15 @@ public class MakoScan<MakoType extends Mako<?>> extends CSOScan<MakoType, MakoIn
 		Header header = fits.getHDU(0).getHeader();
 		
 		// Check that FITS file is MAKO FITS...
-		if(!header.getStringValue("INSTRUME").equalsIgnoreCase("MAKO")) 
+		String instrumentName = header.getStringValue("INSTRUME").toUpperCase();
+		
+		if(!instrumentName.startsWith("MAKO"))
 			throw new IllegalStateException("Not a MAKO FITS file.");
 		
+		boolean isChirp = hasOption("chirp");
 		
 		// If it's not a converted file, try see if a converted version exists, 
-		if(!header.containsKey("CONVSOFT")) {
+		if(!isChirp) if(!header.containsKey("CONVSOFT")) {
 			String fileName = file.getPath();
 			int iExt = fileName.lastIndexOf('.');
 			String naming = hasOption("convert.naming") ? option("convert.naming").getValue() : "converted";
@@ -113,7 +116,7 @@ public class MakoScan<MakoType extends Mako<?>> extends CSOScan<MakoType, MakoIn
 		
 		BasicHDU[] HDU = fits.read();
 		
-		int i = 4; 
+		int i = isChirp ? 2 : 4; 
 		BasicHDU firstDataHDU = null;
 		while(!(firstDataHDU = HDU[i]).getHeader().getStringValue("EXTNAME").toUpperCase().startsWith("STREAM")) i++;
 		
@@ -263,7 +266,7 @@ public class MakoScan<MakoType extends Mako<?>> extends CSOScan<MakoType, MakoIn
 		String timeMins = tokens.nextToken() + ":" + tokens.nextToken();
 		String timeString = timeMins + " UT";
 		
-		id = dateString + "." + timeMins;
+		id = hasOption("chirp") ? Integer.toString(header.getIntValue("SCANNO")) : dateString + "." + timeMins;
 		
 		System.err.println(" [" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
 		if(equatorial != null) System.err.println(" Equatorial: " + equatorial.toString());	

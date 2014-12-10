@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.21-a1
+ * @version 2.21-b1
  * 
  */
 public class CRUSH extends Configurator {
@@ -45,8 +45,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.21-a1";
-	private static String revision = "devel.4";
+	private static String version = "2.21-b1";
+	private static String revision = "beta";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -140,11 +140,21 @@ public class CRUSH extends Configurator {
 		else if(key.equals("list.response")) instrument.printResponseModalities(System.err);
 		else super.process(key, value);
 	}
+	
+	
+	private int configDepth = 0;
 
 	@Override
 	public void readConfig(String fileName) {
 		String userConfPath = System.getProperty("user.home") + File.separator + ".crush2"+ File.separator;
 		boolean found = false;
+		
+		if(configDepth > 0) {
+			for(int i=configDepth; --i >= 0; ) System.err.print("  ");
+			System.err.print("<-- ");
+		}
+		
+		configDepth++;
 		
 		try { 
 			super.readConfig(CRUSH.home + File.separator + fileName); 
@@ -179,6 +189,9 @@ public class CRUSH extends Configurator {
 			catch(IOException e) {}
 			
 		}
+		
+		configDepth--;
+		
 	}
 	
 	@Override
@@ -206,7 +219,7 @@ public class CRUSH extends Configurator {
 		
 		// Keep only the non-specific global options here...
 		for(Scan<?,?> scan : scans) instrument.getOptions().intersect(scan.instrument.getOptions()); 		
-		for(int i=0; i<scans.size(); i++) if(scans.get(i).isEmpty()) scans.remove(i--);
+		for(int i=scans.size(); --i >=0; ) if(scans.get(i).isEmpty()) scans.remove(i);
 		
 		//Collections.sort(scans);
 		
@@ -655,9 +668,8 @@ public class CRUSH extends Configurator {
 		for(int i=0; i<8; i++) System.err.print("**********");
 		System.err.println();
 		
-		System.err.println();
 		countdown(5);	
-		System.err.println();
+		
 	}
 	
 	public static void checkJavaVM(int countdown) {
@@ -684,22 +696,23 @@ public class CRUSH extends Configurator {
 			
 			if(countdown > 0) {
 				System.err.println("         You may ignore this warning and proceed at your own risk shortly...");
-				System.err.println();
-			
 				countdown(countdown);
-				System.err.println();
 			}
 		}
 		
 	}
 	
 	public static void countdown(int seconds) {
+		System.err.println();
+		
 		for(int i=seconds; i>0; i--) {
 			System.err.print("\rWill continue in " + i + " seconds.");
 			try { Thread.sleep(1000); }
 			catch(InterruptedException e) {}
 		}
 		System.err.println("\rContinuing...                          ");
+		System.err.println();
+		
 	}
 
 	public static String getFullVersion() {

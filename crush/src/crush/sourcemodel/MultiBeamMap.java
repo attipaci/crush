@@ -58,8 +58,6 @@ public class MultiBeamMap extends ScalarMap {
 	public MultiBeamMap(Instrument<?> instrument, double trackSpacing) {
 		super(instrument);
 		this.trackSpacing = trackSpacing;
-		
-		//preferredStem = "multibeam";
 	}
 	
 	@SuppressWarnings("unchecked")

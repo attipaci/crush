@@ -91,9 +91,9 @@ implements Copiable<ChannelGroup<ChannelType>> {
 	
 	
 	public synchronized boolean slim() {
-		int fromSize = size();
-		int pattern = Channel.FLAG_DEAD | Channel.FLAG_DISCARD;
-		for(int i=size(); --i >= 0; ) if(get(i).isFlagged(pattern)) remove(i);
+		final int fromSize = size();
+		final int pattern = Channel.FLAG_DEAD | Channel.FLAG_DISCARD;
+		for(int i=fromSize; --i >= 0; ) if(get(i).isFlagged(pattern)) remove(i);
 		trimToSize();
 		return size() < fromSize;
 	}

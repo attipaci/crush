@@ -247,9 +247,9 @@ public abstract class SourceMap extends SourceModel {
 		yRange.setMin(yRange.min() - margin.y());
 		
 		Vector2D resolution = resolution();
-		
-		int sizeX = 2 + (int)Math.ceil((xRange.max() - xRange.min()) / resolution.x());
-		int sizeY = 2 + (int)Math.ceil((yRange.max() - yRange.min()) / resolution.y());
+
+		int sizeX = 2 + (int)Math.ceil(xRange.span() / resolution.x());
+		int sizeY = 2 + (int)Math.ceil(yRange.span() / resolution.y());
 	
 		try { 
 			checkForStorage(sizeX, sizeY);	
@@ -396,12 +396,11 @@ public abstract class SourceMap extends SourceModel {
 	}
 	
 	public void add(Integration<?,?> integration, int signalMode) {
-		Configurator option = option("source");
 		Instrument<?> instrument = integration.instrument; 
 
 		// For the first source generation, apply the point source correction directly to the signals.
 		final boolean signalCorrection = integration.sourceGeneration == 0;
-		boolean mapCorrection = option.isConfigured("correct") && !signalCorrection;
+		boolean mapCorrection = hasSourceOption("correct") && !signalCorrection;
 	
 		integration.comments += "Map";
 		if(id != null) integration.comments += "." + id;
@@ -482,6 +481,7 @@ public abstract class SourceMap extends SourceModel {
 		double np = sumpw > 0.0 ? N / sumpw : 0.0;
 		double nf = sumfw > 0 ? N / sumfw : 0.0;
 
+		// TODO revise for composite sources...
 		Dependents parms = integration.dependents.containsKey("source") ? integration.dependents.get("source") : new Dependents(integration, "source");
 		for(Pixel pixel : pixels) {
 			parms.clear(pixel, 0, integration.size());
@@ -509,7 +509,8 @@ public abstract class SourceMap extends SourceModel {
 	public void suggestMakeValid() {
 		super.suggestMakeValid();
 		System.err.println("            * Increase 'grid' for a coarser map pixellization.");
-		if(hasSourceOption("redundancy")) System.err.println("            * Disable redundancy checking ('forget=source.redundancy').");
+		if(hasSourceOption("redundancy")) 
+			System.err.println("            * Disable redundancy checking ('forget=source.redundancy').");
 	}
 	
 	@Override

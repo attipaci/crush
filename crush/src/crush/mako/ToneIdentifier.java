@@ -66,6 +66,7 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 			TRange.scale(Unit.K);
 		}
 		if(options.isConfigured("max")) maxDeviation = options.get("max").getDouble();
+		if(options.isConfigured("attempts")) attempts = options.get("attempts").getInt();
 	}
 	
 	public ToneIdentifier(String fileName) throws IOException {

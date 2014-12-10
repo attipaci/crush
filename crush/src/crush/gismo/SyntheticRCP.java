@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.array;
+package crush.gismo;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
