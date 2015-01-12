@@ -255,7 +255,7 @@ public abstract class Filter {
 		// Start from the 1/f filter cutoff
 		int minf = getHipassIndex();
 		
-		double sum = 0.0, norm = 0.0;;
+		double sum = 0.0, norm = 0.0;
 		
 		// just calculate x=0 component -- O(N)
 		// Below the hipass time-scale, the filter has no effect, so count it as such...

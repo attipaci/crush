@@ -73,8 +73,7 @@ public class SharcFile extends Hashtable<Integer, SharcScan> {
 		this.fileName = fileName;
 		
 		id = new File(fileName).getName();
-		if(id.contains("."));
-		id = id.substring(0, id.lastIndexOf('.'));
+		if(id.contains(".")) id = id.substring(0, id.lastIndexOf('.'));
 		
 		in = new VAXDataInputStream(new BufferedInputStream(new FileInputStream(fileName), bufferSize));
 		readFully();
