@@ -31,6 +31,7 @@ import java.util.StringTokenizer;
 
 import kovacs.math.Vector2D;
 import kovacs.util.Unit;
+import crush.CRUSH;
 import crush.Mount;
 import crush.Scan;
 import crush.SourceModel;
@@ -84,6 +85,8 @@ public class Sharc extends CSOArray<SharcPixel> {
 	@Override
 	public Scan<?, ?> readScan(String descriptor, boolean readFully) throws IOException {
 		if(!hasOption("file")) throw new FileNotFoundException("Unspecified data file. Use the 'file' option.");
+		
+		CRUSH.silent = true;
 		
 		SharcFile file = null;
 		String spec = option("file").getPath();

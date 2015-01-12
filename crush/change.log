@@ -1,15 +1,30 @@
->> GISMO NEFD data (reduce with -faint!)
->> Upload GISMO beam maps
->> test SHARC deconvolve...
+
+2.21-1	(13 January 2014)		
 
 
-2.21-b1	(9 December 2014)		
+	Overview
+	======================================================================
+	The release fixes a few major bugs of the prior release, mainly
+	affecting the post-reduction tools such as 'imagetool' or 'detect' 
+	(see below). It also brings official support for MAKOv2 (Sep. 2014),
+	and brings other smaller fixes and improvement.
+	Upgrading from prior 2.20 releases is strongly recommended. 	
+	======================================================================
 
-	[BUG] {tools} Re-estimation of noise ran amok in 'imagetool', 'detect',
-	etc., causing major problems in the source extraction tool 'detect', 
-	for example. The bug was due to botched legacy support for old maps 
-	created by CRUSH-1.xx. It is hopefully fixed now, while still 
+
+	[BUG] {tools} {post-b1} Re-estimation of noise ran amok in 'imagetool',
+	'detect' etc., causing major problems in the source extraction tool 
+	'detect', for example. The bug was due to botched legacy support for 
+	old maps created by CRUSH-1.xx. It is hopefully fixed now, while still 
 	maintaining legacy support as expected.
+
+	[BUG] {GISMO} {post-b1} Data from 2014-10-20 could not be reduced with 
+	2.21-b1 due to a configuration bug. Fixed for 2.20-b2.
+
+	[BUG] {crushtools} Equatorial (RA/DEC) image output had the wrong 
+	CDELT1 sign (should have been negative, but was written positive). As 
+	such, maps produced by 'imagetool', 'coadd', 'difference', or 'detect'
+	all appeared inverted.
 
 	[NEW] {MAKO2} Initial support for MAKO2.
 
@@ -17,22 +32,15 @@
 	how many fitting attempts are made before the best is chosen for
 	tone identifications (the default is 100).
 
-	[BUG] {b1} Data from 2014-10-20 could not be reduced with 2.21-b1 due
-	to a configuration bug. Fixed for 2.20-b2.
+	[FIX] {util} {post-b1} Smoothing weight normalization to account for 
+	prior smoothing. The fix has no effect on the reduction since smoothing
+	is applied to raw, unsmoothed, images only.
 
-	[BUG] {crushtools} Equatorial (RA/DEC) image output had the wrong 
-	CDELT1 sign (should have been negative, but was written positive). As 
-	such, maps produced by 'imagetool', 'coadd', 'difference', or 'detect'
-	all appeared inverted.
+	[FIX] {util} {post-b1} Deconvolution normalization for imagetool, 
+	show, etc. fixed.
 
-	[FIX] {GridImage} Smoothing weight normalization to account for prior
-	smoothing. The fix has no effect on the reduction since smoothing is
-	applied to raw, unsmoothed, images only.
-
-	[FIX] {tools} Deconvolution normalization for imagetool, show, etc 
-	fixed.
-
-	[FIX] {show} File->Reload did not reset menus as expected. Fixed.
+	[FIX] {show} {post-b1} File->Reload did not reset menus as expected. 
+	Fixed.
 
 	[FIX] {SHARC} Fixed handling of Nyquist component (in fastest index)
 	in the 2D FFT. (see util-change.log)
@@ -54,6 +62,9 @@
 	code, and it has unnecessarily increased the complexity of configuring,
 	reducing transparency and making the source model(s) more bug prone as 
 	a result.
+
+	[CONFIG] {GISMO} {post-b1} Shortened tau table to include only the
+	dates for the run.
 
 	[CONFIG] {GISMO} {post-b1} Updated residual pointing table with new one
 	(This should nmot result in any real change from prior version).

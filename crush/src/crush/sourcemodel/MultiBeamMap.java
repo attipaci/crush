@@ -213,8 +213,7 @@ public class MultiBeamMap extends ScalarMap {
 		*/
 	
 			
-	
-		
+		fft.real2Amplitude(transformer.getData());		
 		isSpectrum = true;
 	}
 	
