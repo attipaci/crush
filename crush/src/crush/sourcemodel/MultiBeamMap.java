@@ -46,6 +46,7 @@ import crush.SourceModel;
 
 public class MultiBeamMap extends ScalarMap {
 	GridMap<Coordinate2D> transformer;
+		
 	Class<SphericalCoordinates> scanningSystem;
 	MultiFFT fft = new MultiFFT();
 
@@ -89,7 +90,7 @@ public class MultiBeamMap extends ScalarMap {
 		int nx = ExtraMath.pow2ceil((int) Math.ceil(map.sizeX() + maxThrow / delta.x()));
 		int ny = ExtraMath.pow2ceil((int) Math.ceil(map.sizeY() + maxThrow / delta.y()));
 		
-		transformer = new GridMap<Coordinate2D>(nx, ny);
+		transformer = new GridMap<Coordinate2D>(nx, ny + 2);		
 		transformer.setGrid(new CartesianGrid2D());
 		transformer.setReference(new Coordinate2D());
 		
@@ -112,6 +113,7 @@ public class MultiBeamMap extends ScalarMap {
 		if(!multibeam.isSpectrum) throw new IllegalStateException("Expecting spectrum to accumulate.");
 		
 		transformer.addWeightedDirect(multibeam.transformer, weight);		
+		
 		isSpectrum = true;
 	}
 
@@ -198,9 +200,9 @@ public class MultiBeamMap extends ScalarMap {
 		
 		loader.process();
 		
+		double w = loader.getResult();
 		transformer.unflag();
-		transformer.setWeight(loader.getResult()); // All frequencies have equal weight before deconvolution
-
+		transformer.setWeight(w); // All frequencies have equal weight before deconvolution
 		
 		/*
 		try { 
@@ -211,7 +213,8 @@ public class MultiBeamMap extends ScalarMap {
 		*/
 	
 			
-		fft.real2Amplitude(transformer.getData());
+	
+		
 		isSpectrum = true;
 	}
 	
@@ -250,13 +253,12 @@ public class MultiBeamMap extends ScalarMap {
 
 		transformer.new Task<Void>() {		
 			@Override
-			public void process(int i, int j) {				
+			public void process(int i, int j) {	
+				// If j points to the imaginary part of the packed complex number then ignore...
 				if((j & 1) != 0) return;
 				
-				// in j, index 1 is the nyquist frequency...
 				int fj = j>>1; 
-				if(j == 1) fj = transformer.sizeY() >> 1;
-
+				
 				// i has positive and negative frequencies...
 				int fi = i;
 				if(i > Nx) fi = i - (Nx<<1);
@@ -278,11 +280,8 @@ public class MultiBeamMap extends ScalarMap {
 					transformer.setValue(i,  j+1, temp);
 				}			
 			}
-		
-	
 		}.process();
 
-		
 	}
 	
 	private void normalizeTransformer() {

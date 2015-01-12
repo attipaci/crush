@@ -87,6 +87,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	protected boolean isDetectorStage = false;
 	protected boolean isValid = false;
 	
+	public int parallelism = 1;		// The desired number of parallel threads to run when processing.
+									// The actual number of threads may be different from this.
+	
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
 	// The constructor of Integration thus copies the Scan instrument for private use...
 	@SuppressWarnings("unchecked")
@@ -827,7 +830,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	public boolean decorrelate(final String modalityName, final boolean isRobust) {
 		
-		Modality<?> modality = instrument.modalities.get(modalityName);
+		final Modality<?> modality = instrument.modalities.get(modalityName);
 		if(modality == null) return false;
 		
 		
@@ -837,11 +840,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(modality.trigger != null) if(!hasOption(modality.trigger)) return false;
 		
-		String left = isRobust ? "[" : "";
-		String right = isRobust ? "]" : "";
+		final String left = isRobust ? "[" : "";
+		final String right = isRobust ? "]" : "";
 		
 		comments += left + modality.id + right;
-		int frameResolution = power2FramesFor(modality.resolution);
+		final int frameResolution = power2FramesFor(modality.resolution);
 		if(frameResolution > 1) comments += "(" + frameResolution + ")";	
 			
 		if(modality instanceof CorrelatedModality) {
