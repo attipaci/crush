@@ -208,8 +208,8 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 
 	
 	@Override
-	public void smooth(double FWHM) {
-		super.smooth(FWHM);
+	public void fastSmooth(double[][] beam, int stepX, int stepY) {
+		super.fastSmooth(beam, stepX, stepY);
 		setUnit(getUnit().name());
 	}
 
