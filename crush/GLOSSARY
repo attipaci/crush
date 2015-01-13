@@ -3154,8 +3154,23 @@
 			relationship.
 			@See: 'tau.<?>.a' for details.
 
+
+:: tau.jctables=<spec>	@Advanced
+			@Since: 2.20
+			@Instrument: SHARC, SHARC-2, MAKO, MAKO-2
+			Specify the location (folder) of the JCMT 183 GHz tau
+			tables. The argument can point to a local directory
+			or an online resource on the web (URL). E.g.:
+
+			  http://www.jach.hawaii.edu/weather/opacity/mk/archive			
+			If the JCMT lookup fails (e.g. because no data is
+			available for the specific date, or using CRUSH 
+			offline), then a fallback option may be specified via
+			the 'maitau.fallback' key. 
+			@See: 'tau.tables', 'maitau.fallback'
+
 :: tau.tables=<path>	@Since: 2.14
-			@Instrument: SHARC2, MAKO
+			@Instrument: SHARC, SHARC2, MAKO, MAKO-2
 			Path to the directory containing the CSO tau tables.
 			The files are assumed to be named by date as 
 			<yyMMdd>.dat, e.g.: '130421.dat'.

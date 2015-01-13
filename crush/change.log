@@ -63,6 +63,10 @@
 	reducing transparency and making the source model(s) more bug prone as 
 	a result.
 
+	[CONFIG] {SHARC-2} {MAKO} The online JCMT 183 GHz tau made to be the 
+	default source of zenith opacity after 2012-02-01 (the CSO shutdown)
+	after which MaiTau is typically no longer available.
+
 	[CONFIG] {LABOCA} RCP data, skydip opacities and calibration tables
 	up to and inclusing 2014-10-21.
 
@@ -99,6 +103,9 @@
 	resonance match. First, if the nearest channel is too far from a
 	known resonance, then it is not considered in the fit. Secodly, it
 	minimizes the reduced chi2 instead of the raw chi2.
+
+	[CODE] Cleaned up tau setting code for CSO instruments. (It was getting
+	messy with the growing number of possibilities to obtain or set tau).
 
 	[CODE] Pixels with null positions are now processed without error.
 
