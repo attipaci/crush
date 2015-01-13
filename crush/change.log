@@ -63,6 +63,9 @@
 	reducing transparency and making the source model(s) more bug prone as 
 	a result.
 
+	[CONFIG] {LABOCA} RCP data, skydip opacities and calibration tables
+	up to and inclusing 2014-10-21.
+
 	[CONFIG] {GISMO} {post-b1} Shortened tau table to include only the
 	dates for the run.
 
