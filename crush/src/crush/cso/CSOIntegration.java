@@ -47,7 +47,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 
 	public CSOIntegration(Scan<InstrumentType, ?> parent) {
 		super(parent);
-
 	}
 	
 	@Override
@@ -233,15 +232,15 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		PrintWriter out = new PrintWriter(tauServer.getOutputStream(), true);
 		BufferedReader in = new BufferedReader(new InputStreamReader(tauServer.getInputStream()));
 
-		while(in.read() != '>'); // Seek for prompt
+		while(in.read() != '>') nonprompt(); // Seek for prompt
 
 		out.println("set noexit"); // Enter into interactive mode (do not disconnect after first command).
 
-		while(in.read() != '>'); // Seek for prompt
+		while(in.read() != '>') nonprompt(); // Seek for prompt
 
 		out.println("set " + id); // Select which tau value to query...
 
-		while(in.read() != '>'); // Seek for prompt
+		while(in.read() != '>') nonprompt(); // Seek for prompt
 
 		out.println("get tau " + scan.timeStamp); // Request tau for the specified date	
 		
@@ -264,6 +263,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		return value;
 	}
 
+	private void nonprompt() {}
+	
 	@Override
 	public String getASCIIHeader() {
 		double eps = 1.0 - Math.exp(-zenithTau / scan.horizontal.sinLat());
