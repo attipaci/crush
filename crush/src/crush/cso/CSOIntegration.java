@@ -136,76 +136,77 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	public void setTau() throws Exception {
 		String source = option("tau").getValue().toLowerCase();
 		
-		if(source.equals("tables")) {
-			source = hasOption("tau.tables") ? option("tau.tables").getValue() : ".";
-			String date = scan.getID().substring(0, scan.getID().indexOf('.'));
-			String spec = date.substring(2, 4) + date.substring(5, 7) + date.substring(8, 10);
-			
-			File file = new File(Util.getSystemPath(source) + File.separator + spec + ".dat");
-			if(!file.exists()) {
-				System.err.print("   WARNING! No tau table found for " + date + "...");
-				System.err.print("            Using default tau.");
-				instrument.getOptions().remove("tau");
-				setTau();
-				return;
-			}
-			
-			CSOTauTable table = CSOTauTable.get(((CSOScan<?,?>) scan).iMJD, file.getPath());
-			table.setOptions(option("tau"));
-			setTau("225GHz", table.getTau(getMJD()));	
-		}
-		else if(source.equals("jctables")) {
-			source = hasOption("tau.jctables") ? option("tau.jctables").getValue() : ".";
-			String date = scan.getID().substring(0, scan.getID().indexOf('.'));
-			String spec = date.substring(0, 10);
-			
-			File file = new File(Util.getSystemPath(source) + File.separator + spec + ".jcmt-183-ghz.dat");
-			if(!file.exists()) {
-				System.err.println("   WARNING! No tau table found for " + date + "...");
-				System.err.println("            Using default tau.");
-				System.err.println("            " + file.getPath());
-				instrument.getOptions().remove("tau");
-				setTau();
-				return;
-			}
-			
-			JCMTTauTable table = JCMTTauTable.get(((CSOScan<?,?>) scan).iMJD, file.getPath());
-			table.setOptions(option("tau"));
-			setTau("225GHz", table.getTau(getMJD()));	
-		}
+		if(source.equals("tables")) setTableTau();
 		else if(source.equals("direct")) setZenithTau(getDirectTau());
-		else {
-			if(source.equals("maitau") && hasOption("maitau.server")) {				
-				System.err.println("   Requesing MaiTau via " + option("maitau.server") + "...");
-				
-				try {
-					try { setTau("350um", getMaiTau("350um")); }
-					catch(NumberFormatException no350) { setTau("225GHz", getMaiTau("225GHz")); }
-				}	
-				catch(Exception e) {
-					if(hasOption("maitau.fallback")) {
-						System.err.print("   WARNING! MaiTau lookup failed. ");
-						source = option("maitau.fallback").getValue().toLowerCase();
-						if(source.equals("maitau")) {
-							System.err.println("Deadlocked fallback option.");
-							throw e;
-						}	
-						System.err.println("Falling back to '" + source + "'.");
-						instrument.setOption("tau=" + source);
-						setTau();
-						return;
-					}
-					else throw e;				
-				}
-			}
-			else super.setTau();
-		}
+		else if(source.equals("maitau") && hasOption("maitau.server")) setMaiTau();	
+		else if(source.equals("jctables") && hasOption("tau.jctables")) setJCMTTableTau();
+		else super.setTau();
 		
 		printEquivalentTaus(zenithTau);
 		
 		double tauLOS = zenithTau / scan.horizontal.sinLat();
 		System.err.println("   Optical load is " + Util.f1.format(((CSOScan<?,?>) scan).ambientT * (1.0 - Math.exp(-tauLOS))) + " K.");
 	
+	}
+	
+	public void setMaiTau() throws Exception {
+		System.err.println("   Requesing MaiTau via " + option("maitau.server") + "...");
+		
+		try {
+			try { setTau("350um", getMaiTau("350um")); }
+			catch(NumberFormatException no350) { setTau("225GHz", getMaiTau("225GHz")); }
+		}	
+		catch(Exception e) { fallbackTau("maitau", e); }	
+	}
+	
+	public void setTableTau() throws Exception {
+		String source = hasOption("tau.tables") ? option("tau.tables").getValue() : ".";
+		String date = scan.getID().substring(0, scan.getID().indexOf('.'));
+		String spec = date.substring(2, 4) + date.substring(5, 7) + date.substring(8, 10);
+		
+		File file = new File(Util.getSystemPath(source) + File.separator + spec + ".dat");
+		if(!file.exists()) {
+			System.err.print("   WARNING! No tau table found for " + date + "...");
+			System.err.print("            Using default tau.");
+			instrument.getOptions().remove("tau");
+			setTau();
+			return;
+		}
+		
+		CSOTauTable table = CSOTauTable.get(((CSOScan<?,?>) scan).iMJD, file.getPath());
+		table.setOptions(option("tau"));
+		setTau("225GHz", table.getTau(getMJD()));	
+	}
+	
+	public void setJCMTTableTau() throws Exception {
+		String source = hasOption("tau.jctables") ? option("tau.jctables").getValue() : ".";
+		String date = scan.getID().substring(0, scan.getID().indexOf('.'));
+		String spec = date.substring(0, 10);
+		String fileName = Util.getSystemPath(source) + File.separator + spec + ".jcmt-183-ghz.dat";
+		
+		try {
+			JCMTTauTable table = JCMTTauTable.get(((CSOScan<?,?>) scan).iMJD, fileName);
+			table.setOptions(option("tau"));
+			setTau("225GHz", table.getTau(getMJD()));	
+		}
+		catch(IOException e) { fallbackTau("jctables", e); }
+	}
+	
+	private void fallbackTau(String from, Exception e) throws Exception {
+		if(hasOption("maitau.fallback")) {
+			System.err.println("   WARNING! Tau lookup failed: " + e.getMessage());
+			String source = option("maitau.fallback").getValue().toLowerCase();
+			if(source.equals(from)) {
+				System.err.println("   WARNING! Deadlocked fallback option!");
+				throw e;
+			}	
+			System.err.println("   ... Falling back to '" + source + "'.");
+			instrument.setOption("tau=" + source);
+			setTau();
+			return;
+		}
+		else throw e;	
+		
 	}
 	
 	public double getMaiTau(String id) throws IOException {

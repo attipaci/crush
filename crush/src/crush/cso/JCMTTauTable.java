@@ -112,8 +112,7 @@ public class JCMTTauTable  extends LocalAverage<JCMTTauTable.Entry> {
 		
 		
 	}	
-	
-	
+		
 	private BufferedReader getFileReader(String fileName) throws IOException {
 		return new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 	}
