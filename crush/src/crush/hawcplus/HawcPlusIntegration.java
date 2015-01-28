@@ -22,7 +22,7 @@
  ******************************************************************************/
 // Copyright (c) 2009 Attila Kovacs 
 
-package crush.gismo;
+package crush.hawcplus;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,7 +36,7 @@ import crush.*;
 import crush.fits.HDUReader;
 import nom.tam.fits.*;
 
-public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> implements GroundBased {
+public class HawcPlusIntegration extends Integration<HawcPlus, HawcPlusFrame> implements GroundBased {
 	/**
 	 * 
 	 */
@@ -45,33 +45,17 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	HorizontalCoordinates reuseTrackingCenter = new HorizontalCoordinates();
 	boolean ignoreIRIG = false;
 	
-	public GismoIntegration(GismoScan parent) {
+	public HawcPlusIntegration(HawcPlusScan parent) {
 		super(parent);
 	}	
 	
 	@Override
 	public Object clone() {
-		GismoIntegration clone = (GismoIntegration) super.clone();
+		HawcPlusIntegration clone = (HawcPlusIntegration) super.clone();
 		clone.reuseTrackingCenter = new HorizontalCoordinates();
 		return clone;
 	}
-	
-	@Override
-	public void validate() {
-		super.validate();
-		
-		if(hasOption("read.sae")) {
-			levelSAE();
-			
-			SAEModality saeMode = (SAEModality) instrument.modalities.get("sae");
-			if(saeMode != null) {
-				System.err.println("   Initializing SAE signals for decorrelation");
-				saeMode.init(this);
-			}
-		
-			discardSAEFields();
-		}
-	}
+
 	
 	@Override
 	public void setTau() throws Exception {
@@ -88,8 +72,8 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	}
 	
 	@Override
-	public GismoFrame getFrameInstance() {
-		return new GismoFrame((GismoScan) scan);
+	public HawcPlusFrame getFrameInstance() {
+		return new HawcPlusFrame((HawcPlusScan) scan);
 	}
 	
 	protected void read(BinaryTableHDU hdu, boolean oldFormat) throws Exception {
@@ -109,11 +93,11 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 		ensureCapacity(records);
 		for(int t=records; --t>=0; ) add(null);
 		
-		if(oldFormat) new OldGismoReader(hdu).read();
-		else new GismoReader(hdu).read();
+		if(oldFormat) new OldHawcPlusReader(hdu).read();
+		else new HawcPlusReader(hdu).read();
 	}
 		
-	class GismoReader extends HDUReader {	
+	class HawcPlusReader extends HDUReader {	
 		private float[] DAC, SAE;
 		private double[] MJD, LST, dX, dY, AZE, ELE;
 		private double[] X0, Y0, cEL; //AZ, EL, cAZ, cEL, tAZ, tEL, posA;
@@ -121,9 +105,9 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 		private byte[] SDI;
 		private int channels;
 		
-		private final GismoScan gismoScan = (GismoScan) scan;
+		private final HawcPlusScan hawcPlusScan = (HawcPlusScan) scan;
 		
-		public GismoReader(BinaryTableHDU hdu) throws FitsException {
+		public HawcPlusReader(BinaryTableHDU hdu) throws FitsException {
 			super(hdu);
 		
 			int iDAC = hdu.findColumn("DAC");
@@ -208,15 +192,15 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 					// Skip processing frames with non-zero cal flag...
 					if(CAL != null) {
 						calFlag = CAL[i];
-						if(CAL[i] != 0) if(gismoScan.skipReconstructed || calFlag != CALFLAG_RECONSTRUCTED) return;
+						if(CAL[i] != 0) if(hawcPlusScan.skipReconstructed || calFlag != CALFLAG_RECONSTRUCTED) return;
 					}	
 						
 					// Skip data with invalid flags 
 					for(int bit=0, from=6*i; bit<6; bit++) if(SDI[from+bit] > 0) digitalFlag |= 1 << bit;
-					if(!ignoreIRIG) if((digitalFlag & GismoFrame.DIGITAL_IRIG) == 0) return;
+					if(!ignoreIRIG) if((digitalFlag & HawcPlusFrame.DIGITAL_IRIG) == 0) return;
 								
 					// Create the frame object only if it cleared the above hurdles...
-					final GismoFrame frame = new GismoFrame(gismoScan);
+					final HawcPlusFrame frame = new HawcPlusFrame(hawcPlusScan);
 					frame.index = i;
 					
 					// Set the frame flags...
@@ -238,25 +222,25 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 					// Use ALWAYS the scanning offsets around the object coordinate...
 					// First make sure the horizontal coordinates of the tracking center
 					// are correct even if tracking (e.g. equatorial). 
-					if(gismoScan.basisSystem == HorizontalCoordinates.class) {
+					if(hawcPlusScan.basisSystem == HorizontalCoordinates.class) {
 						frame.horizontal = new HorizontalCoordinates(X0[i], Y0[i]);
-						if(gismoScan.basisOffset != null) 
-							frame.horizontal.addOffset(gismoScan.basisOffset);
+						if(hawcPlusScan.basisOffset != null) 
+							frame.horizontal.addOffset(hawcPlusScan.basisOffset);
 					}
-					else if(gismoScan.basisSystem == EquatorialCoordinates.class) {
+					else if(hawcPlusScan.basisSystem == EquatorialCoordinates.class) {
 						frame.equatorial = new EquatorialCoordinates(X0[i], Y0[i], scan.equatorial.epoch);
-						if(gismoScan.basisOffset != null) 
-							frame.equatorial.addOffset(gismoScan.basisOffset);
+						if(hawcPlusScan.basisOffset != null) 
+							frame.equatorial.addOffset(hawcPlusScan.basisOffset);
 						frame.calcHorizontal();	
 					}
 					else {
 						try {
-							CelestialCoordinates celestial = (CelestialCoordinates) gismoScan.basisSystem.newInstance();
+							CelestialCoordinates celestial = (CelestialCoordinates) hawcPlusScan.basisSystem.newInstance();
 							celestial.set(X0[i], Y0[i]);
-							if(gismoScan.basisOffset != null) 
-								celestial.addOffset(gismoScan.basisOffset);
+							if(hawcPlusScan.basisOffset != null) 
+								celestial.addOffset(hawcPlusScan.basisOffset);
 							
-							if(celestial instanceof Precessing) ((Precessing) celestial).setEpoch(gismoScan.epoch);
+							if(celestial instanceof Precessing) ((Precessing) celestial).setEpoch(hawcPlusScan.epoch);
 					
 							frame.equatorial = celestial.toEquatorial();
 							frame.calcHorizontal();
@@ -270,18 +254,18 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 		
 					// Load the scanning offsets...
 					frame.horizontalOffset = new Vector2D(dX[i], dY[i]);
-					if(!gismoScan.projectedOffsets) frame.horizontalOffset.scaleY(frame.horizontal.cosLat());
+					if(!hawcPlusScan.projectedOffsets) frame.horizontalOffset.scaleY(frame.horizontal.cosLat());
 					
 					// Convert scanning offsets to horizontal if necessary...
-					if(gismoScan.offsetSystem == EquatorialCoordinates.class)
+					if(hawcPlusScan.offsetSystem == EquatorialCoordinates.class)
 						frame.equatorialToHorizontal(frame.horizontalOffset);
 					
 					// Add the static horizontal offsets
-					if(gismoScan.horizontalOffset != null) frame.horizontalOffset.add(gismoScan.horizontalOffset);
+					if(hawcPlusScan.horizontalOffset != null) frame.horizontalOffset.add(hawcPlusScan.horizontalOffset);
 										
 					// Add the static equatorial offset
-					if(gismoScan.equatorialOffset != null) {
-						offset.copy(gismoScan.equatorialOffset);
+					if(hawcPlusScan.equatorialOffset != null) {
+						offset.copy(hawcPlusScan.equatorialOffset);
 						frame.equatorialToHorizontal(offset);
 						frame.horizontalOffset.add(offset);
 					}
@@ -314,16 +298,16 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	}	
 	
 	
-	class OldGismoReader extends HDUReader {	
+	class OldHawcPlusReader extends HDUReader {	
 		private float[] DAC, RA, DEC, AZ, EL, AZE, ELE, LST;
 		private double[] MJD;
 		private int[] NS, SN, CAL;
 		private byte[] SDI;
 		private int channels;
 		
-		private final GismoScan gismoScan = (GismoScan) scan;
+		private final HawcPlusScan hawcPlusScan = (HawcPlusScan) scan;
 		
-		public OldGismoReader(BinaryTableHDU hdu) throws FitsException {
+		public OldHawcPlusReader(BinaryTableHDU hdu) throws FitsException {
 			super(hdu);
 		
 			int iDAC = hdu.findColumn("DAC");
@@ -399,10 +383,10 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 						
 					// Skip data with invalid flags 
 					for(int bit=0, from=6*i; bit<6; bit++) if(SDI[from+bit] > 0) digitalFlag |= 1 << bit;
-					if((digitalFlag & GismoFrame.DIGITAL_IRIG) == 0) return;
+					if((digitalFlag & HawcPlusFrame.DIGITAL_IRIG) == 0) return;
 								
 					// Create the frame object only if it cleared the above hurdles...
-					final GismoFrame frame = new GismoFrame(gismoScan);
+					final HawcPlusFrame frame = new HawcPlusFrame(hawcPlusScan);
 					
 					// Set the frame flags...
 					frame.calFlag = calFlag;
@@ -468,17 +452,17 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	}	
 	
 	
-	void levelSAE() { for(GismoPixel pixel : instrument) levelSAE(pixel); }
+	void levelSAE() { for(HawcPlusPixel pixel : instrument) levelSAE(pixel); }
 	
-	void levelSAE(GismoPixel channel) {
+	void levelSAE(HawcPlusPixel channel) {
 		double sum = 0.0;
 		int n=0;
-		for(GismoFrame exposure : this) if(exposure != null) {
+		for(HawcPlusFrame exposure : this) if(exposure != null) {
 			sum += exposure.SAE[channel.index];
 			n++;
 		}
 		float ave = n > 0 ? (float) (sum / n) : 0.0F;
-		for(GismoFrame exposure : this) if(exposure != null) exposure.SAE[channel.index] -= ave;		
+		for(HawcPlusFrame exposure : this) if(exposure != null) exposure.SAE[channel.index] -= ave;		
 	}
 
 	
@@ -494,7 +478,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	}
 	
 	public void discardSAEFields() {
-		for(GismoFrame exposure : this) if(exposure != null) exposure.SAE = null;
+		for(HawcPlusFrame exposure : this) if(exposure != null) exposure.SAE = null;
 	}
 	
 	private boolean checkSAEComplete() {
@@ -523,7 +507,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 		for(int i=0; i<4; i++) out.print("\t" + instrument.thirdStageFeedback[i]);
 		
 		for(int c=0; c<instrument.size(); c++) {
-			GismoPixel pixel = instrument.get(c);
+			HawcPlusPixel pixel = instrument.get(c);
 			out.print("\t" + Util.e3.format(pixel.saeGain));
 		}
 		out.println();

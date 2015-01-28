@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,183 +20,224 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+
 package crush.mako;
 
-import crush.*;
-import crush.cso.CSOArray;
-import nom.tam.fits.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.StringTokenizer;
 
-import java.io.*;
-import java.util.*;
-
+import crush.CRUSH;
+import crush.Scan;
+import crush.array.DistortionModel;
+import nom.tam.fits.FitsException;
+import nom.tam.fits.Header;
+import nom.tam.fits.HeaderCardException;
 import kovacs.math.Vector2D;
-import kovacs.util.*;
+import kovacs.text.TableFormatter;
+import kovacs.util.Unit;
+import kovacs.util.Util;
 
-
-public abstract class Mako<MakoPixelType extends MakoPixel> extends CSOArray<MakoPixelType> {
+public class Mako extends AbstractMako<MakoPixel> {
+	
+	
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -8482957165297427388L;
-	
-	public Vector2D pixelSize;
-	protected Vector2D arrayPointingCenter;
-	int pixels;
-	
-	double nativeSamplingInterval;	
+	private static final long serialVersionUID = -3325545547718854921L;
+	public static int rows = 16;
+	public static int cols = 27;
 
-		
-	// Information about the IQ -> shift calibration...
-	int calPositions;
-	int calParms;
-	String calModelName;
-	String calVersion;
+	double Tsky = Double.NaN;
 	
+	ToneIdentifier identifier;
 	
-	
-	protected Mako(String name, int npix) {
-		super(name, npix);
-		resolution = 8.5 * Unit.arcsec;
+	public Mako() {
+		super("mako", rows * cols);
 	}
-	
-	protected abstract Vector2D getDefaultArrayPointingCenter();
-
-	protected abstract Vector2D getDefaultArrayRotationCenter();
-	
-	//protected abstract int pixelCount();
 	
 	@Override
-	public Instrument<MakoPixelType> copy() {
-		Mako<MakoPixelType> copy = (Mako<MakoPixelType>) super.copy();
-		
-		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
-		
-		return copy;
+	public MakoPixel getChannelInstance(int backendIndex) {
+		return new MakoPixel(this, backendIndex);
+	}	
+	
+	@Override
+	public Scan<?, ?> getScanInstance() {
+		return new MakoScan<Mako>(this);
+	}
+	
+	@Override
+	protected Vector2D getDefaultArrayPointingCenter() {
+		return new Vector2D((rows+1) / 2.0, (cols+1) / 2.0);
+	}
+
+	@Override
+	protected Vector2D getDefaultArrayRotationCenter() {
+		return getDefaultArrayPointingCenter();
+	}
+
+	@Override
+	public int maxPixels() {
+		return rows * cols;
 	}
 	
 
-	public Hashtable<String, MakoPixelType> idLookup() {
-		Hashtable<String, MakoPixelType> lookup = new Hashtable<String, MakoPixelType>(pixels);
-		for(MakoPixelType pixel : this) if(pixel.id != null) lookup.put(pixel.getID(), pixel);
-		return lookup;
+	public Vector2D getPixelPosition(Vector2D size, double row, double col) {
+		return new Vector2D(size.x() * (col - 0.5 * (Mako.cols-1)), size.y() * (row - 0.5 * (Mako.rows-1)));
 	}
+	
+	@Override
+	public Vector2D getPointingCenterOffset() {
+		// Update the rotation center...
+		Vector2D arrayRotationCenter = getDefaultArrayRotationCenter();
+		if(hasOption("rcenter")) arrayRotationCenter = option("rcenter").getVector2D();
+	
+		return getPixelPosition(pixelSize, arrayPointingCenter.x() - arrayRotationCenter.x(), arrayPointingCenter.y() - arrayRotationCenter.y());
+	}
+	
 	
 	@Override
 	public void loadChannelData() {
-		arrayPointingCenter = getDefaultArrayPointingCenter();
-		super.loadChannelData();
-	}
-
-	protected abstract void calcPositions(Vector2D pixelSize);
-	
-	@Override
-	public Hashtable<Integer, Pixel> getPixelLookup() {
-		Hashtable<Integer, Pixel> table = new Hashtable<Integer, Pixel>();
-		for(MakoPixelType pixel : this) if(pixel.id != null) table.put(pixel.id.index, pixel);
-		return table;
-	}
-	
-	protected abstract void parseDataHeader(Header header) throws HeaderCardException, FitsException;
-	
-	@Override
-	public void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
-		Header header = hdu.getHeader();
-		samplingInterval = integrationTime = 1.0 / header.getDoubleValue("SAMPLING");
+		if(size() == 0) return;
 		
-		super.parseScanPrimaryHDU(hdu);
-	}
-		
-	protected void parseReadoutHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
-		if(hasOption("chirp")) parseChirpReadoutHDU(hdu);
-		else parseCalibrationHDU(hdu);
-	}
-	
-	protected void parseCalibrationHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
-		Header header = hdu.getHeader();
-	
-		calPositions = header.getIntValue("CALPTS", 53);
-		calParms = header.getIntValue("PARAMS", 0);
-		calVersion = header.getStringValue("SOFTVER");
-		calModelName = header.getStringValue("CALMODEL");
-		double binWidth = header.getDoubleValue("BININHZ") * Unit.Hz;
-		
-		// read in the pixel data...
-		pixels = hdu.getNRows();
-		if(!isEmpty()) clear();
-		ensureCapacity(pixels);
-		
-		int iBin = hdu.findColumn("Tone Bin");
-		int iFlag = hdu.findColumn("Tone Flags");
-		int iPts = hdu.findColumn("Points");
-		int iErr = hdu.findColumn("Fit Error");
-		
-		System.err.print(" MAKO stream has " + pixels + " tones. ");
-		
-		int blinds = 0;
-		
-		for(int c=0; c<pixels; c++) {
-			MakoPixelType pixel = getChannelInstance(c);
-			Object[] row = hdu.getRow(c);
-			
-			pixel.toneBin = ((int[]) row[iBin])[0];
-			pixel.toneFrequency = binWidth * pixel.toneBin;
-			pixel.validCalPositions = ((int[]) row[iPts])[0];
-			pixel.calError = ((float[]) row[iErr])[0];
-			
-			if(iFlag >= 0) if(((int[]) row[iFlag])[0] != 0) {
-				pixel.flag(Channel.FLAG_BLIND);
-				blinds++;
+		if(hasOption("pixelid")) {
+			try {
+				identifier = new ToneIdentifier(option("pixelid"));	
+				double guessT = (hasOption("pixelid.guesst") ? option("pixelid.guesst").getDouble() : 150.0) * Unit.K;
+				Tsky = identifier.match(new ResonanceList<MakoPixel>(getObservingChannels()), guessT);
 			}
-			else add(pixel);
-		}	
+			catch(IOException e) {
+				System.err.println(" WARNING! Cannot identify tones from '" + option("pixelid").getValue() + "'."); 
+				if(CRUSH.debug) e.printStackTrace();
+			}
+		}
+				
+		if(identifier != null && hasOption("assign")) {	
+			try { assignPixels(option("assign").getValue()); }
+			catch(IOException e) { 
+				System.err.println(" WARNING! Cannot assign pixels from '" + option("assign").getValue() + "'."); 
+				if(CRUSH.debug) e.printStackTrace();
+			}
+		}
+		else System.err.println(" WARNING! Tones are not assigned to pixels. Cannot make regular maps.");
 		
-		if(iFlag < 0) System.err.println(" WARNING! Data has no information on blind tones.");
-		else if(blinds > 0) System.err.println(" Ignoring " + blinds + " blind tones.");
-		else System.err.println(" Stream contains no blind tones :-).");
+		
+		// Do not flag unassigned pixels when beam-mapping...
+		if(hasOption("source.type")) if(option("source.type").equals("beammap")) 
+				for(AbstractMakoPixel pixel : this) pixel.unflag(AbstractMakoPixel.FLAG_UNASSIGNED);
+		
+		// Update the pointing center...
+		if(hasOption("pcenter")) arrayPointingCenter = option("pcenter").getVector2D();
+		
+		Vector2D pixelSize = AbstractMakoPixel.defaultSize;
+		
+		// Set the pixel size...
+		if(hasOption("pixelsize")) {
+			pixelSize = new Vector2D();
+			StringTokenizer tokens = new StringTokenizer(option("pixelsize").getValue(), " \t,:xX");
+			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
+			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
+		}
+		if(hasOption("mirror")) { pixelSize.scaleX(-1.0); }
+		if(hasOption("zoom")) { pixelSize.scale(option("zoom").getDouble()); }
+		if(hasOption("stretch")) { 
+			double skew = option("stretch").getDouble();
+			pixelSize.scaleX(skew);
+			pixelSize.scaleY(1.0/skew);
+		}
+		
+		calcPositions(pixelSize);
+		
+		checkRotation();
+		
+		super.loadChannelData();
 		
 	}
 	
-	protected void parseChirpReadoutHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {			
-		//int iFreq = hdu.findColumn("Resonance Frequency");
+	@Override
+	protected void calcPositions(Vector2D size) {
+		pixelSize = size;
 		
-		float[] freqs = (float[]) hdu.getRow(0)[0];
-			
-		// read in the pixel data...
-		pixels = freqs.length;
-		if(!isEmpty()) clear();
-		ensureCapacity(pixels);
-			
-		System.err.print(" MAKO chirp stream has " + pixels + " resonances. ");
+		// Make all pixels the same size. Also calculate their distortionless positions...
+		for(AbstractMakoPixel pixel : this) {
+			pixel.size = size;
+			pixel.calcNominalPosition();
+		}
 		
-		for(int c=0; c<pixels; c++) {
-			MakoPixelType pixel = getChannelInstance(c);
+		Vector2D center = getPixelPosition(size, arrayPointingCenter.x() - 1.0, arrayPointingCenter.y() - 1.0);
+		
+		if(hasOption("distortion")) {
+			System.err.println(" Correcting for focal-plane distortion.");
+			DistortionModel model = new DistortionModel();
+			model.setOptions(option("distortion"));	
 			
-			pixel.toneFrequency = freqs[c];
-			add(pixel);
-		}	
+			for(AbstractMakoPixel pixel : this) model.distort(pixel.getPosition());
+			model.distort(center);
+		}
+		
+		setReferencePosition(center);
+	}
+
+	public void assignPixels(String fileSpec) throws IOException {
+		if(identifier == null) throw new IllegalStateException(" Assigning pixels requires tone identifications first.");
+		
+		System.err.println(" Loading pixel assignments from " + fileSpec);
+
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Util.getSystemPath(fileSpec))));
+		String line = null;
+		
+		ResonanceList<MakoPixel> associations = new ResonanceList<MakoPixel>(pixels);
+		
+		double guessT = (hasOption("assign.guesst") ? option("assign.guesst").getDouble() : 300.0) * Unit.K;
+		
+		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+			StringTokenizer tokens = new StringTokenizer(line, ", \t");
+			MakoPixel pixel = getChannelInstance(-1);
 			
+			pixel.toneFrequency = Double.parseDouble(tokens.nextToken());
+			pixel.row = Integer.parseInt(tokens.nextToken()) - 1;
+			pixel.col = Integer.parseInt(tokens.nextToken()) - 1;
+
+			associations.add(pixel);
+		}
+
+		in.close();
+
+		System.err.println(" Found pixel assignments for " + associations.size() + " resonances.");
+		
+		identifier.match(associations, guessT);
+		associations.assign(this);
 	}
 	
-
+	// Assuming tone id's are at 4.2K load and maximum movement is measured at room temperature -- 22 C)
 	@Override
-	public void readWiring(String fileName) throws IOException {}
-
-	@Override
-	public abstract int maxPixels();
-	
-	
-	
-	@Override
-	public String getCommonHelp() {
-		return super.getCommonHelp() + 
-				"     -fazo=        Correct the pointing with this FAZO value.\n" +
-				"     -fzao=        Correct the pointing with this FZAO value.\n";
+	public double getLoadTemperature() {
+		double Tcold = 4.2 * Unit.K;
+		double Thot = 295.16 * Unit.K;
+		return Tcold + Tsky * (Thot - Tcold);
 	}
 	
 	@Override
-	public String getRCPHeader() { return super.getRCPHeader() + "\tKIDfreq"; }
+	public String getFormattedEntry(String name, String formatSpec) {
+		if(name.equals("Tres")) return Util.defaultFormat(Tsky / Unit.K, TableFormatter.getNumberFormat(formatSpec));
+		else return super.getFormattedEntry(name, formatSpec);
+	}
+	
+	@Override
+	public String getChannelDataHeader() {
+		return "pixelid\t" + super.getChannelDataHeader() + "\teff";
+	}
 
-	public static int DEFAULT_ARRAY = 0;
+	
+
+	@Override
+	protected void parseDataHeader(Header header) throws HeaderCardException, FitsException {
+		// Pointing Center
+		arrayPointingCenter = new Vector2D();
+		arrayPointingCenter.setX(header.getDoubleValue("CRPIX3", (rows + 1) / 2.0));
+		arrayPointingCenter.setY(header.getDoubleValue("CRPIX2", (cols + 1) / 2.0));
+	}
 	
 }
-

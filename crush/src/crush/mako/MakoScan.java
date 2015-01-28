@@ -37,7 +37,7 @@ import kovacs.math.Vector2D;
 import kovacs.util.*;
 
 
-public class MakoScan<MakoType extends Mako<?>> extends CSOScan<MakoType, MakoIntegration<MakoType>> {
+public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType, MakoIntegration<MakoType>> {
 	/**
 	 * 
 	 */

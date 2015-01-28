@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.StringTokenizer;
 
-import crush.mako.MakoPixel;
+import crush.mako.AbstractMakoPixel;
 import crush.mako.ResonanceList;
 import kovacs.data.fitting.AmoebaMinimizer;
 import kovacs.math.Range;
@@ -206,7 +206,7 @@ public class ToneIdentifier2 extends ArrayList<ResonanceID2> implements Cloneabl
 			tone.row = -1;
 			tone.col = -1;
 				
-			tone.unflag(MakoPixel.FLAG_UNASSIGNED);
+			tone.unflag(AbstractMakoPixel.FLAG_UNASSIGNED);
 			
 			if(!Double.isNaN(id.gain)) tone.gain = id.gain;
 		}

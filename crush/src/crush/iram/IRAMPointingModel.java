@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.gismo;
+package crush.iram;
 
 import java.io.*;
 import java.util.StringTokenizer;
@@ -32,14 +32,14 @@ import kovacs.util.Unit;
 import kovacs.util.Util;
 
 public class IRAMPointingModel {
-	double[] P = new double[1+CONSTANTS];
-	double[] c = new double[1+CONSTANTS];
-	double[] s = new double[1+CONSTANTS];
+	public double[] P = new double[1+CONSTANTS];
+	public double[] c = new double[1+CONSTANTS];
+	public double[] s = new double[1+CONSTANTS];
 	
-	double dydT = 0.0, dxdT = 0.0, y0 = 0.0;
+	public double dydT = 0.0, dxdT = 0.0, y0 = 0.0;
 	
 	
-	boolean isStatic = false;
+	public boolean isStatic = false;
 	
 	
 	public IRAMPointingModel() {}

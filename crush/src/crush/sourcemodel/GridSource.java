@@ -53,7 +53,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	 * 
 	 */
 	private static final long serialVersionUID = -7928156781161894347L;
-	public Instrument<?> instrument;
+	private Instrument<?> instrument;
 	public Vector<Scan<?, ?>> scans = new Vector<Scan<?, ?>>();
 
 	public String commandLine;
@@ -75,6 +75,12 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	public void reset(boolean clearContent) {
 		super.reset(clearContent);
 		integrationTime = 0.0;
+	}
+	
+	public Instrument<?> getInstrument() { return instrument; }
+	
+	public void setInstrument(Instrument<?> instrument) {
+		this.instrument = instrument;
 	}
 	
 	@Override
@@ -136,7 +142,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		GridSource<CoordinateType> regrid = (GridSource<CoordinateType>) super.getRegrid(toGrid);
 		return regrid;
 	}
-
+	
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException, FitsException, IOException {
 		super.editHeader(cursor);

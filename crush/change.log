@@ -1,3 +1,28 @@
+>> Use online resources instead of local
+>> prepare crush-data.tar-gz / zip for offline use
+>> Instructions for using offline data...
+
+
+	[NEW] Lookup and interpolation tables now can be specified to fetch
+	online resources via HTTP. Thus, tau lookup for the APEX cameras,
+	GISMO or CSO cameras can all refer to online tables (See 'tau'
+	'tau.tables', tau.jctables' options). Same goes for APEX calibration
+	tables (see 'scaling'). Using online resources means that tau and
+	calibration data can always stay current and up-to-date, and also
+	allows for smaller distribution packages.
+
+	[CODE] All reliance on old FFT classes now removed. (The old FFT
+	classes are gone for good!).
+
+	[CODE] {IRAM} IRAM-specific data (e.g. pointing model, scan-id, tau
+	tables) have been moved to a subpackage (crush.iram).
+
+	[CODE] {GISMO} In preparation for GISMO-2, common functionality has
+	been abstractified.
+
+	[CODE] {MAKO} Common functionality between MAKO and MAKO-2 are now
+	in classes renamed as 'Abstract...', for clarity.
+
 
 2.21-1	(13 January 2014)		
 

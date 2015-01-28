@@ -159,11 +159,11 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	}
 	
 	public void setTableTau() throws Exception {
-		String source = hasOption("tau.tables") ? option("tau.tables").getValue() : ".";
+		String source = hasOption("tau.tables") ? option("tau.tables").getPath() : ".";
 		String date = scan.getID().substring(0, scan.getID().indexOf('.'));
 		String spec = date.substring(2, 4) + date.substring(5, 7) + date.substring(8, 10);
 		
-		File file = new File(Util.getSystemPath(source) + File.separator + spec + ".dat");
+		File file = new File(source + File.separator + spec + ".dat");
 		if(!file.exists()) {
 			System.err.print("   WARNING! No tau table found for " + date + "...");
 			System.err.print("            Using default tau.");
@@ -178,10 +178,10 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	}
 	
 	public void setJCMTTableTau() throws Exception {
-		String source = hasOption("tau.jctables") ? option("tau.jctables").getValue() : ".";
+		String source = hasOption("tau.jctables") ? option("tau.jctables").getPath() : ".";
 		String date = scan.getID().substring(0, scan.getID().indexOf('.'));
 		String spec = date.substring(0, 10);
-		String fileName = Util.getSystemPath(source) + File.separator + spec + ".jcmt-183-ghz.dat";
+		String fileName = source + File.separator + spec + ".jcmt-183-ghz.dat";
 		
 		try {
 			JCMTTauTable table = JCMTTauTable.get(((CSOScan<?,?>) scan).iMJD, fileName);
@@ -232,20 +232,17 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		PrintWriter out = new PrintWriter(tauServer.getOutputStream(), true);
 		BufferedReader in = new BufferedReader(new InputStreamReader(tauServer.getInputStream()));
 
-		while(in.read() != '>') nonprompt(); // Seek for prompt
+		while(in.read() != '>') skipNonPrompt(); // Seek for prompt
 
 		out.println("set noexit"); // Enter into interactive mode (do not disconnect after first command).
-
-		while(in.read() != '>') nonprompt(); // Seek for prompt
+		while(in.read() != '>') skipNonPrompt(); // Seek for prompt
 
 		out.println("set " + id); // Select which tau value to query...
-
-		while(in.read() != '>') nonprompt(); // Seek for prompt
+		while(in.read() != '>') skipNonPrompt(); // Seek for prompt
 
 		out.println("get tau " + scan.timeStamp); // Request tau for the specified date	
 		
 		double value = Double.NaN;
-		
 		try { 
 			value = Double.parseDouble(in.readLine().trim());
 			if(!Double.isNaN(value)) System.err.println("   ---> MaiTau(" + id + ") = " + Util.f3.format(value));
@@ -263,7 +260,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		return value;
 	}
 
-	private void nonprompt() {}
+	private void skipNonPrompt() {}
 	
 	@Override
 	public String getASCIIHeader() {

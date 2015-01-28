@@ -22,13 +22,9 @@
  ******************************************************************************/
 // Copyright (c) 2009 Attila Kovacs 
 
-package crush.gismo;
+package crush.hawcplus;
 
 import crush.*;
-import crush.astro.PointingTable;
-import crush.iram.IRAMPointingModel;
-import crush.iram.IRAMScanID;
-import crush.iram.IRAMTauTable;
 import nom.tam.fits.*;
 
 import java.io.*;
@@ -45,7 +41,7 @@ import kovacs.text.TableFormatter;
 import kovacs.util.*;
 
 
-public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements GroundBased, Weather {
+public class HawcPlusScan extends Scan<HawcPlus, HawcPlusIntegration> implements GroundBased, Weather {
 	/**
 	 * 
 	 */
@@ -57,7 +53,6 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	double ambientT, pressure, humidity, windAve, windPeak, windDirection;
 	double fitsVersion = Double.NaN;
 	String scanID, obsType, operator;
-	IRAMPointingModel observingModel, tiltCorrections;
 		
 	public CoordinateEpoch epoch;
 	public Class<? extends SphericalCoordinates> basisSystem;
@@ -68,13 +63,13 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	public Vector2D nasmythOffset, equatorialOffset, horizontalOffset, pakoOffsets;
 	public Vector2D basisOffset = new Vector2D();
 	
-	public GismoScan(AbstractGismo instrument) {
+	public HawcPlusScan(HawcPlus instrument) {
 		super(instrument);
 	}
 	
 	@Override
-	public GismoIntegration getIntegrationInstance() {
-		return new GismoIntegration(this);
+	public HawcPlusIntegration getIntegrationInstance() {
+		return new HawcPlusIntegration(this);
 	}
 
 	@Override
@@ -88,55 +83,6 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		super.validate();
 		double PA = 0.5 * (getFirstIntegration().getFirstFrame().getParallacticAngle() + getLastIntegration().getLastFrame().getParallacticAngle());
 		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");	
-	}
-	
-	
-	@Override
-	public Vector2D getPointingCorrection(Configurator option) {
-		Vector2D correction = super.getPointingCorrection(option);
-		IRAMPointingModel model = null;
-		
-		if(option.isConfigured("model")) {
-			try { 
-				double UT = (getMJD() % 1.0) * Unit.day;
-				model = new IRAMPointingModel(option.get("model").getPath());
-			
-				// Keep the pointing model referenced to the nominal array center even if
-				// pointing on a different location on the array...
-				model.addNasmythOffset(instrument.getPointingCenterOffset());	
-				
-				if(option.isConfigured("model.static")) model.setStatic(true);
-				
-				Vector2D modelCorr = model.getCorrection(horizontal, UT, ambientT);
-				if(!option.isConfigured("model.incremental")) modelCorr.subtract(observingModel.getCorrection(horizontal, UT, ambientT));	
-				
-				System.err.println("   Got pointing from model: " + 
-						Util.f1.format(modelCorr.x() / Unit.arcsec) + ", " +
-						Util.f1.format(modelCorr.y() / Unit.arcsec) + " arcsec."
-				);
-
-				if(correction == null) correction = modelCorr;
-				else correction.add(modelCorr);
-			}
-			catch(IOException e) {
-				System.err.println("WARNING! Cannot read pointing model from " + option.get("model").getValue());
-			}
-		}
-			
-		if(option.isConfigured("table")) {
-			try { 
-				if(model == null) model = new IRAMPointingModel();
-				String logName = option.get("table").getPath();
-				correction.add(PointingTable.get(logName).getIncrement(getMJD(), ambientT, horizontal, model));
-			}
-			catch(Exception e) {
-				System.err.println("WARNING! No incremental correction: " + e.getMessage());
-				if(CRUSH.debug) e.printStackTrace();
-			}
-		}
-
-		return correction;
-		
 	}
 	
 	@Override
@@ -285,7 +231,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		instrument.validate(this);	
 		clear();
 
-		GismoIntegration integration = new GismoIntegration(this);
+		HawcPlusIntegration integration = new HawcPlusIntegration(this);
 		integration.read((BinaryTableHDU) HDU[2], isOldFormat);
 		add(integration);
 		
@@ -679,13 +625,13 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	@Override 
 	public int compareTo(Scan<?, ?> scan) {
 		try {
-			int dateComp = dateFormat.parse(date).compareTo(dateFormat.parse(((GismoScan) scan).date));
+			int dateComp = dateFormat.parse(date).compareTo(dateFormat.parse(((HawcPlusScan) scan).date));
 			if(dateComp != 0) return dateComp;
 			if(getSerial() == scan.getSerial()) return 0;
 			return getSerial() < scan.getSerial() ? -1 : 1;
 		}
 		catch(ParseException e) {
-			System.err.println("WARNING! Cannot parse date: '" + date + "' or '" + ((GismoScan) scan).date + "'.");
+			System.err.println("WARNING! Cannot parse date: '" + date + "' or '" + ((HawcPlusScan) scan).date + "'.");
 			return 0;
 		}	
 	}

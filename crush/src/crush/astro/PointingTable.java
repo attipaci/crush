@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.gismo;
+package crush.astro;
 
 import java.io.IOException;
 import java.util.*;
@@ -37,8 +37,8 @@ import kovacs.math.Vector2D;
 import kovacs.util.LogFile;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-
 import crush.CRUSH;
+import crush.iram.IRAMPointingModel;
 
 
 public class PointingTable extends LocalAverage<PointingTable.Entry> {

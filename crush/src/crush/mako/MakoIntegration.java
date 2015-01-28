@@ -29,7 +29,7 @@ import kovacs.util.*;
 import crush.cso.CSOIntegration;
 import crush.fits.HDUReader;
 
-public class MakoIntegration<MakoType extends Mako<?>> extends CSOIntegration<MakoType, MakoFrame> {
+public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegration<MakoType, MakoFrame> {
 	/**
 	 * 
 	 */

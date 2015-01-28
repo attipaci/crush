@@ -65,7 +65,7 @@ public class ScalarMap extends SourceMap {
 	@Override
 	public void setInstrument(Instrument<?> instrument) {
 		super.setInstrument(instrument);
-		if(map != null) map.instrument = instrument;
+		if(map != null) map.setInstrument(instrument);
 	}
 
 	@Override
@@ -132,7 +132,7 @@ public class ScalarMap extends SourceMap {
 			List<Double> values = option("grid").getDoubles();
 			if(values.size() == 1) gridSize.set(values.get(0), values.get(0));
 			else gridSize.set(values.get(0), values.get(1));
-			gridSize.scale(getInstrument().getSizeUnit());
+			gridSize.scale(getInstrument().getSizeUnitValue());
 		}
 		
 		map.setResolution(gridSize.x(), gridSize.y());
@@ -224,7 +224,7 @@ public class ScalarMap extends SourceMap {
 		System.err.println(" Applying source model:");
 			
 		
-		AstroMap model = new AstroMap(fileName, map.instrument);
+		AstroMap model = new AstroMap(fileName, map.getInstrument());
 		
 		/*
 		double renorm = map.getImageBeamArea() / model.getImageBeamArea();
@@ -359,7 +359,7 @@ public class ScalarMap extends SourceMap {
 		
 		if(hasOption("pointing")) if(option("pointing").equals("auto") || option("pointing").equals("suggest")) {
 			double optimal = hasOption("smooth.optimal") ? 
-					option("smooth.optimal").getDouble() * scan.instrument.getSizeUnit() :
+					option("smooth.optimal").getDouble() * scan.instrument.getSizeUnitValue() :
 					scan.instrument.resolution;
 	
 			map.smoothTo(optimal);
@@ -400,7 +400,7 @@ public class ScalarMap extends SourceMap {
 		if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
 		
 		double filterScale = directive.equals("auto") ? 
-				5.0 * getSourceSize() : Double.parseDouble(directive) * getInstrument().getSizeUnit();
+				5.0 * getSourceSize() : Double.parseDouble(directive) * getInstrument().getSizeUnitValue();
 			
 		double filterBlanking = (allowBlanking && filter.isConfigured("blank")) ? filter.get("blank").getDouble() : Double.NaN;
 		
@@ -440,7 +440,7 @@ public class ScalarMap extends SourceMap {
 		}
 		map.generation++; // Increment the map generation...
 		
-		map.instrument.resolution = getAverageResolution();
+		map.getInstrument().resolution = getAverageResolution();
 			
 		double blankingLevel = getBlankingLevel();
 		
@@ -784,7 +784,7 @@ public class ScalarMap extends SourceMap {
 				List<Double> offsets = option("write.png.crop").getDoubles();
 				if(offsets.isEmpty()) thumbnail.autoCrop();
 				else {
-					double sizeUnit = getInstrument().getSizeUnit();
+					double sizeUnit = getInstrument().getSizeUnitValue();
 					double dXmin = offsets.get(0) * sizeUnit;
 					double dYmin = offsets.size() > 0 ? offsets.get(1) * sizeUnit : dXmin;
 					double dXmax = offsets.size() > 1 ? offsets.get(2) * sizeUnit : -dXmin;

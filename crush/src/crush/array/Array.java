@@ -81,7 +81,7 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	}
 
 	@Override
-	public double getSizeUnit() {
+	public double getSizeUnitValue() {
 		return Unit.arcsec;
 	}
 	

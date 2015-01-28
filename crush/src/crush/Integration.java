@@ -414,8 +414,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void calcScanSpeedStats() {
 		aveScanSpeed = getMedianScanningVelocity(0.5 * Unit.s);
 		System.err.println("   Typical scanning speeds are " 
-				+ Util.f1.format(aveScanSpeed.value()/(instrument.getSizeUnit()/Unit.s)) 
-				+ " +- " + Util.f1.format(aveScanSpeed.rms()/(instrument.getSizeUnit()/Unit.s)) 
+				+ Util.f1.format(aveScanSpeed.value()/(instrument.getSizeUnitValue()/Unit.s)) 
+				+ " +- " + Util.f1.format(aveScanSpeed.rms()/(instrument.getSizeUnitValue()/Unit.s)) 
 				+ " " + instrument.getSizeName() + "/s");
 	}
 	
@@ -504,7 +504,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}	
 	
 	public int power2FramesFor(double time) {
-		return OldFFT.getPaddedSize(Math.max(1, Math.min(size(), (int)Math.round(Math.min(time, filterTimeScale) / instrument.samplingInterval / Math.sqrt(2.0)))));	
+		return ExtraMath.pow2ceil(Math.max(1, Math.min(size(), (int)Math.round(Math.min(time, filterTimeScale) / instrument.samplingInterval / Math.sqrt(2.0)))));	
 	}
 	
 	public int filterFramesFor(String spec, double defaultValue) {
@@ -528,7 +528,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		frames = Math.max(1, framesFor(driftT));
 		frames = Math.min(frames, size());
 		
-		return OldFFT.getPaddedSize(frames);
+		return ExtraMath.pow2ceil(frames);
 	}
 
 	public FrameType getFirstFrame() {
@@ -1812,7 +1812,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	// Redo with Filter...
 	public synchronized void highPassFilter(double T) {
-		int Nt = OldFFT.getPaddedSize(size());
+		int Nt = ExtraMath.pow2ceil(size());
 	
 		// sigmat sigmaw = 1 ->
 		// Dt sigmaw = 2.35 
@@ -1836,7 +1836,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public synchronized void filter(ChannelGroup<? extends Channel> channels, double[] response) {
 		comments += "F";
 		
-		float[] signal = new float[OldFFT.getPaddedSize(size())];
+		float[] signal = new float[ExtraMath.pow2ceil(size())];
 		
 		
 		for(final Channel channel : channels) {
@@ -2311,7 +2311,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		data.put("Relative_Gain", new double[] { gain });
 		data.put("NEFD", new double[] { nefd } );
 		data.put("Hipass_Timescale", new double[] { filterTimeScale / Unit.s } );
-		data.put("Filter_Resolution", new double[] { 0.5/OldFFT.getPaddedSize(framesFor(filterTimeScale)) } );
+		data.put("Filter_Resolution", new double[] { 0.5/ExtraMath.pow2ceil(framesFor(filterTimeScale)) } );
 	}
 	
 	
@@ -2591,7 +2591,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		else if(task.equals("weighting.frames")) {
 			int n = hasOption("weighting.frames.resolution") ? filterFramesFor(option("weighting.frames.resolution").getValue(), 10.0 * Unit.s) : 1;
-			getTimeWeights(OldFFT.getPaddedSize(n));
+			getTimeWeights(ExtraMath.pow2ceil(n));
 			updatePhases();
 		}
 		else if(task.startsWith("despike")) {
@@ -2940,7 +2940,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else if(name.equals("chopthrow")) {
 			Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;
 			if(chopper == null) return "---";
-			else return  Util.defaultFormat(2.0 * chopper.amplitude / instrument.getSizeUnit(), f);
+			else return  Util.defaultFormat(2.0 * chopper.amplitude / instrument.getSizeUnitValue(), f);
 		}
 		else if(name.equals("chopeff")) {
 			Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;

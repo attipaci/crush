@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.21-1
+ * @version 2.22-a1
  * 
  */
 public class CRUSH extends Configurator {
@@ -45,8 +45,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.21-1";
-	private static String revision = "";
+	private static String version = "2.22-a1";
+	private static String revision = "devel.2";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -57,6 +57,8 @@ public class CRUSH extends Configurator {
 	public String commandLine;
 	
 	public static int maxThreads = 1;
+	
+	private int configDepth = 0;	// Used for 'nested' output of invoked configurations.
 	
 	static { 
 		Locale.setDefault(Locale.US);
@@ -141,8 +143,6 @@ public class CRUSH extends Configurator {
 		else super.process(key, value);
 	}
 	
-	
-	private int configDepth = 0;
 
 	@Override
 	public void readConfig(String fileName) {
@@ -381,7 +381,7 @@ public class CRUSH extends Configurator {
 	
 		if(isConfigured("extended")) System.out.println(" Assuming extended source(s).");
 		
-		System.out.println(" Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getSizeUnit()) + " " + instrument.getSizeName() + " sized source(s).");
+		System.out.println(" Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getSizeUnitValue()) + " " + instrument.getSizeName() + " sized source(s).");
 		
 		
 		if(isConfigured("rounds")) rounds = get("rounds").getInt();

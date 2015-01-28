@@ -32,11 +32,11 @@ public class MakoFrame extends HorizontalFrame {
 		super(parent);
 	}
 	
-	public void parseData(float[] value, int from, Mako<?> mako) {
+	public void parseData(float[] value, int from, AbstractMako<?> mako) {
 		setSize(mako.size());
 		
 		for(int c=mako.size(); --c >= 0; ) {
-			data[c] = -value[from + ((MakoPixel) mako.get(c)).toneIndex];
+			data[c] = -value[from + ((AbstractMakoPixel) mako.get(c)).toneIndex];
 			if(Float.isNaN(data[c])) {
 				data[c] = 0.0F;
 				sampleFlag[c] = Frame.SAMPLE_SKIP;

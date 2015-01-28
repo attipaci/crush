@@ -28,6 +28,7 @@ package crush.astro;
 import kovacs.astro.*;
 import kovacs.data.SphericalGrid;
 import kovacs.math.SphericalCoordinates;
+import kovacs.util.Unit;
 import crush.Instrument;
 import crush.sourcemodel.GridSource;
 
@@ -41,11 +42,12 @@ public class AstroMap extends GridSource<SphericalCoordinates> {
 
 	public AstroMap() {
 		setGrid(new SphericalGrid());
+		setPreferredGridUnit(Unit.get("arcsec"));
 	}
 	
 	public AstroMap(Instrument<?> instrument) {
 		this();
-		this.instrument = instrument;
+		setInstrument(instrument);
 	}
 	
 	public AstroMap(String fileName, Instrument<?> instrument) throws Exception { 
@@ -59,7 +61,7 @@ public class AstroMap extends GridSource<SphericalCoordinates> {
 	}
 	
 	public void filterCorrect() {
-		filterCorrect(instrument.resolution, getSkip(filterBlanking));
+		filterCorrect(getInstrument().resolution, getSkip(filterBlanking));
 	}
 	
 	public void undoFilterCorrect() {

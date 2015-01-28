@@ -15,15 +15,15 @@ import crush.CRUSH;
 import crush.Frame;
 import crush.Integration;
 import crush.Scan;
+import crush.mako.AbstractMako;
 import crush.mako.Mako;
-import crush.mako.Mako1;
-import crush.mako.Mako1Pixel;
+import crush.mako.MakoPixel;
 import crush.mako.MakoFrame;
 import crush.mako.MakoIntegration;
 import crush.mako.MakoScan;
 
 public class BeamMapper extends CRUSH {
-	MakoScan<Mako1> scan;
+	MakoScan<Mako> scan;
 	Vector2D[] pos = null;
 	
 	
@@ -49,10 +49,10 @@ public class BeamMapper extends CRUSH {
 	@Override
 	public void validate() {}
 	
-	public MakoScan<Mako1> read(Mako1 mako, String fileName) throws Exception {
+	public MakoScan<Mako> read(Mako mako, String fileName) throws Exception {
 		Fits fits = new Fits(new File(fileName));
-		MakoScan<Mako1> scan = (MakoScan<Mako1>) mako.getScanInstance();
-		MakoIntegration<Mako1> integration = (MakoIntegration<Mako1>) scan.getIntegrationInstance();
+		MakoScan<Mako> scan = (MakoScan<Mako>) mako.getScanInstance();
+		MakoIntegration<Mako> integration = (MakoIntegration<Mako>) scan.getIntegrationInstance();
 		
 		int xmin = hasOption("xmin") ? option("xmin").getInt() : 0;
 		int t=0;
@@ -90,14 +90,14 @@ public class BeamMapper extends CRUSH {
 	public Configurator option(String key) { return get(key); }
 	
 	public void analyze() throws Exception {
-		Mako1 mako = new Mako1();
+		Mako mako = new Mako();
 		mako.setOptions(this);
 		mako.initialize();
 		
 		scan = read(mako, option("scan").getValue());
 		int channels = scan.get(0).get(0).data.length;
 		for(int c=0; c<channels; c++) {
-			Mako1Pixel pixel = new Mako1Pixel((Mako1) mako, c);
+			MakoPixel pixel = new MakoPixel((Mako) mako, c);
 			mako.add(pixel);
 		}	
 		
@@ -122,7 +122,7 @@ public class BeamMapper extends CRUSH {
 		}
 	}
 		
-	public void print(Mako<?> mako, Vector2D[] pos) {
+	public void print(AbstractMako<?> mako, Vector2D[] pos) {
 		System.err.println("RESULTS(" + mako.size() + ")");
 		
 		for(int c=0; c<mako.size(); c++) {

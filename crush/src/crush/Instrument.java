@@ -88,7 +88,7 @@ implements TableFormatter.Entries {
 		isInitialized = false;
 		startupOptions = null;
 		
-		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnit();
+		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnitValue();
 		if(hasOption("gain")) gain = option("gain").getDouble();
 	}
 	
@@ -353,11 +353,13 @@ implements TableFormatter.Entries {
 
 	public double getSourceSize() {
 		double sourceSize = hasOption("sourcesize") ? 
-				Math.hypot(option("sourcesize").getDouble() * getSizeUnit(), resolution) : resolution;
+				Math.hypot(option("sourcesize").getDouble() * getSizeUnitValue(), resolution) : resolution;
 				return sourceSize;
 	}
 	
-	public abstract double getSizeUnit();
+	public final Unit getSizeUnit() { return new Unit(getSizeName(), getSizeUnitValue()); }
+	
+	public abstract double getSizeUnitValue();
 	
 	public abstract String getSizeName();
 	
@@ -1027,12 +1029,12 @@ implements TableFormatter.Entries {
 		else if(name.equals("channels")) return Integer.toString(size());
 		else if(name.equals("maxchannels")) return Integer.toString(storeChannels);
 		else if(name.equals("mount")) return mount.name();
-		else if(name.equals("resolution")) return Util.defaultFormat(resolution / getSizeUnit(), f);
+		else if(name.equals("resolution")) return Util.defaultFormat(resolution / getSizeUnitValue(), f);
 		else if(name.equals("sizeunit")) return getSizeName();
 		else if(name.equals("ptfilter")) return Util.defaultFormat(getAverageFiltering(), f);
-		else if(name.equals("FWHM")) return Util.defaultFormat(getAverageBeamFWHM() / getSizeUnit(), f);
-		else if(name.equals("minFWHM")) return Util.defaultFormat(getMinBeamFWHM() / getSizeUnit(), f);
-		else if(name.equals("maxFWHM")) return Util.defaultFormat(getMaxBeamFWHM() / getSizeUnit(), f);
+		else if(name.equals("FWHM")) return Util.defaultFormat(getAverageBeamFWHM() / getSizeUnitValue(), f);
+		else if(name.equals("minFWHM")) return Util.defaultFormat(getMinBeamFWHM() / getSizeUnitValue(), f);
+		else if(name.equals("maxFWHM")) return Util.defaultFormat(getMaxBeamFWHM() / getSizeUnitValue(), f);
 		else if(name.equals("stat1f")) return Util.defaultFormat(getOneOverFStat(), f);
 		
 		return TableFormatter.NO_SUCH_DATA;
