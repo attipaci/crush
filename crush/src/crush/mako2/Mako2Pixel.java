@@ -26,10 +26,10 @@ package crush.mako2;
 import java.util.StringTokenizer;
 
 import kovacs.util.Util;
-import crush.mako.Mako1;
-import crush.mako.MakoPixel;
+import crush.mako.Mako;
+import crush.mako.AbstractMakoPixel;
 
-public class Mako2Pixel extends MakoPixel {
+public class Mako2Pixel extends AbstractMakoPixel {
 
 	public Mako2Pixel(Mako2 array, int zeroIndex) {
 		super(array, zeroIndex);
@@ -41,7 +41,7 @@ public class Mako2Pixel extends MakoPixel {
 	public void setRowCol(int row, int col) {
 		this.row = row;
 		this.col = col;
-		setFixedIndex(row * Mako1.cols + col);
+		setFixedIndex(row * Mako.cols + col);
 	}	
 	
 

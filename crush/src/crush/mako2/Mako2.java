@@ -31,8 +31,8 @@ import crush.CRUSH;
 import crush.Channel;
 import crush.Scan;
 import crush.array.DistortionModel;
-import crush.mako.Mako;
-import crush.mako.MakoPixel;
+import crush.mako.AbstractMako;
+import crush.mako.AbstractMakoPixel;
 import crush.mako.ResonanceList;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
@@ -42,7 +42,7 @@ import kovacs.text.TableFormatter;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 
-public class Mako2 extends Mako<Mako2Pixel> {
+public class Mako2 extends AbstractMako<Mako2Pixel> {
 	/**
 	 * 
 	 */
@@ -128,12 +128,12 @@ public class Mako2 extends Mako<Mako2Pixel> {
 			// TODO why are pixels flagged other than unassigned...
 			System.err.println("!!! No tone ids. Maps are bogus...");
 			//for(MakoPixel pixel : this) pixel.unflag(MakoPixel.FLAG_UNASSIGNED);
-			for(MakoPixel pixel : this) pixel.unflag();
+			for(AbstractMakoPixel pixel : this) pixel.unflag();
 		}
 		
 		// Do not flag unassigned pixels when beam-mapping...
 		if(hasOption("source.type")) if(option("source.type").equals("beammap")) 
-				for(MakoPixel pixel : this) pixel.unflag(MakoPixel.FLAG_UNASSIGNED);
+				for(AbstractMakoPixel pixel : this) pixel.unflag(AbstractMakoPixel.FLAG_UNASSIGNED);
 		
 		// Update the pointing center...
 		updateArrayPointingCenter();
@@ -192,7 +192,7 @@ public class Mako2 extends Mako<Mako2Pixel> {
 	protected void calcPositions(Vector2D size) {
 		pixelSize = size;
 		// Make all pixels the same size. Also calculate their distortionless positions...
-		for(MakoPixel pixel : this) {
+		for(AbstractMakoPixel pixel : this) {
 			pixel.size = size;
 			pixel.calcNominalPosition();
 		}
@@ -205,7 +205,7 @@ public class Mako2 extends Mako<Mako2Pixel> {
 			DistortionModel model = new DistortionModel();
 			model.setOptions(option("distortion"));	
 			
-			for(MakoPixel pixel : this) model.distort(pixel.getPosition());
+			for(AbstractMakoPixel pixel : this) model.distort(pixel.getPosition());
 			model.distort(new Vector2D(0.0, 0.0));
 		}
 		

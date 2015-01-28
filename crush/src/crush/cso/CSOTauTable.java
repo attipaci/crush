@@ -67,7 +67,7 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
 	protected void read(int iMJD, String fileName) throws IOException {
 		System.err.print("   [Loading tau data] ");
 		
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+		BufferedReader in = Util.getReader(fileName);
 		
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') if(line.charAt(0) != ' ') {

@@ -37,10 +37,10 @@ import crush.mako2.Mako2;
 import crush.mako2.Mako2Pixel;
 
 
-public class MakoModel<PixelType extends MakoPixel> {
+public class MakoModel<PixelType extends AbstractMakoPixel> {
 	double rotation = 0.0;
 	DistortionModel distortion = new DistortionModel();
-	Mako<PixelType> model;
+	AbstractMako<PixelType> model;
 	Hashtable<Double, Vector2D> positions = new Hashtable<Double, Vector2D>();
 	Hashtable<Double, Double> sourceGains = new Hashtable<Double, Double>();
 	Vector2D offset = new Vector2D();
@@ -51,7 +51,7 @@ public class MakoModel<PixelType extends MakoPixel> {
 		MakoModel<?> model = null;
 		
 		int ver = Integer.parseInt(args[0]);
-		if(ver == 1) model = new MakoModel<Mako1Pixel>(new Mako1());
+		if(ver == 1) model = new MakoModel<MakoPixel>(new Mako());
 		if(ver == 2) model = new MakoModel<Mako2Pixel>(new Mako2());
 		
 		try {
@@ -61,15 +61,15 @@ public class MakoModel<PixelType extends MakoPixel> {
 		catch(Exception e) { e.printStackTrace(); }
 	}
 
-	public MakoModel(Mako<PixelType> mako) {
+	public MakoModel(AbstractMako<PixelType> mako) {
 		this.model = mako;
 		for(int index=0; index< model.pixels; index++) model.add(model.getChannelInstance(index));
 	}
 	
-	public MakoPixel findNearest(Vector2D pixelPos) {
-		MakoPixel nearest = null;
+	public AbstractMakoPixel findNearest(Vector2D pixelPos) {
+		AbstractMakoPixel nearest = null;
 		double mind = Double.POSITIVE_INFINITY;
-		for(MakoPixel pixel : model) {
+		for(AbstractMakoPixel pixel : model) {
 			double d = pixel.getPosition().distanceTo(pixelPos);
 			if(d < mind) {
 				mind = d;
@@ -80,7 +80,7 @@ public class MakoModel<PixelType extends MakoPixel> {
 	}
 	
 	private void recalc() {
-		for(MakoPixel pixel : model) {
+		for(AbstractMakoPixel pixel : model) {
 			pixel.calcNominalPosition();
 			pixel.getPosition().scale(1.0 / Unit.arcsec);
 			distortion.distort(pixel.getPosition());
@@ -141,7 +141,7 @@ public class MakoModel<PixelType extends MakoPixel> {
 				int n = 0;
 				double sum = 0.0;
 				for(Vector2D pos : positions.values()) {
-					MakoPixel pixel = findNearest(pos);
+					AbstractMakoPixel pixel = findNearest(pos);
 					double d = pixel.getPosition().distanceTo(pos);
 					//if(d > tolerance) continue;
 					sum += d*d;
@@ -191,7 +191,7 @@ public class MakoModel<PixelType extends MakoPixel> {
 		
 		for(Double f : sorted) {
 			System.out.print(Util.f1.format(f) + "\t");
-			MakoPixel pixel = findNearest(positions.get(f));
+			AbstractMakoPixel pixel = findNearest(positions.get(f));
 			System.out.print((pixel.row+1) + "\t" + (pixel.col+1) + "\t");
 			System.out.println(Util.f1.format(pixel.getPosition().x()) 
 					+ "\t" + Util.f1.format(pixel.getPosition().y())

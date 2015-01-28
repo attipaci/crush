@@ -63,7 +63,7 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 	protected void read(String datafile) throws IOException {	
 		System.err.print("   [Loading calibration data] ");
 		
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(datafile)));
+		BufferedReader in = Util.getReader(datafile);
 
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {

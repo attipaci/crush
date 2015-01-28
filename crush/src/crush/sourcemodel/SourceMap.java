@@ -122,7 +122,7 @@ public abstract class SourceMap extends SourceModel {
 	}
 	
 	public double getSmoothing(String spec) {
-		double sizeUnit = getInstrument().getSizeUnit();
+		double sizeUnit = getInstrument().getSizeUnitValue();
 		double beam = getInstrument().resolution;
 		double pixelSmoothing = getPixelizationSmoothing();
 		double fwhm = 0.0;
@@ -231,7 +231,7 @@ public abstract class SourceMap extends SourceModel {
 			List<Double> values = sourceOption("margin").getDoubles();
 			margin.setX(values.get(0));
 			margin.setY(values.size() > 1 ? values.get(1) : margin.x());
-			margin.scale(getInstrument().getSizeUnit());
+			margin.scale(getInstrument().getSizeUnitValue());
 		}
 		
 		// Figure out what offsets the corners of the map will have...
@@ -515,7 +515,7 @@ public abstract class SourceMap extends SourceModel {
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
-		if(name.equals("smooth")) return TableFormatter.getNumberFormat(formatSpec).format(smoothing / getInstrument().getSizeUnit());
+		if(name.equals("smooth")) return TableFormatter.getNumberFormat(formatSpec).format(smoothing / getInstrument().getSizeUnitValue());
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	

@@ -63,7 +63,7 @@ public class GenericInstrument extends Instrument<Channel> {
 	}
 
 	@Override
-	public double getSizeUnit() {
+	public double getSizeUnitValue() {
 		// TODO Auto-generated method stub
 		return 0;
 	}

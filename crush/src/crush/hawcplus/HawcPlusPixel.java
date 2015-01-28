@@ -22,7 +22,7 @@
  ******************************************************************************/
 // Copyright (c) 2009 Attila Kovacs 
 
-package crush.gismo;
+package crush.hawcplus;
 
 import java.util.StringTokenizer;
 
@@ -32,14 +32,14 @@ import kovacs.util.*;
 import crush.Channel;
 import crush.array.SimplePixel;
 
-public class GismoPixel extends SimplePixel {
+public class HawcPlusPixel extends SimplePixel {
 	public int row, col, mux, pin;
 	public Vector2D size = defaultSize;
 	public double muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0, saeGain = 0.0;
 	
 	// 16 x 8 (rows x cols)
 	
-	public GismoPixel(AbstractGismo array, int zeroIndex) {
+	public HawcPlusPixel(HawcPlus array, int zeroIndex) {
 		super(array, zeroIndex+1);
 		row = zeroIndex / 8;
 		col = zeroIndex % 8;
@@ -55,7 +55,7 @@ public class GismoPixel extends SimplePixel {
 	
 	@Override
 	public Channel copy() {
-		GismoPixel copy = (GismoPixel) super.copy();
+		HawcPlusPixel copy = (HawcPlusPixel) super.copy();
 		if(size != null) copy.size = (Vector2D) size.clone();
 		return copy;		
 	}

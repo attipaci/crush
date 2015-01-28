@@ -25,12 +25,10 @@ package crush.filters;
 import java.util.Arrays;
 
 import kovacs.data.DataPoint;
-import kovacs.data.OldFFT;
 import kovacs.data.Statistics;
 import kovacs.math.Range;
 import kovacs.util.Configurator;
-
-
+import kovacs.util.ExtraMath;
 import crush.Channel;
 import crush.Integration;
 
@@ -78,7 +76,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 		// Specify critical level as power, but use as amplitude...
 		if(hasOption("level")) level = Math.max(1.0, Math.sqrt(option("level").getDouble()));
 		
-		int windowSize = OldFFT.getPaddedSize(2 * nF);
+		int windowSize = ExtraMath.pow2ceil(2 * nF);
 		int n = data.length;
 		if(n < windowSize) windowSize = n;
 		windows = n / windowSize;

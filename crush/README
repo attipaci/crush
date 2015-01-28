@@ -2,9 +2,9 @@
 		      *** A Guide to Using CRUSH-2. *** 
 
 			       Attila Kovacs 
-			  <attila[AT]submm.caltech.edu>
+		       <attila[AT]submm.caltech.edu>
 
-			  Last updated: 2 July 2014
+		       Last updated: 14 January 2015
 
 
 
@@ -86,6 +86,10 @@ the following instruments (in alphabetical order):
 
     MAKO	(350um) KID technology demonstration camera for the CSO.
 
+    MAKO-2	(350um, 850um) Second-generation KID technology demonstration
+		camera for the CSO with dual-pol pixel response, and dual-band 
+		imaging capability.
+
     p-ArTeMiS	(200um, 350um, 450um) 3-color camera for APEX (prototype)
     		www.apex-telescope.org/instruments/pi/artemis
 
@@ -144,27 +148,47 @@ upon specific request and/or arrangement...
    reside. 
 
   
-   UNIX (POSIX) and MacOS Installation (from tarball)
-   --------------------------------------------------
-   After unpacking in the desired location, you may optionally wish to run 
-   'install.sh' (as root or with 'sudo') to install the CRUSH man pages and 
-   allow global access to the executables, by creating links to them in 
-   '/usr/bin'. Check the success of the installation by typing 'man crush'. 
+   A. Installation from tarball (Mac OS X and generic POSIX/UNIX)
+   --------------------------------------------------------------
+   Unpack the tarball in the desired location (e.g. under '~/astrotools/'):
+
+	> cd ~/astrotools
+	> tar xzf crush-2.xx-x.tar.gz
+
+   You may optionally wish to run 'install.sh' (as root or with 'sudo') to 
+   install the CRUSH man pages and allow global access to the executables, by 
+   creating links to them in '/usr/bin'. 
+
+	> cd crush
+	> sudo sh install.sh
+
+   Check the success of the above optinal step by typing 
+
+	> man crush
+ 
    You should see a basic description on the crush command-line syntax and
    options.
 
 
-   Linux Installation (from packages)
-   ----------------------------------
-   Use the package manager on your system to install. E.g.:
+   B. Linux Installation (from packages)
+   -------------------------------------
+   Use the package manager on your system to install. E.g., on RPM-based 
+   systems (Fedora, RHEL, CentOS, SUSE) you may type:
 
-	> yum localinstall --nogpg crush-<version>.rpm
+	> sudo yum localinstall --nogpg crush-<version>-noarch.rpm
+
+   On Debian based systems (e.g. Ubuntu, Mint) the same is achieved by
+
+	> sudo apt-get install crush-<version>.deb
 
    Or, you may simply double click the package icon from a file browser. 
 
 
-   Windows Installation
-   --------------------
+
+   C. Windows Installation
+   -----------------------
+   Extract the ZIP archive into the desired location.
+
    To run CRUSH under Windows, copy/move the .bat files from under the 
    'windows' subdirectory into the main crush directory. Additionally, you may 
    want to add the crush installation directory to your path (in 
@@ -174,29 +198,32 @@ upon specific request and/or arrangement...
 
 	set CRUSH=<the-crush-directory>
 
-   into your 'autoexec.bat'). A note of caution: while Windows is generally
-   case insensitive, this is not necessarily true for Java. When setting paths,
-   such as 'datapath', it is advised that drive letters appear capitalized, 
-   e.g. as 'C:\data', as well as anything else that might warrant it (e.g. 
+   in your 'autoexec.bat'. 
+
+   A note of caution: while Windows is generally case insensitive, this is not 
+   necessarily the case for Java paths. Therefore, when setting paths, such as 
+   'datapath', it is advised that drive letters appear capitalized, e.g. as 
+   'C:\data', as well as anything else that might warrant it (e.g. 
    "My Documents").
  
  
 
    Java Configuration
    ------------------
-   CRUSH requires Java 1.5 (also called Java 5) or newer. In all likelihood 
-   you already have Java Runtime Environment (JRE) installed on your system,
-   which should suffice. To check what version you have type:
+   CRUSH requires Java 1.6 (also called Java 6) or newer. In all likelihood 
+   you already have a suitable Java Runtime Environment (JRE) installed on 
+   your machine. To check what version of Java you have type:
 
 	> java -version
 
    on the command line. Note, that The GNU java a.k.a. gij (default on some 
-   older RedHat and Fedora systems) is unreliable, and will not run crush. 
+   older RedHat and Fedora systems) is painfully slow and unreliable, and will 
+   not always run CRUSH correctly. 
    If you need Java, you can download the latest JRE from
 
 	http://www.java.com 
 
-   After making sure that you have a usable version of Java 1.5 or newer on 
+   After making sure that you have a usable version of Java 1.6 or newer on 
    your system, enter the crush installation directory.
 
    Edit the 'wrapper.sh' script (or 'wrapper.bat' in Windows), and adjust the 
@@ -225,17 +252,21 @@ upon specific request and/or arrangement...
 
    You can create/edit your default configuration by editing 'default.cfg'
    (either in the installation folder or '~/.crush2', or in the appropriate
-   instrument subdirectory within.). 
-   An example set of typical user-specific entries are shown below:
+   instrument subdirectory within it). 
+   As an example a user configuration for LABOCA data can be placed into 
+   '~/.crush2/laboca/default.cfg', with the a content:
 	
 	datapath ~/data
 	outpath ~/images
 	project T-79.F-0002-2006
 
-   This tells crush to look for raw data files in '~/data', write all output
-   to '~/images', and specifies the project to be 'T-79.F-0002-2006' 
-   (used for APEX data only). The tilde characte '~' can be used as a
-   shorthand for the home directory (similarly to UNIX).
+   This tells crush that when reducing LABOCA data it should look for raw data 
+   files in '~/data', write all output to '~/images', and specifies the default
+   project to be 'T-79.F-0002-2006' 
+ 
+   The tilde character '~' is used as a shorthand for the home directory 
+   (similarly to UNIX shell syntax). In your configuration you can also refer 
+   to environment variables or other settings (see more about it further below).
 
    Of course, you can create any number of configurations, name them as you 
    like place them where you like (practical if you have many data locations, 
@@ -274,8 +305,6 @@ options on the console.
   detect	A source extraction tool for maps. You should make
 		sure that the noise is close enuogh to Gaussian (e.g. with
 		'histogram') before relying on this. 
-
-  jiggle	Align multiple images w.r.t. one-another.
 
   esorename	Rename ESO archive files to their original names.
 
@@ -723,8 +752,8 @@ options on the console.
 	For example, you want to read data from a sub-directory of the current
 	datapath. This requires the new datapath to refer back to its prior
 	value. If it is done with a dynamic reference, it will result in an
-	infinite recursion. So, you will need to always use static 
-	self-references instead:
+	infinite recursion. Therefore, you will always want to use static 
+	self-references:
 
 	   datapath = {&datapath}/jan2012
 
@@ -736,7 +765,7 @@ options on the console.
 	   datapath = /home/images/{?object}
 
 	So by setting this statement ahead of time (e.g. in a global 
-	configuration file), it can have its desired effect always.
+	configuration file), it can always have its desired effect.
 
     In addition to querying configuration settings the same syntax can be used
     to look up other CRUSH properties. Currently, the following are defined:
@@ -747,7 +776,6 @@ options on the console.
 
 	fullversion		The CRUSH version including extra revision
 				information. E.g. '2.13-1 (beta1)'
-
 
     Thus you can, for example set the output directory by instrument name and 
     CRUSH version, E.g.:
@@ -768,14 +796,15 @@ options on the console.
     (even in quoted or escaped forms!) other than those separating directories.
 
     Since CRUSH allows the use of environment variables when defining values
-    (see above), you can have use {@HOME} (for UNIX home directories) or 
-    {@HOMEPATH} (for a user's home under Windows). The same can be achieved
-    universally by using the [#user.home], which substitutes the Java property
-    that holds the home directory.
+    (see above), you can use {@HOME} for your UNIX home directory; or 
+    {@HOMEPATH} for your user folder under Windows. Or, {#user.home} has the 
+    same effect universally, by referring to the the Java property
+    storing the location of the user's home folder.
 
-    The '~' is also universally understood to mean your home folder. 
-    Additionally the UNIX-like '~johndoe' may specify johndoe's home directory 
-    as long as it shares the same parent directory with the user (e.g. both 
+    The tilde character '~' is also universally understood to 
+    mean your home folder. And, finally, the UNIX-like '~johndoe' may specify 
+    johndoe's home directory in any OS as long as it shares the same parent 
+    directory with your home folder (e.g. both johndoe and your home folder 
     reside under a common '/home' or 'C:\Documents and Settings'). 
 	
     Thus, in UNIX systems (including MacOS), you may use:
@@ -795,13 +824,12 @@ options on the console.
 	datapath=D:\data\Sharc2\2010		# proper Windows paths
 	datapath="~John Doe\Data"		# relative to another user
 
-    are acceptable.
 
 
     Wildcards
     ---------
     Thanks to the branching of configuration keys, wildcards '*' can be used to
-    configure all branches of a key at once. E.g.:
+    configure all existing branches of a key at once. E.g.:
 
     	correlated.*.resolution=1.0
 
@@ -1177,18 +1205,6 @@ options on the console.
    Then, other crush tools (like coadd, imagetool etc.) will use these images 
    with the proper alignment. Clearly, this method of adjusting the pointing is
    only practical if your source is clearly detected in the map.
-
-
-   Using the 'jiggle' visual tool
-   ------------------------------
-   Lastly, the tool 'jiggle' can be used to determine the above pointing
-   offsets through an interactive display in which the individual maps can be 
-   moved w.r.t one-another. The cursor arrows will move the selected map in
-   the desired direction, while '+', and '-' can be used to change the map that
-   is selected for movement. Currently, 'jiggle' does not itself update the
-   RAP, DECP keys with the determined values. It only suggests what values
-   you will have to enter yourself in the FITS images.
-
 
 
 

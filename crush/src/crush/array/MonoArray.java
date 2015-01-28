@@ -49,7 +49,7 @@ public abstract class MonoArray<ChannelType extends SimplePixel> extends
 	@Override
 	public void setOptions(Configurator options) {
 		super.setOptions(options);	
-		if(hasOption("beam")) resolution = option("beam").getDouble() * getSizeUnit();
+		if(hasOption("beam")) resolution = option("beam").getDouble() * getSizeUnitValue();
 	}
 	
 	@Override

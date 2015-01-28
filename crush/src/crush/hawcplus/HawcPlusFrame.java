@@ -22,14 +22,14 @@
  ******************************************************************************/
 // Copyright (c) 2009 Attila Kovacs 
 
-package crush.gismo;
+package crush.hawcplus;
 
 import java.util.Arrays;
 
 import crush.*;
 
 
-public class GismoFrame extends HorizontalFrame {
+public class HawcPlusFrame extends HorizontalFrame {
 	int samples = 1;
 	int frameNumber;
 	int calFlag = 0;
@@ -38,14 +38,14 @@ public class GismoFrame extends HorizontalFrame {
 	//float[] diodeT, resistorT, diodeV;
 	float[] SAE;
 	
-	public GismoFrame(GismoScan parent) {
+	public HawcPlusFrame(HawcPlusScan parent) {
 		super(parent);
-		setSize(((AbstractGismo) scan.instrument).pixels());
+		setSize(HawcPlus.pixels);
 	}
 	
 	@Override
 	public Frame copy(boolean withContents) {
-		GismoFrame copy = (GismoFrame) super.copy(withContents);
+		HawcPlusFrame copy = (HawcPlusFrame) super.copy(withContents);
 		if(SAE != null) {
 			copy.SAE = new float[SAE.length];
 			if(withContents) System.arraycopy(SAE, 0, copy.SAE, 0, SAE.length);
@@ -58,9 +58,9 @@ public class GismoFrame extends HorizontalFrame {
 		super.addDataFrom(other, scaling);
 		if(scaling == 0.0) return;
 		
-		final GismoFrame gismoFrame = (GismoFrame) other;
+		final HawcPlusFrame hawcPlusFrame = (HawcPlusFrame) other;
 		final float fScale = (float) scaling;
-		if(SAE != null) for(int i=SAE.length; --i >= 0; ) SAE[i] += fScale * gismoFrame.SAE[i];
+		if(SAE != null) for(int i=SAE.length; --i >= 0; ) SAE[i] += fScale * hawcPlusFrame.SAE[i];
 	}
 	
 	@Override
@@ -89,13 +89,11 @@ public class GismoFrame extends HorizontalFrame {
 	}
 	
 	public void parseData(float[][] DAC) {
-		final int pixels = ((AbstractGismo) scan.instrument).pixels();
-		for(int bol=0; bol<pixels; bol++) data[bol] = DAC[bol/8][bol%8];		
+		for(int bol=0; bol<HawcPlus.pixels; bol++) data[bol] = DAC[bol/8][bol%8];		
 	}
 	
 	public void parseSAE(float[][] SAE) {
-		final int pixels = ((AbstractGismo) scan.instrument).pixels();
-		for(int bol=0; bol<pixels; bol++) this.SAE[bol] = SAE[bol/8][bol%8];	
+		for(int bol=0; bol<HawcPlus.pixels; bol++) this.SAE[bol] = SAE[bol/8][bol%8];	
 	}
 	
 	public void parseData(float[] DAC, int from, int channels) {

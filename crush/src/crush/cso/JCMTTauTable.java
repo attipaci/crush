@@ -24,13 +24,7 @@
 package crush.cso;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
@@ -73,22 +67,7 @@ public class JCMTTauTable  extends LocalAverage<JCMTTauTable.Entry> {
 	protected void read(int iMJD, String fileName) throws IOException {
 		System.err.print("   [Loading tau data] ");
 			
-		BufferedReader in = null;
-		
-		try { 
-			in = getFileReader(fileName); 
-			System.err.print("-- local: "); 
-		}
-		catch(IOException e) {		
-			if(!fileName.contains("://")) fileName = "http://" + fileName;
-			try { 
-				in = getURLReader(fileName); 
-				System.err.print("-- URL: "); 
-			}
-			catch(SocketTimeoutException e2) { System.err.println("WARNING! JCMT tau table timeout."); }
-			catch(IOException e2) { System.err.println("WARNING! JCMT tau tables error: " + fileName); }
-		}
-		if(in == null) throw new FileNotFoundException(fileName);
+		BufferedReader in = Util.getReader(fileName);
 		
 		// Skip the header line...
 		String line = in.readLine();
@@ -112,21 +91,6 @@ public class JCMTTauTable  extends LocalAverage<JCMTTauTable.Entry> {
 		
 		
 	}	
-		
-	private BufferedReader getFileReader(String fileName) throws IOException {
-		return new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-	}
-	
-	private BufferedReader getURLReader(String address) throws IOException {
-		URL versionURL = new URL(address);
-		URLConnection connection = versionURL.openConnection();
-		
-		connection.setConnectTimeout(3000);
-		connection.setReadTimeout(2000);
-		connection.connect();
-		return new BufferedReader(new InputStreamReader(connection.getInputStream()));
-		
-	}
 		
 	
 	public double getTau(double MJD) {	

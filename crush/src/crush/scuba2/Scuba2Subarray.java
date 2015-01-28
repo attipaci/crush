@@ -69,7 +69,7 @@ public class Scuba2Subarray implements Cloneable {
 			orientation = scuba2.option(id + ".rotation").getDouble() * Unit.deg;
 		if(scuba2.hasOption(id + ".position")) {
 			apertureOffset = scuba2.option(id + ".position").getVector2D();
-			apertureOffset.scale(scuba2.getSizeUnit());
+			apertureOffset.scale(scuba2.getSizeUnitValue());
 		}
 		isMirrored = scuba2.hasOption(id + ".mirror");
 	}

@@ -104,7 +104,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 	public void validate() {
 		System.out.println();
 		
-		if(hasOption("chopper.throw")) chopper_throw = option("chopper.throw").getDouble() * instrument.getSizeUnit();
+		if(hasOption("chopper.throw")) chopper_throw = option("chopper.throw").getDouble() * instrument.getSizeUnitValue();
 		
 		printInfo(System.out);
 		

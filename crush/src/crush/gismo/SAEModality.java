@@ -31,7 +31,7 @@ public class SAEModality extends Modality<SAEResponse> {
 	 */
 	private static final long serialVersionUID = 1188101098766206152L;
 	
-	public SAEModality(Gismo instrument) throws NoSuchFieldException {
+	public SAEModality(AbstractGismo instrument) throws NoSuchFieldException {
 		super("sae", "E");
 		if(!instrument.hasOption("read.sae")) return;
 		

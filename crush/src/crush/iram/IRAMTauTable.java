@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.gismo;
+package crush.iram;
 
 import java.io.*;
 import java.text.*;
@@ -68,7 +68,7 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 		System.err.print(" [Loading skydip tau values.]");
 		if(CRUSH.debug) System.err.print(" >> " + fileName + " >> ");		
 		
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+		BufferedReader in = Util.getReader(fileName);
 		String line = null;
 		
 		SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss yyyy-MM-dd");

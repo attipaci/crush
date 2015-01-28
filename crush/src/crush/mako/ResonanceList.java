@@ -30,7 +30,7 @@ import java.util.List;
 
 import crush.Channel;
 
-public class ResonanceList<MakoPixelType extends MakoPixel> extends ArrayList<MakoPixelType> {
+public class ResonanceList<MakoPixelType extends AbstractMakoPixel> extends ArrayList<MakoPixelType> {
 	/**
 	 * 
 	 */
@@ -68,7 +68,7 @@ public class ResonanceList<MakoPixelType extends MakoPixel> extends ArrayList<Ma
 			if(channel == null) continue;
 			
 			channel.setRowCol(pixel.row, pixel.col);
-			channel.unflag(MakoPixel.FLAG_UNASSIGNED);
+			channel.unflag(AbstractMakoPixel.FLAG_UNASSIGNED);
 			
 			assigned++;
 		}	

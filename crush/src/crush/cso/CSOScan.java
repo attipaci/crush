@@ -134,7 +134,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		DataTable data = super.getPointingData();
 		Vector2D pointingOffset = getNativePointingIncrement(pointing);
 		
-		double sizeUnit = instrument.getSizeUnit();
+		double sizeUnit = instrument.getSizeUnitValue();
 		String sizeName = instrument.getSizeName();
 		
 		data.new Entry("FAZO", (pointingOffset.x() + fixedOffset.x()) / sizeUnit, sizeName);

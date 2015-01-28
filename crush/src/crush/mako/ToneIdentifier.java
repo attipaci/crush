@@ -123,13 +123,13 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 		}
 	}
 	
-	public double match(ResonanceList<Mako1Pixel> channels, double guessT) {
+	public double match(ResonanceList<MakoPixel> channels, double guessT) {
 		double T = fit(channels, guessT);
 		assign(channels, T);
 		return T;
 	}
 	
-	protected double fit(final ResonanceList<Mako1Pixel> channels, double guessT) {
+	protected double fit(final ResonanceList<MakoPixel> channels, double guessT) {
 		channels.sort();
 			
 		final double maxSearchDev = maxDeviation * TRange.span();
@@ -175,18 +175,18 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 		return T;
 	}
 	
-	protected void assign(ResonanceList<Mako1Pixel> tones, double T) {
-		for(MakoPixel pixel : tones) {
+	protected void assign(ResonanceList<MakoPixel> tones, double T) {
+		for(AbstractMakoPixel pixel : tones) {
 			pixel.id = null;
-			pixel.flag(MakoPixel.FLAG_NOTONEID);
+			pixel.flag(AbstractMakoPixel.FLAG_NOTONEID);
 		}
 		int n = assign(tones, T, 5);
 		System.err.println("   Identified " + n + " resonances.");
 		
-		for(MakoPixel pixel : tones) if(pixel.id != null) pixel.unflag(MakoPixel.FLAG_NOTONEID);
+		for(AbstractMakoPixel pixel : tones) if(pixel.id != null) pixel.unflag(AbstractMakoPixel.FLAG_NOTONEID);
 	}
 	
-	private int assign(ResonanceList<Mako1Pixel> tones, double T, int rounds) {
+	private int assign(ResonanceList<MakoPixel> tones, double T, int rounds) {
 		if(rounds == 0) return 0;
 		if(tones.isEmpty()) return 0; 
 	
@@ -196,7 +196,7 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 		
 		for(ResonanceID1 id : this) {
 			double fExp = id.expectedFreqFor(T);
-			Mako1Pixel tone = tones.getNearest(fExp);
+			MakoPixel tone = tones.getNearest(fExp);
 			double adf = Math.abs(tone.toneFrequency - fExp);
 			
 			// If the nearest tone is too far, then do not assign...
@@ -209,11 +209,11 @@ public class ToneIdentifier extends ArrayList<ResonanceID1> implements Cloneable
 			tone.id = id;
 		}
 		
-		ResonanceList<Mako1Pixel> remaining = new ResonanceList<Mako1Pixel>(tones.size());
+		ResonanceList<MakoPixel> remaining = new ResonanceList<MakoPixel>(tones.size());
 		ToneIdentifier extraIDs = (ToneIdentifier) clone();
 		
 		for(int i=0; i<tones.size(); i++) {
-			Mako1Pixel tone = tones.get(i);
+			MakoPixel tone = tones.get(i);
 			if(tone.id == null) remaining.add(tone);
 			else extraIDs.remove(tone.id);
 		}

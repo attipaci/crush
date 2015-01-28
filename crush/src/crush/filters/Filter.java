@@ -24,11 +24,10 @@ package crush.filters;
 
 import java.util.Arrays;
 
-import kovacs.data.OldFFT;
 import kovacs.util.Configurator;
 import kovacs.util.Constant;
+import kovacs.util.ExtraMath;
 import kovacs.util.Util;
-
 import crush.Channel;
 import crush.ChannelGroup;
 import crush.Dependents;
@@ -85,7 +84,7 @@ public abstract class Filter {
 	protected void setIntegration(Integration<?,?> integration) {
 		this.integration = integration;
 		
-		int nt = OldFFT.getPaddedSize(integration.size());
+		int nt = ExtraMath.pow2ceil(integration.size());
 		
 		if(data == null) data = new float[nt];
 		else if(data.length != nt) data = new float[nt];

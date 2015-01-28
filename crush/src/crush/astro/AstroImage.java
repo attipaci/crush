@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package crush.astro;
 
@@ -28,6 +27,7 @@ import kovacs.astro.*;
 import kovacs.data.GridImage;
 import kovacs.data.SphericalGrid;
 import kovacs.math.SphericalCoordinates;
+import kovacs.util.Unit;
 
 public class AstroImage extends GridImage<SphericalCoordinates> implements Cloneable {
 
@@ -38,6 +38,7 @@ public class AstroImage extends GridImage<SphericalCoordinates> implements Clone
 
 	public AstroImage() {
 		setGrid(new SphericalGrid());
+		setPreferredGridUnit(Unit.get("arcsec"));
 	}
 
 	public AstroImage(int sizeX, int sizeY) {

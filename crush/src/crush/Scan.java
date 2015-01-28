@@ -172,13 +172,13 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		String value = option.getValue().toLowerCase();
 		if(value.equals("auto") || value.equals("suggest")) return null;
 		Vector2D correction = option.getVector2D(); 
-		correction.scale(instrument.getSizeUnit());
+		correction.scale(instrument.getSizeUnitValue());
 		return correction;
 	}
 	
 	public void pointingAt(Vector2D correction) {
 		if(correction == null) return;
-		double sizeUnit = instrument.getSizeUnit();
+		double sizeUnit = instrument.getSizeUnitValue();
 		System.err.println("   Adjusting pointing by " + 
 				Util.f1.format(correction.x() / sizeUnit) + ", " + Util.f1.format(correction.y() / sizeUnit) +
 				" " + instrument.getSizeName() + ".");
@@ -460,7 +460,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			if(pointing == null) return "---";
 			if(!(sourceModel instanceof ScalarMap)) return "---";
 			AstroMap map = ((ScalarMap) sourceModel).map;
-			Unit sizeUnit = new Unit(instrument.getSizeName(), instrument.getSizeUnit());
+			Unit sizeUnit = new Unit(instrument.getSizeName(), instrument.getSizeUnitValue());
 			return pointing.getData(map, sizeUnit).getFormattedEntry(name.substring(4), formatSpec);
 		}
 		else if(name.equals("object")) return sourceName;
@@ -654,7 +654,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		String nameX = this instanceof GroundBased ? "AZ" : "RA";
 		String nameY = this instanceof GroundBased ? "EL" : "DEC";
 		
-		double sizeUnit = instrument.getSizeUnit();
+		double sizeUnit = instrument.getSizeUnitValue();
 		String sizeName = instrument.getSizeName();
 		
 		data.new Entry("dX", pointingOffset.x() / sizeUnit, sizeName);
@@ -708,7 +708,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			
 		if(sourceModel instanceof ScalarMap) {
 			AstroMap map = ((ScalarMap) sourceModel).map;
-			Unit sizeUnit = new Unit(instrument.getSizeName(), instrument.getSizeUnit());
+			Unit sizeUnit = new Unit(instrument.getSizeName(), instrument.getSizeUnitValue());
 			info += pointing.pointingInfo(map, sizeUnit) + "\n";
 		}
 		
@@ -788,7 +788,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		// Print the native pointing offsets...
 		String text = "";
 		
-		double sizeUnit = instrument.getSizeUnit();
+		double sizeUnit = instrument.getSizeUnitValue();
 		String sizeName = instrument.getSizeName();
 		
 		text += "  Offset: ";
