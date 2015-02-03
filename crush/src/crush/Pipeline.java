@@ -111,7 +111,8 @@ public class Pipeline extends Thread {
 		}		
 
 		scanSource.process(scan);	
-		crush.source.add(scanSource, scan.weight);	
+		crush.source.add(scanSource, scan.weight);
+		
 		scanSource.postprocess(scan);
 		
 		Thread.yield();

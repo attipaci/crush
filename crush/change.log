@@ -11,6 +11,9 @@
 	calibration data can always stay current and up-to-date, and also
 	allows for smaller distribution packages.
 
+	[CODE] Images now rely on new GaussianPSF classes, and support
+	non-circular main beams.
+
 	[CODE] All reliance on old FFT classes now removed. (The old FFT
 	classes are gone for good!).
 
