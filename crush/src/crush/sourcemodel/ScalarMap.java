@@ -126,7 +126,7 @@ public class ScalarMap extends SourceMap {
 		double defaultGridSize = getInstrument().resolution / 5.0;
 		Vector2D gridSize = new Vector2D(defaultGridSize, defaultGridSize);
 	
-		getInstrument().resolution = getAverageResolution();
+		map.setUnderlyingBeam(getAverageResolution());
 		
 		if(hasOption("grid")) {
 			List<Double> values = option("grid").getDoubles();

@@ -28,6 +28,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import kovacs.data.Data2D;
+import kovacs.data.GaussianPSF;
 import kovacs.data.Grid2D;
 import kovacs.data.GridImage;
 import kovacs.data.GridMap;
@@ -35,7 +36,6 @@ import kovacs.fits.FitsExtras;
 import kovacs.math.Coordinate2D;
 import kovacs.util.Configurator;
 import kovacs.util.Unit;
-import kovacs.util.Util;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
@@ -81,17 +81,13 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	
 	public void setInstrument(Instrument<?> instrument) {
 		this.instrument = instrument;
+		
 	}
 	
 	@Override
 	public void addWeightedDirect(final Data2D data, final double w) {
 		super.addWeightedDirect(data, w);
 		if(data instanceof GridSource) integrationTime += ((GridSource<?>) data).integrationTime;
-	}
-	
-	@Override
-	public double getImageFWHM() {
-		return Math.hypot(instrument.resolution, getSmoothFWHM());
 	}
 
 	public double getInstrumentBeamArea() {
@@ -196,6 +192,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		instrument.parseHeader(header);
 
 		// get the beam and calculate derived quantities
+		// TODO revise... (use GaussianPSF...)
 		if(header.containsKey("BEAM")) 
 			instrument.resolution = header.getDoubleValue("BEAM", instrument.resolution / Unit.arcsec) * Unit.arcsec;
 		else if(header.containsKey("BMAJ"))
@@ -231,11 +228,13 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 
 	
 	@Override
-	public int clean(GridImage<CoordinateType> search, double[][] beam, double gain, double replacementFWHM) {
-		int components = super.clean(search, beam, gain, replacementFWHM);
+	// TODO....
+	public int clean(GridImage<CoordinateType> search, double[][] beam, double gain, GaussianPSF replacementBeam) {
+		int components = super.clean(search, beam, gain, replacementBeam);
 		
 		// Reset the beam and resolution... 
-		instrument.resolution = replacementFWHM;
+		// TODO elliptical beam shape...
+		instrument.resolution = replacementBeam.getCircularEquivalentFWHM();
 		
 		return components;
 	}
@@ -246,21 +245,15 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	}
 	
 	@Override
-	public String toString() {
+	public String toString() {	
 		String info = fileName == null ? "\n" : " Image File: " + fileName + ". ->" + "\n\n" + 
 			"  [" + getName() + "]\n" +
-			super.toString() + 
-			"  Instrument Beam FWHM: " + Util.f2.format(instrument.resolution / Unit.arcsec) + " arcsec." + "\n" +
-			"  Applied Smoothing: " + Util.f2.format(getSmoothFWHM() / Unit.arcsec) + " arcsec." + " (includes pixelization)\n" +
-			"  Image Resolution (FWHM): " + Util.f2.format(getImageFWHM() / Unit.arcsec) + " arcsec. (includes smoothing)" + "\n";
-			
+			super.toString();
+		
 		return info;
 	}
 	
-	
-	@Override
-	public double getUnderlyingFWHM() { return instrument.resolution; }
-	
+		
 	private class Jansky extends Unit {
 		/**
 		 * 
