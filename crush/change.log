@@ -11,8 +11,16 @@
 	calibration data can always stay current and up-to-date, and also
 	allows for smaller distribution packages.
 
-	[CODE] Images now rely on new GaussianPSF classes, and support
-	non-circular main beams.
+	[TWEAK] {FITS{ Beam descriptions for the instrument, smoothing, 
+	filtering, and flux correction are now using BMAJ/BMIN/BPA type FITS 
+	keys (all in degrees) which allow non-circular definitions in a more 
+	'standard' format. Thus, the prefix 'S' describes smoothing, 'X' the 
+	extended filter, 'I' the instrument or intrinsic beam, while 'C' the 
+	beam for which fluxes are normalized to.
+
+	[CODE] Images now rely on new GaussianPSF classes, and can support
+	non-circular main beams in reductions. (Note, post-reduction tools, 
+	e.g. 'imagetool', 'show', do not yet support elongated beams).
 
 	[CODE] All reliance on old FFT classes now removed. (The old FFT
 	classes are gone for good!).
@@ -25,6 +33,8 @@
 
 	[CODE] {MAKO} Common functionality between MAKO and MAKO-2 are now
 	in classes renamed as 'Abstract...', for clarity.
+
+
 
 
 2.21-1	(13 January 2014)		
