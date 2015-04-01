@@ -1,7 +1,44 @@
->> Use online resources instead of local
->> prepare crush-data.tar-gz / zip for offline use
->> Instructions for using offline data...
 
+2.22-1 (31 March 2015)
+
+
+        Overview
+        ======================================================================
+	The release comes with built-in configuration for the 2015 Feb/Mar
+	GISMO run. It also fixes a few issues, adds new features, like 
+	conditional configuration based on FITS headers, and the possibility
+	to use external resources online. There are also many changes under 
+	the hood, which should not affect the user experience, if all was done 
+	right...
+	====================================================================== 
+
+	[BUG] {SHARC-2} Gap checking (and trimming to gap if necessary) was
+	not active. Also, gap checking was inherently flawed. This affects 
+	data taken in 2003 Mar/April when a bug in JSharc produced occasional 
+	buffer wraparound, and corresponding timing gaps in the recorded 
+	stream. Fixed.
+
+	[NEW] Ability to set conditions based on FITS header keywords and
+	values. Currently, this is applied to all instruments with FITS-based
+	data formats. Here are some examples on how it may be used:
+
+		fits.[CHOPPED] echo "Header has CHOPPED key"
+
+	The above condition is active if the FITS header contains the CHOPPED
+	keyword. The FITS keyword can be specified in lower or upper case, but
+	the corresponding fits key is assumed to be upper case always.
+
+		fits.[OBJECT?Jupiter] bright
+
+	The above is an example of setting the 'bright' option when the value of
+	the  OBJECT key in the FITS header is 'Jupiter'. The FITS value is case
+	insensitive (i.e. "Jupiter" is the same as "JUPITER"). 
+
+		fits.[INSTRUME?!SHARC-2] echo "Ooops, not a SHARC-2 data file."
+
+	Similarly to the above, but if the character after the ? is a !, then
+	crush checks for the negated condition. I.e., you could read the
+	above as 'if INSTRUME is *not* SHARC-2 then ...'	
 
 	[NEW] Lookup and interpolation tables now can be specified to fetch
 	online resources via HTTP. Thus, tau lookup for the APEX cameras,
@@ -11,12 +48,41 @@
 	calibration data can always stay current and up-to-date, and also
 	allows for smaller distribution packages.
 
-	[TWEAK] {FITS{ Beam descriptions for the instrument, smoothing, 
+	[FIX] {tools} Some fixes to crushtools (e.g. imagetool, show etc.).
+	Aperture flux uncertainties were understated for smoothed maps. Fixed.
+	Now levelling outside of apertures only.
+
+	[FIX] {SHARC} Better handling of timestamps and dates. (UTC vs MJD
+	based on TT).
+
+	[CHANGE] {SHARC-2} The option 'nogaps' no longer takes an optional
+	argument ('JSharc'). Instead, the nogaps option is activated 
+	conditionally based on checking the FITS header for CREATOR = 'JSharc'.
+
+	[TWEAK] {FITS} Beam descriptions for the instrument, smoothing, 
 	filtering, and flux correction are now using BMAJ/BMIN/BPA type FITS 
 	keys (all in degrees) which allow non-circular definitions in a more 
 	'standard' format. Thus, the prefix 'S' describes smoothing, 'X' the 
 	extended filter, 'I' the instrument or intrinsic beam, while 'C' the 
 	beam for which fluxes are normalized to.
+
+	[CODE] Initial support for HAWC+, and SOFIA instruments, in general.
+	(To be packaged in the next release, but available from the SVN repo 
+	now.)
+
+	[CODE] Added HDURowReader class that enables parallelized row-by-row
+	reading of FITS Binary Tables. In principle, it has the advantage of
+	not having to create an object for every table entry. However, in
+	reality this does not lead to significant performance boost, probably
+	because the allocation of large storage for ColumnTables is efficient
+	also. Currently, no class relies on row-by-row reads.
+
+	[CODE] Handling of channel grouping into pixels is now handled by a
+	separate InstrumentLayout class, making it easier to create common
+	superclasses to different type of instruments.	
+
+	[CODE] A fair bit of reorganization and cleanup of the kovacs.util
+	libraries. See util-change.log for details.
 
 	[CODE] Images now rely on new GaussianPSF classes, and can support
 	non-circular main beams in reductions. (Note, post-reduction tools, 
@@ -34,7 +100,24 @@
 	[CODE] {MAKO} Common functionality between MAKO and MAKO-2 are now
 	in classes renamed as 'Abstract...', for clarity.
 
+	[COSMETIC] FITS libraries (nom.tam.fits) version information is now
+	also displayed at startup.
 
+	[CONFIG] Updated 'data/leap-seconds.list' with the latest. The current
+	leap seconds is 36 since 1 January 2015.
+
+	[CONFIG] {SHARC} {SHARC-2} {MAKO} {MAKO-2} Tau scaling relations
+	between 225GHz radiometer, 350um tipper, and precipitable water vapor
+	(pwv) have been moved to common 'cso/default.cfg', with a few other
+	common settings.
+
+	[CONFIG] {GISMO} Configuration updated for the 2015 Feb/Mar run, with
+	blind pointing accuracy to ~2.2" rms in both AZ and EL, and tau tables.
+	Calibration updated based on a dozen or so observations of Uranus and
+	the Bendo et al. 2012 temperature model. The calibration has been
+	retroactively applied to the 2014 runs, for which calibration was
+	difficult to nail down accurately. The new calibration yields 2014 
+	fluxes that are on average 14% lower than before....
 
 
 2.21-1	(13 January 2014)		

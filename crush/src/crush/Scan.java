@@ -68,7 +68,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public String timeStamp;
 	public String descriptor;
-	public String observer, project, creator;
+	public String observer, creator, project;
 	
 	public EquatorialCoordinates equatorial, apparent;
 	public HorizontalCoordinates horizontal;
@@ -342,7 +342,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	}
 
 		
-	public void editScanHeader(Header header) throws FitsException {	
+	public void editScanHeader(Header header) throws HeaderCardException {	
 		Locale.setDefault(Locale.US);
 		
 		header.addValue("EXTNAME", "Scan-" + getID(), "Scan data");
@@ -364,17 +364,17 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		header.addValue("EQUINOX", equatorial.epoch.getYear(), "Precession epoch.");	
 	
 		if(!Double.isNaN(MJD)) header.addValue("MJD", MJD, "Modified Julian Day.");
-		if(!Double.isNaN(LST)) header.addValue("LST", LST / Unit.hour, "Local Sidereal Time (hours).");
 		
 		if(this instanceof GroundBased) {
+			if(!Double.isNaN(LST)) header.addValue("LST", LST / Unit.hour, "Local Sidereal Time (hours).");
 			header.addValue("AZ", horizontal.AZ()/Unit.deg, "Azymuth (deg).");
 			header.addValue("EL", horizontal.EL()/Unit.deg, "Elevation (deg).");
 			header.addValue("PA", getPA()/Unit.deg, "Direction of zenith w.r.t. North (deg).");
-		}
 		
-		if(site != null) {
-			header.addValue("SITELON", Util.af1.format(site.longitude()), "Geographic longitude of the observing site (deg).");
-			header.addValue("SITELAT", Util.af1.format(site.latitude()), "Geographic latitude of the observing site (deg).");
+			if(site != null) {
+				header.addValue("SITELON", Util.af1.format(site.longitude()), "Geographic longitude of the observing site (deg).");
+				header.addValue("SITELAT", Util.af1.format(site.latitude()), "Geographic latitude of the observing site (deg).");
+			}
 		}
 		
 		header.addValue("WEIGHT", weight, "Relative source weight of the scan.");

@@ -35,7 +35,7 @@ import crush.*;
 import crush.array.*;
 import nom.tam.fits.*;
 
-public abstract class AbstractGismo extends MonoArray<GismoPixel> implements GroundBased {
+public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implements GroundBased {
 	/**
 	 * 
 	 */
@@ -54,6 +54,7 @@ public abstract class AbstractGismo extends MonoArray<GismoPixel> implements Gro
 	
 	public AbstractGismo(String name, int npix) {
 		super(name, npix);
+		setLayout(new SingleColorLayout<GismoPixel>(this));
 		resolution = 16.7 * Unit.arcsec;
 		
 		arrayPointingCenter = (Vector2D) getDefaultPointingCenter().clone();

@@ -31,6 +31,7 @@ import crush.sourcemodel.*;
 import kovacs.math.CoordinateAxis;
 import kovacs.math.CoordinateSystem;
 import kovacs.math.Range;
+import kovacs.math.Scale;
 import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
 import kovacs.util.*;

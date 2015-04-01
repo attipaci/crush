@@ -192,7 +192,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 				}
 				
 				@Override
-				public void readRow(int i) {
+				public void processRow(int i) {
 					set(i, null);
 					
 					// Do not process frames with no coordinate information...
@@ -382,7 +382,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 				}
 				
 				@Override
-				public void readRow(int i) {			
+				public void processRow(int i) {			
 					set(i, null);
 					
 					int calFlag = 0, digitalFlag = 0;

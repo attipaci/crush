@@ -30,7 +30,7 @@ public class Horizontal2Equatorial {
 		GeodeticCoordinates site = new GeodeticCoordinates("-03d23m55.51s, 37d04m06.29s");
 		AstroTime time = new AstroTime();
 		time.now();
-		double LST = time.getLST(site.longitude());
+		double LST = time.getLMST(site.longitude());
 		
 		HorizontalCoordinates horizontal = new HorizontalCoordinates(Double.parseDouble(args[0]), Double.parseDouble(args[1]));
 		EquatorialCoordinates equatorial = horizontal.toEquatorial(site, LST);

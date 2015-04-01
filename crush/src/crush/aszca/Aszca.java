@@ -35,7 +35,7 @@ import kovacs.util.Unit;
 
 
 
-public class Aszca extends APEXArray<AszcaPixel> {
+public class Aszca extends APEXCamera<AszcaPixel> {
 	/**
 	 * 
 	 */
@@ -87,7 +87,7 @@ public class Aszca extends APEXArray<AszcaPixel> {
 
 	@Override
 	public void flagInvalidPositions() {
-		for(SimplePixel pixel : this) if(pixel.position.length() > 60.0 * Unit.arcmin) pixel.flag(Channel.FLAG_BLIND);
+		for(SingleColorPixel pixel : this) if(pixel.position.length() > 60.0 * Unit.arcmin) pixel.flag(Channel.FLAG_BLIND);
 	}
 
 	@Override

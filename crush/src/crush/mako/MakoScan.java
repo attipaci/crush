@@ -217,6 +217,9 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 
+		// Load any options based on the FITS header...
+		instrument.setFitsHeaderOptions(header);
+		
 		// Scan Info
 		setSerial(header.getIntValue("SCANNO"));
 			

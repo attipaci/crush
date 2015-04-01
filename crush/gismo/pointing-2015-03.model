@@ -1,0 +1,20 @@
+# Absolute Pointing Model for the main part of the 2015-Feb/Mar run
+# Good to ~2.25" rms in AZ, and 2.21" rms in EL.
+# Adjusted constants: 
+#   P4, P5    -- Tilt of Azymuth axis
+#   P8, P9    -- Gravitational bending
+#   P10, P11  -- Receiver Nasmyth offsets...
+#
+# -- by Attila Kovacs
+#
+P1 =   -3.15
+P2 =   -0.36
+P3 =   -1.63
+P4 =  -11.65
+P5 =  -18.19
+P6 =    0.0
+P7 =   -9.92
+P8 =  -78.13
+P9 =  -17.76
+P10 =  -8.12
+P11 =  -1.98

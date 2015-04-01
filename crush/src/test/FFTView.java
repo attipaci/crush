@@ -2,19 +2,16 @@ package test;
 
 import java.io.IOException;
 
-import crush.astro.AstroMap;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.HeaderCardException;
 import kovacs.data.CartesianGrid2D;
 import kovacs.data.GridImage;
 import kovacs.data.GridMap;
-import kovacs.data.Index2D;
 import kovacs.fft.MultiFFT;
 import kovacs.math.Complex;
 import kovacs.math.Coordinate2D;
 import kovacs.math.Vector2D;
 import kovacs.util.ExtraMath;
-import kovacs.util.Unit;
 
 public class FFTView {	
 	GridImage<Coordinate2D> amplitudeImage;
@@ -34,8 +31,7 @@ public class FFTView {
 			if(args.length > 2) {
 				norm = Double.parseDouble(args[2]);
 			}
-			
-			
+					
 			FFTView transfer = FFTView.fromImage(image, beamCorrection, norm);	
 			transfer.write("fft");
 			
@@ -45,8 +41,7 @@ public class FFTView {
 				FFTView spectrum = FFTView.fromImage(map.getFluxImage(), Double.NaN, Double.NaN);
 				spectrum.deconvolve(transfer);
 				map.setData(spectrum.backTransform(map.sizeX(), map.sizeY()));			
-				map.write("deconvolved.fits");
-				
+				map.write("deconvolved.fits");	
 			}
 			
 			
@@ -151,7 +146,7 @@ public class FFTView {
 		grid.setResolution(Math.PI / 180.0 / (nx * delta.x()), Math.PI / 180.0 / (ny * delta.y()));
 	
 		if(!Double.isNaN(beamCorrection)) {
-			double sigma = beamCorrection * image.getSmoothFWHM() / 2.35;
+			double sigma = beamCorrection * image.getSmoothing().getCircularEquivalentFWHM() / 2.35;
 
 			double dfx = 2.0 / (nx * image.getResolution().x());		
 			double sigmafx = 1.0 / sigma / (2.0 * Math.PI) / dfx;
@@ -164,10 +159,9 @@ public class FFTView {
 				double T = Math.exp(-0.5 * w * w); 
 
 				//A[i][j] = T;
-
-				if(T > 0.1) A[i][j] /= T;
+				
+				if(T > 0.001) A[i][j] /= T;
 				else A[i][j] = Double.NaN;
-
 			}
 		}
 					
@@ -205,9 +199,9 @@ public class FFTView {
 			if(Double.isNaN(tA)) continue;
 			if(tA < 0.01) continue;
 			
-			double tPhi = transfer.phaseImage.valueAtIndex(index);
-			
 			amplitudeImage.setValue(i, j, amplitudeImage.valueAtIndex(i, j) / tA);
+			
+			//double tPhi = transfer.phaseImage.valueAtIndex(index);
 			//phaseImage.setValue(i, j, phaseImage.valueAtIndex(i, j) - tPhi);
 		}
 		

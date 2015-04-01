@@ -288,6 +288,9 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 
+		// Load any options based on the FITS header...
+		instrument.setFitsHeaderOptions(header);
+		
 		// Scan Info
 		setSerial(header.getIntValue("OBSNUM"));
 		if(instrument.getOptions().containsKey("serial")) instrument.setSerialOptions(getSerial());
@@ -429,7 +432,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	}	
 	
 	@Override
-	public void editScanHeader(Header header) throws FitsException {	
+	public void editScanHeader(Header header) throws HeaderCardException {	
 		super.editScanHeader(header);
 	}
 	

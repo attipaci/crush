@@ -25,9 +25,8 @@ package crush.cso;
 import java.io.IOException;
 import java.text.NumberFormat;
 
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
-
+import nom.tam.fits.HeaderCardException;
 import crush.ElevationCouplingCurve;
 import crush.GroundBased;
 import crush.HorizontalFrame;
@@ -117,7 +116,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	
 	
 	@Override
-	public void editScanHeader(Header header) throws FitsException {	
+	public void editScanHeader(Header header) throws HeaderCardException {	
 		super.editScanHeader(header);
 		header.addValue("MJD", iMJD, "Modified Julian Day.");
 		header.addValue("FAZO", fixedOffset.x() / Unit.arcsec, "Fixed AZ pointing offset.");

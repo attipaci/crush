@@ -29,7 +29,7 @@ import crush.array.*;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
-public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
+public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBased {
 	/**
 	 * 
 	 */
@@ -254,8 +254,8 @@ public class Scuba2 extends MonoArray<Scuba2Pixel> implements GroundBased {
 	}
 	
 	@Override
-	public void editImageHeader(Cursor cursor) throws HeaderCardException {	
-		super.editImageHeader(cursor);
+	public void editImageHeader(List<Scan<?,?>> scans, Cursor cursor) throws HeaderCardException {	
+		super.editImageHeader(scans, cursor);
 		cursor.add(new HeaderCard("SC2VER", version, "CRUSH-SCUBA2 Plugin Modules Version."));
 		cursor.add(new HeaderCard("SC2UID", serialVersionUID, "CRUSH-SCUBA2 Modules ID."));
 	}

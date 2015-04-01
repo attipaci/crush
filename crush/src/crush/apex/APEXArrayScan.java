@@ -42,7 +42,7 @@ import kovacs.util.*;
 
 
 
-public class APEXArrayScan<InstrumentType extends APEXArray<?>, SubscanType extends APEXArraySubscan<InstrumentType, ?>> 
+public class APEXArrayScan<InstrumentType extends APEXCamera<?>, SubscanType extends APEXArraySubscan<InstrumentType, ?>> 
 extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	/**
 	 * 
@@ -290,8 +290,9 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	
 	public int readScanInfo(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {
 		Header header = hdu.getHeader();
-		// Read in the full HDU data
-		//hdu.getData().getData();
+		
+		// Load any options based on the FITS header...
+		instrument.setFitsHeaderOptions(header);
 		
 		setSerial(header.getIntValue("SCANNUM"));
 		type = header.getStringValue("SCANTYPE");
@@ -395,7 +396,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	}	
 	
 	@Override
-	public void editScanHeader(Header header) throws FitsException {	
+	public void editScanHeader(Header header) throws HeaderCardException {	
 		super.editScanHeader(header);
 		header.addValue("PROJECT", project, "The project ID for this scan");
 		header.addValue("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan.");

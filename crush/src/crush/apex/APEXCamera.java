@@ -25,8 +25,9 @@
 package crush.apex;
 
 import crush.*;
-import crush.array.MonoArray;
-import crush.array.SimplePixel;
+import crush.array.Array;
+import crush.array.SingleColorPixel;
+import crush.array.SingleColorLayout;
 import nom.tam.fits.*;
 
 import java.io.*;
@@ -41,7 +42,7 @@ import kovacs.util.Unit;
 import kovacs.util.Util;
 
 
-public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray<ChannelType> implements GroundBased {
+public abstract class APEXCamera<ChannelType extends APEXPixel> extends Array<ChannelType, ChannelType> implements GroundBased {
 	/**
 	 * 
 	 */
@@ -50,13 +51,16 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 	public ChannelType referencePixel;
 	public double rotation = 0.0;
 	
-	public APEXArray(String name, int size) {
+	public APEXCamera(String name, int size) {
 		super(name, size);
+		setLayout(new SingleColorLayout<APEXPixel>(this));
 	}
-
-	public APEXArray(String name) {
+	
+	public APEXCamera(String name) {
 		super(name);
+		setLayout(new SingleColorLayout<APEXPixel>(this));
 	}
+	
 	
 	@Override
 	public String getTelescopeName() {
@@ -69,7 +73,7 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 	
 		if(referencePixel != null) setReferencePosition(referencePixel.position);	
 		// Take dewar rotation into account...
-		for(SimplePixel pixel : this) pixel.position.rotate(rotation);
+		for(SingleColorPixel pixel : this) pixel.position.rotate(rotation);
 	}
 	
 
@@ -125,13 +129,13 @@ public abstract class APEXArray<ChannelType extends APEXPixel> extends MonoArray
 		System.err.println(" " + storeChannels + " channels found. Reference pixel is " + referenceBENumber);
 
 		// Take instrument rotation into account
-		for(SimplePixel pixel : this) pixel.position.rotate(rotation);
+		for(SingleColorPixel pixel : this) pixel.position.rotate(rotation);
 		
 	}
 
 	@Override
 	public Scan<?, ?> getScanInstance() {
-		return new APEXArrayScan<APEXArray<?>, APEXArraySubscan<APEXArray<?>,?>>(this);
+		return new APEXArrayScan<APEXCamera<?>, APEXArraySubscan<APEXCamera<?>,?>>(this);
 	}
 
 	@Override

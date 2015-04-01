@@ -34,18 +34,18 @@ import kovacs.util.Util;
 import crush.*;
 
 
-public class SimplePixel extends Channel implements Pixel {
+public class SingleColorPixel extends Channel implements Pixel {
 	public Vector2D position;
-	public Vector<? extends SimplePixel> neighbours;
+	public Vector<? extends SingleColorPixel> neighbours;
 	public boolean isIndependent = false;
 	
-	public SimplePixel(Instrument<? extends SimplePixel> instrument, int backendIndex) { 
+	public SingleColorPixel(Instrument<? extends SingleColorPixel> instrument, int backendIndex) { 
 		super(instrument, backendIndex); 
 	}
 	
 	@Override
 	public Object clone() {
-		SimplePixel clone = (SimplePixel) super.clone();
+		SingleColorPixel clone = (SingleColorPixel) super.clone();
 		if(position != null) clone.position = (Vector2D) position.clone();
 		return clone;
 	}

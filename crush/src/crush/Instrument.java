@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009,2010 Attila Kovacs
 
 package crush;
 
@@ -47,6 +46,7 @@ implements TableFormatter.Entries {
 	private static final long serialVersionUID = -7651803433436713372L;
 	
 	private Configurator options, startupOptions;
+	private InstrumentLayout<? super ChannelType> layout;
 	
 	public double integrationTime;
 	public double samplingInterval;
@@ -80,6 +80,12 @@ implements TableFormatter.Entries {
 		storeChannels = size;
 	}
 		
+	public void setLayout(InstrumentLayout<? super ChannelType> layout) {
+		this.layout = layout;
+	}
+	
+	public InstrumentLayout<?> getLayout() { return layout; }
+	
 	// Load the static instrument settings, which are not meant to be date-dependent...
 	public void setOptions(Configurator options) {
 		this.options = options;
@@ -90,6 +96,8 @@ implements TableFormatter.Entries {
 		
 		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnitValue();
 		if(hasOption("gain")) gain = option("gain").getDouble();
+		
+		if(layout != null) layout.setOptions(options);
 	}
 	
 	public Configurator getOptions() {
@@ -113,8 +121,14 @@ implements TableFormatter.Entries {
 		
 		for(Channel channel : copy) channel.instrument = copy;
 	
-		// TODO this needs to be done properly???
+		
 		if(options != null) copy.setOptions(options.copy());
+		if(layout != null) {
+			copy.layout = layout.copy();
+			copy.layout.instrument = copy;
+		}
+		
+		// TODO this needs to be done properly???
 		copy.groups = null;
 		copy.divisions = null;
 		copy.modalities = null;
@@ -261,6 +275,33 @@ implements TableFormatter.Entries {
 			options.parse(settings.get(spec));
 		}
 	}
+	
+	public void setFitsHeaderOptions(Header header) throws FitsException {
+		if(!options.containsKey("fits")) return;
+		
+		System.err.println(" Setting FITS header options.");
+		
+		final Hashtable<String, Vector<String>> conditionals = options.get("fits").conditionals;
+		
+		for(String condition : conditionals.keySet()) {
+			StringTokenizer tokens = new StringTokenizer(condition, "?");
+			if(!tokens.hasMoreTokens()) continue;
+			String key = tokens.nextToken().toUpperCase();
+	
+			if(!header.containsKey(key)) return;
+			String value = tokens.hasMoreTokens() ? tokens.nextToken() : null;
+					
+			
+			if(value == null) options.parse(conditionals.get(condition));
+			else if(value.charAt(0) == '!') {
+				if(!header.getStringValue(key).equalsIgnoreCase(value)) options.parse(conditionals.get(condition));
+			}
+			else if(header.getStringValue(key).equalsIgnoreCase(value)) options.parse(conditionals.get(condition));
+		}
+	}
+	 
+	
+	
 	
 	public String getDataLocationHelp() {
 		return "";
@@ -667,11 +708,11 @@ implements TableFormatter.Entries {
 		return null;
 	}  
 	
-	public abstract int getPixelCount();
+	public int getPixelCount() { return layout.getPixelCount(); }
 	
-	public abstract Collection<? extends Pixel> getPixels();
+	public Collection<? extends Pixel> getPixels() { return layout.getPixels(); }
 	
-	public abstract Collection<? extends Pixel> getMappingPixels();
+	public Collection<? extends Pixel> getMappingPixels() { return layout.getMappingPixels(); }
 	
 	public Hashtable<Integer, ChannelType> getFixedIndexLookup() {
 		Hashtable<Integer, ChannelType> lookup = new Hashtable<Integer, ChannelType>();
@@ -977,7 +1018,7 @@ implements TableFormatter.Entries {
 	
 	
 	
-	public void editImageHeader(Cursor cursor) throws HeaderCardException {
+	public void editImageHeader(List<Scan<?,?>> scans, Cursor cursor) throws HeaderCardException {
 		cursor.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
 		cursor.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
 		

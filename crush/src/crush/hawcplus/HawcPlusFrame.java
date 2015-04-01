@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,94 +20,41 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package crush.hawcplus;
 
-import java.util.Arrays;
 
+import kovacs.astro.GeodeticCoordinates;
 import crush.*;
 
 
 public class HawcPlusFrame extends HorizontalFrame {
-	int samples = 1;
-	int frameNumber;
-	int calFlag = 0;
-	int digitalFlag = 0;
-	//double labviewTime;
-	//float[] diodeT, resistorT, diodeV;
-	float[] SAE;
-	
+	GeodeticCoordinates site;
+	long mceSerial;
+	float VPA, PWV, HPWangle;
+		
 	public HawcPlusFrame(HawcPlusScan parent) {
 		super(parent);
 		setSize(HawcPlus.pixels);
 	}
 	
-	@Override
-	public Frame copy(boolean withContents) {
-		HawcPlusFrame copy = (HawcPlusFrame) super.copy(withContents);
-		if(SAE != null) {
-			copy.SAE = new float[SAE.length];
-			if(withContents) System.arraycopy(SAE, 0, copy.SAE, 0, SAE.length);
-		}	
-		return copy;
+	public void parseData(int subarray, long[][] DAC) {
+		parseData(DAC, subarray * HawcPlus.subarrayPixels);
 	}
 	
-	@Override
-	public void addDataFrom(Frame other, double scaling) {
-		super.addDataFrom(other, scaling);
-		if(scaling == 0.0) return;
-		
-		final HawcPlusFrame hawcPlusFrame = (HawcPlusFrame) other;
-		final float fScale = (float) scaling;
-		if(SAE != null) for(int i=SAE.length; --i >= 0; ) SAE[i] += fScale * hawcPlusFrame.SAE[i];
+	public void parseData(int subarray, long[] DAC, int frameIndex) {
+		parseData(DAC, frameIndex * HawcPlus.subarrayPixels, HawcPlus.subarrayPixels, subarray * HawcPlus.subarrayPixels);
 	}
 	
-	@Override
-	public void scale(double factor) {
-		super.scale(factor);
-		
-		if(SAE != null) {
-			if(factor == 0.0) Arrays.fill(SAE, 0.0F);
-			else {
-				final float fScale = (float) factor;
-				for(int i=SAE.length; --i >= 0; ) SAE[i] *= fScale;
-			}
-		}
+	private void parseData(long[][] DAC, int offset) {
+		int bol = offset + DAC.length * DAC[0].length - 1;
+		for(int i=DAC.length; --i >= 0; ) for(int j=DAC[0].length; --j >= 0; bol--)
+		data[offset+bol] = DAC[i][j] - ((HawcPlus) scan.instrument).get(offset+bol).readoutOffset;		
 	}
 	
-	@Override
-	public void slimTo(Instrument<?> instrument) {
-		super.slimTo(instrument);
-		
-		if(SAE == null) return;
-		
-		final float[] newSAE = new float[instrument.size()];
-		for(int k=instrument.size(); --k >= 0; ) newSAE[k] = SAE[instrument.get(k).index];		
-			
-		SAE = newSAE;
+	private void parseData(long[] DAC, int from, int channels, int offset) {
+		for(int i=channels; --i >= 0; )
+			data[offset+i] = DAC[from+i] - ((HawcPlus) scan.instrument).get(offset+i).readoutOffset;
 	}
-	
-	public void parseData(float[][] DAC) {
-		for(int bol=0; bol<HawcPlus.pixels; bol++) data[bol] = DAC[bol/8][bol%8];		
-	}
-	
-	public void parseSAE(float[][] SAE) {
-		for(int bol=0; bol<HawcPlus.pixels; bol++) this.SAE[bol] = SAE[bol/8][bol%8];	
-	}
-	
-	public void parseData(float[] DAC, int from, int channels) {
-		System.arraycopy(DAC, from, data, 0, channels);
-	}
-	
-	public void parseSAE(float[] SAE, int from, int channels) {
-		System.arraycopy(SAE, from, this.SAE, 0, channels);
-	}
-	
-	public final static int CAL_NONE = 0;
-	public final static int CAL_SHUTTER = 1;
-	public final static int CAL_IV = 2;
-	
-	public final static int DIGITAL_IRIG = 1;
 	
 }

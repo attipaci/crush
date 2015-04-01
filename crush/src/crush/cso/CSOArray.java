@@ -39,9 +39,10 @@ import crush.InstantFocus;
 import crush.Mount;
 import crush.Scan;
 import crush.array.RotatingArray;
-import crush.array.SimplePixel;
+import crush.array.SingleColorPixel;
+import crush.array.SingleColorLayout;
 
-public abstract class CSOArray<PixelType extends SimplePixel> extends RotatingArray<PixelType> implements GroundBased {
+public abstract class CSOArray<PixelType extends SingleColorPixel> extends RotatingArray<PixelType, PixelType> implements GroundBased {
 	/**
 	 * 
 	 */
@@ -61,6 +62,7 @@ public abstract class CSOArray<PixelType extends SimplePixel> extends RotatingAr
 	
 	public CSOArray(String name, int size) {
 		super(name, size);
+		setLayout(new SingleColorLayout<PixelType>(this));
 		// TODO Auto-generated constructor stub
 	}
 

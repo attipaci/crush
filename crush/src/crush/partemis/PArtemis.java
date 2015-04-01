@@ -33,7 +33,7 @@ import java.util.*;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
 
-public class PArtemis extends APEXArray<PArtemisPixel> {
+public class PArtemis extends APEXCamera<PArtemisPixel> {
 	/**
 	 * 
 	 */
@@ -106,7 +106,7 @@ public class PArtemis extends APEXArray<PArtemisPixel> {
 
 	@Override
 	public void flagInvalidPositions() {
-		for(SimplePixel pixel : this) if(pixel.position.length() > 2.0 * Unit.arcmin) pixel.flag(Channel.FLAG_BLIND);
+		for(SingleColorPixel pixel : this) if(pixel.position.length() > 2.0 * Unit.arcmin) pixel.flag(Channel.FLAG_BLIND);
 	}
 
 	@Override

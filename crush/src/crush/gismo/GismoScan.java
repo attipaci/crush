@@ -302,6 +302,9 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
+		
+		// Load any options based on the FITS header...
+		instrument.setFitsHeaderOptions(header);
 
 		// Scan Info
 		int serial = header.getIntValue("SCANNO");
@@ -524,6 +527,9 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	protected void parseOldScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 
+		// Load any options based on the FITS header...
+		instrument.setFitsHeaderOptions(header);		
+		
 		// Scan Info
 		int serial = header.getIntValue("SCANNO");
 		
@@ -738,7 +744,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	}
 
 	@Override
-	public void editScanHeader(Header header) throws FitsException {	
+	public void editScanHeader(Header header) throws HeaderCardException {	
 		super.editScanHeader(header);
 		header.addValue("PROJECT", project, "The project ID for this scan");
 		if(basisSystem != null) header.addValue("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan.");

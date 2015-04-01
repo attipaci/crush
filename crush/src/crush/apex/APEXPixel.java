@@ -43,13 +43,13 @@ import crush.PhaseData;
 import crush.PhaseDespiking;
 import crush.PhaseSet;
 import crush.PhaseWeighting;
-import crush.array.SimplePixel;
+import crush.array.SingleColorPixel;
 
-public abstract class APEXPixel extends SimplePixel implements PhaseWeighting, PhaseDespiking {
+public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighting, PhaseDespiking {
 	public Vector2D fitsPosition;
 	public double relativePhaseWeight = 1.0;
 	
-	public APEXPixel(APEXArray<?> array, int backendIndex) {
+	public APEXPixel(APEXCamera<?> array, int backendIndex) {
 		super(array, backendIndex);
 	}
 	
