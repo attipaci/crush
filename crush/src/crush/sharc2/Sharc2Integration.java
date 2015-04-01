@@ -72,11 +72,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	@Override
 	public void fillGaps() {
 		// trim gaps...
-		if(hasOption("nogaps")) {
-			String argument = option("nogaps").getValue();
-			if(argument.length() == 0) trimToGap();
-			else if(argument.equalsIgnoreCase("JSharc")) if(scan.creator.equals("JSharc")) trimToGap();
-		}
+		if(hasOption("nogaps")) trimToGap();
 		else super.fillGaps();		
 	}
 	
@@ -94,6 +90,8 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	}
 	
 	public void trimToGap() {
+		System.err.println("   Trimming timestream to first gap.");
+		
 		Sharc2Frame first = getFirstFrame();
 		Sharc2Frame last = getLastFrame();
 		
@@ -209,7 +207,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 					equatorialOffset = new Vector2D();
 				}
 				@Override
-				public void readRow(int i) throws FitsException {	
+				public void processRow(int i) throws FitsException {	
 
 					final Sharc2Frame frame = new Sharc2Frame(sharcscan);
 					frame.index = i;
@@ -263,6 +261,116 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		}
 	}
 
+	/*
+	class Sharc2RowReader extends HDURowReader {	
+		
+
+		private boolean hasExtraTimingInfo, isDoubleUT;
+
+		
+		private int iData, iUT, iAZ, iEL, iAZO, iELO, iAZE, iELE, iRAO, iDECO, iLST, iPA, iChop;
+		private int iDT, iSN;
+		private int channels;
+		
+		private final Sharc2Scan sharcscan = (Sharc2Scan) scan;
+		
+		public Sharc2RowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
+			super(hdu, in);		
+
+			iData = 0;
+			channels = table.getSizes()[iData];
+			
+			iAZ = hdu.findColumn("AZ");
+			iEL = hdu.findColumn("EL");
+			iAZE = hdu.findColumn("AZ_ERROR");
+			iELE = hdu.findColumn("EL_ERROR");
+			iPA = hdu.findColumn("Parallactic Angle");
+			iLST = hdu.findColumn("LST");
+			iRAO = Math.max(hdu.findColumn("RAO"), hdu.findColumn("RA_OFFSET"));
+			iDECO = Math.max(hdu.findColumn("DECO"), hdu.findColumn("DEC_OFFSET"));
+			iAZO = Math.max(hdu.findColumn("AZO"), hdu.findColumn("AZ_OFFSET"));
+			iELO = Math.max(hdu.findColumn("ELO"), hdu.findColumn("EL_OFFSET"));
+			iChop = hdu.findColumn("CHOP_OFFSET");
+			
+			//iFlag = hdu.findColumn("Celestial");
+			//iTRK = hdu.findColumn("Tracking");
+			
+			iDT = hdu.findColumn("Detector Time");
+			iSN = hdu.findColumn("Sequence Number");			
+			hasExtraTimingInfo = iDT >= 0 && iSN >= 0; 
+			
+			
+			iUT = hdu.findColumn("UT");
+			isDoubleUT = hdu.getHeader().getStringValue("TFORM" + (iUT+1)).equalsIgnoreCase("1D");
+		}
+	
+		@Override
+		public Reader getReader() throws FitsException {
+			return new Reader() {
+				private Vector2D equatorialOffset;
+
+				@Override
+				public void init() { 
+					super.init();
+					equatorialOffset = new Vector2D();
+				}
+				
+				@Override
+				public void processRow(Object[] row, int index) throws FitsException {	
+
+					final Sharc2Frame frame = new Sharc2Frame(sharcscan);
+					frame.index = index;
+					
+					frame.parseData((float[][]) row[iData]);
+
+					final double UT = (isDoubleUT ? ((double[]) row[iUT])[0] : ((float[]) row[iUT])[0]) * Unit.hour;
+					frame.MJD = sharcscan.iMJD + UT / Unit.day;
+	
+					// Enforce the calculation of the equatorial coordinates
+					frame.equatorial = null;
+
+					frame.horizontal = new HorizontalCoordinates(
+							((float[]) row[iAZ])[0] * Unit.deg + ((float[]) row[iAZE])[0] * Unit.arcsec,
+							((float[]) row[iEL])[0] * Unit.deg + ((float[]) row[iELE])[0] * Unit.arcsec);
+					
+					final double pa = ((float[]) row[iPA])[0] * Unit.deg;
+					frame.sinPA = Math.sin(pa);
+					frame.cosPA = Math.cos(pa);
+
+					frame.LST = ((float[]) row[iLST])[0] * Unit.hour;
+
+					if(hasExtraTimingInfo) {
+						frame.dspTime = ((double[]) row[iDT])[0] * Unit.sec;
+						frame.frameNumber = ((int[]) row[iSN])[0];
+					}		
+
+					frame.horizontalOffset = new Vector2D(
+							(((float[]) row[iAZO])[0] + ((float[]) row[iAZE])[0] * frame.horizontal.cosLat()) * Unit.arcsec,
+							(((float[]) row[iELO])[0] + ((float[]) row[iELE])[0]) * Unit.arcsec);
+				
+					frame.chopperPosition.setX(((float[]) row[iChop])[0] * Unit.arcsec);
+					
+					//chopZero.add(frame.chopperPosition.getX());
+					//chopZero.addWeight(1.0);
+
+					// Add in the scanning offsets...
+					if(sharcscan.addStaticOffsets) frame.horizontalOffset.add(sharcscan.horizontalOffset);	
+
+					// Add in the equatorial sweeping offsets
+					// Watch out for the sign of the RA offset, which is counter to the native coordinate direction
+					equatorialOffset.set(((float[]) row[iRAO])[0] * Unit.arcsec, ((float[]) row[iDECO])[0] * Unit.arcsec);	
+					
+					
+					frame.equatorialToHorizontal(equatorialOffset);
+					frame.horizontalOffset.add(equatorialOffset);
+		
+					set(index, frame);
+				}
+			};
+		}
+	}
+	*/
+	
 	
 	@Override
 	public String getFullID(String separator) {

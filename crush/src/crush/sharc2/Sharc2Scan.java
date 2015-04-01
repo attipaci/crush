@@ -238,6 +238,9 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 
+		// Load any options based on the FITS header...
+		instrument.setFitsHeaderOptions(header);
+		
 		// Scan Info
 		setSerial(header.getIntValue("SCANNO"));
 		

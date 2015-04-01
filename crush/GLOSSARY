@@ -1728,7 +1728,7 @@
 			of the map.
 			@See: 'exposureclip', 'clip'
 
-:: nogaps[=JSharc]	@Instrument: SHARC-2
+:: nogaps		@Instrument: SHARC-2
 			@Advanced
 			Terminate the reading of the data at the first 
 			gap. During the early SHARC-2 runs when JSharc was used 
@@ -1737,9 +1737,6 @@
 			wraparound of an internal buffer. The bug manifested in
 			a sudden jump in the timestamps, making it relatively 
 			easy to diagnose if this happened during the scan.
-			The optional argument 'JSharc' restricts the gap 
-			termination to data obtained using 'JSharc' alone
-			(default).
 
 :: noresistors		@Instrument: LABOCA
 			@Expert

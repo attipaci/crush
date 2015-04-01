@@ -149,10 +149,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		catch(Exception e) { e.printStackTrace(); }
 			
-		
-		int gapTolerance = hasOption("gap-tolerance") ? framesFor(Double.parseDouble("gap-tolerance") * Unit.s) : 0;
-		if(hasGaps(gapTolerance)) fillGaps();
-		else reindex();
+		if(hasGaps(1)) fillGaps();
 		
 		if(hasOption("detect.chopped")) detectChopper();
 		
@@ -544,11 +541,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	public boolean hasGaps(int tolerance) {
+		System.err.print("   Checking for gaps: ");
+		
 		double lastMJD = Double.NaN;
-		for(final Frame exposure : this) if(!Double.isNaN(lastMJD)) {
-			final int gap = (int)Math.round((exposure.MJD - lastMJD) * Unit.day / instrument.samplingInterval) - 1;
-			if(gap > tolerance) return true;
+		for(int t=size(); --t >= 0; ) if(!Double.isNaN(lastMJD)) {
+			final int gap = (int)Math.round((lastMJD - get(t).MJD) * Unit.day / instrument.samplingInterval) - 1;
+			lastMJD = get(t).MJD;
+			if(gap > tolerance) {
+				System.err.println("Gap(s) found! :-(");
+				return true;
+			}
 		}
+		
+		System.err.println("No gaps. :-)");
 		return false;
 	}
 	

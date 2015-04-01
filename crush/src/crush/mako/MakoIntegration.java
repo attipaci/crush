@@ -154,7 +154,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 					equatorialOffset = new Vector2D();
 				}
 				@Override
-				public void readRow(int i) throws FitsException {	
+				public void processRow(int i) throws FitsException {	
 					if(ch[i] == 255) return;
 					
 					final MakoFrame frame = new MakoFrame(makoscan);
@@ -229,6 +229,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 			this.offset = offset;			
 
 			int cData = hdu.findColumn("Data");
+			if(cData < 0) cData = hdu.findColumn("Shift");
 			channels = table.getSizes()[cData];
 			
 			data = (float[]) table.getColumn(cData);
@@ -260,7 +261,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 					equatorialOffset = new Vector2D();
 				}
 				@Override
-				public void readRow(int i) throws FitsException {	
+				public void processRow(int i) throws FitsException {	
 					if(ch[i] == 255) return;
 					
 					final MakoFrame frame = new MakoFrame(makoscan);

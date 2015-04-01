@@ -35,7 +35,7 @@ import kovacs.util.Unit;
 
 
 
-public class Saboca extends APEXArray<SabocaPixel> {
+public class Saboca extends APEXCamera<SabocaPixel> {
 	/**
 	 * 
 	 */
@@ -73,7 +73,7 @@ public class Saboca extends APEXArray<SabocaPixel> {
 
 	@Override
 	public void flagInvalidPositions() {
-		for(SimplePixel pixel : this) if(pixel.position.length() > 3.0 * Unit.arcmin) pixel.flag(Channel.FLAG_BLIND);
+		for(SingleColorPixel pixel : this) if(pixel.position.length() > 3.0 * Unit.arcmin) pixel.flag(Channel.FLAG_BLIND);
 	}
 
 	@Override

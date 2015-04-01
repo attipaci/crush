@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.22-a1
+ * @version 2.22-1
  * 
  */
 public class CRUSH extends Configurator {
@@ -45,8 +45,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.22-a1";
-	private static String revision = "devel.4";
+	private static String version = "2.22-1";
+	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -528,13 +528,13 @@ public class CRUSH extends Configurator {
 
 	public static void info() {
 		String info = "\n" +
-			"  ----------------------------------------------------------------------\n" +
+			"  ----------------------------------------------------------------------------\n" +
 			"  crush -- Reduction and imaging tool for bolometer arrays.\n" +
 			"           Version: " + getFullVersion() + "\n" + 
-			"           Utilities: " + Util.getFullVersion() + "\n" +
+			"           Utilities: " + Util.getFullVersion() + ", FITS libs: " + Fits.version() + "\n" +
 			"           http://www.submm.caltech.edu/~sharc/crush\n" +
 			"           Copyright (C)2014 Attila Kovacs <attila[AT]caltech.edu>\n" +
-			"  ----------------------------------------------------------------------\n";	
+			"  ----------------------------------------------------------------------------\n";	
 		System.err.println(info);
 	}
 

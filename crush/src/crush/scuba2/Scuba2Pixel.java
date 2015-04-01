@@ -17,9 +17,9 @@ package crush.scuba2;
 
 import kovacs.math.Vector2D;
 import kovacs.util.*;
-import crush.array.SimplePixel;
+import crush.array.SingleColorPixel;
 
-public class Scuba2Pixel extends SimplePixel {
+public class Scuba2Pixel extends SingleColorPixel {
 	public int mux, pin, block=0;
 	public double muxGain = 1.0, pinGain = 1.0;
 	public double temperatureGain = 0.0;

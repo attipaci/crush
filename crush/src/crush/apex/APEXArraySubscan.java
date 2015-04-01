@@ -39,7 +39,7 @@ import kovacs.util.*;
 
 import crush.fits.HDUReader;
 
-public class APEXArraySubscan<InstrumentType extends APEXArray<?>, FrameType extends APEXFrame> 
+public class APEXArraySubscan<InstrumentType extends APEXCamera<?>, FrameType extends APEXFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping {
 	/**
 	 * 
@@ -226,7 +226,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		public Reader getReader() {
 			return new Reader() {
 				@Override
-				public void readRow(int t) throws FitsException {
+				public void processRow(int t) throws FitsException {
 					final APEXFrame exposure = get(t);
 					if(exposure != null) exposure.parse(data, t * channels, channels);			
 				}
@@ -361,7 +361,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 				}
 				
 				@Override
-				public void readRow(int t) throws FitsException {
+				public void processRow(int t) throws FitsException {
 				
 					// Continue only if the basis coordinates are valid...
 					// APEX uses -999 deg to mark invalid data...
@@ -441,7 +441,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 	@SuppressWarnings("unchecked")
 	@Override
 	public FrameType getFrameInstance() {
-		return (FrameType) new APEXFrame((APEXArrayScan<APEXArray<?>, APEXArraySubscan<APEXArray<?>, FrameType>>) scan);
+		return (FrameType) new APEXFrame((APEXArrayScan<APEXCamera<?>, APEXArraySubscan<APEXCamera<?>, FrameType>>) scan);
 	}
 			
 	public void fitsRCP() {

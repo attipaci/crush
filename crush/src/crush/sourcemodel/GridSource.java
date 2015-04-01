@@ -157,7 +157,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		cursor.add(new HeaderCard("V2JY", instrument.janskyPerBeam(), "1 Jy/beam in instrument data units."));	
 		
 		if(instrument != null) {
-			instrument.editImageHeader(cursor);
+			instrument.editImageHeader(scans, cursor);
 			if(instrument.getOptions() != null) instrument.getOptions().editHeader(cursor);
 		}
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,53 +20,30 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2010 Attila Kovacs 
 
-package crush.array;
+package crush.sofia;
 
+import nom.tam.fits.BasicHDU;
+import crush.GroundBased;
+import crush.HorizontalFrame;
+import crush.Integration;
+import crush.Scan;
 
-import java.util.*;
+public abstract class SofiaIntegration<InstrumentType extends SofiaCamera<?>, FrameType extends HorizontalFrame> 
+extends Integration<InstrumentType, FrameType> implements GroundBased {
 
-import kovacs.util.Configurator;
-import crush.*;
-
-
-public abstract class MonoArray<ChannelType extends SimplePixel> extends
-		Array<ChannelType, ChannelType> {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 3231662319547162814L;
+	private static final long serialVersionUID = -4771883165716694480L;
 
-	public MonoArray(String name, int size) {
-		super(name, size);
-	}
-
-	public MonoArray(String name) {
-		super(name);
+	
+	public SofiaIntegration(Scan<InstrumentType, ?> parent) {
+		super(parent);
 	}
 
-	@Override
-	public void setOptions(Configurator options) {
-		super.setOptions(options);	
-		if(hasOption("beam")) resolution = option("beam").getDouble() * getSizeUnitValue();
-	}
-	
-	@Override
-	public int getPixelCount() {
-		return size();
-	}
-	
-	@Override
-	public Collection<? extends Pixel> getPixels() {
-		return copyGroup();
-	}
-	
-	@Override
-	public Collection<? extends Pixel> getMappingPixels() {
-		return getObservingChannels().copyGroup().discard(~0);
-	}
+	public abstract void readData(BasicHDU[] hdus) throws Exception;
 	
 	
-
 }
+

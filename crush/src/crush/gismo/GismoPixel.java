@@ -30,9 +30,9 @@ import kovacs.math.Vector2D;
 import kovacs.util.*;
 
 import crush.Channel;
-import crush.array.SimplePixel;
+import crush.array.SingleColorPixel;
 
-public class GismoPixel extends SimplePixel {
+public class GismoPixel extends SingleColorPixel {
 	public int row, col, mux, pin;
 	public Vector2D size = defaultSize;
 	public double muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0, saeGain = 0.0;

@@ -28,9 +28,9 @@ import java.util.StringTokenizer;
 import kovacs.math.Vector2D;
 import kovacs.util.Unit;
 import crush.Channel;
-import crush.array.SimplePixel;
+import crush.array.SingleColorPixel;
 
-public class SharcPixel extends SimplePixel {
+public class SharcPixel extends SingleColorPixel {
 	boolean isBad = false;
 		
 	public SharcPixel(Sharc instrument, int backendIndex) {

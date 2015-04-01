@@ -25,7 +25,7 @@
 package crush.sharc2;
 
 import crush.Channel;
-import crush.array.SimplePixel;
+import crush.array.SingleColorPixel;
 
 import java.util.StringTokenizer;
 
@@ -35,7 +35,7 @@ import kovacs.util.Util;
 
 
 
-public class Sharc2Pixel extends SimplePixel {
+public class Sharc2Pixel extends SingleColorPixel {
 	public int row, col, block = 0;
 	public Vector2D size;
 	public double biasV;

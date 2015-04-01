@@ -29,7 +29,7 @@ import kovacs.math.Vector2D;
 import kovacs.util.*;
 import crush.*;
 
-public abstract class RotatingArray<PixelType extends SimplePixel> extends MonoArray<PixelType> {
+public abstract class RotatingArray<PixelType extends Pixel, ChannelType extends Channel> extends Array<PixelType, ChannelType> {
 	/**
 	 * 
 	 */
@@ -91,13 +91,15 @@ public abstract class RotatingArray<PixelType extends SimplePixel> extends MonoA
 		Vector2D priorOffset = getPointingOffset(appliedRotation);
 		Vector2D newOffset = getPointingOffset(angle);
 		
-		for(SimplePixel pixel : this) if(pixel.position != null) {
+		for(Pixel pixel : getPixels()) if(pixel.getPosition() != null) {
+			Vector2D position = pixel.getPosition();
+			
 			// Center positions on the rotation center...
-			pixel.position.subtract(priorOffset);
+			position.subtract(priorOffset);
 			// Do the rotation...
-			pixel.position.rotate(angle - appliedRotation);
+			position.rotate(angle - appliedRotation);
 			// Re-center on the pointing center...
-			pixel.position.add(newOffset);
+			position.add(newOffset);
 		}
 		
 		appliedRotation = angle;

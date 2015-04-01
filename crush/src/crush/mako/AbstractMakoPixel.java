@@ -23,7 +23,7 @@
 package crush.mako;
 
 import crush.Channel;
-import crush.array.SimplePixel;
+import crush.array.SingleColorPixel;
 
 import kovacs.math.Vector2D;
 import kovacs.util.Unit;
@@ -31,7 +31,7 @@ import kovacs.util.Util;
 
 
 
-public abstract class AbstractMakoPixel extends SimplePixel {
+public abstract class AbstractMakoPixel extends SingleColorPixel {
 	public int array = AbstractMako.DEFAULT_ARRAY;
 	public int row, col;
 	public Vector2D size;

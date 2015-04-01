@@ -31,11 +31,11 @@ import crush.sourcemodel.Photometry;
 
 public class APEXChoppedPhotometry extends Photometry {
 
-	public APEXChoppedPhotometry(APEXArray<?> instrument) {
+	public APEXChoppedPhotometry(APEXCamera<?> instrument) {
 		super(instrument);
 	}
 	
-	public APEXArray<?> getAPEXArray() { return (APEXArray<?>) getInstrument(); }
+	public APEXCamera<?> getAPEXArray() { return (APEXCamera<?>) getInstrument(); }
 
 
 	@Override

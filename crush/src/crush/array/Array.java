@@ -38,6 +38,10 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	 */
 	private static final long serialVersionUID = -707752417431510013L;
 	
+	public Array(String name) {
+		super(name);
+	}
+	
 	public Array(String name, int size) {
 		super(name, size);
 	}
@@ -58,10 +62,6 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		gradients.add(gy);
 		
 		addModality(gradients);
-	}
-
-	public Array(String name) {
-		super(name);
 	}
 	
 	public void setReferencePosition(Vector2D position) {

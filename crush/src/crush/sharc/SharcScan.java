@@ -87,9 +87,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 	
 	@Override
 	public String getID() {
-		AstroTime time = new AstroTime();
-		time.setMJD(getMJD());
-		return time.getFitsDate() + "." + super.getID();
+		return getFitsDateString() + "." + super.getID();
 	}
 	
 	public void readScanRow(DataInput in) throws IOException {
@@ -169,17 +167,17 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		
 		int dy = year - 2000;
 		int leapDays = dy > 0 ?  (dy+3)/4 : dy/4 - 1;
-		int days2000 = dy * 365 + leapDays + (ut_day - 1);
+		int days2000 = dy * 365 + leapDays + (ut_day-1);
 		
-		double mjd = AstroTime.mjdJ2000 + days2000 + (ut_time * Unit.hour) / Unit.day;
+		long millis = Math.round(AstroTime.millis0UTC1Jan2000 + (days2000 * Unit.day + ut_time * Unit.hour) / Unit.ms);
 		AstroTime time = new AstroTime();
-		time.setMJD(mjd);
+		time.setUTCMillis(millis);
 		timeStamp = time.getFitsTimeStamp();
 		
-		setMJD(mjd);
+		setMJD(time.getMJD());
 		
-		
-		iMJD = (int)Math.floor(getMJD());	
+		// Really iMJD is the MJD for the calendar date here...
+		iMJD = (int) AstroTime.mjdJ2000 + days2000;	
 		
 		equatorial = new EquatorialCoordinates((hasOption("moving") ? -1.0 : 1.0) * in.readDouble(), in.readDouble());
 		double epoch = in.readDouble();
@@ -326,14 +324,12 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		TimeFormat tf = new TimeFormat(0);
 		tf.colons();
 		
-		AstroTime time = new AstroTime();
-		time.setMJD(getMJD());
 		
 		String name = getSourceName() + "            ";
 		name = name.substring(0, 12);
 			
 		return serialFormat.format(index)
-				+ " " + time.getFitsDate()
+				+ " " + getFitsDateString()
 				+ " " + tf.format(ut_time * 3600.0)
 				+ " " + name
 				+ " " + Util.f3.format(tau225GHz)
@@ -352,6 +348,16 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		if(coordinates instanceof FocalPlaneCoordinates) return -instrument.rotatorAngle;
 		if(coordinates instanceof CelestialCoordinates) return getPA() - ((CelestialCoordinates) coordinates).getEquatorialPositionAngle();
 		return Double.NaN;
+	}
+	
+	
+	/**
+	 * Gets the simple date.
+	 *
+	 * @return the simple date
+	 */
+	public String getFitsDateString() {
+		return AstroTime.fitsDateFormatter.format(AstroTime.getTTMillis(iMJD + 0.5));
 	}
 	
 	

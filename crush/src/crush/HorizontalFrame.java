@@ -92,7 +92,7 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	@Override
 	public final void getEquatorialNativeOffset(final Vector2D position, final Vector2D offset) {
 		getHorizontalOffset(position, offset);
-		horizontalToEquatorialNative(offset);
+		horizontalToNativeEquatorial(offset);
 	}
 	
 	@Override
@@ -169,14 +169,14 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	}
 	
 	// Rotate by PA
-	public final void horizontalToEquatorialNative(Vector2D offset) {
+	public final void horizontalToNativeEquatorial(Vector2D offset) {
 		final double x = offset.x();
 		offset.setX(cosPA * x - sinPA * offset.y());
 		offset.setY(cosPA * offset.y() + sinPA * x);
 	}
 	
 	public final void horizontalToEquatorial(Vector2D offset) {
-		horizontalToEquatorialNative(offset);
+		horizontalToNativeEquatorial(offset);
 		offset.scaleX(-1.0);
 	}
 	
@@ -194,7 +194,7 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	
 	@Override
 	public final void nativeToEquatorialNative(Vector2D offset) {
-		horizontalToEquatorialNative(offset);
+		horizontalToNativeEquatorial(offset);
 	}
 	
 	@Override

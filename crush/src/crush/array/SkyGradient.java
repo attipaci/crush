@@ -34,7 +34,7 @@ public class SkyGradient extends GradientGains {
 	
 	@Override
 	public double getRawGain(Channel c) throws Exception {
-		SimplePixel pixel = (SimplePixel) c;
+		SingleColorPixel pixel = (SingleColorPixel) c;
 		if(pixel.position == null) return Double.NaN;
 		return (horizontal ? pixel.position.x() : pixel.position.y());
 	}

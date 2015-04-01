@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package crush.hawcplus;
 
@@ -30,14 +29,16 @@ import kovacs.math.Vector2D;
 import kovacs.util.*;
 
 import crush.Channel;
-import crush.array.SimplePixel;
+import crush.array.SingleColorPixel;
 
-public class HawcPlusPixel extends SimplePixel {
+public class HawcPlusPixel extends SingleColorPixel {
 	public int row, col, mux, pin;
 	public Vector2D size = defaultSize;
 	public double muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0, saeGain = 0.0;
 	
 	// 16 x 8 (rows x cols)
+	long readoutOffset = 0L;
+	
 	
 	public HawcPlusPixel(HawcPlus array, int zeroIndex) {
 		super(array, zeroIndex+1);
@@ -93,7 +94,7 @@ public class HawcPlusPixel extends SimplePixel {
 	}
 	
 	
-	public static Vector2D defaultSize = new Vector2D(13.88 * Unit.arcsec, 13.77 * Unit.arcsec);
+	public static Vector2D defaultSize = new Vector2D(5.0 * Unit.arcsec, 5.0 * Unit.arcsec);
 	
 	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
 	public final static int FLAG_PIN = 1 << nextSoftwareFlag++;

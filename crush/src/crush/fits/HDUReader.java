@@ -51,7 +51,7 @@ public abstract class HDUReader {
 	}
 
 	
-	public abstract class Task<ReturnType> extends Parallel<ReturnType> {
+	public abstract class Reader extends Parallel<Void> {
 		@Override
 		public void processIndex(int i, int threadCount) throws Exception {
 			final int frames = hdu.getNRows();
@@ -67,14 +67,9 @@ public abstract class HDUReader {
 				Thread.yield();
 			}
 		}
-		
+			
 		public abstract void processRow(int i) throws Exception;
+		
 	}
 	
-	public abstract class Reader extends Task<Void> {
-		@Override
-		public void processRow(int i) throws Exception { readRow(i); }
-		
-		public abstract void readRow(int i) throws Exception;
-	}
 }
