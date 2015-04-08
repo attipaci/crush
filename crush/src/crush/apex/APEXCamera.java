@@ -52,13 +52,11 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Array<Ch
 	public double rotation = 0.0;
 	
 	public APEXCamera(String name, int size) {
-		super(name, size);
-		setLayout(new SingleColorLayout<APEXPixel>(this));
+		super(name, new SingleColorLayout<APEXPixel>(), size);
 	}
 	
 	public APEXCamera(String name) {
-		super(name);
-		setLayout(new SingleColorLayout<APEXPixel>(this));
+		super(name, new SingleColorLayout<APEXPixel>());
 	}
 	
 	
@@ -146,7 +144,7 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Array<Ch
 		final EquatorialCoordinates reference = firstScan.equatorial;
 		final String sourceName = firstScan.getSourceName();
 		
-		final double pointingTolerance = resolution / 5.0;
+		final double pointingTolerance = getPointSize() / 5.0;
 		
 		final boolean isChopped = firstSubscan.getChopper() != null;
 		

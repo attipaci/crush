@@ -24,17 +24,13 @@
 package crush.hawcplus;
 
 import java.io.*;
-import java.text.NumberFormat;
 import java.util.*;
 
-import kovacs.data.DataPoint;
 import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
 import kovacs.util.*;
 import crush.*;
-import crush.array.*;
+import crush.array.SingleColorLayout;
 import crush.sofia.SofiaCamera;
-import crush.sofia.SofiaScan;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
@@ -46,18 +42,27 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 
 	
 	private Vector2D arrayPointingCenter; // row,col
-	
+	Vector2D pixelSize = HawcPlusPixel.defaultSize;
+	Vector2D[][] subarrayOffset = new Vector2D[2][2];
 	
 	public HawcPlus() {
-		super("hawc+", pixels);	
+		super("hawc+", new SingleColorLayout<HawcPlusPixel>(), pixels);
 		arrayPointingCenter = (Vector2D) defaultPointingCenter.clone();
+		for(int i=0; i<1; i++) for(int j=0; j<1; j++) subarrayOffset[i][j] = new Vector2D();
 		mount = Mount.LEFT_NASMYTH;
 	}
-
+	
+	
 	@Override
 	public Instrument<HawcPlusPixel> copy() {
 		HawcPlus copy = (HawcPlus) super.copy();
-		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();	
+		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
+		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
+		
+		if(subarrayOffset != null) {
+			copy.subarrayOffset = new Vector2D[2][2];
+			for(int i=0; i<1; i++) for(int j=0; j<1; j++) copy.subarrayOffset[i][j] = (Vector2D) subarrayOffset[i][j].clone();
+		}
 		return copy;
 	}
 	
@@ -79,6 +84,12 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 	@Override
 	public void initDivisions() {
 		super.initDivisions();
+		
+		try { addDivision(getDivision("polarrays", HawcPlusPixel.class.getField("polarray"), Channel.FLAG_DEAD)); }
+		catch(Exception e) { e.printStackTrace(); }	
+		
+		try { addDivision(getDivision("subarrays", HawcPlusPixel.class.getField("subarray"), Channel.FLAG_DEAD)); }
+		catch(Exception e) { e.printStackTrace(); }	
 		
 		try { addDivision(getDivision("mux", HawcPlusPixel.class.getField("mux"), Channel.FLAG_DEAD)); 
 			ChannelDivision<HawcPlusPixel> muxDivision = divisions.get("mux");
@@ -110,6 +121,20 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 	@Override
 	public void initModalities() {
 		super.initModalities();
+		
+		try { 
+			Modality<?> pinMode = new CorrelatedModality("polarrays", "P", divisions.get("polarrays"), HawcPlusPixel.class.getField("polarrayGain")); 
+			pinMode.setGainFlag(HawcPlusPixel.FLAG_POL);
+			addModality(pinMode);
+		}
+		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		
+		try { 
+			Modality<?> pinMode = new CorrelatedModality("subarrays", "S", divisions.get("subarrays"), HawcPlusPixel.class.getField("subarrayGain")); 
+			pinMode.setGainFlag(HawcPlusPixel.FLAG_SUB);
+			addModality(pinMode);
+		}
+		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
 		try {
 			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), HawcPlusPixel.class.getField("muxGain"));		
@@ -147,6 +172,11 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 		if(hasOption("pcenter")) arrayPointingCenter = option("pcenter").getVector2D();
 		else arrayPointingCenter = array.arrayPointingCenter;
 		
+		subarrayOffset[0][0] = hasOption("offset.r1") ? option("offset.r1").getVector2D() : new Vector2D();
+		subarrayOffset[0][1] = hasOption("offset.r2") ? option("offset.r2").getVector2D() : new Vector2D();
+		subarrayOffset[1][0] = hasOption("offset.t1") ? option("offset.t1").getVector2D() : new Vector2D();
+		subarrayOffset[1][1] = hasOption("offset.t2") ? option("offset.t2").getVector2D() : new Vector2D();
+		
 		Vector2D pixelSize = HawcPlusPixel.defaultSize;
 		
 		// Set the pixel size...
@@ -157,27 +187,31 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
 		}
 		else pixelSize = new Vector2D(array.pixelScale, array.pixelScale);
-		
 
 		setPlateScale(pixelSize);
 			
 		super.loadChannelData();
 	}
 	
-	public void setPlateScale(Vector2D size) {
-		// Make all pixels the same size. Also calculate their positions...
-		for(HawcPlusPixel pixel : this) pixel.size = size;
+	public void setPlateScale(Vector2D size) {	
+		pixelSize = size;
 		
-		Vector2D center = HawcPlusPixel.getPosition(size, arrayPointingCenter.x() - 1.0, arrayPointingCenter.y() - 1.0);			
+		Vector2D center = HawcPlusPixel.getPosition(size, subarrayOffset[0][0], arrayPointingCenter.x() - 1.0, arrayPointingCenter.y() - 1.0);			
+		for(HawcPlusPixel pixel : this) pixel.calcPosition();
 		
 		// Set the pointing center...
 		setReferencePosition(center);
 		
 		if(hasOption("rotation")) rotate(option("rotation").getDouble() * Unit.deg);
+		if(hasOption("rotation.t")) rotateT(option("rotation.t").getDouble() * Unit.deg);
 	}
 	
 	public void rotate(double angle) {
 		for(HawcPlusPixel pixel : this) pixel.position.rotate(angle);
+	}
+	
+	public void rotateT(double angle) {
+		for(int i=pixels; --i >= polArrayPixels; ) get(i).position.rotate(angle);
 	}
 	
 	// Calculates the offset of the pointing center from the nominal center of the array
@@ -187,27 +221,9 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 		if(hasOption("rotation")) offset.rotate(option("rotation").getDouble() * Unit.deg);
 		return offset;
 	}
-
-	@Override
-	public void setReferencePosition(Vector2D position) {
-		for(HawcPlusPixel pixel : this) pixel.calcPosition();
-		super.setReferencePosition(position);
-	}
 	
-	// TODO need to incorporate into scan reading...
-	protected void parseHardwareHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
-		Object[] row = hdu.getRow(0);
-			
-		if(!isEmpty()) clear();
-		ensureCapacity(pixels);
-		
-		for(int c = 0; c<pixels; c++) add(new HawcPlusPixel(this, c));
-
-		// TODO 
-		//setBiasOptions();	
-	}
-	
-	
+	// TODO
+	/*
 	public void setBiasOptions() {	
 		if(!getOptions().containsKey("bias")) return;
 			
@@ -224,7 +240,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 			getOptions().parse(settings.get(bias + ""));
 		}
 	}
-
+	 */
 	
 
 	@Override
@@ -257,17 +273,42 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 	}
 	
 	
-	public static final int subarrays = 2;
-	public static final int cols = 64;
-	public static final int rows = 41;
-	public static final int subarrayPixels = cols * rows;
-	public static final int pixels = subarrays * subarrayPixels;
+	@Override
+	public void readWiring(String fileName) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void readData(BasicHDU[] hdu) throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+		
+	@Override
+	public void validate(Scan<?,?> scan) {
+		
+		clear();
+		ensureCapacity(pixels);
+		for(int c=0; c<pixels; c++) add(new HawcPlusPixel(this, c));
+			
+		if(!hasOption("filter")) getOptions().parse("filter " + instrumentData.wavelength + "um");	
+		System.err.println(" HAWC+ Filter set to " + option("filter").getValue());
+		
+		super.validate(scan);
+	}
+	
+	
+	public static final int polarrays = 2;
+	public static final int cols = 41;
+	public static final int rows = 64;
+	public static final int polArrayPixels = cols * rows;
+	public static final int pixels = polarrays * polArrayPixels;
 	
 	// subarray center assuming 32x41 pixels
-	private static Vector2D defaultPointingCenter = new Vector2D(31.5, 20.0); // row, col
-		
+	private static Vector2D defaultPointingCenter = new Vector2D(20.5, 32.5); // row, col
+
+	
 	
 }
 
-	
-}

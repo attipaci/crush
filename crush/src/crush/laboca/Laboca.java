@@ -46,8 +46,12 @@ public class Laboca extends APEXCamera<LabocaPixel> {
 	
 	public Laboca() {
 		super("laboca", 320);	
-		resolution = 19.5 * Unit.arcsec;
-		nonDetectorFlags = Channel.FLAG_DEAD | LabocaPixel.FLAG_RESISTOR;
+		setResolution(19.5 * Unit.arcsec);
+	}
+	
+	@Override
+	public int getNonDetectorFlags() {
+		return super.getNonDetectorFlags() | LabocaPixel.FLAG_RESISTOR;
 	}
 	
 	@Override
@@ -81,7 +85,7 @@ public class Laboca extends APEXCamera<LabocaPixel> {
 	public void initDivisions() {
 		super.initDivisions();
 		
-		try { addDivision(getDivision("boxes", LabocaPixel.class.getField("box"), nonDetectorFlags)); }
+		try { addDivision(getDivision("boxes", LabocaPixel.class.getField("box"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }
 		
 		try { addDivision(getDivision("cables", LabocaPixel.class.getField("cable"), Channel.FLAG_DEAD)); }

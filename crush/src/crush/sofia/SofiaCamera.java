@@ -29,18 +29,20 @@ import java.util.Vector;
 
 import kovacs.astro.AstroTime;
 import kovacs.util.Unit;
-import nom.tam.fits.FitsException;
+import nom.tam.fits.BasicHDU;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 import crush.CRUSH;
+import crush.GroundBased;
 import crush.Instrument;
+import crush.InstrumentLayout;
 import crush.Scan;
 import crush.array.Array;
 import crush.array.SingleColorPixel;
 
-public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends Array<ChannelType, ChannelType> {
+public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends Array<ChannelType, ChannelType> implements GroundBased {
 	/**
 	 * 
 	 */
@@ -50,8 +52,8 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 	public SofiaArrayData array;
 	
 	
-	public SofiaCamera(String name, int size) {
-		super(name, size);
+	public SofiaCamera(String name, InstrumentLayout<? super ChannelType> layout, int size) {
+		super(name, layout, size);
 	}
 
 	@Override
@@ -62,12 +64,17 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 		return copy;
 	}
 	
-
-	public void parseScanHeader(Header header) throws FitsException, HeaderCardException {
+	
+	public abstract void readData(BasicHDU[] hdu) throws Exception;
+	
+	@Override
+	public void parseHeader(Header header) {	
+		super.parseHeader(header);
+		
 		instrumentData = new SofiaInstrumentData(header);
 		
 		// Set the default angular resolution given the telescope size...
-		resolution = 1.22 * instrumentData.wavelength * Unit.um / telescopeDiameter;
+		setResolution(1.22 * instrumentData.wavelength * Unit.um / telescopeDiameter);
 		
 		array = new SofiaArrayData(header);
 		
@@ -92,7 +99,7 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 		for(Scan<?,?> scan : scans) hasTrackingError |= ((SofiaScan<?,?>) scan).telescope.hasTrackingError;
 		cursor.add(new HeaderCard("TRACERR", hasTrackingError, "Whether any of the data has tracking errors."));
 		
-		int level = scans.size() > 1 ? 4 : (hasOption("calibrated") ? 3 : 2);
+		int level = hasOption("calibrated") ? 3 : 2;
 		
 		// Add SOFIA processing keys
 		cursor.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
@@ -104,15 +111,17 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 		// Add the reduction to the history...
 		AstroTime timeStamp = new AstroTime();
 		timeStamp.now();
+	
+		// Add required keys and prior history
+		((SofiaScan<?,?>) scans.get(0)).addRequiredKeys(cursor);
 		
-		cursor.setKey("HISTORY");
+		cursor.setKey("HISTORY");	
+		//cursor.add(new HeaderCard("HISTORY", "Reduced: crush v" + CRUSH.getFullVersion(), false));
 		cursor.add(new HeaderCard("HISTORY", "Reduced: crush v" + CRUSH.getFullVersion() + " @ " + timeStamp.getFitsTimeStamp(), false));
 		
 		for(int i=0; i<scans.size(); i++)
-			cursor.add(new HeaderCard("HISTORY", "OBS-ID[" + (i+1) + "]: " + scans.get(i).getID(), false));
+			cursor.add(new HeaderCard("HISTORY", " OBS-ID[" + (i+1) + "]: " + scans.get(i).getID(), false));
 		
-		// Add required keys and prior hisory
-		if(scans.size() == 1) ((SofiaScan<?,?>) scans.get(0)).addRequiredKeys(cursor);
 		
 		// Go back to before the history...
 		cursor.setKey("HISTORY");
@@ -139,6 +148,6 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 		super.validate(scans);
 	}
 	
-	private static final double telescopeDiameter = 2.5 * Unit.m;
+	public static final double telescopeDiameter = 2.5 * Unit.m;
 	
 }

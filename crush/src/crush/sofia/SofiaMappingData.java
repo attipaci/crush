@@ -29,7 +29,6 @@ import kovacs.astro.GalacticCoordinates;
 import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
 import kovacs.util.Unit;
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -42,14 +41,14 @@ public class SofiaMappingData extends SofiaHeaderData {
 	
 	public SofiaMappingData() {}
 	
-	public SofiaMappingData(Header header) throws FitsException, HeaderCardException {
+	public SofiaMappingData(Header header) {
 		this();
 		parseHeader(header);
 	}
 	
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
 		coordinateSystem = getStringValue(header, "MAPCRSYS");
 		sizeX = header.getIntValue("MAPNXPOS", UNKNOWN_INT_VALUE);
 		sizeY = header.getIntValue("MAPNYPOS", UNKNOWN_INT_VALUE);

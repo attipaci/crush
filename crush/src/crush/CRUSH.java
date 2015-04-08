@@ -45,8 +45,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.22-1";
-	private static String revision = "";
+	private static String version = "2.23-a1";
+	private static String revision = "devel.2";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -207,7 +207,7 @@ public class CRUSH extends Configurator {
 			System.err.println("No scans to reduce. Exiting.");
 			System.exit(1);
 		}
-				
+					
 		try { instrument.validate(scans); }
 		catch(Error e) {
 			System.err.println("ERROR! " + e.getMessage());
@@ -368,7 +368,10 @@ public class CRUSH extends Configurator {
 			source.commandLine = commandLine;
 			source.setOptions(this);
 			source.createFrom(scans);
+			instrument = source.getInstrument();
 		}
+		else instrument = scans.get(0).instrument;
+		
 	
 		System.err.println();
 		

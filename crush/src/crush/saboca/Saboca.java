@@ -43,7 +43,7 @@ public class Saboca extends APEXCamera<SabocaPixel> {
 
 	public Saboca() {
 		super("saboca", 40);	
-		resolution = 7.4 * Unit.arcsec;
+		setResolution(7.4 * Unit.arcsec);
 		gain = -1000.0;
 	}
 	

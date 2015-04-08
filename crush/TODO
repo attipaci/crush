@@ -1,4 +1,13 @@
+	- Parallelize integration tasks
+	  * 
+	  * Channel tasks via timestream blocks...
+	  * Parallel with optional executor service...
+
 ---> 2.3
+
+	- Grouped channel steps
+	  * drifts, weighting, gains, filtering
+	  * dynamically by cache size... ('cache' option)
 
 	- Parallelize integration tasks
 	  (pipeline first, then initialization, and post-process)

@@ -1,3 +1,27 @@
+	[NEW] Initial support for HAWC+.
+
+	[FIX] Aperture flux uncertainties reported for a pointing fit at the 
+	end of reduction w uncertainty was garbage in prior release. Fixed.
+
+	[CODE] InstrumentLayout constructor without arguments, and Instrument
+	constructors to include a mantatory layout specification.
+
+	[CODE] Instrument resolution made private with get/set access only.
+
+	[CODE] {GISMO} {SHARC-2} {MAKO} {MAKO-2} pixelsize moved up to global
+	instrument property.
+
+	[CODE] {GISMO} Calculation of default pixel sizes moved to 
+	setPlateScale() from setReferencePosition().
+
+	[CODE] Initial generic support for SOFIA instruments, in general.
+
+	[CODE] Tweaked instrument initialization/configuration. The instrument
+	configuration used for global reduction options is now set to be the
+	same as for the source model (or first scan if no source model is
+	derived). Default settings, like resolution, etc are parsed upon
+	validation only.
+
 
 2.22-1 (31 March 2015)
 

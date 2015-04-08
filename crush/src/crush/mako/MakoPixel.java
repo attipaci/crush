@@ -25,6 +25,8 @@ package crush.mako;
 
 import java.util.StringTokenizer;
 
+import kovacs.math.Vector2D;
+import kovacs.util.Unit;
 import kovacs.util.Util;
 
 
@@ -49,7 +51,7 @@ public class MakoPixel extends AbstractMakoPixel {
 	
 	@Override
 	public void calcNominalPosition() {
-		position = ((Mako) instrument).getPixelPosition(size, row, col);
+		position = ((Mako) instrument).getPixelPosition(((Mako) instrument).pixelSize, row, col);
 	}
 	
 	
@@ -64,5 +66,7 @@ public class MakoPixel extends AbstractMakoPixel {
 	public String toString() {
 		return getID() + "\t" + super.toString() + "\t" + Util.f3.format(coupling);
 	}
+	
+	public static Vector2D defaultSize = new Vector2D(3.86 * Unit.arcsec, 7.21 * Unit.arcsec);
 	
 }

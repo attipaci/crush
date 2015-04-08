@@ -44,8 +44,8 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	private static final long serialVersionUID = -6344037367939085571L;
 	
 	public String date;
-	public ScanBounds utc;
-	boolean isChopping = false, isNodding = false, isDithering = false, isMapping = false, isScanning = false;
+	public BracketedValues utc = new BracketedValues();
+	public boolean isChopping = false, isNodding = false, isDithering = false, isMapping = false, isScanning = false;
 		
 	Vector<String> history = new Vector<String>();
 	
@@ -82,8 +82,8 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		String startTime = header.getStringValue("UTCSTART");
 		String endTime = header.getStringValue("UTCEND");
 		
-		utc.start = Util.parseTime(startTime);
-		utc.end = Util.parseTime(endTime);
+		if(startTime != null) utc.start = Util.parseTime(startTime);
+		if(endTime != null) utc.end = Util.parseTime(endTime);
 			
 		if(date.contains("T")) {
 			timeStamp = date;
@@ -124,6 +124,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		
 		telescope = new SofiaTelescopeData(header);
 		equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();	
+		calcPrecessions(telescope.requestedEquatorial.epoch);
 		
 		isTracking = telescope.isTracking();
 
@@ -184,19 +185,19 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		Header h = new Header();
 		editScanHeader(h);
 		
-		// Place the history entries before the newly added history entries...
-		for( ; cursor.hasNext(); ) {
-			HeaderCard card = (HeaderCard) cursor.next();
-			if(card.getKey().equalsIgnoreCase("HISTORY")) break;
-		}
-		for(int i=0; i<history.size(); i++) cursor.add(new HeaderCard("HISTORY", history.get(i), false));
-		
+	
 		// Copy the required keys
 		for(String key : requiredKeys) {
 			cursor.setKey(key);
-			HeaderCard card = (HeaderCard) cursor.next();
-			if(card != null) card.setValue(h.findCard(key).getValue());
-			else cursor.add(card);
+			
+			HeaderCard fromCard = h.findCard(key);
+			if(fromCard == null) continue;
+			
+			HeaderCard toCard = (HeaderCard) cursor.prev();
+			
+			if(toCard != null) toCard.setValue(fromCard.getValue());
+			else cursor.add(fromCard);
+			
 		}
 		
 		// Copy the subarray specs (if defined)
@@ -219,6 +220,10 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		if(mapping != null) mapping.editHeader(cursor);
 		if(scanning != null) scanning.editHeader(cursor);
 		
+		
+		cursor.setKey("HISTORY");
+		for(int i=0; i<history.size(); i++) cursor.add(new HeaderCard("HISTORY", history.get(i), false));
+	
 	}
 	
 	public void parseHistory(Header header) {
@@ -235,6 +240,8 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		}
 
 		System.err.println("   History: " + history.size() + " entries found.");
+		
+		//for(int i=0; i<history.size(); i++) System.err.println("#  " + history.get(i));
 	}
 	
 	
@@ -285,6 +292,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 
 		parseHeader(HDU[0].getHeader());
 		
+		instrument.readData(HDU);
 		instrument.validate(this);	
 		clear();
 
@@ -300,7 +308,6 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		
 		validate();
 	}
-	
 	
 	@Override
 	public double getAmbientHumidity() {

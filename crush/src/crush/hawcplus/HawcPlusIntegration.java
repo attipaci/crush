@@ -86,6 +86,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		private long[] R, T, SN;
 		private double[] TS; 
 		private float[] RA, DEC, AZ, EL, PA, VPA, LON, LAT, LST, chop, PWV, HWP;
+		//private float[] dT;
 		private boolean isSimulated;
 		//private int channels;
 		
@@ -98,7 +99,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		
 			// The IRAM coordinate data...
 			TS = (double[]) table.getColumn(hdu.findColumn("Timestamp"));	
-			SN = (long[]) table.getColumn(hdu.findColumn("FRAME_COUNTER"));
+			//dT = (float[]) table.getColumn(hdu.findColumn("Time Adjustment"));	
+			SN = (long[]) table.getColumn(hdu.findColumn("Frame Counter"));
 			
 			// The GISMO data
 			int iR = hdu.findColumn("R array");
@@ -107,31 +109,30 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			T = (long[]) table.getColumn(iT);
 			
 			// The tracking center in the basis coordinates of the scan (usually RA/DEC)
-			RA = (float[]) table.getColumn(hdu.findColumn("RA"));
-			DEC = (float[]) table.getColumn(hdu.findColumn("DEC"));
-						
+			RA = (float[]) table.getColumn(hdu.findColumn("Right Ascension"));
+			DEC = (float[]) table.getColumn(hdu.findColumn("Declination"));
+			
 			// The scanning offsets in the offset system (usually AZ/EL)
 			AZ = (float[]) table.getColumn(hdu.findColumn("Azimuth"));
 			EL = (float[]) table.getColumn(hdu.findColumn("Elevation"));
 			
+			LST = (float[]) table.getColumn(hdu.findColumn("LST"));
+				
 			// The parallactic angle and the SOFIA Vertical Position Angle
 			PA = (float[]) table.getColumn(hdu.findColumn("Parallactic Angle"));
-			VPA = (float[]) table.getColumn(hdu.findColumn("VPA"));
-			
-			LON = (float[]) table.getColumn(hdu.findColumn("GEOLON"));
-			LON = (float[]) table.getColumn(hdu.findColumn("GEOLAT"));
-			
-			LST = (float[]) table.getColumn(hdu.findColumn("LST"));
+			VPA = (float[]) table.getColumn(hdu.findColumn("Vertical Position Angle"));
+				
+			LON = (float[]) table.getColumn(hdu.findColumn("Longitude"));
+			LAT = (float[]) table.getColumn(hdu.findColumn("Latitude"));
 			
 			chop = (float[]) table.getColumn(hdu.findColumn("Chop Offset"));
 			// CRUSH does not need the nod offset, so ignore it...
 			
 			// HWP may be used in the future if support is extended for
 			// scan-mode polarimetry (or polarimetry, in general...
-			HWP = (float[]) table.getColumn(hdu.findColumn("HPW Angle"));
+			HWP = (float[]) table.getColumn(hdu.findColumn("HWP Angle"));
 			
-			PWV = (float[]) table.getColumn(hdu.findColumn("PWV"));
-			
+			PWV = (float[]) table.getColumn(hdu.findColumn("Water Vapor"));	
 		}
 		
 		@Override
@@ -167,42 +168,49 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					frame.equatorial = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, scan.equatorial.epoch);
 					frame.site = new GeodeticCoordinates(LON[i] * Unit.deg, LAT[i] * Unit.deg);
 					
-					frame.chopperPosition = new Vector2D(chop[i] * Unit.arcsec, 0.0);
-					frame.chopperPosition.rotate(hawcPlusScan.chopper.angle);
+					if(hawcPlusScan.isChopping) {
+						frame.chopperPosition = new Vector2D(chop[i] * Unit.arcsec, 0.0);
+						frame.chopperPosition.rotate(hawcPlusScan.chopper.angle);
+					}
+					else frame.chopperPosition = new Vector2D();
 					
 					frame.HPWangle = HWP[i] * (float) Unit.deg;
 					frame.PWV = PWV[i] * (float) Unit.um;
 
+					frame.LST = LST[i] * (float) Unit.hour;
+					frame.horizontal = new HorizontalCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
+					
+					//frame.LST = timeStamp.getLMST(frame.site.longitude());
+					//frame.horizontal = frame.equatorial.toHorizontal(frame.site, frame.LST);
+					
 					if(!isSimulated) {
-						frame.horizontal = new HorizontalCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
-						frame.LST = LST[i] * (float) Unit.hour;
 						frame.setParallacticAngle(PA[i] * Unit.deg);
 						frame.VPA = VPA[i] * (float) Unit.deg;	
 					}
 					else {
-						// -------------- CALCULATE MISSING -------------------
-						frame.LST = timeStamp.getLMST(frame.site.longitude());
-						frame.equatorial.getParallacticAngle(frame.site, frame.LST);
+						// The simulation writes a position angle, not parallactic angle...
+						frame.setParallacticAngle((PA[i] - EL[i]) * Unit.deg);
 						frame.VPA = (float) (frame.getParallacticAngle() + frame.horizontal.EL());
-						frame.calcHorizontal(); // needs LST.
-						// ----------------------------------------------------
 					}
-
+					
 					// Calculate the scanning offsets...
 					frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(scan.equatorial);
 					frame.equatorialNativeToHorizontal(frame.horizontalOffset);
-
+					
 					// Add the chopper offset to the telescope coordinates.
 					// TODO check!
-					frame.horizontalOffset.add(frame.chopperPosition);
-					frame.horizontal.addOffset(frame.chopperPosition);
+					if(hawcPlusScan.isChopping) {
+						frame.horizontalOffset.add(frame.chopperPosition);
+						frame.horizontal.addOffset(frame.chopperPosition);
 					
-					offset = frame.chopperPosition;
-					frame.horizontalToNativeEquatorial(offset);
-					frame.equatorial.addNativeOffset(offset);
-					
+						offset = frame.chopperPosition;
+						frame.horizontalToNativeEquatorial(offset);
+						frame.equatorial.addNativeOffset(offset);
+					}
+						
 					set(i, frame);
 				}
+				
 			};
 		}
 	}	

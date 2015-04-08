@@ -24,7 +24,6 @@
 package crush.sofia;
 
 import kovacs.util.Unit;
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -38,14 +37,14 @@ public class SofiaDitheringData extends SofiaHeaderData {
 	
 	public SofiaDitheringData() {}
 	
-	public SofiaDitheringData(Header header) throws FitsException, HeaderCardException {
+	public SofiaDitheringData(Header header) {
 		this();
 		parseHeader(header);
 	}
 	
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
 		patternShape = getStringValue(header, "DTHPATT");
 		positions = header.getIntValue("DTHNPOS", UNKNOWN_INT_VALUE);
 		index = header.getIntValue("DTHINDEX", UNKNOWN_INT_VALUE);

@@ -42,7 +42,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	public double gain = 1.0;
 	public double coupling = 1.0;
 	public double weight = 1.0;
-	public double variance = Double.NaN;
+	public double variance = 1.0;
 	public double dof = 1.0;
 	float temp, tempG, tempWG, tempWG2;
 	
@@ -170,7 +170,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 		flag(criticalFlags & Integer.decode(tokens.nextToken()));	
 	}
 	
-	public double getResolution() { return instrument.resolution; }
+	public double getResolution() { return instrument.getResolution(); }
 	
 	public void uniformGains() {
 		gain = 1.0; 

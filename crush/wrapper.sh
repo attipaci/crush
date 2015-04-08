@@ -50,7 +50,7 @@ JAVAOPTS="-$JVM -Xbatch -Xmx1000M"
 # To run in 64-bit mode (needed for accessing RAM beyond 2GB but requires 
 # both a 64-bit OS *AND* a 64-bit version of Java), uncomment and edit:
 
-#JAVAOPTS="-$JVM -d64 -Xbatch -Xmx4000M"
+JAVAOPTS="-$JVM -d64 -Xbatch -Xmx4000M"
 
 
 # Uncomment and edit the line below if you are using IBM Java:

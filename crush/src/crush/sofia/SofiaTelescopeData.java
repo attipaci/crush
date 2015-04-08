@@ -26,7 +26,6 @@ package crush.sofia;
 import kovacs.astro.EquatorialCoordinates;
 import kovacs.astro.JulianEpoch;
 import kovacs.util.Unit;
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -38,16 +37,16 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 	public EquatorialCoordinates boresightEquatorial, requestedEquatorial;
 	public float VPA = Float.NaN;
 	public String lastRewind;
-	public ScanBounds focusT = new ScanBounds();
+	public BracketedValues focusT = new BracketedValues();
 	public float relElevation = Float.NaN, crossElevation = Float.NaN, lineOfSightAngle = Float.NaN;
 	public String tascuStatus, fbcStatus;
-	public ScanBounds zenithAngle = new ScanBounds();
+	public BracketedValues zenithAngle = new BracketedValues();
 	public String trackingMode;
 	public boolean hasTrackingError = false;
 	
 	public SofiaTelescopeData() {}
 	
-	public SofiaTelescopeData(Header header) throws FitsException, HeaderCardException {
+	public SofiaTelescopeData(Header header) {
 		this();
 		parseHeader(header);
 	}
@@ -58,7 +57,8 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 	
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
+		
 		if(header.containsKey("TELESCOP")) telescope = header.getStringValue("TELESCOPE");
 		telConfig = getStringValue(header, "TELCONF");
 		
@@ -67,8 +67,8 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		
 		try { 
 			boresightEquatorial.set(
-					getHMSValue(header, "TELRA") * Unit.hourAngle, 
-					getDMSValue(header, "TELDEC") * Unit.degree
+					getHMSTime(header, "TELRA") * Unit.timeAngle, 
+					getDMSAngle(header, "TELDEC")
 			);
 		}
 		catch(Exception e) { boresightEquatorial = null; }
@@ -91,8 +91,8 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		
 		try { 
 			requestedEquatorial.set(
-					getHMSValue(header, "OBSRA") * Unit.hourAngle, 
-					getDMSValue(header, "OBSDEC") * Unit.degree
+					getHMSTime(header, "OBSRA") * Unit.timeAngle, 
+					getDMSAngle(header, "OBSDEC")
 			);
 		}
 		catch(Exception e) { boresightEquatorial = null; }

@@ -25,7 +25,7 @@ package crush.sofia;
 
 import kovacs.util.Copiable;
 
-public class ScanBounds implements Cloneable, Copiable<ScanBounds> {
+public class BracketedValues implements Cloneable, Copiable<BracketedValues> {
 	public double start = Double.NaN, end = Double.NaN;
 
 	
@@ -36,11 +36,11 @@ public class ScanBounds implements Cloneable, Copiable<ScanBounds> {
 	}
 	
 	@Override
-	public ScanBounds copy() {
-		return (ScanBounds) clone();
+	public BracketedValues copy() {
+		return (BracketedValues) clone();
 	}
 	
-	public void combineWidth(ScanBounds bounds) {
+	public void combineWidth(BracketedValues bounds) {
 		if(bounds.start < start) start = bounds.start;
 		if(bounds.end > end) end = bounds.end;
 	}

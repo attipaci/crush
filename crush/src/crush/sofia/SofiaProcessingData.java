@@ -23,7 +23,6 @@
 
 package crush.sofia;
 
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -35,13 +34,13 @@ public class SofiaProcessingData extends SofiaHeaderData {
 	
 	public SofiaProcessingData() {}
 	
-	public SofiaProcessingData(Header header) throws FitsException, HeaderCardException {
+	public SofiaProcessingData(Header header) {
 		this();
 		parseHeader(header);
 	}
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
 		processLevel = getStringValue(header, "PROCSTAT");
 		headerStatus = getStringValue(header, "HEADSTAT");
 		softwareName = getStringValue(header, "PIPELINE");
@@ -77,7 +76,7 @@ public class SofiaProcessingData extends SofiaHeaderData {
 		"Raw uncalibrated science data.",
 		"Corrected/reduced science data.",
 		"Flux-calibrated science data.",
-		"Higher order products (e.g. composites)."
+		"Higher order product (e.g. composites)."
 	};
 	
 

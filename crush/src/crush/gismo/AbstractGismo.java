@@ -44,6 +44,7 @@ public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implem
 
 	public Vector2D nasmythOffset;
 	protected Vector2D arrayPointingCenter; // row,col
+	Vector2D pixelSize = GismoPixel.defaultSize;
 
 	double focusXOffset, focusYOffset, focusZOffset;
 	
@@ -53,9 +54,8 @@ public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implem
 	
 	
 	public AbstractGismo(String name, int npix) {
-		super(name, npix);
-		setLayout(new SingleColorLayout<GismoPixel>(this));
-		resolution = 16.7 * Unit.arcsec;
+		super(name, new SingleColorLayout<GismoPixel>(), npix);
+		setResolution(16.7 * Unit.arcsec);
 		
 		arrayPointingCenter = (Vector2D) getDefaultPointingCenter().clone();
 		
@@ -74,6 +74,7 @@ public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implem
 		AbstractGismo copy = (AbstractGismo) super.copy();
 		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
 		if(nasmythOffset != null) copy.nasmythOffset = (Vector2D) nasmythOffset.clone();
+		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
 		
 		copy.detectorBias = Util.copyOf(detectorBias);
 		copy.secondStageBias = Util.copyOf(secondStageBias);
@@ -190,10 +191,11 @@ public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implem
 	}
 	
 	public void setPlateScale(Vector2D size) {
-		// Make all pixels the same size. Also calculate their positions...
-		for(GismoPixel pixel : this) pixel.size = size;
+		pixelSize = size;
 		
 		Vector2D center = GismoPixel.getPosition(size, arrayPointingCenter.x() - 1.0, arrayPointingCenter.y() - 1.0);			
+	
+		for(GismoPixel pixel : this) pixel.calcPosition();
 		
 		// Set the pointing center...
 		setReferencePosition(center);
@@ -234,13 +236,6 @@ public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implem
 		
 		in.close();
 	}
-
-	@Override
-	public void setReferencePosition(Vector2D position) {
-		for(GismoPixel pixel : this) pixel.calcPosition();
-		super.setReferencePosition(position);
-	}
-	
 	
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
@@ -485,4 +480,6 @@ public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implem
 	}
 	
 
+	public static Vector2D defaultSize;
+	
 }

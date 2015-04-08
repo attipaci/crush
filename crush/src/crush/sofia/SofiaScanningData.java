@@ -24,30 +24,29 @@
 package crush.sofia;
 
 import kovacs.util.Unit;
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaScanningData extends SofiaHeaderData {
-	public ScanBounds RA, DEC;
+	public BracketedValues RA = new BracketedValues(), DEC = new BracketedValues();
 	public float speed = Float.NaN, angle = Float.NaN;
 		
 	public SofiaScanningData() {}
 	
-	public SofiaScanningData(Header header) throws FitsException, HeaderCardException {
+	public SofiaScanningData(Header header) {
 		this();
 		parseHeader(header);
 	}
 	
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
-		RA.start = getHMSValue(header, "SCNRA0") * Unit.hourAngle;
-		RA.end = getHMSValue(header, "SCNRAF") * Unit.hourAngle;
-		DEC.start = getDMSValue(header, "SCNDEC0") * Unit.deg;
-		DEC.end = getDMSValue(header, "SCNDECF") * Unit.deg;
+	public void parseHeader(Header header) {
+		RA.start = getHMSTime(header, "SCNRA0") * Unit.timeAngle;
+		RA.end = getHMSTime(header, "SCNRAF") * Unit.timeAngle;
+		DEC.start = getDMSAngle(header, "SCNDEC0");
+		DEC.end = getDMSAngle(header, "SCNDECF");
 		speed = header.getFloatValue("SCNRATE", Float.NaN) * (float) (Unit.arcsec / Unit.s);
 		angle = header.getFloatValue("SCNDIR", Float.NaN) * (float) Unit.deg;
 	}

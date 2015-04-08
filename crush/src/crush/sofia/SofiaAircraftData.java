@@ -26,7 +26,6 @@ import java.text.NumberFormat;
 import kovacs.text.TableFormatter;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -34,29 +33,29 @@ import nom.tam.util.Cursor;
 
 public class SofiaAircraftData extends SofiaHeaderData implements TableFormatter.Entries {
 
-	public ScanBounds altitude = new ScanBounds();
-	public ScanBounds latitude = new ScanBounds();
-	public ScanBounds longitude = new ScanBounds();
+	public BracketedValues altitude = new BracketedValues();
+	public BracketedValues latitude = new BracketedValues();
+	public BracketedValues longitude = new BracketedValues();
 	public float airSpeed = Float.NaN, groundSpeed = Float.NaN, heading = Float.NaN, trackAngle = Float.NaN;
 	
 	public SofiaAircraftData() {}
 	
-	public SofiaAircraftData(Header header) throws FitsException, HeaderCardException {
+	public SofiaAircraftData(Header header) {
 		this();
 		parseHeader(header);
 	}
 	
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
 		altitude.start = header.getDoubleValue("ALTI_STA", Double.NaN) * Unit.ft;
 		altitude.end = header.getDoubleValue("ALTI_END", Double.NaN) * Unit.ft;
 		airSpeed = header.getFloatValue("AIRSPEED", Float.NaN) * (float) Unit.kn;
 		groundSpeed = header.getFloatValue("GRDSPEED", Float.NaN) * (float) Unit.kn;
-		latitude.start = header.getDoubleValue("LAT_STA", Double.NaN) * Unit.deg;
-		latitude.end = header.getDoubleValue("LAT_END", Double.NaN) * Unit.deg;
-		longitude.start = header.getDoubleValue("LON_STA", Double.NaN) * Unit.deg;
-		longitude.end = header.getDoubleValue("LON_END", Double.NaN) * Unit.deg;
+		latitude.start = getDMSAngle(header, "LAT_STA");
+		latitude.end = getDMSAngle(header, "LAT_END");
+		longitude.start = getDMSAngle(header, "LON_STA");
+		longitude.end = getDMSAngle(header, "LON_END");
 		heading = header.getFloatValue("HEADING", Float.NaN) * (float) Unit.deg;
 		trackAngle = header.getFloatValue("TRACKANG", Float.NaN) * (float) Unit.deg;
 	}

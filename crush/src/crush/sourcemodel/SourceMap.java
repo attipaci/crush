@@ -123,7 +123,7 @@ public abstract class SourceMap extends SourceModel {
 	
 	public double getSmoothing(String spec) {
 		double sizeUnit = getInstrument().getSizeUnitValue();
-		double beam = getInstrument().resolution;
+		double beam = getInstrument().getPointSize();
 		double pixelSmoothing = getPixelizationSmoothing();
 		double fwhm = 0.0;
 		
@@ -144,7 +144,7 @@ public abstract class SourceMap extends SourceModel {
 	public abstract double getPixelizationSmoothing();
 
 	@Override
-	public double getPointSize() { return Math.hypot(getInstrument().resolution, getRequestedSmoothing(option("smooth"))); }
+	public double getPointSize() { return Math.hypot(getInstrument().getPointSize(), getRequestedSmoothing(option("smooth"))); }
 	
 	@Override
 	public double getSourceSize() { return Math.hypot(super.getSourceSize(), getRequestedSmoothing(option("smooth"))); }

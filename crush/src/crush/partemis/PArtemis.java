@@ -41,17 +41,17 @@ public class PArtemis extends APEXCamera<PArtemisPixel> {
 
 	public PArtemis() {
 		super("p-artemis", 256);
-		resolution = 9.6 * Unit.arcsec;
+		setResolution(9.6 * Unit.arcsec);
 	}
 	
 	@Override
 	public void initDivisions() {
 		super.initDivisions();
 		
-		try { addDivision(getDivision("rows", PArtemisPixel.class.getField("row"), nonDetectorFlags)); }
+		try { addDivision(getDivision("rows", PArtemisPixel.class.getField("row"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
 		
-		try { addDivision(getDivision("cols", PArtemisPixel.class.getField("col"), nonDetectorFlags)); }
+		try { addDivision(getDivision("cols", PArtemisPixel.class.getField("col"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
 	}
 	

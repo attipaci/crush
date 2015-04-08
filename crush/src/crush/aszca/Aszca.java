@@ -43,7 +43,7 @@ public class Aszca extends APEXCamera<AszcaPixel> {
 	
 	public Aszca() {
 		super("aszca", 320);	
-		resolution = 60.0 * Unit.arcsec;
+		setResolution(60.0 * Unit.arcsec);
 	}
 	
 	@Override

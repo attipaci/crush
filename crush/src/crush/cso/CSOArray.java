@@ -31,7 +31,6 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
 import kovacs.data.DataPoint;
 import kovacs.text.TableFormatter;
-import kovacs.util.Configurator;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 import crush.GroundBased;
@@ -61,14 +60,11 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Rotat
 	public double excessLoad = 0.0;
 	
 	public CSOArray(String name, int size) {
-		super(name, size);
-		setLayout(new SingleColorLayout<PixelType>(this));
-		// TODO Auto-generated constructor stub
+		super(name, new SingleColorLayout<PixelType>(), size);
 	}
 
 	public CSOArray(String name) {
-		super(name);
-		// TODO Auto-generated constructor stub
+		super(name, new SingleColorLayout<PixelType>());
 	}
 	
 	@Override
@@ -90,9 +86,9 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Rotat
 	}
 	
 	@Override
-	public void setOptions(Configurator options) {
-		super.setOptions(options);
-		if(hasOption("excessload")) excessLoad = option("excessload").getDouble() * Unit.K;	
+	public void validate(Scan<?,?> scan) {
+		if(hasOption("excessload")) excessLoad = option("excessload").getDouble() * Unit.K;
+		super.validate(scan);
 	}
 	
 	

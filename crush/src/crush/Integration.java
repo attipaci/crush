@@ -50,7 +50,6 @@ import nom.tam.util.*;
  * @param <InstrumentType>
  * @param <FrameType>
  * 
- * Always iterate frames first then channels. It's a lot faster this way, probably due to caching...
  */
 public abstract class Integration<InstrumentType extends Instrument<?>, FrameType extends Frame> 
 extends ArrayList<FrameType> 
@@ -325,7 +324,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				System.err.println("   WARNING! No automatic downsampling for zero scan speed.");
 				return; 
 			}
-			double maxInt = 0.4 * instrument.resolution / maxv;
+			double maxInt = 0.4 * instrument.getPointSize() / maxv;
+			
 			int factor = (int)Math.floor(maxInt / instrument.samplingInterval);
 			if(factor == Integer.MAX_VALUE) {
 				System.err.println("   WARNING! No automatic downsampling for negligible scan speed.");
@@ -423,7 +423,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(option.equals("auto")) {	
 			// Move at least 3 fwhms over the stability timescale
 			// But less that 1/2.5 beams per sample to avoid smearing
-			vRange = new Range(3.0 * instrument.getSourceSize() / instrument.getStability(), 0.4 * instrument.resolution / instrument.samplingInterval);
+			vRange = new Range(3.0 * instrument.getSourceSize() / instrument.getStability(), 0.4 * instrument.getPointSize() / instrument.samplingInterval);
 		}
 		else {
 			vRange = option.getRange(true);
@@ -1622,8 +1622,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					coords.copy(exposure.getNativeCoords());
 					// Subtract the chopper motion if it is not requested...
 					if((type & Motion.CHOPPER) == 0) coords.subtractNativeOffset(exposure.chopperPosition);
-					pos.setX(coords.x());
-					pos.setY(coords.y());
+					pos.copy(coords);
 					
 					if((type & Motion.PROJECT_GLS) != 0) pos.scaleX(coords.cosLat());
 				}
@@ -1632,8 +1631,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				// Scanning includes the chopper motion
 				// SCANNING with or without CHOPPER
 				else if((type & Motion.SCANNING) != 0) {
-					exposure.getEquatorialNativeOffset(pos);
-					exposure.equatorialNativeToNative(pos);
+					exposure.getNativeOffset(pos);
 					// Subtract the chopper motion if it is not requested...
 					if((type & Motion.CHOPPER) == 0) pos.subtract(exposure.chopperPosition);
 				}	
@@ -2994,9 +2992,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	public abstract class ChannelFork<ReturnType> extends Parallel<ReturnType> {
 		private ChannelGroup<?> channels;
-
+		
 		public ChannelFork(ChannelGroup<?> channels) { this.channels = channels; }
-
+		
 		@Override
 		public void processIndex(int index, int threadCount) {
 			final int nc = channels.size();

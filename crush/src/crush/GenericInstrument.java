@@ -35,13 +35,11 @@ public class GenericInstrument extends Instrument<Channel> {
 	private String telescope;
 	
 	public GenericInstrument(String name, int size) {
-		super(name, size);
-		// TODO Auto-generated constructor stub
+		super(name, null, size);
 	}
 
 	public GenericInstrument(String name) {
-		super(name);
-		// TODO Auto-generated constructor stub
+		super(name, null);
 	}
 
 	public void setTelescopeName(String value) { telescope = value; }

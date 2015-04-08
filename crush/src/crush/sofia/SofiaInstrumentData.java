@@ -25,7 +25,6 @@ package crush.sofia;
 
 import kovacs.util.Copiable;
 import kovacs.util.Unit;
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -42,7 +41,7 @@ public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<Sof
 	
 	public SofiaInstrumentData() {}
 	
-	public SofiaInstrumentData(Header header) throws FitsException, HeaderCardException {
+	public SofiaInstrumentData(Header header) {
 		this();
 		parseHeader(header);
 	}
@@ -61,7 +60,7 @@ public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<Sof
 	}
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
 		dataType = getStringValue(header, "DATATYPE");
 		instrumentConfig = getStringValue(header, "INSTCFG");
 		instrumentMode = getStringValue(header, "INSTMODE");

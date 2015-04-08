@@ -22,7 +22,6 @@
  ******************************************************************************/package crush.sofia;
 
 import kovacs.util.Unit;
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -41,14 +40,14 @@ public class SofiaChopperData extends SofiaHeaderData {
 	
 	public SofiaChopperData() {}
 	
-	public SofiaChopperData(Header header) throws FitsException, HeaderCardException {
+	public SofiaChopperData(Header header) {
 		this();
 		parseHeader(header);
 	}
 	
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
 		frequency = header.getFloatValue("CHPFREQ", Float.NaN) * (float) Unit.Hz;
 		profileType = getStringValue(header, "CHPPROF");
 		symmetryType = getStringValue(header, "CHPSYM");

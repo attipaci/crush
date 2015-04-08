@@ -61,7 +61,7 @@ public class AstroMap extends GridSource<SphericalCoordinates> {
 	}
 	
 	public void filterCorrect() {
-		filterCorrect(getInstrument().resolution, getSkip(filterBlanking));
+		filterCorrect(getInstrument().getPointSize(), getSkip(filterBlanking));
 	}
 	
 	public void undoFilterCorrect() {

@@ -101,8 +101,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		// 1/5 beams ~90% on the boundary
 		// 1/4 beams ~85% on the boundary
 		// 1/3 beams ~75% on the boundary
-		double tolerance = instrument.resolution / 5.0;
-		if(hasOption("pointing.tolerance")) tolerance = option("pointing.tolerance").getDouble() * instrument.resolution;
+		double tolerance = instrument.getPointSize() / 5.0;
+		if(hasOption("pointing.tolerance")) tolerance = option("pointing.tolerance").getDouble() * instrument.getPointSize();
 		
 		
 		markChopped(left, right, tolerance);
