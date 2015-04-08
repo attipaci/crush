@@ -23,6 +23,7 @@
 package crush.mako;
 
 import crush.*;
+import crush.array.DistortionModel;
 import crush.cso.CSOArray;
 import nom.tam.fits.*;
 
@@ -39,8 +40,8 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 	 */
 	private static final long serialVersionUID = -8482957165297427388L;
 	
-	public Vector2D pixelSize;
 	protected Vector2D arrayPointingCenter;
+	public Vector2D pixelSize = getDefaultPixelSize();
 	int pixels;
 	
 	double nativeSamplingInterval;	
@@ -55,12 +56,18 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 	
 	protected AbstractMako(String name, int npix) {
 		super(name, npix);
-		resolution = 8.5 * Unit.arcsec;
+		setResolution(8.5 * Unit.arcsec);
 	}
+	
+	protected abstract Vector2D getDefaultPixelSize();
 	
 	protected abstract Vector2D getDefaultArrayPointingCenter();
 
 	protected abstract Vector2D getDefaultArrayRotationCenter();
+	
+	public double getAreaFactor() {
+		return pixelSize.x() * pixelSize.y() / (getDefaultPixelSize().x() * getDefaultPixelSize().y());
+	}
 	
 	//protected abstract int pixelCount();
 	
@@ -69,6 +76,7 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 		AbstractMako<MakoPixelType> copy = (AbstractMako<MakoPixelType>) super.copy();
 		
 		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
+		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
 		
 		return copy;
 	}
@@ -86,7 +94,26 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 		super.loadChannelData();
 	}
 
-	protected abstract void calcPositions(Vector2D pixelSize);
+	protected void calcPositions(Vector2D size) {
+		pixelSize = size;
+		// Make all pixels the same size. Also calculate their distortionless positions...
+		for(AbstractMakoPixel pixel : this) pixel.calcNominalPosition();
+		
+		Vector2D center = new Vector2D(arrayPointingCenter.x() * pixelSize.x(), arrayPointingCenter.y() * pixelSize.y());
+		
+	
+		if(hasOption("distortion")) {
+			System.err.println(" Correcting for focal-plane distortion.");
+			DistortionModel model = new DistortionModel();
+			model.setOptions(option("distortion"));	
+			
+			for(AbstractMakoPixel pixel : this) model.distort(pixel.getPosition());
+			model.distort(new Vector2D(0.0, 0.0));
+		}
+		
+		setReferencePosition(center);
+	}
+	
 	
 	@Override
 	public Hashtable<Integer, Pixel> getPixelLookup() {
@@ -182,6 +209,7 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 
 	@Override
 	public abstract int maxPixels();
+	
 	
 	
 	

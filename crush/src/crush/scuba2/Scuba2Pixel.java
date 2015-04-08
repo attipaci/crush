@@ -30,8 +30,6 @@ public class Scuba2Pixel extends SingleColorPixel {
 		super(array, zeroIndex+1);
 		mux = zeroIndex / 40;
 		pin = zeroIndex % 40;
-		// TODO This is just a workaround...
-		variance = 1.0;
 	}
 	
 	

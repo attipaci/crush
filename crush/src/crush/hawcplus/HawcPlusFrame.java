@@ -38,12 +38,12 @@ public class HawcPlusFrame extends HorizontalFrame {
 		setSize(HawcPlus.pixels);
 	}
 	
-	public void parseData(int subarray, long[][] DAC) {
-		parseData(DAC, subarray * HawcPlus.subarrayPixels);
+	public void parseData(int polarray, long[][] DAC) {
+		parseData(DAC, polarray * HawcPlus.polArrayPixels);
 	}
 	
-	public void parseData(int subarray, long[] DAC, int frameIndex) {
-		parseData(DAC, frameIndex * HawcPlus.subarrayPixels, HawcPlus.subarrayPixels, subarray * HawcPlus.subarrayPixels);
+	public void parseData(int polarray, long[] DAC, int frameIndex) {
+		parseData(DAC, frameIndex * HawcPlus.polArrayPixels, HawcPlus.polArrayPixels, polarray * HawcPlus.polArrayPixels);
 	}
 	
 	private void parseData(long[][] DAC, int offset) {

@@ -47,16 +47,15 @@ implements TableFormatter.Entries {
 	
 	private Configurator options, startupOptions;
 	private InstrumentLayout<? super ChannelType> layout;
+	public Mount mount;
+	
+	private double resolution;
 	
 	public double integrationTime;
 	public double samplingInterval;
 	
-	public double resolution;
 	public double gain = 1.0; // The electronic amplification
 	public double sourceGain = 1.0;
-	public double MJD;
-	
-	public int nonDetectorFlags = Channel.FLAG_DEAD;
 	
 	public int storeChannels; // The number of channels stored in the data files...
 	public int mappingChannels;
@@ -67,21 +66,21 @@ implements TableFormatter.Entries {
 			
 	public boolean isInitialized = false, isValid = false;
 	
-	public Mount mount;
-	
-	public Instrument(String name) {
+	public Instrument(String name, InstrumentLayout<? super ChannelType> layout) {
 		super(name);
-		options = new Configurator();
+		setLayout(layout);
 		startupOptions = options;
 	}
 	
-	public Instrument(String name, int size) {
+	public Instrument(String name, InstrumentLayout<? super ChannelType> layout, int size) {
 		super(name, size);
+		setLayout(layout);
 		storeChannels = size;
 	}
 		
 	public void setLayout(InstrumentLayout<? super ChannelType> layout) {
 		this.layout = layout;
+		if(layout != null) layout.setInstrument(this);
 	}
 	
 	public InstrumentLayout<?> getLayout() { return layout; }
@@ -93,11 +92,6 @@ implements TableFormatter.Entries {
 		isValid = false;
 		isInitialized = false;
 		startupOptions = null;
-		
-		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnitValue();
-		if(hasOption("gain")) gain = option("gain").getDouble();
-		
-		if(layout != null) layout.setOptions(options);
 	}
 	
 	public Configurator getOptions() {
@@ -125,7 +119,7 @@ implements TableFormatter.Entries {
 		if(options != null) copy.setOptions(options.copy());
 		if(layout != null) {
 			copy.layout = layout.copy();
-			copy.layout.instrument = copy;
+			copy.layout.setInstrument(copy);
 		}
 		
 		// TODO this needs to be done properly???
@@ -152,6 +146,11 @@ implements TableFormatter.Entries {
 		startupOptions = options.copy();
 		
 		if(!isInitialized) initialize();
+		
+		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnitValue();
+		if(hasOption("gain")) gain = option("gain").getDouble();
+		
+		if(layout != null) layout.validate(options);
 		
 		loadChannelData();
 		
@@ -213,9 +212,7 @@ implements TableFormatter.Entries {
 	
 	public void setMJDOptions(double MJD) {
 		if(!options.containsKey("mjd")) return;
-		
-		this.MJD = MJD;
-		
+			
 		Hashtable<String, Vector<String>> settings = option("mjd").conditionals;
 		
 		for(String rangeSpec : settings.keySet()) 
@@ -226,9 +223,7 @@ implements TableFormatter.Entries {
 	
 	public void setDateOptions(double MJD) {
 		if(!options.containsKey("date")) return;
-	
-		this.MJD = MJD;
-		
+
 		Hashtable<String, Vector<String>> settings = option("date").conditionals;
 		
 		for(String rangeSpec : settings.keySet()) {
@@ -390,11 +385,15 @@ implements TableFormatter.Entries {
 	
 	public abstract void readWiring(String fileName) throws IOException;
 	
-	public double getPointSize() { return resolution; }
+	public double getResolution() { return resolution; }
+	
+	public void setResolution(double value) { resolution = value; }
+	
+	public final double getPointSize() { return getResolution(); }
 
 	public double getSourceSize() {
 		double sourceSize = hasOption("sourcesize") ? 
-				Math.hypot(option("sourcesize").getDouble() * getSizeUnitValue(), resolution) : resolution;
+				Math.hypot(option("sourcesize").getDouble() * getSizeUnitValue(), getPointSize()) : getPointSize();
 				return sourceSize;
 	}
 	
@@ -433,15 +432,17 @@ implements TableFormatter.Entries {
 		return groups.get("blinds");
 	}
 	
+	public int getNonDetectorFlags() { return Channel.FLAG_DEAD; }
+	
 	public void initGroups() {
 		groups = new Hashtable<String, ChannelGroup<ChannelType>>();
 		
 		addGroup("all", copyGroup());
 		addGroup("connected", copyGroup().discard(Channel.FLAG_DEAD));
-		addGroup("detectors", copyGroup().discard(nonDetectorFlags));
-		addGroup("obs-channels", copyGroup().discard(nonDetectorFlags | Channel.FLAG_BLIND));
-		addGroup("sensitive", copyGroup().discard(nonDetectorFlags | Channel.FLAG_BLIND | Channel.FLAG_SENSITIVITY));
-		addGroup("blinds", copyGroup().discard(nonDetectorFlags).discard(Channel.FLAG_BLIND, ChannelGroup.KEEP_ANY_FLAG));
+		addGroup("detectors", copyGroup().discard(getNonDetectorFlags()));
+		addGroup("obs-channels", copyGroup().discard(getNonDetectorFlags() | Channel.FLAG_BLIND));
+		addGroup("sensitive", copyGroup().discard(getNonDetectorFlags() | Channel.FLAG_BLIND | Channel.FLAG_SENSITIVITY));
+		addGroup("blinds", copyGroup().discard(getNonDetectorFlags()).discard(Channel.FLAG_BLIND, ChannelGroup.KEEP_ANY_FLAG));
 		
 		if(options.containsKey("group")) {
 			Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
@@ -1016,23 +1017,14 @@ implements TableFormatter.Entries {
 		data.put("Channel_Flags", flags);
 	}
 	
-	
+	public void parseHeader(Header header) {}
 	
 	public void editImageHeader(List<Scan<?,?>> scans, Cursor cursor) throws HeaderCardException {
 		cursor.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
-		cursor.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
-		
-		// The data descriptors
-		cursor.add(new HeaderCard("BEAM", resolution / Unit.arcsec, "The instrument FWHM (arcsec) of the beam."));
+		cursor.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));			
 	}
 	
-	public void editScanHeader(Header header) throws HeaderCardException {
-		
-	}
-	
-	public void parseHeader(Header header) {
-		resolution = header.getDoubleValue("BEAM", resolution / Unit.arcsec) * Unit.arcsec;
-	}
+	public void editScanHeader(Header header) throws HeaderCardException {}
 	
 	public static Instrument<?> forName(String name) {
 		File file = new File(CRUSH.home + File.separator + "instruments" + File.separator + name.toLowerCase());

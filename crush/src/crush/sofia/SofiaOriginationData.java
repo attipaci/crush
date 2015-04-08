@@ -23,7 +23,6 @@
 
 package crush.sofia;
 
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -35,13 +34,13 @@ public class SofiaOriginationData extends SofiaHeaderData {
 	
 	public SofiaOriginationData() {}
 	
-	public SofiaOriginationData(Header header) throws FitsException, HeaderCardException {
+	public SofiaOriginationData(Header header) {
 		this();
 		parseHeader(header);
 	}
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
 		organization = getStringValue(header, "ORIGIN");
 		observer = getStringValue(header, "OBSERVER");
 		creator = getStringValue(header, "CREATOR");

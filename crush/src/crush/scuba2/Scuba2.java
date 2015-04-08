@@ -54,9 +54,9 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	public final static int[] y = { 4, 1, 2, -8, 0, -8, -3 };
 	
 	public Scuba2() {
-		super("scuba2", pixels);
-		resolution = 14.3 * Unit.arcsec;
-		//resolution = 7.6 * Unit.arcsec;	
+		super("scuba2", new SingleColorLayout<Scuba2Pixel>(), pixels);
+		setResolution(14.3 * Unit.arcsec);
+		//setResolution(7.6 * Unit.arcsec);	
 		integrationTime = samplingInterval = 1.0/200.0 * Unit.sec;
 		mount = Mount.RIGHT_NASMYTH;
 	}

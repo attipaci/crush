@@ -22,11 +22,7 @@
  ******************************************************************************/
 package crush.mako;
 
-import crush.Channel;
 import crush.array.SingleColorPixel;
-
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
 import kovacs.util.Util;
 
 
@@ -34,7 +30,6 @@ import kovacs.util.Util;
 public abstract class AbstractMakoPixel extends SingleColorPixel {
 	public int array = AbstractMako.DEFAULT_ARRAY;
 	public int row, col;
-	public Vector2D size;
 	
 	public int toneIndex;
 	public int toneBin;
@@ -48,16 +43,8 @@ public abstract class AbstractMakoPixel extends SingleColorPixel {
 		super(array, zeroIndex+1);
 		toneIndex = zeroIndex;
 		flag(FLAG_NOTONEID | FLAG_UNASSIGNED);
-		size = defaultSize;
 		row = -1;
 		col = -1;
-	}
-	
-	@Override
-	public Channel copy() {
-		AbstractMakoPixel copy = (AbstractMakoPixel) super.copy();
-		if(size != null) copy.size = (Vector2D) size.clone();
-		return copy;		
 	}
 	
 	@Override
@@ -74,7 +61,7 @@ public abstract class AbstractMakoPixel extends SingleColorPixel {
 	
 	
 	public double getAreaFactor() {
-		return size.x() * size.y() / (defaultSize.x() * defaultSize.y());	
+		return ((AbstractMako<?>) instrument).getAreaFactor();
 	}
 	
 	@Override
@@ -85,7 +72,7 @@ public abstract class AbstractMakoPixel extends SingleColorPixel {
 	public abstract void setRowCol(int row, int col);
 	
 	
-	public static Vector2D defaultSize = new Vector2D(3.86 * Unit.arcsec, 7.21 * Unit.arcsec);
+	
 
 	public final static int FLAG_NOTONEID = 1 << nextSoftwareFlag++;
 	public final static int FLAG_UNASSIGNED = 1 << nextSoftwareFlag++;

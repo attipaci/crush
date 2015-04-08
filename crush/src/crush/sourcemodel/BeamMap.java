@@ -252,7 +252,7 @@ public class BeamMap extends SourceMap {
 			
 			if(beamMap != null) if(beamMap.isValid()) {
 				AstroMap map = beamMap.map;
-				if(smooth) map.smoothTo(getInstrument().resolution);
+				if(smooth) map.smoothTo(getInstrument().getPointSize());
 				GaussianSource<SphericalCoordinates> source = beamMap.getPeakSource();
 				
 				if(source != null) {

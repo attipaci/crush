@@ -31,7 +31,6 @@ import java.util.StringTokenizer;
 
 import crush.CRUSH;
 import crush.Scan;
-import crush.array.DistortionModel;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
@@ -56,6 +55,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 	
 	public Mako() {
 		super("mako", rows * cols);
+		pixelSize = MakoPixel.defaultSize;
 	}
 	
 	@Override
@@ -131,7 +131,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 		// Update the pointing center...
 		if(hasOption("pcenter")) arrayPointingCenter = option("pcenter").getVector2D();
 		
-		Vector2D pixelSize = AbstractMakoPixel.defaultSize;
+		Vector2D pixelSize = getDefaultPixelSize();
 		
 		// Set the pixel size...
 		if(hasOption("pixelsize")) {
@@ -154,30 +154,6 @@ public class Mako extends AbstractMako<MakoPixel> {
 		
 		super.loadChannelData();
 		
-	}
-	
-	@Override
-	protected void calcPositions(Vector2D size) {
-		pixelSize = size;
-		
-		// Make all pixels the same size. Also calculate their distortionless positions...
-		for(AbstractMakoPixel pixel : this) {
-			pixel.size = size;
-			pixel.calcNominalPosition();
-		}
-		
-		Vector2D center = getPixelPosition(size, arrayPointingCenter.x() - 1.0, arrayPointingCenter.y() - 1.0);
-		
-		if(hasOption("distortion")) {
-			System.err.println(" Correcting for focal-plane distortion.");
-			DistortionModel model = new DistortionModel();
-			model.setOptions(option("distortion"));	
-			
-			for(AbstractMakoPixel pixel : this) model.distort(pixel.getPosition());
-			model.distort(center);
-		}
-		
-		setReferencePosition(center);
 	}
 
 	public void assignPixels(String fileSpec) throws IOException {
@@ -239,5 +215,11 @@ public class Mako extends AbstractMako<MakoPixel> {
 		arrayPointingCenter.setX(header.getDoubleValue("CRPIX3", (rows + 1) / 2.0));
 		arrayPointingCenter.setY(header.getDoubleValue("CRPIX2", (cols + 1) / 2.0));
 	}
+
+	@Override
+	protected Vector2D getDefaultPixelSize() {
+		return MakoPixel.defaultSize;
+	}
+	
 	
 }

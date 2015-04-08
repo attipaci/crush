@@ -24,27 +24,26 @@
 package crush.sofia;
 
 import kovacs.util.Unit;
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaEnvironmentData extends SofiaHeaderData {
-	public ScanBounds pwv = new ScanBounds();
+	public BracketedValues pwv = new BracketedValues();
 	
 	public float ambientT = Float.NaN;
 	public float primaryT1 = Float.NaN, primaryT2 = Float.NaN, primaryT3 = Float.NaN, secondaryT = Float.NaN;
 
 	public SofiaEnvironmentData() {}
 	
-	public SofiaEnvironmentData(Header header) throws FitsException, HeaderCardException {
+	public SofiaEnvironmentData(Header header) {
 		this();
 		parseHeader(header);
 	}
 
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
 		pwv.start = header.getDoubleValue("WVZ_STA", Double.NaN) * Unit.um;
 		pwv.end = header.getDoubleValue("WVZ_END", Double.NaN) * Unit.um;
 		ambientT = header.getFloatValue("TEMP_OUT", Float.NaN);

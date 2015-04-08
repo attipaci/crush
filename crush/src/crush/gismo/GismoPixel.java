@@ -29,12 +29,10 @@ import java.util.StringTokenizer;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
 
-import crush.Channel;
 import crush.array.SingleColorPixel;
 
 public class GismoPixel extends SingleColorPixel {
 	public int row, col, mux, pin;
-	public Vector2D size = defaultSize;
 	public double muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0, saeGain = 0.0;
 	
 	// 16 x 8 (rows x cols)
@@ -47,22 +45,13 @@ public class GismoPixel extends SingleColorPixel {
 		// mux & pin filled when reading 'wiring.dat'
 		
 		calcPosition();
-		
-		// TODO This is just a workaround...
-		variance = 1.0;
 	}
 	
-	
-	@Override
-	public Channel copy() {
-		GismoPixel copy = (GismoPixel) super.copy();
-		if(size != null) copy.size = (Vector2D) size.clone();
-		return copy;		
-	}
+
 
 	public void calcPosition() {
 		// ALt/Az maps show this to be correct...
-		position = getPosition(size, row, col);
+		position = getPosition(((AbstractGismo) instrument).pixelSize, row, col);
 	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {
@@ -92,8 +81,8 @@ public class GismoPixel extends SingleColorPixel {
 		if(tokens.hasMoreTokens()) muxGain = Double.parseDouble(tokens.nextToken());
 	}
 	
-	
 	public static Vector2D defaultSize = new Vector2D(13.88 * Unit.arcsec, 13.77 * Unit.arcsec);
+	
 	
 	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
 	public final static int FLAG_PIN = 1 << nextSoftwareFlag++;

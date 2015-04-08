@@ -24,7 +24,6 @@
 package crush.sofia;
 
 import kovacs.util.Unit;
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -40,14 +39,14 @@ public class SofiaNoddingData extends SofiaHeaderData {
 	
 	public SofiaNoddingData() {}
 	
-	public SofiaNoddingData(Header header) throws FitsException, HeaderCardException {
+	public SofiaNoddingData(Header header) {
 		this();
 		parseHeader(header);
 	}
 	
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
 		dwellTime = header.getFloatValue("NODTIME", Float.NaN) * (float) Unit.s;
 		cycles = header.getIntValue("NODN", UNKNOWN_INT_VALUE);
 		settlingTime = header.getFloatValue("NODSETL", Float.NaN) * (float) Unit.s;

@@ -25,15 +25,10 @@ package crush.array;
 
 import java.util.Collection;
 
-import crush.Instrument;
 import crush.InstrumentLayout;
 import crush.Pixel;
 
 public class SingleColorLayout<ChannelType extends SingleColorPixel> extends InstrumentLayout<ChannelType> {
-
-	public SingleColorLayout(Instrument<? extends ChannelType> instrument) {
-		super(instrument);
-	}
 
 	@Override
 	public int getPixelCount() {

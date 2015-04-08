@@ -35,14 +35,14 @@ public abstract class RotatingArray<PixelType extends Pixel, ChannelType extends
 	 */
 	private static final long serialVersionUID = 2271933035438315377L;
 	
-	public RotatingArray(String name, int size) {
-		super(name, size);
-	}
-
-	public RotatingArray(String name) {
-		super(name);
+	public RotatingArray(String name, InstrumentLayout<? super ChannelType> layout) {
+		super(name, layout);
 	}
 	
+	public RotatingArray(String name, InstrumentLayout<? super ChannelType> layout, int size) {
+		super(name, layout, size);
+	}
+
 	public abstract Vector2D getPointingCenterOffset();
 	
 	public double getRotation() {

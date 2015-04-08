@@ -123,7 +123,7 @@ public class ScalarMap extends SourceMap {
 		
 		super.createFrom(collection);
 		
-		double defaultGridSize = getInstrument().resolution / 5.0;
+		double defaultGridSize = getInstrument().getPointSize() / 5.0;
 		Vector2D gridSize = new Vector2D(defaultGridSize, defaultGridSize);
 	
 		map.setUnderlyingBeam(getAverageResolution());
@@ -360,7 +360,7 @@ public class ScalarMap extends SourceMap {
 		if(hasOption("pointing")) if(option("pointing").equals("auto") || option("pointing").equals("suggest")) {
 			double optimal = hasOption("smooth.optimal") ? 
 					option("smooth.optimal").getDouble() * scan.instrument.getSizeUnitValue() :
-					scan.instrument.resolution;
+					scan.instrument.getPointSize();
 	
 			map.smoothTo(optimal);
 			if(hasOption("pointing.exposureclip")) map.clipBelowRelativeExposure(option("pointing.exposureclip").getDouble(), 0.1);
@@ -440,7 +440,7 @@ public class ScalarMap extends SourceMap {
 		}
 		map.generation++; // Increment the map generation...
 		
-		map.getInstrument().resolution = getAverageResolution();
+		map.getInstrument().setResolution(getAverageResolution());
 			
 		double blankingLevel = getBlankingLevel();
 		
@@ -797,7 +797,7 @@ public class ScalarMap extends SourceMap {
 			// Smooth thumbnail by half a beam for nicer appearance
 			if(hasOption("write.png.smooth")) {
 				String arg = option("write.png.smooth").getValue();
-				double fwhm = arg.length() > 0 ? getSmoothing(arg) : 0.5 * getInstrument().resolution;
+				double fwhm = arg.length() > 0 ? getSmoothing(arg) : 0.5 * getInstrument().getPointSize();
 				thumbnail.smoothTo(fwhm);
 			}
 			

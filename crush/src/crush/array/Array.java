@@ -25,9 +25,12 @@ package crush.array;
 import java.io.*;
 import java.util.*;
 
+import nom.tam.fits.Header;
+import nom.tam.fits.HeaderCard;
+import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
-
 import crush.*;
 import crush.sourcemodel.*;
 
@@ -38,12 +41,12 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	 */
 	private static final long serialVersionUID = -707752417431510013L;
 	
-	public Array(String name) {
-		super(name);
+	public Array(String name, InstrumentLayout<? super ChannelType> layout) {
+		super(name, layout);
 	}
 	
-	public Array(String name, int size) {
-		super(name, size);
+	public Array(String name, InstrumentLayout<? super ChannelType> layout, int size) {
+		super(name, layout, size);
 	}
 	
 	@Override
@@ -200,5 +203,19 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		setOption("point");
 		scan.instrument.setOption("point");		
 	}
+	
+	@Override
+	public void parseHeader(Header header) {
+		super.parseHeader(header);
+		setResolution(header.getDoubleValue("BEAM", getResolution() / Unit.arcsec) * Unit.arcsec);
+	}
+	
+	@Override
+	public void editImageHeader(List<Scan<?,?>> scans, Cursor cursor) throws HeaderCardException {
+		super.editImageHeader(scans, cursor);
+		cursor.add(new HeaderCard("BEAM", getResolution() / Unit.arcsec, "The instrument FWHM (arcsec) of the beam."));
+	}
+	
+	
 	
 }

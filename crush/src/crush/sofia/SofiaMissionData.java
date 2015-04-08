@@ -23,7 +23,6 @@
 
 package crush.sofia;
 
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -35,14 +34,14 @@ public class SofiaMissionData extends SofiaHeaderData {
 	
 	public SofiaMissionData() {}
 	
-	public SofiaMissionData(Header header) throws FitsException, HeaderCardException {
+	public SofiaMissionData(Header header) {
 		this();
 		parseHeader(header);
 	}
 	
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
 		obsPlanID = getStringValue(header, "PLANID");	// TODO map to project?
 		aircraft = getStringValue(header, "DEPLOY");
 		missionID = getStringValue(header, "MISSN-ID");

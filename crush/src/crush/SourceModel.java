@@ -110,11 +110,12 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 		
 		for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) if(integration.instrument != instrument) {
 			double wG2 = scan.weight * integration.gain * integration.gain;
-			sum += wG2 * integration.instrument.resolution * integration.instrument.resolution;
+			double resolution = integration.instrument.getResolution();
+			sum += wG2 * resolution * resolution;
 			sumw += wG2;
 		}
 		
-		return sumw > 0.0 ? Math.sqrt(sum / sumw) : instrument.resolution;
+		return sumw > 0.0 ? Math.sqrt(sum / sumw) : instrument.getResolution();
 	}
 
 	public void reset(boolean clearContent) {

@@ -720,8 +720,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public Asymmetry2D getSourceAsymmetry(CircularRegion<SphericalCoordinates> region) {
 		if(!(sourceModel instanceof ScalarMap)) return null;
 		
-		double minr = instrument.resolution;
-		double maxr = (hasOption("focus.r") ? option("focus.r").getDouble() : 2.5) * instrument.resolution;
+		double minr = instrument.getPointSize();
+		double maxr = (hasOption("focus.r") ? option("focus.r").getDouble() : 2.5) * instrument.getPointSize();
 		
 		AstroMap map = ((ScalarMap) sourceModel).map; 
 		AstroSystem system = map.astroSystem();
@@ -759,7 +759,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		if(elongation != null) info.append("  Elongation: " + elongation.toString(Unit.get("%")) + "\n");			
 		
-		double relFWHM = pointing.getFWHM().value() / instrument.resolution;
+		double relFWHM = pointing.getFWHM().value() / instrument.getPointSize();
 			
 		boolean force = hasOption("focus");
 		

@@ -35,9 +35,11 @@ public class Gismo extends AbstractGismo {
 	
 	public Gismo() {
 		super("gismo", pixels);
-		resolution = 16.7 * Unit.arcsec;
+		setResolution(16.7 * Unit.arcsec);
 		
 		arrayPointingCenter = (Vector2D) defaultPointingCenter.clone();
+		
+		pixelSize = GismoPixel.defaultSize;
 		
 		// TODO calculate this?
 		integrationTime = samplingInterval = 0.1 * Unit.sec;
@@ -53,6 +55,7 @@ public class Gismo extends AbstractGismo {
 	
 	// Array is 16x8 (rows x cols);
 	public static final int pixels = 128;
+	
 	
 	private static Vector2D defaultPointingCenter = new Vector2D(8.5, 4.5); // row, col
 	

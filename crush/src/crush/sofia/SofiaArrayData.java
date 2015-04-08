@@ -27,7 +27,6 @@ import kovacs.math.Vector2D;
 import kovacs.projection.Projection2D;
 import kovacs.util.Copiable;
 import kovacs.util.Unit;
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -43,7 +42,7 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 
 	public SofiaArrayData() {}
 	
-	public SofiaArrayData(Header header) throws FitsException, HeaderCardException {
+	public SofiaArrayData(Header header) {
 		this();
 		parseHeader(header);
 	}
@@ -65,7 +64,7 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 	
 	
 	@Override
-	public void parseHeader(Header header) throws FitsException, HeaderCardException {
+	public void parseHeader(Header header) {
 		detectorName = SofiaHeaderData.getStringValue(header, "DETECTOR");
 		detectorSizeString = SofiaHeaderData.getStringValue(header, "DETSIZE");
 		pixelScale = header.getFloatValue("PIXSCAL", Float.NaN) * (float) Unit.arcsec;

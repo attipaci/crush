@@ -23,8 +23,8 @@
 
 package crush.sofia;
 
+import kovacs.util.Unit;
 import kovacs.util.Util;
-import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
@@ -37,7 +37,7 @@ public abstract class SofiaHeaderData implements Cloneable {
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
-	public abstract void parseHeader(Header header) throws FitsException, HeaderCardException;
+	public abstract void parseHeader(Header header);
 	
 	public abstract void editHeader(Cursor cursor) throws HeaderCardException;
 	
@@ -50,16 +50,16 @@ public abstract class SofiaHeaderData implements Cloneable {
 		return header.containsKey(key) ? header.getStringValue(key) : null;
 	}
 	
-	public static double getHMSValue(Header header, String key) {
+	public static double getHMSTime(Header header, String key) {
 		String value = header.getStringValue(key);
-		try { return Double.parseDouble(value); }
-		catch(NumberFormatException e) { return Util.parseTime(value); }
+		if(value == null) return header.getDoubleValue(key, Double.NaN) * Unit.hour; 
+		return Util.parseTime(value);
 	}
 	
-	public static double getDMSValue(Header header, String key) {
+	public static double getDMSAngle(Header header, String key) {
 		String value = header.getStringValue(key);
-		try { return Double.parseDouble(value); }
-		catch(NumberFormatException e) { return Util.parseAngle(value); }
+		if(value == null) return header.getDoubleValue(key, Double.NaN) * Unit.deg; 
+		return Util.parseAngle(value);
 	}
 	
 	public final static int UNKNOWN_INT_VALUE = -9999;

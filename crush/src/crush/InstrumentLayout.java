@@ -31,7 +31,8 @@ import kovacs.util.Copiable;
 public abstract class InstrumentLayout<ChannelType extends Channel> implements Cloneable, Copiable<InstrumentLayout<ChannelType>> {
 	public Instrument<? extends ChannelType> instrument;
 	
-	public InstrumentLayout(Instrument<? extends ChannelType> instrument) {
+		
+	public void setInstrument(Instrument<? extends ChannelType> instrument) {
 		this.instrument = instrument;
 	}
 	
@@ -55,8 +56,8 @@ public abstract class InstrumentLayout<ChannelType extends Channel> implements C
 		return instrument.option(key);
 	}
 	
-	public void setOptions(Configurator options) {
-		if(hasOption("beam")) instrument.resolution = option("beam").getDouble() * instrument.getSizeUnitValue();
+	public void validate(Configurator options) {
+		if(hasOption("beam")) instrument.setResolution(option("beam").getDouble() * instrument.getSizeUnitValue());
 	}
 	
 	public abstract int getPixelCount();

@@ -48,7 +48,7 @@ public class Sharc extends CSOArray<SharcPixel> {
 	
 	public Sharc() {
 		super("sharc", pixels);
-		resolution = 8.5 * Unit.arcsec;
+		setResolution(8.5 * Unit.arcsec);
 		mount = Mount.CASSEGRAIN;
 	}
 	

@@ -91,7 +91,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	}
 
 	public double getInstrumentBeamArea() {
-		double size = instrument.resolution * fwhm2size;
+		double size = instrument.getResolution() * fwhm2size;
 		return size*size;
 	}
 	
@@ -194,11 +194,11 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		// get the beam and calculate derived quantities
 		// TODO revise... (use GaussianPSF...)
 		if(header.containsKey("BEAM")) 
-			instrument.resolution = header.getDoubleValue("BEAM", instrument.resolution / Unit.arcsec) * Unit.arcsec;
+			instrument.setResolution(header.getDoubleValue("BEAM", instrument.getResolution() / Unit.arcsec) * Unit.arcsec);
 		else if(header.containsKey("BMAJ"))
-			instrument.resolution =  header.getDoubleValue("BMAJ", instrument.resolution / Unit.deg) * Unit.deg;
+			instrument.setResolution(header.getDoubleValue("BMAJ", instrument.getResolution() / Unit.deg) * Unit.deg);
 		else 
-			instrument.resolution = 3.0 * Math.sqrt(getGrid().getPixelArea());
+			instrument.setResolution(3.0 * Math.sqrt(getGrid().getPixelArea()));
 	}
 
 	
@@ -234,7 +234,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		
 		// Reset the beam and resolution... 
 		// TODO elliptical beam shape...
-		instrument.resolution = replacementBeam.getCircularEquivalentFWHM();
+		instrument.setResolution(replacementBeam.getCircularEquivalentFWHM());
 		
 		return components;
 	}

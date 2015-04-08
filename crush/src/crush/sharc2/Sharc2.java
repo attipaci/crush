@@ -44,8 +44,8 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> {
 	private static final long serialVersionUID = -6054582144119360355L;
 	String filterName;
 	
-	public Vector2D pixelSize;
 	private Vector2D arrayPointingCenter = new Vector2D(6.5, 16.5);
+	Vector2D pixelSize = Sharc2Pixel.defaultSize;
 	
 	double nativeSamplingInterval;
 	double[] rowGain;
@@ -57,7 +57,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> {
 	
 	public Sharc2() {
 		super("sharc2", pixels);
-		resolution = 8.5 * Unit.arcsec;
+		setResolution(8.5 * Unit.arcsec);
 	}
 	
 	
@@ -68,7 +68,8 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> {
 		if(rowGain != null) copy.rowGain = Util.copyOf(rowGain);	
 		if(isHiGain != null) copy.isHiGain = Util.copyOf(isHiGain);
 		
-		copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
+		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
+		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
 		
 		return copy;
 	}
@@ -147,10 +148,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> {
 	private void calcPositions(Vector2D size) {
 		pixelSize = size;
 		// Make all pixels the same size. Also calculate their positions...
-		for(Sharc2Pixel pixel : this) {
-			pixel.size = size;
-			pixel.calcPosition();
-		}
+		for(Sharc2Pixel pixel : this) pixel.calcPosition();
 		Vector2D center = Sharc2Pixel.getPosition(size, arrayPointingCenter.x() - 1.0, arrayPointingCenter.y() - 1.0);
 		setReferencePosition(center);
 	}

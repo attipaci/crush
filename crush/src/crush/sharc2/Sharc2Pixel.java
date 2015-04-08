@@ -24,7 +24,6 @@
 
 package crush.sharc2;
 
-import crush.Channel;
 import crush.array.SingleColorPixel;
 
 import java.util.StringTokenizer;
@@ -37,7 +36,6 @@ import kovacs.util.Util;
 
 public class Sharc2Pixel extends SingleColorPixel {
 	public int row, col, block = 0;
-	public Vector2D size;
 	public double biasV;
 	public short DAC;
 	public double G0 = 0.0, V0 = Double.POSITIVE_INFINITY, T0 = Double.POSITIVE_INFINITY; // Gain non-linearity constants...
@@ -50,14 +48,6 @@ public class Sharc2Pixel extends SingleColorPixel {
 		row = zeroIndex / 32;
 		col = zeroIndex % 32;
 		muxGain = col < 16 ? 1.0 : -1.0;
-		size = defaultSize;
-	}
-	
-	@Override
-	public Channel copy() {
-		Sharc2Pixel copy = (Sharc2Pixel) super.copy();
-		if(size != null) copy.size = (Vector2D) size.clone();
-		return copy;		
 	}
 	
 	@Override
@@ -67,7 +57,7 @@ public class Sharc2Pixel extends SingleColorPixel {
 	
 	public void calcPosition() {
 		// ALt/Az maps show this to be correct...
-		position = getPosition(size, row, col);
+		position = getPosition(((Sharc2) instrument).pixelSize, row, col);
 	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {
@@ -87,6 +77,7 @@ public class Sharc2Pixel extends SingleColorPixel {
 	}
 	
 	public double getAreaFactor() {
+		Vector2D size = ((Sharc2) instrument).pixelSize;
 		return size.x() * size.y() / (defaultSize.x() * defaultSize.y());	
 	}
 	

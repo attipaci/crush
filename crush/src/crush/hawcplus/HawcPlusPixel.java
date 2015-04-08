@@ -28,13 +28,11 @@ import java.util.StringTokenizer;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
 
-import crush.Channel;
 import crush.array.SingleColorPixel;
 
 public class HawcPlusPixel extends SingleColorPixel {
-	public int row, col, mux, pin;
-	public Vector2D size = defaultSize;
-	public double muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0, saeGain = 0.0;
+	public int polarray, subarray, row, col, mux, pin;
+	public double polarrayGain = 1.0, subarrayGain = 1.0, muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0;
 	
 	// 16 x 8 (rows x cols)
 	long readoutOffset = 0L;
@@ -42,32 +40,32 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	public HawcPlusPixel(HawcPlus array, int zeroIndex) {
 		super(array, zeroIndex+1);
-		row = zeroIndex / 8;
-		col = zeroIndex % 8;
 		
-		// mux & pin filled when reading 'wiring.dat'
+		//row = (zeroIndex / 64) % 41;
+		//col = zeroIndex % 64;
 		
-		calcPosition();
+		row = zeroIndex / 41;
+		col = zeroIndex % 41;
 		
-		// TODO This is just a workaround...
-		variance = 1.0;
+		polarray = row < 64 ? 0 : 1;
+		row %= 64;
+		subarray = (polarray << 1) + (col < 32 ? 0 : 1);
+		
+		// Flag the dark squids as such...
+		if(col == 40) flag(FLAG_DARK);
+		
+		// TODO mux & pin filled when reading 'wiring.dat'	
 	}
 	
-	
-	@Override
-	public Channel copy() {
-		HawcPlusPixel copy = (HawcPlusPixel) super.copy();
-		if(size != null) copy.size = (Vector2D) size.clone();
-		return copy;		
-	}
 
 	public void calcPosition() {
 		// ALt/Az maps show this to be correct...
-		position = getPosition(size, row, col);
+		HawcPlus hawc = (HawcPlus) instrument;
+		position = getPosition(hawc.pixelSize, hawc.subarrayOffset[polarray][subarray&1], row, col);
 	}
 	
-	public static Vector2D getPosition(Vector2D size, double row, double col) {
-		return new Vector2D(size.x() * col, -size.y() * row);
+	public static Vector2D getPosition(Vector2D size, Vector2D subarrayOffset, double row, double col) {
+		return new Vector2D(subarrayOffset.x() + size.x() * row, subarrayOffset.y() - size.y() * col);
 	}
 	
 	@Override
@@ -96,11 +94,15 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	public static Vector2D defaultSize = new Vector2D(5.0 * Unit.arcsec, 5.0 * Unit.arcsec);
 	
+	public final static int FLAG_DARK = 1 << nextHardwareFlag++;
+	
+	public final static int FLAG_POL = 1 << nextSoftwareFlag++;
+	public final static int FLAG_SUB = 1 << nextSoftwareFlag++;
 	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
 	public final static int FLAG_PIN = 1 << nextSoftwareFlag++;
 	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
 	public final static int FLAG_COL = 1 << nextSoftwareFlag++;
-	public final static int FLAG_SAE = 1 << nextSoftwareFlag++;
+	
 
 	
 }
