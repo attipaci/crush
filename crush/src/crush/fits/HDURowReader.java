@@ -25,7 +25,6 @@ package crush.fits;
 
 import java.io.IOException;
 
-import crush.CRUSH;
 import kovacs.util.Parallel;
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -45,12 +44,15 @@ public abstract class HDURowReader {
 	public abstract Reader getReader() throws FitsException;
 	
 	public void read() throws Exception {
-		read(CRUSH.maxThreads);
-		//read(1);
+		// TODO not thread safe...
+		//read(CRUSH.maxThreads);
+		read(1);
 	}
 	
 	
 	public void read(int threadCount) throws Exception {
+		if(!table.reset()) throw new FitsException("Cannot locate beginning of FITS binary table.");	// Go to the beginning
+		nextRow = 0;		
 		getReader().process(threadCount);
 	}
 
@@ -66,26 +68,33 @@ public abstract class HDURowReader {
 	public abstract class Reader extends Parallel<Void> {
 		private Object[] row;
 			
-		public Reader() throws FitsException {
-			if(!table.reset()) throw new FitsException("Cannot locate beginning of FITS binary table.");	// Go to the beginning
+		public Reader() {
+			setDefaults();
 		}
+		
+		public void setDefaults() {}
 		
 		@Override
 		public void init() {
+			super.init();
 			row = table.getModelRow();
+		}
+		
+		protected final int next(Object[] row) throws IOException {
+			return getNextRow(row);
 		}
 		
 		@Override
 		public void processIndex(int i, int threadCount) throws Exception {
 			int index;
-			while((index = getNextRow(row)) >= 0) {
-				if(isInterrupted()) return;
-				processRow(row, index);
+			while((index = next(row)) >= 0) {
+				if(isInterrupted()) return;				
+				processRow(index, row);
 				Thread.yield();
 			}
 		}
 		
-		public abstract void processRow(Object[] row, int index) throws Exception;
+		public abstract void processRow(int index, Object[] row) throws Exception;
 		
 	}
 	

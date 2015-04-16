@@ -49,7 +49,7 @@ public class HawcPlusFrame extends HorizontalFrame {
 	private void parseData(long[][] DAC, int offset) {
 		int bol = offset + DAC.length * DAC[0].length - 1;
 		for(int i=DAC.length; --i >= 0; ) for(int j=DAC[0].length; --j >= 0; bol--)
-		data[offset+bol] = DAC[i][j] - ((HawcPlus) scan.instrument).get(offset+bol).readoutOffset;		
+		data[bol] = DAC[i][j] - ((HawcPlus) scan.instrument).get(bol).readoutOffset;		
 	}
 	
 	private void parseData(long[] DAC, int from, int channels, int offset) {

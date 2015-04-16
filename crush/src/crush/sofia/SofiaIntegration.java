@@ -23,7 +23,7 @@
 
 package crush.sofia;
 
-import nom.tam.fits.BasicHDU;
+import nom.tam.fits.Fits;
 import crush.GroundBased;
 import crush.HorizontalFrame;
 import crush.Integration;
@@ -42,7 +42,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		super(parent);
 	}
 
-	public abstract void readData(BasicHDU[] hdus) throws Exception;
+	public abstract void readData(Fits fits) throws Exception;
 	
 	
 }

@@ -40,27 +40,26 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	public HawcPlusPixel(HawcPlus array, int zeroIndex) {
 		super(array, zeroIndex+1);
+	
+		row = zeroIndex / HawcPlus.cols;
+		col = zeroIndex % HawcPlus.cols;
 		
-		//row = (zeroIndex / 64) % 41;
-		//col = zeroIndex % 64;
+		polarray = row < HawcPlus.rows ? 0 : 1;
+		row %= HawcPlus.rows;
+		subarray = (polarray << 1) + (col < HawcPlus.subarrayCols ? 0 : 1);
 		
-		row = zeroIndex / 41;
-		col = zeroIndex % 41;
-		
-		polarray = row < 64 ? 0 : 1;
-		row %= 64;
-		subarray = (polarray << 1) + (col < 32 ? 0 : 1);
+		mux = subarray * HawcPlus.rows + row;
+		pin = col % HawcPlus.subarrayCols;
 		
 		// Flag the dark squids as such...
-		if(col == 40) flag(FLAG_DARK);
+		if(col == HawcPlus.cols-1) flag(FLAG_BLIND);
 		
-		// TODO mux & pin filled when reading 'wiring.dat'	
+		// TODO pin filled when reading 'wiring.dat'	
 	}
 	
 
 	public void calcPosition() {
-		// ALt/Az maps show this to be correct...
-		HawcPlus hawc = (HawcPlus) instrument;
+		final HawcPlus hawc = (HawcPlus) instrument;
 		position = getPosition(hawc.pixelSize, hawc.subarrayOffset[polarray][subarray&1], row, col);
 	}
 	
@@ -70,7 +69,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	@Override
 	public int getCriticalFlags() {
-		return FLAG_DEAD | FLAG_BLIND;
+		return FLAG_DEAD;
 	}
 	
 	@Override
@@ -94,7 +93,6 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	public static Vector2D defaultSize = new Vector2D(5.0 * Unit.arcsec, 5.0 * Unit.arcsec);
 	
-	public final static int FLAG_DARK = 1 << nextHardwareFlag++;
 	
 	public final static int FLAG_POL = 1 << nextSoftwareFlag++;
 	public final static int FLAG_SUB = 1 << nextSoftwareFlag++;

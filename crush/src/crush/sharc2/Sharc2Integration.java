@@ -142,7 +142,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		
 		for(int n=0, startIndex = 0; n<nDataHDUs; n++) {
 			BinaryTableHDU hdu = (BinaryTableHDU) HDU[firstDataHDU+n]; 
-			new Sharc2Reader(hdu, startIndex).read();
+			new Sharc2Reader(hdu, startIndex).read();			
 			startIndex += hdu.getNRows();
 		}	
 		
@@ -263,8 +263,6 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 
 	/*
 	class Sharc2RowReader extends HDURowReader {	
-		
-
 		private boolean hasExtraTimingInfo, isDoubleUT;
 
 		
@@ -307,16 +305,16 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		@Override
 		public Reader getReader() throws FitsException {
 			return new Reader() {
-				private Vector2D equatorialOffset;
+				private Vector2D offset;
 
 				@Override
 				public void init() { 
 					super.init();
-					equatorialOffset = new Vector2D();
+					offset = new Vector2D();
 				}
 				
 				@Override
-				public void processRow(Object[] row, int index) throws FitsException {	
+				public void processRow(int index, Object[] row) throws FitsException {	
 
 					final Sharc2Frame frame = new Sharc2Frame(sharcscan);
 					frame.index = index;
@@ -358,11 +356,11 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 
 					// Add in the equatorial sweeping offsets
 					// Watch out for the sign of the RA offset, which is counter to the native coordinate direction
-					equatorialOffset.set(((float[]) row[iRAO])[0] * Unit.arcsec, ((float[]) row[iDECO])[0] * Unit.arcsec);	
+					offset.set(((float[]) row[iRAO])[0] * Unit.arcsec, ((float[]) row[iDECO])[0] * Unit.arcsec);	
 					
 					
-					frame.equatorialToHorizontal(equatorialOffset);
-					frame.horizontalOffset.add(equatorialOffset);
+					frame.equatorialToHorizontal(offset);
+					frame.horizontalOffset.add(offset);
 		
 					set(index, frame);
 				}

@@ -48,7 +48,6 @@ import kovacs.math.Vector2D;
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
 import kovacs.util.DataTable;
-
 import crush.astro.AstroMap;
 import crush.sourcemodel.*;
 
@@ -336,6 +335,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			cursor.add(new HeaderCard("TTYPE" + (k++), name, "The column name"));
 		}
 
+		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+		cursor.add(new HeaderCard("COMMENT", " CRUSH scan-specific configuration section", false));
+		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+	
 		instrument.getStartupOptions().difference(global).editHeader(cursor);	
 		
 		return hdu;

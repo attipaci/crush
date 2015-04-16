@@ -1,10 +1,44 @@
+2.23-b1
+
+
 	[NEW] Initial support for HAWC+.
 
+	[NEW] On Linux systems CRUSH will attempt to automatically configure
+	Java for optimal performance. On other systems (e.g. Mac OS X or
+	Windows, it defaults to fail-safe settings of 32-bit VM and 1GB of 
+	RAM).
+
+	[NEW] On POSIX systems (e.g. Linux, Mac OS X), you can place your 
+	persistent Java runtime configuration in arbitrary files under
+	/etc/crush2/startup, or ~/.crush2/startup. (User settings in the latter
+	will override the system-wide settings in the former). See Section 2.2 
+	(Java Configuration) in the updated README for details.
+
 	[FIX] Aperture flux uncertainties reported for a pointing fit at the 
-	end of reduction w uncertainty was garbage in prior release. Fixed.
+	end of reduction was garbage in prior release. Fixed.
+
+	[README] Updated installation instructions.
+
+	[PACKAGE] Added bash and coreutils to pre-requisites for RPM and Debian
+	packages (The latter provides 'readlink' and 'dirname'). 
+
+	[TWEAK] {FITS} Added a few sectioning comments to FITS headers to
+	make it easier to read by humans.
+
+	[CODE] Closing FITS streams after reading (for all instruments) with
+	no-action exception catch (not a real issue).
+
+	[CODE] new Integration.TimestreamView for faster access of cached 
+	channel timestreams. Its use should provide a performance boost for
+	large integrations, which do not fit into the CPU cache in their
+	entirety. Upgrading timestream analysis algorithms to use this new
+	feature is in progress...
+	
+	[CODE] Reporting of CRUSH command line arguments in FITS header moved
+	from GridSource to CRUSH.
 
 	[CODE] InstrumentLayout constructor without arguments, and Instrument
-	constructors to include a mantatory layout specification.
+	constructors to include a mandatory layout specification.
 
 	[CODE] Instrument resolution made private with get/set access only.
 
@@ -21,6 +55,8 @@
 	same as for the source model (or first scan if no source model is
 	derived). Default settings, like resolution, etc are parsed upon
 	validation only.
+
+
 
 
 2.22-1 (31 March 2015)

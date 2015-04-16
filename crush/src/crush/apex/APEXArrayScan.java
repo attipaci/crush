@@ -271,7 +271,8 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 			}
 		}
 		
-		fits.getStream().close();
+		try { fits.getStream().close(); }
+		catch(IOException e) {}
 		
 	}
 	
