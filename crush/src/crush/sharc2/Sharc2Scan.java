@@ -48,7 +48,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 
 	private double raUnit = Unit.hourAngle;
 	private double decUnit = Unit.deg;
-	
+		
 	public Sharc2Scan(Sharc2 instrument) {
 		super(instrument);
 	}

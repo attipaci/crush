@@ -24,7 +24,6 @@ package crush.sourcemodel;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.StringTokenizer;
 import java.util.Vector;
 
 import kovacs.data.Data2D;
@@ -32,7 +31,6 @@ import kovacs.data.GaussianPSF;
 import kovacs.data.Grid2D;
 import kovacs.data.GridImage;
 import kovacs.data.GridMap;
-import kovacs.fits.FitsExtras;
 import kovacs.math.Coordinate2D;
 import kovacs.util.Configurator;
 import kovacs.util.Unit;
@@ -55,8 +53,6 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	private static final long serialVersionUID = -7928156781161894347L;
 	private Instrument<?> instrument;
 	public Vector<Scan<?, ?>> scans = new Vector<Scan<?, ?>>();
-
-	public String commandLine;
 	
 	public int generation = 0;
 	public double integrationTime = 0.0;	
@@ -145,14 +141,6 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		
 		cursor.add(new HeaderCard("SCANS", scans.size(), "The number of scans in this composite image."));
 		cursor.add(new HeaderCard("INTEGRTN", integrationTime / Unit.s, "The total integration time in seconds."));
-		
-		// Add the command-line reduction options
-		if(commandLine != null) {
-			StringTokenizer args = new StringTokenizer(commandLine);
-			cursor.add(new HeaderCard("ARGS", args.countTokens(), "The number of arguments passed from the command line."));
-			int i=1;
-			while(args.hasMoreTokens()) FitsExtras.addLongKey(cursor, "ARG" + (i++), args.nextToken(), "Command-line argument.");
-		}
 		
 		cursor.add(new HeaderCard("V2JY", instrument.janskyPerBeam(), "1 Jy/beam in instrument data units."));	
 		

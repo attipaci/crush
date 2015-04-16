@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.22-1
+ * @version 2.23-a2
  * 
  */
 public class CRUSH extends Configurator {
@@ -45,8 +45,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.23-a1";
-	private static String revision = "devel.2";
+	private static String version = "2.23-b1";
+	private static String revision = "beta";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -217,6 +217,7 @@ public class CRUSH extends Configurator {
 			System.err.println("WARNING! " + e.getMessage());
 		}
 		
+		
 		// Keep only the non-specific global options here...
 		for(Scan<?,?> scan : scans) instrument.getOptions().intersect(scan.instrument.getOptions()); 		
 		for(int i=scans.size(); --i >=0; ) if(scans.get(i).isEmpty()) scans.remove(i);
@@ -224,7 +225,26 @@ public class CRUSH extends Configurator {
 		//Collections.sort(scans);
 		
 		update();
-		System.err.println(" Will use " + Math.min(scans.size(), maxThreads) + " CPU core(s).");
+		
+		int threads = Math.min(scans.size(), maxThreads);
+		
+		System.err.println(" Will use " + threads + " CPU core(s).");
+		
+		if(hasOption("cache")) {
+			System.err.println(" Configuring caching.");
+			String spec = option("cache").getValue().toLowerCase();
+			int bytes = Integer.parseInt(spec.substring(0, spec.length()-1));
+			
+			switch(spec.charAt(spec.length()-1)) {
+			case 'k': bytes *= 2<<10; break;
+			case 'm': bytes *= 2<<20; break;
+			case 'g': bytes *= 2<<30; break;
+			}
+			
+			bytes /= threads;
+			
+			for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) integration.cacheSize = bytes;
+		}
 	}
 	
 	
@@ -532,11 +552,11 @@ public class CRUSH extends Configurator {
 	public static void info() {
 		String info = "\n" +
 			"  ----------------------------------------------------------------------------\n" +
-			"  crush -- Reduction and imaging tool for bolometer arrays.\n" +
+			"  crush -- Reduction and imaging tool for astronomical cameras.\n" +
 			"           Version: " + getFullVersion() + "\n" + 
 			"           Utilities: " + Util.getFullVersion() + ", FITS libs: " + Fits.version() + "\n" +
 			"           http://www.submm.caltech.edu/~sharc/crush\n" +
-			"           Copyright (C)2014 Attila Kovacs <attila[AT]caltech.edu>\n" +
+			"           Copyright (C)2015 Attila Kovacs <attila[AT]caltech.edu>\n" +
 			"  ----------------------------------------------------------------------------\n";	
 		System.err.println(info);
 	}
@@ -545,11 +565,11 @@ public class CRUSH extends Configurator {
 		String info = "  Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
 			"\n" +
 			"    <instrument>     'sharc', 'sharc2', 'laboca', 'saboca', 'aszca', 'polka'\n" +
-			"                     'p-artemis', 'gismo', 'mako', 'mako2' (or 'scuba2').\n" +
+			"                     'p-artemis', 'gismo', 'mako', 'mako2', 'hawc+'\n" + 
+			"                     (or 'scuba2').\n" +
 			"    [options]        Various configuration options. See README for details.\n" +
 			"                     Global settings must precede all scans on argument list.\n" +
-			"                     Each scan will use all options listed before it on the\n" +
-			"                     command line.\n" +
+			"                     Scan will use all options listed before them.\n" +
 			"    <scanlist>       A list of scan numbers (or names) to reduce. Can mix\n" +
 			"                     file names, individual scan numbers, and ranges. E.g.\n" +
 			"                       10628-10633 11043 myscan.fits\n" +
@@ -730,6 +750,24 @@ public class CRUSH extends Configurator {
 		
 		cursor.add(new HeaderCard("CRUSHVER", getFullVersion(), "CRUSH version information."));
 		
+		// Add the command-line reduction options
+		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+		cursor.add(new HeaderCard("COMMENT", " CRUSH command line arguments section", false));
+		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+			
+				
+		if(commandLine != null) {
+			StringTokenizer args = new StringTokenizer(commandLine);
+			cursor.add(new HeaderCard("ARGS", args.countTokens(), "The number of arguments passed from the command line."));
+			int i=1;
+			while(args.hasMoreTokens()) FitsExtras.addLongKey(cursor, "ARG" + (i++), args.nextToken(), "Command-line argument.");
+		}
+		
+		
+		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+		cursor.add(new HeaderCard("COMMENT", " CRUSH VM/OS section", false));
+		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+	
 		cursor.add(new HeaderCard("JAVA", Util.getProperty("java.vendor"), "Java vendor name."));
 		cursor.add(new HeaderCard("JAVAVER", Util.getProperty("java.version"), "The Java version."));
 		
@@ -751,7 +789,16 @@ public class CRUSH extends Configurator {
 		cursor.add(new HeaderCard("COUNTRY", Util.getProperty("user.country"), "The user country."));
 		cursor.add(new HeaderCard("LANGUAGE", Util.getProperty("user.language"), "The user language."));
 		
+		
+		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+		cursor.add(new HeaderCard("COMMENT", " CRUSH configuration section", false));
+		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+		
 		super.editHeader(cursor);
+		
+		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+		cursor.add(new HeaderCard("COMMENT", " End of CRUSH configuration sections", false));
+		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 	}
 	
 	

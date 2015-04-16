@@ -29,7 +29,7 @@ import java.util.Vector;
 
 import kovacs.astro.AstroTime;
 import kovacs.util.Unit;
-import nom.tam.fits.BasicHDU;
+import nom.tam.fits.Fits;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -65,7 +65,7 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 	}
 	
 	
-	public abstract void readData(BasicHDU[] hdu) throws Exception;
+	public abstract void readData(Fits fits) throws Exception;
 	
 	@Override
 	public void parseHeader(Header header) {	
@@ -86,8 +86,8 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 		if(instrumentData != null) instrumentData.editHeader(cursor);
 		if(array != null) array.editHeader(cursor);
 		
-		if(hasOption("pixeldata")) 
-			cursor.add(new HeaderCard("FLATFILE", option("pixeldata").getValue(), "pixel data file."));
+		//if(hasOption("pixeldata")) 
+		//	cursor.add(new HeaderCard("FLATFILE", option("pixeldata").getValue(), "pixel data file."));
 	
 	}
 

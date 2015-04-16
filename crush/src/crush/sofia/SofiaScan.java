@@ -145,8 +145,10 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	
 	@Override
 	public void editScanHeader(Header header) throws HeaderCardException {
+		super.editScanHeader(header);		
+		Header sofiaHeader = new Header();
 		
-		Cursor cursor = header.iterator();
+		Cursor cursor = sofiaHeader.iterator();
 		while(cursor.hasNext()) cursor.next();
 		
 		observation.editHeader(cursor);
@@ -176,9 +178,11 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		//cursor.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getReleaseVersion(), "Software that produced this file."));
 		//cursor.add(new HeaderCard("PIPEVERS", CRUSH.getFullVersion(), "Full software version information.")); 
 		//cursor.add(new HeaderCard("PRODTYPE", "CRUSH-SCAN-META", "Type of product produced by the software."));
+		
 	
 		// May overwrite existing values...
-		super.editScanHeader(header);		
+		header.updateLines(sofiaHeader);
+		
 	}
 
 	public void addRequiredKeys(Cursor cursor) throws HeaderCardException {
@@ -192,8 +196,8 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 			
 			HeaderCard fromCard = h.findCard(key);
 			if(fromCard == null) continue;
-			
-			HeaderCard toCard = (HeaderCard) cursor.prev();
+				
+			HeaderCard toCard = (HeaderCard) cursor.prev();	
 			
 			if(toCard != null) toCard.setValue(fromCard.getValue());
 			else cursor.add(fromCard);
@@ -239,8 +243,11 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 			}
 		}
 
-		System.err.println("   History: " + history.size() + " entries found.");
-		
+		if(!history.isEmpty()) {
+			System.err.println(" Processing History: " + history.size() + " entries found.");
+			System.err.println("   --> Last: " + history.get(history.size() - 1));
+		}
+			
 		//for(int i=0; i<history.size(); i++) System.err.println("#  " + history.get(i));
 	}
 	
@@ -286,18 +293,15 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	}
 	
 	
-	protected void read(Fits fits, boolean readFully) throws Exception {
-		// Read in entire FITS file
-		BasicHDU[] HDU = fits.read();
-
-		parseHeader(HDU[0].getHeader());
+	protected void read(Fits fits, boolean readFully) throws Exception {	
+		parseHeader(fits.getHDU(0).getHeader());
 		
-		instrument.readData(HDU);
+		instrument.readData(fits);
 		instrument.validate(this);	
 		clear();
 
 		IntegrationType integration = getIntegrationInstance();
-		integration.readData(HDU);
+		integration.readData(fits);
 		add(integration);
 		
 		try { fits.getStream().close(); }

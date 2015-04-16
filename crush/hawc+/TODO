@@ -1,0 +1,4 @@
+* read data by row to reduce RAM use.
+* Make use of Integration.TimestreamView to increase performance...
+
+

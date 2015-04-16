@@ -23,6 +23,8 @@
 
 package crush.hawcplus;
 
+import java.io.IOException;
+
 import kovacs.astro.*;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
@@ -35,7 +37,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	 * 
 	 */
 	private static final long serialVersionUID = -3894220792729801094L;
-
 
 	public HawcPlusIntegration(HawcPlusScan parent) {
 		super(parent);
@@ -61,10 +62,15 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		return new HawcPlusFrame((HawcPlusScan) scan);
 	}
 	
-	
 	@Override
-	public void readData(BasicHDU[] hdus) throws Exception {
-		read((BinaryTableHDU) hdus[1]);
+	public void readData(Fits fits) throws Exception {
+		BinaryTableHDU hdu = (BinaryTableHDU) fits.getHDU(1);
+		read(hdu);
+		
+		try { fits.getStream().close(); }
+		catch(IOException e) {}
+		
+		System.gc();
 	}
 	
 	protected void read(BinaryTableHDU hdu) throws Exception {
@@ -78,7 +84,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		clear();
 		ensureCapacity(records);
 		for(int t=records; --t>=0; ) add(null);
-		
+			
 		new HawcPlusReader(hdu).read();
 	}
 		
@@ -97,16 +103,24 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			
 			isSimulated = hasOption("simulated");
 		
-			// The IRAM coordinate data...
+			// The Sofia timestamp (decimal seconds since 0 UTC 1 Jan 1970...
 			TS = (double[]) table.getColumn(hdu.findColumn("Timestamp"));	
+			
 			//dT = (float[]) table.getColumn(hdu.findColumn("Time Adjustment"));	
 			SN = (long[]) table.getColumn(hdu.findColumn("Frame Counter"));
 			
-			// The GISMO data
+			// The R/T array data
 			int iR = hdu.findColumn("R array");
 			R = (long[]) table.getColumn(iR);
 			int iT = hdu.findColumn("T array");
 			T = (long[]) table.getColumn(iT);
+			
+			// Initialize the readout offset to the first sample. This way we won't lose precision
+			// in the long -> float conversion as loading the array data...
+			for(int c=HawcPlus.polArrayPixels; --c >= 0; ) {
+				instrument.get(c).readoutOffset = R[c];
+				instrument.get(HawcPlus.polArrayPixels + c).readoutOffset = T[c];
+			}
 			
 			// The tracking center in the basis coordinates of the scan (usually RA/DEC)
 			RA = (float[]) table.getColumn(hdu.findColumn("Right Ascension"));
@@ -180,6 +194,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					frame.LST = LST[i] * (float) Unit.hour;
 					frame.horizontal = new HorizontalCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
 					
+					// LST and horizontal can be calculated (approximately within dUT1), if need be...
 					//frame.LST = timeStamp.getLMST(frame.site.longitude());
 					//frame.horizontal = frame.equatorial.toHorizontal(frame.site, frame.LST);
 					

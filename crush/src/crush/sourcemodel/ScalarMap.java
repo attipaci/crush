@@ -146,8 +146,7 @@ public class ScalarMap extends SourceMap {
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
 		map.setName(firstScan.getSourceName());
-		map.commandLine = commandLine;
-	
+		
 		setSize();
 
 		// Make the reference fall on pixel boundaries.

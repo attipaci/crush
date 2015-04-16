@@ -358,6 +358,7 @@ public class Signal implements Cloneable {
 		return dG;
 	}
 	
+	// TODO smart timestream access
 	protected final WeightedPoint[] getRobustGainIncrement() {
 		final int[] channelIndex = mode.getChannelIndex();
 		

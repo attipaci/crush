@@ -85,10 +85,16 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 	public void initDivisions() {
 		super.initDivisions();
 		
-		try { addDivision(getDivision("polarrays", HawcPlusPixel.class.getField("polarray"), Channel.FLAG_DEAD)); }
+		try { addDivision(getDivision("polarrays", HawcPlusPixel.class.getField("polarray"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
 		catch(Exception e) { e.printStackTrace(); }	
 		
-		try { addDivision(getDivision("subarrays", HawcPlusPixel.class.getField("subarray"), Channel.FLAG_DEAD)); }
+		try { addDivision(getDivision("subarrays", HawcPlusPixel.class.getField("subarray"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
+		catch(Exception e) { e.printStackTrace(); }	
+		
+		try { addDivision(getDivision("cols", HawcPlusPixel.class.getField("col"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
+		catch(Exception e) { e.printStackTrace(); }	
+		
+		try { addDivision(getDivision("rows", HawcPlusPixel.class.getField("row"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
 		catch(Exception e) { e.printStackTrace(); }	
 		
 		try { addDivision(getDivision("mux", HawcPlusPixel.class.getField("mux"), Channel.FLAG_DEAD)); 
@@ -110,11 +116,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 		try { addDivision(getDivision("pins", HawcPlusPixel.class.getField("pin"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
 		
-		try { addDivision(getDivision("cols", HawcPlusPixel.class.getField("col"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }	
-		
-		try { addDivision(getDivision("rows", HawcPlusPixel.class.getField("row"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }	
+	
 		
 	}
 	
@@ -280,7 +282,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 	}
 
 	@Override
-	public void readData(BasicHDU[] hdu) throws Exception {
+	public void readData(Fits fits) throws Exception {
 		// TODO Auto-generated method stub
 		
 	}
@@ -300,8 +302,9 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 	
 	
 	public static final int polarrays = 2;
-	public static final int cols = 41;
-	public static final int rows = 64;
+	public static final int subarrayCols = 32;
+	public static final int cols = subarrayCols << 1;
+	public static final int rows = 41;
 	public static final int polArrayPixels = cols * rows;
 	public static final int pixels = polarrays * polArrayPixels;
 	

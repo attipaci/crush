@@ -169,6 +169,7 @@ public abstract class Filter {
 		levelDataFor(channel);
 	}
 	
+	// TODO Smart timestream access...
 	protected void remove(Channel channel) {
 		// Subtract the rejected signal...
 		final int c = channel.index;
@@ -184,6 +185,7 @@ public abstract class Filter {
 				"(---)";
 	}
 	
+	// TODO smart timestream access...
 	protected void loadTimeStream(Channel channel) {
 		final int c = channel.index;
 		

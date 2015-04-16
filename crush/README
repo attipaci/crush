@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 		       <attila[AT]submm.caltech.edu>
 
-		       Last updated: 14 January 2015
+		        Last updated: 8 April 2015
 
 
 
@@ -66,7 +66,7 @@ Table of Contents
 #####################################################################
 
 
-CRUSH-2 is a bolometer reduction and imaging package for ground-based
+CRUSH-2 is a reduction and imaging package for various astronomical imaging
 arrays. It is based on the development centred on SHARC-2 (crush-1.xx) as
 well as a reincarnation for the APEX bolometers (minicrush). Version 2
 provides, for the first time, a unified platform for reducing data from
@@ -113,9 +113,12 @@ the following instruments (in alphabetical order):
     		Caltech, Pasadena, CA
     		www.submm.caltech.edu:/~sharc
 
+    SOFIA/HAWC+	(53um, 62um, 89um, 155um, 216um)
+
 
 Further support for instruments is possible. If interested to use CRUSH for
-your bolometer array, please contact Attila Kovacs <attila[AT]submm.caltech.edu>.
+your bolometer array, please contact Attila Kovacs 
+<attila[AT]submm.caltech.edu>.
 
 In principle, it is possible to extend CRUSH support for other types of scanning
 instruments, like heterodyne receiver arrays, or single-pixel receivers that
@@ -129,10 +132,22 @@ upon specific request and/or arrangement...
 1.1 Installation
 ================
 
+   Install Java (if not already installed
+   --------------------------------------
+   Install Java (if necessary), e.g. from www.java.com. If you already have
+   Java, check that it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
 
-   Download 
-   --------
-   You can download the latest version of CRUSH from:
+        > java -version
+
+   Note, that The GNU java a.k.a. gij (default on some older RedHat and Fedora
+   systems) is painfully slow and unreliable, and will not always run CRUSH
+   correctly. If you need Java, you can download the latest JRE from
+   wwww.java.com
+
+
+   Download CRUSH
+   --------------
+   You can get the latest version of CRUSH from:
 
 	http://www.submm.caltech.edu/~sharc/crush 
 
@@ -148,30 +163,24 @@ upon specific request and/or arrangement...
    reside. 
 
   
-   A. Installation from tarball (Mac OS X and generic POSIX/UNIX)
-   --------------------------------------------------------------
+   A. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
+   ---------------------------------------------------------
    Unpack the tarball in the desired location (e.g. under '~/astrotools/'):
 
-	> cd ~/astrotools
-	> tar xzf crush-2.xx-x.tar.gz
+        > cd ~/astrotools
+        > tar xzf crush-2.xx-x.tar.gz
 
-   You may optionally wish to run 'install.sh' (as root or with 'sudo') to 
-   install the CRUSH man pages and allow global access to the executables, by 
-   creating links to them in '/usr/bin'. 
+   Verify that CRUSH works:
 
-	> cd crush
-	> sudo sh install.sh
+        > cd crush
+        > ./crush
 
-   Check the success of the above optinal step by typing 
-
-	> man crush
- 
-   You should see a basic description on the crush command-line syntax and
-   options.
+   You should see a brief information screen on how to use CRUSH.
 
 
-   B. Linux Installation (from packages)
-   -------------------------------------
+
+   B. Installation via Linux packages
+   ----------------------------------
    Use the package manager on your system to install. E.g., on RPM-based 
    systems (Fedora, RHEL, CentOS, SUSE) you may type:
 
@@ -208,39 +217,68 @@ upon specific request and/or arrangement...
  
  
 
-   Java Configuration
-   ------------------
-   CRUSH requires Java 1.6 (also called Java 6) or newer. In all likelihood 
-   you already have a suitable Java Runtime Environment (JRE) installed on 
-   your machine. To check what version of Java you have type:
+   (optional) Java Configuration
+   -----------------------------
+   CRUSH ships with a default Java configuration. On the most common UNIX
+   platforms (Linux, Mac OS X, BSD, and Solaris), it will automatically attempt 
+   to set an optimal configuration. On other platforms, it comes with fail-safe 
+   default values (default java, 32-bit mode and 1GB of RAM use). 
 
-	> java -version
+   To override the defaults on Windows, edit 'wrapper.bat' directly. 
 
-   on the command line. Note, that The GNU java a.k.a. gij (default on some 
-   older RedHat and Fedora systems) is painfully slow and unreliable, and will 
-   not always run CRUSH correctly. 
-   If you need Java, you can download the latest JRE from
+   On all other platforms, you can override the defaults by placing your 
+   settings in arbitrary files under /etc/crush2/startup or ~/.crush2/startup. 
+   (Any settings in the user's home under ~/.crush2/startup will overrride the 
+   system-wide values in /etc/crush2/startup. If multiple config files exist in
+   the same location, these will be parse in non-specific order). 
 
-	http://www.java.com 
+   E.g., placing the following lines in ~/.crush2/startup/java.conf overrides 
+   all available settings:
 
-   After making sure that you have a usable version of Java 1.6 or newer on 
-   your system, enter the crush installation directory.
+	JAVA="/usr/java/latest/bin/java"
+	DATAMODEL="64"
+	USEMB="4000"
+	JVM="-server"
+	EXTRAOPTS=""
 
-   Edit the 'wrapper.sh' script (or 'wrapper.bat' in Windows), and adjust the 
-   '-Xmx' option of JAVAOPTS to reflect the maximum amount of memory you will 
-   allow the reduction to use. E.g. for 1GB, use:
+   Upon startup CRUSH will find and apply these settings, so it will use
+   "/usr/java/latest/bin/java" as your to run CRUSH, in 64-bit mode, with
+   4GB of RAM, using the HotSpot 'server' VM, with no extra Java options.
+
+   (Note, these config files are parsed as bash scripts, so you may use other
+   bash commands too, such as printing earlier settings via 'echo')
+
+   Below is a guide to the variables that you can override to set your own
+   Java runtime configuration:
+
+	JAVA		Set to the location of the Java executable you want
+			to use. E.g. "java" to use the default Java, or
+			"/usr/java/latest/bin/java" to use the latest from
+			Oracle or OpenJDK.
+
+	DATAMODEL	Set to "32" or "64", to select 32 or 64-bit mode.
+			To use 64-bit mode you will need both a 64-bit OS
+			and a 64-bit JRE (Java Runtime Environment)
+			installation.
+   
+	USEMB		Set to the maximum amount of RAM (in MB) available to 
+			CRUSH. E.g. "4000" for 4GB. Note, that when DATAMODEL
+			is "32", you this value must be somewhere below 2000.
+			Thus, "1900" is a good maximum value to use in 32-bit
+			mode.
+
+	JVM		Usually set to "-server" for Oracle or OpenJDK. If 
+			using IBM's Java, set it to "" (empty string). On ARM 
+			platforms, you probably get better performance using
+			"-jamvm" or "-avian". o see what VM options are 
+			available, run 'java -help'. The VM options are listed 
+			near the top of the resulting help screen. 
+
+	EXTRAOPTS	Any other non-standard options you may want to pass
+			to the Java VM should go here. Typically set to "".
+			(Note, the "-Xbatch" options is set for CRUSH, by
+			default). 
 	
-	-Xmx1000M
-
-   Note, that for 32-bit machines, the value of Xmx has to remain below 2GB.
-   On 64-bit machines (with the appropriate 64-bit OS and Java VM installed) 
-   up to 4GB or more (depending on the OS configuration) can be specified (the
-   latter may require the use of the '-d64' option as well on UNIX systems). 
-
-   You may also want to change the JAVA variable in 'wrapper.sh' (or 
-   'wrapper.bat') to point to the version of java that you intend to use when 
-   this is not the default one. (E.g. '/usr/java/latest/bin' for the latest 
-   Java from Oracle/SUN). 
 
 
    CRUSH Configuration

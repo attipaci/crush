@@ -105,7 +105,8 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 			else throw new IllegalStateException("Not an I/Q --> frequency shift converted FITS.");
 		
 			// Close the IQ fits.
-			fits.getStream().close();
+			try { fits.getStream().close(); }
+			catch(IOException e) {}
 			
 			// Read the converted FITS instead...
 			read(convertedName, readFully);
