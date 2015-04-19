@@ -89,8 +89,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public int parallelism = 1;		// The desired number of parallel threads to run when processing.
 									// The actual number of threads may be different from this.
 	
-	public int cacheSize = 0;	// 1MB
-	
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
 	// The constructor of Integration thus copies the Scan instrument for private use...
 	@SuppressWarnings("unchecked")
@@ -671,24 +669,22 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);
 			
 		final Dependents parms = getDependents("drifts");
+		final ArrayList<Signal> sigs = new ArrayList<Signal>(signals.values());
+		final int nc = instrument.size();
 		
 		if(driftN < size()) comments += (robust ? "[D]" : "D") + "(" + driftN + ")";
 		else comments += robust ? "[O]" : "O";
 		
-		
 		try {
 			new Parallel<Void>() {
 				@Override
-				protected void processIndex(int i, int threadCount) throws Exception {
-					final int nc = instrument.size();
+				protected void processIndex(int i, int threadCount) throws Exception {	
 					ChannelGroup<Channel> g = new ChannelGroup<Channel>("parchannel-" + i);
 					g.ensureCapacity(ExtraMath.roundupRatio(instrument.size(), threadCount));
 					for(int c = i; c < nc; c += threadCount) g.add(instrument.get(c));
 								
 					// Remove drifts from a parallel group of channels...
 					removeChannelDrifts(g, parms, driftN, robust);			
-					
-					ArrayList<Signal> sigs = new ArrayList<Signal>(signals.values());
 					
 					// Remove drifts from signals too...
 					for(int k = i; k < sigs.size(); k += threadCount) sigs.get(k).removeDrifts();
@@ -697,16 +693,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}.process(threads);
 		}
 		catch(Exception e) { e.printStackTrace(); }
+		
+		
+		
 	}
 	
 	
 	public void removeChannelDrifts(final ChannelGroup<? extends Channel> channels, final int targetFrameResolution, final boolean robust) {
 		final int driftN = Math.min(size(), ExtraMath.pow2ceil(targetFrameResolution));
 		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);	
-		removeChannelDrifts(channels, getDependents("drifts"), driftN, robust);	
+		removeChannelDrifts(channels, getDependents("drifts"), driftN, robust);
+		
 	}
 	
-	// TODO smart timestream access...
 	public void removeChannelDrifts(final ChannelGroup<? extends Channel> channels, final Dependents parms, final int driftN, final boolean robust) {
 
 		WeightedPoint[] buffer = null;	// The timestream for robust estimates
@@ -725,7 +724,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final int nt = size();
 		for(int from=0; from < nt; from += driftN) {
 			int to = Math.min(size(), from + driftN);
-			//TimestreamView timestream = new TimestreamView(from, to, channels, 1);
 			
 			parms.clear(channels, from, to);
 			
@@ -739,6 +737,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				
 				removeOffset(channel, from, to, parms, increment);
 			}
+			
 			parms.apply(channels, from, to);
 		}
 			
@@ -808,6 +807,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 		}
 		if(increment.weight() > 0.0) increment.setValue(increment.value() / increment.weight());
+		
+		Thread.yield();
 	}
 
 	
@@ -831,7 +832,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 		}
 		
-		if(sumw > 0.0) Statistics.smartMedian(buffer, 0, n, 0.25, increment);				
+		if(sumw > 0.0) Statistics.smartMedian(buffer, 0, n, 0.25, increment);	
+		
+		Thread.yield();
 	}
 	
 
@@ -2499,7 +2502,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			
 			if(xTransitions > 0 || yTransitions > 0) {
-				double d = Math.hypot(dx, dy);
+				double d = ExtraMath.hypot(dx, dy);
 				if(d > threshold) {
 					int sign = (dx < 0.0) ? -1 : 1;
 					if(dx == 0.0) sign = (dy < 0.0) ? -1 : 1;
@@ -3041,218 +3044,5 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 		public abstract void process(Channel channel, int from, int to);
 	}
-	
-	
-	public static class Timestream {
-		public Channel channel;
-		public float[] data;
-		private int offset;
-		
-		public int groupIndex;
-		
-		protected Timestream(Channel channel, float[] data, int groupIndex) {
-			this(channel, data, 0, groupIndex);
-		}
-		
-		protected Timestream(Channel channel, float[] data, int offset, int groupIndex) {
-			this.offset = offset;
-			this.channel = channel;
-			this.data = data;
-			this.groupIndex = groupIndex;
-		}
-		
-		public int getOffset() { return offset; }
-		
-		public float get(int t) {
-			return data[t - offset];
-		}
-	}
-	
-	
-	public class TimestreamView implements Iterator<Timestream> {
-		private ChannelGroup<?> channels;
-		private int from, to;
-		private float[][] buffer;	// channel, t
-		private boolean isSynching;
-		private int skipFlags;
-		
-		private int[] channelLookup, syncLookup;
-		private boolean[] isActive;
-		
-		private int activeCount;
-		private int firstChannel;
-		
-		private int nextIndex;
-		private float blankValue = Float.NaN;
-			
-		public TimestreamView(ChannelGroup<?> channels) {
-			this(channels, 1);
-		}
-		
-		public TimestreamView(ChannelGroup<?> channels, int concurrent) {
-			this(0, size(), channels, concurrent);
-		}
-		
-		public TimestreamView(int from, int to, ChannelGroup<?> channels) {
-			this(from, to, channels, 1);
-		}
-		
-		public TimestreamView(int from, int to, ChannelGroup<?> channels, int concurrent) {
-			this.from = from;
-			this.to = to;
-			this.channels = channels;
-			this.isSynching = true;
-			
-			this.skipFlags = 0;
-			activeCount = 0;
-			nextIndex = 0;
-			
-			int size = concurrent;
-			if(cacheSize > 0) {	
-				size = concurrent * (int)Math.floor(cacheSize / (4 * (to - from) * concurrent));
-				if(size > channels.size()) size = channels.size();
-				else if(size < 1) {
-					// If cannot cache the requested concurrent threads,
-					// then cache as many as possible (which will limit the
-					// concurrency to that...
-					size = (int)Math.floor(cacheSize / (4 * (to - from)));
-					if(size < 1) size = 1;
-				}
-			}
-			
-			buffer = new float[size][to - from];
-			firstChannel = -size;
-			
-			channelLookup = new int[size];
-			syncLookup = new int[size];
-			
-			reset();
-		}
-		
-		
-		public void reset() {	
-			firstChannel = -buffer.length;
-			try { loadBuffer(); }
-			catch(InterruptedException e) { System.err.println("TimestreamView: interrupted."); }
-		}
-
-		public void setSkipFlags(int pattern) { skipFlags = pattern; }
-		
-		public int getSkipFlags() { return skipFlags; }
-		
-		public void setBlankValue(float value) { blankValue = value; } 
-		
-		public float getBlankValue() { return blankValue; }
-		
-		public int maxConcurrent() { return buffer.length; }
-		
-		@Override
-		public synchronized Timestream next() {	
-			if(firstChannel + nextIndex >= channels.size()) return null;
-			
-			if(nextIndex >= buffer.length) {	
-				try { loadBuffer(); }
-				catch(InterruptedException e) { System.err.println("TimestreamView: interrupted."); }
-			}
-			
-			int k = firstChannel + nextIndex;
-			
-			isActive[k] = true;
-			if(isSynching) activeCount++;
-			
-			nextIndex++;
-			
-			return new Timestream(channels.get(k), buffer[nextIndex], from, k);
-		}
-		
-		@Override
-		public synchronized boolean hasNext() {
-			return firstChannel + nextIndex < channels.size();
-		}
-		
-		public synchronized void sync(Timestream t) {
-			if(!isActive[t.groupIndex]) return;
-			isActive[t.groupIndex] = false;
-			if(isSynching) {
-				activeCount--;
-				if(activeCount == 0) if(!hasNext()) syncBuffer();
-				// Otherwise the synch will happen on the next buffer load...
-			}
-			notifyAll();
-		}
-		
-		public synchronized void nosync() {
-			isSynching = false;
-			activeCount = 0;
-			notifyAll();
-		}
-		
-		
-		private synchronized void syncBuffer() {
-			for(int dt=to-from; --dt >= 0; ) {
-				final Frame exposure = get(from + dt);
-				if(exposure == null) continue;
-				if(exposure.isFlagged(skipFlags)) continue; 
-				
-				int N = Math.min(buffer.length, channels.size() - firstChannel);
-				for(int k=N; --k >= 0; ) if(!Float.isNaN(buffer[k][dt])) 
-					exposure.data[channelLookup[k]] = buffer[k][dt];	
-			}
-		}
-		
-		private synchronized void loadBuffer() throws InterruptedException {
-			if(isSynching) while(activeCount > 0) wait();
-			
-			boolean sync = isSynching && firstChannel >= 0;
-			
-			int[] temp = syncLookup;
-			syncLookup = channelLookup;
-			channelLookup = temp;
-			
-			// Update the channelIndex...
-			final int firstSync = firstChannel;
-			firstChannel += buffer.length;
-			
-			// Prepare the new channel lookup...
-			int N = Math.min(buffer.length, channels.size() - firstChannel);
-			for(int k=N; --k >= 0; ) channelLookup[k] = channels.get(firstChannel + k).index;
-			
-			for(int dt=to-from; --dt >= 0; ) {
-				final Frame exposure = get(from + dt);
-				
-				// If no valid data, fill with NaNs...
-				if(exposure == null) { fillBlank(dt); continue; }
-				if(exposure.isFlagged(skipFlags)) { fillBlank(dt); continue; }
-		
-				// Sync back the old buffer...
-				if(sync) {
-					N = Math.min(buffer.length, channels.size() - firstSync);
-					for(int k=N; --k >= 0; ) if(!Float.isNaN(buffer[k][dt])) 
-						exposure.data[syncLookup[k]] = buffer[k][dt];
-				}
-					
-				N = Math.min(buffer.length, channels.size() - firstChannel);
-				
-				// Load the new buffer...
-				for(int k=N; --k >= 0; ) {
-					final int c = channelLookup[k];
-					buffer[k][dt] = (exposure.sampleFlag[c] == 0) ? exposure.data[c] : blankValue;
-				}	
-			}
-			
-			nextIndex = 0;
-			firstChannel += buffer.length;	
-		}
-		
-	
-		private void fillBlank(int t) {
-			for(int k=buffer.length; --k >= 0; ) buffer[k][t] = blankValue;
-		}
-
-		@Override
-		public void remove() {}
-		
-	}
-	
 
 }

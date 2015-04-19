@@ -34,7 +34,7 @@ import kovacs.util.Util;
 import crush.*;
 
 
-public class SingleColorPixel extends Channel implements Pixel {
+public abstract class SingleColorPixel extends Channel implements Pixel {
 	public Vector2D position;
 	public Vector<? extends SingleColorPixel> neighbours;
 	public boolean isIndependent = false;

@@ -22,10 +22,8 @@ import java.util.*;
 import kovacs.math.Vector2D;
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
-
 import crush.*;
 import crush.array.*;
-
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
@@ -289,5 +287,9 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 				"                    The FITS files will be writter to the location set\n" +
 				"                    by the 'outpath' option.\n";
 	}
+	
+	
+
+
 	
 }

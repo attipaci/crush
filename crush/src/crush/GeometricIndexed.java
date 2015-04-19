@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,38 +20,13 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2010 Attila Kovacs
 
 package crush;
 
+import java.util.List;
 
+public interface GeometricIndexed {
 
-import kovacs.math.Vector2D;
-
-public interface Pixel extends Iterable<Channel> {
-
-	public int getIndex();
+	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex);
 	
-	public int getFixedIndex();
-
-	public boolean isValid();
-	
-	public Vector2D getPosition();
-
-	public double distanceTo(Pixel pixel);
-	
-	public double getResolution();	
-		
-	public int channels();
-	
-	public Channel getChannel(int i);
-	
-	public void setIndependent(boolean value);
-	
-	public String getRCPString();
-	
-	public final static int FLAG_XACCEL = 1 << 0;
-	public final static int FLAG_YACCEL = 1 << 1;
-	
-	public final static int LAST_FLAG = FLAG_YACCEL;
 }

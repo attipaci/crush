@@ -463,7 +463,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		sumc *= 2.0/n;
 		sums *= 2.0/n;
 		
-		System.err.println("   ---> TP: " + Util.e3.format(Math.hypot(sums, sumc))
+		System.err.println("   ---> TP: " + Util.e3.format(ExtraMath.hypot(sums, sumc))
 				+ " @ " + Util.f3.format(freq) + "Hz");
 		
 		return Math.atan2(sums, sumc);

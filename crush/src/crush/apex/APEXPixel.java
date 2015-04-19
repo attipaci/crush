@@ -177,7 +177,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 			
 		out.println(data[0]);
 		for(int i=2; i < data.length; i+=2) {
-			out.println("  " + (i*dF) + "\t" + Util.e5.format(Math.hypot(data[i], data[i+1])) + "\t" + Util.f5.format(Math.atan2(data[i+1], data[i])));
+			out.println("  " + (i*dF) + "\t" + Util.e5.format(ExtraMath.hypot(data[i], data[i+1])) + "\t" + Util.f5.format(Math.atan2(data[i+1], data[i])));
 		}
 		out.println(data[1]);
 			

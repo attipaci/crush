@@ -27,9 +27,9 @@ import java.util.Arrays;
 import kovacs.data.Statistics;
 import kovacs.math.Range;
 import kovacs.math.Vector2D;
+import kovacs.util.ExtraMath;
 import kovacs.util.Unit;
 import kovacs.util.Util;
-
 import crush.Integration;
 import crush.Motion;
 
@@ -123,7 +123,7 @@ public class MotionFilter extends KillFilter {
 		int peakIndex = 0;
 		double max = 0.0;
 		for(int i=0; i<reject.length; i += 2) {
-			double value = Math.hypot(data[i], data[i+1]);
+			double value = ExtraMath.hypot(data[i], data[i+1]);
 			if(value > max) {
 				max = value;
 				peakIndex = i;
@@ -137,7 +137,7 @@ public class MotionFilter extends KillFilter {
 		
 
 		for(int i=2; i<data.length; i += 2) {
-			double value = Math.hypot(data[i], data[i+1]);
+			double value = ExtraMath.hypot(data[i], data[i+1]);
 			if(value > criticalLevel) reject[i>>1] = true;	
 		}
 		

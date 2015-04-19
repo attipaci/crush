@@ -25,6 +25,7 @@ package crush;
 import kovacs.data.Asymmetry2D;
 import kovacs.data.DataPoint;
 import kovacs.util.Configurator;
+import kovacs.util.ExtraMath;
 import kovacs.util.Unit;
 
 /*******************************************************************************
@@ -97,20 +98,20 @@ public class InstantFocus implements Cloneable {
 				x = new DataPoint(asym.getX());
 				x.scale(-Unit.mm / options.get("focus.xcoeff").getDouble());
 				if(options.isConfigured("focus.xscatter")) 
-					x.setRMS(Math.hypot(x.rms(), options.get("focus.xscatter").getDouble() * Unit.mm));
+					x.setRMS(ExtraMath.hypot(x.rms(), options.get("focus.xscatter").getDouble() * Unit.mm));
 			}
 			if(options.isConfigured("focus.ycoeff")) if(asym.getY().significance() > s2n) {
 				y = new DataPoint(asym.getY());
 				y.scale(-Unit.mm / options.get("focus.ycoeff").getDouble());			
 				if(options.isConfigured("focus.yscatter")) 
-					y.setRMS(Math.hypot(y.rms(), options.get("focus.yscatter").getDouble() * Unit.mm));
+					y.setRMS(ExtraMath.hypot(y.rms(), options.get("focus.yscatter").getDouble() * Unit.mm));
 			}
 		}
 		if(xElongation != null) if(xElongation.significance() > s2n) if(options.isConfigured("focus.zcoeff")) {
 			z = new DataPoint(xElongation);			
 			z.scale(-Unit.mm / options.get("focus.zcoeff").getDouble());
 			if(options.isConfigured("focus.zscatter")) 
-				z.setRMS(Math.hypot(z.rms(), options.get("focus.zscatter").getDouble() * Unit.mm));
+				z.setRMS(ExtraMath.hypot(z.rms(), options.get("focus.zscatter").getDouble() * Unit.mm));
 		}	
 	}
 	

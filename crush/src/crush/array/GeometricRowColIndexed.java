@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,38 +20,24 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2010 Attila Kovacs
 
-package crush;
-
-
+package crush.array;
 
 import kovacs.math.Vector2D;
+import crush.GeometricIndexed;
 
-public interface Pixel extends Iterable<Channel> {
+public interface GeometricRowColIndexed extends GeometricIndexed {
 
-	public int getIndex();
+	public int getFixedIndex(int row, int col);
 	
-	public int getFixedIndex();
-
-	public boolean isValid();
+	public int getRow(int fixedIndex);
 	
-	public Vector2D getPosition();
-
-	public double distanceTo(Pixel pixel);
+	public int getCol(int fixedIndex);
 	
-	public double getResolution();	
-		
-	public int channels();
+	public int rows();
 	
-	public Channel getChannel(int i);
+	public int cols();
 	
-	public void setIndependent(boolean value);
+	public Vector2D getPixelSize();
 	
-	public String getRCPString();
-	
-	public final static int FLAG_XACCEL = 1 << 0;
-	public final static int FLAG_YACCEL = 1 << 1;
-	
-	public final static int LAST_FLAG = FLAG_YACCEL;
 }

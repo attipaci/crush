@@ -25,7 +25,6 @@
 package crush.sharc2;
 
 import crush.array.SingleColorPixel;
-
 import java.util.StringTokenizer;
 
 import kovacs.math.Vector2D;
@@ -57,7 +56,7 @@ public class Sharc2Pixel extends SingleColorPixel {
 	
 	public void calcPosition() {
 		// ALt/Az maps show this to be correct...
-		position = getPosition(((Sharc2) instrument).pixelSize, row, col);
+		position = getPosition(((Sharc2) instrument).getPixelSize(), row, col);
 	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {
@@ -77,7 +76,7 @@ public class Sharc2Pixel extends SingleColorPixel {
 	}
 	
 	public double getAreaFactor() {
-		Vector2D size = ((Sharc2) instrument).pixelSize;
+		Vector2D size = ((Sharc2) instrument).getPixelSize();
 		return size.x() * size.y() / (defaultSize.x() * defaultSize.y());	
 	}
 	
@@ -87,6 +86,7 @@ public class Sharc2Pixel extends SingleColorPixel {
 		muxGain = 1.0;
 		rowGain = 1.0;
 	}
+	
 	
 	public static Vector2D defaultSize = new Vector2D(4.89 * Unit.arcsec, 4.82 * Unit.arcsec);
 

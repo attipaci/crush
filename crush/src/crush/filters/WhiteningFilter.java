@@ -266,7 +266,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 			// 1.0 / wA' = (A1/A')^2 / w1 + (A2/A')^2 / w2
 			
 			for(int F = 0; F < N1; F += 2) {
-				final double A1 = Math.hypot(A[F].value, A[F+1].value);
+				final double A1 = ExtraMath.hypot(A[F].value, A[F+1].value);
 				final double var = (A[F].value * A[F].value / A[F].weight + A[F+1].value * A[F+1].value / A[F+1].weight) / (A1 * A1);
 				final int F1 = F >> 1;
 				A[F1].value = A1;

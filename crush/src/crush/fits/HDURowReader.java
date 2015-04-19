@@ -29,7 +29,7 @@ import kovacs.util.Parallel;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
-
+// TODO does not work with gzipped FITS...
 public abstract class HDURowReader {	
 	protected BinaryTableHDU hdu;
 	protected BinaryTable table;

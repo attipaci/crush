@@ -31,6 +31,7 @@ import kovacs.data.LocalAverage;
 import kovacs.data.Locality;
 import kovacs.data.LocalizedData;
 import kovacs.util.Configurator;
+import kovacs.util.ExtraMath;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 
@@ -76,7 +77,7 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
 			skydip.timeStamp = new TimeStamp(iMJD, tokens.nextToken());
 			skydip.tau.setValue(Double.parseDouble(tokens.nextToken()));
 			tokens.nextToken();
-			skydip.tau.setRMS(Math.hypot(0.005, Double.parseDouble(tokens.nextToken())));
+			skydip.tau.setRMS(ExtraMath.hypot(0.005, Double.parseDouble(tokens.nextToken())));
 			add(skydip);
 		}
 		in.close();
