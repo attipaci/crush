@@ -34,6 +34,7 @@ import kovacs.data.LocalizedData;
 import kovacs.data.WeightedPoint;
 import kovacs.math.Range;
 import kovacs.math.Vector2D;
+import kovacs.util.ExtraMath;
 import kovacs.util.LogFile;
 import kovacs.util.Unit;
 import kovacs.util.Util;
@@ -163,7 +164,7 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 			double devT = (((Location) other).MJD - MJD) * Unit.day / timeWindow;
 			double devX = ((Location) other).horizontal.distanceTo(horizontal) / searchRadius;
 			
-			return Math.hypot(devT, devX);
+			return ExtraMath.hypot(devT, devX);
 		}
 
 		@Override

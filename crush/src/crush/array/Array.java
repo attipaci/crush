@@ -216,6 +216,25 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		cursor.add(new HeaderCard("BEAM", getResolution() / Unit.arcsec, "The instrument FWHM (arcsec) of the beam."));
 	}
 	
+	public static void addLocalFixedIndices(GeometricRowColIndexed geometric, int fixedIndex, double radius, Collection<Integer> toIndex) {
+		final int row = geometric.getRow(fixedIndex);
+		final int col = geometric.getCol(fixedIndex);
+		
+		final Vector2D pixelSize = geometric.getPixelSize();
+		final int dc = (int)Math.ceil(radius / pixelSize.x());
+		final int dr = (int)Math.ceil(radius / pixelSize.y());
+		
+		final int fromi = Math.max(0, row - dr);
+		final int toi = Math.min(geometric.rows()-1, row + dr);
+		
+		final int fromj = Math.max(0, col - dc);
+		final int toj = Math.min(geometric.cols()-1, col + dc);
 	
+		for(int i=fromi; i<=toi; i++) for(int j=fromj; j<=toj; j++) if(!(i == row && j == col)) {
+			final double r = ExtraMath.hypot((i - row) * pixelSize.y(), (j - col) * pixelSize.x());
+			if(r <= radius) toIndex.add(i * geometric.cols() + j);
+		}
+		
+	}
 	
 }

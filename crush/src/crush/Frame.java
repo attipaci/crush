@@ -140,6 +140,14 @@ public abstract class Frame implements Cloneable, Flagging {
 		unflag(~0);
 	}
 	
+	public final synchronized void addDependents(double dp) {
+		dependents += dp;
+	}
+	
+	public final synchronized void removeDependents(double dp) {
+		dependents -= dp;
+	}
+	
 	public float getTransmission() { return transmission; }
 	
 	protected void setTransmission(float value) { transmission = value; }

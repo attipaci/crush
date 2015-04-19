@@ -20,11 +20,11 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009,2010 Attila Kovacs
 
 package crush;
 
-
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.StringTokenizer;
 
 import kovacs.util.*;
@@ -32,6 +32,8 @@ import kovacs.util.*;
 
 public abstract class Channel implements Cloneable, Comparable<Channel>, Flagging, Copiable<Channel> {
 	public Instrument<?> instrument;
+	
+	private Collection<Overlap> overlaps;
 	
 	public int index;
 	private int storeIndex;
@@ -89,6 +91,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	@Override
 	public Channel copy() {
 		Channel copy = (Channel) clone();
+		copy.overlaps = null;
 		return copy;
 	}
 	
@@ -130,6 +133,14 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 		flag = 0;
 	}
 	
+	public final synchronized void addDependents(double dp) {
+		dependents += dp;
+	}
+	
+	public final synchronized void removeDependents(double dp) {
+		dependents -= dp;
+	}
+	
 	public final int getIndex() { return index; }
 	
 	public final int getFixedIndex() { return storeIndex; }
@@ -153,6 +164,20 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	}
 	
 	public abstract double overlap(Channel channel, double pointSize);
+	
+	public Collection<Overlap> getOverlaps() { return overlaps; }
+	
+	public void setOverlaps(Collection<Overlap> overlaps) { this.overlaps = overlaps; }
+	
+	public void clearOverlaps() {
+		if(overlaps != null) overlaps.clear();
+	}
+	
+	public void addOverlap(Overlap overlap) {
+		if(overlap.a != this && overlap.b != this) return;
+		if(overlaps == null) overlaps = new ArrayList<Overlap>();
+		overlaps.add(overlap);		
+	}
 	
 	public int getCriticalFlags() {
 		return FLAG_DEAD | FLAG_BLIND | FLAG_GAIN;
@@ -196,3 +221,4 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	
 	
 }
+ 

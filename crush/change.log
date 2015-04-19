@@ -1,3 +1,7 @@
+!!! removeDrifts race condition...
+>>> Dependents.Entry with synchronized access...
+
+
 2.23-b1
 
 
@@ -14,8 +18,21 @@
 	will override the system-wide settings in the former). See Section 2.2 
 	(Java Configuration) in the updated README for details.
 
+	[FIX] Eliminated race condition fixed on parallel offset removal 
+	(in parallel dependents accounting). The existence of the condition 
+	resulted in a random reduction noise whose level was typically ~1% of 
+	the detector noise...
+
 	[FIX] Aperture flux uncertainties reported for a pointing fit at the 
 	end of reduction was garbage in prior release. Fixed.
+	
+	[SPEED] Significant speedup for large geometrically indexed arrays
+	(e.g. HAWC+) by restricting overlap calculation to nearby pairs of
+	channels. (Overlap calculation is needed in the proper estimation of
+	lost degrees of freedom, and hence in the noise estimation).
+
+	[SPEED] Speedup by ~1.6x, by replacing slow hypot() with the faster
+	(albeit less precise) sqrt(a^2 + b^2)...
 
 	[README] Updated installation instructions.
 
@@ -25,15 +42,12 @@
 	[TWEAK] {FITS} Added a few sectioning comments to FITS headers to
 	make it easier to read by humans.
 
+	[CODE] Parameter dependents accounting made thread-safe without 
+	unnecessary blocking.
+
 	[CODE] Closing FITS streams after reading (for all instruments) with
 	no-action exception catch (not a real issue).
 
-	[CODE] new Integration.TimestreamView for faster access of cached 
-	channel timestreams. Its use should provide a performance boost for
-	large integrations, which do not fit into the CPU cache in their
-	entirety. Upgrading timestream analysis algorithms to use this new
-	feature is in progress...
-	
 	[CODE] Reporting of CRUSH command line arguments in FITS header moved
 	from GridSource to CRUSH.
 

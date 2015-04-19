@@ -46,7 +46,7 @@ public class CRUSH extends Configurator {
 	private static final long serialVersionUID = 6284421525275783456L;
 	
 	private static String version = "2.23-b1";
-	private static String revision = "beta";
+	private static String revision = "devel.2";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -229,22 +229,6 @@ public class CRUSH extends Configurator {
 		int threads = Math.min(scans.size(), maxThreads);
 		
 		System.err.println(" Will use " + threads + " CPU core(s).");
-		
-		if(hasOption("cache")) {
-			System.err.println(" Configuring caching.");
-			String spec = option("cache").getValue().toLowerCase();
-			int bytes = Integer.parseInt(spec.substring(0, spec.length()-1));
-			
-			switch(spec.charAt(spec.length()-1)) {
-			case 'k': bytes *= 2<<10; break;
-			case 'm': bytes *= 2<<20; break;
-			case 'g': bytes *= 2<<30; break;
-			}
-			
-			bytes /= threads;
-			
-			for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) integration.cacheSize = bytes;
-		}
 	}
 	
 	
@@ -257,7 +241,7 @@ public class CRUSH extends Configurator {
 			else 
 					maxThreads -= get("idle").getInt();
 		}
-		maxThreads = Math.max(maxThreads, 1);
+		maxThreads = Math.max(1, maxThreads);
 		
 		if(containsKey("outpath")) setOutpath();
 	}

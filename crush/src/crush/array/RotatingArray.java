@@ -35,6 +35,8 @@ public abstract class RotatingArray<PixelType extends Pixel, ChannelType extends
 	 */
 	private static final long serialVersionUID = 2271933035438315377L;
 	
+	protected double appliedRotation = 0.0;
+	
 	public RotatingArray(String name, InstrumentLayout<? super ChannelType> layout) {
 		super(name, layout);
 	}
@@ -82,7 +84,7 @@ public abstract class RotatingArray<PixelType extends Pixel, ChannelType extends
 
 	// For Cassegrain assume pointing at zero rotation (a0 = 0.0)
 	// For Nasmyth assume pointing at same elevation (a = a0)
-	protected double appliedRotation = 0.0;
+
 	
 	protected void rotate(double angle) {
 		System.err.println(" Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");

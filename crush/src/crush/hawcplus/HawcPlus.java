@@ -29,12 +29,14 @@ import java.util.*;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
 import crush.*;
+import crush.array.Array;
+import crush.array.GeometricRowColIndexed;
 import crush.array.SingleColorLayout;
 import crush.sofia.SofiaCamera;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
-public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
+public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRowColIndexed {
 	/**
 	 * 
 	 */
@@ -301,6 +303,57 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 	}
 	
 	
+	@Override
+	// TODO do it better with relative offset and rotation...
+	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
+		Array.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+		for(int i = toIndex.size(); --i >= 0; ) toIndex.add(toIndex.get(i) + polArrayPixels);
+	}
+
+
+	@Override
+	public int getFixedIndex(int row, int col) {
+		return row * cols + col;
+	}
+
+
+	@Override
+	public int getRow(int fixedIndex) {
+		return fixedIndex / cols;
+	}
+
+
+	@Override
+	public int getCol(int fixedIndex) {
+		return fixedIndex % cols;
+	}
+
+
+	@Override
+	public int rows() {
+		return rows;
+	}
+
+
+	@Override
+	public int cols() {
+		return cols;
+	}
+
+
+	@Override
+	public Vector2D getPixelSize() {
+		return pixelSize;
+	}
+
+	
+
+	
+	
+	public final static int getArrayIndex(final int row, final int col) {
+		return row * cols + col;
+	}
+	
 	public static final int polarrays = 2;
 	public static final int subarrayCols = 32;
 	public static final int cols = subarrayCols << 1;
@@ -311,6 +364,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> {
 	// subarray center assuming 32x41 pixels
 	private static Vector2D defaultPointingCenter = new Vector2D(20.5, 32.5); // row, col
 
+	
 	
 	
 }

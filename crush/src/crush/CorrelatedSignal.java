@@ -25,6 +25,7 @@
 package crush;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 import kovacs.data.Statistics;
 import kovacs.data.WeightedPoint;
@@ -248,16 +249,24 @@ public class CorrelatedSignal extends Signal {
 		//final double T =  (resolution - 1) * integration.instrument.samplingInterval;
 		//final double phit = 1.0 - T / (T + integration.getPointCrossingTime());
 		
-		SourceModel model = integration.scan.sourceModel;
-		double pointSize = model == null ? integration.instrument.getPointSize() : model.getPointSize();
+		final SourceModel model = integration.scan.sourceModel;
+		final double pointSize = model == null ? integration.instrument.getPointSize() : model.getPointSize();
+		integration.instrument.calcOverlap(pointSize);
 		
 		for(int k=channels.size(); --k >= 0; ) {
 			Channel channel = channels.get(k);
-			double phi = 0.0;
+			if(channel.isFlagged(skipFlags)) continue;
+			
+			double phi = dependents.get(channel);
+			final Collection<Overlap> overlaps = channel.getOverlaps();
+			
 			// Every pixel that sees the source contributes to the filtering...
-			if(channel.isUnflagged(skipFlags)) for(Channel other : channels) if(other.isUnflagged(skipFlags))
-				phi += channel.overlap(other, pointSize) * dependents.get(other);
-
+			if(overlaps != null) for(Overlap overlap : overlaps) {
+				final Channel other = (overlap.a == channel) ? overlap.b : overlap.a; 
+				if(other.isFlagged(skipFlags)) continue;
+				phi += overlap.value * dependents.get(other);
+			}
+				
 			//phi *= phit;
 			
 			if(nP > 0) phi /= nP;

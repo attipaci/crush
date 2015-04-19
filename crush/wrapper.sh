@@ -107,7 +107,7 @@ if [ -z ${CRUSH+x} ] ; then
   if [ -L $NAME ] ; then CRUSH=`readlink -f $0 | dirname` ; else CRUSH=`dirname $0` ; fi
 fi
 
-JAVAOPTS="-Xbatch -d$DATAMODEL -Xmx${USEMB}M $EXTRAOPTS"
+JAVAOPTS="-d$DATAMODEL -Xmx${USEMB}M $EXTRAOPTS"
 CLASSPATH="$CRUSH/tools.jar:$CRUSH/fits.jar:$CRUSH/util.jar:$CRUSH/crush2.jar"
 
 export CRUSH

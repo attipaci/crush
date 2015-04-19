@@ -23,11 +23,15 @@
 
 package crush.gismo;
 
+import java.util.List;
+
 import kovacs.math.Vector2D;
 import kovacs.util.Unit;
 import crush.Mount;
+import crush.array.Array;
+import crush.array.GeometricRowColIndexed;
 
-public class Gismo extends AbstractGismo {
+public class Gismo extends AbstractGismo implements GeometricRowColIndexed {
 	/**
 	 * 
 	 */
@@ -53,10 +57,54 @@ public class Gismo extends AbstractGismo {
 	@Override
 	public Vector2D getDefaultPointingCenter() { return defaultPointingCenter; }
 	
+	@Override
+	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
+		Array.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+	}
+
+
+	@Override
+	public int getFixedIndex(int row, int col) {
+		return row * cols + col;
+	}
+
+
+	@Override
+	public int getRow(int fixedIndex) {
+		return fixedIndex / cols;
+	}
+
+
+	@Override
+	public int getCol(int fixedIndex) {
+		return fixedIndex % cols;
+	}
+
+
+	@Override
+	public int rows() {
+		return rows;
+	}
+
+
+	@Override
+	public int cols() {
+		return cols;
+	}
+	
+	@Override
+	public Vector2D getPixelSize() {
+		return pixelSize;
+	}
+	
+	
 	// Array is 16x8 (rows x cols);
-	public static final int pixels = 128;
+	public static final int rows = 16;
+	public static final int cols = 8;
+	public static final int pixels = rows * cols;
 	
 	
 	private static Vector2D defaultPointingCenter = new Vector2D(8.5, 4.5); // row, col
+
 	
 }

@@ -50,6 +50,7 @@ implements TableFormatter.Entries {
 	public Mount mount;
 	
 	private double resolution;
+	private double overlapSize = Double.NaN;
 	
 	public double integrationTime;
 	public double samplingInterval;
@@ -115,6 +116,7 @@ implements TableFormatter.Entries {
 		
 		for(Channel channel : copy) channel.instrument = copy;
 	
+		copy.overlapSize = Double.NaN;
 		
 		if(options != null) copy.setOptions(options.copy());
 		if(layout != null) {
@@ -393,7 +395,7 @@ implements TableFormatter.Entries {
 
 	public double getSourceSize() {
 		double sourceSize = hasOption("sourcesize") ? 
-				Math.hypot(option("sourcesize").getDouble() * getSizeUnitValue(), getPointSize()) : getPointSize();
+				ExtraMath.hypot(option("sourcesize").getDouble() * getSizeUnitValue(), getPointSize()) : getPointSize();
 				return sourceSize;
 	}
 	
@@ -1025,6 +1027,48 @@ implements TableFormatter.Entries {
 	}
 	
 	public void editScanHeader(Header header) throws HeaderCardException {}
+	
+	public void calcOverlap(double pointSize) {
+		if(pointSize == overlapSize) return;
+			
+		for(Channel channel : this) channel.clearOverlaps();
+		
+		if(this instanceof GeometricIndexed) calcQuickOverlaps((GeometricIndexed) this, pointSize);
+		else for(Channel channel : this) {
+			for(int k=channel.index; --k >= 0; ) {
+				final Channel other = get(k);
+				final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
+				channel.addOverlap(overlap);
+				other.addOverlap(overlap);
+			}	
+		}
+		
+		overlapSize = pointSize;
+	}
+	
+	private synchronized void calcQuickOverlaps(GeometricIndexed geometric, double pointSize) {
+		final double radius = 2.0 * pointSize;
+		final Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
+		final ArrayList<Integer> nearbyIndex = new ArrayList<Integer>();
+	
+		for(Channel channel : this) {
+			nearbyIndex.clear();
+			geometric.addLocalFixedIndices(channel.getFixedIndex(), radius, nearbyIndex);
+			
+			for(int fixedIndex : nearbyIndex) {
+				if(fixedIndex >= channel.getFixedIndex()) continue;
+				
+				final Channel other = lookup.get(fixedIndex);
+				if(other == null) continue;
+				
+				final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
+				channel.addOverlap(overlap);
+				other.addOverlap(overlap);
+			}
+		}
+		
+		overlapSize = pointSize;
+	}
 	
 	public static Instrument<?> forName(String name) {
 		File file = new File(CRUSH.home + File.separator + "instruments" + File.separator + name.toLowerCase());

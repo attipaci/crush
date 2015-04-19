@@ -27,7 +27,6 @@ import java.util.StringTokenizer;
 
 import kovacs.math.Vector2D;
 import kovacs.util.*;
-
 import crush.array.SingleColorPixel;
 
 public class HawcPlusPixel extends SingleColorPixel {
@@ -91,6 +90,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	}
 	
 	
+	
 	public static Vector2D defaultSize = new Vector2D(5.0 * Unit.arcsec, 5.0 * Unit.arcsec);
 	
 	
@@ -100,6 +100,10 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public final static int FLAG_PIN = 1 << nextSoftwareFlag++;
 	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
 	public final static int FLAG_COL = 1 << nextSoftwareFlag++;
+
+
+	
+
 	
 
 	

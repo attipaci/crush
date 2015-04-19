@@ -60,9 +60,9 @@ elif [[ $JVER == *"-64"* ]] ; then DATAMODEL="64"
 fi
 
 # Set "-server" VM for Oracle and OpenJDK java
-if [[ $JVER == *"OpenJDK"* ]] ; then JVM="-server"
-elif [[ $JVER == *"HotSpot"* ]] ; then JVM="-server"
-fi
+#if [[ $JVER == *"OpenJDK"* ]] ; then JVM="-server"
+#elif [[ $JVER == *"HotSpot"* ]] ; then JVM="-server"
+#fi
 
 # Attempt to configure 80% of total RAM...
 case `uname` in

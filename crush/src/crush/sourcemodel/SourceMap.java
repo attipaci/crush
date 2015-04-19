@@ -144,10 +144,10 @@ public abstract class SourceMap extends SourceModel {
 	public abstract double getPixelizationSmoothing();
 
 	@Override
-	public double getPointSize() { return Math.hypot(getInstrument().getPointSize(), getRequestedSmoothing(option("smooth"))); }
+	public double getPointSize() { return ExtraMath.hypot(getInstrument().getPointSize(), getRequestedSmoothing(option("smooth"))); }
 	
 	@Override
-	public double getSourceSize() { return Math.hypot(super.getSourceSize(), getRequestedSmoothing(option("smooth"))); }
+	public double getSourceSize() { return ExtraMath.hypot(super.getSourceSize(), getRequestedSmoothing(option("smooth"))); }
 	
 	
 	public synchronized void searchCorners() throws Exception {
@@ -267,7 +267,7 @@ public abstract class SourceMap extends SourceModel {
 	public void memoryError(int sizeX, int sizeY) {
 		
 		Vector2D resolution = resolution();
-		double diagonal = Math.hypot(sizeX * resolution.x(), sizeY * resolution.y());
+		double diagonal = ExtraMath.hypot(sizeX * resolution.x(), sizeY * resolution.y());
 		
 		System.err.println("\n");
 		System.err.println("ERROR! Map is too large to fit into memory (" + sizeX + "x" + sizeY + " pixels).");
@@ -349,7 +349,7 @@ public abstract class SourceMap extends SourceModel {
 		double cosLat = getProjection().getReference().cosLat();
 		
 		for(Scan<?,?> scan : scans) {
-			double span = Math.hypot(scan.longitudeRange.span() * cosLat, scan.latitudeRange.span());
+			double span = ExtraMath.hypot(scan.longitudeRange.span() * cosLat, scan.latitudeRange.span());
 			if(span > maxDistance) slews.add(scan);
 		}
 		return slews;
