@@ -1020,6 +1020,15 @@
 			stability value.
 			@See: 'filter.motion.range', 'filter.motion.stability'	
 
+:: filter.mrproper	@Expert
+			@Since: 2.23
+			Enables the explicit re-levelling of the filtered 
+			signal. In practice, the re-levelling is unlikely to
+			improve significantly on the filter's effectiveness. At
+			the same time, it does slow it down somewhat, which is
+			why it has been turned off by default starting in 2.23.
+
+
 :: filter.ordering=<list>	@Since: 2.10
 				@Expert
 			A comma-separated list of spectral filters, in the

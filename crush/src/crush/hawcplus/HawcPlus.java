@@ -325,9 +325,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	}
 
 	
-
-	
-	
 	public final static int getArrayIndex(final int row, final int col) {
 		return row * cols + col;
 	}
