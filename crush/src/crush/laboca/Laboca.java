@@ -38,7 +38,7 @@ import kovacs.util.Util;
 
 
 
-public class Laboca extends APEXCamera<LabocaPixel> {
+public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlappingChannels {
 	/**
 	 * 
 	 */

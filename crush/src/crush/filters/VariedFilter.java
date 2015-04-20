@@ -35,6 +35,8 @@ public abstract class VariedFilter extends Filter {
 	protected float[] pointResponse;
 
 	protected float[] sourceProfile;
+	protected float dp;
+	
 	protected double sourceNorm;
 	
 	
@@ -51,6 +53,7 @@ public abstract class VariedFilter extends Filter {
 		super.setIntegration(integration);
 		
 		pointResponse = new float[integration.instrument.size()];
+		
 		Arrays.fill(pointResponse, 1.0F);
 		
 		updateSourceProfile();
@@ -75,13 +78,7 @@ public abstract class VariedFilter extends Filter {
 		final double rejected = countParms();
 		parms.add(channel, rejected);
 		
-		if(points > 0.0) {
-			final double dp = rejected / points;
-			final int c = channel.index;
-			for(Frame exposure : integration) if(exposure != null) 
-				if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)
-					parms.add(exposure, exposure.relativeWeight * dp);
-		}
+		dp = points >= 0.0 ? (float) (rejected / points) : 0.0F;
 		
 		final double response = calcPointResponse();
 		pointResponse[channel.index] = (float) response;
@@ -93,6 +90,14 @@ public abstract class VariedFilter extends Filter {
 		double weighRescale = 1.0 - rejected / points;
 		channel.weight *= weighRescale;
 		*/
+	}
+	
+	
+	@Override
+	protected void remove(final float value, final Frame exposure, int channel) {
+		if(exposure == null) return;
+		exposure.data[channel] -= value;
+		if(exposure.sampleFlag[channel] == 0) parms.add(exposure, exposure.relativeWeight * dp);		
 	}
 	
 	@Override

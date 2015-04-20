@@ -26,6 +26,7 @@ import java.io.*;
 import java.util.*;
 
 import kovacs.data.WeightedPoint;
+import kovacs.util.ExtraMath;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 
@@ -122,7 +123,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
 		final PhaseDependents parms = getPhaseDependents("drifts");
 		parms.clear(channel);
 		
-		int nParms = (int)Math.ceil((double) size() / nPhases);
+		int nParms = ExtraMath.roundupRatio(size(), nPhases);
 		
 		for(int N=0; N < nParms; N++) {
 			double sum = 0.0, sumw = 0.0;

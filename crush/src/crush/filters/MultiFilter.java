@@ -27,7 +27,6 @@ import java.util.Arrays;
 
 import crush.Channel;
 import crush.ChannelGroup;
-import crush.Frame;
 import crush.Integration;
 
 
@@ -187,15 +186,11 @@ public class MultiFilter extends VariedFilter {
 		integration.getFFT().amplitude2Real(filtered);
 		
 		// Remove the DC component...
-		levelFor(channel, filtered);
+		if(isPedantic) levelForChannel(channel, filtered);
 		
 		// Subtract the rejected signal...
 		final int c = channel.index;
-		for(int t = integration.size(); --t >= 0; ) {
-			final Frame exposure = integration.get(t);
-			if(exposure != null) exposure.data[c] -= filtered[t];	
-		}
-		
+		for(int t = integration.size(); --t >= 0; ) remove(filtered[t], integration.get(t), c);		
 	}
 	
 	@Override

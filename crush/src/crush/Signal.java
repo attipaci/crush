@@ -30,6 +30,7 @@ import java.io.*;
 import kovacs.data.Statistics;
 import kovacs.data.WeightedPoint;
 import kovacs.util.Constant;
+import kovacs.util.ExtraMath;
 import kovacs.util.Util;
 
 public class Signal implements Cloneable {
@@ -53,7 +54,7 @@ public class Signal implements Cloneable {
 	
 	public Signal(Mode mode, Integration<?, ?> integration, float[] values, boolean isFloating) {
 		this(mode, integration);
-		resolution = (int) Math.ceil((double) integration.size() / values.length);
+		resolution = ExtraMath.roundupRatio(integration.size(), values.length);
 		this.value = values;
 		driftN = values.length;
 	}
@@ -139,7 +140,7 @@ public class Signal implements Cloneable {
 	}
 	
 	public synchronized void removeDrifts() {
-		removeDrifts((int) Math.ceil(integration.framesFor(integration.filterTimeScale) / resolution), true);
+		removeDrifts(ExtraMath.roundupRatio(integration.framesFor(integration.filterTimeScale), resolution), true);
 	}
 	
 	
@@ -149,7 +150,7 @@ public class Signal implements Cloneable {
 		addDrifts();
 		
 		driftN = N;
-		if(isReconstructible) drifts = new float[(int) Math.ceil((double) value.length / driftN)];
+		if(isReconstructible) drifts = new float[ExtraMath.roundupRatio(value.length, driftN)];
 		
 		for(int T=0, fromt=0; fromt<value.length; T++) {
 			double sum = 0.0;
@@ -172,8 +173,8 @@ public class Signal implements Cloneable {
 	
 	
 	public synchronized void level(int from, int to) {
-		from = (int) Math.floor((double) from / resolution);
-		to = (int) Math.ceil((double) from / resolution);
+		from = from / resolution;
+		to = ExtraMath.roundupRatio(to, resolution);
 		
 		double sum = 0.0;
 		int n=0;

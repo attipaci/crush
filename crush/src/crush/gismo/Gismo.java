@@ -64,24 +64,6 @@ public class Gismo extends AbstractGismo implements GeometricRowColIndexed {
 
 
 	@Override
-	public int getFixedIndex(int row, int col) {
-		return row * cols + col;
-	}
-
-
-	@Override
-	public int getRow(int fixedIndex) {
-		return fixedIndex / cols;
-	}
-
-
-	@Override
-	public int getCol(int fixedIndex) {
-		return fixedIndex % cols;
-	}
-
-
-	@Override
 	public int rows() {
 		return rows;
 	}

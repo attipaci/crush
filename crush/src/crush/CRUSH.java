@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.23-a2
+ * @version 2.23-b1
  * 
  */
 public class CRUSH extends Configurator {
@@ -46,7 +46,7 @@ public class CRUSH extends Configurator {
 	private static final long serialVersionUID = 6284421525275783456L;
 	
 	private static String version = "2.23-b1";
-	private static String revision = "devel.2";
+	private static String revision = "devel.3";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -80,6 +80,7 @@ public class CRUSH extends Configurator {
 		}
 		
 		checkJavaVM(5);
+		checkForUpdates();
 		
 		home = System.getenv("CRUSH");
 		if(home == null) home = ".";
@@ -94,7 +95,7 @@ public class CRUSH extends Configurator {
 	}
 
 	public CRUSH(String instrumentName) {
-		checkForUpdates();
+		
 	
 		instrument = Instrument.forName(instrumentName.toLowerCase());
 		instrument.setOptions(this);
@@ -722,6 +723,10 @@ public class CRUSH extends Configurator {
 		
 	}
 
+	public static String getVersion() {
+		return version;
+	}
+	
 	public static String getFullVersion() {
 		if(revision == null) return version;
 		if(revision.length() == 0) return version;

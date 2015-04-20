@@ -35,7 +35,7 @@ import kovacs.util.Unit;
 
 
 
-public class Saboca extends APEXCamera<SabocaPixel> {
+public class Saboca extends APEXCamera<SabocaPixel> implements NonOverlappingChannels {
 	/**
 	 * 
 	 */

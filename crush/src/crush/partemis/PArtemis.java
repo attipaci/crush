@@ -33,15 +33,27 @@ import java.util.*;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
 
-public class PArtemis extends APEXCamera<PArtemisPixel> {
+public class PArtemis extends APEXCamera<PArtemisPixel> implements GeometricRowColIndexed {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 7163408261887093751L;
 
+	public static int rows = 16;
+	public static int cols = 16;
+	
+	public Vector2D pixelSize = PArtemisPixel.defaultSize;
+	
 	public PArtemis() {
 		super("p-artemis", 256);
 		setResolution(9.6 * Unit.arcsec);
+	}
+	
+	@Override
+	public Instrument<PArtemisPixel> copy() {
+		PArtemis copy = (PArtemis) super.copy();
+		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
+		return copy;
 	}
 	
 	@Override
@@ -94,11 +106,9 @@ public class PArtemis extends APEXCamera<PArtemisPixel> {
 	
 	public void setPlateScale(Vector2D size) {
 		// Make all pixels the same size. Also calculate their positions...
-		for(PArtemisPixel pixel : this) {
-			pixel.size = size;		
-			pixel.calcPosition();
-		}
-			
+		pixelSize = size;
+		for(PArtemisPixel pixel : this) pixel.calcPosition();
+		
 		// Set the pointing center...
 		setReferencePosition(referencePixel.getPosition());
 	}
@@ -113,5 +123,26 @@ public class PArtemis extends APEXCamera<PArtemisPixel> {
 	public PArtemisPixel getChannelInstance(int backendIndex) {
 		return new PArtemisPixel(this, backendIndex);
 	}
+
+	@Override
+	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
+		Array.addLocalFixedIndices((GeometricRowColIndexed) this, fixedIndex, radius, toIndex);
+	}
+
+	@Override
+	public int rows() {
+		return rows;
+	}
+
+	@Override
+	public int cols() {
+		return cols;
+	}
+
+	@Override
+	public Vector2D getPixelSize() {
+		return pixelSize;
+	}
+	
 	
 }

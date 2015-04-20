@@ -3030,7 +3030,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		public void processIndex(int index, int threadCount) {
 			final int nc = channels.size();
 			final int nt = size();
-			final int nblocks = (int) Math.ceil((double) nt / blocksize);
+			final int nblocks = ExtraMath.roundupRatio(nt, blocksize);
 			final int N = nblocks * nc;
 			
 			for(int i=index; i<N; i+=threadCount) {
