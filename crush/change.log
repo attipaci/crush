@@ -1,6 +1,4 @@
-!!! removeDrifts race condition...
->>> Dependents.Entry with synchronized access...
-
+>> 'filter.mrproper'
 
 2.23-b1
 
@@ -18,6 +16,14 @@
 	will override the system-wide settings in the former). See Section 2.2 
 	(Java Configuration) in the updated README for details.
 
+	[NEW] Filters have new sub-option 'mrproper' which activates a
+	re-levelling of the filtered signal, which is turned off by default
+	to increase performance. In truth, the re-levelling should have
+	insignificant effect on the filter's effectiveness.
+
+	[FIX] Signal/CorrelatedSignal levelling interval was null, due to 
+	malformed interval calculation. Fixed.
+
 	[FIX] Eliminated race condition fixed on parallel offset removal 
 	(in parallel dependents accounting). The existence of the condition 
 	resulted in a random reduction noise whose level was typically ~1% of 
@@ -31,7 +37,7 @@
 	channels. (Overlap calculation is needed in the proper estimation of
 	lost degrees of freedom, and hence in the noise estimation).
 
-	[SPEED] Speedup by ~1.6x, by replacing slow hypot() with the faster
+	[SPEED] Speedup by ~30%, from replacing slow hypot() with the faster
 	(albeit less precise) sqrt(a^2 + b^2)...
 
 	[README] Updated installation instructions.
@@ -39,11 +45,24 @@
 	[PACKAGE] Added bash and coreutils to pre-requisites for RPM and Debian
 	packages (The latter provides 'readlink' and 'dirname'). 
 
+	[TWEAK] {VariedFilter} Dependence accounting made faster by pooling
+	channels in postFilter().
+
+	[TWEAK] {Filter} loadTimeStream levelling inlined for better speed.
+
 	[TWEAK] {FITS} Added a few sectioning comments to FITS headers to
 	make it easier to read by humans.
 
+	[CODE] Use ExtraMath.roundupRatio() wherever possible.
+
+	[CODE] Release version checking in main() instead of CRUSH 
+	instantiation.
+
+	[CODE] RotatingArray merged into Array. No good reason for keeping it
+	a separate class.
+
 	[CODE] Parameter dependents accounting made thread-safe without 
-	unnecessary blocking.
+	unnecessary blocking (using Dependents.Entry inner class).
 
 	[CODE] Closing FITS streams after reading (for all instruments) with
 	no-action exception catch (not a real issue).

@@ -138,10 +138,6 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		}
 	}
 	
-	public void rotate(double angle) {
-		for(Scuba2Pixel pixel : this) pixel.position.rotate(angle);
-	}
-	
 	@Override
 	public void readWiring(String fileName) throws IOException {
 		//System.err.println(" Loading wiring data from " + fileName);

@@ -37,11 +37,11 @@ import crush.GroundBased;
 import crush.InstantFocus;
 import crush.Mount;
 import crush.Scan;
-import crush.array.RotatingArray;
+import crush.array.Array;
 import crush.array.SingleColorPixel;
 import crush.array.SingleColorLayout;
 
-public abstract class CSOArray<PixelType extends SingleColorPixel> extends RotatingArray<PixelType, PixelType> implements GroundBased {
+public abstract class CSOArray<PixelType extends SingleColorPixel> extends Array<PixelType, PixelType> implements GroundBased {
 	/**
 	 * 
 	 */
@@ -120,7 +120,7 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Rotat
 
 	
 	@Override
-	public double getRotation() {
+	public double getRotationAngle() {
 		return (mount == Mount.CASSEGRAIN ? rotatorAngle : 0.0) - rotatorZeroAngle;
 	}
 

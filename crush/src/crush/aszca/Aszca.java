@@ -35,7 +35,7 @@ import kovacs.util.Unit;
 
 
 
-public class Aszca extends APEXCamera<AszcaPixel> {
+public class Aszca extends APEXCamera<AszcaPixel> implements NonOverlappingChannels {
 	/**
 	 * 
 	 */

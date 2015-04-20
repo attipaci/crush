@@ -30,6 +30,7 @@ import java.util.Arrays;
 import kovacs.data.Statistics;
 import kovacs.data.WeightedPoint;
 import kovacs.math.Range;
+import kovacs.util.ExtraMath;
 
 
 public class Mode {
@@ -200,7 +201,7 @@ public class Mode {
 	}
 	
 	public int signalLength(Integration<?, ?> integration) {
-		return (int)Math.ceil((double) integration.size() / getFrameResolution(integration));
+		return ExtraMath.roundupRatio(integration.size(), getFrameResolution(integration));
 	}
 	
 	@Override

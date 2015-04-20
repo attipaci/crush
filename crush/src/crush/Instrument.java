@@ -1029,11 +1029,13 @@ implements TableFormatter.Entries {
 	public void editScanHeader(Header header) throws HeaderCardException {}
 	
 	public void calcOverlap(double pointSize) {
+		if(this instanceof NonOverlappingChannels) return;
+		
 		if(pointSize == overlapSize) return;
-			
+		
 		for(Channel channel : this) channel.clearOverlaps();
 		
-		if(this instanceof GeometricIndexed) calcQuickOverlaps((GeometricIndexed) this, pointSize);
+		if(this instanceof GeometricIndexed) calcGeometricOverlaps((GeometricIndexed) this, pointSize);
 		else for(Channel channel : this) {
 			for(int k=channel.index; --k >= 0; ) {
 				final Channel other = get(k);
@@ -1046,7 +1048,7 @@ implements TableFormatter.Entries {
 		overlapSize = pointSize;
 	}
 	
-	private synchronized void calcQuickOverlaps(GeometricIndexed geometric, double pointSize) {
+	private synchronized void calcGeometricOverlaps(GeometricIndexed geometric, double pointSize) {
 		final double radius = 2.0 * pointSize;
 		final Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
 		final ArrayList<Integer> nearbyIndex = new ArrayList<Integer>();

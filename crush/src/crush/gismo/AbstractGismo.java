@@ -199,15 +199,10 @@ public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implem
 		
 		// Set the pointing center...
 		setReferencePosition(center);
-		
-		if(hasOption("rotation")) rotate(option("rotation").getDouble() * Unit.deg);
-	}
-	
-	public void rotate(double angle) {
-		for(GismoPixel pixel : this) pixel.position.rotate(angle);
 	}
 	
 	// Calculates the offset of the pointing center from the nominal center of the array
+	@Override
 	public Vector2D getPointingCenterOffset() {
 		Vector2D offset = (Vector2D) arrayPointingCenter.clone();
 		final Vector2D pCenter = getDefaultPointingCenter();

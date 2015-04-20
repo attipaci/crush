@@ -47,6 +47,8 @@ public abstract class Filter {
 	boolean dft = false;
 	boolean isEnabled = false;
 	
+	boolean isPedantic = false;
+	
 	public Filter(Integration<?,?> integration) {
 		setIntegration(integration);
 	}
@@ -113,6 +115,7 @@ public abstract class Filter {
 	
 	public void updateConfig() {
 		isEnabled = integration.hasOption(getConfigName());	
+		isPedantic = integration.hasOption("filter.mrproper");
 	}
 	
 	// Allows to adjust the FFT filter after the channel spectrum has been loaded
@@ -137,6 +140,8 @@ public abstract class Filter {
 			// Apply the filter, with the rejected signal written to the local data array
 			if(dft) dftFilter(channel);
 			else fftFilter(channel);
+			
+			if(isPedantic) levelDataForChannel(channel);
 			
 			postFilter(channel);
 			
@@ -166,17 +171,18 @@ public abstract class Filter {
 	
 	protected void postFilter(Channel channel) {
 		// Remove the DC component...
-		levelDataFor(channel);
+		//levelDataFor(channel);
 	}
 	
-	// TODO Smart timestream access...
 	protected void remove(Channel channel) {
 		// Subtract the rejected signal...
 		final int c = channel.index;
-		for(int t = integration.size(); --t >= 0; ) {
-			final Frame exposure = integration.get(t);
-			if(exposure != null) exposure.data[c] -= data[t];	
-		}
+		for(int t = integration.size(); --t >= 0; ) remove(data[t], integration.get(t), c);
+	}
+	
+	protected void remove(final float value, final Frame exposure, int channel) {
+		if(exposure == null) return;
+		exposure.data[channel] -= value;
 	}
 	
 	public void report() {
@@ -191,6 +197,9 @@ public abstract class Filter {
 		
 		points = 0.0;
 		
+		double sum = 0.0;
+		int n=0;
+		
 		// Load the channel data into the data array
 		for(int t = integration.size(); --t >= 0; ) {
 			final Frame exposure = integration.get(t);
@@ -199,13 +208,21 @@ public abstract class Filter {
 			else if(exposure.isFlagged(Frame.MODELING_FLAGS)) data[t] = Float.NaN;
 			else if(exposure.sampleFlag[c] != 0) data[t] = Float.NaN;
 			else {
-				data[t] = exposure.relativeWeight * exposure.data[c];
+				sum += (data[t] = exposure.relativeWeight * exposure.data[c]);
 				points += exposure.relativeWeight;
+				n++;
 			}
 		}
 			
-		// Remove DC component
-		levelData();
+		// Remove the DC offset...
+		if(n > 0) {
+			final float ave = (float) (sum / n);
+			for(int t = integration.size(); --t >= 0; ) {
+				if(Float.isNaN(data[t])) data[t] = 0.0F;
+				else data[t] -= ave;			
+			}
+		}
+		else Arrays.fill(data, 0, integration.size(), 0.0F);
 	}
 	
 	
@@ -256,15 +273,15 @@ public abstract class Filter {
 		// Start from the 1/f filter cutoff
 		int minf = getHipassIndex();
 		
-		double sum = 0.0, norm = 0.0;
+		double sum = 0.0;
 		
 		// just calculate x=0 component -- O(N)
 		// Below the hipass time-scale, the filter has no effect, so count it as such...
 		for(int f=minf; --f >= 0; ) sum += Math.exp(a*f*f);
-		norm = sum;
+		double norm = sum;
 		
 		// Calculate the true source filtering above the hipass timescale...
-		for(int f=minf; f <= nf; f++) {
+		for(int f=nf; --f >= minf; ) {
 			double sourceResponse = Math.exp(a*f*f);
 			sum += sourceResponse * responseAt(f);
 			norm += sourceResponse;
@@ -284,11 +301,11 @@ public abstract class Filter {
 	}
 	
 	
-	protected void levelDataFor(Channel channel) {
-		levelFor(channel, data);
+	protected void levelDataForChannel(Channel channel) {
+		levelForChannel(channel, data);
 	}
 		
-	protected void levelFor(Channel channel, float[] signal) {
+	protected void levelForChannel(Channel channel, float[] signal) {	
 		final int c = channel.index;
 		double sum = 0.0;
 		int n = 0;
@@ -301,12 +318,12 @@ public abstract class Filter {
 			
 			sum += signal[t];
 			n++;
-		}
-		if(!(n > 0)) Arrays.fill(signal, 0, integration.size(), 0.0F);
-		else {
-			float ave = (float) (sum / n);
+		} 
+		if(n > 0) {
+			final float ave = (float) (sum / n);
 			for(int t=integration.size(); --t >= 0; ) signal[t] -= ave;			
 		}
+		else Arrays.fill(signal, 0, integration.size(), 0.0F);
 	}
 	
 	protected void levelData() { level(data); }

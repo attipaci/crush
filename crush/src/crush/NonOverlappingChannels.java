@@ -21,17 +21,8 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.array;
+package crush;
 
-import kovacs.math.Vector2D;
-import crush.GeometricIndexed;
+public interface NonOverlappingChannels {
 
-public interface GeometricRowColIndexed extends GeometricIndexed {
-	
-	public int rows();
-	
-	public int cols();
-	
-	public Vector2D getPixelSize();
-	
 }

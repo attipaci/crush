@@ -29,6 +29,7 @@ import java.util.Collection;
 
 import kovacs.data.Statistics;
 import kovacs.data.WeightedPoint;
+import kovacs.util.ExtraMath;
 
 
 
@@ -92,13 +93,13 @@ public class CorrelatedSignal extends Signal {
 
 	@Override
 	public synchronized void removeDrifts() {
-		int N = (int)Math.ceil((double) integration.framesFor(integration.filterTimeScale) / resolution);
+		int N = ExtraMath.roundupRatio(integration.framesFor(integration.filterTimeScale), resolution);
 		if(N == driftN) return;
 		
 		addDrifts();
 		
 		driftN = N;
-		drifts = new float[(int) Math.ceil((double) value.length / driftN)];
+		drifts = new float[ExtraMath.roundupRatio(value.length, driftN)];
 		
 		for(int T=0, fromt=0; fromt < value.length; T++) {
 			final int tot = Math.min(fromt + driftN, value.length);
@@ -123,17 +124,17 @@ public class CorrelatedSignal extends Signal {
 	
 	@Override
 	public synchronized void level(int from, int to) {
-		from = (int) Math.floor((double) from / resolution);
-		to = (int) Math.ceil((double) from / resolution);
+		from = from / resolution;
+		to = ExtraMath.roundupRatio(to, resolution);
 		
 		double sum = 0.0, sumw=0;
-		for(int t=from; t<to; t++) {
+		for(int t=to; --t >= from; ) {
 			sum += weight[t] * value[t];
 			sumw += weight[t];
 		}
 		if(sumw > 0.0) {
-			double ave = sum / sumw;
-			for(int t=from; t<to; t++) value[t] -= ave;
+			final double ave = sum / sumw;
+			for(int t=to; --t >= from; ) value[t] -= ave;
 		}
 	}
 	

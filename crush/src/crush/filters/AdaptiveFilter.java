@@ -61,14 +61,14 @@ public abstract class AdaptiveFilter extends VariedFilter {
 		updateSourceProfile();
 		
 		for(int i=profiles.length; --i >= 0; ) {
-			float[] oldProfile = profiles[i];
+			final float[] oldProfile = profiles[i];
 			if(oldProfile == null) continue;
 			profiles[i] = new float[nF];
 			resample(oldProfile, profiles[i]);
 		}
 	}
 	
-	protected void resample(float[] from, float[] to) {
+	protected void resample(final float[] from, final float[] to) {
 		final double n = (double) from.length / to.length; 
 		
 		for(int i=to.length; --i >= 0; ) {
@@ -103,8 +103,8 @@ public abstract class AdaptiveFilter extends VariedFilter {
 	
 	@Override
 	protected double responseAt(int fch) {
-		if(profile == null) return 1.0;
-		return profile[(int) Math.floor((double) fch / (nf+1) * profile.length)];
+		if(profile == null) return 1.0;	
+		return profile[fch * profile.length / (nf+1)];
 	}
 	
 	public float[] getValidProfile(Channel channel) {

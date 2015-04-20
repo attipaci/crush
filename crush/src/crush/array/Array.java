@@ -41,6 +41,8 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	 */
 	private static final long serialVersionUID = -707752417431510013L;
 	
+	protected double rotation = 0.0;
+	
 	public Array(String name, InstrumentLayout<? super ChannelType> layout) {
 		super(name, layout);
 	}
@@ -108,8 +110,15 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		}
 		
 		super.loadChannelData();
+		
+		rotation = 0.0;
+		rotateTo(getRotationAngle());
 	}
 		
+	public double getRotationAngle() {
+		if(hasOption("rotation")) return option("rotation").getDouble() * Unit.deg;
+		return Double.NaN;
+	}
 	
 	public void readRCP(String fileName)  throws IOException {		
 		System.err.println(" Reading RCP from " + fileName);
@@ -216,9 +225,61 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		cursor.add(new HeaderCard("BEAM", getResolution() / Unit.arcsec, "The instrument FWHM (arcsec) of the beam."));
 	}
 	
+	public Vector2D getPointingCenterOffset() { return new Vector2D(); }
+	
+	// Returns the offset of the pointing center from the the rotation center for a given rotation...
+	private Vector2D getPointingOffset(double rotationAngle) {
+		Vector2D offset = new Vector2D();
+		
+		final double sinA = Math.sin(rotationAngle);
+		final double cosA = Math.cos(rotationAngle);
+		
+		if(mount == Mount.CASSEGRAIN) {
+			Vector2D dP = getPointingCenterOffset();	
+			offset.setX(dP.x() * (1.0 - cosA) + dP.y() * sinA);
+			offset.setY(dP.x() * sinA + dP.y() * (1.0 - cosA));
+		}
+		return offset;
+	}
+		
+	
+	// How about different pointing and rotation centers?...
+	// If assuming that pointed at rotation a0 and observing at a
+	// then the pointing center will rotate by (a-a0) on the array rel. to the rotation
+	// center... (dP is the pointing rel. to rotation vector)
+	// i.e. the effective array offsets change by:
+	//	dP - dP.rotate(a-a0)
+	
+	// For Cassegrain assume pointing at zero rotation (a0 = 0.0)
+	// For Nasmyth assume pointing at same elevation (a = a0)
+
+	protected void rotateTo(double angle) {
+		if(Double.isNaN(angle)) return;
+		
+		System.err.println(" Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
+		
+		// Undo the prior rotation...
+		Vector2D priorOffset = getPointingOffset(rotation);
+		Vector2D newOffset = getPointingOffset(angle);
+		
+		for(Pixel pixel : getPixels()) if(pixel.getPosition() != null) {
+			Vector2D position = pixel.getPosition();
+			
+			// Center positions on the rotation center...
+			position.subtract(priorOffset);
+			// Do the rotation...
+			position.rotate(angle - rotation);
+			// Re-center on the pointing center...
+			position.add(newOffset);
+		}
+		
+		rotation = angle;
+	}
+	
 	public static void addLocalFixedIndices(GeometricRowColIndexed geometric, int fixedIndex, double radius, Collection<Integer> toIndex) {
-		final int row = geometric.getRow(fixedIndex);
-		final int col = geometric.getCol(fixedIndex);
+		
+		final int row = fixedIndex / geometric.cols();
+		final int col = fixedIndex % geometric.cols();
 		
 		final Vector2D pixelSize = geometric.getPixelSize();
 		final int dc = (int)Math.ceil(radius / pixelSize.x());

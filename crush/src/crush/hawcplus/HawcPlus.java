@@ -193,6 +193,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		else pixelSize = new Vector2D(array.pixelScale, array.pixelScale);
 
 		setPlateScale(pixelSize);
+		
+		if(hasOption("rotation.t")) rotateT(option("rotation.t").getDouble() * Unit.deg);
 			
 		super.loadChannelData();
 	}
@@ -205,13 +207,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		
 		// Set the pointing center...
 		setReferencePosition(center);
-		
-		if(hasOption("rotation")) rotate(option("rotation").getDouble() * Unit.deg);
-		if(hasOption("rotation.t")) rotateT(option("rotation.t").getDouble() * Unit.deg);
-	}
-	
-	public void rotate(double angle) {
-		for(HawcPlusPixel pixel : this) pixel.position.rotate(angle);
 	}
 	
 	public void rotateT(double angle) {
@@ -219,6 +214,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	}
 	
 	// Calculates the offset of the pointing center from the nominal center of the array
+	@Override
 	public Vector2D getPointingCenterOffset() {
 		Vector2D offset = (Vector2D) arrayPointingCenter.clone();
 		offset.subtract(defaultPointingCenter);
@@ -308,24 +304,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
 		Array.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
 		for(int i = toIndex.size(); --i >= 0; ) toIndex.add(toIndex.get(i) + polArrayPixels);
-	}
-
-
-	@Override
-	public int getFixedIndex(int row, int col) {
-		return row * cols + col;
-	}
-
-
-	@Override
-	public int getRow(int fixedIndex) {
-		return fixedIndex / cols;
-	}
-
-
-	@Override
-	public int getCol(int fixedIndex) {
-		return fixedIndex % cols;
 	}
 
 

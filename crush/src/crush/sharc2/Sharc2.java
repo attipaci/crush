@@ -475,23 +475,6 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GeometricRowColInde
 	}
 
 
-	@Override
-	public int getFixedIndex(int row, int col) {
-		return row * cols + col;
-	}
-
-
-	@Override
-	public int getRow(int fixedIndex) {
-		return fixedIndex / cols;
-	}
-
-
-	@Override
-	public int getCol(int fixedIndex) {
-		return fixedIndex % cols;
-	}
-
 
 	@Override
 	public int rows() {

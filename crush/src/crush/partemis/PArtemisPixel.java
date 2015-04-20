@@ -31,18 +31,16 @@ import crush.apex.APEXPixel;
 public class PArtemisPixel extends APEXPixel {
 	public int row, col;
 	public double rowGain = 1.0, colGain = 1.0;
-	public Vector2D size;
 	
 	public PArtemisPixel(PArtemis array, int backendIndex) {
 		super(array, backendIndex);
 		int i = backendIndex - 1;
-		row = i/16;
-		col = i%16;
-		size = defaultSize;
+		row = i / PArtemis.cols;
+		col = i % PArtemis.cols;
 	}
 	
 	public void calcPosition() {
-		position = getPosition(size, row, col);
+		position = getPosition(((PArtemis) instrument).pixelSize, row, col);
 	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {
