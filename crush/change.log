@@ -1,6 +1,16 @@
->> 'filter.mrproper'
 
 2.23-b1
+
+	Overview
+	======================================================================
+	The release adds support for SOFIA/HAWC+, and improves reduction speed
+	by ~30% (or more for instruments with a large number of pixels). It
+	also streamlines installation with automatic Java configuration (on 
+	most UNIX platforms, incl. Max OS X), and easier manual Java 
+	configuration for those who need/want it. This release also fixes bad 
+	aperture flux uncertainties in the prior version, adds many smaller 
+	fixes, and brings many architecture improvements under the hood.
+	======================================================================
 
 
 	[NEW] Initial support for HAWC+.
@@ -16,12 +26,12 @@
 	will override the system-wide settings in the former). See Section 2.2 
 	(Java Configuration) in the updated README for details.
 
-	[NEW] Filters have new sub-option 'mrproper' which activates a
-	re-levelling of the filtered signal, which is turned off by default
-	to increase performance. In truth, the re-levelling should have
-	insignificant effect on the filter's effectiveness.
+	[NEW] Filters have new sub-option 'mrproper' (disabled by default) 
+	which activates a re-levelling of the filtered signal. In truth, the 
+	re-levelling should have insignificant effect on the filter's 
+	effectiveness.
 
-	[FIX] Signal/CorrelatedSignal levelling interval was null, due to 
+	[FIX] Signal/CorrelatedSignal levelling interval was nil, due to a
 	malformed interval calculation. Fixed.
 
 	[FIX] Eliminated race condition fixed on parallel offset removal 

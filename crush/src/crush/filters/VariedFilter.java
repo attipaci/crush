@@ -94,7 +94,7 @@ public abstract class VariedFilter extends Filter {
 	
 	
 	@Override
-	protected void remove(final float value, final Frame exposure, int channel) {
+	protected void remove(final float value, final Frame exposure, final int channel) {
 		if(exposure == null) return;
 		exposure.data[channel] -= value;
 		if(exposure.sampleFlag[channel] == 0) parms.add(exposure, exposure.relativeWeight * dp);		

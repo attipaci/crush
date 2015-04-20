@@ -180,7 +180,7 @@ public abstract class Filter {
 		for(int t = integration.size(); --t >= 0; ) remove(data[t], integration.get(t), c);
 	}
 	
-	protected void remove(final float value, final Frame exposure, int channel) {
+	protected void remove(final float value, final Frame exposure, final int channel) {
 		if(exposure == null) return;
 		exposure.data[channel] -= value;
 	}
