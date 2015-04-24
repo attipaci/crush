@@ -1,5 +1,7 @@
 
-2.23-b1
+
+2.23-b2 (24 April 2015)
+
 
 	Overview
 	======================================================================
@@ -13,6 +15,10 @@
 	======================================================================
 
 
+	[BUG] {2.23-b1} [GISMO] Ooops! Array rotation SNAFU: 'rotation' was
+	applied to RCP, not just to calculated pixel positions as was to be.
+	(RCP rotation is handled via separate 'rcp.rotate' option).
+
 	[NEW] Initial support for HAWC+.
 
 	[NEW] On Linux systems CRUSH will attempt to automatically configure
@@ -25,6 +31,15 @@
 	/etc/crush2/startup, or ~/.crush2/startup. (User settings in the latter
 	will override the system-wide settings in the former). See Section 2.2 
 	(Java Configuration) in the updated README for details.
+
+	[NEW] Option 'source.inject' can be used to inject a test map into the 
+	timestream. The sub-option 'scale' can specify a scaling before 
+	injection. E.g.:
+
+	   source.inject=~/test/mytestsource.fits
+	   source.inject.scale=0.5
+
+	The above will inject 'mytestsource.fits' with a scaling of 0.5.
 
 	[NEW] Filters have new sub-option 'mrproper' (disabled by default) 
 	which activates a re-levelling of the filtered signal. In truth, the 
@@ -63,6 +78,13 @@
 	[TWEAK] {FITS} Added a few sectioning comments to FITS headers to
 	make it easier to read by humans.
 
+	[COSMETIC] {CSO} Cassegrain platform rotator processing mentioned 
+	'MAKO' in messages. Fixed.
+
+	[CODE] {SHARC-2} {GISMO} {p-ArTEMIS} {SCUBA-2} Arrays with row/col 
+	pixel indexing are handled more efficiently, and with more shared 
+	code.
+	
 	[CODE] Use ExtraMath.roundupRatio() wherever possible.
 
 	[CODE] Release version checking in main() instead of CRUSH 

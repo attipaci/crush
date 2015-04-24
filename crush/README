@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 		       <attila[AT]submm.caltech.edu>
 
-		        Last updated: 8 April 2015
+		        Last updated: 24 April 2015
 
 
 
@@ -114,6 +114,7 @@ the following instruments (in alphabetical order):
     		www.submm.caltech.edu:/~sharc
 
     SOFIA/HAWC+	(53um, 62um, 89um, 155um, 216um)
+		High-resolution Airborne Wide-angle Camera
 
 
 Further support for instruments is possible. If interested to use CRUSH for
@@ -123,19 +124,18 @@ your bolometer array, please contact Attila Kovacs
 In principle, it is possible to extend CRUSH support for other types of scanning
 instruments, like heterodyne receiver arrays, or single-pixel receivers that
 scan in frequency space, or for the reduction of line-surveys from double
-side-band (DSB) receivers. Interferometric imaging may be another area of
-applicability. Such new features may appear in future releases, especially
-upon specific request and/or arrangement...
+side-band (DSB) receivers. Such new features may appear in future releases, 
+especially upon specific request and/or arrangement...
 
 
 
 1.1 Installation
 ================
 
-   Install Java (if not already installed
-   --------------------------------------
-   Install Java (if necessary), e.g. from www.java.com. If you already have
-   Java, check that it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
+   Install Java (if not already installed)
+   ---------------------------------------
+   Download Java, e.g. from www.java.com. If you already have Java, check that 
+   it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
 
         > java -version
 
@@ -154,9 +154,9 @@ upon specific request and/or arrangement...
    Linux users can grab one of the distribution packages to install CRUSH via
    a package manager. Packages are provided for both RPM-based distributions 
    (like Fedora, Redhat, CentOS, or SUSE), and Debian-based distributions (e.g.
-   Ubuntu). Both will install CRUSH in '/usr/share/crush'. Note, if you use one
-   of these packages you will need root privileges (e.g. via 'sudo') on the 
-   machine. Unprivileged users should install using the tarball.
+   Ubuntu, Mint). Both will install CRUSH in '/usr/share/crush'. Note, if you 
+   use one of these packages you will need root privileges (e.g. via 'sudo') on
+   the machine. Unprivileged users should install using the tarball.
 
    For all others, CRUSH is distributed as a gzipped tarball (or as a zip 
    archive). Simply unpack it in the directory, where you want the crush to 
@@ -230,10 +230,10 @@ upon specific request and/or arrangement...
    settings in arbitrary files under /etc/crush2/startup or ~/.crush2/startup. 
    (Any settings in the user's home under ~/.crush2/startup will overrride the 
    system-wide values in /etc/crush2/startup. If multiple config files exist in
-   the same location, these will be parse in non-specific order). 
+   the same location, these will be parsed in non-specific order). 
 
    E.g., placing the following lines in ~/.crush2/startup/java.conf overrides 
-   all available settings:
+   all availablei runtime configuration settings:
 
 	JAVA="/usr/java/latest/bin/java"
 	DATAMODEL="64"
@@ -275,22 +275,20 @@ upon specific request and/or arrangement...
 			near the top of the resulting help screen. 
 
 	EXTRAOPTS	Any other non-standard options you may want to pass
-			to the Java VM should go here. Typically set to "".
-			(Note, the "-Xbatch" options is set for CRUSH, by
-			default). 
+			to the Java VM should go here. 
 	
 
 
    CRUSH Configuration
    -------------------
    The preferred way of creating user-specific configurations for CRUSH is to
-   place your personalized configuration files inside a '.crush2' configuration
-   directory within your home. This way, your personalized configurations 
-   will survive future updates to CRUSH.
+   place your personalized configuration files inside a '.crush2/' 
+   configuration directory within your home. This way, your personalized 
+   configurations will survive future updates to CRUSH.
 
    You can create/edit your default configuration by editing 'default.cfg'
    (either in the installation folder or '~/.crush2', or in the appropriate
-   instrument subdirectory within it). 
+   instrument subdirectory within it. 
    As an example a user configuration for LABOCA data can be placed into 
    '~/.crush2/laboca/default.cfg', with the a content:
 	
@@ -310,7 +308,7 @@ upon specific request and/or arrangement...
    like place them where you like (practical if you have many data locations, 
    projects etc.). You can easily invoke configuration files as needed via
 
-	> crush [...] -config=<myconfig> [...]
+	> crush [...] -config=<path-to-myconfig> [...]
 
 
 
@@ -473,7 +471,7 @@ options on the console.
    CRUSH is a pipeline reduction that is principally meant to remove
    correlated signals (correlated noise) in the time-streams to arrive
    at clean & independent bolometer signals, which are then used to make
-   a source model (map).
+   a source model (usually an image).
 
    As such it is not an interactive reduction software (e.g. as opposed to 
    e.g. BoA). The term 'scripting' in CRUSH mainly means defining configuration 
@@ -1150,7 +1148,7 @@ options on the console.
     $  [11564] D(128) C245 W(8.44E-2)245 dN(0.0%)245 B245 c245 Map(8.44E-2) 
     $  [Source] {check} (smooth) (clip:4.0) (blank:10.0) (sync) 
 	
-   Are interpreted as such... In the 4th iteration, the following steps are
+   Are interpreted as such: In the 4th iteration, the following steps are
    performed on scan 11564: 
 
 	D(128)       -- 1/f filtering (on 128 frame timescale)
@@ -1351,13 +1349,13 @@ options on the console.
    above which there is no information present. Then, and only then, will 
    sampled data (at a frequency strictly larger[!] than twice the Nyquist 
    cutoff) preserve all information about the signals. Secondly, 2-pixels per 
-   beam is almost certainly too few for you.
+   beam is almost certainly too few for the case of Gaussian beams.
 
-   Here is why: Gaussian beams have no frequency cutoff -- the signal spreads 
-   across the spectrum, with information at all frequencies, even if it is 
-   increasingly tapered at the higher ones. By choosing a sampling (i.e. pixel 
-   size in your map) the information above your sampling rate will be aliased 
-   into the sampled band, corrupting your pixelized data. 
+   Here is why: Gaussian beams have no actual frequency cutoff -- the signal 
+   spreads  across the spectrum, with information present at all frequencies, 
+   even if it is increasingly tapered at the higher frequencies. By choosing a 
+   sampling (i.e. pixel size in your map) the information above your sampling 
+   rate will be aliased into the sampled band, corrupting your pixelized data. 
 
    Thus, you can choose a practical cutoff frequency (i.e. pixelization) based
    on the level of information loss and corruption you are willing to tolerate.
@@ -1367,7 +1365,7 @@ options on the console.
    Nyquist  sampled, is certainly too few by most standards of accuracy!)
 
    Thus, the CRUSH default is to use around 5-pixels per FWHM, representing a 
-   compromise between completeness (~99%) and senseless increasing of map 
+   compromise between completeness (~99%) and a senseless increase of map 
    pixels (i.e. number of model parameters).
 
 

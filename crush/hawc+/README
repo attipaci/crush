@@ -50,7 +50,7 @@ Table of Contents
    CRUSH is a reduction pipeline, designed mainly to remove correlated signals 
    (correlated noise) in the detector time-streams to arrive at clean & 
    independent bolometer signals, which are then used to derive a model of
-   the source (usually a map).
+   the source (usually an image).
 
    As such it is not an interactive reduction software (e.g. as opposed to
    e.g. BoA). The term 'scripting' in CRUSH mainly means defining configuration
@@ -156,8 +156,8 @@ Table of Contents
 	EXTRAOPTS=""
 
    Upon startup CRUSH will find and apply these settings, so it will use
-   "/usr/java/latest/bin/java" as your to run CRUSH, in 64-bit mode, with
-   4GB of RAM, using the HotSpot 'server' VM, with no extra Java options.
+   "/usr/java/latest/bin/java" to run CRUSH, in 64-bit mode, with 4GB of RAM, 
+   using the HotSpot 'server' VM, with no extra Java options.
 
    (Note, these config files are parsed as bash scripts, so you may use other
    bash commands too, such as printing earlier settings via 'echo')
@@ -384,7 +384,8 @@ For a general overview of channel divisions, please consult Section 3.
 =======================================
 
 
-   calibrated		Set this option when the reduction includes the final				calibration (opacities and other calibration
+   calibrated		Set this option when the reduction includes the final
+			calibration (opacities and other calibration
 			corrections) to produce Level 3 data. Otherwise, CRUSH
 			will produce Level 2 output.
 

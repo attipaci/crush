@@ -184,13 +184,23 @@ public class ScalarMap extends SourceMap {
 		
 		// TODO Apply mask to data either via flag.inside or flag.outside + mask file.
 		
+		if(hasSourceOption("inject")) {
+			try { injectSource(sourceOption("inject").getPath()); }
+			catch(Exception e) { 
+				System.err.println("WARNING! Cannot read injection map. Check the file name and path."); 
+				e.printStackTrace();
+			}
+		}
+		
 		if(hasSourceOption("model")) {
-			try { applyModel(sourceOption("model").getValue()); }
+			try { applyModel(sourceOption("model").getPath()); }
 			catch(Exception e) { 
 				System.err.println("WARNING! Cannot read source model. Check the file name and path."); 
 				e.printStackTrace();
 			}
 		}
+		
+		
 		
 	}
 		
@@ -222,8 +232,7 @@ public class ScalarMap extends SourceMap {
 	public synchronized void applyModel(String fileName) throws Exception {
 		System.err.println(" Applying source model:");
 			
-		
-		AstroMap model = new AstroMap(fileName, map.getInstrument());
+		AstroMap model = new AstroMap(fileName, getInstrument());
 		
 		/*
 		double renorm = map.getImageBeamArea() / model.getImageBeamArea();
@@ -234,7 +243,7 @@ public class ScalarMap extends SourceMap {
 		*/
 	
 		model.regridTo(map);
-			
+		
 		map.generation = 1;
 		map.sanitize();
 		
@@ -243,19 +252,46 @@ public class ScalarMap extends SourceMap {
 		double blankingLevel = getBlankingLevel();
 		if(!Double.isNaN(blankingLevel)) System.err.println("  --> Blanking positions above " + Util.f2.format(blankingLevel) + " sigma in source model.");
 		
-		try { 
-			System.err.print("  --> Removing model from the data. ");
-			super.sync(); 
-			System.err.println();
-		}
+		System.err.print("  --> Removing model from the data. ");
+		try { super.sync(); }
 		catch(Exception e) { e.printStackTrace(); }
-	
 		System.err.println();
 		
 		// For testing the removal of the model...
 		//for(int i=0; i<map.sizeX(); i++) Arrays.fill(base[i], 0.0);
 	}
+	
+	public synchronized void injectSource(String fileName) throws Exception {
+		System.err.println(" Injecting source structure:");
 		
+		AstroMap model = new AstroMap(fileName, getInstrument());
+		
+		/*
+		double renorm = map.getImageBeamArea() / model.getImageBeamArea();
+		if(renorm != 1.0) {
+			System.err.println("  --> Rescaling model to instrument resolution: " + Util.s3.format(renorm) + "x");
+			model.scale(renorm);
+		}
+		*/
+	
+		model.regridTo(map);
+		
+		double scaling = hasOption("source.inject.scale") ? option("source.inject.scale").getDouble() : 1.0;
+		
+		map.sanitize();
+		map.scale(-scaling);
+		
+		isReady = true;
+			
+		System.err.print("  --> Injecting source map into timestream data. ");
+		try { super.sync(); }
+		catch(Exception e) { e.printStackTrace(); }
+		System.err.println();
+		
+		map.reset(true);
+		base.clear();
+	}
+	
 	public void index() throws Exception {
 		System.err.print(" Indexing maps. ");
 	
