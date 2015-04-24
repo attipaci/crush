@@ -38,10 +38,11 @@ import crush.InstantFocus;
 import crush.Mount;
 import crush.Scan;
 import crush.array.Array;
+import crush.array.Rotating;
 import crush.array.SingleColorPixel;
 import crush.array.SingleColorLayout;
 
-public abstract class CSOArray<PixelType extends SingleColorPixel> extends Array<PixelType, PixelType> implements GroundBased {
+public abstract class CSOArray<PixelType extends SingleColorPixel> extends Array<PixelType, PixelType> implements GroundBased, Rotating {
 	/**
 	 * 
 	 */
@@ -103,7 +104,7 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Array
 	
 			if(Math.abs(rotatorAngle - rotatorZeroAngle) > 5.0 * Unit.deg) {
 				System.err.println(" *****************************************************************************");
-				System.err.println(" WARNING! MAKO is in non-standard orientation. Will assume that pointing");
+				System.err.println(" WARNING! " + getName().toUpperCase() + " is in non-standard orientation. Will assume that pointing");
 				if(hasOption("rcenter")) {
 					System.err.println("          was performed in the horizontal orientation. To override this and to");
 					System.err.println("          assume pointing in this rotation, use '-forget=rcenter'.");
@@ -120,7 +121,7 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Array
 
 	
 	@Override
-	public double getRotationAngle() {
+	public double getRotation() {
 		return (mount == Mount.CASSEGRAIN ? rotatorAngle : 0.0) - rotatorZeroAngle;
 	}
 

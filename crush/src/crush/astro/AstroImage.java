@@ -23,6 +23,7 @@
 
 package crush.astro;
 
+
 import kovacs.astro.*;
 import kovacs.data.GridImage;
 import kovacs.data.SphericalGrid;
@@ -54,6 +55,11 @@ public class AstroImage extends GridImage<SphericalCoordinates> implements Clone
 	public AstroImage(double[][] data, int[][] flag) {
 		super(data, flag);
 		setGrid(new SphericalGrid());
+	}
+	
+	public AstroImage(String fileName) throws Exception {
+		super();
+		read(fileName);
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -2767,6 +2767,24 @@
 			decoupled from the sky-noise gains).
 			@See: 'source.coupling', 'beammap'
 
+:: source.inject=<path>		@Advanced
+				@Since: 2.23
+			Inject a source map into the timestreams. This may be
+			useful for understanding the filtering properties. As
+			such, the option would be used most commonly together
+			with one of the 'jackknife' options, so any real
+			emission cancels in the output map so that mainly only
+			the injected source is seen.
+			@See: 'source.inject.scale', 'jackknife', 
+			      'jackknife.alternate', 'jackknife.frames',
+			      'jackknife.channels'
+
+:: source.inject.scale=X	@Advanced
+				@Since: 2.23
+			Scale the map by a factor X before injection into the
+			timestream via the 'source.inject' option.
+			@See: 'source.inject'
+
 :: source.intermediates @Expert
 			Write the maps made during the reduction into 
 			'intermediate.fits' (inside the crush directory). 

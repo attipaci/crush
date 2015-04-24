@@ -11,16 +11,19 @@ import kovacs.fft.MultiFFT;
 import kovacs.math.Complex;
 import kovacs.math.Coordinate2D;
 import kovacs.math.Vector2D;
+import kovacs.util.Constant;
 import kovacs.util.ExtraMath;
 
 public class FFTView {	
 	GridImage<Coordinate2D> amplitudeImage;
 	GridImage<Coordinate2D> phaseImage;
-	
+		
+	double[][] w;
+	double wnorm = 0.0;
 	
 	public static void main(String[] args) {
 		try {
-			GridImage<?> image = new GridImage<Coordinate2D>(args[0]);
+			GridMap<?> image = new GridMap<Coordinate2D>(args[0]);
 			double beamCorrection = Double.NaN;
 			double norm = 1.0;
 			
@@ -32,13 +35,13 @@ public class FFTView {
 				norm = Double.parseDouble(args[2]);
 			}
 					
-			FFTView transfer = FFTView.fromImage(image, beamCorrection, norm);	
+			FFTView transfer = FFTView.fromImage(image, image.getWeight(), beamCorrection, norm);	
 			transfer.write("fft");
 			
 			if(args.length > 3) {
 				GridMap<Coordinate2D> map;
 				map = new GridMap<Coordinate2D>(args[3]);
-				FFTView spectrum = FFTView.fromImage(map.getFluxImage(), Double.NaN, Double.NaN);
+				FFTView spectrum = FFTView.fromImage(map.getFluxImage(), map.getWeight(), Double.NaN, Double.NaN);
 				spectrum.deconvolve(transfer);
 				map.setData(spectrum.backTransform(map.sizeX(), map.sizeY()));			
 				map.write("deconvolved.fits");	
@@ -57,75 +60,107 @@ public class FFTView {
 	}
 	
 	
-	public static FFTView fromImage(GridImage<?> image, double beamCorrection, double renorm) {
+	public static FFTView fromImage(GridImage<?> image, double[][] w, double beamCorrection, double renorm) {
 		final int nx = ExtraMath.pow2ceil(image.sizeX());
 		final int ny = ExtraMath.pow2ceil(image.sizeY());
 		
+		Complex[][] point = new Complex[nx][ny];
+		
 		// Load the image into a padded complex array
 		Complex[][] data = new Complex[nx][ny];
-		
-		for(int i=nx; --i >= 0; ) for(int j=ny; --j >= 0; ) data[i][j] = new Complex();
-
-		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.isUnflagged(i, j))
-			data[i][j].setX(image.getValue(i, j));
-
-		System.err.println(" Mean level.");
-		double sum = 0.0;
-		int n = 0;
-		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.isUnflagged(i, j)) {
-			sum += data[i][j].x();
-			n++;
+		for(int i=nx; --i >= 0; ) for(int j=ny; --j >= 0; ) {
+			data[i][j] = new Complex();
+			point[i][j] = new Complex();
 		}
-		double mean = sum / n;
-		for(int i=nx; --i >= 0; ) for(int j=ny; --j >= 0; ) data[i][j].subtractX(mean);
-	
+
+		double sigma = image.getImageBeam().getCircularEquivalentFWHM() / Constant.sigmasInFWHM;
+		double sigmax = sigma / image.getResolution().x(); 
+		double sigmay = sigma / image.getResolution().y(); 
+
 		
-		final int midx = image.sizeX() >> 1;
-		final int midy = image.sizeY() >> 1;
-	
-	
+		int midx = image.sizeX() >> 1;
+		int midy = image.sizeY() >> 1;
+		
+		double midw = w[midx][midy];
+		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.isUnflagged(i, j)) {
+			data[i][j].setX(image.getValue(i, j));	
+		}
+
+		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.isUnflagged(i, j)) {
+			double devx = (i - midx) / sigmax;
+			double devy = (j - midy) / sigmay;
+			point[i][j].setX(Math.exp(-0.5 * (devx * devx + devy * devy)));			
+		}
+		
+		
+		System.err.println(" Mean level.");
+		double sum = 0.0, sumw = 0.0;
+		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.isUnflagged(i, j)) {
+			sum += w[i][j] * data[i][j].x();
+			sumw += w[i][j];
+		}
+		final double mean = sum / sumw;
+		
+		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) 
+			data[i][j].subtractX(mean);
+			
+
+		
+		
 		System.err.println(" Remove gradient");
+		
 		double sumX = 0.0, sumY = 0.0;
 		double sumXG2 = 0.0, sumYG2 = 0.0;
+		
 		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.isUnflagged(i, j)) {
-			sumX += (i - midx) * data[i][j].x();
-			sumXG2 += (i - midx) * (i - midx);
+			sumX += w[i][j] * (i - midx) * data[i][j].x();
+			sumXG2 += w[i][j] * (i - midx) * (i - midx);
 			
-			sumY += (j - midy) * data[i][j].x();
-			sumYG2 += (j - midy) * (j - midy);
-			n++;
+			sumY += w[i][j] * (j - midy) * data[i][j].x();
+			sumYG2 += w[i][j] * (j - midy) * (j - midy);
 		}
 		double gx = sumX / sumXG2;
 		double gy = sumY / sumYG2;
 		
-		for(int i=nx; --i >= 0; ) for(int j=ny; --j >= 0; ){
+		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; )
 			data[i][j].subtractX(gx * (i - midx) + gy * (j - midy));
+	
+		
+		
+		
+		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.isUnflagged(i, j)) {
+			double iN = Math.sqrt(w[i][j] / midw);
+			data[i][j].scaleX(iN);
+			point[i][j].scaleX(iN);
 		}
 		
-	
+		
+		
+		
 		final int nx2 = nx >> 1;
 		final int ny2 = ny >> 1;
-		
-
 		
 		// Perform the FFT
 		MultiFFT fft = new MultiFFT();
 		
 		System.err.println(" FFT");
 		fft.complexForward(data);
+		fft.complexForward(point);
+		data[0][0].zero();
 		
 		FFTView view = new FFTView();
 
-		final double beamPixels = image.getSmoothArea() / image.getPixelArea();
-		final double norm = Double.isNaN(renorm) ? 1.0 : 0.25 / renorm / beamPixels;
+		//final double beamPixels = image.getSmoothArea() / image.getPixelArea();
+		//final double norm = Double.isNaN(renorm) ? 1.0 : 0.25 / renorm / beamPixels;
 		
 		double[][] A = new double[nx][ny];
 		double[][] phi = new double[nx][ny];
+		double[][] psf = new double[nx][ny];
 		
 		// Renormalize and unpack into a view with the zero frequency at the center.
 		System.err.println(" Renormalize");
 		for(int i=nx; --i >= 0; ) for(int j=ny; --j >= 0; ) {
-			data[i][j].scale(norm);
+			//data[i][j].scale(norm);
 			
 			int i1 = i - nx2;
 			if(i1 < 0) i1 += nx;
@@ -134,8 +169,11 @@ public class FFTView {
 			if(j1 < 0) j1 += ny;
 			
 			A[i1][j1] = data[i][j].abs();
+			psf[i1][j1] = point[i][j].abs();
 			phi[i1][j1] = data[i][j].angle();
+			if(Double.isNaN(phi[i1][j1])) phi[i1][j1] = 0.0;
 		}
+	
 		
 		// Create the FFT grid.
 		CartesianGrid2D grid = new CartesianGrid2D();
@@ -146,21 +184,25 @@ public class FFTView {
 		grid.setResolution(Math.PI / 180.0 / (nx * delta.x()), Math.PI / 180.0 / (ny * delta.y()));
 	
 		if(!Double.isNaN(beamCorrection)) {
-			double sigma = beamCorrection * image.getSmoothing().getCircularEquivalentFWHM() / 2.35;
+			//double sigmaw = 1.0 / (beamCorrection * image.getImageBeam().getCircularEquivalentFWHM() / Constant.sigmasInFWHM);
 
-			double dfx = 2.0 / (nx * image.getResolution().x());		
-			double sigmafx = 1.0 / sigma / (2.0 * Math.PI) / dfx;
+			//double dfx = 1.0 / (nx * image.getResolution().x());		
+			//double sigmafx = sigmaw / (Constant.twoPi * dfx);
 
-			double dfy = 2.0 / (ny * image.getResolution().y());	
-			double sigmafy = 1.0 / sigma / (2.0 * Math.PI) / dfy;
+			//double dfy = 1.0 / (ny * image.getResolution().y());	
+			//double sigmafy = sigmaw / (Constant.twoPi * dfy);
 
 			for(int i=nx; --i >= 0; ) for(int j=ny; --j >= 0; ) {		
-				double w = Math.hypot((i - nx2) / sigmafx, (j - ny2) / sigmafy);
-				double T = Math.exp(-0.5 * w * w); 
+				//double devx = (i - nx2) / sigmafx;
+				//double devy = (j - ny2) / sigmafy;
+				//double T = Math.exp(-0.5 * (devx * devx + devy * devy)); 
 
 				//A[i][j] = T;
 				
-				if(T > 0.001) A[i][j] /= T;
+				double T = renorm * psf[i][j];
+				if(psf[i][j] > 1.0) A[i][j] /= T;
+				
+				//if(T > 0.01) A[i][j] /= T;
 				else A[i][j] = Double.NaN;
 			}
 		}
@@ -176,6 +218,9 @@ public class FFTView {
 		view.phaseImage.createDefaultFlag();
 		view.phaseImage.setGrid(grid);
 		
+		view.wnorm = midw;
+		view.w = w;
+		
 		return view;
 	}
 	
@@ -186,8 +231,8 @@ public class FFTView {
 			
 		Vector2D index = new Vector2D();
 		Vector2D offset = new Vector2D();
-		
-		for(int i=nx; --i >=0; ) for(int j=ny; --j >=0; ) {
+			
+		for(int i=nx; --i >= 0; ) for(int j=ny; --j >= 0; ) {
 			index.set(i, j);
 			amplitudeImage.indexToOffset(index, offset);
 			transfer.amplitudeImage.offsetToIndex(offset, index);
@@ -196,6 +241,7 @@ public class FFTView {
 			index.set((int) Math.round(index.x()), (int) Math.round(index.y()));
 			
 			double tA = transfer.amplitudeImage.valueAtIndex(index);
+			
 			if(Double.isNaN(tA)) continue;
 			if(tA < 0.01) continue;
 			
@@ -236,7 +282,7 @@ public class FFTView {
 		
 		double[][] image = new double[sizeX][sizeY];
 		for(int i=Math.min(nx, sizeX); --i >= 0; ) for(int j=Math.min(ny, sizeY); --j >= 0; ) 
-			image[i][j] = spec[i][j].x();
+			image[i][j] = spec[i][j].x() * Math.sqrt(wnorm / w[i][j]);
 		
 		return image;
 	}

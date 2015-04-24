@@ -104,19 +104,29 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	
 	@Override
 	public void loadChannelData() {	
+		// Rotation is applied to calculated / default positions only.
+		// RCP rotation is handled separately via 'rcp.rotate' option...
+		rotation = 0.0;
+		if(hasOption("rotation")) rotate(option("rotation").getDouble() * Unit.deg);
+		
 		if(hasOption("rcp")) {
 			try { readRCP(option("rcp").getPath()); }
 			catch(IOException e) { System.err.println("WARNING! Cannot update pixel RCP data. Using values from FITS."); }
 		}
 		
+		// Instruments with a rotator should apply explicit rotation after pixel positions are finalized...
+		if(this instanceof Rotating) {
+			double angle = ((Rotating) this).getRotation();
+			if(angle != 0.0) rotate(angle);
+		}
+		
 		super.loadChannelData();
 		
-		rotation = 0.0;
-		rotateTo(getRotationAngle());
+		
 	}
 		
 	public double getRotationAngle() {
-		if(hasOption("rotation")) return option("rotation").getDouble() * Unit.deg;
+		
 		return Double.NaN;
 	}
 	
@@ -252,15 +262,15 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	
 	// For Cassegrain assume pointing at zero rotation (a0 = 0.0)
 	// For Nasmyth assume pointing at same elevation (a = a0)
-
-	protected void rotateTo(double angle) {
+	
+	public void rotate(double angle) {
 		if(Double.isNaN(angle)) return;
 		
-		System.err.println(" Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
+		System.err.println(" Applying otation at " + Util.f1.format(angle / Unit.deg) + " deg.");
 		
 		// Undo the prior rotation...
 		Vector2D priorOffset = getPointingOffset(rotation);
-		Vector2D newOffset = getPointingOffset(angle);
+		Vector2D newOffset = getPointingOffset(rotation + angle);
 		
 		for(Pixel pixel : getPixels()) if(pixel.getPosition() != null) {
 			Vector2D position = pixel.getPosition();
@@ -268,13 +278,14 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 			// Center positions on the rotation center...
 			position.subtract(priorOffset);
 			// Do the rotation...
-			position.rotate(angle - rotation);
+			position.rotate(angle);
 			// Re-center on the pointing center...
 			position.add(newOffset);
 		}
 		
-		rotation = angle;
+		rotation += angle;
 	}
+	
 	
 	public static void addLocalFixedIndices(GeometricRowColIndexed geometric, int fixedIndex, double radius, Collection<Integer> toIndex) {
 		
