@@ -32,7 +32,6 @@ import kovacs.util.*;
 
 public abstract class SourceModel implements Cloneable, TableFormatter.Entries, CopiableContent<SourceModel> {
 	private Instrument<?> instrument;
-	private Configurator options; 
 
 	public Vector<Scan<?,?>> scans;
 	public int generation = 0;
@@ -52,12 +51,8 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 
 	public Instrument<?> getInstrument() { return instrument; }
 
-	public void setOptions(Configurator options) {
-		this.options = options;
-	}
-
 	public Configurator getOptions() {
-		return options;
+		return instrument.getOptions();
 	}
 	
 	
@@ -70,11 +65,11 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	
 
 	public boolean hasOption(String name) {
-		return options.isConfigured(name);
+		return getOptions().isConfigured(name);
 	}
 
 	public Configurator option(String name) {
-		return options.get(name);
+		return getOptions().get(name);
 	}
 	
 	public boolean hasSourceOption(String name) { return hasOption("source." + name); }
@@ -191,6 +186,8 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 		System.err.println("          otherwise, you may try:");
 		System.err.println();
 		
+		
+		Configurator options = getOptions();
 		if(options.isConfigured("deep")) System.err.println("            * Reduce with 'faint' instead of 'deep'.");
 		else if(options.isConfigured("faint")) System.err.println("            * Reduce with default settings instead of 'faint'.");
 		else if(!options.isConfigured("bright")) System.err.println("            * Reduce with 'bright'.");

@@ -140,11 +140,6 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 			
 		if(scans.size() == 1) if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
 		
-		// Any options dynamically set for the first scan will be made global also...
-		String[] dynamicOptions = { "instrument.config", "instrument.mode", "filter", "filter2", "slit" };
-		for(String key : dynamicOptions)
-		if(firstScan.hasOption(key)) getOptions().parse(key + " " + firstScan.option(key));
-		
 		super.validate(scans);
 	}
 	

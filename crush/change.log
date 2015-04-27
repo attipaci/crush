@@ -1,4 +1,4 @@
-
+>>> band-A.cfg -> grid not applied to source map...
 
 2.23-b2 (24 April 2015)
 
@@ -80,6 +80,10 @@
 
 	[COSMETIC] {CSO} Cassegrain platform rotator processing mentioned 
 	'MAKO' in messages. Fixed.
+
+	[CODE] SourceModel does not have standalone options but uses those of
+	its instrument, removing a source of ambiguity that could result in
+	unpredictable behavior.
 
 	[CODE] {SHARC-2} {GISMO} {p-ArTEMIS} {SCUBA-2} Arrays with row/col 
 	pixel indexing are handled more efficiently, and with more shared 
