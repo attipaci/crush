@@ -159,20 +159,20 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		aircraft.editHeader(cursor);
 		telescope.editHeader(cursor);
 		
-		cursor.add(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));
-		cursor.add(new HeaderCard("NODDING", isNodding, "Was nodding used?"));
-		cursor.add(new HeaderCard("DITHER", isDithering, "Was dithering used?"));
-		cursor.add(new HeaderCard("MAPPING", isMapping, "Was mapping?"));
+		cursor.add(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));	
+		cursor.add(new HeaderCard("NODDING", isNodding, "Was nodding used?"));	
+		cursor.add(new HeaderCard("DITHER", isDithering, "Was dithering used?"));	
+		cursor.add(new HeaderCard("MAPPING", isMapping, "Was mapping?"));	
 		cursor.add(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
-
-		instrument.editHeader(cursor);
 		
 		if(chopper != null) chopper.editHeader(cursor);
 		if(nodding != null) nodding.editHeader(cursor);
 		if(dither != null) dither.editHeader(cursor);
 		if(mapping != null) mapping.editHeader(cursor);
 		if(scanning != null) scanning.editHeader(cursor);
-			
+		
+		instrument.editHeader(cursor);
+					
 		//cursor.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
 		//cursor.add(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
 		//cursor.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getReleaseVersion(), "Software that produced this file."));
@@ -189,7 +189,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		Header h = new Header();
 		editScanHeader(h);
 		
-	
+		
 		// Copy the required keys
 		for(String key : requiredKeys) {
 			cursor.setKey(key);
@@ -197,12 +197,11 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 			HeaderCard fromCard = h.findCard(key);
 			if(fromCard == null) continue;
 				
-			HeaderCard toCard = (HeaderCard) cursor.prev();	
-			
+			HeaderCard toCard = cursor.hasNext() ? (HeaderCard) cursor.next() : null;	
 			if(toCard != null) toCard.setValue(fromCard.getValue());
 			else cursor.add(fromCard);
-			
 		}
+		
 		
 		// Copy the subarray specs (if defined)
 		if(instrument.array.subarrays > 0) {
@@ -218,12 +217,13 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		// Add the observing mode keywords at the end...
 		while(cursor.hasNext()) cursor.next();
 		
+		// Add the observing mode keywords at the end...
 		if(chopper != null) chopper.editHeader(cursor);
 		if(nodding != null) nodding.editHeader(cursor);
 		if(dither != null) dither.editHeader(cursor);
 		if(mapping != null) mapping.editHeader(cursor);
 		if(scanning != null) scanning.editHeader(cursor);
-		
+	
 		
 		cursor.setKey("HISTORY");
 		for(int i=0; i<history.size(); i++) cursor.add(new HeaderCard("HISTORY", history.get(i), false));
@@ -260,9 +260,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 
 	
 	@Override
-	public void validate() {
-		if(hasOption("extended.auto")) if(observation.sourceType.equalsIgnoreCase("EXTENDED_SOURCE")) instrument.getOptions().parse("extended");
-		
+	public void validate() {	
 		super.validate();	
 		
 		double PA = 0.5 * (getFirstIntegration().getFirstFrame().getParallacticAngle() + getLastIntegration().getLastFrame().getParallacticAngle());

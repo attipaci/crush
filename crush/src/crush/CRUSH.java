@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.23-b1
+ * @version 2.23-b3
  * 
  */
 public class CRUSH extends Configurator {
@@ -45,7 +45,7 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.23-b2";
+	private static String version = "2.23-b3";
 	private static String revision = "beta";
 	public static String workPath = ".";
 	public static String home = ".";
@@ -208,7 +208,10 @@ public class CRUSH extends Configurator {
 			System.err.println("No scans to reduce. Exiting.");
 			System.exit(1);
 		}
-					
+		
+		// Make the global options derive from those of the first scan...
+		instrument = (Instrument<?>) scans.get(0).instrument.copy();
+			
 		try { instrument.validate(scans); }
 		catch(Error e) {
 			System.err.println("ERROR! " + e.getMessage());
@@ -366,17 +369,14 @@ public class CRUSH extends Configurator {
 	
 		System.out.println();
 		
-
+		// TODO Using the global options (intersect of scan options) instead of the first scan's
+		// for the source does not work properly (clipping...)
 		source = scans.get(0).instrument.getSourceModelInstance();
-		
+			
 		if(source != null) {
 			source.commandLine = commandLine;
-			source.setOptions(this);
 			source.createFrom(scans);
-			instrument = source.getInstrument();
 		}
-		else instrument = scans.get(0).instrument;
-		
 	
 		System.err.println();
 		

@@ -66,7 +66,6 @@ public class BeamMap extends SourceMap {
 		super.createFrom(collection);
 		
 		template = new ScalarMap(getInstrument());
-		template.setOptions(getOptions());
 		template.createFrom(collection);
 		
 		pixelMap = new ScalarMap[getArray().maxPixels() + 1];

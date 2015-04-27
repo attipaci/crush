@@ -383,6 +383,15 @@ For a general overview of channel divisions, please consult Section 3.
 4.2. Glossary of HAWC+ specific options
 =======================================
 
+   band=X		Set the observing band to A, B, C, D, or E. Normally,
+			the band setting is automatic through the SPECTEL1
+			fits keyword. However, setting the band manually may
+			be useful for polling band specific settings. E.g.
+
+			  > crush hawc+ -band=A -poll=beam
+
+			The above line will report the Gaussian FWHM beam size
+			(in arcsec) used when reducing band A (53um) data.
 
    calibrated		Set this option when the reduction includes the final
 			calibration (opacities and other calibration
@@ -394,12 +403,6 @@ For a general overview of channel divisions, please consult Section 3.
                         Decorrelate geometric detector columns. All
      			correlated modality suboptions apply.
                         @See: 'correlated.<?>', 'rows'
-
-   extended.auto	Set the 'extended' option (for reducing extended 
-			sources) automatically based on the SOFIA header
-			(specifically if it has 'SRCTYPE' equal to
-			'EXTENDED_SOURCE').
-			@See: 'extended'			 
 
    filter=<wavelength>	@Expert
 			Sets the filter band to one of:
