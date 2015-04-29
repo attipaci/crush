@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.23-b3
+ * @version 2.23-1
  * 
  */
 public class CRUSH extends Configurator {
@@ -45,8 +45,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.23-b3";
-	private static String revision = "beta";
+	private static String version = "2.23-1";
+	private static String revision = "devel.1";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -95,8 +95,6 @@ public class CRUSH extends Configurator {
 	}
 
 	public CRUSH(String instrumentName) {
-		
-	
 		instrument = Instrument.forName(instrumentName.toLowerCase());
 		instrument.setOptions(this);
 		
@@ -120,16 +118,9 @@ public class CRUSH extends Configurator {
 		
 		for(int i=1; i<args.length; i++) if(args[i].length() > 0) {
 			commandLine += " " + args[i]; 
-			
-			if(args[i].charAt(0) == '-') {
-				String option = args[i].substring(1);
-				parse(option);
-				
-			}
-			else {
-				instrument.setOptions(this);
-				read(args[i]);
-			}
+		
+			if(args[i].charAt(0) == '-') parse(args[i].substring(1));
+			else read(args[i]);
 		}	
 		
 		validate();
@@ -192,7 +183,6 @@ public class CRUSH extends Configurator {
 		}
 		
 		configDepth--;
-		
 	}
 	
 	@Override
@@ -225,9 +215,7 @@ public class CRUSH extends Configurator {
 		// Keep only the non-specific global options here...
 		for(Scan<?,?> scan : scans) instrument.getOptions().intersect(scan.instrument.getOptions()); 		
 		for(int i=scans.size(); --i >=0; ) if(scans.get(i).isEmpty()) scans.remove(i);
-		
-		//Collections.sort(scans);
-		
+			
 		update();
 		
 		int threads = Math.min(scans.size(), maxThreads);

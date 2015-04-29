@@ -28,14 +28,14 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaChopperData extends SofiaHeaderData {
-	public float frequency = Float.NaN;
+	public double frequency = Double.NaN;
 	public String profileType;
 	public String symmetryType;
-	public float amplitude = Float.NaN, amplitude2 = Float.NaN;
+	public double amplitude = Double.NaN, amplitude2 = Double.NaN;
 	public String coordinateSystem;
-	public float angle = Float.NaN;
-	public float tip = Float.NaN;
-	public float tilt = Float.NaN;
+	public double angle = Double.NaN;
+	public double tip = Double.NaN;
+	public double tilt = Double.NaN;
 	public int phaseMillis = UNKNOWN_INT_VALUE;
 	
 	public SofiaChopperData() {}
@@ -48,26 +48,26 @@ public class SofiaChopperData extends SofiaHeaderData {
 	
 	@Override
 	public void parseHeader(Header header) {
-		frequency = header.getFloatValue("CHPFREQ", Float.NaN) * (float) Unit.Hz;
+		frequency = header.getDoubleValue("CHPFREQ", Double.NaN) * Unit.Hz;
 		profileType = getStringValue(header, "CHPPROF");
 		symmetryType = getStringValue(header, "CHPSYM");
-		amplitude = header.getFloatValue("CHPAMP1", Float.NaN) * (float) Unit.arcsec;
-		amplitude2 = header.getFloatValue("CHPAMP2", Float.NaN) * (float) Unit.arcsec;
+		amplitude = header.getDoubleValue("CHPAMP1", Double.NaN) * Unit.arcsec;
+		amplitude2 = header.getDoubleValue("CHPAMP2", Double.NaN) * Unit.arcsec;
 		coordinateSystem = getStringValue(header, "CHPCRSYS");
-		angle = header.getFloatValue("CHPANGLE", Float.NaN) * (float) Unit.deg;
-		tip = header.getFloatValue("CHPTIP", Float.NaN) * (float) Unit.arcsec;
-		tilt = header.getFloatValue("CHPTILT", Float.NaN) * (float) Unit.arcsec;
+		angle = header.getDoubleValue("CHPANGLE", Double.NaN) * Unit.deg;
+		tip = header.getDoubleValue("CHPTIP", Double.NaN) * Unit.arcsec;
+		tilt = header.getDoubleValue("CHPTILT", Double.NaN) * Unit.arcsec;
 		phaseMillis = header.getIntValue("CHPPHASE", UNKNOWN_INT_VALUE);
 	}
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
-		if(!Float.isNaN(frequency)) cursor.add(new HeaderCard("CHPFREQ", frequency / Unit.Hz, "(Hz) Chop frequency."));
-		if(!Float.isNaN(amplitude)) cursor.add(new HeaderCard("CHPAMP1", amplitude / Unit.arcsec, "(arcsec) Chop amplitude on sky."));
-		if(!Float.isNaN(amplitude2)) cursor.add(new HeaderCard("CHPAMP2", amplitude2 / Unit.arcsec, "(arcsec) Second chop amplitude on sky."));
-		if(!Float.isNaN(angle)) cursor.add(new HeaderCard("CHPANGLE", angle / Unit.deg, "(deg) Chop angle on sky."));
-		if(!Float.isNaN(tip)) cursor.add(new HeaderCard("CHPTIP", tip / Unit.arcsec, "(arcsec) Chopper tip on sky."));
-		if(!Float.isNaN(tilt)) cursor.add(new HeaderCard("CHPTILT", tilt / Unit.arcsec, "(arcsec) Chop tilt on sky."));
+		if(!Double.isNaN(frequency)) cursor.add(new HeaderCard("CHPFREQ", frequency / Unit.Hz, "(Hz) Chop frequency."));
+		if(!Double.isNaN(amplitude)) cursor.add(new HeaderCard("CHPAMP1", amplitude / Unit.arcsec, "(arcsec) Chop amplitude on sky."));
+		if(!Double.isNaN(amplitude2)) cursor.add(new HeaderCard("CHPAMP2", amplitude2 / Unit.arcsec, "(arcsec) Second chop amplitude on sky."));
+		if(!Double.isNaN(angle)) cursor.add(new HeaderCard("CHPANGLE", angle / Unit.deg, "(deg) Chop angle on sky."));
+		if(!Double.isNaN(tip)) cursor.add(new HeaderCard("CHPTIP", tip / Unit.arcsec, "(arcsec) Chopper tip on sky."));
+		if(!Double.isNaN(tilt)) cursor.add(new HeaderCard("CHPTILT", tilt / Unit.arcsec, "(arcsec) Chop tilt on sky."));
 		if(profileType != null) cursor.add(new HeaderCard("CHPPROF", profileType, "Chop profile from MCCS."));
 		if(symmetryType != null) cursor.add(new HeaderCard("CHPSYM", symmetryType, "Chop symmetry mode."));
 		if(coordinateSystem != null) cursor.add(new HeaderCard("CHPCRSYS", coordinateSystem, "Chop coordinate system."));

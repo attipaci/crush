@@ -1,6 +1,5 @@
->>> band-A.cfg -> grid not applied to source map...
 
-2.23-b2 (24 April 2015)
+2.23-b3 (27 April 2015)
 
 
 	Overview
@@ -15,9 +14,10 @@
 	======================================================================
 
 
-	[BUG] {2.23-b1} [GISMO] Ooops! Array rotation SNAFU: 'rotation' was
-	applied to RCP, not just to calculated pixel positions as was to be.
-	(RCP rotation is handled via separate 'rcp.rotate' option).
+	[BUG] {2.23-b1} {GISMO} Ooops! Array rotation SNAFU: 'rotation' was
+	applied to pixel positions loaded from an RCP file, not just to 
+	calculated pixel positions as was to be. (RCP rotation is handled via 
+	separate 'rcp.rotate' option).
 
 	[NEW] Initial support for HAWC+.
 
@@ -80,6 +80,10 @@
 
 	[COSMETIC] {CSO} Cassegrain platform rotator processing mentioned 
 	'MAKO' in messages. Fixed.
+
+	[CODE] {post-b3} {SOFIA} Eliminated double->float->double precision
+	loss when processing header values. All values are now kept at
+	double precision throughout.
 
 	[CODE] SourceModel does not have standalone options but uses those of
 	its instrument, removing a source of ambiguity that could result in

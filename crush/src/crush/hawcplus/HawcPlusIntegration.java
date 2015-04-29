@@ -212,8 +212,10 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(scan.equatorial);
 					frame.equatorialNativeToHorizontal(frame.horizontalOffset);
 					
+			
 					// Add the chopper offset to the telescope coordinates.
 					// TODO check!
+					/*
 					if(hawcPlusScan.isChopping) {
 						frame.horizontalOffset.add(frame.chopperPosition);
 						frame.horizontal.addOffset(frame.chopperPosition);
@@ -222,6 +224,9 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 						frame.horizontalToNativeEquatorial(offset);
 						frame.equatorial.addNativeOffset(offset);
 					}
+					*/
+						
+				
 						
 					set(i, frame);
 				}

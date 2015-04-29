@@ -185,16 +185,28 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		
 	}
 
+	
+	public ArrayList<String> getPreservedKeys() {
+		ArrayList<String> keys = new ArrayList<String>(requiredKeys.length);
+		for(String key : requiredKeys) keys.add(key.toUpperCase());
+		
+		// Add any keys
+		if(hasOption("fits.addkeys")) for(String key : option("fits.addkeys").getList()) {
+			key = key.toUpperCase();
+			if(!keys.contains(key)) keys.add(key);			
+		}
+		return keys;
+	}
+	
 	public void addRequiredKeys(Cursor cursor) throws HeaderCardException {
 		Header h = new Header();
 		editScanHeader(h);
 		
-		
-		// Copy the required keys
-		for(String key : requiredKeys) {
-			cursor.setKey(key);
-			
+		for(String key : getPreservedKeys()) {
 			HeaderCard fromCard = h.findCard(key);
+			
+			cursor.setKey(key);
+		
 			if(fromCard == null) continue;
 				
 			HeaderCard toCard = cursor.hasNext() ? (HeaderCard) cursor.next() : null;	
@@ -204,14 +216,12 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		
 		
 		// Copy the subarray specs (if defined)
-		if(instrument.array.subarrays > 0) {
-			for(int i=0; i<instrument.array.subarrays; i++) {
-				String key = "SUBARR" + Util.d2.format(i);
-				cursor.setKey(key);
-				HeaderCard card = (HeaderCard) cursor.next();
-				if(card != null) card.setValue(h.findCard(key).getValue());
-				else cursor.add(card);
-			}
+		if(instrument.array.subarrays > 0) for(int i=0; i<instrument.array.subarrays; i++) {
+			String key = "SUBARR" + Util.d2.format(i);
+			cursor.setKey(key);
+			HeaderCard card = cursor.hasNext() ? (HeaderCard) cursor.next() : null;
+			if(card != null) card.setValue(h.findCard(key).getValue());
+			else cursor.add(card);
 		}
 		
 		// Add the observing mode keywords at the end...
@@ -397,10 +407,12 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	
 	public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
+	
 	public final static String[] requiredKeys = { 
 			"DATASRC", "OBS_ID", "IMAGEID", "AOT_ID", "AOR_ID", "PLANID", "MISSN-ID", "DATE-OBS", 
 			"TRACMODE", "TRACERR", "CHOPPING", "NODDING", "DITHER", "MAPPING", "SCANNING",
 			"INSTRUME", "SPECTEL1", "SPECTEL2", "SLIT", "WAVECENT", "RESOLUN",
 			"DETECTOR", "DETSIZE", "PIXSCAL", "SUBARRNO", "SIBS_X", "SIBS_Y"
 	};
+	
 }

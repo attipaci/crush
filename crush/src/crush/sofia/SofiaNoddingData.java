@@ -30,12 +30,12 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaNoddingData extends SofiaHeaderData {
-	public float dwellTime = Float.NaN;
+	public double dwellTime = Double.NaN;
 	public int cycles = 0;
-	public float settlingTime = Float.NaN;
-	public float amplitude = Float.NaN;
+	public double settlingTime = Double.NaN;
+	public double amplitude = Double.NaN;
 	public String beamPosition, pattern, style, coordinateSystem;
-	public float angle = Float.NaN;
+	public double angle = Double.NaN;
 	
 	public SofiaNoddingData() {}
 	
@@ -47,24 +47,24 @@ public class SofiaNoddingData extends SofiaHeaderData {
 	
 	@Override
 	public void parseHeader(Header header) {
-		dwellTime = header.getFloatValue("NODTIME", Float.NaN) * (float) Unit.s;
+		dwellTime = header.getDoubleValue("NODTIME", Double.NaN) * Unit.s;
 		cycles = header.getIntValue("NODN", UNKNOWN_INT_VALUE);
-		settlingTime = header.getFloatValue("NODSETL", Float.NaN) * (float) Unit.s;
-		amplitude = header.getFloatValue("NODAMP", Float.NaN) * (float) Unit.arcsec;
+		settlingTime = header.getDoubleValue("NODSETL", Double.NaN) * Unit.s;
+		amplitude = header.getDoubleValue("NODAMP", Double.NaN) * Unit.arcsec;
 		beamPosition = getStringValue(header, "NODBEAM");
 		pattern = getStringValue(header, "NODPATT");
 		style = getStringValue(header, "NODSTYLE");
 		coordinateSystem = getStringValue(header, "NODCRSYS");
-		angle = header.getFloatValue("NODANGLE", Float.NaN) * (float) Unit.deg;
+		angle = header.getDoubleValue("NODANGLE", Double.NaN) * Unit.deg;
 	}
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
 		if(cycles != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("NODN", cycles, "Number of nod cycles."));
-		if(!Float.isNaN(amplitude)) cursor.add(new HeaderCard("NODAMP", amplitude / Unit.arcsec, "(arcsec) Nod amplitude on sky."));
-		if(!Float.isNaN(angle)) cursor.add(new HeaderCard("NODANGLE", angle / Unit.deg, "(deg) Nod angle on sky."));
-		if(!Float.isNaN(dwellTime)) cursor.add(new HeaderCard("NODTIME", dwellTime / Unit.s, "(s) Total dwell time per nod position."));
-		if(!Float.isNaN(settlingTime)) cursor.add(new HeaderCard("NODSETL", settlingTime / Unit.s, "(s) Nod settling time."));
+		if(!Double.isNaN(amplitude)) cursor.add(new HeaderCard("NODAMP", amplitude / Unit.arcsec, "(arcsec) Nod amplitude on sky."));
+		if(!Double.isNaN(angle)) cursor.add(new HeaderCard("NODANGLE", angle / Unit.deg, "(deg) Nod angle on sky."));
+		if(!Double.isNaN(dwellTime)) cursor.add(new HeaderCard("NODTIME", dwellTime / Unit.s, "(s) Total dwell time per nod position."));
+		if(!Double.isNaN(settlingTime)) cursor.add(new HeaderCard("NODSETL", settlingTime / Unit.s, "(s) Nod settling time."));
 		if(pattern != null) cursor.add(new HeaderCard("NODPATT", pattern, "Pointing sequence for one nod cycle."));
 		if(style != null) cursor.add(new HeaderCard("NODSTYLE", style, "Nodding style."));
 		if(coordinateSystem != null) cursor.add(new HeaderCard("NODCRSYS", coordinateSystem, "Nodding coordinate system."));

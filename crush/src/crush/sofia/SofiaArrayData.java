@@ -34,7 +34,7 @@ import nom.tam.util.Cursor;
 
 public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArrayData> {
 	public String detectorName, detectorSizeString;
-	public float pixelScale = Float.NaN;
+	public double pixelScale = Double.NaN;
 	public int subarrays = 0;
 	public String[] subarraySize;
 	public Vector2D arrayPointingCenter = new Vector2D();	// boresight
@@ -67,7 +67,7 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 	public void parseHeader(Header header) {
 		detectorName = SofiaHeaderData.getStringValue(header, "DETECTOR");
 		detectorSizeString = SofiaHeaderData.getStringValue(header, "DETSIZE");
-		pixelScale = header.getFloatValue("PIXSCAL", Float.NaN) * (float) Unit.arcsec;
+		pixelScale = header.getDoubleValue("PIXSCAL", Double.NaN) * Unit.arcsec;
 		subarrays = header.getIntValue("SUBARRNO", 0);
 		
 		if(subarrays > 0) {
@@ -86,7 +86,7 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 	public void editHeader(Cursor cursor) throws HeaderCardException {
 		if(detectorName != null) cursor.add(new HeaderCard("DETECTOR", detectorName, "Detector name"));
 		if(detectorSizeString != null) cursor.add(new HeaderCard("DETSIZE", detectorSizeString, "Detector size"));
-		if(!Float.isNaN(pixelScale)) cursor.add(new HeaderCard("PIXSCAL", pixelScale / Unit.arcsec, "(arcsec) Pixel scale on sky."));
+		if(!Double.isNaN(pixelScale)) cursor.add(new HeaderCard("PIXSCAL", pixelScale / Unit.arcsec, "(arcsec) Pixel scale on sky."));
 		if(subarrays > 0) {
 			cursor.add(new HeaderCard("SUBARRNO", subarrays, "Number of subarrays."));
 			DecimalFormat d2 = new DecimalFormat("00");

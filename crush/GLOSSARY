@@ -1131,6 +1131,30 @@
 
 			to specify beam smoothing in the last iteration.
 
+:: fits.addKeys=<list>	@Expert
+			@Instrument: SOFIA*, HAWC+
+			@Since:2.23
+			Specify a comma-separated list of keys that should be
+			migrated from the first scan to the image header, in
+			addition to the list of required SOFIA header keys.
+
+:: fits.[key]
+:: fits.[key?value]	@Advanced
+			@Since: 2.23
+			Conditions based on the existence of specific FITS keys
+			in the input scan headers, or based on these keys 
+			having specific values. Both the keys and the 
+			comparison to expected values is case insensitive. Thus,
+			for example, the existence of 
+	
+				OBJECT = 'Mars' 
+
+			in the  FITS header will activate the conditional 
+			'bright' reduction setting defined as:
+
+				fits.[object?MARS] bright
+
+			
 :: flag=<list>		Specify a list of backend channels that ought to be 
 			ignored for the successively read scans. Can use pixel
 			numbers (i.e. APEX backend indexes) and ranges. E.g.:

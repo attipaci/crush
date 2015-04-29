@@ -32,8 +32,8 @@ import nom.tam.util.Cursor;
 public class SofiaEnvironmentData extends SofiaHeaderData {
 	public BracketedValues pwv = new BracketedValues();
 	
-	public float ambientT = Float.NaN;
-	public float primaryT1 = Float.NaN, primaryT2 = Float.NaN, primaryT3 = Float.NaN, secondaryT = Float.NaN;
+	public double ambientT = Double.NaN;
+	public double primaryT1 = Double.NaN, primaryT2 = Double.NaN, primaryT3 = Double.NaN, secondaryT = Double.NaN;
 
 	public SofiaEnvironmentData() {}
 	
@@ -46,22 +46,22 @@ public class SofiaEnvironmentData extends SofiaHeaderData {
 	public void parseHeader(Header header) {
 		pwv.start = header.getDoubleValue("WVZ_STA", Double.NaN) * Unit.um;
 		pwv.end = header.getDoubleValue("WVZ_END", Double.NaN) * Unit.um;
-		ambientT = header.getFloatValue("TEMP_OUT", Float.NaN);
-		primaryT1 = header.getFloatValue("TEMPPRI1", Float.NaN);
-		primaryT2 = header.getFloatValue("TEMPPRI2", Float.NaN);
-		primaryT3 = header.getFloatValue("TEMPPRI3", Float.NaN);
-		secondaryT = header.getFloatValue("TEMPSEC1", Float.NaN);
+		ambientT = header.getDoubleValue("TEMP_OUT", Double.NaN) * Unit.K;
+		primaryT1 = header.getDoubleValue("TEMPPRI1", Double.NaN) * Unit.K;
+		primaryT2 = header.getDoubleValue("TEMPPRI2", Double.NaN) * Unit.K;
+		primaryT3 = header.getDoubleValue("TEMPPRI3", Double.NaN) * Unit.K;
+		secondaryT = header.getDoubleValue("TEMPSEC1", Double.NaN) * Unit.K;
 	}
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
 		if(!Double.isNaN(pwv.start)) cursor.add(new HeaderCard("WVZ_STA", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
 		if(!Double.isNaN(pwv.end)) cursor.add(new HeaderCard("WVZ_END", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
-		if(!Float.isNaN(ambientT)) cursor.add(new HeaderCard("TEMP_OUT", ambientT, "(C) Ambient air temperature."));
-		if(!Float.isNaN(primaryT1)) cursor.add(new HeaderCard("TEMPPRI1", primaryT1, "(C) Primary mirror temperature #1."));
-		if(!Float.isNaN(primaryT2)) cursor.add(new HeaderCard("TEMPPRI2", primaryT2, "(C) Primary mirror temperature #2."));
-		if(!Float.isNaN(primaryT3)) cursor.add(new HeaderCard("TEMPPRI3", primaryT3, "(C) Primary mirror temperature #3."));
-		if(!Float.isNaN(secondaryT)) cursor.add(new HeaderCard("TEMPSEC1", secondaryT, "(C) Secondary mirror temperature."));
+		if(!Double.isNaN(ambientT)) cursor.add(new HeaderCard("TEMP_OUT", ambientT, "(C) Ambient air temperature."));
+		if(!Double.isNaN(primaryT1)) cursor.add(new HeaderCard("TEMPPRI1", primaryT1, "(C) Primary mirror temperature #1."));
+		if(!Double.isNaN(primaryT2)) cursor.add(new HeaderCard("TEMPPRI2", primaryT2, "(C) Primary mirror temperature #2."));
+		if(!Double.isNaN(primaryT3)) cursor.add(new HeaderCard("TEMPPRI3", primaryT3, "(C) Primary mirror temperature #3."));
+		if(!Double.isNaN(secondaryT)) cursor.add(new HeaderCard("TEMPSEC1", secondaryT, "(C) Secondary mirror temperature."));
 	}
 
 }
