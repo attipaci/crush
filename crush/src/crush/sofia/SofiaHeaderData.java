@@ -41,6 +41,11 @@ public abstract class SofiaHeaderData implements Cloneable {
 	
 	public abstract void editHeader(Cursor cursor) throws HeaderCardException;
 	
+	public double getHeaderDouble(double value) {
+		if(Double.isNaN(value)) return UNKNOWN_DOUBLE_VALUE;
+		return value;
+	}
+	
 	public float getHeaderFloat(double value) {
 		if(Double.isNaN(value)) return UNKNOWN_FLOAT_VALUE;
 		return (float) value;
@@ -64,6 +69,7 @@ public abstract class SofiaHeaderData implements Cloneable {
 	
 	public final static int UNKNOWN_INT_VALUE = -9999;
 	public final static float UNKNOWN_FLOAT_VALUE = -9999.0F;
+	public final static double UNKNOWN_DOUBLE_VALUE = -9999.0;
 	public final static String UNKNOWN_STRING_VALUE = "UNKNOWN";
 	
 }

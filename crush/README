@@ -745,10 +745,10 @@ options on the console.
 
     References
     ----------
-    As of version 2.12, CRUSH allows static and dynamics references to be used
-    when setting values. References are placed inside curly brackets. After the
-    opening '{' a special character is used to define what 
-    type of reference is used:
+    As of version 2.12, CRUSH allows both static and dynamics references to be 
+    used when setting configuration values. All references are placed inside 
+    curly brackets. After the opening '{' a special character is used to define
+    what type of reference is used:
 
 	Table. Referencing
 	--------------------------------------------------------------

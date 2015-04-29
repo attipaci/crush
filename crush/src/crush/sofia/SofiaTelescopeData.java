@@ -35,10 +35,10 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 	public String telescope = "SOFIA";
 	public String telConfig;
 	public EquatorialCoordinates boresightEquatorial, requestedEquatorial;
-	public float VPA = Float.NaN;
+	public double VPA = Double.NaN;
 	public String lastRewind;
 	public BracketedValues focusT = new BracketedValues();
-	public float relElevation = Float.NaN, crossElevation = Float.NaN, lineOfSightAngle = Float.NaN;
+	public double relElevation = Double.NaN, crossElevation = Double.NaN, lineOfSightAngle = Double.NaN;
 	public String tascuStatus, fbcStatus;
 	public BracketedValues zenithAngle = new BracketedValues();
 	public String trackingMode;
@@ -52,6 +52,7 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 	}
 	
 	public boolean isTracking() { 
+		if(trackingMode == null) return false;
 		return !trackingMode.equalsIgnoreCase("OFF");
 	}
 	
@@ -73,15 +74,15 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		}
 		catch(Exception e) { boresightEquatorial = null; }
 		
-		VPA = header.getFloatValue("TELVPA", Float.NaN) * (float) Unit.deg;
+		VPA = header.getDoubleValue("TELVPA", Double.NaN) * Unit.deg;
 		
 		lastRewind = getStringValue(header, "LASTREW");
 		focusT.start = header.getDoubleValue("FOCUS_ST", Double.NaN) * Unit.um;
 		focusT.end = header.getDoubleValue("FOCUS_EN", Double.NaN) * Unit.um;
 		
-		relElevation = header.getFloatValue("TELEL", Float.NaN) * (float) Unit.deg;
-		crossElevation = header.getFloatValue("TELXEL", Float.NaN) * (float) Unit.deg;
-		lineOfSightAngle = header.getFloatValue("TELLOS", Float.NaN) * (float) Unit.deg;
+		relElevation = header.getDoubleValue("TELEL", Double.NaN) * Unit.deg;
+		crossElevation = header.getDoubleValue("TELXEL", Double.NaN) * Unit.deg;
+		lineOfSightAngle = header.getDoubleValue("TELLOS", Double.NaN) * Unit.deg;
 		
 		tascuStatus = getStringValue(header, "TSC-STAT");
 		fbcStatus = getStringValue(header, "FBC-STAT");
@@ -116,16 +117,16 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 			cursor.add(new HeaderCard("TELEQUI", boresightEquatorial.epoch.getYear(), "(yr) Boresight epoch."));
 		}
 		
-		if(!Float.isNaN(VPA)) cursor.add(new HeaderCard("TELVPA", VPA / Unit.deg, "(deg) Boresight position angle."));
+		if(!Double.isNaN(VPA)) cursor.add(new HeaderCard("TELVPA", VPA / Unit.deg, "(deg) Boresight position angle."));
 		
 		if(lastRewind != null) cursor.add(new HeaderCard("LASTREW", lastRewind, "UTC time of last telescope rewind."));
 		
 		if(!Double.isNaN(focusT.start)) cursor.add(new HeaderCard("FOCUS_ST", focusT.start / Unit.um, "(um) Focus T value at start."));
 		if(!Double.isNaN(focusT.end)) cursor.add(new HeaderCard("FOCUS_EN", focusT.end / Unit.um, "(um) Focus T value at end."));
 		
-		if(!Float.isNaN(relElevation)) cursor.add(new HeaderCard("TELEL", relElevation / Unit.deg, "(deg) Telescope elevation in cavity."));
-		if(!Float.isNaN(crossElevation)) cursor.add(new HeaderCard("TELXEL", crossElevation / Unit.deg, "(deg) Telescope cross elevation in cavity."));
-		if(!Float.isNaN(lineOfSightAngle)) cursor.add(new HeaderCard("TELLOS", lineOfSightAngle / Unit.deg, "(deg) Telescope line-of-sight angle in cavity."));
+		if(!Double.isNaN(relElevation)) cursor.add(new HeaderCard("TELEL", relElevation / Unit.deg, "(deg) Telescope elevation in cavity."));
+		if(!Double.isNaN(crossElevation)) cursor.add(new HeaderCard("TELXEL", crossElevation / Unit.deg, "(deg) Telescope cross elevation in cavity."));
+		if(!Double.isNaN(lineOfSightAngle)) cursor.add(new HeaderCard("TELLOS", lineOfSightAngle / Unit.deg, "(deg) Telescope line-of-sight angle in cavity."));
 		
 		if(tascuStatus != null) cursor.add(new HeaderCard("TSC_STAT", tascuStatus, "TASCU system status at end."));
 		if(fbcStatus != null) cursor.add(new HeaderCard("FBC_STAT", fbcStatus, "flexible body compensation system status at end."));

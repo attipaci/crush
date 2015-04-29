@@ -29,7 +29,6 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaObservationData extends SofiaHeaderData {
-
 	public String sourceName;
 	public String obsID, imageID, aotID, aorID;
 	public String dataSource, obsType, sourceType;

@@ -36,7 +36,7 @@ public class SofiaAircraftData extends SofiaHeaderData implements TableFormatter
 	public BracketedValues altitude = new BracketedValues();
 	public BracketedValues latitude = new BracketedValues();
 	public BracketedValues longitude = new BracketedValues();
-	public float airSpeed = Float.NaN, groundSpeed = Float.NaN, heading = Float.NaN, trackAngle = Float.NaN;
+	public double airSpeed = Double.NaN, groundSpeed = Double.NaN, heading = Double.NaN, trackAngle = Double.NaN;
 	
 	public SofiaAircraftData() {}
 	
@@ -50,14 +50,14 @@ public class SofiaAircraftData extends SofiaHeaderData implements TableFormatter
 	public void parseHeader(Header header) {
 		altitude.start = header.getDoubleValue("ALTI_STA", Double.NaN) * Unit.ft;
 		altitude.end = header.getDoubleValue("ALTI_END", Double.NaN) * Unit.ft;
-		airSpeed = header.getFloatValue("AIRSPEED", Float.NaN) * (float) Unit.kn;
-		groundSpeed = header.getFloatValue("GRDSPEED", Float.NaN) * (float) Unit.kn;
+		airSpeed = header.getDoubleValue("AIRSPEED", Double.NaN) * Unit.kn;
+		groundSpeed = header.getDoubleValue("GRDSPEED", Double.NaN) * Unit.kn;
 		latitude.start = getDMSAngle(header, "LAT_STA");
 		latitude.end = getDMSAngle(header, "LAT_END");
 		longitude.start = getDMSAngle(header, "LON_STA");
 		longitude.end = getDMSAngle(header, "LON_END");
-		heading = header.getFloatValue("HEADING", Float.NaN) * (float) Unit.deg;
-		trackAngle = header.getFloatValue("TRACKANG", Float.NaN) * (float) Unit.deg;
+		heading = header.getDoubleValue("HEADING", Double.NaN) * Unit.deg;
+		trackAngle = header.getDoubleValue("TRACKANG", Double.NaN) * Unit.deg;
 	}
 
 	@Override
@@ -68,10 +68,10 @@ public class SofiaAircraftData extends SofiaHeaderData implements TableFormatter
 		if(!Double.isNaN(latitude.end)) cursor.add(new HeaderCard("LAT_END", latitude.end / Unit.deg, "(deg) Latitude at end of observation."));
 		if(!Double.isNaN(altitude.start)) cursor.add(new HeaderCard("ALTI_STA", altitude.start / Unit.ft, "(ft) Altitude at start of observation."));
 		if(!Double.isNaN(altitude.end)) cursor.add(new HeaderCard("ALTI_END", altitude.end / Unit.ft, "(ft) Altitude at end of observation."));
-		if(!Float.isNaN(airSpeed)) cursor.add(new HeaderCard("AIRSPEED", airSpeed / Unit.kn, "(kn) Airspeed at start of observation."));
-		if(!Float.isNaN(groundSpeed)) cursor.add(new HeaderCard("GRDSPEED", groundSpeed / Unit.kn, "(kn) Ground speed at start of observation."));
-		if(!Float.isNaN(heading)) cursor.add(new HeaderCard("HEADING", heading / Unit.deg, "(deg) True aircraft heading at start of observation."));
-		if(!Float.isNaN(trackAngle)) cursor.add(new HeaderCard("TRACKANG", trackAngle / Unit.deg, "(deg) Aircraft tracking angle at start of observation."));	
+		if(!Double.isNaN(airSpeed)) cursor.add(new HeaderCard("AIRSPEED", airSpeed / Unit.kn, "(kn) Airspeed at start of observation."));
+		if(!Double.isNaN(groundSpeed)) cursor.add(new HeaderCard("GRDSPEED", groundSpeed / Unit.kn, "(kn) Ground speed at start of observation."));
+		if(!Double.isNaN(heading)) cursor.add(new HeaderCard("HEADING", heading / Unit.deg, "(deg) True aircraft heading at start of observation."));
+		if(!Double.isNaN(trackAngle)) cursor.add(new HeaderCard("TRACKANG", trackAngle / Unit.deg, "(deg) Aircraft tracking angle at start of observation."));	
 	}
 	
 	@Override

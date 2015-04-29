@@ -31,13 +31,12 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<SofiaInstrumentData> {
-
 	public String dataType;
-	public String instrumentConfig, instrumentMode, mccsMode;
-	public float exposureTime = Float.NaN;
+	public String instrumentName, instrumentConfig, instrumentMode, mccsMode;
+	public double exposureTime = Double.NaN;
 	public String spectralElement1, spectralElement2, slitID;
-	public float wavelength;
-	public float spectralResolution;
+	public double wavelength;
+	public double spectralResolution;
 	
 	public SofiaInstrumentData() {}
 	
@@ -62,31 +61,32 @@ public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<Sof
 	@Override
 	public void parseHeader(Header header) {
 		dataType = getStringValue(header, "DATATYPE");
+		instrumentName = getStringValue(header, "INSTRUME");
 		instrumentConfig = getStringValue(header, "INSTCFG");
 		instrumentMode = getStringValue(header, "INSTMODE");
 		mccsMode = getStringValue(header, "MCCSMODE");
-		exposureTime = header.getFloatValue("EXPTIME", Float.NaN) * (float) Unit.s;
+		exposureTime = header.getDoubleValue("EXPTIME", Double.NaN) * Unit.s;
 		spectralElement1 = getStringValue(header, "SPECTEL1");
 		spectralElement2 = getStringValue(header, "SPECTEL2");
 		slitID = getStringValue(header, "SPECTEL2");
-		wavelength = header.getFloatValue("WAVECENT", Float.NaN) * (float) Unit.um;
-		spectralResolution = header.getFloatValue("RESOLUN", Float.NaN);
+		wavelength = header.getDoubleValue("WAVECENT", Double.NaN) * Unit.um;
+		spectralResolution = header.getDoubleValue("RESOLUN", Double.NaN);
 
 	}
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
 		if(dataType != null) cursor.add(new HeaderCard("DATATYPE", dataType, "Data type."));
+		if(instrumentName != null) cursor.add(new HeaderCard("INSTRUME", instrumentName, "Name of SOFIA instrument."));
 		if(instrumentConfig != null) cursor.add(new HeaderCard("INSTCFG", instrumentConfig, "Instrument configuration."));
 		if(instrumentMode != null) cursor.add(new HeaderCard("INSTMODE", instrumentMode, "Instrument observing mode."));
 		if(mccsMode != null) cursor.add(new HeaderCard("MCCSMODE", instrumentMode, "MCCS mode."));
-		if(!Float.isNaN(exposureTime)) cursor.add(new HeaderCard("EXPTIME", exposureTime / Unit.s, "(s) total effective on-source time."));
+		if(!Double.isNaN(exposureTime)) cursor.add(new HeaderCard("EXPTIME", exposureTime / Unit.s, "(s) total effective on-source time."));
 		if(spectralElement1 != null) cursor.add(new HeaderCard("SPECTEL1", spectralElement1, "First spectral element."));
 		if(spectralElement2 != null) cursor.add(new HeaderCard("SPECTEL2", spectralElement2, "Second spectral element."));
 		if(slitID != null) cursor.add(new HeaderCard("SLIT", slitID, "Slit identifier."));
-		if(!Float.isNaN(wavelength)) cursor.add(new HeaderCard("WAVECENT", wavelength / Unit.um, "(um) wavelength at passband center."));
-		if(!Float.isNaN(spectralResolution)) cursor.add(new HeaderCard("RESOLUN", spectralResolution, "Spectral resolution."));
-
+		if(!Double.isNaN(wavelength)) cursor.add(new HeaderCard("WAVECENT", wavelength / Unit.um, "(um) wavelength at passband center."));
+		if(!Double.isNaN(spectralResolution)) cursor.add(new HeaderCard("RESOLUN", spectralResolution, "Spectral resolution."));
 	}
 
 	

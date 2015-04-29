@@ -37,7 +37,7 @@ import nom.tam.util.Cursor;
 public class SofiaMappingData extends SofiaHeaderData {
 	public String coordinateSystem;
 	public int sizeX = 0, sizeY = 0;
-	public Vector2D step = new Vector2D(Float.NaN, Float.NaN);
+	public Vector2D step = new Vector2D(Double.NaN, Double.NaN);
 	
 	public SofiaMappingData() {}
 	

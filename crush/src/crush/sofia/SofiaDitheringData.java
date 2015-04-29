@@ -33,7 +33,7 @@ public class SofiaDitheringData extends SofiaHeaderData {
 	public String patternShape;
 	public int positions = UNKNOWN_INT_VALUE;
 	public int index = UNKNOWN_INT_VALUE;
-	public float spacing;
+	public double spacing = Double.NaN;
 	
 	public SofiaDitheringData() {}
 	
@@ -48,7 +48,7 @@ public class SofiaDitheringData extends SofiaHeaderData {
 		patternShape = getStringValue(header, "DTHPATT");
 		positions = header.getIntValue("DTHNPOS", UNKNOWN_INT_VALUE);
 		index = header.getIntValue("DTHINDEX", UNKNOWN_INT_VALUE);
-		spacing = header.getFloatValue("DTHOFFS", Float.NaN) * (float) Unit.arcsec;
+		spacing = header.getDoubleValue("DTHOFFS", Double.NaN) * Unit.arcsec;
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public class SofiaDitheringData extends SofiaHeaderData {
 		if(patternShape != null) cursor.add(new HeaderCard("DTHPATT", patternShape, "Approximate shape of dither pattern."));
 		if(positions != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("DTHNPOS", positions, "Number of dither positions."));
 		if(index != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("DTHINDEX", index, "Dither position index."));
-		if(!Float.isNaN(spacing)) cursor.add(new HeaderCard("DTHOFFS", spacing / Unit.arcsec, "(arcsec) Dither spacing."));
+		if(!Double.isNaN(spacing)) cursor.add(new HeaderCard("DTHOFFS", spacing / Unit.arcsec, "(arcsec) Dither spacing."));
 	}
 
 }

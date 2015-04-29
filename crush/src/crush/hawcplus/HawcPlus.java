@@ -45,12 +45,12 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	
 	private Vector2D arrayPointingCenter; // row,col
 	Vector2D pixelSize = HawcPlusPixel.defaultSize;
-	Vector2D[][] subarrayOffset = new Vector2D[2][2];
+	Vector2D[][] subarrayOffset = new Vector2D[polarrays][polsubarrays];
 	
 	public HawcPlus() {
 		super("hawc+", new SingleColorLayout<HawcPlusPixel>(), pixels);
 		arrayPointingCenter = (Vector2D) defaultPointingCenter.clone();
-		for(int i=0; i<1; i++) for(int j=0; j<1; j++) subarrayOffset[i][j] = new Vector2D();
+		for(int i=0; i<polarrays; i++) for(int j=0; j<polsubarrays; j++) subarrayOffset[i][j] = new Vector2D();
 		mount = Mount.LEFT_NASMYTH;
 	}
 	
@@ -62,8 +62,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
 		
 		if(subarrayOffset != null) {
-			copy.subarrayOffset = new Vector2D[2][2];
-			for(int i=0; i<1; i++) for(int j=0; j<1; j++) copy.subarrayOffset[i][j] = (Vector2D) subarrayOffset[i][j].clone();
+			copy.subarrayOffset = new Vector2D[polarrays][polsubarrays];
+			for(int i=0; i<polarrays; i++) for(int j=0; j<polsubarrays; j++) copy.subarrayOffset[i][j] = (Vector2D) subarrayOffset[i][j].clone();
 		}
 		return copy;
 	}
@@ -282,7 +282,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	@Override
 	public void readData(Fits fits) throws Exception {
 		// TODO Auto-generated method stub
-		
 	}
 		
 	@Override
@@ -296,6 +295,22 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		System.err.println(" HAWC+ Filter set to " + option("filter").getValue());
 		
 		super.validate(scan);
+	}
+	
+	@Override
+	public void validate(Vector<Scan<?,?>> scans) throws Exception {
+		final HawcPlusScan firstScan = (HawcPlusScan) scans.get(0);
+	
+		for(int i=scans.size(); --i >= 1; ) {
+			HawcPlusScan scan = (HawcPlusScan) scans.get(i);
+			
+			if(scan.instrument.instrumentData.instrumentConfig.equals(firstScan.instrument.instrumentData.instrumentConfig)) {
+				System.err.println("  WARNING! Scan " + scans.get(i).getID() + " is in different instrument configuration. Removing from set.");
+				scans.remove(i);				
+			}		
+		}
+		
+		super.validate(scans);
 	}
 	
 	
@@ -330,13 +345,14 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	}
 	
 	public static final int polarrays = 2;
+	public static final int polsubarrays = 2;
 	public static final int subarrayCols = 32;
-	public static final int cols = subarrayCols << 1;
+	public static final int cols = polsubarrays * subarrayCols;
 	public static final int rows = 41;
 	public static final int polArrayPixels = cols * rows;
 	public static final int pixels = polarrays * polArrayPixels;
 	
-	// subarray center assuming 32x41 pixels
+	// subarray center assuming 41x32 pixels
 	private static Vector2D defaultPointingCenter = new Vector2D(20.5, 32.5); // row, col
 
 	
