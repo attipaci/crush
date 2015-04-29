@@ -1,5 +1,5 @@
 
-2.23-b3 (27 April 2015)
+2.23-b4 (29 April 2015)
 
 
 	Overview
@@ -18,6 +18,11 @@
 	applied to pixel positions loaded from an RCP file, not just to 
 	calculated pixel positions as was to be. (RCP rotation is handled via 
 	separate 'rcp.rotate' option).
+
+	[BUG] {2.23-b1...} {HAWC+} interpretation of parallactic angle and
+	array orientation was wrong. The nearly totally degenerate solution
+	used earlier was slightly inferior to the new (and likely) correct
+	interpretation. 
 
 	[NEW] Initial support for HAWC+.
 

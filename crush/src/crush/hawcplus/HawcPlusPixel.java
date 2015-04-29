@@ -63,7 +63,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	}
 	
 	public static Vector2D getPosition(Vector2D size, Vector2D subarrayOffset, double row, double col) {
-		return new Vector2D(subarrayOffset.x() + size.x() * row, subarrayOffset.y() - size.y() * col);
+		return new Vector2D(subarrayOffset.x() - size.x() * row, subarrayOffset.y() + size.y() * col);
 	}
 	
 	@Override

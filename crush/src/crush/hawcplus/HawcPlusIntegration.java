@@ -146,7 +146,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			// scan-mode polarimetry (or polarimetry, in general...
 			HWP = (float[]) table.getColumn(hdu.findColumn("HWP Angle"));
 			
-			PWV = (float[]) table.getColumn(hdu.findColumn("Water Vapor"));	
+			PWV = (float[]) table.getColumn(hdu.findColumn("Water Vapor"));
 		}
 		
 		@Override
@@ -204,7 +204,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					}
 					else {
 						// The simulation writes a position angle, not parallactic angle...
-						frame.setParallacticAngle((PA[i] - EL[i]) * Unit.deg);
+						frame.setParallacticAngle(-(PA[i] + EL[i]) * Unit.deg);
 						frame.VPA = (float) (frame.getParallacticAngle() + frame.horizontal.EL());
 					}
 					
@@ -215,7 +215,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			
 					// Add the chopper offset to the telescope coordinates.
 					// TODO check!
-					/*
 					if(hawcPlusScan.isChopping) {
 						frame.horizontalOffset.add(frame.chopperPosition);
 						frame.horizontal.addOffset(frame.chopperPosition);
@@ -224,7 +223,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 						frame.horizontalToNativeEquatorial(offset);
 						frame.equatorial.addNativeOffset(offset);
 					}
-					*/
 						
 				
 						
