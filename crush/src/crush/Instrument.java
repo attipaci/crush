@@ -973,8 +973,9 @@ implements TableFormatter.Entries {
 	
 	public double getSourceNEFD() {		
 		double sumpw = 0.0;
-		for(Channel channel : getObservingChannels()) if(channel.flag == 0 && channel.variance > 0.0)
+		for(Channel channel : getObservingChannels()) if(channel.flag == 0 && channel.variance > 0.0) 
 			sumpw += channel.sourceFiltering * channel.sourceFiltering / channel.variance;	
+		
 		return Math.sqrt(size()*integrationTime/sumpw) / (sourceGain * janskyPerBeam());
 	}
 	

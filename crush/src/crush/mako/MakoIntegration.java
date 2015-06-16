@@ -127,7 +127,15 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 			//intTime = (float[]) table.getColumn(hdu.findColumn("Integration Time"));
 			
 			ch = (byte[]) table.getColumn(hdu.findColumn("Channel"));
-			AZ = (int[]) table.getColumn(hdu.findColumn("Requested AZ"));
+			
+			int iAZ = hdu.findColumn("Requested AZ");
+			if(iAZ < 0) {
+				System.err.println(" ERROR! Scan does not seem to contain telescope information.");
+				System.err.println("        Perhaps it is a lab scan. CRUSH cannot reduce it.");
+				throw new IllegalStateException("No telescope information in scan " + getID());
+			}
+			
+			AZ = (int[]) table.getColumn(iAZ);
 			EL = (int[]) table.getColumn(hdu.findColumn("Requested EL"));
 			AZE = (int[]) table.getColumn(hdu.findColumn("Error In AZ"));
 			ELE = (int[]) table.getColumn(hdu.findColumn("Error In EL"));
@@ -278,7 +286,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 							AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
 							EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
 					
-					final double pa = PA[i] * Unit.deg;
+					final double pa = -PA[i] * Unit.deg;
 					frame.sinPA = Math.sin(pa);
 					frame.cosPA = Math.cos(pa);
 
@@ -294,7 +302,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 					}
 					else {
 						frame.horizontalOffset = new Vector2D(
-							(dX[i] + AZE[i] * frame.horizontal.cosLat()) * Unit.arcsec,
+							-(dX[i] + AZE[i] * frame.horizontal.cosLat()) * Unit.arcsec,
 							(dY[i] + ELE[i]) * Unit.arcsec);
 						equatorialOffset.zero();
 					}

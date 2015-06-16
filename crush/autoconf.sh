@@ -23,7 +23,7 @@ USEMB="1000"
 JVM=""
 EXTRAOPTS=""
 
-# Now, try  locate the default Java, and set the JAVA variable to it.
+# Now, try locate the default Java, and set the JAVA variable to it.
 # If no default java is set, check if there is an Oracle/OpenJDK java installed
 # in the default location
 JAVA=`which java`
@@ -52,7 +52,7 @@ if [ -z ${JAVA+x} ] ; then
 fi
 
 # Use 'java -version' to set VM defaults
-JVER=`$JAVA -version |& tail -1`
+JVER=`$JAVA -version 2>&1 | tail -1`
 
 # Attempt to determine data mode (32 or 64 bit)
 if [[ $JVER == *"64-"* ]] ; then DATAMODEL="64"

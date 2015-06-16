@@ -40,18 +40,18 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public HawcPlusPixel(HawcPlus array, int zeroIndex) {
 		super(array, zeroIndex+1);
 	
-		row = zeroIndex / HawcPlus.cols;
-		col = zeroIndex % HawcPlus.cols;
+		row = zeroIndex / array.cols();
+		col = zeroIndex % array.cols();
 		
-		polarray = row < HawcPlus.rows ? 0 : 1;
-		row %= HawcPlus.rows;
-		subarray = (polarray << 1) + (col < HawcPlus.subarrayCols ? 0 : 1);
+		polarray = row < array.rows ? 0 : 1;
+		row %= array.rows;
+		subarray = (polarray << 1) + (col < array.subarrayCols ? 0 : 1);
 		
-		mux = subarray * HawcPlus.rows + row;
-		pin = col % HawcPlus.subarrayCols;
+		mux = subarray * array.rows + row;
+		pin = col % array.subarrayCols;
 		
 		// Flag the dark squids as such...
-		if(col == HawcPlus.cols-1) flag(FLAG_BLIND);
+		if(col == array.cols()-1) flag(FLAG_BLIND);
 		
 		// TODO pin filled when reading 'wiring.dat'	
 	}
@@ -77,6 +77,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 		muxGain = 1.0;
 		pinGain = 1.0;
 	}
+	
 	
 	@Override
 	public String toString() {

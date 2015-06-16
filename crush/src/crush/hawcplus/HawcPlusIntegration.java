@@ -102,7 +102,11 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			super(hdu);
 			
 			isSimulated = hasOption("simulated");
-		
+			
+			HawcPlus hawc = scan.instrument;
+			
+			Object[] row = (Object[]) hdu.getRow(0);
+			
 			// The Sofia timestamp (decimal seconds since 0 UTC 1 Jan 1970...
 			TS = (double[]) table.getColumn(hdu.findColumn("Timestamp"));	
 			
@@ -114,12 +118,26 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			R = (long[]) table.getColumn(iR);
 			int iT = hdu.findColumn("T array");
 			T = (long[]) table.getColumn(iT);
+
+			System.err.println("   FITS has " + hawc.rows() + "x" + hawc.cols() + " arrays.");
+			
+			hawc.rows = ((long[][]) row[iR]).length;
+			hawc.subarrayCols = ((long[][]) row[iR])[0].length;
+			if(hawc.subarrayCols > 32) { 
+				hawc.polsubarrays = 2;
+				hawc.subarrayCols >>= 1;	
+			}
+			else hawc.polsubarrays = 1;
+			
+			System.err.println("   Logical layout: " + hawc.polsubarrays + " subarrays of " + hawc.rows + "x" + hawc.subarrayCols + " pixels per polarization.");
+
 			
 			// Initialize the readout offset to the first sample. This way we won't lose precision
 			// in the long -> float conversion as loading the array data...
-			for(int c=HawcPlus.polArrayPixels; --c >= 0; ) {
+			final int polArrayPixels = hawc.polArrayPixels();
+			for(int c=polArrayPixels; --c >= 0; ) {
 				instrument.get(c).readoutOffset = R[c];
-				instrument.get(HawcPlus.polArrayPixels + c).readoutOffset = T[c];
+				instrument.get(polArrayPixels + c).readoutOffset = T[c];
 			}
 			
 			// The tracking center in the basis coordinates of the scan (usually RA/DEC)
@@ -240,6 +258,5 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	}
 
 	
-
 	
 }

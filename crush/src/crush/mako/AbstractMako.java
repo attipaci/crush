@@ -165,7 +165,7 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 			Object[] row = hdu.getRow(c);
 			
 			pixel.toneBin = ((int[]) row[iBin])[0];
-			pixel.toneFrequency = binWidth * pixel.toneBin;
+			pixel.toneFrequency = binWidth * pixel.toneBin;	
 			pixel.validCalPositions = ((int[]) row[iPts])[0];
 			pixel.calError = ((float[]) row[iErr])[0];
 			
@@ -221,7 +221,10 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 	}
 	
 	@Override
-	public String getRCPHeader() { return super.getRCPHeader() + "\tKIDfreq"; }
+	public String getRCPHeader() {
+		return "KIDfreq[Hz]\tdX[\"]\tdY[\"]\tsrcgain";
+		//return super.getRCPHeader() + "\tKIDfreq"; 
+	}
 
 	public static int DEFAULT_ARRAY = 0;
 	

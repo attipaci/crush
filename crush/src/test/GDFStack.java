@@ -84,7 +84,7 @@ public class GDFStack {
 	}
 	
 	public GridMap<Coordinate2D> getStack() {
-		int size = 1 + 2 * (int)Math.ceil(3.0 * map.getImageFWHM() / map.getResolution().x());
+		int size = 1 + 2 * (int)Math.ceil(3.0 * map.getImageBeam().getCircularEquivalentFWHM() / map.getResolution().x());
 		GridMap<Coordinate2D> stack = new GridMap<Coordinate2D>(size, size);
 		stack.setGrid(new CartesianGrid2D());
 		stack.setResolution(map.getResolution().x());
@@ -173,7 +173,7 @@ public class GDFStack {
 			source.setID(tokens.nextToken());
 			source.setCoordinates(new EquatorialCoordinates(line.replace('+', ' ')));
 			source.setPeak(1.0);
-			source.setRadius(map.getImageFWHM());
+			source.setRadius(map.getImageBeam().getCircularEquivalentFWHM());
 			
 			sources.add(source);
 		}
@@ -197,7 +197,7 @@ public class GDFStack {
 					CoordinateEpoch.J2000));
 	
 			source.setPeak(1.0);
-			source.setRadius(map.getImageFWHM());
+			source.setRadius(map.getImageBeam().getCircularEquivalentFWHM());
 			
 			tokens.nextToken();
 			tokens.nextToken();
@@ -229,7 +229,7 @@ public class GDFStack {
 					CoordinateEpoch.J2000));
 	
 			source.setPeak(1.0);
-			source.setRadius(map.getImageFWHM());
+			source.setRadius(map.getImageBeam().getCircularEquivalentFWHM());
 			
 			tokens.nextToken();
 			tokens.nextToken();

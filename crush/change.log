@@ -1,5 +1,5 @@
 
-2.23-b4 (29 April 2015)
+2.23-1 (16 June 2015)
 
 
 	Overview
@@ -51,6 +51,22 @@
 	re-levelling should have insignificant effect on the filter's 
 	effectiveness.
 
+	[FIX] {LABOCA} Skydip reductions were broken in beta releases as the
+	freshly fixed-up decorrelation with He3 bath temperature (as seen
+	with the blind bolometers) has ruined the skydip signal. Now, the
+	temperature decorrelation is blacklisted for skydip reductions. Fixed
+	for final release. (Thanks to Karl Torstensson for finding the 
+	problem.)
+	
+	[FIX] {SHARC-2} Better handling of JCMT tau tables lookup failure
+	through 'jctables.fallback' option.
+
+	[FIX] {MAKO} {MAKO-2} {beta releases} Found and fixed harmless 
+	NullPointerExceptions in overlap calculation of unassigned pixels.
+
+	[FIX] {beta releases} 'autoconf.sh' did not work on bash < 4. Fixed
+	for final release.
+
 	[FIX] Signal/CorrelatedSignal levelling interval was nil, due to a
 	malformed interval calculation. Fixed.
 
@@ -75,6 +91,18 @@
 	[PACKAGE] Added bash and coreutils to pre-requisites for RPM and Debian
 	packages (The latter provides 'readlink' and 'dirname'). 
 
+	[TWEAK] {HAWC+} {post-b6} Handle different-sized simulated arrays.
+	It should work with both 41x32 and 41x64 FITS arrays, and also 
+	intermediate sized ones...
+
+	[TWEAK] Kill filter is applied at initialization, before downsampling.
+
+	[TWEAK] Gains measured on correlated signals are renormalized (again).
+	Correlated signals are always updated with normalized gains.
+
+	[TWEAK] {MAKO-2} beammap functionality to produce output that is 
+	also suitable as pixelid input.
+
 	[TWEAK] {VariedFilter} Dependence accounting made faster by pooling
 	channels in postFilter().
 
@@ -85,6 +113,21 @@
 
 	[COSMETIC] {CSO} Cassegrain platform rotator processing mentioned 
 	'MAKO' in messages. Fixed.
+
+	[CONFIG] {LABOCA} Laboca configuration is up-to-date till 2014 April 
+	15.
+
+	[CONFIG] {LABOCA} 2014 RCP's had invalid date ranges, and were not used
+	as a result. CRUSH reverted back to the default RCP for 2014 data.
+	Fixed.
+
+	[CONFIG] {MAKO-2} New 350um and 850um pixel positions for the May 2015 
+	run. Also, MAKO-2 is fully configured for that run.
+
+	[CONFIG] Updated data/leap-seconds.list to most current.
+
+	[CONFIG] {CSO} Common tau lookup settings move to cso/default.cfg.
+	Also, updated URL to JCMT tau tables to new location.
 
 	[CODE] {post-b3} {SOFIA} Eliminated double->float->double precision
 	loss when processing header values. All values are now kept at

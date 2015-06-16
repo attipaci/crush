@@ -36,6 +36,8 @@ public class CorrelatedMode extends Mode {
 	public boolean solvePhases = false;
 	public int skipChannels = ~0;
 
+	private boolean isNormalizedGains = false;
+	
 	Vector<CoupledMode> coupledModes;
 	
 	public CorrelatedMode() {}
@@ -46,6 +48,25 @@ public class CorrelatedMode extends Mode {
 	
 	public CorrelatedMode(ChannelGroup<?> group, Field gainField) { 
 		super(group, gainField);
+	}
+	
+	@Override
+	public synchronized boolean setGains(float[] gain) throws Exception {
+		normalizeGains(gain);
+		isNormalizedGains = true;
+		return super.setGains(gain);
+	}
+	
+	public float[] getNormalizedGains() throws Exception {
+		float[] G = getGains();
+		if(isNormalizedGains) return G;
+		normalizeGains(G);
+		return G;
+	}
+	
+	public void normalizeGains(float[] gain) {
+		final float aveG = (float) getAverageGain(gain, ~gainFlag);
+		for(int i=gain.length; --i >= 0; ) gain[i] /= aveG;
 	}
 	
 	private void addCoupledMode(CoupledMode m) {
@@ -99,10 +120,11 @@ public class CorrelatedMode extends Mode {
 	}	
 	
 	@Override
-	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws Exception {
+	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws Exception {		
+		scaleSignals(integration, getAverageGain(~gainFlag));
 		
 		super.syncAllGains(integration, sumwC2, isTempReady);
-		
+			
 		// Sync the gains to all the dependent modes too... 
 		if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.resyncGains(integration);
 	}

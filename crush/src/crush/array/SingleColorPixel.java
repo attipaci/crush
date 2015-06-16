@@ -55,7 +55,13 @@ public abstract class SingleColorPixel extends Channel implements Pixel {
 	public final Vector2D getPosition() { return position; }
 	
 	@Override
-	public final double distanceTo(final Pixel pixel) {
+	public final double distanceTo(final Pixel pixel) {	
+		Vector2D position = getPosition();
+		if(position == null) return Double.NaN;
+		
+		Vector2D other = pixel.getPosition();
+		if(other == null) return Double.NaN;
+		
 		return getPosition().distanceTo(pixel.getPosition());
 	}
 	
@@ -73,7 +79,7 @@ public abstract class SingleColorPixel extends Channel implements Pixel {
 		
 		if(channel instanceof Pixel) {
 			final double dev = distanceTo((Pixel) channel) * isigma;
-			return Math.exp(-0.5 * dev * dev);
+			if(!Double.isNaN(dev)) return Math.exp(-0.5 * dev * dev);
 		}
 		// If other channel is not a pixel assume it is independent...
 		return 0.0;

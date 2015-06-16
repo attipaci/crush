@@ -268,6 +268,7 @@ public class CorrelatedSignal extends Signal {
 				phi += overlap.value * dependents.get(other);
 			}
 				
+			
 			//phi *= phit;
 			
 			if(nP > 0) phi /= nP;
@@ -275,6 +276,8 @@ public class CorrelatedSignal extends Signal {
 		
 			// Undo the prior filtering correction
 			if(sourceFiltering[k] > 0.0) channel.sourceFiltering /= sourceFiltering[k];
+			if(Double.isNaN(channel.sourceFiltering)) channel.sourceFiltering = 1.0;
+			
 			// Calculate the new filtering gain correction...
 			sourceFiltering[k] = (float) (1.0 - phi); 
 			// And apply it...
@@ -337,7 +340,7 @@ public class CorrelatedSignal extends Signal {
 		// Clear the dependents in all mode channels...
 		dependents.clear(channels, 0, integration.size());
 		
-		final float[] G = mode.getGains();
+		final float[] G = mode.getNormalizedGains();	
 		final float[] dG = syncGains;
 		
 		// Make syncGains carry the gain increment from last sync...
