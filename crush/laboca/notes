@@ -1,9 +1,0 @@
-B = <Bi>
-
-Bi = <i> - 0.5*(<i-1> + <i+1>)
-
-<Bi> = sum wi Bi / sum wi
-
-sum Bi = sum <i> - 0.5 * sum (<i-1> + <i+1>)
-
-sum <i> = sum_i ( sum_t	
