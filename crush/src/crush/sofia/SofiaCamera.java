@@ -50,7 +50,11 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 
 	public SofiaInstrumentData instrumentData;
 	public SofiaArrayData array;
-	
+
+	public SofiaCamera(String name, InstrumentLayout<? super ChannelType> layout) {
+		super(name, layout);
+	}
+
 	
 	public SofiaCamera(String name, InstrumentLayout<? super ChannelType> layout, int size) {
 		super(name, layout, size);

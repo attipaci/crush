@@ -169,11 +169,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(instrument.mappingChannels < minChannels)
 			throw new IllegalStateException("Too few valid channels (" + instrument.mappingChannels + ").");
 		
+		if(hasOption("filter.kill")) {
+			System.err.println("   FFT Filtering specified sub-bands...");
+			removeOffsets(false, CRUSH.maxThreads);
+			KillFilter filter = new KillFilter(this);
+			filter.updateConfig();
+			filter.apply();
+		}
+		
 		// Automatic downsampling after vclipping...
 		if(hasOption("downsample")) if(option("downsample").equals("auto")) downsample();
 	
 		
 		// Discard invalid frames at the beginning and end of the integration...
+		reindex();
 		trim();
 			
 		// Continue only if integration is long enough to be processed...

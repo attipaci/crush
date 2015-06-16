@@ -42,13 +42,17 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	 */
 	private static final long serialVersionUID = 3009881856872575936L;
 
-	
+	int polarrays = 2;
+	int polsubarrays = 2;
+	int subarrayCols = 32;
+	int rows = 41;
+
 	private Vector2D arrayPointingCenter; // row,col
 	Vector2D pixelSize = HawcPlusPixel.defaultSize;
 	Vector2D[][] subarrayOffset = new Vector2D[polarrays][polsubarrays];
 	
 	public HawcPlus() {
-		super("hawc+", new SingleColorLayout<HawcPlusPixel>(), pixels);
+		super("hawc+", new SingleColorLayout<HawcPlusPixel>());
 		arrayPointingCenter = (Vector2D) defaultPointingCenter.clone();
 		for(int i=0; i<polarrays; i++) for(int j=0; j<polsubarrays; j++) subarrayOffset[i][j] = new Vector2D();
 		mount = Mount.LEFT_NASMYTH;
@@ -210,7 +214,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	}
 	
 	public void rotateT(double angle) {
-		for(int i=pixels; --i >= polArrayPixels; ) get(i).position.rotate(angle);
+		final int polArrayPixels = polArrayPixels();
+		for(int i=pixels(); --i >= polArrayPixels; ) get(i).position.rotate(angle);
 	}
 	
 	// Calculates the offset of the pointing center from the nominal center of the array
@@ -288,6 +293,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	public void validate(Scan<?,?> scan) {
 		
 		clear();
+		final int pixels = pixels();
 		ensureCapacity(pixels);
 		for(int c=0; c<pixels; c++) add(new HawcPlusPixel(this, c));
 			
@@ -318,6 +324,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	// TODO do it better with relative offset and rotation...
 	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
 		Array.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+		final int polArrayPixels = polArrayPixels();
 		for(int i = toIndex.size(); --i >= 0; ) toIndex.add(toIndex.get(i) + polArrayPixels);
 	}
 
@@ -330,27 +337,41 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 
 	@Override
 	public int cols() {
-		return cols;
+		return polsubarrays * subarrayCols;
 	}
 
-
+	public int subarrayCols() {
+		return subarrayCols;
+	}
+	
+	public int polArrays() {
+		return polarrays;
+	}
+	
+	public int polSubArrays() {
+		return polsubarrays;
+	}
+	
+	public int polArrayPixels() {
+		return cols() * rows();
+	}
+	
+	public int pixels() {
+		return polarrays * polArrayPixels();
+	}
+	
 	@Override
 	public Vector2D getPixelSize() {
 		return pixelSize;
 	}
 
 	
-	public final static int getArrayIndex(final int row, final int col) {
-		return row * cols + col;
+	public final int getArrayIndex(final int row, final int col) {
+		return row * cols() + col;
 	}
 	
-	public static final int polarrays = 2;
-	public static final int polsubarrays = 2;
-	public static final int subarrayCols = 32;
-	public static final int cols = polsubarrays * subarrayCols;
-	public static final int rows = 41;
-	public static final int polArrayPixels = cols * rows;
-	public static final int pixels = polarrays * polArrayPixels;
+	
+
 	
 	// subarray center assuming 41x32 pixels
 	private static Vector2D defaultPointingCenter = new Vector2D(20.5, 32.5); // row, col

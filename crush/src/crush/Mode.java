@@ -158,7 +158,11 @@ public class Mode {
 	}	
 	
 	public double getAverageGain(int excludeFlag) throws Exception {
-		final float[] G = getGains();
+		return getAverageGain(getGains(), excludeFlag);
+		
+	}
+	
+	public double getAverageGain(float[] G, int excludeFlag) {
 		final double[] values = new double[channels.size()];
 		int n = 0;
 		for(int k=channels.size(); --k >= 0; ) if(channels.get(k).isUnflagged(excludeFlag))

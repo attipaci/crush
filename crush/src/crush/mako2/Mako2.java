@@ -91,14 +91,15 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 		if(hasOption("offset.350")) offset350 = option("offset.350").getVector2D();
 		if(hasOption("offset.850")) offset350 = option("offset.850").getVector2D();
 		
+		// Assign the pixels to the 350um or 850um subarrays based on KID frequency...
 		double max850Frequency = hasOption("850um.maxfreq") ? option("850um.maxfreq").getDouble() * Unit.MHz : 100.0 * Unit.MHz;
 		for(Mako2Pixel pixel : this) pixel.array = pixel.toneFrequency > max850Frequency ? Mako2.ARRAY_350 : Mako2.ARRAY_850;
 		
 		
 		if(hasOption("pixelid")) {
 			try {
-				List<Mako2Pixel> pixels350 = get350Pixels();
-				List<Mako2Pixel> pixels850 = get850Pixels();
+				List<Mako2Pixel> pixels350 = hasOption("350um") ? get350Pixels() : null;
+				List<Mako2Pixel> pixels850 = hasOption("850um") ? get850Pixels() : null;
 				
 				if(pixels350 != null) {
 					identifier = new ToneIdentifier2(option("pixelid"));
@@ -120,14 +121,16 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 		}
 		else {
 			// TODO why are pixels flagged other than unassigned...
-			System.err.println("!!! No tone ids. Maps are bogus...");
-			//for(MakoPixel pixel : this) pixel.unflag(MakoPixel.FLAG_UNASSIGNED);
-			for(AbstractMakoPixel pixel : this) pixel.unflag();
-		}
+			boolean beammap = false;
+			if(hasOption("source.type")) if(option("source.type").getValue().equalsIgnoreCase("beammap")) beammap = true;
+			
+			if(!beammap) System.err.println(" WARNING! No pixel ids. All pixels mapped to tracking position...");
 		
-		// Do not flag unassigned pixels when beam-mapping...
-		if(hasOption("source.type")) if(option("source.type").equals("beammap")) 
-				for(AbstractMakoPixel pixel : this) pixel.unflag(AbstractMakoPixel.FLAG_UNASSIGNED);
+			for(AbstractMakoPixel pixel : this) {
+				pixel.position = new Vector2D();
+				pixel.unflag(AbstractMakoPixel.FLAG_UNASSIGNED | AbstractMakoPixel.FLAG_NOTONEID);
+			}
+		}
 		
 		// Update the pointing center...
 		updateArrayPointingCenter();

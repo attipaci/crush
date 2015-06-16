@@ -35,21 +35,22 @@ public class HawcPlusFrame extends HorizontalFrame {
 		
 	public HawcPlusFrame(HawcPlusScan parent) {
 		super(parent);
-		setSize(HawcPlus.pixels);
+		setSize(parent.instrument.pixels());
 	}
 	
 	public void parseData(int polarray, long[][] DAC) {
-		parseData(DAC, polarray * HawcPlus.polArrayPixels);
+		parseData(DAC, polarray * ((HawcPlus) scan.instrument).polArrayPixels());
 	}
 	
 	public void parseData(int polarray, long[] DAC, int frameIndex) {
-		parseData(DAC, frameIndex * HawcPlus.polArrayPixels, HawcPlus.polArrayPixels, polarray * HawcPlus.polArrayPixels);
+		final int polArrayPixels =  ((HawcPlus) scan.instrument).polArrayPixels();
+		parseData(DAC, frameIndex * polArrayPixels, polArrayPixels, polarray * polArrayPixels);
 	}
 	
 	private void parseData(long[][] DAC, int offset) {
 		int bol = offset + DAC.length * DAC[0].length - 1;
 		for(int i=DAC.length; --i >= 0; ) for(int j=DAC[0].length; --j >= 0; bol--)
-		data[bol] = DAC[i][j] - ((HawcPlus) scan.instrument).get(bol).readoutOffset;		
+			data[bol] = DAC[i][j] - ((HawcPlus) scan.instrument).get(bol).readoutOffset;		
 	}
 	
 	private void parseData(long[] DAC, int from, int channels, int offset) {

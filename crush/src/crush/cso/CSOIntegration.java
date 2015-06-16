@@ -192,9 +192,9 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	}
 	
 	private void fallbackTau(String from, Exception e) throws Exception {
-		if(hasOption("maitau.fallback")) {
+		if(hasOption(from + ".fallback")) {
 			System.err.println("   WARNING! Tau lookup failed: " + e.getMessage());
-			String source = option("maitau.fallback").getValue().toLowerCase();
+			String source = option(from + ".fallback").getValue().toLowerCase();
 			if(source.equals(from)) {
 				System.err.println("   WARNING! Deadlocked fallback option!");
 				throw e;

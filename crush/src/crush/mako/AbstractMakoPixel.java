@@ -23,6 +23,7 @@
 package crush.mako;
 
 import crush.array.SingleColorPixel;
+import kovacs.util.Unit;
 import kovacs.util.Util;
 
 
@@ -49,7 +50,7 @@ public abstract class AbstractMakoPixel extends SingleColorPixel {
 	
 	@Override
 	public String getID() {
-		return id == null ? "---" : Util.f1.format(id.freq);
+		return id == null ? Util.f1.format(toneFrequency) : Util.f1.format(id.freq);
 	}
 	
 	@Override
@@ -66,7 +67,10 @@ public abstract class AbstractMakoPixel extends SingleColorPixel {
 	
 	@Override
 	public String getRCPString() {
-		return super.getRCPString() + "\t" + getID();
+		return getID() + "\t" + Util.f1.format(getPosition().x() / Unit.arcsec) + "\t" + Util.f1.format(getPosition().y() / Unit.arcsec)
+				+ "\t" + Util.f3.format(coupling);
+		
+		//return super.getRCPString() + "\t" + getID();
 	}
 
 	public abstract void setRowCol(int row, int col);

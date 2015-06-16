@@ -36,7 +36,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.23-b4
+ * @version 2.23-b5
  * 
  */
 public class CRUSH extends Configurator {
@@ -45,8 +45,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.23-b4";
-	private static String revision = "beta";
+	private static String version = "2.23-1";
+	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -541,8 +541,8 @@ public class CRUSH extends Configurator {
 			"                     'p-artemis', 'gismo', 'mako', 'mako2', 'hawc+'\n" + 
 			"                     (or 'scuba2').\n" +
 			"    [options]        Various configuration options. See README for details.\n" +
-			"                     Global settings must precede all scans on argument list.\n" +
-			"                     Scan will use all options listed before them.\n" +
+			"                     Global settings must precede scans on the argument list.\n" +
+			"                     Each scan will use all options listed before it.\n" +
 			"    <scanlist>       A list of scan numbers (or names) to reduce. Can mix\n" +
 			"                     file names, individual scan numbers, and ranges. E.g.\n" +
 			"                       10628-10633 11043 myscan.fits\n" +

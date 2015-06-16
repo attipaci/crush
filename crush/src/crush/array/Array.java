@@ -201,8 +201,8 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		out.println("#");
 		out.println("# " + getRCPHeader());
 		
-		for(Pixel pixel : getMappingPixels()) if(pixel.getPosition() != null)
-			if(!pixel.getPosition().isNaN()) out.println(pixel.getRCPString());
+		for(Pixel pixel : getMappingPixels()) if(pixel.getPosition() != null) if(!pixel.getPosition().isNaN()) 
+			out.println(pixel.getRCPString());
 	}
 
 	public void generateRCPFrom(String rcpFileName, String pixelFileName) throws IOException {
