@@ -23,7 +23,7 @@
 
 package crush;
 
-import java.util.Collection;
+import java.util.List;
 
 import kovacs.util.Configurator;
 import kovacs.util.Copiable;
@@ -62,8 +62,8 @@ public abstract class InstrumentLayout<ChannelType extends Channel> implements C
 	
 	public abstract int getPixelCount();
 	
-	public abstract Collection<? extends Pixel> getPixels();
+	public abstract List<? extends Pixel> getPixels();
 	
-	public abstract Collection<? extends Pixel> getMappingPixels();
+	public abstract List<? extends Pixel> getMappingPixels();
 		
 }

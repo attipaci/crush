@@ -32,7 +32,6 @@ public class SyncPolarMap extends PolarMap {
 
 	public SyncPolarMap(Array<?, ?> instrument) {
 		super(instrument);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override

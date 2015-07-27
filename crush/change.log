@@ -1,3 +1,91 @@
+>> use 'pngcairo' for gnuplot...
+>> beammap add to fork by channel instead of frame...
+>> test beammap and photometry! 
+
+
+2.30-a1
+	
+	[BUG] {PolKa} Parameter accounting for the removal of total-power
+	modulation was buggy. The dependents that were to be accumulated for
+	frames were instead added to channels, causing incorrect weightings
+	over the iterations. Fixed.
+
+	[BUG] {SyncModMap} Miscounting of good frames. However, this mapping
+	feature was really unused, making this a rather inconsequential bug.
+
+	[NEW] CRUSH has a brand new parallel architecture, giving a big boost
+	to single-scan reductions (or the reductions of a few scans) on multi
+	CPU or multicore machines (i.e. most of today's computers).	
+
+	[NEW] New option 'segment' instructs crush to break long integrations
+	into shorter ones, if desired. The argument is the desired shorter
+	integration length in seconds. (It's the complement function to the
+	existing 'merge' option). Can be used together with subscans.split too
+	to break the segments into separate scans altogether.
+
+	[NEW] New option 'shift' allows to shift the data relative to the frame
+	headers to test for timing issues or correct for them. The argument is
+	the desired timeshift in seconds, and can be positive or negative.
+
+	[DEPRECATE] The option 'drifts.method' is no longer available. The
+	standard 'blocks' method was safer and better than the laternative
+	'fft'. Because the 'fft' method was inherently problematic, and never
+	really used anyway, it's best to say goodbye to it...
+
+	[TWEAK] Some tweaks to parameter accounting. Sometimes samples that
+	did not contribute to a model were still added to parameter dependents,
+	which was incorrect.
+
+	[TWEAK] Reverted to faster (async) parameter accounting, opting for
+	explicit synxhronization externally (careful coding required...).
+
+	[TWEAK] Beammaps do not need to operate on source copies, since the
+	submaps provide a natural separation against race conditions. This
+	should result in a speedup for processing beammaps.
+
+	[CODE] {SyncModMap} simplified by using sourceGain(mode) instead of old
+	modulated waveform. No more sync() override...
+
+	[CODE] {SourceMap} fewer argument for method adding samples to map.
+
+	[CODE] {PolKa} removal of total-power modulation parallelized.
+
+	[CODE] SyncModMap parallelized.
+
+	[CODE] BeamMap to operate on original. No need for (slow) copies, 
+	since the pixelmaps provide natural isolation agains race conditions.
+
+	[CODE] BeamMap parallelized.
+	
+	[CODE] Photometry (in particulat for APEX) is parallelized.
+
+	[CODE] new one-integration-at-a-time pipeline model.
+
+	[CODE] Source model corner search made more efficient by performing on
+	perimeter pixels only. New code determines which pixels define the 
+	perimeter.	
+
+	[CODE] Source model updates and syncs parallelized.
+
+	[CODE] Source model corner search and indexing parallelized.
+
+	[CODE] Signal updates and syncs parallelized.
+
+	[CODE] Pipeline operations on Integrations are parallelized.
+
+	[CODE] Filters parallelized.
+
+	[CODE] SourceModel has its own recycler to handle temporary copies
+	during the reduction, so these do not need to be reallocated again and
+	again...
+
+	[CODE] Array Recyclers handle temporary float[], double[] and
+	DataPoint[] arrays both for the Instrument and for the Integrations,
+	reducing the need to allocate these again and again on-the-fly.
+
+	[CODE] All intensive validation tasks parallelized.
+
+
 
 2.23-1 (16 June 2015)
 

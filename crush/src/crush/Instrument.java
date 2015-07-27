@@ -29,8 +29,11 @@ import java.util.*;
 import java.text.*;
 
 import kovacs.astro.AstroTime;
+import kovacs.data.DataPoint;
 import kovacs.data.Statistics;
+import kovacs.data.WeightedPoint;
 import kovacs.math.Range;
+import kovacs.math.Vector2D;
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
 import crush.sourcemodel.*;
@@ -182,7 +185,7 @@ implements TableFormatter.Entries {
 			channel.dof = 1.0;
 			if(Double.isNaN(channel.variance)) channel.variance = 1.0 / channel.weight;
 		}
-
+		
 		census();
 		
 		isValid = true;
@@ -338,7 +341,7 @@ implements TableFormatter.Entries {
 		for(int beIndex : list) if(lookup.containsKey(beIndex)) lookup.get(beIndex).flag(Channel.FLAG_DEAD);
 	}
 	
-	public void killChannels(int pattern, int ignorePattern) {
+	public void killChannels(final int pattern, final int ignorePattern) {
 		// Anything flagged as blind so far should be flagged as dead instead...
 		for(Channel channel : this) if(channel.isFlagged(pattern)) if(channel.isUnflagged(ignorePattern)) {
 			channel.unflag(pattern);
@@ -405,7 +408,7 @@ implements TableFormatter.Entries {
 	
 	public abstract String getSizeName();
 	
-	public void census() {
+	public synchronized void census() {
 		mappingChannels = 0;
 		for(Channel channel : this) if(channel.flag == 0) if(channel.weight > 0.0) mappingChannels++;
 	}
@@ -578,6 +581,7 @@ implements TableFormatter.Entries {
 		return keys;
 	}
 	
+	// TODO parallelize...
 	public void flattenWeights() {
 		System.err.println(" Switching to flat channel weights.");
 		double sum = 0.0, sumG2 = 0.0;
@@ -592,7 +596,7 @@ implements TableFormatter.Entries {
 	}
 	
 	public void uniformGains() {
-		for(Channel channel : this) channel.uniformGains();	
+		for(Channel channel : this) channel.uniformGains();
 	}
 	
 	public void uniformGains(Field field) throws IllegalAccessException {
@@ -713,9 +717,40 @@ implements TableFormatter.Entries {
 	
 	public int getPixelCount() { return layout.getPixelCount(); }
 	
-	public Collection<? extends Pixel> getPixels() { return layout.getPixels(); }
+	public List<? extends Pixel> getPixels() { return layout.getPixels(); }
 	
-	public Collection<? extends Pixel> getMappingPixels() { return layout.getMappingPixels(); }
+	public List<? extends Pixel> getMappingPixels() { return layout.getMappingPixels(); }
+	
+	public final List<? extends Pixel> getPerimeterPixels() { return getPerimeterPixels(100); }
+	
+	public final List<? extends Pixel> getPerimeterPixels(int sections) { 
+		List<? extends Pixel> mappingPixels = getMappingPixels();
+		if(mappingPixels.size() < sections) return mappingPixels;
+		
+		Pixel[] sPixel = new Pixel[sections];
+		double[] maxd = new double[sections];
+		
+		Vector2D center = new Vector2D();
+		for(Pixel p : mappingPixels) center.add(p.getPosition());
+		center.scale(1.0 / mappingPixels.size());
+		
+		double dA = Constant.twoPi / sections;
+		
+		for(Pixel p : mappingPixels) {
+			int bin = (int) Math.floor((p.getPosition().angle() + Math.PI) / dA);
+			
+			double d = p.getPosition().distanceTo(center);
+			if(d > maxd[bin]) {
+				maxd[bin] = d;
+				sPixel[bin] = p;
+			}
+		}
+		
+		ArrayList<Pixel> perimeter = new ArrayList<Pixel>(sections);
+		for(int i=sections; --i >= 0; ) if(sPixel[i] != null) perimeter.add(sPixel[i]);
+		
+		return perimeter;
+	}
 	
 	public Hashtable<Integer, ChannelType> getFixedIndexLookup() {
 		Hashtable<Integer, ChannelType> lookup = new Hashtable<Integer, ChannelType>();
@@ -870,15 +905,22 @@ implements TableFormatter.Entries {
 		return this;
 	}
 		
-	public double[] getSourceGains(boolean filterCorrected) {
+
+	public void loadTempHardwareGains() {
+		for(Channel channel : this) channel.temp = (float) channel.getHardwareGain();
+	}
+
+
+	
+	public double[] getSourceGains(final boolean filterCorrected) {
 		final double[] sourceGain = new double[size()];
-		boolean fixedGains = hasOption("source.fixedgains");
+		final boolean fixedGains = hasOption("source.fixedgains");
 		
 		for(Channel channel : this) {
 			sourceGain[channel.index] = fixedGains ? channel.coupling : channel.coupling * channel.gain;
 			if(filterCorrected) sourceGain[channel.index] *= channel.sourceFiltering;
 		}
-		
+	
 		return sourceGain;
 	}
 	
@@ -905,17 +947,18 @@ implements TableFormatter.Entries {
 	}
 	
 	public double getAverageFiltering() {
-		final double[] sourceGain = getSourceGains(false);	
-		
-		double averageFiltering;
+		final double[] sourceGain = getSourceGains(false);		
 		double sumwG = 0.0, sumwG2 = 0.0;
-		for(Channel channel : this) if(channel.isUnflagged()) {			
+		
+		for(Channel channel : this) if(channel.isUnflagged()) {
 			double G = sourceGain[channel.index];
 			double w = channel.weight * G * G;
 			double phi = channel.sourceFiltering;
 			sumwG2 += w * phi * phi;
-			sumwG += w * phi;			
+			sumwG += w * phi;	
 		}
+		
+		double averageFiltering = 0.0;
 		if(sumwG > 0.0) averageFiltering = sumwG2 / sumwG;
 		else averageFiltering = 0.0;
 		return averageFiltering;
@@ -937,6 +980,7 @@ implements TableFormatter.Entries {
 		// Flag channels with insufficient degrees of freedom
 		double[] weights = new double[size()];
 		int n=0;
+		
 		for(Channel channel : getDetectorChannels()) {
 			if(channel.dof > 0.0) {
 				channel.unflag(Channel.FLAG_DOF);
@@ -947,36 +991,33 @@ implements TableFormatter.Entries {
 		if(n == 0) throw new IllegalStateException("DOF?");
 		
 		// Use robust mean (with 10% tails) to estimate average weight.
-		double aveW = Math.expm1(n > 10 ? Statistics.robustMean(weights, 0, n, 0.1) : Statistics.median(weights));	
-		double maxWeight = weightRange.max() * aveW;
-		double minWeight = weightRange.min() * aveW;	
-		double sumw = 0.0;
+		final double aveW = Math.expm1(n > 10 ? Statistics.robustMean(weights, 0, n, 0.1) : Statistics.median(weights));	
+		final double maxWeight = weightRange.max() * aveW;
+		final double minWeight = weightRange.min() * aveW;	
 		
-		// Flag out channels with unrealistically small or large source weights
+		double sumw = 0.0;
 		for(Channel channel : getDetectorChannels()) {
 			channel.unflag(Channel.FLAG_SENSITIVITY);
 			double w = channel.weight * channel.gain * channel.gain;
+			
 			if(w > maxWeight) channel.flag(Channel.FLAG_SENSITIVITY);
 			else if(w < minWeight) channel.flag(Channel.FLAG_SENSITIVITY);		
 			else if(channel.isUnflagged()) sumw += w;
 		}
-		
-		census();
 		
 		if(sumw == 0.0) {
 			if(mappingChannels > 0) throw new IllegalStateException("FLAG");
 			else throw new IllegalStateException("----");
 		}
 		
-		
+		census();
 	}
 	
-	public double getSourceNEFD() {		
+	public double getSourceNEFD() {
 		double sumpw = 0.0;
-		for(Channel channel : getObservingChannels()) if(channel.flag == 0 && channel.variance > 0.0) 
+		for(Channel channel : getObservingChannels()) if(channel.flag == 0) if(channel.variance > 0.0) 
 			sumpw += channel.sourceFiltering * channel.sourceFiltering / channel.variance;	
-		
-		return Math.sqrt(size()*integrationTime/sumpw) / (sourceGain * janskyPerBeam());
+		return Math.sqrt(size() * integrationTime / sumpw) / (sourceGain * janskyPerBeam());
 	}
 	
 
@@ -989,6 +1030,7 @@ implements TableFormatter.Entries {
 	
 	public double getOneOverFStat() {
 		double sum = 0.0, sumw = 0.0;
+		
 		for(Channel channel : getObservingChannels()) if(channel.isUnflagged()) if(!Double.isNaN(channel.oneOverFStat)) {
 			sum += channel.weight * channel.oneOverFStat * channel.oneOverFStat;
 			sumw += channel.weight;
@@ -1029,7 +1071,8 @@ implements TableFormatter.Entries {
 	
 	public void editScanHeader(Header header) throws HeaderCardException {}
 	
-	public void calcOverlap(double pointSize) {
+	// Sequential, because it is usually called from a parallel environment
+	public void calcOverlap(final double pointSize) {
 		if(this instanceof NonOverlappingChannels) return;
 		
 		if(pointSize == overlapSize) return;
@@ -1037,33 +1080,38 @@ implements TableFormatter.Entries {
 		for(Channel channel : this) channel.clearOverlaps();
 		
 		if(this instanceof GeometricIndexed) calcGeometricOverlaps((GeometricIndexed) this, pointSize);
-		else for(Channel channel : this) {
-			for(int k=channel.index; --k >= 0; ) {
-				final Channel other = get(k);
-				final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
-				channel.addOverlap(overlap);
-				other.addOverlap(overlap);
-			}	
+		else {
+			for(Channel channel : this) {
+				for(int k=channel.index; --k >= 0; ) {
+					final Channel other = get(k);
+					final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
+					channel.addOverlap(overlap);
+					other.addOverlap(overlap);
+				}	
+			}
 		}
 		
 		overlapSize = pointSize;
 	}
 	
-	private synchronized void calcGeometricOverlaps(GeometricIndexed geometric, double pointSize) {
+	// Sequential, because it is usually called from a parallel environment...
+	private synchronized void calcGeometricOverlaps(final GeometricIndexed geometric, final double pointSize) {
 		final double radius = 2.0 * pointSize;
 		final Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
-		final ArrayList<Integer> nearbyIndex = new ArrayList<Integer>();
-	
+		
+		double nbeams = 2.0 * pointSize / resolution;
+		final ArrayList<Integer> nearbyIndex = new ArrayList<Integer>((int) Math.ceil(nbeams * nbeams));
+		
 		for(Channel channel : this) {
 			nearbyIndex.clear();
 			geometric.addLocalFixedIndices(channel.getFixedIndex(), radius, nearbyIndex);
-			
+
 			for(int fixedIndex : nearbyIndex) {
 				if(fixedIndex >= channel.getFixedIndex()) continue;
-				
+
 				final Channel other = lookup.get(fixedIndex);
 				if(other == null) continue;
-				
+
 				final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
 				channel.addOverlap(overlap);
 				other.addOverlap(overlap);
@@ -1082,7 +1130,7 @@ implements TableFormatter.Entries {
 		}
 		
 		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+ 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
 			String className = in.readLine();
 			in.close();
 			return (Instrument<?>) Class.forName(className).newInstance(); 
@@ -1152,8 +1200,32 @@ implements TableFormatter.Entries {
 		
 	}
 	
+	public int[] getInts() { return recycler.getIntArray(size()); }
+		
+	public float[] getFloats() { return recycler.getFloatArray(size()); }
+	
+	public double[] getDoubles() { return recycler.getDoubleArray(size()); }
+	
+	public DataPoint[] getDataPoints() { return recycler.getDataPointArray(size()); }
+	
+	public static void recycle(int[] array) { recycler.recycle(array); }
+	
+	public static void recycle(float[] array) { recycler.recycle(array); }
+	
+	public static void recycle(double[] array) { recycler.recycle(array); }
+	
+	public static void recycle(WeightedPoint[] array) { recycler.recycle(array); }
+
+	public static void setRecyclerCapacity(int size) { recycler.setSize(size); }
+	
+	public static void clearRecycler() { recycler.clear(); }
+	
+	private static ArrayRecycler recycler = new ArrayRecycler();
+	
+		
 	public final static int GAINS_SIGNED = 0;
 	public final static int GAINS_BIDIRECTIONAL = 1;
 
 	
 }
+ 

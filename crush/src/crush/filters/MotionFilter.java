@@ -74,6 +74,8 @@ public class MotionFilter extends KillFilter {
 		rangeCheck();
 		
 		int pass = 0;
+		final boolean[] reject = getRejectMask();
+		
 		for(int i=reject.length; --i >= 0; ) if(!reject[i]) pass++;
 		
 		System.err.print(Util.f2.format(100.0 * pass / reject.length) + "% pass. ");
@@ -84,6 +86,7 @@ public class MotionFilter extends KillFilter {
 	}
 	
 	public double getShortestPeriod() {
+		final boolean[] reject = getRejectMask();
 		for(int i=reject.length; --i >= 0; ) if(reject[i]) return 1.0 / (df * i);
 		return Double.POSITIVE_INFINITY;
 	}
@@ -96,12 +99,19 @@ public class MotionFilter extends KillFilter {
 		int mini = ((int) Math.floor(range.min() / df));
 		int maxi = ((int) Math.ceil(range.max() / df));
 		
+		final boolean[] reject = getRejectMask();
 		Arrays.fill(reject, 0, Math.min(mini, reject.length), false);
 		if(maxi < reject.length) Arrays.fill(reject, maxi, reject.length, false);
 	}
 
 	
-	private void addFilter(Vector2D[] pos, Motion dir) {	
+	private void addFilter(Vector2D[] pos, Motion dir) {
+		makeTempData(); 
+		
+		final float[] data = getTempData();
+		final boolean[] reject = getRejectMask();
+		
+		
 		for(int t=pos.length; --t >= 0; )
 			data[t] = pos[t] == null ? Float.NaN : (float) dir.getValue(pos[t]);
 
@@ -111,7 +121,7 @@ public class MotionFilter extends KillFilter {
 		levelData();
 		
 		// FFT to get the scanning spectra
-		integration.getFFT().real2Amplitude(data);
+		integration.getParallelFFT().real2Amplitude(data);
 		
 		// Never
 		data[0] = 0.0F;
@@ -144,6 +154,8 @@ public class MotionFilter extends KillFilter {
 		double df = 1.0 / (integration.instrument.samplingInterval * data.length);
 		double f = peakIndex/2 * df;
 	
+		discardTempData();
+		
 		System.err.print(dir.id + " @ " + Util.f1.format(1000.0 * f) + " mHz, ");
 	}
 	
@@ -152,6 +164,7 @@ public class MotionFilter extends KillFilter {
 		int d = (int) Math.round(halfWidth / df);
 		if(d < 1) return;
 		
+		final boolean[] reject = getRejectMask();
 		final boolean[] expanded = new boolean[reject.length];
 		
 		int lastFrom = reject.length-1;
@@ -163,12 +176,13 @@ public class MotionFilter extends KillFilter {
 			lastFrom = from;
 		}
 		
-		reject = expanded;
+		setRejectMask(expanded);
 	}
 	
 	private void harmonize() {
 		if(harmonics < 2) return;
 		
+		final boolean[] reject = getRejectMask();
 		final boolean[] spread = new boolean[reject.length];
 		final int step = oddHarmonicsOnly ? 2 : 1;
 		
@@ -180,7 +194,7 @@ public class MotionFilter extends KillFilter {
 			}
 		}
 		
-		reject = spread;
+		setRejectMask(spread);
 	}
 	
 	private float getRMS(float[] spectrum) {

@@ -34,17 +34,28 @@ public abstract class AdaptiveFilter extends VariedFilter {
 
 	// TODO noiseFiltering to be replaced by dependents accounting...
 	protected float[][] profiles;
-	float[] profile;
-	
 	protected double dF;	
+
 	
+	private float[] profile;
+	
+		
 	public AdaptiveFilter(Integration<?, ?> integration) {
 		super(integration);
 	}
 
+	@Override
+	public Object clone() {
+		AdaptiveFilter clone = (AdaptiveFilter) super.clone();
+		if(profile != null) clone.profile = new float[profile.length];
+		return clone;
+	}
+	
 	public AdaptiveFilter(Integration<?,?> integration, float[] data) {
 		super(integration, data);
 	}
+	
+	public float[] getProfile() { return profile; }
 	
 	@Override
 	protected void setIntegration(Integration<?,?> integration) {

@@ -26,11 +26,10 @@ import java.util.List;
 
 import kovacs.math.Range;
 import kovacs.util.Constant;
-
 import crush.Integration;
 
 public class KillFilter extends FixedFilter {
-	public boolean[] reject;
+	protected boolean[] reject;
 		
 	public KillFilter(Integration<?,?> integration) {
 		super(integration);
@@ -39,6 +38,10 @@ public class KillFilter extends FixedFilter {
 	public KillFilter(Integration<?,?> integration, float[] data) {
 		super(integration, data);
 	}
+	
+	public boolean[] getRejectMask() { return reject; }
+	
+	public void setRejectMask(boolean[] mask) { reject = mask; }
 	
 	@Override
 	protected void setIntegration(Integration<?,?> integration) {
@@ -72,7 +75,7 @@ public class KillFilter extends FixedFilter {
 		int dftreq = 51 * (int) countParms() * integration.size();
 		
 		// 2xFFT (forth and back) with 31 ops each loop, 9.5 ops per datum, 34.5 ops per datum rearrange...
-		int fftreq = 2 * (31 * (int) Math.round(Math.log(data.length) / Constant.log2) * data.length + 44 * data.length); 
+		int fftreq = 2 * (31 * (int) Math.round(Math.log(nt) / Constant.log2) * nt + 44 * nt); 
 	
 		setDFT(dftreq < fftreq);
 	}

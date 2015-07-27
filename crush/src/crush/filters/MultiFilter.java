@@ -31,8 +31,7 @@ import crush.Integration;
 
 
 public class MultiFilter extends VariedFilter {
-	ArrayList<Filter> filters = new ArrayList<Filter>();
-	float[] filtered;
+	private ArrayList<Filter> filters = new ArrayList<Filter>();
 	
 	private int enabled = 0;
 	
@@ -41,16 +40,24 @@ public class MultiFilter extends VariedFilter {
 	}
 	
 	@Override
+	public Object clone() {	
+		MultiFilter clone = (MultiFilter) super.clone();
+		clone.filters = new ArrayList<Filter>(filters.size());
+		for(int i=0; i<filters.size(); i++) clone.filters.add((Filter) filters.get(i).clone());
+		return clone;
+	}
+		
+	public ArrayList<Filter> getFilters() { return filters; }
+	
+	@Override
 	protected void setIntegration(Integration<?,?> integration) {
 		super.setIntegration(integration);
 		
 		if(filters != null) for(Filter filter : filters) {
-			filter.data = data;
+			filter.setTempData(getTempData());
 			filter.setIntegration(integration);
 		}
-		
-		filtered = new float[data.length];
-		
+			
 		updateSourceProfile();
 	}
 	
@@ -142,12 +149,16 @@ public class MultiFilter extends VariedFilter {
 		super.postFilter();
 	}
 	
+
 	@Override
-	protected synchronized void fftFilter(Channel channel) {				
+	protected synchronized void fftFilter(Channel channel) {
+		final float[] data = getTempData();
+		final float[] filtered = integration.getFloats();
+		
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		Arrays.fill(filtered, 0.0F);
 		
-		integration.getFFT().real2Amplitude(data);	
+		integration.getSequentialFFT().real2Amplitude(data);	
 		data[0] = 0.0F;
 		
 		// Apply the filters sequentially...
@@ -157,7 +168,7 @@ public class MultiFilter extends VariedFilter {
 			if(!filter.isEnabled()) continue;
 			
 			// A safety check to make sure the filter uses the spectrum from the master data array...
-			if(filter.data != data) filter.data = data;
+			if(filter.getTempData() != data) filter.setTempData(data);
 			
 			filter.points = points;
 			filter.preFilter(channel);
@@ -183,14 +194,16 @@ public class MultiFilter extends VariedFilter {
 		}
 		
 		// Convert to rejected signal...
-		integration.getFFT().amplitude2Real(filtered);
+		integration.getSequentialFFT().amplitude2Real(filtered);
 		
 		// Remove the DC component...
 		if(isPedantic) levelForChannel(channel, filtered);
 		
 		// Subtract the rejected signal...
 		final int c = channel.index;
-		for(int t = integration.size(); --t >= 0; ) remove(filtered[t], integration.get(t), c);		
+		for(int t = integration.size(); --t >= 0; ) remove(filtered[t], integration.get(t), c);	
+		
+		Integration.recycle(filtered);
 	}
 	
 	@Override

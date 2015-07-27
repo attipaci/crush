@@ -171,7 +171,8 @@ public class GDFStack {
 			GaussianSource<SphericalCoordinates> source = new GaussianSource<SphericalCoordinates>();
 
 			source.setID(tokens.nextToken());
-			source.setCoordinates(new EquatorialCoordinates(line.replace('+', ' ')));
+			//source.setCoordinates(new EquatorialCoordinates(line.replace('+', ' ')));
+			source.setCoordinates(new EquatorialCoordinates(tokens.nextToken() + " " + tokens.nextToken() + "(J2000.0)"));
 			source.setPeak(1.0);
 			source.setRadius(map.getImageBeam().getCircularEquivalentFWHM());
 			

@@ -141,10 +141,10 @@ public class PhaseSet extends ArrayList<PhaseData> {
 				for(int n=from; n<to; n++) {
 					PhaseData offsets = get(n);
 					offsets.value[channel.index] -= level;
-					parms.add(offsets, offsets.weight[channel.index] / sumw);
+					parms.addAsync(offsets, offsets.weight[channel.index] / sumw);
 				}
 			}	
-			parms.add(channel, 1.0);
+			parms.addAsync(channel, 1.0);
 		}		
 		
 		parms.apply(channel);

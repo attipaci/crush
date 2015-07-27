@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -47,48 +47,8 @@ public class APEXChoppedPhotometry extends Photometry {
 			left[c] = new WeightedPoint();
 			right[c] = new WeightedPoint();			
 		}
-	
-		for(Integration<?,?> integration : scan) {
-			final APEXArraySubscan<?,?> subscan = (APEXArraySubscan<?,?>) integration;
-			final double transmission = 0.5 * (subscan.getFirstFrame().getTransmission() + subscan.getLastFrame().getTransmission());
-			final double[] sourceGain = subscan.instrument.getSourceGains(false);
-			final PhaseSet phases = subscan.getPhases();
 		
-			// Proceed only if there are enough pixels to do the job...
-			if(!checkPixelCount(integration)) continue;		
-			
-			double radius = hasOption("neighbours.radius") ? option("neighbours.radius").getDouble() : 0.0;	
-			
-			for(APEXPixel pixel : subscan.instrument.getObservingChannels()) if(pixel.sourcePhase != 0) {
-				WeightedPoint point = null;
-	
-				ArrayList<APEXPixel> neighbours = subscan.instrument.getNeighbours(pixel, radius * pixel.getResolution());
-				
-				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.getFixedIndex()];
-				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.getFixedIndex()];
-				else continue;
-				
-				/*
-				try { pixel.writeLROffset(phases, 
-						CRUSH.workPath + File.separator + "phases-" + integration.getFullID("-") + "-P" + pixel.getFixedIndex() + ".dat",
-						neighbours, sourceGain); }
-				catch(IOException e) { e.printStackTrace(); }
-				
-				try { pixel.writeLRSpectrum(phases, 
-						CRUSH.workPath + File.separator + "phases-" + integration.getFullID("-") + "-P" + pixel.getFixedIndex() + ".spec"); }
-				catch(IOException e) { e.printStackTrace(); }
-				*/
-				
-				WeightedPoint df = pixel.getCorrectedLROffset(phases, neighbours, sourceGain);	
-				double chi2 = pixel.getCorrectedLRChi2(phases, neighbours, df.value(), sourceGain);
-		
-				if(!Double.isNaN(chi2)) {
-					df.scaleWeight(Math.min(1.0, 1.0 / chi2));
-					df.scale(1.0 / (transmission * subscan.gain * sourceGain[pixel.index]));
-					point.average(df);
-				}
-			}
-		}
+		for(Integration<?,?> integration : scan) process((APEXArraySubscan<?,?>) integration, left, right);
 		
 		sourceFlux.noData();	
 		
@@ -106,6 +66,54 @@ public class APEXChoppedPhotometry extends Photometry {
 		scan.getLastIntegration().comments += " " + (F.weight() > 0.0 ? F.toString() : "<<invalid>>");
 	}
 	
+	protected void process(final APEXArraySubscan<?,?> subscan, final WeightedPoint[] left, final WeightedPoint[] right) {		
+		// Proceed only if there are enough pixels to do the job...
+		if(!checkPixelCount(subscan)) return;		
+
+
+		final double transmission = 0.5 * (subscan.getFirstFrame().getTransmission() + subscan.getLastFrame().getTransmission());
+		final double[] sourceGain = subscan.instrument.getSourceGains(false);
+		final PhaseSet phases = subscan.getPhases();
+
+		final double radius = hasOption("neighbours.radius") ? option("neighbours.radius").getDouble() : 0.0;	
+
+		subscan.instrument.getObservingChannels().new Fork<Void>() {
+			@Override
+			protected void process(APEXPixel channel) {
+				APEXPixel pixel = (APEXPixel) channel;
+				
+				WeightedPoint point = null;
+
+				ArrayList<APEXPixel> neighbours = subscan.instrument.getNeighbours(pixel, radius * pixel.getResolution());
+
+				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.getFixedIndex()];
+				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.getFixedIndex()];
+				else return;
+
+				/*
+					try { pixel.writeLROffset(phases, 
+							CRUSH.workPath + File.separator + "phases-" + integration.getFullID("-") + "-P" + pixel.getFixedIndex() + ".dat",
+							neighbours, sourceGain); }
+					catch(IOException e) { e.printStackTrace(); }
+
+					try { pixel.writeLRSpectrum(phases, 
+							CRUSH.workPath + File.separator + "phases-" + integration.getFullID("-") + "-P" + pixel.getFixedIndex() + ".spec"); }
+					catch(IOException e) { e.printStackTrace(); }
+				 */
+
+				WeightedPoint df = pixel.getCorrectedLROffset(phases, neighbours, sourceGain);	
+				double chi2 = pixel.getCorrectedLRChi2(phases, neighbours, df.value(), sourceGain);
+
+				if(!Double.isNaN(chi2)) {
+					df.scaleWeight(Math.min(1.0, 1.0 / chi2));
+					df.scale(1.0 / (transmission * subscan.gain * sourceGain[pixel.index]));
+					point.average(df);
+				}
+			}
+			
+		}.process();
+	}
+
 
 	@Override
 	public void write(String path) throws Exception {	

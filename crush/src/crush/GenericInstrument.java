@@ -25,7 +25,7 @@
 package crush;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
 
 public class GenericInstrument extends Instrument<Channel> {
 	/**
@@ -84,7 +84,7 @@ public class GenericInstrument extends Instrument<Channel> {
 	}
 
 	@Override
-	public Collection<? extends Pixel> getMappingPixels() {
+	public List<? extends Pixel> getMappingPixels() {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -96,7 +96,7 @@ public class GenericInstrument extends Instrument<Channel> {
 	}
 
 	@Override
-	public Collection<? extends Pixel> getPixels() {
+	public List<? extends Pixel> getPixels() {
 		// TODO Auto-generated method stub
 		return null;
 	}

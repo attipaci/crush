@@ -105,7 +105,7 @@ public class PhaseSignal {
 			weight[i] = dC.weight();
 			
 			offsets.addChannelDependence(parms, mode, G, dC);
-			parms.add(offsets, 1.0);
+			parms.addAsync(offsets, 1.0);
 		}	
 		
 		parms.apply(channels, 0, phases.size());

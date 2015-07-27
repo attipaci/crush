@@ -1,24 +1,9 @@
-	- Parallelize integration tasks
-	  * 
-	  * Channel tasks via timestream blocks...
-	  * Parallel with optional executor service...
 
 ---> 2.3
 
 	- Grouped channel steps
 	  * drifts, weighting, gains, filtering
 	  * dynamically by cache size... ('cache' option)
-
-	- Parallelize integration tasks
-	  (pipeline first, then initialization, and post-process)
-
-	  * use Integration.parallelism, and forks
-	  * Source:
-		- queue increments with n-1 threads
-		- 1 thread to process queue and update source synchronously
-	  ? Use central executor pool? (change Parallel accordingly?)
-	  ? Once all pipeline is parallelized, switch to sequential integration
-	    processing?
 
 
 >> MAKO chirp readout table to be more similar to ROACH calibration table...

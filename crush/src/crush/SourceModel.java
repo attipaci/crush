@@ -26,6 +26,7 @@ package crush;
 
 
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
@@ -218,15 +219,12 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 
 		final int nParms = countPoints();
 
-		new IntegrationFork<Void>() {
-			@Override
-			public void process(Integration<?,?> integration) {
-				sync(integration);
-				integration.sourceGeneration++;
-				integration.scan.sourcePoints = nParms;
-			}	
-		}.process();
-
+		for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) {
+			sync(integration);
+			integration.sourceGeneration++;
+			integration.scan.sourcePoints = nParms;
+		}
+		
 		generation++;
 
 		setBase();
@@ -276,11 +274,13 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 		return name;
 	}
 
+	/*
 	public ArrayList<Integration<?,?>> getIntegrations() {
 		final ArrayList<Integration<?,?>> integrations = new ArrayList<Integration<?,?>>();
 		for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) integrations.add(integration);
 		return integrations;		
 	}
+	*/
 
 	public boolean checkPixelCount(Integration<?,?> integration) {
 		Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
@@ -304,41 +304,7 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	public abstract void noParallel();
 	
 	public abstract void setParallel(int threads);
-
-	public abstract class ScanFork<ReturnType> extends Parallel<ReturnType> {	
-		public ScanFork() {}
-
-		public void process() throws Exception { process(CRUSH.maxThreads); }
-
-		@Override
-		public void processIndex(int index, int threadCount) throws Exception {
-			for(int i=index; i<scans.size(); i += threadCount) {
-				if(isInterrupted()) return;
-				process(scans.get(i));
-				Thread.yield();
-			}
-		}
-
-		public abstract void process(Scan<?,?> scan) throws Exception;
-	}
-
-	public abstract class IntegrationFork<ReturnType> extends Parallel<ReturnType> {	
-		public final ArrayList<Integration<?,?>> integrations = getIntegrations();
-
-		public void process() throws Exception { process(CRUSH.maxThreads); }
-
-		@Override
-		public void processIndex(int index, int threadCount) throws Exception {	
-			for(int i=index; i<integrations.size(); i += threadCount) {
-				if(isInterrupted()) return;
-				process(integrations.get(i));
-				Thread.yield();
-			}
-		}
-
-		public abstract void process(Integration<?,?> integration) throws Exception;
-	}
-
+	
 	public String getASCIIHeader() {
 		StringBuffer header = new StringBuffer(
 			"# CRUSH version: " + CRUSH.getFullVersion() + "\n" +
@@ -363,5 +329,27 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	public String getFormattedEntry(String name, String formatSpec) {
 		return null;
 	}
+	
+	public SourceModel getRecyclerCopy(boolean withContent) {
+		if(recycler != null) if(!recycler.isEmpty()) {
+			try { return recycler.take(); }
+			catch(InterruptedException e) { e.printStackTrace(); }
+		}
+		return copy(withContent);
+	}
+	
+	public synchronized void recycle() { 
+		if(recycler == null) return;
+		if(recycler.remainingCapacity() <= 0) return;
+		recycler.add(this);
+	}
+	
+	public static void setRecyclerSize(int size) {
+		if(size <= 0) recycler = null;
+		else recycler = new ArrayBlockingQueue<SourceModel>(size);
+	}
+	
+	public static ArrayBlockingQueue<SourceModel> recycler;
+	
 }
 

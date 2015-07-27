@@ -32,11 +32,10 @@ import crush.Frame;
 import crush.Integration;
 
 public abstract class VariedFilter extends Filter {
-	protected float[] pointResponse;
-
 	protected float[] sourceProfile;
-	protected float dp;
+	protected float[] pointResponse;
 	
+	protected float dp;
 	protected double sourceNorm;
 	
 	
@@ -48,12 +47,14 @@ public abstract class VariedFilter extends Filter {
 		super(integration, data);
 	}
 	
+	
+	public float[] getSourceProfile() { return sourceProfile; }
+	
 	@Override
 	protected void setIntegration(Integration<?,?> integration) {
 		super.setIntegration(integration);
 		
 		pointResponse = new float[integration.instrument.size()];
-		
 		Arrays.fill(pointResponse, 1.0F);
 		
 		updateSourceProfile();
@@ -76,7 +77,7 @@ public abstract class VariedFilter extends Filter {
 		super.postFilter(channel);
 		
 		final double rejected = countParms();
-		parms.add(channel, rejected);
+		parms.addAsync(channel, rejected);
 		
 		dp = points >= 0.0 ? (float) (rejected / points) : 0.0F;
 		
@@ -97,7 +98,7 @@ public abstract class VariedFilter extends Filter {
 	protected void remove(final float value, final Frame exposure, final int channel) {
 		if(exposure == null) return;
 		exposure.data[channel] -= value;
-		if(exposure.sampleFlag[channel] == 0) parms.add(exposure, exposure.relativeWeight * dp);		
+		if(exposure.sampleFlag[channel] == 0) frameParms[exposure.index] += exposure.relativeWeight * dp;		
 	}
 	
 	@Override

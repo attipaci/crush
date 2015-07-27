@@ -27,6 +27,7 @@ import java.util.Arrays;
 import kovacs.util.Configurator;
 import kovacs.util.Constant;
 import kovacs.util.ExtraMath;
+import kovacs.util.Parallel;
 import kovacs.util.Util;
 import crush.Channel;
 import crush.ChannelGroup;
@@ -35,19 +36,22 @@ import crush.Frame;
 import crush.Integration;
 
 
-public abstract class Filter {
+public abstract class Filter implements Cloneable {
 	protected Integration<?,?> integration;
 	protected Dependents parms;
+	protected float[] frameParms;
 	private ChannelGroup<?> channels;
 	
-	protected float[] data;
-	protected int nf;
+	
+	protected int nt, nf;
 	protected double df, points;
 	
 	boolean dft = false;
 	boolean isEnabled = false;
 	
 	boolean isPedantic = false;
+	
+	private float[] data;
 	
 	public Filter(Integration<?,?> integration) {
 		setIntegration(integration);
@@ -58,11 +62,33 @@ public abstract class Filter {
 		setIntegration(integration);
 	}
 	
+	@Override
+	public Object clone() {
+		try {
+			Filter clone = (Filter) super.clone();
+			clone.data = null;
+			clone.frameParms = null;
+			return clone;
+		} catch(CloneNotSupportedException e) { return null; }
+	}
+	
+	protected void makeTempData() {
+		if(data != null) discardTempData();
+		data = integration.getFloats();
+	}
+	
+	protected void discardTempData() {
+		Integration.recycle(data);
+		data = null;
+	}
+	
 	public boolean isEnabled() {
 		return isEnabled;
 	}
 	
-	public float[] getData() { return data; }
+	public float[] getTempData() { return data; }
+	
+	public void setTempData(float[] data) { this.data = data; }
 	
 	public abstract String getID();
 	
@@ -86,11 +112,7 @@ public abstract class Filter {
 	protected void setIntegration(Integration<?,?> integration) {
 		this.integration = integration;
 		
-		int nt = ExtraMath.pow2ceil(integration.size());
-		
-		if(data == null) data = new float[nt];
-		else if(data.length != nt) data = new float[nt];
-		
+		nt = ExtraMath.pow2ceil(integration.size());	
 		nf = nt >> 1;
 		df = 1.0 / (integration.instrument.samplingInterval * nt);
 		
@@ -124,6 +146,7 @@ public abstract class Filter {
 	public final boolean apply() { return apply(true); }
 		
 	public final boolean apply(boolean report) {
+		
 		updateConfig();
 		
 		if(!isEnabled()) return false;
@@ -132,21 +155,46 @@ public abstract class Filter {
 		
 		preFilter();
 		
-		for(Channel channel : getChannels()) {
-			loadTimeStream(channel);
+		getChannels().new Fork<float[]>() {
+			private Filter worker;
+
+			@Override
+			protected void init() {
+				super.init();
+				worker = (Filter) Filter.this.clone();
+				worker.makeTempData();
+				
+				worker.frameParms = integration.getFloats();
+				Arrays.fill(worker.frameParms, 0, integration.size(), 0.0F);
+			}
 			
-			preFilter(channel);
+			@Override
+			protected void cleanup() {
+				super.cleanup();
+				worker.discardTempData();
+			}
 			
-			// Apply the filter, with the rejected signal written to the local data array
-			if(dft) dftFilter(channel);
-			else fftFilter(channel);
+			@Override
+			public float[] getPartialResult() { return worker.frameParms; }
 			
-			if(isPedantic) levelDataForChannel(channel);
+			@Override
+			protected void postProcess() {
+				super.postProcess();
+				
+				for(Parallel<float[]> task : getWorkers()) {
+					float[] localFrameParms = task.getPartialResult();
+					parms.addForFrames(localFrameParms);
+					Integration.recycle(localFrameParms);
+				}
+			}
 			
-			postFilter(channel);
+			@Override
+			protected void process(Channel channel) {
+				worker.applyTo(channel);
+			}
 			
-			remove(channel);
-		}
+		}.process();
+		
 			
 		postFilter();
 		
@@ -155,19 +203,37 @@ public abstract class Filter {
 		return true;
 	}
 	
-	
+	private void applyTo(Channel channel) {
+		boolean localTemp = (data == null);
+		if(localTemp) makeTempData();
+		
+		loadTimeStream(channel);
+		
+		preFilter(channel);
+		
+		// Apply the filter, with the rejected signal written to the local data array
+		if(dft) dftFilter(channel);
+		else fftFilter(channel);
+		
+		if(isPedantic) levelDataForChannel(channel);
+		
+		postFilter(channel);
+		
+		remove(channel);
+		
+		if(localTemp) discardTempData();
+	}
 	
 	protected void preFilter() {
-		if(parms == null) parms = integration.getDependents(getConfigName());		
+		if(parms == null) parms = integration.getDependents(getConfigName());
+		parms.clear(getChannels(), 0, integration.size());
 	}
 	
 	protected void postFilter() {
 		parms.apply(getChannels(), 0, integration.size());	
 	}
 	
-	protected void preFilter(Channel channel) {
-		parms.clear(channel);
-	}
+	protected void preFilter(Channel channel) {}
 	
 	protected void postFilter(Channel channel) {
 		// Remove the DC component...
@@ -231,7 +297,7 @@ public abstract class Filter {
 		// Pad with zeroes as necessary...
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		
-		integration.getFFT().real2Amplitude(data);
+		integration.getSequentialFFT().real2Amplitude(data);
 		
 		updateProfile(channel);
 		
@@ -244,7 +310,7 @@ public abstract class Filter {
 			data[i++] *= rejection; 	
 		}
 		
-		integration.getFFT().amplitude2Real(data);
+		integration.getSequentialFFT().amplitude2Real(data);
 	}
 	
 	// Convert data into a rejected signal (unlevelled)

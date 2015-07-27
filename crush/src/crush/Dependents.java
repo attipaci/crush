@@ -23,22 +23,21 @@
 
 package crush;
 
+import java.util.Arrays;
+
 
 public class Dependents {
 	private String name;
 	private Integration<?, ?> integration;
-	private Entry[] forFrame, forChannel;
+	private float[] forFrame, forChannel;
 	
 	public Dependents(Integration<?, ?> owner, String name) {
 		this.name = name;
 		this.integration = owner;
 		
-		forFrame = new Entry[integration.size()];
-		for(int i=forFrame.length; --i >= 0; ) forFrame[i] = new Entry();
-		
-		forChannel = new Entry[integration.instrument.size()];
-		for(int i=forChannel.length; --i >= 0; ) forChannel[i] = new Entry();
-		
+		forFrame = new float[integration.size()];
+		forChannel = new float[integration.instrument.size()];
+			
 		integration.dependents.put(name, this);
 	}
 	
@@ -47,71 +46,49 @@ public class Dependents {
 	public void setName(String value) { this.name = value; }
 	
 	public Integration<?, ?> getIntegration() { return integration; }
-	
-	public void clear(final Iterable<? extends Channel> channels, final int from, int to) { 
-		while(--to >= from) forFrame[to].clearFrom(integration.get(to));
-		for(final Channel channel : channels) forChannel[channel.index].clearFrom(channel);
+
+	public final void addAsync(final Frame exposure, final double dp) { 
+		forFrame[exposure.index] += dp; 
 	}
 	
-	public final void clear(final Frame frame) { forFrame[frame.index].clearFrom(frame); }
-	
-	public final void clear(final Channel channel) { forChannel[channel.index].clearFrom(channel); }
-	
-	public final void add(final Frame exposure, final Channel channel, final double dp) {
-		forFrame[exposure.index].increment(dp); 
-		forChannel[channel.index].increment(dp); 
-	}
-	
-	public final void add(final Frame exposure, final double dp) { 
-		forFrame[exposure.index].increment(dp); 
-	}
-	
-	public final void addForFrame(final int index, final double dp) { 
-		forFrame[index].increment(dp);
+	public final void addAsync(final Channel channel, final double dp) { 
+		forChannel[channel.index] += dp;
 	}
 	
 	
-	public final void add(final Channel channel, final double dp) { 
-		forChannel[channel.index].increment(dp);
+	public synchronized void addForChannels(float[] dp) {
+		for(int i=forChannel.length; --i >= 0; ) forChannel[i] += dp[i];
 	}
 	
-	public final void addForChannel(final int index, final double dp) { 
-		forChannel[index].increment(dp); 
+	public synchronized void addForFrames(float[] dp) {
+		for(int i=forFrame.length; --i >= 0; ) forFrame[i] += dp[i];
 	}
 	
-	public void apply(final Iterable<? extends Channel> channels, final int from, int to) {
+	public synchronized void addForChannels(double[] dp) {
+		for(int i=forChannel.length; --i >= 0; ) forChannel[i] += dp[i];
+	}
+	
+	public	synchronized void addForFrames(double[] dp) {
+		for(int i=forFrame.length; --i >= 0; ) forFrame[i] += dp[i];
+	}
+	
+	public synchronized void clear(final Iterable<? extends Channel> channels, final int from, int to) { 
+		Arrays.fill(forFrame, from, to,  0.0F);
+		Arrays.fill(forChannel,  0.0F);
+	}
+		
+	public synchronized void apply(final Iterable<? extends Channel> channels, final int from, int to) {
 		while(--to >= from) {
 			final Frame exposure = integration.get(to);
-			if(exposure != null) exposure.addDependents(forFrame[to].getValue());
+			if(exposure != null) exposure.addDependents(forFrame[to]);
 		}
 		
-		for(final Channel channel : channels) channel.addDependents(forChannel[channel.index].getValue());
+		for(final Channel channel : channels) channel.addDependents(forChannel[channel.index]);
 	}
 	
-	public double get(final Frame exposure) { return forFrame[exposure.index].getValue(); }
+	public double get(final Frame exposure) { return forFrame[exposure.index]; }
 		
-	public double get(final Channel channel) { return forChannel[channel.index].getValue(); }
+	public double get(final Channel channel) { return forChannel[channel.index]; }
 	
 
-	public static class Entry {
-		private double value = 0.0;
-		
-		public final synchronized void increment(double dp) { value += dp; }
-		
-		public final synchronized void decrement(double dp) { value -= dp; }
-		
-		public final synchronized double getValue() { return value; }
-		
-		public final synchronized void clear() { value = 0.0; }
-		
-		public final synchronized void clearFrom(Frame exposure) { 
-			if(exposure != null) exposure.removeDependents(value);
-			value = 0.0;
-		}
-		
-		public final synchronized void clearFrom(Channel channel) { 
-			channel.removeDependents(value);
-			value = 0.0;
-		}	
-	}
 }

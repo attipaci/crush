@@ -23,7 +23,7 @@
 
 package crush.array;
 
-import java.util.Collection;
+import java.util.List;
 
 import crush.InstrumentLayout;
 import crush.Pixel;
@@ -36,12 +36,12 @@ public class SingleColorLayout<ChannelType extends SingleColorPixel> extends Ins
 	}
 
 	@Override
-	public Collection<? extends Pixel> getPixels() {
+	public List<? extends Pixel> getPixels() {
 		return instrument.copyGroup();
 	}
 
 	@Override
-	public Collection<? extends Pixel> getMappingPixels() {
+	public List<? extends Pixel> getMappingPixels() {
 		return instrument.getObservingChannels().copyGroup().discard(~0);	
 	}
 

@@ -173,7 +173,7 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 		if(overlaps != null) overlaps.clear();
 	}
 	
-	public void addOverlap(Overlap overlap) {
+	public synchronized void addOverlap(Overlap overlap) {
 		if(overlap.a != this && overlap.b != this) return;
 		if(overlaps == null) overlaps = new ArrayList<Overlap>();
 		overlaps.add(overlap);		
