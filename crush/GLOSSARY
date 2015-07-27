@@ -777,19 +777,8 @@
 			@Version: 2.12
 			As of version 2.12, the value 'max' is also accepted
 			producing results identical to that of 'offsets'.
-			@See: 'sourcesize', 'stability', 'offsets
+			@See: 'sourcesize', 'stability', 'offsets'
 	
-:: drifts.method=<name>	@Advanced
-			Choose the method, with which drifts are removed. The 
-			choice is between 'blocks' or 'fft'. The former 
-			estimates and removes drifts from the timestreams in 
-			consecutive time windows (i.e. blocks) of data. This is
-			very fast, and scales linearly with data size. The 
-			'fft' method implements a spectral lowpass filter, with
-			the same characteristic timescale as the other method. 
-			It is slower, and its computation requirement scales 
-			with N log N.
-
 :: echo=<text>		@Advanced
 			@Since: 2.12
 			Print <text> onto the error stream. This <text> can
@@ -2536,6 +2525,15 @@
 			whereas 'scramble' can be used also for few, or even 
 			single scans to nearly the same effect.
 			@See: 'jackknife'
+
+:: segment=X		@Expert
+			@Since: 2.30
+			Break long integrations into shorter ones, with max.
+			duration of X seconds. It's the complement option to
+			'merge', which does the opposite. Can also be used
+			together with 'subscans.split' to break the shorter
+			segments into separate scans altogether.
+			@See: 'merge', 'subscans.split'
 			
 :: serial.[...]		@Advanced
 			Specify settings to apply when the scan's serial number
@@ -2549,6 +2547,12 @@
 			specifies an instrument rotation of 15.3 degrees up 
 			until and including scan 2593.
 			@See: 'mjd.[...]', 'date.[...]'
+
+:: shift=X		@Expert
+			@Since: 2.30
+			Shift the data by X seconds relative to the frame 
+			headers. It can be used to diagnose, or correct for,
+			timing problems.
 
 :: signal-response	@Expert
 			This is diagnostic option. It affects the console

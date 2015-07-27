@@ -29,6 +29,7 @@ import java.io.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import kovacs.data.*;
 import kovacs.fft.FloatFFT;
@@ -78,7 +79,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public DataPoint aveScanSpeed;
 	public MultiFilter filter;
-	private FloatFFT fft;
+	private FloatFFT sequentialFFT, parallelFFT;
 	
 	public double filterTimeScale = Double.POSITIVE_INFINITY;
 	public double nefd = Double.NaN; // It is readily cast into the Jy sqrt(s) units!!!
@@ -86,8 +87,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	protected boolean isDetectorStage = false;
 	protected boolean isValid = false;
 	
-	public int parallelism = 1;		// The desired number of parallel threads to run when processing.
-									// The actual number of threads may be different from this.
 	
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
 	// The constructor of Integration thus copies the Scan instrument for private use...
@@ -101,7 +100,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	@Override
 	public Object clone() { 
 		Integration<InstrumentType, FrameType> clone = (Integration<InstrumentType, FrameType>) super.clone();
-		// TODO redo it safely, s.t. existing reduction steps copy over as well.
+		// TODO redo it safely, s.t. existing reduction steps copy over as well?
 		clone.dependents = new Hashtable<String, Dependents>(); 
 		clone.signals = new Hashtable<Mode, Signal>();
 		clone.filter = null;
@@ -118,9 +117,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public void reindex() {
-		for(int t=size(); --t >= 0; ) {
-			final Frame exposure = get(t);
-			if(exposure != null) exposure.index = t;
+		for(int k=size(); --k >= 0; ) {
+			final Frame exposure = get(k);
+			if(exposure != null) exposure.index = k;
 		}
 	}
 	
@@ -140,15 +139,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Incorporate the relative instrument gain (under loading) in the scan gain...
 		gain *= instrument.sourceGain;	
 		
-		try {
-			new FrameFork<Void>() {
-				@Override
-				public void process(FrameType frame) { if(frame != null) frame.validate(); }
-			}.process(CRUSH.maxThreads);
-		}
-		catch(Exception e) { e.printStackTrace(); }
+		new CRUSH.IndexedFork<Void>(size()) {
+			@Override
+			protected void processIndex(int index) {
+				Frame frame = get(index);
+				if(frame == null) return;
+				frame.validate();
+				frame.index = index;
+			}
+		}.process();
 			
 		if(hasGaps(1)) fillGaps();
+		
+		if(hasOption("shift")) shiftData(option("shift").getDouble() * Unit.s);
 		
 		if(hasOption("detect.chopped")) detectChopper();
 		
@@ -171,7 +174,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(hasOption("filter.kill")) {
 			System.err.println("   FFT Filtering specified sub-bands...");
-			removeOffsets(false, CRUSH.maxThreads);
+			removeOffsets(false);
 			KillFilter filter = new KillFilter(this);
 			filter.updateConfig();
 			filter.apply();
@@ -200,10 +203,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// or to allow bootstrapping pixel weights when pixeldata is not defined.
 		// Must do this before direct tau estimates...
 		if(hasOption("level") || !hasOption("pixeldata")) {
-			System.err.println("   Removing DC offsets.");
 			boolean isRobust = false;
 			if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust=true;
-			removeOffsets(isRobust, CRUSH.maxThreads);
+			
+			System.err.println("   Removing DC offsets" + (isRobust ? " (robust)" : "") + ".");
+			removeOffsets(isRobust);
 		}
 			
 		if(hasOption("tau")) {
@@ -247,31 +251,24 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public double getDuration() { return size() * instrument.samplingInterval; }
 	
 	public void invert() {
-		for(Frame frame : this) if(frame != null) frame.invert();
+		new Fork<Void>() {
+			@Override
+			protected void process(FrameType frame) { frame.invert(); }
+		}.process();
 	}
 	
-	public int getFrameCount(int excludeFlags) {
+	public int getFrameCount(final int excludeFlags) {
 		int n=0;
-		for(Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(excludeFlags)) n++;
+		for(Frame frame : this) if(frame != null) if(frame.isUnflagged(excludeFlags)) n++;
 		return n;
 	}
 	
 	
-	public int getFrameCount(int excludeFlags, Channel channel, int excludeSamples) {
+	public int getFrameCount(final int excludeFlags, final Channel channel, final int excludeSamples) {
 		int n=0;
-		for(Frame exposure : this) if(exposure != null) 
-			if(exposure.isUnflagged(excludeFlags)) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0) n++;
+		for(Frame frame : this) if(frame != null) if(frame.isUnflagged(excludeFlags)) if((frame.sampleFlag[channel.index] & excludeSamples) == 0) n++;
 		return n;
 	}
-	
-	/* TODO
-	public void shiftData() {
-		double dt = option("shift").getDouble();
-		System.err.print(" Shifting by " + dt + " sec.");
-		//shift(dt * Unit.s);
-		System.err.println();		
-	}
-	*/
 	
 	public void selectFrames() {
 		Range range = option("frames").getRange(true);
@@ -292,33 +289,38 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		System.err.print("   Flagging out-of-range data. ");
 		
-		final int[] n = new int[instrument.size()];
-		int N = 0;
-		for(final Frame exposure : this) if(exposure != null) {
-			for(final Channel channel : instrument) if(!range.contains(exposure.data[channel.index])) {
-				exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+		int[] n = getInts();
+		
+		for(Frame frame : this) if(frame != null) {
+			for(final Channel channel : instrument) if(!range.contains(frame.data[channel.index])) {
+				frame.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
 				n[channel.index]++;
 			}
-			N++;
 		}
 		
 		if(!hasOption("range.flagfraction")) {
+			recycle(n);
 			System.err.println();
 			return;
 		}
-			
+		
 		int flagged = 0;
-		final double f = 1.0 / N;
+		final double f = 1.0 / getFrameCount(0);
 		final double critical = option("range.flagfraction").getDouble();
+		
+		
 		for(final Channel channel : instrument) {
 			if(f * n[channel.index] > critical) {
 				channel.flag(Channel.FLAG_DAC_RANGE | Channel.FLAG_DEAD);
 				flagged++;
 			}
 		}
-	
-		System.err.println(flagged + " channel(s) discarded.");
+
+		recycle(n);
 		
+		
+		System.err.println(flagged + " channel(s) discarded.");
+
 		instrument.census();
 	}
 	
@@ -377,7 +379,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void setTau(String id, double value) {
 		Vector2D t = getTauCoefficients(id);
 		Vector2D inband = getTauCoefficients(instrument.getName());
-		setZenithTau(inband.x() / t.x() * (value - t.y()) + inband.y());
+		try { setZenithTau(inband.x() / t.x() * (value - t.y()) + inband.y()); }
+		catch(Exception e) { System.err.println(" WARNING! could not set zenith tau: " + e.getMessage()); }
 	}
 	
 	public double getTau(String id, double value) {
@@ -402,19 +405,23 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return coeff;
 	}
 	
-	public void setTau(double value) throws Exception {	
+	public void setTau(final double value) throws Exception {	
 		if(this instanceof GroundBased) {
 			try { setZenithTau(value); }
 			catch(NumberFormatException e) {}
 		}
-		else for(Frame frame : this) frame.setTransmission(Math.exp(-value));
+		else {
+			final double transmission = Math.exp(-value);
+			for(Frame frame : this) frame.setTransmission(transmission);
+		}
 	}
 	
-	public void setZenithTau(double value) {
+	public void setZenithTau(final double value) {
 		if(!(this instanceof GroundBased)) throw new UnsupportedOperationException("Only implementation of GroundBased can set a zenith tau.");
 		System.err.println("   Setting zenith tau to " + Util.f3.format(value));
 		zenithTau = value;
-		for(Frame frame : this) if(frame != null) ((HorizontalFrame) frame).setZenithTau(zenithTau);
+		
+		for(Frame frame : this) ((HorizontalFrame) frame).setZenithTau(value);
 	}
 
 	public void calcScanSpeedStats() {
@@ -449,8 +456,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 
-	public void pointingAt(Vector2D offset) {
-		for(final Frame frame : this) if(frame != null) frame.pointingAt(offset);
+	public void pointingAt(final Vector2D offset) {
+		for(Frame frame : this) if(frame != null) frame.pointingAt(offset);
 	}
 	
 	
@@ -467,18 +474,28 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public Filter getFilter(String name) {
 		name = name.toLowerCase();
-		if(name.equals("motion")) return new MotionFilter(this, filter.getData());
-		else if(name.equals("kill")) return new KillFilter(this, filter.getData());
-		else if(name.equals("whiten")) return new WhiteningFilter(this, filter.getData());
+		if(name.equals("motion")) return new MotionFilter(this);
+		else if(name.equals("kill")) return new KillFilter(this);
+		else if(name.equals("whiten")) return new WhiteningFilter(this);
 		else return null;
 	}
 	
-	public FloatFFT getFFT() {
-		if(fft == null) {
-			fft = new FloatFFT();
-			fft.setSequential();
+	public FloatFFT getSequentialFFT() {
+		if(sequentialFFT == null) {
+			sequentialFFT = new FloatFFT();
+			sequentialFFT.setSequential();
 		}
-		return fft;
+		return sequentialFFT;
+	}
+	
+	public FloatFFT getParallelFFT() {
+		if(parallelFFT == null) {
+			parallelFFT = new FloatFFT();
+			if(CRUSH.executor instanceof ThreadPoolExecutor) parallelFFT.setPool((ThreadPoolExecutor) CRUSH.executor);
+			else parallelFFT.setThreads(CRUSH.maxThreads);
+		}
+			
+		return parallelFFT;
 	}
 	
 	public abstract FrameType getFrameInstance();
@@ -549,21 +566,29 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return get(t);
 	}
 
-	public boolean hasGaps(int tolerance) {
+
+	public boolean hasGaps(final int tolerance) {
 		System.err.print("   Checking for gaps: ");
+			
+		boolean hasGaps = false;
 		
-		double lastMJD = Double.NaN;
-		for(int t=size(); --t >= 0; ) if(!Double.isNaN(lastMJD)) {
-			final int gap = (int)Math.round((lastMJD - get(t).MJD) * Unit.day / instrument.samplingInterval) - 1;
-			lastMJD = get(t).MJD;
-			if(gap > tolerance) {
-				System.err.println("Gap(s) found! :-(");
-				return true;
+		Frame last = null;
+		
+		for(int t=size(); --t > 0; ) {
+			final Frame frame = get(t);
+			
+			if(frame == null) continue;
+			
+			if(last != null) {
+				int gap = (int) Math.round((last.MJD - frame.MJD) * Unit.day / instrument.samplingInterval) - (last.index - t);
+				if(gap > tolerance) { hasGaps = true; break; }
 			}
+			last = frame;
 		}
 		
-		System.err.println("No gaps. :-)");
-		return false;
+		System.err.println(hasGaps ? "Gap(s) found! :-(" : "No gaps. :-)");
+
+		return hasGaps;
 	}
 	
 	public void fillGaps() {
@@ -623,32 +648,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public synchronized void slim(int threads) {
 		if(instrument.slim(false)) {
-			try {
-				new FrameFork<Void>() {
-					@Override
-					public void process(FrameType frame) { if(frame != null) frame.slimTo(instrument); }
-				}.process(threads);
-			}
-			catch(Exception e) { e.printStackTrace(); }
-		
+			new Fork<Void>() {
+				@Override
+				protected void process(FrameType frame) { if(frame != null) frame.slimTo(instrument); }
+			}.process();
+
 			instrument.reindex();
 		}
 	}
 	
-	public synchronized void scale(double factor) {
+	public synchronized void scale(final double factor) {
 		if(factor == 1.0) return;
-		for(final Frame frame : this) if(frame != null) frame.scale(factor);
+		for(Frame frame : this) if(frame != null) frame.scale(factor);
 	}
-	
-
-	public Range getRange(ChannelGroup<?> channels) {
-		Range range = new Range();
 		
-		for(final Frame frame : this) if(frame != null) {
-			for(final Channel channel : channels) if(frame.sampleFlag[channel.index] == 0) range.include(frame.data[channel.index]);
-		}
-		return range;		
-	}
 
 	public double getPA() {
 		HorizontalFrame first = (HorizontalFrame) getFirstFrame();
@@ -656,110 +669,169 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return 0.5 * (Math.atan2(first.sinPA, first.cosPA) + Math.atan2(last.sinPA, last.cosPA));
 	}
 	
+	
+	public void localLevel(final int from, final int to, final Dependents parms, final boolean robust) {	
+		instrument.new Fork<float[]>() {
+			private WeightedPoint increment;
+			private DataPoint[] buffer;
+			private float[] frameParms;
+			
+			@Override
+			protected void init() {
+				super.init();
+				increment = new WeightedPoint();
+				
+				frameParms = getFloats();
+				Arrays.fill(frameParms, 0, size(), 0.0F);
+				
+				if(robust) buffer = getDataPoints();
+			}
+			
+			@Override
+			protected void cleanup() { 
+				super.cleanup();
+				if(buffer != null) recycle(buffer); 
+			}
+			
+			@Override
+			public float[] getPartialResult() { return frameParms; }
+			
+			@Override
+			public void postProcess() {
+				super.postProcess();
+				for(Parallel<float[]> task : getWorkers()) {
+					float[] localFrameParms = task.getPartialResult();
+					parms.addForFrames(localFrameParms);
+					recycle(localFrameParms);
+				}
+			}
+			
+			@Override
+			protected void process(Channel channel) {
+				if(robust) getMedianLevel(channel, from, to, buffer, increment);
+				else getMeanLevel(channel, from, to, increment);
+				removeOffset(channel, from, to, frameParms, increment);
+				parms.addAsync(channel, 1.0);
+			}
+		}.process();
+		
+		// Remove the drifts from all signals also to match bandpass..
+		final ArrayList<Signal> sigs = new ArrayList<Signal>(signals.values());
+		new CRUSH.IndexedFork<Void>(sigs.size()) {
+			@Override
+			protected void processIndex(int k) { sigs.get(k).level(from, to); }
+		}.process();
+	}
+	
+	
+	
 	public void removeOffsets(final boolean robust) {
-		removeOffsets(robust, 1);
+		removeDrifts(size(), robust);
 	}
 	
-	public void removeOffsets(final boolean robust, int threads) {
-		removeDrifts(size(), robust, threads);
-	}
-	
-	
+
 	public void removeDrifts(final int targetFrameResolution, final boolean robust) {
-		removeDrifts(targetFrameResolution, robust, 1);
-	}
-	
-	public void removeDrifts(final int targetFrameResolution, final boolean robust, int threads) {
-		if(threads < 1) threads = 1;
-		if(threads > instrument.size()) threads = instrument.size();
-		
 		final int driftN = Math.min(size(), ExtraMath.pow2ceil(targetFrameResolution));
-		
 		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);
 			
 		final Dependents parms = getDependents("drifts");
-		final ArrayList<Signal> sigs = new ArrayList<Signal>(signals.values());
-		final int nc = instrument.size();
 		
 		if(driftN < size()) comments += (robust ? "[D]" : "D") + "(" + driftN + ")";
 		else comments += robust ? "[O]" : "O";
 		
-		try {
-			new Parallel<Void>() {
-				@Override
-				protected void processIndex(int i, int threadCount) throws Exception {	
-					ChannelGroup<Channel> g = new ChannelGroup<Channel>("parchannel-" + i);
-					g.ensureCapacity(ExtraMath.roundupRatio(instrument.size(), threadCount));
-					for(int c = i; c < nc; c += threadCount) g.add(instrument.get(c));
-								
-					// Remove drifts from a parallel group of channels...
-					removeChannelDrifts(g, parms, driftN, robust);			
-					
-					// Remove drifts from signals too...
-					for(int k = i; k < sigs.size(); k += threadCount) sigs.get(k).removeDrifts();
-				}
-				
-			}.process(threads);
-		}
-		catch(Exception e) { e.printStackTrace(); }
+		// Remove the 1/f drifts from all channels
+		removeChannelDrifts(instrument, parms, driftN, robust);	
+
+		// Remove the drifts from all signals also to match bandpass..
+		final ArrayList<Signal> sigs = new ArrayList<Signal>(signals.values());
 		
-		
-		
+		new CRUSH.IndexedFork<Void>(sigs.size()) {
+			@Override
+			protected void processIndex(int k) { sigs.get(k).removeDrifts(); }
+		}.process();
 	}
-	
-	
+
 	public void removeChannelDrifts(final ChannelGroup<? extends Channel> channels, final int targetFrameResolution, final boolean robust) {
 		final int driftN = Math.min(size(), ExtraMath.pow2ceil(targetFrameResolution));
 		filterTimeScale = Math.min(filterTimeScale, driftN * instrument.samplingInterval);	
-		removeChannelDrifts(channels, getDependents("drifts"), driftN, robust);
-		
+		removeChannelDrifts(channels, getDependents("drifts"), driftN, robust);	
 	}
 	
-	public void removeChannelDrifts(final ChannelGroup<? extends Channel> channels, final Dependents parms, final int driftN, final boolean robust) {
-
-		WeightedPoint[] buffer = null;	// The timestream for robust estimates
-
-		final WeightedPoint increment = new WeightedPoint();	
-		
-		final WeightedPoint[] aveOffset = new WeightedPoint[channels.size()];
-		for(int i=aveOffset.length; --i >= 0; ) aveOffset[i] = new WeightedPoint();
 	
+	public void removeChannelDrifts(final ChannelGroup<? extends Channel> channels, final Dependents parms, final int driftN, final boolean robust) {
+		parms.clear(channels, 0, size());
 		
-		if(robust) {
-			buffer = new WeightedPoint[size()];
-			for(int i=buffer.length; --i >= 0; ) buffer[i] = new WeightedPoint();
-		}
-				
+		final DataPoint[] aveOffset = instrument.getDataPoints();
+		for(int i=channels.size(); --i >= 0; ) aveOffset[i].noData();
+		
 		final int nt = size();
-		for(int from=0; from < nt; from += driftN) {
-			int to = Math.min(size(), from + driftN);
+		
+		new CRUSH.IndexedFork<float[]>(channels.size()) {
+			private WeightedPoint increment = new WeightedPoint();
+			private float[] frameParms;
+			private DataPoint[] buffer;
 			
-			parms.clear(channels, from, to);
-			
-			for(int k=channels.size(); --k >= 0; ) {
-				final Channel channel = channels.get(k);
-					
-				if(robust) getMedianLevel(channel, from, to, buffer, increment);
-				else getMeanLevel(channel, from, to, increment);
-			
-				aveOffset[k].average(increment);
+			@Override
+			protected void init() {
+				super.init();
+				increment = new WeightedPoint();
 				
-				removeOffset(channel, from, to, parms, increment);
+				frameParms = getFloats();
+				Arrays.fill(frameParms, 0, size(), 0.0F);
+				
+				if(robust) buffer = getDataPoints();
 			}
 			
-			parms.apply(channels, from, to);
-		}
+			@Override
+			protected void cleanup() {
+				super.cleanup();
+				if(buffer != null) recycle(buffer);
+			}
 			
-		// Store the mean offset as a channel property...
+			@Override
+			public float[] getPartialResult() { return frameParms; }
+			
+			@Override
+			protected void postProcess() {
+				super.postProcess();
+				for(Parallel<float[]> task : getWorkers()) {
+					float[] localFrameParms = task.getPartialResult();
+					parms.addForFrames(localFrameParms);
+					recycle(localFrameParms);
+				}
+			}
+			
+			@Override
+			protected void processIndex(int k) {
+				final Channel channel = channels.get(k);
+				
+				for(int from=0; from < nt; from += driftN) {
+					final int to = Math.min(from + driftN, size());
+
+					if(robust) getMedianLevel(channel, from, to, buffer, increment);
+					else getMeanLevel(channel, from, to, increment);
+				
+					aveOffset[k].average(increment);
+					
+					removeOffset(channel, from, to, frameParms, increment);
+					
+					if(increment.weight() > 0.0) parms.addAsync(channel, 1.0);
+				}
+			}
+		}.process();
+		
+		
+		parms.apply(channels, 0, size());
+		
+		final double crossingTime = getPointCrossingTime();	
+		
 		for(int k=channels.size(); --k >= 0; ) {
 			final Channel channel = channels.get(k);
 			final double G = isDetectorStage ? channel.getHardwareGain() : 1.0;
 			channel.offset += G * aveOffset[k].value();
-		}
 			
-		final double crossingTime = getPointCrossingTime();	
-	
-		if(driftN < size()) for(final Channel channel : channels) {
+			if(driftN >= size()) return;
+			
 			if(!Double.isNaN(crossingTime) && !Double.isInfinite(crossingTime)) {
 				// Undo prior drift corrections....
 				if(!Double.isInfinite(channel.filterTimeScale)) {
@@ -770,16 +842,17 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				channel.sourceFiltering *= 1.0 - crossingTime / channel.filterTimeScale;
 			}
 			else channel.sourceFiltering = 0.0;
-			
+
 			channel.filterTimeScale = Math.min(filterTimeScale, channel.filterTimeScale);
-		}		
-		
-		
-		if(CRUSH.debug) checkForNaNs(channels, 0, size());
-		
+		}
+				
+		Instrument.recycle(aveOffset);
+	
+		if(CRUSH.debug) checkForNaNs(channels, 0, size());	
 	}
 	
-	private void removeOffset(final Channel channel, final int from, int to, final Dependents parms, final WeightedPoint increment) {
+
+	private void removeOffset(final Channel channel, final int from, int to, final float[] frameParms, final WeightedPoint increment) {
 		final float delta = (float) increment.value();
 				
 		// Remove offsets from data and account frame dependence...	
@@ -790,15 +863,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			exposure.data[channel.index] -= delta;
 			
 			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0)
-				parms.add(exposure, exposure.relativeWeight / increment.weight()); 
-					
+				frameParms[exposure.index] += exposure.relativeWeight / increment.weight();
 		}
-		
-		parms.add(channel, 1.0);	
-		
-		Thread.yield();
 	}
-	
+
 	
 	private void getMeanLevel(final Channel channel, final int from, int to, final WeightedPoint increment) {
 		to = Math.min(to, size());
@@ -816,8 +884,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 		}
 		if(increment.weight() > 0.0) increment.setValue(increment.value() / increment.weight());
-		
-		Thread.yield();
 	}
 
 	
@@ -837,13 +903,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				final WeightedPoint point = buffer[n++];
 				point.setValue(exposure.data[c]);
 				point.setWeight(exposure.relativeWeight);
-				sumw += point.weight();
+				sumw += exposure.relativeWeight;
 			}
 		}
 		
 		if(sumw > 0.0) Statistics.smartMedian(buffer, 0, n, 0.25, increment);	
-		
-		Thread.yield();
 	}
 	
 
@@ -851,7 +915,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		final Modality<?> modality = instrument.modalities.get(modalityName);
 		if(modality == null) return false;
-		
 		
 		modality.solveGains = hasOption("gains");
 		modality.phaseGains = hasOption("phasegains");
@@ -894,97 +957,171 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public Dependents getDependents(String name) {
 		return dependents.containsKey(name) ? dependents.get(name) : new Dependents(this, name);
 	}
-
-
+	
+	
 	public void getPixelWeights() {
 		comments += "W";
 		
-		final ChannelGroup<?> liveChannels = instrument.getConnectedChannels();
-	
-		// Use the weight field for the weight-sum
-		for(final Channel channel : liveChannels) channel.weight = 0.0;	
+		final ChannelGroup<?> channels = instrument.getConnectedChannels();
 		
-		final double[] var = new double[instrument.size()];
-		
-		for(final Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(Frame.WEIGHTING_FLAGS)) {	
-			for(final Channel channel : liveChannels) if(exposure.sampleFlag[channel.index] == 0) {	
-				final float value = exposure.data[channel.index];
-				var[channel.index] += (exposure.relativeWeight * value * value);
-				channel.weight += exposure.relativeWeight;
-			}
-		}
-	
-		for(final Channel channel : liveChannels) if(channel.weight > 0.0) {
-			channel.dof = Math.max(0.0, 1.0 - channel.dependents / channel.weight);
-			channel.variance = channel.weight > 0.0 ? var[channel.index] / channel.weight : 0.0;
-			channel.weight = channel.variance > 0.0 ? channel.dof / channel.variance : 0.0;
-		}
-
-		flagWeights();
-	}
-	
-
-	public void getDifferencialPixelWeights() {
-		final int delta = framesFor(10.0 * getPointCrossingTime());
-		
-		comments += "w";
-
-		final ChannelGroup<?> liveChannels = instrument.getConnectedChannels();
-		
-		// Use the weight field for the weight-sum...
-		for(final Channel channel : liveChannels) channel.weight = 0.0;
-		
-		final double[] var = new double[instrument.size()];
-		final int nT = size();
-		
-		for(int t=delta; t<nT; t++) {
-			final Frame exposure = get(t);
-			final Frame prior = get(t-delta);
+		Fork<DataPoint[]> variances = new Fork<DataPoint[]>() {
+			private DataPoint[] var;
 			
-			if(exposure != null && prior != null) if(((exposure.flag | prior.flag) & Frame.WEIGHTING_FLAGS) == 0) {
-				for(final Channel channel : liveChannels) if((exposure.sampleFlag[channel.index] | prior.sampleFlag[channel.index]) == 0) {
-					final float diff = exposure.data[channel.index] - prior.data[channel.index];
-					var[channel.index] += (exposure.relativeWeight * diff * diff);
-					channel.weight += exposure.relativeWeight;		    
+			@Override
+			protected void init() {
+				super.init();
+				var = instrument.getDataPoints();
+				for(int i=instrument.size(); --i >= 0; ) var[i].noData();
+			}
+			
+			@Override
+			protected void process(FrameType exposure) {
+				if(exposure.isFlagged(Frame.WEIGHTING_FLAGS)) return;
+				
+				for(Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
+					final float value = exposure.data[channel.index];
+					final DataPoint point = var[channel.index];
+					
+					point.add(exposure.relativeWeight * value * value);
+					point.addWeight(exposure.relativeWeight);
 				}
 			}
-		}
- 
+			
+			@Override
+			public DataPoint[] getPartialResult() { return var; }
+			
+			@Override
+			public DataPoint[] getResult() {
+				init();
+				
+				for(Parallel<DataPoint[]> task : getWorkers()) {
+					final DataPoint[] localVar = task.getPartialResult();
+					for(int i=instrument.size(); --i >= 0; ) {
+						final DataPoint global = var[i];
+						final DataPoint local = localVar[i];
+						
+						global.add(local.value());
+						global.addWeight(local.weight());
+					}
+					Instrument.recycle(localVar);
+				}
+				return var;
+			}	
+		};
 		
-		for(final Channel channel : liveChannels) if(channel.weight > 0.0) {
-			channel.dof = Math.max(0.0, 1.0 - channel.dependents / channel.weight);
-			channel.variance = channel.weight > 0.0 ? 0.5 * var[channel.index] /  channel.weight : 0.0;
+		variances.process();
+		setWeightsFromVarStats(channels, variances.getResult());
+	}
+	
+	private void setWeightsFromVarStats(ChannelGroup<?> channels, final DataPoint[] var) {
+		for(Channel channel : channels) {
+			final DataPoint x = var[channel.index];
+			if(x.weight() <= 0.0) return;
+			channel.dof = Math.max(0.0, 1.0 - channel.dependents / x.weight());
+			channel.variance = x.value() / x.weight();
 			channel.weight = channel.variance > 0.0 ? channel.dof / channel.variance : 0.0;
 		}
+		Instrument.recycle(var);
+	}
+	
+	public void getDifferencialPixelWeights() {
+		final int delta = framesFor(10.0 * getPointCrossingTime());
+		final ChannelGroup<?> channels = instrument.getConnectedChannels();
 		
-		flagWeights();
+		comments += "w";
+			
+		CRUSH.IndexedFork<DataPoint[]> variances = new CRUSH.IndexedFork<DataPoint[]>(size() - delta) {
+			private DataPoint[] var;
+			
+			@Override
+			protected void init() {
+				super.init();
+				var = instrument.getDataPoints();
+				for(int i=instrument.size(); --i >= 0; ) var[i].noData();
+			}
+			
+			@Override
+			protected void processIndex(int t) {
+				final Frame exposure = get(t);
+				if(exposure.isFlagged(Frame.WEIGHTING_FLAGS)) return;
+				
+				final Frame prior = get(t-delta);
+				if(prior.isFlagged(Frame.WEIGHTING_FLAGS)) return;
+				
+				for(Channel channel : channels) if((exposure.sampleFlag[channel.index] | prior.sampleFlag[channel.index]) == 0) {
+					final float diff = exposure.data[channel.index] - prior.data[channel.index];
+					final DataPoint point = var[channel.index];
+					
+					point.add(exposure.relativeWeight * diff * diff);
+					point.addWeight(exposure.relativeWeight);
+				}
+			}
+			
+			@Override
+			public DataPoint[] getPartialResult() { return var; }
+			
+			@Override
+			public DataPoint[] getResult() {
+				init();
+				
+				for(Parallel<DataPoint[]> task : getWorkers()) {
+					final DataPoint[] localVar = task.getPartialResult();
+					for(int i=instrument.size(); --i >= 0; ) {
+						final DataPoint global = var[i];
+						final DataPoint local = localVar[i];
+						
+						global.add(local.value());
+						global.addWeight(local.weight());
+					}
+					Instrument.recycle(localVar);
+				}
+				return var;
+			}	
+		};
+		
+		variances.process();
+		setWeightsFromVarStats(channels, variances.getResult());
+		
 	}
 
-	// TODO smart timestream access
 	public void getRobustPixelWeights() {
 		comments += "[W]";
 	
-		final float[] dev2 = new float[size()];
-
-		
-		for(final Channel channel : instrument.getConnectedChannels()) {
-			int points = 0;
+		instrument.getConnectedChannels().new Fork<Void>() {
+			private float[] dev2;
 			
-			for(final Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(Frame.WEIGHTING_FLAGS)) {
-				if(exposure.sampleFlag[channel.index] == 0) {
-					final float value = exposure.data[channel.index];
-					dev2[points++] = exposure.relativeWeight * value * value;
-				}		    
-			}	
-			
-			if(points > 0) {
-				channel.dof = Math.max(0.0, 1.0 - channel.dependents / points);
-				channel.variance = points > 0 ? (Statistics.median(dev2, 0, points) / 0.454937) : 0.0;
-				channel.weight = channel.variance > 0.0 ? channel.dof / channel.variance : 0.0;	
+			@Override
+			protected void init() {
+				super.init();
+				dev2 = getFloats();
 			}
-		}
+			
+			@Override
+			protected void cleanup() {
+				super.cleanup();
+				recycle(dev2); 	
+			}
+			
+			@Override
+			protected void process(Channel channel) {
+				int points = 0;
+				
+				for(final Frame exposure : Integration.this) if(exposure != null) if(exposure.isUnflagged(Frame.WEIGHTING_FLAGS)) {
+					if(exposure.sampleFlag[channel.index] == 0) {
+						final float value = exposure.data[channel.index];
+						dev2[points++] = exposure.relativeWeight * value * value;
+					}		    
+				}	
+				
+				if(points > 0) {
+					channel.dof = Math.max(0.0, 1.0 - channel.dependents / points);
+					channel.variance = points > 0 ? (Statistics.median(dev2, 0, points) / 0.454937) : 0.0;
+					channel.weight = channel.variance > 0.0 ? channel.dof / channel.variance : 0.0;	
+				}
+			}
+			
+		}.process();
 		
-		flagWeights();
 	}
 	
 
@@ -1013,80 +1150,95 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		getTimeWeights(blockSize, true); 
 	}
 	
-	public void getTimeWeights(final int blockSize, boolean flag) {
+	public void getTimeWeights(final int blockSize, final boolean flag) {
 		final ChannelGroup<?> detectorChannels = instrument.getDetectorChannels();
-		
-		final int nT = ExtraMath.roundupRatio(size(), blockSize);
-		
-		double sumfw = 0.0;
-		int n = 0;
-		
-		for(int T=0,fromt=0; T<nT; T++) {
-			int points = 0;
-			double deps = 0.0;
-			double sumChi2 = 0.0;
 			
-			final int tot = Math.min(fromt + blockSize, size());
+		BlockFork<WeightedPoint> weighting = new BlockFork<WeightedPoint>(blockSize) {
+			double sumfw = 0.0;
+			int n = 0;
 			
-			for(int t=tot; --t >= fromt; ) {
-				final Frame exposure = get(t);
-				if(exposure == null) continue;
-
-				for(final Channel channel : detectorChannels) if(channel.isUnflagged()) if(exposure.sampleFlag[channel.index] == 0) {			
-					final float value = exposure.data[channel.index];
-					sumChi2 += (channel.weight * value * value);
-					points++;
-				}
-				deps += exposure.dependents;
-			}		
-			
-			if(points > deps) {
-				final float fw = sumChi2 > 0.0 ? (float) ((points-deps) / sumChi2) : 1.0F;	
-				final double dof = 1.0 - deps / points;
+			@Override
+			protected void process(int from, int to) {
+				int points = 0;
+				double deps = 0.0;
+				double sumChi2 = 0.0;
 				
-				for(int t=tot; --t >= fromt; ) {
+				for(int t=to; --t >= from; ) {
 					final Frame exposure = get(t);
 					if(exposure == null) continue;
+
+					for(final Channel channel : detectorChannels) if(channel.isUnflagged()) if(exposure.sampleFlag[channel.index] == 0) {			
+						final float value = exposure.data[channel.index];
+						sumChi2 += (channel.weight * value * value);
+						points++;
+					}
+					deps += exposure.dependents;
+				}		
+				
+				if(points > deps) {
+					final float fw = sumChi2 > 0.0 ? (float) ((points-deps) / sumChi2) : 1.0F;	
+					final double dof = 1.0 - deps / points;
 					
-					exposure.unflag(Frame.FLAG_DOF);
-					exposure.dof = dof;
-					exposure.relativeWeight = fw;
-					sumfw += fw;
-					n++;
+					for(int t=to; --t >= from; ) {
+						final Frame exposure = get(t);
+						if(exposure == null) continue;
+						
+						exposure.unflag(Frame.FLAG_DOF);
+						exposure.dof = dof;
+						exposure.relativeWeight = fw;
+						sumfw += fw;
+						n++;
+					}
 				}
-			}
-			else for(int t=tot; --t >= fromt; ) {
-				final Frame exposure = get(t);
-				if(exposure == null) continue;
-		
-				exposure.flag(Frame.FLAG_DOF);
-				exposure.dof = 0.0F;
-				exposure.relativeWeight = Float.NaN; //	These will be set to 1.0 when renormalizing below...			
+				else for(int t=to; --t >= from; ) {
+					final Frame exposure = get(t);
+					if(exposure == null) continue;
+			
+					exposure.flag(Frame.FLAG_DOF);
+					exposure.dof = 0.0F;
+					exposure.relativeWeight = Float.NaN; //	These will be set to 1.0 when renormalizing below...			
+				}	
 			}
 			
-			fromt = tot;
-		}
+			@Override
+			public WeightedPoint getPartialResult() { return new WeightedPoint(n, sumfw); }
+			
+			@Override
+			public WeightedPoint getResult() {
+				WeightedPoint global = new WeightedPoint();
+				for(Parallel<WeightedPoint> task : getWorkers()) {
+					WeightedPoint local = task.getPartialResult();
+					global.add(local.value());
+					global.addWeight(local.weight());
+				}
+				return global;
+			}
+			
+		};
 		
+		weighting.process();
+		WeightedPoint stats = weighting.getResult();
 		
 		// Renormalize the time weights s.t. the pixel weights remain representative...
-		final float inorm = sumfw > 0.0 ? (float) (n / sumfw) : 1.0F; 
+		final float inorm = stats.weight() > 0.0 ? (float) (stats.value() / stats.weight()) : 1.0F; 
 			
 		Range wRange = new Range();
 		
 		if(hasOption("weighting.frames.noiserange")) wRange = option("weighting.frames.noiserange").getRange(true);
 		else wRange.full();
+		
+		final Range weightRange = wRange;
 			 
 		for(Frame exposure : this) if(exposure != null) {
 			if(Float.isNaN(exposure.relativeWeight)) exposure.relativeWeight = 1.0F;
 			else exposure.relativeWeight *= inorm;
 			
 			if(flag) {
-				if(wRange.contains(exposure.relativeWeight)) exposure.unflag(Frame.FLAG_WEIGHT);
+				if(weightRange.contains(exposure.relativeWeight)) exposure.unflag(Frame.FLAG_WEIGHT);
 				else exposure.flag(Frame.FLAG_WEIGHT);
 			}
 			else exposure.unflag(Frame.FLAG_WEIGHT);
-			
-		}
+		}		
 	}
 	
 	
@@ -1104,21 +1256,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		// Save the old time weights
 		for(Frame exposure : this) if(exposure != null) exposure.tempC = exposure.relativeWeight;
-		
+			
 		getTimeWeights(resolution, false);
 			
 		comments += robust ? "[J]" : "J";
 	
-		final Dependents parms = getDependents("jumps");
+		final Dependents parms = getDependents("jumps");		
 		
-		WeightedPoint[] buffer = null;	// The timestream for robust estimates
-			
-		final WeightedPoint increment = new WeightedPoint();
-			
-		if(robust) {
-			buffer = new WeightedPoint[size()];
-			for(int i=buffer.length; --i >= 0; ) buffer[i] = new WeightedPoint();
-		}
 		
 		// Convert level from rms to weight....
 		level = 1.0 / (level * level);
@@ -1137,26 +1281,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			to = nextWeightTransit(from, level, 1);
 			
 			if(to - from > minFrames) {
-				
 				// Clear dependecies of any prior de-jumping. Will use new dependecies
 				// on the currently obtained level for the interval.
-				for(int t=from; t<to; t++) {
-					final Frame exposure = get(t);
-					if(exposure != null) parms.clear(exposure);
-				}
-				
-				// Level all correlated signals
-				for(Signal signal : signals.values()) signal.level(from, to); 
-				
 				parms.clear(instrument, from, to);
-				for(Channel channel : instrument) {	
-					if(robust) getMedianLevel(channel, from, to, buffer, increment);		
-					else getMeanLevel(channel, from, to, increment);
-					removeOffset(channel, from, to, parms, increment);
-				}
-				parms.apply(instrument, from, to);
 				
-					
+				// Remove the offsets, and update the dependecies...
+				localLevel(from, to, parms, robust);
+				
 				// Mark weights temporarily as NaN -- then these will be reset to 1.0 later...
 				for(int t=from; t<to; t++) {
 					Frame exposure = get(t);
@@ -1178,9 +1309,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		// Reinstate the old time weights
 		for(Frame exposure : this) if(exposure != null) 
-			exposure.relativeWeight = Float.isNaN(exposure.relativeWeight) ? 1.0F : exposure.tempC;
+			exposure.relativeWeight = Float.isNaN(exposure.relativeWeight) ? 1.0F : exposure.tempC;	
+		
 				
-			
 		comments += levelled + ":" + removed;
 	}
 	
@@ -1306,21 +1437,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(data.length > nt) for(int t=nt; t<data.length; t++) data[t] = weight[t] = 0.0F;
 	}
 
-	/*
-	public double[] getPointSourceProfile(int nt) {
-		double sigma = getPointCrossingTime() / Util.sigmasInFWHM / instrument.samplingInterval;
-		double[] sourceProfile = new double[nt];
-		int nF = nt >> 1;
-		
-		sourceProfile[0] = 1.0;
-		for(int t=nF; --t > 0; ) {
-			double dev = t / sigma;
-			double a = Math.exp(-0.5*dev*dev);
-			sourceProfile[t] = sourceProfile[sourceProfile.length-t] = a;
-		}
-		return sourceProfile;
-	}
-	*/
 	
 	protected boolean despikedNeighbours = false;
 		
@@ -1335,6 +1451,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		int flagCount = despike.isConfigured("flagcount") ? despike.get("flagcount").getInt() : Integer.MAX_VALUE;
 		int frameSpikes = despike.isConfigured("framespikes") ? despike.get("framespikes").getInt() : instrument.size();
 		int featureWidth = 1;
+		
 		
 		if(method.equalsIgnoreCase("neighbours")) despikeNeighbouring(level);
 		else if(method.equalsIgnoreCase("absolute")) despikeAbsolute(level);
@@ -1370,6 +1487,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 	}
 	
+	private void setDespikeLevels(ChannelGroup<?> channels, final double significance) {
+		for(Channel channel : channels) channel.temp = (float) (significance * Math.sqrt(channel.variance));
+	}
 	
 	public void despikeNeighbouring(final double significance) {
 		comments += "dN";
@@ -1381,27 +1501,29 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
 		
-		for(final Channel channel : connectedChannels) channel.temp = (float) (significance * Math.sqrt(channel.variance));
+		setDespikeLevels(connectedChannels, significance);
 		
-		int nt = size();
-		for(int t=delta; t < nt; t++) {
-			final Frame exposure = get(t);
-			final Frame prior = get(t-delta);
-			
-			if(exposure != null) if(prior != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(prior.isUnflagged(Frame.MODELING_FLAGS))  {
-				final float chi = (float) (1.0 / Math.sqrt(exposure.relativeWeight) + 1.0 / Math.sqrt(prior.relativeWeight));
+		new CRUSH.IndexedFork<Void>(size() - delta) {
+			@Override
+			protected void processIndex(int t) {
+				final Frame exposure = get(t);
+				final Frame prior = get(t+delta);
 				
-				for(final Channel channel : connectedChannels) if(((exposure.sampleFlag[channel.index] | prior.sampleFlag[channel.index]) & excludeSamples) == 0) {
-					exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKY_NEIGHBOUR;
+				if(exposure != null) if(prior != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(prior.isUnflagged(Frame.MODELING_FLAGS))  {
+					final float chi = (float) (1.0 / Math.sqrt(exposure.relativeWeight) + 1.0 / Math.sqrt(prior.relativeWeight));
+					
+					for(final Channel channel : connectedChannels) if(((exposure.sampleFlag[channel.index] | prior.sampleFlag[channel.index]) & excludeSamples) == 0) {
+						exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKY_NEIGHBOUR;
 
-					if(Math.abs(exposure.data[channel.index] - prior.data[channel.index]) > channel.temp * chi) {
-						exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
-						prior.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
+						if(Math.abs(exposure.data[channel.index] - prior.data[channel.index]) > channel.temp * chi) {
+							exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
+							prior.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
+						}
 					}
-				}
-			}	
-		}
-		
+				}	
+			}
+		}.process();
+
 	}
 
 	public void despikeAbsolute(final double significance) {
@@ -1410,46 +1532,56 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
 		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
 		
-		for(final Channel channel : instrument) channel.temp = (float) (significance * Math.sqrt(channel.variance));
-
-		for(final Frame exposure : this) if(exposure != null) {
-			final float frameChi = 1.0F / (float)Math.sqrt(exposure.relativeWeight);
-			for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0) {
-				if(Math.abs(exposure.data[channel.index]) > channel.temp * frameChi) 
-					exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
-				else 
-					exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKE;
-			}
-		}
+		setDespikeLevels(connectedChannels, significance);
+		
+		new Fork<Void>() {
+			@Override
+			protected void process(FrameType exposure) {
+				final float frameChi = 1.0F / (float)Math.sqrt(exposure.relativeWeight);
+				for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0) {
+					if(Math.abs(exposure.data[channel.index]) > channel.temp * frameChi) 
+						exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
+					else 
+						exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKE;
+				}
+			}	
+		}.process();
 	}
 	
 
 	public void despikeGradual(final double significance, final double depth) {
 		comments += "dG";
-		
-		for(final Channel channel : instrument) channel.temp = (float) (significance * Math.sqrt(channel.variance));
-		
+
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
+		
+		setDespikeLevels(connectedChannels, significance);
 		
 		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
 		
-		for(final Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {	
-			double maxdev = 0.0;
-			final float frameChi = 1.0F / (float)Math.sqrt(exposure.relativeWeight);
-			
-			// Find the largest not yet flagged as spike deviation.
-			for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0)
-				maxdev = Math.max(maxdev, Math.abs(exposure.data[channel.index] / (float)channel.gain));
+		new Fork<Void>() {
+
+			@Override
+			protected void process(FrameType exposure) {
+				if(exposure.isFlagged(Frame.MODELING_FLAGS)) return;
 				
-			if(maxdev > 0.0) {
-				double minSignal = depth * maxdev;
-				for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SOURCE_BLANK) == 0) {
-					final double critical = Math.max(channel.gain * minSignal, channel.temp * frameChi);
-					if(Math.abs(exposure.data[channel.index]) > critical) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
-					else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKE;
+				double maxdev = 0.0;
+				final float frameChi = 1.0F / (float)Math.sqrt(exposure.relativeWeight);
+				
+				// Find the largest not yet flagged as spike deviation.
+				for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0)
+					maxdev = Math.max(maxdev, Math.abs(exposure.data[channel.index] / (float)channel.gain));
+					
+				if(maxdev > 0.0) {
+					double minSignal = depth * maxdev;
+					for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SOURCE_BLANK) == 0) {
+						final double critical = Math.max(channel.gain * minSignal, channel.temp * frameChi);
+						if(Math.abs(exposure.data[channel.index]) > critical) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
+						else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKE;
+					}
 				}
 			}
-		}
+			
+		}.process();
 		
 	}
 	
@@ -1462,50 +1594,72 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		comments += "dF";
 		
 		final ChannelGroup<?> liveChannels = instrument.getConnectedChannels();
-		
 		final int nt = size();
-		final float[] data = new float[size()];
-		final float[] weight = new float[size()];
+		final int mbSize = maxBlockSize;
 		
-		final DataPoint diff = new DataPoint();
-		final DataPoint temp = new DataPoint();
-
 		// Clear the spiky feature flag...
-		for(final Frame exposure : this) if(exposure != null) for(final Channel channel : liveChannels) 
-				exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKY_FEATURE;		
+		new Fork<Void>() {
+			@Override
+			protected void process(FrameType exposure) {
+				for(final Channel channel : liveChannels) exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKY_FEATURE;	
+			}
+		}.process();
 		
-		for(final Channel channel : instrument) {
-			getTimeStream(channel, data, weight);
+		
+		instrument.new Fork<Void>() {
+			private float[] data, weight;
+			private DataPoint diff, temp;
 			
-			// check and divide...
-			int n = size();
-			for(int blockSize = 1; blockSize <= maxBlockSize; blockSize <<= 1) {
-				for(int T=1; T < n; T++) if(T < n) {
-					diff.setValue(data[T]);
-					diff.setWeight(weight[T]);
-					temp.setValue(data[T-1]);
-					temp.setWeight(weight[T-1]);
-					
-					diff.subtract(temp);
-					if(diff.significance() > significance) {
-						for(int t=blockSize*(T-1), blockt=0; t<nt && blockt < 2*blockSize; t++, blockt++) {
-							final Frame exposure = get(t);
-							if(exposure != null) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_FEATURE;		
+			@Override
+			protected void init() {
+				super.init();
+				diff = new DataPoint();
+				temp = new DataPoint();
+				data = getFloats();
+				weight = getFloats();
+			}
+			
+			@Override
+			protected void cleanup() {
+				super.cleanup();
+				recycle(data);
+				recycle(weight);
+			}
+			
+			@Override
+			protected void process(Channel channel) {
+				getTimeStream(channel, data, weight);
+				
+				// check and divide...
+				int n = size();
+				for(int blockSize = 1; blockSize <= mbSize; blockSize <<= 1) {
+					for(int T=1; T < n; T++) if(T < n) {
+						diff.setValue(data[T]);
+						diff.setWeight(weight[T]);
+						temp.setValue(data[T-1]);
+						temp.setWeight(weight[T-1]);
+						
+						diff.subtract(temp);
+						if(diff.significance() > significance) {
+							for(int t=blockSize*(T-1), blockt=0; t<nt && blockt < (blockSize<<1); t++, blockt++) {
+								final Frame exposure = get(t);
+								if(exposure != null) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_FEATURE;		
+							}
 						}
 					}
-				}
-				
-				n >>= 1;
-				
-				for(int to=0, from=0; to < n; to++, from += 2) {
-					// to = average(from, from+1)
-					data[to] = weight[from] * data[from] + weight[from+1] * data[from+1];
-					weight[to] = weight[from] + weight[from+1];
-					data[to] /= weight[to];
+					
+					n >>= 1;
+					
+					for(int to=0, from=0; to < n; to++, from += 2) {
+						// to = average(from, from+1)
+						data[to] = weight[from] * data[from] + weight[from+1] * data[from+1];
+						weight[to] = weight[from] + weight[from+1];
+						data[to] /= weight[to];
+					}
 				}
 			}
-		}	
-
+			
+		}.process();
 	}
 	
 	public void flagSpikyChannels(final int spikeTypes, final double flagFraction, final int minSpikes, final int channelFlag) {
@@ -1517,22 +1671,57 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Only flag spiky channels if spikes are not in spiky frames
 		final int frameFlags = Frame.MODELING_FLAGS;
 	
-		for(final Channel channel : instrument) channel.spikes = 0;
+		for(Channel channel : instrument) channel.spikes = 0;
+		
+		Fork<int[]> spikeCount = new Fork<int[]>() {
+			private int[] channelSpikes;
 			
-		for(final Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(frameFlags)) 
-			for(final Channel channel : instrument) if((exposure.sampleFlag[channel.index] & spikeTypes) != 0) channel.spikes++;
+			@Override
+			protected void init(){
+				super.init();
+				channelSpikes = instrument.getInts();
+				Arrays.fill(channelSpikes, 0);
+			}
 			
-		for(final Channel channel : instrument) {
+			@Override
+			protected void process(FrameType exposure) {
+				if(exposure.isFlagged(frameFlags)) return;
+				for(final Channel channel : instrument) if((exposure.sampleFlag[channel.index] & spikeTypes) != 0) channelSpikes[channel.index]++;
+			}
+			
+			@Override
+			public int[] getPartialResult() { return channelSpikes; }
+			
+			@Override
+			public int[] getResult() {
+				init();
+				for(Parallel<int[]> task : getWorkers()) {
+					int[] localSpikes = task.getPartialResult();
+					for(int c=instrument.size(); --c >= 0; ) channelSpikes[c] += localSpikes[c];
+					Instrument.recycle(localSpikes);
+				}
+				return channelSpikes;
+			}
+			
+		};
+		
+		spikeCount.process();
+			
+		final int[] channelSpikes = spikeCount.getResult();
+		
+		for(Channel channel : instrument) {
+			channel.spikes = channelSpikes[channel.index];
 			if(channel.spikes > maxChannelSpikes) channel.flag(channelFlag);
 			else channel.unflag(channelFlag);
 		}
+			
+		Instrument.recycle(channelSpikes);
 		
 		instrument.census();
 		comments += instrument.mappingChannels;
 	}
 			
 	public void flagSpikyFrames(final int spikeTypes, final double minSpikes) {
-		int spikyFrames = 0;
 		
 		// Flag spiky frames even if spikes are in spiky channels.
 		//int channelFlags = ~(LabocaPixel.FLAG_SPIKY | LabocaPixel.FLAG_FEATURES);
@@ -1540,73 +1729,95 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Flag spiky frames only if spikes are not in spiky channels.
 		final int channelFlags = ~0;
 		
-		for(final Frame exposure : this) if(exposure != null) {
-			int frameSpikes = 0;
+		Fork<Integer> flagger = new Fork<Integer>() {
+			private int spikyFrames = 0;
+			
+			@Override
+			protected void process(FrameType exposure) {
+				int frameSpikes = 0;
 
-			for(final Channel channel : instrument) if(channel.isUnflagged(channelFlags))
-				if((exposure.sampleFlag[channel.index] & spikeTypes) != 0) frameSpikes++;
+				for(final Channel channel : instrument) if(channel.isUnflagged(channelFlags))
+					if((exposure.sampleFlag[channel.index] & spikeTypes) != 0) frameSpikes++;
 
-			if(frameSpikes > minSpikes) {
-				exposure.flag |= Frame.FLAG_SPIKY;
-				spikyFrames++;
+				if(frameSpikes > minSpikes) {
+					exposure.flag |= Frame.FLAG_SPIKY;
+					spikyFrames++;
+				}
+				else exposure.flag &= ~Frame.FLAG_SPIKY;
 			}
-			else exposure.flag &= ~Frame.FLAG_SPIKY;
-		}
+			
+			@Override
+			public Integer getPartialResult() { return spikyFrames; }
+			
+			@Override
+			public Integer getResult() {
+				int globalSpikyFrames = 0;
+				for(Parallel<Integer> task : getWorkers()) globalSpikyFrames += task.getPartialResult();
+				return globalSpikyFrames;
+			}
+			
+		};
+		flagger.process();
 		
 		//comments += "(" + Util.f1.format(100.0*spikyFrames/size()) + "%)";
-		comments += "(" + spikyFrames + ")";
+		comments += "(" + flagger.getResult() + ")";
 	}
-	
-	
-	// 2*bins complex gains per pixel...
-	public void deresonate(int[] channelSelection, double[] signal, Complex[][] gain, int bins) {
-		//Complex[][] spectrum = new Complex[channelSelection.length][];
-		
-		// create average spectra for all channels
-		// weighted average in phase together (with prior gains if available)
-		// the 'signal' is averaged power signal
-		// Complex gains by comparing 'signal' to the individual spectra
-		// remove filtered periodic patches from timeStream of each channel...
-	}	
 	
 	public synchronized boolean isDetectorStage() {
 		return isDetectorStage;
 	}
-	
+		
 	public synchronized void detectorStage() { 
 		if(isDetectorStage) return;
 		
-		for(final Channel channel : instrument) channel.temp = (float) channel.getHardwareGain();
+		instrument.loadTempHardwareGains();
 		
-		for(final Frame frame : this) if(frame != null) for(final Channel channel : instrument)
-			frame.data[channel.index] /= channel.temp;
-		
+		new Fork<Void>() {
+			@Override
+			public void process(FrameType frame) {
+				for(final Channel channel : instrument) frame.data[channel.index] /= channel.temp;
+			}
+		}.process();
+					
 		isDetectorStage = true;		
 	}
 	
 	public synchronized void readoutStage() { 
 		if(!isDetectorStage) return;
 		
-		for(final Channel channel : instrument) channel.temp = (float) channel.getHardwareGain();
+		instrument.loadTempHardwareGains();
 		
-		for(final Frame frame : this) if(frame != null) for(final Channel channel : instrument)
-			frame.data[channel.index] *= channel.temp;
+		new Fork<Void>() {
+			@Override
+			public void process(FrameType frame) {
+				for(final Channel channel : instrument) frame.data[channel.index] *= channel.temp;
+			}
+		}.process();
 		
 		isDetectorStage = false;
 	}
 	
 	public synchronized void clearData() {
-		for(final Frame exposure : this) if(exposure != null) for(final Channel channel : instrument) exposure.data[channel.index] = 0.0F;
+		new Fork<Void>() {
+			@Override
+			public void process(FrameType frame) { for(final Channel channel : instrument) frame.data[channel.index] = 0.0F; }
+		}.process();
 	}
 	
 	public synchronized void randomData() {
 		final Random random = new Random();
 		
-		for(final Channel channel : instrument) channel.temp = (float)(Math.sqrt(1.0/channel.weight));
-		
-		for(Frame exposure : this) if(exposure != null) for(Channel channel : instrument)
-			exposure.data[channel.index] = channel.temp * (float)random.nextGaussian();						
-	
+		instrument.new Fork<Void>() {
+			@Override
+			public void process(Channel channel) { channel.temp = (float)(Math.sqrt(1.0/channel.weight)); }
+		}.process();
+
+		new Fork<Void>() {
+			@Override
+			public void process(FrameType frame) { 
+				for(final Channel channel : instrument) frame.data[channel.index] = channel.temp * (float) random.nextGaussian(); 	
+			}
+		}.process();	
 	}
 	
 	public void addCorrelated(final CorrelatedSignal signal) throws Exception {	
@@ -1614,47 +1825,45 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final float[] gain = mode.getGains();
 		final int nc = mode.size();
 		
-		for(final Frame exposure : this) {
-			final float C = signal.valueAt(exposure);
-			for(int k=nc; --k >= 0; ) exposure.data[mode.getChannel(k).index] += gain[k] * C;
-		}
+		new Fork<Void>() {
+			@Override
+			public void process(FrameType frame) { 
+				final float C = signal.valueAt(frame);
+				for(int k=nc; --k >= 0; ) frame.data[mode.getChannel(k).index] += gain[k] * C;
+			}				
+		}.process();
 	}
 	
 	
-	public Vector2D[] getPositions(int type) {
+	public Vector2D[] getPositions(final int type) {
 		final Vector2D[] position = new Vector2D[size()];
-		final SphericalCoordinates coords = new SphericalCoordinates();
+		SphericalCoordinates coords = new SphericalCoordinates();
+		
+		for(Frame exposure : this) if(exposure != null) {
+			final Vector2D pos = new Vector2D();
+			position[exposure.index] = pos;
 
-		for(int t=size(); --t >= 0; ) {
-			final Frame exposure = get(t);
-			if(exposure != null) {
-				position[t] = new Vector2D();
-				final Vector2D pos = position[t];
-			
-				// Telescope motion should be w/o chopper...
-				// TELESCOPE motion with or w/o SCANNING and CHOPPER
-				if((type & Motion.TELESCOPE) != 0) {
-					coords.copy(exposure.getNativeCoords());
-					// Subtract the chopper motion if it is not requested...
-					if((type & Motion.CHOPPER) == 0) coords.subtractNativeOffset(exposure.chopperPosition);
-					pos.copy(coords);
-					
-					if((type & Motion.PROJECT_GLS) != 0) pos.scaleX(coords.cosLat());
-				}
-				
+			// Telescope motion should be w/o chopper...
+			// TELESCOPE motion with or w/o SCANNING and CHOPPER
+			if((type & Motion.TELESCOPE) != 0) {
+				coords.copy(exposure.getNativeCoords());
+				// Subtract the chopper motion if it is not requested...
+				if((type & Motion.CHOPPER) == 0) coords.subtractNativeOffset(exposure.chopperPosition);
+				pos.copy(coords);
 
-				// Scanning includes the chopper motion
-				// SCANNING with or without CHOPPER
-				else if((type & Motion.SCANNING) != 0) {
-					exposure.getNativeOffset(pos);
-					// Subtract the chopper motion if it is not requested...
-					if((type & Motion.CHOPPER) == 0) pos.subtract(exposure.chopperPosition);
-				}	
-
-				// CHOPPER only...
-				else if(type == Motion.CHOPPER) pos.copy(exposure.chopperPosition);
-
+				if((type & Motion.PROJECT_GLS) != 0) pos.scaleX(coords.cosLat());
 			}
+
+			// Scanning includes the chopper motion
+			// SCANNING with or without CHOPPER
+			else if((type & Motion.SCANNING) != 0) {
+				exposure.getNativeOffset(pos);
+				// Subtract the chopper motion if it is not requested...
+				if((type & Motion.CHOPPER) == 0) pos.subtract(exposure.chopperPosition);
+			}	
+
+			// CHOPPER only...
+			else if(type == Motion.CHOPPER) pos.copy(exposure.chopperPosition);
 		}
 		
 		return position;
@@ -1701,7 +1910,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public Signal getPositionSignal(final Mode mode, final int type, final Motion direction) {
 		final Vector2D[] pos = getSmoothPositions(type);
 		final float[] data = new float[size()];	
-		for(int t=data.length; --t >= 0; ) data[t] = pos[t] == null ? Float.NaN : (float) direction.getValue(pos[t]);
+
+		for(int t=size(); --t >= 0; ) 
+			data[t] = (pos[t] == null) ? Float.NaN : (float) direction.getValue(pos[t]);
+		
 		Signal signal = new Signal(mode, this, data, true);
 		return signal;
 	}
@@ -1711,24 +1923,30 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final Vector2D[] v = new Vector2D[size()];
 
 		final double i2dt = 0.5 / instrument.samplingInterval;
-		
+	
 		for(int t=size()-1; --t > 0; ) {
 			if(pos[t+1] == null || pos[t-1] == null) v[t] = null;
 			else {
 				v[t] = new Vector2D(
-						pos[t+1].x() - pos[t-1].x(),
-						pos[t+1].y() - pos[t-1].y()
+					pos[t+1].x() - pos[t-1].x(),
+					pos[t+1].y() - pos[t-1].y()
 				);
 				v[t].scale(i2dt);
-			}
+			}		
 		}
-
+	
+		// Extrapolate first and last...
+		if(size() > 1) v[0] = v[1];
+		if(size() > 2) v[size()-1] = v[size()-2];
+		
 		return v;
 	}
 	
 	public DataPoint getMedianScanningVelocity(double smoothT) {
 		final Vector2D[] v = getScanningVelocities();		
-		final float[] speed = new float[v.length];
+		
+		final float[] speed = getFloats();
+		Arrays.fill(speed, 0, v.length, 0.0F);
 		
 		int n=0;
 		for(int t=v.length; --t >= 0; ) if(v[t] != null) speed[n++] = (float) v[t].length();
@@ -1741,6 +1959,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		double w = n > 0 ? 0.454937/Statistics.median(speed, 0, n) : 0.0;
 		
+		recycle(speed);
+		
 		return new DataPoint(new WeightedPoint(avev, w));
 	}
 	
@@ -1748,23 +1968,23 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		System.err.print("   Discarding unsuitable mapping speeds. ");
 	
 		final Vector2D[] v = getScanningVelocities();
+		int flagged = 0, cut = 0;
 		
-		int flagged = 0;
-		int cut = 0;
+		for(Frame frame : this) if(frame != null) {
+			final Vector2D value = v[frame.index];
 
-		for(int t=size(); --t >= 0; ) if(get(t) != null) {
-			if(v[t] == null) {
-				set(t, null);
+			if(value == null) {
+				set(frame.index, null);
 				cut++;
 			}
 			else {	
-				final double speed = v[t].length();
+				final double speed = value.length();
 				if(speed < range.min()) {
-					get(t).flag(Frame.SKIP_SOURCE);
+					frame.flag(Frame.SKIP_SOURCE);
 					flagged++;
 				}
 				else if(speed > range.max()) {
-					set(t, null);
+					set(frame.index, null);
 					cut++;
 				}
 			}
@@ -1774,30 +1994,32 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		System.err.println((int)Math.round(100.0 * cut / size()) + "% clipped]");
 
 		return cut;
+
 	}
 
+	
 	public int accelerationCut(final double maxA) {
 		System.err.print("   Discarding excessive telescope accelerations. ");
 	
 		final Vector2D[] a = getAccelerations();
-
 		int cut = 0;
-		for(int t=size(); --t >= 0; ) if(get(t) != null) {
-			final Vector2D value = a[t];
-			
+		
+		for(Frame frame : this) if(frame != null) {
+			final Vector2D value = a[frame.index];
+
 			if(value == null) {
-				set(t, null);
+				set(frame.index, null);
 				cut++;
 			}
 			else if(!(value.length() <= maxA)) {
-				set(t, null);
+				set(frame.index, null);
 				cut++;
 			}
 		}
 
 		System.err.println("[" + (int)Math.round(100.0 * cut / size()) + "% clipped]");
-		
-		return cut;
+
+		return cut;	
 	}
 	
 	public Vector2D[] getAccelerations() { 
@@ -1812,110 +2034,31 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				a[t] = new Vector2D(
 						Math.cos(pos[t].y()) * Math.IEEEremainder(pos[t+1].x() + pos[t-1].x() - 2.0*pos[t].x(), Constant.twoPi),
 						pos[t+1].y() + pos[t-1].y() - 2.0*pos[t].y()
-				);
+						);
 				a[t].scale(idt);
 			}
 		}
-	
+		
+		// Extrapolate to ends...
+		if(size() > 1) a[0] = a[1];
+		if(size() > 2) a[size()-1] = a[size()-2];
+		
 		return a;
 	}
-	
 	
 	public Signal getAccelerationSignal(Mode mode, final Motion direction) {
 		final Vector2D[] a = getAccelerations();
 		final float[] data = new float[size()];	
-		for(int t=data.length; --t >= 0; ) data[t] = a[t] == null ? Float.NaN : (float) direction.getValue(a[t]);
+		
+		for(int t=size(); --t >= 0; ) 
+			data[t] = a[t] == null ? Float.NaN : (float) direction.getValue(a[t]);
+		
 		return new Signal(mode, this, data, false);
 	}
 	
-	// Redo with Filter...
-	public synchronized void highPassFilter(double T) {
-		int Nt = ExtraMath.pow2ceil(size());
-	
-		// sigmat sigmaw = 1 ->
-		// Dt sigmaw = 2.35 
-		// Dt 2Pi sigmaf = 2.35 --> sigmaf = 2.35/2Pi 1/Dt
-		// df = 1/(Nt*dt);
-		// sigmaf / df = 2.35/2Pi * (Nt*dt)/Dt 
-	
-		double sigma_f = 2.35 / Constant.twoPi * Nt * instrument.samplingInterval / T;	
-		
-		double A = 0.5/(sigma_f*sigma_f);
-		double[] response = new double[Nt >> 1];
-		for(int f=response.length; --f >= 0; ) response[f] = -Math.expm1(-A*f*f);
-		
-		filter(instrument.getConnectedChannels(), response);
-		
-		comments += "h";
-		filterTimeScale = T;
-	}
 
 	
-	public synchronized void filter(ChannelGroup<? extends Channel> channels, double[] response) {
-		comments += "F";
-		
-		float[] signal = new float[ExtraMath.pow2ceil(size())];
-		
-		
-		for(final Channel channel : channels) {
-			final int c = channel.index;
-			getWeightedTimeStream(channel, signal);
-
-			// Level the signal to avoid DC spectral leakage from padding...
-			level(signal, channel);
-			
-			getFFT().real2Amplitude(signal);
-			toRejected(signal, response);
-			getFFT().amplitude2Real(signal);
-
-			// Re-level the useful part of the signal
-			level(signal, channel);
-
-			for(Frame exposure : this) if(exposure != null) exposure.data[c] -= signal[exposure.index];
-
-		}
-	}
-
-	protected void toRejected(float[] spectrum, double[] response) {
-		// Calculate the idealized filter (no flags, no padding).
-		spectrum[0] *= 1.0 - response[0];
-		spectrum[1] *= 1.0 - response[response.length-1];
-		
-		for(int i=spectrum.length; --i >= 2; ) {
-			final int F = (int) ((long)i * response.length / spectrum.length);
-			final float rejection = (float) (1.0 - response[F]);
-			spectrum[i] *= rejection;
-			spectrum[--i] *= rejection;
-		}
-	}
-	
-	protected void level(float[] signal, Channel channel) {
-		level(signal, channel, 0, size());
-	}
-	
-	
-	// TODO dependents accounting
-	// Median removal...
-	protected void level(float[] signal, final Channel channel, final int from, final int to) {
-		final int c = channel.index;
-		double sum = 0.0, sumw = 0.0;
-		for(int i=to; --i >= from; ) {
-			final Frame exposure = get(i);
-			if(exposure == null) continue;
-			if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
-			if(exposure.sampleFlag[c] != 0) continue;
-			
-			sum += exposure.relativeWeight * signal[i];
-			sumw += exposure.relativeWeight;
-		}
-		if(sumw <= 0.0) Arrays.fill(signal, 0, size(), 0.0F);
-		else {
-			float ave = (float) (sum / sumw);
-			for(int i=size(); --i >= 0; ) signal[i] -= ave;			
-		}
-	}
-	
-			
+	// TODO parallelize...
 	public void checkForNaNs(final Iterable<? extends Channel> channels, final int from, int to) {
 		comments += "?";
 		
@@ -1955,105 +2098,66 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	// The alternative would be to include sample count in weights everywhere...
 	@SuppressWarnings("unchecked")
 	public synchronized void downsample(final int n) {
-		
 		final int windowSize = (int)Math.round(1.82 * n * WindowFunction.getEquivalentWidth("Hann"));
 		final int centerOffset = windowSize/2 + 1;
 		final double[] w = WindowFunction.get("Hann", windowSize);
 		
-		int N = (size()-windowSize) / n + 1;
+		final int N = ExtraMath.roundupRatio(size()-windowSize, n);
+		
 		if(N <= 0) {
 			System.err.println("   WARNING! Time stream too short to downsample by specified amount.");
 			return;
 		}
 	
-		System.err.print("   Downsampling by " + n);
+		System.err.print("   Downsampling by " + n + " to " + N + " frames");
 		
-		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(N); 
+		final Frame[] buffer = new Frame[N];
 		
 		// Normalize window function to absolute intergral 1
 		double norm = 0.0;
 		for(int i=w.length; --i >= 0; ) norm += Math.abs(w[i]);
 		for(int i=w.length; --i >= 0; ) w[i] /= norm;
-		
-		final int nt = size();
-		
-		for(int to=windowSize; to <= nt; to += n) {
-			FrameType central = get(to-centerOffset);
-			FrameType downsampled = null;
+
+		new CRUSH.IndexedFork<Void>(N) {
+			@Override
+			protected void processIndex(int k) { buffer[k] = getDownsampled(k); }
 			
-			if(central != null) {
-				downsampled = (FrameType) central.copy(false);
-			
-				for(int t=to-windowSize; t<to; t++) {
-					final FrameType exposure = get(t);
-					if(exposure == null) {
-						downsampled = null;
-						break;
+			private final FrameType getDownsampled(int k) {
+				final int to = windowSize + k*n;
+				final FrameType central = get(to-centerOffset);
+
+				if(central != null) {
+					final FrameType downsampled = (FrameType) central.copy(false);
+
+					for(int t=to-windowSize; t<to; t++) {
+						final FrameType exposure = get(t);
+						if(exposure == null) return null;
+						downsampled.addDataFrom(exposure, w[to-t-1]);
 					}
-					downsampled.addDataFrom(exposure, w[to-t-1]);
+					return downsampled;
 				}
+				return null;
 			}
-			
-			buffer.add(downsampled);
-		}
-		
-		System.err.println(" to " + buffer.size() + " frames.");
-	
+		}.process();
+
 		instrument.samplingInterval *= n;
 		instrument.integrationTime *= n;
 		
 		clear();
-		ensureCapacity(buffer.size());
-		addAll(buffer);
+		//ensureCapacity(N);
+		for(int t=0; t<N; t++) add((FrameType) buffer[t]);
 		trimToSize();
 		reindex();
 	}
 
-	// TODO redo in a smarter way, with Frames providing the data...
-	/*
-	public synchronized void shift(double dt) {
-		double[][] coords = new double[7][size()];
-		for(int t=0; t<size(); t++) {
-			if(get(t) != null) {
-				Frame exposure = get(t);
-				if(exposure.isUnflagged(Frame.BAD_DATA)) {
-					coords[0][t] = exposure.equatorial.RA();
-					coords[1][t] = exposure.equatorial.DEC();
-					coords[2][t] = exposure.LST;
-					coords[3][t] = exposure.horizontal.AZ();
-					coords[4][t] = exposure.horizontal.EL();
-					coords[5][t] = exposure.getTrackingOffset().x;
-					coords[6][t] = exposure.getTrackingOffset().y;
-				}
-				else for(int i=0; i<7; i++) coords[i][t] = Double.NaN;
-			}
-			else for(int i=0; i<7; i++) coords[i][t] = Double.NaN;
-		}
-	
-		for(int i=0; i<7; i++) coords[i] = ArrayExtras.shift(coords[i], dt/instrument.samplingInterval, 0.5);
-	
-		for(int t=0; t<size(); t++) if(get(t) != null) {
-			if(Double.isNaN(coords[0][t])) set(t, null);
-			else {
-				Frame exposure = get(t);
-				exposure.equatorial.setRA(coords[0][t]);
-				exposure.equatorial.setDEC(coords[1][t]);
-				exposure.LST = coords[2][t];
-				exposure.horizontal.setAZ(coords[3][t]);
-				exposure.horizontal.setEL(coords[4][t]);
-				exposure.getTrackingOffset().x = coords[5][t];
-				exposure.getTrackingOffset().y = coords[6][t];		
-			}
-		}
-	}
-	*/
-
 	public synchronized void offset(final double value) {
-		for(final Frame exposure : this) if(exposure != null) {
-			for(final Channel channel : instrument) if(channel.flag == 0) exposure.data[channel.index] += value;			
-		}
+		new Fork<Void>() {
+			@Override
+			protected void process(FrameType frame) {
+				for(final Channel channel : instrument) if(channel.flag == 0) frame.data[channel.index] += value;
+			}
+		}.process();
 	}
-
 
 	public void writeASCIITimeStream() throws IOException {
 		String filename = CRUSH.workPath + File.separator + scan.getID() + "-" + getID() + ".tms";
@@ -2090,26 +2194,29 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final double[][] covar = new double[instrument.size()][instrument.size()];
 		final int[][] n = new int[instrument.size()][instrument.size()];
 		
-		for(final Frame exposure : this) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) {
-			for(int c1=instrument.size(); --c1>=0; ) if(instrument.get(c1).flag == 0) if(exposure.sampleFlag[c1] == 0) {
-				final double[] rowC = covar[c1];
-				final int[] rowN = n[c1];
-				for(int c2=instrument.size(); --c2 > c1; ) if(instrument.get(c2).flag == 0) if(exposure.sampleFlag[c2] == 0) {
-					rowC[c2] += exposure.relativeWeight * exposure.data[c1] * exposure.data[c2];
-					rowN[c2]++;
+		instrument.new Fork<Void>() {
+			@Override
+			protected void process(Channel channel) {
+				if(channel.flag != 0) return; 
+				
+				final double[] rowC = covar[channel.index];
+				final int[] rowN = n[channel.index];
+				
+				for(final Frame exposure : Integration.this) if(exposure != null) 
+					if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) if(exposure.sampleFlag[channel.index] == 0) 
+						for(int c2=instrument.size(); --c2 > channel.index; ) if(instrument.get(c2).flag == 0) if(exposure.sampleFlag[c2] == 0) {
+							rowC[c2] += exposure.relativeWeight * exposure.data[channel.index] * exposure.data[c2];
+							rowN[c2]++;
+						}
+				
+				for(int c2=instrument.size(); --c2 >= channel.index; ) {
+					rowC[c2] *= Math.sqrt(instrument.get(channel.index).weight * instrument.get(c2).weight) / rowN[c2];
+					covar[c2][channel.index] = rowC[c2];
 				}
-			}
-		}
-
-		for(int c1=instrument.size(); --c1>=0; ) {
-			final double[] rowC = covar[c1];
-			final int[] rowN = n[c1];
-			for(int c2=instrument.size(); --c2 >= c1; ) {
-				rowC[c2] *= Math.sqrt(instrument.get(c1).weight * instrument.get(c2).weight) / rowN[c2];
-				covar[c2][c1] = rowC[c2];
-			}
-		}
-	
+				
+			}	
+		}.process();
+		
 		System.err.println();
 		
 		return covar;
@@ -2121,7 +2228,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 		final double[][] groupedCovar = new double[n][n];
 		for(int k=n; --k >= 0; ) Arrays.fill(groupedCovar[k], Double.NaN);
-	
 		
 		int k1 = 0;
 		for(final ChannelGroup<?> g1 : division) for(Channel ch1 : g1) {
@@ -2133,15 +2239,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return groupedCovar;
 	}
 
-	public double[][] getFullCovariance(double[][] covar) {
-		
+	public double[][] getFullCovariance(final double[][] covar) {	
 		final double[][] fullCovar = new double[instrument.storeChannels][instrument.storeChannels];
 		
-		for(int i=fullCovar.length; --i >= 0; ) Arrays.fill(fullCovar[i], Double.NaN);
-		
-		for(final Channel c1 : instrument) for(final Channel c2 : instrument)
-			fullCovar[c1.getFixedIndex()-1][c2.getFixedIndex()-1] = covar[c1.index][c2.index];
-			
+		instrument.new Fork<Void>() {
+			@Override
+			protected void process(Channel c1) {
+				Arrays.fill(fullCovar[c1.index], Double.NaN);
+				for(final Channel c2 : instrument)
+					fullCovar[c1.getFixedIndex()-1][c2.getFixedIndex()-1] = covar[c1.index][c2.index];
+			}
+		}.process();
+				
 		return fullCovar;
 	}
 
@@ -2163,29 +2272,46 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final double[] w = WindowFunction.get(windowName, windowSize);
 
 		// System.err.println("  Calculating Power spectra.");
-		final float[] data = new float[size()];
 		final float[][] spectra = new float[instrument.size()][];
 		final double df = 1.0 / (instrument.samplingInterval * windowSize);	
 		final float Jy = gain * (float) instrument.janskyPerBeam();
 		
 		final int nt = size();
 
-		for(final Channel channel : instrument) {
-			for(int t=nt; --t >= 0; ) {
-				final Frame exposure = get(t);
-				if(exposure == null) data[t] = 0.0F;
-				else if(exposure.isFlagged(Frame.MODELING_FLAGS)) data[t] = 0.0F;
-				else if(exposure.sampleFlag[channel.index] != 0) data[t] = 0.0F;
-				else data[t] = exposure.data[channel.index];
+		instrument.new Fork<Void>() {
+			private float[] data;
+			
+			@Override
+			protected void init() {
+				super.init();
+				data = getFloats();
 			}
 			
-			final double[] spectrum = getFFT().averagePower(data, w);
-			final float[] channelSpectrum = new float[spectrum.length];
-			for(int i=spectrum.length; --i>=0; ) channelSpectrum[i] = (float) Math.sqrt(spectrum[i] / df) / Jy;		
-			spectra[channel.index] = channelSpectrum;
+			@Override
+			protected void cleanup() {
+				super.cleanup();
+				recycle(data);
+			}
 
-		}
-  
+			@Override
+			protected void process(Channel channel) {
+				for(int t=nt; --t >= 0; ) {
+					final Frame exposure = get(t);
+					if(exposure == null) data[t] = 0.0F;
+					else if(exposure.isFlagged(Frame.MODELING_FLAGS)) data[t] = 0.0F;
+					else if(exposure.sampleFlag[channel.index] != 0) data[t] = 0.0F;
+					else data[t] = exposure.data[channel.index];
+				}
+				
+				final double[] spectrum = getSequentialFFT().averagePower(data, w);
+				final float[] channelSpectrum = new float[spectrum.length];
+				for(int i=spectrum.length; --i>=0; ) channelSpectrum[i] = (float) Math.sqrt(spectrum[i] / df) / Jy;		
+				spectra[channel.index] = channelSpectrum;	
+			}
+			
+		
+		}.process();
+		
 		return spectra;
 	}
 	
@@ -2484,7 +2610,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		double sumA = 0.0, sumw = 0.0;
 		
-		float[] distance = new float[nt];
+		float[] distance = getFloats();
 		final double threshold = instrument.getMinBeamFWHM() / 2.5;
 		int n=0;
 				
@@ -2534,6 +2660,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			Chopper chopper = new Chopper();
 			chopper.amplitude = Statistics.median(distance, 0, n);
+			
 			if(chopper.amplitude < threshold) {
 				chopper = null;
 				System.err.println("   Small chopper fluctuations (assuming chopper not used).");
@@ -2557,6 +2684,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			System.err.println("   Chopper not used.");
 			instrument.forget("chopped");
 		}	
+		
+		recycle(distance);
 	}
 
 	public String getASCIIHeader() {
@@ -2594,11 +2723,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		else if(task.equals("drifts")) {
 			if(isPhaseModulated()) return false;
-			Configurator driftOptions = option("drifts");
-			String method = driftOptions.isConfigured("method") ? driftOptions.get("method").getValue() : "blocks"; 
 			int driftN = filterFramesFor(option("drifts").getValue(), 10.0*Unit.sec);
-			if(method.equalsIgnoreCase("fft")) highPassFilter(driftN * instrument.samplingInterval);
-			else removeDrifts(driftN, isRobust);
+			removeDrifts(driftN, isRobust);
 		}
 		else if(task.startsWith("correlated.")) {	
 			String modalityName = task.substring(task.indexOf('.')+1);
@@ -2617,6 +2743,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			updatePhases();
 		}
 		else if(task.equals("filter")) {
+			if(filter == null) return false;
 			if(!filter.apply()) return false;
 			if(indexOf("filter") > indexOf("weighting")) getWeights();
 			updatePhases();
@@ -2668,6 +2795,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(method.equals("robust")) getRobustPixelWeights();
 		else if(method.equals("differential")) getDifferencialPixelWeights();
 		else getPixelWeights();	
+		flagWeights();
 	}
 
 	public void addSignal(Signal signal) {
@@ -2766,7 +2894,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		int nF = C[0].length;
 		double df = 1.0 / (windowSize * instrument.samplingInterval);
 
-
 		for(int c=0; c < instrument.storeChannels; c++) {
 			Channel channel = allChannels[c];
 			z.set(channel == null ? 0.0 : C[channel.index][0].x(), 0.0);
@@ -2812,8 +2939,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 	}
 	
-	
-		
+			
 	void writeDelayedCoupling(String name, Complex[][] spectrum) throws IOException {
 		int nF = spectrum[0].length;
 		
@@ -2831,6 +2957,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			fft.amplitude2Real(C.getData());
 			System.arraycopy(C.getData(), 0, delay[c], 0, nF << 1);		
 		}
+	
 		
 		String fileName = CRUSH.workPath + File.separator + scan.getID() + "." + name + "-coupling.delay";
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
@@ -2858,25 +2985,31 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	
-	Complex[][] getCouplingSpectrum(Signal signal, int windowSize) throws Exception {
-		double[] w = WindowFunction.getHann(windowSize);
+	Complex[][] getCouplingSpectrum(final Signal signal, int windowSize) throws Exception {
+		final double[] w = WindowFunction.getHann(windowSize);
 		
-		Mode mode = signal.getMode();
-		ChannelGroup<? extends Channel> channels = mode.getChannels();
-		float[] gain = mode.getGains();
+		final Mode mode = signal.getMode();
+		final ChannelGroup<? extends Channel> channels = mode.getChannels();
+		final float[] gain = mode.getGains();
 		
-		Complex[][] C = new Complex[mode.size()][];
+		final Complex[][] C = new Complex[mode.size()][];
 			
-		for(int k = mode.size(); --k >= 0; ) {
-			Channel channel = channels.get(k);
-			C[k] = getCouplingSpectrum(signal, channel, gain[k], w);
-			if(channel.isFlagged()) for(Complex z : C[k]) z.zero();
-		}
+		new CRUSH.IndexedFork<Void>(mode.size()) {
+
+			@Override
+			protected void processIndex(int k) {
+				Channel channel = channels.get(k);
+				C[k] = getCouplingSpectrum(signal, channel, gain[k], w);
+				if(channel.isFlagged()) for(Complex z : C[k]) z.zero();
+			}
+
+		}.process();
+		
 		return C;
 	}
 	
 	
-	Complex[] getCouplingSpectrum(Signal signal, Channel channel, float gain, double[] w) throws Exception {
+	Complex[] getCouplingSpectrum(Signal signal, Channel channel, float gain, double[] w) {
 		int windowSize = w.length;
 		windowSize = ExtraMath.pow2ceil(windowSize);
 		int step = windowSize >> 1;
@@ -2909,6 +3042,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				Frame exposure = get(from + k);
 				if(exposure == null) continue;
 				if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+				
 				s[k] = (float) w[k] * signal.valueAt(exposure);
 				d[k] = (float) (w[k] * exposure.data[channel.index] + gain * s[k]);
 			}
@@ -2932,6 +3066,28 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(int i=nF; --i >= 0; ) c[i].scale(norm);
 		
 		return c;
+	}
+	
+	
+	public void shiftData(double dt) {
+		shiftData((int) Math.round(dt / instrument.samplingInterval));
+	}
+	
+	public void shiftData(int nFrames) {
+		if(nFrames == 0) return;
+		
+		System.err.println("   Shifting data by " + nFrames + " frames.");
+		
+		if(nFrames > 0) {
+			if(nFrames > size()) nFrames = size();
+			for(int t=size(); --t >= nFrames; ) get(t).data = get(t-nFrames).data;
+			for(int t=nFrames; --t >= 0; ) set(t, null);	
+		}
+		else {
+			nFrames *= -1;
+			for(int t=nFrames; t<size(); t++) get(t-nFrames).data = get(t).data;
+			for(int t=size()-nFrames; t<size(); t++) set(t, null);
+		}
 	}
 	
 
@@ -2972,61 +3128,43 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public String toString() { return "Integration " + getFullID("|"); }
 	
 	
+	
+	
 
-	public abstract class FrameFork<ReturnType> extends Parallel<ReturnType> {
+	public abstract class Fork<ReturnType> extends CRUSH.IndexedFork<ReturnType> {
+		public Fork() { super(size()); }
+		
 		@Override
-		public void processIndex(int index, int threadCount) {
-			for(int t=index; t<size(); t += threadCount) {
-				if(isInterrupted()) return;
-				process(get(t));
-				Thread.yield();
-			}
+		public final void processIndex(int index) { 
+			FrameType exposure = get(index);
+			if(exposure != null) process(exposure);
 		}
 
-		public abstract void process(FrameType frame);
+		protected abstract void process(FrameType frame);
 	}
 
 	
-	public abstract class BlockFork<ReturnType> extends Parallel<ReturnType> {
+	public abstract class BlockFork<ReturnType> extends CRUSH.IndexedFork<ReturnType> {
 		private int blocksize;
 
-		public BlockFork(int blocksize) { this.blocksize = blocksize; }
-
-		@Override
-		public void processIndex(int index, int threadCount) {
-			final int nt = size();
-			for(int from=index*blocksize; from < nt; from += threadCount*blocksize) {
-				if(isInterrupted()) return;
-				process(from, Math.min(nt, from + blocksize));
-				Thread.yield();
-			}
+		public BlockFork(int blocksize) { 
+			super(ExtraMath.roundupRatio(size(), blocksize));
+			this.blocksize = blocksize; 
 		}
 
-		public abstract void process(int from, int to);
-	}
-
-	// TODO redo with TimestreamView...
-	public abstract class ChannelFork<ReturnType> extends Parallel<ReturnType> {
-		private ChannelGroup<?> channels;
-		
-		public ChannelFork(ChannelGroup<?> channels) { this.channels = channels; }
-		
 		@Override
-		public void processIndex(int index, int threadCount) {
-			final int nc = channels.size();
-			for(int c = index; c < nc; c += threadCount) {
-				if(isInterrupted()) return;
-				process(channels.get(c));
-				Thread.yield();
-			}
+		protected final void processIndex(int index) {
+			int from = blocksize * index;
+			process(from, Math.min(from + blocksize, size()));
 		}
 
-		public abstract void process(Channel channel);
+		protected abstract void process(int from, int to);
+		
+		public final int getBlockSize() { return blocksize; }
 	}
-	
-	
-	// TODO redo with TimestreamView...
-	public abstract class ChannelBlockFork<ReturnType> extends Parallel<ReturnType> {
+
+	/*
+	public abstract class ChannelBlockFork<ReturnType> extends CRUSH.Fork<ReturnType> {
 		private ChannelGroup<?> channels;
 		private int blocksize;
 		
@@ -3036,7 +3174,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 
 		@Override
-		public void processIndex(int index, int threadCount) {
+		protected void processIndex(int index, int threadCount) {
 			final int nc = channels.size();
 			final int nt = size();
 			final int nblocks = ExtraMath.roundupRatio(nt, blocksize);
@@ -3051,7 +3189,32 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 		}
 
-		public abstract void process(Channel channel, int from, int to);
+		protected abstract void process(Channel channel, int from, int to);
 	}
+	*/
+	
+	public int pow2Size() { return ExtraMath.pow2ceil(size()); }
 
+	public int[] getInts() { return recycler.getIntArray(pow2Size()); }
+	
+	public float[] getFloats() { return recycler.getFloatArray(pow2Size()); }
+	
+	public double[] getDoubles() { return recycler.getDoubleArray(pow2Size()); }
+	
+	public DataPoint[] getDataPoints() { return recycler.getDataPointArray(pow2Size()); }
+	
+	public static void recycle(int[] array) { recycler.recycle(array); }
+	
+	public static void recycle(float[] array) { recycler.recycle(array); }
+	
+	public static void recycle(double[] array) { recycler.recycle(array); }
+	
+	public static void recycle(WeightedPoint[] array) { recycler.recycle(array); }
+	
+	public static void setRecyclerCapacity(int size) { recycler.setSize(size); }
+	
+	public static void clearRecycler() { recycler.clear(); }
+	
+	private static ArrayRecycler recycler = new ArrayRecycler();
+	
 }

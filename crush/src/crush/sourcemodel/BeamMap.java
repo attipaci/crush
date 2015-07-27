@@ -24,6 +24,7 @@ package crush.sourcemodel;
 
 import java.io.*;
 import java.util.Collection;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import kovacs.astro.AstroProjector;
@@ -44,6 +45,9 @@ public class BeamMap extends SourceMap {
 		super(instrument);
 	}
 
+	@Override
+	protected boolean isAddingToMaster() { return true; }
+	
 	@Override
 	public SourceModel copy(boolean withContents) {
 		BeamMap copy = (BeamMap) super.copy(withContents);
@@ -94,9 +98,14 @@ public class BeamMap extends SourceMap {
 		generation = Math.max(generation, other.generation);
 	}
 
+	@Override
+	protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
+		return addForkPixels(integration, pixels, sourceGain, filtering, signalMode);
+	}
+	
 
 	@Override
-	protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain, final double dt, final int excludeSamples) {		
+	protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain) {		
 		final int i = pixel.getFixedIndex();
 		ScalarMap map = pixelMap[i];
 		
@@ -107,7 +116,7 @@ public class BeamMap extends SourceMap {
 			pixelMap[i] = map;
 		}
 			
-		map.add(exposure, pixel, index, fGC, sourceGain, dt, excludeSamples);
+		map.addSync(exposure, pixel, index, fGC, sourceGain);
 	}
 
 
@@ -326,5 +335,22 @@ public class BeamMap extends SourceMap {
 		// Require at least one valid pixel map.
 		for(ScalarMap map : pixelMap) if(map != null) if(map.isValid()) return true;
 		return false;
-	}	
+	}
+
+	@Override
+	public void addNonZero(SourceMap other) {
+		if(!(other instanceof BeamMap)) 
+			throw new IllegalStateException("Cannot add " + other.getClass().getSimpleName() + " to " + getClass().getSimpleName() + ".");
+		
+		BeamMap beammap = (BeamMap) other;
+		
+		for(int k=pixelMap.length; --k >= 0; ) {
+			ScalarMap map = pixelMap[k];
+			if(map == null) continue;
+			ScalarMap otherMap = beammap.pixelMap[k];
+			if(otherMap == null) continue;
+			map.addNonZero(otherMap);
+		}
+	}
+
 }

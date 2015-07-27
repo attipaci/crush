@@ -66,16 +66,16 @@ public class PhaseDependents {
 		forChannel[channel.index] = 0.0; 
 	}
 	
-	public final void add(final PhaseData phase, final Channel channel, final double dp) {
+	public final void addAsync(final PhaseData phase, final Channel channel, final double dp) {
 		forPhase[phase.index] += dp; 
 		forChannel[channel.index] += dp; 
 	}
 	
-	public final void add(final PhaseData phase, final double dp) { 
+	public final void addAsync(final PhaseData phase, final double dp) { 
 		forPhase[phase.index] += dp; 
 	}
 	
-	public final void add(final Channel channel, final double dp) { 
+	public final void addAsync(final Channel channel, final double dp) { 
 		forChannel[channel.index] += dp; 
 	}
 	

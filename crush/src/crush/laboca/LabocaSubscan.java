@@ -34,8 +34,6 @@ import java.util.*;
 import kovacs.math.Vector2D;
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
-
-
 import nom.tam.fits.*;
 
 public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
@@ -92,16 +90,22 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		
 		Response mode = (Response) instrument.modalities.get("temperature").get(0);
 		Signal signal = getSignal(mode);
-		if(signal == null) signal = mode.getSignal(this);
-		
+		if(signal == null) signal = mode.getSignal(this);	
 		signal.level(false);
+		
 		rmsHe3 = signal.getRMS();
 		System.err.println("   RMS He3 temperature drift is " + Util.f3.format(1e3 * rmsHe3) + " mK.");
 		
-		for(LabocaFrame exposure : this) if(exposure != null) {
-			double dT = signal.valueAt(exposure);
-			if(!Double.isNaN(dT)) for(LabocaPixel pixel : instrument) exposure.data[pixel.index] -= pixel.temperatureGain * dT;
-		}
+		final Signal temperatureSignal = signal;
+
+		new Fork<Void>() {
+			@Override
+			protected void process(LabocaFrame exposure) {
+				final double dT = temperatureSignal.valueAt(exposure);
+				if(!Double.isNaN(dT)) for(LabocaPixel pixel : instrument) exposure.data[pixel.index] -= pixel.temperatureGain * dT;
+			}			
+		}.process();
+		
 	}
 	
 	public void writeTemperatureGains() throws IOException {
@@ -140,7 +144,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		System.err.println("   Calculating He3 temperatures from " + blindChannels.size() + " blind bolometer[s].");
 		
 		// Calculate the RMS temperature fluctuation...
-		CorrelatedSignal signal = new CorrelatedSignal(blindMode, this);
+		final CorrelatedSignal signal = new CorrelatedSignal(blindMode, this);
 		
 		try { blindMode.updateSignals(this, false); }
 		catch(Exception e) { 
@@ -149,7 +153,11 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		}
 		
 		// Set blind temperatures...
-		for(LabocaFrame exposure : this) if(exposure != null) exposure.he3Temp = signal.valueAt(exposure);
+		new Fork<Void>() {
+			@Override
+			protected void process(LabocaFrame exposure) { exposure.he3Temp = signal.valueAt(exposure); }
+		}.process();
+
 	}	
 	
 	
@@ -184,55 +192,73 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		interpolateHe3Temperatures(table);
 	}
 	
-	public void interpolateHe3Temperatures(ArrayList<Vector2D> table) {
+	public void interpolateHe3Temperatures(final ArrayList<Vector2D> table) {
 		System.err.print("   Interpolating He3 temperatures. ");
 		// plus or minus in days;
-		double smoothFWHM = he3TimeScale / Unit.day;
-		double windowSize = 2.0 * smoothFWHM;
-		double sigma = smoothFWHM / Constant.sigmasInFWHM;
-	
-		int from = 0, to=0;
-		for(LabocaFrame exposure : this) if(exposure != null) {
-			double MJD0 = exposure.MJD;
-	
-			// Adjust the smoothing window...
-			while(MJD0 - table.get(from).x() > windowSize || from == table.size()-1) from++;
-			while(table.get(to).x() - MJD0 < windowSize || to == table.size()-1) to++;
-	
-			double sum = 0.0, sumw = 0.0;
-	
-			for(int tt=from; tt<=to; tt++) {
-				Vector2D entry = table.get(tt);
-				double dev = (MJD0 - entry.x()) / sigma;
-				double w = Math.exp(-0.5*dev*dev);
-				sum += w * entry.y();
-				sumw += w;
+		final double smoothFWHM = he3TimeScale / Unit.day;
+		final double windowSize = 2.0 * smoothFWHM;
+		final double sigma = smoothFWHM / Constant.sigmasInFWHM;
+			
+
+		new Fork<Void>() {
+			int from = 0, to=0;
+
+			@Override
+			protected void process(LabocaFrame exposure) {
+				double MJD0 = exposure.MJD;
+
+				// Adjust the smoothing window...
+				while(MJD0 - table.get(from).x() > windowSize || from == table.size()-1) from++;
+				while(table.get(to).x() - MJD0 < windowSize || to == table.size()-1) to++;
+
+				double sum = 0.0, sumw = 0.0;
+
+				for(int tt=from; tt<=to; tt++) {
+					Vector2D entry = table.get(tt);
+					double dev = (MJD0 - entry.x()) / sigma;
+					double w = Math.exp(-0.5*dev*dev);
+					sum += w * entry.y();
+					sumw += w;
+				}
+
+				exposure.he3Temp = sumw > 0.3 ? (float) (sum/sumw) : Float.NaN;
 			}
 
-			exposure.he3Temp = sumw > 0.3 ? (float) (sum/sumw) : Float.NaN;
-		}
+		}.process();
 
-		// Shift by a number of frames...
-		/*
-		System.err.print("[shift]");
-		for(int i=80; i<size(); i++) {
-			LabocaFrame exposure = get(i);
-			if(exposure != null) {
-				LabocaFrame other = get(i-80);
-				if(other != null) other.he3Temp = exposure.he3Temp;
-				exposure.he3Temp = Double.NaN;
-			}	
-		}
-		*/
-		
-		// Flag invalid exposured...
-		int nFlagged = 0;
-		for(LabocaFrame exposure : this) if(exposure != null) if(Double.isNaN(exposure.he3Temp)) {
-			set(exposure.index, null);
-			nFlagged++;
-		}
 
-		System.err.println(nFlagged == 0 ? "All good :-)" : "Dropped " + nFlagged + " frames without reliable He3 data :-(");	
+		// Flag invalid exposures...
+		Fork<Integer> frameFlagging = new Fork<Integer>() {
+			private int nFlagged = 0;
+
+			@Override
+			protected void process(LabocaFrame exposure) {
+				if(Double.isNaN(exposure.he3Temp)) {
+					set(exposure.index, null);
+					nFlagged++;
+				}
+
+			}
+
+			@Override
+			public Integer getPartialResult() { return nFlagged; }
+
+			@Override
+			public Integer getResult() {
+				int globalFlagged = 0;
+				for(Parallel<Integer> task : getWorkers()) globalFlagged += task.getPartialResult();
+				return globalFlagged;
+			}
+
+		};
+
+		frameFlagging.process();
+		int nFlagged = frameFlagging.getResult();
+
+		for(LabocaFrame exposure : this) if(exposure != null) 
+			System.err.println(nFlagged == 0 ? "All good :-)" : "Dropped " + nFlagged + " frames without reliable He3 data :-(");	
+
+
 	}
 	
 	@Override

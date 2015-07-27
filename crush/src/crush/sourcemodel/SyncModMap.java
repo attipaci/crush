@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -28,7 +28,7 @@ import java.util.*;
 
 import kovacs.astro.AstroProjector;
 import kovacs.data.Index2D;
-
+import kovacs.util.Parallel;
 import crush.*;
 
 
@@ -45,111 +45,96 @@ public class SyncModMap extends ScalarMap {
 	}
 	
 	@Override
-	protected synchronized int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
-		int goodFrames = 0;
-		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
-		final AstroProjector projector = new AstroProjector(getProjection());
-		final Index2D index = new Index2D();
-		
-		final float[] value = new float[integration.instrument.size()];
-		
-		final Modulated modulation = (Modulated) integration;
-		
-		final float[] waveform = new float[modulation.getPeriod(signalMode)];
-		final int last = integration.size() + 1 - waveform.length;
-		
-		double integral = 0.5 * waveform.length;
-		double samplingInterval = integration.instrument.samplingInterval;
-		
-		for(int fromt=0; fromt<last; fromt += waveform.length) {
-			Arrays.fill(value, 0.0F);
-			int samples = 0;
-			Frame midFrame = null;
-			modulation.getWaveForm(signalMode, fromt, waveform);
-		
-			int mid = waveform.length >> 1;
-		
-			for(int blockt = 0; blockt < waveform.length; blockt++) {
-				final Frame exposure = integration.get(fromt + blockt);
-				
-				if(exposure == null) break;
-				if(exposure.isFlagged(Frame.SOURCE_FLAGS)) break;
+	protected synchronized int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {
+		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;	
 			
-				if(blockt == mid) midFrame = exposure;
-				
-				final float[] data = exposure.data;
-				final byte[] sampleFlag = exposure.sampleFlag;
-				final float fG = waveform[blockt] * integration.gain;
+		final Periodic modulation = (Periodic) integration;
+		
+		final int waveSamples = modulation.getPeriod(signalMode);
+		final float samplingInterval = (float) integration.instrument.samplingInterval;
+		final float iI = 2.0F / waveSamples;
+		final int mid = waveSamples >> 1;
+		
 
-				for(final Pixel pixel : pixels) for(final Channel channel : pixel) {
-					final int c = channel.index;
-					if((sampleFlag[c] & excludeSamples) == 0) value[c] += fG * data[c];
-					else value[c] = Float.NaN;
-				}
+		CRUSH.Fork<Integer> accumulator = integration.new BlockFork<Integer>(waveSamples) {
+			private float[] channelValue;
+			private AstroProjector projector;
+			private Index2D index;
+			private int goodFrames = 0;
+			
+			@Override
+			protected void init() {
+				super.init();
 				
-				samples++;
+				channelValue = integration.instrument.getFloats();
+				
+				projector = new AstroProjector(getProjection());
+				index = new Index2D();
 			}
 			
-			if(samples == waveform.length) {
+			@Override
+			protected void cleanup() {
+				super.cleanup();
+				Instrument.recycle(channelValue);
+			}
+			
+			@Override
+			protected void process(int from, int to) {
+				Arrays.fill(channelValue, 0.0F);
+				
+				Frame midFrame = null;
+				
+				int blockt = getBlockSize() - 1;
+				
+				// If there isn't data for the full waveform, then return!
+				for(int t=from; t < to; blockt++) {
+					final Frame exposure = integration.get(t);	
+					if(exposure == null) return;
+					if(exposure.isFlagged(Frame.SOURCE_FLAGS)) return;
+				
+					if(blockt == mid) midFrame = exposure;
+					
+					final float[] data = exposure.data;
+					final byte[] sampleFlag = exposure.sampleFlag;
+					final float fG = integration.gain * exposure.getSourceGain(signalMode);
+
+					for(final Pixel pixel : pixels) for(final Channel channel : pixel) {
+						final int c = channel.index;
+						if((sampleFlag[c] & excludeSamples) == 0) channelValue[c] += fG * data[c];
+						else channelValue[c] = Float.NaN;
+					}
+				}
+		
+				goodFrames += waveSamples;
+				
 				for(final Pixel pixel : pixels) {
 					midFrame.project(pixel.getPosition(), projector);
 					map.getIndex(projector.offset, index);
-			
+				
 					final float fGC = (isMasked(index) ? 1.0F : (float) filtering) * midFrame.getSourceGain(signalMode);
-					
-					for(final Channel channel : pixel) if(!Float.isNaN(value[channel.index])) {
-						value[channel.index] /= integral;
-						addPoint(index, channel, midFrame, fGC * sourceGain[channel.index],  waveform.length * samplingInterval);
-					}
-				}				
-				goodFrames += waveform.length;
+						
+					for(final Channel channel : pixel) if(!Float.isNaN(channelValue[channel.index])) {
+						channelValue[channel.index] *= iI;
+						addPoint(index, channel, midFrame, fGC * sourceGain[channel.index],  waveSamples * samplingInterval);
+					}				
+				}		
 			}
-		}
-		
-		return goodFrames;
-	}
-	
-	
-	@Override
-	protected void sync(Integration<?,?> integration, Collection<? extends Pixel> pixels, double[] sourceGain, int signalMode) {
-		final AstroProjector projector = new AstroProjector(getProjection());
-		final Index2D index = new Index2D();
-		
-		final int last = integration.size();
-		
-		final Modulated modulation = (Modulated) integration;
-		final float[] waveform = new float[modulation.getPeriod(signalMode)];
-		
-		
-		for(int t=0; t<last; ) {
-			modulation.getWaveForm(signalMode, t, waveform);
-			int nt = Math.min(waveform.length, integration.size() - t);
 			
-			for(int blockt = 0; blockt < nt; blockt++, t++) {
-				final Frame exposure = integration.get(t);	
-				if(exposure == null) continue;
-				
-				final float fG = waveform[blockt] * integration.gain * exposure.getSourceGain(signalMode); 
-				
-				if(exposure != null) for(Pixel pixel : pixels) { 
-					getIndex(exposure, pixel, projector, index);
-					//exposure.project(pixel.getPosition(), projector);
-					//map.getIndex(projector.offset, index);
-
-					for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SKIP) == 0) {
-						// Do not check for flags, to get a true difference image...
-						exposure.data[channel.index] -= getIncrement(index, channel, fG * integration.sourceSyncGain[channel.index], fG * sourceGain[channel.index]);
-
-						// Do the blanking here...
-						if(isMasked(index)) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
-						else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SOURCE_BLANK;
-					}
-				}
+			@Override
+			public Integer getPartialResult() { return goodFrames; }
+			
+			@Override
+			public Integer getResult() {
+				int total = 0;
+				for(Parallel<Integer> task : getWorkers()) total += task.getPartialResult();
+				return total;
 			}
-		}
-
+			
+		};
+		
+		accumulator.process();
+			
+		return accumulator.getResult();
 	}
-	
-	
 	
 }

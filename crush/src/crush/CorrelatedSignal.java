@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -27,9 +27,11 @@ package crush;
 import java.util.Arrays;
 import java.util.Collection;
 
+import kovacs.data.DataPoint;
 import kovacs.data.Statistics;
 import kovacs.data.WeightedPoint;
 import kovacs.util.ExtraMath;
+import kovacs.util.Parallel;
 
 
 
@@ -43,8 +45,6 @@ public class CorrelatedSignal extends Signal {
 	int excludePixelFlags = Channel.FLAG_DEAD | Channel.FLAG_BLIND;
 	int excludeFrameFlags = Frame.MODELING_FLAGS;
 	
-	private WeightedPoint[] temp;
-	
 	public CorrelatedSignal(CorrelatedMode mode, Integration<?, ?> integration) {
 		super(mode, integration);
 		syncGains = new float[mode.size()];
@@ -55,14 +55,6 @@ public class CorrelatedSignal extends Signal {
 		driftN = value.length;
 	}
 	
-	public WeightedPoint[] getTempStorage(ChannelGroup<?> channels) {
-		final int n = channels.size() * resolution;
-		if(n == 0) return new WeightedPoint[0];
-		if(temp == null) temp = new WeightedPoint[n];
-		if(temp.length < n) temp = new WeightedPoint[n];
-		if(temp[0] == null) for(int i=temp.length; --i >= 0; ) temp[i] = new WeightedPoint();	
-		return temp;
-	}
 
 	@Override
 	public final float weightAt(Frame frame) {
@@ -232,6 +224,7 @@ public class CorrelatedSignal extends Signal {
 	}
 	
 	
+	
 	public void calcFiltering() {
 		// Create the filtering srorage if necessary...
 		if(sourceFiltering == null) {
@@ -240,7 +233,7 @@ public class CorrelatedSignal extends Signal {
 		}
 		
 		// Calculate the source filtering for this mode...
-		double nP = getParms();
+		final double nP = getParms();
 		
 		final CorrelatedMode mode = (CorrelatedMode) getMode();
 		final ChannelGroup<?> channels = mode.getChannels();
@@ -254,36 +247,42 @@ public class CorrelatedSignal extends Signal {
 		final double pointSize = model == null ? integration.instrument.getPointSize() : model.getPointSize();
 		integration.instrument.calcOverlap(pointSize);
 		
-		for(int k=channels.size(); --k >= 0; ) {
-			Channel channel = channels.get(k);
-			if(channel.isFlagged(skipFlags)) continue;
-			
-			double phi = dependents.get(channel);
-			final Collection<Overlap> overlaps = channel.getOverlaps();
-			
-			// Every pixel that sees the source contributes to the filtering...
-			if(overlaps != null) for(Overlap overlap : overlaps) {
-				final Channel other = (overlap.a == channel) ? overlap.b : overlap.a; 
-				if(other.isFlagged(skipFlags)) continue;
-				phi += overlap.value * dependents.get(other);
-			}
+		new CRUSH.IndexedFork<Void>(channels.size()) {
+			@Override
+			protected void processIndex(int k) {
+				final Channel channel = channels.get(k);
+				if(channel.isFlagged(skipFlags)) return;
 				
+				double phi = dependents.get(channel);
+				final Collection<Overlap> overlaps = channel.getOverlaps();
+				
+				// Every pixel that sees the source contributes to the filtering...
+				if(overlaps != null) for(Overlap overlap : overlaps) {
+					final Channel other = (overlap.a == channel) ? overlap.b : overlap.a; 
+					if(other.isFlagged(skipFlags)) continue;
+					phi += overlap.value * dependents.get(other);
+				}
+					
+				
+				//phi *= phit;
+				
+				if(nP > 0) phi /= nP;
+				if(phi > 1.0) phi = 1.0;
 			
-			//phi *= phit;
+				// Undo the prior filtering correction
+				if(sourceFiltering[k] > 0.0) channel.sourceFiltering /= sourceFiltering[k];
+				if(Double.isNaN(channel.sourceFiltering)) channel.sourceFiltering = 1.0;
+				
+				// Calculate the new filtering gain correction...
+				sourceFiltering[k] = (float) (1.0 - phi); 
+				// And apply it...
+				channel.sourceFiltering *= sourceFiltering[k];
+			}
 			
-			if(nP > 0) phi /= nP;
-			if(phi > 1.0) phi = 1.0;
-		
-			// Undo the prior filtering correction
-			if(sourceFiltering[k] > 0.0) channel.sourceFiltering /= sourceFiltering[k];
-			if(Double.isNaN(channel.sourceFiltering)) channel.sourceFiltering = 1.0;
+		}.process();
 			
-			// Calculate the new filtering gain correction...
-			sourceFiltering[k] = (float) (1.0 - phi); 
-			// And apply it...
-			channel.sourceFiltering *= sourceFiltering[k];
-		}		
 	}
+	
 	
 	// TODO Use this in ArrayUtil...
 	@Override
@@ -312,9 +311,6 @@ public class CorrelatedSignal extends Signal {
 		weight = smoothw;
 	}
 	
-	
-	public void noTempStorage() { temp = null; }
-	
 	public double getParms() {
 		int n = 0;
 		for(int i=value.length; --i >= 0; ) if(weight[i] > 0.0) n++;	
@@ -323,35 +319,31 @@ public class CorrelatedSignal extends Signal {
 	
 	// Get correlated for all frames even those that are no good...
 	// But use only channels that are valid, and skip over flagged samples...
-	public synchronized void update(boolean isRobust) throws Exception {
+	public synchronized void update(final boolean isRobust) throws Exception {
 		// work on only a selected subset of not critically flagged channels only (for speed)
 		final CorrelatedMode mode = (CorrelatedMode) getMode();
 		final ChannelGroup<?> channels = mode.getChannels();
 		final ChannelGroup<?> goodChannels = mode.getValidChannels();
 		final int nc = channels.size();
+		final int resolution = mode.getFrameResolution(integration);
+		final double duration = integration.getDuration();
+	
 		
 		// Need at least 2 channels for decorrelaton...
 		//if(goodChannels.size() < 2) return;
-		
-		final int resolution = mode.getFrameResolution(integration);
-		final int nt = integration.size();
-		final int nT = mode.signalLength(integration);
-		
-		// Clear the dependents in all mode channels...
-		dependents.clear(channels, 0, integration.size());
-		
+			
+			
 		final float[] G = mode.getNormalizedGains();	
 		final float[] dG = syncGains;
 		
-		// Make syncGains carry the gain increment from last sync...
 		boolean resyncGains = false;
+		
+		// Make syncGains carry the gain increment from last sync...
+		// Precalculate the gain-weight products...
 		for(int k=nc; --k >= 0; ) {
 			dG[k] = G[k] - dG[k];
 			if(dG[k] != 0.0) resyncGains = true;
-		}
-		
-		// Precalculate the gain-weight products...
-		for(int k=nc; --k >= 0; ) {
+			
 			final Channel channel = channels.get(k);
 			channel.temp = 0.0F;
 			channel.tempG = G[k];
@@ -360,76 +352,114 @@ public class CorrelatedSignal extends Signal {
 		}
 		
 		// Remove channels with zero gain/weight from goodChannels
+		// Precalculate the channel dependents...
 		for(int k=goodChannels.size(); --k >= 0; ) {
 			Channel channel = goodChannels.get(k);
 			if(channel.tempWG2 == 0.0) goodChannels.remove(k);
+			else channel.temp = channel.tempWG2 * (float) (channel.directFiltering * (1.0 - channel.filterTimeScale / duration));
 		}
 		
 		
-		final WeightedPoint increment = new WeightedPoint();
 		
-		WeightedPoint[] buffer = null;
-		if(isRobust) buffer = getTempStorage(goodChannels);
-		else noTempStorage();
+		final boolean isGainResync = resyncGains;
+			
+		// Clear the dependents in all mode channels...
+		dependents.clear(channels, 0, integration.size());
+			
 		
-		for(int T=0, from=0; T < nT; T++, from += resolution) {
-			final int to = Math.min(from + resolution, nt);
-			final float C = value[T];
+		integration.new BlockFork<float[]>(resolution) {
+			private WeightedPoint increment;
+			private DataPoint[] buffer;
+			private float[] channelParms;
 			
-			// Resync gains, if necessary...
-			if(resyncGains) for(int t=to; --t >= from; ) {
-				final Frame exposure = integration.get(t);
-				if(exposure == null) continue;			
-				for(int k=nc; --k >= 0; ) exposure.data[channels.get(k).index] -= dG[k] * C;
-			}
-			
-			if(isRobust) getRobustCorrelated(goodChannels, from, to, increment, buffer);
-			else getMLCorrelated(goodChannels, from, to, increment);
-			
-			if(increment.weight() <= 0.0) continue;
-			
-			// Cast the incremental value into float for speed...	
-			final float dC = (float) increment.value();
-
-			// precalculate the channel dependences...
-			
-			final double duration = integration.getDuration();
-			for(final Channel pixel : goodChannels) {
-				final float filterFactor = (float) (pixel.directFiltering * (1.0 - pixel.filterTimeScale / duration));
-				pixel.temp = filterFactor * pixel.tempWG2 / (float) increment.weight();			
-			}
-			
-			// sync to data and calculate dependences...float filterFactor = (float) (1.0 - integration.filterTimeScale / integration.getDuration());
-			for(int t=to; --t >= from; ) {
-				final Frame exposure = integration.get(t);
-				if(exposure == null) continue;
+			@Override
+			protected void init() {
+				super.init();
+				increment = new WeightedPoint();
 				
-				for(int k=nc; --k >= 0; ) {
-					final Channel channel = channels.get(k);
-					// Here usedGains carries the gain increment dG from the last correlated signal removal
-					exposure.data[channel.index] -= channel.tempG * dC;
-					if(channel.temp > 0.0F) dependents.add(exposure, channel, exposure.relativeWeight * channel.temp);
+				channelParms = integration.instrument.getFloats();
+				Arrays.fill(channelParms, 0.0F);
+				
+				if(isRobust) buffer = integration.getDataPoints();
+			}
+			
+			@Override
+			protected void cleanup() {
+				super.cleanup();
+				if(buffer != null) Integration.recycle(buffer);
+			}
+			
+			@Override
+			protected void process(int from, int to) {
+				final int T = from / resolution;
+				
+				final float C = value[T];
+				
+				// Resync gains, if necessary...
+				if(isGainResync) for(int t=to; --t >= from; ) {
+					final Frame exposure = integration.get(t);
+					if(exposure == null) continue;			
+					for(int k=nc; --k >= 0; ) exposure.data[channels.get(k).index] -= dG[k] * C;
+				}
+				
+				if(isRobust) getRobustCorrelated(goodChannels, from, to, increment, buffer);
+				else getMLCorrelated(goodChannels, from, to, increment);
+				
+				if(increment.weight() <= 0.0) return;
+				
+				// Cast the incremental value into float for speed...	
+				final float dC = (float) increment.value();
+
+				// sync to data and calculate dependences...float filterFactor = (float) (1.0 - integration.filterTimeScale / integration.getDuration());
+				for(int t=to; --t >= from; ) {
+					final Frame exposure = integration.get(t);
+					if(exposure == null) continue;
+					
+					for(Channel channel : channels) {
+						// Here usedGains carries the gain increment dG from the last correlated signal removal
+						exposure.data[channel.index] -= channel.tempG * dC;
+						
+						if(channel.temp <= 0.0F) continue;						
+						if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+						if(exposure.sampleFlag[channel.index] != 0) continue;
+						
+						final double dp = exposure.relativeWeight * channel.temp / increment.weight();
+						dependents.addAsync(exposure, dp);
+						channelParms[channel.index] += dp;
+					}
+				}
+					
+				// Update the correlated signal model...	
+				value[T] += dC;
+				weight[T] = (float) increment.weight();
+			}
+		
+			@Override
+			public float[] getPartialResult() { return channelParms; }
+			
+			@Override
+			protected void postProcess() {
+				super.postProcess();
+				
+				for(Parallel<float[]> task : getWorkers()) {
+					float[] localChannelParms = task.getPartialResult();
+					dependents.addForChannels(localChannelParms);
+					Instrument.recycle(localChannelParms);
 				}
 			}
-				
-			// Update the correlated signal model...	
-			value[T] += dC;
-			weight[T] = (float) increment.weight();
-		}
-		
-		// Update the gain values used for signal extraction...
-		setSyncGains(G);
-		
-		// Free up the temporary storage, which is used for calculating medians
-		noTempStorage();
-		
-		if(CRUSH.debug) integration.checkForNaNs(mode.getChannels(), 0, integration.size());
-		
-		generation++;
+			
+		}.process();
 		
 		// Apply the mode dependices only to the channels that have contributed...
 		dependents.apply(goodChannels, 0, integration.size());	
+			
+		// Update the gain values used for signal extraction...
+		setSyncGains(G);
+			
+		if(CRUSH.debug) integration.checkForNaNs(mode.getChannels(), 0, integration.size());
 		
+		generation++;
+			
 		// Calculate the point-source filtering by the decorrelation...
 		calcFiltering();
 	}
@@ -474,9 +504,5 @@ public class CorrelatedSignal extends Signal {
 		}
 		Statistics.smartMedian(buffer, 0, n, 0.25, increment); 
 	}
-	
-	
-	
-	// TODO Use estimators...
 	
 }

@@ -29,21 +29,16 @@ import java.util.*;
 import kovacs.util.*;
 
 
-public class Pipeline extends Thread {
-	Vector<Scan<?, ?>> scans = new Vector<Scan<?, ?>>();
+public class Pipeline {
 	CRUSH crush;
 	
 	List<String> ordering = new ArrayList<String>();
-	boolean isRobust = false, isGainRobust = false;
-	
 	SourceModel scanSource;
-	boolean isReused = false;
 	
 	public Pipeline(CRUSH crush) {
 		this.crush = crush;
 		scanSource = crush.source.copy(false);
-		scanSource.noParallel();
-		scanSource.reset(false);
+		scanSource.setParallel(CRUSH.maxThreads);
 	}
 
 	public boolean hasOption(String name) {
@@ -54,27 +49,10 @@ public class Pipeline extends Thread {
 		return crush.get(name);
 	}
 	
-	public void addScan(Scan<?, ?> scan) { 
-		scans.add(scan); 
-		for(Integration<?, ?> integration : scan) crush.queue.add(integration);
-	}
-
-	@Override
-	public void run() {
-		try { iterate(); }
-		catch(InterruptedException e) { System.err.println("\nInterrupted!"); }
-		catch(Exception e) { 
-			System.err.println("ERROR! " + e.getMessage()); 
-			e.printStackTrace();
-			System.err.println("Exiting.");
-			System.exit(1);
-		}
-	}
-
 	public void setOrdering(List<String> ordering) { this.ordering = ordering; }
 	
 	public synchronized void iterate() throws InterruptedException {					
-		for(Scan<?, ?> scan : scans) iterate(scan);
+		for(int i=0; i<crush.scans.size(); i++) iterate(crush.scans.get(i));
 	}
 	
 	public synchronized void iterate(Scan<?,?> scan) throws InterruptedException {		
@@ -85,21 +63,16 @@ public class Pipeline extends Thread {
 		// Extract source ALWAYS at the end, independently of what was requested...
 		// The supplier of the tasks should generally make sure that the source
 		// is extracted at the end.
-		if(ordering.contains("source")) if(scan.hasOption("source")) getSource(scan);
+		if(ordering.contains("source")) if(scan.hasOption("source")) updateSource(scan);
 
-		for(Integration<?, ?> integration : scan) crush.checkout(integration);
+		for(int i=0; i<scan.size(); i++) summarize(scan.get(i));
 	}
 	
-	protected void getSource(Scan<?,?> scan) {
+	protected void updateSource(Scan<?,?> scan) {
 		if(crush.source == null) return;
-	
+		
 		// Reset smoothing etc. for raw map.
-		if(scanSource == null) {
-			scanSource = crush.source.copy(false);
-			scanSource.noParallel();
-			scanSource.reset(false);
-		}
-		else scanSource.reset(true);
+		scanSource.reset(false);
 		
 		// TODO why doesn't this work...
 		scanSource.setInstrument(scan.instrument);
@@ -114,9 +87,14 @@ public class Pipeline extends Thread {
 		crush.source.add(scanSource, scan.weight);
 		
 		scanSource.postprocess(scan);
-		
-		Thread.yield();
 	}
+	
+	public void summarize(Integration<?,?> integration) {
+		System.err.print("  [" + integration.getDisplayID() + "] ");
+		System.err.println(integration.comments);
+		integration.comments = new String();
+	}	
+
 	
 }
 	

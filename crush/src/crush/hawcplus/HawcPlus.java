@@ -246,8 +246,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		}
 	}
 	 */
-	
 
+		
 	@Override
 	public int maxPixels() {
 		return storeChannels;

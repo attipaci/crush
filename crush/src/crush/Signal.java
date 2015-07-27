@@ -28,9 +28,11 @@ package crush;
 import java.io.*;
 
 import kovacs.data.Statistics;
+import kovacs.data.DataPoint;
 import kovacs.data.WeightedPoint;
 import kovacs.util.Constant;
 import kovacs.util.ExtraMath;
+import kovacs.util.Parallel;
 import kovacs.util.Util;
 
 public class Signal implements Cloneable {
@@ -190,9 +192,11 @@ public class Signal implements Cloneable {
 	}
 		
 	public WeightedPoint getMedian() {
-		final float[] temp = new float[value.length];
-		for(int t=value.length; --t >= 0; ) if(!Float.isNaN(value[t])) temp[t] = value[t];
-		return new WeightedPoint(Statistics.median(temp), Double.POSITIVE_INFINITY);
+		final float[] temp = integration.getFloats();
+		for(int t=value.length; --t >= 0; ) temp[t] = Float.isNaN(value[t]) ? 0.0F : value[t];
+		float median = Statistics.median(temp);
+		Integration.recycle(temp);
+		return new WeightedPoint(median, Double.POSITIVE_INFINITY);
 	}
 	
 	public WeightedPoint getMean() {
@@ -333,62 +337,114 @@ public class Signal implements Cloneable {
 		// Calculate gains here...
 		return isRobust ? getRobustGainIncrement() : getMLGainIncrement();
 	}
+
 	
-	
+
 	protected final WeightedPoint[] getMLGainIncrement() {
 		final int[] channelIndex = mode.getChannelIndex();
 		
-		final WeightedPoint[] dG = new WeightedPoint[mode.size()];
-		for(int k=dG.length; --k >= 0; ) dG[k] = new WeightedPoint();
-		
-		for(final Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {	
-			for(int k=dG.length; --k >= 0; ) {
-				final int c = channelIndex[k];
-				if(exposure.sampleFlag[c] == 0) {
-					final WeightedPoint increment = dG[k];
+		CRUSH.Fork<DataPoint[]> increments = integration.new Fork<DataPoint[]>() {
+			private DataPoint[] dG;
+			
+			@Override
+			protected void init() {
+				super.init();
+				dG = integration.instrument.getDataPoints();
+				for(int k=mode.size(); --k >= 0; ) dG[k].noData();
+			}
+			
+			@Override protected void process(Frame exposure){
+				if(exposure.isFlagged(Frame.MODELING_FLAGS)) return;		
+				
+				for(int k=mode.size(); --k >= 0; ) {
+					final int c = channelIndex[k];
+					if(exposure.sampleFlag[c] != 0) continue;
+					
+					DataPoint increment = dG[k];
 					increment.add(exposure.tempWC * exposure.data[c]);
 					increment.addWeight(exposure.tempWC2);
 				}
 			}
-		}
-		for(int k=dG.length; --k >= 0; ) {
-			final WeightedPoint increment = dG[k];
-			if(increment.weight() > 0.0) increment.scaleValue(1.0 / increment.weight());
-		}
-		
-		return dG;
+			
+			@Override
+			public DataPoint[] getPartialResult() { return dG; }
+			
+			@Override
+			public DataPoint[] getResult() {
+				final DataPoint[] globalIncrement = DataPoint.createArray(mode.size());
+				
+				for(Parallel<DataPoint[]> task : getWorkers()) {
+					final DataPoint[] localIncrement = task.getPartialResult();
+					for(int k=mode.size(); --k >= 0; ) {
+						DataPoint global = globalIncrement[k];
+						DataPoint local = localIncrement[k];
+						global.add(local.value());
+						global.addWeight(local.weight());
+					}
+					Instrument.recycle(localIncrement);
+				}
+				
+				for(int k=mode.size(); --k >= 0; ) {
+					final WeightedPoint increment = globalIncrement[k];
+					if(increment.weight() > 0.0) increment.scaleValue(1.0 / increment.weight());
+				}
+				
+				return globalIncrement;
+			}
+			
+		};
+		increments.process();
+		return increments.getResult();
 	}
 	
 	// TODO smart timestream access
 	protected final WeightedPoint[] getRobustGainIncrement() {
 		final int[] channelIndex = mode.getChannelIndex();
 		
-		final WeightedPoint[] dG = new WeightedPoint[channelIndex.length];
-		for(int k=dG.length; --k >= 0; ) dG[k] = new WeightedPoint();
+		final WeightedPoint[] dG = WeightedPoint.createArray(channelIndex.length);
 		
-		// Allocate storage for sorting if estimating robustly...
-		final WeightedPoint[] gainData = new WeightedPoint[integration.size()];
-		for(int t=integration.size(); --t >= 0; ) gainData[t] = new WeightedPoint();
-	
-		for(int k=dG.length; --k >= 0; ) {
-			int n=0;
-			final int c = channelIndex[k];
-			final WeightedPoint increment = dG[k];
-			for(final Frame exposure : integration) if(exposure != null) 
-				if(exposure.tempWC2 > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)  {
-					final WeightedPoint point = gainData[n++];
-					point.setValue(exposure.data[c] / exposure.tempC);
-					point.setWeight(exposure.tempWC2);
-					increment.addWeight(point.weight());
-					
-					assert !Double.isNaN(point.value());
-					assert !Double.isInfinite(point.value());
-				}
-			Statistics.smartMedian(gainData, 0, n, 0.25, increment);
-		}
+		new CRUSH.IndexedFork<Void>(dG.length) {
+			// Allocate storage for sorting if estimating robustly...
+			private WeightedPoint[] gainData;
+			
+			@Override
+			public void init() {
+				super.init();
+				gainData = integration.getDataPoints();
+			}
 		
+			@Override
+			public void cleanup() {
+				Integration.recycle(gainData);
+				super.cleanup();
+			}
+			
+			@Override
+			protected void processIndex(int k) {
+				int n=0;
+				final int c = channelIndex[k];
+				final WeightedPoint increment = dG[k];
+				//increment.noData();
+				for(final Frame exposure : integration) if(exposure != null) 
+					if(exposure.tempWC2 > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)  {
+						final WeightedPoint point = gainData[n++];
+						point.setValue(exposure.data[c] / exposure.tempC);
+						point.setWeight(exposure.tempWC2);
+						increment.addWeight(point.weight());
+						
+						assert !Double.isNaN(point.value());
+						assert !Double.isInfinite(point.value());
+					}
+				if(n > 0) Statistics.smartMedian(gainData, 0, n, 0.25, increment);
+			}
+			
+		}.process();
+		
+
 		return dG;
 	}
+	
+	
 
 	protected synchronized void resyncGains() throws Exception {
 		final ChannelGroup<?> channels = mode.getChannels();
@@ -400,17 +456,21 @@ public class Signal implements Cloneable {
 		
 		for(int k=nc; --k >=0; ) dG[k] = G[k] - dG[k];
 		
-		// Sync to data and calculate dependeces...
-		for(final Frame exposure : integration) if(exposure != null) for(int k=nc; --k >=0; ) 
-			exposure.data[channelIndex[k]] -= dG[k] * valueAt(exposure);
+		integration.new Fork<Void>() {
+			@Override 
+			protected void process(final Frame exposure) {
+				for(int k=nc; --k >=0; ) exposure.data[channelIndex[k]] -= dG[k] * valueAt(exposure);
+			}
+		}.process();
 		
+
 		// Register the gains as the ones used for the signal...
 		setSyncGains(G);
 			
 	}
 	
-
-	protected synchronized void syncGains(float[] sumwC2, boolean isTempReady) throws Exception {
+	
+	protected synchronized void syncGains(final float[] sumwC2, boolean isTempReady) throws Exception {
 		if(mode.fixedGains) throw new IllegalStateException("WARNING! Cannot change gains for fixed gain modes.");
 		
 		final ChannelGroup<?> channels = mode.getChannels();
@@ -432,20 +492,25 @@ public class Signal implements Cloneable {
 
 		// Precalculate the gain-weight products...
 		if(!isTempReady) prepareFrameTempFields();
-
+		
 		// Sync to data and calculate dependences...
-		for(final Frame exposure : integration) if(exposure != null) {
-			for(int k=nc; --k >=0; ) if(sumwC2[k] > 0.0) {
-				exposure.data[channelIndex[k]] -= dG[k] * exposure.tempC;
-				parms.add(exposure, exposure.tempWC2 / sumwC2[k]);
+		integration.new Fork<Void>() {
+			@Override 
+			protected void process(Frame exposure){
+				for(int k=nc; --k >=0; ) if(sumwC2[k] > 0.0) {
+					final int c = channelIndex[k];
+					exposure.data[c] -= dG[k] * exposure.tempC;
+					if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)
+						parms.addAsync(exposure, exposure.tempWC2 / sumwC2[k]);
+				}
 			}
-		}
-
+		}.process();
+		
 		// Account for the one gain parameter per channel...
 		// minus the overall gain renormalization...
 		// TODO calculate more properly with weights...
-		double channelDependence = 1.0 - 1.0 / nc;
-		for(int k=nc; --k >= 0; ) if(sumwC2[k] > 0.0) parms.add(channels.get(k), channelDependence);
+		final double channelDependence = 1.0 - 1.0 / nc;
+		for(int k=nc; --k >= 0; ) if(sumwC2[k] > 0.0) parms.addAsync(channels.get(k), channelDependence);
 		
 		// Apply the mode dependeces...
 		parms.apply(channels, 0, integration.size());
@@ -455,7 +520,6 @@ public class Signal implements Cloneable {
 		
 		if(CRUSH.debug) integration.checkForNaNs(channels, 0, integration.size());
 	}
-	
 	
 	private void prepareFrameTempFields() {
 		for(final Frame exposure : integration) if(exposure != null) {

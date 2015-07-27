@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,15 +20,12 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009,2010 Attila Kovacs
+
 
 package crush;
 
-public interface Modulated {
+public interface Periodic {
 	
 	public int getPeriod(int mode);
-	
-	public void getWaveForm(int mode, int index, float[] waveform); 
-	
 	
 }

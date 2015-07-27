@@ -61,6 +61,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
 		return copy;
 	}
 	
+	// Parallelize...
 	@Override
 	public boolean equals(Object o) {
 		if(!super.equals(o)) return false;
@@ -85,7 +86,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
 		return channels;
 	}
 	
-	public void kill(int flagPattern) {
+	public void kill(final int flagPattern) {
 		for(Channel channel : this) if(channel.isFlagged(flagPattern)) channel.flag(Channel.FLAG_DEAD);
 	}
 	
@@ -98,8 +99,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
 		return size() < fromSize;
 	}
 
-	public void order(final Field field) {
-		
+	public void order(final Field field) {	
 		Comparator<ChannelType> ordering = new Comparator<ChannelType>() {
 			@Override
 			public int compare(ChannelType c1, ChannelType c2) {
@@ -151,6 +151,17 @@ implements Copiable<ChannelGroup<ChannelType>> {
 		trimToSize();
 		return this;
 	}
+
+	public abstract class Fork<ReturnType> extends CRUSH.IndexedFork<ReturnType> {	
+		public Fork() { super(size()); }
+		
+		@Override
+		protected final void processIndex(int index) { process(get(index)); }
+
+		protected abstract void process(ChannelType channel);
+	}
+
+	
 	
 	
 }

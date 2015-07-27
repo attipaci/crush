@@ -302,7 +302,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 					}
 					else {
 						frame.horizontalOffset = new Vector2D(
-							-(dX[i] + AZE[i] * frame.horizontal.cosLat()) * Unit.arcsec,
+							(dX[i] + AZE[i] * frame.horizontal.cosLat()) * Unit.arcsec,
 							(dY[i] + ELE[i]) * Unit.arcsec);
 						equatorialOffset.zero();
 					}

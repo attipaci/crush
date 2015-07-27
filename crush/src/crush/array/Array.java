@@ -192,6 +192,7 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		
 	}
 	
+
 	public String getRCPHeader() { return "ch\t[Gpnt]\t[Gsky]ch\t[dX\"]\t[dY\"]"; }
 	
 	public void printPixelRCP(PrintStream out, String header)  throws IOException {

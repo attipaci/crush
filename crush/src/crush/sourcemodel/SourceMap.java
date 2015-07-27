@@ -39,6 +39,7 @@ import kovacs.data.Statistics;
 import kovacs.math.Range;
 import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
+import kovacs.parallel.Summation;
 import kovacs.projection.Gnomonic;
 import kovacs.projection.Projection2D;
 import kovacs.projection.SphericalProjection;
@@ -54,11 +55,16 @@ public abstract class SourceMap extends SourceModel {
 	
 	public boolean allowIndexing = true;
 	public int marginX = 0, marginY = 0;
-		
+	
+	protected int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
+	
 	public SourceMap(Instrument<?> instrument) {
 		super(instrument);
 	}
 
+	public void setExcludeSamples(int pattern) {
+		excludeSamples = pattern;
+	}
 	
 	@Override
 	public void reset(boolean clearContent) {
@@ -150,6 +156,99 @@ public abstract class SourceMap extends SourceModel {
 	public double getSourceSize() { return ExtraMath.hypot(super.getSourceSize(), getRequestedSmoothing(option("smooth"))); }
 	
 	
+	private synchronized void flagOutside(final Integration<?,?> integration, final Vector2D fixedSize) {
+		final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
+	
+		new CRUSH.IndexedFork<Void>(integration.size()) {
+			private AstroProjector projector;
+			
+			@Override
+			public void init() {
+				super.init();
+				projector = new AstroProjector(getProjection());
+			}
+			
+			@Override
+			protected void processIndex(int t) {
+				Frame exposure = integration.get(t);
+				if(exposure == null) return;
+				boolean valid = false;
+
+				for(Pixel pixel : pixels) {
+					exposure.project(pixel.getPosition(), projector);
+					for(Channel channel : pixel) {
+						if(Math.abs(projector.offset.x()) > fixedSize.x()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+						else if(Math.abs(projector.offset.y()) > fixedSize.y()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+						else valid = true;
+					}
+				}
+
+				if(!valid) exposure = null;
+				
+			}
+		}.process();
+	}
+	
+	private synchronized void searchCorners(final Integration<?,?> integration) {
+		//final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
+		final Collection<? extends Pixel> pixels = integration.instrument.getPerimeterPixels();
+		
+		class ProjectorData {	
+			public Range longitudeRange = new Range();
+			public Range latitudeRange = new Range();
+		}
+		
+		CRUSH.IndexedFork<ProjectorData> findCorners = new CRUSH.IndexedFork<ProjectorData>(integration.size()) {
+			private ProjectorData data;
+			private AstroProjector projector;
+			
+			@Override
+			public void init() {
+				super.init();
+				data = new ProjectorData();
+				projector = new AstroProjector(getProjection());
+			}
+			
+			@Override
+			protected void processIndex(int t) {
+				Frame exposure = integration.get(t);
+				if(exposure == null) return;
+				
+				for(Pixel pixel : pixels) {
+					exposure.project(pixel.getPosition(), projector);
+					data.longitudeRange.include(projector.offset.x());
+					data.latitudeRange.include(projector.offset.y());
+				}	
+			}
+			
+			@Override
+			public ProjectorData getPartialResult() { return data; }
+			
+			@Override
+			public ProjectorData getResult() {
+				init();
+				for(Parallel<ProjectorData> task : getWorkers()) {
+					ProjectorData local = task.getPartialResult();
+					data.longitudeRange.include(local.longitudeRange);
+					data.latitudeRange.include(local.latitudeRange);
+				}
+				return data;
+			}
+
+			
+		};
+		findCorners.process();
+		ProjectorData data = findCorners.getResult();
+		
+		Scan<?,?> scan = integration.scan;
+		scan.longitudeRange.include(data.longitudeRange);
+		scan.latitudeRange.include(data.latitudeRange);
+		
+		xRange.include(data.longitudeRange);
+		yRange.include(data.latitudeRange);
+		
+	}
+	
 	public synchronized void searchCorners() throws Exception {
 		final Vector2D fixedSize = new Vector2D(Double.NaN, Double.NaN);
 		final boolean fixSize = hasOption("map.size");
@@ -162,49 +261,20 @@ public abstract class SourceMap extends SourceModel {
 
 			xRange.setRange(-fixedSize.x(), fixedSize.x());
 			yRange.setRange(-fixedSize.y(), fixedSize.y());	
+			
+			for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) flagOutside(integration, fixedSize);
 		}
 			
-		new IntegrationFork<Void>() {		
-			@Override
-			public void process(Integration<?,?> integration) {					
-				Scan<?,?> scan = integration.scan;
-				
-				// Try restrict boxing to the corners only...
-				// May not work well for maps that reach far on both sides of the equator...
-				// Also may end up with larger than necessary maps as rotated box corners can go
-				// farther than any of the actual pixels...
-				// Else use 'perimeter' key
-
-				// The safe thing to do is to check all pixels...
-				Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
+		else {
+			xRange.empty();
+			yRange.empty();
+			
+			for(Scan<?,?> scan : scans) {
 				scan.longitudeRange = new Range();
 				scan.latitudeRange = new Range();
-	
-				final AstroProjector projector = new AstroProjector(getProjection());
-
-				for(Frame exposure : integration) if(exposure != null) {
-					boolean valid = false;
-
-					for(Pixel pixel : pixels) {
-						exposure.project(pixel.getPosition(), projector);
-
-						if(!fixSize) {
-							xRange.include(projector.offset.x());
-							yRange.include(projector.offset.y());
-							scan.longitudeRange.include(projector.offset.x());
-							scan.latitudeRange.include(projector.offset.y());
-						}
-						else for(Channel channel : pixel) {
-							if(Math.abs(projector.offset.x()) > fixedSize.x()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
-							else if(Math.abs(projector.offset.y()) > fixedSize.y()) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
-							else valid = true;
-						}
-					}
-
-					if(fixSize && !valid) exposure = null;
-				}
+				for(Integration<?,?> integration : scan) searchCorners(integration);
 			}
-		}.process();		
+		}
 	}
 	
 	public long getMemoryFootprint(long pixels) {
@@ -357,38 +427,172 @@ public abstract class SourceMap extends SourceModel {
 	
 	public abstract void getIndex(final Frame exposure, final Pixel pixel, final AstroProjector projector, final Index2D index);
 	
-	protected abstract void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain, final double dt, final int excludeSamples);
+	protected abstract void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain);
 	
 	public abstract boolean isMasked(Index2D index); 
 	
-	protected synchronized int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
-		int goodFrames = 0;
-		
-		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
-		final double samplingInterval = integration.instrument.samplingInterval;
-
-		final AstroProjector projector = new AstroProjector(getProjection());
-		final Index2D index = new Index2D();	
+	public abstract void addNonZero(SourceMap other);
+	
+	protected boolean isAddingToMaster() { return false; }
+	
+	protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
+		return addForkFrames(integration, pixels, sourceGain, filtering, signalMode);
+	}
+	
+	protected synchronized int addForkFrames(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
 			
-		for(final Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) {
-			final double fG = integration.gain * exposure.getSourceGain(signalMode);
-			final double fGC = (isMasked(index) ? 1.0 : filtering) * fG;
+		class Mapper extends CRUSH.IndexedFork<Integer> {
+			private SourceMap localSource;
+			private AstroProjector projector;
+			private Index2D index;
+			private int mappingFrames = 0;
+
+			Mapper() { super(integration.size()); }
+
+			@Override
+			protected void init() {
+				super.init();
 				
-			if(fGC == 0.0) continue;
-			
-			goodFrames++;
-
-			for(final Pixel pixel : pixels) {
-				getIndex(exposure, pixel, projector, index);		
-				add(exposure, pixel, index, fGC, sourceGain, samplingInterval, excludeSamples);
+				if(isAddingToMaster()) localSource = SourceMap.this;
+				else {
+					localSource = (SourceMap) getRecyclerCopy(false);
+					localSource.reset(true);
+				}
+				
+				projector = new AstroProjector(localSource.getProjection());
+				index = new Index2D();
 			}
+			
+			@Override
+			protected void processIndex(int index) {
+				Frame exposure = integration.get(index);
+				if(exposure != null) process(exposure);
+			}
+			
+			private void process(Frame exposure) {
+				if(exposure.isFlagged(Frame.SOURCE_FLAGS)) return;
+				
+				final double fGC = (isMasked(index) ? 1.0 : filtering) * integration.gain * exposure.getSourceGain(signalMode);
+					
+				if(fGC == 0.0) return;
+				
+				mappingFrames++;
+
+				for(final Pixel pixel : pixels) {
+					localSource.getIndex(exposure, pixel, projector, index);		
+					localSource.add(exposure, pixel, index, fGC, sourceGain);
+				}
+			}
+			
+			@Override
+			public Integer getPartialResult() { return mappingFrames; }
+			
+			@Override
+			public Integer getResult() {				
+				mappingFrames = 0;
+				for(Parallel<Integer> task : getWorkers()) {
+					mappingFrames += task.getPartialResult();
+					
+					if(!isAddingToMaster()) {
+						SourceMap localMap = ((Mapper) task).localSource;
+						addNonZero(localMap);
+						localMap.recycle();
+					}
+				}
+				
+				return mappingFrames;
+			}	
 		}
 		
-			
-		if(CRUSH.debug) System.err.println("### mapping frames:" + goodFrames);
+		Mapper mapping = new Mapper();
+		mapping.process();
 		
-		return goodFrames;
+		
+		int mappingFrames = mapping.getResult();
+	
+		if(CRUSH.debug) System.err.println("### mapping frames:" + mappingFrames);
+
+		return mappingFrames;
+		
 	}
+	
+	protected synchronized int addForkPixels(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
+		
+		CRUSH.Fork<Integer> framePrep = integration.new Fork<Integer>() {
+			int n = 0;
+			
+			@Override 
+			protected void process(Frame exposure) {
+				exposure.tempC = exposure.isFlagged(Frame.SOURCE_FLAGS) ? 0.0F : integration.gain * exposure.getSourceGain(signalMode);
+				if(exposure.tempC != 0.0F) n++;
+			}
+			
+			@Override
+			public Integer getPartialResult() { return n; }
+		};
+		
+		framePrep.setReduction(new Summation.IntValue());
+		framePrep.process();
+		final int mappingFrames = framePrep.getResult();
+		
+		
+		class Mapper extends CRUSH.IndexedFork<Void> {
+			private SourceMap localSource;
+			private AstroProjector projector;
+			private Index2D index;
+		
+			Mapper() { super(pixels.size()); }
+
+			@Override
+			protected void init() {
+				super.init();
+				
+				if(isAddingToMaster()) localSource = SourceMap.this;
+				else {
+					localSource = (SourceMap) getRecyclerCopy(false);
+					localSource.reset(true);
+				}
+				
+				projector = new AstroProjector(localSource.getProjection());
+				index = new Index2D();
+			}
+			
+			@Override
+			protected void processIndex(int index) {
+				process(pixels.get(index));
+			}
+			
+			private void process(final Pixel pixel) {
+				for(Frame exposure : integration) if(exposure != null) if(exposure.tempC != 0.0F) {
+					final double fGC = (isMasked(index) ? 1.0 : filtering) * exposure.tempC;
+					localSource.getIndex(exposure, pixel, projector, index);		
+					localSource.add(exposure, pixel, index, fGC, sourceGain);
+				}
+			}
+			
+			@Override
+			public Void getResult() {				
+				for(Parallel<Void> task : getWorkers()) if(!isAddingToMaster()) {
+					SourceMap localMap = ((Mapper) task).localSource;
+					addNonZero(localMap);
+					localMap.recycle();
+				}
+				return null;
+			}	
+			
+		}
+		
+		Mapper mapping = new Mapper();
+		mapping.process();
+		mapping.getResult();
+	
+		if(CRUSH.debug) System.err.println("### mapping frames:" + mappingFrames);
+
+		return mappingFrames;
+		
+	}
+	
+	
 	
 	@Override
 	public void add(Integration<?,?> integration) {
@@ -406,7 +610,7 @@ public abstract class SourceMap extends SourceModel {
 		if(id != null) integration.comments += "." + id;
 		// For jackknived maps indicate sign...
 		
-		Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
+		List<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 		
 		// Proceed only if there are enough pixels to do the job...
 		if(!checkPixelCount(integration)) return;
@@ -436,19 +640,31 @@ public abstract class SourceMap extends SourceModel {
 		for(Channel channel : pixel) integration.sourceSyncGain[channel.index] = sourceGain[channel.index];
 	}
 	
-	protected void sync(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
-		final AstroProjector projector = new AstroProjector(getProjection());
-		final Index2D index = new Index2D();
-				
-		for(final Frame exposure : integration) if(exposure != null) {
-			final double fG = integration.gain * exposure.getSourceGain(signalMode); 
-			
-			// Remove source from all but the blind channels...
-			for(final Pixel pixel : pixels)  {
-				getIndex(exposure, pixel, projector, index);
-				sync(exposure, pixel, index, fG, sourceGain, integration.sourceSyncGain, isMasked(index));
+	protected void sync(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {			
+		integration.new Fork<Void>() {
+			private AstroProjector projector;
+			private Index2D index;
+
+			@Override
+			public void init() {
+				super.init();
+				projector = new AstroProjector(getProjection());
+				index = new Index2D();
 			}
-		}
+			
+			@Override 
+			protected void process(final Frame exposure) {
+				//if(exposure.isFlagged(Frame.SKIP_SOURCE)) return;
+				
+				final double fG = integration.gain * exposure.getSourceGain(signalMode); 
+				
+				// Remove source from all but the blind channels...
+				for(final Pixel pixel : pixels)  {
+					SourceMap.this.getIndex(exposure, pixel, projector, index);	
+					sync(exposure, pixel, index, fG, sourceGain, integration.sourceSyncGain, isMasked(index));
+				}
+			}
+		}.process();
 	}
 
 	@Override
@@ -457,13 +673,13 @@ public abstract class SourceMap extends SourceModel {
 	}
 
 	
-	public void sync(Integration<?,?> integration, int signalMode) {
+	public void sync(final Integration<?,?> integration, final int signalMode) {
 		Instrument<?> instrument = integration.instrument; 
 		
-		double[] sourceGain = instrument.getSourceGains(false);	
+		final double[] sourceGain = instrument.getSourceGains(false);	
 		if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
 		
-		Collection<? extends Pixel> pixels = instrument.getMappingPixels();
+		final List<? extends Pixel> pixels = instrument.getMappingPixels();
 		
 		if(hasSourceOption("coupling")) calcCoupling(integration, pixels, sourceGain, integration.sourceSyncGain);
 		sync(integration, pixels, sourceGain, signalMode);
@@ -478,22 +694,25 @@ public abstract class SourceMap extends SourceModel {
 			sumfw += exposure.relativeWeight * exposure.getSourceGain(signalMode);		
 
 		double N = Math.min(integration.scan.sourcePoints, countPoints()) / covariantPoints();
-		double np = sumpw > 0.0 ? N / sumpw : 0.0;
-		double nf = sumfw > 0 ? N / sumfw : 0.0;
+		final double np = sumpw > 0.0 ? N / sumpw : 0.0;
+		final double nf = sumfw > 0 ? N / sumfw : 0.0;
 
 		// TODO revise for composite sources...
-		Dependents parms = integration.dependents.containsKey("source") ? integration.dependents.get("source") : new Dependents(integration, "source");
-		for(Pixel pixel : pixels) {
+		final Dependents parms = integration.dependents.containsKey("source") ? integration.dependents.get("source") : new Dependents(integration, "source");
+	
+		for(int k=pixels.size(); --k >= 0; ) {
+			Pixel pixel = pixels.get(k);
 			parms.clear(pixel, 0, integration.size());
 			
 			for(Channel channel : pixel) if(channel.flag == 0) 
-				parms.add(channel, np * sourceGain[channel.index] * sourceGain[channel.index] / channel.variance);
+				parms.addAsync(channel, np * sourceGain[channel.index] * sourceGain[channel.index] / channel.variance);
 		}
-			
-		for(Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) 
-			parms.add(exposure, nf * exposure.relativeWeight * Math.abs(exposure.getSourceGain(signalMode)));
-
-		for(Pixel pixel : pixels) {
+		
+		for(Frame exposure : integration) if(exposure != null) if(exposure.isUnflagged(Frame.SOURCE_FLAGS))
+			parms.addAsync(exposure, nf * exposure.relativeWeight * Math.abs(exposure.getSourceGain(signalMode)));
+	
+		for(int k=pixels.size(); --k >= 0; ) {
+			Pixel pixel = pixels.get(k);
 			parms.apply(pixel, 0, integration.size());
 			setSyncGains(integration, pixel, sourceGain);
 		}

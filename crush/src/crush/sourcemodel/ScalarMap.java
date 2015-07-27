@@ -51,6 +51,7 @@ public class ScalarMap extends SourceMap {
 	
 	protected Data2D base; 
 	private boolean[][] mask;
+	
 		
 	public boolean enableWeighting = true;
 	public boolean enableLevel = true;
@@ -67,7 +68,19 @@ public class ScalarMap extends SourceMap {
 		super.setInstrument(instrument);
 		if(map != null) map.setInstrument(instrument);
 	}
-
+	
+	/*
+	@Override
+	public void setExecutor(ExecutorService executor) {
+		map.setExecutor(executor);
+	}
+	
+	@Override
+	public ExecutorService getExecutor() {
+		return map.getExecutor();
+	}
+	*/
+	
 	@Override
 	public synchronized void add(SourceModel model, double weight) {
 		ScalarMap other = (ScalarMap) model;
@@ -83,6 +96,11 @@ public class ScalarMap extends SourceMap {
 		generation = Math.max(generation, other.generation);
 	}
 
+	@Override
+	public void addNonZero(SourceMap other) {
+		map.mergeNonZero(((ScalarMap) other).map);
+	}
+	
 
 	@Override
 	public SourceModel copy(boolean withContents) {
@@ -143,6 +161,7 @@ public class ScalarMap extends SourceMap {
 		
 		if(hasOption("unit")) map.setUnit(option("unit").getValue());
 		
+		//map.setExecutor(CRUSH.executor);
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
 		map.setName(firstScan.getSourceName());
@@ -218,13 +237,10 @@ public class ScalarMap extends SourceMap {
 		
 		System.err.println(" Inserting test sources into data.");
 		
-		new IntegrationFork<Void>() {
-			@Override
-			public void process(Integration<?,?> integration) {
-				sync(integration);
-				integration.sourceGeneration=0; // Reset the source generation...
-			}
-		}.process();
+		for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) {
+			sync(integration);
+			integration.sourceGeneration=0;
+		}
 		
 		map.reset(true);
 	}
@@ -302,15 +318,12 @@ public class ScalarMap extends SourceMap {
 		long maxAvailable = runtime.maxMemory() - getReductionFootprint(pixels());
 		final long maxUsed = (long) (maxUsage * maxAvailable);
 		
-		new IntegrationFork<Void>() {
-			@Override
-			public void process(final Integration<?,?> integration) {	
-				if(isInterrupted()) return;
-				
-				if(runtime.totalMemory() - runtime.freeMemory() >= maxUsed) interruptAll();
-				else createLookup(integration);	
-			}
-		}.process();
+		
+		for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) {
+			if(runtime.totalMemory() - runtime.freeMemory() >= maxUsed) return;
+			createLookup(integration);	
+		}
+		
 	}
 	
 	@Override
@@ -561,12 +574,10 @@ public class ScalarMap extends SourceMap {
 			else map.getMask(Double.NaN, 3, 0);
 		}
 		
-		
-		
 		isReady = true;
 		
 		// Run the garbage collector
-		System.gc();
+		//System.gc();
 	}
 
 
@@ -624,11 +635,19 @@ public class ScalarMap extends SourceMap {
 		map.reset(clearContent);
 	}
 	
+	protected final synchronized void addSync(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain) {
+		add(exposure, pixel, index, fGC, sourceGain);
+	}
+	
 	@Override
-	protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain, final double dt, final int excludeSamples) {
+	protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain) {
 		// The use of iterables is a minor performance hit only (~3% overall)
 		for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0)	
-			addPoint(index, channel, exposure, fGC * sourceGain[channel.index], dt);
+			addPoint(index, channel, exposure, fGC * sourceGain[channel.index]);
+	}
+	
+	protected final void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G) {	
+		addPoint(index, channel, exposure, G, channel.instrument.samplingInterval);
 	}
 	
 	protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {	
@@ -646,95 +665,152 @@ public class ScalarMap extends SourceMap {
 			index.set(linearIndex % map.sizeX(), linearIndex / map.sizeX());
 		}
 	}
-
 	
 	
 	public void createLookup(Integration<?,?> integration) {	
-		final AstroProjector projector = new AstroProjector(getProjection());
-		final Index2D index = new Index2D();
 		final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 		final int n = integration.instrument.getPixelCount();
-		final Vector2D offset = projector.offset;
 		
-		for(final Frame exposure : integration) if(exposure != null) {
-			exposure.sourceIndex = new int[n];
+		integration.new Fork<Void>() {
+			private AstroProjector projector;
+			private Vector2D offset;
+			private Index2D index;
 			
-			for(final Pixel pixel : pixels) {
-				exposure.project(pixel.getPosition(), projector);
-				map.getIndex(offset, index);		
-				exposure.sourceIndex[pixel.getIndex()] = map.sizeX() * index.j() + index.i();
+			@Override
+			protected void init() {
+				super.init();
+				projector = new AstroProjector(getProjection());
+				offset = projector.offset;
+				index = new Index2D();
 			}
-		}
+			
+			@Override 
+			protected void process(Frame exposure) {
+				exposure.sourceIndex = new int[n];
+				
+				for(final Pixel pixel : pixels) {
+					exposure.project(pixel.getPosition(), projector);
+					map.getIndex(offset, index);		
+					exposure.sourceIndex[pixel.getIndex()] = map.sizeX() * index.j() + index.i();
+				}
+			}
+			
+		}.process();
 	}
 
 	
 	@Override
-	protected synchronized int add(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
+	protected synchronized int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
 		int goodFrames = super.add(integration, pixels, sourceGain, filtering, signalMode);
 		map.integrationTime += goodFrames * integration.instrument.samplingInterval;
 		isNormalized = false;
 		return goodFrames;
 	}
 	
-	protected double getIncrement(final Index2D index, final Channel channel, final double oldG, final double G) {
-		return G * map.getValue(index.i(), index.j()) - oldG * base.getValue(index.i(), index.j());	
-	}
+	
 	
 	@Override
 	protected void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, final double[] syncGain, final boolean isMasked) {
 		// The use of iterables is a minor performance hit only (~3% overall)
-		for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SKIP) == 0) {
+		final float mapValue = (float) map.getValue(index);
+		final float baseValue = (float) base.getValue(index);
+		
+		for(final Channel channel : pixel) {
 			// Do not check for flags, to get a true difference image...
-			exposure.data[channel.index] -= getIncrement(index, channel, 
-					fG * syncGain[channel.index], fG * sourceGain[channel.index]);
+			exposure.data[channel.index] -= fG * (sourceGain[channel.index] * mapValue - syncGain[channel.index] * baseValue);	
+	
 			// Do the blanking here...
 			if(isMasked) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
 			else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SOURCE_BLANK;
 		}
 	}
 
+
 	@Override
 	protected void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain) {
-		final AstroProjector projector = new AstroProjector(getProjection());
-		final Index2D index = new Index2D();
-
-		final double[] sumIM = new double[sourceGain.length];
-		final double[] sumM2 = new double[sourceGain.length];
 				
-		for(final Frame exposure : integration) if(exposure != null) {
-			final double fG = integration.gain * exposure.getSourceGain(signalMode); 
+		CRUSH.Fork<DataPoint[]> calcCoupling = integration.new Fork<DataPoint[]>() {
+			private AstroProjector projector;
+			private Index2D index;
+			private DataPoint[] sum;
+			
+			@Override
+			protected void init() {
+				super.init();
+				projector = new AstroProjector(getProjection());
+				index = new Index2D();
+				sum = integration.instrument.getDataPoints();
+				for(int i=sum.length; --i >= 0; ) sum[i].noData();
+			}
+			
+			@Override 
+			protected void process(final Frame exposure) {
+				final double fG = integration.gain * exposure.getSourceGain(signalMode); 
 				
-			// Remove source from all but the blind channels...
-			for(final Pixel pixel : pixels)  {
-				getIndex(exposure, pixel, projector, index);
-				final int i = index.i();
-				final int j = index.j();
-				
-				// The use of iterables is a minor performance hit only (~3% overall)
-				if(isMasked(index)) for(final Channel channel : pixel) {
-					final int c = channel.index;
-					if((exposure.sampleFlag[c] & Frame.SAMPLE_SKIP) == 0) {
-						final double mapValue = fG * sourceGain[c] * map.getValue(i, j);
-						final double value = exposure.data[c] + fG * syncGain[c] * base.getValue(i, j);
-						sumIM[c] += exposure.relativeWeight * value * mapValue;
-						sumM2[c] += exposure.relativeWeight * mapValue * mapValue;			
+				// Remove source from all but the blind channels...
+				for(final Pixel pixel : pixels)  {
+					ScalarMap.this.getIndex(exposure, pixel, projector, index);
+					final int i = index.i();
+					final int j = index.j();
+					
+					// The use of iterables is a minor performance hit only (~3% overall)
+					if(isMasked(index)) for(final Channel channel : pixel) {
+						final int c = channel.index;
+						if((exposure.sampleFlag[c] & Frame.SAMPLE_SKIP) == 0) {
+							final double mapValue = fG * sourceGain[c] * map.getValue(i, j);
+							final double value = exposure.data[c] + fG * syncGain[c] * base.getValue(i, j);
+							final DataPoint point = sum[c];
+							point.add(exposure.relativeWeight * value * mapValue);
+							point.addWeight(exposure.relativeWeight * mapValue * mapValue);			
+						}
+					}
+				}	
+			}
+			
+			@Override
+			public DataPoint[] getPartialResult() { return sum; }
+			
+			@Override
+			public DataPoint[] getResult() {
+				DataPoint[] total = null;
+				for(Parallel<DataPoint[]> task : getWorkers()) {
+					DataPoint[] local = task.getPartialResult();
+					if(sum == null) sum = local;
+					else {
+						for(int i=sum.length; --i >= 0; ) {
+							sum[i].add(local[i].value());
+							sum[i].addWeight(local[i].weight());
+						}
+						Instrument.recycle(local);
 					}
 				}
-			}	    
-		}
+				return total;
+			}
+			
+		};
 		
+		calcCoupling.process();
+		
+		final DataPoint[] sum = calcCoupling.getResult();
+			
 		// Apply a globally neutral coupling correction...
-		final float[] data = new float[integration.instrument.size()];
+		final float[] data = integration.instrument.getFloats();
 		int n=0;
-		for(final Pixel pixel : pixels) for(final Channel channel : pixel) if(sumM2[channel.index] > 0.0)
-			data[n++] = (float) (sumIM[channel.index] / sumM2[channel.index]);
+		for(final Channel channel : integration.instrument) if(sum[channel.index].weight() > 0.0) {
+			final double dG =  sum[channel.index].significance();
+			channel.coupling *= dG;
+			data[n++] = (float) dG;
+		}
 	
 		if(n > 0) {
-			double ave = Statistics.median(data, 0, n);
-			for(final Pixel pixel : pixels) for(final Channel channel : pixel) if(sumM2[channel.index] > 0.0)
-				channel.coupling *= sumIM[channel.index] / sumM2[channel.index] / ave;
+			double norm = 1.0 / Statistics.median(data, 0, n);
+			for(final Channel channel : integration.instrument) if(sum[channel.index].weight() > 0.0)
+				channel.coupling *= norm;
 		}
 	
+		Instrument.recycle(sum);
+		Instrument.recycle(data);
+		
 		// If the coupling falls out of range, then revert to the default of 1.0	
 		if(hasSourceOption("coupling.range")) {
 			Range range = sourceOption("coupling.range").getRange();

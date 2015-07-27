@@ -468,7 +468,15 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	}	
 	
 	
-	void levelSAE() { for(GismoPixel pixel : instrument) levelSAE(pixel); }
+	void levelSAE() { 
+		instrument.new Fork<Void>() {
+			@Override
+			protected void process(GismoPixel channel) { levelSAE(channel); }
+		}.process();
+		
+		for(GismoPixel pixel : instrument) levelSAE(pixel); 
+		
+	}
 	
 	void levelSAE(GismoPixel channel) {
 		double sum = 0.0;

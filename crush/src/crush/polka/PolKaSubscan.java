@@ -27,7 +27,6 @@ package crush.polka;
 import crush.*;
 import crush.apex.APEXArrayScan;
 import crush.filters.Filter;
-import crush.polarization.*;
 import crush.laboca.*;
 
 import java.text.NumberFormat;
@@ -38,7 +37,7 @@ import kovacs.math.Vector2D;
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
 
-public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable {
+public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable {
 	/**
 	 * 
 	 */
@@ -62,7 +61,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 	@Override
 	public Filter getFilter(String name) {
 		name = name.toLowerCase();
-		if(name.equals("hwp")) return new HWPFilter(this, filter.getData());
+		if(name.equals("hwp")) return new HWPFilter(this, filter.getTempData());
 		else return super.getFilter(name);
 	}
 
@@ -165,6 +164,7 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 	WeightedPoint[] tpWaveform, dw;
 	double dAngle;
 	
+	
 	public void removeTPModulation() {
 		PolKa polka = (PolKa) instrument;
 		
@@ -188,73 +188,76 @@ public class PolKaSubscan extends LabocaSubscan implements Modulated, Purifiable
 		
 		comments += "P(" + dw.length + ") ";
 		
-		ChannelGroup<?> channels = instrument.getObservingChannels();
-		Dependents parms = getDependents("tpmod");
+		final ChannelGroup<?> channels = instrument.getObservingChannels();
+		final Dependents parms = getDependents("tpmod");
+		
 		parms.clear(channels, 0, size());
 
-		
-		for(Channel channel : channels) {
-			for(int i=dw.length; --i >= 0; ) dw[i].noData();
-			final int c = channel.index;
+		channels.new Fork<float[]>() {
+			private float[] frameParms;
 			
-			for(LabocaFrame exposure : this) if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
-				if(exposure.sampleFlag[c] != 0) continue;
-				
-				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).waveplateAngle, Constant.twoPi) + Math.PI;
-				final WeightedPoint point = dw[(int)Math.floor(normAngle / dAngle)];
-				
-				point.add(exposure.relativeWeight * exposure.data[c]);
-				point.addWeight(exposure.relativeWeight);
+			@Override
+			protected void init() {
+				super.init();
+				frameParms = getFloats();
+				Arrays.fill(frameParms,  0, size(), 0.0F);
 			}
 			
-			for(int i=dw.length; --i >= 0; ) {
-				final WeightedPoint point = dw[i];
-				if(point.weight() > 0.0) {
-					point.scaleValue(1.0 / point.weight());
-					tpWaveform[i].add(point.value());
-					tpWaveform[i].setWeight(point.weight());
-					parms.add(channel, 1.0);
+			@Override
+			public float[] getPartialResult() { return frameParms; }
+			
+			@Override
+			protected void postProcess() {
+				super.postProcess();
+				
+				for(Parallel<float[]> task : getWorkers()) {
+					float[] localFrameParms = task.getPartialResult();
+					parms.addForFrames(localFrameParms);
+					recycle(localFrameParms);
 				}
 			}
 			
-			for(LabocaFrame exposure : this) if(exposure != null) {
-				final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).waveplateAngle, Constant.twoPi) + Math.PI;
-				final WeightedPoint point = dw[(int)Math.floor(normAngle / dAngle)];
+			@Override
+			protected void process(Channel channel) {
+				for(int i=dw.length; --i >= 0; ) dw[i].noData();
+				final int c = channel.index;
 				
-				exposure.data[c] -= point.value();
-				if(point.weight() > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] != 0)
-					parms.add(channel, exposure.relativeWeight / point.weight());
+				for(LabocaFrame exposure : PolKaSubscan.this) if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
+					if(exposure.sampleFlag[c] != 0) continue;
+					
+					final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).waveplateAngle, Constant.twoPi) + Math.PI;
+					final WeightedPoint point = dw[(int)Math.floor(normAngle / dAngle)];
+					
+					point.add(exposure.relativeWeight * exposure.data[c]);
+					point.addWeight(exposure.relativeWeight);
+				}
+				
+				for(int i=dw.length; --i >= 0; ) {
+					final WeightedPoint point = dw[i];
+					if(point.weight() > 0.0) {
+						point.scaleValue(1.0 / point.weight());
+						tpWaveform[i].add(point.value());
+						tpWaveform[i].setWeight(point.weight());
+						parms.addAsync(channel, 1.0);
+					}
+				}
+				
+				for(LabocaFrame exposure : PolKaSubscan.this) if(exposure != null) {
+					final double normAngle = Math.IEEEremainder(((PolKaFrame) exposure).waveplateAngle, Constant.twoPi) + Math.PI;
+					final WeightedPoint point = dw[(int)Math.floor(normAngle / dAngle)];
+					
+					exposure.data[c] -= point.value();
+					if(point.weight() > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] != 0)
+						frameParms[exposure.index] += exposure.relativeWeight / point.weight();
+				}
 			}
-		}
-		
+			
+		}.process();
 		
 		parms.apply(channels, 0, size());
 	}
 
-	
-	@Override
-	public void getWaveForm(int mode, int index, float[] waveform) {	
-		
-		if(mode == PolarModulation.N) Arrays.fill(waveform, 1.0F);
-		else if(mode == PolarModulation.Q) {
-			int nt = Math.min(waveform.length, size() - index);
-			for(int blockt=0; blockt<nt; blockt++, index++) { 
-				PolKaFrame exposure = (PolKaFrame) get(index);
-				if(exposure != null) waveform[blockt] = exposure.Q;
-				else waveform[blockt] = Float.NaN;
-			}
-		}
-		else if(mode == PolarModulation.U) {
-			int nt = Math.min(waveform.length, size() - index);
-			for(int blockt=0; blockt<nt; blockt++, index++) {
-				PolKaFrame exposure = (PolKaFrame) get(index);
-				if(exposure != null) waveform[blockt] = exposure.U;
-				else waveform[blockt] = Float.NaN;
-			}
-		}
-		else throw new IllegalArgumentException("Mode " + mode + " is undefined for " + getClass().getSimpleName());
-	}
-	
+
 	@Override
 	public void purify() {
 		//if(!hasOption("filter.hwp")) 

@@ -84,7 +84,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public int sourcePoints = 0;
 	public boolean hasSiblings = false;
-	
+		
 	public GaussianSource<SphericalCoordinates> pointing;
 	
 	// Creates a scan with an initialized copy of the instrument
@@ -101,6 +101,14 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public void validate() {	
 		System.err.println(" Processing scan data:");
+		
+		if(hasOption("segment")) {
+			double segmentTime = 60.0 * Unit.s;
+			try { segmentTime = option("segment").getDouble() * Unit.s; }
+			catch(Exception e) {}
+			segmentTo(segmentTime);
+		}
+		
 		
 		isMovingObject |= hasOption("moving");
 		
@@ -137,7 +145,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		if(instrument.getOptions().containsKey("jackknife")) sourceName += "-JK";
 		
-		if(instrument.getOptions().containsKey("pointing")) pointingAt(getPointingCorrection(option("pointing")));
+		if(instrument.getOptions().containsKey("pointing")) pointingAt(getPointingCorrection(option("pointing")));	
 	}
 	
 	public int getSerial() { return serialNo; }
@@ -874,5 +882,42 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	@Override
 	public String toString() { return "Scan " + getID(); }
+	
+	@SuppressWarnings("unchecked")
+	public void segmentTo(double segmentTime) {
+		if(size() > 1) mergeSubscans();
+		
+		IntegrationType merged = get(0);
+		clear();
+		
+		int nT = merged.framesFor(segmentTime);
+		int N = ExtraMath.roundupRatio(merged.size(), nT);
+		
+		if(N <= 1) return;
+		
+		ensureCapacity(N);
+		
+		System.err.println(" Segmenting into " + N + " integrations.");
+		
+		clear();
+		
+		for(int i=0, t=0; i<N; i++) {
+			Integration<InstrumentType, Frame> integration = (Integration<InstrumentType, Frame>) merged.clone();
+			integration.clear();
+			integration.instrument = (InstrumentType) merged.instrument.copy();
+			integration.integrationNo = i;
+			
+			int nk = Math.min(merged.size() - t, nT);
+			integration.ensureCapacity(nk);
+			
+			for(int k=0; k<nk; k++,t++) integration.add(merged.get(t));
+			integration.reindex();
+			add((IntegrationType) integration);
+		}
+		
+		
+		
+	}
+	
 	
 }

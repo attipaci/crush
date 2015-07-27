@@ -40,12 +40,13 @@ public class WhiteningFilter extends AdaptiveFilter {
 	//boolean neighbours = false;
 	
 	private int nF; // The number of stacked frequency components
-	private DataPoint[] A, temp; // The amplitude at reduced resolution, and a temp storage for median
 	private int windows; // The number of stacked windows...
 	private int whiteFrom, whiteTo; // The frequency channel indexes of the white-level measuring range
 	
 	private int oneOverFBin;
 	private int whiteNoiseBin;
+	
+	private DataPoint[] A, temp; // The amplitude at reduced resolution, and a temp storage for median
 	
 	public WhiteningFilter(Integration<?, ?> integration) {
 		super(integration);
@@ -53,6 +54,14 @@ public class WhiteningFilter extends AdaptiveFilter {
 
 	public WhiteningFilter(Integration<?,?> integration, float[] data) {
 		super(integration, data);
+	}
+	
+	@Override
+	public Object clone() {
+		WhiteningFilter clone = (WhiteningFilter) super.clone();
+		if(A != null) clone.A = DataPoint.createArray(A.length);
+		if(temp != null) clone.temp = DataPoint.createArray(temp.length);
+		return clone;
 	}
 	
 	@Override
@@ -77,9 +86,8 @@ public class WhiteningFilter extends AdaptiveFilter {
 		if(hasOption("level")) level = Math.max(1.0, Math.sqrt(option("level").getDouble()));
 		
 		int windowSize = ExtraMath.pow2ceil(2 * nF);
-		int n = data.length;
-		if(n < windowSize) windowSize = n;
-		windows = n / windowSize;
+		if(nt < windowSize) windowSize = nt;
+		windows = nt / windowSize;
 		
 		Range probe = new Range(0.0, nF * dF);
 				
@@ -117,10 +125,9 @@ public class WhiteningFilter extends AdaptiveFilter {
 		
 		this.nF = nF;
 		
-		A = new DataPoint[nF];
+		A = DataPoint.createArray(nF);
 		temp = new DataPoint[nF];
-	
-		for(int i=nF; --i >= 0; ) A[i] = new DataPoint();	
+		
 	}	
 	
 	@Override
@@ -135,6 +142,8 @@ public class WhiteningFilter extends AdaptiveFilter {
 			profiles[channel.index] = new float[nF];
 			Arrays.fill(profiles[channel.index], 1.0F);
 		}
+		
+		final float[] data = getTempData();
 		
 		// Get the coarse average spectrum...
 		for(int F=nF; --F >= 0; ) {
@@ -169,7 +178,8 @@ public class WhiteningFilter extends AdaptiveFilter {
 	}
 	
 	private void whitenProfile(Channel channel) {
-
+		final float[] profile = getProfile();
+		
 		Arrays.fill(profile, 1.0F); // To be safe initialize the scaling array here...
 		final float[] lastProfile = profiles[channel.index];
 		
