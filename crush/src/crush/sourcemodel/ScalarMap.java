@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -885,7 +885,7 @@ public class ScalarMap extends SourceMap {
 			int height = 300;
 			
 			if(hasOption("write.png.size")) {
-				StringTokenizer tokens = new StringTokenizer(option("write.png.size").getValue(), ",x ");
+				StringTokenizer tokens = new StringTokenizer(option("write.png.size").getValue(), "xX*:, ");
 				width = Integer.parseInt(tokens.nextToken());
 				height = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : width;
 			}

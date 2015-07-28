@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -245,7 +245,7 @@ public class SkyDip extends SourceModel {
 		plot.println("set term push");
 		plot.println("set term unknown");
 	
-		plot.println("set label 1 'Produced by CRUSH " + CRUSH.getFullVersion() + "' at graph 0.99,0.04 right font ',12'");
+		plot.println("set label 1 'Produced by CRUSH " + CRUSH.getFullVersion() + "' at graph 0.01,0.04 left font ',12'");
 		
 		
 		plot.println("plot \\");
@@ -300,13 +300,14 @@ public class SkyDip extends SourceModel {
 		int sizeY = 480;
 		if(hasOption("write.png.size")) {
 			String spec = option("write.png.size").getValue();
-			StringTokenizer tokens = new StringTokenizer(spec, "xX:,");
+			StringTokenizer tokens = new StringTokenizer(spec, "xX*:, ");
 			sizeX = sizeY = Integer.parseInt(tokens.nextToken());
 			if(tokens.hasMoreTokens()) sizeY = Integer.parseInt(tokens.nextToken());				
 		}
-		
-		plot.println("set term png enh " + (isTransparent ? "" : "no") + "transparent truecolor interlace" +
-				" background '#" + Integer.toHexString(bgColor).substring(2) + "' size " + sizeX + "," + sizeY);
+			
+		plot.println("set term pngcairo enhanced color " + (isTransparent ? "" : "no") + "transparent" +
+				" background '#" + Integer.toHexString(bgColor).substring(2) + "' fontscale " + getGnuplotPNGFontScale(sizeX) + 
+				" butt size " + sizeX + "," + sizeY);
 		plot.println("set out '" + coreName + ".png'");
 		plot.println("replot");
 		plot.println("print 'Written " + coreName + ".png'");	

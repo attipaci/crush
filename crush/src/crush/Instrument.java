@@ -721,14 +721,20 @@ implements TableFormatter.Entries {
 	
 	public List<? extends Pixel> getMappingPixels() { return layout.getMappingPixels(); }
 	
-	public final List<? extends Pixel> getPerimeterPixels() { return getPerimeterPixels(100); }
+	public final List<? extends Pixel> getPerimeterPixels() { 
+		int sections = hasOption("perimeter") ? option("perimeter").getInt() : 100;
+		return getPerimeterPixels(sections); 
+	}
 	
 	public final List<? extends Pixel> getPerimeterPixels(int sections) { 
 		List<? extends Pixel> mappingPixels = getMappingPixels();
+		if(sections <= 0) return mappingPixels;
+		
 		if(mappingPixels.size() < sections) return mappingPixels;
 		
 		Pixel[] sPixel = new Pixel[sections];
 		double[] maxd = new double[sections];
+		Arrays.fill(maxd, Double.NEGATIVE_INFINITY);
 		
 		Vector2D center = new Vector2D();
 		for(Pixel p : mappingPixels) center.add(p.getPosition());
