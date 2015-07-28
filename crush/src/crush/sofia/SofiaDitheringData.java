@@ -23,6 +23,8 @@
 
 package crush.sofia;
 
+
+import kovacs.math.Vector2D;
 import kovacs.util.Unit;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
@@ -30,6 +32,8 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaDitheringData extends SofiaHeaderData {
+	public String coordinateSystem;
+	public Vector2D offset;
 	public String patternShape;
 	public int positions = UNKNOWN_INT_VALUE;
 	public int index = UNKNOWN_INT_VALUE;
@@ -45,6 +49,15 @@ public class SofiaDitheringData extends SofiaHeaderData {
 	
 	@Override
 	public void parseHeader(Header header) {
+		
+		coordinateSystem = getStringValue(header, "DTHCRSYS");		// new in 3.0
+		
+		if(header.containsKey("DTHXOFF") || header.containsKey("DTHYOFF")) {
+			offset = new Vector2D(header.getDoubleValue("DTHXOFF", 0.0), header.getDoubleValue("DTHYOFF", 0.0));
+			offset.scale(Unit.arcsec);
+		}
+		else offset = null;		// new in 3.0
+		
 		patternShape = getStringValue(header, "DTHPATT");
 		positions = header.getIntValue("DTHNPOS", UNKNOWN_INT_VALUE);
 		index = header.getIntValue("DTHINDEX", UNKNOWN_INT_VALUE);
@@ -53,6 +66,12 @@ public class SofiaDitheringData extends SofiaHeaderData {
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
+		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Dithering Data ------>", false));
+		if(coordinateSystem != null) cursor.add(new HeaderCard("DTHCRSYS", coordinateSystem, "Dither coordinate system."));
+		if(offset != null) {
+			cursor.add(new HeaderCard("DTHXOFF", offset.x() / Unit.arcsec, "(arcsec) Dither X offset."));
+			cursor.add(new HeaderCard("DTHYOFF", offset.y() / Unit.arcsec, "(arcsec) Dither Y offset."));
+		}
 		if(patternShape != null) cursor.add(new HeaderCard("DTHPATT", patternShape, "Approximate shape of dither pattern."));
 		if(positions != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("DTHNPOS", positions, "Number of dither positions."));
 		if(index != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("DTHINDEX", index, "Dither position index."));

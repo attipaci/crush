@@ -36,6 +36,7 @@ import nom.tam.util.Cursor;
 
 public class SofiaMappingData extends SofiaHeaderData {
 	public String coordinateSystem;
+	public String pattern;
 	public int sizeX = 0, sizeY = 0;
 	public Vector2D step = new Vector2D(Double.NaN, Double.NaN);
 	
@@ -50,6 +51,7 @@ public class SofiaMappingData extends SofiaHeaderData {
 	@Override
 	public void parseHeader(Header header) {
 		coordinateSystem = getStringValue(header, "MAPCRSYS");
+		pattern = getStringValue(header, "MAPPATT");
 		sizeX = header.getIntValue("MAPNXPOS", UNKNOWN_INT_VALUE);
 		sizeY = header.getIntValue("MAPNYPOS", UNKNOWN_INT_VALUE);
 		step.setX(header.getDoubleValue("MAPINTX", Double.NaN) * Unit.arcmin);
@@ -58,7 +60,9 @@ public class SofiaMappingData extends SofiaHeaderData {
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
+		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Mapping Data ------>", false));
 		if(coordinateSystem != null) cursor.add(new HeaderCard("MAPCRSYS", coordinateSystem, "Mapping coordinate system."));
+		if(pattern != null) cursor.add(new HeaderCard("MAPPATT", pattern, "Mapping pattern."));
 		if(sizeX != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("MAPNXPOS", sizeX, "Number of map positions in X"));
 		if(sizeY != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("MAPNYPOS", sizeY, "Number of map positions in Y"));
 		if(Double.isNaN(step.x())) cursor.add(new HeaderCard("MAPINTX", step.x() / Unit.arcmin, "(arcmin) Map step interval in X"));

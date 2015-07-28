@@ -248,8 +248,8 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	}
 	
 	@Override
-	public void editImageHeader(List<Scan<?,?>> scans, Cursor cursor) throws HeaderCardException {	
-		super.editImageHeader(scans, cursor);
+	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {	
+		super.editImageHeader(scans, header, cursor);
 		cursor.add(new HeaderCard("SC2VER", version, "CRUSH-SCUBA2 Plugin Modules Version."));
 		cursor.add(new HeaderCard("SC2UID", serialVersionUID, "CRUSH-SCUBA2 Modules ID."));
 	}

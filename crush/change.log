@@ -5,7 +5,7 @@
 >> catch race condition... (11564)
 
 
-2.30-a1
+2.30-b1
 
 	[BUG] {SourceMap} The use of unfiltered vs filtered gains for mapping
 	did not depend on the mask as intented. The algorithm used a stale map
@@ -38,8 +38,30 @@
 	'fft'. Because the 'fft' method was inherently problematic, and never
 	really used anyway, it's best to say goodbye to it...
 
+	[FIX] {despike} Neighbor despiking method had possible race condition
+	introduced in 2.30 alpha releases. Fixed.
+
+	[FIX] {LABOCA} Processing of He3 temperatures from MONITOR table was
+	incorrect as a result of inverted iteration order. (Feature was not 
+	used typically...)
+
 	[FIX] When gaps were detected in data, the gap filling routine did not 
 	work as expected. Fixed.
+
+	[FIX] {HAWC+} Fixed multiple occurences of FITS keys: INSTRUME and
+	TRACERR.
+
+	[TWEAK] {HAWC+} Instrument name now copies that from input files to
+	make sure it conforms to specification.
+
+	[TWEAK] {SOFIA} Handling of newer SOFIA FITS keywords: OBSERNO, 
+	FILEGPID, LST-OBS, MJD-OBS, WVTALOS, SUNANGL, MOONANGL, USRCRDSY, 
+	USRREFCR, USRORIGX, USRORIGY, USRCRROT, USRX, USRY, USREQNX, HELI_COR,
+	LSR_COR, INSTHWV, INSTSWV, SATURATE, DET_ANGL, COADDS, CHPSRC, CHPFUNC,
+	CHPSETL, NODPOSX, NODPOSY, MAPPATT, DATAQUAL, OBSERVAT, DATASUM, 
+	CHECKVER. Also, new keywords in v3.0 (rev F, 6-22-13): N_SPEC, COARSEEL
+	FD_EL, FD_XEL, FD_LOS, DETCHAN, TOTINT, DTHCRSYS, DTHXOFF, DTHYOFF.
+	Also, CHPPHASE change to floating point (rev F).
 
 	[TWEAK] Derivation of source map not using filter gain correction as
 	before. That scheme is expected to go awry with the filter bowls around
@@ -60,6 +82,10 @@
 	[TWEAK] Beammaps do not need to operate on source copies, since the
 	submaps provide a natural separation against race conditions. This
 	should result in a speedup for processing beammaps.
+
+	[CODE] Header editing to used nboth header and cursor where needed
+	and possible, to allow for more complex edits (e.g. overrides, 
+	removals)
 
 	[CODE] pipeline task iteration ordering more explicit, by iterating
 	on task indices.

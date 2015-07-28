@@ -30,7 +30,7 @@ import nom.tam.util.Cursor;
 
 public class SofiaOriginationData extends SofiaHeaderData {
 	public String organization, observer, creator, operator;
-	public String fileName;
+	public String fileName, observatory;
 	
 	public SofiaOriginationData() {}
 	
@@ -46,15 +46,18 @@ public class SofiaOriginationData extends SofiaHeaderData {
 		creator = getStringValue(header, "CREATOR");
 		operator = getStringValue(header, "OPERATOR");
 		fileName = getStringValue(header, "FILENAME");
+		fileName = getStringValue(header, "OBSERVAT");		// not in 3.0
 	}
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
+		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Origination Data ------>", false));
 		if(organization != null) cursor.add(new HeaderCard("ORIGIN", organization, "Organization where data originated."));
 		if(observer != null) cursor.add(new HeaderCard("OBSERVER", observer, "Name(s) of observer(s)."));
 		if(creator != null) cursor.add(new HeaderCard("CREATOR", creator, "Software / Task that created the raw data."));
 		if(operator != null) cursor.add(new HeaderCard("OPERATOR", operator, "Name(s) of operator(s)."));
 		if(fileName != null) cursor.add(new HeaderCard("FILENAME", fileName, "Original file name."));
+		if(observatory != null) cursor.add(new HeaderCard("OBSERVAT", observatory, "Observatory name."));
 	}
 
 }

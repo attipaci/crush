@@ -271,8 +271,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	}
 	
 	@Override
-	public void editImageHeader(List<Scan<?,?>> scans, Cursor cursor) throws HeaderCardException {
-		super.editImageHeader(scans, cursor);
+	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {
+		super.editImageHeader(scans, header, cursor);
 		// Add HAWC+ specific keywords
 		cursor.add(new HeaderCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
 	}

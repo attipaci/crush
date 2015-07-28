@@ -1070,7 +1070,7 @@ implements TableFormatter.Entries {
 	
 	public void parseHeader(Header header) {}
 	
-	public void editImageHeader(List<Scan<?,?>> scans, Cursor cursor) throws HeaderCardException {
+	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {
 		cursor.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
 		cursor.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));			
 	}

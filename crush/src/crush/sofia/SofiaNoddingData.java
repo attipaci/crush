@@ -23,6 +23,7 @@
 
 package crush.sofia;
 
+import kovacs.math.Vector2D;
 import kovacs.util.Unit;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
@@ -35,6 +36,7 @@ public class SofiaNoddingData extends SofiaHeaderData {
 	public double settlingTime = Double.NaN;
 	public double amplitude = Double.NaN;
 	public String beamPosition, pattern, style, coordinateSystem;
+	public Vector2D offset;
 	public double angle = Double.NaN;
 	
 	public SofiaNoddingData() {}
@@ -55,11 +57,20 @@ public class SofiaNoddingData extends SofiaHeaderData {
 		pattern = getStringValue(header, "NODPATT");
 		style = getStringValue(header, "NODSTYLE");
 		coordinateSystem = getStringValue(header, "NODCRSYS");
+		
+		// not in 3.0
+		if(header.containsKey("NODPOSX") || header.containsKey("NODPOSY")) {
+			offset = new Vector2D(header.getDoubleValue("NODPOSX", 0.0), header.getDoubleValue("NODPOSY", 0.0));
+			offset.scale(Unit.deg);
+		}
+		else offset = null;
+			
 		angle = header.getDoubleValue("NODANGLE", Double.NaN) * Unit.deg;
 	}
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
+		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Nodding Data ------>", false));
 		if(cycles != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("NODN", cycles, "Number of nod cycles."));
 		if(!Double.isNaN(amplitude)) cursor.add(new HeaderCard("NODAMP", amplitude / Unit.arcsec, "(arcsec) Nod amplitude on sky."));
 		if(!Double.isNaN(angle)) cursor.add(new HeaderCard("NODANGLE", angle / Unit.deg, "(deg) Nod angle on sky."));
@@ -68,6 +79,10 @@ public class SofiaNoddingData extends SofiaHeaderData {
 		if(pattern != null) cursor.add(new HeaderCard("NODPATT", pattern, "Pointing sequence for one nod cycle."));
 		if(style != null) cursor.add(new HeaderCard("NODSTYLE", style, "Nodding style."));
 		if(coordinateSystem != null) cursor.add(new HeaderCard("NODCRSYS", coordinateSystem, "Nodding coordinate system."));
+		if(offset != null) {
+			cursor.add(new HeaderCard("NODPOSX", offset.x() / Unit.deg, "(deg) nod position x in nod coords."));
+			cursor.add(new HeaderCard("NODPOSY", offset.y() / Unit.deg, "(deg) nod position y in nod coords."));
+		}
 		if(beamPosition != null) cursor.add(new HeaderCard("NODBEAM", beamPosition, "Nod beam position."));
 	}
 

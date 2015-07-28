@@ -30,7 +30,8 @@ import nom.tam.util.Cursor;
 
 public class SofiaProcessingData extends SofiaHeaderData {
 	String processLevel;
-	String headerStatus, softwareName, softwareFullVersion, productType, revision; 
+	String headerStatus, softwareName, softwareFullVersion, productType, revision, quality; 
+	int nSpectra = -1;
 	
 	public SofiaProcessingData() {}
 	
@@ -47,10 +48,13 @@ public class SofiaProcessingData extends SofiaHeaderData {
 		softwareFullVersion = getStringValue(header, "PIPEVERS");
 		productType = getStringValue(header, "PRODTYPE");
 		revision = getStringValue(header, "FILEREV");
+		quality = getStringValue(header, "DATAQUAL");				// new in 3.0
+		nSpectra = header.getIntValue("N_SPEC", -1);				// new in 3.0
 	}
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
+		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Processing Information ------>", false));
 		int level = 0;
 		if(processLevel.toUpperCase().startsWith("LEVEL_")) {
 			try { level = Integer.parseInt(processLevel.substring(6)); }
@@ -63,6 +67,8 @@ public class SofiaProcessingData extends SofiaHeaderData {
 		if(softwareFullVersion != null) cursor.add(new HeaderCard("PIPEVERS", softwareFullVersion, "Full version info of software."));
 		if(productType != null) cursor.add(new HeaderCard("PRODTYPE", productType, "Prodcu type produced by software."));
 		if(revision != null) cursor.add(new HeaderCard("FILEREV", revision, "File revision identifier."));
+		if(quality != null) cursor.add(new HeaderCard("DATAQUAL", quality, "Data quality."));
+		if(nSpectra >= 0) cursor.add(new HeaderCard("N_SPEC", nSpectra, "Number of spectra included."));
 	}
 	
 	public static String getComment(int level) {

@@ -136,8 +136,8 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	}
 	
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException, FitsException, IOException {
-		super.editHeader(cursor);
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException, FitsException, IOException {
+		super.editHeader(header, cursor);
 		
 		cursor.add(new HeaderCard("SCANS", scans.size(), "The number of scans in this composite image."));
 		cursor.add(new HeaderCard("INTEGRTN", integrationTime / Unit.s, "The total integration time in seconds."));
@@ -145,7 +145,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		cursor.add(new HeaderCard("V2JY", instrument.janskyPerBeam(), "1 Jy/beam in instrument data units."));	
 		
 		if(instrument != null) {
-			instrument.editImageHeader(scans, cursor);
+			instrument.editImageHeader(scans, header, cursor);
 			if(instrument.getOptions() != null) instrument.getOptions().editHeader(cursor);
 		}
 	}
