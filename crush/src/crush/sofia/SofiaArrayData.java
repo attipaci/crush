@@ -37,6 +37,9 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 	public double pixelScale = Double.NaN;
 	public int subarrays = 0;
 	public String[] subarraySize;
+	public double saturationValue = Double.NaN;
+	public double detectorAngle = Double.NaN;
+	public int averagedFrames = -1;
 	public Vector2D arrayPointingCenter = new Vector2D();	// boresight
 	public Projection2D<?> projection;		// the WCS coordinate system
 
@@ -76,6 +79,10 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 			for(int i=0; i<subarrays; i++) subarraySize[i] = SofiaHeaderData.getStringValue(header, "SUBARR" + d2.format(i+1));	
 		}
 		
+		saturationValue = header.getDoubleValue("SATURATE", Double.NaN);
+		detectorAngle = header.getDoubleValue("DET_ANGL", Double.NaN);
+		averagedFrames = header.getIntValue("COADDS", -1);
+		
 		arrayPointingCenter.setX(header.getDoubleValue("SIBS_X", Double.NaN));
 		arrayPointingCenter.setY(header.getDoubleValue("SIBS_Y", Double.NaN));
 		
@@ -84,6 +91,7 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
+		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Array Data ------>", false));
 		if(detectorName != null) cursor.add(new HeaderCard("DETECTOR", detectorName, "Detector name"));
 		if(detectorSizeString != null) cursor.add(new HeaderCard("DETSIZE", detectorSizeString, "Detector size"));
 		if(!Double.isNaN(pixelScale)) cursor.add(new HeaderCard("PIXSCAL", pixelScale / Unit.arcsec, "(arcsec) Pixel scale on sky."));
@@ -93,6 +101,9 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 			for(int i=0; i<subarrays; i++) if(subarraySize[i] != null)
 				cursor.add(new HeaderCard("SUBARR" + d2.format(i+1), subarraySize[i], "Subarray " + (i+1) + " location and size."));
 		}
+		if(!Double.isNaN(saturationValue)) cursor.add(new HeaderCard("SATURATE", saturationValue, "Detector saturation level."));
+		if(!Double.isNaN(detectorAngle)) cursor.add(new HeaderCard("DET_ANGL", detectorAngle, "(deg) Detector angle wrt North."));
+		if(averagedFrames > 0) cursor.add(new HeaderCard("COADDS", averagedFrames, "Number of raw frames per sample."));
 		if(!Double.isNaN(arrayPointingCenter.x())) cursor.add(new HeaderCard("SIBS_X", arrayPointingCenter.x(), "(pixel) boresight pixel x."));
 		if(!Double.isNaN(arrayPointingCenter.y())) cursor.add(new HeaderCard("SIBS_Y", arrayPointingCenter.y(), "(pixel) boresight pixel y."));
 	}

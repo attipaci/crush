@@ -231,8 +231,8 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	}
 	
 	@Override
-	public void editImageHeader(List<Scan<?,?>> scans, Cursor cursor) throws HeaderCardException {
-		super.editImageHeader(scans, cursor);
+	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {
+		super.editImageHeader(scans, header, cursor);
 		cursor.add(new HeaderCard("BEAM", getResolution() / Unit.arcsec, "The instrument FWHM (arcsec) of the beam."));
 	}
 	

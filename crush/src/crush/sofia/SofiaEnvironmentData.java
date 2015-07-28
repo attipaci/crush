@@ -31,6 +31,7 @@ import nom.tam.util.Cursor;
 
 public class SofiaEnvironmentData extends SofiaHeaderData {
 	public BracketedValues pwv = new BracketedValues();
+	public double pwvLOS = Double.NaN;
 	
 	public double ambientT = Double.NaN;
 	public double primaryT1 = Double.NaN, primaryT2 = Double.NaN, primaryT3 = Double.NaN, secondaryT = Double.NaN;
@@ -46,6 +47,7 @@ public class SofiaEnvironmentData extends SofiaHeaderData {
 	public void parseHeader(Header header) {
 		pwv.start = header.getDoubleValue("WVZ_STA", Double.NaN) * Unit.um;
 		pwv.end = header.getDoubleValue("WVZ_END", Double.NaN) * Unit.um;
+		pwvLOS = header.getDoubleValue("WVTALOS", Double.NaN) * Unit.um;		// not in 3.0
 		ambientT = header.getDoubleValue("TEMP_OUT", Double.NaN) * Unit.K;
 		primaryT1 = header.getDoubleValue("TEMPPRI1", Double.NaN) * Unit.K;
 		primaryT2 = header.getDoubleValue("TEMPPRI2", Double.NaN) * Unit.K;
@@ -55,8 +57,10 @@ public class SofiaEnvironmentData extends SofiaHeaderData {
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
+		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Environment Data ------>", false));
 		if(!Double.isNaN(pwv.start)) cursor.add(new HeaderCard("WVZ_STA", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
 		if(!Double.isNaN(pwv.end)) cursor.add(new HeaderCard("WVZ_END", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
+		if(!Double.isNaN(pwvLOS)) cursor.add(new HeaderCard("WVTALOS", pwvLOS / Unit.um, "(um) PWV at TA line-of-sight."));
 		if(!Double.isNaN(ambientT)) cursor.add(new HeaderCard("TEMP_OUT", ambientT, "(C) Ambient air temperature."));
 		if(!Double.isNaN(primaryT1)) cursor.add(new HeaderCard("TEMPPRI1", primaryT1, "(C) Primary mirror temperature #1."));
 		if(!Double.isNaN(primaryT2)) cursor.add(new HeaderCard("TEMPPRI2", primaryT2, "(C) Primary mirror temperature #2."));

@@ -72,6 +72,12 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 	public abstract void readData(Fits fits) throws Exception;
 	
 	@Override
+	public String getName() {
+		if(instrumentData == null) return super.getName();
+		return (instrumentData.instrumentName != null) ? instrumentData.instrumentName : super.getName();
+	}
+	
+	@Override
 	public void parseHeader(Header header) {	
 		super.parseHeader(header);
 		
@@ -96,29 +102,38 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 	}
 
 	@Override
-	public void editImageHeader(List<Scan<?,?>> scans, Cursor cursor) throws HeaderCardException {
-		super.editImageHeader(scans, cursor);
-		
-		boolean hasTrackingError = false;
-		for(Scan<?,?> scan : scans) hasTrackingError |= ((SofiaScan<?,?>) scan).telescope.hasTrackingError;
-		cursor.add(new HeaderCard("TRACERR", hasTrackingError, "Whether any of the data has tracking errors."));
-		
+	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {
+		super.editImageHeader(scans, header, cursor);	
+			
 		int level = hasOption("calibrated") ? 3 : 2;
 		
 		// Add SOFIA processing keys
+		cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Processing Data ------>", false));
 		cursor.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
 		cursor.add(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
 		cursor.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getVersion(), "Software that produced this file."));
-		cursor.add(new HeaderCard("PIPEVERS", CRUSH.getFullVersion(), "Full software version information.")); 
+		cursor.add(new HeaderCard("PIPEVERS", "crush v" + CRUSH.getFullVersion(), "Full software version information.")); 
 		cursor.add(new HeaderCard("PRODTYPE", "CRUSH-IMAGE", "Type of product produced by the software."));
 			
 		// Add the reduction to the history...
 		AstroTime timeStamp = new AstroTime();
 		timeStamp.now();
 	
-		// Add required keys and prior history
-		((SofiaScan<?,?>) scans.get(0)).addRequiredKeys(cursor);
+		cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Additional Required Keys START ------>", false));
 		
+		// Add mandatory TRACERR entry...
+		boolean hasTrackingError = false;
+		for(Scan<?,?> scan : scans) hasTrackingError |= ((SofiaScan<?,?>) scan).telescope.hasTrackingError;
+		cursor.add(new HeaderCard("TRACERR", hasTrackingError, "Whether any input data had tracking errors."));
+
+		
+		// Add required keys and prior history
+		((SofiaScan<?,?>) scans.get(0)).updateRequiredKeys(header, cursor);
+		
+		cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Additional Required Keys END ------>", false));
+		
+		//if(scans.size() == 1) ((SofiaScan<?,?>) scans.get(0)).addHistory(cursor);
+			
 		cursor.setKey("HISTORY");	
 		//cursor.add(new HeaderCard("HISTORY", "Reduced: crush v" + CRUSH.getFullVersion(), false));
 		cursor.add(new HeaderCard("HISTORY", "Reduced: crush v" + CRUSH.getFullVersion() + " @ " + timeStamp.getFitsTimeStamp(), false));
@@ -126,9 +141,6 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 		for(int i=0; i<scans.size(); i++)
 			cursor.add(new HeaderCard("HISTORY", " OBS-ID[" + (i+1) + "]: " + scans.get(i).getID(), false));
 		
-		
-		// Go back to before the history...
-		cursor.setKey("HISTORY");
 	}	
 	
 	@Override

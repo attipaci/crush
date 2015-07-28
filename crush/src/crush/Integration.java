@@ -980,6 +980,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			protected void init() {
 				super.init();
+				
 				var = instrument.getDataPoints();
 				for(int i=instrument.size(); --i >= 0; ) var[i].noData();
 			}
@@ -1002,18 +1003,21 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			@Override
 			public DataPoint[] getResult() {
-				init();
 				
 				for(Parallel<DataPoint[]> task : getWorkers()) {
 					final DataPoint[] localVar = task.getPartialResult();
-					for(int i=instrument.size(); --i >= 0; ) {
-						final DataPoint global = var[i];
-						final DataPoint local = localVar[i];
-						
-						global.add(local.value());
-						global.addWeight(local.weight());
+					
+					if(var == null) var = localVar;
+					else {
+						for(int i=instrument.size(); --i >= 0; ) {
+							final DataPoint global = var[i];
+							final DataPoint local = localVar[i];
+
+							global.add(local.value());
+							global.addWeight(local.weight());
+						}
+						Instrument.recycle(localVar);
 					}
-					Instrument.recycle(localVar);
 				}
 				return var;
 			}	
@@ -1513,21 +1517,30 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		setDespikeLevels(connectedChannels, significance);
 		
+		// Clear the spike flag for every sample...
+		new Fork<Void>() {
+			@Override
+			protected void process(FrameType exposure) {
+				for(final Channel channel : connectedChannels) exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKY_NEIGHBOUR;
+			}			
+		}.process();
+		
+		// Despike here...
 		new CRUSH.IndexedFork<Void>(size() - delta) {
 			@Override
 			protected void processIndex(int t) {
 				final Frame exposure = get(t);
-				final Frame prior = get(t+delta);
+				final Frame other = get(t+delta);
 				
-				if(exposure != null) if(prior != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(prior.isUnflagged(Frame.MODELING_FLAGS))  {
-					final float chi = (float) (1.0 / Math.sqrt(exposure.relativeWeight) + 1.0 / Math.sqrt(prior.relativeWeight));
+				if(exposure != null) if(other != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(other.isUnflagged(Frame.MODELING_FLAGS))  {
+					final float chi = (float) (1.0 / Math.sqrt(exposure.relativeWeight) + 1.0 / Math.sqrt(other.relativeWeight));
 					
-					for(final Channel channel : connectedChannels) if(((exposure.sampleFlag[channel.index] | prior.sampleFlag[channel.index]) & excludeSamples) == 0) {
-						exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKY_NEIGHBOUR;
-
-						if(Math.abs(exposure.data[channel.index] - prior.data[channel.index]) > channel.temp * chi) {
+					for(final Channel channel : connectedChannels) if(((exposure.sampleFlag[channel.index] | other.sampleFlag[channel.index]) & excludeSamples) == 0) {
+						if(Math.abs(exposure.data[channel.index] - other.data[channel.index]) > channel.temp * chi) {
 							exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
-							prior.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
+							// TODO this could be a race condition, although concurrent updates should 
+							// still result in expected flag value...
+							other.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
 						}
 					}
 				}	

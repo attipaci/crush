@@ -43,7 +43,9 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	 */
 	private static final long serialVersionUID = -6344037367939085571L;
 	
-	public String date;
+	public String fileDate, date;
+	public String checksum, checksumVersion;
+	
 	public BracketedValues utc = new BracketedValues();
 	public boolean isChopping = false, isNodding = false, isDithering = false, isMapping = false, isScanning = false;
 		
@@ -78,10 +80,11 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		// Load any options based on the FITS header...
 		instrument.setFitsHeaderOptions(header);
 		
+		fileDate = SofiaHeaderData.getStringValue(header, "DATE");
 		date = header.getStringValue("DATE-OBS");
 		String startTime = header.getStringValue("UTCSTART");
 		String endTime = header.getStringValue("UTCEND");
-		
+			
 		if(startTime != null) utc.start = Util.parseTime(startTime);
 		if(endTime != null) utc.end = Util.parseTime(endTime);
 			
@@ -96,6 +99,9 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		AstroTime time = new AstroTime();
 		time.parseFitsTimeStamp(timeStamp);
 		setMJD(time.getMJD());	
+		
+		checksum = SofiaHeaderData.getStringValue(header, "DATASUM");				// not in 3.0
+		checksumVersion = SofiaHeaderData.getStringValue(header, "CHECKVER");		// not in 3.0
 		
 		isChopping = header.getBooleanValue("CHOPPING", false);
 		isNodding = header.getBooleanValue("NODDING", false);
@@ -146,10 +152,16 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	@Override
 	public void editScanHeader(Header header) throws HeaderCardException {
 		super.editScanHeader(header);		
+		
 		Header sofiaHeader = new Header();
 		
 		Cursor cursor = sofiaHeader.iterator();
 		while(cursor.hasNext()) cursor.next();
+		
+		if(fileDate != null) cursor.add(new HeaderCard("DATE", fileDate, "Scan file creation date."));
+		
+		if(checksum != null) cursor.add(new HeaderCard("DATASUM", checksum, "Data file checksum."));
+		if(checksumVersion != null) cursor.add(new HeaderCard("CHECKVER", checksumVersion, "Checksum method version."));
 		
 		observation.editHeader(cursor);
 		processing.editHeader(cursor);
@@ -179,10 +191,8 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		//cursor.add(new HeaderCard("PIPEVERS", CRUSH.getFullVersion(), "Full software version information.")); 
 		//cursor.add(new HeaderCard("PRODTYPE", "CRUSH-SCAN-META", "Type of product produced by the software."));
 		
-	
 		// May overwrite existing values...
 		header.updateLines(sofiaHeader);
-		
 	}
 
 	
@@ -198,19 +208,14 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		return keys;
 	}
 	
-	public void addRequiredKeys(Cursor cursor) throws HeaderCardException {
+	public void updateRequiredKeys(Header header, Cursor cursor) throws HeaderCardException {
 		Header h = new Header();
 		editScanHeader(h);
 		
 		for(String key : getPreservedKeys()) {
 			HeaderCard fromCard = h.findCard(key);
-			
-			cursor.setKey(key);
-		
-			if(fromCard == null) continue;
-				
-			HeaderCard toCard = cursor.hasNext() ? (HeaderCard) cursor.next() : null;	
-			if(toCard != null) toCard.setValue(fromCard.getValue());
+			if(fromCard == null) continue;	
+			if(header.containsKey(key)) header.updateLine(key, fromCard);
 			else cursor.add(fromCard);
 		}
 		
@@ -228,16 +233,20 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		while(cursor.hasNext()) cursor.next();
 		
 		// Add the observing mode keywords at the end...
+		/*
 		if(chopper != null) chopper.editHeader(cursor);
 		if(nodding != null) nodding.editHeader(cursor);
 		if(dither != null) dither.editHeader(cursor);
 		if(mapping != null) mapping.editHeader(cursor);
 		if(scanning != null) scanning.editHeader(cursor);
-	
+		*/
 		
-		cursor.setKey("HISTORY");
-		for(int i=0; i<history.size(); i++) cursor.add(new HeaderCard("HISTORY", history.get(i), false));
+		
 	
+	}
+	
+	public void addHistory(Cursor cursor) throws HeaderCardException {
+		for(int i=0; i<history.size(); i++) cursor.add(new HeaderCard("HISTORY", history.get(i), false));
 	}
 	
 	public void parseHistory(Header header) {
@@ -262,7 +271,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	}
 	
 	
-	public void addHistory(Header header) throws FitsException {
+	public void addHistory(Header header) throws HeaderCardException {
 		header.findCard("HISTORY");
 		for(int i=0; i<history.size(); i++) header.insertHistory(history.get(i));		
 	}
@@ -410,9 +419,10 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	
 	public final static String[] requiredKeys = { 
 			"DATASRC", "OBS_ID", "IMAGEID", "AOT_ID", "AOR_ID", "PLANID", "MISSN-ID", "DATE-OBS", 
-			"TRACMODE", "TRACERR", "CHOPPING", "NODDING", "DITHER", "MAPPING", "SCANNING",
-			"INSTRUME", "SPECTEL1", "SPECTEL2", "SLIT", "WAVECENT", "RESOLUN",
+			"TRACMODE", "CHOPPING", "NODDING", "DITHER", "MAPPING", "SCANNING",
+			"SPECTEL1", "SPECTEL2", "SLIT", "WAVECENT", "RESOLUN",
 			"DETECTOR", "DETSIZE", "PIXSCAL", "SUBARRNO", "SIBS_X", "SIBS_Y"
 	};
+
 	
 }

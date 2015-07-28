@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -19,8 +19,7 @@
  * 
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
- ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
+ ******************************************************************************/ 
 
 package crush.laboca;
 
@@ -97,7 +96,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		System.err.println("   RMS He3 temperature drift is " + Util.f3.format(1e3 * rmsHe3) + " mK.");
 		
 		final Signal temperatureSignal = signal;
-
+	
 		new Fork<Void>() {
 			@Override
 			protected void process(LabocaFrame exposure) {
@@ -152,12 +151,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 			return;
 		}
 		
-		// Set blind temperatures...
-		new Fork<Void>() {
-			@Override
-			protected void process(LabocaFrame exposure) { exposure.he3Temp = signal.valueAt(exposure); }
-		}.process();
-
+		for(LabocaFrame exposure : this) if(exposure != null) exposure.he3Temp = signal.valueAt(exposure); 
 	}	
 	
 	
@@ -192,72 +186,45 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		interpolateHe3Temperatures(table);
 	}
 	
+	// TODO reimplement with localized data...
 	public void interpolateHe3Temperatures(final ArrayList<Vector2D> table) {
 		System.err.print("   Interpolating He3 temperatures. ");
 		// plus or minus in days;
 		final double smoothFWHM = he3TimeScale / Unit.day;
 		final double windowSize = 2.0 * smoothFWHM;
 		final double sigma = smoothFWHM / Constant.sigmasInFWHM;
+		final int nt = size();	
+		
+		int nFlagged = 0;
+		int from = 0, to=0;
+		for(int t = 0; t < nt; t++) {
+			LabocaFrame exposure = get(t);
+			if(exposure == null) continue;
 			
+			double MJD0 = exposure.MJD;
 
-		new Fork<Void>() {
-			int from = 0, to=0;
+			// Adjust the smoothing window...
+			while(MJD0 - table.get(from).x() > windowSize || from == table.size()-1) from++;
+			while(table.get(to).x() - MJD0 < windowSize || to == table.size()-1) to++;
 
-			@Override
-			protected void process(LabocaFrame exposure) {
-				double MJD0 = exposure.MJD;
+			double sum = 0.0, sumw = 0.0;
 
-				// Adjust the smoothing window...
-				while(MJD0 - table.get(from).x() > windowSize || from == table.size()-1) from++;
-				while(table.get(to).x() - MJD0 < windowSize || to == table.size()-1) to++;
-
-				double sum = 0.0, sumw = 0.0;
-
-				for(int tt=from; tt<=to; tt++) {
-					Vector2D entry = table.get(tt);
-					double dev = (MJD0 - entry.x()) / sigma;
-					double w = Math.exp(-0.5*dev*dev);
-					sum += w * entry.y();
-					sumw += w;
-				}
-
-				exposure.he3Temp = sumw > 0.3 ? (float) (sum/sumw) : Float.NaN;
+			for(int tt=from; tt<=to; tt++) {
+				Vector2D entry = table.get(tt);
+				double dev = (MJD0 - entry.x()) / sigma;
+				double w = Math.exp(-0.5*dev*dev);
+				sum += w * entry.y();
+				sumw += w;
 			}
 
-		}.process();
-
-
-		// Flag invalid exposures...
-		Fork<Integer> frameFlagging = new Fork<Integer>() {
-			private int nFlagged = 0;
-
-			@Override
-			protected void process(LabocaFrame exposure) {
-				if(Double.isNaN(exposure.he3Temp)) {
-					set(exposure.index, null);
-					nFlagged++;
-				}
-
+			if(sumw > 0.3) exposure.he3Temp = (float) (sum/sumw);
+			else {
+				set(t, null);
+				nFlagged++;
 			}
+		}
 
-			@Override
-			public Integer getPartialResult() { return nFlagged; }
-
-			@Override
-			public Integer getResult() {
-				int globalFlagged = 0;
-				for(Parallel<Integer> task : getWorkers()) globalFlagged += task.getPartialResult();
-				return globalFlagged;
-			}
-
-		};
-
-		frameFlagging.process();
-		int nFlagged = frameFlagging.getResult();
-
-		for(LabocaFrame exposure : this) if(exposure != null) 
-			System.err.println(nFlagged == 0 ? "All good :-)" : "Dropped " + nFlagged + " frames without reliable He3 data :-(");	
-
+		System.err.println(nFlagged == 0 ? "All good :-)" : "Dropped " + nFlagged + " frames without reliable He3 data :-(");	
 
 	}
 	

@@ -39,8 +39,15 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 	public String lastRewind;
 	public BracketedValues focusT = new BracketedValues();
 	public double relElevation = Double.NaN, crossElevation = Double.NaN, lineOfSightAngle = Double.NaN;
+	public double coarseElevation = Double.NaN;
+	public double fineDriveElevation = Double.NaN, fineDriveCrossElevation = Double.NaN, fineDriveLOS = Double.NaN;
 	public String tascuStatus, fbcStatus;
 	public BracketedValues zenithAngle = new BracketedValues();
+	public double sunAngle = Double.NaN, moonAngle = Double.NaN;
+	public String userCoordinateSystem, userReferenceSystem;
+	public double userRefLon = Double.NaN, userRefLat = Double.NaN, userRefAngle = Double.NaN;
+	public double userLongitude = Double.NaN, userLatitude = Double.NaN, userEquinox = Double.NaN;
+	public double vHelio = Double.NaN, vLSR = Double.NaN;
 	public String trackingMode;
 	public boolean hasTrackingError = false;
 	
@@ -84,6 +91,11 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		crossElevation = header.getDoubleValue("TELXEL", Double.NaN) * Unit.deg;
 		lineOfSightAngle = header.getDoubleValue("TELLOS", Double.NaN) * Unit.deg;
 		
+		coarseElevation = header.getDoubleValue("COARSEEL", Double.NaN) * Unit.deg;			// new in 3.0
+		fineDriveElevation = header.getDoubleValue("FD_EL", Double.NaN) * Unit.deg;			// new in 3.0
+		fineDriveCrossElevation = header.getDoubleValue("FD_XEL", Double.NaN) * Unit.deg;	// new in 3.0
+		fineDriveLOS = header.getDoubleValue("FD_LOS", Double.NaN) * Unit.deg;				// new in 3.0
+			
 		tascuStatus = getStringValue(header, "TSC-STAT");
 		fbcStatus = getStringValue(header, "FBC-STAT");
 		
@@ -101,6 +113,23 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		zenithAngle.start = header.getDoubleValue("ZA_START", Double.NaN) * Unit.deg;
 		zenithAngle.end = header.getDoubleValue("ZA_END", Double.NaN) * Unit.deg;
 		
+		sunAngle = header.getDoubleValue("SUNANGL", Double.NaN) * Unit.deg;				// not in 3.0
+		moonAngle = header.getDoubleValue("MOONANGL", Double.NaN) * Unit.deg;			// not in 3.0
+		
+		userCoordinateSystem = getStringValue(header, "USRCRDSY");						// not in 3.0
+		userReferenceSystem = getStringValue(header, "USRREFCR");						// not in 3.0
+		
+		userRefLon = header.getDoubleValue("USRORIGX", Double.NaN) * Unit.deg;			// not in 3.0
+		userRefLat = header.getDoubleValue("USRORIGY", Double.NaN) * Unit.deg;			// not in 3.0
+		userRefAngle = header.getDoubleValue("USRCRROT", Double.NaN) * Unit.deg;		// not in 3.0
+		
+		userLongitude = header.getDoubleValue("USRX", Double.NaN) * Unit.deg;			// not in 3.0
+		userLatitude = header.getDoubleValue("USRY", Double.NaN) * Unit.deg;			// not in 3.0
+		userEquinox = header.getDoubleValue("USREQNX", Double.NaN);						// not in 3.0
+		
+		vHelio = header.getDoubleValue("HELI_COR", Double.NaN) * Unit.km / Unit.s;		// not in 3.0
+		vLSR = header.getDoubleValue("LSR_COR", Double.NaN) * Unit.km / Unit.s;			// not in 3.0
+		
 		trackingMode = getStringValue(header, "TRACMODE");
 		hasTrackingError = header.getBooleanValue("TRACERR", false);
 		
@@ -108,6 +137,8 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 
 	@Override
 	public void editHeader(Cursor cursor) throws HeaderCardException {
+		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Telescope Data ------>", false));
+		
 		if(telescope != null) cursor.add(new HeaderCard("TELESCOP", telescope, "observatory name."));
 		if(telConfig != null) cursor.add(new HeaderCard("TELCONF", telConfig, "telescope configuration."));
 		
@@ -128,6 +159,11 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		if(!Double.isNaN(crossElevation)) cursor.add(new HeaderCard("TELXEL", crossElevation / Unit.deg, "(deg) Telescope cross elevation in cavity."));
 		if(!Double.isNaN(lineOfSightAngle)) cursor.add(new HeaderCard("TELLOS", lineOfSightAngle / Unit.deg, "(deg) Telescope line-of-sight angle in cavity."));
 		
+		if(!Double.isNaN(coarseElevation)) cursor.add(new HeaderCard("COARSEEL", coarseElevation / Unit.deg, "(deg) Coarse drive elevation."));
+		if(!Double.isNaN(fineDriveElevation)) cursor.add(new HeaderCard("FD_EL", fineDriveElevation / Unit.deg, "(deg) Fine drive elevation."));
+		if(!Double.isNaN(fineDriveCrossElevation)) cursor.add(new HeaderCard("FD_XEL", fineDriveCrossElevation / Unit.deg, "(deg) Fine drive cross elevation."));
+		if(!Double.isNaN(fineDriveLOS)) cursor.add(new HeaderCard("FD_LOS", fineDriveLOS / Unit.deg, "(deg) Fine drive line-of-sight angle."));
+		
 		if(tascuStatus != null) cursor.add(new HeaderCard("TSC_STAT", tascuStatus, "TASCU system status at end."));
 		if(fbcStatus != null) cursor.add(new HeaderCard("FBC_STAT", fbcStatus, "flexible body compensation system status at end."));
 		
@@ -140,9 +176,26 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		if(!Double.isNaN(zenithAngle.start)) cursor.add(new HeaderCard("ZA_START", zenithAngle.start / Unit.deg, "(deg) Zenith angle at start."));
 		if(!Double.isNaN(zenithAngle.end)) cursor.add(new HeaderCard("ZA_END", zenithAngle.end / Unit.deg, "(deg) Zenith angle at end."));
 		
+		if(!Double.isNaN(sunAngle)) cursor.add(new HeaderCard("SUNANGL", sunAngle / Unit.deg, "(deg) Angle btw tel. pointing and Sun."));
+		if(!Double.isNaN(zenithAngle.end)) cursor.add(new HeaderCard("MOONANGL", moonAngle / Unit.deg, "(deg) Angle btw tel. pointing and Moon ."));
+		
+		if(userCoordinateSystem != null) cursor.add(new HeaderCard("USRCRDSY", userCoordinateSystem, "User coordinate system name."));
+		if(userReferenceSystem != null) cursor.add(new HeaderCard("USRREFCR", userReferenceSystem, "User reference system name."));
+		
+		if(!Double.isNaN(userRefLon)) cursor.add(new HeaderCard("USRORIGX", userRefLon / Unit.deg, "(deg) user origin LON in ref. sys."));
+		if(!Double.isNaN(userRefLat)) cursor.add(new HeaderCard("USRORIGY", userRefLat / Unit.deg, "(deg) user origin LAT in ref. sys."));
+		if(!Double.isNaN(userRefAngle)) cursor.add(new HeaderCard("USRCRROT", userRefAngle / Unit.deg, "(deg) rotation of user system to reference."));
+
+		if(!Double.isNaN(userLongitude)) cursor.add(new HeaderCard("USRX", userLongitude / Unit.deg, "(deg) Object longitude in user system."));
+		if(!Double.isNaN(userLatitude)) cursor.add(new HeaderCard("USRY", userLatitude / Unit.deg, "(deg) Object latitude in user system."));
+		if(!Double.isNaN(userEquinox)) cursor.add(new HeaderCard("USREQNX", userEquinox, "(yr) User coordinate epoch."));
+		
+		if(!Double.isNaN(vHelio)) cursor.add(new HeaderCard("HELI_COR", vHelio, "(km/s) Heliocentric velocity correction."));
+		if(!Double.isNaN(vLSR)) cursor.add(new HeaderCard("LSR_COR", vLSR, "(km/s) LSR velocity correction."));
+		
 		if(trackingMode != null) {
 			cursor.add(new HeaderCard("TRACMODE", trackingMode, "SOFIA tracking mode."));
-			cursor.add(new HeaderCard("TRACERR", hasTrackingError, "Was there a tracking error during the scan?"));
+			//cursor.add(new HeaderCard("TRACERR", hasTrackingError, "Was there a tracking error during the scan?"));
 		}
 		
 	}
