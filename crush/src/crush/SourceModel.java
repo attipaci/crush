@@ -344,10 +344,23 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 		recycler.add(this);
 	}
 	
+	public double getGnuplotPNGFontScale(int size) {
+		double dpc = (double) size / scans.size();
+
+		if(dpc < 16.0) return 0.33;
+		if(dpc < 20.0) return 0.4;
+		if(dpc < 24.0 ) return 0.5;
+		if(dpc < 32.0) return 0.6;
+		if(dpc < 40.0) return 0.8;
+		return 1.0;
+		
+	}
+	
 	public static void setRecyclerSize(int size) {
 		if(size <= 0) recycler = null;
 		else recycler = new ArrayBlockingQueue<SourceModel>(size);
 	}
+	
 	
 	public static ArrayBlockingQueue<SourceModel> recycler;
 	

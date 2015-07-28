@@ -1,10 +1,16 @@
->> use 'pngcairo' for gnuplot...
->> beammap add to fork by channel instead of frame...
->> test beammap and photometry! 
+>> test pngcairo for photometry
+>> test photometry! 
+>> 'perimeter'
+>> 'fillgaps'
+>> catch race condition... (11564)
 
 
 2.30-a1
-	
+
+	[BUG] {SourceMap} The use of unfiltered vs filtered gains for mapping
+	did not depend on the mask as intented. The algorithm used a stale map
+	index when making the choice. Fixed.
+
 	[BUG] {PolKa} Parameter accounting for the removal of total-power
 	modulation was buggy. The dependents that were to be accumulated for
 	frames were instead added to channels, causing incorrect weightings
@@ -32,6 +38,18 @@
 	'fft'. Because the 'fft' method was inherently problematic, and never
 	really used anyway, it's best to say goodbye to it...
 
+	[FIX] When gaps were detected in data, the gap filling routine did not 
+	work as expected. Fixed.
+
+	[TWEAK] Derivation of source map not using filter gain correction as
+	before. That scheme is expected to go awry with the filter bowls around
+	sources, which is what it was designed to avoid in the first place...
+	
+	[TWEAK] PNG plots for skydip and photometry reductions, produced by
+	gnuplot, now use the antialiased 'pngcairo' plot terminal instead of 
+	the coarsely pixellated 'png' terminal. You should see higher plot
+	quality as a result.
+
 	[TWEAK] Some tweaks to parameter accounting. Sometimes samples that
 	did not contribute to a model were still added to parameter dependents,
 	which was incorrect.
@@ -43,6 +61,12 @@
 	submaps provide a natural separation against race conditions. This
 	should result in a speedup for processing beammaps.
 
+	[CODE] pipeline task iteration ordering more explicit, by iterating
+	on task indices.
+
+	[CODE] {beammap} Beammap forks by pixel, instead of frame to avoid
+	race conditions on master map without copies.
+	
 	[CODE] {SyncModMap} simplified by using sourceGain(mode) instead of old
 	modulated waveform. No more sync() override...
 

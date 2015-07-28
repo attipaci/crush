@@ -107,7 +107,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 
 		private byte[] ch;
 		private float[] data; //intTime, chop;
-		private int[] SN, AZ, EL, dX, dY, AZE, ELE, LST, PA, MJD, ticks; // UTseconds, UTnanosec;
+		private int[] SN, AZ, EL, dX, dY, AZE, ELE, LST, PA, MJD, ticks; //, UTseconds, UTnanosec;
 		private int channels;
 		
 		private final MakoScan<?> makoscan = (MakoScan<?>) scan;
@@ -161,6 +161,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 					super.init();
 					equatorialOffset = new Vector2D();
 				}
+				
 				@Override
 				public void processRow(int i) throws FitsException {	
 					if(ch[i] == 255) return;

@@ -47,8 +47,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.30-a3";
-	private static String revision = "(devel.1)";
+	private static String version = "2.30-b1";
+	private static String revision = "devel.1";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -432,9 +432,10 @@ public class CRUSH extends Configurator {
 	
 	public synchronized void iterate() throws Exception {
 		List<String> ordering = get("ordering").getLowerCaseList();
-		ArrayList<String> tasks = new ArrayList<String>();
+		ArrayList<String> tasks = new ArrayList<String>(ordering.size());
 		
-		for(String task : ordering) {
+		for(int i=0; i < ordering.size(); i++) {
+			final String task = ordering.get(i);
 			tasks.add(task);
 			
 			if(solveSource()) if(task.startsWith("source"))  {
@@ -460,7 +461,7 @@ public class CRUSH extends Configurator {
 			source.reset(true);
 		}
 				
-		pipeline.iterate();
+		pipeline.iterate(true);
 		
 		if(solveSource()) if(tasks.contains("source")) {
 			System.err.print("  [Source] ");

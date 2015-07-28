@@ -51,21 +51,24 @@ public class Pipeline {
 	
 	public void setOrdering(List<String> ordering) { this.ordering = ordering; }
 	
-	public synchronized void iterate() throws InterruptedException {					
-		for(int i=0; i<crush.scans.size(); i++) iterate(crush.scans.get(i));
+	public synchronized void iterate(boolean summarize) throws InterruptedException {					
+		for(int i=0; i<crush.scans.size(); i++) iterate(crush.scans.get(i), summarize);
 	}
 	
-	public synchronized void iterate(Scan<?,?> scan) throws InterruptedException {		
+	public synchronized void iterate(Scan<?,?> scan, boolean summarize) throws InterruptedException {		
 		for(Integration<?, ?> integration: scan) integration.comments = new String();
 
-		for(String task : ordering) if(scan.hasOption(task)) scan.perform(task);
-				
+		for(int i=0; i < ordering.size(); i++) {
+			final String task = ordering.get(i);
+			if(scan.hasOption(task)) scan.perform(task);
+		}
+			
 		// Extract source ALWAYS at the end, independently of what was requested...
 		// The supplier of the tasks should generally make sure that the source
 		// is extracted at the end.
 		if(ordering.contains("source")) if(scan.hasOption("source")) updateSource(scan);
 
-		for(int i=0; i<scan.size(); i++) summarize(scan.get(i));
+		if(summarize) for(int i=0; i<scan.size(); i++) summarize(scan.get(i));
 	}
 	
 	protected void updateSource(Scan<?,?> scan) {

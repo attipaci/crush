@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -351,7 +351,6 @@ public abstract class Photometry extends SourceModel {
 	public void gnuplotPNG(PrintWriter plot, String coreName) {
 		boolean isTransparent = false;
 		
-		
 		int bgColor = Color.WHITE.getRGB();
 		if(hasOption("write.png.bg")) {
 			String spec = option("write.png.bg").getValue().toLowerCase();
@@ -364,24 +363,14 @@ public abstract class Photometry extends SourceModel {
 		int sizeY = 480;
 		if(hasOption("write.png.size")) {
 			String spec = option("write.png.size").getValue();
-			StringTokenizer tokens = new StringTokenizer(spec, "xX:,");
+			StringTokenizer tokens = new StringTokenizer(spec, "xX*:, ");
 			sizeX = sizeY = Integer.parseInt(tokens.nextToken());
 			if(tokens.hasMoreTokens()) sizeY = Integer.parseInt(tokens.nextToken());				
 		}
 		
-
-		double dpc = (double) sizeX / scans.size();
-		
-		double fontScale = 1.0;
-		if(dpc < 16.0) fontScale = 0.33;
-		if(dpc < 20.0) fontScale = 0.4;
-		if(dpc < 24.0 ) fontScale = 0.5;
-		if(dpc < 32.0) fontScale = 0.6;
-		if(dpc < 40.0) fontScale = 0.8;
-		
-		
-		plot.println("set term png enh " + (isTransparent ? "" : "no") + "transparent truecolor interlace" +
-				" background '#" + Integer.toHexString(bgColor).substring(2) + "' fontscale " + fontScale + " size " + sizeX + "," + sizeY);
+		plot.println("set term pngcairo enhanced color " + (isTransparent ? "" : "no") + "transparent crop" +
+				" background '#" + Integer.toHexString(bgColor).substring(2) + "' fontscale " + getGnuplotPNGFontScale(sizeX) + 
+				"butt size " + sizeX + "," + sizeY);
 		plot.println("set out '" + coreName + ".png'");
 		plot.println("replot");
 		plot.println("print '  Written " + coreName + ".png'");	

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -39,7 +39,6 @@ import kovacs.data.Statistics;
 import kovacs.math.Range;
 import kovacs.math.SphericalCoordinates;
 import kovacs.math.Vector2D;
-import kovacs.parallel.Summation;
 import kovacs.projection.Gnomonic;
 import kovacs.projection.Projection2D;
 import kovacs.projection.SphericalProjection;
@@ -440,7 +439,7 @@ public abstract class SourceMap extends SourceModel {
 	}
 	
 	protected synchronized int addForkFrames(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
-			
+				
 		class Mapper extends CRUSH.IndexedFork<Integer> {
 			private SourceMap localSource;
 			private AstroProjector projector;
@@ -452,7 +451,7 @@ public abstract class SourceMap extends SourceModel {
 			@Override
 			protected void init() {
 				super.init();
-				
+	
 				if(isAddingToMaster()) localSource = SourceMap.this;
 				else {
 					localSource = (SourceMap) getRecyclerCopy(false);
@@ -472,15 +471,15 @@ public abstract class SourceMap extends SourceModel {
 			private void process(Frame exposure) {
 				if(exposure.isFlagged(Frame.SOURCE_FLAGS)) return;
 				
-				final double fGC = (isMasked(index) ? 1.0 : filtering) * integration.gain * exposure.getSourceGain(signalMode);
-					
-				if(fGC == 0.0) return;
+				final double fG = integration.gain * exposure.getSourceGain(signalMode);	
+				if(fG == 0.0) return;
 				
 				mappingFrames++;
 
 				for(final Pixel pixel : pixels) {
-					localSource.getIndex(exposure, pixel, projector, index);		
-					localSource.add(exposure, pixel, index, fGC, sourceGain);
+					localSource.getIndex(exposure, pixel, projector, index);
+					localSource.add(exposure, pixel, index, fG, sourceGain);
+					//localSource.add(exposure, pixel, index, (isMasked(index) ? fG : filtering * fG), sourceGain);
 				}
 			}
 			
@@ -507,34 +506,16 @@ public abstract class SourceMap extends SourceModel {
 		Mapper mapping = new Mapper();
 		mapping.process();
 		
-		
-		int mappingFrames = mapping.getResult();
-	
-		if(CRUSH.debug) System.err.println("### mapping frames:" + mappingFrames);
-
-		return mappingFrames;
-		
+		return mapping.getResult();		
 	}
 	
 	protected synchronized int addForkPixels(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
+		int mappingFrames = 0;
 		
-		CRUSH.Fork<Integer> framePrep = integration.new Fork<Integer>() {
-			int n = 0;
-			
-			@Override 
-			protected void process(Frame exposure) {
-				exposure.tempC = exposure.isFlagged(Frame.SOURCE_FLAGS) ? 0.0F : integration.gain * exposure.getSourceGain(signalMode);
-				if(exposure.tempC != 0.0F) n++;
-			}
-			
-			@Override
-			public Integer getPartialResult() { return n; }
-		};
-		
-		framePrep.setReduction(new Summation.IntValue());
-		framePrep.process();
-		final int mappingFrames = framePrep.getResult();
-		
+		for(Frame exposure : integration) if(exposure != null) {
+			exposure.tempC = exposure.isFlagged(Frame.SOURCE_FLAGS) ? 0.0F : integration.gain * exposure.getSourceGain(signalMode);
+			if(exposure.tempC != 0.0F) mappingFrames++;
+		}
 		
 		class Mapper extends CRUSH.IndexedFork<Void> {
 			private SourceMap localSource;
@@ -546,7 +527,7 @@ public abstract class SourceMap extends SourceModel {
 			@Override
 			protected void init() {
 				super.init();
-				
+						
 				if(isAddingToMaster()) localSource = SourceMap.this;
 				else {
 					localSource = (SourceMap) getRecyclerCopy(false);
@@ -555,6 +536,7 @@ public abstract class SourceMap extends SourceModel {
 				
 				projector = new AstroProjector(localSource.getProjection());
 				index = new Index2D();
+		
 			}
 			
 			@Override
@@ -564,9 +546,9 @@ public abstract class SourceMap extends SourceModel {
 			
 			private void process(final Pixel pixel) {
 				for(Frame exposure : integration) if(exposure != null) if(exposure.tempC != 0.0F) {
-					final double fGC = (isMasked(index) ? 1.0 : filtering) * exposure.tempC;
-					localSource.getIndex(exposure, pixel, projector, index);		
-					localSource.add(exposure, pixel, index, fGC, sourceGain);
+					localSource.getIndex(exposure, pixel, projector, index);
+					localSource.add(exposure, pixel, index, exposure.tempC, sourceGain);
+					//localSource.add(exposure, pixel, index, (isMasked(index) ? exposure.tempC : filtering * exposure.tempC), sourceGain);
 				}
 			}
 			
@@ -584,12 +566,9 @@ public abstract class SourceMap extends SourceModel {
 		
 		Mapper mapping = new Mapper();
 		mapping.process();
-		mapping.getResult();
-	
-		if(CRUSH.debug) System.err.println("### mapping frames:" + mappingFrames);
+		mapping.getResult();	
 
 		return mappingFrames;
-		
 	}
 	
 	
@@ -600,17 +579,11 @@ public abstract class SourceMap extends SourceModel {
 	}
 	
 	public void add(Integration<?,?> integration, int signalMode) {
-		Instrument<?> instrument = integration.instrument; 
+		final Instrument<?> instrument = integration.instrument; 
 
-		// For the first source generation, apply the point source correction directly to the signals.
-		final boolean signalCorrection = integration.sourceGeneration == 0;
-		boolean mapCorrection = hasSourceOption("correct") && !signalCorrection;
-	
 		integration.comments += "Map";
 		if(id != null) integration.comments += "." + id;
 		// For jackknived maps indicate sign...
-		
-		List<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 		
 		// Proceed only if there are enough pixels to do the job...
 		if(!checkPixelCount(integration)) return;
@@ -618,12 +591,23 @@ public abstract class SourceMap extends SourceModel {
 		// Calculate the effective source NEFD based on the latest weights and the current filtering
 		integration.calcSourceNEFD();
 
-		final double[] sourceGain = instrument.getSourceGains(signalCorrection);
+		final double averageFiltering = instrument.getAverageFiltering();			
 	
-		double averageFiltering = instrument.getAverageFiltering();			
+		// For the first source generation, apply the point source correction directly to the signals.
+		final boolean signalCorrection = integration.sourceGeneration == 0;
+		boolean mapCorrection = hasSourceOption("correct") && !signalCorrection;
 	
-		add(integration, pixels, sourceGain, mapCorrection ? averageFiltering : 1.0, signalMode);
-			
+		
+		final int mappingFrames = add(
+				integration, 
+				integration.instrument.getMappingPixels(), 
+				instrument.getSourceGains(signalCorrection), 
+				mapCorrection ? averageFiltering : 1.0, 
+				signalMode
+		);
+		
+		if(CRUSH.debug) System.err.println("### mapping frames:" + mappingFrames);
+		
 		if(signalCorrection)
 			integration.comments += "[C1~" + Util.f2.format(1.0/averageFiltering) + "] ";
 		else if(mapCorrection) {

@@ -149,7 +149,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 		}.process();
 			
-		if(hasGaps(1)) fillGaps();
+		if(hasOption("fillgaps")) if(hasGaps(1)) fillGaps();
 		
 		if(hasOption("shift")) shiftData(option("shift").getDouble() * Unit.s);
 		
@@ -569,8 +569,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	public boolean hasGaps(final int tolerance) {
 		System.err.print("   Checking for gaps: ");
-			
-		boolean hasGaps = false;
 		
 		Frame last = null;
 		
@@ -581,14 +579,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			if(last != null) {
 				int gap = (int) Math.round((last.MJD - frame.MJD) * Unit.day / instrument.samplingInterval) - (last.index - t);
-				if(gap > tolerance) { hasGaps = true; break; }
+				if(gap > tolerance) { 
+					System.err.println("Gap(s) found! :-(  [e.g.: " + Util.f1.format((last.MJD - frame.MJD) * Unit.day / Unit.ms) + " ms]");
+					return true; 
+				}
 			}
 			last = frame;
 		}
 		
-		System.err.println(hasGaps ? "Gap(s) found! :-(" : "No gaps. :-)");
-
-		return hasGaps;
+		System.err.println("No gaps. :-)");
+		return false;
 	}
 	
 	public void fillGaps() {
@@ -596,11 +596,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(size() << 1);
 		
-		for(final FrameType exposure : this) if(!Double.isNaN(lastMJD)) {
-			final int gap = (int)Math.round((exposure.MJD - lastMJD) * Unit.day / instrument.samplingInterval) - 1;
-			if(gap > 0) {
-				System.err.println("   Inserting " + gap + " empty frames...");
-				for(int i=gap; --i >= 0; ) buffer.add(null);
+		for(int t=size(); --t >= 0; ) {
+			final FrameType exposure = get(t);
+			
+			if(exposure == null) {
+				lastMJD += instrument.samplingInterval / Unit.day;
+				continue;
+			}
+			
+			if(!Double.isNaN(lastMJD)) {
+				final int gap = (int)Math.round((exposure.MJD - lastMJD) * Unit.day / instrument.samplingInterval) - 1;
+				if(gap > 0) {
+					System.err.println("   Inserting " + gap + " empty frames...");
+					for(int i=gap; --i >= 0; ) buffer.add(null);
+				}
 			}
 						
 			buffer.add(exposure);	
@@ -794,6 +803,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			protected void postProcess() {
 				super.postProcess();
+				
 				for(Parallel<float[]> task : getWorkers()) {
 					float[] localFrameParms = task.getPartialResult();
 					parms.addForFrames(localFrameParms);
@@ -2148,6 +2158,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(int t=0; t<N; t++) add((FrameType) buffer[t]);
 		trimToSize();
 		reindex();
+		
+		// TODO downsample dependents / signals too
+		dependents.clear();
+		signals.clear();
 	}
 
 	public synchronized void offset(final double value) {
