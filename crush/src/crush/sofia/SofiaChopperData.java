@@ -36,9 +36,10 @@ public class SofiaChopperData extends SofiaHeaderData {
 	public double angle = Double.NaN;
 	public double tip = Double.NaN;
 	public double tilt = Double.NaN;
-	public String signalSource, waveFunction;
+	public String signalSource, driveMode, waveFunction;
 	public double settlingTime = Double.NaN;
 	public double phase = Double.NaN;
+	
 	
 	public SofiaChopperData() {}
 	
@@ -60,13 +61,14 @@ public class SofiaChopperData extends SofiaHeaderData {
 		tip = header.getDoubleValue("CHPTIP", Double.NaN) * Unit.arcsec;
 		tilt = header.getDoubleValue("CHPTILT", Double.NaN) * Unit.arcsec;
 		signalSource = getStringValue(header, "CHPSRC");								// not in 3.0
+		driveMode = getStringValue(header, "CHPACDC");									// new in 3.0
 		waveFunction = getStringValue(header, "CHPFUNC");								// not in 3.0
 		settlingTime = header.getDoubleValue("CHPSETL", Double.NaN) * Unit.ms;			// not in 3.0
 		phase = header.getDoubleValue("CHPPHASE", Double.NaN) * Unit.ms;				// int->float in 3.0
 	}
 
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Chopper Data ------>", false));
 		if(!Double.isNaN(frequency)) cursor.add(new HeaderCard("CHPFREQ", frequency / Unit.Hz, "(Hz) Chop frequency."));
 		if(!Double.isNaN(amplitude)) cursor.add(new HeaderCard("CHPAMP1", amplitude / Unit.arcsec, "(arcsec) Chop amplitude on sky."));
@@ -78,6 +80,7 @@ public class SofiaChopperData extends SofiaHeaderData {
 		if(symmetryType != null) cursor.add(new HeaderCard("CHPSYM", symmetryType, "Chop symmetry mode."));
 		if(coordinateSystem != null) cursor.add(new HeaderCard("CHPCRSYS", coordinateSystem, "Chop coordinate system."));
 		if(signalSource != null) cursor.add(new HeaderCard("CHPSRC", signalSource, "Source of chopper signal."));
+		if(driveMode != null) cursor.add(new HeaderCard("CHPACDC", driveMode, "Analog or Digital drive signal."));
 		if(waveFunction != null) cursor.add(new HeaderCard("CHPFUNC", waveFunction, "Chopper wave function."));
 		if(!Double.isNaN(settlingTime)) cursor.add(new HeaderCard("CHPSETL", settlingTime / Unit.ms, "(ms) Chopper settling time."));
 		if(!Double.isNaN(phase)) cursor.add(new HeaderCard("CHPPHASE", phase / Unit.ms, "(ms) Chop phase."));

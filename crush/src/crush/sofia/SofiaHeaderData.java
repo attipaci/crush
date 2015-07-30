@@ -39,7 +39,7 @@ public abstract class SofiaHeaderData implements Cloneable {
 	
 	public abstract void parseHeader(Header header);
 	
-	public abstract void editHeader(Cursor cursor) throws HeaderCardException;
+	public abstract void editHeader(Header header, Cursor cursor) throws HeaderCardException;
 	
 	public double getHeaderDouble(double value) {
 		if(Double.isNaN(value)) return UNKNOWN_DOUBLE_VALUE;

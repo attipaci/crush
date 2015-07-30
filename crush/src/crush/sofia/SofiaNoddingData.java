@@ -69,7 +69,7 @@ public class SofiaNoddingData extends SofiaHeaderData {
 	}
 
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Nodding Data ------>", false));
 		if(cycles != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("NODN", cycles, "Number of nod cycles."));
 		if(!Double.isNaN(amplitude)) cursor.add(new HeaderCard("NODAMP", amplitude / Unit.arcsec, "(arcsec) Nod amplitude on sky."));

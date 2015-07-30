@@ -35,6 +35,7 @@ import kovacs.astro.*;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
 
+// TODO aux data in processing history...
 
 public abstract class SofiaScan<InstrumentType extends SofiaCamera<?>, IntegrationType extends SofiaIntegration<InstrumentType, ?>> 
 extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
@@ -163,13 +164,13 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		if(checksum != null) cursor.add(new HeaderCard("DATASUM", checksum, "Data file checksum."));
 		if(checksumVersion != null) cursor.add(new HeaderCard("CHECKVER", checksumVersion, "Checksum method version."));
 		
-		observation.editHeader(cursor);
-		processing.editHeader(cursor);
-		mission.editHeader(cursor);
-		origin.editHeader(cursor);
-		environment.editHeader(cursor);
-		aircraft.editHeader(cursor);
-		telescope.editHeader(cursor);
+		observation.editHeader(sofiaHeader, cursor);
+		processing.editHeader(sofiaHeader, cursor);
+		mission.editHeader(sofiaHeader, cursor);
+		origin.editHeader(sofiaHeader, cursor);
+		environment.editHeader(sofiaHeader, cursor);
+		aircraft.editHeader(sofiaHeader, cursor);
+		telescope.editHeader(sofiaHeader, cursor);
 		
 		cursor.add(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));	
 		cursor.add(new HeaderCard("NODDING", isNodding, "Was nodding used?"));	
@@ -177,13 +178,13 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		cursor.add(new HeaderCard("MAPPING", isMapping, "Was mapping?"));	
 		cursor.add(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
 		
-		if(chopper != null) chopper.editHeader(cursor);
-		if(nodding != null) nodding.editHeader(cursor);
-		if(dither != null) dither.editHeader(cursor);
-		if(mapping != null) mapping.editHeader(cursor);
-		if(scanning != null) scanning.editHeader(cursor);
+		if(chopper != null) chopper.editHeader(sofiaHeader, cursor);
+		if(nodding != null) nodding.editHeader(sofiaHeader, cursor);
+		if(dither != null) dither.editHeader(sofiaHeader, cursor);
+		if(mapping != null) mapping.editHeader(sofiaHeader, cursor);
+		if(scanning != null) scanning.editHeader(sofiaHeader, cursor);
 		
-		instrument.editHeader(cursor);
+		instrument.editHeader(sofiaHeader, cursor);
 					
 		//cursor.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
 		//cursor.add(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
@@ -193,6 +194,12 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		
 		// May overwrite existing values...
 		header.updateLines(sofiaHeader);
+		
+		cursor = header.iterator();
+		while(cursor.hasNext()) cursor.next();
+		
+		addHistory(cursor);
+		instrument.addHistory(cursor, null);
 	}
 
 	
@@ -208,41 +215,35 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		return keys;
 	}
 	
-	public void updateRequiredKeys(Header header, Cursor cursor) throws HeaderCardException {
+	public void addRequiredKeysTo(Header header) throws HeaderCardException {
 		Header h = new Header();
 		editScanHeader(h);
 		
 		for(String key : getPreservedKeys()) {
-			HeaderCard fromCard = h.findCard(key);
-			if(fromCard == null) continue;	
-			if(header.containsKey(key)) header.updateLine(key, fromCard);
-			else cursor.add(fromCard);
+			HeaderCard card = h.findCard(key);
+			if(card == null) continue;
+			header.addLine(card);
 		}
-		
 		
 		// Copy the subarray specs (if defined)
 		if(instrument.array.subarrays > 0) for(int i=0; i<instrument.array.subarrays; i++) {
 			String key = "SUBARR" + Util.d2.format(i);
-			cursor.setKey(key);
-			HeaderCard card = cursor.hasNext() ? (HeaderCard) cursor.next() : null;
-			if(card != null) card.setValue(h.findCard(key).getValue());
-			else cursor.add(card);
+			HeaderCard card = h.findCard(key);
+			if(card == null) continue;	
+			header.addLine(card);
 		}
+		
+		Cursor cursor = header.iterator();
 		
 		// Add the observing mode keywords at the end...
 		while(cursor.hasNext()) cursor.next();
 		
 		// Add the observing mode keywords at the end...
-		/*
-		if(chopper != null) chopper.editHeader(cursor);
-		if(nodding != null) nodding.editHeader(cursor);
-		if(dither != null) dither.editHeader(cursor);
-		if(mapping != null) mapping.editHeader(cursor);
-		if(scanning != null) scanning.editHeader(cursor);
-		*/
-		
-		
-	
+		if(chopper != null) chopper.editHeader(header, cursor);
+		if(nodding != null) nodding.editHeader(header, cursor);
+		if(dither != null) dither.editHeader(header, cursor);
+		if(mapping != null) mapping.editHeader(header, cursor);
+		if(scanning != null) scanning.editHeader(header, cursor);
 	}
 	
 	public void addHistory(Cursor cursor) throws HeaderCardException {
@@ -268,12 +269,6 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		}
 			
 		//for(int i=0; i<history.size(); i++) System.err.println("#  " + history.get(i));
-	}
-	
-	
-	public void addHistory(Header header) throws HeaderCardException {
-		header.findCard("HISTORY");
-		for(int i=0; i<history.size(); i++) header.insertHistory(history.get(i));		
 	}
 	
 
@@ -419,10 +414,11 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	
 	public final static String[] requiredKeys = { 
 			"DATASRC", "OBS_ID", "IMAGEID", "AOT_ID", "AOR_ID", "PLANID", "MISSN-ID", "DATE-OBS", 
-			"TRACMODE", "CHOPPING", "NODDING", "DITHER", "MAPPING", "SCANNING",
-			"SPECTEL1", "SPECTEL2", "SLIT", "WAVECENT", "RESOLUN",
+			"TRACERR", "TRACMODE", "CHOPPING", "NODDING", "DITHER", "MAPPING", "SCANNING",
+			"EXPTIME", "SPECTEL1", "SPECTEL2", "SLIT", "WAVECENT", "RESOLUN",
 			"DETECTOR", "DETSIZE", "PIXSCAL", "SUBARRNO", "SIBS_X", "SIBS_Y"
 	};
 
+	// INSTRUME excluded from this list since it is added automatically...
 	
 }

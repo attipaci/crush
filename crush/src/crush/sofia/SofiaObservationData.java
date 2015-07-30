@@ -31,6 +31,7 @@ import nom.tam.util.Cursor;
 
 public class SofiaObservationData extends SofiaHeaderData {
 	public String sourceName;
+	public String errorStatus;
 	public String obsID, imageID, aotID, aorID, fileGroupID;
 	public String dataSource, obsType, sourceType;
 	public String dictionaryVersion;
@@ -50,6 +51,7 @@ public class SofiaObservationData extends SofiaHeaderData {
 	public void parseHeader(Header header) {
 		dataSource = getStringValue(header, "DATASRC");
 		obsType = getStringValue(header, "OBSTYPE");
+		errorStatus = getStringValue(header, "OBSSTAT");			// new in rev. F
 		sourceType = getStringValue(header, "SRCTYPE");
 		dictionaryVersion = getStringValue(header, "KWDICT");
 		obsID = getStringValue(header, "OBS_ID");
@@ -66,13 +68,14 @@ public class SofiaObservationData extends SofiaHeaderData {
 	}
 
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Observation Data ------>", false));
 		if(sourceName != null) cursor.add(new HeaderCard("OBJECT", sourceName, "Object catalog name."));
 		if(!Double.isNaN(startMJD)) cursor.add(new HeaderCard("MJD-OBS", startMJD, "MJD at the start of observation."));
 		if(!Double.isNaN(startLST)) cursor.add(new HeaderCard("LST-OBS", Util.HMS(startLST), "LST at the start of observation"));
 		if(dataSource != null) cursor.add(new HeaderCard("DATASRC", dataSource, "data source category."));
 		if(obsType != null) cursor.add(new HeaderCard("OBSTYPE", obsType, "type of observation."));
+		if(errorStatus != null) cursor.add(new HeaderCard("OBSSTAT", errorStatus, "Observation error status."));
 		if(sourceType != null) cursor.add(new HeaderCard("SRCTYPE", sourceType, "AOR source type."));
 		if(dictionaryVersion != null) cursor.add(new HeaderCard("KWDICT", dictionaryVersion, "SOFIA keword dictionary version."));
 		if(obsID != null) cursor.add(new HeaderCard("OBS_ID", obsID, "Sofia observation ID."));

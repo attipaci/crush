@@ -147,7 +147,12 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		if(instrument != null) {
 			instrument.editImageHeader(scans, header, cursor);
 			if(instrument.getOptions() != null) instrument.getOptions().editHeader(cursor);
+			
 		}
+		
+		CRUSH.addHistory(cursor);
+		if(instrument != null) instrument.addHistory(cursor, scans);
+		
 	}
 
 	@Override

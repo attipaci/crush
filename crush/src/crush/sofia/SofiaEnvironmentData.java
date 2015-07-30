@@ -56,7 +56,7 @@ public class SofiaEnvironmentData extends SofiaHeaderData {
 	}
 
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Environment Data ------>", false));
 		if(!Double.isNaN(pwv.start)) cursor.add(new HeaderCard("WVZ_STA", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
 		if(!Double.isNaN(pwv.end)) cursor.add(new HeaderCard("WVZ_END", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));

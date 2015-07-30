@@ -40,7 +40,7 @@ public class BracketedValues implements Cloneable, Copiable<BracketedValues> {
 		return (BracketedValues) clone();
 	}
 	
-	public void combineWidth(BracketedValues bounds) {
+	public void merge(BracketedValues bounds) {
 		if(bounds.start < start) start = bounds.start;
 		if(bounds.end > end) end = bounds.end;
 	}

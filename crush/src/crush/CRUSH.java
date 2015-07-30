@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import kovacs.astro.AstroTime;
 import kovacs.astro.LeapSeconds;
 import kovacs.fits.FitsExtras;
 import kovacs.text.VersionString;
@@ -48,7 +49,7 @@ public class CRUSH extends Configurator {
 	private static final long serialVersionUID = 6284421525275783456L;
 	
 	private static String version = "2.30-b1";
-	private static String revision = "devel.2";
+	private static String revision = "devel.3";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -82,7 +83,7 @@ public class CRUSH extends Configurator {
 			System.exit(0);	
 		}
 		
-		checkJavaVM(5);
+		checkJavaVM(5);		
 		checkForUpdates();
 		
 		home = System.getenv("CRUSH");
@@ -155,26 +156,34 @@ public class CRUSH extends Configurator {
 		configDepth++;
 		
 		try { 
-			super.readConfig(CRUSH.home + File.separator + fileName); 
+			String path = CRUSH.home + File.separator + fileName;
+			super.readConfig(path); 
+			if(instrument != null) instrument.registerConfigFile(path);
 			found = true;
 		}
 		catch(IOException e) {}
 		
 		try { 
-			super.readConfig(userConfPath + fileName); 
+			String path = userConfPath + fileName;
+			super.readConfig(path); 
+			if(instrument != null) instrument.registerConfigFile(path);
 			found = true;
 		}
 		catch(IOException e) {}
 		
 		try { 
-			super.readConfig(instrument.getConfigPath() + fileName); 
+			String path = instrument.getConfigPath() + fileName;
+			super.readConfig(path); 
+			if(instrument != null) instrument.registerConfigFile(path);
 			found = true;
 		}
 		catch(IOException e) { }
 		
 		// read the instrument overriderrs (if any).
 		try { 
-			super.readConfig(userConfPath + instrument.getName() + File.separator + fileName); 
+			String path = userConfPath + instrument.getName() + File.separator + fileName;
+			super.readConfig(path); 
+			if(instrument != null) instrument.registerConfigFile(path);
 			found = true;
 		}
 		catch(IOException e) {}
@@ -183,7 +192,10 @@ public class CRUSH extends Configurator {
 		// config path...
 		if(!found) {
 			// read the instrument overriderrs (if any).
-			try { super.readConfig(fileName); }
+			try { 
+				super.readConfig(fileName); 
+				if(instrument != null) instrument.registerConfigFile(fileName);
+			}
 			catch(IOException e) {}
 			
 		}
@@ -227,18 +239,18 @@ public class CRUSH extends Configurator {
 		System.gc();
 		
 		update();
-		
-		// TODO ensure sequential scan processing until parallelization is complete
-		//executor = Executors.newSingleThreadExecutor();
-		
-		int threads = Math.min(scans.size(), maxThreads);
-		
-		System.err.println(" Will use " + threads + " CPU core(s).");
+			
+		System.err.println(" Will use " + maxThreads + " CPU core(s).");
 	}
 	
 	public void update() {
 		maxThreads = Runtime.getRuntime().availableProcessors();
-		if(isConfigured("idle")) {
+		
+		if(isConfigured("threads")) {
+			maxThreads = get("threads").getInt();
+			if(maxThreads < 1) maxThreads = 1;
+		}
+		else if(isConfigured("idle")) {
 			String spec = get("idle").getValue();
 			if(spec.charAt(spec.length() - 1) == '%') 
 					maxThreads -= (int)Math.round(0.01 * Double.parseDouble(spec.substring(0, spec.length()-1)) * maxThreads);
@@ -613,6 +625,9 @@ public class CRUSH extends Configurator {
 	  
 	
 	public static void checkForUpdates() {	
+		String quickstart = System.getProperty("CRUSH_QUICKSTART");
+		if(quickstart != null) return; 
+		
 		String releaseVersion = getReleaseVersion();	
 		if(releaseVersion == null) return;
 		
@@ -669,6 +684,9 @@ public class CRUSH extends Configurator {
 	}
 	
 	public static void countdown(int seconds) {
+		String quickstart = System.getProperty("CRUSH_QUICKSTART");
+		if(quickstart != null) return; 
+		
 		System.err.println();
 		
 		for(int i=seconds; i>0; i--) {
@@ -691,8 +709,16 @@ public class CRUSH extends Configurator {
 		return version + " (" + revision + ")";
 	}
 	
+	public static void addHistory(Cursor cursor) throws HeaderCardException {
+		// Add the reduction to the history...
+		AstroTime timeStamp = new AstroTime();
+		timeStamp.now();
+			
+		cursor.add(new HeaderCard("HISTORY", "Reduced: crush v" + CRUSH.getFullVersion() + " @ " + timeStamp.getFitsTimeStamp(), false));			
+	}
+	
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException, FitsException {
+	public void editHeader(Cursor cursor) throws HeaderCardException {
 		// Add the system descriptors...
 		
 		cursor.add(new HeaderCard("CRUSHVER", getFullVersion(), "CRUSH version information."));
@@ -712,7 +738,7 @@ public class CRUSH extends Configurator {
 		
 		
 		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-		cursor.add(new HeaderCard("COMMENT", " CRUSH VM/OS section", false));
+		cursor.add(new HeaderCard("COMMENT", " CRUSH Java VM & OS section", false));
 		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 	
 		cursor.add(new HeaderCard("JAVA", Util.getProperty("java.vendor"), "Java vendor name."));
@@ -744,7 +770,7 @@ public class CRUSH extends Configurator {
 		super.editHeader(cursor);
 		
 		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-		cursor.add(new HeaderCard("COMMENT", " End of CRUSH configuration sections", false));
+		cursor.add(new HeaderCard("COMMENT", " End of CRUSH configuration section", false));
 		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 	}
 	

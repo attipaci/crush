@@ -23,8 +23,8 @@
 
 import java.text.DecimalFormat;
 
+import kovacs.data.Grid2D;
 import kovacs.math.Vector2D;
-import kovacs.projection.Projection2D;
 import kovacs.util.Copiable;
 import kovacs.util.Unit;
 import nom.tam.fits.Header;
@@ -41,7 +41,7 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 	public double detectorAngle = Double.NaN;
 	public int averagedFrames = -1;
 	public Vector2D arrayPointingCenter = new Vector2D();	// boresight
-	public Projection2D<?> projection;		// the WCS coordinate system
+	public Grid2D<?> grid;									// the WCS coordinate system
 
 	public SofiaArrayData() {}
 	
@@ -60,7 +60,7 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 			for(int i=subarraySize.length; --i >= 0; ) copy.subarraySize[i] = new String(subarraySize[i]);
 		}
 		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.copy();
-		if(projection != null) copy.projection = projection.copy();	
+		if(grid != null) copy.grid = grid.copy();	
 		return copy;
 	}
 
@@ -86,11 +86,25 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 		arrayPointingCenter.setX(header.getDoubleValue("SIBS_X", Double.NaN));
 		arrayPointingCenter.setY(header.getDoubleValue("SIBS_Y", Double.NaN));
 		
-		// TODO Array WCS
+		if(header.containsKey("CTYPE1") && header.containsKey("CTYPE2")) {
+			try { grid = Grid2D.getGrid2DFor(header, ""); } 
+			catch (Exception e) { e.printStackTrace(); }
+		}
+		else grid = null;
+		
+	}
+	
+	public void updateRequiredKeys(Header header) throws HeaderCardException {
+		if(!Double.isNaN(arrayPointingCenter.x())) header.addValue("SIBS_X", arrayPointingCenter.x(), "(pixel) boresight pixel x.");
+		else header.addValue("SIBS_X", SofiaHeaderData.UNKNOWN_FLOAT_VALUE, "Undefined value.");
+		
+		if(!Double.isNaN(arrayPointingCenter.y())) header.addValue("SIBS_Y", arrayPointingCenter.y(), "(pixel) boresight pixel y.");
+		else header.addValue("SIBS_Y", SofiaHeaderData.UNKNOWN_FLOAT_VALUE, "Undefined value.");
+	
 	}
 
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Array Data ------>", false));
 		if(detectorName != null) cursor.add(new HeaderCard("DETECTOR", detectorName, "Detector name"));
 		if(detectorSizeString != null) cursor.add(new HeaderCard("DETSIZE", detectorSizeString, "Detector size"));
@@ -104,8 +118,14 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 		if(!Double.isNaN(saturationValue)) cursor.add(new HeaderCard("SATURATE", saturationValue, "Detector saturation level."));
 		if(!Double.isNaN(detectorAngle)) cursor.add(new HeaderCard("DET_ANGL", detectorAngle, "(deg) Detector angle wrt North."));
 		if(averagedFrames > 0) cursor.add(new HeaderCard("COADDS", averagedFrames, "Number of raw frames per sample."));
+	
 		if(!Double.isNaN(arrayPointingCenter.x())) cursor.add(new HeaderCard("SIBS_X", arrayPointingCenter.x(), "(pixel) boresight pixel x."));
+		else cursor.add(new HeaderCard("SIBS_X", SofiaHeaderData.UNKNOWN_FLOAT_VALUE, "Undefined value."));
+		
 		if(!Double.isNaN(arrayPointingCenter.y())) cursor.add(new HeaderCard("SIBS_Y", arrayPointingCenter.y(), "(pixel) boresight pixel y."));
+		else cursor.add(new HeaderCard("SIBS_Y", SofiaHeaderData.UNKNOWN_FLOAT_VALUE, "Undefined value."));
+		
+		if(grid != null) grid.editHeader(header, cursor); // TODO...
 	}
 
 	
