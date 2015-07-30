@@ -61,7 +61,7 @@ public class SofiaAircraftData extends SofiaHeaderData implements TableFormatter
 	}
 
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Aircraft Data ------>", false));
 		if(!Double.isNaN(longitude.start)) cursor.add(new HeaderCard("LON_STA", longitude.start / Unit.deg, "(deg) Longitude at start of observation."));
 		if(!Double.isNaN(longitude.end)) cursor.add(new HeaderCard("LON_END", longitude.end / Unit.deg, "(deg) Longitude at end of observation."));

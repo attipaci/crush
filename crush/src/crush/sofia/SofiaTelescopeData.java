@@ -127,7 +127,7 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		userLatitude = header.getDoubleValue("USRY", Double.NaN) * Unit.deg;			// not in 3.0
 		userEquinox = header.getDoubleValue("USREQNX", Double.NaN);						// not in 3.0
 		
-		vHelio = header.getDoubleValue("HELI_COR", Double.NaN) * Unit.km / Unit.s;		// not in 3.0
+		vHelio = header.getDoubleValue("HELIOCOR", Double.NaN) * Unit.km / Unit.s;		// not in 3.0
 		vLSR = header.getDoubleValue("LSR_COR", Double.NaN) * Unit.km / Unit.s;			// not in 3.0
 		
 		trackingMode = getStringValue(header, "TRACMODE");
@@ -135,8 +135,19 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		
 	}
 
+	public void updateStatusKeys(Header header) throws HeaderCardException {
+		if(tascuStatus != null) header.addValue("TSC_STAT", tascuStatus, "TASCU system status at end.");
+		if(fbcStatus != null) header.addValue("FBC_STAT", fbcStatus, "flexible body compensation system status at end.");
+	}
+	
+	public void updateElevationKeys(Header header) throws HeaderCardException {
+		if(!Double.isNaN(relElevation)) header.addValue("TELEL", relElevation / Unit.deg, "(deg) Telescope elevation in cavity.");
+		if(!Double.isNaN(crossElevation)) header.addValue("TELXEL", crossElevation / Unit.deg, "(deg) Telescope cross elevation in cavity.");
+		if(!Double.isNaN(lineOfSightAngle)) header.addValue("TELLOS", lineOfSightAngle / Unit.deg, "(deg) Telescope line-of-sight angle in cavity.");
+	}
+	
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Telescope Data ------>", false));
 		
 		if(telescope != null) cursor.add(new HeaderCard("TELESCOP", telescope, "observatory name."));
@@ -158,15 +169,15 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		if(!Double.isNaN(relElevation)) cursor.add(new HeaderCard("TELEL", relElevation / Unit.deg, "(deg) Telescope elevation in cavity."));
 		if(!Double.isNaN(crossElevation)) cursor.add(new HeaderCard("TELXEL", crossElevation / Unit.deg, "(deg) Telescope cross elevation in cavity."));
 		if(!Double.isNaN(lineOfSightAngle)) cursor.add(new HeaderCard("TELLOS", lineOfSightAngle / Unit.deg, "(deg) Telescope line-of-sight angle in cavity."));
-		
+	
 		if(!Double.isNaN(coarseElevation)) cursor.add(new HeaderCard("COARSEEL", coarseElevation / Unit.deg, "(deg) Coarse drive elevation."));
 		if(!Double.isNaN(fineDriveElevation)) cursor.add(new HeaderCard("FD_EL", fineDriveElevation / Unit.deg, "(deg) Fine drive elevation."));
 		if(!Double.isNaN(fineDriveCrossElevation)) cursor.add(new HeaderCard("FD_XEL", fineDriveCrossElevation / Unit.deg, "(deg) Fine drive cross elevation."));
 		if(!Double.isNaN(fineDriveLOS)) cursor.add(new HeaderCard("FD_LOS", fineDriveLOS / Unit.deg, "(deg) Fine drive line-of-sight angle."));
-		
+	
 		if(tascuStatus != null) cursor.add(new HeaderCard("TSC_STAT", tascuStatus, "TASCU system status at end."));
 		if(fbcStatus != null) cursor.add(new HeaderCard("FBC_STAT", fbcStatus, "flexible body compensation system status at end."));
-		
+	
 		if(requestedEquatorial != null) {
 			cursor.add(new HeaderCard("OBSRA", requestedEquatorial.RA() / Unit.hourAngle, "(hour) Requested RA."));
 			cursor.add(new HeaderCard("OBSDEC", requestedEquatorial.DEC() / Unit.deg, "(deg) Requested DEC."));
@@ -190,12 +201,12 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		if(!Double.isNaN(userLatitude)) cursor.add(new HeaderCard("USRY", userLatitude / Unit.deg, "(deg) Object latitude in user system."));
 		if(!Double.isNaN(userEquinox)) cursor.add(new HeaderCard("USREQNX", userEquinox, "(yr) User coordinate epoch."));
 		
-		if(!Double.isNaN(vHelio)) cursor.add(new HeaderCard("HELI_COR", vHelio, "(km/s) Heliocentric velocity correction."));
+		if(!Double.isNaN(vHelio)) cursor.add(new HeaderCard("HELIOCOR", vHelio, "(km/s) Heliocentric velocity correction."));
 		if(!Double.isNaN(vLSR)) cursor.add(new HeaderCard("LSR_COR", vLSR, "(km/s) LSR velocity correction."));
 		
 		if(trackingMode != null) {
 			cursor.add(new HeaderCard("TRACMODE", trackingMode, "SOFIA tracking mode."));
-			//cursor.add(new HeaderCard("TRACERR", hasTrackingError, "Was there a tracking error during the scan?"));
+			cursor.add(new HeaderCard("TRACERR", hasTrackingError, "Was there a tracking error during the scan?"));
 		}
 		
 	}

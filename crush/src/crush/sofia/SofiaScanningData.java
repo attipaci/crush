@@ -52,7 +52,7 @@ public class SofiaScanningData extends SofiaHeaderData {
 	}
 
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Scanning Data ------>", false));
 		if(!Double.isNaN(RA.start)) cursor.add(new HeaderCard("SCNRA0", RA.start / Unit.hourAngle, "(hour) Initial scan RA."));
 		if(!Double.isNaN(DEC.start)) cursor.add(new HeaderCard("SCNDEC0", DEC.start / Unit.deg, "(deg) Initial scan DEC."));

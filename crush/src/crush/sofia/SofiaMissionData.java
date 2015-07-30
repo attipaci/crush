@@ -49,7 +49,7 @@ public class SofiaMissionData extends SofiaHeaderData {
 	}
 
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Mission Data ------>", false));
 		if(aircraft != null) cursor.add(new HeaderCard("DEPLOY", aircraft, "aircraft base of operation."));
 		if(obsPlanID != null) cursor.add(new HeaderCard("PLANID", obsPlanID, "observing plan containing all AORs."));

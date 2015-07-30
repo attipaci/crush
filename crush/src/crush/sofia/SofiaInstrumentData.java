@@ -36,6 +36,7 @@ public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<Sof
 	public double exposureTime = Double.NaN;
 	public String spectralElement1, spectralElement2, slitID;
 	public double wavelength = Double.NaN;
+	public double bandwidthMicrons = Double.NaN;
 	public double spectralResolution = Double.NaN;
 	public String detectorChannel;
 	public double totalIntegrationTime = Double.NaN;
@@ -77,6 +78,7 @@ public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<Sof
 		spectralElement2 = getStringValue(header, "SPECTEL2");
 		slitID = getStringValue(header, "SLIT");
 		wavelength = header.getDoubleValue("WAVECENT", Double.NaN) * Unit.um;
+		bandwidthMicrons = header.getDoubleValue("BANDWDTH", Double.NaN);
 		spectralResolution = header.getDoubleValue("RESOLUN", Double.NaN);
 		detectorChannel = getStringValue(header, "DETCHAN");							// new in 3.0
 		totalIntegrationTime = header.getDoubleValue("TOTINT", Double.NaN) * Unit.s;	// new in 3.0
@@ -84,7 +86,7 @@ public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<Sof
 	}
 
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Instrument Data ------>", false));
 		if(instrumentName != null) cursor.add(new HeaderCard("INSTRUME", instrumentName, "Name of SOFIA instrument."));
 		if(dataType != null) cursor.add(new HeaderCard("DATATYPE", dataType, "Data type."));
@@ -98,6 +100,7 @@ public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<Sof
 		if(spectralElement2 != null) cursor.add(new HeaderCard("SPECTEL2", spectralElement2, "Second spectral element."));
 		if(slitID != null) cursor.add(new HeaderCard("SLIT", slitID, "Slit identifier."));
 		if(!Double.isNaN(wavelength)) cursor.add(new HeaderCard("WAVECENT", wavelength / Unit.um, "(um) wavelength at passband center."));
+		if(!Double.isNaN(bandwidthMicrons)) cursor.add(new HeaderCard("BANDWDTH", bandwidthMicrons, "(um) total bandwith."));
 		if(!Double.isNaN(spectralResolution)) cursor.add(new HeaderCard("RESOLUN", spectralResolution, "Spectral resolution."));
 		if(detectorChannel != null) cursor.add(new HeaderCard("DETCHAN", detectorChannel, "Detector channel ID."));
 		if(!Double.isNaN(totalIntegrationTime)) cursor.add(new HeaderCard("TOTINT", totalIntegrationTime / Unit.s, "(s) Total integration time."));

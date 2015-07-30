@@ -191,6 +191,8 @@ implements TableFormatter.Entries {
 		isValid = true;
 	}
 	
+	public void registerConfigFile(String fileName) {}
+	
 	public abstract String getTelescopeName();
 	
 	public double janskyPerBeam() {
@@ -1076,6 +1078,8 @@ implements TableFormatter.Entries {
 	}
 	
 	public void editScanHeader(Header header) throws HeaderCardException {}
+	
+	public void addHistory(Cursor cursor, List<Scan<?,?>> scans) throws HeaderCardException {}
 	
 	// Sequential, because it is usually called from a parallel environment
 	public void calcOverlap(final double pointSize) {

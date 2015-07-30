@@ -53,7 +53,7 @@ public class SofiaProcessingData extends SofiaHeaderData {
 	}
 
 	@Override
-	public void editHeader(Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Processing Information ------>", false));
 		int level = 0;
 		if(processLevel.toUpperCase().startsWith("LEVEL_")) {

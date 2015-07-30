@@ -282,6 +282,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	public void readWiring(String fileName) throws IOException {
 		// TODO Auto-generated method stub
 		
+		registerConfigFile(fileName);
+		
 	}
 
 	@Override
