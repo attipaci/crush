@@ -20,20 +20,20 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009,2010 Attila Kovacs
 
-package crush;
+package crush.mustang2;
 
-public enum Mount {	
-	CASSEGRAIN ("Cassegrain"),
-	GREGORIAN ("Gregorian"),
-	PRIME_FOCUS ("Prime Focus"),
-	LEFT_NASMYTH ("Left Nasmyth"), 
-	RIGHT_NASMYTH ("Right Nasmyth");
-	
-	public String name;
-	
-	Mount(String name) {
-		this.name = name;		
+import crush.HorizontalFrame;
+
+public class Mustang2Frame extends HorizontalFrame {
+
+	public Mustang2Frame(Mustang2Scan parent) {
+		super(parent);
 	}
+
+	public void parseData(float[] values, int from, int channels) {
+		setSize(channels);
+		System.arraycopy(values, from, data, 0, channels);
+	}
+	
 }

@@ -21,53 +21,19 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.mako;
+package crush.mako2;
 
-import java.util.StringTokenizer;
-
+import crush.resonator.FrequencyID;
 import kovacs.math.Vector2D;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 
+public class Mako2FrequencyID extends FrequencyID {
+	Vector2D position;
+	double gain = Double.NaN;
+	
+	public Mako2FrequencyID(int index) {
+		super(index);
+	}
 
-public class MakoPixel extends AbstractMakoPixel {
-	
-	public MakoPixel(Mako array, int zeroIndex) {
-		super(array, zeroIndex);
-		row = zeroIndex / Mako.cols;
-		col = zeroIndex % Mako.cols;
-	}
-	
-	@Override
-	public void setRowCol(int row, int col) {
-		this.row = row;
-		this.col = col;
-		setFixedIndex(row * Mako.cols + col);
-	}	
-	
-	
-	@Override
-	public void calcNominalPosition() {
-		position = ((Mako) instrument).getPixelPosition(((Mako) instrument).pixelSize, row, col);
-	}
-	
-	
-	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {
-		tokens.nextToken(); // fixed index -- set by pixel matching...
-		super.parseValues(tokens, criticalFlags);
-		if(tokens.hasMoreTokens()) coupling = Double.parseDouble(tokens.nextToken());
-	}
-	
-	@Override
-	public String toString() {
-		return getID() + "\t" + super.toString() + "\t" + Util.f3.format(coupling);
-	}
-	
-	
-	
-	public static Vector2D defaultSize = new Vector2D(3.86 * Unit.arcsec, 7.21 * Unit.arcsec);
-	
-	
-	
 }
+
+

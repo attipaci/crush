@@ -42,19 +42,12 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	 */
 	private static final long serialVersionUID = -6513008414302600380L;
 	
-	HorizontalCoordinates reuseTrackingCenter = new HorizontalCoordinates();
 	boolean ignoreIRIG = false;
 	
 	public GismoIntegration(GismoScan parent) {
 		super(parent);
 	}	
 	
-	@Override
-	public Object clone() {
-		GismoIntegration clone = (GismoIntegration) super.clone();
-		clone.reuseTrackingCenter = new HorizontalCoordinates();
-		return clone;
-	}
 	
 	@Override
 	public void validate() {

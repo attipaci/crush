@@ -2132,7 +2132,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			return;
 		}
 	
-		System.err.print("   Downsampling by " + n + " to " + N + " frames");
+		System.err.println("   Downsampling by " + n + " to " + N + " frames.");
 		
 		final Frame[] buffer = new Frame[N];
 		

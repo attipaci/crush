@@ -21,53 +21,31 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.mako;
+package crush.mustang2;
 
-import java.util.StringTokenizer;
+import kovacs.util.Copiable;
 
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
-import kovacs.util.Util;
-
-
-public class MakoPixel extends AbstractMakoPixel {
+public class Mustang2Readout implements Cloneable, Copiable<Mustang2Readout> {
+	private int index;
+	double bias;
+	double heater;
 	
-	public MakoPixel(Mako array, int zeroIndex) {
-		super(array, zeroIndex);
-		row = zeroIndex / Mako.cols;
-		col = zeroIndex % Mako.cols;
-	}
-	
-	@Override
-	public void setRowCol(int row, int col) {
-		this.row = row;
-		this.col = col;
-		setFixedIndex(row * Mako.cols + col);
+	public Mustang2Readout(int index) { 
+		this.index = index;
 	}	
 	
-	
+	public int getIndex() { return index; }
+
 	@Override
-	public void calcNominalPosition() {
-		position = ((Mako) instrument).getPixelPosition(((Mako) instrument).pixelSize, row, col);
-	}
-	
-	
-	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {
-		tokens.nextToken(); // fixed index -- set by pixel matching...
-		super.parseValues(tokens, criticalFlags);
-		if(tokens.hasMoreTokens()) coupling = Double.parseDouble(tokens.nextToken());
+	public Object clone() {
+		try { return super.clone(); }
+		catch(CloneNotSupportedException e) { return null; }
 	}
 	
 	@Override
-	public String toString() {
-		return getID() + "\t" + super.toString() + "\t" + Util.f3.format(coupling);
+	public Mustang2Readout copy() {
+		return (Mustang2Readout) clone();
 	}
-	
-	
-	
-	public static Vector2D defaultSize = new Vector2D(3.86 * Unit.arcsec, 7.21 * Unit.arcsec);
-	
 	
 	
 }

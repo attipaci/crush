@@ -30,6 +30,7 @@ import kovacs.util.Unit;
 import kovacs.util.Util;
 import crush.mako.Mako;
 import crush.mako.AbstractMakoPixel;
+import crush.resonator.FrequencyID;
 
 public class Mako2Pixel extends AbstractMakoPixel {
 
@@ -38,6 +39,13 @@ public class Mako2Pixel extends AbstractMakoPixel {
 		this.array = Mako2.ARRAY_350;
 	}
 
+	@Override
+	public void setFrequencyID(FrequencyID id) {
+		super.setFrequencyID(id);
+		row = -1;
+		col = -1;
+		if(id != null) position = ((Mako2FrequencyID) id).position;
+	}
 	
 	@Override
 	public void setRowCol(int row, int col) {

@@ -112,8 +112,11 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		isMovingObject |= hasOption("moving");
 		
-		if(Double.isNaN(MJD)) MJD = 0.5 * (getFirstIntegration().getFirstFrame().MJD + getLastIntegration().getLastFrame().MJD);
-		if(Double.isNaN(LST)) LST = 0.5 * (getFirstIntegration().getFirstFrame().LST + getLastIntegration().getLastFrame().LST);
+		Frame firstFrame = getFirstIntegration().getFirstFrame();
+		Frame lastFrame = getLastIntegration().getLastFrame();
+		
+		if(Double.isNaN(MJD)) setMJD(firstFrame.MJD);
+		if(Double.isNaN(LST)) LST = 0.5 * (firstFrame.LST + lastFrame.LST);
 		
 		//System.err.println("### MJD: " + Util.f3.format(MJD) + " --> Epoch is J" + Util.f2.format(JulianEpoch.getYearForMJD(MJD)));
 		//System.err.println("### LST: " + Util.f3.format(LST/Unit.hour));

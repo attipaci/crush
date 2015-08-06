@@ -7,6 +7,7 @@
 >> Instrument to generate history entry (called from CRUSH.editHeader)
 >> processing history to imagetool and Data2D and subclasses... 
 
+
 2.30-b1
 
 	[BUG] {SourceMap} The use of unfiltered vs filtered gains for mapping
@@ -20,6 +21,8 @@
 
 	[BUG] {SyncModMap} Miscounting of good frames. However, this mapping
 	feature was really unused, making this a rather inconsequential bug.
+
+	[NEW] Preliminary support for MUSTANG-2 (GBT).
 
 	[NEW] CRUSH to add a HISTORY note into the FITS output on the 
 	reduction, by default. Instruments (like SOFIA cameras) may add further
@@ -94,6 +97,10 @@
 	[TWEAK] Beammaps do not need to operate on source copies, since the
 	submaps provide a natural separation against race conditions. This
 	should result in a speedup for processing beammaps.
+
+	[CODE] {MAKO} {MAKO-2} Resonator fitting made generic (crush.resonator)
+	so that other frequency multiplexed instruments can reuse the same 
+	code. (It also cleaned up some of the old resonance matching code).
 
 	[CODE] Header editing to used nboth header and cursor where needed
 	and possible, to allow for more complex edits (e.g. overrides, 
