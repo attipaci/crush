@@ -44,9 +44,6 @@ public class Gismo extends AbstractGismo implements GeometricRowColIndexed {
 		arrayPointingCenter = (Vector2D) defaultPointingCenter.clone();
 		
 		pixelSize = GismoPixel.defaultSize;
-		
-		// TODO calculate this?
-		integrationTime = samplingInterval = 0.1 * Unit.sec;
 	
 		mount = Mount.LEFT_NASMYTH;
 	}

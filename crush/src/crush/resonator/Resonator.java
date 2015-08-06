@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,17 +20,26 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+package crush.resonator;
 
-package crush.mako;
+import crush.Channel;
 
-public class ResonanceID1 extends ResonanceID {
-	double T0, delta;
+public interface Resonator {
+
+	public double getFrequency();
 	
-	public ResonanceID1(int index) {
-		super(index);
-	}
+	public FrequencyID getFrequencyID();
 	
-	public double expectedFreqFor(double T) {
-		return freq + (T - T0) * delta;
-	}
+	public void setFrequencyID(FrequencyID id);
+		
+	public Channel getChannel();
+	
+	public void flagID();
+	
+	public void unflagID();
+	
+	public boolean isAssigned();
+	
+	public boolean assignTo(Resonator reference);
+	
 }

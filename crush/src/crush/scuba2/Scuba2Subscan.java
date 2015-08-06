@@ -176,10 +176,15 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		double rmsHe3 = signal.getRMS();
 		System.err.println("   RMS He3 temperature drift is " + Util.f3.format(1e3 * rmsHe3) + " mK.");
 		
-		for(Scuba2Frame exposure : this) if(exposure != null) {
-			double dT = signal.valueAt(exposure);
-			if(!Double.isNaN(dT)) for(Scuba2Pixel pixel : instrument) exposure.data[pixel.index] -= pixel.temperatureGain * dT;
-		}
+		final Signal temperatureSignal = signal;
+		
+		new Fork<Void>() {
+			@Override
+			protected void process(Scuba2Frame exposure) {
+				double dT = temperatureSignal.valueAt(exposure);
+				if(!Double.isNaN(dT)) for(Scuba2Pixel pixel : instrument) exposure.data[pixel.index] -= pixel.temperatureGain * dT;
+			}	
+		}.process();
 	}
 	
 	

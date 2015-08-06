@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -31,6 +31,7 @@ import java.util.StringTokenizer;
 
 import crush.CRUSH;
 import crush.Scan;
+import crush.resonator.ResonatorList;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
@@ -51,7 +52,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 
 	double Tsky = Double.NaN;
 	
-	ToneIdentifier identifier;
+	MakoToneIdentifier identifier;
 	
 	public Mako() {
 		super("mako", rows * cols);
@@ -104,9 +105,9 @@ public class Mako extends AbstractMako<MakoPixel> {
 		
 		if(hasOption("pixelid")) {
 			try {
-				identifier = new ToneIdentifier(option("pixelid"));	
+				identifier = new MakoToneIdentifier(option("pixelid"));	
 				double guessT = (hasOption("pixelid.guesst") ? option("pixelid.guesst").getDouble() : 150.0) * Unit.K;
-				Tsky = identifier.match(new ResonanceList<MakoPixel>(getObservingChannels()), guessT);
+				Tsky = identifier.match(new ResonatorList<MakoPixel>(getObservingChannels()), guessT);
 			}
 			catch(IOException e) {
 				System.err.println(" WARNING! Cannot identify tones from '" + option("pixelid").getValue() + "'."); 
@@ -164,7 +165,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Util.getSystemPath(fileSpec))));
 		String line = null;
 		
-		ResonanceList<MakoPixel> associations = new ResonanceList<MakoPixel>(pixels);
+		ResonatorList<MakoPixel> associations = new ResonatorList<MakoPixel>(pixels);
 		
 		double guessT = (hasOption("assign.guesst") ? option("assign.guesst").getDouble() : 300.0) * Unit.K;
 		
@@ -184,7 +185,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 		System.err.println(" Found pixel assignments for " + associations.size() + " resonances.");
 		
 		identifier.match(associations, guessT);
-		associations.assign(this);
+		associations.assignTo(this);
 	}
 	
 	// Assuming tone id's are at 4.2K load and maximum movement is measured at room temperature -- 22 C)

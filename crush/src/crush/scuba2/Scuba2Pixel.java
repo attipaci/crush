@@ -20,14 +20,16 @@ import kovacs.util.*;
 import crush.array.SingleColorPixel;
 
 public class Scuba2Pixel extends SingleColorPixel {
+	public int subarrayNo;
 	public int mux, pin, block=0;
-	public double muxGain = 1.0, pinGain = 1.0;
+	public double subarrayGain = 1.0, muxGain = 1.0, pinGain = 1.0;
 	public double temperatureGain = 0.0;
 	
 	// 32 x 40 (rows x cols)
 	
 	public Scuba2Pixel(Scuba2 array, int zeroIndex) {
 		super(array, zeroIndex+1);
+		subarrayNo = zeroIndex / Scuba2Subarray.size;
 		mux = zeroIndex / 40;
 		pin = zeroIndex % 40;
 	}
@@ -45,10 +47,15 @@ public class Scuba2Pixel extends SingleColorPixel {
 		pinGain = 1.0;
 	}
 	
+	@Override
+	public String getID() {
+		return ((Scuba2) instrument).subarray[subarrayNo].id + ":" + mux + "," + pin;
+	}
+	
 	public static Vector2D defaultSize = new Vector2D(5.7 * Unit.arcsec, 5.7 * Unit.arcsec);
 	
 	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
 	public final static int FLAG_PIN = 1 << nextSoftwareFlag++;
-	
+	public final static int FLAG_SUBARRAY = 1 << nextSoftwareFlag++; // new in 2.30
 	
 }

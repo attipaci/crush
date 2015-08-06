@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -21,18 +21,23 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.mako2;
+package crush.mustang2;
 
-import crush.mako.ResonanceID;
-import kovacs.math.Vector2D;
+import crush.array.SingleColorPixel;
 
-public class ResonanceID2 extends ResonanceID {
-	Vector2D position;
-	double gain = Double.NaN;
+public class Mustang2Pixel extends SingleColorPixel {
+	public int readoutIndex;				// COL
+	public int muxIndex;					// ROW
+	public double frequency;
+	public double attenuation;
 	
-	public ResonanceID2(int index) {
-		super(index);
-	}	
+	public double readoutGain = 1.0;
+		
+
+	public Mustang2Pixel(Mustang2 instrument, int backendIndex) {
+		super(instrument, backendIndex);
+	}
+	
+	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
+
 }
-
-

@@ -20,54 +20,37 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+package crush.resonator;
 
-package crush.mako;
+import kovacs.util.HashCode;
 
-import java.util.StringTokenizer;
-
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
-import kovacs.util.Util;
-
-
-public class MakoPixel extends AbstractMakoPixel {
+public class FrequencyID implements Comparable<FrequencyID> {
+	public int index;
+	public double freq;
 	
-	public MakoPixel(Mako array, int zeroIndex) {
-		super(array, zeroIndex);
-		row = zeroIndex / Mako.cols;
-		col = zeroIndex % Mako.cols;
+	public FrequencyID(int index) {
+		this.index = index;
 	}
 	
 	@Override
-	public void setRowCol(int row, int col) {
-		this.row = row;
-		this.col = col;
-		setFixedIndex(row * Mako.cols + col);
-	}	
-	
-	
-	@Override
-	public void calcNominalPosition() {
-		position = ((Mako) instrument).getPixelPosition(((Mako) instrument).pixelSize, row, col);
-	}
-	
-	
-	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {
-		tokens.nextToken(); // fixed index -- set by pixel matching...
-		super.parseValues(tokens, criticalFlags);
-		if(tokens.hasMoreTokens()) coupling = Double.parseDouble(tokens.nextToken());
+	public int compareTo(FrequencyID other) {
+		return Double.compare(freq, other.freq);
 	}
 	
 	@Override
-	public String toString() {
-		return getID() + "\t" + super.toString() + "\t" + Util.f3.format(coupling);
+	public int hashCode() {
+		return HashCode.get(freq);
 	}
 	
+	@Override
+	public boolean equals(Object o) {
+		if(!(o instanceof FrequencyID)) return false;
+		FrequencyID id = (FrequencyID) o;
+		return freq == id.freq;
+	}
 	
-	
-	public static Vector2D defaultSize = new Vector2D(3.86 * Unit.arcsec, 7.21 * Unit.arcsec);
-	
-	
+	public double getExpectedFrequencyFor(double shift) {
+		return freq * (1.0 + shift);
+	}
 	
 }

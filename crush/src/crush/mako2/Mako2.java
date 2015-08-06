@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -33,7 +33,7 @@ import crush.Scan;
 import crush.mako.AbstractMako;
 import crush.mako.AbstractMakoPixel;
 import crush.mako.MakoPixel;
-import crush.mako.ResonanceList;
+import crush.resonator.ResonatorList;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
@@ -53,7 +53,7 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 	
 	public double scale850 = 1.92;	// 850um pixel separation rel. to 350um separation.
 	
-	ToneIdentifier2 identifier;
+	Mako2ToneIdentifier identifier;
 	double meanResonatorShift350;
 	double meanResonatorShift850;
 	
@@ -101,15 +101,19 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 				List<Mako2Pixel> pixels350 = hasOption("350um") ? get350Pixels() : null;
 				List<Mako2Pixel> pixels850 = hasOption("850um") ? get850Pixels() : null;
 				
+				identifier = new Mako2ToneIdentifier(option("pixelid"));
+				ResonatorList<Mako2Pixel> resonators = null;
+				
 				if(pixels350 != null) {
-					identifier = new ToneIdentifier2(option("pixelid"));
 					identifier.discardBelow(max850Frequency);
-					if(!identifier.isEmpty()) meanResonatorShift350 = identifier.match(new ResonanceList<Mako2Pixel>(pixels350));
+					resonators = new ResonatorList<Mako2Pixel>(pixels350);
+					if(!identifier.isEmpty()) meanResonatorShift350 = identifier.match(resonators);
 				}
 				if(pixels850 != null) {
-					identifier = new ToneIdentifier2(option("pixelid"));
+					identifier = new Mako2ToneIdentifier(option("pixelid"));
 					identifier.discardAbove(max850Frequency);
-					if(!identifier.isEmpty()) meanResonatorShift850 = identifier.match(new ResonanceList<Mako2Pixel>(pixels850));
+					resonators = new ResonatorList<Mako2Pixel>(pixels850);
+					if(!identifier.isEmpty()) meanResonatorShift850 = identifier.match(resonators);
 				}
 				
 				realign();

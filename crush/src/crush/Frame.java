@@ -187,7 +187,9 @@ public abstract class Frame implements Cloneable, Flagging {
 		else if(sampleFlag.length != data.length) sampleFlag = new byte[data.length];
 		
 		switch(scan.instrument.mount) {
-		case CASSEGRAIN: sinA = 0.0; cosA = 1.0; break;
+		case CASSEGRAIN: 
+		case GREGORIAN: 
+		case PRIME_FOCUS: sinA = 0.0; cosA = 1.0; break;
 		case LEFT_NASMYTH: {
 			SphericalCoordinates nativeCoords = getNativeCoords();
 			sinA = -nativeCoords.sinLat(); cosA = nativeCoords.cosLat(); break;

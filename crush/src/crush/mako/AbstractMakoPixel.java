@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -22,13 +22,16 @@
  ******************************************************************************/
 package crush.mako;
 
+import crush.Channel;
 import crush.array.SingleColorPixel;
+import crush.resonator.FrequencyID;
+import crush.resonator.Resonator;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 
 
 
-public abstract class AbstractMakoPixel extends SingleColorPixel {
+public abstract class AbstractMakoPixel extends SingleColorPixel implements Resonator {
 	public int array = AbstractMako.DEFAULT_ARRAY;
 	public int row, col;
 	
@@ -38,7 +41,7 @@ public abstract class AbstractMakoPixel extends SingleColorPixel {
 	public double toneFrequency;
 	public double calError;
 	
-	public ResonanceID id;
+	public FrequencyID id;
 	
 	public AbstractMakoPixel(AbstractMako<?> array, int zeroIndex) {
 		super(array, zeroIndex+1);
@@ -75,7 +78,43 @@ public abstract class AbstractMakoPixel extends SingleColorPixel {
 
 	public abstract void setRowCol(int row, int col);
 	
+	@Override
+	public Channel getChannel() { return this; }
 	
+	@Override
+	public double getFrequency() { return toneFrequency; }
+	
+	@Override
+	public FrequencyID getFrequencyID() { return id; }
+	
+	@Override
+	public void setFrequencyID(FrequencyID id) { 
+		this.id = id; 
+		if(id == null) flag(FLAG_UNASSIGNED); 
+		else unflag(FLAG_UNASSIGNED);
+	}
+		
+	@Override
+	public void flagID() { flag(FLAG_NOTONEID); }
+	
+	@Override
+	public void unflagID() { unflag(FLAG_NOTONEID); }
+	
+	@Override
+	public boolean isAssigned() {
+		if(getFrequencyID() == null) return false;
+		if(row < 0) return false;
+		if(col < 0) return false;
+		return true;
+	}
+	
+	@Override
+	public boolean assignTo(Resonator reference) {
+		if(!(reference instanceof AbstractMakoPixel)) return false;
+		AbstractMakoPixel pixel = (AbstractMakoPixel) reference;
+		setRowCol(pixel.row, pixel.col);
+		return true;
+	}
 	
 
 	public final static int FLAG_NOTONEID = 1 << nextSoftwareFlag++;

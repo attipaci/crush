@@ -73,4 +73,6 @@ public class Scuba2Subarray implements Cloneable {
 		}
 		isMirrored = scuba2.hasOption(id + ".mirror");
 	}
+	
+	public static int size = 32*40;
 }

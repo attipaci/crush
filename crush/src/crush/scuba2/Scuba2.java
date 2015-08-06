@@ -38,18 +38,10 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	double focusXOffset, focusYOffset, focusZOffset;
 	String filter;
 	boolean shutterOpen, isMirrored;
-	Scuba2Subarray subarray, refarray;
+	Scuba2Subarray[] subarray;
+	int refArrayNo;
 
 	public static int pixels = 32*40;
-
-	public final static int[] a = { 63, -8, -2, -12, 77, -2, -7, 77, 9, 8, -5, 8, -7, -6, 4, 6, 8, -5, 77, -7,
-		-2, -1, 77, -6, 4, 77, 8, 1, -8, 9, -2, 0, 77, -1, 4, 6, -8, 1, -3, 77, 59, 64, 44, 43, 24, 42, 26, 77, 
-		8, 5, -7, 77, 7, -2, 77, -1, -2, 4, -6, -5, 8, -9, 77, -6, 4, 5, 25, 77, 76, 38, 31, 36, 31, 27, 44, 22 };
-	public final static int[] b = { 63, -12, -3, -2, 10, 77, 1, 12, 6, 8, 1, 77, 12, 77, -5, -2, 7, 77, 47, -8,
-		9, 8, 63, -1, 0, -8, 63, -2, -5, -7, -6, 12, 16, 25, 44, 18, -6, 10, 12, -9, -2, 2, 49, 77, -7, 10, 12, 
-		-7, -1, -2, 10, 77, 8, -6, 12, 8, 1, 29, 77, 77, 77, 77, 77, 77, 77, 77, 77 };
-	public final static int[] p = { 8, 0, 12, -1, 63, -5, 8, -6, -8 };
-	public final static int[] y = { 4, 1, 2, -8, 0, -8, -3 };
 	
 	public Scuba2() {
 		super("scuba2", new SingleColorLayout<Scuba2Pixel>(), pixels);
@@ -62,8 +54,10 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	@Override
 	public Instrument<Scuba2Pixel> copy() {
 		Scuba2 copy = (Scuba2) super.copy();
-		if(subarray != null) copy.subarray = subarray.copy();
-		if(refarray != null) copy.refarray = refarray.copy();
+		if(subarray != null) {
+			copy.subarray = new Scuba2Subarray[subarray.length];
+			for(int i=subarray.length; --i >= 0; ) copy.subarray[i] = subarray[i].copy();
+		}
 		return copy;
 	}
 	
@@ -85,6 +79,9 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	@Override
 	public void initDivisions() {
 		super.initDivisions();
+		
+		try { addDivision(getDivision("subarrays", Scuba2Pixel.class.getField("subarrayNo"), Channel.FLAG_DEAD)); }
+		catch(Exception e) { e.printStackTrace(); }
 		
 		try { addDivision(getDivision("mux", Scuba2Pixel.class.getField("mux"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }
@@ -109,20 +106,32 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	public void initModalities() {
 		super.initModalities();
 		
-		try { addModality(new CorrelatedModality("mux", "m", divisions.get("mux"), Scuba2Pixel.class.getField("muxGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		try {
+			CorrelatedModality muxMode = new CorrelatedModality("subarrays", "S", divisions.get("subarrays"), Scuba2Pixel.class.getField("subarrayGain"));		
+			muxMode.setGainFlag(Scuba2Pixel.FLAG_SUBARRAY);
+			addModality(muxMode);
+		}
+		catch(NoSuchFieldException e) { e.printStackTrace(); }	
 		
-		try { addModality(new CorrelatedModality("pins", "p", divisions.get("pins"), Scuba2Pixel.class.getField("pinGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		try {
+			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), Scuba2Pixel.class.getField("muxGain"));		
+			muxMode.setGainFlag(Scuba2Pixel.FLAG_MUX);
+			addModality(muxMode);
+		}
+		catch(NoSuchFieldException e) { e.printStackTrace(); }	
 		
+		try {
+			CorrelatedModality muxMode = new CorrelatedModality("pins", "p", divisions.get("pins"), Scuba2Pixel.class.getField("pinGain"));		
+			muxMode.setGainFlag(Scuba2Pixel.FLAG_PIN);
+			addModality(muxMode);
+		}
+		catch(NoSuchFieldException e) { e.printStackTrace(); }	
+			
 		try { addModality(new Modality<Scuba2TempResponse>("temperature", "T", divisions.get("detectors"), Scuba2Pixel.class.getField("temperatureGain"), Scuba2TempResponse.class));	}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
 		try { addModality(new CorrelatedModality("blocks", "b", divisions.get("blocks"), Scuba2Pixel.class.getField("gain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
-		
-		modalities.get("mux").setGainFlag(Scuba2Pixel.FLAG_MUX);
-		modalities.get("pins").setGainFlag(Scuba2Pixel.FLAG_PIN);
 	}
 	
 	@Override
@@ -133,7 +142,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	
 	public void calcPixelPositions() {	
 		for(Scuba2Pixel pixel : this) {
-			pixel.position = subarray.getPixelPosition(pixel.mux, pixel.pin);
+			pixel.position = subarray[pixel.subarrayNo].getPixelPosition(pixel.mux, pixel.pin);
 			//pixel.position.subtract(refarray.apertureOffset);
 		}
 	}
@@ -144,11 +153,6 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		System.err.println("WARNING! processing of wiring data not (yet) implemented!.");
 	}
 	
-	public static void reconfigure(String key, String value) {
-		System.err.println("\n" + key + "\n" + value + "\n");
-		System.exit(0);
-	}
-
 	@Override
 	public void setReferencePosition(Vector2D position) {
 		super.setReferencePosition(position);

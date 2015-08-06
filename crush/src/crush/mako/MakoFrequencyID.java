@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,34 +20,20 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+
 package crush.mako;
 
-import kovacs.util.HashCode;
+import crush.resonator.FrequencyID;
 
-public class ResonanceID implements Comparable<ResonanceID> {
-	public int index;
-	public double freq;
+public class MakoFrequencyID extends FrequencyID {
+	double T0, delta;
 	
-	public ResonanceID(int index) {
-		this.index = index;
+	public MakoFrequencyID(int index) {
+		super(index);
 	}
 	
 	@Override
-	public int compareTo(ResonanceID other) {
-		return Double.compare(freq, other.freq);
+	public double getExpectedFrequencyFor(double T) {
+		return freq + (T - T0) * delta;
 	}
-	
-	@Override
-	public int hashCode() {
-		return HashCode.get(freq);
-	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if(!(o instanceof ResonanceID)) return false;
-		ResonanceID id = (ResonanceID) o;
-		return freq == id.freq;
-	}
-	
-	
 }
