@@ -1,10 +1,11 @@
+>> 'distortion.name'
+>> 'regrid'
 >> test pngcairo for photometry
 >> test photometry! 
 >> 'perimeter'
 >> 'fillgaps'
 >> 'threads'
 >> history to crushtools
->> Instrument to generate history entry (called from CRUSH.editHeader)
 >> processing history to imagetool and Data2D and subclasses... 
 
 
@@ -48,6 +49,10 @@
 	'fft'. Because the 'fft' method was inherently problematic, and never
 	really used anyway, it's best to say goodbye to it...
 
+	[FIX] 'weighting.noiserange' setting for 'extended'-mode reductions,
+	defined in 'default.cfg', could cause problems. It is safer not to 
+        define a separate noise flagging range for 'extended' mode by default. 
+
 	[FIX] {despike} Neighbor despiking method had possible race condition
 	introduced in 2.30 alpha releases. Fixed.
 
@@ -60,6 +65,14 @@
 
 	[FIX] {HAWC+} Fixed multiple occurences of FITS keys: INSTRUME and
 	TRACERR.
+
+	[TWEAK] {HAWC+} Can process data from multiple 'TIMESTREAM DATA' HDUs,
+	which can be interspersed with other HDUs in the FITS. (Using EXTNAME
+	instead of fixed HDU index).
+
+	[TWEAK] {HAWC+} Adjusted for not having a parallactic angle in the
+	timestream. Uses VPA to calculate the effective instrument rotation
+	instead of the default Nasmyth rotation...
 
 	[TWEAK] {HAWC+} Aux files and configuration files added to processing 
 	history.

@@ -191,6 +191,7 @@ public abstract class SourceMap extends SourceModel {
 	private synchronized void searchCorners(final Integration<?,?> integration) {
 		//final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 		final Collection<? extends Pixel> pixels = integration.instrument.getPerimeterPixels();
+		if(pixels.size() == 0) return;
 		
 		class ProjectorData {	
 			public Range longitudeRange = new Range();
@@ -210,14 +211,16 @@ public abstract class SourceMap extends SourceModel {
 			
 			@Override
 			protected void processIndex(int t) {
+				
 				Frame exposure = integration.get(t);
 				if(exposure == null) return;
+				if(exposure.isFlagged(Frame.SKIP_SOURCE)) return;
 				
 				for(Pixel pixel : pixels) {
-					exposure.project(pixel.getPosition(), projector);
+					exposure.project(pixel.getPosition(), projector);	
 					data.longitudeRange.include(projector.offset.x());
 					data.latitudeRange.include(projector.offset.y());
-				}	
+				}
 			}
 			
 			@Override
@@ -225,19 +228,27 @@ public abstract class SourceMap extends SourceModel {
 			
 			@Override
 			public ProjectorData getResult() {
-				init();
+				data = null;
 				for(Parallel<ProjectorData> task : getWorkers()) {
 					ProjectorData local = task.getPartialResult();
-					data.longitudeRange.include(local.longitudeRange);
-					data.latitudeRange.include(local.latitudeRange);
+					if(data == null) data = local;
+					else {
+						data.longitudeRange.include(local.longitudeRange);
+						data.latitudeRange.include(local.latitudeRange);
+					}
 				}
 				return data;
 			}
 
 			
 		};
+		
 		findCorners.process();
 		ProjectorData data = findCorners.getResult();
+		
+		if(CRUSH.debug) System.err.println("### map range " + integration.getDisplayID() + "> "
+				+ Util.f1.format(data.longitudeRange.span() / Unit.arcsec) + " x " 
+				+ Util.f1.format(data.latitudeRange.span() / Unit.arcsec));
 		
 		Scan<?,?> scan = integration.scan;
 		scan.longitudeRange.include(data.longitudeRange);
@@ -310,6 +321,9 @@ public abstract class SourceMap extends SourceModel {
 			System.exit(1);
 		}
 		
+		if(CRUSH.debug) System.err.println("\n### map range: " + Util.f1.format(xRange.span() / Unit.arcsec) + " x " 
+				+  Util.f1.format(yRange.span() / Unit.arcsec) + " arcsec");
+		
 		xRange.setMax(xRange.max() + margin.x());
 		xRange.setMin(xRange.min() - margin.x());
 		yRange.setMax(yRange.max() + margin.y());
@@ -317,8 +331,13 @@ public abstract class SourceMap extends SourceModel {
 		
 		Vector2D resolution = resolution();
 
+		if(CRUSH.debug) System.err.println("### map + margin: " + Util.f1.format(xRange.span() / Unit.arcsec) + " x " 
+					+  Util.f1.format(yRange.span() / Unit.arcsec) + " arcsec");
+		
 		int sizeX = 2 + (int)Math.ceil(xRange.span() / resolution.x());
 		int sizeY = 2 + (int)Math.ceil(yRange.span() / resolution.y());
+		
+		if(CRUSH.debug) System.err.println("### map pixels: " + sizeX + " x " + sizeY);
 	
 		try { 
 			checkForStorage(sizeX, sizeY);	

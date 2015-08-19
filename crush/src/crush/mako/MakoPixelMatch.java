@@ -22,7 +22,7 @@
  ******************************************************************************/
 package crush.mako;
 
-import crush.resonator.*;
+import crush.resonators.*;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -38,7 +38,7 @@ import kovacs.util.Util;
 
 
 
-public class MakoToneIdentifier extends ToneIdentifier<MakoFrequencyID> {
+public class MakoPixelMatch extends ToneIdentifier<MakoFrequencyID> {
 	/**
 	 * 
 	 */
@@ -47,9 +47,9 @@ public class MakoToneIdentifier extends ToneIdentifier<MakoFrequencyID> {
 	public double Thot = 285.0 * Unit.K;	// Temperature at which 'hot' ids are derived...
 	public double Tcold = 112.2 * Unit.K;	// Effective cold-load temperature of hot/cold measurements.
 	
-	public MakoToneIdentifier() {}
+	public MakoPixelMatch() {}
 	
-	public MakoToneIdentifier(Configurator options) throws IOException {
+	public MakoPixelMatch(Configurator options) throws IOException {
 		super(options);
 		if(options.isConfigured("uniform")) uniformize();
 		if(options.isConfigured("trange")) {
@@ -59,14 +59,16 @@ public class MakoToneIdentifier extends ToneIdentifier<MakoFrequencyID> {
 		read(options.getValue());
 	}
 	
-	@Override
-	public Range getDefaultShiftRange() { return new Range(0.0, 350.0 * Unit.K); }
-	
-	public MakoToneIdentifier(String fileName) throws IOException {
+	public MakoPixelMatch(String fileName) throws IOException {
 		this();
 		read(fileName);
 	}
 		
+	
+	@Override
+	public Range getDefaultShiftRange() { return new Range(0.0, 350.0 * Unit.K); }
+	
+
 	public void read(String fileSpec) throws IOException {
 		System.err.println(" Loading resonance identifications from " + fileSpec);
 		

@@ -49,7 +49,7 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 	private static final long serialVersionUID = 3980706181249384684L;
 
 	String fitsVersion;
-	String ID;
+	String id;
 	int average = 1;
 	
 	public Mustang2Scan(Mustang2 instrument) {
@@ -87,7 +87,6 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 
 		String path = getDataPath();
 		descriptor = scanDescriptor;
-		
 	
 		scanFile = new File(scanDescriptor) ;	
 		if(!scanFile.exists()) {
@@ -142,12 +141,13 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 			-(79 * Unit.deg + 50 * Unit.arcmin + 23.406 * Unit.arcsec),	
 			38 * Unit.deg + 25 * Unit.arcmin + 59.236 * Unit.arcsec	
 		);
+		// SITELON / SITELAT
 		
 		
 		timeStamp = header.getStringValue("DATE-OBS");
 		String date = timeStamp.substring(0, timeStamp.indexOf('T'));
 		String startTime = timeStamp.substring(timeStamp.indexOf('T') + 1);
-		ID = date + "." + getSerial();
+		id = date + "." + getSerial();
 		
 		
 		equatorial = new EquatorialCoordinates(
@@ -163,7 +163,7 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 	
 	
 	@Override
-	public String getID() { return ID; }
+	public String getID() { return id; }
 
 	@Override
 	public Mustang2Integration getIntegrationInstance() {

@@ -23,9 +23,13 @@
 
 package crush.mustang2;
 
+import crush.Channel;
 import crush.array.SingleColorPixel;
+import crush.resonators.FrequencyID;
+import crush.resonators.Resonator;
 
-public class Mustang2Pixel extends SingleColorPixel {
+public class Mustang2Pixel extends SingleColorPixel implements Resonator {
+	public Mustang2PixelID id;
 	public int readoutIndex;				// COL
 	public int muxIndex;					// ROW
 	public double frequency;
@@ -38,6 +42,66 @@ public class Mustang2Pixel extends SingleColorPixel {
 		super(instrument, backendIndex);
 	}
 	
-	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
+	
+	@Override
+	public double getFrequency() {
+		return frequency;
+	}
+	
+	@Override
+	public FrequencyID getFrequencyID() {
+		return id;
+	}
+	
+	@Override
+	public void setFrequencyID(FrequencyID id) {
+		Mustang2PixelID mustangID = (Mustang2PixelID) id;
+		
+		this.id = mustangID;
+		
+		if(id == null) {
+			flagID();
+			return;
+		}
+		
+		unflagID();
+		
+		if(mustangID.isFlagged(Mustang2PixelID.FLAG_UNUSED)) flag(Channel.FLAG_DISCARD);
 
+		if(mustangID.isFlagged(Mustang2PixelID.FLAG_BLIND)) {
+			position = null;
+			flag(Channel.FLAG_BLIND);
+		}
+		else {
+			position = this.id.position;
+			if(position != null) unflag(Channel.FLAG_BLIND);
+		}
+	}
+	
+	@Override
+	public Channel getChannel() {
+		return this;
+	}
+	
+	@Override
+	public void flagID() {
+		flag(FLAG_NOTONEID);
+	}
+	
+	@Override
+	public void unflagID() {
+		unflag(FLAG_NOTONEID);
+	}
+	
+	@Override
+	public boolean isAssigned() {
+		if(id == null) return false;
+		if(position == null) return false;
+		return true;
+	}
+	
+	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
+	public final static int FLAG_NOTONEID = 1 << nextSoftwareFlag++;
+	
+	
 }

@@ -33,7 +33,7 @@ import crush.Scan;
 import crush.mako.AbstractMako;
 import crush.mako.AbstractMakoPixel;
 import crush.mako.MakoPixel;
-import crush.resonator.ResonatorList;
+import crush.resonators.ResonatorList;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
@@ -53,7 +53,7 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 	
 	public double scale850 = 1.92;	// 850um pixel separation rel. to 350um separation.
 	
-	Mako2ToneIdentifier identifier;
+	Mako2PixelMatch identifier;
 	double meanResonatorShift350;
 	double meanResonatorShift850;
 	
@@ -101,7 +101,7 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 				List<Mako2Pixel> pixels350 = hasOption("350um") ? get350Pixels() : null;
 				List<Mako2Pixel> pixels850 = hasOption("850um") ? get850Pixels() : null;
 				
-				identifier = new Mako2ToneIdentifier(option("pixelid"));
+				identifier = new Mako2PixelMatch(option("pixelid"));
 				ResonatorList<Mako2Pixel> resonators = null;
 				
 				if(pixels350 != null) {
@@ -110,7 +110,6 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 					if(!identifier.isEmpty()) meanResonatorShift350 = identifier.match(resonators);
 				}
 				if(pixels850 != null) {
-					identifier = new Mako2ToneIdentifier(option("pixelid"));
 					identifier.discardAbove(max850Frequency);
 					resonators = new ResonatorList<Mako2Pixel>(pixels850);
 					if(!identifier.isEmpty()) meanResonatorShift850 = identifier.match(resonators);
@@ -136,10 +135,11 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 			}
 		}
 		
+		
 		// Update the pointing center...
 		updateArrayPointingCenter();
 
-		checkRotation();
+		checkRotation(); 
 		
 		super.loadChannelData();
 		
@@ -155,6 +155,8 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 				if(pixel.array != ARRAY_350) pixel.flag(Channel.FLAG_DISCARD);
 			}
 		}
+		
+		
 		
 	}
 	
@@ -175,6 +177,7 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 			double angle = option("pixelid.rotate").getDouble() * Unit.deg;
 			for(Mako2Pixel pixel : this) if(pixel.position != null) pixel.position.rotate(angle);
 		}	
+	
 	}
 	
 	@Override

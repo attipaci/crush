@@ -10,47 +10,24 @@
 Table of Contents
 =================
 
-1. License Agreement
-2. Introduction
-3. Installation
-  3.1 Updates
-4. Reading Scans
-  4.1 FITS vs. SDF
-  4.2 '450um' vs '850um' reduction mode
-  4.3 By date and scan number
-  4.4 By file names
-5. Calibration and Pointig
-  5.1 Extinction Correction
-  5.2 Calibration Correction
-  5.3 Pointing Corrections
-
-
-
-
-#####################################################################
-1. License Agreement
-#####################################################################
-
-The SCUBA-2 plugin of CRUSH are proprietary and strictly private. You should
-use only the modules prepared specifically for you. You can obtain your
-personalized plugin from Attila Kovacs <attila[AT]submm.caltech.edu>. By using
-the software, you agree to
-
-  * not share your copy of the plugin with anyone, even accidentally (e.g. by
-    leaving its files accessible to others), and
-
-  * extend authorship to Attila Kovacs on any publication(s) that result from
-    your use of CRUSH.
-
-After installation, you should read the full license agreement ('license.txt' 
-in the 'scuba2' sub-directory of crush) to familiarize yourself with the 
-restritions imposed by the proprietary license.
-
+1. Introduction
+2. Reading Scans
+  2.1 FITS vs. SDF
+  2.2 '450um' vs '850um' reduction mode
+  2.3 By date and scan number
+  2.4 By file names
+3. Calibration and Pointing
+  3.1 Extinction Correction
+  3.2 Calibration Correction
+  3.3 Pointing Corrections
+4. SCUBA-2 specific pixel divisions
+5. Glossary of SCUBA-2 specific options
+6. SCUBA-2 specific log quantities
 
 
 
 #####################################################################
-2. Introduction
+1. Introduction
 #####################################################################
 
 This document contains information specific to using CRUSH-2 to reduce SCUBA-2
@@ -63,75 +40,18 @@ will probably find it useful to study the main README document a little longer.
 
 
 
-
 #####################################################################
-3. Installation
-#####################################################################
-
-The SCUBA-2 plugin modules are distributed as a gzipped tarball (or zip file).
-Simply uncompress it inside the crush distribution directory. E.g.:
-
-   > cd <crush-distro>
-   > tar xzf crush-2.xx-scuba2-x-<username>.tar.gz
-
-The archive file name contains both the crush version number (e.g. 2.01), for
-which the plugin is prepared, and the serial version of the SCUBA-2 modules 
-(e.g. 1), as well as the username, to which the plugin is locked.
-
-The plugins are intended for use with the designated version of crush (and its
-updates). While it is possible that the same plugin may work with other CRUSH 
-versions also, there is no guarantee to it. If you want to upgrade CRUSH to the 
-latest release, you can request a corresponding update of the plugin from 
-<attila[AT]submm.caltech.edu>.
-
-To protect the privacy of the plugin, you should install crush only on your
-own machine, or on a personal computer account.
-
-If you install the plugin on a shared computer, you should delete the original 
-archive after installation, or else make it unreadable to other users, to 
-protect its privacy as agreed by the licensing terms. On UNIX systems, you can 
-limit access to the plugin archive by:
-
-   > chmod go-rw crush-2.xx-scuba2-x-<username>.tar.gz
-
-
-
-3.1 Updates
-===========
-
-   The SCUBA-2 modules of CRUSH are very new, and are subject to active
-   development. To make sure, that you have the latest-greatest version, 
-   please check the SCUBA-2 pages of the crush web-page regularly 
-   (under "Instruments"):
-
-      www.submm.caltech.edu/~sharc/crush
-
-   To check what version of the modules you are using, either run:
-  
-      > crush scuba2
-
-   (the plugin version is reported immediately under the CRUSH banner), or
-   refer to the version number in your personal archive (if you still have it).
-   To update to the current version, request new modules from 
-   <attila[AT]submm.caltech.edu>.
-
-
-
-
-
-#####################################################################
-4. Reading Scans
+2. Reading Scans
 #####################################################################
 
 
-4.1 FITS vs. SDF
+2.1 FITS vs. SDF
 ================
 
    The SCUBA-2 data are recorded in the proprietary SDF format of the JCMT.
    While the SDF files can be accessed with the Starlink software suite, the 
-   format itself is not documented in a way that would allow the creation of an
-   independent tool for them. Therefore, CRUSH can access these data only via
-   the Starlink suite.
+   format itself is not easily readable independently. Therefore, CRUSH 
+   accesses these data via the Starlink suite.
 
    The Starlink suite provides a utility for converting SDF files to FITS,
    which is the format expected by CRUSH. The 'ndf2fits' tool usually resides 
@@ -163,20 +83,26 @@ limit access to the plugin archive by:
 
         ndf2fits /usr/local/starlink/bin/convert/ndf2fits
 
-   If you set this up correctly, CRUSH will manage the conversion of SDF files 
-   automatically.
+   Alternatively, if the STARLINK_DIR environment variable is set, and points
+   to the Starlink directory, as recommended by the Starlink installation, then
+   the default setting (in scuba2/default.cfg):
+
+        ndf2fits {@STARLINK_DIR}/bin/convert/ndf2fits
+
+   will also work. If you set this up correctly, CRUSH will manage the 
+   conversion of SDF files automatically.
 
    
    Batch Conversion
    ----------------
-   If you are going to reduce your data set over and over (e.g. to optimize 
-   reduction settings), it makes sense to convert all your files to FITS once,
-   rather than every time you run CRUSH. Thus, CRUSH provides the 'convert'
-   option for batch conversions (assuming that the 'ndf2fits' option is set up
-   correctly -- see above). Scans are listed the usual way, but instead of 
-   reducing them, they are only converted to FITS. You can also specify the
-   path, where you want the converted files to be written using 'outpath'.
-   (Otherwise, 'datapath' will be used if defined). E.g.
+   If you just want to convert the SDF files to FITS without reducing (at that 
+   point in time) you can use the 'convert' option of CRUSH (assuming that the 
+   'ndf2fits' option is set up correctly -- see above). 
+
+   Scans are listed the usual way, but instead of reducing them, they will be 
+   converted to FITS only. You can also specify the path, where you want the 
+   converted files to be written using 'outpath'. (Otherwise, 'datapath' will 
+   be used if defined). E.g.
 
 	> crush scuba2 -convert -outpath=/data/fits <scans>
 
@@ -186,7 +112,7 @@ limit access to the plugin archive by:
 	> crush scuba2 [...] -datapath=/data/fits [...] <scans>
 
 
-4.2 '450um' vs '850um' reduction mode
+2.2 '450um' vs '850um' reduction mode
 =====================================
 
    When reducing SCUBA-2 data with CRUSH, you should specify the wavelength, in
@@ -196,12 +122,13 @@ limit access to the plugin archive by:
 
       > crush scuba2 -450um [...]
    
-   If you do not define the wavelength, then '850um' reduction will be assumed.
+   If you do not define the wavelength, then CRUSH defaults to '850um' 
+   reduction.
    (The wavelength does not have to be the first argument, but should precede
    the first scan number or name in the argument list).
 
 
-4.3 By date and scan number
+2.3 By date and scan number
 ===========================
 
    The preferred way of reading SCUBA-2 data is by 'date' and scan number.
@@ -221,19 +148,19 @@ limit access to the plugin archive by:
       > crush scuba2 -450um -datapath=/home/data/scuba2 -date=20100301 36
 
    The above line will load all usable subscans of scan #36. Some subscans
-   may be designated unusable by CRUSH, either because the subscan contains
-   no coordinate data from the telescope (which often happens to the first and
-   last subscans in a scan), or because the subscan is too short (<5s) for
-   proper processing. These will be dropped from the reduction queue. You can 
-   override the minimum length requirement by changing or commenting the 
-   'subscans.minlength' option in 'scuba2/default.cfg'
+   may be designated unusable by CRUSH, either because the subscan is a dark
+   measurement, or because it contains no coordinate data from the telescope, 
+   or because the subscan is shorter than a preset minimum length (3s). These 
+   will be dropped from the reduction queue. You can override the minimum 
+   length requirement by changing or commenting the 'subscans.minlength' option
+   in 'scuba2/default.cfg'
 
    Scan ranges can be specified as usual, e.g.:
 
       > crush scuba2 -date=20100301 39-42 45-48 -date=20100302 12-15 17
    
    
-4.4 By file names
+2.4 By file names
 =================
 
    The alternative is to specify file names directly. You can use both full
@@ -262,7 +189,7 @@ limit access to the plugin archive by:
 
 
 #####################################################################
-5. Calibration and Pointing
+3. Calibration and Pointing
 #####################################################################	
 
 The default configuration of CRUSH provides approximate blind calibration, 
@@ -279,11 +206,11 @@ To improve on the calibration accuracy, you can set the atmospheric extinction
 of nearby calibrator sources. 
 
 
-5.1 Extinction Correction
+2.1 Extinction Correction
 =========================
 
-   The JCMT records both 225GHz and 186GHz opacities from radiometer 
-   measurements. These are stored in the data files. CRUSH uses the 186GHz 
+   The JCMT records both 225GHz and 183GHz opacities from radiometer 
+   measurements. These are stored in the data files. CRUSH uses the 183GHz 
    value with an appropriate scaling relation to the SCUBA-2 bands, to obtain a
    guesstimate of the in-band opacities for the atmospheric extinction 
    correction. 
@@ -294,21 +221,21 @@ of nearby calibrator sources.
 
       > crush scuba2 [...] -tau=1.21 <scans> [...]
 
-   You can also set your preferred 186GHz or 225GHz tau values (e.g. from daily
+   You can also set your preferred 183GHz or 225GHz tau values (e.g. from daily
    polynomial fits), e.g.:
 
       > crush scuba2 [...] -tau.225GHz=0.064 <scans> [...]
 
    or,
 
-      > crush scuba2 [...] -tau.186GHz=0.058 <scans> [...]
+      > crush scuba2 [...] -tau.183GHz=0.058 <scans> [...]
 
    CRUSH will then use the specified value to calculate an equivalent in-band
    opacity for the given '450um' or '850um' band.
 
 
 
-5.2 Calibration Correction
+3.2 Calibration Correction
 ==========================
 
    Even if the opacity is perfectly determined, there are remaining 
@@ -342,8 +269,7 @@ of nearby calibrator sources.
    calibration scalings using the same method.
 
 
-
-5.3 Pointing Corrections
+3.3 Pointing Corrections
 ========================
 
    You can specify incremental pointing corrections as AZ,EL offsets for every
@@ -352,5 +278,89 @@ of nearby calibrator sources.
       > crush scuba2 [...] -pointing=-2.3,1.6 <scans> [...]
 
 
+
+
+#####################################################################
+4. SCUBA-2 specific pixel divisions
+#####################################################################
+
+For a general overview of channel divisions, please consult Section 3.
+(Correlated Signals) in the main README document.
+
+   subarrays
+
+   rows          A grouping of pixels based on their SQUID multiplexing scheme
+
+   cols
+
+   blocks
+
+
+
+#####################################################################
+5. Glossary of SCUBA-2 specific options
+#####################################################################
+
+
+
+
+   blocks		@Alias: 'correlated.blocks'
+
+   cols			@Alias: 'correlated.cols'
+
+   convert
+
+ ? distortion...
+
+   he3			@Alias: 'correlated.he3'
+
+   mirror
+
+   ndf2fits
+
+   pixelmm
+
+   platescale
+
+   rows			@Alias: 'correlated.mux'
+			@Expert
+			Specifies the grouping of channels by the SQUID
+			multiplexing.
+			@See: 'correlated.<?>'
+
+   <sID>.position
+
+   <sID>.rotation
+
+   <sID>.scale
+
+   subarrays	
+
+   subscans.minlength
+
+?  subscans.merge
+
+
+
+#####################################################################
+6. SCUBA-2 specific log quantities
+#####################################################################
+
+   dir
+
+   filter
+
+   foc.X
+
+   foc.Y
+
+   foc.Z
+
+   obsmode
+
+   obspattern
+  
+
+
 -----------------------------------------------------------------------------
-Copyright (C)2010 Attila Kovacs <attila[AT]submm.caltech.edu>
+Copyright (C)2015 Attila Kovacs <attila[AT]submm.caltech.edu>

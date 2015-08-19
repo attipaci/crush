@@ -49,7 +49,7 @@ public class CRUSH extends Configurator {
 	private static final long serialVersionUID = 6284421525275783456L;
 	
 	private static String version = "2.30-b1";
-	private static String revision = "devel.5";
+	private static String revision = "devel.6";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -520,8 +520,8 @@ public class CRUSH extends Configurator {
 		String info = "  Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
 			"\n" +
 			"    <instrument>     'sharc', 'sharc2', 'laboca', 'saboca', 'aszca', 'polka'\n" +
-			"                     'p-artemis', 'gismo', 'mako', 'mako2', 'hawc+'\n" + 
-			"                     (or 'scuba2').\n" +
+			"                     'p-artemis', 'gismo', 'mako', 'mako2', 'hawc+',\n" + 
+			"                     'mustang2', or 'scuba2'.\n" +
 			"    [options]        Various configuration options. See README for details.\n" +
 			"                     Global settings must precede scans on the argument list.\n" +
 			"                     Each scan will use all options listed before it.\n" +

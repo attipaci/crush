@@ -371,6 +371,7 @@ public class CorrelatedSignal extends Signal {
 			private WeightedPoint increment;
 			private DataPoint[] buffer;
 			private float[] channelParms;
+			private boolean isRecycling = true;
 			
 			@Override
 			protected void init() {
@@ -380,13 +381,22 @@ public class CorrelatedSignal extends Signal {
 				channelParms = integration.instrument.getFloats();
 				Arrays.fill(channelParms, 0.0F);
 				
-				if(isRobust) buffer = integration.getDataPoints();
+				if(isRobust) {
+					// Try to use a recycleable buffer if it is large enough...
+					buffer = integration.instrument.getDataPoints();
+					if(buffer.length < resolution * goodChannels.size()) {
+						// Otherwise, just create a larger ad-hoc buffer that will not be recycled...
+						Instrument.recycle(buffer);
+						buffer = DataPoint.createArray(resolution * integration.instrument.size());
+						isRecycling = false;
+					}	
+				}
 			}
 			
 			@Override
 			protected void cleanup() {
 				super.cleanup();
-				if(buffer != null) Integration.recycle(buffer);
+				if(buffer != null) if(isRecycling) Instrument.recycle(buffer);
 			}
 			
 			@Override

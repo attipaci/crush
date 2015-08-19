@@ -29,9 +29,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
-
-import crush.resonator.ResonatorList;
-import crush.resonator.ToneIdentifier;
+import crush.resonators.ResonatorList;
+import crush.resonators.ToneIdentifier;
 import kovacs.math.Range;
 import kovacs.math.Vector2D;
 import kovacs.util.Configurator;
@@ -39,7 +38,7 @@ import kovacs.util.Unit;
 import kovacs.util.Util;
 
 
-public class Mako2ToneIdentifier extends ToneIdentifier<Mako2FrequencyID> {
+public class Mako2PixelMatch extends ToneIdentifier<Mako2PixelID> {
 	/**
 	 * 
 	 */
@@ -47,14 +46,14 @@ public class Mako2ToneIdentifier extends ToneIdentifier<Mako2FrequencyID> {
 		
 	
 	
-	public Mako2ToneIdentifier() {}
+	public Mako2PixelMatch() {}
 	
-	public Mako2ToneIdentifier(Configurator options) throws IOException {
+	public Mako2PixelMatch(Configurator options) throws IOException {
 		super(options);
 		read(options.getValue());
 	}
 	
-	public Mako2ToneIdentifier(String fileName) throws IOException {
+	public Mako2PixelMatch(String fileName) throws IOException {
 		this();
 		read(fileName);
 	}
@@ -62,7 +61,7 @@ public class Mako2ToneIdentifier extends ToneIdentifier<Mako2FrequencyID> {
 	public void discardAbove(double freq) {
 		int n = size();
 		for(int i=size(); --i >= 0; ) {
-			Mako2FrequencyID id = get(i);
+			Mako2PixelID id = get(i);
 			if(id.freq >= freq) remove(i);
 		}
 		System.err.println(" Discarded " + (n-size()) + ", kept " + size() + " tones below " + (freq / Unit.MHz) + "MHz.");
@@ -71,7 +70,7 @@ public class Mako2ToneIdentifier extends ToneIdentifier<Mako2FrequencyID> {
 	public void discardBelow(double freq) {
 		int n = size();
 		for(int i=size(); --i >= 0; ) {
-			Mako2FrequencyID id = get(i);
+			Mako2PixelID id = get(i);
 			if(id.freq < freq) remove(i);
 		}
 		System.err.println(" Discarded " + (n-size()) + ", kept " + size() + " tones above " + (freq / Unit.MHz) + "MHz.");
@@ -90,7 +89,7 @@ public class Mako2ToneIdentifier extends ToneIdentifier<Mako2FrequencyID> {
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line, ", \t");
-			Mako2FrequencyID id = new Mako2FrequencyID(index++);
+			Mako2PixelID id = new Mako2PixelID(index++);
 			
 			id.freq = Double.parseDouble(tokens.nextToken());
 			id.position = new Vector2D(Double.parseDouble(tokens.nextToken()), Double.parseDouble(tokens.nextToken()));

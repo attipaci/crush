@@ -23,30 +23,12 @@
 
 package crush.scuba2;
 
-import crush.*;
+import crush.FieldResponse;
 
+public class Scuba2He3Response extends FieldResponse {
 
-public class Scuba2Frame extends HorizontalFrame {
-	public int frameNumber;
-	public float detectorT;
-	
-	public Scuba2Frame(Scuba2Scan parent) {
-		super(parent);
+	public Scuba2He3Response() throws SecurityException, NoSuchFieldException {
+		super(Scuba2Frame.class.getField("detectorT"), true);
 	}
-	
-	public void parseData(final int[][] DAC, final int channelOffset, final float scaling, int[] readoutLevel) {
-		Scuba2Scan scuba2Scan = (Scuba2Scan) scan;
-		final int blankingValue = scuba2Scan.blankingValue;
-		
-		if(data == null) setSize(scuba2Scan.subarrays * Scuba2Subarray.PIXELS);
-		
-		for(int bol=Scuba2Subarray.PIXELS; --bol >= 0; ) {
-			final int value = DAC[bol%Scuba2.COLS][bol/Scuba2.COLS];
-			final int c = channelOffset + bol;
-			if(value != blankingValue && readoutLevel[c] != blankingValue) data[c] = scaling * (value - readoutLevel[c]);
-			else sampleFlag[c] |= Frame.SAMPLE_SKIP;
-		}
-	}
-	
-	
+
 }

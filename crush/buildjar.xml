@@ -5,7 +5,7 @@
 	destfile="${projectHome}/crush2.jar" 
 	basedir="${projectHome}/bin"
 	includes="**/*.class" 
-	excludes="**/tools/*,**/scuba2/*,**/ebex/*,**/test/*,**/devel/*,**/TODO*,**/*~,**/.*" 
+	excludes="**/tools/*,**/ebex/*,**/test/*,**/devel/*,**/TODO*,**/*~,**/.*" 
 	index="true"
 	level="9" 
     />
@@ -13,7 +13,7 @@
 	destfile="${projectHome}/crush2-src.jar" 
 	basedir="${projectHome}/src"
 	includes="**/*.java" 
-	excludes="**/tools/*,**/scuba2/*,**/ebex/*,**/test/*,**/devel/*,**/TODO*,**/*~,**/.*" 
+	excludes="**/tools/*,**/ebex/*,**/test/*,**/devel/*,**/TODO*,**/*~,**/.*" 
 	index="true"
 	level="9" 
     />

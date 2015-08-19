@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import kovacs.astro.AstroTime;
 import kovacs.util.Unit;
 import nom.tam.fits.Fits;
 import nom.tam.fits.Header;
@@ -203,7 +202,18 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 	
 	public void addAssociatedAORIDs(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
 		ArrayList<String> aorIDs = getAORIDs(scans);
-		for(int i=1; i<aorIDs.size(); i++) header.addValue("ASSC_AOR", aorIDs.get(i), "Associated AOR ID for further input scans.");
+		if(aorIDs.size() < 2) return;
+		
+		StringBuffer buf = new StringBuffer();
+		buf.append(aorIDs.get(1));
+		
+		for(int i=2; i<aorIDs.size(); i++) {
+			buf.append(",");
+			buf.append(aorIDs.get(i));
+		}
+		
+		Header.setLongStringsEnabled(true);
+		header.addValue("ASSC_AOR", new String(buf), "Associated AOR IDs.");
 	}
 	
 	public ArrayList<String> getAORIDs(List<Scan<?,?>> scans) {

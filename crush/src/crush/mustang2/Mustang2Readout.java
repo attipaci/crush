@@ -23,12 +23,20 @@
 
 package crush.mustang2;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+
 import kovacs.util.Copiable;
+import kovacs.util.Unit;
 
 public class Mustang2Readout implements Cloneable, Copiable<Mustang2Readout> {
 	private int index;
 	double bias;
 	double heater;
+	ArrayList<Mustang2PixelID> tones = new ArrayList<Mustang2PixelID>(Mustang2.maxReadoutChannels);
 	
 	public Mustang2Readout(int index) { 
 		this.index = index;
@@ -46,6 +54,26 @@ public class Mustang2Readout implements Cloneable, Copiable<Mustang2Readout> {
 	public Mustang2Readout copy() {
 		return (Mustang2Readout) clone();
 	}
+	
+	public void parseFrequencies(String fileName) throws IOException {
+		tones.clear();
+		
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+		String line = null;
+				
+		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+			Mustang2PixelID id = new Mustang2PixelID(tones.size());
+			id.freq = Double.parseDouble(line) * Unit.GHz;
+			tones.add(id);
+		}
+		
+		in.close();
+		
+		System.err.println(" ROACH " + (index+1) + ": " + tones.size() + " frequencies from " + fileName);
+		
+	}
+	
+	
 	
 	
 }

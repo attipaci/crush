@@ -38,7 +38,15 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Vector2D> {
 	 * 
 	 */
 	private static final long serialVersionUID = 2378434929629074050L;
+	private String id = "[n/a]";
 	private Unit unit = Unit.unity;
+	
+	public DistortionModel() {}
+	
+	public DistortionModel(Configurator options) {
+		this();
+		setOptions(options);
+	}
 	
 	public void setOptions(Configurator options) {
 		clear();
@@ -54,10 +62,11 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Vector2D> {
 			else if(dir == 'y') setY(xExp, yExp, value);	
 		}
 		
-		if(options.containsKey("unit")) {
-			unit = Unit.get(options.get("unit").getValue());
-		}
+		if(options.containsKey("unit")) unit = Unit.get(options.get("unit").getValue());
+		if(options.containsKey("name")) id = options.get("name").getValue();
 	}
+	
+	public String getName() { return id; }
 	
 	public Unit getUnit() { return unit; }
 	

@@ -188,6 +188,11 @@ implements TableFormatter.Entries {
 		
 		census();
 		
+		if(CRUSH.debug) {
+			System.err.println("### mapping channels: " + mappingChannels);
+			System.err.println("### mapping pixels: " + getMappingPixels().size());
+		}
+		
 		isValid = true;
 	}
 	

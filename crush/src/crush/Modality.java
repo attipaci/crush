@@ -86,6 +86,8 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		setDefaultNames();
 	}
 
+	
+	
 	public void setDefaultNames() {
 		for(int i=size(); --i >= 0; ) get(i).name = name + ":" + get(i).getChannels().getName();
 	}

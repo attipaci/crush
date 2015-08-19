@@ -27,11 +27,13 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Hashtable;
 import java.util.StringTokenizer;
 
 import crush.CRUSH;
 import crush.Scan;
-import crush.resonator.ResonatorList;
+import crush.resonators.FrequencyID;
+import crush.resonators.ResonatorList;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
@@ -52,7 +54,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 
 	double Tsky = Double.NaN;
 	
-	MakoToneIdentifier identifier;
+	MakoPixelMatch identifier;
 	
 	public Mako() {
 		super("mako", rows * cols);
@@ -105,7 +107,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 		
 		if(hasOption("pixelid")) {
 			try {
-				identifier = new MakoToneIdentifier(option("pixelid"));	
+				identifier = new MakoPixelMatch(option("pixelid"));	
 				double guessT = (hasOption("pixelid.guesst") ? option("pixelid.guesst").getDouble() : 150.0) * Unit.K;
 				Tsky = identifier.match(new ResonatorList<MakoPixel>(getObservingChannels()), guessT);
 			}
@@ -171,13 +173,13 @@ public class Mako extends AbstractMako<MakoPixel> {
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line, ", \t");
-			MakoPixel pixel = getChannelInstance(-1);
+			MakoPixel pixelID = new MakoPixel(this, -1);
 			
-			pixel.toneFrequency = Double.parseDouble(tokens.nextToken());
-			pixel.row = Integer.parseInt(tokens.nextToken()) - 1;
-			pixel.col = Integer.parseInt(tokens.nextToken()) - 1;
+			pixelID.toneFrequency = Double.parseDouble(tokens.nextToken());
+			pixelID.row = Integer.parseInt(tokens.nextToken()) - 1;
+			pixelID.col = Integer.parseInt(tokens.nextToken()) - 1;
 
-			associations.add(pixel);
+			associations.add(pixelID);
 		}
 
 		in.close();
@@ -185,8 +187,28 @@ public class Mako extends AbstractMako<MakoPixel> {
 		System.err.println(" Found pixel assignments for " + associations.size() + " resonances.");
 		
 		identifier.match(associations, guessT);
-		associations.assignTo(this);
+		setRowColFrom(associations);
 	}
+	
+	private void setRowColFrom(ResonatorList<MakoPixel> associations) {
+		int assigned = 0;
+		
+		Hashtable<FrequencyID, MakoPixel> lookup = new Hashtable<FrequencyID, MakoPixel>(associations.size());
+		for(MakoPixel association : associations) if(association.getFrequencyID() != null) 
+			lookup.put(association.getFrequencyID(), association);
+		
+		for(MakoPixel pixel : this) {
+			MakoPixel association = lookup.get(pixel.getFrequencyID());
+			if(association == null) continue;
+			if(!association.isAssigned()) continue;
+			
+			pixel.setRowCol(association.row, association.col);
+			pixel.unflag(AbstractMakoPixel.FLAG_UNASSIGNED);
+		}	
+		
+		System.err.println(" Assigned " + assigned + " of " + size() + " resonators to references.");		
+	}
+
 	
 	// Assuming tone id's are at 4.2K load and maximum movement is measured at room temperature -- 22 C)
 	@Override

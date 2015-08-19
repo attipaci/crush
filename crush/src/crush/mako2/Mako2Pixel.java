@@ -30,7 +30,7 @@ import kovacs.util.Unit;
 import kovacs.util.Util;
 import crush.mako.Mako;
 import crush.mako.AbstractMakoPixel;
-import crush.resonator.FrequencyID;
+import crush.resonators.FrequencyID;
 
 public class Mako2Pixel extends AbstractMakoPixel {
 
@@ -44,7 +44,11 @@ public class Mako2Pixel extends AbstractMakoPixel {
 		super.setFrequencyID(id);
 		row = -1;
 		col = -1;
-		if(id != null) position = ((Mako2FrequencyID) id).position;
+		
+		if(id != null) position = ((Mako2PixelID) id).position;
+		
+		if(position == null) flag(FLAG_UNASSIGNED);
+		else unflag(FLAG_UNASSIGNED);
 	}
 	
 	@Override
@@ -59,6 +63,13 @@ public class Mako2Pixel extends AbstractMakoPixel {
 	public void calcNominalPosition() {
 		if(row == -1 || col == -1) return;		
 		position = ((Mako2) instrument).getPixelPosition(((Mako2) instrument).pixelSize, array, row, col);
+	}
+	
+	@Override
+	public boolean isAssigned() {
+		if(getFrequencyID() == null) return false;
+		if(position == null) return false;
+		return true;
 	}
 
 	@Override

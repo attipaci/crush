@@ -238,9 +238,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			for(Frame exposure : this) exposure.jackknife();
 		}
 		
+		
 		if(!hasOption("pixeldata")) if(hasOption("weighting")) {
-			System.err.println("   Bootstrapping pixel weights");
-			perform("weighting");
+			System.err.print("   Bootstrapping pixel weights");
+			getWeights();
+			instrument.census();
+			System.err.println(" (" + instrument.mappingChannels + " active channels).");
+		}
+		
+		if(CRUSH.debug) {
+			instrument.census();
+			System.err.println("### mapping channels: " + instrument.mappingChannels);
+			System.err.println("### mapping pixels: " + instrument.getMappingPixels().size());
 		}
 		
 		isValid = true;
@@ -412,7 +421,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		else {
 			final double transmission = Math.exp(-value);
-			for(Frame frame : this) frame.setTransmission(transmission);
+			for(Frame frame : this) if(frame != null) frame.setTransmission(transmission);
 		}
 	}
 	
@@ -421,7 +430,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		System.err.println("   Setting zenith tau to " + Util.f3.format(value));
 		zenithTau = value;
 		
-		for(Frame frame : this) ((HorizontalFrame) frame).setZenithTau(value);
+		for(Frame frame : this) if(frame != null) ((HorizontalFrame) frame).setZenithTau(value);
 	}
 
 	public void calcScanSpeedStats() {
@@ -570,21 +579,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public boolean hasGaps(final int tolerance) {
 		System.err.print("   Checking for gaps: ");
 		
-		Frame last = null;
+		final Frame first = getFirstFrame();
+		
 		
 		for(int t=size(); --t > 0; ) {
 			final Frame frame = get(t);
 			
 			if(frame == null) continue;
 			
-			if(last != null) {
-				int gap = (int) Math.round((last.MJD - frame.MJD) * Unit.day / instrument.samplingInterval) - (last.index - t);
-				if(gap > tolerance) { 
-					System.err.println("Gap(s) found! :-(  [e.g.: " + Util.f1.format((last.MJD - frame.MJD) * Unit.day / Unit.ms) + " ms]");
-					return true; 
-				}
+			double gap = (frame.MJD - first.MJD) * Unit.day - (frame.index - first.index) * instrument.samplingInterval;
+			
+			if((int) Math.round(gap / instrument.samplingInterval) > tolerance) { 
+				System.err.println("Gap(s) found! :-(  [e.g.: " + Util.f1.format(gap / Unit.ms) + " ms]");
+				return true; 
 			}
-			last = frame;
 		}
 		
 		System.err.println("No gaps. :-)");
@@ -592,34 +600,38 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public void fillGaps() {
-		double lastMJD = Double.NaN;
-
-		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(size() << 1);
+		final Frame first = getFirstFrame();
+		final Frame last = getLastFrame();
+	
+		System.err.println("### Sampling: " + instrument.samplingInterval);
 		
-		for(int t=size(); --t >= 0; ) {
-			final FrameType exposure = get(t);
+		final int n = (int) Math.ceil((last.MJD - first.MJD) / instrument.samplingInterval);
+		int padded = 0;
+		
+		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(n);
+		
+	
+		
+		for(int t=0; t<size(); t++) {
+			final FrameType frame = get(t);
 			
-			if(exposure == null) {
-				lastMJD += instrument.samplingInterval / Unit.day;
-				continue;
-			}
+			if(frame == null) continue;
 			
-			if(!Double.isNaN(lastMJD)) {
-				final int gap = (int)Math.round((exposure.MJD - lastMJD) * Unit.day / instrument.samplingInterval) - 1;
-				if(gap > 0) {
-					System.err.println("   Inserting " + gap + " empty frames...");
-					for(int i=gap; --i >= 0; ) buffer.add(null);
-				}
-			}
-						
-			buffer.add(exposure);	
-			lastMJD = exposure.MJD;
+			double gap = (frame.MJD - first.MJD) * Unit.day - (frame.index - first.index) * instrument.samplingInterval;
+			int frameGaps = (int) Math.round(gap / instrument.samplingInterval);
+			
+			if(frameGaps > 10) System.err.println("   WARNING! Large gap of " + frameGaps + " frames at index " + t + ", MJD: " + frame.MJD);
+			
+			for(int i=frameGaps; --i >= 0; padded++) buffer.add(null);
+		
+			buffer.add(frame);	
 		}	
 		
-		if(size() != buffer.size()) {
+		if(padded != 0) {
 			clear();
 			addAll(buffer);
 			reindex();
+			System.err.println("   Padded with " + padded + " empty frames.");
 		}
 	}
 	
@@ -1057,9 +1069,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			protected void processIndex(int t) {
 				final Frame exposure = get(t);
+				
+				if(exposure == null) return;
 				if(exposure.isFlagged(Frame.WEIGHTING_FLAGS)) return;
 				
-				final Frame prior = get(t-delta);
+				final Frame prior = get(t+delta);
+				if(prior == null) return;
 				if(prior.isFlagged(Frame.WEIGHTING_FLAGS)) return;
 				
 				for(Channel channel : channels) if((exposure.sampleFlag[channel.index] | prior.sampleFlag[channel.index]) == 0) {
@@ -2002,10 +2017,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			else {	
 				final double speed = value.length();
+				
 				if(speed < range.min()) {
 					frame.flag(Frame.SKIP_SOURCE);
 					flagged++;
-				}
+				}			
 				else if(speed > range.max()) {
 					set(frame.index, null);
 					cut++;

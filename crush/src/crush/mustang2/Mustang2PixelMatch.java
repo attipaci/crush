@@ -21,54 +21,29 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.mako;
+package crush.mustang2;
 
-import java.util.StringTokenizer;
+import kovacs.math.Range;
+import kovacs.util.Configurator;
+import crush.resonators.ToneIdentifier;
 
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
-import kovacs.util.Util;
-
-
-public class MakoPixel extends AbstractMakoPixel {
+public class Mustang2PixelMatch extends ToneIdentifier<Mustang2PixelID> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8074371996590081658L;
 	
-	public MakoPixel(Mako array, int zeroIndex) {
-		super(array, zeroIndex);
-		row = zeroIndex / Mako.cols;
-		col = zeroIndex % Mako.cols;
+	int readoutIndex;
+	
+	public Mustang2PixelMatch(Configurator options) {
+		super(options);
 	}
 	
 	@Override
-	public void setRowCol(int row, int col) {
-		this.row = row;
-		this.col = col;
-		setFixedIndex(row * Mako.cols + col);
-	}	
-	
-	
-	@Override
-	public void calcNominalPosition() {
-		position = ((Mako) instrument).getPixelPosition(((Mako) instrument).pixelSize, row, col);
+	public Range getDefaultShiftRange() {
+		return new Range(-1e-3, 1e-3);
 	}
 	
 	
-	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {
-		tokens.nextToken(); // fixed index -- set by pixel matching...
-		super.parseValues(tokens, criticalFlags);
-		if(tokens.hasMoreTokens()) coupling = Double.parseDouble(tokens.nextToken());
-	}
-	
-	@Override
-	public String toString() {
-		return getID() + "\t" + super.toString() + "\t" + Util.f3.format(coupling);
-	}
-	
-	
-	
-	public static Vector2D defaultSize = new Vector2D(3.86 * Unit.arcsec, 7.21 * Unit.arcsec);
 
-
-
-	
 }
