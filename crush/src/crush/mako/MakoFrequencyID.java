@@ -23,7 +23,7 @@
 
 package crush.mako;
 
-import crush.resonator.FrequencyID;
+import crush.resonators.FrequencyID;
 
 public class MakoFrequencyID extends FrequencyID {
 	double T0, delta;

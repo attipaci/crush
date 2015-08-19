@@ -24,8 +24,8 @@ package crush.mako;
 
 import crush.Channel;
 import crush.array.SingleColorPixel;
-import crush.resonator.FrequencyID;
-import crush.resonator.Resonator;
+import crush.resonators.FrequencyID;
+import crush.resonators.Resonator;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 
@@ -90,8 +90,8 @@ public abstract class AbstractMakoPixel extends SingleColorPixel implements Reso
 	@Override
 	public void setFrequencyID(FrequencyID id) { 
 		this.id = id; 
-		if(id == null) flag(FLAG_UNASSIGNED); 
-		else unflag(FLAG_UNASSIGNED);
+		if(id == null) flag(FLAG_NOTONEID); 
+		else unflag(FLAG_NOTONEID);
 	}
 		
 	@Override
@@ -108,13 +108,6 @@ public abstract class AbstractMakoPixel extends SingleColorPixel implements Reso
 		return true;
 	}
 	
-	@Override
-	public boolean assignTo(Resonator reference) {
-		if(!(reference instanceof AbstractMakoPixel)) return false;
-		AbstractMakoPixel pixel = (AbstractMakoPixel) reference;
-		setRowCol(pixel.row, pixel.col);
-		return true;
-	}
 	
 
 	public final static int FLAG_NOTONEID = 1 << nextSoftwareFlag++;

@@ -21,9 +21,8 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.resonator;
+package crush.resonators;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import kovacs.data.fitting.AmoebaMinimizer;
@@ -48,7 +47,7 @@ public abstract class ToneIdentifier<IDType extends FrequencyID> extends ArrayLi
 		deltaRange = getDefaultShiftRange();		
 	}
 	
-	public ToneIdentifier(Configurator options) throws IOException {
+	public ToneIdentifier(Configurator options) {
 		this();
 		if(options.isConfigured("power")) power = options.get("power").getDouble();
 		if(options.isConfigured("max")) maxDeviation = options.get("max").getDouble();
@@ -64,7 +63,7 @@ public abstract class ToneIdentifier<IDType extends FrequencyID> extends ArrayLi
 	
 	public final double match(final ResonatorList<?> resonators) {
 		Range deltaRange = getShiftRange();
-		return match(resonators, 0.5 * (deltaRange.min() + deltaRange.max()));
+		return match(resonators, 0.01 * deltaRange.span());
 	}
 	
 	public double match(ResonatorList<?> resonators, double initShift) {
@@ -115,14 +114,14 @@ public abstract class ToneIdentifier<IDType extends FrequencyID> extends ArrayLi
 	}
 	
 	protected void assign(ResonatorList<?> resonators, double shift) {
+		
 		for(Resonator resonator : resonators) {
 			resonator.setFrequencyID(null);
 			resonator.flagID();
 		}
+		
 		int n = assign(resonators, shift, 5);
 		System.err.println("   Identified " + n + " resonances.");
-		
-		for(Resonator resonator : resonators) if(resonator.getFrequencyID() != null) resonator.unflagID();
 	}
 	
 	private int assign(ResonatorList<?> resonators, double shift, int rounds) {
@@ -145,11 +144,11 @@ public abstract class ToneIdentifier<IDType extends FrequencyID> extends ArrayLi
 			if(resonator.getFrequencyID() == null) ids++;
 			else if(Math.abs(resonator.getFrequency() - resonator.getFrequencyID().getExpectedFrequencyFor(shift)) < adf) continue;
 			
+			resonator.unflagID();
 			resonator.setFrequencyID(id);
 		}
 		
 		ResonatorList<Resonator> remaining = new ResonatorList<Resonator>(resonators.size());
-		
 		
 		ToneIdentifier<?> extraIDs = (ToneIdentifier<?>) clone();
 		

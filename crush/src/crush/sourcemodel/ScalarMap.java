@@ -876,6 +876,9 @@ public class ScalarMap extends SourceMap {
 			if(enableWeighting) map.reweight(true);
 		}
 
+		
+		if(hasOption("regrid")) map.regrid(option("regrid").getDouble() * getInstrument().getSizeUnitValue());
+		
 		if(info) map.toString();
 		map.write(); 
 		

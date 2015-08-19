@@ -24,6 +24,8 @@
 package crush.hawcplus;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import kovacs.astro.*;
 import kovacs.math.Vector2D;
@@ -64,8 +66,16 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	
 	@Override
 	public void readData(Fits fits) throws Exception {
-		BinaryTableHDU hdu = (BinaryTableHDU) fits.getHDU(1);
-		read(hdu);
+		BasicHDU[] HDU = fits.read();
+		ArrayList<BinaryTableHDU> dataHDUs = new ArrayList<BinaryTableHDU>();
+		
+		for(int i=1; i<HDU.length; i++) if(HDU[i] instanceof BinaryTableHDU) {
+			Header header = HDU[i].getHeader();
+			String extName = header.getStringValue("EXTNAME");
+			if(extName.equalsIgnoreCase("TIMESTREAM DATA")) dataHDUs.add((BinaryTableHDU) HDU[i]);
+		}
+		
+		read(dataHDUs);
 		
 		try { fits.getStream().close(); }
 		catch(IOException e) {}
@@ -73,22 +83,31 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		System.gc();
 	}
 	
-	protected void read(BinaryTableHDU hdu) throws Exception {
-		int records = hdu.getAxes()[0];
-
-		System.err.println(" Processing scan data:");		
-		System.err.println("   Reading " + records + " frames.");		
+	protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {
+		
+		int records = 0;
+		for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
+		
+		System.err.println(" Processing scan data:");
+		System.err.println("   Readng " + records + " frames from " + dataHDUs.size() + " HDU(s).");
 		System.err.println("   Sampling at " + Util.f1.format(instrument.integrationTime / Unit.ms) + " ms ---> " 
 				+ Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
 			
 		clear();
 		ensureCapacity(records);
 		for(int t=records; --t>=0; ) add(null);
-			
-		new HawcPlusReader(hdu).read();
+		
+		int startIndex = 0;
+		for(int i=0; i<dataHDUs.size(); i++) {
+			BinaryTableHDU hdu = dataHDUs.get(i);
+			new HawcPlusReader(hdu, startIndex).read();
+			startIndex += hdu.getAxes()[0];
+		}	
+		
 	}
 		
 	class HawcPlusReader extends HDUReader {	
+		private int startIndex;
 		private long[] R, T, SN;
 		private double[] TS; 
 		private float[] RA, DEC, AZ, EL, PA, VPA, LON, LAT, LST, chop, PWV, HWP;
@@ -98,8 +117,10 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		
 		private final HawcPlusScan hawcPlusScan = (HawcPlusScan) scan;
 		
-		public HawcPlusReader(BinaryTableHDU hdu) throws FitsException {
+		public HawcPlusReader(BinaryTableHDU hdu, int startIndex) throws FitsException {
 			super(hdu);
+			
+			this.startIndex = startIndex;
 			
 			isSimulated = hasOption("simulated");
 			
@@ -181,7 +202,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 				
 				@Override
 				public void processRow(int i) {
-					set(i, null);
+					set(startIndex + i, null);
 										
 					// Create the frame object only if it cleared the above hurdles...
 					final HawcPlusFrame frame = new HawcPlusFrame(hawcPlusScan);
@@ -216,9 +237,16 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					//frame.LST = timeStamp.getLMST(frame.site.longitude());
 					//frame.horizontal = frame.equatorial.toHorizontal(frame.site, frame.LST);
 					
+					
 					if(!isSimulated) {
-						frame.setParallacticAngle(PA[i] * Unit.deg);
-						frame.VPA = VPA[i] * (float) Unit.deg;	
+						frame.VPA = VPA[i] * (float) Unit.deg;
+						// TODO The effective frame rotation to horizontal is VPA - PA... (check sign again...)
+						// H -> E rotate by VPA (or -VPA?)
+						// X -> H rotate by A
+						// H -> E rotate by PA
+						// VPA = A + PA (or -VPA = A + PA?)
+						frame.calcParallacticAngle();
+						frame.setRotation(frame.VPA - frame.getParallacticAngle()); 
 					}
 					else {
 						// The simulation writes a position angle, not parallactic angle...
@@ -242,9 +270,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 						frame.equatorial.addNativeOffset(offset);
 					}
 						
-				
-						
-					set(i, frame);
+					set(startIndex + i, frame);
 				}
 				
 			};

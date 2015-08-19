@@ -20,20 +20,37 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+package crush.resonators;
 
-package crush.mako2;
+import kovacs.util.HashCode;
 
-import crush.resonator.FrequencyID;
-import kovacs.math.Vector2D;
-
-public class Mako2FrequencyID extends FrequencyID {
-	Vector2D position;
-	double gain = Double.NaN;
+public class FrequencyID implements Comparable<FrequencyID> {
+	public int index;
+	public double freq;
 	
-	public Mako2FrequencyID(int index) {
-		super(index);
+	public FrequencyID(int index) {
+		//this.index = index;
 	}
-
+	
+	@Override
+	public int compareTo(FrequencyID other) {
+		return Double.compare(freq, other.freq);
+	}
+	
+	@Override
+	public int hashCode() {
+		return HashCode.get(freq);
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(!(o instanceof FrequencyID)) return false;
+		FrequencyID id = (FrequencyID) o;
+		return freq == id.freq;
+	}
+	
+	public double getExpectedFrequencyFor(double shift) {
+		return freq * (1.0 + shift);
+	}
+	
 }
-
-

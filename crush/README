@@ -90,6 +90,9 @@ the following instruments (in alphabetical order):
 		camera for the CSO with dual-pol pixel response, and dual-band 
 		imaging capability.
 
+    MUSTANG-2	(3mm) Large focal plane array for the 100m Greenbank Telescope.
+		www.gb.nrao.edu/mustang/
+
     p-ArTeMiS	(200um, 350um, 450um) 3-color camera for APEX (prototype)
     		www.apex-telescope.org/instruments/pi/artemis
 
@@ -102,7 +105,6 @@ the following instruments (in alphabetical order):
 
     SCUBA-2	(450um, 850um) Submillimetre Common User Bolometer Array 2
 		www.roe.ac.uk/ukatc/projects/scubatwo
-		[Module available upon special request only]
 
     SHARC	(350um, 450um) Submillimeter High-Angular Resolution Camera
 		Caltech, Pasadena, CA

@@ -186,20 +186,23 @@ public abstract class Frame implements Cloneable, Flagging {
 		if(sampleFlag == null) sampleFlag = new byte[data.length];
 		else if(sampleFlag.length != data.length) sampleFlag = new byte[data.length];
 		
-		switch(scan.instrument.mount) {
-		case CASSEGRAIN: 
-		case GREGORIAN: 
-		case PRIME_FOCUS: sinA = 0.0; cosA = 1.0; break;
-		case LEFT_NASMYTH: {
-			SphericalCoordinates nativeCoords = getNativeCoords();
-			sinA = -nativeCoords.sinLat(); cosA = nativeCoords.cosLat(); break;
+		// Set the platform rotation, unless the rotation was explicitly set already
+		if(Double.isNaN(cosA) || Double.isNaN(sinA)) {
+			switch(scan.instrument.mount) {
+			case CASSEGRAIN: 
+			case GREGORIAN: 
+			case PRIME_FOCUS: sinA = 0.0; cosA = 1.0; break;
+			case LEFT_NASMYTH: {
+				SphericalCoordinates nativeCoords = getNativeCoords();
+				sinA = -nativeCoords.sinLat(); cosA = nativeCoords.cosLat(); break;
+			}
+			case RIGHT_NASMYTH: {
+				SphericalCoordinates nativeCoords = getNativeCoords();
+				sinA = nativeCoords.sinLat(); cosA = nativeCoords.cosLat(); break;
+			}
+			default: sinA = 0.0; cosA = 1.0;
+			}		
 		}
-		case RIGHT_NASMYTH: {
-			SphericalCoordinates nativeCoords = getNativeCoords();
-			sinA = nativeCoords.sinLat(); cosA = nativeCoords.cosLat(); break;
-		}
-		default: sinA = 0.0; cosA = 1.0;
-		}		
 	}
 
 	public void getEquatorial(final Vector2D position, final EquatorialCoordinates coords) {

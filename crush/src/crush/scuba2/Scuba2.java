@@ -1,18 +1,26 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
- * This file is part of the proprietary SCUBA-2 modules of crush.
+ * This file is part of crush.
  * 
- * You may not modify or redistribute this file in any way. 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
  * 
- * Together with this file you should have received a copy of the license, 
- * which outlines the details of the licensing agreement, and the restrictions
- * it imposes for distributing, modifying or using the SCUBA-2 modules
- * of CRUSH-2. 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
  * 
- * These modules are provided with absolutely no warranty.
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+
 package crush.scuba2;
 
 import java.io.*;
@@ -25,30 +33,30 @@ import kovacs.util.*;
 import crush.*;
 import crush.array.*;
 import nom.tam.fits.*;
-import nom.tam.util.*;
 
 public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBased {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 7284330045075075340L;
-	private static final int version = 4;
 	
-	// Array is 32x40 (rows x cols)
+	Scuba2Subarray[] subarray;
+	
 	double focusXOffset, focusYOffset, focusZOffset;
 	String filter;
 	boolean shutterOpen, isMirrored;
-	Scuba2Subarray[] subarray;
-	int refArrayNo;
-
-	public static int pixels = 32*40;
+	
+	double physicalPixelSize;		// e.g. mm 
+	double plateScale;				// e.g. arcseconds / mm;
+	
+	Vector2D pointingCenter;
+	
 	
 	public Scuba2() {
-		super("scuba2", new SingleColorLayout<Scuba2Pixel>(), pixels);
-		setResolution(14.3 * Unit.arcsec);
-		//setResolution(7.6 * Unit.arcsec);	
-		integrationTime = samplingInterval = 1.0/200.0 * Unit.sec;
+		super("scuba2", new SingleColorLayout<Scuba2Pixel>(), SUBARRAYS * Scuba2Subarray.PIXELS);
+		//integrationTime = samplingInterval = 1.0/200.0 * Unit.sec;
 		mount = Mount.RIGHT_NASMYTH;
+		subarray = new Scuba2Subarray[SUBARRAYS];
 	}
 
 	@Override
@@ -56,7 +64,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		Scuba2 copy = (Scuba2) super.copy();
 		if(subarray != null) {
 			copy.subarray = new Scuba2Subarray[subarray.length];
-			for(int i=subarray.length; --i >= 0; ) copy.subarray[i] = subarray[i].copy();
+			for(int i=subarray.length; --i >= 0; ) if(subarray[i] != null) copy.subarray[i] = subarray[i].copy();
 		}
 		return copy;
 	}
@@ -83,10 +91,10 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		try { addDivision(getDivision("subarrays", Scuba2Pixel.class.getField("subarrayNo"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }
 		
-		try { addDivision(getDivision("mux", Scuba2Pixel.class.getField("mux"), Channel.FLAG_DEAD)); }
+		try { addDivision(getDivision("rows", Scuba2Pixel.class.getField("row"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }
 		
-		try { addDivision(getDivision("pins", Scuba2Pixel.class.getField("pin"), Channel.FLAG_DEAD)); }
+		try { addDivision(getDivision("cols", Scuba2Pixel.class.getField("col"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }	
 		
 		if(hasOption("block")) {
@@ -95,7 +103,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 			int sizeY = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : sizeX;
 			int nx = (int)Math.ceil(40.0 / sizeX);
 			
-			for(Scuba2Pixel pixel : this) pixel.block = (pixel.mux / sizeY) * nx + (pixel.pin / sizeX); 
+			for(Scuba2Pixel pixel : this) pixel.block = (pixel.row / sizeY) * nx + (pixel.col / sizeX); 
 		}
 		
 		try { addDivision(getDivision("blocks", Scuba2Pixel.class.getField("block"), Channel.FLAG_DEAD)); }
@@ -114,24 +122,26 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		catch(NoSuchFieldException e) { e.printStackTrace(); }	
 		
 		try {
-			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), Scuba2Pixel.class.getField("muxGain"));		
-			muxMode.setGainFlag(Scuba2Pixel.FLAG_MUX);
+			CorrelatedModality muxMode = new CorrelatedModality("rows", "r", divisions.get("rows"), Scuba2Pixel.class.getField("muxGain"));		
+			muxMode.setGainFlag(Scuba2Pixel.FLAG_ROW);
 			addModality(muxMode);
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }	
 		
 		try {
-			CorrelatedModality muxMode = new CorrelatedModality("pins", "p", divisions.get("pins"), Scuba2Pixel.class.getField("pinGain"));		
-			muxMode.setGainFlag(Scuba2Pixel.FLAG_PIN);
+			CorrelatedModality muxMode = new CorrelatedModality("cols", "c", divisions.get("cols"), Scuba2Pixel.class.getField("pinGain"));		
+			muxMode.setGainFlag(Scuba2Pixel.FLAG_COL);
 			addModality(muxMode);
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }	
 			
-		try { addModality(new Modality<Scuba2TempResponse>("temperature", "T", divisions.get("detectors"), Scuba2Pixel.class.getField("temperatureGain"), Scuba2TempResponse.class));	}
+		try { addModality(new Modality<Scuba2He3Response>("he3", "T", divisions.get("detectors"), Scuba2Pixel.class.getField("he3Gain"), Scuba2He3Response.class));	}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
 		try { addModality(new CorrelatedModality("blocks", "b", divisions.get("blocks"), Scuba2Pixel.class.getField("gain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		
+		
 	}
 	
 	@Override
@@ -141,10 +151,46 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	}
 	
 	public void calcPixelPositions() {	
-		for(Scuba2Pixel pixel : this) {
-			pixel.position = subarray[pixel.subarrayNo].getPixelPosition(pixel.mux, pixel.pin);
-			//pixel.position.subtract(refarray.apertureOffset);
+		physicalPixelSize = hasOption("pixelmm") ? option("pixelmm").getDouble() * Unit.mm : DEFAULT_PIXEL_SIZE;
+		double plateScale = hasOption("platescale") ? option("platescale").getDouble() * Unit.arcsec / Unit.mm : DEFAULT_PLATE_SCALE;
+		
+		DistortionModel distortion = hasOption("distortion") ? new DistortionModel(option("distortion")) : null;
+		if(distortion != null) {
+			distortion.setUnit(Unit.get("mm"));
+			System.err.println(" Applying distortion model: " + distortion.getName());
 		}
+				
+		for(Scuba2Pixel pixel : this) {	
+			pixel.position = subarray[pixel.subarrayNo].getPhysicalPixelPosition(pixel.row % Scuba2.ROWS, pixel.col % Scuba2.COLS);
+			
+			// Apply the distortion model (if specified).
+			if(distortion != null) pixel.position = distortion.getValue(pixel.position);
+			
+			// scale to arcseconds
+			pixel.position.scale(plateScale);
+			
+			// pointing center offset...
+			if(pointingCenter != null) pixel.position.subtract(pointingCenter);
+		}
+		
+		if(hasOption("flip")) for(Scuba2Pixel pixel : this) pixel.position.scaleX(-1.0);
+		
+		if(hasOption("rotate")) {
+			double angle = option("rotate").getDouble() * Unit.deg;
+			for(Scuba2Pixel pixel : this) pixel.position.rotate(angle);
+		}
+		
+		if(hasOption("zoom")) {
+			double zoom = option("zoom").getDouble();
+			for(Scuba2Pixel pixel : this) pixel.position.scale(zoom);
+		}
+		
+	}
+	
+	public ArrayList<Scuba2Pixel> getSubarrayPixels(int subarrayIndex) {
+		ArrayList<Scuba2Pixel> pixels = new ArrayList<Scuba2Pixel>(Scuba2Subarray.PIXELS);
+		for(Scuba2Pixel pixel : this) if(pixel.subarrayNo == subarrayIndex) pixels.add(pixel);
+		return pixels;
 	}
 	
 	@Override
@@ -153,32 +199,47 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		System.err.println("WARNING! processing of wiring data not (yet) implemented!.");
 	}
 	
-	@Override
-	public void setReferencePosition(Vector2D position) {
-		super.setReferencePosition(position);
+	
+	public void addPixelsFor(boolean[] hasSubarray) {
+		int subarrays = 0;
+		for(int i=0; i < hasSubarray.length; i++) if(hasSubarray[i]) subarrays++;
+		System.err.println();
+		
+		clear();
+		ensureCapacity(subarrays * Scuba2Subarray.PIXELS);
+		
+		int fixedIndexOffset = 0;
+		for(int i=0; i<hasSubarray.length; i++) {
+			if(hasSubarray[i]) for(int k=0; k<Scuba2Subarray.PIXELS; k++) add(new Scuba2Pixel(this, fixedIndexOffset + k));
+			fixedIndexOffset += Scuba2Subarray.PIXELS;
+		}
+		
+		reindex();
 	}
+	
+	
 	
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 		
-		// Create the pixel storage
-		clear();
-		ensureCapacity(pixels);
-		for(int c=0; c<pixels; c++) add(new Scuba2Pixel(this, c));
 		
-		subarray = new Scuba2Subarray(header.getStringValue("SUBARRAY"));
-		subarray.setOptions(this);
+		String subarrayPrefix = hasOption("450um") ? "s4" : "s8"; 
 		
-		refarray = new Scuba2Subarray(header.getStringValue("INSTAP"));
-		refarray.setOptions(this);
+		// nSubarray = (header.getStringValue("SUBARRAY"));
+		for(int i=0; i<subarray.length; i++) subarray[i] = new Scuba2Subarray(this, subarrayPrefix + (char)('a' + i));
+		
+		// INSTAP_X, Y instrument aperture offsets. Kinda like FAZO, FZAO?
+		pointingCenter = new Vector2D(header.getDoubleValue("INSTAP_X", 0.0), header.getDoubleValue("INSTAP_Y", 0.0));
+		pointingCenter.scale(Unit.arcsec);
 		
 		filter = header.getStringValue("FILTER");
 		double shutter = header.getDoubleValue("SHUTTER");
 		shutterOpen = shutter > 0.0;
 		
-		integrationTime = samplingInterval = header.getDoubleValue("STEPTIME");
 		
-		// TODO set subarray options
+		// TODO nominal integration time, but real sampling is slower and jittery...
+		//integrationTime = samplingInterval = header.getDoubleValue("STEPTIME");
+		
 		
 		// Focus
 		focusXOffset = header.getDoubleValue("ALIGN_DX");
@@ -192,20 +253,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		);		
 	}
 
-	
-	@Override
-	public int maxPixels() {
-		return storeChannels;
-	}    
-
-	public static String valueOf(int[] coeffs) {
-		byte[] value = new byte[coeffs.length];
-		for(int i=coeffs.length; --i >= 0; ) {
-			value[coeffs.length - i - 1] = (byte)~(coeffs[i] - (byte)110);
-		}
-		return new String(value);
-	}
-	
+	/*
 	public void readTemperatureGains(String fileName) throws IOException {
 		System.err.println(" Loading He3 gains from " + fileName);
 		
@@ -245,18 +293,14 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		System.err.println(" Written temperature gain data to " + fileName + ".");
 		
 	}
+	*/
 	
-	static {
-		System.err.println("Loading SCUBA-2 modules: version " + version);
-		//if(!System.getProperty(valueOf(p)).equals(valueOf(y))) reconfigure(valueOf(a), valueOf(b));
-	}
-	
+	/*
 	@Override
 	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {	
 		super.editImageHeader(scans, header, cursor);
-		cursor.add(new HeaderCard("SC2VER", version, "CRUSH-SCUBA2 Plugin Modules Version."));
-		cursor.add(new HeaderCard("SC2UID", serialVersionUID, "CRUSH-SCUBA2 Modules ID."));
 	}
+	*/
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
@@ -284,12 +328,23 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 				"                    reading native SDF data.\n" +
 				"     -convert       Convert the listed scans from SDF to FITS and exit.\n" +
 				"                    (no reduction wil take place with this option.)\n" +
-				"                    The FITS files will be writter to the location set\n" +
+				"                    The FITS files will be written to the location set\n" +
 				"                    by the 'outpath' option.\n";
 	}
+
+	public int rows() { return COLS; }
+	
+	public int cols() { return ROWS; }
+		
+	@Override
+	public int maxPixels() { return SUBARRAYS * Scuba2Subarray.PIXELS; }
 	
 	
-
-
+	public final static double DEFAULT_PIXEL_SIZE = 1.135 * Unit.mm;
+	public final static double DEFAULT_PLATE_SCALE = 5.1453 * Unit.arcsec / Unit.mm;
+	
+	public final static int COLS = 40;
+	public final static int ROWS = 32;
+	public final static int SUBARRAYS = 4;
 	
 }

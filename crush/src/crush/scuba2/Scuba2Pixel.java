@@ -1,18 +1,26 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
- * This file is part of the proprietary SCUBA-2 modules of crush.
+ * This file is part of crush.
  * 
- * You may not modify or redistribute this file in any way. 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
  * 
- * Together with this file you should have received a copy of the license, 
- * which outlines the details of the licensing agreement, and the restrictions
- * it imposes for distributing, modifying or using the SCUBA-2 modules
- * of CRUSH-2. 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
  * 
- * These modules are provided with absolutely no warranty.
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+
 package crush.scuba2;
 
 import kovacs.math.Vector2D;
@@ -21,17 +29,15 @@ import crush.array.SingleColorPixel;
 
 public class Scuba2Pixel extends SingleColorPixel {
 	public int subarrayNo;
-	public int mux, pin, block=0;
+	public int row, col, block=0;
 	public double subarrayGain = 1.0, muxGain = 1.0, pinGain = 1.0;
-	public double temperatureGain = 0.0;
-	
-	// 32 x 40 (rows x cols)
+	public double he3Gain = 0.0;
 	
 	public Scuba2Pixel(Scuba2 array, int zeroIndex) {
 		super(array, zeroIndex+1);
-		subarrayNo = zeroIndex / Scuba2Subarray.size;
-		mux = zeroIndex / 40;
-		pin = zeroIndex % 40;
+		subarrayNo = zeroIndex / Scuba2Subarray.PIXELS;
+		row = zeroIndex / Scuba2.COLS;
+		col = Scuba2.COLS * subarrayNo + zeroIndex % Scuba2.COLS;
 	}
 	
 	
@@ -49,13 +55,13 @@ public class Scuba2Pixel extends SingleColorPixel {
 	
 	@Override
 	public String getID() {
-		return ((Scuba2) instrument).subarray[subarrayNo].id + ":" + mux + "," + pin;
+		return ((Scuba2) instrument).subarray[subarrayNo].id + ":" + row + "," + col;
 	}
 	
 	public static Vector2D defaultSize = new Vector2D(5.7 * Unit.arcsec, 5.7 * Unit.arcsec);
 	
-	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
-	public final static int FLAG_PIN = 1 << nextSoftwareFlag++;
+	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
+	public final static int FLAG_COL = 1 << nextSoftwareFlag++;
 	public final static int FLAG_SUBARRAY = 1 << nextSoftwareFlag++; // new in 2.30
 	
 }

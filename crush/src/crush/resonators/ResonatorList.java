@@ -20,13 +20,12 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.resonator;
+package crush.resonators;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Hashtable;
 
 import crush.Channel;
 
@@ -52,24 +51,6 @@ public class ResonatorList<ResonatorType extends Resonator> extends ArrayList<Re
 			}
 		});	
 	}
-	
-	public void assignTo(Collection<? extends Resonator> referenceList) {
-		int assigned = 0;
-		
-		Hashtable<FrequencyID, Resonator> lookup = new Hashtable<FrequencyID, Resonator>(referenceList.size());
-		for(Resonator reference : referenceList) if(reference.getFrequencyID() != null) 
-			lookup.put(reference.getFrequencyID(), reference);
-		
-		for(Resonator reference : referenceList) if(reference.isAssigned()) {
-			Resonator resonator = lookup.get(reference.getFrequencyID());
-			if(resonator == null) continue;
-			
-			if(resonator.assignTo(reference)) assigned++;
-		}	
-		
-		System.err.println(" Assigned " + assigned + " of " + size() + " resonators to references.");		
-	}
-
 
 	public int indexBefore(double f) throws ArrayIndexOutOfBoundsException {
 		int i = 0;

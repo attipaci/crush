@@ -20,33 +20,25 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+package crush.resonators;
 
-package crush.scuba2;
+import crush.Channel;
 
-import crush.*;
+public interface Resonator {
 
-
-public class Scuba2Frame extends HorizontalFrame {
-	public int frameNumber;
-	public float detectorT;
+	public double getFrequency();
 	
-	public Scuba2Frame(Scuba2Scan parent) {
-		super(parent);
-	}
+	public FrequencyID getFrequencyID();
 	
-	public void parseData(final int[][] DAC, final int channelOffset, final float scaling, int[] readoutLevel) {
-		Scuba2Scan scuba2Scan = (Scuba2Scan) scan;
-		final int blankingValue = scuba2Scan.blankingValue;
+	public void setFrequencyID(FrequencyID id);
 		
-		if(data == null) setSize(scuba2Scan.subarrays * Scuba2Subarray.PIXELS);
-		
-		for(int bol=Scuba2Subarray.PIXELS; --bol >= 0; ) {
-			final int value = DAC[bol%Scuba2.COLS][bol/Scuba2.COLS];
-			final int c = channelOffset + bol;
-			if(value != blankingValue && readoutLevel[c] != blankingValue) data[c] = scaling * (value - readoutLevel[c]);
-			else sampleFlag[c] |= Frame.SAMPLE_SKIP;
-		}
-	}
+	public Channel getChannel();
+	
+	public void flagID();
+	
+	public void unflagID();
+	
+	public boolean isAssigned();
 	
 	
 }

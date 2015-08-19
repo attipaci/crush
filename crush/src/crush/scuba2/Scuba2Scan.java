@@ -1,18 +1,26 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
- * This file is part of the proprietary SCUBA-2 modules of crush.
+ * This file is part of crush.
  * 
- * You may not modify or redistribute this file in any way. 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
  * 
- * Together with this file you should have received a copy of the license, 
- * which outlines the details of the licensing agreement, and the restrictions
- * it imposes for distributing, modifying or using the SCUBA-2 modules
- * of CRUSH-2. 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
  * 
- * These modules are provided with absolutely no warranty.
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+
 package crush.scuba2;
 
 import crush.*;
@@ -22,6 +30,7 @@ import java.io.*;
 import java.util.*;
 
 import kovacs.astro.AstroSystem;
+import kovacs.astro.AstroTime;
 import kovacs.astro.CoordinateEpoch;
 import kovacs.astro.EquatorialCoordinates;
 import kovacs.astro.GeodeticCoordinates;
@@ -41,11 +50,15 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	String obsMode, scanPattern;
 	int iDate;
 	
-	double tau225GHz, tau186GHz;
+	double tau225GHz, tau183GHz;
 	double ambientT, pressure, humidity, windAve, windPeak, windDirection;
 	String scanID;
-	File fitsTemp;
 	int blankingValue;
+	
+	double dUT1 = 0.0;
+	
+	boolean[] hasSubarray = new boolean[Scuba2.SUBARRAYS];
+	int subarrays;
 	
 	public Class<? extends SphericalCoordinates> trackingClass;
 	
@@ -58,63 +71,99 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		return new Scuba2Subscan(this);
 	}
 
+	public Scuba2Fits getFirstFits() {
+		return getFirstIntegration().files.get(0);
+	}
+	
+
+	
 	@Override
-	public void read(String scanDescriptor, boolean readFully) throws IOException, HeaderCardException, FitsException, FileNotFoundException {
-		ArrayList<File> files = getFiles(scanDescriptor);
+	public void mergeSubscans() {
+		calcSamplingRate();
+		
+		super.mergeSubscans();
+		
+		Scuba2Subscan subscan = get(0);
+		subscan.integrationNo = 0;
+		subscan.instrument.integrationTime = instrument.integrationTime;
+		subscan.instrument.samplingInterval = instrument.samplingInterval;
+	}
+	
+	
+	@Override
+	public void read(String scanDescriptor, boolean readFully) throws Exception {
+		ArrayList<Scuba2Fits> files = getFitsFiles(scanDescriptor);
+		if(files.isEmpty()) return;
+		
+		// Check fow which subarrays there is data in the dataset...
+		Arrays.fill(hasSubarray, false);
+		for(Scuba2Fits file : files) hasSubarray[file.getSubarrayIndex()] = true;
+		
+		// Count how many subarrays are active
+		subarrays = 0;
+		for(int i=0; i<hasSubarray.length; i++) if(hasSubarray[i]) subarrays++;
+		System.err.println(" Found data for " + subarrays + " subarrays.");
+		
+		// Sort by subscan and then by subarray index
+		Collections.sort(files);
+		
+		BasicHDU mainHDU = files.get(0).getHDUs()[0];
+		parseScanPrimaryHDU(mainHDU);
+		((Scuba2) instrument).addPixelsFor(hasSubarray);
+		instrument.parseScanPrimaryHDU(mainHDU);
+		instrument.validate(this);	
+		clear();
+		
+		// Read all the files for a given subscan...
+		Scuba2Subscan subscan = new Scuba2Subscan(this);
+		subscan.integrationNo = files.get(0).getSubscanNo();
 		
 		for(int i=0; i<files.size(); i++) {
-			File file = files.get(i);
+			Scuba2Fits file = files.get(i);
+			int subscanNo = file.getSubscanNo();
 
-			// If it's an SDF, check if an equivalent FITS exists also...
-			// If so, then we can skip the SDF, and wait for the FITS to be read...
-			if(file.getName().endsWith(".sdf"))
-				if(new File(getFitsName(file.getName())).exists()) continue;
-			
-			Fits fits = getFits(file);
-			if(fits == null) continue;
-			
-			// If converting only, than close the FITS file and move on...
-			if(hasOption("convert")) if(fitsTemp != null) {
-				try { fits.getStream().close(); }
-				catch(IOException e) {}
-				fitsTemp = null;
-				continue;				
+			if(subscanNo != subscan.integrationNo || (i+1) == files.size()) {
+				if(!subscan.files.isEmpty()) {
+					try { 
+						subscan.read(); 
+						if(!subscan.isEmpty()) add(subscan);	
+					}
+					catch(DarkSubscanException e) { System.err.println(" Subscan " + subscan.getID() + " is a dark measurement. Skipping."); }
+					catch(IllegalStateException e) { System.err.println(" WARNING! " + e.getMessage()); }
+				}
+				
+				if((i+1) < files.size()) {
+					subscan = new Scuba2Subscan(this);
+					subscan.integrationNo = subscanNo;
+				}
 			}
 			
-			// Get the header information from the first file in this scan...
-			if(i==0) {
-				BasicHDU mainHDU = fits.getHDU(0);
-				parseScanPrimaryHDU(mainHDU);
-				instrument.parseScanPrimaryHDU(mainHDU);
-				instrument.validate(this);	
-				clear();
-			}
-					
-			// Read the data contained in the FITS...
-			try { readSubscan(fits); }
-			catch(IllegalStateException e) { 
-				System.err.println("   WARNING! " + e.getMessage() + " Skipping.");
-			}
-			
-			// Try close the FITS stream so that it can be garbage collected.
-			try { fits.getStream().close(); }
-			catch(IOException e) {}
-			
-			// Remove the temporary FITS file, as it is no longer needed...
-			if(fitsTemp != null) if(fitsTemp.exists()) {
-				fitsTemp.delete();
-				fitsTemp = null;
-			}
+			subscan.files.add(file);
 		}
+		
 		Collections.sort(this);
+		
 		if(hasOption("subscans.merge")) mergeSubscans();
 		if(!isEmpty()) validate();
 	}
 	
+	private void calcSamplingRate() {
+		double totalTime = 0.0;
+		int nFrames = 0;
+		for(Scuba2Subscan subscan : this) {
+			totalTime += subscan.totalIntegrationTime;
+			nFrames += subscan.rawFrames;
+		}
+		instrument.samplingInterval = instrument.integrationTime = totalTime / nFrames;
 	
-	
+	}
+		
 	@Override
 	public void validate() {
+		calcSamplingRate();
+		System.err.println(" Typical sampling rate is " + Util.f2.format(1.0 / instrument.integrationTime) + " Hz.");
+	
+		
 		Scuba2Frame firstFrame = getFirstIntegration().getFirstFrame();
 		Scuba2Frame lastFrame = getLastIntegration().getLastFrame();
 
@@ -130,13 +179,27 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		super.validate();
 	}
 
-	public ArrayList<File> getFiles(String scanDescriptor) throws FileNotFoundException {
-		ArrayList<File> scanFiles = new ArrayList<File>();
+	public ArrayList<Scuba2Fits> getFitsFiles(String scanDescriptor) throws FileNotFoundException{
+		List<String> subIDs = hasOption("subarray") ? option("subarray").getList() : null;
+		
+		ArrayList<Scuba2Fits> files = null;
+		
+		if(subIDs == null)  files = getFitsFiles(scanDescriptor, '*');
+		else {
+			files = new ArrayList<Scuba2Fits>();
+			for(String id : subIDs) files.addAll(getFitsFiles(scanDescriptor, id.toLowerCase().charAt(0)));
+		}
+		return files;
+	}
+	
+	public ArrayList<Scuba2Fits> getFitsFiles(String scanDescriptor, char subarrayCode) throws FileNotFoundException {
+		ArrayList<Scuba2Fits> scanFiles = new ArrayList<Scuba2Fits>();
 
 		String path = getDataPath();
 		descriptor = scanDescriptor;
 
-		String subarray = hasOption("450um") ? "s4a" : "s8d";
+		String prefix = hasOption("450um") ? "s4" : "s8";
+		if(subarrayCode != '*') prefix += subarrayCode;
 		
 		// Try to read scan number with the help of 'object' and 'date' keys...
 		try {
@@ -144,7 +207,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			if(hasOption("date")) {
 				File directory = new File(path);
 				String date = option("date").getValue();
-				String convention = subarray + date + "_" + scanNo + "_";
+				String scanID = date + "_" + scanNo + "_";
 				
 				if(!directory.exists()) {
 					String message = "Cannot find scan directory " + path +
@@ -157,9 +220,15 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 				}
 				else {
 					String[] files = directory.list();
-					for(int i=0; i<files.length; i++) if(files[i].startsWith(convention))
-						scanFiles.add(new File(path + File.separator + files[i]));
-		
+					
+					for(int i=0; i<files.length; i++) if(files[i].startsWith(prefix)) if(files[i].substring(3).startsWith(scanID)) {
+						try { scanFiles.add(new Scuba2Fits(path + File.separator + files[i], instrument.getOptions())); }
+						catch(IllegalStateException e) { 
+							// there is a FITS alternative already...
+						}
+						catch(Exception e) { System.err.println("WARNING! " + e.getMessage()); }
+					}
+						
 					if(scanFiles.isEmpty()) 
 						throw new FileNotFoundException("Cannot find matching files in " + path);
 				}
@@ -173,116 +242,28 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 				throw new FileNotFoundException(message);
 			}
 		}
+		
 		// Otherwise, just read as file names...
 		catch(NumberFormatException e) {
 			File scanFile = new File(scanDescriptor) ;	
+			
 			if(!scanFile.exists()) {
 				scanFile = new File(path + scanDescriptor);
 				if(!scanFile.exists()) throw new FileNotFoundException("Could not find scan " + scanDescriptor);
 			} 	
 			
-			scanFiles.add(scanFile);
+			try { scanFiles.add(new Scuba2Fits(scanFile.getPath(), instrument.getOptions())); }
+			catch(IllegalStateException e2) {
+				// There is a FITS alternative already...
+			}
+			catch(Exception e2) { System.err.println("WARNING! " + e2.getMessage()); }
 		}
 		
-		Collections.sort(scanFiles);
+		if(hasOption("convert")) System.exit(0);
 		
 		return scanFiles;
 	}	
-
-	public boolean isSDF(File file) {
-		return file.getName().endsWith(".sdf");		
-	}
 	
-	public String getFitsName(String sdfName) {
-		return sdfName.substring(0, sdfName.length() - 4) + ".fits";		
-	}
-	
-	private Fits getFits(File file) throws IOException, FileNotFoundException, FitsException {
-		String fileName = file.getName();
-		if(fileName.endsWith(".sdf.gz")) 
-			throw new IOException("Uncompress SDF '" + fileName + "' before use.");
-	
-		if(!isSDF(file)) {
-			boolean isCompressed = fileName.endsWith(".gz");
-			System.out.println(" Reading " + file.getPath() + "...");
-			return new Fits(file, isCompressed);
-		}
-		
-		
-		if(hasOption("ndf2fits")) {
-			String inName = file.getAbsolutePath();
-			String command = option("ndf2fits").getValue();
-			String outName = getFitsName(inName);
-				
-			// Check if the SDF has a FITS equivalent in the same directory...
-			File outFile = new File(outName);
-			if(outFile.exists()) return new Fits(outFile);
-			// We could also return null to just let go of the SDF, and wait for the FITS...
-			//if(outFile.exists()) return null;
-		
-			// Try the same in the default working directory of CRUSH...
-			String path = hasOption("outpath") ? option("outpath").getPath() : getDataPath();
-			
-			outName = path + File.separator + getFitsName(file.getName());
-			outFile = new File(outName);
-			// check if a FITS exists in the temporaty directory...
-			if(outFile.exists()) return new Fits(outFile);
-			
-			Runtime runtime = Runtime.getRuntime();
-				
-			String commandLine = command + " " + inName + " " + outName + " proexts";
-			String[] commandArray = { command, inName, outName, "proexts" };
-			
-			System.err.println(" Converting SDF to FITS...");
-			System.err.println(" > " + commandLine);
-				
-			Process convert = runtime.exec(commandArray); 
-			//BufferedReader err = new BufferedReader(new InputStreamReader(convert.getErrorStream()));
-				
-			//String line = null;
-			//while((line = err.readLine()) != null) System.err.println("> " + line);
-				
-			try { 
-				int retval = convert.waitFor(); 
-				if(retval != 0) {
-					System.err.println("WARNING! Conversion error. Check that 'ndf2fits' is correct, and that");
-					System.err.println("         the 'datapath' directory is writeable.");
-					if(outFile.exists()) outFile.delete();
-					throw new IOException("SDF to FITS conversion error.");
-				}
-				fitsTemp = new File(outName);
-				return new Fits(fitsTemp);
-			}
-			catch(InterruptedException e) {
-				System.err.println("Interrupted!");
-				System.exit(1);
-			}
-		}
-		return null;
-	}
-	
-
-	protected void readSubscan(Fits fits) throws IllegalStateException, HeaderCardException, FitsException {
-		// Read in entire FITS file
-		BasicHDU[] HDU = fits.read();
-		if(HDU == null) throw new IllegalStateException("FITS has no content.");
-		
-		Scuba2Subscan integration = new Scuba2Subscan(this);	
-		integration.read((ImageHDU) HDU[0], getJcmtHDU(HDU));
-		
-		if(!integration.isEmpty()) {
-			integration.validate();
-			add(integration);
-		}
-	}
-	
-	public BinaryTableHDU getJcmtHDU(BasicHDU[] HDU) {
-		for(int i=1; i<HDU.length; i++) {
-			String extName = HDU[i].getHeader().getStringValue("EXTNAME");
-			if(extName != null) if(extName.endsWith("JCMTSTATE")) return (BinaryTableHDU) HDU[i];
-		}
-		return null;		
-	}
 
 	
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
@@ -309,12 +290,28 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		setSourceName(header.getStringValue("OBJECT"));
 		date = header.getStringValue("DATE-OBS");
 		endTime = header.getStringValue("DATE-END");
+		if(date == null) date = endTime;
+		
 		iDate = header.getIntValue("UTDATE");
 		scanID = header.getStringValue("OBSID");
 		
+		dUT1 = header.getDoubleValue("DUT1") * Unit.day;
+		
+		
+		AstroTime timeStamp = new AstroTime();
+		try { 
+			timeStamp.parseFitsDate(date); 
+			setMJD(timeStamp.getMJD());
+		}
+		catch(Exception e) { System.err.println("WARNING! could not parse DATE-OBS..."); }
+		
+		// TODO CRVAL3 dMJD at the middle of observation
+		
+	
+		
 		blankingValue = header.getIntValue("BLANK");
 		
-		// INSTAP_X, Y instrument aperture offsets. Kinda like FAZO, FZAO?
+	
 		
 		System.err.println(" [" + getSourceName() + "] observed on " + date);
 		String trackingSystem = header.getStringValue("TRACKSYS");
@@ -333,8 +330,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		}
 		else {
 			trackingClass = EquatorialCoordinates.class;
-			double mjdDay = header.getDoubleValue("TMORG_A");
-			double year = (mjdDay - CoordinateEpoch.J2000.getMJD()) / 365.25;
+			double year = (getMJD() - CoordinateEpoch.J2000.getMJD()) / 365.25;
 			
 			String epoch = trackingSystem.equals("APP") ? "J" + Util.f1.format(year) : "J2000";
 			
@@ -348,10 +344,10 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 
 		// Weather
 		
-		if(hasOption("tau.186ghz")) tau186GHz = option("tau.186ghz").getDouble();
+		if(hasOption("tau.183ghz")) tau183GHz = option("tau.183ghz").getDouble();
 		else {
-			tau186GHz = 0.5 * (header.getDoubleValue("WVMTAUST") + header.getDoubleValue("WVMTAUEN"));
-			instrument.setOption("tau.186ghz=" + tau186GHz);
+			tau183GHz = 0.5 * (header.getDoubleValue("WVMTAUST") + header.getDoubleValue("WVMTAUEN"));
+			instrument.setOption("tau.183ghz=" + tau183GHz);
 		}
 		
 		if(hasOption("tau.225ghz")) tau225GHz = option("tau.225ghz").getDouble();
@@ -360,7 +356,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			instrument.setOption("tau.225ghz=" + tau225GHz);
 		}
 		
-		System.err.println(" tau(225GHz)=" + Util.f3.format(tau225GHz) + ", tau(186GHz)=" + Util.f3.format(tau186GHz));
+		System.err.println(" tau(225GHz)=" + Util.f3.format(tau225GHz) + ", tau(183GHz)=" + Util.f3.format(tau183GHz));
 		
 		ambientT = 0.5 * (header.getDoubleValue("ATSTART") + header.getDoubleValue("ATEND")) * Unit.K + 273.16 * Unit.K;
 		pressure = 0.5 * (header.getDoubleValue("BPSTART") + header.getDoubleValue("BPEND")) * Unit.mbar;
@@ -443,6 +439,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		else if(name.equals("dir")) return AstroSystem.getID(trackingClass);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
-
+	
+	
 	
 }

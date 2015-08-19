@@ -108,7 +108,7 @@ if [ -z ${CRUSH+x} ] ; then
 fi
 
 JAVAOPTS="-d$DATAMODEL -Xmx${USEMB}M $EXTRAOPTS"
-CLASSPATH="$CRUSH/tools.jar:$CRUSH/fits.jar:$CRUSH/util.jar:$CRUSH/crush2.jar"
+CLASSPATH="$CRUSH/tools.jar:$CRUSH/fits.jar:$CRUSH/util.jar:$CRUSH/crush2.jar:$CRUSH/bin"
 
 export CRUSH
 

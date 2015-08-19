@@ -1,34 +1,47 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
- * This file is part of the proprietary SCUBA-2 modules of crush.
+ * This file is part of crush.
  * 
- * You may not modify or redistribute this file in any way. 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
  * 
- * Together with this file you should have received a copy of the license, 
- * which outlines the details of the licensing agreement, and the restrictions
- * it imposes for distributing, modifying or using the SCUBA-2 modules
- * of CRUSH-2. 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
  * 
- * These modules are provided with absolutely no warranty.
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+
 package crush.scuba2;
 
 
-import java.util.*;
 
 import kovacs.math.Vector2D;
 import kovacs.util.*;
 
 public class Scuba2Subarray implements Cloneable {
+	Scuba2 scuba2;
 	String id;
-	Vector2D pixelSize = Scuba2Pixel.defaultSize, apertureOffset = new Vector2D();
+	
+	Vector2D focalPlanePixelOffset = new Vector2D();
 	double orientation = 0.0;
 	boolean isMirrored = false;
+	public double scaling = 1.0;
 	
-	public Scuba2Subarray(String id) {
+	
+	public Scuba2Subarray(Scuba2 parent, String id) {
+		scuba2 = parent;
 		this.id = id;
+		setOptions();
 	}
 	
 	@Override 
@@ -39,40 +52,29 @@ public class Scuba2Subarray implements Cloneable {
 	
 	public Scuba2Subarray copy() {
 		Scuba2Subarray copy = (Scuba2Subarray) clone();
-		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.clone();
-		if(apertureOffset != null) copy.apertureOffset = (Vector2D) apertureOffset.clone();
+		if(focalPlanePixelOffset != null) copy.focalPlanePixelOffset = (Vector2D) focalPlanePixelOffset.clone();
 		if(id != null) copy.id = new String(id);
 		return copy;
 	}
 
-	public Vector2D getPixelPosition(double mux, double pin) {
+	public Vector2D getPhysicalPixelPosition(double row, double col) {
 		Vector2D position = new Vector2D();
-		getPixelPosition(mux, pin, position);
+		getPhysicalPixelPosition(row, col, position);
 		return position;
 	}
 	
-	public void getPixelPosition(double mux, double pin, Vector2D position) {
-		position.setX((isMirrored ? -1.0 : 1.0) * pixelSize.x() * (pin - 19.5));
-		position.setY(pixelSize.y() * (mux - 15.5));
+	public void getPhysicalPixelPosition(double row, double col, Vector2D position) {
+		position.set((isMirrored ? -1.0 : 1.0) * col, row);
 		position.rotate(orientation);
-		position.add(apertureOffset);
+		position.add(focalPlanePixelOffset);
+		position.scale(scuba2.physicalPixelSize);
 	}
 	
-	public void setOptions(Scuba2 scuba2) {
-		if(scuba2.hasOption(id + ".pixelsize")) {
-			pixelSize = new Vector2D();
-			StringTokenizer tokens = new StringTokenizer(scuba2.option(id + ".pixelsize").getValue(), " \t,:xX");
-			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
-		}
-		if(scuba2.hasOption(id + ".rotation"))
-			orientation = scuba2.option(id + ".rotation").getDouble() * Unit.deg;
-		if(scuba2.hasOption(id + ".position")) {
-			apertureOffset = scuba2.option(id + ".position").getVector2D();
-			apertureOffset.scale(scuba2.getSizeUnitValue());
-		}
-		isMirrored = scuba2.hasOption(id + ".mirror");
+	public void setOptions() {
+		if(scuba2.hasOption(id + ".rotation")) orientation = scuba2.option(id + ".rotation").getDouble() * Unit.deg;
+		if(scuba2.hasOption(id + ".position")) focalPlanePixelOffset = scuba2.option(id + ".position").getVector2D();
+		isMirrored = scuba2.hasOption("mirror");
 	}
 	
-	public static int size = 32*40;
+	public static int PIXELS = Scuba2.ROWS * Scuba2.COLS;
 }

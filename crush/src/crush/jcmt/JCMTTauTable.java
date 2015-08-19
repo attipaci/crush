@@ -21,7 +21,7 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.cso;
+package crush.jcmt;
 
 import java.io.BufferedReader;
 import java.io.IOException;

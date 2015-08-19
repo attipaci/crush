@@ -23,7 +23,12 @@
 
 package crush.mustang2;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import kovacs.math.Vector2D;
 import kovacs.util.Unit;
@@ -40,6 +45,7 @@ import crush.Mount;
 import crush.Scan;
 import crush.array.Array;
 import crush.array.SingleColorLayout;
+import crush.resonators.ResonatorList;
 
 public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements GroundBased {
 	/**
@@ -53,7 +59,7 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 	// TODO ? Vector2D arrayPointingCenter
 	
 	public Mustang2() {
-		super("mustang2", new SingleColorLayout<Mustang2Pixel>(), maxReadouts * maxReadoutPixels);	
+		super("mustang2", new SingleColorLayout<Mustang2Pixel>(), maxPixels);	
 		setResolution(6.2 * Unit.arcsec);
 		
 		mount = Mount.CASSEGRAIN;
@@ -96,7 +102,7 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 
 	@Override
 	public int maxPixels() {
-		return maxReadouts * maxReadoutPixels;
+		return maxReadouts * maxReadoutChannels;
 	}
 
 	@Override
@@ -105,9 +111,7 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 	}
 
 	@Override
-	public void readWiring(String fileName) throws IOException {
-		// TODO Auto-generated method stub
-	}
+	public void readWiring(String fileName) throws IOException {}
 
 	@Override
 	public Mustang2Pixel getChannelInstance(int backendIndex) {
@@ -123,12 +127,13 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 	public void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException {
 		Header header = hdu.getHeader();
 		
-		//readout = new Mustang2Readout[header.getIntValue("NROACHES", 1)];
+		// nReadouts = header.getIntValue("NROACHES", 1);
 		focus = header.getDoubleValue("LFCY", Double.NaN) * Unit.mm;
 		
 		// TODO read from FITS when available...
 		samplingInterval = integrationTime = 1.0 * Unit.ms;
 	}
+
 	
 	public void parseHardwareHDU(BinaryTableHDU hdu) throws FitsException {
 		Object[] data = hdu.getRow(0);
@@ -139,9 +144,7 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		float[] atten = (float[]) data[hdu.findColumn("ATTEN")];
 		float[] bias = (float[]) data[hdu.findColumn("DETBIAS")];
 		float[] heater = (float[]) data[hdu.findColumn("DETHEATERS")];
-		float[] x = (float[]) data[hdu.findColumn("DETOFFX")];
-		float[] y = (float[]) data[hdu.findColumn("DETOFFY")];
-		float[] weight = (float[]) data[hdu.findColumn("DETWT")];
+		float[] gain = (float[]) data[hdu.findColumn("GAINS")];
 		
 		readout = new Mustang2Readout[bias.length];
 		
@@ -153,41 +156,152 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		}
 			
 		int pixels = f0.length;
-		System.err.println(" Camera has " + pixels + " active pixels.");
+		System.err.println(" Reading out " + pixels + " channels.");
 		clear();
 		ensureCapacity(pixels);
 		
+		double sumaG = 0.0;
+		int n = 0;
+		
 		for(int i=0; i<pixels; i++) {
 			Mustang2Pixel pixel = new Mustang2Pixel(this, (i+1));
-			pixel.weight = weight[i];
-			pixel.frequency = f0[i] * Unit.mHz;
+			pixel.gain = gain[i];
+			if(gain[i] != 0.0) {
+				sumaG = Math.abs(gain[i]);
+				n++;
+			}
+			pixel.frequency = f0[i] * Unit.GHz;
 			pixel.attenuation = atten[i];
 			pixel.readoutIndex = col[i]; 
 			pixel.muxIndex = row[i];
-			pixel.position = new Vector2D(x[i] * Unit.arcsec, y[i] * Unit.arcsec);
-			if(pixel.position.length() == 0.0) pixel.flag(Channel.FLAG_DEAD);
+			if(pixel.gain == 0.0) pixel.flag(Channel.FLAG_BLIND); 
+			if(pixel.frequency < 0.0) pixel.flag(Channel.FLAG_DEAD); 
 			add(pixel);
 		}
 		
+		// Normalize the gains
+		if(n > 0) {
+			double aveG = sumaG / n;
+			for(Channel pixel : this) pixel.gain /= aveG;			
+		}
 	
-		if(hasOption("rotate")) {
-			double angle = option("rotate").getDouble() * Unit.deg;
-			for(Mustang2Pixel pixel : this) pixel.position.rotate(angle);
-		}
-		
-		if(hasOption("flip")) for(Mustang2Pixel pixel : this) pixel.position.scaleX(-1.0);
-			
-		if(hasOption("zoom")) {
-			double factor = option("zoom").getDouble();
-			for(Mustang2Pixel pixel : this) pixel.position.scaleY(factor);
-		}
-		
 		
 	}
 	
+	@Override
+	public void loadChannelData() {
+
+		for(int i=0; i<readout.length; i++) if(hasOption("frequencies." + (i+1))) {
+			try { readout[i].parseFrequencies(option("frequencies." + (i+1)).getPath()); }
+			catch(IOException e) { e.printStackTrace(); }
+		}
+			
+		if(hasOption("positions")) {
+			try { parsePositions(option("positions").getPath()); }
+			catch(IOException e) { e.printStackTrace(); }
+		}
+		
+		assignPositions();
+			
+		if(hasOption("rotate")) {
+			double angle = option("rotate").getDouble() * Unit.deg;
+			for(Mustang2Pixel pixel : this) if(pixel.position != null) pixel.position.rotate(angle);
+		}
+		
+		if(hasOption("flip")) for(Mustang2Pixel pixel : this) if(pixel.position != null) pixel.position.scaleX(-1.0);
+			
+		if(hasOption("zoom")) {
+			double factor = option("zoom").getDouble();
+			for(Mustang2Pixel pixel : this) if(pixel.position != null) pixel.position.scale(factor);
+		}
+		
+		if(hasOption("offset")) {
+			Vector2D offset = option("offset").getVector2D();
+			for(Mustang2Pixel pixel : this) if(pixel.position != null) pixel.position.add(offset);
+		}
+		
+		for(int i=0; i<readout.length; i++) if(hasOption("rotation." + (i + 1))) {
+			double angle = option("rotation." + (i + 1)).getDouble() * Unit.deg;
+			for(Mustang2Pixel pixel : getReadoutPixels(i)) if(pixel.position != null) pixel.position.rotate(angle);
+		}
+		
+		for(int i=0; i<readout.length; i++) if(hasOption("offset." + (i + 1))) {
+			Vector2D offset = option("offset." + (i + 1)).getVector2D();
+			offset.scale(Unit.arcsec);
+			for(Mustang2Pixel pixel : getReadoutPixels(i)) if(pixel.position != null) pixel.position.add(offset);
+		}
+			
+		super.loadChannelData();
+	}
+		
+	public void parsePositions(String fileName) throws IOException {
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
+		String line = null;
+		
+		for(Mustang2Readout r : readout) if(r != null) for(Mustang2PixelID id : r.tones) id.flag(Mustang2PixelID.FLAG_UNUSED);
+		
+		
+		int n = 0;
+		
+		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
+			StringTokenizer tokens = new StringTokenizer(line);
+			if(tokens.countTokens() > 4) {
+				Mustang2Readout r = readout[Integer.parseInt(tokens.nextToken())];
+				
+				int channel = Integer.parseInt(tokens.nextToken());
+				
+				if(channel < r.tones.size()) {
+					Mustang2PixelID id = r.tones.get(channel);
+					
+					id.position = new Vector2D(Double.parseDouble(tokens.nextToken()), Double.parseDouble(tokens.nextToken()));			
+					id.position.scale(Unit.arcsec);
+
+					id.unflag(Mustang2PixelID.FLAG_UNUSED);
+
+					int flag = Integer.parseInt(tokens.nextToken());
+					if(flag == 0) id.flag(Mustang2PixelID.FLAG_BLIND);
+					else id.unflag(Mustang2PixelID.FLAG_BLIND);
+
+					n++;
+				}
+			}
+			
+		}
+		
+		System.err.println(" Parsed " + n + " pixel positions from " + fileName);
+		
+		in.close();
+	}
+		
+	public void assignPositions() {	
+		for(Mustang2Pixel pixel : this) pixel.flagID();
+		
+		if(hasOption("readout")) {
+			int i = option("readout").getInt() - 1;
+			assignPositions(i);	
+		}
+		else for(int i=0; i<readout.length; i++) if(readout[i] != null) if(!readout[i].tones.isEmpty()) assignPositions(i);
+
+		// Mark to discard any channels that have no IDs or are blind channels...
+		for(Channel channel : this) if(channel.isFlagged(Mustang2Pixel.FLAG_NOTONEID | Mustang2Pixel.FLAG_BLIND))
+			channel.flag(Channel.FLAG_DISCARD);
+	}
 	
+	public void assignPositions(int readoutIndex) {
+		ArrayList<Mustang2Pixel> pixels = getReadoutPixels(readoutIndex);
+		Mustang2PixelMatch identifier = new Mustang2PixelMatch(getOptions().get("pixelid"));
+		identifier.addAll(readout[readoutIndex].tones);
+		identifier.match(new ResonatorList<Mustang2Pixel>(pixels));
+	}
+	
+	public ArrayList<Mustang2Pixel> getReadoutPixels(int readoutIndex) {
+		ArrayList<Mustang2Pixel> pixels = new ArrayList<Mustang2Pixel>(maxReadoutChannels);
+		for(Mustang2Pixel pixel : this) if(pixel.readoutIndex == readoutIndex) pixels.add(pixel);
+		return pixels;
+	}
 	
 	
 	public static int maxReadouts = 7;
-	public static int maxReadoutPixels = 36;
+	public static int maxReadoutChannels = 36;
+	public static int maxPixels = 338;
 }

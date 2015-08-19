@@ -76,7 +76,7 @@ public class Mustang2Integration extends Integration<Mustang2, Mustang2Frame> im
 	
 	class Mustang2Reader extends HDUReader {	
 		private float[] data;
-		private double[] MJD, RA, DEC, AZ, EL; // LST?
+		private double[] MJD, RA, DEC, AZ, EL, LST;
 		private int channels;
 		
 		private final Mustang2Scan mustang2Scan = (Mustang2Scan) scan;
@@ -84,13 +84,13 @@ public class Mustang2Integration extends Integration<Mustang2, Mustang2Frame> im
 		public Mustang2Reader(BinaryTableHDU hdu) throws FitsException {
 			super(hdu);
 		
-			int iData = hdu.findColumn("DATA");	// TODO
+			int iData = hdu.findColumn("DATA");
 			channels = table.getSizes()[iData];
 			data = (float[]) table.getColumn(iData);
 			
 			// The IRAM coordinate data...
 			MJD = (double[]) table.getColumn(hdu.findColumn("DMJD"));
-			//LST = (double[]) table.getColumn(hdu.findColumn("LST"));
+			LST = (double[]) table.getColumn(hdu.findColumn("LST"));
 			
 			RA = (double[]) table.getColumn(hdu.findColumn("GBTRA"));
 			DEC = (double[]) table.getColumn(hdu.findColumn("GBTDEC"));
@@ -112,8 +112,6 @@ public class Mustang2Integration extends Integration<Mustang2, Mustang2Frame> im
 				
 				@Override
 				public void processRow(int i) {
-					//set(i, null);
-					
 					// Create the frame object only if it cleared the above hurdles...
 					final Mustang2Frame frame = new Mustang2Frame(mustang2Scan);
 					frame.index = i;
@@ -124,7 +122,7 @@ public class Mustang2Integration extends Integration<Mustang2, Mustang2Frame> im
 					// Add in the astrometry...
 					frame.MJD = MJD[i];
 					timestamp.setMJD(frame.MJD);
-					frame.LST = timestamp.getLMST(scan.site.longitude());
+					frame.LST = LST[i] * Unit.hourAngle;
 					
 					frame.equatorial = new EquatorialCoordinates(RA[i] * Unit.deg, DEC[i] * Unit.deg, scan.equatorial.epoch);
 					frame.horizontal = new HorizontalCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);

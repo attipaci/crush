@@ -36,6 +36,7 @@ import crush.GroundBased;
 import crush.HorizontalFrame;
 import crush.Integration;
 import crush.Scan;
+import crush.jcmt.JCMTTauTable;
 
 
 public abstract class CSOIntegration<InstrumentType extends CSOArray<?>, FrameType extends HorizontalFrame> 

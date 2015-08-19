@@ -20,26 +20,36 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.resonator;
 
-import crush.Channel;
+package crush.mustang2;
 
-public interface Resonator {
+import kovacs.math.Vector2D;
+import crush.resonators.FrequencyID;
 
-	public double getFrequency();
+public class Mustang2PixelID extends FrequencyID {
+	Vector2D position;
+	int flag;
 	
-	public FrequencyID getFrequencyID();
+	public Mustang2PixelID(int index) {
+		super(index);
+	}
+
+	public void flag(int pattern) {
+		flag |= pattern;
+	}
 	
-	public void setFrequencyID(FrequencyID id);
-		
-	public Channel getChannel();
+	public void unflag(int pattern) {
+		flag &= ~pattern;
+	}
 	
-	public void flagID();
+	public boolean isFlagged(int pattern) {
+		return (flag & pattern) != 0;
+	}
 	
-	public void unflagID();
+	public boolean isUnflagged(int pattern) {
+		return (flag & pattern) == 0;
+	}
 	
-	public boolean isAssigned();
-	
-	public boolean assignTo(Resonator reference);
-	
+	public static int FLAG_BLIND = 1;
+	public static int FLAG_UNUSED = 2;
 }
