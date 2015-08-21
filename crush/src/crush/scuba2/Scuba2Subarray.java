@@ -25,17 +25,24 @@ package crush.scuba2;
 
 
 
+import crush.Channel;
 import kovacs.math.Vector2D;
 import kovacs.util.*;
+import nom.tam.fits.BinaryTableHDU;
+import nom.tam.fits.FitsException;
 
 public class Scuba2Subarray implements Cloneable {
 	Scuba2 scuba2;
 	String id;
+	int channelOffset;
 	
 	Vector2D focalPlanePixelOffset = new Vector2D();
 	double orientation = 0.0;
 	boolean isMirrored = false;
-	public double scaling = 1.0;
+
+	double scaling = 1.0;
+	
+
 	
 	
 	public Scuba2Subarray(Scuba2 parent, String id) {
@@ -74,6 +81,25 @@ public class Scuba2Subarray implements Cloneable {
 		if(scuba2.hasOption(id + ".rotation")) orientation = scuba2.option(id + ".rotation").getDouble() * Unit.deg;
 		if(scuba2.hasOption(id + ".position")) focalPlanePixelOffset = scuba2.option(id + ".position").getVector2D();
 		isMirrored = scuba2.hasOption("mirror");
+	}
+	
+	public Scuba2Pixel getPixel(int subarrayIndex) {
+		return scuba2.get(channelOffset + subarrayIndex);
+	}
+	
+	protected void parseFlatcalHDU(BinaryTableHDU hdu) throws FitsException {
+		int col = hdu.findColumn("DATA");
+		if(col < 0) {
+			System.err.println(" WARNING! flatfield data not found...");
+			return;
+		}
+		double[][][] data = (double[][][]) hdu.getRow(0)[col];
+		
+		for(int c=Scuba2Subarray.PIXELS; --c >= 0; ) {
+			Scuba2Pixel pixel = getPixel(c);
+			if(Double.isNaN(data[0][pixel.col % Scuba2.COLS][pixel.row % Scuba2.ROWS])) pixel.flag(Channel.FLAG_DEAD);
+		}
+		
 	}
 	
 	public static int PIXELS = Scuba2.ROWS * Scuba2.COLS;

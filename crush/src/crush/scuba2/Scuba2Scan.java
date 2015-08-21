@@ -99,11 +99,6 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		Arrays.fill(hasSubarray, false);
 		for(Scuba2Fits file : files) hasSubarray[file.getSubarrayIndex()] = true;
 		
-		// Count how many subarrays are active
-		subarrays = 0;
-		for(int i=0; i<hasSubarray.length; i++) if(hasSubarray[i]) subarrays++;
-		System.err.println(" Found data for " + subarrays + " subarrays.");
-		
 		// Sort by subscan and then by subarray index
 		Collections.sort(files);
 		
@@ -112,6 +107,17 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		((Scuba2) instrument).addPixelsFor(hasSubarray);
 		instrument.parseScanPrimaryHDU(mainHDU);
 		instrument.validate(this);	
+		
+		// Count how many subarrays are active
+		subarrays = 0;
+		int channelOffset = 0;
+		for(int i=0; i<hasSubarray.length; i++) if(hasSubarray[i]) {
+			subarrays++;
+			instrument.subarray[i].channelOffset = channelOffset;
+			channelOffset += Scuba2Subarray.PIXELS;
+		}
+		System.err.println(" Found data for " + subarrays + " subarrays.");
+		
 		clear();
 		
 		// Read all the files for a given subscan...
@@ -184,7 +190,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		
 		ArrayList<Scuba2Fits> files = null;
 		
-		if(subIDs == null)  files = getFitsFiles(scanDescriptor, '*');
+		if(subIDs == null) files = getFitsFiles(scanDescriptor, '*');
 		else {
 			files = new ArrayList<Scuba2Fits>();
 			for(String id : subIDs) files.addAll(getFitsFiles(scanDescriptor, id.toLowerCase().charAt(0)));

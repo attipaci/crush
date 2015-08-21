@@ -74,7 +74,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	}
 	
 	
-	public void read() throws Exception {
+	public void read() throws FitsException, DarkSubscanException {
 		clear();
 		
 		Scuba2Scan scuba2Scan = (Scuba2Scan) scan;
@@ -83,36 +83,34 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		Arrays.fill(readoutLevel, scuba2Scan.blankingValue);
 		
 		// Read the subsequent subarray data (if any).
-		for(int i=0; i<files.size(); i++) {
-			Scuba2Fits file = files.get(i);
-			Fits fits = new Fits(file.getFile());
-			ImageHDU dataHDU = null;
-						
-			if(i==0) {
-				BasicHDU[] HDU = fits.read();
-				
-				parsePrimaryHeader(HDU[0].getHeader());
-				
-				// TODO WCS-TAB HDU has data timestamps...
-				// TODO could match when reading coordinates, or check if same size...
-				// Read the coordinate info etc. from the first subscan file.
-				readCoordinateData(getJcmtHDU(HDU));
-				
-				dataHDU = (ImageHDU) HDU[0];
-			}
-			else dataHDU = (ImageHDU) fits.getHDU(0);
+		for(int i=0; i<files.size(); i++) readFile(files.get(i), i == 0);	
+	}
+	
+	private void readFile(Scuba2Fits file, boolean isFirstFile) throws FitsException, DarkSubscanException {
+		Fits fits = new Fits(file.getFile());
+		ImageHDU dataHDU = null;
 			
-			int subarrayIndex = file.getSubarrayIndex();
-			int channelOffset = 0;
-			for(int k=0; k<subarrayIndex; k++) if(scuba2Scan.hasSubarray[k]) channelOffset += Scuba2Subarray.PIXELS;
-			
-			Scuba2Subarray subarray = instrument.subarray[subarrayIndex];
-			float scaling = hasOption(subarray.id + ".scale") ? option(subarray.id + ".scale").getFloat() : 1.0F;
-			subarray.scaling *= scaling;
-			
-			readArrayData(dataHDU, channelOffset, scaling);
-		}
+		BasicHDU[] HDU = fits.read();
 		
+		if(isFirstFile) {
+			parsePrimaryHeader(HDU[0].getHeader());
+			
+			// TODO WCS-TAB HDU has data timestamps...
+			// TODO could match when reading coordinates, or check if same size...
+			// Read the coordinate info etc. from the first subscan file.
+			readCoordinateData(getJcmtHDU(HDU));
+		}
+
+		dataHDU = (ImageHDU) HDU[0];
+		
+		int subarrayIndex = file.getSubarrayIndex();	
+		Scuba2Subarray subarray = instrument.subarray[subarrayIndex];
+		
+		float scaling = hasOption(subarray.id + ".scale") ? option(subarray.id + ".scale").getFloat() : 1.0F;
+		subarray.scaling *= scaling;
+		
+		readArrayData(dataHDU, subarray.channelOffset, scaling);
+		subarray.parseFlatcalHDU(getFlatcalHDU(HDU));
 	}
 
 	private void setReadoutLevels(final int[][] DAC, final int channelOffset) {
@@ -142,6 +140,14 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		return null;		
 	}
 
+	public BinaryTableHDU getFlatcalHDU(BasicHDU[] HDU) {
+		for(int i=1; i<HDU.length; i++) {
+			String extName = HDU[i].getHeader().getStringValue("EXTNAME");
+			if(extName != null) if(extName.endsWith("FLATCAL.DATA_ARRAY")) return (BinaryTableHDU) HDU[i];
+		}
+		return null;		
+	}
+	
 	@Override
 	public String getID() { return Integer.toString(integrationNo+1); }
 	
@@ -269,29 +275,6 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		
 	}
 
-	/*
-	public void temperatureCorrect() {
-		System.err.println("   Correcting for temperature drifts.");
-		
-		Response mode = (Response) instrument.modalities.get("temperature").get(0);
-		Signal signal = getSignal(mode);
-		if(signal == null) signal = mode.getSignal(this);
-		
-		signal.level(false);
-		double rmsHe3 = signal.getRMS();
-		System.err.println("   RMS He3 temperature drift is " + Util.f3.format(1e3 * rmsHe3) + " mK.");
-		
-		final Signal temperatureSignal = signal;
-		
-		new Fork<Void>() {
-			@Override
-			protected void process(Scuba2Frame exposure) {
-				double dT = temperatureSignal.valueAt(exposure);
-				if(!Double.isNaN(dT)) for(Scuba2Pixel pixel : instrument) exposure.data[pixel.index] -= pixel.he3Gain * dT;
-			}	
-		}.process();
-	}
-	*/
 	
 	/*
 	public void writeTemperatureGains() throws IOException {

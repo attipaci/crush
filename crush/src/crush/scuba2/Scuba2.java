@@ -219,7 +219,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	
 	
 	
-	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException {
 		Header header = hdu.getHeader();
 		
 		
@@ -252,6 +252,9 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 				+ " ZOff=" + Util.f2.format(focusZOffset)
 		);		
 	}
+	
+	
+	
 
 	/*
 	public void readTemperatureGains(String fileName) throws IOException {
@@ -335,10 +338,10 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	public int rows() { return COLS; }
 	
 	public int cols() { return ROWS; }
+	
 		
 	@Override
 	public int maxPixels() { return SUBARRAYS * Scuba2Subarray.PIXELS; }
-	
 	
 	public final static double DEFAULT_PIXEL_SIZE = 1.135 * Unit.mm;
 	public final static double DEFAULT_PLATE_SCALE = 5.1453 * Unit.arcsec / Unit.mm;
