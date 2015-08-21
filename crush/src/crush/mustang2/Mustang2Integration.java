@@ -138,7 +138,6 @@ public class Mustang2Integration extends Integration<Mustang2, Mustang2Frame> im
 			};
 		}
 	}	
-	
-	
+
 	
 }

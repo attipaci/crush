@@ -601,23 +601,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void fillGaps() {
 		final Frame first = getFirstFrame();
-		final Frame last = getLastFrame();
-	
-		System.err.println("### Sampling: " + instrument.samplingInterval);
-		
-		final int n = (int) Math.ceil((last.MJD - first.MJD) / instrument.samplingInterval);
+			
+		final int n = (int) Math.ceil((getLastFrame().MJD - first.MJD) / instrument.samplingInterval);
 		int padded = 0;
 		
 		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(n);
-		
-	
 		
 		for(int t=0; t<size(); t++) {
 			final FrameType frame = get(t);
 			
 			if(frame == null) continue;
 			
-			double gap = (frame.MJD - first.MJD) * Unit.day - (frame.index - first.index) * instrument.samplingInterval;
+			double gap = (frame.MJD - first.MJD) * Unit.day - (buffer.size() - first.index) * instrument.samplingInterval;
 			int frameGaps = (int) Math.round(gap / instrument.samplingInterval);
 			
 			if(frameGaps > 10) System.err.println("   WARNING! Large gap of " + frameGaps + " frames at index " + t + ", MJD: " + frame.MJD);

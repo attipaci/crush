@@ -30,8 +30,10 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import kovacs.data.Statistics;
 import kovacs.math.Vector2D;
 import kovacs.util.Unit;
+import kovacs.util.Util;
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;
@@ -55,6 +57,7 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 
 	Mustang2Readout[] readout;
 	double focus;
+	double temperatureGain;
 	
 	// TODO ? Vector2D arrayPointingCenter
 	
@@ -160,37 +163,50 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		clear();
 		ensureCapacity(pixels);
 		
-		double sumaG = 0.0;
 		int n = 0;
+		double[] G = new double[pixels];
+		final double maxG = 0.1;			// A maximum reasonable temperature gain rad/K...
+											// Allows for +/- ~15 K dynamic range
 		
 		for(int i=0; i<pixels; i++) {
 			Mustang2Pixel pixel = new Mustang2Pixel(this, (i+1));
+			
 			pixel.gain = gain[i];
-			if(gain[i] != 0.0) {
-				sumaG = Math.abs(gain[i]);
-				n++;
-			}
 			pixel.frequency = f0[i] * Unit.GHz;
 			pixel.attenuation = atten[i];
 			pixel.readoutIndex = col[i]; 
 			pixel.muxIndex = row[i];
+			
 			if(pixel.gain == 0.0) pixel.flag(Channel.FLAG_BLIND); 
+			if(Math.abs(pixel.gain) > maxG) {
+				pixel.gain /= Math.abs(pixel.gain);
+				pixel.flag(Channel.FLAG_GAIN); 
+			}
 			if(pixel.frequency < 0.0) pixel.flag(Channel.FLAG_DEAD); 
+			
+			if(pixel.isUnflagged()) G[n++] = Math.abs(pixel.gain);
+			
 			add(pixel);
 		}
 		
 		// Normalize the gains
 		if(n > 0) {
-			double aveG = sumaG / n;
-			for(Channel pixel : this) pixel.gain /= aveG;			
+			temperatureGain = Statistics.median(G, 0, n);		
+			System.err.println(" Average gain is " + Util.s2.format(temperatureGain) + " / K for " + n + " pixels.");
+			for(Channel pixel : this) pixel.gain /= temperatureGain;
 		}
 	
 		
 	}
 	
 	@Override
+	public void validate(Scan<?,?> scan) {
+		super.validate(scan);
+		gain *= temperatureGain;
+	}
+	
+	@Override
 	public void loadChannelData() {
-
 		for(int i=0; i<readout.length; i++) if(hasOption("frequencies." + (i+1))) {
 			try { readout[i].parseFrequencies(option("frequencies." + (i+1)).getPath()); }
 			catch(IOException e) { e.printStackTrace(); }
@@ -203,34 +219,6 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		
 		assignPositions();
 			
-		if(hasOption("rotate")) {
-			double angle = option("rotate").getDouble() * Unit.deg;
-			for(Mustang2Pixel pixel : this) if(pixel.position != null) pixel.position.rotate(angle);
-		}
-		
-		if(hasOption("flip")) for(Mustang2Pixel pixel : this) if(pixel.position != null) pixel.position.scaleX(-1.0);
-			
-		if(hasOption("zoom")) {
-			double factor = option("zoom").getDouble();
-			for(Mustang2Pixel pixel : this) if(pixel.position != null) pixel.position.scale(factor);
-		}
-		
-		if(hasOption("offset")) {
-			Vector2D offset = option("offset").getVector2D();
-			for(Mustang2Pixel pixel : this) if(pixel.position != null) pixel.position.add(offset);
-		}
-		
-		for(int i=0; i<readout.length; i++) if(hasOption("rotation." + (i + 1))) {
-			double angle = option("rotation." + (i + 1)).getDouble() * Unit.deg;
-			for(Mustang2Pixel pixel : getReadoutPixels(i)) if(pixel.position != null) pixel.position.rotate(angle);
-		}
-		
-		for(int i=0; i<readout.length; i++) if(hasOption("offset." + (i + 1))) {
-			Vector2D offset = option("offset." + (i + 1)).getVector2D();
-			offset.scale(Unit.arcsec);
-			for(Mustang2Pixel pixel : getReadoutPixels(i)) if(pixel.position != null) pixel.position.add(offset);
-		}
-			
 		super.loadChannelData();
 	}
 		
@@ -239,7 +227,6 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		String line = null;
 		
 		for(Mustang2Readout r : readout) if(r != null) for(Mustang2PixelID id : r.tones) id.flag(Mustang2PixelID.FLAG_UNUSED);
-		
 		
 		int n = 0;
 		
