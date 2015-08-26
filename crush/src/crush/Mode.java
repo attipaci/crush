@@ -125,24 +125,28 @@ public class Mode {
 		}
 	}
 	
-	// Return true if flagging...
 	public synchronized boolean setGains(float[] gain) throws Exception {
+		return setGains(gain, true);
+	}
+	
+	// Return true if flagging...
+	public synchronized boolean setGains(float[] gain, boolean flagNormalized) throws Exception {
 		if(gainProvider == null) this.gain = gain;
 		else for(int c=channels.size(); --c>=0; ) gainProvider.setGain(channels.get(c), gain[c]);
-		return flagGains();
+		return flagGains(flagNormalized);
 	}
 		
 	public void uniformGains() throws Exception {
 		float[] G = new float[channels.size()];
 		Arrays.fill(G, 1.0F);
-		setGains(G);
+		setGains(G, false);
 	}
 	
-	protected synchronized boolean flagGains() throws Exception {
+	protected synchronized boolean flagGains(boolean normalize) throws Exception {
 		if(gainFlag == 0) return false;
 			
 		final float[] gain = getGains();
-		final float aveG = (float) getAverageGain(~gainFlag);
+		final float aveG = normalize ? (float) getAverageGain(~gainFlag) : 1.0F;
 		
 		for(int k=channels.size(); --k >= 0; ) {
 			final Channel channel = channels.get(k);

@@ -34,7 +34,7 @@ public class CorrelatedMode extends Mode {
 	
 	public boolean fixedSignal = false;
 	public boolean solvePhases = false;
-	public int skipChannels = ~0;
+	public int skipFlags = ~0;
 
 	private boolean isNormalizedGains = false;
 	
@@ -51,10 +51,10 @@ public class CorrelatedMode extends Mode {
 	}
 	
 	@Override
-	public synchronized boolean setGains(float[] gain) throws Exception {
+	public boolean setGains(float[] gain) throws Exception {
 		normalizeGains(gain);
 		isNormalizedGains = true;
-		return super.setGains(gain);
+		return super.setGains(gain, false);
 	}
 	
 	public float[] getNormalizedGains() throws Exception {
@@ -64,8 +64,8 @@ public class CorrelatedMode extends Mode {
 		return G;
 	}
 	
-	public void normalizeGains(float[] gain) {
-		final float aveG = (float) getAverageGain(gain, ~gainFlag);
+	private void normalizeGains(float[] gain) {
+		final float aveG = (float) getAverageGain(gain, skipFlags & ~gainFlag);
 		for(int i=gain.length; --i >= 0; ) gain[i] /= aveG;
 	}
 	
@@ -82,7 +82,7 @@ public class CorrelatedMode extends Mode {
 	
 	// TODO How to solve the indexing of valid channels...
 	public ChannelGroup<?> getValidChannels() {
-		return getChannels().copyGroup().discard(skipChannels);		
+		return getChannels().copyGroup().discard(skipFlags);		
 	}	
 	
 	public synchronized void scaleSignals(Integration<?,?> integration, double aveG) {
@@ -121,8 +121,6 @@ public class CorrelatedMode extends Mode {
 	
 	@Override
 	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws Exception {		
-		scaleSignals(integration, getAverageGain(~gainFlag));
-		
 		super.syncAllGains(integration, sumwC2, isTempReady);
 			
 		// Sync the gains to all the dependent modes too... 

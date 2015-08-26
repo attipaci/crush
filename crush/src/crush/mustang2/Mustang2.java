@@ -47,7 +47,6 @@ import crush.Mount;
 import crush.Scan;
 import crush.array.Array;
 import crush.array.SingleColorLayout;
-import crush.resonators.ResonatorList;
 
 public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements GroundBased {
 	/**
@@ -259,7 +258,7 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		
 		in.close();
 	}
-		
+	
 	public void assignPositions() {	
 		for(Mustang2Pixel pixel : this) pixel.flagID();
 		
@@ -273,13 +272,23 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		for(Channel channel : this) if(channel.isFlagged(Mustang2Pixel.FLAG_NOTONEID | Mustang2Pixel.FLAG_BLIND))
 			channel.flag(Channel.FLAG_DISCARD);
 	}
+	public void assignPositions(int readoutIndex) {
+		ArrayList<Mustang2Pixel> pixels = getReadoutPixels(readoutIndex);
+		Mustang2Readout r = readout[readoutIndex];
+		for(Mustang2Pixel pixel : pixels) pixel.setFrequencyID(r.getNearestID(pixel.frequency));
+	}
 	
+	
+	
+	/*
 	public void assignPositions(int readoutIndex) {
 		ArrayList<Mustang2Pixel> pixels = getReadoutPixels(readoutIndex);
 		Mustang2PixelMatch identifier = new Mustang2PixelMatch(getOptions().get("pixelid"));
 		identifier.addAll(readout[readoutIndex].tones);
 		identifier.match(new ResonatorList<Mustang2Pixel>(pixels));
 	}
+	*/
+	
 	
 	public ArrayList<Mustang2Pixel> getReadoutPixels(int readoutIndex) {
 		ArrayList<Mustang2Pixel> pixels = new ArrayList<Mustang2Pixel>(maxReadoutChannels);

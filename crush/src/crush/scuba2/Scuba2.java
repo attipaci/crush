@@ -185,6 +185,13 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 			for(Scuba2Pixel pixel : this) pixel.position.scale(zoom);
 		}
 		
+		if(hasOption("skew")) {
+			double skew = option("skew").getDouble();
+			for(Scuba2Pixel pixel : this) { pixel.position.scaleX(skew); pixel.position.scaleY(1.0/skew); }
+		}
+		
+		
+		
 	}
 	
 	public ArrayList<Scuba2Pixel> getSubarrayPixels(int subarrayIndex) {
@@ -230,7 +237,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		
 		// INSTAP_X, Y instrument aperture offsets. Kinda like FAZO, FZAO?
 		pointingCenter = new Vector2D(header.getDoubleValue("INSTAP_X", 0.0), header.getDoubleValue("INSTAP_Y", 0.0));
-		pointingCenter.scale(Unit.arcsec);
+		pointingCenter.scale(-Unit.arcsec);
 		
 		filter = header.getStringValue("FILTER");
 		double shutter = header.getDoubleValue("SHUTTER");
@@ -328,11 +335,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		return super.getDataLocationHelp() +
 				"     -date=         YYYYMMDD when the data was collected.\n" +
 				"     -ndf2fits=     The path to the ndf2fits executable. Required for\n" +
-				"                    reading native SDF data.\n" +
-				"     -convert       Convert the listed scans from SDF to FITS and exit.\n" +
-				"                    (no reduction wil take place with this option.)\n" +
-				"                    The FITS files will be written to the location set\n" +
-				"                    by the 'outpath' option.\n";
+				"                    reading native SDF data.\n";
 	}
 
 	public int rows() { return COLS; }

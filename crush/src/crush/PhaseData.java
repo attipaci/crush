@@ -121,7 +121,7 @@ public class PhaseData {
 	}
 	
 	protected void addChannelDependence(final PhaseDependents parms, final CorrelatedMode mode, final float[] G, final WeightedPoint increment) {
-		final int skipChannels = mode.skipChannels;
+		final int skipChannels = mode.skipFlags;
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.getChannel(k);
 			
@@ -136,7 +136,7 @@ public class PhaseData {
 	
 	
 	protected void getMLCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint correlated) {	
-		final int skipChannels = mode.skipChannels;
+		final int skipChannels = mode.skipFlags;
 
 		double sum = 0.0, sumw = 0.0;
 		
@@ -157,7 +157,7 @@ public class PhaseData {
 	}
 	
 	protected void getRobustCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint[] temp, final WeightedPoint correlated) {
-		final int skipChannels = mode.skipChannels;
+		final int skipChannels = mode.skipFlags;
 		
 		int n=0;
 		correlated.setWeight(0.0);

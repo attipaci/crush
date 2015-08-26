@@ -108,6 +108,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			catch(Exception e) {}
 			segmentTo(segmentTime);
 		}
+		else if(hasOption("subscans.merge")) mergeSubscans();
 		
 		
 		isMovingObject |= hasOption("moving");
@@ -166,6 +167,12 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		this.MJD = MJD;
 		instrument.setDateOptions(MJD);
 		instrument.setMJDOptions(MJD);
+	}
+	
+	public String getShortDateString() {
+		AstroTime time = new AstroTime();
+		time.setMJD(getMJD());
+		return time.getFitsShortDate();
 	}
 	
 	public String getSourceName() {
@@ -287,27 +294,23 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		// TODO What if different sampling intervals...
 		System.err.println(" Merging integrations...");
 		
-		Integration<InstrumentType, Frame> single = (Integration<InstrumentType, Frame>) get(0).clone();
-
-		for(int i=0; i<size(); i++) {
-			IntegrationType integration = get(i);
-			integration.reindex();
-			
-			int from = integration.getFirstFrame().index;
-			int to = integration.getLastFrame().index;
+		Integration<InstrumentType, Frame> merged = (Integration<InstrumentType, Frame>) get(0);
+		merged.trimToSize();
 		
-			if(i>0) {
-				double mjdGap = integration.get(from).MJD - get(i-1).getLastFrame().MJD;
-				int padding = (int) Math.round(mjdGap * Unit.day / integration.instrument.samplingInterval);
-				if(padding < 0) padding = 0;
-				for(int t=0; t<padding; t++) single.add(null);
-			}
-
-			for(int t=from; t<=to; t++) single.add(integration.get(t));		
+		for(int i=1; i<size(); i++) {
+			IntegrationType integration = get(i);
+			integration.trimToSize();
+			
+			int gap = (int) Math.round((integration.getFirstFrame().MJD - get(i-1).getLastFrame().MJD) / instrument.samplingInterval);
+			for(; --gap >= 0; ) merged.add(null);
+				
+			merged.addAll(integration);	
 		}
 	
+		merged.reindex();
+		
 		clear();
-		add((IntegrationType) single);
+		add((IntegrationType) merged);
 	}
 	
 	public double getPA() {

@@ -127,31 +127,33 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		for(int i=0; i<files.size(); i++) {
 			Scuba2Fits file = files.get(i);
 			int subscanNo = file.getSubscanNo();
-
-			if(subscanNo != subscan.integrationNo || (i+1) == files.size()) {
-				if(!subscan.files.isEmpty()) {
-					try { 
-						subscan.read(); 
-						if(!subscan.isEmpty()) add(subscan);	
-					}
-					catch(DarkSubscanException e) { System.err.println(" Subscan " + subscan.getID() + " is a dark measurement. Skipping."); }
-					catch(IllegalStateException e) { System.err.println(" WARNING! " + e.getMessage()); }
-				}
+	
+			if(subscanNo != subscan.integrationNo) {
+				addSubscan(subscan);
 				
-				if((i+1) < files.size()) {
-					subscan = new Scuba2Subscan(this);
-					subscan.integrationNo = subscanNo;
-				}
+				subscan = new Scuba2Subscan(this);
+				subscan.integrationNo = subscanNo;
 			}
-			
 			subscan.files.add(file);
 		}
+		addSubscan(subscan);
 		
 		Collections.sort(this);
 		
-		if(hasOption("subscans.merge")) mergeSubscans();
 		if(!isEmpty()) validate();
 	}
+	
+	private void addSubscan(Scuba2Subscan subscan) throws FitsException {
+		if(subscan.files.isEmpty()) return;
+		try { 
+			subscan.read(); 
+			if(!subscan.isEmpty()) add(subscan);	
+		}
+		catch(DarkSubscanException e) { System.err.println(" Subscan " + subscan.getID() + " is a dark measurement. Skipping."); }
+		catch(IllegalStateException e) { System.err.println(" WARNING! " + e.getMessage()); }
+		catch(IOException e) { System.err.println(" WARNING! FITS stream was not be closed."); }
+	}
+	
 	
 	private void calcSamplingRate() {
 		double totalTime = 0.0;
@@ -264,8 +266,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			}
 			catch(Exception e2) { System.err.println("WARNING! " + e2.getMessage()); }
 		}
-		
-		if(hasOption("convert")) System.exit(0);
+
 		
 		return scanFiles;
 	}	
@@ -311,13 +312,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		}
 		catch(Exception e) { System.err.println("WARNING! could not parse DATE-OBS..."); }
 		
-		// TODO CRVAL3 dMJD at the middle of observation
-		
-	
-		
 		blankingValue = header.getIntValue("BLANK");
-		
-	
 		
 		System.err.println(" [" + getSourceName() + "] observed on " + date);
 		String trackingSystem = header.getStringValue("TRACKSYS");

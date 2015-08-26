@@ -1,9 +1,9 @@
-             *** CRUSH User's Manual for the SCUBA-2 Plugin ***
+            *** CRUSH User's Manual Extension for the SCUBA-2 ***
 
                               Attila Kovacs
                         <attila[AT]submm.caltech.edu>
 
-                        Last updated: 17 Sep 2010
+                        Last updated: 25 Aug 2015
 
 
 
@@ -11,18 +11,22 @@ Table of Contents
 =================
 
 1. Introduction
-2. Reading Scans
-  2.1 FITS vs. SDF
-  2.2 '450um' vs '850um' reduction mode
-  2.3 By date and scan number
-  2.4 By file names
-3. Calibration and Pointing
-  3.1 Extinction Correction
-  3.2 Calibration Correction
-  3.3 Pointing Corrections
-4. SCUBA-2 specific pixel divisions
-5. Glossary of SCUBA-2 specific options
-6. SCUBA-2 specific log quantities
+2. Quick Start
+  2.1 Setup and configuration
+  2.2 Reducing the first scans 
+  2.3 Extended sources
+3. Reading Scans
+  3.1 FITS vs. SDF
+  3.2 '450um' vs '850um' reduction mode
+  3.3 By date and scan number
+  3.4 By file names
+4. Calibration and Pointing
+  4.1 Extinction Correction
+  4.2 Calibration Correction
+  4.3 Pointing Corrections
+5. SCUBA-2 specific pixel divisions
+6. Glossary of SCUBA-2 specific options
+7. SCUBA-2 specific log quantities
 
 
 
@@ -35,17 +39,147 @@ data. It is assumed that you are already familiar with the contents of the main
 CRUSH-2 README (inside the distribution directory), especially its Section 1
 (Getting Started).
 
-If you run into difficulty understanding the concepts in this document, you
-will probably find it useful to study the main README document a little longer.
+If you run into difficulty following this document, you will probably find it 
+useful to study the main README a little longer.
 
 
 
 #####################################################################
-2. Reading Scans
+2. Quick start
 #####################################################################
 
 
-2.1 FITS vs. SDF
+2.1 Setup and configuration
+===========================
+
+   After you set up CRUSH (see the main README for instructions), you will also 
+   need access to a Starlink installation on your machine, since the 
+   SCUBA-2 proprietary data files (.sdf) can only be read through the Starlink 
+   libraries. (You only really need the 'ndf2fits' tool included in 
+   Starlink...)
+
+   Once you have installed Starlink, start by creating (or editing) 
+   '.crush2/scuba2/default.cfg' in your home directory (this file will contain 
+   your personalized configuration entries). E.g. on UNIX and MacOS:
+
+     > mkdir -p ~/.crush2/scuba2
+
+   Then create/edit 'default.cfg' therein, e.g. with 'nano':
+
+     > nano ~/.crush2/scuba2/default.cfg
+
+   (Replace 'nano' with your preferred editor, such as 'vi' or 'emacs' or 
+   'gedit') In there you can specify your default values for the SCUBA-2 scan 
+   data directory ('datapath'), and where CRUSH should write its output files, 
+   such as the reduced images ('outpath'). You might also want to specify where
+   the Starlink 'ndf2fits' conversion tool is. E.g.:
+
+     datapath /home/data/scuba2
+     outpath ~/images
+     ndf2fits /usr/local/Starlink/bin/convert/ndf2fits
+
+   (The 'ndf2fits' setting may not be needed if the STARLINK_DIR environment 
+   variable is set to point to your Starlink distribution folder...). Also,
+   make sure the output directory actually exists. :-)
+
+   You can also specify and override any of these settings ad-hoc on the 
+   command line later: E.g.:
+
+     > crush scuba2 -datapath=/home/myData -outpath=../myImages [...]
+
+
+2.2. Reducing the first scans
+=============================
+
+   Now, let's reduce some data. Suppose you want to reduce pointing scan #62 
+   from 2015-06-30, at 850um:
+
+     > crush scuba2 -850um -date=20150630 -point 62  
+
+   (The '-850um' or '-450um' options select the imaging band for the reduction,
+   while the '-point' option will produce a pointing fit with fluxes displayed 
+   at the end of the reduction). Suppose, you find that the pointing was off by 
+   -1.2,4.6 arcsec (in Az/EL). And, suppose the flux (peak or integrated) you 
+   found was too low by a factor of 1.14. You can the apply these corrections 
+   (to this scan, or others) as:
+
+     > crush scuba2 -850um -date=20150630 -center=-1.2,4.6 -scale=1.14 [...]
+
+   Now, you are ready to reduce some science scans from the same day (say scan 
+   numbers 63-66, 70 with the above pointing and 81-83 with a different 
+   pointing):
+
+     > crush scuba2 [...] -pointing=-1.2,4.6 63-66 70 -pointing=2.3,1.8 81-83
+
+   Similarly, you can apply different calibration scalings too for the 
+   different scans. In general any options will be applied to the scans that 
+   are listed after them, until the same option is redefined again, or cleared
+   (using -forget) or blacklisted (via -blacklist) on the command line. Thus, 
+   global options should be up front before any of the scans are listed...
+
+   The above will produce a default reduction, which is meant to work with a 
+   wide variety of sources (brightness and extent), but you may do better than 
+   that for your particular target. For example, if your source is faint you 
+   may use the '-faint' option. For deep fields (very faint point sources) you 
+   can use '-deep' which will aggressively filter the large scales... E.g.:
+
+     > crush scuba2 -faint [...]
+
+   or
+
+     > crush scuba2 -deep [...]
+
+   For very bright sources (which might be flagged excessively by the default
+   settings) you may try '-bright'.
+
+   You can find more details on pointing and calibration in the sections below.
+   A more detailed general overview is in the main README (e.g. the Quick Start
+   guide there, and the various advanced topics).   
+
+
+2.3 Extended sources
+====================
+
+   By default, crush is optimized for reducing compact sources, and to provide 
+   the cleanest possible images. This works well up to scales of 1.5 to 3 
+   arcmins across (depending on how bright the source is). If you have a more 
+   extended source, you can try the 'extended' option. E.g.
+
+     > crush scuba2 -extended [...]
+
+   or 
+ 
+     > crush scuba2 -faint -extended [...]
+
+   (showing that 'extended' may be combined with other options like 'faint' to
+   tune the reduction for your particular source). The 'extended' option will
+   recover more of the large scales (up to FoV or, for bright sources, beyond 
+   the FoV -- see the corresponding section in the main README), but you will 
+   pay the price of reduced sensitivity (increased noise, especially on the
+   large scales).
+
+   You can further fine-tune 'extended' mode reductions by specifying an 
+   approximate source extent (FWHM) via the 'sourcesize' option (in arcsecs), 
+   and by changing the number of iterations via 'rounds'. E.g.
+
+     > crush scuba2 -extended -sourcesize=300 -rounds=20 [...]
+
+   (The above will set the expected source size to 300" fwhm and will iterate 
+   20 times.) The larger the 'sourcesize', and the more you iterate, the more 
+   extended emission you will recover, but you will also see more and more 
+   noise, especially on the larger scales (such as a wavy background). You need
+   to make you own call as to what is best.
+
+   You can find more information on the recovery of extended emission in 
+   the main README, under the 'Advanced Topics' section.
+
+
+#####################################################################
+3. Reading Scans
+#####################################################################
+
+
+3.1 FITS vs. SDF
 ================
 
    The SCUBA-2 data are recorded in the proprietary SDF format of the JCMT.
@@ -90,29 +224,12 @@ will probably find it useful to study the main README document a little longer.
         ndf2fits {@STARLINK_DIR}/bin/convert/ndf2fits
 
    will also work. If you set this up correctly, CRUSH will manage the 
-   conversion of SDF files automatically.
+   conversion of SDF files automatically, writing the FITS files in the same
+   directory as the SDF.
 
    
-   Batch Conversion
-   ----------------
-   If you just want to convert the SDF files to FITS without reducing (at that 
-   point in time) you can use the 'convert' option of CRUSH (assuming that the 
-   'ndf2fits' option is set up correctly -- see above). 
 
-   Scans are listed the usual way, but instead of reducing them, they will be 
-   converted to FITS only. You can also specify the path, where you want the 
-   converted files to be written using 'outpath'. (Otherwise, 'datapath' will 
-   be used if defined). E.g.
-
-	> crush scuba2 -convert -outpath=/data/fits <scans>
-
-   After the conversion, make sure that your reduction scripts have 'datapath' 
-   set to the location of the FITS files. E.g., using the above example:
-
-	> crush scuba2 [...] -datapath=/data/fits [...] <scans>
-
-
-2.2 '450um' vs '850um' reduction mode
+3.2 '450um' vs '850um' reduction mode
 =====================================
 
    When reducing SCUBA-2 data with CRUSH, you should specify the wavelength, in
@@ -128,7 +245,7 @@ will probably find it useful to study the main README document a little longer.
    the first scan number or name in the argument list).
 
 
-2.3 By date and scan number
+3.3 By date and scan number
 ===========================
 
    The preferred way of reading SCUBA-2 data is by 'date' and scan number.
@@ -160,7 +277,7 @@ will probably find it useful to study the main README document a little longer.
       > crush scuba2 -date=20100301 39-42 45-48 -date=20100302 12-15 17
    
    
-2.4 By file names
+3.4 By file names
 =================
 
    The alternative is to specify file names directly. You can use both full
@@ -189,53 +306,47 @@ will probably find it useful to study the main README document a little longer.
 
 
 #####################################################################
-3. Calibration and Pointing
+4. Calibration and Pointing
 #####################################################################	
 
 The default configuration of CRUSH provides approximate blind calibration, 
-expected to be good to 7% rms at 850um, and approximately 23% rms at 450um,
-when using aperture fluxes in apertures large enough to contain the SCUBA-2
-error beams of the emission.
+expected to be good to ~10% rms, when using aperture fluxes in apertures large 
+enough to contain the SCUBA-2 error beams of the emission.
 
 When using peak fluxes, the blind calibration accuracy is expected to be worse
 due to the variations in main-beam efficiency with focus, elevation and
 the surface quality of the JCMT.
 
-To improve on the calibration accuracy, you can set the atmospheric extinction
-(tau) manually, and provide order-of-unity corrections based on observations
-of nearby calibrator sources. 
+To improve on the calibration accuracy, you can switch to a smoothed 183 GHz 
+tau value based on the JCMT 183 GHz archive ('tau=jctables'), and/or provide 
+order-of-unity corrections based on observations of nearby calibrator sources
+(via 'scale'). E.g.
 
 
-2.1 Extinction Correction
+4.1 Extinction Correction
 =========================
 
    The JCMT records both 225GHz and 183GHz opacities from radiometer 
-   measurements. These are stored in the data files. CRUSH uses the 183GHz 
-   value with an appropriate scaling relation to the SCUBA-2 bands, to obtain a
-   guesstimate of the in-band opacities for the atmospheric extinction 
+   measurements. These are stored in the data files. By default, CRUSH uses the
+   183GHz value with an appropriate scaling relation to the SCUBA-2 bands, to 
+   obtain a guesstimate of the in-band opacities for the atmospheric extinction 
    correction. 
 
-   You can also specify your preferred tau value, for every group of scans 
-   (see the main CRUSH README). You can set an in-band zenith opacity the 
-   usual way, for successive scans. E.g.:
+   You can get a more accurate local average value of the 183 GHz tau using the
+   the 'tau=jctables' option (requires an online connection!).
 
-      > crush scuba2 [...] -tau=1.21 <scans> [...]
+      > crush scuba2 -tau=jctables <scans> [...]
 
-   You can also set your preferred 183GHz or 225GHz tau values (e.g. from daily
-   polynomial fits), e.g.:
-
-      > crush scuba2 [...] -tau.225GHz=0.064 <scans> [...]
-
-   or,
-
-      > crush scuba2 [...] -tau.183GHz=0.058 <scans> [...]
-
-   CRUSH will then use the specified value to calculate an equivalent in-band
-   opacity for the given '450um' or '850um' band.
+   The above will download the table of measurements from the online JCMT 183 
+   GHz tau archive for the date(s) of each scan, and calculate a local average
+   around the time of observation within a Gaussian window (see 'tau.window'
+   option in the GLOSSARY and in 'scuba2/default.cfg'). The resulting tau 
+   should be more precise than the default, but is noticeably slower to obtain
+   (due to the size of the tables that need to be downloaded on demand) and 
+   requires a online connection.
 
 
-
-3.2 Calibration Correction
+4.2 Calibration Correction
 ==========================
 
    Even if the opacity is perfectly determined, there are remaining 
@@ -269,7 +380,7 @@ of nearby calibrator sources.
    calibration scalings using the same method.
 
 
-3.3 Pointing Corrections
+4.3 Pointing Corrections
 ========================
 
    You can specify incremental pointing corrections as AZ,EL offsets for every
@@ -281,70 +392,144 @@ of nearby calibrator sources.
 
 
 #####################################################################
-4. SCUBA-2 specific pixel divisions
+5. SCUBA-2 specific pixel divisions
 #####################################################################
 
 For a general overview of channel divisions, please consult Section 3.
 (Correlated Signals) in the main README document.
 
-   subarrays
+   subarrays     A grouping of pixels by subarrays.
 
-   rows          A grouping of pixels based on their SQUID multiplexing scheme
+   rows          Pixel grouping by detector columns. There are 40 columns on
+                 each subarray. Incidentally, the channels in a row are all
+                 read out through the same SQUID mux. Thus, the group 'cols'
+                 is also the grouping by SQUID multiplexer.
 
-   cols
+   cols          Pixel grouping by detector rows. There are 32 rows on each
+                 subarray.
 
-   blocks
+   blocks        Pixel grouping by user-specified geometric blocks of n by m
+		 pixels. The size of the blocks is specified via the 'block'
+		 option.   
 
 
 
 #####################################################################
-5. Glossary of SCUBA-2 specific options
+6. Glossary of SCUBA-2 specific options
 #####################################################################
 
 
+   450um		Select 450um imaging mode.
 
+   850um		Select 850um imaging mode.
+
+   block=<n>
+   block=<n>x<m>	@Advanced
+			Set the block size (pixels) for 'correlated.blocks'.
+			The decorrelation block size will be <n> by <n>, or
+			<n> by <m> pixels, depending whether there are 1 or 2
+			arguments (separated by 'x').
+			@See: 'correlated.blocks'
 
    blocks		@Alias: 'correlated.blocks'
 
    cols			@Alias: 'correlated.cols'
-
-   convert
-
- ? distortion...
-
-   he3			@Alias: 'correlated.he3'
-
-   mirror
-
-   ndf2fits
-
-   pixelmm
-
-   platescale
-
-   rows			@Alias: 'correlated.mux'
-			@Expert
-			Specifies the grouping of channels by the SQUID
-			multiplexing.
+                        @Expert
+                        Specifies the grouping of channels by geometric columns
+			on the array, following the storage and array geometry
+			convention of 32 rows by 40 columns. Since the 32 
+			pixels of a 'column' are read through the same SQUID
+			MUX, decorrelating on 'cols' is effectively 
+			decorrelates channels that share a MUX.
 			@See: 'correlated.<?>'
 
-   <sID>.position
+   he3			@Alias: 'correlated.he3'
+			Remove correlations with the detector temperature (at
+			the He3 stage -- hence the name). This may, or may not
+			improve the sensitivity of the data.
 
-   <sID>.rotation
+   mirror		@Expert
+			Indicate a mirrored focal plane layout. (Since one
+			subarray is seen in transmission, the other in 
+			reflection, through the beam-splitter, one of the
+			subarray layouts is a mirror image of the other...
 
-   <sID>.scale
+   ndf2fits=<path>	Specify the path to the Starlink 'ndf2fits' executable
+			(usually in bin/convert subdirectory of the Starlink
+			distribution. You may not need to change this option
+			if the STARLINK_DIR environment variable is set to
+			point to the Starlink installation folder on your 
+			system, as recommended by the Starlink installation
+			instructions. Otherwise, you can set this e.g.:
 
-   subarrays	
+			  ndf2fits /usr/local/starlink/bin/convert/ndf2fits
 
-   subscans.minlength
+   pixelmm=X		@Expert
+			Specify the physical pixel size (separation) in mm,
+			on the detector arrays.
+			@See: 'platescale'
 
-?  subscans.merge
+   platescale=X		@Expert
+			Specify the scaling from mm on the focal plane to
+			arcsec on the sky.
+			@See: 'pixelmm'
+
+   rows			@Alias: 'correlated.rows'
+			@Expert
+			Specifies the grouping of channels by geometric rows on
+			the array, following the storage and array geometry
+			convention of 32 rows by 40 columns.
+			@See: 'correlated.<?>'
+
+   <sID>.position=dX,dY	@Expert
+			Set the position of pixel 0 (first row, first column)
+			of subarray <sID> to dX, dY pixels from the optical 
+			center. E.g.
+
+			  s8a.position -37.3, -35.3
+			
+			The offset will be applied *after* any rotation.
+			@See: '<sID>.rotation'
+
+   <sID>.rotation=X	@Expert
+			Set the orientation angle (degrees) of subarray <sID>
+			on the focal plane. E.g.
+
+			  s8d.rotation -90
+
+			@See: <sID>.position'
+
+   <sID>.scale=X	@Expert
+			Set the subarray scalings. Scaling the data from the
+			different subarrays such that the pixels on a subarray
+			show the same response, on average, from one subarray
+			to the next, is useful for maintaining calibration when
+			not all subarray data is available, or when reducing
+			just a select set of subarrays. E.g.:
+
+			  s8a.scale 0.63
+
+			@See: 'subarray'
+
+   subarray=<list>	@Expert
+			Restrict the reduction to just the specified subarrays
+			at the current wavelength. The argument is a list of
+			subarray letter codes (a thru d) that specify which
+			subarray data to use. E.g.:
+
+			 >crush scuba2 -850um -subarrays=a,c [...]
+
+			Will reduce only the 850um subarrays a and c.	
+			@See: '<sID>.scale'
 
 
 
 #####################################################################
-6. SCUBA-2 specific log quantities
+7. SCUBA-2 specific log quantities
 #####################################################################
+
+Coming soon...
+
 
    dir
 

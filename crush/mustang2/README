@@ -1,0 +1,174 @@
+
+	     *** CRUSH User's Manual Extension for MUSTANG-2 ***
+
+			      Attila Kovacs
+		      <attila[AT]submm.caltech.edu>
+
+		       Last updated: 25 August 2015
+
+
+
+Table of Contents
+=================
+
+1. Introduction
+2. Locating Scans
+  2.1 By file names
+  2.2 By date and time 
+3. Extinction Correction
+4. MUSTANG-2 specific pixel divisions
+5. Glossary of MUSTANG-2 specific options
+6. MUSTANG-2 specific log quantities
+
+
+
+
+
+
+#####################################################################
+1. Introduction
+#####################################################################
+
+
+This document contains information specific to using CRUSH-2 to reduce data 
+from MUSTANG-2. It is assumed that you are already familiar with the contents 
+of the main CRUSH-2 README (inside the distribution directory), especially its 
+Section 1 (Getting Started). 
+
+If you run into difficulty understanding the concepts in this document, you
+will probably find it useful to study the main README document a little longer.
+
+
+
+
+#####################################################################
+2. Locating Scans
+#####################################################################
+
+
+2.1 By file names
+=================    
+
+   For single scans, it may be the simplest to specify the file name itself
+   (especially if your OS or shell supports autocompletion). Simply 
+   give the file name, either as a fully qualified path name, or relative
+   to the 'datapath' setting. Thus,
+
+       > crush mustang2 ~/data/2015_04_12_03_58_30.fits
+       
+   and
+
+       > crush mustang2 -datapath=~/data 2015_04_12_03_58_30.fits
+   
+   are equivalent.
+
+
+
+2.2 By date and time...
+=======================
+
+   [not yet implemented!!!]
+
+   When reducing several scans together (which is the recommended way to deal
+   with datasets), it may be more convenient to use a combination of
+   'datapath', 'date' and start times, and let crush find the
+   desired data files based on these. E.g.:
+   
+       > crush mustang2 -datapath=/data \
+                     -date=2010-11-08 03:58 04:12 \
+                     -date=2011-02-13 09:17 09:33 09:46
+
+   Of course, for each scan, or set of scans, you may add additional options
+   such as pointing corrections (via 'pointing') or in-band opacities (via
+   'tau'), or calibration corrections (via 'scale') etc.
+
+
+
+#####################################################################
+2. Extinction Correction
+#####################################################################
+
+coming soon...
+
+
+
+
+#####################################################################
+3. MUSTANG-2 specific pixel divisions
+#####################################################################
+
+For a general overview of channel divisions, please consult Section 3.
+(Correlated Signals) in the main README document.
+
+   mux		A grouping of pixels based on their SQUID multiplexing scheme
+
+
+
+
+#####################################################################
+4. Glossary of MUSTANG-2 specific options
+#####################################################################
+
+  
+   frequencies.<n>=<path>	@Expert
+				Specify the location of the ASCII table that
+			contains the rest frequencies (GHz) of the channels on
+			readout <n>. E.g.:
+
+			  frequencies.1 {@CRUSH}/mustang2/m1_resonance.txt
+			  frequencies.2 {@CRUSH}/mustang2/m2_resonance.txt
+
+			defines the expected channel frequencies for readout
+			lines 1 and 2. These options, together with 'positions'
+			define the array geometry.
+			@See: 'positions'
+
+
+   mux			@Alias: 'correlated.mux'
+			@Expert
+			Specifies the grouping of channels by the SQUID 
+			multiplexing.
+			@See: 'correlated.<?>'
+
+   positions=<path>	@Expert
+			Specify the ASCII table containing the pixel position
+			data. E.g.:
+
+			  positions {@CRUSH}/mustang2/skyoff_July2015
+
+			@See: 'frequencies.<n>', 'offset.<n>', 'rotation.<n>'
+
+   readout=N		@Expert
+			Restrict the reduction to readout line (ROACH) index N.
+			
+
+   sparse		Some shorter scans may not sample the image fully at
+			the default pixelization (1.5" pixels). In such cases,
+			use the sparse option to project the map onto a coarser
+			grid. The option is really just a trigger for various
+			settings spawned by it. E.g.
+
+			  > crush mustang2 -sparse [...]
+
+   SZ			Optimize reduction for the detection of Sunyaev-
+			Zel'dovich signals (decrements). The SZ option is 
+			really just a trigger condition for activating other
+			settings. Check the configuration files under
+			the gismo/ crush folder (esp. 'default.cfg) to see
+			what this does exactly. E.g.
+
+			  > crush mustang2 -sz [...]
+
+
+
+#####################################################################
+5. MUSTANG-2 specific log quantities
+#####################################################################
+
+coming soon....
+
+
+------------------------------------------------------------------------------
+Copyright (C)2015 -- Attila Kovacs <attila[AT]submm.caltech.edu>
+
+
