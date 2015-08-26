@@ -538,7 +538,7 @@ implements TableFormatter.Entries {
 		if(hasOption("blind")) {
 			try {
 				CorrelatedModality blinds = new CorrelatedModality("blinds", "Bl", divisions.get("blinds"), getChannelInstance(-1).getClass().getField("temperatureGain")); 
-				for(CorrelatedMode mode : blinds) mode.skipChannels = Channel.FLAG_DEAD;
+				for(CorrelatedMode mode : blinds) mode.skipFlags = Channel.FLAG_DEAD;
 				addModality(blinds);
 			}
 			catch(NoSuchFieldException e) {
@@ -734,32 +734,35 @@ implements TableFormatter.Entries {
 	}
 	
 	public final List<? extends Pixel> getPerimeterPixels(int sections) { 
-		List<? extends Pixel> mappingPixels = getMappingPixels();
+		final List<? extends Pixel> mappingPixels = getMappingPixels();
 		if(sections <= 0) return mappingPixels;
 		
 		if(mappingPixels.size() < sections) return mappingPixels;
 		
-		Pixel[] sPixel = new Pixel[sections];
-		double[] maxd = new double[sections];
+		final Pixel[] sPixel = new Pixel[sections];
+		final double[] maxd = new double[sections];
 		Arrays.fill(maxd, Double.NEGATIVE_INFINITY);
 		
-		Vector2D center = new Vector2D();
-		for(Pixel p : mappingPixels) center.add(p.getPosition());
-		center.scale(1.0 / mappingPixels.size());
+		final Vector2D centroid = new Vector2D();
+		for(Pixel p : mappingPixels) centroid.add(p.getPosition());
+		centroid.scale(1.0 / mappingPixels.size());
 		
-		double dA = Constant.twoPi / sections;
+		final double dA = Constant.twoPi / sections;
+		final Vector2D relative = new Vector2D();
 		
 		for(Pixel p : mappingPixels) {
-			int bin = (int) Math.floor((p.getPosition().angle() + Math.PI) / dA);
+			relative.setDifference(p.getPosition(), centroid);
 			
-			double d = p.getPosition().distanceTo(center);
+			final int bin = (int) Math.floor((relative.angle() + Math.PI) / dA);
+			
+			final double d = relative.length();
 			if(d > maxd[bin]) {
 				maxd[bin] = d;
 				sPixel[bin] = p;
 			}
 		}
 		
-		ArrayList<Pixel> perimeter = new ArrayList<Pixel>(sections);
+		final ArrayList<Pixel> perimeter = new ArrayList<Pixel>(sections);
 		for(int i=sections; --i >= 0; ) if(sPixel[i] != null) perimeter.add(sPixel[i]);
 		
 		return perimeter;

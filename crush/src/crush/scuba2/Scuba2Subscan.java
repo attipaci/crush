@@ -24,9 +24,12 @@
 package crush.scuba2;
 
 import crush.*;
+import crush.jcmt.JCMTTauTable;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -55,18 +58,52 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	
 	@Override
 	public void setTau() throws Exception {
-		super.setTau();
+		String source = option("tau").getValue().toLowerCase();
+		if(source.equals("jctables") && hasOption("tau.jctables")) setJCMTTableTau();
+		else super.setTau();
+		
 		printEquivalentTaus();	
 	}
 	
-	public void printEquivalentTaus() {
-		System.err.println("   --->"
-				+ " tau(183GHz):" + Util.f3.format(getTau("183ghz"))
-				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
-				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
-		);	
-	
+	public void setJCMTTableTau() throws Exception {
+		String source = hasOption("tau.jctables") ? option("tau.jctables").getPath() : ".";
+		String spec = scan.getShortDateString();
+		String fileName = source + File.separator + spec + ".jcmt-183-ghz.dat";
+		
+		try {
+			JCMTTauTable table = JCMTTauTable.get((int) scan.getMJD(), fileName);
+			table.setOptions(option("tau"));
+			setTau("183gHz", table.getTau(getMJD()));	
+		}
+		catch(IOException e) { fallbackTau("jctables", e); }
 	}
+	
+	private void fallbackTau(String from, Exception e) throws Exception {
+		if(hasOption(from + ".fallback")) {
+			System.err.println("   WARNING! Tau lookup failed: " + e.getMessage());
+			String source = option(from + ".fallback").getValue().toLowerCase();
+			if(source.equals(from)) {
+				System.err.println("   WARNING! Deadlocked fallback option!");
+				throw e;
+			}	
+			System.err.println("   ... Falling back to '" + source + "'.");
+			instrument.setOption("tau=" + source);
+			setTau();
+			return;
+		}
+		else throw e;	
+		
+	}
+	
+	public void printEquivalentTaus() {	
+		System.err.println("   --->"
+				+ " tau(JCMT):" + Util.f3.format(getTau("183ghz"))
+				+ ", tau(CSO):" + Util.f3.format(getTau("225ghz"))
+				+ ", tau(LOS):" + Util.f3.format(getTau("scuba2") / scan.horizontal.sinLat())
+				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
+		);		
+	}
+	
 	
 	@Override
 	public Scuba2Frame getFrameInstance() {
@@ -74,7 +111,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	}
 	
 	
-	public void read() throws FitsException, DarkSubscanException {
+	public void read() throws FitsException, DarkSubscanException, IOException {
 		clear();
 		
 		Scuba2Scan scuba2Scan = (Scuba2Scan) scan;
@@ -83,13 +120,16 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		Arrays.fill(readoutLevel, scuba2Scan.blankingValue);
 		
 		// Read the subsequent subarray data (if any).
-		for(int i=0; i<files.size(); i++) readFile(files.get(i), i == 0);	
+		for(int i=0; i<files.size(); i++) {
+			readFile(files.get(i), i == 0);	
+			System.gc();
+		}
 	}
 	
-	private void readFile(Scuba2Fits file, boolean isFirstFile) throws FitsException, DarkSubscanException {
-		Fits fits = new Fits(file.getFile());
-		ImageHDU dataHDU = null;
-			
+	private void readFile(Scuba2Fits file, boolean isFirstFile) throws FitsException, DarkSubscanException, IOException {
+		if(CRUSH.debug) System.err.println("### " + file.getFile().getName());
+		
+		Fits fits = new Fits(file.getFile());		
 		BasicHDU[] HDU = fits.read();
 		
 		if(isFirstFile) {
@@ -100,17 +140,14 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 			// Read the coordinate info etc. from the first subscan file.
 			readCoordinateData(getJcmtHDU(HDU));
 		}
-
-		dataHDU = (ImageHDU) HDU[0];
 		
-		int subarrayIndex = file.getSubarrayIndex();	
-		Scuba2Subarray subarray = instrument.subarray[subarrayIndex];
+		Scuba2Subarray subarray = instrument.subarray[file.getSubarrayIndex()];
+		subarray.scaling = hasOption(subarray.id + ".scale") ? option(subarray.id + ".scale").getDouble() : 1.0;
 		
-		float scaling = hasOption(subarray.id + ".scale") ? option(subarray.id + ".scale").getFloat() : 1.0F;
-		subarray.scaling *= scaling;
-		
-		readArrayData(dataHDU, subarray.channelOffset, scaling);
+		readArrayData((ImageHDU) HDU[0], subarray.channelOffset, (float) subarray.scaling);
 		subarray.parseFlatcalHDU(getFlatcalHDU(HDU));
+		
+		fits.getStream().close();
 	}
 
 	private void setReadoutLevels(final int[][] DAC, final int channelOffset) {
@@ -120,8 +157,12 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	
 	private void readArrayData(ImageHDU dataHDU, final int channelOffset, final float scaling) throws FitsException {
 		final int[][][] data = (int[][][]) dataHDU.getData().getData();
-			
+		//if(data.length != size()) throw new IllegalStateException("Mismatched data (" + data.length + ") vs. coordinates size (" + size() + ").");	
+		
 		setReadoutLevels(data[0], channelOffset);
+		
+		// Trim the coordinates to match the data size...
+		if(data.length < size()) for(int t=size(); --t >= data.length; ) remove(t);
 		
 		new CRUSH.IndexedFork<Void>(size()) {
 			@Override

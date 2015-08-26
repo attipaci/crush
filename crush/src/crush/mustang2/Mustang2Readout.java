@@ -69,10 +69,22 @@ public class Mustang2Readout implements Cloneable, Copiable<Mustang2Readout> {
 		
 		in.close();
 		
-		System.err.println(" ROACH " + (index+1) + ": " + tones.size() + " frequencies from " + fileName);
-		
+		System.err.println(" ROACH " + (index+1) + ": " + tones.size() + " frequencies from " + fileName);	
 	}
 	
+	
+	public Mustang2PixelID getNearestID(double f) {
+		double mind = Double.POSITIVE_INFINITY;
+		Mustang2PixelID nearest = null;
+		for(Mustang2PixelID tone : tones) {
+			double d = Math.abs(tone.freq - f);
+			if(d < mind) {
+				mind = d;
+				nearest = tone;
+			}
+		}
+		return nearest;
+	}
 	
 	
 	

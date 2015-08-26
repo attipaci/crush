@@ -139,9 +139,7 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 		
 		String inName = sdf.getAbsolutePath();
 		String command = options.get("ndf2fits").getValue();
-		String outPath = sdf.getParentFile().getPath();
-		if(options.isConfigured("datapath")) outPath = options.get("datapath").getPath();
-		String outName = outPath + File.separator + getFitsName(sdf.getName());
+		String outName = sdf.getParentFile().getPath() + File.separator + getFitsName(sdf.getName());
 		
 		Runtime runtime = Runtime.getRuntime();
 

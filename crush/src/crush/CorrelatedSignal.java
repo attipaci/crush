@@ -237,7 +237,7 @@ public class CorrelatedSignal extends Signal {
 		
 		final CorrelatedMode mode = (CorrelatedMode) getMode();
 		final ChannelGroup<?> channels = mode.getChannels();
-		final int skipFlags = mode.skipChannels;
+		final int skipFlags = mode.skipFlags;
 		
 		// The reduced filtering effect due to model time-resolution
 		//final double T =  (resolution - 1) * integration.instrument.samplingInterval;
@@ -465,6 +465,9 @@ public class CorrelatedSignal extends Signal {
 			
 		// Update the gain values used for signal extraction...
 		setSyncGains(G);
+		
+		// Make sure that the mode gains are normalized to the signal
+		if(!mode.fixedGains) mode.setGains(G);
 			
 		if(CRUSH.debug) integration.checkForNaNs(mode.getChannels(), 0, integration.size());
 		

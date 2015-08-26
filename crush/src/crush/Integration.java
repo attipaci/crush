@@ -252,6 +252,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			System.err.println("### mapping pixels: " + instrument.getMappingPixels().size());
 		}
 		
+		System.gc();
+		
 		isValid = true;
 		
 		if(hasOption("speedtest")) speedTest();
@@ -625,9 +627,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(padded != 0) {
 			clear();
 			addAll(buffer);
-			reindex();
 			System.err.println("   Padded with " + padded + " empty frames.");
 		}
+		
+		reindex();
 	}
 	
 	public synchronized void trim() {

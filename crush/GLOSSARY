@@ -682,7 +682,13 @@
 			Correct nominal pixel positions for the 2D focal-plane
 			distortion.
 			@See: 'distortion.x??', 'distortion.y??', 
-			      'distortion.unit'
+			      'distortion.unit', 'distortion.name'
+
+:: distortion.name=<name>	@Expert
+				@Since: 2.30
+			Provide a name for the distortion model that helps 
+			identify it to the user. The distortion model will work
+			just fine without a name too...
 
 :: distortion.unit=<name>	@Expert
 				@Since: 2.14
@@ -692,27 +698,28 @@
 			specified, unity (or dimensionless) is assumed.
 			@See: 'distortion', 'distortion.x??', 'distortion.y??'
 
-:: distortion.x??	@Expert
+:: distortion.x<nm<	@Expert
 			@Since: 2.14
-			@Instrument: MAKO ...
+			@Instrument: MAKO, SCUBA-2
 			Define a distortion coefficient for the x-coordinate.
-			'x' is followed by two integers (0-9) defining the
-			x,y exponents of the distortion term for which this
+			'x' is followed by two integers n and m (0-9) defining 
+			the x,y exponents of the distortion term for which this
 			coefficient applies. E.g.: x31 specifies the term
 			
-				dx = x01 * x^3 * y^1
+				dx = x31 * x^3 * y^1
 
 			dx, x, and y are all in the units defined by
 			'distortion.unit'
 
-			@See: 'distortion.y??', 'distortion', 'distortion.unit'
+			@See: 'distortion.y<nm>', 'distortion', 
+			'distortion.unit', 'distortion.name'
 
-:: distortion.y??	@Expert
+:: distortion.y<nm>	@Expert
 			@Since: 2.14
 			@Instrument: MAKO ...
-			Same as 'distortion.x??' but for calculating distortion
-			in the y-direction.
-			@See: 'distortion.x??'
+			Same as 'distortion.x<nm>' but for calculating 
+			distortion in the y-direction.
+			@See: 'distortion.x<nm>'
 
 :: division.<?>=<list> 	@Expert
 			Specify a new pixel division <?> from a list of pixel 
@@ -3070,13 +3077,15 @@
 			      'rotation'.
 
 :: subscans.merge	@Expert
-			@Instrument: SCUBA-2
 			@Since: 2.01-1
 			Specifies that the integrations (subscans) in a scans
 			should be merged into a single timestream, with
 			null frames filling potential gaps at the boundaries
 			to ensure proper time-spacing of all data (for time
 			window processing or FFT).
+			@Since: 2.30
+			Now available for allinstruments (previously it was
+			for the then proprietary SCUBA-2 module only).
 			@See: 'subscans.split'
 
 :: subscans.minlength=X	@Expert

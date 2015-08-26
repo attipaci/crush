@@ -64,7 +64,7 @@ public class Mustang2Integration extends Integration<Mustang2, Mustang2Frame> im
 		
 		System.err.println("   Sampling at " + Util.f1.format(instrument.integrationTime / Unit.ms) + " ms ---> " 
 				+ Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
-			
+		
 		clear();
 		ensureCapacity(records);
 		for(int t=records; --t>=0; ) add(null);
@@ -138,6 +138,12 @@ public class Mustang2Integration extends Integration<Mustang2, Mustang2Frame> im
 			};
 		}
 	}	
+	
+	@Override
+	public void setTau() throws Exception {
+		Mustang2Scan mustang2Scan = (Mustang2Scan) scan;
+		if(!Double.isNaN(mustang2Scan.zenithTau)) setTau(mustang2Scan.zenithTau);
+	}
 
 	
 }

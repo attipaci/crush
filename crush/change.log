@@ -1,5 +1,5 @@
 >> 'distortion.name'
->> 'regrid'
+>> 'regrid' --> artefacts (?)
 >> test pngcairo for photometry
 >> test photometry! 
 >> 'perimeter'
@@ -23,7 +23,17 @@
 	[BUG] {SyncModMap} Miscounting of good frames. However, this mapping
 	feature was really unused, making this a rather inconsequential bug.
 
-	[NEW] Preliminary support for MUSTANG-2 (GBT).
+	[NEW] Preliminary support for MUSTANG-2 (GBT). See mustang2/README
+	for details.
+
+	[NEW] Much updated support for SCUBA-2, now bundled with the rest of 
+	CRUSH, under the same generic public license (GPLv3). It now supports
+	all subarrays, with more precise array geometry (based on SMURF's own 
+	sc2ast.c), and is roughly calibrated for integrated (i.e. aperture)
+	fluxes, based on Uranus. (Beware, peak fluxes are very dependent on
+	focus quality!). Many thanks to Ed Chapin for helping make sense of
+	SCUBA-2 data, and Tony Mroczkowski for getting some essential training
+	data to make this happen. See scuba2/README for details...
 
 	[NEW] CRUSH to add a HISTORY note into the FITS output on the 
 	reduction, by default. Instruments (like SOFIA cameras) may add further
@@ -65,6 +75,9 @@
 
 	[FIX] {HAWC+} Fixed multiple occurences of FITS keys: INSTRUME and
 	TRACERR.
+
+	[TWEAK] Stronger enforcement of gain normalization for correlated noise
+	removal.
 
 	[TWEAK] {HAWC+} Can process data from multiple 'TIMESTREAM DATA' HDUs,
 	which can be interspersed with other HDUs in the FITS. (Using EXTNAME

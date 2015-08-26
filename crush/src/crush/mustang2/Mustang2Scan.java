@@ -51,6 +51,7 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 	String fitsVersion;
 	String id;
 	int average = 1;
+	double zenithTau = Double.NaN;
 	
 	public Mustang2Scan(Mustang2 instrument) {
 		super(instrument);
@@ -72,7 +73,9 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 
 	@Override
 	public void read(String scanDescriptor, boolean readFully) throws Exception {
-		read(getFits(scanDescriptor), readFully);
+		Fits fits = getFits(scanDescriptor);
+		read(fits, readFully);
+		fits.getStream().close();
 	}
 	
 	public Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
@@ -156,9 +159,21 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 				CoordinateEpoch.J2000
 		); 
 		
-		System.err.println(" [" + sourceName + "] of project " + project);
-		System.err.println(" Observed on " + date + " at " + startTime + " by " + observer);
-		System.err.println(" Equatorial: " + equatorial.toString());		
+		System.err.println(" [" + sourceName + "] of project " + project + " observed on " + date + " at " + startTime);
+		System.err.println(" Equatorial: " + equatorial.toString());	
+		
+		
+		if(hasOption("tau")) {
+			zenithTau = option("tau").getDouble();
+			System.err.println(" Using tau: " + Util.f3.format(zenithTau));
+		}
+		else if(header.containsKey("TAUZ")) {
+			zenithTau = header.getDoubleValue("TAUZ");
+			System.err.println(" Zenith tau from skydip: " + Util.f3.format(zenithTau));
+		}
+		else { 
+			System.err.println(" No tau in FITS, or specified. No extinction correction.");
+		}
 	}
 	
 	

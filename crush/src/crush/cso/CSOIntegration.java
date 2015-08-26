@@ -180,14 +180,13 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	
 	public void setJCMTTableTau() throws Exception {
 		String source = hasOption("tau.jctables") ? option("tau.jctables").getPath() : ".";
-		String date = scan.getID().substring(0, scan.getID().indexOf('.'));
-		String spec = date.substring(0, 10);
+		String spec = scan.getShortDateString();
 		String fileName = source + File.separator + spec + ".jcmt-183-ghz.dat";
 		
 		try {
 			JCMTTauTable table = JCMTTauTable.get(((CSOScan<?,?>) scan).iMJD, fileName);
 			table.setOptions(option("tau"));
-			setTau("225GHz", table.getTau(getMJD()));	
+			setTau("225gHz", table.getTau(getMJD()));	
 		}
 		catch(IOException e) { fallbackTau("jctables", e); }
 	}

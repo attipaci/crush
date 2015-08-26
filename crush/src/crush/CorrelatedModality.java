@@ -77,7 +77,7 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 	}
 	
 	public void setSkipFlags(int pattern) {
-		for(CorrelatedMode mode : this) mode.skipChannels = pattern;
+		for(CorrelatedMode mode : this) mode.skipFlags = pattern;
 	}
 	
 	/*
