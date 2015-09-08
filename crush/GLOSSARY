@@ -304,6 +304,9 @@
 			with 'blank' in the intermediate iterations.
 			@See: 'blank', 'iteration.[?]'
 
+:: cols			@Alias -> 'correlated.cols'
+			@Instrument: SHARC-2, p-ArTeMiS, HAWC+, SCUBA-2
+
 :: conditions[=<pattern>]	@Since: 2.01-4
 				Check conditional settings in the configuration
 			Used without the pattern, it lists all conditionals
@@ -895,6 +898,13 @@
 			use 'list' after this option to provide just a listing
 			of the scan entries contained in the data file.
 			@See: 'datapath'
+
+:: fillgaps		@Since: 2.30
+			@Advanced
+			Fill any gaps in the timestream data with empty frames
+			so that time windows in the reduction work as expected
+			and that no surprise discontinuities can cause real
+			trouble.
 
 :: filter		@Since: 2.10
 			@Advanced
@@ -1791,6 +1801,39 @@
 			retains all channels for the reduction, whether these 
 			are used or not.
 
+:: notch		@Since: 2.30
+			@Expert
+			Enable notch filtering the raw detector timestreams
+			before further initial processing (e.g. downsampling).
+			The sub-options 'frequencies', 'harmonics' and 'width'
+			are used to customize the notch filter response.
+
+:: notch.frequencies=<list>	@Since: 2.30
+				@Expert
+			A comma-separated list of frequencies (Hz) to notch
+			out from the raw detector timestreams.
+			@See: 'notch.width', 'notch.harmonics'
+
+:: notch.harmonics=N	@Since: 2.30
+			@Expert
+			Specify that the notch filter should also notch out
+			N harmonics of the specified frequencies. (If not
+			set, only the list of frequencies are notched, i.e.
+			same as 'harmonics=1'.). E.g.
+
+			  notch.harmonics 2
+
+			Will notch out the list of frequencies set by 
+			'notch.frequencies' (fundamentals) as well as their
+			second harmonics.
+			@See: 'notch.frequencies', 'notch.width'
+
+:: notch.width=X	@Since: 2.30
+			@expert
+			Set the frequency width (Hz) of the notch filter
+			response.
+			@See: 'notch.frequencies'
+
 :: object=<name>	@Instrument: GISMO
 			Can be used to help locate GISMO data with scan numbers
 			when used together with the 'datapath' and 'date' 
@@ -1899,6 +1942,16 @@
 			being calculated (since a rectangular grid can no 
 			longer be assumed).
 			@See: 'rcp', 'rcenter', 'pixelsize', 'rotate'
+
+:: perimeter=N		@Expert
+			@Since: 2.30
+			To speed up the sizing of the output image for large
+			arrays (e.g. SCUBA-2 or HAWC+) do not use the positions
+			of each and every pixel. Instead, identify a set of
+			pixels that define an array perimeter from N sections
+			around the centroid of the array. N values up to a few
+			hundred should be fail-safe for most typical array
+			layouts, even when these have lots of pixels.
 
 :: phases		@Expert
 			@Since: 2.02
@@ -2378,6 +2431,18 @@
 			old value.
 			@See: 'forget'	
 
+
+:: regrid=X		@Advanced
+			@Since: 2.30
+			Regrid the final map to a different grid than what was
+			used during the reduction. The argument is the final
+			image pixel size in arcsec. E.g.
+
+			  > crush [...] -regrid=1.0 [...]
+
+			to cast the final image onto a 1" pixel grid.		
+			@See: 'grid'
+
 :: remove=<option>	Similar to 'forget', but removes the entire branch. 
 			Thus '-remove=despike' unsets:
 
@@ -2445,7 +2510,7 @@
 			@See: 'iteration.[?]', 'extended', 'faint', 'deep'
 
 :: rows			@Alias: -> correlated.rows
-			@Instrument: SHARC-2, P-ArTeMiS
+			@Instrument: SHARC-2, P-ArTeMiS, HAWC+, SCUBA-2
 			@Advanced
 			Decorrelate on detector rows, or set options for it.
 			@See: 'correlated.<?>'
@@ -3049,6 +3114,22 @@
 			specified.
 			@See: 'drifts', 'sourcesize'
 
+:: subarray=<list>	@Expert
+			@Instrument: SCUBA-2, HAWC+
+			@Since: 2.30
+			Restrict the analysis to just the selected subarrays.
+			For SCUBA-2, the list is a comma-separated list of
+			letter codes 'at' thru 'd', E.g.:
+
+			  > crush scuba2 -subarray='a,b' [...] 
+
+			For HAWC+ the list consists of the subarray ids: 'R1', 
+			'R2' and 'T1', 'T2', and may also use 'R' (same as 
+			'R1,R2') or 'T' (same as 'T1,T2'). E.g. 
+
+			  > crush hawc+ -subarray='R1,T1' [...]
+				 
+
 :: <subarray>.pixelsize=X,Y	@Expert
 				@Instrument: SCUBA-2
 				@Since: 2.01-1
@@ -3084,9 +3165,18 @@
 			to ensure proper time-spacing of all data (for time
 			window processing or FFT).
 			@Since: 2.30
-			Now available for allinstruments (previously it was
+			Now available for all instruments (previously it was
 			for the then proprietary SCUBA-2 module only).
 			@See: 'subscans.split'
+
+:: subscans.merge.maxgap=X	@Expert
+				@Since: 2.30
+			Merging subscans will pad gaps between them with null
+			frames as needed. Use this option to limit how much 
+			padding is allowed. If the gap between two consecutive
+			subscans is larger than the maximum gap (seconds)
+			specified by this option, then the the merge will
+			continue in a separate subscan.
 
 :: subscans.minlength=X	@Expert
 			@Since: 2.05
@@ -3218,7 +3308,7 @@
 
 :: tau.jctables=<spec>	@Advanced
 			@Since: 2.20
-			@Instrument: SHARC, SHARC-2, MAKO, MAKO-2
+			@Instrument: SHARC, SHARC-2, MAKO, MAKO-2, SCUBA-2
 			Specify the location (folder) of the JCMT 183 GHz tau
 			tables. The argument can point to a local directory
 			or an online resource on the web (URL). E.g.:
@@ -3250,13 +3340,27 @@
 			@See: 'tau.window'
 
 :: tau.window=X		@Expert
-			@Instrument: APEX, SHARC-2, MAKO, GISMO
+			@Instrument: APEX, SHARC-2, MAKO, GISMO, MAKO-2, SCUBA-2
 			@Since: 2.13
 			Set the 1-sigma Gaussian weighting window (in hours) 
 			for deriving local weighted average tau values from a 
 			table of skydip/tau measurements.
 			@GISMO: since 2.15-2.
 			@See: 'tau', 'scale.window'
+
+:: threads=N		@Since: 2.30
+			@Expert
+			Specify the actual number of threads that CRUSH should
+			use. By default CRUSH will run as many threads as there
+			are (virtual) cores in the host machine. Before, you
+			could only alter that behaviour by instructing crush to
+			use some number fewer than optimal ('idle' option).
+			This new option gives the user explicit control on the
+			threading, although it only really serves the purpose
+			of testing and checking for scalability. In most other
+			scenarios, users should stay away from tryinf to manage
+			threading, and let crush decide what's optimal.
+			@See: 'idle'
 
 :: time-weighting	@Alias: -> weighting.frames
 			@Advanced

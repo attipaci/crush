@@ -4,7 +4,7 @@
 			      Attila Kovacs
 		      <attila[AT]submm.caltech.edu>
 
-		       Last updated: 25 August 2015
+		      Last updated: 4 September 2015
 
 
 
@@ -100,16 +100,17 @@ coming soon...
 For a general overview of channel divisions, please consult Section 3.
 (Correlated Signals) in the main README document.
 
-   mux		A grouping of pixels based on their SQUID multiplexing scheme
+   mux		A grouping of detectors based on their SQUID multiplexing.
 
-
+   pols		Grouping of detectors by their polarization
 
 
 #####################################################################
 4. Glossary of MUSTANG-2 specific options
 #####################################################################
 
-  
+ 
+ 
    frequencies.<n>=<path>	@Expert
 				Specify the location of the ASCII table that
 			contains the rest frequencies (GHz) of the channels on
@@ -123,25 +124,32 @@ For a general overview of channel divisions, please consult Section 3.
 			define the array geometry.
 			@See: 'positions'
 
-
    mux			@Alias: 'correlated.mux'
 			@Expert
-			Specifies the grouping of channels by the SQUID 
-			multiplexing.
+			Estimate and remove correlated signals on SQUID MUXes
 			@See: 'correlated.<?>'
+
+   pols			@Alias: 'correlated.pols'
+			Estimate and remove correlated signals on detectors
+			with the same polarization angle.
+			@Expert
+			
+   pol=angle		@Advanced
+			Restrict the analysis for just one detector 
+			polarization angle. Argument should be one of 0, 45,
+			90, 135.
 
    positions=<path>	@Expert
 			Specify the ASCII table containing the pixel position
-			data. E.g.:
+			and polarization data. E.g.:
 
-			  positions {@CRUSH}/mustang2/skyoff_July2015
+			  positions {@CRUSH}/mustang2/skyoff_Current.txt
 
 			@See: 'frequencies.<n>', 'offset.<n>', 'rotation.<n>'
 
    readout=N		@Expert
 			Restrict the reduction to readout line (ROACH) index N.
 			
-
    sparse		Some shorter scans may not sample the image fully at
 			the default pixelization (1.5" pixels). In such cases,
 			use the sparse option to project the map onto a coarser

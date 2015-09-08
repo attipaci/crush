@@ -499,6 +499,15 @@ For a general overview of channel divisions, please consult Section 3.
 			modality sub-options apply.
                         @See: 'correlated.<?>', 'cols'
 
+
+   subarray=<list>	@Expert
+			Restrict the reduction only to the subarrays listed.
+			The argument is a comma-separated list of subarray 
+			codes: R1, R2, T1, T2 or R (= R1,R2) or T (= T1,T2). 
+			E.g.:
+
+			  > crush hawc+ -subarray=R1,T1 [...]
+
    subarrays		@Alias: 'correlated.subarrays'
 			@Expert
 			Decorrelate on physical subarrays (two 40x32 subarrays

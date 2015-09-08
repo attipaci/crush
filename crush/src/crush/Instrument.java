@@ -170,6 +170,12 @@ implements TableFormatter.Entries {
 			for(Channel channel : this) channel.gain *= 1.0 + level * random.nextGaussian();
 		}
 				
+		try { normalizeSkyGains(); }
+		catch(Exception e) {
+			System.err.println(" WARNING! normalization failed: " + e.getMessage());
+			if(CRUSH.debug) e.printStackTrace();
+		}
+		
 		if(hasOption("source.fixedgains")) {
 			fixedSourceGains();
 			System.out.println(" Will use static source gains.");
@@ -186,6 +192,8 @@ implements TableFormatter.Entries {
 			if(Double.isNaN(channel.variance)) channel.variance = 1.0 / channel.weight;
 		}
 		
+	
+		
 		census();
 		
 		if(CRUSH.debug) {
@@ -194,6 +202,12 @@ implements TableFormatter.Entries {
 		}
 		
 		isValid = true;
+	}
+	
+	public float normalizeSkyGains() throws Exception {
+		System.err.println(" Normalizing sky-noise gains.");
+		CorrelatedMode sky = (CorrelatedMode) modalities.get("obs-channels").get(0);
+		return sky.setNormalizedGains();
 	}
 	
 	public void registerConfigFile(String fileName) {}
@@ -283,7 +297,7 @@ implements TableFormatter.Entries {
 		}
 	}
 	
-	public void setFitsHeaderOptions(Header header) throws FitsException {
+	public void setFitsHeaderOptions(Header header) {
 		if(!options.containsKey("fits")) return;
 		
 		System.err.println(" Setting FITS header options.");
@@ -296,8 +310,7 @@ implements TableFormatter.Entries {
 			String key = tokens.nextToken().toUpperCase();
 	
 			if(!header.containsKey(key)) return;
-			String value = tokens.hasMoreTokens() ? tokens.nextToken() : null;
-					
+			String value = tokens.hasMoreTokens() ? tokens.nextToken() : null;	
 			
 			if(value == null) options.parse(conditionals.get(condition));
 			else if(value.charAt(0) == '!') {
@@ -395,7 +408,7 @@ implements TableFormatter.Entries {
 		}
 	}
 	
-	public abstract void readWiring(String fileName) throws IOException;
+	public void readWiring(String fileName) throws IOException {}
 	
 	public double getResolution() { return resolution; }
 	
@@ -729,7 +742,7 @@ implements TableFormatter.Entries {
 	public List<? extends Pixel> getMappingPixels() { return layout.getMappingPixels(); }
 	
 	public final List<? extends Pixel> getPerimeterPixels() { 
-		int sections = hasOption("perimeter") ? option("perimeter").getInt() : 100;
+		int sections = hasOption("perimeter") ? option("perimeter").getInt() : 0;
 		return getPerimeterPixels(sections); 
 	}
 	
@@ -887,7 +900,7 @@ implements TableFormatter.Entries {
 	}
 	
 	@Override
-	public boolean slim() {
+	public final boolean slim() {
 		return slim(true);
 	}
 	
@@ -1078,11 +1091,11 @@ implements TableFormatter.Entries {
 		data.put("Channel_Flags", flags);
 	}
 	
-	public void parseHeader(Header header) {}
+	public void parseImageHeader(Header header) {}
 	
 	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {
 		cursor.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
-		cursor.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));			
+		cursor.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
 	}
 	
 	public void editScanHeader(Header header) throws HeaderCardException {}

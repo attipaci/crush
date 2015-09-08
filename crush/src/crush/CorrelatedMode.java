@@ -36,8 +36,6 @@ public class CorrelatedMode extends Mode {
 	public boolean solvePhases = false;
 	public int skipFlags = ~0;
 
-	private boolean isNormalizedGains = false;
-	
 	Vector<CoupledMode> coupledModes;
 	
 	public CorrelatedMode() {}
@@ -50,23 +48,32 @@ public class CorrelatedMode extends Mode {
 		super(group, gainField);
 	}
 	
+	/*
+	 * TODO problematic...
 	@Override
 	public boolean setGains(float[] gain) throws Exception {
 		normalizeGains(gain);
-		isNormalizedGains = true;
 		return super.setGains(gain, false);
+	}
+	*/
+	
+	public float setNormalizedGains() throws Exception {
+		float[] G = getGains();
+		float aveG = normalizeGains(G);
+		setGains(G);
+		return aveG;
 	}
 	
 	public float[] getNormalizedGains() throws Exception {
 		float[] G = getGains();
-		if(isNormalizedGains) return G;
 		normalizeGains(G);
 		return G;
 	}
 	
-	private void normalizeGains(float[] gain) {
+	private float normalizeGains(float[] gain) {
 		final float aveG = (float) getAverageGain(gain, skipFlags & ~gainFlag);
 		for(int i=gain.length; --i >= 0; ) gain[i] /= aveG;
+		return aveG;
 	}
 	
 	private void addCoupledMode(CoupledMode m) {

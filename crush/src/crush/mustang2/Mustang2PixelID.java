@@ -27,11 +27,14 @@ import kovacs.math.Vector2D;
 import crush.resonators.FrequencyID;
 
 public class Mustang2PixelID extends FrequencyID {
+	int readoutIndex;
 	Vector2D position;
+	double polarizationAngle = Double.NaN;
 	int flag;
 	
-	public Mustang2PixelID(int index) {
+	public Mustang2PixelID(int readoutIndex, int index) {
 		super(index);
+		this.readoutIndex = readoutIndex;
 	}
 
 	public void flag(int pattern) {
@@ -52,4 +55,7 @@ public class Mustang2PixelID extends FrequencyID {
 	
 	public static int FLAG_BLIND = 1;
 	public static int FLAG_UNUSED = 2;
+	
+	
+
 }

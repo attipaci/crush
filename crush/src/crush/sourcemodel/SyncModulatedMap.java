@@ -32,9 +32,9 @@ import kovacs.util.Parallel;
 import crush.*;
 
 
-public class SyncModMap extends ScalarMap {
+public class SyncModulatedMap extends ScalarMap {
 	
-	public SyncModMap(Instrument<?> instrument) {
+	public SyncModulatedMap(Instrument<?> instrument) {
 		super(instrument);
 	}
 	

@@ -31,7 +31,6 @@ import java.util.*;
 
 import kovacs.astro.AstroSystem;
 import kovacs.astro.AstroTime;
-import kovacs.astro.CoordinateEpoch;
 import kovacs.astro.EquatorialCoordinates;
 import kovacs.astro.GeodeticCoordinates;
 import kovacs.astro.HorizontalCoordinates;
@@ -47,7 +46,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	private static final long serialVersionUID = 1608680718251250629L;
 
 	String date, endTime;
-	String obsMode, scanPattern;
+	String obsMode, scanPattern, obsType;
 	int iDate;
 	
 	double tau225GHz, tau183GHz;
@@ -78,15 +77,17 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 
 	
 	@Override
-	public void mergeSubscans() {
+	public void mergeIntegrations() {
 		calcSamplingRate();
 		
-		super.mergeSubscans();
+		super.mergeIntegrations();
 		
-		Scuba2Subscan subscan = get(0);
-		subscan.integrationNo = 0;
-		subscan.instrument.integrationTime = instrument.integrationTime;
-		subscan.instrument.samplingInterval = instrument.samplingInterval;
+		for(int i=size(); --i >= 0; ) {
+			Scuba2Subscan subscan = get(i);
+			subscan.integrationNo = i;
+			subscan.instrument.integrationTime = instrument.integrationTime;
+			subscan.instrument.samplingInterval = instrument.samplingInterval;
+		}
 	}
 	
 	
@@ -149,7 +150,10 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			subscan.read(); 
 			if(!subscan.isEmpty()) add(subscan);	
 		}
-		catch(DarkSubscanException e) { System.err.println(" Subscan " + subscan.getID() + " is a dark measurement. Skipping."); }
+		catch(DarkSubscanException e) { System.err.println("   Subscan " + subscan.getID() + " is a dark measurement. Skipping."); }
+		catch(FastFlatSubscanException e) { System.err.println("   Subscan " + subscan.getID() + " is a flatfield measurement. Skipping."); }
+		catch(NoiseSubscanException e) { System.err.println("   Subscan " + subscan.getID() + " is a noise measurement. Skipping."); }
+		catch(UnsupportedIntegrationException e) {  System.err.println("   Subscan " + subscan.getID() + " is not supported. Skipping."); }
 		catch(IllegalStateException e) { System.err.println(" WARNING! " + e.getMessage()); }
 		catch(IOException e) { System.err.println(" WARNING! FITS stream was not be closed."); }
 	}
@@ -214,7 +218,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			String scanNo = Util.d5.format(Integer.parseInt(scanDescriptor));
 			if(hasOption("date")) {
 				File directory = new File(path);
-				String date = option("date").getValue();
+				String date = option("date").getValue().replaceAll("-", "");
 				String scanID = date + "_" + scanNo + "_";
 				
 				if(!directory.exists()) {
@@ -244,8 +248,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			else {
 				String message = "Cannot find scan " + scanDescriptor;
 
-				if(!hasOption("date")) 
-					message += "\n    * Specify 'date' for unique JCMT scan ID.";
+				if(!hasOption("date")) message += "\n    * Specify 'date' for unique JCMT scan ID.";
 			
 				throw new FileNotFoundException(message);
 			}
@@ -273,9 +276,9 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	
 
 	
-	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException, UnsupportedScanException {
 		Header header = hdu.getHeader();
-
+		
 		// Load any options based on the FITS header...
 		instrument.setFitsHeaderOptions(header);
 		
@@ -285,10 +288,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	
 		site = new GeodeticCoordinates(header.getDoubleValue("LONG-OBS") * Unit.deg, header.getDoubleValue("LAT-OBS") * Unit.deg);
 		creator = header.getStringValue("ORIGIN");
-		//observer = header.getStringValue("OBSERVER");
 		project = header.getStringValue("PROJECT");
-		//descriptor = header.getStringValue("DESCRIPT");
-		//scanID = header.getStringValue("SCANID");
 		
 		if(creator == null) creator = "Unknown";
 		if(observer == null) observer = "Unknown";
@@ -304,7 +304,6 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		
 		dUT1 = header.getDoubleValue("DUT1") * Unit.day;
 		
-		
 		AstroTime timeStamp = new AstroTime();
 		try { 
 			timeStamp.parseFitsDate(date); 
@@ -317,34 +316,14 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		System.err.println(" [" + getSourceName() + "] observed on " + date);
 		String trackingSystem = header.getStringValue("TRACKSYS");
 		
-		if(trackingSystem == null) {
-			trackingClass = null;
-			horizontal = new HorizontalCoordinates(0.0, 0.0);
-		}
-		else if(trackingSystem.equals("AZEL")) {
-			trackingClass = HorizontalCoordinates.class;
-			horizontal = new HorizontalCoordinates(
-					header.getDoubleValue("BASEC1") * Unit.deg,
-					header.getDoubleValue("BASEC2") * Unit.deg
-			);
-			System.err.println(" Horizontal: " + horizontal.toString());	
-		}
-		else {
-			trackingClass = EquatorialCoordinates.class;
-			double year = (getMJD() - CoordinateEpoch.J2000.getMJD()) / 365.25;
-			
-			String epoch = trackingSystem.equals("APP") ? "J" + Util.f1.format(year) : "J2000";
-			
-			equatorial = new EquatorialCoordinates(
-				header.getDoubleValue("BASEC1") * Unit.deg,
-				header.getDoubleValue("BASEC2") * Unit.deg,
-				epoch
-			);
-			System.err.println(" Equatorial: " + equatorial.toString());	
-		}
+		obsType = header.getStringValue("OBS_TYPE");	
+		if(obsType.equalsIgnoreCase("focus")) throw new UnsupportedScanException("Focus reduction not (yet) implemented.");
+		
+		if(trackingSystem == null) trackingClass = null;
+		else if(trackingSystem.equals("AZEL")) trackingClass = HorizontalCoordinates.class;
+		else trackingClass = EquatorialCoordinates.class;
 
 		// Weather
-		
 		if(hasOption("tau.183ghz")) tau183GHz = option("tau.183ghz").getDouble();
 		else {
 			tau183GHz = 0.5 * (header.getDoubleValue("WVMTAUST") + header.getDoubleValue("WVMTAUEN"));
@@ -357,8 +336,6 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			instrument.setOption("tau.225ghz=" + tau225GHz);
 		}
 		
-		System.err.println(" tau(225GHz)=" + Util.f3.format(tau225GHz) + ", tau(183GHz)=" + Util.f3.format(tau183GHz));
-		
 		ambientT = 0.5 * (header.getDoubleValue("ATSTART") + header.getDoubleValue("ATEND")) * Unit.K + 273.16 * Unit.K;
 		pressure = 0.5 * (header.getDoubleValue("BPSTART") + header.getDoubleValue("BPEND")) * Unit.mbar;
 		humidity = 0.5 * (header.getDoubleValue("HUMSTART") + header.getDoubleValue("HUMEND"));
@@ -366,15 +343,12 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		windDirection = 0.5 * (header.getDoubleValue("WINDDIRST") + header.getDoubleValue("WINDDIREN")) * Unit.deg;
 		
 		obsMode = header.getStringValue("SAM_MODE");
-		// + Switching mode
-		// + Chopper, jiggler parameters
-		// + Scan details
+		// TODO + Switching mode
+		// TODO + Chopper, jiggler parameters
+		// TODO + Scan details
 		scanPattern = header.getStringValue("SCAN_PAT");
-
-		// + pointing offsets in the SMU section...
 		
-		isTracking = true;
-		
+		isTracking = true;		
 	}
 	
 	@Override
@@ -414,7 +388,6 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		if(iDate != scubascan.iDate) return iDate < scubascan.iDate ? -1 : 1;
 		if(getSerial() == scan.getSerial()) return 0;
 		return getSerial() < scan.getSerial() ? -1 : 1;
-		
 	}
 	
 	@Override
@@ -436,11 +409,10 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
 		if(name.equals("obsmode")) return obsMode;
+		else if(name.equals("obstype")) return obsMode;
 		else if(name.equals("obspattern")) return scanPattern;
 		else if(name.equals("dir")) return AstroSystem.getID(trackingClass);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
-	
-	
 	
 }

@@ -234,7 +234,7 @@ public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implem
 	
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
-			
+		
 		// Focus
 		focusXOffset = header.getDoubleValue("FOCUS_XO", Double.NaN) * Unit.mm;
 		focusYOffset = header.getDoubleValue("FOCUS_YO", Double.NaN) * Unit.mm;

@@ -27,7 +27,6 @@ import crush.array.DistortionModel;
 import crush.cso.CSOArray;
 import nom.tam.fits.*;
 
-import java.io.*;
 import java.util.*;
 
 import kovacs.math.Vector2D;
@@ -127,6 +126,7 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 	@Override
 	public void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
+		
 		samplingInterval = integrationTime = 1.0 / header.getDoubleValue("SAMPLING");
 		
 		super.parseScanPrimaryHDU(hdu);
@@ -203,10 +203,6 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 			
 	}
 	
-
-	@Override
-	public void readWiring(String fileName) throws IOException {}
-
 	@Override
 	public abstract int maxPixels();
 	

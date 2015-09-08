@@ -29,7 +29,7 @@ public class FrequencyID implements Comparable<FrequencyID> {
 	public double freq;
 	
 	public FrequencyID(int index) {
-		//this.index = index;
+		this.index = index;
 	}
 	
 	@Override

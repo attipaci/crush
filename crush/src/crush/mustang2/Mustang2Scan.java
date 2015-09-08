@@ -67,9 +67,6 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 		double PA = 0.5 * (firstFrame.getParallacticAngle() + lastFrame.getParallacticAngle());
 		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");
 	}
-	
-	
-	
 
 	@Override
 	public void read(String scanDescriptor, boolean readFully) throws Exception {
@@ -125,9 +122,10 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 	}
 	
 	public void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException {
-		// GBT 79:50:23.406 W, 38:25:59.236 N
-		
 		Header header = hdu.getHeader();
+		
+		// Load any options based on the FITS header...
+		instrument.setFitsHeaderOptions(header);
 		
 		fitsVersion = header.getStringValue("FITSVER");
 		if(fitsVersion.length() == 0) fitsVersion = null;
@@ -140,18 +138,17 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 		setSerial(header.getIntValue("SCAN", -1));
 		project = header.getStringValue("PROJID");
 		
+		// GBT 79:50:23.406 W, 38:25:59.236 N
 		site = new GeodeticCoordinates(
 			-(79 * Unit.deg + 50 * Unit.arcmin + 23.406 * Unit.arcsec),	
 			38 * Unit.deg + 25 * Unit.arcmin + 59.236 * Unit.arcsec	
 		);
-		// SITELON / SITELAT
-		
+		// or use SITELON / SITELAT from FITS?...
 		
 		timeStamp = header.getStringValue("DATE-OBS");
 		String date = timeStamp.substring(0, timeStamp.indexOf('T'));
 		String startTime = timeStamp.substring(timeStamp.indexOf('T') + 1);
 		id = date + "." + getSerial();
-		
 		
 		equatorial = new EquatorialCoordinates(
 				header.getDoubleValue("RA0") * Unit.hourAngle,

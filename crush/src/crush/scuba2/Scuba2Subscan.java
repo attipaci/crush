@@ -73,7 +73,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		try {
 			JCMTTauTable table = JCMTTauTable.get((int) scan.getMJD(), fileName);
 			table.setOptions(option("tau"));
-			setTau("183gHz", table.getTau(getMJD()));	
+			setTau("183ghz", table.getTau(getMJD()));	
 		}
 		catch(IOException e) { fallbackTau("jctables", e); }
 	}
@@ -97,8 +97,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	
 	public void printEquivalentTaus() {	
 		System.err.println("   --->"
-				+ " tau(JCMT):" + Util.f3.format(getTau("183ghz"))
-				+ ", tau(CSO):" + Util.f3.format(getTau("225ghz"))
+				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
 				+ ", tau(LOS):" + Util.f3.format(getTau("scuba2") / scan.horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
 		);		
@@ -111,7 +110,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	}
 	
 	
-	public void read() throws FitsException, DarkSubscanException, IOException {
+	public void read() throws FitsException, UnsupportedIntegrationException, IOException {
 		clear();
 		
 		Scuba2Scan scuba2Scan = (Scuba2Scan) scan;
@@ -126,7 +125,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		}
 	}
 	
-	private void readFile(Scuba2Fits file, boolean isFirstFile) throws FitsException, DarkSubscanException, IOException {
+	private void readFile(Scuba2Fits file, boolean isFirstFile) throws FitsException, UnsupportedIntegrationException, IOException {
 		if(CRUSH.debug) System.err.println("### " + file.getFile().getName());
 		
 		Fits fits = new Fits(file.getFile());		
@@ -192,20 +191,24 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	@Override
 	public String getID() { return Integer.toString(integrationNo+1); }
 	
-	public void parsePrimaryHeader(Header header) throws HeaderCardException, DarkSubscanException {
+	public void parsePrimaryHeader(Header header) throws HeaderCardException, UnsupportedIntegrationException {
 		integrationNo = header.getIntValue("NSUBSCAN") - 1;
 		
 		boolean isDark = header.getDoubleValue("SHUTTER", 1.0) == 0.0;
 		if(isDark) throw new DarkSubscanException();
 		
+		String sequenceType = header.getStringValue("SEQ_TYPE").toLowerCase();
+		if(sequenceType.equals("fastflat")) throw new FastFlatSubscanException();
+		if(sequenceType.equals("noise")) throw new NoiseSubscanException();
+		
 		totalIntegrationTime = header.getDoubleValue("INT_TIME") * Unit.s;
 		rawFrames = header.getIntValue("NAXIS3"); 
 		
-		System.err.println("   " + Util.f2.format(totalIntegrationTime / Unit.s) + " seconds with " + rawFrames + " frames --> @ "
+		System.err.println("   Subscan " + getID() + ": " + Util.f2.format(totalIntegrationTime / Unit.s) + " seconds with " + rawFrames + " frames --> @ "
 				+ Util.f2.format(rawFrames / totalIntegrationTime) + " Hz.");
 		
 		if(hasOption("subscan.minlength")) if(totalIntegrationTime < option("subscan.minlength").getDouble() * Unit.s)
-			throw new IllegalStateException(" Subscan " + getID() + " is less than " + option("subscan.minlength").getDouble() + "s long. Skipping.");
+			throw new IllegalStateException("    Subscan " + getID() + " is less than " + option("subscan.minlength").getDouble() + "s long. Skipping.");
 
 		
 		instrument.integrationTime = instrument.samplingInterval = totalIntegrationTime / rawFrames;
@@ -225,7 +228,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		final int samples = MJD.length;
 			
 		if(samples < 2) {
-			System.err.println(" Subscan " + getID() + " has no coordinate data. Dropping from set.");
+			System.err.println("   WARNING! Subscan " + getID() + " has no coordinate data. Dropping from set.");
 			return;
 		}
 				
@@ -341,6 +344,11 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	@Override
 	public String getFullID(String separator) {
 		return super.getFullID(separator) + separator + instrument.filter;
+	}
+	
+	@Override
+	public String getDisplayID() {
+		return super.getFullID("|");
 	}
 
 	

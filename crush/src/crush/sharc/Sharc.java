@@ -69,10 +69,6 @@ public class Sharc extends CSOArray<SharcPixel> {
 	}
 
 	@Override
-	public void readWiring(String fileName) throws IOException {
-	}
-
-	@Override
 	public SharcPixel getChannelInstance(int backendIndex) {
 		return new SharcPixel(this, backendIndex);
 	}

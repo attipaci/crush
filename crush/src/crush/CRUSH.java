@@ -49,7 +49,7 @@ public class CRUSH extends Configurator {
 	private static final long serialVersionUID = 6284421525275783456L;
 	
 	private static String version = "2.30-b1";
-	private static String revision = "devel.8";
+	private static String revision = "beta";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -341,6 +341,9 @@ public class CRUSH extends Configurator {
 			    System.err.println();
 			
 			    System.exit(1);				
+			}
+			catch(UnsupportedScanException e) {
+				System.err.println(" WARNING! Unsupported scan type: " + e.getMessage() + "\n");
 			}
 			catch(FileNotFoundException e) { 
 				// If it has '-', try to see if it can be read as a range...
