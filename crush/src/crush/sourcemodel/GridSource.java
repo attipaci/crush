@@ -182,7 +182,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 		
 		if(instrument.getOptions() == null) instrument.setOptions(new Configurator());
 
-		instrument.parseHeader(header);
+		instrument.parseImageHeader(header);
 
 		// get the beam and calculate derived quantities
 		// TODO revise... (use GaussianPSF...)

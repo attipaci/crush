@@ -439,12 +439,6 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GeometricRowColInde
 		out.close();
 	}
 
-	
-	@Override
-	public void readWiring(String fileName) throws IOException {
-		// TODO the amplifier wiring...
-	}
-
 	@Override
 	public int maxPixels() {
 		return storeChannels;

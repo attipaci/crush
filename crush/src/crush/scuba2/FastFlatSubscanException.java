@@ -25,11 +25,11 @@ package crush.scuba2;
 
 import crush.UnsupportedIntegrationException;
 
-public class DarkSubscanException extends UnsupportedIntegrationException {
+public class FastFlatSubscanException extends UnsupportedIntegrationException {
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -7163601774590161634L;
+	private static final long serialVersionUID = 4065273848418628066L;
 
 }

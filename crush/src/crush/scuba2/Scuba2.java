@@ -23,7 +23,6 @@
 
 package crush.scuba2;
 
-import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -50,6 +49,8 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	double plateScale;				// e.g. arcseconds / mm;
 	
 	Vector2D pointingCenter;
+	Vector2D pointingCorrection;
+	Vector2D userPointingOffset;
 	
 	
 	public Scuba2() {
@@ -64,7 +65,10 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		Scuba2 copy = (Scuba2) super.copy();
 		if(subarray != null) {
 			copy.subarray = new Scuba2Subarray[subarray.length];
-			for(int i=subarray.length; --i >= 0; ) if(subarray[i] != null) copy.subarray[i] = subarray[i].copy();
+			for(int i=subarray.length; --i >= 0; ) if(subarray[i] != null) {
+				copy.subarray[i] = subarray[i].copy();
+				copy.subarray[i].scuba2 = copy;
+			}
 		}
 		return copy;
 	}
@@ -102,7 +106,6 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 			int sizeX = Integer.parseInt(tokens.nextToken());
 			int sizeY = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : sizeX;
 			int nx = (int)Math.ceil(40.0 / sizeX);
-			
 			for(Scuba2Pixel pixel : this) pixel.block = (pixel.row / sizeY) * nx + (pixel.col / sizeX); 
 		}
 		
@@ -122,14 +125,14 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		catch(NoSuchFieldException e) { e.printStackTrace(); }	
 		
 		try {
-			CorrelatedModality muxMode = new CorrelatedModality("rows", "r", divisions.get("rows"), Scuba2Pixel.class.getField("muxGain"));		
+			CorrelatedModality muxMode = new CorrelatedModality("rows", "r", divisions.get("rows"), Scuba2Pixel.class.getField("rowGain"));		
 			muxMode.setGainFlag(Scuba2Pixel.FLAG_ROW);
 			addModality(muxMode);
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }	
 		
 		try {
-			CorrelatedModality muxMode = new CorrelatedModality("cols", "c", divisions.get("cols"), Scuba2Pixel.class.getField("pinGain"));		
+			CorrelatedModality muxMode = new CorrelatedModality("cols", "c", divisions.get("cols"), Scuba2Pixel.class.getField("colGain"));		
 			muxMode.setGainFlag(Scuba2Pixel.FLAG_COL);
 			addModality(muxMode);
 		}
@@ -200,17 +203,10 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		return pixels;
 	}
 	
-	@Override
-	public void readWiring(String fileName) throws IOException {
-		//System.err.println(" Loading wiring data from " + fileName);
-		System.err.println("WARNING! processing of wiring data not (yet) implemented!.");
-	}
-	
 	
 	public void addPixelsFor(boolean[] hasSubarray) {
 		int subarrays = 0;
 		for(int i=0; i < hasSubarray.length; i++) if(hasSubarray[i]) subarrays++;
-		System.err.println();
 		
 		clear();
 		ensureCapacity(subarrays * Scuba2Subarray.PIXELS);
@@ -229,7 +225,6 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException {
 		Header header = hdu.getHeader();
 		
-		
 		String subarrayPrefix = hasOption("450um") ? "s4" : "s8"; 
 		
 		// nSubarray = (header.getStringValue("SUBARRAY"));
@@ -243,10 +238,8 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		double shutter = header.getDoubleValue("SHUTTER");
 		shutterOpen = shutter > 0.0;
 		
-		
-		// TODO nominal integration time, but real sampling is slower and jittery...
+		// nominal integration time, but real sampling is slower and jittery...
 		//integrationTime = samplingInterval = header.getDoubleValue("STEPTIME");
-		
 		
 		// Focus
 		focusXOffset = header.getDoubleValue("ALIGN_DX");
@@ -258,11 +251,17 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 				+ " YOff=" + Util.f2.format(focusYOffset) 
 				+ " ZOff=" + Util.f2.format(focusZOffset)
 		);		
+		
+		// DAZ, DEL total pointing corrections
+		pointingCorrection = new Vector2D(header.getDoubleValue("DAZ", 0.0), header.getDoubleValue("DEL", 0.0));
+		pointingCorrection.scale(Unit.arcsec);
+		
+		// UAZ, UEL pointing
+		userPointingOffset = new Vector2D(header.getDoubleValue("UAZ", 0.0), header.getDoubleValue("UEL", 0.0));
+		userPointingOffset.scale(Unit.arcsec);
+		
 	}
 	
-	
-	
-
 	/*
 	public void readTemperatureGains(String fileName) throws IOException {
 		System.err.println(" Loading He3 gains from " + fileName);
@@ -305,12 +304,6 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	}
 	*/
 	
-	/*
-	@Override
-	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {	
-		super.editImageHeader(scans, header, cursor);
-	}
-	*/
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
@@ -320,6 +313,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		else if(name.equals("foc.X")) return Util.defaultFormat(focusXOffset, f);
 		else if(name.equals("foc.Y")) return Util.defaultFormat(focusYOffset, f);
 		else if(name.equals("foc.Z")) return Util.defaultFormat(focusZOffset, f);
+		else if(name.equals("shutter?")) return Boolean.toString(shutterOpen);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
 	
@@ -333,7 +327,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	@Override
 	public String getDataLocationHelp() {
 		return super.getDataLocationHelp() +
-				"     -date=         YYYYMMDD when the data was collected.\n" +
+				"     -date=         YYYY-MM-DD when the data was collected.\n" +
 				"     -ndf2fits=     The path to the ndf2fits executable. Required for\n" +
 				"                    reading native SDF data.\n";
 	}

@@ -99,10 +99,7 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 		return (instrumentData.instrumentName != null) ? instrumentData.instrumentName : super.getName();
 	}
 	
-	@Override
-	public void parseHeader(Header header) {	
-		super.parseHeader(header);
-		
+	public void parseHeader(Header header) {		
 		instrumentData = new SofiaInstrumentData(header);
 		
 		// Set the default angular resolution given the telescope size...
@@ -283,6 +280,7 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 		
 		super.validate(scans);
 	}
+	
 	
 	public static final double telescopeDiameter = 2.5 * Unit.m;
 	

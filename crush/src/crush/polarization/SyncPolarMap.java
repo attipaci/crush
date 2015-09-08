@@ -26,7 +26,7 @@ package crush.polarization;
 
 import crush.array.Array;
 import crush.sourcemodel.ScalarMap;
-import crush.sourcemodel.SyncModMap;
+import crush.sourcemodel.SyncModulatedMap;
 
 public class SyncPolarMap extends PolarMap {
 
@@ -36,6 +36,6 @@ public class SyncPolarMap extends PolarMap {
 
 	@Override
 	public ScalarMap getMapInstance() {
-		return new SyncModMap(getInstrument());
+		return new SyncModulatedMap(getInstrument());
 	}
 }

@@ -30,12 +30,14 @@ import crush.resonators.Resonator;
 
 public class Mustang2Pixel extends SingleColorPixel implements Resonator {
 	public Mustang2PixelID id;
+	public double polarizationAngle = Double.NaN;
+	public int polarizationIndex = -1;
 	public int readoutIndex;				// COL
 	public int muxIndex;					// ROW
 	public double frequency;
 	public double attenuation;
 	
-	public double readoutGain = 1.0;
+	public double polarizationGain = 1.0, readoutGain = 1.0;
 		
 
 	public Mustang2Pixel(Mustang2 instrument, int backendIndex) {
@@ -66,6 +68,8 @@ public class Mustang2Pixel extends SingleColorPixel implements Resonator {
 		
 		unflagID();
 		
+		setFixedIndex(mustangID.readoutIndex * Mustang2.maxReadoutChannels + mustangID.index);
+		
 		if(mustangID.isFlagged(Mustang2PixelID.FLAG_UNUSED)) flag(Channel.FLAG_DISCARD);
 
 		if(mustangID.isFlagged(Mustang2PixelID.FLAG_BLIND)) {
@@ -73,7 +77,14 @@ public class Mustang2Pixel extends SingleColorPixel implements Resonator {
 			flag(Channel.FLAG_BLIND);
 		}
 		else {
-			position = this.id.position;
+			position = mustangID.position;
+			polarizationAngle = mustangID.polarizationAngle;
+			
+			if(!Double.isNaN(polarizationAngle)) {
+				polarizationIndex = (int) Math.round(polarizationAngle / POLARIZATION_STEP);
+			}
+			else polarizationIndex = (mustangID.index & 1) << 1;
+			
 			if(position != null) unflag(Channel.FLAG_BLIND);
 		}
 	}
@@ -100,8 +111,12 @@ public class Mustang2Pixel extends SingleColorPixel implements Resonator {
 		return true;
 	}
 	
+	public final static int FLAG_POL = 1 << nextSoftwareFlag++;
 	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
 	public final static int FLAG_NOTONEID = 1 << nextSoftwareFlag++;
+	
+	public final static int N_POLARIZATIONS = 4;
+	public final static double POLARIZATION_STEP = Math.PI / N_POLARIZATIONS;
 	
 	
 }

@@ -1,15 +1,21 @@
->> 'distortion.name'
->> 'regrid' --> artefacts (?)
->> test pngcairo for photometry
->> test photometry! 
->> 'perimeter'
->> 'fillgaps'
->> 'threads'
->> history to crushtools
->> processing history to imagetool and Data2D and subclasses... 
+
+2.30-b1 (8 September 2015)
 
 
-2.30-b1
+	Overview
+	=====================================================================
+	This is major release, with some big changes and lots of new features. 
+        The most important highlights are:
+
+          * Brand new parallel architecture throughout, giving big boost to
+	    single-scan reductions on multicore architectures.
+          * Free and full SCUBA-2 support (initial version).
+	  * Experimental support for MUSTANG-2.
+
+	Beyond these, a lot of changes under the hood. Many old bugs found and
+	fixed, and many improvements made. See the full list of changes below.
+	=====================================================================
+
 
 	[BUG] {SourceMap} The use of unfiltered vs filtered gains for mapping
 	did not depend on the mask as intented. The algorithm used a stale map
@@ -23,6 +29,10 @@
 	[BUG] {SyncModMap} Miscounting of good frames. However, this mapping
 	feature was really unused, making this a rather inconsequential bug.
 
+	[BUG] Gain renormalization (re-enabled in the last release) was flawed
+	and could cause mapping artefacts. Now following a more cautious
+	approach...
+
 	[NEW] Preliminary support for MUSTANG-2 (GBT). See mustang2/README
 	for details.
 
@@ -34,6 +44,28 @@
 	focus quality!). Many thanks to Ed Chapin for helping make sense of
 	SCUBA-2 data, and Tony Mroczkowski for getting some essential training
 	data to make this happen. See scuba2/README for details...
+
+	[NEW] New option 'notch' for notch filtering the raw detector 
+	timestreams. It is faster (usually) than the kill filter. It has the
+	following sub-options: 'frequencies' to provide a comma-separated
+	list of frequencies to notch out, 'harmonics' if you want to remove
+	extra harmonics of those frequencies, and 'width' to specify the
+	target width of the notch filter (in Hz). E.g.
+
+		notch
+		notch.frequencies 1.416, 50.0, 60.0
+		notch.harmonics 6
+		notch.width 0.1
+
+	[NEW] New option 'subscans.merge.maxgap' to specify a maximum gap
+	(seconds) between two consecutive subscans (integrations) that can
+	be merged with the 'subscans.merge' option.
+
+	[NEW] New experimental option 'regrid' to resample the final map to
+	a different pixel grid than what was used during the reduction. This
+	feature is somewhat experimental for now. The preferred approach is
+	to use the time-tested 'imagetool' after the reduction to achieve the
+	same effect.	
 
 	[NEW] CRUSH to add a HISTORY note into the FITS output on the 
 	reduction, by default. Instruments (like SOFIA cameras) may add further
@@ -75,6 +107,21 @@
 
 	[FIX] {HAWC+} Fixed multiple occurences of FITS keys: INSTRUME and
 	TRACERR.
+
+	[TWEAK] {MAKO-2} kill filter replaced by the faster notch filter for
+	removing pulse-tube pickups.
+
+	[TWEAK] Time weighting requires at least 1 full degree of freedom
+	before flagging (was > 0 before).
+
+	[TWEAK] {APEX} Automatic skydip reductions no longer hardcoded but
+	set dynamically in the configuration apex/default.cfg based on the
+	OBJECT name (= SKYDIP). No change in functionality.
+
+	[TWEAK] fits.jar modified to forgo console messages on multiple keys.
+	One of the SCUBA-2 HDU headers had duplicate EXTVER keys, which 
+	produced a whole lot of warnings when processing the FITS files. These 
+	inconsequential warnings are now supressed.
 
 	[TWEAK] Stronger enforcement of gain normalization for correlated noise
 	removal.
@@ -128,9 +175,8 @@
 	so that other frequency multiplexed instruments can reuse the same 
 	code. (It also cleaned up some of the old resonance matching code).
 
-	[CODE] Header editing to used nboth header and cursor where needed
-	and possible, to allow for more complex edits (e.g. overrides, 
-	removals)
+	[CODE] Header editing to use both header and cursor where needed and 
+	possible, to allow for more complex edits (e.g. overrides, removals)
 
 	[CODE] pipeline task iteration ordering more explicit, by iterating
 	on task indices.

@@ -21,15 +21,15 @@
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-package crush.scuba2;
+package crush;
 
-import crush.UnsupportedIntegrationException;
-
-public class DarkSubscanException extends UnsupportedIntegrationException {
+public class UnsupportedScanException extends Exception {
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -7163601774590161634L;
+	private static final long serialVersionUID = 7797623045803263996L;
 
+	public UnsupportedScanException(String message) { super(message); }
+	
 }

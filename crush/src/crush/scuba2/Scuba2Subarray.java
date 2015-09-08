@@ -42,9 +42,6 @@ public class Scuba2Subarray implements Cloneable {
 
 	double scaling = 1.0;
 	
-
-	
-	
 	public Scuba2Subarray(Scuba2 parent, String id) {
 		scuba2 = parent;
 		this.id = id;
@@ -61,6 +58,7 @@ public class Scuba2Subarray implements Cloneable {
 		Scuba2Subarray copy = (Scuba2Subarray) clone();
 		if(focalPlanePixelOffset != null) copy.focalPlanePixelOffset = (Vector2D) focalPlanePixelOffset.clone();
 		if(id != null) copy.id = new String(id);
+		copy.scuba2 = null;
 		return copy;
 	}
 
@@ -97,9 +95,8 @@ public class Scuba2Subarray implements Cloneable {
 		
 		for(int c=Scuba2Subarray.PIXELS; --c >= 0; ) {
 			Scuba2Pixel pixel = getPixel(c);
-			if(Double.isNaN(data[0][pixel.col % Scuba2.COLS][pixel.row % Scuba2.ROWS])) pixel.flag(Channel.FLAG_DEAD);
+			if(Double.isNaN(data[0][pixel.col % Scuba2.COLS][pixel.row % Scuba2.ROWS])) pixel.flag(Channel.FLAG_DISCARD);
 		}
-		
 	}
 	
 	public static int PIXELS = Scuba2.ROWS * Scuba2.COLS;

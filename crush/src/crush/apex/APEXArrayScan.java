@@ -77,8 +77,8 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	}
 	
 	@Override
-	public void mergeSubscans() {
-		super.mergeSubscans();
+	public void mergeIntegrations() {
+		super.mergeIntegrations();
 		get(0).nodPhase = 0;
 	}
 	
@@ -103,7 +103,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		}
 		
 		if(readFully) {
-			if(chopper == null) mergeSubscans();
+			if(chopper == null) mergeIntegrations();
 			validate();
 		}
 	}
@@ -304,11 +304,6 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		timeStamp = header.getStringValue("DATE-OBS");
 		if(sourceName == null) sourceName = "Undefined";
 		setSourceName(sourceName);
-		
-		if(sourceName.equalsIgnoreCase("SKYDIP")) {
-			System.err.println(" Setting options for skydip");
-			instrument.setOption("skydip");
-		}
 		
 		pointingOffset = new Vector2D(header.getDoubleValue("IA"), header.getDoubleValue("IE"));
 		pointingOffset.scale(Unit.deg);

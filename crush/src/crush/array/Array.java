@@ -225,8 +225,8 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	}
 	
 	@Override
-	public void parseHeader(Header header) {
-		super.parseHeader(header);
+	public void parseImageHeader(Header header) {
+		super.parseImageHeader(header);
 		setResolution(header.getDoubleValue("BEAM", getResolution() / Unit.arcsec) * Unit.arcsec);
 	}
 	

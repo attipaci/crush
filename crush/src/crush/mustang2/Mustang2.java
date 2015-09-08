@@ -32,6 +32,7 @@ import java.util.StringTokenizer;
 
 import kovacs.data.Statistics;
 import kovacs.math.Vector2D;
+import kovacs.util.Constant;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 import nom.tam.fits.BasicHDU;
@@ -63,8 +64,8 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 	public Mustang2() {
 		super("mustang2", new SingleColorLayout<Mustang2Pixel>(), maxPixels);	
 		setResolution(6.2 * Unit.arcsec);
-		
 		mount = Mount.CASSEGRAIN;
+		samplingInterval = integrationTime = 1.0 * Unit.ms;
 	}
 	
 	@Override
@@ -81,6 +82,9 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 	@Override
 	public void initDivisions() {
 		super.initDivisions();
+			
+		try { addDivision(getDivision("polarizations", Mustang2Pixel.class.getField("polarizationIndex"), Channel.FLAG_DEAD)); }
+		catch(Exception e) { e.printStackTrace(); }
 		
 		try { addDivision(getDivision("mux", Mustang2Pixel.class.getField("readoutIndex"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { e.printStackTrace(); }
@@ -90,7 +94,13 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 	@Override
 	public void initModalities() {
 		super.initModalities();
-			
+				
+		try {
+			CorrelatedModality muxMode = new CorrelatedModality("polarizations", "P", divisions.get("polarizations"), Mustang2Pixel.class.getField("polarizationGain"));		
+			muxMode.setGainFlag(Mustang2Pixel.FLAG_POL);
+			addModality(muxMode);
+		}
+		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
 		try {
 			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), Mustang2Pixel.class.getField("readoutGain"));		
@@ -113,9 +123,6 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 	}
 
 	@Override
-	public void readWiring(String fileName) throws IOException {}
-
-	@Override
 	public Mustang2Pixel getChannelInstance(int backendIndex) {
 		return new Mustang2Pixel(this, backendIndex);
 	}
@@ -128,16 +135,18 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 	
 	public void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException {
 		Header header = hdu.getHeader();
-		
+				
 		// nReadouts = header.getIntValue("NROACHES", 1);
 		focus = header.getDoubleValue("LFCY", Double.NaN) * Unit.mm;
 		
-		// TODO read from FITS when available...
-		samplingInterval = integrationTime = 1.0 * Unit.ms;
 	}
 
 	
 	public void parseHardwareHDU(BinaryTableHDU hdu) throws FitsException {
+		Header header = hdu.getHeader();
+		
+		samplingInterval = integrationTime = Unit.s / header.getDoubleValue("SMPLFREQ", 1000.0);
+		
 		Object[] data = hdu.getRow(0);
 		
 		byte[] row = (byte[]) data[hdu.findColumn("ROW")];
@@ -177,12 +186,10 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 			pixel.muxIndex = row[i];
 			
 			if(pixel.gain == 0.0) pixel.flag(Channel.FLAG_BLIND); 
-			if(Math.abs(pixel.gain) > maxG) {
-				pixel.gain /= Math.abs(pixel.gain);
-				pixel.flag(Channel.FLAG_GAIN); 
-			}
-			if(pixel.frequency < 0.0) pixel.flag(Channel.FLAG_DEAD); 
+			else if(pixel.gain > maxG) pixel.flag(Channel.FLAG_GAIN); 
 			
+			if(pixel.frequency < 0.0) pixel.flag(Channel.FLAG_DEAD); 
+		
 			if(pixel.isUnflagged()) G[n++] = Math.abs(pixel.gain);
 			
 			add(pixel);
@@ -194,8 +201,13 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 			System.err.println(" Average gain is " + Util.s2.format(temperatureGain) + " / K for " + n + " pixels.");
 			for(Channel pixel : this) pixel.gain /= temperatureGain;
 		}
+	}
 	
-		
+	@Override
+	public float normalizeSkyGains() throws Exception {
+		float aveG = super.normalizeSkyGains();
+		temperatureGain *= aveG;
+		return aveG;
 	}
 	
 	@Override
@@ -218,6 +230,8 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		
 		assignPositions();
 			
+		if(hasOption("pol")) restrictPolarization(option("pol").getDouble() * Unit.deg);
+		
 		super.loadChannelData();
 	}
 		
@@ -228,6 +242,8 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		for(Mustang2Readout r : readout) if(r != null) for(Mustang2PixelID id : r.tones) id.flag(Mustang2PixelID.FLAG_UNUSED);
 		
 		int n = 0;
+		
+		double pol0 = hasOption("positions.pol0") ? option("positions.pol0").getDouble() * Unit.deg : 0.0;
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
@@ -241,13 +257,18 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 					
 					id.position = new Vector2D(Double.parseDouble(tokens.nextToken()), Double.parseDouble(tokens.nextToken()));			
 					id.position.scale(Unit.arcsec);
-
-					id.unflag(Mustang2PixelID.FLAG_UNUSED);
+					
+					id.unflag(Mustang2PixelID.FLAG_UNUSED);	
 
 					int flag = Integer.parseInt(tokens.nextToken());
 					if(flag == 0) id.flag(Mustang2PixelID.FLAG_BLIND);
 					else id.unflag(Mustang2PixelID.FLAG_BLIND);
 
+					if(tokens.hasMoreTokens()) {
+						id.polarizationAngle = Constant.rightAngle + Math.IEEEremainder(Double.parseDouble(tokens.nextToken()) * Unit.deg - pol0, Math.PI);
+						if(id.polarizationAngle == Math.PI) id.polarizationAngle = 0.0;
+					}
+						
 					n++;
 				}
 			}
@@ -259,7 +280,9 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		in.close();
 	}
 	
-	public void assignPositions() {	
+	private void assignPositions() {	
+		System.err.println(" Assigning known pixels to resonators.");
+		
 		for(Mustang2Pixel pixel : this) pixel.flagID();
 		
 		if(hasOption("readout")) {
@@ -272,13 +295,12 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		for(Channel channel : this) if(channel.isFlagged(Mustang2Pixel.FLAG_NOTONEID | Mustang2Pixel.FLAG_BLIND))
 			channel.flag(Channel.FLAG_DISCARD);
 	}
-	public void assignPositions(int readoutIndex) {
+	
+	private void assignPositions(int readoutIndex) {
 		ArrayList<Mustang2Pixel> pixels = getReadoutPixels(readoutIndex);
 		Mustang2Readout r = readout[readoutIndex];
 		for(Mustang2Pixel pixel : pixels) pixel.setFrequencyID(r.getNearestID(pixel.frequency));
 	}
-	
-	
 	
 	/*
 	public void assignPositions(int readoutIndex) {
@@ -296,6 +318,37 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 		return pixels;
 	}
 	
+	public ArrayList<Mustang2Pixel> getPolarizationPixels(double polarizationAngle) {
+		if(Double.isNaN(polarizationAngle)) return this;
+		ArrayList<Mustang2Pixel> pixels = new ArrayList<Mustang2Pixel>(maxReadoutChannels);
+		for(Mustang2Pixel pixel : this) if(pixel.polarizationAngle == polarizationAngle) pixels.add(pixel);
+		return pixels;
+	}
+	
+	private void restrictPolarization(double polarizationAngle) {
+		if(Double.isNaN(polarizationAngle)) return;
+		polarizationAngle = Constant.rightAngle + Math.IEEEremainder(polarizationAngle, Math.PI);
+		if(polarizationAngle == Math.PI) polarizationAngle = 0.0;
+		System.err.println(" Restricting polarization to " + Util.s3.format(polarizationAngle / Unit.deg) + "degrees.") ;
+		for(Mustang2Pixel pixel : this) if(pixel.polarizationAngle != polarizationAngle) pixel.flag(Channel.FLAG_DEAD);
+	}
+	
+	
+	@Override
+	public String getCommonHelp() {
+		return super.getCommonHelp() + 
+				"     -sparse        Reduce sparsely sampled data on a coarser grid.\n";
+	}
+	
+	/*
+	@Override
+	public String getDataLocationHelp() {
+		return super.getDataLocationHelp() +
+				"     -date=         YYYYMMDD when the data was collected.\n" +
+				"     -ndf2fits=     The path to the ndf2fits executable. Required for\n" +
+				"                    reading native SDF data.\n";
+	}
+	*/
 	
 	public static int maxReadouts = 7;
 	public static int maxReadoutChannels = 36;

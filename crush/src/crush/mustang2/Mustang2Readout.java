@@ -62,7 +62,7 @@ public class Mustang2Readout implements Cloneable, Copiable<Mustang2Readout> {
 		String line = null;
 				
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			Mustang2PixelID id = new Mustang2PixelID(tones.size());
+			Mustang2PixelID id = new Mustang2PixelID(index, tones.size());
 			id.freq = Double.parseDouble(line) * Unit.GHz;
 			tones.add(id);
 		}

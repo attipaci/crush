@@ -23,7 +23,6 @@
 
 package crush.hawcplus;
 
-import java.io.*;
 import java.util.*;
 
 import kovacs.math.Vector2D;
@@ -176,6 +175,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	
 	@Override
 	public void loadChannelData() {
+		if(hasOption("subarray")) selectSubarrays(option("subarray").getValue());
+		
 		// Update the pointing centers...
 		if(hasOption("pcenter")) arrayPointingCenter = option("pcenter").getVector2D();
 		else arrayPointingCenter = array.arrayPointingCenter;
@@ -201,6 +202,34 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		if(hasOption("rotation.t")) rotateT(option("rotation.t").getDouble() * Unit.deg);
 			
 		super.loadChannelData();
+	}
+	
+	public void selectSubarrays(String spec) {
+		for(HawcPlusPixel pixel : this) pixel.flag(Channel.FLAG_DISCARD);
+		
+		StringTokenizer tokens = new StringTokenizer(spec, ",; \t");
+		while(tokens.hasMoreTokens()) {
+			String value = tokens.nextToken().toUpperCase();
+			char pol = value.charAt(0);
+			int index = value.length() > 1 ? value.charAt(1) - '1' : 0;
+			
+			int polIndex = -1;
+			if(pol == 'R') polIndex = 0;
+			else if(pol == 'T') polIndex = 1;
+			
+			if(polIndex >= 0) {
+				if(index <= 0) for(int i=polSubArrays(); --i >= 0; ) selectSubarray(pol, i);
+				else selectSubarray(pol, index);
+			}
+		}
+		
+		for(HawcPlusPixel pixel : this) if(pixel.isFlagged(Channel.FLAG_DISCARD)) pixel.flag(Channel.FLAG_DEAD);
+		
+	}
+	
+	public void selectSubarray(int pol, int index) {
+		int from = pol * polArrayPixels() + index * subarrayPixels();
+		for(int k=subarrayPixels(); --k >= 0; ) get(from + k).unflag(Channel.FLAG_DISCARD);
 	}
 	
 	public void setPlateScale(Vector2D size) {	
@@ -276,15 +305,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		// Add HAWC+ specific keywords
 		cursor.add(new HeaderCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
 	}
-	
-	
-	@Override
-	public void readWiring(String fileName) throws IOException {
-		// TODO Auto-generated method stub
-		
-		registerConfigFile(fileName);
-		
-	}
 
 	@Override
 	public void readData(Fits fits) throws Exception {
@@ -356,6 +376,10 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	
 	public int polArrayPixels() {
 		return cols() * rows();
+	}
+	
+	public int subarrayPixels() {
+		return rows() * subarrayCols();
 	}
 	
 	public int pixels() {

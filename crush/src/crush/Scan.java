@@ -108,7 +108,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			catch(Exception e) {}
 			segmentTo(segmentTime);
 		}
-		else if(hasOption("subscans.merge")) mergeSubscans();
+		else if(hasOption("subscans.merge")) mergeIntegrations();
 		
 		
 		isMovingObject |= hasOption("moving");
@@ -287,29 +287,59 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		return hasOption("datapath") ? option("datapath").getPath() + File.separator : "";
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void mergeSubscans() {	
-		if(size() < 2) return;
 
+	
+	@SuppressWarnings("unchecked")
+	public void mergeIntegrations() {	
+		if(size() < 2) return;
+	
 		// TODO What if different sampling intervals...
 		System.err.println(" Merging integrations...");
 		
+		final double maxDiscontinuity = hasOption("subscans.merge.maxgap") ? option("subscans.merge.maxgap").getDouble() * Unit.s : Double.NaN;
+		final int maxGap = Double.isNaN(maxDiscontinuity) ? Integer.MAX_VALUE : (int) Math.ceil(maxDiscontinuity / instrument.samplingInterval);
+		
 		Integration<InstrumentType, Frame> merged = (Integration<InstrumentType, Frame>) get(0);
-		merged.trimToSize();
+		merged.trimEnd();
+		
+		double lastMJD = merged.getLastFrame().MJD;
+		
+		ArrayList<IntegrationType> parts = new ArrayList<IntegrationType>();
 		
 		for(int i=1; i<size(); i++) {
 			IntegrationType integration = get(i);
-			integration.trimToSize();
 			
-			int gap = (int) Math.round((integration.getFirstFrame().MJD - get(i-1).getLastFrame().MJD) / instrument.samplingInterval);
-			for(; --gap >= 0; ) merged.add(null);
-				
-			merged.addAll(integration);	
+			// Remove null frames from the end;
+			integration.trimEnd();
+			
+			// Skip null frames at the beginning...
+			final int nt = integration.size();
+			int from = 0;
+			for( ; from < nt; from++) if(integration.get(from) != null) break;			
+			
+			int gap = (int) Math.round((integration.get(from).MJD - lastMJD) * Unit.day / instrument.samplingInterval);
+			if(gap > 0) {
+				if(gap < maxGap) {
+					System.err.println("   > Padding with " + gap + " frames before integration " + integration.getID());
+					for(; --gap >= 0; ) merged.add(null);
+					for(int t=from; t<nt; t++) merged.add(integration.get(t));
+				}
+				else {
+					System.err.println("   > Gap before integration " + integration.getID() + " is too large. Starting new merge.");
+					parts.add((IntegrationType) merged);
+					merged = (Integration<InstrumentType, Frame>) integration;
+				}
+			}
+			
+			lastMJD = integration.getLastFrame().MJD;
 		}
 	
 		merged.reindex();
 		
+		System.err.println("   > Total esposure time: " + Util.f1.format(merged.getExposureTime() / Unit.s) + "s.");
+		
 		clear();
+		addAll(parts);
 		add((IntegrationType) merged);
 	}
 	
@@ -891,7 +921,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	@SuppressWarnings("unchecked")
 	public void segmentTo(double segmentTime) {
-		if(size() > 1) mergeSubscans();
+		if(size() > 1) mergeIntegrations();
 		
 		IntegrationType merged = get(0);
 		clear();

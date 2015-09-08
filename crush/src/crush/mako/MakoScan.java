@@ -179,7 +179,11 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 	}
 
 	protected void readScanInfo(Fits fits) throws IOException, HeaderCardException, FitsException {
-		parseScanPrimaryHDU(fits.readHDU());		
+		BasicHDU mainHDU = fits.readHDU();
+		
+		parseScanPrimaryHDU(mainHDU);
+		instrument.parseScanPrimaryHDU(mainHDU);
+
 		fits.skipHDU(3);
 
 		BasicHDU nextHDU = fits.readHDU();
@@ -217,7 +221,7 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 		
 	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
-
+		
 		// Load any options based on the FITS header...
 		instrument.setFitsHeaderOptions(header);
 		

@@ -30,7 +30,7 @@ import crush.array.SingleColorPixel;
 public class Scuba2Pixel extends SingleColorPixel {
 	public int subarrayNo;
 	public int row, col, block=0;
-	public double subarrayGain = 1.0, muxGain = 1.0, pinGain = 1.0;
+	public double subarrayGain = 1.0, rowGain = 1.0, colGain = 1.0;
 	public double he3Gain = 0.0;
 	
 	public Scuba2Pixel(Scuba2 array, int zeroIndex) {
@@ -49,8 +49,9 @@ public class Scuba2Pixel extends SingleColorPixel {
 	@Override
 	public void uniformGains() {
 		super.uniformGains();
-		muxGain = 1.0;
-		pinGain = 1.0;
+		subarrayGain = 1.0;
+		rowGain = 1.0;
+		colGain = 1.0;
 	}
 	
 	@Override

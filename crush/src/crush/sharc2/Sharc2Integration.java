@@ -111,7 +111,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		
 		if(t < last.index) {
 			System.err.println("   WARNING! Gap detected. Discarding data after gap.");
-			this.trim(0, t);
+			for(int i=size(); --i >= t; ) remove(i);
 		}
 	}
 	

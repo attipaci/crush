@@ -272,13 +272,13 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		skipReconstructed = hasOption("skipfwfix");
 		
 		if(isOldFormat) {
-			parseOldScanPrimaryHDU(HDU[0]);
 			instrument.parseOldScanPrimaryHDU(HDU[0]);
+			parseOldScanPrimaryHDU(HDU[0]);
 			instrument.parseOldHardwareHDU((BinaryTableHDU) HDU[1]);	
 		}
 		else {
-			parseScanPrimaryHDU(HDU[0]);
 			instrument.parseScanPrimaryHDU(HDU[0]);
+			parseScanPrimaryHDU(HDU[0]);
 			instrument.parseHardwareHDU((BinaryTableHDU) HDU[1]);
 		}
 		
@@ -305,7 +305,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		
 		// Load any options based on the FITS header...
 		instrument.setFitsHeaderOptions(header);
-
+		
 		// Scan Info
 		int serial = header.getIntValue("SCANNO");
 		
@@ -526,9 +526,9 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	
 	protected void parseOldScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
-
+	
 		// Load any options based on the FITS header...
-		instrument.setFitsHeaderOptions(header);		
+		instrument.setFitsHeaderOptions(header);
 		
 		// Scan Info
 		int serial = header.getIntValue("SCANNO");

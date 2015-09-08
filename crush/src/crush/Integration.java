@@ -148,8 +148,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				frame.index = index;
 			}
 		}.process();
-			
+		
 		if(hasOption("fillgaps")) if(hasGaps(1)) fillGaps();
+		
+		if(hasOption("notch")) notchFilter();
 		
 		if(hasOption("shift")) shiftData(option("shift").getDouble() * Unit.s);
 		
@@ -165,13 +167,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 		calcScanSpeedStats();
 		
-		// Flag out-of-range data
-		if(hasOption("range")) checkRange();
-		// Continue only if enough valid channels remain...
-		int minChannels = hasOption("mappingpixels") ? option("mappingpixels").getInt() : 2;
-		if(instrument.mappingChannels < minChannels)
-			throw new IllegalStateException("Too few valid channels (" + instrument.mappingChannels + ").");
-		
 		if(hasOption("filter.kill")) {
 			System.err.println("   FFT Filtering specified sub-bands...");
 			removeOffsets(false);
@@ -180,14 +175,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			filter.apply();
 		}
 		
+		
+		
+		// Flag out-of-range data
+		if(hasOption("range")) checkRange();
+		// Continue only if enough valid channels remain...
+		int minChannels = hasOption("mappingpixels") ? option("mappingpixels").getInt() : 2;
+		if(instrument.mappingChannels < minChannels)
+			throw new IllegalStateException("Too few valid channels (" + instrument.mappingChannels + ").");
+		
 		// Automatic downsampling after vclipping...
 		if(hasOption("downsample")) if(option("downsample").equals("auto")) downsample();
-	
 		
-		// Discard invalid frames at the beginning and end of the integration...
-		reindex();
 		trim();
-			
+		
 		// Continue only if integration is long enough to be processed...
 		int minFrames = hasOption("subscan.minlength") ? (int) Math.floor(option("subscan.minlength").getDouble() / instrument.samplingInterval) : 2;
 		int mappingFrames = getFrameCount(Frame.SOURCE_FLAGS);
@@ -259,6 +260,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(hasOption("speedtest")) speedTest();
 	}
 	
+	public double getExposureTime() { return getFrameCount(Frame.SKIP_SOURCE) * instrument.samplingInterval; }
+	
 	public double getDuration() { return size() * instrument.samplingInterval; }
 	
 	public void invert() {
@@ -286,11 +289,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final int from = (int)range.min();
 		final int to = Math.min(size(), (int)range.max());
 		
-		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(to-from+1);
+		for(int t=size(); --t >= to; ) remove(t);
 		
-		for(int t=from; t<to; t++) buffer.add(get(t));
+		if(from == 0) return;
+		
+		final ArrayList<FrameType> selected = new ArrayList<FrameType>(to - from);
+		for(int t=from; t<to; t++) selected.add(get(t));
+		
 		clear();
-		addAll(buffer);
+		addAll(selected);
+		
 		reindex();
 	}
 	
@@ -353,6 +361,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				System.err.println("   WARNING! No automatic downsampling for negligible scan speed.");
 				return;
 			}
+			
+			if(hasOption("downsample.autofactor")) factor = (int)Math.floor(factor * option("downsample.autofactor").getDouble());
+			
+			
 			if(factor > 1) downsample(factor);
 			else return;
 		}
@@ -603,13 +615,15 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void fillGaps() {
 		final Frame first = getFirstFrame();
-			
+		
+		final int nt = size();
 		final int n = (int) Math.ceil((getLastFrame().MJD - first.MJD) / instrument.samplingInterval);
 		int padded = 0;
 		
 		final ArrayList<FrameType> buffer = new ArrayList<FrameType>(n);
 		
-		for(int t=0; t<size(); t++) {
+		
+		for(int t=0; t < nt; t++) {
 			final FrameType frame = get(t);
 			
 			if(frame == null) continue;
@@ -633,37 +647,36 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		reindex();
 	}
 	
-	public synchronized void trim() {
-		trim(getFirstFrame().index, getLastFrame().index+1);
+	
+	public void trimEnd() {
+		// Remove null frames from the end;
+		for(int t=size(); --t >= 0; ) {
+			if(get(t) == null) remove(t);
+			else return;
+		}		
 	}
 	
-	public synchronized void trim(int from, int to) {
-		from = Math.max(0, from);
-		to = Math.min(size(), to);
+	public synchronized void trim() {
+		trimEnd();
 		
-		// If no frames need to be discarded, then do nothing, except
-		// ensuring efficient memory use...
-		if(from == 0 && to == size()) {
-			trimToSize();
-			return;
-		}
+		final int nt = size();
+		int from = 0;
+		for( ; from < nt; from++) if(get(from) != null) break;
 		
-		if(from == 0) {
-			for(int t=size(); --t >= to; ) remove(t);
-		}
-		else {
-			final ArrayList<FrameType> frames = new ArrayList<FrameType>(to - from);
-			for(int t=from; t<to; t++) frames.add(get(t));
-
-			clear();
-			addAll(frames);
-			reindex();
-		}
+		if(from == 0) return;
 		
-		trimToSize();
+		final ArrayList<FrameType> timmed = new ArrayList<FrameType>(nt);
+		for( ; from<nt; from++) timmed.add(get(from));
+			
+		clear();
+		addAll(timmed);
+			
+		reindex();
 		
 		System.err.println("   Trimmed to " + size() + " frames.");
 	}
+
+	
 	
 	public synchronized void slim(int threads) {
 		if(instrument.slim(false)) {
@@ -827,7 +840,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				
 				for(int from=0; from < nt; from += driftN) {
 					final int to = Math.min(from + driftN, size());
-
+						
 					if(robust) getMedianLevel(channel, from, to, buffer, increment);
 					else getMeanLevel(channel, from, to, increment);
 				
@@ -1202,7 +1215,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					deps += exposure.dependents;
 				}		
 				
-				if(points > deps) {
+				if(points - deps >= 1.0) {
 					final float fw = sumChi2 > 0.0 ? (float) ((points-deps) / sumChi2) : 1.0F;	
 					final double dof = 1.0 - deps / points;
 					
@@ -2135,6 +2148,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	// The alternative would be to include sample count in weights everywhere...
 	@SuppressWarnings("unchecked")
 	public synchronized void downsample(final int n) {
+		if(n < 2) return;
+		
 		final int windowSize = (int)Math.round(1.82 * n * WindowFunction.getEquivalentWidth("Hann"));
 		final int centerOffset = windowSize/2 + 1;
 		final double[] w = WindowFunction.get("Hann", windowSize);
@@ -2150,7 +2165,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		final Frame[] buffer = new Frame[N];
 		
-		// Normalize window function to absolute intergral 1
+		// Normalize window function to absolute integral 1
 		double norm = 0.0;
 		for(int i=w.length; --i >= 0; ) norm += Math.abs(w[i]);
 		for(int i=w.length; --i >= 0; ) w[i] /= norm;
@@ -2181,7 +2196,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		instrument.integrationTime *= n;
 		
 		clear();
-		//ensureCapacity(N);
 		for(int t=0; t<N; t++) add((FrameType) buffer[t]);
 		trimToSize();
 		reindex();
@@ -2190,6 +2204,109 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		dependents.clear();
 		signals.clear();
 	}
+	
+	
+	public void notchFilter() {
+		if(!hasOption("notch.frequencies")) return;
+		
+		List<Double> frequencies = option("notch.frequencies").getDoubles();
+		double width = hasOption("notch.width") ? option("notch.width").getDouble() : 0.1;
+		
+		if(hasOption("notch.harmonics")) {
+			int harmonics = option("notch.harmonics").getInt();
+			for(int i=frequencies.size(); --i >= 0; i++) {
+				double f0 = frequencies.get(i);
+				for(int k=2; k<=harmonics; k++) frequencies.add(f0 * k);
+			}
+		}
+		
+		if(hasOption("notch.bands")) {
+			List<String> ranges = option("notch.bands").getList();
+			for(String rangeSpec : ranges) {
+				Range range = Range.parse(rangeSpec, true);
+				for(double f = range.min(); f<range.max(); f += width) frequencies.add(f);
+			}
+		}
+		
+		if(frequencies.isEmpty()) return;
+		
+		Collections.sort(frequencies);
+		
+		notchFilter(frequencies, width);
+	}
+	
+	public void notchFilter(final List<Double> frequencies, final double width) {
+		final int windowSize = ExtraMath.pow2ceil((int) Math.ceil(1.0 / (width * instrument.samplingInterval)));
+		final double df = 1.0 / (windowSize * instrument.samplingInterval);
+		final int nf = windowSize >> 1;
+		
+		System.err.println("   Notching " + frequencies.size() + " frequencies.");
+		
+		instrument.new Fork<Void>() {
+			private FloatFFT fft;
+			private float[] data;
+			
+			@Override
+			protected void init() {
+				fft = new FloatFFT();
+				data = new float[windowSize];
+			}
+
+			@Override
+			protected void process(Channel channel) {
+				for(int from = 0; from < size(); from += windowSize) {
+					process(channel, from, Math.min(from + windowSize, size()));
+				}
+			}
+			
+			private void process(Channel channel, int from, int to) {
+				double sum = 0.0;
+				int n = 0;
+				
+				for(int t=from; t<to; t++) {
+					final Frame frame = get(t);
+					if(frame == null) data[t - from] = 0.0F;
+					else {
+						data[t - from] = frame.data[channel.index];
+						sum += frame.data[channel.index];
+						n++;
+					}
+				}
+				final float ave = n > 0 ? (float) (sum / n) : 0.0F;
+				for(int t=from; t<to; t++) if(get(t) != null) data[t - from] -= ave;
+				
+				Arrays.fill(data, to - from, data.length, 0.0F);
+				
+				fft.real2Amplitude(data);
+				
+				for(double f : frequencies) {
+					int bin = (int)Math.floor(f / df);
+					filter(bin);
+					filter(bin+1);
+				}	
+				
+				fft.amplitude2Real(data);
+				
+				for(int t=from; t<to; t++) {
+					final Frame frame = get(t);
+					if(frame != null) frame.data[channel.index] = ave + data[t - from];
+				}
+				
+			}
+			
+			private void filter(int bin) {
+				if(bin > nf) return;
+				if(bin == nf) data[1] = 0.0F;
+				else {
+					bin <<= 1;
+					data[bin] = 0.0F;
+					data[bin+1] = 0.0F;
+				}
+			}
+
+		}.process();		
+	}
+	
 
 	public synchronized void offset(final double value) {
 		new Fork<Void>() {
@@ -3169,9 +3286,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public String toString() { return "Integration " + getFullID("|"); }
 	
 	
-	
-	
 
+	
+	
+	
+	
 	public abstract class Fork<ReturnType> extends CRUSH.IndexedFork<ReturnType> {
 		public Fork() { super(size()); }
 		

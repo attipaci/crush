@@ -1,3 +1,8 @@
+* logging quantities...
+* custom console help
+* pipeline socket com.
+
+
 * 'platescale' for conversion mm -> arcsec
 * offset.R1,R2,T1,T2 to take values in mm (convert via platescale)
 * pixelsize in mm (converted via platescale)

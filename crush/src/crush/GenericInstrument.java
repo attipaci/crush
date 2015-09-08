@@ -24,8 +24,9 @@
 
 package crush;
 
-import java.io.IOException;
 import java.util.List;
+
+import kovacs.util.Unit;
 
 public class GenericInstrument extends Instrument<Channel> {
 	/**
@@ -56,48 +57,36 @@ public class GenericInstrument extends Instrument<Channel> {
 
 	@Override
 	public String getSizeName() {
-		// TODO Auto-generated method stub
-		return null;
+		return "arcsec";
 	}
 
 	@Override
 	public double getSizeUnitValue() {
-		// TODO Auto-generated method stub
-		return 0;
+		return Unit.arcsec;
 	}
 
 	@Override
 	public Scan<?, ?> getScanInstance() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public SourceModel getSourceModelInstance() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void readWiring(String fileName) throws IOException {
-		// TODO Auto-generated method stub		
-	}
-
-	@Override
 	public List<? extends Pixel> getMappingPixels() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public int getPixelCount() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
 	public List<? extends Pixel> getPixels() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
