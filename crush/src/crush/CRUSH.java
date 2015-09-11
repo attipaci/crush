@@ -27,6 +27,7 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import kovacs.astro.AstroTime;
 import kovacs.astro.LeapSeconds;
@@ -48,8 +49,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.30-b1";
-	private static String revision = "beta";
+	private static String version = "2.30-b2";
+	private static String revision = "devel.1";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -61,6 +62,13 @@ public class CRUSH extends Configurator {
 
 	public static int maxThreads = 1;
 	public static ExecutorService executor;
+	
+	public int parallelScans = 1;
+	public int parallelism = 1;
+	
+	ArrayList<Pipeline> pipelines;
+	
+	Vector<Integration<?, ?>> queue = new Vector<Integration<?, ?>>();
 	
 	private int configDepth = 0;	// Used for 'nested' output of invoked configurations.
 	
@@ -231,6 +239,7 @@ public class CRUSH extends Configurator {
 		
 		Integration.clearRecycler();
 		Instrument.clearRecycler();
+		SourceModel.clearRecycler();
 		
 		// Keep only the non-specific global options here...
 		for(Scan<?,?> scan : scans) instrument.getOptions().intersect(scan.instrument.getOptions()); 		
@@ -238,10 +247,57 @@ public class CRUSH extends Configurator {
 			
 		System.gc();
 		
+		initSourceModel();
+		
+		initPipelines();
+		
+	}
+	
+	public void initSourceModel() {
+		System.out.println();
+		
+		// TODO Using the global options (intersect of scan options) instead of the first scan's
+		// for the source does not work properly (clipping...)
+		source = scans.get(0).instrument.getSourceModelInstance();
+			
+		if(source != null) {
+			source.commandLine = commandLine;
+			source.createFrom(scans);
+			source.setExecutor(executor);
+			source.setParallel(CRUSH.maxThreads);
+		}
+	
+		System.err.println();
+		
+		setObjectOptions(source.getSourceName());
+	}
+	
+	public void initPipelines() {
 		update();
 			
-		System.err.println(" Will use " + maxThreads + " CPU core(s).");
+		//System.err.println(" Will use " + maxThreads + " threads.");
+		parallelism = Math.max(1, maxThreads / scans.size());
+		parallelScans = Math.max(1, maxThreads / parallelism);
+		
+		System.err.println(" Will use " + parallelScans + " x " + parallelism + " grid of threads.");
+	
+		
+		// TODO could be before iterating... (validation?)
+		pipelines = new ArrayList<Pipeline>(parallelScans); 
+		for(int i=0; i<parallelScans; i++) {
+			Pipeline pipeline = new Pipeline(this, parallelism);
+			pipeline.setSourceModel(source);
+			pipelines.add(pipeline);
+		}
+			
+		
+		for(int i=0; i<scans.size(); i++) {
+			Scan<?,?> scan = scans.get(i);	
+			pipelines.get(i % parallelScans).scans.add(scan);
+			for(Integration<?,?> integration : scan) integration.setThreadCount(parallelism); 
+		}		
 	}
+	
 	
 	public void update() {
 		maxThreads = Runtime.getRuntime().availableProcessors();
@@ -259,12 +315,15 @@ public class CRUSH extends Configurator {
 		}
 		maxThreads = Math.max(1, maxThreads);
 		
-		executor = Executors.newFixedThreadPool(maxThreads);
-		//if(source != null) source.setExecutor(executor);
+		ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
+		pool.prestartAllCoreThreads();
+		executor = pool;
+		
+		if(source != null) source.setExecutor(executor);
 		
 		Instrument.setRecyclerCapacity((maxThreads + 1) << 2);
 		Integration.setRecyclerCapacity((maxThreads + 1) << 2);
-		SourceModel.setRecyclerSize(maxThreads + 1);
+		SourceModel.setRecyclerCapacity(maxThreads << 1);
 		
 		if(containsKey("outpath")) setOutpath();
 	}
@@ -381,21 +440,7 @@ public class CRUSH extends Configurator {
 	public void reduce() throws Exception {	
 		int rounds = 0;
 	
-		System.out.println();
 		
-		// TODO Using the global options (intersect of scan options) instead of the first scan's
-		// for the source does not work properly (clipping...)
-		source = scans.get(0).instrument.getSourceModelInstance();
-			
-		if(source != null) {
-			source.commandLine = commandLine;
-			source.createFrom(scans);
-			//source.setExecutor(executor);
-		}
-	
-		System.err.println();
-		
-		setObjectOptions(source.getSourceName());
 			
 		if(isConfigured("bright")) System.out.println(" Bright source reduction.");
 		else if(isConfigured("faint")) System.out.println(" Faint source reduction.");
@@ -445,7 +490,7 @@ public class CRUSH extends Configurator {
 		
 	}
 	
-	public synchronized void iterate() throws Exception {
+	public void iterate() throws Exception {
 		List<String> ordering = get("ordering").getLowerCaseList();
 		ArrayList<String> tasks = new ArrayList<String>(ordering.size());
 		
@@ -465,28 +510,56 @@ public class CRUSH extends Configurator {
 	}
 	
 	
-	public synchronized void iterate(List<String> tasks) throws Exception {
+	public void iterate(List<String> tasks) throws Exception {
 		System.err.println();
-			
-		Pipeline pipeline = new Pipeline(this);
-		pipeline.setOrdering(tasks);
 		
-		if(solveSource()) if(tasks.contains("source")) {
-			source.setParallel(CRUSH.maxThreads);
-			source.reset(true);
+		queue.clear();
+		for(Scan<?,?> scan : scans) queue.addAll(scan);
+		
+		if(solveSource()) if(tasks.contains("source")) source.reset(true);
+		
+		for(int i=0; i<pipelines.size(); i++) {
+			final Pipeline pipeline = pipelines.get(i);
+			pipeline.setOrdering(tasks);
+			new Thread(pipeline).start();
 		}
-				
-		pipeline.iterate(true);
+		
+		summarize();
 		
 		if(solveSource()) if(tasks.contains("source")) {
 			System.err.print("  [Source] ");
 			source.process(true);
 			source.sync();
 		}
-			
+		
 		if(isConfigured("whiten")) if(get("whiten").isConfigured("once")) purge("whiten");
 	}
 	
+
+	
+	public synchronized void checkout(Integration<?,?> integration) {
+		queue.remove(integration);
+		notifyAll();
+	}
+	
+	public synchronized void summarize() throws InterruptedException {
+		// Go in order.
+		// If next one disappears from queue then print summary
+		// else wait();
+		
+		for(Scan<?, ?> scan : scans) for(Integration<?,?> integration : scan) {
+			while(queue.contains(integration)) wait();
+			summarize(integration);
+			notifyAll();
+		}	
+	}
+
+	public void summarize(Integration<?,?> integration) {
+		System.err.print("  [" + integration.getDisplayID() + "] ");
+		System.err.println(integration.comments);
+		integration.comments = new String();
+	}	
+
 	
 	public void setObjectOptions(String sourceName) {
 		//System.err.println(">>> Setting global options for " + sourceName);
@@ -777,13 +850,32 @@ public class CRUSH extends Configurator {
 		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 	}
 	
-	
+
 	public static abstract class Fork<ReturnType> extends Parallel<ReturnType> {
 		private Exception exception;
+		private int size;
+		private int parallelism;
+		
+		public Fork(int size, int chunks) { 
+			this.size = size; 
+			parallelism = chunks;
+		}
+		
+		@Override
+		protected void processIndexOf(int index, int threadCount) {
+			for(int k=size - index - 1; k >= 0; k -= threadCount) {
+				if(isInterrupted()) return;
+				processIndex(k);
+				Thread.yield();
+			}
+		}
+
+		protected abstract void processIndex(int index);
+	
 		
 		public void process() {
 			exception = null;
-			process(CRUSH.maxThreads);
+			process(parallelism);
 		}
 		
 		@Override
@@ -792,7 +884,7 @@ public class CRUSH extends Configurator {
 				if(executor != null) process(threads, executor);
 				else process(threads);			
 			} catch(Exception e) { 
-				System.err.println(" WARNING! " + getClass().getSimpleName() + ": " + e.getMessage());
+				System.err.println(" WARNING! " + executor.getClass().getSimpleName() + ": " + e.getMessage());
 				e.printStackTrace();
 				this.exception = e;
 			}
@@ -802,24 +894,6 @@ public class CRUSH extends Configurator {
 		public boolean hasException() { return exception != null; }
 		
 		public Exception getLastException() { return exception; }
-	}
-	
-
-	public static abstract class IndexedFork<ReturnType> extends Fork<ReturnType> {
-		private int size;
-		
-		public IndexedFork(int size) { this.size = size; }
-		
-		@Override
-		protected void processIndex(int index, int threadCount) {
-			for(int k=size - index - 1; k >= 0; k -= threadCount) {
-				if(isInterrupted()) return;
-				processIndex(k);
-				Thread.yield();
-			}
-		}
-
-		protected abstract void processIndex(int index);
 	}
 
 	

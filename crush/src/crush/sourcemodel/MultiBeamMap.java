@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -50,7 +50,6 @@ public class MultiBeamMap extends ScalarMap {
 	Class<SphericalCoordinates> scanningSystem;
 	MultiFFT fft = new MultiFFT();
 
-	
 	double trackSpacing;
 	boolean isSpectrum = false;
 
@@ -63,8 +62,8 @@ public class MultiBeamMap extends ScalarMap {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public SourceModel copy(boolean withContents) {
-		MultiBeamMap copy = (MultiBeamMap) super.copy(withContents);
+	public SourceModel getWorkingCopy(boolean withContents) {
+		MultiBeamMap copy = (MultiBeamMap) super.getWorkingCopy(withContents);
 		copy.fft = new MultiFFT();
 		if(transformer != null) copy.transformer = (GridMap<Coordinate2D>) transformer.copy();
 		return copy;
@@ -306,7 +305,7 @@ public class MultiBeamMap extends ScalarMap {
 	
 		base.unflag();
 		
-		final MultiBeamMap dual = (MultiBeamMap) copy(true);
+		final MultiBeamMap dual = (MultiBeamMap) getWorkingCopy(true);
 		dual.standalone();
 		
 		final double l = 0.5 * scan.getChopSeparation();

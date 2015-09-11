@@ -50,8 +50,8 @@ public abstract class Photometry extends SourceModel {
 	
 	
 	@Override
-	public SourceModel copy(boolean withContents) {
-		Photometry copy = (Photometry) super.copy(withContents);
+	public SourceModel getWorkingCopy(boolean withContents) {
+		Photometry copy = (Photometry) super.getWorkingCopy(withContents);
 		copy.sourceFlux = (WeightedPoint) sourceFlux.clone();
 		copy.flux = new WeightedPoint[flux.length];
 		if(withContents) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = (WeightedPoint) flux[i].clone();
@@ -67,7 +67,7 @@ public abstract class Photometry extends SourceModel {
 	}
 	
 	@Override
-	public synchronized void add(SourceModel model, double weight) {
+	public void add(SourceModel model, double weight) {
 		Photometry other = (Photometry) model;
 		double renorm = getInstrument().janskyPerBeam() / other.getInstrument().janskyPerBeam();
 		for(int c=flux.length; --c >= 0; ) {
@@ -80,7 +80,7 @@ public abstract class Photometry extends SourceModel {
 	}
 
 	@Override
-	public synchronized void add(Integration<?, ?> integration) {
+	public void add(Integration<?, ?> integration) {
 		if(!integration.isPhaseModulated()) return;
 		
 		integration.comments += "[Phot]";
@@ -115,7 +115,7 @@ public abstract class Photometry extends SourceModel {
 	}
 	
 	@Override
-	public synchronized void reset(boolean clearContent) {
+	public void reset(boolean clearContent) {
 		super.reset(clearContent);
 		if(clearContent) {
 			if(flux != null) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) flux[i].noData();

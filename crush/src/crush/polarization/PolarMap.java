@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -30,6 +30,7 @@ import crush.astro.AstroMap;
 import crush.sourcemodel.ScalarMap;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 
 import kovacs.util.Unit;
 
@@ -77,7 +78,7 @@ public class PolarMap extends SourceModel {
 		N.enableWeighting = true;
 		N.id = "N";
 		
-		Q = (ScalarMap) N.copy(false);
+		Q = (ScalarMap) N.getWorkingCopy(false);
 		Q.standalone();
 		Q.signalMode = PolarModulation.Q;
 		Q.enableLevel = false;
@@ -85,7 +86,7 @@ public class PolarMap extends SourceModel {
 		Q.enableWeighting = true;
 		Q.id = "Q";
 		
-		U = (ScalarMap) N.copy(false);
+		U = (ScalarMap) N.getWorkingCopy(false);
 		U.standalone();
 		U.signalMode = PolarModulation.U;
 		U.enableLevel = false;
@@ -95,17 +96,17 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public SourceModel copy(boolean withContents) {
-		PolarMap copy = (PolarMap) super.copy(withContents);
-		copy.N = (ScalarMap) N.copy(withContents);
-		copy.Q = (ScalarMap) Q.copy(withContents);
-		copy.U = (ScalarMap) U.copy(withContents);
+	public SourceModel getWorkingCopy(boolean withContents) {
+		PolarMap copy = (PolarMap) super.getWorkingCopy(withContents);
+		copy.N = (ScalarMap) N.getWorkingCopy(withContents);
+		copy.Q = (ScalarMap) Q.getWorkingCopy(withContents);
+		copy.U = (ScalarMap) U.getWorkingCopy(withContents);
 		return copy;
 	}
 	
 	
 	@Override
-	public synchronized void add(SourceModel model, double weight) {
+	public void add(SourceModel model, double weight) {
 		PolarMap other = (PolarMap) model;
 		N.add(other.N, weight);
 		if(usePolarization()) {
@@ -116,7 +117,7 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public synchronized void add(Integration<?, ?> subscan) {
+	public void add(Integration<?, ?> subscan) {
 		((Purifiable) subscan).purify();
 		
 		N.add(subscan);	
@@ -129,7 +130,7 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public synchronized void setBase() {
+	public void setBase() {
 		N.setBase();
 		if(usePolarization()) {
 			Q.setBase();
@@ -138,7 +139,7 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public synchronized void process(Scan<?, ?> scan) {
+	public void process(Scan<?, ?> scan) {
 		N.process(scan);
 		if(usePolarization()) {
 			Q.process(scan);
@@ -147,7 +148,7 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public synchronized void process(boolean verbose) throws Exception {		
+	public void process(boolean verbose) throws Exception {		
 		if(verbose) System.err.print("\n   [N] ");
 		N.process(verbose);
 		if(usePolarization()) {
@@ -164,7 +165,7 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public synchronized void reset(boolean clearContent) {
+	public void reset(boolean clearContent) {
 		N.reset(clearContent);
 		if(usePolarization()) {
 			Q.reset(clearContent);
@@ -183,7 +184,7 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public synchronized void postprocess(Scan<?,?> scan) {
+	public void postprocess(Scan<?,?> scan) {
 		super.postprocess(scan);
 		
 		// Treat N as a regular total-power map, so do the post-processing accordingly...
@@ -193,7 +194,7 @@ public class PolarMap extends SourceModel {
 	
 	// Angles are measured East of North... 
 	public ScalarMap getAngles(ScalarMap P) {
-		final ScalarMap A = (ScalarMap) N.copy(false);
+		final ScalarMap A = (ScalarMap) N.getWorkingCopy(false);
 		
 		final AstroMap q = Q.map;
 		final AstroMap u = U.map;
@@ -240,7 +241,7 @@ public class PolarMap extends SourceModel {
 	
 	
 	public ScalarMap getP() {
-		final ScalarMap P = (ScalarMap) N.copy(false);
+		final ScalarMap P = (ScalarMap) N.getWorkingCopy(false);
 		
 		final AstroMap q = Q.map;
 		final AstroMap u = U.map;
@@ -286,7 +287,7 @@ public class PolarMap extends SourceModel {
 	}	
 	
 	public ScalarMap getI(ScalarMap P) {	
-		final ScalarMap I = (ScalarMap) N.copy(false);
+		final ScalarMap I = (ScalarMap) N.getWorkingCopy(false);
 		final AstroMap n = N.map;
 		final AstroMap p = P.map;
 		final AstroMap t = I.map;
@@ -310,7 +311,7 @@ public class PolarMap extends SourceModel {
 	
 
 	public ScalarMap getPolarFraction(ScalarMap P, ScalarMap I, double accuracy) {	
-		final ScalarMap F = (ScalarMap) P.copy(false);
+		final ScalarMap F = (ScalarMap) P.getWorkingCopy(false);
 		final AstroMap p = P.map;
 		final AstroMap t = I.map;
 		final AstroMap f = F.map;
@@ -421,6 +422,14 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
+	public int getParallel() {
+		if(N != null) return N.getParallel();
+		if(Q != null) return Q.getParallel();
+		if(U != null) return U.getParallel();
+		return 1;
+	}
+	
+	@Override
 	public int countPoints() {
 		return N.countPoints() + Q.countPoints() + U.countPoints();
 	}
@@ -432,6 +441,23 @@ public class PolarMap extends SourceModel {
 		else if(name.startsWith("U.")) return U.getFormattedEntry(name.substring(2), formatSpec);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
+
+	@Override
+	public void setExecutor(ExecutorService executor) {
+		if(N != null) N.setExecutor(executor);
+		if(Q != null) Q.setExecutor(executor);
+		if(U != null) U.setExecutor(executor);
+		
+	}
+
+	@Override
+	public ExecutorService getExecutor() {
+		if(N != null) return N.getExecutor();
+		if(Q != null) return Q.getExecutor();
+		if(U != null) return U.getExecutor();
+		return null;
+	}
+
 	
 
 	

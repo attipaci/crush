@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -629,7 +629,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		return scans;
 	}
 
-	public synchronized void updateGains(final String modalityName) {		
+	public void updateGains(final String modalityName) {		
 		boolean isRobust = false;
 		if(!hasOption("gains")) return;
 		if(hasOption("correlated." + modalityName + ".nogains")) return;

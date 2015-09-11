@@ -3,7 +3,7 @@
                               Attila Kovacs
                         <attila[AT]submm.caltech.edu>
 
-                        Last updated: 1 Sep 2015
+                        Last updated: 8 Sep 2015
 
 
 
@@ -14,6 +14,8 @@ Table of Contents
   1.1 Computing requirements
   1.1 Performance
 2. Setup and configuration
+  2.1 Starlink
+  2.2 Your personal settings
 3. Quickstart guide
   3.1 Pointing and calibration
   3.2 Source brightness
@@ -73,12 +75,12 @@ also thoroughly parallelized, and will use all processing cores in your machine
 effectively.
 
 If your machine has N processing cores, you can expect to reduce a minute of
-full SCUBA-2 data (4 subarrays) in about an Nth of a minute. Thus, with a dual-
-core i5 mobile CPU, my Lenovo T430s laptop churns through a minute of SCUBA-2
-data in around 30 seconds. An i7 desktop with 4 cores should get there in 15 
-seconds, while a 12-core Xeon should clock in at around 5 seconds reduction 
-time per minute of observation (provided you are not slowed down by disk speeds
-when reading the data).
+full 850um SCUBA-2 data (4 subarrays) in about an Nth of a minute. Thus, with 
+a dual-core i5 mobile CPU, my Lenovo T430s laptop churns through a minute of 
+850um SCUBA-2 data in around 30 seconds. An i7 desktop with 4 cores should get 
+there in 15 seconds, while a 12-core Xeon should clock in at around 5 seconds 
+reduction time per minute of observation (provided you are not slowed down by 
+disk access when reading the data).
 
 
 
@@ -86,39 +88,58 @@ when reading the data).
 2. Setup and configuration
 #####################################################################
 
-After you set up CRUSH (see the main README for instructions), you will also 
-need access to a Starlink installation on your machine, since the SCUBA-2 data 
-files (.sdf) can only be read through the Starlink libraries. (You only really 
-need the 'ndf2fits' tool included in Starlink...)
+Start by installing <b>CRUSH</b>, as instructed by the main README.
 
-Once you have installed Starlink, start by creating (or editing) 
-'.crush2/scuba2/default.cfg' in your home directory (this file will contain 
-your personalized configuration entries). E.g. on UNIX and Mac OS:
 
-  > mkdir -p ~/.crush2/scuba2
+2.1 Starlink
+============
 
-Then create/edit 'default.cfg' therein, e.g. with 'nano':
+   CRUSH will readily read SCUBA-2 data in FITS format, when these are 
+   available. More typically, though, your SCUBA-2 data comes in the 
+   proprietary NDF (.sdf) format of the Starlink suite, and so you will need to
+   convert your files to FITS for using with CRUSH. Fortunately, CRUSH can make
+   the conversion seamless,as long as the necessary Starlink tools are 
+   accessible. (Once you have FITS files, you no longer need Starlink, or the 
+   original .sdf files.)
 
-  > nano ~/.crush2/scuba2/default.cfg
 
-(Replace 'nano' with your preferred editor, such as 'vi' or 'emacs' or 'gedit'.)
-In this file you can specify your default values for the SCUBA-2 scan data 
-directory ('datapath'), and where CRUSH should write its output files, such as 
-the reduced images ('outpath'). You might also want to specify where the 
-Starlink 'ndf2fits' conversion tool is. E.g.:
+   To set up the automatic NDF to FITS conversion, first make sure the Starlink
+   suite is installled on your machine. (You only really need the 'ndf2fits' 
+   tool included in Starlink...). You can now continue personalizing CRUSH.
 
-  datapath /home/data/scuba2
-  outpath ~/images
-  ndf2fits /usr/local/Starlink/bin/convert/ndf2fits
 
-(The 'ndf2fits' setting may not be needed if the STARLINK_DIR environment 
-variable is set to point to your Starlink distribution folder...). Also, make 
-sure the output directory actually exists. :-)
+2.2 Your personal settings
+==========================
 
-You can also specify and override any of these settings ad-hoc on the command 
-line later. E.g.:
+   Start by creating (or editing) '.crush2/scuba2/default.cfg' in your home 
+   directory (this file will contain your personalized configuration entries). 
+   E.g. on UNIX and Mac OS:
 
-  > crush scuba2 -datapath=/home/myData -outpath=../myImages [...]
+     > mkdir -p ~/.crush2/scuba2
+
+   Then create/edit 'default.cfg' therein, e.g. with 'nano':
+
+     > nano ~/.crush2/scuba2/default.cfg
+
+   (Replace 'nano' with your preferred editor, such as 'vi' or 'emacs' or 
+   'gedit'.) In this file you can specify your default values for the SCUBA-2 
+   scan data directory ('datapath'), and where CRUSH should write its output 
+   files, such as the reduced images ('outpath'). You might also want to 
+   specify where the Starlink 'ndf2fits' conversion tool is. E.g.:
+
+     datapath /home/data/scuba2
+     outpath ~/images
+     ndf2fits /usr/local/Starlink/bin/convert/ndf2fits
+
+   (The 'ndf2fits' setting may not be needed if you already have FITS files, or
+   if the STARLINK_DIR environment variable points to your Starlink 
+   distribution folder...). Also, make sure the output directory actually 
+   exists. :-)
+
+   You can also specify and override any of these settings ad-hoc on the 
+   command line later. E.g.:
+
+     > crush scuba2 -datapath=/home/myData -outpath=../myImages [...]
 
 
 

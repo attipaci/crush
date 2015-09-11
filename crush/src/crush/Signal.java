@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -86,26 +86,26 @@ public class Signal implements Cloneable {
 		return 1.0F;
 	}
 		
-	public synchronized void scale(double factor) {
+	public void scale(double factor) {
 		float fValue = (float) factor;
 		for(int t=value.length; --t >= 0; ) value[t] *= fValue;
 		if(drifts != null) for(int T=drifts.length; --T >= 0; ) drifts[T] *= fValue;
 		for(int k=syncGains.length; --k >= 0; ) syncGains[k] /= fValue;
 	}
 	
-	public synchronized void add(double x) {
+	public void add(double x) {
 		float fValue = (float) x;
 		for(int t=value.length; --t >= 0; ) value[t] += fValue;
 		if(drifts != null) for(int T=drifts.length; --T >= 0; ) drifts[T] += fValue;
 	}
 	
-	public synchronized void subtract(double x) {
+	public void subtract(double x) {
 		float fValue = (float) x;
 		for(int t=value.length; --t >= 0; ) value[t] -= fValue;
 		if(drifts != null) for(int T=drifts.length; --T >= 0; ) drifts[T] -= fValue;
 	}
 	
-	public synchronized void addDrifts() {
+	public void addDrifts() {
 		if(drifts == null) return;
 		
 		for(int T=0, fromt=0; fromt<value.length; T++) {
@@ -141,12 +141,12 @@ public class Signal implements Cloneable {
 		return sum / n;
 	}
 	
-	public synchronized void removeDrifts() {
+	public void removeDrifts() {
 		removeDrifts(ExtraMath.roundupRatio(integration.framesFor(integration.filterTimeScale), resolution), true);
 	}
 	
 	
-	public synchronized void removeDrifts(int N, boolean isReconstructible) {	
+	public void removeDrifts(int N, boolean isReconstructible) {	
 		if(N == driftN) return;
 		
 		addDrifts();
@@ -174,7 +174,7 @@ public class Signal implements Cloneable {
 	}
 	
 	
-	public synchronized void level(int from, int to) {
+	public void level(int from, int to) {
 		from = from / resolution;
 		to = ExtraMath.roundupRatio(to, resolution);
 		
@@ -225,7 +225,7 @@ public class Signal implements Cloneable {
 	//
 	// f[1] = f[0] + h f'[0]
 	// f[n] = f[n-1] + h f'[n]
-	public synchronized void differentiate() {
+	public void differentiate() {
 		final float dt = (float) (resolution * integration.instrument.samplingInterval);
 		
 		final int n = value.length;
@@ -244,7 +244,7 @@ public class Signal implements Cloneable {
 	}
 	
 	// Intergate using trapesiod rule...
-	public synchronized void integrate() {
+	public void integrate() {
 		double dt = (float) (resolution * integration.instrument.samplingInterval);		
 		double I = 0.0;
 		
@@ -277,7 +277,7 @@ public class Signal implements Cloneable {
 		return d;
 	}
 	
-	public synchronized void level(boolean isRobust) {
+	public void level(boolean isRobust) {
 		WeightedPoint center = isRobust ? getMedian() : getMean();
 		float fValue = (float) center.value();
 		for(int t=value.length; --t >= 0; ) value[t] -= fValue;
@@ -296,7 +296,7 @@ public class Signal implements Cloneable {
 	}
 	
 	// TODO Use this in ArrayUtil...
-	public synchronized void smooth(double[] w) {
+	public void smooth(double[] w) {
 		int ic = w.length / 2;
 		float[] smoothed = new float[value.length];
 			
@@ -315,7 +315,7 @@ public class Signal implements Cloneable {
 		value = smoothed;
 	}
 	
-	protected synchronized void setSyncGains(float[] G) {
+	protected void setSyncGains(float[] G) {
 		System.arraycopy(G, 0, syncGains, 0, G.length);
 	}
 	
@@ -327,7 +327,7 @@ public class Signal implements Cloneable {
 	}
 	
 	
-	protected synchronized WeightedPoint[] getGainIncrement(boolean isRobust) {	
+	protected WeightedPoint[] getGainIncrement(boolean isRobust) {	
 		if(integration.hasOption("signal-response")) 
 			integration.comments += "{" + Util.f2.format(getCovariance()) + "}";
 
@@ -353,7 +353,8 @@ public class Signal implements Cloneable {
 				for(int k=mode.size(); --k >= 0; ) dG[k].noData();
 			}
 			
-			@Override protected void process(Frame exposure){
+			@Override 
+			protected void process(Frame exposure){
 				if(exposure.isFlagged(Frame.MODELING_FLAGS)) return;		
 				
 				for(int k=mode.size(); --k >= 0; ) {
@@ -403,7 +404,7 @@ public class Signal implements Cloneable {
 		
 		final WeightedPoint[] dG = WeightedPoint.createArray(channelIndex.length);
 		
-		new CRUSH.IndexedFork<Void>(dG.length) {
+		new CRUSH.Fork<Void>(dG.length, integration.getThreadCount()) {
 			// Allocate storage for sorting if estimating robustly...
 			private WeightedPoint[] gainData;
 			
@@ -446,7 +447,7 @@ public class Signal implements Cloneable {
 	
 	
 
-	protected synchronized void resyncGains() throws Exception {
+	protected void resyncGains() throws Exception {
 		final ChannelGroup<?> channels = mode.getChannels();
 		final int nc = channels.size();
 		final int[] channelIndex = mode.getChannelIndex();
@@ -470,7 +471,7 @@ public class Signal implements Cloneable {
 	}
 	
 	
-	protected synchronized void syncGains(final float[] sumwC2, boolean isTempReady) throws Exception {
+	protected void syncGains(final float[] sumwC2, boolean isTempReady) throws Exception {
 		if(mode.fixedGains) throw new IllegalStateException("WARNING! Cannot change gains for fixed gain modes.");
 		
 		final ChannelGroup<?> channels = mode.getChannels();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -428,7 +428,7 @@ implements TableFormatter.Entries {
 	
 	public abstract String getSizeName();
 	
-	public synchronized void census() {
+	public void census() {
 		mappingChannels = 0;
 		for(Channel channel : this) if(channel.flag == 0) if(channel.weight > 0.0) mappingChannels++;
 	}
@@ -895,7 +895,7 @@ implements TableFormatter.Entries {
 	}
 	*/
 	
-	public synchronized void reindex() {
+	public void reindex() {
 		for(int k=size(); --k >= 0; ) get(k).index = k;
 	}
 	
@@ -904,7 +904,7 @@ implements TableFormatter.Entries {
 		return slim(true);
 	}
 	
-	public synchronized boolean slim(boolean reindex) {
+	public boolean slim(boolean reindex) {
 		if(super.slim()) {
 			// remove discarded channels from groups (and divisiongroups) also...
 			slimGroups();
@@ -1111,22 +1111,23 @@ implements TableFormatter.Entries {
 		for(Channel channel : this) channel.clearOverlaps();
 		
 		if(this instanceof GeometricIndexed) calcGeometricOverlaps((GeometricIndexed) this, pointSize);
-		else {
-			for(Channel channel : this) {
+		else new Fork<Void>() {
+			@Override
+			protected void process(ChannelType channel) {
 				for(int k=channel.index; --k >= 0; ) {
 					final Channel other = get(k);
 					final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
 					channel.addOverlap(overlap);
 					other.addOverlap(overlap);
 				}	
-			}
-		}
-		
+			}	
+		}.process();
+
 		overlapSize = pointSize;
 	}
 	
 	// Sequential, because it is usually called from a parallel environment...
-	private synchronized void calcGeometricOverlaps(final GeometricIndexed geometric, final double pointSize) {
+	private void calcGeometricOverlaps(final GeometricIndexed geometric, final double pointSize) {
 		final double radius = 2.0 * pointSize;
 		final Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
 		
@@ -1136,18 +1137,23 @@ implements TableFormatter.Entries {
 		for(Channel channel : this) {
 			nearbyIndex.clear();
 			geometric.addLocalFixedIndices(channel.getFixedIndex(), radius, nearbyIndex);
-
-			for(int fixedIndex : nearbyIndex) {
-				if(fixedIndex >= channel.getFixedIndex()) continue;
-
-				final Channel other = lookup.get(fixedIndex);
-				if(other == null) continue;
-
-				final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
-				channel.addOverlap(overlap);
-				other.addOverlap(overlap);
-			}
 		}
+		
+		new Fork<Void>() {
+			@Override
+			protected void process(ChannelType channel) {
+				for(int fixedIndex : nearbyIndex) {
+					if(fixedIndex >= channel.getFixedIndex()) continue;
+
+					final Channel other = lookup.get(fixedIndex);
+					if(other == null) continue;
+
+					final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
+					channel.addOverlap(overlap);
+					other.addOverlap(overlap);
+				}
+			}	
+		}.process();
 		
 		overlapSize = pointSize;
 	}

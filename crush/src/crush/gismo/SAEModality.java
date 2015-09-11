@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -39,7 +39,7 @@ public class SAEModality extends Modality<SAEResponse> {
 		setGainFlag(GismoPixel.FLAG_SAE);
 	}
 	
-	public synchronized void init(GismoIntegration integration) {
+	public void init(GismoIntegration integration) {
 		for(int i=size(); --i >= 0; ) {
 			SAEResponse r = get(i);
 			if(r.getChannelCount() > 0) r.initSignal(integration);

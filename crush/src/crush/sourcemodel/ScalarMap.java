@@ -27,6 +27,7 @@ package crush.sourcemodel;
 import java.awt.Color;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 
 import kovacs.astro.AstroProjector;
 import kovacs.astro.SourceCatalog;
@@ -82,7 +83,7 @@ public class ScalarMap extends SourceMap {
 	*/
 	
 	@Override
-	public synchronized void add(SourceModel model, double weight) {
+	public void add(SourceModel model, double weight) {
 		ScalarMap other = (ScalarMap) model;
 		isReady = false;
 	
@@ -103,8 +104,10 @@ public class ScalarMap extends SourceMap {
 	
 
 	@Override
-	public SourceModel copy(boolean withContents) {
-		ScalarMap copy = (ScalarMap) super.copy(withContents);
+	public SourceModel getWorkingCopy(boolean withContents) {
+		ScalarMap copy = (ScalarMap) super.getWorkingCopy(withContents);
+		
+		
 		try { copy.map = (AstroMap) map.copy(withContents); }
 		catch(OutOfMemoryError e) {
 			System.err.println("ERROR! Ran out of memory while making a copy of the source map.");
@@ -123,6 +126,7 @@ public class ScalarMap extends SourceMap {
 		    System.err.println();
 		    System.exit(1);
 		}
+		
 		return copy;
 	}
 	
@@ -161,7 +165,6 @@ public class ScalarMap extends SourceMap {
 		
 		if(hasOption("unit")) map.setUnit(option("unit").getValue());
 		
-		//map.setExecutor(CRUSH.executor);
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
 		map.setName(firstScan.getSourceName());
@@ -223,7 +226,7 @@ public class ScalarMap extends SourceMap {
 		
 	}
 		
-	public synchronized void insertSources(SourceCatalog<SphericalCoordinates> catalog) throws Exception {
+	public void insertSources(SourceCatalog<SphericalCoordinates> catalog) throws Exception {
 		// Since the synching step is removal, the sources should be inserted with a negative sign to add into the
 		// timestream.
 		double resolution = getAverageResolution();
@@ -245,7 +248,7 @@ public class ScalarMap extends SourceMap {
 		map.reset(true);
 	}
 	
-	public synchronized void applyModel(String fileName) throws Exception {
+	public void applyModel(String fileName) throws Exception {
 		System.err.println(" Applying source model:");
 			
 		AstroMap model = new AstroMap(fileName, getInstrument());
@@ -277,7 +280,7 @@ public class ScalarMap extends SourceMap {
 		//for(int i=0; i<map.sizeX(); i++) Arrays.fill(base[i], 0.0);
 	}
 	
-	public synchronized void injectSource(String fileName) throws Exception {
+	public void injectSource(String fileName) throws Exception {
 		System.err.println(" Injecting source structure:");
 		
 		AstroMap model = new AstroMap(fileName, getInstrument());
@@ -358,7 +361,7 @@ public class ScalarMap extends SourceMap {
 	
 	
 	@Override
-	public synchronized void process(Scan<?,?> scan) {			
+	public void process(Scan<?,?> scan) {			
 		if(!isNormalized) {
 			map.normalize();
 			isNormalized = true;
@@ -400,7 +403,7 @@ public class ScalarMap extends SourceMap {
 	}	
 	
 	@Override
-	public synchronized void postprocess(Scan<?,?> scan) {
+	public void postprocess(Scan<?,?> scan) {
 		super.postprocess(scan);
 		
 		if(countPoints() == 0) return;
@@ -417,7 +420,7 @@ public class ScalarMap extends SourceMap {
 		}
 	}
 	
-	public synchronized void filter(boolean allowBlanking) {
+	public void filter(boolean allowBlanking) {
 		if(!hasSourceOption("filter") || getSourceSize() <= 0.0) {
 			map.noExtFilter();
 			map.filterBlanking = Double.NaN;
@@ -480,7 +483,7 @@ public class ScalarMap extends SourceMap {
 	
 	
 	@Override
-	public synchronized void process(boolean verbose) {	
+	public void process(boolean verbose) {	
 		
 		if(!isNormalized) {
 			map.normalize();
@@ -585,9 +588,9 @@ public class ScalarMap extends SourceMap {
 		if(mask == null) return;
 		map.new Task<Void>() {
 			@Override
-			public void processX(int i) { Arrays.fill(mask[i], false); }
+			protected void processX(int i) { Arrays.fill(mask[i], false); }
 			@Override
-			public void process(int i, int j) {}
+			protected void process(int i, int j) {}
 		}.process();
 	}
 	
@@ -599,7 +602,7 @@ public class ScalarMap extends SourceMap {
 		if(mask == null) mask = m;
 		map.new Task<Void>() {
 			@Override
-			public void process(int i, int j) { mask[i][j] |= m[i][j]; }
+			protected void process(int i, int j) { mask[i][j] |= m[i][j]; }
 		}.process();
 	}
 	
@@ -607,9 +610,9 @@ public class ScalarMap extends SourceMap {
 		if(mask == null) createMask();
 		map.new Task<Void>() {
 			@Override
-			public void processX(int i) { System.arraycopy(m[i], 0, mask[i], 0, m[i].length); }
+			protected void processX(int i) { System.arraycopy(m[i], 0, mask[i], 0, m[i].length); }
 			@Override
-			public void process(int i, int j) {}
+			protected void process(int i, int j) {}
 		}.process();
 	}
 	
@@ -627,16 +630,12 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	@Override
-	public synchronized void setBase() { map.copyTo(base.getData()); }
+	public void setBase() { map.copyTo(base.getData()); }
 
 	@Override
-	public synchronized void reset(boolean clearContent) {
+	public void reset(boolean clearContent) {
 		super.reset(clearContent);
 		map.reset(clearContent);
-	}
-	
-	protected final synchronized void addSync(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain) {
-		add(exposure, pixel, index, fGC, sourceGain);
 	}
 	
 	@Override
@@ -700,7 +699,7 @@ public class ScalarMap extends SourceMap {
 
 	
 	@Override
-	protected synchronized int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
+	protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
 		int goodFrames = super.add(integration, pixels, sourceGain, filtering, signalMode);
 		map.integrationTime += goodFrames * integration.instrument.samplingInterval;
 		isNormalized = false;
@@ -987,9 +986,25 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	@Override
+	public int getParallel() {
+		return map.getParallel();
+	}
+	
+	@Override
 	public String getFormattedEntry(String name, String formatSpec) {	
 		if(name.startsWith("map.")) return map.getFormattedEntry(name.substring(4), formatSpec);
 		else return super.getFormattedEntry(name, formatSpec);
 	}
+
+	@Override
+	public void setExecutor(ExecutorService executor) {
+		map.setExecutor(executor);
+	}
+
+	@Override
+	public ExecutorService getExecutor() {
+		return map.getExecutor();
+	}
+
 	
 }

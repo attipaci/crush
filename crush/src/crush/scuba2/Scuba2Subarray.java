@@ -95,9 +95,9 @@ public class Scuba2Subarray implements Cloneable {
 		
 		for(int c=Scuba2Subarray.PIXELS; --c >= 0; ) {
 			Scuba2Pixel pixel = getPixel(c);
-			if(Double.isNaN(data[0][pixel.col % Scuba2.COLS][pixel.row % Scuba2.ROWS])) pixel.flag(Channel.FLAG_DISCARD);
+			if(Double.isNaN(data[0][pixel.col % Scuba2.SUBARRAY_COLS][pixel.row % Scuba2.SUBARRAY_ROWS])) pixel.flag(Channel.FLAG_DISCARD);
 		}
 	}
 	
-	public static int PIXELS = Scuba2.ROWS * Scuba2.COLS;
+	public static int PIXELS = Scuba2.SUBARRAY_ROWS * Scuba2.SUBARRAY_COLS;
 }

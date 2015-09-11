@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -81,7 +81,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	}
 	
 	@Override
-	public void addWeightedDirect(final Data2D data, final double w) {
+	public synchronized void addWeightedDirect(final Data2D data, final double w) {
 		super.addWeightedDirect(data, w);
 		if(data instanceof GridSource) integrationTime += ((GridSource<?>) data).integrationTime;
 	}
@@ -95,11 +95,11 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	public void normalize() {
 		new Task<Void>() {
 			@Override
-			public void process(int i, int j) { normalize(i, j); }
+			protected void process(int i, int j) { normalize(i, j); }
 		}.process();
 	}
 
-	public void normalize(int i, int j) { 
+	public void normalize(final int i, final int j) { 
 		if(getWeight(i, j) <= 0.0) {
 			setValue(i, j, 0.0);
 			setWeight(i, j, 0.0);

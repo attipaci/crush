@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -68,7 +68,7 @@ public class Dependents {
 		for(int i=forChannel.length; --i >= 0; ) forChannel[i] += dp[i];
 	}
 	
-	public	synchronized void addForFrames(double[] dp) {
+	public synchronized void addForFrames(double[] dp) {
 		for(int i=forFrame.length; --i >= 0; ) forFrame[i] += dp[i];
 	}
 	

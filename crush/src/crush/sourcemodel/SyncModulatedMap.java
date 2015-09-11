@@ -45,7 +45,7 @@ public class SyncModulatedMap extends ScalarMap {
 	}
 	
 	@Override
-	protected synchronized int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {
+	protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {
 		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;	
 			
 		final Periodic modulation = (Periodic) integration;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -59,7 +59,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
 		return phaseDeps.containsKey(name) ? phaseDeps.get(name) : new PhaseDependents(this, name);
 	}
 	
-	public synchronized void update(ChannelGroup<?> channels) {
+	public void update(ChannelGroup<?> channels) {
 		
 		integration.comments += "|P";
 		
@@ -88,11 +88,11 @@ public class PhaseSet extends ArrayList<PhaseData> {
 		for(int i=size(); --i >=0; ) get(i).index = i;
 	}
 		
-	public synchronized WeightedPoint[] getGainIncrement(Mode mode) {
+	public WeightedPoint[] getGainIncrement(Mode mode) {
 		return signals.get(mode).getGainIncrement();
 	}
 	
-	protected synchronized void syncGains(final Mode mode) throws Exception {
+	protected void syncGains(final Mode mode) throws Exception {
 		if(signals.containsKey(mode)) signals.get(mode).syncGains();
 	}
 	
@@ -152,7 +152,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
 	
 	// TODO levelling on just the left frames...
 	// TODO Use removeDrifts for dependence 
-	public synchronized void level(final Channel channel) {
+	public void level(final Channel channel) {
 		//driftParms = Math.max(driftParms, 1);
 		
 		final int c = channel.index;

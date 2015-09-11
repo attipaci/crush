@@ -27,6 +27,7 @@ import crush.*;
 import java.awt.Color;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 
 import kovacs.astro.Weather;
 import kovacs.data.WeightedPoint;
@@ -45,8 +46,8 @@ public class SkyDip extends SourceModel {
 	}
 	
 	@Override
-	public SourceModel copy(boolean withContents) {
-		SkyDip copy = (SkyDip) super.copy(withContents);
+	public SourceModel getWorkingCopy(boolean withContents) {
+		SkyDip copy = (SkyDip) super.getWorkingCopy(withContents);
 		copy.data = new WeightedPoint[data.length];
 		if(Tamb != null) copy.Tamb = (WeightedPoint) Tamb.clone();
 		
@@ -60,7 +61,7 @@ public class SkyDip extends SourceModel {
 	}
 	
 	@Override
-	public synchronized void reset(boolean clearContent) {
+	public void reset(boolean clearContent) {
 		super.reset(clearContent);
 		if(clearContent) if(data != null) {
 			for(int i=0; i<data.length; i++) if(data[i] != null) data[i].noData();
@@ -87,14 +88,14 @@ public class SkyDip extends SourceModel {
 	}
 	
 	@Override
-	public synchronized void add(SourceModel model, double weight) {
+	public void add(SourceModel model, double weight) {
 		SkyDip other = (SkyDip) model;
 		Tamb.average(other.Tamb);
 		for(int i=0; i<data.length; i++) data[i].average(other.data[i]);
 	}
 
 	@Override
-	public synchronized void add(Integration<?, ?> integration) {
+	public void add(Integration<?, ?> integration) {
 		integration.comments += "[Dip] ";
 		
 		CorrelatedMode mode = (CorrelatedMode) integration.instrument.modalities.get("obs-channels").get(0);
@@ -124,7 +125,7 @@ public class SkyDip extends SourceModel {
 	}
 
 	@Override
-	public synchronized void setBase() {
+	public void setBase() {
 		// Unused...
 	}
 
@@ -134,7 +135,7 @@ public class SkyDip extends SourceModel {
 	}
 
 	@Override
-	public synchronized void process(Scan<?, ?> scan) {
+	public void process(Scan<?, ?> scan) {
 		for(int i=0; i<data.length; i++) if(data[i].weight() > 0.0) data[i].scaleValue(1.0 / data[i].weight());
 		if(scan instanceof Weather) {
 			double ambientT = ((Weather) scan).getAmbientTemperature();
@@ -342,6 +343,23 @@ public class SkyDip extends SourceModel {
 	@Override
 	public boolean isValid() {
 		return countPoints() > 0;
+	}
+
+	@Override
+	public void setExecutor(ExecutorService executor) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public ExecutorService getExecutor() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getParallel() {
+		// TODO Auto-generated method stub
+		return 1;
 	}
 	
 }

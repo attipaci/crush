@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2007,2008,2009,2010 Attila Kovacs
 
 package crush;
 
@@ -87,6 +86,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	protected boolean isDetectorStage = false;
 	protected boolean isValid = false;
 	
+	private int parallelism = 1;
 	
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
 	// The constructor of Integration thus copies the Scan instrument for private use...
@@ -94,6 +94,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public Integration(Scan<InstrumentType, ?> parent) {
 		scan = parent;
 		instrument = (InstrumentType) scan.instrument.copy();
+		setThreadCount(CRUSH.maxThreads);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -109,6 +110,21 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return clone;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof Integration)) return false;
+		
+		final Integration<?,?> other = (Integration<?,?>) o;
+		if(other.integrationNo != integrationNo) return false;
+		if(other.size() != size()) return false;
+		return other.getFullID("|").equals(getFullID("|"));
+	}
+	
+	@Override
+	public int hashCode() {
+		return super.hashCode() ^ size() ^ getFullID("|").hashCode();
+	}
 	
 	@Override
 	public int compareTo(Integration<InstrumentType, FrameType> other) {
@@ -131,6 +147,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return instrument.option(key);
 	}
 
+	public void setThreadCount(int threads) { 
+		parallelism = threads; 
+		instrument.setThreadCount(threads);
+	}
+	
+	public int getThreadCount() { return parallelism; }
+	
 	public void validate() {
 		if(isValid) return;		
 	
@@ -139,7 +162,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Incorporate the relative instrument gain (under loading) in the scan gain...
 		gain *= instrument.sourceGain;	
 		
-		new CRUSH.IndexedFork<Void>(size()) {
+		new CRUSH.Fork<Void>(size(), getThreadCount()) {
 			@Override
 			protected void processIndex(int index) {
 				Frame frame = get(index);
@@ -228,7 +251,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		if(hasOption("invert")) gain *= -1.0;
 		
-		if(!hasOption("noslim")) slim(CRUSH.maxThreads);
+		if(!hasOption("noslim")) slim(getThreadCount());
 		
 		if(hasOption("jackknife")) if(Math.random() < 0.5) {
 			System.err.println("   JACKKNIFE! This integration will produce an inverted source.");
@@ -515,7 +538,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(parallelFFT == null) {
 			parallelFFT = new FloatFFT();
 			if(CRUSH.executor instanceof ThreadPoolExecutor) parallelFFT.setPool((ThreadPoolExecutor) CRUSH.executor);
-			else parallelFFT.setThreads(CRUSH.maxThreads);
+			else parallelFFT.setThreads(parallelism);
 		}
 			
 		return parallelFFT;
@@ -656,7 +679,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}		
 	}
 	
-	public synchronized void trim() {
+	public void trim() {
 		trimEnd();
 		
 		final int nt = size();
@@ -678,7 +701,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	
 	
-	public synchronized void slim(int threads) {
+	public void slim(int threads) {
 		if(instrument.slim(false)) {
 			new Fork<Void>() {
 				@Override
@@ -689,7 +712,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 	}
 	
-	public synchronized void scale(final double factor) {
+	public void scale(final double factor) {
 		if(factor == 1.0) return;
 		for(Frame frame : this) if(frame != null) frame.scale(factor);
 	}
@@ -742,14 +765,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			protected void process(Channel channel) {
 				if(robust) getMedianLevel(channel, from, to, buffer, increment);
 				else getMeanLevel(channel, from, to, increment);
-				removeOffset(channel, from, to, frameParms, increment);
+				level(channel, from, to, frameParms, increment);
 				parms.addAsync(channel, 1.0);
 			}
 		}.process();
 		
 		// Remove the drifts from all signals also to match bandpass..
 		final ArrayList<Signal> sigs = new ArrayList<Signal>(signals.values());
-		new CRUSH.IndexedFork<Void>(sigs.size()) {
+		new CRUSH.Fork<Void>(sigs.size(), getThreadCount()) {
 			@Override
 			protected void processIndex(int k) { sigs.get(k).level(from, to); }
 		}.process();
@@ -777,7 +800,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Remove the drifts from all signals also to match bandpass..
 		final ArrayList<Signal> sigs = new ArrayList<Signal>(signals.values());
 		
-		new CRUSH.IndexedFork<Void>(sigs.size()) {
+		if(!sigs.isEmpty()) new CRUSH.Fork<Void>(sigs.size(), getThreadCount()) {
 			@Override
 			protected void processIndex(int k) { sigs.get(k).removeDrifts(); }
 		}.process();
@@ -798,7 +821,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		final int nt = size();
 		
-		new CRUSH.IndexedFork<float[]>(channels.size()) {
+		new CRUSH.Fork<float[]>(channels.size(), getThreadCount()) {
 			private WeightedPoint increment = new WeightedPoint();
 			private float[] frameParms;
 			private DataPoint[] buffer;
@@ -817,22 +840,15 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			protected void cleanup() {
 				super.cleanup();
+				
+				parms.addForFrames(frameParms);
+				recycle(frameParms);
+				
 				if(buffer != null) recycle(buffer);
 			}
 			
 			@Override
 			public float[] getPartialResult() { return frameParms; }
-			
-			@Override
-			protected void postProcess() {
-				super.postProcess();
-				
-				for(Parallel<float[]> task : getWorkers()) {
-					float[] localFrameParms = task.getPartialResult();
-					parms.addForFrames(localFrameParms);
-					recycle(localFrameParms);
-				}
-			}
 			
 			@Override
 			protected void processIndex(int k) {
@@ -846,16 +862,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				
 					aveOffset[k].average(increment);
 					
-					removeOffset(channel, from, to, frameParms, increment);
+					level(channel, from, to, frameParms, increment);
 					
 					if(increment.weight() > 0.0) parms.addAsync(channel, 1.0);
 				}
 			}
 		}.process();
-		
-		
-		parms.apply(channels, 0, size());
-		
+				
 		final double crossingTime = getPointCrossingTime();	
 		
 		for(int k=channels.size(); --k >= 0; ) {
@@ -863,7 +876,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			final double G = isDetectorStage ? channel.getHardwareGain() : 1.0;
 			channel.offset += G * aveOffset[k].value();
 			
-			if(driftN >= size()) return;
+			if(driftN >= size()) break;
 			
 			if(!Double.isNaN(crossingTime) && !Double.isInfinite(crossingTime)) {
 				// Undo prior drift corrections....
@@ -885,7 +898,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 
-	private void removeOffset(final Channel channel, final int from, int to, final float[] frameParms, final WeightedPoint increment) {
+	private void level(final Channel channel, final int from, int to, final float[] frameParms, final WeightedPoint increment) {
 		final float delta = (float) increment.value();
 				
 		// Remove offsets from data and account frame dependence...	
@@ -992,7 +1005,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	
-	public void getPixelWeights() {
+	public void getRMSNoiseWeights() {
 		comments += "W";
 		
 		final ChannelGroup<?> channels = instrument.getConnectedChannels();
@@ -1067,7 +1080,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		comments += "w";
 			
-		CRUSH.IndexedFork<DataPoint[]> variances = new CRUSH.IndexedFork<DataPoint[]>(size() - delta) {
+		CRUSH.Fork<DataPoint[]> variances = new CRUSH.Fork<DataPoint[]>(size() - delta, getThreadCount()) {
 			private DataPoint[] var;
 			
 			@Override
@@ -1527,7 +1540,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 	}
 	
-	private void setDespikeLevels(ChannelGroup<?> channels, final double significance) {
+	private void setTempDespikeLevels(ChannelGroup<?> channels, final double significance) {
 		for(Channel channel : channels) channel.temp = (float) (significance * Math.sqrt(channel.variance));
 	}
 	
@@ -1541,7 +1554,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
 		
-		setDespikeLevels(connectedChannels, significance);
+		setTempDespikeLevels(connectedChannels, significance);
 		
 		// Clear the spike flag for every sample...
 		new Fork<Void>() {
@@ -1552,7 +1565,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}.process();
 		
 		// Despike here...
-		new CRUSH.IndexedFork<Void>(size() - delta) {
+		new CRUSH.Fork<Void>(size() - delta, getThreadCount()) {
 			@Override
 			protected void processIndex(int t) {
 				final Frame exposure = get(t);
@@ -1564,15 +1577,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					for(final Channel channel : connectedChannels) if(((exposure.sampleFlag[channel.index] | other.sampleFlag[channel.index]) & excludeSamples) == 0) {
 						if(Math.abs(exposure.data[channel.index] - other.data[channel.index]) > channel.temp * chi) {
 							exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
+							
 							// TODO this could be a race condition, although concurrent updates should 
 							// still result in expected flag value...
+							// TODO the below also requires CPU cache synching, so it can slow things down on
+							// multi-CPU machines..
 							other.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
 						}
 					}
 				}	
 			}
 		}.process();
-
+		
 	}
 
 	public void despikeAbsolute(final double significance) {
@@ -1581,7 +1597,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
 		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
 		
-		setDespikeLevels(connectedChannels, significance);
+		setTempDespikeLevels(connectedChannels, significance);
 		
 		new Fork<Void>() {
 			@Override
@@ -1603,7 +1619,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
 		
-		setDespikeLevels(connectedChannels, significance);
+		setTempDespikeLevels(connectedChannels, significance);
 		
 		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
 		
@@ -1812,11 +1828,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		comments += "(" + flagger.getResult() + ")";
 	}
 	
-	public synchronized boolean isDetectorStage() {
+	public boolean isDetectorStage() {
 		return isDetectorStage;
 	}
 		
-	public synchronized void detectorStage() { 
+	public void detectorStage() { 
 		if(isDetectorStage) return;
 		
 		instrument.loadTempHardwareGains();
@@ -1831,7 +1847,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		isDetectorStage = true;		
 	}
 	
-	public synchronized void readoutStage() { 
+	public void readoutStage() { 
 		if(!isDetectorStage) return;
 		
 		instrument.loadTempHardwareGains();
@@ -1846,14 +1862,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		isDetectorStage = false;
 	}
 	
-	public synchronized void clearData() {
+	public void clearData() {
 		new Fork<Void>() {
 			@Override
 			public void process(FrameType frame) { for(final Channel channel : instrument) frame.data[channel.index] = 0.0F; }
 		}.process();
 	}
 	
-	public synchronized void randomData() {
+	public void randomData() {
 		final Random random = new Random();
 		
 		instrument.new Fork<Void>() {
@@ -2147,7 +2163,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	// uniform...
 	// The alternative would be to include sample count in weights everywhere...
 	@SuppressWarnings("unchecked")
-	public synchronized void downsample(final int n) {
+	public void downsample(final int n) {
 		if(n < 2) return;
 		
 		final int windowSize = (int)Math.round(1.82 * n * WindowFunction.getEquivalentWidth("Hann"));
@@ -2170,7 +2186,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(int i=w.length; --i >= 0; ) norm += Math.abs(w[i]);
 		for(int i=w.length; --i >= 0; ) w[i] /= norm;
 
-		new CRUSH.IndexedFork<Void>(N) {
+		new CRUSH.Fork<Void>(N, getThreadCount()) {
 			@Override
 			protected void processIndex(int k) { buffer[k] = getDownsampled(k); }
 			
@@ -2308,7 +2324,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 
-	public synchronized void offset(final double value) {
+	public void offset(final double value) {
 		new Fork<Void>() {
 			@Override
 			protected void process(FrameType frame) {
@@ -2872,7 +2888,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return scan.size() > 1 | scan.hasSiblings ? getFullID("|") : scan.getID();
 	}
 
-	public synchronized boolean perform(String task) {
+	public boolean perform(String task) {
 		boolean isRobust = false;
 		if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust = true;
 			
@@ -2917,7 +2933,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 		comments += " ";	
 	
-		Thread.yield();
+		//Thread.yield();
 		
 		return true;
 	}
@@ -2952,7 +2968,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void getWeights(String method) {
 		if(method.equals("robust")) getRobustPixelWeights();
 		else if(method.equals("differential")) getDifferencialPixelWeights();
-		else getPixelWeights();	
+		else getRMSNoiseWeights();	
 		flagWeights();
 	}
 
@@ -3152,7 +3168,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		final Complex[][] C = new Complex[mode.size()][];
 			
-		new CRUSH.IndexedFork<Void>(mode.size()) {
+		new CRUSH.Fork<Void>(mode.size(), getThreadCount()) {
 
 			@Override
 			protected void processIndex(int k) {
@@ -3288,27 +3304,24 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 
 	
-	
-	
-	
-	public abstract class Fork<ReturnType> extends CRUSH.IndexedFork<ReturnType> {
-		public Fork() { super(size()); }
+	public abstract class Fork<ReturnType> extends CRUSH.Fork<ReturnType> {
+		public Fork() { super(size(), getThreadCount()); }
 		
 		@Override
 		public final void processIndex(int index) { 
 			FrameType exposure = get(index);
 			if(exposure != null) process(exposure);
 		}
-
+		
 		protected abstract void process(FrameType frame);
 	}
 
 	
-	public abstract class BlockFork<ReturnType> extends CRUSH.IndexedFork<ReturnType> {
+	public abstract class BlockFork<ReturnType> extends CRUSH.Fork<ReturnType> {
 		private int blocksize;
 
 		public BlockFork(int blocksize) { 
-			super(ExtraMath.roundupRatio(size(), blocksize));
+			super(ExtraMath.roundupRatio(size(), blocksize), getThreadCount());
 			this.blocksize = blocksize; 
 		}
 
@@ -3323,35 +3336,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		public final int getBlockSize() { return blocksize; }
 	}
 
-	/*
-	public abstract class ChannelBlockFork<ReturnType> extends CRUSH.Fork<ReturnType> {
-		private ChannelGroup<?> channels;
-		private int blocksize;
-		
-		public ChannelBlockFork(ChannelGroup<?> channels, int blocksize) { 
-			this.channels = channels; 
-			this.blocksize = blocksize;
-		}
-
-		@Override
-		protected void processIndex(int index, int threadCount) {
-			final int nc = channels.size();
-			final int nt = size();
-			final int nblocks = ExtraMath.roundupRatio(nt, blocksize);
-			final int N = nblocks * nc;
-			
-			for(int i=index; i<N; i+=threadCount) {
-				final int from = (i / nc) * blocksize;
-				
-				if(isInterrupted()) return;
-				process(channels.get(i % nc), from, Math.min(nt, from));
-				Thread.yield();
-			}
-		}
-
-		protected abstract void process(Channel channel, int from, int to);
-	}
-	*/
 	
 	public int pow2Size() { return ExtraMath.pow2ceil(size()); }
 

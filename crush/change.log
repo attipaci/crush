@@ -1,4 +1,5 @@
 
+
 2.30-b1 (8 September 2015)
 
 
@@ -32,6 +33,13 @@
 	[BUG] Gain renormalization (re-enabled in the last release) was flawed
 	and could cause mapping artefacts. Now following a more cautious
 	approach...
+
+	[NEW] {post-b1} Hybrid parallel architecture that gives the best of
+	both worlds, optimally fast single-scan reductions, and as fast as
+	possible multiscan reductions. The available threads are distributed
+	on an N by M grid, where N scans run very efficiently in parallel,
+	each with M concurrent threads (which are a bit less efficient because
+	of more frequent data sharing).
 
 	[NEW] Preliminary support for MUSTANG-2 (GBT). See mustang2/README
 	for details.
@@ -108,6 +116,8 @@
 	[FIX] {HAWC+} Fixed multiple occurences of FITS keys: INSTRUME and
 	TRACERR.
 
+	[TWEAK] {post-b1} {SCUBA-2} pixel overlap calculation speeded up.
+
 	[TWEAK] {MAKO-2} kill filter replaced by the faster notch filter for
 	removing pulse-tube pickups.
 
@@ -170,6 +180,20 @@
 	[TWEAK] Beammaps do not need to operate on source copies, since the
 	submaps provide a natural separation against race conditions. This
 	should result in a speedup for processing beammaps.
+
+	[CODE] {post-b1} Cleaned up unnecessary pipeline recreation at each
+	iteration. Instead, pipelines are created at validation, and reused
+	ever after...
+
+	[CODE] {post-b1} Parallelized channel overlap calculation.
+
+	[CODE] {post-b1} PhaseSignal now also parallelized.
+
+	[CODE] {post-b1} Source model to use CRUSH's executor service when
+	possible.
+
+	[CODE] {post-b1} Removed synchronized directive from most of method 
+	calls.
 
 	[CODE] {MAKO} {MAKO-2} Resonator fitting made generic (crush.resonator)
 	so that other frequency multiplexed instruments can reuse the same 
