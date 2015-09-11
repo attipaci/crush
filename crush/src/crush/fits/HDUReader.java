@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -42,7 +42,6 @@ public abstract class HDUReader {
 	
 	public void read() throws Exception {
 		read(CRUSH.maxThreads);
-		//read(1);
 	}
 	
 	
@@ -53,7 +52,7 @@ public abstract class HDUReader {
 	
 	public abstract class Reader extends Parallel<Void> {
 		@Override
-		public void processIndex(int i, int threadCount) throws Exception {
+		public void processIndexOf(int i, int threadCount) throws Exception {
 			final int frames = hdu.getNRows();
 			final int step = ExtraMath.roundupRatio(frames, threadCount);
 			

@@ -84,7 +84,7 @@ public class CorrelatedSignal extends Signal {
 	}
 
 	@Override
-	public synchronized void removeDrifts() {
+	public void removeDrifts() {
 		int N = ExtraMath.roundupRatio(integration.framesFor(integration.filterTimeScale), resolution);
 		if(N == driftN) return;
 		
@@ -115,7 +115,7 @@ public class CorrelatedSignal extends Signal {
 	}
 	
 	@Override
-	public synchronized void level(int from, int to) {
+	public void level(int from, int to) {
 		from = from / resolution;
 		to = ExtraMath.roundupRatio(to, resolution);
 		
@@ -151,7 +151,7 @@ public class CorrelatedSignal extends Signal {
 	}
 	
 	@Override
-	public synchronized void differentiate() {
+	public void differentiate() {
 		final double idt = 1.0 / (resolution * integration.instrument.samplingInterval);
 		final WeightedPoint p1 = new WeightedPoint();
 		final WeightedPoint p2 = new WeightedPoint();
@@ -196,7 +196,7 @@ public class CorrelatedSignal extends Signal {
 	
 	// Intergate using trapesiod rule...
 	@Override
-	public synchronized void integrate() {
+	public void integrate() {
 		float dt = (float) (resolution * integration.instrument.samplingInterval);
 		float dt2 = dt * dt;
 		
@@ -247,7 +247,7 @@ public class CorrelatedSignal extends Signal {
 		final double pointSize = model == null ? integration.instrument.getPointSize() : model.getPointSize();
 		integration.instrument.calcOverlap(pointSize);
 		
-		new CRUSH.IndexedFork<Void>(channels.size()) {
+		new CRUSH.Fork<Void>(channels.size(), integration.getThreadCount()) {
 			@Override
 			protected void processIndex(int k) {
 				final Channel channel = channels.get(k);
@@ -286,7 +286,7 @@ public class CorrelatedSignal extends Signal {
 	
 	// TODO Use this in ArrayUtil...
 	@Override
-	public synchronized void smooth(double[] w) {
+	public void smooth(double[] w) {
 		int ic = w.length / 2;
 		float[] smooth = new float[value.length];
 		float[] smoothw = new float[value.length];
@@ -319,7 +319,7 @@ public class CorrelatedSignal extends Signal {
 	
 	// Get correlated for all frames even those that are no good...
 	// But use only channels that are valid, and skip over flagged samples...
-	public synchronized void update(final boolean isRobust) throws Exception {
+	public void update(final boolean isRobust) throws Exception {
 		// work on only a selected subset of not critically flagged channels only (for speed)
 		final CorrelatedMode mode = (CorrelatedMode) getMode();
 		final ChannelGroup<?> channels = mode.getChannels();

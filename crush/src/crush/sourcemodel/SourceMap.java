@@ -155,10 +155,10 @@ public abstract class SourceMap extends SourceModel {
 	public double getSourceSize() { return ExtraMath.hypot(super.getSourceSize(), getRequestedSmoothing(option("smooth"))); }
 	
 	
-	private synchronized void flagOutside(final Integration<?,?> integration, final Vector2D fixedSize) {
+	private void flagOutside(final Integration<?,?> integration, final Vector2D fixedSize) {
 		final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 	
-		new CRUSH.IndexedFork<Void>(integration.size()) {
+		new CRUSH.Fork<Void>(integration.size(), integration.getThreadCount()) {
 			private AstroProjector projector;
 			
 			@Override
@@ -188,7 +188,7 @@ public abstract class SourceMap extends SourceModel {
 		}.process();
 	}
 	
-	private synchronized void searchCorners(final Integration<?,?> integration) {
+	private void searchCorners(final Integration<?,?> integration) {
 		//final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
 		final Collection<? extends Pixel> pixels = integration.instrument.getPerimeterPixels();
 		if(pixels.size() == 0) return;
@@ -198,7 +198,7 @@ public abstract class SourceMap extends SourceModel {
 			public Range latitudeRange = new Range();
 		}
 		
-		CRUSH.IndexedFork<ProjectorData> findCorners = new CRUSH.IndexedFork<ProjectorData>(integration.size()) {
+		CRUSH.Fork<ProjectorData> findCorners = new CRUSH.Fork<ProjectorData>(integration.size(), integration.getThreadCount()) {
 			private ProjectorData data;
 			private AstroProjector projector;
 			
@@ -259,7 +259,7 @@ public abstract class SourceMap extends SourceModel {
 		
 	}
 	
-	public synchronized void searchCorners() throws Exception {
+	public void searchCorners() throws Exception {
 		final Vector2D fixedSize = new Vector2D(Double.NaN, Double.NaN);
 		final boolean fixSize = hasOption("map.size");
 		
@@ -457,25 +457,22 @@ public abstract class SourceMap extends SourceModel {
 		return addForkFrames(integration, pixels, sourceGain, filtering, signalMode);
 	}
 	
-	protected synchronized int addForkFrames(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
-				
-		class Mapper extends CRUSH.IndexedFork<Integer> {
+	protected int addForkFrames(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
+		
+		class Mapper extends CRUSH.Fork<Integer> {
 			private SourceMap localSource;
 			private AstroProjector projector;
 			private Index2D index;
 			private int mappingFrames = 0;
 
-			Mapper() { super(integration.size()); }
+			Mapper() { super(integration.size(), integration.getThreadCount()); }
 
 			@Override
 			protected void init() {
 				super.init();
-	
+				
 				if(isAddingToMaster()) localSource = SourceMap.this;
-				else {
-					localSource = (SourceMap) getRecyclerCopy(false);
-					localSource.reset(true);
-				}
+				else localSource = (SourceMap) getRecycledCleanThreadLocalCopy();
 				
 				projector = new AstroProjector(localSource.getProjection());
 				index = new Index2D();
@@ -524,11 +521,11 @@ public abstract class SourceMap extends SourceModel {
 		
 		Mapper mapping = new Mapper();
 		mapping.process();
-		
+			
 		return mapping.getResult();		
 	}
 	
-	protected synchronized int addForkPixels(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
+	protected int addForkPixels(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
 		int mappingFrames = 0;
 		
 		for(Frame exposure : integration) if(exposure != null) {
@@ -536,22 +533,19 @@ public abstract class SourceMap extends SourceModel {
 			if(exposure.tempC != 0.0F) mappingFrames++;
 		}
 		
-		class Mapper extends CRUSH.IndexedFork<Void> {
+		class Mapper extends CRUSH.Fork<Void> {
 			private SourceMap localSource;
 			private AstroProjector projector;
 			private Index2D index;
 		
-			Mapper() { super(pixels.size()); }
+			Mapper() { super(pixels.size(), integration.getThreadCount()); }
 
 			@Override
 			protected void init() {
 				super.init();
 						
 				if(isAddingToMaster()) localSource = SourceMap.this;
-				else {
-					localSource = (SourceMap) getRecyclerCopy(false);
-					localSource.reset(true);
-				}
+				else localSource = (SourceMap) getRecycledCleanThreadLocalCopy();
 				
 				projector = new AstroProjector(localSource.getProjection());
 				index = new Index2D();

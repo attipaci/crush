@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2007,2008,2009,2010 Attila Kovacs
 
 package crush;
 
@@ -29,17 +28,27 @@ import java.util.*;
 import kovacs.util.*;
 
 
-public class Pipeline {
+public class Pipeline implements Runnable {
 	CRUSH crush;
 	
+	List<Scan<?,?>> scans = new ArrayList<Scan<?,?>>();
 	List<String> ordering = new ArrayList<String>();
 	SourceModel scanSource;
 	
-	public Pipeline(CRUSH crush) {
+	
+	private int threadCount;
+	
+	public Pipeline(CRUSH crush, int threadCount) {
 		this.crush = crush;
-		scanSource = crush.source.copy(false);
-		scanSource.setParallel(CRUSH.maxThreads);
+		this.threadCount = threadCount;
 	}
+	
+	public void setSourceModel(SourceModel source) {
+		scanSource = crush.source.getWorkingCopy(false);
+		scanSource.setParallel(threadCount);
+	}
+	
+	public int getThreadCount() { return threadCount; }
 
 	public boolean hasOption(String name) {
 		return crush.isConfigured(name);
@@ -51,12 +60,28 @@ public class Pipeline {
 	
 	public void setOrdering(List<String> ordering) { this.ordering = ordering; }
 	
-	public synchronized void iterate(boolean summarize) throws InterruptedException {					
-		for(int i=0; i<crush.scans.size(); i++) iterate(crush.scans.get(i), summarize);
+	@Override
+	public void run() {
+		try { iterate(); }
+		catch(InterruptedException e) { System.err.println("\nInterrupted!"); }
+		catch(Exception e) { 
+			System.err.println("ERROR! " + e.getMessage()); 
+			e.printStackTrace();
+			System.err.println("Exiting.");
+			System.exit(1);
+		}
 	}
 	
-	public synchronized void iterate(Scan<?,?> scan, boolean summarize) throws InterruptedException {		
-		for(Integration<?, ?> integration: scan) integration.comments = new String();
+	
+	public void iterate() throws InterruptedException {	
+		for(int i=0; i<scans.size(); i++) iterate(scans.get(i));
+	}
+	
+	private void iterate(Scan<?,?> scan) throws InterruptedException {	
+		for(Integration<?, ?> integration: scan) {
+			integration.setThreadCount(threadCount);
+			integration.comments = new String();
+		}
 
 		for(int i=0; i < ordering.size(); i++) {
 			final String task = ordering.get(i);
@@ -68,35 +93,30 @@ public class Pipeline {
 		// is extracted at the end.
 		if(ordering.contains("source")) if(scan.hasOption("source")) updateSource(scan);
 
-		if(summarize) for(int i=0; i<scan.size(); i++) summarize(scan.get(i));
+		for(Integration<?, ?> integration: scan) crush.checkout(integration);
 	}
 	
-	protected void updateSource(Scan<?,?> scan) {
+	private void updateSource(Scan<?,?> scan) {	
 		if(crush.source == null) return;
 		
 		// Reset smoothing etc. for raw map.
-		scanSource.reset(false);
-		
+		scanSource.reset(true);
+	
 		// TODO why doesn't this work...
 		scanSource.setInstrument(scan.instrument);
-		
+			
 		for(Integration<?, ?> integration: scan) {						
 			if(integration.hasOption("jackknife")) integration.comments += integration.gain > 0.0 ? "+" : "-";
 			else if(integration.gain < 0.0) integration.comments += "-";
 			scanSource.add(integration);
 		}		
-
+	
 		scanSource.process(scan);	
 		crush.source.add(scanSource, scan.weight);
 		
 		scanSource.postprocess(scan);
 	}
 	
-	public void summarize(Integration<?,?> integration) {
-		System.err.print("  [" + integration.getDisplayID() + "] ");
-		System.err.println(integration.comments);
-		integration.comments = new String();
-	}	
 
 	
 }

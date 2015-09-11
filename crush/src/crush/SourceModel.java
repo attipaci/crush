@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -26,11 +26,12 @@ package crush;
 
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
 
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
 
-public abstract class SourceModel implements Cloneable, TableFormatter.Entries, CopiableContent<SourceModel> {
+public abstract class SourceModel implements Cloneable, TableFormatter.Entries {
 	private Instrument<?> instrument;
 
 	public Vector<Scan<?,?>> scans;
@@ -39,7 +40,6 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 
 	public String commandLine;
 	public String id;
-	
 	
 	public SourceModel(Instrument<?> instrument) {
 		setInstrument(instrument);
@@ -55,6 +55,9 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 		return instrument.getOptions();
 	}
 	
+	public abstract void setExecutor(ExecutorService executor);
+	
+	public abstract ExecutorService getExecutor();
 	
 	@Override
 	public Object clone() {
@@ -78,12 +81,26 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	
 	
 	
-	@Override
-	public final SourceModel copy() { return copy(true); }
+	public final SourceModel getWorkingCopy() { return getWorkingCopy(true); }
 	
-	@Override
-	public SourceModel copy(boolean copyContents) {
+	public SourceModel getWorkingCopy(boolean copyContents) {
 		SourceModel copy = (SourceModel) clone();
+		return copy;
+	}
+	
+	public SourceModel getCleanThreadLocalCopy() {
+		int threads = getParallel();
+		ExecutorService executor = getExecutor();
+		
+		noParallel();
+		setExecutor(null);
+		
+		SourceModel copy = getWorkingCopy(false);
+		copy.reset(false);
+		
+		setParallel(threads);
+		setExecutor(executor);
+		
 		return copy;
 	}
 
@@ -209,7 +226,7 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	public abstract void process(boolean verbose) throws Exception;
 
 
-	public synchronized void sync() throws Exception {
+	public void sync() throws Exception {
 		// Coupled with blanking...
 		if(hasSourceOption("nosync")) return;
 		if(hasSourceOption("coupling")) System.err.print("(coupling) ");
@@ -304,6 +321,8 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	
 	public abstract void setParallel(int threads);
 	
+	public abstract int getParallel();
+	
 	public String getASCIIHeader() {
 		StringBuffer header = new StringBuffer(
 			"# CRUSH version: " + CRUSH.getFullVersion() + "\n" +
@@ -328,21 +347,7 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	public String getFormattedEntry(String name, String formatSpec) {
 		return null;
 	}
-	
-	public SourceModel getRecyclerCopy(boolean withContent) {
-		if(recycler != null) if(!recycler.isEmpty()) {
-			try { return recycler.take(); }
-			catch(InterruptedException e) { e.printStackTrace(); }
-		}
-		return copy(withContent);
-	}
-	
-	public synchronized void recycle() { 
-		if(recycler == null) return;
-		if(recycler.remainingCapacity() <= 0) return;
-		recycler.add(this);
-	}
-	
+
 	public double getGnuplotPNGFontScale(int size) {
 		double dpc = (double) size / scans.size();
 
@@ -354,14 +359,39 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 		return 1.0;
 		
 	}
+
 	
-	public static void setRecyclerSize(int size) {
+	public synchronized SourceModel getRecycledCleanThreadLocalCopy() {	
+		if(recycler != null) if(!recycler.isEmpty()) {
+			try { 
+				SourceModel model = recycler.take(); 
+				model.reset(true);
+				return model;
+			}
+			catch(InterruptedException e) { e.printStackTrace(); }
+		}
+		
+		return getCleanThreadLocalCopy();
+	}
+	
+	
+	public synchronized void recycle() { 
+		if(recycler == null) return;
+		if(recycler.remainingCapacity() <= 0) {
+			System.err.println("WARNING! source recycler overflow.");
+			return;
+		}
+		recycler.add(this);
+	}
+	
+	public static synchronized void clearRecycler() { if(recycler != null) recycler.clear(); }
+
+	public static synchronized void setRecyclerCapacity(int size) {
 		if(size <= 0) recycler = null;
 		else recycler = new ArrayBlockingQueue<SourceModel>(size);
 	}
 	
 	
 	public static ArrayBlockingQueue<SourceModel> recycler;
-	
 }
 

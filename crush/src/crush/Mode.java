@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -108,7 +108,7 @@ public class Mode {
 		return getGains(true);
 	}
 		
-	public synchronized float[] getGains(boolean validate) throws Exception {
+	public float[] getGains(boolean validate) throws Exception {
 		if(gainProvider == null) {
 			if(gain == null) {
 				gain = new float[channels.size()];
@@ -125,12 +125,12 @@ public class Mode {
 		}
 	}
 	
-	public synchronized boolean setGains(float[] gain) throws Exception {
+	public boolean setGains(float[] gain) throws Exception {
 		return setGains(gain, true);
 	}
 	
 	// Return true if flagging...
-	public synchronized boolean setGains(float[] gain, boolean flagNormalized) throws Exception {
+	public boolean setGains(float[] gain, boolean flagNormalized) throws Exception {
 		if(gainProvider == null) this.gain = gain;
 		else for(int c=channels.size(); --c>=0; ) gainProvider.setGain(channels.get(c), gain[c]);
 		return flagGains(flagNormalized);
@@ -142,7 +142,7 @@ public class Mode {
 		setGains(G, false);
 	}
 	
-	protected synchronized boolean flagGains(boolean normalize) throws Exception {
+	protected boolean flagGains(boolean normalize) throws Exception {
 		if(gainFlag == 0) return false;
 			
 		final float[] gain = getGains();

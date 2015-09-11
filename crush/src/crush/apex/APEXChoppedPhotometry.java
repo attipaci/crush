@@ -23,6 +23,7 @@
 package crush.apex;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
 
 import kovacs.data.DataPoint;
 import kovacs.data.WeightedPoint;
@@ -39,7 +40,7 @@ public class APEXChoppedPhotometry extends Photometry {
 
 
 	@Override
-	public synchronized void process(Scan<?, ?> scan) {		
+	public void process(Scan<?, ?> scan) {		
 		final WeightedPoint[] left = new WeightedPoint[flux.length];
 		final WeightedPoint[] right = new WeightedPoint[flux.length];
 		
@@ -136,6 +137,24 @@ public class APEXChoppedPhotometry extends Photometry {
 		
 		
 		
+	}
+
+	@Override
+	public void setExecutor(ExecutorService executor) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public ExecutorService getExecutor() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getParallel() {
+		// TODO Auto-generated method stub
+		return 1;
 	}
 
 	

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -293,7 +293,7 @@ public abstract class Filter implements Cloneable {
 	
 	
 	// Convert data into a rejected signal (unlevelled)
-	protected synchronized void fftFilter(Channel channel) {
+	protected void fftFilter(Channel channel) {
 		// Pad with zeroes as necessary...
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		
@@ -314,7 +314,7 @@ public abstract class Filter implements Cloneable {
 	}
 	
 	// Convert data into a rejected signal (unlevelled)
-	protected synchronized void dftFilter(Channel channel) {
+	protected void dftFilter(Channel channel) {
 		// TODO make rejected a private field, initialize or throw away as needed (setDFT())
 		float[] rejected = new float[integration.size()];
 		for(int f=nf+1; --f >= 0; ) {

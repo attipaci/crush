@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -192,11 +192,9 @@ public class PhaseData {
 	}
 
 		
-	public abstract class Fork<ReturnType> extends CRUSH.IndexedFork<ReturnType> {
+	public abstract class Fork<ReturnType> extends CRUSH.Fork<ReturnType> {
 
-		public Fork() {
-			super(end.index - start.index + 1);
-		}
+		public Fork() { super(end.index - start.index + 1, integration.getThreadCount()); }
 
 		@Override
 		protected void processIndex(int offset) {

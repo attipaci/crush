@@ -36,8 +36,8 @@ public class Scuba2Pixel extends SingleColorPixel {
 	public Scuba2Pixel(Scuba2 array, int zeroIndex) {
 		super(array, zeroIndex+1);
 		subarrayNo = zeroIndex / Scuba2Subarray.PIXELS;
-		row = zeroIndex / Scuba2.COLS;
-		col = Scuba2.COLS * subarrayNo + zeroIndex % Scuba2.COLS;
+		row = zeroIndex / Scuba2.SUBARRAY_COLS;
+		col = Scuba2.SUBARRAY_COLS * subarrayNo + zeroIndex % Scuba2.SUBARRAY_COLS;
 	}
 	
 	

@@ -150,7 +150,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	}
 
 	private void setReadoutLevels(final int[][] DAC, final int channelOffset) {
-		for(int bol=Scuba2Subarray.PIXELS; --bol >= 0; ) readoutLevel[channelOffset + bol] = DAC[bol%Scuba2.COLS][bol/Scuba2.COLS];
+		for(int bol=Scuba2Subarray.PIXELS; --bol >= 0; ) readoutLevel[channelOffset + bol] = DAC[bol%Scuba2.SUBARRAY_COLS][bol/Scuba2.SUBARRAY_COLS];
 	}
 
 	
@@ -163,7 +163,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		// Trim the coordinates to match the data size...
 		if(data.length < size()) for(int t=size(); --t >= data.length; ) remove(t);
 		
-		new CRUSH.IndexedFork<Void>(size()) {
+		new CRUSH.Fork<Void>(size(), getThreadCount()) {
 			@Override
 			protected void processIndex(int i) {
 				Scuba2Frame frame = get(i);
@@ -270,7 +270,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		ensureCapacity(samples);
 		for(int i=samples; --i >=0; ) add(null);
 		
-		new CRUSH.IndexedFork<Void>(samples) {
+		new CRUSH.Fork<Void>(samples, getThreadCount()) {
 			private AstroTime time;
 			
 			@Override
@@ -345,11 +345,5 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	public String getFullID(String separator) {
 		return super.getFullID(separator) + separator + instrument.filter;
 	}
-	
-	@Override
-	public String getDisplayID() {
-		return super.getFullID("|");
-	}
-
 	
 }

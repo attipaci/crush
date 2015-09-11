@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -92,7 +92,7 @@ public class CorrelatedMode extends Mode {
 		return getChannels().copyGroup().discard(skipFlags);		
 	}	
 	
-	public synchronized void scaleSignals(Integration<?,?> integration, double aveG) {
+	public void scaleSignals(Integration<?,?> integration, double aveG) {
 		if(fixedSignal) throw new IllegalStateException("Correlate mode '" + name + "' has non-adjustable signal.");
 		
 		Signal signal = integration.getSignal(this);
@@ -111,7 +111,7 @@ public class CorrelatedMode extends Mode {
 		if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.scaleSignals(integration, aveG);
 	}
 	
-	public synchronized void updateSignals(Integration<?, ?> integration, boolean isRobust) throws Exception {
+	public void updateSignals(Integration<?, ?> integration, boolean isRobust) throws Exception {
 		if(fixedSignal) throw new IllegalStateException("WARNING! Cannot decorrelate fixed signal modes.");
 			
 		CorrelatedSignal signal = (CorrelatedSignal) integration.getSignal(this);
@@ -168,7 +168,7 @@ public class CorrelatedMode extends Mode {
 		}
 			
 		@Override
-		public synchronized float[] getGains() throws Exception {
+		public float[] getGains() throws Exception {
 			final float[] parentgains = CorrelatedMode.this.getGains();
 			final float[] gains = super.getGains();
 			for(int i=gains.length; --i>=0; ) gains[i] *= parentgains[i];
@@ -176,7 +176,7 @@ public class CorrelatedMode extends Mode {
 		}
 		
 		@Override
-		public synchronized boolean setGains(float[] gain) throws IllegalAccessException {
+		public boolean setGains(float[] gain) throws IllegalAccessException {
 			throw new UnsupportedOperationException("Cannot adjust gains in Spinoff Modes.");
 		}
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -23,6 +23,7 @@
 package crush;
 
 import crush.CorrelatedMode.CoupledMode;
+import kovacs.data.DataPoint;
 import kovacs.data.WeightedPoint;
 
 public class PhaseSignal {
@@ -66,7 +67,7 @@ public class PhaseSignal {
 	}
 	
 	
-	protected synchronized void update(boolean isRobust) throws Exception {
+	protected void update(boolean isRobust) throws Exception {
 		// Make syncGains carry the gain increment since last sync...
 		syncGains();
 		
@@ -79,46 +80,67 @@ public class PhaseSignal {
 		if(integration.hasOption("phases.estimator")) 
 			isRobust = integration.option("phases.estimator").equals("median");
 		
-		WeightedPoint[] temp = null;
-		if(isRobust) {
-			temp = new WeightedPoint[G.length];
-			for(int i=temp.length; --i >= 0; ) temp[i] = new WeightedPoint();
-		}
-		
+		final boolean useMedians = isRobust;
+	
 		final PhaseDependents parms = phases.getPhaseDependents(mode.getName());
 		parms.clear(channels, 0, phases.size());
 		
-		for(int i=phases.size(); --i >= 0; ) {
-			final PhaseData offsets = phases.get(i);
+		new CRUSH.Fork<Void>(phases.size(), integration.getThreadCount()) {
+			private DataPoint[] temp = null;
 			
-			if(isRobust) offsets.getRobustCorrelated(mode, G, temp, dC);
-			else offsets.getMLCorrelated(mode, G, dC);
-			
-			if(dC.weight() <= 0.0) continue;
-				
-			for(int k=G.length; --k >= 0; ) {
-				Channel channel = channels.get(k);	
-				offsets.value[channel.index] -= G[k] * dC.value();
+			@Override
+			protected void init() {
+				super.init();
+				if(useMedians) {
+					temp = integration.instrument.getDataPoints();
+					for(int i=G.length; --i >= 0; ) temp[i].noData();
+				}
 			}
 			
-			value[i] += dC.value();
-			weight[i] = dC.weight();
+			@Override
+			protected void cleanup() {
+				super.cleanup();
+				if(temp != null) Instrument.recycle(temp);
+			}
 			
-			offsets.addChannelDependence(parms, mode, G, dC);
-			parms.addAsync(offsets, 1.0);
-		}	
+			@Override
+			protected void processIndex(int i) {
+				final PhaseData offsets = phases.get(i);
+				
+				if(useMedians) offsets.getRobustCorrelated(mode, G, temp, dC);
+				else offsets.getMLCorrelated(mode, G, dC);
+				
+				if(dC.weight() <= 0.0) return;
+					
+				for(int k=G.length; --k >= 0; ) {
+					Channel channel = channels.get(k);	
+					offsets.value[channel.index] -= G[k] * dC.value();
+				}
+				
+				value[i] += dC.value();
+				weight[i] = dC.weight();
+				
+				offsets.addChannelDependence(parms, mode, G, dC);
+				parms.addAsync(offsets, 1.0);
+			}
+			
+		}.process();
 		
+
 		parms.apply(channels, 0, phases.size());
 		
 		generation++;
 		setSyncGains(G);
 	}
 	
-	public synchronized WeightedPoint[] getGainIncrement() {	
+	public WeightedPoint[] getGainIncrement() {	
 		final ChannelGroup<?> channels = mode.getChannels();
 		final WeightedPoint[] dG = new WeightedPoint[channels.size()];
 		
-		for(int k=channels.size(); --k >= 0; ) dG[k] = getGainIncrement(channels.get(k));
+		new CRUSH.Fork<Void>(channels.size(), phases.getIntegration().getThreadCount()) {
+			@Override
+			protected void processIndex(int k) { dG[k] = getGainIncrement(channels.get(k)); }
+		}.process();
 			
 		return dG;
 	}
@@ -141,7 +163,7 @@ public class PhaseSignal {
 	
 	// TODO robust gains?...
 	
-	protected synchronized void setSyncGains(final float[] G) {
+	protected void setSyncGains(final float[] G) {
 		System.arraycopy(G, 0, syncGains, 0, G.length);
 	}
 	
@@ -157,10 +179,15 @@ public class PhaseSignal {
 		}
 		if(!changed) return;
 			
-		for(int i=phases.size(); --i >= 0; ) if(weight[i] > 0.0) {
-			final PhaseData offsets = phases.get(i);
-			for(int k=G.length; --k >= 0; ) offsets.value[channels.get(k).index] -= dG[k] * value[i];
-		}
+		new CRUSH.Fork<Void>(phases.size(), phases.getIntegration().getThreadCount()) {
+			@Override
+			protected void processIndex(int i) {
+				if(!(weight[i] > 0.0)) return;
+				final PhaseData offsets = phases.get(i);
+				for(int k=G.length; --k >= 0; ) offsets.value[channels.get(k).index] -= dG[k] * value[i];
+			}
+			
+		}.process();
 		
 		setSyncGains(G);
 	}

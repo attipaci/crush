@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -37,6 +37,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
 	private static final long serialVersionUID = -922794075467674753L;
 	
 	private String name;
+	private int parallelism = 1;
 	
 	public ChannelGroup(String name) {
 		this.name = name;
@@ -51,6 +52,11 @@ implements Copiable<ChannelGroup<ChannelType>> {
 		this(name);
 		addAll(channelList);
 	}
+	
+	public void setThreadCount(int threads) { parallelism = threads; }
+	
+	public int getThreadCount() { return parallelism; }
+	
 	
 	@Override
 	@SuppressWarnings("unchecked")
@@ -91,7 +97,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
 	}
 	
 	
-	public synchronized boolean slim() {
+	public boolean slim() {
 		final int fromSize = size();
 		final int pattern = Channel.FLAG_DEAD | Channel.FLAG_DISCARD;
 		for(int i=fromSize; --i >= 0; ) if(get(i).isFlagged(pattern)) remove(i);
@@ -152,12 +158,12 @@ implements Copiable<ChannelGroup<ChannelType>> {
 		return this;
 	}
 
-	public abstract class Fork<ReturnType> extends CRUSH.IndexedFork<ReturnType> {	
-		public Fork() { super(size()); }
+	public abstract class Fork<ReturnType> extends CRUSH.Fork<ReturnType> {	
+		public Fork() { super(size(), getThreadCount()); }
 		
 		@Override
 		protected final void processIndex(int index) { process(get(index)); }
-
+		
 		protected abstract void process(ChannelType channel);
 	}
 

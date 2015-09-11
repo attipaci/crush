@@ -26,6 +26,7 @@ import java.io.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.concurrent.ExecutorService;
 
 import kovacs.astro.AstroProjector;
 import kovacs.data.*;
@@ -49,11 +50,11 @@ public class BeamMap extends SourceMap {
 	protected boolean isAddingToMaster() { return true; }
 	
 	@Override
-	public SourceModel copy(boolean withContents) {
-		BeamMap copy = (BeamMap) super.copy(withContents);
+	public SourceModel getWorkingCopy(boolean withContents) {
+		BeamMap copy = (BeamMap) super.getWorkingCopy(withContents);
 		copy.pixelMap = new ScalarMap[pixelMap.length];
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null)
-			copy.pixelMap[p] = (ScalarMap) pixelMap[p].copy(withContents);	
+			copy.pixelMap[p] = (ScalarMap) pixelMap[p].getWorkingCopy(withContents);	
 		return copy;
 	}
 
@@ -78,7 +79,7 @@ public class BeamMap extends SourceMap {
 	public Array<?, ?> getArray() { return (Array<?, ?>) getInstrument(); }
 	
 	@Override
-	public synchronized void reset(boolean clearContent) {
+	public void reset(boolean clearContent) {
 		super.reset(clearContent);
 		for(ScalarMap map : pixelMap) if(map != null) map.reset(clearContent);
 	}
@@ -86,12 +87,12 @@ public class BeamMap extends SourceMap {
 	
 		
 	@Override
-	public synchronized void add(SourceModel model, double weight) {
+	public void add(SourceModel model, double weight) {
 		if(!(model instanceof BeamMap)) throw new IllegalArgumentException("ERROR! Cannot add " + model.getClass().getSimpleName() + " to " + getClass().getSimpleName());
 		BeamMap other = (BeamMap) model;
 		
 		for(int p=0; p<pixelMap.length; p++) if(other.pixelMap[p] != null) {
-			if(pixelMap[p] == null) pixelMap[p] = (ScalarMap) other.pixelMap[p].copy(false);
+			if(pixelMap[p] == null) pixelMap[p] = (ScalarMap) other.pixelMap[p].getWorkingCopy(false);
 			pixelMap[p].add(other.pixelMap[p], weight);
 		}
 		
@@ -110,13 +111,13 @@ public class BeamMap extends SourceMap {
 		ScalarMap map = pixelMap[i];
 		
 		if(map == null) {	
-			map = (ScalarMap) template.copy(false);
+			map = (ScalarMap) template.getWorkingCopy(false);
 			map.id = Integer.toString(i);
 			map.standalone();
 			pixelMap[i] = map;
 		}
 			
-		map.addSync(exposure, pixel, index, fGC, sourceGain);
+		map.add(exposure, pixel, index, fGC, sourceGain);
 	}
 
 
@@ -200,12 +201,12 @@ public class BeamMap extends SourceMap {
 
 
 	@Override
-	public synchronized void setBase() {
+	public void setBase() {
 		for(ScalarMap map : pixelMap) if(map != null) map.setBase();
 	}
 
 	@Override
-	public synchronized void process(Scan<?, ?> scan) {
+	public void process(Scan<?, ?> scan) {
 		for(ScalarMap map : pixelMap) if(map != null) map.process(scan);
 	}
 
@@ -328,6 +329,12 @@ public class BeamMap extends SourceMap {
 	public void setParallel(int threads) {
 		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) map.setParallel(threads);
 	}
+	
+	@Override
+	public int getParallel() {
+		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) return map.getParallel();
+		return 1;
+	}
 
 	@Override
 	public boolean isValid() {
@@ -352,5 +359,18 @@ public class BeamMap extends SourceMap {
 			map.addNonZero(otherMap);
 		}
 	}
+
+	@Override
+	public void setExecutor(ExecutorService executor) {
+		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) map.setExecutor(executor);
+	}
+
+	@Override
+	public ExecutorService getExecutor() {
+		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) return map.getExecutor();
+		return null;
+	}
+
+	
 
 }

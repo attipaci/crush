@@ -33,7 +33,7 @@ import crush.*;
 import crush.array.*;
 import nom.tam.fits.*;
 
-public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBased {
+public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBased, GeometricRowColIndexed {
 	/**
 	 * 
 	 */
@@ -164,7 +164,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 		}
 				
 		for(Scuba2Pixel pixel : this) {	
-			pixel.position = subarray[pixel.subarrayNo].getPhysicalPixelPosition(pixel.row % Scuba2.ROWS, pixel.col % Scuba2.COLS);
+			pixel.position = subarray[pixel.subarrayNo].getPhysicalPixelPosition(pixel.row % Scuba2.SUBARRAY_ROWS, pixel.col % Scuba2.SUBARRAY_COLS);
 			
 			// Apply the distortion model (if specified).
 			if(distortion != null) pixel.position = distortion.getValue(pixel.position);
@@ -332,19 +332,38 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 				"                    reading native SDF data.\n";
 	}
 
-	public int rows() { return COLS; }
-	
-	public int cols() { return ROWS; }
-	
 		
 	@Override
 	public int maxPixels() { return SUBARRAYS * Scuba2Subarray.PIXELS; }
 	
+
+	@Override
+	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
+		Array.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+	}
+
+	@Override
+	public Vector2D getPixelSize() {
+		final double size = physicalPixelSize * plateScale;
+		return new Vector2D(size, size);
+	}
+
+	@Override
+	public int rows() {
+		return SUBARRAYS * SUBARRAY_ROWS;
+	}
+
+	@Override
+	public int cols() {
+		return SUBARRAY_COLS;
+	}
+	
+
 	public final static double DEFAULT_PIXEL_SIZE = 1.135 * Unit.mm;
 	public final static double DEFAULT_PLATE_SCALE = 5.1453 * Unit.arcsec / Unit.mm;
 	
-	public final static int COLS = 40;
-	public final static int ROWS = 32;
+	public final static int SUBARRAY_COLS = 40;
+	public final static int SUBARRAY_ROWS = 32;
 	public final static int SUBARRAYS = 4;
-	
+
 }

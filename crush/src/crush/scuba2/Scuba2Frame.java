@@ -41,7 +41,7 @@ public class Scuba2Frame extends HorizontalFrame {
 		if(data == null) setSize(scuba2Scan.subarrays * Scuba2Subarray.PIXELS);
 		
 		for(int bol=Scuba2Subarray.PIXELS; --bol >= 0; ) {
-			final int value = DAC[bol%Scuba2.COLS][bol/Scuba2.COLS];
+			final int value = DAC[bol%Scuba2.SUBARRAY_COLS][bol/Scuba2.SUBARRAY_COLS];
 			final int c = channelOffset + bol;
 			if(value != blankingValue && readoutLevel[c] != blankingValue) data[c] = scaling * (value - readoutLevel[c]);
 			else sampleFlag[c] |= Frame.SAMPLE_SKIP;
