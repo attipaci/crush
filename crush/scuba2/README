@@ -95,13 +95,11 @@ Start by installing <b>CRUSH</b>, as instructed by the main README.
 ============
 
    CRUSH will readily read SCUBA-2 data in FITS format, when these are 
-   available. More typically, though, your SCUBA-2 data comes in the 
-   proprietary NDF (.sdf) format of the Starlink suite, and so you will need to
-   convert your files to FITS for using with CRUSH. Fortunately, CRUSH can make
-   the conversion seamless,as long as the necessary Starlink tools are 
-   accessible. (Once you have FITS files, you no longer need Starlink, or the 
-   original .sdf files.)
-
+   available. More typically, though, your SCUBA-2 data comes in NDF (.sdf) 
+   format of the Starlink suite, and so you will need to convert your files to 
+   FITS for using with CRUSH. Fortunately, CRUSH can make the conversion 
+   seamless, as long as the necessary Starlink tools are accessible. (Once you 
+   have FITS files, you no longer need Starlink, or the  original .sdf files.)
 
    To set up the automatic NDF to FITS conversion, first make sure the Starlink
    suite is installled on your machine. (You only really need the 'ndf2fits' 
