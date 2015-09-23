@@ -49,8 +49,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.30-b2";
-	private static String revision = "devel.1";
+	private static String version = "2.30-1";
+	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -274,15 +274,26 @@ public class CRUSH extends Configurator {
 	
 	public void initPipelines() {
 		update();
-			
-		//System.err.println(" Will use " + maxThreads + " threads.");
-		parallelism = Math.max(1, maxThreads / scans.size());
-		parallelScans = Math.max(1, maxThreads / parallelism);
+
+		String parallelMode = "hybrid";
+		if(hasOption("parallel")) parallelMode = option("parallel").getValue().toLowerCase();
+		
+		if(parallelMode.equals("scans")) {
+			parallelScans = maxThreads;
+			parallelism = 1;
+		}
+		else if(parallelMode.equals("ops")) {
+			parallelism = maxThreads;
+			parallelScans = 1;
+		}
+		else {		
+			//System.err.println(" Will use " + maxThreads + " threads.");
+			parallelism = Math.max(1, maxThreads / scans.size());
+			parallelScans = Math.max(1, maxThreads / parallelism);
+		}
 		
 		System.err.println(" Will use " + parallelScans + " x " + parallelism + " grid of threads.");
-	
 		
-		// TODO could be before iterating... (validation?)
 		pipelines = new ArrayList<Pipeline>(parallelScans); 
 		for(int i=0; i<parallelScans; i++) {
 			Pipeline pipeline = new Pipeline(this, parallelism);
@@ -672,8 +683,8 @@ public class CRUSH extends Configurator {
 			URL versionURL = new URL("http://www.submm.caltech.edu/~sharc/crush/v2/release.version");
 			URLConnection connection = versionURL.openConnection();
 			try {
-				connection.setConnectTimeout(3000);
-				connection.setReadTimeout(2000);
+				connection.setConnectTimeout(TCP_CONNECTION_TIMEOUT);
+				connection.setReadTimeout(TCP_READ_TIMEOUT);
 				connection.connect();
 				
 				BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -927,5 +938,9 @@ public class CRUSH extends Configurator {
 		}
 	}
 	*/
+	
+	public static final int TCP_CONNECTION_TIMEOUT = 3000;
+	public static final int TCP_READ_TIMEOUT = 2000;
+	
 }
 

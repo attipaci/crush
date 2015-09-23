@@ -1,45 +1,18 @@
->> parallelize PhaseSet and PhaseSignal
+>> HAWC+ TCP/IP messages
+>> SOFIA log quantities
 >> test photometry!
 >> history to crushtools
 >> processing history to imagetool and Data2D and subclasses...
 
 
-
-
----> 2.3
-
-	- Grouped channel steps
-	  * drifts, weighting, gains, filtering
-	  * dynamically by cache size... ('cache' option)
-
-
->> MAKO chirp readout table to be more similar to ROACH calibration table...
-!>> crushtools: Fix single image noise estimation
-
->>> compound decorrelation
-        * inversion matrix data[] -> all non-fixed signal modes
-        * full resolution signals
-        * gain solution to include all non-fixed-gain responses too.
-        * smooth signals as desired
-        * compound remove
-        - activate on first decorrelation in pipeline, skip after...
-
-
-
-
->> 'mirror', 'zoom', 'skew'
->> MAKO doc to README
->> 'dir' for all instruments.
->> distortion for all arrays...
->> flag.inside=<mask> flag.outside=<mask>
->> LogFile to store columns...
->> check LABOCA reductions...
-
->> Update to nom.tam.fits 1.11
-
 >> "force." command to override date-, serial-, object-type conditional 
    settings
    E.g. -force.tau.225GHz=0.223 
+
+>> Upstream photometry architecture, common for all instruments.
+     - PhaseSet > PhaseGroup > PhaseData
+     - PhaseGroup.getValue(Channel c)
+     - Weighting/Despiking move to PhaseSet
 
 >> Surgical blacklisting...
    blacklist specific values: E.g. 
@@ -48,39 +21,6 @@
 	whitelist=estimator:*
    or	
 	whitelist=estimator:median	
-
->> update html copyright in headers...
-
->> inverse colors (e.g. for write.png).
-
->> Integration ops -> Integration.Task 
-     - Migrate operations (crush.task)
-     - Parallel / massively parallel
-     - plugin architecture
-
-
->> deprecate {$HOME} syntax -- in a while...
-
->> write.png.spline
-
->> changed how source models access instrument settings and coadd...
-   check that it works for all instruments and data types!!!
-
->> crop option?
-
->> why addDirect does not scale by relative conversion factor...
-
-
-
->> Add OpenCL FFTs?
-
->> Make SyntheticRCP generic, with nominal positions?
-
->> Reorganize data reading? e.g.
-	GismoFits -- handles FITS, HDUs, columns etc.
-		& checks rows if valid before passing to GismoFrame to parse
-	GismoFrame -- parses FITS row with the help of GismoFits+Integration?
-	GismoIntegration -- just iterates through frames for read...
 
 >> Switch to standard FITS long keys (after updating FITS libs)
 	-- Retain the ability to read crush-style long keys through Util...
@@ -92,6 +32,8 @@
 	--> To message client (if connected)
 	    (client [e.g. graphical] can launch crush, and connect to its
 	    message server)
+	--> timestamps (sorting Comparable)
+	--> GUI mode?
 
 >> track progress
 	? through message server
@@ -102,40 +44,8 @@
 	--> to display
 	--> summary information
 
->> SHARC-2 rows.nogains...
->> sourcecounts bug hunt?
-
->> polka levelling in faithful rounds???
->> check all reduction modes, normal, beammap, skydip, photo, polar
->> polarization calibration
->> comissioning: large-enough scan pattern for extended pol.
->> analyzer and waveplate objects?
-
->> validate(scans) to automatically compare source types.
-	-- remove specific source type comparisons?...
-
->> polarization in horizontal?...
-
->> Autodetect APEX planets?
 
 >> 'waveplate.accuracy' --> add to angles error...
-
->> MovingFrame reductions...
-	--> Force equatorial for celestial systems
-
->> 'source.polar.smooth'...
-
->> tp waveform remove with spline...
-
->> polka write waveforms
-
->> polka log quantities
-	hwp. tsdelay, freq, jitter
-	pol (H/V/-) 
-
->> Waveplate object (regulate, despike, meanTimeStampDelay...
-
->> configurator root access for substitutions
 
 >> formatter access to configuration
 	{%key} --> configuration key
@@ -148,237 +58,5 @@
 
 >> catalog.format
 
->> Polarimetry --> N, QH, UH, QV, UV
-
->> Photometry output file (ASCII vs. FITS)
-
->> Messaging classes
-	--> Messages by owner (owner, sender, message)
-	--> console.errors .warnings .info .details .comments
-	--> timestamps (sorting Comparable)
-	--> GUI mode?
-
->> Reanalyze chopped reductions...
-
->> Mode.getGains/setGains --> channel.temp?
->> Instrument.getSourceGains --> channel.temp?
-
->> SCUBA-2 module to version 4 (change.log, web-page!)
-
-
->> Integration.Fork extends Parallel...
-	Fork.Channels
-	Fork.Frames
-	Fork.Blocks?
-	Fork.ChannelGroups?
-
->> Pipeline to convert to Parallel...
-
-X> Synchronized access to Data2D, GridData...
-	Could slow things down unnecessarily. It's better to keep it 
-	non-thread safe, and be careful about access...
-
->> Copy over the old header keys...
-
->> Try SourceModel<CoordinateType>, SourceMap<CT>, ScalarMap<CT> ...
-   Need to separate generic from astronomical...
-	Frame<CoordinateType> --> AstroFrame (SphericalCoordinates)
-	Scan<CoordinateType...> --> AstroScan (...)
-	Integration<CoordinateType...> --> AstroIntegration (...)
-	Instrument --> TelescopeInstrument
-
->> Instrument.getCoordinateInstance();
-	
->> standard fits keys (Data2D, or FitsImage wrapper?)
-
-X> Filter & MultiFilter to use FFT.Float for faster transform
-   !> It turns out that the lookup up the factors is slower than calculating
-       them...
-
->> 'whiten.multires'?
-
->> drifts, signal to remove with cubic spline
-   drifts to store signals...
- 	* Signals can have arbitrary resolution (not limited to powers of 2)
-	* Maybe drifts too, but then adjust whitening windowsize
-	  and range to connect (with overlap...)
-	* Implications on parameter accounting?
-	* Signals always full length? -- smooth to desired res?
-	  (smooth to account parameters?)
-
->> 'filter.motion'
-   * check for OTF/box scans...
-   * test on extended emission
-     (adjust [extended] configs)
-
->> whitening/mf interaction...
-
-
-
->> Why do aperture fluxes have smaller error (e.g. in pointing) than peak
-fluxes?
-
->> Smoothing in deep does not preserve point source fluxes...
-	-- is this corrected in 2.05-1?
-
-	-- Aparapi integration for GPU computing? 
-		* Need ATI Stream SDK
-		* only 1D primitive arrays up to float[]
-		* no object access
-		* no recursion
-		* Needs an ATI graphics card...
-		! but should work otherwise on fallback mode...
-
-
-For 2.20:
-
-	-- Switch to Java 1.6 (change package deps)
-
-	-- update FITS libs	
-
-	-- Faster scan reading (SHARC-2, APEX, SCUBA-2, GISMO)
-	   (try parallel once again)...
-
-	-- Native show tool (+ others)
-	   (crush icon in show...)
-
-	-- Scan.getPointingString() to work with getPointingData() table...
-           (for better consistency)
-
-	-- Update ConfidenceCalculator...
-
-	-- GaussianSource --> SourceProfile
-	   FilteredGaussianSource
-		FilteredGaussianSource(GaussianSource)
-			[true peak to observed peak]
-		GaussianSource(FilteredGaussianSource)
-			[observed peak to true peak]
-
-
-	-- SourceCatalog --> Region, SourceProfile
-		insert(AstroImage)
-		remove(AstroImage)
-	   (detect to always correct prior sources with profile, in bounds)
-	   (detect finds filteredGaussian sources, but writes Gaussian ones)
-
-	-- getBeam() / clean() to work with source profiles
-
-
-General:
-
-	-- tau.dat and calibration.dat by year...
-
-	-- Scan-synchronous filtering...
-	   (get X and Y spectra) filter some sigma above rms
-	   'filter.motion', 'filter.motion.significance'
-	   keep track of dependents...	 
-
-	-- Hipass through fast-smooth instead of FFT
-
-	-- De-blend detection fluxes...
-
-	-- Use ExecutorService in Parallel to thread tasks, with fixed thread
-	count...
-
-	-- Load leap seconds from file (option?). 
-
-	-- Autoupdate leap seconds from web...
-
-	-- swap option (swap scans to disk as a way to reduce very large
-	   data sets with limited resources -- also an important step towards
-	   a supercomputer model with no downtime).
-	
-	-- drifts via window function -- interpolated...
-
-	-- Quotes in format specifications
-
-	-- Messages (InfoMessage, ErrorMessage, WarningMessage, StatusMessage
-	   DebugMessage, Detail).
-
-	-- Redo FITS tables read row-by-row using a modelRow...
-	   (should be faster, but requires Java 6...)
-
-!!	-- Better gain renormalization...
-		-- either propagate to dependent modes
-		-- or just renormalize for writing (cleaner!)
- 
-	-- Updater (for tau.dat and calibration.dat files + pixeldata.cfg)
-	        update.auto (check once daily)
-        	'<instrument>/lastupdate' (times and versions)
-
-	-- 'correlated.*.uniform' to set uniform gains?
-   	   (only at the beginning or set every time?)
-	-- Dynamic download/update for instrument data...
-		versioning of files to allow append
-		(in sepatate .version files)
-		'update' or 'update.auto'
-		What about permissions?
-			create local config (with directories as needed)
-			place config data there, with correct references...
-	-- main image header edits by instrument...
-	-- Scan horizontal coordinates only for GroundBased 
-	   (getHorizontal(), setHorizontal(coords))
-	-- Generic FFT filtering with response
-		getSpectrum
-		filter(spectrum, response)
-		filter(response)
-	-- highpass filtering to hp signals too...
-
-	-- Generic FITS image reading:
-	    OK non-square pixels
-	    * multi-dimensional images (plane=n1[,n2...])
-	      (or 0,[0...] as default)
-	    OK transfer matrices (if no CDELT keys)
-	    * Automatic detection of VARIANCE, NOISE, RMS images
-	    * Automatic units...
-	    .. Extra projection keys (poles etc.)
-2.03+	-- Better map units (baseUnit, isBeamNormalized?)
-	-- source.whiten?
-	-- check double filtering
-	-- 'aperture' for aperture conversion/scaling
-	-- channel.dataIndex --> channel.getID()?
-	-- private Scan.serialNo (use getID())
-	-- faint.cfg's [extended] reenable some forgotten modalities.
-	-- re-check accel-mag (before array) on instruments (sharc2/apex/gismo)
-	   should do something about whitening also??
-	-- Shadow scans
-		* Scan.shadow, CRUSH.shadowSource?
-		* call shadow operations on all signal estimation/removal.
-		* console output on shadows?
-		* write shadow scans
-		* options:
-			shadow
-			shadow.sources	(default catalog 1Jy, point)
-	-- Scan.parallelization
-	   -- load management...
-		size=frames*channels
-		Navailable = Ncp * remainingSize / totalSize 	
-		Npossible = remainingsize / size
-		parallel = round|floor ? (Navailable / Npossible)
-	-- Annuli, Polygon, and Point regions
-	-- More debug (CRUSH.debug) 
-		--> give traces for all exceptions
-		--> Remove ? from NaN checks?
-	-- Merge util with xcrush and update to it...
-	-- Common TextFileParser (and TextTableParser?)...
-	-- RMI (client/server) mode...
-		-- InfoMessage, WarningMessage, ErrorMessage (with stubs)
-		-- ScanSet (for fixed threads)
-		-- Node/Job Manager
-		-- node.readScan(), or node.addScan()
-		-- Service discovery via UDP
-		-- node.merge(SourceModel)
-	-- parallelization
-		-- drifts
-		-- decorrelate
-		-- gains
-		-- weighting (all)
-		-- despike
-		-- filter
-		-- reading/validation
-	-- Orientable corrections (e.g. single scan rows...)
-		-- Multimode analysis
-		   (choose the highest mode with a certain power
-		   fraction of the zero mode)
-		-- mean rotation span from weighted center
-
+>> Shadow scans
+		

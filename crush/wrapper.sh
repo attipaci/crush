@@ -3,7 +3,7 @@
 # ===========================================================================
 # Description: Java configuration wrapper script for CRUSH tools.
 # Author: Attila Kovacs <attila@submm.caltech.edu>
-# Updated: 15 April 2015
+# Updated: 15 September 2015
 # ===========================================================================  
 
 # Attempt to auto configure CRUSH. This should provide optimal settings on
@@ -11,7 +11,9 @@
 # fail-safe defaults. Users can override settings by uncommenting or editing 
 # lines further below, or preferably by adding their own persistent settings 
 # in under /etc/crush2/startup/ or ~/.crush2/startup/ (e.g. in java.conf).
-if [ -L $NAME ] ; then CRUSH=`readlink -f $0 | dirname` ; else CRUSH=`dirname $0` ; fi
+if [ -L $0 ] ; then CRUSH=$(dirname $(readlink -f $0)) ; 
+else CRUSH=$(dirname $0) ; fi
+
 source "$CRUSH/autoconf.sh"
 
 
@@ -101,10 +103,6 @@ if [[ $DEBUG == "TRUE" ]] ; then
   echo "  USEMB=$USEMB"
   echo "  EXTRAOPTS=$EXTRAOPTS"
   echo
-fi
-
-if [ -z ${CRUSH+x} ] ; then 
-  if [ -L $NAME ] ; then CRUSH=`readlink -f $0 | dirname` ; else CRUSH=`dirname $0` ; fi
 fi
 
 JAVAOPTS="-d$DATAMODEL -Xmx${USEMB}M $EXTRAOPTS"

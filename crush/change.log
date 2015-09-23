@@ -1,6 +1,5 @@
 
-
-2.30-b1 (8 September 2015)
+2.30-1 (22 September 2015)
 
 
 	Overview
@@ -17,6 +16,9 @@
 	fixed, and many improvements made. See the full list of changes below.
 	=====================================================================
 
+	[BUG] {RPM} {.deb} 'wrapper.sh' did not work as expected if CRUSH was
+	invoked via a symlink (e.g. /usr/bin/crush), as was the case with the
+	packaged installations.
 
 	[BUG] {SourceMap} The use of unfiltered vs filtered gains for mapping
 	did not depend on the mask as intented. The algorithm used a stale map
@@ -33,6 +35,17 @@
 	[BUG] Gain renormalization (re-enabled in the last release) was flawed
 	and could cause mapping artefacts. Now following a more cautious
 	approach...
+
+	[NEW] {post-b1} New option 'parallel' to select the parallelization
+	mode. The acceptable values are:
+
+	  scans   -- Reduce each scan in a separate thread.
+	  ops     -- Each scan is reduced by parallel threads, one scan a time.
+          hybrid  -- Reduce as many scans in parallel as possible, each with
+                     an optimal number of parallel threads.
+
+        The default value is 'hybrid', which is used if 'parallel' is not set
+	or if its value is not one of the accepted values shown above.
 
 	[NEW] {post-b1} Hybrid parallel architecture that gives the best of
 	both worlds, optimally fast single-scan reductions, and as fast as
@@ -249,6 +262,9 @@
 	reducing the need to allocate these again and again on-the-fly.
 
 	[CODE] All intensive validation tasks parallelized.
+
+	[CONFOG] {LABOCA} Skydip opacities and calibration scalings updated
+	up to and including 25 July 2015.
 
 
 
