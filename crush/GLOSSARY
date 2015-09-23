@@ -1928,6 +1928,22 @@
 			with an error if the output path does not exist.
 			@See: 'outpath'
 
+:: parallel=<mode>	@Since:2.30
+			@Advanced
+			Set the parallel processing mode. The argument is one
+			of:
+
+			   scans    process scans in parallel
+			   ops	    process each scan with parallel threads
+			   hybrid   process as many scans in parallel as
+			            possible, each with an optimal number of
+				    threads.
+
+			The default mode is 'hybrid'. The 'scans' is what 
+			parallelization used to be before 2.30.
+			@See: 'threads', 'idle'
+
+
 :: pcenter=row,col	@Instrument: SHARC-2, GISMO, MAKO
 			@Advanced
 			Defines the pointing center used, in terms of the

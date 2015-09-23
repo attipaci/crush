@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -209,11 +209,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	}
 	
 	public double getMaiTau(String id) throws IOException {
-		// Return immediately if ID does not match 225GHz or 350um, which are the only values in
-		// the Mai-Tau lookup at present
-		final int timeout = 3000;
-		
-		
+			
 		if(!id.equalsIgnoreCase("225GHz") && !id.equalsIgnoreCase("350um")) 
 			throw new IllegalArgumentException("No MaiTau lookup for '" + id + "'.");
 		
@@ -221,12 +217,12 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			throw new IllegalArgumentException(" WARNING! MaiTau server not set. Use 'maitau.server' configuration key.");
 		
 		Socket tauServer = new Socket();
-		tauServer.setSoTimeout(timeout);
+		tauServer.setSoTimeout(MAITAU_TIMEOUT);
 		tauServer.setTcpNoDelay(true);
 		tauServer.setReuseAddress(true);
 		//tauServer.setPerformancePreferences(0, 1, 2); // connection time, latency, throughput
 		tauServer.setTrafficClass(0x10); // low latency
-		tauServer.connect(new InetSocketAddress(option("maitau.server").getValue(), 63225), timeout);
+		tauServer.connect(new InetSocketAddress(option("maitau.server").getValue(), 63225), MAITAU_CONNECTION_TIMEOUT);
 		
 		
 		PrintWriter out = new PrintWriter(tauServer.getOutputStream(), true);
@@ -281,5 +277,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	
 	public final float antennaTick = (float) (0.01 * Unit.s);
 	public final float tenthArcsec = (float) (0.1 * Unit.arcsec);
+	
+	public static int MAITAU_CONNECTION_TIMEOUT = 3000;
+	public static int MAITAU_TIMEOUT = 2000;
 
 }
