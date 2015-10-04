@@ -1,3 +1,19 @@
+2.30-2 (5 October 2015)
+
+
+	[BUG] {SCUBA-2} Tracking coordinates not correctly processed from FITS,
+	which led to some arbitrary absolute astrometry. Now fixed, and 
+	supporting 'AZEL', 'APP', 'J2000', 'B1950', and 'GAL'.
+
+	[FIX] Merging subscans gap filling was off by 1 frame.
+
+	[FIX] {HAWC+} Using the new Vertical Position Angle column in the new
+	simlations. 
+
+	[FIX] {HAWC+} MOONANGL keyword in scan HDU could be NaN, which was not
+	SOFIA standard. Fixed.
+
+
 
 2.30-1 (22 September 2015)
 

@@ -200,12 +200,18 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		String sequenceType = header.getStringValue("SEQ_TYPE").toLowerCase();
 		if(sequenceType.equals("fastflat")) throw new FastFlatSubscanException();
 		if(sequenceType.equals("noise")) throw new NoiseSubscanException();
-		
+				
 		totalIntegrationTime = header.getDoubleValue("INT_TIME") * Unit.s;
 		rawFrames = header.getIntValue("NAXIS3"); 
+	
+		// Get the tracking coordinates for the scan, if not already set...
+		Scuba2Scan scubaScan = (Scuba2Scan) scan;
+		if(scubaScan.trackingClass == null) scubaScan.parseCoordinateInfo(header);
 		
 		System.err.println("   Subscan " + getID() + ": " + Util.f2.format(totalIntegrationTime / Unit.s) + " seconds with " + rawFrames + " frames --> @ "
 				+ Util.f2.format(rawFrames / totalIntegrationTime) + " Hz.");
+		
+		
 		
 		if(hasOption("subscan.minlength")) if(totalIntegrationTime < option("subscan.minlength").getDouble() * Unit.s)
 			throw new IllegalStateException("    Subscan " + getID() + " is less than " + option("subscan.minlength").getDouble() + "s long. Skipping.");

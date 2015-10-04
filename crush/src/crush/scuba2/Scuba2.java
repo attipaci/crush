@@ -328,8 +328,8 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	public String getDataLocationHelp() {
 		return super.getDataLocationHelp() +
 				"     -date=         YYYY-MM-DD when the data was collected.\n" +
-				"     -ndf2fits=     The path to the ndf2fits executable. Required for\n" +
-				"                    reading native SDF data.\n";
+				"     -ndf2fits=     The path to the ndf2fits executable. Required for reading\n" +
+				"                    native NDF (.sdf) files.\n";
 	}
 
 		

@@ -188,7 +188,7 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		if(!Double.isNaN(zenithAngle.end)) cursor.add(new HeaderCard("ZA_END", zenithAngle.end / Unit.deg, "(deg) Zenith angle at end."));
 		
 		if(!Double.isNaN(sunAngle)) cursor.add(new HeaderCard("SUNANGL", sunAngle / Unit.deg, "(deg) Angle btw tel. pointing and Sun."));
-		if(!Double.isNaN(zenithAngle.end)) cursor.add(new HeaderCard("MOONANGL", moonAngle / Unit.deg, "(deg) Angle btw tel. pointing and Moon ."));
+		if(!Double.isNaN(moonAngle)) cursor.add(new HeaderCard("MOONANGL", moonAngle / Unit.deg, "(deg) Angle btw tel. pointing and Moon ."));
 		
 		if(userCoordinateSystem != null) cursor.add(new HeaderCard("USRCRDSY", userCoordinateSystem, "User coordinate system name."));
 		if(userReferenceSystem != null) cursor.add(new HeaderCard("USRREFCR", userReferenceSystem, "User reference system name."));

@@ -110,7 +110,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		private int startIndex;
 		private long[] R, T, SN;
 		private double[] TS; 
-		private float[] RA, DEC, AZ, EL, PA, VPA, LON, LAT, LST, chop, PWV, HWP;
+		private float[] RA, DEC, AZ, EL, VPA, LON, LAT, LST, chop, PWV, HWP;
 		//private float[] dT;
 		private boolean isSimulated;
 		//private int channels;
@@ -172,7 +172,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			LST = (float[]) table.getColumn(hdu.findColumn("LST"));
 				
 			// The parallactic angle and the SOFIA Vertical Position Angle
-			PA = (float[]) table.getColumn(hdu.findColumn("Parallactic Angle"));
+			//PA = (float[]) table.getColumn(hdu.findColumn("Parallactic Angle"));
 			VPA = (float[]) table.getColumn(hdu.findColumn("Vertical Position Angle"));
 				
 			LON = (float[]) table.getColumn(hdu.findColumn("Longitude"));
@@ -238,7 +238,12 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					//frame.horizontal = frame.equatorial.toHorizontal(frame.site, frame.LST);
 					
 					
-					if(!isSimulated) {
+					if(isSimulated) {
+						// The simulation writes a position angle, not parallactic angle...
+						frame.VPA = VPA[i] * (float) Unit.deg;
+						frame.setParallacticAngle(-(VPA[i] + EL[i]) * Unit.deg);
+					}
+					else {
 						frame.VPA = VPA[i] * (float) Unit.deg;
 						// TODO The effective frame rotation to horizontal is VPA - PA... (check sign again...)
 						// H -> E rotate by VPA (or -VPA?)
@@ -248,12 +253,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 						frame.calcParallacticAngle();
 						frame.setRotation(frame.VPA - frame.getParallacticAngle()); 
 					}
-					else {
-						// The simulation writes a position angle, not parallactic angle...
-						frame.setParallacticAngle(-(PA[i] + EL[i]) * Unit.deg);
-						frame.VPA = (float) (frame.getParallacticAngle() + frame.horizontal.EL());
-					}
-					
+
+
 					// Calculate the scanning offsets...
 					frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(scan.equatorial);
 					frame.equatorialNativeToHorizontal(frame.horizontalOffset);

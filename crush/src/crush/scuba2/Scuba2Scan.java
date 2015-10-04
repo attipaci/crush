@@ -31,9 +31,12 @@ import java.util.*;
 
 import kovacs.astro.AstroSystem;
 import kovacs.astro.AstroTime;
+import kovacs.astro.CoordinateEpoch;
 import kovacs.astro.EquatorialCoordinates;
+import kovacs.astro.GalacticCoordinates;
 import kovacs.astro.GeodeticCoordinates;
 import kovacs.astro.HorizontalCoordinates;
+import kovacs.astro.JulianEpoch;
 import kovacs.astro.Weather;
 import kovacs.math.SphericalCoordinates;
 import kovacs.util.*;
@@ -314,15 +317,10 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		blankingValue = header.getIntValue("BLANK");
 		
 		System.err.println(" [" + getSourceName() + "] observed on " + date);
-		String trackingSystem = header.getStringValue("TRACKSYS");
 		
 		obsType = header.getStringValue("OBS_TYPE");	
 		if(obsType.equalsIgnoreCase("focus")) throw new UnsupportedScanException("Focus reduction not (yet) implemented.");
 		
-		if(trackingSystem == null) trackingClass = null;
-		else if(trackingSystem.equals("AZEL")) trackingClass = HorizontalCoordinates.class;
-		else trackingClass = EquatorialCoordinates.class;
-
 		// Weather
 		if(hasOption("tau.183ghz")) tau183GHz = option("tau.183ghz").getDouble();
 		else {
@@ -349,6 +347,49 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		scanPattern = header.getStringValue("SCAN_PAT");
 		
 		isTracking = true;		
+	}
+	
+	public void parseCoordinateInfo(Header header) {
+		String trackingSystem = header.getStringValue("TRACKSYS");
+		
+		final double lon = header.getDoubleValue("BASEC1", Double.NaN) * Unit.deg;
+		final double lat = header.getDoubleValue("BASEC2", Double.NaN) * Unit.deg;
+		
+		if(trackingSystem == null) trackingClass = null;
+		else if(trackingSystem.equals("AZEL")) {
+			trackingClass = HorizontalCoordinates.class;
+			horizontal = new HorizontalCoordinates(lon, lat);
+			System.err.println(" Horizontal: " + horizontal.toString(1));
+		}
+		else if(trackingSystem.equals("APP")) {
+			trackingClass = EquatorialCoordinates.class;
+			apparent = new EquatorialCoordinates(lon, lat, JulianEpoch.forMJD(getMJD()));
+			System.err.println(" Apparent: " + apparent.toString(1));
+		}
+		else if(trackingSystem.equals("J2000")) {
+			trackingClass = EquatorialCoordinates.class;
+			equatorial = new EquatorialCoordinates(lon, lat, CoordinateEpoch.J2000);
+			System.err.println(" Equatorial: " + equatorial.toString(1));
+		}
+		else if(trackingSystem.equals("B1950")) {
+			trackingClass = EquatorialCoordinates.class;
+			equatorial = new EquatorialCoordinates(lon, lat, CoordinateEpoch.B1950);
+			System.err.println(" Equatorial: " + equatorial.toString(1));
+		}
+		else if(trackingSystem.equals("GAL")) {
+			trackingClass = GalacticCoordinates.class;
+			GalacticCoordinates galactic = new GalacticCoordinates(lon, lat);
+			equatorial = galactic.toEquatorial();
+			System.err.println(" Galactic: " + galactic.toString(1));
+			System.err.println(" Equatorial: " + equatorial.toString(1));
+		}
+		else {
+			trackingClass = null;
+			System.err.println("WARNING! Unsupported tracking system: " + trackingSystem);
+		}
+		
+		// GAPPT ?
+		
 	}
 	
 	@Override
