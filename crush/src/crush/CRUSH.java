@@ -49,7 +49,7 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 	
-	private static String version = "2.30-1";
+	private static String version = "2.30-2";
 	private static String revision = "";
 	public static String workPath = ".";
 	public static String home = ".";
@@ -606,9 +606,9 @@ public class CRUSH extends Configurator {
 	public static void usage() {
 		String info = "  Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
 			"\n" +
-			"    <instrument>     'sharc', 'sharc2', 'laboca', 'saboca', 'aszca', 'polka'\n" +
-			"                     'p-artemis', 'gismo', 'mako', 'mako2', 'hawc+',\n" + 
-			"                     'mustang2', or 'scuba2'.\n" +
+			"    <instrument>     Select from: 'sharc', 'sharc2', 'laboca', 'saboca',\n" +
+			"                     'aszca', 'polka', 'p-artemis', 'gismo', 'mako', 'mako2',\n" + 
+			"                     'hawc+', 'scuba2', or 'mustang2'.\n" +
 			"    [options]        Various configuration options. See README for details.\n" +
 			"                     Global settings must precede scans on the argument list.\n" +
 			"                     Each scan will use all options listed before it.\n" +
@@ -625,6 +625,7 @@ public class CRUSH extends Configurator {
 
 	public static void help(Instrument<?> instrument) {
 		String info = 
+			"\n" +
 			" Some commonly used options. For full and detailed description of all options.\n" +
 			" please consult the GLOSSARY.\n\n" +
 			"   Location of input files:\n" +

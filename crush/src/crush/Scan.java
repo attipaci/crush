@@ -317,7 +317,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			int from = 0;
 			for( ; from < nt; from++) if(integration.get(from) != null) break;			
 			
-			int gap = (int) Math.round((integration.get(from).MJD - lastMJD) * Unit.day / instrument.samplingInterval);
+			int gap = (int) Math.round((integration.get(from).MJD - lastMJD) * Unit.day / instrument.samplingInterval) - 1;
 			if(gap > 0) {
 				if(gap < maxGap) {
 					System.err.println("   > Padding with " + gap + " frames before integration " + integration.getID());
