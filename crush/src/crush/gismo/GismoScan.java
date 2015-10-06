@@ -398,11 +398,13 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		
 		if(basisSystem == EquatorialCoordinates.class) {
 			equatorial = new EquatorialCoordinates(lon, lat, epoch);	
-			calcHorizontal();	
+			calcHorizontal();
+			isTracking = true;
 		}
 		else if(basisSystem == HorizontalCoordinates.class) {
 			horizontal = new HorizontalCoordinates(lon, lat);
 			calcEquatorial();
+			isTracking = false;
 		}
 		else {
 			try { 
@@ -411,6 +413,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 				if(basisCoords instanceof Precessing) ((Precessing) basisCoords).setEpoch(epoch);
 				equatorial = basisCoords.toEquatorial();
 				calcHorizontal();
+				isTracking = true;
 			}
 			catch(Exception e) {
 				throw new IllegalStateException("Error instantiating " + basisSystem.getName() +

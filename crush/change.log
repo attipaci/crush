@@ -1,3 +1,19 @@
+2.30-3 (6 October 2015)
+
+
+	[FIX] {SCUBA-2} Yet another astrometry bug. LST units were wrong, 
+	causing problems when converting from native horizontal to equatorial
+	coordinates.
+
+	[FIX] {SCUBA-2} Coordinates of objects tracked in apparent coordinates 
+	(Solar System objects) was still wrong. Fixed.
+
+	[TWEAK] {SCUBA-2} Conversion from Horizontal to equatorial relative
+	to tracking position, when tracking, to eliminate astrometric 
+	imprecision.
+
+
+
 2.30-2 (5 October 2015)
 
 
