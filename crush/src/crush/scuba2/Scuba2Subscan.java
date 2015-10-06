@@ -229,9 +229,9 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 			
 		//final boolean isEquatorial = scuba2Scan.trackingClass == EquatorialCoordinates.class;
 			
-		final double[] MJD = (double[]) table[hdu.findColumn("TCS_TAI")];
+		final double[] MJDTAI = (double[]) table[hdu.findColumn("TCS_TAI")];
 		final double TAI2TT = AstroTime.TAI2TT / Unit.day;
-		final int samples = MJD.length;
+		final int samples = MJDTAI.length;
 			
 		if(samples < 2) {
 			System.err.println("   WARNING! Subscan " + getID() + " has no coordinate data. Dropping from set.");
@@ -244,7 +244,6 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		final double[] tAZ = (double[]) table[hdu.findColumn("TCS_AZ_BC1")];
 		final double[] tEL = (double[]) table[hdu.findColumn("TCS_AZ_BC2")];
 
-		
 		/*
 		final double[] RA = isEquatorial ? (double[]) table[hdu.findColumn("TCS_TR_AC1")] : null;
 		final double[] DEC = isEquatorial ? (double[]) table[hdu.findColumn("TCS_TR_AC2")] : null;
@@ -293,11 +292,11 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 				final Scuba2Frame frame = new Scuba2Frame(scuba2Scan);
 
 				//final double UT = (((double[]) row[iUT])[0] * Unit.sec) % Unit.day;
-				frame.MJD = MJD[i] + TAI2TT;
+				frame.MJD = MJDTAI[i] + TAI2TT;
 				time.setMJD(frame.MJD);
-				
-				frame.LST = time.getLMST(scan.site.longitude(), scuba2Scan.dUT1) * Unit.timeAngle;
-				
+						
+				frame.LST = time.getLMST(scan.site.longitude(), scuba2Scan.dUT1);
+					
 				frame.horizontal = new HorizontalCoordinates(AZ[i], EL[i]);
 				frame.horizontalOffset = new Vector2D((AZ[i] - tAZ[i]) * frame.horizontal.cosLat(), EL[i] - tEL[i]);		
 				

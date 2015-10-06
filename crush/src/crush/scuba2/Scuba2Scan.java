@@ -355,16 +355,25 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		final double lon = header.getDoubleValue("BASEC1", Double.NaN) * Unit.deg;
 		final double lat = header.getDoubleValue("BASEC2", Double.NaN) * Unit.deg;
 		
-		if(trackingSystem == null) trackingClass = null;
-		else if(trackingSystem.equals("AZEL")) {
+		if(trackingSystem == null) {
+			trackingClass = null;
+			return;
+		}
+		else isTracking = true;
+		
+		if(trackingSystem.equals("AZEL")) {
 			trackingClass = HorizontalCoordinates.class;
 			horizontal = new HorizontalCoordinates(lon, lat);
 			System.err.println(" Horizontal: " + horizontal.toString(1));
+			isTracking = false;
 		}
 		else if(trackingSystem.equals("APP")) {
 			trackingClass = EquatorialCoordinates.class;
 			apparent = new EquatorialCoordinates(lon, lat, JulianEpoch.forMJD(getMJD()));
+			equatorial = (EquatorialCoordinates) apparent.clone();
+			equatorial.precess(CoordinateEpoch.J2000);
 			System.err.println(" Apparent: " + apparent.toString(1));
+			System.err.println(" Equatorial: " + equatorial.toString(1));
 		}
 		else if(trackingSystem.equals("J2000")) {
 			trackingClass = EquatorialCoordinates.class;
