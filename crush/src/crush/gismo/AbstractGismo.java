@@ -232,7 +232,7 @@ public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implem
 		in.close();
 	}
 	
-	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 		
 		// Focus
@@ -252,7 +252,7 @@ public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implem
 	}
 	
 	
-	protected void parseOldScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseOldScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 			
 		// Focus

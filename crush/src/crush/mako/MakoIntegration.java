@@ -69,7 +69,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 	}
 		
 	
-	protected void read(BasicHDU[] HDU, int firstDataHDU) throws Exception {
+	protected void read(BasicHDU<?>[] HDU, int firstDataHDU) throws Exception {
 		
 		int nDataHDUs = HDU.length - firstDataHDU, records = 0;
 		
@@ -112,7 +112,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 		
 		private final MakoScan<?> makoscan = (MakoScan<?>) scan;
 		
-		public MakoReader(TableHDU hdu, int offset) throws FitsException {
+		public MakoReader(TableHDU<?> hdu, int offset) throws FitsException {
 			super(hdu);
 			this.offset = offset;			
 
@@ -233,7 +233,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 		
 		private final MakoScan<?> makoscan = (MakoScan<?>) scan;
 		
-		public MakoChirpReader(TableHDU hdu, int offset) throws FitsException {
+		public MakoChirpReader(TableHDU<?> hdu, int offset) throws FitsException {
 			super(hdu);
 			this.offset = offset;			
 

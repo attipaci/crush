@@ -124,8 +124,6 @@ public class Sharc extends CSOArray<SharcPixel> {
 		scan.instrument.validate(scan);
 		for(SharcIntegration integration : scan) integration.instrument = (Sharc) scan.instrument.copy();
 		
-		scan.validate();
-		
 		return scan;
 	}
 	

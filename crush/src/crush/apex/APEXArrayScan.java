@@ -102,10 +102,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 			throw new FileNotFoundException(message);		
 		}
 		
-		if(readFully) {
-			if(chopper == null) mergeIntegrations();
-			validate();
-		}
+		if(readFully) if(chopper == null) mergeIntegrations();
 	}
 	
 	public String getTelescopeName() { return "APEX"; }
@@ -216,10 +213,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 				
 				add(subscan);
 			}
-			catch(Exception e) {
-				System.err.println(" ERROR: " + e.getMessage());
-				e.printStackTrace();
-			}
+			catch(Exception e) { error(e); }
 		}
 	
 	}
@@ -237,7 +231,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		if(!file.exists()) throw new FileNotFoundException("Cannot find data file.");
 		
 		Fits fits = new Fits(file, fileName.endsWith(".gz") | fileName.endsWith(".Z"));	
-		BasicHDU[] hdu = fits.read();
+		BasicHDU<?>[] hdu = fits.read();
 		
 		// TODO Pick scan and instrument hdu's by name
 		int subscans = readScanInfo((BinaryTableHDU) hdu[1]);
@@ -265,13 +259,10 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 				
 				add(subscan);
 			}
-			catch(Exception e) {
-				System.err.println(" ERROR: " + e.getMessage());
-				e.printStackTrace();
-			}
+			catch(Exception e) { error(e); }
 		}
-		
-		try { fits.getStream().close(); }
+	
+		try { fits.close(); }
 		catch(IOException e) {}
 		
 	}
@@ -283,7 +274,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 		Fits fits = new Fits(new File(fileName), fileName.endsWith(".gz"));	
 		openFits.add(fits);
-		BasicHDU[] hdu = fits.read();
+		BasicHDU<?>[] hdu = fits.read();
 		
 		return (BinaryTableHDU) hdu[1];
 	}
@@ -380,8 +371,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 				calcHorizontal();
 			}
 			catch(Exception e) {
-				throw new IllegalStateException("Error instantiating " + basisSystem.getName() +
-						": " + e.getMessage());
+				throw new IllegalStateException("Cannot instantiate " + basisSystem.getName() + ": " + e.getMessage());
 			}
 		}
 		

@@ -104,9 +104,7 @@ public class SkyDip extends SourceModel {
 		if(C == null) {
 			C = new CorrelatedSignal(mode, integration);
 			try { C.update(false); }
-			catch(Exception e) { 
-				System.err.println("ERROR! Cannot decorrelate sky channels: " + e.getMessage());
-			}
+			catch(Exception e) { error("Cannot decorrelate sky channels: " + e.getMessage()); }
 			C = (CorrelatedSignal) integration.getSignal(mode);
 		}
 		
@@ -173,9 +171,7 @@ public class SkyDip extends SourceModel {
 			System.out.println("=================================================");
 			System.out.println();
 		}
-		else {
-			System.err.println("WARNING! Skydip fit did not converge...");
-		}
+		else warning("Skydip fit did not converge...");
 			
 		String fileName = hasOption("name") ? option("name").getValue() : getDefaultCoreName();
 		String coreName = CRUSH.workPath + File.separator + fileName;

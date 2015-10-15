@@ -86,7 +86,7 @@ public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<Sof
 	}
 
 	@Override
-	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Instrument Data ------>", false));
 		if(instrumentName != null) cursor.add(new HeaderCard("INSTRUME", instrumentName, "Name of SOFIA instrument."));
 		if(dataType != null) cursor.add(new HeaderCard("DATATYPE", dataType, "Data type."));

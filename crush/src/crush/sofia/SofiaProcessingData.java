@@ -32,6 +32,7 @@ public class SofiaProcessingData extends SofiaHeaderData {
 	String processLevel;
 	String headerStatus, softwareName, softwareFullVersion, productType, revision, quality; 
 	int nSpectra = -1;
+	int qualityLevel = defaultQuality;
 	
 	public SofiaProcessingData() {}
 	
@@ -50,10 +51,16 @@ public class SofiaProcessingData extends SofiaHeaderData {
 		revision = getStringValue(header, "FILEREV");
 		quality = getStringValue(header, "DATAQUAL");				// new in 3.0
 		nSpectra = header.getIntValue("N_SPEC", -1);				// new in 3.0
+		
+		qualityLevel = defaultQuality;
+		if(quality != null) for(int i=qualityNames.length; --i >= 0; ) if(quality.equalsIgnoreCase(qualityNames[i])) {
+			qualityLevel = i;
+			break;
+		}
 	}
 
 	@Override
-	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Processing Information ------>", false));
 		int level = 0;
 		if(processLevel.toUpperCase().startsWith("LEVEL_")) {
@@ -85,5 +92,6 @@ public class SofiaProcessingData extends SofiaHeaderData {
 		"Higher order product (e.g. composites)."
 	};
 	
-
+	public static String qualityNames[] = { "FAIL", "PROBLEM", "TEST", "USABLE", "NOMINAL" };
+	public static int defaultQuality = qualityNames.length - 1;
 }

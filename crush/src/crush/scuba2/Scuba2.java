@@ -222,7 +222,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 	
 	
 	
-	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException {
+	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException {
 		Header header = hdu.getHeader();
 		
 		String subarrayPrefix = hasOption("450um") ? "s4" : "s8"; 

@@ -81,7 +81,7 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Array<Ch
 		BinaryTableHDU hdu = (BinaryTableHDU) fits.getHDU(1);
 		readPar(hdu);
 		
-		fits.getStream().close();
+		fits.close();
 	}
 	
 	public void readPar(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {
@@ -178,15 +178,15 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Array<Ch
 			
 			// Throw out any subsequent skydips...
 			if(scan.getSourceName().equalsIgnoreCase("SKYDIP")) {
-				System.err.println("  WARNING! Scan " + scan.getID() + " is a skydip. Dropping from dataset.");
+				warning("Scan " + scan.getID() + " is a skydip. Dropping from dataset.");
 				scans.remove(i);
 			}
 			
 			boolean subscanChopped = subscan.getChopper() != null;
 			
 			if(subscanChopped != isChopped) {	
-				if(isChopped) System.err.println("  WARNING! Scan " + scan.getID() + " is not a chopped scan. Dropping from dataset.");
-				else System.err.println("  WARNING! Scan " + scan.getSerial() + " is a chopped scan. Dropping from dataset.");
+				if(isChopped) warning("Scan " + scan.getID() + " is not a chopped scan. Dropping from dataset.");
+				else warning("Scan " + scan.getSerial() + " is a chopped scan. Dropping from dataset.");
 				scans.remove(i);
 				continue;
 			}
@@ -194,7 +194,7 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Array<Ch
 			if(isChopped) {
 				if(!scan.isMovingObject) {
 					if(scan.equatorial.distanceTo(reference) > pointingTolerance) {
-						System.err.println("  WARNING! Scan " + scan.getID() + " observed at a different position. Dropping from dataset.");
+						warning("Scan " + scan.getID() + " observed at a different position. Dropping from dataset.");
 						System.err.println("           (You can use 'moving' to keep and reduce anyway.)");
 						scans.remove(i);
 					}

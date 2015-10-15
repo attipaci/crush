@@ -136,7 +136,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	}
 	
 	@Override
-	public void editHeader(Header header, Cursor cursor) throws HeaderCardException, FitsException, IOException {
+	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException, FitsException, IOException {
 		super.editHeader(header, cursor);
 		
 		cursor.add(new HeaderCard("SCANS", scans.size(), "The number of scans in this composite image."));

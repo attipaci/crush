@@ -26,6 +26,7 @@ package crush.sofia;
 import kovacs.util.Unit;
 import kovacs.util.Util;
 import nom.tam.fits.Header;
+import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
@@ -39,7 +40,7 @@ public abstract class SofiaHeaderData implements Cloneable {
 	
 	public abstract void parseHeader(Header header);
 	
-	public abstract void editHeader(Header header, Cursor cursor) throws HeaderCardException;
+	public abstract void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException;
 	
 	public double getHeaderDouble(double value) {
 		if(Double.isNaN(value)) return UNKNOWN_DOUBLE_VALUE;

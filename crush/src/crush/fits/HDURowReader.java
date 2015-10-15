@@ -25,6 +25,7 @@ package crush.fits;
 
 import java.io.IOException;
 
+import crush.CRUSH;
 import kovacs.util.Parallel;
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -53,7 +54,8 @@ public abstract class HDURowReader {
 	public void read(int threadCount) throws Exception {
 		if(!table.reset()) throw new FitsException("Cannot locate beginning of FITS binary table.");	// Go to the beginning
 		nextRow = 0;		
-		getReader().process(threadCount);
+		if(CRUSH.executor != null) getReader().process(threadCount, CRUSH.executor);
+		else getReader().process(threadCount);
 	}
 
 	private int nextRow = 0;

@@ -166,8 +166,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		
 		File file = new File(source + File.separator + spec + ".dat");
 		if(!file.exists()) {
-			System.err.print("   WARNING! No tau table found for " + date + "...");
-			System.err.print("            Using default tau.");
+			warning("No tau table found for " + date + "...");
+			System.err.print("          Using default tau.");
 			instrument.getOptions().remove("tau");
 			setTau();
 			return;
@@ -193,10 +193,10 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	
 	private void fallbackTau(String from, Exception e) throws Exception {
 		if(hasOption(from + ".fallback")) {
-			System.err.println("   WARNING! Tau lookup failed: " + e.getMessage());
+			warning("Tau lookup failed: " + e.getMessage());
 			String source = option(from + ".fallback").getValue().toLowerCase();
 			if(source.equals(from)) {
-				System.err.println("   WARNING! Deadlocked fallback option!");
+				warning("Deadlocked fallback tau option!");
 				throw e;
 			}	
 			System.err.println("   ... Falling back to '" + source + "'.");

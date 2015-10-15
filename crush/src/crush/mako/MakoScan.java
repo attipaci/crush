@@ -115,10 +115,10 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 		}
 			
 		
-		BasicHDU[] HDU = fits.read();
+		BasicHDU<?>[] HDU = fits.read();
 		
 		int i = isChirp ? 2 : 4; 
-		BasicHDU firstDataHDU = null;
+		BasicHDU<?> firstDataHDU = null;
 		while(!(firstDataHDU = HDU[i]).getHeader().getStringValue("EXTNAME").toUpperCase().startsWith("STREAM")) i++;
 		
 		parseScanPrimaryHDU(HDU[0]);
@@ -140,8 +140,6 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 		catch(IOException e) {}
 		
 		horizontal = null;
-		
-		validate();
 	}
 	
 	
@@ -179,14 +177,14 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 	}
 
 	protected void readScanInfo(Fits fits) throws IOException, HeaderCardException, FitsException {
-		BasicHDU mainHDU = fits.readHDU();
+		BasicHDU<?> mainHDU = fits.readHDU();
 		
 		parseScanPrimaryHDU(mainHDU);
 		instrument.parseScanPrimaryHDU(mainHDU);
 
 		fits.skipHDU(3);
 
-		BasicHDU nextHDU = fits.readHDU();
+		BasicHDU<?> nextHDU = fits.readHDU();
 		while(!nextHDU.getHeader().getStringValue("EXTNAME").startsWith("STREAM") ) nextHDU = fits.readHDU();
 		instrument.parseDataHeader(nextHDU.getHeader());
 	}
@@ -219,7 +217,7 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 		}
 	}
 		
-	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 		
 		// Load any options based on the FITS header...

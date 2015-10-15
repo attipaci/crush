@@ -23,19 +23,18 @@
 package crush.fits;
 
 import crush.CRUSH;
-import kovacs.util.ExtraMath;
 import kovacs.util.Parallel;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
 
 public abstract class HDUReader {	
-	protected TableHDU hdu;
-	protected ColumnTable table;
+	protected TableHDU<?> hdu;
+	protected ColumnTable<?> table;
 	
-	public HDUReader(TableHDU hdu) throws FitsException {
+	public HDUReader(TableHDU<?> hdu) throws FitsException {
 		this.hdu = hdu;
-		this.table = (ColumnTable) hdu.getData().getData();
+		this.table = (ColumnTable<?>) hdu.getData().getData();
 	}
 
 	public abstract Reader getReader();
@@ -44,9 +43,9 @@ public abstract class HDUReader {
 		read(CRUSH.maxThreads);
 	}
 	
-	
-	public void read(int threadCount) throws Exception {
-		getReader().process(threadCount);
+	private void read(int threadCount) throws Exception {
+		if(CRUSH.executor != null) getReader().process(threadCount, CRUSH.executor);
+		else getReader().process(threadCount);
 	}
 
 	
@@ -54,14 +53,7 @@ public abstract class HDUReader {
 		@Override
 		public void processIndexOf(int i, int threadCount) throws Exception {
 			final int frames = hdu.getNRows();
-			final int step = ExtraMath.roundupRatio(frames, threadCount);
-			
-			processRows(i*step, Math.min((i+1)*step, frames));
-		}
-		
-		public void processRows(int from, int to) throws Exception {
-			for(int i=from; i<to; i++) {
-				if(isInterrupted()) return;
+			for(; i<frames; i+=threadCount) {
 				processRow(i);
 				Thread.yield();
 			}

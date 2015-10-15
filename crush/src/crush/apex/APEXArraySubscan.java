@@ -64,8 +64,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 				if(hasOption("tau.window")) tauTable.timeWindow = option("tau.window").getDouble() * Unit.hour;
 				setTau(tauTable.getTau(getMJD()));
 			}
-			catch(ArrayIndexOutOfBoundsException ie) { System.err.println("     WARNING! " + e.getMessage()); }
-			catch(IOException io) { System.err.println("WARNING! Tau interpolator table could not be read."); }
+			catch(ArrayIndexOutOfBoundsException ie) { warning(e); }
+			catch(IOException io) { warning("Tau interpolator table could not be read."); }
 		}
 	}
 	
@@ -79,8 +79,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 				if(hasOption("scale.window")) calTable.timeWindow = option("scale.window").getDouble() * Unit.hour;
 				setScaling(calTable.getScaling(getMJD())); 
 			}
-			catch(ArrayIndexOutOfBoundsException e) { System.err.println("     WARNING! " + e.getMessage()); }
-			catch(IOException e) { System.err.println("WARNING! Calibration table could not be read."); }
+			catch(ArrayIndexOutOfBoundsException e) { warning(e); }
+			catch(IOException e) { warning("Calibration table could not be read."); }
 		}
 	}
 	
@@ -215,7 +215,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		private float[] data;
 		private int channels;
 		
-		public DataTable(TableHDU hdu) throws FitsException { 
+		public DataTable(TableHDU<?> hdu) throws FitsException { 
 			super(hdu); 
 			int iData = hdu.findColumn("DATA");
 			channels = table.getSizes()[iData];
@@ -249,6 +249,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		}	
 			
 		fits.write(new BufferedDataOutputStream(new FileOutputStream(toName)));
+		fits.close();
 	}
 	
 	
@@ -282,7 +283,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		private final APEXArrayScan<InstrumentType, ?> apexScan = (APEXArrayScan<InstrumentType, ?>) scan;
 		private final static double m900deg = -900.0 * Unit.deg;
 		
-		public DataParTable(TableHDU hdu) throws FitsException {
+		public DataParTable(TableHDU<?> hdu) throws FitsException {
 			super(hdu);
 
 			final Header header = hdu.getHeader();		
@@ -354,7 +355,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 					if(apexScan.basisSystem != HorizontalCoordinates.class && apexScan.basisSystem != EquatorialCoordinates.class) {
 						try { basisCoords = (CelestialCoordinates) apexScan.basisSystem.newInstance(); }
 						catch(Exception e) {
-							throw new IllegalStateException("Error instantiating " + apexScan.basisSystem.getName() +
+							throw new IllegalStateException("Cannot instantiate " + apexScan.basisSystem.getName() +
 									": " + e.getMessage());
 						}
 					}					

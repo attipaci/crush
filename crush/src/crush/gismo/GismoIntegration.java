@@ -500,8 +500,8 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	
 	private boolean checkSAEComplete() {
 		boolean isOK = true;
-		if(!hasOption("read.sae")) { isOK = false; System.err.println("WARNING! SAE values not parsed. Use 'read.sae' option."); }
-		if(!hasOption("noslim")) { isOK = false; System.err.println("WARNING! Use 'noslim' option to write complete SAE data."); }
+		if(!hasOption("read.sae")) { isOK = false; warning("SAE values not parsed. Use 'read.sae' option."); }
+		if(!hasOption("noslim")) { isOK = false; warning("Use 'noslim' option to write complete SAE data."); }
 		return isOK;
 	}
 	

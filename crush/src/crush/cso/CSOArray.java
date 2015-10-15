@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -104,7 +104,7 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Array
 	
 			if(Math.abs(rotatorAngle - rotatorZeroAngle) > 5.0 * Unit.deg) {
 				System.err.println(" *****************************************************************************");
-				System.err.println(" WARNING! " + getName().toUpperCase() + " is in non-standard orientation. Will assume that pointing");
+				warning(getName().toUpperCase() + " is in non-standard orientation. Will assume that pointing");
 				if(hasOption("rcenter")) {
 					System.err.println("          was performed in the horizontal orientation. To override this and to");
 					System.err.println("          assume pointing in this rotation, use '-forget=rcenter'.");
@@ -125,7 +125,7 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Array
 		return (mount == Mount.CASSEGRAIN ? rotatorAngle : 0.0) - rotatorZeroAngle;
 	}
 
-	public void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+	public void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 		
 		// Platform

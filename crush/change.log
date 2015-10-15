@@ -1,3 +1,24 @@
+>> 'drp', 'drp.host', 'drp.port', 'drp.timeout'
+
+
+	[FIX] CRUSH could breach the OS limit for maximum number of processes
+	if the number of scans times the number of threads (virtual CPU cores)
+	exceeded the OS limit. Fixed. 	
+
+	[TWEAK] {SOFIA} FITS requirements to conform to Rev. F.
+
+	[TWEAK] nom.tam.fits package updated to 1.13.1. FITS resource leaks
+	plugged.
+
+	[CODE] HDUReader to go through CRUSH's executor service when possible.
+
+	[CODE] scan validation separated from read.
+
+	[CODE] Common handling of messages (informational, warning, and errors)
+	introduced.
+
+	
+
 2.30-3 (6 October 2015)
 
 

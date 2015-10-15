@@ -64,12 +64,8 @@ public class SofiaDitheringData extends SofiaHeaderData {
 		spacing = header.getDoubleValue("DTHOFFS", Double.NaN) * Unit.arcsec;
 	}
 
-	public void updateRequiredKeys(Header header) throws HeaderCardException {
-		header.addValue("DTHINDEX", index, "Dither position index.");
-	}
-	
 	@Override
-	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Dithering Data ------>", false));
 		if(coordinateSystem != null) cursor.add(new HeaderCard("DTHCRSYS", coordinateSystem, "Dither coordinate system."));
 		if(offset != null) {

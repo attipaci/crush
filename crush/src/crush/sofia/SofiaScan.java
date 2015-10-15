@@ -156,7 +156,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		
 		Header sofiaHeader = new Header();
 		
-		Cursor cursor = sofiaHeader.iterator();
+		Cursor<String, HeaderCard> cursor = sofiaHeader.iterator();
 		while(cursor.hasNext()) cursor.next();
 		
 		if(fileDate != null) cursor.add(new HeaderCard("DATE", fileDate, "Scan file creation date."));
@@ -203,11 +203,11 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	}
 
 	
-	public ArrayList<String> getPreservedKeys() {
+	public ArrayList<String> getRequiredPrimaryHeaderKeys() {
 		ArrayList<String> keys = new ArrayList<String>(requiredKeys.length);
 		for(String key : requiredKeys) keys.add(key.toUpperCase());
 		
-		// Add any keys
+		// Add any additional keys specified by the 'fits.addkeys
 		if(hasOption("fits.addkeys")) for(String key : option("fits.addkeys").getList()) {
 			key = key.toUpperCase();
 			if(!keys.contains(key)) keys.add(key);			
@@ -215,11 +215,11 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		return keys;
 	}
 	
-	public void addRequiredKeysTo(Header header) throws HeaderCardException {
+	public void addRequiredPrimaryHeaderKeysTo(Header header) throws HeaderCardException {
 		Header h = new Header();
 		editScanHeader(h);
 		
-		for(String key : getPreservedKeys()) {
+		for(String key : getRequiredPrimaryHeaderKeys()) {
 			HeaderCard card = h.findCard(key);
 			if(card == null) continue;
 			header.addLine(card);
@@ -233,27 +233,27 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 			header.addLine(card);
 		}
 		
-		Cursor cursor = header.iterator();
+		Cursor<String, HeaderCard> cursor = header.iterator();
 		
 		// Add the observing mode keywords at the end...
 		while(cursor.hasNext()) cursor.next();
 		
 		// Add the observing mode keywords at the end...
-		if(chopper != null) chopper.editHeader(header, cursor);
-		if(nodding != null) nodding.editHeader(header, cursor);
-		if(dither != null) dither.editHeader(header, cursor);
-		if(mapping != null) mapping.editHeader(header, cursor);
-		if(scanning != null) scanning.editHeader(header, cursor);
+		//if(chopper != null) chopper.editHeader(header, cursor);
+		//if(nodding != null) nodding.editHeader(header, cursor);
+		//if(dither != null) dither.editHeader(header, cursor);
+		//if(mapping != null) mapping.editHeader(header, cursor);
+		//if(scanning != null) scanning.editHeader(header, cursor);
 	}
 	
-	public void addHistory(Cursor cursor) throws HeaderCardException {
+	public void addHistory(Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		for(int i=0; i<history.size(); i++) cursor.add(new HeaderCard("HISTORY", history.get(i), false));
 	}
 	
 	public void parseHistory(Header header) {
 		history.clear();
 		
-		Cursor cursor = header.iterator();
+		Cursor<String, HeaderCard> cursor = header.iterator();
 		
 		while(cursor.hasNext()) {
 			HeaderCard card = (HeaderCard) cursor.next();
@@ -321,8 +321,6 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		
 		instrument.samplingInterval = integration.instrument.samplingInterval;
 		instrument.integrationTime = integration.instrument.integrationTime;
-		
-		validate();
 	}
 	
 	@Override
@@ -364,7 +362,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 			return getSerial() < scan.getSerial() ? -1 : 1;
 		}
 		catch(ParseException e) {
-			System.err.println("WARNING! Cannot parse date: '" + date + "' or '" + ((SofiaScan<?, ?>) scan).date + "'.");
+			warning("Cannot parse date: '" + date + "' or '" + ((SofiaScan<?, ?>) scan).date + "'.");
 			return 0;
 		}	
 	}
@@ -413,12 +411,29 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 
 	
 	public final static String[] requiredKeys = { 
-			"DATASRC", "OBS_ID", "IMAGEID", "AOT_ID", "AOR_ID", "PLANID", "MISSN-ID", "DATE-OBS", 
-			"TRACERR", "TRACMODE", "CHOPPING", "NODDING", "DITHER", "MAPPING", "SCANNING",
-			"EXPTIME", "SPECTEL1", "SPECTEL2", "SLIT", "WAVECENT", "RESOLUN",
-			"DETECTOR", "DETSIZE", "PIXSCAL", "SUBARRNO", "SIBS_X", "SIBS_Y"
+			"DATASRC", "KWDICT", 
+			"DATAQUAL", 
+			"PLANID", "DEPLOY", "MISSN-ID", "FLIGHTLG", 
+			"ORIGIN", "OBSERVER", "OPERATOR", "FILENAME", 
+			"TELESCOP", "TELCONF",
+			"CHOPPING", "NODDING", "DITHER", "MAPPING", "SCANNING",
+			"DATATYPE", "INSTCFG", "INSTMODE", "MCCSMODE", "WAVECENT", "RESOLUN", 
+			"DETECTOR", "DETSIZE", "PIXSCAL", "SUBARRNO"
 	};
+			
+	//		These are added by CRUSH (not copied!)
+	//		"PROCSTAT", "HEADSTAT", "N_SPEC", "PIPELINE", "PIPEVERS", "PRODTYPE", "FILEREV", 		
+	
+	//		"CREATOR"
+	
+	//      This is an old list of what was understood to be required primary header keys...
+	//		"OBS_ID", "IMAGEID", "AOT_ID", "AOR_ID", "PLANID", "MISSN-ID", "DATE-OBS", 
+	//		"TRACERR", "TRACMODE", "CHOPPING", "NODDING", "DITHER", "MAPPING", "SCANNING",
+	//		"EXPTIME", "SPECTEL1", "SPECTEL2", "SLIT", "WAVECENT", "RESOLUN",
+	//		"DETECTOR", "DETSIZE", "PIXSCAL", "SUBARRNO", "SIBS_X", "SIBS_Y"
 
+	// N_SPEC, FILEREV (in changed post processing)
+	
 	// INSTRUME excluded from this list since it is added automatically...
 	
 }

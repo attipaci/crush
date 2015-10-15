@@ -129,7 +129,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		if(CRUSH.debug) System.err.println("### " + file.getFile().getName());
 		
 		Fits fits = new Fits(file.getFile());		
-		BasicHDU[] HDU = fits.read();
+		BasicHDU<?>[] HDU = fits.read();
 		
 		if(isFirstFile) {
 			parsePrimaryHeader(HDU[0].getHeader());
@@ -146,7 +146,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		readArrayData((ImageHDU) HDU[0], subarray.channelOffset, (float) subarray.scaling);
 		subarray.parseFlatcalHDU(getFlatcalHDU(HDU));
 		
-		fits.getStream().close();
+		fits.close();
 	}
 
 	private void setReadoutLevels(final int[][] DAC, final int channelOffset) {
@@ -172,7 +172,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		}.process();
 	}
 	
-	public BinaryTableHDU getJcmtHDU(BasicHDU[] HDU) {
+	public BinaryTableHDU getJcmtHDU(BasicHDU<?>[] HDU) {
 		for(int i=1; i<HDU.length; i++) {
 			String extName = HDU[i].getHeader().getStringValue("EXTNAME");
 			if(extName != null) if(extName.endsWith("JCMTSTATE")) return (BinaryTableHDU) HDU[i];
@@ -180,7 +180,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		return null;		
 	}
 
-	public BinaryTableHDU getFlatcalHDU(BasicHDU[] HDU) {
+	public BinaryTableHDU getFlatcalHDU(BasicHDU<?>[] HDU) {
 		for(int i=1; i<HDU.length; i++) {
 			String extName = HDU[i].getHeader().getStringValue("EXTNAME");
 			if(extName != null) if(extName.endsWith("FLATCAL.DATA_ARRAY")) return (BinaryTableHDU) HDU[i];
@@ -223,9 +223,8 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	public void readCoordinateData(BinaryTableHDU hdu) throws FitsException {
 		
 		// TODO chop phase and beam (L/R/M?)...	
-		final Scuba2Scan scuba2Scan = (Scuba2Scan) scan;
-			
-		Object[] table = (Object[]) ((ColumnTable) hdu.getData().getData()).getRow(0);
+		final Scuba2Scan scuba2Scan = (Scuba2Scan) scan;			
+		final Object[] table = (Object[]) ((ColumnTable<?>) hdu.getData().getData()).getRow(0);
 			
 		//final boolean isEquatorial = scuba2Scan.trackingClass == EquatorialCoordinates.class;
 			

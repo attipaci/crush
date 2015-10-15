@@ -59,7 +59,7 @@ public class SofiaMappingData extends SofiaHeaderData {
 	}
 
 	@Override
-	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Mapping Data ------>", false));
 		if(coordinateSystem != null) cursor.add(new HeaderCard("MAPCRSYS", coordinateSystem, "Mapping coordinate system."));
 		if(pattern != null) cursor.add(new HeaderCard("MAPPATT", pattern, "Mapping pattern."));

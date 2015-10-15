@@ -68,7 +68,7 @@ public class SofiaObservationData extends SofiaHeaderData {
 	}
 
 	@Override
-	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Observation Data ------>", false));
 		if(sourceName != null) cursor.add(new HeaderCard("OBJECT", sourceName, "Object catalog name."));
 		if(!Double.isNaN(startMJD)) cursor.add(new HeaderCard("MJD-OBS", startMJD, "MJD at the start of observation."));

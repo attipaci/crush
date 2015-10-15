@@ -106,7 +106,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		// Sort by subscan and then by subarray index
 		Collections.sort(files);
 		
-		BasicHDU mainHDU = files.get(0).getHDUs()[0];
+		BasicHDU<?> mainHDU = files.get(0).getHDUs()[0];
 		parseScanPrimaryHDU(mainHDU);
 		((Scuba2) instrument).addPixelsFor(hasSubarray);
 		instrument.parseScanPrimaryHDU(mainHDU);
@@ -143,8 +143,6 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		addSubscan(subscan);
 		
 		Collections.sort(this);
-		
-		if(!isEmpty()) validate();
 	}
 	
 	private void addSubscan(Scuba2Subscan subscan) throws FitsException {
@@ -157,8 +155,8 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		catch(FastFlatSubscanException e) { System.err.println("   Subscan " + subscan.getID() + " is a flatfield measurement. Skipping."); }
 		catch(NoiseSubscanException e) { System.err.println("   Subscan " + subscan.getID() + " is a noise measurement. Skipping."); }
 		catch(UnsupportedIntegrationException e) {  System.err.println("   Subscan " + subscan.getID() + " is not supported. Skipping."); }
-		catch(IllegalStateException e) { System.err.println(" WARNING! " + e.getMessage()); }
-		catch(IOException e) { System.err.println(" WARNING! FITS stream was not be closed."); }
+		catch(IllegalStateException e) { warning(e); }
+		catch(IOException e) { warning("FITS was not be closed."); }
 	}
 	
 	
@@ -175,6 +173,8 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		
 	@Override
 	public void validate() {
+		if(isEmpty()) return;	// TODO warning?
+		
 		calcSamplingRate();
 		System.err.println(" Typical sampling rate is " + Util.f2.format(1.0 / instrument.integrationTime) + " Hz.");
 	
@@ -241,7 +241,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 						catch(IllegalStateException e) { 
 							// there is a FITS alternative already...
 						}
-						catch(Exception e) { System.err.println("WARNING! " + e.getMessage()); }
+						catch(Exception e) { warning(e); }
 					}
 						
 					if(scanFiles.isEmpty()) 
@@ -270,7 +270,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			catch(IllegalStateException e2) {
 				// There is a FITS alternative already...
 			}
-			catch(Exception e2) { System.err.println("WARNING! " + e2.getMessage()); }
+			catch(Exception e2) { warning(e2); }
 		}
 
 		
@@ -279,7 +279,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	
 
 	
-	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException, UnsupportedScanException {
+	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException, UnsupportedScanException {
 		Header header = hdu.getHeader();
 		
 		// Load any options based on the FITS header...
@@ -312,7 +312,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			timeStamp.parseFitsDate(date); 
 			setMJD(timeStamp.getMJD());
 		}
-		catch(Exception e) { System.err.println("WARNING! could not parse DATE-OBS..."); }
+		catch(Exception e) { warning("Could not parse DATE-OBS..."); }
 		
 		blankingValue = header.getIntValue("BLANK");
 		
@@ -394,7 +394,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		}
 		else {
 			trackingClass = null;
-			System.err.println("WARNING! Unsupported tracking system: " + trackingSystem);
+			warning("Unsupported tracking system: " + trackingSystem);
 		}
 		
 		// GAPPT ?

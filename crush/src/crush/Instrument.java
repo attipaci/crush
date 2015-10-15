@@ -42,7 +42,7 @@ import nom.tam.util.*;
 
 
 public abstract class Instrument<ChannelType extends Channel> extends ChannelGroup<ChannelType> 
-implements TableFormatter.Entries {	
+implements TableFormatter.Entries, Messaging {	
 	/**
 	 * 
 	 */
@@ -172,7 +172,7 @@ implements TableFormatter.Entries {
 				
 		try { normalizeSkyGains(); }
 		catch(Exception e) {
-			System.err.println(" WARNING! normalization failed: " + e.getMessage());
+			warning("Normalization failed: " + e.getMessage());
 			if(CRUSH.debug) e.printStackTrace();
 		}
 		
@@ -395,14 +395,14 @@ implements TableFormatter.Entries {
 			Configurator c = option("pixeldata");
 			if(!c.getValue().equalsIgnoreCase("write")) {
 				try { loadChannelData(c.getPath()); }
-				catch(IOException e) { System.err.println("WARNING! Cannot read pixel data. Using default gains & flags."); }
+				catch(IOException e) { warning("Cannot read pixel data. Using default gains & flags."); }
 			}
 		}	
 		
 		if(hasOption("wiring")) { 
 			try { readWiring(option("wiring").getPath()); }	
 			catch(IOException e) {
-				System.err.println("ERROR! Cannot read wiring data. Specific channel divisions not established.");
+				warning("Cannot read wiring data. Specific channel divisions not established.");
 				return;
 			}
 		}
@@ -500,7 +500,7 @@ implements TableFormatter.Entries {
 				for(String groupName : option.get(name).getList()) {
 					ChannelGroup<ChannelType> group = groups.get(groupName);
 					if(group != null) division.add(group);
-					else System.err.println(" WARNING! Group '" + groupName + "' is undefined.");
+					else warning("Channel group '" + groupName + "' is undefined.");
 				}
 				addDivision(division);
 			}
@@ -555,7 +555,7 @@ implements TableFormatter.Entries {
 				addModality(blinds);
 			}
 			catch(NoSuchFieldException e) {
-				System.err.println(" WARNING! " + getChannelInstance(-1).getClass().getSimpleName() + " has no 'temperatureGain' for blind correction");	
+				warning(getChannelInstance(-1).getClass().getSimpleName() + " has no 'temperatureGain' for blind correction");	
 			}
 		}
 		
@@ -574,7 +574,7 @@ implements TableFormatter.Entries {
 						addModality(new CorrelatedModality(name, id, divisions.get(name), field));
 					} 
 					catch(NoSuchFieldException e) { 
-						System.err.println(" WARNING! No gain field '" + option(name + ".gainfield").getValue() + "'."); 
+						warning("No gain field '" + option(name + ".gainfield").getValue() + "'."); 
 					}
 				}
 				else addModality(new CorrelatedModality(name, id, divisions.get(name)));
@@ -824,7 +824,7 @@ implements TableFormatter.Entries {
 			ChannelType pixel = lookup.get(be);
 			if(pixel != null) group.add(pixel);
 		}
-		if(group.size() == 0) System.err.println("   WARNING! empty group '" + name + "'.");
+		if(group.size() == 0) warning("Empty group '" + name + "'.");
 		else groups.put(name, group);		
 	}
 	
@@ -1093,14 +1093,14 @@ implements TableFormatter.Entries {
 	
 	public void parseImageHeader(Header header) {}
 	
-	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {
+	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		cursor.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
 		cursor.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
 	}
 	
 	public void editScanHeader(Header header) throws HeaderCardException {}
 	
-	public void addHistory(Cursor cursor, List<Scan<?,?>> scans) throws HeaderCardException {}
+	public void addHistory(Cursor<String, HeaderCard> cursor, List<Scan<?,?>> scans) throws HeaderCardException {}
 	
 	// Sequential, because it is usually called from a parallel environment
 	public void calcOverlap(final double pointSize) {
@@ -1244,6 +1244,32 @@ implements TableFormatter.Entries {
 	public double[] getDoubles() { return recycler.getDoubleArray(size()); }
 	
 	public DataPoint[] getDataPoints() { return recycler.getDataPointArray(size()); }
+	
+	@Override
+	public final void error(Throwable e) { CRUSH.error(e); }
+	
+	@Override
+	public final void error(Throwable e, boolean debug) { CRUSH.error(e, debug); }
+	
+	@Override
+	public void error(String message) { CRUSH.error(message); }
+	
+	@Override
+	public final void warning(Exception e) { CRUSH.warning(e); }
+	
+	@Override
+	public final void warning(Exception e, boolean debug) { CRUSH.warning(e, debug); }
+	
+	@Override
+	public void warning(String message) { CRUSH.warning(message); }
+	
+	@Override
+	public final void info(String message) { CRUSH.info(message); }
+	
+	public void status(String message) {}
+	
+	
+	public void shutdown() {}
 	
 	public static void recycle(int[] array) { recycler.recycle(array); }
 	

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -108,7 +108,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 				for(CSOIntegration<?,?> integration : this) integration.gain *= elevationResponse;
 			}
 			catch(IOException e) { 
-				System.err.println("WARNING! Cannot read elevation response table..."); 
+				warning("Cannot read elevation response table..."); 
 				e.printStackTrace();
 			}
 		}

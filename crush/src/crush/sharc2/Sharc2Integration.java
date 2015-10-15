@@ -85,7 +85,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		if(hasOption("response.calc")) {
 			instrument.calcGainCoefficients(getSkyLoadTemperature());
 			try { instrument.writeGainCoefficients(CRUSH.workPath + File.separator + "response-" + scanID + ".dat", getASCIIHeader()); }
-			catch(IOException e) { System.err.println("   WARNING! Error writing nonlinearity coefficients: " + e.getMessage()); }
+			catch(IOException e) { warning("Could not write nonlinearity coefficients: " + e.getMessage()); }
 		}
 	}
 	
@@ -110,7 +110,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		}
 		
 		if(t < last.index) {
-			System.err.println("   WARNING! Gap detected. Discarding data after gap.");
+			warning("Gap detected. Discarding data after gap.");
 			for(int i=size(); --i >= t; ) remove(i);
 		}
 	}
@@ -123,7 +123,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	
 	
 	
-	protected void read(BasicHDU[] HDU, int firstDataHDU) throws Exception {
+	protected void read(BasicHDU<?>[] HDU, int firstDataHDU) throws Exception {
 		
 		int nDataHDUs = HDU.length - firstDataHDU, records = 0;
 		for(int datahdu=0; datahdu<nDataHDUs; datahdu++) records += HDU[firstDataHDU + datahdu].getAxes()[0];
@@ -159,7 +159,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		
 		private final Sharc2Scan sharcscan = (Sharc2Scan) scan;
 		
-		public Sharc2Reader(TableHDU hdu, int offset) throws FitsException {
+		public Sharc2Reader(TableHDU<?> hdu, int offset) throws FitsException {
 			super(hdu);
 			this.offset = offset;			
 
