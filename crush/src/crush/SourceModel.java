@@ -31,7 +31,7 @@ import java.util.concurrent.ExecutorService;
 import kovacs.text.TableFormatter;
 import kovacs.util.*;
 
-public abstract class SourceModel implements Cloneable, TableFormatter.Entries {
+public abstract class SourceModel implements Cloneable, TableFormatter.Entries, Messaging {
 	private Instrument<?> instrument;
 
 	public Vector<Scan<?,?>> scans;
@@ -360,6 +360,50 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries {
 		
 	}
 
+	
+	@Override
+	public void error(Throwable e, boolean debug) {
+		if(instrument != null) instrument.error(e, debug);
+		else CRUSH.error(e, debug);
+	}
+	
+	@Override
+	public void error(Throwable e) { 
+		if(instrument != null) instrument.error(e);
+		else CRUSH.error(e);
+	}
+	
+	@Override
+	public void error(String message) {
+		if(instrument != null) instrument.error(message);
+		else CRUSH.error(message);
+	}
+	
+	@Override
+	public void warning(Exception e, boolean debug) {
+		if(instrument != null) instrument.warning(e, debug);
+		else CRUSH.warning(e, debug);
+	}
+	
+	@Override
+	public void warning(Exception e) {
+		if(instrument != null) instrument.warning(e);
+		else CRUSH.warning(e);
+	}
+	
+	@Override
+	public void warning(String message) {
+		if(instrument != null) instrument.warning(message);
+		else CRUSH.warning(message);
+	}
+	
+	@Override
+	public void info(String message) {
+		if(instrument != null) instrument.info(message);
+		else CRUSH.info(message);
+	}
+	
+	
 	
 	public synchronized SourceModel getRecycledCleanThreadLocalCopy() {	
 		if(recycler != null) if(!recycler.isEmpty()) {

@@ -133,7 +133,7 @@ public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements Gro
 	}
 	
 	
-	public void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException {
+	public void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException {
 		Header header = hdu.getHeader();
 				
 		// nReadouts = header.getIntValue("NROACHES", 1);

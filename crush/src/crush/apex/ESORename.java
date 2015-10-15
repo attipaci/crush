@@ -49,10 +49,10 @@ public class ESORename {
 		String ext = ".fits";
 		if(isCompressed) ext += fileName.substring(fileName.lastIndexOf("."));
 	
-		Fits fits = new Fits(file, isCompressed);
-		Header header = fits.getHDU(0).getHeader();
+		Fits fits = new Fits(file, isCompressed);	
+		String origName = fits.getHDU(0).getHeader().getStringValue("ORIGFILE") + ext;
+		fits.close();
 		
-		String origName = header.getStringValue("ORIGFILE") + ext;
 		String stem = "";
 		if(fileName.contains(File.separator)) stem += fileName.substring(0, 1 + fileName.lastIndexOf(File.separator));
 		File origFile = new File(stem + origName);
@@ -60,6 +60,7 @@ public class ESORename {
 		System.err.println(" --> " + origName);
 		
 		file.renameTo(origFile);
+		
 	}
 	
 	public static void usage() {

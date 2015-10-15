@@ -262,7 +262,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	
 	protected void read(Fits fits, boolean readFully) throws Exception {
 		// Read in entire FITS file
-		BasicHDU[] HDU = fits.read();
+		BasicHDU<?>[] HDU = fits.read();
 
 		if(hasOption("ver")) setVersionOptions(option("ver").getDouble());
 		else setVersionOptions(HDU[0].getHeader().getDoubleValue("MRGVER", Double.POSITIVE_INFINITY));
@@ -295,12 +295,11 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		instrument.samplingInterval = integration.instrument.samplingInterval;
 		instrument.integrationTime = integration.instrument.integrationTime;
 		
-		validate();
 	}
 	
 
 	
-	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 		
 		// Load any options based on the FITS header...
@@ -527,7 +526,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		isTracking = true;
 	}
 	
-	protected void parseOldScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseOldScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 	
 		// Load any options based on the FITS header...

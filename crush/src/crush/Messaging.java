@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,12 +20,23 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.devel;
 
-public class InfoMessage extends Message {
+package crush;
+
+public interface Messaging {
+
+	public void error(Throwable e, boolean debug);
 	
-	public InfoMessage(Object object, String message) {
-		super(object, message);
-		System.err.println("[" + object.getClass().getSimpleName() + "] " + message);
-	}
+	public void error(Throwable e);
+	
+	public void error(String message);
+	
+	public void warning(Exception e, boolean debug);
+	
+	public void warning(Exception e);
+	
+	public void warning(String message);
+	
+	public void info(String message);
+	
 }

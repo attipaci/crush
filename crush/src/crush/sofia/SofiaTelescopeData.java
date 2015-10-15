@@ -147,7 +147,7 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 	}
 	
 	@Override
-	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Telescope Data ------>", false));
 		
 		if(telescope != null) cursor.add(new HeaderCard("TELESCOP", telescope, "observatory name."));

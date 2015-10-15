@@ -110,7 +110,7 @@ public class ScalarMap extends SourceMap {
 		
 		try { copy.map = (AstroMap) map.copy(withContents); }
 		catch(OutOfMemoryError e) {
-			System.err.println("ERROR! Ran out of memory while making a copy of the source map.");
+			error("Ran out of memory while making a copy of the source map.");
 			System.err.println();
 			System.err.println("   * Check that the map size is reasonable for the area mapped and that");
 			System.err.println("     all scans reduced together belong to the same source or region.");
@@ -183,7 +183,7 @@ public class ScalarMap extends SourceMap {
 		if(allowIndexing) if(hasOption("indexing")) {
 			try { index(); }
 			catch(Exception e) { 
-				System.err.println("WARNING! Indexing error:");
+				warning("Indexing error: " + e.getMessage());
 				e.printStackTrace();
 			}
 		}
@@ -194,12 +194,12 @@ public class ScalarMap extends SourceMap {
 				catalog.read(option("sources").getPath(), map); 
 				try { insertSources(catalog); }
 				catch(Exception e) {
-					System.err.println("WARNING! Source insertion error:");
+					warning("Source insertion error: " + e.getMessage());
 					e.printStackTrace();
 				}
 			}
 			catch(IOException e) {
-				System.err.println("WARNING! Cannot read sources: " + e.getMessage());
+				warning("Cannot read sources: " + e.getMessage());
 				if(CRUSH.debug) e.printStackTrace();
 			}	
 		}
@@ -209,7 +209,7 @@ public class ScalarMap extends SourceMap {
 		if(hasSourceOption("inject")) {
 			try { injectSource(sourceOption("inject").getPath()); }
 			catch(Exception e) { 
-				System.err.println("WARNING! Cannot read injection map. Check the file name and path."); 
+				warning("Cannot read injection map. Check the file name and path."); 
 				e.printStackTrace();
 			}
 		}
@@ -217,7 +217,7 @@ public class ScalarMap extends SourceMap {
 		if(hasSourceOption("model")) {
 			try { applyModel(sourceOption("model").getPath()); }
 			catch(Exception e) { 
-				System.err.println("WARNING! Cannot read source model. Check the file name and path."); 
+				warning("Cannot read source model. Check the file name and path."); 
 				e.printStackTrace();
 			}
 		}
@@ -863,7 +863,7 @@ public class ScalarMap extends SourceMap {
 		map.fileName = path + File.separator + getCoreName() + idExt + ".fits";
 		
 		if(!isReady) {
-			System.err.println(" WARNING! Source" + idExt + " is empty. Skipping");
+			warning("Source" + idExt + " is empty. Skipping.");
 			File file = new File(map.fileName);
 			if(file.exists()) file.delete();
 			return;

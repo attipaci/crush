@@ -80,10 +80,10 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 	
 	protected void read(Fits fits, boolean readFully) throws Exception {
 		// Read in entire FITS file		
-		BasicHDU[] HDU = fits.read();
+		BasicHDU<?>[] HDU = fits.read();
 		
 		int i = 4; 
-		BasicHDU firstDataHDU = null;
+		BasicHDU<?> firstDataHDU = null;
 		while( !(firstDataHDU = HDU[i]).getHeader().getStringValue("EXTNAME").equalsIgnoreCase("SHARC2 Data") ) i++;
 		
 		checkPrematureFits(HDU[0], (BinaryTableHDU) firstDataHDU);
@@ -107,8 +107,6 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		catch(IOException e) {}
 		
 		horizontal = null;
-		
-		validate();
 	}
 	
 	
@@ -149,7 +147,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		parseScanPrimaryHDU(fits.readHDU());		
 		fits.skipHDU(3);
 
-		BasicHDU nextHDU = fits.readHDU();
+		BasicHDU<?> nextHDU = fits.readHDU();
 		while(!nextHDU.getHeader().getStringValue("EXTNAME").equalsIgnoreCase("SHARC2 Data") ) nextHDU = fits.readHDU();
 		instrument.parseDataHeader(nextHDU.getHeader());
 	}
@@ -168,7 +166,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		return new Fits(getFile(scanDescriptor), isCompressed);
 	}
 	
-	protected void checkPrematureFits(BasicHDU main, BinaryTableHDU data) throws FitsException {
+	protected void checkPrematureFits(BasicHDU<?> main, BinaryTableHDU data) throws FitsException {
 		equatorial = null;
 		Header header = main.getHeader();
 		if(header.containsKey("RAEP") && header.containsKey("DECEP")) return;
@@ -235,7 +233,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		return name;
 	}
 	
-	protected void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 
 		// Load any options based on the FITS header...

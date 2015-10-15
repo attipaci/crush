@@ -50,7 +50,7 @@ public class SofiaOriginationData extends SofiaHeaderData {
 	}
 
 	@Override
-	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Origination Data ------>", false));
 		if(organization != null) cursor.add(new HeaderCard("ORIGIN", organization, "Organization where data originated."));
 		if(observer != null) cursor.add(new HeaderCard("OBSERVER", observer, "Name(s) of observer(s)."));

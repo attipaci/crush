@@ -53,7 +53,7 @@ import nom.tam.util.*;
  */
 public abstract class Integration<InstrumentType extends Instrument<?>, FrameType extends Frame> 
 extends ArrayList<FrameType> 
-implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.Entries {
+implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.Entries, Messaging {
 	/**
 	 * 
 	 */
@@ -2432,10 +2432,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(!name.endsWith(".fits")) name += "-" + scan.getID() + "-" + getID() + ".fits";
 		if(covar == null) return;
 		Fits fits = new Fits();
-		BasicHDU hdu = Fits.makeHDU(covar);
+		BasicHDU<?> hdu = Fits.makeHDU(covar);
 		fits.addHDU(hdu);
-		fits.write(new BufferedDataOutputStream(new FileOutputStream(name)));	
+		fits.write(new BufferedDataOutputStream(new FileOutputStream(name)));
 		System.err.println(" Written " + name);
+		fits.close();
 	}
 
 	float[][] getSpectra() {
@@ -3337,6 +3338,49 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	
+	@Override
+	public void error(Throwable e, boolean debug) {
+		if(instrument != null) instrument.error(e, debug);
+		else CRUSH.error(e, debug);
+	}
+	
+	@Override
+	public void error(Throwable e) { 
+		if(instrument != null) instrument.error(e);
+		else CRUSH.error(e);
+	}
+	
+	@Override
+	public void error(String message) {
+		if(instrument != null) instrument.error(message);
+		else CRUSH.error(message);
+	}
+	
+	@Override
+	public void warning(Exception e, boolean debug) {
+		if(instrument != null) instrument.warning(e, debug);
+		else CRUSH.warning(e, debug);
+	}
+	
+	@Override
+	public void warning(Exception e) {
+		if(instrument != null) instrument.warning(e);
+		else CRUSH.warning(e);
+	}
+	
+	@Override
+	public void warning(String message) {
+		if(instrument != null) instrument.warning(message);
+		else CRUSH.warning(message);
+	}
+	
+	@Override
+	public void info(String message) {
+		if(instrument != null) instrument.info(message);
+		else CRUSH.info(message);
+	}
+	
+	
 	public int pow2Size() { return ExtraMath.pow2ceil(size()); }
 
 	public int[] getInts() { return recycler.getIntArray(pow2Size()); }
@@ -3346,6 +3390,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public double[] getDoubles() { return recycler.getDoubleArray(pow2Size()); }
 	
 	public DataPoint[] getDataPoints() { return recycler.getDataPointArray(pow2Size()); }
+	
+	
 	
 	public static void recycle(int[] array) { recycler.recycle(array); }
 	

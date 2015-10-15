@@ -358,7 +358,7 @@ public abstract class SourceMap extends SourceModel {
 		double diagonal = ExtraMath.hypot(sizeX * resolution.x(), sizeY * resolution.y());
 		
 		System.err.println("\n");
-		System.err.println("ERROR! Map is too large to fit into memory (" + sizeX + "x" + sizeY + " pixels).");
+		error("Map is too large to fit into memory (" + sizeX + "x" + sizeY + " pixels).");
 		System.err.println("       Requires " + (getMemoryFootprint((long) sizeX * sizeY) >> 20) + " MB free memory."); 
 		System.err.println();
 		

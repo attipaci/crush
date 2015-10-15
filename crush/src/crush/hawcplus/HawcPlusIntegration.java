@@ -66,7 +66,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	
 	@Override
 	public void readData(Fits fits) throws Exception {
-		BasicHDU[] HDU = fits.read();
+		BasicHDU<?>[] HDU = fits.read();
 		ArrayList<BinaryTableHDU> dataHDUs = new ArrayList<BinaryTableHDU>();
 		
 		for(int i=1; i<HDU.length; i++) if(HDU[i] instanceof BinaryTableHDU) {
@@ -151,7 +151,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			else hawc.polsubarrays = 1;
 			
 			System.err.println("   Logical layout: " + hawc.polsubarrays + " subarrays of " + hawc.rows + "x" + hawc.subarrayCols + " pixels per polarization.");
-
 			
 			// Initialize the readout offset to the first sample. This way we won't lose precision
 			// in the long -> float conversion as loading the array data...

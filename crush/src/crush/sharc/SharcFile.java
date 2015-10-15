@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Hashtable;
 
+import crush.CRUSH;
 import kovacs.io.VAXDataInputStream;
 import kovacs.math.Vector2D;
 import kovacs.util.Configurator;
@@ -92,7 +93,7 @@ public class SharcFile extends Hashtable<Integer, SharcScan> {
 		
 		try { for(;;) readScan(); }
 		catch(EOFException e) {}
-		catch(IOException e) { System.err.println("WARNING! " + e.getMessage()); }
+		catch(IOException e) { CRUSH.warning(e); }
 	
 		//listScans();
 	}

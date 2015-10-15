@@ -32,6 +32,7 @@ import java.util.Vector;
 
 import kovacs.util.Unit;
 import nom.tam.fits.Fits;
+import nom.tam.fits.FitsFactory;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -56,6 +57,11 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 	Vector<String> history = new Vector<String>();
 	// TODO add pixeldata, rcp, pwv data, calibration table, wiring, distortion model, other lookups, etc.
 
+	static {
+		FitsFactory.setLongStringsEnabled(true);
+	}
+	
+	
 	public SofiaCamera(String name, InstrumentLayout<? super ChannelType> layout) {
 		super(name, layout);
 	}
@@ -111,7 +117,7 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 	}
 	
 
-	public void editHeader(Header header, Cursor cursor) throws HeaderCardException {
+	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		if(instrumentData != null) instrumentData.editHeader(header, cursor);
 		if(array != null) array.editHeader(header, cursor);
 		
@@ -121,37 +127,33 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 	}
 
 	@Override
-	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {
+	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		super.editImageHeader(scans, header, cursor);	
 			
 		int level = hasOption("calibrated") ? 3 : 2;
 		// TODO if multiple mission IDs, then Level 4...
 		
 		// Add SOFIA processing keys
-		cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Processing Data ------>", false));
+		cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Data Processing Keys ------>", false));
 		cursor.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
 		cursor.add(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
 		cursor.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getVersion(), "Software that produced this file."));
 		cursor.add(new HeaderCard("PIPEVERS", "crush v" + CRUSH.getFullVersion(), "Full software version information.")); 
 		cursor.add(new HeaderCard("PRODTYPE", "CRUSH-IMAGE", "Type of product produced by the software."));
-			
-	
+		cursor.add(new HeaderCard("DATAQUAL", getQualityString(scans), "Lowest quality input scan."));
+		
 		// Add required keys and prior history
-		cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Additional Required Keys ------>", false));
+		cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Additional Required Primary Header Keys ------>", false));
 		
 		// TODO workaround for updates...
 		// -----------------------------------------------------------------------------------------------------
 		Header required = new Header();
-		((SofiaScan<?,?>) scans.get(0)).addRequiredKeysTo(required);
+		((SofiaScan<?,?>) scans.get(0)).addRequiredPrimaryHeaderKeysTo(required);
 		updateMultiScanKeys(scans, required);
 		
-		Cursor c2 = required.iterator();
+		Cursor<String, HeaderCard> c2 = required.iterator();
 		while(c2.hasNext()) cursor.add(c2.next());
-		// -----------------------------------------------------------------------------------------------------
-		
-	
-		
-		
+		// -----------------------------------------------------------------------------------------------------	
 	}	
 	
 	
@@ -166,18 +168,7 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 			
 		// AOR_ID, ASSC_AOR
 		addAssociatedAORIDs(scans, header);
-				
-		// SIBS_X, SIBS_Y, DTHINDEX (should be set to -9999 for multiscan...
-		SofiaScan<?,?> firstScan = (SofiaScan<?,?>) scans.get(0);
-		firstScan.instrument.array.updateRequiredKeys(header);
-		
-		if(scans.size() == 1) {
-			if(firstScan.isDithering) firstScan.dither.updateRequiredKeys(header);
-		}
-		else {
-			if(containsDithering(scans)) header.addLine(new HeaderCard("DTHINDEX", SofiaHeaderData.UNKNOWN_INT_VALUE, "Undefined for multiple scans."));
-		}
-		
+					
 		// TELEL, TELXEL, TELLOS to earliest input.
 		//getEarliestScan(scans).telescope.updateElevationKeys(header);
 		
@@ -205,12 +196,20 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 		buf.append(aorIDs.get(1));
 		
 		for(int i=2; i<aorIDs.size(); i++) {
-			buf.append(",");
+			buf.append(", ");
 			buf.append(aorIDs.get(i));
 		}
 		
-		Header.setLongStringsEnabled(true);
 		header.addValue("ASSC_AOR", new String(buf), "Associated AOR IDs.");
+	}
+	
+	public String getQualityString(List<Scan<?,?>> scans) {
+		int overall = ((SofiaScan<?,?>) scans.get(0)).processing.qualityLevel;
+		for(int i=scans.size(); --i > 0; ) {
+			int level = ((SofiaScan<?,?>) scans.get(i)).processing.qualityLevel;
+			if(level < overall) overall = level;
+		}
+		return SofiaProcessingData.qualityNames[overall];
 	}
 	
 	public ArrayList<String> getAORIDs(List<Scan<?,?>> scans) {
@@ -251,13 +250,13 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 	}
 	
 	@Override
-	public void addHistory(Cursor cursor, List<Scan<?,?>> scans) throws HeaderCardException {	
+	public void addHistory(Cursor<String, HeaderCard> cursor, List<Scan<?,?>> scans) throws HeaderCardException {	
 		super.addHistory(cursor, scans);			
 		
 		// Add auxiliary file information
 		try { cursor.add(new HeaderCard("HISTORY", " PWD: " + new File(".").getCanonicalPath(), false)); }
-		catch(Exception e) { System.err.println("WARNING! could not determine PWD for HISTORY entry..."); }
-		
+		catch(Exception e) { warning("Could not determine PWD for HISTORY entry..."); }
+	
 		for(int i=0; i<history.size(); i++) cursor.add(new HeaderCard("HISTORY", " " + history.get(i), false));
 
 		// Add obs-IDs for all input scans...
@@ -267,14 +266,12 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 	
 	@Override
 	public void validate(Vector<Scan<?,?>> scans) throws Exception {
-		
 		final SofiaScan<?,?> firstScan = (SofiaScan<?,?>) scans.get(0);
 		double wavelength = firstScan.instrument.instrumentData.wavelength;
 		for(int i=scans.size(); --i >= 1; ) if(((SofiaScan<?,?>) scans.get(i)).instrument.instrumentData.wavelength != wavelength) {
-			System.err.println("  WARNING! Scan " + scans.get(i).getID() + " in a different band. Removing from set.");
+			warning("Scan " + scans.get(i).getID() + " in a different band. Removing from set.");
 			scans.remove(i);
 		}
-		
 			
 		if(scans.size() == 1) if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
 		

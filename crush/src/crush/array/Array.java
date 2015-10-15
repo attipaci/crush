@@ -111,7 +111,7 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 		
 		if(hasOption("rcp")) {
 			try { readRCP(option("rcp").getPath()); }
-			catch(IOException e) { System.err.println("WARNING! Cannot update pixel RCP data. Using values from FITS."); }
+			catch(IOException e) { warning("Cannot update pixel RCP data. Using values from FITS."); }
 		}
 		
 		// Instruments with a rotator should apply explicit rotation after pixel positions are finalized...
@@ -231,7 +231,7 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	}
 	
 	@Override
-	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {
+	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		super.editImageHeader(scans, header, cursor);
 		cursor.add(new HeaderCard("BEAM", getResolution() / Unit.arcsec, "The instrument FWHM (arcsec) of the beam."));
 	}

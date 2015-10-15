@@ -124,7 +124,7 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 	protected abstract void parseDataHeader(Header header) throws HeaderCardException, FitsException;
 	
 	@Override
-	public void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException, FitsException {
+	public void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();
 		
 		samplingInterval = integrationTime = 1.0 / header.getDoubleValue("SAMPLING");

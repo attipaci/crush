@@ -23,6 +23,7 @@
 
 package crush.hawcplus;
 
+import java.io.IOException;
 import java.util.*;
 
 import kovacs.math.Vector2D;
@@ -50,6 +51,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	Vector2D pixelSize = HawcPlusPixel.defaultSize;
 	Vector2D[][] subarrayOffset = new Vector2D[polarrays][polsubarrays];
 	
+	
 	public HawcPlus() {
 		super("hawc+", new SingleColorLayout<HawcPlusPixel>());
 		arrayPointingCenter = (Vector2D) defaultPointingCenter.clone();
@@ -57,6 +59,28 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		mount = Mount.LEFT_NASMYTH;
 	}
 	
+	@Override
+	public void setOptions(Configurator options) {
+		super.setOptions(options);
+		if(drp == null) if(hasOption("drp")) initDRPMessages();
+	}
+	
+	private void initDRPMessages() {
+		System.err.println(" Activating DRP messages over TCP/IP.");
+		String url = hasOption("drp.host") ? option("drp.host").getValue() : DRPMessenger.DEFAULT_HOST;
+		int port = hasOption("drp.port") ? option("drp.port").getInt() : DRPMessenger.DEFAULT_DRP_PORT;
+		try { 
+			drp = new DRPMessenger(url, port); 
+			if(hasOption("drp.timeout")) drp.setTimeout((int) Math.ceil(1000.0 * option("drp.timeout").getDouble()));
+		}
+		catch(IOException e) { warning(e); }
+	}
+	
+	@Override
+	public void shutdown() {
+		super.shutdown();
+		if(drp != null) drp.shutdown();
+	}
 	
 	@Override
 	public Instrument<HawcPlusPixel> copy() {
@@ -300,9 +324,10 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	}
 	
 	@Override
-	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor cursor) throws HeaderCardException {
+	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		super.editImageHeader(scans, header, cursor);
 		// Add HAWC+ specific keywords
+		cursor.add(new HeaderCard("COMMENT", "<------ HAWC+ Header Keys ------>", false));
 		cursor.add(new HeaderCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
 	}
 
@@ -333,7 +358,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 			HawcPlusScan scan = (HawcPlusScan) scans.get(i);
 			
 			if(scan.instrument.instrumentData.instrumentConfig.equals(firstScan.instrument.instrumentData.instrumentConfig)) {
-				System.err.println("  WARNING! Scan " + scans.get(i).getID() + " is in different instrument configuration. Removing from set.");
+				warning("Scan " + scans.get(i).getID() + " is in different instrument configuration. Removing from set.");
 				scans.remove(i);				
 			}		
 		}
@@ -396,13 +421,29 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		return row * cols() + col;
 	}
 	
+	@Override
+	public void error(String message) {
+		super.error(message);
+		if(drp != null) drp.error(message);
+	}
 	
-
+	@Override
+	public void warning(String message) {
+		super.warning(message);
+		if(drp != null) drp.warning(message);
+	}
+	
+	@Override
+	public void status(String message) {
+		super.status(message);
+		if(drp != null) drp.info(message);
+	}
+	
 	
 	// subarray center assuming 41x32 pixels
 	private static Vector2D defaultPointingCenter = new Vector2D(20.5, 32.5); // row, col
 
-	
+	private static DRPMessenger drp;
 	
 	
 }

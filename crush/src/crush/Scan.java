@@ -52,7 +52,7 @@ import crush.astro.AstroMap;
 import crush.sourcemodel.*;
 
 public abstract class Scan<InstrumentType extends Instrument<?>, IntegrationType extends Integration<InstrumentType, ?>>
-extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatter.Entries {
+extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatter.Entries, Messaging {
 	/**
 	 * 
 	 */
@@ -141,8 +141,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 				i++;
 			}
 			catch(Exception e) {
-				System.err.println("   WARNING! " + e.getMessage() + " Dropping from set.");
-				if(CRUSH.debug) e.printStackTrace();
+				integration.warning("Integration " + integration.getFullID("|") + " validation error. Dropping from set.");
+				integration.warning(e);
 				remove(i); 
 			}
 		}
@@ -349,7 +349,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		return 0.5 * (Math.atan2(first.sinPA, first.cosPA) + Math.atan2(last.sinPA, last.cosPA));
 	}
 	
-	public BasicHDU getSummaryHDU(Configurator global) throws FitsException, IOException {
+	public BasicHDU<?> getSummaryHDU(Configurator global) throws FitsException, IOException {
 		Object[][] table = new Object[size()][];
 		boolean details = hasOption("write.scandata.details");
 		
@@ -367,11 +367,11 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			table[i] = row;
 		}
 
-		BasicHDU hdu = Fits.makeHDU(table);
+		BasicHDU<?> hdu = Fits.makeHDU(table);
 		Header header = hdu.getHeader();
 		editScanHeader(header);
 
-		Cursor cursor = header.iterator();
+		Cursor<String, HeaderCard> cursor = header.iterator();
 
 		int k=1;
 		for(String name : first.keySet()) {
@@ -591,9 +591,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		else if(hasOption("pointing")) if(sourceModel.isValid()) {
 			Configurator pointingOption = option("pointing");
- 			if(pointingOption.equals("suggest") || pointingOption.equals("auto")) {
-				System.out.println(" WARNING! Cannot suggest focus for scan " + getID() + ".");
-			}
+ 			if(pointingOption.equals("suggest") || pointingOption.equals("auto")) 
+				warning("Cannot suggest focus for scan " + getID() + ".");
 		}
 	}
 	
@@ -607,9 +606,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		else if(hasOption("pointing")) if(sourceModel.isValid()) {
 			Configurator pointingOption = option("pointing");
-			if(pointingOption.equals("suggest") || pointingOption.equals("auto")) {
-				System.out.println(" WARNING! Cannot suggest pointing for scan " + getID() + ".");
-			}
+			if(pointingOption.equals("suggest") || pointingOption.equals("auto"))
+				warning("Cannot suggest pointing for scan " + getID() + ".");
 		}
 	}
 	
@@ -953,6 +951,49 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		
 		
+	}
+	
+	
+	@Override
+	public void error(Throwable e, boolean debug) {
+		if(instrument != null) instrument.error(e, debug);
+		else CRUSH.error(e, debug);
+	}
+	
+	@Override
+	public void error(Throwable e) { 
+		if(instrument != null) instrument.error(e);
+		else CRUSH.error(e);
+	}
+	
+	@Override
+	public void error(String message) {
+		if(instrument != null) instrument.error(message);
+		else CRUSH.error(message);
+	}
+	
+	@Override
+	public void warning(Exception e, boolean debug) {
+		if(instrument != null) instrument.warning(e, debug);
+		else CRUSH.warning(e, debug);
+	}
+	
+	@Override
+	public void warning(Exception e) {
+		if(instrument != null) instrument.warning(e);
+		else CRUSH.warning(e);
+	}
+	
+	@Override
+	public void warning(String message) {
+		if(instrument != null) instrument.warning(message);
+		else CRUSH.warning(message);
+	}
+	
+	@Override
+	public void info(String message) {
+		if(instrument != null) instrument.info(message);
+		else CRUSH.info(message);
 	}
 	
 	

@@ -88,7 +88,7 @@ public class Scuba2Subarray implements Cloneable {
 	protected void parseFlatcalHDU(BinaryTableHDU hdu) throws FitsException {
 		int col = hdu.findColumn("DATA");
 		if(col < 0) {
-			System.err.println(" WARNING! flatfield data not found...");
+			scuba2.warning("Flatfield data not found...");
 			return;
 		}
 		double[][][] data = (double[][][]) hdu.getRow(0)[col];

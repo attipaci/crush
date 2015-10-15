@@ -100,7 +100,7 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 	
 	protected void read(Fits fits, boolean readFully) throws Exception {
 		// Read in entire FITS file
-		BasicHDU[] HDU = fits.read();
+		BasicHDU<?>[] HDU = fits.read();
 
 		parseScanPrimaryHDU(HDU[0]);
 		instrument.parseScanPrimaryHDU(HDU[0]);
@@ -117,11 +117,9 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 		
 		instrument.samplingInterval = integration.instrument.samplingInterval;
 		instrument.integrationTime = integration.instrument.integrationTime;
-		
-		validate();
 	}
 	
-	public void parseScanPrimaryHDU(BasicHDU hdu) throws HeaderCardException {
+	public void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException {
 		Header header = hdu.getHeader();
 		
 		// Load any options based on the FITS header...

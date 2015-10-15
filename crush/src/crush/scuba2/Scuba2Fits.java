@@ -39,7 +39,7 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 	private String fileName;
 	
 	Fits fits;
-	BasicHDU[] HDU;
+	BasicHDU<?>[] HDU;
 	
 	public Scuba2Fits(String fileName, Configurator options) throws Exception {
 		this.options = options;
@@ -73,7 +73,7 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 	
 	public String getFileName() { return fileName; }
 	
-	public BasicHDU[] getHDUs() { return HDU; }
+	public BasicHDU<?>[] getHDUs() { return HDU; }
 	
 	public boolean hasOption(String key) {
 		return options.isConfigured(key);

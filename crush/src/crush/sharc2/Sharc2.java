@@ -114,7 +114,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GeometricRowColInde
 				loadGainCoefficients(option("response").getPath());
 				calcPixelGains();
 			}
-			catch(IOException e) { System.err.println(" WARNING! Problem parsing nonlinearity file."); }		
+			catch(IOException e) { warning("Problem parsing nonlinearity file."); }		
 		}
 	
 		// Update the pointing center...
@@ -271,10 +271,10 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GeometricRowColInde
 		int iWeight = hdu.findColumn("Pixel Weights");
 		int iOffset = hdu.findColumn("Pixel Offsets");
 		
-		if(iGain < 0) System.err.println(" WARNING! FITS pixel gains not found.");
-		if(iFlag < 0) System.err.println(" WARNING! FITS pixel flags not found.");
-		if(iWeight < 0) System.err.println(" WARNING! FITS pixel weights not found.");
-		if(iOffset < 0) System.err.println(" WARNING! FITS pixel offsets not found.");
+		if(iGain < 0) warning("FITS pixel gains not found.");
+		if(iFlag < 0) warning("FITS pixel flags not found.");
+		if(iWeight < 0) warning("FITS pixel weights not found.");
+		if(iOffset < 0) warning("FITS pixel offsets not found.");
 		
 		for(int row=0; row<12; row++) {
 			Object[] data = hdu.getRow(row);
@@ -445,7 +445,6 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GeometricRowColInde
 	}
 
 
-	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {	
 		if(name.equals("bias")) return TableFormatter.getNumberFormat(formatSpec).format(bias0 / Unit.mV);

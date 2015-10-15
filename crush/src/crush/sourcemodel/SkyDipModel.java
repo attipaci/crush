@@ -25,6 +25,7 @@ package crush.sourcemodel;
 
 import java.util.*;
 
+import crush.CRUSH;
 import kovacs.data.fitting.AmoebaMinimizer;
 import kovacs.data.fitting.Parameter;
 import kovacs.math.Range;
@@ -200,7 +201,7 @@ public class SkyDipModel {
 	
 	@Override
 	public String toString() {	
-		if(!fitOK) return "WARNING! The fit has not converged. Try again!";
+		if(!fitOK) CRUSH.warning("The fit has not converged. Try again!");
 	
 		StringBuffer text = new StringBuffer();
 		
