@@ -294,7 +294,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(size() < 2) return;
 	
 		// TODO What if different sampling intervals...
-		System.err.println(" Merging integrations...");
+		System.err.println(" Merging " + size() + " integrations...");
 		
 		final double maxDiscontinuity = hasOption("subscans.merge.maxgap") ? option("subscans.merge.maxgap").getDouble() * Unit.s : Double.NaN;
 		final int maxGap = Double.isNaN(maxDiscontinuity) ? Integer.MAX_VALUE : (int) Math.ceil(maxDiscontinuity / instrument.samplingInterval);
@@ -318,18 +318,22 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			for( ; from < nt; from++) if(integration.get(from) != null) break;			
 			
 			int gap = (int) Math.round((integration.get(from).MJD - lastMJD) * Unit.day / instrument.samplingInterval) - 1;
+			
+			// Deal with any gaps between subscans here...
 			if(gap > 0) {
 				if(gap < maxGap) {
 					System.err.println("   > Padding with " + gap + " frames before integration " + integration.getID());
 					for(; --gap >= 0; ) merged.add(null);
-					for(int t=from; t<nt; t++) merged.add(integration.get(t));
 				}
 				else {
-					System.err.println("   > Gap before integration " + integration.getID() + " is too large. Starting new merge.");
+					System.err.println("   > Large gap before integration " + integration.getID() + ". Starting new merge.");
 					parts.add((IntegrationType) merged);
 					merged = (Integration<InstrumentType, Frame>) integration;
-				}
+				}	
 			}
+			
+			// Do the actual merge...
+			for(int t=from; t<nt; t++) merged.add(integration.get(t));
 			
 			lastMJD = integration.getLastFrame().MJD;
 		}

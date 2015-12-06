@@ -359,14 +359,11 @@ public class CorrelatedSignal extends Signal {
 			else channel.temp = channel.tempWG2 * (float) (channel.directFiltering * (1.0 - channel.filterTimeScale / duration));
 		}
 		
-		
-		
 		final boolean isGainResync = resyncGains;
 			
 		// Clear the dependents in all mode channels...
 		dependents.clear(channels, 0, integration.size());
 			
-		
 		integration.new BlockFork<float[]>(resolution) {
 			private WeightedPoint increment;
 			private DataPoint[] buffer;
@@ -425,15 +422,15 @@ public class CorrelatedSignal extends Signal {
 					final Frame exposure = integration.get(t);
 					if(exposure == null) continue;
 					
-					for(Channel channel : channels) {
-						// Here usedGains carries the gain increment dG from the last correlated signal removal
-						exposure.data[channel.index] -= channel.tempG * dC;
-						
-						if(channel.temp <= 0.0F) continue;						
-						if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
-						if(exposure.sampleFlag[channel.index] != 0) continue;
-						
-						final double dp = exposure.relativeWeight * channel.temp / increment.weight();
+					// Here usedGains carries the gain increment dG from the last correlated signal removal
+					for(Channel channel : channels) exposure.data[channel.index] -= channel.tempG * dC;
+												
+					if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+					
+					final double fpNorm = exposure.relativeWeight / increment.weight();
+					
+					for(Channel channel : goodChannels) if(exposure.sampleFlag[channel.index] == 0) { 	
+						final double dp = fpNorm * channel.temp;
 						dependents.addAsync(exposure, dp);
 						channelParms[channel.index] += dp;
 					}
@@ -460,7 +457,7 @@ public class CorrelatedSignal extends Signal {
 			
 		}.process();
 		
-		// Apply the mode dependices only to the channels that have contributed...
+		// Apply the mode dependencies only to the channels that have contributed...
 		dependents.apply(goodChannels, 0, integration.size());	
 			
 		// Update the gain values used for signal extraction...

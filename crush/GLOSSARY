@@ -788,7 +788,64 @@
 			As of version 2.12, the value 'max' is also accepted
 			producing results identical to that of 'offsets'.
 			@See: 'sourcesize', 'stability', 'offsets'
-	
+
+:: drp			@Advanced
+			@Instrument: HAWC+
+			@Since: 2.30-4
+			Turn on DRP messages through TCP/IP. Enabling this 
+			option will let crush know that is it being run as part
+			of the standard HAWC+ Data Reduction Pipeline (DRP),
+			to which it can send status updates as the reduction 
+			proceeds.		
+			@See: 'drp.host', 'drp.port', 'drp.id', 'drp.timeout'
+
+:: drp.fifo=N		@Expert
+			@Instrument: HAWC+
+			@Since: 2.30-4
+			Set the DRP FIFO size to max. N queued outgoing 
+			messages.
+
+:: drp.host=<name>	@Expert
+			@Instrument: HAWC+
+			@Since: 2.30-4
+			Specify the hotname to send DRP messages to, if it
+			is not 'localhost' or '127.0.0.1'
+			@See: 'drp.port', 'drp.timeout'
+
+:: drp.id=<ID>		@Expert
+			@Instrument: HAWC+
+			@Since: 2.30-4
+			Set the message origination ID to the specified value.
+			E.g.:
+
+			  drp.id=hawc.pipe.crush
+
+			Will send messges with sender ID 'hawc.pipe.crush'.
+
+:: drp.port=N		@Expert
+			@Instrument: HAWC+
+			@Since: 2.30-4
+			Specify the port oto which DRP messages are sent, if
+			it is not the default 50747.
+			@See: 'drp.host'
+
+:: drp.timeout=X	@Expert
+			@Instrument: HAWC+
+			@Since: 2.30-4
+			Set the DRP socket timeout to X seconds. If the DRP
+			message cannot be sent within this timeframe, CRUSH
+			will stop sending DRP messages for the rest the 
+			reduction.
+			@See: 'drp.host', 'drp.port'
+
+:: drp.timestamp	@Expert
+			@Instrument: HAWC+
+			@Since: 2.30-4
+			If the option is specified, DRP messages will have
+			a timestamp attached to the end of message. An '@' 
+			character will mark the end of message, and the
+			beginning of the timestamp.
+
 :: echo=<text>		@Advanced
 			@Since: 2.12
 			Print <text> onto the error stream. This <text> can

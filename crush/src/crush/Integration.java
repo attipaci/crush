@@ -483,9 +483,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Configurator option = option("vclip");
 		
 		if(option.equals("auto")) {	
-			// Move at least 3 fwhms over the stability timescale
+			// Move at least 5 fwhms over the stability timescale
 			// But less that 1/2.5 beams per sample to avoid smearing
-			vRange = new Range(3.0 * instrument.getSourceSize() / instrument.getStability(), 0.4 * instrument.getPointSize() / instrument.samplingInterval);
+			vRange = new Range(5.0 * instrument.getSourceSize() / instrument.getStability(), 0.4 * instrument.getPointSize() / instrument.samplingInterval);
 		}
 		else {
 			vRange = option.getRange(true);
@@ -725,7 +725,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	
-	public void localLevel(final int from, final int to, final Dependents parms, final boolean robust) {	
+	public void localLevel(final int from, final int to, final Dependents parms, final boolean robust) {
+		// Clear dependencies of any prior local levelling. Will use new dependencies
+		// on the currently obtained level for the interval.
+		parms.clear(instrument, from, to);
+		
 		instrument.new Fork<float[]>() {
 			private WeightedPoint increment;
 			private DataPoint[] buffer;
@@ -769,6 +773,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				parms.addAsync(channel, 1.0);
 			}
 		}.process();
+		
+
+		// Apply the local-level dependencies
+		parms.apply(instrument, from, to);			
+		
 		
 		// Remove the drifts from all signals also to match bandpass..
 		final ArrayList<Signal> sigs = new ArrayList<Signal>(signals.values());
@@ -1005,7 +1014,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	
-	public void getRMSNoiseWeights() {
+	public void getRMSPixelWeights() {
 		comments += "W";
 		
 		final ChannelGroup<?> channels = instrument.getConnectedChannels();
@@ -1023,7 +1032,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			@Override
 			protected void process(FrameType exposure) {
-				if(exposure.isFlagged(Frame.WEIGHTING_FLAGS)) return;
+				if(exposure.isFlagged(Frame.CHANNEL_WEIGHTING_FLAGS)) return;
 				
 				for(Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
 					final float value = exposure.data[channel.index];
@@ -1095,11 +1104,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				final Frame exposure = get(t);
 				
 				if(exposure == null) return;
-				if(exposure.isFlagged(Frame.WEIGHTING_FLAGS)) return;
+				if(exposure.isFlagged(Frame.CHANNEL_WEIGHTING_FLAGS)) return;
 				
 				final Frame prior = get(t+delta);
 				if(prior == null) return;
-				if(prior.isFlagged(Frame.WEIGHTING_FLAGS)) return;
+				if(prior.isFlagged(Frame.CHANNEL_WEIGHTING_FLAGS)) return;
 				
 				for(Channel channel : channels) if((exposure.sampleFlag[channel.index] | prior.sampleFlag[channel.index]) == 0) {
 					final float diff = exposure.data[channel.index] - prior.data[channel.index];
@@ -1159,7 +1168,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			protected void process(Channel channel) {
 				int points = 0;
 				
-				for(final Frame exposure : Integration.this) if(exposure != null) if(exposure.isUnflagged(Frame.WEIGHTING_FLAGS)) {
+				for(final Frame exposure : Integration.this) if(exposure != null) if(exposure.isUnflagged(Frame.CHANNEL_WEIGHTING_FLAGS)) {
 					if(exposure.sampleFlag[channel.index] == 0) {
 						final float value = exposure.data[channel.index];
 						dev2[points++] = exposure.relativeWeight * value * value;
@@ -1197,64 +1206,82 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		comments += "(" + Util.e2.format(nefd) + ")";	
 	}
 
+	public void getTimeWeights() {
+		int n = hasOption("weighting.frames.resolution") ? filterFramesFor(option("weighting.frames.resolution").getValue(), 10.0 * Unit.s) : 1;
+		getTimeWeights(ExtraMath.pow2ceil(n));
+	}
+	
 	public void getTimeWeights(final int blockSize) { 
 		comments += "tW";
 		if(blockSize > 1) comments += "(" + blockSize + ")";
 		getTimeWeights(blockSize, true); 
 	}
 	
-	public void getTimeWeights(final int blockSize, final boolean flag) {
-		final ChannelGroup<?> detectorChannels = instrument.getDetectorChannels();
+	protected void getTimeWeight(final int from, final int to, final WeightedPoint stats) {
+		int points = 0;
+		double deps = 0.0;
+		double sumChi2 = 0.0;
 			
-		BlockFork<WeightedPoint> weighting = new BlockFork<WeightedPoint>(blockSize) {
-			double sumfw = 0.0;
-			int n = 0;
+		for(int t=to; --t >= from; ) {
+			final Frame exposure = get(t);
+			if(exposure == null) continue;
+			
+			exposure.unflag(Frame.FLAG_WEIGHT);
+
+			for(final Channel channel : instrument) if(channel.isUnflagged(Frame.TIME_WEIGHTING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0) {			
+				final float value = exposure.data[channel.index];
+				sumChi2 += (channel.weight * value * value);
+				points++;
+			}
+			deps += exposure.dependents;
+		}		
+		
+		if(points - deps >= 1.0) {
+			final float fw = sumChi2 > 0.0 ? (float) ((points-deps) / sumChi2) : 1.0F;	
+			final double dof = 1.0 - deps / points;
+			
+			for(int t=to; --t >= from; ) {
+				final Frame exposure = get(t);
+				if(exposure == null) continue;
+				
+				exposure.unflag(Frame.FLAG_DOF);
+				exposure.dof = dof;
+				exposure.relativeWeight = fw;
+				
+				if(stats != null) {
+					stats.addWeight(fw);
+					stats.add(1.0);
+				}
+			}
+		}
+		else for(int t=to; --t >= from; ) {
+			final Frame exposure = get(t);
+			if(exposure == null) continue;
+	
+			exposure.flag(Frame.FLAG_DOF);
+			exposure.dof = 0.0F;
+			exposure.relativeWeight = Float.NaN; //	These will be set to 1.0 when renormalizing below...			
+		}	
+	}
+	
+	protected void getTimeWeights(final int blockSize, final boolean flag) {
+		
+		final BlockFork<WeightedPoint> weighting = new BlockFork<WeightedPoint>(blockSize) {
+			private WeightedPoint stats;
 			
 			@Override
-			protected void process(int from, int to) {
-				int points = 0;
-				double deps = 0.0;
-				double sumChi2 = 0.0;
-				
-				for(int t=to; --t >= from; ) {
-					final Frame exposure = get(t);
-					if(exposure == null) continue;
-
-					for(final Channel channel : detectorChannels) if(channel.isUnflagged()) if(exposure.sampleFlag[channel.index] == 0) {			
-						final float value = exposure.data[channel.index];
-						sumChi2 += (channel.weight * value * value);
-						points++;
-					}
-					deps += exposure.dependents;
-				}		
-				
-				if(points - deps >= 1.0) {
-					final float fw = sumChi2 > 0.0 ? (float) ((points-deps) / sumChi2) : 1.0F;	
-					final double dof = 1.0 - deps / points;
-					
-					for(int t=to; --t >= from; ) {
-						final Frame exposure = get(t);
-						if(exposure == null) continue;
-						
-						exposure.unflag(Frame.FLAG_DOF);
-						exposure.dof = dof;
-						exposure.relativeWeight = fw;
-						sumfw += fw;
-						n++;
-					}
-				}
-				else for(int t=to; --t >= from; ) {
-					final Frame exposure = get(t);
-					if(exposure == null) continue;
-			
-					exposure.flag(Frame.FLAG_DOF);
-					exposure.dof = 0.0F;
-					exposure.relativeWeight = Float.NaN; //	These will be set to 1.0 when renormalizing below...			
-				}	
+			protected void init() {
+				super.init();
+				stats = new WeightedPoint();
 			}
 			
 			@Override
-			public WeightedPoint getPartialResult() { return new WeightedPoint(n, sumfw); }
+			protected void process(int from, int to) {
+				getTimeWeight(from, to, stats);
+			}
+			
+			@Override
+			public WeightedPoint getPartialResult() { return stats; }
 			
 			@Override
 			public WeightedPoint getResult() {
@@ -1275,96 +1302,86 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Renormalize the time weights s.t. the pixel weights remain representative...
 		final float inorm = stats.weight() > 0.0 ? (float) (stats.value() / stats.weight()) : 1.0F; 
 			
-		Range wRange = new Range();
-		
-		if(hasOption("weighting.frames.noiserange")) wRange = option("weighting.frames.noiserange").getRange(true);
-		else wRange.full();
-		
-		final Range weightRange = wRange;
-			 
-		for(Frame exposure : this) if(exposure != null) {
-			if(Float.isNaN(exposure.relativeWeight)) exposure.relativeWeight = 1.0F;
+		for(final Frame exposure : this) if(exposure != null) {
+			if(Float.isNaN(exposure.relativeWeight)) exposure.relativeWeight = 0.0F;
 			else exposure.relativeWeight *= inorm;
-			
-			if(flag) {
-				if(weightRange.contains(exposure.relativeWeight)) exposure.unflag(Frame.FLAG_WEIGHT);
-				else exposure.flag(Frame.FLAG_WEIGHT);
-			}
-			else exposure.unflag(Frame.FLAG_WEIGHT);
-		}		
+		}
+		
+		if(!flag) return;
+		if(!hasOption("weighting.frames.noiserange")) return;
+		
+		final Range weightRange = option("weighting.frames.noiserange").getRange(true);
+
+		for(final Frame exposure : this) if(exposure != null) if(!weightRange.contains(exposure.relativeWeight)) 
+			exposure.flag(Frame.FLAG_WEIGHT);	
 	}
 	
 	
 	public void dejumpFrames() {
-		final int resolution = hasOption("dejump.resolution") ? framesFor(option("dejump.resolution").getDouble() * Unit.sec) : 1;
-		final double levelLength = hasOption("dejump.minlength") ? option("dejump.minlength").getDouble() * Unit.sec : 1.0 * Unit.sec;
-		
-		int minFrames = (int) Math.round(levelLength / instrument.samplingInterval);
-		if(minFrames < 2) minFrames = Integer.MAX_VALUE;
-		
+		final int resolution = ExtraMath.pow2round(hasOption("dejump.resolution") ? framesFor(option("dejump.resolution").getDouble() * Unit.sec) : 1);
 		double level = hasOption("dejump.level") ? option("dejump.level").getDouble() : 2.0;
-		boolean robust = false;
-		
-		if(hasOption("estimator")) if(option("estimator").equals("median")) robust=true;
-		
-		// Save the old time weights
-		for(Frame exposure : this) if(exposure != null) exposure.tempC = exposure.relativeWeight;
-			
-		getTimeWeights(resolution, false);
-			
-		comments += robust ? "[J]" : "J";
-	
-		final Dependents parms = getDependents("jumps");		
-		
 		
 		// Convert level from rms to weight....
 		level = 1.0 / (level * level);
 		
 		// Make sure that the level is significant at the 3-sigma level...
-		level = Math.min(1.0 - 9.0 / instrument.mappingChannels, level);
+		// TODO this is assuming Gaussian distribution, whereas it's the distribution of weights that matters
+		//      but it should be roughly correct, and if anything conservative...
+		level = Math.min(1.0 - 9.0 / (resolution * instrument.mappingChannels), level);
 		
-		final int nt = size();
+		if(level <= 0.0) return;
+		
+		boolean robust = false;
+		if(hasOption("estimator")) if(option("estimator").equals("median")) robust=true;
+		comments += robust ? "[J]" : "J";
+		
+		final double minLevelTime = hasOption("dejump.minlength") ? option("dejump.minlength").getDouble() * Unit.sec : 5.0 * getPointCrossingTime();
+		
+		int minFrames = (int) Math.round(minLevelTime / instrument.samplingInterval);
+		if(minFrames < 2) minFrames = Integer.MAX_VALUE;
+		
+		// Save the old time weights
+		for(Frame exposure : this) if(exposure != null) exposure.tempC = exposure.relativeWeight;
+			
+		final Dependents parms = getDependents("jumps");		
+		
+		// Derive new time weights temporarily...
+		getTimeWeights(resolution, false);
 		
 		int from = 0;
 		int to = 0;
 		int levelled = 0;
 		int removed = 0;
 		
-		while((from = nextWeightTransit(to, level, -1)) < nt) {
+		while((from = nextWeightTransit(to, level, -1)) > 0) {
 			to = nextWeightTransit(from, level, 1);
+			if(to < 0) to = size();
 			
 			if(to - from > minFrames) {
-				// Clear dependecies of any prior de-jumping. Will use new dependecies
-				// on the currently obtained level for the interval.
-				parms.clear(instrument, from, to);
-				
-				// Remove the offsets, and update the dependecies...
+				// Remove the offsets, and update the dependencies...
 				localLevel(from, to, parms, robust);
 				
-				// Mark weights temporarily as NaN -- then these will be reset to 1.0 later...
-				for(int t=from; t<to; t++) {
-					Frame exposure = get(t);
-					if(get(t) == null) continue;
-					exposure.relativeWeight = Float.NaN;
+				// Set default frame weights (for now, might be overwritten if re-weighting below...)
+				for(int t=to; --t >= from; ) {
+					final Frame exposure = get(t);
+					if(exposure != null) exposure.tempC = 1.0F;
 				}
 				
-				parms.apply(instrument, from, to);
-				
 				levelled++;
-				
 			}
 			else {
-				for(int t=from; t<to; t++) if(get(t) != null) get(t).flag(Frame.FLAG_LEVEL);
+				for(int t=from; t<to; t++) if(get(t) != null) get(t).flag(Frame.FLAG_JUMP);
 				removed++;
 			}
-			
 		}
 		
-		// Reinstate the old time weights
-		for(Frame exposure : this) if(exposure != null) 
-			exposure.relativeWeight = Float.isNaN(exposure.relativeWeight) ? 1.0F : exposure.tempC;	
+		// Recalculate the frame weights as necessary... (it's fast!)
+		if(levelled > 0  || removed > 0) {
+			if(hasOption("weighting.frames")) getTimeWeights();
+		}
+		// Otherwise, just reinstate the old weights...
+		else for(final Frame exposure : this) if(exposure != null) exposure.relativeWeight = exposure.tempC;
 		
-				
 		comments += levelled + ":" + removed;
 	}
 	
@@ -1376,7 +1393,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(int t=fromt; t<nt; t++) {	
 			final Frame exposure = get(t);
 			if(exposure == null) continue;
-			if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+			if(exposure.isFlagged(Frame.TIME_WEIGHTING_FLAGS)) continue;
 			if(exposure.relativeWeight <= 0.0) continue;
 		
 			if(direction < 0) {
@@ -1386,7 +1403,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				if(exposure.relativeWeight > level) return t;
 			}
 		}
-		return nt;
+		return -1;
 	}
 	
 	public void getTimeStream(final Channel channel, final double[] data) {
@@ -2909,8 +2926,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			getWeights();
 		}
 		else if(task.equals("weighting.frames")) {
-			int n = hasOption("weighting.frames.resolution") ? filterFramesFor(option("weighting.frames.resolution").getValue(), 10.0 * Unit.s) : 1;
-			getTimeWeights(ExtraMath.pow2ceil(n));
+			getTimeWeights();
 			updatePhases();
 		}
 		else if(task.startsWith("despike")) {
@@ -2969,7 +2985,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void getWeights(String method) {
 		if(method.equals("robust")) getRobustPixelWeights();
 		else if(method.equals("differential")) getDifferencialPixelWeights();
-		else getRMSNoiseWeights();	
+		else getRMSPixelWeights();	
 		flagWeights();
 	}
 
@@ -3322,8 +3338,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		private int blocksize;
 
 		public BlockFork(int blocksize) { 
-			super(ExtraMath.roundupRatio(size(), blocksize), getThreadCount());
-			this.blocksize = blocksize; 
+			super(ExtraMath.roundupRatio(size(), Math.max(1, blocksize)), getThreadCount());
+			this.blocksize = Math.max(1, blocksize); 
 		}
 
 		@Override

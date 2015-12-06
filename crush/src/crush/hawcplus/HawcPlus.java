@@ -67,12 +67,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	
 	private void initDRPMessages() {
 		System.err.println(" Activating DRP messages over TCP/IP.");
-		String url = hasOption("drp.host") ? option("drp.host").getValue() : DRPMessenger.DEFAULT_HOST;
-		int port = hasOption("drp.port") ? option("drp.port").getInt() : DRPMessenger.DEFAULT_DRP_PORT;
-		try { 
-			drp = new DRPMessenger(url, port); 
-			if(hasOption("drp.timeout")) drp.setTimeout((int) Math.ceil(1000.0 * option("drp.timeout").getDouble()));
-		}
+		try { drp = new DRPMessenger(option("drp")); }
 		catch(IOException e) { warning(e); }
 	}
 	
