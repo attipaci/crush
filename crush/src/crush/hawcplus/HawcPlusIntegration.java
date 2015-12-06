@@ -245,7 +245,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					else {
 						frame.VPA = VPA[i] * (float) Unit.deg;
 						// TODO The effective frame rotation to horizontal is VPA - PA... (check sign again...)
-						// H -> E rotate by VPA (or -VPA?)
+						// X -> E rotate by VPA (or -VPA?)
 						// X -> H rotate by A
 						// H -> E rotate by PA
 						// VPA = A + PA (or -VPA = A + PA?)

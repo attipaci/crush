@@ -50,7 +50,8 @@ public class CRUSH extends Configurator {
 	private static final long serialVersionUID = 6284421525275783456L;
 
 	private static String version = "2.30-4";
-	private static String revision = "devel.3";
+	private static String revision = "devel.6";
+	
 	public static String workPath = ".";
 	public static String home = ".";
 	public static boolean debug = false;
@@ -66,10 +67,9 @@ public class CRUSH extends Configurator {
 	public int parallelScans = 1;
 	public int parallelism = 1;
 
-	ArrayList<Pipeline> pipelines;
-
-	Vector<Integration<?, ?>> queue = new Vector<Integration<?, ?>>();
-
+	private ArrayList<Pipeline> pipelines;
+	private Vector<Integration<?, ?>> queue = new Vector<Integration<?, ?>>();
+	
 	private int configDepth = 0;	// Used for 'nested' output of invoked configurations.
 
 	static { 
@@ -465,10 +465,10 @@ public class CRUSH extends Configurator {
 
 		status("Reducing " + scans.size() + " scan(s).");
 
-		if(isConfigured("bright")) info(" Bright source reduction.");
-		else if(isConfigured("faint")) info(" Faint source reduction.");
-		else if(isConfigured("deep")) info(" Deep source reduction.");
-		else info(" Default reduction.");
+		if(isConfigured("bright")) info("Bright source reduction.");
+		else if(isConfigured("faint")) info("Faint source reduction.");
+		else if(isConfigured("deep")) info("Deep source reduction.");
+		else info("Default reduction.");
 
 		if(isConfigured("extended")) System.out.println(" Assuming extended source(s).");
 

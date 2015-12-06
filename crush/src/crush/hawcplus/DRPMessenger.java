@@ -27,27 +27,48 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import crush.CRUSH;
+import kovacs.util.Configurator;
 
 
 public class DRPMessenger extends Thread {
 	private ArrayBlockingQueue<Message> queue;
 	private InetSocketAddress address;
+	private String senderID = "hawc.pipe.step.crush";
 	private int timeoutMillis = DEFAULT_TIMEOUT_MILLIS;
+	private boolean isTimestamping = true;
 	
-	public DRPMessenger(String host, int port) throws IOException {
-		if(port < 0) port = DEFAULT_DRP_PORT;
+	public DRPMessenger(Configurator options) throws IOException {
+		String host = options.isConfigured("host") ? options.get("host").getValue() : DEFAULT_HOST;
+		int port = options.isConfigured("port") ? options.get("port").getInt() : DEFAULT_DRP_PORT;
 		
+		if(options.isConfigured("timeout")) setTimeout((int) Math.ceil(1000.0 * options.get("timeout").getDouble()));
+		if(options.isConfigured("id")) setSenderID(options.get("id").getValue());
+		setTimestamping(options.isConfigured("timestamp"));
+		
+		int capacity = options.isConfigured("fifo") ? options.get("fifo").getInt() : DEFAULT_QUEUE_CAPACITY;
+	
 		address = new InetSocketAddress(host, port);
-		queue = new ArrayBlockingQueue<Message>(QUEUE_CAPACITY);
+		queue = new ArrayBlockingQueue<Message>(capacity);
 		
 		info("Hello!");
 		
 		//setDaemon(true); 
 		start();
 	}
+	
+	public synchronized void setTimestamping(boolean value) { isTimestamping = value; }
+	
+	public boolean isTimestamping() { return isTimestamping; }
+	
+	public void setSenderID(String id) { senderID = id; }
+	
+	public String getSenderID() { return senderID; }
 	
 	public void setTimeout(int millis) { timeoutMillis = millis; }
 	
@@ -74,10 +95,9 @@ public class DRPMessenger extends Thread {
 	}
 	
 	
-	private void send(Message message) throws IOException {
+	private synchronized void send(Message message) throws IOException {
 		if(message == null) return;
-		
-		
+				
 		Socket socket = new Socket();
 		socket.setReuseAddress(true);
 		socket.setPerformancePreferences(2, 1, 0); // connection, latency, bandwidth
@@ -87,13 +107,12 @@ public class DRPMessenger extends Thread {
 		socket.connect(address);
 		//System.err.println("TCP Command connected to " + address.getHostName() + " port " + address.getPort());
 		
-		String line = message.type + "\t" + sender + "\t" + message.text;
-		if(line.length() > MAX_MESSAGE_BYTES) line = line.substring(0, MAX_MESSAGE_BYTES-3) + "...";
-	
 		OutputStream out = socket.getOutputStream();
-		out.write(line.getBytes());
+		String text = message.toString();
 		
-		if(CRUSH.debug) System.err.println("DRP> " + line.getBytes());
+		out.write(text.getBytes());
+		
+		if(CRUSH.debug) System.err.println("DRP> " + text.getBytes());
 		
 		out.flush();
 		
@@ -107,9 +126,7 @@ public class DRPMessenger extends Thread {
 	
 	public void shutdown() {
 		interrupt();
-		try { 
-			this.join();
-		}
+		try { this.join(); }
 		catch(InterruptedException e) {}
 		
 	}
@@ -137,17 +154,28 @@ public class DRPMessenger extends Thread {
 	private class Message {
 		String type;
 		String text;
+		long timestamp;
 		
 		private Message(String type, String message) {
+			timestamp = System.currentTimeMillis();
 			this.type = type;
 			this.text = message.replace('\t', ' ');	// Replace tabs with spaces since tabs are message delimiters.
 			
 			try { queue.put(this); }
 			catch(InterruptedException e) { CRUSH.warning("DRP message creation was interrupted."); }
 		}
+		
+		@Override
+		public String toString() {
+			String line = type + "\t" + senderID + "\t" + text;
+			
+			int maxLength = MAX_MESSAGE_BYTES;
+			if(isTimestamping()) maxLength -= (timePrefix.length() + timeFormatSpec.length());
+			if(line.length() > maxLength) line = line.substring(0, maxLength-3) + "...";
+		
+			return line + (isTimestamping() ? timePrefix + timeFormat.format(timestamp) : "");
+		}
 	}
-	
-	private static String sender = "hawc.pipe.step.crush";
 	
 	public final static String TYPE_CRITICAL = "CRIT";
 	public final static String TYPE_ERROR = "ERR";
@@ -157,8 +185,15 @@ public class DRPMessenger extends Thread {
 	
 	public final static String DEFAULT_HOST = "127.0.0.1";
 	public final static int DEFAULT_DRP_PORT = 50747;
-	public final static int QUEUE_CAPACITY = 100;
+	public final static int DEFAULT_QUEUE_CAPACITY = 100;
 	public final static int DEFAULT_TIMEOUT_MILLIS = 1000;
 	public final static int MAX_MESSAGE_BYTES = 1000;
+	
+	private final static String timePrefix = " @ ";
+	private final static String timeFormatSpec = "HH:mm:ss.SSS";
+	private final static DateFormat timeFormat = new SimpleDateFormat(timeFormatSpec);
+	
+	static { timeFormat.setTimeZone(TimeZone.getTimeZone("UTC")); }
+
 	
 }

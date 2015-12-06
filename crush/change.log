@@ -1,16 +1,42 @@
->> 'drp', 'drp.host', 'drp.port', 'drp.timeout'
 
+
+2.30-4
+
+	[BUG] {SCUBA-2} Merging of integrations was buggy, leaving just one
+	subscan worth of data being processed. Fixed.
+
+	[NEW] {HAWC+} DRP messages through TCP/IP. The messages are turned on
+	via the 'drp' option. The default setting assumes port 50747 on 
+	localhost, which can be changed, if desired, through the 'drp.port'
+	and 'drp.host' options respectively. Other sub-options are 'drp.id'
+	(for setting sender ID), 'drp.fifo' (setting outgoing queue size)
+	and 'drp.timeout' (TCP/IP socket timeout). 
+
+	[FIX] {MacOS X} The 'readlink' bash command on MacOS X does not 
+	support the '-f' option (follow links through). CRUSH scripts updated 
+	to use workaround, following links through manually. This approach 
+	should work equally well on all platforms.
 
 	[FIX] CRUSH could breach the OS limit for maximum number of processes
 	if the number of scans times the number of threads (virtual CPU cores)
 	exceeded the OS limit. Fixed. 	
+
+	[TWEAK] Slight speedup of decorrelation parameter accounting. 
+
+	[TWEAK] {GISMO} Some tweaks to de-jumping...
+	
+	[TWEAK] Small changes to time weighting: DOF measured over all 
+	channels, weighting flags cleared up front, measure domain to use 
+	previously flagged for weight/DOF (for redetermining these flags, as 
+	needed).
 
 	[TWEAK] {SOFIA} FITS requirements to conform to Rev. F.
 
 	[TWEAK] nom.tam.fits package updated to 1.13.1. FITS resource leaks
 	plugged.
 
-	[CODE] HDUReader to go through CRUSH's executor service when possible.
+	[CODE] HDUReader now goes through CRUSH's executor service when 
+	possible.
 
 	[CODE] scan validation separated from read.
 
