@@ -141,40 +141,30 @@ public class Signal implements Cloneable {
 		return sum / n;
 	}
 	
-	public void removeDrifts() {
-		removeDrifts(ExtraMath.roundupRatio(integration.framesFor(integration.filterTimeScale), resolution), true);
+	public final void removeDrifts() {
+		removeDrifts(integration.framesFor(integration.filterTimeScale), true);
 	}
 	
 	
-	public void removeDrifts(int N, boolean isReconstructible) {	
-		if(N == driftN) return;
+	public final void removeDrifts(int nFrames, boolean isReconstructible) {		
+		int N = ExtraMath.roundupRatio(nFrames, resolution);
 		
-		addDrifts();
-		
-		driftN = N;
-		if(isReconstructible) drifts = new float[ExtraMath.roundupRatio(value.length, driftN)];
+		if(drifts == null || N != driftN) {
+			addDrifts();
+			if(isReconstructible) drifts = new float[ExtraMath.roundupRatio(value.length, N)];
+			driftN = N;
+		}
 		
 		for(int T=0, fromt=0; fromt<value.length; T++) {
-			double sum = 0.0;
-			int n = 0;
-			final int tot = Math.min(fromt + driftN, value.length);
-			
-			for(int t=tot; --t >= fromt; ) if(!Float.isNaN(value[t])) {
-				sum += value[t];
-				n++;
-			}
-			if(n > 0) {
-				float fValue = (float) (sum / n);
-				for(int t=tot; --t >= fromt; ) value[t] -= fValue;
-				if(isReconstructible) drifts[T] = fValue;
-			}
-			
+			final int tot = Math.min(fromt + nFrames, integration.size());
+			final float value = (float) level(fromt, tot);
+			if(isReconstructible) drifts[T] += value;
 			fromt = tot;
 		}
 	}
 	
 	
-	public void level(int from, int to) {
+	public double level(int from, int to) {
 		from = from / resolution;
 		to = ExtraMath.roundupRatio(to, resolution);
 		
@@ -185,10 +175,11 @@ public class Signal implements Cloneable {
 			sum += value[t];
 			n++;
 		}
-		if(n > 0) {
-			float ave = (float) (sum / n);
-			for(int t=from; t<to; t++) value[t] -= ave;
-		}
+		if(n == 0) return 0.0;
+			
+		float ave = (float) (sum / n);
+		for(int t=from; t<to; t++) value[t] -= ave;
+		return ave;
 	}
 		
 	public WeightedPoint getMedian() {

@@ -11,8 +11,8 @@
 # fail-safe defaults. Users can override settings by uncommenting or editing 
 # lines further below, or preferably by adding their own persistent settings 
 # in under /etc/crush2/startup/ or ~/.crush2/startup/ (e.g. in java.conf).
-if [ -L $0 ] ; then CRUSH=$(dirname $(readlink -f $0)) ; 
-else CRUSH=$(dirname $0) ; fi
+#if [ -L $0 ] ; then CRUSH=$(dirname $(readlink -f $0)) ; 
+#else CRUSH=$(dirname $0) ; fi
 
 source "$CRUSH/autoconf.sh"
 

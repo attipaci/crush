@@ -133,6 +133,11 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 		flag = 0;
 	}
 	
+	public double getFiltering(Integration<?,?> integration) {
+		final double nDrifts = Math.ceil(integration.getDuration() / filterTimeScale);
+		return directFiltering * (1.0 - nDrifts / integration.size());
+	}
+	
 	public final synchronized void addDependents(double dp) {
 		dependents += dp;
 	}
