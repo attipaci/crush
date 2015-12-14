@@ -83,39 +83,9 @@ public class CorrelatedSignal extends Signal {
 		return sum / sumw;
 	}
 
-	@Override
-	public void removeDrifts() {
-		int N = ExtraMath.roundupRatio(integration.framesFor(integration.filterTimeScale), resolution);
-		if(N == driftN) return;
-		
-		addDrifts();
-		
-		driftN = N;
-		drifts = new float[ExtraMath.roundupRatio(value.length, driftN)];
-		
-		for(int T=0, fromt=0; fromt < value.length; T++) {
-			final int tot = Math.min(fromt + driftN, value.length);
-			
-			double sum = 0.0, sumw = 0.0;			
-			for(int t=tot; --t >= fromt; ) {
-				final float wt = weight[t];
-				if(wt <= 0.0) continue;
-				sum += wt * value[t];
-				sumw += wt;
-			}
-			
-			if(sumw > 0.0) {
-				float fValue = (float) (sum /= sumw);
-				for(int t=tot; --t >= fromt; ) value[t] -= fValue;
-				drifts[T] = fValue;
-			}
-			
-			fromt = tot;
-		}
-	}
 	
 	@Override
-	public void level(int from, int to) {
+	public double level(int from, int to) {
 		from = from / resolution;
 		to = ExtraMath.roundupRatio(to, resolution);
 		
@@ -124,10 +94,11 @@ public class CorrelatedSignal extends Signal {
 			sum += weight[t] * value[t];
 			sumw += weight[t];
 		}
-		if(sumw > 0.0) {
-			final double ave = sum / sumw;
-			for(int t=to; --t >= from; ) value[t] -= ave;
-		}
+		if(sumw == 0.0) return 0.0;
+		
+		final double ave = sum / sumw;
+		for(int t=to; --t >= from; ) value[t] -= ave;
+		return ave;
 	}
 	
 	
@@ -326,13 +297,10 @@ public class CorrelatedSignal extends Signal {
 		final ChannelGroup<?> goodChannels = mode.getValidChannels();
 		final int nc = channels.size();
 		final int resolution = mode.getFrameResolution(integration);
-		final double duration = integration.getDuration();
-	
 		
 		// Need at least 2 channels for decorrelaton...
 		//if(goodChannels.size() < 2) return;
-			
-			
+					
 		final float[] G = mode.getNormalizedGains();	
 		final float[] dG = syncGains;
 		
@@ -351,12 +319,16 @@ public class CorrelatedSignal extends Signal {
 			channel.tempWG2 = channel.tempWG * channel.tempG;
 		}
 		
+		
 		// Remove channels with zero gain/weight from goodChannels
 		// Precalculate the channel dependents...
 		for(int k=goodChannels.size(); --k >= 0; ) {
 			Channel channel = goodChannels.get(k);
 			if(channel.tempWG2 == 0.0) goodChannels.remove(k);
-			else channel.temp = channel.tempWG2 * (float) (channel.directFiltering * (1.0 - channel.filterTimeScale / duration));
+			else {
+				// Correct for lowered degrees of freedom due to prior filtering...
+				channel.temp = channel.tempWG2 * (float) channel.getFiltering(integration);
+			}
 		}
 		
 		final boolean isGainResync = resyncGains;
@@ -398,20 +370,23 @@ public class CorrelatedSignal extends Signal {
 			
 			@Override
 			protected void process(int from, int to) {
-				final int T = from / resolution;
-				
-				final float C = value[T];
+				final int T = from / resolution;	
 				
 				// Resync gains, if necessary...
-				if(isGainResync) for(int t=to; --t >= from; ) {
-					final Frame exposure = integration.get(t);
-					if(exposure == null) continue;			
-					for(int k=nc; --k >= 0; ) exposure.data[channels.get(k).index] -= dG[k] * C;
+				if(isGainResync) {
+					final float C = value[T];
+					for(int t=to; --t >= from; ) {
+						final Frame exposure = integration.get(t);
+						if(exposure != null) for(int k=nc; --k >= 0; ) 
+							exposure.data[channels.get(k).index] -= dG[k] * C;
+					}
 				}
 				
+				// Calculate the incremental correlated values...
 				if(isRobust) getRobustCorrelated(goodChannels, from, to, increment, buffer);
 				else getMLCorrelated(goodChannels, from, to, increment);
 				
+				// If there is no valid correlated signal, we are done...
 				if(increment.weight() <= 0.0) return;
 				
 				// Cast the incremental value into float for speed...	
@@ -423,13 +398,13 @@ public class CorrelatedSignal extends Signal {
 					if(exposure == null) continue;
 					
 					// Here usedGains carries the gain increment dG from the last correlated signal removal
-					for(Channel channel : channels) exposure.data[channel.index] -= channel.tempG * dC;
+					for(final Channel channel : channels) exposure.data[channel.index] -= channel.tempG * dC;
 												
 					if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
 					
 					final double fpNorm = exposure.relativeWeight / increment.weight();
 					
-					for(Channel channel : goodChannels) if(exposure.sampleFlag[channel.index] == 0) { 	
+					for(final Channel channel : goodChannels) if(exposure.sampleFlag[channel.index] == 0) { 	
 						final double dp = fpNorm * channel.temp;
 						dependents.addAsync(exposure, dp);
 						channelParms[channel.index] += dp;
@@ -480,12 +455,13 @@ public class CorrelatedSignal extends Signal {
 		
 		while(--to >= from) {
 			final Frame exposure = integration.get(to);
-						
-			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
-				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
-					sum += (exposure.relativeWeight * channel.tempWG * exposure.data[channel.index]);
-					sumw += (exposure.relativeWeight * channel.tempWG2);
-				}
+			
+			if(exposure == null) continue; 
+			if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+			
+			for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
+				sum += (exposure.relativeWeight * channel.tempWG * exposure.data[channel.index]);
+				sumw += (exposure.relativeWeight * channel.tempWG2);
 			}
 		}
 	
@@ -500,18 +476,21 @@ public class CorrelatedSignal extends Signal {
 		
 		while(--to >= from) {
 			final Frame exposure = integration.get(to);
-			if(exposure != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) {
-				for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
-					final WeightedPoint point = buffer[n++];
-					point.setValue(exposure.data[channel.index] / channel.tempG);
-					point.setWeight(exposure.relativeWeight * channel.tempWG2);
-					increment.addWeight(point.weight());
-					
-					assert !Double.isNaN(point.value());
-					assert !Double.isInfinite(point.value());
-				}
+			
+			if(exposure == null) continue; 
+			if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+		
+			for(final Channel channel : channels) if(exposure.sampleFlag[channel.index] == 0) {
+				final WeightedPoint point = buffer[n++];
+				point.setValue(exposure.data[channel.index] / channel.tempG);
+				point.setWeight(exposure.relativeWeight * channel.tempWG2);
+				increment.addWeight(point.weight());
+
+				assert !Double.isNaN(point.value());
+				assert !Double.isInfinite(point.value());
 			}
 		}
+
 		Statistics.smartMedian(buffer, 0, n, 0.25, increment); 
 	}
 	

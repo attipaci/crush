@@ -811,7 +811,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(!sigs.isEmpty()) new CRUSH.Fork<Void>(sigs.size(), getThreadCount()) {
 			@Override
-			protected void processIndex(int k) { sigs.get(k).removeDrifts(); }
+			protected void processIndex(int k) { sigs.get(k).removeDrifts(driftN, true); }
 		}.process();
 	}
 
@@ -908,8 +908,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 
 	private void level(final Channel channel, final int from, int to, final float[] frameParms, final WeightedPoint increment) {
-		final float delta = (float) increment.value();
-				
+		final float delta = (float) increment.value();			
+		final float pNorm = (float) (channel.getFiltering(this) / increment.weight());
+		
 		// Remove offsets from data and account frame dependence...	
 		while(--to >= from) {
 			final Frame exposure = get(to);
@@ -918,7 +919,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			exposure.data[channel.index] -= delta;
 			
 			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0)
-				frameParms[exposure.index] += exposure.relativeWeight / increment.weight();
+				frameParms[exposure.index] += exposure.relativeWeight * pNorm;
 		}
 	}
 

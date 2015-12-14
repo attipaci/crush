@@ -1,12 +1,10 @@
 #!/bin/bash
 
-NAME=$0
-
-if [ -L $NAME ]; then
-        NAME=`readlink -f $NAME`
-fi
-
-CRUSH=`dirname $NAME`
+# Find the absolute path to CRUSH (follow links manually, not using '-f'
+# (which does not work on MacOS X)
+EXECNAME=$0
+while [ -L $EXECNAME ] ; do EXECNAME=`readlink $EXECNAME`; done
+CRUSH=`dirname $EXECNAME`
 
 source $CRUSH/wrapper.sh
 

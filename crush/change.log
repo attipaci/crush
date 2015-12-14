@@ -1,9 +1,21 @@
 
+2.30-4 (14 December 2015)
 
-2.30-4
 
-	[BUG] {SCUBA-2} Merging of integrations was buggy, leaving just one
-	subscan worth of data being processed. Fixed.
+	Overview
+	======================================================================
+	This maintenance release fixes a critical bug for SCUBA-2, whereby long
+	integration (consisting of more than 1 subscan) were processed 
+	incorrectly. It also fixes a smaller bug with the parameter accounting
+	of the correlated noise removal. And, the release offers the usual 
+	suite of smaller fixes and improvements.
+	======================================================================
+
+	[CRITICAL] {SCUBA-2} Merging of integrations was buggy, leaving just 
+        one subscan worth of data being processed. Fixed.
+
+	[BUG] Correlated signal parameter accounting ooops. Reduced degrees
+	of freedom due to filtering were calculated wrong.
 
 	[NEW] {HAWC+} DRP messages through TCP/IP. The messages are turned on
 	via the 'drp' option. The default setting assumes port 50747 on 
@@ -11,6 +23,9 @@
 	and 'drp.host' options respectively. Other sub-options are 'drp.id'
 	(for setting sender ID), 'drp.fifo' (setting outgoing queue size)
 	and 'drp.timeout' (TCP/IP socket timeout). 
+
+	[FIX] Signal drift removal fixes and improvements. Drift removal now
+	uses the level(from, to) method.
 
 	[FIX] {MacOS X} The 'readlink' bash command on MacOS X does not 
 	support the '-f' option (follow links through). CRUSH scripts updated 
@@ -20,6 +35,14 @@
 	[FIX] CRUSH could breach the OS limit for maximum number of processes
 	if the number of scans times the number of threads (virtual CPU cores)
 	exceeded the OS limit. Fixed. 	
+
+	[TWEAK] {SCUBA-2} Tweaked SCUBA-2 configurations for a bit more 
+	aggressive cleaning. Thanks to Zhi-yu Zhang for helping find more
+	optimal default settings.
+
+	[TWEAK] {GISMO} 'faint' and 'deep' mode 1/f 'stability' setting 
+	set back to shorter (the shorter settings got commented a few versions
+	back...)
 
 	[TWEAK] Slight speedup of decorrelation parameter accounting. 
 
@@ -42,6 +65,12 @@
 
 	[CODE] Common handling of messages (informational, warning, and errors)
 	introduced.
+	
+	[CONFIG] {SCUBA-2} Tweaked SCUBA-2 default configuration 
+	(scuba2/default.cfg) based on suggestions by Zhi-yu Zhang.
+
+	[CONFIG] {LABOCA} Skydip opacities and calibration data is included
+	up to 2015-09-01.
 
 	
 
