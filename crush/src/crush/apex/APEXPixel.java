@@ -29,14 +29,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
 
-import kovacs.data.DataPoint;
-import kovacs.data.WeightedPoint;
-import kovacs.fft.DoubleFFT;
-import kovacs.math.Vector2D;
-import kovacs.util.ExtraMath;
-import kovacs.util.Unit;
-import kovacs.util.Util;
-
 import crush.Channel;
 import crush.Frame;
 import crush.PhaseData;
@@ -44,6 +36,13 @@ import crush.PhaseDespiking;
 import crush.PhaseSet;
 import crush.PhaseWeighting;
 import crush.array.SingleColorPixel;
+import jnum.ExtraMath;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.DataPoint;
+import jnum.data.WeightedPoint;
+import jnum.fft.DoubleFFT;
+import jnum.math.Vector2D;
 
 public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighting, PhaseDespiking {
 	public Vector2D fitsPosition;

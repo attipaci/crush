@@ -24,14 +24,14 @@ package crush.filters;
 
 import java.util.Arrays;
 
-import kovacs.data.Statistics;
-import kovacs.math.Range;
-import kovacs.math.Vector2D;
-import kovacs.util.ExtraMath;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 import crush.Integration;
 import crush.Motion;
+import jnum.ExtraMath;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.Statistics;
+import jnum.math.Range;
+import jnum.math.Vector2D;
 
 
 // TODO account for point-source filtering, and Dependents...

@@ -26,7 +26,7 @@ package crush.fits;
 import java.io.IOException;
 
 import crush.CRUSH;
-import kovacs.util.Parallel;
+import jnum.Parallel;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 

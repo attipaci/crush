@@ -27,11 +27,11 @@ package crush;
 import java.util.Arrays;
 import java.util.Collection;
 
-import kovacs.data.DataPoint;
-import kovacs.data.Statistics;
-import kovacs.data.WeightedPoint;
-import kovacs.util.ExtraMath;
-import kovacs.util.Parallel;
+import jnum.ExtraMath;
+import jnum.Parallel;
+import jnum.data.DataPoint;
+import jnum.data.Statistics;
+import jnum.data.WeightedPoint;
 
 
 

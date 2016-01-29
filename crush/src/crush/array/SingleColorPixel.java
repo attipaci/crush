@@ -26,12 +26,11 @@ package crush.array;
 
 import java.util.*;
 
-import kovacs.math.Vector2D;
-import kovacs.util.Constant;
-import kovacs.util.Unit;
-import kovacs.util.Util;
-
 import crush.*;
+import jnum.Constant;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.Vector2D;
 
 
 public abstract class SingleColorPixel extends Channel implements Pixel {

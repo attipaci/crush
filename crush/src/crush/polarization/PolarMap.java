@@ -28,11 +28,10 @@ import crush.*;
 import crush.array.*;
 import crush.astro.AstroMap;
 import crush.sourcemodel.ScalarMap;
+import jnum.Unit;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-
-import kovacs.util.Unit;
 
 
 public class PolarMap extends SourceModel {

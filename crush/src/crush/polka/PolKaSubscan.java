@@ -28,14 +28,17 @@ import crush.*;
 import crush.apex.APEXArrayScan;
 import crush.filters.Filter;
 import crush.laboca.*;
+import jnum.Constant;
+import jnum.ExtraMath;
+import jnum.Parallel;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.WeightedPoint;
+import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
 
 import java.text.NumberFormat;
 import java.util.*;
-
-import kovacs.data.WeightedPoint;
-import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
-import kovacs.util.*;
 
 public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable {
 	/**

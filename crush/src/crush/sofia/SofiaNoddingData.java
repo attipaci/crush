@@ -23,8 +23,8 @@
 
 package crush.sofia;
 
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
+import jnum.Unit;
+import jnum.math.Vector2D;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;

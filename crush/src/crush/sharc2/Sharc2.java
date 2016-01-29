@@ -27,16 +27,16 @@ import crush.*;
 import crush.array.Array;
 import crush.array.GeometricRowColIndexed;
 import crush.cso.CSOArray;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.Statistics;
+import jnum.data.WeightedPoint;
+import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 
 import java.io.*;
 import java.util.*;
-
-import kovacs.data.Statistics;
-import kovacs.data.WeightedPoint;
-import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
-import kovacs.util.*;
 
 
 public class Sharc2 extends CSOArray<Sharc2Pixel> implements GeometricRowColIndexed {

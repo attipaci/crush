@@ -27,7 +27,7 @@ package crush;
 import java.lang.reflect.*;
 import java.util.*;
 
-import kovacs.util.Copiable;
+import jnum.Copiable;
 
 public class ChannelGroup<ChannelType extends Channel> extends ArrayList<ChannelType> 
 implements Copiable<ChannelGroup<ChannelType>> {

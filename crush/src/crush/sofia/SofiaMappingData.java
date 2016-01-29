@@ -23,12 +23,12 @@
 
 package crush.sofia;
 
-import kovacs.astro.EclipticCoordinates;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.GalacticCoordinates;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
+import jnum.Unit;
+import jnum.astro.EclipticCoordinates;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.GalacticCoordinates;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;

@@ -24,9 +24,9 @@
 
 package crush.partemis;
 
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 import crush.apex.APEXPixel;
+import jnum.Unit;
+import jnum.math.Vector2D;
 
 public class PArtemisPixel extends APEXPixel {
 	public int row, col;

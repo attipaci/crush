@@ -25,8 +25,8 @@ package crush;
 
 import java.text.NumberFormat;
 
-import kovacs.data.Statistics;
-import kovacs.data.WeightedPoint;
+import jnum.data.Statistics;
+import jnum.data.WeightedPoint;
 
 
 public class PhaseData {

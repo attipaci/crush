@@ -4,10 +4,10 @@ import java.io.*;
 import java.util.StringTokenizer;
 
 import crush.astro.AstroImage;
-import kovacs.data.Interpolator;
-import kovacs.math.Vector2D;
-import kovacs.util.ExtraMath;
-import kovacs.util.Unit;
+import jnum.ExtraMath;
+import jnum.Unit;
+import jnum.data.Interpolator;
+import jnum.math.Vector2D;
 
 public class ProfileSource {
 	Interpolator profile;

@@ -26,8 +26,8 @@ package crush.scuba2;
 
 
 import crush.Channel;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
+import jnum.Unit;
+import jnum.math.Vector2D;
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;
 

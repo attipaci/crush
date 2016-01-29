@@ -30,13 +30,13 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-import kovacs.util.Unit;
-import kovacs.util.Util;
 import crush.GroundBased;
 import crush.HorizontalFrame;
 import crush.Integration;
 import crush.Scan;
 import crush.jcmt.JCMTTauTable;
+import jnum.Unit;
+import jnum.Util;
 
 
 public abstract class CSOIntegration<InstrumentType extends CSOArray<?>, FrameType extends HorizontalFrame> 

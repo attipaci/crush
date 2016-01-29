@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-import kovacs.util.Copiable;
-import kovacs.util.Unit;
+import jnum.Copiable;
+import jnum.Unit;
 
 public class Mustang2Readout implements Cloneable, Copiable<Mustang2Readout> {
 	private int index;

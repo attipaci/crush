@@ -25,9 +25,9 @@ package crush.mako;
 
 import java.util.StringTokenizer;
 
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
-import kovacs.util.Util;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.Vector2D;
 
 
 public class MakoPixel extends AbstractMakoPixel {

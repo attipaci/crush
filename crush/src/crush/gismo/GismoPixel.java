@@ -26,10 +26,10 @@ package crush.gismo;
 
 import java.util.StringTokenizer;
 
-import kovacs.math.Vector2D;
-import kovacs.util.*;
-
 import crush.array.SingleColorPixel;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.Vector2D;
 
 public class GismoPixel extends SingleColorPixel {
 	public int row, col, mux, pin;

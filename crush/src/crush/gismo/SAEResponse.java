@@ -23,12 +23,12 @@
 
 package crush.gismo;
 
-import kovacs.util.Unit;
 import crush.ChannelGroup;
 import crush.FieldGainProvider;
 import crush.Integration;
 import crush.Response;
 import crush.Signal;
+import jnum.Unit;
 
 public class SAEResponse extends Response {
 	

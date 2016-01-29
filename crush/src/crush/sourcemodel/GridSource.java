@@ -26,14 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
 
-import kovacs.data.Data2D;
-import kovacs.data.GaussianPSF;
-import kovacs.data.Grid2D;
-import kovacs.data.GridImage;
-import kovacs.data.GridMap;
-import kovacs.math.Coordinate2D;
-import kovacs.util.Configurator;
-import kovacs.util.Unit;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
@@ -44,9 +36,17 @@ import crush.CRUSH;
 import crush.GenericInstrument;
 import crush.Instrument;
 import crush.Scan;
+import jnum.Configurator;
+import jnum.Unit;
+import jnum.data.Data2D;
+import jnum.data.GaussianPSF;
+import jnum.data.Grid2D;
+import jnum.data.GridImage2D;
+import jnum.data.GridMap2D;
+import jnum.math.Coordinate2D;
 
 
-public abstract class GridSource<CoordinateType extends Coordinate2D> extends GridMap<CoordinateType> {
+public abstract class GridSource<CoordinateType extends Coordinate2D> extends GridMap2D<CoordinateType> {
 	/**
 	 * 
 	 */
@@ -130,7 +130,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	}
 	
 	@Override
-	public GridImage<CoordinateType> getRegrid(final Grid2D<CoordinateType> toGrid) throws IllegalStateException {	
+	public GridImage2D<CoordinateType> getRegrid(final Grid2D<CoordinateType> toGrid) throws IllegalStateException {	
 		GridSource<CoordinateType> regrid = (GridSource<CoordinateType>) super.getRegrid(toGrid);
 		return regrid;
 	}
@@ -222,7 +222,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	
 	@Override
 	// TODO....
-	public int clean(GridImage<CoordinateType> search, double[][] beam, double gain, GaussianPSF replacementBeam) {
+	public int clean(GridImage2D<CoordinateType> search, double[][] beam, double gain, GaussianPSF replacementBeam) {
 		int components = super.clean(search, beam, gain, replacementBeam);
 		
 		// Reset the beam and resolution... 

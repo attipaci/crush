@@ -25,17 +25,17 @@
 package crush.sharc2;
 
 import crush.cso.CSOScan;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.AstroTime;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.HorizontalCoordinates;
+import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
 import java.io.*;
 import java.util.*;
 import java.text.*;
-
-import kovacs.astro.AstroTime;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.HorizontalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 
 
 public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {

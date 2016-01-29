@@ -31,11 +31,11 @@ import java.util.StringTokenizer;
 
 import crush.resonators.ResonatorList;
 import crush.resonators.ToneIdentifier;
-import kovacs.math.Range;
-import kovacs.math.Vector2D;
-import kovacs.util.Configurator;
-import kovacs.util.Unit;
-import kovacs.util.Util;
+import jnum.Configurator;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.Range;
+import jnum.math.Vector2D;
 
 
 public class Mako2PixelMatch extends ToneIdentifier<Mako2PixelID> {

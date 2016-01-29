@@ -25,8 +25,8 @@ package crush;
 
 import java.util.concurrent.ArrayBlockingQueue;
 
-import kovacs.data.DataPoint;
-import kovacs.data.WeightedPoint;
+import jnum.data.DataPoint;
+import jnum.data.WeightedPoint;
 
 
 public class ArrayRecycler {

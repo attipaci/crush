@@ -26,16 +26,18 @@ import crush.*;
 import crush.astro.AstroImage;
 import crush.astro.AstroMap;
 import crush.sourcemodel.*;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.SourceCatalog;
+import jnum.data.Region;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
+import jnum.util.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import kovacs.astro.SourceCatalog;
-import kovacs.data.Region;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 import nom.tam.fits.*;
 
 public class ImageTool {

@@ -29,10 +29,12 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 import crush.*;
 import crush.sourcemodel.*;
+import jnum.ExtraMath;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.Vector2D;
 
 
 public abstract class Array<PixelType extends Pixel, ChannelType extends Channel> extends Instrument<ChannelType> {

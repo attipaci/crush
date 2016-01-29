@@ -22,11 +22,11 @@
  ******************************************************************************/
 package crush;
 
-import kovacs.data.Asymmetry2D;
-import kovacs.data.DataPoint;
-import kovacs.util.Configurator;
-import kovacs.util.ExtraMath;
-import kovacs.util.Unit;
+import jnum.Configurator;
+import jnum.ExtraMath;
+import jnum.Unit;
+import jnum.data.Asymmetry2D;
+import jnum.data.DataPoint;
 
 /*******************************************************************************
  * Copyright (c) 2012 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.

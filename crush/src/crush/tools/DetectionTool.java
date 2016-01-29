@@ -48,15 +48,14 @@ package crush.tools;
 
 import java.util.*;
 
-import kovacs.astro.SourceCatalog;
-import kovacs.data.Region;
-import kovacs.util.ConfidenceCalculator;
-import kovacs.util.Constant;
-import kovacs.util.Unit;
-import kovacs.util.Util;
-
 import crush.CRUSH;
 import crush.astro.AstroMap;
+import jnum.Constant;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.SourceCatalog;
+import jnum.data.Region;
+import jnum.util.ConfidenceCalculator;
 
 
 //noise-peaks

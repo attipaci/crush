@@ -33,7 +33,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import crush.CRUSH;
-import kovacs.util.Configurator;
+import jnum.Configurator;
 
 
 public class DRPMessenger extends Thread {

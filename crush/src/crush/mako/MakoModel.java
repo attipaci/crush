@@ -29,12 +29,13 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.io.*;
 
-import kovacs.data.fitting.AmoebaMinimizer;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 import crush.array.DistortionModel;
 import crush.mako2.Mako2;
 import crush.mako2.Mako2Pixel;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.fitting.AmoebaMinimizer;
+import jnum.math.Vector2D;
 
 
 public class MakoModel<PixelType extends AbstractMakoPixel> {

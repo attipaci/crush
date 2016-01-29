@@ -23,9 +23,9 @@
 
 package crush.scuba2;
 
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 import crush.array.SingleColorPixel;
+import jnum.Unit;
+import jnum.math.Vector2D;
 
 public class Scuba2Pixel extends SingleColorPixel {
 	public int subarrayNo;

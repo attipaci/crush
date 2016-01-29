@@ -28,8 +28,9 @@ import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 
-import kovacs.text.TableFormatter;
-import kovacs.util.*;
+import jnum.Configurator;
+import jnum.Unit;
+import jnum.text.TableFormatter;
 
 public abstract class SourceModel implements Cloneable, TableFormatter.Entries, Messaging {
 	private Instrument<?> instrument;

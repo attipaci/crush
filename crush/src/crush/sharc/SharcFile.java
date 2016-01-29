@@ -32,9 +32,9 @@ import java.io.PrintStream;
 import java.util.Hashtable;
 
 import crush.CRUSH;
-import kovacs.io.VAXDataInputStream;
-import kovacs.math.Vector2D;
-import kovacs.util.Configurator;
+import jnum.Configurator;
+import jnum.io.VAXDataInputStream;
+import jnum.math.Vector2D;
 
 
 public class SharcFile extends Hashtable<Integer, SharcScan> {

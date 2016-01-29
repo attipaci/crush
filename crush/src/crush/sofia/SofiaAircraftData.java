@@ -23,9 +23,9 @@
 
 import java.text.NumberFormat;
 
-import kovacs.text.TableFormatter;
-import kovacs.util.Unit;
-import kovacs.util.Util;
+import jnum.Unit;
+import jnum.Util;
+import jnum.text.TableFormatter;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;

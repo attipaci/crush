@@ -26,8 +26,8 @@ import crush.Channel;
 import crush.array.SingleColorPixel;
 import crush.resonators.FrequencyID;
 import crush.resonators.Resonator;
-import kovacs.util.Unit;
-import kovacs.util.Util;
+import jnum.Unit;
+import jnum.Util;
 
 
 

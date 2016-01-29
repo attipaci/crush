@@ -24,12 +24,10 @@ package crush.filters;
 
 import java.util.Arrays;
 
-import kovacs.util.Constant;
-
-
 import crush.Channel;
 import crush.Frame;
 import crush.Integration;
+import jnum.Constant;
 
 public abstract class VariedFilter extends Filter {
 	protected float[] sourceProfile;

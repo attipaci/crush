@@ -23,8 +23,8 @@
 
 package crush.array;
 
-import kovacs.math.Vector2D;
 import crush.GeometricIndexed;
+import jnum.math.Vector2D;
 
 public interface GeometricRowColIndexed extends GeometricIndexed {
 	

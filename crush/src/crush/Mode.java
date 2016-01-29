@@ -27,10 +27,10 @@ package crush;
 import java.lang.reflect.*;
 import java.util.Arrays;
 
-import kovacs.data.Statistics;
-import kovacs.data.WeightedPoint;
-import kovacs.math.Range;
-import kovacs.util.ExtraMath;
+import jnum.ExtraMath;
+import jnum.data.Statistics;
+import jnum.data.WeightedPoint;
+import jnum.math.Range;
 
 
 public class Mode {

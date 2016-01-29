@@ -29,14 +29,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
 import crush.CRUSH;
 import crush.Mount;
 import crush.Scan;
 import crush.SourceModel;
 import crush.cso.CSOArray;
 import crush.sourcemodel.MultiBeamMap;
+import jnum.Unit;
+import jnum.math.Vector2D;
 
 public class Sharc extends CSOArray<SharcPixel> {
 	/**

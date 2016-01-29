@@ -30,14 +30,14 @@ import nom.tam.util.*;
 
 import java.io.*;
 
-import kovacs.astro.CelestialCoordinates;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.HorizontalCoordinates;
-import kovacs.data.WeightedPoint;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
-
 import crush.fits.HDUReader;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.CelestialCoordinates;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.HorizontalCoordinates;
+import jnum.data.WeightedPoint;
+import jnum.math.Vector2D;
 
 public class APEXArraySubscan<InstrumentType extends APEXCamera<?>, FrameType extends APEXFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping {

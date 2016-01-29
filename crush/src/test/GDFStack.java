@@ -26,23 +26,21 @@ import java.io.*;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import kovacs.astro.CoordinateEpoch;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.data.CartesianGrid2D;
-import kovacs.data.DataPoint;
-import kovacs.data.GaussianSource;
-import kovacs.data.GridMap;
-import kovacs.data.Data2D.Task;
-import kovacs.math.Coordinate2D;
-import kovacs.math.Range;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.util.Parallel;
-import kovacs.util.Unit;
-import kovacs.util.Util;
-
-
 import crush.astro.AstroMap;
+import jnum.Parallel;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.CoordinateEpoch;
+import jnum.astro.EquatorialCoordinates;
+import jnum.data.CartesianGrid2D;
+import jnum.data.DataPoint;
+import jnum.data.GaussianSource;
+import jnum.data.GridMap2D;
+import jnum.data.Data2D.Task;
+import jnum.math.Coordinate2D;
+import jnum.math.Range;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
 
 
 public class GDFStack {
@@ -72,7 +70,7 @@ public class GDFStack {
 			else stacker.readSources(catalogName);
 			
 			stacker.makeModel();
-			GridMap<?> stack = stacker.getStack();			
+			GridMap2D<?> stack = stacker.getStack();			
 			
 			try { stack.write(catalogName + ".fits"); }
 			catch(Exception e) { e.printStackTrace(); }
@@ -83,9 +81,9 @@ public class GDFStack {
 		
 	}
 	
-	public GridMap<Coordinate2D> getStack() {
+	public GridMap2D<Coordinate2D> getStack() {
 		int size = 1 + 2 * (int)Math.ceil(3.0 * map.getImageBeam().getCircularEquivalentFWHM() / map.getResolution().x());
-		GridMap<Coordinate2D> stack = new GridMap<Coordinate2D>(size, size);
+		GridMap2D<Coordinate2D> stack = new GridMap2D<Coordinate2D>(size, size);
 		stack.setGrid(new CartesianGrid2D());
 		stack.setResolution(map.getResolution().x());
 		stack.setName("stack");

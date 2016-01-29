@@ -23,9 +23,9 @@
 
 package crush.mustang2;
 
-import kovacs.math.Range;
-import kovacs.util.Configurator;
 import crush.resonators.ToneIdentifier;
+import jnum.Configurator;
+import jnum.math.Range;
 
 public class Mustang2PixelMatch extends ToneIdentifier<Mustang2PixelID> {
 	/**

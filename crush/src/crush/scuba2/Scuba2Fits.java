@@ -27,10 +27,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import jnum.Configurator;
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
-import kovacs.util.Configurator;
 
 
 public class Scuba2Fits implements Comparable<Scuba2Fits> {

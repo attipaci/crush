@@ -29,20 +29,22 @@ import crush.astro.PointingTable;
 import crush.iram.IRAMPointingModel;
 import crush.iram.IRAMScanID;
 import crush.iram.IRAMTauTable;
+import jnum.Configurator;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.*;
+import jnum.data.Asymmetry2D;
+import jnum.data.DataPoint;
+import jnum.math.Range;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
+import jnum.util.*;
 import nom.tam.fits.*;
 
 import java.io.*;
 import java.text.*;
 import java.util.*;
-
-import kovacs.astro.*;
-import kovacs.data.Asymmetry2D;
-import kovacs.data.DataPoint;
-import kovacs.math.Range;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
-import kovacs.util.*;
 
 
 public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements GroundBased, Weather {

@@ -27,12 +27,13 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
-import kovacs.data.DataPoint;
-import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
-import kovacs.util.*;
 import crush.*;
 import crush.array.*;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.DataPoint;
+import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 
 public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implements GroundBased {

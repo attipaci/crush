@@ -25,12 +25,12 @@ package crush.mako2;
 
 import java.util.StringTokenizer;
 
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 import crush.mako.Mako;
 import crush.mako.AbstractMakoPixel;
 import crush.resonators.FrequencyID;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.Vector2D;
 
 public class Mako2Pixel extends AbstractMakoPixel {
 

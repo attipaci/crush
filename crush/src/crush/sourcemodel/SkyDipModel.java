@@ -26,10 +26,12 @@ package crush.sourcemodel;
 import java.util.*;
 
 import crush.CRUSH;
-import kovacs.data.fitting.AmoebaMinimizer;
-import kovacs.data.fitting.Parameter;
-import kovacs.math.Range;
-import kovacs.util.*;
+import jnum.Configurator;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.fitting.AmoebaMinimizer;
+import jnum.data.fitting.Parameter;
+import jnum.math.Range;
 
 // Simple sky dip:
 //

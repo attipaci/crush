@@ -29,10 +29,6 @@ import nom.tam.fits.BasicHDU;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
-import kovacs.data.DataPoint;
-import kovacs.text.TableFormatter;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 import crush.GroundBased;
 import crush.InstantFocus;
 import crush.Mount;
@@ -40,6 +36,10 @@ import crush.Scan;
 import crush.array.Array;
 import crush.array.Rotating;
 import crush.array.SingleColorPixel;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.DataPoint;
+import jnum.text.TableFormatter;
 import crush.array.SingleColorLayout;
 
 public abstract class CSOArray<PixelType extends SingleColorPixel> extends Array<PixelType, PixelType> implements GroundBased, Rotating {

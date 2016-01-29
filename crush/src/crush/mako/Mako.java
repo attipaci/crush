@@ -34,13 +34,13 @@ import crush.CRUSH;
 import crush.Scan;
 import crush.resonators.FrequencyID;
 import crush.resonators.ResonatorList;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
-import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 
 public class Mako extends AbstractMako<MakoPixel> {
 	

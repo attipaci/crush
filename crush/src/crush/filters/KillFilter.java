@@ -24,9 +24,9 @@ package crush.filters;
 
 import java.util.List;
 
-import kovacs.math.Range;
-import kovacs.util.Constant;
 import crush.Integration;
+import jnum.Constant;
+import jnum.math.Range;
 
 public class KillFilter extends FixedFilter {
 	protected boolean[] reject;

@@ -23,8 +23,8 @@
 
 package crush.mustang2;
 
-import kovacs.math.Vector2D;
 import crush.resonators.FrequencyID;
+import jnum.math.Vector2D;
 
 public class Mustang2PixelID extends FrequencyID {
 	int readoutIndex;

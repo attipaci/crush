@@ -25,11 +25,11 @@ package crush.gismo;
 
 import java.util.List;
 
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
 import crush.Mount;
 import crush.array.Array;
 import crush.array.GeometricRowColIndexed;
+import jnum.Unit;
+import jnum.math.Vector2D;
 
 public class Gismo extends AbstractGismo implements GeometricRowColIndexed {
 	/**

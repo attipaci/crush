@@ -31,25 +31,29 @@ import java.io.*;
 import java.util.*;
 import java.text.*;
 
-import kovacs.astro.AstroSystem;
-import kovacs.astro.AstroTime;
-import kovacs.astro.CelestialCoordinates;
-import kovacs.astro.CoordinateEpoch;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.GeodeticCoordinates;
-import kovacs.astro.HorizontalCoordinates;
-import kovacs.astro.JulianEpoch;
-import kovacs.astro.Precession;
-import kovacs.astro.Weather;
-import kovacs.data.*;
-import kovacs.math.Range;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
-import kovacs.util.*;
-import kovacs.util.DataTable;
 import crush.astro.AstroMap;
 import crush.sourcemodel.*;
+import jnum.Configurator;
+import jnum.ExtraMath;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.AstroSystem;
+import jnum.astro.AstroTime;
+import jnum.astro.CelestialCoordinates;
+import jnum.astro.CoordinateEpoch;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.GeodeticCoordinates;
+import jnum.astro.HorizontalCoordinates;
+import jnum.astro.JulianEpoch;
+import jnum.astro.Precession;
+import jnum.astro.Weather;
+import jnum.data.*;
+import jnum.math.Range;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
+import jnum.util.*;
+import jnum.util.DataTable;
 
 public abstract class Scan<InstrumentType extends Instrument<?>, IntegrationType extends Integration<InstrumentType, ?>>
 extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatter.Entries, Messaging {

@@ -25,8 +25,9 @@ package crush.tools;
 import java.io.*;
 import java.util.*;
 
-import kovacs.math.Vector2D;
-import kovacs.util.*;
+import jnum.Util;
+import jnum.math.Vector2D;
+import jnum.util.*;
 
 
 public class RCPFile {

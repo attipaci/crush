@@ -31,24 +31,24 @@ import java.text.NumberFormat;
 import java.util.StringTokenizer;
 import java.io.File;
 
-import kovacs.astro.AstroTime;
-import kovacs.astro.BesselianEpoch;
-import kovacs.astro.CelestialCoordinates;
-import kovacs.astro.CoordinateEpoch;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.FocalPlaneCoordinates;
-import kovacs.astro.HorizontalCoordinates;
-import kovacs.astro.JulianEpoch;
-import kovacs.math.Coordinate2D;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.text.FixedLengthFormat;
-import kovacs.text.TimeFormat;
-import kovacs.util.Configurator;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 import crush.DualBeam;
 import crush.cso.CSOScan;
+import jnum.Configurator;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.AstroTime;
+import jnum.astro.BesselianEpoch;
+import jnum.astro.CelestialCoordinates;
+import jnum.astro.CoordinateEpoch;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.FocalPlaneCoordinates;
+import jnum.astro.HorizontalCoordinates;
+import jnum.astro.JulianEpoch;
+import jnum.math.Coordinate2D;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
+import jnum.text.FixedLengthFormat;
+import jnum.text.TimeFormat;
 
 public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualBeam {
 

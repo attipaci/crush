@@ -24,8 +24,8 @@
 package crush.hawcplus;
 
 
-import kovacs.astro.GeodeticCoordinates;
 import crush.*;
+import jnum.astro.GeodeticCoordinates;
 
 
 public class HawcPlusFrame extends HorizontalFrame {

@@ -25,8 +25,8 @@ package crush.iram;
 
 import java.util.StringTokenizer;
 
-import kovacs.math.Range;
-import kovacs.util.Util;
+import jnum.Util;
+import jnum.math.Range;
 
 
 // 2012-04-12.138

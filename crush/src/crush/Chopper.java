@@ -22,8 +22,11 @@
  ******************************************************************************/
 package crush;
 
-import kovacs.util.*;
-import kovacs.math.*;
+import jnum.Copiable;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.*;
+
 
 public class Chopper implements Cloneable, Copiable<Chopper> {
 	public int positions = 0; // 0 for indeterminate, -1 for sweeping mode

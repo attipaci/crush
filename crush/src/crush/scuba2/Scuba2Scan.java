@@ -24,22 +24,22 @@
 package crush.scuba2;
 
 import crush.*;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.AstroSystem;
+import jnum.astro.AstroTime;
+import jnum.astro.CoordinateEpoch;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.GalacticCoordinates;
+import jnum.astro.GeodeticCoordinates;
+import jnum.astro.HorizontalCoordinates;
+import jnum.astro.JulianEpoch;
+import jnum.astro.Weather;
+import jnum.math.SphericalCoordinates;
 import nom.tam.fits.*;
 
 import java.io.*;
 import java.util.*;
-
-import kovacs.astro.AstroSystem;
-import kovacs.astro.AstroTime;
-import kovacs.astro.CoordinateEpoch;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.GalacticCoordinates;
-import kovacs.astro.GeodeticCoordinates;
-import kovacs.astro.HorizontalCoordinates;
-import kovacs.astro.JulianEpoch;
-import kovacs.astro.Weather;
-import kovacs.math.SphericalCoordinates;
-import kovacs.util.*;
 
 
 public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBased, Weather {

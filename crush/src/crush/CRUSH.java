@@ -29,18 +29,20 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import kovacs.astro.AstroTime;
-import kovacs.astro.LeapSeconds;
-import kovacs.fits.FitsExtras;
-import kovacs.text.VersionString;
-import kovacs.util.*;
+import jnum.Configurator;
+import jnum.Parallel;
+import jnum.Util;
+import jnum.astro.AstroTime;
+import jnum.astro.LeapSeconds;
+import jnum.fits.FitsExtras;
+import jnum.text.VersionString;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
 /**
  * 
  * @author Attila Kovacs
- * @version 2.30
+ * @version 2.31
  * 
  */
 public class CRUSH extends Configurator {
@@ -49,8 +51,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 
-	private static String version = "2.30-4";
-	private static String revision = "";
+	private static String version = "2.31-a1";
+	private static String revision = "devel.1";
 	
 	public static String workPath = ".";
 	public static String home = ".";

@@ -25,10 +25,10 @@ package crush;
 import java.io.*;
 import java.util.*;
 
-import kovacs.data.WeightedPoint;
-import kovacs.util.ExtraMath;
-import kovacs.util.Unit;
-import kovacs.util.Util;
+import jnum.ExtraMath;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.WeightedPoint;
 
 
 public class PhaseSet extends ArrayList<PhaseData> {

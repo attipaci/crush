@@ -27,12 +27,12 @@ package crush.apex;
 import java.io.*;
 import java.util.*;
 
-import kovacs.data.DataPoint;
-import kovacs.data.LocalAverage;
-import kovacs.data.Locality;
-import kovacs.data.LocalizedData;
-import kovacs.util.Unit;
-import kovacs.util.Util;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.DataPoint;
+import jnum.data.LocalAverage;
+import jnum.data.Locality;
+import jnum.data.LocalizedData;
 
 
 

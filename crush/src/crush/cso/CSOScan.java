@@ -31,13 +31,13 @@ import crush.ElevationCouplingCurve;
 import crush.GroundBased;
 import crush.HorizontalFrame;
 import crush.Scan;
-import kovacs.astro.*;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
-import kovacs.util.DataTable;
-import kovacs.util.Unit;
-import kovacs.util.Util;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.*;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
+import jnum.util.DataTable;
 
 public abstract class CSOScan<InstrumentType extends CSOArray<?>, IntegrationType extends CSOIntegration<InstrumentType,?>> 
 extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {

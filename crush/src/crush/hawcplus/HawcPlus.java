@@ -26,13 +26,14 @@ package crush.hawcplus;
 import java.io.IOException;
 import java.util.*;
 
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 import crush.*;
 import crush.array.Array;
 import crush.array.GeometricRowColIndexed;
 import crush.array.SingleColorLayout;
 import crush.sofia.SofiaCamera;
+import jnum.Configurator;
+import jnum.Unit;
+import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 

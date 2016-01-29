@@ -106,7 +106,7 @@ if [[ $DEBUG == "TRUE" ]] ; then
 fi
 
 JAVAOPTS="-d$DATAMODEL -Xmx${USEMB}M $EXTRAOPTS"
-CLASSPATH="$CRUSH/tools.jar:$CRUSH/fits.jar:$CRUSH/util.jar:$CRUSH/crush2.jar:$CRUSH/bin"
+CLASSPATH="$CRUSH/crush2.jar:$CRUSH/tools.jar:$CRUSH/fits.jar:$CRUSH/jnum.jar:$CRUSH/bin"
 
 export CRUSH
 

@@ -23,9 +23,9 @@
 
 package crush.sofia;
 
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.JulianEpoch;
-import kovacs.util.Unit;
+import jnum.Unit;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.JulianEpoch;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
