@@ -28,15 +28,15 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.concurrent.ExecutorService;
 
-import kovacs.astro.AstroProjector;
-import kovacs.data.*;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.projection.Projection2D;
-import kovacs.util.*;
 import crush.*;
 import crush.array.*;
 import crush.astro.AstroMap;
+import jnum.Unit;
+import jnum.astro.AstroProjector;
+import jnum.data.*;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
+import jnum.projection.Projection2D;
 
 public class BeamMap extends SourceMap {
 	ScalarMap[] pixelMap;

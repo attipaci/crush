@@ -23,7 +23,7 @@
 
 package crush.sofia;
 
-import kovacs.util.Util;
+import jnum.Util;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;

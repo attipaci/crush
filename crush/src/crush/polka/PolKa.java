@@ -27,14 +27,14 @@ package crush.polka;
 import crush.*;
 import crush.laboca.*;
 import crush.polarization.*;
+import jnum.Unit;
+import jnum.Util;
+import jnum.text.TableFormatter;
 
 import java.io.*;
 import java.text.NumberFormat;
 import java.util.Vector;
 
-import kovacs.text.TableFormatter;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.HeaderCardException;

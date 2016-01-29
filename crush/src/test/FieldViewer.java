@@ -7,13 +7,13 @@ import java.io.InputStreamReader;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
-import kovacs.data.CartesianGrid2D;
-import kovacs.data.Grid2D;
-import kovacs.data.GridImage;
-import kovacs.math.Coordinate2D;
-import kovacs.math.Range;
-import kovacs.math.Vector2D;
-import kovacs.util.Util;
+import jnum.Util;
+import jnum.data.CartesianGrid2D;
+import jnum.data.Grid2D;
+import jnum.data.GridImage2D;
+import jnum.math.Coordinate2D;
+import jnum.math.Range;
+import jnum.math.Vector2D;
 
 public class FieldViewer {
 	Hashtable <String, Vector2D> positions = new Hashtable<String, Vector2D>();
@@ -61,7 +61,7 @@ public class FieldViewer {
 		System.err.println("Parsed " + positions.size() + " positions.");
 	}
 	
-	GridImage<?> getView(double res) {
+	GridImage2D<?> getView(double res) {
 		// get xrange and yrange...
 		Range xRange = new Range();
 		Range yRange = new Range();
@@ -72,7 +72,7 @@ public class FieldViewer {
 		
 		
 		// create grid...
-		GridImage<Coordinate2D> image = new GridImage<Coordinate2D>(new CartesianGrid2D());
+		GridImage2D<Coordinate2D> image = new GridImage2D<Coordinate2D>(new CartesianGrid2D());
 		image.setSize(1 + (int) Math.ceil(xRange.span() / res), 1 + (int) Math.ceil(yRange.span() / res));
 		Grid2D<Coordinate2D> grid = image.getGrid();
 		

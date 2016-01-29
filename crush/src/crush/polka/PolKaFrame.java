@@ -23,11 +23,11 @@
 
 package crush.polka;
 
-import kovacs.util.Constant;
-import kovacs.util.Unit;
 import crush.apex.APEXArrayScan;
 import crush.laboca.*;
 import crush.polarization.*;
+import jnum.Constant;
+import jnum.Unit;
 
 public class PolKaFrame extends LabocaFrame {
 	// phases for Q and U demodulation

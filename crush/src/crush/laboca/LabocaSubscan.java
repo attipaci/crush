@@ -25,14 +25,17 @@ package crush.laboca;
 
 import crush.*;
 import crush.apex.*;
+import jnum.Configurator;
+import jnum.Constant;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
 
 import java.io.*;
 import java.text.NumberFormat;
 import java.util.*;
 
-import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
-import kovacs.util.*;
 import nom.tam.fits.*;
 
 public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {

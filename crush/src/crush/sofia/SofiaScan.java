@@ -24,16 +24,17 @@
 package crush.sofia;
 
 import crush.*;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.*;
+import jnum.math.Vector2D;
+import jnum.util.*;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
 import java.io.*;
 import java.text.*;
 import java.util.*;
-
-import kovacs.astro.*;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 
 // TODO aux data in processing history...
 

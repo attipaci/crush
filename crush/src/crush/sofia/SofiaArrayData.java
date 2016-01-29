@@ -23,10 +23,10 @@
 
 import java.text.DecimalFormat;
 
-import kovacs.data.Grid2D;
-import kovacs.math.Vector2D;
-import kovacs.util.Copiable;
-import kovacs.util.Unit;
+import jnum.Copiable;
+import jnum.Unit;
+import jnum.data.Grid2D;
+import jnum.math.Vector2D;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -87,7 +87,7 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 		arrayPointingCenter.setY(header.getDoubleValue("SIBS_Y", Double.NaN));
 		
 		if(header.containsKey("CTYPE1") && header.containsKey("CTYPE2")) {
-			try { grid = Grid2D.getGrid2DFor(header, ""); } 
+			try { grid = Grid2D.fromHeader(header, ""); } 
 			catch (Exception e) { e.printStackTrace(); }
 		}
 		else grid = null;

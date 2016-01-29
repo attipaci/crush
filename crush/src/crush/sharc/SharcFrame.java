@@ -26,9 +26,9 @@ package crush.sharc;
 import java.io.DataInput;
 import java.io.IOException;
 
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
 import crush.HorizontalFrame;
+import jnum.Unit;
+import jnum.math.Vector2D;
 
 public class SharcFrame extends HorizontalFrame {
 	float[] quadrature;

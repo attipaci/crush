@@ -2,28 +2,28 @@ package test;
 
 import java.io.IOException;
 
+import jnum.Constant;
+import jnum.ExtraMath;
+import jnum.data.CartesianGrid2D;
+import jnum.data.GridImage2D;
+import jnum.data.GridMap2D;
+import jnum.fft.MultiFFT;
+import jnum.math.Complex;
+import jnum.math.Coordinate2D;
+import jnum.math.Vector2D;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.HeaderCardException;
-import kovacs.data.CartesianGrid2D;
-import kovacs.data.GridImage;
-import kovacs.data.GridMap;
-import kovacs.fft.MultiFFT;
-import kovacs.math.Complex;
-import kovacs.math.Coordinate2D;
-import kovacs.math.Vector2D;
-import kovacs.util.Constant;
-import kovacs.util.ExtraMath;
 
 public class FFTView {	
-	GridImage<Coordinate2D> amplitudeImage;
-	GridImage<Coordinate2D> phaseImage;
+	GridImage2D<Coordinate2D> amplitudeImage;
+	GridImage2D<Coordinate2D> phaseImage;
 		
 	double[][] w;
 	double wnorm = 0.0;
 	
 	public static void main(String[] args) {
 		try {
-			GridMap<?> image = new GridMap<Coordinate2D>(args[0]);
+			GridMap2D<?> image = new GridMap2D<Coordinate2D>(args[0]);
 			double beamCorrection = Double.NaN;
 			double norm = 1.0;
 			
@@ -39,8 +39,8 @@ public class FFTView {
 			transfer.write("fft");
 			
 			if(args.length > 3) {
-				GridMap<Coordinate2D> map;
-				map = new GridMap<Coordinate2D>(args[3]);
+				GridMap2D<Coordinate2D> map;
+				map = new GridMap2D<Coordinate2D>(args[3]);
 				FFTView spectrum = FFTView.fromImage(map.getFluxImage(), map.getWeight(), Double.NaN, Double.NaN);
 				spectrum.deconvolve(transfer);
 				map.setData(spectrum.backTransform(map.sizeX(), map.sizeY()));			
@@ -60,7 +60,7 @@ public class FFTView {
 	}
 	
 	
-	public static FFTView fromImage(GridImage<?> image, double[][] w, double beamCorrection, double renorm) {
+	public static FFTView fromImage(GridImage2D<?> image, double[][] w, double beamCorrection, double renorm) {
 		final int nx = ExtraMath.pow2ceil(image.sizeX());
 		final int ny = ExtraMath.pow2ceil(image.sizeY());
 		
@@ -208,12 +208,12 @@ public class FFTView {
 		}
 					
 		// create A, phi images...
-		view.amplitudeImage = new GridImage<Coordinate2D>();
+		view.amplitudeImage = new GridImage2D<Coordinate2D>();
 		view.amplitudeImage.setData(A);
 		view.amplitudeImage.createDefaultFlag();
 		view.amplitudeImage.setGrid(grid);
 		
-		view.phaseImage = new GridImage<Coordinate2D>();
+		view.phaseImage = new GridImage2D<Coordinate2D>();
 		view.phaseImage.setData(phi);
 		view.phaseImage.createDefaultFlag();
 		view.phaseImage.setGrid(grid);

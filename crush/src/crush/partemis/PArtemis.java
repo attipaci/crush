@@ -26,12 +26,11 @@ package crush.partemis;
 
 import crush.*;
 import crush.array.*;
+import jnum.Unit;
+import jnum.math.Vector2D;
 import crush.apex.*;
 
 import java.util.*;
-
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 
 public class PArtemis extends APEXCamera<PArtemisPixel> implements GeometricRowColIndexed {
 	/**

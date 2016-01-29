@@ -25,11 +25,11 @@
 package crush.sharc2;
 
 import crush.array.SingleColorPixel;
-import java.util.StringTokenizer;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.Vector2D;
 
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
-import kovacs.util.Util;
+import java.util.StringTokenizer;
 
 
 

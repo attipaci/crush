@@ -60,7 +60,8 @@ public class GismoVis {
 			fits.addHDU(Fits.makeHDU(image));
 			
 			BufferedDataOutputStream file = new BufferedDataOutputStream(new FileOutputStream("gismovis.fits"));
-			fits.write(file);	
+			fits.write(file);
+			fits.close();
 		}
 		catch(Exception e) { e.printStackTrace(); }
 		

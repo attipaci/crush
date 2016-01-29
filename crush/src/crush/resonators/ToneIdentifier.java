@@ -25,10 +25,10 @@ package crush.resonators;
 
 import java.util.ArrayList;
 
-import kovacs.data.fitting.AmoebaMinimizer;
-import kovacs.math.Range;
-import kovacs.util.Configurator;
-import kovacs.util.Util;
+import jnum.Configurator;
+import jnum.Util;
+import jnum.data.fitting.AmoebaMinimizer;
+import jnum.math.Range;
 
 public abstract class ToneIdentifier<IDType extends FrequencyID> extends ArrayList<IDType> implements Cloneable {
 	/**

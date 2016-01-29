@@ -23,6 +23,9 @@
 package crush.sourcemodel;
 
 import crush.*;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.*;
 
 import java.awt.Color;
 import java.io.File;
@@ -30,9 +33,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
-
-import kovacs.data.*;
-import kovacs.util.*;
 
 public abstract class Photometry extends SourceModel {
 	public String sourceName;

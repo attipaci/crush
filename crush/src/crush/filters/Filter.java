@@ -24,16 +24,16 @@ package crush.filters;
 
 import java.util.Arrays;
 
-import kovacs.util.Configurator;
-import kovacs.util.Constant;
-import kovacs.util.ExtraMath;
-import kovacs.util.Parallel;
-import kovacs.util.Util;
 import crush.Channel;
 import crush.ChannelGroup;
 import crush.Dependents;
 import crush.Frame;
 import crush.Integration;
+import jnum.Configurator;
+import jnum.Constant;
+import jnum.ExtraMath;
+import jnum.Parallel;
+import jnum.Util;
 
 
 public abstract class Filter implements Cloneable {

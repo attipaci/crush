@@ -22,8 +22,8 @@
  ******************************************************************************/
 package test;
 
-import kovacs.math.specialfunctions.CumulativeNormalDistribution;
-import kovacs.util.Unit;
+import jnum.Unit;
+import jnum.math.specialfunctions.CumulativeNormalDistribution;
 
 public class DetectCountEstimator {
 

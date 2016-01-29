@@ -29,11 +29,12 @@ import nom.tam.fits.*;
 
 import java.io.*;
 
-import kovacs.astro.*;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 import crush.cso.CSOIntegration;
 import crush.fits.HDUReader;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.*;
+import jnum.math.Vector2D;
 
 // TODO Split nod-phases into integrations...
 public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {

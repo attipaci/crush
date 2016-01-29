@@ -24,8 +24,10 @@ package crush.devel;
 
 import java.io.IOException;
 
-import kovacs.data.*;
-import kovacs.util.*;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.*;
+import jnum.util.*;
 
 
 public class SimpleDeboosting {

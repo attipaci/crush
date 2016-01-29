@@ -22,7 +22,7 @@
  ******************************************************************************/
 package crush.resonators;
 
-import kovacs.util.HashCode;
+import jnum.util.HashCode;
 
 public class FrequencyID implements Comparable<FrequencyID> {
 	public int index;

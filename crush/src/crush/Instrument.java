@@ -28,15 +28,19 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.text.*;
 
-import kovacs.astro.AstroTime;
-import kovacs.data.DataPoint;
-import kovacs.data.Statistics;
-import kovacs.data.WeightedPoint;
-import kovacs.math.Range;
-import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
-import kovacs.util.*;
 import crush.sourcemodel.*;
+import jnum.Configurator;
+import jnum.Constant;
+import jnum.ExtraMath;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.AstroTime;
+import jnum.data.DataPoint;
+import jnum.data.Statistics;
+import jnum.data.WeightedPoint;
+import jnum.math.Range;
+import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 

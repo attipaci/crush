@@ -27,11 +27,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import kovacs.astro.*;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 import crush.fits.HDUReader;
 import crush.sofia.SofiaIntegration;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.*;
+import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
 public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFrame> {	
@@ -89,7 +90,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
 		
 		System.err.println(" Processing scan data:");
-		System.err.println("   Readng " + records + " frames from " + dataHDUs.size() + " HDU(s).");
+		System.err.println("   Reading " + records + " frames from " + dataHDUs.size() + " HDU(s).");
 		System.err.println("   Sampling at " + Util.f1.format(instrument.integrationTime / Unit.ms) + " ms ---> " 
 				+ Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
 			

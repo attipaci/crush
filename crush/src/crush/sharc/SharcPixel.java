@@ -25,10 +25,10 @@ package crush.sharc;
 
 import java.util.StringTokenizer;
 
-import kovacs.math.Vector2D;
-import kovacs.util.Unit;
 import crush.Channel;
 import crush.array.SingleColorPixel;
+import jnum.Unit;
+import jnum.math.Vector2D;
 
 public class SharcPixel extends SingleColorPixel {
 	boolean isBad = false;

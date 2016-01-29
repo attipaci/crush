@@ -26,8 +26,8 @@ package crush;
 
 import java.lang.reflect.*;
 
-import kovacs.math.Range;
-import kovacs.util.Configurator;
+import jnum.Configurator;
+import jnum.math.Range;
 
 
 public class CorrelatedModality extends Modality<CorrelatedMode> {

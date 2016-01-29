@@ -23,11 +23,12 @@
 package crush.mako;
 
 import nom.tam.fits.*;
-import kovacs.astro.*;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 import crush.cso.CSOIntegration;
 import crush.fits.HDUReader;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.*;
+import jnum.math.Vector2D;
 
 public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegration<MakoType, MakoFrame> {
 	/**

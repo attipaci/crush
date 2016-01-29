@@ -23,8 +23,8 @@
 
 package crush.sofia;
 
-import kovacs.util.Copiable;
-import kovacs.util.Unit;
+import jnum.Copiable;
+import jnum.Unit;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;

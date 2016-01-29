@@ -23,16 +23,17 @@
 package crush.sourcemodel;
 
 import crush.*;
+import jnum.Constant;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.Weather;
+import jnum.data.WeightedPoint;
+import jnum.math.Range;
 
 import java.awt.Color;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-
-import kovacs.astro.Weather;
-import kovacs.data.WeightedPoint;
-import kovacs.math.Range;
-import kovacs.util.*;
 
 // Bin the correlated signal by elevation...
 public class SkyDip extends SourceModel {

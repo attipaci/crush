@@ -23,17 +23,17 @@
 
 package crush.mustang2;
 
-import kovacs.astro.AstroTime;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.HorizontalCoordinates;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;
 import crush.GroundBased;
 import crush.Integration;
 import crush.Scan;
 import crush.fits.HDUReader;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.AstroTime;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.HorizontalCoordinates;
 
 
 public class Mustang2Integration extends Integration<Mustang2, Mustang2Frame> implements GroundBased {

@@ -27,11 +27,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import kovacs.astro.CoordinateEpoch;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.GeodeticCoordinates;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.Fits;
@@ -40,6 +35,11 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
 import crush.GroundBased;
 import crush.Scan;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.CoordinateEpoch;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.GeodeticCoordinates;
 
 public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements GroundBased {
 

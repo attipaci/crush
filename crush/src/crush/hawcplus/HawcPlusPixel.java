@@ -25,9 +25,10 @@ package crush.hawcplus;
 
 import java.util.StringTokenizer;
 
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 import crush.array.SingleColorPixel;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.Vector2D;
 
 public class HawcPlusPixel extends SingleColorPixel {
 	public int polarray, subarray, row, col, mux, pin;

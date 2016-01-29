@@ -27,6 +27,11 @@ package crush.apex;
 import crush.*;
 import crush.array.Array;
 import crush.array.SingleColorPixel;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.EquatorialCoordinates;
+import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
 import crush.array.SingleColorLayout;
 import nom.tam.fits.*;
 
@@ -34,12 +39,6 @@ import java.io.*;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Vector;
-
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 
 
 public abstract class APEXCamera<ChannelType extends APEXPixel> extends Array<ChannelType, ChannelType> implements GroundBased {

@@ -25,20 +25,20 @@
 package crush.apex;
 
 import crush.*;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.AstroSystem;
+import jnum.astro.CelestialCoordinates;
+import jnum.astro.CoordinateEpoch;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.GeodeticCoordinates;
+import jnum.astro.HorizontalCoordinates;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
 import java.io.*;
 import java.util.*;
-
-import kovacs.astro.AstroSystem;
-import kovacs.astro.CelestialCoordinates;
-import kovacs.astro.CoordinateEpoch;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.GeodeticCoordinates;
-import kovacs.astro.HorizontalCoordinates;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 
 
 

@@ -22,10 +22,10 @@
  ******************************************************************************/
 package crush.polka;
 
-import kovacs.math.Range;
-import kovacs.util.Util;
 import crush.Integration;
 import crush.filters.KillFilter;
+import jnum.Util;
+import jnum.math.Range;
 
 
 public class HWPFilter extends KillFilter {

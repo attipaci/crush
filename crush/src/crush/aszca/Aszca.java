@@ -27,11 +27,10 @@ package crush.aszca;
 import crush.*;
 import crush.apex.*;
 import crush.array.*;
+import jnum.Unit;
 
 import java.io.*;
 import java.util.*;
-
-import kovacs.util.Unit;
 
 
 

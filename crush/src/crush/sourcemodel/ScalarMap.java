@@ -29,21 +29,24 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 
-import kovacs.astro.AstroProjector;
-import kovacs.astro.SourceCatalog;
-import kovacs.data.*;
-import kovacs.math.Range;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.plot.ColorScheme;
-import kovacs.plot.GridImageLayer;
-import kovacs.plot.ImageArea;
-import kovacs.plot.BufferedImageLayer;
-import kovacs.plot.colorscheme.Colorful;
-import kovacs.projection.Projection2D;
-import kovacs.util.*;
 import crush.*;
 import crush.astro.AstroMap;
+import jnum.Configurator;
+import jnum.Parallel;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.AstroProjector;
+import jnum.astro.SourceCatalog;
+import jnum.data.*;
+import jnum.math.Range;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
+import jnum.plot.BufferedImageLayer;
+import jnum.plot.ColorScheme;
+import jnum.plot.GridImageLayer;
+import jnum.plot.ImageArea;
+import jnum.plot.colorscheme.Colorful;
+import jnum.projection.Projection2D;
 
 
 
@@ -331,7 +334,7 @@ public class ScalarMap extends SourceMap {
 	
 	@Override
 	public double getPixelizationSmoothing() {
-		return Math.sqrt(map.getGrid().getPixelArea()) / GridImage.fwhm2size;
+		return Math.sqrt(map.getGrid().getPixelArea()) / GridImage2D.fwhm2size;
 	}
 	
 	// 3 double maps (signal, weight, integrationTime), one int (flag) and one boolean (maks)
@@ -914,7 +917,7 @@ public class ScalarMap extends SourceMap {
 				thumbnail.smoothTo(fwhm);
 			}
 			
-			GridImage<?> plane = thumbnail;
+			GridImage2D<?> plane = thumbnail;
 			
 			if(hasOption("write.png.plane")) {
 				String spec = option("write.png.plane").getValue().toLowerCase();

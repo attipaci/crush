@@ -23,8 +23,8 @@
 package crush;
 
 import crush.CorrelatedMode.CoupledMode;
-import kovacs.data.DataPoint;
-import kovacs.data.WeightedPoint;
+import jnum.data.DataPoint;
+import jnum.data.WeightedPoint;
 
 public class PhaseSignal {
 	PhaseSet phases;

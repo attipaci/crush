@@ -30,11 +30,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import kovacs.data.Statistics;
-import kovacs.math.Vector2D;
-import kovacs.util.Constant;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;
@@ -48,6 +43,11 @@ import crush.Mount;
 import crush.Scan;
 import crush.array.Array;
 import crush.array.SingleColorLayout;
+import jnum.Constant;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.Statistics;
+import jnum.math.Vector2D;
 
 public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements GroundBased {
 	/**

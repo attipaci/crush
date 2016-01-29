@@ -26,11 +26,12 @@ package crush;
 
 import java.util.Arrays;
 
-import kovacs.astro.AstroProjector;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
+import jnum.Flagging;
+import jnum.astro.AstroProjector;
+import jnum.astro.EquatorialCoordinates;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
+import jnum.util.*;
 
 
 public abstract class Frame implements Cloneable, Flagging {

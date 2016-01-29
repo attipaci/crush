@@ -26,10 +26,10 @@ package crush.sourcemodel;
 
 import java.util.*;
 
-import kovacs.astro.AstroProjector;
-import kovacs.data.Index2D;
-import kovacs.util.Parallel;
 import crush.*;
+import jnum.Parallel;
+import jnum.astro.AstroProjector;
+import jnum.data.Index2D;
 
 
 public class SyncModulatedMap extends ScalarMap {

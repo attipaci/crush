@@ -26,7 +26,7 @@ package crush;
 
 import java.util.List;
 
-import kovacs.util.Unit;
+import jnum.Unit;
 
 public class GenericInstrument extends Instrument<Channel> {
 	/**

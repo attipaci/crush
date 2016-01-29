@@ -24,13 +24,13 @@ package crush.filters;
 
 import java.util.Arrays;
 
-import kovacs.data.DataPoint;
-import kovacs.data.Statistics;
-import kovacs.math.Range;
-import kovacs.util.Configurator;
-import kovacs.util.ExtraMath;
 import crush.Channel;
 import crush.Integration;
+import jnum.Configurator;
+import jnum.ExtraMath;
+import jnum.data.DataPoint;
+import jnum.data.Statistics;
+import jnum.math.Range;
 
 public class WhiteningFilter extends AdaptiveFilter {
 	double level = 1.2;

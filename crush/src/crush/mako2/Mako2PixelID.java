@@ -24,7 +24,7 @@
 package crush.mako2;
 
 import crush.resonators.FrequencyID;
-import kovacs.math.Vector2D;
+import jnum.math.Vector2D;
 
 public class Mako2PixelID extends FrequencyID {
 	Vector2D position;

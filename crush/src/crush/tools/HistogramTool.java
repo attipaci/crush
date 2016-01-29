@@ -23,14 +23,14 @@
 package crush.tools;
 
 import crush.*;
+import jnum.Util;
+import jnum.data.Data2D;
+import jnum.data.GridMap2D;
+import jnum.math.SphericalCoordinates;
+import jnum.util.*;
 
 import java.io.*;
 import java.util.*;
-
-import kovacs.data.Data2D;
-import kovacs.data.GridMap;
-import kovacs.math.SphericalCoordinates;
-import kovacs.util.*;
 
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.Fits;
@@ -119,13 +119,13 @@ public class HistogramTool {
 	}
 	
 	public void readMap(Fits fits) throws Exception {
-		GridMap<?> map = new GridMap<SphericalCoordinates>(); 
+		GridMap2D<?> map = new GridMap2D<SphericalCoordinates>(); 
 		map.read(fits);
 		selectImage(map, type);
 		binres *= image.getUnit().value();		
 	}
 	
-	public void selectImage(GridMap<?> map, String type) {
+	public void selectImage(GridMap2D<?> map, String type) {
 		if(type.equalsIgnoreCase("flux")) {}
 		else if(type.equalsIgnoreCase("s2n")) { image = map.getS2NImage(); }
 		else if(type.equalsIgnoreCase("rms")) { image = map.getRMSImage(); }

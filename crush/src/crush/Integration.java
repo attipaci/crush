@@ -30,15 +30,20 @@ import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import kovacs.data.*;
-import kovacs.fft.FloatFFT;
-import kovacs.math.Complex;
-import kovacs.math.Range;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.text.TableFormatter;
-import kovacs.util.*;
 import crush.filters.*;
+import jnum.Configurator;
+import jnum.Constant;
+import jnum.ExtraMath;
+import jnum.Parallel;
+import jnum.Unit;
+import jnum.Util;
+import jnum.data.*;
+import jnum.fft.FloatFFT;
+import jnum.math.Complex;
+import jnum.math.Range;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 

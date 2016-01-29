@@ -27,14 +27,13 @@ package crush.laboca;
 import crush.*;
 import crush.apex.*;
 import crush.array.*;
+import jnum.Unit;
+import jnum.Util;
+import jnum.math.Range;
 import nom.tam.fits.*;
 
 import java.io.*;
 import java.util.*;
-
-import kovacs.math.Range;
-import kovacs.util.Unit;
-import kovacs.util.Util;
 
 
 

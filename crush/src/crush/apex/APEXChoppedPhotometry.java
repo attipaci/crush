@@ -25,10 +25,10 @@ package crush.apex;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 
-import kovacs.data.DataPoint;
-import kovacs.data.WeightedPoint;
 import crush.*;
 import crush.sourcemodel.Photometry;
+import jnum.data.DataPoint;
+import jnum.data.WeightedPoint;
 
 public class APEXChoppedPhotometry extends Photometry {
 

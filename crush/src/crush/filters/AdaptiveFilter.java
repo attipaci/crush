@@ -24,11 +24,9 @@ package crush.filters;
 
 import java.util.Arrays;
 
-import kovacs.util.Constant;
-
-
 import crush.Channel;
 import crush.Integration;
+import jnum.Constant;
 
 public abstract class AdaptiveFilter extends VariedFilter {
 

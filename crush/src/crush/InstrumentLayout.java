@@ -25,8 +25,8 @@ package crush;
 
 import java.util.List;
 
-import kovacs.util.Configurator;
-import kovacs.util.Copiable;
+import jnum.Configurator;
+import jnum.Copiable;
 
 public abstract class InstrumentLayout<ChannelType extends Channel> implements Cloneable, Copiable<InstrumentLayout<ChannelType>> {
 	public Instrument<? extends ChannelType> instrument;

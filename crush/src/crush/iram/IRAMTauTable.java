@@ -26,14 +26,14 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 
-import kovacs.astro.AstroTime;
-import kovacs.data.DataPoint;
-import kovacs.data.LocalAverage;
-import kovacs.data.Locality;
-import kovacs.data.LocalizedData;
-import kovacs.util.*;
-
 import crush.CRUSH;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.AstroTime;
+import jnum.data.DataPoint;
+import jnum.data.LocalAverage;
+import jnum.data.Locality;
+import jnum.data.LocalizedData;
 
 public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 	

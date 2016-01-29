@@ -27,7 +27,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.StringTokenizer;
 
-import kovacs.util.*;
+import jnum.Copiable;
+import jnum.Flagging;
+import jnum.Util;
+
 
 
 public abstract class Channel implements Cloneable, Comparable<Channel>, Flagging, Copiable<Channel> {

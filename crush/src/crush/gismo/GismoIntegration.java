@@ -29,11 +29,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import kovacs.astro.*;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 import crush.*;
 import crush.fits.HDUReader;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.*;
+import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
 public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> implements GroundBased {

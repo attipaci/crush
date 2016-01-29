@@ -22,11 +22,11 @@
  ******************************************************************************/
 package crush;
 
-import kovacs.astro.AstroProjector;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.HorizontalCoordinates;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
+import jnum.astro.AstroProjector;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.HorizontalCoordinates;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
 
 
 public abstract class HorizontalFrame extends Frame implements GroundBased {

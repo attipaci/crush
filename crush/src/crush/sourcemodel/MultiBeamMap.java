@@ -26,26 +26,26 @@ package crush.sourcemodel;
 
 import java.util.Collection;
 
-import kovacs.data.CartesianGrid2D;
-import kovacs.data.Data2D;
-import kovacs.data.Data2D.Task;
-import kovacs.data.GridMap;
-import kovacs.fft.MultiFFT;
-import kovacs.math.Coordinate2D;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.util.Constant;
-import kovacs.util.ExtraMath;
-import kovacs.util.Parallel;
 import crush.DualBeam;
 import crush.Instrument;
 import crush.Integration;
 import crush.Pixel;
 import crush.Scan;
 import crush.SourceModel;
+import jnum.Constant;
+import jnum.ExtraMath;
+import jnum.Parallel;
+import jnum.data.CartesianGrid2D;
+import jnum.data.Data2D;
+import jnum.data.GridMap2D;
+import jnum.data.Data2D.Task;
+import jnum.fft.MultiFFT;
+import jnum.math.Coordinate2D;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
 
 public class MultiBeamMap extends ScalarMap {
-	GridMap<Coordinate2D> transformer;
+	GridMap2D<Coordinate2D> transformer;
 		
 	Class<SphericalCoordinates> scanningSystem;
 	MultiFFT fft = new MultiFFT();
@@ -65,7 +65,7 @@ public class MultiBeamMap extends ScalarMap {
 	public SourceModel getWorkingCopy(boolean withContents) {
 		MultiBeamMap copy = (MultiBeamMap) super.getWorkingCopy(withContents);
 		copy.fft = new MultiFFT();
-		if(transformer != null) copy.transformer = (GridMap<Coordinate2D>) transformer.copy();
+		if(transformer != null) copy.transformer = (GridMap2D<Coordinate2D>) transformer.copy();
 		return copy;
 	}
 	
@@ -89,7 +89,7 @@ public class MultiBeamMap extends ScalarMap {
 		int nx = ExtraMath.pow2ceil((int) Math.ceil(map.sizeX() + maxThrow / delta.x()));
 		int ny = ExtraMath.pow2ceil((int) Math.ceil(map.sizeY() + maxThrow / delta.y()));
 		
-		transformer = new GridMap<Coordinate2D>(nx, ny + 2);		
+		transformer = new GridMap2D<Coordinate2D>(nx, ny + 2);		
 		transformer.setGrid(new CartesianGrid2D());
 		transformer.setReference(new Coordinate2D());
 		

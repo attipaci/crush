@@ -23,7 +23,7 @@
 
 package crush;
 
-import kovacs.math.Coordinate2D;
+import jnum.math.Coordinate2D;
 
 public interface DualBeam {
 

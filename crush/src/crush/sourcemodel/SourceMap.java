@@ -28,23 +28,27 @@ package crush.sourcemodel;
 
 import java.util.*;
 
-import kovacs.astro.AstroProjector;
-import kovacs.astro.CoordinateEpoch;
-import kovacs.astro.EclipticCoordinates;
-import kovacs.astro.EquatorialCoordinates;
-import kovacs.astro.FocalPlaneCoordinates;
-import kovacs.astro.GalacticCoordinates;
-import kovacs.data.Index2D;
-import kovacs.data.Statistics;
-import kovacs.math.Range;
-import kovacs.math.SphericalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.projection.Gnomonic;
-import kovacs.projection.Projection2D;
-import kovacs.projection.SphericalProjection;
-import kovacs.text.TableFormatter;
-import kovacs.util.*;
 import crush.*;
+import jnum.Configurator;
+import jnum.ExtraMath;
+import jnum.Parallel;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.AstroProjector;
+import jnum.astro.CoordinateEpoch;
+import jnum.astro.EclipticCoordinates;
+import jnum.astro.EquatorialCoordinates;
+import jnum.astro.FocalPlaneCoordinates;
+import jnum.astro.GalacticCoordinates;
+import jnum.data.Index2D;
+import jnum.data.Statistics;
+import jnum.math.Range;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
+import jnum.projection.Gnomonic;
+import jnum.projection.Projection2D;
+import jnum.projection.SphericalProjection;
+import jnum.text.TableFormatter;
 
 
 public abstract class SourceMap extends SourceModel {	

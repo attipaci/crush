@@ -23,7 +23,7 @@
 
 package crush.sofia;
 
-import kovacs.util.Copiable;
+import jnum.Copiable;
 
 public class BracketedValues implements Cloneable, Copiable<BracketedValues> {
 	public double start = Double.NaN, end = Double.NaN;

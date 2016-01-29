@@ -25,7 +25,7 @@ package crush;
 
 import java.util.*;
 
-import kovacs.util.*;
+import jnum.Configurator;
 
 
 public class Pipeline implements Runnable {

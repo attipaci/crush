@@ -25,6 +25,11 @@ package crush.scuba2;
 
 import crush.*;
 import crush.jcmt.JCMTTauTable;
+import jnum.Unit;
+import jnum.Util;
+import jnum.astro.AstroTime;
+import jnum.astro.HorizontalCoordinates;
+import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
@@ -32,11 +37,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import kovacs.astro.AstroTime;
-import kovacs.astro.HorizontalCoordinates;
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 
 public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements GroundBased {
 	/**

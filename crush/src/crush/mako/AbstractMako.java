@@ -25,12 +25,11 @@ package crush.mako;
 import crush.*;
 import crush.array.DistortionModel;
 import crush.cso.CSOArray;
+import jnum.Unit;
+import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
 import java.util.*;
-
-import kovacs.math.Vector2D;
-import kovacs.util.*;
 
 
 public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> extends CSOArray<MakoPixelType> {

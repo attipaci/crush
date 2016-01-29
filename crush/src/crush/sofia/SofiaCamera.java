@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import kovacs.util.Unit;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsFactory;
 import nom.tam.fits.Header;
@@ -44,6 +43,7 @@ import crush.InstrumentLayout;
 import crush.Scan;
 import crush.array.Array;
 import crush.array.SingleColorPixel;
+import jnum.Unit;
 
 public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends Array<ChannelType, ChannelType> implements GroundBased {
 	/**

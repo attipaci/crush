@@ -6,11 +6,6 @@ import java.util.ArrayList;
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.Fits;
-import kovacs.data.WeightedPoint;
-import kovacs.math.Range;
-import kovacs.math.Vector2D;
-import kovacs.util.Configurator;
-import kovacs.util.Util;
 import crush.CRUSH;
 import crush.Frame;
 import crush.Integration;
@@ -21,6 +16,11 @@ import crush.mako.MakoPixel;
 import crush.mako.MakoFrame;
 import crush.mako.MakoIntegration;
 import crush.mako.MakoScan;
+import jnum.Configurator;
+import jnum.Util;
+import jnum.data.WeightedPoint;
+import jnum.math.Range;
+import jnum.math.Vector2D;
 
 public class BeamMapper extends CRUSH {
 	MakoScan<Mako> scan;
