@@ -23,10 +23,17 @@
 
 package crush;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
+import jnum.Util;
 
-public class Dependents {
+
+public class Dependents implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2489033861985258941L;
 	private String name;
 	private Integration<?, ?> integration;
 	private float[] forFrame, forChannel;
@@ -39,6 +46,22 @@ public class Dependents {
 		forChannel = new float[integration.instrument.size()];
 			
 		integration.dependents.put(name, this);
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof Dependents)) return false;
+		if(!super.equals(o)) return false;
+		Dependents d = (Dependents) o;
+		if(!name.equals(d.name)) return false;
+		if(!Util.equals(integration, d.integration)) return false;
+		return true;
+	}
+	
+	@Override
+	public int hashCode() {
+		return super.hashCode() ^ integration.getDisplayID().hashCode() ^ getName().hashCode();
 	}
 	
 	public String getName() { return name; }

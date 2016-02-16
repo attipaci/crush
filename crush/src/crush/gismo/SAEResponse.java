@@ -32,6 +32,11 @@ import jnum.Unit;
 
 public class SAEResponse extends Response {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 525169198737359678L;
+
 	public SAEResponse(GismoPixel channel) throws NoSuchFieldException {
 		name = "sae-" + channel.getFixedIndex();
 		ChannelGroup<GismoPixel> g = new ChannelGroup<GismoPixel>("pixel-" + channel.getFixedIndex());

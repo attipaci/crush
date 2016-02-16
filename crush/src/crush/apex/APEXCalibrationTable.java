@@ -134,6 +134,11 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 
 	
 	class Entry extends LocalizedData {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 4103895830752978780L;
+		
 		TimeStamp timeStamp;
 		DataPoint scaling = new DataPoint();
 		

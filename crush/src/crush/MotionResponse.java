@@ -28,6 +28,11 @@ import java.util.StringTokenizer;
 
 public abstract class MotionResponse extends Response {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7298231042057007209L;
+
 	public MotionResponse() {
 		super();
 	}

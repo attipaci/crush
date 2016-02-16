@@ -26,6 +26,11 @@ import java.lang.reflect.Field;
 
 public class PointingResponse extends PositionResponse {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 19228371167607910L;
+
 	public PointingResponse() {
 		super(Motion.TELESCOPE);
 	}

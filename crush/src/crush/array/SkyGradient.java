@@ -26,10 +26,24 @@ import crush.Channel;
 import crush.GradientGains;
 
 public class SkyGradient extends GradientGains {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5605187091928172211L;
 	private boolean horizontal = true;
 	
 	private SkyGradient(boolean isHorizontal) {
 		this.horizontal = isHorizontal;
+	}
+	
+	@Override
+	public int hashCode() { return super.hashCode() ^ (horizontal ? 1 : 0); }
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!super.equals(o)) return false;
+		return horizontal == ((SkyGradient) o).horizontal;
 	}
 	
 	@Override
@@ -45,10 +59,20 @@ public class SkyGradient extends GradientGains {
 	}
 
 	public static class X extends SkyGradient {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 627602461300041682L;
+
 		public X() { super(true); }
 	}
 	
 	public static class Y extends SkyGradient {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -2925386841948261256L;
+
 		public Y() { super(false); }
 	}
 

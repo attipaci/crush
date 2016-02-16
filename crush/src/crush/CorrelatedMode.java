@@ -32,6 +32,10 @@ import java.util.Vector;
 
 public class CorrelatedMode extends Mode {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8794899798480857476L;
 	public boolean fixedSignal = false;
 	public boolean solvePhases = false;
 	public int skipFlags = ~0;
@@ -146,6 +150,11 @@ public class CorrelatedMode extends Mode {
 
 	public class CoupledMode extends CorrelatedMode {
 		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1524809691029533295L;
+
 		public CoupledMode() {
 			super(CorrelatedMode.this.getChannels());
 			CorrelatedMode.this.addCoupledMode(this);

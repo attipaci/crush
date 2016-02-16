@@ -39,6 +39,11 @@ import jnum.math.Vector2D;
 import jnum.projection.Projection2D;
 
 public class BeamMap extends SourceMap {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8380688477538977451L;
+	
 	ScalarMap[] pixelMap;
 	private ScalarMap template;
 	
@@ -369,6 +374,11 @@ public class BeamMap extends SourceMap {
 	public ExecutorService getExecutor() {
 		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) return map.getExecutor();
 		return null;
+	}
+
+	@Override
+	public SphericalCoordinates getReference() {
+		return template.getReference();
 	}
 
 	

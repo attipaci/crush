@@ -52,6 +52,11 @@ import jnum.text.TableFormatter;
 
 
 public abstract class SourceMap extends SourceModel {	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8110425445687949465L;
+	
 	public double integationTime = 0.0;
 	public double smoothing = 0.0;
 	public int signalMode = Frame.TOTAL_POWER;

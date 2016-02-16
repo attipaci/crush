@@ -24,7 +24,9 @@
 
 package crush;
 
-public enum Mount {	
+import java.io.Serializable;
+
+public enum Mount implements Serializable {	
 	CASSEGRAIN ("Cassegrain"),
 	GREGORIAN ("Gregorian"),
 	PRIME_FOCUS ("Prime Focus"),
@@ -36,4 +38,5 @@ public enum Mount {
 	Mount(String name) {
 		this.name = name;		
 	}
+	
 }

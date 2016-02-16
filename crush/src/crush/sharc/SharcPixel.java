@@ -31,6 +31,10 @@ import jnum.Unit;
 import jnum.math.Vector2D;
 
 public class SharcPixel extends SingleColorPixel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7461430118087545027L;
 	boolean isBad = false;
 		
 	public SharcPixel(Sharc instrument, int backendIndex) {

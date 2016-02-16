@@ -29,6 +29,7 @@ import jnum.Util;
 import jnum.astro.Weather;
 import jnum.data.WeightedPoint;
 import jnum.math.Range;
+import jnum.math.SphericalCoordinates;
 
 import java.awt.Color;
 import java.io.*;
@@ -37,6 +38,11 @@ import java.util.concurrent.ExecutorService;
 
 // Bin the correlated signal by elevation...
 public class SkyDip extends SourceModel {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4817222317574280875L;
 	
 	WeightedPoint[] data;
 	double resolution;
@@ -357,6 +363,12 @@ public class SkyDip extends SourceModel {
 	public int getParallel() {
 		// TODO Auto-generated method stub
 		return 1;
+	}
+
+	@Override
+	public SphericalCoordinates getReference() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

@@ -33,6 +33,10 @@ import java.util.StringTokenizer;
 
 
 public class AszcaPixel extends APEXPixel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4607548660132765868L;
 	public double waferGain = 1.0;
 	public double squidGain = 1.0;
 	public double squidGroupGain = 1.0;

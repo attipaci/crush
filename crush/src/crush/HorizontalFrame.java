@@ -30,6 +30,10 @@ import jnum.math.Vector2D;
 
 
 public abstract class HorizontalFrame extends Frame implements GroundBased {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4706123354315623700L;
 	public HorizontalCoordinates horizontal; 	// includes chopping offsets
 	public Vector2D horizontalOffset; 			// includes chopping offsets
 	public double cosPA, sinPA;					// parallactic angle.
@@ -142,6 +146,7 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 		horizontal = apparent.toHorizontal(scan.site, LST);
 	}
 	
+	// TODO use the mapping projection, instead of hardcoded SFL
 	public void calcEquatorial() {
 		// This assumes that the object is tracked on sky...
 		// Uses the scanning offsets, on top of the tracking coordinate of the scan...

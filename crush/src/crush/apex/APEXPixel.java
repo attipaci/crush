@@ -45,6 +45,10 @@ import jnum.fft.DoubleFFT;
 import jnum.math.Vector2D;
 
 public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighting, PhaseDespiking {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3101551324892059033L;
 	public Vector2D fitsPosition;
 	public double relativePhaseWeight = 1.0;
 	

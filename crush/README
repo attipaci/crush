@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 		       <attila[AT]submm.caltech.edu>
 
-		        Last updated: 24 April 2015
+		       Last updated: 11 February 2016
 
 
 
@@ -1159,8 +1159,8 @@ options on the console.
 	W(8.44E0-2)  -- Deriving pixel weights with the 'rms' method. The
 			average sensitivity of the array is estimated to be
 			84.4 mJy sqrt(s).
-	dN(0.0%)245  -- Despiking via the 'neighbours' method, with 0.0% of the
-			data flagged as spikes, and 245 pixels surviving the
+	dN(3)245     -- Despiking via the 'neighbours' method, with 3 frames
+			flagged as spiky, and 245 pixels surviving the
 			flagging of pixels with too many spikes.
 	B245	     -- Decorrelating on amplifier boxes, with 245 pixels 
 			having acceptable gains to the correlated signals.

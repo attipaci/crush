@@ -29,6 +29,10 @@ import jnum.astro.GeodeticCoordinates;
 
 
 public class HawcPlusFrame extends HorizontalFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6511202510198331668L;
 	GeodeticCoordinates site;
 	long mceSerial;
 	float VPA, PWV, HPWangle;

@@ -52,7 +52,7 @@ public class CRUSH extends Configurator {
 	private static final long serialVersionUID = 6284421525275783456L;
 
 	private static String version = "2.31-a1";
-	private static String revision = "devel.1";
+	private static String revision = "devel.3";
 	
 	public static String workPath = ".";
 	public static String home = ".";
@@ -607,9 +607,9 @@ public class CRUSH extends Configurator {
 				"  ----------------------------------------------------------------------------\n" +
 				"  crush -- Reduction and imaging tool for astronomical cameras.\n" +
 				"           Version: " + getFullVersion() + "\n" + 
-				"           Utilities: " + Util.getFullVersion() + ", nom.tam.fits: " + Fits.version() + "\n" +
+				"           jnum: " + Util.getFullVersion() + ", nom.tam.fits: " + Fits.version() + "\n" +
 				"           http://www.submm.caltech.edu/~sharc/crush\n" +
-				"           Copyright (C)2015 Attila Kovacs <attila[AT]caltech.edu>\n" +
+				"           Copyright (c)2015 Attila Kovacs <attila[AT]caltech.edu>\n" +
 				"  ----------------------------------------------------------------------------\n";	
 		System.err.println(info);
 	}

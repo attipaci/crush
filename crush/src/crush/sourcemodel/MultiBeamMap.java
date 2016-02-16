@@ -45,6 +45,11 @@ import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 
 public class MultiBeamMap extends ScalarMap {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1489783970843373449L;
+
 	GridMap2D<Coordinate2D> transformer;
 		
 	Class<SphericalCoordinates> scanningSystem;

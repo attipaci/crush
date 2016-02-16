@@ -1,5 +1,32 @@
->> multi-scan pointing is crap after first scan (GISMO)...
+>> poll=option to list all conditionals for option* also.
+>> despike.features --> despike.multires
 
+
+
+	[DEPREATE] 'despike2' and 'despike3' pipeline steps are no longer
+	supported. (They were never used).
+
+	[CHANGE] Despiking 'features' method renamed to 'multires'.
+
+	[FIX] Despiking via 'neighbours' method threshold was too high by about
+	sqrt(2) typically. Fixed.
+
+	[FIX] Pointing information now correct for multiscan pointing 
+	reductions, in any coordinate system, and also for moving objects.
+
+	[TWEAK] Neighbor despiking domain tweaked to include all flagged 
+	frames.
+
+	[TWEAK] Absolute level despiking is now default starting in the 4th
+	iteration (except in 'bright' mode).
+
+	[TWEAK] Neighbor despiking to flag single sample only.
+
+	[CONFIG] {GISMO} 'deep' mode 1/f stability changed back to 3 s,
+	resulting in cleaner maps.
+
+	[CODE] Most classes now implement Serializable, as well as suitable
+	overrides for the hashCode() and equals() methods.
 
 	[CODE] kovacs.util packages renamed to jnum (Java Numerical).
 

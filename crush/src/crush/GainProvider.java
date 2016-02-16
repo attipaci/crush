@@ -22,6 +22,7 @@
  ******************************************************************************/
 package crush;
 
+
 public interface GainProvider {
 
 	public double getGain(Channel c) throws Exception;

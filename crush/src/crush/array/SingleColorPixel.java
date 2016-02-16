@@ -34,6 +34,10 @@ import jnum.math.Vector2D;
 
 
 public abstract class SingleColorPixel extends Channel implements Pixel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3125855169655883839L;
 	public Vector2D position;
 	public Vector<? extends SingleColorPixel> neighbours;
 	public boolean isIndependent = false;

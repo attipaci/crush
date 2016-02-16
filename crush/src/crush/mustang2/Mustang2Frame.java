@@ -27,6 +27,11 @@ import crush.HorizontalFrame;
 
 public class Mustang2Frame extends HorizontalFrame {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3339115022179473683L;
+
 	public Mustang2Frame(Mustang2Scan parent) {
 		super(parent);
 	}

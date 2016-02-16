@@ -28,6 +28,10 @@ import crush.*;
 
 
 public class APEXFrame extends HorizontalFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4679861282148192736L;
 	public int chopperPhase;
 	public int nodFlag;
 	

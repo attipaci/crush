@@ -29,6 +29,7 @@ import crush.array.*;
 import crush.astro.AstroMap;
 import crush.sourcemodel.ScalarMap;
 import jnum.Unit;
+import jnum.math.SphericalCoordinates;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -36,6 +37,11 @@ import java.util.concurrent.ExecutorService;
 
 public class PolarMap extends SourceModel {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -533094900293482665L;
+	
 	ScalarMap N,Q,U;
 	public boolean usePolarization = false;
 	public boolean hasPolarization = false;
@@ -455,6 +461,11 @@ public class PolarMap extends SourceModel {
 		if(Q != null) return Q.getExecutor();
 		if(U != null) return U.getExecutor();
 		return null;
+	}
+
+	@Override
+	public SphericalCoordinates getReference() {
+		return N.getReference();
 	}
 
 	

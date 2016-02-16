@@ -26,6 +26,11 @@ import java.lang.reflect.Field;
 
 public class AccelerationResponse extends MotionResponse {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6674558238592018995L;
+
 	public AccelerationResponse() {
 		super();
 		// TODO Auto-generated constructor stub

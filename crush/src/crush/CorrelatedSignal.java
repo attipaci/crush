@@ -36,6 +36,10 @@ import jnum.data.WeightedPoint;
 
 
 public class CorrelatedSignal extends Signal {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2003139600515268900L;
 	Dependents dependents;
 	float[] weight;
 	float[] sourceFiltering; // per channel

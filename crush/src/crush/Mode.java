@@ -24,6 +24,8 @@
 
 package crush;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.Arrays;
 
@@ -33,7 +35,14 @@ import jnum.data.WeightedPoint;
 import jnum.math.Range;
 
 
-public class Mode {
+public class Mode implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1953090499269762683L;
+	
+	private transient int serialNo;
+	
 	public String name;
 	private ChannelGroup<?> channels;
 	public GainProvider gainProvider;
@@ -49,9 +58,10 @@ public class Mode {
 	private float[] gain;
 		
 	public Mode() {
-		name = "mode-" + (++counter);
+		serialNo = ++counter;
+		name = "mode-" + serialNo;
 	}
-
+	
 	public Mode(ChannelGroup<?> group) {
 		this();
 		setChannels(group);
@@ -73,15 +83,14 @@ public class Mode {
 	
 	@Override
 	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof Mode)) return false;
 		if(!super.equals(o)) return false;
-		Mode m = (Mode) o;
-		return name.equals(m.name);
+		return serialNo == ((Mode) o).serialNo;
 	}
-	
+
 	@Override
-	public int hashCode() {
-		return name.hashCode();
-	}
+	public int hashCode() { return super.hashCode() ^ serialNo; }
 
 	public String getName() { return name; }	
 	
@@ -219,7 +228,10 @@ public class Mode {
 		return description;
 	}
 	
-	
+	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+		stream.defaultReadObject();
+		serialNo = ++counter;
+    }
 	
 	protected static int nextMode = 0;
 	public final static int TOTAL_POWER = nextMode++;

@@ -27,6 +27,11 @@ import crush.*;
 
 
 public class Scuba2Frame extends HorizontalFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7910019752807155234L;
+	
 	public int frameNumber;
 	public float detectorT;
 	

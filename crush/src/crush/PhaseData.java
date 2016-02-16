@@ -23,13 +23,21 @@
 package crush;
 
 
+import java.io.Serializable;
 import java.text.NumberFormat;
+import java.util.Arrays;
 
+import jnum.Util;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
+import jnum.util.HashCode;
 
 
-public class PhaseData {
+public class PhaseData implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1535628125231643099L;
 	protected Integration<?,?> integration;
 	public int index;
 	
@@ -42,6 +50,32 @@ public class PhaseData {
 	
 	public PhaseData(Integration<?,?> integration){
 		this.integration = integration;
+	}
+	
+	@Override
+	public int hashCode() { 
+		int hash = super.hashCode() ^ integration.getDisplayID().hashCode() ^ index ^ phase ^ HashCode.get(dependents);
+		if(start != null) hash ^= start.index;
+		if(end != null) hash ^= end.index;
+		if(value != null) hash ^= value.length;
+		return hash;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof PhaseData)) return false;
+		if(!super.equals(o)) return false;
+		
+		PhaseData phases = (PhaseData) o;
+		if(index != phases.index) return false;
+		if(phase != phases.phase) return false;
+		if(dependents != phases.dependents) return false;
+		if(!Util.equals(start, phases.start)) return false;
+		if(!Util.equals(end, phases.end)) return false;
+		if(!Arrays.equals(value, phases.value)) return false;
+		if(!Arrays.equals(weight, phases.weight)) return false;
+		return true;
 	}
 	
 	public boolean validate() {
@@ -72,7 +106,7 @@ public class PhaseData {
 					if(exposure == null) continue;
 					if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
 					
-					if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE_FLAGS) == 0) {
+					if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE) == 0) {
 						sum += exposure.relativeWeight * exposure.data[channel.index];
 						sumw += exposure.relativeWeight;
 					}
@@ -98,7 +132,7 @@ public class PhaseData {
 				
 				for(Channel channel : channels) {
 					exposure.data[channel.index] -= channel.temp;
-					if(wasUsed) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE_FLAGS) == 0)					
+					if(wasUsed) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE) == 0)					
 						parms.addAsync(exposure, exposure.relativeWeight / weight[channel.index]); 
 				}
 			}

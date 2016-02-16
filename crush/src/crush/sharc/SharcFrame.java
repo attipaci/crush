@@ -31,6 +31,10 @@ import jnum.Unit;
 import jnum.math.Vector2D;
 
 public class SharcFrame extends HorizontalFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6241292032442297935L;
 	float[] quadrature;
 	
 	public SharcFrame(SharcScan parent) {

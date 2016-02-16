@@ -35,7 +35,11 @@ import jnum.data.DataPoint;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
 
-public class Signal implements Cloneable {
+public class Signal implements Serializable, Cloneable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1918817167111994832L;
 	private Mode mode;
 	Integration<?, ?> integration;
 	public float[] value, drifts;
@@ -59,6 +63,26 @@ public class Signal implements Cloneable {
 		resolution = ExtraMath.roundupRatio(integration.size(), values.length);
 		this.value = values;
 		driftN = values.length;
+	}
+	
+	@Override
+	public int hashCode() {
+		return super.hashCode() ^ mode.hashCode() ^ integration.getDisplayID().hashCode() ^ resolution ^ driftN;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof Signal)) return false;
+		if(!super.equals(o)) return false;
+		
+		Signal sig = (Signal) o;
+		if(resolution != sig.resolution) return false;
+		if(driftN != sig.driftN) return false;
+		if(!integration.getID().equals(sig.integration.getID())) return false;
+		if(!Util.equals(mode, sig.mode)) return false;
+		return true;
+		
 	}
 	
 	

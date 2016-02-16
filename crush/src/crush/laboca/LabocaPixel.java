@@ -34,6 +34,10 @@ import java.util.*;
 
 public class LabocaPixel extends APEXPixel {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5745477721698573346L;
 	public int box = -1;
 	public int amp = -1;
 	public int cable = -1;

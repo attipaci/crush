@@ -26,6 +26,11 @@ import java.lang.reflect.Field;
 
 public class ChopperResponse extends PositionResponse {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4523907214569680646L;
+
 	public ChopperResponse() {
 		super(Motion.CHOPPER);
 	}

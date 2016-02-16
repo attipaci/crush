@@ -32,6 +32,10 @@ import jnum.Util;
 import jnum.math.Vector2D;
 
 public class GismoPixel extends SingleColorPixel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2948396506109435290L;
 	public int row, col, mux, pin;
 	public double muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0, saeGain = 0.0;
 	

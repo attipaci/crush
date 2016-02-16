@@ -139,6 +139,10 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 	}
 
 	class Entry extends LocalizedData {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -7635791450826001376L;
 		TimeStamp timeStamp;
 		DataPoint tau = new DataPoint();
 		

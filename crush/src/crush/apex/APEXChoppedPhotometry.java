@@ -32,6 +32,11 @@ import jnum.data.WeightedPoint;
 
 public class APEXChoppedPhotometry extends Photometry {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3704113753270498352L;
+
 	public APEXChoppedPhotometry(APEXCamera<?> instrument) {
 		super(instrument);
 	}

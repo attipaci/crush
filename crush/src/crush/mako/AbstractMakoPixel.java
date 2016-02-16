@@ -32,6 +32,10 @@ import jnum.Util;
 
 
 public abstract class AbstractMakoPixel extends SingleColorPixel implements Resonator {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8293468198087185516L;
 	public int array = AbstractMako.DEFAULT_ARRAY;
 	public int row, col;
 	

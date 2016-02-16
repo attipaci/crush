@@ -87,7 +87,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public double weight = 1.0;
 	
 	public int sourcePoints = 0;
-	public boolean hasSiblings = false;
+	public boolean isSplit = false;
 		
 	public GaussianSource<SphericalCoordinates> pointing;
 	
@@ -101,6 +101,27 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public int compareTo(Scan<?, ?> other) {
 		if(serialNo == other.serialNo) return 0;
 		return serialNo < other.serialNo ? -1 : 1;
+	}
+	
+	@Override
+	public int hashCode() {
+		int hash = super.hashCode() ^ size() ^ getID().hashCode() ^ HashCode.get(MJD);
+		if(instrument != null) hash ^= instrument.hashCode();
+		return hash;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof Scan)) return false;
+		if(!super.equals(o)) return false;
+		Scan<?,?> scan = (Scan<?,?>) o;
+		
+		if(size() != scan.size()) return false;
+		if(getID() != scan.getID()) return false;
+		if(MJD != scan.MJD) return false;
+		if(!Util.equals(instrument, scan.instrument)) return false;
+		return true;
 	}
 	
 	public void validate() {	
@@ -625,7 +646,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		ArrayList<Scan<InstrumentType, IntegrationType>> scans = new ArrayList<Scan<InstrumentType, IntegrationType>>();
 		for(IntegrationType integration : this) {
 			Scan<InstrumentType, IntegrationType> scan = (Scan<InstrumentType, IntegrationType>) clone();
-			if(size() > 1) scan.hasSiblings = true;
+			if(size() > 1) scan.isSplit = true;
 			scan.clear();
 			scan.instrument = integration.instrument;
 			integration.scan = scan;
@@ -861,18 +882,26 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 
 	public Vector2D getEquatorialPointing(GaussianSource<SphericalCoordinates> source) {
+		if(!source.getCoordinates().getClass().equals(sourceModel.getReference().getClass()))
+			throw new IllegalArgumentException("pointing source is in a different coordinate system from source model.");
+		
+		
 		EquatorialCoordinates sourceCoords = null;
+		EquatorialCoordinates reference = null;
 		
 		if(source.getCoordinates() instanceof EquatorialCoordinates) {
 			sourceCoords = (EquatorialCoordinates) source.getCoordinates();
+			reference = (EquatorialCoordinates) sourceModel.getReference();
 			if(!sourceCoords.epoch.equals(equatorial.epoch)) sourceCoords.precess(equatorial.epoch);
 		}
 		else {
 			sourceCoords = (EquatorialCoordinates) equatorial.clone();
+			reference = (EquatorialCoordinates) equatorial.clone();
 			((CelestialCoordinates) source.getCoordinates()).toEquatorial(sourceCoords);
+			((CelestialCoordinates) sourceModel.getReference()).toEquatorial(reference);
 		}
 			
-		return sourceCoords.getOffsetFrom(equatorial);
+		return sourceCoords.getOffsetFrom(reference);
 	}
 	
 	public Vector2D getNativePointing(GaussianSource<SphericalCoordinates> source) {
@@ -882,9 +911,13 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	}
 	
 	public Vector2D getNativePointingIncrement(GaussianSource<SphericalCoordinates> source) {
+		if(!source.getCoordinates().getClass().equals(sourceModel.getReference().getClass()))
+			throw new IllegalArgumentException("pointing source is in a different coordinate system from source model.");
+		
+		
 		if(instrument instanceof GroundBased) {
 			if(source.getCoordinates() instanceof HorizontalCoordinates) 
-				return source.getCoordinates().getOffsetFrom(horizontal);			
+				return source.getCoordinates().getOffsetFrom(sourceModel.getReference());			
 			else {	
 				// Equatorial offset (RA/DEC)
 				Vector2D offset = getEquatorialPointing(source);
@@ -900,10 +933,11 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			}
 		}	
 		else if(source.getCoordinates() instanceof EquatorialCoordinates) 
-			return source.getCoordinates().getOffsetFrom(equatorial);
+			return source.getCoordinates().getOffsetFrom(sourceModel.getReference());
 		else {
 			EquatorialCoordinates sourceEq = ((CelestialCoordinates) source.getCoordinates()).toEquatorial();
-			return sourceEq.getOffsetFrom(equatorial);
+			EquatorialCoordinates refEq = ((CelestialCoordinates) sourceModel.getReference()).toEquatorial();
+			return sourceEq.getOffsetFrom(refEq);
 		}
 	}
  

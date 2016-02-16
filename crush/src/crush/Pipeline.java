@@ -23,12 +23,18 @@
 
 package crush;
 
+import java.io.Serializable;
 import java.util.*;
 
 import jnum.Configurator;
 
 
-public class Pipeline implements Runnable {
+public class Pipeline implements Runnable, Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4031114728363827458L;
+
 	CRUSH crush;
 	
 	List<Scan<?,?>> scans = new ArrayList<Scan<?,?>>();

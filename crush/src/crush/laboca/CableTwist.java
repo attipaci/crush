@@ -30,6 +30,10 @@ import crush.GradientGains;
  *
  */
 public class CableTwist extends GradientGains {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1813119272323673961L;
 	double center = 0.0;
 
 	@Override

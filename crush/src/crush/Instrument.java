@@ -41,6 +41,7 @@ import jnum.data.WeightedPoint;
 import jnum.math.Range;
 import jnum.math.Vector2D;
 import jnum.text.TableFormatter;
+import jnum.util.HashCode;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
@@ -57,7 +58,7 @@ implements TableFormatter.Entries, Messaging {
 	public Mount mount;
 	
 	private double resolution;
-	private double overlapSize = Double.NaN;
+	private double overlapPointSize = Double.NaN;
 	
 	public double integrationTime;
 	public double samplingInterval;
@@ -84,6 +85,23 @@ implements TableFormatter.Entries, Messaging {
 		super(name, size);
 		setLayout(layout);
 		storeChannels = size;
+	}
+	
+	@Override
+	public int hashCode() {
+		return super.hashCode() ^ mount.hashCode() ^ layout.hashCode() ^ HashCode.get(resolution);
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof Instrument)) return false;
+		if(!super.equals(o)) return false;
+		Instrument<?> i = (Instrument<?>) o;
+		if(resolution != i.resolution) return false;
+		if(!Util.equals(mount, i.mount)) return false;
+		if(!Util.equals(layout, i.layout)) return false;
+		return true;
 	}
 		
 	public void setLayout(InstrumentLayout<? super ChannelType> layout) {
@@ -123,7 +141,7 @@ implements TableFormatter.Entries, Messaging {
 		
 		for(Channel channel : copy) channel.instrument = copy;
 	
-		copy.overlapSize = Double.NaN;
+		copy.overlapPointSize = Double.NaN;
 		
 		if(options != null) copy.setOptions(options.copy());
 		if(layout != null) {
@@ -1110,7 +1128,7 @@ implements TableFormatter.Entries, Messaging {
 	public void calcOverlap(final double pointSize) {
 		if(this instanceof NonOverlappingChannels) return;
 		
-		if(pointSize == overlapSize) return;
+		if(pointSize == overlapPointSize) return;
 		
 		for(Channel channel : this) channel.clearOverlaps();
 		
@@ -1127,7 +1145,7 @@ implements TableFormatter.Entries, Messaging {
 			}	
 		}.process();
 
-		overlapSize = pointSize;
+		overlapPointSize = pointSize;
 	}
 	
 	// Sequential, because it is usually called from a parallel environment...
@@ -1159,7 +1177,7 @@ implements TableFormatter.Entries, Messaging {
 			}	
 		}.process();
 		
-		overlapSize = pointSize;
+		overlapPointSize = pointSize;
 	}
 	
 	public static Instrument<?> forName(String name) {

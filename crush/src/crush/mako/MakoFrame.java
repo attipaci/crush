@@ -25,6 +25,10 @@ package crush.mako;
 import crush.*;
 
 public class MakoFrame extends HorizontalFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3492248390542871495L;
 	int frameNumber;
 	int telescopeFlags = 0;
 	

@@ -27,6 +27,10 @@ package crush;
 import java.lang.reflect.*;
 
 public class FieldGradientMode extends CorrelatedMode {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6661319100565424381L;
 	private Field field;
 
 	public FieldGradientMode(Field field) {
