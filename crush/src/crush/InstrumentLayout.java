@@ -23,14 +23,19 @@
 
 package crush;
 
+import java.io.Serializable;
 import java.util.List;
 
 import jnum.Configurator;
 import jnum.Copiable;
 
-public abstract class InstrumentLayout<ChannelType extends Channel> implements Cloneable, Copiable<InstrumentLayout<ChannelType>> {
-	public Instrument<? extends ChannelType> instrument;
+public abstract class InstrumentLayout<ChannelType extends Channel> implements Serializable, Cloneable, Copiable<InstrumentLayout<ChannelType>> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6144882903894123342L;
 	
+	public Instrument<? extends ChannelType> instrument;
 		
 	public void setInstrument(Instrument<? extends ChannelType> instrument) {
 		this.instrument = instrument;

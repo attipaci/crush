@@ -30,6 +30,10 @@ import crush.*;
 
 
 public class GismoFrame extends HorizontalFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -322299070222166192L;
 	int samples = 1;
 	int frameNumber;
 	int calFlag = 0;

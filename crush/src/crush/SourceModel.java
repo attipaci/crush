@@ -24,15 +24,24 @@
 package crush;
 
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 
 import jnum.Configurator;
 import jnum.Unit;
+import jnum.Util;
+import jnum.math.SphericalCoordinates;
 import jnum.text.TableFormatter;
+import jnum.util.HashCode;
 
-public abstract class SourceModel implements Cloneable, TableFormatter.Entries, Messaging {
+public abstract class SourceModel implements Serializable, Cloneable, TableFormatter.Entries, Messaging {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6355660797531285811L;
+
 	private Instrument<?> instrument;
 
 	public Vector<Scan<?,?>> scans;
@@ -51,7 +60,28 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 	}
 
 	public Instrument<?> getInstrument() { return instrument; }
+	
+	@Override
+	public int hashCode() {
+		int hash = super.hashCode() ^ generation;
+		if(instrument != null) hash ^= instrument.hashCode();
+		if(scans != null) hash ^= HashCode.sampleFrom(scans);
+		return hash;
+	}
 
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof SourceModel)) return false;
+		if(!super.equals(o)) return false;
+		
+		SourceModel model = (SourceModel) o;
+		if(generation != model.generation) return false;
+		if(!Util.equals(instrument, model.instrument)) return false;
+		if(!Util.equals(scans, model.scans)) return false;
+		return true;
+	}
+	
 	public Configurator getOptions() {
 		return instrument.getOptions();
 	}
@@ -151,7 +181,8 @@ public abstract class SourceModel implements Cloneable, TableFormatter.Entries, 
 
 	public abstract boolean isValid();
 
-
+	public abstract SphericalCoordinates getReference();
+	
 	public void suggestions() {
 		boolean scanningProblemOnly = false;
 		

@@ -141,6 +141,10 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
 
 	
 	class Entry extends LocalizedData {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 7189114815744822461L;
 		TimeStamp timeStamp;
 		DataPoint tau = new DataPoint();
 		

@@ -29,8 +29,10 @@ import java.util.*;
 
 import jnum.Configurator;
 import jnum.Unit;
+import jnum.Util;
 import jnum.data.WeightedPoint;
 import jnum.math.Range;
+import jnum.util.HashCode;
 
 
 
@@ -53,15 +55,31 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		this.id = id;
 	}
 	
+
 	@Override
-	public boolean equals(Object o) {
-		if(!super.equals(o)) return false;
-		return ((Modality<?>) o).name.equals(name);
+	public int hashCode() {
+		int hash = super.hashCode() ^ name.hashCode() ^ id.hashCode() ^ (solveGains ? 1: 0) ^ (phaseGains ? 2 : 0) 
+				^ HashCode.get(resolution);
+		if(trigger != null) hash ^= trigger.hashCode();
+		if(name != null) hash ^= name.hashCode();
+		if(id != null) hash ^= id.hashCode();
+		return hash;
 	}
 	
 	@Override
-	public int hashCode() {
-		return name.hashCode();
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof Modality)) return false;
+		if(!super.equals(o)) return false;
+		
+		Modality<?> modality = (Modality<?>) o;
+		if(solveGains != modality.solveGains) return false;
+		if(phaseGains != modality.phaseGains) return false;
+		if(Double.compare(resolution, modality.resolution) != 0) return false;
+		if(!Util.equals(trigger, modality.trigger)) return false;
+		if(!id.equals(modality.id)) return false;
+		if(!name.equals(modality.name)) return false;
+		return true;
 	}
 	
 	public Modality(String name, String id, ChannelDivision<?> division, Field gainField, Class<? extends ModeType> modeClass) { 

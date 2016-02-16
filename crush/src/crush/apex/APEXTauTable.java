@@ -132,6 +132,10 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 
 	
 	class Entry extends LocalizedData {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 3293214668641028650L;
 		TimeStamp timeStamp;
 		DataPoint tau = new DataPoint();
 		

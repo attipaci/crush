@@ -30,6 +30,11 @@ import crush.Pixel;
 
 public class SingleColorLayout<ChannelType extends SingleColorPixel> extends InstrumentLayout<ChannelType> {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3711770466718770949L;
+
 	@Override
 	public int getPixelCount() {
 		return instrument.size();

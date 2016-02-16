@@ -22,13 +22,19 @@
  ******************************************************************************/
 package crush;
 
+import java.io.Serializable;
+
 import jnum.Copiable;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.*;
 
 
-public class Chopper implements Cloneable, Copiable<Chopper> {
+public class Chopper implements Serializable, Cloneable, Copiable<Chopper> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2142368367368186753L;
 	public int positions = 0; // 0 for indeterminate, -1 for sweeping mode
 	public double frequency = Double.NaN;
 	public double amplitude = 0.0;

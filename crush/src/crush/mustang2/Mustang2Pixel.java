@@ -29,6 +29,10 @@ import crush.resonators.FrequencyID;
 import crush.resonators.Resonator;
 
 public class Mustang2Pixel extends SingleColorPixel implements Resonator {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1763277158720420599L;
 	public Mustang2PixelID id;
 	public double polarizationAngle = Double.NaN;
 	public int polarizationIndex = -1;

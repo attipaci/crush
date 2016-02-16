@@ -23,6 +23,7 @@
 
 package crush;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.StringTokenizer;
@@ -30,13 +31,20 @@ import java.util.StringTokenizer;
 import jnum.Copiable;
 import jnum.Flagging;
 import jnum.Util;
+import jnum.util.HashCode;
 
 
 
-public abstract class Channel implements Cloneable, Comparable<Channel>, Flagging, Copiable<Channel> {
+public abstract class Channel implements Serializable, Cloneable, Comparable<Channel>, Flagging, Copiable<Channel> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5541239418892633654L;
+
 	public Instrument<?> instrument;
 	
-	private Collection<Overlap> overlaps;
+	private transient Collection<Overlap> overlaps;
+	transient float temp, tempG, tempWG, tempWG2;
 	
 	public int index;
 	private int storeIndex;
@@ -49,7 +57,6 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	public double weight = 1.0;
 	public double variance = 1.0;
 	public double dof = 1.0;
-	float temp, tempG, tempWG, tempWG2;
 	
 	public double dependents = 0.0;
 	
@@ -68,14 +75,23 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	
 	@Override
 	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof Channel)) return false;
 		if(!super.equals(o)) return false;
 		Channel c = (Channel) o;
-		if(c.instrument != instrument) return false;
-		return c.storeIndex == storeIndex; 
+		if(!Util.equals(c.instrument, instrument)) return false;
+		if(c.storeIndex != storeIndex) return false;
+		if(c.weight != weight) return false;
+		if(c.gain != gain) return false;
+		if(c.dof != dof) return false;
+		if(c.dependents != dependents) return false;
+		return true;
 	}
 	
 	@Override
-	public int hashCode() { return storeIndex; }
+	public int hashCode() { return super.hashCode() ^ instrument.getName().hashCode() ^ HashCode.get(storeIndex)
+			^ HashCode.get(weight) ^ HashCode.get(gain) ^ HashCode.get(dof) ^ HashCode.get(dependents); 
+	}
 	
 	
 	@Override
@@ -222,7 +238,6 @@ public abstract class Channel implements Cloneable, Comparable<Channel>, Flaggin
 	public final static int FLAG_DOF = 1 << nextSoftwareFlag++;
 	public final static int FLAG_SPIKY = 1 << nextSoftwareFlag++;
 	//public final static int FLAG_DISCONTINUITY = 1 << nextSoftwareFlag++;
-	public final static int FLAG_FEATURES = 1 << nextSoftwareFlag++;
 	public final static int FLAG_DAC_RANGE = 1 << nextSoftwareFlag++;
 	
 	public final static int SOFTWARE_FLAGS = ~HARDWARE_FLAGS;

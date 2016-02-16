@@ -27,6 +27,10 @@ package crush.sharc2;
 import crush.*;
 
 public class Sharc2Frame extends HorizontalFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1628223917919186907L;
 	int frameNumber;
 	int telescopeFlags = 0;
 	double dspTime;

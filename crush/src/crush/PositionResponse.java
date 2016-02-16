@@ -25,6 +25,10 @@ package crush;
 import java.lang.reflect.Field;
 
 public class PositionResponse extends MotionResponse {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8122571998749162314L;
 	int type;
 	
 	public PositionResponse(int type) {

@@ -23,7 +23,15 @@
 
 package crush;
 
-public class Overlap {
+import java.io.Serializable;
+
+import jnum.util.HashCode;
+
+public class Overlap implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7567199967596593068L;
 	Channel a, b;
 	double value;
 	
@@ -31,5 +39,28 @@ public class Overlap {
 		this.a = a;
 		this.b = b;
 		this.value = overlap;
+	}
+	
+	@Override
+	public int hashCode() {
+		int hash = super.hashCode() ^ HashCode.get(value);
+		if(a != null) hash ^= a.hashCode();
+		if(b != null) hash ^= b.hashCode();
+		return hash;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof Overlap)) return false;
+		if(!super.equals(o)) return false;
+		Overlap other = (Overlap) o;
+		
+		if(value != other.value) return false;
+		
+		if(a == other.a && b == other.b) return true;
+		if(a == other.b && b == other.a) return true;
+		
+		return false;
 	}
 }

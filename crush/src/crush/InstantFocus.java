@@ -22,6 +22,8 @@
  ******************************************************************************/
 package crush;
 
+import java.io.Serializable;
+
 import jnum.Configurator;
 import jnum.ExtraMath;
 import jnum.Unit;
@@ -51,7 +53,11 @@ import jnum.data.DataPoint;
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
 
-public class InstantFocus implements Cloneable {
+public class InstantFocus implements Serializable, Cloneable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4275858972947351486L;
 	private DataPoint x, y, z;
 	
 	public InstantFocus() {	}

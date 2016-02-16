@@ -148,6 +148,10 @@ public class JCMTTauTable  extends LocalAverage<JCMTTauTable.Entry> {
 
 	
 	class Entry extends LocalizedData {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -3204359502356393498L;
 		TimeStamp timeStamp;
 		DataPoint tau = new DataPoint();
 		

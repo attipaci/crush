@@ -30,6 +30,10 @@ import jnum.Constant;
 import jnum.Unit;
 
 public class PolKaFrame extends LabocaFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 913725861256419630L;
 	// phases for Q and U demodulation
 	float Q,U;
 	float Qh,Uh;

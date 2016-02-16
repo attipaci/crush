@@ -22,8 +22,30 @@
  ******************************************************************************/
 package crush;
 
-public abstract class GradientGains implements GainProvider {
+import java.io.Serializable;
+
+import jnum.util.HashCode;
+
+public abstract class GradientGains implements Serializable, GainProvider {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5916984290768232863L;
+	
 	private double center = 0.0;
+	
+	@Override
+	public int hashCode() { return super.hashCode() ^ HashCode.get(center); }
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof GradientGains)) return false;
+		if(!super.equals(o)) return false;
+		GradientGains g = (GradientGains) o;
+		if(center != g.center) return false;
+		return true;
+	}
 	
 	@Override
 	public final double getGain(Channel c) throws Exception {

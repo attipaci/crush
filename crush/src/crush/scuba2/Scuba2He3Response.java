@@ -27,6 +27,11 @@ import crush.FieldResponse;
 
 public class Scuba2He3Response extends FieldResponse {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8676900365295069180L;
+
 	public Scuba2He3Response() throws SecurityException, NoSuchFieldException {
 		super(Scuba2Frame.class.getField("detectorT"), true);
 	}

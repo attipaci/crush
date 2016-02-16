@@ -28,6 +28,11 @@ import jnum.Unit;
 import jnum.math.Vector2D;
 
 public class Scuba2Pixel extends SingleColorPixel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -638264274147854699L;
+	
 	public int subarrayNo;
 	public int row, col, block=0;
 	public double subarrayGain = 1.0, rowGain = 1.0, colGain = 1.0;

@@ -31,6 +31,10 @@ import jnum.Util;
 import jnum.math.Vector2D;
 
 public class HawcPlusPixel extends SingleColorPixel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5898856651596856837L;
 	public int polarray, subarray, row, col, mux, pin;
 	public double polarrayGain = 1.0, subarrayGain = 1.0, muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0;
 	

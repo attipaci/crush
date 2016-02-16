@@ -38,12 +38,14 @@ import crush.Instrument;
 import crush.Scan;
 import jnum.Configurator;
 import jnum.Unit;
+import jnum.Util;
 import jnum.data.Data2D;
 import jnum.data.GaussianPSF;
 import jnum.data.Grid2D;
 import jnum.data.GridImage2D;
 import jnum.data.GridMap2D;
 import jnum.math.Coordinate2D;
+import jnum.util.HashCode;
 
 
 public abstract class GridSource<CoordinateType extends Coordinate2D> extends GridMap2D<CoordinateType> {
@@ -65,6 +67,28 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 
 	public GridSource(int sizeX, int sizeY) {
 		super(sizeX, sizeY);
+	}
+	
+	@Override
+	public int hashCode() { 
+		int hash = super.hashCode() ^ generation ^ HashCode.get(integrationTime);
+		if(instrument != null) hash ^= instrument.hashCode();
+		if(scans != null) hash ^= HashCode.sampleFrom(scans); 
+		return hash;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof GridSource)) return false;
+		if(!super.equals(o)) return false;
+		
+		GridSource<?> source = (GridSource<?>) o;
+		if(generation != source.generation) return false;
+		if(integrationTime != source.integrationTime) return false;
+		if(!Util.equals(instrument, source.instrument)) return false;
+		if(!Util.equals(scans, source.scans)) return false;
+		return true;
 	}
 	
 	@Override

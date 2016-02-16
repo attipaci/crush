@@ -34,6 +34,11 @@ import jnum.math.Vector2D;
 
 public class Mako2Pixel extends AbstractMakoPixel {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6292895881603515328L;
+
 	public Mako2Pixel(Mako2 array, int zeroIndex) {
 		super(array, zeroIndex);
 		this.array = Mako2.ARRAY_350;

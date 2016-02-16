@@ -33,6 +33,11 @@ import java.util.StringTokenizer;
 
 
 public class SabocaPixel extends APEXPixel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5970759467554165572L;
+
 	public double squidGain = 1.0;
 	
 	public int squid;

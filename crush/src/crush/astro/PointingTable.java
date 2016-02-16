@@ -183,6 +183,10 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 
 	
 	class Entry extends LocalizedData {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 6919207692208960243L;
 		Location location;
 		String id;
 		

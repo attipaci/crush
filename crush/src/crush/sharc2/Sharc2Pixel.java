@@ -34,6 +34,10 @@ import java.util.StringTokenizer;
 
 
 public class Sharc2Pixel extends SingleColorPixel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1902854577318314033L;
 	public int row, col, block = 0;
 	public double biasV;
 	public short DAC;

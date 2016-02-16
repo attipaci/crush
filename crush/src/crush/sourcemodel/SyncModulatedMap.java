@@ -34,6 +34,11 @@ import jnum.data.Index2D;
 
 public class SyncModulatedMap extends ScalarMap {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8251377808607977894L;
+
 	public SyncModulatedMap(Instrument<?> instrument) {
 		super(instrument);
 	}

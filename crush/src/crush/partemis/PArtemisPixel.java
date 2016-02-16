@@ -29,6 +29,10 @@ import jnum.Unit;
 import jnum.math.Vector2D;
 
 public class PArtemisPixel extends APEXPixel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6291190718535112119L;
 	public int row, col;
 	public double rowGain = 1.0, colGain = 1.0;
 	

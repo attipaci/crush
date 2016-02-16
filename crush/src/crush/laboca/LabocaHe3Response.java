@@ -27,6 +27,10 @@ import java.lang.reflect.*;
 
 public class LabocaHe3Response extends FieldResponse {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4390450615227012414L;
 	static Field temperatureField;
 	
 	static { 

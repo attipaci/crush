@@ -25,6 +25,10 @@ package crush;
 import java.lang.reflect.*;
 
 public class FieldResponse extends Response {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4490473787009977735L;
 	private Field field;
 	private boolean isFloating = false;
 	

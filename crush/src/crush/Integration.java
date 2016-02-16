@@ -44,6 +44,7 @@ import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.text.TableFormatter;
+import jnum.util.HashCode;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
@@ -102,6 +103,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		setThreadCount(CRUSH.maxThreads);
 	}
 	
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object clone() { 
@@ -119,16 +121,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public boolean equals(Object o) {
 		if(o == this) return true;
 		if(!(o instanceof Integration)) return false;
+		if(!super.equals(o)) return false;
 		
 		final Integration<?,?> other = (Integration<?,?>) o;
 		if(other.integrationNo != integrationNo) return false;
+		if(!other.scan.getID().equals(scan.getID())) return false;
 		if(other.size() != size()) return false;
 		return other.getFullID("|").equals(getFullID("|"));
 	}
 	
 	@Override
 	public int hashCode() {
-		return super.hashCode() ^ size() ^ getFullID("|").hashCode();
+		return super.hashCode() ^ scan.getID().hashCode() ^ HashCode.get(integrationNo) ^ size();
 	}
 	
 	@Override
@@ -1513,11 +1517,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(data.length > nt) for(int t=nt; t<data.length; t++) data[t] = weight[t] = 0.0F;
 	}
 
-	
-	protected boolean despikedNeighbours = false;
-		
+			
 	public void despike(Configurator despike) {
-		String method = despike.isConfigured("method") ? despike.get("method").getValue() : "absolute";
+		String method = despike.isConfigured("method") ? despike.get("method").getValue().toLowerCase() : "absolute";
 		
 		double level = 10.0;
 		despike.mapValueTo("level");
@@ -1526,36 +1528,24 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		double flagFraction = despike.isConfigured("flagfraction") ? despike.get("flagfraction").getDouble() : 1.0;
 		int flagCount = despike.isConfigured("flagcount") ? despike.get("flagcount").getInt() : Integer.MAX_VALUE;
 		int frameSpikes = despike.isConfigured("framespikes") ? despike.get("framespikes").getInt() : instrument.size();
-		int featureWidth = 1;
 		
-		
-		if(method.equalsIgnoreCase("neighbours")) despikeNeighbouring(level);
-		else if(method.equalsIgnoreCase("absolute")) despikeAbsolute(level);
-		else if(method.equalsIgnoreCase("gradual")) despikeGradual(level, 0.1);
-		else if(method.equalsIgnoreCase("features")) {
-			int maxT = framesFor(filterTimeScale) >> 1;
-			
-			if(despike.isConfigured("width")) if(!despike.get("width").equals("auto"))
-				maxT = (int)Math.ceil(despike.get("width").getDouble() * Unit.s / instrument.samplingInterval);
-			
-			despikeFeatures(level, maxT);
-			featureWidth = maxT;
-		}
+		if(method.equals("neighbours") || method.equals("neighbors")) despikeNeighbouring(level, framesFor(0.2 * getPointCrossingTime()));
+		else if(method.equals("absolute")) despikeAbsolute(level);
+		else if(method.equals("gradual")) despikeGradual(level, 0.1);
+		else if(method.equals("multires") || method.equals("features")) despikeMultires(level);
 	
-		int regularSpikes = Frame.SAMPLE_SPIKE_FLAGS & ~Frame.SAMPLE_SPIKY_FEATURE;
 			
 		// Flag spiky frames first assumes that spikes tend to be caused in many pixels at once
 		// rather than some pixels being inherently spiky...
 		// Only do these for regular spikes (not features)...
-		if(!method.equalsIgnoreCase("features")) flagSpikyFrames(regularSpikes, frameSpikes);
+		if(!method.equalsIgnoreCase("features")) flagSpikyFrames(frameSpikes);
 		
 		if(method.equalsIgnoreCase("features")) {
-			double featureFraction = 1.0 - Math.exp(-2*featureWidth*flagFraction);
-			flagSpikyChannels(Frame.SAMPLE_SPIKY_FEATURE, featureFraction, 2*featureWidth*flagCount, Channel.FLAG_FEATURES);
+			int featureWidth = framesFor(filterTimeScale) >> 1;
+			double featureFraction = 1.0 - Math.exp(-featureWidth*flagFraction);
+			flagSpikyChannels(featureFraction, featureWidth*flagCount);
 		}
-		else if(despikedNeighbours) flagSpikyChannels(regularSpikes, 2*flagFraction, 2*flagCount, Channel.FLAG_SPIKY);
-		else flagSpikyChannels(regularSpikes, flagFraction, flagCount, Channel.FLAG_SPIKY);
-	
+		else flagSpikyChannels(flagFraction, flagCount);
 		
 		if(isPhaseModulated()) if(hasOption("phasedespike")) {
 			PhaseSet phases = ((PhaseModulated) this).getPhases();
@@ -1567,51 +1557,65 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(Channel channel : channels) channel.temp = (float) (significance * Math.sqrt(channel.variance));
 	}
 	
-	public void despikeNeighbouring(final double significance) {
+	public void despikeNeighbouring(final double significance, final int delta) {
 		comments += "dN";
-
-		//final int delta = framesFor(filterTimeScale);
-		final int delta = 1;
-		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
-		despikedNeighbours = true;
+	
+		if(size() < delta) return;
 		
+		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
+		final int notSpike = ~Frame.SAMPLE_SPIKE;
+			
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
 		
 		setTempDespikeLevels(connectedChannels, significance);
 		
 		// Clear the spike flag for every sample...
+		// and precalculate the thresholds...
 		new Fork<Void>() {
 			@Override
-			protected void process(FrameType exposure) {
-				for(final Channel channel : connectedChannels) exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKY_NEIGHBOUR;
+			protected void process(final FrameType exposure) {
+				for(final Channel channel : connectedChannels) exposure.sampleFlag[channel.index] &= notSpike;
+				if(exposure.index >= delta) {
+					final Frame before = get(exposure.index - delta);
+					exposure.tempC = before == null ? Float.NaN : (float) Math.sqrt(1.0F / exposure.relativeWeight + 1.0F / before.relativeWeight);
+				}
+				else exposure.tempC = Float.NaN;
 			}			
 		}.process();
 		
-		// Despike here...
-		new CRUSH.Fork<Void>(size() - delta, getThreadCount()) {
-			@Override
-			protected void processIndex(int t) {
-				final Frame exposure = get(t);
-				final Frame other = get(t+delta);
-				
-				if(exposure != null) if(other != null) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(other.isUnflagged(Frame.MODELING_FLAGS))  {
-					final float chi = (float) (1.0 / Math.sqrt(exposure.relativeWeight) + 1.0 / Math.sqrt(other.relativeWeight));
+		// perform the actual despiking...
+		connectedChannels.new Fork<Void>() {
+			@Override 
+			protected void process(final Channel channel) {
+
+				for(int t=size() - delta; --t >= 0; ) {
+					final Frame exposure = get(t);
+					if(exposure == null) continue;
 					
-					for(final Channel channel : connectedChannels) if(((exposure.sampleFlag[channel.index] | other.sampleFlag[channel.index]) & excludeSamples) == 0) {
-						if(Math.abs(exposure.data[channel.index] - other.data[channel.index]) > channel.temp * chi) {
-							exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
-							
-							// TODO this could be a race condition, although concurrent updates should 
-							// still result in expected flag value...
-							// TODO the below also requires CPU cache synching, so it can slow things down on
-							// multi-CPU machines..
-							other.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_NEIGHBOUR;
+					final Frame after = get(t + delta);
+					if(after == null) continue;
+					
+					if((exposure.sampleFlag[channel.index] & excludeSamples) != 0) continue;
+					if((after.sampleFlag[channel.index] & excludeSamples) != 0) continue;
+					
+					// Flag both points as spike, since it's not immediately clear which is the troubled one...
+					if((after.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE) == 0) {
+						if(Math.abs(exposure.data[channel.index] - after.data[channel.index]) > channel.temp * after.tempC) {
+							exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
+							after.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
 						}
 					}
-				}	
+					
+					// Exonerate the prior spike if possible...
+					else if(Math.abs(exposure.data[channel.index] - after.data[channel.index]) <= channel.temp * after.tempC)
+						after.sampleFlag[channel.index] &= notSpike;
+					
+				}
 			}
+			
 		}.process();
-		
+	
+
 	}
 
 	public void despikeAbsolute(final double significance) {
@@ -1619,18 +1623,21 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
 		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
+		final int notSpike = ~Frame.SAMPLE_SPIKE;
 		
 		setTempDespikeLevels(connectedChannels, significance);
 		
 		new Fork<Void>() {
 			@Override
-			protected void process(FrameType exposure) {
+			protected void process(final FrameType exposure) {
 				final float frameChi = 1.0F / (float)Math.sqrt(exposure.relativeWeight);
-				for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0) {
-					if(Math.abs(exposure.data[channel.index]) > channel.temp * frameChi) 
-						exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
-					else 
-						exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKE;
+				for(final Channel channel : connectedChannels) {
+					// Clear any prior spike flag...
+					exposure.sampleFlag[channel.index] &= notSpike;
+					// Check for spikes...
+					if((exposure.sampleFlag[channel.index] & excludeSamples) == 0) 
+						if(Math.abs(exposure.data[channel.index]) > channel.temp * frameChi) 
+							exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
 				}
 			}	
 		}.process();
@@ -1645,6 +1652,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		setTempDespikeLevels(connectedChannels, significance);
 		
 		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
+		final int notSpike = ~Frame.SAMPLE_SPIKE;
 		
 		new Fork<Void>() {
 
@@ -1655,16 +1663,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				double maxdev = 0.0;
 				final float frameChi = 1.0F / (float)Math.sqrt(exposure.relativeWeight);
 				
+				// Clear prior spike flags...
 				// Find the largest not yet flagged as spike deviation.
-				for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0)
-					maxdev = Math.max(maxdev, Math.abs(exposure.data[channel.index] / (float)channel.gain));
+				for(final Channel channel : connectedChannels) {
+					exposure.sampleFlag[channel.index] &= notSpike;
+					if((exposure.sampleFlag[channel.index] & excludeSamples) == 0)
+						maxdev = Math.max(maxdev, Math.abs(exposure.data[channel.index] / (float)channel.gain));
+				}
 					
 				if(maxdev > 0.0) {
 					double minSignal = depth * maxdev;
 					for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SOURCE_BLANK) == 0) {
 						final double critical = Math.max(channel.gain * minSignal, channel.temp * frameChi);
 						if(Math.abs(exposure.data[channel.index]) > critical) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
-						else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKE;
 					}
 				}
 			}
@@ -1673,26 +1684,26 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 	}
 	
-	public void despikeFeatures(double significance) {
-		despikeFeatures(significance, framesFor(filterTimeScale));
-	}
-	
-	public void despikeFeatures(final double significance, int maxBlockSize) {
+
+	public void despikeMultires(final double significance) {
+		int maxBlockSize = framesFor(filterTimeScale) >> 1;
+		if(maxBlockSize < 1) maxBlockSize = 1;	
 		if(maxBlockSize > size()) maxBlockSize = size();
-		comments += "dF";
+		
+		comments += "dM";
 		
 		final ChannelGroup<?> liveChannels = instrument.getConnectedChannels();
 		final int nt = size();
 		final int mbSize = maxBlockSize;
+		final int notSpike = ~Frame.SAMPLE_SPIKE;
 		
-		// Clear the spiky feature flag...
+		// Clear the spike flags...
 		new Fork<Void>() {
 			@Override
 			protected void process(FrameType exposure) {
-				for(final Channel channel : liveChannels) exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SPIKY_FEATURE;	
+				for(final Channel channel : liveChannels) exposure.sampleFlag[channel.index] &= notSpike;	
 			}
 		}.process();
-		
 		
 		instrument.new Fork<Void>() {
 			private float[] data, weight;
@@ -1715,7 +1726,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			
 			@Override
-			protected void process(Channel channel) {
+			protected void process(final Channel channel) {
 				getTimeStream(channel, data, weight);
 				
 				// check and divide...
@@ -1731,7 +1742,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 						if(diff.significance() > significance) {
 							for(int t=blockSize*(T-1), blockt=0; t<nt && blockt < (blockSize<<1); t++, blockt++) {
 								final Frame exposure = get(t);
-								if(exposure != null) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKY_FEATURE;		
+								if(exposure != null) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;		
 							}
 						}
 					}
@@ -1750,7 +1761,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}.process();
 	}
 	
-	public void flagSpikyChannels(final int spikeTypes, final double flagFraction, final int minSpikes, final int channelFlag) {
+	public void flagSpikyChannels(final double flagFraction, final int minSpikes) {
 		final int maxChannelSpikes = Math.max(minSpikes, (int)Math.round(flagFraction * size()));
 		
 		// Flag spiky channels even if spikes are in spiky frames
@@ -1774,7 +1785,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			protected void process(FrameType exposure) {
 				if(exposure.isFlagged(frameFlags)) return;
-				for(final Channel channel : instrument) if((exposure.sampleFlag[channel.index] & spikeTypes) != 0) channelSpikes[channel.index]++;
+				for(final Channel channel : instrument) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE) != 0) channelSpikes[channel.index]++;
 			}
 			
 			@Override
@@ -1799,8 +1810,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		for(Channel channel : instrument) {
 			channel.spikes = channelSpikes[channel.index];
-			if(channel.spikes > maxChannelSpikes) channel.flag(channelFlag);
-			else channel.unflag(channelFlag);
+			if(channel.spikes > maxChannelSpikes) channel.flag(Channel.FLAG_SPIKY);
+			else channel.unflag(Channel.FLAG_SPIKY);
 		}
 			
 		Instrument.recycle(channelSpikes);
@@ -1809,7 +1820,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		comments += instrument.mappingChannels;
 	}
 			
-	public void flagSpikyFrames(final int spikeTypes, final double minSpikes) {
+	public void flagSpikyFrames(final double minSpikes) {
 		
 		// Flag spiky frames even if spikes are in spiky channels.
 		//int channelFlags = ~(LabocaPixel.FLAG_SPIKY | LabocaPixel.FLAG_FEATURES);
@@ -1825,7 +1836,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				int frameSpikes = 0;
 
 				for(final Channel channel : instrument) if(channel.isUnflagged(channelFlags))
-					if((exposure.sampleFlag[channel.index] & spikeTypes) != 0) frameSpikes++;
+					if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE) != 0) frameSpikes++;
 
 				if(frameSpikes > minSpikes) {
 					exposure.flag |= Frame.FLAG_SPIKY;
@@ -2076,6 +2087,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					set(frame.index, null);
 					cut++;
 				}
+				
 			}
 		}
 		
@@ -2373,7 +2385,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(exposure != null) if(exposure.isUnflagged(Frame.BAD_DATA)) {
 				isEmpty = false;
 				for(int c=0; c<nc; c++) 
-					out.print((exposure.sampleFlag[c] & Frame.SAMPLE_SPIKE_FLAGS) != 0 ? flagValue + "\t\t" : Util.e5.format(exposure.data[c]) + "\t");
+					out.print((exposure.sampleFlag[c] & Frame.SAMPLE_SPIKE) != 0 ? flagValue + "\t\t" : Util.e5.format(exposure.data[c]) + "\t");
 			}
 			if(isEmpty) for(int c=0; c<nc; c++) out.print(flagValue + "\t\t");
 		
@@ -2909,7 +2921,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public String getDisplayID() {
-		return scan.size() > 1 | scan.hasSiblings ? getFullID("|") : scan.getID();
+		return scan.size() > 1 | scan.isSplit ? getFullID("|") : scan.getID();
 	}
 
 	public boolean perform(String task) {
@@ -2935,7 +2947,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			getTimeWeights();
 			updatePhases();
 		}
-		else if(task.startsWith("despike")) {
+		else if(task.equals("despike")) {
 			despike(option(task));
 			updatePhases();
 		}

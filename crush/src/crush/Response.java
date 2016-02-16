@@ -27,6 +27,11 @@ import java.lang.reflect.Field;
 
 public abstract class Response extends Mode {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8619855129077390006L;
+
 	public Response() {
 		super();
 		// TODO Auto-generated constructor stub

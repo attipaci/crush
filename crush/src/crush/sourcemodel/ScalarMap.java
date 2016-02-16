@@ -51,6 +51,11 @@ import jnum.projection.Projection2D;
 
 
 public class ScalarMap extends SourceMap {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 224617446250418317L;
+
 	public AstroMap map;
 	
 	protected Data2D base; 
@@ -133,6 +138,10 @@ public class ScalarMap extends SourceMap {
 		return copy;
 	}
 	
+	@Override
+	public SphericalCoordinates getReference() {
+		return map.getReference();
+	}
 	
 	public void standalone() {
 		base = new Data2D(map.sizeX(), map.sizeY());

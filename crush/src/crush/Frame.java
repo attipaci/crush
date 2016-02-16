@@ -24,6 +24,7 @@
 
 package crush;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import jnum.Flagging;
@@ -34,7 +35,11 @@ import jnum.math.Vector2D;
 import jnum.util.*;
 
 
-public abstract class Frame implements Cloneable, Flagging {
+public abstract class Frame implements Serializable, Cloneable, Flagging {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6878330196774273680L;
 	public Scan<?, ?> scan;
 	public int index;
 	
@@ -53,7 +58,7 @@ public abstract class Frame implements Cloneable, Flagging {
 	private float transmission = 1.0F;
 	
 	// Some temporary fields to speed up some operations...
-	public float tempC, tempWC, tempWC2;
+	public transient float tempC, tempWC, tempWC2;
 	
 	public float[] data;
 	public byte[] sampleFlag;
@@ -63,6 +68,9 @@ public abstract class Frame implements Cloneable, Flagging {
 		scan = parent; 
 		index = parent.size();
 	}
+	
+	
+	public final int size() { return data.length; }
 	
 	@Override
 	public Object clone() {
@@ -95,10 +103,26 @@ public abstract class Frame implements Cloneable, Flagging {
 	}
 	
 	@Override
-	public int hashCode() {
-		int hash = HashCode.get(MJD);
-		if(data != null) hash ^= HashCode.sampleFrom(data);
-		return hash;
+	public int hashCode() { 
+		return super.hashCode() ^ HashCode.get(MJD) ^ data.length ^ index ^ flag
+				^ HashCode.get(dependents) ^ HashCode.get(dof) ^ HashCode.sampleFrom(data); 
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof Frame)) return false;
+		if(!super.equals(o)) return false;
+		Frame frame = (Frame) o;
+		if(MJD != frame.MJD) return false;
+		if(index != frame.index) return false;
+		if(flag != frame.flag) return false;
+		if(dependents != frame.dependents) return false;
+		if(dof != frame.dof) return false;
+		if(!Arrays.equals(data, frame.data)) return false;
+		if(!Arrays.equals(sampleFlag, frame.sampleFlag)) return false;
+		if(!Arrays.equals(sourceIndex, frame.sourceIndex)) return false;
+		return true;
 	}
 	
 	public void setSize(int size) {
@@ -302,12 +326,14 @@ public abstract class Frame implements Cloneable, Flagging {
 	public void project(final Vector2D position, final AstroProjector projector) {
 		if(projector.isFocalPlane()) {
 			projector.setReferenceCoords();
+			// Deproject SFL focal plane offsets...
 			getFocalPlaneOffset(position, projector.offset);
 			projector.getCoordinates().addNativeOffset(projector.offset);
 			projector.project();
 		}
 		else if(scan.isMovingObject) {
 			projector.setReferenceCoords();
+			// Deproject SFL native offsets...
 			getEquatorialNativeOffset(position, projector.offset);
 			projector.getEquatorial().addNativeOffset(projector.offset);
 			projector.projectFromEquatorial();
@@ -343,14 +369,10 @@ public abstract class Frame implements Cloneable, Flagging {
 	public void equatorialToNative(EquatorialCoordinates equatorial, SphericalCoordinates coords) {
 		coords.copy(equatorial);
 	}
-	
 
 	public static int nextSampleFlag = 0;
 	public static byte SAMPLE_SOURCE_BLANK = (byte) (1 << nextSampleFlag++);
 	public static byte SAMPLE_SPIKE = (byte) (1 << nextSampleFlag++);
-	public static byte SAMPLE_SPIKY_NEIGHBOUR = (byte) (1 << nextSampleFlag++);
-	public static byte SAMPLE_SPIKY_FEATURE = (byte) (1 << nextSampleFlag++);
-	public static byte SAMPLE_SPIKE_FLAGS = (byte) (SAMPLE_SPIKE | SAMPLE_SPIKY_NEIGHBOUR | SAMPLE_SPIKY_FEATURE);
 	public static byte SAMPLE_SKIP = (byte) (1 << nextSampleFlag++);
 	public static byte SAMPLE_PHOTOMETRY = (byte) (1 << nextSampleFlag++);
 	

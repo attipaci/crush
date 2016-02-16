@@ -53,6 +53,26 @@ public class PhaseSet extends ArrayList<PhaseData> {
 		channelParms = new double[integration.instrument.size()];
 	}
 	
+	@Override
+	public int hashCode() { return super.hashCode() ^ integration.getDisplayID().hashCode() ^ generation 
+			^ integrationDeps.hashCode() ^ signals.size() ^ phaseDeps.size() ^ channelParms.length;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(!(o instanceof PhaseSet)) return false;
+		if(!super.equals(o)) return false;
+		PhaseSet set = (PhaseSet) o;
+		if(generation != set.generation) return false;
+		if(integration.getDisplayID() != set.integration.getDisplayID()) return false;
+		if(signals.size() != set.signals.size()) return false;
+		if(phaseDeps.size() != set.phaseDeps.size()) return false;
+		if(!Util.equals(integrationDeps, set.integrationDeps)) return false;
+		if(!Arrays.equals(channelParms, set.channelParms)) return false;
+		return true;
+	}
+	
 	public Integration<?,?> getIntegration() { return integration; }
 	
 	public PhaseDependents getPhaseDependents(String name) {

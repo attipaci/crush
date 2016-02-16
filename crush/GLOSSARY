@@ -617,14 +617,6 @@
 			flagging criteria. See the various despiking options
 			below:
 
-:: despike2		@Advanced
-			A second round of despiking.
-			@See: despike
-
-:: despike3		@Advanced
-			A third round of despiking.
-			@See: despike
-
 :: despike.flagcount=N	@Expert
 			Tolerate (w/o pixel flagging) up to N spikes up in each
 	 		pixel.
@@ -656,9 +648,8 @@
 			   	       cautiously, removing only a fraction of
 				       most offending spikes at each turn.
 
-			   features    Look for spikes wider than just a sigle 
-			   	       sample. The 'width' subkey (below) 
-				       the timescale, up to which spikes sought.
+			   multires    Look for spikes wider than just a sigle 
+			   	       sample. 
 
 			All methods will flag pixels and frames if these have 
 			too many spikes. The flagging of spiky channels and 
@@ -666,12 +657,7 @@
 			and 'framespikes' subkeys.
 			@See: 'despike.flagcount', 'despike.flagfraction',
 			      'despike.framespikes', 'despike.level',
-			      'despike.width'
 
-:: despike.width=X	@Expert
-			When despiking using the 'features' method, spikes up 
-			to X second in width will be sought.
-				
 :: detect.chopped	@Advanced
 			Try determine from the data itself if the chopper was 
 			used, and set the 'chopped' flag accordingly. This can 
