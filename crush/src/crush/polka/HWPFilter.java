@@ -30,6 +30,11 @@ import jnum.math.Range;
 
 public class HWPFilter extends KillFilter {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4848853813082110238L;
+
 	public HWPFilter(Integration<?, ?> integration) {
 		super(integration);
 	}

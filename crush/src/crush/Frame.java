@@ -120,8 +120,8 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		if(dependents != frame.dependents) return false;
 		if(dof != frame.dof) return false;
 		if(!Arrays.equals(data, frame.data)) return false;
-		if(!Arrays.equals(sampleFlag, frame.sampleFlag)) return false;
-		if(!Arrays.equals(sourceIndex, frame.sourceIndex)) return false;
+		//if(!Arrays.equals(sampleFlag, frame.sampleFlag)) return false;
+		//if(!Arrays.equals(sourceIndex, frame.sourceIndex)) return false;
 		return true;
 	}
 	

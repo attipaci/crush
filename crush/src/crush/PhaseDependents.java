@@ -59,8 +59,8 @@ public class PhaseDependents implements Serializable {
 		PhaseDependents deps = (PhaseDependents) o;
 		if(!Util.equals(name, deps.name)) return false;
 		if(!Util.equals(phases, deps.phases)) return false;
-		if(!Arrays.equals(forPhase, deps.forPhase)) return false;
-		if(!Arrays.equals(forChannel, deps.forChannel)) return false;
+		//if(!Arrays.equals(forPhase, deps.forPhase)) return false;
+		//if(!Arrays.equals(forChannel, deps.forChannel)) return false;
 		return true;
 	}
 	

@@ -340,7 +340,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		ensureCapacity(pixels);
 		for(int c=0; c<pixels; c++) add(new HawcPlusPixel(this, c));
 			
-		if(!hasOption("filter")) getOptions().parse("filter " + instrumentData.wavelength + "um");	
+		if(!hasOption("filter")) getOptions().parseSilent("filter " + instrumentData.wavelength + "um");	
 		System.err.println(" HAWC+ Filter set to " + option("filter").getValue());
 		
 		super.validate(scan);

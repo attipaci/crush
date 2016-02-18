@@ -34,6 +34,7 @@ import crush.filters.*;
 import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
+import jnum.LockedException;
 import jnum.Parallel;
 import jnum.Unit;
 import jnum.Util;
@@ -127,12 +128,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(other.integrationNo != integrationNo) return false;
 		if(!other.scan.getID().equals(scan.getID())) return false;
 		if(other.size() != size()) return false;
-		return other.getFullID("|").equals(getFullID("|"));
+		return other.getDisplayID().equals(getDisplayID());
 	}
 	
 	@Override
 	public int hashCode() {
-		return super.hashCode() ^ scan.getID().hashCode() ^ HashCode.get(integrationNo) ^ size();
+		return super.hashCode() ^ scan.getID().hashCode() ^ HashCode.get(integrationNo) ^ size() ^ getDisplayID().hashCode();
 	}
 	
 	@Override
@@ -1007,7 +1008,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		boolean isGainRobust = false;		
 		if(modality.solveGains) {
 			Configurator gains = option("gains");
-			gains.mapValueTo("estimator");
+			
+			try { gains.mapValueTo("estimator"); }
+			catch(LockedException e) {} // TODO...
+			
 			if(gains.isConfigured("estimator")) if(gains.get("estimator").equals("median")) isGainRobust = true; 
 			
 			if(modality.updateAllGains(this, isGainRobust)) {
@@ -1522,7 +1526,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		String method = despike.isConfigured("method") ? despike.get("method").getValue().toLowerCase() : "absolute";
 		
 		double level = 10.0;
-		despike.mapValueTo("level");
+		
+		try { despike.mapValueTo("level"); }
+		catch(LockedException e) {}	 // TODO...
+		
 		if(despike.isConfigured("level")) level = despike.get("level").getDouble();
 		
 		double flagFraction = despike.isConfigured("flagfraction") ? despike.get("flagfraction").getDouble() : 1.0;
@@ -2988,7 +2995,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void getWeights() {
 		String method = "rms";
 		Configurator weighting = option("weighting");
-		weighting.mapValueTo("method");
+		
+		try { weighting.mapValueTo("method"); }
+		catch(LockedException e) {}
 		
 		if(weighting.isConfigured("method")) method = weighting.get("method").getValue().toLowerCase();
 		

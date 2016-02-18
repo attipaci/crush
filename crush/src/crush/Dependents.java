@@ -54,7 +54,7 @@ public class Dependents implements Serializable {
 		if(!(o instanceof Dependents)) return false;
 		if(!super.equals(o)) return false;
 		Dependents d = (Dependents) o;
-		if(!name.equals(d.name)) return false;
+		if(!getName().equals(d.getName())) return false;
 		if(!Util.equals(integration, d.integration)) return false;
 		return true;
 	}

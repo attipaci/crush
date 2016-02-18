@@ -325,7 +325,7 @@ public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implem
 			
 		if(settings.containsKey(bias + "")) {
 			System.err.println(" Setting options for bias " + bias);
-			getOptions().parse(settings.get(bias + ""));
+			getOptions().parseAll(settings.get(bias + ""));
 		}
 	}
 

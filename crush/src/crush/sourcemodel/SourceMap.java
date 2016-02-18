@@ -99,7 +99,7 @@ public abstract class SourceMap extends SourceModel {
 		else if(system.equals("focalplane")) projection.setReference(new FocalPlaneCoordinates()); 
 		else if(firstScan.isMovingObject) {
 			System.err.println(" Forcing equatorial for moving object.");
-			getOptions().process("system", "equatorial");
+			getOptions().processSilent("system", "equatorial");
 			projection.setReference(firstScan.equatorial);
 		}
 		else if(system.equals("ecliptic")) {

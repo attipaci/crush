@@ -29,6 +29,11 @@ import jnum.Constant;
 import jnum.math.Range;
 
 public class KillFilter extends FixedFilter {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 580288477345827863L;
+	
 	protected boolean[] reject;
 		
 	public KillFilter(Integration<?,?> integration) {

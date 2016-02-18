@@ -39,6 +39,11 @@ import jnum.math.Vector2D;
 // TODO motion filter to disable whiten.below, or even whitening altogether...
 
 public class MotionFilter extends KillFilter {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 698161240086532503L;
+	
 	float critical = 10.0F;
 	double halfWidth = 0.0;	// for AM noise on >5s.
 	int harmonics = 1;

@@ -27,7 +27,11 @@ import crush.Frame;
 import crush.Integration;
 
 public abstract class FixedFilter extends Filter {
-
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8317718290223682350L;
+	
 	private double pointResponse = 1.0;
 	private double rejected = 0.0;
 	

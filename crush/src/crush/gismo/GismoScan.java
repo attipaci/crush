@@ -242,7 +242,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		Hashtable<String, Vector<String>> settings = option("ver").conditionals;
 		
 		for(String rangeSpec : settings.keySet()) 
-			if(Range.parse(rangeSpec, true).contains(fitsVersion)) instrument.getOptions().parse(settings.get(rangeSpec));
+			if(Range.parse(rangeSpec, true).contains(fitsVersion)) instrument.getOptions().parseAll(settings.get(rangeSpec));
 	}
 	
 	public void setScanIDOptions(String id) {
@@ -257,7 +257,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		for(String rangeSpec : settings.keySet()) {
 			if(IRAMScanID.rangeFor(rangeSpec).contains(fid)) {
 				//System.err.println("### Setting options for " + rangeSpec);
-				instrument.getOptions().parse(settings.get(rangeSpec));
+				instrument.getOptions().parseAll(settings.get(rangeSpec));
 			}
 		}
 	}
@@ -479,7 +479,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath(), timeZone);
 					if(hasOption("tau.window")) table.timeWindow = option("tau.window").getDouble() * Unit.hour;
 					tau225GHz = table.getTau(getMJD());
-					instrument.getOptions().process("tau.225ghz", tau225GHz + "");
+					instrument.getOptions().processSilent("tau.225ghz", tau225GHz + "");
 				}
 				catch(IOException e2) { 
 					System.err.println("\n WARNING! Cannot read tau table: " + e2.getMessage());
@@ -491,7 +491,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		
 		if(Double.isNaN(tau225GHz)) {
 			tau225GHz = header.getDoubleValue("TAU225GH");
-			instrument.getOptions().process("tau.225ghz", tau225GHz + "");
+			instrument.getOptions().processSilent("tau.225ghz", tau225GHz + "");
 		}
 	
 		
@@ -629,7 +629,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 					IRAMTauTable table = IRAMTauTable.get(option("tau.225ghz").getPath(), timeZone);
 					if(hasOption("tau.window")) table.timeWindow = option("tau.window").getDouble() * Unit.hour;
 					tau225GHz = table.getTau(getMJD());
-					instrument.getOptions().process("tau.225ghz", tau225GHz + "");
+					instrument.getOptions().processSilent("tau.225ghz", tau225GHz + "");
 				}
 				catch(IOException e2) { 
 					System.err.println("WARNING! Cannot read tau table.");
