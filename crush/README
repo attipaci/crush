@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 		       <attila[AT]submm.caltech.edu>
 
-		       Last updated: 11 February 2016
+		       Last updated: 18 February 2016
 
 
 
@@ -18,17 +18,17 @@ Table of Contents
   1.3 Quick Start
   1.4 A Brief Description of What CRUSH Does and How...
   1.5 Command-line Options and Scripting Support
+  1.6 Making Sense of the Console Output
 
 2. Advanced Topics
 
-  2.1 Filtering corrections, transfer functions, etc.
-  2.2 Making Sense of the Console Output
-  2.3 Pointing Corrections
-  2.4 Recovery of Extended Emission
-  2.5 Pixellization and Smoothing
-  2.6 Image Processing Post-Reduction
-  2.7 Reducing Very Large Datasets (to do...)
-  2.8 Custom Logging Support
+  2.1 Pointing Corrections
+  2.2 Pixelization and Smoothing
+  2.3 Recovery of Extended Emission
+  2.4 Filtering corrections, transfer functions, etc.
+  2.5 Image Processing Post-Reduction
+  2.6 Reducing Very Large Datasets (to do...)
+  2.7 Custom Logging Support
 
 3. Advanced Configuration
 
@@ -44,7 +44,9 @@ Table of Contents
   4.2 Removing Correlated Signals
   4.3 User-defined Modalities
 
-6. Examples
+5. Examples
+
+6. Supported Cameras
 
 7. Future Developments (A Wish List...)
 
@@ -65,69 +67,11 @@ Table of Contents
 1. Getting Started
 #####################################################################
 
-
 CRUSH-2 is a reduction and imaging package for various astronomical imaging
 arrays. It is based on the development centred on SHARC-2 (crush-1.xx) as
 well as a reincarnation for the APEX bolometers (minicrush). Version 2
 provides, for the first time, a unified platform for reducing data from
-virtually any high-background bolometer instrument. Currently, it supports 
-the following instruments (in alphabetical order):
-
-   
-    ASZCA	(2mm) APEX SZ Camera, from Berkeley, CA
-    	      	bolo.berkeley.edu/apexsz/instrument.html
-
-    GISMO	(2mm) Goddard-IRAM Superconducting 2-Millimeter Observer
-    		www.iram.es/IRAMES/mainWiki/
-					GoddardIramSuperconductingTwoMillimeter
-
-    LABOCA	(870um) Large APEX Bolometer Camera
-    		www.apex-telescope.org/bolometer/laboca		 
-
-    MAKO	(350um) KID technology demonstration camera for the CSO.
-
-    MAKO-2	(350um, 850um) Second-generation KID technology demonstration
-		camera for the CSO with dual-pol pixel response, and dual-band 
-		imaging capability.
-
-    MUSTANG-2	(3mm) Large focal plane array for the 100m Greenbank Telescope.
-		www.gb.nrao.edu/mustang/
-
-    p-ArTeMiS	(200um, 350um, 450um) 3-color camera for APEX (prototype)
-    		www.apex-telescope.org/instruments/pi/artemis
-
-    PolKA	(polarimetry) Polarimeter for LABOCA
-    		www.mpifr-bonn.mpg.de/staff/gsiringo/laboca/
-							laboca_polarimeter.html
-
-    SABOCA	(350um) Submillimeter APEX Bolometer Camera
-    		www.apex-telescope.org/bolometer/saboca
-
-    SCUBA-2	(450um, 850um) Submillimetre Common User Bolometer Array 2
-		www.roe.ac.uk/ukatc/projects/scubatwo
-
-    SHARC	(350um, 450um) Submillimeter High-Angular Resolution Camera
-		Caltech, Pasadena, CA
-		http://www.submm.caltech.edu/cso/sharc/cso_sharc.html
-
-    SHARC-2	(350um, 450um, 850um) The second-generation Submillimeter 
-		High-Angular Resolution Camera
-    		Caltech, Pasadena, CA
-    		www.submm.caltech.edu:/~sharc
-
-    SOFIA/HAWC+	(53um, 62um, 89um, 155um, 216um)
-		High-resolution Airborne Wide-angle Camera
-
-
-Further support for instruments is possible. If interested to use CRUSH for
-your bolometer array, please contact Attila Kovacs 
-<attila[AT]submm.caltech.edu>.
-
-In principle, it is possible to extend CRUSH support for other types of scanning
-instruments, like heterodyne receiver arrays, or single-pixel receivers that
-scan in frequency space, or for the reduction of line-surveys from double
-side-band (DSB) receivers. Such new features may appear in future releases, 
-especially upon specific request and/or arrangement...
+virtually any fast-sampling scanning camera. 
 
 
 
@@ -188,7 +132,7 @@ especially upon specific request and/or arrangement...
 
 	> sudo yum localinstall --nogpg crush-<version>-noarch.rpm
 
-   On Debian based systems (e.g. Ubuntu, Mint) the same is achieved by
+   On Debian based systems (e.g. Ubuntu, Mint) the same is achieved by:
 
 	> sudo apt-get install crush-<version>.deb
 
@@ -235,7 +179,7 @@ especially upon specific request and/or arrangement...
    the same location, these will be parsed in non-specific order). 
 
    E.g., placing the following lines in ~/.crush2/startup/java.conf overrides 
-   all availablei runtime configuration settings:
+   all available runtime configuration settings:
 
 	JAVA="/usr/java/latest/bin/java"
 	DATAMODEL="64"
@@ -494,22 +438,28 @@ options on the console.
 
 
 
-1.5 Command-line Options and Scripting Support
-==============================================
 
-   Basic Rules
-   -----------
+1.5 Command-line Options and Scripting Support
+==============================================   
+
    Configuration of CRUSH is available either through command line 
    options or via scripting. You have seen scripting already in the form
    of 'default.cfg', which stores the default configuration values (Sec. 1.1). 
 
-   Both command-line options and scripting are organized in key/value pairs. 
-   The main difference is that the command-line (bash is assumed in UNIX
-   platforms!) imposes restrictions on syntax. E.g., no white spaces, or 
-   brackets are allowed (unless you place these in quotes). Thus, keys and 
-   values may be separated either by '=', ':' or empty spaces (or even a 
-   combination of these). 
- 
+   The syntax is designed so that it accomodates both scripting and
+   command-line (bash) use alike. Thus, white spaces are optional and curved 
+   brackets are avoided (unless these are placed in quotes).
+
+   For a complete guide on using the configuration engine, please read
+   README.syntax. Below we provide only a very basic overview, and describe
+   only what is specific to CRUSH, beyond the cofiguration engine in general.
+
+
+   Basic Rules
+   -----------
+   When defining settings, keys can be separated from their values either by
+   '=', ':' or empty spaces (or even a combination of these).
+
    Command line options start with a dash '-' in front. Thus, what may look
    like:
 	
@@ -540,408 +490,54 @@ options on the console.
 
     Lines that start with '#' designate comments that are ignored by the 
     parser.
-   
  
-    Unsetting and Resetting Options
-    -------------------------------
-    Additionally, there are a few special keys (or rather commands that have
-    the same syntax as keys), that are used to unset/reset options. 
-    The command 'forget' can be used to unset keys. Forgotten options can be 
-    reinstated to their prior values via the 'recall' command. E.g.:
 
-	forget tau,smooth
-
-    Will unset the tau value and disable despiking. To later specify a new tau
-    and to reenable despiking with its previous setting, you may (say on the
-    command line this time):
-
-	> crush [...] -tau=0.30 -recall=smooth
-
-    As you can see, forgotten keys may be reconfigured at any time. There is
-    also a way to permanently remove a configuration key via the 'blacklist'
-    command. It works just like 'forget' except that all blacklisted keys will
-    be ignored until these are 'whitelist'-ed. Note, that 'whitelist' only
-    removes keys from the blacklist, but does NOT reinstate them -- this you 
-    have to do explicitly afterwards either using 'recall' or by specifying a
-    new value).
-
-	blacklist smooth		
-	smooth=8.0		# Has no effect, because smooth is blacklisted!
-	[...]
-	whitelist smooth	# Allows smooth to be set again...
-	smooth=6.5		# Sets the smoothing to 6.5"
-	
-    All blacklisted settings can be cleared by:
-
-	forget blacklist
-
-
-
-    Branched Configuration
-    ----------------------
-    Options may also have branches, helping to group related keys together in a 
-    hierarchy. Branches are separated by periods, e.g.
-
-	despike
-	despike.level 6.0
-	despike.method absolute
-
-    defines a despiking at 6-sigma, while the 'method' subkey selects the
-    despiking method used. 
-
-    It is possible to unset/reset entire branches with the commands 'remove' 
-    and 'restore', much the same way as 'forget' and 'recall' operate on 
-    individual settings. Thus, 
-
-	> crush [...] -remove=despike [...]
-
-    unsets both 'despike', 'despike.level' and 'despike.method' and all other 
-    existing branches of 'despike'. Similarly, 'restore' reinstates the full 
-    brach to its original state. 
-
-
-
-    Conditionals
-    ------------
-    CRUSH also provides the capability for conditional configuration.
-    Conditions are formally housed in square brackets. The syntax is:
-
-	[condition] key=value
-
-    The basic condition is the existence of an option key. For example,
-
-	[extended] forget correlated.gradients	
-
-    will disable the decorrelation of gradient sky-noise if or when the 
-    'extended' key is defined, e.g. by
-	
-	> crush [...] -extended [...]
-
-    Note, that if 'extended' is later unset (e.g. via 'forget', 'remove' or 
-    'blacklist') from the configuration it will not undo settings that were
-    conditionally activated when 'extended' was defined.
-
-    You can also make settings activate conditioned on another key having been
-    set to a given value. The syntax for that is:
-
-  	[key1?value1] key2=value2
-
-    The above statement specifies that if key1 is set to value1, then key2 
-    will be set to value2. (Again, the '=' is optional...) 
-
-    Other conditions are interpreted by CRUSH, such settings based on 
-    date (or MJD) or serial number, such as:
+ 
+    Dynamic Conditionals
+    --------------------
+    Some conditions are interpreted dynamically. For example CRUSH, can 
+    activate settings based on observation date (or MJD) or serial number, on 
+    a scan-by-scan basis, such as:
 
 	mjd.[54555-54869] rcp {$CRUSH}/laboca/laboca-3.rcp
-
+ 
     which loads the pixel positions (RCP) 'laboca-3.rcp' inside the 'laboca'
     subfolder in the crush installation for scans taken in the MJD range
     54555 to 54869. Similarly,
 
 	date.[2007.02.28-2009.10.13] instrument.gain -1250.0
-    
+
     or
 
 	serial.[14203-15652] flag 112-154,173
 
     are examples of setting activated based on dates or scan serial numbers.
 
-    As of version 2.05, you may also specify conditional settings based on the
+    You may also specify conditional settings based on the
     source names under the 'object' branch. E.g.:
 
 	object.[Jupiter] bright
 
-    will invoke the 'bright' configuration for Jupiter. The check for the 
+    will invoke the 'bright' configuration for Jupiter. The check for the
     source name is case insensitive, and matches all source names that begin
     with the specified sequence of characters. Thus, the SHARC-2 configuration
     line:
-	
+
 	object.[PNT_] point
 
     will perform a pointing fit at the end of the reduction for all sources
     whose catalog names begin with 'PNT_' (e.g. PNT_3C345).
 
-    These examples also demonstrates that conditionals can be branched just 
+    These examples also demonstrates that conditionals can be branched just
     like options. (In the above cases, the conditions effectively reside in the
-    'mjd', 'date' or 'serial' branches). Other commonly used conditionals of 
+    'mjd', 'date' or 'serial' branches). Other commonly used conditionals of
     this type are iteration based settings:
 
 	> crush [...] -iteration.[last-1]whiten=2.0 [...]
 
     will activate the noise whitening in the iteration before the last one.
 
-    The use of branched conditions can be tricky. For interpreted conditions
-    a key (e.g. 'iteration', 'mjd', 'serial' or 'date') defines the rule by
-    which the condition is interpreted. As such the square brackets should
-    always follow afterwards.
-
-    For simple conditions, which are based on the existence of configuration
-    keys, the placement of brackets matters for how the conditional statement
-    is interpreted. E.g., the condition:
-
-    	  [key.subkey] option=value
-
-    is not equivalent to
-
-       	  key.[subkey] option=value
-
-    The second line assumes that 'option' is also a branch of 'key', so it 
-    actually sets the 'key.option' conditional on 'key.subkey'. In other words
-    the following would be truly equivalent statements:
-
-    	  key.[subkey] option=value
-    	  =
-	  [key.subkey] key.option=value
-
-    Here is an example to illustrate the difference with actual settings:
-
-    	  [source.model] blacklist clip
-
-    blacklists 'clip' whenever a source model is defined (via 'source.model').
-    On the other hand,
-
-       	  source.[model] filter
-
-    can be used to activate the 'source.filter' when 'source.model' is defined.
-
-    It is possible to clear all conditional settings by:
-
-	  forget conditions
- 
- 
-    Aliases
-    -------
-    CRUSH allows you to create your own shorthands for convenience, using the 
-    alias key. Some shorthands are predefined for convenience. For example,
-    one may prefer to simply type 'array' instead of 'correlated.obs-channels'
-    (referring to the common mode signals seen by the group of observing 
-    channels). This shorthand is set (in 'default.cfg') by the statement:
-
-	alias.array correlated.obs-channels
-
-    Thus, the option:
-
-	array.resolution=1.0
-
-    is translated by CRUSH into
-
-	correlated.obs-channels.resolution=1.0
-
-    Aliases are literal substitutions. Therefore, they can also be used
-    to shorthand full (or partial) statements. In this way 'altaz' is
-    is defined to be a shorthand for 'system=horizontal'. You can find this 
-    definition (in 'default.cfg') as:
-
-	alias.altaz system horizontal
-
-    Finally, conditions can be also aliased. An example of this is the
-    preconfigured alias (also in 'default.cfg') 'final', which is defined as
-
-	alias.final iteration.[last]
-
-    Thus the the command line option '-final:smooth=beam' is equivalent
-    to the typing '-iteration.[last]smooth=beam'. (The ':' serves as a way
-    for separating conditions from the setting on the command line, where
-    spaces aren't allowed unless placed in a literal quote.)
-
-
-    References
-    ----------
-    As of version 2.12, CRUSH allows both static and dynamics references to be 
-    used when setting configuration values. All references are placed inside 
-    curly brackets. After the opening '{' a special character is used to define
-    what type of reference is used:
-
-	Table. Referencing
-	--------------------------------------------------------------
-	Description			Symbol		Example		
-        ==============================================================
-	Static reference to another	&		{&datapath}
-	configuration value/property
-	--------------------------------------------------------------
-	Dynamic reference to a
-	configuration value/property	?		{?tau.225GHz}
-	--------------------------------------------------------------
-	Shell environment variable	@		{@HOME}
-	--------------------------------------------------------------
-	Java property			#		{#user.home}
-	--------------------------------------------------------------
-
-   Thus, for example, you can set the path to the output data (e.g. images)
-   relative to the raw (input) data (which is specified by datapath. E.g.:
-
-	outpath = {&datapath}/images
-
-   So, if your 'datapath' was set to '/data/myobservations', then CRUSH will 
-   write its output into '/data/myobservations/images'. You could have also 
-   used:
-
-	outpath = {?datapath}/images
-
-   also. The difference is that the former is evaluated only once, when the
-   statement is parsed, substituting whatever value 'datapath' had at that 
-   particular point. In contrast, the latter, dynamic statement is evaluated 
-   every time it is queried by CRUSH, always substituting the current value of 
-   'datapath'. While the two forms can have effectively identical results if 
-   'datapath' remains unchanged, there are particular scenarios when you might 
-   need one or the other form specifically. Here are two examples:
-
-      * Static reference: Suppose you want to amend a previously defined value. 
-	For example, you want to read data from a sub-directory of the current
-	datapath. This requires the new datapath to refer back to its prior
-	value. If it is done with a dynamic reference, it will result in an
-	infinite recursion. Therefore, you will always want to use static 
-	self-references:
-
-	   datapath = {&datapath}/jan2012
-
-      * Dynamic reference: Suppose you want to refer to a value that has not
-	yet been defined. An example would be to try write output into sub-
-	folders by object name (e.g. for GISMO, where object name is usually
-	defined for locating scans). Then, you would write:
-
-	   datapath = /home/images/{?object}
-
-	So by setting this statement ahead of time (e.g. in a global 
-	configuration file), it can always have its desired effect.
-
-    In addition to querying configuration settings the same syntax can be used
-    to look up other CRUSH properties. Currently, the following are defined:
-
-	instrument		The name of the instrument providing the data.
-
-	version			The CRUSH version (e.g. 2.13-1).
-
-	fullversion		The CRUSH version including extra revision
-				information. E.g. '2.13-1 (beta1)'
-
-    Thus you can, for example set the output directory by instrument name and 
-    CRUSH version, E.g.:
-
-      outpath = {&outpath}/{&instrument}/{&version}
-
-    So, if you took data with LABOCA and reduced with CRUSH 2.13-1, then the
-    output will go to the 'laboca/2.13-1' subfolder within the the directory
-    specified by 'outpath'.
-
-
-    Path Names
-    ----------
-    Path names generally follow the rules of your OS. However, in order to
-    enable platform independent configuration files, the UNIX-like '/' is
-    always permitted (and is generally preferred) as a path separator. As a
-    result, you should avoid using path names that contain '/' characters 
-    (even in quoted or escaped forms!) other than those separating directories.
-
-    Since CRUSH allows the use of environment variables when defining values
-    (see above), you can use {@HOME} for your UNIX home directory; or 
-    {@HOMEPATH} for your user folder under Windows. Or, {#user.home} has the 
-    same effect universally, by referring to the the Java property
-    storing the location of the user's home folder.
-
-    The tilde character '~' is also universally understood to 
-    mean your home folder. And, finally, the UNIX-like '~johndoe' may specify 
-    johndoe's home directory in any OS as long as it shares the same parent 
-    directory with your home folder (e.g. both johndoe and your home folder 
-    reside under a common '/home' or 'C:\Documents and Settings'). 
-	
-    Thus, in UNIX systems (including MacOS), you may use:
-
-	datapath={@HOME}/mydata			# environment variables
-	datapath={#user.home}/mydata		# Java properties
-	datapath=~/mydata			# the '~' shorthand
-	datapath=~johndoe/data			# relative to another user
-	datapath=/mnt/data/2010			# Fully qualified path names
-
-    while in Windows any of the following are acceptable:
-
-	datapath="~\My Data"			# Using the '~' shorthand
-	datapath="{$HOMEPATH}\My Data"		# Using environment variables
-	datapath="{#user.home}\My Data"		# Java properties
-	datapath=D:/data/Sharc2/2010		# UNIX-style paths
-	datapath=D:\data\Sharc2\2010		# proper Windows paths
-	datapath="~John Doe\Data"		# relative to another user
-
-
-
-    Wildcards
-    ---------
-    Thanks to the branching of configuration keys, wildcards '*' can be used to
-    configure all existing branches of a key at once. E.g.:
-
-    	correlated.*.resolution=1.0
-
-    Will set the 'resolution' for every currently defined 'correlated' 
-    modality. Thus, if you had the common 'obs-channels' and 'gradients' modes 
-    defined as well as an instrument mode, say 'cables', then the above is 
-    equivalent to:
-
-        correlated.obs-channels.resolution 1.0
-	correlated.gradients.resolution 1.0
-	correlated.cables.resolution 1.0
-
-    Additionally, wildcards can be used with the 'forget', 'blacklist' or
-    'remove'. E.g.:
-
-    	forget despike.*
- 
-    clears all sub-settings of 'despike' (while keeping despiking enabled, if
-    it already was).
-
-
-    Checking Configuration State
-    ----------------------------
-    You can check the current configuration using the 'poll' command. Without
-    an argument it lists the full current configuration, e.g.:
-
-       > crush [...] -poll
-
-    lists all the currently active settings at the time of polling, as well
-    as all settings that can be recalled (i.e. were unset using 'forget').
-    The comlete list of settings can be long, especially when you just want
-    to check for specific configurations. In this case, you can specify an
-    argument to poll, to lists only settings that start with the specified
-    pattern. For example, you care only to check despiking settings (for the
-    first round of despiking). Then, you would type:
-
-       > crush [...] -poll=despike
-
-    Or, you can also type:
-
-       > crush [...] -despike.poll
-
-    The difference is that the first method lists all configuration keys from 
-    the root of the configuration tree that start with the word 'despike', 
-    wereas, the second example lists the settings in the subtree of the 
-    'despike' key (hence without 'despike' appearing in in the list).
-
-    You can also check on conditional statements similarly. E.g.:
-
-       > crush [...] -conditions
-
-    or,
-
-       > crush [...] -conditions=date
-
-    for a selected list of conditions starting with 'date', or
-
-       > crush [...] -date.conditions
-
-    for the subtree of conditions under the 'date' key (without preprending
-    the 'date' key itself).
-
-    Finally, you can also check what settings are currently blacklisted using
-    the 'blacklist' command, without an argument. E.g.:
-
-       > crush [...] -blacklist
-
-    or,
-
-       > crush [...] -despike.blacklist
-
-    to check only for blacklisted settings under the despike branch.
-
-
+   
     Startup Configuration
     ---------------------
     At launch, crush will parse 'default.cfg' to establish a default 
@@ -960,102 +556,91 @@ options on the console.
 
 
 
-#####################################################################
-2. Advanced Topics
-#####################################################################
-
-
-
-2.1 Filtering corrections, transfer functions, etc.
-===================================================
-
-    Most reduction steps (decorrelation, 1/f drift removal, spectral filtering) 
-    will impact different spatial frequencies of the source structure 
-    differently. In general, the low spatial frequency components are most 
-    affected (suppressed). E.g. decorrelating the full array will reject 
-    scales larger than the field-of-view, while 1/f filtering will result in
-    1/f spatial filtering of the map due to the scanning motion, which more
-    or less directly maps temporal frequencies into spatial frequencies.
-
-    The approach of CRUSH is to apply appropriate point-source corrections
-    (rescaling) such that point sources in the map yield the same fluxes no
-    matter how (i.e. with what options exactly) the source was reduced. 
-    While the corrections will be readily sufficient for a large fraction of 
-    the science cases in this simple form, there are two notable exceptions
-    to this rule: (i) extended emission, and (ii) small, fast maps reduced
-    in 'deep' mode (when the source is scanned over the same detector more than
-    once over the 'stability' timescale). 
-
-    The better approach for these cases is to measure a transfer function, or 
-    otherwise check the reduction of a similar simulated source.
-
-
-    Transfer functions and simulated sources
-    ----------------------------------------
-    The 'sources' option provides a means for inserting test sources into
-    CRUSH maps, while one of the 'jackknife' options can be used to remove
-    any real emission beforehand but retaining the signal and noise structure
-    of the data otherwise (which is important in order to get a representative
-    measure of the transfer function). E.g.
-
-       > crush [...] -jackknife.alternate -sources=test.mask ...
-
-    will apply an alternating jackknife to the input scans, and insert sources
-    specified in the mask file 'test.mask' (See 'example.mask' on the format
-    of mask files, and the GLOSSARY for more on jackknifing options).
-
-    To measure transfer functions (i.e. complete spatial characterization of
-    the point-source response) you would want to insert a single beam-sized 
-    point source. Alternatively, you can insert one or more Gaussian-shaped 
-    source(s) with a range of FWHMs to create a simulated source structure that
-    resembles the structure you expect your source(s) to have.
-
-    Make sure your test source is bright enough to see with high S/N, but not
-    too bright to trigger unintended flagging, or despiking. In general, a S/N
-    between 100 and 1000 should be fine for default reductions, and 100 to 300 
-    for 'faint' or 'deep' modes.
-
-    Additionally, in 'faint' or 'deep' modes, you may want to disable some 
-    features which may affect your relatively bright test sources differently
-    than your much fainter real science target(s). Thus, the following are
-    recommended for reducing 'faint' and 'deep' test sources:
-
-   	> crush [...] -blacklist=clip,blank,source.filter.blank    
-
-    Note also that the spatial filtering (transfer function) will be varying
-    with location on the map (since the scanning speed and directions will
-    themselves be non-uniform over the map). Therefore, it is strongly 
-    recommended that test sources are inserted near the same locations as the
-    real sources in the field.
-    
-    
-2.2 Making sense of the console output
+1.6 Making sense of the console output
 ======================================
+ 
+   Don't ignore the console output. It contains a lot of information, which
+   may be useful for diagnosing your reduction, and troubleshooting if things
+   don't go as expected. 
 
-   Say you are reducing two scans with the command:
+   In the beginning of the console output, you will see information from each
+   scan as it is being read, followed by output from the preprocessing steps
+   (such as downsampling, scan statistics, velocity clipping, opacity used,
+   pointing corrections applied etc.). This part is verbose enough that it 
+   should be eszsentially self-explanatory.
 
-	./crush laboca -deep 12065 12066
+   Once all the scans are loaded, and the source model (usually a map) has been
+   created to accomidate the dataset, CRUSH will enter the iterated pipeline
+   reduction. It may look cryptic at first, as it captures a lot of information
+   in very little console space. Below is a short guide to figure out what
+   it all means. Understanding it will help you diagnose and troubleshoot all
+   sorts of issues that might affect the reduction of your dataset. So, don't
+   be shy, dive in!
 
-   The output begins with some minimalistic capture of the scans that are
-   read in. This is reasonably straighforward.
 
-   Then, you'll get some information on the type of reduction that has been
-   selected by you. This refers to the brighness and extent of the source. 
-   In this case, since '-deep' was specified without a further specification of
-   source size, the reduction will assume deep-field-type sources that are
-   point like.
+   An example line from the console output
+   ----------------------------------------
 
-   After this, some basic information is given on the source and the map
-   parameters. 
+   Let's begin with a concrete example. Here is a section from the console 
+   output from the reduction of LABOCA scan 11564 (from 2007): 
 
-   At last, the reduction enters its main iterative phase. You'll see some 
-   cryptic words and some numbers in a row. Each letter corresponds to an
-   incremental modeling of the time-series signals, while the integer numbers
-   tell you how many pixels remain unflagged after a step which can discard
-   'funky' pixels. Here's what the various bits stand for:
+    $ Round 4: 
+    $
+    $  [11564] D(128) C245 W(8.44E-2)245 dN(0)245 B245 c245 Map(8.44E-2) 
+    $  [Source] {check} (smooth) (clip:4.0) (blank:10.0) (sync) 
 
-   Inside brackets:
-   ----------------
+   Each 'phrase' (separated by spaces around it) represents a short summary of
+   a pipeline step. The leading characters identify the step, often followed by 
+   some quantitative capure (or figure-of-merit) summarizing what the step
+   accomplished.
+	
+   Here is how the above section is interpreted: 
+
+        In the 4th iteration, the following steps are performed on scan 11564: 
+
+	D(128)       -- 1/f filtering (on 128 frame timescale)
+   	C245         -- removing the correlated noise from the array with 
+			245 pixels surviving the gain range criterion.
+	W(8.44E0-2)  -- Deriving pixel weights with the 'rms' method. The
+			average sensitivity of the array is estimated to be
+			84.4 mJy sqrt(s).
+	dN(0)245     -- Despiking via the 'neighbours' method, with 0 frames
+			flagged as spiky, and 245 pixels surviving the
+			flagging of pixels with too many spikes.
+	B245	     -- Decorrelating on amplifier boxes, with 245 pixels 
+			having acceptable gains to the correlated signals.
+	c245	     -- Decorrelating on electronic cables, with 245 pixels
+			showing acceptable gain response to these signals.
+	Map(8.44E-2) -- Mapping scan, with estimated point source NEFD of
+			84.4 mJy sqry(s).
+
+   Then, at the end of the iteration a composite source model is created. This
+   is further processed as:
+
+	{check}	     -- Remove invalid data from the scan maps (before adding
+			to composite).
+	(smooth)     -- smooth composite by the desired amount.
+	(clip:4.0)   -- Discard map points below an S/N of 4.0 from composite.
+	(blank:10.0) -- Do not use bolometer data in other steps, which are
+			collected over the map points with S/N > 10, thus
+			reducing the bias that bright sources can cause in the
+			reduction steps.
+	(sync)	     -- Synch the composite model back to the time-stream data.
+
+   Once the reduction is done, various files, including the source map, are
+   written. This is appropriately echoed on the console output.
+
+
+   
+   Console Output Reference Guide
+   ==============================
+
+   Below is a reference guide for interpreting the console output for your 
+   particular reduction:
+  
+
+   Quantities inside the brackets:
+   -------------------------------
 
    [nnnnn|m]:		processing scan nnnnn, subscan m from the list
 
@@ -1069,8 +654,9 @@ options on the console.
 			the number of downsampled frames, when this is not
 			the default full resolution.
 
-   Reduction-step Shorthands
-   -------------------------
+
+   Reduction-step Shorthands (alphabetically)
+   ------------------------------------------
 
 	a		Decorrelating amplifier boards (e.g. LABOCA,GISMO).
 	am		Remove correlated telescope acceleration (magnitude)
@@ -1087,12 +673,13 @@ options on the console.
 	cx		Remove correlated chopper x position
 	cy		Remove correlated chopper y position
 	D		Solving for pixel drifts (1/f filtering).
-	dA(%)		despiking absolute deviations.	
-			In brackets it shows the percentage % of frames
+	dA(#)		despiking absolute deviations.	
+			In brackets it shows the percentage # of frames
 			flagged in the data as spiky by any method.
-	dF(%)		despiking wider features.
-	dG(%)		like above but proceeds gradually.
-	dN(%)		despiking using neighbouring samples in the timeseries.
+	dG(#)		like above but proceeds gradually.
+	dN(#)		despiking using neighbouring samples in the timeseries.
+	dM(#)		despiking at multiple resolutions (up to the 1/f
+			filter timescale).
 	E		Remove correlated SAE error signal (GISMO)	
 	G		Estimating atmospheric gradients accross the FOV.
 	J		De-jumping frames (e.g. for GISMO). Followed by two
@@ -1143,51 +730,17 @@ options on the console.
 
 
 
-   Thus, the lines on the console output: 
 
-    $ Round 4: 
-    $
-    $  [11564] D(128) C245 W(8.44E-2)245 dN(0.0%)245 B245 c245 Map(8.44E-2) 
-    $  [Source] {check} (smooth) (clip:4.0) (blank:10.0) (sync) 
-	
-   Are interpreted as such: In the 4th iteration, the following steps are
-   performed on scan 11564: 
+   
 
-	D(128)       -- 1/f filtering (on 128 frame timescale)
-   	C245         -- removing the correlated noise from the array with 
-			245 pixels surviving the gain range criterion.
-	W(8.44E0-2)  -- Deriving pixel weights with the 'rms' method. The
-			average sensitivity of the array is estimated to be
-			84.4 mJy sqrt(s).
-	dN(3)245     -- Despiking via the 'neighbours' method, with 3 frames
-			flagged as spiky, and 245 pixels surviving the
-			flagging of pixels with too many spikes.
-	B245	     -- Decorrelating on amplifier boxes, with 245 pixels 
-			having acceptable gains to the correlated signals.
-	c245	     -- Decorrelating on electronic cables, with 245 pixels
-			showing acceptable gain response to these signals.
-	Map(8.44E-2) -- Mapping scan, with estimated point source NEFD of
-			84.4 mJy sqry(s).
 
-   The, at the end of the iteration a composite source model is created. This
-   is further processed as:
-
-	{check}	     -- Remove invalid data from the scan maps (before adding
-			to composite).
-	(smooth)     -- smooth composite by the desired amount.
-	(clip:4.0)   -- Discard map points below an S/N of 4.0 from composite.
-	(blank:10.0) -- Do not use bolometer data in other steps, which are
-			collected over the map points with S/N > 10, thus
-			reducing the bias that bright sources can cause in the
-			reduction steps.
-	(sync)	     -- Synch the composite model back to the time-stream data.
-
-   Once the reduction is done, various files, including the source map, are
-   written. This is appropriately echoed on the console output.
+#####################################################################
+2. Advanced Topics
+#####################################################################
 
 
 
-2.3 Pointing Corrections
+2.1 Pointing Corrections
 ========================
 
    Reducing the data with the correct pointing can be crucial (esp. when 
@@ -1246,8 +799,146 @@ options on the console.
 
 
 
-2.4 Recovery of Extended Emission
-==================================
+
+2.2 Pixelization and Smoothing
+==============================
+
+   There seem to be many misconceptions about the 'correct' choice of 
+   pixelization and about the (mal)effects of smoothing. This section aims to 
+   offer a balanced account on choosing an appropriate mapping grid and on the 
+   pros and cons of applying smoothing to your maps.
+
+
+   Pixelization (i.e. choosing the 'right' grid)
+   ---------------------------------------------
+   Misconception 1: You should always 'Nyquist' sample your map, with 2 pixels
+   per beam FWHM, to ensure ideal representation.
+
+   There is more than one thing wrong with the above idea. First, there is no
+   'Nyquist' sampling of Gaussian beams. The Nyquist sampling theorem applies 
+   only to data, which has a natural cutoff frequency (the Nyquist frequency), 
+   above which there is no information present. Then, and only then, will 
+   sampled data (at a frequency strictly larger[!] than twice the Nyquist 
+   cutoff) preserve all information about the signals. 
+
+   Two pixels per beam is almost certainly too few for the case of Gaussian 
+   beams. Gaussian beams have no true frequency cutoff -- the signal spreads
+   across the spectrum, with information present at all frequencies, even if it
+   is increasingly tapered at the higher frequencies. By choosing a sampling 
+   (i.e. pixel size in your map) the information above your sampling rate will 
+   be aliased into the sampled band, corrupting your pixelized data. 
+
+   Thus, you can choose a practical cutoff frequency (i.e. pixelization) based
+   on the level of information loss and corruption you are willing to tolerate.
+   At 2.5 pixels pear FWHM, you retain ~95% of the underlying information, and 
+   corrupt it by the remaining 5%. With more pixels per beam, you get more 
+   accurate maps. (The 2-pixels per beam, that many understand to be the 
+   Nyquist  sampled, is certainly too few by most standards of accuracy!)
+
+   Thus, the CRUSH default is to use around 5-pixels per FWHM, representing a 
+   compromise between completeness (~99%) with minimal corruption (<1%) and a 
+   senseless increase of map pixels (i.e. number of model parameters).
+
+
+   Smoothing
+   ---------
+   Misconception 2: You should not smooth your maps, because it does something
+   'unnatural' to your 'raw' image.
+
+   Again, there are two reasons why this is wrong. The first problem with this 
+   view is that there is no 'natural' or 'raw' image to start with, because 
+   there is no 'natural' pixelization (see above). Secondly, by choosing a map 
+   pixel size, you effectively apply smoothing -- only that your smoothing 
+   kernel is a square pixel, with an abrupt edge, rather than a controlled (and
+   directionless) taper of choice. 
+
+   (To convice yourself that a map pixels apply smoothing, consider the mapping 
+   process: each pixel will represent an average of the emission from the area 
+   it covers. Thus, the pixel values are essentially samples of a moving 
+   integral under the pixel shape -- i.e. samples of the emission convolved 
+   [smoothed] by the pixel shape.)
+
+   However, smoothing does have one real con, in that it degrades the effective
+   resolution of the image. Consider smoothing by Gaussian kernels. Then, the
+   image resolution (imageFWHM) increases with the smoothing width (smoothFWHM)
+   as
+
+       imageFWHM^2 = beamFWHM^2 + smoothFWHM^2
+
+   from the instrument resolution (beamFWHM). However, you can smooth a fair 
+   bit before the degradation of resolution becomes a problem or even really
+   noticeable. If you use sub-beam smoothing with smoothFWHM < beamFWHM, then 
+   the relative widening is roughly
+
+    	 dW / W0 ~ 0.5 * (smoothFWHM / beamFWHM)^2
+
+   Thus, smoothing by half a beam, degrades resolution by ~12% only... At the 
+   same time, smoothing can bring many benefits:
+
+     * Improves image appearance and S/N by rejecting pixelization noise. It is
+       better to use a finer grid and smooth the image by the desired amount,
+       than to pixelize coarsely -- not only for visual appearance but also
+       for the preservation of information.
+
+     * Smoothing can help avoid pathological solutions during the iterations, 
+       by linking nearby pixel values together.
+
+     * Beam-smoothing is the optimal (Wiener) filtering for determining point 
+       source fluxes in a white noise background. I.e., smoothing by the 
+       beam produces the highest signal-to-noise measurement of point sources.
+
+     * Beam-smoothing is mathematically equivalent to fitting fixed-width beams
+       at every pixel position. The beam-smoothed flux value in each pixel
+       represents the amplitude of a beam fitted at that position using 
+       chi-squared minimization. Thus, beam smoothed images are the bread-and-
+       butter of point source extraction (e.g. the 'detect' tool of CRUSH).
+
+   Given the pros and the con for smoothing, the different reduction modes 
+   (default, 'faint' or 'deep') of CRUSH make different compromises. The 
+   default reduction aims to provide maps with maximal resolution (i.e. no 
+   smoothing), although a some smoothing is used during the iterations to aid
+   convergence to a robust solution. 'faint' mode reductions smooth by 2/3 
+   beams (resulting in ~22% degradation of resolution), to provide better 
+   signal-to-noise at a moderate loss of spatial resolution. 
+   Finally, 'deep' reductions yield beam smoothed images, which are ideal for 
+   point source extraction, even if some spatial details are sacrificed.
+
+   You can change/override these default settings. The smoothing during 
+   reduction is  controlled by the 'smooth' setting, which can take both a 
+   Gaussian FWHM (in arcsec) as its arguments as well as the preset values 
+   'minimal', 'halfbeam', '2/3beam' and 'beam'. The smoothing of the final map 
+   can be controlled by 'final:smooth' (the 'final' stands as a shorthand 
+   conditional for the last iteration). Thus,
+
+      > crush [...] -smooth=halfbeam -final:smooth=minimal [...]
+
+   smoothes by half a beam during the iterations, and only slightly for the 
+   output image, while
+
+      > crush [...] -forget=smooth -final:forget=smooth [...]
+
+   disables smoothing both during reduction and at the end. The table below
+   summarizes the effect of the preset smoothing values, indicating both the
+   degradation of resolution (relative to the telescope beam) and the relative
+   peak S/N on point sources:
+
+
+|           Table 2. Smoothing properties
+|           -------------------------------------
+|           setting          widening	rel. S/N
+|           =====================================
+|           minimal	         6%	    0.33
+|           halfbeam	        12%	    0.50
+|           2/3beam	        22%	    0.67
+|           beam		41%	    1.00
+|           -------------------------------------
+
+
+
+
+
+2.3 Recovery of Extended Emission
+=================================
 
    As a general rule, ground based instruments (in the mm and submm) are only 
    sensitive to structures smaller than the Field-of-View (FoV) of the 
@@ -1331,142 +1022,74 @@ options on the console.
 
 
 
-2.5 Pixelization and Smoothing
-===============================
 
-   There seem to be many misconceptions about the 'correct' choice of 
-   pixelization and about the (mal)effects of smoothing. This section aims to 
-   offer a balanced account on choosing an appropriate mapping grid and on the 
-   pros and cons of applying smoothing to your maps.
+2.4 Filtering corrections, transfer functions, etc.
+===================================================
 
+    Most reduction steps (decorrelation, 1/f drift removal, spectral filtering) 
+    will impact different spatial frequencies of the source structure 
+    differently. In general, the low spatial frequency components are most 
+    affected (suppressed). E.g. decorrelating the full array will reject 
+    scales larger than the field-of-view, while 1/f filtering will result in
+    1/f spatial filtering of the map due to the scanning motion, which more
+    or less directly maps temporal frequencies into spatial frequencies.
 
-   Pixelization (i.e. choosing the 'right' grid)
-   ---------------------------------------------
-   Misconception 1: You should always 'Nyquist' sample your map, with 2 pixels
-   per beam FWHM, to ensure ideal representation.
+    The approach of CRUSH is to apply appropriate point-source corrections
+    (rescaling) such that point sources in the map yield the same fluxes no
+    matter how (i.e. with what options exactly) the source was reduced. 
+    While the corrections will be readily sufficient for a large fraction of 
+    the science cases in this simple form, there are two notable exceptions
+    to this rule: (i) extended emission, and (ii) small, fast maps reduced
+    in 'deep' mode (when the source is scanned over the same detector more than
+    once over the 'stability' timescale). 
 
-   There is more than one thing wrong with the above idea. First, there is no
-   'Nyquist' sampling of Gaussian beams. The Nyquist sampling theorem applies 
-   only to data, which has a cutoff frequency (i.e. the Nyquist frequency), 
-   above which there is no information present. Then, and only then, will 
-   sampled data (at a frequency strictly larger[!] than twice the Nyquist 
-   cutoff) preserve all information about the signals. Secondly, 2-pixels per 
-   beam is almost certainly too few for the case of Gaussian beams.
-
-   Here is why: Gaussian beams have no actual frequency cutoff -- the signal 
-   spreads  across the spectrum, with information present at all frequencies, 
-   even if it is increasingly tapered at the higher frequencies. By choosing a 
-   sampling (i.e. pixel size in your map) the information above your sampling 
-   rate will be aliased into the sampled band, corrupting your pixelized data. 
-
-   Thus, you can choose a practical cutoff frequency (i.e. pixelization) based
-   on the level of information loss and corruption you are willing to tolerate.
-   At 2.5 pixels pear FWHM, you retain ~95% of the underlying information, and 
-   corrupt it by the remaining 5%. With more pixels per beam, you get more 
-   accurate maps. (The 2-pixels per beam, that many understand to be the 
-   Nyquist  sampled, is certainly too few by most standards of accuracy!)
-
-   Thus, the CRUSH default is to use around 5-pixels per FWHM, representing a 
-   compromise between completeness (~99%) and a senseless increase of map 
-   pixels (i.e. number of model parameters).
+    The better approach for these cases is to measure a transfer function, or 
+    otherwise check the reduction of a similar simulated source.
 
 
-   Smoothing
-   ---------
-   Misconception 2: You should not smooth your maps, because it does something
-   'unnatural' to your 'raw' image.
+    Transfer functions and simulated sources
+    ----------------------------------------
+    The 'sources' option provides a means for inserting test sources into
+    CRUSH maps, while one of the 'jackknife' options can be used to remove
+    any real emission beforehand but retaining the signal and noise structure
+    of the data otherwise (which is important in order to get a representative
+    measure of the transfer function). E.g.
 
-   Again, there are two reasons why this is wrong. The first problem with this 
-   view is that there is no 'natural' or 'raw' image to start with, because 
-   there is no 'natural' pixelization (see above). Secondly, by choosing a map 
-   pixel size, you effectively apply smoothing -- only that your smoothing 
-   kernel is a square pixel, with an abrupt edge, rather than a controlled (and
-   directionless) taper of choice. 
+       > crush [...] -jackknife.alternate -sources=test.mask ...
 
-   (To convice yourself that a map pixels apply smoothing, consider the mapping 
-   process: each pixel will represent an average of the emission from the area 
-   it covers. Thus, the pixel values are essentially samples of a moving 
-   integral under the pixel shape -- i.e. samples of the emission convolved 
-   [smoothed] by the pixel shape.)
+    will apply an alternating jackknife to the input scans, and insert sources
+    specified in the mask file 'test.mask' (See 'example.mask' on the format
+    of mask files, and the GLOSSARY for more on jackknifing options).
 
-   However, smoothing does have one real con, in that it degrades the effective
-   resolution of the image. Consider smoothing by Gaussian kernels. Then, the
-   image resolution (imageFWHM) increases with the smoothing width (smoothFWHM)
-   as
+    To measure transfer functions (i.e. complete spatial characterization of
+    the point-source response) you would want to insert a single beam-sized 
+    point source. Alternatively, you can insert one or more Gaussian-shaped 
+    source(s) with a range of FWHMs to create a simulated source structure that
+    resembles the structure you expect your source(s) to have.
 
-       imageFWHM^2 = beamFWHM^2 + smoothFWHM^2
+    Make sure your test source is bright enough to see with high S/N, but not
+    too bright to trigger unintended flagging, or despiking. In general, a S/N
+    between 100 and 1000 should be fine for default reductions, and 100 to 300 
+    for 'faint' or 'deep' modes.
 
-   from the instrument resolution (beamFWHM). However, you can smooth a fair 
-   bit before the degradation of resolution becomes a problem. If you use 
-   sub-beam smoothing with smoothFWHM < beamFWHM, then the relative widening is
+    Additionally, in 'faint' or 'deep' modes, you may want to disable some 
+    features which may affect your relatively bright test sources differently
+    than your much fainter real science target(s). Thus, the following are
+    recommended for reducing 'faint' and 'deep' test sources:
 
-    	~ 0.5 * (smoothFWHM / beamFWHM)^2
+   	> crush [...] -blacklist=clip,blank,source.filter.blank    
 
-   Thus, smoothing by half a beam, degrades resolution by ~12% only... At the 
-   same time, smoothing can bring many benefits:
-
-     * Improves image appearance and S/N by rejecting pixelization noise. It is
-       better to use a finer grid and smooth the image by the desired amount,
-       than to pixelize coarsely -- not only for visual appearance but also
-       for the preservation of information.
-
-     * Smoothing can help avoid pathological solutions during the iterations, 
-       by linking nearby pixel values together.
-
-     * Beam-smoothing is the optimal (Wiener) filtering of point sources in a 
-       white noise background. Thus, smoothing by the beam produces the highest 
-       signal-to-noise measurement of point sources.
-
-     * Beam-smoothing is mathematically equivalent to fitting fixed-width beams
-       at every pixel position. The beam-smoothed flux value in each pixel
-       represents the amplitude of a beam fitted at that position using 
-       chi-squared minimization. Thus, beam smoothed images are the bread-and-
-       butter of point source extraction (e.g. the 'detect' tool of CRUSH).
-
-   Given the pros and the con for smoothing, the different reduction modes 
-   (default, 'faint' or 'deep') of CRUSH make different compromises. The 
-   default reduction aims to provide maps with maximal resolution (i.e. no 
-   smoothing), although a some smoothing is used during the iterations to aid
-   convergence to a robust solution. 'faint' mode reductions smooth by 2/3 
-   beams (resulting in ~22% degradation of resolution), to provide better 
-   signal-to-noise at a moderate loss of spatial resolution. 
-   Finally, 'deep' reductions yield beam smoothed images, which are ideal for 
-   point source extraction, even if some spatial details are sacrificed.
-
-   You can change/override these default settings. The smoothing during 
-   reduction is  controlled by the 'smooth' setting, which can take both a 
-   Gaussian FWHM (in arcsec) as its arguments as well as the preset values 
-   'minimal', 'halfbeam', '2/3beam' and 'beam'. The smoothing of the final map 
-   can be controlled by 'final:smooth' (the 'final' stands as a shorthand 
-   conditional for the last iteration). Thus,
-
-      > crush [...] -smooth=halfbeam -final:smooth=minimal [...]
-
-   smoothes by half a beam during the iterations, and only slightly for the 
-   output image, while
-
-      > crush [...] -forget=smooth -final:forget=smooth [...]
-
-   disables smoothing both during reduction and at the end. The table below
-   summarizes the effect of the preset smoothing values, indicating both the
-   degradation of resolution (relative to the telescope beam) and the relative
-   peak S/N on point sources:
-
-
-|           Table 2. Smoothing properties
-|           -------------------------------------
-|           setting          widening	rel. S/N
-|           =====================================
-|           minimal	         6%	    0.33
-|           halfbeam	        12%	    0.50
-|           2/3beam	        22%	    0.67
-|           beam		41%	    1.00
-|           -------------------------------------
+    Note also that the spatial filtering (transfer function) will be varying
+    with location on the map (since the scanning speed and directions will
+    themselves be non-uniform over the map). Therefore, it is strongly 
+    recommended that test sources are inserted near the same locations as the
+    real sources in the field.
+    
 
 
 
 
-2.6 Image processing post-reduction
+2.5 Image processing post-reduction
 ====================================
 
    CRUSH also provides 'imagetool' for post-processing images after reduction. 
@@ -1502,7 +1125,7 @@ options on the console.
 
 
     
-2.7 Reducing Very Large Datasets
+2.6 Reducing Very Large Datasets
 ================================
 
    Coming soon...
@@ -1512,8 +1135,7 @@ options on the console.
 
 
 
-
-2.8 Custom Logging Support
+2.7 Custom Logging Support
 ==========================
 
    CRUSH (as of version 2.03 really) provides a poweful scan/reduction logging
@@ -2798,7 +2420,71 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 #####################################################################
-6. Future Developments (A Wish List...)
+6. Supported Cameras
+#####################################################################
+
+Currently, CRUSH supports the following instruments (in alphabetical order):
+
+   
+    ASZCA	(2mm) APEX SZ Camera, from Berkeley, CA
+    	      	bolo.berkeley.edu/apexsz/instrument.html
+
+    GISMO	(2mm) Goddard-IRAM Superconducting 2-Millimeter Observer
+    		www.iram.es/IRAMES/mainWiki/
+					GoddardIramSuperconductingTwoMillimeter
+
+    LABOCA	(870um) Large APEX Bolometer Camera
+    		www.apex-telescope.org/bolometer/laboca		 
+
+    MAKO	(350um) KID technology demonstration camera for the CSO.
+
+    MAKO-2	(350um, 850um) Second-generation KID technology demonstration
+		camera for the CSO with dual-pol pixel response, and dual-band 
+		imaging capability.
+
+    MUSTANG-2	(3mm) Large focal plane array for the 100m Greenbank Telescope.
+		www.gb.nrao.edu/mustang/
+
+    p-ArTeMiS	(200um, 350um, 450um) 3-color camera for APEX (prototype)
+    		www.apex-telescope.org/instruments/pi/artemis
+
+    PolKA	(polarimetry) Polarimeter for LABOCA
+    		www.mpifr-bonn.mpg.de/staff/gsiringo/laboca/
+							laboca_polarimeter.html
+
+    SABOCA	(350um) Submillimeter APEX Bolometer Camera
+    		www.apex-telescope.org/bolometer/saboca
+
+    SCUBA-2	(450um, 850um) Submillimetre Common User Bolometer Array 2
+		www.roe.ac.uk/ukatc/projects/scubatwo
+
+    SHARC	(350um, 450um) Submillimeter High-Angular Resolution Camera
+		Caltech, Pasadena, CA
+		http://www.submm.caltech.edu/cso/sharc/cso_sharc.html
+
+    SHARC-2	(350um, 450um, 850um) The second-generation Submillimeter 
+		High-Angular Resolution Camera
+    		Caltech, Pasadena, CA
+    		www.submm.caltech.edu:/~sharc
+
+    SOFIA/HAWC+	(53um, 62um, 89um, 155um, 216um)
+		High-resolution Airborne Wide-angle Camera
+
+
+Further support for instruments is possible. If interested to use CRUSH for
+your bolometer array, please contact Attila Kovacs 
+<attila[AT]submm.caltech.edu>.
+
+In principle, it is possible to extend CRUSH support for other types of scanning
+instruments, like heterodyne receiver arrays, or single-pixel receivers that
+scan in frequency space, or for the reduction of line-surveys from double
+side-band (DSB) receivers. Such new features may appear in future releases, 
+especially upon specific request and/or arrangement...
+
+
+
+#####################################################################
+7. Future Developments (A Wish List...)
 #####################################################################
 
 
@@ -2808,7 +2494,7 @@ implementation. Nonetheless, the following avenues of feature enrichment are
 being considered. 
 
 
-6.1 Support for Heterodyne Receivers and Interferometry
+7.1 Support for Heterodyne Receivers and Interferometry
 =======================================================
 
    CRUSH was born as a bolometer array reduction package. However, there is no
@@ -2822,7 +2508,7 @@ being considered.
    to deal with immense data volumes also.
 
 
-6.2 Interactive Reductions
+7.2 Interactive Reductions
 ==========================
 
    At present CRUSH offers only a reduction pipeline. This is ideal for
@@ -2844,7 +2530,7 @@ being considered.
    essential plotting capabilities, but that too may come sooner than later...
 
 
-6.3 Distributed and GPU Computing
+7.3 Distributed and GPU Computing
 ==================================
 
    The reduction paradigm of CRUSH is massively parallelizable. CRUSH can
@@ -2862,7 +2548,7 @@ being considered.
    performace of CRUSH. 
 
 
-6.4 Graphical User-Interface (GUI)
+7.4 Graphical User-Interface (GUI)
 ==================================
 
    The addition of a Graphical User Interface (GUI) to CRUSH would make 
@@ -2877,7 +2563,7 @@ being considered.
 
 
 #####################################################################
-7. Further information
+8. Further information
 #####################################################################
 
 

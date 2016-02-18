@@ -1,7 +1,37 @@
->> poll=option to list all conditionals for option* also.
->> despike.features --> despike.multires
+>> README.syntax
 
 
+2.31-a1
+
+	[NEW] Introducing the ability to create, undo, and modify persistent
+	configuration settings, e.g. to prevent changes to these later (e.g. by 
+	conditionals). For example, you can lock the 'tau.225GHz' setting to 
+	your favored value:
+
+	  > crush ... -tau.lock=0.31 ...
+
+	By this you assure that CRUSH will use your specified value, even if
+	normally it would look tau up for each scan, e.g. from a table.
+	Once a setting this locked this way, it cannot be changed (or forgotten
+	or blacklisted!) until it is unlocked again, e.g. by 'tau.unlock'.
+	If you want to set a new favored value later, for some other scans,
+	you'd have to:
+
+	   > crush ... -tau.unlock -tau.lock=0.46 ...
+
+	Or, you can use the stronger 'relock' directive, which will override
+	existing locks as necessary:
+
+	   > crush ... -tau.relock=0.46 ...
+
+	When no argument is given to the lock, it will simply preserve the
+	current value to the configuration option.
+
+	[NEW] Improved polling of settings via the '-poll' command. Apart from
+	listing current settings for all keys that start with the specified
+	pattern (as it used to), it now also list any matching settings that
+	were blacklisted (as bracketed). And, it also lists any conditionals
+	that might change a matching settings dynamically.
 
 	[DEPREATE] 'despike2' and 'despike3' pipeline steps are no longer
 	supported. (They were never used).
@@ -25,10 +55,23 @@
 	[CONFIG] {GISMO} 'deep' mode 1/f stability changed back to 3 s,
 	resulting in cleaner maps.
 
+	[DOC] Re-structured the README bringing the more useful topics up
+	front. 
+
+        [DOC] The guide to the configuration engine has been split to a 
+	separate document (README.syntax), leaving only a bare description 
+	inside the main README. There are two good reasons for this split: 
+	first, as the configuration engine was getting more feature rich, this 
+	section was getting way too long, and distracting; secondly, the 
+	configuration engine is really a standalone piece of software, which 
+	may be (will be!) used outside of the bounds of CRUSH. The separate
+	document makes better sense.
+	
 	[CODE] Most classes now implement Serializable, as well as suitable
 	overrides for the hashCode() and equals() methods.
 
 	[CODE] kovacs.util packages renamed to jnum (Java Numerical).
+
 
 
 2.30-4 (14 December 2015)

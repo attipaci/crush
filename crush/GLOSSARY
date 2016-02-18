@@ -1578,6 +1578,38 @@
 			@See: 'correlated.<?>', 'write.coupling'
 				'list.divisions'
 
+
+:: .lock[=value]	@Since: 2.31
+			Set a persistent option value, that cannot be
+			changed, cleared, or blacklisted later (e.g. by 
+			conditionally activated settings). Users may use locks
+			to ensure that their manually set reduction options
+			are applied, and never overrriden. For the lock to
+			take effect, the option must not be blacklisted or
+			locked to a different value before.
+			Without the optional value argument, the lock will
+			make the current setting (whatever it is at the time
+			the lock is invoked) persistent. E.g.:
+
+			   stability=5.0
+			   [...]
+
+			   > crush [...] -stability.lock [...]
+
+			If the optional <value> argument is given, then the
+			<option> will be set to that value before the <lock>
+			is created:
+
+			   > crush [...] -stability.lock=5.0
+			
+			will lock 'stability' to 5.0. To release a lock, use
+			the '<option>.unlock' directive. To re-lock to a new
+			value (same unlock and lock again) use 
+			'<option>.unlock'.	
+
+			@See: '.unlock', '.relock', 'blacklist'
+
+
 :: log			@Advanced
 			@Since: 2.03
 			Log the scans after the reduction. (Similar logging
@@ -2501,6 +2533,20 @@
 
 			to cast the final image onto a 1" pixel grid.		
 			@See: 'grid'
+
+:: .relock=value	@Since: 2.31
+			Create a new persistent setting for the option, even if
+			the option was locked to another setting previously
+			Thus, for example:
+			
+			  stability.relock=10.0
+
+			is effectively a shorthand for:
+
+			  stability.unlock		
+			  stability.lock=10.0		
+			   			
+			@See: '.lock', '.unlock', 'blacklist'
 
 :: remove=<option>	Similar to 'forget', but removes the entire branch. 
 			Thus '-remove=despike' unsets:
@@ -3444,6 +3490,21 @@
 			the more typical 'Jy/beam' (default), as well as their
 			common multiples (e.g. 'uJy/beam', or 'nV/beam').	
 			@See: 'dataunit', 'jansky'
+
+:: .unlock		@Since: 2.31
+			Release the lock on the parent option, thus allowing
+			it to be changed again (e.g. by a conditional). E.g.
+			Suppose you locked the 'stability' option via:
+
+			  > [...] -stability.lock=5.0
+
+                        on the command line. You can release that lock later
+			via:
+
+			  > [...] -stability.unlock
+
+			@See: '.lock', '.unlock', '.relock'
+
 
 :: vclip=<arg>		@Advanced
 			Clip data where the field scan velocity is outside
