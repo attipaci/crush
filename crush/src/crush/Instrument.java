@@ -264,7 +264,7 @@ implements TableFormatter.Entries, Messaging {
 		Hashtable<String, Vector<String>> settings = option("mjd").conditionals;
 		
 		for(String rangeSpec : settings.keySet()) 
-			if(Range.parse(rangeSpec, true).contains(MJD)) options.parse(settings.get(rangeSpec));
+			if(Range.parse(rangeSpec, true).contains(MJD)) options.parseAll(settings.get(rangeSpec));
 			
 	}
 	
@@ -288,7 +288,7 @@ implements TableFormatter.Entries, Messaging {
 				
 				if(mjdRange.contains(MJD)) {
 					//System.err.println("### Setting options for " + rangeSpec);
-					options.parse(settings.get(rangeSpec));
+					options.parseAll(settings.get(rangeSpec));
 				}
 			}
 			catch(ParseException e) { System.err.println("   WARNING! " + e.getMessage()); }
@@ -302,7 +302,7 @@ implements TableFormatter.Entries, Messaging {
 		Hashtable<String, Vector<String>> settings = option("serial").conditionals;
 		for(String rangeSpec : settings.keySet()) if(Range.parse(rangeSpec, true).contains(serialNo)) {
 			//System.err.println("### Setting options for " + rangeSpec);
-			options.parse(settings.get(rangeSpec));
+			options.parseAll(settings.get(rangeSpec));
 		}
 	}
 	
@@ -315,7 +315,7 @@ implements TableFormatter.Entries, Messaging {
 		// Make options an independent set of options, setting object specifics...
 		Hashtable<String, Vector<String>> settings = option("object").conditionals;
 		for(String spec : settings.keySet()) if(sourceName.startsWith(spec)) {
-			options.parse(settings.get(spec));
+			options.parseAll(settings.get(spec));
 		}
 	}
 	
@@ -334,11 +334,11 @@ implements TableFormatter.Entries, Messaging {
 			if(!header.containsKey(key)) return;
 			String value = tokens.hasMoreTokens() ? tokens.nextToken() : null;	
 			
-			if(value == null) options.parse(conditionals.get(condition));
+			if(value == null) options.parseAll(conditionals.get(condition));
 			else if(value.charAt(0) == '!') {
-				if(!header.getStringValue(key).equalsIgnoreCase(value)) options.parse(conditionals.get(condition));
+				if(!header.getStringValue(key).equalsIgnoreCase(value)) options.parseAll(conditionals.get(condition));
 			}
-			else if(header.getStringValue(key).equalsIgnoreCase(value)) options.parse(conditionals.get(condition));
+			else if(header.getStringValue(key).equalsIgnoreCase(value)) options.parseAll(conditionals.get(condition));
 		}
 	}
 	 
@@ -362,11 +362,11 @@ implements TableFormatter.Entries, Messaging {
 	}
 	
 	public void setOption(String line) {
-		options.parse(line);
+		options.parseSilent(line);
 	}
 	
 	public void forget(String key) {
-		options.forget(key);
+		options.forgetSilent(key);
 	}
 	
 	public Scan<?, ?> readScan(String descriptor) throws Exception {

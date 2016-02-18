@@ -29,7 +29,11 @@ import crush.Integration;
 import jnum.Constant;
 
 public abstract class AdaptiveFilter extends VariedFilter {
-
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2499384682820252338L;
+	
 	// TODO noiseFiltering to be replaced by dependents accounting...
 	protected float[][] profiles;
 	protected double dF;	

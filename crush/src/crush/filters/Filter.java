@@ -22,6 +22,7 @@
  ******************************************************************************/
 package crush.filters;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import crush.Channel;
@@ -36,7 +37,12 @@ import jnum.Parallel;
 import jnum.Util;
 
 
-public abstract class Filter implements Cloneable {
+public abstract class Filter implements Serializable, Cloneable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 9018904303446615792L;
+	
 	protected Integration<?,?> integration;
 	protected Dependents parms;
 	protected float[] frameParms;

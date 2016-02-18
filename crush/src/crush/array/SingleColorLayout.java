@@ -29,7 +29,6 @@ import crush.InstrumentLayout;
 import crush.Pixel;
 
 public class SingleColorLayout<ChannelType extends SingleColorPixel> extends InstrumentLayout<ChannelType> {
-
 	/**
 	 * 
 	 */

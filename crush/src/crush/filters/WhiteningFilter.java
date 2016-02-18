@@ -33,6 +33,11 @@ import jnum.data.Statistics;
 import jnum.math.Range;
 
 public class WhiteningFilter extends AdaptiveFilter {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1954923341731840023L;
+	
 	double level = 1.2;
 	double significance = 2.0;
 	double maxBoost = 2.0;

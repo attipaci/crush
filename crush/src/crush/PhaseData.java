@@ -25,7 +25,6 @@ package crush;
 
 import java.io.Serializable;
 import java.text.NumberFormat;
-import java.util.Arrays;
 
 import jnum.Util;
 import jnum.data.Statistics;
@@ -73,8 +72,8 @@ public class PhaseData implements Serializable {
 		if(dependents != phases.dependents) return false;
 		if(!Util.equals(start, phases.start)) return false;
 		if(!Util.equals(end, phases.end)) return false;
-		if(!Arrays.equals(value, phases.value)) return false;
-		if(!Arrays.equals(weight, phases.weight)) return false;
+		//if(!Arrays.equals(value, phases.value)) return false;
+		//if(!Arrays.equals(weight, phases.weight)) return false;
 		return true;
 	}
 	

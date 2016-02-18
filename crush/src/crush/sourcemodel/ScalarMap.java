@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 import crush.*;
 import crush.astro.AstroMap;
 import jnum.Configurator;
+import jnum.LockedException;
 import jnum.Parallel;
 import jnum.Unit;
 import jnum.Util;
@@ -387,7 +388,10 @@ public class ScalarMap extends SourceMap {
 		if(hasSourceOption("despike")) {
 			Configurator despike = sourceOption("despike");
 			double level = 10.0;
-			despike.mapValueTo("level");
+			
+			try { despike.mapValueTo("level"); }
+			catch(LockedException e) {} // TODO...
+			
 			if(despike.isConfigured("level")) level = despike.get("level").getDouble();
 			map.despike(level);
 		}
@@ -440,7 +444,9 @@ public class ScalarMap extends SourceMap {
 		}
 			
 		Configurator filter = sourceOption("filter");
-		filter.mapValueTo("fwhm");
+	
+		try { filter.mapValueTo("fwhm"); }
+		catch(LockedException e) {} // TODO...
 			
 		String mode = filter.isConfigured("type") ? filter.get("type").getValue() : "convolution";
 		String directive = "auto";

@@ -30,6 +30,11 @@ import crush.Integration;
 import jnum.Constant;
 
 public abstract class VariedFilter extends Filter {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5414130961462551874L;
+	
 	protected float[] sourceProfile;
 	protected float[] pointResponse;
 	

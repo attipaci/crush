@@ -35,6 +35,7 @@ import crush.astro.AstroMap;
 import crush.sourcemodel.*;
 import jnum.Configurator;
 import jnum.ExtraMath;
+import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroSystem;
@@ -481,7 +482,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	//      format: e.g. d3, f1, e3, t:1 (time with colons, 1 decimal), ad2 (angle with symbols, 2 decimals)
 	public void writeLog(Configurator option, String defaultFileName) throws IOException {
 		// Map the optional argument to the 'file' sub-option.
-		option.mapValueTo("file");
+		try { option.mapValueTo("file"); }
+		catch(LockedException e) {}
 		
 		String fileName = option.isConfigured("file") ? 
 				option.get("file").getPath() : defaultFileName;
@@ -662,7 +664,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(hasOption("correlated." + modalityName + ".nogains")) return;
 		
 		Configurator gains = option("gains");
-		gains.mapValueTo("estimator");
+		
+		try { gains.mapValueTo("estimator"); }
+		catch(LockedException e) {} // TODO...
+	
 		if(gains.isConfigured("estimator")) if(gains.get("estimator").equals("median")) isRobust = true; 
 		
 		WeightedPoint[] G = new WeightedPoint[instrument.storeChannels+1];

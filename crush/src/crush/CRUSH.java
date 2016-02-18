@@ -30,6 +30,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import jnum.Configurator;
+import jnum.LockedException;
 import jnum.Parallel;
 import jnum.Util;
 import jnum.astro.AstroTime;
@@ -52,7 +53,7 @@ public class CRUSH extends Configurator {
 	private static final long serialVersionUID = 6284421525275783456L;
 
 	private static String version = "2.31-a1";
-	private static String revision = "devel.3";
+	private static String revision = "devel.4";
 	
 	public static String workPath = ".";
 	public static String home = ".";
@@ -137,7 +138,7 @@ public class CRUSH extends Configurator {
 		for(int i=1; i<args.length; i++) if(args[i].length() > 0) {
 			commandLine += " " + args[i]; 
 
-			if(args[i].charAt(0) == '-') parse(args[i].substring(1));
+			if(args[i].charAt(0) == '-') parseSilent(args[i].substring(1));
 			else read(args[i]);
 		}	
 
@@ -150,7 +151,10 @@ public class CRUSH extends Configurator {
 		else if(key.equals("help")) help(instrument);
 		else if(key.equals("list.divisions")) instrument.printCorrelatedModalities(System.err);
 		else if(key.equals("list.response")) instrument.printResponseModalities(System.err);
-		else super.process(key, value);
+		else {
+			try { super.process(key, value); }
+			catch(LockedException e) {} // TODO
+		}
 	}
 
 
@@ -591,7 +595,7 @@ public class CRUSH extends Configurator {
 
 		Hashtable<String, Vector<String>> settings = get("object").conditionals;
 		for(String spec : settings.keySet()) if(sourceName.startsWith(spec)) 
-			parse(settings.get(spec));
+			parseAll(settings.get(spec));
 
 	}
 

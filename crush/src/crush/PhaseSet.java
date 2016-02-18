@@ -68,8 +68,8 @@ public class PhaseSet extends ArrayList<PhaseData> {
 		if(integration.getDisplayID() != set.integration.getDisplayID()) return false;
 		if(signals.size() != set.signals.size()) return false;
 		if(phaseDeps.size() != set.phaseDeps.size()) return false;
-		if(!Util.equals(integrationDeps, set.integrationDeps)) return false;
-		if(!Arrays.equals(channelParms, set.channelParms)) return false;
+		//if(!Util.equals(integrationDeps, set.integrationDeps)) return false;
+		//if(!Arrays.equals(channelParms, set.channelParms)) return false;
 		return true;
 	}
 	
