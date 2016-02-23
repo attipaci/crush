@@ -178,6 +178,13 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(instrument.getOptions().containsKey("pointing")) pointingAt(getPointingCorrection(option("pointing")));	
 	}
 	
+	public void setIteration(int i, int rounds) {
+		CRUSH.setIteration(instrument.getOptions(), i, rounds);
+		for(Integration<?,?> integration : this) if(integration.instrument != instrument) 
+			integration.setIteration(i, rounds);
+	}
+ 	
+	
 	public int getSerial() { return serialNo; }
 
 	public void setSerial(int n) { 

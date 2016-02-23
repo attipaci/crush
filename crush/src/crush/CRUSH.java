@@ -53,7 +53,7 @@ public class CRUSH extends Configurator {
 	private static final long serialVersionUID = 6284421525275783456L;
 
 	private static String version = "2.31-a1";
-	private static String revision = "devel.4";
+	private static String revision = "alpha";
 	
 	public static String workPath = ".";
 	public static String home = ".";
@@ -487,12 +487,7 @@ public class CRUSH extends Configurator {
 			System.err.println(" Round " + iteration + ": ");	
 
 			setIteration(iteration, rounds);	
-
-			for(Scan<?,?> scan : scans) {
-				scan.instrument.getOptions().setIteration(iteration, rounds);	
-				for(Integration<?,?> integration : scan) if(integration.instrument != scan.instrument)  
-					integration.instrument.getOptions().setIteration(iteration, rounds);	
-			}
+			for(Scan<?,?> scan : scans) scan.setIteration(iteration, rounds);	
 
 			iterate();	
 		}
@@ -586,6 +581,9 @@ public class CRUSH extends Configurator {
 		integration.comments = new String();
 	}	
 
+	public final void setIteration(int i, int rounds) {	
+		setIteration(this, i, rounds);
+	}
 
 	public void setObjectOptions(String sourceName) {
 		//System.err.println(">>> Setting global options for " + sourceName);
@@ -606,43 +604,87 @@ public class CRUSH extends Configurator {
 	}
 
 
+	public static void setIteration(Configurator config, int i, int rounds) {	
+		if(!config.branches.containsKey("iteration")) return;
+		Hashtable<String, Vector<String>> settings = config.branches.get("iteration").conditionals;
+
+		// Parse explicit iteration settings
+		if(settings.containsKey(i + "")) config.parseAll(settings.get(i + ""));		
+
+		// Parse relative iteration settings
+		for(String spec : settings.keySet()) if(spec.endsWith("%")) {
+			int k = (int) Math.round(rounds * 0.01 * Double.parseDouble(spec.substring(0, spec.length()-1)));
+			if(i == k) config.parseAll(settings.get(spec));
+		}
+
+		// Parse end-based settings
+		String spec = "last" + (i==rounds ? "" : "-" + (rounds-i));
+		if(settings.containsKey(spec)) config.parseAll(settings.get(spec));
+	}
+	
+	
 	public static void info() {
 		String info = "\n" +
-				"  ----------------------------------------------------------------------------\n" +
-				"  crush -- Reduction and imaging tool for astronomical cameras.\n" +
-				"           Version: " + getFullVersion() + "\n" + 
-				"           jnum: " + Util.getFullVersion() + ", nom.tam.fits: " + Fits.version() + "\n" +
-				"           http://www.submm.caltech.edu/~sharc/crush\n" +
-				"           Copyright (c)2015 Attila Kovacs <attila[AT]caltech.edu>\n" +
-				"  ----------------------------------------------------------------------------\n";	
+				" -----------------------------------------------------------------------------\n" +
+				" crush -- Reduction and imaging tool for astronomical cameras.\n" +
+				"          Version: " + getFullVersion() + "\n" + 
+				"          Includes: jnum " + Util.getFullVersion() + ", nom.tam.fits " + Fits.version() + "\n" +
+				"          http://www.submm.caltech.edu/~sharc/crush\n" +
+				"          Copyright (c)2016 Attila Kovacs <attila[AT]caltech.edu>\n" +
+				" -----------------------------------------------------------------------------\n";	
 		System.err.println(info);
 	}
 
 	public static void usage() {
-		String info = "  Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
+		String info = " Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
 				"\n" +
-				"    <instrument>     Select from: 'sharc', 'sharc2', 'laboca', 'saboca',\n" +
-				"                     'aszca', 'polka', 'p-artemis', 'gismo', 'mako', 'mako2',\n" + 
-				"                     'hawc+', 'scuba2', or 'mustang2'.\n" +
-				"    [options]        Various configuration options. See README for details.\n" +
+				"    <instrument>     Instrument name, e.g. 'scuba2', 'gismo', 'laboca'...\n" +
+				"                     list of supported instruments.\n" +
+				"    [options]        Various configuration options. See README and GLOSSARY.\n" +
 				"                     Global settings must precede scans on the argument list.\n" +
 				"                     Each scan will use all options listed before it.\n" +
-				"    <scanlist>       A list of scan numbers (or names) to reduce. Can mix\n" +
-				"                     file names, individual scan numbers, and ranges. E.g.\n" +
-				"                       10628-10633 11043 myscan.fits\n" +
+				"    <scanlist>       A list of scan numbers/IDs and/or filenames to reduce.\n" +
+				"                     E.g.: 10628-10633 11043 myscan.fits\n" +
 				"\n" +
 				"   Try 'crush <instrument> -poll' for a list of current settings.\n" +
-				"   or 'crush -help' for a brief list of commonly used options.\n"; 
+				"   or 'crush -help' for a full list of instruments and brief list\n" +
+				"   of commonly used options.\n"; 
 
 		System.out.println(info);
 	}
 
 
 	public static void help(Instrument<?> instrument) {
-		String info = 
+		String info =
 				"\n" +
-						" Some commonly used options. For full and detailed description of all options.\n" +
-						" please consult the GLOSSARY.\n\n" +
+						(
+						instrument != null ? 
+							" Usage: crush " + instrument.getName() + " [options] <scanlist> [[options] <scanlist> ...]\n\n"
+						:
+							" Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
+							"\n" +
+							" Supported instruments (mandatory first argument to crush):\n" +
+							"\n" +
+							"     aszca          APEX S-Z Camera.\n" +
+							"     gismo          Goddard-IRAM 2mm Observer.\n" +
+							"     hawc+          SOFIA/HAWC+ camera.\n" +
+							"     laboca         LABOCA 870um camera at APEX.\n" +
+							"     mako           MAKO 350um KID demo camera at the CSO.\n" +
+							"     mako2          Gen. 2 MAKO 350um/850um KID demo camera at CSO.\n" +
+							"     mustang2       MUSTANG-2 3mm camera at the GBT.\n" +
+							"     p-artemis      ArTeMiS prototype at APEX.\n" +
+							"     polka          PolKa polarimetry frontend for LABOCA.\n" +
+							"     saboca         SABOCA 350um camera at APEX.\n" +
+							"     scuba2         SCUBA-2 450um/850um camera at the JCMT.\n" +
+							"     sharc          Original SHARC 350um camera at the CSO.\n" +
+							"     sharc2         SHARC-2 350um/450um/850um camera at the CSO.\n" +
+							"\n" +		
+							" Try 'crush <instrument> -help' to get an instrument-specific version of this\n" +
+							" help screen.\n\n"
+						) +
+						" For full and detailed description of all options please consult the GLOSSARY.\n" +
+						" Here are some commonly used options" +
+							(instrument == null ? ":" : " for " + instrument.getName() + ":") + "\n\n" +
 						"   Location of input files:\n" +
 						"     -datapath=     Specify the path to the raw data.\n" +
 						(instrument != null ? instrument.getDataLocationHelp() : "") +
@@ -686,10 +728,10 @@ public class CRUSH extends Configurator {
 						"     -blacklist=    Comma separated list of options to ignore.\n" +
 						"     -config=       Load configuration file.\n" +
 						"     -poll          Poll the currently set options.\n" +
-						"     -conditions    List all conditional settings.\n" +
-						"\n";
+						"     -conditions    List all conditional settings.\n";
 
 		System.out.println(info);
+		System.exit(0);
 	}
 
 	public static String getReleaseVersion() {  
@@ -882,7 +924,8 @@ public class CRUSH extends Configurator {
 	public void status(String message) { 
 		if(instrument != null) instrument.status(message); 
 	}
-
+	
+	
 
 	public static final void error(Throwable e) { error(e, debug); }
 

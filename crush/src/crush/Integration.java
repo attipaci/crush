@@ -293,6 +293,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(hasOption("speedtest")) speedTest();
 	}
 	
+	public void setIteration(int i, int rounds) {
+		CRUSH.setIteration(instrument.getOptions(), i, rounds);
+	}
+ 	
 	public double getExposureTime() { return getFrameCount(Frame.SKIP_SOURCE) * instrument.samplingInterval; }
 	
 	public double getDuration() { return size() * instrument.samplingInterval; }
