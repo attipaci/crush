@@ -12,14 +12,21 @@ Table of Contents
 =================
 
 1. Introduction
+
   1.1. A brief description of of what CRUSH does and how...
+
 2. Installation
+
   2.1. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
   2.2. Optional system-wide installation.
   2.3. Optional Java configuration
+
 3. Quickstart guide
+
   3.1. A few common options to use with SOFIA/HAWC+
+
 4. Technical details for expert users
+
   4.1. HAWC+ specific pixel divisions
   4.2. Glossary of HAWC+ specific options
   4.3. HAWC+ specific log quantities
@@ -514,6 +521,15 @@ For a general overview of channel divisions, please consult Section 3.
 			per polarization). All correlated modality options
 			apply.
 			@See: 'correlated.<?>'
+
+   write.flatfield[=path]	@Expert
+				Write a DRP flatfield FITS file, to be used by
+			the chop-nod pipeline. The optional argument can 
+			specify the FITS file's name. Otherwise, a default
+			name is used, containing the scan's ID, and placed in
+			the the directory specified by 'outpath'.
+			The file format is specified by Marc Berthoud.
+			@See: 'outpath'
 
 
 4.3. HAWC+ specific log quantities

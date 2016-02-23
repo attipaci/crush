@@ -23,10 +23,12 @@
 
 package crush.hawcplus;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import crush.CRUSH;
 import crush.fits.HDUReader;
 import crush.sofia.SofiaIntegration;
 import jnum.Unit;
@@ -278,6 +280,18 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		}
 	}	
 
+
+	@Override
+	public void writeProducts() {
+		super.writeProducts();
+		
+		if(hasOption("write.flatfield")) {
+			String fileName = option("write.flatfield").getValue();
+			if(fileName.isEmpty()) fileName = CRUSH.workPath + File.separator + "flatfield-" + getDisplayID() + ".fits";
+			try { instrument.writeFlatfield(fileName); }
+			catch(Exception e) { e.printStackTrace(); }
+		}
+	}
 	
 	@Override
 	public String getFullID(String separator) {

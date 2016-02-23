@@ -1,9 +1,349 @@
 
-Reading Scans
+            *** CRUSH User's Manual Extension for SHARC-2 ***
+
+                              Attila Kovacs
+                      <attila[AT]submm.caltech.edu>
+
+                      Last updated: 20 February 2016
 
 
-SHARC-2 Specific Configuration
+Table of Contents
+=================
+
+1. Introduction
+
+2. Locating Scans
+
+  2.1 By file names
+  2.2 By scan numbers
+
+3. Opacity Corrections
+
+  3.1 Tau scaling relations
+  3.2 JCMT 183GHz water vapor lookup
+  3.3 MaiTau lookup
+  3.4 Direct tau
+  3.5 Manually defined tau
+
+4. Pointing Corrections
+
+5. Glossary of SHARC-2 specific options
+
+6. SHARC-2 specific log quantities
 
 
-SHARC-2 Pixel Divisions and Modalities
+
+
+#####################################################################
+1. Introduction
+#####################################################################
+
+This document contains information specific to using CRUSH-2 to reduce SHARC-2
+data. It is assumed that you are already familiar with the contents of the main
+CRUSH-2 README (inside the distribution directory), especially its Section 1
+(Getting Started).
+
+If you run into difficulty understanding the concepts in this document, you
+will probably find it useful to study the main README document a little longer.
+
+
+
+
+#####################################################################
+2. Locating scans
+#####################################################################
+
+2.1 By file names
+
+2.2 By scan numbers
+
+
+
+
+#####################################################################
+3. Opacity Corrections
+#####################################################################
+
+3.1 Tau scaling relations
+
+3.2 JCMT 183GHz water vapor lookup (preferred)
+
+3.3 Maitau lookup (2nd preferred)
+
+3.4 Direct tau
+
+3.5 Manually defined tau
+
+
+
+#####################################################################
+4. Pointing Corrections
+#####################################################################
+
+
+
+
+#####################################################################
+5. Glossary of SHARC-2 specific options
+#####################################################################
+
+   350um		Specify that the 350um filter was used (default). This
+                        adjuts conversion factors, tau scaling relations for
+                        calculating in-band line-of sight opacitites, and beam
+                        sizes (see 'sharc2/default.cfg').
+                        @See: 'jansky', 'tau.<?>', 'beam'.
+
+   450um		Use if the 450um filter was used to observe with
+                        SHARC-2, or to specify 450um imaging with SCUBA-2 and
+                        MAKO-2.
+                        @See: '350um' and '850um'
+		
+   850um		Specify that data was taken at 850um with SHARC-2, or
+                        to reduce the data from the 850um array of SCUBA-2 and
+                        MAKO-2.
+                        @See: '350um' and '450um'
+	
+   block=NX,NY		@Expert
+                        Specify a correlated block size for higher order
+                        sky-noise removal, as two integer pixel numbers (rows
+                        and columns) separated by a comma or 'x'. E.g.:
+
+                           block=4x6
+
+                        will correlated.signals on blocks that are 4 columns
+                        wide and 6 rows tall (i.e. there will be 16 such blocks
+                        on the 32x12 SHARC-2 array).
+
+   blocks		@Alias -> correlated.blocks
+			@Advanced
+                        Decorrelate on rectangular block regions of the array,
+                        as a way to remove higher order sky-noise. As such, it
+                        can be used together with, or instead of 'gradients'.
+                        @See: 'gradients', 'correlated.<?>'			
+
+   chopper		@Alias -> correlated.chopper-x
+			@Advanced
+                        Remove signals that are correlated with chopper
+                        movement. The moving secondary mirror changes the
+                        telescope illumination, thus producing strong signals
+                        when observing under a bright atmosphere. To first
+                        order, such signals are linear with chopper
+                        displacement. Since most telescopes chop in the
+                        horizontal 'x' direction only, the 'chopper' keyword is
+                        aliased to decorrelation on motion in that direction.
+                        When a 2D chopper is used, you should correlated.in
+                        both the 'x' and 'y' directions.
+                        @See: 'correlated.<?>', 'detect.chopped'
+
+   cols			@Alias -> 'correlated.cols'
+			
+   elevation-response   @Expert
+                        Load and use an lookup table for the elevation
+                        dependent forward efficiency of the telecscope. The
+                        table is an ASCII file, as specified by Darren Dowell,
+                        and is available from the SHARC-2 web-site. CRUSH
+                        contains copies of the available tables and is
+                        configured to use them as needed.
+
+   excessload=X		@Expert
+                        SHARC-2 can determine a line-of-sight opacity based on
+                        the total-power response of its detectors. However, for
+                        this to work well, all sources of optical loading on
+                        the detectors must be understood. The load curves (see
+                        'response') were determined at one time only, and
+                        therefore this flag provides the means to specify a
+                        different optical loading environment from then, as an
+                        excess optical load (in Kelvins).
+                        @See: 'response', 'tau.<?>'
+
+   fazo			An alternative to 'center' for providing pointing
+                        corrections. As opposed to 'center', which specifies
+                        incremental corrections, this option takes an absolute
+                        AZ pointing offset (i.e. FAZO at the CSO) which should
+                        have been the correct one (as opposed to the value used
+                        by the antenna computer during the observations).
+                        @See: 'fzao', 'center'
+
+   fzao			Specify a zenith pointing offset.
+                        @See: 'fazo'
+
+   maitau.fallback=<type>	@Advanced
+                        Define which tau value to use in case the MaiTau lookup
+                        fails. The possible values are:
+
+                           direct         Calculate tau from the total-power
+                                          loading of the detectors
+
+                           225GHz         Use the 225GHz tipper value.
+
+                           350um          Use the 350um tipper value.
+
+                           pwv            Use precipitable water vapor.
+
+                           sharc2         Use the value specified by tau.sharc2
+
+                        Other than the 'direct' flag, the values may be
+                        specified with the corresponding tau settings.
+                        @See: 'maitau.server', 'tau.225GHz', 'tau.350um',
+                              'tau.sharc2'
+
+   maitau.server=IP	@Expert
+                        Specify the MaiTau server to use, either as an IP
+                        address, or server name. This should probably be set to
+                        'agn.caltech.edu', or to the equivalent
+                        'fangorn.submm.caltech.edu'. MaiTau is a server-based
+                        lookup of the CSO opacities, based on dailly polynomial
+                        fits to the measured 225GHz and 350um tipper data. The
+                        polynomials smooth out short-term fluctuations and
+                        measurement errors, providing a smoothly varying
+                        function of tau with time. When using MaiTau, CRUSH
+                        will try use the 350um fit, and then the 225GHz fit (if
+                        available), from which it calculates an appropriate
+                        in-band zenith tau value.
+                        @See: 'tau.<?>.a', 'tau.<?>.b'
+
+   mux			@Alias -> correlated.mux
+			@Advanced
+                        Decorrelate on MUXes, or set options for it.
+                        @See: 'correlated.<?>'
+
+   nochopper		@Advanced
+                        @Since:2.16-1
+                        Ignore the chopper position signal (if at all present).
+
+   nogaps		@Advanced
+                        Terminate the reading of the data at the first
+                        gap. During the early SHARC-2 runs when JSharc was used
+                        for the acquisition of the data, there was an
+                        occasional damaging timing bug resultuing from the
+                        wraparound of an internal buffer. The bug manifested in
+                        a sudden jump in the timestamps, making it relatively
+                        easy to diagnose if this happened during the scan.
+
+   pcenter=row,col	@Advanced
+                        Defines the pointing center used, in terms of the
+                        instrument pixel row and colum coordinates. Pixel 1,1
+                        designates the top-left corner of the array in
+                        horizontal (AZ/EL) or equivalent Nasmyth coordinates.
+                        Columns increase to the right, while row numbers
+                        increase downward. Thus, the center of the
+                        SHARC-2 array is 6.5,16.5, while the center of GISMO is
+                        8.5,4.5. The 'pcenter' option is not used if the pixel
+                        positions are loaded from an RCP data file, instead of
+                        being calculated (since a rectangular grid can no
+                        longer be assumed).
+                        @See: 'rcp', 'rcenter', 'pixelsize', 'rotate'
+
+   pixelsize=X		@Since: 2.17
+                        @Expert
+                        Specify the pixel spacing in arcseconds.
+
+   pixelsize=X,Y	@Expert
+                        Specify the size of rectangular pixels in a grid. This
+                        is used for calculating pixel positions on a rectangular
+                        grid. The information is ignored when positions are
+                        loaded from an RCP data file (as a regular grid can no
+                        nonger be assumed).
+                        @See: 'rcp', 'pcenter', 'rcenter'
+
+   rcenter=dX,dY	@Expert
+                        Specify a rotation center, in the coordinate system of
+                        the array (AZ,EL or Nasmyth coordinates). Works
+                        similarly to 'pcenter'
+                        @See: 'pcenter'
+
+   response=<filename>	@Expert
+                        Specify the <filename> containing the pixel
+                        loading information, based on which in-band
+                        line-of-sight opacities may be calculated.
+                        @See: 'response.calc', 'tau', 'tau.<?>'
+
+   response.calc	@Expert
+                        Allows the recalculation of pixel responses, based on an
+                        initial 'response' provided in a file, and a 'tau'
+                        value. Scans on very faint or deep-field sources are
+                        most suited for such recalculations. Use this option
+                        only if you really understand what it is meant to do.
+                        @See: 'response', 'tau', 'tau.<?>'
+
+   rot0			@Expert
+                        Specifies the reference (zero point) of the rotator (if
+                        available). This option applies only for the early
+                        SHARC-2 runs, when the instrument was still mounted on
+                        the Cassdegrain platform. The values should be correcly
+                        configured in the default SHARC-2 configuration
+                        ('sharc2/default.cfg'), and there should be no reason
+                        for the user to change these settings...
+                        @See: 'rotation'
+
+   rows			@Alias: -> correlated.rows
+			@Advanced
+                        Decorrelate on detector rows, or set options for it.
+                        @See: 'correlated.<?>'
+
+   tau.jctables=<spec>	@Advanced
+			Specify the location (folder) of the JCMT 183 GHz tau
+                        tables. The argument can point to a local directory
+                        or an online resource on the web (URL). E.g.:
+
+                          http://www.jach.hawaii.edu/weather/opacity/mk/archive      
+                        If the JCMT lookup fails (e.g. because no data is
+                        available for the specific date, or using CRUSH
+                        offline), then a fallback option may be specified via
+                        the 'maitau.fallback' key.
+                        @See: 'tau.tables', 'maitau.fallback'
+
+   tau.window=X		@Expert
+			@Since: 2.13
+                        Set the 1-sigma Gaussian weighting window (in hours)
+                        for deriving local weighted average tau values from a
+                        table of skydip/tau measurements.
+                        @GISMO: since 2.15-2.
+                        @See: 'tau', 'scale.window'
+
+
+
+#####################################################################
+6. SHARC-2 specific log quantities
+#####################################################################
+
+	bias		The bias amplitude (mV) of the first detector row.
+
+	dsos?		Whether DSOS was used.
+
+	FAZO		FAZO during observation (arcsec).
+
+	FZAO		FZAO during observation (arcsec).
+
+	filter		Filter setting.
+
+	foc.mode	Focum mode.
+
+	foc.dY		Focus Y offset (mm).
+
+	foc.dZ		Focus Z offset (mm).
+
+	foc.X		Focus X (mm).
+
+	foc.Y		Focus Y (mm).
+
+	foc.Z		Focus Z (mm).
+
+	load		The excess optical load in K (calculated or assumed).
+
+	pnt.FAZO	FAZO pointing offset.
+	
+	pnt.FZAO	FZAO pointing offset.
+
+	rot		Rotator angle (deg).
+
+	rot0		Zero rotation angle (deg).
+
+	rotmode		Rotator mode.
+
+	rotoff		Rotator offset (deg).
+
+
+------------------------------------------------------------------------------
+Copyright (C)2016 -- Attila Kovacs <attila[AT]submm.caltech.edu>
 

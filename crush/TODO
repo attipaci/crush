@@ -1,3 +1,15 @@
+>> GLOSSARY-2-html:
+
+ * each option to have a separate page, or all on one page?
+ * class ids by label, instrument, user-level so they can be hidden on demand.
+ * div for selectors (instrument, telescope, user-level)
+ * summary page (1-liners using @Brief tag)
+ * 'internal references to known labels in '' (references also classed)
+ 
+>> README-2-html:
+ * Interpret sectioning, identation
+
+
 >> -poll=option
 
    To list all conditional setting for option* also...

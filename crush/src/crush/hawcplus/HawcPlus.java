@@ -23,6 +23,7 @@
 
 package crush.hawcplus;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -35,6 +36,7 @@ import jnum.Configurator;
 import jnum.Unit;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
+import nom.tam.util.BufferedDataOutputStream;
 import nom.tam.util.Cursor;
 
 public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRowColIndexed {
@@ -435,12 +437,70 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		if(drp != null) drp.info(message);
 	}
 	
+	/**
+	 * Writes a flatfield file, used for the chop-nod pipelines, according to the specifications by Marc Berthoud.
+	 * 
+	 * @param The FITS file name (and path) where the flatfield data is destined.
+	 * @throws IOException
+	 * @throws FitsException
+	 */
+	public void writeFlatfield(String fileName) throws IOException, FitsException {
+		final int cols = cols();
+		
+		final int FLAG_R = 1;
+		final int FLAG_T = 2;
+		
+		final float[][] gainR = new float[cols][rows];
+		final float[][] gainT = new float[cols][rows];
+		final int[][] flagR = new int[cols][rows];
+		final int[][] flagT = new int[cols][rows];
+		
+		// By default flag all pixels, then unflag as appropriate.
+		for(int i=cols; --i >= 0; ) {
+			Arrays.fill(flagR, FLAG_R);
+			Arrays.fill(flagT, FLAG_T);
+			Arrays.fill(gainR, Double.NaN);
+			Arrays.fill(gainT, Double.NaN);
+		}
+		
+		for(HawcPlusPixel pixel : this) {
+			if(pixel.polarray == T_ARRAY) {
+				gainT[pixel.row][pixel.col] = (float) (pixel.gain * pixel.coupling);
+				if(pixel.isUnflagged()) flagT[pixel.row][pixel.col] = 0; 
+			}
+			else if(pixel.polarray == R_ARRAY) {
+				gainR[pixel.row][pixel.col] = (float) (pixel.gain * pixel.coupling);
+				if(pixel.isUnflagged()) flagR[pixel.row][pixel.col] = 0; 
+			}
+		}
+		
+		final Fits fits = new Fits();
+		
+		addHDU(fits, Fits.makeHDU(gainR), "R array gain");
+		addHDU(fits, Fits.makeHDU(gainT), "T array gain");
+		addHDU(fits, Fits.makeHDU(flagR), "R bad pixel mask");
+		addHDU(fits, Fits.makeHDU(flagT), "T bad pixel mask");
+		
+		fits.write(new BufferedDataOutputStream(new FileOutputStream(fileName)));
+		fits.close();
+		
+		status(" Written flatfield to " + fileName);
+	}
+	
+	private void addHDU(Fits fits, BasicHDU<?> hdu, String extName) throws FitsException {
+		hdu.addValue("EXTNAME", extName, "image content ID");
+		editHeader(hdu.getHeader(), hdu.getHeader().iterator());
+		fits.addHDU(hdu);
+	}
+	
 	
 	// subarray center assuming 41x32 pixels
 	private static Vector2D defaultPointingCenter = new Vector2D(20.5, 32.5); // row, col
 
 	private static DRPMessenger drp;
 	
+	private static int T_ARRAY = 0;
+	private static int R_ARRAY = 1;
 	
 }
 

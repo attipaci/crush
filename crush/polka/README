@@ -1,0 +1,314 @@
+
+             *** CRUSH User's Manual Extension for LABOCA ***
+
+                              Attila Kovacs
+                      <attila[AT]submm.caltech.edu>
+
+                      Last updated: 20 February 2016
+
+
+
+
+Table of Contents
+=================
+
+1. Introduction
+
+3. Glossary of PolKa-specific options
+
+4. PolKa-specific log quantities
+
+
+#####################################################################
+1. Introduction
+#####################################################################
+
+PolKa is the polarimetry frontent for the APEX/LABOCA camera.
+
+This document contains information specific to using CRUSH-2 to reduce PoLKa
+data. It is assumed that you are already familiar with the contents of the main
+CRUSH-2 README (inside the distribution directory), especially its Section 1
+(Getting Started), as well as the APEX and LABOCA specific user's guide 
+extensions (apex/REAME and laboca/README).
+
+If you run into difficulty understanding the concepts in this document, you
+will probably find it useful to study the prerequisite README documents a 
+little longer.
+
+
+
+
+
+#####################################################################
+2. Glossary of PolKa-specific options
+#####################################################################
+
+:: analyzer=<pos>	@Since: 2.04
+                        Specify that the analyzer grid position that was used
+                        for taking the data. Specifying the analyzer is
+                        important for recovering the polarization information.
+                        The <pos> must be either 'H' or 'V' corresponding to
+                        the two positions.
+                        As of 2011, the analyzer position should be correctly
+                        recorded in the data file, and therefore automatically
+                        detected. You can still use 'analyzer' to override the
+                        recorded setting.
+
+:: analyzer.h=X		@Expert
+                        @Since: 2.11
+                        Set the H analyzer angle (in degrees).
+                        @See: 'analyzer.v'
+
+:: analyzer.h.phase=X	@Expert
+                        @Since: 2.11
+                        Set the relative phase (degrees) of the total-power
+                        modulation for waveplate phase reconstruction with the
+                        H analyzer. These phases can be measured using
+                        'waveplate.tpchar' when the waveplate data is normally
+                        present.
+                        @See: 'waveplate.tpchannel', 'waveplate.tpharmonic'
+                              'waveplate.tpchar', 'analyzer.v.phase'
+
+:: analyzer.v=X		@Expert
+                        @Since: 2.11
+                        Set the V analyzer angle (in degrees).
+                        @See: 'analyzer.h'
+
+:: analyzer.v.phase=X	@Expert
+                        @Since: 2.11
+                        Set the relative phase (degrees) of the total-power
+                        modulation for waveplate phase reconstruction with the
+                        V analyzer. These phases can be measured using
+                        'waveplate.tpchar' when the waveplate data is normally
+                        present.
+                        @See: 'waveplate.tpchannel', 'waveplate.tpharmonic'
+                              'waveplate.tpchar', 'analyzer.h.phase'
+
+:: filter.hwp		@Advanced
+                        @Since: 2.11
+                        Use FFT filtering to get rid of the total-power
+                        modulation by the half-waveplate rotation. Can be used
+                        together with, or instead of, 'purify'. The advantage
+                        of the FFT filtering is that it works even if the
+                        waveplate data is not entirely accurate (i.e. jittery).
+                        However, if the waveplate phase is fully known, then
+                        'purify' should be the prefered method for rejecting
+                        the unwanted total-power modulation. The number of
+                        harmonics (over the rotation frequency) is controlled
+                        by the 'harmonics' subkey.
+                        @See: 'filter.hwp.harmonics', 'waveplate.jitter'
+                              'purify', 'waveplate.frequency'
+
+:: filter.hwp.harmonics=N	@Expert
+                        	@Since: 2.11
+                        Specify how many harmonics of the waveplate rotation
+                        frequency to use in the half-waveplate filter.
+                        @See: 'filter.hwp'
+
+:: purify		@Advanced
+                        @Since: 2.11
+                        Really a generic option for getting rid of unwanted
+                        signals before the mapping step. The exact action may
+                        be different from one instrument to another. For now,
+                        only PolKa uses this option for removing the total-
+                        power modulation before producing the Q and U maps. The
+                        method uses a template of the modulation as a function
+                        of the phase. It should work perfectly, if the
+                        waveplate angles are accurately known. However, FFT
+                        filtering (via 'filter.hwp') is more suited for
+                        uncertainties in the waveplate angles.
+                        @See: 'filter.hwp'
+
+:: source.polar  	@Advanced
+                        Specify to yield polarization data (I,Q and U)
+                        rather than simply producing a total-power image. The
+                        option obviously only affects instruments that measure
+                        polarization, anbd will be ignored otherwise.
+                        You can also use the shorthand 'pol' to the same
+                        effect.
+                        @See: 'pol', 'spf', 'source.synchronized',
+                              'waveplate.refangle', 'analyzer'
+
+:: source.polar.angles		@Since: 2.11
+                                @Advanced
+                        Write an image of the polarization angles also. The
+                        shorthand 'spa' can also be used.
+                        @See: 'spa'
+
+:: source.polar.fraction	@Since: 2.10
+				@Advanced
+                        Write an image of the polarized power fraction as well
+                        as the default polarization products (N, Q, U and the
+                        derivatives I & P). You can also use the shorthand
+                        'spf' to the same effect, and can control the clipping
+                        of the noisy bits via the 'rmsclip' sub-option.
+                        @See: 'spf', 'source.polar',
+                              'source.polar.fration.rmsclip'
+
+:: source.polar.fraction.rmsclip=X	@Since: 2.10
+					@Expert
+                        Set the maximum rms for the unflagged points in the
+                        polarization fraction image. The default value is 0.03
+                        (i.e. 3% rms). You can also use the shorthand version
+                        'spf.rmsclip'.
+                        @See: 'spf', 'source.polar.fraction'
+
+:: source.synchronized 	@Advanced
+                        CRUSH offers two methods of analyzing
+                        polarization data. The default is an inventive method
+                        that extracts polarization from repeated observations
+                        over each map pixels, which can be scattered in time.
+                        As such, the default method can be used also for fast
+                        scanning (relative to waveplate rotation). The more
+                        traditional approach is to scan slowly, and integrate
+                        an entire waveplate rotation over one map pixel. This
+                        "synchronized" mode can be selected with this option. It
+                        is only suitable for reducing data, where telescope
+                        movement is always less than a map pixel in a quarter
+                        waveplate cycle.
+                        @See: 'grid'
+
+:: waveplate.channel=N  @Expert
+                        Specify the LABOCA channel (counting from 1) that
+                        carries the waveplate phase information. The waveplate
+                        phases are critical to recovering the polarization
+                        information from the data.
+                        @See: 'waveplate.fchannel', 'waveplate.refangle'
+
+:: waveplate.counter	@Advanced
+                        @Since: 2.11
+                        Occasionally the waveplate spins backwards. This option
+                        lets you reduce such data, provided you know when this
+                        happened.
+
+:: waveplate.despike=X	@Expert
+                        @Since: 2.11
+                        When fitting the timestamp data, assuming regular
+                        waveplate rotation (see 'waveplate.regulate'), this
+                        option can set a despiking level.
+                        @See: 'waveplate.regulate'
+
+:: waveplate.fchannel=N	@Expert
+                        The LABOCA channel number (counting from 1),
+                        which contains the frequency information for the last
+                        waveplate cycle. This information is not used by crush
+                        really, but may point the user to where to find this
+                        information in the raw data, if one wishes to look into
+                        the details.
+                        @See: 'waveplate.channel'
+
+:: waveplate.frequency=X	@Obsolete
+                                @Expert
+                                Specify the waveplate frequency (in Hz) to
+                        assume when detailed waveplate information is not
+                        readily available. The waveplate angle of the first
+                        frame can be set via 'waveplate.refangle'.
+                        @See: 'waveplate.channel', 'waveplate.refangle'
+
+:: waveplate.incidence=X	@Expert
+                                @Since: 2.11
+                        The waveplate incidence angle from normal, in degrees.
+                        @See: 'waveplate.incidence.phase'
+
+:: waveplate.incidence.phase=X	@Expert
+                                @Since: 2.11
+                        The waveplate phase (in degrees) of the plane of
+                        incidence, measured from the reference position in the
+                        direction of waveplate rotation.
+                        @See: 'waveplate.incidence'
+
+:: waveplate.jitter=X	@Expert
+                        @Obsolete
+                        Specify the typical fractional waveplate jitter.
+                        This information is used for designing optimal notch
+                        filters for the total-power mode to reject any
+                        waveplate modulated residues. This option has been
+                        obsoleted by the new time-domain filter, and will
+                        dissappear in future releases.
+                        @See: 'waveplate.channel'
+
+:: waveplate.oversample=X	@Expert
+                                @Since: 2.04
+                        Define the oversampling rate for the total-power
+                        modulation removal. Typically, a waveplate rotation
+                        (1.560 Hz) is 16 samples (at 25Hz sampling rate),
+                        only coarsly resolving the power modulation waveform.
+                        Because the waveplate rotation is not completely
+                        synchronous with the acquition, it may help to model
+                        the waveform at somewhat higher resolution for a better
+                        removal of the unwanted total-power modulation
+                        signals. The default value is 1.0.
+                        @See: 'waveplate.channel'
+
+:: waveplate.refangle=X	@Advanced
+			Set the waveplate angle at its reference
+                        position. The calibration of this position is necessary
+                        for obtaining meaningful polatization angles. Without
+                        it only the polarized fluxes, or polarization fractions
+                        can be measured. The calibration of the reference angle
+                        requires measurements on sources of known polarization
+                        (e.g. a wire grid in the pupil)
+                        @See: 'waveplate.channel'
+
+:: waveplate.regulate	@Advanced
+                        @Since: 2.11
+                        Provide a workaround to the innacuracy of the waveplate
+                        timestaps, by assuming that the waveplate motion is
+                        regular. A linear fit to the timestamp data will be
+                        used instead of the original timestamps. The quality of
+                        the fit may be improved with despiking the data via
+                        'waveplate.despike'. Requires timestamp information via
+                        'waveplate.tchannel'.
+                        @See: 'waveplate.despike', 'waveplate.tchannel'
+
+:: waveplate.tchannel=N	@Expert
+                        @Since: 2.11
+                        The channel that holds the timing offsets to the last
+                        waveplate timestamp. This information can be used by
+                        CRUSH to fully reconstruct the waveplate motion (at
+                        least to the timestamping accuracy).
+
+:: waveplate.tpchannel=N	@Expert
+                                @Since: 2.11
+                        Reconstruct the waveplate data, when this is not
+                        recorded (such as for two days in Dec 2011), from the
+                        total power-modulation of the specified channel.
+                        The harmonic and relative phase of the total power
+                        modulation (for H and V analyzers respectively) are set
+                        by 'waveplate.tpharmonic', 'analyzer.h.phase' and
+                        'analyzer.v.phase'
+                        @See: 'waceplate.tpharmonic', 'analyzer.h.phase'
+                              'analyzer.v.phase'
+
+:: waveplate.tpharmonic=N	@Expert
+                                @Since: 2.11
+                        The harmonic of the waveplate frequency that should be
+                        used for the waveplate phase reconstruction, when the
+                        waveplate phase data is not recorded.
+                        @See: 'waveplate.tpchannel'
+
+
+
+
+#####################################################################
+3. PolKa-specific log quantities
+#####################################################################
+	
+	analyzer	The analyzer in place ('H', 'V' or '-')
+
+	wpdelay		The mean time-stamping delay (ms) of the waveplate 
+			reference crossings based on the linear fit from 
+			'waveplate.regulate'
+
+	wpdir		Direction of waveplate rotation ('+' or '-')
+
+	wpfreq		Waveplate frequency (Hz).
+
+	wpjitter	Fractional jitter of the waveplate.
+
+	wpok		Whether or not the scan has valid waveplate data.
+
+
+------------------------------------------------------------------------------
+Copyright (C)2016 -- Attila Kovacs <attila[AT]submm.caltech.edu>
+

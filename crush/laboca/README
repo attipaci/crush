@@ -1,0 +1,137 @@
+
+             *** CRUSH User's Manual Extension for LABOCA ***
+
+                              Attila Kovacs
+                      <attila[AT]submm.caltech.edu>
+
+                      Last updated: 20 February 2016
+
+
+
+
+Table of Contents
+=================
+
+1. Introduction
+
+2. Calibration and Extinction Correction
+
+3. Glossary of LABOCA-specific options
+
+4. LABOCA-specific log quantities
+
+
+
+#####################################################################
+1. Introduction
+#####################################################################
+
+This document contains information specific to using CRUSH-2 to reduce LABOCA
+data. It is assumed that you are already familiar with the contents of the main
+CRUSH-2 README (inside the distribution directory), especially its Section 1
+(Getting Started).
+
+If you run into difficulty understanding the concepts in this document, you
+will probably find it useful to study the main README document a little longer.
+
+
+
+
+#####################################################################
+2. Calibration and Extinction Correction
+#####################################################################
+
+
+
+
+#####################################################################
+3. Glossary of LABOCA-specific options
+#####################################################################
+
+:: amps			@Alias -> 'correlated.amps'
+			@Advanced
+                        Decorrelate on amplifier boards, or set options for it.
+                        @See: 'correlated.<?>' for details on brached options.
+
+:: boxes		@Alias -> correlated.boxes
+			@Advanced
+                        Decorrelate on electronic boxes, or set options for it.
+                        @See: 'correlated.<?>', 'cables', 'squids'
+
+:: cables		@Alias -> correlated.cables
+			@Advanced
+                        Decorrelate channels whose signals are running on the
+                        same cables, and which are therefore subject to the
+                        same pickups (electromagnetic or microphonic).
+                        @See: 'correlated.<?>', 'boxes'
+
+:: he3=<source>		@Advanced
+                        Correct time-streams for He3 temperature fluctuations.
+                        <source> specifies the source of the He3 data, which
+                        can be 'thermistor' or 'blinds'. The use of blind
+                        bolometers is quicker and preferred, unless you
+                        specifically wish to use the 'thermistors'.
+
+:: he3.gains		@Expert
+                        Specifies that rather than correcting for temperature
+                        fluctuations, the thermistor and bolometer data should
+                        be used to calculate appropriate temperature gains.
+                        This option should only be used on skydip scans with
+                        the shutter closed (i.e. only temperature signals
+                        without sky). Additionally 'forget=source' should be
+                        used to disable source modeling for such data.
+
+:: he3.maxrms=X		@Expert
+                        Define the maximum RMS temperature variation (Kelvin)
+                        over the duration of a scan. When a scan has variation
+                        larger than this limit, it will be dropped from the
+                        reduction.
+
+:: noresistors		@Expert
+                        Do not use the resistor channels in the decorrelation of
+                        electrinic signals, such as 'boxes', 'cables' and
+                        'amps'. In LABOCA several of the readout channels are
+                        connected not to light-sensitive detectors, but to
+                        fixed resistors. While these are not sensitive to
+                        radiation or temperature the channels will still be
+                        subject to electronic pickup. Therefore, the default is
+                        to use these channels when decorrelating signals, which
+                        are thought to originate within the electronics. This
+                        option can be used to overrride this behavior, and
+                        restrict all decorrelation steps to detector channels
+                        only.
+                        @See: 'boxes', 'cables', 'amps'
+
+:: range.auto		@Expert
+			@Since: 2.03
+                        Set the ADC range automatically using the actual
+                        backend gain setting
+                        @See: 'range'
+
+:: scale.window=X       @Expert
+                        @Since: 2.13
+                        Set the 1-sigma Gaussian weighting window (in hours)
+                        for deriving local weighted average scaling values from
+                        a table of calibrattion measurements.
+                        @See: 'scale', 'tau.window'
+
+:: twisting		@Alias: -> correlated.twisting	
+			@Expert
+                        Enable the decorrelation of signals that correspond to
+                        twisting flexible band cables, or set options for it.
+                        @See: 'correlated.<?>', 'cables'
+
+
+
+
+#####################################################################
+4. LABOCA-specific log quantities
+#####################################################################
+
+
+	rmsHe3		RMS He3 temperature fluctutations (mK).
+	
+
+------------------------------------------------------------------------------
+Copyright (C)2016 -- Attila Kovacs <attila[AT]submm.caltech.edu>   
+
