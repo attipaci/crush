@@ -275,6 +275,6 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 		return spikes;
 	}
 	
-	public final static int FLAG_PHASE_DOF = 1<<nextSoftwareFlag++;
+	public final static int FLAG_PHASE_DOF = softwareFlags.next('F', "Insufficient phase degrees-of-freedom").value();
 
 }

@@ -138,20 +138,6 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 
 		return scanFile;
 	}
-
-	public void readScanInfo(String scanDescriptor) throws IOException, HeaderCardException, FitsException {
-		readScanInfo(new Fits(getFile(scanDescriptor)));
-	}
-
-	protected void readScanInfo(Fits fits) throws IOException, HeaderCardException, FitsException {
-		parseScanPrimaryHDU(fits.readHDU());		
-		fits.skipHDU(3);
-
-		BasicHDU<?> nextHDU = fits.readHDU();
-		while(!nextHDU.getHeader().getStringValue("EXTNAME").equalsIgnoreCase("SHARC2 Data") ) nextHDU = fits.readHDU();
-		instrument.parseDataHeader(nextHDU.getHeader());
-	}
-	
 	
 	@Override
 	public void read(String scanDescriptor, boolean readFully) throws Exception {

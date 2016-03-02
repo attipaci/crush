@@ -23,7 +23,6 @@
 
 package crush.hawcplus;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -34,9 +33,9 @@ import crush.array.SingleColorLayout;
 import crush.sofia.SofiaCamera;
 import jnum.Configurator;
 import jnum.Unit;
+import jnum.io.fits.FitsExtras;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
-import nom.tam.util.BufferedDataOutputStream;
 import nom.tam.util.Cursor;
 
 public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRowColIndexed {
@@ -450,17 +449,17 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		final int FLAG_R = 1;
 		final int FLAG_T = 2;
 		
-		final float[][] gainR = new float[cols][rows];
-		final float[][] gainT = new float[cols][rows];
-		final int[][] flagR = new int[cols][rows];
-		final int[][] flagT = new int[cols][rows];
+		final float[][] gainR = new float[rows][cols];
+		final float[][] gainT = new float[rows][cols];
+		final int[][] flagR = new int[rows][cols];
+		final int[][] flagT = new int[rows][cols];
 		
 		// By default flag all pixels, then unflag as appropriate.
-		for(int i=cols; --i >= 0; ) {
-			Arrays.fill(flagR, FLAG_R);
-			Arrays.fill(flagT, FLAG_T);
-			Arrays.fill(gainR, Double.NaN);
-			Arrays.fill(gainT, Double.NaN);
+		for(int i=rows; --i >= 0; ) {
+			Arrays.fill(flagR[i], FLAG_R);
+			Arrays.fill(flagT[i], FLAG_T);
+			Arrays.fill(gainR[i], Float.NaN);
+			Arrays.fill(gainT[i], Float.NaN);
 		}
 		
 		for(HawcPlusPixel pixel : this) {
@@ -481,10 +480,10 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		addHDU(fits, Fits.makeHDU(flagR), "R bad pixel mask");
 		addHDU(fits, Fits.makeHDU(flagT), "T bad pixel mask");
 		
-		fits.write(new BufferedDataOutputStream(new FileOutputStream(fileName)));
+		FitsExtras.write(fits, fileName);
 		fits.close();
 		
-		status(" Written flatfield to " + fileName);
+		System.err.println(" Written flatfield to " + fileName);
 	}
 	
 	private void addHDU(Fits fits, BasicHDU<?> hdu, String extName) throws FitsException {

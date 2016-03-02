@@ -23,10 +23,11 @@
 package test;
 
 import nom.tam.fits.*;
-import nom.tam.util.*;
 
 import java.io.*;
 import java.util.*;
+
+import jnum.io.fits.FitsExtras;
 
 public class GismoVis {
 
@@ -59,8 +60,7 @@ public class GismoVis {
 			Fits fits = new Fits();
 			fits.addHDU(Fits.makeHDU(image));
 			
-			BufferedDataOutputStream file = new BufferedDataOutputStream(new FileOutputStream("gismovis.fits"));
-			fits.write(file);
+			FitsExtras.write(fits, "gismovis.fits");
 			fits.close();
 		}
 		catch(Exception e) { e.printStackTrace(); }

@@ -58,8 +58,8 @@ public class PArtemisPixel extends APEXPixel {
 		colGain = 1.0;
 	}
 	
-	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
-	public final static int FLAG_COL = 1 << nextSoftwareFlag++;
+	public final static int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
+	public final static int FLAG_COL = softwareFlags.next('x', "Bad col gain").value();
 	
 	public static Vector2D defaultSize = new Vector2D(4.72 * Unit.arcsec, 4.72 * Unit.arcsec);
 

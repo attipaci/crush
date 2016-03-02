@@ -115,9 +115,9 @@ public class Mustang2Pixel extends SingleColorPixel implements Resonator {
 		return true;
 	}
 	
-	public final static int FLAG_POL = 1 << nextSoftwareFlag++;
-	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
-	public final static int FLAG_NOTONEID = 1 << nextSoftwareFlag++;
+	public final static int FLAG_POL = softwareFlags.next('p', "Bad polarization gain").value();
+	public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
+	public final static int FLAG_NOTONEID = softwareFlags.next('i', "No tone ID").value();
 	
 	public final static int N_POLARIZATIONS = 4;
 	public final static double POLARIZATION_STEP = Math.PI / N_POLARIZATIONS;

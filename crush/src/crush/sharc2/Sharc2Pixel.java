@@ -68,8 +68,8 @@ public class Sharc2Pixel extends SingleColorPixel {
 	}
 		
 	@Override
-	public void parseValues(StringTokenizer tokens) {
-		super.parseValues(tokens);
+	public void parseValues(StringTokenizer tokens, int criticalFlags) {
+		super.parseValues(tokens, criticalFlags);
 		coupling = Double.parseDouble(tokens.nextToken());
 		rowGain = Double.parseDouble(tokens.nextToken());
 	}
@@ -94,7 +94,7 @@ public class Sharc2Pixel extends SingleColorPixel {
 	
 	public static Vector2D defaultSize = new Vector2D(4.89 * Unit.arcsec, 4.82 * Unit.arcsec);
 
-	public final static int FLAG_13HZ = 1 << nextHardwareFlag++;
-	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
+	public final static int FLAG_13HZ = softwareFlags.next('^', "13Hz pickup").value();
+	public final static int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
 	
 }

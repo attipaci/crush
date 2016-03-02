@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2010 Attila Kovacs
 
 package crush;
 
@@ -49,9 +48,6 @@ public interface Pixel extends Iterable<Channel> {
 	public void setIndependent(boolean value);
 	
 	public String getRCPString();
+
 	
-	public final static int FLAG_XACCEL = 1 << 0;
-	public final static int FLAG_YACCEL = 1 << 1;
-	
-	public final static int LAST_FLAG = FLAG_YACCEL;
 }

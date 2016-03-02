@@ -41,6 +41,7 @@ import jnum.data.WeightedPoint;
 import jnum.math.Range;
 import jnum.math.Vector2D;
 import jnum.text.TableFormatter;
+import jnum.util.FlagSpace;
 import jnum.util.HashCode;
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -212,10 +213,7 @@ implements TableFormatter.Entries, Messaging {
 			channel.spikes = 0;
 			channel.dof = 1.0;
 			if(Double.isNaN(channel.variance)) channel.variance = 1.0 / channel.weight;
-		}
-		
-	
-		
+		}	
 		census();
 		
 		if(CRUSH.debug) {
@@ -667,6 +665,20 @@ implements TableFormatter.Entries, Messaging {
 		return "ch\tgain\tweight\t\tflag";
 	}
 	
+	public String getChannelFlagKey(String prepend) {	    
+	    if(isEmpty()) return prepend;
+	    FlagSpace flags = Channel.flags;
+	    
+	    StringBuffer buf = new StringBuffer();
+	    
+	    ArrayList<Integer> values = new ArrayList<Integer>(flags.getValues());
+	    Collections.sort(values);
+	    
+	    for(int i=0; i<values.size(); i++) buf.append(prepend + flags.get(values.get(i)) + "\n");
+	    
+	    return new String(buf);
+	}
+	
 	public void writeChannelData(String filename, String header) throws IOException {
 		PrintWriter out = new PrintWriter(new FileOutputStream(filename));
 		
@@ -676,11 +688,14 @@ implements TableFormatter.Entries, Messaging {
 			out.println(header);
 			out.println("#");
 		}	
+	
+		out.print(getChannelFlagKey("# Flag "));
+		out.println("#");
 		out.println("# " + getChannelDataHeader());
 		
 		standardWeights();
 		
-		for(ChannelType channel : this) if(channel.isUnflagged(Channel.FLAG_DEAD)) out.println(channel);
+		for(ChannelType channel : this) out.println(channel);
 		out.close();
 		
 		System.err.println(" Written " + filename);
@@ -1120,7 +1135,9 @@ implements TableFormatter.Entries, Messaging {
 		cursor.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
 	}
 	
-	public void editScanHeader(Header header) throws HeaderCardException {}
+	public void editScanHeader(Header header) throws HeaderCardException {
+	    Channel.flags.editHeader('C', header);
+	}
 	
 	public void addHistory(Cursor<String, HeaderCard> cursor, List<Scan<?,?>> scans) throws HeaderCardException {}
 	

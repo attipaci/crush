@@ -1,5 +1,12 @@
+>> Fits standard long keys, and legacy long key support...
 
 2.31-a1
+
+	[NEW] Improved flag management. Channel data files (see 
+	'write.pixeldata') now contain flag letter codes for easier human
+	readability, together with a key to the codes in the header section
+	of these files. Scan HDUs in FITS images also contain keys to the
+	flag values in the header.
 
 	[NEW] Introducing the ability to create, undo, and modify persistent
 	configuration settings, e.g. to prevent changes to these later (e.g. by 
@@ -135,6 +142,8 @@
 
 	[TWEAK] nom.tam.fits package updated to 1.13.1. FITS resource leaks
 	plugged.
+
+	[CODE] Plugged some potential resource leaks.
 
 	[CODE] HDUReader now goes through CRUSH's executor service when 
 	possible.

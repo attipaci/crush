@@ -275,7 +275,8 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		Fits fits = new Fits(new File(fileName), fileName.endsWith(".gz"));	
 		openFits.add(fits);
 		BasicHDU<?>[] hdu = fits.read();
-		
+		fits.close();
+	
 		return (BinaryTableHDU) hdu[1];
 	}
 	

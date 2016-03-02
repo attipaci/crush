@@ -370,32 +370,33 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		coords.copy(equatorial);
 	}
 
-	public static int nextSampleFlag = 0;
-	public static byte SAMPLE_SOURCE_BLANK = (byte) (1 << nextSampleFlag++);
-	public static byte SAMPLE_SPIKE = (byte) (1 << nextSampleFlag++);
-	public static byte SAMPLE_SKIP = (byte) (1 << nextSampleFlag++);
-	public static byte SAMPLE_PHOTOMETRY = (byte) (1 << nextSampleFlag++);
+	public static final FlagBlock sampleFlags = new FlagSpace("sample-flags", Byte.class).getFullFlagBlock();
+	public static byte SAMPLE_SOURCE_BLANK = (byte) sampleFlags.next('B', "Blanked").value();
+	public static byte SAMPLE_SPIKE = (byte) sampleFlags.next('s', "Spiky").value();
+	public static byte SAMPLE_SKIP = (byte) sampleFlags.next('$', "Skip").value();
+	public static byte SAMPLE_PHOTOMETRY = (byte) sampleFlags.next('P', "Photometry").value();
 	
-	public static int nextFlag = 0;
-	public static int FLAG_WEIGHT = 1 << nextFlag++;
-	public static int FLAG_SPIKY = 1 << nextFlag++;
-	public static int FLAG_DOF = 1 << nextFlag++;
-	public static int FLAG_JUMP = 1 << nextFlag++;
+	
+	public static final FlagBlock frameFlags = new FlagSpace("frame-flags", Integer.class).getFullFlagBlock();
+	public static int FLAG_WEIGHT = frameFlags.next('n', "Noise level").value();
+	public static int FLAG_SPIKY = frameFlags.next('s', "Spiky").value();
+	public static int FLAG_DOF = frameFlags.next('f', "Insuffucient degrees-of-freedom").value();
+	public static int FLAG_JUMP = frameFlags.next('J', "Jump").value();
 	
 
-	public static int SKIP_SOURCE = 1 << nextFlag++;
-	public static int SKIP_MODELS = 1 << nextFlag++;
-	public static int SKIP_WEIGHTING = 1 << nextFlag++;
-	//public static int SKIP_SYNCHING = 1 << nextFlag++;
+	public static int SKIP_SOURCE = frameFlags.next('$', "Skip Source").value();
+	public static int SKIP_MODELS = frameFlags.next('M', "Skip Models").value();
+	public static int SKIP_WEIGHTING = frameFlags.next('W', "Skip Weighting").value();
+	//public static int SKIP_SYNCHING = 
 	
 	
-	public static int CHOP_LEFT = 1 << nextFlag++;
-	public static int CHOP_RIGHT = 1 << nextFlag++;
-	public static int CHOP_TRANSIT = 1 << nextFlag++;
+	public static int CHOP_LEFT = frameFlags.next('L', "Chop Left").value();
+	public static int CHOP_RIGHT = frameFlags.next('R', "Chop Right").value();
+	public static int CHOP_TRANSIT = frameFlags.next('T', "Chop Transit").value();
 	public static int CHOP_FLAGS = CHOP_LEFT | CHOP_RIGHT | CHOP_TRANSIT;
 	
-	public static int NOD_LEFT = 1 << nextFlag++;
-	public static int NOD_RIGHT = 1 << nextFlag++;
+	public static int NOD_LEFT = frameFlags.next('<', "Nod Left").value();
+	public static int NOD_RIGHT = frameFlags.next('>', "Nod Right").value();
 
 	public static int BAD_DATA = FLAG_SPIKY | FLAG_JUMP;
 	public static int MODELING_FLAGS = SKIP_MODELS | BAD_DATA | FLAG_DOF | FLAG_WEIGHT;

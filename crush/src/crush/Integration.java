@@ -40,6 +40,7 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.data.*;
 import jnum.fft.FloatFFT;
+import jnum.io.fits.FitsExtras;
 import jnum.math.Complex;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
@@ -47,8 +48,6 @@ import jnum.math.Vector2D;
 import jnum.text.TableFormatter;
 import jnum.util.HashCode;
 import nom.tam.fits.*;
-import nom.tam.util.*;
-
 
 /**
  * 
@@ -58,7 +57,7 @@ import nom.tam.util.*;
  * @param <FrameType>
  * 
  */
-public abstract class Integration<InstrumentType extends Instrument<?>, FrameType extends Frame> 
+public abstract class Integration<InstrumentType extends Instrument<? extends Channel>, FrameType extends Frame> 
 extends ArrayList<FrameType> 
 implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.Entries, Messaging {
 	/**
@@ -2480,9 +2479,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Fits fits = new Fits();
 		BasicHDU<?> hdu = Fits.makeHDU(covar);
 		fits.addHDU(hdu);
-		fits.write(new BufferedDataOutputStream(new FileOutputStream(name)));
-		System.err.println(" Written " + name);
+		
+		FitsExtras.write(fits, name);
 		fits.close();
+		
+		System.err.println(" Written " + name);
 	}
 
 	float[][] getSpectra() {

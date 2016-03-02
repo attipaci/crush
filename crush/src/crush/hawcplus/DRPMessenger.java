@@ -107,7 +107,8 @@ public class DRPMessenger extends Thread {
 		socket.connect(address);
 		//System.err.println("TCP Command connected to " + address.getHostName() + " port " + address.getPort());
 		
-		OutputStream out = socket.getOutputStream();
+		@SuppressWarnings("resource")
+        OutputStream out = socket.getOutputStream();
 		String text = message.toString();
 		
 		out.write(text.getBytes());
@@ -115,7 +116,6 @@ public class DRPMessenger extends Thread {
 		if(CRUSH.debug) System.err.println("DRP> " + text.getBytes());
 		
 		out.flush();
-		
 		socket.close();
 	}
 	
