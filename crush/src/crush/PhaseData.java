@@ -29,6 +29,8 @@ import java.text.NumberFormat;
 import jnum.Util;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
+import jnum.util.FlagSpace;
+import jnum.util.FlagBlock;
 import jnum.util.HashCode;
 
 
@@ -239,8 +241,8 @@ public class PhaseData implements Serializable {
 		
 	}
 	
-	
-	public static final int FLAG_SPIKE = 1;
+	public static final FlagBlock flags = new FlagSpace("phase-flags", Integer.class).getFullFlagBlock();
+	public static final int FLAG_SPIKE = flags.next('s', "Spike").value();
 	
 
 }

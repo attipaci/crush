@@ -90,24 +90,27 @@ public class HawcPlusPixel extends SingleColorPixel {
 	}
 	
 	@Override
-	public void parseValues(StringTokenizer tokens) {	
-		super.parseValues(tokens);
+	public void parseValues(StringTokenizer tokens, int criticalFlags) {	
+		super.parseValues(tokens, criticalFlags);
 		if(tokens.hasMoreTokens()) muxGain = Double.parseDouble(tokens.nextToken());
 	}
 	
-	
+	@Override
+    public String getID() {
+	    return polID[polarray] + subarray + "[" + row + "," + col + "]";
+	}
 	
 	public static Vector2D defaultSize = new Vector2D(5.0 * Unit.arcsec, 5.0 * Unit.arcsec);
-	
-	
-	public final static int FLAG_POL = 1 << nextSoftwareFlag++;
-	public final static int FLAG_SUB = 1 << nextSoftwareFlag++;
-	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
-	public final static int FLAG_PIN = 1 << nextSoftwareFlag++;
-	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
-	public final static int FLAG_COL = 1 << nextSoftwareFlag++;
 
+	
+	public final static int FLAG_POL = softwareFlags.next('p', "Bad polarray gain").value();
+	public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();
+	public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
+	public final static int FLAG_PIN = softwareFlags.next('#', "Bad MUX sample gain").value();
+	public final static int FLAG_ROW = softwareFlags.next('y', "Bad subarray row gain").value();
+	public final static int FLAG_COL = softwareFlags.next('x', "Bad subarray col gain").value();
 
+	private static final String[] polID = { "T", "R" };
 	
 
 	

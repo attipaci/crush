@@ -31,6 +31,8 @@ import java.util.StringTokenizer;
 import jnum.Copiable;
 import jnum.Flagging;
 import jnum.Util;
+import jnum.util.FlagSpace;
+import jnum.util.FlagBlock;
 import jnum.util.HashCode;
 
 
@@ -180,12 +182,13 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	// Write backendIndex plus whatever information....
 	@Override
 	public String toString() {
-		String text = storeIndex + "\t" +
+		String text = getID() + "\t" +
 			Util.f3.format(gain) + " \t" +
 			Util.e3.format(weight) + " \t" +
-			"0x" + Integer.toHexString(flag);
+			flags.toString(flag);
 		return text;
 	}
+	
 	
 	public abstract double overlap(Channel channel, double pointSize);
 	
@@ -207,7 +210,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		return FLAG_DEAD | FLAG_BLIND | FLAG_GAIN;
 	}
 	
-	public void parseValues(StringTokenizer tokens) {
+	public final void parseValues(StringTokenizer tokens) {
 		parseValues(tokens, getCriticalFlags());
 	}
 	
@@ -216,7 +219,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		weight = Double.parseDouble(tokens.nextToken());
 
 		// Add flags from pixel data file on top of those already specified...
-		flag(criticalFlags & Integer.decode(tokens.nextToken()));	
+		flag(criticalFlags & flags.parse(tokens.nextToken()));	
 	}
 	
 	public double getResolution() { return instrument.getResolution(); }
@@ -225,22 +228,24 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		gain = 1.0; 
 		coupling = 1.0;
 	}
-
-	public static int nextHardwareFlag = 0;
-	public final static int FLAG_DEAD = 1 << nextHardwareFlag++;
-	public final static int FLAG_BLIND = 1 << nextHardwareFlag++;
-	public final static int HARDWARE_FLAGS = 0xFF;
 	
-	public static int nextSoftwareFlag = 8;
-	public final static int FLAG_DISCARD = 1 << nextSoftwareFlag++;
-	public final static int FLAG_GAIN = 1 << nextSoftwareFlag++;
-	public final static int FLAG_SENSITIVITY = 1 << nextSoftwareFlag++;
-	public final static int FLAG_DOF = 1 << nextSoftwareFlag++;
-	public final static int FLAG_SPIKY = 1 << nextSoftwareFlag++;
-	//public final static int FLAG_DISCONTINUITY = 1 << nextSoftwareFlag++;
-	public final static int FLAG_DAC_RANGE = 1 << nextSoftwareFlag++;
+	public static final FlagSpace flags = new FlagSpace("channel-flags", Integer.class);
 	
-	public final static int SOFTWARE_FLAGS = ~HARDWARE_FLAGS;
+	public static final FlagBlock hardwareFlags = flags.getFlagBlock(0, 8);
+	public final static int FLAG_DEAD = hardwareFlags.next('X', "Dead").value();
+	public final static int FLAG_BLIND = hardwareFlags.next('B', "Blind").value();
+	public final static int HARDWARE_FLAGS = hardwareFlags.getMask();
+	
+	public static final FlagBlock softwareFlags = flags.getFlagBlock(8, 31);
+	public final static int FLAG_DISCARD = softwareFlags.next('d', "Discarded").value();
+	public final static int FLAG_GAIN = softwareFlags.next('g', "Gain").value();
+	public final static int FLAG_SENSITIVITY = softwareFlags.next('n', "Noisy").value();
+	public final static int FLAG_DOF = softwareFlags.next('f', "Insufficient degrees-of-freedom.").value();
+	public final static int FLAG_SPIKY = softwareFlags.next('s', "Spiky").value();
+	//public final static int FLAG_DISCONTINUITY
+	public final static int FLAG_DAC_RANGE = softwareFlags.next('r', "Railing/Saturated").value();
+	
+	public final static int SOFTWARE_FLAGS = softwareFlags.getMask();
 	
 	
 }

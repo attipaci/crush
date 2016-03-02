@@ -171,23 +171,6 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 		return scanFile;
 	}
 
-	public void readScanInfo(String scanDescriptor) throws IOException, HeaderCardException, FitsException {
-		readScanInfo(new Fits(getFile(scanDescriptor)));
-	}
-
-	protected void readScanInfo(Fits fits) throws IOException, HeaderCardException, FitsException {
-		BasicHDU<?> mainHDU = fits.readHDU();
-		
-		parseScanPrimaryHDU(mainHDU);
-		instrument.parseScanPrimaryHDU(mainHDU);
-
-		fits.skipHDU(3);
-
-		BasicHDU<?> nextHDU = fits.readHDU();
-		while(!nextHDU.getHeader().getStringValue("EXTNAME").startsWith("STREAM") ) nextHDU = fits.readHDU();
-		instrument.parseDataHeader(nextHDU.getHeader());
-	}
-	
 	
 	@Override
 	public void read(String scanDescriptor, boolean readFully) throws Exception {

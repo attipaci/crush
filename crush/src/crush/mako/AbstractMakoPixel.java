@@ -114,8 +114,8 @@ public abstract class AbstractMakoPixel extends SingleColorPixel implements Reso
 	
 	
 
-	public final static int FLAG_NOTONEID = 1 << nextSoftwareFlag++;
-	public final static int FLAG_UNASSIGNED = 1 << nextSoftwareFlag++;
+	public final static int FLAG_NOTONEID = softwareFlags.next('i', "No tone ID").value();
+	public final static int FLAG_UNASSIGNED = softwareFlags.next('u', "Unassigned tone").value();
 	
 	
 }

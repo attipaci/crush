@@ -62,8 +62,8 @@ public class LabocaPixel extends APEXPixel {
 	}
 	
 	@Override
-	public void parseValues(StringTokenizer tokens) {	
-		super.parseValues(tokens);
+	public void parseValues(StringTokenizer tokens, int criticalFlags) {	
+		super.parseValues(tokens, criticalFlags);
 
 		boxGain = Double.parseDouble(tokens.nextToken());
 		cableGain = Double.parseDouble(tokens.nextToken());
@@ -96,10 +96,10 @@ public class LabocaPixel extends APEXPixel {
 		cableGain = 1.0;
 	}
 	
-	public final static int FLAG_RESISTOR = 1 << nextHardwareFlag++;
+	public final static int FLAG_RESISTOR = softwareFlags.next('R', "Resistor").value();
 	
-	public final static int FLAG_CABLE = 1 << nextSoftwareFlag++;
-	public final static int FLAG_BOX = 1 << nextSoftwareFlag++;
-	public final static int FLAG_AMP = 1 << nextSoftwareFlag++;
+	public final static int FLAG_CABLE = softwareFlags.next('c', "Bad cable gain").value();
+	public final static int FLAG_BOX = softwareFlags.next('b', "Bad amplifier box gain").value();
+	public final static int FLAG_AMP = softwareFlags.next('a', "Bad amp gain").value();
 
 }

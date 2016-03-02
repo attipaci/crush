@@ -66,8 +66,8 @@ public class Scuba2Pixel extends SingleColorPixel {
 	
 	public static Vector2D defaultSize = new Vector2D(5.7 * Unit.arcsec, 5.7 * Unit.arcsec);
 	
-	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
-	public final static int FLAG_COL = 1 << nextSoftwareFlag++;
-	public final static int FLAG_SUBARRAY = 1 << nextSoftwareFlag++; // new in 2.30
+	public final static int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
+	public final static int FLAG_COL = softwareFlags.next('c', "Bad col gain").value();
+	public final static int FLAG_SUBARRAY = softwareFlags.next('a', "Bad subarray gain").value(); // new in 2.30
 	
 }

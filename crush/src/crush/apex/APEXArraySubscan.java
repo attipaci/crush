@@ -26,7 +26,6 @@ package crush.apex;
 
 import crush.*;
 import nom.tam.fits.*;
-import nom.tam.util.*;
 
 import java.io.*;
 
@@ -37,6 +36,7 @@ import jnum.astro.CelestialCoordinates;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.data.WeightedPoint;
+import jnum.io.fits.FitsExtras;
 import jnum.math.Vector2D;
 
 public class APEXArraySubscan<InstrumentType extends APEXCamera<?>, FrameType extends APEXFrame> 
@@ -247,8 +247,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 			for(Channel channel : instrument) data[channel.getFixedIndex()-1][0] = exposure.data[channel.index];
 			hdu.setRow(exposure.index, row);
 		}	
-			
-		fits.write(new BufferedDataOutputStream(new FileOutputStream(toName)));
+		
+		FitsExtras.write(fits, toName);
 		fits.close();
 	}
 	

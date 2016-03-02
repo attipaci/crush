@@ -60,8 +60,8 @@ public class AszcaPixel extends APEXPixel {
 	}
 	
 	@Override
-	public void parseValues(StringTokenizer tokens) {	
-		super.parseValues(tokens);
+	public void parseValues(StringTokenizer tokens, int criticalFlags) {	
+		super.parseValues(tokens, criticalFlags);
 		waferGain = Double.parseDouble(tokens.nextToken());
 		squidGain = Double.parseDouble(tokens.nextToken());
 	}	
@@ -79,8 +79,8 @@ public class AszcaPixel extends APEXPixel {
 		squidGroupGain = 1.0;
 	}
 
-	public final static int FLAG_WAFER = 1 << nextSoftwareFlag++;
-	public final static int FLAG_SQUID = 1 << nextSoftwareFlag++;
-	public final static int FLAG_SQUIDGROUP = 1 << nextSoftwareFlag++;
-	public final static int FLAG_CABLE = 1 << nextSoftwareFlag++;
+	public final static int FLAG_WAFER = softwareFlags.next('w', "Bad wedge gain.").value();
+	public final static int FLAG_SQUID = softwareFlags.next('m', "Bad SQUID gain").value();
+	public final static int FLAG_SQUIDGROUP = softwareFlags.next('q', "Bad SQUID-group gain.").value();
+	public final static int FLAG_CABLE = softwareFlags.next('c', "Bad cable gain").value();
 }

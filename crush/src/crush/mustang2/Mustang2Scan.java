@@ -72,7 +72,7 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 	public void read(String scanDescriptor, boolean readFully) throws Exception {
 		Fits fits = getFits(scanDescriptor);
 		read(fits, readFully);
-		fits.getStream().close();
+		fits.close();
 	}
 	
 	public Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {

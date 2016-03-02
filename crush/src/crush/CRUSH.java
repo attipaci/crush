@@ -35,7 +35,7 @@ import jnum.Parallel;
 import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.astro.LeapSeconds;
-import jnum.fits.FitsExtras;
+import jnum.io.fits.FitsExtras;
 import jnum.text.VersionString;
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -52,8 +52,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 
-	private static String version = "2.31-a1";
-	private static String revision = "alpha";
+	private static String version = "2.31-b1";
+	private static String revision = "devel.1";
 	
 	public static String workPath = ".";
 	public static String home = ".";

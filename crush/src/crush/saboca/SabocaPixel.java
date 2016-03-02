@@ -48,8 +48,8 @@ public class SabocaPixel extends APEXPixel {
 	}
 	
 	@Override
-	public void parseValues(StringTokenizer tokens) {
-		super.parseValues(tokens);
+	public void parseValues(StringTokenizer tokens, int criticalFlags) {
+		super.parseValues(tokens, criticalFlags);
 		squidGain = Double.parseDouble(tokens.nextToken());
 	}
 
@@ -69,6 +69,6 @@ public class SabocaPixel extends APEXPixel {
 		squidGain = 1.0;
 	}
 	
-	public final static int FLAG_SQUID = 1 << nextSoftwareFlag++;
+	public final static int FLAG_SQUID = softwareFlags.next('m', "Bad SQUID gain").value();
 	
 }

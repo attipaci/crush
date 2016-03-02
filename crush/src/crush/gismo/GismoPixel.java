@@ -80,19 +80,19 @@ public class GismoPixel extends SingleColorPixel {
 	}
 	
 	@Override
-	public void parseValues(StringTokenizer tokens) {	
-		super.parseValues(tokens);
+	public void parseValues(StringTokenizer tokens, int criticalFlags) {	
+		super.parseValues(tokens, criticalFlags);
 		if(tokens.hasMoreTokens()) muxGain = Double.parseDouble(tokens.nextToken());
 	}
 	
 	public static Vector2D defaultSize = new Vector2D(13.88 * Unit.arcsec, 13.77 * Unit.arcsec);
 	
 	
-	public final static int FLAG_MUX = 1 << nextSoftwareFlag++;
-	public final static int FLAG_PIN = 1 << nextSoftwareFlag++;
-	public final static int FLAG_ROW = 1 << nextSoftwareFlag++;
-	public final static int FLAG_COL = 1 << nextSoftwareFlag++;
-	public final static int FLAG_SAE = 1 << nextSoftwareFlag++;
+	public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
+	public final static int FLAG_PIN = softwareFlags.next('#', "Bad MUX sample gain").value();
+	public final static int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
+	public final static int FLAG_COL = softwareFlags.next('x', "Bad col gain").value();
+	public final static int FLAG_SAE = softwareFlags.next('e', "SAE").value();
 
 	
 }
