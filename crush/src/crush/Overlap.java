@@ -43,7 +43,7 @@ public class Overlap implements Serializable {
 	
 	@Override
 	public int hashCode() {
-		int hash = super.hashCode() ^ HashCode.get(value);
+		int hash = super.hashCode() ^ HashCode.from(value);
 		if(a != null) hash ^= a.hashCode();
 		if(b != null) hash ^= b.hashCode();
 		return hash;

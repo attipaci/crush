@@ -111,7 +111,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		
 	class HawcPlusReader extends HDUReader {	
 		private int startIndex;
-		private long[] R, T, SN;
+		private long[] SN;
+		private long[] data;
 		private double[] TS; 
 		private float[] RA, DEC, AZ, EL, VPA, LON, LAT, LST, chop, PWV, HWP;
 		//private float[] dT;
@@ -138,30 +139,14 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			SN = (long[]) table.getColumn(hdu.findColumn("Frame Counter"));
 			
 			// The R/T array data
-			int iR = hdu.findColumn("R array");
-			R = (long[]) table.getColumn(iR);
-			int iT = hdu.findColumn("T array");
-			T = (long[]) table.getColumn(iT);
-
-			System.err.println("   FITS has " + hawc.rows() + "x" + hawc.cols() + " arrays.");
+			int iData = hdu.findColumn("SQ1 Feedback");
+			data = (long[]) table.getColumn(iData);
 			
-			hawc.rows = ((long[][]) row[iR]).length;
-			hawc.subarrayCols = ((long[][]) row[iR])[0].length;
-			if(hawc.subarrayCols > 32) { 
-				hawc.polsubarrays = 2;
-				hawc.subarrayCols >>= 1;	
-			}
-			else hawc.polsubarrays = 1;
+			int storeRows = ((long[][]) row[iData]).length;
+			int storeCols = ((long[][]) row[iData])[0].length;
+			System.err.println("   FITS has " + storeRows + "x" + storeCols + " arrays.");
 			
 			System.err.println("   Logical layout: " + hawc.polsubarrays + " subarrays of " + hawc.rows + "x" + hawc.subarrayCols + " pixels per polarization.");
-			
-			// Initialize the readout offset to the first sample. This way we won't lose precision
-			// in the long -> float conversion as loading the array data...
-			final int polArrayPixels = hawc.polArrayPixels();
-			for(int c=polArrayPixels; --c >= 0; ) {
-				instrument.get(c).readoutOffset = R[c];
-				instrument.get(polArrayPixels + c).readoutOffset = T[c];
-			}
 			
 			// The tracking center in the basis coordinates of the scan (usually RA/DEC)
 			RA = (float[]) table.getColumn(hdu.findColumn("Right Ascension"));
@@ -175,7 +160,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 				
 			// The parallactic angle and the SOFIA Vertical Position Angle
 			//PA = (float[]) table.getColumn(hdu.findColumn("Parallactic Angle"));
-			VPA = (float[]) table.getColumn(hdu.findColumn("Vertical Position Angle"));
+			VPA = (float[]) table.getColumn(hdu.findColumn("Array VPA"));
 				
 			LON = (float[]) table.getColumn(hdu.findColumn("Longitude"));
 			LAT = (float[]) table.getColumn(hdu.findColumn("Latitude"));
@@ -211,8 +196,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					frame.index = i;
 						
 					// Read the pixel data
-					frame.parseData(0, R, i);
-					frame.parseData(1, T, i);
+					frame.parseData(data, i);
 					
 					frame.mceSerial = SN[i];
 					
@@ -243,7 +227,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					if(isSimulated) {
 						// The simulation writes a position angle, not parallactic angle...
 						frame.VPA = VPA[i] * (float) Unit.deg;
-						frame.setParallacticAngle(-(VPA[i] + EL[i]) * Unit.deg);
+						frame.setParallacticAngle(-VPA[i] * Unit.deg);
 					}
 					else {
 						frame.VPA = VPA[i] * (float) Unit.deg;
@@ -253,6 +237,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 						// H -> E rotate by PA
 						// VPA = A + PA (or -VPA = A + PA?)
 						frame.calcParallacticAngle();
+						// TODO use LOS angle?
 						frame.setRotation(frame.VPA - frame.getParallacticAngle()); 
 					}
 
@@ -261,7 +246,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(scan.equatorial);
 					frame.equatorialNativeToHorizontal(frame.horizontalOffset);
 					
-			
 					// Add the chopper offset to the telescope coordinates.
 					// TODO check!
 					if(hawcPlusScan.isChopping) {
@@ -272,6 +256,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 						frame.horizontalToNativeEquatorial(offset);
 						frame.equatorial.addNativeOffset(offset);
 					}
+				
 						
 					set(startIndex + i, frame);
 				}

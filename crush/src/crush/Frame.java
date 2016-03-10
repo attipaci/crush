@@ -104,8 +104,8 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	@Override
 	public int hashCode() { 
-		return super.hashCode() ^ HashCode.get(MJD) ^ data.length ^ index ^ flag
-				^ HashCode.get(dependents) ^ HashCode.get(dof) ^ HashCode.sampleFrom(data); 
+		return super.hashCode() ^ HashCode.from(MJD) ^ data.length ^ index ^ flag
+				^ HashCode.from(dependents) ^ HashCode.from(dof) ^ HashCode.sampleFrom(data); 
 	}
 
 	@Override
@@ -216,6 +216,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 			switch(scan.instrument.mount) {
 			case CASSEGRAIN: 
 			case GREGORIAN: 
+			case NASMYTH_COROTATING:
 			case PRIME_FOCUS: sinA = 0.0; cosA = 1.0; break;
 			case LEFT_NASMYTH: {
 				SphericalCoordinates nativeCoords = getNativeCoords();
@@ -370,17 +371,17 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		coords.copy(equatorial);
 	}
 
-	public static final FlagBlock sampleFlags = new FlagSpace("sample-flags", Byte.class).getFullFlagBlock();
-	public static byte SAMPLE_SOURCE_BLANK = (byte) sampleFlags.next('B', "Blanked").value();
-	public static byte SAMPLE_SPIKE = (byte) sampleFlags.next('s', "Spiky").value();
-	public static byte SAMPLE_SKIP = (byte) sampleFlags.next('$', "Skip").value();
-	public static byte SAMPLE_PHOTOMETRY = (byte) sampleFlags.next('P', "Photometry").value();
+	public static final FlagBlock<Byte> sampleFlags = new FlagSpace.Byte("sample-flags").getDefaultFlagBlock();
+	public static byte SAMPLE_SOURCE_BLANK = sampleFlags.next('B', "Blanked").value();
+	public static byte SAMPLE_SPIKE = sampleFlags.next('s', "Spiky").value();
+	public static byte SAMPLE_SKIP = sampleFlags.next('$', "Skip").value();
+	public static byte SAMPLE_PHOTOMETRY = sampleFlags.next('P', "Photometry").value();
 	
 	
-	public static final FlagBlock frameFlags = new FlagSpace("frame-flags", Integer.class).getFullFlagBlock();
+	public static final FlagBlock<Integer> frameFlags = new FlagSpace.Integer("frame-flags").getDefaultFlagBlock();
 	public static int FLAG_WEIGHT = frameFlags.next('n', "Noise level").value();
 	public static int FLAG_SPIKY = frameFlags.next('s', "Spiky").value();
-	public static int FLAG_DOF = frameFlags.next('f', "Insuffucient degrees-of-freedom").value();
+	public static int FLAG_DOF = frameFlags.next('f', "Degrees-of-freedom").value();
 	public static int FLAG_JUMP = frameFlags.next('J', "Jump").value();
 	
 

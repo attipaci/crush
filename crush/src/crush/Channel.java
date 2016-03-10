@@ -91,8 +91,8 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	}
 	
 	@Override
-	public int hashCode() { return super.hashCode() ^ instrument.getName().hashCode() ^ HashCode.get(storeIndex)
-			^ HashCode.get(weight) ^ HashCode.get(gain) ^ HashCode.get(dof) ^ HashCode.get(dependents); 
+	public int hashCode() { return super.hashCode() ^ instrument.getName().hashCode() ^ HashCode.from(storeIndex)
+			^ HashCode.from(weight) ^ HashCode.from(gain) ^ HashCode.from(dof) ^ HashCode.from(dependents); 
 	}
 	
 	
@@ -185,7 +185,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		String text = getID() + "\t" +
 			Util.f3.format(gain) + " \t" +
 			Util.e3.format(weight) + " \t" +
-			flags.toString(flag);
+			flagSpace.toString(flag);
 		return text;
 	}
 	
@@ -219,7 +219,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		weight = Double.parseDouble(tokens.nextToken());
 
 		// Add flags from pixel data file on top of those already specified...
-		flag(criticalFlags & flags.parse(tokens.nextToken()));	
+		flag(criticalFlags & flagSpace.parse(tokens.nextToken()));	
 	}
 	
 	public double getResolution() { return instrument.getResolution(); }
@@ -229,23 +229,23 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		coupling = 1.0;
 	}
 	
-	public static final FlagSpace flags = new FlagSpace("channel-flags", Integer.class);
+	public static final FlagSpace<Integer> flagSpace = new FlagSpace.Integer("channel-flags");
 	
-	public static final FlagBlock hardwareFlags = flags.getFlagBlock(0, 8);
+	public static final FlagBlock<Integer> hardwareFlags = flagSpace.getFlagBlock(0, 8);
 	public final static int FLAG_DEAD = hardwareFlags.next('X', "Dead").value();
 	public final static int FLAG_BLIND = hardwareFlags.next('B', "Blind").value();
-	public final static int HARDWARE_FLAGS = hardwareFlags.getMask();
+	public final static int HARDWARE_FLAGS = (int) hardwareFlags.getMask();
 	
-	public static final FlagBlock softwareFlags = flags.getFlagBlock(8, 31);
+	public static final FlagBlock<Integer> softwareFlags = flagSpace.getFlagBlock(8, 31);
 	public final static int FLAG_DISCARD = softwareFlags.next('d', "Discarded").value();
 	public final static int FLAG_GAIN = softwareFlags.next('g', "Gain").value();
 	public final static int FLAG_SENSITIVITY = softwareFlags.next('n', "Noisy").value();
-	public final static int FLAG_DOF = softwareFlags.next('f', "Insufficient degrees-of-freedom.").value();
+	public final static int FLAG_DOF = softwareFlags.next('f', "Degrees-of-freedom.").value();
 	public final static int FLAG_SPIKY = softwareFlags.next('s', "Spiky").value();
 	//public final static int FLAG_DISCONTINUITY
 	public final static int FLAG_DAC_RANGE = softwareFlags.next('r', "Railing/Saturated").value();
 	
-	public final static int SOFTWARE_FLAGS = softwareFlags.getMask();
+	public final static int SOFTWARE_FLAGS = (int) softwareFlags.getMask();
 	
 	
 }

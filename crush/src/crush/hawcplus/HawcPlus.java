@@ -58,7 +58,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 		super("hawc+", new SingleColorLayout<HawcPlusPixel>());
 		arrayPointingCenter = (Vector2D) defaultPointingCenter.clone();
 		for(int i=0; i<polarrays; i++) for(int j=0; j<polsubarrays; j++) subarrayOffset[i][j] = new Vector2D();
-		mount = Mount.LEFT_NASMYTH;
+		mount = Mount.NASMYTH_COROTATING;
 	}
 	
 	@Override

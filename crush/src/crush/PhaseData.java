@@ -55,7 +55,7 @@ public class PhaseData implements Serializable {
 	
 	@Override
 	public int hashCode() { 
-		int hash = super.hashCode() ^ integration.getDisplayID().hashCode() ^ index ^ phase ^ HashCode.get(dependents);
+		int hash = super.hashCode() ^ integration.getDisplayID().hashCode() ^ index ^ phase ^ HashCode.from(dependents);
 		if(start != null) hash ^= start.index;
 		if(end != null) hash ^= end.index;
 		if(value != null) hash ^= value.length;
@@ -241,7 +241,7 @@ public class PhaseData implements Serializable {
 		
 	}
 	
-	public static final FlagBlock flags = new FlagSpace("phase-flags", Integer.class).getFullFlagBlock();
+	public static final FlagBlock<Integer> flags = new FlagSpace.Integer("phase-flags").getDefaultFlagBlock();
 	public static final int FLAG_SPIKE = flags.next('s', "Spike").value();
 	
 
