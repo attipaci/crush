@@ -42,24 +42,26 @@ public class HawcPlusFrame extends HorizontalFrame {
 		setSize(parent.instrument.pixels());
 	}
 	
-	public void parseData(int polarray, long[][] DAC) {
-		parseData(DAC, polarray * ((HawcPlus) scan.instrument).polArrayPixels());
+
+	public void parseData(long[] DAC, int frameIndex) {   
+		parseData(DAC, frameIndex * FITS_CHANNELS, FITS_CHANNELS);
 	}
 	
-	public void parseData(int polarray, long[] DAC, int frameIndex) {
-		final int polArrayPixels =  ((HawcPlus) scan.instrument).polArrayPixels();
-		parseData(DAC, frameIndex * polArrayPixels, polArrayPixels, polarray * polArrayPixels);
+	private void parseData(long[] DAC, int from, int channels) {
+	    final int polOffset = ((HawcPlus) scan.instrument).polArrayPixels();
+	    
+	    // Unpack the 
+		for(int i=channels; --i >= 0; ) {
+		    final int row = i >> 7;
+		    final int col = i & 63;
+		    final int offset = (i & 64) == 0 ? 0 : polOffset; 
+		    data[offset + (row<<6) + col] = (int) DAC[from+i];
+		}
 	}
 	
-	private void parseData(long[][] DAC, int offset) {
-		int bol = offset + DAC.length * DAC[0].length - 1;
-		for(int i=DAC.length; --i >= 0; ) for(int j=DAC[0].length; --j >= 0; bol--)
-			data[bol] = DAC[i][j] - ((HawcPlus) scan.instrument).get(bol).readoutOffset;		
-	}
+	public final static int FITS_ROWS = 41;
+	public final static int FITS_COLS = 128;
+	public final static int FITS_CHANNELS = FITS_ROWS * FITS_COLS;
 	
-	private void parseData(long[] DAC, int from, int channels, int offset) {
-		for(int i=channels; --i >= 0; )
-			data[offset+i] = DAC[from+i] - ((HawcPlus) scan.instrument).get(offset+i).readoutOffset;
-	}
 	
 }

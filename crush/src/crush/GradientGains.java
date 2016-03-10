@@ -35,7 +35,7 @@ public abstract class GradientGains implements Serializable, GainProvider {
 	private double center = 0.0;
 	
 	@Override
-	public int hashCode() { return super.hashCode() ^ HashCode.get(center); }
+	public int hashCode() { return super.hashCode() ^ HashCode.from(center); }
 	
 	@Override
 	public boolean equals(Object o) {

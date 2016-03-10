@@ -106,7 +106,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	@Override
 	public int hashCode() {
-		int hash = super.hashCode() ^ size() ^ getID().hashCode() ^ HashCode.get(MJD);
+		int hash = super.hashCode() ^ size() ^ getID().hashCode() ^ HashCode.from(MJD);
 		if(instrument != null) hash ^= instrument.hashCode();
 		return hash;
 	}

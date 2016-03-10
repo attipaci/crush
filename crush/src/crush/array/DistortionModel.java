@@ -142,7 +142,7 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Vector2D> {
 		
 		@Override
 		public int hashCode() {
-			return HashCode.get(xExp) ^ HashCode.get(yExp);
+			return HashCode.from(xExp) ^ HashCode.from(yExp);
 		}
 		
 		public double getValue(double x, double y) {

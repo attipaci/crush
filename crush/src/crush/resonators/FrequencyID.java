@@ -39,7 +39,7 @@ public class FrequencyID implements Comparable<FrequencyID> {
 	
 	@Override
 	public int hashCode() {
-		return HashCode.get(freq);
+		return HashCode.from(freq);
 	}
 	
 	@Override

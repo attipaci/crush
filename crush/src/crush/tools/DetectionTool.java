@@ -218,7 +218,7 @@ public class DetectionTool {
 	
 			// Remove anything that may have dropped below the search criterion...
 			for(int i=0; i<regions.size(); ) {
-				Region source = regions.get(i);
+				Region source = regions.from(i);
 				final double S2N = source.peak / source.dpeak;
 				
 				if(S2N < significance) {

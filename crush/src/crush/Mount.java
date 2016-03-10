@@ -31,7 +31,8 @@ public enum Mount implements Serializable {
 	GREGORIAN ("Gregorian"),
 	PRIME_FOCUS ("Prime Focus"),
 	LEFT_NASMYTH ("Left Nasmyth"), 
-	RIGHT_NASMYTH ("Right Nasmyth");
+	RIGHT_NASMYTH ("Right Nasmyth"),
+    NASMYTH_COROTATING ("Nasmyth (corotating)");
 	
 	public String name;
 	

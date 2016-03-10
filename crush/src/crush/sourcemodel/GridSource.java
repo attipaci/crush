@@ -71,7 +71,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	
 	@Override
 	public int hashCode() { 
-		int hash = super.hashCode() ^ generation ^ HashCode.get(integrationTime);
+		int hash = super.hashCode() ^ generation ^ HashCode.from(integrationTime);
 		if(instrument != null) hash ^= instrument.hashCode();
 		if(scans != null) hash ^= HashCode.sampleFrom(scans); 
 		return hash;
@@ -137,8 +137,8 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	
 	
 	@Override
-	public Fits createFits() throws HeaderCardException, FitsException, IOException {
-		Fits fits = super.createFits();
+	public Fits createFits(Class<? extends Number> dataType) throws HeaderCardException, FitsException, IOException {
+		Fits fits = super.createFits(dataType);
 		
 		if(instrument != null) if(instrument.hasOption("write.scandata")) 
 			for(Scan<?,?> scan : scans) fits.addHDU(scan.getSummaryHDU(instrument.getOptions()));
@@ -147,10 +147,12 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	}
 	
 	
-	@Override
 	public void write() throws HeaderCardException, FitsException, IOException {
-		if(fileName == null) fileName = CRUSH.workPath + File.separator + getName() + ".fits";  
-		super.write();
+		super.write(fileName != null ? fileName : getDefaultFileName());  
+	}
+	
+	protected String getDefaultFileName() {
+	    return CRUSH.workPath + File.separator + getName() + ".fits";
 	}
 	
 	@Override

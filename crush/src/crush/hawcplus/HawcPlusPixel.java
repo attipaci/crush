@@ -38,8 +38,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public int polarray, subarray, row, col, mux, pin;
 	public double polarrayGain = 1.0, subarrayGain = 1.0, muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0;
 	
-	// 16 x 8 (rows x cols)
-	long readoutOffset = 0L;
+	int jumpCounter = 0;
 	
 	
 	public HawcPlusPixel(HawcPlus array, int zeroIndex) {
@@ -68,7 +67,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	}
 	
 	public static Vector2D getPosition(Vector2D size, Vector2D subarrayOffset, double row, double col) {
-		return new Vector2D(subarrayOffset.x() - size.x() * row, subarrayOffset.y() + size.y() * col);
+		return new Vector2D(subarrayOffset.y() + size.y() * col, subarrayOffset.x() + size.x() * row);
 	}
 	
 	@Override

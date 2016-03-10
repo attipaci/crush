@@ -96,7 +96,7 @@ public class ImageTool {
 		}
 		else if(key.equalsIgnoreCase("-pick")) {
 			final String id = tokens.nextToken().toLowerCase();
-			final String coreName = CRUSH.workPath + File.separator + image.sourceName;
+			final String coreName = CRUSH.workPath + File.separator + image.getName();
 			
 			try {
 				if(id.equals("flux")) image.getFluxImage().write(coreName + ".flux.fits");
@@ -114,31 +114,33 @@ public class ImageTool {
 			String fileName = values.nextToken();
 			
 			try {
+			    // TODO...
 				BasicHDU hdu = new Fits(fileName).getHDU(0);
 				AstroImage plane = new AstroImage();
+				Unit imageUnit = image.getUnit();
 				
 				if(spec.equals("flux")) {
 					System.err.println("Replacing flux plane.");
-					plane.unit = image.unit;
+					plane.setUnit(imageUnit);
 					plane.setImage(hdu);
 					image.setData(plane.getData());
 					image.setFlag(plane.getFlag());
 				}
 				else if(spec.equals("weight")) {
 					System.err.println("Replacing weight plane.");
-					plane.unit = new Unit("weight", 1.0 / (image.unit.text * image.unit.text));
+					plane.setUnit(new Unit("weight", 1.0 / (imageUnit.value() * imageUnit.value())));
 					plane.setImage(hdu);
 					image.setWeight(plane.getData());
 				}
 				else if(spec.equals("time")) {
 					System.err.println("Replacing integration-time plane.");
-					plane.unit = Unit.get("s");
+					plane.setUnit(Unit.get("s"));
 					plane.setImage(hdu);
 					image.setTime(plane.getData());
 				}
 				else if(spec.equals("flag")) {
 					System.err.println("Replacing integration-time plane.");
-					plane.unit = Unit.unity;
+					plane.setUnit(Unit.unity);
 					plane.setImage(hdu);
 					image.setFlag(plane.getFlag());
 				}
@@ -152,7 +154,7 @@ public class ImageTool {
 				BasicHDU hdu = new Fits(tokens.nextToken()).getHDU(0);
 				AstroImage plane = new AstroImage();
 				
-				plane.unit = Unit.unity;
+				plane.setUnit(Unit.unity);
 				plane.setImage(hdu);
 				image.setFlag(plane.getFlag());
 				
@@ -191,7 +193,7 @@ public class ImageTool {
 
 		else if(key.equalsIgnoreCase("-deconvolve")) {
 			double[][] beam = null;
-			double replacementFWHM = image.instrument.resolution / 2.0;
+			double replacementFWHM = image.getImageBeam().getCircularEquivalentFWHM() / 2.0;
 			
 			if(tokens.hasMoreTokens()) {
 				

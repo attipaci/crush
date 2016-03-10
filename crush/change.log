@@ -1,6 +1,5 @@
->> Fits standard long keys, and legacy long key support...
 
-2.31-a1
+2.31-a2
 
 	[NEW] Improved flag management. Channel data files (see 
 	'write.pixeldata') now contain flag letter codes for easier human
@@ -40,6 +39,9 @@
 
 	[DEPREATE] 'despike2' and 'despike3' pipeline steps are no longer
 	supported. (They were never used).
+
+	[CHANGE] {HAWC+} New data packing format (41x128), and corotating 
+	Nasmyth mount.
 
 	[CHANGE] Despiking 'features' method renamed to 'multires'.
 

@@ -90,7 +90,7 @@ implements TableFormatter.Entries, Messaging {
 	
 	@Override
 	public int hashCode() {
-		return super.hashCode() ^ mount.hashCode() ^ layout.hashCode() ^ HashCode.get(resolution);
+		return super.hashCode() ^ mount.hashCode() ^ layout.hashCode() ^ HashCode.from(resolution);
 	}
 	
 	@Override
@@ -667,7 +667,7 @@ implements TableFormatter.Entries, Messaging {
 	
 	public String getChannelFlagKey(String prepend) {	    
 	    if(isEmpty()) return prepend;
-	    FlagSpace flags = Channel.flags;
+	    FlagSpace<Integer> flags = Channel.flagSpace;
 	    
 	    StringBuffer buf = new StringBuffer();
 	    
@@ -1136,7 +1136,7 @@ implements TableFormatter.Entries, Messaging {
 	}
 	
 	public void editScanHeader(Header header) throws HeaderCardException {
-	    Channel.flags.editHeader('C', header);
+	    if(hasOption("write.scandata.details")) Channel.flagSpace.editHeader('C', header);
 	}
 	
 	public void addHistory(Cursor<String, HeaderCard> cursor, List<Scan<?,?>> scans) throws HeaderCardException {}

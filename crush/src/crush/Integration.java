@@ -132,7 +132,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	@Override
 	public int hashCode() {
-		return super.hashCode() ^ scan.getID().hashCode() ^ HashCode.get(integrationNo) ^ size() ^ getDisplayID().hashCode();
+		return super.hashCode() ^ scan.getID().hashCode() ^ HashCode.from(integrationNo) ^ size() ^ getDisplayID().hashCode();
 	}
 	
 	@Override
