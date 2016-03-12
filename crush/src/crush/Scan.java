@@ -49,6 +49,8 @@ import jnum.astro.JulianEpoch;
 import jnum.astro.Precession;
 import jnum.astro.Weather;
 import jnum.data.*;
+import jnum.math.CoordinateSystem;
+import jnum.math.Offset2D;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
@@ -239,7 +241,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	}
 	
 	public void applyPointing() {
-		Vector2D differential = getNativePointingIncrement(pointing);
+		Offset2D differential = getNativePointingIncrement(pointing);
 		pointingAt(differential);
 		
 		Vector2D arcsecs = (Vector2D) differential.clone();
@@ -292,6 +294,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(apparent == null) calcApparent();
 		horizontal = apparent.toHorizontal(site, LST);
 	}
+	
+	public SphericalCoordinates getNativeCoordinates() { return horizontal; }
 	
 	public IntegrationType getFirstIntegration() {
 		return get(0); 
@@ -732,29 +736,38 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 
 	public DataTable getPointingData() throws IllegalStateException {
 		if(pointing == null) throw new IllegalStateException("No pointing data for scan " + getID());
-		Vector2D pointingOffset = getNativePointingIncrement(pointing);
-		Vector2D absolute = getNativePointing(pointing);
+		Offset2D relative = getNativePointingIncrement(pointing);
+		Offset2D absolute = getNativePointing(pointing);
 		
 		DataTable data = new DataTable();
 		
-		String nameX = this instanceof GroundBased ? "AZ" : "RA";
-		String nameY = this instanceof GroundBased ? "EL" : "DEC";
+		String nameX = "X";
+		String nameY = "Y";
+		Class<?> coordinateClass = relative.getCoordinateClass();
+		
+		try {
+		    SphericalCoordinates coords = (SphericalCoordinates) coordinateClass.newInstance();
+		    CoordinateSystem system = coords.getCoordinateSystem();
+		    nameX = system.get(0).getShortLabel();
+		    nameY = system.get(1).getShortLabel();
+		}
+		catch(Exception e) { e.printStackTrace(); }
 		
 		double sizeUnit = instrument.getSizeUnitValue();
 		String sizeName = instrument.getSizeName();
 		
-		data.new Entry("dX", pointingOffset.x() / sizeUnit, sizeName);
-		data.new Entry("dY", pointingOffset.y() / sizeUnit, sizeName);
+		data.new Entry("dX", relative.x() / sizeUnit, sizeName);
+		data.new Entry("dY", relative.y() / sizeUnit, sizeName);
 		
-		data.new Entry("d" + nameX, pointingOffset.x() / sizeUnit, sizeName);
-		data.new Entry("d" + nameY, pointingOffset.y() / sizeUnit, sizeName);
-		
+		data.new Entry("d" + nameX, relative.x() / sizeUnit, sizeName);
+		data.new Entry("d" + nameY, relative.y() / sizeUnit, sizeName);
+	
 		data.new Entry(nameX, absolute.x() / sizeUnit, sizeName);
 		data.new Entry(nameY, absolute.y() / sizeUnit, sizeName);
 		
 		// Also print Nasmyth offsets if applicable...
 		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
-			Vector2D nasmyth = getNasmythOffset(pointingOffset);
+			Vector2D nasmyth = getNasmythOffset(relative);
 			
 			data.new Entry("dNasX", nasmyth.x() / sizeUnit, sizeName);
 			data.new Entry("dNasY", nasmyth.y() / sizeUnit, sizeName);
@@ -870,20 +883,32 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	
 	
-	protected String getPointingString(Vector2D pointingOffset) {	
+	protected String getPointingString(Offset2D pointing) {	
+	    if(pointing == null) return "";
 		// Print the native pointing offsets...
 		String text = "";
 		
 		double sizeUnit = instrument.getSizeUnitValue();
 		String sizeName = instrument.getSizeName();
 		
+		String nameX = "x";
+		String nameY = "y";
+		
+		try {
+		    SphericalCoordinates coords = (SphericalCoordinates) pointing.getCoordinateClass().newInstance();
+		    CoordinateSystem system = coords.getLocalCoordinateSystem();
+		    nameX = system.get(0).getShortLabel();
+		    nameY = system.get(1).getShortLabel();
+		}
+		catch(Exception e) { e.printStackTrace(); }
+			
 		text += "  Offset: ";
-		text += Util.f1.format(pointingOffset.x() / sizeUnit) + ", " + Util.f1.format(pointingOffset.y() / sizeUnit) + " " 
-			+ sizeName + " (" + (this instanceof GroundBased ? "az,el" : "ra,dec") + ")";
+		text += Util.f1.format(pointing.x() / sizeUnit) + ", " + Util.f1.format(pointing.y() / sizeUnit) + " " 
+			+ sizeName + " (" + nameX + "," + nameY + ")";
 		
 		// Also print Nasmyth offsets if applicable...
 		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
-			Vector2D nasmyth = getNasmythOffset(pointingOffset);
+			Vector2D nasmyth = getNasmythOffset(pointing);
 			text += "\n  Offset: ";		
 			text += Util.f1.format(nasmyth.x() / sizeUnit) + ", " + Util.f1.format(nasmyth.y() / sizeUnit) + " " 
 				+ sizeName + " (nasmyth)";
@@ -892,6 +917,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		return text;
 	}	
 	
+
+
 
 	public Vector2D getEquatorialPointing(GaussianSource<SphericalCoordinates> source) {
 		if(!source.getCoordinates().getClass().equals(sourceModel.getReference().getClass()))
@@ -916,54 +943,66 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		return sourceCoords.getOffsetFrom(reference);
 	}
 	
-	public Vector2D getNativePointing(GaussianSource<SphericalCoordinates> source) {
-		Vector2D offset = getNativePointingIncrement(source);
-		if(pointingCorrection != null) offset.add(pointingCorrection);
-		return offset;
+	
+	
+	public Offset2D getNativePointing(GaussianSource<SphericalCoordinates> source) {
+		Offset2D pointing = getNativePointingIncrement(source);
+		if(pointingCorrection != null) pointing.add(pointingCorrection);
+		return pointing;
 	}
 	
-	public Vector2D getNativePointingIncrement(GaussianSource<SphericalCoordinates> source) {
+	public Offset2D getNativePointingIncrement(GaussianSource<SphericalCoordinates> source) {
 		if(!source.getCoordinates().getClass().equals(sourceModel.getReference().getClass()))
 			throw new IllegalArgumentException("pointing source is in a different coordinate system from source model.");
 		
+		SphericalCoordinates sourceCoords = source.getCoordinates();
+		SphericalCoordinates nativeCoords = getNativeCoordinates();
 		
-		if(instrument instanceof GroundBased) {
-			if(source.getCoordinates() instanceof HorizontalCoordinates) 
-				return source.getCoordinates().getOffsetFrom(sourceModel.getReference());			
-			else {	
-				// Equatorial offset (RA/DEC)
-				Vector2D offset = getEquatorialPointing(source);
-				
-				// Rotate to Horizontal...
-				Vector2D from = (Vector2D) offset.clone();
-				((HorizontalFrame) getFirstIntegration().getFirstFrame()).equatorialToHorizontal(from);
-				Vector2D to = (Vector2D) offset.clone();
-				((HorizontalFrame) getLastIntegration().getLastFrame()).equatorialToHorizontal(to);
-				offset.setX(0.5 * (from.x() + to.x()));
-				offset.setY(0.5 * (from.y() + to.y()));
-				return offset;
-			}
-		}	
-		else if(source.getCoordinates() instanceof EquatorialCoordinates) 
-			return source.getCoordinates().getOffsetFrom(sourceModel.getReference());
-		else {
-			EquatorialCoordinates sourceEq = ((CelestialCoordinates) source.getCoordinates()).toEquatorial();
+		if(sourceCoords.getClass().equals(nativeCoords.getClass())) {
+		    return new Offset2D(nativeCoords, sourceCoords.getOffsetFrom(sourceModel.getReference()));
+        }
+		else if(sourceCoords instanceof EquatorialCoordinates)
+			return getNativeOffsetOf(new Offset2D(equatorial, sourceCoords.getOffsetFrom(sourceModel.getReference())));
+		else if(sourceCoords instanceof CelestialCoordinates) {
+			EquatorialCoordinates sourceEq = ((CelestialCoordinates) sourceCoords).toEquatorial();
 			EquatorialCoordinates refEq = ((CelestialCoordinates) sourceModel.getReference()).toEquatorial();
-			return sourceEq.getOffsetFrom(refEq);
+			return getNativeOffsetOf(new Offset2D(equatorial, sourceEq.getOffsetFrom(refEq)));
 		}
+		
+		return null;
 	}
  
+	public Offset2D getNativeOffsetOf(Offset2D equatorial) {
+	    if(!equatorial.getCoordinateClass().equals(EquatorialCoordinates.class))
+	        throw new IllegalArgumentException("not an equatorial offset");
+	    
+	    // Equatorial offset (RA/DEC)
+        Vector2D offset = new Vector2D(equatorial);
+        
+        // Rotate to Horizontal...
+        Vector2D from = (Vector2D) offset.clone();
+        ((HorizontalFrame) getFirstIntegration().getFirstFrame()).equatorialToNative(from);
+        Vector2D to = (Vector2D) offset.clone();
+        ((HorizontalFrame) getLastIntegration().getLastFrame()).equatorialToNative(to);
+        offset.setX(0.5 * (from.x() + to.x()));
+        offset.setY(0.5 * (from.y() + to.y()));
+        return new Offset2D(getNativeCoordinates(), offset);
+	}
 
 	// Inverse rotation from Native to Nasmyth...
-	public Vector2D getNasmythOffset(Vector2D nativeOffset) {
-		SphericalCoordinates coords = this instanceof GroundBased ? horizontal : equatorial;
+	public Vector2D getNasmythOffset(Offset2D pointing) {
+		SphericalCoordinates coords = getNativeCoordinates();
+		if(!pointing.getCoordinateClass().equals(coords.getClass())) 
+		    throw new IllegalArgumentException("non-native pointing offset."); 
+		
 		double sinA = instrument.mount == Mount.LEFT_NASMYTH ? -coords.sinLat() : coords.sinLat();
 		double cosA = coords.cosLat();
 		
+		
 		// Inverse rotation from Native to Nasmyth...
 		Vector2D nasmyth = new Vector2D();
-		nasmyth.setX(cosA * nativeOffset.x() + sinA * nativeOffset.y());
-		nasmyth.setY(cosA * nativeOffset.y() - sinA * nativeOffset.x());
+		nasmyth.setX(cosA * pointing.x() + sinA * pointing.y());
+		nasmyth.setY(cosA * pointing.y() - sinA * pointing.x());
 		
 		return nasmyth;
 	}

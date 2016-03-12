@@ -104,7 +104,7 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 		if(instrumentData == null) return super.getName();
 		return (instrumentData.instrumentName != null) ? instrumentData.instrumentName : super.getName();
 	}
-	
+
 	public void parseHeader(Header header) {		
 		instrumentData = new SofiaInstrumentData(header);
 		

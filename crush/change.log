@@ -1,5 +1,17 @@
+>> Frame -> Frame<NativeCoordinateType>
+   Scan -> Scan<NativeCoordinateType>
+   horizontal -> native
 
-2.31-a2
+>> system=native
+   
+
+2.31-a3
+
+	[NEW] 'system=native' to reduce in the native telescope coordinates. 
+	For typical Alt/Az mount ground-based telescopes it is the same as 
+	'system=horizontal', but it does not have to be. For SOFIA, it results
+	in reducing in TARF/SIRF coordinates, in the telescope assembly's 
+	XEL, EL system.
 
 	[NEW] Improved flag management. Channel data files (see 
 	'write.pixeldata') now contain flag letter codes for easier human
@@ -50,6 +62,12 @@
 
 	[FIX] Pointing information is now correct for multiscan pointing 
 	reductions, in any coordinate system, and also for moving objects.
+
+	[TWEAK] {HAWC+} Native as well as horizontal support. (in progress...)
+
+	[TWEAK] Cleaner, more versatile, reporting of pointing offsets.
+
+	[TWEAK] Wider use of native coordinates instead of hardcoded horizontal
 
 	[TWEAK] Neighbour despiking domain tweaked to include all flagged 
 	frames.

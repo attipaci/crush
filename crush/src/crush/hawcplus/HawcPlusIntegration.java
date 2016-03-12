@@ -114,7 +114,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		private long[] SN;
 		private long[] data;
 		private double[] TS; 
-		private float[] RA, DEC, AZ, EL, VPA, LON, LAT, LST, chop, PWV, HWP;
+		private float[] RA, DEC, AZ, EL, iVPA, LON, LAT, LST, chop, PWV, HWP;
 		//private float[] dT;
 		private boolean isSimulated;
 		//private int channels;
@@ -160,7 +160,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 				
 			// The parallactic angle and the SOFIA Vertical Position Angle
 			//PA = (float[]) table.getColumn(hdu.findColumn("Parallactic Angle"));
-			VPA = (float[]) table.getColumn(hdu.findColumn("Array VPA"));
+			iVPA = (float[]) table.getColumn(hdu.findColumn("Array VPA"));
 				
 			LON = (float[]) table.getColumn(hdu.findColumn("Longitude"));
 			LAT = (float[]) table.getColumn(hdu.findColumn("Latitude"));
@@ -219,26 +219,28 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					frame.LST = LST[i] * (float) Unit.hour;
 					frame.horizontal = new HorizontalCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
 					
+					// TODO...
+					frame.telescopeCoords = new TelescopeCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
+					
 					// LST and horizontal can be calculated (approximately within dUT1), if need be...
 					//frame.LST = timeStamp.getLMST(frame.site.longitude());
 					//frame.horizontal = frame.equatorial.toHorizontal(frame.site, frame.LST);
 					
 					
 					if(isSimulated) {
-						// The simulation writes a position angle, not parallactic angle...
-						frame.VPA = VPA[i] * (float) Unit.deg;
-						frame.setParallacticAngle(-VPA[i] * Unit.deg);
+						// The simulation writes a position angle as if a parallactic angle...
+						frame.instrumentVPA = iVPA[i] * (float) Unit.deg;
+						frame.telescopeVPA = iVPA[i] * (float) Unit.deg; // TODO
+						frame.setParallacticAngle(-iVPA[i] * Unit.deg);
+						frame.setRotation(0.0);
 					}
 					else {
-						frame.VPA = VPA[i] * (float) Unit.deg;
-						// TODO The effective frame rotation to horizontal is VPA - PA... (check sign again...)
-						// X -> E rotate by VPA (or -VPA?)
-						// X -> H rotate by A
-						// H -> E rotate by PA
-						// VPA = A + PA (or -VPA = A + PA?)
-						frame.calcParallacticAngle();
-						// TODO use LOS angle?
-						frame.setRotation(frame.VPA - frame.getParallacticAngle()); 
+					    // calc parallactic angle...
+					    // rot: sibs VPA - PA
+						frame.instrumentVPA = iVPA[i] * (float) Unit.deg;
+						frame.telescopeVPA = iVPA[i] * (float) Unit.deg; // TODO
+						frame.setParallacticAngle(frame.telescopeVPA);
+						frame.setRotation(frame.instrumentVPA - frame.telescopeVPA); 
 					}
 
 

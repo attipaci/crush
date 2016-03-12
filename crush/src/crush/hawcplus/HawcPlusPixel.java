@@ -100,6 +100,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	}
 	
 	public static Vector2D defaultSize = new Vector2D(5.0 * Unit.arcsec, 5.0 * Unit.arcsec);
+	public static Vector2D physicalSize = new Vector2D(1.133 * Unit.mm, 1.133 * Unit.mm);
 
 	
 	public final static int FLAG_POL = softwareFlags.next('p', "Bad polarray gain").value();

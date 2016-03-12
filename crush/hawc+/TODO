@@ -1,3 +1,5 @@
+>> pointing native->equatorial; equatorial->native
+
 >> native pixel order (by subarray...)
 >> los and vpa sign check... (los for horizontal?)
 >> jump counter
