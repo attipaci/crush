@@ -33,6 +33,7 @@ import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
+import jnum.math.Offset2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
@@ -390,7 +391,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	}
 	
 	@Override
-	public String getPointingString(Vector2D pointing) {
+	public String getPointingString(Offset2D pointing) {
 		return super.getPointingString(pointing) + "\n\n" +
 			"  >>> pcorr " + Util.f1.format(pointing.x() / Unit.arcsec) + "," + Util.f1.format(pointing.y() / Unit.arcsec);
 		

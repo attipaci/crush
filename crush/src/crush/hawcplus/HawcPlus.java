@@ -493,8 +493,40 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	}
 	
 	
-	// subarray center assuming 41x32 pixels
-	private static Vector2D defaultPointingCenter = new Vector2D(20.5, 32.5); // row, col
+	public int fitsToFixedIndex(int i, int j) {  
+	    return getSubarrayForFitsCol(j) * subarrayPixels() + i * subarrayCols() + j;	    
+	}
+	
+	
+	public static int getSubarrayForFitsCol(int fitsCol) {
+	    return fitsCol >> 5;
+	}
+	
+	public static int fitsToSubarrayCol(int col) {
+       return col & 31;
+	}
+	
+	public static int subarrayToFitsCol(int subarray, int col) {
+	    if(subarray < 0 || subarray >= 4) throw new IndexOutOfBoundsException("invalid subarray index: " + subarray);
+	    if(col < 0 || col >= 32) throw new IndexOutOfBoundsException("invalid col index: " + col);
+	    return (subarray << 5) | col;
+	}
+	
+	public static void subarrayIndexToArrayOffset(double orientation, Vector2D subarrayOffset, Vector2D v) {
+	    v.setY(39.0 - v.y());
+	    v.scaleX(HawcPlusPixel.physicalSize.x());
+	    v.scaleY(HawcPlusPixel.physicalSize.y());
+	    v.rotate(orientation);
+	    v.add(subarrayOffset);
+	}
+
+	
+	public static int fitsRows = 41;
+	public static int fitsCols = 128;
+	
+	
+	// array center assuming a 40x66 pixel virtual layout...
+	private static Vector2D defaultPointingCenter = new Vector2D(19.5, 32.5); // row, col
 
 	private static DRPMessenger drp;
 	

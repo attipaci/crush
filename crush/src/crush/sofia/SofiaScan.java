@@ -27,7 +27,8 @@ import crush.*;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
-import jnum.math.Vector2D;
+import jnum.math.Offset2D;
+import jnum.math.SphericalCoordinates;
 import jnum.util.*;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
@@ -39,7 +40,7 @@ import java.util.*;
 // TODO aux data in processing history...
 
 public abstract class SofiaScan<InstrumentType extends SofiaCamera<?>, IntegrationType extends SofiaIntegration<InstrumentType, ?>> 
-extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
+extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 	/**
 	 * 
 	 */
@@ -53,6 +54,8 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		
 	Vector<String> history = new Vector<String>();
 	
+	public TelescopeCoordinates telescopeCoordinates;
+		
 	public SofiaObservationData observation;
 	public SofiaProcessingData processing;
 	public SofiaMissionData mission;
@@ -72,6 +75,8 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		super(instrument);
 	}
 
+	@Override
+    public SphericalCoordinates getNativeCoordinates() { return telescopeCoordinates; }
 
 	@Override
 	public void read(String scanDescriptor, boolean readFully) throws Exception {
@@ -275,13 +280,27 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 
 	
 	@Override
-	public void validate() {	
-		super.validate();	
+	public void validate() {
+	      
+		super.validate();
 		
-		double PA = 0.5 * (getFirstIntegration().getFirstFrame().getParallacticAngle() + getLastIntegration().getLastFrame().getParallacticAngle());
-		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");	
+		System.err.println(" Mean telescope VPA is " + Util.f1.format(getTelescopeVPA() / Unit.deg) + " deg.");  
+		
+		SofiaFrame first = getFirstIntegration().getFirstFrame();
+		SofiaFrame last = getLastIntegration().getLastFrame();
+		
+		telescopeCoordinates = new TelescopeCoordinates(
+		        0.5 * (first.telescopeCoords.longitude() + last.telescopeCoords.longitude()),
+		        0.5 * (first.telescopeCoords.latitude() + last.telescopeCoords.latitude())
+		);
+		//System.err.println(" Telescope Assembly: " + telescopeCoordinates.toString(1));
+		 
 	}
 	
+	
+	public double getTelescopeVPA() {
+	    return 0.5 * (getFirstIntegration().getFirstFrame().telescopeVPA + getLastIntegration().getLastFrame().telescopeVPA);	    
+	}
 	
 	public File getFile(String scanDescriptor) throws FileNotFoundException {
 		File scanFile;
@@ -377,24 +396,19 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	public DataTable getPointingData() {
 		DataTable data = super.getPointingData();
 
-		Vector2D pointingOffset = getNativePointingIncrement(pointing);
+		Offset2D relative = getNativePointingIncrement(pointing);
 		//Vector2D nasmyth = getNasmythOffset(pointingOffset);
 		
 		double sizeUnit = instrument.getSizeUnitValue();
 		String sizeName = instrument.getSizeName();
 		
-		data.new Entry("X", pointingOffset.x() / sizeUnit, sizeName);
-		data.new Entry("Y", pointingOffset.y() / sizeUnit, sizeName);
+		data.new Entry("X", relative.x() / sizeUnit, sizeName);
+		data.new Entry("Y", relative.y() / sizeUnit, sizeName);
 		//data.new Entry("NasX", (instrument.nasmythOffset.x() + nasmyth.x()) / sizeUnit, sizeName);
 		//data.new Entry("NasY", (instrument.nasmythOffset.y() + nasmyth.y()) / sizeUnit, sizeName);
 		return data;
 	}
 	
-	@Override
-	public Vector2D getNasmythOffset(Vector2D nativeOffset) {
-		Vector2D nasmythOffset = super.getNasmythOffset(nativeOffset);
-		return nasmythOffset;
-	}
 	
 	
 	@Override

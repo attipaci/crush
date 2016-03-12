@@ -35,6 +35,7 @@ import jnum.Util;
 import jnum.astro.*;
 import jnum.data.Asymmetry2D;
 import jnum.data.DataPoint;
+import jnum.math.Offset2D;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
@@ -142,7 +143,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	}
 	
 	@Override
-	public String getPointingString(Vector2D pointing) {
+	public String getPointingString(Offset2D pointing) {
 		String info = super.getPointingString(pointing) + "\n\n";
 		
 		if(hasOption("pointing.model") || hasOption("pointing.log")) 
@@ -709,8 +710,8 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	public DataTable getPointingData() {
 		DataTable data = super.getPointingData();
 
-		Vector2D pointingOffset = getNativePointingIncrement(pointing);
-		Vector2D nasmyth = getNasmythOffset(pointingOffset);
+		Offset2D relative = getNativePointingIncrement(pointing);
+		Vector2D nasmyth = getNasmythOffset(relative);
 		
 		double sizeUnit = instrument.getSizeUnitValue();
 		String sizeName = instrument.getSizeName();
@@ -718,9 +719,9 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		// X and Y are absolute pointing offsets including the static pointing model...
 		Vector2D obs = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day, ambientT);
 		if(pointingCorrection != null) obs.add(pointingCorrection);
-		
-		data.new Entry("X", (pointingOffset.x() + obs.x()) / sizeUnit, sizeName);
-		data.new Entry("Y", (pointingOffset.y() + obs.y()) / sizeUnit, sizeName);
+			
+		data.new Entry("X", (relative.x() + obs.x()) / sizeUnit, sizeName);
+		data.new Entry("Y", (relative.y() + obs.y()) / sizeUnit, sizeName);
 		data.new Entry("NasX", (instrument.nasmythOffset.x() + nasmyth.x()) / sizeUnit, sizeName);
 		data.new Entry("NasY", (instrument.nasmythOffset.y() + nasmyth.y()) / sizeUnit, sizeName);
 		return data;
@@ -728,7 +729,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	
 	// 2012-03-06 Conforms to IRAM pointing model convention (P11/P12)
 	@Override
-	public Vector2D getNasmythOffset(Vector2D nativeOffset) {
+	public Vector2D getNasmythOffset(Offset2D nativeOffset) {
 		Vector2D nasmythOffset = super.getNasmythOffset(nativeOffset);
 		return nasmythOffset;
 	}

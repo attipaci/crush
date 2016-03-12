@@ -116,7 +116,8 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 			getHorizontalOffset(position, projector.offset);
 			projector.getCoordinates().addNativeOffset(projector.offset);
 			projector.project();
-		}
+		} 
+		// TODO handle native coordinates...
 		else super.project(position, projector);		
 	}
 	

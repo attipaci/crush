@@ -295,7 +295,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		SphericalCoordinates basisCoords = new HorizontalCoordinates();
 		try { basisCoords = scanSystem.newInstance(); }
 		catch(Exception e) {}
-		String longitudeName = basisCoords.getCoordinateSystem().get(0).label;
+		String longitudeName = basisCoords.getCoordinateSystem().get(0).shortLabel;
 		
 		out.println("   Chop: " + Util.f1.format(chopper_throw / Unit.arcsec) + "\" at " + Util.f3.format(chop_frequency) + " Hz" +
 				", Scan: " + (int)Math.round(delta / Unit.arcsec) + "\" in " + longitudeName);

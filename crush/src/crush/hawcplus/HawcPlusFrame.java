@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -24,18 +24,17 @@
 package crush.hawcplus;
 
 
-import crush.*;
-import jnum.astro.GeodeticCoordinates;
+import crush.sofia.SofiaFrame;
 
 
-public class HawcPlusFrame extends HorizontalFrame {
+public class HawcPlusFrame extends SofiaFrame {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 6511202510198331668L;
-	GeodeticCoordinates site;
+	
 	long mceSerial;
-	float VPA, PWV, HPWangle;
+	float HPWangle;
 		
 	public HawcPlusFrame(HawcPlusScan parent) {
 		super(parent);
@@ -62,6 +61,6 @@ public class HawcPlusFrame extends HorizontalFrame {
 	public final static int FITS_ROWS = 41;
 	public final static int FITS_COLS = 128;
 	public final static int FITS_CHANNELS = FITS_ROWS * FITS_COLS;
-	
-	
+
+   
 }

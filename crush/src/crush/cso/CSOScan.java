@@ -34,6 +34,7 @@ import crush.Scan;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
+import jnum.math.Offset2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.text.TableFormatter;
@@ -131,19 +132,19 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	@Override
 	public DataTable getPointingData() {
 		DataTable data = super.getPointingData();
-		Vector2D pointingOffset = getNativePointingIncrement(pointing);
+		Offset2D relative = getNativePointingIncrement(pointing);
 		
 		double sizeUnit = instrument.getSizeUnitValue();
 		String sizeName = instrument.getSizeName();
 		
-		data.new Entry("FAZO", (pointingOffset.x() + fixedOffset.x()) / sizeUnit, sizeName);
-		data.new Entry("FZAO", -(pointingOffset.y() + fixedOffset.y()) / sizeUnit, sizeName);
+		data.new Entry("FAZO", (relative.x() + fixedOffset.x()) / sizeUnit, sizeName);
+		data.new Entry("FZAO", -(relative.y() + fixedOffset.y()) / sizeUnit, sizeName);
 		
 		return data;
 	}
 	
 	@Override
-	public String getPointingString(Vector2D pointing) {	
+	public String getPointingString(Offset2D pointing) {	
 		return super.getPointingString(pointing) + "\n\n" +
 			"  FAZO --> " + Util.f1.format((pointing.x() + fixedOffset.x()) / Unit.arcsec) +
 			", FZAO --> " + Util.f1.format(-(pointing.y() + fixedOffset.y()) / Unit.arcsec);		

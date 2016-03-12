@@ -25,11 +25,10 @@ package crush.sofia;
 
 import nom.tam.fits.Fits;
 import crush.GroundBased;
-import crush.HorizontalFrame;
 import crush.Integration;
 import crush.Scan;
 
-public abstract class SofiaIntegration<InstrumentType extends SofiaCamera<?>, FrameType extends HorizontalFrame> 
+public abstract class SofiaIntegration<InstrumentType extends SofiaCamera<?>, FrameType extends SofiaFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased {
 
 	/**
