@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,27 +20,33 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+package crush.devel;
 
-package crush.sofia;
-
-import crush.GroundBased;
+import crush.Instrument;
 import crush.Integration;
 import crush.Scan;
 
-public abstract class SofiaIntegration<InstrumentType extends SofiaCamera<?>, FrameType extends SofiaFrame> 
-extends Integration<InstrumentType, FrameType> implements GroundBased {
-
+public class ShadowScan extends Scan<Instrument<?>, Integration<Instrument<?>,?>> {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -4771883165716694480L;
-
+	private static final long serialVersionUID = -3683079235950210496L;
+	Scan<Instrument<?>,?> parent;
+		
+	public ShadowScan(Scan<Instrument<?>,?> parent) {
+		super(parent.instrument);
+		this.parent = parent;
+	}
 	
-	public SofiaIntegration(Scan<InstrumentType, ?> parent) {
-		super(parent);
+	@Override
+	public Integration<Instrument<?>,?> getIntegrationInstance() {
+		return parent.getIntegrationInstance();
 	}
 
-	
-	
-}
+	@Override
+	public void read(String descriptor, boolean readFully) throws Exception {
+		throw new UnsupportedOperationException("Shadow scans cannot be read.");
+	}
 
+
+}

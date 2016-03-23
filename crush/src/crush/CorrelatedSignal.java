@@ -421,14 +421,14 @@ public class CorrelatedSignal extends Signal {
 			}
 		
 			@Override
-			public float[] getPartialResult() { return channelParms; }
+			public float[] getLocalResult() { return channelParms; }
 			
 			@Override
 			protected void postProcess() {
 				super.postProcess();
 				
 				for(Parallel<float[]> task : getWorkers()) {
-					float[] localChannelParms = task.getPartialResult();
+					float[] localChannelParms = task.getLocalResult();
 					dependents.addForChannels(localChannelParms);
 					Instrument.recycle(localChannelParms);
 				}

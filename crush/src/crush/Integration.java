@@ -57,7 +57,7 @@ import nom.tam.fits.*;
  * @param <FrameType>
  * 
  */
-public abstract class Integration<InstrumentType extends Instrument<? extends Channel>, FrameType extends Frame> 
+public abstract class Integration<InstrumentType extends Instrument<?>, FrameType extends Frame> 
 extends ArrayList<FrameType> 
 implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.Entries, Messaging {
 	/**
@@ -766,13 +766,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			
 			@Override
-			public float[] getPartialResult() { return frameParms; }
+			public float[] getLocalResult() { return frameParms; }
 			
 			@Override
 			public void postProcess() {
 				super.postProcess();
 				for(Parallel<float[]> task : getWorkers()) {
-					float[] localFrameParms = task.getPartialResult();
+					float[] localFrameParms = task.getLocalResult();
 					parms.addForFrames(localFrameParms);
 					recycle(localFrameParms);
 				}
@@ -870,7 +870,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			
 			@Override
-			public float[] getPartialResult() { return frameParms; }
+			public float[] getLocalResult() { return frameParms; }
 			
 			@Override
 			protected void processIndex(int k) {
@@ -1061,13 +1061,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			
 			@Override
-			public DataPoint[] getPartialResult() { return var; }
+			public DataPoint[] getLocalResult() { return var; }
 			
 			@Override
 			public DataPoint[] getResult() {
 				
 				for(Parallel<DataPoint[]> task : getWorkers()) {
-					final DataPoint[] localVar = task.getPartialResult();
+					final DataPoint[] localVar = task.getLocalResult();
 					
 					if(var == null) var = localVar;
 					else {
@@ -1137,14 +1137,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			
 			@Override
-			public DataPoint[] getPartialResult() { return var; }
+			public DataPoint[] getLocalResult() { return var; }
 			
 			@Override
 			public DataPoint[] getResult() {
 				init();
 				
 				for(Parallel<DataPoint[]> task : getWorkers()) {
-					final DataPoint[] localVar = task.getPartialResult();
+					final DataPoint[] localVar = task.getLocalResult();
 					for(int i=instrument.size(); --i >= 0; ) {
 						final DataPoint global = var[i];
 						final DataPoint local = localVar[i];
@@ -1298,13 +1298,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			
 			@Override
-			public WeightedPoint getPartialResult() { return stats; }
+			public WeightedPoint getLocalResult() { return stats; }
 			
 			@Override
 			public WeightedPoint getResult() {
 				WeightedPoint global = new WeightedPoint();
 				for(Parallel<WeightedPoint> task : getWorkers()) {
-					WeightedPoint local = task.getPartialResult();
+					WeightedPoint local = task.getLocalResult();
 					global.add(local.value());
 					global.addWeight(local.weight());
 				}
@@ -1539,7 +1539,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		int flagCount = despike.isConfigured("flagcount") ? despike.get("flagcount").getInt() : Integer.MAX_VALUE;
 		int frameSpikes = despike.isConfigured("framespikes") ? despike.get("framespikes").getInt() : instrument.size();
 		
-		if(method.equals("neighbours") || method.equals("neighbors")) despikeNeighbouring(level, framesFor(0.2 * getPointCrossingTime()));
+		if(method.equals("neighbours") || method.equals("neighbors")) {
+		    int delta = isPhaseModulated() ? 1 : framesFor(0.2 * getPointCrossingTime());
+		    despikeNeighbouring(level, delta);
+		}
 		else if(method.equals("absolute")) despikeAbsolute(level);
 		else if(method.equals("gradual")) despikeGradual(level, 0.1);
 		else if(method.equals("multires") || method.equals("features")) despikeMultires(level);
@@ -1557,10 +1560,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		else flagSpikyChannels(flagFraction, flagCount);
 		
+		
 		if(isPhaseModulated()) if(hasOption("phasedespike")) {
 			PhaseSet phases = ((PhaseModulated) this).getPhases();
 			if(phases != null) phases.despike(level);
 		}
+		
 	}
 	
 	private void setTempDespikeLevels(ChannelGroup<?> channels, final double significance) {
@@ -1569,7 +1574,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void despikeNeighbouring(final double significance, final int delta) {
 		comments += "dN";
-	
+		
 		if(size() < delta) return;
 		
 		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
@@ -1579,6 +1584,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		setTempDespikeLevels(connectedChannels, significance);
 		
+		final float[] frameLevel = getFloats();
+		
 		// Clear the spike flag for every sample...
 		// and precalculate the thresholds...
 		new Fork<Void>() {
@@ -1587,9 +1594,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				for(final Channel channel : connectedChannels) exposure.sampleFlag[channel.index] &= notSpike;
 				if(exposure.index >= delta) {
 					final Frame before = get(exposure.index - delta);
-					exposure.tempC = before == null ? Float.NaN : (float) Math.sqrt(1.0F / exposure.relativeWeight + 1.0F / before.relativeWeight);
+					frameLevel[exposure.index] = before == null ? Float.NaN : (float) Math.sqrt(1.0F / exposure.relativeWeight + 1.0F / before.relativeWeight);
 				}
-				else exposure.tempC = Float.NaN;
+				else frameLevel[exposure.index] = Float.NaN;
 			}			
 		}.process();
 		
@@ -1610,21 +1617,21 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					
 					// Flag both points as spike, since it's not immediately clear which is the troubled one...
 					if((after.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE) == 0) {
-						if(Math.abs(exposure.data[channel.index] - after.data[channel.index]) > channel.temp * after.tempC) {
+						if(Math.abs(exposure.data[channel.index] - after.data[channel.index]) > channel.temp * frameLevel[after.index]) {
 							exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
 							after.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
 						}
 					}
 					
 					// Exonerate the prior spike if possible...
-					else if(Math.abs(exposure.data[channel.index] - after.data[channel.index]) <= channel.temp * after.tempC)
+					else if(Math.abs(exposure.data[channel.index] - after.data[channel.index]) <= channel.temp * frameLevel[after.index])
 						after.sampleFlag[channel.index] &= notSpike;
-					
 				}
 			}
 			
 		}.process();
 	
+		recycle(frameLevel);
 
 	}
 
@@ -1799,13 +1806,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			
 			@Override
-			public int[] getPartialResult() { return channelSpikes; }
+			public int[] getLocalResult() { return channelSpikes; }
 			
 			@Override
 			public int[] getResult() {
 				init();
 				for(Parallel<int[]> task : getWorkers()) {
-					int[] localSpikes = task.getPartialResult();
+					int[] localSpikes = task.getLocalResult();
 					for(int c=instrument.size(); --c >= 0; ) channelSpikes[c] += localSpikes[c];
 					Instrument.recycle(localSpikes);
 				}
@@ -1856,12 +1863,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 			
 			@Override
-			public Integer getPartialResult() { return spikyFrames; }
+			public Integer getLocalResult() { return spikyFrames; }
 			
 			@Override
 			public Integer getResult() {
 				int globalSpikyFrames = 0;
-				for(Parallel<Integer> task : getWorkers()) globalSpikyFrames += task.getPartialResult();
+				for(Parallel<Integer> task : getWorkers()) globalSpikyFrames += task.getLocalResult();
 				return globalSpikyFrames;
 			}
 			
@@ -3028,7 +3035,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public Signal getSignal(Mode mode) {
 		Signal signal = signals.get(mode);
 		if(signal == null) if(mode instanceof Response) {
-			signal = ((Response) mode).getSignal(this);
+			signal = ((Response) mode).getSignal(this);	
 			if(signal.isFloating) signal.level(false);
 			signal.removeDrifts();
 		}

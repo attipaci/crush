@@ -959,14 +959,14 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		SphericalCoordinates nativeCoords = getNativeCoordinates();
 		
 		if(sourceCoords.getClass().equals(nativeCoords.getClass())) {
-		    return new Offset2D(nativeCoords, sourceCoords.getOffsetFrom(sourceModel.getReference()));
+		    return new Offset2D(sourceModel.getReference(), sourceCoords.getOffsetFrom(sourceModel.getReference()));
         }
 		else if(sourceCoords instanceof EquatorialCoordinates)
-			return getNativeOffsetOf(new Offset2D(equatorial, sourceCoords.getOffsetFrom(sourceModel.getReference())));
+			return getNativeOffsetOf(new Offset2D(sourceModel.getReference(), sourceCoords.getOffsetFrom(sourceModel.getReference())));
 		else if(sourceCoords instanceof CelestialCoordinates) {
 			EquatorialCoordinates sourceEq = ((CelestialCoordinates) sourceCoords).toEquatorial();
 			EquatorialCoordinates refEq = ((CelestialCoordinates) sourceModel.getReference()).toEquatorial();
-			return getNativeOffsetOf(new Offset2D(equatorial, sourceEq.getOffsetFrom(refEq)));
+			return getNativeOffsetOf(new Offset2D(refEq, sourceEq.getOffsetFrom(refEq)));
 		}
 		
 		return null;

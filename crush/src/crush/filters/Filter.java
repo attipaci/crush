@@ -181,14 +181,14 @@ public abstract class Filter implements Serializable, Cloneable {
 			}
 			
 			@Override
-			public float[] getPartialResult() { return worker.frameParms; }
+			public float[] getLocalResult() { return worker.frameParms; }
 			
 			@Override
 			protected void postProcess() {
 				super.postProcess();
 				
 				for(Parallel<float[]> task : getWorkers()) {
-					float[] localFrameParms = task.getPartialResult();
+					float[] localFrameParms = task.getLocalResult();
 					parms.addForFrames(localFrameParms);
 					Integration.recycle(localFrameParms);
 				}

@@ -41,7 +41,6 @@ import jnum.data.WeightedPoint;
 import jnum.math.Range;
 import jnum.math.Vector2D;
 import jnum.text.TableFormatter;
-import jnum.util.FlagSpace;
 import jnum.util.HashCode;
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -667,14 +666,13 @@ implements TableFormatter.Entries, Messaging {
 	
 	public String getChannelFlagKey(String prepend) {	    
 	    if(isEmpty()) return prepend;
-	    FlagSpace<Integer> flags = Channel.flagSpace;
 	    
 	    StringBuffer buf = new StringBuffer();
 	    
-	    ArrayList<Integer> values = new ArrayList<Integer>(flags.getValues());
+	    ArrayList<Integer> values = new ArrayList<Integer>(Channel.flagSpace.getValues());
 	    Collections.sort(values);
 	    
-	    for(int i=0; i<values.size(); i++) buf.append(prepend + flags.get(values.get(i)) + "\n");
+	    for(int i=0; i<values.size(); i++) buf.append(prepend + Channel.flagSpace.get(values.get(i)) + "\n");
 	    
 	    return new String(buf);
 	}

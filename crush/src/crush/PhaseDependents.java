@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -70,26 +70,21 @@ public class PhaseDependents implements Serializable {
 	
 	public PhaseSet getPhases() { return phases; }
 	
-	public void clear(final Iterable<? extends Channel> channels, final int from, int to) { 
-		while(--to >= from) {
-			final PhaseData phase = phases.get(to);
-			if(phase != null) phase.dependents -= forPhase[to];
+	public void clear(final Iterable<? extends Channel> channels) {
+	    clear(channels, 0, forPhase.length);
+	}
+	
+	public void clear(final Iterable<? extends Channel> channels, final int from, final int to) { 
+		for(int i=to; --i >= from; ) {
+			final PhaseData phase = phases.get(i);
+			if(phase != null) phase.dependents -= forPhase[i];
 		}
 		for(final Channel channel : channels) phases.channelParms[channel.index] -= forChannel[channel.index];
 		
-		Arrays.fill(forPhase, 0.0);
-		Arrays.fill(forChannel, 0.0);
+		Arrays.fill(forPhase, from, to, 0.0);
+		Arrays.fill(forChannel, from, to, 0.0);
 	}
 	
-	public final void clear(final PhaseData phase) {
-		phase.dependents -= forPhase[phase.index];
-		forPhase[phase.index] = 0.0; 
-	}
-	
-	public final void clear(final Channel channel) { 
-		phases.channelParms[channel.index] -= forChannel[channel.index];
-		forChannel[channel.index] = 0.0; 
-	}
 	
 	public final void addAsync(final PhaseData phase, final Channel channel, final double dp) {
 		forPhase[phase.index] += dp; 
@@ -104,6 +99,10 @@ public class PhaseDependents implements Serializable {
 		forChannel[channel.index] += dp; 
 	}
 	
+	public void apply(final Iterable<? extends Channel> channels) {
+	    apply(channels, 0, forPhase.length);
+	}
+	
 	public void apply(final Iterable<? extends Channel> channels, final int from, int to) {
 		while(--to >= from) {
 			final PhaseData phase = phases.get(to);
@@ -112,15 +111,6 @@ public class PhaseDependents implements Serializable {
 		
 		for(final Channel channel : channels) phases.channelParms[channel.index] += forChannel[channel.index];
 		
-	}
-	
-	public void apply(Channel channel) {
-		for(int i = phases.size(); --i >= 0; ) {
-			final PhaseData phase = phases.get(i);
-			if(phase != null) phase.dependents += forPhase[i];
-		}
-		
-		phases.channelParms[channel.index] += forChannel[channel.index];
 	}
 	
 	public double get(final PhaseData phase) { return forPhase[phase.index]; }

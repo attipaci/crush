@@ -1,3 +1,23 @@
+
+
+>> Pointing native & focalplane
+
+>> Projector2D -> Projected2D, AstroPojector -> CelestialOffset???
+
+>> proper projection/deprojection of offsets... (Projected2D...)
+
+>> Frame -> Frame<NativeCoordinateType>
+   Scan -> Scan<NativeCoordinateType>
+   horizontal -> native
+
+>> better way to plug APEX scan resource leaks...
+
+>> eliminate channel/frame temp fields
+
+>> Laboca He3 temperature reporting (blinds)
+
+
+
 >> GLOSSARY-2-html:
 
  * each option to have a separate page, or all on one page?

@@ -785,13 +785,13 @@ public class ScalarMap extends SourceMap {
 			}
 			
 			@Override
-			public DataPoint[] getPartialResult() { return sum; }
+			public DataPoint[] getLocalResult() { return sum; }
 			
 			@Override
 			public DataPoint[] getResult() {
 				DataPoint[] total = null;
 				for(Parallel<DataPoint[]> task : getWorkers()) {
-					DataPoint[] local = task.getPartialResult();
+					DataPoint[] local = task.getLocalResult();
 					if(sum == null) sum = local;
 					else {
 						for(int i=sum.length; --i >= 0; ) {

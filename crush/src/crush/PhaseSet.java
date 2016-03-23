@@ -83,7 +83,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
 		
 		integration.comments += "|P";
 		
-		for(PhaseData offsets : this) offsets.update(channels, integrationDeps);	
+		for(PhaseData phase : this) phase.update(channels, integrationDeps);	
 		
 		int N = size();
 		if(integration.hasOption("stability")) {
@@ -123,7 +123,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
 			if(channel instanceof PhaseWeighting) ((PhaseWeighting) channel).deriveRelativePhaseWeights(this); 
 	}
 	
-	public void despike(double level) {
+	public void despike(double level) { 
 		integration.comments += "|dP";
 		
 		int spikes = 0;
@@ -134,14 +134,18 @@ public class PhaseSet extends ArrayList<PhaseData> {
 		integration.comments += "(" + spikes + ")";
 	}
 	
-	public void removeDrifts(ChannelGroup<? extends Channel> channels, int nPhases) {
+	public void removeDrifts(ChannelGroup<?> channels, int nPhases) {
 		//integration.comments += "|DP(" + nPhases + ")";
-		for(Channel channel : channels) removeDrifts(channel, nPhases);		
+	    final PhaseDependents parms = getPhaseDependents("drifts");
+	    
+	    parms.clear(channels);
+	    
+		for(Channel channel : channels) removeDrifts(channel, nPhases, parms);
+		
+		parms.apply(channels);
 	}
 	
-	private void removeDrifts(final Channel channel, final int nPhases) {		
-		final PhaseDependents parms = getPhaseDependents("drifts");
-		parms.clear(channel);
+	private void removeDrifts(final Channel channel, final int nPhases, final PhaseDependents parms) {		
 		
 		int nParms = ExtraMath.roundupRatio(size(), nPhases);
 		
@@ -151,23 +155,22 @@ public class PhaseSet extends ArrayList<PhaseData> {
 			final int to = Math.min(size(), from+nPhases);
 			
 			for(int n=from; n<to; n++) {
-				PhaseData offsets = get(n);
-				sum += offsets.weight[channel.index] * offsets.value[channel.index];
-				sumw += offsets.weight[channel.index];
+				PhaseData phase = get(n);
+				sum += phase.weight[channel.index] * phase.value[channel.index];
+				sumw += phase.weight[channel.index];
 			}
 			
 			if(sumw > 0.0) {
 				double level = (float) (sum / sumw);
 				for(int n=from; n<to; n++) {
-					PhaseData offsets = get(n);
-					offsets.value[channel.index] -= level;
-					parms.addAsync(offsets, offsets.weight[channel.index] / sumw);
+					PhaseData phase = get(n);
+					phase.value[channel.index] -= level;
+					parms.addAsync(phase, phase.weight[channel.index] / sumw);
 				}
 			}	
 			parms.addAsync(channel, 1.0);
 		}		
 		
-		parms.apply(channel);
 	}
 	
 	// TODO levelling on just the left frames...
@@ -184,7 +187,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
 		if(sumw == 0.0) return;
 		final double ave = sum / sumw;
 		
-		for(PhaseData offsets : this) offsets.value[c] -= ave;
+		for(PhaseData phase : this) phase.value[c] -= ave;
 	}
 	
 	public void write() throws IOException {

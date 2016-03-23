@@ -293,7 +293,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 		        0.5 * (first.telescopeCoords.longitude() + last.telescopeCoords.longitude()),
 		        0.5 * (first.telescopeCoords.latitude() + last.telescopeCoords.latitude())
 		);
-		//System.err.println(" Telescope Assembly: " + telescopeCoordinates.toString(1));
+		System.err.println(" Telescope Assembly: " + telescopeCoordinates.toString(1));
 		 
 	}
 	
@@ -332,17 +332,18 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 		instrument.validate(this);	
 		clear();
 
-		IntegrationType integration = getIntegrationInstance();
-		integration.readData(fits);
-		add(integration);
+		addIntegrationsFrom(fits);
 		
 		try { fits.getStream().close(); }
 		catch(IOException e) {}
 		
-		instrument.samplingInterval = integration.instrument.samplingInterval;
-		instrument.integrationTime = integration.instrument.integrationTime;
+		instrument.samplingInterval = get(0).instrument.samplingInterval;
+		instrument.integrationTime = get(0).instrument.integrationTime;
 	}
 	
+	public abstract void addIntegrationsFrom(Fits fits) throws Exception;
+    
+
 	@Override
 	public double getAmbientHumidity() {
 		return Double.NaN;

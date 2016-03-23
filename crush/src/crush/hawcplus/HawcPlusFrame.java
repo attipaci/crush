@@ -25,6 +25,7 @@ package crush.hawcplus;
 
 
 import crush.sofia.SofiaFrame;
+import jnum.astro.EquatorialCoordinates;
 
 
 public class HawcPlusFrame extends SofiaFrame {
@@ -33,15 +34,24 @@ public class HawcPlusFrame extends SofiaFrame {
 	 */
 	private static final long serialVersionUID = 6511202510198331668L;
 	
+	EquatorialCoordinates objectCoords;    // For non-sidereal mapping...
+	
 	long mceSerial;
-	float HPWangle;
+	float hwpAngle;
+	
+	byte[] jumpCounter;
 		
 	public HawcPlusFrame(HawcPlusScan parent) {
 		super(parent);
 		setSize(parent.instrument.pixels());
 	}
 	
-
+	@Override
+    public void setSize(int size) {
+	    super.setSize(size);
+	    jumpCounter = new byte[size];
+	}
+	
 	public void parseData(long[] DAC, int frameIndex) {   
 		parseData(DAC, frameIndex * FITS_CHANNELS, FITS_CHANNELS);
 	}
@@ -61,6 +71,8 @@ public class HawcPlusFrame extends SofiaFrame {
 	public final static int FITS_ROWS = 41;
 	public final static int FITS_COLS = 128;
 	public final static int FITS_CHANNELS = FITS_ROWS * FITS_COLS;
+	
+	public static byte SAMPLE_PHI0_JUMP = sampleFlags.next('j', "phi0 jump").value();
 
    
 }

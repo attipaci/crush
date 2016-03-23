@@ -107,8 +107,8 @@ public class APEXChoppedPhotometry extends Photometry {
 					catch(IOException e) { e.printStackTrace(); }
 				 */
 
-				WeightedPoint df = pixel.getCorrectedLROffset(phases, neighbours, sourceGain);	
-				double chi2 = pixel.getCorrectedLRChi2(phases, neighbours, df.value(), sourceGain);
+				WeightedPoint df = pixel.getGainCorrectedLROffset(phases, neighbours, sourceGain);	
+				double chi2 = pixel.getGainCorrectedLRChi2(phases, neighbours, df.value(), sourceGain);
 
 				if(!Double.isNaN(chi2)) {
 					df.scaleWeight(Math.min(1.0, 1.0 / chi2));

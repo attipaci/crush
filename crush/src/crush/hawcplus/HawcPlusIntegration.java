@@ -24,8 +24,6 @@
 package crush.hawcplus;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import crush.CRUSH;
@@ -67,27 +65,9 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		return new HawcPlusFrame((HawcPlusScan) scan);
 	}
 	
-	@Override
-	public void readData(Fits fits) throws Exception {
-		BasicHDU<?>[] HDU = fits.read();
-		ArrayList<BinaryTableHDU> dataHDUs = new ArrayList<BinaryTableHDU>();
-		
-		for(int i=1; i<HDU.length; i++) if(HDU[i] instanceof BinaryTableHDU) {
-			Header header = HDU[i].getHeader();
-			String extName = header.getStringValue("EXTNAME");
-			if(extName.equalsIgnoreCase("TIMESTREAM DATA")) dataHDUs.add((BinaryTableHDU) HDU[i]);
-		}
-		
-		read(dataHDUs);
-		
-		try { fits.getStream().close(); }
-		catch(IOException e) {}
-		
-		System.gc();
-	}
 	
-	protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {
-		
+	
+	protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {	
 		int records = 0;
 		for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
 		
@@ -213,7 +193,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					}
 					else frame.chopperPosition = new Vector2D();
 					
-					frame.HPWangle = HWP[i] * (float) Unit.deg;
+					frame.hwpAngle = HWP[i] * (float) Unit.deg;
 					frame.PWV = PWV[i] * (float) Unit.um;
 
 					frame.LST = LST[i] * (float) Unit.hour;

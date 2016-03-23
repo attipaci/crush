@@ -143,7 +143,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		
 		// Flag frames according to chopper phase ---> left, right, transit.
 		PhaseData current = new PhaseData(this);
-		int phases = 0;
+		int nPhases = 0;
 		int transitFlag = Frame.CHOP_TRANSIT | Frame.SKIP_MODELS | Frame.SKIP_WEIGHTING | Frame.SKIP_SOURCE;
 		
 		for(Frame exposure : this) if(exposure != null) {
@@ -158,7 +158,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 					current.start = exposure;
 					current.end = exposure;
 					if(current.phase != 0) chopper.phases.add(current);
-					phases++;
+					nPhases++;
 				}
 				else current.end = exposure;
 				usable++;
@@ -172,7 +172,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 					current.start = exposure;
 					current.end = exposure;
 					if(current.phase != 0) chopper.phases.add(current);
-					phases++;
+					nPhases++;
 				}
 				else current.end = exposure;
 				usable++;
@@ -197,7 +197,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		// Get the initial phase data...
 		updatePhases();
 		
-		filterTimeScale = size() * instrument.integrationTime / phases; 
+		filterTimeScale = size() * instrument.integrationTime / nPhases; 
 		
 	}
 	
