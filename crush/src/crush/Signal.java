@@ -195,7 +195,7 @@ public class Signal implements Serializable, Cloneable {
 		double sum = 0.0;
 		int n=0;
 		
-		for(int t=from; t<to; t++) {
+		for(int t=from; t<to; t++) if(!Float.isNaN(value[t])) {
 			sum += value[t];
 			n++;
 		}
@@ -383,14 +383,14 @@ public class Signal implements Serializable, Cloneable {
 			}
 			
 			@Override
-			public DataPoint[] getPartialResult() { return dG; }
+			public DataPoint[] getLocalResult() { return dG; }
 			
 			@Override
 			public DataPoint[] getResult() {
 				final DataPoint[] globalIncrement = DataPoint.createArray(mode.size());
 				
 				for(Parallel<DataPoint[]> task : getWorkers()) {
-					final DataPoint[] localIncrement = task.getPartialResult();
+					final DataPoint[] localIncrement = task.getLocalResult();
 					for(int k=mode.size(); --k >= 0; ) {
 						DataPoint global = globalIncrement[k];
 						DataPoint local = localIncrement[k];

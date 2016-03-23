@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2010 Attila Kovacs 
 
 package crush.apex;
 
@@ -66,15 +65,15 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 
 	@Override
 	public void deriveRelativePhaseWeights(final PhaseSet phases) {	
+	    unflag(FLAG_PHASE_DOF);
+	    
 		double chi2 = getLRChi2(phases, getLROffset(phases).value());
 		
 		if(Double.isNaN(chi2)) {
 			flag(FLAG_PHASE_DOF);
 			return;
 		}
-		
-		unflag(FLAG_PHASE_DOF);
-		
+			
 		relativePhaseWeight /= chi2;
 
 		// Do not allow relative phaseWeights to become larger than 1.0
@@ -110,7 +109,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 	}
 	
 	
-	public WeightedPoint getCorrectedChopSignal(final PhaseSet phases, final int i, final Collection<APEXPixel> bgPixels, final double[] G) {
+	public WeightedPoint getGainCorrectedChopSignal(final PhaseSet phases, final int i, final Collection<APEXPixel> bgPixels, final double[] G) {
 		final WeightedPoint bg = new WeightedPoint();
 		
 		for(final APEXPixel pixel : bgPixels) if(!pixel.isFlagged()) if(pixel != this) if(pixel.sourcePhase == 0) {
@@ -145,7 +144,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 		final int N = phases.size();
 		for(int i=1; i < N; i+=2) out.println("  " + (i>>1)
 				+ "\t" + getChopSignal(phases, i).toString(Util.e5)
-				+ "\t" + getCorrectedChopSignal(phases, i, bgPixels, sourceGain).toString(Util.e5));
+				+ "\t" + getGainCorrectedChopSignal(phases, i, bgPixels, sourceGain).toString(Util.e5));
 		
 		out.println();
 		out.println();
@@ -197,10 +196,10 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 		return lr;
 	}
 	
-	public WeightedPoint getCorrectedLROffset(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double[] sourceGain) {
+	public WeightedPoint getGainCorrectedLROffset(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double[] sourceGain) {
 		int N = phases.size();
 		final WeightedPoint lr = new DataPoint();
-		for(int i=1; i < N; i+=2) lr.average(getCorrectedChopSignal(phases, i, bgPixels, sourceGain));
+		for(int i=1; i < N; i+=2) lr.average(getGainCorrectedChopSignal(phases, i, bgPixels, sourceGain));
 		//lr.scaleWeight(0.5);
 		return lr;
 	}
@@ -213,7 +212,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 		
 		for(int i=1; i < N; i+=2) {
 			final WeightedPoint LR = getChopSignal(phases, i);
-			if(LR.weight() == 0.0) continue;
+			if(LR.weight() <= 0.0) continue;
 			
 			LR.subtract(mean);
 
@@ -222,20 +221,19 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 			n++;
 		}
 		
-		//double dof = n * (1.0 - (double) phases.driftParms / phases.size());
 		dof = n * (1.0 - phases.channelParms[this.index] / phases.size());
 		dof = Math.min(dof, n - 1);
 		
-		return dof > 0.0 ? chi2/dof : Double.NaN;
+		return dof > 0.0 ? chi2 / dof : Double.NaN;
 	}
 
-	public double getCorrectedLRChi2(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double mean, final double[] sourceGain) {	
+	public double getGainCorrectedLRChi2(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double mean, final double[] sourceGain) {	
 		final int N = phases.size();
 		double chi2 = 0.0;
 		int n = 0;
 		
 		for(int i=1; i < N; i+=2) {
-			final WeightedPoint LR = getCorrectedChopSignal(phases, i, bgPixels, sourceGain);
+			final WeightedPoint LR = getGainCorrectedChopSignal(phases, i, bgPixels, sourceGain);
 			if(LR.weight() == 0.0) continue;
 			
 			LR.subtract(mean);
@@ -244,31 +242,31 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 			chi2 += chi * chi;
 			n++;
 		}
-		//double dof = n * (1.0 - (double) phases.driftParms / phases.size());
+		
 		dof = n * (1.0 - phases.channelParms[this.index] / phases.size());
 		dof = Math.min(dof, n - 1);
 		
-		return dof > 0.0 ? chi2/dof : Double.NaN;
+		return dof > 0.0 ? chi2 / dof : Double.NaN;
 	}
 	
 	@Override
-	public int despike(PhaseSet phases, double level) {
+	public int despike(PhaseSet phases, double level) { 
 		final int N = phases.size();
 		final double mean = getLROffset(phases).value();
 		
 		int spikes = 0;
 		
 		for(int i=1; i < N; i+=2) {
-			phases.get(i).channelFlag[this.index] &= ~PhaseData.FLAG_SPIKE;
-			phases.get(i-1).channelFlag[this.index] &= ~PhaseData.FLAG_SPIKE;
+			phases.get(i).channelFlag[this.index] &= ~FLAG_PHASE_SPIKE;
+			phases.get(i-1).channelFlag[this.index] &= ~FLAG_PHASE_SPIKE;
 			
 			final WeightedPoint LR = getChopSignal(phases, i);
 			if(LR.weight() == 0.0) continue;
 			
 			LR.subtract(mean);
 			if(Math.abs(DataPoint.significanceOf(LR)) > level) {
-				phases.get(i).channelFlag[this.index] |= PhaseData.FLAG_SPIKE;
-				phases.get(i-1).channelFlag[this.index] |= PhaseData.FLAG_SPIKE;
+				phases.get(i).channelFlag[this.index] |= FLAG_PHASE_SPIKE;
+				phases.get(i-1).channelFlag[this.index] |= FLAG_PHASE_SPIKE;
 				spikes++;
 			}
 		}
@@ -276,5 +274,5 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 	}
 	
 	public final static int FLAG_PHASE_DOF = softwareFlags.next('F', "Insufficient phase degrees-of-freedom").value();
-
+	public static final int FLAG_PHASE_SPIKE = softwareFlags.next('S', "Phase spike").value();
 }

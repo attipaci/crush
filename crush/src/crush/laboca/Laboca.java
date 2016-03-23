@@ -78,6 +78,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlappingCha
 		}
 		
 		super.readPar(hdu);
+		
 	}
 	
 	@Override

@@ -3312,9 +3312,9 @@
 
 :: system=<type>	Select the coordinate system for mapping. The default
 			is 'equatorial'. Other possibilities are 'horizontal'
-			'ecliptic', 'galactic' or 'supergalactic'. Each of 
-			these values is additionally aliased to simple keys. 
-			Thus, you may use:
+			'ecliptic', 'galactic' or 'supergalactic', 'focalplane'
+			or 'native'. Most of these values is additionally 
+			aliased to simple keys. Thus, you may use:
 			
 			   > crush -galactic [...]
 			   

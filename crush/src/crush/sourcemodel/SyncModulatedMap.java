@@ -126,12 +126,12 @@ public class SyncModulatedMap extends ScalarMap {
 			}
 			
 			@Override
-			public Integer getPartialResult() { return goodFrames; }
+			public Integer getLocalResult() { return goodFrames; }
 			
 			@Override
 			public Integer getResult() {
 				int total = 0;
-				for(Parallel<Integer> task : getWorkers()) total += task.getPartialResult();
+				for(Parallel<Integer> task : getWorkers()) total += task.getLocalResult();
 				return total;
 			}
 			

@@ -95,7 +95,16 @@ public class Dependents implements Serializable {
 		for(int i=forFrame.length; --i >= 0; ) forFrame[i] += dp[i];
 	}
 	
-	public synchronized void clear(final Iterable<? extends Channel> channels, final int from, int to) { 
+	public synchronized void clear(final Iterable<? extends Channel> channels, final int from, final int to) { 
+	    int i=to;
+	    
+	    while(--i >= from) {
+            final Frame exposure = integration.get(i);
+            if(exposure != null) exposure.removeDependents(forFrame[i]);
+        }
+        
+        for(final Channel channel : channels) channel.removeDependents(forChannel[channel.index]);
+	    
 		Arrays.fill(forFrame, from, to,  0.0F);
 		Arrays.fill(forChannel,  0.0F);
 	}

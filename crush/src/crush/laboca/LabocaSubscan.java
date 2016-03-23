@@ -55,8 +55,8 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 	
 	@Override
 	public void validate() {	
-		super.validate();
-	
+	    super.validate();
+	    
 		if(hasOption("he3")) {
 			Configurator he3 = option("he3");
 			if(he3.equals("blinds")) setBlindTemperatures();
@@ -75,7 +75,6 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 			}
 		}
 		
-		
 	}
 	
 	@Override
@@ -92,11 +91,14 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		
 		Response mode = (Response) instrument.modalities.get("temperature").get(0);
 		Signal signal = getSignal(mode);
-		if(signal == null) signal = mode.getSignal(this);	
-		signal.level(false);
+		
+		if(signal == null) {
+		    signal = mode.getSignal(this);	
+		    signal.level(false);
+		}
 		
 		rmsHe3 = signal.getRMS();
-		System.err.println("   RMS He3 temperature drift is " + Util.f3.format(1e3 * rmsHe3) + " mK.");
+		System.err.println("   RMS He3 temperature drift is " + Util.f3.format(rmsHe3 * instrument.gain / Unit.mK) + " mK.");
 		
 		final Signal temperatureSignal = signal;
 	
@@ -127,6 +129,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 	}
 	
 	public void setBlindTemperatures() {
+	     
 		ChannelGroup<LabocaPixel> blindChannels = instrument.getBlindChannels();
 		if(blindChannels.size() < 1) {
 			System.err.println("   WARNING! No blind channels for temperature correction.");
@@ -155,6 +158,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 		}
 		
 		for(LabocaFrame exposure : this) if(exposure != null) exposure.he3Temp = signal.valueAt(exposure); 
+		
 	}	
 	
 	

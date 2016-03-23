@@ -191,12 +191,12 @@ public class MultiBeamMap extends ScalarMap {
 			}
 			
 			@Override 
-			public Double getPartialResult() { return sumw; }
+			public Double getLocalResult() { return sumw; }
 			
 			@Override
 			public Double getResult() {
 				double globalSumW = 0.0;
-				for(Parallel<Double> task : getWorkers()) globalSumW += task.getPartialResult();
+				for(Parallel<Double> task : getWorkers()) globalSumW += task.getLocalResult();
 				return globalSumW;
 			}
 			

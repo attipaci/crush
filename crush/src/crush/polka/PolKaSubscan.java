@@ -207,14 +207,14 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 			}
 			
 			@Override
-			public float[] getPartialResult() { return frameParms; }
+			public float[] getLocalResult() { return frameParms; }
 			
 			@Override
 			protected void postProcess() {
 				super.postProcess();
 				
 				for(Parallel<float[]> task : getWorkers()) {
-					float[] localFrameParms = task.getPartialResult();
+					float[] localFrameParms = task.getLocalResult();
 					parms.addForFrames(localFrameParms);
 					recycle(localFrameParms);
 				}

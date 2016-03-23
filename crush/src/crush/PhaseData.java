@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -29,8 +29,6 @@ import java.text.NumberFormat;
 import jnum.Util;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
-import jnum.util.FlagSpace;
-import jnum.util.FlagBlock;
 import jnum.util.HashCode;
 
 
@@ -86,6 +84,7 @@ public class PhaseData implements Serializable {
 	public void update(final ChannelGroup<?> channels, final Dependents parms) {
 		if(end.index - start.index < 1) return;
 		
+		
 		final int nc = integration.instrument.size();
 		if(value == null) {
 			value = new double[nc];
@@ -94,23 +93,24 @@ public class PhaseData implements Serializable {
 		}
 		
 		final int to = end.index + 1;
+		final int skipSamples = Frame.SAMPLE_SPIKE | Frame.SAMPLE_SKIP;
 		
 		parms.clear(channels, start.index, to);
 			
 		channels.new Fork<Void>() {
 			@Override
-			protected void process(Channel channel) {
+			protected void process(final Channel channel) {
 				double sum = 0.0, sumw = 0.0;
 				
 				for(int t=start.index; t<to; t++) {
 					final Frame exposure = integration.get(t);
+					
 					if(exposure == null) continue;
 					if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+					if((exposure.sampleFlag[channel.index] & skipSamples) != 0) continue;
 					
-					if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE) == 0) {
-						sum += exposure.relativeWeight * exposure.data[channel.index];
-						sumw += exposure.relativeWeight;
-					}
+					sum += exposure.relativeWeight * exposure.data[channel.index];
+					sumw += exposure.relativeWeight;
 				}
 				
 				parms.addAsync(channel, 1.0);
@@ -133,13 +133,12 @@ public class PhaseData implements Serializable {
 				
 				for(Channel channel : channels) {
 					exposure.data[channel.index] -= channel.temp;
-					if(wasUsed) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE) == 0)					
+					if(wasUsed) if((exposure.sampleFlag[channel.index] & skipSamples) == 0)					
 						parms.addAsync(exposure, exposure.relativeWeight / weight[channel.index]); 
 				}
 			}
 			
 		}.process();
-		
 		
 		
 		for(final Channel channel : channels) {
@@ -155,43 +154,45 @@ public class PhaseData implements Serializable {
 		return new WeightedPoint(value[channel.index], weight[channel.index]);
 	}
 	
-	protected void addChannelDependence(final PhaseDependents parms, final CorrelatedMode mode, final float[] G, final WeightedPoint increment) {
-		final int skipChannels = mode.skipFlags;
-		for(int k=G.length; --k >= 0; ) {
-			final Channel channel = mode.getChannel(k);
-			
-			if(channel.isFlagged(skipChannels)) continue;
-			if(channel.sourcePhase != 0) continue;
-			if(channelFlag[channel.index] != 0) continue;
-			
-			parms.addAsync(channel, weight[channel.index] * G[k] * G[k] / increment.weight());
-		}
+	protected boolean isContributing(final Channel channel, final CorrelatedMode mode) {
+		
+	    if(channel.isFlagged(mode.skipFlags)) return false;
+	    if(channel.sourcePhase != 0) return false;
+	    if(channelFlag[channel.index] != 0) return false;
+		return true;
 	}
 		
+	private void addChannelDeps(final CorrelatedMode mode, final float[] G, double sumw, double[] channelParms) {
+	    if(!(sumw > 0.0)) return;
+	    // Add the channeldeps...
+	    for(int k=G.length; --k >= 0; ) {
+	        final Channel channel = mode.getChannel(k);
+	        if(isContributing(channel, mode)) channelParms[k] += weight[channel.index] * G[k] * G[k] / sumw;
+	    }
+	}
 	
 	
-	protected void getMLCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint correlated) {	
-		final int skipChannels = mode.skipFlags;
-
+	protected void getMLCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint correlated, final double[] channelParms) {	
 		double sum = 0.0, sumw = 0.0;
 		
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.getChannel(k);
-			
-			if(channel.isFlagged(skipChannels)) continue;
-			if(channel.sourcePhase != 0) continue;
-			if(channelFlag[channel.index] != 0) continue;
+			if(!isContributing(channel, mode)) continue;
 	
 			final double wG = weight[channel.index] * G[k];
 			sum += (wG * value[channel.index]);
 			sumw += (wG * G[k]);
 		}
-			
+		
+		if(channelParms != null) addChannelDeps(mode, G, sumw, channelParms);
+		
 		correlated.setValue(sum / sumw);
 		correlated.setWeight(sumw);
-	}
+	}	
+		
 	
-	protected void getRobustCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint[] temp, final WeightedPoint correlated) {
+	
+	protected void getRobustCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint[] temp, final WeightedPoint correlated, final double[] channelParms) {
 		final int skipChannels = mode.skipFlags;
 		
 		int n=0;
@@ -218,6 +219,8 @@ public class PhaseData implements Serializable {
 			
 		}
 		Statistics.smartMedian(temp, 0, n, 0.25, correlated);
+		
+		if(channelParms != null) addChannelDeps(mode, G, correlated.weight(), channelParms);
 	}
 	
 	public String toString(NumberFormat nf) {
@@ -241,8 +244,8 @@ public class PhaseData implements Serializable {
 		
 	}
 	
-	public static final FlagBlock<Integer> flags = new FlagSpace.Integer("phase-flags").getDefaultFlagBlock();
-	public static final int FLAG_SPIKE = flags.next('s', "Spike").value();
+	
+	
 	
 
 }

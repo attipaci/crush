@@ -1,11 +1,26 @@
->> Frame -> Frame<NativeCoordinateType>
-   Scan -> Scan<NativeCoordinateType>
-   horizontal -> native
 
->> system=native
-   
+2.31-b1 (beta)
 
-2.31-a3
+	
+	Overview
+	======================================================================
+	This release fixes a major bug in the accounting of the degrees of
+	freedom (used for getting proper noise weights and uncertainty 
+	estimates). It also brings LABOCA photometry reductions back from the
+	brink. Among the new features are an enhanced configuration engine
+	with improved polling and brand new locks. There are lots of smaller
+	fixes and improvements, some documentation updates, and changes under
+	the hood.
+	====================================================================== 
+
+
+	[BUG] Dependents were accumulated instead of being replaced, resulting
+	in understated degrees of freedom that could spiral out of control.
+	Fortunately, for typical reductions the effect was more or less
+	contained. Still, this one was bad...
+
+	[BUG] {APEX} photometry reductions still had race conditions from all
+	prior 2.30 releases. Fixed.
 
 	[NEW] 'system=native' to reduce in the native telescope coordinates. 
 	For typical Alt/Az mount ground-based telescopes it is the same as 
@@ -57,13 +72,33 @@
 
 	[CHANGE] Despiking 'features' method renamed to 'multires'.
 
+	[FIX] {LABOCA} He3 temperature rms is reported correctly again...
+
+	[FIX] Signal drift removal could leave unwanted NaNs behind... 
+
+	[FIX] {APEX} Tau or calibration lookup could end up empty handed when
+	only table had a only few valid points in range. Fixed.
+
+	[FIX] {APEX} Photometry accounting of degrees of freedom in the phase
+	data was flawed. Fixed.
+
+	[FIX] {APEX} Improved handling of errors on scan read...
+
 	[FIX] Despiking via 'neighbours' method threshold was too high by about
 	sqrt(2) typically. Fixed.
 
 	[FIX] Pointing information is now correct for multiscan pointing 
 	reductions, in any coordinate system, and also for moving objects.
 
-	[TWEAK] {HAWC+} Native as well as horizontal support. (in progress...)
+	[TWEAK] {LABOCA} Configurations tweaked. 'twisting' cables 
+	decorrelation is disabled in 'deep' (previously enabled and could
+	result in unwanted artefacts). 'boxes' decorrelation no longer solves
+	for gains -- it seems to work better this way.
+
+	[TWEAK] Reporting of pointing offsets made more elegant and universal.
+
+	[TWEAK] {HAWC+} Reduction both in native and horizontal systems. 
+	(in progress...)
 
 	[TWEAK] Cleaner, more versatile, reporting of pointing offsets.
 
@@ -96,11 +131,17 @@
 	configuration engine is really a standalone piece of software, which 
 	may be (will be!) used outside of the bounds of CRUSH. The separate
 	document makes better sense.
+
+	[CODE] Lots of under the hood changes to make handling native 
+	coordinates, and conversion to/from them, more universal
 	
 	[CODE] Most classes now implement Serializable, as well as suitable
 	overrides for the hashCode() and equals() methods.
 
 	[CODE] kovacs.util packages renamed to jnum (Java Numerical).
+
+	[UPDATE] The nom.tam.fits package updated to the official 1.14.2
+        release.
 
 
 

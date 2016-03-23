@@ -40,6 +40,8 @@ import nom.tam.fits.*;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 
@@ -92,7 +94,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 		try { read(project, descriptor, readFully); }
 		catch(FileNotFoundException e) {
-			if(hasOption("debug")) e.printStackTrace();
+			if(CRUSH.debug) e.printStackTrace();
 			
 			String message = "Cannot read scan " + descriptor + "\n"
 				+ "     : project = " + project + "\n"
@@ -163,6 +165,9 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		String name = getFileName(getDataPath(), spec, projectID);	
 	
 		File file = new File(name);
+		
+		// Turn off FITS library warnings...
+        if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
 	
 		if(file.exists()) {
 			System.err.println();
@@ -172,11 +177,13 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		if(file.isDirectory()) {
 			System.err.println(" From directory '" + name + "'.");
 			try { readScanDirectory(name, "", readFully); }
+			catch(FitsException e) { throw e; }
 			catch(Exception e) {
-				if(hasOption("debug")) e.printStackTrace();
+				if(CRUSH.debug) e.printStackTrace();
 				try { readScanDirectory(name, ".gz", readFully); }
+				catch(FitsException e2) { throw e2; }
 				catch(Exception e2) { 
-					if(hasOption("debug")) e.printStackTrace();
+					if(CRUSH.debug) e.printStackTrace();
 					readScanDirectory(name, ".Z", readFully); 
 				}
 			}
@@ -196,8 +203,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		int subscans = readScanInfo(getHDU(dir + "SCAN" + ext));
 		instrument.readPar(getHDU(dir + getFEBECombination() + "-FEBEPAR" + ext));
 		instrument.validate(this);
-		clear();
-		
+		clear();	
 		closeStreams();
 		
 		for(int i=0; i<subscans; i++) {
@@ -221,7 +227,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	
 	public void closeStreams() {
 		for(Fits fits : openFits) {
-			try { fits.getStream().close();	}
+			try { fits.close();	}
 			catch(IOException e) { e.printStackTrace(); }
 		}
 		openFits.clear();
@@ -273,12 +279,10 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		File file = new File(fileName);
 		if(!file.exists()) throw new FileNotFoundException("Cannot find data file " + fileName);
 		
-		Fits fits = new Fits(new File(fileName), fileName.endsWith(".gz"));	
+		Fits fits = new Fits(new File(fileName), fileName.endsWith(".gz") | fileName.endsWith(".Z"));	
 		openFits.add(fits);
-		BasicHDU<?>[] hdu = fits.read();
-		fits.close();
-	
-		return (BinaryTableHDU) hdu[1];
+		
+		return (BinaryTableHDU) fits.getHDU(1);
 	}
 	
 	
@@ -295,6 +299,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		direction = header.getStringValue("SCANDIR");
 		String sourceName = header.getStringValue("OBJECT");
 		timeStamp = header.getStringValue("DATE-OBS");
+		
 		if(sourceName == null) sourceName = "Undefined";
 		setSourceName(sourceName);
 		

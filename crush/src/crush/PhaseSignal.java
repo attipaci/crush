@@ -23,8 +23,10 @@
 package crush;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import crush.CorrelatedMode.CoupledMode;
+import jnum.Parallel;
 import jnum.Util;
 import jnum.data.DataPoint;
 import jnum.data.WeightedPoint;
@@ -102,7 +104,7 @@ public class PhaseSignal implements Serializable {
 		
 		final float[] G = mode.getGains();
 		final ChannelGroup<?> channels = mode.getChannels();
-		final WeightedPoint dC = new WeightedPoint(); 
+		
 		final Integration<?,?> integration = phases.getIntegration();
 		
 		// Allow phases.estimator to override the default estimator request
@@ -111,15 +113,24 @@ public class PhaseSignal implements Serializable {
 		
 		final boolean useMedians = isRobust;
 	
-		final PhaseDependents parms = phases.getPhaseDependents(mode.getName());
-		parms.clear(channels, 0, phases.size());
+		final PhaseDependents phaseParms = phases.getPhaseDependents(mode.getName());
+		phaseParms.clear(channels);
 		
-		new CRUSH.Fork<Void>(phases.size(), integration.getThreadCount()) {
+		new CRUSH.Fork<double[]>(phases.size(), integration.getThreadCount()) {
 			private DataPoint[] temp = null;
+			private double phaseChannelParms[];
+			private WeightedPoint dC; 
 			
 			@Override
 			protected void init() {
 				super.init();
+				
+				dC = new WeightedPoint();
+				
+				// Use local channel dependency accounting for the mode...
+				phaseChannelParms = integration.instrument.getDoubles();
+				Arrays.fill(phaseChannelParms, 0, mode.size(), 0.0);
+				
 				if(useMedians) {
 					temp = integration.instrument.getDataPoints();
 					for(int i=G.length; --i >= 0; ) temp[i].noData();
@@ -133,30 +144,37 @@ public class PhaseSignal implements Serializable {
 			}
 			
 			@Override
+            protected void postProcess() {
+                super.postProcess();
+                
+                for(Parallel<double[]> task : getWorkers()) {
+                    double[] localChannelParms = task.getLocalResult();
+                    for(int k=mode.size(); --k >= 0; ) phaseParms.addAsync(mode.getChannels().get(k), localChannelParms[k]);
+                    Instrument.recycle(localChannelParms);
+                }
+            }
+			
+			@Override
+            public double[] getLocalResult() { return phaseChannelParms; }
+            
+			@Override
 			protected void processIndex(int i) {
-				final PhaseData offsets = phases.get(i);
+				final PhaseData phase = phases.get(i);
 				
-				if(useMedians) offsets.getRobustCorrelated(mode, G, temp, dC);
-				else offsets.getMLCorrelated(mode, G, dC);
+				if(useMedians) phase.getRobustCorrelated(mode, G, temp, dC, phaseChannelParms);
+				else phase.getMLCorrelated(mode, G, dC, phaseChannelParms);
 				
 				if(dC.weight() <= 0.0) return;
-					
-				for(int k=G.length; --k >= 0; ) {
-					Channel channel = channels.get(k);	
-					offsets.value[channel.index] -= G[k] * dC.value();
-				}
 				
 				value[i] += dC.value();
 				weight[i] = dC.weight();
-				
-				offsets.addChannelDependence(parms, mode, G, dC);
-				parms.addAsync(offsets, 1.0);
+					
+				phaseParms.addAsync(phase, 1.0);
 			}
 			
 		}.process();
-		
-
-		parms.apply(channels, 0, phases.size());
+	
+		phaseParms.apply(channels);
 		
 		generation++;
 		setSyncGains(G);
@@ -178,13 +196,13 @@ public class PhaseSignal implements Serializable {
 		double sum = 0.0, sumw = 0.0;
 
 		for(int i=phases.size(); --i >= 0; ) {
-			final PhaseData offsets = phases.get(i);
+			final PhaseData phase = phases.get(i);
 			
-			if(offsets.channelFlag[channel.index] != 0) continue;
+			if(phase.channelFlag[channel.index] != 0) continue;
 			
 			final double C = value[i];
 			final double wC = weight[i] * C;
-			sum += (wC * offsets.value[channel.index]);
+			sum += (wC * phase.value[channel.index]);
 			sumw += (wC * C);
 		}
 		return sumw > 0.0 ? new WeightedPoint(sum / sumw, sumw) : new WeightedPoint();
@@ -212,8 +230,8 @@ public class PhaseSignal implements Serializable {
 			@Override
 			protected void processIndex(int i) {
 				if(!(weight[i] > 0.0)) return;
-				final PhaseData offsets = phases.get(i);
-				for(int k=G.length; --k >= 0; ) offsets.value[channels.get(k).index] -= dG[k] * value[i];
+				final PhaseData phase = phases.get(i);
+				for(int k=G.length; --k >= 0; ) phase.value[channels.get(k).index] -= dG[k] * value[i];
 			}
 			
 		}.process();

@@ -23,9 +23,16 @@
 
 package crush.hawcplus;
 
+import nom.tam.fits.BasicHDU;
+import nom.tam.fits.BinaryTableHDU;
+import nom.tam.fits.Fits;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
 import crush.sofia.SofiaHeaderData;
 import crush.sofia.SofiaScan;
 
@@ -58,6 +65,26 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 		if(priorPipelineStep != null) header.addLine(new HeaderCard("PROCLEVL", priorPipelineStep, "Last processing step on input scan."));	
 	}
 
+	@Override
+    public void addIntegrationsFrom(Fits fits) throws Exception {
+        BasicHDU<?>[] HDU = fits.read();
+        ArrayList<BinaryTableHDU> dataHDUs = new ArrayList<BinaryTableHDU>();
+        
+        for(int i=1; i<HDU.length; i++) if(HDU[i] instanceof BinaryTableHDU) {
+            Header header = HDU[i].getHeader();
+            String extName = header.getStringValue("EXTNAME");
+            if(extName.equalsIgnoreCase("TIMESTREAM DATA")) dataHDUs.add((BinaryTableHDU) HDU[i]);
+        }
+        
+        HawcPlusIntegration integration = this.getIntegrationInstance();
+        integration.read(dataHDUs);
+        add(integration);
+        
+        try { fits.getStream().close(); }
+        catch(IOException e) {}
+        
+        System.gc();
+    }
 	
 	
 }

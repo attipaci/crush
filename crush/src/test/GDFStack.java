@@ -130,7 +130,7 @@ public class GDFStack {
 			}
 			
 			@Override
-			public DataPoint getPartialResult() {
+			public DataPoint getLocalResult() {
 				return mean;
 			}
 			
@@ -138,7 +138,7 @@ public class GDFStack {
 			public DataPoint getResult() {
 				DataPoint combined = new DataPoint();
 				for(Parallel<DataPoint> task : getWorkers()) {
-					DataPoint partial = task.getPartialResult();
+					DataPoint partial = task.getLocalResult();
 					combined.add(partial.value());
 					combined.addWeight(partial.weight());
 				}

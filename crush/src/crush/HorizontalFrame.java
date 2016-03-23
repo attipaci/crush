@@ -199,12 +199,12 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	}
 	
 	@Override
-	public final void nativeToEquatorialNative(Vector2D offset) {
+	public final void nativeToNativeEquatorial(Vector2D offset) {
 		horizontalToNativeEquatorial(offset);
 	}
 	
 	@Override
-	public final void equatorialNativeToNative(Vector2D offset) {
+	public final void nativeEquatorialToNative(Vector2D offset) {
 		equatorialNativeToHorizontal(offset);
 	}
 	

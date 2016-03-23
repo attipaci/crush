@@ -234,13 +234,13 @@ public abstract class SourceMap extends SourceModel {
 			}
 			
 			@Override
-			public ProjectorData getPartialResult() { return data; }
+			public ProjectorData getLocalResult() { return data; }
 			
 			@Override
 			public ProjectorData getResult() {
 				data = null;
 				for(Parallel<ProjectorData> task : getWorkers()) {
-					ProjectorData local = task.getPartialResult();
+					ProjectorData local = task.getLocalResult();
 					if(data == null) data = local;
 					else {
 						data.longitudeRange.include(local.longitudeRange);
@@ -510,13 +510,13 @@ public abstract class SourceMap extends SourceModel {
 			}
 			
 			@Override
-			public Integer getPartialResult() { return mappingFrames; }
+			public Integer getLocalResult() { return mappingFrames; }
 			
 			@Override
 			public Integer getResult() {				
 				mappingFrames = 0;
 				for(Parallel<Integer> task : getWorkers()) {
-					mappingFrames += task.getPartialResult();
+					mappingFrames += task.getLocalResult();
 					
 					if(!isAddingToMaster()) {
 						SourceMap localMap = ((Mapper) task).localSource;

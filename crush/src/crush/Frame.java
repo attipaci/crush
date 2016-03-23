@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009,2010 Attila Kovacs
 
 package crush;
 
@@ -348,19 +347,19 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	
 	// Native offsets are in standard directions (e.g. -RA, DEC)
-	public void nativeToEquatorialNative(Vector2D offset) {}
+	public void nativeToNativeEquatorial(Vector2D offset) {}
 	
 	public final void nativeToEquatorial(Vector2D offset) {
-		nativeToEquatorialNative(offset);
+		nativeToNativeEquatorial(offset);
 		offset.scaleX(-1.0);
 	}
 	
 	// Native offsets are in standard directions (e.g. -RA, DEC)
-	public void equatorialNativeToNative(Vector2D offset) {}
+	public void nativeEquatorialToNative(Vector2D offset) {}
 	
 	public final void equatorialToNative(Vector2D offset) {
 		offset.scaleX(-1.0);
-		equatorialNativeToNative(offset);
+		nativeEquatorialToNative(offset);
 	}
 	
 	public void nativeToEquatorial(SphericalCoordinates coords, EquatorialCoordinates equatorial) {
@@ -377,19 +376,15 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public static byte SAMPLE_SKIP = sampleFlags.next('$', "Skip").value();
 	public static byte SAMPLE_PHOTOMETRY = sampleFlags.next('P', "Photometry").value();
 	
-	
 	public static final FlagBlock<Integer> frameFlags = new FlagSpace.Integer("frame-flags").getDefaultFlagBlock();
 	public static int FLAG_WEIGHT = frameFlags.next('n', "Noise level").value();
 	public static int FLAG_SPIKY = frameFlags.next('s', "Spiky").value();
 	public static int FLAG_DOF = frameFlags.next('f', "Degrees-of-freedom").value();
 	public static int FLAG_JUMP = frameFlags.next('J', "Jump").value();
-	
 
 	public static int SKIP_SOURCE = frameFlags.next('$', "Skip Source").value();
 	public static int SKIP_MODELS = frameFlags.next('M', "Skip Models").value();
 	public static int SKIP_WEIGHTING = frameFlags.next('W', "Skip Weighting").value();
-	//public static int SKIP_SYNCHING = 
-	
 	
 	public static int CHOP_LEFT = frameFlags.next('L', "Chop Left").value();
 	public static int CHOP_RIGHT = frameFlags.next('R', "Chop Right").value();
