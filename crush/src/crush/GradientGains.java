@@ -62,7 +62,7 @@ public abstract class GradientGains implements Serializable, GainProvider {
 	public abstract void setRawGain(Channel c, double value) throws Exception;
 	
 	@Override
-	public void validate(Mode mode) throws Exception {	
+	public void validate(Mode mode) throws Exception {	  
 		final float[] gains = mode.getGains(false);
 
 		double sum = 0.0, sumw = 0.0;

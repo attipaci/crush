@@ -39,7 +39,7 @@ import jnum.data.WeightedPoint;
 import jnum.io.fits.FitsExtras;
 import jnum.math.Vector2D;
 
-public class APEXArraySubscan<InstrumentType extends APEXCamera<?>, FrameType extends APEXFrame> 
+public class APEXSubscan<InstrumentType extends APEXCamera<?>, FrameType extends APEXFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping {
 	/**
 	 * 
@@ -50,7 +50,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 	protected WeightedPoint[] tempPhase;
 	private Chopper chopper;
 	
-	public APEXArraySubscan(APEXArrayScan<InstrumentType, ?> parent) {
+	public APEXSubscan(APEXScan<InstrumentType, ?> parent) {
 		super(parent);
 	}
 	
@@ -280,7 +280,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		private double[] MJD, LST, X, Y, DX, DY, chop;
 		private int[] phase;
 		private boolean chopperIncluded;
-		private final APEXArrayScan<InstrumentType, ?> apexScan = (APEXArrayScan<InstrumentType, ?>) scan;
+		private final APEXScan<InstrumentType, ?> apexScan = (APEXScan<InstrumentType, ?>) scan;
 		private final static double m900deg = -900.0 * Unit.deg;
 		
 		public DataParTable(TableHDU<?> hdu) throws FitsException {
@@ -442,7 +442,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 	@SuppressWarnings("unchecked")
 	@Override
 	public FrameType getFrameInstance() {
-		return (FrameType) new APEXFrame((APEXArrayScan<APEXCamera<?>, APEXArraySubscan<APEXCamera<?>, FrameType>>) scan);
+		return (FrameType) new APEXFrame((APEXScan<APEXCamera<?>, APEXSubscan<APEXCamera<?>, FrameType>>) scan);
 	}
 			
 	public void fitsRCP() {

@@ -37,7 +37,7 @@ import jnum.Util;
 import jnum.math.Vector2D;
 
 
-public abstract class Array<PixelType extends Pixel, ChannelType extends Channel> extends Instrument<ChannelType> {
+public abstract class Camera<PixelType extends Pixel, ChannelType extends Channel> extends Instrument<ChannelType> {
 	/**
 	 * 
 	 */
@@ -45,11 +45,11 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	
 	protected double rotation = 0.0;
 	
-	public Array(String name, InstrumentLayout<? super ChannelType> layout) {
+	public Camera(String name, InstrumentLayout<? super ChannelType> layout) {
 		super(name, layout);
 	}
 	
-	public Array(String name, InstrumentLayout<? super ChannelType> layout, int size) {
+	public Camera(String name, InstrumentLayout<? super ChannelType> layout, int size) {
 		super(name, layout, size);
 	}
 	
@@ -290,7 +290,7 @@ public abstract class Array<PixelType extends Pixel, ChannelType extends Channel
 	}
 	
 	
-	public static void addLocalFixedIndices(GeometricRowColIndexed geometric, int fixedIndex, double radius, Collection<Integer> toIndex) {
+	public static void addLocalFixedIndices(GridIndexed geometric, int fixedIndex, double radius, Collection<Integer> toIndex) {
 		
 		final int row = fixedIndex / geometric.cols();
 		final int col = fixedIndex % geometric.cols();

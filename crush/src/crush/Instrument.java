@@ -1141,7 +1141,7 @@ implements TableFormatter.Entries, Messaging {
 	
 	// Sequential, because it is usually called from a parallel environment
 	public void calcOverlap(final double pointSize) {
-		if(this instanceof NonOverlappingChannels) return;
+		if(this instanceof NonOverlapping) return;
 		
 		if(pointSize == overlapPointSize) return;
 		

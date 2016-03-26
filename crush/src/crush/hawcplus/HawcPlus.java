@@ -27,8 +27,8 @@ import java.io.IOException;
 import java.util.*;
 
 import crush.*;
-import crush.array.Array;
-import crush.array.GeometricRowColIndexed;
+import crush.array.Camera;
+import crush.array.GridIndexed;
 import crush.array.SingleColorLayout;
 import crush.sofia.SofiaCamera;
 import jnum.Configurator;
@@ -38,7 +38,7 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
-public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRowColIndexed {
+public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed {
 	/**
 	 * 
 	 */
@@ -367,7 +367,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GeometricRow
 	@Override
 	// TODO do it better with relative offset and rotation...
 	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-		Array.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+		Camera.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
 		final int polArrayPixels = polArrayPixels();
 		for(int i = toIndex.size(); --i >= 0; ) toIndex.add(toIndex.get(i) + polArrayPixels);
 	}

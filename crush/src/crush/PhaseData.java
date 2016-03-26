@@ -40,8 +40,8 @@ public class PhaseData implements Serializable {
 	protected Integration<?,?> integration;
 	public int index;
 	
-	public double[] value, weight;
-	public int[] channelFlag;
+	public float[] value, weight;
+	public byte[] sampleFlag;
 	public Frame start, end;
 	public int phase = 0;
 	
@@ -82,14 +82,13 @@ public class PhaseData implements Serializable {
 	}
 	
 	public void update(final ChannelGroup<?> channels, final Dependents parms) {
-		if(end.index - start.index < 1) return;
-		
+		if(end.index - start.index < 1) return;	
 		
 		final int nc = integration.instrument.size();
 		if(value == null) {
-			value = new double[nc];
-			weight = new double[nc];
-			channelFlag = new int[nc];
+			value = new float[nc];
+			weight = new float[nc];
+			sampleFlag = new byte[nc];
 		}
 		
 		final int to = end.index + 1;
@@ -113,13 +112,12 @@ public class PhaseData implements Serializable {
 					sumw += exposure.relativeWeight;
 				}
 				
-				parms.addAsync(channel, 1.0);
-				
 				if(sumw > 0.0) {
-					sum /= sumw;
-					channel.temp = (float) sum;
-					value[channel.index] += sum;
-					weight[channel.index] = sumw;
+				    parms.addAsync(channel, 1.0);
+					float increment = (float) (sum / sumw);
+					channel.temp = increment;    
+					value[channel.index] += increment;
+					weight[channel.index] = (float) sumw;
 				}
 			}
 		}.process();
@@ -129,11 +127,11 @@ public class PhaseData implements Serializable {
 		new Fork<Void>() {
 			@Override
 			protected void processFrame(Frame exposure) {
-				final boolean wasUsed = exposure.isUnflagged(Frame.MODELING_FLAGS);
+				final boolean frameUsed = exposure.isUnflagged(Frame.MODELING_FLAGS);
 				
 				for(Channel channel : channels) {
 					exposure.data[channel.index] -= channel.temp;
-					if(wasUsed) if((exposure.sampleFlag[channel.index] & skipSamples) == 0)					
+					if(frameUsed) if((exposure.sampleFlag[channel.index] & skipSamples) == 0)					
 						parms.addAsync(exposure, exposure.relativeWeight / weight[channel.index]); 
 				}
 			}
@@ -150,20 +148,19 @@ public class PhaseData implements Serializable {
 		
 	}
 	
-	public final WeightedPoint getChannelValue(final Channel channel) {
-		return new WeightedPoint(value[channel.index], weight[channel.index]);
+	public final WeightedPoint getValue(final Channel channel) {
+		return new WeightedPoint(value[channel.index], isFlagged(channel) ? 0.0 : weight[channel.index]);
 	}
 	
 	protected boolean isContributing(final Channel channel, final CorrelatedMode mode) {
-		
-	    if(channel.isFlagged(mode.skipFlags)) return false;
+	    if(channel.isFlagged(mode.skipFlags | Channel.FLAG_PHASE_DOF)) return false;
 	    if(channel.sourcePhase != 0) return false;
-	    if(channelFlag[channel.index] != 0) return false;
+	    if(isFlagged(channel)) return false;
 		return true;
 	}
-		
+	
 	private void addChannelDeps(final CorrelatedMode mode, final float[] G, double sumw, double[] channelParms) {
-	    if(!(sumw > 0.0)) return;
+	    if(sumw <= 0.0) return;
 	    // Add the channeldeps...
 	    for(int k=G.length; --k >= 0; ) {
 	        final Channel channel = mode.getChannel(k);
@@ -171,6 +168,13 @@ public class PhaseData implements Serializable {
 	    }
 	}
 	
+	public boolean isFlagged(Channel channel) {
+	    return sampleFlag[channel.index] != 0;
+	}
+	
+	public boolean isUnflagged(Channel channel) {
+        return sampleFlag[channel.index] == 0;
+    }
 	
 	protected void getMLCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint correlated, final double[] channelParms) {	
 		double sum = 0.0, sumw = 0.0;
@@ -178,13 +182,13 @@ public class PhaseData implements Serializable {
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.getChannel(k);
 			if(!isContributing(channel, mode)) continue;
-	
+			
 			final double wG = weight[channel.index] * G[k];
 			sum += (wG * value[channel.index]);
 			sumw += (wG * G[k]);
 		}
 		
-		if(channelParms != null) addChannelDeps(mode, G, sumw, channelParms);
+		//if(channelParms != null) addChannelDeps(mode, G, sumw, channelParms);
 		
 		correlated.setValue(sum / sumw);
 		correlated.setWeight(sumw);
@@ -193,18 +197,13 @@ public class PhaseData implements Serializable {
 	
 	
 	protected void getRobustCorrelated(final CorrelatedMode mode, final float[] G, final WeightedPoint[] temp, final WeightedPoint correlated, final double[] channelParms) {
-		final int skipChannels = mode.skipFlags;
-		
 		int n=0;
 		correlated.setWeight(0.0);
 		
 		for(int k=G.length; --k >= 0; ) {
 			final Channel channel = mode.getChannel(k);
-		
-			if(channel.isFlagged(skipChannels)) continue;
-			if(channel.sourcePhase != 0) continue;
-			if(channelFlag[channel.index] != 0) continue;
-
+			if(!isContributing(channel, mode)) continue;
+			
 			final float Gk = G[k];
 			final double wG2 = weight[channel.index] * Gk * Gk;
 			if(wG2 == 0.0) continue;
@@ -244,7 +243,8 @@ public class PhaseData implements Serializable {
 		
 	}
 	
-	
+	// TODO if more than one flag type is in use, then create flag values through a managed flagSpace...
+	public static final int FLAG_SPIKE = 1;
 	
 	
 

@@ -25,7 +25,7 @@
 package crush.polka;
 
 import crush.*;
-import crush.apex.APEXArrayScan;
+import crush.apex.APEXScan;
 import crush.filters.Filter;
 import crush.laboca.*;
 import jnum.Constant;
@@ -48,7 +48,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 	double meanTimeStampDelay = Double.NaN;
 	boolean hasTimeStamps = true;
 	
-	public PolKaSubscan(APEXArrayScan<Laboca, LabocaSubscan> parent) {
+	public PolKaSubscan(APEXScan<Laboca, LabocaSubscan> parent) {
 		super(parent);
 	}
 	

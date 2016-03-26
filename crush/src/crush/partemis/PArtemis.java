@@ -32,7 +32,7 @@ import crush.apex.*;
 
 import java.util.*;
 
-public class PArtemis extends APEXCamera<PArtemisPixel> implements GeometricRowColIndexed {
+public class PArtemis extends APEXCamera<PArtemisPixel> implements GridIndexed {
 	/**
 	 * 
 	 */
@@ -125,7 +125,7 @@ public class PArtemis extends APEXCamera<PArtemisPixel> implements GeometricRowC
 
 	@Override
 	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-		Array.addLocalFixedIndices((GeometricRowColIndexed) this, fixedIndex, radius, toIndex);
+		Camera.addLocalFixedIndices((GridIndexed) this, fixedIndex, radius, toIndex);
 	}
 
 	@Override

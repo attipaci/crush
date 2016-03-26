@@ -34,7 +34,7 @@ import jnum.math.Vector2D;
 import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 
-public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBased, GeometricRowColIndexed {
+public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBased, GridIndexed {
 	/**
 	 * 
 	 */
@@ -340,7 +340,7 @@ public class Scuba2 extends Array<Scuba2Pixel, Scuba2Pixel> implements GroundBas
 
 	@Override
 	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-		Array.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+		Camera.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
 	}
 
 	@Override

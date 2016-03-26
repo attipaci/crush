@@ -34,7 +34,7 @@ import java.util.*;
 
 
 
-public class Aszca extends APEXCamera<AszcaPixel> implements NonOverlappingChannels {
+public class Aszca extends APEXCamera<AszcaPixel> implements NonOverlapping {
 	/**
 	 * 
 	 */

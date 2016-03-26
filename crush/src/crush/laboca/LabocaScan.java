@@ -24,9 +24,9 @@
 
 package crush.laboca;
 
-import crush.apex.APEXArrayScan;
+import crush.apex.APEXScan;
 
-public class LabocaScan extends APEXArrayScan<Laboca, LabocaSubscan> {
+public class LabocaScan extends APEXScan<Laboca, LabocaSubscan> {
 	/**
 	 * 
 	 */

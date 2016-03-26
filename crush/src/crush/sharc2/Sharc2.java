@@ -24,8 +24,8 @@
 package crush.sharc2;
 
 import crush.*;
-import crush.array.Array;
-import crush.array.GeometricRowColIndexed;
+import crush.array.Camera;
+import crush.array.GridIndexed;
 import crush.cso.CSOArray;
 import jnum.Unit;
 import jnum.Util;
@@ -39,7 +39,7 @@ import java.io.*;
 import java.util.*;
 
 
-public class Sharc2 extends CSOArray<Sharc2Pixel> implements GeometricRowColIndexed {
+public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 	/**
 	 * 
 	 */
@@ -464,7 +464,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GeometricRowColInde
 	
 	@Override
 	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-		Array.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+		Camera.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
 	}
 
 

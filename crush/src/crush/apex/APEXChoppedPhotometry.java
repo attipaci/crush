@@ -29,6 +29,7 @@ import crush.*;
 import crush.sourcemodel.Photometry;
 import jnum.data.DataPoint;
 import jnum.data.WeightedPoint;
+import jnum.math.Range;
 
 public class APEXChoppedPhotometry extends Photometry {
 
@@ -54,7 +55,8 @@ public class APEXChoppedPhotometry extends Photometry {
 			right[c] = new WeightedPoint();			
 		}
 		
-		for(Integration<?,?> integration : scan) process((APEXArraySubscan<?,?>) integration, left, right);
+		
+		for(Integration<?,?> integration : scan) process((APEXSubscan<?,?>) integration, left, right);
 		
 		sourceFlux.noData();	
 		
@@ -67,12 +69,13 @@ public class APEXChoppedPhotometry extends Photometry {
 	
 		DataPoint F = new DataPoint(sourceFlux);
 		F.scale(1.0 / getInstrument().janskyPerBeam());
+		
 		scanFluxes.put(scan, F);
 		
-		scan.getLastIntegration().comments += " " + (F.weight() > 0.0 ? F.toString() : "<<invalid>>");
+		scan.getLastIntegration().comments += " " + (F.weight() > 0.0 ? F.toString() : "<<invalid>>") + " ";
 	}
 	
-	protected void process(final APEXArraySubscan<?,?> subscan, final WeightedPoint[] left, final WeightedPoint[] right) {		
+	protected void process(final APEXSubscan<?,?> subscan, final WeightedPoint[] left, final WeightedPoint[] right) {		
 		// Proceed only if there are enough pixels to do the job...
 		if(!checkPixelCount(subscan)) return;		
 
@@ -107,19 +110,38 @@ public class APEXChoppedPhotometry extends Photometry {
 					catch(IOException e) { e.printStackTrace(); }
 				 */
 
-				WeightedPoint df = pixel.getGainCorrectedLROffset(phases, neighbours, sourceGain);	
-				double chi2 = pixel.getGainCorrectedLRChi2(phases, neighbours, df.value(), sourceGain);
+				WeightedPoint df = pixel.getBGCorrectedLROffset(phases, neighbours, sourceGain);	
+				double chi2 = pixel.getBGCorrectedLRChi2(phases, neighbours, df.value(), sourceGain);
 
 				if(!Double.isNaN(chi2)) {
 					df.scaleWeight(Math.min(1.0, 1.0 / chi2));
 					df.scale(1.0 / (transmission * subscan.gain * sourceGain[pixel.index]));
+					
+					   
+			        if(hasOption("nefdrange")) {
+			            double rms = 1.0 / Math.sqrt(df.weight()) / subscan.instrument.janskyPerBeam();
+			            if(!isWithinRange(rms, subscan)) {
+			                subscan.comments += " <<skip>>"; 
+			                df.noData();
+			            }
+			        }
+					
 					point.average(df);
 				}
 			}
 			
 		}.process();
 	}
-
+	
+	
+	private boolean isWithinRange(double rms, APEXSubscan<?,?> subscan) {
+	    Range range = option("nefdrange").getRange(true);
+        double t = subscan.getFrameCount(~(Frame.CHOP_LEFT | Frame.CHOP_RIGHT)) * subscan.instrument.integrationTime;
+         
+        range.scale(1.0 / Math.sqrt(0.5 * t * subscan.getChopper().efficiency));
+         
+        return range.contains(rms); 
+	}
 
 	@Override
 	public void write(String path) throws Exception {	
@@ -137,11 +159,7 @@ public class APEXChoppedPhotometry extends Photometry {
 			System.out.println();
 		}
 		
-		
 		super.write(path);
-		
-		
-		
 	}
 
 	@Override

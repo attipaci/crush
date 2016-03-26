@@ -41,11 +41,11 @@ import crush.GroundBased;
 import crush.Instrument;
 import crush.InstrumentLayout;
 import crush.Scan;
-import crush.array.Array;
+import crush.array.Camera;
 import crush.array.SingleColorPixel;
 import jnum.Unit;
 
-public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends Array<ChannelType, ChannelType> implements GroundBased {
+public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends Camera<ChannelType, ChannelType> implements GroundBased {
 	/**
 	 * 
 	 */

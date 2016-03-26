@@ -33,7 +33,7 @@ import crush.GroundBased;
 import crush.InstantFocus;
 import crush.Mount;
 import crush.Scan;
-import crush.array.Array;
+import crush.array.Camera;
 import crush.array.Rotating;
 import crush.array.SingleColorPixel;
 import jnum.Unit;
@@ -42,7 +42,7 @@ import jnum.data.DataPoint;
 import jnum.text.TableFormatter;
 import crush.array.SingleColorLayout;
 
-public abstract class CSOArray<PixelType extends SingleColorPixel> extends Array<PixelType, PixelType> implements GroundBased, Rotating {
+public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camera<PixelType, PixelType> implements GroundBased, Rotating {
 	/**
 	 * 
 	 */

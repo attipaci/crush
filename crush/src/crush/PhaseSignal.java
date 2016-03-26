@@ -40,7 +40,7 @@ public class PhaseSignal implements Serializable {
 	PhaseSet phases;
 	CorrelatedMode mode;
 
-	double[] value, weight;
+	float[] value, weight;
 	float[] syncGains;
 	int generation = 0;
 	
@@ -48,8 +48,8 @@ public class PhaseSignal implements Serializable {
 		this.phases = phases;
 		this.mode = mode;
 		
-		value = new double[phases.size()];
-		weight = new double[phases.size()];
+		value = new float[phases.size()];
+		weight = new float[phases.size()];
 		
 		syncGains = new float[mode.size()];
 	
@@ -77,6 +77,8 @@ public class PhaseSignal implements Serializable {
 		//if(!Arrays.equals(syncGains, sig.syncGains)) return false;
 		return true;
 	}
+	
+	public int size() { return value == null ? 0 : value.length; }
 	
 	public double getValue(int i) { return value[i]; }
 	
@@ -166,10 +168,13 @@ public class PhaseSignal implements Serializable {
 				
 				if(dC.weight() <= 0.0) return;
 				
-				value[i] += dC.value();
-				weight[i] = dC.weight();
+				value[i] += (float) dC.value();
+				weight[i] = (float) dC.weight();
 					
 				phaseParms.addAsync(phase, 1.0);
+				 
+				final float increment = (float) dC.value();
+				for(int k=G.length; --k >= 0; ) phase.value[channels.get(k).index] -= G[k] * increment;
 			}
 			
 		}.process();
@@ -198,10 +203,11 @@ public class PhaseSignal implements Serializable {
 		for(int i=phases.size(); --i >= 0; ) {
 			final PhaseData phase = phases.get(i);
 			
-			if(phase.channelFlag[channel.index] != 0) continue;
+			if(phase.isFlagged(channel)) continue;
 			
 			final double C = value[i];
 			final double wC = weight[i] * C;
+			
 			sum += (wC * phase.value[channel.index]);
 			sumw += (wC * C);
 		}

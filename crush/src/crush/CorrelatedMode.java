@@ -154,7 +154,7 @@ public class CorrelatedMode extends Mode {
 		 * 
 		 */
 		private static final long serialVersionUID = -1524809691029533295L;
-
+	
 		public CoupledMode() {
 			super(CorrelatedMode.this.getChannels());
 			CorrelatedMode.this.addCoupledMode(this);

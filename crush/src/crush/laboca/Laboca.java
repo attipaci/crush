@@ -37,7 +37,7 @@ import java.util.*;
 
 
 
-public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlappingChannels {
+public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 	/**
 	 * 
 	 */
@@ -106,7 +106,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlappingCha
 		try {
 			CorrelatedModality cables = new CorrelatedModality("cables", "c", divisions.get("cables"), LabocaPixel.class.getField("cableGain"));
 			addModality(cables);
-			addModality(cables.new CoupledModality("twisting", "t", new CableTwist()));
+			addModality(cables.new CoupledModality("twisting", "t", new LabocaCableTwist()));
 		}			
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		

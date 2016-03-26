@@ -26,7 +26,7 @@ package crush.array;
 import crush.GeometricIndexed;
 import jnum.math.Vector2D;
 
-public interface GeometricRowColIndexed extends GeometricIndexed {
+public interface GridIndexed extends GeometricIndexed {
 	
 	public int rows();
 	

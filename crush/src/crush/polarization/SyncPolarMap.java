@@ -24,7 +24,7 @@
 
 package crush.polarization;
 
-import crush.array.Array;
+import crush.array.Camera;
 import crush.sourcemodel.ScalarMap;
 import crush.sourcemodel.SyncModulatedMap;
 
@@ -35,7 +35,7 @@ public class SyncPolarMap extends PolarMap {
 	 */
 	private static final long serialVersionUID = -46906674479028154L;
 
-	public SyncPolarMap(Array<?, ?> instrument) {
+	public SyncPolarMap(Camera<?, ?> instrument) {
 		super(instrument);
 	}
 

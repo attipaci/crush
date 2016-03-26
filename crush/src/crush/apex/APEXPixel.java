@@ -31,7 +31,6 @@ import java.util.Collection;
 import crush.Channel;
 import crush.Frame;
 import crush.PhaseData;
-import crush.PhaseDespiking;
 import crush.PhaseSet;
 import crush.PhaseWeighting;
 import crush.array.SingleColorPixel;
@@ -39,11 +38,12 @@ import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
+import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
 import jnum.fft.DoubleFFT;
 import jnum.math.Vector2D;
 
-public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighting, PhaseDespiking {
+public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighting {
 	/**
 	 * 
 	 */
@@ -67,49 +67,50 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 	public void deriveRelativePhaseWeights(final PhaseSet phases) {	
 	    unflag(FLAG_PHASE_DOF);
 	    
+		// Undo the prior relative weight correction...
+		for(PhaseData offsets : phases) offsets.weight[this.index] /= relativePhaseWeight;
+			
 		double chi2 = getLRChi2(phases, getLROffset(phases).value());
 		
 		if(Double.isNaN(chi2)) {
-			flag(FLAG_PHASE_DOF);
-			return;
-		}
-			
-		relativePhaseWeight /= chi2;
+		    flag(FLAG_PHASE_DOF);
+		    return;
+	    }
+		
+		relativePhaseWeight = 1.0 / chi2;
 
 		// Do not allow relative phaseWeights to become larger than 1.0
-		if(relativePhaseWeight > 1.0) {
-			chi2 *= relativePhaseWeight;
-			relativePhaseWeight = 1.0;		
-		}
+		if(relativePhaseWeight > 1.0) relativePhaseWeight = 1.0;		
 		
-		for(PhaseData offsets : phases) offsets.weight[this.index] /= chi2;
+		// Reapply the new relative weight correction...
+		for(PhaseData offsets : phases) offsets.weight[this.index] *= relativePhaseWeight;
 	}
 	
 	@Override
-	public double getRelativePhaseWeight() { return relativePhaseWeight; }
-	
-	
+	public double getRelativePhaseWeight() {
+	    return relativePhaseWeight;    
+	}
+		
 	public WeightedPoint getChopSignal(final PhaseSet phases, final int i) {
 		final PhaseData A = phases.get(i);
 		final PhaseData B = phases.get(i-1);
 		
-		final int phaseA = A.phase;	
-		final WeightedPoint signal = A.getChannelValue(this);		
+		// Check that it's a left/right chop pair...
+		if(A.phase == Frame.CHOP_LEFT && B.phase != Frame.CHOP_RIGHT) return new WeightedPoint();
+		if(B.phase == Frame.CHOP_LEFT && A.phase != Frame.CHOP_RIGHT) return new WeightedPoint();
 		
-		if(A.channelFlag[this.index] != 0) signal.setWeight(0.0);
+		// Check that neither phase is flagged...
+		if(A.isFlagged(this) || B.isFlagged(this)) return new WeightedPoint();
 		
-		if(B.phase != phaseA) {
-			signal.subtract(B.getChannelValue(this));
-			if(B.channelFlag[this.index] != 0) signal.setWeight(0.0);
-		}
-		else signal.setWeight(0.0);
+		final WeightedPoint signal = A.getValue(this);		
+		signal.subtract(B.getValue(this));
 		
-		if((phaseA & Frame.CHOP_LEFT) == 0) signal.scale(-1.0);
+		if((A.phase & Frame.CHOP_LEFT) == 0) signal.scale(-1.0);
 		return signal;
 	}
 	
 	
-	public WeightedPoint getGainCorrectedChopSignal(final PhaseSet phases, final int i, final Collection<APEXPixel> bgPixels, final double[] G) {
+	public WeightedPoint getBGCorrectedChopSignal(final PhaseSet phases, final int i, final Collection<APEXPixel> bgPixels, final double[] G) {
 		final WeightedPoint bg = new WeightedPoint();
 		
 		for(final APEXPixel pixel : bgPixels) if(!pixel.isFlagged()) if(pixel != this) if(pixel.sourcePhase == 0) {
@@ -130,7 +131,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 	
 	public void writeLROffset(final PhaseSet phases, String fileName, final Collection<APEXPixel> bgPixels, final double[] sourceGain) throws IOException {
 		final PrintWriter out = new PrintWriter(new FileOutputStream(fileName));	
-		final APEXArraySubscan<?,?> subscan = (APEXArraySubscan<?,?>) phases.getIntegration();
+		final APEXSubscan<?,?> subscan = (APEXSubscan<?,?>) phases.getIntegration();
 		
 		out.println("# CRUSH APEX Photometry Nod-cycle Data");
 		out.println("# =============================================================================");
@@ -142,9 +143,9 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 		out.println("# chop#\tSignal\t\tCorrected");
 		
 		final int N = phases.size();
-		for(int i=1; i < N; i+=2) out.println("  " + (i>>1)
+		for(int i=1; i < N; i++) out.println("  " + i
 				+ "\t" + getChopSignal(phases, i).toString(Util.e5)
-				+ "\t" + getGainCorrectedChopSignal(phases, i, bgPixels, sourceGain).toString(Util.e5));
+				+ "\t" + getBGCorrectedChopSignal(phases, i, bgPixels, sourceGain).toString(Util.e5));
 		
 		out.println();
 		out.println();
@@ -153,7 +154,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 	
 	public void writeLRSpectrum(final PhaseSet phases, String fileName) throws IOException {
 		final PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
-		final APEXArraySubscan<?,?> subscan = (APEXArraySubscan<?,?>) phases.getIntegration();
+		final APEXSubscan<?,?> subscan = (APEXSubscan<?,?>) phases.getIntegration();
 	
 		out.println("# CRUSH APEX Photometry Nod-cycle Spectrum");
 		out.println("# =============================================================================");
@@ -164,15 +165,15 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 		out.println();
 		out.println("# Freq(Hz)\tAmplitude\tPhase(deg)");
 	
-		final double[] data = new double[ExtraMath.pow2ceil(phases.size()>>1)];
+		final double[] data = new double[ExtraMath.pow2ceil(phases.size())];
 		final double dF = 0.5 * subscan.getChopper().frequency / data.length;
 		final int N = phases.size();
 		final double mean = getLROffset(phases).value();
 		
-		for(int i=1; i < N; i+=2) {
+		for(int i=1; i < N; i++) {
 			final WeightedPoint point = getChopSignal(phases, i);
 			point.subtract(mean);
-			data[i>>1] = DataPoint.significanceOf(point);
+			data[i] = DataPoint.significanceOf(point);
 		}
 			
 		new DoubleFFT().real2Amplitude(data);
@@ -191,26 +192,44 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 	public WeightedPoint getLROffset(final PhaseSet phases) {
 		int N = phases.size();
 		final WeightedPoint lr = new WeightedPoint();
-		for(int i=1; i < N; i+=2) lr.average(getChopSignal(phases, i));
+		for(int i=1; i < N; i++) lr.average(getChopSignal(phases, i));
 		//lr.scaleWeight(0.5);
 		return lr;
 	}
 	
-	public WeightedPoint getGainCorrectedLROffset(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double[] sourceGain) {
+	public WeightedPoint getMedianLROffset(final PhaseSet phases) {
+	    WeightedPoint[] points = new WeightedPoint[phases.size()];
+	    int k=0;
+	    
+        int N = phases.size();
+        for(int i=1; i < N; i++) points[k++] = getChopSignal(phases, i);
+        return Statistics.smartMedian(points, 0, k, 0.25);
+    }
+	
+	public WeightedPoint getBGCorrectedLROffset(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double[] sourceGain) {
 		int N = phases.size();
 		final WeightedPoint lr = new DataPoint();
-		for(int i=1; i < N; i+=2) lr.average(getGainCorrectedChopSignal(phases, i, bgPixels, sourceGain));
+		for(int i=1; i < N; i++) lr.average(getBGCorrectedChopSignal(phases, i, bgPixels, sourceGain));
 		//lr.scaleWeight(0.5);
 		return lr;
 	}
 
+	public WeightedPoint getBGCorrectedMedianLROffset(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double[] sourceGain) {
+        WeightedPoint[] points = new WeightedPoint[phases.size()];
+        int k=0;
+        
+        int N = phases.size();
+        for(int i=1; i < N; i++) points[k++] = getBGCorrectedChopSignal(phases, i, bgPixels, sourceGain);
+        return Statistics.smartMedian(points, 0, k, 0.25);
+    }
+	
 	
 	public double getLRChi2(final PhaseSet phases, final double mean) {	
 		final int N = phases.size();
 		double chi2 = 0.0;
 		int n = 0;
 		
-		for(int i=1; i < N; i+=2) {
+		for(int i=1; i < N; i++) {
 			final WeightedPoint LR = getChopSignal(phases, i);
 			if(LR.weight() <= 0.0) continue;
 			
@@ -221,19 +240,18 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 			n++;
 		}
 		
-		dof = n * (1.0 - phases.channelParms[this.index] / phases.size());
-		dof = Math.min(dof, n - 1);
+		dof = (n + 1) - phases.channelParms[index];
 		
 		return dof > 0.0 ? chi2 / dof : Double.NaN;
 	}
 
-	public double getGainCorrectedLRChi2(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double mean, final double[] sourceGain) {	
+	public double getBGCorrectedLRChi2(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double mean, final double[] sourceGain) {	
 		final int N = phases.size();
 		double chi2 = 0.0;
 		int n = 0;
 		
-		for(int i=1; i < N; i+=2) {
-			final WeightedPoint LR = getGainCorrectedChopSignal(phases, i, bgPixels, sourceGain);
+		for(int i=1; i < N; i++) {
+			final WeightedPoint LR = getBGCorrectedChopSignal(phases, i, bgPixels, sourceGain);
 			if(LR.weight() == 0.0) continue;
 			
 			LR.subtract(mean);
@@ -243,36 +261,9 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 			n++;
 		}
 		
-		dof = n * (1.0 - phases.channelParms[this.index] / phases.size());
-		dof = Math.min(dof, n - 1);
+		dof = n - phases.channelParms[index];
 		
 		return dof > 0.0 ? chi2 / dof : Double.NaN;
 	}
 	
-	@Override
-	public int despike(PhaseSet phases, double level) { 
-		final int N = phases.size();
-		final double mean = getLROffset(phases).value();
-		
-		int spikes = 0;
-		
-		for(int i=1; i < N; i+=2) {
-			phases.get(i).channelFlag[this.index] &= ~FLAG_PHASE_SPIKE;
-			phases.get(i-1).channelFlag[this.index] &= ~FLAG_PHASE_SPIKE;
-			
-			final WeightedPoint LR = getChopSignal(phases, i);
-			if(LR.weight() == 0.0) continue;
-			
-			LR.subtract(mean);
-			if(Math.abs(DataPoint.significanceOf(LR)) > level) {
-				phases.get(i).channelFlag[this.index] |= FLAG_PHASE_SPIKE;
-				phases.get(i-1).channelFlag[this.index] |= FLAG_PHASE_SPIKE;
-				spikes++;
-			}
-		}
-		return spikes;
-	}
-	
-	public final static int FLAG_PHASE_DOF = softwareFlags.next('F', "Insufficient phase degrees-of-freedom").value();
-	public static final int FLAG_PHASE_SPIKE = softwareFlags.next('S', "Phase spike").value();
 }

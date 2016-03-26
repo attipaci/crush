@@ -37,7 +37,7 @@ public class APEXFrame extends HorizontalFrame {
 	
 	public static double skydipFactor = 1.0;
 	
-	public APEXFrame(APEXArrayScan<?, ?> parent) {
+	public APEXFrame(APEXScan<?, ?> parent) {
 		super(parent);
 	}
 

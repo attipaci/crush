@@ -46,11 +46,11 @@ public class PolarMap extends SourceModel {
 	public boolean usePolarization = false;
 	public boolean hasPolarization = false;
 	
-	public PolarMap(Array<?,?> instrument) {
+	public PolarMap(Camera<?,?> instrument) {
 		super(instrument);	
 	}
 	
-	public Array<?,?> getArray() { return (Array<?,?>) getInstrument(); }
+	public Camera<?,?> getArray() { return (Camera<?,?>) getInstrument(); }
 
 	public ScalarMap getMapInstance() {
 		return new ScalarMap(getInstrument());
