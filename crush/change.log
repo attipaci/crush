@@ -1,3 +1,5 @@
+>> nefdrange (for chop)
+
 
 2.31-b1 (beta)
 
@@ -7,10 +9,11 @@
 	This release fixes a major bug in the accounting of the degrees of
 	freedom (used for getting proper noise weights and uncertainty 
 	estimates). It also brings LABOCA photometry reductions back from the
-	brink. Among the new features are an enhanced configuration engine
-	with improved polling and brand new locks. There are lots of smaller
-	fixes and improvements, some documentation updates, and changes under
-	the hood.
+	brink, with a significant improvement on the previous best! 
+	Among the new features are an enhanced configuration engine with 
+	improved polling and brand new locks. There are lots of smaller fixes 
+	and improvements, some documentation updates, and changes under the 
+	hood.
 	====================================================================== 
 
 
@@ -18,6 +21,10 @@
 	in understated degrees of freedom that could spiral out of control.
 	Fortunately, for typical reductions the effect was more or less
 	contained. Still, this one was bad...
+
+	[BUG] {APEX} photometry phase decorrelations did not sync back to
+	phase data, leading to garbage photometry results (probably since 2.30)
+	Fixed.
 
 	[BUG] {APEX} photometry reductions still had race conditions from all
 	prior 2.30 releases. Fixed.
@@ -72,6 +79,9 @@
 
 	[CHANGE] Despiking 'features' method renamed to 'multires'.
 
+	[FIX] {APEX} {b2} Using quadrature chop phase data also, effectively
+	doubling the number of useful datapoints for photometry. 
+
 	[FIX] {LABOCA} He3 temperature rms is reported correctly again...
 
 	[FIX] Signal drift removal could leave unwanted NaNs behind... 
@@ -90,10 +100,9 @@
 	[FIX] Pointing information is now correct for multiscan pointing 
 	reductions, in any coordinate system, and also for moving objects.
 
-	[TWEAK] {LABOCA} Configurations tweaked. 'twisting' cables 
-	decorrelation is disabled in 'deep' (previously enabled and could
-	result in unwanted artefacts). 'boxes' decorrelation no longer solves
-	for gains -- it seems to work better this way.
+	[TWEAK] {APEX} {b2} Improved photometry despiking. Data can be NEFD 
+	range bound -- outlying subscans are skipped, resulting in a more
+	homogeneous chop set.
 
 	[TWEAK] Reporting of pointing offsets made more elegant and universal.
 
@@ -115,6 +124,10 @@
 	[CONFIG] {GISMO} 'deep' mode 1/f stability changed back to 3 s,
 	resulting in cleaner maps.
 
+	[COSMETIC] {APEX} photometry summary give more comments on the 
+	reduced chi^2 value. Just enough to put your mind at rest, or to make
+	you a bit nervous...
+
 	[COSMETIC] Some tweaks to the help screens.
 
 	[DOC] Re-structured the README bringing the more useful topics up
@@ -131,6 +144,15 @@
 	configuration engine is really a standalone piece of software, which 
 	may be (will be!) used outside of the bounds of CRUSH. The separate
 	document makes better sense.
+
+	[CODE] Some renames, e.g. Array -> Camera, GeometricRowColIndexed ->
+	GridIndexed, APEXArray -> APEXCamera, APEXArrayScan -> APEXScan...
+
+	[CODE] Phase data and signal storage downsized to float to reduce
+	footprint. Phase sample flag space downsized to byte.
+
+	[CODE] Despiking of phase data moved upstream to PhaseSet, obsoleting
+	the PhaseDespiking interface.
 
 	[CODE] Lots of under the hood changes to make handling native 
 	coordinates, and conversion to/from them, more universal

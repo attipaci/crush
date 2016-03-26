@@ -1090,6 +1090,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	private void setWeightsFromVarStats(ChannelGroup<?> channels, final DataPoint[] var) {
+	    if(var == null) return;
+	    
 		for(Channel channel : channels) {
 			final DataPoint x = var[channel.index];
 			if(x.weight() <= 0.0) return;
@@ -1194,7 +1196,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				
 				if(points > 0) {
 					channel.dof = Math.max(0.0, 1.0 - channel.dependents / points);
-					channel.variance = points > 0 ? (Statistics.median(dev2, 0, points) / 0.454937) : 0.0;
+					channel.variance = points > 0 ? (Statistics.median(dev2, 0, points) / Statistics.medianNormalizedVariance) : 0.0;
 					channel.weight = channel.variance > 0.0 ? channel.dof / channel.variance : 0.0;	
 				}
 			}
@@ -2073,7 +2075,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			float dev = (float) (speed[n] - avev);
 			speed[n++] = dev*dev;
 		}
-		double w = n > 0 ? 0.454937/Statistics.median(speed, 0, n) : 0.0;
+		double w = n > 0 ? Statistics.medianNormalizedVariance / Statistics.median(speed, 0, n) : 0.0;
 		
 		recycle(speed);
 		

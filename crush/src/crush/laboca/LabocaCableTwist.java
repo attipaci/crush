@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,9 +20,30 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
+package crush.laboca;
 
-package crush;
+import crush.Channel;
+import crush.GradientGains;
 
-public interface NonOverlappingChannels {
+/**
+ * @author pumukli
+ *
+ */
+public class LabocaCableTwist extends GradientGains {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1813119272323673961L;
+	
+	@Override
+	public double getRawGain(Channel c) throws Exception {
+		return ((LabocaPixel) c).pin - 13.5;
+	}
 
+	@Override
+	public void setRawGain(Channel c, double value) throws Exception {
+		throw new UnsupportedOperationException("Cannot set twisting gains.");
+	}
+	
+	
 }

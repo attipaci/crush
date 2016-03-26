@@ -38,7 +38,7 @@ import java.util.*;
 
 import nom.tam.fits.*;
 
-public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
+public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	/**
 	 * 
 	 */
@@ -48,7 +48,7 @@ public class LabocaSubscan extends APEXArraySubscan<Laboca, LabocaFrame> {
 	double blindTimeScale = 0.3 * Unit.sec;
 	double rmsHe3 = 0.0;
 	
-	public LabocaSubscan(APEXArrayScan<Laboca, LabocaSubscan> parent) {
+	public LabocaSubscan(APEXScan<Laboca, LabocaSubscan> parent) {
 		super(parent);
 	}
 

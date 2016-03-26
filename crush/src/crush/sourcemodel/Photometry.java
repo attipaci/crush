@@ -102,7 +102,7 @@ public abstract class Photometry extends SourceModel {
 		final PhaseSet phases = ((PhaseModulated) integration).getPhases();
 	
 		int frames = 0;
-		for(PhaseData offset : phases) frames += offset.end.index - offset.start.index;
+		for(PhaseData phase : phases) frames += phase.end.index - phase.start.index;
 	
 		integrationTime += frames * instrument.integrationTime;
 	}
@@ -184,11 +184,23 @@ public abstract class Photometry extends SourceModel {
 		System.out.println("  Time  : " + Util.f1.format(integrationTime/Unit.min) + " min.");
 		
 		double chi2 = getReducedChi2();
-		if(!Double.isNaN(chi2)) System.out.println("  |rChi|: " + (chi2 < 1.0 ? "<= 1   :-)" : Util.s3.format(Math.sqrt(chi2))));
+		if(!Double.isNaN(chi2)) System.out.println("  |rChi|: " + getCommentedChi2(chi2));
 		
 		//System.out.println("  NEFD  : " + Util.f1.format(500.0 * F.rms() * Math.sqrt(integrationTime/Unit.s)) + " mJy sqrt(s).");
 		System.out.println("  =====================================");
 		
+	}
+	
+	public String getCommentedChi2(double chi2) {
+	    double chi = Math.sqrt(chi2);
+	    
+	    if(chi <= 1.0) return "<= 1   :-)";
+	    
+	    String value = Util.s3.format(Math.sqrt(chi2));
+	    
+	    if(chi < 1.5) return value + "   [OK]";
+	    if(chi < 3.0) return value + "   [high!]";
+	    return value + "   [ouch!!!]  :-/";
 	}
 	
 	@Override
@@ -224,7 +236,8 @@ public abstract class Photometry extends SourceModel {
 			out.println("# =============================================================================");
 			for(int i=0; i<scans.size(); i++) {
 				Scan<?,?> scan = scans.get(i);
-				out.println(scan.getID() + "\t" + scanFluxes.get(scan) + " Jy/beam");
+				DataPoint flux = scanFluxes.get(scan);	
+				out.println(scan.getID() + "\t" + (flux.weight() > 0.0 ? flux + " Jy/beam" : "---"));
 			}
 			
 		}

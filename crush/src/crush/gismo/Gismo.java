@@ -26,12 +26,12 @@ package crush.gismo;
 import java.util.List;
 
 import crush.Mount;
-import crush.array.Array;
-import crush.array.GeometricRowColIndexed;
+import crush.array.Camera;
+import crush.array.GridIndexed;
 import jnum.Unit;
 import jnum.math.Vector2D;
 
-public class Gismo extends AbstractGismo implements GeometricRowColIndexed {
+public class Gismo extends AbstractGismo implements GridIndexed {
 	/**
 	 * 
 	 */
@@ -56,7 +56,7 @@ public class Gismo extends AbstractGismo implements GeometricRowColIndexed {
 	
 	@Override
 	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-		Array.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+		Camera.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
 	}
 
 

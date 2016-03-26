@@ -25,7 +25,7 @@
 package crush.apex;
 
 import crush.*;
-import crush.array.Array;
+import crush.array.Camera;
 import crush.array.SingleColorPixel;
 import jnum.Unit;
 import jnum.Util;
@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 
-public abstract class APEXCamera<ChannelType extends APEXPixel> extends Array<ChannelType, ChannelType> implements GroundBased {
+public abstract class APEXCamera<ChannelType extends APEXPixel> extends Camera<ChannelType, ChannelType> implements GroundBased {
 	/**
 	 * 
 	 */
@@ -132,14 +132,14 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Array<Ch
 
 	@Override
 	public Scan<?, ?> getScanInstance() {
-		return new APEXArrayScan<APEXCamera<?>, APEXArraySubscan<APEXCamera<?>,?>>(this);
+		return new APEXScan<APEXCamera<?>, APEXSubscan<APEXCamera<?>,?>>(this);
 	}
 
 	@Override
 	public void validate(Vector<Scan<?,?>> scans) throws Exception {
 		
-		final APEXArrayScan<?,?> firstScan = (APEXArrayScan<?,?>) scans.get(0);
-		final APEXArraySubscan<?,?> firstSubscan = firstScan.get(0);
+		final APEXScan<?,?> firstScan = (APEXScan<?,?>) scans.get(0);
+		final APEXSubscan<?,?> firstSubscan = firstScan.get(0);
 		final EquatorialCoordinates reference = firstScan.equatorial;
 		final String sourceName = firstScan.getSourceName();
 		
@@ -172,8 +172,8 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Array<Ch
 		
 		// Make sure the rest of the list conform to the first scan...
 		for(int i=scans.size(); --i > 0; ) {
-			APEXArrayScan<?,?> scan = (APEXArrayScan<?,?>) scans.get(i);
-			APEXArraySubscan<?,?> subscan = scan.get(0);
+			APEXScan<?,?> scan = (APEXScan<?,?>) scans.get(i);
+			APEXSubscan<?,?> subscan = scan.get(0);
 			
 			// Throw out any subsequent skydips...
 			if(scan.getSourceName().equalsIgnoreCase("SKYDIP")) {

@@ -478,7 +478,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public double getObservingTime() {
 		double t = 0.0;
-		for(IntegrationType integration : this) t += integration.getFrameCount(~0) * integration.instrument.integrationTime;
+		int skipFlags = ~(Frame.CHOP_LEFT | Frame.CHOP_RIGHT);
+		for(IntegrationType integration : this) t += integration.getFrameCount(skipFlags) * integration.instrument.integrationTime;
 		return t;
 	}
 	

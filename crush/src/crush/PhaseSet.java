@@ -28,179 +28,243 @@ import java.util.*;
 import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
+import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
 
 
 public class PhaseSet extends ArrayList<PhaseData> {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3448515171055358173L;
-	
-	private Integration<?,?> integration;
-	protected Hashtable<Mode, PhaseSignal> signals = new Hashtable<Mode, PhaseSignal>();
-	protected Hashtable<String, PhaseDependents> phaseDeps = new Hashtable<String, PhaseDependents>();
-	
-	public double[] channelParms;
-	
-	Dependents integrationDeps;
-	int generation = 0;	
-	//public int driftParms = 0;
-	
-	public PhaseSet(Integration<?,?> integration) {
-		this.integration = integration;	
-		integrationDeps = new Dependents(integration, "phases");
-		channelParms = new double[integration.instrument.size()];
-	}
-	
-	@Override
-	public int hashCode() { return super.hashCode() ^ integration.getDisplayID().hashCode() ^ generation 
-			^ integrationDeps.hashCode() ^ signals.size() ^ phaseDeps.size() ^ channelParms.length;
-	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!(o instanceof PhaseSet)) return false;
-		if(!super.equals(o)) return false;
-		PhaseSet set = (PhaseSet) o;
-		if(generation != set.generation) return false;
-		if(integration.getDisplayID() != set.integration.getDisplayID()) return false;
-		if(signals.size() != set.signals.size()) return false;
-		if(phaseDeps.size() != set.phaseDeps.size()) return false;
-		//if(!Util.equals(integrationDeps, set.integrationDeps)) return false;
-		//if(!Arrays.equals(channelParms, set.channelParms)) return false;
-		return true;
-	}
-	
-	public Integration<?,?> getIntegration() { return integration; }
-	
-	public PhaseDependents getPhaseDependents(String name) {
-		return phaseDeps.containsKey(name) ? phaseDeps.get(name) : new PhaseDependents(this, name);
-	}
-	
-	public void update(ChannelGroup<?> channels) {
-		
-		integration.comments += "|P";
-		
-		for(PhaseData phase : this) phase.update(channels, integrationDeps);	
-		
-		int N = size();
-		if(integration.hasOption("stability")) {
-			double T = (integration.instrument.integrationTime * integration.size()) / size();	
-			N = (int) Math.ceil(integration.option("stability").getDouble() * Unit.s / T);
-			if((N & 1) != 0) N++;
-			if(N > size()) N = size();
-		}
-		
-		/*
-		if(N == size()) integration.comments += "PO";
-		else integration.comments += " PD(" + N + ")";
-		*/
-		
-		removeDrifts(channels, N);
-		
-		generation++;
-	}
-	
-	public void validate() {
-		for(int i=size(); --i >=0; ) if(!get(i).validate()) remove(i);
-		for(int i=size(); --i >=0; ) get(i).index = i;
-	}
-		
-	public WeightedPoint[] getGainIncrement(Mode mode) {
-		return signals.get(mode).getGainIncrement();
-	}
-	
-	protected void syncGains(final Mode mode) throws Exception {
-		if(signals.containsKey(mode)) signals.get(mode).syncGains();
-	}
-	
-	public void getWeights() {
-		integration.comments += "|wP";
-		
-		for(Channel channel : integration.instrument)
-			if(channel instanceof PhaseWeighting) ((PhaseWeighting) channel).deriveRelativePhaseWeights(this); 
-	}
-	
-	public void despike(double level) { 
-		integration.comments += "|dP";
-		
-		int spikes = 0;
-		
-		for(Channel channel : integration.instrument)
-			if(channel instanceof PhaseDespiking) spikes += ((PhaseDespiking) channel).despike(this, level); 
-		
-		integration.comments += "(" + spikes + ")";
-	}
-	
-	public void removeDrifts(ChannelGroup<?> channels, int nPhases) {
-		//integration.comments += "|DP(" + nPhases + ")";
-	    final PhaseDependents parms = getPhaseDependents("drifts");
-	    
-	    parms.clear(channels);
-	    
-		for(Channel channel : channels) removeDrifts(channel, nPhases, parms);
-		
-		parms.apply(channels);
-	}
-	
-	private void removeDrifts(final Channel channel, final int nPhases, final PhaseDependents parms) {		
-		
-		int nParms = ExtraMath.roundupRatio(size(), nPhases);
-		
-		for(int N=0; N < nParms; N++) {
-			double sum = 0.0, sumw = 0.0;
-			final int from = N * nPhases;
-			final int to = Math.min(size(), from+nPhases);
-			
-			for(int n=from; n<to; n++) {
-				PhaseData phase = get(n);
-				sum += phase.weight[channel.index] * phase.value[channel.index];
-				sumw += phase.weight[channel.index];
-			}
-			
-			if(sumw > 0.0) {
-				double level = (float) (sum / sumw);
-				for(int n=from; n<to; n++) {
-					PhaseData phase = get(n);
-					phase.value[channel.index] -= level;
-					parms.addAsync(phase, phase.weight[channel.index] / sumw);
-				}
-			}	
-			parms.addAsync(channel, 1.0);
-		}		
-		
-	}
-	
-	// TODO levelling on just the left frames...
-	// TODO Use removeDrifts for dependence 
-	public void level(final Channel channel) {
-		//driftParms = Math.max(driftParms, 1);
-		
-		final int c = channel.index;
-		double sum = 0.0, sumw = 0.0;
-		for(PhaseData offsets : this) {			
-			sum += offsets.weight[c] * offsets.value[c];
-			sumw += offsets.weight[c];
-		}
-		if(sumw == 0.0) return;
-		final double ave = sum / sumw;
-		
-		for(PhaseData phase : this) phase.value[c] -= ave;
-	}
-	
-	public void write() throws IOException {
-		String filename = CRUSH.workPath + File.separator + integration.scan.getID() + "-" + integration.getID() + ".phases.tms";
-		PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename)));
-		write(out);
-		out.close();
-		System.err.println("Written phases to " + filename);
-	}
-	
-	public void write(PrintStream out) {
-		out.println(integration.getASCIIHeader());
-		for(int i=0; i<size(); i++) out.println(get(i).toString(Util.e3));
-	}
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 3448515171055358173L;
+
+    private Integration<?,?> integration;
+    protected Hashtable<Mode, PhaseSignal> signals = new Hashtable<Mode, PhaseSignal>();
+    protected Hashtable<String, PhaseDependents> phaseDeps = new Hashtable<String, PhaseDependents>();
+
+    public double[] channelParms;
+
+
+    Dependents integrationDeps;
+    int generation = 0;	
+    //public int driftParms = 0;
+
+    public PhaseSet(Integration<?,?> integration) {
+        this.integration = integration;	
+        integrationDeps = new Dependents(integration, "phases");
+        channelParms = new double[integration.instrument.size()];
+    }
+
+    @Override
+    public int hashCode() { return super.hashCode() ^ integration.getDisplayID().hashCode() ^ generation 
+            ^ integrationDeps.hashCode() ^ signals.size() ^ phaseDeps.size() ^ channelParms.length;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(o == this) return true;
+        if(!(o instanceof PhaseSet)) return false;
+        if(!super.equals(o)) return false;
+        PhaseSet set = (PhaseSet) o;
+        if(generation != set.generation) return false;
+        if(integration.getDisplayID() != set.integration.getDisplayID()) return false;
+        if(signals.size() != set.signals.size()) return false;
+        if(phaseDeps.size() != set.phaseDeps.size()) return false;
+        //if(!Util.equals(integrationDeps, set.integrationDeps)) return false;
+        //if(!Arrays.equals(channelParms, set.channelParms)) return false;
+        return true;
+    }
+
+    public PhaseSignal getSignal(Mode mode) {
+        return signals.get(mode);
+    }
+
+    public Integration<?,?> getIntegration() { return integration; }
+
+    public PhaseDependents getPhaseDependents(String name) {
+        return phaseDeps.containsKey(name) ? phaseDeps.get(name) : new PhaseDependents(this, name);
+    }
+
+    public void update(ChannelGroup<?> channels) {
+
+        integration.comments += ":P";
+
+        for(PhaseData phase : this) phase.update(channels, integrationDeps);	
+
+        int N = size();
+
+        if(integration.hasOption("stability")) {
+            double T = (integration.instrument.integrationTime * integration.size()) / size();	
+            N = (int) Math.ceil(integration.option("stability").getDouble() * Unit.s / T);
+            if((N & 1) != 0) N++;
+            if(N > size()) N = size();
+        }
+
+        if(N < size()) integration.comments += "(" + N + ")";
+
+        removeDrifts(channels, N);
+
+        generation++;
+    }
+
+
+    public void validate() {
+        for(int i=size(); --i >=0; ) if(!get(i).validate()) remove(i);
+        for(int i=size(); --i >=0; ) get(i).index = i;
+    }
+
+    public WeightedPoint[] getGainIncrement(Mode mode) {
+        return signals.get(mode).getGainIncrement();
+    }
+
+    protected void syncGains(final Mode mode) throws Exception {
+        if(signals.containsKey(mode)) signals.get(mode).syncGains();
+    }
+
+    public void getWeights() {
+        integration.comments += ",P";
+
+        for(Channel channel : integration.instrument) if(channel instanceof PhaseWeighting) 
+            ((PhaseWeighting) channel).deriveRelativePhaseWeights(this); 
+    }
+
+  
+
+    public void despike(double level) { 
+        integration.comments += ",P";
+
+        Hashtable<Integer, Double> levels = new Hashtable<Integer, Double>();
+        Hashtable<Integer, Double> noise = new Hashtable<Integer, Double>();
+
+        int spikes = 0;
+
+        for(Channel channel : integration.instrument) {
+            levels.clear();
+            noise.clear();
+
+            for(PhaseData p : this) {
+                if(!levels.containsKey(p.phase)) levels.put(p.phase, getMedianLevel(channel, p.phase));
+                if(!noise.containsKey(p.phase)) noise.put(p.phase, getMedianNoise(channel, p.phase, levels.get(p.phase)));
+
+                despike(channel, level, levels.get(p.phase), noise.get(p.phase));
+            }
+        }
+
+        integration.comments += "(" + spikes + ")";
+    }
+
+    private int despike(Channel channel, double significance, double offset, double noise) { 
+        int spikes = 0;
+
+        for(PhaseData p : this) {
+            double dev = (p.value[channel.index] - offset) / noise;
+
+            if(Math.abs(dev) > significance) {
+                p.sampleFlag[channel.index] |= PhaseData.FLAG_SPIKE;
+                spikes++;
+            }
+            else p.sampleFlag[channel.index] &= ~PhaseData.FLAG_SPIKE;
+        }
+
+        return spikes;
+    }
+
+
+    public double getMeanLevel(Channel channel, int phaseValue) {
+        double sum = 0.0, sumw = 0.0;
+        for(PhaseData p : this) if(p.phase == phaseValue) if(p.isUnflagged(channel)) {
+            sum += p.weight[channel.index] * p.value[channel.index];
+            sumw += p.weight[channel.index];
+        }
+        return sum / sumw;
+    }
+
+    public double getMedianLevel(Channel channel, int phaseValue) {
+        WeightedPoint[] points = new WeightedPoint[size()];
+
+        int k = 0;
+        for(PhaseData p : this) if(p.phase == phaseValue) if(p.isUnflagged(channel)) {
+            points[k++] = new WeightedPoint(p.value[channel.index], p.weight[channel.index]);
+        }
+        return k > 0 ? Statistics.smartMedian(points, 0, k, 0.25).value() : Double.NaN;
+    }
+
+    public double getRMSNoise(Channel channel, int phaseValue, double level) {
+        double sum = 0.0;
+        int n=0;
+        for(PhaseData p : this) if(p.phase == phaseValue) if(p.isUnflagged(channel)) {
+            double dev = p.value[channel.index] * Math.sqrt(p.weight[channel.index]);
+            sum += dev * dev;
+            n++;
+        }
+        return n > 1 ? sum / (n-1) : Double.NaN;
+    }
+
+    public double getMedianNoise(Channel channel, int phaseValue, double level) {
+        double[] var = new double[size()];
+
+        int k = 0;
+        for(PhaseData p : this) if(p.phase == phaseValue) if(p.isUnflagged(channel)) {
+            double dev = p.value[channel.index] * Math.sqrt(p.weight[channel.index]);
+            var[k++] = dev * dev;
+        }
+        return k > 1 ? Statistics.median(var, 0, k) / Statistics.medianNormalizedVariance : Double.NaN;
+    }
+
+
+
+    public void removeDrifts(ChannelGroup<?> channels, int nPhases) {
+        //integration.comments += "|DP(" + nPhases + ")";
+        final PhaseDependents parms = getPhaseDependents("drifts");
+
+        parms.clear(channels);
+
+        for(Channel channel : channels) removeDrifts(channel, nPhases, parms);
+
+        parms.apply(channels);
+    }
+
+
+    private void removeDrifts(final Channel channel, final int blockSize, final PhaseDependents parms) {		
+
+        int nParms = ExtraMath.roundupRatio(size(), blockSize);
+
+        for(int N=0; N < nParms; N++) {
+            final int from = N * blockSize;
+            final int to = Math.min(size(), from + blockSize);
+            double sum = 0.0, sumw = 0.0;
+
+            for(int n=from; n<to; n++) {
+                PhaseData phase = get(n);
+                if(phase.isFlagged(channel)) continue;
+
+                sum += phase.weight[channel.index] * phase.value[channel.index];
+                sumw += phase.weight[channel.index];
+            }
+
+            if(sumw > 0.0) {
+                double level = (float) (sum / sumw);
+                for(int n=from; n<to; n++) {
+                    PhaseData phase = get(n);
+                    phase.value[channel.index] -= level;
+                    if(phase.isUnflagged(channel)) parms.addAsync(phase, phase.weight[channel.index] / sumw);
+                }
+                parms.addAsync(channel, 1.0);
+            }		
+        }		
+    }
+
+    public void write() throws IOException {
+        String filename = CRUSH.workPath + File.separator + integration.scan.getID() + "-" + integration.getID() + ".phases.tms";
+        PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename)));
+        write(out);
+        out.close();
+        System.err.println("Written phases to " + filename);
+    }
+
+    public void write(PrintStream out) {
+        out.println(integration.getASCIIHeader());
+        for(int i=0; i<size(); i++) out.println(get(i).toString(Util.e3));
+    }
 
 }

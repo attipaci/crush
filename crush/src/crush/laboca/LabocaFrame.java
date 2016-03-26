@@ -33,7 +33,7 @@ public class LabocaFrame extends APEXFrame {
 	private static final long serialVersionUID = 3722154840051109536L;
 	public float he3Temp;
 	
-	public LabocaFrame(APEXArrayScan<Laboca, LabocaSubscan> parent) { 
+	public LabocaFrame(APEXScan<Laboca, LabocaSubscan> parent) { 
 		super(parent); 
 	}
 	

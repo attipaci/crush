@@ -41,7 +41,7 @@ import crush.GroundBased;
 import crush.Instrument;
 import crush.Mount;
 import crush.Scan;
-import crush.array.Array;
+import crush.array.Camera;
 import crush.array.SingleColorLayout;
 import jnum.Constant;
 import jnum.Unit;
@@ -49,7 +49,7 @@ import jnum.Util;
 import jnum.data.Statistics;
 import jnum.math.Vector2D;
 
-public class Mustang2 extends Array<Mustang2Pixel, Mustang2Pixel> implements GroundBased {
+public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements GroundBased {
 	/**
 	 * 
 	 */

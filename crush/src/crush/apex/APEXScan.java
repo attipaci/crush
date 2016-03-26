@@ -45,7 +45,7 @@ import java.util.logging.Logger;
 
 
 
-public class APEXArrayScan<InstrumentType extends APEXCamera<?>, SubscanType extends APEXArraySubscan<InstrumentType, ?>> 
+public class APEXScan<InstrumentType extends APEXCamera<?>, SubscanType extends APEXSubscan<InstrumentType, ?>> 
 extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	/**
 	 * 
@@ -67,14 +67,14 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	
 	private Vector<Fits> openFits = new Vector<Fits>();
 	
-	public APEXArrayScan(InstrumentType instrument) {
+	public APEXScan(InstrumentType instrument) {
 		super(instrument);
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
 	public Object clone() {
-		APEXArrayScan<InstrumentType, SubscanType> clone = (APEXArrayScan<InstrumentType, SubscanType>) super.clone();
+		APEXScan<InstrumentType, SubscanType> clone = (APEXScan<InstrumentType, SubscanType>) super.clone();
 		clone.openFits = new Vector<Fits>();
 		return clone;
 	}
@@ -117,7 +117,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	@SuppressWarnings("unchecked")
 	@Override
 	public SubscanType getIntegrationInstance() {
-		return (SubscanType) new APEXArraySubscan<InstrumentType, APEXFrame>(this);
+		return (SubscanType) new APEXSubscan<InstrumentType, APEXFrame>(this);
 	}
 	
 	public String getFileName(String path, String spec, String projectID) throws FileNotFoundException {

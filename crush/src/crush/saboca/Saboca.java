@@ -34,7 +34,7 @@ import java.util.*;
 
 
 
-public class Saboca extends APEXCamera<SabocaPixel> implements NonOverlappingChannels {
+public class Saboca extends APEXCamera<SabocaPixel> implements NonOverlapping {
 	/**
 	 * 
 	 */

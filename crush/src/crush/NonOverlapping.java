@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -23,7 +23,6 @@
 
 package crush;
 
-public interface PhaseDespiking {
+public interface NonOverlapping {
 
-	int despike(PhaseSet phases, double level);
 }

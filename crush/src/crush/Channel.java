@@ -243,7 +243,9 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	public final static int FLAG_DOF = softwareFlags.next('f', "Degrees-of-freedom.").value();
 	public final static int FLAG_SPIKY = softwareFlags.next('s', "Spiky").value();
 	//public final static int FLAG_DISCONTINUITY
-	public final static int FLAG_DAC_RANGE = softwareFlags.next('r', "Railing/Saturated").value();
+	public final static int FLAG_DAC_RANGE = softwareFlags.next('r', "Railing/Saturated").value();    
+    public final static int FLAG_PHASE_DOF = softwareFlags.next('F', "Insufficient phase degrees-of-freedom").value();
+
 	
 	public final static int SOFTWARE_FLAGS = (int) softwareFlags.getMask();
 	

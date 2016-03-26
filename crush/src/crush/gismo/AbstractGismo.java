@@ -36,7 +36,7 @@ import jnum.math.Vector2D;
 import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 
-public abstract class AbstractGismo extends Array<GismoPixel, GismoPixel> implements GroundBased {
+public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> implements GroundBased {
 	/**
 	 * 
 	 */

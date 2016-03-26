@@ -23,7 +23,7 @@
 
 package crush.polka;
 
-import crush.apex.APEXArrayScan;
+import crush.apex.APEXScan;
 import crush.laboca.*;
 import crush.polarization.*;
 import jnum.Constant;
@@ -39,7 +39,7 @@ public class PolKaFrame extends LabocaFrame {
 	float Qh,Uh;
 	double waveplateOffset = Double.NaN, waveplateAngle = Double.NaN, waveplateFrequency = Double.NaN;
 	
-	public PolKaFrame(APEXArrayScan<Laboca, LabocaSubscan> parent) {
+	public PolKaFrame(APEXScan<Laboca, LabocaSubscan> parent) {
 		super(parent);
 	}
 	
