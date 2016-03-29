@@ -261,6 +261,14 @@
 :: center		@Deprecated: 2.00-b4
 			@See: 'pointing'
 
+:: chirange=min:max	@Since: 2.31
+			@Instrument: APEX
+			@Expert
+			A range of acceptable reduced chi values for 
+			photometry. If a subscan cannot contribute photometry 
+			within that range, it will not be part of the overall 
+			photometry result.
+
 :: chopped		Used for specifying a chopped data reduction. Can be
 			set manually or automatically (via 'detect.chopped')
 			based on the data itself. The key may trigger 

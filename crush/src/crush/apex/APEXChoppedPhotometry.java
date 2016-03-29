@@ -113,19 +113,17 @@ public class APEXChoppedPhotometry extends Photometry {
 				WeightedPoint df = pixel.getBGCorrectedLROffset(phases, neighbours, sourceGain);	
 				double chi2 = pixel.getBGCorrectedLRChi2(phases, neighbours, df.value(), sourceGain);
 
+			    if(hasOption("chirange")) {
+			        Range r = option("chirange").getRange(true);
+                    if(!r.contains(Math.sqrt(chi2))) {
+                        subscan.comments += " <<skip>>"; 
+                        df.noData();
+                    }
+                }
+				
 				if(!Double.isNaN(chi2)) {
-					df.scaleWeight(Math.min(1.0, 1.0 / chi2));
+					df.scaleWeight(Math.min(1.0, 1.0 / chi2));            
 					df.scale(1.0 / (transmission * subscan.gain * sourceGain[pixel.index]));
-					
-					   
-			        if(hasOption("nefdrange")) {
-			            double rms = 1.0 / Math.sqrt(df.weight()) / subscan.instrument.janskyPerBeam();
-			            if(!isWithinRange(rms, subscan)) {
-			                subscan.comments += " <<skip>>"; 
-			                df.noData();
-			            }
-			        }
-					
 					point.average(df);
 				}
 			}
@@ -133,15 +131,6 @@ public class APEXChoppedPhotometry extends Photometry {
 		}.process();
 	}
 	
-	
-	private boolean isWithinRange(double rms, APEXSubscan<?,?> subscan) {
-	    Range range = option("nefdrange").getRange(true);
-        double t = subscan.getFrameCount(~(Frame.CHOP_LEFT | Frame.CHOP_RIGHT)) * subscan.instrument.integrationTime;
-         
-        range.scale(1.0 / Math.sqrt(0.5 * t * subscan.getChopper().efficiency));
-         
-        return range.contains(rms); 
-	}
 
 	@Override
 	public void write(String path) throws Exception {	
