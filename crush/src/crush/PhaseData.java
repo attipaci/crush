@@ -219,7 +219,7 @@ public class PhaseData implements Serializable {
 		}
 		Statistics.smartMedian(temp, 0, n, 0.25, correlated);
 		
-		if(channelParms != null) addChannelDeps(mode, G, correlated.weight(), channelParms);
+		//if(channelParms != null) addChannelDeps(mode, G, correlated.weight(), channelParms);
 	}
 	
 	public String toString(NumberFormat nf) {
