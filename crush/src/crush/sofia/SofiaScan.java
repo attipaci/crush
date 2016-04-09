@@ -284,6 +284,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 	      
 		super.validate();
 		
+		if(hasOption("lab")) return;
+		
 		System.err.println(" Mean telescope VPA is " + Util.f1.format(getTelescopeVPA() / Unit.deg) + " deg.");  
 		
 		SofiaFrame first = getFirstIntegration().getFirstFrame();

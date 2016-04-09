@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -57,6 +57,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	public void parseHeader(Header header) throws Exception {
 		super.parseHeader(header);
 		priorPipelineStep = SofiaHeaderData.getStringValue(header, "PROCLEVL");
+		isMovingObject = header.getBooleanValue("NONSIDE", false);
 	}
 	
 	@Override

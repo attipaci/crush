@@ -53,11 +53,8 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	public void validate() {	
 		// Tau is set here...
 		super.validate();	
-			
-		boolean directTau = false;
-		if(hasOption("tau")) directTau = option("tau").equals("direct"); 
-		
-		if(!directTau) {		
+	
+		if(hasOption("tau")) if(!option("tau").equals("direct")) {		
 			double measuredLoad = instrument.getLoadTemperature(); 
 			double eps = (measuredLoad - instrument.excessLoad) / ((Sharc2Scan) scan).getAmbientTemperature();
 			double tauLOS = -Math.log(1.0-eps);
@@ -157,6 +154,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		private double[] dUT, DT;
 		private int[] SN;
 		private int channels;
+		private boolean isLab;
 		
 		private final Sharc2Scan sharcscan = (Sharc2Scan) scan;
 		
@@ -166,7 +164,28 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 
 			channels = table.getSizes()[0];
 			
+			isLab = hasOption("lab");
+			
 			data = (float[]) table.getColumn(0);
+			
+			int iDT = hdu.findColumn("Detector Time");
+            int iSN = hdu.findColumn("Sequence Number");            
+            hasExtraTimingInfo = iDT >= 0 && iSN >= 0; 
+            
+            if(iDT > 0) DT = (double[]) table.getColumn(iDT);
+            if(iSN > 0) SN = (int[]) table.getColumn(iSN);
+            
+            int iUT = hdu.findColumn("UT");
+            isDoubleUT = hdu.getHeader().getStringValue("TFORM" + (iUT+1)).equalsIgnoreCase("1D");
+            
+            if(isDoubleUT) dUT = (double[]) table.getColumn(iUT);
+            else fUT = (float[]) table.getColumn(iUT);
+            
+            if(isLab) {
+                System.err.println("   Laboratory data reduction. Ignoring telescope information...");
+                return;
+            }
+			
 			AZ = (float[]) table.getColumn(hdu.findColumn("AZ"));
 			EL = (float[]) table.getColumn(hdu.findColumn("EL"));
 			AZE = (float[]) table.getColumn(hdu.findColumn("AZ_ERROR"));
@@ -182,18 +201,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 			//iFlag = hdu.findColumn("Celestial");
 			//iTRK = hdu.findColumn("Tracking");
 			
-			int iDT = hdu.findColumn("Detector Time");
-			int iSN = hdu.findColumn("Sequence Number");			
-			hasExtraTimingInfo = iDT >= 0 && iSN >= 0; 
 			
-			if(iDT > 0) DT = (double[]) table.getColumn(iDT);
-			if(iSN > 0) SN = (int[]) table.getColumn(iSN);
-			
-			int iUT = hdu.findColumn("UT");
-			isDoubleUT = hdu.getHeader().getStringValue("TFORM" + (iUT+1)).equalsIgnoreCase("1D");
-			
-			if(isDoubleUT) dUT = (double[]) table.getColumn(iUT);
-			else fUT = (float[]) table.getColumn(iUT);
 			
 		}
 	
@@ -211,6 +219,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 				public void processRow(int i) throws FitsException {	
 
 					final Sharc2Frame frame = new Sharc2Frame(sharcscan);
+					frame.hasTelescopeInfo = !isLab;
 					frame.index = i;
 					
 					frame.parseData(data, i*channels, channels);
@@ -218,30 +227,37 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 					final double UT = isDoubleUT ? dUT[i] * Unit.hour : fUT[i] * Unit.hour;
 					frame.MJD = sharcscan.iMJD + UT / Unit.day;
 	
+					if(hasExtraTimingInfo) {
+                        frame.dspTime = DT[i] * Unit.sec;
+                        frame.frameNumber = SN[i];
+                    }       
+					
 					// Enforce the calculation of the equatorial coordinates
 					frame.equatorial = null;
-
-					frame.horizontal = new HorizontalCoordinates(
-							AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
-							EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
 					
+					set(offset + i, frame);
+						
+					// Do not add coordinate information for lab reductions...
+					if(!frame.hasTelescopeInfo) return;
+					
+					
+					frame.horizontal = new HorizontalCoordinates(
+					        AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
+					        EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
+
 					final double pa = PA[i] * Unit.deg;
 					frame.sinPA = Math.sin(pa);
 					frame.cosPA = Math.cos(pa);
 
 					frame.LST = LST[i] * Unit.hour;
 
-					if(hasExtraTimingInfo) {
-						frame.dspTime = DT[i] * Unit.sec;
-						frame.frameNumber = SN[i];
-					}		
 
 					frame.horizontalOffset = new Vector2D(
-							(AZO[i] + AZE[i] * frame.horizontal.cosLat()) * Unit.arcsec,
-							(ELO[i] + ELE[i]) * Unit.arcsec);
-				
+					        (AZO[i] + AZE[i] * frame.horizontal.cosLat()) * Unit.arcsec,
+					        (ELO[i] + ELE[i]) * Unit.arcsec);
+
 					frame.chopperPosition.setX(chop[i] * Unit.arcsec);
-					
+
 					//chopZero.add(frame.chopperPosition.getX());
 					//chopZero.addWeight(1.0);
 
@@ -251,12 +267,11 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 					// Add in the equatorial sweeping offsets
 					// Watch out for the sign of the RA offset, which is counter to the native coordinate direction
 					equatorialOffset.set(RAO[i] * Unit.arcsec, DECO[i] * Unit.arcsec);	
-					
-					
+
 					frame.equatorialToHorizontal(equatorialOffset);
 					frame.horizontalOffset.add(equatorialOffset);
-		
-					set(offset + i, frame);
+					
+					
 				}
 			};
 		}

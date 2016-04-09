@@ -52,7 +52,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	
 	@Override
 	public void validate() {	
-		if(!hasOption("nochopper")) {
+		if(!hasOption("nochopper")) if(!hasOption("lab")) {
 			removeChopperDCOffset();
 
 			for(FrameType frame : this) if(frame != null) {
@@ -260,7 +260,8 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	
 	@Override
 	public String getASCIIHeader() {
-		double eps = 1.0 - Math.exp(-zenithTau / scan.horizontal.sinLat());
+	 
+		double eps = hasOption("lab") ? 1.0 : 1.0 - Math.exp(-zenithTau / scan.horizontal.sinLat());
 		double Tload = ((CSOScan<?, ?>) scan).getAmbientTemperature();
 		
 		return super.getASCIIHeader() + "\n" 

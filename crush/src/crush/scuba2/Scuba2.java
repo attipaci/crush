@@ -55,7 +55,7 @@ public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBa
 	
 	
 	public Scuba2() {
-		super("scuba2", new SingleColorLayout<Scuba2Pixel>(), SUBARRAYS * Scuba2Subarray.PIXELS);
+		super("scuba2", new SingleColorArrangement<Scuba2Pixel>(), SUBARRAYS * Scuba2Subarray.PIXELS);
 		//integrationTime = samplingInterval = 1.0/200.0 * Unit.sec;
 		mount = Mount.RIGHT_NASMYTH;
 		subarray = new Scuba2Subarray[SUBARRAYS];

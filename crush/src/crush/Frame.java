@@ -63,6 +63,8 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public byte[] sampleFlag;
 	public int[] sourceIndex;
 	
+	public boolean hasTelescopeInfo = true;
+	
 	public Frame(Scan<?, ?> parent) { 
 		scan = parent; 
 		index = parent.size();

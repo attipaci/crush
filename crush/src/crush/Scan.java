@@ -150,17 +150,19 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		//System.err.println("### MJD: " + Util.f3.format(MJD) + " --> Epoch is J" + Util.f2.format(JulianEpoch.getYearForMJD(MJD)));
 		//System.err.println("### LST: " + Util.f3.format(LST/Unit.hour));
 		
-		if(equatorial == null) calcEquatorial();
+		if(!hasOption("lab")) {
+		    if(equatorial == null) calcEquatorial();
 
-		// Use J2000 coordinates
-		if(!equatorial.epoch.equals(CoordinateEpoch.J2000)) precess(CoordinateEpoch.J2000);
-		System.err.println("   Equatorial: " + equatorial.toString());
-		
-		// Calculate apparent and approximate horizontal coordinates.... 
-		if(apparent == null) calcApparent();
-		if(horizontal == null && site != null) calcHorizontal();
-		
-		if(horizontal != null) System.err.println("   Horizontal: " + horizontal.toString());
+		    // Use J2000 coordinates
+		    if(!equatorial.epoch.equals(CoordinateEpoch.J2000)) precess(CoordinateEpoch.J2000);
+		    System.err.println("   Equatorial: " + equatorial.toString());
+
+		    // Calculate apparent and approximate horizontal coordinates.... 
+		    if(apparent == null) calcApparent();
+		    if(horizontal == null && site != null) calcHorizontal();
+
+		    if(horizontal != null) System.err.println("   Horizontal: " + horizontal.toString());
+		}
 		
 		for(int i=0; i<size(); ) {
 			Integration<InstrumentType, ?> integration = get(i);
@@ -613,10 +615,11 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public void writeProducts() {
 		for(Integration<?,?> integration : this) integration.writeProducts();
 		
-		printFocus();
-		
-		printPointing();
-		
+		if(!hasOption("lab")) {
+		    printFocus();
+		    printPointing();
+		}
+		    
 		if(hasOption("log")) {
 			try { writeLog(option("log"), CRUSH.workPath + File.separator + instrument.getName() + ".log"); }
 			catch(IOException e) {

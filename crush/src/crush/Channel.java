@@ -69,6 +69,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	public double oneOverFStat = Double.NaN;
 	
 	public int spikes = 0;
+	public int inconsistencies = 0; // such as jumps...
 	
 	public Channel(Instrument<?> instrument, int dataIndex) {
 		this.instrument = instrument;

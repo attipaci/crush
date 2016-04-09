@@ -24,8 +24,8 @@
 package crush.hawcplus;
 
 
+import crush.Instrument;
 import crush.sofia.SofiaFrame;
-import jnum.astro.EquatorialCoordinates;
 
 
 public class HawcPlusFrame extends SofiaFrame {
@@ -33,8 +33,6 @@ public class HawcPlusFrame extends SofiaFrame {
 	 * 
 	 */
 	private static final long serialVersionUID = 6511202510198331668L;
-	
-	EquatorialCoordinates objectCoords;    // For non-sidereal mapping...
 	
 	long mceSerial;
 	float hwpAngle;
@@ -52,21 +50,38 @@ public class HawcPlusFrame extends SofiaFrame {
 	    jumpCounter = new byte[size];
 	}
 	
-	public void parseData(long[] DAC, int frameIndex) {   
-		parseData(DAC, frameIndex * FITS_CHANNELS, FITS_CHANNELS);
+	public void parseData(int frameIndex, long[] DAC, short[] jump) {   
+		parseData(DAC, jump, frameIndex * FITS_CHANNELS, FITS_CHANNELS);
 	}
 	
-	private void parseData(long[] DAC, int from, int channels) {
-	    final int polOffset = ((HawcPlus) scan.instrument).polArrayPixels();
+	private void parseData(long[] DAC, short[] jump, int from, int channels) {
+	    final int polOffset = HawcPlus.polArrayPixels;
 	    
-	    // Unpack the 
+	    // Unpack the FITS array into the internal array (with overlapping polarizations separated out)
 		for(int i=channels; --i >= 0; ) {
 		    final int row = i >> 7;
 		    final int col = i & 63;
 		    final int offset = (i & 64) == 0 ? 0 : polOffset; 
-		    data[offset + (row<<6) + col] = (int) DAC[from+i];
+		    final int gridIndex = offset + (row<<6) + col;
+		    
+		    data[gridIndex] = (int) DAC[from+i];
+		    if(jump != null) jumpCounter[gridIndex] = (byte) jump[from+i];
 		}
 	}
+	
+
+	@Override
+    public void slimTo(Instrument<?> instrument) {
+        super.slimTo(instrument);
+        
+        if(jumpCounter == null) return;
+        
+        final byte[] newJumpCounter = new byte[instrument.size()];
+        for(int k=instrument.size(); --k >= 0; ) newJumpCounter[k] = jumpCounter[instrument.get(k).index];      
+            
+        jumpCounter = newJumpCounter;
+    }
+   
 	
 	public final static int FITS_ROWS = 41;
 	public final static int FITS_COLS = 128;

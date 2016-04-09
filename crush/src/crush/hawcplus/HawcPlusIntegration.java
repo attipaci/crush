@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -27,7 +27,9 @@ import java.io.File;
 import java.util.List;
 
 import crush.CRUSH;
+import crush.Channel;
 import crush.fits.HDUReader;
+import crush.sofia.SofiaChopperData;
 import crush.sofia.SofiaIntegration;
 import jnum.Unit;
 import jnum.Util;
@@ -41,6 +43,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	 */
 	private static final long serialVersionUID = -3894220792729801094L;
 
+	public boolean flagJumps = true;
+	
 	public HawcPlusIntegration(HawcPlusScan parent) {
 		super(parent);
 	}	
@@ -64,8 +68,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	public HawcPlusFrame getFrameInstance() {
 		return new HawcPlusFrame((HawcPlusScan) scan);
 	}
-	
-	
 	
 	protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {	
 		int records = 0;
@@ -92,12 +94,15 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	class HawcPlusReader extends HDUReader {	
 		private int startIndex;
 		private long[] SN;
+		private short[] jump;
 		private long[] data;
 		private double[] TS; 
-		private float[] RA, DEC, AZ, EL, iVPA, LON, LAT, LST, chop, PWV, HWP;
-		//private float[] dT;
-		private boolean isSimulated;
-		//private int channels;
+		private double[] RA, DEC, AZ, EL, iVPA, tVPA, cVPA, LON, LAT, LST, PWV;
+		private double[] objectRA, objectDEC;
+		private float[] chopR, chopS;
+		private int[] HWP;
+	
+		private boolean isLab;
 		
 		private final HawcPlusScan hawcPlusScan = (HawcPlusScan) scan;
 		
@@ -105,127 +110,137 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			super(hdu);
 			
 			this.startIndex = startIndex;
-			
-			isSimulated = hasOption("simulated");
-			
-			HawcPlus hawc = scan.instrument;
+		
+			isLab = hasOption("lab");
 			
 			Object[] row = (Object[]) hdu.getRow(0);
 			
 			// The Sofia timestamp (decimal seconds since 0 UTC 1 Jan 1970...
 			TS = (double[]) table.getColumn(hdu.findColumn("Timestamp"));	
-			
-			//dT = (float[]) table.getColumn(hdu.findColumn("Time Adjustment"));	
-			SN = (long[]) table.getColumn(hdu.findColumn("Frame Counter"));
+			SN = (long[]) table.getColumn(hdu.findColumn("FrameCounter"));
+			jump = (short[]) table.getColumn(hdu.findColumn("FluxJumps"));
 			
 			// The R/T array data
-			int iData = hdu.findColumn("SQ1 Feedback");
+			int iData = hdu.findColumn("SQ1Feedback");
 			data = (long[]) table.getColumn(iData);
 			
 			int storeRows = ((long[][]) row[iData]).length;
 			int storeCols = ((long[][]) row[iData])[0].length;
 			System.err.println("   FITS has " + storeRows + "x" + storeCols + " arrays.");
 			
-			System.err.println("   Logical layout: " + hawc.polsubarrays + " subarrays of " + hawc.rows + "x" + hawc.subarrayCols + " pixels per polarization.");
+			// HWP may be used in the future if support is extended for
+            // scan-mode polarimetry (or polarimetry, in general...
+			HWP = (int[]) table.getColumn(hdu.findColumn("hwpCount"));
+            
+			// Ignore coordinate info for 'lab' data...
+			if(isLab) {
+			    System.err.println("   Lab mode data reduction. Ignoring telescope data...");
+			    return;
+			}
 			
 			// The tracking center in the basis coordinates of the scan (usually RA/DEC)
-			RA = (float[]) table.getColumn(hdu.findColumn("Right Ascension"));
-			DEC = (float[]) table.getColumn(hdu.findColumn("Declination"));
+			RA = (double[]) table.getColumn(hdu.findColumn("RA"));
+			DEC = (double[]) table.getColumn(hdu.findColumn("DEC"));
+
+			if(scan.isMovingObject) {
+			    objectRA = (double[]) table.getColumn(hdu.findColumn("NonSiderealRA"));
+	            objectDEC = (double[]) table.getColumn(hdu.findColumn("NonSiderealDEC"));
+			}
 			
 			// The scanning offsets in the offset system (usually AZ/EL)
-			AZ = (float[]) table.getColumn(hdu.findColumn("Azimuth"));
-			EL = (float[]) table.getColumn(hdu.findColumn("Elevation"));
+			AZ = (double[]) table.getColumn(hdu.findColumn("AZ"));
+			EL = (double[]) table.getColumn(hdu.findColumn("EL"));
+
+			LST = (double[]) table.getColumn(hdu.findColumn("LST"));
+
+			iVPA = (double[]) table.getColumn(hdu.findColumn("SIBS_VPA"));
+			tVPA = (double[]) table.getColumn(hdu.findColumn("TABS_VPA"));
+			cVPA = (double[]) table.getColumn(hdu.findColumn("Chop_VPA"));
+
+			LON = (double[]) table.getColumn(hdu.findColumn("LON"));
+			LAT = (double[]) table.getColumn(hdu.findColumn("LAT"));
+
+			chopR = (float[]) table.getColumn(hdu.findColumn("sofiaChopR"));
+			chopR = (float[]) table.getColumn(hdu.findColumn("sofiaChopS"));
+
+			PWV = (double[]) table.getColumn(hdu.findColumn("PWV"));
 			
-			LST = (float[]) table.getColumn(hdu.findColumn("LST"));
-				
-			// The parallactic angle and the SOFIA Vertical Position Angle
-			//PA = (float[]) table.getColumn(hdu.findColumn("Parallactic Angle"));
-			iVPA = (float[]) table.getColumn(hdu.findColumn("Array VPA"));
-				
-			LON = (float[]) table.getColumn(hdu.findColumn("Longitude"));
-			LAT = (float[]) table.getColumn(hdu.findColumn("Latitude"));
-			
-			chop = (float[]) table.getColumn(hdu.findColumn("Chop Offset"));
-			// CRUSH does not need the nod offset, so ignore it...
-			
-			// HWP may be used in the future if support is extended for
-			// scan-mode polarimetry (or polarimetry, in general...
-			HWP = (float[]) table.getColumn(hdu.findColumn("HWP Angle"));
-			
-			PWV = (float[]) table.getColumn(hdu.findColumn("Water Vapor"));
 		}
 		
 		@Override
 		public Reader getReader() {
 			return new Reader() {	
-				AstroTime timeStamp;
-				Vector2D offset;
+				private AstroTime timeStamp;
+				private EquatorialCoordinates objectEq;
+				private Vector2D offset;
 				
 				@Override
 				public void init() {
 					timeStamp = new AstroTime();
 					offset = new Vector2D();
+					objectEq = scan.isMovingObject ? new EquatorialCoordinates() : (EquatorialCoordinates) scan.equatorial.copy();		
 				}
 				
 				@Override
 				public void processRow(int i) {
-					set(startIndex + i, null);
+					// TODO may not be needed...
+				    set(startIndex + i, null);
 										
 					// Create the frame object only if it cleared the above hurdles...
 					final HawcPlusFrame frame = new HawcPlusFrame(hawcPlusScan);
 					frame.index = i;
+					frame.hasTelescopeInfo = !isLab;
 						
-					// Read the pixel data
-					frame.parseData(data, i);
-					
+					// Read the pixel data (DAC and MCE jump counter)
+					frame.parseData(i, data, jump);
 					frame.mceSerial = SN[i];
 					
-					// Add in the astrometry...
-					timeStamp.setUTCMillis(Math.round(1000.0 * TS[i] * Unit.s));
-					frame.MJD = timeStamp.getMJD();
+                    timeStamp.setUTCMillis(Math.round(1000.0 * TS[i]));
+                    frame.MJD = timeStamp.getMJD();
+                       
+                    frame.hwpAngle = (float) (HWP[i] * HawcPlus.hwpStep);
+                    
+                    set(startIndex + i, frame);
+					
+					if(!frame.hasTelescopeInfo) return;
+					
+					// Below here is telescope data only, which will be ignored for 'lab' mode reductions...
+					// Add the astrometry...
 					
 					frame.equatorial = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, scan.equatorial.epoch);
+					if(scan.isMovingObject) objectEq.set(objectRA[i] * Unit.hourAngle, objectDEC[i] * Unit.deg);
+					
 					frame.site = new GeodeticCoordinates(LON[i] * Unit.deg, LAT[i] * Unit.deg);
 					
 					if(hawcPlusScan.isChopping) {
-						frame.chopperPosition = new Vector2D(chop[i] * Unit.arcsec, 0.0);
-						frame.chopperPosition.rotate(hawcPlusScan.chopper.angle);
+					   // In telescope XEL, EL
+					   // TODO check sign convention!!!
+					   frame.chopperPosition = new Vector2D(chopS[i] * Unit.V, chopR[i] * Unit.V);
+					   frame.chopperPosition.scale(SofiaChopperData.volts2Angle);
+					   // TODO check signs...
+					   frame.chopperPosition.rotate((cVPA[i] - tVPA[i]) * Unit.deg);
 					}
 					else frame.chopperPosition = new Vector2D();
 					
-					frame.hwpAngle = HWP[i] * (float) Unit.deg;
 					frame.PWV = PWV[i] * (float) Unit.um;
 
 					frame.LST = LST[i] * (float) Unit.hour;
 					frame.horizontal = new HorizontalCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
 					
-					// TODO...
+					// TODO use actual telescope XEL, EL...
 					frame.telescopeCoords = new TelescopeCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
+							
+					// calc parallactic angle...
+					// rot: sibs VPA - PA
+					frame.instrumentVPA = iVPA[i] * (float) Unit.deg;
+					frame.telescopeVPA = tVPA[i] * (float) Unit.deg; // TODO
+					frame.setParallacticAngle(frame.telescopeVPA);
 					
-					// LST and horizontal can be calculated (approximately within dUT1), if need be...
-					//frame.LST = timeStamp.getLMST(frame.site.longitude());
-					//frame.horizontal = frame.equatorial.toHorizontal(frame.site, frame.LST);
-					
-					
-					if(isSimulated) {
-						// The simulation writes a position angle as if a parallactic angle...
-						frame.instrumentVPA = iVPA[i] * (float) Unit.deg;
-						frame.telescopeVPA = iVPA[i] * (float) Unit.deg; // TODO
-						frame.setParallacticAngle(-iVPA[i] * Unit.deg);
-						frame.setRotation(0.0);
-					}
-					else {
-					    // calc parallactic angle...
-					    // rot: sibs VPA - PA
-						frame.instrumentVPA = iVPA[i] * (float) Unit.deg;
-						frame.telescopeVPA = iVPA[i] * (float) Unit.deg; // TODO
-						frame.setParallacticAngle(frame.telescopeVPA);
-						frame.setRotation(frame.instrumentVPA - frame.telescopeVPA); 
-					}
-
-
+					// TODO check signs!!!
+					frame.setRotation(frame.instrumentVPA - frame.telescopeVPA); 
+				
 					// Calculate the scanning offsets...
-					frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(scan.equatorial);
+					frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(objectEq);
 					frame.equatorialNativeToHorizontal(frame.horizontalOffset);
 					
 					// Add the chopper offset to the telescope coordinates.
@@ -234,13 +249,13 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 						frame.horizontalOffset.add(frame.chopperPosition);
 						frame.horizontal.addOffset(frame.chopperPosition);
 					
-						offset = frame.chopperPosition;
-						frame.horizontalToNativeEquatorial(offset);
+						// TODO check native vs nominal
+                        frame.equatorial.addOffset(frame.chopperPosition);
+                        
+                        offset = (Vector2D) frame.chopperPosition.copy();
+                        frame.horizontalToNativeEquatorial(offset);
 						frame.equatorial.addNativeOffset(offset);
-					}
-				
-						
-					set(startIndex + i, frame);
+					}	
 				}
 				
 			};
@@ -265,6 +280,34 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		return scan.getID();
 	}
 
+	@Override
+    public void validate() {
+	    super.validate();
+	    flagJumps = hasOption("flagjumps");
+	}
+	
+	@Override
+    public boolean checkConsistency(final Channel channel, final int from, final int to) {
+	    super.checkConsistency(channel, from, to);
+	    
+	    if(!flagJumps) return true;
+	    
+	    final byte jumpStart = get(from).jumpCounter[channel.index];
+	    final int clearFlag = ~HawcPlusFrame.SAMPLE_PHI0_JUMP;
+	    
+	    for(int t=to; --t > from; ) if(get(t).jumpCounter[channel.index] != jumpStart) {
+	        get(t).sampleFlag[channel.index] &= clearFlag;
+	        flagJump(channel, from, to);
+	        return false;
+	    }
+	   
+	    return true;
+	}
+	
+	private void flagJump(final Channel channel, final int from, int to) {
+	    while(--to >= from) get(to).sampleFlag[channel.index] |= HawcPlusFrame.SAMPLE_PHI0_JUMP;
+	}
+	
 	
 	
 }

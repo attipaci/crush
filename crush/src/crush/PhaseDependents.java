@@ -74,7 +74,7 @@ public class PhaseDependents implements Serializable {
 	    clear(channels, 0, forPhase.length);
 	}
 	
-	public void clear(final Iterable<? extends Channel> channels, final int from, final int to) { 
+	private void clear(final Iterable<? extends Channel> channels, final int from, final int to) { 
 		for(int i=to; --i >= from; ) {
 			final PhaseData phase = phases.get(i);
 			if(phase != null) phase.dependents -= forPhase[i];
@@ -82,7 +82,7 @@ public class PhaseDependents implements Serializable {
 		for(final Channel channel : channels) phases.channelParms[channel.index] -= forChannel[channel.index];
 		
 		Arrays.fill(forPhase, from, to, 0.0);
-		Arrays.fill(forChannel, from, to, 0.0);
+		Arrays.fill(forChannel, 0.0);
 	}
 	
 	

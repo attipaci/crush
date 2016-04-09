@@ -28,6 +28,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.text.*;
 
+import crush.array.GeometricIndexed;
 import crush.sourcemodel.*;
 import jnum.Configurator;
 import jnum.Constant;
@@ -54,7 +55,7 @@ implements TableFormatter.Entries, Messaging {
 	private static final long serialVersionUID = -7651803433436713372L;
 	
 	private Configurator options, startupOptions;
-	private InstrumentLayout<? super ChannelType> layout;
+	private ColorArrangement<? super ChannelType> arrangement;
 	public Mount mount;
 	
 	private double resolution;
@@ -75,21 +76,21 @@ implements TableFormatter.Entries, Messaging {
 			
 	public boolean isInitialized = false, isValid = false;
 	
-	public Instrument(String name, InstrumentLayout<? super ChannelType> layout) {
+	public Instrument(String name, ColorArrangement<? super ChannelType> layout) {
 		super(name);
-		setLayout(layout);
+		setArrangement(layout);
 		startupOptions = options;
 	}
 	
-	public Instrument(String name, InstrumentLayout<? super ChannelType> layout, int size) {
+	public Instrument(String name, ColorArrangement<? super ChannelType> layout, int size) {
 		super(name, size);
-		setLayout(layout);
+		setArrangement(layout);
 		storeChannels = size;
 	}
 	
 	@Override
 	public int hashCode() {
-		return super.hashCode() ^ mount.hashCode() ^ layout.hashCode() ^ HashCode.from(resolution);
+		return super.hashCode() ^ mount.hashCode() ^ arrangement.hashCode() ^ HashCode.from(resolution);
 	}
 	
 	@Override
@@ -100,16 +101,16 @@ implements TableFormatter.Entries, Messaging {
 		Instrument<?> i = (Instrument<?>) o;
 		if(resolution != i.resolution) return false;
 		if(!Util.equals(mount, i.mount)) return false;
-		if(!Util.equals(layout, i.layout)) return false;
+		if(!Util.equals(arrangement, i.arrangement)) return false;
 		return true;
 	}
 		
-	public void setLayout(InstrumentLayout<? super ChannelType> layout) {
-		this.layout = layout;
+	public void setArrangement(ColorArrangement<? super ChannelType> layout) {
+		this.arrangement = layout;
 		if(layout != null) layout.setInstrument(this);
 	}
 	
-	public InstrumentLayout<?> getLayout() { return layout; }
+	public ColorArrangement<?> getArrangement() { return arrangement; }
 	
 	// Load the static instrument settings, which are not meant to be date-dependent...
 	public void setOptions(Configurator options) {
@@ -144,9 +145,9 @@ implements TableFormatter.Entries, Messaging {
 		copy.overlapPointSize = Double.NaN;
 		
 		if(options != null) copy.setOptions(options.copy());
-		if(layout != null) {
-			copy.layout = layout.copy();
-			copy.layout.setInstrument(copy);
+		if(arrangement != null) {
+			copy.arrangement = arrangement.copy();
+			copy.arrangement.setInstrument(copy);
 		}
 		
 		// TODO this needs to be done properly???
@@ -177,7 +178,7 @@ implements TableFormatter.Entries, Messaging {
 		if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnitValue();
 		if(hasOption("gain")) gain = option("gain").getDouble();
 		
-		if(layout != null) layout.validate(options);
+		if(arrangement != null) arrangement.validate(options);
 		
 		loadChannelData();
 		
@@ -770,11 +771,11 @@ implements TableFormatter.Entries, Messaging {
 		return null;
 	}  
 	
-	public int getPixelCount() { return layout.getPixelCount(); }
+	public int getPixelCount() { return arrangement.getPixelCount(); }
 	
-	public List<? extends Pixel> getPixels() { return layout.getPixels(); }
+	public List<? extends Pixel> getPixels() { return arrangement.getPixels(); }
 	
-	public List<? extends Pixel> getMappingPixels() { return layout.getMappingPixels(); }
+	public List<? extends Pixel> getMappingPixels() { return arrangement.getMappingPixels(); }
 	
 	public final List<? extends Pixel> getPerimeterPixels() { 
 		int sections = hasOption("perimeter") ? option("perimeter").getInt() : 0;

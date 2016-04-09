@@ -60,6 +60,7 @@ public class MotionFilter extends KillFilter {
 	@Override
 	protected void setIntegration(Integration<?,?> integration) {
 		super.setIntegration(integration);
+		if(integration.hasOption("lab")) return;
 
 		System.err.print("   Motion filter: ");
 		

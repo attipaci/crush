@@ -25,10 +25,10 @@ package crush.array;
 
 import java.util.List;
 
-import crush.InstrumentLayout;
+import crush.ColorArrangement;
 import crush.Pixel;
 
-public class SingleColorLayout<ChannelType extends SingleColorPixel> extends InstrumentLayout<ChannelType> {
+public class SingleColorArrangement<ChannelType extends SingleColorPixel> extends ColorArrangement<ChannelType> {
 	/**
 	 * 
 	 */

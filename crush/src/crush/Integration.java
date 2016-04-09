@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -194,11 +194,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		// Explicit downsampling should precede v-clipping
 		if(hasOption("downsample")) if(!option("downsample").equals("auto")) downsample();
-		if(hasOption("vclip")) velocityClip();
-		if(hasOption("aclip")) accelerationClip();
-
-		calcScanSpeedStats();
 		
+		if(!hasOption("lab")) {
+		    if(hasOption("vclip")) velocityClip();
+		    if(hasOption("aclip")) accelerationClip();
+
+		    calcScanSpeedStats();
+		}
+		else if(hasOption("lab.scanspeed")) {
+		    aveScanSpeed = new DataPoint(option("lab.scanspeed").getDouble() * Unit.arcsec / Unit.s, 0.0);
+		}
+		else {
+		    aveScanSpeed = new DataPoint(10.0 * instrument.getResolution(), 0.0);
+		}
+		    
 		if(hasOption("filter.kill")) {
 			System.err.println("   FFT Filtering specified sub-bands...");
 			removeOffsets(false);
@@ -207,8 +216,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			filter.apply();
 		}
 		
-		
-		
+
 		// Flag out-of-range data
 		if(hasOption("range")) checkRange();
 		// Continue only if enough valid channels remain...
@@ -839,7 +847,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		parms.clear(channels, 0, size());
 		
 		final DataPoint[] aveOffset = instrument.getDataPoints();
-		for(int i=channels.size(); --i >= 0; ) aveOffset[i].noData();
+		for(int i=channels.size(); --i >= 0; ) {
+		    aveOffset[i].noData();
+		    instrument.get(i).inconsistencies = 0;
+		}
 		
 		final int nt = size();
 		
@@ -884,7 +895,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				
 					aveOffset[k].average(increment);
 					
-					level(channel, from, to, frameParms, increment);
+					if(!level(channel, from, to, frameParms, increment)) channel.inconsistencies++;
 					
 					if(increment.weight() > 0.0) parms.addAsync(channel, 1.0);
 				}
@@ -893,10 +904,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				
 		final double crossingTime = getPointCrossingTime();	
 		
+		int inconsistentChannels = 0;
+		int inconsistencies = 0;
+		
 		for(int k=channels.size(); --k >= 0; ) {
 			final Channel channel = channels.get(k);
 			final double G = isDetectorStage ? channel.getHardwareGain() : 1.0;
 			channel.offset += G * aveOffset[k].value();
+			
+			if(channel.inconsistencies > 0) inconsistentChannels++;
+			inconsistencies += channel.inconsistencies;
 			
 			if(driftN >= size()) break;
 			
@@ -913,6 +930,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 			channel.filterTimeScale = Math.min(filterTimeScale, channel.filterTimeScale);
 		}
+		
+		if(inconsistencies > 0) comments += "!" + inconsistentChannels + ":" + inconsistencies;
 				
 		Instrument.recycle(aveOffset);
 	
@@ -920,7 +939,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 
-	private void level(final Channel channel, final int from, int to, final float[] frameParms, final WeightedPoint increment) {
+	private boolean level(final Channel channel, final int from, int to, final float[] frameParms, final WeightedPoint increment) {
 		final float delta = (float) increment.value();			
 		final float pNorm = (float) (channel.getFiltering(this) / increment.weight());
 		
@@ -934,8 +953,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0)
 				frameParms[exposure.index] += exposure.relativeWeight * pNorm;
 		}
+		
+		return checkConsistency(channel, from, to);
 	}
 
+	
+	public boolean checkConsistency(final Channel channel, int from, int to) {
+	    return true;
+	}
 	
 	private void getMeanLevel(final Channel channel, final int from, int to, final WeightedPoint increment) {
 		to = Math.min(to, size());
