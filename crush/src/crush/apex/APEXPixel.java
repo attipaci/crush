@@ -51,6 +51,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 	public Vector2D fitsPosition;
 	public double relativePhaseWeight = 1.0;
 	
+	
 	public APEXPixel(APEXCamera<?> array, int backendIndex) {
 		super(array, backendIndex);
 	}

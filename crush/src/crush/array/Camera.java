@@ -45,11 +45,11 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 	
 	protected double rotation = 0.0;
 	
-	public Camera(String name, InstrumentLayout<? super ChannelType> layout) {
+	public Camera(String name, ColorArrangement<? super ChannelType> layout) {
 		super(name, layout);
 	}
 	
-	public Camera(String name, InstrumentLayout<? super ChannelType> layout, int size) {
+	public Camera(String name, ColorArrangement<? super ChannelType> layout, int size) {
 		super(name, layout, size);
 	}
 	

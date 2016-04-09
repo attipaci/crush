@@ -50,8 +50,11 @@ public class Pipeline implements Runnable, Serializable {
 	}
 	
 	public void setSourceModel(SourceModel source) {
-		scanSource = crush.source.getWorkingCopy(false);
-		scanSource.setParallel(threadCount);
+	    if(source != null) { 
+	        scanSource = crush.source.getWorkingCopy(false);
+	        scanSource.setParallel(threadCount);
+	    }
+	    else scanSource = null;
 	}
 	
 	public int getThreadCount() { return threadCount; }

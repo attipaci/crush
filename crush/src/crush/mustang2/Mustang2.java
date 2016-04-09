@@ -42,7 +42,7 @@ import crush.Instrument;
 import crush.Mount;
 import crush.Scan;
 import crush.array.Camera;
-import crush.array.SingleColorLayout;
+import crush.array.SingleColorArrangement;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
@@ -62,7 +62,7 @@ public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements Gr
 	// TODO ? Vector2D arrayPointingCenter
 	
 	public Mustang2() {
-		super("mustang2", new SingleColorLayout<Mustang2Pixel>(), maxPixels);	
+		super("mustang2", new SingleColorArrangement<Mustang2Pixel>(), maxPixels);	
 		setResolution(6.2 * Unit.arcsec);
 		mount = Mount.CASSEGRAIN;
 		samplingInterval = integrationTime = 1.0 * Unit.ms;

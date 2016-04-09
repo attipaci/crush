@@ -55,7 +55,7 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 	
 	
 	public AbstractGismo(String name, int npix) {
-		super(name, new SingleColorLayout<GismoPixel>(), npix);
+		super(name, new SingleColorArrangement<GismoPixel>(), npix);
 		setResolution(16.7 * Unit.arcsec);
 		
 		arrayPointingCenter = (Vector2D) getDefaultPointingCenter().clone();

@@ -32,7 +32,7 @@ import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
 import jnum.math.Vector2D;
 import jnum.text.TableFormatter;
-import crush.array.SingleColorLayout;
+import crush.array.SingleColorArrangement;
 import nom.tam.fits.*;
 
 import java.io.*;
@@ -51,11 +51,11 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Camera<C
 	public double rotation = 0.0;
 	
 	public APEXCamera(String name, int size) {
-		super(name, new SingleColorLayout<APEXPixel>(), size);
+		super(name, new SingleColorArrangement<APEXPixel>(), size);
 	}
 	
 	public APEXCamera(String name) {
-		super(name, new SingleColorLayout<APEXPixel>());
+		super(name, new SingleColorArrangement<APEXPixel>());
 	}
 	
 	

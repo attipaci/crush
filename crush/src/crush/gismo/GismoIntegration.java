@@ -161,7 +161,6 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 			
 			if(hasOption("read.sae")) if(iSAE > 0) SAE = (float[]) table.getColumn(iSAE);
 			
-				
 			// These columns below have been retired in March 2012
 			// But even before that, these did not carry actual data, as thermometry
 			// was disconnected during observations...

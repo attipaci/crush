@@ -63,6 +63,7 @@ public class SofiaFrame extends HorizontalFrame {
     
     public double instrumentVPA;
     public double telescopeVPA;
+     
     public double PWV;
 
     public SofiaFrame(Scan<?, ?> parent) {

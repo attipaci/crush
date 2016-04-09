@@ -204,7 +204,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		instrument.readPar(getHDU(dir + getFEBECombination() + "-FEBEPAR" + ext));
 		instrument.validate(this);
 		clear();	
-		closeStreams();
+		closeAllFits();
 		
 		for(int i=0; i<subscans; i++) {
 			try {
@@ -216,7 +216,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 				subscan.readDataPar(getHDU(dir + (i+1) + File.separator + getFEBECombination() + "-DATAPAR" + ext));
 				subscan.readData(getHDU(dir + (i+1) + File.separator + getFEBECombination() + "-ARRAYDATA-1" + ext));
 				if(readMonitor()) subscan.readMonitor(getHDU(dir + (i+1) + File.separator + "MONITOR" + ext));
-				closeStreams();
+				closeAllFits();
 				
 				add(subscan);
 			}
@@ -225,7 +225,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	
 	}
 	
-	public void closeStreams() {
+	public void closeAllFits() {
 		for(Fits fits : openFits) {
 			try { fits.close();	}
 			catch(IOException e) { e.printStackTrace(); }

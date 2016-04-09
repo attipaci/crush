@@ -352,7 +352,7 @@ For a general overview of channel divisions, please consult Section 3.
 
    polarrays	Pixels of the the R and T polarization arrays, respectively.
 		
-   subarrays    Pixels of each of the 4 HAWC+ subarrays (40x32). Each subarray
+   subarrays	Pixels of each of the 4 HAWC+ subarrays (40x32). Each subarray
 		may contain correlated signals to themselves, e.g. do to
 		correlated thermal fluctuations on their wafers.
 
@@ -424,6 +424,10 @@ For a general overview of channel divisions, please consult Section 3.
 			setting conditional settings, which depend on the
 			HAWC+ waveband.
 
+   flagjumps		@Expert
+			Enables flagging timestream blocks around flux jumps
+			in such a way that these will not cause problems.
+
    mux			@Alias: 'correlated.mux'
 			@Expert
 			Decorrelate on SQUID muxes. All correlated modality
@@ -482,7 +486,7 @@ For a general overview of channel divisions, please consult Section 3.
 			rectangular pixels.
 			@See: 'rcp', 'rotation', 'pcenter'
 
-   polarrays		@Alias: 'correlated.polarrays'
+   pols			@Alias: 'correlated.polarrays'
 			@Expert
 			Decorrelate each polarization array separately. All 
 			correlated modality sub-options apply.
@@ -515,7 +519,7 @@ For a general overview of channel divisions, please consult Section 3.
 
 			  > crush hawc+ -subarray=R1,T1 [...]
 
-   subarrays		@Alias: 'correlated.subarrays'
+   subs			@Alias: 'correlated.subarrays'
 			@Expert
 			Decorrelate on physical subarrays (two 40x32 subarrays
 			per polarization). All correlated modality options
@@ -542,6 +546,6 @@ For a general overview of channel divisions, please consult Section 3.
 
 
 ------------------------------------------------------------------------------
-Copyright (C)2015 -- Attila Kovacs <attila[AT]submm.caltech.edu>
+Copyright (C)2016 -- Attila Kovacs <attila[AT]submm.caltech.edu>
 
 

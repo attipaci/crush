@@ -1,16 +1,23 @@
+! discard missing subarray...
+! read and process astrometry
+  --> check VPA rotation
+  --> check chop
+! internal pixel ordering (same as FITS[?] or subarray blocks)
+  --> subarray selectrions...
+! array geometry
+  --> offsets and rotations (units!!!)
+! bias values and calibration...
+
+
++ custom console help
++ documentation
++ logging quantities  
+
+==============================================================================
+
+
 >> pointing native->equatorial; equatorial->native
 
->> native pixel order (by subarray...)
->> los and vpa sign check... (los for horizontal?)
->> jump counter
->> consistency check after level(channel,from, to) 
-   -- flag block if jump inside..
->> subarray rotation and offset (according to doc...)
->> FIT format updates...
-
-* logging quantities...
-* custom console help
-* pipeline socket com.
 
 
 * 'platescale' for conversion mm -> arcsec

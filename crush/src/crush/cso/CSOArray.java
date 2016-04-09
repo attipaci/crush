@@ -40,7 +40,7 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
 import jnum.text.TableFormatter;
-import crush.array.SingleColorLayout;
+import crush.array.SingleColorArrangement;
 
 public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camera<PixelType, PixelType> implements GroundBased, Rotating {
 	/**
@@ -61,11 +61,11 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camer
 	public double excessLoad = 0.0;
 	
 	public CSOArray(String name, int size) {
-		super(name, new SingleColorLayout<PixelType>(), size);
+		super(name, new SingleColorArrangement<PixelType>(), size);
 	}
 
 	public CSOArray(String name) {
-		super(name, new SingleColorLayout<PixelType>());
+		super(name, new SingleColorArrangement<PixelType>());
 	}
 	
 	@Override

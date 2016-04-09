@@ -86,7 +86,7 @@ public class SofiaChopperData extends SofiaHeaderData {
 		if(!Double.isNaN(phase)) cursor.add(new HeaderCard("CHPPHASE", phase / Unit.ms, "(ms) Chop phase."));
 	}
 
-	
+	public static double volts2Angle = 1123.0 * Unit.arcsec / (9.0 * Unit.V);
 	
 	
 }

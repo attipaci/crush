@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -29,7 +29,7 @@ import java.util.List;
 import jnum.Configurator;
 import jnum.Copiable;
 
-public abstract class InstrumentLayout<ChannelType extends Channel> implements Serializable, Cloneable, Copiable<InstrumentLayout<ChannelType>> {
+public abstract class ColorArrangement<ChannelType extends Channel> implements Serializable, Cloneable, Copiable<ColorArrangement<ChannelType>> {
 	/**
 	 * 
 	 */
@@ -49,8 +49,8 @@ public abstract class InstrumentLayout<ChannelType extends Channel> implements S
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public InstrumentLayout<ChannelType> copy()  {
-		return (InstrumentLayout<ChannelType>) clone();
+	public ColorArrangement<ChannelType> copy()  {
+		return (ColorArrangement<ChannelType>) clone();
 	}
 	
 	public boolean hasOption(String key) {

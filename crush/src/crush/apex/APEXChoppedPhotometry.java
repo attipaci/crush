@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -23,7 +23,6 @@
 package crush.apex;
 
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
 
 import crush.*;
 import crush.sourcemodel.Photometry;
@@ -149,24 +148,6 @@ public class APEXChoppedPhotometry extends Photometry {
 		}
 		
 		super.write(path);
-	}
-
-	@Override
-	public void setExecutor(ExecutorService executor) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public ExecutorService getExecutor() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public int getParallel() {
-		// TODO Auto-generated method stub
-		return 1;
 	}
 
 	

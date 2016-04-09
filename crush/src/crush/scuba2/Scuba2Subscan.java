@@ -224,7 +224,18 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		
 		// TODO chop phase and beam (L/R/M?)...	
 		final Scuba2Scan scuba2Scan = (Scuba2Scan) scan;			
-		final Object[] table = (Object[]) ((ColumnTable<?>) hdu.getData().getData()).getRow(0);
+		
+		Object[] table = null;
+		
+		try { table = (Object[]) ((ColumnTable<?>) hdu.getData().getData()).getRow(0); }
+		catch(NullPointerException e) {
+		    System.err.println(" ERROR! FITS input is missing essential binary tables. ");
+		    System.err.println("        Use the 'proexts' option when converting from SDF. E.g.: ");
+		    System.err.println();
+		    System.err.println("         > ndf2fits <input.sdf> <output.fits> proexts");
+		    System.err.println();
+		    throw new IllegalArgumentException("FITS contains no table data.");
+		}
 			
 		//final boolean isEquatorial = scuba2Scan.trackingClass == EquatorialCoordinates.class;
 			

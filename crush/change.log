@@ -1,6 +1,5 @@
 
-
-2.31-b1 (beta)
+2.31-b3 (beta)
 
 	
 	Overview
@@ -15,6 +14,10 @@
 	hood.
 	====================================================================== 
 
+	[BUG] {b2} {APEX} Channel dependents reset for phase data (photometry)
+	was imcomplete due to a mishandled index range, resulting in slightly
+	biased error estimates (LABOCA) or broken reductions (SABOCA). Fixed. 
+
 	[BUG] Dependents were accumulated instead of being replaced, resulting
 	in understated degrees of freedom that could spiral out of control.
 	Fortunately, for typical reductions the effect was more or less
@@ -26,6 +29,12 @@
 
 	[BUG] {APEX} photometry reductions still had race conditions from all
 	prior 2.30 releases. Fixed.
+
+	[NEW] New option 'lab' allows reductions without telescope data (for
+	supported instruments only). CRUSH will not produce a source model.
+	Instead, it will output power spectra for the pixels. The option
+	'lab.scanspeed' can additionally be used to assume a typical scanning
+	speed for adjusting the filtering, as if the data were taken on sky...
 
 	[NEW] {APEX} 'chirange=min:max' option can specify a range of 
 	acceptable reduced chi values. If a subscan cannot contribute 
@@ -123,6 +132,11 @@
 	iteration (except in 'bright' mode).
 
 	[TWEAK] Neighbour despiking to flag single sample only.
+
+	[CONGIG] {LABOCA} Exploring a new paradigm for removing microphonics
+	on the flexible band cables. Removing 'twisting' modes is now enabled
+	by default, in all modes (except 'bright'). In photometry the cable
+	gains are locked to their nominal values in 'pixel.dat'.
 
 	[CONFIG] {GISMO} 'deep' mode 1/f stability changed back to 3 s,
 	resulting in cleaner maps.
