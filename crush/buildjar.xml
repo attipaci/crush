@@ -14,7 +14,7 @@
 	basedir="${projectHome}/src"
 	includes="**/*.java" 
 	excludes="**/tools/*,**/ebex/*,**/test/*,**/devel/*,**/TODO*,**/*~,**/.*" 
-	index="true"
+	index="false"
 	level="9" 
     />
   </target>    

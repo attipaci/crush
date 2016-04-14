@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package crush.laboca;
 
@@ -131,12 +130,12 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 		System.err.println(" Loading wiring data from " + fileName);
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<Integer, LabocaPixel> lookup = getFixedIndexLookup();
+		Hashtable<String, LabocaPixel> lookup = getIDLookup();
 		
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
-		 	LabocaPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken())); 	
+		 	LabocaPixel pixel = lookup.get(tokens.nextToken()); 	
 		 	if(pixel == null) continue;
 		 	
 			pixel.box = Integer.parseInt(tokens.nextToken());
@@ -147,17 +146,18 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 			pixel.pin = Integer.parseInt(tokens.nextToken()); // cable pin
 			
 			int bol = Integer.parseInt(tokens.nextToken());
-			char state = tokens.nextToken().charAt(0);
+			char state = tokens.nextToken().toUpperCase().charAt(0);
 			//boolean hasComment = tokens.hasMoreTokens();
 			
-			if(bol < 0 || state != 'B') pixel.flag(Channel.FLAG_DEAD);
-			if(state == 'R') {
-				pixel.unflag(Channel.FLAG_DEAD);
-				pixel.flag(LabocaPixel.FLAG_RESISTOR);
-				pixel.gain = 0.0;
-				pixel.coupling = 0.0;
-				pixel.boxGain = 0.0;
+			if(bol < 0 || state != 'B') {
+			    if(state == 'R') {
+			        pixel.flag(LabocaPixel.FLAG_RESISTOR);
+			        pixel.gain = 0.0;
+			        pixel.coupling = 0.0;
+			    }
+			    else pixel.flag(Channel.FLAG_DEAD);
 			}
+		
 		}	
 		in.close();
 	}
@@ -169,11 +169,11 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		String line;
 		
-		Hashtable<Integer, LabocaPixel> lookup = getFixedIndexLookup();
+		Hashtable<String, LabocaPixel> lookup = getIDLookup();
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
-			LabocaPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
+			LabocaPixel pixel = lookup.get(tokens.nextToken());
 			if(pixel != null) pixel.temperatureGain = Double.parseDouble(tokens.nextToken());
 		}
 		in.close();
@@ -192,7 +192,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 		out.println("# BEch\tGain");
 		out.println("#     \t(V/K)");
 		out.println("# ----\t-----");
-		for(LabocaPixel pixel : this) out.println(pixel.getFixedIndex() + "\t" + Util.e6.format(pixel.temperatureGain));
+		for(LabocaPixel pixel : this) out.println(pixel.getID() + "\t" + Util.e6.format(pixel.temperatureGain));
 		
 		out.flush();
 		out.close();

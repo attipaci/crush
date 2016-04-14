@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -26,35 +26,36 @@ import java.io.Serializable;
 
 import jnum.util.HashCode;
 
-public abstract class GradientGains implements Serializable, GainProvider {
+public abstract class ZeroMeanGains implements Serializable, GainProvider {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5916984290768232863L;
 	
-	private double center = 0.0;
+	private double aveG = 0.0;
 	
 	@Override
-	public int hashCode() { return super.hashCode() ^ HashCode.from(center); }
+	public int hashCode() { return super.hashCode() ^ HashCode.from(aveG); }
 	
 	@Override
 	public boolean equals(Object o) {
 		if(o == this) return true;
-		if(!(o instanceof GradientGains)) return false;
+		if(!(o instanceof ZeroMeanGains)) return false;
 		if(!super.equals(o)) return false;
-		GradientGains g = (GradientGains) o;
-		if(center != g.center) return false;
+		ZeroMeanGains g = (ZeroMeanGains) o;
+		if(aveG != g.aveG) return false;
 		return true;
 	}
 	
 	@Override
 	public final double getGain(Channel c) throws Exception {
-		return getRawGain(c) - center;
+	    double g0 = getRawGain(c);
+	    return Double.isNaN(g0) ? 0.0 : g0 - aveG;
 	}
 	
 	@Override
 	public final void setGain(Channel c, double value) throws Exception {
-		setRawGain(c, center + value);
+		setRawGain(c, value + aveG);
 	}
 	
 	public abstract double getRawGain(Channel c) throws Exception;
@@ -63,26 +64,22 @@ public abstract class GradientGains implements Serializable, GainProvider {
 	
 	@Override
 	public void validate(Mode mode) throws Exception {	  
-		final float[] gains = mode.getGains(false);
-
 		double sum = 0.0, sumw = 0.0;
-		for(int k=gains.length; --k >= 0; ) {
+		
+		final int skipFlags = mode instanceof CorrelatedMode ? ((CorrelatedMode) mode).skipFlags : 0;
+		
+		for(int k=mode.size(); --k >= 0; ) {
 			final Channel channel = mode.getChannel(k);
-			if(channel.isFlagged()) continue;
+			if(channel.isFlagged(skipFlags)) continue;
 
-			final double x = getGain(channel);
-			
-			if(x == 0.0) continue;
-			else if(Double.isNaN(x)) continue;
-			
-			final double g = gains[k] / x;
-			final double wg2 = channel.weight * g * g;
-			
-			sum += wg2 * x;
-			sumw += wg2;
+			final double x = getRawGain(channel);
+			if(Double.isNaN(x)) continue;
+				
+			sum += channel.weight * x;
+			sumw += channel.weight;
 		}
 		
-		if(sumw > 0.0) center += sum / sumw;
+		aveG = sumw > 0.0 ? sum / sumw : 0.0;
 	}
 
 }

@@ -99,17 +99,18 @@ public class WhiteningFilter extends AdaptiveFilter {
 		if(hasOption("proberange")) { 
 			Configurator spec = option("proberange");
 			if(spec.getValue().equalsIgnoreCase("auto")) {
-				double fPnt = 1.0 / integration.getPointCrossingTime();
-				probe = new Range(0.5 * fPnt, fPnt);
+			    // The frequency cutoff (half-max) of the typical point-source response....
+				double fPnt = 0.44 / integration.getPointCrossingTime();
+				probe = new Range(0.2 * fPnt, 1.14 * fPnt);
 			}
 			else probe = option("proberange").getRange(true);
 		}
-		
+	
 		probe.restrict(0, nF);
 		
 		whiteFrom = Math.max(1, (int) Math.floor(probe.min() / dF));
 		whiteTo = Math.min(nF, (int) Math.ceil(probe.max() / dF) + 1);
-		
+		    
 		oneOverFBin = Math.min(nF, hasOption("1overf.freq") ? Math.max(1, (int) Math.floor(option("1overf.freq").getDouble() / dF)) : 2);
 		whiteNoiseBin = Math.min(nF, hasOption("1overf.ref") ? Math.max(1, (int) Math.floor(option("1overf.ref").getDouble() / dF)) : nF>>1);		
 		

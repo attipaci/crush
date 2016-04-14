@@ -356,7 +356,6 @@ public class Signal implements Serializable, Cloneable {
 	
 
 	protected final WeightedPoint[] getMLGainIncrement() {
-		final int[] channelIndex = mode.getChannelIndex();
 		
 		CRUSH.Fork<DataPoint[]> increments = integration.new Fork<DataPoint[]>() {
 			private DataPoint[] dG;
@@ -373,11 +372,12 @@ public class Signal implements Serializable, Cloneable {
 				if(exposure.isFlagged(Frame.MODELING_FLAGS)) return;		
 				
 				for(int k=mode.size(); --k >= 0; ) {
-					final int c = channelIndex[k];
-					if(exposure.sampleFlag[c] != 0) continue;
+					final Channel channel = mode.getChannel(k);
+					
+					if(exposure.sampleFlag[channel.index] != 0) continue;
 					
 					DataPoint increment = dG[k];
-					increment.add(exposure.tempWC * exposure.data[c]);
+					increment.add(exposure.tempWC * exposure.data[channel.index]);
 					increment.addWeight(exposure.tempWC2);
 				}
 			}
@@ -415,9 +415,8 @@ public class Signal implements Serializable, Cloneable {
 	
 	// TODO smart timestream access
 	protected final WeightedPoint[] getRobustGainIncrement() {
-		final int[] channelIndex = mode.getChannelIndex();
 		
-		final WeightedPoint[] dG = WeightedPoint.createArray(channelIndex.length);
+		final WeightedPoint[] dG = WeightedPoint.createArray(mode.size());
 		
 		new CRUSH.Fork<Void>(dG.length, integration.getThreadCount()) {
 			// Allocate storage for sorting if estimating robustly...
@@ -438,13 +437,14 @@ public class Signal implements Serializable, Cloneable {
 			@Override
 			protected void processIndex(int k) {
 				int n=0;
-				final int c = channelIndex[k];
+				final Channel channel = mode.getChannel(k);
+				
 				final WeightedPoint increment = dG[k];
 				//increment.noData();
 				for(final Frame exposure : integration) if(exposure != null) 
-					if(exposure.tempWC2 > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)  {
+					if(exposure.tempWC2 > 0.0) if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0)  {
 						final WeightedPoint point = gainData[n++];
-						point.setValue(exposure.data[c] / exposure.tempC);
+						point.setValue(exposure.data[channel.index] / exposure.tempC);
 						point.setWeight(exposure.tempWC2);
 						increment.addWeight(point.weight());
 						
@@ -465,24 +465,24 @@ public class Signal implements Serializable, Cloneable {
 	protected void resyncGains() throws Exception {
 		final ChannelGroup<?> channels = mode.getChannels();
 		final int nc = channels.size();
-		final int[] channelIndex = mode.getChannelIndex();
 		
 		final float[] G = mode.getGains();
 		final float[] dG = syncGains;	
 		
-		for(int k=nc; --k >=0; ) dG[k] = G[k] - dG[k];
+		for(int k=nc; --k >=0; ) dG[k] = G[k] - syncGains[k];
 		
 		integration.new Fork<Void>() {
 			@Override 
 			protected void process(final Frame exposure) {
-				for(int k=nc; --k >=0; ) exposure.data[channelIndex[k]] -= dG[k] * valueAt(exposure);
+				for(int k=nc; --k >=0; ) {
+				    final Channel channel = mode.getChannel(k);
+				    exposure.data[channel.index] -= dG[k] * valueAt(exposure);
+				}
 			}
 		}.process();
 		
-
 		// Register the gains as the ones used for the signal...
-		setSyncGains(G);
-			
+		setSyncGains(G);	
 	}
 	
 	
@@ -493,7 +493,6 @@ public class Signal implements Serializable, Cloneable {
 		final int nc = mode.size();
 		final Dependents parms = integration.getDependents("gains-" + mode.name);
 		
-		final int[] channelIndex = mode.getChannelIndex();
 		final float[] G = mode.getGains();
 		final float[] dG = syncGains;
 		
@@ -514,7 +513,7 @@ public class Signal implements Serializable, Cloneable {
 			@Override 
 			protected void process(Frame exposure){
 				for(int k=nc; --k >=0; ) if(sumwC2[k] > 0.0) {
-					final int c = channelIndex[k];
+					final int c = mode.getChannel(k).index;
 					exposure.data[c] -= dG[k] * exposure.tempC;
 					if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)
 						parms.addAsync(exposure, exposure.tempWC2 / sumwC2[k]);

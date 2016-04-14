@@ -98,7 +98,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 		}
 		
 		rmsHe3 = signal.getRMS();
-		System.err.println("   RMS He3 temperature drift is " + Util.f3.format(rmsHe3 * instrument.gain / Unit.mK) + " mK.");
+		System.err.println("   RMS He3 temperature drift is " + Util.f3.format(1000.0 * rmsHe3 * instrument.gain) + " uK.");
 		
 		final Signal temperatureSignal = signal;
 	

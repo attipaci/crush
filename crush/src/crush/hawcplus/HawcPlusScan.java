@@ -57,7 +57,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	public void parseHeader(Header header) throws Exception {
 		super.parseHeader(header);
 		priorPipelineStep = SofiaHeaderData.getStringValue(header, "PROCLEVL");
-		isMovingObject = header.getBooleanValue("NONSIDE", false);
+		isNonSidereal = header.getBooleanValue("NONSIDE", false);
 	}
 	
 	@Override

@@ -105,7 +105,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 			System.err.println("     WARNING! Invalid waveplate data. Will attempt workaround...");
 			calcMeanWavePlateFrequency();
 			Channel channel = hasOption("waveplate.tpchannel") ?
-					instrument.getFixedIndexLookup().get(option("waveplate.tpchannel").getInt()) :
+					instrument.getIDLookup().get(option("waveplate.tpchannel").getValue()) :
 					instrument.referencePixel;
 			setTPPhases(channel);
 		}
@@ -123,7 +123,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 			trim();
 			
 			Channel channel = hasOption("waveplate.tpchannel") ?
-					instrument.getFixedIndexLookup().get(option("waveplate.tpchannel").getInt()) :
+					instrument.getIDLookup().get(option("waveplate.tpchannel").getValue()) :
 					instrument.referencePixel;
 					
 			measureTPPhases(channel);
@@ -435,7 +435,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		double phase = getMeanTPPhase(channel, harmonic * polka.waveplateFrequency);
 		double alpha = (delta - phase) / harmonic;
 		
-		System.err.println("   ---> Using phase " + Util.f1.format(delta / Unit.deg) + " deg for pixel " + channel.getFixedIndex() + ".");
+		System.err.println("   ---> Using phase " + Util.f1.format(delta / Unit.deg) + " deg for pixel " + channel.getID() + ".");
 		
 		if(hasOption("waveplate.tpchar")) {
 			PolKaFrame firstFrame = (PolKaFrame) get(0);

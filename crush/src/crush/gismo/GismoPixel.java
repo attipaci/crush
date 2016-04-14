@@ -42,7 +42,7 @@ public class GismoPixel extends SingleColorPixel {
 	// 16 x 8 (rows x cols)
 	
 	public GismoPixel(AbstractGismo array, int zeroIndex) {
-		super(array, zeroIndex+1);
+		super(array, zeroIndex);
 		row = zeroIndex / 8;
 		col = zeroIndex % 8;
 		

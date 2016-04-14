@@ -26,9 +26,7 @@ package crush.hawcplus;
 import java.util.StringTokenizer;
 
 import crush.array.SingleColorPixel;
-import jnum.Unit;
 import jnum.Util;
-import jnum.math.Vector2D;
 
 public class HawcPlusPixel extends SingleColorPixel {
 	/**
@@ -36,50 +34,36 @@ public class HawcPlusPixel extends SingleColorPixel {
 	 */
 	private static final long serialVersionUID = 5898856651596856837L;
 	public int pol, sub, row, col, mux, pin;
+	public int fitsIndex, fitsRow, fitsCol;
+	
 	public double polGain = 1.0, subGain = 1.0, muxGain = 1.0, pinGain = 1.0;
 	
 	int jumpCounter = 0;
 	
-	
 	public HawcPlusPixel(HawcPlus array, int zeroIndex) {
-		super(array, zeroIndex+1);
-	
-		row = zeroIndex / HawcPlus.polCols;
-		col = zeroIndex % HawcPlus.polCols;
+		super(array, zeroIndex);
 		
-		pol = row < HawcPlus.rows ? 0 : 1;
-		row %= HawcPlus.rows;
-		sub = (pol << 1) + (col < HawcPlus.subarrayCols ? 0 : 1);
+		sub = zeroIndex / HawcPlus.subarrayPixels;
+		pol = (sub>>1);
 		
-		mux = sub * HawcPlus.rows + row;
-		pin = col % HawcPlus.subarrayCols;
+		pin = zeroIndex / HawcPlus.subarrayCols;
+		fitsRow = row = pin % HawcPlus.rows;
+		
+		col = zeroIndex % HawcPlus.subarrayCols;
+		fitsCol = mux = sub * HawcPlus.subarrayCols + col;
+		
+		fitsIndex = fitsRow * HawcPlusFrame.FITS_COLS + fitsCol;
 		
 		// Flag the dark squids as such...
-		if(col == HawcPlus.polCols-1) flag(FLAG_BLIND);
+		if(row == HawcPlus.DARK_SQUID_ROW) flag(FLAG_BLIND);
 
 	}
 	
 
 	public void calcPosition() {
-		final HawcPlus hawc = (HawcPlus) instrument;
-		position = getPosition(
-		        hawc.pixelSize, hawc.polZoom[pol], hawc.subarrayOffset[sub], 
-		        hawc.subarrayOrientation[sub], row, col
-		);
+		position = ((HawcPlus) instrument).getPosition(sub, row, col);
 	}
-	
-	public static Vector2D getPosition(Vector2D size, double zoom, Vector2D subarrayOffset, double subarrayOrientation, double row, double col) {
-        Vector2D v = new Vector2D(col, 39.0 - row);
-        v.scaleX(HawcPlusPixel.physicalSize.x());
-        v.scaleY(HawcPlusPixel.physicalSize.y());
-        v.rotate(subarrayOrientation);
-        v.add(subarrayOffset);
-        v.scale(zoom);
-        return v;
-    }
-
-    
-	
+		
 	@Override
 	public int getCriticalFlags() {
 		return FLAG_DEAD;
@@ -108,8 +92,6 @@ public class HawcPlusPixel extends SingleColorPixel {
     public String getID() {
 	    return HawcPlus.polID[pol] + sub + "[" + row + "," + col + "]";
 	}
-	
-	public static Vector2D physicalSize = new Vector2D(1.133 * Unit.mm, 1.133 * Unit.mm);
 	
 	public final static int FLAG_POL = softwareFlags.next('p', "Bad polarray gain").value();
 	public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();

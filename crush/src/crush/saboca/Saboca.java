@@ -85,12 +85,12 @@ public class Saboca extends APEXCamera<SabocaPixel> implements NonOverlapping {
 		System.err.println(" Loading wiring data from " + fileName);
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<Integer, SabocaPixel> lookup = getFixedIndexLookup();
+		Hashtable<String, SabocaPixel> lookup = getIDLookup();
 		
 		String line;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
-			SabocaPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
+			SabocaPixel pixel = lookup.get(tokens.nextToken());
 			if(pixel == null) continue;
 			
 			if(pixel != null) {

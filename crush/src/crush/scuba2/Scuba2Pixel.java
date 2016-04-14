@@ -39,7 +39,7 @@ public class Scuba2Pixel extends SingleColorPixel {
 	public double he3Gain = 0.0;
 	
 	public Scuba2Pixel(Scuba2 array, int zeroIndex) {
-		super(array, zeroIndex+1);
+		super(array, zeroIndex);
 		subarrayNo = zeroIndex / Scuba2Subarray.PIXELS;
 		row = zeroIndex / Scuba2.SUBARRAY_COLS;
 		col = Scuba2.SUBARRAY_COLS * subarrayNo + zeroIndex % Scuba2.SUBARRAY_COLS;

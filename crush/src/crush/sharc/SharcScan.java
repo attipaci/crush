@@ -121,7 +121,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		Configurator.verbose = false;
 		
 		// Populate instrument with pixels...
-		for(int c=0; c<Sharc.pixels; c++) instrument.add(new SharcPixel(instrument, c+1));
+		for(int c=0; c<Sharc.pixels; c++) instrument.add(new SharcPixel(instrument, c));
 		
 		byte[] nameBytes = new byte[20];
 		byte[] qualBytes = new byte[10];

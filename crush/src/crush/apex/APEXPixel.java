@@ -63,7 +63,6 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 		return copy;
 	}
 	
-
 	@Override
 	public void deriveRelativePhaseWeights(final PhaseSet phases) {	
 	    unflag(FLAG_PHASE_DOF);
@@ -138,7 +137,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 		out.println("# =============================================================================");
 		out.println(subscan.getASCIIHeader());
 		out.println("# Chop Frequency: " + Util.f3.format(subscan.getChopper().frequency / Unit.Hz) + "Hz"); 
-		out.println("# Pixel: " + getFixedIndex());
+		out.println("# Pixel: " + getID());
 		out.println("# Source Phase: " + sourcePhase);
 		out.println();
 		out.println("# chop#\tSignal\t\tCorrected");
@@ -161,7 +160,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 		out.println("# =============================================================================");
 		out.println(subscan.getASCIIHeader());
 		out.println("# Chop Frequency: " + Util.f3.format(subscan.getChopper().frequency / Unit.Hz) + "Hz"); 
-		out.println("# Pixel: " + getFixedIndex());
+		out.println("# Pixel: " + getID());
 		out.println("# Source Phase: " + sourcePhase);
 		out.println();
 		out.println("# Freq(Hz)\tAmplitude\tPhase(deg)");

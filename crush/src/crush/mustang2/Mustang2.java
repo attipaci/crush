@@ -177,7 +177,7 @@ public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements Gr
 											// Allows for +/- ~15 K dynamic range
 		
 		for(int i=0; i<pixels; i++) {
-			Mustang2Pixel pixel = new Mustang2Pixel(this, (i+1));
+			Mustang2Pixel pixel = new Mustang2Pixel(this, i);
 			
 			pixel.gain = gain[i];
 			pixel.frequency = f0[i] * Unit.GHz;

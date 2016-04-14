@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -111,8 +111,7 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Camera<C
 		ensureCapacity(storeChannels);
 
 		for(int c=0; c<storeChannels; c++) {
-			final ChannelType pixel = getChannelInstance(c+1);
-			pixel.index = c;
+			final ChannelType pixel = getChannelInstance(c);
 			pixel.fitsPosition = new Vector2D(xOffset[c] * Unit.deg, yOffset[c] * Unit.deg);
 			pixel.position = (Vector2D) pixel.fitsPosition.clone();
 			add(pixel);
@@ -191,7 +190,7 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Camera<C
 			}
 			
 			if(isChopped) {
-				if(!scan.isMovingObject) {
+				if(!scan.isNonSidereal) {
 					if(scan.equatorial.distanceTo(reference) > pointingTolerance) {
 						warning("Scan " + scan.getID() + " observed at a different position. Dropping from dataset.");
 						System.err.println("           (You can use 'moving' to keep and reduce anyway.)");
@@ -234,7 +233,7 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Camera<C
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
 	
-		if(name.equals("ref")) return Integer.toString(referencePixel.getFixedIndex());
+		if(name.equals("ref")) return referencePixel.getID();
 		else if(name.equals("rot")) return Util.defaultFormat(rotation / Unit.deg, f);
 		else return super.getFormattedEntry(name, formatSpec);
 	}

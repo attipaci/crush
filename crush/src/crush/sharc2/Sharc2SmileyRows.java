@@ -20,31 +20,28 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.laboca;
+
+package crush.sharc2;
 
 import crush.Channel;
 import crush.ZeroMeanGains;
 
-/**
- * @author pumukli
- *
- */
-public class LabocaCableTwist extends ZeroMeanGains {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1813119272323673961L;
-	
-	@Override
-	public double getRawGain(Channel c) throws Exception {
-	    final int pin = ((LabocaPixel) c).pin;
-		return pin < 0 ? Double.NaN : pin - 13.5;
-	}
+public class Sharc2SmileyRows extends ZeroMeanGains {
 
-	@Override
-	public void setRawGain(Channel c, double value) throws Exception {
-		throw new UnsupportedOperationException("Cannot set cable twist gains.");
-	}
-	
-	
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1670914205840986908L;
+
+    @Override
+    public double getRawGain(Channel c) throws Exception {
+       double dc = ((Sharc2Pixel) c).col - 15.5;
+       return dc * dc;
+    }
+
+    @Override
+    public void setRawGain(Channel c, double value) throws Exception {
+        throw new UnsupportedOperationException("Cannot set smiley row gains.");
+    }
+
 }

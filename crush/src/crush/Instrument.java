@@ -105,6 +105,12 @@ implements TableFormatter.Entries, Messaging {
 		return true;
 	}
 		
+	@Override
+    public boolean add(ChannelType channel) {
+	    channel.index = size();
+	    return super.add(channel);
+	}
+	
 	public void setArrangement(ColorArrangement<? super ChannelType> layout) {
 		this.arrangement = layout;
 		if(layout != null) layout.setInstrument(this);
@@ -182,8 +188,8 @@ implements TableFormatter.Entries, Messaging {
 		
 		loadChannelData();
 		
-		if(hasOption("blind")) setBlindChannels(option("blind").getIntegers()); 
-		if(hasOption("flag")) flagPixels(option("flag").getIntegers()); 	
+		if(hasOption("blind")) setBlindChannels(option("blind").getList()); 
+		if(hasOption("flag")) flagPixels(option("flag").getList()); 	
 		if(hasOption("flatweights")) flattenWeights();
 		
 		if(hasOption("uniform")) uniformGains();
@@ -192,7 +198,7 @@ implements TableFormatter.Entries, Messaging {
 			double level = option("gainnoise").getDouble();
 			for(Channel channel : this) channel.gain *= 1.0 + level * random.nextGaussian();
 		}
-				
+		
 		try { normalizeSkyGains(); }
 		catch(Exception e) {
 			warning("Normalization failed: " + e.getMessage());
@@ -227,7 +233,7 @@ implements TableFormatter.Entries, Messaging {
 	public float normalizeSkyGains() throws Exception {
 		System.err.println(" Normalizing sky-noise gains.");
 		CorrelatedMode sky = (CorrelatedMode) modalities.get("obs-channels").get(0);
-		return sky.setNormalizedGains();
+		return sky.normalizeGains();
 	}
 	
 	public void registerConfigFile(String fileName) {}
@@ -375,10 +381,10 @@ implements TableFormatter.Entries, Messaging {
 	
 	// TODO ability to flag groups divisions...
 	// perhaps flag.group, and flag.division...
-	public void flagPixels(Collection<Integer> list) {
-		Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
+	public void flagPixels(Collection<String> list) {
+		Hashtable<String, ChannelType> lookup = getIDLookup();
 		System.err.println(" Flagging " + list.size() + " channels");
-		for(int beIndex : list) if(lookup.containsKey(beIndex)) lookup.get(beIndex).flag(Channel.FLAG_DEAD);
+		for(String id : list) if(lookup.containsKey(id)) lookup.get(id).flag(Channel.FLAG_DEAD);
 	}
 	
 	public void killChannels(final int pattern, final int ignorePattern) {
@@ -394,15 +400,15 @@ implements TableFormatter.Entries, Messaging {
 	}
 	
 	
-	public void setBlindChannels(Collection<Integer> list) {
+	public void setBlindChannels(Collection<String> list) {
 		killChannels(Channel.FLAG_BLIND);
 		
 		System.err.println(" Defining " + list.size() + " blind channels.");		
 		
-		Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
+		Hashtable<String, ChannelType> lookup = getIDLookup();
 		
-		for(int beIndex : list) {
-			ChannelType channel = lookup.get(beIndex);
+		for(String id : list) {
+			ChannelType channel = lookup.get(id);
 			if(channel != null) {
 				channel.unflag();
 				channel.flag(Channel.FLAG_BLIND);
@@ -490,12 +496,12 @@ implements TableFormatter.Entries, Messaging {
 		addGroup("blinds", copyGroup().discard(getNonDetectorFlags()).discard(Channel.FLAG_BLIND, ChannelGroup.KEEP_ANY_FLAG));
 		
 		if(options.containsKey("group")) {
-			Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
+			Hashtable<String, ChannelType> lookup = getIDLookup();
 			Configurator option = option("group");
 			for(String name : option.getTimeOrderedKeys()) {
 				ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>(name);
-				for(int backendIndex : option.get(name).getIntegers()) {
-					ChannelType channel = lookup.get(backendIndex);
+				for(String id : option.get(name).getList()) {
+					ChannelType channel = lookup.get(id);
 					if(channel != null) if(channel.isUnflagged(Channel.FLAG_DEAD)) channels.add(channel);
 				}
 				addGroup(name, channels);
@@ -754,6 +760,11 @@ implements TableFormatter.Entries, Messaging {
 	
 	public abstract Scan<?, ?> getScanInstance();
 	
+	public void populate(int channels) {
+	    clear();
+	    for(int i=0; i<channels; i++) add(getChannelInstance(i));
+	}
+	
 	public Scan<?, ?> readScan(String descriptor, boolean readFully) throws Exception {
 		Scan<?, ?> scan = getScanInstance();
 		scan.read(descriptor, readFully);
@@ -853,11 +864,11 @@ implements TableFormatter.Entries, Messaging {
 		groups.put(name, group);		
 	}
 	
-	public synchronized void addGroup(String name, Vector<Integer> backendIndexes) {
-		Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
+	public synchronized void addGroup(String name, Vector<String> idList) {
+		Hashtable<String, ChannelType> lookup = getIDLookup();
 		ChannelGroup<ChannelType> group = new ChannelGroup<ChannelType>(name);
-		for(int be : backendIndexes) {
-			ChannelType pixel = lookup.get(be);
+		for(String id : idList) {
+			ChannelType pixel = lookup.get(id);
 			if(pixel != null) group.add(pixel);
 		}
 		if(group.size() == 0) warning("Empty group '" + name + "'.");
@@ -958,8 +969,8 @@ implements TableFormatter.Entries, Messaging {
 		for(String name : modalities.keySet()) for(Mode mode : modalities.get(name)) slimGroup(mode.getChannels(), lookup); 	
 	}
 	
-	public void slimGroup(ChannelGroup<?> group, Hashtable<Integer, ChannelType> lookup) {
-		for(int c=group.size(); --c >= 0; ) if(!lookup.containsKey(group.get(c).getFixedIndex())) group.remove(c);
+	public void slimGroup(ChannelGroup<?> group, Hashtable<Integer, ChannelType> indexLookup) {
+		for(int c=group.size(); --c >= 0; ) if(!indexLookup.containsKey(group.get(c).getFixedIndex())) group.remove(c);
 		group.trimToSize();
 	}
 	
@@ -1115,9 +1126,9 @@ implements TableFormatter.Entries, Messaging {
 		standardWeights();
 		
 		for(Channel channel : this) {
-			gains[channel.getFixedIndex()-1] = (float) channel.gain;
-			weights[channel.getFixedIndex()-1] = (float) channel.weight;
-			flags[channel.getFixedIndex()-1] = channel.flag;
+			gains[channel.getFixedIndex()] = (float) channel.gain;
+			weights[channel.getFixedIndex()] = (float) channel.weight;
+			flags[channel.getFixedIndex()] = channel.flag;
 		}
 		
 		dataWeights();

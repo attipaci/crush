@@ -94,8 +94,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	class HawcPlusReader extends HDUReader {	
 		private int startIndex;
 		private long[] SN;
+		private int[] DAC;
 		private short[] jump;
-		private long[] data;
 		private double[] TS; 
 		private double[] RA, DEC, AZ, EL, iVPA, tVPA, cVPA, LON, LAT, LST, PWV;
 		private double[] objectRA, objectDEC;
@@ -122,7 +122,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			
 			// The R/T array data
 			int iData = hdu.findColumn("SQ1Feedback");
-			data = (long[]) table.getColumn(iData);
+			DAC = (int[]) table.getColumn(iData);
 			
 			int storeRows = ((long[][]) row[iData]).length;
 			int storeCols = ((long[][]) row[iData])[0].length;
@@ -142,7 +142,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			RA = (double[]) table.getColumn(hdu.findColumn("RA"));
 			DEC = (double[]) table.getColumn(hdu.findColumn("DEC"));
 
-			if(scan.isMovingObject) {
+			if(scan.isNonSidereal) {
 			    objectRA = (double[]) table.getColumn(hdu.findColumn("NonSiderealRA"));
 	            objectDEC = (double[]) table.getColumn(hdu.findColumn("NonSiderealDEC"));
 			}
@@ -178,13 +178,15 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 				public void init() {
 					timeStamp = new AstroTime();
 					offset = new Vector2D();
-					objectEq = scan.isMovingObject ? new EquatorialCoordinates() : (EquatorialCoordinates) scan.equatorial.copy();		
+					objectEq = scan.isNonSidereal ? new EquatorialCoordinates() : (EquatorialCoordinates) scan.equatorial.copy();		
 				}
 				
 				@Override
 				public void processRow(int i) {
 					// TODO may not be needed...
 				    set(startIndex + i, null);
+				    
+				    HawcPlus hawc = (HawcPlus) scan.instrument;
 										
 					// Create the frame object only if it cleared the above hurdles...
 					final HawcPlusFrame frame = new HawcPlusFrame(hawcPlusScan);
@@ -192,13 +194,13 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					frame.hasTelescopeInfo = !isLab;
 						
 					// Read the pixel data (DAC and MCE jump counter)
-					frame.parseData(i, data, jump);
+					frame.parseData(i, DAC, jump);
 					frame.mceSerial = SN[i];
 					
                     timeStamp.setUTCMillis(Math.round(1000.0 * TS[i]));
                     frame.MJD = timeStamp.getMJD();
                        
-                    frame.hwpAngle = (float) (HWP[i] * HawcPlus.hwpStep);
+                    frame.hwpAngle = (float) (HWP[i] * HawcPlus.hwpStep - hawc.hwpTelescopeVertical);
                     
                     set(startIndex + i, frame);
 					
@@ -206,56 +208,89 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					
 					// Below here is telescope data only, which will be ignored for 'lab' mode reductions...
 					// Add the astrometry...
+
+                    frame.PWV = PWV[i] * (float) Unit.um;
 					
 					frame.equatorial = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, scan.equatorial.epoch);
-					if(scan.isMovingObject) objectEq.set(objectRA[i] * Unit.hourAngle, objectDEC[i] * Unit.deg);
+					if(scan.isNonSidereal) objectEq.set(objectRA[i] * Unit.hourAngle, objectDEC[i] * Unit.deg);
 					
-					frame.site = new GeodeticCoordinates(LON[i] * Unit.deg, LAT[i] * Unit.deg);
-					
-					if(hawcPlusScan.isChopping) {
-					   // In telescope XEL, EL
-					   // TODO check sign convention!!!
-					   frame.chopperPosition = new Vector2D(chopS[i] * Unit.V, chopR[i] * Unit.V);
-					   frame.chopperPosition.scale(SofiaChopperData.volts2Angle);
-					   // TODO check signs...
-					   frame.chopperPosition.rotate((cVPA[i] - tVPA[i]) * Unit.deg);
-					}
-					else frame.chopperPosition = new Vector2D();
-					
-					frame.PWV = PWV[i] * (float) Unit.um;
-
 					frame.LST = LST[i] * (float) Unit.hour;
 					frame.horizontal = new HorizontalCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
 					
 					// TODO use actual telescope XEL, EL...
 					frame.telescopeCoords = new TelescopeCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
-							
-					// calc parallactic angle...
-					// rot: sibs VPA - PA
-					frame.instrumentVPA = iVPA[i] * (float) Unit.deg;
-					frame.telescopeVPA = tVPA[i] * (float) Unit.deg; // TODO
-					frame.setParallacticAngle(frame.telescopeVPA);
 					
-					// TODO check signs!!!
-					frame.setRotation(frame.instrumentVPA - frame.telescopeVPA); 
+					frame.site = new GeodeticCoordinates(LON[i] * Unit.deg, LAT[i] * Unit.deg);    
+							
+					// I  -> T      rot by phi (instrument rotation)
+                    // T' -> E      rot by -theta_ta
+                    // T  -> H      rot by ROF
+                    // H  -> E'     rot by PA
+                    // I' -> E      rot by -theta_si
+                    //
+                    // T -> H -> E': theta_ta = ROF + PA
+                    //
+                    //    PA = theta_ta - ROF
+                    //
+                    // I -> T -> E': theta_si = phi + theta_ta
+                    //
+                    //    phi = theta_si - theta_ta
+					frame.instrumentVPA = iVPA[i] * (float) Unit.deg;
+					frame.telescopeVPA = tVPA[i] * (float) Unit.deg;
+					frame.chopVPA = cVPA[i] * (float) Unit.deg;
+					
+					// rotation from pixel coordinates to telescope coordinates...
+					// TODO once mount angle in instrument XML is correct, mountOffset should be unnecessary...		
+					frame.setRotation(frame.instrumentVPA - frame.telescopeVPA + hawc.mountOffsetAngle);
+					
+					// rotation from telescope coordinates to equatorial.
+                    frame.setParallacticAngle(frame.telescopeVPA);
 				
+					// TODO HWP angle in equatorial... (check sign)
+					frame.hwpAngle += frame.telescopeVPA;
+					
 					// Calculate the scanning offsets...
 					frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(objectEq);
 					frame.equatorialNativeToHorizontal(frame.horizontalOffset);
 					
-					// Add the chopper offset to the telescope coordinates.
-					// TODO check!
-					if(hawcPlusScan.isChopping) {
-						frame.horizontalOffset.add(frame.chopperPosition);
-						frame.horizontal.addOffset(frame.chopperPosition);
-					
-						// TODO check native vs nominal
-                        frame.equatorial.addOffset(frame.chopperPosition);
-                        
-                        offset = (Vector2D) frame.chopperPosition.copy();
-                        frame.horizontalToNativeEquatorial(offset);
-						frame.equatorial.addNativeOffset(offset);
-					}	
+					if(!hawcPlusScan.isChopping) {
+					    frame.chopperPosition = new Vector2D();
+					    return;
+					}
+					    
+					    
+					// In telescope XEL (phiS), EL (phiR)
+					// TODO check sign convention!!!
+					frame.chopperPosition = new Vector2D(chopS[i] * Unit.V, chopR[i] * Unit.V);
+					frame.chopperPosition.scale(SofiaChopperData.volts2Angle);
+
+					frame.horizontalOffset.add(frame.chopperPosition);
+					frame.horizontal.addOffset(frame.chopperPosition);
+
+					offset.copy(frame.chopperPosition);
+					frame.horizontalToNativeEquatorial(offset);
+					frame.equatorial.addNativeOffset(offset);
+
+					// TODO it is possible that chopper is in phi_R, phi_S (which is oriented like EQ)
+					// and that the chop VPA is 90 deg different from tel VPA... (check!)
+					// Then:
+					//
+					// T' -> E   rot by -theta_ta
+					// C  -> E   rot by -theta_c
+					//
+					// so C -> E -> T'     (phiR, phiS) rot by (theta_ta - theta_c)
+
+					/*
+					      frame.chopperPosition = new Vector2D(chopR[i] * Unit.V, chopS[i] * Unit.V);
+                          frame.chopperPosition.scale(SofiaChopperData.volts2Angle);
+					      frame.chopperPosition.rotate(-frame.chopVPA);
+
+					      // Now chopper position is in equatorial
+					      frame.equatorial.addOffset(frame.chopperPosition);
+					      frame.equatorialToHorizontal(frame.chopperPosition);
+					      frame.horizontalOffset.add(frame.chopperPosition);
+					      frame.horizontal.addOffset(frame.chopperPosition);
+					 */	    
 				}
 				
 			};

@@ -98,7 +98,7 @@ public abstract class SourceMap extends SourceModel {
 		if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
 		else if(system.equals("native")) projection.setReference(firstScan.getNativeCoordinates()); 
 		else if(system.equals("focalplane")) projection.setReference(new FocalPlaneCoordinates()); 
-		else if(firstScan.isMovingObject) {
+		else if(firstScan.isNonSidereal) {
 			System.err.println(" Forcing equatorial for moving object.");
 			getOptions().processSilent("system", "equatorial");
 			projection.setReference(firstScan.equatorial);

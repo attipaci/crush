@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -76,9 +76,9 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 		for(Pixel pixel : getPixels()) pixel.getPosition().subtract(referencePosition);
 	}
 	
-	public Hashtable<Integer, Pixel> getPixelLookup() {
-		Hashtable<Integer, Pixel> table = new Hashtable<Integer, Pixel>();
-		for(Pixel pixel : getPixels()) table.put(pixel.getFixedIndex(), pixel);
+	public Hashtable<String, Pixel> getPixelLookup() {
+		Hashtable<String, Pixel> table = new Hashtable<String, Pixel>();
+		for(Pixel pixel : getPixels()) table.put(pixel.getID(), pixel);
 		return table;
 	}
 		
@@ -143,7 +143,7 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 			pixel.flag(Channel.FLAG_BLIND);
 		}
 		
-		Hashtable<Integer, Pixel> backends = getPixelLookup(); 
+		Hashtable<String, Pixel> idLookup = getPixelLookup(); 
 		boolean useGains = hasOption("rcp.gains");
 			
 		if(useGains) System.err.println(" Initial Source Gains set from RCP file.");
@@ -151,7 +151,7 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 		while((line = in.readLine()) != null) if(line.length() > 0) if(!"#!/".contains(line.charAt(0) + "")) {
 			StringTokenizer tokens = new StringTokenizer(line);
 			int columns = tokens.countTokens();
-			Pixel pixel = backends.get(Integer.parseInt(tokens.nextToken()));
+			Pixel pixel = idLookup.get(tokens.nextToken());
 			
 			if(pixel == null) continue;
 			

@@ -299,21 +299,22 @@ public class CorrelatedSignal extends Signal {
 		final CorrelatedMode mode = (CorrelatedMode) getMode();
 		final ChannelGroup<?> channels = mode.getChannels();
 		final ChannelGroup<?> goodChannels = mode.getValidChannels();
-		final int nc = channels.size();
 		final int resolution = mode.getFrameResolution(integration);
 		
 		// Need at least 2 channels for decorrelaton...
 		//if(goodChannels.size() < 2) return;
 					
-		final float[] G = mode.getNormalizedGains();	
+		final float[] G = mode.getGains();	
 		final float[] dG = syncGains;
 		
 		boolean resyncGains = false;
 		
 		// Make syncGains carry the gain increment from last sync...
 		// Precalculate the gain-weight products...
-		for(int k=nc; --k >= 0; ) {
-			dG[k] = G[k] - dG[k];
+		for(int k=G.length; --k >= 0; ) { 
+		    if(CRUSH.debug) if(Float.isNaN(G[k])) integration.comments += "!" + channels.get(k).getID();
+		    
+			dG[k] = G[k] - syncGains[k];
 			if(dG[k] != 0.0) resyncGains = true;
 			
 			final Channel channel = channels.get(k);
@@ -329,17 +330,15 @@ public class CorrelatedSignal extends Signal {
 		for(int k=goodChannels.size(); --k >= 0; ) {
 			Channel channel = goodChannels.get(k);
 			if(channel.tempWG2 == 0.0) goodChannels.remove(k);
-			else {
-				// Correct for lowered degrees of freedom due to prior filtering...
-				channel.temp = channel.tempWG2 * (float) channel.getFiltering(integration);
-			}
+			// Correct for lowered degrees of freedom due to prior filtering...
+			else channel.temp = channel.tempWG2 * (float) channel.getFiltering(integration);
 		}
 		
 		final boolean isGainResync = resyncGains;
 			
 		// Clear the dependents in all mode channels...
 		dependents.clear(channels, 0, integration.size());
-			
+		
 		integration.new BlockFork<float[]>(resolution) {
 			private WeightedPoint increment;
 			private DataPoint[] buffer;
@@ -354,16 +353,16 @@ public class CorrelatedSignal extends Signal {
 				channelParms = integration.instrument.getFloats();
 				Arrays.fill(channelParms, 0.0F);
 				
-				if(isRobust) {
-					// Try to use a recycleable buffer if it is large enough...
-					buffer = integration.instrument.getDataPoints();
-					if(buffer.length < resolution * goodChannels.size()) {
-						// Otherwise, just create a larger ad-hoc buffer that will not be recycled...
-						Instrument.recycle(buffer);
-						buffer = DataPoint.createArray(resolution * integration.instrument.size());
-						isRecycling = false;
-					}	
-				}
+				if(!isRobust) return;
+
+				// Try to use a recycleable buffer if it is large enough...
+				buffer = integration.instrument.getDataPoints();
+				if(buffer.length < resolution * goodChannels.size()) {
+				    // Otherwise, just create a larger ad-hoc buffer that will not be recycled...
+				    Instrument.recycle(buffer);
+				    buffer = DataPoint.createArray(resolution * integration.instrument.size());
+				    isRecycling = false;
+				}	
 			}
 			
 			@Override
@@ -377,15 +376,14 @@ public class CorrelatedSignal extends Signal {
 				final int T = from / resolution;	
 				
 				// Resync gains, if necessary...
-				if(isGainResync) {
-					final float C = value[T];
-					for(int t=to; --t >= from; ) {
-						final Frame exposure = integration.get(t);
-						if(exposure != null) for(int k=nc; --k >= 0; ) 
-							exposure.data[channels.get(k).index] -= dG[k] * C;
-					}
-				}
+				final float C = value[T];
 				
+				if(isGainResync) for(int t=to; --t >= from; ) {
+				    final Frame exposure = integration.get(t);
+				    if(exposure != null) for(int k=G.length; --k >= 0; )					    
+				        exposure.data[channels.get(k).index] -= dG[k] * C;
+				}
+			
 				// Calculate the incremental correlated values...
 				if(isRobust) getRobustCorrelated(goodChannels, from, to, increment, buffer);
 				else getMLCorrelated(goodChannels, from, to, increment);
@@ -402,7 +400,10 @@ public class CorrelatedSignal extends Signal {
 					if(exposure == null) continue;
 					
 					// Here usedGains carries the gain increment dG from the last correlated signal removal
-					for(final Channel channel : channels) exposure.data[channel.index] -= channel.tempG * dC;
+					for(int k=dG.length; --k >= 0; ) {
+					    final Channel channel = channels.get(k);
+					    exposure.data[channel.index] -= G[k] * dC;
+					}
 												
 					if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
 					
@@ -441,10 +442,7 @@ public class CorrelatedSignal extends Signal {
 			
 		// Update the gain values used for signal extraction...
 		setSyncGains(G);
-		
-		// Make sure that the mode gains are normalized to the signal
-		if(!mode.fixedGains) mode.setGains(G);
-			
+				
 		if(CRUSH.debug) integration.checkForNaNs(mode.getChannels(), 0, integration.size());
 		
 		generation++;

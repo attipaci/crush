@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -126,11 +126,11 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 			
 			if(position.distanceTo(left) < tolerance) for(Channel channel : pixel) {
 				channel.sourcePhase |= Frame.CHOP_LEFT;
-				System.err.print(" L" + channel.getFixedIndex());
+				System.err.print(" L" + channel.getID());
 			}
 			else if(position.distanceTo(right) < tolerance) for(Channel channel : pixel) {
 				channel.sourcePhase |= Frame.CHOP_RIGHT;
-				System.err.print(" R" + channel.getFixedIndex()); 
+				System.err.print(" R" + channel.getID()); 
 			}
 			else for(Channel channel : pixel) channel.sourcePhase &= ~Frame.CHOP_FLAGS;
 		}
@@ -244,7 +244,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 			final Object[] row = hdu.getRow(exposure.index);
 			final float[][] data = (float[][]) row[iData];
 			for(int c=0; c<data.length; c++) data[c][0] = 0.0F;
-			for(Channel channel : instrument) data[channel.getFixedIndex()-1][0] = exposure.data[channel.index];
+			for(Channel channel : instrument) data[channel.getFixedIndex()][0] = exposure.data[channel.index];
 			hdu.setRow(exposure.index, row);
 		}	
 		

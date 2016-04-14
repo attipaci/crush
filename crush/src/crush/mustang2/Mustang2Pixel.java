@@ -44,8 +44,8 @@ public class Mustang2Pixel extends SingleColorPixel implements Resonator {
 	public double polarizationGain = 1.0, readoutGain = 1.0;
 		
 
-	public Mustang2Pixel(Mustang2 instrument, int backendIndex) {
-		super(instrument, backendIndex);
+	public Mustang2Pixel(Mustang2 instrument, int zeroIndex) {
+		super(instrument, zeroIndex);
 	}
 	
 	

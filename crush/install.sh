@@ -68,6 +68,7 @@ cp -r man/* $MANDIR
 
 # [Linux only] Also install the icons and desktop launchers now...
 OSNAME=`uname`
+
 if [ $OSNAME == "Linux" ] ; then
 	echo Installing Icons and desktop launchers under $SHAREDIR...
 	
