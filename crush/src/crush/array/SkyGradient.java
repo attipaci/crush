@@ -23,9 +23,9 @@
 package crush.array;
 
 import crush.Channel;
-import crush.GradientGains;
+import crush.ZeroMeanGains;
 
-public class SkyGradient extends GradientGains {
+public class SkyGradient extends ZeroMeanGains {
 	/**
 	 * 
 	 */

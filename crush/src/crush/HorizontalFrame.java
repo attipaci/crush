@@ -63,6 +63,8 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 		super.validate();
 	}
 	
+	
+	
 	@Override
 	public void getEquatorial(final Vector2D position, final EquatorialCoordinates coords) {
 		// The proper GLS convention uses actual cos(DEC)
@@ -90,11 +92,7 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 		getHorizontalOffset(position, offset);
 	}
 	
-	@Override
-	public void getNativeOffset(final Vector2D offset) {
-		offset.copy(horizontalOffset);
-	}
-		
+	
 	@Override
 	public final void getEquatorialNativeOffset(final Vector2D position, final Vector2D offset) {
 		getHorizontalOffset(position, offset);
@@ -110,6 +108,12 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	public Vector2D getNativeOffset() {
 		return horizontalOffset;
 	}	
+	
+	@Override
+    public void getNativeOffset(final Vector2D offset) {
+        offset.copy(horizontalOffset);
+    }
+        
 	
 	@Override
 	public void project(final Vector2D position, final AstroProjector projector) {
@@ -180,7 +184,7 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	public final void horizontalToNativeEquatorial(Vector2D offset) {
 		final double x = offset.x();
 		offset.setX(cosPA * x - sinPA * offset.y());
-		offset.setY(cosPA * offset.y() + sinPA * x);
+		offset.setY(sinPA * x + cosPA * offset.y());
 	}
 	
 	public final void horizontalToEquatorial(Vector2D offset) {

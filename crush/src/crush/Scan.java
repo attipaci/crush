@@ -84,7 +84,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public Range longitudeRange, latitudeRange;
 	public boolean isTracking = false;
-	public boolean isMovingObject = false;
+	public boolean isNonSidereal = false;
 	
 	public SourceModel sourceModel;
 	public double weight = 1.0;
@@ -139,7 +139,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		else if(hasOption("subscans.merge")) mergeIntegrations();
 		
 		
-		isMovingObject |= hasOption("moving");
+		isNonSidereal |= hasOption("moving");
 		
 		Frame firstFrame = getFirstIntegration().getFirstFrame();
 		Frame lastFrame = getLastIntegration().getLastFrame();
@@ -685,7 +685,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 		if(gains.isConfigured("estimator")) if(gains.get("estimator").equals("median")) isRobust = true; 
 		
-		WeightedPoint[] G = new WeightedPoint[instrument.storeChannels+1];
+		WeightedPoint[] G = new WeightedPoint[instrument.storeChannels];
 		for(int i=G.length; --i >= 0; ) G[i] = new WeightedPoint();	
 		
 		// Derive the scan gains

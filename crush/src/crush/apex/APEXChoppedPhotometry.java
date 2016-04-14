@@ -54,7 +54,6 @@ public class APEXChoppedPhotometry extends Photometry {
 			right[c] = new WeightedPoint();			
 		}
 		
-		
 		for(Integration<?,?> integration : scan) process((APEXSubscan<?,?>) integration, left, right);
 		
 		sourceFlux.noData();	

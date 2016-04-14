@@ -32,6 +32,8 @@ public interface Pixel extends Iterable<Channel> {
 	public int getIndex();
 	
 	public int getFixedIndex();
+	
+	public String getID();
 
 	public boolean isValid();
 	

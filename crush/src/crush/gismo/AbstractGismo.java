@@ -217,14 +217,14 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 		System.err.println(" Loading wiring data from " + fileName);
 			
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<Integer, GismoPixel> lookup = getFixedIndexLookup();
+		Hashtable<String, GismoPixel> lookup = getIDLookup();
 		
 		int groupPins = hasOption("correlated.pins.group") ? option("correlated.pins.group").getInt() : 1;
 		
 		String line = null;
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
-		 	GismoPixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
+		 	GismoPixel pixel = lookup.get(tokens.nextToken());
 		 	if(pixel == null) continue;
 			pixel.mux = Integer.parseInt(tokens.nextToken());
 		 	pixel.pin = Integer.parseInt(tokens.nextToken()) / groupPins;
@@ -291,11 +291,11 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 		if(iMask >= 0) {
 			try {
 				short[] mask = (short[]) row[iMask];
-				for(Channel channel : this) if(mask[channel.getFixedIndex()-1] == 0) channel.flag(Channel.FLAG_DEAD); 
+				for(Channel channel : this) if(mask[channel.getFixedIndex()] == 0) channel.flag(Channel.FLAG_DEAD); 
 			}
 			catch(ClassCastException e) {
 				byte[] mask = (byte[]) row[iMask];
-				for(Channel channel : this) if(mask[channel.getFixedIndex()-1] == 0) channel.flag(Channel.FLAG_DEAD);
+				for(Channel channel : this) if(mask[channel.getFixedIndex()] == 0) channel.flag(Channel.FLAG_DEAD);
 			}
 		}
 		
@@ -344,11 +344,11 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 		
 		try {
 			short[] mask = (short[]) row[iMask];
-			for(Channel channel : this) if(mask[channel.getFixedIndex()-1] == 0) channel.flag(Channel.FLAG_DEAD); 
+			for(Channel channel : this) if(mask[channel.getFixedIndex()] == 0) channel.flag(Channel.FLAG_DEAD); 
 		}
 		catch(ClassCastException e) {
 			byte[] mask = (byte[]) row[iMask];
-			for(Channel channel : this) if(mask[channel.getFixedIndex()-1] == 0) channel.flag(Channel.FLAG_DEAD);
+			for(Channel channel : this) if(mask[channel.getFixedIndex()] == 0) channel.flag(Channel.FLAG_DEAD);
 		}
 	
 	}

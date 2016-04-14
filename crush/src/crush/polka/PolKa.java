@@ -117,21 +117,21 @@ public class PolKa extends Laboca {
 				int beIndex = option("waveplate.channel").getInt();
 				phaseChannel = get(beIndex-1);
 				if(phaseChannel != null) 
-					System.err.println("  --> Angles from channel " + phaseChannel.getFixedIndex() + ".");
+					System.err.println("  --> Angles from channel " + phaseChannel.getID() + ".");
 			}
 			
 			if(hasOption("waveplate.fchannel")) {
 				int beIndex = option("waveplate.fchannel").getInt();
 				frequencyChannel = get(beIndex-1);
 				if(frequencyChannel != null) 
-					System.err.println("  --> Frequencies from channel " + frequencyChannel.getFixedIndex() + ".");
+					System.err.println("  --> Frequencies from channel " + frequencyChannel.getID() + ".");
 			}
 			
 			if(hasOption("waveplate.tchannel")) {
 				int beIndex = option("waveplate.tchannel").getInt();
 				offsetChannel = get(beIndex-1);
 				if(offsetChannel != null) 
-					System.err.println("  --> Crossing times from channel " + offsetChannel.getFixedIndex() + ".");
+					System.err.println("  --> Crossing times from channel " + offsetChannel.getID() + ".");
 			}		
 		}
 		

@@ -27,6 +27,7 @@ package crush;
 import java.lang.reflect.*;
 import java.util.*;
 
+
 import jnum.Configurator;
 import jnum.Unit;
 import jnum.Util;
@@ -198,5 +199,23 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		return description; 
 	}
 	
-	
+	public class CoupledModality extends CorrelatedModality {
+
+	    /**
+	     * 
+	     */
+	    private static final long serialVersionUID = 866119477552433909L;
+
+
+	    public CoupledModality(String name, String id, Field gainField) {
+	        this(name, id, new FieldGainProvider(gainField));
+	    }
+
+	    public CoupledModality(String name, String id, GainProvider source) {
+	        super(name, id);
+	        for(Mode mode : Modality.this) CoupledModality.this.add(mode.new CoupledMode(source));
+	        CoupledModality.this.setDefaultNames();
+	    }
+	}
+		
 }

@@ -310,7 +310,7 @@ public abstract class Photometry extends SourceModel {
 
         F.scale(1.0 / jansky);	
 
-        plot.println("set title '" + sourceName + " / " + getInstrument().getName().toUpperCase() + "    " + printValue + "'");
+        plot.println("set title '" + sourceName.replace("_",  " ") + " / " + getInstrument().getName().toUpperCase() + "    " + printValue + "'");
         plot.println("set xla 'Scans");
         plot.println("set yla 'Photometry (Jy/beam)'");
 

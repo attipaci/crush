@@ -71,23 +71,14 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 	public void setOptions(Configurator option) {
 		super.setOptions(option);
 		solveSignal = !option.isConfigured("nosignals");
-		
-		boolean solvePhases = option.isConfigured("phases");
-		for(CorrelatedMode mode : this) mode.solvePhases = solvePhases;
 	}
 	
 	public void setSkipFlags(int pattern) {
 		for(CorrelatedMode mode : this) mode.skipFlags = pattern;
 	}
 	
-	/*
-	public void scaleSignals(Integration<?,?> integration, double aveG) {
-		for(CorrelatedMode mode : this) if(!mode.fixedSignal) mode.scaleSignals(integration, aveG);
-	}
-	*/
-
 	public void updateSignals(Integration<?, ?> integration, boolean isRobust) {	
-		for(CorrelatedMode mode : this) if(!mode.fixedSignal) {
+		for(CorrelatedMode mode : this) {
 			if(!Double.isNaN(resolution)) mode.resolution = resolution;
 			try { mode.updateSignals(integration, isRobust); }
 			catch(Exception e) { e.printStackTrace(); }
@@ -95,25 +86,6 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 	}
 
 	
-	public class CoupledModality extends CorrelatedModality {
 
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 866119477552433909L;
-
-		
-		public CoupledModality(String name, String id, Field gainField) {
-			this(name, id, new FieldGainProvider(gainField));
-		}
-
-		public CoupledModality(String name, String id, GainProvider source) {
-			super(name, id);
-			for(CorrelatedMode mode : CorrelatedModality.this) CoupledModality.this.add(mode.new CoupledMode(source));
-			CoupledModality.this.setDefaultNames();
-		}
-		
-		
-	}
 	
 }

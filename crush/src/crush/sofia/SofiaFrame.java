@@ -20,28 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-/*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
- * All rights reserved. 
- * 
- * This file is part of crush.
- * 
- *     crush is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- * 
- *     crush is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- * 
- *     You should have received a copy of the GNU General Public License
- *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
- ******************************************************************************/
 
 package crush.sofia;
 
@@ -63,6 +41,7 @@ public class SofiaFrame extends HorizontalFrame {
     
     public double instrumentVPA;
     public double telescopeVPA;
+    public double chopVPA;
      
     public double PWV;
 
@@ -70,7 +49,7 @@ public class SofiaFrame extends HorizontalFrame {
         super(parent);
         // TODO Auto-generated constructor stub
     }
-
+    
     @Override
     public void project(final Vector2D position, final AstroProjector projector) {
         if(projector.getCoordinates() instanceof TelescopeCoordinates) {
@@ -79,8 +58,25 @@ public class SofiaFrame extends HorizontalFrame {
             projector.getCoordinates().addNativeOffset(projector.offset);
             projector.project();
         } 
-        // TODO handle native coordinates...
         else super.project(position, projector);        
+    }    
+    
+    public void telescopeToEquatorial(Vector2D offset) {
+        telescopeToNativeEquatorial(offset);
+        offset.scaleX(-1.0);
+    }
+    
+    public void equatorialToTelescope(Vector2D offset) {
+        offset.scaleX(-1.0);
+        nativeEquatorialToTelescope(offset);
+    }
+    
+    public void telescopeToNativeEquatorial(Vector2D offset) {
+        offset.rotate(-telescopeVPA);
+    }
+    
+    public void nativeEquatorialToTelescope(Vector2D offset) {
+        offset.rotate(telescopeVPA);
     }
     
     

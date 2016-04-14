@@ -51,8 +51,8 @@ public class FieldGradientMode extends CorrelatedMode {
 	}
 	
 	@Override
-	public float[] getGains() throws Exception {
-		float[] gains = super.getGains();
+	public float[] getGains(boolean validate) throws Exception {
+		float[] gains = super.getGains(validate);
 		
 		double sumwg = 0.0, sumw = 0.0;
 		for(Channel channel : getChannels()) if(channel.flag == 0) {

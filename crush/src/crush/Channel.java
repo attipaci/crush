@@ -49,7 +49,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	transient float temp, tempG, tempWG, tempWG2;
 	
 	public int index;
-	private int storeIndex;
+	private int fixedIndex;
 	public int flag = 0;
 	public int sourcePhase = 0;
 	
@@ -71,9 +71,9 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	public int spikes = 0;
 	public int inconsistencies = 0; // such as jumps...
 	
-	public Channel(Instrument<?> instrument, int dataIndex) {
+	public Channel(Instrument<?> instrument, int fixedIndex) {
 		this.instrument = instrument;
-		setFixedIndex(dataIndex);
+		setFixedIndex(fixedIndex);
 	}
 	
 	@Override
@@ -83,7 +83,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		if(!super.equals(o)) return false;
 		Channel c = (Channel) o;
 		if(!Util.equals(c.instrument, instrument)) return false;
-		if(c.storeIndex != storeIndex) return false;
+		if(c.fixedIndex != fixedIndex) return false;
 		if(c.weight != weight) return false;
 		if(c.gain != gain) return false;
 		if(c.dof != dof) return false;
@@ -92,7 +92,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	}
 	
 	@Override
-	public int hashCode() { return super.hashCode() ^ instrument.getName().hashCode() ^ HashCode.from(storeIndex)
+	public int hashCode() { return super.hashCode() ^ instrument.getName().hashCode() ^ HashCode.from(fixedIndex)
 			^ HashCode.from(weight) ^ HashCode.from(gain) ^ HashCode.from(dof) ^ HashCode.from(dependents); 
 	}
 	
@@ -106,8 +106,8 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	// By default, channels can be sorted by backend-index
 	@Override
 	public int compareTo(Channel channel) {
-		if(channel.storeIndex == storeIndex) return 0;
-		else return storeIndex < channel.storeIndex ? -1 : 1;
+		if(channel.fixedIndex == fixedIndex) return 0;
+		else return fixedIndex < channel.fixedIndex ? -1 : 1;
 	}
 	
 	@Override
@@ -118,8 +118,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	}
 	
 	public boolean isValid() { return isFlagged(); }
-	
-	
+		
 	@Override
 	public final boolean isFlagged(final int pattern) {
 		return (flag & pattern) != 0;
@@ -170,11 +169,11 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	
 	public final int getIndex() { return index; }
 	
-	public final int getFixedIndex() { return storeIndex; }
+	public final int getFixedIndex() { return fixedIndex; }
 	
-	public final void setFixedIndex(int i) { storeIndex = i; }
+	public final void setFixedIndex(int i) { fixedIndex = i; }
 	
-	public String getID() { return Integer.toString(getFixedIndex()); }
+	public String getID() { return Integer.toString(getFixedIndex() + 1); }
 	
 	public double getHardwareGain() {
 		return instrument.gain;
@@ -229,6 +228,8 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		gain = 1.0; 
 		coupling = 1.0;
 	}
+	
+	
 	
 	public static final FlagSpace<Integer> flagSpace = new FlagSpace.Integer("channel-flags");
 	

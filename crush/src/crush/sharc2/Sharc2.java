@@ -131,6 +131,8 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		}
 
 		calcPositions(pixelSize);
+		
+		
 	
 		checkRotation();
 		
@@ -201,6 +203,8 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		*/
 		
+		addModality(modalities.get("rows").new CoupledModality("smileys", "s", new Sharc2SmileyRows()));
+		
 		modalities.get("rows").setGainFlag(Sharc2Pixel.FLAG_ROW);
 		modalities.get("mux").solveGains = false;
 		modalities.get("blocks").solveGains = false;
@@ -264,7 +268,6 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 	}
 
 	protected void parsePixelHDU(BinaryTableHDU hdu) throws HeaderCardException, FitsException {
-		Hashtable<Integer, Sharc2Pixel> lookup = getFixedIndexLookup();
 		
 		int iGain = hdu.findColumn("Relative Pixel Gains");
 		int iFlag = hdu.findColumn("Pixel Flags");
@@ -278,11 +281,11 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		
 		for(int row=0; row<12; row++) {
 			Object[] data = hdu.getRow(row);
-			int rowStart = 32 * row + 1;
+			int rowStart = 32 * row;
 			
 			if(iGain >= 0) {
 				float[] gain = (float[]) data[iGain];
-				for(int col=0; col<32; col++) lookup.get(rowStart + col).gain = gain[col];
+				for(int col=0; col<32; col++) get(rowStart + col).gain = gain[col];
 			}
 			// Flags in data file are different than here...
 			// Are they really necessary?
@@ -294,7 +297,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 			*/
 			if(iWeight >= 0) {
 				float[] weight = (float[]) data[iWeight];
-				for(int col=0; col<32; col++) lookup.get(rowStart + col).weight = weight[col];
+				for(int col=0; col<32; col++) get(rowStart + col).weight = weight[col];
 			}		   
 			// Do not parse offsets. One should not rely on the uncertain levelling
 			// by user before scans. It's safer and better to get these calculated
@@ -322,7 +325,6 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		System.out.print(" Loading nonlinearities from " + fileName + ".");
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<Integer, Sharc2Pixel> lookup = getFixedIndexLookup();
 		
 		String line;
 		
@@ -332,7 +334,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 			int row = Integer.parseInt(tokens.nextToken()) - 1;
 			int col = Integer.parseInt(tokens.nextToken()) - 1;
 			
-			Sharc2Pixel pixel = lookup.get(32*row + col + 1);
+			Sharc2Pixel pixel = get(32*row + col + 1);
 
 			pixel.G0 = Double.parseDouble(tokens.nextToken());
 			pixel.V0 = -Double.parseDouble(tokens.nextToken()) * pixel.biasV;

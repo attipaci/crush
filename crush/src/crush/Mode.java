@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009,2010 Attila Kovacs
 
 package crush;
 
@@ -28,213 +27,263 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.*;
 import java.util.Arrays;
+import java.util.Vector;
 
 import jnum.ExtraMath;
-import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
 import jnum.math.Range;
 
 
 public class Mode implements Serializable {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1953090499269762683L;
-	
-	private transient int serialNo;
-	
-	public String name;
-	private ChannelGroup<?> channels;
-	public GainProvider gainProvider;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1953090499269762683L;
 
-	public boolean fixedGains = false;
-	public boolean phaseGains = false;
-	public double resolution;
-	public Range gainRange = Range.getFullRange();
-	public int gainFlag = 0;
-	public int gainType = Instrument.GAINS_BIDIRECTIONAL;
+    private transient int serialNo;
 
-	private static int counter = 0;
-	private float[] gain;
-		
-	public Mode() {
-		serialNo = ++counter;
-		name = "mode-" + serialNo;
-	}
-	
-	public Mode(ChannelGroup<?> group) {
-		this();
-		setChannels(group);
-	}
-	
-	public Mode(ChannelGroup<?> group, GainProvider gainProvider) { 
-		this(group);
-		setGainProvider(gainProvider);
-	}
-	
-	public Mode(ChannelGroup<?> group, Field gainField) { 
-		this(group, new FieldGainProvider(gainField));
-	}
-	
-	
-	public void setGainProvider(GainProvider source) {
-		this.gainProvider = source;
-	}	
-	
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!(o instanceof Mode)) return false;
-		if(!super.equals(o)) return false;
-		return serialNo == ((Mode) o).serialNo;
-	}
+    public String name;
+    private ChannelGroup<?> channels;
+    public GainProvider gainProvider;
 
-	@Override
-	public int hashCode() { return super.hashCode() ^ serialNo; }
+    Vector<CoupledMode> coupledModes;
 
-	public String getName() { return name; }	
-	
-	public ChannelGroup<?> getChannels() { return channels; }
-	
-	public int getChannelCount() { return channels.size(); }
-	
-	public void setChannels(ChannelGroup<?> group) {
-		channels = group;
-		name = group.getName();
-	}
-	
-	public Channel getChannel(int k) { return channels.get(k); }
-	
-	public int size() { return channels.size(); }
-	
-	public int[] getChannelIndex() {
-		final int[] index = new int[channels.size()];
-		for(int c=channels.size(); --c >= 0; ) index[c] = channels.get(c).index;
-		return index;
-	}
-	
-	public float[] getGains() throws Exception {
-		return getGains(true);
-	}
-		
-	public float[] getGains(boolean validate) throws Exception {
-		if(gainProvider == null) {
-			if(gain == null) {
-				gain = new float[channels.size()];
-				Arrays.fill(gain, 1.0F);
-			}
-			return gain;
-		}
-		else {
-			if(validate) gainProvider.validate(this);
-			if(gain == null) gain = new float[channels.size()];
-			if(gain.length != channels.size()) gain = new float[channels.size()];
-			for(int c=channels.size(); --c >= 0; ) gain[c] = (float) gainProvider.getGain(channels.get(c));
-			return gain;
-		}
-	}
-	
-	public boolean setGains(float[] gain) throws Exception {
-		return setGains(gain, true);
-	}
-	
-	// Return true if flagging...
-	public boolean setGains(float[] gain, boolean flagNormalized) throws Exception {
-		if(gainProvider == null) this.gain = gain;
-		else for(int c=channels.size(); --c>=0; ) gainProvider.setGain(channels.get(c), gain[c]);
-		return flagGains(flagNormalized);
-	}
-		
-	public void uniformGains() throws Exception {
-		float[] G = new float[channels.size()];
-		Arrays.fill(G, 1.0F);
-		setGains(G, false);
-	}
-	
-	protected boolean flagGains(boolean normalize) throws Exception {
-		if(gainFlag == 0) return false;
-			
-		final float[] gain = getGains();
-		final float aveG = normalize ? (float) getAverageGain(~gainFlag) : 1.0F;
-		
-		for(int k=channels.size(); --k >= 0; ) {
-			final Channel channel = channels.get(k);
-			
-			float G = Float.NaN;
-			if(gainType == Instrument.GAINS_SIGNED) G = gain[k] / aveG;
-			else if(gainType == Instrument.GAINS_BIDIRECTIONAL) G = Math.abs(gain[k] / aveG);
+    public boolean fixedGains = false;
+    public boolean phaseGains = false;
+    public double resolution;
+    public Range gainRange = Range.getFullRange();
+    public int gainFlag = 0;
+    public int gainType = Instrument.GAINS_BIDIRECTIONAL;
 
-			if(!gainRange.contains(G)) channel.flag(gainFlag);
-			else channel.unflag(gainFlag);
-		}
-		return true;
-	}	
-	
-	public double getAverageGain(int excludeFlag) throws Exception {
-		return getAverageGain(getGains(), excludeFlag);
-		
-	}
-	
-	public double getAverageGain(float[] G, int excludeFlag) {
-		final double[] values = new double[channels.size()];
-		int n = 0;
-		for(int k=channels.size(); --k >= 0; ) if(channels.get(k).isUnflagged(excludeFlag))
-			values[n++] = Math.log(1.0 + Math.abs(G[k]));
-		
-		// Use a robust mean (with 10% tails) to calculate the average gain...
-		double aveG = Statistics.robustMean(values, 0, n, 0.1);
-		if(Double.isNaN(aveG)) return 1.0;
- 
-		return Math.exp(aveG) - 1.0;	
-	}
-	
-	public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
-		if(fixedGains) throw new IllegalStateException("WARNING! Cannot solve gains for fixed gain modes.");
-		
-		float[] G0 = getGains();
-		
-		WeightedPoint[] G = phaseGains && integration.isPhaseModulated() ?  
-				((PhaseModulated) integration).getPhases().getGainIncrement(this) : 
-				integration.getSignal(this).getGainIncrement(isRobust);
-				
-		for(int i=G0.length; --i >= 0; ) {
-			if(G[i] != null) G[i].add(G0[i]);
-			else G[i] = new WeightedPoint(G0[i], 0.0);
-		}
-		
-		return G;		
-	}
-	
-	protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws Exception {			
-		integration.getSignal(this).syncGains(sumwC2, isTempReady);
-		
-		// Solve for the correlated phases also, if required
-		if(integration.isPhaseModulated()) if(integration.hasOption("phases"))
-			((PhaseModulated) integration).getPhases().syncGains(this);
-	}
-	
-	public int getFrameResolution(Integration<?, ?> integration) {
-		return integration.power2FramesFor(resolution/Math.sqrt(2.0));
-	}
-	
-	public int signalLength(Integration<?, ?> integration) {
-		return ExtraMath.roundupRatio(integration.size(), getFrameResolution(integration));
-	}
-	
-	@Override
-	public String toString() {
-		String description = name + ":";
-		for(Channel channel : channels) description += " " + channel.getFixedIndex();
-		return description;
-	}
-	
-	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
-		stream.defaultReadObject();
-		serialNo = ++counter;
+    private static int counter = 0;
+    private float[] gain;
+
+    public Mode() {
+        serialNo = ++counter;
+        name = "mode-" + serialNo;
     }
-	
-	protected static int nextMode = 0;
-	public final static int TOTAL_POWER = nextMode++;
-	public final static int CHOPPED = nextMode++;
-	
+
+    public Mode(ChannelGroup<?> group) {
+        this();
+        setChannels(group);
+    }
+
+    public Mode(ChannelGroup<?> group, GainProvider gainProvider) { 
+        this(group);
+        setGainProvider(gainProvider);
+    }
+
+    public Mode(ChannelGroup<?> group, Field gainField) { 
+        this(group, new FieldGainProvider(gainField));
+    }
+
+
+    public void setGainProvider(GainProvider source) {
+        this.gainProvider = source;
+    }	
+
+    @Override
+    public boolean equals(Object o) {
+        if(o == this) return true;
+        if(!(o instanceof Mode)) return false;
+        if(!super.equals(o)) return false;
+        return serialNo == ((Mode) o).serialNo;
+    }
+
+    @Override
+    public int hashCode() { return super.hashCode() ^ serialNo; }
+
+
+
+    public String getName() { return name; }	
+
+    public ChannelGroup<?> getChannels() { return channels; }
+
+    public int getChannelCount() { return channels.size(); }
+
+    public void setChannels(ChannelGroup<?> group) {
+        channels = group;
+        name = group.getName();
+        if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.setChannels(group);
+    }
+
+    public Channel getChannel(int k) { return channels.get(k); }
+
+    public int size() { return channels.size(); }
+
+    private void addCoupledMode(CoupledMode m) {
+        if(coupledModes == null) coupledModes = new Vector<CoupledMode>();
+        coupledModes.add(m);        
+    }
+
+
+    public final float[] getGains() throws Exception {
+        return getGains(true);
+    }
+
+    public float[] getGains(boolean validate) throws Exception {
+        if(gainProvider == null) {
+            if(gain == null) {
+                gain = new float[channels.size()];
+                Arrays.fill(gain, 1.0F);
+            }
+            return gain;
+        }
+        else {
+            if(validate) gainProvider.validate(this);
+            if(gain == null) gain = new float[channels.size()];
+            if(gain.length != channels.size()) gain = new float[channels.size()];
+            for(int c=channels.size(); --c >= 0; ) {
+                gain[c] = (float) gainProvider.getGain(channels.get(c));
+                if(Float.isNaN(gain[c])) gain[c] = 0.0F;
+            }
+            return gain;
+        }
+    }
+
+    public final boolean setGains(float[] gain) throws Exception {
+        return setGains(gain, true);
+    }
+
+    public int getSkipChannelFlags() { return 0; }
+
+    // Return true if flagging...
+    public boolean setGains(float[] gain, boolean flagNormalized) throws Exception {
+        if(gainProvider == null) this.gain = gain;
+        else for(int c=channels.size(); --c>=0; ) gainProvider.setGain(channels.get(c), gain[c]);
+        return flagGains(flagNormalized);
+    }
+
+    public void uniformGains() throws Exception {
+        float[] G = new float[channels.size()];
+        Arrays.fill(G, 1.0F);
+        setGains(G, false);
+    }
+
+    protected boolean flagGains(boolean normalize) throws Exception {
+        if(gainFlag == 0) return false;
+
+        final float[] gain = getGains();
+        final float aveG = normalize ? (float) channels.getTypicalGainMagnitude(gain, ~gainFlag) : 1.0F;
+
+        for(int k=channels.size(); --k >= 0; ) {
+            final Channel channel = channels.get(k);
+
+            float G = Float.NaN;
+            if(gainType == Instrument.GAINS_SIGNED) G = gain[k] / aveG;
+            else if(gainType == Instrument.GAINS_BIDIRECTIONAL) G = Math.abs(gain[k] / aveG);
+
+            if(!gainRange.contains(G)) channel.flag(gainFlag);
+            else channel.unflag(gainFlag);
+        }
+        return true;
+    }	
+
+
+
+    public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
+        if(fixedGains) throw new IllegalStateException("WARNING! Cannot solve gains for fixed gain modes.");
+
+        float[] G0 = getGains();
+
+        WeightedPoint[] G = phaseGains && integration.isPhaseModulated()  
+                ? ((PhaseModulated) integration).getPhases().getGainIncrement(this) 
+                : integration.getSignal(this).getGainIncrement(isRobust);
+                
+        for(int i=G0.length; --i >= 0; ) {
+            if(G[i] != null) G[i].add(G0[i]);
+            else G[i] = new WeightedPoint(G0[i], 0.0);
+        }
+
+        return G;		
+    }
+
+    protected void syncAllGains(Integration<?,?> integration, float[] sumwC2, boolean isTempReady) throws Exception {			
+        integration.getSignal(this).syncGains(sumwC2, isTempReady);
+
+        // Solve for the correlated phases also, if required
+        if(integration.isPhaseModulated()) if(integration.hasOption("phases"))
+            ((PhaseModulated) integration).getPhases().syncGains(this);
+
+        // Sync the gains to all the dependent modes too... 
+        if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.resyncGains(integration);
+    }
+
+    public int getFrameResolution(Integration<?, ?> integration) {
+        return integration.power2FramesFor(resolution/Math.sqrt(2.0));
+    }
+
+    public int signalLength(Integration<?, ?> integration) {
+        return ExtraMath.roundupRatio(integration.size(), getFrameResolution(integration));
+    }
+
+    @Override
+    public String toString() {
+        String description = name + ":";
+        for(Channel channel : channels) description += " " + channel.getID();
+        return description;
+    }
+
+    private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        stream.defaultReadObject();
+        serialNo = ++counter;
+    }
+
+    public class CoupledMode extends CorrelatedMode {
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = -1524809691029533295L;
+
+        public CoupledMode() {
+            super(Mode.this.getChannels());
+            Mode.this.addCoupledMode(this);
+            fixedGains = true;
+        }
+
+        public CoupledMode(float[] gains) throws Exception {
+            this();
+            super.setGains(gains);
+        }
+
+        public CoupledMode(Field gainField) {
+            this();
+            setGainProvider(new FieldGainProvider(gainField));
+        }
+
+        public CoupledMode(GainProvider gains) { 
+            this();
+            setGainProvider(gains);
+        }
+
+        @Override
+        public float[] getGains(boolean validate) throws Exception {
+            final float[] parentgains = Mode.this.getGains(validate);
+            final float[] gains = super.getGains(validate);
+            for(int i=gains.length; --i>=0; ) gains[i] *= parentgains[i];
+            return gains;
+        }
+
+        @Override
+        public boolean setGains(float[] gain, boolean flagNormalized) throws IllegalAccessException {
+            throw new UnsupportedOperationException("Cannot adjust gains for " + getClass().getSimpleName());
+        }
+
+        // Recursively resync all dependent modes...
+        protected void resyncGains(Integration<?,?> integration) throws Exception {
+            Signal signal = integration.getSignal(this);
+            if(signal != null) signal.resyncGains();
+
+            // Sync the gains to all the dependent modes too... 
+            if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.resyncGains(integration);
+        }
+
+    }
+
+
+    protected static int nextMode = 0;
+    public final static int TOTAL_POWER = nextMode++;
+    public final static int CHOPPED = nextMode++;
+
 }

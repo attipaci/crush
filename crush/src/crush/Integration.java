@@ -2495,12 +2495,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public double[][] getFullCovariance(final double[][] covar) {	
 		final double[][] fullCovar = new double[instrument.storeChannels][instrument.storeChannels];
 		
+		new CRUSH.Fork<Void>(instrument.storeChannels, getThreadCount()) {
+            @Override
+            protected void processIndex(int index) {
+                Arrays.fill(fullCovar[index], Double.NaN);
+            }
+        }.process();
+		
 		instrument.new Fork<Void>() {
 			@Override
 			protected void process(Channel c1) {
-				Arrays.fill(fullCovar[c1.index], Double.NaN);
 				for(final Channel c2 : instrument)
-					fullCovar[c1.getFixedIndex()-1][c2.getFixedIndex()-1] = covar[c1.index][c2.index];
+					fullCovar[c1.getFixedIndex()][c2.getFixedIndex()] = covar[c1.index][c2.index];
 			}
 		}.process();
 				
@@ -3097,7 +3103,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		for(int c=0; c<instrument.size(); c++) {
 			Channel channel = instrument.get(c);
-			if(g[c] != 0.0) out.println(channel.getFixedIndex() + "\t" + Util.f3.format(g[c]));
+			if(g[c] != 0.0) out.println(channel.getID() + "\t" + Util.f3.format(g[c]));
 		}
 		
 		System.err.println(" Written " + fileName);
@@ -3108,10 +3114,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	private void getCouplingGains(Signal signal, double[] g) throws Exception {	
 		Mode mode = signal.getMode();
 		
-		int[] ch = mode.getChannelIndex();
 		float[] gains = mode.getGains();
 		
-		for(int k=0; k<mode.size(); k++) g[ch[k]] = gains[k];
+		for(int k=0; k<mode.size(); k++) g[mode.getChannel(k).index] = gains[k];
 	}
 	
 	
@@ -3142,7 +3147,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Complex[][] C = new Complex[instrument.size()][];
 		
 		Channel[] allChannels = new Channel[instrument.storeChannels];
-		for(Channel channel : instrument) allChannels[channel.getFixedIndex()-1] = channel;
+		for(Channel channel : instrument) allChannels[channel.getFixedIndex()] = channel;
 		
 		for(Mode mode : modality) getCouplingSpectrum(getSignal(mode), windowSize, C);
 			
@@ -3206,7 +3211,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		float[][] delay = new float[spectrum.length][nF << 1];
 		
 		Channel[] allChannels = new Channel[instrument.storeChannels];		
-		for(Channel channel : instrument) allChannels[channel.getFixedIndex()-1] = channel;
+		for(Channel channel : instrument) allChannels[channel.getFixedIndex()] = channel;
 		
 		
 		for(int c=spectrum.length; --c >= 0; ) {
@@ -3310,7 +3315,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			for(int f=nF; --f >= 0; ) {
 				D.get(f, dComponent);
 				S.get(f, sComponent);
-				norm += sComponent.norm();
+				norm += sComponent.asquare();
 				
 				sComponent.conjugate();
 				dComponent.multiplyBy(sComponent);

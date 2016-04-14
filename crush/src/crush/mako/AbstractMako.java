@@ -112,14 +112,6 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 		setReferencePosition(center);
 	}
 	
-	
-	@Override
-	public Hashtable<Integer, Pixel> getPixelLookup() {
-		Hashtable<Integer, Pixel> table = new Hashtable<Integer, Pixel>();
-		for(MakoPixelType pixel : this) if(pixel.id != null) table.put(pixel.id.index, pixel);
-		return table;
-	}
-	
 	protected abstract void parseDataHeader(Header header) throws HeaderCardException, FitsException;
 	
 	@Override

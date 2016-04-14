@@ -25,7 +25,6 @@ package crush;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import crush.CorrelatedMode.CoupledMode;
 import jnum.Parallel;
 import jnum.Util;
 import jnum.data.DataPoint;
@@ -83,22 +82,6 @@ public class PhaseSignal implements Serializable {
 	public double getValue(int i) { return value[i]; }
 	
 	public double getWeight(int i) { return weight[i]; }
-	
-	public void scale(double factor) {
-		double f2 = factor * factor;
-		for(int i=value.length; --i >= 0; ) {
-			value[i] *= factor;
-			weight[i] /= f2;
-		}
-		
-		// Rescale the signals in the coupled modes also...
-		for(CoupledMode coupled : mode.coupledModes)
-			if(phases.signals.containsKey(coupled)) phases.signals.get(coupled).scale(factor);
-		
-		// Rescale the corresponding synching gains also to keep the product intact
-		for(int k=syncGains.length; --k >= 0; ) syncGains[k] /= factor;	
-	}
-	
 	
 	protected void update(boolean isRobust) throws Exception {
 		// Make syncGains carry the gain increment since last sync...

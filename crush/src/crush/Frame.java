@@ -307,12 +307,13 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		cosA = Math.cos(angle);
 	}
 	
-	public final double getX(final Vector2D position) {
-		return cosA * position.x() - sinA * position.y();	
+	
+	public double getX(final Vector2D fpPosition) {
+		return cosA * fpPosition.x() - sinA * fpPosition.y();	
 	}
 	
-	public final double getY(final Vector2D position) {
-		return cosA * position.y() + sinA * position.x();	
+	public double getY(final Vector2D fpPosition) {
+		return sinA * fpPosition.x() + cosA * fpPosition.y();	
 	}
 	
 	public void addDataFrom(final Frame other, final double scaling) {
@@ -333,7 +334,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 			projector.getCoordinates().addNativeOffset(projector.offset);
 			projector.project();
 		}
-		else if(scan.isMovingObject) {
+		else if(scan.isNonSidereal) {
 			projector.setReferenceCoords();
 			// Deproject SFL native offsets...
 			getEquatorialNativeOffset(position, projector.offset);

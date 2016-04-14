@@ -24,70 +24,91 @@
 package crush.hawcplus;
 
 
+import crush.Channel;
 import crush.Instrument;
 import crush.sofia.SofiaFrame;
+import jnum.math.Vector2D;
 
 
 public class HawcPlusFrame extends SofiaFrame {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6511202510198331668L;
-	
-	long mceSerial;
-	float hwpAngle;
-	
-	byte[] jumpCounter;
-		
-	public HawcPlusFrame(HawcPlusScan parent) {
-		super(parent);
-		setSize(parent.instrument.pixels());
-	}
-	
-	@Override
-    public void setSize(int size) {
-	    super.setSize(size);
-	    jumpCounter = new byte[size];
-	}
-	
-	public void parseData(int frameIndex, long[] DAC, short[] jump) {   
-		parseData(DAC, jump, frameIndex * FITS_CHANNELS, FITS_CHANNELS);
-	}
-	
-	private void parseData(long[] DAC, short[] jump, int from, int channels) {
-	    final int polOffset = HawcPlus.polArrayPixels;
-	    
-	    // Unpack the FITS array into the internal array (with overlapping polarizations separated out)
-		for(int i=channels; --i >= 0; ) {
-		    final int row = i >> 7;
-		    final int col = i & 63;
-		    final int offset = (i & 64) == 0 ? 0 : polOffset; 
-		    final int gridIndex = offset + (row<<6) + col;
-		    
-		    data[gridIndex] = (int) DAC[from+i];
-		    if(jump != null) jumpCounter[gridIndex] = (byte) jump[from+i];
-		}
-	}
-	
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 6511202510198331668L;
 
-	@Override
+    long mceSerial;
+    float hwpAngle;
+
+    byte[] jumpCounter;
+
+    public HawcPlusFrame(HawcPlusScan parent) {
+        super(parent);
+        setSize(parent.instrument.size());
+    }
+
+    @Override
+    public void setSize(int size) {
+        super.setSize(size);
+        jumpCounter = new byte[size];
+    }
+
+    public void parseData(int frameIndex, int[] DAC, short[] jump) {   
+        parseData(DAC, jump, frameIndex * FITS_CHANNELS);
+    }
+
+    // Parses data for valid pixels only...
+    private void parseData(int[] DAC, short[] jump, int from) {
+        for(final HawcPlusPixel pixel : (HawcPlus) scan.instrument) {
+            data[pixel.index] = DAC[from + pixel.fitsIndex];
+            if(jump != null) jumpCounter[pixel.index] = (byte) jump[from + pixel.fitsIndex];
+        }
+    }
+
+    @Override
     public void slimTo(Instrument<?> instrument) {
         super.slimTo(instrument);
-        
+
         if(jumpCounter == null) return;
-        
+
         final byte[] newJumpCounter = new byte[instrument.size()];
         for(int k=instrument.size(); --k >= 0; ) newJumpCounter[k] = jumpCounter[instrument.get(k).index];      
-            
+
         jumpCounter = newJumpCounter;
     }
-   
-	
-	public final static int FITS_ROWS = 41;
-	public final static int FITS_COLS = 128;
-	public final static int FITS_CHANNELS = FITS_ROWS * FITS_COLS;
-	
-	public static byte SAMPLE_PHI0_JUMP = sampleFlags.next('j', "phi0 jump").value();
 
+    @Override
+    public void validate() {
+        HawcPlus hawc = (HawcPlus) scan.instrument;
+
+        // TODO dark squid removal
+        if(hawc.darkSquidCorrection) darkCorrect();
+
+        super.validate();
+    }
+
+    public void darkCorrect() {
+        HawcPlus hawc = (HawcPlus) scan.instrument;
+
+        for(HawcPlusPixel pixel : hawc) if(!pixel.isFlagged(Channel.FLAG_BLIND))
+            data[pixel.index] -= data[hawc.darkSquidLookup[pixel.sub][pixel.col]];
+    }
+  
+    public void instrumentToEquatorial(Vector2D offset) {
+        offset.rotate(-instrumentVPA);
+    }
+
+    public void equatorialToInstrument(Vector2D offset) {
+        offset.rotate(instrumentVPA);
+    }
    
+  
+    
+
+    public final static int FITS_ROWS = 41;
+    public final static int FITS_COLS = 128;
+    public final static int FITS_CHANNELS = FITS_ROWS * FITS_COLS;
+
+    public static byte SAMPLE_PHI0_JUMP = sampleFlags.next('j', "phi0 jump").value();
+
+
 }

@@ -47,7 +47,7 @@ public class Sharc2Pixel extends SingleColorPixel {
 	public double muxGain;
 	
 	public Sharc2Pixel(Sharc2 array, int zeroIndex) {
-		super(array, zeroIndex+1);
+		super(array, zeroIndex);
 		row = zeroIndex / 32;
 		col = zeroIndex % 32;
 		muxGain = col < 16 ? 1.0 : -1.0;

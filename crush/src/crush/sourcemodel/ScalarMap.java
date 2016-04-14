@@ -668,7 +668,7 @@ public class ScalarMap extends SourceMap {
 	}
 	
 	protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {	
-		map.addPointAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight/channel.variance, dt);
+		map.addPointAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight / channel.variance, dt);
 	}
 	
 	@Override

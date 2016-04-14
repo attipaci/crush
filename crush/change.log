@@ -8,6 +8,9 @@
 	freedom (used for getting proper noise weights and uncertainty 
 	estimates). It also brings LABOCA photometry reductions back from the
 	brink, with a significant improvement on the previous best! 
+	A tweak in noise whitening results in more honest noise estimates
+	when noise whitening is used (you might observe a change in the S/N 
+	compared to before...)
 	Among the new features are an enhanced configuration engine with 
 	improved polling and brand new locks. There are lots of smaller fixes 
 	and improvements, some documentation updates, and changes under the 
@@ -29,6 +32,10 @@
 
 	[BUG] {APEX} photometry reductions still had race conditions from all
 	prior 2.30 releases. Fixed.
+
+	[NEW] {SHARC2} New decorrelation mode named 'smileys' which removes
+	parabolic shaped correlations on detectors rows (possibly thermal
+	features). It is enabled by default in 'faint' mode. 
 
 	[NEW] New option 'lab' allows reductions without telescope data (for
 	supported instruments only). CRUSH will not produce a source model.
@@ -91,6 +98,24 @@
 
 	[CHANGE] Despiking 'features' method renamed to 'multires'.
 
+	[FIX] Removal of coupled modes (such as gradients on top of another
+	correlated mode) left unwanted signals between decorrelating the parent
+	mode and the coupled mode. For example for sky gradients, this meant
+	polluting signals between array decorrelation and gradient removal, so
+	that the undesired remnants affected weighting, whitening and despiking
+	in-between.
+
+	[FIX] CorrelatedMode.getNormalizedGains could result in NaN gains 
+	(when the mean gain was calculated 0.0). Now skipping renormalization 
+	in such pathological cases...
+
+	[FIX] Some new safety pins for dealing with NaN gains...
+
+	[FIX] Better separation between channel/pixel ids and fixed indices.
+	As a result some features that were broken for certain instruments
+	should work again (such as recording extended pixel data in the output
+	FITS). Reading of pixel/channel data is always by ID.
+
 	[FIX] {APEX} {b2} Using quadrature chop phase data also, effectively
 	doubling the number of useful datapoints for photometry. 
 
@@ -112,6 +137,13 @@
 	[FIX] Pointing information is now correct for multiscan pointing 
 	reductions, in any coordinate system, and also for moving objects.
 
+	[TWEAK] Noise whitening automatic white-noise probe range set to better
+	correspond to range of point source signals, leading to more honest
+	noise eatimates.
+
+	[TWEAK] {SCUBA-2} More informative error messaging when FITS input 
+	is missing tables (ndf2fits proexts option was not used).
+
 	[TWEAK] {APEX} {b2} Improved photometry despiking. Data can be NEFD 
 	range bound -- outlying subscans are skipped, resulting in a more
 	homogeneous chop set.
@@ -132,6 +164,12 @@
 	iteration (except in 'bright' mode).
 
 	[TWEAK] Neighbour despiking to flag single sample only.
+
+	[CONFIG] {SHARC2} 'mux' and 'smileys' decorrelation enabled by 
+	default for 'faint' mode reductions.
+
+	[CONFIG] Re-enabled 'weighting.noiserange' by default with range of
+	0.1:10.0.
 
 	[CONGIG] {LABOCA} Exploring a new paradigm for removing microphonics
 	on the flexible band cables. Removing 'twisting' modes is now enabled
@@ -162,6 +200,16 @@
 	may be (will be!) used outside of the bounds of CRUSH. The separate
 	document makes better sense.
 
+	[CODE] CoupledMode moved upstream to Mode from CorrelatedMode. 
+	(And the corresponding move of CoupledModality to Modality...)
+
+	[CODE] CorrelatedMode always return normalized gains for use.
+
+	[CODE] Got rid of Mode.getChannelIndex(), resulting in cleaner and 
+	(slightly) faster decorrelations.
+
+	[CODE] Gradient gain validation (centering) was cleaned up.
+	
 	[CODE] Some renames, e.g. Array -> Camera, GeometricRowColIndexed ->
 	GridIndexed, APEXArray -> APEXCamera, APEXArrayScan -> APEXScan...
 
