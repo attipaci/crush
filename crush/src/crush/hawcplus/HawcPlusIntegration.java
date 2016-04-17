@@ -31,6 +31,7 @@ import crush.Channel;
 import crush.fits.HDUReader;
 import crush.sofia.SofiaChopperData;
 import crush.sofia.SofiaIntegration;
+import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
@@ -235,19 +236,23 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     // I -> T -> E': theta_si = phi + theta_ta
                     //
                     //    phi = theta_si - theta_ta
+					//
 					frame.instrumentVPA = iVPA[i] * (float) Unit.deg;
 					frame.telescopeVPA = tVPA[i] * (float) Unit.deg;
 					frame.chopVPA = cVPA[i] * (float) Unit.deg;
 					
+					// The natural VPA (tEL vs North) is 180-degrees from the TABS VPA (V vs North)...
+					final double natVPA = Math.IEEEremainder((frame.telescopeVPA + Math.PI), Constant.twoPi);
+					
 					// rotation from pixel coordinates to telescope coordinates...
 					// TODO once mount angle in instrument XML is correct, mountOffset should be unnecessary...		
-					frame.setRotation(frame.instrumentVPA - frame.telescopeVPA + hawc.mountOffsetAngle);
+					frame.setRotation(frame.instrumentVPA - natVPA + hawc.mountOffsetAngle);
 					
 					// rotation from telescope coordinates to equatorial.
-                    frame.setParallacticAngle(frame.telescopeVPA);
+                    frame.setParallacticAngle(natVPA);
 				
 					// TODO HWP angle in equatorial... (check sign)
-					frame.hwpAngle += frame.telescopeVPA;
+					frame.hwpAngle += natVPA;
 					
 					// Calculate the scanning offsets...
 					frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(objectEq);

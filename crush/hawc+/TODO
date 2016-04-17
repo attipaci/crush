@@ -1,3 +1,5 @@
+>> flagjumps
+
 ok discard missing subarray...
 ! read and process astrometry
   --> check VPA rotation
@@ -7,7 +9,7 @@ ok  --> by subarray blocks...
 ! array geometry
   --> offsets and rotations (units!!!)
 ! bias values and calibration...
-
+  --> 'biasref'
 
 + custom console help
 + documentation

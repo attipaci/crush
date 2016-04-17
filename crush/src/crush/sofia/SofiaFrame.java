@@ -40,14 +40,13 @@ public class SofiaFrame extends HorizontalFrame {
     public TelescopeCoordinates telescopeCoords;
     
     public double instrumentVPA;
-    public double telescopeVPA;
-    public double chopVPA;
+    public double telescopeVPA;     // TODO check: orientation of V (-tEL!!!) vs North...
+    public double chopVPA;          // TODO check: orientation of S (-phi_R) vs North...
      
     public double PWV;
 
     public SofiaFrame(Scan<?, ?> parent) {
         super(parent);
-        // TODO Auto-generated constructor stub
     }
     
     @Override
@@ -72,11 +71,11 @@ public class SofiaFrame extends HorizontalFrame {
     }
     
     public void telescopeToNativeEquatorial(Vector2D offset) {
-        offset.rotate(-telescopeVPA);
+        offset.rotate(Math.PI - telescopeVPA);
     }
     
     public void nativeEquatorialToTelescope(Vector2D offset) {
-        offset.rotate(telescopeVPA);
+        offset.rotate(Math.PI + telescopeVPA);
     }
     
     
