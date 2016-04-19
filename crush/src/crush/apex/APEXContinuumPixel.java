@@ -43,7 +43,7 @@ import jnum.data.WeightedPoint;
 import jnum.fft.DoubleFFT;
 import jnum.math.Vector2D;
 
-public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighting {
+public abstract class APEXContinuumPixel extends SingleColorPixel implements PhaseWeighting {
 	/**
 	 * 
 	 */
@@ -52,13 +52,13 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 	public double relativePhaseWeight = 1.0;
 	
 	
-	public APEXPixel(APEXCamera<?> array, int backendIndex) {
+	public APEXContinuumPixel(APEXCamera<?> array, int backendIndex) {
 		super(array, backendIndex);
 	}
 	
 	@Override
 	public Channel copy() {
-		APEXPixel copy = (APEXPixel) super.copy();
+		APEXContinuumPixel copy = (APEXContinuumPixel) super.copy();
 		if(fitsPosition != null) copy.fitsPosition = (Vector2D) fitsPosition.clone();
 		return copy;
 	}
@@ -110,10 +110,10 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 	}
 	
 	
-	public WeightedPoint getBGCorrectedChopSignal(final PhaseSet phases, final int i, final Collection<APEXPixel> bgPixels, final double[] G) {
+	public WeightedPoint getBGCorrectedChopSignal(final PhaseSet phases, final int i, final Collection<APEXContinuumPixel> bgPixels, final double[] G) {
 		final WeightedPoint bg = new WeightedPoint();
 		
-		for(final APEXPixel pixel : bgPixels) if(!pixel.isFlagged()) if(pixel != this) if(pixel.sourcePhase == 0) {
+		for(final APEXContinuumPixel pixel : bgPixels) if(!pixel.isFlagged()) if(pixel != this) if(pixel.sourcePhase == 0) {
 			final WeightedPoint lr = pixel.getChopSignal(phases, i);
 			if(G[pixel.index] == 0.0) continue;
 			lr.scale(1.0 / G[pixel.index]);
@@ -129,7 +129,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 	}
 
 	
-	public void writeLROffset(final PhaseSet phases, String fileName, final Collection<APEXPixel> bgPixels, final double[] sourceGain) throws IOException {
+	public void writeLROffset(final PhaseSet phases, String fileName, final Collection<APEXContinuumPixel> bgPixels, final double[] sourceGain) throws IOException {
 		final PrintWriter out = new PrintWriter(new FileOutputStream(fileName));	
 		final APEXSubscan<?,?> subscan = (APEXSubscan<?,?>) phases.getIntegration();
 		
@@ -206,7 +206,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
         return Statistics.smartMedian(points, 0, k, 0.25);
     }
 	
-	public WeightedPoint getBGCorrectedLROffset(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double[] sourceGain) {
+	public WeightedPoint getBGCorrectedLROffset(final PhaseSet phases, final Collection<APEXContinuumPixel> bgPixels, final double[] sourceGain) {
 		int N = phases.size();
 		final WeightedPoint lr = new DataPoint();
 		for(int i=1; i < N; i++) lr.average(getBGCorrectedChopSignal(phases, i, bgPixels, sourceGain));
@@ -214,7 +214,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 		return lr;
 	}
 
-	public WeightedPoint getBGCorrectedMedianLROffset(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double[] sourceGain) {
+	public WeightedPoint getBGCorrectedMedianLROffset(final PhaseSet phases, final Collection<APEXContinuumPixel> bgPixels, final double[] sourceGain) {
         WeightedPoint[] points = new WeightedPoint[phases.size()];
         int k=0;
         
@@ -245,7 +245,7 @@ public abstract class APEXPixel extends SingleColorPixel implements PhaseWeighti
 		return dof > 0.0 ? chi2 / dof : Double.NaN;
 	}
 
-	public double getBGCorrectedLRChi2(final PhaseSet phases, final Collection<APEXPixel> bgPixels, final double mean, final double[] sourceGain) {	
+	public double getBGCorrectedLRChi2(final PhaseSet phases, final Collection<APEXContinuumPixel> bgPixels, final double mean, final double[] sourceGain) {	
 		final int N = phases.size();
 		double chi2 = 0.0;
 		int n = 0;

@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 
-public abstract class APEXCamera<ChannelType extends APEXPixel> extends Camera<ChannelType, ChannelType> implements GroundBased {
+public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends Camera<ChannelType, ChannelType> implements GroundBased {
 	/**
 	 * 
 	 */
@@ -51,11 +51,11 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Camera<C
 	public double rotation = 0.0;
 	
 	public APEXCamera(String name, int size) {
-		super(name, new SingleColorArrangement<APEXPixel>(), size);
+		super(name, new SingleColorArrangement<APEXContinuumPixel>(), size);
 	}
 	
 	public APEXCamera(String name) {
-		super(name, new SingleColorArrangement<APEXPixel>());
+		super(name, new SingleColorArrangement<APEXContinuumPixel>());
 	}
 	
 	
@@ -223,9 +223,9 @@ public abstract class APEXCamera<ChannelType extends APEXPixel> extends Camera<C
 		else return super.getSourceModelInstance();
 	}
 	
-	public ArrayList<APEXPixel> getNeighbours(APEXPixel pixel, double radius) {
-		ArrayList<APEXPixel> neighbours = new ArrayList<APEXPixel>();
-		for(APEXPixel p2 : getObservingChannels()) if(p2 != pixel) if(p2.distanceTo(pixel) <= radius) neighbours.add(p2);
+	public ArrayList<APEXContinuumPixel> getNeighbours(APEXContinuumPixel pixel, double radius) {
+		ArrayList<APEXContinuumPixel> neighbours = new ArrayList<APEXContinuumPixel>();
+		for(APEXContinuumPixel p2 : getObservingChannels()) if(p2 != pixel) if(p2.distanceTo(pixel) <= radius) neighbours.add(p2);
 		return neighbours;		
 	}
 	

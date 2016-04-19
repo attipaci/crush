@@ -37,15 +37,16 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 import crush.CRUSH;
+import crush.Channel;
 import crush.GroundBased;
 import crush.Instrument;
+import crush.Pixel;
 import crush.ColorArrangement;
 import crush.Scan;
 import crush.array.Camera;
-import crush.array.SingleColorPixel;
 import jnum.Unit;
 
-public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends Camera<ChannelType, ChannelType> implements GroundBased {
+public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends Channel> extends Camera<PixelType, ChannelType> implements GroundBased {
     /**
      * 
      */
@@ -55,8 +56,7 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
     public SofiaArrayData array;
 
     Vector<String> history = new Vector<String>();
-    // TODO add pixeldata, rcp, pwv data, calibration table, wiring, distortion model, other lookups, etc.
-
+   
     static {
         FitsFactory.setLongStringsEnabled(true);
     }
@@ -73,7 +73,8 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 
     @Override
     public Instrument<ChannelType> copy() {
-        SofiaCamera<ChannelType> copy = (SofiaCamera<ChannelType>) super.copy();
+        @SuppressWarnings("unchecked")
+        SofiaCamera<PixelType, ChannelType> copy = (SofiaCamera<PixelType, ChannelType>) super.copy();
         if(instrumentData != null) copy.instrumentData = instrumentData.copy();
         if(array != null) copy.array = array.copy();
         return copy;
@@ -185,7 +186,7 @@ public abstract class SofiaCamera<ChannelType extends SingleColorPixel> extends 
 
     public double getTotalExposureTime(List<Scan<?,?>> scans) {
         double expTime = 0.0;
-        for(Scan<?,?> scan : scans) expTime += ((SofiaCamera<?>) scan.instrument).instrumentData.exposureTime;
+        for(Scan<?,?> scan : scans) expTime += ((SofiaCamera<?,?>) scan.instrument).instrumentData.exposureTime;
         return expTime;
     }
 

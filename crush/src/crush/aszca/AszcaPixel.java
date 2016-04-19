@@ -32,7 +32,7 @@ import java.util.StringTokenizer;
 
 
 
-public class AszcaPixel extends APEXPixel {
+public class AszcaPixel extends APEXContinuumPixel {
 	/**
 	 * 
 	 */

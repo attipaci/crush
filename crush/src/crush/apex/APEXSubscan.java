@@ -447,7 +447,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 			
 	public void fitsRCP() {
 		System.err.println("   Using RCP data contained in the FITS.");
-		for(APEXPixel pixel : instrument) pixel.position = (Vector2D) pixel.fitsPosition.clone();
+		for(APEXContinuumPixel pixel : instrument) pixel.position = (Vector2D) pixel.fitsPosition.clone();
 	}
 
 	@Override

@@ -27,7 +27,7 @@ import crush.GroundBased;
 import crush.Integration;
 import crush.Scan;
 
-public abstract class SofiaIntegration<InstrumentType extends SofiaCamera<?>, FrameType extends SofiaFrame> 
+public abstract class SofiaIntegration<InstrumentType extends SofiaCamera<?, ?>, FrameType extends SofiaFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased {
 
 	/**

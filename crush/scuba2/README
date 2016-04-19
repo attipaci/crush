@@ -590,6 +590,14 @@ For a general overview of channel divisions, please consult Section 3.
 			decorrelates channels that share a MUX.
 			@See: 'correlated.<?>'
 
+   darkcorrect		@Expert
+			@Since: 2.31
+			Attempt to use dark SQUID data to remove common mode
+			noise on SQUID MUX. In practice, the use of this option
+			may not improve reduction quality, and may in fact
+			degrade it. Therefore, the option is disabled by
+			default.
+
    date=YYYY-MM-DD
    date=YYYYMMDD	Specify the the date of observation for locating scan
 			data. When used together with 'datapath' and scan 

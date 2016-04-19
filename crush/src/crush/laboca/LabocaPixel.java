@@ -32,7 +32,7 @@ import java.util.*;
 
 
 
-public class LabocaPixel extends APEXPixel {
+public class LabocaPixel extends APEXContinuumPixel {
 	
 	/**
 	 * 

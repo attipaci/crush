@@ -24,11 +24,11 @@
 
 package crush.partemis;
 
-import crush.apex.APEXPixel;
+import crush.apex.APEXContinuumPixel;
 import jnum.Unit;
 import jnum.math.Vector2D;
 
-public class PArtemisPixel extends APEXPixel {
+public class PArtemisPixel extends APEXContinuumPixel {
 	/**
 	 * 
 	 */

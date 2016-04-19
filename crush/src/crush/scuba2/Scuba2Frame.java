@@ -34,6 +34,7 @@ public class Scuba2Frame extends HorizontalFrame {
 	
 	public int frameNumber;
 	public float detectorT;
+	public int[][] darkSquid = new int[Scuba2.SUBARRAYS][];  // sub, col
 	
 	public Scuba2Frame(Scuba2Scan parent) {
 		super(parent);
@@ -53,5 +54,8 @@ public class Scuba2Frame extends HorizontalFrame {
 		}
 	}
 	
+	public void setDarkSquid(int subarray, int[] data) {
+	    darkSquid[subarray] = data;
+	}
 	
 }
