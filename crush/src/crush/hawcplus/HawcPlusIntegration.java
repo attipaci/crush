@@ -53,10 +53,11 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	@Override
 	public void setTau() throws Exception {
 		super.setTau();
-		printEquivalentTaus();
+		// TODO printEquivalentTaus();
 	}
 	
 	// TODO
+	/*
 	public void printEquivalentTaus() {
 		System.err.println("   --->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
@@ -64,6 +65,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
 		);		
 	}
+	*/
 	
 	@Override
 	public HawcPlusFrame getFrameInstance() {

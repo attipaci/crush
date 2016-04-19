@@ -144,6 +144,8 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		subarray.scaling = hasOption(subarray.id + ".scale") ? option(subarray.id + ".scale").getDouble() : 1.0;
 		
 		readArrayData((ImageHDU) HDU[0], subarray.channelOffset, (float) subarray.scaling);
+		if(hasOption("darkcorrect")) readDarkSquidData(file.getSubarrayIndex(), getDarkSquidHDU(HDU));
+		
 		subarray.parseFlatcalHDU(getFlatcalHDU(HDU));
 		
 		fits.close();
@@ -172,6 +174,12 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		}.process();
 	}
 	
+	public void readDarkSquidData(int subarrayIndex, BinaryTableHDU hdu) throws FitsException {
+	    int[][] data = (int[][]) hdu.getRow(0)[hdu.findColumn("DATA")];
+	    for(int t=0; t<size(); t++) get(t).setDarkSquid(subarrayIndex, data[t]);
+	}
+	
+	
 	public BinaryTableHDU getJcmtHDU(BasicHDU<?>[] HDU) {
 		for(int i=1; i<HDU.length; i++) {
 			String extName = HDU[i].getHeader().getStringValue("EXTNAME");
@@ -180,12 +188,40 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		return null;		
 	}
 
+	public BinaryTableHDU getDarkSquidHDU(BasicHDU<?>[] HDU) {
+        for(int i=1; i<HDU.length; i++) {
+            String extName = HDU[i].getHeader().getStringValue("EXTNAME");
+            if(extName != null) if(extName.endsWith("DKSQUID.DATA_ARRAY")) return (BinaryTableHDU) HDU[i];
+        }
+        return null;        
+    }
+	
 	public BinaryTableHDU getFlatcalHDU(BasicHDU<?>[] HDU) {
 		for(int i=1; i<HDU.length; i++) {
 			String extName = HDU[i].getHeader().getStringValue("EXTNAME");
 			if(extName != null) if(extName.endsWith("FLATCAL.DATA_ARRAY")) return (BinaryTableHDU) HDU[i];
 		}
 		return null;		
+	}
+	
+	public void darkCorrect() {
+        System.err.println("   Applying dark SQUID correction.");
+        
+        new Fork<Void>() {
+            @Override
+            protected void process(Scuba2Frame frame) {
+                for(Scuba2Pixel pixel : instrument) 
+                    frame.data[pixel.index] -= frame.darkSquid[pixel.subarrayNo][pixel.row % Scuba2.SUBARRAY_ROWS];
+            }
+            
+        }.process();
+    
+    }
+    
+	@Override
+    public void validate() {
+	    if(hasOption("darkcorrect")) darkCorrect();
+	    super.validate();
 	}
 	
 	@Override

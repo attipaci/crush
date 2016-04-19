@@ -40,7 +40,7 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 	public double saturationValue = Double.NaN;
 	public double detectorAngle = Double.NaN;
 	public int averagedFrames = -1;
-	public Vector2D arrayPointingCenter = new Vector2D();	// boresight
+	public Vector2D boresightIndex = new Vector2D();	// boresight
 	public Grid2D<?> grid;									// the WCS coordinate system
 
 	public SofiaArrayData() {}
@@ -59,7 +59,7 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 			copy.subarraySize = new String[subarraySize.length];
 			for(int i=subarraySize.length; --i >= 0; ) copy.subarraySize[i] = new String(subarraySize[i]);
 		}
-		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.copy();
+		if(boresightIndex != null) copy.boresightIndex = (Vector2D) boresightIndex.copy();
 		if(grid != null) copy.grid = grid.copy();	
 		return copy;
 	}
@@ -83,8 +83,8 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 		detectorAngle = header.getDoubleValue("DET_ANGL", Double.NaN);
 		averagedFrames = header.getIntValue("COADDS", -1);
 		
-		arrayPointingCenter.setX(header.getDoubleValue("SIBS_X", Double.NaN));
-		arrayPointingCenter.setY(header.getDoubleValue("SIBS_Y", Double.NaN));
+		boresightIndex.setX(header.getDoubleValue("SIBS_X", Double.NaN));
+		boresightIndex.setY(header.getDoubleValue("SIBS_Y", Double.NaN));
 		
 		if(header.containsKey("CTYPE1") && header.containsKey("CTYPE2")) {
 			try { grid = Grid2D.fromHeader(header, ""); } 
@@ -111,10 +111,10 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 		if(!Double.isNaN(detectorAngle)) cursor.add(new HeaderCard("DET_ANGL", detectorAngle, "(deg) Detector angle wrt North."));
 		if(averagedFrames > 0) cursor.add(new HeaderCard("COADDS", averagedFrames, "Number of raw frames per sample."));
 	
-		if(!Double.isNaN(arrayPointingCenter.x())) cursor.add(new HeaderCard("SIBS_X", arrayPointingCenter.x(), "(pixel) boresight pixel x."));
+		if(!Double.isNaN(boresightIndex.x())) cursor.add(new HeaderCard("SIBS_X", boresightIndex.x(), "(pixel) boresight pixel x."));
 		else cursor.add(new HeaderCard("SIBS_X", SofiaHeaderData.UNKNOWN_FLOAT_VALUE, "Undefined value."));
 		
-		if(!Double.isNaN(arrayPointingCenter.y())) cursor.add(new HeaderCard("SIBS_Y", arrayPointingCenter.y(), "(pixel) boresight pixel y."));
+		if(!Double.isNaN(boresightIndex.y())) cursor.add(new HeaderCard("SIBS_Y", boresightIndex.y(), "(pixel) boresight pixel y."));
 		else cursor.add(new HeaderCard("SIBS_Y", SofiaHeaderData.UNKNOWN_FLOAT_VALUE, "Undefined value."));
 		
 		if(grid != null) grid.editHeader(header, cursor); // TODO...

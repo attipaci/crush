@@ -4,7 +4,7 @@
 			      Attila Kovacs
 		      <attila[AT]submm.caltech.edu>
 
-		       Last updated: 14 April 2015
+		       Last updated: 18 April 2015
 
 
 
@@ -356,6 +356,9 @@ For a general overview of channel divisions, please consult Section 3.
 		may contain correlated signals to themselves, e.g. do to
 		correlated thermal fluctuations on their wafers.
 
+   bias		Groupinf of pixels by TES bias line. Each subarray has 20
+		bias lines, each applied to two consecutive detectors rows.
+
    mux		A grouping of pixels based on their SQUID multiplexing scheme
 		Each 4x8 pixel quadrant of the array is read out through the
 		same SQUID amplifier. Therefore, it is not suprizing that 
@@ -375,16 +378,6 @@ For a general overview of channel divisions, please consult Section 3.
 		via the 'correlated.pins.group' option, or the equivalent
 		'pins.group' shorthand.
 
-   rows		Geometric rows of the array (it has 16 rows and 8 columns).
-		You can also group n rows together for the decorrelation via
-		the 'correlated.rows.group=n' option, or the equivalent
-		'rows.group=n' shorthand.
-
-   cols		Geometric columns of the array (it has 16 rows and 8 columns).
-		You can also group n columns together for the decorrelation via
-		the 'correlated.cols.group=n' option, or the equivalent
-		'cols.group=n' shorthand.
-
 
 
 4.2. Glossary of HAWC+ specific options
@@ -399,17 +392,18 @@ For a general overview of channel divisions, please consult Section 3.
 
 			The above line will report the Gaussian FWHM beam size
 			(in arcsec) used when reducing band A (53um) data.
+   
+   biaslines            @Alias: 'correlated.bias'
+                        @Expert
+                        Decorrelate TES bias lines. All correlated modality 
+			suboptions apply.
+                        @See: 'correlated.<?>'
+
 
    calibrated		Set this option when the reduction includes the final
 			calibration (opacities and other calibration
 			corrections) to produce Level 3 data. Otherwise, CRUSH
 			will produce Level 2 output.
-
-   cols                 @Alias: 'correlated.cols'
-                        @Expert
-                        Decorrelate geometric detector columns. All
-     			correlated modality suboptions apply.
-                        @See: 'correlated.<?>', 'rows'
 
    filter=<wavelength>	@Expert
 			Sets the filter band to one of:
@@ -446,19 +440,6 @@ For a general overview of channel divisions, please consult Section 3.
 			where R and T are perfectly aligned relative to
 			one another, and the two subarrays of each form a 
 			single seamless polarization array.
-
-
-   pcenter=<row>,<col>	@Expert
-			Specify the pointing center as a row,col combination 
-			on the array. There are 16 rows and 8 columns on the 
-			GISMO array, and the numbering starts from 1. Thus, 
-			the geometric center of the array corresponds to 
-			8.5,4.5. This option is not used (ignored) if pixel
-			positions are defined by the 'rcp' option (which is 
-			default). In those cases, the pointing center can be 
-			adjusted via the 'rcp.center' option.
-			@See: 'rcp', 'rcp.center', 'pixelsize', 'rotation'
-
 
    pins			@Alias: 'correlated.pins'
 			@Expert
@@ -503,13 +484,6 @@ For a general overview of channel divisions, please consult Section 3.
    rotation.T=<deg>	@Expert
 			Specify the rotation of the T polarization subarray
 			relative to the R subarray.
-
-   rows                 @Alias: 'correlated.rows'
-                        @Expert
-                        Decorrelate on geometric detector rows. All correlated
-			modality sub-options apply.
-                        @See: 'correlated.<?>', 'cols'
-
 
    subarray=<list>	@Expert
 			Restrict the reduction only to the subarrays listed.

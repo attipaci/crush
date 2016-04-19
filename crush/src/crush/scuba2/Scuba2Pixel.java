@@ -34,7 +34,7 @@ public class Scuba2Pixel extends SingleColorPixel {
 	private static final long serialVersionUID = -638264274147854699L;
 	
 	public int subarrayNo;
-	public int row, col, block=0;
+	public int row, col, block=0;  // row = MUX, col = address line
 	public double subarrayGain = 1.0, rowGain = 1.0, colGain = 1.0;
 	public double he3Gain = 0.0;
 	

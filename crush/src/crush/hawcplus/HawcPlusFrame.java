@@ -80,7 +80,6 @@ public class HawcPlusFrame extends SofiaFrame {
     public void validate() {
         HawcPlus hawc = (HawcPlus) scan.instrument;
 
-        // TODO dark squid removal
         if(hawc.darkSquidCorrection) darkCorrect();
 
         super.validate();

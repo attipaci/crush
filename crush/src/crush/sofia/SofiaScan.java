@@ -37,9 +37,8 @@ import java.io.*;
 import java.text.*;
 import java.util.*;
 
-// TODO aux data in processing history...
 
-public abstract class SofiaScan<InstrumentType extends SofiaCamera<?>, IntegrationType extends SofiaIntegration<InstrumentType, ?>> 
+public abstract class SofiaScan<InstrumentType extends SofiaCamera<?,?>, IntegrationType extends SofiaIntegration<InstrumentType, ?>> 
 extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 	/**
 	 * 

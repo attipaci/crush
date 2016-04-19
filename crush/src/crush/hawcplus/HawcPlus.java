@@ -38,14 +38,12 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
-public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed {
+public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implements GridIndexed {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3009881856872575936L;
 
-
-	private Vector2D boresightIndex; // row, col
 	Vector2D pixelSize;
 	
 	boolean[] hasSubarray;
@@ -54,7 +52,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 	
 	double[] polZoom;
 	
-	double mountOffsetAngle = 0.0; // TODO temporarily until the XML is correct...
+	double mountOffsetAngle = 0.0;  // TODO temporarily until the XML is correct...
 	
 	boolean darkSquidCorrection = false;
 	int[][] darkSquidLookup;       // sub,col
@@ -63,7 +61,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 	
 	public HawcPlus() {
 		super("hawc+", new SingleColorArrangement<HawcPlusPixel>());
-		boresightIndex = (Vector2D) defaultBoresightIndex.clone();
 		mount = Mount.NASMYTH_COROTATING;
 	}
 	
@@ -89,7 +86,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 	public Instrument<HawcPlusPixel> copy() {
 		HawcPlus copy = (HawcPlus) super.copy();
 		
-		if(boresightIndex != null) copy.boresightIndex = (Vector2D) boresightIndex.clone();
 		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
 		
         if(hasSubarray != null) {
@@ -136,7 +132,14 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 		try { addDivision(getDivision("subarrays", HawcPlusPixel.class.getField("sub"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
 		catch(Exception e) { e.printStackTrace(); }	
 				
+		try { addDivision(getDivision("subarrays", HawcPlusPixel.class.getField("sub"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
+        catch(Exception e) { e.printStackTrace(); } 
 		
+		try { addDivision(getDivision("bias", HawcPlusPixel.class.getField("biasLine"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
+        catch(Exception e) { e.printStackTrace(); } 
+		
+		// If correction was applied at validation, then only decorrelate detectors
+		// Otherwise, decorrelate including the dark SQUIDs...
 		int muxSkipFlag = hasOption("darkcorrect") ? Channel.FLAG_DEAD | Channel.FLAG_BLIND : Channel.FLAG_DEAD;
 		
 		try { addDivision(getDivision("mux", HawcPlusPixel.class.getField("mux"), muxSkipFlag)); 
@@ -178,8 +181,16 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
 		try {
+            CorrelatedModality biasMode = new CorrelatedModality("bias", "b", divisions.get("bias"), HawcPlusPixel.class.getField("biasGain"));     
+            //biasMode.solveGains = false;
+            biasMode.setGainFlag(HawcPlusPixel.FLAG_BIAS);
+            addModality(biasMode);
+        }
+        catch(NoSuchFieldException e) { e.printStackTrace(); }  
+		
+		try {
 			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), HawcPlusPixel.class.getField("muxGain"));		
-			muxMode.solveGains = false;
+			//muxMode.solveGains = false;
 			muxMode.setGainFlag(HawcPlusPixel.FLAG_MUX);
 			addModality(muxMode);
 		}
@@ -217,11 +228,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 	@Override
 	public void loadChannelData() {
 		if(hasOption("subarray")) selectSubarrays(option("subarray").getValue());
-		
-		// Update the pointing centers...
-		if(hasOption("pcenter")) boresightIndex = option("pcenter").getVector2D();
-		else boresightIndex = array.arrayPointingCenter;
-		
+			
 		// The subarrays orientations
 		subarrayOrientation = new double[subarrays];
 		subarrayOrientation[R0] = hasOption("rotation.r0") ? option("offset.r0").getDouble() * Unit.deg : 0.0;
@@ -290,7 +297,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 	private void setPixelSize(Vector2D size) {	
 		pixelSize = size;
 		
-		Vector2D center = getPosition(0, boresightIndex.x(), boresightIndex.y());
+		Vector2D center = getPosition(0, array.boresightIndex.x(), array.boresightIndex.y());
 		
 		for(HawcPlusPixel pixel : this) pixel.calcPosition();
 		
@@ -298,14 +305,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 		setReferencePosition(center);
 	}
 	
-	// Calculates the offset of the pointing center from the nominal center of the array
-	@Override
-	public Vector2D getPointingCenterOffset() {
-		Vector2D offset = (Vector2D) boresightIndex.clone();
-		offset.subtract(defaultBoresightIndex);
-		if(hasOption("rotation")) offset.rotate(option("rotation").getDouble() * Unit.deg);
-		return offset;
-	}
 	
 	// TODO (couple to readData()...)
 	/* 
@@ -352,7 +351,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 	}
 		
 	public void parseConfigurationHDU(BinaryTableHDU hdu) {
-	    // TODO see if fluc jumps were enabled (factor 8 in calibration)
+	    // TODO see if flux jumps were enabled (factor 8 in calibration)
 	    
 	    // TODO load and correct for bias
 	    
@@ -371,10 +370,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 		
 		for(int c=0; c<pixels; c++) {
 		    HawcPlusPixel pixel = new HawcPlusPixel(this, c);
-		    if(hasSubarray[pixel.sub]) {
-		        add(pixel);
-		        
-		    }
+		    if(hasSubarray[pixel.sub]) add(pixel);
 		}
 		    
 		if(!hasOption("filter")) getOptions().parseSilent("filter " + instrumentData.wavelength + "um");	
@@ -414,7 +410,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 	    for(HawcPlusPixel pixel : this) if(pixel.isFlagged(Channel.FLAG_BLIND)) darkSquidLookup[pixel.sub][pixel.col] = pixel.index;
 	}
 	
-	// TODO... currently treating all subarrays are non-overlapping -- which is valid for point sources...
+	// TODO... currently treating all subarrays as non-overlapping -- which is valid for point sources...
 	@Override
 	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
 		Camera.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
@@ -556,8 +552,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 	private static int T_ARRAY = 1;
 
 	
-	// array center assuming a 40 x 67 pixel virtual layout...
-    private static Vector2D defaultBoresightIndex = new Vector2D(19.5, 32.5); // row, col
 
 }
 

@@ -1,17 +1,16 @@
 
-2.31-b4 (beta)
+2.31-1 (20 April 2016)
 
 	
 	Overview
 	======================================================================
 	This release fixes a major bug in the accounting of the degrees of
-	freedom (used for getting proper noise weights and uncertainty 
-	estimates). It also fixes a less severe issue with the removal of
-	gradients, and brings LABOCA photometry reductions back from the brink,
-	with a significant improvement on the previous best! 
+	freedom (used in noise weighting). It also fixes a less severe issue 
+	with gradient removal, and brings LABOCA photometry reductions back 
+	from the brink, with a significant improvement on the previous best! 
+        Improved SCUBA-2 configuration, and SHARC-2 reduction.
 	A tweak in noise whitening results in more honest noise estimates
-	when noise whitening is used (you might observe a change in the S/N 
-	compared to before...)
+	(you might observe a change in the S/N compared to before...)
 	Among the new features are an enhanced configuration engine with 
 	improved polling and brand new locks. There are lots of smaller fixes 
 	and improvements, some documentation updates, and changes under the 
@@ -149,14 +148,7 @@
 	range bound -- outlying subscans are skipped, resulting in a more
 	homogeneous chop set.
 
-	[TWEAK] Reporting of pointing offsets made more elegant and universal.
-
-	[TWEAK] {HAWC+} Reduction both in native and horizontal systems. 
-	(in progress...)
-
 	[TWEAK] Cleaner, more versatile, reporting of pointing offsets.
-
-	[TWEAK] Wider use of native coordinates instead of hardcoded horizontal
 
 	[TWEAK] Neighbour despiking domain tweaked to include all flagged 
 	frames.
@@ -166,13 +158,21 @@
 
 	[TWEAK] Neighbour despiking to flag single sample only.
 
+	[CONFIG] {SCUBA-2} decorrelation on rows (SQUID MUXes) is enabled. 
+	(previously only decorrelation on cols -- SQUID address lines was 
+	used).
+
+	[CONFIG] {SCUBA-2} gain flagging ranges for 'rows', 'cols', and 
+	'subarrays' decorrelations changed from -10:10 to 0.1:10, resulting
+	in improved flagging of non-responsive pixels.
+
 	[CONFIG] {SHARC2} 'mux' and 'smileys' decorrelation enabled by 
 	default for 'faint' mode reductions.
 
 	[CONFIG] Re-enabled 'weighting.noiserange' by default with range of
 	0.1:10.0.
 
-	[CONGIG] {LABOCA} Exploring a new paradigm for removing microphonics
+	[CONFIG] {LABOCA} Exploring a new paradigm for removing microphonics
 	on the flexible band cables. Removing 'twisting' modes is now enabled
 	by default, in all modes (except 'bright'). In photometry the cable
 	gains are locked to their nominal values in 'pixel.dat'.
@@ -200,6 +200,8 @@
 	configuration engine is really a standalone piece of software, which 
 	may be (will be!) used outside of the bounds of CRUSH. The separate
 	document makes better sense.
+
+	[CODE] Wider use of native coordinates instead of hardcoded horizontal
 
 	[CODE] CoupledMode moved upstream to Mode from CorrelatedMode. 
 	(And the corresponding move of CoupledModality to Modality...)

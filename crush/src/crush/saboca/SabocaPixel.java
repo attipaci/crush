@@ -25,14 +25,14 @@
 package crush.saboca;
 
 import crush.*;
-import crush.apex.APEXPixel;
+import crush.apex.APEXContinuumPixel;
 import jnum.Util;
 
 import java.util.StringTokenizer;
 
 
 
-public class SabocaPixel extends APEXPixel {
+public class SabocaPixel extends APEXContinuumPixel {
 	/**
 	 * 
 	 */
