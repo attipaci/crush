@@ -30,11 +30,18 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import crush.CRUSH;
 import crush.sofia.SofiaHeaderData;
 import crush.sofia.SofiaScan;
+import jnum.Util;
+import jnum.astro.EquatorialCoordinates;
 
 public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
 	/**
@@ -46,6 +53,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	
 	public HawcPlusScan(HawcPlus instrument) {
 		super(instrument);
+		if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
 	}
 
 	@Override
@@ -56,8 +64,15 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	@Override
 	public void parseHeader(Header header) throws Exception {
 		super.parseHeader(header);
+		
 		priorPipelineStep = SofiaHeaderData.getStringValue(header, "PROCLEVL");
 		isNonSidereal = header.getBooleanValue("NONSIDE", false);
+		
+		// TODO Data without AORs -- should not happen...
+		if(observation.aorID.equals("0")) {
+		    System.err.println(" WARNING! No AOR, will use boresight position as reference.");
+		    equatorial = (EquatorialCoordinates) telescope.boresightEquatorial.copy();   
+		}
 	}
 	
 	@Override
@@ -74,7 +89,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
         for(int i=1; i<HDU.length; i++) if(HDU[i] instanceof BinaryTableHDU) {
             Header header = HDU[i].getHeader();
             String extName = header.getStringValue("EXTNAME");
-            if(extName.equalsIgnoreCase("TIMESTREAM DATA")) dataHDUs.add((BinaryTableHDU) HDU[i]);
+            if(extName.equalsIgnoreCase("Timestream")) dataHDUs.add((BinaryTableHDU) HDU[i]);
         }
         
         HawcPlusIntegration integration = this.getIntegrationInstance();
@@ -86,6 +101,44 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
         
         System.gc();
     }
+	
+	@Override
+    public File getFile(String scanDescriptor) throws FileNotFoundException {
+       
+	    try { return super.getFile(scanDescriptor); }
+	    catch(FileNotFoundException e) { if(!hasOption("date")) throw e; }
+	    
+	    int scanNo = -1;
+	    try { scanNo = Integer.parseInt(scanDescriptor); }
+	    catch(NumberFormatException e) { throw new FileNotFoundException("Cannot find file for: '" + scanDescriptor+ "'"); }
+	        
+	    String path = getDataPath();
+	    
+	    String date = option("date").getValue().replace("-", "");
+	    if(date.length() != 8) throw new FileNotFoundException("Invalid date: " + option("date").getValue());
+	    date = date.substring(2); // YYYYMMDD --> YYMMDD
+	    
+	    // Otherwise, see if anything in the path matches...
+        File root = new File(path);
+        String[] fileName = root.list();
+        
+        if(fileName == null) throw new FileNotFoundException("Incorrect 'datapath'.");
+           
+        String part = "_raw_" + Util.d3.format(scanNo) + ".fits";
+         
+        for(int i=0; i<fileName.length; i++) {
+            String lowerCaseName = fileName[i].toLowerCase();
+            
+            if(lowerCaseName.length() < 20) continue; // Minimum filename is: xYYMMDD_RAW_nnn.fits
+            if(!lowerCaseName.substring(1, 7).equals(date)) continue;
+            if(!lowerCaseName.contains("_haw")) continue;
+            if(!lowerCaseName.contains(part)) continue;
+            
+            return new File(path + fileName[i]);
+        }
+        throw new FileNotFoundException("Cannot find file for: '" + scanDescriptor + "'");
+	   
+    }   
 	
 	
 }

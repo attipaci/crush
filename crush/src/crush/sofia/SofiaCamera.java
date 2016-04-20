@@ -120,7 +120,8 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
 
         array = new SofiaArrayData(header);
 
-        samplingInterval = integrationTime = 1.0 / (header.getDoubleValue("SMPLFREQ", Double.NaN) * Unit.Hz);	
+        samplingInterval = integrationTime = 1.0 / (header.getDoubleValue("SMPLFREQ", Double.NaN) * Unit.Hz);
+        if(samplingInterval < 0.0) samplingInterval = integrationTime = Double.NaN;
     }
 
 

@@ -31,7 +31,6 @@ import crush.Channel;
 import crush.fits.HDUReader;
 import crush.sofia.SofiaChopperData;
 import crush.sofia.SofiaIntegration;
-import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
@@ -73,6 +72,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	}
 	
 	protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {	
+	    
 		int records = 0;
 		for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
 		
@@ -121,19 +121,21 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			// The Sofia timestamp (decimal seconds since 0 UTC 1 Jan 1970...
 			TS = (double[]) table.getColumn(hdu.findColumn("Timestamp"));	
 			SN = (long[]) table.getColumn(hdu.findColumn("FrameCounter"));
-			jump = (short[]) table.getColumn(hdu.findColumn("FluxJumps"));
+			
+			try { jump = (short[]) table.getColumn(hdu.findColumn("FluxJumps")); }
+			catch(ClassCastException e) { System.err.println("   WARNING! unexpected FluxJumps storage format"); }
 			
 			// The R/T array data
 			int iData = hdu.findColumn("SQ1Feedback");
 			DAC = (int[]) table.getColumn(iData);
 			
-			int storeRows = ((long[][]) row[iData]).length;
-			int storeCols = ((long[][]) row[iData])[0].length;
+			int storeRows = ((int[][]) row[iData]).length;
+			int storeCols = ((int[][]) row[iData])[0].length;
 			System.err.println("   FITS has " + storeRows + "x" + storeCols + " arrays.");
 			
 			// HWP may be used in the future if support is extended for
             // scan-mode polarimetry (or polarimetry, in general...
-			HWP = (int[]) table.getColumn(hdu.findColumn("hwpCount"));
+			HWP = (int[]) table.getColumn(hdu.findColumn("hwpCounts"));
             
 			// Ignore coordinate info for 'lab' data...
 			if(isLab) {
@@ -147,7 +149,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
 			if(scan.isNonSidereal) {
 			    objectRA = (double[]) table.getColumn(hdu.findColumn("NonSiderealRA"));
-	            objectDEC = (double[]) table.getColumn(hdu.findColumn("NonSiderealDEC"));
+	            objectDEC = (double[]) table.getColumn(hdu.findColumn("NonSiderealDec"));
 			}
 			
 			// The scanning offsets in the offset system (usually AZ/EL)
@@ -164,7 +166,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			LAT = (double[]) table.getColumn(hdu.findColumn("LAT"));
 
 			chopR = (float[]) table.getColumn(hdu.findColumn("sofiaChopR"));
-			chopR = (float[]) table.getColumn(hdu.findColumn("sofiaChopS"));
+			chopS = (float[]) table.getColumn(hdu.findColumn("sofiaChopS"));
 
 			PWV = (double[]) table.getColumn(hdu.findColumn("PWV"));
 			
@@ -181,7 +183,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 				public void init() {
 					timeStamp = new AstroTime();
 					offset = new Vector2D();
-					objectEq = scan.isNonSidereal ? new EquatorialCoordinates() : (EquatorialCoordinates) scan.equatorial.copy();		
+					objectEq = (EquatorialCoordinates) scan.equatorial.copy();		
 				}
 				
 				@Override
@@ -212,6 +214,12 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					// Below here is telescope data only, which will be ignored for 'lab' mode reductions...
 					// Add the astrometry...
 
+					// If there is no valid astrometry, then skip...
+                    if(Double.isNaN(RA[i])) {
+                        set(startIndex + i, null);
+                        return;
+                    }
+					
                     frame.PWV = PWV[i] * (float) Unit.um;
 					
 					frame.equatorial = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, scan.equatorial.epoch);
@@ -226,7 +234,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					frame.site = new GeodeticCoordinates(LON[i] * Unit.deg, LAT[i] * Unit.deg);    
 							
 					// I  -> T      rot by phi (instrument rotation)
-                    // T' -> E      rot by -theta_ta
+                    // T  -> E      rot by -theta_ta
                     // T  -> H      rot by ROF
                     // H  -> E'     rot by PA
                     // I' -> E      rot by -theta_si
@@ -235,7 +243,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     //
                     //    PA = theta_ta - ROF
                     //
-                    // I -> T -> E': theta_si = phi + theta_ta
+                    // I -> T -> E': theta_si = phi - theta_ta
                     //
                     //    phi = theta_si - theta_ta
 					//
@@ -243,18 +251,15 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					frame.telescopeVPA = tVPA[i] * (float) Unit.deg;
 					frame.chopVPA = cVPA[i] * (float) Unit.deg;
 					
-					// The natural VPA (tEL vs North) is 180-degrees from the TABS VPA (V vs North)...
-					final double natVPA = Math.IEEEremainder((frame.telescopeVPA + Math.PI), Constant.twoPi);
-					
 					// rotation from pixel coordinates to telescope coordinates...
 					// TODO once mount angle in instrument XML is correct, mountOffset should be unnecessary...		
-					frame.setRotation(frame.instrumentVPA - natVPA + hawc.mountOffsetAngle);
+					frame.setRotation(frame.instrumentVPA - frame.telescopeVPA - hawc.mountOffsetAngle);
 					
 					// rotation from telescope coordinates to equatorial.
-                    frame.setParallacticAngle(natVPA);
+                    frame.setParallacticAngle(frame.telescopeVPA);
 				
 					// TODO HWP angle in equatorial... (check sign)
-					frame.hwpAngle += natVPA;
+					frame.hwpAngle += frame.telescopeVPA;
 					
 					// Calculate the scanning offsets...
 					frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(objectEq);
@@ -270,6 +275,12 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					// TODO check sign convention!!!
 					frame.chopperPosition = new Vector2D(chopS[i] * Unit.V, chopR[i] * Unit.V);
 					frame.chopperPosition.scale(SofiaChopperData.volts2Angle);
+					
+					// Rotate the chopper offset into the TA frame...
+					// C -> E' rot by theta_cp
+					// T -> E' rot by theta_ta
+					// C -> T rot by theta_cp - theta_ta
+					frame.chopperPosition.rotate(frame.chopVPA - frame.telescopeVPA);
 
 					frame.horizontalOffset.add(frame.chopperPosition);
 					frame.horizontal.addOffset(frame.chopperPosition);

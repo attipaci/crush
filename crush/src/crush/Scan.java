@@ -138,7 +138,6 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		else if(hasOption("subscans.merge")) mergeIntegrations();
 		
-		
 		isNonSidereal |= hasOption("moving");
 		
 		Frame firstFrame = getFirstIntegration().getFirstFrame();
@@ -159,8 +158,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 
 		    // Calculate apparent and approximate horizontal coordinates.... 
 		    if(apparent == null) calcApparent();
+		    
+		    // TODO below are only for horizontal...
+		    if(Double.isNaN(LST)) LST = 0.5 * (getFirstIntegration().getFirstFrame().LST + getFirstIntegration().getFirstFrame().LST);
 		    if(horizontal == null && site != null) calcHorizontal();
-
 		    if(horizontal != null) System.err.println("   Horizontal: " + horizontal.toString());
 		}
 		
