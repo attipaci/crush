@@ -209,6 +209,13 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
     public void parseHeader(Header header) {
 	    super.parseHeader(header);
 	    
+	    // TODO should not be necessary if the header is proper...
+	    if(Double.isNaN(integrationTime) || integrationTime < 0.0) {
+	        System.err.println(" WARNING! Missing SMPLFREQ. Will assume 200 Hz.");
+	        integrationTime = samplingInterval = 5.0 * Unit.ms;
+	    }
+	    
+	    
 	    hasSubarray = new boolean[subarrays];
 	    
 	    String mceMap = header.getStringValue("MCEMAP");
@@ -220,7 +227,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	                int mce = Integer.parseInt(assignment);
 	                hasSubarray[sub] = mce >= 0;
 	            }
-	            catch(NumberFormatException e) { System.err.println("   WARNING! Invalid MCE assignment: " + assignment);}
+	            catch(NumberFormatException e) { System.err.println(" WARNING! Invalid MCE assignment: " + assignment);}
 	        }       
 	    }   
 	}
@@ -231,10 +238,10 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 			
 		// The subarrays orientations
 		subarrayOrientation = new double[subarrays];
-		subarrayOrientation[R0] = hasOption("rotation.r0") ? option("offset.r0").getDouble() * Unit.deg : 0.0;
-		subarrayOrientation[R1] = hasOption("rotation.r1") ? option("offset.r1").getDouble() * Unit.deg : Math.PI;
-		subarrayOrientation[T0] = hasOption("rotation.t0") ? option("offset.t0").getDouble() * Unit.deg : 0.0;
-		subarrayOrientation[T1] = hasOption("rotation.t1") ? option("offset.t1").getDouble() * Unit.deg : Math.PI;
+		subarrayOrientation[R0] = hasOption("rotation.r0") ? option("rotation.r0").getDouble() * Unit.deg : 0.0;
+		subarrayOrientation[R1] = hasOption("rotation.r1") ? option("rotation.r1").getDouble() * Unit.deg : Math.PI;
+		subarrayOrientation[T0] = hasOption("rotation.t0") ? option("rotation.t0").getDouble() * Unit.deg : 0.0;
+		subarrayOrientation[T1] = hasOption("rotation.t1") ? option("rotation.t1").getDouble() * Unit.deg : Math.PI;
 
 		// The subarray offsets (after rotation, in pixels)
 		subarrayOffset = new Vector2D[subarrays];

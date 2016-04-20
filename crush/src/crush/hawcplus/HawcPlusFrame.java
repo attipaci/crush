@@ -84,6 +84,7 @@ public class HawcPlusFrame extends SofiaFrame {
 
         super.validate();
     }
+    
 
     public void darkCorrect() {
         HawcPlus hawc = (HawcPlus) scan.instrument;
