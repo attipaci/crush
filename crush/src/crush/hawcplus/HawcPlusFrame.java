@@ -40,6 +40,8 @@ public class HawcPlusFrame extends SofiaFrame {
     float hwpAngle;
 
     byte[] jumpCounter;
+    
+    int status;
 
     public HawcPlusFrame(HawcPlusScan parent) {
         super(parent);
@@ -101,8 +103,11 @@ public class HawcPlusFrame extends SofiaFrame {
         offset.rotate(instrumentVPA);
     }
    
-  
     
+    public final static int FITS_FLAG_NORMAL_OBSERVING = 0;
+    public final static int FITS_FLAG_LOS_REWIND = 1;
+    public final static int FITS_FLAG_IVCURVES = 2;
+    public final static int FITS_FLAG_BETWEEN_SCANS = 3;
 
     public final static int FITS_ROWS = 41;
     public final static int FITS_COLS = 128;
