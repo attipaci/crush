@@ -35,8 +35,9 @@ public class HawcPlusPixel extends SingleColorPixel {
 	private static final long serialVersionUID = 5898856651596856837L;
 	public int pol, sub, row, col, mux, pin, biasLine;
 	public int fitsIndex, fitsRow, fitsCol;
+	public boolean hasJumps = false;
 	
-	public double polGain = 1.0, subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0;
+	public double muxGain = 1.0, pinGain = 1.0, biasGain = 1.0;
 	
 	int jumpCounter = 0;
 	
@@ -81,7 +82,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	@Override
 	public String toString() {
-		return super.toString() + "\t" + Util.f3.format(muxGain);
+		return super.toString() + "\t" + Util.f3.format(muxGain) + "\t" + getFixedIndex() + "\t" + sub + "\t" + row + "\t" + col;
 	}
 	
 	@Override
@@ -95,8 +96,8 @@ public class HawcPlusPixel extends SingleColorPixel {
 	    return HawcPlus.polID[pol] + sub + "[" + row + "," + col + "]";
 	}
 	
-	public final static int FLAG_POL = softwareFlags.next('p', "Bad polarray gain").value();
-	public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();
+	//public final static int FLAG_POL = softwareFlags.next('p', "Bad polarray gain").value();
+	//public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();
 	public final static int FLAG_BIAS = softwareFlags.next('b', "Bad TES bias gain").value();
 	public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
 	public final static int FLAG_PIN = softwareFlags.next('#', "Bad MUX sample gain").value();

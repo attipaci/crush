@@ -172,7 +172,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 				i++;
 			}
 			catch(Exception e) {
-				integration.warning("Integration " + integration.getFullID("|") + " validation error. Dropping from set.");
+				integration.warning("Integration " + (i+1) + " validation error (dropping from set):\n   --> " + e.getMessage());
 				integration.warning(e);
 				remove(i); 
 			}

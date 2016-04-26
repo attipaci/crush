@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import nom.tam.fits.Fits;
+import nom.tam.fits.BasicHDU;
 import nom.tam.fits.FitsFactory;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
@@ -104,7 +104,7 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
         registerConfigFile(fileName);
     }
 
-    public abstract void readData(Fits fits) throws Exception;
+    public abstract void readData(BasicHDU<?>[] fits) throws Exception;
 
     @Override
     public String getName() {

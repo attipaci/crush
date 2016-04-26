@@ -25,14 +25,12 @@ package crush.hawcplus;
 
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.BinaryTableHDU;
-import nom.tam.fits.Fits;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,8 +68,8 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 		
 		// TODO Data without AORs -- should not happen...
 		if(observation.aorID.equals("0")) {
-		    System.err.println(" WARNING! No AOR, will use boresight position as reference.");
-		    equatorial = (EquatorialCoordinates) telescope.boresightEquatorial.copy();   
+		    System.err.println(" WARNING! No AOR, will use initial scan position as reference.");
+		    equatorial = null;
 		}
 	}
 	
@@ -82,8 +80,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	}
 
 	@Override
-    public void addIntegrationsFrom(Fits fits) throws Exception {
-        BasicHDU<?>[] HDU = fits.read();
+    public void addIntegrationsFrom(BasicHDU<?>[] HDU) throws Exception {
         ArrayList<BinaryTableHDU> dataHDUs = new ArrayList<BinaryTableHDU>();
         
         for(int i=1; i<HDU.length; i++) if(HDU[i] instanceof BinaryTableHDU) {
@@ -95,11 +92,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
         HawcPlusIntegration integration = this.getIntegrationInstance();
         integration.read(dataHDUs);
         add(integration);
-        
-        try { fits.getStream().close(); }
-        catch(IOException e) {}
-        
-        System.gc();
+      
     }
 	
 	@Override
@@ -139,6 +132,16 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
         throw new FileNotFoundException("Cannot find file for: '" + scanDescriptor + "'");
 	   
     }   
+	
+	@Override
+    public void validate() {
+	    // TODO fix for missing OBSRA/OBSDEC keywords. Should not be needed if header is correct...
+	    if(equatorial == null) {
+	        HawcPlusFrame firstFrame = getFirstIntegration().getFirstFrame();
+	        if(firstFrame.hasTelescopeInfo) equatorial = (EquatorialCoordinates) firstFrame.equatorial.copy();
+	    }
+	    super.validate();
+	}
 	
 	
 }

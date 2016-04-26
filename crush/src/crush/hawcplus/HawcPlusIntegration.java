@@ -103,7 +103,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		private double[] RA, DEC, AZ, EL, iVPA, tVPA, cVPA, LON, LAT, LST, PWV;
 		private double[] objectRA, objectDEC;
 		private float[] chopR, chopS;
-		private int[] HWP;
+		private int[] HWP, statusFlag;
 	
 		private boolean isLab;
 		
@@ -142,6 +142,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			    System.err.println("   Lab mode data reduction. Ignoring telescope data...");
 			    return;
 			}
+			
+			statusFlag = (int[]) table.getColumn(hdu.findColumn("Flag"));
 			
 			// The tracking center in the basis coordinates of the scan (usually RA/DEC)
 			RA = (double[]) table.getColumn(hdu.findColumn("RA"));
@@ -183,7 +185,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 				public void init() {
 					timeStamp = new AstroTime();
 					offset = new Vector2D();
-					objectEq = (EquatorialCoordinates) scan.equatorial.copy();		
+					if(scan.equatorial != null) objectEq = (EquatorialCoordinates) scan.equatorial.copy();		
 				}
 				
 				@Override
@@ -207,6 +209,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                        
                     frame.hwpAngle = (float) (HWP[i] * HawcPlus.hwpStep - hawc.hwpTelescopeVertical);
                     
+                    frame.status = statusFlag[i];
+                    
                     set(startIndex + i, frame);
 					
 					if(!frame.hasTelescopeInfo) return;
@@ -214,6 +218,13 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					// Below here is telescope data only, which will be ignored for 'lab' mode reductions...
 					// Add the astrometry...
 
+					
+					
+					if(frame.status != HawcPlusFrame.FITS_FLAG_NORMAL_OBSERVING) {
+					    set(startIndex + i, null);
+                        return;
+					}
+					
 					// If there is no valid astrometry, then skip...
                     if(Double.isNaN(RA[i])) {
                         set(startIndex + i, null);
@@ -222,7 +233,10 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					
                     frame.PWV = PWV[i] * (float) Unit.um;
 					
-					frame.equatorial = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, scan.equatorial.epoch);
+                    // TODO override bad OBSRA/OBSEC in header. Should not be needed if header is OK...
+                    if(objectEq == null) objectEq = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, CoordinateEpoch.J2000);
+                    
+					frame.equatorial = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, objectEq.epoch);							
 					if(scan.isNonSidereal) objectEq.set(objectRA[i] * Unit.hourAngle, objectDEC[i] * Unit.deg);
 					
 					frame.LST = LST[i] * (float) Unit.hour;
@@ -234,7 +248,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					frame.site = new GeodeticCoordinates(LON[i] * Unit.deg, LAT[i] * Unit.deg);    
 							
 					// I  -> T      rot by phi (instrument rotation)
-                    // T  -> E      rot by -theta_ta
+                    // T' -> E      rot by -theta_ta
                     // T  -> H      rot by ROF
                     // H  -> E'     rot by PA
                     // I' -> E      rot by -theta_si
@@ -269,7 +283,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					    frame.chopperPosition = new Vector2D();
 					    return;
 					}
-					    
 					    
 					// In telescope XEL (phiS), EL (phiR)
 					// TODO check sign convention!!!
@@ -314,6 +327,9 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			};
 		}
 	}	
+	
+	
+
 
 
 	@Override
@@ -335,32 +351,73 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
 	@Override
     public void validate() {
+	    checkJumps();
+	        
 	    super.validate();
+	    
 	    flagJumps = hasOption("flagjumps");
 	}
 	
+	private void checkJumps() {
+	    System.err.print("   Checking for flux jumps... ");
+
+	    final byte[] startCounter = getFirstFrame().jumpCounter;   
+
+	    new Fork<Void>() {        
+	        @Override
+	        protected void process(HawcPlusFrame frame) {
+	            for(int k=startCounter.length; --k >= 0; ) 
+	                if(frame.jumpCounter[k] != startCounter[k]) instrument.get(k).hasJumps = true;
+	        }
+
+	    }.process();
+
+	    int jumpPixels = 0;
+	    for(HawcPlusPixel pixel : instrument) if(pixel.hasJumps) jumpPixels++;
+
+	    System.err.println(jumpPixels > 0 ? "found jump(s) in " + jumpPixels + " pixels." : "All good!");
+	}
+	
+	
 	@Override
     public boolean checkConsistency(final Channel channel, final int from, final int to) {
-	    super.checkConsistency(channel, from, to);
+	    boolean result = super.checkConsistency(channel, from, to);
 	    
-	    if(!flagJumps) return true;
+	    if(!((HawcPlusPixel) channel).hasJumps) return result;
 	    
-	    final byte jumpStart = get(from).jumpCounter[channel.index];
+	    if(!flagJumps) return result;
+	    
+	    boolean isInitialized = false;
+	    byte jumpStart = (byte) 0;
+	    
 	    final int clearFlag = ~HawcPlusFrame.SAMPLE_PHI0_JUMP;
 	    
-	    for(int t=to; --t > from; ) if(get(t).jumpCounter[channel.index] != jumpStart) {
-	        get(t).sampleFlag[channel.index] &= clearFlag;
-	        flagJump(channel, from, to);
-	        return false;
+	    for(int t=to; --t > from; ) {
+	        final HawcPlusFrame exposure = get(t);
+	        if(exposure == null) continue;
+	     
+	        exposure.sampleFlag[channel.index] &= clearFlag;
+	        
+	        if(!isInitialized) {
+	            jumpStart = exposure.jumpCounter[channel.index];
+	            isInitialized = true;
+	        }
+	        
+	        else if(exposure.jumpCounter[channel.index] != jumpStart) {      
+	            flagJump(channel, from, to);
+	            return false;
+	        }
+	     
 	    }
-	   
-	    return true;
+	        
+	    return result;
 	}
+	
+	
 	
 	private void flagJump(final Channel channel, final int from, int to) {
 	    while(--to >= from) get(to).sampleFlag[channel.index] |= HawcPlusFrame.SAMPLE_PHI0_JUMP;
 	}
-	
 	
 	
 }

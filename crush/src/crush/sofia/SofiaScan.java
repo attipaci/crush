@@ -68,8 +68,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 	public SofiaDitheringData dither;
 	public SofiaMappingData mapping;
 	public SofiaScanningData scanning;
-	
-	
+
 	public SofiaScan(InstrumentType instrument) {
 		super(instrument);
 	}
@@ -79,7 +78,15 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
 	@Override
 	public void read(String scanDescriptor, boolean readFully) throws Exception {
-		read(getFits(scanDescriptor), readFully);
+	   
+	    
+	    Fits fits = getFits(scanDescriptor);
+		read(fits.read(), readFully);
+		
+		try { fits.close(); }
+		catch(Exception e) {}	
+		  
+        System.gc();
 	}
 
 	public void parseHeader(Header header) throws Exception {
@@ -326,23 +333,20 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 	}
 	
 	
-	protected void read(Fits fits, boolean readFully) throws Exception {	
-		parseHeader(fits.getHDU(0).getHeader());
+	protected void read(BasicHDU<?>[] hdu, boolean readFully) throws Exception {	
+		parseHeader(hdu[0].getHeader());
 		
-		instrument.readData(fits);
+		instrument.readData(hdu);
 		instrument.validate(this);	
 		clear();
 
-		addIntegrationsFrom(fits);
-		
-		try { fits.getStream().close(); }
-		catch(IOException e) {}
+		addIntegrationsFrom(hdu);
 		
 		instrument.samplingInterval = get(0).instrument.samplingInterval;
 		instrument.integrationTime = get(0).instrument.integrationTime;
 	}
 	
-	public abstract void addIntegrationsFrom(Fits fits) throws Exception;
+	public abstract void addIntegrationsFrom(BasicHDU<?>[] hdu) throws Exception;
     
 
 	@Override

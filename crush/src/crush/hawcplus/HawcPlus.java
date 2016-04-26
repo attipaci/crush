@@ -32,6 +32,7 @@ import crush.array.GridIndexed;
 import crush.array.SingleColorArrangement;
 import crush.sofia.SofiaCamera;
 import jnum.Configurator;
+import jnum.LockedException;
 import jnum.Unit;
 import jnum.io.fits.FitsExtras;
 import jnum.math.Vector2D;
@@ -52,15 +53,18 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	
 	double[] polZoom;
 	
-	double mountOffsetAngle = 0.0;  // TODO temporarily until the XML is correct...
+	double mountOffsetAngle = 0.0;     // TODO temporarily until the XML is correct...
 	
 	boolean darkSquidCorrection = false;
-	int[][] darkSquidLookup;       // sub,col
+	int[][] darkSquidLookup;           // sub,col
+	
+	int[] mceSubarray;                 // subarray assignment for MCE 0-3
+	int[][] detectorBias;              // sub [4], line [20]
 	
 	double hwpTelescopeVertical;
 	
 	public HawcPlus() {
-		super("hawc+", new SingleColorArrangement<HawcPlusPixel>());
+		super("hawc+", new SingleColorArrangement<HawcPlusPixel>(), pixels);
 		mount = Mount.NASMYTH_COROTATING;
 	}
 	
@@ -166,17 +170,12 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	public void initModalities() {
 		super.initModalities();
 		
-		try { 
-			Modality<?> pinMode = new CorrelatedModality("polarrays", "P", divisions.get("polarrays"), HawcPlusPixel.class.getField("polGain")); 
-			pinMode.setGainFlag(HawcPlusPixel.FLAG_POL);
-			addModality(pinMode);
-		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		addModality(modalities.get("obs-channels").new CoupledModality("polarrays", "p", new HawcPlusPolImbalance()));
 		
 		try { 
-			Modality<?> pinMode = new CorrelatedModality("subarrays", "S", divisions.get("subarrays"), HawcPlusPixel.class.getField("subGain")); 
-			pinMode.setGainFlag(HawcPlusPixel.FLAG_SUB);
-			addModality(pinMode);
+			Modality<?> subMode = new CorrelatedModality("subarrays", "s", divisions.get("subarrays"), HawcPlusPixel.class.getField("gain")); 
+			subMode.solveGains = false;
+			addModality(subMode);
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
@@ -219,12 +218,16 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	    hasSubarray = new boolean[subarrays];
 	    
 	    String mceMap = header.getStringValue("MCEMAP");
+	    mceSubarray = new int[4];
+	    Arrays.fill(mceSubarray, -1);
+	    
 	    if(mceMap != null) {
 	        StringTokenizer tokens = new StringTokenizer(mceMap, " \t,;:");
 	        for(int sub=0; sub<subarrays; sub++) if(tokens.hasMoreTokens()) {
 	            String assignment = tokens.nextToken();
 	            try { 
 	                int mce = Integer.parseInt(assignment);
+	                if(mce >= 0) mceSubarray[mce] = sub;
 	                hasSubarray[sub] = mce >= 0;
 	            }
 	            catch(NumberFormatException e) { System.err.println(" WARNING! Invalid MCE assignment: " + assignment);}
@@ -267,7 +270,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		}
 		
 		setPixelSize(pixelSize);
-			
+				
 		// TODO load bias gains? ...
 		
 		super.loadChannelData();
@@ -303,11 +306,18 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	
 	private void setPixelSize(Vector2D size) {	
 		pixelSize = size;
+	
+		System.err.println("   Boresight pixel from FITS is " + array.boresightIndex);
 		
+		if(hasOption("pcenter")) {
+		    array.boresightIndex = option("pcenter").getVector2D();	
+		    System.err.println("   Boresight override --> " + array.boresightIndex);
+		}
 		Vector2D center = getPosition(0, array.boresightIndex.x(), array.boresightIndex.y());
 		
-		for(HawcPlusPixel pixel : this) pixel.calcPosition();
 		
+		for(HawcPlusPixel pixel : this) pixel.calcPosition();
+		   
 		// Set the pointing center...
 		setReferencePosition(center);
 	}
@@ -341,7 +351,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	
 	@Override
 	public String getChannelDataHeader() {
-		return super.getChannelDataHeader() + "\tGmux";
+		return super.getChannelDataHeader() + "\tGmux\tidx\tsub\trow\tcol";
 	}
 	
 	@Override
@@ -353,15 +363,42 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	}
 
 	@Override
-	public void readData(Fits fits) throws Exception {
-		// TODO Auto-generated method stub
+	public void readData(BasicHDU<?>[] hdu) throws Exception {      
+		for(int i=1; i<hdu.length; i++) {
+		    String extName = hdu[i].getHeader().getStringValue("EXTNAME").toLowerCase(); 
+		    if(extName.equals("configuration")) parseConfigurationHDU(hdu[i]);
+		}
 	}
 		
-	public void parseConfigurationHDU(BinaryTableHDU hdu) {
-	    // TODO see if flux jumps were enabled (factor 8 in calibration)
+	private void parseConfigurationHDU(BasicHDU<?> hdu) {
+	    System.err.print(" Parsing HAWC+ TES bias. ");
+	   	   
+	    Header header = hdu.getHeader();
 	    
-	    // TODO load and correct for bias
+	    detectorBias = new int[subarrays][MCE_BIAS_LINES];
 	    
+	    int found = 0;
+	    for(int mce=0; mce < subarrays; mce++) {
+	        String key = "HIERARCH.MCE" + mce + "_TES_BIAS";
+	        String values = header.getStringValue(key);
+	        if(values != null) {
+	            parseTESBias(mceSubarray[mce], values);
+	            found++;
+	        }
+	    }
+	    
+	    System.err.println("Found for " + found + " MCEs.");
+	}
+	
+	private void parseTESBias(int sub, String values) {	    
+	    StringTokenizer tokens = new StringTokenizer(values, ", \t;");
+	    for(int i=0; i<20; i++) {
+	        if(!tokens.hasMoreTokens()) {
+	            System.err.println(" WARNING! Missing TES bias values for subarray " + sub);
+	            break;
+	        }
+	        detectorBias[sub][i] = Integer.parseInt(tokens.nextToken());
+	    }
 	}
 	
 	@Override
@@ -371,7 +408,16 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		darkSquidCorrection = hasOption("darkcorrect");
 		
 		int nSub = 0;
-		for(int i=subarrays; --i >= 0; ) if(hasSubarray[i]) nSub++;
+		int polMask = 0;
+		for(int i=subarrays; --i >= 0; ) {
+		    polMask |= (i+1) & 2;
+		    if(hasSubarray[i]) nSub++;
+		}
+		
+		if(polMask != 3) {
+		    try { getOptions().blacklist("correlated.polarrays"); }
+		    catch(LockedException e) {}
+		}
 		
 		ensureCapacity(nSub * subarrayPixels);
 		
@@ -445,35 +491,35 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	 * @throws IOException
 	 * @throws FitsException
 	 */
-	public void writeFlatfield(String fileName) throws IOException, FitsException {
-		final int cols = cols();
-		
+	public void writeFlatfield(String fileName) throws IOException, FitsException {	
 		final int FLAG_R = 1;
 		final int FLAG_T = 2;
 		
-		final float[][] gainR = new float[rows][cols];
-		final float[][] gainT = new float[rows][cols];
-		final int[][] flagR = new int[rows][cols];
-		final int[][] flagT = new int[rows][cols];
+		final float[][] gainR = new float[rows][polCols];
+		final float[][] gainT = new float[rows][polCols];
+		final int[][] flagR = new int[rows][polCols];
+		final int[][] flagT = new int[rows][polCols];
 		
 		// By default flag all pixels, then unflag as appropriate.
 		for(int i=rows; --i >= 0; ) {
 			Arrays.fill(flagR[i], FLAG_R);
 			Arrays.fill(flagT[i], FLAG_T);
-			Arrays.fill(gainR[i], Float.NaN);
-			Arrays.fill(gainT[i], Float.NaN);
+			Arrays.fill(gainR[i], 1.0F);
+			Arrays.fill(gainT[i], 1.0F);
 		}
 		
 		for(HawcPlusPixel pixel : this) {
 		    float iG = (float)(1.0 / (pixel.gain * pixel.coupling));
 		    
+		    int col = (pixel.sub & 1) * HawcPlus.subarrayCols + pixel.col;
+		    
 			if(pixel.pol == T_ARRAY) {
-				gainT[pixel.row][pixel.col] = iG;
-				if(pixel.isUnflagged()) flagT[pixel.row][pixel.col] = 0; 
+				gainT[pixel.row][col] = iG;
+				if(pixel.isUnflagged()) flagT[pixel.row][col] = 0; 
 			}
 			else if(pixel.pol == R_ARRAY) {
-				gainR[pixel.row][pixel.col] = iG;
-				if(pixel.isUnflagged()) flagR[pixel.row][pixel.col] = 0; 
+				gainR[pixel.row][col] = iG;
+				if(pixel.isUnflagged()) flagR[pixel.row][col] = 0; 
 			}
 		}
 		
@@ -495,8 +541,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		editHeader(hdu.getHeader(), hdu.getHeader().iterator());
 		fits.addHDU(hdu);
 	}
-	
-	
 	
 	@Override
     public void error(String message) {
@@ -543,6 +587,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	final static int pixels = polArrays * polArrayPixels;
 	
 	final static int DARK_SQUID_ROW = rows - 1;
+	
+	final static int MCE_BIAS_LINES = 20;
 		
     static int R0 = 0;
     static int R1 = 1;
@@ -555,8 +601,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	
 	private static DRPMessenger drp;
 	
-	private static int R_ARRAY = 0;
-	private static int T_ARRAY = 1;
+	private static final int R_ARRAY = 0;
+	private static final int T_ARRAY = 1;
 
 	
 

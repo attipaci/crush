@@ -43,7 +43,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.31
+ * @version 2.32
  * 
  */
 public class CRUSH extends Configurator {
@@ -52,8 +52,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 
-	private static String version = "2.31-1";
-	private static String revision = "";
+	private static String version = "2.32-a1";
+	private static String revision = "devel.2";
 	
 	public static String workPath = ".";
 	public static String home = ".";
@@ -77,6 +77,7 @@ public class CRUSH extends Configurator {
 
 	static { 
 		Locale.setDefault(Locale.US);
+		FitsFactory.setUseHierarch(true);
 		FitsFactory.setLongStringsEnabled(true);		
 	}
 
@@ -437,6 +438,7 @@ public class CRUSH extends Configurator {
 				System.err.println("     scans together, if there is a way to fit them into memory.");
 				System.err.println();
 			}
+			
 			exit(1);				
 		}
 		catch(UnsupportedScanException e) {
