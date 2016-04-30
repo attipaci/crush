@@ -1,4 +1,6 @@
+>> out of range map indices (independently from 'perimeter')
 >> covariance race condition...
+>> 'perimeter = auto'
 
 
 
@@ -8,6 +10,10 @@
 	as pixels got flagged/unflagged. Fixed.	
 
 	[CODE] Faster map index lookup.
+
+	[CODE] Map sizing has been slightly tweaked. Should be more robust and
+	a little more generalized for different source map classes...
+
 
 
 2.31-1 (20 April 2016)

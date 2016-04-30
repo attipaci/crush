@@ -39,7 +39,6 @@ import crush.CRUSH;
 import crush.sofia.SofiaHeaderData;
 import crush.sofia.SofiaScan;
 import jnum.Util;
-import jnum.astro.EquatorialCoordinates;
 
 public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
 	/**

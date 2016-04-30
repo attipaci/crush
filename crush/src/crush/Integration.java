@@ -2661,7 +2661,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(hasOption("write.signals")) for(Mode mode : signals.keySet()) {
 			try { 
-				PrintStream out = new PrintStream(new FileOutputStream(mode.name + ".tms"));
+				PrintStream out = new PrintStream(new FileOutputStream(CRUSH.workPath + File.separator + mode.name + ".tms"));
 				signals.get(mode).print(out);
 				System.err.println("Written " + mode.name + ".tms");
 				out.close();
