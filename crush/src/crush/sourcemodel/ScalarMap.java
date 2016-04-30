@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 import crush.*;
 import crush.astro.AstroMap;
 import jnum.Configurator;
+import jnum.ExtraMath;
 import jnum.LockedException;
 import jnum.Parallel;
 import jnum.Unit;
@@ -62,7 +63,8 @@ public class ScalarMap extends SourceMap {
 	protected Data2D base; 
 	private boolean[][] mask;
 	
-		
+	private int indexShiftX, indexMaskY;
+	
 	public boolean enableWeighting = true;
 	public boolean enableLevel = true;
 	public boolean enableBias = true;	
@@ -187,7 +189,7 @@ public class ScalarMap extends SourceMap {
 		// Make the reference fall on pixel boundaries.
 		map.getGrid().refIndex.setX(0.5 - Math.rint(xRange.min()/gridSize.x()));
 		map.getGrid().refIndex.setY(0.5 - Math.rint(yRange.min()/gridSize.y()));
-			
+		
 		map.printShortInfo();
 			
 		base = new Data2D(map.sizeX(), map.sizeY());
@@ -675,29 +677,45 @@ public class ScalarMap extends SourceMap {
 	public final void getIndex(final Frame exposure, final Pixel pixel, final AstroProjector projector, final Index2D index) {
 		if(exposure.sourceIndex == null) {
 			exposure.project(pixel.getPosition(), projector);
-			map.getIndex(projector.offset, index);
+			map.getIndex(projector.offset, index);	
 		}
 		else {
 			final int linearIndex = exposure.sourceIndex[pixel.getIndex()];
-			index.set(linearIndex % map.sizeX(), linearIndex / map.sizeX());
+			index.set(linearIndex >>> indexShiftX, linearIndex & indexMaskY);
+		}
+		
+		if(CRUSH.debug) {
+		    if(index.i() < 0 || index.i() >= map.sizeX() || index.j() < 0 || index.j() >= map.sizeY()) {
+		        System.err.println("!!! invalid map index pixel " + pixel.getID() + " frame " + exposure.index + ": " +
+		                (exposure.sourceIndex == null ? 
+		                        index : 
+		                        exposure.sourceIndex[pixel.getIndex()]
+		                )
+		        );
+		        index.set(0, 0);
+		    }
 		}
 	}
 	
 	
 	public void createLookup(Integration<?,?> integration) {	
-		final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
+	    final Instrument<?> instrument = integration.instrument;
+		final List<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
 		final int n = integration.instrument.getPixelCount();
+		
+		if(CRUSH.debug) System.err.println("### lookup.pixels " + pixels.size() + " : " + integration.instrument.size());
+		
+		indexShiftX = ExtraMath.log2ceil(map.sizeY());
+		indexMaskY = (1<<indexShiftX) - 1;
 		
 		integration.new Fork<Void>() {
 			private AstroProjector projector;
-			private Vector2D offset;
 			private Index2D index;
 			
 			@Override
 			protected void init() {
 				super.init();
 				projector = new AstroProjector(getProjection());
-				offset = projector.offset;
 				index = new Index2D();
 			}
 			
@@ -705,10 +723,26 @@ public class ScalarMap extends SourceMap {
 			protected void process(Frame exposure) {
 				exposure.sourceIndex = new int[n];
 				
+				if(CRUSH.debug) Arrays.fill(exposure.sourceIndex, -1);
+				
 				for(final Pixel pixel : pixels) {
 					exposure.project(pixel.getPosition(), projector);
-					map.getIndex(offset, index);		
-					exposure.sourceIndex[pixel.getIndex()] = map.sizeX() * index.j() + index.i();
+					map.getIndex(projector.offset, index);
+					
+					if(CRUSH.debug) {
+			            if(index.i() < 0 || index.i() >= map.sizeX() || index.j() < 0 || index.j() >= map.sizeY()) {
+			                System.err.println("!!! invalid map index pixel " + pixel.getID() + " frame " + exposure.index + ": " +
+			                        (exposure.sourceIndex == null ? 
+			                                index : 
+			                                exposure.sourceIndex[pixel.getIndex()]
+			                        )
+			                );
+			                index.set(0, 0);
+			            }
+			        }
+					
+					
+					exposure.sourceIndex[pixel.getIndex()] = (index.i() << indexShiftX) | index.j();
 				}
 			}
 			

@@ -150,6 +150,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
 
         for(int i=size(); --i >= 0; ) {
             Channel channel = get(i);
+            
             switch(criterion) {
             case DISCARD_ANY_FLAG:
                 if(channel.isFlagged(flagPattern)) remove(i); break; 

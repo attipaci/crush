@@ -33,7 +33,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	 * 
 	 */
 	private static final long serialVersionUID = 5898856651596856837L;
-	public int pol, sub, row, col, mux, pin, biasLine;
+	public int pol, sub, subrow, col, mux, row, biasLine;
 	public int fitsIndex, fitsRow, fitsCol;
 	public boolean hasJumps = false;
 	
@@ -44,27 +44,26 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public HawcPlusPixel(HawcPlus array, int zeroIndex) {
 		super(array, zeroIndex);
 		
+		col = zeroIndex % HawcPlus.subarrayCols;
+		row = zeroIndex / HawcPlus.subarrayCols;
 		sub = zeroIndex / HawcPlus.subarrayPixels;
 		pol = (sub>>1);
 		
-		pin = zeroIndex / HawcPlus.subarrayCols;
-		fitsRow = row = pin % HawcPlus.rows;
+		fitsRow = subrow = row % HawcPlus.rows;
+		biasLine = row >> 1;
 		
-		biasLine = pin >> 1;
-		
-		col = zeroIndex % HawcPlus.subarrayCols;
 		fitsCol = mux = sub * HawcPlus.subarrayCols + col;
 		
 		fitsIndex = fitsRow * HawcPlusFrame.FITS_COLS + fitsCol;
 		
 		// Flag the dark squids as such...
-		if(row == HawcPlus.DARK_SQUID_ROW) flag(FLAG_BLIND);
-
+		if(subrow == HawcPlus.DARK_SQUID_ROW) flag(FLAG_BLIND);
 	}
 	
 
 	public void calcPosition() {
-		position = ((HawcPlus) instrument).getPosition(sub, row, col);
+	    if(isFlagged(FLAG_BLIND)) position = null;
+	    position = ((HawcPlus) instrument).getPosition(sub, subrow, col);
 	}
 		
 	@Override
@@ -82,7 +81,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	@Override
 	public String toString() {
-		return super.toString() + "\t" + Util.f3.format(muxGain) + "\t" + getFixedIndex() + "\t" + sub + "\t" + row + "\t" + col;
+		return super.toString() + "\t" + Util.f3.format(muxGain) + "\t" + getFixedIndex() + "\t" + sub + "\t" + subrow + "\t" + col;
 	}
 	
 	@Override
@@ -93,13 +92,13 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	@Override
     public String getID() {
-	    return HawcPlus.polID[pol] + sub + "[" + row + "," + col + "]";
+	    return HawcPlus.polID[pol] + sub + "[" + subrow + "," + col + "]";
 	}
 	
 	//public final static int FLAG_POL = softwareFlags.next('p', "Bad polarray gain").value();
 	//public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();
 	public final static int FLAG_BIAS = softwareFlags.next('b', "Bad TES bias gain").value();
 	public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
-	public final static int FLAG_PIN = softwareFlags.next('#', "Bad MUX sample gain").value();
+	public final static int FLAG_ROW = softwareFlags.next('#', "Bad MUX sample gain").value();
 
 }

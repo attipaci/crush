@@ -78,7 +78,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		
 		System.err.println(" Processing scan data:");
 		System.err.println("   Reading " + records + " frames from " + dataHDUs.size() + " HDU(s).");
-		System.err.println("   Sampling at " + Util.f1.format(instrument.integrationTime / Unit.ms) + " ms ---> " 
+		System.err.println("   Sampling at " + Util.f2.format(1.0 / instrument.integrationTime) + " Hz ---> " 
 				+ Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
 			
 		clear();
@@ -100,11 +100,11 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		private int[] DAC;
 		private short[] jump;
 		private double[] TS; 
-		private double[] RA, DEC, AZ, EL, iVPA, tVPA, cVPA, LON, LAT, LST, PWV;
+		private double[] RA, DEC, iVPA, tVPA, cVPA, LON, LAT, LST, PWV;
 		private double[] objectRA, objectDEC;
 		private float[] chopR, chopS;
 		private int[] HWP, statusFlag;
-	
+		
 		private boolean isLab;
 		
 		private final HawcPlusScan hawcPlusScan = (HawcPlusScan) scan;
@@ -145,19 +145,37 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			
 			statusFlag = (int[]) table.getColumn(hdu.findColumn("Flag"));
 			
+			
+			//AZ = (double[]) table.getColumn(hdu.findColumn("AZ"));
+            //EL = (double[]) table.getColumn(hdu.findColumn("EL"));
+			
+			
 			// The tracking center in the basis coordinates of the scan (usually RA/DEC)
 			RA = (double[]) table.getColumn(hdu.findColumn("RA"));
 			DEC = (double[]) table.getColumn(hdu.findColumn("DEC"));
 
+	
 			if(scan.isNonSidereal) {
 			    objectRA = (double[]) table.getColumn(hdu.findColumn("NonSiderealRA"));
 	            objectDEC = (double[]) table.getColumn(hdu.findColumn("NonSiderealDec"));
 			}
 			
-			// The scanning offsets in the offset system (usually AZ/EL)
-			AZ = (double[]) table.getColumn(hdu.findColumn("AZ"));
-			EL = (double[]) table.getColumn(hdu.findColumn("EL"));
-
+			// TODO should not be needed if data is proper
+			// Check that:
+			//   * OBJRA and OBJDEC set correctly
+			//   * NonSiderealRA and NonSiderealDEC columns are filled.
+			for(int i=0; i<RA.length; i++) if(!Double.isNaN(RA[i])) {
+			    if(scan.equatorial == null) 
+			        scan.equatorial = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, CoordinateEpoch.J2000);
+			   
+			    if(objectRA != null) if(Double.isNaN(objectRA[i])) {
+			        objectRA = objectDEC = null;
+			        scan.isNonSidereal = false;
+			    }
+			    
+			    break;
+			}
+				
 			LST = (double[]) table.getColumn(hdu.findColumn("LST"));
 
 			iVPA = (double[]) table.getColumn(hdu.findColumn("SIBS_VPA"));
@@ -166,7 +184,13 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
 			LON = (double[]) table.getColumn(hdu.findColumn("LON"));
 			LAT = (double[]) table.getColumn(hdu.findColumn("LAT"));
-
+			
+			// Interpolate between NaN values...
+			int gaps = fillGaps(LON);
+			fillGaps(LAT);
+			System.err.println("   Gaps in LAT/LON data: " + gaps);
+			
+			
 			chopR = (float[]) table.getColumn(hdu.findColumn("sofiaChopR"));
 			chopS = (float[]) table.getColumn(hdu.findColumn("sofiaChopS"));
 
@@ -178,21 +202,19 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		public Reader getReader() {
 			return new Reader() {	
 				private AstroTime timeStamp;
-				private EquatorialCoordinates objectEq;
+				private EquatorialCoordinates objectEq, apparent;
 				private Vector2D offset;
 				
 				@Override
 				public void init() {
 					timeStamp = new AstroTime();
-					offset = new Vector2D();
+					offset = new Vector2D();	
+					apparent = new EquatorialCoordinates();
 					if(scan.equatorial != null) objectEq = (EquatorialCoordinates) scan.equatorial.copy();		
 				}
 				
-				@Override
-				public void processRow(int i) {
-					// TODO may not be needed...
-				    set(startIndex + i, null);
-				    
+ 				@Override
+				public void processRow(int i) {	 
 				    HawcPlus hawc = (HawcPlus) scan.instrument;
 										
 					// Create the frame object only if it cleared the above hurdles...
@@ -219,7 +241,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					// Add the astrometry...
 
 					
-					
+					// Skip data that is not normal observing
 					if(frame.status != HawcPlusFrame.FITS_FLAG_NORMAL_OBSERVING) {
 					    set(startIndex + i, null);
                         return;
@@ -231,22 +253,26 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                         return;
                     }
 					
-                    frame.PWV = PWV[i] * (float) Unit.um;
-					
-                    // TODO override bad OBSRA/OBSEC in header. Should not be needed if header is OK...
-                    if(objectEq == null) objectEq = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, CoordinateEpoch.J2000);
+                    frame.PWV = PWV[i] * (float) Unit.um; 
                     
-					frame.equatorial = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, objectEq.epoch);							
+                    frame.site = new GeodeticCoordinates(LON[i] * Unit.deg, LAT[i] * Unit.deg);  
+                    frame.LST = LST[i] * (float) Unit.hour;
+                    
+                    frame.equatorial = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, objectEq.epoch);							
 					if(scan.isNonSidereal) objectEq.set(objectRA[i] * Unit.hourAngle, objectDEC[i] * Unit.deg);
-					
-					frame.LST = LST[i] * (float) Unit.hour;
-					frame.horizontal = new HorizontalCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
+				
+					// Calculate AZ/EL -- the values in the table are noisy aircraft values...
+					apparent.copy(frame.equatorial);
+					scan.toApparent.precess(apparent);
+					frame.horizontal = apparent.toHorizontal(frame.site, frame.LST);
+					//frame.horizontal = new HorizontalCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
 					
 					// TODO use actual telescope XEL, EL...
-					frame.telescopeCoords = new TelescopeCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
+					frame.telescopeCoords = new TelescopeCoordinates();
+					frame.telescopeCoords.copy(frame.horizontal);
 					
-					frame.site = new GeodeticCoordinates(LON[i] * Unit.deg, LAT[i] * Unit.deg);    
-							
+                    //frame.telescopeCoords = new TelescopeCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
+                    
 					// I  -> T      rot by phi (instrument rotation)
                     // T' -> E      rot by -theta_ta
                     // T  -> H      rot by ROF
@@ -265,9 +291,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					frame.telescopeVPA = tVPA[i] * (float) Unit.deg;
 					frame.chopVPA = cVPA[i] * (float) Unit.deg;
 					
-					// rotation from pixel coordinates to telescope coordinates...
-					// TODO once mount angle in instrument XML is correct, mountOffset should be unnecessary...		
-					frame.setRotation(frame.instrumentVPA - frame.telescopeVPA - hawc.mountOffsetAngle);
+					// rotation from pixel coordinates to telescope coordinates...	
+					frame.setRotation(frame.instrumentVPA - frame.telescopeVPA);
 					
 					// rotation from telescope coordinates to equatorial.
                     frame.setParallacticAngle(frame.telescopeVPA);
@@ -284,6 +309,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					    return;
 					}
 					    
+					
 					// In telescope XEL (phiS), EL (phiR)
 					// TODO check sign convention!!!
 					frame.chopperPosition = new Vector2D(chopS[i] * Unit.V, chopR[i] * Unit.V);
@@ -301,6 +327,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 					offset.copy(frame.chopperPosition);
 					frame.horizontalToNativeEquatorial(offset);
 					frame.equatorial.addNativeOffset(offset);
+                    
 
 					// TODO it is possible that chopper is in phi_R, phi_S (which is oriented like EQ)
 					// and that the chop VPA is 90 deg different from tel VPA... (check!)
@@ -419,5 +446,37 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	    while(--to >= from) get(to).sampleFlag[channel.index] |= HawcPlusFrame.SAMPLE_PHI0_JUMP;
 	}
 	
+	
+	// TODO fill gaps in position data, if any...
+	private int fillGaps(double[] x) {   
+	    int from = 0;
+	    int gaps = 0;
+	    
+	    while(from < x.length-1) {
+	        // Skip over valid points until a gap is found...
+	        while(!Double.isNaN(x[from]) && from < x.length-1) from++;
+	        
+	        // Find the next valid point after the gap...
+	        int to = from;
+	        while(Double.isNaN(x[to]) && to < x.length-1) to++;
+
+	        if(to >= x.length) return gaps;
+
+	        gaps++;
+	        
+	        double last = x[from];
+	        double delta = (x[to] - x[from]) / (to - from);
+
+	        for(int i=from+1; i<to; i++) {
+	            last += delta;
+	            x[i] = last;
+	        }
+
+	        from = to;
+	    }
+	        
+	    return gaps;
+	
+	}
 	
 }

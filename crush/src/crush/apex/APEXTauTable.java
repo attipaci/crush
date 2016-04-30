@@ -28,6 +28,7 @@ import java.util.*;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
+import jnum.data.LinearLocality;
 import jnum.data.LocalAverage;
 import jnum.data.Locality;
 import jnum.data.LocalizedData;
@@ -106,27 +107,13 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 		return mean.tau.value();
 	}
 	
-	class TimeStamp extends Locality {
-		double MJD;
+	class TimeStamp extends LinearLocality {
 		
-		public TimeStamp(double MJD) { this.MJD = MJD; }
+		public TimeStamp(double MJD) { super(MJD); }
 		
 		@Override
 		public double distanceTo(Locality other) {
-			return(Math.abs((((TimeStamp) other).MJD - MJD) * Unit.day / timeWindow));
-		}
-
-		@Override
-		public int compareTo(Locality o) {
-			return Double.compare(MJD, ((TimeStamp) o).MJD);
-		}
-		
-		@Override
-		public String toString() { return Double.toString(MJD); }
-
-		@Override
-		public double sortingDistanceTo(Locality other) {
-			return distanceTo(other);
+			return super.distanceTo(other) * Unit.day / Math.abs(timeWindow);
 		}
 	}
 

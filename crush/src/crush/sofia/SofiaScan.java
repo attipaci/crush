@@ -112,6 +112,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 		AstroTime time = new AstroTime();
 		time.parseFitsTimeStamp(timeStamp);
 		setMJD(time.getMJD());	
+		calcPrecessions(CoordinateEpoch.J2000);
 		
 		checksum = SofiaHeaderData.getStringValue(header, "DATASUM");				// not in 3.0
 		checksumVersion = SofiaHeaderData.getStringValue(header, "CHECKVER");		// not in 3.0
@@ -138,9 +139,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 		if(!hasOption("tau.pwv")) instrument.getOptions().parse("tau.pwv " + environment.pwv.midPoint());
 		
 		aircraft = new SofiaAircraftData(header);
-		// Calculate the mean geodetic site of the observation
-		site = new GeodeticCoordinates(aircraft.longitude.midPoint(), aircraft.latitude.midPoint());
-		
+			
 		telescope = new SofiaTelescopeData(header);
 		equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();	
 		calcPrecessions(telescope.requestedEquatorial.epoch);
@@ -287,21 +286,32 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 	
 	@Override
 	public void validate() {
+	    if(!hasOption("lab")) {
+	        SofiaFrame first = getFirstIntegration().getFirstFrame();
+	        SofiaFrame last = getLastIntegration().getLastFrame();
 	      
+	        System.err.println(" Mean telescope VPA is " + Util.f1.format(getTelescopeVPA() / Unit.deg) + " deg.");  
+        
+            horizontal = new HorizontalCoordinates(
+                    0.5 * (first.horizontal.x() + last.horizontal.x()),
+                    0.5 * (first.horizontal.y() + last.horizontal.y())
+            );
+           
+	        telescopeCoordinates = new TelescopeCoordinates(
+	                0.5 * (first.telescopeCoords.longitude() + last.telescopeCoords.longitude()),
+	                0.5 * (first.telescopeCoords.latitude() + last.telescopeCoords.latitude())
+	        );
+	        System.err.println(" Telescope Assembly: " + telescopeCoordinates.toString(2));  
+	    
+	        site = new GeodeticCoordinates(
+                    0.5 * (first.site.x() + last.site.x()), 
+                    0.5 * (first.site.y() + last.site.y())
+            );
+	        System.err.println(" Location: " + site.toString(2));
+	        
+	    }
+	    
 		super.validate();
-		
-		if(hasOption("lab")) return;
-		
-		System.err.println(" Mean telescope VPA is " + Util.f1.format(getTelescopeVPA() / Unit.deg) + " deg.");  
-		
-		SofiaFrame first = getFirstIntegration().getFirstFrame();
-		SofiaFrame last = getLastIntegration().getLastFrame();
-		
-		telescopeCoordinates = new TelescopeCoordinates(
-		        0.5 * (first.telescopeCoords.longitude() + last.telescopeCoords.longitude()),
-		        0.5 * (first.telescopeCoords.latitude() + last.telescopeCoords.latitude())
-		);
-		System.err.println(" Telescope Assembly: " + telescopeCoordinates.toString(1));
 		 
 	}
 	

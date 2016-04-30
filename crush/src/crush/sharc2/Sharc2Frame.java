@@ -37,7 +37,7 @@ public class Sharc2Frame extends HorizontalFrame {
 	
 	public Sharc2Frame(Sharc2Scan parent) {
 		super(parent);
-		setSize(Sharc2.pixels);
+		create(Sharc2.pixels);
 	}
 	
 	public void parseData(float[][] value) {

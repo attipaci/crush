@@ -76,7 +76,7 @@ public class GenericInstrument extends Instrument<Channel> {
 	}
 
 	@Override
-	public List<? extends Pixel> getMappingPixels() {
+	public List<? extends Pixel> getMappingPixels(int keepFlags) {
 		return null;
 	}
 

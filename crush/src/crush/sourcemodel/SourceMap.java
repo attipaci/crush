@@ -166,7 +166,8 @@ public abstract class SourceMap extends SourceModel {
 	
 	
 	private void flagOutside(final Integration<?,?> integration, final Vector2D fixedSize) {
-		final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
+	    final Instrument<?> instrument = integration.instrument;
+		final Collection<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
 	
 		new CRUSH.Fork<Void>(integration.size(), integration.getThreadCount()) {
 			private AstroProjector projector;
@@ -213,15 +214,14 @@ public abstract class SourceMap extends SourceModel {
 			private AstroProjector projector;
 			
 			@Override
-			public void init() {
+			protected void init() {
 				super.init();
 				data = new ProjectorData();
 				projector = new AstroProjector(getProjection());
 			}
 			
 			@Override
-			protected void processIndex(int t) {
-				
+			protected void processIndex(int t) {	
 				Frame exposure = integration.get(t);
 				if(exposure == null) return;
 				if(exposure.isFlagged(Frame.SKIP_SOURCE)) return;
@@ -344,8 +344,8 @@ public abstract class SourceMap extends SourceModel {
 		if(CRUSH.debug) System.err.println("### map + margin: " + Util.f1.format(xRange.span() / Unit.arcsec) + " x " 
 					+  Util.f1.format(yRange.span() / Unit.arcsec) + " arcsec");
 		
-		int sizeX = 2 + (int)Math.ceil(xRange.span() / resolution.x());
-		int sizeY = 2 + (int)Math.ceil(yRange.span() / resolution.y());
+		int sizeX = 4 + (int) Math.ceil(xRange.span() / resolution.x());
+		int sizeY = 4 + (int) Math.ceil(yRange.span() / resolution.y());
 		
 		if(CRUSH.debug) System.err.println("### map pixels: " + sizeX + " x " + sizeY);
 	
@@ -464,7 +464,9 @@ public abstract class SourceMap extends SourceModel {
 	protected boolean isAddingToMaster() { return false; }
 	
 	protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
-		return addForkFrames(integration, pixels, sourceGain, filtering, signalMode);
+	    if(CRUSH.debug) System.err.println("### add.pixels " + pixels.size() + " : " + integration.instrument.size());
+	   
+	    return addForkFrames(integration, pixels, sourceGain, filtering, signalMode);
 	}
 	
 	protected int addForkFrames(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
@@ -559,7 +561,6 @@ public abstract class SourceMap extends SourceModel {
 				
 				projector = new AstroProjector(localSource.getProjection());
 				index = new Index2D();
-		
 			}
 			
 			@Override
@@ -620,10 +621,9 @@ public abstract class SourceMap extends SourceModel {
 		final boolean signalCorrection = integration.sourceGeneration == 0;
 		boolean mapCorrection = hasSourceOption("correct") && !signalCorrection;
 	
-		
 		final int mappingFrames = add(
 				integration, 
-				integration.instrument.getMappingPixels(), 
+				integration.instrument.getMappingPixels(0), 
 				instrument.getSourceGains(signalCorrection), 
 				mapCorrection ? averageFiltering : 1.0, 
 				signalMode
@@ -648,7 +648,9 @@ public abstract class SourceMap extends SourceModel {
 	}
 	
 	protected void sync(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {			
-		integration.new Fork<Void>() {
+	    if(CRUSH.debug) System.err.println("### sync.pixels " + pixels.size() + " : " + integration.instrument.size());
+
+	    integration.new Fork<Void>() {
 			private AstroProjector projector;
 			private Index2D index;
 
@@ -686,7 +688,7 @@ public abstract class SourceMap extends SourceModel {
 		final double[] sourceGain = instrument.getSourceGains(false);	
 		if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
 		
-		final List<? extends Pixel> pixels = instrument.getMappingPixels();
+		final List<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
 		
 		if(hasSourceOption("coupling")) calcCoupling(integration, pixels, sourceGain, integration.sourceSyncGain);
 		sync(integration, pixels, sourceGain, signalMode);

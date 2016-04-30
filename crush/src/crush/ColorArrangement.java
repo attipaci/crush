@@ -69,6 +69,6 @@ public abstract class ColorArrangement<ChannelType extends Channel> implements S
 	
 	public abstract List<? extends Pixel> getPixels();
 	
-	public abstract List<? extends Pixel> getMappingPixels();
+	public abstract List<? extends Pixel> getMappingPixels(int keepFlags);
 		
 }

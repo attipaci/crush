@@ -230,7 +230,6 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	}
 	
 	
-	
 	public static final FlagSpace<Integer> flagSpace = new FlagSpace.Integer("channel-flags");
 	
 	public static final FlagBlock<Integer> hardwareFlags = flagSpace.getFlagBlock(0, 8);

@@ -51,6 +51,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 
 	@Override
 	public void validate() {	
+	  
 		// Tau is set here...
 		super.validate();	
 	

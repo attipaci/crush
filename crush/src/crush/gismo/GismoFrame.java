@@ -44,7 +44,7 @@ public class GismoFrame extends HorizontalFrame {
 	
 	public GismoFrame(GismoScan parent) {
 		super(parent);
-		setSize(((AbstractGismo) scan.instrument).pixels());
+		create(((AbstractGismo) scan.instrument).pixels());
 	}
 	
 	@Override
