@@ -331,7 +331,7 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 	*/
 
 	public boolean checkPixelCount(Integration<?,?> integration) {
-		Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels();
+		Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels(0);
 		int nObs = integration.instrument.getObservingChannels().size();
 
 		// If there aren't enough good pixels in the scan, do not generate a map...

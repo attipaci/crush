@@ -287,12 +287,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			System.err.println(" (" + instrument.mappingChannels + " active channels).");
 		}
 		
-		if(CRUSH.debug) {
-			instrument.census();
-			System.err.println("### mapping channels: " + instrument.mappingChannels);
-			System.err.println("### mapping pixels: " + instrument.getMappingPixels().size());
-		}
-		
+	
 		System.gc();
 		
 		isValid = true;

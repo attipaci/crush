@@ -135,11 +135,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	
 	@Override
     public void validate() {
-	    // TODO fix for missing OBSRA/OBSDEC keywords. Should not be needed if header is correct...
-	    if(equatorial == null) {
-	        HawcPlusFrame firstFrame = getFirstIntegration().getFirstFrame();
-	        if(firstFrame.hasTelescopeInfo) equatorial = (EquatorialCoordinates) firstFrame.equatorial.copy();
-	    }
+	   
 	    super.validate();
 	}
 	

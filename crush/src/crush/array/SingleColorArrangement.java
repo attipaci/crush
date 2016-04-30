@@ -25,6 +25,7 @@ package crush.array;
 
 import java.util.List;
 
+import crush.Channel;
 import crush.ColorArrangement;
 import crush.Pixel;
 
@@ -45,8 +46,8 @@ public class SingleColorArrangement<ChannelType extends SingleColorPixel> extend
 	}
 
 	@Override
-	public List<? extends Pixel> getMappingPixels() {
-		return instrument.getObservingChannels().copyGroup().discard(~0);	
+	public List<? extends Pixel> getMappingPixels(int keepFlags) {
+		return instrument.getObservingChannels().copyGroup().discard(~keepFlags);	
 	}
 
 }

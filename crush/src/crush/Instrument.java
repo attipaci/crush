@@ -224,11 +224,13 @@ implements TableFormatter.Entries, Messaging {
 		
 		if(CRUSH.debug) {
 			System.err.println("### mapping channels: " + mappingChannels);
-			System.err.println("### mapping pixels: " + getMappingPixels().size());
+			System.err.println("### mapping pixels: " + getMappingPixels(~sourcelessChannelFlags()).size());
 		}
 		
 		isValid = true;
 	}
+	
+	public int sourcelessChannelFlags() { return Channel.FLAG_BLIND | Channel.FLAG_DEAD | Channel.FLAG_DISCARD; }
 	
 	public float normalizeSkyGains() throws Exception {
 		System.err.println(" Normalizing sky-noise gains.");
@@ -786,15 +788,25 @@ implements TableFormatter.Entries, Messaging {
 	
 	public List<? extends Pixel> getPixels() { return arrangement.getPixels(); }
 	
-	public List<? extends Pixel> getMappingPixels() { return arrangement.getMappingPixels(); }
+	public List<? extends Pixel> getMappingPixels(int keepFlags) { return arrangement.getMappingPixels(keepFlags); }
 	
 	public final List<? extends Pixel> getPerimeterPixels() { 
-		int sections = hasOption("perimeter") ? option("perimeter").getInt() : 0;
+	    int sections = 0;
+	    
+	    if(hasOption("perimeter")) {
+	        if(option("perimeter").getValue().equalsIgnoreCase("auto")) {
+	            // n ~ pi r^2   --> r ~ sqrt(n / pi)
+	            // np ~ 2 pi r ~ 2 sqrt(pi n) ~ 3.55 sqrt(n)
+	            // Add factor of ~2 margin --> np ~ 7 sqrt(n)
+	            sections = (int) Math.ceil(10 * Math.sqrt(storeChannels));
+	        }
+	        else sections = option("perimeter").getInt();
+	    }
 		return getPerimeterPixels(sections); 
 	}
 	
 	public final List<? extends Pixel> getPerimeterPixels(int sections) { 
-		final List<? extends Pixel> mappingPixels = getMappingPixels();
+		final List<? extends Pixel> mappingPixels = getMappingPixels(~sourcelessChannelFlags());
 		if(sections <= 0) return mappingPixels;
 		
 		if(mappingPixels.size() < sections) return mappingPixels;

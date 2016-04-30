@@ -73,7 +73,10 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 	
 	public void setReferencePosition(Vector2D position) {
 		Vector2D referencePosition = (Vector2D) position.clone();
-		for(Pixel pixel : getPixels()) pixel.getPosition().subtract(referencePosition);
+		for(Pixel pixel : getPixels()) {
+		    Vector2D v = pixel.getPosition();
+		    if(v != null) v.subtract(referencePosition);
+		}
 	}
 	
 	public Hashtable<String, Pixel> getPixelLookup() {
@@ -204,8 +207,9 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 		out.println("#");
 		out.println("# " + getRCPHeader());
 		
-		for(Pixel pixel : getMappingPixels()) if(pixel.getPosition() != null) if(!pixel.getPosition().isNaN()) 
-			out.println(pixel.getRCPString());
+		for(Pixel pixel : getMappingPixels(~sourcelessChannelFlags())) 
+		    if(pixel.getPosition() != null) if(!pixel.getPosition().isNaN()) 
+		        out.println(pixel.getRCPString());
 	}
 
 	public void generateRCPFrom(String rcpFileName, String pixelFileName) throws IOException {

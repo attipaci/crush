@@ -68,10 +68,16 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 				19.0 * Unit.deg  + 49.0 * Unit.arcmin + 21.0 * Unit.arcsec);
 		*/
 		
+		
 		// from the CSO website
 		site = new GeodeticCoordinates(
 				-(155.0 * Unit.deg + 28.0 * Unit.arcmin + 42.124 * Unit.arcsec), 
 				19.0 * Unit.deg  + 49.0 * Unit.arcmin + 31.698 * Unit.arcsec);
+	    
+	    
+		// Google
+		//site = new GeodeticCoordinates(-155.4760399 * Unit.deg, 19.8225053 * Unit.deg);
+		
 		
 		// Google
 		/*

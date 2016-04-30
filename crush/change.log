@@ -3,8 +3,11 @@
 
 
 2.32-a1
-	
 
+	[FIX] Map lookup, update and sync could operate on different pixels
+	as pixels got flagged/unflagged. Fixed.	
+
+	[CODE] Faster map index lookup.
 
 
 2.31-1 (20 April 2016)

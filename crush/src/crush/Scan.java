@@ -293,7 +293,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		toApparent.precess(apparent);
 	}
 	
-	public void calcHorizontal() {
+	public void calcHorizontal() {  
 		if(apparent == null) calcApparent();
 		horizontal = apparent.toHorizontal(site, LST);
 	}

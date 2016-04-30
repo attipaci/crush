@@ -126,7 +126,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		return true;
 	}
 	
-	public void setSize(int size) {
+	public void create(int size) {
 		data = new float[size];
 		sampleFlag = new byte[size];
 	}
@@ -187,6 +187,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public void slimTo(Instrument<?> instrument) {
 		float[] reduced = new float[instrument.size()];
 		byte[] newSampleFlag = new byte[instrument.size()];
+		
 		sourceIndex = null; // discard old lookup table if it exists...
 			
 		for(int k=instrument.size(); --k >= 0; ) {

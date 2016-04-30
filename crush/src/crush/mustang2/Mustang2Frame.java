@@ -37,7 +37,7 @@ public class Mustang2Frame extends HorizontalFrame {
 	}
 
 	public void parseData(float[] values, int from, int channels) {
-		setSize(channels);
+		create(channels);
 		System.arraycopy(values, from, data, 0, channels);
 	}
 	

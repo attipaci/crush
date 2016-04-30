@@ -37,7 +37,7 @@ public class MakoFrame extends HorizontalFrame {
 	}
 	
 	public void parseData(float[] value, int from, AbstractMako<?> mako) {
-		setSize(mako.size());
+		create(mako.size());
 		
 		for(int c=mako.size(); --c >= 0; ) {
 			data[c] = -value[from + ((AbstractMakoPixel) mako.get(c)).toneIndex];

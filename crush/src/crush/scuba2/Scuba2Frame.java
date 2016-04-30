@@ -44,7 +44,7 @@ public class Scuba2Frame extends HorizontalFrame {
 		Scuba2Scan scuba2Scan = (Scuba2Scan) scan;
 		final int blankingValue = scuba2Scan.blankingValue;
 		
-		if(data == null) setSize(scuba2Scan.subarrays * Scuba2Subarray.PIXELS);
+		if(data == null) create(scuba2Scan.subarrays * Scuba2Subarray.PIXELS);
 		
 		for(int bol=Scuba2Subarray.PIXELS; --bol >= 0; ) {
 			final int value = DAC[bol%Scuba2.SUBARRAY_COLS][bol/Scuba2.SUBARRAY_COLS];

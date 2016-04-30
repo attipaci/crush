@@ -43,14 +43,14 @@ public class HawcPlusFrame extends SofiaFrame {
     
     int status;
 
-    public HawcPlusFrame(HawcPlusScan parent) {
-        super(parent);
-        setSize(parent.instrument.size());
+    public HawcPlusFrame(HawcPlusScan hawcScan) {
+        super(hawcScan);
+        create(hawcScan.instrument.size());
     }
 
     @Override
-    public void setSize(int size) {
-        super.setSize(size);
+    public void create(int size) {
+        super.create(size);
         jumpCounter = new byte[size];
     }
 
@@ -59,9 +59,12 @@ public class HawcPlusFrame extends SofiaFrame {
     }
 
     // Parses data for valid pixels only...
-    private void parseData(int[] DAC, short[] jump, int from) {
-        for(final HawcPlusPixel pixel : (HawcPlus) scan.instrument) {
+    private void parseData(int[] DAC, short[] jump, int from) {  
+        HawcPlus hawc = (HawcPlus) scan.instrument;
+        
+        for(final HawcPlusPixel pixel : hawc) {
             data[pixel.index] = DAC[from + pixel.fitsIndex];
+            if(hawc.subarrayInverted[pixel.sub]) data[pixel.index] *= -1;
             if(jump != null) jumpCounter[pixel.index] = (byte) jump[from + pixel.fitsIndex];
         }
     }

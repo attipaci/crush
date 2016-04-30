@@ -67,7 +67,8 @@ public class BeamMap extends SourceMap {
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		// Set all pixel positions to zero...
 		for(Scan<?,?> scan : collection) for(Integration<?,?> integration : scan) {
-			for(Pixel pixel : integration.instrument.getMappingPixels()) {
+		    final Instrument<?> instrument = integration.instrument;
+			for(Pixel pixel : instrument.getMappingPixels(~instrument.sourcelessChannelFlags())) {
 				pixel.getPosition().zero();
 				pixel.setIndependent(true);
 			}
@@ -258,7 +259,7 @@ public class BeamMap extends SourceMap {
 		
 		int k = 0;
 		
-		for(Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
+		for(Pixel pixel : scans.get(0).instrument.getMappingPixels(0)) {
 			int i = pixel.getFixedIndex();
 			ScalarMap beamMap = pixelMap[i];
 			
@@ -286,7 +287,7 @@ public class BeamMap extends SourceMap {
 		
 		final double mean = Statistics.median(peaks, 0, k);
 		
-		for(final Pixel pixel : scans.get(0).instrument.getMappingPixels()) {
+		for(final Pixel pixel : scans.get(0).instrument.getMappingPixels(0)) {
 			int i = pixel.getFixedIndex();
 			ScalarMap map = pixelMap[i];
 			if(map != null) {
