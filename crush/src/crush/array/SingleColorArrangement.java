@@ -25,7 +25,6 @@ package crush.array;
 
 import java.util.List;
 
-import crush.Channel;
 import crush.ColorArrangement;
 import crush.Pixel;
 

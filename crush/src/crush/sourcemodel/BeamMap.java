@@ -32,10 +32,8 @@ import crush.*;
 import crush.array.*;
 import crush.astro.AstroMap;
 import jnum.Unit;
-import jnum.astro.AstroProjector;
 import jnum.data.*;
 import jnum.math.SphericalCoordinates;
-import jnum.math.Vector2D;
 import jnum.projection.Projection2D;
 
 public class BeamMap extends SourceMap {
@@ -144,12 +142,6 @@ public class BeamMap extends SourceMap {
 		return 1.0;
 	}
 
-
-	@Override
-	public void getIndex(Frame exposure, Pixel pixel, AstroProjector projector, Index2D index) {
-		template.getIndex(exposure, pixel, projector, index);
-	}
-
 	@Override
 	public double getPixelizationSmoothing() {
 		return template.getPixelizationSmoothing();
@@ -180,19 +172,6 @@ public class BeamMap extends SourceMap {
 	public boolean isMasked(Index2D index) {
 		return false;
 	}
-
-
-	@Override
-	public int pixels() {
-		return template.pixels();
-	}
-
-
-	@Override
-	public Vector2D resolution() {
-		return template.resolution();
-	}
-
 
 	@Override
 	public void setSize(int sizeX, int sizeY) {
@@ -381,6 +360,21 @@ public class BeamMap extends SourceMap {
 	public SphericalCoordinates getReference() {
 		return template.getReference();
 	}
+
+    @Override
+    public Grid2D<?> getGrid() {
+        return template.getGrid();
+    }
+
+    @Override
+    public int sizeX() {
+        return template.sizeX();
+    }
+
+    @Override
+    public int sizeY() {
+        return template.sizeY();
+    }
 
 	
 

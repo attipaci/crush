@@ -23,7 +23,10 @@
 
 package crush.sofia;
 
+import java.text.NumberFormat;
+
 import jnum.Copiable;
+import jnum.Unit;
 
 public class BracketedValues implements Cloneable, Copiable<BracketedValues> {
 	public double start = Double.NaN, end = Double.NaN;
@@ -50,7 +53,18 @@ public class BracketedValues implements Cloneable, Copiable<BracketedValues> {
 		else if(Double.isNaN(start)) return end;
 		return 0.5 * (start + end);
 	}
-
 	
+	@Override
+    public String toString() {
+	    return toString(null, null);
+	}
+
+	public String toString(NumberFormat nf, Unit u) {
+	    double uValue = u == null ? 1.0 : u.value();
+	    String uName = u == null ? "" : " " + u.name();
+	    
+	    if(nf != null) return nf.format(start / uValue) + uName + " --> " + nf.format(end / uValue) + uName;
+	    else return start + uName + " --> " + end + uName;
+	}
 	
 }

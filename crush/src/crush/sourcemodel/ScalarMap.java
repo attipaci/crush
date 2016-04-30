@@ -32,7 +32,6 @@ import java.util.concurrent.ExecutorService;
 import crush.*;
 import crush.astro.AstroMap;
 import jnum.Configurator;
-import jnum.ExtraMath;
 import jnum.LockedException;
 import jnum.Parallel;
 import jnum.Unit;
@@ -42,7 +41,6 @@ import jnum.astro.SourceCatalog;
 import jnum.data.*;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
-import jnum.math.Vector2D;
 import jnum.plot.BufferedImageLayer;
 import jnum.plot.ColorScheme;
 import jnum.plot.GridImageLayer;
@@ -62,8 +60,6 @@ public class ScalarMap extends SourceMap {
 	
 	protected Data2D base; 
 	private boolean[][] mask;
-	
-	private int indexShiftX, indexMaskY;
 	
 	public boolean enableWeighting = true;
 	public boolean enableLevel = true;
@@ -152,6 +148,9 @@ public class ScalarMap extends SourceMap {
 	}
 
 	@Override
+    public Grid2D<?> getGrid() { return map.getGrid(); }
+	
+	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		map = new AstroMap();
 		map.setGrid(new SphericalGrid());
@@ -159,20 +158,6 @@ public class ScalarMap extends SourceMap {
 		setInstrument(getInstrument());
 		
 		super.createFrom(collection);
-		
-		double defaultGridSize = getInstrument().getPointSize() / 5.0;
-		Vector2D gridSize = new Vector2D(defaultGridSize, defaultGridSize);
-	
-		map.setUnderlyingBeam(getAverageResolution());
-			
-		if(hasOption("grid")) {
-			List<Double> values = option("grid").getDoubles();
-			if(values.size() == 1) gridSize.set(values.get(0), values.get(0));
-			else gridSize.set(values.get(0), values.get(1));
-			gridSize.scale(getInstrument().getSizeUnitValue());
-		}
-		
-		map.setResolution(gridSize.x(), gridSize.y());
 		
 		Scan<?,?> firstScan = scans.get(0);
 		
@@ -183,26 +168,13 @@ public class ScalarMap extends SourceMap {
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
 		map.setName(firstScan.getSourceName());
-		
-		setSize();
-
-		// Make the reference fall on pixel boundaries.
-		map.getGrid().refIndex.setX(0.5 - Math.rint(xRange.min()/gridSize.x()));
-		map.getGrid().refIndex.setY(0.5 - Math.rint(yRange.min()/gridSize.y()));
-		
+		map.setUnderlyingBeam(getAverageResolution());
 		map.printShortInfo();
 			
 		base = new Data2D(map.sizeX(), map.sizeY());
 		createMask();
 		
-		if(allowIndexing) if(hasOption("indexing")) {
-			try { index(); }
-			catch(Exception e) { 
-				warning("Indexing error: " + e.getMessage());
-				e.printStackTrace();
-			}
-		}
-		
+	
 		if(hasOption("sources")) {
 			try { 
 				SourceCatalog<SphericalCoordinates> catalog = new SourceCatalog<SphericalCoordinates>();
@@ -326,24 +298,7 @@ public class ScalarMap extends SourceMap {
 		base.clear();
 	}
 	
-	public void index() throws Exception {
-		System.err.print(" Indexing maps. ");
-	
-		final double maxUsage = hasOption("indexing.saturation") ? option("indexing.saturation").getDouble() : 0.5;
-		System.err.println(" (Up to " + Util.d1.format(100.0*maxUsage) + "% of RAM saturation.)");
-		
-		final Runtime runtime = Runtime.getRuntime();
-		long maxAvailable = runtime.maxMemory() - getReductionFootprint(pixels());
-		final long maxUsed = (long) (maxUsage * maxAvailable);
-		
-		
-		for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) {
-			if(runtime.totalMemory() - runtime.freeMemory() >= maxUsed) return;
-			createLookup(integration);	
-		}
-		
-	}
-	
+
 	@Override
 	public double getPixelizationSmoothing() {
 		return Math.sqrt(map.getGrid().getPixelArea()) / GridImage2D.fwhm2size;
@@ -360,12 +315,13 @@ public class ScalarMap extends SourceMap {
 	public void setSize(int sizeX, int sizeY) {
 		map.setSize(sizeX, sizeY);
 	}
-
-	@Override
-	public int pixels() { return map.sizeX() * map.sizeY(); }
 	
 	@Override
-	public Vector2D resolution() { return map.getResolution(); }
+    public int sizeX() { return map.sizeX(); }
+	
+	@Override
+    public int sizeY() { return map.sizeY(); }
+	
 	@Override
 	public Projection2D<SphericalCoordinates> getProjection() { return map.getProjection(); }
 	
@@ -673,81 +629,7 @@ public class ScalarMap extends SourceMap {
 		map.addPointAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight / channel.variance, dt);
 	}
 	
-	@Override
-	public final void getIndex(final Frame exposure, final Pixel pixel, final AstroProjector projector, final Index2D index) {
-		if(exposure.sourceIndex == null) {
-			exposure.project(pixel.getPosition(), projector);
-			map.getIndex(projector.offset, index);	
-		}
-		else {
-			final int linearIndex = exposure.sourceIndex[pixel.getIndex()];
-			index.set(linearIndex >>> indexShiftX, linearIndex & indexMaskY);
-		}
-		
-		if(CRUSH.debug) {
-		    if(index.i() < 0 || index.i() >= map.sizeX() || index.j() < 0 || index.j() >= map.sizeY()) {
-		        System.err.println("!!! invalid map index pixel " + pixel.getID() + " frame " + exposure.index + ": " +
-		                (exposure.sourceIndex == null ? 
-		                        index : 
-		                        exposure.sourceIndex[pixel.getIndex()]
-		                )
-		        );
-		        index.set(0, 0);
-		    }
-		}
-	}
 	
-	
-	public void createLookup(Integration<?,?> integration) {	
-	    final Instrument<?> instrument = integration.instrument;
-		final List<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
-		final int n = integration.instrument.getPixelCount();
-		
-		if(CRUSH.debug) System.err.println("### lookup.pixels " + pixels.size() + " : " + integration.instrument.size());
-		
-		indexShiftX = ExtraMath.log2ceil(map.sizeY());
-		indexMaskY = (1<<indexShiftX) - 1;
-		
-		integration.new Fork<Void>() {
-			private AstroProjector projector;
-			private Index2D index;
-			
-			@Override
-			protected void init() {
-				super.init();
-				projector = new AstroProjector(getProjection());
-				index = new Index2D();
-			}
-			
-			@Override 
-			protected void process(Frame exposure) {
-				exposure.sourceIndex = new int[n];
-				
-				if(CRUSH.debug) Arrays.fill(exposure.sourceIndex, -1);
-				
-				for(final Pixel pixel : pixels) {
-					exposure.project(pixel.getPosition(), projector);
-					map.getIndex(projector.offset, index);
-					
-					if(CRUSH.debug) {
-			            if(index.i() < 0 || index.i() >= map.sizeX() || index.j() < 0 || index.j() >= map.sizeY()) {
-			                System.err.println("!!! invalid map index pixel " + pixel.getID() + " frame " + exposure.index + ": " +
-			                        (exposure.sourceIndex == null ? 
-			                                index : 
-			                                exposure.sourceIndex[pixel.getIndex()]
-			                        )
-			                );
-			                index.set(0, 0);
-			            }
-			        }
-					
-					
-					exposure.sourceIndex[pixel.getIndex()] = (index.i() << indexShiftX) | index.j();
-				}
-			}
-			
-		}.process();
-	}
 
 	
 	@Override

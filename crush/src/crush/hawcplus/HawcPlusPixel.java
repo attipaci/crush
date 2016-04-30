@@ -92,7 +92,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	@Override
     public String getID() {
-	    return HawcPlus.polID[pol] + sub + "[" + subrow + "," + col + "]";
+	    return HawcPlus.polID[pol] + (sub & 1) + "[" + subrow + "," + col + "]";
 	}
 	
 	//public final static int FLAG_POL = softwareFlags.next('p', "Bad polarray gain").value();

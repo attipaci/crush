@@ -149,6 +149,9 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 		System.err.println(" [" + getSourceName() + "] of AOR " + observation.aorID);
 		System.err.println(" Observed on " + date + " at " + startTime + " by " + observer);
 		System.err.println(" Equatorial: " + telescope.requestedEquatorial.toString());	
+			  
+        System.err.println(" Focus: " + telescope.focusT.toString(Util.f1, Unit.get("um")));
+    
 		
 		instrument.parseHeader(header);
 		
