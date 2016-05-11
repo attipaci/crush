@@ -68,6 +68,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 	public SofiaDitheringData dither;
 	public SofiaMappingData mapping;
 	public SofiaScanningData scanning;
+	
+	public Fits fits;
 
 	public SofiaScan(InstrumentType instrument) {
 		super(instrument);
@@ -78,25 +80,29 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
 	@Override
 	public void read(String scanDescriptor, boolean readFully) throws Exception {
-	   
+	    fits = getFits(scanDescriptor);
 	    
-	    Fits fits = getFits(scanDescriptor);
 		read(fits.read(), readFully);
-		
-		try { fits.close(); }
-		catch(Exception e) {}	
-		  
-        System.gc();
+		closeFits();
 	}
 
-	public void parseHeader(Header header) throws Exception {
+	public void closeFits() {
+	    if(fits == null) return;
+	    try { fits.close(); }
+	    catch(IOException e) {}
+	    fits = null;
+
+        System.gc();
+	}
+	
+	public void parseHeader(SofiaHeader header) throws Exception {
 		// Load any options based on the FITS header...
-		instrument.setFitsHeaderOptions(header);
+		instrument.setFitsHeaderOptions(header.getFitsHeader());
 		
-		fileDate = SofiaHeaderData.getStringValue(header, "DATE");
-		date = header.getStringValue("DATE-OBS");
-		String startTime = header.getStringValue("UTCSTART");
-		String endTime = header.getStringValue("UTCEND");
+		fileDate = header.getString("DATE");
+		date = header.getString("DATE-OBS");
+		String startTime = header.getString("UTCSTART");
+		String endTime = header.getString("UTCEND");
 			
 		if(startTime != null) utc.start = Util.parseTime(startTime);
 		if(endTime != null) utc.end = Util.parseTime(endTime);
@@ -114,14 +120,14 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 		setMJD(time.getMJD());	
 		calcPrecessions(CoordinateEpoch.J2000);
 		
-		checksum = SofiaHeaderData.getStringValue(header, "DATASUM");				// not in 3.0
-		checksumVersion = SofiaHeaderData.getStringValue(header, "CHECKVER");		// not in 3.0
+		checksum = header.getString("DATASUM");				// not in 3.0
+		checksumVersion = header.getString("CHECKVER");		// not in 3.0
 		
-		isChopping = header.getBooleanValue("CHOPPING", false);
-		isNodding = header.getBooleanValue("NODDING", false);
-		isDithering = header.getBooleanValue("DITHER", false);
-		isMapping = header.getBooleanValue("MAPPING", false);
-		isScanning = header.getBooleanValue("SCANNING", false);
+		isChopping = header.getBoolean("CHOPPING", false);
+		isNodding = header.getBoolean("NODDING", false);
+		isDithering = header.getBoolean("DITHER", false);
+		isMapping = header.getBoolean("MAPPING", false);
+		isScanning = header.getBoolean("SCANNING", false);
 		
 		observation = new SofiaObservationData(header);
 		setSourceName(observation.sourceName);
@@ -161,7 +167,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 		if(isMapping) mapping = new SofiaMappingData(header);
 		if(isScanning) scanning = new SofiaScanningData(header);	
 		
-		parseHistory(header);
+		parseHistory(header.getFitsHeader());
 	}
 	
 	@Override
@@ -299,12 +305,12 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
                     0.5 * (first.horizontal.x() + last.horizontal.x()),
                     0.5 * (first.horizontal.y() + last.horizontal.y())
             );
-           
+            
 	        telescopeCoordinates = new TelescopeCoordinates(
 	                0.5 * (first.telescopeCoords.longitude() + last.telescopeCoords.longitude()),
 	                0.5 * (first.telescopeCoords.latitude() + last.telescopeCoords.latitude())
 	        );
-	        System.err.println(" Telescope Assembly: " + telescopeCoordinates.toString(2));  
+	        // System.err.println(" Telescope Assembly: " + telescopeCoordinates.toString(2));  
 	    
 	        site = new GeodeticCoordinates(
                     0.5 * (first.site.x() + last.site.x()), 
@@ -347,7 +353,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 	
 	
 	protected void read(BasicHDU<?>[] hdu, boolean readFully) throws Exception {	
-		parseHeader(hdu[0].getHeader());
+		parseHeader(new SofiaHeader(hdu[0].getHeader()));
 		
 		instrument.readData(hdu);
 		instrument.validate(this);	

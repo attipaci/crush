@@ -143,11 +143,6 @@ public class BeamMap extends SourceMap {
 	}
 
 	@Override
-	public double getPixelizationSmoothing() {
-		return template.getPixelizationSmoothing();
-	}
-	
-	@Override
 	public double getPixelFootprint() {
 		return pixelMap.length * template.getPixelFootprint();
 	}

@@ -28,7 +28,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaProcessingData extends SofiaHeaderData {
+public class SofiaProcessingData extends SofiaData {
 	String processLevel;
 	String headerStatus, softwareName, softwareFullVersion, productType, revision, quality; 
 	int nSpectra = -1;
@@ -36,21 +36,20 @@ public class SofiaProcessingData extends SofiaHeaderData {
 	
 	public SofiaProcessingData() {}
 	
-	public SofiaProcessingData(Header header) {
+	public SofiaProcessingData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
-	
-	@Override
-	public void parseHeader(Header header) {
-		processLevel = getStringValue(header, "PROCSTAT");
-		headerStatus = getStringValue(header, "HEADSTAT");
-		softwareName = getStringValue(header, "PIPELINE");
-		softwareFullVersion = getStringValue(header, "PIPEVERS");
-		productType = getStringValue(header, "PRODTYPE");
-		revision = getStringValue(header, "FILEREV");
-		quality = getStringValue(header, "DATAQUAL");				// new in 3.0
-		nSpectra = header.getIntValue("N_SPEC", -1);				// new in 3.0
+
+	public void parseHeader(SofiaHeader header) {
+		processLevel = header.getString("PROCSTAT");
+		headerStatus = header.getString("HEADSTAT");
+		softwareName = header.getString("PIPELINE");
+		softwareFullVersion = header.getString("PIPEVERS");
+		productType = header.getString("PRODTYPE");
+		revision = header.getString("FILEREV");
+		quality = header.getString("DATAQUAL");				// new in 3.0
+		nSpectra = header.getInt("N_SPEC", -1);				// new in 3.0
 		
 		qualityLevel = defaultQuality;
 		if(quality != null) for(int i=qualityNames.length; --i >= 0; ) if(quality.equalsIgnoreCase(qualityNames[i])) {

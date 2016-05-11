@@ -379,7 +379,6 @@
 			configurations anywhere on the file system.
 			@See: 'bright', 'faint', 'deep'
 	
-
 :: convert		@Since: 2.01-3
 			@Advanced
 
@@ -2051,6 +2050,10 @@
 			around the centroid of the array. N values up to a few
 			hundred should be fail-safe for most typical array
 			layouts, even when these have lots of pixels.
+
+			@Since: 2.32
+			The value 'auto' will use an optimal number of sections
+			for the perimeter calculation.
 
 :: phases		@Expert
 			@Since: 2.02
@@ -3805,20 +3808,6 @@
 			indicated with a NaN character.
 			@See: 'noslim', 'write.spectrum'			
 
-:: write.covar[=<list>]	@Expert
-			Write covariance data. If no argument is
-			specified, CRUSH will write the full 
-			pixel-to-pixel covariance data as a FITS image. The 
-			optional argument can specify the ordering of the 
-			covariance matrix according to pixel divisions. Each
-			group in the pixel division will be blocked together
-			for easy identifycation of block-diagonal covariance
-			structures. Other than the division names, the list
-			can contain 'full' and 'reduced' to indicate the full
-			covariance matrix if all instrument pixels, or only
-			those that were used in the reduction (see 'noslim').
-			@See: 'division.<?>', 'noslim'
-
 :: write.coupling=<list>	@Since: 2.16
 				@Advanced
 			Measure and write coupling gains to the given signals.
@@ -3856,6 +3845,29 @@
 			is to measure on the longest meaningful timescale
 			as defined by 'drifts'.
 			@See: 'write.coupling.spec', 'drifts'
+
+:: write.covar[=<list>]	@Expert
+			Write covariance data. If no argument is
+			specified, CRUSH will write the full 
+			pixel-to-pixel covariance data as a FITS image. The 
+			optional argument can specify the ordering of the 
+			covariance matrix according to pixel divisions. Each
+			group in the pixel division will be blocked together
+			for easy identifycation of block-diagonal covariance
+			structures. Other than the division names, the list
+			can contain 'full' and 'reduced' to indicate the full
+			covariance matrix if all instrument pixels, or only
+			those that were used in the reduction (see 'noslim').
+			@See: 'division.<?>', 'noslim'
+
+:: write.covar.condensed	@Since: 2.32
+				@Expert
+			When writing covariance matrices, write only 'live'
+			channels, i.e. those that are unflagged by the 
+			reduction. This results in a covariance matrix without
+			gaps. The downside is that identifying particular
+			pixels/channels may be difficult in that form.
+			@See: 'write.covar'
 
 :: write.eps		@Since: 2.14
 			Write final result into an EPS image, if available.

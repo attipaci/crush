@@ -273,7 +273,7 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 	public void rotate(double angle) {
 		if(Double.isNaN(angle)) return;
 		
-		System.err.println(" Applying otation at " + Util.f1.format(angle / Unit.deg) + " deg.");
+		System.err.println(" Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
 		
 		// Undo the prior rotation...
 		Vector2D priorOffset = getPointingOffset(rotation);

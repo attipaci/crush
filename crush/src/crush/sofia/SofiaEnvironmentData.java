@@ -29,7 +29,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaEnvironmentData extends SofiaHeaderData {
+public class SofiaEnvironmentData extends SofiaData {
 	public BracketedValues pwv = new BracketedValues();
 	public double pwvLOS = Double.NaN;
 	
@@ -38,21 +38,20 @@ public class SofiaEnvironmentData extends SofiaHeaderData {
 
 	public SofiaEnvironmentData() {}
 	
-	public SofiaEnvironmentData(Header header) {
+	public SofiaEnvironmentData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
 
-	@Override
-	public void parseHeader(Header header) {
-		pwv.start = header.getDoubleValue("WVZ_STA", Double.NaN) * Unit.um;
-		pwv.end = header.getDoubleValue("WVZ_END", Double.NaN) * Unit.um;
-		pwvLOS = header.getDoubleValue("WVTALOS", Double.NaN) * Unit.um;		// not in 3.0
-		ambientT = header.getDoubleValue("TEMP_OUT", Double.NaN) * Unit.K;
-		primaryT1 = header.getDoubleValue("TEMPPRI1", Double.NaN) * Unit.K;
-		primaryT2 = header.getDoubleValue("TEMPPRI2", Double.NaN) * Unit.K;
-		primaryT3 = header.getDoubleValue("TEMPPRI3", Double.NaN) * Unit.K;
-		secondaryT = header.getDoubleValue("TEMPSEC1", Double.NaN) * Unit.K;
+	public void parseHeader(SofiaHeader header) {
+		pwv.start = header.getDouble("WVZ_STA", Double.NaN) * Unit.um;
+		pwv.end = header.getDouble("WVZ_END", Double.NaN) * Unit.um;
+		pwvLOS = header.getDouble("WVTALOS", Double.NaN) * Unit.um;		// not in 3.0
+		ambientT = header.getDouble("TEMP_OUT", Double.NaN) * Unit.K;
+		primaryT1 = header.getDouble("TEMPPRI1", Double.NaN) * Unit.K;
+		primaryT2 = header.getDouble("TEMPPRI2", Double.NaN) * Unit.K;
+		primaryT3 = header.getDouble("TEMPPRI3", Double.NaN) * Unit.K;
+		secondaryT = header.getDouble("TEMPSEC1", Double.NaN) * Unit.K;
 	}
 
 	@Override

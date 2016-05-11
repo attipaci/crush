@@ -29,26 +29,25 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaScanningData extends SofiaHeaderData {
+public class SofiaScanningData extends SofiaData {
 	public BracketedValues RA = new BracketedValues(), DEC = new BracketedValues();
 	public double speed = Double.NaN, angle = Double.NaN;
 		
 	public SofiaScanningData() {}
 	
-	public SofiaScanningData(Header header) {
+	public SofiaScanningData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
 	
 	
-	@Override
-	public void parseHeader(Header header) {
-		RA.start = getHMSTime(header, "SCNRA0") * Unit.timeAngle;
-		RA.end = getHMSTime(header, "SCNRAF") * Unit.timeAngle;
-		DEC.start = getDMSAngle(header, "SCNDEC0");
-		DEC.end = getDMSAngle(header, "SCNDECF");
-		speed = header.getDoubleValue("SCNRATE", Double.NaN) * Unit.arcsec / Unit.s;
-		angle = header.getDoubleValue("SCNDIR", Double.NaN) * Unit.deg;
+	public void parseHeader(SofiaHeader header) {
+		RA.start = header.getHMSTime("SCNRA0") * Unit.timeAngle;
+		RA.end = header.getHMSTime("SCNRAF") * Unit.timeAngle;
+		DEC.start = header.getDMSAngle("SCNDEC0");
+		DEC.end = header.getDMSAngle("SCNDECF");
+		speed = header.getDouble("SCNRATE", Double.NaN) * Unit.arcsec / Unit.s;
+		angle = header.getDouble("SCNDIR", Double.NaN) * Unit.deg;
 	}
 
 	@Override

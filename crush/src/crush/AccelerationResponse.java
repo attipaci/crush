@@ -22,8 +22,6 @@
  ******************************************************************************/
 package crush;
 
-import java.lang.reflect.Field;
-
 public class AccelerationResponse extends MotionResponse {
 
 	/**
@@ -36,16 +34,6 @@ public class AccelerationResponse extends MotionResponse {
 		// TODO Auto-generated constructor stub
 	}
 
-	public AccelerationResponse(ChannelGroup<?> group, Field gainField) {
-		super(group, gainField);
-		// TODO Auto-generated constructor stub
-	}
-
-	public AccelerationResponse(ChannelGroup<?> group) {
-		super(group);
-		// TODO Auto-generated constructor stub
-	}
-	
 	@Override
 	public Signal getSignal(Integration<?, ?> integration, Motion direction) {
 		return integration.getAccelerationSignal(this, direction);

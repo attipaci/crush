@@ -22,8 +22,6 @@
  ******************************************************************************/
 package crush;
 
-import java.lang.reflect.Field;
-
 public class PositionResponse extends MotionResponse {
 	/**
 	 * 
@@ -35,16 +33,6 @@ public class PositionResponse extends MotionResponse {
 		setType(type);
 	}
 
-	public PositionResponse(int type, ChannelGroup<?> group, Field gainField) {
-		super(group, gainField);
-		setType(type);
-	}
-
-	public PositionResponse(int type, ChannelGroup<?> group) {
-		super(group);
-		setType(type);
-	}
-	
 	public void setType(int type) {
 		this.type = type;
 	}

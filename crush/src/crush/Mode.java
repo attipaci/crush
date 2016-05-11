@@ -239,6 +239,7 @@ public class Mode implements Serializable {
         public CoupledMode() {
             super(Mode.this.getChannels());
             Mode.this.addCoupledMode(this);
+            name = getClass().getSimpleName().toLowerCase() + "-" + Mode.this.name;
             fixedGains = true;
         }
 
@@ -247,15 +248,15 @@ public class Mode implements Serializable {
             super.setGains(gains);
         }
 
-        public CoupledMode(Field gainField) {
-            this();
-            setGainProvider(new FieldGainProvider(gainField));
-        }
-
         public CoupledMode(GainProvider gains) { 
             this();
             setGainProvider(gains);
         }
+        
+        public CoupledMode(Field gainField) {
+            this(new FieldGainProvider(gainField));
+        }
+
 
         @Override
         public float[] getGains(boolean validate) throws Exception {
@@ -280,6 +281,43 @@ public class Mode implements Serializable {
         }
 
     }
+    
+    public class NonLinearResponse extends Response {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = -3060028666043495588L;
+       
+        public NonLinearResponse() {
+            setChannels(Mode.this.getChannels());
+            name = "nonlinear-" + Mode.this.name;
+        }
+  
+        public NonLinearResponse(GainProvider gainSource) {
+            this();
+            setGainProvider(gainSource);
+        }
+        
+        @Override
+        public Signal getSignal(Integration<?, ?> integration) {
+            Signal signal = integration.getSignal(Mode.this);
+            
+            float[] C2 = new float[signal.value.length];
+            
+            for(int i=C2.length; --i >= 0; ) {
+                float C = signal.value[i];
+                if(signal.drifts != null) C += signal.drifts[i / signal.driftN];
+                C2[i] = C * C;
+            }
+            
+            // Remove drifts from the squared signal...
+            Signal s2 = new Signal(this, integration, C2, false);
+            if(signal.drifts != null) s2.removeDrifts(signal.driftN * signal.resolution, false);
+            
+            return s2;
+        }
+    }
+
 
 
     protected static int nextMode = 0;

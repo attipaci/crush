@@ -55,6 +55,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	
 	public double offset = 0.0; // At the readout stage! (as of 2.03)
 	public double gain = 1.0;
+	public double nonlinearity = 0.0;
 	public double coupling = 1.0;
 	public double weight = 1.0;
 	public double variance = 1.0;

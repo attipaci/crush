@@ -34,7 +34,7 @@ public class Sharc2SmileyRows extends ZeroMeanGains {
     private static final long serialVersionUID = -1670914205840986908L;
 
     @Override
-    public double getRawGain(Channel c) throws Exception {
+    public double getRelativeGain(Channel c) throws Exception {
        double dc = ((Sharc2Pixel) c).col - 15.5;
        return dc * dc;
     }

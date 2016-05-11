@@ -23,14 +23,12 @@
 
 package crush.sofia;
 
-import jnum.Unit;
-import jnum.Util;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public abstract class SofiaHeaderData implements Cloneable {
+public abstract class SofiaData implements Cloneable {
 
 	@Override
 	public Object clone() {
@@ -38,39 +36,26 @@ public abstract class SofiaHeaderData implements Cloneable {
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
-	public abstract void parseHeader(Header header);
-	
 	public abstract void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException;
-	
-	public double getHeaderDouble(double value) {
-		if(Double.isNaN(value)) return UNKNOWN_DOUBLE_VALUE;
-		return value;
+
+	public HeaderCard makeCard(String key, boolean value, String comment) throws HeaderCardException {
+	    return new HeaderCard(key, value, comment);
 	}
 	
-	public float getHeaderFloat(double value) {
-		if(Double.isNaN(value)) return UNKNOWN_FLOAT_VALUE;
-		return (float) value;
-	}
+	public HeaderCard makeCard(String key, int value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, value, comment);
+    }
 	
-	public static String getStringValue(Header header, String key) {
-		return header.containsKey(key) ? header.getStringValue(key) : null;
-	}
+	public HeaderCard makeCard(String key, long value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, value, comment);
+    }
 	
-	public static double getHMSTime(Header header, String key) {
-		String value = header.getStringValue(key);
-		if(value == null) return header.getDoubleValue(key, Double.NaN) * Unit.hour; 
-		return Util.parseTime(value);
-	}
+	public HeaderCard makeCard(String key, float value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, Float.isNaN(value) ? SofiaHeader.UNKNOWN_FLOAT_VALUE : value, comment);
+    }
 	
-	public static double getDMSAngle(Header header, String key) {
-		String value = header.getStringValue(key);
-		if(value == null) return header.getDoubleValue(key, Double.NaN) * Unit.deg; 
-		return Util.parseAngle(value);
-	}
-	
-	public final static int UNKNOWN_INT_VALUE = -9999;
-	public final static float UNKNOWN_FLOAT_VALUE = -9999.0F;
-	public final static double UNKNOWN_DOUBLE_VALUE = -9999.0;
-	public final static String UNKNOWN_STRING_VALUE = "UNKNOWN";
+	public HeaderCard makeCard(String key, double value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, Double.isNaN(value) ? SofiaHeader.UNKNOWN_DOUBLE_VALUE : value, comment);
+    }
 	
 }

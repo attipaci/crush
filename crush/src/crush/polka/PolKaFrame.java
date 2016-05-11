@@ -67,8 +67,7 @@ public class PolKaFrame extends LabocaFrame {
 	}
 	
 	@Override
-	public void validate() {
-		super.validate();
+	public boolean validate() {
 		
 		final PolKa polka = (PolKa) scan.instrument;
 		
@@ -82,11 +81,13 @@ public class PolKaFrame extends LabocaFrame {
 		Uh = (float) Math.sin(theta);
 		
 		// calculate Q and U phases on sky based on the horizontal orientation...
-		final float cos2PA = (float)(cosPA*cosPA - sinPA*sinPA);
+		final float cos2PA = (float)(cosPA * cosPA - sinPA * sinPA);
 		final float sin2PA = (float)(2.0 * sinPA * cosPA);
 		
 		// Rotate by PA 
 		Q = cos2PA * Qh - sin2PA * Uh;
 		U = sin2PA * Qh + cos2PA * Uh;
+		
+		return super.validate();
 	}
 }

@@ -171,13 +171,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Incorporate the relative instrument gain (under loading) in the scan gain...
 		gain *= instrument.sourceGain;	
 		
+		if(hasOption("shift")) shiftData(option("shift").getDouble() * Unit.s);
+
 		new CRUSH.Fork<Void>(size(), getThreadCount()) {
 			@Override
 			protected void processIndex(int index) {
 				Frame frame = get(index);
 				if(frame == null) return;
-				frame.validate();
-				frame.index = index;
+				
+				if(!frame.validate()) set(index, null); 
+				else frame.index = index;
 			}
 		}.process();
 		
@@ -185,7 +188,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(hasOption("notch")) notchFilter();
 		
-		if(hasOption("shift")) shiftData(option("shift").getDouble() * Unit.s);
 		
 		if(hasOption("detect.chopped")) detectChopper();
 		
@@ -280,7 +282,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		
 		
-		if(!hasOption("pixeldata")) if(hasOption("weighting")) {
+		if(!hasOption("pixeldata")) if(hasOption("weighting")) if(!hasOption("uniformweights")) {
 			System.err.print("   Bootstrapping pixel weights");
 			getWeights();
 			instrument.census();
@@ -299,7 +301,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		CRUSH.setIteration(instrument.getOptions(), i, rounds);
 	}
  	
-	public double getExposureTime() { return getFrameCount(Frame.SKIP_SOURCE) * instrument.samplingInterval; }
+	public double getExposureTime() { return getFrameCount(Frame.SKIP_SOURCE_MODELING) * instrument.samplingInterval; }
 	
 	public double getDuration() { return size() * instrument.samplingInterval; }
 	
@@ -2119,7 +2121,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				final double speed = value.length();
 				
 				if(speed < range.min()) {
-					frame.flag(Frame.SKIP_SOURCE);
+					frame.flag(Frame.SKIP_SOURCE_MODELING);
 					flagged++;
 				}			
 				else if(speed > range.max()) {
@@ -2509,8 +2511,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	protected void writeCovariance(String name, double[][] covar) throws IOException, FitsException {
+	    
+	    if(hasOption("write.covar.condensed")) covar = condenseCovariance(covar);
+	        
 		if(!name.endsWith(".fits")) name += "-" + scan.getID() + "-" + getID() + ".fits";
 		if(covar == null) return;
+		
 		Fits fits = new Fits();
 		BasicHDU<?> hdu = Fits.makeHDU(covar);
 		fits.addHDU(hdu);
@@ -2521,6 +2527,29 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		System.err.println(" Written " + name);
 	}
 
+	protected double[][] condenseCovariance(double[][] covar) {
+	    int n = covar.length;
+	    ArrayList<Integer> lookup = new ArrayList<Integer>(n);
+
+	    for(int i=0; i < n; i++) {
+	        for(int j=0; j < i; j++) if(!Double.isNaN(covar[i][j])) if(covar[i][j] != 0) {
+	            lookup.add(i);
+	            break;
+	        }
+	    }
+	    if(lookup.size() == n) return covar;
+
+	    double[][] condensed = new double[lookup.size()][lookup.size()];
+	    
+	    for(int i=condensed.length; --i >= 0; ) {
+	        int fromi = lookup.get(i);
+	        for(int j=condensed.length; --j > i; ) condensed[i][j] = condensed[j][i] = covar[fromi][lookup.get(j)];
+	    }
+	    
+	    return condensed;
+	    
+	}
+	
 	float[][] getSpectra() {
 		return getSpectra("Hamming", 2*framesFor(filterTimeScale));
 	}
@@ -3337,17 +3366,28 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(nFrames > 0) {
 			if(nFrames > size()) nFrames = size();
-			for(int t=size(); --t >= nFrames; ) get(t).data = get(t-nFrames).data;
+			for(int t=size(); --t >= nFrames; ) {
+			    FrameType to = get(t);
+			    FrameType from = get (t - nFrames);
+			    if(to == null) continue;
+			    if(from == null) continue;
+			    to.cloneReadout(from);
+			}
 			for(int t=nFrames; --t >= 0; ) set(t, null);	
 		}
 		else {
 			nFrames *= -1;
-			for(int t=nFrames; t<size(); t++) get(t-nFrames).data = get(t).data;
+			for(int t=nFrames; t<size(); t++) {
+			    FrameType from = get(t);
+                FrameType to = get (t - nFrames);
+                if(to == null) continue;
+                if(from == null) continue;
+			    to.cloneReadout(from);
+			}
 			for(int t=size()-nFrames; t<size(); t++) set(t, null);
 		}
 	}
 	
-
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {
 		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);

@@ -114,24 +114,9 @@ public class ScalarMap extends SourceMap {
 	public SourceModel getWorkingCopy(boolean withContents) {
 		ScalarMap copy = (ScalarMap) super.getWorkingCopy(withContents);
 		
-		
 		try { copy.map = (AstroMap) map.copy(withContents); }
-		catch(OutOfMemoryError e) {
-			error("Ran out of memory while making a copy of the source map.");
-			System.err.println();
-			System.err.println("   * Check that the map size is reasonable for the area mapped and that");
-			System.err.println("     all scans reduced together belong to the same source or region.");
-			System.err.println();
-			System.err.println("   * Increase the amount of memory available to crush, by editing the '-Xmx'");
-			System.err.println("     option to Java in 'wrapper.sh' (or 'wrapper.bat' for Windows).");
-			System.err.println();
-			System.err.println("   * If using 64-bit Unix OS and Java, you can also add the '-d64' option to");
-			System.err.println("     allow Java to access over 2GB.");
-			System.err.println();
-			System.err.println("   * Reduce the number of parallel threads in the reduction by increasing");
-			System.err.println("     the idle CPU cores with the 'reservecpus' option.");
-		    System.err.println();
-		    System.exit(1);
+		catch(OutOfMemoryError e) { 
+		    runtimeMemoryError("Ran out of memory while making a copy of the source map.");
 		}
 		
 		return copy;
@@ -155,16 +140,14 @@ public class ScalarMap extends SourceMap {
 		map = new AstroMap();
 		map.setGrid(new SphericalGrid());
 		
-		setInstrument(getInstrument());
-		
 		super.createFrom(collection);
 		
-		Scan<?,?> firstScan = scans.get(0);
-		
+		Scan<?,?> firstScan = scans.get(0);	
 		for(Scan<?,?> scan : scans) map.scans.add(scan);	
 		
 		if(hasOption("unit")) map.setUnit(option("unit").getValue());
 		
+		map.setInstrument(getInstrument());
 		map.setParallel(CRUSH.maxThreads);
 		map.creator = CRUSH.class.getSimpleName();
 		map.setName(firstScan.getSourceName());
@@ -299,10 +282,7 @@ public class ScalarMap extends SourceMap {
 	}
 	
 
-	@Override
-	public double getPixelizationSmoothing() {
-		return Math.sqrt(map.getGrid().getPixelArea()) / GridImage2D.fwhm2size;
-	}
+	
 	
 	// 3 double maps (signal, weight, integrationTime), one int (flag) and one boolean (maks)
 	@Override

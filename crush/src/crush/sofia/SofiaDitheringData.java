@@ -31,37 +31,35 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaDitheringData extends SofiaHeaderData {
+public class SofiaDitheringData extends SofiaData {
 	public String coordinateSystem;
 	public Vector2D offset;
 	public String patternShape;
-	public int positions = UNKNOWN_INT_VALUE;
-	public int index = UNKNOWN_INT_VALUE;
+	public int positions = SofiaHeader.UNKNOWN_INT_VALUE;
+	public int index = SofiaHeader.UNKNOWN_INT_VALUE;
 	public double spacing = Double.NaN;
 	
 	public SofiaDitheringData() {}
 	
-	public SofiaDitheringData(Header header) {
+	public SofiaDitheringData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
 	
-	
-	@Override
-	public void parseHeader(Header header) {
+	public void parseHeader(SofiaHeader header) {
 		
-		coordinateSystem = getStringValue(header, "DTHCRSYS");		// new in 3.0
+		coordinateSystem = header.getString("DTHCRSYS");		// new in 3.0
 		
 		if(header.containsKey("DTHXOFF") || header.containsKey("DTHYOFF")) {
-			offset = new Vector2D(header.getDoubleValue("DTHXOFF", 0.0), header.getDoubleValue("DTHYOFF", 0.0));
+			offset = new Vector2D(header.getDouble("DTHXOFF", 0.0), header.getDouble("DTHYOFF", 0.0));
 			offset.scale(Unit.arcsec);
 		}
 		else offset = null;		// new in 3.0
 		
-		patternShape = getStringValue(header, "DTHPATT");
-		positions = header.getIntValue("DTHNPOS", UNKNOWN_INT_VALUE);
-		index = header.getIntValue("DTHINDEX", UNKNOWN_INT_VALUE);
-		spacing = header.getDoubleValue("DTHOFFS", Double.NaN) * Unit.arcsec;
+		patternShape = header.getString("DTHPATT");
+		positions = header.getInt("DTHNPOS");
+		index = header.getInt("DTHINDEX");
+		spacing = header.getDouble("DTHOFFS", Double.NaN) * Unit.arcsec;
 	}
 
 	@Override
@@ -73,7 +71,7 @@ public class SofiaDitheringData extends SofiaHeaderData {
 			cursor.add(new HeaderCard("DTHYOFF", offset.y() / Unit.arcsec, "(arcsec) Dither Y offset."));
 		}
 		if(patternShape != null) cursor.add(new HeaderCard("DTHPATT", patternShape, "Approximate shape of dither pattern."));
-		if(positions != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("DTHNPOS", positions, "Number of dither positions."));
+		if(positions != SofiaHeader.UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("DTHNPOS", positions, "Number of dither positions."));
 		cursor.add(new HeaderCard("DTHINDEX", index, "Dither position index."));
 		if(!Double.isNaN(spacing)) cursor.add(new HeaderCard("DTHOFFS", spacing / Unit.arcsec, "(arcsec) Dither spacing."));
 	}

@@ -168,10 +168,7 @@ public class PolKa extends Laboca {
 	
 		int iAnalyzer = hdu.findColumn("POLTY");
 		
-		if(hasOption("analyzer")) {
-			String value = option("analyzer").getValue().toUpperCase();
-			setAnalyzer(value.charAt(0));
-		}
+		if(hasOption("analyzer")) setAnalyzer(option("analyzer").getValue().charAt(0));
 		else if(iAnalyzer > 0) setAnalyzer(((String) hdu.getRow(0)[iAnalyzer]).charAt(0));
 		else {
 			hasAnalyzer = false;
@@ -184,15 +181,17 @@ public class PolKa extends Laboca {
 	}
 	
 	public void setAnalyzer(char c) {
-		switch(c) {
+		switch(Character.toUpperCase(c)) {
 		case 'N' : 
 			hasAnalyzer = false;
 			System.err.println("  WARNING! Total-power data. You really should use 'laboca' as your instrument");
 			System.err.println("           However, 'polka' will try its best to reduce it anyway...");
 			break;
-		case 'V' : 
+		case 'V' :
+		case 'Y' :
 			hasAnalyzer = true; isVertical = true; break;
 		case 'H' :
+		case 'X' :
 			hasAnalyzer = true; isVertical = false; break;
 		default :
 			System.err.println();

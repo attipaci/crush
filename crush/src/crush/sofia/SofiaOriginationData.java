@@ -28,25 +28,24 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaOriginationData extends SofiaHeaderData {
+public class SofiaOriginationData extends SofiaData {
 	public String organization, observer, creator, operator;
 	public String fileName, observatory;
 	
 	public SofiaOriginationData() {}
 	
-	public SofiaOriginationData(Header header) {
+	public SofiaOriginationData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
 	
-	@Override
-	public void parseHeader(Header header) {
-		organization = getStringValue(header, "ORIGIN");
-		observer = getStringValue(header, "OBSERVER");
-		creator = getStringValue(header, "CREATOR");
-		operator = getStringValue(header, "OPERATOR");
-		fileName = getStringValue(header, "FILENAME");
-		fileName = getStringValue(header, "OBSERVAT");		// not in 3.0
+	public void parseHeader(SofiaHeader header) {
+		organization = header.getString("ORIGIN");
+		observer = header.getString("OBSERVER");
+		creator = header.getString("CREATOR");
+		operator = header.getString("OPERATOR");
+		fileName = header.getString("FILENAME");
+		fileName = header.getString("OBSERVAT");		// not in 3.0
 	}
 
 	@Override

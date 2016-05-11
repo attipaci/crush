@@ -28,24 +28,23 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaMissionData extends SofiaHeaderData {
+public class SofiaMissionData extends SofiaData {
 	public String obsPlanID, aircraft, missionID;
-	public int flightLeg = UNKNOWN_INT_VALUE;
+	public int flightLeg = SofiaHeader.UNKNOWN_INT_VALUE;
 	
 	public SofiaMissionData() {}
 	
-	public SofiaMissionData(Header header) {
+	public SofiaMissionData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
 	
-	
-	@Override
-	public void parseHeader(Header header) {
-		obsPlanID = getStringValue(header, "PLANID");	// TODO map to project?
-		aircraft = getStringValue(header, "DEPLOY");
-		missionID = getStringValue(header, "MISSN-ID");
-		flightLeg = header.getIntValue("FLIGHTLG", UNKNOWN_INT_VALUE);
+
+	public void parseHeader(SofiaHeader header) {
+		obsPlanID = header.getString("PLANID");	// TODO map to project?
+		aircraft = header.getString("DEPLOY");
+		missionID = header.getString("MISSN-ID");
+		flightLeg = header.getInt("FLIGHTLG");
 	}
 
 	@Override

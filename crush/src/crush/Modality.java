@@ -104,8 +104,6 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		}
 		setDefaultNames();
 	}
-
-	
 	
 	public void setDefaultNames() {
 		for(int i=size(); --i >= 0; ) get(i).name = name + ":" + get(i).getChannels().getName();
@@ -214,8 +212,23 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	    public CoupledModality(String name, String id, GainProvider source) {
 	        super(name, id);
 	        for(Mode mode : Modality.this) CoupledModality.this.add(mode.new CoupledMode(source));
-	        CoupledModality.this.setDefaultNames();
 	    }
+	}
+	
+	public class NonLinearity extends Modality<Mode.NonLinearResponse> {
+	    /**
+         * 
+         */
+        private static final long serialVersionUID = -7733111770338459357L;
+
+        public NonLinearity(String name, String id, Field gainField) {
+            this(name, id, new FieldGainProvider(gainField));
+        }
+
+        public NonLinearity(String name, String id, GainProvider source) {
+            super(name, id);
+            for(Mode mode : Modality.this) NonLinearity.this.add(mode.new NonLinearResponse(source));
+        }
 	}
 		
 }

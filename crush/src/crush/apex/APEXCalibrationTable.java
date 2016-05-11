@@ -29,7 +29,7 @@ import java.util.*;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
-import jnum.data.LinearLocality;
+import jnum.data.ScalarLocality;
 import jnum.data.LocalAverage;
 import jnum.data.Locality;
 import jnum.data.LocalizedData;
@@ -108,7 +108,7 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 		return mean.scaling.value();
 	}
 	
-	class TimeStamp extends LinearLocality {
+	class TimeStamp extends ScalarLocality {
 		
 		public TimeStamp(double MJD) { super(MJD); }
 		

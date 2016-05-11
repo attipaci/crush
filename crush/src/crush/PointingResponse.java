@@ -22,8 +22,6 @@
  ******************************************************************************/
 package crush;
 
-import java.lang.reflect.Field;
-
 public class PointingResponse extends PositionResponse {
 
 	/**
@@ -35,12 +33,5 @@ public class PointingResponse extends PositionResponse {
 		super(Motion.TELESCOPE);
 	}
 
-	public PointingResponse(ChannelGroup<?> group, Field gainField) {
-		super(Motion.TELESCOPE, group, gainField);
-	}
-
-	public PointingResponse(ChannelGroup<?> group) {
-		super(Motion.TELESCOPE, group);
-	}
 
 }

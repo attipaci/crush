@@ -25,6 +25,7 @@ package crush.hawcplus;
 
 
 import crush.Channel;
+import crush.Frame;
 import crush.Instrument;
 import crush.sofia.SofiaFrame;
 import jnum.math.Vector2D;
@@ -68,7 +69,41 @@ public class HawcPlusFrame extends SofiaFrame {
             if(jump != null) jumpCounter[pixel.index] = (byte) jump[from + pixel.fitsIndex];
         }
     }
+    
+    public void parseData(int[][] DAC, short[][] jump) {  
+        HawcPlus hawc = (HawcPlus) scan.instrument;
+        
+        for(final HawcPlusPixel pixel : hawc) {
+            data[pixel.index] = DAC[pixel.fitsRow][pixel.fitsCol];
+            if(hawc.subarrayInverted[pixel.sub]) data[pixel.index] *= -1;
+            if(jump != null) jumpCounter[pixel.index] = (byte) jump[pixel.fitsRow][pixel.fitsCol];
+        }
+    }
 
+    @Override
+    public void cloneReadout(Frame from) {
+        super.cloneReadout(from);
+        
+        HawcPlusFrame frame = (HawcPlusFrame) from;
+        jumpCounter = frame.jumpCounter;
+        chopperPosition = frame.chopperPosition;
+        hwpAngle = frame.hwpAngle;
+        MJD = frame.MJD;
+        mceSerial = frame.mceSerial;
+    }
+    
+    @Override
+    public void addDataFrom(Frame other, double scaling) {
+        super.addDataFrom(other, scaling);
+        if(scaling == 0.0) return;
+        
+        final HawcPlusFrame frame = (HawcPlusFrame) other;
+        final float fScale = (float) scaling;
+        
+        hwpAngle += fScale * frame.hwpAngle;
+    }
+    
+    
     @Override
     public void slimTo(Instrument<?> instrument) {
         super.slimTo(instrument);
@@ -80,14 +115,35 @@ public class HawcPlusFrame extends SofiaFrame {
 
         jumpCounter = newJumpCounter;
     }
-
+  
     @Override
-    public void validate() {
-        HawcPlus hawc = (HawcPlus) scan.instrument;
+    public boolean validate() {
+        HawcPlusScan hawcScan = (HawcPlusScan) scan;
+        HawcPlus hawc = hawcScan.instrument; 
+        
+         // Skip data that is not normal observing
+        if(status != FITS_FLAG_NORMAL_OBSERVING || (hawcScan.useBetweenScans && status == FITS_FLAG_BETWEEN_SCANS)) 
+            return false;
+        
+        if(hasTelescopeInfo) {
+            if(equatorial == null) return false;
+                   
+            if(chopperPosition != null) {
+                horizontalOffset.add(chopperPosition);
+                horizontal.addOffset(chopperPosition);
 
+                Vector2D offset = (Vector2D) chopperPosition.copy();
+                horizontalToNativeEquatorial(offset);
+                equatorial.addNativeOffset(offset);
+            }
+
+            // TODO HWP angle in equatorial... (check sign)
+            hwpAngle += telescopeVPA;
+        }
+        
         if(hawc.darkSquidCorrection) darkCorrect();
 
-        super.validate();
+        return super.validate();
     }
     
 

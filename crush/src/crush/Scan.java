@@ -82,7 +82,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public Precession fromApparent, toApparent;
 	public Vector2D pointingCorrection;
 	
-	public Range longitudeRange, latitudeRange;
+	public Range xRange, yRange;
 	public boolean isTracking = false;
 	public boolean isNonSidereal = false;
 	
@@ -1046,9 +1046,6 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			integration.reindex();
 			add((IntegrationType) integration);
 		}
-		
-		
-		
 	}
 	
 	

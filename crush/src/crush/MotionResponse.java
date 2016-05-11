@@ -22,7 +22,6 @@
  ******************************************************************************/
 package crush;
 
-import java.lang.reflect.Field;
 import java.util.StringTokenizer;
 
 
@@ -35,14 +34,6 @@ public abstract class MotionResponse extends Response {
 
 	public MotionResponse() {
 		super();
-	}
-
-	public MotionResponse(ChannelGroup<?> group, Field gainField) {
-		super(group, gainField);
-	}
-
-	public MotionResponse(ChannelGroup<?> group) {
-		super(group);
 	}
 	
 	public abstract Signal getSignal(Integration<?, ?> integration, Motion direction);

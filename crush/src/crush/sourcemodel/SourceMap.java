@@ -41,6 +41,7 @@ import jnum.astro.EquatorialCoordinates;
 import jnum.astro.FocalPlaneCoordinates;
 import jnum.astro.GalacticCoordinates;
 import jnum.data.Grid2D;
+import jnum.data.GridImage2D;
 import jnum.data.Index2D;
 import jnum.data.Statistics;
 import jnum.math.Range;
@@ -66,8 +67,8 @@ public abstract class SourceMap extends SourceModel {
     public int marginX = 0, marginY = 0;
 
     protected int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
-    
-    
+
+
     private int indexShiftX, indexMaskY;
 
 
@@ -88,17 +89,16 @@ public abstract class SourceMap extends SourceModel {
     @Override
     public void createFrom(Collection<? extends Scan<?,?>> collection) {
         super.createFrom(collection);
-
-        System.out.print(" Initializing Source Map. ");	
-
-        String system = hasOption("system") ? option("system").getValue().toLowerCase() : "equatorial";
-
+      
+        System.out.println(" Initializing Source Map.");	
+ 
         Projection2D<SphericalCoordinates> projection = null;
 
         try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
         catch(Exception e) { projection = new Gnomonic(); }		
 
         Scan<?,?> firstScan = scans.get(0);
+        String system = hasOption("system") ? option("system").getValue().toLowerCase() : "equatorial";
 
         if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
         else if(system.equals("native")) projection.setReference(firstScan.getNativeCoordinates()); 
@@ -138,6 +138,7 @@ public abstract class SourceMap extends SourceModel {
         }
 
     }
+    
 
     public void setSmoothing() {
         if(!hasOption("smooth")) return;
@@ -171,8 +172,10 @@ public abstract class SourceMap extends SourceModel {
     public void setSmoothing(double value) { smoothing = value; }
 
     public double getSmoothing() { return smoothing; }
-
-    public abstract double getPixelizationSmoothing();
+  
+    public double getPixelizationSmoothing() {
+        return Math.sqrt(getGrid().getPixelArea()) / GridImage2D.fwhm2size;
+    }
 
     @Override
     public double getPointSize() { return ExtraMath.hypot(getInstrument().getPointSize(), getRequestedSmoothing(option("smooth"))); }
@@ -219,6 +222,8 @@ public abstract class SourceMap extends SourceModel {
         final Collection<? extends Pixel> pixels = integration.instrument.getPerimeterPixels();
         if(pixels.size() == 0) return;
 
+        if(CRUSH.debug) System.err.println("### search pixels: " + pixels.size() + " : " + integration.instrument.size());
+        
         class Range2D {	
             public Range x = new Range();
             public Range y = new Range();
@@ -237,8 +242,6 @@ public abstract class SourceMap extends SourceModel {
 
             @Override
             protected void process(Frame exposure) {	
-                if(exposure.isFlagged(Frame.SKIP_SOURCE)) return;
-
                 for(Pixel pixel : pixels) {
                     exposure.project(pixel.getPosition(), projector);	
                     range.x.include(projector.offset.x());
@@ -274,8 +277,8 @@ public abstract class SourceMap extends SourceModel {
 
         Scan<?,?> scan = integration.scan;
 
-        scan.longitudeRange.include(range.x);
-        scan.latitudeRange.include(range.y);
+        scan.xRange.include(range.x);
+        scan.yRange.include(range.y);
 
     }
 
@@ -300,27 +303,24 @@ public abstract class SourceMap extends SourceModel {
             yRange.empty();
 
             for(Scan<?,?> scan : scans) {
-                scan.longitudeRange = new Range();
-                scan.latitudeRange = new Range();
+                scan.xRange = new Range();
+                scan.yRange = new Range();
 
                 for(Integration<?,?> integration : scan) searchCorners(integration);
 
-                xRange.include(scan.longitudeRange);
-                yRange.include(scan.latitudeRange);
+                xRange.include(scan.xRange);
+                yRange.include(scan.yRange);
             }	       
         }
     }
 
     public void index() throws Exception {
-        System.err.print(" Indexing maps. ");
-
         final double maxUsage = hasOption("indexing.saturation") ? option("indexing.saturation").getDouble() : 0.5;
-        System.err.println(" (Up to " + Util.d1.format(100.0*maxUsage) + "% of RAM saturation.)");
+        System.err.println(" Indexing maps (up to " + Util.d1.format(100.0*maxUsage) + "% of RAM saturation).");
 
         final Runtime runtime = Runtime.getRuntime();
         long maxAvailable = runtime.maxMemory() - getReductionFootprint(pixels());
         final long maxUsed = (long) (maxUsage * maxAvailable);
-
 
         for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) {
             if(runtime.totalMemory() - runtime.freeMemory() >= maxUsed) return;
@@ -339,7 +339,7 @@ public abstract class SourceMap extends SourceModel {
 
         indexShiftX = ExtraMath.log2ceil(sizeY());
         indexMaskY = (1<<indexShiftX) - 1;
-        
+
         integration.new Fork<Void>() {
             private AstroProjector projector;
             private Index2D index;
@@ -352,7 +352,7 @@ public abstract class SourceMap extends SourceModel {
             }
 
             @Override 
-            protected void process(Frame exposure) {
+            protected void process(Frame exposure) {  
                 exposure.sourceIndex = new int[n];
 
                 if(CRUSH.debug) Arrays.fill(exposure.sourceIndex, -1);
@@ -423,7 +423,7 @@ public abstract class SourceMap extends SourceModel {
     public abstract Grid2D<?> getGrid();
 
     public void setSize() {
-
+      
         // Figure out what offsets the corners of the map will have...
         try { searchCorners(); }
         catch(Exception e) { 
@@ -449,11 +449,21 @@ public abstract class SourceMap extends SourceModel {
         Grid2D<?> grid = getGrid();
         grid.setResolution(delta);
 
-        grid.refIndex.setX(0.5 - Math.floor(xRange.min() / delta.x()));
-        grid.refIndex.setY(0.5 - Math.floor(yRange.min() / delta.y()));
+        grid.refIndex.setX(0.5 - Math.rint(xRange.min() / delta.x()));
+        grid.refIndex.setY(0.5 - Math.rint(yRange.min() / delta.y()));
 
-        int sizeX = 2 + (int) Math.ceil(grid.refIndex.x() + xRange.max() / delta.x());
-        int sizeY = 2 + (int) Math.ceil(grid.refIndex.y() + yRange.max() / delta.y());
+        if(CRUSH.debug) {
+            Vector2D corner = new Vector2D(xRange.min(), yRange.min());
+            grid.toIndex(corner);
+            System.err.println("### near corner: " + corner);
+            
+            corner = new Vector2D(xRange.max(), yRange.max());
+            grid.toIndex(corner);
+            System.err.println("### far corner: " + corner);
+        }
+
+        int sizeX = 1 + (int) Math.ceil(grid.refIndex.x() + xRange.max() / delta.x());
+        int sizeY = 1 + (int) Math.ceil(grid.refIndex.y() + yRange.max() / delta.y());
 
         if(CRUSH.debug) System.err.println("### map pixels: " + sizeX + " x " + sizeY);
 
@@ -461,20 +471,38 @@ public abstract class SourceMap extends SourceModel {
             checkForStorage(sizeX, sizeY);	
             setSize(sizeX, sizeY);
         }
-        catch(OutOfMemoryError e) { memoryError(sizeX, sizeY); }
+        catch(OutOfMemoryError e) { createMemoryError(sizeX, sizeY); }
     }
 
     public abstract void setSize(int sizeX, int sizeY);
-    
+
     public abstract int sizeX();
-    
+
     public abstract int sizeY();
 
     public abstract Projection2D<SphericalCoordinates> getProjection(); 
 
     public abstract void setProjection(Projection2D<SphericalCoordinates> projection); 
 
-    public void memoryError(int sizeX, int sizeY) {
+    public void runtimeMemoryError(String message) {
+        error(message);
+        System.err.println();
+        System.err.println("   * Check that the map size is reasonable for the area mapped and that");
+        System.err.println("     all scans reduced together belong to the same source or region.");
+        System.err.println();
+        System.err.println("   * Increase the amount of memory available to crush, by editing the '-Xmx'");
+        System.err.println("     option to Java in 'wrapper.sh' (or 'wrapper.bat' for Windows).");
+        System.err.println();
+        System.err.println("   * If using 64-bit Unix OS and Java, you can also add the '-d64' option to");
+        System.err.println("     allow Java to access over 2GB.");
+        System.err.println();
+        System.err.println("   * Reduce the number of parallel threads in the reduction by increasing");
+        System.err.println("     the idle CPU cores with the 'reservecpus' option.");
+        System.err.println();
+        System.exit(1);
+    }
+    
+    public void createMemoryError(int sizeX, int sizeY) {
 
         Vector2D resolution = getGrid().getResolution();
         double diagonal = ExtraMath.hypot(sizeX * resolution.x(), sizeY * resolution.y());
@@ -528,7 +556,7 @@ public abstract class SourceMap extends SourceModel {
         long max = runtime.maxMemory();
         long used = runtime.totalMemory() - runtime.freeMemory();
         long required = (long) (getPixelFootprint() * sizeX * sizeY);
-        if(used + required > max) memoryError(sizeX, sizeY); 
+        if(used + required > max) createMemoryError(sizeX, sizeY); 
     }
 
     public Collection<Scan<?,?>> findOutliers(double maxDistance) {
@@ -559,7 +587,7 @@ public abstract class SourceMap extends SourceModel {
         double cosLat = getProjection().getReference().cosLat();
 
         for(Scan<?,?> scan : scans) {
-            double span = ExtraMath.hypot(scan.longitudeRange.span() * cosLat, scan.latitudeRange.span());
+            double span = ExtraMath.hypot(scan.xRange.span() * cosLat, scan.yRange.span());
             if(span > maxDistance) slews.add(scan);
         }
         return slews;
@@ -773,8 +801,6 @@ public abstract class SourceMap extends SourceModel {
 
             @Override 
             protected void process(final Frame exposure) {
-                //if(exposure.isFlagged(Frame.SKIP_SOURCE)) return;
-
                 final double fG = integration.gain * exposure.getSourceGain(signalMode); 
 
                 // Remove source from all but the blind channels...

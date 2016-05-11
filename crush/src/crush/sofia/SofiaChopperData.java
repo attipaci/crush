@@ -27,7 +27,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaChopperData extends SofiaHeaderData {
+public class SofiaChopperData extends SofiaData {
 	public double frequency = Double.NaN;
 	public String profileType;
 	public String symmetryType;
@@ -43,28 +43,27 @@ public class SofiaChopperData extends SofiaHeaderData {
 	
 	public SofiaChopperData() {}
 	
-	public SofiaChopperData(Header header) {
+	public SofiaChopperData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
 	
-	
-	@Override
-	public void parseHeader(Header header) {
-		frequency = header.getDoubleValue("CHPFREQ", Double.NaN) * Unit.Hz;
-		profileType = getStringValue(header, "CHPPROF");
-		symmetryType = getStringValue(header, "CHPSYM");
-		amplitude = header.getDoubleValue("CHPAMP1", Double.NaN) * Unit.arcsec;
-		amplitude2 = header.getDoubleValue("CHPAMP2", Double.NaN) * Unit.arcsec;
-		coordinateSystem = getStringValue(header, "CHPCRSYS");
-		angle = header.getDoubleValue("CHPANGLE", Double.NaN) * Unit.deg;
-		tip = header.getDoubleValue("CHPTIP", Double.NaN) * Unit.arcsec;
-		tilt = header.getDoubleValue("CHPTILT", Double.NaN) * Unit.arcsec;
-		signalSource = getStringValue(header, "CHPSRC");								// not in 3.0
-		driveMode = getStringValue(header, "CHPACDC");									// new in 3.0
-		waveFunction = getStringValue(header, "CHPFUNC");								// not in 3.0
-		settlingTime = header.getDoubleValue("CHPSETL", Double.NaN) * Unit.ms;			// not in 3.0
-		phase = header.getDoubleValue("CHPPHASE", Double.NaN) * Unit.ms;				// int->float in 3.0
+
+	public void parseHeader(SofiaHeader header) {
+		frequency = header.getDouble("CHPFREQ", Double.NaN) * Unit.Hz;
+		profileType = header.getString("CHPPROF");
+		symmetryType = header.getString("CHPSYM");
+		amplitude = header.getDouble("CHPAMP1", Double.NaN) * Unit.arcsec;
+		amplitude2 = header.getDouble("CHPAMP2", Double.NaN) * Unit.arcsec;
+		coordinateSystem = header.getString("CHPCRSYS");
+		angle = header.getDouble("CHPANGLE", Double.NaN) * Unit.deg;
+		tip = header.getDouble("CHPTIP", Double.NaN) * Unit.arcsec;
+		tilt = header.getDouble("CHPTILT", Double.NaN) * Unit.arcsec;
+		signalSource = header.getString("CHPSRC");								// not in 3.0
+		driveMode = header.getString("CHPACDC");									// new in 3.0
+		waveFunction = header.getString("CHPFUNC");								// not in 3.0
+		settlingTime = header.getDouble("CHPSETL", Double.NaN) * Unit.ms;			// not in 3.0
+		phase = header.getDouble("CHPPHASE", Double.NaN) * Unit.ms;				// int->float in 3.0
 	}
 
 	@Override
@@ -86,7 +85,10 @@ public class SofiaChopperData extends SofiaHeaderData {
 		if(!Double.isNaN(phase)) cursor.add(new HeaderCard("CHPPHASE", phase / Unit.ms, "(ms) Chop phase."));
 	}
 
-	public static double volts2Angle = 1123.0 * Unit.arcsec / (9.0 * Unit.V);
+	// Below is the nominal conversion
+	//public static final double volts2Angle = 1123.0 * Unit.arcsec / (9.0 * Unit.V);
 	
+	// And here is the conversion that matches HAWC+ data...
+	public static final double volts2Angle = 301.5 * Unit.arcsec / (9.0 * Unit.V);
 	
 }

@@ -32,7 +32,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArrayData> {
+public class SofiaArrayData extends SofiaData implements Copiable<SofiaArrayData> {
 	public String detectorName, detectorSizeString;
 	public double pixelScale = Double.NaN;
 	public int subarrays = 0;
@@ -45,7 +45,7 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 
 	public SofiaArrayData() {}
 	
-	public SofiaArrayData(Header header) {
+	public SofiaArrayData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
@@ -65,29 +65,28 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 	}
 
 	
-	
-	@Override
-	public void parseHeader(Header header) {
-		detectorName = SofiaHeaderData.getStringValue(header, "DETECTOR");
-		detectorSizeString = SofiaHeaderData.getStringValue(header, "DETSIZE");
-		pixelScale = header.getDoubleValue("PIXSCAL", Double.NaN) * Unit.arcsec;
-		subarrays = header.getIntValue("SUBARRNO", 0);
+
+	public void parseHeader(SofiaHeader header) {
+		detectorName = header.getString("DETECTOR");
+		detectorSizeString = header.getString("DETSIZE");
+		pixelScale = header.getDouble("PIXSCAL", Double.NaN) * Unit.arcsec;
+		subarrays = header.getInt("SUBARRNO", 0);
 		
 		if(subarrays > 0) {
 			subarraySize = new String[subarrays];
 			DecimalFormat d2 = new DecimalFormat("00");
-			for(int i=0; i<subarrays; i++) subarraySize[i] = SofiaHeaderData.getStringValue(header, "SUBARR" + d2.format(i+1));	
+			for(int i=0; i<subarrays; i++) subarraySize[i] = header.getString("SUBARR" + d2.format(i+1));	
 		}
 		
-		saturationValue = header.getDoubleValue("SATURATE", Double.NaN);
-		detectorAngle = header.getDoubleValue("DET_ANGL", Double.NaN);
-		averagedFrames = header.getIntValue("COADDS", -1);
+		saturationValue = header.getDouble("SATURATE", Double.NaN);
+		detectorAngle = header.getDouble("DET_ANGL", Double.NaN);
+		averagedFrames = header.getInt("COADDS", -1);
 		
-		boresightIndex.setX(header.getDoubleValue("SIBS_X", Double.NaN));
-		boresightIndex.setY(header.getDoubleValue("SIBS_Y", Double.NaN));
+		boresightIndex.setX(header.getDouble("SIBS_X", Double.NaN));
+		boresightIndex.setY(header.getDouble("SIBS_Y", Double.NaN));
 		
 		if(header.containsKey("CTYPE1") && header.containsKey("CTYPE2")) {
-			try { grid = Grid2D.fromHeader(header, ""); } 
+			try { grid = Grid2D.fromHeader(header.getFitsHeader(), ""); } 
 			catch (Exception e) { e.printStackTrace(); }
 		}
 		else grid = null;
@@ -112,10 +111,10 @@ public class SofiaArrayData extends SofiaHeaderData implements Copiable<SofiaArr
 		if(averagedFrames > 0) cursor.add(new HeaderCard("COADDS", averagedFrames, "Number of raw frames per sample."));
 	
 		if(!Double.isNaN(boresightIndex.x())) cursor.add(new HeaderCard("SIBS_X", boresightIndex.x(), "(pixel) boresight pixel x."));
-		else cursor.add(new HeaderCard("SIBS_X", SofiaHeaderData.UNKNOWN_FLOAT_VALUE, "Undefined value."));
+		else cursor.add(new HeaderCard("SIBS_X", SofiaHeader.UNKNOWN_FLOAT_VALUE, "Undefined value."));
 		
 		if(!Double.isNaN(boresightIndex.y())) cursor.add(new HeaderCard("SIBS_Y", boresightIndex.y(), "(pixel) boresight pixel y."));
-		else cursor.add(new HeaderCard("SIBS_Y", SofiaHeaderData.UNKNOWN_FLOAT_VALUE, "Undefined value."));
+		else cursor.add(new HeaderCard("SIBS_Y", SofiaHeader.UNKNOWN_FLOAT_VALUE, "Undefined value."));
 		
 		if(grid != null) grid.editHeader(header, cursor); // TODO...
 	}

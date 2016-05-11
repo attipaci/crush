@@ -36,7 +36,7 @@ public class LabocaCableTwist extends ZeroMeanGains {
 	private static final long serialVersionUID = -1813119272323673961L;
 	
 	@Override
-	public double getRawGain(Channel c) throws Exception {
+	public double getRelativeGain(Channel c) throws Exception {
 	    final int pin = ((LabocaPixel) c).pin;
 		return pin < 0 ? Double.NaN : pin - 13.5;
 	}
