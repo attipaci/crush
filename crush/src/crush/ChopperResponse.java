@@ -22,8 +22,6 @@
  ******************************************************************************/
 package crush;
 
-import java.lang.reflect.Field;
-
 public class ChopperResponse extends PositionResponse {
 
 	/**
@@ -33,14 +31,6 @@ public class ChopperResponse extends PositionResponse {
 
 	public ChopperResponse() {
 		super(Motion.CHOPPER);
-	}
-
-	public ChopperResponse(ChannelGroup<?> group, Field gainField) {
-		super(Motion.CHOPPER, group, gainField);
-	}
-
-	public ChopperResponse(ChannelGroup<?> group) {
-		super(Motion.CHOPPER, group);
 	}
 
 }

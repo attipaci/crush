@@ -31,9 +31,11 @@ import crush.array.Camera;
 import crush.array.GridIndexed;
 import crush.array.SingleColorArrangement;
 import crush.sofia.SofiaCamera;
+import crush.sofia.SofiaHeader;
 import jnum.Configurator;
 import jnum.LockedException;
 import jnum.Unit;
+import jnum.data.ArrayUtil;
 import jnum.io.fits.FitsExtras;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
@@ -91,46 +93,17 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		HawcPlus copy = (HawcPlus) super.copy();
 		
 		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
-		
-        if(hasSubarray != null) {
-            copy.hasSubarray = new boolean[subarrays];
-            for(int i=subarrays; --i >= 0; ) copy.hasSubarray[i] = hasSubarray[i];
-        }
-        
-		if(subarrayOffset != null) {
-			copy.subarrayOffset = new Vector2D[subarrays];
-			for(int i=subarrays; --i >= 0; ) copy.subarrayOffset[i] = (Vector2D) subarrayOffset[i].clone();
-		}
-	
-		if(subarrayOrientation != null) {
-            copy.subarrayOrientation = new double[subarrays];
-            for(int i=subarrays; --i >= 0; ) copy.subarrayOrientation[i] = subarrayOrientation[i];
-        }
-
-		if(subarrayInverted != null) {
-            copy.subarrayInverted = new boolean[subarrays];
-            for(int i=subarrays; --i >= 0; ) copy.subarrayInverted[i] = subarrayInverted[i];
-        }
-		
-		if(polZoom != null) {
-		    copy.polZoom = new double[polArrays];
-		    for(int i=polArrays; --i >= 0; ) copy.polZoom[i] = polZoom[i];
-		}
-		
+        if(hasSubarray != null) copy.hasSubarray = Arrays.copyOf(hasSubarray, hasSubarray.length);   
+		if(subarrayOffset != null) copy.subarrayOffset = Arrays.copyOf(subarrayOffset, subarrayOffset.length);
+		if(subarrayOrientation != null) copy.subarrayOrientation = Arrays.copyOf(subarrayOrientation, subarrayOrientation.length);
+ 		if(subarrayInverted != null) copy.subarrayInverted = Arrays.copyOf(subarrayInverted, subarrayInverted.length);
+  		if(polZoom != null) copy.polZoom = Arrays.copyOf(polZoom, polZoom.length);
 		if(darkSquidLookup != null) {
-		    copy.darkSquidLookup = new int[subarrays][subarrayCols];
-            for(int i=subarrays; --i >= 0; ) System.arraycopy(darkSquidLookup[i], 0, copy.darkSquidLookup[i], 0, darkSquidLookup[i].length);
-        }
-		
-		if(mceSubarray != null) {
-		    copy.mceSubarray = new int[mceSubarray.length];
-		    System.arraycopy(mceSubarray, 0, copy.mceSubarray, 0, mceSubarray.length);
+            try { copy.darkSquidLookup = (int[][]) ArrayUtil.copy(darkSquidLookup); } 
+            catch(Exception e) { e.printStackTrace(); }
 		}
-		
-		if(detectorBias != null) {
-		    copy.detectorBias = new int[detectorBias.length][detectorBias[0].length];
-		    for(int i=detectorBias.length; --i >= 0; ) System.arraycopy(detectorBias[i], 0, copy.detectorBias[i], 0, detectorBias[i].length);
-		}
+		if(mceSubarray != null) copy.mceSubarray = Arrays.copyOf(mceSubarray, mceSubarray.length);
+		if(detectorBias != null) copy.detectorBias = Arrays.copyOf(detectorBias, detectorBias.length);
 		
 		return copy;
 	}
@@ -189,15 +162,17 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	@Override
 	public void initModalities() {
 		super.initModalities();
-		
+		       
 		addModality(modalities.get("obs-channels").new CoupledModality("polarrays", "p", new HawcPlusPolImbalance()));
 		
+		/* TODO subarrays should be coupled modality...
 		try { 
 			Modality<?> subMode = new CorrelatedModality("subarrays", "s", divisions.get("subarrays"), HawcPlusPixel.class.getField("gain")); 
 			subMode.solveGains = false;
 			addModality(subMode);
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		*/
 		
 		try {
             CorrelatedModality biasMode = new CorrelatedModality("bias", "b", divisions.get("bias"), HawcPlusPixel.class.getField("biasGain"));     
@@ -216,29 +191,28 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		catch(NoSuchFieldException e) { e.printStackTrace(); }	
 			
 		try { 
-			Modality<?> pinMode = new CorrelatedModality("rows", "r", divisions.get("rows"), HawcPlusPixel.class.getField("pinGain")); 
-			pinMode.setGainFlag(HawcPlusPixel.FLAG_ROW);
-			addModality(pinMode);
+			Modality<?> addressMode = new CorrelatedModality("rows", "r", divisions.get("rows"), HawcPlusPixel.class.getField("pinGain")); 
+			addressMode.setGainFlag(HawcPlusPixel.FLAG_ROW);
+			addModality(addressMode);
 		}
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 		
 	}
 	
 	@Override
-    public void parseHeader(Header header) {
+    public void parseHeader(SofiaHeader header) {
 	    super.parseHeader(header);
 	    
 	    // TODO should not be necessary if the header is proper...
 	    if(Double.isNaN(integrationTime) || integrationTime < 0.0) {
-	        System.err.println(" WARNING! Missing SMPLFREQ. Will assume 200 Hz.");
-	        integrationTime = samplingInterval = 5.0 * Unit.ms;
+	        System.err.println(" WARNING! Missing SMPLFREQ. Will assume 203.25 Hz.");
+	        integrationTime = samplingInterval = 1.0 * Unit.s / 203.25;
 	    }
-	    
 	    
 	    hasSubarray = new boolean[subarrays];
 	    
-	    String mceMap = header.getStringValue("MCEMAP");
-	    mceSubarray = new int[4];
+	    String mceMap = header.getString("MCEMAP");
+	    mceSubarray = new int[subarrays];
 	    Arrays.fill(mceSubarray, -1);
 	    
 	    if(mceMap != null) {
@@ -333,12 +307,16 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	
 	private void setPixelSize(Vector2D size) {	
 		pixelSize = size;
-	
+		
 		System.err.println("   Boresight pixel from FITS is " + array.boresightIndex);
 		
 		if(hasOption("pcenter")) {
 		    array.boresightIndex = option("pcenter").getVector2D();	
 		    System.err.println("   Boresight override --> " + array.boresightIndex);
+		} 
+		else if(Double.isNaN(array.boresightIndex.x())) {
+		    array.boresightIndex = defaultBoresightIndex;
+		    System.err.println("   WARNING! Missing FITS boresight --> " + array.boresightIndex);
 		}
 		Vector2D center = getPosition(0, array.boresightIndex.x(), array.boresightIndex.y());
 	
@@ -435,7 +413,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		int nSub = 0;
 		int polMask = 0;
 		for(int i=subarrays; --i >= 0; ) {
-		    polMask |= (i+1) & 2;
+		    polMask |= (i & 2) + 1;
 		    if(hasSubarray[i]) nSub++;
 		}
 		
@@ -443,11 +421,17 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		    try { getOptions().blacklist("correlated.polarrays"); }
 		    catch(LockedException e) {}
 		}
+		  
+		/*
+        if(nSub < 2 || (polMask == 3 && nSub == 2)) {
+            try { getOptions().blacklist("correlated.subs"); }
+            catch(LockedException e) {}
+        }
+        */
 		
 		clear();
 		ensureCapacity(nSub * subarrayPixels);
-		
-		// TODO...
+
 		for(int c=0; c<pixels; c++) {
 		    HawcPlusPixel pixel = new HawcPlusPixel(this, c);
 		    if(hasSubarray[pixel.sub]) add(pixel);
@@ -634,7 +618,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	private static final int R_ARRAY = 0;
 	private static final int T_ARRAY = 1;
 
-	
+	public static final Vector2D defaultBoresightIndex = new Vector2D(15.5, 19.5);
 
 }
 

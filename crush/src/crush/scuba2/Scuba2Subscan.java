@@ -155,7 +155,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		for(int bol=Scuba2Subarray.PIXELS; --bol >= 0; ) readoutLevel[channelOffset + bol] = DAC[bol%Scuba2.SUBARRAY_COLS][bol/Scuba2.SUBARRAY_COLS];
 	}
 
-	
+	// TODO low level read for less RAM overhead...
 	private void readArrayData(ImageHDU dataHDU, final int channelOffset, final float scaling) throws FitsException {
 		final int[][][] data = (int[][][]) dataHDU.getData().getData();
 		//if(data.length != size()) throw new IllegalStateException("Mismatched data (" + data.length + ") vs. coordinates size (" + size() + ").");	

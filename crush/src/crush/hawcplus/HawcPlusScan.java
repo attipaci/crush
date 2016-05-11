@@ -36,7 +36,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import crush.CRUSH;
-import crush.sofia.SofiaHeaderData;
+import crush.sofia.SofiaHeader;
 import crush.sofia.SofiaScan;
 import jnum.Util;
 
@@ -47,6 +47,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	private static final long serialVersionUID = -3732251029215505308L;
 	
 	String priorPipelineStep;
+	boolean useBetweenScans;
 	
 	public HawcPlusScan(HawcPlus instrument) {
 		super(instrument);
@@ -59,11 +60,11 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	}
 
 	@Override
-	public void parseHeader(Header header) throws Exception {
+	public void parseHeader(SofiaHeader header) throws Exception {
 		super.parseHeader(header);
 		
-		priorPipelineStep = SofiaHeaderData.getStringValue(header, "PROCLEVL");
-		isNonSidereal = header.getBooleanValue("NONSIDE", false);
+		priorPipelineStep = header.getString("PROCLEVL");
+		isNonSidereal = header.getBoolean("NONSIDE", false);
 		
 		// TODO Data without AORs -- should not happen...
 		if(observation.aorID.equals("0")) {
@@ -134,7 +135,8 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	
 	@Override
     public void validate() {
-	   
+	    useBetweenScans = hasOption("betweenscans");
+	    
 	    super.validate();
 	}
 	

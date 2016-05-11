@@ -55,12 +55,12 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	}
 	
 	@Override
-	public void validate() {
+	public boolean validate() {
 	    if(hasTelescopeInfo) {
 	        if(equatorial == null) calcEquatorial();
 	        else if(horizontal == null) calcHorizontal();
 	    }
-		super.validate();
+		return super.validate();
 	}
 	
 	

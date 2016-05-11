@@ -34,7 +34,7 @@ public class HawcPlusPolImbalance extends ZeroMeanGains {
     private static final long serialVersionUID = 3346494258785117721L;
 
     @Override
-    public double getRawGain(Channel c) throws Exception {
+    public double getRelativeGain(Channel c) throws Exception {
         return ((HawcPlusPixel) c).pol == 0 ? 1.0 : -1.0;
     }
 

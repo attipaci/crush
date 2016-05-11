@@ -31,7 +31,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaAircraftData extends SofiaHeaderData implements TableFormatter.Entries {
+public class SofiaAircraftData extends SofiaData implements TableFormatter.Entries {
 
 	public BracketedValues altitude = new BracketedValues();
 	public BracketedValues latitude = new BracketedValues();
@@ -40,24 +40,22 @@ public class SofiaAircraftData extends SofiaHeaderData implements TableFormatter
 	
 	public SofiaAircraftData() {}
 	
-	public SofiaAircraftData(Header header) {
+	public SofiaAircraftData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
-	
-	
-	@Override
-	public void parseHeader(Header header) {
-		altitude.start = header.getDoubleValue("ALTI_STA", Double.NaN) * Unit.ft;
-		altitude.end = header.getDoubleValue("ALTI_END", Double.NaN) * Unit.ft;
-		airSpeed = header.getDoubleValue("AIRSPEED", Double.NaN) * Unit.kn;
-		groundSpeed = header.getDoubleValue("GRDSPEED", Double.NaN) * Unit.kn;
-		latitude.start = getDMSAngle(header, "LAT_STA");
-		latitude.end = getDMSAngle(header, "LAT_END");
-		longitude.start = getDMSAngle(header, "LON_STA");
-		longitude.end = getDMSAngle(header, "LON_END");
-		heading = header.getDoubleValue("HEADING", Double.NaN) * Unit.deg;
-		trackAngle = header.getDoubleValue("TRACKANG", Double.NaN) * Unit.deg;
+
+	public void parseHeader(SofiaHeader header) {
+		altitude.start = header.getDouble("ALTI_STA", Double.NaN) * Unit.ft;
+		altitude.end = header.getDouble("ALTI_END", Double.NaN) * Unit.ft;
+		airSpeed = header.getDouble("AIRSPEED", Double.NaN) * Unit.kn;
+		groundSpeed = header.getDouble("GRDSPEED", Double.NaN) * Unit.kn;
+		latitude.start = header.getDMSAngle("LAT_STA");
+		latitude.end = header.getDMSAngle("LAT_END");
+		longitude.start = header.getDMSAngle("LON_STA");
+		longitude.end = header.getDMSAngle("LON_END");
+		heading = header.getDouble("HEADING", Double.NaN) * Unit.deg;
+		trackAngle = header.getDouble("TRACKANG", Double.NaN) * Unit.deg;
 	}
 
 	@Override

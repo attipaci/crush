@@ -234,7 +234,17 @@ Table of Contents
 
    Below is a brief guide to a few useful options, grouped by functionality.
 
+
+   HAWVC+ specific options
+   -----------------------
+
+     -subarray=<list>	Restrict imaging to specific subarrays only. The 
+			argument is a comma separated list of subarray IDs
+			(R0, R1, T0, T1). E.g.:
+			
+			  > crush hawc+ -subarray=R0,T0 ...
    
+
    Source type options
    -------------------
    The default reduction is generally OK for sources smaller than the field of 
@@ -275,12 +285,6 @@ Table of Contents
 			Set the sign accordingly to +, -, or 0. E.g.
 			'-source.sign=+'
 
-     -moving		Indicate that the object is a moving source, such as
-			a planet, a moon, an asteroid, or a comet. CRUSH will
-			use only relative coordinates w.r.t the tracking center
-			to construct a map. The map's nominal center will be 
-			that of the first scan.
-	
 
    Output map options
    ------------------
@@ -365,18 +369,17 @@ For a general overview of channel divisions, please consult Section 3.
 		correlated signals are present on these quadrants. The
 		decorrelating on 'mux' groups is default in GISMO reductions
 
-   pins		The GISMO multiplexing scheme is implemented in the time-domain
+   rows		The HAWC+ multiplexing scheme is implemented in the time-domain
 		Thus, the first channels of each SQUID are read out at the same
 		time, followed by the second channel in each group etc. Thus,
 		if there is any pickup of high-frequency signals in the
 		multiplexing scheme, one could expect some correlated signals
-		to be present on these virtual readout pin groups. There
+		to be present on these multiplexer address lines. There
 		is little evidence for these, but the reduction of very faint
 		compact sources may benefit from the additional decorrelation
 		on these groups.
-		You can group neighboring 'pins' together for decorrelation
-		via the 'correlated.pins.group' option, or the equivalent
-		'pins.group' shorthand.
+		For HAWC+, these SQUID address lines are effectively the
+		detectors rows, hence the naming.
 
 
 
@@ -441,22 +444,6 @@ For a general overview of channel divisions, please consult Section 3.
 			one another, and the two subarrays of each form a 
 			single seamless polarization array.
 
-   pins			@Alias: 'correlated.pins'
-			@Expert
-			Decorrelate along the 'pins' direction of the 
-			SQUID mulitplexed channels. All correlated modality
-			sub-options apply.
-			@See: 'correlated.<?>'
-
-   pins.group=<n>	@Alias: 'correlated.pins.group'
-			@Expert
-			Because there are only four SQUID multiplexers in 
-			GISMO, there is little redundancy among the pixels, 
-			which are read out at exactly the same instant. This 
-			option allows to group together <n> consecutive 
-			samples, to combine pixels read in some time-interval.
-			@See: 'pins'
-
    pixelsize=<a>[,<b>]	@Expert
 			Specify the size of the pixels for calculating pixel 
 			positions based on a regular grid. A better way of 
@@ -485,6 +472,13 @@ For a general overview of channel divisions, please consult Section 3.
 			Specify the rotation of the T polarization subarray
 			relative to the R subarray.
 
+   rows			@Alias: 'correlated.rows'
+			@Expert
+			Decorrelate along the 'row' direction of the arrays,
+			the same as SQUID address lines. All correlated 
+			modality sub-options apply.
+			@See: 'correlated.<?>'
+
    subarray=<list>	@Expert
 			Restrict the reduction only to the subarrays listed.
 			The argument is a comma-separated list of subarray 
@@ -492,13 +486,6 @@ For a general overview of channel divisions, please consult Section 3.
 			E.g.:
 
 			  > crush hawc+ -subarray=R1,T1 [...]
-
-   subs			@Alias: 'correlated.subarrays'
-			@Expert
-			Decorrelate on physical subarrays (two 40x32 subarrays
-			per polarization). All correlated modality options
-			apply.
-			@See: 'correlated.<?>'
 
    write.flatfield[=path]	@Expert
 				Write a DRP flatfield FITS file, to be used by

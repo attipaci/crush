@@ -59,6 +59,13 @@ public class CorrelatedSignal extends Signal {
 		driftN = value.length;
 	}
 	
+	@Override
+    public Signal copy() {
+	    CorrelatedSignal copy = (CorrelatedSignal) super.copy();
+	    if(weight != null) weight = Arrays.copyOf(weight, weight.length);
+	    if(sourceFiltering != null) sourceFiltering = Arrays.copyOf(sourceFiltering, sourceFiltering.length);
+	    return copy;
+	}
 
 	@Override
 	public final float weightAt(Frame frame) {

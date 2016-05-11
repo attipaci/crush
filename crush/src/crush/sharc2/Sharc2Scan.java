@@ -48,7 +48,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 
 	private double raUnit = Unit.hourAngle;
 	private double decUnit = Unit.deg;
-		
+	
 	public Sharc2Scan(Sharc2 instrument) {
 		super(instrument);
 	}
@@ -79,7 +79,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 	
 	
 	protected void read(Fits fits, boolean readFully) throws Exception {
-		// Read in entire FITS file		
+		// Read in entire FITS file		    
 		BasicHDU<?>[] HDU = fits.read();
 		
 		int i = 4; 

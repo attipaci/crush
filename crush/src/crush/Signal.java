@@ -26,8 +26,10 @@ package crush;
 
 
 import java.io.*;
+import java.util.Arrays;
 
 import jnum.Constant;
+import jnum.Copiable;
 import jnum.ExtraMath;
 import jnum.Parallel;
 import jnum.Util;
@@ -35,7 +37,7 @@ import jnum.data.DataPoint;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
 
-public class Signal implements Serializable, Cloneable {
+public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	/**
 	 * 
 	 */
@@ -56,8 +58,7 @@ public class Signal implements Serializable, Cloneable {
 			integration.addSignal(this);
 		}
 	}
-	
-	
+
 	public Signal(Mode mode, Integration<?, ?> integration, float[] values, boolean isFloating) {
 		this(mode, integration);
 		resolution = ExtraMath.roundupRatio(integration.size(), values.length);
@@ -100,6 +101,15 @@ public class Signal implements Serializable, Cloneable {
 	public Object clone() {
 		try { return super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
+	}
+	
+	@Override
+    public Signal copy() {
+	    Signal copy = (Signal) clone();
+	    if(drifts != null) copy.drifts = Arrays.copyOf(drifts, drifts.length);
+	    if(syncGains != null) copy.syncGains = Arrays.copyOf(syncGains, syncGains.length);
+	    if(value != null) copy.value = Arrays.copyOf(value, value.length);
+	    return copy;
 	}
 	
 	public final float valueAt(final Frame frame) {
@@ -172,7 +182,7 @@ public class Signal implements Serializable, Cloneable {
 	
 	public final void removeDrifts(int nFrames, boolean isReconstructible) {		
 		int N = ExtraMath.roundupRatio(nFrames, resolution);
-		
+			
 		if(drifts == null || N != driftN) {
 			addDrifts();
 			if(isReconstructible) drifts = new float[ExtraMath.roundupRatio(value.length, N)];

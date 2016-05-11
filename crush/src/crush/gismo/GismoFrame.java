@@ -58,6 +58,18 @@ public class GismoFrame extends HorizontalFrame {
 	}
 	
 	@Override
+    public void cloneReadout(Frame from) {
+        super.cloneReadout(from);
+        
+        GismoFrame frame = (GismoFrame) from;
+        
+        samples = frame.samples;
+        calFlag = frame.calFlag;
+        digitalFlag = frame.digitalFlag;
+        SAE = frame.SAE; 
+	}
+	
+	@Override
 	public void addDataFrom(Frame other, double scaling) {
 		super.addDataFrom(other, scaling);
 		if(scaling == 0.0) return;

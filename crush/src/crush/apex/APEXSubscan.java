@@ -144,7 +144,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		// Flag frames according to chopper phase ---> left, right, transit.
 		PhaseData current = new PhaseData(this);
 		int nPhases = 0;
-		int transitFlag = Frame.CHOP_TRANSIT | Frame.SKIP_MODELS | Frame.SKIP_WEIGHTING | Frame.SKIP_SOURCE;
+		int transitFlag = Frame.CHOP_TRANSIT | Frame.SKIP_MODELING | Frame.SKIP_WEIGHTING | Frame.SKIP_SOURCE_MODELING;
 		
 		for(Frame exposure : this) if(exposure != null) {
 			exposure.flag &= ~Frame.CHOP_FLAGS;

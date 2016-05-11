@@ -1,3 +1,11 @@
+>> CovarianceMatrix object
+   -- based on SquareMatrix<DataPoint>
+      (so can do, e.g. SVD)
+   -- write as Data2D
+   -- add BinaryTableHDU for pixel assignment
+
+>> Write spectra as FITS... (write.spectrum.fits or write.spectrum=fits/ascii)
+
 >> LinearLocality to replace TimeStamps in Interpolators...
 
 !! SCUBA-2: bias scheme: birows?

@@ -28,7 +28,7 @@ import java.util.*;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
-import jnum.data.LinearLocality;
+import jnum.data.ScalarLocality;
 import jnum.data.LocalAverage;
 import jnum.data.Locality;
 import jnum.data.LocalizedData;
@@ -107,7 +107,7 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 		return mean.tau.value();
 	}
 	
-	class TimeStamp extends LinearLocality {
+	class TimeStamp extends ScalarLocality {
 		
 		public TimeStamp(double MJD) { super(MJD); }
 		

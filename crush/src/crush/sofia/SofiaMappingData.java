@@ -34,7 +34,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaMappingData extends SofiaHeaderData {
+public class SofiaMappingData extends SofiaData {
 	public String coordinateSystem;
 	public String pattern;
 	public int sizeX = 0, sizeY = 0;
@@ -42,20 +42,19 @@ public class SofiaMappingData extends SofiaHeaderData {
 	
 	public SofiaMappingData() {}
 	
-	public SofiaMappingData(Header header) {
+	public SofiaMappingData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
 	
-	
-	@Override
-	public void parseHeader(Header header) {
-		coordinateSystem = getStringValue(header, "MAPCRSYS");
-		pattern = getStringValue(header, "MAPPATT");
-		sizeX = header.getIntValue("MAPNXPOS", UNKNOWN_INT_VALUE);
-		sizeY = header.getIntValue("MAPNYPOS", UNKNOWN_INT_VALUE);
-		step.setX(header.getDoubleValue("MAPINTX", Double.NaN) * Unit.arcmin);
-		step.setY(header.getDoubleValue("MAPINTY", Double.NaN) * Unit.arcmin);
+
+	public void parseHeader(SofiaHeader header) {
+		coordinateSystem = header.getString("MAPCRSYS");
+		pattern = header.getString("MAPPATT");
+		sizeX = header.getInt("MAPNXPOS");
+		sizeY = header.getInt("MAPNYPOS");
+		step.setX(header.getDouble("MAPINTX", Double.NaN) * Unit.arcmin);
+		step.setY(header.getDouble("MAPINTY", Double.NaN) * Unit.arcmin);
 	}
 
 	@Override
@@ -63,8 +62,8 @@ public class SofiaMappingData extends SofiaHeaderData {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Mapping Data ------>", false));
 		if(coordinateSystem != null) cursor.add(new HeaderCard("MAPCRSYS", coordinateSystem, "Mapping coordinate system."));
 		if(pattern != null) cursor.add(new HeaderCard("MAPPATT", pattern, "Mapping pattern."));
-		if(sizeX != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("MAPNXPOS", sizeX, "Number of map positions in X"));
-		if(sizeY != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("MAPNYPOS", sizeY, "Number of map positions in Y"));
+		if(sizeX != SofiaHeader.UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("MAPNXPOS", sizeX, "Number of map positions in X"));
+		if(sizeY != SofiaHeader.UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("MAPNYPOS", sizeY, "Number of map positions in Y"));
 		if(Double.isNaN(step.x())) cursor.add(new HeaderCard("MAPINTX", step.x() / Unit.arcmin, "(arcmin) Map step interval in X"));
 		if(Double.isNaN(step.y())) cursor.add(new HeaderCard("MAPINTY", step.y() / Unit.arcmin, "(arcmin) Map step interval in Y"));
 	}

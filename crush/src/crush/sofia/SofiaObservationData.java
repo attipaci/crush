@@ -29,7 +29,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaObservationData extends SofiaHeaderData {
+public class SofiaObservationData extends SofiaData {
 	public String sourceName;
 	public String errorStatus;
 	public String obsID, imageID, aotID, aorID, fileGroupID;
@@ -41,29 +41,27 @@ public class SofiaObservationData extends SofiaHeaderData {
 	
 	public SofiaObservationData() {}
 	
-	public SofiaObservationData(Header header) {
+	public SofiaObservationData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
-	
-	
-	@Override
-	public void parseHeader(Header header) {
-		dataSource = getStringValue(header, "DATASRC");
-		obsType = getStringValue(header, "OBSTYPE");
-		errorStatus = getStringValue(header, "OBSSTAT");			// new in rev. F
-		sourceType = getStringValue(header, "SRCTYPE");
-		dictionaryVersion = getStringValue(header, "KWDICT");
-		obsID = getStringValue(header, "OBS_ID");
-		serialNo = header.getIntValue("OBSERNO", -1);			// not in 3.0
-		imageID = getStringValue(header, "IMAGEID");
-		sourceName = getStringValue(header, "OBJECT");			// not in 3.0
-		aotID = getStringValue(header, "AOT_ID");
-		aorID = getStringValue(header, "AOR_ID");
-		fileGroupID = getStringValue(header, "FILEGPID");		// not in 3.0
+
+	public void parseHeader(SofiaHeader header) {
+		dataSource = header.getString("DATASRC");
+		obsType = header.getString("OBSTYPE");
+		errorStatus = header.getString("OBSSTAT");			// new in rev. F
+		sourceType = header.getString("SRCTYPE");
+		dictionaryVersion = header.getString("KWDICT");
+		obsID = header.getString("OBS_ID");
+		serialNo = header.getInt("OBSERNO", -1);			// not in 3.0
+		imageID = header.getString("IMAGEID");
+		sourceName = header.getString("OBJECT");			// not in 3.0
+		aotID = header.getString("AOT_ID");
+		aorID = header.getString("AOR_ID");
+		fileGroupID = header.getString("FILEGPID");		// not in 3.0
 		
-		if(header.containsKey("LST-OBS")) startLST = Util.parseTime(header.getStringValue("LST-OBS"));	// not in 3.0
-		startMJD = header.getDoubleValue("MJD-OBS", Double.NaN);										// not in 3.0
+		if(header.containsKey("LST-OBS")) startLST = Util.parseTime(header.getString("LST-OBS"));	// not in 3.0
+		startMJD = header.getDouble("MJD-OBS", Double.NaN);										// not in 3.0
 	
 	}
 

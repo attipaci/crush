@@ -1,18 +1,56 @@
->> out of range map indices (independently from 'perimeter')
->> covariance race condition...
->> 'perimeter = auto'
+
+2.32-a2
 
 
+	[NEW] Ability to condense covariance matrix output to unflagged 'live'
+	channels only, using the 'write.covar.condensed' option.
 
-2.32-a1
+	[CHANGE] 'perimeter' option for faster map sizing using only a set of
+	pixels on the instrument's perimeter now supports the value 'auto'. 
+	When used it will determine the optimal number of sections to use for
+	the perimeter calculation. This setting is now default.
 
-	[FIX] Map lookup, update and sync could operate on different pixels
-	as pixels got flagged/unflagged. Fixed.	
+	[FIX] Naming of coupled modes is now unique. (Previously, these were
+	named exactly like their parent modes...).
+
+	[FIX] {PolKa} Analyzer grid position in FITS is recognized both as 
+	'X', 'Y' and as 'H', 'V'.
+
+	[FIX] Fixed inconsistent frameset use for source map sizing, indexing
+	update and sync (e.g. the inclusion of velocity clipped frames). Fixed.
+
+	[FIX] Map lookup, update and sync could operate on different sets
+	of pixels as pixels got flagged/unflagged. Fixed.	
+
+	[TWEAK] {HAWC+} Reduced RAM overhead when reading scans -- using
+	low-lever read to move data from FITS directly to CRUSH data 
+	structures.
+
+	[CODE] Non-linear response implementation.
+
+	[CODE] Cleanup: deleted unused left-over constructors from Response 
+	and subclasses.
+
+	[CODE] HDURowReader, for processing FITS row-by-row, seems to be
+	working and thread safe...
+
+	[CODE] Shifting frames pulled up ahead frame validation. This way 
+	validation works with the timing-fixed data.
+
+	[CODE] Time shifting can shift more quantities beyond just the detector
+	timestream depending on each instrument's needs and implementation.
+	
+	[CODE] Frame validation improved s.t. invalid frames are nulled as
+	the integration is validating.
 
 	[CODE] Faster map index lookup.
 
 	[CODE] Map sizing has been slightly tweaked. Should be more robust and
 	a little more generalized for different source map classes...
+
+	[CODE] Map setup and indexing, and various smaller methods moved
+	upstream from SourceMap to ScalarMap.
+
 
 
 

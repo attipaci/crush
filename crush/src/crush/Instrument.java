@@ -29,6 +29,7 @@ import java.util.*;
 import java.text.*;
 
 import crush.array.GeometricIndexed;
+import crush.hawcplus.HawcPlusPixel;
 import crush.sourcemodel.*;
 import jnum.Configurator;
 import jnum.Constant;
@@ -550,7 +551,9 @@ implements TableFormatter.Entries, Messaging {
 		try { addModality(new CorrelatedModality("obs-channels", "C", divisions.get("obs-channels"), Channel.class.getField("gain"))); }
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 	
-		
+		try { addModality(modalities.get("obs-channels").new NonLinearity("nonlinearity", "n", HawcPlusPixel.class.getField("nonlinearity"))); } 
+		catch (NoSuchFieldException e) { e.printStackTrace(); }
+	
 		// Add pointing response modes...
 		addModality(new Modality<PointingResponse>("telescope-x", "Tx", divisions.get("detectors"), PointingResponse.class));
 		addModality(new Modality<PointingResponse>("telescope-y", "Ty", divisions.get("detectors"), PointingResponse.class));
@@ -798,7 +801,7 @@ implements TableFormatter.Entries, Messaging {
 	            // n ~ pi r^2   --> r ~ sqrt(n / pi)
 	            // np ~ 2 pi r ~ 2 sqrt(pi n) ~ 3.55 sqrt(n)
 	            // Add factor of ~2 margin --> np ~ 7 sqrt(n)
-	            sections = (int) Math.ceil(10 * Math.sqrt(storeChannels));
+	            sections = (int) Math.ceil(7 * Math.sqrt(size()));
 	        }
 	        else sections = option("perimeter").getInt();
 	    }

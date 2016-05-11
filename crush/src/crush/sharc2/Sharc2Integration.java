@@ -141,7 +141,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		
 		for(int n=0, startIndex = 0; n<nDataHDUs; n++) {
 			BinaryTableHDU hdu = (BinaryTableHDU) HDU[firstDataHDU+n]; 
-			new Sharc2Reader(hdu, startIndex).read();			
+			new Sharc2Reader(hdu, startIndex).read();	
 			startIndex += hdu.getNRows();
 		}	
 		
@@ -314,7 +314,6 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 			iSN = hdu.findColumn("Sequence Number");			
 			hasExtraTimingInfo = iDT >= 0 && iSN >= 0; 
 			
-			
 			iUT = hdu.findColumn("UT");
 			isDoubleUT = hdu.getHeader().getStringValue("TFORM" + (iUT+1)).equalsIgnoreCase("1D");
 		}
@@ -385,7 +384,6 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		}
 	}
 	*/
-	
 	
 	@Override
 	public String getFullID(String separator) {

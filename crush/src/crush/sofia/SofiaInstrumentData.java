@@ -30,7 +30,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<SofiaInstrumentData> {
+public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInstrumentData> {
 	public String dataType;
 	public String instrumentName, instrumentConfig, instrumentMode, mccsMode, hardwareVersion, softwareVersion;
 	public double exposureTime = Double.NaN;
@@ -43,7 +43,7 @@ public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<Sof
 	
 	public SofiaInstrumentData() {}
 	
-	public SofiaInstrumentData(Header header) {
+	public SofiaInstrumentData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
@@ -64,24 +64,23 @@ public class SofiaInstrumentData extends SofiaHeaderData implements Copiable<Sof
 		return copy;
 	}
 	
-	@Override
-	public void parseHeader(Header header) {
-		instrumentName = getStringValue(header, "INSTRUME");
-		dataType = getStringValue(header, "DATATYPE");
-		instrumentConfig = getStringValue(header, "INSTCFG");
-		instrumentMode = getStringValue(header, "INSTMODE");
-		mccsMode = getStringValue(header, "MCCSMODE");
-		hardwareVersion = getStringValue(header, "INSTHWV");							// not in 3.0
-		softwareVersion = getStringValue(header, "INSTSWV");							// not in 3.0
-		exposureTime = header.getDoubleValue("EXPTIME", Double.NaN) * Unit.s;
-		spectralElement1 = getStringValue(header, "SPECTEL1");
-		spectralElement2 = getStringValue(header, "SPECTEL2");
-		slitID = getStringValue(header, "SLIT");
-		wavelength = header.getDoubleValue("WAVECENT", Double.NaN) * Unit.um;
-		bandwidthMicrons = header.getDoubleValue("BANDWDTH", Double.NaN);
-		spectralResolution = header.getDoubleValue("RESOLUN", Double.NaN);
-		detectorChannel = getStringValue(header, "DETCHAN");							// new in 3.0
-		totalIntegrationTime = header.getDoubleValue("TOTINT", Double.NaN) * Unit.s;	// new in 3.0
+	public void parseHeader(SofiaHeader header) {
+		instrumentName = header.getString("INSTRUME");
+		dataType = header.getString("DATATYPE");
+		instrumentConfig = header.getString("INSTCFG");
+		instrumentMode =header.getString("INSTMODE");
+		mccsMode = header.getString("MCCSMODE");
+		hardwareVersion = header.getString("INSTHWV");							// not in 3.0
+		softwareVersion = header.getString("INSTSWV");							// not in 3.0
+		exposureTime = header.getDouble("EXPTIME", Double.NaN) * Unit.s;
+		spectralElement1 = header.getString("SPECTEL1");
+		spectralElement2 = header.getString("SPECTEL2");
+		slitID = header.getString("SLIT");
+		wavelength = header.getDouble("WAVECENT", Double.NaN) * Unit.um;
+		bandwidthMicrons = header.getDouble("BANDWDTH", Double.NaN);
+		spectralResolution = header.getDouble("RESOLUN", Double.NaN);
+		detectorChannel = header.getString("DETCHAN");							// new in 3.0
+		totalIntegrationTime = header.getDouble("TOTINT", Double.NaN) * Unit.s;	// new in 3.0
 
 	}
 

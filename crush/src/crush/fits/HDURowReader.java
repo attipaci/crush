@@ -27,6 +27,7 @@ import java.io.IOException;
 
 import crush.CRUSH;
 import jnum.Parallel;
+import jnum.data.ArrayUtil;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
@@ -36,21 +37,21 @@ public abstract class HDURowReader {
 	protected BinaryTable table;
 	protected ArrayDataInput in;
 	
+	private Object[] modelRow;
+	
 	public HDURowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
 		this.hdu = hdu;
 		this.table = (BinaryTable) hdu.getData();
 		this.in = in;
+		modelRow = table.getModelRow();
 	}
 
 	public abstract Reader getReader() throws FitsException;
 	
 	public void read() throws Exception {
-		// TODO not thread safe...
-		//read(CRUSH.maxThreads);
-		read(1);
+		read(CRUSH.maxThreads);
 	}
-	
-	
+
 	public void read(int threadCount) throws Exception {
 		if(!table.reset()) throw new FitsException("Cannot locate beginning of FITS binary table.");	// Go to the beginning
 		nextRow = 0;		
@@ -60,8 +61,8 @@ public abstract class HDURowReader {
 
 	private int nextRow = 0;
 	
-	private synchronized int getNextRow(Object[] data) throws IOException {
-		if(nextRow >= table.getNRows()) return -1;
+	private synchronized int getNextRow(Object[] data) throws IOException {  
+		if(nextRow >= table.getNRows()) return -1;		
 		long bytes = in.readLArray(data);
 		if(bytes == 0) return -1;
 		return nextRow++;
@@ -77,19 +78,17 @@ public abstract class HDURowReader {
 		public void setDefaults() {}
 		
 		@Override
-		public void init() {
+		public void init() { 
 			super.init();
-			row = table.getModelRow();
-		}
-		
-		protected final int next(Object[] row) throws IOException {
-			return getNextRow(row);
+			
+			try { row = (Object[]) ArrayUtil.copy(modelRow); } 
+			catch (Exception e) { e.printStackTrace(); }
 		}
 		
 		@Override
 		public void processIndexOf(int i, int threadCount) throws Exception {
 			int index;
-			while((index = next(row)) >= 0) {
+			while((index = getNextRow(row)) >= 0) {
 				if(isInterrupted()) return;				
 				processRow(index, row);
 				Thread.yield();

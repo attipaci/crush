@@ -49,7 +49,7 @@ public abstract class ZeroMeanGains implements Serializable, GainProvider {
 	
 	@Override
 	public final double getGain(Channel c) throws Exception {
-	    double g0 = getRawGain(c);
+	    double g0 = getRelativeGain(c);
 	    return Double.isNaN(g0) ? 0.0 : g0 - aveG;
 	}
 	
@@ -58,7 +58,7 @@ public abstract class ZeroMeanGains implements Serializable, GainProvider {
 		setRawGain(c, value + aveG);
 	}
 	
-	public abstract double getRawGain(Channel c) throws Exception;
+	public abstract double getRelativeGain(Channel c) throws Exception;
 	
 	public abstract void setRawGain(Channel c, double value) throws Exception;
 	
@@ -72,7 +72,7 @@ public abstract class ZeroMeanGains implements Serializable, GainProvider {
 			final Channel channel = mode.getChannel(k);
 			if(channel.isFlagged(skipFlags)) continue;
 
-			final double x = getRawGain(channel);
+			final double x = getRelativeGain(channel);
 			if(Double.isNaN(x)) continue;
 				
 			sum += channel.weight * x;

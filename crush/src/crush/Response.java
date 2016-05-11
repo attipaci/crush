@@ -22,8 +22,6 @@
  ******************************************************************************/
 package crush;
 
-import java.lang.reflect.Field;
-
 
 public abstract class Response extends Mode {
 
@@ -34,16 +32,6 @@ public abstract class Response extends Mode {
 
 	public Response() {
 		super();
-		// TODO Auto-generated constructor stub
-	}
-
-	public Response(ChannelGroup<?> group, Field gainField) {
-		super(group, gainField);
-		// TODO Auto-generated constructor stub
-	}
-
-	public Response(ChannelGroup<?> group) {
-		super(group);
 		// TODO Auto-generated constructor stub
 	}
 

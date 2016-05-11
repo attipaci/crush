@@ -65,6 +65,8 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	public boolean hasTelescopeInfo = true;
 	
+	private boolean isValid = false;
+	
 	public Frame(Scan<?, ?> parent) { 
 		scan = parent; 
 		index = parent.size();
@@ -209,9 +211,14 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		else throw new IllegalArgumentException(getClass().getSimpleName() + " does not define signal mode " + mode);
 	}
 
-	public void validate() {
+	public boolean validate() {
+	    if(isValid) return true;
+	    isValid = true;
+	    
 		if(sampleFlag == null) sampleFlag = new byte[data.length];
 		else if(sampleFlag.length != data.length) sampleFlag = new byte[data.length];
+		
+		if(!hasTelescopeInfo) return true;
 		
 		// Set the platform rotation, unless the rotation was explicitly set already
 		if(Double.isNaN(cosA) || Double.isNaN(sinA)) {
@@ -231,6 +238,15 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 			default: sinA = 0.0; cosA = 1.0;
 			}		
 		}
+		return true;
+	}
+	
+	public void cloneReadout(Frame from) {
+	    data = from.data;
+	}
+	
+	public void invalidate() {
+	    isValid = false;
 	}
 
 	public void getEquatorial(final Vector2D position, final EquatorialCoordinates coords) {
@@ -386,8 +402,8 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public static int FLAG_DOF = frameFlags.next('f', "Degrees-of-freedom").value();
 	public static int FLAG_JUMP = frameFlags.next('J', "Jump").value();
 
-	public static int SKIP_SOURCE = frameFlags.next('$', "Skip Source").value();
-	public static int SKIP_MODELS = frameFlags.next('M', "Skip Models").value();
+	public static int SKIP_SOURCE_MODELING = frameFlags.next('$', "Skip Source").value();
+	public static int SKIP_MODELING = frameFlags.next('M', "Skip Models").value();
 	public static int SKIP_WEIGHTING = frameFlags.next('W', "Skip Weighting").value();
 	
 	public static int CHOP_LEFT = frameFlags.next('L', "Chop Left").value();
@@ -399,8 +415,8 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public static int NOD_RIGHT = frameFlags.next('>', "Nod Right").value();
 
 	public static int BAD_DATA = FLAG_SPIKY | FLAG_JUMP;
-	public static int MODELING_FLAGS = SKIP_MODELS | BAD_DATA | FLAG_DOF | FLAG_WEIGHT;
-	public static int SOURCE_FLAGS = SKIP_SOURCE | MODELING_FLAGS;
+	public static int MODELING_FLAGS = SKIP_MODELING | BAD_DATA | FLAG_DOF | FLAG_WEIGHT;
+	public static int SOURCE_FLAGS = SKIP_SOURCE_MODELING | MODELING_FLAGS;
 	public static int CHANNEL_WEIGHTING_FLAGS = SKIP_WEIGHTING | MODELING_FLAGS;
 	public static int TIME_WEIGHTING_FLAGS = SKIP_WEIGHTING | MODELING_FLAGS & ~(FLAG_WEIGHT | FLAG_DOF);
 	

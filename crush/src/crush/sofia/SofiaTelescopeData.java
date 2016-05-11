@@ -31,7 +31,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaTelescopeData extends SofiaHeaderData {
+public class SofiaTelescopeData extends SofiaData {
 	public String telescope = "SOFIA";
 	public String telConfig;
 	public EquatorialCoordinates boresightEquatorial, requestedEquatorial;
@@ -53,7 +53,7 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 	
 	public SofiaTelescopeData() {}
 	
-	public SofiaTelescopeData(Header header) {
+	public SofiaTelescopeData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
@@ -62,76 +62,64 @@ public class SofiaTelescopeData extends SofiaHeaderData {
 		if(trackingMode == null) return false;
 		return !trackingMode.equalsIgnoreCase("OFF");
 	}
-	
-	
-	@Override
-	public void parseHeader(Header header) {
+
+	public void parseHeader(SofiaHeader header) {
 		
-		if(header.containsKey("TELESCOP")) telescope = header.getStringValue("TELESCOPE");
-		telConfig = getStringValue(header, "TELCONF");
+		if(header.containsKey("TELESCOP")) telescope = header.getString("TELESCOPE");
+		telConfig = header.getString("TELCONF");
 		
 		boresightEquatorial = new EquatorialCoordinates();
-		if(header.containsKey("TELEQUI")) boresightEquatorial.setEpoch(new JulianEpoch(header.getDoubleValue("TELEQUI")));
+		if(header.containsKey("TELEQUI")) boresightEquatorial.setEpoch(new JulianEpoch(header.getDouble("TELEQUI")));
 		
-		try { 
-			boresightEquatorial.set(
-					getHMSTime(header, "TELRA") * Unit.timeAngle, 
-					getDMSAngle(header, "TELDEC")
-			);
-		}
+		try { boresightEquatorial.set(header.getHMSTime("TELRA") * Unit.timeAngle, header.getDMSAngle("TELDEC")); }
 		catch(Exception e) { boresightEquatorial = null; }
 		
-		VPA = header.getDoubleValue("TELVPA", Double.NaN) * Unit.deg;
+		VPA = header.getDouble("TELVPA", Double.NaN) * Unit.deg;
 		
-		lastRewind = getStringValue(header, "LASTREW");
-		focusT.start = header.getDoubleValue("FOCUS_ST", Double.NaN) * Unit.um;
-		focusT.end = header.getDoubleValue("FOCUS_EN", Double.NaN) * Unit.um;
+		lastRewind = header.getString("LASTREW");
+		focusT.start = header.getDouble("FOCUS_ST", Double.NaN) * Unit.um;
+		focusT.end = header.getDouble("FOCUS_EN", Double.NaN) * Unit.um;
 		
-		relElevation = header.getDoubleValue("TELEL", Double.NaN) * Unit.deg;
-		crossElevation = header.getDoubleValue("TELXEL", Double.NaN) * Unit.deg;
-		lineOfSightAngle = header.getDoubleValue("TELLOS", Double.NaN) * Unit.deg;
+		relElevation = header.getDouble("TELEL", Double.NaN) * Unit.deg;
+		crossElevation = header.getDouble("TELXEL", Double.NaN) * Unit.deg;
+		lineOfSightAngle = header.getDouble("TELLOS", Double.NaN) * Unit.deg;
 		
-		coarseElevation = header.getDoubleValue("COARSEEL", Double.NaN) * Unit.deg;			// new in 3.0
-		fineDriveElevation = header.getDoubleValue("FD_EL", Double.NaN) * Unit.deg;			// new in 3.0
-		fineDriveCrossElevation = header.getDoubleValue("FD_XEL", Double.NaN) * Unit.deg;	// new in 3.0
-		fineDriveLOS = header.getDoubleValue("FD_LOS", Double.NaN) * Unit.deg;				// new in 3.0
+		coarseElevation = header.getDouble("COARSEEL", Double.NaN) * Unit.deg;			// new in 3.0
+		fineDriveElevation = header.getDouble("FD_EL", Double.NaN) * Unit.deg;			// new in 3.0
+		fineDriveCrossElevation = header.getDouble("FD_XEL", Double.NaN) * Unit.deg;	// new in 3.0
+		fineDriveLOS = header.getDouble("FD_LOS", Double.NaN) * Unit.deg;				// new in 3.0
 			
-		tascuStatus = getStringValue(header, "TSC-STAT");
-		fbcStatus = getStringValue(header, "FBC-STAT");
+		tascuStatus = header.getString("TSC-STAT");
+		fbcStatus = header.getString("FBC-STAT");
 		
 		requestedEquatorial = new EquatorialCoordinates();
-		if(header.containsKey("EQUINOX")) requestedEquatorial.setEpoch(new JulianEpoch(header.getDoubleValue("EQUINOX")));
+		if(header.containsKey("EQUINOX")) requestedEquatorial.setEpoch(new JulianEpoch(header.getDouble("EQUINOX")));
 		
-		try { 
-			requestedEquatorial.set(
-					getHMSTime(header, "OBSRA") * Unit.timeAngle, 
-					getDMSAngle(header, "OBSDEC")
-			);
-		}
+		try { requestedEquatorial.set(header.getHMSTime("OBSRA") * Unit.timeAngle, header.getDMSAngle("OBSDEC")); }
 		catch(Exception e) { boresightEquatorial = null; }
 		
-		zenithAngle.start = header.getDoubleValue("ZA_START", Double.NaN) * Unit.deg;
-		zenithAngle.end = header.getDoubleValue("ZA_END", Double.NaN) * Unit.deg;
+		zenithAngle.start = header.getDouble("ZA_START", Double.NaN) * Unit.deg;
+		zenithAngle.end = header.getDouble("ZA_END", Double.NaN) * Unit.deg;
 		
-		sunAngle = header.getDoubleValue("SUNANGL", Double.NaN) * Unit.deg;				// not in 3.0
-		moonAngle = header.getDoubleValue("MOONANGL", Double.NaN) * Unit.deg;			// not in 3.0
+		sunAngle = header.getDouble("SUNANGL", Double.NaN) * Unit.deg;				// not in 3.0
+		moonAngle = header.getDouble("MOONANGL", Double.NaN) * Unit.deg;			// not in 3.0
 		
-		userCoordinateSystem = getStringValue(header, "USRCRDSY");						// not in 3.0
-		userReferenceSystem = getStringValue(header, "USRREFCR");						// not in 3.0
+		userCoordinateSystem = header.getString("USRCRDSY");						// not in 3.0
+		userReferenceSystem = header.getString("USRREFCR");						// not in 3.0
 		
-		userRefLon = header.getDoubleValue("USRORIGX", Double.NaN) * Unit.deg;			// not in 3.0
-		userRefLat = header.getDoubleValue("USRORIGY", Double.NaN) * Unit.deg;			// not in 3.0
-		userRefAngle = header.getDoubleValue("USRCRROT", Double.NaN) * Unit.deg;		// not in 3.0
+		userRefLon = header.getDouble("USRORIGX", Double.NaN) * Unit.deg;			// not in 3.0
+		userRefLat = header.getDouble("USRORIGY", Double.NaN) * Unit.deg;			// not in 3.0
+		userRefAngle = header.getDouble("USRCRROT", Double.NaN) * Unit.deg;		// not in 3.0
 		
-		userLongitude = header.getDoubleValue("USRX", Double.NaN) * Unit.deg;			// not in 3.0
-		userLatitude = header.getDoubleValue("USRY", Double.NaN) * Unit.deg;			// not in 3.0
-		userEquinox = header.getDoubleValue("USREQNX", Double.NaN);						// not in 3.0
+		userLongitude = header.getDouble("USRX", Double.NaN) * Unit.deg;			// not in 3.0
+		userLatitude = header.getDouble("USRY", Double.NaN) * Unit.deg;			// not in 3.0
+		userEquinox = header.getDouble("USREQNX", Double.NaN);						// not in 3.0
 		
-		vHelio = header.getDoubleValue("HELIOCOR", Double.NaN) * Unit.km / Unit.s;		// not in 3.0
-		vLSR = header.getDoubleValue("LSR_COR", Double.NaN) * Unit.km / Unit.s;			// not in 3.0
+		vHelio = header.getDouble("HELIOCOR", Double.NaN) * Unit.km / Unit.s;		// not in 3.0
+		vLSR = header.getDouble("LSR_COR", Double.NaN) * Unit.km / Unit.s;			// not in 3.0
 		
-		trackingMode = getStringValue(header, "TRACMODE");
-		hasTrackingError = header.getBooleanValue("TRACERR", false);
+		trackingMode = header.getString("TRACMODE");
+		hasTrackingError = header.getBoolean("TRACERR", false);
 		
 	}
 

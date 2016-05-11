@@ -30,7 +30,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public class SofiaNoddingData extends SofiaHeaderData {
+public class SofiaNoddingData extends SofiaData {
 	public double dwellTime = Double.NaN;
 	public int cycles = 0;
 	public double settlingTime = Double.NaN;
@@ -41,37 +41,35 @@ public class SofiaNoddingData extends SofiaHeaderData {
 	
 	public SofiaNoddingData() {}
 	
-	public SofiaNoddingData(Header header) {
+	public SofiaNoddingData(SofiaHeader header) {
 		this();
 		parseHeader(header);
 	}
-	
-	
-	@Override
-	public void parseHeader(Header header) {
-		dwellTime = header.getDoubleValue("NODTIME", Double.NaN) * Unit.s;
-		cycles = header.getIntValue("NODN", UNKNOWN_INT_VALUE);
-		settlingTime = header.getDoubleValue("NODSETL", Double.NaN) * Unit.s;
-		amplitude = header.getDoubleValue("NODAMP", Double.NaN) * Unit.arcsec;
-		beamPosition = getStringValue(header, "NODBEAM");
-		pattern = getStringValue(header, "NODPATT");
-		style = getStringValue(header, "NODSTYLE");
-		coordinateSystem = getStringValue(header, "NODCRSYS");
+
+	public void parseHeader(SofiaHeader header) {
+		dwellTime = header.getDouble("NODTIME", Double.NaN) * Unit.s;
+		cycles = header.getInt("NODN");
+		settlingTime = header.getDouble("NODSETL", Double.NaN) * Unit.s;
+		amplitude = header.getDouble("NODAMP", Double.NaN) * Unit.arcsec;
+		beamPosition = header.getString("NODBEAM");
+		pattern = header.getString("NODPATT");
+		style = header.getString("NODSTYLE");
+		coordinateSystem = header.getString("NODCRSYS");
 		
 		// not in 3.0
 		if(header.containsKey("NODPOSX") || header.containsKey("NODPOSY")) {
-			offset = new Vector2D(header.getDoubleValue("NODPOSX", 0.0), header.getDoubleValue("NODPOSY", 0.0));
+			offset = new Vector2D(header.getDouble("NODPOSX", 0.0), header.getDouble("NODPOSY", 0.0));
 			offset.scale(Unit.deg);
 		}
 		else offset = null;
 			
-		angle = header.getDoubleValue("NODANGLE", Double.NaN) * Unit.deg;
+		angle = header.getDouble("NODANGLE", Double.NaN) * Unit.deg;
 	}
 
 	@Override
 	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
 		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Nodding Data ------>", false));
-		if(cycles != UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("NODN", cycles, "Number of nod cycles."));
+		if(cycles != SofiaHeader.UNKNOWN_INT_VALUE) cursor.add(new HeaderCard("NODN", cycles, "Number of nod cycles."));
 		if(!Double.isNaN(amplitude)) cursor.add(new HeaderCard("NODAMP", amplitude / Unit.arcsec, "(arcsec) Nod amplitude on sky."));
 		if(!Double.isNaN(angle)) cursor.add(new HeaderCard("NODANGLE", angle / Unit.deg, "(deg) Nod angle on sky."));
 		if(!Double.isNaN(dwellTime)) cursor.add(new HeaderCard("NODTIME", dwellTime / Unit.s, "(s) Total dwell time per nod position."));

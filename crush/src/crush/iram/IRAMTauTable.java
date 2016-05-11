@@ -31,7 +31,7 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.data.DataPoint;
-import jnum.data.LinearLocality;
+import jnum.data.ScalarLocality;
 import jnum.data.LocalAverage;
 import jnum.data.Locality;
 import jnum.data.LocalizedData;
@@ -115,7 +115,7 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 	}
 	
 	
-	class TimeStamp extends LinearLocality {
+	class TimeStamp extends ScalarLocality {
 		
 		public TimeStamp(double MJD) { super(MJD); }
 		

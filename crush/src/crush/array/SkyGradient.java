@@ -47,7 +47,7 @@ public class SkyGradient extends ZeroMeanGains {
 	}
 	
 	@Override
-	public double getRawGain(Channel c) throws Exception {
+	public double getRelativeGain(Channel c) throws Exception {
 		SingleColorPixel pixel = (SingleColorPixel) c;
 		if(pixel.position == null) return Double.NaN;
 		return (horizontal ? pixel.position.x() : pixel.position.y());

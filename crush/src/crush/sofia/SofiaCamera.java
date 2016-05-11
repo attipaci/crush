@@ -112,7 +112,7 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
         return (instrumentData.instrumentName != null) ? instrumentData.instrumentName : super.getName();
     }
 
-    public void parseHeader(Header header) {		
+    public void parseHeader(SofiaHeader header) {		
         instrumentData = new SofiaInstrumentData(header);
 
         // Set the default angular resolution given the telescope size...
@@ -120,7 +120,7 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
 
         array = new SofiaArrayData(header);
 
-        samplingInterval = integrationTime = 1.0 / (header.getDoubleValue("SMPLFREQ", Double.NaN) * Unit.Hz);
+        samplingInterval = integrationTime = 1.0 / (header.getDouble("SMPLFREQ", Double.NaN) * Unit.Hz);
         if(samplingInterval < 0.0) samplingInterval = integrationTime = Double.NaN;
     }
 
