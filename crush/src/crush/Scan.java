@@ -102,8 +102,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	@Override
 	public int compareTo(Scan<?, ?> other) {
-		if(serialNo == other.serialNo) return 0;
-		return serialNo < other.serialNo ? -1 : 1;
+	    return getID().compareTo(other.getID());
 	}
 	
 	@Override
@@ -439,6 +438,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		header.addValue("EXTNAME", "Scan-" + getID(), "Scan data");
 		
 		header.addValue("INSTRUME", instrument.getName(), "The instrument name");
+		
+		header.addValue("SCANID", getID(), "Scan ID.");
 		
 		if(serialNo > 0) header.addValue("SCANNO", serialNo, "Serial number for the scan");
 		if(descriptor != null) header.addValue("SCANSPEC", descriptor, "Specifier by which the scan was invoked.");

@@ -89,6 +89,6 @@ public class SofiaChopperData extends SofiaData {
 	//public static final double volts2Angle = 1123.0 * Unit.arcsec / (9.0 * Unit.V);
 	
 	// And here is the conversion that matches HAWC+ data...
-	public static final double volts2Angle = 301.5 * Unit.arcsec / (9.0 * Unit.V);
+	public static final double volts2Angle = 33.394 * Unit.arcsec / Unit.V;
 	
 }

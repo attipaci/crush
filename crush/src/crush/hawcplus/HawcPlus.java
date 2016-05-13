@@ -99,7 +99,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
  		if(subarrayInverted != null) copy.subarrayInverted = Arrays.copyOf(subarrayInverted, subarrayInverted.length);
   		if(polZoom != null) copy.polZoom = Arrays.copyOf(polZoom, polZoom.length);
 		if(darkSquidLookup != null) {
-            try { copy.darkSquidLookup = (int[][]) ArrayUtil.copy(darkSquidLookup); } 
+            try { copy.darkSquidLookup = (int[][]) ArrayUtil.copyOf(darkSquidLookup); } 
             catch(Exception e) { e.printStackTrace(); }
 		}
 		if(mceSubarray != null) copy.mceSubarray = Arrays.copyOf(mceSubarray, mceSubarray.length);
