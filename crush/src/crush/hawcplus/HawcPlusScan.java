@@ -136,7 +136,6 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	@Override
     public void validate() {
 	    useBetweenScans = hasOption("betweenscans");
-	    
 	    super.validate();
 	}
 	

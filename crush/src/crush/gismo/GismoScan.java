@@ -687,20 +687,6 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		return windAve;
 	}
 
-	@Override 
-	public int compareTo(Scan<?, ?> scan) {
-		try {
-			int dateComp = dateFormat.parse(date).compareTo(dateFormat.parse(((GismoScan) scan).date));
-			if(dateComp != 0) return dateComp;
-			if(getSerial() == scan.getSerial()) return 0;
-			return getSerial() < scan.getSerial() ? -1 : 1;
-		}
-		catch(ParseException e) {
-			System.err.println("WARNING! Cannot parse date: '" + date + "' or '" + ((GismoScan) scan).date + "'.");
-			return 0;
-		}	
-	}
-	
 	@Override
 	public String getID() {
 		return scanID;

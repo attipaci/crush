@@ -49,7 +49,7 @@ public abstract class HDURowReader {
 	public abstract Reader getReader() throws FitsException;
 	
 	public void read() throws Exception {
-		read(CRUSH.maxThreads);
+	    read(CRUSH.maxThreads);
 	}
 
 	public void read(int threadCount) throws Exception {
@@ -81,7 +81,7 @@ public abstract class HDURowReader {
 		public void init() { 
 			super.init();
 			
-			try { row = (Object[]) ArrayUtil.copy(modelRow); } 
+			try { row = (Object[]) ArrayUtil.copyOf(modelRow); } 
 			catch (Exception e) { e.printStackTrace(); }
 		}
 		

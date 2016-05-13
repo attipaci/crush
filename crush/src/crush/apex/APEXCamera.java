@@ -184,7 +184,7 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 			
 			if(subscanChopped != isChopped) {	
 				if(isChopped) warning("Scan " + scan.getID() + " is not a chopped scan. Dropping from dataset.");
-				else warning("Scan " + scan.getSerial() + " is a chopped scan. Dropping from dataset.");
+				else warning("Scan " + scan.getID() + " is a chopped scan. Dropping from dataset.");
 				scans.remove(i);
 				continue;
 			}

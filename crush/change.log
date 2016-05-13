@@ -1,3 +1,6 @@
+>> multiscan file naming (HAWC+)
+
+
 
 2.32-a2
 
@@ -9,6 +12,9 @@
 	pixels on the instrument's perimeter now supports the value 'auto'. 
 	When used it will determine the optimal number of sections to use for
 	the perimeter calculation. This setting is now default.
+
+	[FIX] Comparing scans based on IDs instead of serial numbers. Serial
+	numbers may not be available at all observatories...
 
 	[FIX] Naming of coupled modes is now unique. (Previously, these were
 	named exactly like their parent modes...).

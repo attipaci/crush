@@ -94,7 +94,7 @@ public class PolKa extends Laboca {
 		for(int i=scans.size(); --i > 0; ) {
 			PolKaScan scan = (PolKaScan) scans.get(i);
 			if(((PolKa) scan.instrument).hasAnalyzer != polka.hasAnalyzer) {
-				System.err.println("  WARNING! Scan " + scan.getSerial() + " is " 
+				System.err.println("  WARNING! Scan " + scan.getID() + " is " 
 						+ (polka.hasAnalyzer ? "total-power (no analyzer)" : "is polarized")
 						+ ". Dropping from dataset.");
 				scans.remove(i);

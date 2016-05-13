@@ -430,15 +430,6 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	public double getWindSpeed() {
 		return windAve;
 	}
-
-	
-	@Override 
-	public int compareTo(Scan<?,?> scan) {
-		Scuba2Scan scubascan = (Scuba2Scan) scan;
-		if(iDate != scubascan.iDate) return iDate < scubascan.iDate ? -1 : 1;
-		if(getSerial() == scan.getSerial()) return 0;
-		return getSerial() < scan.getSerial() ? -1 : 1;
-	}
 	
 	@Override
 	public String getID() {

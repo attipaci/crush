@@ -28,7 +28,6 @@ import java.util.List;
 
 import crush.CRUSH;
 import crush.Channel;
-import crush.fits.HDUReader;
 import crush.fits.HDURowReader;
 import crush.sofia.SofiaChopperData;
 import crush.sofia.SofiaIntegration;
@@ -87,13 +86,13 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		ensureCapacity(records);
 		for(int t=records; --t>=0; ) add(null);
 		
-		int startIndex = 0;
+		//int startIndex = 0;
 		for(int i=0; i<dataHDUs.size(); i++) {
 			BinaryTableHDU hdu = dataHDUs.get(i);
 			//new HawcPlusReader(hdu, startIndex).read();
-			new HawcPlusRowReader(hdu, ((HawcPlusScan) scan).fits.getStream()).read(1);
+            //startIndex += hdu.getAxes()[0];
 			
-			startIndex += hdu.getAxes()[0];
+			new HawcPlusRowReader(hdu, ((HawcPlusScan) scan).fits.getStream()).read(1);
 		}	
 		
 	}
@@ -324,7 +323,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	
 	class HawcPlusRowReader extends HDURowReader { 
 	    private int iSN=-1, iDAC=-1, iJump=-1, iTS=-1;
-	    private int iRA=-1, iDEC=-1, iAVPA=-1, iTVPA=-1, iCVPA=-1;
+	    private int iAZ=-1, iEL=-1, iRA=-1, iDEC=-1, iAVPA=-1, iTVPA=-1, iCVPA=-1;
 	    private int iLON=-1, iLAT=-1, iLST=-1, iPWV=-1, iORA=-1, iODEC=-1;
 	    private int iChopR=-1, iChopS=-1, iHWP=-1, iStat=-1;
      
@@ -357,8 +356,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             
             iStat = hdu.findColumn("Flag");
             
-            //iAZ = hdu.findColumn("AZ");
-            //iEL = hdu.findColumn("EL");
+            iAZ = hdu.findColumn("AZ");
+            iEL = hdu.findColumn("EL");
             
             // The tracking center in the basis coordinates of the scan (usually RA/DEC)
             iRA = hdu.findColumn("RA");
@@ -445,6 +444,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     
                     set(i, frame);
                     
+                    frame.hasTelescopeInfo &= !Double.isNaN(((double[]) row[iRA])[0]);
+                    
                     if(!frame.hasTelescopeInfo) return;
                     
                     // ======================================================================================
@@ -453,10 +454,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     // ======================================================================================
                     
                     frame.status = ((int[]) row[iStat])[0];       
-                    
-                    // If there is no valid astrometry, then skip...
-                    if(Double.isNaN(((double[]) row[iRA])[0])) return;
-                    if(Double.isNaN(((double[]) row[iLON])[0])) return;
                     
                     if(!isConfigured) configure(row);
                     if(objectEq == null) objectEq = (EquatorialCoordinates) scan.equatorial.copy();
@@ -470,19 +467,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     if(scan.isNonSidereal) objectEq.set(((double[]) row[iORA])[0] * Unit.hourAngle, ((double[]) row[iODEC])[0] * Unit.deg);
                 
                      
-                    // TODO if MCCS fixes alt/az inconsistency then we can just realy on their data...
-                    //frame.horizontal = new HorizontalCoordinates(((double[]) row[iAZ])[0] * Unit.deg, ((double[]) row[iEL])[0] * Unit.deg);                
-                    //frame.telescopeCoords = new TelescopeCoordinates(frame.horizontal);
-                    
-                    // Calculate AZ/EL -- the values in the table are noisy aircraft values...
-                    apparent.copy(frame.equatorial);
-                    scan.toApparent.precess(apparent);
-                    frame.horizontal = apparent.toHorizontal(frame.site, frame.LST);
-                 
-                    // TODO use actual telescope XEL, EL...
-                    frame.telescopeCoords = new TelescopeCoordinates();
-                    frame.telescopeCoords.copy(frame.horizontal);
-                    
                     // I  -> T      rot by phi (instrument rotation)
                     // T' -> E      rot by -theta_ta
                     // T  -> H      rot by ROF
@@ -522,6 +506,26 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     // T -> E' rot by theta_ta
                     // C -> T rot by theta_cp - theta_ta
                     frame.chopperPosition.rotate(frame.chopVPA - frame.telescopeVPA);
+                    
+                    // TODO if MCCS fixes alt/az inconsistency then we can just realy on their data...
+                    //frame.horizontal = new HorizontalCoordinates(((double[]) row[iAZ])[0] * Unit.deg, ((double[]) row[iEL])[0] * Unit.deg);                
+                    //frame.telescopeCoords = new TelescopeCoordinates(frame.horizontal);
+                    
+                    // If the longitude/latitude data is missing then do not attempt to
+                    // calculate horizontal coordinates...
+                    if(!Double.isNaN(frame.site.longitude())) {
+                        // Calculate AZ/EL -- the values in the table are noisy aircraft values...  
+                        apparent.copy(frame.equatorial);
+                        scan.toApparent.precess(apparent);
+                        frame.horizontal = apparent.toHorizontal(frame.site, frame.LST);
+                    }
+                    else {
+                        frame.horizontal = new HorizontalCoordinates(((double[]) row[iAZ])[0] * Unit.deg, ((double[]) row[iEL])[0] * Unit.deg);
+                    }
+                 
+                    frame.telescopeCoords = new TelescopeCoordinates();
+                    frame.telescopeCoords.copy(frame.horizontal);
+                    
                 }
                 
             };
@@ -547,9 +551,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	}
 
 	@Override
-    public void validate() {
-	      
-	    
+    public void validate() {  
 	    checkJumps();
 	        
 	    super.validate();
@@ -617,6 +619,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	}
 	
 	
+	/*
 	// TODO fill gaps in position data, if any...
 	private int fillGaps(double[] x) {   
 	    int from = 0;
@@ -646,7 +649,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	    }
 	        
 	    return gaps;
-	
 	}
+	*/
 	
 }
