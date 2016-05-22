@@ -86,239 +86,10 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		ensureCapacity(records);
 		for(int t=records; --t>=0; ) add(null);
 		
-		//int startIndex = 0;
-		for(int i=0; i<dataHDUs.size(); i++) {
-			BinaryTableHDU hdu = dataHDUs.get(i);
-			//new HawcPlusReader(hdu, startIndex).read();
-            //startIndex += hdu.getAxes()[0];
-			
-			new HawcPlusRowReader(hdu, ((HawcPlusScan) scan).fits.getStream()).read(1);
-		}	
-		
+		for(int i=0; i<dataHDUs.size(); i++) 
+		    new HawcPlusRowReader(dataHDUs.get(i), ((HawcPlusScan) scan).fits.getStream()).read(1);	
 	}
 		
-	/*
-	class HawcPlusReader extends HDUReader {	
-		private int startIndex;
-		private long[] SN;
-		private int[] DAC;
-		private short[] jump;
-		private double[] TS; 
-		private double[] RA, DEC, iVPA, tVPA, cVPA, LON, LAT, LST, PWV;
-		private double[] objectRA, objectDEC;
-		private float[] chopR, chopS;
-		private int[] HWP, statusFlag;
-		
-		private boolean isLab;
-			
-		private final HawcPlusScan hawcPlusScan = (HawcPlusScan) scan;
-		
-		public HawcPlusReader(BinaryTableHDU hdu, int startIndex) throws FitsException {
-			super(hdu);
-			
-			this.startIndex = startIndex;
-		
-			isLab = hasOption("lab");
-				
-			Object[] row = (Object[]) hdu.getRow(0);
-			
-			// The Sofia timestamp (decimal seconds since 0 UTC 1 Jan 1970...
-			TS = (double[]) table.getColumn(hdu.findColumn("Timestamp"));	
-			SN = (long[]) table.getColumn(hdu.findColumn("FrameCounter"));
-			
-			try { jump = (short[]) table.getColumn(hdu.findColumn("FluxJumps")); }
-			catch(ClassCastException e) { System.err.println("   WARNING! unexpected FluxJumps storage format"); }
-			
-			// The R/T array data
-			int iData = hdu.findColumn("SQ1Feedback");
-			DAC = (int[]) table.getColumn(iData);
-			
-			int storeRows = ((int[][]) row[iData]).length;
-			int storeCols = ((int[][]) row[iData])[0].length;
-			System.err.println("   FITS has " + storeRows + "x" + storeCols + " arrays.");
-			
-			// HWP may be used in the future if support is extended for
-            // scan-mode polarimetry (or polarimetry, in general...
-			HWP = (int[]) table.getColumn(hdu.findColumn("hwpCounts"));
-            
-			// Ignore coordinate info for 'lab' data...
-			if(isLab) {
-			    System.err.println("   Lab mode data reduction. Ignoring telescope data...");
-			    return;
-			}
-			
-			statusFlag = (int[]) table.getColumn(hdu.findColumn("Flag"));
-			
-			//AZ = (double[]) table.getColumn(hdu.findColumn("AZ"));
-            //EL = (double[]) table.getColumn(hdu.findColumn("EL"));
-			
-			// The tracking center in the basis coordinates of the scan (usually RA/DEC)
-			RA = (double[]) table.getColumn(hdu.findColumn("RA"));
-			DEC = (double[]) table.getColumn(hdu.findColumn("DEC"));
-
-			if(scan.isNonSidereal) {
-			    objectRA = (double[]) table.getColumn(hdu.findColumn("NonSiderealRA"));
-	            objectDEC = (double[]) table.getColumn(hdu.findColumn("NonSiderealDec"));
-			}
-			
-			// TODO should not be needed if data is proper
-			// Check that:
-			//   * OBJRA and OBJDEC set correctly
-			//   * NonSiderealRA and NonSiderealDEC columns are filled.
-			for(int i=0; i<RA.length; i++) if(!Double.isNaN(RA[i])) {
-			    if(scan.equatorial == null) {
-			        warning("Missing OBJRA/OBJDEC header keys. Using initial position instead.");
-			        scan.equatorial = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, CoordinateEpoch.J2000);
-			    }
-			        
-			    if(objectRA != null) if(Double.isNaN(objectRA[i])) {
-			        objectRA = objectDEC = null;
-			        if(scan.isNonSidereal) warning("Missing NonSiderealRA/NonSiderealDEC columns. Forcing sidereal mapping.");
-			        scan.isNonSidereal = false;
-			    }
-			    
-			    break;
-			}
-				
-			LST = (double[]) table.getColumn(hdu.findColumn("LST"));
-
-			iVPA = (double[]) table.getColumn(hdu.findColumn("SIBS_VPA"));
-			tVPA = (double[]) table.getColumn(hdu.findColumn("TABS_VPA"));
-			cVPA = (double[]) table.getColumn(hdu.findColumn("Chop_VPA"));
-
-			LON = (double[]) table.getColumn(hdu.findColumn("LON"));
-			LAT = (double[]) table.getColumn(hdu.findColumn("LAT"));
-			
-			// Interpolate between NaN values...
-			int gaps = fillGaps(LON);
-			fillGaps(LAT);
-			System.err.println("   Gaps in LAT/LON data: " + gaps);
-			
-			
-			chopR = (float[]) table.getColumn(hdu.findColumn("sofiaChopR"));
-			chopS = (float[]) table.getColumn(hdu.findColumn("sofiaChopS"));
-
-			PWV = (double[]) table.getColumn(hdu.findColumn("PWV"));
-			
-			// TODO a better way to clean up as we go...
-			hawcPlusScan.closeFits();
-			
-		}
-		
-		@Override
-		public Reader getReader() {
-			return new Reader() {	
-				private AstroTime timeStamp;
-				private EquatorialCoordinates objectEq, apparent;
-				
-				@Override
-				public void init() {
-				    super.init();
-				    
-					timeStamp = new AstroTime();
-					apparent = new EquatorialCoordinates();
-					if(scan.equatorial != null) objectEq = (EquatorialCoordinates) scan.equatorial.copy();		
-				}
-				
- 				@Override
-				public void processRow(int i) {	
-				    HawcPlus hawc = (HawcPlus) scan.instrument;
-										
-					// Create the frame object only if it cleared the above hurdles...
-					final HawcPlusFrame frame = new HawcPlusFrame(hawcPlusScan);
-					frame.index = i;
-					frame.hasTelescopeInfo = !isLab;
-						
-					// Read the pixel data (DAC and MCE jump counter)
-					frame.parseData(i, DAC, jump);
-					frame.mceSerial = SN[i];
-					
-                    timeStamp.setUTCMillis(Math.round(1000.0 * TS[i]));
-                    frame.MJD = timeStamp.getMJD();
-                       
-                    frame.hwpAngle = (float) (HWP[i] * HawcPlus.hwpStep - hawc.hwpTelescopeVertical);
-                    
-                    set(startIndex + i, frame);
-					
-					if(!frame.hasTelescopeInfo) return;
-					
-					// ======================================================================================
-					// Below here is telescope data only, which will be ignored for 'lab' mode reductions...
-					// Add the astrometry...
-					// ======================================================================================
-					
-					frame.status = statusFlag[i];       
-					
-					// If there is no valid astrometry, then skip...
-                    if(Double.isNaN(RA[i])) return;
-                       
-                    frame.PWV = PWV[i] * (float) Unit.um; 
-                    
-                    frame.site = new GeodeticCoordinates(LON[i] * Unit.deg, LAT[i] * Unit.deg);  
-                    frame.LST = LST[i] * (float) Unit.hour;
-                    
-                    frame.equatorial = new EquatorialCoordinates(RA[i] * Unit.hourAngle, DEC[i] * Unit.deg, objectEq.epoch);							
-					if(scan.isNonSidereal) objectEq.set(objectRA[i] * Unit.hourAngle, objectDEC[i] * Unit.deg);
-					
-					// TODO if MCCS fixes alt/az inconsistency then we can just realy on their data...
-					//frame.horizontal = new HorizontalCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
-                    //frame.telescopeCoords = new TelescopeCoordinates(AZ[i] * Unit.deg, EL[i] * Unit.deg);
-                    
-					// Calculate AZ/EL -- the values in the table are noisy aircraft values...
-                    apparent.copy(frame.equatorial);
-                    scan.toApparent.precess(apparent);
-                    frame.horizontal = apparent.toHorizontal(frame.site, frame.LST);
-                 
-                    // TODO use actual telescope XEL, EL...
-                    frame.telescopeCoords = new TelescopeCoordinates();
-                    frame.telescopeCoords.copy(frame.horizontal);
-					
-					// I  -> T      rot by phi (instrument rotation)
-                    // T' -> E      rot by -theta_ta
-                    // T  -> H      rot by ROF
-                    // H  -> E'     rot by PA
-                    // I' -> E      rot by -theta_si
-                    //
-                    // T -> H -> E': theta_ta = ROF + PA
-                    //
-                    //    PA = theta_ta - ROF
-                    //
-                    // I -> T -> E': theta_si = phi - theta_ta
-                    //
-                    //    phi = theta_si - theta_ta
-					//
-					frame.instrumentVPA = iVPA[i] * (float) Unit.deg;
-					frame.telescopeVPA = tVPA[i] * (float) Unit.deg;
-					frame.chopVPA = cVPA[i] * (float) Unit.deg;
-					
-					// rotation from pixel coordinates to telescope coordinates...	
-					frame.setRotation(frame.instrumentVPA - frame.telescopeVPA);
-					
-					// rotation from telescope coordinates to equatorial.
-                    frame.setParallacticAngle(frame.telescopeVPA);
-				
-					// Calculate the scanning offsets...
-					frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(objectEq);
-					frame.equatorialNativeToHorizontal(frame.horizontalOffset);
-					
-					// In telescope XEL (phiS), EL (phiR)
-					frame.chopperPosition = new Vector2D(chopS[i] * Unit.V, chopR[i] * Unit.V);
-					
-					// TODO empirical scaling...
-					frame.chopperPosition.scale(SofiaChopperData.volts2Angle);
-				
-					// Rotate the chopper offset into the TA frame...
-					// C -> E' rot by theta_cp
-					// T -> E' rot by theta_ta
-					// C -> T rot by theta_cp - theta_ta
-					frame.chopperPosition.rotate(frame.chopVPA - frame.telescopeVPA);
-
-				}
-				
-			};
-		}
-	}	
-	*/
 	
 	
 	class HawcPlusRowReader extends HDURowReader { 
@@ -421,9 +192,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     apparent = new EquatorialCoordinates();
                     if(scan.equatorial != null) objectEq = (EquatorialCoordinates) scan.equatorial.copy();      
                 }
-                
-              
-                
+                    
                 @Override
                 public void processRow(int i, Object[] row) {                    
                     HawcPlus hawc = (HawcPlus) scan.instrument;
@@ -522,10 +291,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     else {
                         frame.horizontal = new HorizontalCoordinates(((double[]) row[iAZ])[0] * Unit.deg, ((double[]) row[iEL])[0] * Unit.deg);
                     }
-                 
-                    frame.telescopeCoords = new TelescopeCoordinates();
-                    frame.telescopeCoords.copy(frame.horizontal);
-                    
+              
                 }
                 
             };

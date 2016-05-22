@@ -161,27 +161,29 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 		
 	}	
 	
-	
+	// TODO broken, FITS libs do not handle curled row structure well...
 	@Override
 	public void readMonitor(BinaryTableHDU hdu)  throws IOException, FitsException, HeaderCardException {
+	    super.readMonitor(hdu);
+	    
 		// Don't read monitor table unless necessary...
 		if(!hasOption("he3")) return;
 		
 		Configurator directive = option("he3");
 		if(!(directive.equals("thermistor") || directive.equals("gains"))) return;
 			
-		System.err.println("   Parsing He3 temperatures from MONITOR table.");
-		Header header = hdu.getHeader();
-		int n = header.getIntValue("NAXIS2");
+		System.err.println("   Parsing He3 temperatures from MONITOR table... ");
+	
+		final int n = hdu.getNRows();
 		
-		ArrayList<Vector2D> table = new ArrayList<Vector2D>();
+		final ArrayList<Vector2D> table = new ArrayList<Vector2D>();
 		final int iMJD = hdu.findColumn("MJD");
 		final int iLABEL = hdu.findColumn("MONPOINT");
 		final int iVALUE = hdu.findColumn("MONVALUE");
-		
+				
 		for(int i=0; i<n; i++) {
-			final Object[] row = hdu.getRow(i);	
-		
+		    Object[] row = hdu.getRow(i);
+		     
 			if(((String) row[iLABEL]).equals("LABOCA_HE3TEMP")) {
 				final Vector2D entry = new Vector2D();
 				entry.setX(((double[]) row[iMJD])[0]);
@@ -190,8 +192,11 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 			}
 		}
 		
-		interpolateHe3Temperatures(table);
+		System.err.println("   --> Found " + table.size() + " He3 temperature entries.");
+		
+		if(table.size() > 1) interpolateHe3Temperatures(table);
 	}
+	
 	
 	// TODO reimplement with localized data...
 	public void interpolateHe3Temperatures(final ArrayList<Vector2D> table) {

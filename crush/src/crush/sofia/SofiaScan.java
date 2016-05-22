@@ -28,7 +28,6 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
 import jnum.math.Offset2D;
-import jnum.math.SphericalCoordinates;
 import jnum.util.*;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
@@ -53,8 +52,6 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
     Vector<String> history = new Vector<String>();
 
-    public TelescopeCoordinates telescopeCoordinates;
-
     public SofiaObservationData observation;
     public SofiaProcessingData processing;
     public SofiaMissionData mission;
@@ -74,9 +71,6 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public SofiaScan(InstrumentType instrument) {
         super(instrument);
     }
-
-    @Override
-    public SphericalCoordinates getNativeCoordinates() { return telescopeCoordinates; }
 
     @Override
     public void read(String scanDescriptor, boolean readFully) throws Exception {
@@ -305,12 +299,6 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
                     0.5 * (first.horizontal.y() + last.horizontal.y())
                     );
             System.err.println(" Horizontal: " + horizontal.toString(2)); 
-
-            telescopeCoordinates = new TelescopeCoordinates(
-                    0.5 * (first.telescopeCoords.longitude() + last.telescopeCoords.longitude()),
-                    0.5 * (first.telescopeCoords.latitude() + last.telescopeCoords.latitude())
-                    );
-            // System.err.println(" Telescope Assembly: " + telescopeCoordinates.toString(2));  
 
             site = new GeodeticCoordinates(
                     0.5 * (first.site.x() + last.site.x()), 

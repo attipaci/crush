@@ -30,6 +30,7 @@ import nom.tam.fits.*;
 import java.io.*;
 
 import crush.fits.HDUReader;
+import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.CelestialCoordinates;
@@ -50,12 +51,15 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 	protected WeightedPoint[] tempPhase;
 	private Chopper chopper;
 	
+	double pwv = Double.NaN;
+	
 	public APEXSubscan(APEXScan<InstrumentType, ?> parent) {
 		super(parent);
 	}
 	
 	@Override
 	public void setTau() throws Exception {	
+	    
 		try { super.setTau(); }
 		catch(IllegalArgumentException e) {
 			String tauName = option("tau").getPath();
@@ -64,7 +68,13 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 				if(hasOption("tau.window")) tauTable.timeWindow = option("tau.window").getDouble() * Unit.hour;
 				setTau(tauTable.getTau(getMJD()));
 			}
-			catch(ArrayIndexOutOfBoundsException ie) { warning(e); }
+			catch(ArrayIndexOutOfBoundsException ie) { 
+			    if(!Double.isNaN(pwv)) {
+			        warning("No skydip for this date. Using PWV to determine tau...");
+			        setTau("pwv", pwv);
+			    }
+			    else warning("No skydip tau for this date!"); 
+			}
 			catch(IOException io) { warning("Tau interpolator table could not be read."); }
 		}
 	}
@@ -79,7 +89,9 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 				if(hasOption("scale.window")) calTable.timeWindow = option("scale.window").getDouble() * Unit.hour;
 				setScaling(calTable.getScaling(getMJD())); 
 			}
-			catch(ArrayIndexOutOfBoundsException e) { warning(e); }
+			catch(ArrayIndexOutOfBoundsException e) { 
+			    warning("No calibration scaling for this date. Assuming 1.0..."); 
+			}
 			catch(IOException e) { warning("Calibration table could not be read."); }
 		}
 	}
@@ -206,33 +218,72 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		super.validate();	
 		if(chopper != null) markChopped();
 	}
-		
-	public void readData(BinaryTableHDU hdu) throws Exception {	
-		new DataTable(hdu).read();
+	
+	
+	/*
+	public void readData(Fits fits) throws Exception {
+	    readData((BinaryTableHDU) fits.getHDU(1), fits.getStream());
+	    fits.close();
 	}
 	
-	class DataTable extends HDUReader {
-		private float[] data;
-		private int channels;
-		
-		public DataTable(TableHDU<?> hdu) throws FitsException { 
-			super(hdu); 
-			int iData = hdu.findColumn("DATA");
-			channels = table.getSizes()[iData];
-			data = (float[]) table.getColumn(iData);
-		}
-		
-		@Override
-		public Reader getReader() {
-			return new Reader() {
-				@Override
-				public void processRow(int t) throws FitsException {
-					final APEXFrame exposure = get(t);
-					if(exposure != null) exposure.parse(data, t * channels, channels);			
-				}
-			};
-		}
+	public void readData(BinaryTableHDU hdu, ArrayDataInput in) throws Exception {	
+		new DataTable(hdu, in).read(1);
 	}
+
+	class DataTable extends HDURowReader {
+	    private int iData;
+	       
+        public DataTable(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException { 
+            super(hdu, in); 
+            iData = hdu.findColumn("DATA");
+        }
+       
+        @Override
+        public Reader getReader() {
+            return new Reader() {
+                @Override
+                public void processRow(int index, Object[] row) throws Exception {
+                    final APEXFrame exposure = get(index);
+                    if(exposure != null) exposure.parse((float[][]) row[iData]);  
+                }
+            };
+        }
+    }
+    */
+	
+	public void readData(Fits fits) throws Exception {
+        readData((BinaryTableHDU) fits.getHDU(1));
+        fits.close();
+    }
+    
+
+	public void readData(BinaryTableHDU hdu) throws Exception { 
+	    new DataTable(hdu).read();
+	}
+
+	class DataTable extends HDUReader {
+	    private float[] data;
+	    private int channels;
+
+	    public DataTable(TableHDU<?> hdu) throws FitsException { 
+	        super(hdu); 
+	        int iData = hdu.findColumn("DATA");
+	        channels = table.getSizes()[iData];
+	        data = (float[]) table.getColumn(iData);
+	    }
+
+	    @Override
+	    public Reader getReader() {
+	        return new Reader() {
+	            @Override
+	            public void processRow(int t) throws FitsException {
+	                final APEXFrame exposure = get(t);
+	                if(exposure != null) exposure.parse(data, t * channels, channels);          
+	            }
+	        };
+	    }
+	}
+
 	
 	public void writeData(String fromName, String toName) throws IOException, FitsException, HeaderCardException {
 		Fits fits = new Fits(new File(fromName), fromName.endsWith(".gz"));
@@ -252,8 +303,12 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		fits.close();
 	}
 	
+	public void readDataPar(Fits fits) throws Exception {
+	    readDataPar((BinaryTableHDU) fits.getHDU(1));
+	    fits.close();
+	}
 	
-	public void readDataPar(BinaryTableHDU hdu)  throws Exception {
+	public void readDataPar(BinaryTableHDU hdu) throws Exception {
 		final Header header = hdu.getHeader();	
 		final int frames = header.getIntValue("NAXIS2");
 		
@@ -436,8 +491,46 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 			};
 		}
 	}
+	
+	public void readMonitor(Fits fits) throws IOException, FitsException, HeaderCardException {
+	    readMonitor((BinaryTableHDU) fits.getHDU(1));
+	    fits.close();
+	}
 
-	public void readMonitor(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {}
+	public void readMonitor(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {    
+	    if(hasOption("tau.pwv")) return;
+	    
+        final int n = hdu.getNRows();
+        final int iLABEL = hdu.findColumn("MONPOINT");
+        final int iVALUE = hdu.findColumn("MONVALUE");
+        
+        int N = 0;
+        double sum = 0.0;
+    
+	    for(int i=0; i<n; i++) {
+            Object[] row = hdu.getRow(i);
+             
+            if(((String) row[iLABEL]).equals("PWV")) {
+              
+                sum += ((double[]) row[iVALUE])[0];
+                N++;
+            }
+        }
+        
+	    if(N == 0) {
+	        warning("PWV not recorded in FITS. Set tau explicitly or via lookup table...");
+	        return;
+	    }
+	    
+	    pwv = sum / N; 
+	    
+	    if(!hasOption("tau.pwv")) {
+            try { instrument.getOptions().process("tau.pwv", pwv + ""); } 
+            catch (LockedException e) {}
+	    }
+	    
+        System.err.println("   --> PWV = " + Util.f3.format(pwv) + " mm, from " + N + " entries.");
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override

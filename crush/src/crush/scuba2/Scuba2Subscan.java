@@ -142,8 +142,9 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		
 		Scuba2Subarray subarray = instrument.subarray[file.getSubarrayIndex()];
 		subarray.scaling = hasOption(subarray.id + ".scale") ? option(subarray.id + ".scale").getDouble() : 1.0;
+	
+		readArrayData((ImageHDU) HDU[0], fits.getStream(), subarray.channelOffset, (float) subarray.scaling);
 		
-		readArrayData((ImageHDU) HDU[0], subarray.channelOffset, (float) subarray.scaling);
 		if(hasOption("darkcorrect")) readDarkSquidData(file.getSubarrayIndex(), getDarkSquidHDU(HDU));
 		
 		subarray.parseFlatcalHDU(getFlatcalHDU(HDU));
@@ -155,24 +156,25 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		for(int bol=Scuba2Subarray.PIXELS; --bol >= 0; ) readoutLevel[channelOffset + bol] = DAC[bol%Scuba2.SUBARRAY_COLS][bol/Scuba2.SUBARRAY_COLS];
 	}
 
-	// TODO low level read for less RAM overhead...
-	private void readArrayData(ImageHDU dataHDU, final int channelOffset, final float scaling) throws FitsException {
-		final int[][][] data = (int[][][]) dataHDU.getData().getData();
-		//if(data.length != size()) throw new IllegalStateException("Mismatched data (" + data.length + ") vs. coordinates size (" + size() + ").");	
-		
-		setReadoutLevels(data[0], channelOffset);
-		
-		// Trim the coordinates to match the data size...
-		if(data.length < size()) for(int t=size(); --t >= data.length; ) remove(t);
-		
-		new CRUSH.Fork<Void>(size(), getThreadCount()) {
-			@Override
-			protected void processIndex(int i) {
-				Scuba2Frame frame = get(i);
-				if(frame != null) frame.parseData(data[i], channelOffset, scaling, readoutLevel);
-			}
-		}.process();
-	}
+	
+	private void readArrayData(ImageHDU dataHDU, final ArrayDataInput in, final int channelOffset, final float scaling) throws IOException, FitsException {
+	    final int[] sizes = dataHDU.getAxes();    
+	    final int nt = sizes[0];
+	    final int[][] data = new int[sizes[1]][sizes[2]];
+        
+	    // Trim the coordinates to match the data size...
+        if(nt < size()) for(int t=size(); --t >= nt; ) remove(t);
+        
+        dataHDU.getData().reset();
+        
+	    for(int i=0; i<nt; i++) {
+	        if(in.readLArray(data) <= 0) break;
+	        
+	        if(i == 0) setReadoutLevels(data, channelOffset);
+	        Scuba2Frame frame = get(i);
+	        if(frame != null) frame.parseData(data, channelOffset, scaling, readoutLevel);
+	    }
+    }
 	
 	public void readDarkSquidData(int subarrayIndex, BinaryTableHDU hdu) throws FitsException {
 	    int[][] data = (int[][]) hdu.getRow(0)[hdu.findColumn("DATA")];
@@ -290,13 +292,6 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		final double[] tAZ = (double[]) table[hdu.findColumn("TCS_AZ_BC1")];
 		final double[] tEL = (double[]) table[hdu.findColumn("TCS_AZ_BC2")];
 
-		/*
-		final double[] RA = isEquatorial ? (double[]) table[hdu.findColumn("TCS_TR_AC1")] : null;
-		final double[] DEC = isEquatorial ? (double[]) table[hdu.findColumn("TCS_TR_AC2")] : null;
-		final double[] tRA = isEquatorial ? (double[]) table[hdu.findColumn("TCS_TR_BC1")] : null;
-		final double[] tDEC = isEquatorial ? (double[]) table[hdu.findColumn("TCS_TR_BC2")] : null;
-		*/
-
 	
 		final int[] SN = (int[]) table[hdu.findColumn("RTS_NUM")];
 		int iDT = hdu.findColumn("SC2_MIXTEMP");
@@ -306,17 +301,11 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		final double[] CX = (double[]) table[hdu.findColumn("SMU_AZ_CHOP_X")];
 		final double[] CY = (double[]) table[hdu.findColumn("SMU_AZ_CHOP_Y")];
 		final boolean isChopped = (CX.length == AZ.length);
-		
-		//	CR = (double[]) table[hdu.findColumn("SMU_TR_CHOP_X")];
-		//	CD = (double[]) table[hdu.findColumn("SMU_TR_CHOP_Y")];
-
+	
 		final double[] JX = (double[]) table[hdu.findColumn("SMU_AZ_JIG_X")];
 		final double[] JY = (double[]) table[hdu.findColumn("SMU_AZ_JIG_Y")];
 		final boolean isJiggled = (CX.length == AZ.length);
-		
-		//	JR = (double[]) table[hdu.findColumn("SMU_TR_JIG_X")];
-		//	JD = (double[]) table[hdu.findColumn("SMU_TR_JIG_Y")];
-
+	
 		clear();
 		ensureCapacity(samples);
 		for(int i=samples; --i >=0; ) add(null);
@@ -333,7 +322,6 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 			protected void processIndex(int i) {
 				// Check to see if the frame has valid astrometry...
 				if(Double.isNaN(AZ[i])) return;
-				//if(Double.isNaN(RA[i])) return;
 				
 				final Scuba2Frame frame = new Scuba2Frame(scuba2Scan);
 

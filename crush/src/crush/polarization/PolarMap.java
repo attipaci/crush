@@ -302,7 +302,10 @@ public class PolarMap extends SourceModel {
 			public void process(int i, int j) {
 				if(n.isUnflagged(i, j) && p.isUnflagged(i, j)) {
 					t.setValue(i, j, n.getValue(i, j) + p.getValue(i, j));
-					t.setWeight(i, j, 1.0 / (1.0/n.getWeight(i, j) + 1.0/p.getWeight(i, j)));
+					t.setWeight(i, j, n.getWeight(i, j));
+					t.unflag(i, j);
+					// TODO check on what's the proper uncertainty on I (same as N or N+P from independent N,P)...
+					//t.setWeight(i, j, 1.0 / (1.0/n.getWeight(i, j) + 1.0/p.getWeight(i, j)));
 				}
 				else t.flag(i, j);				
 			}
@@ -326,6 +329,7 @@ public class PolarMap extends SourceModel {
 		f.new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
+			     
 				if(t.isFlagged(i, j) || p.isFlagged(i, j)) {
 					f.flag(i, j);	
 					return;
@@ -344,13 +348,15 @@ public class PolarMap extends SourceModel {
 					return;
 				}
 				
+				
 				double t2 = t.getValue(i, j);
 				p2 *= p2; t2 *= t2;
 				
 				f.setWeight(i, j, t2 / p2 / (1.0 / (p2 * p.getWeight(i, j)) + 1.0 / (t2 * t.getWeight(i, j))));
 
 				// if sigma_f > accuracy than flag the datum
-				if(f.getWeight(i, j) < minw) f.flag(i, j);			
+				if(f.getWeight(i, j) < minw) f.flag(i, j);	
+				else f.unflag(i, j);
 			}
 		}.process();
 		

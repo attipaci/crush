@@ -32,18 +32,20 @@ import nom.tam.fits.*;
 import nom.tam.util.*;
 
 // TODO does not work with gzipped FITS...
+
 public abstract class HDURowReader {	
 	protected BinaryTableHDU hdu;
 	protected BinaryTable table;
 	protected ArrayDataInput in;
 	
 	private Object[] modelRow;
+    private int nextRow = 0;
+
 	
-	public HDURowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
+	public HDURowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException { 
 		this.hdu = hdu;
 		this.table = (BinaryTable) hdu.getData();
 		this.in = in;
-		modelRow = table.getModelRow();
 	}
 
 	public abstract Reader getReader() throws FitsException;
@@ -52,16 +54,16 @@ public abstract class HDURowReader {
 	    read(CRUSH.maxThreads);
 	}
 
-	public void read(int threadCount) throws Exception {
-		if(!table.reset()) throw new FitsException("Cannot locate beginning of FITS binary table.");	// Go to the beginning
+	public void read(int threadCount) throws Exception {   
+	    modelRow = table.getModelRow();
+	    if(!table.reset()) throw new FitsException("Cannot locate beginning of FITS binary table.");	// Go to the beginning
+	
 		nextRow = 0;		
 		if(CRUSH.executor != null) getReader().process(threadCount, CRUSH.executor);
 		else getReader().process(threadCount);
 	}
-
-	private int nextRow = 0;
 	
-	private synchronized int getNextRow(Object[] data) throws IOException {  
+	private synchronized int readNextRow(Object[] data) throws IOException {  
 		if(nextRow >= table.getNRows()) return -1;		
 		long bytes = in.readLArray(data);
 		if(bytes == 0) return -1;
@@ -70,17 +72,10 @@ public abstract class HDURowReader {
 	
 	public abstract class Reader extends Parallel<Void> {
 		private Object[] row;
-			
-		public Reader() {
-			setDefaults();
-		}
-		
-		public void setDefaults() {}
 		
 		@Override
 		public void init() { 
-			super.init();
-			
+			super.init();		
 			try { row = (Object[]) ArrayUtil.copyOf(modelRow); } 
 			catch (Exception e) { e.printStackTrace(); }
 		}
@@ -88,7 +83,7 @@ public abstract class HDURowReader {
 		@Override
 		public void processIndexOf(int i, int threadCount) throws Exception {
 			int index;
-			while((index = getNextRow(row)) >= 0) {
+			while((index = readNextRow(row)) >= 0) {
 				if(isInterrupted()) return;				
 				processRow(index, row);
 				Thread.yield();

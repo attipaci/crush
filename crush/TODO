@@ -1,3 +1,26 @@
+>> Fits:
+
+	HDUDataReader<T extends BasicHDU> {
+		void readData(ArrayDataInput in);
+	}
+
+	--> ImageDataReader extends HDUDataReader<ImageHDU>
+	--> AsciiTableDataReader extends HDUDataReader<AsciiTableHDU>
+	--> BinaryTableDataReader extends HDUDataReader<BinaryTableHDU> {
+		void readFixedTableData(ArrayDataInput in);
+		void readHeapData(ArrayDataInput in);
+	    }
+	--> final DefaultImageDataReader() or ImageHDU.getDefaultDataReader()
+
+	Fits.setImageDataReader(ImageDataReader r)
+	Fits.setAsciiTableDataReader(AsciiTableReader r)
+	Firs.setBinaryTableDataReader(BinaryTableReader r)
+
+
+
+	
+
+
 >> CovarianceMatrix object
    -- based on SquareMatrix<DataPoint>
       (so can do, e.g. SVD)
@@ -6,9 +29,6 @@
 
 >> Write spectra as FITS... (write.spectrum.fits or write.spectrum=fits/ascii)
 
->> LinearLocality to replace TimeStamps in Interpolators...
-
-!! SCUBA-2: bias scheme: birows?
 !! SCUBA-2: incorporate dark SQUID data...
 
 

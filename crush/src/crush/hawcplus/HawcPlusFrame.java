@@ -28,7 +28,6 @@ import crush.Channel;
 import crush.Frame;
 import crush.Instrument;
 import crush.sofia.SofiaFrame;
-import jnum.astro.TelescopeCoordinates;
 import jnum.math.Vector2D;
 
 
@@ -129,11 +128,6 @@ public class HawcPlusFrame extends SofiaFrame {
         if(hasTelescopeInfo) {
             if(equatorial == null) return false;
         
-            if(telescopeCoords == null) {
-                telescopeCoords = new TelescopeCoordinates();
-                telescopeCoords.copy(horizontal);
-            }
-            
             if(chopperPosition != null) {
                 horizontalOffset.add(chopperPosition);
                 horizontal.addOffset(chopperPosition);
