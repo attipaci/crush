@@ -39,7 +39,6 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
 import java.io.*;
-import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,18 +64,8 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	
 	Vector2D pointingOffset;
 	
-	private Vector<Fits> openFits = new Vector<Fits>();
-	
 	public APEXScan(InstrumentType instrument) {
 		super(instrument);
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public Object clone() {
-		APEXScan<InstrumentType, SubscanType> clone = (APEXScan<InstrumentType, SubscanType>) super.clone();
-		clone.openFits = new Vector<Fits>();
-		return clone;
 	}
 	
 	@Override
@@ -199,12 +188,12 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	public void readScanDirectory(String dir, String ext, boolean readFully) throws IOException, FitsException, HeaderCardException {	
 		ext = ".fits" + ext;
 		dir += File.separator;
+		 
+		int subscans = readScanInfo(getFits(dir + "SCAN" + ext));
 		
-		int subscans = readScanInfo(getHDU(dir + "SCAN" + ext));
-		instrument.readPar(getHDU(dir + getFEBECombination() + "-FEBEPAR" + ext));
+		instrument.readPar(getFits(dir + getFEBECombination() + "-FEBEPAR" + ext));
 		instrument.validate(this);
 		clear();	
-		closeAllFits();
 		
 		for(int i=0; i<subscans; i++) {
 			try {
@@ -213,10 +202,9 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 				System.err.println(" Integration {" + (i+1) + "}:");
 				subscan.integrationNo = i;
 				
-				subscan.readDataPar(getHDU(dir + (i+1) + File.separator + getFEBECombination() + "-DATAPAR" + ext));
-				subscan.readData(getHDU(dir + (i+1) + File.separator + getFEBECombination() + "-ARRAYDATA-1" + ext));
-				if(readMonitor()) subscan.readMonitor(getHDU(dir + (i+1) + File.separator + "MONITOR" + ext));
-				closeAllFits();
+				subscan.readDataPar(getFits(dir + (i+1) + File.separator + getFEBECombination() + "-DATAPAR" + ext));
+				subscan.readData(getFits(dir + (i+1) + File.separator + getFEBECombination() + "-ARRAYDATA-1" + ext));
+				if(readMonitor()) subscan.readMonitor(getFits(dir + (i+1) + File.separator + "MONITOR" + ext));
 				
 				add(subscan);
 			}
@@ -225,20 +213,17 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	
 	}
 	
-	public void closeAllFits() {
-		for(Fits fits : openFits) {
-			try { fits.close();	}
-			catch(IOException e) { e.printStackTrace(); }
-		}
-		openFits.clear();
-	}
-	
 	public void readScan(String fileName, boolean readFully) throws IOException, FitsException, HeaderCardException {	
 		File file = new File(fileName);
 		if(!file.exists()) throw new FileNotFoundException("Cannot find data file.");
 		
 		Fits fits = new Fits(file, fileName.endsWith(".gz") | fileName.endsWith(".Z"));	
+			
 		BasicHDU<?>[] hdu = fits.read();
+
+        //@SuppressWarnings("resource")
+        //ArrayDataInput in = fits.getStream();
+    
 		
 		// TODO Pick scan and instrument hdu's by name
 		int subscans = readScanInfo((BinaryTableHDU) hdu[1]);
@@ -257,6 +242,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 				// HDUs for each integration can come in any order, so check EXTNAME...
 				for(int m=0; m<3; m++, k++) {
 					BinaryTableHDU table = (BinaryTableHDU) hdu[k];
+					
 					String extName = table.getHeader().getStringValue("EXTNAME");
 					
 					if(extName.equalsIgnoreCase("DATAPAR-MBFITS")) subscan.readDataPar(table);
@@ -275,16 +261,18 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	}
 	
 	
-	public BinaryTableHDU getHDU(String fileName) throws IOException, FitsException, HeaderCardException {
+	
+	public Fits getFits(String fileName) throws IOException, FitsException, HeaderCardException {
 		File file = new File(fileName);
 		if(!file.exists()) throw new FileNotFoundException("Cannot find data file " + fileName);
-		
-		Fits fits = new Fits(new File(fileName), fileName.endsWith(".gz") | fileName.endsWith(".Z"));	
-		openFits.add(fits);
-		
-		return (BinaryTableHDU) fits.getHDU(1);
+		return new Fits(new File(fileName));
 	}
 	
+	public final int readScanInfo(Fits fits) throws IOException, FitsException, HeaderCardException {
+	    int result = readScanInfo((BinaryTableHDU) fits.getHDU(1));
+	    fits.close();
+	    return result;
+	}
 	
 	public int readScanInfo(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {
 		Header header = hdu.getHeader();

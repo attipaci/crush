@@ -276,20 +276,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			System.err.println("   JACKKNIFE! This integration will produce an inverted source.");
 			gain *= -1.0;
 		}
+		
 		if(hasOption("jackknife.frames")) {
 			System.err.println("   JACKKNIFE! Randomly inverted frames in source.");
 			for(Frame exposure : this) exposure.jackknife();
 		}
 		
-		
 		if(!hasOption("pixeldata")) if(hasOption("weighting")) if(!hasOption("uniformweights")) {
 			System.err.print("   Bootstrapping pixel weights");
-			getWeights();
+			getDifferentialPixelWeights();
 			instrument.census();
 			System.err.println(" (" + instrument.mappingChannels + " active channels).");
 		}
 		
-	
 		System.gc();
 		
 		isValid = true;
@@ -1124,7 +1123,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Instrument.recycle(var);
 	}
 	
-	public void getDifferencialPixelWeights() {
+	public void getDifferentialPixelWeights() {
 		final int delta = framesFor(10.0 * getPointCrossingTime());
 		final ChannelGroup<?> channels = instrument.getConnectedChannels();
 		
@@ -3080,7 +3079,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void getWeights(String method) {
 		if(method.equals("robust")) getRobustPixelWeights();
-		else if(method.equals("differential")) getDifferencialPixelWeights();
+		else if(method.equals("differential")) getDifferentialPixelWeights();
 		else getRMSPixelWeights();	
 		flagWeights();
 	}

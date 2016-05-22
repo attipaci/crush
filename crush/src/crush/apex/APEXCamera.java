@@ -83,6 +83,11 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 		fits.close();
 	}
 	
+	public final void readPar(Fits fits) throws IOException, FitsException, HeaderCardException {
+	    readPar((BinaryTableHDU) fits.getHDU(1));
+	    fits.close();
+	}
+	
 	public void readPar(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {
 		Header header = hdu.getHeader();
 

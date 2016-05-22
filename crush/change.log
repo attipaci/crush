@@ -1,17 +1,35 @@
+>> Data2D autocrop null exception
 >> multiscan file naming (HAWC+)
 
 
 
-2.32-a2
+2.32-a3
 
+
+	[BUG] {PolKa} Total intensity map I was ill-constructed from Q,U and
+	N. fixed.
+
+	[NEW] {APEX} Tau setting defaults to PWV, when PWV is stored in the
+	MONITOR table. 
 
 	[NEW] Ability to condense covariance matrix output to unflagged 'live'
 	channels only, using the 'write.covar.condensed' option.
+
+	[CHANGE] Long FITS keyword/values now use the more standard convention
+	for long FITS keywords, relying on CONTINUE keys, rather than CRUSH's
+	own convention earlier. However, CRUSH will continue to recognise
+	images written in its own long string convention... 
 
 	[CHANGE] 'perimeter' option for faster map sizing using only a set of
 	pixels on the instrument's perimeter now supports the value 'auto'. 
 	When used it will determine the optimal number of sections to use for
 	the perimeter calculation. This setting is now default.
+
+	[FIX] {APEX} {nom.tam.fits} FITS libraries has a brached fix (1.14.2A) 
+	for dealing with variable length columns in binary table HDUs, such
+	as the MONITOR tables of APEX. The fix has been pushed upstream and 
+	should be included in the 1.15 or later releases of the nom.tam.fits 
+	libraries...
 
 	[FIX] Comparing scans based on IDs instead of serial numbers. Serial
 	numbers may not be available at all observatories...
@@ -28,6 +46,13 @@
 	[FIX] Map lookup, update and sync could operate on different sets
 	of pixels as pixels got flagged/unflagged. Fixed.	
 
+	[TWEAK] Bootstrapping pixel weights (when reading scans) now uses
+	differential weighting method always. It is robust with dirty signals
+
+	[TWEAK] {SCUBA-2} More efficient scan reads, eliminating intermediate
+	storage and loading detector data sirectly into CRUSH's data 
+	structures.
+	
 	[TWEAK] {HAWC+} Reduced RAM overhead when reading scans -- using
 	low-lever read to move data from FITS directly to CRUSH data 
 	structures.
@@ -57,6 +82,7 @@
 	[CODE] Map setup and indexing, and various smaller methods moved
 	upstream from SourceMap to ScalarMap.
 
+	[CONFIG] {PolKA} Reinstated default analyzer grid angles...
 
 
 

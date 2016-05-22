@@ -37,11 +37,10 @@ public class SofiaFrame extends HorizontalFrame {
     private static final long serialVersionUID = -180851195016374209L;
     
     public GeodeticCoordinates site;
-    public TelescopeCoordinates telescopeCoords;
-    
+     
     public double instrumentVPA;
-    public double telescopeVPA;     // TODO check: orientation of V (-tEL!!!) vs North...
-    public double chopVPA;          // TODO check: orientation of S (-phi_R) vs North...
+    public double telescopeVPA;
+    public double chopVPA;
      
     public double PWV;
 
