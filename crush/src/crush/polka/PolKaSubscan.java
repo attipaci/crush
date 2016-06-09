@@ -33,6 +33,8 @@ import jnum.ExtraMath;
 import jnum.Parallel;
 import jnum.Unit;
 import jnum.Util;
+import jnum.data.Interpolator;
+import jnum.data.SimpleInterpolator;
 import jnum.data.WeightedPoint;
 import jnum.math.Vector2D;
 import jnum.text.TableFormatter;
@@ -109,7 +111,11 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 					instrument.referencePixel;
 			setTPPhases(channel);
 		}
-		else if(hasOption("waveplate.regulate")) regularAngles();
+		else if(hasOption("waveplate.recalc")) {
+		    String spec = option("waveplate.recalc").getValue().toLowerCase();
+		    if(spec.equals("uniform")) regularAngles();
+		    else interpolateAngles();
+		}
 		else if(hasOption("waveplate.frequency")) {
 			System.err.println("   Setting waveplate frequency " + Util.f3.format(getWaveplateFrequency()) + " Hz.");
 			System.err.println("   WARNING! Phaseless polarization (i.e. uncalibrated angles).");
@@ -130,10 +136,34 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 			setTPPhases(channel);
 		}
 
-		super.validate();		
+		super.validate();	
+		
+		//levelPolModulation();
 		
 		if(hasOption("purify")) removeTPModulation();
 	}
+	
+	/*
+	private void levelPolModulation() {
+	    double sumQ = 0.0, sumU = 0.0;
+	    int n = 0;
+	    for(LabocaFrame frame : this) if(frame != null) {
+	        PolKaFrame polkaFrame = (PolKaFrame) frame;
+	        sumQ += polkaFrame.Q;
+	        sumU += polkaFrame.U;
+	        n++;
+	    }
+	    
+	    double aveQ = sumQ / n;
+	    double aveU = sumU / n;
+	    
+	    for(LabocaFrame frame : this) if(frame != null) {
+	        PolKaFrame polkaFrame = (PolKaFrame) frame;
+	        polkaFrame.Q -= aveQ;
+	        polkaFrame.U -= aveU;
+	    } 
+	}
+	*/
 	
 	public void calcMeanWavePlateFrequency() throws IllegalStateException {
 		PolKa polka = (PolKa) instrument;
@@ -278,29 +308,80 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		else return super.getTauCoefficients(id);
 	}
 		
+	public ArrayList<Double> getMJDCrossings() {
+	    PolKa polka = (PolKa) instrument;
+        Channel offsetChannel = polka.offsetChannel;
+        if(offsetChannel == null) return null;
+        int c = offsetChannel.index;
+	    
+	    ArrayList<Double> crossings = new ArrayList<Double>();
+        double lastCrossing = Double.NaN;
+        double tolerance = 10 * Unit.ms / Unit.day;
+        
+        for(int t=0; t<size(); t++) {
+            Frame exposure = get(t);
+            if(exposure == null) continue;
+            double MJD = exposure.MJD - exposure.data[c] * Unit.ms / Unit.day;
+            if(!(Math.abs(MJD - lastCrossing) < tolerance)) {
+                lastCrossing = MJD;
+                crossings.add(MJD);
+            }   
+        }
+        Collections.sort(crossings);
+        return crossings;
+	}
 	
-	public void regularAngles() throws IllegalStateException {	
-		PolKa polka = (PolKa) instrument;
-		Channel offsetChannel = polka.offsetChannel;
-		if(offsetChannel == null) return;
-		int c = offsetChannel.index;
-		
+	private void interpolateAngles() {
+	    System.err.print("   Reconstructing waveplate (trapesoidal): ");
+	    
+	    PolKa polka = (PolKa) instrument;
+	    
+	    ArrayList<Double> crossings = getMJDCrossings();
+	    System.err.println(crossings.size() + " crossings.");
+	    
+	    SimpleInterpolator interpolator = new SimpleInterpolator();
+	    for(int i=0; i<crossings.size(); i++) {
+	        Interpolator.Data point = new Interpolator.Data();
+            point.ordinate = crossings.get(i);
+            point.value = i * Constant.twoPi;
+            interpolator.add(point);
+	    }
+	    interpolator.validate();
+	    
+	    double f = crossings.size() / ((crossings.get(crossings.size() - 1) - crossings.get(0)) * Unit.day / Unit.s);
+	    System.err.println("   --> <f> = " + Util.f3.format(f) + " Hz.");
+	    polka.waveplateFrequency = f;  
+	    
+	    int bad = 0;
+	    for(int i=size(); --i >= 0; ) {
+	        PolKaFrame frame = (PolKaFrame) get(i);
+	        if(frame == null) continue;
+	        
+	        double phi = Double.NaN;
+	        
+	        try { phi = interpolator.getTrapesoidValue(frame.MJD); }
+	        catch(IndexOutOfBoundsException e) {}
+	        
+	        if(!Double.isNaN(phi)) {
+	            frame.waveplateAngle = Math.IEEEremainder(phi, Constant.twoPi);
+	            frame.waveplateFrequency = f;
+	        }
+	        else {
+	            set(i, null);
+	            bad++;
+	        }
+	    }
+	    
+	    if(bad > 0) System.err.print("   --> " + bad + " frames invalidated.");
+	    
+	    System.err.println();
+	}
+	
+	private void regularAngles() throws IllegalStateException {	
+	    PolKa polka = (PolKa) instrument;
 		System.err.print("   Fixing waveplate: ");
 		
-		ArrayList<Double> crossings = new ArrayList<Double>();
-		double lastCrossing = Double.NaN;
-		double tolerance = 10 * Unit.ms / Unit.day;
-		
-		for(int t=0; t<size(); t++) {
-			Frame exposure = get(t);
-			if(exposure == null) continue;
-			double MJD = exposure.MJD - exposure.data[c] * Unit.ms / Unit.day;
-			if(!(Math.abs(MJD - lastCrossing) < tolerance)) {
-				lastCrossing = MJD;
-				crossings.add(MJD);
-			}	
-		}
-		Collections.sort(crossings);
+		ArrayList<Double> crossings = getMJDCrossings();
 		System.err.print(crossings.size() + " crossings, ");
 		
 		if(hasOption("waveplate.despike")) {
@@ -335,7 +416,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		
 	}
 	
-	public Vector2D regress(ArrayList<Double> crossings, double despike) throws IllegalStateException {
+	private Vector2D regress(ArrayList<Double> crossings, double despike) throws IllegalStateException {
 			
 		double sumx = 0.0, sumy = 0.0, sumxy = 0.0, sumxx = 0.0, sumyy = 0.0;
 		int n = crossings.size();
@@ -376,7 +457,8 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		
 		// If the rms error in the timings is greater than 3.6 degrees
 		// then consider it bad...
-		if(Math.sqrt(sigma2 / (n-1)) > 0.01 * dMJDdn) throw new IllegalStateException("Bad waveplate timings!");
+		// TODO...
+		//if(Math.sqrt(sigma2 / (n-1)) > 0.01 * dMJDdn) throw new IllegalStateException("Bad waveplate timings!");
 		
 		return new Vector2D(MJD0, dMJDdn);
 	}

@@ -189,6 +189,8 @@ implements TableFormatter.Entries, Messaging {
 		
 		loadChannelData();
 		
+		if(hasOption("scramble")) scramble();
+		
 		if(hasOption("blind")) setBlindChannels(option("blind").getList()); 
 		if(hasOption("flag")) flagPixels(option("flag").getList()); 	
 		if(hasOption("flatweights")) flattenWeights();
@@ -229,6 +231,34 @@ implements TableFormatter.Entries, Messaging {
 		}
 		
 		isValid = true;
+	}
+	
+	public void scramble() {
+	    System.err.println("   !!! Scrambling pixel position data (noise map only) !!!");
+	    
+	    List<? extends Pixel> pixels = getPixels();
+	    
+	    Vector2D temp = null;
+	    
+	    int switches = (int) Math.ceil(pixels.size() * ExtraMath.log2(pixels.size()));
+	    
+	    for(int n=switches; --n >= 0; ) {
+	        int i = (int) (pixels.size() * Math.random());
+	        int j = (int) (pixels.size() * Math.random());
+	        if(i == j) continue;
+	        
+	        Vector2D pos1 = pixels.get(i).getPosition();
+	        if(pos1 == null) return;
+	    
+	        Vector2D pos2 = pixels.get(j).getPosition();
+	        if(pos2 == null) return;
+	        
+	        if(temp == null) temp = (Vector2D) pos1.copy();
+	        else temp.copy(pos1);
+	        
+	        pos1.copy(pos2);
+	        pos2.copy(temp);
+	    }	    
 	}
 	
 	public int sourcelessChannelFlags() { return Channel.FLAG_BLIND | Channel.FLAG_DEAD | Channel.FLAG_DISCARD; }
@@ -552,7 +582,7 @@ implements TableFormatter.Entries, Messaging {
 		catch(NoSuchFieldException e) { e.printStackTrace(); }
 	
 		try { addModality(modalities.get("obs-channels").new NonLinearity("nonlinearity", "n", HawcPlusPixel.class.getField("nonlinearity"))); } 
-		catch (NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { e.printStackTrace(); }
 	
 		// Add pointing response modes...
 		addModality(new Modality<PointingResponse>("telescope-x", "Tx", divisions.get("detectors"), PointingResponse.class));
@@ -1060,7 +1090,6 @@ implements TableFormatter.Entries, Messaging {
 	public void flagWeights() {
 		Range weightRange = new Range();
 		weightRange.full();
-		
 		
 		if(hasOption("weighting.noiserange")) {
 			Range noiseRange = option("weighting.noiserange").getRange(true);

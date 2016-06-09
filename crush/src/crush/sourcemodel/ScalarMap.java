@@ -637,7 +637,7 @@ public class ScalarMap extends SourceMap {
 			else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SOURCE_BLANK;
 		}
 	}
-
+	
 
 	@Override
 	protected void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain) {

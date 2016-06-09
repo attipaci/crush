@@ -52,8 +52,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 
-	private static String version = "2.32-a3";
-	private static String revision = "devel.2";
+	private static String version = "2.32-b1";
+	private static String revision = "beta";
 	
 	public static String workPath = ".";
 	public static String home = ".";
@@ -148,7 +148,14 @@ public class CRUSH extends Configurator {
 
 	@Override
 	public void process(String key, String value) {
-		if(key.equals("debug")) debug=true;
+		if(key.equals("debug")) {
+		    debug=true;
+
+		    System.err.println("### java: " + Util.getProperty("java.vendor") + ": " + Util.getProperty("java.version"));
+		    System.err.println("### java-path: " + Util.getProperty("java.home"));
+		    System.err.println("### jre: " + Util.getProperty("java.runtime.name") + ": " + Util.getProperty("java.runtime.version"));
+		    System.err.println("### jvm: " + Util.getProperty("java.vm.name") + ": " + Util.getProperty("java.vm.version"));	        
+		}
 		else if(key.equals("help")) help(instrument);
 		else if(key.equals("list.divisions")) instrument.printCorrelatedModalities(System.err);
 		else if(key.equals("list.response")) instrument.printResponseModalities(System.err);
@@ -227,7 +234,7 @@ public class CRUSH extends Configurator {
 		else return super.getProperty(name);
 	}
 
-	public void validate() {			
+	public void validate() {			    
 		if(scans.size() == 0) {
 			instrument.warning("No scans to reduce. Exiting.");
 			exit(1);

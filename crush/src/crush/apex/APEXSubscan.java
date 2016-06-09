@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs
 
 package crush.apex;
 
@@ -324,19 +323,16 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 	
 		System.err.println("   " + frames + " frames found (" + 
 				Util.f1.format(frames * instrument.samplingInterval / Unit.min) + " minutes).");
-
-		if(hasOption("scramble")) System.err.println("   !!! Scrambling position data (noise map only) !!!");
-
-		
+	
 		new DataParTable(hdu).read(); 
 	}
 	
 	class DataParTable extends HDUReader {
-		private double[] MJD, LST, X, Y, DX, DY, chop;
+		private double[] MJD, LST, X, Y, DX, DY, chop, objX, objY;
 		private int[] phase;
 		private boolean chopperIncluded;
 		private final APEXScan<InstrumentType, ?> apexScan = (APEXScan<InstrumentType, ?>) scan;
-		private final static double m900deg = -900.0 * Unit.deg;
+		private final static double m900 = -900.0;
 		
 		public DataParTable(TableHDU<?> hdu) throws FitsException {
 			super(hdu);
@@ -349,10 +345,25 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 			//EL = (double[]) table.getColumn(hdu.findColumn("ELEVATIO"));
 			X = (double[]) table.getColumn(hdu.findColumn("BASLONG"));
 			Y = (double[]) table.getColumn(hdu.findColumn("BASLAT"));
+			
 			DX = (double[]) table.getColumn(hdu.findColumn("LONGOFF"));
 			DY = (double[]) table.getColumn(hdu.findColumn("LATOFF"));
 			phase = (int[]) table.getColumn(hdu.findColumn("PHASE"));
 
+			int iOX = hdu.findColumn("MCRVAL1");
+            int iOY = hdu.findColumn("MCRVAL2");
+			
+            if(iOX >= 0 && iOY >= 0) {
+                objX = (double[]) table.getColumn(iOX);
+                objY = (double[]) table.getColumn(iOY);
+                
+                for(int i=objX.length; --i >= 0; ) if(!Double.isNaN(objX[i])) if(objX[i] > m900) {
+                    System.err.println("   Non-sidereal tracking detected...");
+                    scan.isNonSidereal = true;
+                    break;
+                }
+            }
+            
 			/*
 			int iRA = hdu.findColumn("RA");
 			int iDEC = hdu.findColumn("DEC");
@@ -400,7 +411,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 			return new Reader() {				
 				private Vector2D tempOffset;
 				private CelestialCoordinates basisCoords;
-				private boolean scramble = hasOption("scramble");
 				
 				@Override
 				public void init() {
@@ -421,19 +431,13 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 				
 					// Continue only if the basis coordinates are valid...
 					// APEX uses -999 deg to mark invalid data...
-					final double x = X[t] * Unit.deg;
-					if(x < m900deg) return;
-					
-					final double y = Y[t] * Unit.deg;
-					if(y < m900deg) return;
+					if(X[t] < m900) return;
+					if(Y[t] < m900) return;
 
 					// Continue only if the scanning offsets are valid...
 					// APEX uses -999 deg to mark invalid data...
-					final double dx = DX[t] * Unit.deg;
-					if(dx < m900deg) return;
-					
-					final double dy = DY[t] * Unit.deg;
-					if(dy < m900deg) return;
+					if(DX[t] < m900) return;
+					if(DY[t] < m900) return;
 			
 					// Create the frame object once the hurdles above are cleared...
 					final FrameType exposure = getFrameInstance();
@@ -442,49 +446,70 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 					exposure.MJD = MJD[t];
 					exposure.LST = LST[t];
 					
+					boolean hasObjectCoords = objX == null ? false : scan.isNonSidereal && objX[t] > m900 && objY[t] > m900;
+					
 					if(basisCoords != null) {
-						basisCoords.set(x, y);
+						basisCoords.set(X[t] * Unit.deg, Y[t] * Unit.deg);
 						exposure.equatorial = basisCoords.toEquatorial();
 						exposure.calcHorizontal();
 					}	
 					else if(apexScan.basisSystem == EquatorialCoordinates.class) {
-						exposure.equatorial = new EquatorialCoordinates(x, y, scan.equatorial.epoch);
+						exposure.equatorial = new EquatorialCoordinates(X[t] * Unit.deg, Y[t] * Unit.deg, scan.equatorial.epoch);
 						exposure.calcHorizontal();
 					}
-					else exposure.horizontal = new HorizontalCoordinates(x, y);
-
-					exposure.horizontalOffset = new Vector2D(dx, dy);
-					exposure.calcParallacticAngle();
-
-					// Make scanning offsets always horizontal...
-					if(apexScan.nativeSystem == EquatorialCoordinates.class) 
-						exposure.equatorialToHorizontal(exposure.horizontalOffset);
-
-					if(chop != null) exposure.chopperPosition.setX(chop[t] * Unit.deg);
-					exposure.chopperPhase = phase[t];			
-					exposure.zenithTau = (float) zenithTau;
-					exposure.nodFlag = nodPhase;
-
-					if(chopper != null) if(!chopperIncluded) {
-						// Add the chopping offsets to the horizontal coordinates and offsets
-						exposure.horizontal.addX(exposure.chopperPosition.x() / exposure.horizontal.cosLat());
-						exposure.horizontalOffset.addX(exposure.chopperPosition.x());
-						// Add to the equatorial coordinate also...
-						tempOffset.copy(exposure.chopperPosition);
-						exposure.horizontalToEquatorial(tempOffset);
-						exposure.equatorial.addOffset(tempOffset);
+					else {
+					    exposure.horizontal = new HorizontalCoordinates(X[t] * Unit.deg, Y[t] * Unit.deg);
+					    exposure.calcEquatorial();
 					}
 
-					// Scrambling produces a messed-up map, which is suitable for  studying the noise properties
-					// If the scanning is more or less centrally symmetric, the resulting 'noise' map is
-					// representative of the non-scrambled map...
-					if(scramble) {
-						exposure.horizontalOffset.invert();
-						exposure.chopperPosition.scaleX(-1.0);
-						exposure.sinPA *= -1.0;
-						exposure.cosPA *= -1.0;
-						exposure.calcEquatorial();
-					}		
+                    exposure.calcParallacticAngle();
+            
+					// Equatorial offset to moving reference...
+					if(hasObjectCoords) {
+					    if(basisCoords != null) {
+                            basisCoords.set(objX[t] * Unit.deg, objY[t] * Unit.deg);
+                            exposure.horizontalOffset = exposure.equatorial.getNativeOffsetFrom(basisCoords.toEquatorial());
+                            exposure.equatorialNativeToHorizontal(exposure.horizontalOffset);
+                        }
+					    else if(apexScan.basisSystem == EquatorialCoordinates.class) { 
+					        exposure.horizontalOffset = exposure.equatorial.getNativeOffsetFrom(
+                                    new EquatorialCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg, scan.equatorial.epoch)
+                            );
+					        exposure.equatorialNativeToHorizontal(exposure.horizontalOffset);
+					    }
+					    else {
+					        exposure.horizontalOffset = exposure.horizontal.getOffsetFrom(
+	                                new HorizontalCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg)
+	                        );
+					    }
+					}
+					// Else just rely on the scanning offsets...
+					else {
+					    exposure.horizontalOffset = new Vector2D(DX[t] * Unit.deg, DY[t] * Unit.deg);
+					
+					    if(apexScan.nativeSystem == EquatorialCoordinates.class)
+					        exposure.equatorialToHorizontal(exposure.horizontalOffset);
+					}
+					    
+					exposure.zenithTau = (float) zenithTau;	
+					
+					exposure.chopperPhase = phase[t];          
+                    exposure.nodFlag = nodPhase;
+					
+					// Add the chopper offsets, if available...
+					if(chop != null) if(chop[t] > -m900) {
+					    exposure.chopperPosition.setX(chop[t] * Unit.deg);
+					    
+					    if(!chopperIncluded) {
+					        // Add the chopping offsets to the horizontal coordinates and offsets
+					        exposure.horizontal.addX(exposure.chopperPosition.x() / exposure.horizontal.cosLat());
+					        exposure.horizontalOffset.addX(exposure.chopperPosition.x());
+					        // Add to the equatorial coordinate also...
+					        tempOffset.copy(exposure.chopperPosition);
+					        exposure.horizontalToEquatorial(tempOffset);
+					        exposure.equatorial.addOffset(tempOffset);
+					    }
+					}
 
 					set(t, exposure);
 				}		
@@ -498,6 +523,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 	}
 
 	public void readMonitor(BinaryTableHDU hdu) throws IOException, FitsException, HeaderCardException {    
+	    
 	    if(hasOption("tau.pwv")) return;
 	    
         final int n = hdu.getNRows();

@@ -92,11 +92,29 @@ public class SofiaTelescopeData extends SofiaData {
 		tascuStatus = header.getString("TSC-STAT");
 		fbcStatus = header.getString("FBC-STAT");
 		
-		requestedEquatorial = new EquatorialCoordinates();
-		if(header.containsKey("EQUINOX")) requestedEquatorial.setEpoch(new JulianEpoch(header.getDouble("EQUINOX")));
+		double epochYear = header.getDouble("EQUINOX");
+		JulianEpoch epoch = Double.isNaN(epochYear) ? null : new JulianEpoch(epochYear);
 		
-		try { requestedEquatorial.set(header.getHMSTime("OBSRA") * Unit.timeAngle, header.getDMSAngle("OBSDEC")); }
-		catch(Exception e) { boresightEquatorial = null; }
+		requestedEquatorial = null;
+		boresightEquatorial = null;
+		
+		if(epoch != null) {
+		    try { 
+                double hRA = header.getHMSTime("TELRA");
+                double dDEC = header.getDMSAngle("TELDEC");
+                if(!Double.isNaN(hRA) && !Double.isNaN(dDEC)) 
+                    requestedEquatorial = new EquatorialCoordinates(hRA * Unit.timeAngle, dDEC * Unit.deg, epoch); 
+            }
+            catch(Exception e) {}
+		    
+		    try { 
+		        double hRA = header.getHMSTime("OBSRA");
+		        double dDEC = header.getDMSAngle("OBSDEC");
+		        if(!Double.isNaN(hRA) && !Double.isNaN(dDEC)) 
+		            boresightEquatorial = new EquatorialCoordinates(hRA * Unit.timeAngle, dDEC * Unit.deg, epoch); 
+		    }
+		    catch(Exception e) {}
+		}
 		
 		zenithAngle.start = header.getDouble("ZA_START", Double.NaN) * Unit.deg;
 		zenithAngle.end = header.getDouble("ZA_END", Double.NaN) * Unit.deg;
@@ -105,14 +123,14 @@ public class SofiaTelescopeData extends SofiaData {
 		moonAngle = header.getDouble("MOONANGL", Double.NaN) * Unit.deg;			// not in 3.0
 		
 		userCoordinateSystem = header.getString("USRCRDSY");						// not in 3.0
-		userReferenceSystem = header.getString("USRREFCR");						// not in 3.0
+		userReferenceSystem = header.getString("USRREFCR");						    // not in 3.0
 		
 		userRefLon = header.getDouble("USRORIGX", Double.NaN) * Unit.deg;			// not in 3.0
 		userRefLat = header.getDouble("USRORIGY", Double.NaN) * Unit.deg;			// not in 3.0
-		userRefAngle = header.getDouble("USRCRROT", Double.NaN) * Unit.deg;		// not in 3.0
+		userRefAngle = header.getDouble("USRCRROT", Double.NaN) * Unit.deg;		    // not in 3.0
 		
 		userLongitude = header.getDouble("USRX", Double.NaN) * Unit.deg;			// not in 3.0
-		userLatitude = header.getDouble("USRY", Double.NaN) * Unit.deg;			// not in 3.0
+		userLatitude = header.getDouble("USRY", Double.NaN) * Unit.deg;			    // not in 3.0
 		userEquinox = header.getDouble("USREQNX", Double.NaN);						// not in 3.0
 		
 		vHelio = header.getDouble("HELIOCOR", Double.NaN) * Unit.km / Unit.s;		// not in 3.0

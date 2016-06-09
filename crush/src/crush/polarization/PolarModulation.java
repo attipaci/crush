@@ -27,4 +27,6 @@ public final class PolarModulation {
 	public final static int Q = 2;
 	public final static int U = 3;
 	public final static int V = 4;
+	public final static int etaQ = 5;
+	public final static int etaU = 6;	
 }

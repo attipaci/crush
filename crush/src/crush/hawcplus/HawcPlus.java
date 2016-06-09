@@ -277,6 +277,26 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		// TODO load bias gains? ...
 		
 		super.loadChannelData();
+		
+		if(hasOption("edge")) discardEdges(getOptions().get("edge"));
+		
+	}
+	
+	public void discardEdges(Configurator option) {
+	    List<Integer> values = option.getIntegers();
+	    int rows = values.get(0);
+	    int cols = values.size() > 1 ? values.get(1) : rows;
+	    discardEdges(rows, cols);
+	}
+		
+	public void discardEdges(int eRows, int eCols) {
+	    System.err.println("   Cropping " + eRows + " rows & " + eCols + " cols from subarray edges.");
+	    
+	    for(HawcPlusPixel pixel : this) {
+	        if(pixel.row < eRows || pixel.row >= rows - eRows) pixel.flag(Channel.FLAG_DISCARD | Channel.FLAG_DEAD);
+	        int col = pixel.col % subarrayCols;
+	        if(col < eCols || col >= subarrayCols - eCols) pixel.flag(Channel.FLAG_DISCARD | Channel.FLAG_DEAD); 
+	    }
 	}
 	
 	public void selectSubarrays(String spec) {	
@@ -510,6 +530,9 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		
 		final float[][] gainR = new float[rows][polCols];
 		final float[][] gainT = new float[rows][polCols];
+		final float[][] nonlinearR = new float[rows][polCols];
+        final float[][] nonlinearT = new float[rows][polCols];
+		
 		final int[][] flagR = new int[rows][polCols];
 		final int[][] flagT = new int[rows][polCols];
 		
@@ -526,14 +549,17 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		    
 		    int col = (pixel.sub & 1) * HawcPlus.subarrayCols + pixel.col;
 		    
-			if(pixel.pol == T_ARRAY) {
+		    if(pixel.pol == R_ARRAY) {
+                gainR[pixel.subrow][col] = iG;
+                nonlinearR[pixel.subrow][col] = (float) pixel.nonlinearity;
+                if(pixel.isUnflagged()) flagR[pixel.subrow][col] = 0; 
+            }
+		    else if(pixel.pol == T_ARRAY) {
 				gainT[pixel.subrow][col] = iG;
+				nonlinearT[pixel.subrow][col] = (float) pixel.nonlinearity;
 				if(pixel.isUnflagged()) flagT[pixel.subrow][col] = 0; 
 			}
-			else if(pixel.pol == R_ARRAY) {
-				gainR[pixel.subrow][col] = iG;
-				if(pixel.isUnflagged()) flagR[pixel.subrow][col] = 0; 
-			}
+			
 		}
 		
 		final Fits fits = new Fits();
@@ -542,6 +568,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		addHDU(fits, Fits.makeHDU(gainT), "T array gain");
 		addHDU(fits, Fits.makeHDU(flagR), "R bad pixel mask");
 		addHDU(fits, Fits.makeHDU(flagT), "T bad pixel mask");
+		addHDU(fits, Fits.makeHDU(nonlinearR), "R array nonlinearity");
+        addHDU(fits, Fits.makeHDU(nonlinearT), "T array nonlinearity");
 		
 		FitsExtras.write(fits, fileName);
 		fits.close();

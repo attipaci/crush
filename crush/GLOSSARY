@@ -3651,12 +3651,15 @@
 			(e.g. a wire grid in the pupil)
 			@See: 'waveplate.channel'
 
-:: waveplate.regulate	@Instrument: PolKa
-			@Advanced
-			@Since: 2.11
-			Provide a workaround to the innacuracy of the waveplate
-			timestaps, by assuming that the waveplate motion is
-			regular. A linear fit to the timestamp data will be 
+:: waveplate.recalc[=<method>]	@Instrument: PolKa
+				@Advanced
+				@Since: 2.32
+			Recalculate the waveplate data from the reconstructed
+			waveplate crossings. By default, the recalculated
+			waveplate will use trapesoidal interpolation between
+			bracketing crossings. 
+			Alternatively, if the optional <method> argument is set
+			to 'uniform' A linear fit to the timestamp data will be 
 			used instead of the original timestamps. The quality of
 			the fit may be improved with despiking the data via
 			'waveplate.despike'. Requires timestamp information via

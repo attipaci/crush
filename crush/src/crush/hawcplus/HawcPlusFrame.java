@@ -127,7 +127,7 @@ public class HawcPlusFrame extends SofiaFrame {
         
         if(hasTelescopeInfo) {
             if(equatorial == null) return false;
-        
+          
             if(chopperPosition != null) {
                 horizontalOffset.add(chopperPosition);
                 horizontal.addOffset(chopperPosition);

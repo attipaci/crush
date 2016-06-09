@@ -73,8 +73,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 			System.err.println("   >>> Fix: invalid (stale) equatorial coordinates.");
 			equatorial = eq2;
 			apparent = horizontal.toEquatorial(site, LST);
-		}
-		
+		}	
 	}
 	
 	
@@ -120,11 +119,15 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 			int scanNo = Integer.parseInt(scanDescriptor);
 			String fileName = path + "sharc2-" + Util.d6.format(scanNo) + ".fits";
 			scanFile = new File(fileName);
-			if(!scanFile.exists()) {
-				fileName += ".gz";
-				scanFile = new File(fileName);
-				if(!scanFile.exists()) throw new FileNotFoundException("Could Not find scan " + scanDescriptor); 
-			}
+			
+			// Try with various compressed formats...
+			if(!scanFile.exists()) scanFile = new File(fileName + ".gz");
+			if(!scanFile.exists()) scanFile = new File(fileName + ".xz");
+			if(!scanFile.exists()) scanFile = new File(fileName + ".Z");
+			if(!scanFile.exists()) scanFile = new File(fileName + ".bz2");
+			if(!scanFile.exists()) scanFile = new File(fileName + ".zip");
+			
+			if(!scanFile.exists()) throw new FileNotFoundException("Could Not find scan " + scanDescriptor); 
 		} 
 		catch(NumberFormatException e) {
 			scanFile = new File(scanDescriptor) ;	
@@ -147,9 +150,8 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 	
 	public Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
 		File file = getFile(scanDescriptor);
-		boolean isCompressed = file.getName().endsWith(".gz");
 		System.out.println(" Reading " + file.getPath() + "...");
-		return new Fits(getFile(scanDescriptor), isCompressed);
+		return new Fits(getFile(scanDescriptor));
 	}
 	
 	protected void checkPrematureFits(BasicHDU<?> main, BinaryTableHDU data) throws FitsException {

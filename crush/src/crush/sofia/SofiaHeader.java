@@ -65,7 +65,7 @@ public class SofiaHeader {
     }
     
     public final float getFloat(String key) {
-        return header.getFloatValue(key, UNKNOWN_FLOAT_VALUE);
+        return getFloat(key, Float.NaN);
     }
     
     public float getFloat(String key, float defaultValue) {
@@ -74,7 +74,7 @@ public class SofiaHeader {
     }
     
     public final double getDouble(String key) {
-        return header.getFloatValue(key, UNKNOWN_FLOAT_VALUE);
+        return getDouble(key, Double.NaN);
     }
     
     public double getDouble(String key, double defaultValue) {
@@ -82,13 +82,13 @@ public class SofiaHeader {
         return value == UNKNOWN_DOUBLE_VALUE ? Double.NaN : value;
     }
     
-    public double getHeaderDouble(double value) {
+    public static double getHeaderValue(double value) {
         if(Double.isNaN(value)) return UNKNOWN_DOUBLE_VALUE;
         return value;
     }
     
-    public float getHeaderFloat(double value) {
-        if(Double.isNaN(value)) return UNKNOWN_FLOAT_VALUE;
+    public static float getHeaderValue(float value) {
+        if(Float.isNaN(value)) return UNKNOWN_FLOAT_VALUE;
         return (float) value;
     }
     
@@ -98,13 +98,13 @@ public class SofiaHeader {
     
     public double getHMSTime(String key) {
         String value = header.getStringValue(key);
-        if(value == null) return header.getDoubleValue(key, Double.NaN) * Unit.hour; 
+        if(value == null) return getDouble(key) * Unit.hour; 
         return Util.parseTime(value);
     }
     
     public double getDMSAngle(String key) {
         String value = header.getStringValue(key);
-        if(value == null) return header.getDoubleValue(key, Double.NaN) * Unit.deg; 
+        if(value == null) return getDouble(key) * Unit.deg; 
         return Util.parseAngle(value);
     }
     

@@ -50,6 +50,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	int driftN;
 	boolean isFloating = false;
 	
+	
 	public Signal(Mode mode, Integration<?, ?> integration) {
 		this.mode = mode;
 		this.integration = integration;
@@ -58,13 +59,14 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 			integration.addSignal(this);
 		}
 	}
-
+	
 	public Signal(Mode mode, Integration<?, ?> integration, float[] values, boolean isFloating) {
 		this(mode, integration);
 		resolution = ExtraMath.roundupRatio(integration.size(), values.length);
 		this.value = values;
 		driftN = values.length;
 	}
+	
 	
 	@Override
 	public int hashCode() {
@@ -513,7 +515,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 		}
 		if(!changed) return;
 			
-		parms.clear(channels, 0, integration.size());
+		if(sumwC2 != null) parms.clear(channels, 0, integration.size());
 
 		// Precalculate the gain-weight products...
 		if(!isTempReady) prepareFrameTempFields();
@@ -522,7 +524,11 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 		integration.new Fork<Void>() {
 			@Override 
 			protected void process(Frame exposure){
-				for(int k=nc; --k >=0; ) if(sumwC2[k] > 0.0) {
+				for(int k=nc; --k >=0; ) {
+				    boolean calcDependents = sumwC2 == null ? false : sumwC2[k] > 0.0F;
+				   
+				    if(!calcDependents) continue;
+				    
 					final int c = mode.getChannel(k).index;
 					exposure.data[c] -= dG[k] * exposure.tempC;
 					if(exposure.isUnflagged(Frame.MODELING_FLAGS)) if(exposure.sampleFlag[c] == 0)
@@ -531,17 +537,20 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 			}
 		}.process();
 		
-		// Account for the one gain parameter per channel...
-		// minus the overall gain renormalization...
-		// TODO calculate more properly with weights...
-		final double channelDependence = 1.0 - 1.0 / nc;
-		for(int k=nc; --k >= 0; ) if(sumwC2[k] > 0.0) parms.addAsync(channels.get(k), channelDependence);
-		
-		// Apply the mode dependeces...
-		parms.apply(channels, 0, integration.size());
-	
+		if(sumwC2 != null) {
+		    // Account for the one gain parameter per channel...
+		    // minus the overall gain renormalization...
+		    // TODO calculate more properly with weights...
+		    final double channelDependence = 1.0 - 1.0 / nc;
+		    for(int k=nc; --k >= 0; ) if(sumwC2[k] > 0.0) parms.addAsync(channels.get(k), channelDependence);
+
+		    // Apply the mode dependeces...
+		    parms.apply(channels, 0, integration.size());
+		}
+		 
 		// Register the gains as the ones used for the signal...
 		setSyncGains(G);
+		
 		
 		if(CRUSH.debug) integration.checkForNaNs(channels, 0, integration.size());
 	}
@@ -586,5 +595,6 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	
 	@Override
 	public String toString() { return "Signal " + integration.getFullID("|") + "." + mode.getName(); }
+
 	
 }

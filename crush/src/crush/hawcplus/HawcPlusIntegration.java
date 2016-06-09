@@ -215,7 +215,10 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     
                     frame.hasTelescopeInfo &= !Double.isNaN(((double[]) row[iRA])[0]);
                     
-                    if(!frame.hasTelescopeInfo) return;
+                    if(!frame.hasTelescopeInfo) {
+                        if(!isLab) set(i, null);
+                        return;
+                    }
                     
                     // ======================================================================================
                     // Below here is telescope data only, which will be ignored for 'lab' mode reductions...

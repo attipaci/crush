@@ -45,7 +45,7 @@ public class PolKa extends Laboca {
 	 */
 	private static final long serialVersionUID = -5407116500180513583L;
 
-	float q0 = 0.0F, u0 = 0.0F; // The intrinsic polarization fraction of the instrument...
+	float etaQh = 0.0F, etaUh = 0.0F; // The intrinsic polarization fraction of the instrument...
 	double waveplateFrequency; // The default rotation frequency
 	double jitter = 0.003;
 	double referenceAngle = 0.0 * Unit.deg;
@@ -58,6 +58,7 @@ public class PolKa extends Laboca {
 	boolean hasAnalyzer = false;
 	boolean isVertical = false;
 	boolean isCounterRotating = false;
+	boolean isHorizontalPolarization = false;
 	
 	Channel offsetChannel, phaseChannel, frequencyChannel;
 	
@@ -158,7 +159,12 @@ public class PolKa extends Laboca {
 		if(hasOption("analyzer.v")) verticalAngle = option("analyzer.v").getDouble() * Unit.deg;
 		
 		cosi = Math.cos(incidencePhase);
+		
+		isHorizontalPolarization = hasOption("polarization.horizontal");
 			
+		etaQh = hasOption("polarization.q0") ? option("polarization.q0").getFloat() : 0.0F;
+		etaUh = hasOption("polarization.u0") ? option("polarization.u0").getFloat() : 0.0F;
+		
 		super.validate(scan);
 	}
 	
