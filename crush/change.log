@@ -1,13 +1,27 @@
->> Data2D autocrop null exception
->> multiscan file naming (HAWC+)
+
+2.32-b1
+
+	Overview
+	======================================================================
+	The release provides out-of-the-box support for Spring 2016 
+	commissioning flight data of SOFIA/HAWC+. It also brings improved
+	support for PolKa (now with calibrated polarization angles!). For APEX
+	cameras it now uses PVW values when stored in the MONITOR table as the
+	default source of tau. And, the latest FITS libraries (1.14.3) restore 
+	Java 6 compatibility.
+	Lots of fixes, improvements, and under-the-hood code changes, as usual.
+	======================================================================
 
 
-
-2.32-a3
-
-
-	[BUG] {PolKa} Total intensity map I was ill-constructed from Q,U and
+	[BUG] {PolKa} Total intensity map 'I' was ill-constructed from Q,U and
 	N. fixed.
+
+	[NEW] {HAWC+} Non-linear response modeling.
+
+	[NEW] {APEX} Automatic detection of non-sidereal scans, in which the
+	tracked object is moving w.r.t the celestial frame. When available,
+	CRUSH now uses the MCRVALn column data that contains the real-time
+	object position.
 
 	[NEW] {APEX} Tau setting defaults to PWV, when PWV is stored in the
 	MONITOR table. 
@@ -15,21 +29,37 @@
 	[NEW] Ability to condense covariance matrix output to unflagged 'live'
 	channels only, using the 'write.covar.condensed' option.
 
-	[CHANGE] Long FITS keyword/values now use the more standard convention
-	for long FITS keywords, relying on CONTINUE keys, rather than CRUSH's
-	own convention earlier. However, CRUSH will continue to recognise
-	images written in its own long string convention... 
+	[CHANGE] {HAWC+} Flatfield output (produced via 'write.flatfield')
+	now contains HDUs for the R and T nonlinearity coefficients also...
+
+	[CHANGE] {PolKa} The 'waveplate.regulate' option has been renamed to
+	'waveplate.recalc' with an optional argument. Without the argument the
+	waveplate angle is interpolated (linearly) between the timestamped
+	reference crossings. If the argument is set to 'uniform', then a 
+	uniform waveplate frequency is assumed and fitted to the data (same as 
+	the deprecated 'waveplate.regulate' option.
+
+	[CHANGE] 'scramble' option randomly exchanges pixel positions to 
+	produce noise maps with smeared source flux (a jackknife alternative).
+	Now works with all instruments. (Previously only APEX cameras were 
+	supported, with a simpler mirroring only...)
+
+	[CHANGE] Long FITS keyword/values now use the more standard (OGIP 1.0) 
+	convention for long FITS keywords, relying on CONTINUE keys, rather 
+	than CRUSH's own convention earlier. However, CRUSH will continue to 
+	recognise images written in its own long string convention... 
 
 	[CHANGE] 'perimeter' option for faster map sizing using only a set of
 	pixels on the instrument's perimeter now supports the value 'auto'. 
 	When used it will determine the optimal number of sections to use for
 	the perimeter calculation. This setting is now default.
 
-	[FIX] {APEX} {nom.tam.fits} FITS libraries has a brached fix (1.14.2A) 
-	for dealing with variable length columns in binary table HDUs, such
-	as the MONITOR tables of APEX. The fix has been pushed upstream and 
-	should be included in the 1.15 or later releases of the nom.tam.fits 
-	libraries...
+	[FIX] {FITS} Updated nom-tam-fits library (1.14.3) can once again deal
+	with variable length columns in binary tables (such as APEX MONITOR 
+	tables), and restores Java 1.6 compatibility. 
+
+	[FIX] {SOFIA} Workaround for invalid (-9999.0) OBSRA/OBSDEC, 
+	TELRA/TELDEC, and EQUINOX (in some May HAWC+ data). 
 
 	[FIX] Comparing scans based on IDs instead of serial numbers. Serial
 	numbers may not be available at all observatories...
@@ -57,13 +87,21 @@
 	low-lever read to move data from FITS directly to CRUSH data 
 	structures.
 
+	[DEBUG] Java information printed to console in 'debug' mode.
+
+	[CODE] {APEX} Simplified scan file search, looking for uncompressed
+	and various compressed (.gz, .xz, .Z, .bz2, .zip) FITS files that 
+	match...
+
 	[CODE] Non-linear response implementation.
 
 	[CODE] Cleanup: deleted unused left-over constructors from Response 
 	and subclasses.
 
 	[CODE] HDURowReader, for processing FITS row-by-row, seems to be
-	working and thread safe...
+	working and thread safe. However, it cannot handle compressed FITS 
+	files. Also, there is likely little or no performance advantage for
+	using more than 1 thread, in general...
 
 	[CODE] Shifting frames pulled up ahead frame validation. This way 
 	validation works with the timing-fixed data.
@@ -82,7 +120,13 @@
 	[CODE] Map setup and indexing, and various smaller methods moved
 	upstream from SourceMap to ScalarMap.
 
+	[PACKAGE] ZIP archive may have been out of date w.r.t the tarball
+	in the past. Fixed.
+
 	[CONFIG] {PolKA} Reinstated default analyzer grid angles...
+
+	[CONFIG] Moon is now assumed to be a 'bright' source for all 
+	instruments, by default.
 
 
 

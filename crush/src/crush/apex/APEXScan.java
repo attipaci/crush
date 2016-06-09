@@ -139,10 +139,18 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 			}
 			// Otherwise, check for matches in here...
 			if(fileName[i].startsWith(getTelescopeName() + "-" + spec)) {
-				String core = fileName[i];
+				String core = fileName[i].toUpperCase();
+				
+				// Take off the compression extension...
 				if(core.endsWith(".Z")) core = core.substring(0, core.length() - 2);
-				if(core.endsWith(".gz")) core = core.substring(0, core.length() - 3);
-				if(core.endsWith(".fits")) core = core.substring(0, core.length() - 5);
+				else if(core.endsWith(".GZ")) core = core.substring(0, core.length() - 3);
+				else if(core.endsWith(".XZ")) core = core.substring(0, core.length() - 3);
+				else if(core.endsWith(".BZ2")) core = core.substring(0, core.length() - 4);
+				else if(core.endsWith(".ZIP")) core = core.substring(0, core.length() - 4);
+                
+				// Take off the FITS extension...
+				if(core.endsWith(".FITS")) core = core.substring(0, core.length() - 5);
+				
 				if(core.endsWith(projectID)) return path + fileName[i];
 			}
 		}
@@ -165,17 +173,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 		if(file.isDirectory()) {
 			System.err.println(" From directory '" + name + "'.");
-			try { readScanDirectory(name, "", readFully); }
-			catch(FitsException e) { throw e; }
-			catch(Exception e) {
-				if(CRUSH.debug) e.printStackTrace();
-				try { readScanDirectory(name, ".gz", readFully); }
-				catch(FitsException e2) { throw e2; }
-				catch(Exception e2) { 
-					if(CRUSH.debug) e.printStackTrace();
-					readScanDirectory(name, ".Z", readFully); 
-				}
-			}
+			readScanDirectory(name, "", readFully);
 		}
 		else {
 			System.err.println(" From file '" + name + "'.");
@@ -188,7 +186,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	public void readScanDirectory(String dir, String ext, boolean readFully) throws IOException, FitsException, HeaderCardException {	
 		ext = ".fits" + ext;
 		dir += File.separator;
-		 
+		
 		int subscans = readScanInfo(getFits(dir + "SCAN" + ext));
 		
 		instrument.readPar(getFits(dir + getFEBECombination() + "-FEBEPAR" + ext));
@@ -214,17 +212,13 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	}
 	
 	public void readScan(String fileName, boolean readFully) throws IOException, FitsException, HeaderCardException {	
-		File file = new File(fileName);
-		if(!file.exists()) throw new FileNotFoundException("Cannot find data file.");
-		
-		Fits fits = new Fits(file, fileName.endsWith(".gz") | fileName.endsWith(".Z"));	
 			
+		Fits fits = getFits(fileName);		
 		BasicHDU<?>[] hdu = fits.read();
 
         //@SuppressWarnings("resource")
         //ArrayDataInput in = fits.getStream();
     
-		
 		// TODO Pick scan and instrument hdu's by name
 		int subscans = readScanInfo((BinaryTableHDU) hdu[1]);
 		instrument.readPar((BinaryTableHDU) hdu[2]);
@@ -260,12 +254,14 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 	}
 	
-	
-	
-	public Fits getFits(String fileName) throws IOException, FitsException, HeaderCardException {
+	public Fits getFits(String fileName) throws IOException, FitsException, HeaderCardException {   
 		File file = new File(fileName);
-		if(!file.exists()) throw new FileNotFoundException("Cannot find data file " + fileName);
-		return new Fits(new File(fileName));
+		if(!file.exists()) file = new File(fileName + ".gz");
+		if(!file.exists()) file = new File(fileName + ".xz");
+		if(!file.exists()) file = new File(fileName + ".Z");
+		if(!file.exists()) file = new File(fileName + ".bz2");
+		if(!file.exists()) file = new File(fileName + ".zip");
+		return new Fits(file);
 	}
 	
 	public final int readScanInfo(Fits fits) throws IOException, FitsException, HeaderCardException {

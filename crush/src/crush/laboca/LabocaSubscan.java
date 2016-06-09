@@ -164,6 +164,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	// TODO broken, FITS libs do not handle curled row structure well...
 	@Override
 	public void readMonitor(BinaryTableHDU hdu)  throws IOException, FitsException, HeaderCardException {
+	    
 	    super.readMonitor(hdu);
 	    
 		// Don't read monitor table unless necessary...

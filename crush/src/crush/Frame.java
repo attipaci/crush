@@ -343,23 +343,23 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		}
 	}
 	
-	public void project(final Vector2D position, final AstroProjector projector) {
+	public void project(final Vector2D fpOffset, final AstroProjector projector) {
 		if(projector.isFocalPlane()) {
 			projector.setReferenceCoords();
 			// Deproject SFL focal plane offsets...
-			getFocalPlaneOffset(position, projector.offset);
+			getFocalPlaneOffset(fpOffset, projector.offset);
 			projector.getCoordinates().addNativeOffset(projector.offset);
 			projector.project();
 		}
 		else if(scan.isNonSidereal) {
 			projector.setReferenceCoords();
 			// Deproject SFL native offsets...
-			getEquatorialNativeOffset(position, projector.offset);
+			getEquatorialNativeOffset(fpOffset, projector.offset);
 			projector.getEquatorial().addNativeOffset(projector.offset);
 			projector.projectFromEquatorial();
 		}
 		else {
-			getEquatorial(position, projector.getEquatorial());		
+			getEquatorial(fpOffset, projector.getEquatorial());		
 			projector.projectFromEquatorial();
 		}
 	
@@ -389,6 +389,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public void equatorialToNative(EquatorialCoordinates equatorial, SphericalCoordinates coords) {
 		coords.copy(equatorial);
 	}
+	
 
 	public static final FlagBlock<Byte> sampleFlags = new FlagSpace.Byte("sample-flags").getDefaultFlagBlock();
 	public static byte SAMPLE_SOURCE_BLANK = sampleFlags.next('B', "Blanked").value();

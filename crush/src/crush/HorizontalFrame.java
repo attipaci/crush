@@ -63,8 +63,6 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 		return super.validate();
 	}
 	
-	
-	
 	@Override
 	public void getEquatorial(final Vector2D position, final EquatorialCoordinates coords) {
 		// The proper GLS convention uses actual cos(DEC)

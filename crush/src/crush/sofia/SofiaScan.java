@@ -141,15 +141,20 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         aircraft = new SofiaAircraftData(header);
 
         telescope = new SofiaTelescopeData(header);
-        equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();	
-        calcPrecessions(telescope.requestedEquatorial.epoch);
-
+        
         isTracking = telescope.isTracking();
 
         System.err.println(" [" + getSourceName() + "] of AOR " + observation.aorID);
         System.err.println(" Observed on " + date + " at " + startTime + " by " + observer);
-        System.err.println(" Equatorial: " + telescope.requestedEquatorial.toString());	
-
+     
+        
+        if(telescope.requestedEquatorial != null) {
+            equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();	
+            calcPrecessions(telescope.requestedEquatorial.epoch);
+            System.err.println(" Equatorial: " + telescope.requestedEquatorial.toString());	
+        }
+        else warning("No valid TELRA/TELDEC in header.");
+        
         System.err.println(" Focus: " + telescope.focusT.toString(Util.f1, Unit.get("um")));
 
 
@@ -299,7 +304,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
                     0.5 * (first.horizontal.y() + last.horizontal.y())
                     );
             System.err.println(" Horizontal: " + horizontal.toString(2)); 
-
+           
+                
             site = new GeodeticCoordinates(
                     0.5 * (first.site.x() + last.site.x()), 
                     0.5 * (first.site.y() + last.site.y())
@@ -390,7 +396,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
     @Override
     public String getID() {
-        return observation.obsID.startsWith("UNKNOWN") ? observation.obsID.substring(7) : observation.obsID;
+        return observation.obsID.startsWith("UNKNOWN") ? date + "." + observation.obsID.substring(7) : observation.obsID;
     }
 
     @Override

@@ -172,7 +172,8 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
         header.addValue("TRACERR", hasTrackingError, "Whether any input data had tracking errors.");
 
         // EXPTIME
-        header.addValue("EXPTIME", getTotalExposureTime(scans), "(s) Total effective on-source time.");
+        double expTime = getTotalExposureTime(scans);
+        if(!Double.isNaN(expTime)) header.addValue("EXPTIME", expTime, "(s) Total effective on-source time.");
 
         // AOR_ID, ASSC_AOR
         addAssociatedAORIDs(scans, header);

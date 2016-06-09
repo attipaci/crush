@@ -52,6 +52,7 @@ public class PolarMap extends SourceModel {
 	
 	public Camera<?,?> getArray() { return (Camera<?,?>) getInstrument(); }
 
+	
 	public ScalarMap getMapInstance() {
 		return new ScalarMap(getInstrument());
 	}
@@ -156,6 +157,7 @@ public class PolarMap extends SourceModel {
 	public void process(boolean verbose) throws Exception {		
 		if(verbose) System.err.print("\n   [N] ");
 		N.process(verbose);
+		
 		if(usePolarization()) {
 			if(verbose) System.err.print("\n   [Q] ");
 			Q.process(verbose);
@@ -182,6 +184,7 @@ public class PolarMap extends SourceModel {
 	@Override
 	public void sync(Integration<?, ?> subscan) {
 		N.sync(subscan);	
+		
 		if(usePolarization()) {
 			Q.sync(subscan);
 			U.sync(subscan);	
@@ -198,21 +201,24 @@ public class PolarMap extends SourceModel {
 	
 	
 	// Angles are measured East of North... 
-	public ScalarMap getAngles(ScalarMap P) {
+	public ScalarMap getAngles(ScalarMap P, ScalarMap F) {
 		final ScalarMap A = (ScalarMap) N.getWorkingCopy(false);
 		
 		final AstroMap q = Q.map;
 		final AstroMap u = U.map;
 		final AstroMap p = P.map;
+		final AstroMap f = F.map;
 		final AstroMap a = A.map;
 		
 		a.new Task<Void>() {
 			@Override
 			public void process(int i, int j) {
-				if(p.isFlagged(i,j)) {
-					a.flag(i, j);
-					return;
+			  
+				if(f.isFlagged(i,j)) {
+				    a.flag(i,j);
+				    return;
 				}
+				else a.unflag(i, j);
 				
 				final double p0 = p.getValue(i, j);
 				
@@ -393,19 +399,20 @@ public class PolarMap extends SourceModel {
 		ScalarMap I = getI(P);
 		I.write(path, false);	
 		
-		if(hasOption("source.polar.angles")) {
-			ScalarMap A = getAngles(P);
-			A.write(path, false);
-		}
+		// Write F (polarized fraction)
+        double accuracy = hasOption("source.polar.fraction.rmsclip") ?
+                option("source.polar.fraction.rmsclip").getDouble() : 0.03;
+        
+        ScalarMap F = getPolarFraction(P, I, accuracy);
 		
 		if(hasOption("source.polar.fraction")) {
-			// Write F (polarized fraction)
-			double accuracy = hasOption("source.polar.fraction.rmsclip") ?
-					option("source.polar.fraction.rmsclip").getDouble() : 0.03;
-			
-			ScalarMap F = getPolarFraction(P, I, accuracy);
 			F.write(path, false);
-		}	
+		}
+
+        if(hasOption("source.polar.angles")) {
+            ScalarMap A = getAngles(P, F);
+            A.write(path, false);
+        }
 	}
 
 	@Override

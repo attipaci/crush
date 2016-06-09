@@ -303,19 +303,40 @@ public class Mode implements Serializable {
             Signal signal = integration.getSignal(Mode.this);
             
             float[] C2 = new float[signal.value.length];
-            
-            for(int i=C2.length; --i >= 0; ) {
-                float C = signal.value[i];
-                if(signal.drifts != null) C += signal.drifts[i / signal.driftN];
-                C2[i] = C * C;
-            }
-            
-            // Remove drifts from the squared signal...
             Signal s2 = new Signal(this, integration, C2, false);
-            if(signal.drifts != null) s2.removeDrifts(signal.driftN * signal.resolution, false);
+            
+            updateSignal(integration);
             
             return s2;
         }
+        
+        public void updateSignal(Integration<?,?> integration) {
+            Signal c = integration.getSignal(Mode.this);
+            Signal c2 = integration.getSignal(NonLinearResponse.this);
+            
+            for(int i=c2.value.length; --i >= 0; ) {
+                float C = c.value[i];
+                if(c.drifts != null) C += c.drifts[i / c.driftN];
+                c2.value[i] = C * C;
+            }
+            
+            // Remove drifts from the squared signal... 
+            if(c.drifts != null) c2.removeDrifts(c.driftN * c.resolution, false);  
+        }
+        
+        @Override
+        public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
+            // Undo the prior nonlinearity correction....
+            setGains(new float[size()]);
+            syncAllGains(integration, null, true);       
+            
+            // Calculated the new nonlinearity signal...
+            updateSignal(integration);
+            
+            // Calculate new gains...
+            return super.deriveGains(integration, isRobust);
+        }
+        
     }
 
 
