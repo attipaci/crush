@@ -48,7 +48,6 @@ public abstract class Filter implements Serializable, Cloneable {
 	protected float[] frameParms;
 	private ChannelGroup<?> channels;
 	
-	
 	protected int nt, nf;
 	protected double df, points;
 	
@@ -119,7 +118,7 @@ public abstract class Filter implements Serializable, Cloneable {
 		this.integration = integration;
 		
 		nt = ExtraMath.pow2ceil(integration.size());	
-		nf = nt >> 1;
+		nf = nt >>> 1;
 		df = 1.0 / (integration.instrument.samplingInterval * nt);
 		
 		if(getChannels() == null) setChannels(integration.instrument);
@@ -311,7 +310,7 @@ public abstract class Filter implements Serializable, Cloneable {
 		data[1] *= rejectionAt(nf);
 		
 		for(int i=2; i<data.length; ) {
-			final double rejection = rejectionAt(i >> 1);
+			final double rejection = rejectionAt(i >>> 1);
 			data[i++] *= rejection;
 			data[i++] *= rejection; 	
 		}

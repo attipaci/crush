@@ -128,14 +128,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public void validate() {	
 		System.err.println(" Processing scan data:");
+			
+		if(hasOption("subscans.merge")) mergeIntegrations();
 		
 		if(hasOption("segment")) {
-			double segmentTime = 60.0 * Unit.s;
-			try { segmentTime = option("segment").getDouble() * Unit.s; }
-			catch(Exception e) {}
-			segmentTo(segmentTime);
-		}
-		else if(hasOption("subscans.merge")) mergeIntegrations();
+            double segmentTime = 60.0 * Unit.s;
+            try { segmentTime = option("segment").getDouble() * Unit.s; }
+            catch(Exception e) {}
+            segmentTo(segmentTime);
+        }
 		
 		isNonSidereal |= hasOption("moving");
 		
@@ -725,7 +726,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust = true;
 		
 		for(IntegrationType integration : this) integration.decorrelate(modalityName, isRobust);
-		if(hasOption("gains.span") || hasOption("correlated." + modalityName + ".span")) updateGains(modalityName);
+		if(hasOption("correlated." + modalityName + ".span")) updateGains(modalityName);
 	}
 	
 	public void perform(String task) { 

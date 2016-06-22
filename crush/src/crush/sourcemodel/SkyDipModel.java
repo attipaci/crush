@@ -29,7 +29,8 @@ import crush.CRUSH;
 import jnum.Configurator;
 import jnum.Unit;
 import jnum.Util;
-import jnum.data.fitting.AmoebaMinimizer;
+import jnum.data.fitting.ChiSquared;
+import jnum.data.fitting.DownhillSimplex;
 import jnum.data.fitting.Parameter;
 import jnum.math.Range;
 
@@ -47,10 +48,10 @@ import jnum.math.Range;
 public class SkyDipModel {
 	Configurator options;
 
-	Parameter Tsky = new Parameter("Tsky", 273.0 * Unit.K); // 0 C
+	Parameter Tsky = new Parameter("Tsky", 273.0 * Unit.K, new Range(0.0, 400.0 * Unit.K)); // 0 C
 	Parameter offset = new Parameter("offset");
 	Parameter kelvin = new Parameter("kelvin");
-	Parameter tau = new Parameter("tau", 0.3);
+	Parameter tau = new Parameter("tau", 0.3, new Range(0.0, 1.0));
 
 	String dataUnit = "[dataunit]";
 
@@ -61,7 +62,9 @@ public class SkyDipModel {
 	
 	Range elRange;
 	
+	DownhillSimplex minimizer;
 	Vector<Parameter> parameters = new Vector<Parameter>();
+	
 	
 	public void setOptions(Configurator options) {
 		this.options = options;	
@@ -100,7 +103,7 @@ public class SkyDipModel {
 		return offset.value() + Tobs * kelvin.value();
 	}
 	
-	protected void initialize(AmoebaMinimizer minimizer, SkyDip skydip) {
+	protected void initParms(SkyDip skydip) {
 		double lowest = Double.NaN;
 		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight() > 0.0) {
 			lowest = skydip.data[i].value();
@@ -117,13 +120,7 @@ public class SkyDipModel {
 			
 		// Set some reasonable initial values for the offset and conversion...
 		if(Double.isNaN(offset.value())) offset.setValue(highest);
-		if(Double.isNaN(kelvin.value())) kelvin.setValue((lowest - highest) / Tsky.value());
-		
-		minimizer.verbose = true;
-		minimizer.precision = 1e-10;
-	
-		minimizer.init(getParms());
-		minimizer.fitAll();
+		if(Double.isNaN(kelvin.value())) kelvin.setValue((lowest - highest) / Tsky.value());	
 	}
 
 	
@@ -151,53 +148,41 @@ public class SkyDipModel {
 	
 	public void fit(final SkyDip skydip) {
 		
-		AmoebaMinimizer minimizer = new AmoebaMinimizer() {
-			int fromBin, toBin;
-			
-			@Override
-			public void init(double[] p) {
-				super.init(p);
-				
-				if(elRange != null) {
-					fromBin = Math.max(0,  skydip.getBin(elRange.min()));
-					toBin = Math.min(skydip.data.length, skydip.getBin(elRange.max()));
-				}
-				else { fromBin = 0; toBin = skydip.data.length; }
-					
-				usePoints = 0;
-				for(int i=fromBin; i<toBin; i++) if(skydip.data[i].weight() > 0.0) usePoints++;
-			}
-			
-			@Override
-			public double evaluate(double[] tryparm) {
-				setParms(tryparm);
-				return getDeviationFrom(skydip, fromBin, toBin);
-			}
-		};
+	   
+	    int fromBin, toBin;
+	    if(elRange != null) {
+            fromBin = Math.max(0,  skydip.getBin(elRange.min()));
+            toBin = Math.min(skydip.data.length, skydip.getBin(elRange.max()));
+        }
+        else { fromBin = 0; toBin = skydip.data.length; }
+            
+        usePoints = 0;
+        for(int i=fromBin; i<toBin; i++) if(skydip.data[i].weight() > 0.0) usePoints++;
+	   
+        final int from = fromBin;
+        final int to = toBin;
+        
+        ChiSquared chi2 = new ChiSquared() {
+            @Override
+            public Double evaluate() { return getDeviationFrom(skydip, from, to); } 
+        };
+        
+        initParms(skydip);
+        minimizer = new DownhillSimplex(chi2, parameters);
+        minimizer.minimize();
+        minimizer.print();
 		
-		initialize(minimizer, skydip);
-		minimizer.verbose = false;
-		minimizer.retry = false;
-		minimizer.maxSteps = 1000;
-		minimizer.minimize(3);
-		fitOK = minimizer.converged;
-
 		final int dof = usePoints - parameters.size();
 		
 		if(dof > 0.0) {
-			rmsDev = Math.sqrt(minimizer.getChi2() / dof);	
-			minimizer.rescaleChi2(1.0 / (rmsDev * rmsDev));
+			double rChi2 = minimizer.getMinimum() / dof;	
 			
 			for(int i=0; i<parameters.size(); i++) {
 				final Parameter p = parameters.get(i);
-				final double rms = minimizer.getTotalError(i, 0.01 * p.value());
-				p.setWeight(1.0 / (rms * rms));
+				p.scaleWeight(1.0 / rChi2);
 			}		
 		}
 		else for(Parameter p : parameters) p.setWeight(0.0);
-			
-		double[] fitted = minimizer.getFitParameters();
-		for(int i=0; i<fitted.length; i++) parameters.get(i).setValue(fitted[i]);
 		
 	}
 	
