@@ -27,7 +27,9 @@ import java.util.ArrayList;
 
 import jnum.Configurator;
 import jnum.Util;
-import jnum.data.fitting.AmoebaMinimizer;
+import jnum.data.fitting.ChiSquared;
+import jnum.data.fitting.DownhillSimplex;
+import jnum.data.fitting.Parameter;
 import jnum.math.Range;
 
 public abstract class ToneIdentifier<IDType extends FrequencyID> extends ArrayList<IDType> implements Cloneable {
@@ -78,39 +80,33 @@ public abstract class ToneIdentifier<IDType extends FrequencyID> extends ArrayLi
 		final Range deltaRange = getShiftRange();
 		final double maxSearchDev = maxDeviation * 0.5 * deltaRange.span();
 		
-		AmoebaMinimizer opt = new AmoebaMinimizer() {
-			@Override
-			public double evaluate(double[] tryparms) {
-				double delta = tryparms[0];
-				double chi2 = 0.0;
-				int n = 0;
-				
-				for(FrequencyID id : ToneIdentifier.this) {
-					double fExp = id.getExpectedFrequencyFor(delta);
-					double dev = (resonators.getNearest(fExp).getFrequency() - fExp) / fExp;
-					if(Math.abs(dev) < maxSearchDev) {
-						chi2 += Math.pow(Math.abs(dev), power);
-						n++;
-					}
-				}
-				
-				if(delta < deltaRange.min()) chi2 *= Math.exp(deltaRange.min() - delta);
-				else if(delta > deltaRange.max()) chi2 *= Math.exp(delta - deltaRange.max());
-				
-				return chi2 / n;
-			}	
-		};
+		final Parameter delta = new Parameter("delta", initShift, deltaRange);
 		
-		opt.init(new double[] { initShift });
-		opt.setStartSize(new double[] { 0.3 * deltaRange.span() });
-		opt.precision = 1e-12;
-		opt.verbose = false;
-		opt.minimize(attempts);
+		ChiSquared chi2 = new ChiSquared() {
+            @Override
+            public Double evaluate() {
+                double chi2 = 0.0;
+                int n = 0;
+                
+                for(FrequencyID id : ToneIdentifier.this) {
+                    double fExp = id.getExpectedFrequencyFor(delta.value());
+                    double dev = (resonators.getNearest(fExp).getFrequency() - fExp) / fExp;
+                    if(Math.abs(dev) < maxSearchDev) {
+                        chi2 += Math.pow(Math.abs(dev), power);
+                        n++;
+                    }
+                }   
+                return chi2 / n;
+            }
+		};    
 		
-		rchi = Math.pow(opt.getChi2(), 1.0 / power);
+		DownhillSimplex minimizer = new DownhillSimplex(chi2, new Parameter[] { delta });
+		minimizer.minimize();
+		
+		rchi = Math.pow(minimizer.getMinimum(), 1.0 / power);
 		System.err.println("   Tone assignment rms = " + Util.s3.format(1e6 * rchi) + " ppm.");
 		
-		return opt.getFitParameters()[0];
+		return delta.value();
 	}
 	
 	protected void assign(ResonatorList<?> resonators, double shift) {

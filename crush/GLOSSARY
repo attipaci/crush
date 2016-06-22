@@ -481,7 +481,7 @@
 			instead of integrations (subscans). You can also
 			set this option for all correlated modalities at once
 			using the 'gains.span' key.
-			@See: 'gains.span', 'correlated.<?>.phases'
+			@See: 'correlated.<?>.phases'
 
 :: correlated.<?>.trigger=<key>	@Expert
 				You can specify a configuration key that is to 
@@ -1299,22 +1299,6 @@
 			pixel gains to correlated signals.
 			@See: 'estimator', 'correlated.<?>'
 			
-
-:: gains.span		@Expert
-			@Since: 2.02 
-			Derive gains for all correlated modalities for entire
-			scans, rather than separately for each integration
-			(subscan). Most scans contain just one integration, and
-			multiple integrations are often merged into one upon 
-			reading. However, for chopped photometry observations, 
-			the nod phases remain in separate subscans, and this 
-			option makes the gains apply to all nod phases in a 
-			scan, rather than separate gains for each nod phase.
-			Alternatively, the gain spans can be controlled 
-			individually, per modality, via the 
-			'correlated.<?>.span' keys.
-			@See: 'correlated.<?>.span', 'phases'
-
 :: galactic 		@Alias -> system=galactic
 			Reduce using new galactic coordinates (for mapping).
 			@See: 'system', 'equatorial', 'altaz'
@@ -2061,7 +2045,7 @@
 			observations) for all correlated modes. Alternatively
 			phase decorrelation can be turned on individually for
 			modalities using the 'correlated.<?>.phases' options.
-			@See: 'correlated.<?>.phases', 'gains.span'
+			@See: 'correlated.<?>.phases'
 		
 :: phases.estimator=<value>	@Expert
 				@Since: 2.04

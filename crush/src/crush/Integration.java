@@ -185,10 +185,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}.process();
 		
 		if(hasOption("fillgaps")) if(hasGaps(1)) fillGaps();
-		
+	
 		if(hasOption("notch")) notchFilter();
-		
-		
+	
 		if(hasOption("detect.chopped")) detectChopper();
 		
 		//if(hasOption("shift")) shiftData();
@@ -1027,7 +1026,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Continue to solve gains only if gains are derived per integration
 		// If the gains span over scans, then return to allow them to be
 		// derived globally...
-		if(hasOption("gains.span") || hasOption("correlated." + modality.name + ".span")) return false;
+		if(hasOption("correlated." + modality.name + ".span")) return false;
 		
 		boolean isGainRobust = false;		
 		if(modality.solveGains) {
@@ -1577,7 +1576,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(!method.equalsIgnoreCase("features")) flagSpikyFrames(frameSpikes);
 		
 		if(method.equalsIgnoreCase("features")) {
-			int featureWidth = framesFor(filterTimeScale) >> 1;
+			int featureWidth = framesFor(filterTimeScale) >>> 1;
 			double featureFraction = 1.0 - Math.exp(-featureWidth*flagFraction);
 			flagSpikyChannels(featureFraction, featureWidth*flagCount);
 		}
@@ -1726,7 +1725,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 
 	public void despikeMultires(final double significance) {
-		int maxBlockSize = framesFor(filterTimeScale) >> 1;
+		int maxBlockSize = framesFor(filterTimeScale) >>> 1;
 		if(maxBlockSize < 1) maxBlockSize = 1;	
 		if(maxBlockSize > size()) maxBlockSize = size();
 		
@@ -1787,7 +1786,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 						}
 					}
 					
-					n >>= 1;
+					n >>>= 1;
 					
 					for(int to=0, from=0; to < n; to++, from += 2) {
 						// to = average(from, from+1)
@@ -2025,7 +2024,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			else sum.add(pos[t]);
 		}
 
-		final int nm = n >> 1;
+		final int nm = n >>> 1;
 		final int np = n - nm;
 		final int tot = size()-np-1;
 		
@@ -2305,7 +2304,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(hasOption("notch.harmonics")) {
 			int harmonics = option("notch.harmonics").getInt();
-			for(int i=frequencies.size(); --i >= 0; i++) {
+			
+			for(int i=frequencies.size(); --i >= 0; ) {
 				double f0 = frequencies.get(i);
 				for(int k=2; k<=harmonics; k++) frequencies.add(f0 * k);
 			}
@@ -2329,7 +2329,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void notchFilter(final List<Double> frequencies, final double width) {
 		final int windowSize = ExtraMath.pow2ceil((int) Math.ceil(1.0 / (width * instrument.samplingInterval)));
 		final double df = 1.0 / (windowSize * instrument.samplingInterval);
-		final int nf = windowSize >> 1;
+		final int nf = windowSize >>> 1;
 		
 		System.err.println("   Notching " + frequencies.size() + " frequencies.");
 		
@@ -3297,9 +3297,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	Complex[] getCouplingSpectrum(Signal signal, Channel channel, float gain, double[] w) {
 		int windowSize = w.length;
 		windowSize = ExtraMath.pow2ceil(windowSize);
-		int step = windowSize >> 1;
+		int step = windowSize >>> 1;
 		int nt = size();
-		int nF = windowSize >> 1;
+		int nF = windowSize >>> 1;
 		
 		Complex[] c = new Complex[nF];
 		for(int i=nF; --i >= 0; ) c[i] = new Complex();

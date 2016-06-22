@@ -52,8 +52,8 @@ public class CRUSH extends Configurator {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 
-	private static String version = "2.32-b1";
-	private static String revision = "beta";
+	private static String version = "2.32-b2";
+	private static String revision = "devel.2";
 	
 	public static String workPath = ".";
 	public static String home = ".";
@@ -149,8 +149,8 @@ public class CRUSH extends Configurator {
 	@Override
 	public void process(String key, String value) {
 		if(key.equals("debug")) {
-		    debug=true;
-
+		    Util.debug = debug = true;
+		    
 		    System.err.println("### java: " + Util.getProperty("java.vendor") + ": " + Util.getProperty("java.version"));
 		    System.err.println("### java-path: " + Util.getProperty("java.home"));
 		    System.err.println("### jre: " + Util.getProperty("java.runtime.name") + ": " + Util.getProperty("java.runtime.version"));

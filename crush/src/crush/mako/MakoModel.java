@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -34,17 +34,20 @@ import crush.mako2.Mako2;
 import crush.mako2.Mako2Pixel;
 import jnum.Unit;
 import jnum.Util;
-import jnum.data.fitting.AmoebaMinimizer;
+import jnum.data.fitting.ChiSquared;
+import jnum.data.fitting.DownhillSimplex;
+import jnum.data.fitting.Parameter;
+import jnum.math.Range;
 import jnum.math.Vector2D;
 
 
 public class MakoModel<PixelType extends AbstractMakoPixel> {
-	double rotation = 0.0;
+	Parameter rotation = new Parameter("rotation", 0.0, Unit.deg);
+		
 	DistortionModel distortion = new DistortionModel();
 	AbstractMako<PixelType> model;
 	Hashtable<Double, Vector2D> positions = new Hashtable<Double, Vector2D>();
 	Hashtable<Double, Double> sourceGains = new Hashtable<Double, Double>();
-	Vector2D offset = new Vector2D();
 	int order = 2;
 	//double tolerance = 8.0;
 	
@@ -58,6 +61,7 @@ public class MakoModel<PixelType extends AbstractMakoPixel> {
 		try {
 			model.readRCP(args[1]);
 			model.fit();
+			model.print(System.out);
 		}
 		catch(Exception e) { e.printStackTrace(); }
 	}
@@ -85,7 +89,7 @@ public class MakoModel<PixelType extends AbstractMakoPixel> {
 			pixel.calcNominalPosition();
 			pixel.getPosition().scale(1.0 / Unit.arcsec);
 			distortion.distort(pixel.getPosition());
-			pixel.getPosition().rotate(rotation);			
+			pixel.getPosition().rotate(rotation.value());			
 		}
 	}
 	
@@ -94,7 +98,8 @@ public class MakoModel<PixelType extends AbstractMakoPixel> {
 		String line = null;
 		positions.clear();
 		
-		offset.zero();
+		Range xRange = new Range();
+		Range yRange = new Range();
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
 			StringTokenizer tokens = new StringTokenizer(line);
@@ -105,40 +110,30 @@ public class MakoModel<PixelType extends AbstractMakoPixel> {
 			Double f = Double.parseDouble(tokens.nextToken());
 			sourceGains.put(f, sourceGain);
 			positions.put(f, pos);
-			offset.add(pos);
+			if(!Double.isNaN(pos.x())) xRange.include(pos.x());
+			if(!Double.isNaN(pos.y()))yRange.include(pos.y());
 		}
 		in.close();
-		offset.scale(1.0 / positions.size());
 		
 		System.err.println(" Parsed " + positions.size() + " positions.");
 		
-		/*
-		for(Vector2D pos : positions.values()) pos.subtract(offset);
-		offset.zero();
-		*/
+		
+		
+		distortion.get(distortion.getParameter("x", 0, 0)).setRange(xRange);
+		distortion.get(distortion.getParameter("y", 0, 0)).setRange(yRange);
+		
 	}
 	
-	private void setParms(double[] p) {
-		rotation = p[0];
-		
-		for(int i=0, index = 1; i<=order; i++) for(int j=0; j<=order-i; j++) {
-			distortion.setX(i, j, p[index++]);
-			distortion.setY(i, j, p[index++]);
-		}
-		
-		recalc();
-	}
 		
 	public void fit() {
 		
-		for(int i=0; i<=order; i++) for(int j=0; j<=order-i; j++) distortion.set(i, j, 0.0, 0.0);
-		
-		AmoebaMinimizer opt = new AmoebaMinimizer() {
-
-			@Override
-			public double evaluate(double[] tryparms) {
-				setParms(tryparms);
-				
+	    for(int i=0; i<=order; i++) for(int j=0; j<=order-i; j++) distortion.set(i, j, 0.0, 0.0);
+	    
+		ChiSquared chi2 = new ChiSquared() {
+		    @Override
+			public Double evaluate() {
+		        recalc();
+		        
 				int n = 0;
 				double sum = 0.0;
 				for(Vector2D pos : positions.values()) {
@@ -154,47 +149,26 @@ public class MakoModel<PixelType extends AbstractMakoPixel> {
 			}
 		};
 		
-		double[] parms = new double[2 * distortion.size() + 1];
-		parms[1] = offset.x();
-		parms[2] = offset.y();
+		ArrayList<Parameter> parameters = new ArrayList<Parameter>();
 		
-		double[] initSize = new double[parms.length];
+		parameters.add(rotation);
+		parameters.addAll(distortion.values());
 		
-		initSize[0] = 0.01;
-		for(int i=0, index = 1; i<=order; i++) for(int j=0; j<=order-i; j++) {
-			double l = Math.pow(0.01, 0.5*(i+j+1));
-			initSize[index++] = l;
-			initSize[index++] = l;
-		}
-		
-		opt.init(parms);
- 		opt.setStartSize(initSize);
-		opt.verbose = true;
-		opt.precision = 1e-6;
-		opt.minimize(10);
+		DownhillSimplex opt = new DownhillSimplex(chi2, parameters);
+		opt.minimize();
+		opt.print("# ");
+	}
 	
-		double[] p = opt.getFitParameters();
-		setParms(p);
-		
-		System.out.println("# rms = " + Util.s4.format(Math.sqrt(opt.getChi2())) + " arcsec.");
-		System.out.println("#");
-		System.out.println("# rotation = " + Util.f3.format(-p[0] / Unit.deg) + "deg.");
-		
-		for(int i=0, index = 1; i<=order; i++) for(int j=0; j<=order-i; j++) {
-			System.out.println("# " + i + "," + j + ":\t" + Util.s4.format(p[index++]) + "\t" + Util.s4.format(p[index++]));
-		}
-	
-		System.out.println("#");
-		
+	public void print(PrintStream out) {
 		Set<Double> keys = positions.keySet();
 		ArrayList<Double> sorted = new ArrayList<Double>(keys);
 		Collections.sort(sorted);
 		
 		for(Double f : sorted) {
-			System.out.print(Util.f1.format(f) + "\t");
+			out.print(Util.f1.format(f) + "\t");
 			AbstractMakoPixel pixel = findNearest(positions.get(f));
-			System.out.print((pixel.row+1) + "\t" + (pixel.col+1) + "\t");
-			System.out.println(Util.f1.format(pixel.getPosition().x()) 
+			out.print((pixel.row+1) + "\t" + (pixel.col+1) + "\t");
+			out.println(Util.f1.format(pixel.getPosition().x()) 
 					+ "\t" + Util.f1.format(pixel.getPosition().y())
 					+ "\t" + Util.f3.format(sourceGains.get(f)));
 		}

@@ -1,3 +1,5 @@
+>> Test skydip, mako resonance fit, mako distortion...
+
 
 2.32-b1
 
@@ -13,8 +15,11 @@
 	======================================================================
 
 
-	[BUG] {PolKa} Total intensity map 'I' was ill-constructed from Q,U and
-	N. fixed.
+	[BUG] {PolKa} Total intensity map 'I' was faultily constructed from 
+	Q,U and N. fixed.
+
+	[BUG] {MAKO-2} There was an infinite loop in the notch filter code (used
+	by MAKO-2 only?) Fixed.
 
 	[NEW] {HAWC+} Non-linear response modeling.
 
@@ -28,6 +33,9 @@
 
 	[NEW] Ability to condense covariance matrix output to unflagged 'live'
 	channels only, using the 'write.covar.condensed' option.
+
+	[DEPRECATE] The option 'gains.span' is obsoleted. Its function is 
+	completely reproduced by 'subscan.merge'.
 
 	[CHANGE] {HAWC+} Flatfield output (produced via 'write.flatfield')
 	now contains HDUs for the R and T nonlinearity coefficients also...
@@ -76,6 +84,9 @@
 	[FIX] Map lookup, update and sync could operate on different sets
 	of pixels as pixels got flagged/unflagged. Fixed.	
 
+	[TWEAK] 'subscans.merge' and 'segment' may be used together now, 
+	allowing to re-arrange scan data into arbitrary-sized chunks...
+
 	[TWEAK] Bootstrapping pixel weights (when reading scans) now uses
 	differential weighting method always. It is robust with dirty signals
 
@@ -88,6 +99,9 @@
 	structures.
 
 	[DEBUG] Java information printed to console in 'debug' mode.
+
+	[CODE] Adapted for new jnum minimization API. Skydip fitting, MAKO
+	resonance ID fitting, and MAKO distortion fitting are affected.
 
 	[CODE] {APEX} Simplified scan file search, looking for uncompressed
 	and various compressed (.gz, .xz, .Z, .bz2, .zip) FITS files that 
@@ -122,6 +136,8 @@
 
 	[PACKAGE] ZIP archive may have been out of date w.r.t the tarball
 	in the past. Fixed.
+
+	[CONFIG] {SCUBA-2} Disable 'subscans.merge' by default.
 
 	[CONFIG] {PolKA} Reinstated default analyzer grid angles...
 
