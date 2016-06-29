@@ -48,7 +48,7 @@ import jnum.math.Range;
 public class SkyDipModel {
 	Configurator options;
 
-	Parameter Tsky = new Parameter("Tsky", 273.0 * Unit.K, new Range(0.0, 400.0 * Unit.K)); // 0 C
+	Parameter Tsky = new Parameter("Tsky", 273.0 * Unit.K, 1.0 * Unit.K); // 0 C
 	Parameter offset = new Parameter("offset");
 	Parameter kelvin = new Parameter("kelvin");
 	Parameter tau = new Parameter("tau", 0.3, new Range(0.0, 1.0));
@@ -146,9 +146,8 @@ public class SkyDipModel {
 	}
 
 	
-	public void fit(final SkyDip skydip) {
-		
-	   
+	public void fit(final SkyDip skydip) { 
+	    
 	    int fromBin, toBin;
 	    if(elRange != null) {
             fromBin = Math.max(0,  skydip.getBin(elRange.min()));
@@ -191,7 +190,6 @@ public class SkyDipModel {
 		if(!fitOK) CRUSH.warning("The fit has not converged. Try again!");
 	
 		StringBuffer text = new StringBuffer();
-		
 		
 		if(parameters.contains(tau)) text.append("  " + tau.toString(Util.f3) + "\n");
 		if(parameters.contains(Tsky)) text.append("  " + Tsky.toString(Util.f1) + " K" + "\n");
