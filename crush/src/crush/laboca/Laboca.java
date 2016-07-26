@@ -72,7 +72,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 			Object[] row = hdu.getRow(0);
 			float G = ((float[]) row[hdu.findColumn("BEGAIN")])[0];
 			range.scale(1.0 / G);
-			System.err.println(" Setting ADC range to " + range.toString() + "(V)");
+			info("Setting ADC range to " + range.toString() + "(V)");
 			setOption("range=" + range.toString());
 		}
 		
@@ -127,7 +127,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 	
 	@Override
 	public void readWiring(String fileName) throws IOException {	
-		System.err.println(" Loading wiring data from " + fileName);
+		info("Loading wiring data from " + fileName);
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		Hashtable<String, LabocaPixel> lookup = getIDLookup();
@@ -163,7 +163,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 	}
 	
 	public void readTemperatureGains(String fileName) throws IOException {
-		System.err.println(" Loading He3 gains from " + fileName);
+		info("Loading He3 gains from " + fileName);
 		
 		// Read gains into LabocaPixel -> temperatureGain:
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
@@ -196,7 +196,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 		
 		out.flush();
 		out.close();
-		System.err.println(" Written He3 gain data to " + fileName + ".");
+		notify("Written He3 gain data to " + fileName + ".");
 		
 	}
 	
@@ -210,7 +210,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 			
 			try { readTemperatureGains(fileName); }
 			catch(IOException e) {
-				System.err.println(" WARNING! File not found. Skipping temperature correction.");
+				warning("File not found. Skipping temperature correction.");
 				getOptions().purge("he3");
 			}
 		}

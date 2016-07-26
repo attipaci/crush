@@ -52,7 +52,7 @@ public class SofiaObservationData extends SofiaData {
 		errorStatus = header.getString("OBSSTAT");			// new in rev. F
 		sourceType = header.getString("SRCTYPE");
 		dictionaryVersion = header.getString("KWDICT");
-		obsID = header.getString("OBS_ID");
+		obsID = header.getString("OBS_ID");	
 		serialNo = header.getInt("OBSERNO", -1);			// not in 3.0
 		imageID = header.getString("IMAGEID");
 		sourceName = header.getString("OBJECT");			// not in 3.0

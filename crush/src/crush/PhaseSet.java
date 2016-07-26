@@ -255,11 +255,11 @@ public class PhaseSet extends ArrayList<PhaseData> {
     }
 
     public void write() throws IOException {
-        String filename = CRUSH.workPath + File.separator + integration.scan.getID() + "-" + integration.getID() + ".phases.tms";
+        String filename = CRUSH.workPath + File.separator + integration.scan.getID() + "-" + integration.getFileID() + ".phases.tms";
         PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename)));
         write(out);
         out.close();
-        System.err.println("Written phases to " + filename);
+        CRUSH.notify(this, "Written phases to " + filename);
     }
 
     public void write(PrintStream out) {

@@ -152,8 +152,8 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 		String commandLine = command + " " + inName + " " + outName + " proexts";
 		String[] commandArray = { command, inName, outName, "proexts" };
 
-		System.err.println(" Converting SDF to FITS...");
-		System.err.println(" > " + commandLine);
+		CRUSH.info(this, "Converting SDF to FITS...");
+		CRUSH.info(this, "> " + commandLine);
 
 		Process convert = runtime.exec(commandArray); 
 		//BufferedReader err = new BufferedReader(new InputStreamReader(convert.getErrorStream()));
@@ -164,15 +164,15 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 		try { 
 			int retval = convert.waitFor(); 
 			if(retval != 0) {
-				System.err.println("WARNING! Conversion error. Check that 'ndf2fits' is correct, and that");
-				System.err.println("         the 'datapath' directory is writeable.");
+				CRUSH.warning(this, "Conversion error. Check that 'ndf2fits' is correct, and that "
+				        + "the 'datapath' directory is writeable.");
 				//if(outFile.exists()) outFile.delete();
 				throw new IOException("SDF to FITS conversion error.");
 			}
 			return new File(outName);
 		}
 		catch(InterruptedException e) {
-			System.err.println("Interrupted!");
+			CRUSH.warning(this, "Interrupted!");
 			System.exit(1);
 		}
 

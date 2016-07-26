@@ -59,7 +59,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 			
 			SAEModality saeMode = (SAEModality) instrument.modalities.get("sae");
 			if(saeMode != null) {
-				System.err.println("   Initializing SAE signals for decorrelation");
+				info("Initializing SAE signals for decorrelation");
 				saeMode.init(this);
 			}
 		
@@ -74,7 +74,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	}
 	
 	public void printEquivalentTaus() {
-		System.err.println("   --->"
+	    CRUSH.values(this, "--->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
 				+ ", tau(LOS):" + Util.f3.format(zenithTau / scan.horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
@@ -89,14 +89,14 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	protected void read(BinaryTableHDU hdu, boolean oldFormat) throws Exception {
 		int records = hdu.getAxes()[0];
 
-		System.err.println(" Processing scan data:");		
-		System.err.println("   Reading " + records + " frames.");
+		scan.info("Processing scan data:");		
+		info("Reading " + records + " frames.");
 	
 		Header header = hdu.getHeader();
 		
 		instrument.integrationTime = instrument.samplingInterval = header.getDoubleValue("CDELT1") * Unit.ms;
 		
-		System.err.println("   Sampling at " + Util.f1.format(instrument.integrationTime / Unit.ms) + " ms ---> " 
+		info("Sampling at " + Util.f1.format(instrument.integrationTime / Unit.ms) + " ms ---> " 
 				+ Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
 			
 		clear();
@@ -531,7 +531,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 		
 		out.close();
 		
-		System.err.println(" Logged to " + fileName);
+		notify("Logged to " + fileName);
 	}
 	
 	

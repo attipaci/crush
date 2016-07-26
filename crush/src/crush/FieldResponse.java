@@ -24,6 +24,7 @@ package crush;
 
 import java.lang.reflect.*;
 
+
 public class FieldResponse extends Response {
 	/**
 	 * 
@@ -56,7 +57,7 @@ public class FieldResponse extends Response {
 				data[t] = exposure == null ? Float.NaN : field.getFloat(exposure);
 			}
 		}
-		catch(Exception e) { System.err.println("WARNING! No field named " + field.getName() + " for signal."); }
+		catch(Exception e) { integration.warning("No field named " + field.getName() + " for signal."); }
 		return new Signal(this, integration, data, isFloating);
 	}
 

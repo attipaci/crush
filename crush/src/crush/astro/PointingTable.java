@@ -75,8 +75,6 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 	private void read(String fileName) throws IOException {
 		if(fileName.equals(this.fileName)) return;
 		
-		System.err.print("   [Loading pointing table.]");
-		if(CRUSH.debug) System.err.print(" >> " + fileName + " >> ");
 		
 		for(LogFile.Row row : LogFile.read(fileName)) {
 			Entry pointing = new Entry();
@@ -111,7 +109,7 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 				
 			}
 			catch(ParseException e) {
-				System.err.println("WARNING! Cannot parse date " + row.get("date").getValue());
+				CRUSH.warning(this, "Cannot parse date " + row.get("date").getValue());
 			}
 		}
 		
@@ -119,7 +117,9 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 		
 		Collections.sort(this);
 		
-		System.err.println(" -- " + size() + " valid records found.");	
+		CRUSH.info(this, "[Loading pointing table.] -- " + size() + " valid records found.");
+		if(CRUSH.debug) CRUSH.detail(this, " >> " + fileName + " >> ");
+		
 	}
 	
 	

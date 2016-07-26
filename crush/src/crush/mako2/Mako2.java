@@ -118,8 +118,8 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 				realign();
 			}
 			catch(IOException e) {
-				System.err.println(" WARNING! Cannot identify tones from '" + option("pixelid").getValue() + "'."); 
-				if(CRUSH.debug) e.printStackTrace();
+				warning("Cannot identify tones from '" + option("pixelid").getValue() + "'."); 
+				if(CRUSH.debug) CRUSH.trace(e);
 			}
 		}
 		else {
@@ -127,7 +127,7 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 			boolean beammap = false;
 			if(hasOption("source.type")) if(option("source.type").getValue().equalsIgnoreCase("beammap")) beammap = true;
 			
-			if(!beammap) System.err.println(" WARNING! No pixel ids. All pixels mapped to tracking position...");
+			if(!beammap) warning("No pixel ids. All pixels mapped to tracking position...");
 		
 			for(AbstractMakoPixel pixel : this) {
 				pixel.position = new Vector2D();
@@ -144,7 +144,7 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 		super.loadChannelData();
 		
 		boolean map850um = hasOption("850um");
-		System.err.println(" Map with " + (map850um ? "850um" : "350um") + " subarray only.");
+		info("Map with " + (map850um ? "850um" : "350um") + " subarray only.");
 		
 		
 		for(Mako2Pixel pixel : this) {

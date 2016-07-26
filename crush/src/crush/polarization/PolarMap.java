@@ -381,10 +381,10 @@ public class PolarMap extends SourceModel {
 		N.write(path, true);
 		
 		if(!hasPolarization) {
-			System.err.println();
-			System.err.println("WARNING! No polarization products available.");
-			System.err.println("         Consider setting the 'source.polarization' option");
-			System.err.println("         to create Q, U, P and I images (and optionally F).");
+		    warning("No polarization products available.");
+		    CRUSH.suggest(this,
+		            "         Consider setting the 'source.polarization' option\n" +
+		            "         to create Q, U, P and I images (and optionally F).\n");
 			return;
 		}
 		

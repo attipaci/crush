@@ -30,6 +30,7 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import crush.CRUSH;
 import crush.GroundBased;
 import crush.HorizontalFrame;
 import crush.Integration;
@@ -71,7 +72,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		double sumP = 0.0, sumM = 0.0;
 		int nP = 0, nM = 0;
 		
-		System.err.println("   Removing chopper signal DC offset.");
+		
 		
 		for(FrameType frame : this) if(frame != null) {
 			sumP += frame.chopperPosition.x();
@@ -82,8 +83,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		final double mean = sumP / nP;
 		sumP = 0.0;
 		nP = 0;
-		
-		System.err.print("   --> mean: " + Util.f1.format(mean / Unit.arcsec) + "\", ");
 		
 		for(FrameType frame : this) if(frame != null) {
 			frame.chopperPosition.subtractX(mean);
@@ -100,14 +99,15 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		}
 		
 		if(nP == 0 || nM == 0) {
-			System.err.println("not chopped.");
 			instrument.forget("detect.chopped");
 			return;
 		}
 		
+		info("Removing chopper signal DC offset.");
+		
 		final double level = 0.5 * (sumP / nP + sumM / nM);
 		
-		System.err.println(" res: " + Util.f1.format(level / Unit.arcsec) + "\".");
+		CRUSH.values(this, "--> mean: " + Util.f1.format(mean / Unit.arcsec) + "\", res: " + Util.f1.format(level / Unit.arcsec) + "\".");
 		
 
 		for(FrameType frame : this) if(frame != null) frame.chopperPosition.subtractX(level);
@@ -117,7 +117,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	
 	
 	public void printEquivalentTaus(double value) {	
-		System.err.println("   --->"
+		CRUSH.values(this, "--->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz", value))
 				+ ", tau(350um):" + Util.f3.format(getTau("350um", value))
 				+ ", tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat())
@@ -145,12 +145,12 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		printEquivalentTaus(zenithTau);
 		
 		double tauLOS = zenithTau / scan.horizontal.sinLat();
-		System.err.println("   Optical load is " + Util.f1.format(((CSOScan<?,?>) scan).ambientT * (1.0 - Math.exp(-tauLOS))) + " K.");
+		CRUSH.values(this, "Optical load is " + Util.f1.format(((CSOScan<?,?>) scan).ambientT * (1.0 - Math.exp(-tauLOS))) + " K.");
 	
 	}
 	
 	public void setMaiTau() throws Exception {
-		System.err.println("   Requesing MaiTau via " + option("maitau.server") + "...");
+		info("Requesing MaiTau via " + option("maitau.server") + "...");
 		
 		try {
 			try { setTau("350um", getMaiTau("350um")); }
@@ -166,8 +166,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		
 		File file = new File(source + File.separator + spec + ".dat");
 		if(!file.exists()) {
-			warning("No tau table found for " + date + "...");
-			System.err.print("          Using default tau.");
+			warning("No tau table found for " + date + ". Using default tau.");
 			instrument.getOptions().remove("tau");
 			setTau();
 			return;
@@ -199,7 +198,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 				warning("Deadlocked fallback tau option!");
 				throw e;
 			}	
-			System.err.println("   ... Falling back to '" + source + "'.");
+			info("---> Falling back to '" + source + "'.");
 			instrument.setOption("tau=" + source);
 			setTau();
 			return;
@@ -214,7 +213,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			throw new IllegalArgumentException("No MaiTau lookup for '" + id + "'.");
 		
 		if(!hasOption("maitau.server")) 
-			throw new IllegalArgumentException(" WARNING! MaiTau server not set. Use 'maitau.server' configuration key.");
+			throw new IllegalArgumentException("MaiTau server not set. Use 'maitau.server' configuration key.");
 		
 		Socket tauServer = new Socket();
 		tauServer.setSoTimeout(MAITAU_TIMEOUT);
@@ -241,7 +240,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		double value = Double.NaN;
 		try { 
 			value = Double.parseDouble(in.readLine().trim());
-			if(!Double.isNaN(value)) System.err.println("   ---> MaiTau(" + id + ") = " + Util.f3.format(value));
+			if(!Double.isNaN(value)) info("---> MaiTau(" + id + ") = " + Util.f3.format(value));
 		}
 		catch(NumberFormatException e) {}
 		

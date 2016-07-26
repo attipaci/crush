@@ -66,8 +66,8 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 	private void read(String fileName, String timeZone) throws IOException {
 		if(fileName.equals(this.fileName)) return;
 			
-		System.err.print(" [Loading skydip tau values.]");
-		if(CRUSH.debug) System.err.print(" >> " + fileName + " >> ");		
+		CRUSH.info(this, "[Loading skydip tau values.]");
+		if(CRUSH.debug) CRUSH.detail(this, " >> " + fileName + " >> ");		
 		
 		BufferedReader in = Util.getReader(fileName);
 		String line = null;
@@ -95,7 +95,7 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 					
 				}
 				catch(ParseException e) {
-					System.err.println("WARNING! Cannot parse date " + dateSpec);
+					CRUSH.warning(this, "Cannot parse date " + dateSpec);
 				}
 			}
 		}
@@ -110,7 +110,7 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 	
 	public double getTau(double MJD) {
 		Entry mean = getCheckedLocalAverage(new TimeStamp(MJD));
-		System.err.println(" Local average tau(225GHz) = " + mean.tau.toString(Util.f3) + " (from " + mean.measurements + " measurements)");
+		CRUSH.values(this, "Local average tau(225GHz) = " + mean.tau.toString(Util.f3) + " (from " + mean.measurements + " measurements)");
 		return mean.tau.value();
 	}
 	

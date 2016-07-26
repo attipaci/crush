@@ -90,7 +90,7 @@ public abstract class SourceMap extends SourceModel {
     public void createFrom(Collection<? extends Scan<?,?>> collection) {
         super.createFrom(collection);
       
-        System.out.println(" Initializing Source Map.");	
+        info("Initializing Source Map.");	
  
         Projection2D<SphericalCoordinates> projection = null;
 
@@ -104,7 +104,7 @@ public abstract class SourceMap extends SourceModel {
         else if(system.equals("native")) projection.setReference(firstScan.getNativeCoordinates()); 
         else if(system.equals("focalplane")) projection.setReference(new FocalPlaneCoordinates()); 
         else if(firstScan.isNonSidereal) {
-            System.err.println(" Forcing equatorial for moving object.");
+            info("Forcing equatorial for moving object.");
             getOptions().processSilent("system", "equatorial");
             projection.setReference(firstScan.equatorial);
         }
@@ -222,7 +222,7 @@ public abstract class SourceMap extends SourceModel {
         final Collection<? extends Pixel> pixels = integration.instrument.getPerimeterPixels();
         if(pixels.size() == 0) return;
 
-        if(CRUSH.debug) System.err.println("### search pixels: " + pixels.size() + " : " + integration.instrument.size());
+        if(CRUSH.debug) debug("search pixels: " + pixels.size() + " : " + integration.instrument.size());
         
         class Range2D {	
             public Range x = new Range();
@@ -271,7 +271,7 @@ public abstract class SourceMap extends SourceModel {
 
         Range2D range = findCorners.getResult();
 
-        if(CRUSH.debug) System.err.println("### map range " + integration.getDisplayID() + "> "
+        if(CRUSH.debug) debug("map range " + integration.getDisplayID() + "> "
                 + Util.f1.format(range.x.span() / Unit.arcsec) + " x " 
                 + Util.f1.format(range.y.span() / Unit.arcsec));
 
@@ -316,7 +316,7 @@ public abstract class SourceMap extends SourceModel {
 
     public void index() throws Exception {
         final double maxUsage = hasOption("indexing.saturation") ? option("indexing.saturation").getDouble() : 0.5;
-        System.err.println(" Indexing maps (up to " + Util.d1.format(100.0*maxUsage) + "% of RAM saturation).");
+        info("Indexing maps (up to " + Util.d1.format(100.0*maxUsage) + "% of RAM saturation).");
 
         final Runtime runtime = Runtime.getRuntime();
         long maxAvailable = runtime.maxMemory() - getReductionFootprint(pixels());
@@ -335,7 +335,7 @@ public abstract class SourceMap extends SourceModel {
         final List<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
         final int n = integration.instrument.getPixelCount();
 
-        if(CRUSH.debug) System.err.println("### lookup.pixels " + pixels.size() + " : " + integration.instrument.size());
+        if(CRUSH.debug) debug("lookup.pixels " + pixels.size() + " : " + integration.instrument.size());
 
         indexShiftX = ExtraMath.log2ceil(sizeY());
         indexMaskY = (1<<indexShiftX) - 1;
@@ -393,7 +393,7 @@ public abstract class SourceMap extends SourceModel {
 
         if(CRUSH.debug) {
             if(index.i() < 0 || index.i() >= sizeX() || index.j() < 0 || index.j() >= sizeY()) {
-                System.err.println("!!! invalid map index pixel " + pixel.getID() + " frame " + exposure.index + ": " +
+                warning("!!! invalid map index pixel " + pixel.getID() + " frame " + exposure.index + ": " +
                         (exposure.sourceIndex == null ? 
                                 index : 
                                     exposure.sourceIndex[pixel.getIndex()]
@@ -431,7 +431,7 @@ public abstract class SourceMap extends SourceModel {
             System.exit(1);
         }
 
-        if(CRUSH.debug) System.err.println("\n### map range: " + Util.f1.format(xRange.span() / Unit.arcsec) + " x " 
+        if(CRUSH.debug) debug("map range: " + Util.f1.format(xRange.span() / Unit.arcsec) + " x " 
                 +  Util.f1.format(yRange.span() / Unit.arcsec) + " arcsec");
 
 
@@ -455,17 +455,17 @@ public abstract class SourceMap extends SourceModel {
         if(CRUSH.debug) {
             Vector2D corner = new Vector2D(xRange.min(), yRange.min());
             grid.toIndex(corner);
-            System.err.println("### near corner: " + corner);
+            debug("near corner: " + corner);
             
             corner = new Vector2D(xRange.max(), yRange.max());
             grid.toIndex(corner);
-            System.err.println("### far corner: " + corner);
+            debug("far corner: " + corner);
         }
 
         int sizeX = 1 + (int) Math.ceil(grid.refIndex.x() + xRange.max() / delta.x());
         int sizeY = 1 + (int) Math.ceil(grid.refIndex.y() + yRange.max() / delta.y());
 
-        if(CRUSH.debug) System.err.println("### map pixels: " + sizeX + " x " + sizeY);
+        if(CRUSH.debug) debug("map pixels: " + sizeX + " x " + sizeY);
 
         try { 
             checkForStorage(sizeX, sizeY);	
@@ -486,19 +486,15 @@ public abstract class SourceMap extends SourceModel {
 
     public void runtimeMemoryError(String message) {
         error(message);
-        System.err.println();
-        System.err.println("   * Check that the map size is reasonable for the area mapped and that");
-        System.err.println("     all scans reduced together belong to the same source or region.");
-        System.err.println();
-        System.err.println("   * Increase the amount of memory available to crush, by editing the '-Xmx'");
-        System.err.println("     option to Java in 'wrapper.sh' (or 'wrapper.bat' for Windows).");
-        System.err.println();
-        System.err.println("   * If using 64-bit Unix OS and Java, you can also add the '-d64' option to");
-        System.err.println("     allow Java to access over 2GB.");
-        System.err.println();
-        System.err.println("   * Reduce the number of parallel threads in the reduction by increasing");
-        System.err.println("     the idle CPU cores with the 'reservecpus' option.");
-        System.err.println();
+        CRUSH.suggest(this,
+                "   * Check that the map size is reasonable for the area mapped and that\n" +
+                "     all scans reduced together belong to the same source or region.\n\n" +
+                "   * Increase the amount of memory available to crush, by editing the '-Xmx'\n" +
+                "     option to Java in 'wrapper.sh' (or 'wrapper.bat' for Windows).\n\n" +
+                "   * If using 64-bit Unix OS and Java, you can also add the '-d64' option to\n" +
+                "     allow Java to access over 2GB.\n\n" +
+                "   * Reduce the number of parallel threads in the reduction by increasing\n" +
+                "     the idle CPU cores with the 'reservecpus' option.\n");
         System.exit(1);
     }
     
@@ -509,9 +505,11 @@ public abstract class SourceMap extends SourceModel {
 
         System.err.println("\n");
         error("Map is too large to fit into memory (" + sizeX + "x" + sizeY + " pixels).");
-        System.err.println("       Requires " + (getMemoryFootprint((long) sizeX * sizeY) >> 20) + " MB free memory."); 
-        System.err.println();
-
+        
+        StringBuffer buf = new StringBuffer();
+        
+        buf.append(" Map requires " + (getMemoryFootprint((long) sizeX * sizeY) >> 20) + " MB free memory.\n\n"); 
+        
         boolean foundSuspects = false;
 
         if(scans.size() > 1) {
@@ -519,11 +517,11 @@ public abstract class SourceMap extends SourceModel {
             Collection<Scan<?,?>> suspects = findOutliers(diagonal / 2.0);
             if(!suspects.isEmpty()) {
                 foundSuspects = true;
-                System.err.println("   * Check that all scans observe the same area on sky.");
-                System.err.println("     Remove scans, which are far from your source.");	
-                System.err.println("     Suspect scan(s): ");
-                for(Scan<?,?> scan : suspects) System.err.println("\t--> " + scan.getID());
-                System.err.println();
+                buf.append(
+                        "   * Check that all scans observe the same area on sky, \n" +
+                        "     and remove those that are far from your source.\n");	
+                buf.append("     Suspect scan(s) are:\n");
+                for(Scan<?,?> scan : suspects) buf.append("     --> " + scan.getID() + "\n");
             }
         }
 
@@ -531,21 +529,22 @@ public abstract class SourceMap extends SourceModel {
         Collection<Scan<?,?>> suspects = findSlewing(diagonal / 2.0);
         if(!suspects.isEmpty()) {
             foundSuspects = true;
-            System.err.println("   * Was data acquired during telescope slew?");	
-            System.err.println("     Suspect scan(s):");
-            for(Scan<?,?> scan : suspects) System.err.println("\t--> " + scan.getID());
-            System.err.println();
+            buf.append("   * Was data acquired during telescope slew?\n");	
+            buf.append("     Suspect scan(s) are:\n");
+            for(Scan<?,?> scan : suspects) buf.append("     --> " + scan.getID() + "\n");
         }
 
         if(!foundSuspects) {	
-            System.err.println("   * Could there be an unflagged pixel with an invalid position?");
-            System.err.println("     check your instrument configuration and pixel data files.");
-            System.err.println();
+            buf.append(
+                    "   * Could there be an unflagged pixel with an invalid position?\n" +
+                    "     Check your instrument configuration and pixel data files.\n");
         }
 
-        System.err.println("   * Increase the amount of memory available to crush, by editing the '-Xmx'");
-        System.err.println("     option to Java in 'wrapper.sh'.");
-        System.err.println();
+        buf.append(
+                "   * Increase the amount of memory available to crush, by editing the '-Xmx'\n" +
+                "     option to Java in 'wrapper.sh'.");
+       
+        CRUSH.suggest(this, new String(buf));
 
         System.exit(1);
     }
@@ -602,7 +601,7 @@ public abstract class SourceMap extends SourceModel {
     protected boolean isAddingToMaster() { return false; }
 
     protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
-        if(CRUSH.debug) System.err.println("### add.pixels " + pixels.size() + " : " + integration.instrument.size());
+        if(CRUSH.debug) debug("add.pixels " + pixels.size() + " : " + integration.instrument.size());
 
         return addForkFrames(integration, pixels, sourceGain, filtering, signalMode);
     }
@@ -767,7 +766,7 @@ public abstract class SourceMap extends SourceModel {
                         signalMode
                 );
 
-        if(CRUSH.debug) System.err.println("### mapping frames:" + mappingFrames);
+        if(CRUSH.debug) debug("mapping frames:" + mappingFrames);
 
         if(signalCorrection)
             integration.comments += "[C1~" + Util.f2.format(1.0/averageFiltering) + "] ";
@@ -786,7 +785,7 @@ public abstract class SourceMap extends SourceModel {
     }
 
     protected void sync(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {			
-        if(CRUSH.debug) System.err.println("### sync.pixels " + pixels.size() + " : " + integration.instrument.size());
+        if(CRUSH.debug) debug("sync.pixels " + pixels.size() + " : " + integration.instrument.size());
 
         integration.new Fork<Void>() {
             private AstroProjector projector;
@@ -870,11 +869,15 @@ public abstract class SourceMap extends SourceModel {
     protected abstract void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain);
 
     @Override
-    public void suggestMakeValid() {
-        super.suggestMakeValid();
-        System.err.println("            * Increase 'grid' for a coarser map pixellization.");
+    public String suggestMakeValid() {
+        StringBuffer buf = new StringBuffer();
+        buf.append(super.suggestMakeValid());
+     
+        buf.append("            * Increase 'grid' for a coarser map pixellization.\n");
         if(hasSourceOption("redundancy")) 
-            System.err.println("            * Disable redundancy checking ('forget=source.redundancy').");
+            buf.append("            * Disable redundancy checking ('forget=source.redundancy').\n");
+        
+        return new String(buf);
     }
 
     @Override

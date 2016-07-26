@@ -499,7 +499,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	
 	
 	protected void syncGains(final float[] sumwC2, boolean isTempReady) throws Exception {
-		if(mode.fixedGains) throw new IllegalStateException("WARNING! Cannot change gains for fixed gain modes.");
+		if(mode.fixedGains) throw new IllegalStateException("Cannot change gains for fixed gain modes.");
 		
 		final ChannelGroup<?> channels = mode.getChannels();
 		final int nc = mode.size();

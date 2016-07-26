@@ -83,9 +83,9 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 		try { read(project, descriptor, readFully); }
 		catch(FileNotFoundException e) {
-			if(CRUSH.debug) e.printStackTrace();
+			if(CRUSH.debug) warning(e);
 			
-			String message = "Cannot read scan " + descriptor + "\n"
+			String message = " Cannot read scan " + descriptor + "\n"
 				+ "     : project = " + project + "\n"
 				+ "     : datapath = " + getDataPath() + "\n"
 				+ " ----> Check that 'datapath' and 'project' settings are correct.\n"
@@ -167,16 +167,15 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
         if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
 	
 		if(file.exists()) {
-			System.err.println();
-			System.err.println("Scan " + spec + " (details follow...)");
+			info("Scan " + spec + " (details follow...)");
 		}
 		
 		if(file.isDirectory()) {
-			System.err.println(" From directory '" + name + "'.");
+			info("From directory '" + name + "'.");
 			readScanDirectory(name, "", readFully);
 		}
 		else {
-			System.err.println(" From file '" + name + "'.");
+			info("From file '" + name + "'.");
 			readScan(name, readFully);
 		}
 	}
@@ -197,7 +196,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 			try {
 				SubscanType subscan = getIntegrationInstance();
 
-				System.err.println(" Integration {" + (i+1) + "}:");
+				info("Integration {" + (i+1) + "}:");
 				subscan.integrationNo = i;
 				
 				subscan.readDataPar(getFits(dir + (i+1) + File.separator + getFEBECombination() + "-DATAPAR" + ext));
@@ -231,7 +230,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 				SubscanType subscan = getIntegrationInstance();
 				subscan.integrationNo = i;
 				
-				System.err.println(" Integration {" + (i+1) + "}:");
+				info("Integration {" + (i+1) + "}:");
 				
 				// HDUs for each integration can come in any order, so check EXTNAME...
 				for(int m=0; m<3; m++, k++) {
@@ -304,7 +303,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		
 		if(project == null) project = "Unknown";
 		
-		System.err.println(" [" + getSourceName() + "] observed on " + dateString + " at " + timeString + " UT by " + observer);
+		info("[" + getSourceName() + "] observed on " + dateString + " at " + timeString + " UT by " + observer);
 		
 		site = new GeodeticCoordinates(header.getDoubleValue("SITELONG") * Unit.deg, 
 					header.getDoubleValue("SITELAT") * Unit.deg);
@@ -319,7 +318,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 			chopper.frequency = 1.0 / (header.getDoubleValue("WOBCYCLE") * Unit.sec);
 			chopper.positions = 2;
 			chopper.angle = 0.0 * Unit.degree;
-			System.err.println(" Setting options for chopped photometry.");
+			info("Setting options for chopped photometry.");
 			instrument.setOption("chopped");
 		}
 					

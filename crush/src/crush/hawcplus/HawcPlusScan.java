@@ -68,7 +68,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 		
 		// TODO Data without AORs -- should not happen...
 		if(observation.aorID.equals("0")) {
-		    System.err.println(" WARNING! No AOR, will use initial scan position as reference.");
+		    warning("No AOR, will use initial scan position as reference.");
 		    equatorial = null;
 		}
 	}

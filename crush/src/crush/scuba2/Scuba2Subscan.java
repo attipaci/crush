@@ -80,13 +80,13 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	
 	private void fallbackTau(String from, Exception e) throws Exception {
 		if(hasOption(from + ".fallback")) {
-			System.err.println("   WARNING! Tau lookup failed: " + e.getMessage());
+			warning("Tau lookup failed: " + e.getMessage());
 			String source = option(from + ".fallback").getValue().toLowerCase();
 			if(source.equals(from)) {
-				System.err.println("   WARNING! Deadlocked fallback option!");
+				warning("Deadlocked fallback option!");
 				throw e;
 			}	
-			System.err.println("   ... Falling back to '" + source + "'.");
+			info("... Falling back to '" + source + "'.");
 			instrument.setOption("tau=" + source);
 			setTau();
 			return;
@@ -96,7 +96,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	}
 	
 	public void printEquivalentTaus() {	
-		System.err.println("   --->"
+		CRUSH.values(this, "--->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
 				+ ", tau(LOS):" + Util.f3.format(getTau("scuba2") / scan.horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
@@ -126,7 +126,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	}
 	
 	private void readFile(Scuba2Fits file, boolean isFirstFile) throws FitsException, UnsupportedIntegrationException, IOException {
-		if(CRUSH.debug) System.err.println("### " + file.getFile().getName());
+		if(CRUSH.debug) CRUSH.detail(this, "<FILE> " + file.getFile().getName());
 		
 		Fits fits = new Fits(file.getFile());		
 		BasicHDU<?>[] HDU = fits.read();
@@ -207,7 +207,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	}
 	
 	public void darkCorrect() {
-        System.err.println("   Applying dark SQUID correction.");
+        info("Applying dark SQUID correction.");
         
         new Fork<Void>() {
             @Override
@@ -246,13 +246,13 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		Scuba2Scan scubaScan = (Scuba2Scan) scan;
 		if(scubaScan.trackingClass == null) scubaScan.parseCoordinateInfo(header);
 		
-		System.err.println("   Subscan " + getID() + ": " + Util.f2.format(totalIntegrationTime / Unit.s) + " seconds with " + rawFrames + " frames --> @ "
+		info("Subscan " + getID() + ": " + Util.f2.format(totalIntegrationTime / Unit.s) + " seconds with " + rawFrames + " frames --> @ "
 				+ Util.f2.format(rawFrames / totalIntegrationTime) + " Hz.");
 		
 		
 		
 		if(hasOption("subscan.minlength")) if(totalIntegrationTime < option("subscan.minlength").getDouble() * Unit.s)
-			throw new IllegalStateException("    Subscan " + getID() + " is less than " + option("subscan.minlength").getDouble() + "s long. Skipping.");
+			throw new IllegalStateException("Subscan " + getID() + " is less than " + option("subscan.minlength").getDouble() + "s long. Skipping.");
 
 		
 		instrument.integrationTime = instrument.samplingInterval = totalIntegrationTime / rawFrames;
@@ -267,11 +267,10 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		
 		try { table = (Object[]) ((ColumnTable<?>) hdu.getData().getData()).getRow(0); }
 		catch(NullPointerException e) {
-		    System.err.println(" ERROR! FITS input is missing essential binary tables. ");
-		    System.err.println("        Use the 'proexts' option when converting from SDF. E.g.: ");
-		    System.err.println();
-		    System.err.println("         > ndf2fits <input.sdf> <output.fits> proexts");
-		    System.err.println();
+		    error("FITS input is missing essential binary tables.");
+		    CRUSH.suggest(this,
+		            "        Use the 'proexts' option when converting from SDF. E.g.:\n\n" +
+		            "         > ndf2fits <input.sdf> <output.fits> proexts");
 		    throw new IllegalArgumentException("FITS contains no table data.");
 		}
 			
@@ -282,7 +281,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		final int samples = MJDTAI.length;
 			
 		if(samples < 2) {
-			System.err.println("   WARNING! Subscan " + getID() + " has no coordinate data. Dropping from set.");
+			scan.warning("Subscan " + getID() + " has no coordinate data. Dropping from set.");
 			return;
 		}
 				
@@ -353,7 +352,6 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 
 			}
 			
-			
 		}.process();
 		
 	}
@@ -362,7 +360,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	/*
 	public void writeTemperatureGains() throws IOException {
 		// Now write to a file
-		String fileName = CRUSH.workPath + File.separator + "temperature-gains-" + scan.getID() + ".dat";
+		String fileName = CRUSH.workPath + File.separator + "temperature-gains-" + getFileID + ".dat";
 		try { instrument.writeTemperatureGains(fileName, getASCIIHeader()); }
 		catch(IOException e) { e.printStackTrace(); }
 	}
@@ -374,7 +372,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 		super.writeProducts();
 		if(hasOption("write.tgains")) {
 			try { writeTemperatureGains(); }
-			catch(IOException e) { System.err.println("WARNING! Problem writing temperature gains."); }
+			catch(IOException e) { warning("Problem writing temperature gains."); }
 		}
 	}
 	*/

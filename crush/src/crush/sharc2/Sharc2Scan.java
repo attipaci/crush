@@ -70,7 +70,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		eq2.precess(equatorial.epoch);
 		
 		if(eq2.distanceTo(equatorial) > 5.0 * Unit.deg) {
-			System.err.println("   >>> Fix: invalid (stale) equatorial coordinates.");
+			info(">>> Fix: invalid (stale) equatorial coordinates.");
 			equatorial = eq2;
 			apparent = horizontal.toEquatorial(site, LST);
 		}	
@@ -150,7 +150,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 	
 	public Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
 		File file = getFile(scanDescriptor);
-		System.out.println(" Reading " + file.getPath() + "...");
+		info("Reading " + file.getPath() + "...");
 		return new Fits(getFile(scanDescriptor));
 	}
 	
@@ -159,8 +159,8 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		Header header = main.getHeader();
 		if(header.containsKey("RAEP") && header.containsKey("DECEP")) return;
 		
-		System.err.println(" >>> Fix: Assuming early JSharc data format.");
-		System.err.println(" >>> Fix: Source coordinates obtained from antenna stream.");
+		info(">>> Fix: Assuming early JSharc data format.");
+		info(">>> Fix: Source coordinates obtained from antenna stream.");
 		
 		instrument.prematureFITS = true;
 		double epoch = header.getDoubleValue("EQUINOX", 2000.0);
@@ -178,7 +178,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 	public void setSerial(int number) {
 		// Fix for early Nov 2002 scans, where RA/DEC are in incorrect units.
 		if(number < 7320) {
-			System.err.println(" >>> Fix: RA/DEC column in unexpected units.");
+			info(">>> Fix: RA/DEC column in unexpected units.");
 			raUnit = 1.0;
 			decUnit = 1.0;
 		}
@@ -210,14 +210,14 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 				StringTokenizer tokens = new StringTokenizer(line);
 				if(Integer.parseInt(tokens.nextToken()) == serial) {
 					name = tokens.nextToken();
-					System.err.println(" Fix: source name changed to " + name);
+					info("Fix: source name changed to " + name);
 					in.close();
 					return name;
 				}
 			}
 			in.close();
 		}
-		catch(IOException e) { System.err.println(" >>> Fix: WARNING! Cannot find name fix list specification file. No fix."); }
+		catch(IOException e) { info(">>> Fix: WARNING! Cannot find name fix list specification file. No fix."); }
 		return name;
 	}
 	
@@ -231,7 +231,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		setSerial(header.getIntValue("SCANNO"));
 		
 		//site = new GeodesicCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
-		//System.err.println("   Location: " + site);
+		//info("Location: " + site);
 		
 		creator = header.getStringValue("CREATOR");
 		observer = header.getStringValue("OBSERVER");
@@ -262,12 +262,12 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		
 		// increment month by 1 to correct JSharc FITS bug
 		if(creator.equalsIgnoreCase("JSharc")) {
-			System.err.println(" >>> Fix: FITS libraries BUG in JSharc timestamp.");
+			info(">>> Fix: FITS libraries BUG in JSharc timestamp.");
 			String modDate = timeStamp.substring(0, 5);
 			modDate += Util.d2.format(Integer.parseInt(timeStamp.substring(5,7)) + 1 );
 			modDate += timeStamp.substring(7);
 			timeStamp = modDate;
-			//System.err.println(modDate);
+			//CRUSH.detail(this, modDate);
 		}
 		double epoch = header.getDoubleValue("EQUINOX");
 		
@@ -285,8 +285,8 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		String dateString = tokens.nextToken();
 		String timeString = tokens.nextToken() + ":" + tokens.nextToken() + " UT";
 		
-		System.err.println(" [" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
-		if(equatorial != null) System.err.println(" Equatorial: " + equatorial.toString());	
+		info("[" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
+		if(equatorial != null) info("Equatorial: " + equatorial.toString());	
 		
 		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
 		catch(ParseException e) { e.printStackTrace(); }
@@ -321,14 +321,14 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 		
 		DecimalFormat f3_1 = new DecimalFormat(" 0.0;-0.0");
 
-		System.err.println("   AZO =" + f3_1.format(horizontalOffset.x()/Unit.arcsec)
+		info("  AZO =" + f3_1.format(horizontalOffset.x()/Unit.arcsec)
 				+ "\tELO =" + f3_1.format(horizontalOffset.y()/Unit.arcsec)
 				+ "\tRAO =" + f3_1.format(eqOffset.x()/Unit.arcsec)
 				+ "\tDECO=" + f3_1.format(eqOffset.y()/Unit.arcsec)
 				
 		);
 		
-		System.err.println("   FAZO=" + f3_1.format(fixedOffset.x()/Unit.arcsec)
+		info("  FAZO=" + f3_1.format(fixedOffset.x()/Unit.arcsec)
 				+ "\tFZAO=" + f3_1.format(-fixedOffset.y()/Unit.arcsec)
 		);
 		

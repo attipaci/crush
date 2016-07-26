@@ -86,7 +86,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		else if(hasOption("450um")) filter = "450um";
 		else if(hasOption("850um")) filter = "850um";
 		
-		System.err.println(" SHARC-2 Filter set to " + filter);
+		info("SHARC-2 Filter set to " + filter);
 	}
 
 
@@ -361,7 +361,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 			for(Sharc2Pixel pixel : this) pixel.gain /= sourceGain;
 		}
 		
-		System.err.println(" Gain compression is " + Util.f3.format(sourceGain));
+		info("Gain compression is " + Util.f3.format(sourceGain));
 	}
 	
 	// TODO convert to robust estimate?...
@@ -393,7 +393,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 	}
 	
 	public void calcGainCoefficients(double loadT) {
-		System.err.println(" Calculating nonlinearity coefficients.");
+		info("Calculating nonlinearity coefficients.");
 		
 		double sumG02 = 0.0, sumG0 = 0.0;
 		
@@ -418,8 +418,6 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 	}
 
 	public void writeGainCoefficients(String fileName, String header) throws IOException {
-		System.err.println(" Writing nonlinearity coefficients to " + fileName);
-		
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 	
 		out.println("# SHARC2 Non-linearity Coefficients ");
@@ -439,6 +437,8 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		}
 	
 		out.close();
+		
+		notify("Written nonlinearity coefficients to " + fileName);
 	}
 
 	@Override

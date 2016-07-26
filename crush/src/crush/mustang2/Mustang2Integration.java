@@ -59,10 +59,10 @@ public class Mustang2Integration extends Integration<Mustang2, Mustang2Frame> im
 	protected void read(BinaryTableHDU hdu) throws Exception {
 		int records = hdu.getAxes()[0];
 
-		System.err.println(" Processing scan data:");		
-		System.err.println("   Reading " + records + " frames.");
+		scan.info("Processing scan data:");		
+		info("Reading " + records + " frames.");
 		
-		System.err.println("   Sampling at " + Util.f1.format(instrument.integrationTime / Unit.ms) + " ms ---> " 
+		info("Sampling at " + Util.f1.format(instrument.integrationTime / Unit.ms) + " ms ---> " 
 				+ Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
 		
 		clear();

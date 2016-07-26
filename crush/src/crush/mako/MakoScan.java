@@ -90,13 +90,13 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 			File converted = new File(convertedName);
 			
 			if(converted.exists()) {
-				System.err.println(" Will read existing IQ --> shift converted file instead...");
+				info("Will read existing IQ --> shift converted file instead...");
 			}
 			else if(hasOption("convert")) {	
 				String iqconv = option("convert").getPath();
 				
-				if(CRUSH.details) System.err.println(" Converting I/Q --> frequency shift...");
-				System.err.println("> " + iqconv + " " + file.getPath());
+				if(CRUSH.details) info("Converting I/Q --> frequency shift...");
+				info("> " + iqconv + " " + file.getPath());
 				Process process = Runtime.getRuntime().exec(iqconv + " " + file.getPath());
 				process.waitFor();
 				if(process.exitValue() != 0) throw new IllegalStateException("I/Q --> frequency shift conversion error.");
@@ -194,7 +194,7 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 			scanSystem = isEquatorial ? EquatorialCoordinates.class : HorizontalCoordinates.class;
 		}
 		else {
-			System.err.println(" WARNING! Scan direction undefined. Assuming /altaz.");
+			warning("Scan direction undefined. Assuming /altaz.");
 			scanSystem = HorizontalCoordinates.class;		
 		}
 	}
@@ -256,8 +256,8 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 		
 		id = hasOption("chirp") ? Integer.toString(header.getIntValue("SCANNO")) : dateString + "." + timeMins;
 		
-		System.err.println(" [" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
-		if(equatorial != null) System.err.println(" Equatorial: " + equatorial.toString());	
+		info("[" + sourceName + "] observed on " + dateString + " at " + timeString + " by " + observer);
+		if(equatorial != null) info("Equatorial: " + equatorial.toString());	
 		
 		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
 		catch(ParseException e) { e.printStackTrace(); }
@@ -292,14 +292,14 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 		
 		DecimalFormat f3_1 = new DecimalFormat(" 0.0;-0.0");
 
-		System.err.println("   AZO =" + f3_1.format(horizontalOffset.x()/Unit.arcsec)
+		info("AZO =" + f3_1.format(horizontalOffset.x()/Unit.arcsec)
 				+ "\tELO =" + f3_1.format(horizontalOffset.y()/Unit.arcsec)
 				+ "\tRAO =" + f3_1.format(eqOffset.x()/Unit.arcsec)
 				+ "\tDECO=" + f3_1.format(eqOffset.y()/Unit.arcsec)
 				
 		);
 		
-		System.err.println("   FAZO=" + f3_1.format(fixedOffset.x()/Unit.arcsec)
+		info("FAZO=" + f3_1.format(fixedOffset.x()/Unit.arcsec)
 				+ "\tFZAO=" + f3_1.format(-fixedOffset.y()/Unit.arcsec)
 		);
 		

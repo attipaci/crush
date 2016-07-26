@@ -171,12 +171,11 @@ public class SkyDip extends SourceModel {
 		fit(model);
 		
 		if(model.fitOK) {
-			System.out.println();
-			System.out.println("Skydip result:");
-			System.out.println("=================================================");
-			System.out.print(model.toString());
-			System.out.println("=================================================");
-			System.out.println();
+		    CRUSH.result(this,
+		            "Skydip result:\n" +
+		            "=================================================\n" +
+		            model.toString() +
+		            "=================================================\n");
 		}
 		else warning("Skydip fit did not converge...");
 			
@@ -205,7 +204,7 @@ public class SkyDip extends SourceModel {
 		out.flush();
 		out.close();
 		
-		System.err.println("Written " + fileName);
+		CRUSH.notify(this, "Written " + fileName);
 		
 		gnuplot(coreName, fileName, model);
 	}
@@ -269,7 +268,7 @@ public class SkyDip extends SourceModel {
 		
 		plot.close();
 		
-		System.err.println("Written " + plotName);
+		CRUSH.notify(this, "Written " + plotName);
 		
 		if(hasOption("gnuplot")) {
 			String command = option("gnuplot").getValue();
@@ -287,7 +286,7 @@ public class SkyDip extends SourceModel {
 		plot.println("replot");
 		
 		plot.println("print 'Written " + coreName + ".eps'");
-		System.err.println("Written " + coreName + ".eps");	
+		CRUSH.notify(this, "Written " + coreName + ".eps");	
 	}
 	
 	public void gnuplotPNG(PrintWriter plot, String coreName) {
@@ -315,7 +314,7 @@ public class SkyDip extends SourceModel {
 		plot.println("set out '" + coreName + ".png'");
 		plot.println("replot");
 		plot.println("print 'Written " + coreName + ".png'");	
-		System.err.println("Written " + coreName + ".png");
+		CRUSH.notify(this, "Written " + coreName + ".png");
 	}
 	
 	public void fit(SkyDipModel model) {

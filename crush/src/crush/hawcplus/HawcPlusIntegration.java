@@ -59,7 +59,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	// TODO
 	/*
 	public void printEquivalentTaus() {
-		System.err.println("   --->"
+		CRUSH.values(this, "--->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
 				+ ", tau(LOS):" + Util.f3.format(zenithTau / scan.horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
@@ -77,9 +77,9 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		int records = 0;
 		for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
 		
-		System.err.println(" Processing scan data:");
-		System.err.println("   Reading " + records + " frames from " + dataHDUs.size() + " HDU(s).");
-		System.err.println("   Sampling at " + Util.f2.format(1.0 / instrument.integrationTime) + " Hz ---> " 
+		instrument.info("Processing scan data:");
+		info("Reading " + records + " frames from " + dataHDUs.size() + " HDU(s).");
+		info("Sampling at " + Util.f2.format(1.0 / instrument.integrationTime) + " Hz ---> " 
 				+ Util.f1.format(instrument.samplingInterval * records / Unit.min) + " minutes.");
 			
 		clear();
@@ -121,7 +121,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             
             // Ignore coordinate info for 'lab' data...
             if(isLab) {
-                System.err.println("   Lab mode data reduction. Ignoring telescope data...");
+                info("Lab mode data reduction. Ignoring telescope data...");
                 return;
             }
             
@@ -160,7 +160,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             
             int storeRows = ((int[][]) row[iDAC]).length;
             int storeCols = ((int[][]) row[iDAC])[0].length;
-            System.err.println("   FITS has " + storeRows + "x" + storeCols + " arrays.");
+            info("FITS has " + storeRows + "x" + storeCols + " arrays.");
             
             if(scan.equatorial == null) {
                 warning("Missing OBJRA/OBJDEC header keys. Using initial position instead.");
@@ -329,7 +329,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	}
 	
 	private void checkJumps() {
-	    System.err.print("   Checking for flux jumps... ");
+	    info("Checking for flux jumps... ");
 
 	    final byte[] startCounter = getFirstFrame().jumpCounter;   
 
@@ -345,7 +345,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	    int jumpPixels = 0;
 	    for(HawcPlusPixel pixel : instrument) if(pixel.hasJumps) jumpPixels++;
 
-	    System.err.println(jumpPixels > 0 ? "found jump(s) in " + jumpPixels + " pixels." : "All good!");
+	    info("---> " + (jumpPixels > 0 ? "found jump(s) in " + jumpPixels + " pixels." : "All good!"));
 	}
 	
 	

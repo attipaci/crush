@@ -1,3 +1,32 @@
+>> eliminate more println statements...
+
+
+
+	[FIX] {HAWC+} Nearly all warning/error messages are now propagated to
+	the DRP, with the traces added as DEBUG messages. Suggestions are also
+	sent to the DRP as DEBUG messages.
+
+	[FIX] {HAWC+} Missing header string values now automatically take 
+	'UNKNOWN' for further processing.
+
+	[FIX] {HAWC+} TELESCOP keyword not parse properly from input files due
+	to a typo in the code. Fixed.
+
+	[FIX] {HAWC+} Added AOR_IDs, and other IDs back into the image header.
+
+	[CHANGE] More consistent output file naming for scans/integrations.
+
+	[CHANGE] {SHARC-2} Pointing and focus check no longer suggests UIP
+	corrections. These are irrelevant since the CSO is closed down... :-(
+	
+	[CHANGE] Update and VM checking takes place after instrument 
+	initialization when possible, allowing to propagate the resulting 
+	messages according to the instrument's own method.
+
+	[CODE] Complete overhaul of messaging architecture...	
+
+
+
 
 2.32-1 (29 June 2016)
 

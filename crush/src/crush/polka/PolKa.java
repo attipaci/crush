@@ -88,14 +88,14 @@ public class PolKa extends Laboca {
 		final PolKaScan firstScan = (PolKaScan) scans.get(0);
 		final PolKa polka = (PolKa) firstScan.instrument;
 		
-		if(polka.hasAnalyzer) System.err.println(" Polarized reduction mode (H or V analyzer).");
-		else System.err.println(" Total-power reduction mode (no analyzer grid).");
+		if(polka.hasAnalyzer) info("Polarized reduction mode (H or V analyzer).");
+		else info("Total-power reduction mode (no analyzer grid).");
 			
 		// Make sure the rest of the list conform to the first scan...
 		for(int i=scans.size(); --i > 0; ) {
 			PolKaScan scan = (PolKaScan) scans.get(i);
 			if(((PolKa) scan.instrument).hasAnalyzer != polka.hasAnalyzer) {
-				System.err.println("  WARNING! Scan " + scan.getID() + " is " 
+				warning("Scan " + scan.getID() + " is " 
 						+ (polka.hasAnalyzer ? "total-power (no analyzer)" : "is polarized")
 						+ ". Dropping from dataset.");
 				scans.remove(i);
@@ -107,50 +107,50 @@ public class PolKa extends Laboca {
 	
 	@Override
 	public void validate(Scan<?,?> scan) {
-		System.err.println(" Parsing waveplate settings: ");
+		info("Parsing waveplate settings: ");
 		
 		if(hasOption("waveplate.frequency")) { 
 			waveplateFrequency = option("waveplate.frequency").getDouble() * Unit.Hz;
-			System.err.println("  --> Frequency = " + Util.f3.format(waveplateFrequency / Unit.Hz) + " Hz.");
+			info(" --> Frequency = " + Util.f3.format(waveplateFrequency / Unit.Hz) + " Hz.");
 		}
 		else {	
 			if(hasOption("waveplate.channel")) {
 				int beIndex = option("waveplate.channel").getInt();
 				phaseChannel = get(beIndex-1);
 				if(phaseChannel != null) 
-					System.err.println("  --> Angles from channel " + phaseChannel.getID() + ".");
+					info(" --> Angles from channel " + phaseChannel.getID() + ".");
 			}
 			
 			if(hasOption("waveplate.fchannel")) {
 				int beIndex = option("waveplate.fchannel").getInt();
 				frequencyChannel = get(beIndex-1);
 				if(frequencyChannel != null) 
-					System.err.println("  --> Frequencies from channel " + frequencyChannel.getID() + ".");
+					info(" --> Frequencies from channel " + frequencyChannel.getID() + ".");
 			}
 			
 			if(hasOption("waveplate.tchannel")) {
 				int beIndex = option("waveplate.tchannel").getInt();
 				offsetChannel = get(beIndex-1);
 				if(offsetChannel != null) 
-					System.err.println("  --> Crossing times from channel " + offsetChannel.getID() + ".");
+					info(" --> Crossing times from channel " + offsetChannel.getID() + ".");
 			}		
 		}
 		
 		if(hasOption("waveplate.jitter")) { 
 			jitter = option("waveplate.jitter").getDouble();
-			System.err.println("  --> Jitter = " + Util.f2.format(100.0 * jitter) + "%.");
+			info(" --> Jitter = " + Util.f2.format(100.0 * jitter) + "%.");
 		}
 		
 		if(hasOption("waveplate.refangle")) referenceAngle = option("waveplate.refangle").getDouble();
 		
 		if(hasOption("waveplate.incidence")) {
 			incidence = option("waveplate.incidence").getDouble() * Unit.deg;
-			System.err.println("  --> incidence = " + Util.f1.format(incidence/Unit.deg) + " deg.");
+			info(" --> incidence = " + Util.f1.format(incidence/Unit.deg) + " deg.");
 		}
 		
 		if(hasOption("waveplate.incidence.phase")) {
 			incidencePhase = option("waveplate.incidence.phase").getDouble() * Unit.deg;
-			System.err.println("  --> incidence phase = " + Util.f1.format(incidencePhase/Unit.deg) + " deg.");
+			info(" --> incidence phase = " + Util.f1.format(incidencePhase/Unit.deg) + " deg.");
 		}
 		
 		isCounterRotating = hasOption("waveplate.counter");
@@ -178,20 +178,20 @@ public class PolKa extends Laboca {
 		else if(iAnalyzer > 0) setAnalyzer(((String) hdu.getRow(0)[iAnalyzer]).charAt(0));
 		else {
 			hasAnalyzer = false;
-			System.err.println("  WARNING! Analyzer position is not defined. Assuming LABOCA total-power mode.");
-			System.err.println("           Use 'analyzer' option to to manually set 'H' or 'V'.");
+			warning("Analyzer position is not defined. Assuming LABOCA total-power mode.");
+			CRUSH.suggest(this, "         * Use 'analyzer' option to to manually set 'H' or 'V'.");
 			
 		}
 		
-		if(hasAnalyzer) System.err.println(" Analyzer grid orientation is " + (isVertical ? "V" : "H"));
+		if(hasAnalyzer) info("Analyzer grid orientation is " + (isVertical ? "V" : "H"));
 	}
 	
 	public void setAnalyzer(char c) {
 		switch(Character.toUpperCase(c)) {
 		case 'N' : 
 			hasAnalyzer = false;
-			System.err.println("  WARNING! Total-power data. You really should use 'laboca' as your instrument");
-			System.err.println("           However, 'polka' will try its best to reduce it anyway...");
+			warning("Total-power data. You really should use 'laboca' as your instrument\n" +
+			    "          However, 'polka' will try its best to reduce it anyway...");
 			break;
 		case 'V' :
 		case 'Y' :
@@ -200,10 +200,8 @@ public class PolKa extends Laboca {
 		case 'X' :
 			hasAnalyzer = true; isVertical = false; break;
 		default :
-			System.err.println();
-			System.err.println("WARNING! Polarization analyzer position is undefined. Set the");
-			System.err.println("         'analyzer' option to 'H' or 'V' to specify. Exiting.");
-			System.err.println();
+			error("Polarization analyzer position is undefined.");
+			CRUSH.suggest(this, "     * Set the 'analyzer' option to 'H' or 'V' to specify. Exiting.");
 			System.exit(1);
 			break;
 		}

@@ -167,7 +167,7 @@ public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements Gr
 		}
 			
 		int pixels = f0.length;
-		System.err.println(" Reading out " + pixels + " channels.");
+		info("Reading out " + pixels + " channels.");
 		clear();
 		ensureCapacity(pixels);
 		
@@ -198,7 +198,7 @@ public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements Gr
 		// Normalize the gains
 		if(n > 0) {
 			temperatureGain = Statistics.median(G, 0, n);		
-			System.err.println(" Average gain is " + Util.s2.format(temperatureGain) + " / K for " + n + " pixels.");
+			info("Average gain is " + Util.s2.format(temperatureGain) + " / K for " + n + " pixels.");
 			for(Channel pixel : this) pixel.gain /= temperatureGain;
 		}
 	}
@@ -275,13 +275,13 @@ public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements Gr
 			
 		}
 		
-		System.err.println(" Parsed " + n + " pixel positions from " + fileName);
+		info("Parsed " + n + " pixel positions from " + fileName);
 		
 		in.close();
 	}
 	
 	private void assignPositions() {	
-		System.err.println(" Assigning known pixels to resonators.");
+		info("Assigning known pixels to resonators.");
 		
 		for(Mustang2Pixel pixel : this) pixel.flagID();
 		
@@ -329,7 +329,7 @@ public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements Gr
 		if(Double.isNaN(polarizationAngle)) return;
 		polarizationAngle = Constant.rightAngle + Math.IEEEremainder(polarizationAngle, Math.PI);
 		if(polarizationAngle == Math.PI) polarizationAngle = 0.0;
-		System.err.println(" Restricting polarization to " + Util.s3.format(polarizationAngle / Unit.deg) + "degrees.") ;
+		info("Restricting polarization to " + Util.s3.format(polarizationAngle / Unit.deg) + "degrees.") ;
 		for(Mustang2Pixel pixel : this) if(pixel.polarizationAngle != polarizationAngle) pixel.flag(Channel.FLAG_DEAD);
 	}
 	

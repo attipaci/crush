@@ -136,7 +136,7 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 	}
 	
 	public void readRCP(String fileName)  throws IOException {		
-		System.err.println(" Reading RCP from " + fileName);
+		info("Reading RCP from " + fileName);
 			
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		String line;
@@ -149,7 +149,7 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 		Hashtable<String, Pixel> idLookup = getPixelLookup(); 
 		boolean useGains = hasOption("rcp.gains");
 			
-		if(useGains) System.err.println(" Initial Source Gains set from RCP file.");
+		if(useGains) info("Initial Source Gains set from RCP file.");
 		
 		while((line = in.readLine()) != null) if(line.length() > 0) if(!"#!/".contains(line.charAt(0) + "")) {
 			StringTokenizer tokens = new StringTokenizer(line);
@@ -225,7 +225,7 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 	
 	protected void setPointing(Scan<?,?> scan) {
 		if(hasOption("point")) return;
-		System.err.println(" Setting 'point' option to obtain pointing/calibration data.");
+		info("Setting 'point' option to obtain pointing/calibration data.");
 		setOption("point");
 		scan.instrument.setOption("point");		
 	}
@@ -273,7 +273,7 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 	public void rotate(double angle) {
 		if(Double.isNaN(angle)) return;
 		
-		System.err.println(" Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
+		info("Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
 		
 		// Undo the prior rotation...
 		Vector2D priorOffset = getPointingOffset(rotation);

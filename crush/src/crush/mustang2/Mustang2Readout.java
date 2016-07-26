@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import crush.CRUSH;
 import jnum.Copiable;
 import jnum.Unit;
 
@@ -69,7 +70,7 @@ public class Mustang2Readout implements Cloneable, Copiable<Mustang2Readout> {
 		
 		in.close();
 		
-		System.err.println(" ROACH " + (index+1) + ": " + tones.size() + " frequencies from " + fileName);	
+		CRUSH.info(this, "ROACH " + (index+1) + ": " + tones.size() + " frequencies from " + fileName);	
 	}
 	
 	

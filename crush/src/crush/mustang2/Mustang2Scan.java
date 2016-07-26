@@ -65,7 +65,7 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 		Mustang2Frame lastFrame = getLastIntegration().getLastFrame();
 		
 		double PA = 0.5 * (firstFrame.getParallacticAngle() + lastFrame.getParallacticAngle());
-		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");
+		info("Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");
 	}
 
 	@Override
@@ -78,7 +78,7 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 	public Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
 		File file = getFile(scanDescriptor);
 		boolean isCompressed = file.getName().endsWith(".gz");
-		System.out.println(" Reading " + file.getPath() + "...");
+		info("Reading " + file.getPath() + "...");
 		return new Fits(getFile(scanDescriptor), isCompressed);
 	}
 
@@ -154,20 +154,20 @@ public class Mustang2Scan extends Scan<Mustang2, Mustang2Integration> implements
 				CoordinateEpoch.J2000
 		); 
 		
-		System.err.println(" [" + sourceName + "] of project " + project + " observed on " + date + " at " + startTime);
-		System.err.println(" Equatorial: " + equatorial.toString());	
+		info("[" + sourceName + "] of project " + project + " observed on " + date + " at " + startTime);
+		info("Equatorial: " + equatorial.toString());	
 		
 		
 		if(hasOption("tau")) {
 			zenithTau = option("tau").getDouble();
-			System.err.println(" Using tau: " + Util.f3.format(zenithTau));
+			info("Using tau: " + Util.f3.format(zenithTau));
 		}
 		else if(header.containsKey("TAUZ")) {
 			zenithTau = header.getDoubleValue("TAUZ");
-			System.err.println(" Zenith tau from skydip: " + Util.f3.format(zenithTau));
+			info("Zenith tau from skydip: " + Util.f3.format(zenithTau));
 		}
 		else { 
-			System.err.println(" No tau in FITS, or specified. No extinction correction.");
+			warning("No tau in FITS, or specified. No extinction correction.");
 		}
 	}
 	

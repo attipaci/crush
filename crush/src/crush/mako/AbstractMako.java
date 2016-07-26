@@ -101,7 +101,7 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 		
 	
 		if(hasOption("distortion")) {
-			System.err.println(" Correcting for focal-plane distortion.");
+			info("Correcting for focal-plane distortion.");
 			DistortionModel model = new DistortionModel();
 			model.setOptions(option("distortion"));	
 			
@@ -147,7 +147,7 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 		int iPts = hdu.findColumn("Points");
 		int iErr = hdu.findColumn("Fit Error");
 		
-		System.err.print(" MAKO stream has " + pixels + " tones. ");
+		info("MAKO stream has " + pixels + " tones. ");
 		
 		int blinds = 0;
 		
@@ -167,9 +167,9 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 			else add(pixel);
 		}	
 		
-		if(iFlag < 0) System.err.println(" WARNING! Data has no information on blind tones.");
-		else if(blinds > 0) System.err.println(" Ignoring " + blinds + " blind tones.");
-		else System.err.println(" Stream contains no blind tones :-).");
+		if(iFlag < 0) warning("Data has no information on blind tones.");
+		else if(blinds > 0) warning("Ignoring " + blinds + " blind tones.");
+		else warning("Stream contains no blind tones :-).");
 		
 	}
 	
@@ -183,7 +183,7 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 		if(!isEmpty()) clear();
 		ensureCapacity(pixels);
 			
-		System.err.print(" MAKO chirp stream has " + pixels + " resonances. ");
+		info("MAKO chirp stream has " + pixels + " resonances. ");
 		
 		for(int c=0; c<pixels; c++) {
 			MakoPixelType pixel = getChannelInstance(c);

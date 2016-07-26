@@ -94,7 +94,7 @@ public class ArrayRecycler {
 			try { ints.put(array); }
 			catch(InterruptedException e) {}
 		}
-		else System.err.println(" WARNING! int[] recycler overflow.");
+		else CRUSH.warning(this, "int[] recycler overflow.");
 	}
 	
 	public synchronized void recycle(float[] array) { 
@@ -104,7 +104,7 @@ public class ArrayRecycler {
 			try { floats.put(array); }
 			catch(InterruptedException e) {}
 		}
-		else System.err.println(" WARNING! float[] recycler overflow.");
+		else CRUSH.warning(this, "float[] recycler overflow.");
 	}
 	
 	public synchronized void recycle(double[] array) { 
@@ -114,7 +114,7 @@ public class ArrayRecycler {
 			try { doubles.put(array); }
 			catch(InterruptedException e) {}
 		}
-		else System.err.println(" WARNING! double[] recycler overflow.");
+		else CRUSH.warning(this, "double[] recycler overflow.");
 	}
 	
 	public synchronized void recycle(WeightedPoint[] array) {
@@ -125,7 +125,7 @@ public class ArrayRecycler {
 			try { points.put((DataPoint[]) array); }
 			catch(InterruptedException e) {}
 		}
-		else System.err.println(" WARNING! WeightedPoint[] recycler overflow.");
+		else CRUSH.warning(this, "WeightedPoint[] recycler overflow.");
 	}
 	
 	public synchronized void clear() {

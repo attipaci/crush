@@ -26,6 +26,7 @@ package crush;
 import java.io.Serializable;
 import java.util.*;
 
+
 import jnum.Configurator;
 
 
@@ -72,11 +73,11 @@ public class Pipeline implements Runnable, Serializable {
 	@Override
 	public void run() {
 		try { iterate(); }
-		catch(InterruptedException e) { System.err.println("\nInterrupted!"); }
+		catch(InterruptedException e) { CRUSH.warning(this, "Interrupted!"); }
 		catch(Exception e) { 
-			System.err.println("ERROR! " + e.getMessage()); 
+			CRUSH.error(this, e); 
 			e.printStackTrace();
-			System.err.println("Exiting.");
+			CRUSH.info(this, "Exiting.");
 			System.exit(1);
 		}
 	}

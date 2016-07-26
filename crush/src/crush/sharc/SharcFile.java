@@ -83,7 +83,6 @@ public class SharcFile extends Hashtable<Integer, SharcScan> {
 		readFully();
 		in.close();
 		
-		System.err.println();
 		
 		files.put(fileName, this);
 	}
@@ -92,13 +91,11 @@ public class SharcFile extends Hashtable<Integer, SharcScan> {
 		readHeader();
 		//printInfo(System.out);
 		
-		System.out.println();
-		System.out.println(" [" + fileName + "]");
-		System.out.println();
+		CRUSH.info(this, "\n[" + fileName + "]\n");
 		
 		try { for(;;) readScan(); }
 		catch(EOFException e) {}
-		catch(IOException e) { CRUSH.warning(e); }
+		catch(IOException e) { CRUSH.warning(this, e); }
 	
 		//listScans();
 	}
@@ -115,7 +112,7 @@ public class SharcFile extends Hashtable<Integer, SharcScan> {
 	}
 	
 	public void listScans() {
-		for(int i=0; i<size(); i++) System.out.println("  " + get(i).toString());
+		for(int i=0; i<size(); i++) CRUSH.info(this, "\n  " + get(i).toString());
 	}
 	
 	

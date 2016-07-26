@@ -92,8 +92,12 @@ public class SofiaHeader {
         return (float) value;
     }
     
+    public String getString(String key, String defaultValue) {
+        return header.containsKey(key) ? header.getStringValue(key) : defaultValue;
+    }
+    
     public String getString(String key) {
-        return header.containsKey(key) ? header.getStringValue(key) : null;
+        return getString(key, UNKNOWN_STRING_VALUE);
     }
     
     public double getHMSTime(String key) {

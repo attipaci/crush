@@ -120,7 +120,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			instrument.subarray[i].channelOffset = channelOffset;
 			channelOffset += Scuba2Subarray.PIXELS;
 		}
-		System.err.println(" Found data for " + subarrays + " subarrays.");
+		info("Found data for " + subarrays + " subarrays.");
 		
 		clear();
 		
@@ -151,12 +151,12 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			subscan.read(); 
 			if(!subscan.isEmpty()) add(subscan);	
 		}
-		catch(DarkSubscanException e) { System.err.println("   Subscan " + subscan.getID() + " is a dark measurement. Skipping."); }
-		catch(FastFlatSubscanException e) { System.err.println("   Subscan " + subscan.getID() + " is a flatfield measurement. Skipping."); }
-		catch(NoiseSubscanException e) { System.err.println("   Subscan " + subscan.getID() + " is a noise measurement. Skipping."); }
-		catch(UnsupportedIntegrationException e) {  System.err.println("   Subscan " + subscan.getID() + " is not supported. Skipping."); }
-		catch(IllegalStateException e) { warning(e); }
-		catch(IOException e) { warning("FITS was not be closed."); }
+		catch(DarkSubscanException e) { subscan.info("Subscan " + subscan.getID() + " is a dark measurement. Skipping."); }
+		catch(FastFlatSubscanException e) { subscan.info("Subscan " + subscan.getID() + " is a flatfield measurement. Skipping."); }
+		catch(NoiseSubscanException e) { subscan.info("Subscan " + subscan.getID() + " is a noise measurement. Skipping."); }
+		catch(UnsupportedIntegrationException e) {  subscan.info("Subscan " + subscan.getID() + " is not supported. Skipping."); }
+		catch(IllegalStateException e) { subscan.warning(e); }
+		catch(IOException e) { subscan.warning("FITS was not be closed."); }
 	}
 	
 	
@@ -176,7 +176,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		if(isEmpty()) return;	// TODO warning?
 		
 		calcSamplingRate();
-		System.err.println(" Typical sampling rate is " + Util.f2.format(1.0 / instrument.integrationTime) + " Hz.");
+		info("Typical sampling rate is " + Util.f2.format(1.0 / instrument.integrationTime) + " Hz.");
 	
 		
 		Scuba2Frame firstFrame = getFirstIntegration().getFirstFrame();
@@ -189,7 +189,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		}
 			
 		double PA = 0.5 * (firstFrame.getParallacticAngle() + lastFrame.getParallacticAngle());
-		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");
+		info("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");
 		
 		super.validate();
 	}
@@ -316,7 +316,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		
 		blankingValue = header.getIntValue("BLANK");
 		
-		System.err.println(" [" + getSourceName() + "] observed on " + date);
+		info("[" + getSourceName() + "] observed on " + date);
 		
 		obsType = header.getStringValue("OBS_TYPE");	
 		if(obsType.equalsIgnoreCase("focus")) throw new UnsupportedScanException("Focus reduction not (yet) implemented.");
@@ -364,7 +364,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		if(trackingSystem.equals("AZEL")) {
 			trackingClass = HorizontalCoordinates.class;
 			horizontal = new HorizontalCoordinates(lon, lat);
-			System.err.println(" Horizontal: " + horizontal.toString(1));
+			info("Horizontal: " + horizontal.toString(1));
 			isTracking = false;
 		}
 		else if(trackingSystem.equals("APP")) {
@@ -372,25 +372,25 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			apparent = new EquatorialCoordinates(lon, lat, JulianEpoch.forMJD(getMJD()));
 			equatorial = (EquatorialCoordinates) apparent.clone();
 			equatorial.precess(CoordinateEpoch.J2000);
-			System.err.println(" Apparent: " + apparent.toString(1));
-			System.err.println(" Equatorial: " + equatorial.toString(1));
+			info("Apparent: " + apparent.toString(1));
+			info("Equatorial: " + equatorial.toString(1));
 		}
 		else if(trackingSystem.equals("J2000")) {
 			trackingClass = EquatorialCoordinates.class;
 			equatorial = new EquatorialCoordinates(lon, lat, CoordinateEpoch.J2000);
-			System.err.println(" Equatorial: " + equatorial.toString(1));
+			info("Equatorial: " + equatorial.toString(1));
 		}
 		else if(trackingSystem.equals("B1950")) {
 			trackingClass = EquatorialCoordinates.class;
 			equatorial = new EquatorialCoordinates(lon, lat, CoordinateEpoch.B1950);
-			System.err.println(" Equatorial: " + equatorial.toString(1));
+			info("Equatorial: " + equatorial.toString(1));
 		}
 		else if(trackingSystem.equals("GAL")) {
 			trackingClass = GalacticCoordinates.class;
 			GalacticCoordinates galactic = new GalacticCoordinates(lon, lat);
 			equatorial = galactic.toEquatorial();
-			System.err.println(" Galactic: " + galactic.toString(1));
-			System.err.println(" Equatorial: " + equatorial.toString(1));
+			info("Galactic: " + galactic.toString(1));
+			info("Equatorial: " + equatorial.toString(1));
 		}
 		else {
 			trackingClass = null;

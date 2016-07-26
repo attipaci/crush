@@ -32,7 +32,7 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaTelescopeData extends SofiaData {
-	public String telescope = "SOFIA";
+	public String telescope = "SOFIA 2.5m";
 	public String telConfig;
 	public EquatorialCoordinates boresightEquatorial, requestedEquatorial;
 	public double VPA = Double.NaN;
@@ -65,7 +65,8 @@ public class SofiaTelescopeData extends SofiaData {
 
 	public void parseHeader(SofiaHeader header) {
 		
-		if(header.containsKey("TELESCOP")) telescope = header.getString("TELESCOPE");
+		if(header.containsKey("TELESCOP")) telescope = header.getString("TELESCOP");
+		
 		telConfig = header.getString("TELCONF");
 		
 		boresightEquatorial = new EquatorialCoordinates();

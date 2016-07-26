@@ -33,10 +33,11 @@ import jnum.Configurator;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.SphericalCoordinates;
+import jnum.reporting.BasicMessaging;
 import jnum.text.TableFormatter;
 import jnum.util.HashCode;
 
-public abstract class SourceModel implements Serializable, Cloneable, TableFormatter.Entries, Messaging {
+public abstract class SourceModel implements Serializable, Cloneable, TableFormatter.Entries, BasicMessaging {
 	/**
 	 * 
 	 */
@@ -57,6 +58,7 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 
 	public void setInstrument(Instrument<?> instrument) {
 		this.instrument = instrument;
+		instrument.setParent(this);
 	}
 
 	public Instrument<?> getInstrument() { return instrument; }
@@ -192,15 +194,10 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 			break;
 		}
 		if(scansWithFewPixels > 0) scanningProblemOnly = troubleshootFewPixels();
-		else if(!isValid() && generation > 0) suggestMakeValid();
+		else if(!isValid() && generation > 0) CRUSH.suggest(this, suggestMakeValid());
 		else return; // no problems, so nothing left to do...
 		
-		System.err.println();
-		
-		if(!scanningProblemOnly) {
-			System.err.println("          Please consult the README and/or the GLOSSARY for details.");
-			System.err.println();
-		}
+		if(!scanningProblemOnly) CRUSH.suggest(this, "          Please consult the README and/or the GLOSSARY for details.");
 	}
 
 	public boolean isScanningProblemOnly() {
@@ -216,43 +213,51 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 				else speedProblemOnly = false;
 			}
 			
-			if(lowSpeed) System.err.println("            * Low scanning speed in " + scan.getID() + ".");
+			if(lowSpeed) CRUSH.suggest(this, "            * Low scanning speed in " + scan.getID() + ".");
 		}
 		
 		return speedProblemOnly;
 	}
 	
 	public boolean troubleshootFewPixels() {
-		System.err.println(" WARNING! It seems that one or more scans contain too few valid pixels for");
-		System.err.println("          contributing to the source model. This may be just fine, and probably");
-		System.err.println("          indicates that something was sub-optimal with the affected scan(s).");
-		System.err.println();
+	    warning("It seems that one or more scans contain too few valid pixels for\n" +
+	            "contributing to the source model. This may be just fine, and probably\n" +
+	            "indicates that something was sub-optimal with the affected scan(s).\n");
 		
 		if(isScanningProblemOnly()) return true;
 		
-		System.err.println();
-		System.err.println("          If you feel that CRUSH should try harder with the scans flagged");
-		System.err.println("          otherwise, you may try:");
-		System.err.println();
+		StringBuffer buf = new StringBuffer();
+		buf.append(
+		        "          If you feel that CRUSH should try harder with the scans flagged\n");
+		buf.append(
+		        "          otherwise, you may try:\n");
+		
 		
 		
 		Configurator options = getOptions();
-		if(options.isConfigured("deep")) System.err.println("            * Reduce with 'faint' instead of 'deep'.");
-		else if(options.isConfigured("faint")) System.err.println("            * Reduce with default settings instead of 'faint'.");
-		else if(!options.isConfigured("bright")) System.err.println("            * Reduce with 'bright'.");
+		if(options.isConfigured("deep")) buf.append(
+		        "            * Reduce with 'faint' instead of 'deep'.\n");
+		else if(options.isConfigured("faint")) buf.append(
+		        "            * Reduce with default settings instead of 'faint'.\n");
+		else if(!options.isConfigured("bright")) buf.append(
+		        "            * Reduce with 'bright'.\n");
 	
 		instrument.troubleshootFewPixels();
 		
 		if(hasOption("mappingpixels") || hasOption("mappingfraction")) {
-			System.err.println("            * Adjust 'mappingpixels' or 'mappigfraction' to allow source ");
-			System.err.println("              extraction with fewer pixels.");
+			buf.append(
+			        "            * Adjust 'mappingpixels' or 'mappigfraction' to allow source\n");
+			buf.append(
+			        "              extraction with fewer pixels.\n");
 		}
+		
+		CRUSH.suggest(this, "\n" + new String(buf));
 		
 		return false;
 	}
 
-	public void suggestMakeValid() {
-		System.err.println("            * Check the console output for any problems when reading scans.");
+	public String suggestMakeValid() {
+		return "            * Check the console output for any problems when reading scans.\n";
 	}
 	
 	public abstract void process(boolean verbose) throws Exception;
@@ -391,51 +396,34 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 		return 1.0;
 		
 	}
+	
+	@Override
+    public void info(String message) { CRUSH.info(this, message); }
+    
+    @Override
+    public void notify(String message) { CRUSH.notify(this, message); }
+    
+    @Override
+    public void debug(String message) { CRUSH.debug(this, message); }
+    
+    @Override
+    public void warning(String message) { CRUSH.warning(this, message); }
 
-	
-	@Override
-	public void error(Throwable e, boolean debug) {
-		if(instrument != null) instrument.error(e, debug);
-		else CRUSH.error(e, debug);
-	}
-	
-	@Override
-	public void error(Throwable e) { 
-		if(instrument != null) instrument.error(e);
-		else CRUSH.error(e);
-	}
-	
-	@Override
-	public void error(String message) {
-		if(instrument != null) instrument.error(message);
-		else CRUSH.error(message);
-	}
-	
-	@Override
-	public void warning(Exception e, boolean debug) {
-		if(instrument != null) instrument.warning(e, debug);
-		else CRUSH.warning(e, debug);
-	}
-	
-	@Override
-	public void warning(Exception e) {
-		if(instrument != null) instrument.warning(e);
-		else CRUSH.warning(e);
-	}
-	
-	@Override
-	public void warning(String message) {
-		if(instrument != null) instrument.warning(message);
-		else CRUSH.warning(message);
-	}
-	
-	@Override
-	public void info(String message) {
-		if(instrument != null) instrument.info(message);
-		else CRUSH.info(message);
-	}
-	
-	
+    @Override
+    public void warning(Exception e, boolean debug) { CRUSH.warning(this, e, debug); }
+
+    @Override
+    public void warning(Exception e) { CRUSH.warning(this, e); }
+
+    @Override
+    public void error(String message) { CRUSH.error(this, message); }
+    
+    @Override
+    public void error(Throwable e, boolean debug) { CRUSH.error(this, e, debug); }
+
+    @Override
+    public void error(Throwable e) { CRUSH.error(this, e); }
+
 	
 	public synchronized SourceModel getRecycledCleanThreadLocalCopy() {	
 		if(recycler != null) if(!recycler.isEmpty()) {
@@ -454,7 +442,7 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 	public synchronized void recycle() { 
 		if(recycler == null) return;
 		if(recycler.remainingCapacity() <= 0) {
-			System.err.println("WARNING! source recycler overflow.");
+			warning("Source recycler overflow.");
 			return;
 		}
 		recycler.add(this);

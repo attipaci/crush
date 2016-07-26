@@ -187,7 +187,7 @@ public class SkyDipModel {
 	
 	@Override
 	public String toString() {	
-		if(!fitOK) CRUSH.warning("The fit has not converged. Try again!");
+		if(!fitOK) CRUSH.warning(this, "The fit has not converged. Try again!");
 	
 		StringBuffer text = new StringBuffer();
 		

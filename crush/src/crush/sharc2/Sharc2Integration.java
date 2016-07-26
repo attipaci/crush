@@ -59,11 +59,11 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 			double measuredLoad = instrument.getLoadTemperature(); 
 			double eps = (measuredLoad - instrument.excessLoad) / ((Sharc2Scan) scan).getAmbientTemperature();
 			double tauLOS = -Math.log(1.0-eps);
-			System.err.println("   Tau from bolometers (not used):");
+			info("Tau from bolometers (not used):");
 			printEquivalentTaus(tauLOS * scan.horizontal.sinLat());
 			
 			if(!hasOption("excessload")) instrument.excessLoad = measuredLoad - getSkyLoadTemperature();
-			System.err.println("   Excess optical load on bolometers is " + Util.f1.format(instrument.excessLoad) + " K. (not used)");		
+			info("Excess optical load on bolometers is " + Util.f1.format(instrument.excessLoad) + " K. (not used)");		
 		}
 		
 	}
@@ -79,17 +79,16 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	public void writeProducts() {
 		super.writeProducts();
 		
-		String scanID = getID();
 		// Needs 'excessload'
 		if(hasOption("response.calc")) {
 			instrument.calcGainCoefficients(getSkyLoadTemperature());
-			try { instrument.writeGainCoefficients(CRUSH.workPath + File.separator + "response-" + scanID + ".dat", getASCIIHeader()); }
+			try { instrument.writeGainCoefficients(CRUSH.workPath + File.separator + "response-" + getFileID() + ".dat", getASCIIHeader()); }
 			catch(IOException e) { warning("Could not write nonlinearity coefficients: " + e.getMessage()); }
 		}
 	}
 	
 	public void trimToGap() {
-		System.err.println("   Trimming timestream to first gap.");
+		info("Trimming timestream to first gap.");
 		
 		Sharc2Frame first = getFirstFrame();
 		Sharc2Frame last = getLastFrame();
@@ -127,9 +126,9 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 		int nDataHDUs = HDU.length - firstDataHDU, records = 0;
 		for(int datahdu=0; datahdu<nDataHDUs; datahdu++) records += HDU[firstDataHDU + datahdu].getAxes()[0];
 
-		System.err.println(" Processing scan data:");
+		scan.info("Processing scan data:");
 		
-		System.err.println("   " + nDataHDUs + " HDUs,  " + records + " x " +
+		info(nDataHDUs + " HDUs,  " + records + " x " +
 				(int)(instrument.integrationTime/Unit.ms) + "ms frames" + " -> " + 
 				Util.f1.format(records*instrument.integrationTime/Unit.min) + " minutes total."); 
 	
@@ -183,7 +182,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
             else fUT = (float[]) table.getColumn(iUT);
             
             if(isLab) {
-                System.err.println("   Laboratory data reduction. Ignoring telescope information...");
+                info("Laboratory data reduction. Ignoring telescope information...");
                 return;
             }
 			

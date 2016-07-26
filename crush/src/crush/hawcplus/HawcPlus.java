@@ -77,7 +77,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	}
 	
 	private void initDRPMessages() {
-		System.err.println(" Activating DRP messages over TCP/IP.");
+		info("Activating DRP messages over TCP/IP.");
 		try { drp = new DRPMessenger(option("drp")); }
 		catch(IOException e) { warning(e); }
 	}
@@ -205,7 +205,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	    
 	    // TODO should not be necessary if the header is proper...
 	    if(Double.isNaN(integrationTime) || integrationTime < 0.0) {
-	        System.err.println(" WARNING! Missing SMPLFREQ. Will assume 203.25 Hz.");
+	        warning("Missing SMPLFREQ. Will assume 203.25 Hz.");
 	        integrationTime = samplingInterval = 1.0 * Unit.s / 203.25;
 	    }
 	    
@@ -224,7 +224,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	                if(mce >= 0) mceSubarray[mce] = sub;
 	                hasSubarray[sub] = mce >= 0;
 	            }
-	            catch(NumberFormatException e) { System.err.println(" WARNING! Invalid MCE assignment: " + assignment);}
+	            catch(NumberFormatException e) { warning("Invalid MCE assignment: " + assignment);}
 	        }       
 	    }   
 	    
@@ -290,7 +290,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	}
 		
 	public void discardEdges(int eRows, int eCols) {
-	    System.err.println("   Cropping " + eRows + " rows & " + eCols + " cols from subarray edges.");
+	    info("Cropping " + eRows + " rows & " + eCols + " cols from subarray edges.");
 	    
 	    for(HawcPlusPixel pixel : this) {
 	        if(pixel.row < eRows || pixel.row >= rows - eRows) pixel.flag(Channel.FLAG_DISCARD | Channel.FLAG_DEAD);
@@ -315,7 +315,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 			if(pol == 'R') polarray = R0;
 			else if(pol == 'T') polarray = T0;
 			
-			if(polarray < 0) System.err.println("   WARNING! invalid subarray selection: " + value);
+			if(polarray < 0) warning("Invalid subarray selection: " + value);
 			else {
 				if(sub < 0) for(int i=polSubarrays; --i >= 0; ) hasSubarray[polarray + i] = oldHasSubarray[polarray + i];
 				else hasSubarray[polarray + sub] = oldHasSubarray[polarray + sub];
@@ -328,15 +328,15 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	private void setPixelSize(Vector2D size) {	
 		pixelSize = size;
 		
-		System.err.println("   Boresight pixel from FITS is " + array.boresightIndex);
+		info("Boresight pixel from FITS is " + array.boresightIndex);
 		
 		if(hasOption("pcenter")) {
 		    array.boresightIndex = option("pcenter").getVector2D();	
-		    System.err.println("   Boresight override --> " + array.boresightIndex);
+		    info("Boresight override --> " + array.boresightIndex);
 		} 
 		else if(Double.isNaN(array.boresightIndex.x())) {
 		    array.boresightIndex = defaultBoresightIndex;
-		    System.err.println("   WARNING! Missing FITS boresight --> " + array.boresightIndex);
+		    warning("Missing FITS boresight --> " + array.boresightIndex);
 		}
 		Vector2D center = getPosition(0, array.boresightIndex.x(), array.boresightIndex.y());
 	
@@ -354,14 +354,14 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 			
 		int bias = detectorBias[0];
 		for(int i=1; i<detectorBias.length; i++) if(detectorBias[i] != bias) {
-			System.err.println(" WARNING! Inconsistent bias values. Calibration may be bad!");
+			warning("Inconsistent bias values. Calibration may be bad!");
 			CRUSH.countdown(5);
 		}
 		
 		Hashtable<String, Vector<String>> settings = option("bias").conditionals;
 			
 		if(settings.containsKey(bias + "")) {
-			System.err.println(" Setting options for bias " + bias);
+			info("Setting options for bias " + bias);
 			getOptions().parse(settings.get(bias + ""));
 		}
 	}
@@ -394,9 +394,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		}
 	}
 		
-	private void parseConfigurationHDU(BasicHDU<?> hdu) {
-	    System.err.print(" Parsing HAWC+ TES bias. ");
-	   	   
+	private void parseConfigurationHDU(BasicHDU<?> hdu) {	   
 	    Header header = hdu.getHeader();
 	    
 	    detectorBias = new int[subarrays][MCE_BIAS_LINES];
@@ -411,14 +409,14 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	        }
 	    }
 	    
-	    System.err.println("Found for " + found + " MCEs.");
+	    info("Parsing HAWC+ TES bias. Found for " + found + " MCEs.");
 	}
 	
 	private void parseTESBias(int sub, String values) {	    
 	    StringTokenizer tokens = new StringTokenizer(values, ", \t;");
 	    for(int i=0; i<20; i++) {
 	        if(!tokens.hasMoreTokens()) {
-	            System.err.println(" WARNING! Missing TES bias values for subarray " + sub);
+	            warning("Missing TES bias values for subarray " + sub);
 	            break;
 	        }
 	        detectorBias[sub][i] = Integer.parseInt(tokens.nextToken());
@@ -459,7 +457,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		
 			    
 		if(!hasOption("filter")) getOptions().parseSilent("filter " + instrumentData.wavelength + "um");	
-		System.err.println(" HAWC+ Filter set to " + option("filter").getValue());
+		info("HAWC+ Filter set to " + option("filter").getValue());
 		
 		super.validate(scan);
 		
@@ -574,7 +572,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		FitsExtras.write(fits, fileName);
 		fits.close();
 		
-		System.err.println(" Written flatfield to " + fileName);
+		notify("Written flatfield to " + fileName);
 	}
 	
 	private void addHDU(Fits fits, BasicHDU<?> hdu, String extName) throws FitsException {
@@ -582,24 +580,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		editHeader(hdu.getHeader(), hdu.getHeader().iterator());
 		fits.addHDU(hdu);
 	}
-	
-	@Override
-    public void error(String message) {
-        super.error(message);
-        if(drp != null) drp.error(message);
-    }
-    
-    @Override
-    public void warning(String message) {
-        super.warning(message);
-        if(drp != null) drp.warning(message);
-    }
-    
-    @Override
-    public void status(String message) {
-        super.status(message);
-        if(drp != null) drp.info(message);
-    }
         
     public Vector2D getPosition(int sub, double row, double col) {
         Vector2D v = new Vector2D(col, 39.0 - row);

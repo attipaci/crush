@@ -25,6 +25,8 @@ package crush.hawcplus;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.text.DateFormat;
@@ -34,6 +36,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import crush.CRUSH;
 import jnum.Configurator;
+import jnum.reporting.Reporter;
 
 
 public class DRPMessenger extends Thread {
@@ -56,6 +59,7 @@ public class DRPMessenger extends Thread {
 		address = new InetSocketAddress(host, port);
 		queue = new ArrayBlockingQueue<Message>(capacity);
 		
+		
 		info("Hello!");
 		
 		//setDaemon(true); 
@@ -74,7 +78,7 @@ public class DRPMessenger extends Thread {
 	
 	public int getTimeout() { return timeoutMillis; }
 	
-	public void crittical(String message) {
+	public void critical(String message) {
 		new Message(TYPE_CRITICAL, message);
 	}
 	
@@ -127,25 +131,30 @@ public class DRPMessenger extends Thread {
 	public void shutdown() {
 		interrupt();
 		try { this.join(); }
-		catch(InterruptedException e) {}
-		
+		catch(InterruptedException e) {}	
 	}
 	
 	@Override
 	public void run() {
-		System.err.println(" Starting DRP messaging service.");
+		CRUSH.info(this, "Starting DRP messaging service.");
+		
+		CRUSH.add(new ReporterAdapter());
 		
 		try { while(!isInterrupted()) send(queue.take()); }
-		catch(IOException e) { CRUSH.warning("DRP messaging error: " + e.getMessage()); }		
+		catch(IOException e) { 
+		    CRUSH.warning(this, "DRP messaging error: " + e.getMessage());     
+		}		
 		catch(InterruptedException e) {
-			if(!queue.isEmpty()) System.err.println(" Sending queued DRP messages...");
+			if(!queue.isEmpty()) CRUSH.info(this, "Sending queued DRP messages...");
 			
 			try { while(!queue.isEmpty()) send(queue.take()); }
-			catch(InterruptedException e2) { CRUSH.warning("DRP queue cleanup interrupted.");}
-			catch(IOException e2) { CRUSH.warning("DRP messaging error: " + e2.getMessage()); }
+			catch(InterruptedException e2) { CRUSH.warning(this, "DRP queue cleanup interrupted.");}
+			catch(IOException e2) { CRUSH.warning(this, "DRP messaging error: " + e2.getMessage()); }
 		}
 		
-		System.err.println(" DRP messaging stopped.");
+		CRUSH.removeReporter(DRP_REPORTER_ID);
+		
+		CRUSH.info(this, "DRP messaging stopped.");
 		
 		clear();
 	}
@@ -162,7 +171,7 @@ public class DRPMessenger extends Thread {
 			this.text = message.replace('\t', ' ');	// Replace tabs with spaces since tabs are message delimiters.
 			
 			try { queue.put(this); }
-			catch(InterruptedException e) { CRUSH.warning("DRP message creation was interrupted."); }
+			catch(InterruptedException e) { CRUSH.warning(this, "DRP message creation was interrupted."); }
 		}
 		
 		@Override
@@ -193,7 +202,76 @@ public class DRPMessenger extends Thread {
 	private final static String timeFormatSpec = "HH:mm:ss.SSS";
 	private final static DateFormat timeFormat = new SimpleDateFormat(timeFormatSpec);
 	
+	private final static String DRP_REPORTER_ID = "HAWC-DRP";
+	
 	static { timeFormat.setTimeZone(TimeZone.getTimeZone("UTC")); }
+
+	
+	
+	private class ReporterAdapter extends Reporter {
+	    
+	    private ReporterAdapter() {
+	        super(DRP_REPORTER_ID);
+	    }
+	    
+	    @Override
+	    public void info(Object owner, String message) {
+	        // TODO 
+	    }
+
+	    @Override
+	    public void notify(Object owner, String message) {
+	        if(owner != DRPMessenger.this) DRPMessenger.this.info(message);
+	    }
+
+	    @Override
+        public void debug(Object owner, String message) {
+            if(CRUSH.debug) if(owner != DRPMessenger.this) DRPMessenger.this.debug(message);
+        }
+	    
+	    @Override
+	    public void warning(Object owner, String message) {
+	        if(owner != DRPMessenger.this) DRPMessenger.this.warning(message);
+	    }
+
+	    @Override
+	    public void error(Object owner, String message) {
+	        if(owner != DRPMessenger.this) DRPMessenger.this.error(message);
+	    }
+
+	    @Override
+	    public void trace(Throwable e) { 
+	        StringWriter text = new StringWriter();
+	        e.printStackTrace(new PrintWriter(text));
+	        DRPMessenger.this.debug(text.toString());
+	    }
+
+	    @Override
+	    public void status(Object owner, String message) {
+	        if(owner != DRPMessenger.this) DRPMessenger.this.info(message);
+	    }
+
+	    @Override
+	    public void result(Object owner, String message) {
+	        if(owner != DRPMessenger.this) DRPMessenger.this.info(message);
+	    }
+
+	    @Override
+	    public void detail(Object owner, String message) {
+	        // TODO
+	    }
+
+	    @Override
+	    public void values(Object owner, String message) {
+	        // TODO
+	    }
+
+	    @Override
+	    public void suggest(Object owner, String message) {
+	        if(owner != DRPMessenger.this) DRPMessenger.this.debug(message);
+	    }
+
+	}
 
 	
 }

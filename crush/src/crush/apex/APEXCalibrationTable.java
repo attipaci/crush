@@ -26,6 +26,7 @@ package crush.apex;
 import java.io.*;
 import java.util.*;
 
+import crush.CRUSH;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
@@ -43,25 +44,17 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 	private static final long serialVersionUID = -3843930469196283911L;
 	
 	private static Hashtable<String, APEXCalibrationTable> tables = new Hashtable<String, APEXCalibrationTable>();
-	
-	public String fileName;
+		public String fileName;
 	public double timeWindow = 30 * Unit.min;
 	
-	public static APEXCalibrationTable get(String fileName) throws IOException {
-		APEXCalibrationTable table = tables.get(fileName);
-		if(table == null) {
-			table = new APEXCalibrationTable(fileName);
-			tables.put(fileName, table);
-		}
-		return table;
-	}
+
 		
 	private APEXCalibrationTable(String fileName) throws IOException {
 		read(fileName);
 	}
 	
 	protected void read(String datafile) throws IOException {	
-		System.err.print("   [Loading calibration data] ");
+		
 		
 		BufferedReader in = Util.getReader(datafile);
 
@@ -80,31 +73,31 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 		}
 		in.close();
 		
-		System.err.println("-- " + size() + " values parsed.");
+		CRUSH.info(this, "[Loading calibration data] -- " + size() + " values parsed.");
 	}
 	
 	public double getScaling(double MJD) {
 		Entry mean = getLocalAverage(new TimeStamp(MJD));
 		
 		if(mean.scaling.weight() == 0.0) {
-			System.err.println("   ... No calibration data was found in specified time window.");
+			CRUSH.info(this, "... No calibration data was found in specified time window.");
 			
 			if(timeWindow < 6.0 * Unit.hour) {
-				System.err.println("   ... expanding scaling lookup window to 6 hours.");
+				CRUSH.info(this, "... expanding scaling lookup window to 6 hours.");
 				timeWindow = 6.0 * Unit.hour;
 				mean = getLocalAverage(new TimeStamp(MJD));
 			}
 			else {
-				System.err.println("   WARNING! Local calibration scaling is unknown.");
+				CRUSH.warning(this, "Local calibration scaling is unknown.");
 				return 1.0;
 			}
 		}
 		else if(Double.isInfinite(mean.scaling.value())) {
-			System.err.println("   WARNING! Inifinite local calibration scaling.");
+			CRUSH.warning(this, "Inifinite local calibration scaling.");
 			return 1.0;
 		}
 		
-		System.err.println("   Local average scaling = " + Util.f3.format(mean.scaling.value()) + " (from " + mean.measurements + " cal scans)");
+		CRUSH.values(this, "Local average scaling = " + Util.f3.format(mean.scaling.value()) + " (from " + mean.measurements + " cal scans)");
 		return mean.scaling.value();
 	}
 	
@@ -151,5 +144,13 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 		return new Entry();
 	}
 	
-	
+	public static APEXCalibrationTable get(String fileName) throws IOException {
+	    APEXCalibrationTable table = tables.get(fileName);
+	    if(table == null) {
+	        table = new APEXCalibrationTable(fileName);
+	        tables.put(fileName, table);
+	    }
+	    return table;
+	}
+
 }
