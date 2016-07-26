@@ -36,6 +36,9 @@ import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.astro.LeapSeconds;
 import jnum.io.fits.FitsExtras;
+import jnum.reporting.BasicMessaging;
+import jnum.reporting.Broadcaster;
+import jnum.reporting.Reporter;
 import jnum.text.VersionString;
 import nom.tam.fits.*;
 import nom.tam.util.*;
@@ -46,14 +49,14 @@ import nom.tam.util.*;
  * @version 2.32
  * 
  */
-public class CRUSH extends Configurator {
+public class CRUSH extends Configurator implements BasicMessaging {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 
-	private static String version = "2.32-1";
-	private static String revision = "";
+	private static String version = "2.32-2";
+	private static String revision = "devel.2";
 	
 	public static String workPath = ".";
 	public static String home = ".";
@@ -78,7 +81,7 @@ public class CRUSH extends Configurator {
 	static { 
 		Locale.setDefault(Locale.US);
 		FitsFactory.setUseHierarch(true);
-		FitsFactory.setLongStringsEnabled(true);		
+		FitsFactory.setLongStringsEnabled(true);
 	}
 
 	public static void main(String[] args) {
@@ -86,7 +89,7 @@ public class CRUSH extends Configurator {
 
 		if(args.length == 0) {
 			usage();
-			checkJavaVM(0);
+			new CRUSH().checkJavaVM(0);
 			System.exit(0);			
 		}
 
@@ -95,30 +98,36 @@ public class CRUSH extends Configurator {
 			System.exit(0);	
 		}
 
-		checkJavaVM(5);		
-		checkForUpdates();
-
 		home = System.getenv("CRUSH");
 		if(home == null) home = ".";
 
 		LeapSeconds.dataFile = home + File.separator + "data" + File.separator + "leap-seconds.list";
 
 		CRUSH crush = new CRUSH(args[0]);
+		
+		crush.checkJavaVM(5);     
+		crush.checkForUpdates();	
 		crush.init(args);
 
 		try { crush.reduce(); }
-		catch(Exception e) { crush.instrument.error(e); }
+		catch(Exception e) { crush.error(e); }
 
 		// TODO should not be needed if background processes are all wrapped up...
 		crush.exit(0);
 	}
+	
+	private CRUSH() {
+	    
+	}
 
 	public CRUSH(String instrumentName) {
+	    this();
+	    
 		instrument = Instrument.forName(instrumentName.toLowerCase());
 		instrument.setOptions(this);
 
 		if(instrument == null) {
-			System.err.println(" ERROR! Unknown instrument " + instrumentName);
+			error("Unknown instrument " + instrumentName);
 			System.exit(1);
 		}
 
@@ -151,10 +160,10 @@ public class CRUSH extends Configurator {
 		if(key.equals("debug")) {
 		    Util.debug = debug = true;
 		    
-		    System.err.println("### java: " + Util.getProperty("java.vendor") + ": " + Util.getProperty("java.version"));
-		    System.err.println("### java-path: " + Util.getProperty("java.home"));
-		    System.err.println("### jre: " + Util.getProperty("java.runtime.name") + ": " + Util.getProperty("java.runtime.version"));
-		    System.err.println("### jvm: " + Util.getProperty("java.vm.name") + ": " + Util.getProperty("java.vm.version"));	        
+		    debug("java: " + Util.getProperty("java.vendor") + ": " + Util.getProperty("java.version"));
+		    debug("java-path: " + Util.getProperty("java.home"));
+		    debug("jre: " + Util.getProperty("java.runtime.name") + ": " + Util.getProperty("java.runtime.version"));
+		    debug("jvm: " + Util.getProperty("java.vm.name") + ": " + Util.getProperty("java.vm.version"));	        
 		}
 		else if(key.equals("help")) help(instrument);
 		else if(key.equals("list.divisions")) instrument.printCorrelatedModalities(System.err);
@@ -236,7 +245,7 @@ public class CRUSH extends Configurator {
 
 	public void validate() {			    
 		if(scans.size() == 0) {
-			instrument.warning("No scans to reduce. Exiting.");
+			warning("No scans to reduce. Exiting.");
 			exit(1);
 		}
 
@@ -245,11 +254,11 @@ public class CRUSH extends Configurator {
 
 		try { instrument.validate(scans); }
 		catch(Error e) {
-			instrument.error(e);
+			error(e);
 			exit(1);
 		}
 		catch(Exception e) {
-			instrument.warning(e);
+			warning(e);
 		}
 
 		Integration.clearRecycler();
@@ -306,7 +315,7 @@ public class CRUSH extends Configurator {
 			parallelScans = Math.max(1, maxThreads / parallelism);
 		}
 
-		System.err.println(" Will use " + parallelScans + " x " + parallelism + " grid of threads.");
+		info("Will use " + parallelScans + " x " + parallelism + " grid of threads.");
 
 		pipelines = new ArrayList<Pipeline>(parallelScans); 
 		for(int i=0; i<parallelScans; i++) {
@@ -364,28 +373,27 @@ public class CRUSH extends Configurator {
 		File workFolder = new File(workPath);	
 		if(workFolder.exists()) return;	
 
-		instrument.warning("The specified output path does not exists: '" + workPath + "'");
+		warning("The specified output path does not exists: '" + workPath + "'");
 
 		if(!hasOption("outpath.create")) {
-			instrument.error("Invalid static output path."); 
-			System.err.println();
-			System.err.println("       * change 'outpath' to an existing directory, or");
-			System.err.println("       * set 'outpath.create' to create the path automatically.");
-			System.err.println();
+			error("Invalid static output path.");
+			suggest(this,
+			        "       * change 'outpath' to an existing directory, or\n" +
+			        "       * set 'outpath.create' to create the path automatically.");
 			exit(1);
 		}
 
-		System.err.println(" -------> Creating output folder.");	
+		info("-----> Creating output folder.");	
 		try {
 			if(!workFolder.mkdirs()) {
-				instrument.error("Output path could not be created: unknown error.");
-				System.err.println("       Try change 'outpath'.");
+				error("Output path could not be created: unknown error.");
+				suggest(this, "       * Try change 'outpath'.");
 				exit(1);
 			}
 		}
 		catch(SecurityException e) {
-			instrument.error("Output path could not be created: " + e.getMessage());
-			System.err.println("       Try change 'outpath'.");
+			error("Output path could not be created: " + e.getMessage());
+			suggest(this, "       * Try change 'outpath'.");
 			exit(1);
 		}
 	}
@@ -400,7 +408,7 @@ public class CRUSH extends Configurator {
 			return;
 		}
 
-		status("Reading scan: " + scanID);
+		status(this, "Reading scan: " + scanID);
 
 		try {
 			Scan<?,?> scan = null;
@@ -411,7 +419,7 @@ public class CRUSH extends Configurator {
 			else { 
 				scan = instrument.readScan(scanID, true);
 				scan.validate();
-				if(scan.size() == 0) instrument.warning("Scan " + scan.getID() + " contains no valid data. Skipping.");
+				if(scan.size() == 0) warning(scan, "Scan " + scan.getID() + " contains no valid data. Skipping.");
 				else if(isConfigured("subscans.split")) scans.addAll(scan.split());	
 				else scans.add(scan);
 
@@ -421,35 +429,30 @@ public class CRUSH extends Configurator {
 		}
 		catch(OutOfMemoryError e) {
 			if(e.getMessage().equals("unable to create new native thread")) {
-				instrument.error("Exceeded the maximum allowed user processes.");
-				System.err.println();
-				System.err.println("   * Try increase the user processes limit. E.g.:");
-				System.err.println("       $ ulimit -u 65536");
-				System.err.println();
-				System.err.println("   * Decrease the number of parallel threads used by CRUSH:");
-				System.err.println("       $ crush [...] -threads=4 [...]");
-				System.err.println();
+				error("Exceeded the maximum allowed user processes.");
+				suggest(this,
+				        "   * Try increase the user processes limit. E.g.:\n" +
+				        "       $ ulimit -u 65536\n\n" +
+				        "   * Decrease the number of parallel threads used by CRUSH:\n" +
+				        "       $ crush [...] -threads=4 [...]\n");
 			}
 
 			else {
-				instrument.error("Ran of of memory while reading scan.");
-				System.err.println();
-				System.err.println("   * Increase the amount of memory available to crush, by editing the '-Xmx'");
-				System.err.println("     option to Java in 'wrapper.sh' (or 'wrapper.bat' for Windows).");
-				System.err.println();
-				System.err.println("   * If using 64-bit Unix OS and Java, you can also add the '-d64' option to");
-				System.err.println("     allow Java to access over 2GB.");
-				System.err.println();
-				System.err.println("   * Try reduce scans in smaller chunks. You can then use 'coadd' to combine");
-				System.err.println("     the maps post reduction. Note: it is always preferable to try reduce all");
-				System.err.println("     scans together, if there is a way to fit them into memory.");
-				System.err.println();
+				error("Ran of of memory while reading scan.");
+				suggest(this,
+				        "   * Increase the amount of memory available to crush, by editing the '-Xmx'\n" +
+				        "     option to Java in 'wrapper.sh' (or 'wrapper.bat' for Windows).\n\n" +
+				        "   * If using 64-bit Unix OS and Java, you can also add the '-d64' option to\n" +
+				        "     allow Java to access over 2GB.\n\n" +
+				        "   * Try reduce scans in smaller chunks. You can then use 'coadd' to combine\n" +
+				        "     the maps post reduction. Note: it is always preferable to try reduce all" +
+				        "     scans together, if there is a way to fit them into memory.\n");
 			}
 			
 			exit(1);				
 		}
 		catch(UnsupportedScanException e) {
-			instrument.warning("Unsupported scan type: " + e.getMessage() + "\n");
+			warning("Unsupported scan type: " + e.getMessage() + "\n");
 		}
 		catch(FileNotFoundException e) { 
 			// If it has '-', try to see if it can be read as a range...
@@ -460,17 +463,17 @@ public class CRUSH extends Configurator {
 					int to = Integer.parseInt(range.nextToken());
 					for(int no = from; no <= to; no++) read(no + "");
 				}
-				catch(Exception parseError) { instrument.error(parseError); }
+				catch(Exception parseError) { error(parseError); }
 			}
 			else {
 				System.err.println();
-				instrument.error(e);
+				error(e);
 			}
 		}
-		catch(IOException e) { instrument.error(e); }
+		catch(IOException e) { error(e); }
 		catch(Exception e) {
-			instrument.error(e);
-			if(!debug) System.err.println("        (use '-debug' to obtain additional information on this error.)");
+			error(e);
+			if(!debug) suggest(this, "        (use '-debug' to obtain additional information on this error.)");
 		}	
 	}
 
@@ -478,22 +481,22 @@ public class CRUSH extends Configurator {
 	public void reduce() throws Exception {	
 		int rounds = 0;
 
-		status("Reducing " + scans.size() + " scan(s).");
+		status(this, "Reducing " + scans.size() + " scan(s).");
 
 		if(isConfigured("bright")) info("Bright source reduction.");
 		else if(isConfigured("faint")) info("Faint source reduction.");
 		else if(isConfigured("deep")) info("Deep source reduction.");
 		else info("Default reduction.");
 
-		if(isConfigured("extended")) System.out.println(" Assuming extended source(s).");
+		if(isConfigured("extended")) info("Assuming extended source(s).");
 
-		System.out.println(" Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getSizeUnitValue()) + " " + instrument.getSizeName() + " sized source(s).");
+		info("Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getSizeUnitValue()) + " " + instrument.getSizeName() + " sized source(s).");
 
 		if(isConfigured("rounds")) rounds = get("rounds").getInt();
 
 		for(int iteration=1; iteration<=rounds; iteration++) {
 			System.err.println();
-			System.err.println(" Round " + iteration + ": ");	
+			info("Round " + iteration + ": ");	
 
 			setIteration(iteration, rounds);	
 			for(Scan<?,?> scan : scans) scan.setIteration(iteration, rounds);	
@@ -510,12 +513,12 @@ public class CRUSH extends Configurator {
 				try { source.write(workPath); }
 				catch(Exception e) { e.printStackTrace(); }
 			}
-			else instrument.warning("The reduction did not result in a source model.");
+			else warning("The reduction did not result in a source model.");
 		}
 
 		for(Scan<?,?> scan : scans) scan.writeProducts();	
 
-		status("Done.");
+		status(this, "Done.");
 
 		System.err.println();
 	}
@@ -595,7 +598,7 @@ public class CRUSH extends Configurator {
 	}
 
 	public void setObjectOptions(String sourceName) {
-		//System.err.println(">>> Setting global options for " + sourceName);
+		//debug("Setting global options for " + sourceName);
 		sourceName = sourceName.toLowerCase();
 
 		if(!containsKey("object")) return;
@@ -648,16 +651,16 @@ public class CRUSH extends Configurator {
 		String info = " Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
 				"\n" +
 				"    <instrument>     Instrument name, e.g. 'scuba2', 'gismo', 'laboca'...\n" +
-				"                     list of supported instruments.\n" +
+				"                     Try 'crush -help' for a list of supported cameras.\n" +
 				"    [options]        Various configuration options. See README and GLOSSARY.\n" +
 				"                     Global settings must precede scans on the argument list.\n" +
 				"                     Each scan will use all options listed before it.\n" +
 				"    <scanlist>       A list of scan numbers/IDs and/or filenames to reduce.\n" +
 				"                     E.g.: 10628-10633 11043 myscan.fits\n" +
 				"\n" +
-				"   Try 'crush <instrument> -poll' for a list of current settings.\n" +
-				"   or 'crush -help' for a full list of instruments and brief list\n" +
-				"   of commonly used options.\n"; 
+				"   Try 'crush <instrument> -poll' for a list of current settings or\n" +
+				"   'crush -help' for a full list of instruments and brief list of commonly\n" +
+				"   used options.\n"; 
 
 		System.out.println(info);
 	}
@@ -743,7 +746,7 @@ public class CRUSH extends Configurator {
 		System.exit(0);
 	}
 
-	public static String getReleaseVersion() {  
+	public String getReleaseVersion() {  
 		String version = null;
 
 		try {
@@ -760,25 +763,25 @@ public class CRUSH extends Configurator {
 			} 
 			catch(IOException e) {
 				if(e instanceof SocketTimeoutException) 
-					System.err.println("WARNING! Timed out while awaiting version update information.");
+					warning("Timed out while awaiting version update information.");
 				else 
-					System.err.println("WARNING! Could not get version update information.");
+					warning("Could not get version update information.");
 
-				if(debug) e.printStackTrace();
+				if(debug) warning(e);
 			}
 
 		}
 		catch(MalformedURLException e) { e.printStackTrace(); }
 		catch(IOException e) {
-			System.err.println("WARNING! No connection to version update server.");
-			if(debug) e.printStackTrace();
+			warning("No connection to version update server.");
+			if(debug) warning(e);
 		}
 
 		return version;
 	}
 
 
-	public static void checkForUpdates() {	
+	public void checkForUpdates() {	
 		String quickstart = System.getProperty("CRUSH_QUICKSTART");
 		if(quickstart != null) return; 
 
@@ -791,14 +794,13 @@ public class CRUSH extends Configurator {
 		for(int i=0; i<8; i++) System.err.print("**********");
 		System.err.println();
 
-		System.err.println("  A NEW CRUSH-2 RELEASE IS NOW AVAILABLE FOR DOWNLOAD!!! "); 
-		System.err.println();
-		System.err.println("  Version: " + releaseVersion);
-		System.err.println();
-		System.err.println("  Get it from:  www.submm.caltech.edu/~sharc/crush");
-		System.err.println();
-		System.err.println("  You should always update to the latest release to take advantage of critical");
-		System.err.println("  bug fixes, improvements, and new features.");
+		warning(
+		        "A NEW CRUSH-2 RELEASE IS NOW AVAILABLE FOR DOWNLOAD!!!\n" +
+		        "\n" + 
+		        "Version: " + releaseVersion + "\n" +
+		        "Available at: www.submm.caltech.edu/~sharc/crush\n\n" +
+		        "You should always update to the latest release to take advantage of critical " +
+		        "bug fixes, improvements, and new features.");
 
 		for(int i=0; i<8; i++) System.err.print("**********");
 		System.err.println();
@@ -807,35 +809,42 @@ public class CRUSH extends Configurator {
 
 	}
 
-	public static void checkJavaVM(int countdown) {
+	public void checkJavaVM(int countdown) {
 		String name = System.getProperty("java.vm.name");
 		if(name.startsWith("GNU") | name.contains("libgcj")) {
 			for(int i=0; i<8; i++) System.err.print("**********");
 			System.err.println();
-			System.err.println("WARNING! You appear to be running CRUSH with GNU Java (libgcj).");
-			System.err.println("         The GNU Java virtual machine is rather slow and is known for");
-			System.err.println("         producing unexpected errors during the reduction.");
-			System.err.println("         It is highly recommended that you install and use a more reliable");
-			System.err.println("         Java Runtime Environment (JRE).");
-			System.err.println();
-			System.err.println("         Please check for available Java packages for your system or see");
-			System.err.println("         http://www.submm.caltech.edu/~sharc/crush/download.html");
-			System.err.println("         for possible Java downloads.");
-			System.err.println();
-			System.err.println("         If you already have another Java installations on your system");
-			System.err.println("         you can edit the 'JAVA' variable in 'wrapper.sh', inside the CRUSH");
-			System.err.println("         distribution directory to point to the desired java executable");
+			
+			warning(
+			        "You appear to be running CRUSH with GNU Java (libgcj).\n" +
+			        "\n" +
+			        "The GNU Java virtual machine is rather slow and is known for " +
+			        "producing unexpected errors during the reduction.\n" +
+			        "It is highly recommended that you install and use a more reliable " +
+			        "Java Runtime Environment (JRE).\n" +
+			        "\n" +
+			        "Please check for available Java packages for your system or see " +
+			        "http://www.submm.caltech.edu/~sharc/crush/download.html " +
+			        "for possible Java downloads.\n" +
+			        "\n" +
+			        "If you already have another Java installations on your system " +
+			        "you can edit the 'JAVA' variable in 'wrapper.sh' inside the CRUSH " +
+			        "distribution directory to point to the desired java executable.");
+			
+			
 			for(int i=0; i<8; i++) System.err.print("**********");
 			System.err.println();
 			System.err.println();
 
 			if(countdown > 0) {
-				System.err.println("         You may ignore this warning and proceed at your own risk shortly...");
+				suggest(this, "         You may ignore this warning and proceed at your own risk shortly...");
 				countdown(countdown);
 			}
 		}
 
 	}
+	
+	
 
 	public static void countdown(int seconds) {
 		String quickstart = System.getProperty("CRUSH_QUICKSTART");
@@ -931,34 +940,75 @@ public class CRUSH extends Configurator {
 		System.exit(exitValue);
 	}
 
-	public void status(String message) { 
-		if(instrument != null) instrument.status(message); 
-	}
+	
+	@Override
+    public void info(String message) { CRUSH.info(this, message); }
+    
+    @Override
+    public void notify(String message) { CRUSH.notify(this, message); }
+    
+    @Override
+    public void debug(String message) { CRUSH.debug(this, message); }
+    
+    @Override
+    public void warning(String message) { CRUSH.warning(this, message); }
+
+    @Override
+    public void warning(Exception e, boolean debug) { CRUSH.warning(this, e, debug); }
+
+    @Override
+    public void warning(Exception e) { CRUSH.warning(this, e); }
+
+    @Override
+    public void error(String message) { CRUSH.error(this, message); }
+    
+    @Override
+    public void error(Throwable e, boolean debug) { CRUSH.error(this, e, debug); }
+
+    @Override
+    public void error(Throwable e) { CRUSH.error(this, e); }
+
+	
+	
+	
+    public static void info(Object owner, String message) { broadcaster.info(owner, message); }
+
+    public static void notify(Object owner, String message) { broadcaster.notify(owner, message); }
+    
+    public static void debug(Object owner, String message) { broadcaster.debug(owner, message); }
+      
+    public static void warning(Object owner, String message) { broadcaster.warning(owner, message); }
+    
+    public static void warning(Object owner, Exception e, boolean debug) { broadcaster.warning(owner, e, debug); }
+    
+    public static void warning(Object owner, Exception e) { broadcaster.warning(owner, e, debug); }
+ 
+    public static void error(Object owner, String message) { broadcaster.error(owner, message); }
+    
+    public static void error(Object owner, Throwable e, boolean debug) { broadcaster.error(owner, e, debug); }
+    
+    public static void error(Object owner, Throwable e) { broadcaster.error(owner, e); }
+    
+    public static void status(Object owner, String message) { broadcaster.status(owner, message); }
+	
+	public static void result(Object owner, String message) { broadcaster.result(owner, message); }
+
+    public static void detail(Object owner, String message) { broadcaster.detail(owner, message); }
+	
+	public static void values(Object owner, String message) { broadcaster.values(owner, message); }
+	
+	public static void suggest(Object owner, String message) { broadcaster.suggest(owner, message); }
+	
+	public static void trace(Throwable e) { broadcaster.trace(e); }
 	
 	
 
-	public static final void error(Throwable e) { error(e, debug); }
 
-	public static final void error(Throwable e, boolean debug) { 
-		error(e.getMessage()); 
-		if(debug) e.printStackTrace();
-	}
+  
+   
 
 
-	public static void error(String message) { System.err.println(" ERROR! " + message); }
-
-	public static final void warning(Exception e) { warning(e, debug); }
-
-	public static final void warning(Exception e, boolean debug) { 
-		error(e.getMessage()); 
-		if(debug) e.printStackTrace();
-	}
-
-	public static void warning(String message) { System.err.println(" WARNING! " + message); }
-
-	public static void info(String message) { System.err.println(" " + message); }
-
-
+	
 	public static abstract class Fork<ReturnType> extends Parallel<ReturnType> {
 		private Exception exception;
 		private int size;
@@ -992,8 +1042,8 @@ public class CRUSH extends Configurator {
 				if(executor != null) process(threads, executor);
 				else process(threads);			
 			} catch(Exception e) { 
-				System.err.println(" WARNING! " + executor.getClass().getSimpleName() + ": " + e.getMessage());
-				e.printStackTrace();
+				CRUSH.warning(this, executor.getClass().getSimpleName() + ": " + e.getMessage());
+				if(debug) trace(e);
 				this.exception = e;
 			}
 		}
@@ -1004,41 +1054,22 @@ public class CRUSH extends Configurator {
 		public Exception getLastException() { return exception; }
 	}
 
+	
+	
+	public static void add(Reporter r) { broadcaster.add(r); }
 
-
-	/*
-	public static void printMessages() {
-		try {
-			URL messageURL = new URL("http://www.submm.caltech.edu/~sharc/crush/v2/messages");
-			URLConnection connection = messageURL.openConnection();
-			try {
-				connection.setConnectTimeout(3000);
-				connection.setReadTimeout(3000);
-				connection.connect();
-
-				BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-				String line = "";
-
-				System.err.println();
-				System.err.println("[www] Message from www.submm.caltech.edu/~sharc/crush/v2: ");
-				while((line = in.readLine()) != null) System.err.println("[CRUSH] " + line);
-				System.err.println();
-
-				in.close();
-			}
-			catch(IOException e) {
-				System.err.println("WARNING! Timed out while awaiting messages from CRUSH server.");
-			}
-		} 
-		catch(MalformedURLException e) { e.printStackTrace(); }
-		catch(IOException e) {
-			System.err.println("WARNING! No connection to messages server.");
-		}
-	}
-	 */
-
+	public static void remove(Reporter r) { broadcaster.remove(r); }
+	
+	public static void removeReporter(String id) { broadcaster.remove(id); }
+	
+	
+	
+	
+	public static Broadcaster broadcaster = new Broadcaster("CRUSH-broadcast", new CRUSHConsoleReporter("console"));
+	
 	public static final int TCP_CONNECTION_TIMEOUT = 3000;
 	public static final int TCP_READ_TIMEOUT = 2000;
+	
 
 }
 

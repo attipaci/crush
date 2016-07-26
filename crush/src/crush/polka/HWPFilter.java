@@ -47,16 +47,14 @@ public class HWPFilter extends KillFilter {
 	protected void setIntegration(Integration<?,?> integration) {
 		super.setIntegration(integration);
 		
-		System.err.print("   Half-waveplate filter: ");
+		
 		
 		// Use waveplate PolKa.frequency and PolKa.jitter 
 		// Use filter.hwp.harmonics
 		PolKa polka = (PolKa) integration.instrument;
 		
 		if(!(polka.waveplateFrequency > 0.0)) {
-			System.err.println();
-			System.err.println("     WARNING! Waveplate rotation not detected. Assuming total-power mode.");
-			System.err.println("              Blacklisting 'filter.hwp'.");
+			integration.warning("Waveplate rotation not detected. Assuming total-power mode. Blacklisting 'filter.hwp'.");
 			polka.setOption("blacklist=filter.hwp");
 			return;
 		}
@@ -67,12 +65,13 @@ public class HWPFilter extends KillFilter {
 		// polarization is modulated at 4-theta...
 		int harmonics = hasOption("harmonics") ? option("harmonics").getInt() : 8;
 		
-		System.err.print(harmonics + " harmonics, ");
+		
 		
 		for(int n=1; n<=harmonics; n++)	
 			kill(new Range(n * (f0 - 2.0 * d), n * (f0 + 2.0 * d)));
 		
-		System.err.println(Util.f2.format(100.0 * (1.0 - countParms() / reject.length)) + "% pass. ");
+		integration.info("Half-waveplate filter: " + harmonics + " harmonics, " 
+		        + Util.f2.format(100.0 * (1.0 - countParms() / reject.length)) + "% pass.");
 	}
 
 	@Override

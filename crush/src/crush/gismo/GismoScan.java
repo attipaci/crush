@@ -90,7 +90,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	public void validate() {	
 		super.validate();
 		double PA = 0.5 * (getFirstIntegration().getFirstFrame().getParallacticAngle() + getLastIntegration().getLastFrame().getParallacticAngle());
-		System.err.println("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");	
+		info("Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");	
 	}
 	
 	
@@ -113,7 +113,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 				Vector2D modelCorr = model.getCorrection(horizontal, UT, ambientT);
 				if(!option.isConfigured("model.incremental")) modelCorr.subtract(observingModel.getCorrection(horizontal, UT, ambientT));	
 				
-				System.err.println("   Got pointing from model: " + 
+				info("Got pointing from model: " + 
 						Util.f1.format(modelCorr.x() / Unit.arcsec) + ", " +
 						Util.f1.format(modelCorr.y() / Unit.arcsec) + " arcsec."
 				);
@@ -122,7 +122,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 				else correction.add(modelCorr);
 			}
 			catch(IOException e) {
-				System.err.println("WARNING! Cannot read pointing model from " + option.get("model").getValue());
+				warning("Cannot read pointing model from " + option.get("model").getValue());
 			}
 		}
 			
@@ -133,8 +133,8 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 				correction.add(PointingTable.get(logName).getIncrement(getMJD(), ambientT, horizontal, model));
 			}
 			catch(Exception e) {
-				System.err.println("WARNING! No incremental correction: " + e.getMessage());
-				if(CRUSH.debug) e.printStackTrace();
+				warning("No incremental correction: " + e.getMessage());
+				if(CRUSH.debug) CRUSH.trace(e);
 			}
 		}
 
@@ -257,7 +257,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 			
 		for(String rangeSpec : settings.keySet()) {
 			if(IRAMScanID.rangeFor(rangeSpec).contains(fid)) {
-				//System.err.println("### Setting options for " + rangeSpec);
+				//debug("Setting options for " + rangeSpec);
 				instrument.getOptions().parseAll(settings.get(rangeSpec));
 			}
 		}
@@ -383,7 +383,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		// TODO use UTC, TAI, TT offsets to configure AstroTime?...
 		/*
 		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
-		catch(ParseException e) { System.err.println("WARNING! " + e.getMessage()); }
+		catch(ParseException e) { warning(e); }
 		*/
 
 		
@@ -423,10 +423,10 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 			}
 		}
 		
-		System.err.println(" [" + sourceName + "] of project " + project);
-		System.err.println(" Observed on " + date + " at " + startTime + " by " + observer);
-		System.err.println(" Equatorial: " + equatorial.toString());	
-		System.err.println(" Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
+		info("[" + sourceName + "] of project " + project);
+		info("Observed on " + date + " at " + startTime + " by " + observer);
+		info("Equatorial: " + equatorial.toString());	
+		info("Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
 		
 		// Figure out how scanning offsets are mean to be used...
 		String offsetSystemName = header.getStringValue("SYSTEMOF").toLowerCase();
@@ -440,7 +440,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		else if(offsetSystemName.equals("equatorial")) offsetSystem = EquatorialCoordinates.class;
 		else throw new IllegalStateException("Offset system '" + offsetSystemName + "' is not implemented.");
 		
-		System.err.println(" Angles are " + (projectedOffsets ? "" : "not ") + "projected");
+		info("Angles are " + (projectedOffsets ? "" : "not ") + "projected");
 		
 		// NOT Used...
 		//isPlanetary = header.getBooleanValue("MOVEFRAM", false);
@@ -456,7 +456,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 					header.getDoubleValue("YOFFSET" + n)
 			);
 			
-			System.err.println(" " + type + " offset --> " + Vector2D.toString(offset, Unit.get("arcsec"), 1));
+			CRUSH.values(this, type + " offset --> " + Vector2D.toString(offset, Unit.get("arcsec"), 1));
 			
 			type = type.toLowerCase();
 			
@@ -483,8 +483,9 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 					instrument.getOptions().processSilent("tau.225ghz", tau225GHz + "");
 				}
 				catch(IOException e2) { 
-					System.err.println("\n WARNING! Cannot read tau table: " + e2.getMessage());
-					if(CRUSH.debug) e.printStackTrace(); 
+					System.err.println("\n"); 
+					warning("Cannot read tau table: " + e2.getMessage());
+					if(CRUSH.debug) CRUSH.trace(e2); 
 					tau225GHz = Double.NaN;
 				}
 			}
@@ -612,12 +613,12 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 				epoch);
 	
 		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
-		catch(ParseException e) { System.err.println("WARNING! " + e.getMessage()); }
+		catch(ParseException e) { warning(e); }
 	
 		
-		System.err.println(" [" + sourceName + "] observed on " + date + " at " + startTime + " by " + observer);
-		System.err.println(" Equatorial: " + equatorial.toString());	
-		System.err.println(" Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
+		info(" [" + sourceName + "] observed on " + date + " at " + startTime + " by " + observer);
+		info(" Equatorial: " + equatorial.toString());	
+		info(" Scanning in '" + header.getStringValue("SYSTEMOF") + "'.");
 		
 		// Tau
 		tau225GHz = Double.NaN;
@@ -633,8 +634,8 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 					instrument.getOptions().processSilent("tau.225ghz", tau225GHz + "");
 				}
 				catch(IOException e2) { 
-					System.err.println("WARNING! Cannot read tau table.");
-					if(CRUSH.debug) e.printStackTrace(); 
+					warning("Cannot read tau table.");
+					if(CRUSH.debug) CRUSH.trace(e); 
 					tau225GHz = Double.NaN;
 				}
 			}

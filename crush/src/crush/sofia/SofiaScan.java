@@ -95,8 +95,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
         fileDate = header.getString("DATE");
         date = header.getString("DATE-OBS");
-        String startTime = header.getString("UTCSTART");
-        String endTime = header.getString("UTCEND");
+        String startTime = header.getString("UTCSTART", null);
+        String endTime = header.getString("UTCEND", null);
 
         if(startTime != null) utc.start = Util.parseTime(startTime);
         if(endTime != null) utc.end = Util.parseTime(endTime);
@@ -108,7 +108,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         }
         else if(startTime == null) timeStamp = date + "T" + startTime;
         else timeStamp = date;
-
+  
         AstroTime time = new AstroTime();
         time.parseFitsTimeStamp(timeStamp);
         setMJD(time.getMJD());	
@@ -144,18 +144,18 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         
         isTracking = telescope.isTracking();
 
-        System.err.println(" [" + getSourceName() + "] of AOR " + observation.aorID);
-        System.err.println(" Observed on " + date + " at " + startTime + " by " + observer);
+        info("[" + getSourceName() + "] of AOR " + observation.aorID);
+        info("Observed on " + date + " at " + startTime + " by " + observer);
      
         
         if(telescope.requestedEquatorial != null) {
             equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();	
             calcPrecessions(telescope.requestedEquatorial.epoch);
-            System.err.println(" Equatorial: " + telescope.requestedEquatorial.toString());	
+            info(" Equatorial: " + telescope.requestedEquatorial.toString());	
         }
         else warning("No valid TELRA/TELDEC in header.");
         
-        System.err.println(" Focus: " + telescope.focusT.toString(Util.f1, Unit.get("um")));
+        info("Focus: " + telescope.focusT.toString(Util.f1, Unit.get("um")));
 
 
         instrument.parseHeader(header);
@@ -283,8 +283,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         }
 
         if(!history.isEmpty()) {
-            System.err.println(" Processing History: " + history.size() + " entries found.");
-            System.err.println("   --> Last: " + history.get(history.size() - 1));
+            info("Processing History: " + history.size() + " entries found.");
+            CRUSH.detail(this, "Last: " + history.get(history.size() - 1));
         }
 
         //for(int i=0; i<history.size(); i++) System.err.println("#  " + history.get(i));
@@ -303,16 +303,16 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
                     0.5 * (first.horizontal.x() + last.horizontal.x()),
                     0.5 * (first.horizontal.y() + last.horizontal.y())
                     );
-            System.err.println(" Horizontal: " + horizontal.toString(2)); 
+            info("Horizontal: " + horizontal.toString(2)); 
            
                 
             site = new GeodeticCoordinates(
                     0.5 * (first.site.x() + last.site.x()), 
                     0.5 * (first.site.y() + last.site.y())
                     );
-            System.err.println(" Location: " + site.toString(2));
+            info("Location: " + site.toString(2));
             
-            System.err.println(" Mean telescope VPA is " + Util.f1.format(getTelescopeVPA() / Unit.deg) + " deg.");  
+            info("Mean telescope VPA is " + Util.f1.format(getTelescopeVPA() / Unit.deg) + " deg.");  
 
         }
                 
@@ -435,7 +435,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public final static String[] requiredKeys = { 
             "DATASRC", "KWDICT", 
             "DATAQUAL", 
-            "PLANID", "DEPLOY", "MISSN-ID", "FLIGHTLG", 
+            "AOR_ID", "PLANID", "DEPLOY", "MISSN-ID", "FLIGHTLG", 
             "ORIGIN", "OBSERVER", "OPERATOR", "FILENAME", 
             "TELESCOP", "TELCONF",
             "CHOPPING", "NODDING", "DITHER", "MAPPING", "SCANNING",
@@ -445,7 +445,6 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
     //		These are added by CRUSH (not copied!)
     //		"PROCSTAT", "HEADSTAT", "N_SPEC", "PIPELINE", "PIPEVERS", "PRODTYPE", "FILEREV", 		
-
     //		"CREATOR"
 
     //      This is an old list of what was understood to be required primary header keys...

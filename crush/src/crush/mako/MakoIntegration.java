@@ -75,15 +75,15 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 		int nDataHDUs = HDU.length - firstDataHDU, records = 0;
 		
 		if(hasOption("skiplast")) {
-			System.err.println("   WARNING! Skipping last stream HDU...");
+		    warning("Skipping last stream HDU...");
 			nDataHDUs--; 
 		}
 	
 		for(int datahdu=0; datahdu<nDataHDUs; datahdu++) records += HDU[firstDataHDU + datahdu].getAxes()[0];
 
-		System.err.println(" Processing scan data:");
+		scan.info("Processing scan data:");
 		
-		System.err.println("   " + nDataHDUs + " HDUs,  " + records + " x " +
+		info(nDataHDUs + " HDUs,  " + records + " x " +
 				(int)(instrument.integrationTime/Unit.ms) + "ms frames" + " -> " + 
 				Util.f1.format(records*instrument.integrationTime/Unit.min) + " minutes total."); 
 	
@@ -131,8 +131,7 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 			
 			int iAZ = hdu.findColumn("Requested AZ");
 			if(iAZ < 0) {
-				System.err.println(" ERROR! Scan does not seem to contain telescope information.");
-				System.err.println("        Perhaps it is a lab scan. CRUSH cannot reduce it.");
+				error("Scan does not seem to contain telescope information. Perhaps it is a lab scan. CRUSH cannot reduce it.");
 				throw new IllegalStateException("No telescope information in scan " + getID());
 			}
 			

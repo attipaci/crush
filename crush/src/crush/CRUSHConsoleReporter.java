@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -23,20 +23,27 @@
 
 package crush;
 
-public interface Messaging {
+import jnum.data.LocalAverage;
+import jnum.reporting.ConsoleReporter;
 
-	public void error(Throwable e, boolean debug);
-	
-	public void error(Throwable e);
-	
-	public void error(String message);
-	
-	public void warning(Exception e, boolean debug);
-	
-	public void warning(Exception e);
-	
-	public void warning(String message);
-	
-	public void info(String message);
-	
+public class CRUSHConsoleReporter extends ConsoleReporter {
+
+    public CRUSHConsoleReporter(String id) {
+        super(id);
+    }
+    
+    @Override
+    public String getPrefix(Object owner) { 
+        if(owner == null) return "";
+        else if(owner instanceof CRUSH) return " ";
+        else if(owner instanceof Scan) return " ";
+        else if(owner instanceof Integration || owner instanceof LocalAverage) return "   ";
+        else return " ";
+    }
+
+    @Override
+    public void status(Object owner, String message) {
+        if(CRUSH.debug) super.status(owner, message);
+    }
+    
 }

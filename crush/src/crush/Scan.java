@@ -54,12 +54,13 @@ import jnum.math.Offset2D;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
+import jnum.reporting.BasicMessaging;
 import jnum.text.TableFormatter;
 import jnum.util.*;
 import jnum.util.DataTable;
 
 public abstract class Scan<InstrumentType extends Instrument<?>, IntegrationType extends Integration<InstrumentType, ?>>
-extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatter.Entries, Messaging {
+extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatter.Entries, BasicMessaging {
 	/**
 	 * 
 	 */
@@ -98,6 +99,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	@SuppressWarnings("unchecked")
 	public Scan(InstrumentType instrument) { 
 		this.instrument = (InstrumentType) instrument.copy();
+		this.instrument.setParent(this);
 	}
 	
 	@Override
@@ -127,7 +129,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	}
 	
 	public void validate() {	
-		System.err.println(" Processing scan data:");
+		info("Processing scan data:");
 			
 		if(hasOption("subscans.merge")) mergeIntegrations();
 		
@@ -146,15 +148,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(Double.isNaN(MJD)) setMJD(firstFrame.MJD);
 		if(Double.isNaN(LST)) LST = 0.5 * (firstFrame.LST + lastFrame.LST);
 		
-		//System.err.println("### MJD: " + Util.f3.format(MJD) + " --> Epoch is J" + Util.f2.format(JulianEpoch.getYearForMJD(MJD)));
-		//System.err.println("### LST: " + Util.f3.format(LST/Unit.hour));
+		//debug("MJD: " + Util.f3.format(MJD) + " --> Epoch is J" + Util.f2.format(JulianEpoch.getYearForMJD(MJD)));
+		//debug("LST: " + Util.f3.format(LST/Unit.hour));
 		
 		if(!hasOption("lab")) {
 		    if(equatorial == null) calcEquatorial();
 
 		    // Use J2000 coordinates
 		    if(!equatorial.epoch.equals(CoordinateEpoch.J2000)) precess(CoordinateEpoch.J2000);
-		    System.err.println("   Equatorial: " + equatorial.toString());
+		    info("  Equatorial: " + equatorial.toString());
 
 		    // Calculate apparent and approximate horizontal coordinates.... 
 		    if(apparent == null) calcApparent();
@@ -162,7 +164,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		    // TODO below are only for horizontal...
 		    if(Double.isNaN(LST)) LST = 0.5 * (getFirstIntegration().getFirstFrame().LST + getFirstIntegration().getFirstFrame().LST);
 		    if(horizontal == null && site != null) calcHorizontal();
-		    if(horizontal != null) System.err.println("   Horizontal: " + horizontal.toString());
+		    if(horizontal != null) info("  Horizontal: " + horizontal.toString());
 		}
 		
 		for(int i=0; i<size(); ) {
@@ -173,7 +175,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			}
 			catch(Exception e) {
 				integration.warning("Integration " + (i+1) + " validation error (dropping from set):\n   --> " + e.getMessage());
-				integration.warning(e);
+				if(CRUSH.debug) CRUSH.trace(e);
 				remove(i); 
 			}
 		}
@@ -234,7 +236,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public void pointingAt(Vector2D correction) {
 		if(correction == null) return;
 		double sizeUnit = instrument.getSizeUnitValue();
-		System.err.println("   Adjusting pointing by " + 
+		info("Adjusting pointing by " + 
 				Util.f1.format(correction.x() / sizeUnit) + ", " + Util.f1.format(correction.y() / sizeUnit) +
 				" " + instrument.getSizeName() + ".");
 		
@@ -249,7 +251,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		Vector2D arcsecs = (Vector2D) differential.clone();
 		arcsecs.scale(1.0 / Unit.arcsec);
-		//System.err.println("### pointing at " + arcsecs);
+		//debug("pointing at " + arcsecs);
 		
 		// Reset the source coordinates to the pointing center
 		if(pointing.getCoordinates() instanceof HorizontalCoordinates) 
@@ -334,7 +336,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(size() < 2) return;
 	
 		// TODO What if different sampling intervals...
-		System.err.println(" Merging " + size() + " integrations...");
+		info("Merging " + size() + " integrations...");
 		
 		final double maxDiscontinuity = hasOption("subscans.merge.maxgap") ? option("subscans.merge.maxgap").getDouble() * Unit.s : Double.NaN;
 		final int maxGap = Double.isNaN(maxDiscontinuity) ? Integer.MAX_VALUE : (int) Math.ceil(maxDiscontinuity / instrument.samplingInterval);
@@ -362,11 +364,11 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			// Deal with any gaps between subscans here...
 			if(gap > 0) {
 				if(gap < maxGap) {
-					System.err.println("   > Padding with " + gap + " frames before integration " + integration.getID());
+					info("  > Padding with " + gap + " frames before integration " + integration.getID());
 					for(; --gap >= 0; ) merged.add(null);
 				}
 				else {
-					System.err.println("   > Large gap before integration " + integration.getID() + ". Starting new merge.");
+					info("  > Large gap before integration " + integration.getID() + ". Starting new merge.");
 					parts.add((IntegrationType) merged);
 					merged = (Integration<InstrumentType, Frame>) integration;
 				}	
@@ -380,7 +382,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 		merged.reindex();
 		
-		System.err.println("   > Total esposure time: " + Util.f1.format(merged.getExposureTime() / Unit.s) + "s.");
+		info("  > Total esposure time: " + Util.f1.format(merged.getExposureTime() / Unit.s) + "s.");
 		
 		clear();
 		addAll(parts);
@@ -522,7 +524,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		LogFile log = new LogFile(fileName, format, conflictPolicy);
 		log.add(TableFormatter.format(this, format));
 		
-		System.err.println(" Written log to " + log.getFileName());
+		notify("Written log to " + log.getFileName());
 	}
 	
 	
@@ -626,17 +628,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(hasOption("log")) {
 			try { writeLog(option("log"), CRUSH.workPath + File.separator + instrument.getName() + ".log"); }
 			catch(IOException e) {
-				System.err.println(" WARNING! Could not write log.");
-				if(CRUSH.debug) e.printStackTrace();
+				warning("Could not write log.");
+				if(CRUSH.debug) CRUSH.trace(e);
 			}
 		}
 	}
 	
 	public void printFocus() {
 		if(pointing != null) {
-			System.out.println(" Instant Focus Results for Scan " + getID() + ":");
-			System.out.println();
-			System.out.println(getFocusString());
+			CRUSH.result(this, "Instant Focus Results for Scan " + getID() + ":\n\n" + getFocusString());
 		}
 		else if(hasOption("pointing")) if(sourceModel.isValid()) {
 			Configurator pointingOption = option("pointing");
@@ -648,10 +648,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public void printPointing() {
 		if(pointing != null) {
-			System.out.println();
-			System.out.println(" Pointing Results for Scan " + getID() + ":");
-			System.out.println();
-			System.out.println(getPointingString() + "\n");
+			CRUSH.result(this, "Pointing Results for Scan " + getID() + ":\n\n" + getPointingString());
 		}
 		else if(hasOption("pointing")) if(sourceModel.isValid()) {
 			Configurator pointingOption = option("pointing");
@@ -662,7 +659,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	@SuppressWarnings("unchecked")
 	public ArrayList<Scan<InstrumentType, IntegrationType>> split() {
-		System.err.println(" Splitting subscans into separate scans.");
+		info("Splitting subscans into separate scans.");
 		ArrayList<Scan<InstrumentType, IntegrationType>> scans = new ArrayList<Scan<InstrumentType, IntegrationType>>();
 		for(IntegrationType integration : this) {
 			Scan<InstrumentType, IntegrationType> scan = (Scan<InstrumentType, IntegrationType>) clone();
@@ -1031,7 +1028,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		ensureCapacity(N);
 		
-		System.err.println(" Segmenting into " + N + " integrations.");
+		info("Segmenting into " + N + " integrations.");
 		
 		clear();
 		
@@ -1049,49 +1046,34 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			add((IntegrationType) integration);
 		}
 	}
-	
-	
-	@Override
-	public void error(Throwable e, boolean debug) {
-		if(instrument != null) instrument.error(e, debug);
-		else CRUSH.error(e, debug);
-	}
+
 	
 	@Override
-	public void error(Throwable e) { 
-		if(instrument != null) instrument.error(e);
-		else CRUSH.error(e);
-	}
-	
-	@Override
-	public void error(String message) {
-		if(instrument != null) instrument.error(message);
-		else CRUSH.error(message);
-	}
-	
-	@Override
-	public void warning(Exception e, boolean debug) {
-		if(instrument != null) instrument.warning(e, debug);
-		else CRUSH.warning(e, debug);
-	}
-	
-	@Override
-	public void warning(Exception e) {
-		if(instrument != null) instrument.warning(e);
-		else CRUSH.warning(e);
-	}
-	
-	@Override
-	public void warning(String message) {
-		if(instrument != null) instrument.warning(message);
-		else CRUSH.warning(message);
-	}
-	
-	@Override
-	public void info(String message) {
-		if(instrument != null) instrument.info(message);
-		else CRUSH.info(message);
-	}
+    public void info(String message) { CRUSH.info(this, message); }
+    
+    @Override
+    public void notify(String message) { CRUSH.notify(this, message); }
+    
+    @Override
+    public void debug(String message) { CRUSH.debug(this, message); }
+    
+    @Override
+    public void warning(String message) { CRUSH.warning(this, message); }
+
+    @Override
+    public void warning(Exception e, boolean debug) { CRUSH.warning(this, e, debug); }
+
+    @Override
+    public void warning(Exception e) { CRUSH.warning(this, e); }
+
+    @Override
+    public void error(String message) { CRUSH.error(this, message); }
+    
+    @Override
+    public void error(Throwable e, boolean debug) { CRUSH.error(this, e, debug); }
+
+    @Override
+    public void error(Throwable e) { CRUSH.error(this, e); }
 	
 	
 }

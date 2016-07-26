@@ -25,6 +25,7 @@ package crush.apex;
 import java.io.*;
 import java.util.*;
 
+import crush.CRUSH;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
@@ -46,21 +47,14 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 	public String fileName;
 	public double timeWindow = 1.5 * Unit.hour;
 	
-	public static APEXTauTable get(String fileName) throws IOException {
-		APEXTauTable table = tables.get(fileName);
-		if(table == null) {
-			table = new APEXTauTable(fileName);
-			tables.put(fileName, table);
-		}
-		return table;
-	}
+
 	
 	private APEXTauTable(String fileName) throws IOException {
 		read(fileName);
 	}
 	
 	protected void read(String fileName) throws IOException {
-		System.err.print("   [Loading tau data] ");
+		
 		
 		BufferedReader in = Util.getReader(fileName);
 		
@@ -79,31 +73,31 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 		
 		this.fileName = fileName;
 		
-		System.err.println("-- " + size() + " values parsed.");
+		CRUSH.info(this, "[Loading tau data] -- " + size() + " values parsed.");
 	}	
 	
 	public double getTau(double MJD) {
 		Entry mean = getLocalAverage(new TimeStamp(MJD));
 		
 		if(mean.tau.weight() == 0.0) {
-			System.err.println("   ... No skydip data was found in specified time window.");
+			CRUSH.info(this, "... No skydip data was found in specified time window.");
 			
 			if(timeWindow < 6.0 * Unit.hour) {
-				System.err.println("   ... expanding tau lookup window to 6 hours.");
+				CRUSH.info(this, "... expanding tau lookup window to 6 hours.");
 				timeWindow = 6.0 * Unit.hour;
 				mean = getLocalAverage(new TimeStamp(MJD));
 			}
 			else {
-				System.err.println("   WARNING! Local tau is unknown.");
+				CRUSH.warning(this, "Local tau is unknown.");
 				return 0.0;
 			}
 		}
 		else if(Double.isInfinite(mean.tau.value())) {
-			System.err.println("   WARNING! Inifinite local tau.");
+			CRUSH.warning(this, "Inifinite local tau.");
 			return 0.0;
 		}
 		
-		System.err.println("   Local average tau = " + Util.f3.format(mean.tau.value()) + " (from " + mean.measurements + " skydips)");
+		CRUSH.values(this, "Local average tau = " + Util.f3.format(mean.tau.value()) + " (from " + mean.measurements + " skydips)");
 		return mean.tau.value();
 	}
 	
@@ -149,5 +143,14 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 		return new Entry();
 	}
 	
+	public static APEXTauTable get(String fileName) throws IOException {
+	    APEXTauTable table = tables.get(fileName);
+	    if(table == null) {
+	        table = new APEXTauTable(fileName);
+	        tables.put(fileName, table);
+	    }
+	    return table;
+	}
+
 }
 

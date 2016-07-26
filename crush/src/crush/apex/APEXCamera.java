@@ -101,13 +101,13 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 		if(cabin.startsWith("c")) mount = Mount.CASSEGRAIN;
 		else if(cabin.startsWith("a") || cabin.equals("nasmyth_a")) mount = Mount.LEFT_NASMYTH;
 		else if(cabin.startsWith("b") || cabin.equals("nasmyth_b")) mount = Mount.RIGHT_NASMYTH;
-		else throw new IllegalStateException("WARNING! Instrument Cabin Undefined.");
+		else throw new IllegalStateException("Instrument cabin undefined.");
 			
-		System.err.println(" Instrument mounted in " + mount.name + " cabin.");
+		info("Instrument mounted in " + mount.name + " cabin.");
 		
 		rotation = header.getDoubleValue("DEWUSER", 0.0) - header.getDoubleValue("DEWZERO", 0.0);
 		if(rotation != 0.0) {
-			System.err.println(" Dewar rotated at " + rotation + " deg.");
+			info("Dewar rotated at " + rotation + " deg.");
 			rotation *= Unit.deg;
 		}
 		
@@ -127,7 +127,7 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 		int referenceBENumber = ((int[]) row[hdu.findColumn("REFFEED")])[0];
 		referencePixel = get(referenceBENumber-1);
 		setReferencePosition(referencePixel.fitsPosition);
-		System.err.println(" " + storeChannels + " channels found. Reference pixel is " + referenceBENumber);
+		info(storeChannels + " channels found. Reference pixel is " + referenceBENumber);
 
 		// Take instrument rotation into account
 		for(SingleColorPixel pixel : this) pixel.position.rotate(rotation);
@@ -153,16 +153,16 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 		
 	
 		if(isChopped) {
-			System.err.println(" Chopped photometry reduction mode.");
-			System.err.println(" Target is [" + sourceName + "] at " + reference.toString());
+			info("Chopped photometry reduction mode.");
+			info("Target is [" + sourceName + "] at " + reference.toString());
 			setOption("chopped");
 		}
 		else if(sourceName.equalsIgnoreCase("SKYDIP")) {
-			System.err.println(" Skydip reduction mode.");
+			info("Skydip reduction mode.");
 			setOption("skydip");
 			
 			if(scans.size() > 1) {
-				System.err.println("Ignoring all but first scan in list (for skydip).");
+				info("Ignoring all but first scan in list (for skydip).");
 				scans.clear();
 				scans.add(firstScan);
 			}
@@ -181,7 +181,7 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 			
 			// Throw out any subsequent skydips...
 			if(scan.getSourceName().equalsIgnoreCase("SKYDIP")) {
-				warning("Scan " + scan.getID() + " is a skydip. Dropping from dataset.");
+			    warning("Scan " + scan.getID() + " is a skydip. Dropping from dataset.");
 				scans.remove(i);
 			}
 			
@@ -198,12 +198,12 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 				if(!scan.isNonSidereal) {
 					if(scan.equatorial.distanceTo(reference) > pointingTolerance) {
 						warning("Scan " + scan.getID() + " observed at a different position. Dropping from dataset.");
-						System.err.println("           (You can use 'moving' to keep and reduce anyway.)");
+						CRUSH.suggest(this, "           (You can use 'moving' to keep and reduce anyway.)");
 						scans.remove(i);
 					}
 				}
 				else if(!scan.getSourceName().equalsIgnoreCase(sourceName)) {
-					System.err.println("  WARNING! Scan " + scan.getID() + " is on a different object. Dropping from dataset.");
+					warning("Scan " + scan.getID() + " is on a different object. Dropping from dataset.");
 					scans.remove(i);
 				}
 			}

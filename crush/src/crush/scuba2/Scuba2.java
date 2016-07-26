@@ -161,7 +161,7 @@ public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBa
 		DistortionModel distortion = hasOption("distortion") ? new DistortionModel(option("distortion")) : null;
 		if(distortion != null) {
 			distortion.setUnit(Unit.get("mm"));
-			System.err.println(" Applying distortion model: " + distortion.getName());
+			info("Applying distortion model: " + distortion.getName());
 		}
 				
 		for(Scuba2Pixel pixel : this) {	
@@ -247,7 +247,7 @@ public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBa
 		focusYOffset = header.getDoubleValue("ALIGN_DY");
 		focusZOffset = header.getDoubleValue("ALIGN_DZ");
 	
-		System.err.println(" Focus :"
+		info("Focus :"
 				+ " XOff=" + Util.f2.format(focusXOffset)
 				+ " YOff=" + Util.f2.format(focusYOffset) 
 				+ " ZOff=" + Util.f2.format(focusZOffset)
@@ -265,7 +265,7 @@ public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBa
 	
 	/*
 	public void readTemperatureGains(String fileName) throws IOException {
-		System.err.println(" Loading He3 gains from " + fileName);
+		info("Loading He3 gains from " + fileName);
 		
 		// Read gains into LabocaPixel -> temperatureGain:
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
@@ -300,7 +300,7 @@ public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBa
 		
 		out.flush();
 		out.close();
-		System.err.println(" Written temperature gain data to " + fileName + ".");
+	    notify("Written temperature gain data to " + fileName + ".");
 		
 	}
 	*/

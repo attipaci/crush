@@ -45,6 +45,7 @@ import jnum.math.Complex;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
+import jnum.reporting.BasicMessaging;
 import jnum.text.TableFormatter;
 import jnum.util.HashCode;
 import nom.tam.fits.*;
@@ -59,7 +60,7 @@ import nom.tam.fits.*;
  */
 public abstract class Integration<InstrumentType extends Instrument<?>, FrameType extends Frame> 
 extends ArrayList<FrameType> 
-implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.Entries, Messaging {
+implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.Entries, BasicMessaging {
 	/**
 	 * 
 	 */
@@ -100,6 +101,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public Integration(Scan<InstrumentType, ?> parent) {
 		scan = parent;
 		instrument = (InstrumentType) scan.instrument.copy();
+		instrument.setParent(this);
 		setThreadCount(CRUSH.maxThreads);
 	}
 	
@@ -166,7 +168,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void validate() {
 		if(isValid) return;		
 	
-		System.err.println(" Processing integration " + getID() + ":");
+		scan.info("Processing integration " + getID() + ":");
 		
 		// Incorporate the relative instrument gain (under loading) in the scan gain...
 		gain *= instrument.sourceGain;	
@@ -210,7 +212,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		    
 		if(hasOption("filter.kill")) {
-			System.err.println("   FFT Filtering specified sub-bands...");
+			info("FFT Filtering specified sub-bands...");
 			removeOffsets(false);
 			KillFilter filter = new KillFilter(this);
 			filter.updateConfig();
@@ -248,23 +250,23 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			boolean isRobust = false;
 			if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust=true;
 			
-			System.err.println("   Removing DC offsets" + (isRobust ? " (robust)" : "") + ".");
+			info("Removing DC offsets" + (isRobust ? " (robust)" : "") + ".");
 			removeOffsets(isRobust);
 		}
 			
 		if(hasOption("tau")) {
 			try { setTau(); }
 			catch(Exception e) { 
-				System.err.println("   WARNING! Problem setting tau: " + e.getMessage()); 
-				if(CRUSH.debug) e.printStackTrace();
+				warning("Problem setting tau: " + e.getMessage()); 
+				if(CRUSH.debug) CRUSH.trace(e);
 			}
 		}
 	
 		if(hasOption("scale")) {
 			try { setScaling(); }
 			catch(Exception e) {
-				System.err.println("   WARNING! Problem setting calibration scaling: " + e.getMessage()); 
-				if(CRUSH.debug) e.printStackTrace();
+				warning("Problem setting calibration scaling: " + e.getMessage()); 
+				if(CRUSH.debug) CRUSH.trace(e);
 			}
 		}
 		if(hasOption("invert")) gain *= -1.0;
@@ -272,20 +274,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(!hasOption("noslim")) slim(getThreadCount());
 		
 		if(hasOption("jackknife")) if(Math.random() < 0.5) {
-			System.err.println("   JACKKNIFE! This integration will produce an inverted source.");
+			notify("JACKKNIFE: This integration will produce an inverted source.");
 			gain *= -1.0;
 		}
 		
 		if(hasOption("jackknife.frames")) {
-			System.err.println("   JACKKNIFE! Randomly inverted frames in source.");
+			notify("JACKKNIFE: Randomly inverted frames in source.");
 			for(Frame exposure : this) exposure.jackknife();
 		}
 		
 		if(!hasOption("pixeldata")) if(hasOption("weighting")) if(!hasOption("uniformweights")) {
-			System.err.print("   Bootstrapping pixel weights");
 			getDifferentialPixelWeights();
 			instrument.census();
-			System.err.println(" (" + instrument.mappingChannels + " active channels).");
+			info("Bootstrapping pixel weights (" + instrument.mappingChannels + " active channels).");
 		}
 		
 		System.gc();
@@ -345,8 +346,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(!hasOption("range")) return;
 		final Range range = option("range").getRange();
 		
-		System.err.print("   Flagging out-of-range data. ");
-		
 		int[] n = getInts();
 		
 		for(Frame frame : this) if(frame != null) {
@@ -358,7 +357,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(!hasOption("range.flagfraction")) {
 			recycle(n);
-			System.err.println();
 			return;
 		}
 		
@@ -377,7 +375,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		recycle(n);
 		
 		
-		System.err.println(flagged + " channel(s) discarded.");
+		info("Flagging out-of-range data." + flagged + " channel(s) discarded.");
 
 		instrument.census();
 	}
@@ -390,14 +388,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			// Choose downsampling to accomodate at ~98% of scanning speeds... 
 			//double maxv = aveScanSpeed.value + 2.0 * aveScanSpeed.rms();
 			if(maxv == 0.0) { 
-				System.err.println("   WARNING! No automatic downsampling for zero scan speed.");
+				warning("No automatic downsampling for zero scan speed.");
 				return; 
 			}
 			double maxInt = 0.4 * instrument.getPointSize() / maxv;
 			
 			int factor = (int)Math.floor(maxInt / instrument.samplingInterval);
 			if(factor == Integer.MAX_VALUE) {
-				System.err.println("   WARNING! No automatic downsampling for negligible scan speed.");
+				warning("No automatic downsampling for negligible scan speed.");
 				return;
 			}
 			
@@ -420,7 +418,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	public void setScaling(double value) {
 		gain /= value;
-		System.err.println("   Applying scaling factor " + Util.f3.format(value));		
+		info("Applying scaling factor " + Util.f3.format(value));		
 	}
 
 	// Try in this order:
@@ -442,7 +440,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Vector2D t = getTauCoefficients(id);
 		Vector2D inband = getTauCoefficients(instrument.getName());
 		try { setZenithTau(inband.x() / t.x() * (value - t.y()) + inband.y()); }
-		catch(Exception e) { System.err.println(" WARNING! could not set zenith tau: " + e.getMessage()); }
+		catch(Exception e) { 
+		    warning("Could not set zenith tau: " + e.getMessage()); 
+		    if(CRUSH.debug) CRUSH.trace(e);
+		}
 	}
 	
 	public double getTau(String id, double value) {
@@ -458,7 +459,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public Vector2D getTauCoefficients(String id) {
 		String key = "tau." + id.toLowerCase();
 		
-		if(!hasOption(key + ".a")) throw new IllegalStateException("   WARNING! " + key + " has no scaling relation.");
+		if(!hasOption(key + ".a")) throw new IllegalStateException(key + " has no scaling relation.");
 		
 		Vector2D coeff = new Vector2D();
 		coeff.setX(option(key + ".a").getDouble());
@@ -480,7 +481,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void setZenithTau(final double value) {
 		if(!(this instanceof GroundBased)) throw new UnsupportedOperationException("Only implementation of GroundBased can set a zenith tau.");
-		System.err.println("   Setting zenith tau to " + Util.f3.format(value));
+		info("Setting zenith tau to " + Util.f3.format(value));
 		zenithTau = value;
 		
 		for(Frame frame : this) if(frame != null) ((HorizontalFrame) frame).setZenithTau(value);
@@ -488,7 +489,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	public void calcScanSpeedStats() {
 		aveScanSpeed = getMedianScanningVelocity(0.5 * Unit.s);
-		System.err.println("   Typical scanning speeds are " 
+		info("Typical scanning speeds are " 
 				+ Util.f1.format(aveScanSpeed.value()/(instrument.getSizeUnitValue()/Unit.s)) 
 				+ " +- " + Util.f1.format(aveScanSpeed.rms()/(instrument.getSizeUnitValue()/Unit.s)) 
 				+ " " + instrument.getSizeName() + "/s");
@@ -524,12 +525,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	
 	public void setupFilters() {
-		System.err.println("   Configuring filters.");
+		info("Configuring filters.");
 		List<String> ordering = option("filter.ordering").getList();
 		filter = new MultiFilter(this);
 		for(final String name : ordering) {	
 			Filter f = getFilter(name);
-			if(f == null) System.err.println(" WARNING! No filter for '" + name + "'.");
+			if(f == null) warning("No filter for '" + name + "'.");
 			else filter.addFilter(f);
 		}	
 	}
@@ -630,7 +631,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 
 	public boolean hasGaps(final int tolerance) {
-		System.err.print("   Checking for gaps: ");
+		String text = "Checking for gaps: ";
 		
 		final Frame first = getFirstFrame();
 		
@@ -643,12 +644,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			double gap = (frame.MJD - first.MJD) * Unit.day - (frame.index - first.index) * instrument.samplingInterval;
 			
 			if((int) Math.round(gap / instrument.samplingInterval) > tolerance) { 
-				System.err.println("Gap(s) found! :-(  [e.g.: " + Util.f1.format(gap / Unit.ms) + " ms]");
+				info(text + "Gap(s) found! :-(  [e.g.: " + Util.f1.format(gap / Unit.ms) + " ms]");
 				return true; 
 			}
 		}
 		
-		System.err.println("No gaps. :-)");
+		info(text + "No gaps. :-)");
 		return false;
 	}
 	
@@ -670,7 +671,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			double gap = (frame.MJD - first.MJD) * Unit.day - (buffer.size() - first.index) * instrument.samplingInterval;
 			int frameGaps = (int) Math.round(gap / instrument.samplingInterval);
 			
-			if(frameGaps > 10) System.err.println("   WARNING! Large gap of " + frameGaps + " frames at index " + t + ", MJD: " + frame.MJD);
+			if(frameGaps > 10) warning("Large gap of " + frameGaps + " frames at index " + t + ", MJD: " + frame.MJD);
 			
 			for(int i=frameGaps; --i >= 0; padded++) buffer.add(null);
 		
@@ -680,7 +681,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(padded != 0) {
 			clear();
 			addAll(buffer);
-			System.err.println("   Padded with " + padded + " empty frames.");
+			info("Padded with " + padded + " empty frames.");
 		}
 		
 		reindex();
@@ -712,7 +713,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 		reindex();
 		
-		System.err.println("   Trimmed to " + size() + " frames.");
+		info("Trimmed to " + size() + " frames.");
 	}
 
 	
@@ -2103,8 +2104,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public int velocityCut(final Range range) { 
-		System.err.print("   Discarding unsuitable mapping speeds. ");
-	
+		
 		final Vector2D[] v = getScanningVelocities();
 		int flagged = 0, cut = 0;
 		
@@ -2130,8 +2130,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 		}
 		
-		System.err.print("[" + (int)Math.round(100.0 * flagged / size()) + "% flagged, ");
-		System.err.println((int)Math.round(100.0 * cut / size()) + "% clipped]");
+		info("Discarding unsuitable mapping speeds. " +
+		        "[" + (int)Math.round(100.0 * flagged / size()) + "% flagged, " +
+		        (int) Math.round(100.0 * cut / size()) + "% clipped]");
 
 		return cut;
 
@@ -2139,8 +2140,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 	
 	public int accelerationCut(final double maxA) {
-		System.err.print("   Discarding excessive telescope accelerations. ");
-	
+		
 		final Vector2D[] a = getAccelerations();
 		int cut = 0;
 		
@@ -2157,7 +2157,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			}
 		}
 
-		System.err.println("[" + (int)Math.round(100.0 * cut / size()) + "% clipped]");
+		info("Discarding excessive telescope accelerations. [" + (int)Math.round(100.0 * cut / size()) + "% clipped]");
 
 		return cut;	
 	}
@@ -2247,11 +2247,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final int N = ExtraMath.roundupRatio(size()-windowSize, n);
 		
 		if(N <= 0) {
-			System.err.println("   WARNING! Time stream too short to downsample by specified amount.");
+			warning("Time stream too short to downsample by specified amount.");
 			return;
 		}
 	
-		System.err.println("   Downsampling by " + n + " to " + N + " frames.");
+		info("Downsampling by " + n + " to " + N + " frames.");
 		
 		final Frame[] buffer = new Frame[N];
 		
@@ -2331,7 +2331,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final double df = 1.0 / (windowSize * instrument.samplingInterval);
 		final int nf = windowSize >>> 1;
 		
-		System.err.println("   Notching " + frequencies.size() + " frequencies.");
+		info("Notching " + frequencies.size() + " frequencies.");
 		
 		instrument.new Fork<Void>() {
 			private FloatFFT fft;
@@ -2409,7 +2409,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	public void writeASCIITimeStream() throws IOException {
-		String filename = CRUSH.workPath + File.separator + scan.getID() + "-" + getID() + ".tms";
+		String filename = CRUSH.workPath + File.separator + scan.getID() + "-" + getFileID() + ".tms";
 		final PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename), 1000000));
 		out.println("# " + Util.e3.format(1.0/instrument.samplingInterval));
 		final int nc = instrument.size();
@@ -2434,11 +2434,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		out.flush();
 		out.close();
-		System.err.println("Written ASCII time-streams to " + filename);
+		notify("Written ASCII time-streams to " + filename);
 	}
 
 	public double[][] getCovariance() {
-		System.err.print(" Calculating Covariance Matrix (this may take a while...)");
+		info("Calculating Covariance Matrix (this may take a while...)");
 		
 		final double[][] covar = new double[instrument.size()][instrument.size()];
 		final int[][] n = new int[instrument.size()][instrument.size()];
@@ -2465,8 +2465,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				
 			}	
 		}.process();
-		
-		System.err.println();
 		
 		return covar;
 	}
@@ -2513,7 +2511,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	    
 	    if(hasOption("write.covar.condensed")) covar = condenseCovariance(covar);
 	        
-		if(!name.endsWith(".fits")) name += "-" + scan.getID() + "-" + getID() + ".fits";
+		if(!name.endsWith(".fits")) name += "-" + scan.getID() + "-" + getFileID() + ".fits";
+		
 		if(covar == null) return;
 		
 		Fits fits = new Fits();
@@ -2523,7 +2522,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		FitsExtras.write(fits, name);
 		fits.close();
 		
-		System.err.println(" Written " + name);
+		notify("Written " + name);
 	}
 
 	protected double[][] condenseCovariance(double[][] covar) {
@@ -2601,7 +2600,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public void writeSpectra(String windowName, int windowSize) throws IOException {
-		String fileName = CRUSH.workPath + File.separator + scan.getID() + "-" + getID() + ".spec";
+		String fileName = CRUSH.workPath + File.separator + getFileID() + ".spec";
 
 		final float[][] spectrum = getSpectra(windowName, windowSize);
 		final double df = 1.0 / (instrument.samplingInterval * windowSize);
@@ -2626,14 +2625,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		out.flush();
 		out.close();
 
-		System.err.println("Written Power spectra to " + fileName);
+		notify("Written Power spectra to " + fileName);
 
 	}
 
 
 	public void writeCovariances() {
-		String scanID = getFullID("-");
-		
+	
 		final double[][] covar = getCovariance(); 
 		List<String> specs = hasOption("write.covar") ? option("write.covar").getList() : new ArrayList<String>();
 		String prefix = CRUSH.workPath + File.separator + "covar";
@@ -2643,18 +2641,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 		for(String name : specs) {
 			if(name.equalsIgnoreCase("full")){
-				try { writeCovariance(prefix + "-" + scanID + ".fits", getFullCovariance(covar)); }
+				try { writeCovariance(prefix + "-" + getFileID() + ".fits", getFullCovariance(covar)); }
 				catch(Exception e) { e.printStackTrace(); }	
 			}
 			else if(name.equalsIgnoreCase("reduced")){
-				try { writeCovariance(prefix + "-" + scanID + ".reduced.fits", covar); }
+				try { writeCovariance(prefix + "-" + getFileID() + ".reduced.fits", covar); }
 				catch(Exception e) { e.printStackTrace(); }	
 			}	
 			else {
 				ChannelDivision<?> division = instrument.divisions.get(name);
-				if(division == null) System.err.println("   Cannot write covariance for " + name + ". Undefined grouping.");
+				if(division == null) warning("Cannot write covariance for " + name + ". Undefined grouping.");
 				else {
-					try { writeCovariance(prefix + "-" + scanID + "." + name + ".fits", getGroupCovariance(division, covar)); }
+					try { writeCovariance(prefix + "-" + getFileID() + "." + name + ".fits", getGroupCovariance(division, covar)); }
 					catch(Exception e) { e.printStackTrace(); }	
 				}
 			}
@@ -2662,7 +2660,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public void writeProducts() {
-		String scanID = getFullID("-");
+		
 
 		if(hasOption("write.pattern")) {
 			try { writeScanPattern(); }
@@ -2670,7 +2668,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		
 		if(hasOption("write.pixeldata")) {
-			String fileName = CRUSH.workPath + File.separator + "pixel-" + scanID + ".dat";
+			String fileName = CRUSH.workPath + File.separator + "pixel-" + getFileID() + ".dat";
 			try { instrument.writeChannelData(fileName, getASCIIHeader()); }
 			catch(Exception e) { e.printStackTrace(); }
 		}
@@ -2689,9 +2687,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(hasOption("write.signals")) for(Mode mode : signals.keySet()) {
 			try { 
-				PrintStream out = new PrintStream(new FileOutputStream(CRUSH.workPath + File.separator + mode.name + ".tms"));
+				PrintStream out = new PrintStream(new FileOutputStream(CRUSH.workPath + File.separator + mode.name + "-" + getFileID() + ".tms"));
 				signals.get(mode).print(out);
-				System.err.println("Written " + mode.name + ".tms");
+				notify("Written " + mode.name + ".tms");
 				out.close();
 			}
 			catch(IOException e) {}
@@ -2715,7 +2713,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public void writeScanPattern() throws IOException {
-		String fileName = CRUSH.workPath + File.separator + "pattern-" + getFullID(":") + ".dat";
+		String fileName = CRUSH.workPath + File.separator + "pattern-" + getFileID() + ".dat";
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 		
 		for(int i=0; i<size(); i++) {
@@ -2729,7 +2727,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		out.close();
 		
-		System.err.println("Written " + fileName);
+		notify("Written " + fileName);
 		
 	}
 	
@@ -2948,7 +2946,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			if(chopper.amplitude < threshold) {
 				chopper = null;
-				System.err.println("   Small chopper fluctuations (assuming chopper not used).");
+				info("Small chopper fluctuations (assuming chopper not used).");
 				instrument.forget("chopped");
 				return;
 			}
@@ -2962,11 +2960,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			((Chopping) this).setChopper(chopper);
 			
-			System.err.println("   Chopper detected: " + chopper.toString());
+			info("Chopper detected: " + chopper.toString());
 			instrument.setOption("chopped");
 		}
 		else {
-			System.err.println("   Chopper not used.");
+			info("Chopper not used.");
 			instrument.forget("chopped");
 		}	
 		
@@ -2996,9 +2994,17 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public String getDisplayID() {
-		return scan.size() > 1 | scan.isSplit ? getFullID("|") : scan.getID();
+		return getStandardID("|");
 	}
 
+	public String getFileID() {
+        return getStandardID("-");
+    }
+	
+	public String getStandardID(String separator) {
+        return scan.size() > 1 | scan.isSplit ? getFullID(separator) : scan.getID();
+    }
+	
 	public boolean perform(String task) {
 		boolean isRobust = false;
 		if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust = true;
@@ -3102,8 +3108,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(String name : signalNames) {
 			try { writeCouplingGains(name); }
 			catch(Exception e) {
-				System.err.println("WARNING! Couplings for '" + name + "' not written: " + e.getMessage());
-				if(CRUSH.debug) e.printStackTrace();
+			    warning("Couplings for '" + name + "' not written: " + e.getMessage());
+				if(CRUSH.debug) CRUSH.trace(e);
 			}
 		}
 	}
@@ -3118,7 +3124,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		for(Mode mode : modality) getCouplingGains(getSignal(mode), g);
 		
-		String fileName = CRUSH.workPath + File.separator + scan.getID() + "." + name + "-coupling.dat";
+		String fileName = CRUSH.workPath + File.separator + getFileID() + "." + name + "-coupling.dat";
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 		out.println(this.getASCIIHeader());
 		out.println("#");
@@ -3129,7 +3135,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(g[c] != 0.0) out.println(channel.getID() + "\t" + Util.f3.format(g[c]));
 		}
 		
-		System.err.println(" Written " + fileName);
+		notify("Written " + fileName);
 		
 		out.close();	
 	}
@@ -3149,8 +3155,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(String name : signalNames) {
 			try { writeCouplingSpectrum(name, windowSize); }
 			catch(Exception e) {
-				System.err.println("WARNING! coupling spectra for '" + name + "' not written: " + e.getMessage());
-				if(CRUSH.debug) e.printStackTrace();
+				warning("Coupling spectra for '" + name + "' not written: " + e.getMessage());
+				if(CRUSH.debug) CRUSH.trace(e);
 			}
 		}
 	}	
@@ -3161,7 +3167,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 		modality.updateAllGains(this, false);
 		
-		String fileName = CRUSH.workPath + File.separator + scan.getID() + "." + name + "-coupling.spec";
+		String fileName = CRUSH.workPath + File.separator + getFileID() + "." + name + "-coupling.spec";
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 		
 		out.println(this.getASCIIHeader());
@@ -3206,7 +3212,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		out.println();	
 		
-		System.err.println(" Written " + fileName);
+		notify("Written " + fileName);
 		out.close();
 		
 		writeDelayedCoupling(name, C);
@@ -3244,7 +3250,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 	
 		
-		String fileName = CRUSH.workPath + File.separator + scan.getID() + "." + name + "-coupling.delay";
+		String fileName = CRUSH.workPath + File.separator + getFileID() + "." + name + "-coupling.delay";
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 		
 		out.println(this.getASCIIHeader());
@@ -3266,7 +3272,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		out.close();
 		
-		System.err.println(" Written " + fileName);
+		notify("Written " + fileName);
 	}
 	
 	
@@ -3361,7 +3367,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void shiftData(int nFrames) {
 		if(nFrames == 0) return;
 		
-		System.err.println("   Shifting data by " + nFrames + " frames.");
+		info("Shifting data by " + nFrames + " frames.");
 		
 		if(nFrames > 0) {
 			if(nFrames > size()) nFrames = size();
@@ -3458,48 +3464,34 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		public final int getBlockSize() { return blocksize; }
 	}
 
+	@Override
+	public void info(String message) { CRUSH.info(this, message); }
+    
+	@Override
+    public void notify(String message) { CRUSH.notify(this, message); }
+    
+	@Override
+    public void debug(String message) { CRUSH.debug(this, message); }
 	
 	@Override
-	public void error(Throwable e, boolean debug) {
-		if(instrument != null) instrument.error(e, debug);
-		else CRUSH.error(e, debug);
-	}
-	
+    public void warning(String message) { CRUSH.warning(this, message); }
+
 	@Override
-	public void error(Throwable e) { 
-		if(instrument != null) instrument.error(e);
-		else CRUSH.error(e);
-	}
-	
+    public void warning(Exception e, boolean debug) { CRUSH.warning(this, e, debug); }
+
 	@Override
-	public void error(String message) {
-		if(instrument != null) instrument.error(message);
-		else CRUSH.error(message);
-	}
-	
+    public void warning(Exception e) { CRUSH.warning(this, e); }
+
 	@Override
-	public void warning(Exception e, boolean debug) {
-		if(instrument != null) instrument.warning(e, debug);
-		else CRUSH.warning(e, debug);
-	}
-	
+    public void error(String message) { CRUSH.error(this, message); }
+    
 	@Override
-	public void warning(Exception e) {
-		if(instrument != null) instrument.warning(e);
-		else CRUSH.warning(e);
-	}
-	
+	public void error(Throwable e, boolean debug) { CRUSH.error(this, e, debug); }
+
 	@Override
-	public void warning(String message) {
-		if(instrument != null) instrument.warning(message);
-		else CRUSH.warning(message);
-	}
-	
-	@Override
-	public void info(String message) {
-		if(instrument != null) instrument.info(message);
-		else CRUSH.info(message);
-	}
+    public void error(Throwable e) { CRUSH.error(this, e); }
+
+		
 	
 	
 	public int pow2Size() { return ExtraMath.pow2ceil(size()); }
@@ -3526,6 +3518,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public static void clearRecycler() { recycler.clear(); }
 	
+	
+	
 	private static ArrayRecycler recycler = new ArrayRecycler();
+	
 	
 }

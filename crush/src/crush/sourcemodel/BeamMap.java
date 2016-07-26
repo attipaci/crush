@@ -92,7 +92,7 @@ public class BeamMap extends SourceMap {
 		
 	@Override
 	public void add(SourceModel model, double weight) {
-		if(!(model instanceof BeamMap)) throw new IllegalArgumentException("ERROR! Cannot add " + model.getClass().getSimpleName() + " to " + getClass().getSimpleName());
+		if(!(model instanceof BeamMap)) throw new IllegalArgumentException("Cannot add " + model.getClass().getSimpleName() + " to " + getClass().getSimpleName());
 		BeamMap other = (BeamMap) model;
 		
 		for(int p=0; p<pixelMap.length; p++) if(other.pixelMap[p] != null) {
@@ -286,7 +286,7 @@ public class BeamMap extends SourceMap {
 		
 		out.flush();
 		out.close();
-		System.err.println("Written " + fileName);
+		CRUSH.notify(this, "Written " + fileName);
 	}
 
 

@@ -214,7 +214,7 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 	
 	@Override
 	public void readWiring(String fileName) throws IOException {
-		System.err.println(" Loading wiring data from " + fileName);
+		info("Loading wiring data from " + fileName);
 			
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		Hashtable<String, GismoPixel> lookup = getIDLookup();
@@ -249,7 +249,7 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 				header.getDoubleValue("RXVERT", Double.NaN) + header.getDoubleValue("RXVERTCO", 0.0)
 				);
 		
-		System.err.println(" Focus: dZ = " + Util.f2.format(focusZOffset / Unit.mm) + " mm.");
+		info("Focus: dZ = " + Util.f2.format(focusZOffset / Unit.mm) + " mm.");
 	}
 	
 	
@@ -266,7 +266,7 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 				header.getDoubleValue("RXVERT", Double.NaN) + header.getDoubleValue("RXVERTCO", 0.0)
 				);
 		
-		System.err.println(" Focus: dZ = " + Util.f2.format(focusZOffset / Unit.mm) + " mm.");
+		info("Focus: dZ = " + Util.f2.format(focusZOffset / Unit.mm) + " mm.");
 	}
 	
 	
@@ -317,14 +317,14 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 			
 		int bias = detectorBias[0];
 		for(int i=1; i<detectorBias.length; i++) if(detectorBias[i] != bias) {
-			System.err.println(" WARNING! Inconsistent bias values. Calibration may be bad!");
+			warning("Inconsistent bias values. Calibration may be bad!");
 			CRUSH.countdown(5);
 		}
 		
 		Hashtable<String, Vector<String>> settings = option("bias").conditionals;
 			
 		if(settings.containsKey(bias + "")) {
-			System.err.println(" Setting options for bias " + bias);
+			info("Setting options for bias " + bias);
 			getOptions().parseAll(settings.get(bias + ""));
 		}
 	}
@@ -368,11 +368,11 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 			
 		if(scans.size() == 1) {
 			if(firstScan.obsType.equalsIgnoreCase("tip")) {
-				System.err.println("Setting skydip reduction mode.");
+				info("Setting skydip reduction mode.");
 				setOption("skydip");
 
 				if(scans.size() > 1) {
-					System.err.println("Ignoring all but first scan in list (for skydip).");
+					warning("Ignoring all but first scan in list (for skydip).");
 					scans.clear();
 					scans.add(firstScan);
 				}
@@ -383,7 +383,7 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 		for(int i=scans.size(); --i > 0; ) {
 			GismoScan scan = (GismoScan) scans.get(i);
 			if(scan.obsType.equalsIgnoreCase("tip")) {
-				System.err.println("  WARNING! Scan " + scan.getID() + " is a skydip. Dropping from dataset.");
+				warning("Scan " + scan.getID() + " is a skydip. Dropping from dataset.");
 				scans.remove(i);
 			}
 		}

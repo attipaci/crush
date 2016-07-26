@@ -132,18 +132,17 @@ public class APEXChoppedPhotometry extends Photometry {
 
 	@Override
 	public void write(String path) throws Exception {	
-		System.out.println("  Note, that the results of the APEX chopped photometry reduction below include");
-		System.out.println("  an estimate of the systematic errors, based on the true scatter of the");
-		System.out.println("  chopped photometry measurements in each nod cycle. As such, these errors are");
-		System.out.println("  higher than expected from the nominal NEFD values alone, and reflect the");
-		System.out.println("  photometric uncertainty more accurately.");
-		System.out.println();
+		info("Note, that the results of the APEX chopped photometry reduction below include "
+		        + "an estimate of the systematic errors, based on the true scatter of the chopped "
+		        + "photometry measurements in each nod cycle. As such, these errors are higher than "
+		        + "expected from the nominal NEFD values alone, and reflect thephotometric uncertainty "
+		        + "more accurately.");
+		
 		
 		if(scans.size() > 1) {
-			System.out.println("  Scan-to-scan scatter is measured by the reduced chi value. When |rChi| > 1,"); 
-			System.out.println("  you can multiply the quoted uncertainty by it to arrive at a more robust");
-			System.out.println("  estimate of the total measurement uncertainty.");
-			System.out.println();
+			info("Scan-to-scan scatter is measured by the reduced chi value. When |rChi| > 1, "
+			        + "you can multiply the quoted uncertainty by it to arrive at a more robust estimate "
+			        + "of the total measurement uncertainty.");
 		}
 		
 		super.write(path);

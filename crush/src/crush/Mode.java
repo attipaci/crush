@@ -182,7 +182,7 @@ public class Mode implements Serializable {
 
 
     public WeightedPoint[] deriveGains(Integration<?, ?> integration, boolean isRobust) throws Exception {
-        if(fixedGains) throw new IllegalStateException("WARNING! Cannot solve gains for fixed gain modes.");
+        if(fixedGains) throw new IllegalStateException("Cannot solve gains for fixed gain modes.");
 
         float[] G0 = getGains();
 

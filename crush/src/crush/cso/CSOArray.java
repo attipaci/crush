@@ -30,7 +30,6 @@ import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
 import crush.GroundBased;
-import crush.InstantFocus;
 import crush.Mount;
 import crush.Scan;
 import crush.array.Camera;
@@ -38,7 +37,6 @@ import crush.array.Rotating;
 import crush.array.SingleColorPixel;
 import jnum.Unit;
 import jnum.Util;
-import jnum.data.DataPoint;
 import jnum.text.TableFormatter;
 import crush.array.SingleColorArrangement;
 
@@ -99,24 +97,30 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camer
 		if(hasOption("rotation")) rotatorAngle = option("rotation").getDouble() * Unit.deg;	
 		
 		if(mount == Mount.CASSEGRAIN) {
-			System.out.println(" Rotator = " + Util.f1.format(rotatorAngle/Unit.deg) + " RotZero = " 
+			info("Rotator = " + Util.f1.format(rotatorAngle/Unit.deg) + " RotZero = " 
 					+ Util.f1.format(rotatorZeroAngle/Unit.deg));
 	
+			StringBuffer buf = new StringBuffer();
+			
 			if(Math.abs(rotatorAngle - rotatorZeroAngle) > 5.0 * Unit.deg) {
-				System.err.println(" *****************************************************************************");
-				warning(getName().toUpperCase() + " is in non-standard orientation. Will assume that pointing");
-				if(hasOption("rcenter")) {
-					System.err.println("          was performed in the horizontal orientation. To override this and to");
-					System.err.println("          assume pointing in this rotation, use '-forget=rcenter'.");
-				}
-				else {
-					System.err.println("          was performed in the same orientration. To override this and to");
-					System.err.println("          assume pointing in horizontal orientation, set the 'rcenter' option.");
-				}
-				System.err.println(" *****************************************************************************");
+				buf.append("*****************************************************************************\n");		
+				
+				buf.append(getName().toUpperCase() + " is in non-standard orientation. "
+				        + "Will assume that pointing was performed ");
+				
+				if(hasOption("rcenter"))
+					buf.append("in the horizontal orientation. To override this and to assume pointing in this "
+					        + "rotation, use '-forget=rcenter'.");
+				else
+					buf.append("in the same orientration. To override this and to assume pointing in horizontal "
+					        + "orientation, set the 'rcenter' option.\n");	
+				
+				buf.append("*****************************************************************************\n");
+				
+				warning(new String(buf));
 			}
 		}
-		else System.out.println(" Mounted at " + Util.f1.format(rotatorZeroAngle/Unit.deg) + " deg.");	
+		else info("Mounted at " + Util.f1.format(rotatorZeroAngle/Unit.deg) + " deg.");	
 	}
 
 	
@@ -134,7 +138,7 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camer
 		
 		mount =  platform.equalsIgnoreCase("NASMYTH") ? Mount.RIGHT_NASMYTH : Mount.CASSEGRAIN;
 		
-		System.err.println(" " + mount.name + " mount assumed.");
+		info(mount.name + " mount assumed.");
 		
 		rotatorZeroAngle = header.getDoubleValue("ROTZERO", Double.NaN) * Unit.deg;
 		rotatorAngle = header.getDoubleValue("ROTATOR", rotatorZeroAngle / Unit.deg) * Unit.deg;
@@ -147,15 +151,15 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camer
 		// These typically have 1000 values.
 		if(rotatorZeroAngle == 1000.0 * Unit.deg) {
 			rotatorZeroAngle = 16.0 * Unit.deg;
-			System.err.println(" >>> Fix: missing rotator zero angle set to 16.0 deg.");
+			info(">>> Fix: missing rotator zero angle set to 16.0 deg.");
 		}
 		if(rotatorAngle == 1000.0 * Unit.deg) {
 			rotatorAngle = Double.NaN;
-			System.err.println(" >>> Fix: missing rotator angle..");
+			info(">>> Fix: missing rotator angle..");
 		}
 		if(rotatorOffset == 1000.0 * Unit.deg) {
 			rotatorOffset = 0.0;
-			System.err.println(" >>> Fix: assuming no rotator offset.");
+			info(">>> Fix: assuming no rotator offset.");
 		}
 			
 		// Focus
@@ -169,7 +173,7 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camer
 		focusMode = header.getStringValue("FOCMODE");
 		if(focusMode == null) focusMode = "Unknown";
 		
-		System.err.println(" Focus [" + focusMode + "]"
+		info(" Focus [" + focusMode + "]"
 				+ " X=" + Util.f2.format(focusX / Unit.mm)
 				+ " Y=" + Util.f2.format(focusY / Unit.mm)
 				+ " Z=" + Util.f2.format(focusZ / Unit.mm)
@@ -181,66 +185,9 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camer
 		dsosUsed = header.getBooleanValue("DSOS");
 		dsosVersion = header.getStringValue("DSOSVER");
 		
-		if(dsosUsed) System.err.println(" DSOS version " + dsosVersion);
+		if(dsosUsed) info("DSOS version " + dsosVersion);
 		
 	}
-	
-	@Override
-	public String getFocusString(InstantFocus focus) {
-		String info = "";
-		
-		focus = new InstantFocus(focus);
-		
-		boolean largeLateral = false;
-		boolean suggested = false;
-		boolean suggestX = false;
-		boolean suggestY = false;
-		
-		
-		if(focus.getX() != null) {
-			DataPoint x = focus.getX();
-			//if(x.significance() > 2.0) largeLateral = true;
-			x.add(focusX);
-			info += "\n  UIP> x_position " + Util.f2.format(x.value() / Unit.mm) 
-					+ "       \t[+-" + Util.f2.format(x.rms() / Unit.mm) + "]";	
-			suggested = true;
-			suggestX = true;
-		}
-		if(focus.getY() != null) {
-			DataPoint dy = focus.getY();
-			//if(dy.significance() > 2.0) largeLateral = true;
-			dy.add(focusYOffset);
-			info += "\n  UIP> y_position /offset " + Util.f2.format(dy.value() / Unit.mm)
-					+ "\t[+-" + Util.f2.format(dy.rms() / Unit.mm) + "]";	
-			suggested = true;
-			suggestY = true;
-		}
-		if(focus.getZ() != null && !largeLateral) {			
-			DataPoint dz = focus.getZ();
-			dz.add(focusZOffset);
-			info += "\n  UIP> focus /offset " + Util.f2.format(dz.value() / Unit.mm)
-					+ "    \t[+-" + Util.f2.format(dz.rms() / Unit.mm) + "]";
-			suggested = true;
-		}
-		
-		if(suggested) info += "\n  UIP> focus \t\t\t!!! apply settings !!!";
-		if(suggestX) info += "\n  UIP> focus /constant \t\t!!! IMPORTANT when x-focus is changed !!!";
-		
-		if(suggestX || suggestY) info +=  "\n\n" +
-				"  WARNING! After changing lateral focus, do not forget to re-measure and\n" +
-				"           adjust the pointing as necessary!!!";	
-		
-		if(suggested) {
-			info += "\n\n";
-			info += "  Note: The instant focus feature of CRUSH is very experimental.\n" +
-				"        It may be used to guesstimate focus corrections on truly point-like\n" +
-				"        sources (D < 4\"). You should always verify that the beam shape is\n" +
-				"        round and symmetric after applying any of the suggested corrections.";
-		}
-			
-		return info;
-	}
-	
 	
 	@Override
 	public String getFormattedEntry(String name, String formatSpec) {

@@ -33,13 +33,17 @@ public class LabocaHe3Response extends FieldResponse {
 	private static final long serialVersionUID = -4390450615227012414L;
 	static Field temperatureField;
 	
+	private static final String he3FieldName = "he3Temp";
+	
 	static { 
-		try { temperatureField = LabocaFrame.class.getField("he3Temp"); }
+		try { temperatureField = LabocaFrame.class.getField(he3FieldName); }
 		catch(NoSuchFieldException e) {
-			System.err.println("WARNING! LabocaFrame has no such field.");
-			e.printStackTrace();
+			CRUSH.warning(null, LabocaFrame.class.getSimpleName() + " has no field named '" + he3FieldName + ".");
+			CRUSH.trace(e);
 		}
 	}
 	
 	public LabocaHe3Response() { super(temperatureField, true); }
+	
+	
 }

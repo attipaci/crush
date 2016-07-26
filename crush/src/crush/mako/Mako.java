@@ -112,19 +112,19 @@ public class Mako extends AbstractMako<MakoPixel> {
 				Tsky = identifier.match(new ResonatorList<MakoPixel>(getObservingChannels()), guessT);
 			}
 			catch(IOException e) {
-				System.err.println(" WARNING! Cannot identify tones from '" + option("pixelid").getValue() + "'."); 
-				if(CRUSH.debug) e.printStackTrace();
+				warning("Cannot identify tones from '" + option("pixelid").getValue() + "'."); 
+				if(CRUSH.debug) CRUSH.trace(e);
 			}
 		}
 				
 		if(identifier != null && hasOption("assign")) {	
 			try { assignPixels(option("assign").getValue()); }
 			catch(IOException e) { 
-				System.err.println(" WARNING! Cannot assign pixels from '" + option("assign").getValue() + "'."); 
-				if(CRUSH.debug) e.printStackTrace();
+				warning("Cannot assign pixels from '" + option("assign").getValue() + "'."); 
+				if(CRUSH.debug) CRUSH.trace(e);
 			}
 		}
-		else System.err.println(" WARNING! Tones are not assigned to pixels. Cannot make regular maps.");
+		else warning("Tones are not assigned to pixels. Cannot make regular maps.");
 		
 		
 		// Do not flag unassigned pixels when beam-mapping...
@@ -160,9 +160,9 @@ public class Mako extends AbstractMako<MakoPixel> {
 	}
 
 	public void assignPixels(String fileSpec) throws IOException {
-		if(identifier == null) throw new IllegalStateException(" Assigning pixels requires tone identifications first.");
+		if(identifier == null) throw new IllegalStateException("Assigning pixels requires tone identifications first.");
 		
-		System.err.println(" Loading pixel assignments from " + fileSpec);
+		info("Loading pixel assignments from " + fileSpec);
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Util.getSystemPath(fileSpec))));
 		String line = null;
@@ -184,7 +184,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 
 		in.close();
 
-		System.err.println(" Found pixel assignments for " + associations.size() + " resonances.");
+		info("Found pixel assignments for " + associations.size() + " resonances.");
 		
 		identifier.match(associations, guessT);
 		setRowColFrom(associations);
@@ -206,7 +206,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 			pixel.unflag(AbstractMakoPixel.FLAG_UNASSIGNED);
 		}	
 		
-		System.err.println(" Assigned " + assigned + " of " + size() + " resonators to references.");		
+		info("Assigned " + assigned + " of " + size() + " resonators to references.");		
 	}
 
 	

@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
+import crush.CRUSH;
 import jnum.Configurator;
 import jnum.Unit;
 import jnum.Util;
@@ -65,7 +66,7 @@ public class JCMTTauTable  extends LocalAverage<JCMTTauTable.Entry> {
 	}
 	
 	protected void read(int iMJD, String fileName) throws IOException {
-		System.err.print("   [Loading tau data] ");
+		
 			
 		BufferedReader in = Util.getReader(fileName);
 		
@@ -83,7 +84,7 @@ public class JCMTTauTable  extends LocalAverage<JCMTTauTable.Entry> {
 		}
 		in.close();
 		
-		System.err.println(size() + " values parsed.");
+		CRUSH.info(this, "[Loading tau data] " + size() + " values parsed.");
 		
 		Collections.sort(this);
 		
@@ -97,20 +98,20 @@ public class JCMTTauTable  extends LocalAverage<JCMTTauTable.Entry> {
 		Entry mean = getLocalAverage(new TimeStamp(MJD));
 			
 		if(mean.tau.weight() == 0.0) {
-			System.err.println("   ... No skydip data was found in specified time window.");
+			CRUSH.info(this, "... No skydip data was found in specified time window.");
 			
 			if(timeWindow < 6.0 * Unit.hour) {
-				System.err.println("   ... expanding tau lookup window to 6 hours.");
+				CRUSH.info(this, "... expanding tau lookup window to 6 hours.");
 				timeWindow = 6.0 * Unit.hour;
 				mean = getLocalAverage(new TimeStamp(MJD));
 			}
 			else {
-				System.err.println("   WARNING! Tau is unknown.");
+				CRUSH.warning(this, "Tau is unknown.");
 				return 0.0;
 			}
 		}
 		
-		System.err.println("   Local average tau = " + Util.f3.format(mean.tau.value()) + " (from " + mean.measurements + " measurements)");
+		CRUSH.values(this, "Local average tau = " + Util.f3.format(mean.tau.value()) + " (from " + mean.measurements + " measurements)");
 		return mean.tau.value();
 	}
 	

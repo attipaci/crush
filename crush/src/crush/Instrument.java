@@ -42,6 +42,7 @@ import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
 import jnum.math.Range;
 import jnum.math.Vector2D;
+import jnum.reporting.BasicMessaging;
 import jnum.text.TableFormatter;
 import jnum.util.HashCode;
 import nom.tam.fits.*;
@@ -49,7 +50,7 @@ import nom.tam.util.*;
 
 
 public abstract class Instrument<ChannelType extends Channel> extends ChannelGroup<ChannelType> 
-implements TableFormatter.Entries, Messaging {	
+implements TableFormatter.Entries, BasicMessaging {	
 	/**
 	 * 
 	 */
@@ -74,6 +75,8 @@ implements TableFormatter.Entries, Messaging {
 	public Hashtable<String, ChannelGroup<ChannelType>> groups;
 	public Hashtable<String, ChannelDivision<ChannelType>> divisions;
 	public Hashtable<String, Modality<?>> modalities;
+	
+	private Object parent;
 			
 	public boolean isInitialized = false, isValid = false;
 	
@@ -105,6 +108,10 @@ implements TableFormatter.Entries, Messaging {
 		if(!Util.equals(arrangement, i.arrangement)) return false;
 		return true;
 	}
+	
+	public void setParent(Object o) { this.parent = o; }
+	
+	public Object getParent() { return parent; }
 		
 	@Override
     public boolean add(ChannelType channel) {
@@ -137,7 +144,7 @@ implements TableFormatter.Entries, Messaging {
 	// TODO check for incompatible scans
 	public void validate(Vector<Scan<?,?>> scans) throws Exception {
 		if(hasOption("jackknife.alternate")) {
-			System.err.println(" JACKKNIFE! Alternating scans.");
+			notify("JACKKNIFE! Alternating scans.");
 			for(int i=scans.size(); --i >= 0; ) if(i%2 == 1) 
 				for(Integration<?,?> subscan : scans.get(i)) subscan.gain *= -1.0;
 		}
@@ -205,16 +212,16 @@ implements TableFormatter.Entries, Messaging {
 		try { normalizeSkyGains(); }
 		catch(Exception e) {
 			warning("Normalization failed: " + e.getMessage());
-			if(CRUSH.debug) e.printStackTrace();
+			if(CRUSH.debug) CRUSH.trace(e);
 		}
 		
 		if(hasOption("source.fixedgains")) {
 			fixedSourceGains();
-			System.out.println(" Will use static source gains.");
+			info("Will use static source gains.");
 		}
 		
 		if(hasOption("jackknife.channels")) {
-			System.err.println("   JACKKNIFE! Randomly inverted channels in source.");
+			notify("JACKKNIFE: Randomly inverted channels in source.");
 			for(Channel channel : this) if(Math.random() < 0.5) channel.coupling *= -1.0;
 		}
 		
@@ -226,15 +233,15 @@ implements TableFormatter.Entries, Messaging {
 		census();
 		
 		if(CRUSH.debug) {
-			System.err.println("### mapping channels: " + mappingChannels);
-			System.err.println("### mapping pixels: " + getMappingPixels(~sourcelessChannelFlags()).size());
+			debug("mapping channels: " + mappingChannels);
+			debug("mapping pixels: " + getMappingPixels(~sourcelessChannelFlags()).size());
 		}
 		
 		isValid = true;
 	}
 	
 	public void scramble() {
-	    System.err.println("   !!! Scrambling pixel position data (noise map only) !!!");
+	    notify("!!! Scrambling pixel position data (noise map only) !!!");
 	    
 	    List<? extends Pixel> pixels = getPixels();
 	    
@@ -264,7 +271,7 @@ implements TableFormatter.Entries, Messaging {
 	public int sourcelessChannelFlags() { return Channel.FLAG_BLIND | Channel.FLAG_DEAD | Channel.FLAG_DISCARD; }
 	
 	public float normalizeSkyGains() throws Exception {
-		System.err.println(" Normalizing sky-noise gains.");
+	    info("Normalizing sky-noise gains.");
 		CorrelatedMode sky = (CorrelatedMode) modalities.get("obs-channels").get(0);
 		return sky.normalizeGains();
 	}
@@ -324,11 +331,11 @@ implements TableFormatter.Entries, Messaging {
 				}
 				
 				if(mjdRange.contains(MJD)) {
-					//System.err.println("### Setting options for " + rangeSpec);
+					//debug("Setting options for " + rangeSpec);
 					options.parseAll(settings.get(rangeSpec));
 				}
 			}
-			catch(ParseException e) { System.err.println("   WARNING! " + e.getMessage()); }
+			catch(ParseException e) { warning(e); }
 		}
 	}
 	
@@ -338,13 +345,13 @@ implements TableFormatter.Entries, Messaging {
 		// Make options an independent set of options, setting MJD specifics...
 		Hashtable<String, Vector<String>> settings = option("serial").conditionals;
 		for(String rangeSpec : settings.keySet()) if(Range.parse(rangeSpec, true).contains(serialNo)) {
-			//System.err.println("### Setting options for " + rangeSpec);
+			//debug("Setting options for " + rangeSpec);
 			options.parseAll(settings.get(rangeSpec));
 		}
 	}
 	
 	public void setObjectOptions(String sourceName) {
-		//System.err.println(">>> Setting local options for " + sourceName);
+		//debug("Setting local options for " + sourceName);
 		sourceName = sourceName.toLowerCase();
 		
 		if(!options.containsKey("object")) return;
@@ -359,7 +366,7 @@ implements TableFormatter.Entries, Messaging {
 	public void setFitsHeaderOptions(Header header) {
 		if(!options.containsKey("fits")) return;
 		
-		System.err.println(" Setting FITS header options.");
+		info("Setting FITS header options.");
 		
 		final Hashtable<String, Vector<String>> conditionals = options.get("fits").conditionals;
 		
@@ -416,7 +423,7 @@ implements TableFormatter.Entries, Messaging {
 	// perhaps flag.group, and flag.division...
 	public void flagPixels(Collection<String> list) {
 		Hashtable<String, ChannelType> lookup = getIDLookup();
-		System.err.println(" Flagging " + list.size() + " channels");
+		info("Flagging " + list.size() + " channels");
 		for(String id : list) if(lookup.containsKey(id)) lookup.get(id).flag(Channel.FLAG_DEAD);
 	}
 	
@@ -436,7 +443,7 @@ implements TableFormatter.Entries, Messaging {
 	public void setBlindChannels(Collection<String> list) {
 		killChannels(Channel.FLAG_BLIND);
 		
-		System.err.println(" Defining " + list.size() + " blind channels.");		
+		info("Defining " + list.size() + " blind channels.");		
 		
 		Hashtable<String, ChannelType> lookup = getIDLookup();
 		
@@ -664,7 +671,7 @@ implements TableFormatter.Entries, Messaging {
 	
 	// TODO parallelize...
 	public void flattenWeights() {
-		System.err.println(" Switching to flat channel weights.");
+		info("Switching to flat channel weights.");
 		double sum = 0.0, sumG2 = 0.0;
 		for(Channel channel : this) if(channel.isUnflagged(Channel.HARDWARE_FLAGS)) {
 			double G2 = channel.gain * channel.gain;
@@ -738,7 +745,7 @@ implements TableFormatter.Entries, Messaging {
 		for(ChannelType channel : this) out.println(channel);
 		out.close();
 		
-		System.err.println(" Written " + filename);
+		notify("Written " + filename);
 		
 		dataWeights();
 	}
@@ -747,7 +754,7 @@ implements TableFormatter.Entries, Messaging {
 	// create the channel groups based on the wiring scheme.
 
 	public void loadChannelData(String fileName) throws IOException {
-		System.err.println(" Loading pixel data from " + fileName);
+		info("Loading pixel data from " + fileName);
 			
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		String line;
@@ -1001,7 +1008,7 @@ implements TableFormatter.Entries, Messaging {
 			// remove discarded channels from groups (and divisiongroups) also...
 			slimGroups();
 			if(reindex) reindex();
-			System.err.println("   Slimmed to " + size() + " live pixels.");
+			info("Slimmed to " + size() + " live pixels.");
 			return true;
 		}
 		return false;
@@ -1255,7 +1262,7 @@ implements TableFormatter.Entries, Messaging {
 		File file = new File(CRUSH.home + File.separator + "instruments" + File.separator + name.toLowerCase());
 		
 		if(!file.exists()) {
-			System.err.println("ERROR! '" + name + "' is not registered in instruments directory.");
+			CRUSH.error(null, name + "' is not registered in instruments directory.");
 			return null;
 		}
 		
@@ -1266,11 +1273,11 @@ implements TableFormatter.Entries, Messaging {
 			return (Instrument<?>) Class.forName(className).newInstance(); 
 		}
 		catch(IOException e) {
-			System.err.println("ERROR! Problem reading '" + file.getName() + "'");
+			CRUSH.error(null, "Problem reading '" + file.getName() + "'");
 			return null;
 		}
 		catch(Exception e) { 
-			System.err.println("ERROR! " + e.getMessage());
+			CRUSH.error(null, e);
 			e.printStackTrace();
 			return null; 	
 		}
@@ -1318,16 +1325,19 @@ implements TableFormatter.Entries, Messaging {
 	public String toString() { return "Instrument " + getName(); }
 	
 	public void troubleshootFewPixels() {
-		System.err.println("            * Disable gain estimation for one or more modalities. E.g.:");
+	    StringBuffer buf = new StringBuffer();
+	    
+		buf.append("            * Disable gain estimation for one or more modalities. E.g.:\n");
 		
 		for(String modName : getModalityNames()) if(hasOption("correlated." + modName)) if(!hasOption("correlated." + modName + ".nogains"))
-			System.err.println("                '-correlated." + modName + ".noGains'");
+			buf.append("                '-correlated." + modName + ".noGains'\n");
 		
-		if(hasOption("gains")) System.err.println("            * Disable gain estimation globally with '-forget=gains'."); 
-		if(hasOption("despike")) System.err.println("            * Disable despiking with '-forget=despike'.");
+		if(hasOption("gains")) buf.append("            * Disable gain estimation globally with '-forget=gains'.\n"); 
+		if(hasOption("despike")) buf.append("            * Disable despiking with '-forget=despike'.\n");
 		if(hasOption("weighting")) if(hasOption("weighting.noiseRange")) 
-			System.err.println("            * Adjust noise flagging via 'weighting.noiseRange'.");
+			buf.append("            * Adjust noise flagging via 'weighting.noiseRange'.\n");
 		
+		CRUSH.suggest(getParent(), new String(buf));
 	}
 	
 	public int[] getInts() { return recycler.getIntArray(size()); }
@@ -1338,31 +1348,40 @@ implements TableFormatter.Entries, Messaging {
 	
 	public DataPoint[] getDataPoints() { return recycler.getDataPointArray(size()); }
 	
-	@Override
-	public final void error(Throwable e) { CRUSH.error(e); }
+
+    
+    public void shutdown() {}
+    
+    
+    @Override
+    public void info(String message) { CRUSH.info(getParent(), message); }
+
+    @Override
+    public void notify(String message) { CRUSH.notify(getParent(), message); }
+   
+    @Override
+    public void debug(String message) { CRUSH.debug(getParent(), message); }
+    
+    @Override
+    public void warning(String message) { CRUSH.warning(getParent(), message); }
+    
+    @Override
+    public void warning(Exception e, boolean debug) { CRUSH.warning(getParent(), e, debug); }
+
+    @Override
+    public void warning(Exception e) { CRUSH.warning(getParent(), e); }
+
+    @Override
+    public void error(String message) { CRUSH.error(getParent(), message); }
 	
-	@Override
-	public final void error(Throwable e, boolean debug) { CRUSH.error(e, debug); }
+    @Override
+    public void error(Throwable e, boolean debug) { CRUSH.error(getParent(), e, debug); }
+
+    @Override
+    public void error(Throwable e) { CRUSH.error(getParent(), e); }
+
+   
 	
-	@Override
-	public void error(String message) { CRUSH.error(message); }
-	
-	@Override
-	public final void warning(Exception e) { CRUSH.warning(e); }
-	
-	@Override
-	public final void warning(Exception e, boolean debug) { CRUSH.warning(e, debug); }
-	
-	@Override
-	public void warning(String message) { CRUSH.warning(message); }
-	
-	@Override
-	public final void info(String message) { CRUSH.info(message); }
-	
-	public void status(String message) {}
-	
-	
-	public void shutdown() {}
 	
 	public static void recycle(int[] array) { recycler.recycle(array); }
 	
@@ -1378,10 +1397,9 @@ implements TableFormatter.Entries, Messaging {
 	
 	private static ArrayRecycler recycler = new ArrayRecycler();
 	
-		
+	
 	public final static int GAINS_SIGNED = 0;
 	public final static int GAINS_BIDIRECTIONAL = 1;
-
 	
 }
  

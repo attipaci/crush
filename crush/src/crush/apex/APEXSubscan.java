@@ -102,7 +102,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		// Flag pixels that chop on source
 		// left and right are the pixel positions, where, if there's a pixel, it will have the source
 		// in the left or right beams...
-		//System.err.println("on phase is " + integration[i][k].onPhase);
+		//info("on phase is " + integration[i][k].onPhase);
 		
 		
 		
@@ -127,26 +127,27 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		// Flag pixels that chop on source
 		// left and right are the pixel positions, where, if there's a pixel, it will have the source
 		// in the left or right beams...
-		//System.err.println("on phase is " + subscan[i][k].onPhase);
+		//info("on phase is " + subscan[i][k].onPhase);
 		
-		System.err.print("   Marking Chopper Phases: ");
+	    StringBuffer buf = new StringBuffer();
+	    
+		buf.append("Marking Chopper Phases... ");
 	
-		
 		for(Pixel pixel : instrument.getPixels()) {
 			Vector2D position = pixel.getPosition();
 			
 			if(position.distanceTo(left) < tolerance) for(Channel channel : pixel) {
 				channel.sourcePhase |= Frame.CHOP_LEFT;
-				System.err.print(" L" + channel.getID());
+				buf.append(" L" + channel.getID());
 			}
 			else if(position.distanceTo(right) < tolerance) for(Channel channel : pixel) {
 				channel.sourcePhase |= Frame.CHOP_RIGHT;
-				System.err.print(" R" + channel.getID()); 
+				buf.append(" R" + channel.getID()); 
 			}
 			else for(Channel channel : pixel) channel.sourcePhase &= ~Frame.CHOP_FLAGS;
 		}
 		
-		System.err.println();
+		info(new String(buf));
 		
 		chopper.phases = new PhaseSet(this);
 		
@@ -193,7 +194,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		
 		chopper.efficiency = ((double) usable / size());
 		
-		System.err.println("   Chopper parameters: " + chopper.toString());
+		CRUSH.values(this, "Chopper parameters: " + chopper.toString());
 		
 		chopper.phases.validate();
 		
@@ -319,9 +320,9 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		// Use the integrationTime to convert to data weights...
 		instrument.dataWeights();
 		
-		System.err.println("   Sampling at " + Util.f3.format(1.0/instrument.samplingInterval) + " Hz.");
+		info("Sampling at " + Util.f3.format(1.0/instrument.samplingInterval) + " Hz.");
 	
-		System.err.println("   " + frames + " frames found (" + 
+		info(frames + " frames found (" + 
 				Util.f1.format(frames * instrument.samplingInterval / Unit.min) + " minutes).");
 	
 		new DataParTable(hdu).read(); 
@@ -358,7 +359,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
                 objY = (double[]) table.getColumn(iOY);
                 
                 for(int i=objX.length; --i >= 0; ) if(!Double.isNaN(objX[i])) if(objX[i] > m900) {
-                    System.err.println("   Non-sidereal tracking detected...");
+                    info("Non-sidereal tracking detected...");
                     scan.isNonSidereal = true;
                     break;
                 }
@@ -401,7 +402,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 			if(apexScan.chopper != null) chopper = apexScan.chopper.copy();
 
 			if(chopper != null)
-				System.err.println("   Nodding " + (nodPhase == Frame.CHOP_LEFT ? "[LEFT]" : 
+			    info("Nodding " + (nodPhase == Frame.CHOP_LEFT ? "[LEFT]" : 
 					(nodPhase == Frame.CHOP_RIGHT ? "[RIGHT]" : "[???]")));		
 		}	
 		
@@ -555,7 +556,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
             catch (LockedException e) {}
 	    }
 	    
-        System.err.println("   --> PWV = " + Util.f3.format(pwv) + " mm, from " + N + " entries.");
+        info("--> PWV = " + Util.f3.format(pwv) + " mm, from " + N + " entries.");
 	}
 
 	@SuppressWarnings("unchecked")
@@ -565,7 +566,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 	}
 			
 	public void fitsRCP() {
-		System.err.println("   Using RCP data contained in the FITS.");
+		info("Using RCP data contained in the FITS.");
 		for(APEXContinuumPixel pixel : instrument) pixel.position = (Vector2D) pixel.fitsPosition.clone();
 	}
 

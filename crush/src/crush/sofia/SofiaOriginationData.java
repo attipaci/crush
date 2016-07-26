@@ -44,8 +44,8 @@ public class SofiaOriginationData extends SofiaData {
 		observer = header.getString("OBSERVER");
 		creator = header.getString("CREATOR");
 		operator = header.getString("OPERATOR");
-		fileName = header.getString("FILENAME");
-		fileName = header.getString("OBSERVAT");		// not in 3.0
+		fileName = header.getString("FILENAME");	
+		//fileName = header.getString("OBSERVAT");		// not in 3.0
 	}
 
 	@Override

@@ -69,7 +69,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 			if(he3.containsKey("maxrms")) {
 				double maxrms = he3.get("maxrms").getDouble() * Unit.mK;
 				if(rmsHe3 > maxrms) {
-					System.err.println("Scan " + scan.getID() + " temperature fluctuations exceed limit. Removing from dataset.");
+					warning("Scan " + scan.getID() + " temperature fluctuations exceed limit. Removing from dataset.");
 					clear();
 				}
 			}
@@ -80,14 +80,14 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	@Override
 	public void setZenithTau(double value) {	
 		super.setZenithTau(value);
-		System.err.println("   --->"
+		CRUSH.values(this, "--->"
 				+ " tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv", zenithTau)) + "mm"
 		);		
 	}
 	
 	public void temperatureCorrect() {
-		System.err.println("   Correcting for He3 temperature drifts.");
+		info("Correcting for He3 temperature drifts.");
 		
 		Response mode = (Response) instrument.modalities.get("temperature").get(0);
 		Signal signal = getSignal(mode);
@@ -98,7 +98,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 		}
 		
 		rmsHe3 = signal.getRMS();
-		System.err.println("   RMS He3 temperature drift is " + Util.f3.format(1000.0 * rmsHe3 * instrument.gain) + " uK.");
+		info("RMS He3 temperature drift is " + Util.f3.format(1000.0 * rmsHe3 * instrument.gain) + " uK.");
 		
 		final Signal temperatureSignal = signal;
 	
@@ -124,7 +124,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 		super.writeProducts();
 		if(hasOption("he3")) if(option("he3").equals("gains")) {
 			try { writeTemperatureGains(); }
-			catch(IOException e) { System.err.println("WARNING! Problem writing temperature gains."); }
+			catch(IOException e) { warning("Problem writing temperature gains."); }
 		}
 	}
 	
@@ -132,7 +132,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	     
 		ChannelGroup<LabocaPixel> blindChannels = instrument.getBlindChannels();
 		if(blindChannels.size() < 1) {
-			System.err.println("   WARNING! No blind channels for temperature correction.");
+			warning("No blind channels for temperature correction.");
 			return;
 		}
 		
@@ -146,7 +146,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 		blindMode.resolution = blindTimeScale;
 		blindMode.fixedGains = true;
 		
-		System.err.println("   Calculating He3 temperatures from " + blindChannels.size() + " blind bolometer[s].");
+		info("Calculating He3 temperatures from " + blindChannels.size() + " blind bolometer[s].");
 		
 		// Calculate the RMS temperature fluctuation...
 		final CorrelatedSignal signal = new CorrelatedSignal(blindMode, this);
@@ -173,7 +173,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 		Configurator directive = option("he3");
 		if(!(directive.equals("thermistor") || directive.equals("gains"))) return;
 			
-		System.err.println("   Parsing He3 temperatures from MONITOR table... ");
+		info("Parsing He3 temperatures from MONITOR table... ");
 	
 		final int n = hdu.getNRows();
 		
@@ -193,7 +193,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 			}
 		}
 		
-		System.err.println("   --> Found " + table.size() + " He3 temperature entries.");
+		CRUSH.detail(this, "--> Found " + table.size() + " He3 temperature entries.");
 		
 		if(table.size() > 1) interpolateHe3Temperatures(table);
 	}
@@ -201,7 +201,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	
 	// TODO reimplement with localized data...
 	public void interpolateHe3Temperatures(final ArrayList<Vector2D> table) {
-		System.err.print("   Interpolating He3 temperatures. ");
+		
 		// plus or minus in days;
 		final double smoothFWHM = he3TimeScale / Unit.day;
 		final double windowSize = 2.0 * smoothFWHM;
@@ -237,7 +237,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 			}
 		}
 
-		System.err.println(nFlagged == 0 ? "All good :-)" : "Dropped " + nFlagged + " frames without reliable He3 data :-(");	
+		info("Interpolating He3 temperatures. " + (nFlagged == 0 ? "All good :-)" : "Dropped " + nFlagged + " frames without reliable He3 data :-("));	
 
 	}
 	

@@ -115,8 +115,8 @@ public abstract class Photometry extends SourceModel {
         DataPoint F = new DataPoint(sourceFlux);
         F.scale(1.0 / getInstrument().janskyPerBeam());
 
-        if(F.weight() > 0.0) System.err.print("Flux: " + F.toString(Util.e3) + " Jy/beam. ");	
-        else System.err.println("<<invalid>> ");
+        if(F.weight() > 0.0) CRUSH.values(this, "Flux: " + F.toString(Util.e3) + " Jy/beam. ");	
+        else CRUSH.values(this, "<<invalid>> ");
     }
 
     @Override
@@ -171,25 +171,30 @@ public abstract class Photometry extends SourceModel {
         Unit Jy = new Unit("Jy/beam", jansky);
         Unit mJy = new Unit("mJy/beam", 1e-3 * jansky);
         Unit uJy = new Unit("uJy/beam", 1e-6 * jansky);
-
-        System.out.println("  [" + sourceName + "]");
-        System.out.println("  =====================================");
-        System.out.print("  Flux  : ");
+             
+        StringBuffer buf = new StringBuffer();
+        buf.append(
+                "  [" + sourceName + "]\n" +
+                "  =====================================\n" + 
+                "  Flux  : ");
 
         double mag = Math.max(Math.abs(F.value()), F.rms()) ;
 
-        if(mag > 1.0 * Jy.value()) System.out.println(F.toString(Jy));
-        else if(mag > 1.0 * mJy.value()) System.out.println(F.toString(mJy));
-        else System.out.println(F.toString(uJy));
+        if(mag > 1.0 * Jy.value()) buf.append(F.toString(Jy));
+        else if(mag > 1.0 * mJy.value()) buf.append(F.toString(mJy));
+        else buf.append(F.toString(uJy));
+        
+        buf.append("\n");
 
-        System.out.println("  Time  : " + Util.f1.format(integrationTime/Unit.min) + " min.");
+        buf.append("  Time  : " + Util.f1.format(integrationTime/Unit.min) + " min.\n");
 
         double chi2 = getReducedChi2();
-        if(!Double.isNaN(chi2)) System.out.println("  |rChi|: " + getCommentedChi2(chi2));
+        if(!Double.isNaN(chi2)) buf.append("  |rChi|: " + getCommentedChi2(chi2) + "\n");
 
         //System.out.println("  NEFD  : " + Util.f1.format(500.0 * F.rms() * Math.sqrt(integrationTime/Unit.s)) + " mJy sqrt(s).");
-        System.out.println("  =====================================");
+        buf.append("  =====================================\n");
 
+        CRUSH.result(this, new String(buf));
     }
 
     public String getCommentedChi2(double chi2) {
@@ -249,7 +254,7 @@ public abstract class Photometry extends SourceModel {
 
         out.close();
 
-        System.err.println("  Written " + fileName + "");
+        CRUSH.notify(this, "Written " + fileName + "");
 
         if(scans.size() > 1) gnuplot(coreName, fileName);
 
@@ -347,7 +352,7 @@ public abstract class Photometry extends SourceModel {
 
         plot.close();
 
-        System.err.println("  Written " + plotName);
+        CRUSH.notify(this, "Written " + plotName);
 
         if(hasOption("gnuplot")) {
             String command = option("gnuplot").getValue();
@@ -375,7 +380,7 @@ public abstract class Photometry extends SourceModel {
         plot.println("replot");
 
         plot.println("print '  Written " + coreName + ".eps'");
-        System.err.println("  Written " + coreName + ".eps");	
+        CRUSH.notify(this, "Written " + coreName + ".eps");	
     }
 
     public void gnuplotPNG(PrintWriter plot, String coreName) {
@@ -404,7 +409,7 @@ public abstract class Photometry extends SourceModel {
         plot.println("set out '" + coreName + ".png'");
         plot.println("replot");
         plot.println("print '  Written " + coreName + ".png'");	
-        System.err.println("  Written " + coreName + ".png");
+        CRUSH.notify(this, "Written " + coreName + ".png");
     }
 
 

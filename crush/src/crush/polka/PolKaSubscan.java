@@ -104,7 +104,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		
 		if(!isWaveplateValid()) { 
 			hasTimeStamps = false;
-			System.err.println("     WARNING! Invalid waveplate data. Will attempt workaround...");
+			warning("Invalid waveplate data. Will attempt workaround...");
 			calcMeanWavePlateFrequency();
 			Channel channel = hasOption("waveplate.tpchannel") ?
 					instrument.getIDLookup().get(option("waveplate.tpchannel").getValue()) :
@@ -117,12 +117,12 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		    else interpolateAngles();
 		}
 		else if(hasOption("waveplate.frequency")) {
-			System.err.println("   Setting waveplate frequency " + Util.f3.format(getWaveplateFrequency()) + " Hz.");
-			System.err.println("   WARNING! Phaseless polarization (i.e. uncalibrated angles).");
+			info("Setting waveplate frequency " + Util.f3.format(getWaveplateFrequency()) + " Hz.");
+			warning("Phaseless polarization (i.e. uncalibrated angles).");
 		}
 		else {
 			try { calcMeanWavePlateFrequency(); }
-			catch(IllegalStateException e) { System.err.println("   WARNING! " + e.getMessage() + " Using defaults."); }
+			catch(IllegalStateException e) { warning(e.getMessage() + " Using defaults."); }
 		}
 
 		if(hasOption("waveplate.tpchar")) {
@@ -169,7 +169,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		PolKa polka = (PolKa) instrument;
 		
 		if(polka.frequencyChannel == null) 
-			throw new IllegalStateException("WARNING! Frequency channel undefined.");
+			throw new IllegalStateException("Frequency channel undefined.");
 
 		double sum = 0.0;
 		int n=0;
@@ -190,7 +190,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		double jitter = Math.sqrt(sum / (n-1)) / polka.waveplateFrequency;
 		if(!hasOption("waveplate.jitter")) polka.jitter = jitter;
 		
-		System.err.println("   Measured waveplate frequency is " + Util.f3.format(polka.waveplateFrequency) + " Hz (" + Util.f1.format(100.0*jitter) + "% jitter).");
+		info("Measured waveplate frequency is " + Util.f3.format(polka.waveplateFrequency) + " Hz (" + Util.f1.format(100.0*jitter) + "% jitter).");
 	}
 	
 	
@@ -332,12 +332,14 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 	}
 	
 	private void interpolateAngles() {
-	    System.err.print("   Reconstructing waveplate (trapesoidal): ");
+	    StringBuffer buf = new StringBuffer();
+	    
+	    buf.append("Reconstructing waveplate (trapesoidal): ");
 	    
 	    PolKa polka = (PolKa) instrument;
 	    
 	    ArrayList<Double> crossings = getMJDCrossings();
-	    System.err.println(crossings.size() + " crossings.");
+	    buf.append(crossings.size() + " crossings.");
 	    
 	    SimpleInterpolator interpolator = new SimpleInterpolator();
 	    for(int i=0; i<crossings.size(); i++) {
@@ -349,7 +351,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 	    interpolator.validate();
 	    
 	    double f = crossings.size() / ((crossings.get(crossings.size() - 1) - crossings.get(0)) * Unit.day / Unit.s);
-	    System.err.println("   --> <f> = " + Util.f3.format(f) + " Hz.");
+	    buf.append("   --> <f> = " + Util.f3.format(f) + " Hz.");
 	    polka.waveplateFrequency = f;  
 	    
 	    int bad = 0;
@@ -372,39 +374,43 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 	        }
 	    }
 	    
-	    if(bad > 0) System.err.print("   --> " + bad + " frames invalidated.");
+	    if(bad > 0) buf.append("   --> " + bad + " frames invalidated.");
 	    
-	    System.err.println();
+	    info(new String(buf));
 	}
 	
 	private void regularAngles() throws IllegalStateException {	
 	    PolKa polka = (PolKa) instrument;
-		System.err.print("   Fixing waveplate: ");
+	    
+	    StringBuffer buf = new StringBuffer();
+		buf.append("Fixing waveplate: ");
 		
 		ArrayList<Double> crossings = getMJDCrossings();
-		System.err.print(crossings.size() + " crossings, ");
+		buf.append(crossings.size() + " crossings, ");
 		
 		if(hasOption("waveplate.despike")) {
 			double level = 6.0;
 			try { level = option("waveplate.despike").getDouble(); }
 			catch(NumberFormatException e) {}
 			
-			try { regress(crossings, level); }
+			try { regress(crossings, level, buf); }
 			// If the errors are too large, try a second round
 			catch(IllegalStateException e) {
-				try { regress(crossings, level); }
+				try { regress(crossings, level, buf); }
 				catch(IllegalStateException e2) {}
 			}
 		}
 		
-		Vector2D coeffs = regress(crossings, Double.NaN);
+		Vector2D coeffs = regress(crossings, Double.NaN, buf);
 		
-		setMinDelay(crossings, coeffs);
+		buf.append("dt = " + Util.f1.format(setMinDelay(crossings, coeffs) / Unit.ms) + "ms, ");
 		
 		double MJD0 = coeffs.x();
 		double dMJDdn = coeffs.y();
 		double freq = 1.0 / (dMJDdn * Unit.day);
-		System.err.println("f = " + Util.f3.format(freq) + " Hz.");
+		buf.append("f = " + Util.f3.format(freq) + " Hz.");
+
+        info(new String(buf));
 		
 		for(Frame exposure : this) if(exposure != null) {
 			PolKaFrame frame = (PolKaFrame) exposure;
@@ -414,9 +420,10 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		
 		polka.waveplateFrequency = freq;
 		
+		
 	}
 	
-	private Vector2D regress(ArrayList<Double> crossings, double despike) throws IllegalStateException {
+	private Vector2D regress(ArrayList<Double> crossings, double despike, StringBuffer buf) throws IllegalStateException {
 			
 		double sumx = 0.0, sumy = 0.0, sumxy = 0.0, sumxx = 0.0, sumyy = 0.0;
 		int n = crossings.size();
@@ -438,7 +445,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		double sigma2 = (n * sumyy - sumy*sumy - dMJDdn*dMJDdn*(n*sumxx - sumx*sumx)) / (n * (n-2));
 		double sigma = Math.sqrt(sigma2);
 		
-		//System.err.println("### sigma = " + Util.f3.format(sigma * Unit.day / Unit.ms) + " ms.");
+		//debug("sigma = " + Util.f3.format(sigma * Unit.day / Unit.ms) + " ms.");
 		
 		if(!Double.isNaN(despike) && despike > 0.0) {
 			int removed = 0;
@@ -452,7 +459,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 				}
 			}
 			n -= removed;
-			System.err.print(removed + " bad, ");
+			buf.append(removed + " bad, ");
 		}
 		
 		// If the rms error in the timings is greater than 3.6 degrees
@@ -463,7 +470,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		return new Vector2D(MJD0, dMJDdn);
 	}
 	
-	public void setMinDelay(ArrayList<Double> crossings, Vector2D coeffs) {
+	public double setMinDelay(ArrayList<Double> crossings, Vector2D coeffs) {
 		double MJD0 = coeffs.x();
 		double dMJDdn = coeffs.y();
 		double mindMJD = 0.0;
@@ -474,9 +481,9 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		
 		meanTimeStampDelay = -mindMJD * Unit.day;
 		
-		System.err.print("dt = " + Util.f1.format(meanTimeStampDelay / Unit.ms) + "ms, ");
-		
 		coeffs.addX(mindMJD);
+
+		return meanTimeStampDelay;
 	}
 	
 	// Check the waveplate for the bridge error during 2011 Dec 6-8, when 
@@ -490,13 +497,13 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		PolKa polka = (PolKa) instrument;
 		PolKaFrame firstFrame = (PolKaFrame) get(0);
 		
-		//if(firstFrame.waveplateAngle == 0.0) System.err.println("### WARNING zero waveplate angle.");
+		//if(firstFrame.waveplateAngle == 0.0) warning("Zero waveplate angle.");
 		
 		double phase1 = getMeanTPPhase(channel, polka.waveplateFrequency) + firstFrame.waveplateAngle;
 		double phase2 = getMeanTPPhase(channel, 2.0 * polka.waveplateFrequency) + 2.0 * firstFrame.waveplateAngle;
 		double phase4 = getMeanTPPhase(channel, 4.0 * polka.waveplateFrequency) + 4.0 * firstFrame.waveplateAngle;
 		
-		System.err.println("   Measured TP Phases: "
+		info("Measured TP Phases: "
 				+ Util.f1.format(Math.IEEEremainder(phase1, Constant.twoPi) / Unit.deg) + ", "
 				+ Util.f1.format(Math.IEEEremainder(phase2, Constant.twoPi) / Unit.deg) + ", "
  				+ Util.f1.format(Math.IEEEremainder(phase4, Constant.twoPi) / Unit.deg) + " deg"
@@ -504,24 +511,24 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 	}
 	
 	public void setTPPhases(Channel channel) {
-		System.err.println("   Reconstructing waveplate angles from TP modulation.");
+		info("Reconstructing waveplate angles from TP modulation.");
 		
 		PolKa polka = (PolKa) instrument;
 			
 		int harmonic = hasOption("waveplate.tpharmonic") ? option("waveplate.tpharmonic").getInt() : 2;
 		
-		//if(firstFrame.waveplateAngle == 0.0) System.err.println("### WARNING zero waveplate angle.");
+		//if(firstFrame.waveplateAngle == 0.0) warning("Zero waveplate angle.");
 		String analyzer = "analyzer." + (polka.isVertical ? "v" : "h") + ".";
 			
 		double delta = option(analyzer + "phase").getDouble() * Unit.deg; 
 		double phase = getMeanTPPhase(channel, harmonic * polka.waveplateFrequency);
 		double alpha = (delta - phase) / harmonic;
 		
-		System.err.println("   ---> Using phase " + Util.f1.format(delta / Unit.deg) + " deg for pixel " + channel.getID() + ".");
+		info("---> Using phase " + Util.f1.format(delta / Unit.deg) + " deg for pixel " + channel.getID() + ".");
 		
 		if(hasOption("waveplate.tpchar")) {
 			PolKaFrame firstFrame = (PolKaFrame) get(0);
-			System.err.println("   Reconstruction error: " + 
+			warning("Reconstruction error: " + 
 					Util.f1.format(Math.IEEEremainder(alpha - firstFrame.waveplateAngle, Constant.twoPi) / Unit.deg) +
 					" deg.");
 		}
@@ -551,7 +558,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 		sumc *= 2.0/n;
 		sums *= 2.0/n;
 		
-		System.err.println("   ---> TP: " + Util.e3.format(ExtraMath.hypot(sums, sumc))
+		info("---> TP: " + Util.e3.format(ExtraMath.hypot(sums, sumc))
 				+ " @ " + Util.f3.format(freq) + "Hz");
 		
 		return Math.atan2(sums, sumc);

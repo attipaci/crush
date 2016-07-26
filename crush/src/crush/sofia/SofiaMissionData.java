@@ -41,8 +41,8 @@ public class SofiaMissionData extends SofiaData {
 	
 
 	public void parseHeader(SofiaHeader header) {
-		obsPlanID = header.getString("PLANID");	// TODO map to project?
-		aircraft = header.getString("DEPLOY");
+		obsPlanID = header.getString("PLANID");	// TODO map to project?	
+		aircraft = header.getString("DEPLOY");	
 		missionID = header.getString("MISSN-ID");
 		flightLeg = header.getInt("FLIGHTLG");
 	}
