@@ -159,7 +159,7 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 		//BufferedReader err = new BufferedReader(new InputStreamReader(convert.getErrorStream()));
 
 		//String line = null;
-		//while((line = err.readLine()) != null) System.err.println("> " + line);
+		//while((line = err.readLine()) != null) CRUSH.debug(this, line);
 
 		try { 
 			int retval = convert.waitFor(); 

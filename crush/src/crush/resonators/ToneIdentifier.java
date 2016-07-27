@@ -25,6 +25,7 @@ package crush.resonators;
 
 import java.util.ArrayList;
 
+import crush.CRUSH;
 import jnum.Configurator;
 import jnum.Util;
 import jnum.data.fitting.ChiSquared;
@@ -104,7 +105,7 @@ public abstract class ToneIdentifier<IDType extends FrequencyID> extends ArrayLi
 		minimizer.minimize();
 		
 		rchi = Math.pow(minimizer.getMinimum(), 1.0 / power);
-		System.err.println("   Tone assignment rms = " + Util.s3.format(1e6 * rchi) + " ppm.");
+		CRUSH.info(this, "Tone assignment rms = " + Util.s3.format(1e6 * rchi) + " ppm.");
 		
 		return delta.value();
 	}
@@ -117,7 +118,7 @@ public abstract class ToneIdentifier<IDType extends FrequencyID> extends ArrayLi
 		}
 		
 		int n = assign(resonators, shift, 5);
-		System.err.println("   Identified " + n + " resonances.");
+		CRUSH.info(this, "Identified " + n + " resonances.");
 	}
 	
 	private int assign(ResonatorList<?> resonators, double shift, int rounds) {
@@ -155,7 +156,7 @@ public abstract class ToneIdentifier<IDType extends FrequencyID> extends ArrayLi
 		}
 		
 		
-		//System.err.println("     +" + ids + " resonances.");
+		//CRUSH.info(this, "     + " + ids + " resonances.");
 		
 		return ids + extraIDs.assign(remaining, shift, rounds-1);
 	}

@@ -158,7 +158,7 @@ public class MultiBeamMap extends ScalarMap {
 		/*
 		try { 
 			transformer.write("fft.fits");
-			System.err.println(" Written fft.fits");
+			notify("Written fft.fits");
 		}
 		catch(Exception e) { e.printStackTrace(); }
 		*/
@@ -211,7 +211,7 @@ public class MultiBeamMap extends ScalarMap {
 		/*
 		try { 
 			transformer.write("transformer-dual.fits");
-			System.err.println(" Written transformer-dual.fits");
+			notify("Written transformer-dual.fits");
 		}
 		catch(Exception e) { e.printStackTrace(); }
 		*/
@@ -356,7 +356,7 @@ public class MultiBeamMap extends ScalarMap {
 		/*
 		try { 
 			dual.map.write("reconstructed-dual.fits");
-			System.err.println(" Written reconstructed-dual.fits");
+			notify("Written reconstructed-dual.fits");
 		}
 		catch(Exception e) { e.printStackTrace(); }
 		*/
@@ -364,7 +364,7 @@ public class MultiBeamMap extends ScalarMap {
 		/*
 		try { 
 			dual.base.write("base-dual.fits");
-			System.err.println(" Written base-dual.fits");
+			notify("Written base-dual.fits");
 		}
 		catch(Exception e) { e.printStackTrace(); }
 		*/
@@ -416,7 +416,7 @@ public class MultiBeamMap extends ScalarMap {
 		/*
 		try { 
 			map.write("deconvolved-radec.fits");
-			System.err.println(" Written deconvolved-radec.fits");
+			notify("Written deconvolved-radec.fits");
 		}
 		catch(Exception e) { e.printStackTrace(); }
 		*/
@@ -428,7 +428,7 @@ public class MultiBeamMap extends ScalarMap {
 		/*
 		try { 
 			map.write("processed.fits");
-			System.err.println(" Written processed.fits");
+			notify("Written processed.fits");
 		}
 		catch(Exception e) { e.printStackTrace(); }
 		*/

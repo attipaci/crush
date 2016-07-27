@@ -22,6 +22,7 @@
  ******************************************************************************/
 package crush.mako;
 
+import crush.CRUSH;
 import crush.resonators.*;
 import jnum.Configurator;
 import jnum.Unit;
@@ -69,7 +70,7 @@ public class MakoPixelMatch extends ToneIdentifier<MakoFrequencyID> {
 	
 
 	public void read(String fileSpec) throws IOException {
-		System.err.println(" Loading resonance identifications from " + fileSpec);
+		CRUSH.info(this, "Loading resonance identifications from " + fileSpec);
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Util.getSystemPath(fileSpec))));
 		String line = null;
@@ -98,7 +99,7 @@ public class MakoPixelMatch extends ToneIdentifier<MakoFrequencyID> {
 		
 		//Collections.sort(this);
 		
-		System.err.println(" Got IDs for " + size() + " resonances.");
+		CRUSH.info(this, "Got IDs for " + size() + " resonances.");
 	}
 	
 	public void uniformize() {
@@ -109,7 +110,7 @@ public class MakoPixelMatch extends ToneIdentifier<MakoFrequencyID> {
 		}
 		
 		double ave = Statistics.median(deltas);
-		System.err.println(" Median hot/cold response is " + Util.s3.format(1e6 * ave) + " ppm / K");
+		CRUSH.values(this, "Median hot/cold response is " + Util.s3.format(1e6 * ave) + " ppm / K");
 		
 		for(int i=size(); --i >= 0; ) {
 			MakoFrequencyID id = get(i);
@@ -125,7 +126,7 @@ public class MakoPixelMatch extends ToneIdentifier<MakoFrequencyID> {
 	@Override
 	protected double fit(final ResonatorList<?> resonators, double guessT) {
 		double T = super.fit(resonators, guessT);
-		System.err.println("   --> T(id) = " + Util.s4.format(T / Unit.K) + " K.");
+		CRUSH.values(this, "--> T(id) = " + Util.s4.format(T / Unit.K) + " K.");
 		return T;
 	}
 	

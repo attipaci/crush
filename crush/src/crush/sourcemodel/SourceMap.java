@@ -363,7 +363,7 @@ public abstract class SourceMap extends SourceModel {
 
                     if(CRUSH.debug) {
                         if(index.i() < 0 || index.i() >= sizeX() || index.j() < 0 || index.j() >= sizeY()) {
-                            System.err.println("!!! invalid map index pixel " + pixel.getID() + " frame " + exposure.index + ": " +
+                            warning("!!! invalid map index pixel " + pixel.getID() + " frame " + exposure.index + ": " +
                                     (exposure.sourceIndex == null ? 
                                             index : 
                                                 exposure.sourceIndex[pixel.getIndex()]
@@ -503,7 +503,6 @@ public abstract class SourceMap extends SourceModel {
         Vector2D resolution = getGrid().getResolution();
         double diagonal = ExtraMath.hypot(sizeX * resolution.x(), sizeY * resolution.y());
 
-        System.err.println("\n");
         error("Map is too large to fit into memory (" + sizeX + "x" + sizeY + " pixels).");
         
         StringBuffer buf = new StringBuffer();

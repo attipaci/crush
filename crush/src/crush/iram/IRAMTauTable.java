@@ -66,8 +66,7 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 	private void read(String fileName, String timeZone) throws IOException {
 		if(fileName.equals(this.fileName)) return;
 			
-		CRUSH.info(this, "[Loading skydip tau values.]");
-		if(CRUSH.debug) CRUSH.detail(this, " >> " + fileName + " >> ");		
+				
 		
 		BufferedReader in = Util.getReader(fileName);
 		String line = null;
@@ -101,11 +100,13 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 		}
 		in.close();
 		
+        CRUSH.info(this, "[Loading skydip tau values.] -- " + size() + " valid records found.");
+        if(CRUSH.debug) CRUSH.detail(this, " >> " + fileName + " >> ");
+		
 		this.fileName = fileName;
 		
 		Collections.sort(this);
 		
-		System.err.println(" -- " + size() + " valid records found.");	
 	}
 	
 	public double getTau(double MJD) {

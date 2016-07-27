@@ -241,10 +241,9 @@ public class ScalarMap extends SourceMap {
 		double blankingLevel = getBlankingLevel();
 		if(!Double.isNaN(blankingLevel)) CRUSH.detail(this, "Blanking positions above " + Util.f2.format(blankingLevel) + " sigma in source model.");
 		
-		CRUSH.detail(this, "Removing model from the data. ");
+		CRUSH.detail(this, "Removing model from the data.");
 		try { super.sync(); }
 		catch(Exception e) { e.printStackTrace(); }
-		System.err.println();
 		
 		// For testing the removal of the model...
 		//for(int i=0; i<map.sizeX(); i++) Arrays.fill(base[i], 0.0);
@@ -275,7 +274,6 @@ public class ScalarMap extends SourceMap {
 		CRUSH.detail(this, "Injecting source map into timestream data. ");
 		try { super.sync(); }
 		catch(Exception e) { e.printStackTrace(); }
-		System.err.println();
 		
 		map.reset(true);
 		base.clear();
@@ -876,7 +874,7 @@ public class ScalarMap extends SourceMap {
 			imager.setSize(width, height);
 			imager.saveAs(map.fileName + ".png", width, height);	
 		}
-		System.err.println();
+		
 	}
 	
 	@Override

@@ -54,12 +54,11 @@ public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegr
 			//double tauLOS = -Math.log(1.0-eps);
 			
 			// TODO
-			//System.err.println("   Tau from bolometers (not used):");
-			//printEquivalentTaus(tauLOS * scan.horizontal.sinLat());
-			
+			//info("Tau from bolometers (not used):");
+			//printEquivalentTaus(tauLOS * scan.horizontal.sinLat());	
 			
 			if(!hasOption("excessload")) instrument.excessLoad = measuredLoad - getSkyLoadTemperature();
-			//System.err.println("   Excess optical load on bolometers is " + Util.f1.format(instrument.excessLoad) + " K. (not used)");		
+			//info("Excess optical load on bolometers is " + Util.f1.format(instrument.excessLoad) + " K. (not used)");		
 		}
 	}
 	

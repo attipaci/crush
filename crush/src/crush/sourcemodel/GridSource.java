@@ -260,13 +260,13 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	
 	
 	public void printShortInfo() {
-		System.err.println("\n\n  [" + getName() + "]\n" + super.toString());
+		CRUSH.info(this, "\n[" + getName() + "]\n" + super.toString());
 	}
 	
 	@Override
 	public String toString() {	
 		String info = fileName == null ? "\n" : " Image File: " + fileName + ". ->" + "\n\n" + 
-			"  [" + getName() + "]\n" +
+			"[" + getName() + "]\n" +
 			super.toString();
 		
 		return info;

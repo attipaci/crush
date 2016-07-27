@@ -126,7 +126,7 @@ public class PointingTable extends LocalAverage<PointingTable.Entry> {
 	public Vector2D getIncrement(double MJD, double Tamb, HorizontalCoordinates horizontal, IRAMPointingModel pointingModel) {		
 		Entry mean = getLocalAverage(new Location(MJD, horizontal), new Model(pointingModel, Tamb));
 		
-		System.err.println("   Incremental Pointing is " + 
+		CRUSH.info(this, "Incremental Pointing is " + 
 				Util.f1.format(mean.dx.value() / Unit.arcsec) + "," +
 				Util.f1.format(mean.dy.value() / Unit.arcsec) + 
 				" (quality:" + Util.f2.format(mean.dx.weight()) + ")."

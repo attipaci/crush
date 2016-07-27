@@ -312,7 +312,6 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		int serial = header.getIntValue("SCANNO");
 		
 		site = new GeodeticCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
-		//System.err.println(" Telescope Location: " + site);
 		
 		// IRAM Pico Veleta PDF 
 		//site = new GeodeticCoordinates("-03d23m33.7s, 37d03m58.3s");
@@ -324,6 +323,9 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		//latitude: N 37d 4m 6.29s
 		//longitude: W 3d 23m 55.51s 
 		//site = new GeodeticCoordinates("-03d23m55.51s, 37d04m06.29s");
+		
+		//info("Telescope Location: " + site);
+	    
 		
 		creator = header.getStringValue("CREATOR");
 		observer = header.getStringValue("OBSERVER");
@@ -482,8 +484,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 					tau225GHz = table.getTau(getMJD());
 					instrument.getOptions().processSilent("tau.225ghz", tau225GHz + "");
 				}
-				catch(IOException e2) { 
-					System.err.println("\n"); 
+				catch(IOException e2) {
 					warning("Cannot read tau table: " + e2.getMessage());
 					if(CRUSH.debug) CRUSH.trace(e2); 
 					tau225GHz = Double.NaN;
@@ -540,7 +541,6 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		int serial = header.getIntValue("SCANNO");
 		
 		//site = new GeodeticCoordinates(header.getDoubleValue("TELLONGI") * Unit.deg, header.getDoubleValue("TELLATID") * Unit.deg);
-		//System.err.println(" Telescope Location: " + site);
 		
 		// IRAM Pico Veleta PDF 
 		//site = new GeodeticCoordinates("-03d23m33.7s, 37d03m58.3s");
@@ -548,10 +548,14 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		// Google maps and Wikipedia...
 		//site = new GeodeticCoordinates("-03d23m58.1s, 37d04m05.6s");
 		
-		// Antenna amymuth axis coordinates from Juan Penalver
+		// Antenna azimuth axis coordinates from Juan Penalver
 		//latitude: N 37d 4m 6.29s
 		//longitude: W 3d 23m 55.51s 
 		site = new GeodeticCoordinates("-03d23m55.51s, 37d04m06.29s");
+		
+		  
+        //info("Telescope Location: " + site);
+    
 		
 		creator = header.getStringValue("CREATOR");
 		observer = header.getStringValue("OBSERVER");

@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
+import crush.CRUSH;
 import crush.resonators.ResonatorList;
 import crush.resonators.ToneIdentifier;
 import jnum.Configurator;
@@ -64,7 +65,7 @@ public class Mako2PixelMatch extends ToneIdentifier<Mako2PixelID> {
 			Mako2PixelID id = get(i);
 			if(id.freq >= freq) remove(i);
 		}
-		System.err.println(" Discarded " + (n-size()) + ", kept " + size() + " tones below " + (freq / Unit.MHz) + "MHz.");
+		CRUSH.info(this, "Discarded " + (n-size()) + ", kept " + size() + " tones below " + (freq / Unit.MHz) + "MHz.");
 	}
 	 
 	public void discardBelow(double freq) {
@@ -73,12 +74,12 @@ public class Mako2PixelMatch extends ToneIdentifier<Mako2PixelID> {
 			Mako2PixelID id = get(i);
 			if(id.freq < freq) remove(i);
 		}
-		System.err.println(" Discarded " + (n-size()) + ", kept " + size() + " tones above " + (freq / Unit.MHz) + "MHz.");
+		CRUSH.info(this, "Discarded " + (n-size()) + ", kept " + size() + " tones above " + (freq / Unit.MHz) + "MHz.");
 	}
 	 
 	
 	public void read(String fileSpec) throws IOException {
-		System.err.println(" Loading resonance identifications from " + fileSpec);
+		CRUSH.info(this, "Loading resonance identifications from " + fileSpec);
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Util.getSystemPath(fileSpec))));
 		String line = null;
@@ -103,7 +104,7 @@ public class Mako2PixelMatch extends ToneIdentifier<Mako2PixelID> {
 		
 		//Collections.sort(this);
 		
-		System.err.println(" Got IDs for " + size() + " resonances.");
+		CRUSH.info(this, "Got IDs for " + size() + " resonances.");
 	}
 	
 	
@@ -111,7 +112,7 @@ public class Mako2PixelMatch extends ToneIdentifier<Mako2PixelID> {
 	@Override
 	protected double fit(final ResonatorList<?> resonators, double initShift) {
 		double delta = super.fit(resonators, initShift);
-		System.err.println("   --> df/f (id) = " + Util.s4.format(1e6 * delta) + " ppm.");
+		CRUSH.values(this, "--> df/f (id) = " + Util.s4.format(1e6 * delta) + " ppm.");
 		return delta;
 	}
 	

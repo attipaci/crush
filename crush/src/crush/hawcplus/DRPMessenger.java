@@ -36,7 +36,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import crush.CRUSH;
 import jnum.Configurator;
-import jnum.reporting.Reporter;
 
 
 public class DRPMessenger extends Thread {
@@ -58,7 +57,6 @@ public class DRPMessenger extends Thread {
 	
 		address = new InetSocketAddress(host, port);
 		queue = new ArrayBlockingQueue<Message>(capacity);
-		
 		
 		info("Hello!");
 		
@@ -109,15 +107,14 @@ public class DRPMessenger extends Thread {
 		socket.setTrafficClass(0x10);	// low delay
 		socket.setSoTimeout(timeoutMillis);
 		socket.connect(address);
-		//System.err.println("TCP Command connected to " + address.getHostName() + " port " + address.getPort());
-		
+			
 		@SuppressWarnings("resource")
         OutputStream out = socket.getOutputStream();
 		String text = message.toString();
 		
 		out.write(text.getBytes());
 		
-		if(CRUSH.debug) System.err.println("DRP> " + text.getBytes());
+		if(CRUSH.debug) CRUSH.debug(this, "DRP> " + text.getBytes());
 		
 		out.flush();
 		socket.close();
@@ -138,18 +135,18 @@ public class DRPMessenger extends Thread {
 	public void run() {
 		CRUSH.info(this, "Starting DRP messaging service.");
 		
-		CRUSH.add(new ReporterAdapter());
+		CRUSH.add(new Reporter());
 		
 		try { while(!isInterrupted()) send(queue.take()); }
 		catch(IOException e) { 
-		    CRUSH.warning(this, "DRP messaging error: " + e.getMessage());     
+		    CRUSH.warning(this, "DRP messaging: " + e.getMessage());     
 		}		
 		catch(InterruptedException e) {
+		    CRUSH.removeReporter(DRP_REPORTER_ID); // prevent the creation of new DRP messages...
 			if(!queue.isEmpty()) CRUSH.info(this, "Sending queued DRP messages...");
-			
 			try { while(!queue.isEmpty()) send(queue.take()); }
 			catch(InterruptedException e2) { CRUSH.warning(this, "DRP queue cleanup interrupted.");}
-			catch(IOException e2) { CRUSH.warning(this, "DRP messaging error: " + e2.getMessage()); }
+			catch(IOException e2) { CRUSH.warning(this, "DRP messaging: " + e2.getMessage()); }
 		}
 		
 		CRUSH.removeReporter(DRP_REPORTER_ID);
@@ -207,10 +204,9 @@ public class DRPMessenger extends Thread {
 	static { timeFormat.setTimeZone(TimeZone.getTimeZone("UTC")); }
 
 	
-	
-	private class ReporterAdapter extends Reporter {
+	private class Reporter extends jnum.reporting.Reporter {
 	    
-	    private ReporterAdapter() {
+	    private Reporter() {
 	        super(DRP_REPORTER_ID);
 	    }
 	    
