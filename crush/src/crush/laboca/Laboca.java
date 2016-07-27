@@ -60,7 +60,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 		Header header = hdu.getHeader();
 
 		gain = 270.0 * (1<<(int)header.getDoubleValue("FEGAIN"));
-		//System.err.println(" Frontend Gain is " + gain);
+		//CRUSH.values(this, "Frontend Gain is " + gain);
 	
 		// LabocaPixel.offset: get BOLDCOFF
 		

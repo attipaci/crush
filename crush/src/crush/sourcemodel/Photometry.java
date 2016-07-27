@@ -215,8 +215,7 @@ public abstract class Photometry extends SourceModel {
     public void write(String path) throws Exception {
 
         report();
-        System.err.println();
-
+    
         String coreName = path + File.separator + this.getDefaultCoreName();
         String fileName = coreName + ".dat";
 
@@ -258,7 +257,6 @@ public abstract class Photometry extends SourceModel {
 
         if(scans.size() > 1) gnuplot(coreName, fileName);
 
-        //System.err.println();
     }
 
     @Override

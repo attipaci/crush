@@ -287,7 +287,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
             CRUSH.detail(this, "Last: " + history.get(history.size() - 1));
         }
 
-        //for(int i=0; i<history.size(); i++) System.err.println("#  " + history.get(i));
+        //for(int i=0; i<history.size(); i++) debug("  " + history.get(i));
     }
 
 
@@ -304,7 +304,6 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
                     0.5 * (first.horizontal.y() + last.horizontal.y())
                     );
             info("Horizontal: " + horizontal.toString(2)); 
-           
                 
             site = new GeodeticCoordinates(
                     0.5 * (first.site.x() + last.site.x()), 

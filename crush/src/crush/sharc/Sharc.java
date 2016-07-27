@@ -94,7 +94,6 @@ public class Sharc extends CSOArray<SharcPixel> {
 		}
 		
 		if(descriptor.equalsIgnoreCase("list")) {
-			System.err.println();
 			System.exit(0);
 		}
 		

@@ -56,7 +56,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 	private static final long serialVersionUID = 6284421525275783456L;
 
 	private static String version = "2.32-2";
-	private static String revision = "devel.2";
+	private static String revision = "devel.3";
 	
 	public static String workPath = ".";
 	public static String home = ".";
@@ -969,8 +969,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public void error(Throwable e) { CRUSH.error(this, e); }
 
 	
-	
-	
     public static void info(Object owner, String message) { broadcaster.info(owner, message); }
 
     public static void notify(Object owner, String message) { broadcaster.notify(owner, message); }
@@ -1002,12 +1000,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
 	public static void trace(Throwable e) { broadcaster.trace(e); }
 	
 	
-
-
-  
-   
-
-
+	
+	
 	
 	public static abstract class Fork<ReturnType> extends Parallel<ReturnType> {
 		private Exception exception;

@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.io.*;
 
+import crush.CRUSH;
 import crush.array.DistortionModel;
 import crush.mako2.Mako2;
 import crush.mako2.Mako2Pixel;
@@ -115,9 +116,7 @@ public class MakoModel<PixelType extends AbstractMakoPixel> {
 		}
 		in.close();
 		
-		System.err.println(" Parsed " + positions.size() + " positions.");
-		
-		
+		CRUSH.info(this, "Parsed " + positions.size() + " positions.");
 		
 		distortion.get(distortion.getParameter("x", 0, 0)).setRange(xRange);
 		distortion.get(distortion.getParameter("y", 0, 0)).setRange(yRange);

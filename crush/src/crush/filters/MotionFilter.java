@@ -62,7 +62,8 @@ public class MotionFilter extends KillFilter {
 		super.setIntegration(integration);
 		if(integration.hasOption("lab")) return;
 
-		System.err.print("   Motion filter: ");
+		StringBuffer buf = new StringBuffer();
+		buf.append("Motion filter: ");
 		
 		if(hasOption("s2n")) critical = option("s2n").getFloat();
 		if(hasOption("stability")) halfWidth = 0.5 / Math.abs(option("stability").getDouble() * Unit.s);
@@ -71,8 +72,8 @@ public class MotionFilter extends KillFilter {
 		
 		Vector2D[] pos = integration.getSmoothPositions(Motion.SCANNING);
 		
-		addFilter(pos, Motion.X);
-		addFilter(pos, Motion.Y);
+		addFilter(pos, Motion.X, buf);
+		addFilter(pos, Motion.Y, buf);
 		
 		expandFilter();
 		harmonize();
@@ -84,11 +85,13 @@ public class MotionFilter extends KillFilter {
 		
 		for(int i=reject.length; --i >= 0; ) if(!reject[i]) pass++;
 		
-		System.err.print(Util.f2.format(100.0 * pass / reject.length) + "% pass. ");
-	
-		autoDFT();
+        buf.append(Util.f2.format(100.0 * pass / reject.length) + "% pass. ");
 		
-		System.err.println("Preferring " + (dft ? "DFT" : "FFT") + ".");
+        autoDFT();
+		
+		buf.append("Preferring " + (dft ? "DFT" : "FFT") + ".");
+		
+		integration.info(new String(buf));
 	}
 	
 	public double getShortestPeriod() {
@@ -111,7 +114,7 @@ public class MotionFilter extends KillFilter {
 	}
 
 	
-	private void addFilter(Vector2D[] pos, Motion dir) {
+	private void addFilter(Vector2D[] pos, Motion dir, StringBuffer buf) {
 		makeTempData(); 
 		
 		final float[] data = getTempData();
@@ -162,7 +165,7 @@ public class MotionFilter extends KillFilter {
 	
 		discardTempData();
 		
-		System.err.print(dir.id + " @ " + Util.f1.format(1000.0 * f) + " mHz, ");
+		buf.append(dir.id + " @ " + Util.f1.format(1000.0 * f) + " mHz, ");
 	}
 	
 	private void expandFilter() {

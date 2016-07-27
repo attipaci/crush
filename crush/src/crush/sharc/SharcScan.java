@@ -238,7 +238,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		
 		if(quadrature != 0) otf_longitude_step *= 0.5;
 		
-		//System.err.println("# " + getSourceName() + " " + ncycles + " " + nsamples);
+		//CRUSH.debug(this, getSourceName() + " " + ncycles + " " + nsamples);
 		
 		if(header_records < 0) throw new IOException("corrupted data?");
 

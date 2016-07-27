@@ -111,7 +111,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 			try { 
 				String fileName = option("elevation-response").getPath();
 				elevationResponse = new ElevationCouplingCurve(fileName).getValue(horizontal.elevation()); 
-				System.err.println("   Relative beam efficiency is " + Util.f3.format(elevationResponse));
+				info("Relative beam efficiency is " + Util.f3.format(elevationResponse));
 				for(CSOIntegration<?,?> integration : this) integration.gain *= elevationResponse;
 			}
 			catch(IOException e) { 

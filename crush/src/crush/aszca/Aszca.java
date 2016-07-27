@@ -101,7 +101,7 @@ public class Aszca extends APEXCamera<AszcaPixel> implements NonOverlapping {
 	
 	@Override
 	public void readWiring(String fileName) throws IOException {
-		System.err.println(" Loading wiring data from " + fileName);
+		info("Loading wiring data from " + fileName);
 			
 		String[] waferNames = { "e1", "e5", "e8", "ed", "f0", "f3" };
 		int boxStartAddress = Integer.decode("0xe1");

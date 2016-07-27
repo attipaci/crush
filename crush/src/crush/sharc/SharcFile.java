@@ -105,7 +105,7 @@ public class SharcFile extends Hashtable<Integer, SharcScan> {
 		SharcScan scan = new SharcScan(sharc, this);
 	
 		scan.readHeader(in, size()+1);
-		System.err.println("  " + scan.toString());
+		scan.info(scan.toString());
 		scan.readScanRow(in);	
 		
 		put(scan.getSerial(), scan);		

@@ -322,7 +322,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 	}
 	
 	public void loadGainCoefficients(String fileName) throws IOException {
-		System.out.print(" Loading nonlinearities from " + fileName + ".");
+		info("Loading nonlinearities from " + fileName + ".");
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
 		
@@ -342,7 +342,6 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		}
 		
 		in.close();
-		System.out.println();
 	}
 
 	public void calcPixelGains() {
