@@ -38,6 +38,7 @@ import jnum.astro.LeapSeconds;
 import jnum.io.fits.FitsExtras;
 import jnum.reporting.BasicMessaging;
 import jnum.reporting.Broadcaster;
+import jnum.reporting.ConsoleReporter;
 import jnum.reporting.Reporter;
 import jnum.text.VersionString;
 import nom.tam.fits.*;
@@ -56,7 +57,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 	private static final long serialVersionUID = 6284421525275783456L;
 
 	private static String version = "2.32-2";
-	private static String revision = "devel.3";
+	private static String revision = "devel.4";
 	
 	public static String workPath = ".";
 	public static String home = ".";
@@ -86,6 +87,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 	public static void main(String[] args) {
 		info();
+		
+		Util.setReporter(broadcaster);
 
 		if(args.length == 0) {
 			usage();
@@ -131,8 +134,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 			System.exit(1);
 		}
 
-		System.err.println("Instrument is " + instrument.getName().toUpperCase());
-
+		info(this, "Instrument is " + instrument.getName().toUpperCase());
 	}
 
 	public boolean hasOption(String name) {
@@ -159,6 +161,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 	public void process(String key, String value) {
 		if(key.equals("debug")) {
 		    Util.debug = debug = true;
+		    consoleReporter.setLevel(ConsoleReporter.LEVEL_DEBUG);
 		    
 		    debug("java: " + Util.getProperty("java.vendor") + ": " + Util.getProperty("java.version"));
 		    debug("java-path: " + Util.getProperty("java.home"));
@@ -166,6 +169,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
 		    debug("jvm: " + Util.getProperty("java.vm.name") + ": " + Util.getProperty("java.vm.version"));	        
 		}
 		else if(key.equals("help")) help(instrument);
+		else if(key.equals("quiet")) consoleReporter.setLevel(ConsoleReporter.LEVEL_RESULT);
+		else if(key.equals("veryquiet")) consoleReporter.setLevel(ConsoleReporter.LEVEL_STATUS);
 		else if(key.equals("list.divisions")) instrument.printCorrelatedModalities(System.err);
 		else if(key.equals("list.response")) instrument.printResponseModalities(System.err);
 		else {
@@ -243,9 +248,12 @@ public class CRUSH extends Configurator implements BasicMessaging {
 		else return super.getProperty(name);
 	}
 
-	public void validate() {			    
+	public void validate() {	
+	    consoleReporter.addLine();
+	    
 		if(scans.size() == 0) {
 			warning("No scans to reduce. Exiting.");
+			consoleReporter.addLine();
 			exit(1);
 		}
 
@@ -278,7 +286,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 	}
 
 	public void initSourceModel() {
-		System.out.println();
+	    consoleReporter.addLine();
 
 		// TODO Using the global options (intersect of scan options) instead of the first scan's
 		// for the source does not work properly (clipping...)
@@ -291,7 +299,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 			source.setParallel(CRUSH.maxThreads);
 		}
 
-		System.err.println();
+		consoleReporter.addLine();
 
 		setObjectOptions(source.getSourceName());
 	}
@@ -407,6 +415,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
 			while(list.hasMoreTokens()) read(list.nextToken());
 			return;
 		}
+		
+		consoleReporter.addLine();
 
 		status(this, "Reading scan: " + scanID);
 
@@ -425,7 +435,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 				System.gc();		
 			}
-			System.err.println();
 		}
 		catch(OutOfMemoryError e) {
 			if(e.getMessage().equals("unable to create new native thread")) {
@@ -495,7 +504,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 		if(isConfigured("rounds")) rounds = get("rounds").getInt();
 
 		for(int iteration=1; iteration<=rounds; iteration++) {
-			System.err.println();
+			consoleReporter.addLine();
 			info("Round " + iteration + ": ");	
 
 			setIteration(iteration, rounds);	
@@ -504,7 +513,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 			iterate();	
 		}
 
-		System.err.println();
+		consoleReporter.addLine();
 
 		if(source != null) {
 			source.suggestions();
@@ -519,8 +528,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 		for(Scan<?,?> scan : scans) scan.writeProducts();	
 
 		status(this, "Done.");
-
-		System.err.println();
+		consoleReporter.addLine();
 	}
 
 	public void iterate() throws Exception {
@@ -539,12 +547,12 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 		if(!tasks.isEmpty()) iterate(tasks);
 
-		System.err.println();
+		consoleReporter.addLine();
 	}
 
 
 	public void iterate(List<String> tasks) throws Exception {
-		System.err.println();
+		consoleReporter.addLine();
 
 		queue.clear();
 		for(Scan<?,?> scan : scans) queue.addAll(scan);
@@ -560,9 +568,11 @@ public class CRUSH extends Configurator implements BasicMessaging {
 		summarize();
 
 		if(solveSource()) if(tasks.contains("source")) {
-			System.err.print("  [Source] ");
-			source.process(true);
+			source.process();
 			source.sync();
+			
+			info(" [Source] " + source.getProcessBrief());
+			source.clearProcessBrief();
 		}
 
 		if(isConfigured("whiten")) if(get("whiten").isConfigured("once")) purge("whiten");
@@ -588,8 +598,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 	}
 
 	public void summarize(Integration<?,?> integration) {
-		System.err.print("  [" + integration.getDisplayID() + "] ");
-		System.err.println(integration.comments);
+		info(" [" + integration.getDisplayID() + "]" + integration.comments);
 		integration.comments = new String();
 	}	
 
@@ -937,6 +946,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 	
 	public void exit(int exitValue) {
 		if(instrument != null) instrument.shutdown();
+		Util.setDefaultReporter();
 		System.exit(exitValue);
 	}
 
@@ -1058,8 +1068,10 @@ public class CRUSH extends Configurator implements BasicMessaging {
 	
 	
 	
+	public static CRUSHConsoleReporter consoleReporter = new CRUSHConsoleReporter("crush-console");
+	public static Broadcaster broadcaster = new Broadcaster("CRUSH-broadcast", consoleReporter);
 	
-	public static Broadcaster broadcaster = new Broadcaster("CRUSH-broadcast", new CRUSHConsoleReporter("console"));
+	
 	
 	public static final int TCP_CONNECTION_TIMEOUT = 3000;
 	public static final int TCP_READ_TIMEOUT = 2000;

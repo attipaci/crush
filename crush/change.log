@@ -1,6 +1,9 @@
->> eliminate more println statements...
 
 
+	[NEW] New options 'quiet' and 'veryquiet' can turn off most console
+	output. 'quiet' will still display results (such as from pointing),
+	while 'veryquiet' will report only basic status updates and 
+	notifications (e.g. about products), but without reporting results.
 
 	[FIX] {HAWC+} Nearly all warning/error messages are now propagated to
 	the DRP, with the traces added as DEBUG messages. Suggestions are also
@@ -23,8 +26,11 @@
 	initialization when possible, allowing to propagate the resulting 
 	messages according to the instrument's own method.
 
-	[CODE] Complete overhaul of messaging architecture...	
-
+	[CODE] Complete overhaul of messaging architecture that allows routing
+	all messages as needed (including source processing fragments). Many
+	hundreds of lines of non-critical code have been changed. It is
+	possible that some of the formatting of console output may look strange
+	as a result...
 
 
 

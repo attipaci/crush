@@ -437,7 +437,7 @@ public class ScalarMap extends SourceMap {
 	
 	
 	@Override
-	public void process(boolean verbose) {	
+	public void process() {	
 		
 		if(!isNormalized) {
 			map.normalize();
@@ -449,25 +449,23 @@ public class ScalarMap extends SourceMap {
 			
 		double blankingLevel = getBlankingLevel();
 		
-		if(verbose) if(enableLevel) System.err.print("{level} ");
+		if(enableLevel) addProcessBrief("{level} ");
 		
-		if(verbose) if(hasSourceOption("despike")) System.err.print("{despike} ");
+		if(hasSourceOption("despike")) addProcessBrief("{despike} ");
 		
-		if(hasSourceOption("filter") && getSourceSize() > 0.0) {
-			if(verbose) System.err.print("{filter} ");
-		}
+		if(hasSourceOption("filter") && getSourceSize() > 0.0) addProcessBrief("{filter} ");
 		
-		if(verbose) if(enableWeighting) if(hasOption("weighting.scans"))
-			for(Scan<?,?> scan : scans) System.err.print("{" + Util.f2.format(scan.weight) + "} ");
+		if(enableWeighting) if(hasOption("weighting.scans"))
+			for(Scan<?,?> scan : scans) addProcessBrief("{" + Util.f2.format(scan.weight) + "} ");
 		
 		if(hasSourceOption("redundancy"))  {
-			System.err.print("(check) ");
+			addProcessBrief("(check) ");
 			double minIntTime = getInstrument().integrationTime * sourceOption("redundancy").getInt();
 			if(minIntTime > 0.0) map.clipBelowExposure(minIntTime);
 		}
 
 		if(hasOption("smooth") && !hasOption("smooth.external")) {
-			if(verbose) System.err.print("(smooth) ");
+			addProcessBrief("(smooth) ");
 			map.smoothTo(getSmoothing());
 		}
 		
@@ -479,7 +477,7 @@ public class ScalarMap extends SourceMap {
 
 		// Apply the filtering to the final map, to reflect the correct blanking
 		// level...
-		if(hasSourceOption("filter")) if(verbose) System.err.print("(filter) ");
+		if(hasSourceOption("filter")) addProcessBrief("(filter) ");
 		
 		filter(true);
 		map.filterCorrect();
@@ -487,20 +485,20 @@ public class ScalarMap extends SourceMap {
 		// Noise and exposure clip after smoothing for evened-out coverage...
 		// Eposure clip
 		if(hasOption("exposureclip")) {
-			if(verbose) System.err.print("(exposureclip) ");
+			addProcessBrief("(exposureclip) ");
 			map.clipBelowRelativeExposure(option("exposureclip").getDouble(), 0.95);		
 		}
 
 		// Noise clip
 		if(hasOption("noiseclip")) {
-			if(verbose) System.err.print("(noiseclip) ");
+			addProcessBrief("(noiseclip) ");
 			map.clipAboveRelativeRMS(option("noiseclip").getDouble(), 0.05);		
 		}
 
 		
 		if(hasOption("clip") && enableBias) {	
 			double clipLevel = option("clip").getDouble();
-			if(verbose) System.err.print("(clip:" + clipLevel + ") ");
+			addProcessBrief("(clip:" + clipLevel + ") ");
 			final int sign = hasSourceOption("sign") ? sourceOption("sign").getSign() : 0;
 			map.s2nClipBelow(clipLevel, sign);
 		}
@@ -510,7 +508,7 @@ public class ScalarMap extends SourceMap {
 		map.sanitize();
 
 		if(hasSourceOption("mem")) {
-			if(verbose) System.err.print("(MEM) ");
+			addProcessBrief("(MEM) ");
 			double lambda = hasSourceOption("mem.lambda") ? sourceOption("mem.lambda").getDouble() : 0.1;
 			map.MEM(lambda, true);
 		}
@@ -524,7 +522,7 @@ public class ScalarMap extends SourceMap {
 		// Coupled with blanking...
 		if(!hasSourceOption("nosync")) {
 			if(hasOption("blank") && enableBias) {
-				if(verbose) System.err.print("(blank:" + blankingLevel + ") ");
+				addProcessBrief("(blank:" + blankingLevel + ") ");
 				final int sign = hasSourceOption("sign") ? sourceOption("sign").getSign() : 0;
 				setMask(map.getMask(getBlankingLevel(), 3, sign));
 			}

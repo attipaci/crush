@@ -338,7 +338,7 @@ public class SkyDip extends SourceModel {
 	}
 	
 	@Override
-	public void process(boolean verbose) throws Exception {
+	public void process() throws Exception {
 		// TODO Auto-generated method stub
 	}
 

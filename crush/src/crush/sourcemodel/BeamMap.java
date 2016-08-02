@@ -60,6 +60,12 @@ public class BeamMap extends SourceMap {
 			copy.pixelMap[p] = (ScalarMap) pixelMap[p].getWorkingCopy(withContents);	
 		return copy;
 	}
+	
+	@Override
+    public void clearProcessBrief() {
+	    super.clearProcessBrief();
+	    for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null) pixelMap[p].clearProcessBrief();
+	}
 
 	@Override
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
@@ -213,16 +219,15 @@ public class BeamMap extends SourceMap {
 	}
 
 	@Override
-	public void process(boolean verbose) throws Exception {	
+	public void process() throws Exception {	
 		boolean process = hasSourceOption("process");	
 		
 		for(ScalarMap map : pixelMap) if(map != null) {	
-			if(process) map.process(verbose);
+			if(process) map.process();
 			else {
 				map.map.normalize();
 				map.map.generation++; // Increment the map generation...
 			}
-			verbose = false;
 		}
 	}
 	
