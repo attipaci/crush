@@ -67,6 +67,13 @@ public class PolarMap extends SourceModel {
 		return true;
 	}
 
+	@Override
+    public void clearProcessBrief() {
+	    super.clearProcessBrief();
+	    if(N != null) N.clearProcessBrief();
+	    if(Q != null) Q.clearProcessBrief();
+	    if(U != null) U.clearProcessBrief();
+	}
 	
 	public boolean usePolarization() {
 		return usePolarization | hasOption("source.polar");
@@ -154,20 +161,20 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public void process(boolean verbose) throws Exception {		
-		if(verbose) System.err.print("\n   [N] ");
-		N.process(verbose);
+	public void process() throws Exception {		
+		addProcessBrief("\n   [N] ");
+		N.process();
 		
 		if(usePolarization()) {
-			if(verbose) System.err.print("\n   [Q] ");
-			Q.process(verbose);
+			addProcessBrief("\n   [Q] ");
+			Q.process();
 			N.addMask(Q.getMask()); // Add the flagging data from Q
 			
-			if(verbose) System.err.print("\n   [U] ");
-			U.process(verbose);
+			addProcessBrief("\n   [U] ");
+			U.process();
 			N.addMask(U.getMask()); // Add the flagging data from U
 		
-			if(verbose) System.err.print("\n   ");	
+			addProcessBrief("\n   ");	
 		}
 	}
 

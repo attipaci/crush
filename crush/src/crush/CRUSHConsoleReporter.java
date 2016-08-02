@@ -42,8 +42,13 @@ public class CRUSHConsoleReporter extends ConsoleReporter {
     }
 
     @Override
-    public void status(Object owner, String message) {
-        if(CRUSH.debug) super.status(owner, message);
+    public void addLine() {
+        if(getLevel() >= ConsoleReporter.LEVEL_INFO) super.addLine();
+    }
+    
+    @Override
+    public void status(Object owner, String message) { 
+        if(getLevel() >= ConsoleReporter.LEVEL_STATUS && getLevel() <= ConsoleReporter.LEVEL_INFO) System.err.println("> " + message);
     }
     
 }

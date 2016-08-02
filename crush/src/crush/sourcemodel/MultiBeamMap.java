@@ -404,7 +404,7 @@ public class MultiBeamMap extends ScalarMap {
 	
 	
 	@Override
-	public void process(boolean verbose) {		
+	public void process() {		
 		normalizeTransformer();
 		isNormalized = true;
 		
@@ -423,7 +423,7 @@ public class MultiBeamMap extends ScalarMap {
 		
 		//enableLevel = false;
 		
-		super.process(verbose);
+		super.process();
 		
 		/*
 		try { 

@@ -173,7 +173,7 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camer
 		focusMode = header.getStringValue("FOCMODE");
 		if(focusMode == null) focusMode = "Unknown";
 		
-		info(" Focus [" + focusMode + "]"
+		info("Focus [" + focusMode + "]"
 				+ " X=" + Util.f2.format(focusX / Unit.mm)
 				+ " Y=" + Util.f2.format(focusY / Unit.mm)
 				+ " Z=" + Util.f2.format(focusZ / Unit.mm)

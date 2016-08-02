@@ -52,6 +52,8 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 	public String commandLine;
 	public String id;
 	
+	private StringBuffer processBrief = new StringBuffer();
+	
 	public SourceModel(Instrument<?> instrument) {
 		setInstrument(instrument);
 	}
@@ -136,7 +138,16 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 		
 		return copy;
 	}
+	
+	
+	public void addProcessBrief(String blurp) {
+	    processBrief.append(blurp);
+	}
 
+	public String getProcessBrief() { return new String(processBrief); }
+	
+	public void clearProcessBrief() { processBrief = new StringBuffer(); }
+	
 	public void createFrom(Collection<? extends Scan<?,?>> collection) {
 		this.scans = new Vector<Scan<?,?>>(collection);
 		for(Scan<?,?> scan : scans) scan.setSourceModel(this);		
@@ -260,15 +271,15 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 		return "            * Check the console output for any problems when reading scans.\n";
 	}
 	
-	public abstract void process(boolean verbose) throws Exception;
+	public abstract void process() throws Exception;
 
 
 	public void sync() throws Exception {
 		// Coupled with blanking...
 		if(hasSourceOption("nosync")) return;
-		if(hasSourceOption("coupling")) System.err.print("(coupling) ");
+		if(hasSourceOption("coupling")) addProcessBrief("(coupling) ");
 
-		System.err.print("(sync) ");
+		addProcessBrief("(sync) ");
 
 		final int nParms = countPoints();
 

@@ -109,7 +109,7 @@ public abstract class Photometry extends SourceModel {
     }
 
     @Override
-    public void process(boolean verbose) throws Exception {
+    public void process() throws Exception {
         super.sync();
 
         DataPoint F = new DataPoint(sourceFlux);
