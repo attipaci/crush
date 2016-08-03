@@ -23,15 +23,13 @@
 
 package crush.mustang2;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import crush.CRUSH;
 import jnum.Copiable;
 import jnum.Unit;
+import jnum.io.LineParser;
 
 public class Mustang2Readout implements Cloneable, Copiable<Mustang2Readout> {
 	private int index;
@@ -59,16 +57,16 @@ public class Mustang2Readout implements Cloneable, Copiable<Mustang2Readout> {
 	public void parseFrequencies(String fileName) throws IOException {
 		tones.clear();
 		
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		String line = null;
-				
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			Mustang2PixelID id = new Mustang2PixelID(index, tones.size());
-			id.freq = Double.parseDouble(line) * Unit.GHz;
-			tones.add(id);
-		}
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                Mustang2PixelID id = new Mustang2PixelID(index, tones.size());
+                id.freq = Double.parseDouble(line) * Unit.GHz;
+                tones.add(id);
+                return true;
+            }  
+		}.read(fileName);
 		
-		in.close();
 		
 		CRUSH.info(this, "ROACH " + (index+1) + ": " + tones.size() + " frequencies from " + fileName);	
 	}

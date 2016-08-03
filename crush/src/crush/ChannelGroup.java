@@ -117,7 +117,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
                     else if(field.getInt(c1) > field.getInt(c2)) return 1;
                     else return 0;
                 }
-                catch(IllegalAccessException e) { e.printStackTrace(); }
+                catch(IllegalAccessException e) { CRUSH.error(this, e); }
                 return 0;
             }				
         };

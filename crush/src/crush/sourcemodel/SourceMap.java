@@ -133,7 +133,7 @@ public abstract class SourceMap extends SourceModel {
             try { index(); }
             catch(Exception e) { 
                 warning("Indexing error: " + e.getMessage());
-                e.printStackTrace();
+                if(CRUSH.debug) CRUSH.trace(e);
             }
         }
 
@@ -427,7 +427,7 @@ public abstract class SourceMap extends SourceModel {
         // Figure out what offsets the corners of the map will have...
         try { searchCorners(); }
         catch(Exception e) { 
-            e.printStackTrace(); 
+            error(e);
             System.exit(1);
         }
 

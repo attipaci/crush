@@ -545,7 +545,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
         }
         
 	    if(N == 0) {
-	        warning("PWV not recorded in FITS. Set tau explicitly or via lookup table.");
+	        if(!hasOption("tau")) warning("PWV not recorded in FITS. Set tau explicitly or via lookup table.");
 	        return;
 	    }
 	    

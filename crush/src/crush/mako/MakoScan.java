@@ -260,7 +260,7 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 		if(equatorial != null) info("Equatorial: " + equatorial.toString());	
 		
 		try { setMJD(AstroTime.forFitsTimeStamp(timeStamp).getMJD()); }
-		catch(ParseException e) { e.printStackTrace(); }
+		catch(ParseException e) { error(e); }
 		
 		iMJD = (int) Math.floor(getMJD());
 		

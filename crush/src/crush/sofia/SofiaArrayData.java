@@ -23,6 +23,7 @@
 
 import java.text.DecimalFormat;
 
+import crush.CRUSH;
 import jnum.Copiable;
 import jnum.Unit;
 import jnum.data.Grid2D;
@@ -87,7 +88,7 @@ public class SofiaArrayData extends SofiaData implements Copiable<SofiaArrayData
 		
 		if(header.containsKey("CTYPE1") && header.containsKey("CTYPE2")) {
 			try { grid = Grid2D.fromHeader(header.getFitsHeader(), ""); } 
-			catch (Exception e) { e.printStackTrace(); }
+			catch (Exception e) { CRUSH.error(this, e); }
 		}
 		else grid = null;
 		

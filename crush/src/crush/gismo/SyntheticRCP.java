@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -22,18 +22,19 @@
  ******************************************************************************/
 package crush.gismo;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
+import crush.CRUSH;
 import jnum.Unit;
 import jnum.Util;
+import jnum.io.LineParser;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 
 
 public class SyntheticRCP {
@@ -53,57 +54,44 @@ public class SyntheticRCP {
 			distortion.parse(args[0]);
 			if(args.length > 1) distortion.gainsFrom(args[1]);
 			if(args.length > 2) distortion.rotate = Double.parseDouble(args[2]) * Unit.deg;
-			distortion.print();
+			distortion.print(System.out);
 		}
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { CRUSH.error(SyntheticRCP.class, e); }
 		
 	}
 	
-	public void parse(String fileName) throws IOException {
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		String line = null;
-		int n = 0;
+	public void parse(String fileName) throws IOException {	
+	    new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                StringTokenizer tokens = new StringTokenizer(line);
+                String spec = tokens.nextToken();
+              
+                xcoeffs.add(new Coefficient(spec, tokens.nextToken())); 
+                ycoeffs.add(new Coefficient(spec, tokens.nextToken())); 
+                return true;
+            }
+	    }.read(fileName);
 		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			
-			String spec = tokens.nextToken();
-			
-			try { 
-				xcoeffs.add(new Coefficient(spec, tokens.nextToken())); 
-				n++;
-			}
-			catch(Exception e) { System.err.println(e.getMessage()); }
-			
-			try { 
-				ycoeffs.add(new Coefficient(spec, tokens.nextToken())); 
-				n++;
-			}
-			catch(Exception e) { System.err.println(e.getMessage()); }
-		}
-		
-		System.err.println(n + " coefficients parsed.");
-		
-		in.close();
+		CRUSH.info(this, (xcoeffs.size() + ycoeffs.size()) + " coefficients parsed.");
 	}
 
-	public void gainsFrom(String rcpFile) throws IOException {
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(rcpFile)));
-		String line = null;
-		
-		System.err.println("Loading gains from " + rcpFile);
+	public void gainsFrom(String rcpFile) throws IOException {		
+		CRUSH.info(this, "Loading gains from " + rcpFile);
 		
 		sourceGains = new Hashtable<Integer, Double>();
 		skyGains = new Hashtable<Integer, Double>();
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			int channel = Integer.parseInt(tokens.nextToken());
-			sourceGains.put(channel, Double.parseDouble(tokens.nextToken()));
-			if(tokens.hasMoreTokens()) skyGains.put(channel, Double.parseDouble(tokens.nextToken()));
-		}
 	
-		in.close();
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                int channel = tokens.nextInt();
+                sourceGains.put(channel, tokens.nextDouble());
+                if(tokens.hasMoreTokens()) skyGains.put(channel, tokens.nextDouble());
+                return true;
+            }
+		}.read(rcpFile);
 	}
 	
 	public double getValue(ArrayList<Coefficient> coeffs, double x, double y) {
@@ -112,8 +100,8 @@ public class SyntheticRCP {
 		return value;		
 	}
 	
-	public void print() {
-		System.out.println("# Synthetic RCP ");
+	public void print(PrintStream out) {
+		out.println("# Synthetic RCP ");
 		for(int i=0; i<128; i++) {
 			double dc = i % 8 - 3.5;
 			double dr = i / 8 - 7.5;
@@ -132,9 +120,9 @@ public class SyntheticRCP {
 			
 			pos.rotate(rotate);
 			
-			System.out.print(channel + "\t" + sourceGain + "\t" + skyGain + "\t");
-			System.out.print(Util.f1.format(pos.x()) + "\t");
-			System.out.print(Util.f1.format(pos.y()) + "\n");
+			out.print(channel + "\t" + sourceGain + "\t" + skyGain + "\t");
+			out.print(Util.f1.format(pos.x()) + "\t");
+			out.print(Util.f1.format(pos.y()) + "\n");
 		}
 	}
 	
@@ -175,7 +163,7 @@ public class SyntheticRCP {
 				else yOrder += Integer.parseInt(c + "");
 			}
 			
-			System.err.println("> " + xOrder + "," + yOrder + " : " + value);
+			CRUSH.detail(this, "> " + xOrder + "," + yOrder + " : " + value);
 			
 			return from+1;
 		}

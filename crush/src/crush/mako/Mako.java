@@ -23,10 +23,7 @@
 
 package crush.mako;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
@@ -36,7 +33,9 @@ import crush.resonators.FrequencyID;
 import crush.resonators.ResonatorList;
 import jnum.Unit;
 import jnum.Util;
+import jnum.io.LineParser;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 import jnum.text.TableFormatter;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
@@ -163,26 +162,25 @@ public class Mako extends AbstractMako<MakoPixel> {
 		if(identifier == null) throw new IllegalStateException("Assigning pixels requires tone identifications first.");
 		
 		info("Loading pixel assignments from " + fileSpec);
-
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Util.getSystemPath(fileSpec))));
-		String line = null;
+	
+		final ResonatorList<MakoPixel> associations = new ResonatorList<MakoPixel>(pixels);
+		final double guessT = (hasOption("assign.guesst") ? option("assign.guesst").getDouble() : 300.0) * Unit.K;
 		
-		ResonatorList<MakoPixel> associations = new ResonatorList<MakoPixel>(pixels);
-		
-		double guessT = (hasOption("assign.guesst") ? option("assign.guesst").getDouble() : 300.0) * Unit.K;
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line, ", \t");
-			MakoPixel pixelID = new MakoPixel(this, -1);
-			
-			pixelID.toneFrequency = Double.parseDouble(tokens.nextToken());
-			pixelID.row = Integer.parseInt(tokens.nextToken()) - 1;
-			pixelID.col = Integer.parseInt(tokens.nextToken()) - 1;
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line, ", \t");
+                MakoPixel pixelID = new MakoPixel(Mako.this, -1);
+                
+                pixelID.toneFrequency = tokens.nextDouble();
+                pixelID.row = tokens.nextInt() - 1;
+                pixelID.col = tokens.nextInt() - 1;
 
-			associations.add(pixelID);
-		}
-
-		in.close();
+                associations.add(pixelID);
+                return true;
+            }
+		}.read(fileSpec);
+		
 
 		info("Found pixel assignments for " + associations.size() + " resonances.");
 		

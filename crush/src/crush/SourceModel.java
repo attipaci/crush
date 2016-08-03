@@ -443,7 +443,7 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 				model.reset(true);
 				return model;
 			}
-			catch(InterruptedException e) { e.printStackTrace(); }
+			catch(InterruptedException e) { error(e); }
 		}
 		
 		return getCleanThreadLocalCopy();

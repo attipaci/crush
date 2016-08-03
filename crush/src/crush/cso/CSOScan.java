@@ -116,7 +116,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 			}
 			catch(IOException e) { 
 				warning("Cannot read elevation response table..."); 
-				e.printStackTrace();
+				warning(e);
 			}
 		}
 	}

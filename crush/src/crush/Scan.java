@@ -697,7 +697,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 				modality.averageGains(G, integration, isRobust);
 				gotGains = true;
 			}	
-			catch(Exception e) { e.printStackTrace(); }	
+			catch(Exception e) { error(e); }	
 		}
 		
 		if(!gotGains) return;
@@ -709,7 +709,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			boolean isFlagging = false; 
 			
 			try { isFlagging |= modality.applyGains(G, integration); }
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { error(e); }
 			
 			if(isFlagging) {
 				integration.instrument.census();
@@ -755,7 +755,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		    nameX = system.get(0).getShortLabel();
 		    nameY = system.get(1).getShortLabel();
 		}
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		double sizeUnit = instrument.getSizeUnitValue();
 		String sizeName = instrument.getSizeName();
@@ -904,7 +904,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		    nameX = system.get(0).getShortLabel();
 		    nameY = system.get(1).getShortLabel();
 		}
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 			
 		text += "  Offset: ";
 		text += Util.f1.format(pointing.x() / sizeUnit) + ", " + Util.f1.format(pointing.y() / sizeUnit) + " " 

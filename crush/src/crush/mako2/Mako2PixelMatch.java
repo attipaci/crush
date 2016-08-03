@@ -23,11 +23,7 @@
 
 package crush.mako2;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.StringTokenizer;
 
 import crush.CRUSH;
 import crush.resonators.ResonatorList;
@@ -35,8 +31,10 @@ import crush.resonators.ToneIdentifier;
 import jnum.Configurator;
 import jnum.Unit;
 import jnum.Util;
+import jnum.io.LineParser;
 import jnum.math.Range;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 
 
 public class Mako2PixelMatch extends ToneIdentifier<Mako2PixelID> {
@@ -80,28 +78,26 @@ public class Mako2PixelMatch extends ToneIdentifier<Mako2PixelID> {
 	
 	public void read(String fileSpec) throws IOException {
 		CRUSH.info(this, "Loading resonance identifications from " + fileSpec);
-		
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Util.getSystemPath(fileSpec))));
-		String line = null;
-
+	
 		clear();
+				
+		new LineParser() {
+		    int index = 1;
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line, ", \t");
+                Mako2PixelID id = new Mako2PixelID(index++);
+                
+                id.freq = tokens.nextDouble();
+                id.position = new Vector2D(tokens.nextDouble(), tokens.nextDouble());
+                id.position.scale(Unit.arcsec);
+                //if(tokens.hasMoreTokens()) id.gain = tokens.nextDouble();
+                
+                add(id);
+                return true;
+            }
+		}.read(fileSpec);
 			
-		int index = 1;
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line, ", \t");
-			Mako2PixelID id = new Mako2PixelID(index++);
-			
-			id.freq = Double.parseDouble(tokens.nextToken());
-			id.position = new Vector2D(Double.parseDouble(tokens.nextToken()), Double.parseDouble(tokens.nextToken()));
-			id.position.scale(Unit.arcsec);
-			//if(tokens.hasMoreTokens()) id.gain = Double.parseDouble(tokens.nextToken());
-			
-			add(id);
-		}
-		
-		in.close();
-		
 		//Collections.sort(this);
 		
 		CRUSH.info(this, "Got IDs for " + size() + " resonances.");

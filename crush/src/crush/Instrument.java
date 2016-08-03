@@ -40,6 +40,7 @@ import jnum.astro.AstroTime;
 import jnum.data.DataPoint;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
+import jnum.io.LineParser;
 import jnum.math.Range;
 import jnum.math.Vector2D;
 import jnum.reporting.BasicMessaging;
@@ -577,19 +578,19 @@ implements TableFormatter.Entries, BasicMessaging {
 		modalities = new Hashtable<String, Modality<?>>();
 		
 		try { addModality(new CorrelatedModality("all", "Ca", divisions.get("all"), Channel.class.getField("gain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("connected", "Cc", divisions.get("connected"), Channel.class.getField("gain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("detectors", "Cd", divisions.get("detectors"), Channel.class.getField("gain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("obs-channels", "C", divisions.get("obs-channels"), Channel.class.getField("gain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 	
 		try { addModality(modalities.get("obs-channels").new NonLinearity("nonlinearity", "n", HawcPlusPixel.class.getField("nonlinearity"))); } 
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 	
 		// Add pointing response modes...
 		addModality(new Modality<PointingResponse>("telescope-x", "Tx", divisions.get("detectors"), PointingResponse.class));
@@ -755,29 +756,27 @@ implements TableFormatter.Entries, BasicMessaging {
 
 	public void loadChannelData(String fileName) throws IOException {
 		info("Loading pixel data from " + fileName);
-			
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		String line;
-	
-		Hashtable<String, ChannelType> lookup = getIDLookup();
-	
-		// Channels not contained in the data file are assumed dead...
-		for(Channel channel : this) channel.flag(Channel.FLAG_DEAD);
 		
-		while((line=in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {	
-			try {
-				StringTokenizer tokens = new StringTokenizer(line);
-				ChannelType channel = lookup.get(tokens.nextToken());
-				if(channel != null) {
-					// Channels in the file are not dead after all, or let ChannelType.parse decide that....
-					channel.unflag(Channel.FLAG_DEAD);
-					channel.parseValues(tokens);
-					if(channel.gain == 0.0) channel.flag(Channel.FLAG_BLIND);
-				}
-			}
-			catch(NumberFormatException e){ e.printStackTrace(); }
-		}
-		in.close();
+
+        final Hashtable<String, ChannelType> lookup = getIDLookup();
+        
+        // Channels not contained in the data file are assumed dead...
+        for(Channel channel : this) channel.flag(Channel.FLAG_DEAD);
+		
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                StringTokenizer tokens = new StringTokenizer(line);
+                ChannelType channel = lookup.get(tokens.nextToken());
+                if(channel == null) return false;
+                // Channels in the file are not dead after all, or let ChannelType.parse decide that....
+                channel.unflag(Channel.FLAG_DEAD);
+                channel.parseValues(tokens);
+                if(channel.gain == 0.0) channel.flag(Channel.FLAG_BLIND);
+                return true;
+            }
+		    
+		}.read(fileName);
 		
 		standardWeights = true;
 		
@@ -1262,7 +1261,7 @@ implements TableFormatter.Entries, BasicMessaging {
 		File file = new File(CRUSH.home + File.separator + "instruments" + File.separator + name.toLowerCase());
 		
 		if(!file.exists()) {
-			CRUSH.error(null, name + "' is not registered in instruments directory.");
+			CRUSH.error(Instrument.class, name + "' is not registered in instruments directory.");
 			return null;
 		}
 		
@@ -1273,12 +1272,11 @@ implements TableFormatter.Entries, BasicMessaging {
 			return (Instrument<?>) Class.forName(className).newInstance(); 
 		}
 		catch(IOException e) {
-			CRUSH.error(null, "Problem reading '" + file.getName() + "'");
+			CRUSH.error(Instrument.class, "Problem reading '" + file.getName() + "'");
 			return null;
 		}
 		catch(Exception e) { 
-			CRUSH.error(null, e);
-			e.printStackTrace();
+			CRUSH.error(Instrument.class, e);
 			return null; 	
 		}
 	}

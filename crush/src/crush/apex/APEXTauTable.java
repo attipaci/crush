@@ -30,6 +30,8 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
 import jnum.data.ScalarLocality;
+import jnum.io.LineParser;
+import jnum.text.SmartTokenizer;
 import jnum.data.LocalAverage;
 import jnum.data.Locality;
 import jnum.data.LocalizedData;
@@ -54,22 +56,19 @@ public class APEXTauTable extends LocalAverage<APEXTauTable.Entry> {
 	}
 	
 	protected void read(String fileName) throws IOException {
-		
-		
-		BufferedReader in = Util.getReader(fileName);
-		
-		String line = null;
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			Entry skydip = new Entry();
-			tokens.nextToken();
-			tokens.nextToken();
-			skydip.timeStamp = new TimeStamp(Double.parseDouble(tokens.nextToken()));
-			skydip.tau.setValue(Double.parseDouble(tokens.nextToken()));
-			skydip.tau.setRMS(1.0);
-			add(skydip);
-		}
-		in.close();
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                Entry skydip = new Entry();
+                tokens.skip(2);
+                skydip.timeStamp = new TimeStamp(tokens.nextDouble());
+                skydip.tau.setValue(tokens.nextDouble());
+                skydip.tau.setRMS(1.0);
+                add(skydip);
+                return true;
+            }   
+		}.read(fileName);
 		
 		this.fileName = fileName;
 		

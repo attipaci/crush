@@ -23,11 +23,10 @@
 
 package crush.jcmt;
 
-import java.io.BufferedReader;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Hashtable;
-import java.util.StringTokenizer;
 
 import crush.CRUSH;
 import jnum.Configurator;
@@ -37,6 +36,8 @@ import jnum.data.DataPoint;
 import jnum.data.LocalAverage;
 import jnum.data.Locality;
 import jnum.data.LocalizedData;
+import jnum.io.LineParser;
+import jnum.text.SmartTokenizer;
 
 
 public class JCMTTauTable  extends LocalAverage<JCMTTauTable.Entry> {
@@ -65,32 +66,26 @@ public class JCMTTauTable  extends LocalAverage<JCMTTauTable.Entry> {
 		if(options.containsKey("window")) timeWindow = options.get("window").getDouble() * Unit.hour;
 	}
 	
-	protected void read(int iMJD, String fileName) throws IOException {
-		
-			
-		BufferedReader in = Util.getReader(fileName);
-		
-		// Skip the header line...
-		String line = in.readLine();
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') if(line.charAt(0) != ' ') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			Entry skydip = new Entry();
-			skydip.timeStamp = new TimeStamp(iMJD, tokens.nextToken());
-			skydip.tau.setValue(Double.parseDouble(tokens.nextToken()));
-			//tokens.nextToken();
-			skydip.tau.setRMS(0.001);
-			add(skydip);
-		}
-		in.close();
+	protected void read(final int iMJD, String fileName) throws IOException {
+	    new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                Entry skydip = new Entry();
+                skydip.timeStamp = new TimeStamp(iMJD, tokens.nextToken());
+                skydip.tau.setValue(tokens.nextDouble());
+                //tokens.nextToken();
+                skydip.tau.setRMS(0.001);
+                add(skydip);
+                return true;
+            }
+	    }.read(fileName);
 		
 		CRUSH.info(this, "[Loading tau data] " + size() + " values parsed.");
 		
 		Collections.sort(this);
 		
 		this.fileName = fileName;
-		
-		
 	}	
 		
 	

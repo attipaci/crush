@@ -28,7 +28,9 @@ import crush.apex.*;
 import crush.array.*;
 import jnum.Unit;
 import jnum.Util;
+import jnum.io.LineParser;
 import jnum.math.Range;
+import jnum.text.SmartTokenizer;
 import nom.tam.fits.*;
 
 import java.io.*;
@@ -85,13 +87,13 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 		super.initDivisions();
 		
 		try { addDivision(getDivision("boxes", LabocaPixel.class.getField("box"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		try { addDivision(getDivision("cables", LabocaPixel.class.getField("cable"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		try { addDivision(getDivision("amps", LabocaPixel.class.getField("amp"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 	}
 	
@@ -100,20 +102,20 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("boxes", "B", divisions.get("boxes"), LabocaPixel.class.getField("boxGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try {
 			CorrelatedModality cables = new CorrelatedModality("cables", "c", divisions.get("cables"), LabocaPixel.class.getField("cableGain"));
 			addModality(cables);
 			addModality(cables.new CoupledModality("twisting", "t", new LabocaCableTwist()));
 		}			
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("amps", "a", divisions.get("amps"), LabocaPixel.class.getField("ampGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 	
 		try { addModality(new Modality<LabocaHe3Response>("temperature", "T", divisions.get("detectors"), LabocaPixel.class.getField("temperatureGain"), LabocaHe3Response.class));	}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		modalities.get("boxes").setGainFlag(LabocaPixel.FLAG_BOX);
 		modalities.get("cables").setGainFlag(LabocaPixel.FLAG_CABLE);
@@ -129,55 +131,57 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 	public void readWiring(String fileName) throws IOException {	
 		info("Loading wiring data from " + fileName);
 		
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<String, LabocaPixel> lookup = getIDLookup();
+		final Hashtable<String, LabocaPixel> lookup = getIDLookup();
+	
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                LabocaPixel pixel = lookup.get(tokens.nextToken());     
+                if(pixel == null) return false;
+                
+                pixel.box = tokens.nextInt();
+                pixel.cable = tokens.nextInt();
+                tokens.nextToken(); // amp line
+                pixel.amp = 16 * pixel.box + tokens.nextToken().charAt(0) - 'A';
+                tokens.nextToken(); // cable name
+                pixel.pin = tokens.nextInt(); // cable pin
+                
+                int bol = tokens.nextInt();
+                char state = tokens.nextToken().toUpperCase().charAt(0);
+                //boolean hasComment = tokens.hasMoreTokens();
+                
+                if(bol < 0 || state != 'B') {
+                    if(state == 'R') {
+                        pixel.flag(LabocaPixel.FLAG_RESISTOR);
+                        pixel.gain = 0.0;
+                        pixel.coupling = 0.0;
+                    }
+                    else pixel.flag(Channel.FLAG_DEAD);
+                }
+                return true;
+            }
+		}.read(fileName);
 		
-		String line = null;
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-		 	LabocaPixel pixel = lookup.get(tokens.nextToken()); 	
-		 	if(pixel == null) continue;
-		 	
-			pixel.box = Integer.parseInt(tokens.nextToken());
-			pixel.cable = Integer.parseInt(tokens.nextToken());
-			tokens.nextToken(); // amp line
-			pixel.amp = 16 * pixel.box + tokens.nextToken().charAt(0) - 'A';
-			tokens.nextToken(); // cable name
-			pixel.pin = Integer.parseInt(tokens.nextToken()); // cable pin
-			
-			int bol = Integer.parseInt(tokens.nextToken());
-			char state = tokens.nextToken().toUpperCase().charAt(0);
-			//boolean hasComment = tokens.hasMoreTokens();
-			
-			if(bol < 0 || state != 'B') {
-			    if(state == 'R') {
-			        pixel.flag(LabocaPixel.FLAG_RESISTOR);
-			        pixel.gain = 0.0;
-			        pixel.coupling = 0.0;
-			    }
-			    else pixel.flag(Channel.FLAG_DEAD);
-			}
 		
-		}	
-		in.close();
 	}
 	
 	public void readTemperatureGains(String fileName) throws IOException {
 		info("Loading He3 gains from " + fileName);
 		
-		// Read gains into LabocaPixel -> temperatureGain:
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		String line;
-		
-		Hashtable<String, LabocaPixel> lookup = getIDLookup();
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			LabocaPixel pixel = lookup.get(tokens.nextToken());
-			if(pixel != null) pixel.temperatureGain = Double.parseDouble(tokens.nextToken());
-		}
-		in.close();
-		
+        final Hashtable<String, LabocaPixel> lookup = getIDLookup();
+        
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                LabocaPixel pixel = lookup.get(tokens.nextToken());
+                if(pixel == null) return false;
+                pixel.temperatureGain = tokens.nextDouble();
+                return true;
+            }
+		    
+		}.read(fileName);	
 	}
 	
 	

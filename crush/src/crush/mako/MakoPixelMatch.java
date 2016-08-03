@@ -28,13 +28,13 @@ import jnum.Configurator;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.Statistics;
+import jnum.io.LineParser;
 import jnum.math.Range;
+import jnum.text.SmartTokenizer;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.StringTokenizer;
+
 
 
 
@@ -71,31 +71,29 @@ public class MakoPixelMatch extends ToneIdentifier<MakoFrequencyID> {
 
 	public void read(String fileSpec) throws IOException {
 		CRUSH.info(this, "Loading resonance identifications from " + fileSpec);
-		
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(Util.getSystemPath(fileSpec))));
-		String line = null;
 
 		clear();
 		
 		// Assuming 12 C for the hot load...
 		// and 195 K for the cold
-		double dT = Thot - Tcold;
+		final double dT = Thot - Tcold;
 		
-		int index = 1;
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line, ", \t");
-			MakoFrequencyID id = new MakoFrequencyID(index++);
-			
-			double fcold = Double.parseDouble(tokens.nextToken());
-			id.freq = Double.parseDouble(tokens.nextToken());
-			id.delta = (id.freq - fcold) / dT; 
-			id.T0 = Thot;
-			
-			add(id);
-		}
-		
-		in.close();
+		new LineParser() {
+		    private int index = 1;
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line, ", \t");
+                MakoFrequencyID id = new MakoFrequencyID(index++);
+                
+                double fcold = tokens.nextDouble();
+                id.freq = tokens.nextDouble();
+                id.delta = (id.freq - fcold) / dT; 
+                id.T0 = Thot;
+                
+                add(id);
+                return true;
+            }
+		}.read(fileSpec);
 		
 		//Collections.sort(this);
 		

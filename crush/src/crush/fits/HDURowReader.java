@@ -77,7 +77,7 @@ public abstract class HDURowReader {
 		public void init() { 
 			super.init();		
 			try { row = (Object[]) ArrayUtil.copyOf(modelRow); } 
-			catch (Exception e) { e.printStackTrace(); }
+			catch (Exception e) { CRUSH.error(this, e); }
 		}
 		
 		@Override

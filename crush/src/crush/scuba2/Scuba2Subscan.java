@@ -361,8 +361,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	public void writeTemperatureGains() throws IOException {
 		// Now write to a file
 		String fileName = CRUSH.workPath + File.separator + "temperature-gains-" + getFileID + ".dat";
-		try { instrument.writeTemperatureGains(fileName, getASCIIHeader()); }
-		catch(IOException e) { e.printStackTrace(); }
+		instrument.writeTemperatureGains(fileName, getASCIIHeader());
 	}
 	
 	

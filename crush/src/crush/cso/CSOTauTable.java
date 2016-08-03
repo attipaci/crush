@@ -35,6 +35,8 @@ import jnum.data.DataPoint;
 import jnum.data.LocalAverage;
 import jnum.data.Locality;
 import jnum.data.LocalizedData;
+import jnum.io.LineParser;
+import jnum.text.SmartTokenizer;
 
 
 
@@ -66,28 +68,24 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
 		if(options.containsKey("window")) timeWindow = options.get("window").getDouble() * Unit.hour;
 	}
 	
-	protected void read(int iMJD, String fileName) throws IOException {
+	protected void read(final int iMJD, String fileName) throws IOException {
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                Entry skydip = new Entry();
+                skydip.timeStamp = new TimeStamp(iMJD, tokens.nextToken());
+                skydip.tau.setValue(tokens.nextDouble());
+                tokens.skip();
+                skydip.tau.setRMS(ExtraMath.hypot(0.005, tokens.nextDouble()));
+                add(skydip);
+                return true;
+            }
+		}.read(fileName);
 		
-		
-		BufferedReader in = Util.getReader(fileName);
-		
-		String line = null;
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') if(line.charAt(0) != ' ') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			Entry skydip = new Entry();
-			skydip.timeStamp = new TimeStamp(iMJD, tokens.nextToken());
-			skydip.tau.setValue(Double.parseDouble(tokens.nextToken()));
-			tokens.nextToken();
-			skydip.tau.setRMS(ExtraMath.hypot(0.005, Double.parseDouble(tokens.nextToken())));
-			add(skydip);
-		}
-		in.close();
+        this.fileName = fileName;
 		
 		CRUSH.info(this, "[Loading tau data] -- " + size() + " values parsed.");
-		
-		this.fileName = fileName;
-		
-		
 	}	
 	
 	public double getTau(double MJD) {

@@ -310,7 +310,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 			String fileName = option("write.flatfield").getValue();
 			if(fileName.isEmpty()) fileName = CRUSH.workPath + File.separator + "flatfield-" + getDisplayID() + ".fits";
 			try { instrument.writeFlatfield(fileName); }
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { error(e); }
 		}
 	}
 	

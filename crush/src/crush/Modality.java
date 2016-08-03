@@ -100,7 +100,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 				mode.setChannels(group);
 				add(mode);
 			}
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { CRUSH.error(this, e); }
 		}
 		setDefaultNames();
 	}
@@ -166,7 +166,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 				isFlagging |= mode.setGains(fG);
 				mode.syncAllGains(integration, sumwC2, true); 			
 			}
-			catch(IllegalAccessException e) { e.printStackTrace(); }
+			catch(IllegalAccessException e) { CRUSH.error(this, e); }
 		}
 		
 		return isFlagging;
@@ -183,7 +183,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 				isFlagging |= mode.setGains(WeightedPoint.floatValues(G));
 				mode.syncAllGains(integration, WeightedPoint.floatWeights(G), true);
 			}
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { CRUSH.error(this, e); }
 		}
 		
 		return isFlagging;

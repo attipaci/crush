@@ -31,7 +31,9 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
+import jnum.io.LineParser;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 
@@ -163,7 +165,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		super.initDivisions();
 		
 		try { addDivision(getDivision("rows", Sharc2Pixel.class.getField("row"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		if(hasOption("block")) {
 			StringTokenizer tokens = new StringTokenizer(option("block").getValue(), " \t:x");
@@ -175,11 +177,11 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		}
 			
 		try { addDivision(getDivision("blocks", Sharc2Pixel.class.getField("block"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 	
 		/*
 		try { addDivision(getDivision("amps", Sharc2Pixel.class.getField("amp"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		*/
 		
 		
@@ -190,17 +192,17 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("rows", "r", divisions.get("rows"), Sharc2Pixel.class.getField("rowGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("mux", "m", divisions.get("rows"), Sharc2Pixel.class.getField("muxGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("blocks", "b", divisions.get("blocks"), Sharc2Pixel.class.getField("gain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		/* TODO
 		try { addModality(new CorrelatedModality("amps", "a", divisions.get("amps"), Sharc2Pixel.class.getField("ampGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		*/
 		
 		addModality(modalities.get("rows").new CoupledModality("smileys", "s", new Sharc2SmileyRows()));
@@ -324,24 +326,24 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 	public void loadGainCoefficients(String fileName) throws IOException {
 		info("Loading nonlinearities from " + fileName + ".");
 
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		
-		String line;
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
 
-			int row = Integer.parseInt(tokens.nextToken()) - 1;
-			int col = Integer.parseInt(tokens.nextToken()) - 1;
-			
-			Sharc2Pixel pixel = get(32*row + col + 1);
+                int row = tokens.nextInt() - 1;
+                int col = tokens.nextInt() - 1;
+                
+                Sharc2Pixel pixel = get(32*row + col + 1);
 
-			pixel.G0 = Double.parseDouble(tokens.nextToken());
-			pixel.V0 = -Double.parseDouble(tokens.nextToken()) * pixel.biasV;
-			pixel.T0 = Double.parseDouble(tokens.nextToken()) * Unit.K;
-		}
+                pixel.G0 = tokens.nextDouble();
+                pixel.V0 = -tokens.nextDouble() * pixel.biasV;
+                pixel.T0 = tokens.nextDouble() * Unit.K;
+                
+                return true;
+            }
+		}.read(fileName);
 		
-		in.close();
 	}
 
 	public void calcPixelGains() {

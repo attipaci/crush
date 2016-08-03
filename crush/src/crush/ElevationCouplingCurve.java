@@ -25,10 +25,11 @@
 package crush;
 
 import java.io.*;
-import java.util.*;
 
 import jnum.Unit;
 import jnum.data.Interpolator;
+import jnum.io.LineParser;
+import jnum.text.SmartTokenizer;
 
 
 public class ElevationCouplingCurve extends Interpolator {
@@ -43,16 +44,16 @@ public class ElevationCouplingCurve extends Interpolator {
 	
 	@Override
 	public void readData(String fileName) throws IOException {
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		
-		String line = null;
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			Interpolator.Data response = new Interpolator.Data();
-			response.ordinate = Double.parseDouble(tokens.nextToken()) * Unit.deg;
-			response.value = Double.parseDouble(tokens.nextToken());
-			add(response);
-		}
-		in.close();
+	    new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                Interpolator.Data response = new Interpolator.Data();
+                response.ordinate = tokens.nextDouble() * Unit.deg;
+                response.value = tokens.nextDouble();
+                add(response);
+                return true;
+            }     
+	    }.read(fileName);
 	}	
 }

@@ -165,7 +165,7 @@ public class ScalarMap extends SourceMap {
 				try { insertSources(catalog); }
 				catch(Exception e) {
 					warning("Source insertion error: " + e.getMessage());
-					e.printStackTrace();
+					if(CRUSH.debug) CRUSH.trace(e);
 				}
 			}
 			catch(IOException e) {
@@ -180,7 +180,7 @@ public class ScalarMap extends SourceMap {
 			try { injectSource(sourceOption("inject").getPath()); }
 			catch(Exception e) { 
 				warning("Cannot read injection map. Check the file name and path."); 
-				e.printStackTrace();
+				if(CRUSH.debug) CRUSH.trace(e);
 			}
 		}
 		
@@ -188,7 +188,7 @@ public class ScalarMap extends SourceMap {
 			try { applyModel(sourceOption("model").getPath()); }
 			catch(Exception e) { 
 				warning("Cannot read source model. Check the file name and path."); 
-				e.printStackTrace();
+				if(CRUSH.debug) CRUSH.trace(e);
 			}
 		}
 		
@@ -243,7 +243,7 @@ public class ScalarMap extends SourceMap {
 		
 		CRUSH.detail(this, "Removing model from the data.");
 		try { super.sync(); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		// For testing the removal of the model...
 		//for(int i=0; i<map.sizeX(); i++) Arrays.fill(base[i], 0.0);
@@ -273,7 +273,7 @@ public class ScalarMap extends SourceMap {
 			
 		CRUSH.detail(this, "Injecting source map into timestream data. ");
 		try { super.sync(); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		map.reset(true);
 		base.clear();
@@ -348,7 +348,7 @@ public class ScalarMap extends SourceMap {
 		if(hasOption("scanmaps")) {
 			map.fileName = CRUSH.workPath + "/scan-" + (int)scan.getMJD() + "-" + scan.getID() + ".fits";
 			try { map.write(); }
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { error(e); }
 		}
 		
 		isReady = true;
@@ -516,7 +516,7 @@ public class ScalarMap extends SourceMap {
 		if(hasSourceOption("intermediates")) {
 			map.fileName = "intermediate.fits";
 			try { map.write(); }
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { error(e); }
 		}
 
 		// Coupled with blanking...
