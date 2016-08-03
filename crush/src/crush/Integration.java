@@ -2642,18 +2642,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		for(String name : specs) {
 			if(name.equalsIgnoreCase("full")){
 				try { writeCovariance(prefix + "-" + getFileID() + ".fits", getFullCovariance(covar)); }
-				catch(Exception e) { e.printStackTrace(); }	
+				catch(Exception e) { error(e); }	
 			}
 			else if(name.equalsIgnoreCase("reduced")){
 				try { writeCovariance(prefix + "-" + getFileID() + ".reduced.fits", covar); }
-				catch(Exception e) { e.printStackTrace(); }	
+				catch(Exception e) { error(e); }	
 			}	
 			else {
 				ChannelDivision<?> division = instrument.divisions.get(name);
 				if(division == null) warning("Cannot write covariance for " + name + ". Undefined grouping.");
 				else {
 					try { writeCovariance(prefix + "-" + getFileID() + "." + name + ".fits", getGroupCovariance(division, covar)); }
-					catch(Exception e) { e.printStackTrace(); }	
+					catch(Exception e) { error(e); }	
 				}
 			}
 		}
@@ -2664,25 +2664,25 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 		if(hasOption("write.pattern")) {
 			try { writeScanPattern(); }
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { error(e); }
 		}
 		
 		if(hasOption("write.pixeldata")) {
 			String fileName = CRUSH.workPath + File.separator + "pixel-" + getFileID() + ".dat";
 			try { instrument.writeChannelData(fileName, getASCIIHeader()); }
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { error(e); }
 		}
 
 		if(hasOption("write.covar")) writeCovariances();
 			
 		if(hasOption("write.ascii")) {
 			try { writeASCIITimeStream(); }
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { error(e); }
 		}
 		
 		if(hasOption("write.phases")) if(isPhaseModulated()) {
 			try { ((PhaseModulated) this).getPhases().write(); }
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { error(e); }
 		}
 		
 		if(hasOption("write.signals")) for(Mode mode : signals.keySet()) {
@@ -2702,7 +2702,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			int windowSize = spectrumOption.isConfigured("size") ? spectrumOption.get("size").getInt() : 2*framesFor(filterTimeScale);
 		
 			try { writeSpectra(windowName, windowSize); }
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { error(e); }
 		}
 		
 		

@@ -23,10 +23,7 @@
 
 package crush.mustang2;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
@@ -47,6 +44,7 @@ import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.Statistics;
+import jnum.io.LineParser;
 import jnum.math.Vector2D;
 
 public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements GroundBased {
@@ -84,10 +82,10 @@ public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements Gr
 		super.initDivisions();
 			
 		try { addDivision(getDivision("polarizations", Mustang2Pixel.class.getField("polarizationIndex"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		try { addDivision(getDivision("mux", Mustang2Pixel.class.getField("readoutIndex"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 	}
 	
@@ -100,14 +98,14 @@ public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements Gr
 			muxMode.setGainFlag(Mustang2Pixel.FLAG_POL);
 			addModality(muxMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try {
 			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), Mustang2Pixel.class.getField("readoutGain"));		
 			muxMode.setGainFlag(Mustang2Pixel.FLAG_MUX);
 			addModality(muxMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }	
+		catch(NoSuchFieldException e) { error(e); }	
 		
 	}
 	
@@ -220,12 +218,12 @@ public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements Gr
 	public void loadChannelData() {
 		for(int i=0; i<readout.length; i++) if(hasOption("frequencies." + (i+1))) {
 			try { readout[i].parseFrequencies(option("frequencies." + (i+1)).getPath()); }
-			catch(IOException e) { e.printStackTrace(); }
+			catch(IOException e) { error(e); }
 		}
 			
 		if(hasOption("positions")) {
 			try { parsePositions(option("positions").getPath()); }
-			catch(IOException e) { e.printStackTrace(); }
+			catch(IOException e) { error(e); }
 		}
 		
 		assignPositions();
@@ -236,48 +234,45 @@ public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements Gr
 	}
 		
 	public void parsePositions(String fileName) throws IOException {
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		String line = null;
 		
 		for(Mustang2Readout r : readout) if(r != null) for(Mustang2PixelID id : r.tones) id.flag(Mustang2PixelID.FLAG_UNUSED);
 		
-		int n = 0;
+		final double pol0 = hasOption("positions.pol0") ? option("positions.pol0").getDouble() * Unit.deg : 0.0;
 		
-		double pol0 = hasOption("positions.pol0") ? option("positions.pol0").getDouble() * Unit.deg : 0.0;
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			if(tokens.countTokens() > 4) {
-				Mustang2Readout r = readout[Integer.parseInt(tokens.nextToken())];
-				
-				int channel = Integer.parseInt(tokens.nextToken());
-				
-				if(channel < r.tones.size()) {
-					Mustang2PixelID id = r.tones.get(channel);
-					
-					id.position = new Vector2D(Double.parseDouble(tokens.nextToken()), Double.parseDouble(tokens.nextToken()));			
-					id.position.scale(Unit.arcsec);
-					
-					id.unflag(Mustang2PixelID.FLAG_UNUSED);	
+		LineParser parser = new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                StringTokenizer tokens = new StringTokenizer(line);
+                if(tokens.countTokens() < 5) return false;
+                Mustang2Readout r = readout[Integer.parseInt(tokens.nextToken())];
 
-					int flag = Integer.parseInt(tokens.nextToken());
-					if(flag == 0) id.flag(Mustang2PixelID.FLAG_BLIND);
-					else id.unflag(Mustang2PixelID.FLAG_BLIND);
+                int channel = Integer.parseInt(tokens.nextToken());
 
-					if(tokens.hasMoreTokens()) {
-						id.polarizationAngle = Constant.rightAngle + Math.IEEEremainder(Double.parseDouble(tokens.nextToken()) * Unit.deg - pol0, Math.PI);
-						if(id.polarizationAngle == Math.PI) id.polarizationAngle = 0.0;
-					}
-						
-					n++;
-				}
-			}
-			
-		}
+                if(channel >= r.tones.size()) return false;
+                Mustang2PixelID id = r.tones.get(channel);
+                
+                id.position = new Vector2D(Double.parseDouble(tokens.nextToken()), Double.parseDouble(tokens.nextToken()));         
+                id.position.scale(Unit.arcsec);
+                
+                id.unflag(Mustang2PixelID.FLAG_UNUSED); 
+                
+                int flag = Integer.parseInt(tokens.nextToken());
+                if(flag == 0) id.flag(Mustang2PixelID.FLAG_BLIND);
+                else id.unflag(Mustang2PixelID.FLAG_BLIND);
+                
+                if(tokens.hasMoreTokens()) {
+                    id.polarizationAngle = Constant.rightAngle + Math.IEEEremainder(Double.parseDouble(tokens.nextToken()) * Unit.deg - pol0, Math.PI);
+                    if(id.polarizationAngle == Math.PI) id.polarizationAngle = 0.0;
+                }
+                
+                return true;
+            }
+		};
 		
-		info("Parsed " + n + " pixel positions from " + fileName);
+		parser.read(fileName);
 		
-		in.close();
+		info("Parsed " + parser.getLinesProcessed() + " pixel positions from " + fileName);
+
 	}
 	
 	private void assignPositions() {	

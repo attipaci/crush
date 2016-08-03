@@ -32,7 +32,9 @@ import crush.array.*;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
+import jnum.io.LineParser;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 
@@ -119,16 +121,16 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 				});
 			}
 		}
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		try { addDivision(getDivision("pins", GismoPixel.class.getField("pin"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }	
+		catch(Exception e) { error(e); }	
 		
 		try { addDivision(getDivision("cols", GismoPixel.class.getField("col"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }	
+		catch(Exception e) { error(e); }	
 		
 		try { addDivision(getDivision("rows", GismoPixel.class.getField("row"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }	
+		catch(Exception e) { error(e); }	
 		
 	}
 	
@@ -142,32 +144,32 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 			muxMode.setGainFlag(GismoPixel.FLAG_MUX);
 			addModality(muxMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }	
+		catch(NoSuchFieldException e) { error(e); }	
 			
 		try { 
 			Modality<?> pinMode = new CorrelatedModality("pins", "p", divisions.get("pins"), GismoPixel.class.getField("pinGain")); 
 			pinMode.setGainFlag(GismoPixel.FLAG_PIN);
 			addModality(pinMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { 
 			Modality<?> colMode = new CorrelatedModality("cols", "c", divisions.get("cols"), GismoPixel.class.getField("colGain")); 
 			colMode.setGainFlag(GismoPixel.FLAG_COL);
 			addModality(colMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { 
 			Modality<?> rowMode = new CorrelatedModality("rows", "r", divisions.get("rows"), GismoPixel.class.getField("rowGain")); 
 			rowMode.setGainFlag(GismoPixel.FLAG_ROW);
 			addModality(rowMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		if(hasOption("read.sae")) {
 			try { addModality(new SAEModality(this)); }
-			catch(NoSuchFieldException e) { e.printStackTrace(); }
+			catch(NoSuchFieldException e) { error(e); }
 		}
 	}
 	
@@ -216,21 +218,21 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 	public void readWiring(String fileName) throws IOException {
 		info("Loading wiring data from " + fileName);
 			
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<String, GismoPixel> lookup = getIDLookup();
+		final Hashtable<String, GismoPixel> lookup = getIDLookup();
+		final int groupPins = hasOption("correlated.pins.group") ? option("correlated.pins.group").getInt() : 1;
 		
-		int groupPins = hasOption("correlated.pins.group") ? option("correlated.pins.group").getInt() : 1;
-		
-		String line = null;
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-		 	GismoPixel pixel = lookup.get(tokens.nextToken());
-		 	if(pixel == null) continue;
-			pixel.mux = Integer.parseInt(tokens.nextToken());
-		 	pixel.pin = Integer.parseInt(tokens.nextToken()) / groupPins;
-		}
-		
-		in.close();
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                GismoPixel pixel = lookup.get(tokens.nextToken());
+                if(pixel == null) return false;
+                pixel.mux = tokens.nextInt();
+                pixel.pin = tokens.nextInt() / groupPins;
+                return true;
+            }
+		}.read(fileName);
+
 	}
 	
 	protected void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {

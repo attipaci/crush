@@ -100,7 +100,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
   		if(polZoom != null) copy.polZoom = Arrays.copyOf(polZoom, polZoom.length);
 		if(darkSquidLookup != null) {
             try { copy.darkSquidLookup = (int[][]) ArrayUtil.copyOf(darkSquidLookup); } 
-            catch(Exception e) { e.printStackTrace(); }
+            catch(Exception e) { error(e); }
 		}
 		if(mceSubarray != null) copy.mceSubarray = Arrays.copyOf(mceSubarray, mceSubarray.length);
 		if(detectorBias != null) copy.detectorBias = Arrays.copyOf(detectorBias, detectorBias.length);
@@ -124,16 +124,16 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		super.initDivisions();
 		
 		try { addDivision(getDivision("polarrays", HawcPlusPixel.class.getField("pol"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
-		catch(Exception e) { e.printStackTrace(); }	
+		catch(Exception e) { error(e); }	
 		
 		try { addDivision(getDivision("subarrays", HawcPlusPixel.class.getField("sub"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
-		catch(Exception e) { e.printStackTrace(); }	
+		catch(Exception e) { error(e); }	
 				
 		try { addDivision(getDivision("subarrays", HawcPlusPixel.class.getField("sub"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
-        catch(Exception e) { e.printStackTrace(); } 
+        catch(Exception e) { error(e); } 
 		
 		try { addDivision(getDivision("bias", HawcPlusPixel.class.getField("biasLine"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
-        catch(Exception e) { e.printStackTrace(); } 
+        catch(Exception e) { error(e); } 
 		
 		// If correction was applied at validation, then only decorrelate detectors
 		// Otherwise, decorrelate including the dark SQUIDs...
@@ -153,10 +153,10 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 				});
 			}
 		}
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		try { addDivision(getDivision("rows", HawcPlusPixel.class.getField("row"), muxSkipFlag)); }
-		catch(Exception e) { e.printStackTrace(); }	
+		catch(Exception e) { error(e); }	
 	}
 	
 	@Override
@@ -171,7 +171,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 			subMode.solveGains = false;
 			addModality(subMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		*/
 		
 		try {
@@ -180,7 +180,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
             biasMode.setGainFlag(HawcPlusPixel.FLAG_BIAS);
             addModality(biasMode);
         }
-        catch(NoSuchFieldException e) { e.printStackTrace(); }  
+        catch(NoSuchFieldException e) { error(e); }  
 		
 		try {
 			CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), HawcPlusPixel.class.getField("muxGain"));		
@@ -188,14 +188,14 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 			muxMode.setGainFlag(HawcPlusPixel.FLAG_MUX);
 			addModality(muxMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }	
+		catch(NoSuchFieldException e) { error(e); }	
 			
 		try { 
 			Modality<?> addressMode = new CorrelatedModality("rows", "r", divisions.get("rows"), HawcPlusPixel.class.getField("pinGain")); 
 			addressMode.setGainFlag(HawcPlusPixel.FLAG_ROW);
 			addModality(addressMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 	}
 	

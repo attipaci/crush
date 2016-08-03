@@ -254,8 +254,8 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 							frame.equatorial = celestial.toEquatorial();
 							frame.calcHorizontal();
 						}
-						catch(InstantiationException e) { e.printStackTrace(); }
-						catch(IllegalAccessException e) { e.printStackTrace(); }
+						catch(InstantiationException e) { error(e); }
+						catch(IllegalAccessException e) { error(e); }
 					}
 						
 					// Calculate the parallactic angle
@@ -489,7 +489,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 		
 		if(hasOption("log.saegains")) {
 			try { logSAEGains(); }
-			catch(IOException e) { e.printStackTrace(); }
+			catch(IOException e) { error(e); }
 		}
 		
 	}

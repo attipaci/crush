@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.io.*;
 
 import crush.CRUSH;
@@ -38,8 +37,10 @@ import jnum.Util;
 import jnum.data.fitting.ChiSquared;
 import jnum.data.fitting.DownhillSimplex;
 import jnum.data.fitting.Parameter;
+import jnum.io.LineParser;
 import jnum.math.Range;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 
 
 public class MakoModel<PixelType extends AbstractMakoPixel> {
@@ -64,7 +65,7 @@ public class MakoModel<PixelType extends AbstractMakoPixel> {
 			model.fit();
 			model.print(System.out);
 		}
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { CRUSH.error(MakoModel.class, e); }
 	}
 
 	public MakoModel(AbstractMako<PixelType> mako) {
@@ -95,27 +96,28 @@ public class MakoModel<PixelType extends AbstractMakoPixel> {
 	}
 	
 	public void readRCP(String fileName) throws IOException {
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		String line = null;
 		positions.clear();
 		
-		Range xRange = new Range();
-		Range yRange = new Range();
+		final Range xRange = new Range();
+		final Range yRange = new Range();
 		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			tokens.nextToken(); // serial
-			double sourceGain = Double.parseDouble(tokens.nextToken());
-			tokens.nextToken(); // sky gain
-			Vector2D pos = new Vector2D(Double.parseDouble(tokens.nextToken()), Double.parseDouble(tokens.nextToken()));
-			Double f = Double.parseDouble(tokens.nextToken());
-			sourceGains.put(f, sourceGain);
-			positions.put(f, pos);
-			if(!Double.isNaN(pos.x())) xRange.include(pos.x());
-			if(!Double.isNaN(pos.y()))yRange.include(pos.y());
-		}
-		in.close();
-		
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                tokens.nextToken(); // serial
+                double sourceGain = tokens.nextDouble();
+                tokens.nextToken(); // sky gain
+                Vector2D pos = new Vector2D(tokens.nextDouble(), tokens.nextDouble());
+                double f = tokens.nextDouble();
+                sourceGains.put(f, sourceGain);
+                positions.put(f, pos);
+                if(!Double.isNaN(pos.x())) xRange.include(pos.x());
+                if(!Double.isNaN(pos.y()))yRange.include(pos.y());
+                return true;
+            }
+		}.read(fileName);
+			
 		CRUSH.info(this, "Parsed " + positions.size() + " positions.");
 		
 		distortion.get(distortion.getParameter("x", 0, 0)).setRange(xRange);

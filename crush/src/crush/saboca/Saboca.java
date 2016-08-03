@@ -28,6 +28,8 @@ import crush.*;
 import crush.apex.*;
 import crush.array.*;
 import jnum.Unit;
+import jnum.io.LineParser;
+import jnum.text.SmartTokenizer;
 
 import java.io.*;
 import java.util.*;
@@ -51,7 +53,7 @@ public class Saboca extends APEXCamera<SabocaPixel> implements NonOverlapping {
 		super.initDivisions();
 		
 		try { addDivision(getDivision("squids", SabocaPixel.class.getField("squid"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 	}
 	
 	@Override
@@ -59,7 +61,7 @@ public class Saboca extends APEXCamera<SabocaPixel> implements NonOverlapping {
 		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("squids", "q", divisions.get("squids"), SabocaPixel.class.getField("squidGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		modalities.get("squids").setGainFlag(SabocaPixel.FLAG_SQUID);
 	}
@@ -84,24 +86,23 @@ public class Saboca extends APEXCamera<SabocaPixel> implements NonOverlapping {
 	public void readWiring(String fileName) throws IOException {
 		info("Loading wiring data from " + fileName);
 		
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<String, SabocaPixel> lookup = getIDLookup();
-		
-		String line;
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			SabocaPixel pixel = lookup.get(tokens.nextToken());
-			if(pixel == null) continue;
-			
-			if(pixel != null) {
-				pixel.squid = Integer.parseInt(tokens.nextToken());
-				pixel.pin = Integer.parseInt(tokens.nextToken());
-				// in principle the default positions are also here...
-				// TODO maybe should be used for blind flagging...
-			}
-		}
-		
-		in.close();
+		final Hashtable<String, SabocaPixel> lookup = getIDLookup();
+	
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                SabocaPixel pixel = lookup.get(tokens.nextToken());
+                if(pixel == null) return false;
+               
+                pixel.squid = tokens.nextInt();
+                pixel.pin = tokens.nextInt();
+                // in principle the default positions are also here...
+                // TODO maybe should be used for blind flagging...
+                
+                return true;
+            }  
+		}.read(fileName);
 	}	
 	
 }

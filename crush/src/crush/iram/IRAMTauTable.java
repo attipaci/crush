@@ -32,6 +32,8 @@ import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.data.DataPoint;
 import jnum.data.ScalarLocality;
+import jnum.io.LineParser;
+import jnum.text.SmartTokenizer;
 import jnum.data.LocalAverage;
 import jnum.data.Locality;
 import jnum.data.LocalizedData;
@@ -66,40 +68,29 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 	private void read(String fileName, String timeZone) throws IOException {
 		if(fileName.equals(this.fileName)) return;
 			
-				
+
+		final SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss yyyy-MM-dd");
+        df.setTimeZone(TimeZone.getTimeZone(timeZone));	
 		
-		BufferedReader in = Util.getReader(fileName);
-		String line = null;
-		
-		SimpleDateFormat df = new SimpleDateFormat("hh:mm:ss yyyy-MM-dd");
-		df.setTimeZone(TimeZone.getTimeZone(timeZone));
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
+        new LineParser() {
+
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);     
+                if(tokens.countTokens() < 4) return false;
+                
+                Entry skydip = new Entry();
+                String dateSpec = tokens.nextToken() + " " + tokens.nextToken();
+                Date date = df.parse(dateSpec);
+                skydip.timeStamp = new TimeStamp(AstroTime.getMJD(date.getTime()));         
+                
+                skydip.tau.setValue(tokens.nextDouble());    
+                skydip.tau.setRMS(tokens.nextDouble());
+                add(skydip);
+                return true;
+            }
+        }.read(fileName);
 			
-			if(tokens.countTokens() > 3) {
-				Entry skydip = new Entry();
-				String dateSpec = null;
-				try { 
-					dateSpec = tokens.nextToken() + " " + tokens.nextToken();
-					Date date = df.parse(dateSpec);
-					skydip.timeStamp = new TimeStamp(AstroTime.getMJD(date.getTime()));			
-					
-					try { 
-						skydip.tau.setValue(Double.parseDouble(tokens.nextToken())); 	
-						skydip.tau.setRMS(Double.parseDouble(tokens.nextToken()));
-						add(skydip);
-					}
-					catch(NumberFormatException e) {}
-					
-				}
-				catch(ParseException e) {
-					CRUSH.warning(this, "Cannot parse date " + dateSpec);
-				}
-			}
-		}
-		in.close();
-		
         CRUSH.info(this, "[Loading skydip tau values.] -- " + size() + " valid records found.");
         if(CRUSH.debug) CRUSH.detail(this, " >> " + fileName + " >> ");
 		

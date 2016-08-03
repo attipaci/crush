@@ -48,7 +48,7 @@ public class ArrayRecycler {
 				int[] i = ints.take(); 
 				if(i.length == size) return i;	
 			}
-			catch(InterruptedException e) { e.printStackTrace(); }
+			catch(InterruptedException e) { CRUSH.error(this, e); }
 		}
 		return new int[size];
 	}
@@ -60,7 +60,7 @@ public class ArrayRecycler {
 				float[] f = floats.take(); 
 				if(f.length == size) return f;	
 			}
-			catch(InterruptedException e) { e.printStackTrace(); }
+			catch(InterruptedException e) { CRUSH.error(this, e); }
 		}
 		return new float[size];
 	}
@@ -71,7 +71,7 @@ public class ArrayRecycler {
 				double[] d = doubles.take(); 
 				if(d.length == size) return d;	
 			}
-			catch(InterruptedException e) { e.printStackTrace(); }
+			catch(InterruptedException e) { CRUSH.error(this,  e); }
 		}
 		return new double[size];
 	}
@@ -82,7 +82,7 @@ public class ArrayRecycler {
 				DataPoint[] p = points.take(); 
 				if(p.length == size) return p;	
 			}
-			catch(InterruptedException e) { e.printStackTrace(); }
+			catch(InterruptedException e) { CRUSH.error(this, e); }
 		}
 		return DataPoint.createArray(size);
 	}

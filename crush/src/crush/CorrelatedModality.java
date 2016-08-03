@@ -81,7 +81,7 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 		for(CorrelatedMode mode : this) {
 			if(!Double.isNaN(resolution)) mode.resolution = resolution;
 			try { mode.updateSignals(integration, isRobust); }
-			catch(Exception e) { e.printStackTrace(); }
+			catch(Exception e) { CRUSH.error(this, e); }
 		}
 	}
 

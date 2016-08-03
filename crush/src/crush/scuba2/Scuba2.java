@@ -94,13 +94,13 @@ public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBa
 		super.initDivisions();
 		
 		try { addDivision(getDivision("subarrays", Scuba2Pixel.class.getField("subarrayNo"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		try { addDivision(getDivision("rows", Scuba2Pixel.class.getField("row"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		try { addDivision(getDivision("cols", Scuba2Pixel.class.getField("col"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }	
+		catch(Exception e) { error(e); }	
 		
 		if(hasOption("block")) {
 			StringTokenizer tokens = new StringTokenizer(option("block").getValue(), " \t:x");
@@ -111,7 +111,7 @@ public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBa
 		}
 		
 		try { addDivision(getDivision("blocks", Scuba2Pixel.class.getField("block"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }	
+		catch(Exception e) { error(e); }	
 	}
 	
 	@Override
@@ -123,27 +123,27 @@ public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBa
 			muxMode.setGainFlag(Scuba2Pixel.FLAG_SUBARRAY);
 			addModality(muxMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }	
+		catch(NoSuchFieldException e) { error(e); }	
 		
 		try {
 			CorrelatedModality muxMode = new CorrelatedModality("rows", "r", divisions.get("rows"), Scuba2Pixel.class.getField("rowGain"));		
 			muxMode.setGainFlag(Scuba2Pixel.FLAG_ROW);
 			addModality(muxMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }	
+		catch(NoSuchFieldException e) { error(e); }	
 		
 		try {
 			CorrelatedModality muxMode = new CorrelatedModality("cols", "c", divisions.get("cols"), Scuba2Pixel.class.getField("colGain"));		
 			muxMode.setGainFlag(Scuba2Pixel.FLAG_COL);
 			addModality(muxMode);
 		}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }	
+		catch(NoSuchFieldException e) { error(e); }	
 			
 		try { addModality(new Modality<Scuba2He3Response>("he3", "T", divisions.get("detectors"), Scuba2Pixel.class.getField("he3Gain"), Scuba2He3Response.class));	}
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("blocks", "b", divisions.get("blocks"), Scuba2Pixel.class.getField("gain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		
 	}
@@ -267,19 +267,19 @@ public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBa
 	public void readTemperatureGains(String fileName) throws IOException {
 		info("Loading He3 gains from " + fileName);
 		
-		// Read gains into LabocaPixel -> temperatureGain:
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		String line;
-		
-		Hashtable<Integer, Scuba2Pixel> lookup = getFixedIndexLookup();
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			Scuba2Pixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
-			if(pixel != null) pixel.temperatureGain = Double.parseDouble(tokens.nextToken());
-		}
-		in.close();
-		
+		final Hashtable<Integer, Scuba2Pixel> lookup = getFixedIndexLookup();
+        	
+		new AsciiReader() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                StringTokenizer tokens = new StringTokenizer(line);
+                Scuba2Pixel pixel = lookup.get(Integer.parseInt(tokens.nextToken()));
+                if(pixel == null) return false;
+                pixel.temperatureGain = tokens.nextDouble();
+                return true;
+            }
+		}.read(fileName);
+			
 	}
 	
 	

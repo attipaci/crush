@@ -23,13 +23,14 @@
 package crush.iram;
 
 import java.io.*;
-import java.util.StringTokenizer;
 
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.HorizontalCoordinates;
+import jnum.io.LineParser;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 
 public class IRAMPointingModel {
 	public double[] P = new double[1+CONSTANTS];
@@ -120,26 +121,25 @@ public class IRAMPointingModel {
 	}
 	
 	public void read(String fileName) throws IOException {
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		String line;
-		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line, " \t\r=:, ");
-			if(tokens.hasMoreTokens()) {
-				String constant = tokens.nextToken().toLowerCase();
-				if(constant.startsWith("p")) {
-					int i = Integer.parseInt(constant.substring(1));
-					if(tokens.hasMoreTokens()) P[i] = Double.parseDouble(tokens.nextToken());
-					if(tokens.hasMoreTokens()) c[i] = Double.parseDouble(tokens.nextToken());
-					if(tokens.hasMoreTokens()) s[i] = Double.parseDouble(tokens.nextToken());
-				}
-				else if(constant.equals("t")) dydT = Double.parseDouble(tokens.nextToken());
-				else if(constant.equals("tx")) dxdT = Double.parseDouble(tokens.nextToken());
-				else if(constant.equals("ty")) dydT = Double.parseDouble(tokens.nextToken());
-			}
-		}
-		
-		in.close();
+	    new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line, " \t\r=:, ");
+                if(!tokens.hasMoreTokens()) return false;
+                String constant = tokens.nextToken().toLowerCase();
+                if(constant.startsWith("p")) {
+                    int i = Integer.parseInt(constant.substring(1));
+                    if(tokens.hasMoreTokens()) P[i] = tokens.nextDouble();
+                    if(tokens.hasMoreTokens()) c[i] = tokens.nextDouble();
+                    if(tokens.hasMoreTokens()) s[i] = tokens.nextDouble();
+                }
+                else if(constant.equals("t")) dydT = tokens.nextDouble();
+                else if(constant.equals("tx")) dxdT = tokens.nextDouble();
+                else if(constant.equals("ty")) dydT = tokens.nextDouble();  
+                return true;
+            }	        
+	    }.read(fileName);
+
 	}
 	
 	public final static int CONSTANTS = 14;

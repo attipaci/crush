@@ -66,7 +66,7 @@ public class SharcFile extends Hashtable<Integer, SharcScan> {
 			System.out.println();
 			file.get(1).printInfo(System.out);
 		}
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { CRUSH.error(SharcFile.class, e); }
 	}
 	
 	private SharcFile(Sharc instrument, String fileName) throws IOException {

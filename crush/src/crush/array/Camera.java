@@ -34,7 +34,9 @@ import crush.sourcemodel.*;
 import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
+import jnum.io.LineParser;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 
 
 public abstract class Camera<PixelType extends Pixel, ChannelType extends Channel> extends Instrument<ChannelType> {
@@ -137,45 +139,44 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 	
 	public void readRCP(String fileName)  throws IOException {		
 		info("Reading RCP from " + fileName);
-			
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		String line;
-
+		
 		// Channels not in the RCP file are assumed to be blind...
 		for(ChannelType pixel : this) {
 			pixel.flag(Channel.FLAG_BLIND);
 		}
 		
-		Hashtable<String, Pixel> idLookup = getPixelLookup(); 
-		boolean useGains = hasOption("rcp.gains");
+		final Hashtable<String, Pixel> idLookup = getPixelLookup(); 
+		final boolean useGains = hasOption("rcp.gains");
 			
 		if(useGains) info("Initial Source Gains set from RCP file.");
 		
-		while((line = in.readLine()) != null) if(line.length() > 0) if(!"#!/".contains(line.charAt(0) + "")) {
-			StringTokenizer tokens = new StringTokenizer(line);
-			int columns = tokens.countTokens();
-			Pixel pixel = idLookup.get(tokens.nextToken());
-			
-			if(pixel == null) continue;
-			
-			try {
-				if(pixel instanceof Channel) {
-					Channel channel = (Channel) pixel;
-					double sourceGain = Double.parseDouble(tokens.nextToken());
-					double coupling = (columns == 3 || columns > 4) ? sourceGain / Double.parseDouble(tokens.nextToken()) : sourceGain / channel.gain;
-					
-					if(useGains) channel.coupling = coupling;
-					if(sourceGain != 0.0) channel.unflag(Channel.FLAG_BLIND);
-				}
+		new LineParser() {
 
-				Vector2D position = pixel.getPosition();
-				position.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-				position.setY(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-			}
-			catch(NumberFormatException e){}
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                int columns = tokens.countTokens();
+                Pixel pixel = idLookup.get(tokens.nextToken());
+                
+                if(pixel == null) return false;
+          
+                if(pixel instanceof Channel) {
+                    Channel channel = (Channel) pixel;
+                    double sourceGain = tokens.nextDouble();
+                    double coupling = (columns == 3 || columns > 4) ? sourceGain / tokens.nextDouble() : sourceGain / channel.gain;
+
+                    if(useGains) channel.coupling = coupling;
+                    if(sourceGain != 0.0) channel.unflag(Channel.FLAG_BLIND);
+                }
+
+                Vector2D position = pixel.getPosition();
+                position.setX(tokens.nextDouble() * Unit.arcsec);
+                position.setY(tokens.nextDouble() * Unit.arcsec);
+                return true;
+            }
+		    
+		}.read(fileName);
 		
-		}
-		in.close();
 		
 		flagInvalidPositions();
 		

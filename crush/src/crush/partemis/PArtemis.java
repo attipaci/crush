@@ -60,10 +60,10 @@ public class PArtemis extends APEXCamera<PArtemisPixel> implements GridIndexed {
 		super.initDivisions();
 		
 		try { addDivision(getDivision("rows", PArtemisPixel.class.getField("row"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }	
+		catch(Exception e) { error(e); }	
 		
 		try { addDivision(getDivision("cols", PArtemisPixel.class.getField("col"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }	
+		catch(Exception e) { error(e); }	
 	}
 	
 	@Override
@@ -71,10 +71,10 @@ public class PArtemis extends APEXCamera<PArtemisPixel> implements GridIndexed {
 		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("rows", "r", divisions.get("rows"), PArtemisPixel.class.getField("rowGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("cols", "c", divisions.get("cols"), PArtemisPixel.class.getField("colGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		modalities.get("rows").setGainFlag(PArtemisPixel.FLAG_ROW);
 		modalities.get("cols").setGainFlag(PArtemisPixel.FLAG_COL);

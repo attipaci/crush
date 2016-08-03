@@ -1,3 +1,4 @@
+2.33-a1
 
 
 	[NEW] New options 'quiet' and 'veryquiet' can turn off most console
@@ -25,6 +26,9 @@
 	[CHANGE] Update and VM checking takes place after instrument 
 	initialization when possible, allowing to propagate the resulting 
 	messages according to the instrument's own method.
+
+	[CODE] Most text inputs now use LineParser for consistent parsing and
+	error handling.
 
 	[CODE] Complete overhaul of messaging architecture that allows routing
 	all messages as needed (including source processing fragments). Many

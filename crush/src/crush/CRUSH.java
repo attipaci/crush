@@ -56,8 +56,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
 	 */
 	private static final long serialVersionUID = 6284421525275783456L;
 
-	private static String version = "2.32-2";
-	private static String revision = "devel.4";
+	private static String version = "2.33-a1";
+	private static String revision = "devel.1";
 	
 	public static String workPath = ".";
 	public static String home = ".";
@@ -520,7 +520,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 			if(source.isValid()) {
 				try { source.write(workPath); }
-				catch(Exception e) { e.printStackTrace(); }
+				catch(Exception e) { error(e); }
 			}
 			else warning("The reduction did not result in a source model.");
 		}
@@ -780,7 +780,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 			}
 
 		}
-		catch(MalformedURLException e) { e.printStackTrace(); }
+		catch(MalformedURLException e) { error(e); }
 		catch(IOException e) {
 			warning("No connection to version update server.");
 			if(debug) warning(e);

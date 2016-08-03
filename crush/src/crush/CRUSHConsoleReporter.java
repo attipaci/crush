@@ -35,7 +35,7 @@ public class CRUSHConsoleReporter extends ConsoleReporter {
     @Override
     public String getPrefix(Object owner) { 
         if(owner == null) return "";
-        else if(owner instanceof CRUSH) return " ";
+        else if(owner instanceof CRUSH) return "";
         else if(owner instanceof Scan) return " ";
         else if(owner instanceof Integration || owner instanceof LocalAverage) return "   ";
         else return " ";

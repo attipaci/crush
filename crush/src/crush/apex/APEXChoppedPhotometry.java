@@ -101,11 +101,11 @@ public class APEXChoppedPhotometry extends Photometry {
 					try { pixel.writeLROffset(phases, 
 							CRUSH.workPath + File.separator + "phases-" + integration.getFullID("-") + "-P" + pixel.getFixedIndex() + ".dat",
 							neighbours, sourceGain); }
-					catch(IOException e) { e.printStackTrace(); }
+					catch(IOException e) { error(e); }
 
 					try { pixel.writeLRSpectrum(phases, 
 							CRUSH.workPath + File.separator + "phases-" + integration.getFullID("-") + "-P" + pixel.getFixedIndex() + ".spec"); }
-					catch(IOException e) { e.printStackTrace(); }
+					catch(IOException e) { error(e); }
 				 */
 
 				WeightedPoint df = pixel.getBGCorrectedLROffset(phases, neighbours, sourceGain);	

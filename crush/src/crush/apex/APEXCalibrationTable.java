@@ -31,6 +31,8 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
 import jnum.data.ScalarLocality;
+import jnum.io.LineParser;
+import jnum.text.SmartTokenizer;
 import jnum.data.LocalAverage;
 import jnum.data.Locality;
 import jnum.data.LocalizedData;
@@ -54,24 +56,23 @@ public class APEXCalibrationTable extends LocalAverage<APEXCalibrationTable.Entr
 	}
 	
 	protected void read(String datafile) throws IOException {	
+	    new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                Entry calibration = new Entry();
+                
+                tokens.skip(2);
+                calibration.timeStamp = new TimeStamp(tokens.nextDouble());
+                calibration.scaling.setValue(1.0 / tokens.nextDouble());
+                calibration.scaling.setWeight(1.0);
+            
+                add(calibration);
+                return true;
+            }   
+		}.read(datafile);
 		
-		
-		BufferedReader in = Util.getReader(datafile);
-
-		String line = null;
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			Entry calibration = new Entry();
-			
-			tokens.nextToken();
-			tokens.nextToken();
-			calibration.timeStamp = new TimeStamp(Double.parseDouble(tokens.nextToken()));
-			calibration.scaling.setValue(1.0 / Double.parseDouble(tokens.nextToken()));
-			calibration.scaling.setWeight(1.0);
-		
-			add(calibration);
-		}
-		in.close();
+		this.fileName = datafile;
 		
 		CRUSH.info(this, "[Loading calibration data] -- " + size() + " values parsed.");
 	}

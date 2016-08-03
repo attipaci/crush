@@ -28,6 +28,8 @@ import crush.*;
 import crush.apex.*;
 import crush.array.*;
 import jnum.Unit;
+import jnum.io.LineParser;
+import jnum.text.SmartTokenizer;
 
 import java.io.*;
 import java.util.*;
@@ -50,16 +52,16 @@ public class Aszca extends APEXCamera<AszcaPixel> implements NonOverlapping {
 		super.initDivisions();
 		
 		try { addDivision(getDivision("wafers", AszcaPixel.class.getField("wafer"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		try { addDivision(getDivision("squidgroups", AszcaPixel.class.getField("squidGroup"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		try { addDivision(getDivision("squids", AszcaPixel.class.getField("squid"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 		
 		try { addDivision(getDivision("cables", AszcaPixel.class.getField("cable"), Channel.FLAG_DEAD)); }
-		catch(Exception e) { e.printStackTrace(); }
+		catch(Exception e) { error(e); }
 	}
 	
 	@Override
@@ -67,16 +69,16 @@ public class Aszca extends APEXCamera<AszcaPixel> implements NonOverlapping {
 		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("wafers", "V", divisions.get("wafers"), AszcaPixel.class.getField("waferGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("squidgroups", "Q", divisions.get("squidgroups"), AszcaPixel.class.getField("squidGroupGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("squids", "q", divisions.get("squids"), AszcaPixel.class.getField("squidGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		try { addModality(new CorrelatedModality("cables", "c", divisions.get("cables"), AszcaPixel.class.getField("cableGain"))); }
-		catch(NoSuchFieldException e) { e.printStackTrace(); }
+		catch(NoSuchFieldException e) { error(e); }
 		
 		modalities.get("wafers").setGainFlag(AszcaPixel.FLAG_WAFER);
 		modalities.get("squidgroups").setGainFlag(AszcaPixel.FLAG_SQUIDGROUP);
@@ -103,35 +105,36 @@ public class Aszca extends APEXCamera<AszcaPixel> implements NonOverlapping {
 	public void readWiring(String fileName) throws IOException {
 		info("Loading wiring data from " + fileName);
 			
-		String[] waferNames = { "e1", "e5", "e8", "ed", "f0", "f3" };
-		int boxStartAddress = Integer.decode("0xe1");
+		final String[] waferNames = { "e1", "e5", "e8", "ed", "f0", "f3" };
+		final int boxStartAddress = Integer.decode("0xe1");
+		final Hashtable<String, AszcaPixel> lookup = getIDLookup();
 		
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
-		Hashtable<String, AszcaPixel> lookup = getIDLookup();
+		new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                
+                tokens.skip();
+                String readoutAddress = tokens.nextToken();
+                String squidAddress = tokens.nextToken();
+                AszcaPixel pixel = lookup.get(tokens.nextToken());
+                
+                pixel.wafer = Integer.decode("0x" + readoutAddress.substring(0,2)) - boxStartAddress;
+                pixel.cable = 2 * pixel.wafer + (readoutAddress.charAt(4) - 'a'); 
+                pixel.pin = readoutAddress.charAt(5);
+                
+                String waferName = squidAddress.substring(0, 2);
+                
+                for(int g=0; g<waferNames.length; g++) if(waferName.equalsIgnoreCase(waferNames[g])) {
+                    pixel.wafer = g; 
+                    break;
+                }
+                
+                pixel.squid = 7 * pixel.wafer + Integer.parseInt(squidAddress.substring(5)) - 2;  
+                return true;
+            }
+		}.read(fileName);
 		
-		String line;
-		while((line = in.readLine()) != null) if(line.length() > 0) if(line.charAt(0) != '#') {
-			StringTokenizer tokens = new StringTokenizer(line);
-			
-			tokens.nextToken();
-			String readoutAddress = tokens.nextToken();
-			String squidAddress = tokens.nextToken();
-			AszcaPixel pixel = lookup.get(tokens.nextToken());
-			
-			pixel.wafer = Integer.decode("0x" + readoutAddress.substring(0,2)) - boxStartAddress;
-			pixel.cable = 2 * pixel.wafer + (readoutAddress.charAt(4) - 'a'); 
-			pixel.pin = readoutAddress.charAt(5);
-			
-			String waferName = squidAddress.substring(0, 2);
-			
-			for(int g=0; g<waferNames.length; g++) if(waferName.equalsIgnoreCase(waferNames[g])) {
-				pixel.wafer = g; 
-				break;
-			}
-			
-			pixel.squid = 7 * pixel.wafer + Integer.parseInt(squidAddress.substring(5)) - 2;			
-		}
-		in.close();
 	}
 
 	@Override

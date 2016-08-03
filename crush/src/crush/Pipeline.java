@@ -76,7 +76,6 @@ public class Pipeline implements Runnable, Serializable {
 		catch(InterruptedException e) { CRUSH.warning(this, "Interrupted!"); }
 		catch(Exception e) { 
 			CRUSH.error(this, e); 
-			e.printStackTrace();
 			CRUSH.info(this, "Exiting.");
 			System.exit(1);
 		}
