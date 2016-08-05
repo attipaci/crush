@@ -148,21 +148,7 @@ public class MultiBeamMap extends ScalarMap {
 			
 		map.sanitize();
 		
-		/*
-		try { map.write("increment.fits"); }
-		catch(Exception e) { e.printStackTrace(); }
-		*/
-		
 		forwardTransform();
-		
-		/*
-		try { 
-			transformer.write("fft.fits");
-			notify("Written fft.fits");
-		}
-		catch(Exception e) { e.printStackTrace(); }
-		*/
-		
 		deconvolve(dual);
 		
 		isReady = true;
@@ -207,15 +193,6 @@ public class MultiBeamMap extends ScalarMap {
 		double w = loader.getResult();
 		transformer.unflag();
 		transformer.setWeight(w); // All frequencies have equal weight before deconvolution
-		
-		/*
-		try { 
-			transformer.write("transformer-dual.fits");
-			notify("Written transformer-dual.fits");
-		}
-		catch(Exception e) { e.printStackTrace(); }
-		*/
-	
 			
 		fft.real2Amplitude(transformer.getData());		
 		isSpectrum = true;
@@ -352,23 +329,6 @@ public class MultiBeamMap extends ScalarMap {
 	@Override
 	public void sync(Integration<?, ?> integration) {		
 		MultiBeamMap dual = getDualBeam((DualBeam) integration.scan);
-		
-		/*
-		try { 
-			dual.map.write("reconstructed-dual.fits");
-			notify("Written reconstructed-dual.fits");
-		}
-		catch(Exception e) { e.printStackTrace(); }
-		*/
-
-		/*
-		try { 
-			dual.base.write("base-dual.fits");
-			notify("Written base-dual.fits");
-		}
-		catch(Exception e) { e.printStackTrace(); }
-		*/
-		
 		dual.syncSuper(integration);
 	}
 	
@@ -410,28 +370,9 @@ public class MultiBeamMap extends ScalarMap {
 		
 		backTransform();
 		
-		
 		if(base != null) map.addImage(base.getData());
 		
-		/*
-		try { 
-			map.write("deconvolved-radec.fits");
-			notify("Written deconvolved-radec.fits");
-		}
-		catch(Exception e) { e.printStackTrace(); }
-		*/
-		
-		//enableLevel = false;
-		
 		super.process();
-		
-		/*
-		try { 
-			map.write("processed.fits");
-			notify("Written processed.fits");
-		}
-		catch(Exception e) { e.printStackTrace(); }
-		*/
 	}
 	
 	

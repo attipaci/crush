@@ -459,7 +459,8 @@
 			decorrelation of <?>. When dealing with 1/f-type 
 			signals, you probably want to set this to the 1/f knee 
 			time-scale or below if you want optimal sensitivities. 
-			Else, you may want to try larger values if you want to 				recover more large-scale emission and you aren't too 
+			Else, you may want to try larger values if you want to
+ 			recover more large-scale emission and you aren't too 
 			worried about the loss of sensitivity.
 			@See: 'extended'
 			
@@ -1012,7 +1013,8 @@
 			Since these signals will be in synch with the scanning 
 			motion they will produce definite mapping artefacts
 			(e.g. broad peaks or bowls in the map center, or ridges
-			near the map edges). The motion filter lets you 				spectrally filter those frequencies where most of the
+			near the map edges). The motion filter lets you
+ 			spectrally filter those frequencies where most of the
 			scanning motion is concentrated. To activate, both this
 			option and the 'filter' umbrella option must be set.  
 			The identification of rejected motion frequencies is
@@ -2339,7 +2341,9 @@
 			    > crush [...] -poll=despike
 	
 			will list all despiking options (e.g. all settings 
-			under the 'despike', 'despike2', and 'despike3' 				branches) that have been defined prior to the 					invokation of the '-poll' command.
+			under the 'despike', 'despike2', and 'despike3'
+ 			branches) that have been defined prior to the
+ 			invokation of the '-poll' command.
 			Due to the hierarchical nature of the configurations
 			you can also selectively poll settings under subtrees
 			of the configuration. E.g.:

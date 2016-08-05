@@ -103,19 +103,19 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camer
 			StringBuffer buf = new StringBuffer();
 			
 			if(Math.abs(rotatorAngle - rotatorZeroAngle) > 5.0 * Unit.deg) {
-				buf.append("*****************************************************************************\n");		
+				buf.append("**************************************************************************\n");		
 				
 				buf.append(getName().toUpperCase() + " is in non-standard orientation. "
 				        + "Will assume that pointing was performed ");
 				
 				if(hasOption("rcenter"))
 					buf.append("in the horizontal orientation. To override this and to assume pointing in this "
-					        + "rotation, use '-forget=rcenter'.");
+					        + "rotation, use '-forget=rcenter'.\n");
 				else
 					buf.append("in the same orientration. To override this and to assume pointing in horizontal "
 					        + "orientation, set the 'rcenter' option.\n");	
 				
-				buf.append("*****************************************************************************\n");
+				buf.append("**************************************************************************\n");
 				
 				warning(new String(buf));
 			}

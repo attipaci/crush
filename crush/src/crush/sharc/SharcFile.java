@@ -60,10 +60,10 @@ public class SharcFile extends Hashtable<Integer, SharcScan> {
 			Sharc sharc = new Sharc();
 			sharc.setOptions(new Configurator());
 			
-			System.out.println();
+			CRUSH.consoleReporter.addLine();
 			SharcFile file = SharcFile.get(sharc, args[0]);
 
-			System.out.println();
+			CRUSH.consoleReporter.addLine();
 			file.get(1).printInfo(System.out);
 		}
 		catch(Exception e) { CRUSH.error(SharcFile.class, e); }

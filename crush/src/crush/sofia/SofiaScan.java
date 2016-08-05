@@ -151,7 +151,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         if(telescope.requestedEquatorial != null) {
             equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();	
             calcPrecessions(telescope.requestedEquatorial.epoch);
-            info(" Equatorial: " + telescope.requestedEquatorial.toString());	
+            info("Equatorial: " + telescope.requestedEquatorial.toString());	
         }
         else warning("No valid TELRA/TELDEC in header.");
         
@@ -342,7 +342,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
         File file = getFile(scanDescriptor);
         boolean isCompressed = file.getName().endsWith(".gz");
-        System.out.println(" Reading " + file.getPath() + "...");
+        info("Reading " + file.getPath() + "...");
         return new Fits(getFile(scanDescriptor), isCompressed);
     }
 

@@ -191,7 +191,7 @@ public abstract class Photometry extends SourceModel {
         double chi2 = getReducedChi2();
         if(!Double.isNaN(chi2)) buf.append("  |rChi|: " + getCommentedChi2(chi2) + "\n");
 
-        //System.out.println("  NEFD  : " + Util.f1.format(500.0 * F.rms() * Math.sqrt(integrationTime/Unit.s)) + " mJy sqrt(s).");
+        //buf.append("  NEFD  : " + Util.f1.format(500.0 * F.rms() * Math.sqrt(integrationTime/Unit.s)) + " mJy sqrt(s).\n");
         buf.append("  =====================================\n");
 
         CRUSH.result(this, new String(buf));
