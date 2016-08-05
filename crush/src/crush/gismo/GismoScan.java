@@ -229,7 +229,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	public Fits getFits(String scanDescriptor) throws FileNotFoundException, FitsException {
 		File file = getFile(scanDescriptor);
 		boolean isCompressed = file.getName().endsWith(".gz");
-		System.out.println(" Reading " + file.getPath() + "...");
+		info("Reading " + file.getPath() + "...");
 		return new Fits(getFile(scanDescriptor), isCompressed);
 	}
 	

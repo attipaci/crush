@@ -183,7 +183,7 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 		fileSize = file.length();
 		
 		boolean isCompressed = file.getName().endsWith(".gz");
-		System.out.println(" Reading " + file.getPath() + "...");
+		info("Reading " + file.getPath() + "...");
 		return new Fits(getFile(scanDescriptor), isCompressed);
 	}
 	

@@ -171,8 +171,7 @@ public class SyntheticRCP {
 	}
 	
 	public static void usage() {
-		System.err.println();
-		String info = 
+		System.out.println( 
 			"  -----------------------------------------------------------------------------\n" +
 			"  SyntheticRCP -- RCP generation tool.\n" +
 			"                  Copyright (C)2011 Attila Kovacs <attila[AT]submm.caltech.edu>\n" +
@@ -182,9 +181,8 @@ public class SyntheticRCP {
 			"\n" +
 			"    <distortion>  A list of distortion parameters. See e.g. 'gismo/distortion.dat'.\n" +
 			"    [rcp]         (optional) An observed RCP file for source gains.\n" +
-			"    [rotation]	   (optional) Presume a rotation in degrees.\n";
+			"    [rotation]	   (optional) Presume a rotation in degrees.\n");
 		
-		System.out.println(info);
 		System.exit(0);
 	}
 }

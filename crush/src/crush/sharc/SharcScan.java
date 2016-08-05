@@ -31,6 +31,7 @@ import java.text.NumberFormat;
 import java.util.StringTokenizer;
 import java.io.File;
 
+import crush.CRUSH;
 import crush.DualBeam;
 import crush.cso.CSOScan;
 import jnum.Configurator;
@@ -100,7 +101,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 	
 	@Override
 	public void validate() {
-		System.out.println();
+		CRUSH.consoleReporter.addLine();
 		
 		if(hasOption("chopper.throw")) chopper_throw = option("chopper.throw").getDouble() * instrument.getSizeUnitValue();
 		

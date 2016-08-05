@@ -2211,20 +2211,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 				if(Float.isNaN(exposure.data[channel.index])) {
 					comments += "NaN: " + exposure.index + "," + channel.index;
-					System.err.println("   " + comments);
+					error(comments);
 					System.exit(1);
 				}
 
 				if(Float.isInfinite(exposure.data[channel.index])) {
 					comments += "Inf: " + exposure.index + "," + channel.index;
-					System.err.println("   " + comments);
+					error(comments);
 					System.exit(1);
 				}
 
 				/*
 				if(exposure.data[channel.index] > 10.0) {
 					comments += "Big: " + exposure.index + "," + channel.index;
-					System.err.println("   " + comments);
+					error(comments);
 					System.exit(1);
 				}
 				*/
@@ -2555,7 +2555,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	float[][] getSpectra(String windowName, int windowSize) {
 		final double[] w = WindowFunction.get(windowName, windowSize);
 
-		// System.err.println("  Calculating Power spectra.");
+		// info("Calculating Power spectra.");
 		final float[][] spectra = new float[instrument.size()][];
 		final double df = 1.0 / (instrument.samplingInterval * windowSize);	
 		final float Jy = gain * (float) instrument.janskyPerBeam();
@@ -2866,10 +2866,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		DecimalFormat df = Util.f2;
 		
-		System.err.println("> " + Integer.toHexString(m));
-		System.err.println("# array:     " + df.format((double) a/iters) + " ms\t(inverted: " + df.format((double) f/iters) + " ms)");
-		System.err.println("# ArrayList: " + df.format((double) b/iters) + " ms\t(inverted: " + df.format((double) e/iters) + " ms)");
-		System.err.println("# Vector:    " + df.format((double) d/iters) + " ms");
+		CRUSH.result(this, "> " + Integer.toHexString(m) + "\n"
+		        + "# array:     " + df.format((double) a/iters) + " ms\t(inverted: " + df.format((double) f/iters) + " ms)\n"
+		        + "# ArrayList: " + df.format((double) b/iters) + " ms\t(inverted: " + df.format((double) e/iters) + " ms)\n"
+		        + "# Vector:    " + df.format((double) d/iters) + " ms");
 		
 		System.exit(0);
 	}
