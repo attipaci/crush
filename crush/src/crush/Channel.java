@@ -26,11 +26,11 @@ package crush;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.StringTokenizer;
 
 import jnum.Copiable;
 import jnum.Flagging;
 import jnum.Util;
+import jnum.text.SmartTokenizer;
 import jnum.util.FlagSpace;
 import jnum.util.FlagBlock;
 import jnum.util.HashCode;
@@ -211,13 +211,13 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		return FLAG_DEAD | FLAG_BLIND | FLAG_GAIN;
 	}
 	
-	public final void parseValues(StringTokenizer tokens) {
+	public final void parseValues(SmartTokenizer tokens) {
 		parseValues(tokens, getCriticalFlags());
 	}
 	
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {
-		gain = Double.parseDouble(tokens.nextToken());
-		weight = Double.parseDouble(tokens.nextToken());
+	public void parseValues(SmartTokenizer tokens, int criticalFlags) {
+		gain = tokens.nextDouble();
+		weight = tokens.nextDouble();
 
 		// Add flags from pixel data file on top of those already specified...
 		flag(criticalFlags & flagSpace.parse(tokens.nextToken()));	

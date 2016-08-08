@@ -44,6 +44,7 @@ import jnum.io.LineParser;
 import jnum.math.Range;
 import jnum.math.Vector2D;
 import jnum.reporting.BasicMessaging;
+import jnum.text.SmartTokenizer;
 import jnum.text.TableFormatter;
 import jnum.util.HashCode;
 import nom.tam.fits.*;
@@ -766,7 +767,7 @@ implements TableFormatter.Entries, BasicMessaging {
 		new LineParser() {
             @Override
             protected boolean parse(String line) throws Exception {
-                StringTokenizer tokens = new StringTokenizer(line);
+                SmartTokenizer tokens = new SmartTokenizer(line);
                 ChannelType channel = lookup.get(tokens.nextToken());
                 if(channel == null) return false;
                 // Channels in the file are not dead after all, or let ChannelType.parse decide that....

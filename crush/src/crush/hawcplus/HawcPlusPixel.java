@@ -23,10 +23,10 @@
 
 package crush.hawcplus;
 
-import java.util.StringTokenizer;
 
 import crush.array.SingleColorPixel;
 import jnum.Util;
+import jnum.text.SmartTokenizer;
 
 public class HawcPlusPixel extends SingleColorPixel {
 	/**
@@ -85,9 +85,9 @@ public class HawcPlusPixel extends SingleColorPixel {
 	}
 	
 	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {	
+	public void parseValues(SmartTokenizer tokens, int criticalFlags) {	
 		super.parseValues(tokens, criticalFlags);
-		if(tokens.hasMoreTokens()) muxGain = Double.parseDouble(tokens.nextToken());
+		if(tokens.hasMoreTokens()) muxGain = tokens.nextDouble();
 	}
 	
 	@Override
