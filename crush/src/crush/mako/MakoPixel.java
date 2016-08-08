@@ -23,11 +23,11 @@
 
 package crush.mako;
 
-import java.util.StringTokenizer;
 
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 
 
 public class MakoPixel extends AbstractMakoPixel {
@@ -60,10 +60,10 @@ public class MakoPixel extends AbstractMakoPixel {
 	
 	
 	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {
+	public void parseValues(SmartTokenizer tokens, int criticalFlags) {
 		tokens.nextToken(); // fixed index -- set by pixel matching...
 		super.parseValues(tokens, criticalFlags);
-		if(tokens.hasMoreTokens()) coupling = Double.parseDouble(tokens.nextToken());
+		if(tokens.hasMoreTokens()) coupling = tokens.nextDouble();
 	}
 	
 	@Override

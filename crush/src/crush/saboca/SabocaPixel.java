@@ -27,8 +27,7 @@ package crush.saboca;
 import crush.*;
 import crush.apex.APEXContinuumPixel;
 import jnum.Util;
-
-import java.util.StringTokenizer;
+import jnum.text.SmartTokenizer;
 
 
 
@@ -48,9 +47,9 @@ public class SabocaPixel extends APEXContinuumPixel {
 	}
 	
 	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {
+	public void parseValues(SmartTokenizer tokens, int criticalFlags) {
 		super.parseValues(tokens, criticalFlags);
-		squidGain = Double.parseDouble(tokens.nextToken());
+		squidGain = tokens.nextDouble();
 	}
 
 	@Override

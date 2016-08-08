@@ -1,3 +1,4 @@
+>> add 'quiet' and 'veryquiet' to GLOSSARY...
 
 2.33-a1
 
@@ -5,7 +6,8 @@
 	[NEW] New options 'quiet' and 'veryquiet' can turn off most console
 	output. 'quiet' will still display results (such as from pointing),
 	while 'veryquiet' will report only basic status updates and 
-	notifications (e.g. about products), but without reporting results.
+	notifications (e.g. about data products), but without reporting 
+	results.
 
 	[FIX] {HAWC+} Nearly all warning/error messages are now propagated to
 	the DRP, with the traces added as DEBUG messages. Suggestions are also
@@ -14,8 +16,8 @@
 	[FIX] {HAWC+} Missing header string values now automatically take 
 	'UNKNOWN' for further processing.
 
-	[FIX] {HAWC+} TELESCOP keyword not parse properly from input files due
-	to a typo in the code. Fixed.
+	[FIX] {HAWC+} TELESCOP keyword did not parse properly from input files 
+	due to a typo in the code. Fixed.
 
 	[FIX] {HAWC+} Added AOR_IDs, and other IDs back into the image header.
 

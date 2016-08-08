@@ -23,14 +23,13 @@
 
 package crush.mako2;
 
-import java.util.StringTokenizer;
-
 import crush.mako.Mako;
 import crush.mako.AbstractMakoPixel;
 import crush.resonators.FrequencyID;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 
 public class Mako2Pixel extends AbstractMakoPixel {
 
@@ -78,11 +77,11 @@ public class Mako2Pixel extends AbstractMakoPixel {
 	}
 
 	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {
+	public void parseValues(SmartTokenizer tokens, int criticalFlags) {
 		tokens.nextToken(); // fixed index -- set by pixel matching...
 		tokens.nextToken(); // subarray string...
 		super.parseValues(tokens, criticalFlags);
-		if(tokens.hasMoreTokens()) coupling = Double.parseDouble(tokens.nextToken());
+		if(tokens.hasMoreTokens()) coupling = tokens.nextDouble();
 	}
 	
 	public String getSubarrayString() {

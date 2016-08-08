@@ -23,12 +23,11 @@
 
 package crush.sharc;
 
-import java.util.StringTokenizer;
-
 import crush.Channel;
 import crush.array.SingleColorPixel;
 import jnum.Unit;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 
 public class SharcPixel extends SingleColorPixel {
 	/**
@@ -47,7 +46,7 @@ public class SharcPixel extends SingleColorPixel {
 	}
 
 	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {
+	public void parseValues(SmartTokenizer tokens, int criticalFlags) {
 		super.parseValues(tokens, criticalFlags);
 		if(isBad) flag(Channel.FLAG_BLIND);
 	}

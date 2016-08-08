@@ -27,9 +27,7 @@ package crush.aszca;
 import crush.*;
 import crush.apex.*;
 import jnum.Util;
-
-import java.util.StringTokenizer;
-
+import jnum.text.SmartTokenizer;
 
 
 public class AszcaPixel extends APEXContinuumPixel {
@@ -60,10 +58,10 @@ public class AszcaPixel extends APEXContinuumPixel {
 	}
 	
 	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {	
+	public void parseValues(SmartTokenizer tokens, int criticalFlags) {	
 		super.parseValues(tokens, criticalFlags);
-		waferGain = Double.parseDouble(tokens.nextToken());
-		squidGain = Double.parseDouble(tokens.nextToken());
+		waferGain = tokens.nextDouble();
+		squidGain = tokens.nextDouble();
 	}	
 	
 	@Override

@@ -27,9 +27,7 @@ package crush.laboca;
 import crush.*;
 import crush.apex.*;
 import jnum.Util;
-
-import java.util.*;
-
+import jnum.text.SmartTokenizer;
 
 
 public class LabocaPixel extends APEXContinuumPixel {
@@ -62,19 +60,19 @@ public class LabocaPixel extends APEXContinuumPixel {
 	}
 	
 	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {	
+	public void parseValues(SmartTokenizer tokens, int criticalFlags) {	
 		super.parseValues(tokens, criticalFlags);
 
-		boxGain = Double.parseDouble(tokens.nextToken());
-		cableGain = Double.parseDouble(tokens.nextToken());
+		boxGain = tokens.nextDouble();
+		cableGain = tokens.nextDouble();
 		
 		// Make sure resistors are also flagged as blind... 
 		//if(isFlagged(FLAG_RESISTOR)) flag(FLAG_BLIND);
 
 		/*
-		channel[ch].box = Integer.parseInt(tokens.nextToken());
-		channel[ch].cable = Integer.parseInt(tokens.nextToken());
-		channel[ch].amp = Integer.parseInt(tokens.nextToken());
+		channel[ch].box = tokens.nextInt();
+		channel[ch].cable = tokens.nextint();
+		channel[ch].amp = tokens.nextInt();
 		*/
 	}
 	

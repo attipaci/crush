@@ -24,12 +24,12 @@
 
 package crush.gismo;
 
-import java.util.StringTokenizer;
 
 import crush.array.SingleColorPixel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 
 public class GismoPixel extends SingleColorPixel {
 	/**
@@ -80,9 +80,9 @@ public class GismoPixel extends SingleColorPixel {
 	}
 	
 	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {	
+	public void parseValues(SmartTokenizer tokens, int criticalFlags) {	
 		super.parseValues(tokens, criticalFlags);
-		if(tokens.hasMoreTokens()) muxGain = Double.parseDouble(tokens.nextToken());
+		if(tokens.hasMoreTokens()) muxGain = tokens.nextDouble();
 	}
 	
 	public static Vector2D defaultSize = new Vector2D(13.88 * Unit.arcsec, 13.77 * Unit.arcsec);

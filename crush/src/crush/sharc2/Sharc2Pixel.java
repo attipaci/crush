@@ -28,9 +28,7 @@ import crush.array.SingleColorPixel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
-
-import java.util.StringTokenizer;
-
+import jnum.text.SmartTokenizer;
 
 
 public class Sharc2Pixel extends SingleColorPixel {
@@ -68,10 +66,10 @@ public class Sharc2Pixel extends SingleColorPixel {
 	}
 		
 	@Override
-	public void parseValues(StringTokenizer tokens, int criticalFlags) {
+	public void parseValues(SmartTokenizer tokens, int criticalFlags) {
 		super.parseValues(tokens, criticalFlags);
-		coupling = Double.parseDouble(tokens.nextToken());
-		rowGain = Double.parseDouble(tokens.nextToken());
+		coupling = tokens.nextDouble();
+		rowGain = tokens.nextDouble();
 	}
 	
 	@Override
