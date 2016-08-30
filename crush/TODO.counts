@@ -1,0 +1,29 @@
+>> CharHist
+  > A histogram with fixed 2^p bins
+
+  .getCharSpec()
+  .fromMap(GridMap)
+
+>> CharSpec
+
+  .toHistogram(CharHist dst);
+  .getHistogram();
+
+  >> FluxSpec 
+     > The characteristic spectrum for a specific source population with
+     a fixed flux and a population count...
+
+     .forSources(int n);
+
+
+>> ModelCounts
+
+  .get/setOffset()  
+
+  .setOptions(Configurator options)
+  .toHistogram(CharHist dst);
+  .fit(CharHist, Minimizer)
+  .getChi2(CharHist data)
+  
+
+

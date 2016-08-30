@@ -36,7 +36,7 @@ import jnum.astro.CelestialCoordinates;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.data.WeightedPoint;
-import jnum.io.fits.FitsExtras;
+import jnum.io.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
 public class APEXSubscan<InstrumentType extends APEXCamera<?>, FrameType extends APEXFrame> 
@@ -299,7 +299,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 			hdu.setRow(exposure.index, row);
 		}	
 		
-		FitsExtras.write(fits, toName);
+		FitsToolkit.write(fits, toName);
 		fits.close();
 	}
 	

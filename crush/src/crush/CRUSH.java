@@ -35,7 +35,7 @@ import jnum.Parallel;
 import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.astro.LeapSeconds;
-import jnum.io.fits.FitsExtras;
+import jnum.io.fits.FitsToolkit;
 import jnum.reporting.BasicMessaging;
 import jnum.reporting.Broadcaster;
 import jnum.reporting.ConsoleReporter;
@@ -56,8 +56,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.33-a2";
-    private static String revision = "devel.1";
+    private static String version = "2.33-b1";
+    private static String revision = "beta";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -785,9 +785,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 
     public void checkForUpdates() {	
-        String quickstart = System.getProperty("CRUSH_QUICKSTART");
-        if(quickstart != null) return; 
-
+        if(System.getProperty("CRUSH_NO_UPDATE_CHECK") != null) return;
+       
         String releaseVersion = getReleaseVersion();	
         if(releaseVersion == null) return;
 
@@ -813,6 +812,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
     public void checkJavaVM(int countdown) {
+        if(System.getProperty("CRUSH_NO_VM_CHECK") != null) return;
+        
         String name = System.getProperty("java.vm.name");
         if(name.startsWith("GNU") | name.contains("libgcj")) {
             for(int i=0; i<8; i++) System.err.print("**********");
@@ -880,7 +881,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         AstroTime timeStamp = new AstroTime();
         timeStamp.now();
 
-        cursor.add(new HeaderCard("HISTORY", "Reduced: crush v" + CRUSH.getFullVersion() + " @ " + timeStamp.getFitsTimeStamp(), false));			
+        FitsToolkit.addHistory(cursor, "Reduced: crush v" + CRUSH.getFullVersion() + " @ " + timeStamp.getFitsTimeStamp());			
     }
 
     @Override
@@ -896,7 +897,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
             StringTokenizer args = new StringTokenizer(commandLine);
             cursor.add(new HeaderCard("ARGS", args.countTokens(), "The number of arguments passed from the command line."));
             int i=1;
-            while(args.hasMoreTokens()) FitsExtras.addLongKey(cursor, "ARG" + (i++), args.nextToken(), "Command-line argument.");
+            while(args.hasMoreTokens()) FitsToolkit.addLongKey(cursor, "ARG" + (i++), args.nextToken(), "Command-line argument.");
         }
 
 
@@ -907,7 +908,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         cursor.add(new HeaderCard("JAVA", Util.getProperty("java.vendor"), "Java vendor name."));
         cursor.add(new HeaderCard("JAVAVER", Util.getProperty("java.version"), "The Java version."));
 
-        FitsExtras.addLongKey(cursor, "JAVAHOME", Util.getProperty("java.home"), "Java location.");
+        FitsToolkit.addLongKey(cursor, "JAVAHOME", Util.getProperty("java.home"), "Java location.");
         cursor.add(new HeaderCard("JRE", Util.getProperty("java.runtime.name"), "Java Runtime Environment."));
         cursor.add(new HeaderCard("JREVER", Util.getProperty("java.runtime.version"), "JRE version."));
         cursor.add(new HeaderCard("JVM", Util.getProperty("java.vm.name"), "Java Virtual Machine."));

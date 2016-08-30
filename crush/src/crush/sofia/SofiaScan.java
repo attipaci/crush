@@ -27,6 +27,7 @@ import crush.*;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
+import jnum.io.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.util.*;
 import nom.tam.fits.*;
@@ -146,17 +147,20 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
         info("[" + getSourceName() + "] of AOR " + observation.aorID);
         info("Observed on " + date + " at " + startTime + " by " + observer);
-     
         
-        if(telescope.requestedEquatorial != null) {
+        if(telescope.boresightEquatorial != null) {
+            equatorial = (EquatorialCoordinates) telescope.boresightEquatorial.copy();  
+            calcPrecessions(telescope.boresightEquatorial.epoch);
+            info("Equatorial: " + telescope.boresightEquatorial.toString());    
+        }
+        else if(telescope.requestedEquatorial != null) {
             equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();	
             calcPrecessions(telescope.requestedEquatorial.epoch);
             info("Equatorial: " + telescope.requestedEquatorial.toString());	
         }
-        else warning("No valid TELRA/TELDEC in header.");
+        else warning("No valid OBSRA/OBSDEC or TELRA/TELDEC in header.");
         
         info("Focus: " + telescope.focusT.toString(Util.f1, Unit.get("um")));
-
 
         instrument.parseHeader(header);
 
@@ -266,7 +270,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     }
 
     public void addHistory(Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-        for(int i=0; i<history.size(); i++) cursor.add(new HeaderCard("HISTORY", history.get(i), false));
+        for(int i=0; i<history.size(); i++) FitsToolkit.addHistory(cursor, history.get(i));
     }
 
     public void parseHistory(Header header) {

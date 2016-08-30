@@ -2403,6 +2403,13 @@
 			uncertainties in the waveplate angles.
 			@See: 'filter.hwp'
 
+:: quiet		@Since: 2.33
+			@Advanced
+			Suppress most console output, but keep reporting any
+			warnings and errors, as well as results and 
+			notifications.
+			@See: 'veryquiet'
+
 :: radec		@Alias -> system=equatorial
 			Reduce using equatorial coordinates (for mapping).
 			(Default)
@@ -3538,6 +3545,13 @@
 			@Expert
 			Manually override the FITS merge version, and ignore
 			the information stored in the FITS itself.
+
+:: veryquiet		@Since: 2.33
+			@Advanced
+			Suppress most console output, except warnings and 
+			errors. (Unlike 'quiet', not results or notifications 
+			will be reported).
+			@See: 'quiet'
 
 :: wafers		@Alias: -> correlated.wafers
 			@Instrument: ASZCA

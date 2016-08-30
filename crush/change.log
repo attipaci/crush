@@ -1,6 +1,4 @@
->> add 'quiet' and 'veryquiet' to GLOSSARY...
-
-2.33-a1
+2.33-b1 (beta)
 
 
 	[NEW] New options 'quiet' and 'veryquiet' can turn off most console
@@ -8,6 +6,26 @@
 	while 'veryquiet' will report only basic status updates and 
 	notifications (e.g. about data products), but without reporting 
 	results.
+
+	[NEW] Automatic update checking can be disabled by setting the shell
+	variable CRUSH_NO_UPDATE_CHECK (to any value) before CRUSH is started.
+
+	[NEW] Automatic VM checking on startup can be disabled by setting the
+	shell variable CRUSH_NO_VM_CHECK (to any value) before CRUSH is 
+	started. Beware though, that VM checking is useful for reporting when
+	CRUSH is being run by an unsuitanble Java implementation (such as gij).
+
+	[FIX] {Java} Run CRUSH in headless mode (-Djava.awt.headless=true) to
+	avoid issues with PNG generation if or when Java is headless (without 
+	display mouse or keyboard present).
+
+	[FIX] {FITS} Long HISTORY entries ended up producing corrupted FITS 
+	files (due to a bug in the nom.tam.fits libraries). A workaround has
+	been added to break long history entries into multiple lines. Wrapped
+	lines start with "... " for easier human recognition...
+
+	[FIX] {HAWC+} OBSRA/OBSDEC to serve as primary source of scan 
+	coordinates instead of TELRA/TELDEC.
 
 	[FIX] {HAWC+} Nearly all warning/error messages are now propagated to
 	the DRP, with the traces added as DEBUG messages. Suggestions are also
@@ -29,6 +47,14 @@
 	[CHANGE] Update and VM checking takes place after instrument 
 	initialization when possible, allowing to propagate the resulting 
 	messages according to the instrument's own method.
+
+	[CONFIG] {HAWC+} PNG thumbnail generation ('write.png' option) disabled
+	whenever DRP messaging is enabled ('drp' option), to avoid hangs due to
+	internal Java errors when running in the DRP automatic pipeline (e.g.
+	resulting from unexpected X-server disconnection).
+
+	[UPDATE] {FITS} nom.tam.fits library updated to 1.15.1, solving long
+	history (and other comment-like cards) problems from before. 
 
 	[CODE] Most text inputs now use LineParser for consistent parsing and
 	error handling.

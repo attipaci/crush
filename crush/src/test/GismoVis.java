@@ -27,7 +27,7 @@ import nom.tam.fits.*;
 import java.io.*;
 import java.util.*;
 
-import jnum.io.fits.FitsExtras;
+import jnum.io.fits.FitsToolkit;
 
 public class GismoVis {
 
@@ -60,7 +60,7 @@ public class GismoVis {
 			Fits fits = new Fits();
 			fits.addHDU(Fits.makeHDU(image));
 			
-			FitsExtras.write(fits, "gismovis.fits");
+			FitsToolkit.write(fits, "gismovis.fits");
 			fits.close();
 		}
 		catch(Exception e) { e.printStackTrace(); }
