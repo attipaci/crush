@@ -36,7 +36,7 @@ import jnum.Configurator;
 import jnum.LockedException;
 import jnum.Unit;
 import jnum.data.ArrayUtil;
-import jnum.io.fits.FitsExtras;
+import jnum.io.fits.FitsToolkit;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
@@ -234,7 +234,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	@Override
 	public void loadChannelData() {
 		
-			
 		// The subarrays orientations
 		subarrayOrientation = new double[subarrays];
 		subarrayOrientation[R0] = hasOption("rotation.r0") ? option("rotation.r0").getDouble() * Unit.deg : 0.0;
@@ -569,7 +568,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		addHDU(fits, Fits.makeHDU(nonlinearR), "R array nonlinearity");
         addHDU(fits, Fits.makeHDU(nonlinearT), "T array nonlinearity");
 		
-		FitsExtras.write(fits, fileName);
+		FitsToolkit.write(fits, fileName);
 		fits.close();
 		
 		notify("Written flatfield to " + fileName);

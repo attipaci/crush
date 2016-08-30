@@ -45,6 +45,7 @@ import crush.ColorArrangement;
 import crush.Scan;
 import crush.array.Camera;
 import jnum.Unit;
+import jnum.io.fits.FitsToolkit;
 
 public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends Channel> extends Camera<PixelType, ChannelType> implements GroundBased {
     /**
@@ -263,14 +264,14 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
         super.addHistory(cursor, scans);			
 
         // Add auxiliary file information
-        try { cursor.add(new HeaderCard("HISTORY", " PWD: " + new File(".").getCanonicalPath(), false)); }
+        try { FitsToolkit.addHistory(cursor, " PWD: " + new File(".").getCanonicalPath()); }
         catch(Exception e) { warning("Could not determine PWD for HISTORY entry..."); }
 
-        for(int i=0; i<history.size(); i++) cursor.add(new HeaderCard("HISTORY", " " + history.get(i), false));
+        for(int i=0; i<history.size(); i++) FitsToolkit.addHistory(cursor, " " + history.get(i));
 
         // Add obs-IDs for all input scans...
         if(scans != null) for(int i=0; i<scans.size(); i++)
-            cursor.add(new HeaderCard("HISTORY", " OBS-ID[" + (i+1) + "]: " + scans.get(i).getID(), false));	
+            FitsToolkit.addHistory(cursor, " OBS-ID[" + (i+1) + "]: " + scans.get(i).getID());	
     }
 
     @Override

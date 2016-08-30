@@ -8,4 +8,4 @@ CRUSH=`dirname $EXECNAME`
 
 source $CRUSH/wrapper.sh
 
-$JAVA $JAVAOPTS -classpath $CLASSPATH crush.CRUSH ${1+"$@"} 
+$JAVA $JAVAOPTS -classpath $CLASSPATH -Djava.awt.headless=true crush.CRUSH ${1+"$@"} 

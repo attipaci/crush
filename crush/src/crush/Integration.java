@@ -40,7 +40,7 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.data.*;
 import jnum.fft.FloatFFT;
-import jnum.io.fits.FitsExtras;
+import jnum.io.fits.FitsToolkit;
 import jnum.math.Complex;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
@@ -2519,7 +2519,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		BasicHDU<?> hdu = Fits.makeHDU(covar);
 		fits.addHDU(hdu);
 		
-		FitsExtras.write(fits, name);
+		FitsToolkit.write(fits, name);
 		fits.close();
 		
 		notify("Written " + name);
