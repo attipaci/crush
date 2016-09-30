@@ -148,7 +148,7 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 	
 	public void clearProcessBrief() { processBrief = new StringBuffer(); }
 	
-	public void createFrom(Collection<? extends Scan<?,?>> collection) {
+	public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
 		this.scans = new Vector<Scan<?,?>>(collection);
 		for(Scan<?,?> scan : scans) scan.setSourceModel(this);		
 

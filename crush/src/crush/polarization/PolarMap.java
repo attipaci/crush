@@ -80,7 +80,7 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public void createFrom(Collection<? extends Scan<?, ?>> scans) {
+	public void createFrom(Collection<? extends Scan<?, ?>> scans) throws Exception {
 		super.createFrom(scans);
 		
 		N = getMapInstance();

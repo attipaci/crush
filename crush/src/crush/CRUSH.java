@@ -56,8 +56,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.33-b1";
-    private static String revision = "beta";
+    private static String version = "2.33-b2";
+    private static String revision = "devel.4";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -110,9 +110,11 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         crush.checkJavaVM(5);     
         crush.checkForUpdates();	
-        crush.init(args);
-
-        try { crush.reduce(); }
+        
+        try { 
+            crush.init(args);
+            crush.reduce(); 
+        }
         catch(Exception e) { crush.error(e); }
 
         // TODO should not be needed if background processes are all wrapped up...
@@ -143,7 +145,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     public Configurator option(String name) { return get(name); }
 
-    public void init(String[] args) {	
+    public void init(String[] args)throws Exception {	
         readConfig("default.cfg");
         commandLine = args[0];
 
@@ -248,7 +250,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         else return super.getProperty(name);
     }
 
-    public void validate() {	
+    public void validate() throws Exception {	
         consoleReporter.addLine();
 
         if(scans.size() == 0) {
@@ -285,7 +287,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     }
 
-    public void initSourceModel() {
+    public void initSourceModel() throws Exception {
         consoleReporter.addLine();
 
         // TODO Using the global options (intersect of scan options) instead of the first scan's

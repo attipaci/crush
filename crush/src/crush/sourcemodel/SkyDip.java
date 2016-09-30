@@ -77,7 +77,7 @@ public class SkyDip extends SourceModel {
 	}
 	
 	@Override
-	public void createFrom(Collection<? extends Scan<?,?>> collection) {
+	public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
 		super.createFrom(collection);
 		
 		resolution = hasOption("grid") ? Math.abs(option("grid").getDouble()) * Unit.arcsec : 0.25 * Unit.deg;

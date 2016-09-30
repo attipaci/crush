@@ -1,5 +1,23 @@
-2.33-b1 (beta)
+2.33-b2 (beta)
 
+	[NEW] {HAWC+} New option 'rtoc' to specify that the FITS has real-time
+	object coordinates, regardless of whether the source is sidereal or
+	not. This provides a manual override before EPHRA/EPHDEC (or ERA/EDEC)
+	is implemented by Steve for the header...
+
+	[NEW] Program-specific user startup configuration is now possible on 
+	POSIX/UNIX (incl. MacOS) by editing an appropriate file inside the
+        corresponding '~/.crush2/startup/<progname>/' directory. These files 
+	are shell (bash) snipplets that are sources right before Java/CRUSH is 
+	invoked. For example, placing the following lines into
+        '~/.crush2/startup/crush/myconfig.conf':
+
+	  EXTRAOPTS="$EXTRAOPTS -Djava.awt.headless=true"
+	  CRUSH_NO_UPDATE_CHECK="1"
+	  
+	will add headless mode to the current Java runtime options, and will
+	disable update checking on startup -- for reductions ('crush' 
+	executable) only, but not affecting the other tools (like 'show').
 
 	[NEW] New options 'quiet' and 'veryquiet' can turn off most console
 	output. 'quiet' will still display results (such as from pointing),
@@ -14,6 +32,19 @@
 	shell variable CRUSH_NO_VM_CHECK (to any value) before CRUSH is 
 	started. Beware though, that VM checking is useful for reporting when
 	CRUSH is being run by an unsuitanble Java implementation (such as gij).
+
+	[FIX] Initialize coordinate search ranges with first coordinate value
+	instead of positive and negative inifinities. This may help mitigate
+	some architecture-dependent issues...
+
+	[FIX] Additional check for NaN coordinates when preparing source maps.
+	Samples with NaN coordinate data will be flagged for exclusion.
+
+	[FIX] Requested equatorian and boresight equatorial DEC coordinates
+	parsed with units applied twice. Fixed.
+
+	[FIX] CRUSH could hang if an unexpected error occurs at initialization,
+	such as source map creation. Fixed.
 
 	[FIX] {Java} Run CRUSH in headless mode (-Djava.awt.headless=true) to
 	avoid issues with PNG generation if or when Java is headless (without 

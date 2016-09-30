@@ -45,6 +45,7 @@ import jnum.data.GridImage2D;
 import jnum.data.Index2D;
 import jnum.data.Statistics;
 import jnum.math.Range;
+import jnum.math.Range2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.projection.Gnomonic;
@@ -66,11 +67,13 @@ public abstract class SourceMap extends SourceModel {
     public boolean allowIndexing = true;
     public int marginX = 0, marginY = 0;
 
+    public Range2D range;
+    
     protected int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
 
 
     private int indexShiftX, indexMaskY;
-
+    
 
     public SourceMap(Instrument<?> instrument) {
         super(instrument);
@@ -87,7 +90,7 @@ public abstract class SourceMap extends SourceModel {
     }
 
     @Override
-    public void createFrom(Collection<? extends Scan<?,?>> collection) {
+    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
         super.createFrom(collection);
       
         info("Initializing Source Map.");	
@@ -224,11 +227,7 @@ public abstract class SourceMap extends SourceModel {
 
         if(CRUSH.debug) debug("search pixels: " + pixels.size() + " : " + integration.instrument.size());
         
-        class Range2D {	
-            public Range x = new Range();
-            public Range y = new Range();
-        }
-
+        
         CRUSH.Fork<Range2D> findCorners = integration.new Fork<Range2D>() {
             private Range2D range;
             private AstroProjector projector;
@@ -236,16 +235,23 @@ public abstract class SourceMap extends SourceModel {
             @Override
             protected void init() {
                 super.init();
-                range = new Range2D();
                 projector = new AstroProjector(getProjection());
             }
 
             @Override
             protected void process(Frame exposure) {	
                 for(Pixel pixel : pixels) {
-                    exposure.project(pixel.getPosition(), projector);	
-                    range.x.include(projector.offset.x());
-                    range.y.include(projector.offset.y());
+                    exposure.project(pixel.getPosition(), projector);
+                    
+                    // Check to make sure the sample produces a valid position...
+                    // If not, then flag out the corresponding data...
+                    if(Double.isNaN(projector.offset.x()) || Double.isNaN(projector.offset.y())) {
+                        for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+                    }
+                    else {
+                        if(range == null) range = new Range2D(projector.offset);
+                        else range.include(projector.offset);
+                    }
                 }
             }
 
@@ -258,10 +264,7 @@ public abstract class SourceMap extends SourceModel {
                 for(Parallel<Range2D> task : getWorkers()) {
                     Range2D local = task.getLocalResult();
                     if(range == null) range = local;
-                    else {
-                        range.x.include(local.x);
-                        range.y.include(local.y);
-                    }
+                    else if(local != null) range.include(local);
                 }
                 return range;
             }		
@@ -271,14 +274,17 @@ public abstract class SourceMap extends SourceModel {
 
         Range2D range = findCorners.getResult();
 
-        if(CRUSH.debug) debug("map range " + integration.getDisplayID() + "> "
-                + Util.f1.format(range.x.span() / Unit.arcsec) + " x " 
-                + Util.f1.format(range.y.span() / Unit.arcsec));
+        // Check for null range...
+        if(range == null) {
+            if(CRUSH.debug) debug("map range " + integration.getDisplayID() + "> null");
+        }
+        else {
+            if(CRUSH.debug) debug("map range " + integration.getDisplayID() + "> "
+                    + Util.f1.format(range.getXRange().span() / Unit.arcsec) + " x " 
+                    + Util.f1.format(range.getYRange().span() / Unit.arcsec));
 
-        Scan<?,?> scan = integration.scan;
-
-        scan.xRange.include(range.x);
-        scan.yRange.include(range.y);
+            integration.scan.range.include(range);
+        }
 
     }
 
@@ -286,30 +292,26 @@ public abstract class SourceMap extends SourceModel {
         final Vector2D fixedSize = new Vector2D(Double.NaN, Double.NaN);
         final boolean fixSize = hasOption("map.size");
 
+        range = new Range2D();
+        
         if(fixSize) {
             StringTokenizer sizes = new StringTokenizer(option("map.size").getValue(), " \t,:xX");
 
             fixedSize.setX(0.5 * Double.parseDouble(sizes.nextToken()) * Unit.arcsec);
             fixedSize.setY(sizes.hasMoreTokens() ? 0.5 * Double.parseDouble(sizes.nextToken()) * Unit.arcsec : fixedSize.x());
 
-            xRange.setRange(-fixedSize.x(), fixedSize.x());
-            yRange.setRange(-fixedSize.y(), fixedSize.y());	
+            range.setRange(-fixedSize.x(), -fixedSize.y(), fixedSize.x(), fixedSize.y());	
 
             for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) flagOutside(integration, fixedSize);
         }
 
         else {
-            xRange.empty();
-            yRange.empty();
+            range.empty();
 
             for(Scan<?,?> scan : scans) {
-                scan.xRange = new Range();
-                scan.yRange = new Range();
-
+                scan.range = new Range2D();
                 for(Integration<?,?> integration : scan) searchCorners(integration);
-
-                xRange.include(scan.xRange);
-                yRange.include(scan.yRange);
+                range.include(scan.range);
             }	       
         }
     }
@@ -422,17 +424,13 @@ public abstract class SourceMap extends SourceModel {
 
     public abstract Grid2D<?> getGrid();
 
-    public void setSize() {
+    public void setSize() throws Exception {
       
         // Figure out what offsets the corners of the map will have...
-        try { searchCorners(); }
-        catch(Exception e) { 
-            error(e);
-            System.exit(1);
-        }
-
-        if(CRUSH.debug) debug("map range: " + Util.f1.format(xRange.span() / Unit.arcsec) + " x " 
-                +  Util.f1.format(yRange.span() / Unit.arcsec) + " arcsec");
+        searchCorners(); 
+        
+        if(CRUSH.debug) debug("map range: " + Util.f1.format(range.getXRange().span() / Unit.arcsec) + " x " 
+                +  Util.f1.format(range.getYRange().span() / Unit.arcsec) + " arcsec");
 
 
         double defaultResolution = getInstrument().getPointSize() / 5.0;
@@ -449,6 +447,9 @@ public abstract class SourceMap extends SourceModel {
         Grid2D<?> grid = getGrid();
         grid.setResolution(delta);
 
+        Range xRange = range.getXRange();
+        Range yRange = range.getYRange();
+        
         grid.refIndex.setX(0.5 - Math.rint(xRange.min() / delta.x()));
         grid.refIndex.setY(0.5 - Math.rint(yRange.min() / delta.y()));
 
@@ -464,8 +465,10 @@ public abstract class SourceMap extends SourceModel {
 
         int sizeX = 1 + (int) Math.ceil(grid.refIndex.x() + xRange.max() / delta.x());
         int sizeY = 1 + (int) Math.ceil(grid.refIndex.y() + yRange.max() / delta.y());
-
+        
         if(CRUSH.debug) debug("map pixels: " + sizeX + " x " + sizeY);
+         
+        if(sizeX < 0 || sizeY < 0) throw new IllegalStateException("Negative image size: " + sizeX + " x " + sizeY);
 
         try { 
             checkForStorage(sizeX, sizeY);	
@@ -585,7 +588,7 @@ public abstract class SourceMap extends SourceModel {
         double cosLat = getProjection().getReference().cosLat();
 
         for(Scan<?,?> scan : scans) {
-            double span = ExtraMath.hypot(scan.xRange.span() * cosLat, scan.yRange.span());
+            double span = ExtraMath.hypot(scan.range.getXRange().span() * cosLat, scan.range.getYRange().span());
             if(span > maxDistance) slews.add(scan);
         }
         return slews;
@@ -885,8 +888,7 @@ public abstract class SourceMap extends SourceModel {
         else return super.getFormattedEntry(name, formatSpec);
     }
 
-    public Range xRange = new Range();
-    public Range yRange = new Range();
+  
 
 }
 
