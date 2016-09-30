@@ -87,13 +87,40 @@ source "$CRUSH/autoconf.sh"
 
 # --------------------- DO NOT CHANGE BELOW THIS LINE -----------------------
 
+
+# Parse startup configuration files in /etc/crush2/startup and 
+# ~/.crush2/startup directories...
+
 if [ -e /etc/crush2/startup ] ; then
-  for file in /etc/crush2/startup/* ; do source $file ; done
+  for file in /etc/crush2/startup/* ; do 
+    if [ -f $file ] ; then source $file ; fi 
+  done
 fi
 
 if [ -e ~/.crush2/startup ] ; then
-  for file in ~/.crush2/startup/* ; do source $file ; done
+  for file in ~/.crush2/startup/* ; do 
+    if [ -f $file ] ; then source $file ; fi 
+  done
 fi
+
+
+# Parse program-specific startup configurations if this wrapper script
+# was called with at least one argument that specifies the program name.
+
+if [ $# -ge 1 ] ; then
+  if [ -e /etc/crush2/startup/$1 ] ; then
+    for file in /etc/crush2/startup/$1/* ; do 
+      if [ -f $file ] ; then source $file ; fi
+    done
+  fi
+
+  if [ -e ~/.crush2/startup/$1 ] ; then
+    for file in ~/.crush2/startup/$1/* ; do 
+      if [ -f $file ] ; then source $file ; fi
+    done
+  fi
+fi
+
 
 if [[ $DEBUG == "TRUE" ]] ; then 
   echo "Pre-launch:"

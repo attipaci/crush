@@ -6,6 +6,10 @@ EXECNAME=$0
 while [ -L $EXECNAME ] ; do EXECNAME=`readlink $EXECNAME`; done
 CRUSH=`dirname $EXECNAME`
 
-source $CRUSH/wrapper.sh
+# Configure the runtime settings (classpaths, java runtime options)
+source $CRUSH/wrapper.sh crush
 
-$JAVA $JAVAOPTS -classpath $CLASSPATH -Djava.awt.headless=true crush.CRUSH ${1+"$@"} 
+# And run CRUSH...
+$JAVA $JAVAOPTS -classpath $CLASSPATH crush.CRUSH ${1+"$@"} 
+
+

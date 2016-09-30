@@ -68,7 +68,7 @@ public class BeamMap extends SourceMap {
 	}
 
 	@Override
-	public void createFrom(Collection<? extends Scan<?,?>> collection) {
+	public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
 		// Set all pixel positions to zero...
 		for(Scan<?,?> scan : collection) for(Integration<?,?> integration : scan) {
 		    final Instrument<?> instrument = integration.instrument;

@@ -4,7 +4,7 @@
 			       Attila Kovacs 
 		       <attila[AT]submm.caltech.edu>
 
-		       Last updated: 18 February 2016
+		       Last updated: 31 August 2016
 
 
 
@@ -37,6 +37,8 @@ Table of Contents
   3.3 Source (Map) Configuration
   3.4 Scan Configuration
   3.5 Instrument Configuration
+  3.6 Advanced startup environment and Java configuration
+
 
 4. Correlated Signals 
 
@@ -189,14 +191,12 @@ virtually any fast-sampling scanning camera.
 	DATAMODEL="64"
 	USEMB="4000"
 	JVM="-server"
-	EXTRAOPTS=""
+	EXTRAOPTS="-Djava.awt.headless=true"
 
    Upon startup CRUSH will find and apply these settings, so it will use
-   "/usr/java/latest/bin/java" as your to run CRUSH, in 64-bit mode, with
-   4GB of RAM, using the HotSpot 'server' VM, with no extra Java options.
-
-   (Note, these config files are parsed as bash scripts, so you may use other
-   bash commands too, such as printing earlier settings via 'echo')
+   "/usr/java/latest/bin/java" to run CRUSH, in 64-bit mode, with 4GB of RAM, 
+   using the HotSpot 'server' VM, and in headless mode (without display,
+   mouse or keyboard).
 
    Below is a guide to the variables that you can override to set your own
    Java runtime configuration:
@@ -227,6 +227,27 @@ virtually any fast-sampling scanning camera.
 	EXTRAOPTS	Any other non-standard options you may want to pass
 			to the Java VM should go here. 
 	
+
+   You can also specify environment variables, and add shell scripts (bash),
+   since these configuation files are in fact sourced as bash scripts before
+   launching Java / CRUSH. For example you can add:
+
+      CRUSH_NO_UPDATE_CHECK="1"
+      CRUSH_NO_VM_CHECK="1" 
+	  
+      echo "Will try to parse my own configuration now... "
+
+      if [ -f ~/mycrushconfig.sh ] ; then
+          echo -n "OK"
+          source ~/mycrushconfig.sh
+      else
+          echo -n "Not found"
+      fi
+
+   The above will disable update checking (not recommended!) and VM checking
+   (also not recommended!) and will source the contents of 
+   '~/mycrushconfig.sh' if and when such a file exists.
+
 
 
    CRUSH Configuration
@@ -1810,6 +1831,32 @@ necessary.) The commands are:
 
 
 
+3.6. Advanced startup environment and Java configuration
+========================================================
+
+   We have seen before how to configure the startup environment and Java by
+   placing configuration snipplets inside the directory '~/.crush2/startup/'. 
+   However, what if you want certain settings to apply to just a specific 
+   program within the crush suite (e.g. to 'crush' or 'show') only, but not 
+   to all of them? That too is possible, by (creating and) editing a file
+   under the corresponding '~/.crush2/startup/<progname>' directory. E.g.:
+
+     ~/.crush2/startup/crush/myconfig.conf
+
+   will source the bash snippled contained in 'myconfig.conf' for reductions
+   ('crush' executable) only. As with other startup scripts, the name of the
+   file itself is irrelevant, and all files will be parsed inside the 
+   program's startup directory (albeit in unspecified order!).
+
+   Inside this file you can set up environment variables, and add shell 
+   (bash) scripts. E.g., the 'crush' startup configuration file may contain 
+   the lines:
+
+     CRUSH_NO_UPDATE_CHECK="1"
+     EXTRAOPTS="$EXTRAOPTS -Djava.awt.headless=true"
+
+   (The first disables update checking, the second adds headless mode to the
+   list of extra Java options already defined).
 
   
 

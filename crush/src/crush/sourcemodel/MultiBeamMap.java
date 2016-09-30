@@ -75,7 +75,7 @@ public class MultiBeamMap extends ScalarMap {
 	}
 	
 	@Override
-	public void createFrom(Collection<? extends Scan<?,?>> collection) {
+	public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
 		double maxThrow = 0.0;
 
 		for(Scan<?,?> scan : collection) {

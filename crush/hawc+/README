@@ -4,7 +4,7 @@
 			      Attila Kovacs
 		      <attila[AT]submm.caltech.edu>
 
-		       Last updated: 18 April 2015
+		       Last updated: 31 August 2015
 
 
 
@@ -19,7 +19,8 @@ Table of Contents
 
   2.1. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
   2.2. Optional system-wide installation.
-  2.3. Optional Java configuration
+  2.3. Optional startup environment & Java configuration
+  2.4. Optional automatic pipeline configuration (skyhawc)
 
 3. Quickstart guide
 
@@ -138,8 +139,8 @@ Table of Contents
 
 
 
-   2.3. Optional Java configuration
-   ================================
+   2.3. Optional startup environment & Java configuration
+   ======================================================
    CRUSH ships with a default Java configuration. On the most common UNIX
    platforms (Linux, Mac OS X, BSD, and Solaris), it will automatically attempt
    to set an optimal configuration. On other platforms, it comes with fail-safe
@@ -156,18 +157,16 @@ Table of Contents
    E.g., placing the following lines in ~/.crush2/startup/java.conf overrides
    all available settings: 
 
-	JAVA="/usr/java/latest/bin/java"
-	DATAMODEL="64"
-	USEMB="4000"
-	JVM="server"
-	EXTRAOPTS=""
+	  JAVA="/usr/java/latest/bin/java"
+	  DATAMODEL="64"
+	  USEMB="4000"
+	  JVM="server"
+	  EXTRAOPTS="-Djava.awt.headless=true"
 
    Upon startup CRUSH will find and apply these settings, so it will use
    "/usr/java/latest/bin/java" to run CRUSH, in 64-bit mode, with 4GB of RAM, 
-   using the HotSpot 'server' VM, with no extra Java options.
-
-   (Note, these config files are parsed as bash scripts, so you may use other
-   bash commands too, such as printing earlier settings via 'echo')
+   using the HotSpot 'server' VM, and in headless mode (without display,
+	mouse or keyboard).
 
    Below is a guide to the variables that you can override to set your own
    Java runtime configuration:
@@ -177,7 +176,7 @@ Table of Contents
 			"/usr/java/latest/bin/java" to use the latest from
 			Oracle or OpenJDK.
 
-	DATAMODEL	Set to "32" or "64", to select 32 or 64-bit mode.
+	DATAMODEL	Set to "32" oir "64", to select 32 or 64-bit mode.
 			To use 64-bit mode you will need both a 64-bit OS
 			and a 64-bit JRE (Java Runtime Environment)
 			installation.
@@ -199,8 +198,70 @@ Table of Contents
 
 	EXTRAOPTS	Any other non-standard options you may want to pass
 			to the Java VM should go here. Typically set to "".
-			(Note, the "-Xbatch" options is set for CRUSH, by
-			default).
+
+
+   You can also specify environment variables, and add shell commands (bash),
+   since these configuation files are in fact sourced as bash scripts before
+   launching Java / CRUSH. For example you can add:
+
+     CRUSH_NO_UPDATE_CHECK="1"
+     CRUSH_NO_VM_CHECK="1" 
+
+     echo "Will try to parse my own configuration now... "
+	  
+     if [ -f ~/mycrushconfig.sh ] ; then
+         echo -n "OK"
+         source ~/mycrushconfig.sh
+     else
+         echo -n "Not found"
+     fi
+
+   The above will disable update checking (not recommended!) and VM checking
+   (also not recommended!) and will source the contents of 
+   '~/mycrushconfig.sh' if and when such a file exists.
+ 
+   
+
+
+   2.4. Optional automatic pipeline configuration (skyhawc)
+   ========================================================
+
+   Automatic pipeline reductions (such as in flight) should never hang if 
+   possible.
+
+   Unfortunately, there are two uncommon conditions that can cause CRUSH 
+   (Java, really) to hang indefinitely. First, while trying to render a PNG 
+   output if the X11 display connection had dropped unexpectedly. And second, 
+   while trying to check for updates if the network had disconnected 
+   unexpectedly. 
+   
+   Both of these scenarios can be preemted by specifying appropriate runtime 
+   options for running CRUSH reductions with limited scope. We can
+
+   Simply (create and) edit a file: 
+
+      ~/.crush2/startup/crush/autopipeline.conf
+
+   (This will specify settings only for the 'crush' executable, and will not
+   affect other tools, like 'imagetool' or 'show'). Into this file add the 
+   following lines:
+
+      CRUSH_NO_UPDATE_CHECK="1"
+      EXTRAOPTS="$EXTRAOPTS -Djava.awt.headless=true"
+
+   The first will disable update checking (which can hang if the network 
+   connection drops), while the second will run CRUSH in headless mode 
+   (assuming no X11 rendering functionality), in addition to any startup
+   options defined for all programs, thereby avoiding hangs if and 
+   when PNG outputs are rendered. 
+
+   Normal users, outside of the automatic pipeline, should probably not set
+   these options. Update notification is a useful feature, letting users know
+   if or when improved CRUSH releases become available. And, while CRUSH does
+   not currently require on-screen rendering, it is possible that future
+   releases may add graphical functionalities that users may want to access
+   (but would not be available in headless mode!). 
+
 
   
 
@@ -335,6 +396,8 @@ Table of Contents
 			'2/3beam' or 'beam'. E.g. '-smooth=8.0' or 
 			'-smooth=2/3beam'. To turn smoothing off completely
 			use '-final:forget=smooth'.
+
+
 
 
 

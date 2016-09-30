@@ -24,6 +24,7 @@
 package crush.sofia;
 
 import jnum.Unit;
+import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.JulianEpoch;
 import nom.tam.fits.Header;
@@ -94,25 +95,25 @@ public class SofiaTelescopeData extends SofiaData {
 		fbcStatus = header.getString("FBC-STAT");
 		
 		double epochYear = header.getDouble("EQUINOX");
-		JulianEpoch epoch = Double.isNaN(epochYear) ? null : new JulianEpoch(epochYear);
+		CoordinateEpoch epoch = Double.isNaN(epochYear) ? CoordinateEpoch.J2000 : CoordinateEpoch.forString(epochYear + "");
 		
 		requestedEquatorial = null;
 		boresightEquatorial = null;
 		
 		if(epoch != null) {
 		    try { 
-                double hRA = header.getHMSTime("TELRA");
-                double dDEC = header.getDMSAngle("TELDEC");
-                if(!Double.isNaN(hRA) && !Double.isNaN(dDEC)) 
-                    requestedEquatorial = new EquatorialCoordinates(hRA * Unit.timeAngle, dDEC * Unit.deg, epoch); 
+                double RA = header.getHMSTime("TELRA");
+                double DEC = header.getDMSAngle("TELDEC");
+                if(!Double.isNaN(RA) && !Double.isNaN(DEC)) 
+                    requestedEquatorial = new EquatorialCoordinates(RA * Unit.timeAngle, DEC, epoch); 
             }
             catch(Exception e) {}
 		    
 		    try { 
-		        double hRA = header.getHMSTime("OBSRA");
-		        double dDEC = header.getDMSAngle("OBSDEC");
-		        if(!Double.isNaN(hRA) && !Double.isNaN(dDEC)) 
-		            boresightEquatorial = new EquatorialCoordinates(hRA * Unit.timeAngle, dDEC * Unit.deg, epoch); 
+		        double RA = header.getHMSTime("OBSRA");
+		        double DEC = header.getDMSAngle("OBSDEC");
+		        if(!Double.isNaN(RA) && !Double.isNaN(DEC)) 
+		            boresightEquatorial = new EquatorialCoordinates(RA * Unit.timeAngle, DEC, epoch); 
 		    }
 		    catch(Exception e) {}
 		}

@@ -166,7 +166,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                 warning("Missing OBJRA/OBJDEC header keys. Using initial position instead.");
                 scan.equatorial = new EquatorialCoordinates(((double[]) row[iRA])[0] * Unit.hourAngle, ((double[]) row[iDEC])[0] * Unit.deg, CoordinateEpoch.J2000);
             }
-            
+             
             if(iORA >= 0) if(Double.isNaN(((double[]) row[iORA])[0])) {
                 iORA = iODEC = -1;
                 if(scan.isNonSidereal) warning("Missing NonSiderealRA/NonSiderealDEC columns. Forcing sidereal mapping.");
@@ -187,7 +187,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                 @Override
                 public void init() {
                     super.init();
-                    
+               
                     timeStamp = new AstroTime();
                     apparent = new EquatorialCoordinates();
                     if(scan.equatorial != null) objectEq = (EquatorialCoordinates) scan.equatorial.copy();      
@@ -229,7 +229,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     
                     if(!isConfigured) configure(row);
                     if(objectEq == null) objectEq = (EquatorialCoordinates) scan.equatorial.copy();
-                    
+                     
                     frame.PWV = ((double[]) row[iPWV])[0] * (float) Unit.um; 
                     
                     frame.site = new GeodeticCoordinates(((double[]) row[iLON])[0] * Unit.deg, ((double[]) row[iLAT])[0] * Unit.deg);  

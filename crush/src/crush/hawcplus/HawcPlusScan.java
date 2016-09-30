@@ -38,7 +38,10 @@ import java.util.logging.Logger;
 import crush.CRUSH;
 import crush.sofia.SofiaHeader;
 import crush.sofia.SofiaScan;
+import jnum.Unit;
 import jnum.Util;
+import jnum.astro.CoordinateEpoch;
+import jnum.astro.EquatorialCoordinates;
 
 public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
 	/**
@@ -48,6 +51,8 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	
 	String priorPipelineStep;
 	boolean useBetweenScans;
+	
+	EquatorialCoordinates objectCoords;
 	
 	public HawcPlusScan(HawcPlus instrument) {
 		super(instrument);
@@ -66,10 +71,19 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 		priorPipelineStep = header.getString("PROCLEVL");
 		isNonSidereal = header.getBoolean("NONSIDE", false);
 		
+		// If using real-time object coordinates regardless of whether sidereal or not, then treat as if non-sidereal...
+		if(hasOption("rtoc")) isNonSidereal = true;
+		
+		if(hasOption("EPHRA") && hasOption("EPHDEC")) {
+		    CoordinateEpoch epoch = header.containsKey("EQUINOX") ? CoordinateEpoch.forString(header.getDouble("EQUINOX") + "") : CoordinateEpoch.J2000;
+		    objectCoords = new EquatorialCoordinates(header.getHMSTime("EPHRA") * Unit.timeAngle, header.getDMSAngle("EPHDEC"), epoch);
+		}
+		
 		// TODO Data without AORs -- should not happen...
 		if(observation.aorID.equals("0")) {
-		    warning("No AOR, will use initial scan position as reference.");
-		    equatorial = null;
+		    if(objectCoords == null) warning("No AOR, will use initial scan position as reference.");
+		    else warning("No AOR, referencing to object coordinates.");
+		    equatorial = objectCoords;
 		}
 	}
 	

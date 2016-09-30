@@ -136,7 +136,7 @@ public class ScalarMap extends SourceMap {
     public Grid2D<?> getGrid() { return map.getGrid(); }
 
     @Override
-    public void createFrom(Collection<? extends Scan<?,?>> collection) {
+    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
         map = new AstroMap();
         map.setGrid(new SphericalGrid());
 

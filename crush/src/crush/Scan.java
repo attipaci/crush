@@ -51,7 +51,7 @@ import jnum.astro.Weather;
 import jnum.data.*;
 import jnum.math.CoordinateSystem;
 import jnum.math.Offset2D;
-import jnum.math.Range;
+import jnum.math.Range2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.reporting.BasicMessaging;
@@ -83,7 +83,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public Precession fromApparent, toApparent;
 	public Vector2D pointingCorrection;
 	
-	public Range xRange, yRange;
+	public Range2D range;
 	public boolean isTracking = false;
 	public boolean isNonSidereal = false;
 	
