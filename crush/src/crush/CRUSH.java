@@ -28,6 +28,8 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jnum.Configurator;
 import jnum.LockedException;
@@ -57,7 +59,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.33-b2";
-    private static String revision = "devel.4";
+    private static String revision = "devel.5";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -83,6 +85,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         Locale.setDefault(Locale.US);
         FitsFactory.setUseHierarch(true);
         FitsFactory.setLongStringsEnabled(true);
+        Logger.getLogger(Header.class.getName()).setLevel(Level.WARNING);
     }
 
     public static void main(String[] args) {
@@ -476,14 +479,10 @@ public class CRUSH extends Configurator implements BasicMessaging {
                 }
                 catch(Exception parseError) { error(parseError); }
             }
-            else {
-                System.err.println();
-                error(e);
-            }
+            else warning(e);
         }
-        catch(IOException e) { error(e); }
         catch(Exception e) {
-            error(e);
+            warning(e);
             if(!debug) suggest(this, "        (use '-debug' to obtain additional information on this error.)");
         }	
     }

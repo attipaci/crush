@@ -28,7 +28,10 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
 import jnum.io.fits.FitsToolkit;
+import jnum.math.CoordinateSystem;
 import jnum.math.Offset2D;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
 import jnum.util.*;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
@@ -96,6 +99,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
         fileDate = header.getString("DATE");
         date = header.getString("DATE-OBS");
+        
         String startTime = header.getString("UTCSTART", null);
         String endTime = header.getString("UTCEND", null);
 
@@ -148,15 +152,17 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         info("[" + getSourceName() + "] of AOR " + observation.aorID);
         info("Observed on " + date + " at " + startTime + " by " + observer);
         
-        if(telescope.boresightEquatorial != null) {
+        if(telescope.boresightEquatorial != null) info("Boresight: " + telescope.boresightEquatorial.toString());  
+        if(telescope.requestedEquatorial != null) info("Requested: " + telescope.requestedEquatorial.toString());
+        
+        if(telescope.requestedEquatorial != null) {
+            equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();  
+            calcPrecessions(telescope.requestedEquatorial.epoch);
+        }
+        else if(telescope.boresightEquatorial != null) {
             equatorial = (EquatorialCoordinates) telescope.boresightEquatorial.copy();  
             calcPrecessions(telescope.boresightEquatorial.epoch);
-            info("Equatorial: " + telescope.boresightEquatorial.toString());    
-        }
-        else if(telescope.requestedEquatorial != null) {
-            equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();	
-            calcPrecessions(telescope.requestedEquatorial.epoch);
-            info("Equatorial: " + telescope.requestedEquatorial.toString());	
+              
         }
         else warning("No valid OBSRA/OBSDEC or TELRA/TELDEC in header.");
         
@@ -328,6 +334,11 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         return 0.5 * (getFirstIntegration().getFirstFrame().telescopeVPA + getLastIntegration().getLastFrame().telescopeVPA);	    
     }
 
+    public double getInstrumentVPA() {
+        return 0.5 * (getFirstIntegration().getFirstFrame().instrumentVPA + getLastIntegration().getLastFrame().instrumentVPA);       
+    }
+
+    
     public File getFile(String scanDescriptor) throws FileNotFoundException {
         File scanFile;
 
@@ -420,7 +431,6 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     }
 
 
-
     @Override
     public String getFormattedEntry(String name, String formatSpec) {
         //NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
@@ -430,7 +440,24 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         else return super.getFormattedEntry(name, formatSpec);
     }
 
-
+    @Override
+    public String getPointingString(Offset2D pointing) {   
+        // The pointing is xel, el (similar to az, el)
+        Vector2D taOffset = new Vector2D(pointing);
+         
+        // eq -> x: rotate by -VPA
+        taOffset.rotate(getTelescopeVPA() - getInstrumentVPA());
+        
+        // convert offset to pixels
+        // The SI y axis is upside down relative to the elevation axis
+        Vector2D pixelSize = instrument.getPixelSize();  
+        taOffset.scaleX(1.0 / pixelSize.x());
+        taOffset.scaleY(-1.0 / pixelSize.y());
+        
+        return super.getPointingString(pointing) + "\n\n" +
+            "  TA offset --> " + Util.f2.format((taOffset.x())) + ", " + Util.f2.format(taOffset.y()) + " pixels";        
+    }
+    
 
     public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 

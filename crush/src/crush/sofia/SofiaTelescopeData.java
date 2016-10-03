@@ -105,15 +105,15 @@ public class SofiaTelescopeData extends SofiaData {
                 double RA = header.getHMSTime("TELRA");
                 double DEC = header.getDMSAngle("TELDEC");
                 if(!Double.isNaN(RA) && !Double.isNaN(DEC)) 
-                    requestedEquatorial = new EquatorialCoordinates(RA * Unit.timeAngle, DEC, epoch); 
+                    boresightEquatorial = new EquatorialCoordinates(RA * Unit.timeAngle, DEC, epoch); 
             }
             catch(Exception e) {}
 		    
 		    try { 
 		        double RA = header.getHMSTime("OBSRA");
-		        double DEC = header.getDMSAngle("OBSDEC");
+		        double DEC = header.getDMSAngle("OBSDEC");      
 		        if(!Double.isNaN(RA) && !Double.isNaN(DEC)) 
-		            boresightEquatorial = new EquatorialCoordinates(RA * Unit.timeAngle, DEC, epoch); 
+		            requestedEquatorial = new EquatorialCoordinates(RA * Unit.timeAngle, DEC, epoch); 
 		    }
 		    catch(Exception e) {}
 		}

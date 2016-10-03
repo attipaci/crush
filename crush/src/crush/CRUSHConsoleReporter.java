@@ -51,4 +51,9 @@ public class CRUSHConsoleReporter extends ConsoleReporter {
         if(getLevel() >= ConsoleReporter.LEVEL_STATUS && getLevel() <= ConsoleReporter.LEVEL_INFO) System.err.println("> " + message);
     }
     
+    @Override
+    public void notify(Object owner, String message) { 
+        if(getLevel() >= LEVEL_NOTIFY) System.err.println(" " + message);
+    }
+    
 }

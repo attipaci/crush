@@ -1,5 +1,8 @@
 2.33-b2 (beta)
 
+	[NEW] {SOFIA} Pointing now suggests corrections to the XML TA (optical)
+	axis pixel location. 
+
 	[NEW] {HAWC+} New option 'rtoc' to specify that the FITS has real-time
 	object coordinates, regardless of whether the source is sidereal or
 	not. This provides a manual override before EPHRA/EPHDEC (or ERA/EDEC)
@@ -32,6 +35,13 @@
 	shell variable CRUSH_NO_VM_CHECK (to any value) before CRUSH is 
 	started. Beware though, that VM checking is useful for reporting when
 	CRUSH is being run by an unsuitanble Java implementation (such as gij).
+
+	[FIX] {HAWC+} TELRA/TELDEC --> boresight, OBSRA/OBSDEC --> requested.
+
+	[FIX] {HAWC+} Fixed broken 'lab' mode reductions.
+
+	[FIX] {HAWC+} Imroved translation of unknown SOFIA header values 
+	between code and FITS.
 
 	[FIX] Initialize coordinate search ranges with first coordinate value
 	instead of positive and negative inifinities. This may help mitigate
@@ -79,6 +89,9 @@
 	initialization when possible, allowing to propagate the resulting 
 	messages according to the instrument's own method.
 
+	[TWEAK] CRUSH console notifications aren't wrapped to allow copy/paste
+	of long output names.
+
 	[CONFIG] {HAWC+} PNG thumbnail generation ('write.png' option) disabled
 	whenever DRP messaging is enabled ('drp' option), to avoid hangs due to
 	internal Java errors when running in the DRP automatic pipeline (e.g.
@@ -86,6 +99,12 @@
 
 	[UPDATE] {FITS} nom.tam.fits library updated to 1.15.1, solving long
 	history (and other comment-like cards) problems from before. 
+
+	[COSMETIC] {FITS} default log level set for warnings and above. Info
+	messages from nom.tam.fits will not be reported.
+
+	[COSMETIC] Failure to read a scan now produces a warning (with no 
+	trace) rather than the error (with trace) before.
 
 	[CODE] Most text inputs now use LineParser for consistent parsing and
 	error handling.
@@ -96,7 +115,7 @@
 	possible that some of the formatting of console output may look strange
 	as a result...
 
-
+	
 
 2.32-1 (29 June 2016)
 

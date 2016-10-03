@@ -46,6 +46,7 @@ import crush.Scan;
 import crush.array.Camera;
 import jnum.Unit;
 import jnum.io.fits.FitsToolkit;
+import jnum.math.Vector2D;
 
 public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends Channel> extends Camera<PixelType, ChannelType> implements GroundBased {
     /**
@@ -55,7 +56,8 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
 
     public SofiaInstrumentData instrumentData;
     public SofiaArrayData array;
-
+    
+ 
     Vector<String> history = new Vector<String>();
    
     static {
@@ -288,6 +290,8 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
         super.validate(scans);
     }
 
+    
+    public abstract Vector2D getPixelSize();
 
     public static final double telescopeDiameter = 2.5 * Unit.m;
 
