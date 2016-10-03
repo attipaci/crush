@@ -163,7 +163,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             info("FITS has " + storeRows + "x" + storeCols + " arrays.");
             
             if(scan.equatorial == null) {
-                warning("Missing OBJRA/OBJDEC header keys. Using initial position instead.");
+                warning("Missing tracking position. Using initial position instead.");
                 scan.equatorial = new EquatorialCoordinates(((double[]) row[iRA])[0] * Unit.hourAngle, ((double[]) row[iDEC])[0] * Unit.deg, CoordinateEpoch.J2000);
             }
              
@@ -213,8 +213,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     
                     set(i, frame);
                     
-                    frame.hasTelescopeInfo &= !Double.isNaN(((double[]) row[iRA])[0]);
-                    
+                    if(frame.hasTelescopeInfo) frame.hasTelescopeInfo = !Double.isNaN(((double[]) row[iRA])[0]);
+                        
                     if(!frame.hasTelescopeInfo) {
                         if(!isLab) set(i, null);
                         return;

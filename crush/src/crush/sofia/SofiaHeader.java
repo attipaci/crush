@@ -53,7 +53,8 @@ public class SofiaHeader {
     }
     
     public int getInt(String key, int defaultValue) {
-        return header.getIntValue(key, defaultValue);
+        int value = header.getIntValue(key, defaultValue);
+        return value == UNKNOWN_INT_VALUE ? defaultValue : value;
     }
     
     public final long getLong(String key) {
@@ -61,7 +62,8 @@ public class SofiaHeader {
     }
     
     public long getLong(String key, long defaultValue) {
-        return header.getLongValue(key, defaultValue);
+        long value = header.getLongValue(key, defaultValue);
+        return value == UNKNOWN_INT_VALUE ? defaultValue : value;
     }
     
     public final float getFloat(String key) {
@@ -93,7 +95,9 @@ public class SofiaHeader {
     }
     
     public String getString(String key, String defaultValue) {
-        return header.containsKey(key) ? header.getStringValue(key) : defaultValue;
+        if(!header.containsKey(key)) return defaultValue;
+        String record = header.findCard(key).getValue();
+        return record.equalsIgnoreCase(UNKNOWN_STRING_VALUE) ? defaultValue : record;
     }
     
     public String getString(String key) {
@@ -101,15 +105,13 @@ public class SofiaHeader {
     }
     
     public double getHMSTime(String key) {
-        String value = header.getStringValue(key);
-        if(value == null) return getDouble(key) * Unit.hour; 
-        return Util.parseTime(value);
+        try { return Util.parseTime(getString(key, null)); }
+        catch(Exception e) { return getDouble(key) * Unit.hour; }
     }
     
     public double getDMSAngle(String key) {
-        String value = header.getStringValue(key);
-        if(value == null) return getDouble(key) * Unit.deg; 
-        return Util.parseAngle(value);
+        try { return Util.parseAngle(getString(key, null)); }
+        catch(Exception e) { return getDouble(key) * Unit.deg; }
     }
     
     

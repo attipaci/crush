@@ -106,7 +106,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 			else probe = option("proberange").getRange(true);
 		}
 	
-		probe.restrict(0, nF);
+		probe.intersectWith(0, nF);
 		
 		whiteFrom = Math.max(1, (int) Math.floor(probe.min() / dF));
 		whiteTo = Math.min(nF, (int) Math.ceil(probe.max() / dF) + 1);

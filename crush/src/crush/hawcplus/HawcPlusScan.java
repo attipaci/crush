@@ -36,12 +36,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import crush.CRUSH;
+import crush.Mount;
 import crush.sofia.SofiaHeader;
 import crush.sofia.SofiaScan;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
+import jnum.math.CoordinateSystem;
+import jnum.math.Offset2D;
+import jnum.math.SphericalCoordinates;
+import jnum.math.Vector2D;
 
 public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
 	/**
@@ -79,11 +84,28 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 		    objectCoords = new EquatorialCoordinates(header.getHMSTime("EPHRA") * Unit.timeAngle, header.getDMSAngle("EPHDEC"), epoch);
 		}
 		
-		// TODO Data without AORs -- should not happen...
-		if(observation.aorID.equals("0")) {
-		    if(objectCoords == null) warning("No AOR, will use initial scan position as reference.");
-		    else warning("No AOR, referencing to object coordinates.");
-		    equatorial = objectCoords;
+		// Early CDH workaround when OBSRA=1.0 and OBSDEC=2.0 by default...
+		double obsRA = header.getDouble("OBSRA");
+		double obsDEC = header.getDouble("OBSDEC");
+		
+		if(obsRA == 1.0 && obsDEC == 2.0 || Double.isNaN(obsRA) || Double.isNaN(obsDEC)) {  
+		    warning("No OBSRA/OBDEC coordinates available.");
+		    
+		    if(objectCoords != null) {
+		        info("Referencing images to EPHRA/EPHDEC position.");
+		        equatorial = objectCoords;
+		    }
+		    
+		    else if(telescope.boresightEquatorial != null) {
+		        warning("Referencing images to TELRA/TELDEC.");
+		        equatorial = telescope.boresightEquatorial;
+		    }
+		    
+		    else {
+		        warning("Referencing images to initial scan position.");
+		        equatorial = null;
+		    }
+		    
 		}
 	}
 	
@@ -153,5 +175,6 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	    super.validate();
 	}
 	
+
 	
 }

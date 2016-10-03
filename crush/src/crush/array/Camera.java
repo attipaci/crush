@@ -133,7 +133,6 @@ public abstract class Camera<PixelType extends Pixel, ChannelType extends Channe
 	}
 		
 	public double getRotationAngle() {
-		
 		return Double.NaN;
 	}
 	
