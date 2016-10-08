@@ -49,7 +49,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
         this.name = name;
     }
 
-    public ChannelGroup(String name, Vector<? extends ChannelType> channelList) {
+    public ChannelGroup(String name, Collection<? extends ChannelType> channelList) {
         this(name);
         addAll(channelList);
     }
@@ -95,6 +95,37 @@ implements Copiable<ChannelGroup<ChannelType>> {
         return channels;
     }
 
+    public final void add(String spec, Hashtable<String, ChannelType> lookup) {
+        add(spec, lookup, 0);
+    }
+    
+    public void add(String spec, Hashtable<String, ChannelType> lookup, int excludeFlags) {
+        if(lookup.containsKey(spec)) {
+            ChannelType channel = lookup.get(spec);
+            if(channel.isUnflagged(excludeFlags)) add(channel);
+        }
+        else if(spec.contains("-")) {
+            StringTokenizer tokens = new StringTokenizer(spec, "-");
+
+            if(tokens.countTokens() != 2) return;
+            
+            String from = tokens.nextToken();
+            String to = tokens.nextToken();
+            
+            if(!lookup.containsKey(from)) return;
+            if(!lookup.containsKey(to)) return;
+            
+            int fromIndex = lookup.get(from).getFixedIndex();
+            int toIndex = lookup.get(to).getFixedIndex();
+            
+            for(int i=fromIndex; i <= toIndex; i++) {
+                ChannelType channel = lookup.get(i + "");
+                if(channel != null) if(channel.isUnflagged(excludeFlags)) add(channel);
+            }
+        }    
+    }
+    
+    
     public void kill(final int flagPattern) {
         for(Channel channel : this) if(channel.isFlagged(flagPattern)) channel.flag(Channel.FLAG_DEAD);
     }

@@ -1006,7 +1006,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final Modality<?> modality = instrument.modalities.get(modalityName);
 		if(modality == null) return false;
 		
-		modality.solveGains = hasOption("gains");
+		boolean solveGains = modality.solveGains && hasOption("gains");
 		modality.phaseGains = hasOption("phasegains");
 		modality.setOptions(option("correlated." + modality.name));
 		
@@ -1030,7 +1030,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(hasOption("correlated." + modality.name + ".span")) return false;
 		
 		boolean isGainRobust = false;		
-		if(modality.solveGains) {
+		if(solveGains) {
 			Configurator gains = option("gains");
 			
 			try { gains.mapValueTo("estimator"); }
@@ -1583,12 +1583,36 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		else flagSpikyChannels(flagFraction, flagCount);
 		
+		if(hasOption("despike.blocks")) flagSpikyBlocks();
 		
 		if(isPhaseModulated()) if(hasOption("phasedespike")) {
 			PhaseSet phases = ((PhaseModulated) this).getPhases();
 			if(phases != null) phases.despike(level);
-		}
-		
+		}	
+	}
+	
+	public void flagSpikyBlocks() {
+	    final int blockSize = framesFor(filterTimeScale);
+	    
+	    instrument.new Fork<Void>() {
+            @Override
+            protected void process(final Channel channel) {    
+                for(int T=ExtraMath.roundupRatio(size(), blockSize); --T >= 0; ) process(channel, T * blockSize);
+            }
+            
+            private final void process(final Channel channel, final int from) {
+                final int to = Math.min(size(), from + blockSize);
+                
+                for(int t=to; --t >= from; ) {                
+                    final Frame exposure = get(t);
+                    if(exposure == null) continue;
+                    if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE) != 0)  {
+                        for(t=to; --t >= from; ) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
+                        return;
+                    }
+                }
+            }
+	    }.process();
 	}
 	
 	private void setTempDespikeLevels(ChannelGroup<?> channels, final double significance) {
@@ -1695,7 +1719,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final int notSpike = ~Frame.SAMPLE_SPIKE;
 		
 		new Fork<Void>() {
-
 			@Override
 			protected void process(FrameType exposure) {
 				if(exposure.isFlagged(Frame.MODELING_FLAGS)) return;
@@ -1728,7 +1751,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void despikeMultires(final double significance) {
 		int maxBlockSize = framesFor(filterTimeScale) >>> 1;
 		if(maxBlockSize < 1) maxBlockSize = 1;	
-		if(maxBlockSize > size()) maxBlockSize = size();
+		if(maxBlockSize > size()) maxBlockSize = size()>>>1;
 		
 		comments += "dM";
 		
@@ -1747,11 +1770,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		instrument.new Fork<Void>() {
 			private float[] data, weight;
-			private DataPoint diff, temp;
+			private DataPoint diff, sum, temp;
 			
 			@Override
 			protected void init() {
 				super.init();
+				sum = new DataPoint();
 				diff = new DataPoint();
 				temp = new DataPoint();
 				data = getFloats();
@@ -1768,33 +1792,35 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			protected void process(final Channel channel) {
 				getTimeStream(channel, data, weight);
-				
+			
 				// check and divide...
 				int n = size();
 				for(int blockSize = 1; blockSize <= mbSize; blockSize <<= 1) {
+				      
 					for(int T=1; T < n; T++) if(T < n) {
-						diff.setValue(data[T]);
-						diff.setWeight(weight[T]);
-						temp.setValue(data[T-1]);
-						temp.setWeight(weight[T-1]);
+						sum.setValue(data[T]);
+						sum.setWeight(weight[T]);
 						
+						temp.setValue(data[T-1]);
+                        temp.setWeight(weight[T-1]);
+						
+						diff.copy(sum);
+						
+						sum.add(temp);
 						diff.subtract(temp);
+						
+						data[T>>>1] = (float) sum.value();
+						weight[T>>>1] = (float) sum.weight();
+						
 						if(diff.significance() > significance) {
-							for(int t=blockSize*(T-1), blockt=0; t<nt && blockt < (blockSize<<1); t++, blockt++) {
+							for(int t=Math.min(nt, T*blockSize), blockt=blockSize; --blockt >= 0; t--) {
 								final Frame exposure = get(t);
 								if(exposure != null) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;		
 							}
-						}
+						}				
 					}
 					
 					n >>>= 1;
-					
-					for(int to=0, from=0; to < n; to++, from += 2) {
-						// to = average(from, from+1)
-						data[to] = weight[from] * data[from] + weight[from+1] * data[from+1];
-						weight[to] = weight[from] + weight[from+1];
-						data[to] /= weight[to];
-					}
 				}
 			}
 			

@@ -37,7 +37,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public int fitsIndex, fitsRow, fitsCol;
 	public boolean hasJumps = false;
 	
-	public double muxGain = 1.0, pinGain = 1.0, biasGain = 1.0;
+	public double subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0;
 	
 	int jumpCounter = 0;
 	
@@ -96,7 +96,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	}
 	
 	//public final static int FLAG_POL = softwareFlags.next('p', "Bad polarray gain").value();
-	//public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();
+	public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();
 	public final static int FLAG_BIAS = softwareFlags.next('b', "Bad TES bias gain").value();
 	public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
 	public final static int FLAG_ROW = softwareFlags.next('#', "Bad MUX sample gain").value();

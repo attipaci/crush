@@ -386,10 +386,7 @@ implements TableFormatter.Entries, BasicMessaging {
 			}
 			else if(header.getStringValue(key).equalsIgnoreCase(value)) options.parseAll(conditionals.get(condition));
 		}
-	}
-	 
-	
-	
+	}	
 	
 	public String getDataLocationHelp() {
 		return "";
@@ -421,12 +418,18 @@ implements TableFormatter.Entries, BasicMessaging {
 		return scan;
 	}
 	
+
 	// TODO ability to flag groups divisions...
 	// perhaps flag.group, and flag.division...
 	public void flagPixels(Collection<String> list) {
 		Hashtable<String, ChannelType> lookup = getIDLookup();
-		info("Flagging " + list.size() + " channels");
-		for(String id : list) if(lookup.containsKey(id)) lookup.get(id).flag(Channel.FLAG_DEAD);
+		ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>("flag", list.size());
+
+		for(String spec : list) channels.add(spec, lookup); 
+		
+		info("Flagging " + channels.size() + " channels.");
+	
+		for(ChannelType channel : channels) channel.flag(Channel.FLAG_DEAD);
 	}
 	
 	public void killChannels(final int pattern, final int ignorePattern) {
@@ -542,10 +545,7 @@ implements TableFormatter.Entries, BasicMessaging {
 			Configurator option = option("group");
 			for(String name : option.getTimeOrderedKeys()) {
 				ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>(name);
-				for(String id : option.get(name).getList()) {
-					ChannelType channel = lookup.get(id);
-					if(channel != null) if(channel.isUnflagged(Channel.FLAG_DEAD)) channels.add(channel);
-				}
+				for(String spec : option.get(name).getList()) channels.add(spec, lookup, Channel.FLAG_DEAD);
 				addGroup(name, channels);
 			}
 		}
@@ -888,7 +888,11 @@ implements TableFormatter.Entries, BasicMessaging {
 	
 	public Hashtable<String, ChannelType> getIDLookup() {
 		Hashtable<String, ChannelType> lookup = new Hashtable<String, ChannelType>();
-		for(ChannelType channel : this) lookup.put(channel.getID(), channel);
+		for(ChannelType channel : this) {
+		    lookup.put(channel.getID(), channel);
+		    String index = channel.getFixedIndex() + "";
+		    if(!index.equals(channel.getID())) lookup.put(index, channel);
+		}
 		return lookup;
 	}
 	

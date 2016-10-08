@@ -60,7 +60,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	/*
 	public void printEquivalentTaus() {
 		CRUSH.values(this, "--->"
-				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
 				+ ", tau(LOS):" + Util.f3.format(zenithTau / scan.horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
 		);		
@@ -162,17 +161,15 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             int storeCols = ((int[][]) row[iDAC])[0].length;
             info("FITS has " + storeRows + "x" + storeCols + " arrays.");
             
-            if(scan.equatorial == null) {
-                warning("Missing tracking position. Using initial position instead.");
+            if(scan.equatorial == null) 
                 scan.equatorial = new EquatorialCoordinates(((double[]) row[iRA])[0] * Unit.hourAngle, ((double[]) row[iDEC])[0] * Unit.deg, CoordinateEpoch.J2000);
-            }
              
             if(iORA >= 0) if(Double.isNaN(((double[]) row[iORA])[0])) {
                 iORA = iODEC = -1;
                 if(scan.isNonSidereal) warning("Missing NonSiderealRA/NonSiderealDEC columns. Forcing sidereal mapping.");
-                scan.isNonSidereal = false;
+                scan.isNonSidereal = false;        
             } 
-             
+            
             isConfigured = true;
         }
         
@@ -181,16 +178,16 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         public Reader getReader() {
             return new Reader() {   
                 private AstroTime timeStamp;
-                private EquatorialCoordinates objectEq, apparent;
+                private EquatorialCoordinates apparent;
                 private boolean isConfigured = false;
+                private CoordinateEpoch epoch;
                 
                 @Override
                 public void init() {
                     super.init();
-               
                     timeStamp = new AstroTime();
-                    apparent = new EquatorialCoordinates();
-                    if(scan.equatorial != null) objectEq = (EquatorialCoordinates) scan.equatorial.copy();      
+                    apparent = new EquatorialCoordinates(); 
+                    epoch = ((HawcPlusScan) scan).telescope.boresightEquatorial.epoch;
                 }
                     
                 @Override
@@ -228,16 +225,27 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     frame.status = ((int[]) row[iStat])[0];       
                     
                     if(!isConfigured) configure(row);
-                    if(objectEq == null) objectEq = (EquatorialCoordinates) scan.equatorial.copy();
-                     
+                      
                     frame.PWV = ((double[]) row[iPWV])[0] * (float) Unit.um; 
                     
                     frame.site = new GeodeticCoordinates(((double[]) row[iLON])[0] * Unit.deg, ((double[]) row[iLAT])[0] * Unit.deg);  
                     frame.LST = ((double[]) row[iLST])[0] * (float) Unit.hour;
                     
-                    frame.equatorial = new EquatorialCoordinates(((double[]) row[iRA])[0] * Unit.hourAngle, ((double[]) row[iDEC])[0] * Unit.deg, objectEq.epoch);                            
-                    if(scan.isNonSidereal) objectEq.set(((double[]) row[iORA])[0] * Unit.hourAngle, ((double[]) row[iODEC])[0] * Unit.deg);
-                
+                    frame.equatorial = new EquatorialCoordinates(
+                            ((double[]) row[iRA])[0] * Unit.hourAngle, 
+                            ((double[]) row[iDEC])[0] * Unit.deg, 
+                            epoch
+                    );                             
+                    
+                    if(scan.isNonSidereal) {
+                       frame.objectEq = new EquatorialCoordinates(
+                               ((double[]) row[iORA])[0] * Unit.hourAngle, 
+                               ((double[]) row[iODEC])[0] * Unit.deg, 
+                               epoch
+                       );
+                    }
+                    
+                    EquatorialCoordinates reference = scan.isNonSidereal ? frame.objectEq : scan.equatorial;
                      
                     // I  -> T      rot by phi (instrument rotation)
                     // T' -> E      rot by -theta_ta
@@ -264,7 +272,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     frame.setParallacticAngle(frame.telescopeVPA);
                 
                     // Calculate the scanning offsets...
-                    frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(objectEq);
+                    frame.horizontalOffset = frame.equatorial.getNativeOffsetFrom(reference);
                     frame.equatorialNativeToHorizontal(frame.horizontalOffset);
                     
                     // In telescope XEL (phiS), EL (phiR)
@@ -279,7 +287,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     // C -> T rot by theta_cp - theta_ta
                     frame.chopperPosition.rotate(frame.chopVPA - frame.telescopeVPA);
                     
-                    // TODO if MCCS fixes alt/az inconsistency then we can just realy on their data...
+                    // TODO if MCCS fixes alt/az inconsistency then we can just rely on their data...
                     //frame.horizontal = new HorizontalCoordinates(((double[]) row[iAZ])[0] * Unit.deg, ((double[]) row[iEL])[0] * Unit.deg);                
                     //frame.telescopeCoords = new TelescopeCoordinates(frame.horizontal);
                     

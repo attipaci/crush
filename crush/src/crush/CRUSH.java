@@ -49,7 +49,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.32
+ * @version 2.33
  * 
  */
 public class CRUSH extends Configurator implements BasicMessaging {
@@ -59,7 +59,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.33-b2";
-    private static String revision = "devel.5";
+    private static String revision = "devel.8";
 
     public static String workPath = ".";
     public static String home = ".";
