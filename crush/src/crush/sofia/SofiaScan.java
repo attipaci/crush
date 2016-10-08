@@ -28,10 +28,10 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
 import jnum.io.fits.FitsToolkit;
-import jnum.math.CoordinateSystem;
 import jnum.math.Offset2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
+import jnum.text.SmartTokenizer;
 import jnum.util.*;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
@@ -48,6 +48,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
      */
     private static final long serialVersionUID = -6344037367939085571L;
 
+    public EquatorialCoordinates objectCoords;
+    
     public String fileDate, date;
     public String checksum, checksumVersion;
 
@@ -93,6 +95,90 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         System.gc();
     }
 
+    public File getFile(String scanDescriptor) throws FileNotFoundException { 
+        try { return getExactFile(scanDescriptor); }
+        catch(FileNotFoundException e) {}
+        
+        // Try locate the files by flight number and scan number
+        // E.g. F0004_HC_IMA_0_HAWC_HWPC_RAW_109.fits     
+        try {
+            if(scanDescriptor.contains(".") || scanDescriptor.contains(":")) {
+                SmartTokenizer tokens = new SmartTokenizer(scanDescriptor, ".:");
+                return getFile(tokens.nextInt(), tokens.nextInt());
+            }
+            else if(hasOption("flight")) {
+                return getFile(option("flight").getInt(), Integer.parseInt(scanDescriptor)); 
+            }
+        }
+        catch(Exception e) {}
+
+        throw notFound(scanDescriptor);
+    }   
+
+    public File getFile(int flightNo, int scanNo) throws FileNotFoundException {
+        String flightID = "F" + Util.d4.format(flightNo) + "_"; 
+        
+        // Otherwise, see if anything in the path matches...
+        String path = getDataPath();
+        File root = new File(path);
+        String[] fileName = root.list();
+        
+        if(fileName == null) throw new FileNotFoundException("Incorrect 'datapath'.");
+           
+        for(int i=0; i<fileName.length; i++) {
+            String upperCaseName = fileName[i].toUpperCase();
+            
+            if(!upperCaseName.startsWith(flightID.toUpperCase())) continue;
+            if(!upperCaseName.contains("_" + instrument.getFileID().toUpperCase())) continue;
+            if(!upperCaseName.contains(scanNo + ".FITS")) continue;
+            
+            return new File(path + fileName[i]);
+        }
+        throw new FileNotFoundException("flight " + flightNo + ", scan " + scanNo);
+    }
+        
+    protected FileNotFoundException notFound(String scanDescriptor) {
+        return new FileNotFoundException("Cannot find file for: '" + scanDescriptor + "'");
+    }
+    
+    public boolean isAORValid() {
+        return SofiaHeader.isValid(observation.aorID);
+    }
+    
+    public boolean isValid(SphericalCoordinates coords) {
+        if(coords == null) return false;
+        return SofiaHeader.isValid(coords.x()) && SofiaHeader.isValid(coords.y());
+    }
+    
+    public boolean isRequestedValid(SofiaHeader header) {
+        double obsRA = header.getDouble("OBSRA");
+        double obsDEC = header.getDouble("OBSDEC");
+        if(!SofiaHeader.isValid(obsRA)) return false;
+        if(!SofiaHeader.isValid(obsDEC)) return false;
+        if(obsRA == 0.0 && obsDEC == 0.0) return false;
+        return true;
+    }
+    
+  
+    protected EquatorialCoordinates guessReferenceCoordinates() {
+        if(isValid(objectCoords)) {
+            info("Referencing scan to object coordinates OBJRA/OBJDEC.");
+            return (EquatorialCoordinates) objectCoords.copy();
+        }
+        else if(isValid(telescope.requestedEquatorial)) {
+            info("Referencing scan to requested coordinates.");
+            return telescope.requestedEquatorial;
+        }
+        else if(isValid(telescope.boresightEquatorial)) {
+            warning("Referencing scan to initial telescope boresight TELRA/TELDEC.");
+            return (EquatorialCoordinates) telescope.boresightEquatorial.copy();
+        }
+   
+        warning("Referencing scan to initial scan position.");
+        return null;  
+    }
+  
+    
     public void parseHeader(SofiaHeader header) throws Exception {
         // Load any options based on the FITS header...
         instrument.setFitsHeaderOptions(header.getFitsHeader());
@@ -146,26 +232,27 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         aircraft = new SofiaAircraftData(header);
 
         telescope = new SofiaTelescopeData(header);
+        objectCoords = telescope.requestedEquatorial;
         
         isTracking = telescope.isTracking();
 
         info("[" + getSourceName() + "] of AOR " + observation.aorID);
         info("Observed on " + date + " at " + startTime + " by " + observer);
         
-        if(telescope.boresightEquatorial != null) info("Boresight: " + telescope.boresightEquatorial.toString());  
-        if(telescope.requestedEquatorial != null) info("Requested: " + telescope.requestedEquatorial.toString());
-        
-        if(telescope.requestedEquatorial != null) {
+        if(isRequestedValid(header)) {
             equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();  
             calcPrecessions(telescope.requestedEquatorial.epoch);
         }
-        else if(telescope.boresightEquatorial != null) {
-            equatorial = (EquatorialCoordinates) telescope.boresightEquatorial.copy();  
-            calcPrecessions(telescope.boresightEquatorial.epoch);
-              
+        else {
+            warning("No valid OBSRA/OBSDEC in header.");
+            telescope.requestedEquatorial = null;
+            equatorial = guessReferenceCoordinates();
         }
-        else warning("No valid OBSRA/OBSDEC or TELRA/TELDEC in header.");
         
+        if(equatorial != null) info("Equatorial: " + equatorial);
+        if(telescope.boresightEquatorial != null) info("Boresight: " + telescope.boresightEquatorial);  
+        if(telescope.requestedEquatorial != null) info("Requested: " + telescope.requestedEquatorial);
+       
         info("Focus: " + telescope.focusT.toString(Util.f1, Unit.get("um")));
 
         instrument.parseHeader(header);
@@ -179,6 +266,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         parseHistory(header.getFitsHeader());
     }
 
+ 
     @Override
     public void editScanHeader(Header header) throws HeaderCardException {
         super.editScanHeader(header);		
@@ -304,29 +392,35 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
     @Override
     public void validate() {
-        
-        if(!hasOption("lab")) {
-            SofiaFrame first = getFirstIntegration().getFirstFrame();
-            SofiaFrame last = getLastIntegration().getLastFrame();
-
-            horizontal = new HorizontalCoordinates(
-                    0.5 * (first.horizontal.x() + last.horizontal.x()),
-                    0.5 * (first.horizontal.y() + last.horizontal.y())
-                    );
-            info("Horizontal: " + horizontal.toString(2)); 
-                
-            site = new GeodeticCoordinates(
-                    0.5 * (first.site.x() + last.site.x()), 
-                    0.5 * (first.site.y() + last.site.y())
-                    );
-            info("Location: " + site.toString(2));
-            
-            info("Mean telescope VPA is " + Util.f1.format(getTelescopeVPA() / Unit.deg) + " deg.");  
-
-        }
-                
+        if(!hasOption("lab")) validateAstrometry();
         super.validate();
+    }
+    
+    protected void validateAstrometry() {
+        SofiaFrame first = getFirstIntegration().getFirstFrame();
+        SofiaFrame last = getLastIntegration().getLastFrame();
 
+        if(isNonSidereal) {
+            objectCoords = new EquatorialCoordinates(
+                    0.5 * (first.objectEq.RA() + last.objectEq.RA()),
+                    0.5 * (first.objectEq.DEC() + last.objectEq.DEC()),
+                    first.objectEq.epoch
+            );  
+            equatorial = (EquatorialCoordinates) objectCoords.copy();
+        }
+        
+        horizontal = new HorizontalCoordinates(
+                0.5 * (first.horizontal.x() + last.horizontal.x()),
+                0.5 * (first.horizontal.y() + last.horizontal.y())
+                );
+            
+        site = new GeodeticCoordinates(
+                0.5 * (first.site.x() + last.site.x()), 
+                0.5 * (first.site.y() + last.site.y())
+                );
+        info("Location: " + site.toString(2));
+        
+        info("Mean telescope VPA is " + Util.f1.format(getTelescopeVPA() / Unit.deg) + " deg.");
     }
 
 
@@ -339,7 +433,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     }
 
     
-    public File getFile(String scanDescriptor) throws FileNotFoundException {
+    public File getExactFile(String scanDescriptor) throws FileNotFoundException {
         File scanFile;
 
         String path = getDataPath();
@@ -459,9 +553,6 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     }
     
 
-    public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-
     public final static String[] requiredKeys = { 
             "DATASRC", "KWDICT", 
             "DATAQUAL", 
@@ -486,5 +577,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     // N_SPEC, FILEREV (in changed post processing)
 
     // INSTRUME excluded from this list since it is added automatically...
+    
+    public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
 
 }

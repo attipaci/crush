@@ -26,6 +26,7 @@ package crush.sofia;
 import crush.HorizontalFrame;
 import crush.Scan;
 import jnum.astro.AstroProjector;
+import jnum.astro.EquatorialCoordinates;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.TelescopeCoordinates;
 import jnum.math.Vector2D;
@@ -36,6 +37,7 @@ public class SofiaFrame extends HorizontalFrame {
      */
     private static final long serialVersionUID = -180851195016374209L;
     
+    public EquatorialCoordinates objectEq;
     public GeodeticCoordinates site;
      
     public double instrumentVPA;

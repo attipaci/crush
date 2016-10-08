@@ -625,6 +625,15 @@
 			flagging criteria. See the various despiking options
 			below:
 
+
+:: despike.blocks	@Expert
+			@Since: 2.33
+			Flag out an entire 'drifts' block of data around 
+			any spikes found. This is probably an overkill in most
+			cases, but may be useful if spikes are due to 
+			discontinuities (jumps) in individual detectors.
+			@See: 'drifts'
+			
 :: despike.flagcount=N	@Expert
 			Tolerate (w/o pixel flagging) up to N spikes up in each
 	 		pixel.
@@ -1213,13 +1222,17 @@
 				fits.[object?MARS] bright
 
 			
-:: flag=<list>		Specify a list of backend channels that ought to be 
-			ignored for the successively read scans. Can use pixel
-			numbers (i.e. data storage indexes) and ranges. E.g.:
+:: flag=<list>		Specify a list of channels that ought to be ignored. 
+			Can use instrument-specific pixel IDs, fixed indices 
+			(usually data storage indexes) and ranges. E.g.:
 
 			   flag 5-10,12,33-37
+
+			or
+
+			   flag R0[13,6]-R0[13,29],T1[0,0]	# {HAWC+}
 			   
-			Indeces normally start at 1 (i.e. not C-style!).
+			Fixed indices normally start at 1 (i.e. not C-style!).
 			@See: 'noslim', 'blind' 
 
 :: flatweights		@Since: 2.14
@@ -1229,6 +1242,15 @@
 			same uniformized initial weight. It can be useful when
 			the 'pixeldata' weights are suspect for some reason.
 			@See: 'pixeldata'
+
+
+:: flight=N		@Instrument: SOFIA
+			@Since: 2.33
+			Set the flight number for locating data files using
+			scan numbers only. Remember to set 'datapath' also to
+			specify the folder where scan files are stored.
+			@See: 'datapath'
+
 
 :: focalplane		@Alias -> system=focalplane
 			@Since: 2.14
@@ -1331,12 +1353,16 @@
 			support it though...
 
 :: group.<?>=<list>     @Expert
-			Specify a list of channels, by index, that belong
-			to a group with name <?>. The list can contain
-			comma separated list of indeces (starting with 1) and
-			ranges. E.g.:
+			Specify a list of channels, by IDs, fixed index 
+			(usually same as storage index), or ranges thereof, 
+			that ought to belong to a group with name <?>. The
+			argument is a comma separated list E.g.:
 
 			  group.my-group 10-20,45,50-60
+
+			or
+
+			  group.my-group R1[5,11]-R1[5,15],T0[12,2]   # {HAWC+}
 			    	
 			defines a group named 'my-group' from the specified
 			channels.

@@ -72,10 +72,10 @@ public abstract class ZeroMeanGains implements Serializable, GainProvider {
 			final Channel channel = mode.getChannel(k);
 			if(channel.isFlagged(skipFlags)) continue;
 
-			final double x = getRelativeGain(channel);
-			if(Double.isNaN(x)) continue;
+			final double g = getRelativeGain(channel);
+			if(Double.isNaN(g)) continue;
 				
-			sum += channel.weight * x;
+			sum += channel.weight * g;
 			sumw += channel.weight;
 		}
 		

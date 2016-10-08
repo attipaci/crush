@@ -56,7 +56,6 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
 
     public SofiaInstrumentData instrumentData;
     public SofiaArrayData array;
-    
  
     Vector<String> history = new Vector<String>();
    
@@ -82,6 +81,8 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
         if(array != null) copy.array = array.copy();
         return copy;
     }
+    
+    public abstract String getFileID();
 
     @Override
     public String getTelescopeName() {

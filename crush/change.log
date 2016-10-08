@@ -1,4 +1,18 @@
+>> parse gyro drifts, and report (list duration minutes: drift mag arcsecs) 
+
+
 2.33-b2 (beta)
+
+
+	[NEW] Options 'flag' and 'group' now work both with channel IDs as well
+	as fixed indices (usually starting from 1), and ranges specified with
+	both conventions.
+
+	[NEW] New option 'despike.block'. When set spikes will flag out an
+	entire 'drifts' block of data, not just a single sample. This may be
+	useful when spikes are due to discontinuities in the timestream.
+
+	[NEW] {SOFIA} Locating scans by flight and scan numbers.
 
 	[NEW] {SOFIA} Pointing now suggests corrections to the XML TA (optical)
 	axis pixel location. 
@@ -36,6 +50,17 @@
 	started. Beware though, that VM checking is useful for reporting when
 	CRUSH is being run by an unsuitanble Java implementation (such as gij).
 
+	[FIX] {HAWC+} Recovery from missing nonsidereal coordinates.
+
+	[FIX] {HAWC+} Handling of null messages to the DRP pipeline.
+
+	[FIX] Gains for fixed gain-modalities were estimated anyway. Fixed.
+
+	[FIX] {HAWC+} Changed handling of reference coordinates, to mean
+	object center, when real-time object coordinates are available...
+
+	[FIX] {HAWC+} Boresight pixel position had switched x/y. Fixed.
+
 	[FIX] {HAWC+} TELRA/TELDEC --> boresight, OBSRA/OBSDEC --> requested.
 
 	[FIX] {HAWC+} Fixed broken 'lab' mode reductions.
@@ -44,14 +69,14 @@
 	between code and FITS.
 
 	[FIX] Initialize coordinate search ranges with first coordinate value
-	instead of positive and negative inifinities. This may help mitigate
-	some architecture-dependent issues...
+	instead of positive and negative inifinities. The change is a robust 
+	fix against potential issues with handling empty ranges...
 
 	[FIX] Additional check for NaN coordinates when preparing source maps.
 	Samples with NaN coordinate data will be flagged for exclusion.
 
-	[FIX] Requested equatorian and boresight equatorial DEC coordinates
-	parsed with units applied twice. Fixed.
+	[FIX] {HAWC+} Requested equatorian and boresight equatorial DEC 
+	coordinates parsed with units applied twice. Fixed.
 
 	[FIX] CRUSH could hang if an unexpected error occurs at initialization,
 	such as source map creation. Fixed.
@@ -89,8 +114,19 @@
 	initialization when possible, allowing to propagate the resulting 
 	messages according to the instrument's own method.
 
+	[TWEAK] Fixed channel indices can always be used as IDs for lookups.
+
+	[TWEAK] {SOFIA} Improved and cleaner guessing of scan reference 
+	coordinates using OBSRA/OBSDEC, or OBJRA/OBJDEC, or TELRA/TELDEC, or 
+	real-time object coordinates, or initial scan position -- based on 
+	what's really available and valid...
+
 	[TWEAK] CRUSH console notifications aren't wrapped to allow copy/paste
 	of long output names.
+
+	[CONFIG] {HAWC+} extended array gain range [0.03:30], updated geometry
+	(rotations), band-C pixel scale (4.23"/pix) and beam (9.5"), bands C & 
+	E initial calibrations on Neptune. Current timing shift is 20 ms.
 
 	[CONFIG] {HAWC+} PNG thumbnail generation ('write.png' option) disabled
 	whenever DRP messaging is enabled ('drp' option), to avoid hangs due to

@@ -29,24 +29,17 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import crush.CRUSH;
-import crush.Mount;
 import crush.sofia.SofiaHeader;
 import crush.sofia.SofiaScan;
 import jnum.Unit;
-import jnum.Util;
 import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
-import jnum.math.CoordinateSystem;
-import jnum.math.Offset2D;
-import jnum.math.SphericalCoordinates;
-import jnum.math.Vector2D;
 
 public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
 	/**
@@ -57,8 +50,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	String priorPipelineStep;
 	boolean useBetweenScans;
 	
-	EquatorialCoordinates objectCoords;
-	
+		
 	public HawcPlusScan(HawcPlus instrument) {
 		super(instrument);
 		if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
@@ -70,45 +62,53 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	}
 
 	@Override
-	public void parseHeader(SofiaHeader header) throws Exception {
-		super.parseHeader(header);
-		
-		priorPipelineStep = header.getString("PROCLEVL");
-		isNonSidereal = header.getBoolean("NONSIDE", false);
-		
-		// If using real-time object coordinates regardless of whether sidereal or not, then treat as if non-sidereal...
-		if(hasOption("rtoc")) isNonSidereal = true;
-		
-		if(hasOption("EPHRA") && hasOption("EPHDEC")) {
-		    CoordinateEpoch epoch = header.containsKey("EQUINOX") ? CoordinateEpoch.forString(header.getDouble("EQUINOX") + "") : CoordinateEpoch.J2000;
-		    objectCoords = new EquatorialCoordinates(header.getHMSTime("EPHRA") * Unit.timeAngle, header.getDMSAngle("EPHDEC"), epoch);
-		}
-		
-		// Early CDH workaround when OBSRA=1.0 and OBSDEC=2.0 by default...
-		double obsRA = header.getDouble("OBSRA");
-		double obsDEC = header.getDouble("OBSDEC");
-		
-		if(obsRA == 1.0 && obsDEC == 2.0 || Double.isNaN(obsRA) || Double.isNaN(obsDEC)) {  
-		    warning("No OBSRA/OBDEC coordinates available.");
-		    
-		    if(objectCoords != null) {
-		        info("Referencing images to EPHRA/EPHDEC position.");
-		        equatorial = objectCoords;
-		    }
-		    
-		    else if(telescope.boresightEquatorial != null) {
-		        warning("Referencing images to TELRA/TELDEC.");
-		        equatorial = telescope.boresightEquatorial;
-		    }
-		    
-		    else {
-		        warning("Referencing images to initial scan position.");
-		        equatorial = null;
-		    }
-		    
-		}
+    public boolean isAORValid() {
+        return super.isAORValid() && !observation.aorID.equals("0");
+    }
+ 
+	@Override
+    public boolean isRequestedValid(SofiaHeader header) {
+	    if(!super.isRequestedValid(header)) return false;
+	    
+	    // Early CDH workaround when OBSRA=1.0 and OBSDEC=2.0 hardcoded...
+        double obsRA = header.getDouble("OBSRA");
+        double obsDEC = header.getDouble("OBSDEC");
+        
+        return !(obsRA == 1.0 && obsDEC == 2.0);
 	}
 	
+	@Override
+	public void parseHeader(SofiaHeader header) throws Exception {
+	    /*
+	    if(header.containsKey("CMTFILE")) {
+	        String type = header.getString("CMTFILE").toLowerCase();
+	        if(!type.contains("scan")) throw new IllegalStateException("File does not appear to be a scan: " + type);
+	    }
+	    */
+	    
+	    priorPipelineStep = header.getString("PROCLEVL");
+		
+	    // If using real-time object coordinates regardless of whether sidereal or not, then treat as if non-sidereal...
+		isNonSidereal = header.getBoolean("NONSIDE", false) || hasOption("rtoc");
+		
+		if(hasOption("OBJRA") && hasOption("OBJDEC")) {
+		    CoordinateEpoch epoch = header.containsKey("EQUINOX") ? CoordinateEpoch.forString(header.getDouble("EQUINOX") + "") : CoordinateEpoch.J2000;
+		    objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), epoch);
+		}
+	
+		super.parseHeader(header);	
+	}
+	
+	@Override
+    protected EquatorialCoordinates guessReferenceCoordinates() {
+	    if(isNonSidereal) {
+	        info("Referencing images to real-time object coordinates.");
+	        return null;
+	    }
+	    return super.guessReferenceCoordinates();
+	}
+	
+	    
 	@Override
 	public void editScanHeader(Header header) throws HeaderCardException {
 		super.editScanHeader(header);
@@ -132,49 +132,9 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
     }
 	
 	@Override
-    public File getFile(String scanDescriptor) throws FileNotFoundException {
-       
-	    try { return super.getFile(scanDescriptor); }
-	    catch(FileNotFoundException e) { if(!hasOption("date")) throw e; }
-	    
-	    int scanNo = -1;
-	    try { scanNo = Integer.parseInt(scanDescriptor); }
-	    catch(NumberFormatException e) { throw new FileNotFoundException("Cannot find file for: '" + scanDescriptor+ "'"); }
-	        
-	    String path = getDataPath();
-	    
-	    String date = option("date").getValue().replace("-", "");
-	    if(date.length() != 8) throw new FileNotFoundException("Invalid date: " + option("date").getValue());
-	    date = date.substring(2); // YYYYMMDD --> YYMMDD
-	    
-	    // Otherwise, see if anything in the path matches...
-        File root = new File(path);
-        String[] fileName = root.list();
-        
-        if(fileName == null) throw new FileNotFoundException("Incorrect 'datapath'.");
-           
-        String part = "_raw_" + Util.d3.format(scanNo) + ".fits";
-         
-        for(int i=0; i<fileName.length; i++) {
-            String lowerCaseName = fileName[i].toLowerCase();
-            
-            if(lowerCaseName.length() < 20) continue; // Minimum filename is: xYYMMDD_RAW_nnn.fits
-            if(!lowerCaseName.substring(1, 7).equals(date)) continue;
-            if(!lowerCaseName.contains("_haw")) continue;
-            if(!lowerCaseName.contains(part)) continue;
-            
-            return new File(path + fileName[i]);
-        }
-        throw new FileNotFoundException("Cannot find file for: '" + scanDescriptor + "'");
-	   
-    }   
-	
-	@Override
     public void validate() {
 	    useBetweenScans = hasOption("betweenscans");
 	    super.validate();
 	}
-	
-
 	
 }

@@ -71,6 +71,9 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	}
 	
 	@Override
+    public String getFileID() { return "HAW"; }
+	
+	@Override
 	public void setOptions(Configurator options) {
 		super.setOptions(options);
 		if(drp == null) if(hasOption("drp")) initDRPMessages();
@@ -128,10 +131,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		
 		try { addDivision(getDivision("subarrays", HawcPlusPixel.class.getField("sub"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
 		catch(Exception e) { error(e); }	
-				
-		try { addDivision(getDivision("subarrays", HawcPlusPixel.class.getField("sub"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
-        catch(Exception e) { error(e); } 
-		
+					
 		try { addDivision(getDivision("bias", HawcPlusPixel.class.getField("biasLine"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
         catch(Exception e) { error(e); } 
 		
@@ -164,16 +164,15 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		super.initModalities();
 		       
 		addModality(modalities.get("obs-channels").new CoupledModality("polarrays", "p", new HawcPlusPolImbalance()));
-		
-		/* TODO subarrays should be coupled modality...
+			    
 		try { 
-			Modality<?> subMode = new CorrelatedModality("subarrays", "s", divisions.get("subarrays"), HawcPlusPixel.class.getField("gain")); 
-			subMode.solveGains = false;
+			CorrelatedModality subMode = new CorrelatedModality("subarrays", "s", divisions.get("subarrays"), HawcPlusPixel.class.getField("subGain")); 
+			//subMode.solveGains = false;
+			subMode.setGainFlag(HawcPlusPixel.FLAG_SUB);
 			addModality(subMode);
 		}
 		catch(NoSuchFieldException e) { error(e); }
-		*/
-		
+	
 		try {
             CorrelatedModality biasMode = new CorrelatedModality("bias", "b", divisions.get("bias"), HawcPlusPixel.class.getField("biasGain"));     
             //biasMode.solveGains = false;
@@ -197,6 +196,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		}
 		catch(NoSuchFieldException e) { error(e); }
 		
+				
 	}
 	
 	@Override
@@ -337,7 +337,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		    array.boresightIndex = defaultBoresightIndex;
 		    warning("Missing FITS boresight --> " + array.boresightIndex);
 		}
-		Vector2D center = getPosition(0, array.boresightIndex.x(), array.boresightIndex.y());
+		Vector2D center = getPosition(0, array.boresightIndex.y(), array.boresightIndex.x());
 	
 		for(HawcPlusPixel pixel : this) pixel.calcPosition();
 		   
@@ -625,7 +625,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	private static final int R_ARRAY = 0;
 	private static final int T_ARRAY = 1;
 
-	public static final Vector2D defaultBoresightIndex = new Vector2D(15.5, 19.5);
+	public static final Vector2D defaultBoresightIndex = new Vector2D(33.5, 19.5);
 
 }
 

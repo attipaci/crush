@@ -4,7 +4,7 @@
 			      Attila Kovacs
 		      <attila[AT]submm.caltech.edu>
 
-		       Last updated: 31 August 2015
+		       Last updated: 5 October 2016
 
 
 
@@ -24,7 +24,8 @@ Table of Contents
 
 3. Quickstart guide
 
-  3.1. A few common options to use with SOFIA/HAWC+
+  3.1. Locating scan data
+  3.2. A few common options to use with SOFIA/HAWC+
 
 4. Technical details for expert users
 
@@ -280,10 +281,56 @@ Table of Contents
 
    See the main README for more details.  
 
+
+
+3.1. Locating scan data
+=======================
+
+
+   By file name/path
+   -----------------
+   The default method of locating files is by file name, which may specify 
+   either an absolute path, e.g.:
+
+     > crush hawc+ /data/hawc+/F0004_HC_IMA_0_HAWC_HWPC_RAW_105.fits
+
+   or it can be filename/path relative to 'datapath'
+ 
+     > crush hawc+ F0004_HC_IMA_0_HAWC_HWPC_RAW_105.fits
+
+   The two are equilalent assuming that 'datapath' is set to '/data/hawc+' in
+   the second case, e.g. in the user configuration file 
+   '~/.crush/hawc+/default.cfg', or on the command-line.
+
+
+   By flight and scan numbers
+   --------------------------
+   Often the simpler way of locating input files is by a combination of flight
+   and scan numbers. This is often shorter, and allows to specify multiple 
+   scans and ranges with more ease.
+
+   Scan lookup by flight and scan number requires you to set 'datapath' to 
+   point to the data directory. E.g., by placing the line in the user 
+   configuration for HAWC+ (~/.crush2/hawc+/default.cfg):
+
+     datapath /data/hawc+
+
+   Now, you may simply reduce scan 105 from flight 4 as:
+
+     > crush hawc+ -flight=4 105
+
+   You can also reduce multiple scans, from multiple flight together. E.g.:
+
+     > crush hawc+ -flight=4 104-105 129 -flight=5 13 16 33-35
+
+   The above will co-reduce 3 scans (104, 105, 129) from flight #4 with 5 scans
+   (13, 16, 33, 34, 35) from flight #5.
+
+
  
 
-3.1 A few common options to use with SOFIA/HAWC+
-================================================
+3.2. A few common options to use with SOFIA/HAWC+
+=================================================
 
    The DRP interface to CRUSH allows manually specifying reduction options,
    which are passed to CRUSH verbetum as a single line. Each option in the
@@ -487,6 +534,11 @@ For a general overview of channel divisions, please consult Section 3.
    flagjumps		@Expert
 			Enables flagging timestream blocks around flux jumps
 			in such a way that these will not cause problems.
+
+   flight=N             Set the flight number for locating data files using
+                        scan numbers only. Remember to set 'datapath' also to
+                        specify the folder where scan files are stored.
+                        @See: 'datapath'
 
    mux			@Alias: 'correlated.mux'
 			@Expert

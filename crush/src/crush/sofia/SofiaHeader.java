@@ -114,6 +114,22 @@ public class SofiaHeader {
         catch(Exception e) { return getDouble(key) * Unit.deg; }
     }
     
+    public static boolean isValid(String headerValue) {
+        if(headerValue == null) return false;
+        return headerValue.length() > 0 && !headerValue.equalsIgnoreCase(UNKNOWN_STRING_VALUE);
+    }
+    
+    public static boolean isValid(int headerValue) {
+        return headerValue != UNKNOWN_INT_VALUE;
+    }
+    
+    public static boolean isValid(float headerValue) {
+        return headerValue != UNKNOWN_FLOAT_VALUE && !Float.isNaN(headerValue) && !Float.isInfinite(headerValue);
+    }
+    
+    public static boolean isValid(double headerValue) {
+        return headerValue != UNKNOWN_FLOAT_VALUE && !Double.isNaN(headerValue) && !Double.isInfinite(headerValue);
+    }
     
     public final static int UNKNOWN_INT_VALUE = -9999;
     public final static float UNKNOWN_FLOAT_VALUE = -9999.0F;

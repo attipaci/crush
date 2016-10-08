@@ -1,3 +1,34 @@
+>> gain normalization on select group only:
+   e.g. array.norm.group=bias-12
+
+>> gain flagging on different division...
+   e.g. array.gainrange.div=subarray
+
+>> bias-gain model:
+
+	gain.refindex 12
+	gain.refbias 9065
+	gain.exponent -1.5
+	gain.refvalue 1.0
+	
+>> Edit suggestions for editing 'wrapper.sh'
+
+
+
+
+
+>> Pointing
+
+	Scan.getPoiuntingString to use PointingData table
+	(this way pointing values are calculated once only)
+
+>> Native frames
+
+	HorizontalFrame -> SkyFrame<CoordinateType>
+
+	HorizontalFrame 
+		extends SkyFrame<HorizontalCoordinates> implements GroundBased
+
 >> Fits:
 
 	HDUDataReader<T extends BasicHDU> {

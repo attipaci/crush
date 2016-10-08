@@ -164,8 +164,10 @@ public class DRPMessenger extends Thread {
 		
 		private Message(String type, String message) {
 			timestamp = System.currentTimeMillis();
-			this.type = type;
-			this.text = message.replace('\t', ' ');	// Replace tabs with spaces since tabs are message delimiters.
+			this.type = type == null ? TYPE_INFO : type;
+			
+			if(message == null) this.text = "<null>";
+			else this.text = message.replace('\t', ' ');	// Replace tabs with spaces since tabs are message delimiters.
 			
 			try { queue.put(this); }
 			catch(InterruptedException e) { CRUSH.warning(this, "DRP message creation was interrupted."); }
