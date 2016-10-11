@@ -1,4 +1,5 @@
 >> parse gyro drifts, and report (list duration minutes: drift mag arcsecs) 
+>> 'mask=<catalog>' option + TEST!
 
 
 2.33-b2 (beta)
@@ -49,6 +50,9 @@
 	shell variable CRUSH_NO_VM_CHECK (to any value) before CRUSH is 
 	started. Beware though, that VM checking is useful for reporting when
 	CRUSH is being run by an unsuitanble Java implementation (such as gij).
+
+	[FIX] NEFD reporting on console did not include per-channel gains
+	(source gains including filter response). Now they do.
 
 	[FIX] {HAWC+} Recovery from missing nonsidereal coordinates.
 

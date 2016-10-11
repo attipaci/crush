@@ -1241,7 +1241,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public void calcSourceNEFD() {
-		nefd = instrument.getSourceNEFD();
+		nefd = instrument.getSourceNEFD(gain) / instrument.janskyPerBeam();
 		if(hasOption("nefd.map")) nefd /= Math.sqrt(scan.weight);
 		comments += "(" + Util.e2.format(nefd) + ")";	
 	}
@@ -1743,8 +1743,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				}
 			}
 			
-		}.process();
-		
+		}.process();	
 	}
 	
 
