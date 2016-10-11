@@ -1144,11 +1144,20 @@ implements TableFormatter.Entries, BasicMessaging {
 		census();
 	}
 	
-	public double getSourceNEFD() {
+	public double getSourceNEFD(double gain) {
+	    final double G[] = getSourceGains(true);
+	    
 		double sumpw = 0.0;
-		for(Channel channel : getObservingChannels()) if(channel.flag == 0) if(channel.variance > 0.0) 
-			sumpw += channel.sourceFiltering * channel.sourceFiltering / channel.variance;	
-		return Math.sqrt(size() * integrationTime / sumpw) / (sourceGain * janskyPerBeam());
+		int n=0;
+		for(int i=size(); --i >= 0; ) {
+		    Channel channel = get(i);
+		    if(channel.flag != 0) continue;
+		    if(channel.variance <= 0.0) continue;
+		
+			sumpw += G[i] * G[i] / channel.variance;
+			n++;
+		}
+		return Math.sqrt(n * integrationTime / sumpw) / (gain * sourceGain);
 	}
 	
 

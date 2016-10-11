@@ -100,12 +100,12 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	}
 	
 	@Override
-    protected EquatorialCoordinates guessReferenceCoordinates() {
+    protected EquatorialCoordinates guessReferenceCoordinates(SofiaHeader header) {
 	    if(isNonSidereal) {
 	        info("Referencing images to real-time object coordinates.");
 	        return null;
 	    }
-	    return super.guessReferenceCoordinates();
+	    return super.guessReferenceCoordinates(header);
 	}
 	
 	    

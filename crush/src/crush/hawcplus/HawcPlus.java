@@ -283,18 +283,23 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	
 	public void discardEdges(Configurator option) {
 	    List<Integer> values = option.getIntegers();
-	    int rows = values.get(0);
-	    int cols = values.size() > 1 ? values.get(1) : rows;
-	    discardEdges(rows, cols);
+	    int left = values.get(0);
+	    int top = values.size() > 1 ? values.get(1) : left;
+	    int right = values.size() > 2 ? values.get(2) : left;
+	    int bottom = values.size() > 3 ? values.get(3) : top;
+	    discardEdges(left, top, right, bottom);
 	}
 		
-	public void discardEdges(int eRows, int eCols) {
-	    info("Cropping " + eRows + " rows & " + eCols + " cols from subarray edges.");
+	public void discardEdges(int left, int top, int right, int bottom) {
+	    info("Discarding array edges: left " + left + ", top " + top + ", right " + right + ", bottom " + bottom);
+	    
+	    final int cols = subarrays * subarrayCols;
 	    
 	    for(HawcPlusPixel pixel : this) {
-	        if(pixel.row < eRows || pixel.row >= rows - eRows) pixel.flag(Channel.FLAG_DISCARD | Channel.FLAG_DEAD);
-	        int col = pixel.col % subarrayCols;
-	        if(col < eCols || col >= subarrayCols - eCols) pixel.flag(Channel.FLAG_DISCARD | Channel.FLAG_DEAD); 
+	        int row = pixel.row / rows();
+	        if(row < top || row >= rows-right) pixel.flag(Channel.FLAG_DISCARD | Channel.FLAG_DEAD);
+	        int col = pixel.col;
+	        if(col < left || col >= cols-right) pixel.flag(Channel.FLAG_DISCARD | Channel.FLAG_DEAD); 
 	    }
 	}
 	

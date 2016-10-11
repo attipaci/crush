@@ -157,7 +157,19 @@ public class ScalarMap extends SourceMap {
         base = new Data2D(map.sizeX(), map.sizeY());
         createMask();
 
-
+        if(hasOption("mask")) {
+            try { 
+                SourceCatalog<SphericalCoordinates> catalog = new SourceCatalog<SphericalCoordinates>();
+                catalog.read(option("mask").getPath(), map); 
+                flagMask(catalog); 
+            }
+            catch(IOException e) { 
+                warning("Cannot read map mask. Check the file name and path."); 
+                if(CRUSH.debug) CRUSH.trace(e);
+            }
+        }
+        
+        
         if(hasOption("sources")) {
             try { 
                 SourceCatalog<SphericalCoordinates> catalog = new SourceCatalog<SphericalCoordinates>();
@@ -173,9 +185,11 @@ public class ScalarMap extends SourceMap {
                 if(CRUSH.debug) CRUSH.trace(e);
             }	
         }
-
+        
         // TODO Apply mask to data either via flag.inside or flag.outside + mask file.
 
+        
+        
         if(hasSourceOption("inject")) {
             try { injectSource(sourceOption("inject").getPath()); }
             catch(Exception e) { 
@@ -184,6 +198,8 @@ public class ScalarMap extends SourceMap {
             }
         }
 
+        
+        
         if(hasSourceOption("model")) {
             try { applyModel(sourceOption("model").getPath()); }
             catch(Exception e) { 
@@ -195,6 +211,34 @@ public class ScalarMap extends SourceMap {
 
 
     }
+    
+    public void flagMask(SourceCatalog<SphericalCoordinates> catalog) {
+        // Since the synching step is removal, the sources should be inserted with a negative sign to add into the
+        // timestream.
+        double resolution = getAverageResolution();
+
+        for(GaussianSource<?> source : catalog) if(source.getRadius().value() < resolution) {
+            info("! Source '" + source.getID() + "' FWHM increased to match map resolution.");
+            source.setRadius(resolution);
+        }
+   
+        info("Masking " + catalog.size() + " region(s).");
+        catalog.flag(map, SourceModel.FLAG_MASK);
+
+        map.new Task<Void>() {
+            @Override
+            protected void process(int i, int j) {
+               if(map.isFlagged(i, j, SourceModel.FLAG_MASK)) {
+                   mask[i][j] = true;
+                   map.unflag(i, j, SourceModel.FLAG_MASK);
+               }
+            }
+            
+        }.process();
+       
+        maskSamples(Frame.SAMPLE_SKIP);   
+    }    
+   
 
     public void insertSources(SourceCatalog<SphericalCoordinates> catalog) throws Exception {
         // Since the synching step is removal, the sources should be inserted with a negative sign to add into the
@@ -216,8 +260,8 @@ public class ScalarMap extends SourceMap {
         }
 
         map.reset(true);
-    }
-
+    }    
+    
     public void applyModel(String fileName) throws Exception {
         info("Applying source model:");
 

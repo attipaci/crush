@@ -865,6 +865,36 @@ public abstract class SourceMap extends SourceModel {
 
         if(CRUSH.debug) for(Pixel pixel : pixels) integration.checkForNaNs(pixel, 0, integration.size());
     }
+    
+    public void maskSamples(byte sampleFlagPattern) {
+        for(Scan<?,?> scan : scans) for(Integration<?,?> integration : scan) maskSamples(integration, sampleFlagPattern);
+    }
+    
+    public void maskSamples(Integration<?,?> integration, final byte sampleFlagPattern) {
+        final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels(~0);
+        
+        integration.new Fork<Void>() {
+            private AstroProjector projector;
+            private Index2D index;
+
+            @Override
+            public void init() {
+                super.init();
+                projector = new AstroProjector(getProjection());
+                index = new Index2D();
+            }
+
+            @Override 
+            protected void process(final Frame exposure) {
+                 // Remove source from all but the blind channels...
+                for(final Pixel pixel : pixels)  {
+                    SourceMap.this.getIndex(exposure, pixel, projector, index); 
+                    if(isMasked(index)) for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= sampleFlagPattern;
+                }
+            }
+        }.process();
+        
+    }
 
     public abstract double covariantPoints();
 

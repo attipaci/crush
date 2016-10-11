@@ -293,7 +293,7 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 
 		setBase();
 	}
-
+	
 	public double getBlankingLevel() {
 		return hasOption("blank") ? option("blank").getDouble() : Double.NaN;
 	}
@@ -468,5 +468,8 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 	
 	
 	public static ArrayBlockingQueue<SourceModel> recycler;
+	
+	public final static int FLAG_GENERIC = 1;
+	public final static int FLAG_MASK = 2;
 }
 

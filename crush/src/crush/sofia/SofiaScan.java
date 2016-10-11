@@ -153,19 +153,21 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public boolean isRequestedValid(SofiaHeader header) {
         double obsRA = header.getDouble("OBSRA");
         double obsDEC = header.getDouble("OBSDEC");
+        
         if(!SofiaHeader.isValid(obsRA)) return false;
         if(!SofiaHeader.isValid(obsDEC)) return false;
         if(obsRA == 0.0 && obsDEC == 0.0) return false;
+        
         return true;
     }
     
   
-    protected EquatorialCoordinates guessReferenceCoordinates() {
+    protected EquatorialCoordinates guessReferenceCoordinates(SofiaHeader header) {
         if(isValid(objectCoords)) {
             info("Referencing scan to object coordinates OBJRA/OBJDEC.");
             return (EquatorialCoordinates) objectCoords.copy();
         }
-        else if(isValid(telescope.requestedEquatorial)) {
+        else if(isRequestedValid(header)) {
             info("Referencing scan to requested coordinates.");
             return telescope.requestedEquatorial;
         }
@@ -231,9 +233,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
         aircraft = new SofiaAircraftData(header);
 
-        telescope = new SofiaTelescopeData(header);
-        objectCoords = telescope.requestedEquatorial;
-        
+        telescope = new SofiaTelescopeData(header); 
         isTracking = telescope.isTracking();
 
         info("[" + getSourceName() + "] of AOR " + observation.aorID);
@@ -246,7 +246,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         else {
             warning("No valid OBSRA/OBSDEC in header.");
             telescope.requestedEquatorial = null;
-            equatorial = guessReferenceCoordinates();
+            equatorial = guessReferenceCoordinates(header);
         }
         
         if(equatorial != null) info("Equatorial: " + equatorial);
