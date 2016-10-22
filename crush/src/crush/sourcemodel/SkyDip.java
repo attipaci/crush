@@ -170,7 +170,7 @@ public class SkyDip extends SourceModel {
 		
 		fit(model);
 		
-		if(model.fitOK) {
+		if(model.hasConverged()) {
 		    CRUSH.result(this,
 		            "Skydip result:\n" +
 		            "=================================================\n" +
@@ -229,10 +229,10 @@ public class SkyDip extends SourceModel {
 		plot.println("set yla 'Mean Pixel Response (" + getInstrument().getDataUnit().name() + ")");
 		
 		Range dataRange = getRange();
-		dataRange.grow(0.05);
+		dataRange.grow(1.05);
 		
 		Range elRange = getElevationRange();
-		elRange.grow(0.05);
+		elRange.grow(1.05);
 		elRange.scale(1.0 / Unit.deg);
 		
 		plot.println("set xra [" + elRange.min() + ":" + elRange.max() + "]");

@@ -106,7 +106,6 @@ implements Copiable<ChannelGroup<ChannelType>> {
         }
         else if(spec.contains("-")) {
             StringTokenizer tokens = new StringTokenizer(spec, "-");
-
             if(tokens.countTokens() != 2) return;
             
             String from = tokens.nextToken();

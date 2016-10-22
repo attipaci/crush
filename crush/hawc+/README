@@ -594,6 +594,16 @@ For a general overview of channel divisions, please consult Section 3.
 			modality sub-options apply.
 			@See: 'correlated.<?>'
 
+   rtoc			@Expert
+			@Since: 2.33
+			Instruct crush to reference maps to Real-Time Object 
+			Coordinates (RTOC) for sidereal and non-sidereal
+			sources alike. Normally, sidereal object coordinates
+			are determined via the header keywords OBSRA/OBSDEC or
+			OBJRA/OBJDEC. However, these were not always filled
+			correctly during the 2016 October flights, so this
+			option provides a workaround for those scans.
+
    subarray=<list>	@Expert
 			Restrict the reduction only to the subarrays listed.
 			The argument is a comma-separated list of subarray 

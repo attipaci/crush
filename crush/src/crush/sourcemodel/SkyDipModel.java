@@ -56,9 +56,7 @@ public class SkyDipModel {
 	String dataUnit = "[dataunit]";
 
 	int usePoints = 0;
-	double rmsDev = 1.0;
 	boolean uniformWeights = false;
-	boolean fitOK = false;
 	
 	Range elRange;
 	
@@ -135,16 +133,16 @@ public class SkyDipModel {
 	}
 	
 	public double getDeviationFrom(SkyDip skydip, int from, int to) {
-		double sumdev = 0.0, sumw = 0.0;
+		double sumdev = 0.0;
 		for(int i=from; i<to; i++) if(skydip.data[i].weight() > 0.0) {
-			final double dev = (valueAt(skydip.getEL(i)) - skydip.data[i].value()) / rmsDev;
+			final double dev = (valueAt(skydip.getEL(i)) - skydip.data[i].value());
 			final double w = uniformWeights ? 1.0 : skydip.data[i].weight();
 			sumdev += w * dev * dev;
-			sumw += w;
 		}
-		return sumdev / sumw;
+		return sumdev;
 	}
 
+	public boolean hasConverged() { return minimizer.hasConverged(); }
 	
 	public void fit(final SkyDip skydip) { 
 	    
@@ -169,10 +167,11 @@ public class SkyDipModel {
         initParms(skydip);
         minimizer = new DownhillSimplex(chi2, parameters);
         minimizer.minimize();
-        minimizer.print();
-		
+        
 		final int dof = usePoints - parameters.size();
 		
+		
+		// Renormalize to chi2 = 1;
 		if(dof > 0.0) {
 			double rChi2 = minimizer.getMinimum() / dof;	
 			
@@ -187,7 +186,7 @@ public class SkyDipModel {
 	
 	@Override
 	public String toString() {	
-		if(!fitOK) CRUSH.warning(this, "The fit has not converged. Try again!");
+		if(!minimizer.hasConverged()) CRUSH.warning(this, "The fit has not converged. Try again!");
 	
 		StringBuffer text = new StringBuffer();
 		
@@ -195,7 +194,7 @@ public class SkyDipModel {
 		if(parameters.contains(Tsky)) text.append("  " + Tsky.toString(Util.f1) + " K" + "\n");
 		if(parameters.contains(kelvin)) text.append("  " + kelvin.toString(Util.s3) + " " + dataUnit + "\n");
 
-		text.append("\t\t\t\t[" + Util.s3.format(rmsDev / kelvin.value()) + " K rms]\n");
+		text.append("\t\t\t\t[" + Util.s3.format(Math.sqrt(minimizer.getMinimum()) / kelvin.value()) + " K rms]\n");
 		
 		return new String(text);
 	}

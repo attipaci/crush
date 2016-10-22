@@ -1760,6 +1760,16 @@
 			the nominal source coordinates.
 			@See: 'system'
 
+:: mask=<path>		@Since: 2.33
+			@Advanced
+			Flag out data around the specified catalog of sources.
+			The input file defined by <path> is the usual CRUSH
+			catalog format. Any samples falling within the regions
+			defined in the mask will be flagged and ignored in the
+			reduction. This is useful, for example, to look at
+			faint emission around a bright source.
+			@See: 'sources'
+
 :: mjd.[...]		@Advanced
 			Specify settings that are conditionally activated if and
 			when the MJD of the scan falls within the specified 
@@ -2651,6 +2661,17 @@
 			@Advanced
 			Decorrelate on detector rows, or set options for it.
 			@See: 'correlated.<?>'
+
+:: rtoc			@Expert
+			@Instrument: HAWC+
+			@Since: 2.33
+			Instruct crush to reference maps to Real-Time Object 
+			Coordinates (RTOC) for sidereal and non-sidereal
+			sources alike. Normally, sidereal object coordinates
+			are determined via the header keywords OBSRA/OBSDEC or
+			OBJRA/OBJDEC. However, these were not always filled
+			correctly during the 2016 October flights, so this
+			option provides a workaround for those scans.
 
 :: sae			@Alias: -> correlated.sae
 			@Instrument: GISMO
