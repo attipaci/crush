@@ -1,9 +1,23 @@
->> parse gyro drifts, and report (list duration minutes: drift mag arcsecs) 
->> 'mask=<catalog>' option + TEST!
+
+2.33-1 (24 October 2016)
 
 
-2.33-b2 (beta)
+	Overview
+	=====================================================================
+	This major release brings a long list of fixes and stability
+	improvements, with a special focus on SOFIA/HAWC+. HAWC+ is now fully
+	configured to work with the October 2016 commissioning flight data.
+	Among the new features is user-specific Java/startup configuration,
+	source masking, a new despiking option, smarter channel flagging and
+	grouping options, new messaging architecture, and verbosity control. 
+	===================================================================== 
 
+	[NEW] {HAWC+} Parsing and reporting gyro drift magnitudes when reading
+	scans.
+
+	[NEW] New option 'mask' allows to flag out data around sources (e.g.
+	bright sources). The argument is a path to a file with the same catalog
+	format as usual (see example.mask).
 
 	[NEW] Options 'flag' and 'group' now work both with channel IDs as well
 	as fixed indices (usually starting from 1), and ranges specified with
@@ -12,6 +26,9 @@
 	[NEW] New option 'despike.block'. When set spikes will flag out an
 	entire 'drifts' block of data, not just a single sample. This may be
 	useful when spikes are due to discontinuities in the timestream.
+
+	[NEW] {HAWC+} Gyro drift corrections are listed on console when reading
+	scans.
 
 	[NEW] {SOFIA} Locating scans by flight and scan numbers.
 
@@ -23,7 +40,7 @@
 	not. This provides a manual override before EPHRA/EPHDEC (or ERA/EDEC)
 	is implemented by Steve for the header...
 
-	[NEW] Program-specific user startup configuration is now possible on 
+	[NEW] User-specific user startup configuration is now possible on 
 	POSIX/UNIX (incl. MacOS) by editing an appropriate file inside the
         corresponding '~/.crush2/startup/<progname>/' directory. These files 
 	are shell (bash) snipplets that are sources right before Java/CRUSH is 
@@ -51,6 +68,9 @@
 	started. Beware though, that VM checking is useful for reporting when
 	CRUSH is being run by an unsuitanble Java implementation (such as gij).
 
+	[FIX] {Skydip} Skydips were broken after the update of the underlying 
+	fitting code a few versions back. Now fixed.
+	
 	[FIX] NEFD reporting on console did not include per-channel gains
 	(source gains including filter response). Now they do.
 
@@ -69,7 +89,7 @@
 
 	[FIX] {HAWC+} Fixed broken 'lab' mode reductions.
 
-	[FIX] {HAWC+} Imroved translation of unknown SOFIA header values 
+	[FIX] {HAWC+} Improved translation of unknown SOFIA header values 
 	between code and FITS.
 
 	[FIX] Initialize coordinate search ranges with first coordinate value
@@ -125,12 +145,12 @@
 	real-time object coordinates, or initial scan position -- based on 
 	what's really available and valid...
 
-	[TWEAK] CRUSH console notifications aren't wrapped to allow copy/paste
-	of long output names.
+	[CONFIG] {LABOCA} Updated lookup tables with most current data. Tau
+	lookup up to 2016-05-20, calibrator table up to 2016-10-19.
 
-	[CONFIG] {HAWC+} extended array gain range [0.03:30], updated geometry
-	(rotations), band-C pixel scale (4.23"/pix) and beam (9.5"), bands C & 
-	E initial calibrations on Neptune. Current timing shift is 20 ms.
+	[CONFIG] {HAWC+} updated geometry (rotations), band-C pixel scale 
+	(4.23"/pix) and beam (9.5"), bands C & E initial calibrations on 
+	Neptune. Current timing shift is 20 ms.
 
 	[CONFIG] {HAWC+} PNG thumbnail generation ('write.png' option) disabled
 	whenever DRP messaging is enabled ('drp' option), to avoid hangs due to

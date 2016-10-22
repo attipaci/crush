@@ -47,6 +47,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	 */
 	private static final long serialVersionUID = -3732251029215505308L;
 	
+	GyroDrifts gyroDrifts;
 	String priorPipelineStep;
 	boolean useBetweenScans;
 	
@@ -97,6 +98,9 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 		}
 	
 		super.parseHeader(header);	
+		
+		gyroDrifts = new GyroDrifts(this);
+		gyroDrifts.parse(header);
 	}
 	
 	@Override
