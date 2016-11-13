@@ -51,7 +51,7 @@ public abstract class HDUReader {
 	
 	public abstract class Reader extends Parallel<Void> {
 		@Override
-		public void processIndexOf(int i, int threadCount) throws Exception {
+		public void processChunk(int i, int threadCount) throws Exception {
 			final int frames = hdu.getNRows();
 			for(; i<frames; i+=threadCount) {
 				processRow(i);

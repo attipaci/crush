@@ -81,7 +81,7 @@ public abstract class HDURowReader {
 		}
 		
 		@Override
-		public void processIndexOf(int i, int threadCount) throws Exception {
+		public void processChunk(int i, int threadCount) throws Exception {
 			int index;
 			while((index = readNextRow(row)) >= 0) {
 				if(isInterrupted()) return;				

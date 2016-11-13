@@ -1925,7 +1925,7 @@
 			set, only the list of frequencies are notched, i.e.
 			same as 'harmonics=1'.). E.g.
 
-			  notch.harmonics 2
+			  notch.harmonics=2
 
 			Will notch out the list of frequencies set by 
 			'notch.frequencies' (fundamentals) as well as their

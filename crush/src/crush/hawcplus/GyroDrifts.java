@@ -44,17 +44,19 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Entry> {
     private static final long serialVersionUID = -3751194338137621151L;
 
     private SofiaScan<?,?> scan;
+    
+    public long scanStartMillis = -1;
   
     public GyroDrifts(SofiaScan<?,?> scan) {
         this.scan = scan;
-    }
+    } 
     
     public void parse(SofiaHeader header) {
         int i=0;
         while(add(header, i++)) continue;
         
-    }
-    
+    } 
+ 
     protected boolean add(SofiaHeader header, int index) {
         Entry entry = new Entry();
         if(entry.parse(header, index)) {

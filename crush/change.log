@@ -1,5 +1,28 @@
+>> 'skydip.grid'
 
-2.33-1 (24 October 2016)
+
+	[NEW] {skydip} The skydip resolution is now set by the new option
+	'skydip.grid' to avoid conflict with setting mapping grid sizes.
+
+	[FIX] CRUSH_NO_UPDATE_CHECK and CRUSH_NO_VM_CHECK environment variables
+	weren't used as advertised. Fixed.
+
+	[FIX] {HAWC+} Some early scans did not reduce with missing TELRA / 
+	TELDEC. Fixed.
+
+	[FIX] {SOFIA} {skydip} Ambient temperature was in Celsius instead of 
+	Kelvin for the skydip model, resulting in bogus Jy/K value in the fit.
+	Fixed.
+
+	[TWEAK] {SOFIA} Improved reporting of errors encountered while 
+	accessing the FITS input.
+
+	[CODE] C <--> K temperature conversions using 'Constant.zeroCelsius' 
+	everywhere.
+
+
+
+2.33-1 (22 October 2016)
 
 
 	Overview

@@ -58,8 +58,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.33-1";
-    private static String revision = "";
+    private static String version = "2.33-2";
+    private static String revision = "devel.2";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -786,7 +786,11 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 
     public void checkForUpdates() {	
-        if(System.getProperty("CRUSH_NO_UPDATE_CHECK") != null) return;
+        
+        if(System.getenv("CRUSH_NO_UPDATE_CHECK") != null) {
+            CRUSH.detail(this, "Skipping update checking.");
+            return;
+        }
        
         String releaseVersion = getReleaseVersion();	
         if(releaseVersion == null) return;
@@ -813,7 +817,10 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
     public void checkJavaVM(int countdown) {
-        if(System.getProperty("CRUSH_NO_VM_CHECK") != null) return;
+        if(System.getenv("CRUSH_NO_VM_CHECK") != null) {
+            CRUSH.detail(this, "Skipping VM checking.");
+            return;
+        }
         
         String name = System.getProperty("java.vm.name");
         if(name.startsWith("GNU") | name.contains("libgcj")) {
@@ -1020,7 +1027,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         }
 
         @Override
-        protected void processIndexOf(int index, int threadCount) {
+        protected void processChunk(int index, int threadCount) {
             for(int k=size - index - 1; k >= 0; k -= threadCount) {
                 if(isInterrupted()) return;
                 processIndex(k);

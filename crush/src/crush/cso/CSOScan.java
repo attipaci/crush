@@ -177,7 +177,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	}
 
 	@Override
-	public double getAmbientTemperature() {
+	public double getAmbientKelvins() {
 		return ambientT;
 	}
 

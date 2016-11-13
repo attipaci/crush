@@ -104,7 +104,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         
         public HawcPlusRowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
             super(hdu, in);
-            
+                
             isLab = hasOption("lab");
               
             // The Sofia timestamp (decimal seconds since 0 UTC 1 Jan 1970...
@@ -150,8 +150,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             iChopR = hdu.findColumn("sofiaChopR");
             iChopS = hdu.findColumn("sofiaChopS");
 
-            iPWV = hdu.findColumn("PWV");
-            
+            iPWV = hdu.findColumn("PWV");   
         }
         
         private synchronized void configure(Object[] row) {
@@ -185,15 +184,16 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                 @Override
                 public void init() {
                     super.init();
+                   
                     timeStamp = new AstroTime();
                     apparent = new EquatorialCoordinates(); 
-                    epoch = ((HawcPlusScan) scan).telescope.boresightEquatorial.epoch;
+                    epoch = ((HawcPlusScan) scan).telescope.epoch;
                 }
                     
                 @Override
                 public void processRow(int i, Object[] row) {                    
                     HawcPlus hawc = (HawcPlus) scan.instrument;
-                                        
+                    
                     // Create the frame object only if it cleared the above hurdles...
                     final HawcPlusFrame frame = new HawcPlusFrame(hawcPlusScan);
                     frame.index = i;
@@ -385,7 +385,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	            flagJump(channel, from, to);
 	            return false;
 	        }
-	     
 	    }
 	        
 	    return result;

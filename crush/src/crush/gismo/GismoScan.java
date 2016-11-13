@@ -30,6 +30,7 @@ import crush.iram.IRAMPointingModel;
 import crush.iram.IRAMScanID;
 import crush.iram.IRAMTauTable;
 import jnum.Configurator;
+import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
@@ -354,7 +355,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		// Weather
 		
 
-		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + 273.16 * Unit.K;
+		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + Constant.zeroCelsius;
 		pressure = header.getDoubleValue("PRESSURE") * Unit.hPa;
 		humidity = header.getDoubleValue("HUMIDITY");
 		windAve = header.getDoubleValue("WIND_AVE") * Unit.m / Unit.s;
@@ -580,7 +581,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		setSerial(serial);
 		
 		// Weather
-		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + 273.16 * Unit.K;
+		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + Constant.zeroCelsius;
 		pressure = header.getDoubleValue("PRESSURE") * Unit.hPa;
 		humidity = header.getDoubleValue("HUMIDITY");
 		windAve = header.getDoubleValue("WIND_AVE") * Unit.m / Unit.s;
@@ -673,7 +674,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	}
 
 	@Override
-	public double getAmbientTemperature() {
+	public double getAmbientKelvins() {
 		return ambientT;
 	}
 

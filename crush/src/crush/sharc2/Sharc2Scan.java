@@ -25,6 +25,7 @@
 package crush.sharc2;
 
 import crush.cso.CSOScan;
+import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroTime;
@@ -248,7 +249,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 			instrument.setOption("tau.225ghz=" + tau225GHz);
 		}
 
-		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + 273.16 * Unit.K;
+		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + Constant.zeroCelsius;
 		pressure = header.getDoubleValue("PRESSURE") * Unit.mbar;
 		humidity = header.getDoubleValue("HUMIDITY");
 

@@ -57,7 +57,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	
 		if(hasOption("tau")) if(!option("tau").equals("direct")) {		
 			double measuredLoad = instrument.getLoadTemperature(); 
-			double eps = (measuredLoad - instrument.excessLoad) / ((Sharc2Scan) scan).getAmbientTemperature();
+			double eps = (measuredLoad - instrument.excessLoad) / ((Sharc2Scan) scan).getAmbientKelvins();
 			double tauLOS = -Math.log(1.0-eps);
 			info("Tau from bolometers (not used):");
 			printEquivalentTaus(tauLOS * scan.horizontal.sinLat());

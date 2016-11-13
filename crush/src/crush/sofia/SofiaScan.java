@@ -24,6 +24,7 @@
 package crush.sofia;
 
 import crush.*;
+import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
@@ -71,7 +72,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public SofiaDitheringData dither;
     public SofiaMappingData mapping;
     public SofiaScanningData scanning;
-
+    
+   
     public Fits fits;
 
     public SofiaScan(InstrumentType instrument) {
@@ -81,7 +83,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     @Override
     public void read(String scanDescriptor, boolean readFully) throws Exception {
         fits = getFits(scanDescriptor);
-
+        if(fits == null) throw new IllegalStateException("Invalid or unreadable FITS (null).");
         read(fits.read(), readFully);
         closeFits();
     }
@@ -91,7 +93,6 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         try { fits.close(); }
         catch(IOException e) {}
         fits = null;
-
         System.gc();
     }
 
@@ -241,7 +242,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         
         if(isRequestedValid(header)) {
             equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();  
-            calcPrecessions(telescope.requestedEquatorial.epoch);
+            calcPrecessions(telescope.epoch);
         }
         else {
             warning("No valid OBSRA/OBSDEC in header.");
@@ -483,8 +484,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     }
 
     @Override
-    public double getAmbientTemperature() {
-        return environment.ambientT;
+    public double getAmbientKelvins() {
+        return environment.ambientT + Constant.zeroCelsius;
     }
 
     @Override

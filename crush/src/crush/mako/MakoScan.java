@@ -24,6 +24,7 @@ package crush.mako;
 
 import crush.*;
 import crush.cso.CSOScan;
+import jnum.Constant;
 import jnum.Unit;
 import jnum.astro.AstroTime;
 import jnum.astro.EquatorialCoordinates;
@@ -223,7 +224,7 @@ public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType
 			instrument.setOption("tau.225ghz=" + tau225GHz);
 		}
 
-		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + 273.16 * Unit.K;
+		ambientT = header.getDoubleValue("TEMPERAT") * Unit.K + Constant.zeroCelsius;
 		pressure = header.getDoubleValue("PRESSURE") * Unit.mbar;
 		humidity = header.getDoubleValue("HUMIDITY");
 
