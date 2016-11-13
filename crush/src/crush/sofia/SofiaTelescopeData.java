@@ -52,6 +52,8 @@ public class SofiaTelescopeData extends SofiaData {
 	public String trackingMode;
 	public boolean hasTrackingError = false;
 	
+	public CoordinateEpoch epoch = CoordinateEpoch.J2000;
+	
 	public SofiaTelescopeData() {}
 	
 	public SofiaTelescopeData(SofiaHeader header) {
@@ -95,7 +97,7 @@ public class SofiaTelescopeData extends SofiaData {
 		fbcStatus = header.getString("FBC-STAT");
 		
 		double epochYear = header.getDouble("EQUINOX");
-		CoordinateEpoch epoch = Double.isNaN(epochYear) ? CoordinateEpoch.J2000 : CoordinateEpoch.forString(epochYear + "");
+		epoch = Double.isNaN(epochYear) ? CoordinateEpoch.J2000 : CoordinateEpoch.forString(epochYear + "");
 		
 		requestedEquatorial = null;
 		boresightEquatorial = null;
@@ -189,7 +191,7 @@ public class SofiaTelescopeData extends SofiaData {
 		if(requestedEquatorial != null) {
 			cursor.add(new HeaderCard("OBSRA", requestedEquatorial.RA() / Unit.hourAngle, "(hour) Requested RA."));
 			cursor.add(new HeaderCard("OBSDEC", requestedEquatorial.DEC() / Unit.deg, "(deg) Requested DEC."));
-			cursor.add(new HeaderCard("EQUINOX", requestedEquatorial.epoch.getYear(), "(yr) Requested epoch."));
+			cursor.add(new HeaderCard("EQUINOX", epoch.getYear(), "(yr) The coordinate epoch."));
 		}
 		
 		if(!Double.isNaN(zenithAngle.start)) cursor.add(new HeaderCard("ZA_START", zenithAngle.start / Unit.deg, "(deg) Zenith angle at start."));

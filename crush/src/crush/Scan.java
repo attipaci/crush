@@ -34,6 +34,7 @@ import java.text.*;
 import crush.astro.AstroMap;
 import crush.sourcemodel.*;
 import jnum.Configurator;
+import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.LockedException;
 import jnum.Unit;
@@ -600,7 +601,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		else if(name.equals("integrations")) return Integer.toString(size());
 		else if(name.equals("generation")) return Integer.toString(getSourceGeneration());
 		else if(this instanceof Weather) {	
-			if(name.equals("Tamb")) return Util.defaultFormat(((Weather) this).getAmbientTemperature() - 273.16*Unit.K, f);
+			if(name.equals("Tamb")) return Util.defaultFormat(((Weather) this).getAmbientKelvins() - Constant.zeroCelsius, f);
 			else if(name.equals("humidity")) return Util.defaultFormat(((Weather) this).getAmbientHumidity(), f);
 			else if(name.equals("pressure")) return Util.defaultFormat(((Weather) this).getAmbientPressure() / Unit.hPa, f);
 			else if(name.equals("windspeed")) return Util.defaultFormat(((Weather) this).getWindSpeed() / (Unit.m / Unit.s), f);

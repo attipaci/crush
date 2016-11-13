@@ -80,7 +80,8 @@ public class SkyDip extends SourceModel {
 	public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
 		super.createFrom(collection);
 		
-		resolution = hasOption("grid") ? Math.abs(option("grid").getDouble()) * Unit.arcsec : 0.25 * Unit.deg;
+		resolution = hasOption("skydip.grid") ? Math.abs(option("skydip.grid").getDouble()) * Unit.arcsec : 0.25 * Unit.deg;
+		
 		int bins = (int) Math.ceil(Constant.rightAngle / resolution);
 		data = new WeightedPoint[bins];
 		for(int i=0; i<bins; i++) data[i] = new WeightedPoint();
@@ -116,8 +117,10 @@ public class SkyDip extends SourceModel {
 		}
 		
 		for(final Frame frame : integration) if(frame != null) {
-			final HorizontalFrame exposure = (HorizontalFrame) frame;
-			
+		    if(frame.isFlagged(Frame.SOURCE_FLAGS)) continue;
+		    
+		    final HorizontalFrame exposure = (HorizontalFrame) frame;
+		
 			int bin = getBin(exposure.horizontal.EL());
 			if(bin < 0 || bin >= data.length) continue;
 			
@@ -143,7 +146,7 @@ public class SkyDip extends SourceModel {
 	public void process(Scan<?, ?> scan) {
 		for(int i=0; i<data.length; i++) if(data[i].weight() > 0.0) data[i].scaleValue(1.0 / data[i].weight());
 		if(scan instanceof Weather) {
-			double ambientT = ((Weather) scan).getAmbientTemperature();
+			double ambientT = ((Weather) scan).getAmbientKelvins();
 			if(!Double.isNaN(ambientT)) Tamb.average(new WeightedPoint(ambientT, scan.getObservingTime()));
 		}	
 	}

@@ -92,7 +92,7 @@ public class IRAMPointingModel {
 			+ (P(INCL_AZ_AXIS_NS, UT) * cosA + P(INCL_AZ_AXIS_EW, UT) * sinA) * sinE + P(DEC_ERROR, UT) * sinA
 			- P(NASMYTH_H, UT) * cosE - P(NASMYTH_V, UT) * sinE 
 			+ P(AZ_ECCENT_COS, UT) * sin2A + P(AZ_ECCENT_SIN, UT) * cos2A
-			+ dxdT * (Tamb - 273.16 * Unit.K);
+			+ dxdT * (Tamb - Constant.zeroCelsius);
 	}
 	
 	public double getDY(HorizontalCoordinates horizontal, double UT, double Tamb) {
@@ -108,7 +108,7 @@ public class IRAMPointingModel {
 			+ P(EL_POINTING, UT) + P(GRAV_BENDING_COS, UT) * cosE + P(GRAV_BENDING_SIN, UT) * sinE 
 			+ P(NASMYTH_H, UT) * sinE - P(NASMYTH_V, UT) * cosE 
 			+ P(THIRD_REFRACT, UT) * cosE/sinE
-			+ dydT * (Tamb - 273.16 * Unit.K);
+			+ dydT * (Tamb - Constant.zeroCelsius);
 	}
 	
 	public void write(String fileName) throws IOException {

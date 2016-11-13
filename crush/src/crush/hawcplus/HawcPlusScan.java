@@ -38,7 +38,6 @@ import crush.CRUSH;
 import crush.sofia.SofiaHeader;
 import crush.sofia.SofiaScan;
 import jnum.Unit;
-import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
 
 public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
@@ -92,10 +91,9 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	    // If using real-time object coordinates regardless of whether sidereal or not, then treat as if non-sidereal...
 		isNonSidereal = header.getBoolean("NONSIDE", false) || hasOption("rtoc");
 		
-		if(hasOption("OBJRA") && hasOption("OBJDEC")) {
-		    CoordinateEpoch epoch = header.containsKey("EQUINOX") ? CoordinateEpoch.forString(header.getDouble("EQUINOX") + "") : CoordinateEpoch.J2000;
-		    objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), epoch);
-		}
+		if(hasOption("OBJRA") && hasOption("OBJDEC")) 
+		    objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
+		
 	
 		super.parseHeader(header);	
 		

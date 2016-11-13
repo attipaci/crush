@@ -24,6 +24,7 @@
 package crush.scuba2;
 
 import crush.*;
+import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroSystem;
@@ -334,7 +335,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			instrument.setOption("tau.225ghz=" + tau225GHz);
 		}
 		
-		ambientT = 0.5 * (header.getDoubleValue("ATSTART") + header.getDoubleValue("ATEND")) * Unit.K + 273.16 * Unit.K;
+		ambientT = 0.5 * (header.getDoubleValue("ATSTART") + header.getDoubleValue("ATEND")) * Unit.K + Constant.zeroCelsius;
 		pressure = 0.5 * (header.getDoubleValue("BPSTART") + header.getDoubleValue("BPEND")) * Unit.mbar;
 		humidity = 0.5 * (header.getDoubleValue("HUMSTART") + header.getDoubleValue("HUMEND"));
 		windAve = 0.5 * (header.getDoubleValue("WINDSPDST") + header.getDoubleValue("WINDSPDEN")) * Unit.km / Unit.hour;
@@ -412,7 +413,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	}
 
 	@Override
-	public double getAmbientTemperature() {
+	public double getAmbientKelvins() {
 		return ambientT;
 	}
 

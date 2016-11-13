@@ -36,6 +36,7 @@ import crush.HorizontalFrame;
 import crush.Integration;
 import crush.Scan;
 import crush.jcmt.JCMTTauTable;
+import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 
@@ -68,7 +69,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	}
 	
 	private void removeChopperDCOffset() {
-		double threshold = instrument.getMinBeamFWHM() / 2.5;
+		double threshold = 0.4 * instrument.getMinBeamFWHM();
 		double sumP = 0.0, sumM = 0.0;
 		int nP = 0, nM = 0;
 		
@@ -128,7 +129,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	
 	public double getSkyLoadTemperature() {
 		double transmission = 0.5 * (getFirstFrame().getTransmission() + getLastFrame().getTransmission());
-		return (1.0 - transmission) * ((CSOScan<?,?>) scan).getAmbientTemperature();
+		return (1.0 - transmission) * ((CSOScan<?,?>) scan).getAmbientKelvins();
 	}
 	
 	
@@ -261,11 +262,11 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	public String getASCIIHeader() {
 	 
 		double eps = hasOption("lab") ? 1.0 : 1.0 - Math.exp(-zenithTau / scan.horizontal.sinLat());
-		double Tload = ((CSOScan<?, ?>) scan).getAmbientTemperature();
+		double Tload = ((CSOScan<?, ?>) scan).getAmbientKelvins();
 		
 		return super.getASCIIHeader() + "\n" 
 				+ "# tau(225GHz) = " + Util.f3.format(this.getTau("225ghz")) + "\n"
-				+ "# T_amb = " + Util.f1.format(((CSOScan<?,?>) scan).getAmbientTemperature()/Unit.H - 273.16) + " C\n" 
+				+ "# T_amb = " + Util.f1.format((((CSOScan<?,?>) scan).getAmbientKelvins() - Constant.zeroCelsius) / Unit.K) + " C\n" 
 				+ "# T_load = " + Util.f1.format(Tload * eps / Unit.K) + " K";
 	}
 	 
