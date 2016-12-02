@@ -1,8 +1,18 @@
->> 'skydip.grid'
+2.33-2 (devel.6)
 
+	[NEW] Pointing/calibration results are now stored in the scan HDU 
+	headers.
+
+	[NEW] {SOFIA} Added some loggable quantities, such as 'tel.focus'
+	and 'inst.wave', and many, many more... 
 
 	[NEW] {skydip} The skydip resolution is now set by the new option
 	'skydip.grid' to avoid conflict with setting mapping grid sizes.
+
+	[FIX] {skydip} Handling of NaN elevation coordinates.
+
+	[FIX] FITS keyword-based conditions that with no matching FITS keys 
+	in the header broke the keyword checking loop. Fixed.
 
 	[FIX] CRUSH_NO_UPDATE_CHECK and CRUSH_NO_VM_CHECK environment variables
 	weren't used as advertised. Fixed.
@@ -10,12 +20,33 @@
 	[FIX] {HAWC+} Some early scans did not reduce with missing TELRA / 
 	TELDEC. Fixed.
 
-	[FIX] {SOFIA} {skydip} Ambient temperature was in Celsius instead of 
-	Kelvin for the skydip model, resulting in bogus Jy/K value in the fit.
-	Fixed.
+	[FIX] {SOFIA} {skydip} Ambient temperature was passed in Celsius 
+	instead of Kelvin to the skydip model, resulting in bogus Jy/K value in
+	the fit. Fixed.
+
+	[TWEAK] {SOFIA} scan lookup by flight and scan numbers now works with
+	the more standard SOFIA convention as well as the old HAWC+ convention
+	used in April and October 2016.
 
 	[TWEAK] {SOFIA} Improved reporting of errors encountered while 
 	accessing the FITS input.
+
+	[CONFIG] {SOFIA} Disabled smoothing of telescope position data for
+	velocity and acceleration clipping. The smoothing (by 1s) could 
+	result in overflagging of otherwise perfectly good data.
+
+	[CONFIG] {HAWC+} Real-time object coordinates (rtoc) are assumed to be
+	default starting Oct 2016, obsoleting the use of the NONSIDE FITS 
+	keyword, which was not determined automatically anyway. It is a robust
+	solution going forward.
+
+	[CONFIG] {HAWC+} Automatic skydip reductions based on OBSMODE, CALMODE
+	or DIAGMODE keywords (which will be set accordingly starting with the 
+	Nov 30 commissioning flights).
+
+	[CODE] Deprecated unused method of average map filter correction.
+
+	[CODE] Some refactoring for more representative method names.
 
 	[CODE] C <--> K temperature conversions using 'Constant.zeroCelsius' 
 	everywhere.

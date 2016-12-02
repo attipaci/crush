@@ -59,7 +59,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.33-2";
-    private static String revision = "devel.2";
+    private static String revision = "devel.6";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -74,7 +74,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public static ExecutorService executor;
 
     public int parallelScans = 1;
-    public int parallelism = 1;
+    public int parallelTasks = 1;
 
     private ArrayList<Pipeline> pipelines;
     private Vector<Integration<?, ?>> queue = new Vector<Integration<?, ?>>();
@@ -154,12 +154,15 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         for(int i=1; i<args.length; i++) if(args[i].length() > 0) {
             commandLine += " " + args[i]; 
-
-            if(args[i].charAt(0) == '-') parseSilent(args[i].substring(1));
-            else read(args[i]);
+            parseArgument(args[i]);
         }	
 
         validate();
+    }
+    
+    private void parseArgument(String arg) {
+        if(arg.charAt(0) == '-') parseSilent(arg.substring(1));
+        else read(arg);
     }
 
     @Override
@@ -317,22 +320,22 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         if(parallelMode.equals("scans")) {
             parallelScans = maxThreads;
-            parallelism = 1;
+            parallelTasks = 1;
         }
         else if(parallelMode.equals("ops")) {
             parallelScans = 1;
-            parallelism = maxThreads;
+            parallelTasks = maxThreads;
         }
         else {		
-            parallelism = Math.max(1, maxThreads / scans.size());
-            parallelScans = Math.max(1, maxThreads / parallelism);
+            parallelTasks = Math.max(1, maxThreads / scans.size());
+            parallelScans = Math.max(1, maxThreads / parallelTasks);
         }
 
-        info("Will use " + parallelScans + " x " + parallelism + " grid of threads.");
+        info("Will use " + parallelScans + " x " + parallelTasks + " grid of threads.");
 
         pipelines = new ArrayList<Pipeline>(parallelScans); 
         for(int i=0; i<parallelScans; i++) {
-            Pipeline pipeline = new Pipeline(this, parallelism);
+            Pipeline pipeline = new Pipeline(this, parallelTasks);
             pipeline.setSourceModel(source);
             pipelines.add(pipeline);
         }
@@ -341,7 +344,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         for(int i=0; i<scans.size(); i++) {
             Scan<?,?> scan = scans.get(i);	
             pipelines.get(i % parallelScans).scans.add(scan);
-            for(Integration<?,?> integration : scan) integration.setThreadCount(parallelism); 
+            for(Integration<?,?> integration : scan) integration.setThreadCount(parallelTasks); 
         }		
     }
 
@@ -516,6 +519,13 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         consoleReporter.addLine();
 
+        writeProducts();
+
+        status(this, "Done.");
+        consoleReporter.addLine();
+    }
+    
+    private void writeProducts() {
         if(source != null) {
             source.suggestions();
 
@@ -526,10 +536,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
             else warning("The reduction did not result in a source model.");
         }
 
-        for(Scan<?,?> scan : scans) scan.writeProducts();	
-
-        status(this, "Done.");
-        consoleReporter.addLine();
+        for(Scan<?,?> scan : scans) scan.writeProducts();   
     }
 
     public void iterate() throws Exception {

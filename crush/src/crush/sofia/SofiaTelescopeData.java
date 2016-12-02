@@ -220,5 +220,39 @@ public class SofiaTelescopeData extends SofiaData {
 		}
 		
 	}
+	
+	
+	// TODO complete...
+	@Override
+	public Object getTableEntry(String name) {      
+	    
+	    if(name.equals("focus")) return focusT.midPoint() / Unit.um;
+	    else if(name.equals("bra")) return boresightEquatorial.RA() / Unit.hourAngle;
+	    else if(name.equals("bdec")) return boresightEquatorial.DEC() / Unit.deg;
+	    else if(name.equals("rra")) return requestedEquatorial.RA() / Unit.hourAngle;
+        else if(name.equals("rdec")) return requestedEquatorial.DEC() / Unit.deg;
+        else if(name.equals("epoch")) return epoch.toString();
+	    else if(name.equals("vpa")) return VPA / Unit.deg; 
+	    else if(name.equals("za")) return zenithAngle.midPoint() / Unit.deg;
+	    else if(name.equals("los")) return lineOfSightAngle / Unit.deg;
+	    else if(name.equals("el")) return relElevation / Unit.deg;
+	    else if(name.equals("xel")) return crossElevation / Unit.deg;
+	    else if(name.equals("sunang")) return sunAngle / Unit.deg;
+	    else if(name.equals("moonang")) return moonAngle / Unit.deg;
+	    else if(name.equals("vlsr")) return vLSR / (Unit.km / Unit.s);
+        else if(name.equals("vhelio")) return vHelio / (Unit.km / Unit.s);
+	    else if(name.equals("trkerr")) return hasTrackingError;
+        else if(name.equals("trkmode")) return trackingMode;
+        else if(name.equals("cfg")) return telConfig;
+	    else if(name.equals("fbc")) return fbcStatus;	    
+	    else if(name.equals("rew")) return lastRewind;
+	   
+	    return super.getTableEntry(name);
+	}
+
+    @Override
+    public String getLogID() {
+        return "tel";
+    }
 
 }

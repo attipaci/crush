@@ -68,9 +68,9 @@ public class AstroImage extends GridImage2D<SphericalCoordinates> implements Clo
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
+	public Object getTableEntry(String name) {
 		if(name.equals("system")) return astroSystem().getID();
-		else return super.getFormattedEntry(name, formatSpec);
+		else return super.getTableEntry(name);
 	}
 	
 

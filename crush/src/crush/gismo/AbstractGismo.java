@@ -24,7 +24,6 @@
 package crush.gismo;
 
 import java.io.*;
-import java.text.NumberFormat;
 import java.util.*;
 
 import crush.*;
@@ -35,7 +34,6 @@ import jnum.data.DataPoint;
 import jnum.io.LineParser;
 import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
-import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 
 public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> implements GroundBased {
@@ -449,20 +447,18 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 	
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-	
-		if(name.equals("foc.dX")) return Util.defaultFormat(focusXOffset / Unit.mm, f);
-		else if(name.equals("foc.dY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
-		else if(name.equals("foc.dZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
-		else if(name.equals("nasX")) return Util.defaultFormat(nasmythOffset.x() / Unit.arcsec, f);
-		else if(name.equals("nasY")) return Util.defaultFormat(nasmythOffset.y() / Unit.arcsec, f);
-		else if(name.equals("bias")) return Integer.toString(detectorBias[0]);
+	public Object getTableEntry(String name) {
+		if(name.equals("foc.dX")) return focusXOffset / Unit.mm;
+		else if(name.equals("foc.dY")) return focusYOffset / Unit.mm;
+		else if(name.equals("foc.dZ")) return focusZOffset / Unit.mm;
+		else if(name.equals("nasX")) return nasmythOffset.x() / Unit.arcsec;
+		else if(name.equals("nasY")) return nasmythOffset.y() / Unit.arcsec;
+		else if(name.equals("bias")) return detectorBias[0];
 		else if(name.equals("stage2.biases")) return toString(secondStageBias);
 		else if(name.equals("stage2.feedbacks")) return toString(secondStageFeedback);
 		else if(name.equals("stage3.biases")) return toString(thirdStageBias);	
 		else if(name.equals("stage3.feedbacks")) return toString(thirdStageFeedback);	
-		else return super.getFormattedEntry(name, formatSpec);
+		else return super.getTableEntry(name);
 	}
 	
 	@Override

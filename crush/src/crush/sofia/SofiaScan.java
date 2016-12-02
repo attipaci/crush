@@ -73,7 +73,6 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public SofiaMappingData mapping;
     public SofiaScanningData scanning;
     
-   
     public Fits fits;
 
     public SofiaScan(InstrumentType instrument) {
@@ -97,18 +96,18 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     }
 
     public File getFile(String scanDescriptor) throws FileNotFoundException { 
-        try { return getExactFile(scanDescriptor); }
+        try { return getFileByName(scanDescriptor); }
         catch(FileNotFoundException e) {}
         
         // Try locate the files by flight number and scan number
-        // E.g. F0004_HC_IMA_0_HAWC_HWPC_RAW_109.fits     
+        
         try {
             if(scanDescriptor.contains(".") || scanDescriptor.contains(":")) {
                 SmartTokenizer tokens = new SmartTokenizer(scanDescriptor, ".:");
-                return getFile(tokens.nextInt(), tokens.nextInt());
+                return getFileByIDs(tokens.nextInt(), tokens.nextInt());
             }
             else if(hasOption("flight")) {
-                return getFile(option("flight").getInt(), Integer.parseInt(scanDescriptor)); 
+                return getFileByIDs(option("flight").getInt(), Integer.parseInt(scanDescriptor)); 
             }
         }
         catch(Exception e) {}
@@ -116,26 +115,49 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         throw notFound(scanDescriptor);
     }   
 
-    public File getFile(int flightNo, int scanNo) throws FileNotFoundException {
-        String flightID = "F" + Util.d4.format(flightNo) + "_"; 
-        
-        // Otherwise, see if anything in the path matches...
+    /** 
+     * E.g. F0004_HC_IMA_0_HAWC_HWPC_RAW_109.fits or  2016-10-04_HA_F334_0105_CAL_0_HAWE_HWPE_RAW.fits
+     * 
+     * @param flightNo
+     * @param scanNo
+     * @return
+     * @throws FileNotFoundException
+     */
+    public File getFileByIDs(int flightNo, int scanNo) throws FileNotFoundException {
+            
+        // Check for any FITS files in the path that match...
         String path = getDataPath();
-        File root = new File(path);
-        String[] fileName = root.list();
+        String[] fileName = new File(path).list();
         
         if(fileName == null) throw new FileNotFoundException("Incorrect 'datapath'.");
            
-        for(int i=0; i<fileName.length; i++) {
-            String upperCaseName = fileName[i].toUpperCase();
-            
-            if(!upperCaseName.startsWith(flightID.toUpperCase())) continue;
-            if(!upperCaseName.contains("_" + instrument.getFileID().toUpperCase())) continue;
-            if(!upperCaseName.contains(scanNo + ".FITS")) continue;
-            
+        for(int i=0; i<fileName.length; i++) if(isFileNameMatching(fileName[i], flightNo, scanNo)) 
             return new File(path + fileName[i]);
-        }
+            
         throw new FileNotFoundException("flight " + flightNo + ", scan " + scanNo);
+    }
+    
+    protected boolean isFileNameMatching(String fileName, int flightNo, int scanNo) {
+        String upperCaseName = fileName.toUpperCase();
+    
+        // check consistency with standard format...
+        // E.g. 2016-10-04_HA_F334_105_CAL_0_HAWE_HWPE_RAW.fits
+        
+        // 1. check that it's a FITS file (has a '.fits' type extension)
+        if(!upperCaseName.contains(".FITS")) return false;
+        
+        // 2. Check if the file contains the instrument ID...
+        if(!upperCaseName.contains("_" + instrument.getFileID().toUpperCase())) return false;    
+        
+        // 3. Check if the file name contains the flight ID...                 
+        String flightID = "_F" + Util.d3.format(flightNo) + "_";
+        if(!upperCaseName.contains(flightID)) return false;
+       
+        // 4. Check if the file name contains the scan ID in NNN format...
+        String scanID = "_" + Util.d3.format(scanNo) + "_";        
+        if(!upperCaseName.contains(scanID)) return false;
+   
+        return true;
     }
         
     protected FileNotFoundException notFound(String scanDescriptor) {
@@ -434,7 +456,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     }
 
     
-    public File getExactFile(String scanDescriptor) throws FileNotFoundException {
+    public File getFileByName(String scanDescriptor) throws FileNotFoundException {
         File scanFile;
 
         String path = getDataPath();
@@ -527,12 +549,21 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
 
     @Override
-    public String getFormattedEntry(String name, String formatSpec) {
-        //NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-
-        // TODO Add Sofia Header data...
+    public Object getTableEntry(String name) {
+       
         if(name.equals("obstype")) return observation.obsType;
-        else return super.getFormattedEntry(name, formatSpec);
+        
+        // TODO Add Sofia Header data...  
+        SofiaData[] groups = new SofiaData[] { 
+                aircraft, chopper, dither, environment, instrument.instrumentData, instrument.array, mapping, 
+                mission, nodding, observation, origin, processing, scanning, telescope 
+        };
+        
+        for(SofiaData group : groups) if(group != null) if(name.startsWith(group.getLogPrefix())) 
+            return group.getTableEntry(name.substring(group.getLogPrefix().length()));
+        
+       
+        return super.getTableEntry(name);
     }
 
     @Override

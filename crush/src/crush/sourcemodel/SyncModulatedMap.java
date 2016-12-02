@@ -50,7 +50,7 @@ public class SyncModulatedMap extends ScalarMap {
 	}
 	
 	@Override
-	protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {
+	protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {
 		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;	
 			
 		final Periodic modulation = (Periodic) integration;
@@ -116,11 +116,11 @@ public class SyncModulatedMap extends ScalarMap {
 					midFrame.project(pixel.getPosition(), projector);
 					map.getIndex(projector.offset, index);
 				
-					final float fGC = (isMasked(index) ? 1.0F : (float) filtering) * midFrame.getSourceGain(signalMode);
+					final float fG = midFrame.getSourceGain(signalMode);
 						
 					for(final Channel channel : pixel) if(!Float.isNaN(channelValue[channel.index])) {
 						channelValue[channel.index] *= iI;
-						addPoint(index, channel, midFrame, fGC * sourceGain[channel.index],  waveSamples * samplingInterval);
+						addPoint(index, channel, midFrame, fG * sourceGain[channel.index],  waveSamples * samplingInterval);
 					}				
 				}		
 			}

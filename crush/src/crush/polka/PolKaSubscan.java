@@ -37,9 +37,7 @@ import jnum.data.Interpolator;
 import jnum.data.SimpleInterpolator;
 import jnum.data.WeightedPoint;
 import jnum.math.Vector2D;
-import jnum.text.TableFormatter;
 
-import java.text.NumberFormat;
 import java.util.*;
 
 public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable {
@@ -55,12 +53,10 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-	
-		if(name.equals("wpdelay")) return Util.defaultFormat(meanTimeStampDelay / Unit.ms, f);
-		else if(name.equals("wpok")) return Boolean.toString(hasTimeStamps);
-		else return super.getFormattedEntry(name, formatSpec);
+	public Object getTableEntry(String name) {
+		if(name.equals("wpdelay")) return meanTimeStampDelay / Unit.ms;
+		else if(name.equals("wpok")) return hasTimeStamps;
+		else return super.getTableEntry(name);
 	}
 	
 	@Override

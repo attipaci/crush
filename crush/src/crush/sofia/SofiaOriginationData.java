@@ -29,34 +29,49 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaOriginationData extends SofiaData {
-	public String organization, observer, creator, operator;
-	public String fileName, observatory;
-	
-	public SofiaOriginationData() {}
-	
-	public SofiaOriginationData(SofiaHeader header) {
-		this();
-		parseHeader(header);
-	}
-	
-	public void parseHeader(SofiaHeader header) {
-		organization = header.getString("ORIGIN");
-		observer = header.getString("OBSERVER");
-		creator = header.getString("CREATOR");
-		operator = header.getString("OPERATOR");
-		fileName = header.getString("FILENAME");	
-		//fileName = header.getString("OBSERVAT");		// not in 3.0
-	}
+    public String organization, observer, creator, operator;
+    public String fileName, observatory;
 
-	@Override
-	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Origination Data ------>", false));
-		if(organization != null) cursor.add(new HeaderCard("ORIGIN", organization, "Organization where data originated."));
-		if(observer != null) cursor.add(new HeaderCard("OBSERVER", observer, "Name(s) of observer(s)."));
-		if(creator != null) cursor.add(new HeaderCard("CREATOR", creator, "Software / Task that created the raw data."));
-		if(operator != null) cursor.add(new HeaderCard("OPERATOR", operator, "Name(s) of operator(s)."));
-		if(fileName != null) cursor.add(new HeaderCard("FILENAME", fileName, "Original file name."));
-		if(observatory != null) cursor.add(new HeaderCard("OBSERVAT", observatory, "Observatory name."));
-	}
+    public SofiaOriginationData() {}
 
+    public SofiaOriginationData(SofiaHeader header) {
+        this();
+        parseHeader(header);
+    }
+
+    public void parseHeader(SofiaHeader header) {
+        organization = header.getString("ORIGIN");
+        observer = header.getString("OBSERVER");
+        creator = header.getString("CREATOR");
+        operator = header.getString("OPERATOR");
+        fileName = header.getString("FILENAME");	
+        //fileName = header.getString("OBSERVAT");		// not in 3.0
+    }
+
+    @Override
+    public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
+        //cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Origination Data ------>", false));
+        if(organization != null) cursor.add(new HeaderCard("ORIGIN", organization, "Organization where data originated."));
+        if(observer != null) cursor.add(new HeaderCard("OBSERVER", observer, "Name(s) of observer(s)."));
+        if(creator != null) cursor.add(new HeaderCard("CREATOR", creator, "Software / Task that created the raw data."));
+        if(operator != null) cursor.add(new HeaderCard("OPERATOR", operator, "Name(s) of operator(s)."));
+        if(fileName != null) cursor.add(new HeaderCard("FILENAME", fileName, "Original file name."));
+        if(observatory != null) cursor.add(new HeaderCard("OBSERVAT", observatory, "Observatory name."));
+    }
+
+    @Override
+    public String getLogID() {
+        return "orig";
+    }
+
+    @Override
+    public Object getTableEntry(String name) {
+        if(name.equals("creator")) return creator;
+        else if(name.equals("file")) return fileName;
+        else if(name.equals("observer")) return observer;
+        else if(name.equals("operator")) return operator;
+        
+        return super.getTableEntry(name);
+    }
+    
 }

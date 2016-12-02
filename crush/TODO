@@ -1,3 +1,13 @@
+>> command-line options is master mode
+	unlock
+	<option>
+	lock
+
+>> HAWC+
+	DIAGMODE='INT_CAL'
+	DIAG_HZ, INTCALV
+	intcal reductions
+
 >> gain normalization on select group only:
    e.g. array.norm.group=bias-12
 

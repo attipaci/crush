@@ -71,6 +71,10 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 		return new HawcPlusFrame((HawcPlusScan) scan);
 	}
 	
+	public double getMeanHWPAngle() {
+	    return 0.5 * (getFirstFrame().hwpAngle + getLastFrame().hwpAngle);
+	}
+	
 	protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {	
 	    
 		int records = 0;
@@ -392,6 +396,12 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 	
 	private void flagJump(final Channel channel, final int from, int to) {
 	    while(--to >= from) get(to).sampleFlag[channel.index] |= HawcPlusFrame.SAMPLE_PHI0_JUMP;
+	}
+	
+	@Override
+    public Object getTableEntry(String name) {
+        if(name.equals("hwp")) return getMeanHWPAngle();
+        return super.getTableEntry(name);
 	}
 	
 	

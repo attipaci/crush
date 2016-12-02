@@ -653,8 +653,8 @@ public class ScalarMap extends SourceMap {
 
 
     @Override
-    protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, double filtering, int signalMode) {
-        int goodFrames = super.add(integration, pixels, sourceGain, filtering, signalMode);
+    protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
+        int goodFrames = super.add(integration, pixels, sourceGain, signalMode);
         map.integrationTime += goodFrames * integration.instrument.samplingInterval;
         isNormalized = false;
         return goodFrames;
@@ -947,9 +947,9 @@ public class ScalarMap extends SourceMap {
     }
 
     @Override
-    public String getFormattedEntry(String name, String formatSpec) {	
-        if(name.startsWith("map.")) return map.getFormattedEntry(name.substring(4), formatSpec);
-        else return super.getFormattedEntry(name, formatSpec);
+    public Object getTableEntry(String name) {	
+        if(name.startsWith("map.")) return map.getTableEntry(name.substring(4));
+        else return super.getTableEntry(name);
     }
 
     @Override

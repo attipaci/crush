@@ -372,17 +372,19 @@ implements TableFormatter.Entries, BasicMessaging {
 		
 		final Hashtable<String, Vector<String>> conditionals = options.get("fits").conditionals;
 		
-		for(String condition : conditionals.keySet()) {
+		for(String condition : conditionals.keySet()) {		    
 			StringTokenizer tokens = new StringTokenizer(condition, "?");
 			if(!tokens.hasMoreTokens()) continue;
 			String key = tokens.nextToken().toUpperCase();
 	
-			if(!header.containsKey(key)) return;
+			if(!header.containsKey(key)) continue;
 			String value = tokens.hasMoreTokens() ? tokens.nextToken() : null;	
+			
+			debug("checking for FITS header key: " + condition + (value == null ? "" : " = " + value));
 			
 			if(value == null) options.parseAll(conditionals.get(condition));
 			else if(value.charAt(0) == '!') {
-				if(!header.getStringValue(key).equalsIgnoreCase(value)) options.parseAll(conditionals.get(condition));
+				if(!header.getStringValue(key).equalsIgnoreCase(value.substring(1))) options.parseAll(conditionals.get(condition));
 			}
 			else if(header.getStringValue(key).equalsIgnoreCase(value)) options.parseAll(conditionals.get(condition));
 		}
@@ -1296,23 +1298,22 @@ implements TableFormatter.Entries, BasicMessaging {
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-		
-		if(name.equals("gain")) return Util.defaultFormat(gain, f);
-		else if(name.equals("sampling")) return Util.defaultFormat(samplingInterval / Unit.s, f);
-		else if(name.equals("rate")) return Util.defaultFormat(Unit.s / samplingInterval, f);
-		else if(name.equals("okchannels")) return Integer.toString(mappingChannels);
-		else if(name.equals("channels")) return Integer.toString(size());
-		else if(name.equals("maxchannels")) return Integer.toString(storeChannels);
+	public Object getTableEntry(String name) {
+	
+		if(name.equals("gain")) return gain;
+		else if(name.equals("sampling")) return samplingInterval / Unit.s;
+		else if(name.equals("rate")) return Unit.s / samplingInterval;
+		else if(name.equals("okchannels")) return mappingChannels;
+		else if(name.equals("channels")) return size();
+		else if(name.equals("maxchannels")) return storeChannels;
 		else if(name.equals("mount")) return mount.name();
-		else if(name.equals("resolution")) return Util.defaultFormat(resolution / getSizeUnitValue(), f);
+		else if(name.equals("resolution")) return resolution / getSizeUnitValue();
 		else if(name.equals("sizeunit")) return getSizeName();
-		else if(name.equals("ptfilter")) return Util.defaultFormat(getAverageFiltering(), f);
-		else if(name.equals("FWHM")) return Util.defaultFormat(getAverageBeamFWHM() / getSizeUnitValue(), f);
-		else if(name.equals("minFWHM")) return Util.defaultFormat(getMinBeamFWHM() / getSizeUnitValue(), f);
-		else if(name.equals("maxFWHM")) return Util.defaultFormat(getMaxBeamFWHM() / getSizeUnitValue(), f);
-		else if(name.equals("stat1f")) return Util.defaultFormat(getOneOverFStat(), f);
+		else if(name.equals("ptfilter")) return getAverageFiltering();
+		else if(name.equals("FWHM")) return getAverageBeamFWHM() / getSizeUnitValue();
+		else if(name.equals("minFWHM")) return getMinBeamFWHM() / getSizeUnitValue();
+		else if(name.equals("maxFWHM")) return getMaxBeamFWHM() / getSizeUnitValue();
+		else if(name.equals("stat1f")) return getOneOverFStat();
 		
 		return TableFormatter.NO_SUCH_DATA;
 	}

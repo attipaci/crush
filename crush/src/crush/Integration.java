@@ -26,7 +26,6 @@ package crush;
 
 import java.io.*;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -284,7 +283,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		
 		if(!hasOption("pixeldata")) if(hasOption("weighting")) if(!hasOption("uniformweights")) {
-			getDifferentialPixelWeights();
+			getDifferentialChannelWeights();
 			instrument.census();
 			info("Bootstrapping pixel weights (" + instrument.mappingChannels + " active channels).");
 		}
@@ -1052,7 +1051,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	
-	public void getRMSPixelWeights() {
+	public void getRMSChannelWeights() {
 		comments += "W";
 		
 		final ChannelGroup<?> channels = instrument.getConnectedChannels();
@@ -1123,7 +1122,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Instrument.recycle(var);
 	}
 	
-	public void getDifferentialPixelWeights() {
+	public void getDifferentialChannelWeights() {
 		final int delta = framesFor(10.0 * getPointCrossingTime());
 		final ChannelGroup<?> channels = instrument.getConnectedChannels();
 		
@@ -1186,7 +1185,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 	}
 
-	public void getRobustPixelWeights() {
+	public void getRobustChannelWeights() {
 		comments += "[W]";
 	
 		instrument.getConnectedChannels().new Fork<Void>() {
@@ -3047,7 +3046,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			if(!decorrelate(modalityName, isRobust)) return false;
 		}
 		else if(task.equals("weighting")) {
-			getWeights();
+			getChannelWeights();
 		}
 		else if(task.equals("weighting.frames")) {
 			getTimeWeights();
@@ -3060,7 +3059,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else if(task.equals("filter")) {
 			if(filter == null) return false;
 			if(!filter.apply()) return false;
-			if(indexOf("filter") > indexOf("weighting")) getWeights();
+			if(indexOf("filter") > indexOf("weighting")) getChannelWeights();
 			updatePhases();
 		}
 		else if(task.equals("purify")) {
@@ -3091,7 +3090,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(isPhaseModulated()) ((PhaseModulated) this).getPhases().update(instrument);
 	}
 	
-	public void getWeights() {
+	public void getChannelWeights() {
 		String method = "rms";
 		Configurator weighting = option("weighting");
 		
@@ -3100,7 +3099,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(weighting.isConfigured("method")) method = weighting.get("method").getValue().toLowerCase();
 		
-		getWeights(method);
+		getChannelWeights(method);
 		
 		if(isPhaseModulated()) if(hasOption("phaseweights")) {
 			PhaseSet phases = ((PhaseModulated) this).getPhases();
@@ -3108,10 +3107,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 	}
 	
-	public void getWeights(String method) {
-		if(method.equals("robust")) getRobustPixelWeights();
-		else if(method.equals("differential")) getDifferentialPixelWeights();
-		else getRMSPixelWeights();	
+	public void getChannelWeights(String method) {
+		if(method.equals("robust")) getRobustChannelWeights();
+		else if(method.equals("differential")) getDifferentialChannelWeights();
+		else getRMSChannelWeights();	
 		flagWeights();
 	}
 
@@ -3419,36 +3418,24 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+	public Object getTableEntry(String name) {
 			
-		if(name.equals("scale")) return Util.defaultFormat(gain, f);
-		else if(name.equals("NEFD")) return Util.defaultFormat(nefd, f);
-		else if(name.equals("zenithtau")) return Util.defaultFormat(zenithTau, f);
-		else if(name.equals("tau")) return Util.defaultFormat(zenithTau / Math.cos(scan.horizontal.EL()), f);
-		else if(name.startsWith("tau.")) {
-			String id = name.substring(4).toLowerCase();
-			return Util.defaultFormat(getTau(id), f);
+		if(name.equals("scale")) return gain;
+		else if(name.equals("NEFD")) return nefd;
+		else if(name.equals("zenithtau")) return zenithTau;
+		else if(name.equals("tau")) return zenithTau / Math.cos(scan.horizontal.EL());
+		else if(name.startsWith("tau.")) return getTau(name.substring(4).toLowerCase());
+		else if(name.equals("scanspeed")) return aveScanSpeed.value() / (Unit.arcsec / Unit.s);
+		else if(name.equals("rmsspeed")) return aveScanSpeed.rms() / (Unit.arcsec / Unit.s);
+		else if(name.equals("hipass")) return filterTimeScale / Unit.s;
+		else if(name.startsWith("chop")) {
+		    Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;
+		    if(name.equals("chopfreq")) return chopper == null ? null : chopper.frequency / Unit.Hz;
+		    else if(name.equals("chopthrow")) return chopper == null ? null : 2.0 * chopper.amplitude / instrument.getSizeUnitValue();
+		    else if(name.equals("chopeff")) return chopper == null ? null : chopper.efficiency;
 		}
-		else if(name.equals("scanspeed")) return Util.defaultFormat(aveScanSpeed.value() / (Unit.arcsec / Unit.s), f);
-		else if(name.equals("rmsspeed")) return Util.defaultFormat(aveScanSpeed.rms() / (Unit.arcsec / Unit.s), f);
-		else if(name.equals("hipass")) return Util.defaultFormat(filterTimeScale / Unit.s, f);
-		else if(name.equals("chopfreq")) {
-			Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;
-			if(chopper == null) return "---";
-			else return  Util.defaultFormat(chopper.frequency / Unit.Hz, f);
-		}
-		else if(name.equals("chopthrow")) {
-			Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;
-			if(chopper == null) return "---";
-			else return  Util.defaultFormat(2.0 * chopper.amplitude / instrument.getSizeUnitValue(), f);
-		}
-		else if(name.equals("chopeff")) {
-			Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;
-			if(chopper == null) return "---";
-			else return  Util.defaultFormat(chopper.efficiency, f);
-		}
-		else return instrument.getFormattedEntry(name, formatSpec);
+		
+		return instrument.getTableEntry(name);
 	}
 	
 	@Override

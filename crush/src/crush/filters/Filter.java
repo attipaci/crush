@@ -352,6 +352,11 @@ public abstract class Filter implements Serializable, Cloneable {
 		double norm = sum;
 		
 		// Calculate the true source filtering above the hipass timescale...
+		// Consider a symmetric source profile, peaked at the origin --
+		// Its peak is simply the sum of the cosine terms, which are the real part of the amplitudes.
+		// So, the filter correction is simply the ratio of the sum of the filtered real amplitudes
+		// relative to the sum of the original real amplitudes.
+		
 		for(int f=nf; --f >= minf; ) {
 			double sourceResponse = Math.exp(a*f*f);
 			sum += sourceResponse * responseAt(f);

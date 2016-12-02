@@ -51,7 +51,6 @@ import jnum.math.Vector2D;
 import jnum.projection.Gnomonic;
 import jnum.projection.Projection2D;
 import jnum.projection.SphericalProjection;
-import jnum.text.TableFormatter;
 
 
 public abstract class SourceMap extends SourceModel {	
@@ -602,13 +601,13 @@ public abstract class SourceMap extends SourceModel {
 
     protected boolean isAddingToMaster() { return false; }
 
-    protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
+    protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
         if(CRUSH.debug) debug("add.pixels " + pixels.size() + " : " + integration.instrument.size());
 
-        return addForkFrames(integration, pixels, sourceGain, filtering, signalMode);
+        return addForkFrames(integration, pixels, sourceGain, signalMode);
     }
 
-    protected int addForkFrames(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
+    protected int addForkFrames(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
 
         class Mapper extends CRUSH.Fork<Integer> {
             private SourceMap localSource;
@@ -676,7 +675,7 @@ public abstract class SourceMap extends SourceModel {
         return mapping.getResult();		
     }
 
-    protected int addForkPixels(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
+    protected int addForkPixels(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
         int mappingFrames = 0;
 
         for(Frame exposure : integration) if(exposure != null) {
@@ -758,13 +757,11 @@ public abstract class SourceMap extends SourceModel {
 
         // For the first source generation, apply the point source correction directly to the signals.
         final boolean signalCorrection = integration.sourceGeneration == 0;
-        boolean mapCorrection = hasSourceOption("correct") && !signalCorrection;
-
+      
         final int mappingFrames = add(
                 integration, 
                 integration.instrument.getMappingPixels(0), 
                 instrument.getSourceGains(signalCorrection), 
-                mapCorrection ? averageFiltering : 1.0, 
                         signalMode
                 );
 
@@ -772,10 +769,7 @@ public abstract class SourceMap extends SourceModel {
 
         if(signalCorrection)
             integration.comments += "[C1~" + Util.f2.format(1.0/averageFiltering) + "] ";
-        else if(mapCorrection) {
-            integration.comments += "[C2=" + Util.f2.format(1.0/averageFiltering) + "] ";
-        }
-
+        
         integration.comments += " ";
     }
 
@@ -913,9 +907,9 @@ public abstract class SourceMap extends SourceModel {
     }
 
     @Override
-    public String getFormattedEntry(String name, String formatSpec) {
-        if(name.equals("smooth")) return TableFormatter.getNumberFormat(formatSpec).format(smoothing / getInstrument().getSizeUnitValue());
-        else return super.getFormattedEntry(name, formatSpec);
+    public Object getTableEntry(String name) {
+        if(name.equals("smooth")) return smoothing / getInstrument().getSizeUnitValue();
+        else return super.getTableEntry(name);
     }
 
   

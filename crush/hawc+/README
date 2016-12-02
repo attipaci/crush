@@ -131,7 +131,7 @@ Table of Contents
         > cd crush
         > sudo bash install.sh
 
-   You can check the success of the above optinal step by typing:
+   You can check the success of the above optional step by typing:
 
         > man crush
 
@@ -151,7 +151,7 @@ Table of Contents
 
    On all other platforms, you can override the defaults by placing your
    settings in arbitrary files under /etc/crush2/startup or ~/.crush2/startup.
-   (Any settings in the user's home under ~/.crush2/startup will overrride the
+   (Any settings in the user's home under ~/.crush2/startup will override the
    system-wide values in /etc/crush2/startup. If multiple config files exist in
    the same location, these will be parse in non-specific order).
 
@@ -202,7 +202,7 @@ Table of Contents
 
 
    You can also specify environment variables, and add shell commands (bash),
-   since these configuation files are in fact sourced as bash scripts before
+   since these configuration files are in fact sourced as bash scripts before
    launching Java / CRUSH. For example you can add:
 
      CRUSH_NO_UPDATE_CHECK="1"
@@ -237,7 +237,7 @@ Table of Contents
    unexpectedly. 
    
    Both of these scenarios can be preemted by specifying appropriate runtime 
-   options for running CRUSH reductions with limited scope. We can
+   options for running CRUSH reductions with limited scope.
 
    Simply (create and) edit a file: 
 

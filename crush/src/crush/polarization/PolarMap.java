@@ -460,11 +460,11 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		if(name.startsWith("N.")) return N.getFormattedEntry(name.substring(2), formatSpec);
-		else if(name.startsWith("Q.")) return Q.getFormattedEntry(name.substring(2), formatSpec);
-		else if(name.startsWith("U.")) return U.getFormattedEntry(name.substring(2), formatSpec);
-		else return super.getFormattedEntry(name, formatSpec);
+	public Object getTableEntry(String name) {
+		if(name.startsWith("N.")) return N.getTableEntry(name.substring(2));
+		else if(name.startsWith("Q.")) return Q.getTableEntry(name.substring(2));
+		else if(name.startsWith("U.")) return U.getTableEntry(name.substring(2));
+		else return super.getTableEntry(name);
 	}
 
 	@Override

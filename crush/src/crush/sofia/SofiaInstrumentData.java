@@ -104,6 +104,31 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
 		if(detectorChannel != null) cursor.add(new HeaderCard("DETCHAN", detectorChannel, "Detector channel ID."));
 		if(!Double.isNaN(totalIntegrationTime)) cursor.add(new HeaderCard("TOTINT", totalIntegrationTime / Unit.s, "(s) Total integration time."));
 	}
+	
+	   
+    @Override
+    public Object getTableEntry(String name) {
+        if(name.equals("wave")) return wavelength / Unit.um;
+        else if(name.equals("bw")) return bandwidthMicrons;
+        else if(name.equals("exp")) return exposureTime / Unit.s;
+        else if(name.equals("inttime")) return totalIntegrationTime / Unit.s;
+        else if(name.equals("datatype")) return dataType;
+        else if(name.equals("mode")) return instrumentMode;
+        else if(name.equals("cfg")) return instrumentConfig;
+        else if(name.equals("slit")) return slitID;
+        else if(name.equals("spec1")) return spectralElement1;
+        else if(name.equals("spec2")) return spectralElement2;
+        else if(name.equals("hwver")) return hardwareVersion;
+        else if(name.equals("swver")) return softwareVersion; 
+        
+        return super.getTableEntry(name);
+    }
+
+    @Override
+    public String getLogID() {
+        return "inst";
+    }
+    
 
 
 }
