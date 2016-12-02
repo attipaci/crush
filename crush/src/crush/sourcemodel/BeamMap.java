@@ -110,8 +110,8 @@ public class BeamMap extends SourceMap {
 	}
 
 	@Override
-	protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final double filtering, final int signalMode) {	
-		return addForkPixels(integration, pixels, sourceGain, filtering, signalMode);
+	protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
+		return addForkPixels(integration, pixels, sourceGain, signalMode);
 	}
 	
 

@@ -59,10 +59,10 @@ public class SkyDip extends SourceModel {
 		if(Tamb != null) copy.Tamb = (WeightedPoint) Tamb.clone();
 		
 		if(withContents) {
-			for(int i=0; i<data.length; i++) copy.data[i] = (WeightedPoint) data[i].clone();
+			for(int i=data.length; --i >= 0; ) copy.data[i] = (WeightedPoint) data[i].clone();
 		}
 		else {
-			for(int i=0; i<data.length; i++) copy.data[i] = new WeightedPoint();
+			for(int i=data.length; --i >= 0; ) copy.data[i] = new WeightedPoint();
 		}
 		return copy;
 	}
@@ -71,7 +71,7 @@ public class SkyDip extends SourceModel {
 	public void reset(boolean clearContent) {
 		super.reset(clearContent);
 		if(clearContent) if(data != null) {
-			for(int i=0; i<data.length; i++) if(data[i] != null) data[i].noData();
+			for(int i=data.length; --i >= 0; ) if(data[i] != null) data[i].noData();
 			Tamb.noData();
 		}
 	}
@@ -88,6 +88,7 @@ public class SkyDip extends SourceModel {
 	}
 	
 	public int getBin(double EL) {
+	    if(Double.isNaN(EL)) return -1;
 		return (int) Math.round(EL / resolution);		
 	}
 
@@ -99,7 +100,7 @@ public class SkyDip extends SourceModel {
 	public void add(SourceModel model, double weight) {
 		SkyDip other = (SkyDip) model;
 		Tamb.average(other.Tamb);
-		for(int i=0; i<data.length; i++) data[i].average(other.data[i]);
+		for(int i=data.length; --i >= 0; ) data[i].average(other.data[i]);
 	}
 
 	@Override
@@ -255,7 +256,9 @@ public class SkyDip extends SourceModel {
 		
 		
 		plot.println("plot \\");
-		plot.println("  '" + dataName + "' using 1:2 title 'Skydip " + scans.get(0).getID() + "'with linesp lt 1 pt 5 lw 1, \\");
+		String id = scans.get(0).getID().replace("_", " ");
+		
+		plot.println("  '" + dataName + "' using 1:2 title 'Skydip " + id + "'with linesp lt 1 pt 5 lw 1, \\");
 		plot.println("  '" + dataName + "' using 1:3 title 'tau = " + Util.f3.format(model.tau.value()) + " +- " 
 				+ Util.f3.format(model.tau.rms()) + "' with lines lt -1 lw 3");
 		

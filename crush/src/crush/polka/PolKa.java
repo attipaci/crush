@@ -29,10 +29,8 @@ import crush.laboca.*;
 import crush.polarization.*;
 import jnum.Unit;
 import jnum.Util;
-import jnum.text.TableFormatter;
 
 import java.io.*;
-import java.text.NumberFormat;
 import java.util.Vector;
 
 import nom.tam.fits.BinaryTableHDU;
@@ -68,17 +66,15 @@ public class PolKa extends Laboca {
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-	
-		if(name.equals("wpfreq")) return Util.defaultFormat(waveplateFrequency / Unit.Hz, f);
-		else if(name.equals("wpjitter")) return Util.defaultFormat(jitter, f);
+	public Object getTableEntry(String name) {
+		if(name.equals("wpfreq")) return waveplateFrequency / Unit.Hz;
+		else if(name.equals("wpjitter")) return jitter;
 		else if(name.equals("wpdir")) return isCounterRotating ? "-" : "+";
 		else if(name.equals("analyzer")) {
 			if(!hasAnalyzer) return "-";
 			else return isVertical ? "V" : "H";
 		}
-		else return super.getFormattedEntry(name, formatSpec);
+		else return super.getTableEntry(name);
 	}
 
 	@Override

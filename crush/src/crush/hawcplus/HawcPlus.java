@@ -67,7 +67,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	public HawcPlus() {
 		super("hawc+", new SingleColorArrangement<HawcPlusPixel>(), pixels);
 		mount = Mount.NASMYTH_COROTATING;
-		
 	}
 	
 	@Override

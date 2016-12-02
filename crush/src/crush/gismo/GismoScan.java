@@ -40,7 +40,6 @@ import jnum.math.Offset2D;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
-import jnum.text.TableFormatter;
 import jnum.util.*;
 import nom.tam.fits.*;
 
@@ -728,16 +727,14 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-		
+	public Object getTableEntry(String name) {	
 		if(name.equals("obstype")) return obsType;
-		else if(name.equals("modelX")) return Util.defaultFormat(observingModel.getDX(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
-		else if(name.equals("modelY")) return Util.defaultFormat(observingModel.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
-		else if(name.equals("tiltX")) return Util.defaultFormat(tiltCorrections.getDX(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
-		else if(name.equals("tiltY")) return Util.defaultFormat(tiltCorrections.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT), f);
+		else if(name.equals("modelX")) return observingModel.getDX(horizontal, (getMJD() % 1) * Unit.day, ambientT);
+		else if(name.equals("modelY")) return observingModel.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT);
+		else if(name.equals("tiltX")) return tiltCorrections.getDX(horizontal, (getMJD() % 1) * Unit.day, ambientT);
+		else if(name.equals("tiltY")) return tiltCorrections.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT);
 		else if(name.equals("dir")) return AstroSystem.getID(basisSystem);
-		else return super.getFormattedEntry(name, formatSpec);
+		else return super.getTableEntry(name);
 	}
 
 	@Override

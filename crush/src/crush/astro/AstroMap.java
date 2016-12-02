@@ -74,9 +74,9 @@ public class AstroMap extends GridSource<SphericalCoordinates> {
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
+	public Object getTableEntry(String name) {
 		if(name.equals("system")) return astroSystem().getID();
-		else return super.getFormattedEntry(name, formatSpec);
+		else return super.getTableEntry(name);
 	}
 	
 

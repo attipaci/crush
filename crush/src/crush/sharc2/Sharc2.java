@@ -34,7 +34,6 @@ import jnum.data.WeightedPoint;
 import jnum.io.LineParser;
 import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
-import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 
 import java.io.*;
@@ -449,10 +448,10 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 
 
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {	
-		if(name.equals("bias")) return TableFormatter.getNumberFormat(formatSpec).format(bias0 / Unit.mV);
+	public Object getTableEntry(String name) {	
+		if(name.equals("bias")) return bias0 / Unit.mV;
 		else if(name.equals("filter")) return filterName;
-		else return super.getFormattedEntry(name, formatSpec);
+		else return super.getTableEntry(name);
 	}
 	
 	@Override

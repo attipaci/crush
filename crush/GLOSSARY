@@ -2845,6 +2845,11 @@
 			@See: 'skydip.offset', 'skydip.tau', 'skydip.Tsky', 
 			      'kelvin', 'K2Jy', 'dataunit'
 					  
+:: skydip.grid=X	@Advanced
+			@Since: 2.33-2
+			Set the elevation binning (arcsec) of the skydip data.
+			@See: 'grid'
+
 :: skydip.offset=X	@Expert
 			Specify the (initial) offset value in dataunits
 			@See: 'skydip.fit'

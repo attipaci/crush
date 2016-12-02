@@ -30,35 +30,50 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaScanningData extends SofiaData {
-	public BracketedValues RA = new BracketedValues(), DEC = new BracketedValues();
-	public double speed = Double.NaN, angle = Double.NaN;
-		
-	public SofiaScanningData() {}
-	
-	public SofiaScanningData(SofiaHeader header) {
-		this();
-		parseHeader(header);
-	}
-	
-	
-	public void parseHeader(SofiaHeader header) {
-		RA.start = header.getHMSTime("SCNRA0") * Unit.timeAngle;
-		RA.end = header.getHMSTime("SCNRAF") * Unit.timeAngle;
-		DEC.start = header.getDMSAngle("SCNDEC0");
-		DEC.end = header.getDMSAngle("SCNDECF");
-		speed = header.getDouble("SCNRATE", Double.NaN) * Unit.arcsec / Unit.s;
-		angle = header.getDouble("SCNDIR", Double.NaN) * Unit.deg;
-	}
+    public BracketedValues RA = new BracketedValues(), DEC = new BracketedValues();
+    public double speed = Double.NaN, angle = Double.NaN;
 
-	@Override
-	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Scanning Data ------>", false));
-		if(!Double.isNaN(RA.start)) cursor.add(new HeaderCard("SCNRA0", RA.start / Unit.hourAngle, "(hour) Initial scan RA."));
-		if(!Double.isNaN(DEC.start)) cursor.add(new HeaderCard("SCNDEC0", DEC.start / Unit.deg, "(deg) Initial scan DEC."));
-		if(!Double.isNaN(RA.end)) cursor.add(new HeaderCard("SCNRAF", RA.start / Unit.hourAngle, "(hour) Final scan RA."));
-		if(!Double.isNaN(DEC.end)) cursor.add(new HeaderCard("SCNDECF", DEC.start / Unit.deg, "Final scan DEC."));
-		if(!Double.isNaN(speed)) cursor.add(new HeaderCard("SCNRATE", speed / (Unit.arcsec / Unit.s), "(arcsec/s) Commanded slew rate on sky."));
-		if(!Double.isNaN(angle)) cursor.add(new HeaderCard("SCNDIR", angle / Unit.deg, "(deg) Scan direction on sky."));	
-	}
+    public SofiaScanningData() {}
+
+    public SofiaScanningData(SofiaHeader header) {
+        this();
+        parseHeader(header);
+    }
+
+
+    public void parseHeader(SofiaHeader header) {
+        RA.start = header.getHMSTime("SCNRA0") * Unit.timeAngle;
+        RA.end = header.getHMSTime("SCNRAF") * Unit.timeAngle;
+        DEC.start = header.getDMSAngle("SCNDEC0");
+        DEC.end = header.getDMSAngle("SCNDECF");
+        speed = header.getDouble("SCNRATE", Double.NaN) * Unit.arcsec / Unit.s;
+        angle = header.getDouble("SCNDIR", Double.NaN) * Unit.deg;
+    }
+
+    @Override
+    public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
+        //cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Scanning Data ------>", false));
+        if(!Double.isNaN(RA.start)) cursor.add(new HeaderCard("SCNRA0", RA.start / Unit.hourAngle, "(hour) Initial scan RA."));
+        if(!Double.isNaN(DEC.start)) cursor.add(new HeaderCard("SCNDEC0", DEC.start / Unit.deg, "(deg) Initial scan DEC."));
+        if(!Double.isNaN(RA.end)) cursor.add(new HeaderCard("SCNRAF", RA.start / Unit.hourAngle, "(hour) Final scan RA."));
+        if(!Double.isNaN(DEC.end)) cursor.add(new HeaderCard("SCNDECF", DEC.start / Unit.deg, "Final scan DEC."));
+        if(!Double.isNaN(speed)) cursor.add(new HeaderCard("SCNRATE", speed / (Unit.arcsec / Unit.s), "(arcsec/s) Commanded slew rate on sky."));
+        if(!Double.isNaN(angle)) cursor.add(new HeaderCard("SCNDIR", angle / Unit.deg, "(deg) Scan direction on sky."));	
+    }
+
+    @Override
+    public String getLogID() {
+        return "scan";
+    } 
+    
+    @Override
+    public Object getTableEntry(String name) {
+        if(name.equals("angle")) return angle / Unit.deg;
+        else if(name.equals("ra")) return RA.midPoint() / Unit.hourAngle;
+        else if(name.equals("dec")) return DEC.midPoint() / Unit.deg;
+        else if(name.equals("speed")) return speed / (Unit.arcsec / Unit.s);
+      
+        return super.getTableEntry(name);
+    }
 
 }

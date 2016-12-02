@@ -30,10 +30,8 @@ import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
-import jnum.text.TableFormatter;
 
 import java.io.*;
-import java.text.NumberFormat;
 import java.util.*;
 
 import nom.tam.fits.*;
@@ -246,10 +244,8 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-	
-		if(name.equals("rmsHe3")) return Util.defaultFormat(rmsHe3 / Unit.mK, f);
-		else return super.getFormattedEntry(name, formatSpec);
+	public Object getTableEntry(String name) {
+		if(name.equals("rmsHe3")) return rmsHe3 / Unit.mK;
+		else return super.getTableEntry(name);
 	}
 }

@@ -23,7 +23,6 @@
 
 package crush.scuba2;
 
-import java.text.NumberFormat;
 import java.util.*;
 
 import crush.*;
@@ -31,7 +30,6 @@ import crush.array.*;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
-import jnum.text.TableFormatter;
 import nom.tam.fits.*;
 
 public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBased, GridIndexed {
@@ -307,15 +305,14 @@ public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBa
 	
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+	public Object getTableEntry(String name) {
 	
 		if(name.equals("filter")) return filter;
-		else if(name.equals("foc.X")) return Util.defaultFormat(focusXOffset, f);
-		else if(name.equals("foc.Y")) return Util.defaultFormat(focusYOffset, f);
-		else if(name.equals("foc.Z")) return Util.defaultFormat(focusZOffset, f);
+		else if(name.equals("foc.X")) return focusXOffset;
+		else if(name.equals("foc.Y")) return focusYOffset;
+		else if(name.equals("foc.Z")) return focusZOffset;
 		else if(name.equals("shutter?")) return Boolean.toString(shutterOpen);
-		else return super.getFormattedEntry(name, formatSpec);
+		else return super.getTableEntry(name);
 	}
 	
 	@Override

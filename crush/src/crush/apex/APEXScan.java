@@ -386,15 +386,15 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		if(name.equals("chop?")) return Boolean.toString(chopper == null ? false : true);
+	public Object getTableEntry(String name) {
+		if(name.equals("chop?")) return chopper == null ? false : true;
 		else if(name.equals("dir")) return direction;
 		else if(name.equals("geom")) return geometry;
-		else if(name.equals("planet?")) return Boolean.toString(isNonSidereal);
+		else if(name.equals("planet?")) return isNonSidereal;
 		else if(name.equals("obsmode")) return mode;
 		else if(name.equals("obstype")) return type;
 		else if(name.equals("dir")) return AstroSystem.getID(basisSystem);
-		else return super.getFormattedEntry(name, formatSpec);
+		else return super.getTableEntry(name);
 	}
 	
 }

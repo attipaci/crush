@@ -29,7 +29,6 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 
-
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,6 +37,7 @@ import crush.CRUSH;
 import crush.sofia.SofiaHeader;
 import crush.sofia.SofiaScan;
 import jnum.Unit;
+import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
 
 public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
@@ -48,8 +48,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	
 	GyroDrifts gyroDrifts;
 	String priorPipelineStep;
-	boolean useBetweenScans;
-	
+	boolean useBetweenScans;	
 		
 	public HawcPlusScan(HawcPlus instrument) {
 		super(instrument);
@@ -63,9 +62,29 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 
 	@Override
     public boolean isAORValid() {
+	    // In the early comissioning runs CDH defaulted to AOR being '0' instead of 'UNKNOWN'
         return super.isAORValid() && !observation.aorID.equals("0");
     }
- 
+	
+	@Override
+    protected boolean isFileNameMatching(String fileName, int flightNo, int scanNo) {
+	    if(super.isFileNameMatching(fileName, flightNo, scanNo)) return true;
+	    
+	    // E.g. F0004_HC_IMA_0_HAWC_HWPC_RAW_109.fits
+	    String upperCaseName = fileName.toUpperCase();
+	    
+	    // 1. Check if the file name contains the instrument ID...
+	    if(!upperCaseName.contains("_" + instrument.getFileID().toUpperCase())) return false;
+	    	
+	    // 2. Check if the file name starts with the flight ID...
+        String oldFlightID = "F" + Util.d4.format(flightNo) + "_"; 
+        if(!upperCaseName.startsWith(oldFlightID)) return false;
+        
+        // 3. Check if the file name contains the scans ID and a '.fits' extension...
+        String oldScanID = "_" + Util.d3.format(scanNo) + ".FITS";
+        return upperCaseName.contains(oldScanID);         
+	}
+	    
 	@Override
     public boolean isRequestedValid(SofiaHeader header) {
 	    if(!super.isRequestedValid(header)) return false;
@@ -89,8 +108,11 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	    priorPipelineStep = header.getString("PROCLEVL");
 		
 	    // If using real-time object coordinates regardless of whether sidereal or not, then treat as if non-sidereal...
-		isNonSidereal = header.getBoolean("NONSIDE", false) || hasOption("rtoc");
-		
+		// Update: (Nov 2016)
+	    //   NONSIDE has been removed from the FITS as there was no automatic way of setting it
+	    //           it relied on a manual checkbox in the CDH GUI.
+	    isNonSidereal = header.getBoolean("NONSIDE", false) || hasOption("rtoc");
+	    
 		if(hasOption("OBJRA") && hasOption("OBJDEC")) 
 		    objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
 		
@@ -138,5 +160,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	    useBetweenScans = hasOption("betweenscans");
 	    super.validate();
 	}
+	
+	
 	
 }

@@ -29,7 +29,6 @@ import nom.tam.util.*;
 
 import java.io.*;
 import java.util.*;
-import java.text.*;
 
 import crush.astro.AstroMap;
 import crush.sourcemodel.*;
@@ -478,7 +477,12 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		header.addValue("TRACKIN", isTracking, "Was the telescope tracking during the observation?");
 		
 		instrument.editScanHeader(header);
+		
+		if(pointing != null) if(sourceModel instanceof ScalarMap) {  
+		    pointing.editHeader(header, ((ScalarMap) sourceModel).map, instrument.getSizeUnit());
+		}
 	}
+	
 	
 	public void setSourceModel(SourceModel model) {
 		sourceModel = model;
@@ -530,15 +534,13 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
+	public Object getTableEntry(String name) {
 		
 		
 		if(horizontal == null) horizontal = equatorial.toHorizontal(site, LST);
 		
-		
-		String modelEntry = null;
-		if(sourceModel != null) modelEntry = sourceModel.getFormattedEntry(name, formatSpec);
+		Object modelEntry = null;
+		if(sourceModel != null) modelEntry = sourceModel.getTableEntry(name);
 		if(modelEntry != null) return modelEntry;
 		
 		if(name.startsWith("?")) {
@@ -552,64 +554,62 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		else if(name.startsWith("pnt.")) {
 			if(pointing == null) return "---";
-			return getPointingData().getFormattedEntry(name.substring(4), formatSpec);
+			return getPointingData().getTableEntry(name.substring(4));
 		}
 		else if(name.startsWith("src.")) {
 			if(pointing == null) return "---";
 			if(!(sourceModel instanceof ScalarMap)) return "---";
 			AstroMap map = ((ScalarMap) sourceModel).map;
 			Unit sizeUnit = new Unit(instrument.getSizeName(), instrument.getSizeUnitValue());
-			return pointing.getData(map, sizeUnit).getFormattedEntry(name.substring(4), formatSpec);
+			return pointing.getData(map, sizeUnit).getTableEntry(name.substring(4));
 		}
 		else if(name.equals("object")) return sourceName;
 		else if(name.equals("id")) return getID();
-		else if(name.equals("serial")) return Integer.toString(serialNo);
-		else if(name.equals("MJD")) return Util.defaultFormat(MJD, f);
-		else if(name.equals("UT")) return Util.defaultFormat((MJD - Math.floor(MJD)) * Unit.day, f);
-		else if(name.equals("UTh")) return Util.defaultFormat((MJD - Math.floor(MJD)) * 24.0, f);
-		else if(name.equals("PA")) return Util.defaultFormat(getPA(), f);
-		else if(name.equals("PAd")) return Util.defaultFormat(getPA() / Unit.deg, f);
-		else if(name.equals("AZ")) return Util.defaultFormat(horizontal.AZ(), f);
-		else if(name.equals("EL")) return Util.defaultFormat(horizontal.EL(), f);
-		else if(name.equals("RA")) return Util.defaultFormat(equatorial.RA() / Unit.timeAngle, f);
-		else if(name.equals("DEC")) return Util.defaultFormat(equatorial.DEC(), f);
-		else if(name.equals("AZd")) return Util.defaultFormat(horizontal.AZ() / Unit.deg, f);
-		else if(name.equals("ELd")) return Util.defaultFormat(horizontal.EL() / Unit.deg, f);
-		else if(name.equals("RAd")) return Util.defaultFormat(equatorial.RA() / Unit.deg, f);
-		else if(name.equals("RAh")) return Util.defaultFormat(((equatorial.RA() + 2.0 * Math.PI) / Unit.hourAngle) % 24.0, f);
-		else if(name.equals("DECd")) return Util.defaultFormat(equatorial.DEC() / Unit.deg, f);
+		else if(name.equals("serial")) return serialNo;
+		else if(name.equals("MJD")) return MJD;
+		else if(name.equals("UT")) return (MJD - Math.floor(MJD)) * Unit.day;
+		else if(name.equals("UTh")) return (MJD - Math.floor(MJD)) * 24.0;
+		else if(name.equals("PA")) return getPA();
+		else if(name.equals("PAd")) return getPA() / Unit.deg;
+		else if(name.equals("AZ")) return horizontal.AZ();
+		else if(name.equals("EL")) return horizontal.EL();
+		else if(name.equals("RA")) return equatorial.RA() / Unit.timeAngle;
+		else if(name.equals("DEC")) return equatorial.DEC();
+		else if(name.equals("AZd")) return horizontal.AZ() / Unit.deg;
+		else if(name.equals("ELd")) return horizontal.EL() / Unit.deg;
+		else if(name.equals("RAd")) return equatorial.RA() / Unit.deg;
+		else if(name.equals("RAh")) return ((equatorial.RA() + 2.0 * Math.PI) / Unit.hourAngle) % 24.0;
+		else if(name.equals("DECd")) return equatorial.DEC() / Unit.deg;
 		else if(name.equals("epoch")) return equatorial.epoch.toString();
-		else if(name.equals("epochY")) return Util.defaultFormat(equatorial.epoch.getYear(), f);
-		else if(name.equals("LST")) return Util.defaultFormat(LST, f);
-		else if(name.equals("LSTh")) return Util.defaultFormat(LST / Unit.hour, f);
+		else if(name.equals("epochY")) return equatorial.epoch.getYear();
+		else if(name.equals("LST")) return LST;
+		else if(name.equals("LSTh")) return LST / Unit.hour;
 		else if(name.equals("date")) {
 			AstroTime time = new AstroTime();
 			time.setMJD(MJD);
-			DateFormat dateFormat = new SimpleDateFormat(formatSpec);
-			dateFormat.setTimeZone(AstroTime.UTC);
-			return dateFormat.format(time.getDate());
+			return time.getDate();
 		}
-		else if(name.equals("obstime")) return Util.defaultFormat(getObservingTime() / Unit.sec, f);
-		else if(name.equals("obsmins")) return Util.defaultFormat(getObservingTime() / Unit.min, f);
-		else if(name.equals("obshours")) return Util.defaultFormat(getObservingTime() / Unit.hour, f);
-		else if(name.equals("weight")) return Util.defaultFormat(weight, f);
-		else if(name.equals("frames")) return Integer.toString(getFrameCount(~0)); 
+		else if(name.equals("obstime")) return getObservingTime() / Unit.sec;
+		else if(name.equals("obsmins")) return getObservingTime() / Unit.min;
+		else if(name.equals("obshours")) return getObservingTime() / Unit.hour;
+		else if(name.equals("weight")) return weight;
+		else if(name.equals("frames")) return getFrameCount(~0); 
 		else if(name.equals("project")) return project;
 		else if(name.equals("observer")) return observer; 
 		else if(name.equals("descriptor")) return descriptor;
 		else if(name.equals("creator")) return creator;
-		else if(name.equals("integrations")) return Integer.toString(size());
-		else if(name.equals("generation")) return Integer.toString(getSourceGeneration());
+		else if(name.equals("integrations")) return size();
+		else if(name.equals("generation")) return getSourceGeneration();
 		else if(this instanceof Weather) {	
-			if(name.equals("Tamb")) return Util.defaultFormat(((Weather) this).getAmbientKelvins() - Constant.zeroCelsius, f);
-			else if(name.equals("humidity")) return Util.defaultFormat(((Weather) this).getAmbientHumidity(), f);
-			else if(name.equals("pressure")) return Util.defaultFormat(((Weather) this).getAmbientPressure() / Unit.hPa, f);
-			else if(name.equals("windspeed")) return Util.defaultFormat(((Weather) this).getWindSpeed() / (Unit.m / Unit.s), f);
-			else if(name.equals("windpk")) return Util.defaultFormat(((Weather) this).getWindPeak() / (Unit.m / Unit.s), f);
-			else if(name.equals("winddir"))	return Util.defaultFormat(((Weather) this).getWindDirection() / Unit.deg, f);
-			else return getFirstIntegration().getFormattedEntry(name, formatSpec);
+			if(name.equals("Tamb")) return ((Weather) this).getAmbientKelvins() - Constant.zeroCelsius;
+			else if(name.equals("humidity")) return ((Weather) this).getAmbientHumidity();
+			else if(name.equals("pressure")) return ((Weather) this).getAmbientPressure() / Unit.hPa;
+			else if(name.equals("windspeed")) return ((Weather) this).getWindSpeed() / (Unit.m / Unit.s);
+			else if(name.equals("windpk")) return ((Weather) this).getWindPeak() / (Unit.m / Unit.s);
+			else if(name.equals("winddir"))	return ((Weather) this).getWindDirection() / Unit.deg;
 		}
-		else return getFirstIntegration().getFormattedEntry(name, formatSpec);
+		
+		return getFirstIntegration().getTableEntry(name);
 	}
 	
 	public int getSourceGeneration() {
@@ -622,8 +622,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		for(Integration<?,?> integration : this) integration.writeProducts();
 		
 		if(!hasOption("lab")) {
-		    printFocus();
-		    printPointing();
+		    reportFocus();
+		    reportPointing();
 		}
 		    
 		if(hasOption("log")) {
@@ -635,7 +635,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 	}
 	
-	public void printFocus() {
+	public void reportFocus() {
 		if(pointing != null) {
 			CRUSH.result(this, "Instant Focus Results for Scan " + getID() + ":\n\n" + getFocusString());
 		}
@@ -647,7 +647,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	}
 	
 	
-	public void printPointing() {
+	public void reportPointing() {
 		if(pointing != null) {
 			CRUSH.result(this, "Pointing Results for Scan " + getID() + ":\n\n" + getPointingString());
 		}

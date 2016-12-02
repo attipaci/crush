@@ -32,11 +32,9 @@ import crush.Scan;
 import crush.resonators.FrequencyID;
 import crush.resonators.ResonatorList;
 import jnum.Unit;
-import jnum.Util;
 import jnum.io.LineParser;
 import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
-import jnum.text.TableFormatter;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
@@ -217,9 +215,9 @@ public class Mako extends AbstractMako<MakoPixel> {
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		if(name.equals("Tres")) return Util.defaultFormat(Tsky / Unit.K, TableFormatter.getNumberFormat(formatSpec));
-		else return super.getFormattedEntry(name, formatSpec);
+	public Object getTableEntry(String name) {
+		if(name.equals("Tres")) return Tsky / Unit.K;
+		else return super.getTableEntry(name);
 	}
 	
 	@Override

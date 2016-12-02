@@ -392,7 +392,7 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 	
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
+	public Object getTableEntry(String name) {
 		return null;
 	}
 

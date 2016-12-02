@@ -208,7 +208,7 @@ public class CorrelatedSignal extends Signal {
 	
 	
 	public void calcFiltering() {
-		// Create the filtering srorage if necessary...
+		// Create the filtering storage if necessary...
 		if(sourceFiltering == null) {
 			sourceFiltering = new float[getMode().size()];
 			Arrays.fill(sourceFiltering, 1.0F);
@@ -248,7 +248,7 @@ public class CorrelatedSignal extends Signal {
 				
 				//phi *= phit;
 				
-				if(nP > 0) phi /= nP;
+				if(nP > 0.0) phi /= nP;
 				if(phi > 1.0) phi = 1.0;
 			
 				// Undo the prior filtering correction

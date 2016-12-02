@@ -28,15 +28,12 @@ import crush.*;
 import crush.array.Camera;
 import crush.array.SingleColorPixel;
 import jnum.Unit;
-import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
 import jnum.math.Vector2D;
-import jnum.text.TableFormatter;
 import crush.array.SingleColorArrangement;
 import nom.tam.fits.*;
 
 import java.io.*;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -235,12 +232,10 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-	
+	public Object getTableEntry(String name) {
 		if(name.equals("ref")) return referencePixel.getID();
-		else if(name.equals("rot")) return Util.defaultFormat(rotation / Unit.deg, f);
-		else return super.getFormattedEntry(name, formatSpec);
+		else if(name.equals("rot")) return rotation / Unit.deg;
+		else return super.getTableEntry(name);
 	}
 	
 	@Override

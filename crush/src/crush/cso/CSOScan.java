@@ -23,7 +23,6 @@
 package crush.cso;
 
 import java.io.IOException;
-import java.text.NumberFormat;
 
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
@@ -37,7 +36,6 @@ import jnum.astro.*;
 import jnum.math.Offset2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
-import jnum.text.TableFormatter;
 import jnum.util.DataTable;
 
 public abstract class CSOScan<InstrumentType extends CSOArray<?>, IntegrationType extends CSOIntegration<InstrumentType,?>> 
@@ -157,13 +155,11 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-	
-		if(name.equals("FAZO")) return Util.defaultFormat(fixedOffset.x() / Unit.arcsec, f);
-		else if(name.equals("FZAO")) return Util.defaultFormat(-fixedOffset.y() / Unit.arcsec, f);
+	public Object getTableEntry(String name) {
+		if(name.equals("FAZO")) return fixedOffset.x() / Unit.arcsec;
+		else if(name.equals("FZAO")) return -fixedOffset.y() / Unit.arcsec;
 		else if(name.equals("dir")) return AstroSystem.getID(scanSystem);
-		else return super.getFormattedEntry(name, formatSpec);
+		else return super.getTableEntry(name);
 	}
 	
 	@Override

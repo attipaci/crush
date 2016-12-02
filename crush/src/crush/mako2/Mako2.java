@@ -35,9 +35,7 @@ import crush.mako.AbstractMakoPixel;
 import crush.mako.MakoPixel;
 import crush.resonators.ResonatorList;
 import jnum.Unit;
-import jnum.Util;
 import jnum.math.Vector2D;
-import jnum.text.TableFormatter;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
@@ -256,10 +254,10 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 
 
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		if(name.equals("df350")) return Util.defaultFormat(meanResonatorShift350, TableFormatter.getNumberFormat(formatSpec));
-		if(name.equals("df850")) return Util.defaultFormat(meanResonatorShift850, TableFormatter.getNumberFormat(formatSpec));
-		else return super.getFormattedEntry(name, formatSpec);
+	public Object getTableEntry(String name) {
+		if(name.equals("df350")) return meanResonatorShift350;
+		if(name.equals("df850")) return meanResonatorShift850;
+		else return super.getTableEntry(name);
 	}
 
 	

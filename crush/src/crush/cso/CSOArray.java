@@ -22,7 +22,6 @@
  ******************************************************************************/
 package crush.cso;
 
-import java.text.NumberFormat;
 import java.util.Vector;
 
 import nom.tam.fits.BasicHDU;
@@ -37,7 +36,6 @@ import crush.array.Rotating;
 import crush.array.SingleColorPixel;
 import jnum.Unit;
 import jnum.Util;
-import jnum.text.TableFormatter;
 import crush.array.SingleColorArrangement;
 
 public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camera<PixelType, PixelType> implements GroundBased, Rotating {
@@ -190,22 +188,20 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camer
 	}
 	
 	@Override
-	public String getFormattedEntry(String name, String formatSpec) {
-		NumberFormat f = TableFormatter.getNumberFormat(formatSpec);
-	
-		if(name.equals("dsos?")) return Boolean.toString(dsosUsed);
-		else if(name.equals("foc.X")) return Util.defaultFormat(focusX / Unit.mm, f);
-		else if(name.equals("foc.Y")) return Util.defaultFormat(focusY / Unit.mm, f);
-		else if(name.equals("foc.Z")) return Util.defaultFormat(focusZ / Unit.mm, f);
-		else if(name.equals("foc.dY")) return Util.defaultFormat(focusYOffset / Unit.mm, f);
-		else if(name.equals("foc.dZ")) return Util.defaultFormat(focusZOffset / Unit.mm, f);
+	public Object getTableEntry(String name) {
+		if(name.equals("dsos?")) return dsosUsed;
+		else if(name.equals("foc.X")) return focusX / Unit.mm;
+		else if(name.equals("foc.Y")) return focusY / Unit.mm;
+		else if(name.equals("foc.Z")) return focusZ / Unit.mm;
+		else if(name.equals("foc.dY")) return focusYOffset / Unit.mm;
+		else if(name.equals("foc.dZ")) return focusZOffset / Unit.mm;
 		else if(name.equals("foc.mode")) return focusMode;
-		else if(name.equals("rot")) return Util.defaultFormat(rotatorAngle / Unit.deg, f);
-		else if(name.equals("rot0")) return Util.defaultFormat(rotatorZeroAngle / Unit.deg, f);
-		else if(name.equals("rotoff")) return Util.defaultFormat(rotatorOffset / Unit.deg, f);
+		else if(name.equals("rot")) return rotatorAngle / Unit.deg;
+		else if(name.equals("rot0")) return rotatorZeroAngle / Unit.deg;
+		else if(name.equals("rotoff")) return rotatorOffset / Unit.deg;
 		else if(name.equals("rotMode")) return rotatorMode;
-		else if(name.equals("load")) return Util.defaultFormat(excessLoad / Unit.K, f);
-		else return super.getFormattedEntry(name, formatSpec);
+		else if(name.equals("load")) return excessLoad / Unit.K;
+		else return super.getTableEntry(name);
 	}
 	
 }

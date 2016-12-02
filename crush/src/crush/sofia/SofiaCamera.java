@@ -56,9 +56,9 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
 
     public SofiaInstrumentData instrumentData;
     public SofiaArrayData array;
- 
+
     Vector<String> history = new Vector<String>();
-   
+
     static {
         FitsFactory.setLongStringsEnabled(true);
     }
@@ -81,7 +81,7 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
         if(array != null) copy.array = array.copy();
         return copy;
     }
-    
+
     public abstract String getFileID();
 
     @Override
@@ -291,7 +291,7 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
         super.validate(scans);
     }
 
-    
+
     public abstract Vector2D getPixelSize();
 
     public static final double telescopeDiameter = 2.5 * Unit.m;

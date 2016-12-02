@@ -23,39 +23,52 @@
 
 package crush.sofia;
 
+
+import jnum.text.TableFormatter;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public abstract class SofiaData implements Cloneable {
+public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
 
-	@Override
-	public Object clone() {
-		try { return super.clone(); }
-		catch(CloneNotSupportedException e) { return null; }
-	}
-	
-	public abstract void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException;
+    @Override
+    public Object clone() {
+        try { return super.clone(); }
+        catch(CloneNotSupportedException e) { return null; }
+    }
 
-	public HeaderCard makeCard(String key, boolean value, String comment) throws HeaderCardException {
-	    return new HeaderCard(key, value, comment);
-	}
-	
-	public HeaderCard makeCard(String key, int value, String comment) throws HeaderCardException {
+    public abstract void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException;
+
+    public HeaderCard makeCard(String key, boolean value, String comment) throws HeaderCardException {
         return new HeaderCard(key, value, comment);
     }
-	
-	public HeaderCard makeCard(String key, long value, String comment) throws HeaderCardException {
+
+    public HeaderCard makeCard(String key, int value, String comment) throws HeaderCardException {
         return new HeaderCard(key, value, comment);
     }
-	
-	public HeaderCard makeCard(String key, float value, String comment) throws HeaderCardException {
+
+    public HeaderCard makeCard(String key, long value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, value, comment);
+    }
+
+    public HeaderCard makeCard(String key, float value, String comment) throws HeaderCardException {
         return new HeaderCard(key, Float.isNaN(value) ? SofiaHeader.UNKNOWN_FLOAT_VALUE : value, comment);
     }
-	
-	public HeaderCard makeCard(String key, double value, String comment) throws HeaderCardException {
+
+    public HeaderCard makeCard(String key, double value, String comment) throws HeaderCardException {
         return new HeaderCard(key, Double.isNaN(value) ? SofiaHeader.UNKNOWN_DOUBLE_VALUE : value, comment);
     }
-	
+
+    public abstract String getLogID();
+
+    public final String getLogPrefix() { return getLogID().toLowerCase() + "."; }
+
+    @Override
+    public Object getTableEntry(String name) {
+        return null;
+    }
+
+
+
 }
