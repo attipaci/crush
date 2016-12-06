@@ -81,12 +81,13 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	@Override
 	public String toString() {
-		return super.toString() + "\t" + Util.f3.format(muxGain) + "\t" + getFixedIndex() + "\t" + sub + "\t" + subrow + "\t" + col;
+		return super.toString() + "\t" + Util.f3.format(coupling) + "\t" + Util.f3.format(muxGain) + "\t" + getFixedIndex() + "\t" + sub + "\t" + subrow + "\t" + col;
 	}
 	
 	@Override
 	public void parseValues(SmartTokenizer tokens, int criticalFlags) {	
 		super.parseValues(tokens, criticalFlags);
+		if(tokens.hasMoreTokens()) coupling = tokens.nextDouble();
 		if(tokens.hasMoreTokens()) muxGain = tokens.nextDouble();
 	}
 	

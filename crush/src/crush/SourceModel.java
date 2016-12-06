@@ -159,7 +159,9 @@ public abstract class SourceModel implements Serializable, Cloneable, TableForma
 			for(Integration<?,?> integration : scan)
 				integration.gain *= integration.instrument.janskyPerBeam() / janskyPerBeam;
 		}
+		
 	}
+	
 	
 	public double getAverageResolution() {
 		double sum = 0.0, sumw = 0.0;

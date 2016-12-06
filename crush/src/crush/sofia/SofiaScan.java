@@ -78,6 +78,10 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public SofiaScan(InstrumentType instrument) {
         super(instrument);
     }
+    
+    public boolean useChopper() {
+        return isChopping || hasOption("chopped");
+    }
 
     @Override
     public void read(String scanDescriptor, boolean readFully) throws Exception {
@@ -484,6 +488,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
         instrument.readData(hdu);
         instrument.validate(this);	
+        
         clear();
 
         addIntegrationsFrom(hdu);

@@ -50,6 +50,11 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	String priorPipelineStep;
 	boolean useBetweenScans;	
 		
+	double transitTolerance = Double.NaN;
+	
+	double focusTOffset;
+
+	
 	public HawcPlusScan(HawcPlus instrument) {
 		super(instrument);
 		if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
@@ -116,7 +121,8 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 		if(hasOption("OBJRA") && hasOption("OBJDEC")) 
 		    objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
 		
-	
+		focusTOffset = header.getDouble("FCSTOFF") * Unit.um;
+	        
 		super.parseHeader(header);	
 		
 		gyroDrifts = new GyroDrifts(this);
@@ -157,10 +163,15 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	
 	@Override
     public void validate() {
+	    if(hasOption("chopper.tolerance")) transitTolerance = Math.abs(option("chopper.tolerance").getDouble());
 	    useBetweenScans = hasOption("betweenscans");
+	    
 	    super.validate();
 	}
 	
-	
-	
+	 @Override
+	 public Object getTableEntry(String name) {
+	     if(name.equals("hawc.dfoc")) return focusTOffset / Unit.um;
+	     return super.getTableEntry(name);
+	 }
 }
