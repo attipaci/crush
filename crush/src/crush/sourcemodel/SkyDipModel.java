@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -30,18 +30,18 @@ import jnum.Configurator;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.fitting.ChiSquared;
+import jnum.data.fitting.ConvergenceException;
 import jnum.data.fitting.DownhillSimplex;
 import jnum.data.fitting.Parameter;
 import jnum.math.Range;
 
 // Simple sky dip:
 //
-// hot spillover, hot temperature
-// sky temperature
-// temperature conversion
-// offset
+// Tsky     sky temperature
+// conv     temperature conversion
+// C0       signal offset
 // 
-// Tobs = eta_h * Thot + (1-eta_h) * Tsky * (1-exp(-tau/sin(EL)))
+// Tobs = Tsky * (1-exp(-tau/sin(EL)))
 // 
 // C = C0 + conv * Tobs
 
@@ -51,7 +51,7 @@ public class SkyDipModel {
 	Parameter Tsky = new Parameter("Tsky", 273.0 * Unit.K, 1.0 * Unit.K); // 0 C
 	Parameter offset = new Parameter("offset");
 	Parameter kelvin = new Parameter("kelvin");
-	Parameter tau = new Parameter("tau", 0.3, new Range(0.0, 1.0));
+	Parameter tau = new Parameter("tau", 1.0, new Range(0.0, 10.0));
 
 	String dataUnit = "[dataunit]";
 
@@ -59,6 +59,8 @@ public class SkyDipModel {
 	boolean uniformWeights = false;
 	
 	Range elRange;
+	
+	int attempts = 3;
 	
 	DownhillSimplex minimizer;
 	Vector<Parameter> parameters = new Vector<Parameter>();
@@ -70,6 +72,10 @@ public class SkyDipModel {
 		if(options.isConfigured("elrange")) {
 			elRange = options.get("elrange").getRange(true);
 			elRange.scale(Unit.deg);
+		}
+		
+		if(options.isConfigured("attempts")) {
+		    attempts = options.get("attempts").getInt();
 		}
 		
 		uniformWeights = options.isConfigured("uniform");
@@ -102,23 +108,18 @@ public class SkyDipModel {
 	}
 	
 	protected void initParms(SkyDip skydip) {
-		double lowest = Double.NaN;
+		Range signalRange = new Range();
+		
 		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight() > 0.0) {
-			lowest = skydip.data[i].value();
-			break;
-		}
-		double highest = Double.NaN;
-		for(int i=skydip.data.length-1; i>=0; i--) if(skydip.data[i].weight() > 0.0) {
-			highest = skydip.data[i].value();
-			break;
+			signalRange.include(skydip.data[i].value());
 		}
 		
 		if(options.isConfigured("tsky")) Tsky.setValue(options.get("tsky").getDouble() * Unit.K);
 		else if(skydip.Tamb.weight() > 0.0) Tsky.setValue(skydip.Tamb.value());
 			
 		// Set some reasonable initial values for the offset and conversion...
-		if(Double.isNaN(offset.value())) offset.setValue(highest);
-		if(Double.isNaN(kelvin.value())) kelvin.setValue((lowest - highest) / Tsky.value());	
+		if(Double.isNaN(offset.value())) offset.setValue(signalRange.min());
+		if(Double.isNaN(kelvin.value())) kelvin.setValue((signalRange.max() - signalRange.min()) / Tsky.value());	
 	}
 
 	
@@ -166,10 +167,19 @@ public class SkyDipModel {
         
         initParms(skydip);
         minimizer = new DownhillSimplex(chi2, parameters);
-        minimizer.minimize();
+        
+        boolean converged = false;
+        for(int i=0; i<attempts; i++) {
+            try { 
+                minimizer.minimize();
+                converged = true;
+                break;
+            }
+            catch(ConvergenceException e) {}
+        }
+        if(!converged) skydip.warning("Skydip fit did not converge!");
         
 		final int dof = usePoints - parameters.size();
-		
 		
 		// Renormalize to chi2 = 1;
 		if(dof > 0.0) {

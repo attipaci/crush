@@ -170,6 +170,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		for(int i=0; i<size(); ) {
 			Integration<InstrumentType, ?> integration = get(i);
 			try { 
+		        info("Processing integration " + (i+1) + ":");
 				integration.validate();
 				i++;
 			}

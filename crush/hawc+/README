@@ -531,8 +531,8 @@ For a general overview of channel divisions, please consult Section 3.
 			setting conditional settings, which depend on the
 			HAWC+ waveband.
 
-   flagjumps		@Expert
-			Enables flagging timestream blocks around flux jumps
+   fixjumps		@Expert
+			Enables ficing timestream blocks around flux jumps
 			in such a way that these will not cause problems.
 
    flight=N             Set the flight number for locating data files using

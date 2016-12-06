@@ -125,6 +125,11 @@ public class HawcPlusFrame extends SofiaFrame {
         if(status != FITS_FLAG_NORMAL_OBSERVING || (hawcScan.useBetweenScans && status == FITS_FLAG_BETWEEN_SCANS)) 
             return false;
         
+        if(!Double.isNaN(hawcScan.transitTolerance)) if(hawcScan.chopper != null) {
+            double dev = Math.abs(chopperPosition.length()) - hawcScan.chopper.amplitude;
+            if(Math.abs(dev) > hawcScan.transitTolerance) return false;
+        }
+        
         if(hasTelescopeInfo) {
             if(equatorial == null) return false;
           
@@ -141,6 +146,8 @@ public class HawcPlusFrame extends SofiaFrame {
             hwpAngle += telescopeVPA;
         }
         
+        for(HawcPlusPixel pixel : hawc) data[pixel.index] /= hawc.subarrayGainRenorm[pixel.sub];
+      
         if(hawc.darkSquidCorrection) darkCorrect();
 
         return super.validate();
@@ -173,6 +180,6 @@ public class HawcPlusFrame extends SofiaFrame {
     public final static int FITS_CHANNELS = FITS_ROWS * FITS_COLS;
 
     public static byte SAMPLE_PHI0_JUMP = sampleFlags.next('j', "phi0 jump").value();
-
-
+    public static byte SAMPLE_TRANSIENT_NOISE = sampleFlags.next('T', "transient noise").value();
+   
 }

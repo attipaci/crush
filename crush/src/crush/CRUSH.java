@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 import jnum.Configurator;
 import jnum.LockedException;
 import jnum.Parallel;
+import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.astro.LeapSeconds;
@@ -49,7 +50,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.33
+ * @version 2.34
  * 
  */
 public class CRUSH extends Configurator implements BasicMessaging {
@@ -58,8 +59,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.33-2";
-    private static String revision = "devel.6";
+    private static String version = "2.34-a2";
+    private static String revision = "devel.2";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -148,7 +149,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     public Configurator option(String name) { return get(name); }
 
-    public void init(String[] args)throws Exception {	
+    public void init(String[] args)throws Exception {	 
         readConfig("default.cfg");
         commandLine = args[0];
 
@@ -167,7 +168,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     @Override
     public void process(String key, String value) {
-        if(key.equals("debug")) {
+        if(key.startsWith("env.[")) processEnvironmentOption(key.substring(5, key.indexOf("]")), value); 
+        else if(key.startsWith("property.[")) processPropertyOption(key.substring(10, key.indexOf("]")), value); 
+        else if(key.equals("debug")) {
             Util.debug = debug = true;
             consoleReporter.setLevel(ConsoleReporter.LEVEL_DEBUG);
 
@@ -265,9 +268,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
             exit(1);
         }
 
-        // Make the global options derive from those of the first scan...
-        instrument = (Instrument<?>) scans.get(0).instrument.copy();
-
+         
         try { instrument.validate(scans); }
         catch(Error e) {
             error(e);
@@ -280,18 +281,62 @@ public class CRUSH extends Configurator implements BasicMessaging {
         Integration.clearRecycler();
         Instrument.clearRecycler();
         SourceModel.clearRecycler();
-
+        
+        setObservingTimeOptions();
+        
+        // Make the global options derive from those of the first scan...
+        // This way any options that were activated conditionally for that scan become 'global' starters as well...
+        instrument = (Instrument<?>) scans.get(0).instrument.copy();
+        
         // Keep only the non-specific global options here...
         for(Scan<?,?> scan : scans) instrument.getOptions().intersect(scan.instrument.getOptions()); 		
         for(int i=scans.size(); --i >=0; ) if(scans.get(i).isEmpty()) scans.remove(i);
-
+        
         System.gc();
-
+              
         if(!isConfigured("lab")) initSourceModel();
 
         initPipelines();
 
     }
+    
+    private void setObservingTimeOptions() {
+        if(!instrument.getOptions().containsKey("obstime")) return;
+
+        double obsTime = getTotalObservingTime();
+      
+        Hashtable<String, Vector<String>> conditions = option("obstime").conditionals;
+        for(String condition : conditions.keySet()) {
+            if(condition.length() < 2) continue;
+
+            try {
+                char op = condition.charAt(0);
+                double threshold = Double.parseDouble(condition.substring(1)) * Unit.s;
+
+                if(op == '<') {
+                    if(obsTime < threshold) parseAllScans(conditions.get(condition));
+                }
+                else if(op == '>') {
+                    if(obsTime > threshold) parseAllScans(conditions.get(condition));
+                }         
+            }
+            catch(NumberFormatException e) {
+                warning("Cannot interpret obstime condition: [" + condition + "].");
+            }
+        }
+    }
+    
+    public void parseAllScans(Vector<String> options) {
+        for(Scan<?, ?> scan : scans) scan.instrument.getOptions().parseAll(options);
+    }
+
+    public double getTotalObservingTime() {
+        double exposure = 0.0;
+        for(Scan<?,?> scan : scans) exposure += scan.getObservingTime();
+        return exposure;
+    }
+
+    
 
     public void initSourceModel() throws Exception {
         consoleReporter.addLine();
@@ -622,7 +667,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         Hashtable<String, Vector<String>> settings = get("object").conditionals;
         for(String spec : settings.keySet()) if(sourceName.startsWith(spec)) 
-            parseAll(settings.get(spec));
+            instrument.getOptions().parseAll(settings.get(spec));
 
     }
 

@@ -64,6 +64,9 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	
 	double hwpTelescopeVertical;
 	
+	double[] subarrayGainRenorm;
+	
+	
 	public HawcPlus() {
 		super("hawc+", new SingleColorArrangement<HawcPlusPixel>(), pixels);
 		mount = Mount.NASMYTH_COROTATING;
@@ -106,6 +109,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		}
 		if(mceSubarray != null) copy.mceSubarray = Arrays.copyOf(mceSubarray, mceSubarray.length);
 		if(detectorBias != null) copy.detectorBias = Arrays.copyOf(detectorBias, detectorBias.length);
+		if(subarrayGainRenorm != null) copy.subarrayGainRenorm = Arrays.copyOf(subarrayGainRenorm, subarrayGainRenorm.length);
 		
 		return copy;
 	}
@@ -252,13 +256,20 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		polZoom[R_ARRAY] = hasOption("zoom.r") ? option("zoom.r").getDouble() : 1.0;
 		polZoom[T_ARRAY] = hasOption("zoom.t") ? option("zoom.t").getDouble() : 1.0;
 		
-		// subarray gains
+		// subarray signs
 		subarrayInverted = new boolean[subarrays];
 		subarrayInverted[R0] = hasOption("sign.r0") ? option("sign.r0").getSign() < 0 : false;
         subarrayInverted[R1] = hasOption("sign.r1") ? option("sign.r1").getSign() < 0 : false;
         subarrayInverted[T0] = hasOption("sign.t0") ? option("sign.t0").getSign() < 0 : false;
         subarrayInverted[T1] = hasOption("sign.t1") ? option("sign.t1").getSign() < 0 : false;
-		
+        
+        // subarray gain renormalizations
+        subarrayGainRenorm = new double[subarrays];
+        subarrayGainRenorm[R0] = hasOption("gain.r0") ? option("gain.r0").getDouble() : 1.0;
+        subarrayGainRenorm[R1] = hasOption("gain.r1") ? option("gain.r1").getDouble() : 1.0;
+        subarrayGainRenorm[T0] = hasOption("gain.t0") ? option("gain.t0").getDouble() : 1.0;
+        subarrayGainRenorm[T1] = hasOption("gain.t1") ? option("gain.t1").getDouble() : 1.0;
+
 		// The default pixelSizes...
 		Vector2D pixelSize = new Vector2D(array.pixelScale, array.pixelScale);
 		
@@ -378,7 +389,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 	
 	@Override
 	public String getChannelDataHeader() {
-		return super.getChannelDataHeader() + "\tGmux\tidx\tsub\trow\tcol";
+		return super.getChannelDataHeader() + "\teff\tGmux\tidx\tsub\trow\tcol";
 	}
 	
 	@Override
@@ -546,7 +557,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		}
 		
 		for(HawcPlusPixel pixel : this) {
-		    float iG = (float)(1.0 / (pixel.gain * pixel.coupling));
+		    float iG = (float)(1.0 / (subarrayGainRenorm[pixel.sub] * pixel.gain * pixel.coupling));
 		    
 		    int col = (pixel.sub & 1) * HawcPlus.subarrayCols + pixel.col;
 		    

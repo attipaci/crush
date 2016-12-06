@@ -1,3 +1,7 @@
+>> Conditions based on environment vars and java properties
+	env.[KEY] or env.[!KEY] or env.[KEY?value]
+	property.[PROPERTY?value] 
+
 >> command-line options is master mode
 	unlock
 	<option>
@@ -9,7 +13,7 @@
 	intcal reductions
 
 >> gain normalization on select group only:
-   e.g. array.norm.group=bias-12
+   e.g. array.normgroup bias-12
 
 >> gain flagging on different division...
    e.g. array.gainrange.div=subarray

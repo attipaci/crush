@@ -168,8 +168,8 @@ public class ScalarMap extends SourceMap {
                 if(CRUSH.debug) CRUSH.trace(e);
             }
         }
-        
-        
+
+
         if(hasOption("sources")) {
             try { 
                 SourceCatalog<SphericalCoordinates> catalog = new SourceCatalog<SphericalCoordinates>();
@@ -185,11 +185,11 @@ public class ScalarMap extends SourceMap {
                 if(CRUSH.debug) CRUSH.trace(e);
             }	
         }
-        
+
         // TODO Apply mask to data either via flag.inside or flag.outside + mask file.
 
-        
-        
+
+
         if(hasSourceOption("inject")) {
             try { injectSource(sourceOption("inject").getPath()); }
             catch(Exception e) { 
@@ -198,8 +198,8 @@ public class ScalarMap extends SourceMap {
             }
         }
 
-        
-        
+
+
         if(hasSourceOption("model")) {
             try { applyModel(sourceOption("model").getPath()); }
             catch(Exception e) { 
@@ -211,7 +211,7 @@ public class ScalarMap extends SourceMap {
 
 
     }
-    
+
     public void flagMask(SourceCatalog<SphericalCoordinates> catalog) {
         // Since the synching step is removal, the sources should be inserted with a negative sign to add into the
         // timestream.
@@ -221,24 +221,24 @@ public class ScalarMap extends SourceMap {
             info("! Source '" + source.getID() + "' FWHM increased to match map resolution.");
             source.setRadius(resolution);
         }
-   
+
         info("Masking " + catalog.size() + " region(s).");
         catalog.flag(map, SourceModel.FLAG_MASK);
 
         map.new Task<Void>() {
             @Override
             protected void process(int i, int j) {
-               if(map.isFlagged(i, j, SourceModel.FLAG_MASK)) {
-                   mask[i][j] = true;
-                   map.unflag(i, j, SourceModel.FLAG_MASK);
-               }
+                if(map.isFlagged(i, j, SourceModel.FLAG_MASK)) {
+                    mask[i][j] = true;
+                    map.unflag(i, j, SourceModel.FLAG_MASK);
+                }
             }
-            
+
         }.process();
-       
+
         maskSamples(Frame.SAMPLE_SKIP);   
     }    
-   
+
 
     public void insertSources(SourceCatalog<SphericalCoordinates> catalog) throws Exception {
         // Since the synching step is removal, the sources should be inserted with a negative sign to add into the
@@ -261,7 +261,7 @@ public class ScalarMap extends SourceMap {
 
         map.reset(true);
     }    
-    
+
     public void applyModel(String fileName) throws Exception {
         info("Applying source model:");
 
@@ -681,12 +681,15 @@ public class ScalarMap extends SourceMap {
 
     @Override
     protected void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain) {
-
+ 
+        final double threshold = hasSourceOption("coupling.s2n") ? sourceOption("coupling.s2n").getDouble() : 5.0;
+        
         CRUSH.Fork<DataPoint[]> calcCoupling = integration.new Fork<DataPoint[]>() {
             private AstroProjector projector;
             private Index2D index;
             private DataPoint[] sum;
 
+             
             @Override
             protected void init() {
                 super.init();
@@ -706,16 +709,22 @@ public class ScalarMap extends SourceMap {
                     final int i = index.i();
                     final int j = index.j();
 
-                    // The use of iterables is a minor performance hit only (~3% overall)
-                    if(isMasked(index)) for(final Channel channel : pixel) {
-                        final int c = channel.index;
-                        if((exposure.sampleFlag[c] & Frame.SAMPLE_SKIP) == 0) {
-                            final double mapValue = fG * sourceGain[c] * map.getValue(i, j);
-                            final double value = exposure.data[c] + fG * syncGain[c] * base.getValue(i, j);
-                            final DataPoint point = sum[c];
-                            point.add(exposure.relativeWeight * value * mapValue);
-                            point.addWeight(exposure.relativeWeight * mapValue * mapValue);			
-                        }
+                    double mapValue = map.getValue(i, j);
+                    double s2n = mapValue / map.getRMS(i, j);
+                    
+                    if(Math.abs(s2n) < threshold) continue; 
+                    
+                    double baseValue = base.getValue(i,j);
+                    
+                    for(final Channel channel : pixel) {
+                        if((exposure.sampleFlag[channel.index] & excludeSamples) != 0) continue;
+
+                        final double prior = fG * syncGain[channel.index] * baseValue;
+                        final double expected = fG * sourceGain[channel.index] * mapValue; 
+                        final double residual = exposure.data[channel.index] + prior - expected;  
+
+                        sum[channel.index].add(exposure.relativeWeight * residual * expected);
+                        sum[channel.index].addWeight(exposure.relativeWeight * expected * expected);			
                     }
                 }	
             }
@@ -728,11 +737,11 @@ public class ScalarMap extends SourceMap {
                 DataPoint[] total = null;
                 for(Parallel<DataPoint[]> task : getWorkers()) {
                     DataPoint[] local = task.getLocalResult();
-                    if(sum == null) sum = local;
+                    if(total == null) total = local;
                     else {
-                        for(int i=sum.length; --i >= 0; ) {
-                            sum[i].add(local[i].value());
-                            sum[i].addWeight(local[i].weight());
+                        for(int i=total.length; --i >= 0; ) {
+                            total[i].add(local[i].value());
+                            total[i].addWeight(local[i].weight());
                         }
                         Instrument.recycle(local);
                     }
@@ -744,32 +753,23 @@ public class ScalarMap extends SourceMap {
 
         calcCoupling.process();
 
-        final DataPoint[] sum = calcCoupling.getResult();
+        final DataPoint[] result = calcCoupling.getResult();
 
-        // Apply a globally neutral coupling correction...
-        final float[] data = integration.instrument.getFloats();
-        int n=0;
-        for(final Channel channel : integration.instrument) if(sum[channel.index].weight() > 0.0) {
-            final double dG =  sum[channel.index].significance();
-            channel.coupling *= dG;
-            data[n++] = (float) dG;
+        for(final Channel channel : integration.instrument) {
+            DataPoint increment = result[channel.index];
+            if(increment.weight() > 0.0) channel.coupling += increment.value() / increment.weight();
         }
 
-        if(n > 0) {
-            double norm = 1.0 / Statistics.median(data, 0, n);
-            for(final Channel channel : integration.instrument) if(sum[channel.index].weight() > 0.0)
-                channel.coupling *= norm;
-        }
-
-        Instrument.recycle(sum);
-        Instrument.recycle(data);
-
+        Instrument.recycle(result);
+        
+        /*
         // If the coupling falls out of range, then revert to the default of 1.0	
         if(hasSourceOption("coupling.range")) {
             Range range = sourceOption("coupling.range").getRange();
             for(final Pixel pixel : pixels) for(final Channel channel : pixel) if(channel.isUnflagged())
                 if(!range.contains(channel.coupling)) channel.coupling = 1.0;
         }
+        */
 
     }
 
@@ -838,7 +838,7 @@ public class ScalarMap extends SourceMap {
         if(hasOption("write.png")) writePNG(option("write.png"), path);
     }
 
-    
+
     public void writePNG(Configurator option, String path) throws InstantiationException, IllegalAccessException, IOException {
         int width = DEFAULT_PNG_SIZE;
         int height = DEFAULT_PNG_SIZE;
@@ -883,7 +883,7 @@ public class ScalarMap extends SourceMap {
             else if(spec.equals("weight")) plane = thumbnail.getWeightImage();
         }
 
-        
+
         final ImageArea<GridImageLayer> imager = new ImageArea<GridImageLayer>();
         final GridImageLayer image = new GridImageLayer(plane);
 

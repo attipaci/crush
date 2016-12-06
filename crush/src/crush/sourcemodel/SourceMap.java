@@ -768,7 +768,7 @@ public abstract class SourceMap extends SourceModel {
         if(CRUSH.debug) debug("mapping frames:" + mappingFrames);
 
         if(signalCorrection)
-            integration.comments += "[C1~" + Util.f2.format(1.0/averageFiltering) + "] ";
+            integration.comments += "[C~" + Util.f2.format(1.0/averageFiltering) + "] ";
         
         integration.comments += " ";
     }
@@ -816,12 +816,15 @@ public abstract class SourceMap extends SourceModel {
     public void sync(final Integration<?,?> integration, final int signalMode) {
         Instrument<?> instrument = integration.instrument; 
 
-        final double[] sourceGain = instrument.getSourceGains(false);	
+        double[] sourceGain = instrument.getSourceGains(false);	
         if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
 
         final List<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
 
-        if(hasSourceOption("coupling")) calcCoupling(integration, pixels, sourceGain, integration.sourceSyncGain);
+        if(hasSourceOption("coupling")) {
+            calcCoupling(integration, pixels, sourceGain, integration.sourceSyncGain);
+            sourceGain = instrument.getSourceGains(false);
+        }
         sync(integration, pixels, sourceGain, signalMode);
 
         // Do an approximate accounting of the source dependence...

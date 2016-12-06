@@ -1,4 +1,51 @@
-2.33-2 (devel.6)
+>> obstime.[]
+>> fits.assign.<key> option
+>> positions.robust
+>> skydip.attempts
+>> chopper.invert
+>> chopper.tolerance
+>> fixjumps
+>> env.[], property.[]
+>> chopper.shift
+>> chopper.tolerance
+>> transients, transients.level?
+>> source.coupling.s2n
+
+
+2.34-a1 (devel.3)
+ 
+	[NEW] {HAWC+} Subarray relative gain normalizations via gain.R0, 
+	gain.R1, gain.T0 (and gain.T1) options. This allows overall 
+	normalization and calibration regardless of subarray selection.
+
+	[NEW] {HAWC+} New option 'chopper.shift' allows shifting the chopper
+	signal by the specified number of frames forward relative to the data.
+	The detector transitions clearly lag the chopper by about 2 samples, so
+	'chopper.shift=2' compensates for the observed lag.
+
+	[NEW] {HAWC+} New option 'chopper.tolerance' allows setting a
+	tolerance for the chopper position in arcsec. If the actual chopper
+	disatance is not within the nominal chopper amplitude, then the
+	exposure will not be used to avoid smearing.
+
+	[NEW] {skydip} Option 'skydip.attempts' now controls up to how many 
+	times CRUSH will attempt to fit the skydip data before giving up.
+
+	[NEW] Option 'positions.robust' enables robust scanning speed stats 
+	(default before, and now).
+
+	[NEW] Conditional settings based on total observing time using
+	'obstime.[]'. The condition inside the brackets is a minimum or maximum
+	observing time in seconds, e.g.:
+
+		obstime.[<60] 
+		obstime.[>60]
+
+	The first activates for datasets longer than 1 minute, the second for
+	datasets shorter than a minute. Nesting obstime conditions is possible,
+	however, it is evaluated only once after all scans are read. Thus it 
+	will have no effect if activated later (e.g. if nested inside an
+	iteration.[] option).
 
 	[NEW] Pointing/calibration results are now stored in the scan HDU 
 	headers.
@@ -8,6 +55,13 @@
 
 	[NEW] {skydip} The skydip resolution is now set by the new option
 	'skydip.grid' to avoid conflict with setting mapping grid sizes.
+
+	[FIX] 'source.coupling' was broken. Fixed.
+
+	[FIX] {skydip} Convergence exceptions are now caught...
+
+	[FIX] {HAWC+} For non-chopped scans, do not add the SMA position to
+	to the astrometry. It messes things up...
 
 	[FIX] {skydip} Handling of NaN elevation coordinates.
 
@@ -24,12 +78,45 @@
 	instead of Kelvin to the skydip model, resulting in bogus Jy/K value in
 	the fit. Fixed.
 
+	[TWEAK] {skydip} 3 fitting tries.
+
+	[TWEAK] {skydip} Acceptable tau range changed to 0:10.
+
 	[TWEAK] {SOFIA} scan lookup by flight and scan numbers now works with
 	the more standard SOFIA convention as well as the old HAWC+ convention
 	used in April and October 2016.
 
 	[TWEAK] {SOFIA} Improved reporting of errors encountered while 
 	accessing the FITS input.
+
+	[CONFIG] {HAWC+} Updated calibrations for bands A,C,D,E based on
+	Uranus flight 354.
+
+	[CONFIG] {HAWC+} Updated band A and band D geometries based on flights
+	353 and 354.
+
+	[CONFIG] {HAWC+} Smoothing in the intermediate iterations is disabled
+	by default. Using it makes the removal of flux jump artifacts more
+	difficult.
+
+	[CONFIG] {HAWC+} Decorrelate on detector rows instead of biaslines
+	(2-rows). While bias fluctuarions dominate, there is occasionally noise
+	on individual rows, making row-based decorrelation a more robust 
+	solution, in general.
+
+	[CONFIG] {HAWC+} Short (<40s) scans are reduced with a shorter 1/f
+	stability timescale. This makes for cleaner focus reductions.
+
+	[CONFIG] {HAWC+} Do not decorrelate chopper for skydips. (CHOPPING is
+	erroneously set to T when running intcals during skydips -- during
+	2016-12.)
+
+	[CONFIG] {HAWC+} Re-enable 'write.png' for Skydip reductions via the
+	'drp'.
+
+	[CONFIG] {HAWC+} Band A configuration updated based on Nov 30 flight.
+
+	[CONFIG] {HAWC+} array.gainrange adjusted 0.1:30 --> 0.2:10.
 
 	[CONFIG] {SOFIA} Disabled smoothing of telescope position data for
 	velocity and acceleration clipping. The smoothing (by 1s) could 

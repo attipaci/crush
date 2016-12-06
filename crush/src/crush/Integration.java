@@ -166,8 +166,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void validate() {
 		if(isValid) return;		
-	
-		scan.info("Processing integration " + getID() + ":");
 		
 		// Incorporate the relative instrument gain (under loading) in the scan gain...
 		gain *= instrument.sourceGain;	
@@ -247,8 +245,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Must do this before direct tau estimates...
 		if(hasOption("level") || !hasOption("pixeldata")) {
 			boolean isRobust = false;
-			if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust=true;
-			
+			if(hasOption("estimator")) isRobust = option("estimator").equals("median");
 			info("Removing DC offsets" + (isRobust ? " (robust)" : "") + ".");
 			removeOffsets(isRobust);
 		}
@@ -487,7 +484,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	public void calcScanSpeedStats() {
-		aveScanSpeed = getMedianScanningVelocity(0.5 * Unit.s);
+	    boolean robust = hasOption("positions.robust");
+		aveScanSpeed = robust ? getMedianScanningVelocity() : getMeanScanningVelocity();
 		info("Typical scanning speeds are " 
 				+ Util.f1.format(aveScanSpeed.value()/(instrument.getSizeUnitValue()/Unit.s)) 
 				+ " +- " + Util.f1.format(aveScanSpeed.rms()/(instrument.getSizeUnitValue()/Unit.s)) 
@@ -616,14 +614,24 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return ExtraMath.pow2ceil(frames);
 	}
 
-	public FrameType getFirstFrame() {
-		int t=0;
-		while(get(t) == null) t++;
-		return get(t);
+	
+	
+	public final FrameType getFirstFrame() {
+		return getFirstFrameFrom(0);
 	}
 	
+	public FrameType getFirstFrameFrom(int index) {
+        int t=index;
+        while(get(t) == null) t++;
+        return get(t);
+    }
+	
 	public FrameType getLastFrame() {
-		int t=size()-1;
+	    return getLastFrameFrom(size()-1);
+	}
+	
+	public FrameType getLastFrameFrom(int index) {
+		int t=index;
 		while(get(t) == null) t--;
 		return get(t);
 	}
@@ -934,13 +942,15 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 
-	private boolean level(final Channel channel, final int from, int to, final float[] frameParms, final WeightedPoint increment) {
+	private boolean level(final Channel channel, final int from, final int to, final float[] frameParms, final WeightedPoint increment) {
 		final float delta = (float) increment.value();			
 		final float pNorm = (float) (channel.getFiltering(this) / increment.weight());
 		
+		int t=to;
+		
 		// Remove offsets from data and account frame dependence...	
-		while(--to >= from) {
-			final Frame exposure = get(to);
+		while(--t >= from) {
+			final Frame exposure = get(t);
 			if(exposure == null) continue;
 			
 			exposure.data[channel.index] -= delta;
@@ -2105,18 +2115,40 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return v;
 	}
 	
-	public DataPoint getMedianScanningVelocity(double smoothT) {
+	public DataPoint getMeanScanningVelocity() {
+        final Vector2D[] v = getScanningVelocities();       
+      
+        double sum = 0.0;
+        int n = 0;
+       
+        for(int t=v.length; --t >= 0; ) if(v[t] != null) if(!v[t].isNaN()) {
+            sum += v[t].length();
+            n++;
+        }
+        double avev = sum / n;
+        
+        sum = 0.0;
+        for(int t=v.length; --t >= 0; ) if(v[t] != null) if(!v[t].isNaN()) {
+            double dev = (v[t].length() - avev);
+            sum += dev*dev;
+        }
+        double w = n > 0 ? n / sum : 0.0;
+        return new DataPoint(new WeightedPoint(avev, w));
+    }
+    
+	
+	public DataPoint getMedianScanningVelocity() {
 		final Vector2D[] v = getScanningVelocities();		
 		
 		final float[] speed = getFloats();
 		Arrays.fill(speed, 0, v.length, 0.0F);
 		
 		int n=0;
-		for(int t=v.length; --t >= 0; ) if(v[t] != null) speed[n++] = (float) v[t].length();
+		for(int t=v.length; --t >= 0; ) if(v[t] != null) if(!v[t].isNaN()) speed[n++] = (float) v[t].length();
 		double avev = n > 0 ? Statistics.median(speed, 0, n) : Double.NaN;
 		
 		n=0;
-		for(int t=v.length; --t >= 0; ) if(v[t] != null) {
+		for(int t=v.length; --t >= 0; ) if(v[t] != null) if(!v[t].isNaN()) {
 			float dev = (float) (speed[n] - avev);
 			speed[n++] = dev*dev;
 		}
@@ -2323,7 +2355,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void notchFilter() {
 		if(!hasOption("notch.frequencies")) return;
 		
-		List<Double> frequencies = option("notch.frequencies").getDoubles();
+		List<Double> frequencies = option("intcalfreq").getDoubles();	
+		
 		double width = hasOption("notch.width") ? option("notch.width").getDouble() : 0.1;
 		
 		if(hasOption("notch.harmonics")) {
@@ -2355,7 +2388,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final double df = 1.0 / (windowSize * instrument.samplingInterval);
 		final int nf = windowSize >>> 1;
 		
-		info("Notching " + frequencies.size() + " frequencies.");
+		info("Notching " + frequencies.size() + " bands.");
 		
 		instrument.new Fork<Void>() {
 			private FloatFFT fft;

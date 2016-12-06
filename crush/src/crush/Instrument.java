@@ -34,6 +34,7 @@ import crush.sourcemodel.*;
 import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
+import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroTime;
@@ -310,8 +311,7 @@ implements TableFormatter.Entries, BasicMessaging {
 		Hashtable<String, Vector<String>> settings = option("mjd").conditionals;
 		
 		for(String rangeSpec : settings.keySet()) 
-			if(Range.parse(rangeSpec, true).contains(MJD)) options.parseAll(settings.get(rangeSpec));
-			
+			if(Range.parse(rangeSpec, true).contains(MJD)) options.parseAll(settings.get(rangeSpec));		
 	}
 	
 	
@@ -378,17 +378,42 @@ implements TableFormatter.Entries, BasicMessaging {
 			String key = tokens.nextToken().toUpperCase();
 	
 			if(!header.containsKey(key)) continue;
-			String value = tokens.hasMoreTokens() ? tokens.nextToken() : null;	
-			
-			debug("checking for FITS header key: " + condition + (value == null ? "" : " = " + value));
+			String value = tokens.hasMoreTokens() ? tokens.nextToken() : null;		 
+            String cardValue = header.findCard(key).getValue();
 			
 			if(value == null) options.parseAll(conditionals.get(condition));
 			else if(value.charAt(0) == '!') {
-				if(!header.getStringValue(key).equalsIgnoreCase(value.substring(1))) options.parseAll(conditionals.get(condition));
+				if(!cardValue.equalsIgnoreCase(value.substring(1))) options.parseAll(conditionals.get(condition));
 			}
-			else if(header.getStringValue(key).equalsIgnoreCase(value)) options.parseAll(conditionals.get(condition));
+			else if(cardValue.equalsIgnoreCase(value)) options.parseAll(conditionals.get(condition));
 		}
+		
+		setFitsAssignments(header);
 	}	
+	
+	protected void setFitsAssignments(Header header) {
+	    if(!options.containsKey("fits.assign")) return;
+	    
+	    Configurator assignments = options.get("fits.assign");
+	     
+	    for(String fitsKey : assignments.branches.keySet()) {
+	        fitsKey = fitsKey.toUpperCase();
+	        if(header.containsKey(fitsKey)) {
+	            String arg = options.get("fits.assign." + fitsKey).getValue();
+	            StringTokenizer tokens = new StringTokenizer(arg, " \t:=");
+	            if(tokens.countTokens() == 0) continue;
+	            String option = tokens.nextToken();
+	            
+	            try { 
+	                String value = header.findCard(fitsKey).getValue();
+	                CRUSH.debug(Scan.class, "FITS assign " + fitsKey + " --> " + option + " = " + value);
+	                options.parse(option + "=" + value); 
+	            }
+	            catch(LockedException e) {}
+	        }       
+	    }
+	    
+	}
 	
 	public String getDataLocationHelp() {
 		return "";
@@ -1124,18 +1149,18 @@ implements TableFormatter.Entries, BasicMessaging {
 		if(n == 0) throw new IllegalStateException("DOF?");
 		
 		// Use robust mean (with 10% tails) to estimate average weight.
-		final double aveW = Math.expm1(n > 10 ? Statistics.robustMean(weights, 0, n, 0.1) : Statistics.median(weights));	
-		final double maxWeight = weightRange.max() * aveW;
-		final double minWeight = weightRange.min() * aveW;	
+		final double aveWG2 = Math.expm1(n > 10 ? Statistics.robustMean(weights, 0, n, 0.1) : Statistics.median(weights));	
+		final double maxWG2 = weightRange.max() * aveWG2;
+		final double minWG2 = weightRange.min() * aveWG2;	
 		
 		double sumw = 0.0;
 		for(Channel channel : getDetectorChannels()) {
 			channel.unflag(Channel.FLAG_SENSITIVITY);
-			double w = channel.weight * channel.gain * channel.gain;
+			double wG2 = channel.weight * channel.gain * channel.gain;
 			
-			if(w > maxWeight) channel.flag(Channel.FLAG_SENSITIVITY);
-			else if(w < minWeight) channel.flag(Channel.FLAG_SENSITIVITY);		
-			else if(channel.isUnflagged()) sumw += w;
+			if(wG2 > maxWG2) channel.flag(Channel.FLAG_SENSITIVITY);
+			else if(wG2 < minWG2) channel.flag(Channel.FLAG_SENSITIVITY);		
+			else if(channel.isUnflagged()) sumw += wG2;
 		}
 		
 		if(sumw == 0.0) {
