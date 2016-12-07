@@ -49,6 +49,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 
 	Vector2D pixelSize;
 	
+	ArrayList<ChannelGroup<HawcPlusPixel>> subarrayGroups;
+	
 	boolean[] hasSubarray;
 	Vector2D[] subarrayOffset;
 	double[] subarrayOrientation;
@@ -160,6 +162,18 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
 		
 		try { addDivision(getDivision("rows", HawcPlusPixel.class.getField("row"), muxSkipFlag)); }
 		catch(Exception e) { error(e); }	
+	}
+	
+	@Override
+    public void initGroups() {
+	    super.initGroups();
+	    
+		subarrayGroups = new ArrayList<ChannelGroup<HawcPlusPixel>>(subarrays);
+		for(int pol=0; pol<polArrays; pol++) for(int sub=0; sub<polSubarrays; sub++)
+		    subarrayGroups.add(new ChannelGroup<HawcPlusPixel>(polID[pol] + sub));
+		
+		for(HawcPlusPixel pixel : this) subarrayGroups.get(pixel.sub).add(pixel);
+		
 	}
 	
 	@Override

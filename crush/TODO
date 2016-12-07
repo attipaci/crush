@@ -1,3 +1,5 @@
+>> Change combination Frame flags to method calls...
+
 >> Conditions based on environment vars and java properties
 	env.[KEY] or env.[!KEY] or env.[KEY?value]
 	property.[PROPERTY?value] 

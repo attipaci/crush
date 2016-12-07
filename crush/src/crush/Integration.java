@@ -1255,18 +1255,20 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		comments += "(" + Util.e2.format(nefd) + ")";	
 	}
 
-	public void getTimeWeights() {
+	public void getTimeWeights() { getTimeWeights(instrument); } 
+	
+	public void getTimeWeights(ChannelGroup<?> channels) {
 		int n = hasOption("weighting.frames.resolution") ? filterFramesFor(option("weighting.frames.resolution").getValue(), 10.0 * Unit.s) : 1;
-		getTimeWeights(ExtraMath.pow2ceil(n));
+		getTimeWeights(channels, ExtraMath.pow2ceil(n));
 	}
 	
-	public void getTimeWeights(final int blockSize) { 
+	public void getTimeWeights(ChannelGroup<?> channels, final int blockSize) { 
 		comments += "tW";
 		if(blockSize > 1) comments += "(" + blockSize + ")";
-		getTimeWeights(blockSize, true); 
+		getTimeWeights(channels, blockSize, true); 
 	}
 	
-	protected void getTimeWeight(final int from, final int to, final WeightedPoint stats) {
+	protected void getTimeWeight(ChannelGroup<?> channels, final int from, final int to, final WeightedPoint stats) {
 		int points = 0;
 		double deps = 0.0;
 		double sumChi2 = 0.0;
@@ -1277,7 +1279,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			exposure.unflag(Frame.FLAG_WEIGHT);
 
-			for(final Channel channel : instrument) if(channel.isUnflagged(Frame.TIME_WEIGHTING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0) {			
+			for(final Channel channel : channels) if(channel.isUnflagged(Frame.TIME_WEIGHTING_FLAGS)) if(exposure.sampleFlag[channel.index] == 0) {			
 				final float value = exposure.data[channel.index];
 				sumChi2 += (channel.weight * value * value);
 				points++;
@@ -1313,7 +1315,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}	
 	}
 	
-	protected void getTimeWeights(final int blockSize, final boolean flag) {
+	protected void getTimeWeights(final ChannelGroup<?> channels, final int blockSize, final boolean flag) {
 		
 		final BlockFork<WeightedPoint> weighting = new BlockFork<WeightedPoint>(blockSize) {
 			private WeightedPoint stats;
@@ -1326,7 +1328,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			@Override
 			protected void process(int from, int to) {
-				getTimeWeight(from, to, stats);
+				getTimeWeight(channels, from, to, stats);
 			}
 			
 			@Override
@@ -1365,8 +1367,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			exposure.flag(Frame.FLAG_WEIGHT);	
 	}
 	
-	
-	public void dejumpFrames() {
+	public void dejumpFrames() { 
 		final int resolution = ExtraMath.pow2round(hasOption("dejump.resolution") ? framesFor(option("dejump.resolution").getDouble() * Unit.sec) : 1);
 		double level = hasOption("dejump.level") ? option("dejump.level").getDouble() : 2.0;
 		
@@ -1395,7 +1396,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final Dependents parms = getDependents("jumps");		
 		
 		// Derive new time weights temporarily...
-		getTimeWeights(resolution, false);
+		getTimeWeights(instrument, resolution, false);
 		
 		int from = 0;
 		int to = 0;
@@ -1426,7 +1427,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		// Recalculate the frame weights as necessary... (it's fast!)
 		if(levelled > 0  || removed > 0) {
-			if(hasOption("weighting.frames")) getTimeWeights();
+			if(hasOption("weighting.frames")) getTimeWeights(instrument);
 		}
 		// Otherwise, just reinstate the old weights...
 		else for(final Frame exposure : this) if(exposure != null) exposure.relativeWeight = exposure.tempC;
@@ -2043,9 +2044,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public Vector2D[] getSmoothPositions(int type) {
-		final double T = hasOption("positions.smooth") ? option("positions.smooth").getDouble() * Unit.s : instrument.samplingInterval;
-		final int n = framesFor(T);
-
+		final int n = hasOption("positions.smooth") ? framesFor(option("positions.smooth").getDouble() * Unit.s) : 1;
+	
 		final Vector2D[] pos = getPositions(type);
 		if(n < 2) return pos;
 		

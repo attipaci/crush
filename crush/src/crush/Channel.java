@@ -24,6 +24,7 @@
 package crush;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -230,6 +231,17 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		coupling = 1.0;
 	}
 	
+	public Field getFieldFor(String name) {
+        Class<?> channelClass = getClass();
+        
+        try { return channelClass.getField(name); } 
+        catch (SecurityException e) {} 
+        catch (NoSuchFieldException e) {}
+        
+        return null;
+    }
+    
+
 	
 	public static final FlagSpace<Integer> flagSpace = new FlagSpace.Integer("channel-flags");
 	

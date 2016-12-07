@@ -718,7 +718,7 @@ public class ScalarMap extends SourceMap {
                     
                     for(final Channel channel : pixel) {
                         if((exposure.sampleFlag[channel.index] & excludeSamples) != 0) continue;
-
+   
                         final double prior = fG * syncGain[channel.index] * baseValue;
                         final double expected = fG * sourceGain[channel.index] * mapValue; 
                         final double residual = exposure.data[channel.index] + prior - expected;  
@@ -757,19 +757,22 @@ public class ScalarMap extends SourceMap {
 
         for(final Channel channel : integration.instrument) {
             DataPoint increment = result[channel.index];
-            if(increment.weight() > 0.0) channel.coupling += increment.value() / increment.weight();
+            if(increment.weight() <= 0.0) continue;
+            channel.coupling += (increment.value() / increment.weight()) * channel.coupling;
         }
-
+        
         Instrument.recycle(result);
         
-        /*
+        
         // If the coupling falls out of range, then revert to the default of 1.0	
         if(hasSourceOption("coupling.range")) {
             Range range = sourceOption("coupling.range").getRange();
-            for(final Pixel pixel : pixels) for(final Channel channel : pixel) if(channel.isUnflagged())
-                if(!range.contains(channel.coupling)) channel.coupling = 1.0;
+            for(final Pixel pixel : pixels) for(final Channel channel : pixel) if(channel.isUnflagged()) {
+                if(!range.contains(channel.coupling)) channel.flag(Channel.FLAG_BLIND);
+                else channel.unflag(Channel.FLAG_BLIND);
+            }
         }
-        */
+        
 
     }
 

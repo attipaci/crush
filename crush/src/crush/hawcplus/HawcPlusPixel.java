@@ -24,6 +24,7 @@
 package crush.hawcplus;
 
 
+import crush.Channel;
 import crush.array.SingleColorPixel;
 import jnum.Util;
 import jnum.text.SmartTokenizer;
@@ -81,14 +82,25 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	@Override
 	public String toString() {
-		return super.toString() + "\t" + Util.f3.format(coupling) + "\t" + Util.f3.format(muxGain) + "\t" + getFixedIndex() + "\t" + sub + "\t" + subrow + "\t" + col;
+		return super.toString() 
+		        + "\t" + Util.f3.format(coupling) 
+		        + "\t" + Util.f3.format(((HawcPlus) instrument).subarrayGainRenorm[sub])
+		        + "\t" + Util.f3.format(muxGain) 
+		        + "\t" + getFixedIndex() 
+		        + "\t" + sub 
+		        + "\t" + subrow 
+		        + "\t" + col;
 	}
 	
 	@Override
 	public void parseValues(SmartTokenizer tokens, int criticalFlags) {	
 		super.parseValues(tokens, criticalFlags);
+		if(tokens.hasMoreTokens()) tokens.nextToken();
 		if(tokens.hasMoreTokens()) coupling = tokens.nextDouble();
 		if(tokens.hasMoreTokens()) muxGain = tokens.nextDouble();
+		
+		if(coupling < 0.1) flag(Channel.FLAG_BLIND);
+		if(coupling > 10.0) flag(Channel.FLAG_DEAD);
 	}
 	
 	@Override
@@ -101,5 +113,6 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public final static int FLAG_BIAS = softwareFlags.next('b', "Bad TES bias gain").value();
 	public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
 	public final static int FLAG_ROW = softwareFlags.next('#', "Bad MUX sample gain").value();
+	public final static int FLAG_FLICKER = softwareFlags.next('T', "Flicker noise").value();
 
 }

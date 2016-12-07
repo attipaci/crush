@@ -390,7 +390,6 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		coords.copy(equatorial);
 	}
 	
-
 	public static final FlagBlock<Byte> sampleFlags = new FlagSpace.Byte("sample-flags").getDefaultFlagBlock();
 	public static byte SAMPLE_SOURCE_BLANK = sampleFlags.next('B', "Blanked").value();
 	public static byte SAMPLE_SPIKE = sampleFlags.next('s', "Spiky").value();
@@ -414,7 +413,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	public static int NOD_LEFT = frameFlags.next('<', "Nod Left").value();
 	public static int NOD_RIGHT = frameFlags.next('>', "Nod Right").value();
-
+	
 	public static int BAD_DATA = FLAG_SPIKY | FLAG_JUMP;
 	public static int MODELING_FLAGS = SKIP_MODELING | BAD_DATA | FLAG_DOF | FLAG_WEIGHT;
 	public static int SOURCE_FLAGS = SKIP_SOURCE_MODELING | MODELING_FLAGS;
