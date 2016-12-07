@@ -202,7 +202,10 @@ implements TableFormatter.Entries, BasicMessaging {
 		if(hasOption("scramble")) scramble();
 		
 		if(hasOption("blind")) setBlindChannels(option("blind").getList()); 
-		if(hasOption("flag")) flagPixels(option("flag").getList()); 	
+		if(hasOption("flag")) flagPixels(option("flag").getList()); 
+		
+		if(options.containsKey("flag")) flagFields(options.get("flag"));
+		   	
 		if(hasOption("flatweights")) flattenWeights();
 		
 		if(hasOption("uniform")) uniformGains();
@@ -445,7 +448,56 @@ implements TableFormatter.Entries, BasicMessaging {
 		return scan;
 	}
 	
-
+	
+	public void flagFields(Configurator option) {
+	    for(String name : option.getKeys(false)) if(option.isConfigured(name)) flagField(name, option.get(name).getList());   
+	}
+	
+	public void flagField(String fieldName, List<String> specs) {
+	    Channel firstChannel = get(0);
+	    
+	    Field field = firstChannel.getFieldFor(fieldName);
+	    if(field == null) {
+	        warning("No accessible field " + fieldName + " in " + firstChannel.getClass().getSimpleName() + "."); 
+	        return;
+	    } 
+	       
+	    flag(field, specs);
+	}
+	
+	 
+	public void flag(Field pixelField, List<String> specs) {
+	    info("Flagging channels by " + pixelField.getName() + " values");
+	    
+	    for(String spec : specs) {
+	        try { 
+	            flag(pixelField, Integer.parseInt(spec)); 
+	            continue;
+	        }
+	        catch(NumberFormatException e) {}
+	        
+	        Range r = Range.parse(spec, false);
+	        if(r.isEmpty()) r = Range.parse(spec, true);
+	        if(r.isEmpty()) {
+	            warning("Could not parse flag." + pixelField.getName() + " indices from: " + spec);
+	            continue;
+	        }
+	        
+	        int from = (int) r.min();
+	        int to = (int) r.max();
+	        
+	        for(int i=from; i<=to; i++) flag(pixelField, i);   
+	    }
+	    
+	}
+	
+	public void flag(Field pixelField, int value) {
+	    for(ChannelType channel : this) {
+	        try { if(pixelField.getInt(channel) == value) channel.flag(Channel.FLAG_DEAD); }
+	        catch(IllegalAccessException e) {}
+	    }
+	}
+	
 	// TODO ability to flag groups divisions...
 	// perhaps flag.group, and flag.division...
 	public void flagPixels(Collection<String> list) {

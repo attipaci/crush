@@ -1,3 +1,4 @@
+>> dejump by channel group.
 >> obstime.[]
 >> fits.assign.<key> option
 >> positions.robust
@@ -13,9 +14,11 @@
 
 
 2.34-a1 (devel.3)
+
+	[NEW] Flag pixels based on integer field values and ranges...
  
 	[NEW] {HAWC+} Subarray relative gain normalizations via gain.R0, 
-	gain.R1, gain.T0 (and gain.T1) options. This allows overall 
+	gain.R1, gain.T0 (and gain.T1) options. It makes for improved overall 
 	normalization and calibration regardless of subarray selection.
 
 	[NEW] {HAWC+} New option 'chopper.shift' allows shifting the chopper
@@ -89,6 +92,18 @@
 	[TWEAK] {SOFIA} Improved reporting of errors encountered while 
 	accessing the FITS input.
 
+	[CONFIG] {HAWC+} Recalibrated based on Uranus (Flight 354), and 
+	determined pointing corrections.
+
+	[CONFIG] {HAWC+} Changed noise flagging range to deal with some bad
+	pixels better...
+
+	[CONFIG] {HAWC+} Scanning speed flagging is now explicitly set for
+	each band configuration (hawc+/band-X.cfg).
+
+	[CONFIG] {HAWC+} Incorporated optical pixel couplings derived from
+	OMC-1 rasters.
+
 	[CONFIG] {HAWC+} Updated calibrations for bands A,C,D,E based on
 	Uranus flight 354.
 
@@ -130,6 +145,9 @@
 	[CONFIG] {HAWC+} Automatic skydip reductions based on OBSMODE, CALMODE
 	or DIAGMODE keywords (which will be set accordingly starting with the 
 	Nov 30 commissioning flights).
+
+	[CODE] {HAWC+} Added subarray channel groups for easy access of 
+	the subarrays...
 
 	[CODE] Deprecated unused method of average map filter correction.
 

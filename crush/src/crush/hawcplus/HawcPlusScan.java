@@ -120,11 +120,12 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	    
 		if(hasOption("OBJRA") && hasOption("OBJDEC")) 
 		    objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
-		
-		focusTOffset = header.getDouble("FCSTOFF") * Unit.um;
-	        
+			
 		super.parseHeader(header);	
-		
+	
+		focusTOffset = header.getDouble("FCSTOFF") * Unit.um;
+		if(!Double.isNaN(focusTOffset)) info("Focus T Offset: " + Util.f1.format(focusTOffset / Unit.um));    
+
 		gyroDrifts = new GyroDrifts(this);
 		gyroDrifts.parse(header);
 	}
