@@ -28,6 +28,7 @@ import java.util.List;
 
 import crush.CRUSH;
 import crush.Channel;
+import crush.Dependents;
 import crush.Frame;
 import crush.fits.HDURowReader;
 import crush.sofia.SofiaChopperData;
@@ -48,9 +49,11 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
     boolean checkTransients = false;
     double transientLevel = 3.0;
 
-    boolean fixJumps = false;
+    boolean fixJumps = false, fixSubarray[] = new boolean[HawcPlus.subarrays];
     int minJumpLevelFrames = 0;
 
+    Dependents driftParms;
+    
     public HawcPlusIntegration(HawcPlusScan parent) {
         super(parent);
     }	
@@ -341,6 +344,24 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
     public String getFullID(String separator) {
         return scan.getID();
     }
+    
+    @Override
+    public void removeDrifts(final int targetFrameResolution, final boolean robust) {
+        checkTransients = hasOption("transients");
+        transientLevel = hasOption("transients.level") ? option("transients.level").getDouble() : 100.0;
+        fixJumps = hasOption("fixjumps");
+        
+        fixSubarray[HawcPlus.R0] =  hasOption("fixjumps.r0");
+        fixSubarray[HawcPlus.R1] =  hasOption("fixjumps.r1");
+        fixSubarray[HawcPlus.T0] =  hasOption("fixjumps.t0");
+        fixSubarray[HawcPlus.T1] =  hasOption("fixjumps.t1");
+        
+        minJumpLevelFrames = framesFor(30.0 * getPointCrossingTime());
+        
+        driftParms = getDependents("drifts");
+        
+        super.removeDrifts(targetFrameResolution, robust);
+    }
 
     @Override
     public void validate() {  
@@ -350,12 +371,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         checkJumps();
 
         super.validate();
-
-        checkTransients = hasOption("transients");
-        transientLevel = hasOption("transients.level") ? option("transients.level").getDouble() : 6.0;
-        fixJumps = hasOption("fixjumps");
-        minJumpLevelFrames = framesFor(10.0 * getPointCrossingTime());
-
     }
 
     private void checkJumps() {
@@ -398,25 +413,31 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
 
     @Override
-    public boolean checkConsistency(final Channel channel, final int from, final int to) {
-        boolean result = super.checkConsistency(channel, from, to);
-       
-        if(fixJumps) if(((HawcPlusPixel) channel).hasJumps) result &= fixJumps(channel, from, to);    
-
-        if(checkTransients) {
-            channel.unflag(HawcPlusPixel.FLAG_FLICKER);
-            if(((HawcPlusPixel) channel).sub == HawcPlus.R0) if(!checkBlockVariance(channel, from, to)) {
+    public boolean checkConsistency(final Channel channel, final int from, final int to, float[] frameParms) {
+        boolean isOK = super.checkConsistency(channel, from, to, frameParms);
+        
+        HawcPlusPixel pixel = (HawcPlusPixel) channel;
+        
+        if(pixel.hasJumps) {
+            if(fixJumps) isOK &= fixJumps(channel, from, to, frameParms);    
+            else if(fixSubarray[pixel.sub]) isOK &= fixJumps(channel, from, to, frameParms);
+        }
+            
+            
+        if(checkTransients) {     
+            if(!checkBlockVariance(channel, from, to)) {
                 //flagBlock(channel, from, to, HawcPlusFrame.SAMPLE_TRANSIENT_NOISE);
                 channel.flag(HawcPlusPixel.FLAG_FLICKER);
-                return false;
+                isOK = false;
             }
+            else channel.unflag(HawcPlusPixel.FLAG_FLICKER);
         }
 
-        return result;
+        return isOK;
     }
 
-    private boolean fixJumps(final Channel channel, int from, final int to) { 
-        int clearFlag = ~HawcPlusFrame.SAMPLE_PHI0_JUMP;
+    private boolean fixJumps(final Channel channel, int from, final int to, float[] frameParms) { 
+        //int clearFlag = ~HawcPlusFrame.SAMPLE_PHI0_JUMP;
         byte jumpStart = (byte) 0;   
 
         HawcPlusFrame first = getFirstFrameFrom(from);
@@ -428,11 +449,11 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             final HawcPlusFrame exposure = get(t);
             if(exposure == null) continue;
 
-            exposure.sampleFlag[channel.index] &= clearFlag;
+            //exposure.sampleFlag[channel.index] &= clearFlag;
 
             if(exposure.jumpCounter[channel.index] == jumpStart) continue;
 
-            fixBlock(channel, from, t);
+            fixBlock(channel, from, t, frameParms);
             n++;
 
             // Make jumpStart ready for the next block
@@ -441,16 +462,16 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         }
 
         if(from != first.index) {
-            fixBlock(channel, from, to);
+            fixBlock(channel, from, to, frameParms);
             n++;
         }
 
         return n == 0;
     }
 
-    private void fixBlock(Channel channel, final int from, int to) {
+    private void fixBlock(Channel channel, final int from, int to, float[] frameParms) {
         if(to-from < minJumpLevelFrames) flagBlock(channel, from, to, HawcPlusFrame.SAMPLE_PHI0_JUMP);
-        else levelBlock(channel, from, to);
+        else levelBlock(channel, from, to, frameParms);
     }  
 
 
@@ -477,7 +498,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         if(sumw == 0.0) return true;
 
         double var = sum / sumw;
-        return var < transientLevel * channel.variance;
+        return var < transientLevel * transientLevel * channel.variance;
     }
 
     private void flagBlock(final Channel channel, final int from, int to, int pattern) {
@@ -487,26 +508,35 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         }
     }
 
-    private void levelBlock(final Channel channel, final int from, final int to) {
+    private void levelBlock(final Channel channel, final int from, final int to, float[] frameParms) {
         double sum = 0.0, sumw = 0.0;
 
+        int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
+        
         for(int t=to; --t >= from; ) {
             final Frame exposure = get(t);
             if(exposure == null) continue;
             if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
-            if(exposure.sampleFlag[channel.index] != 0) continue;
+            if((exposure.sampleFlag[channel.index] & excludeSamples) != 0) continue;
 
             sum += exposure.relativeWeight * exposure.data[channel.index];
             sumw += exposure.relativeWeight;
         }
         if(sumw == 0.0) return;
 
+        driftParms.addAsync(channel, 1.0);
+        
         final float ave = (float) (sum / sumw);
 
         for(int t=to; --t >= from; ) {
             final Frame exposure = get(t);
             if(exposure == null) continue;
             exposure.data[channel.index] -= ave;
+            
+            if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
+            if((exposure.sampleFlag[channel.index] & excludeSamples) != 0) continue;
+            
+            frameParms[t] += exposure.relativeWeight / sumw;
         }
     }
 

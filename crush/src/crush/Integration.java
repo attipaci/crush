@@ -959,11 +959,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				frameParms[exposure.index] += exposure.relativeWeight * pNorm;
 		}
 		
-		return checkConsistency(channel, from, to);
+		return checkConsistency(channel, from, to, frameParms);
 	}
 
 	
-	public boolean checkConsistency(final Channel channel, int from, int to) {
+	public boolean checkConsistency(final Channel channel, int from, int to, float[] frameParms) {
 	    return true;
 	}
 	

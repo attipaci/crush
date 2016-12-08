@@ -5,7 +5,7 @@
 >> skydip.attempts
 >> chopper.invert
 >> chopper.tolerance
->> fixjumps
+>> fixjumps, fixjumps.R0 ...
 >> env.[], property.[]
 >> chopper.shift
 >> chopper.tolerance
@@ -13,9 +13,11 @@
 >> source.coupling.s2n
 
 
-2.34-a1 (devel.3)
+2.34-a1 (devel.5)
 
-	[NEW] Flag pixels based on integer field values and ranges...
+	[NEW] Flag pixels based on integer field values and ranges. E.g. 
+	HawcPlusPixels based on MUX (e.g. 'flag.mux=10,25-27') or rows
+	(e.g. 'flag.row=0,11').
  
 	[NEW] {HAWC+} Subarray relative gain normalizations via gain.R0, 
 	gain.R1, gain.T0 (and gain.T1) options. It makes for improved overall 
@@ -95,11 +97,9 @@
 	[CONFIG] {HAWC+} Recalibrated based on Uranus (Flight 354), and 
 	determined pointing corrections.
 
-	[CONFIG] {HAWC+} Changed noise flagging range to deal with some bad
-	pixels better...
-
 	[CONFIG] {HAWC+} Scanning speed flagging is now explicitly set for
-	each band configuration (hawc+/band-X.cfg).
+	each band configuration (hawc+/band-X.cfg). It helps get rid of 
+	artifacts at low scanning speeds at the beginning and end of rasters.
 
 	[CONFIG] {HAWC+} Incorporated optical pixel couplings derived from
 	OMC-1 rasters.
@@ -108,16 +108,7 @@
 	Uranus flight 354.
 
 	[CONFIG] {HAWC+} Updated band A and band D geometries based on flights
-	353 and 354.
-
-	[CONFIG] {HAWC+} Smoothing in the intermediate iterations is disabled
-	by default. Using it makes the removal of flux jump artifacts more
-	difficult.
-
-	[CONFIG] {HAWC+} Decorrelate on detector rows instead of biaslines
-	(2-rows). While bias fluctuarions dominate, there is occasionally noise
-	on individual rows, making row-based decorrelation a more robust 
-	solution, in general.
+	353 and 354, respectively.
 
 	[CONFIG] {HAWC+} Short (<40s) scans are reduced with a shorter 1/f
 	stability timescale. This makes for cleaner focus reductions.
@@ -129,10 +120,6 @@
 	[CONFIG] {HAWC+} Re-enable 'write.png' for Skydip reductions via the
 	'drp'.
 
-	[CONFIG] {HAWC+} Band A configuration updated based on Nov 30 flight.
-
-	[CONFIG] {HAWC+} array.gainrange adjusted 0.1:30 --> 0.2:10.
-
 	[CONFIG] {SOFIA} Disabled smoothing of telescope position data for
 	velocity and acceleration clipping. The smoothing (by 1s) could 
 	result in overflagging of otherwise perfectly good data.
@@ -142,9 +129,9 @@
 	keyword, which was not determined automatically anyway. It is a robust
 	solution going forward.
 
-	[CONFIG] {HAWC+} Automatic skydip reductions based on OBSMODE, CALMODE
-	or DIAGMODE keywords (which will be set accordingly starting with the 
-	Nov 30 commissioning flights).
+	[CONFIG] {HAWC+} Automatic skydip reductions based on OBSMODE or 
+	DIAGMODE keywords (which will be set accordingly starting with the 
+	Nov 30 commissioning flight).
 
 	[CODE] {HAWC+} Added subarray channel groups for easy access of 
 	the subarrays...
