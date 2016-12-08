@@ -645,7 +645,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implemen
     static int T0 = 2;
     static int T1 = 3;
     
-    final static String[] polID = { "R", "T" };
+    public final static String[] polID = { "R", "T" };
 
 	static double hwpStep = 0.25 * Unit.deg;	
 	
