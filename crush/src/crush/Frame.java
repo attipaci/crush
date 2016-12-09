@@ -48,7 +48,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public double MJD, LST;
 	public double sinA = Double.NaN, cosA = Double.NaN; // These are the projected array rotation...
 
-	public int flag = 0;
+	private int flag = 0;
 	public double dof = 1.0;
 	public double dependents = 0.0;
 	public float relativeWeight = 1.0F;
@@ -165,8 +165,10 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	@Override
 	public final void unflag() {
-		unflag(~0);
+		flag = 0;
 	}
+	
+	public final int getFlags() { return flag; }
 	
 	public final synchronized void addDependents(double dp) {
 		dependents += dp;

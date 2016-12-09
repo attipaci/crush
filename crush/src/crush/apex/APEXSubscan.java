@@ -159,10 +159,10 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		int transitFlag = Frame.CHOP_TRANSIT | Frame.SKIP_MODELING | Frame.SKIP_WEIGHTING | Frame.SKIP_SOURCE_MODELING;
 		
 		for(Frame exposure : this) if(exposure != null) {
-			exposure.flag &= ~Frame.CHOP_FLAGS;
+			exposure.unflag(Frame.CHOP_FLAGS);
 			
 			if(Math.abs(exposure.chopperPosition.x() + chopper.amplitude) < tolerance) {
-				exposure.flag |= Frame.CHOP_LEFT;
+				exposure.flag(Frame.CHOP_LEFT);
 				if(current.phase != Frame.CHOP_LEFT) {
 					current = new PhaseData(this);
 					current.phase = Frame.CHOP_LEFT;
@@ -176,7 +176,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 				usable++;
 			}
 			else if(Math.abs(exposure.chopperPosition.x() - chopper.amplitude) < tolerance) {
-				exposure.flag |= Frame.CHOP_RIGHT;
+				exposure.flag(Frame.CHOP_RIGHT);
 				if(current.phase != Frame.CHOP_RIGHT) {
 					current = new PhaseData(this);
 					current.phase = Frame.CHOP_RIGHT;
@@ -189,7 +189,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 				else current.end = exposure;
 				usable++;
 			}
-			else exposure.flag |= transitFlag;
+			else exposure.flag(transitFlag);
 		}
 		
 		chopper.efficiency = ((double) usable / size());

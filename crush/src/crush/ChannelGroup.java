@@ -185,15 +185,15 @@ implements Copiable<ChannelGroup<ChannelType>> {
             case DISCARD_ANY_FLAG:
                 if(channel.isFlagged(flagPattern)) remove(i); break; 
             case DISCARD_ALL_FLAGS:
-                if((channel.flag & flagPattern) == flagPattern) remove(i); break; 
+                if((channel.getFlags() & flagPattern) == flagPattern) remove(i); break; 
             case DISCARD_MATCH_FLAGS:
-                if(channel.flag == flagPattern) remove(i); break;
+                if(channel.getFlags() == flagPattern) remove(i); break;
             case KEEP_ANY_FLAG:
                 if(channel.isUnflagged(flagPattern)) remove(i); break; 
             case KEEP_ALL_FLAGS:
-                if((channel.flag & flagPattern) != flagPattern) remove(i); break; 
+                if((channel.getFlags() & flagPattern) != flagPattern) remove(i); break; 
             case KEEP_MATCH_FLAGS:
-                if(channel.flag != flagPattern) remove(i); break;
+                if(channel.getFlags() != flagPattern) remove(i); break;
             }	
         }
 

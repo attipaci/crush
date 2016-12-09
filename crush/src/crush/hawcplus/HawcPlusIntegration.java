@@ -28,14 +28,18 @@ import java.util.List;
 
 import crush.CRUSH;
 import crush.Channel;
+import crush.ChannelGroup;
 import crush.Dependents;
 import crush.Frame;
+import crush.Instrument;
 import crush.fits.HDURowReader;
 import crush.sofia.SofiaChopperData;
 import crush.sofia.SofiaIntegration;
+import jnum.Parallel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
+import jnum.data.DataPoint;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.ArrayDataInput;
@@ -53,7 +57,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
     int minJumpLevelFrames = 0;
 
     Dependents driftParms;
-    
+
     public HawcPlusIntegration(HawcPlusScan parent) {
         super(parent);
     }	
@@ -344,22 +348,22 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
     public String getFullID(String separator) {
         return scan.getID();
     }
-    
+
     @Override
     public void removeDrifts(final int targetFrameResolution, final boolean robust) {
         checkTransients = hasOption("transients");
         transientLevel = hasOption("transients.level") ? option("transients.level").getDouble() : 100.0;
         fixJumps = hasOption("fixjumps");
-        
+
         fixSubarray[HawcPlus.R0] =  hasOption("fixjumps.r0");
         fixSubarray[HawcPlus.R1] =  hasOption("fixjumps.r1");
         fixSubarray[HawcPlus.T0] =  hasOption("fixjumps.t0");
         fixSubarray[HawcPlus.T1] =  hasOption("fixjumps.t1");
-        
-        minJumpLevelFrames = framesFor(30.0 * getPointCrossingTime());
-        
+
+        minJumpLevelFrames = framesFor(10.0 * getPointCrossingTime());
+
         driftParms = getDependents("drifts");
-        
+
         super.removeDrifts(targetFrameResolution, robust);
     }
 
@@ -399,7 +403,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         instrument.new Fork<Void>() {
             @Override
             protected void process(HawcPlusPixel channel) {
-                channel.flag = Channel.FLAG_DEAD;
+                channel.flag(Channel.FLAG_DEAD);
                 for(Frame exposure : HawcPlusIntegration.this) if(exposure != null) if(exposure.data[channel.index] != 0.0) {
                     channel.unflag(Channel.FLAG_DEAD);
                     return;
@@ -415,15 +419,15 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
     @Override
     public boolean checkConsistency(final Channel channel, final int from, final int to, float[] frameParms) {
         boolean isOK = super.checkConsistency(channel, from, to, frameParms);
-        
+
         HawcPlusPixel pixel = (HawcPlusPixel) channel;
-        
+
         if(pixel.hasJumps) {
             if(fixJumps) isOK &= fixJumps(channel, from, to, frameParms);    
             else if(fixSubarray[pixel.sub]) isOK &= fixJumps(channel, from, to, frameParms);
         }
-            
-            
+
+
         if(checkTransients) {     
             if(!checkBlockVariance(channel, from, to)) {
                 //flagBlock(channel, from, to, HawcPlusFrame.SAMPLE_TRANSIENT_NOISE);
@@ -449,6 +453,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             final HawcPlusFrame exposure = get(t);
             if(exposure == null) continue;
 
+            // Once flagged, stay flagged...
             //exposure.sampleFlag[channel.index] &= clearFlag;
 
             if(exposure.jumpCounter[channel.index] == jumpStart) continue;
@@ -512,7 +517,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         double sum = 0.0, sumw = 0.0;
 
         int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
-        
+
         for(int t=to; --t >= from; ) {
             final Frame exposure = get(t);
             if(exposure == null) continue;
@@ -525,17 +530,17 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         if(sumw == 0.0) return;
 
         driftParms.addAsync(channel, 1.0);
-        
+
         final float ave = (float) (sum / sumw);
 
         for(int t=to; --t >= from; ) {
             final Frame exposure = get(t);
             if(exposure == null) continue;
             exposure.data[channel.index] -= ave;
-            
+
             if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
             if((exposure.sampleFlag[channel.index] & excludeSamples) != 0) continue;
-            
+
             frameParms[t] += exposure.relativeWeight / sumw;
         }
     }
@@ -562,6 +567,101 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         }
     }
 
+
+    public void removeJumps() {
+        comments += "J ";
+        
+        
+        final ChannelGroup<HawcPlusPixel> channels = hasOption("dejump.subarray") ?
+                instrument.getSubarrayChannels("jumpies", option("dejump.subarray").getList()) : instrument;
+                    
+        Fork<DataPoint[]> search = new Fork<DataPoint[]>() {
+            private DataPoint[] sum;
+
+            @Override
+            protected void init() {
+                super.init();
+                sum = instrument.getDataPoints();
+                for(int c=sum.length; --c >= 0; ) sum[c].noData();
+            }
+
+            @Override
+            protected void process(HawcPlusFrame frame) {
+                if(frame.index < 1) return;
+                HawcPlusFrame prior = get(frame.index - 1);
+
+                if(prior == null) return;
+               
+                double w = 1.0 / (1.0 / frame.relativeWeight + 1.0 / prior.relativeWeight);
+                if(Double.isNaN(w)) return;
+                
+                for(HawcPlusPixel pixel : channels) if(pixel.hasJumps) {
+                    if(prior.jumpCounter[pixel.index] == frame.jumpCounter[pixel.index]) continue;
+
+                    int nJumps = frame.jumpCounter[pixel.index] - prior.jumpCounter[pixel.index];
+                    
+                    sum[pixel.index].add(w * (frame.data[pixel.index] - prior.data[pixel.index]) / nJumps);
+                    sum[pixel.index].addWeight(w);
+                }
+
+            }
+
+            @Override
+            public DataPoint[] getLocalResult() { return sum; }
+
+            @Override
+            public DataPoint[] getResult() {
+
+                for(Parallel<DataPoint[]> task : getWorkers()) {
+                    final DataPoint[] localSum = task.getLocalResult();
+
+                    if(sum == null) sum = localSum;
+                    else {
+                        for(int i=instrument.size(); --i >= 0; ) {
+                            final DataPoint global = sum[i];
+                            final DataPoint local = localSum[i];
+
+                            global.add(local.value());
+                            global.addWeight(local.weight());
+                        }
+                        Instrument.recycle(localSum);
+                    }
+                    
+                    for(int i=instrument.size(); --i >= 0; ) if(sum[i].weight() > 0.0) 
+                        sum[i].setValue(sum[i].value() / sum[i].weight());
+                }
+                 
+                return sum;
+            }   
+
+        };
+
+        search.process();
+
+        final DataPoint[] dJump = search.getResult();
+        final HawcPlusFrame first = getFirstFrame();
+              
+        new Fork<Void>() {
+            @Override
+            protected void process(HawcPlusFrame frame) {
+                for(HawcPlusPixel pixel : channels) if(dJump[pixel.index].weight() > 0.0)
+                    frame.data[pixel.index] -= dJump[pixel.index].value() * (frame.jumpCounter[pixel.index] - first.jumpCounter[pixel.index]);
+            } 
+        }.process();
+        
+        for(HawcPlusPixel pixel : channels) if(dJump[pixel.index].weight() > 0.0) 
+            pixel.jumpCounts += dJump[pixel.index].value();  
+        
+        Instrument.recycle(dJump);
+  
+    }
+
+    @Override
+    public boolean perform(String task) {
+        if(task.equals("dejump")) removeJumps();
+        else return super.perform(task);
+        return true;
+    }
 
     /*
 	// TODO fill gaps in position data, if any...

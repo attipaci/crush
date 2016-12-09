@@ -108,12 +108,13 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 
 	@Override
 	public void loadChannelData() {
-		
+		double gainCompress = 1.0;
+	    
 		// Load the Gain Non-linearity coefficients
 		if(hasOption("response")) {
 			try {
 				loadGainCoefficients(option("response").getPath());
-				calcPixelGains();
+				gainCompress = calcPixelGains();
 			}
 			catch(IOException e) { warning("Problem parsing nonlinearity file."); }		
 		}
@@ -139,6 +140,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		
 		super.loadChannelData();
 		
+		gain *= gainCompress;
 	}
 	
 	@Override
@@ -345,8 +347,9 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		
 	}
 
-	public void calcPixelGains() {
+	public double calcPixelGains() {
 		double sumwG2 = 0.0, sumwG = 0.0;
+		double sourceGain = Double.NaN;
 		
 		for(Sharc2Pixel pixel : this) {
 			pixel.gain = pixel.G0 * pixel.offset / (pixel.getHardwareGain() * pixel.V0);
@@ -362,6 +365,7 @@ public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
 		}
 		
 		info("Gain compression is " + Util.f3.format(sourceGain));
+		return sourceGain;
 	}
 	
 	// TODO convert to robust estimate?...

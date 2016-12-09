@@ -70,8 +70,7 @@ implements TableFormatter.Entries, BasicMessaging {
 	public double samplingInterval;
 	
 	public double gain = 1.0; // The electronic amplification
-	public double sourceGain = 1.0;
-	
+		
 	public int storeChannels; // The number of channels stored in the data files...
 	public int mappingChannels;
 	
@@ -277,9 +276,9 @@ implements TableFormatter.Entries, BasicMessaging {
 	public int sourcelessChannelFlags() { return Channel.FLAG_BLIND | Channel.FLAG_DEAD | Channel.FLAG_DISCARD; }
 	
 	public float normalizeSkyGains() throws Exception {
-	    info("Normalizing sky-noise gains.");
-		CorrelatedMode sky = (CorrelatedMode) modalities.get("obs-channels").get(0);
-		return sky.normalizeGains();
+	    info("Normalizing relative pixel gains.");
+		CorrelatedMode array = (CorrelatedMode) modalities.get("obs-channels").get(0);
+		return array.normalizeGains();
 	}
 	
 	public void registerConfigFile(String fileName) {}
@@ -580,7 +579,7 @@ implements TableFormatter.Entries, BasicMessaging {
 	
 	public void census() {
 		mappingChannels = 0;
-		for(Channel channel : this) if(channel.flag == 0) if(channel.weight > 0.0) mappingChannels++;
+		for(Channel channel : this) if(channel.isUnflagged()) if(channel.weight > 0.0) mappingChannels++;
 	}
 	
 	public String getConfigPath() {
@@ -978,7 +977,10 @@ implements TableFormatter.Entries, BasicMessaging {
 	public ChannelDivision<ChannelType> getDivision(String name, Field field, int discardFlags) throws IllegalAccessException {
 		Hashtable<Integer, ChannelGroup<ChannelType>> table = new Hashtable<Integer, ChannelGroup<ChannelType>>();
 	
-		for(ChannelType channel : this) if(channel.isUnflagged(discardFlags)) {
+		for(int i=0; i<size(); i++) {
+		    ChannelType channel = get(i);
+		    if(channel.isFlagged(discardFlags)) continue;
+		
 			int group = field.getInt(channel);
 			if(!table.containsKey(group)) table.put(group, new ChannelGroup<ChannelType>(field.getName() + "-" + group));
 			table.get(group).add(channel);
@@ -1124,15 +1126,16 @@ implements TableFormatter.Entries, BasicMessaging {
 
 	
 	public double[] getSourceGains(final boolean filterCorrected) {
-		final double[] sourceGain = new double[size()];
+		final double[] G = new double[size()];
 		final boolean fixedGains = hasOption("source.fixedgains");
 		
 		for(Channel channel : this) {
-			sourceGain[channel.index] = fixedGains ? channel.coupling : channel.coupling * channel.gain;
-			if(filterCorrected) sourceGain[channel.index] *= channel.sourceFiltering;
+			G[channel.index] = channel.coupling;
+			if(!fixedGains) G[channel.index] *= channel.gain;
+			if(filterCorrected) G[channel.index] *= channel.sourceFiltering;
 		}
 	
-		return sourceGain;
+		return G;
 	}
 	
 	public double getMinBeamFWHM() {
@@ -1178,7 +1181,7 @@ implements TableFormatter.Entries, BasicMessaging {
 	
 	// Flag according to noise weights (but not source weights)
 	public void flagWeights() {
-		Range weightRange = new Range();
+		final Range weightRange = new Range();
 		weightRange.full();
 		
 		if(hasOption("weighting.noiserange")) {
@@ -1188,32 +1191,46 @@ implements TableFormatter.Entries, BasicMessaging {
 		}
 	
 		// Flag channels with insufficient degrees of freedom
-		double[] weights = new double[size()];
+		final double[] weights = getDoubles();
 		int n=0;
 		
-		for(Channel channel : getDetectorChannels()) {
-			if(channel.dof > 0.0) {
-				channel.unflag(Channel.FLAG_DOF);
-				if(channel.isUnflagged(Channel.FLAG_GAIN)) weights[n++] = Math.log1p(channel.weight * channel.gain * channel.gain);
+		final ChannelGroup<?> channels = getDetectorChannels();
+		final int excludeFlags = Channel.HARDWARE_FLAGS | Channel.FLAG_GAIN;
+		
+		for(Channel channel : channels)  {
+			if(channel.dof > 0.0) channel.unflag(Channel.FLAG_DOF);
+			else {
+			    channel.flag(Channel.FLAG_DOF);
+			    continue;
 			}
-			else channel.flag(Channel.FLAG_DOF);
+			
+			if(channel.isFlagged(excludeFlags)) continue;
+			
+			if(channel.gain == 0.0) continue;
+			if(channel.weight <= 0.0) continue;  // Skip invalid weights
+			if(channel.weight == 1.0) continue;  // Skip default weights also...
+			
+			weights[n++] = Math.log1p(channel.weight * channel.gain * channel.gain);
 		}
 		if(n == 0) throw new IllegalStateException("DOF?");
 		
 		// Use robust mean (with 10% tails) to estimate average weight.
-		final double aveWG2 = Math.expm1(n > 10 ? Statistics.robustMean(weights, 0, n, 0.1) : Statistics.median(weights));	
-		final double maxWG2 = weightRange.max() * aveWG2;
-		final double minWG2 = weightRange.min() * aveWG2;	
+		weightRange.scale(Math.expm1(n > 10 ? 
+		        Statistics.robustMean(weights, 0, n, 0.1) : Statistics.median(weights, 0, n)
+		));
+		
+		Instrument.recycle(weights);
 		
 		double sumw = 0.0;
-		for(Channel channel : getDetectorChannels()) {
-			channel.unflag(Channel.FLAG_SENSITIVITY);
-			double wG2 = channel.weight * channel.gain * channel.gain;
+		for(Channel channel : channels) {  
+			final double wG2 = channel.weight * channel.gain * channel.gain;
 			
-			if(wG2 > maxWG2) channel.flag(Channel.FLAG_SENSITIVITY);
-			else if(wG2 < minWG2) channel.flag(Channel.FLAG_SENSITIVITY);		
-			else if(channel.isUnflagged()) sumw += wG2;
-		}
+			if(!weightRange.contains(wG2)) channel.flag(Channel.FLAG_SENSITIVITY);	
+			else {
+			    channel.unflag(Channel.FLAG_SENSITIVITY);
+			    if(channel.isUnflagged()) sumw += wG2;
+			}
+		}	
 		
 		if(sumw == 0.0) {
 			if(mappingChannels > 0) throw new IllegalStateException("FLAG");
@@ -1228,15 +1245,19 @@ implements TableFormatter.Entries, BasicMessaging {
 	    
 		double sumpw = 0.0;
 		int n=0;
+		
 		for(int i=size(); --i >= 0; ) {
 		    Channel channel = get(i);
-		    if(channel.flag != 0) continue;
-		    if(channel.variance <= 0.0) continue;
-		
+		    
+		    if(channel.isFlagged()) continue;
+		    if(channel.weight <= 0.0) continue;
+		    
 			sumpw += G[i] * G[i] / channel.variance;
+		    
 			n++;
 		}
-		return Math.sqrt(n * integrationTime / sumpw) / (gain * sourceGain);
+		
+		return Math.sqrt(n * integrationTime / sumpw) / Math.abs(gain);
 	}
 	
 
@@ -1271,7 +1292,7 @@ implements TableFormatter.Entries, BasicMessaging {
 		for(Channel channel : this) {
 			gains[channel.getFixedIndex()] = (float) channel.gain;
 			weights[channel.getFixedIndex()] = (float) channel.weight;
-			flags[channel.getFixedIndex()] = channel.flag;
+			flags[channel.getFixedIndex()] = channel.getFlags();
 		}
 		
 		dataWeights();

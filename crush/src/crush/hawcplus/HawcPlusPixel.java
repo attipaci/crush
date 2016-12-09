@@ -34,11 +34,12 @@ public class HawcPlusPixel extends SingleColorPixel {
 	 * 
 	 */
 	private static final long serialVersionUID = 5898856651596856837L;
-	public int pol, sub, subrow, col, mux, row, biasLine;
+	public int pol, sub, subrow, col, mux, row, biasLine, seriesArray;
 	public int fitsIndex, fitsRow, fitsCol;
 	public boolean hasJumps = false;
+	public float jumpCounts;
 	
-	public double subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0;
+	public double subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0, seriesGain = 1.0;
 	
 	int jumpCounter = 0;
 	
@@ -51,9 +52,10 @@ public class HawcPlusPixel extends SingleColorPixel {
 		pol = (sub>>1);
 		
 		fitsRow = subrow = row % HawcPlus.rows;
-		biasLine = row >> 1;
+		biasLine = row >>> 1;
 		
 		fitsCol = mux = sub * HawcPlus.subarrayCols + col;
+		seriesArray = mux >>> 2;
 		
 		fitsIndex = fitsRow * HawcPlusFrame.FITS_COLS + fitsCol;
 		
@@ -95,12 +97,19 @@ public class HawcPlusPixel extends SingleColorPixel {
 	@Override
 	public void parseValues(SmartTokenizer tokens, int criticalFlags) {	
 		super.parseValues(tokens, criticalFlags);
-		if(tokens.hasMoreTokens()) tokens.nextToken();
+		
 		if(tokens.hasMoreTokens()) coupling = tokens.nextDouble();
+		if(tokens.hasMoreTokens()) tokens.nextToken();
 		if(tokens.hasMoreTokens()) muxGain = tokens.nextDouble();
 		
-		if(coupling < 0.1) flag(Channel.FLAG_BLIND);
-		if(coupling > 10.0) flag(Channel.FLAG_DEAD);
+		if(coupling < 0.3) flag(Channel.FLAG_DEAD);
+		else if(coupling > 3.0) flag(Channel.FLAG_DEAD);
+		else if(coupling == 1.0) flag(Channel.FLAG_DEAD);
+		
+		if(gain < 0.3) flag(Channel.FLAG_DEAD);
+        else if(gain > 3.0) flag(Channel.FLAG_DEAD);
+		
+		if(isFlagged(Channel.FLAG_DEAD)) coupling = 0.0;
 	}
 	
 	@Override
@@ -112,7 +121,8 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();
 	public final static int FLAG_BIAS = softwareFlags.next('b', "Bad TES bias gain").value();
 	public final static int FLAG_MUX = softwareFlags.next('m', "Bad MUX gain").value();
-	public final static int FLAG_ROW = softwareFlags.next('#', "Bad MUX sample gain").value();
+	public final static int FLAG_ROW = softwareFlags.next('R', "Bad detector row gain").value();
+	public final static int FLAG_SERIES_ARRAY = softwareFlags.next('M', "Bad series array gain").value();
 	public final static int FLAG_FLICKER = softwareFlags.next('T', "Flicker noise").value();
 
 }

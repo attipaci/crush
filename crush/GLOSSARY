@@ -3933,7 +3933,7 @@
 			is also set.
 			@See: 'gnuplot', 'write.png', 'skydip'
 
-:: write.flatfield[=path]	@Expert
+:: write.flatfield[=<path>]	@Expert
 				@Since: 2.31
                         	Write a DRP flatfield FITS file, to be used by
 			the chop-nod pipeline. The optional argument can 
@@ -4066,7 +4066,7 @@
 			profiles and residual noise power spectra.
 			@See: 'write.scandata'
 
-:: write.spectrum[=window] 	@Expert
+:: write.spectrum[=<window>] 	@Expert
 				Writes channel spectra (of residuals) into an 
 			ASCII table. The optional argument can specify a window
 			function to use. The available window functions are:
