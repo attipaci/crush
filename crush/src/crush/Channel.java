@@ -51,7 +51,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	
 	public int index;
 	private int fixedIndex;
-	public int flag = 0;
+	private int flag = 0;
 	public int sourcePhase = 0;
 	
 	public double offset = 0.0; // At the readout stage! (as of 2.03)
@@ -155,6 +155,8 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	public final void unflag() {
 		flag = 0;
 	}
+	
+	public final int getFlags() { return flag; }
 	
 	public double getFiltering(Integration<?,?> integration) {
 		final double nDrifts = Math.ceil(integration.getDuration() / filterTimeScale);

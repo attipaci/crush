@@ -55,7 +55,7 @@ public class FieldGradientMode extends CorrelatedMode {
 		float[] gains = super.getGains(validate);
 		
 		double sumwg = 0.0, sumw = 0.0;
-		for(Channel channel : getChannels()) if(channel.flag == 0) {
+		for(Channel channel : getChannels()) if(channel.isUnflagged()) {
 			sumwg += channel.weight * field.getDouble(channel);
 			sumw += channel.weight;	
 		}

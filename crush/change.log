@@ -11,9 +11,18 @@
 >> chopper.tolerance
 >> transients, transients.level?
 >> source.coupling.s2n
+>> HAWC+: series
+>> vclip.strict
 
 
 2.34-a1 (devel.5)
+
+	[NEW] New option 'vclip.strict' will discard any frames outside of the
+	acceptable speed range, rather than the default approach of simply 
+	flagging at slow speeds.
+
+	[NEW] {HAWC+} Automatic subarray gain renormalization after loading
+	flatfield data.
 
 	[NEW] Flag pixels based on integer field values and ranges. E.g. 
 	HawcPlusPixels based on MUX (e.g. 'flag.mux=10,25-27') or rows
@@ -61,6 +70,11 @@
 	[NEW] {skydip} The skydip resolution is now set by the new option
 	'skydip.grid' to avoid conflict with setting mapping grid sizes.
 
+	[FIX] {HAWC+} Do not notch if DIAG_HZ is invalid.
+
+	[FIX] Median noise weight determination was flawed, using data 
+	outside of the available range.
+
 	[FIX] 'source.coupling' was broken. Fixed.
 
 	[FIX] {skydip} Convergence exceptions are now caught...
@@ -93,6 +107,9 @@
 
 	[TWEAK] {SOFIA} Improved reporting of errors encountered while 
 	accessing the FITS input.
+
+	[CONFIG] Disable 'source.nosync' when writing timestreams, covariances
+	or spectra.
 
 	[CONFIG] {HAWC+} Recalibrated based on Uranus (Flight 354), and 
 	determined pointing corrections.
@@ -132,6 +149,17 @@
 	[CONFIG] {HAWC+} Automatic skydip reductions based on OBSMODE or 
 	DIAGMODE keywords (which will be set accordingly starting with the 
 	Nov 30 commissioning flight).
+
+	[CODE] {HAWC+} When loading pixel (flatfield) data, killing all pixels
+	with bad coupling...
+
+	[CODE] Some cleanup on weight flagging...
+
+	[CODE] Flagging  of channels/frames only through method calls for
+	better overall consistency.
+
+	[CODE] Removed an archaic sourceGain field from Instrument which was
+	a relic of SHARC-2.
 
 	[CODE] {HAWC+} Added subarray channel groups for easy access of 
 	the subarrays...

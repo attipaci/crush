@@ -829,7 +829,7 @@ public abstract class SourceMap extends SourceModel {
 
         // Do an approximate accounting of the source dependence...
         double sumpw = 0.0;
-        for(Pixel pixel : pixels) for(Channel channel : pixel) if(channel.flag == 0) 
+        for(Pixel pixel : pixels) for(Channel channel : pixel) if(channel.isUnflagged()) 
             sumpw += sourceGain[channel.index] * sourceGain[channel.index] / channel.variance;
 
         double sumfw = 0.0;
@@ -847,7 +847,7 @@ public abstract class SourceMap extends SourceModel {
             Pixel pixel = pixels.get(k);
             parms.clear(pixel, 0, integration.size());
 
-            for(Channel channel : pixel) if(channel.flag == 0) 
+            for(Channel channel : pixel) if(channel.isUnflagged()) 
                 parms.addAsync(channel, np * sourceGain[channel.index] * sourceGain[channel.index] / channel.variance);
         }
 

@@ -167,9 +167,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void validate() {
 		if(isValid) return;		
 		
-		// Incorporate the relative instrument gain (under loading) in the scan gain...
-		gain *= instrument.sourceGain;	
-		
 		if(hasOption("shift")) shiftData(option("shift").getDouble() * Unit.s);
 
 		new CRUSH.Fork<Void>(size(), getThreadCount()) {
@@ -507,7 +504,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}
 		if(hasOption("chopped")) vRange.setMin(0.0);
 		
-		velocityCut(vRange);
+		velocityClip(vRange);
 	}
 	
 	public void accelerationClip() {
@@ -1914,10 +1911,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SPIKE) != 0) frameSpikes++;
 
 				if(frameSpikes > minSpikes) {
-					exposure.flag |= Frame.FLAG_SPIKY;
+					exposure.flag(Frame.FLAG_SPIKY);
 					spikyFrames++;
 				}
-				else exposure.flag &= ~Frame.FLAG_SPIKY;
+				else exposure.unflag(Frame.FLAG_SPIKY);
 			}
 			
 			@Override
@@ -2159,8 +2156,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return new DataPoint(new WeightedPoint(avev, w));
 	}
 	
-	public int velocityCut(final Range range) { 
+	public int velocityClip(final Range range) { 
 		
+	    boolean isStrict = hasOption("vclip.strict");
+	    
 		final Vector2D[] v = getScanningVelocities();
 		int flagged = 0, cut = 0;
 		
@@ -2175,8 +2174,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				final double speed = value.length();
 				
 				if(speed < range.min()) {
-					frame.flag(Frame.SKIP_SOURCE_MODELING);
-					flagged++;
+				    if(isStrict) {
+				        set(frame.index, null);
+				        cut++;
+				    }
+				    else {
+				        frame.flag(Frame.SKIP_SOURCE_MODELING);
+				        flagged++;
+				    }
 				}			
 				else if(speed > range.max()) {
 					set(frame.index, null);
@@ -2426,8 +2431,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				Arrays.fill(data, to - from, data.length, 0.0F);
 				
 				fft.real2Amplitude(data);
-				
-				for(double f : frequencies) {
+					
+				for(double f : frequencies) { 
 					int bin = (int)Math.floor(f / df);
 					filter(bin);
 					filter(bin+1);
@@ -2460,7 +2465,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		new Fork<Void>() {
 			@Override
 			protected void process(FrameType frame) {
-				for(final Channel channel : instrument) if(channel.flag == 0) frame.data[channel.index] += value;
+				for(final Channel channel : instrument) if(channel.isUnflagged()) frame.data[channel.index] += value;
 			}
 		}.process();
 	}
@@ -2503,14 +2508,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		instrument.new Fork<Void>() {
 			@Override
 			protected void process(Channel channel) {
-				if(channel.flag != 0) return; 
+				if(channel.isFlagged()) return; 
 				
 				final double[] rowC = covar[channel.index];
 				final int[] rowN = n[channel.index];
 				
 				for(final Frame exposure : Integration.this) if(exposure != null) 
 					if(exposure.isUnflagged(Frame.SOURCE_FLAGS)) if(exposure.sampleFlag[channel.index] == 0) 
-						for(int c2=instrument.size(); --c2 > channel.index; ) if(instrument.get(c2).flag == 0) if(exposure.sampleFlag[c2] == 0) {
+						for(int c2=instrument.size(); --c2 > channel.index; ) if(instrument.get(c2).isUnflagged()) if(exposure.sampleFlag[c2] == 0) {
 							rowC[c2] += exposure.relativeWeight * exposure.data[channel.index] * exposure.data[c2];
 							rowN[c2]++;
 						}
@@ -2819,7 +2824,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			channelGain[channel.index] = (float) channel.gain;
 			channelOffset[channel.index] = (float) channel.offset;
 			channelWeight[channel.index] = (float) channel.weight;
-			channelFlags[channel.index] = channel.flag;
+			channelFlags[channel.index] = channel.getFlags();
 			if(whitener != null) filterProfile[channel.index] = whitener.getValidProfile(channel);
 			channelSpikes[channel.index] = (short) channel.spikes;
 		}

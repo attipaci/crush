@@ -64,8 +64,7 @@ public class HawcPlusFrame extends SofiaFrame {
         HawcPlus hawc = (HawcPlus) scan.instrument;
         
         for(final HawcPlusPixel pixel : hawc) {
-            data[pixel.index] = DAC[from + pixel.fitsIndex];
-            if(hawc.subarrayInverted[pixel.sub]) data[pixel.index] *= -1;
+            data[pixel.index] = DAC[from + pixel.fitsIndex] / hawc.subarrayGainRenorm[pixel.sub];
             if(jump != null) jumpCounter[pixel.index] = (byte) jump[from + pixel.fitsIndex];
         }
     }
@@ -74,8 +73,7 @@ public class HawcPlusFrame extends SofiaFrame {
         HawcPlus hawc = (HawcPlus) scan.instrument;
         
         for(final HawcPlusPixel pixel : hawc) {
-            data[pixel.index] = DAC[pixel.fitsRow][pixel.fitsCol];
-            if(hawc.subarrayInverted[pixel.sub]) data[pixel.index] *= -1;
+            data[pixel.index] = DAC[pixel.fitsRow][pixel.fitsCol] / hawc.subarrayGainRenorm[pixel.sub];
             if(jump != null) jumpCounter[pixel.index] = (byte) jump[pixel.fitsRow][pixel.fitsCol];
         }
     }
@@ -146,8 +144,6 @@ public class HawcPlusFrame extends SofiaFrame {
             hwpAngle += telescopeVPA;
         }
         
-        for(HawcPlusPixel pixel : hawc) data[pixel.index] /= hawc.subarrayGainRenorm[pixel.sub];
-      
         if(hawc.darkSquidCorrection) darkCorrect();
 
         return super.validate();
