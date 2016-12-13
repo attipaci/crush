@@ -39,11 +39,14 @@ public class HawcPlusFrame extends SofiaFrame {
 
     long mceSerial;
     float hwpAngle;
-
     byte[] jumpCounter;
     
     int status;
 
+    boolean isComplete = false;
+    
+  
+    
     public HawcPlusFrame(HawcPlusScan hawcScan) {
         super(hawcScan);
         create(hawcScan.instrument.size());
@@ -119,6 +122,8 @@ public class HawcPlusFrame extends SofiaFrame {
         HawcPlusScan hawcScan = (HawcPlusScan) scan;
         HawcPlus hawc = hawcScan.instrument; 
         
+        if(!isComplete) return false;
+        
          // Skip data that is not normal observing
         if(status != FITS_FLAG_NORMAL_OBSERVING || (hawcScan.useBetweenScans && status == FITS_FLAG_BETWEEN_SCANS)) 
             return false;
@@ -127,6 +132,7 @@ public class HawcPlusFrame extends SofiaFrame {
             double dev = Math.abs(chopperPosition.length()) - hawcScan.chopper.amplitude;
             if(Math.abs(dev) > hawcScan.transitTolerance) return false;
         }
+        
         
         if(hasTelescopeInfo) {
             if(equatorial == null) return false;
@@ -165,7 +171,6 @@ public class HawcPlusFrame extends SofiaFrame {
         offset.rotate(instrumentVPA);
     }
    
-    
     public final static int FITS_FLAG_NORMAL_OBSERVING = 0;
     public final static int FITS_FLAG_LOS_REWIND = 1;
     public final static int FITS_FLAG_IVCURVES = 2;

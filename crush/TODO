@@ -1,8 +1,7 @@
->> Change combination Frame flags to method calls...
+>> Pointing
 
->> Conditions based on environment vars and java properties
-	env.[KEY] or env.[!KEY] or env.[KEY?value]
-	property.[PROPERTY?value] 
+	Scan.getPoiuntingString to use PointingData table
+	(this way pointing values are calculated once only)
 
 >> command-line options is master mode
 	unlock
@@ -29,14 +28,6 @@
 	
 >> Edit suggestions for editing 'wrapper.sh'
 
-
-
-
-
->> Pointing
-
-	Scan.getPoiuntingString to use PointingData table
-	(this way pointing values are calculated once only)
 
 >> Native frames
 
