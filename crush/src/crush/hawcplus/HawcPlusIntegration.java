@@ -50,33 +50,14 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
      */
     private static final long serialVersionUID = -3894220792729801094L;
 
-    boolean checkTransients = false;
-    double transientLevel = 3.0;
+    private boolean fixJumps = false, fixSubarray[] = new boolean[HawcPlus.subarrays];
+    private int minJumpLevelFrames = 0;
 
-    boolean fixJumps = false, fixSubarray[] = new boolean[HawcPlus.subarrays];
-    int minJumpLevelFrames = 0;
-
-    Dependents driftParms;
+    private Dependents driftParms;
 
     public HawcPlusIntegration(HawcPlusScan parent) {
         super(parent);
     }	
-
-    @Override
-    public void setTau() throws Exception {
-        super.setTau();
-        // TODO printEquivalentTaus();
-    }
-
-    // TODO
-    /*
-	public void printEquivalentTaus() {
-		CRUSH.values(this, "--->"
-				+ ", tau(LOS):" + Util.f3.format(zenithTau / scan.horizontal.sinLat())
-				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
-		);		
-	}
-     */
 
     @Override
     public HawcPlusFrame getFrameInstance() {
@@ -217,6 +198,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     // Create the frame object only if it cleared the above hurdles...
                     final HawcPlusFrame frame = new HawcPlusFrame(hawcPlusScan);
                     frame.index = i;
+                    frame.isComplete = false;
                     frame.hasTelescopeInfo = !isLab;
 
                     // Read the pixel data (DAC and MCE jump counter)
@@ -233,7 +215,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     if(frame.hasTelescopeInfo) frame.hasTelescopeInfo = !Double.isNaN(((double[]) row[iRA])[0]);
 
                     if(!frame.hasTelescopeInfo) {
-                        if(!isLab) set(i, null);
+                        if(isLab) frame.isComplete = true;
                         return;
                     }
 
@@ -324,7 +306,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     else {
                         frame.horizontal = new HorizontalCoordinates(((double[]) row[iAZ])[0] * Unit.deg, ((double[]) row[iEL])[0] * Unit.deg);
                     }
-
+                    
+                    frame.isComplete = true;
                 }
 
             };
@@ -351,8 +334,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
     @Override
     public void removeDrifts(final int targetFrameResolution, final boolean robust) {
-        checkTransients = hasOption("transients");
-        transientLevel = hasOption("transients.level") ? option("transients.level").getDouble() : 100.0;
         fixJumps = hasOption("fixjumps");
 
         fixSubarray[HawcPlus.R0] =  hasOption("fixjumps.r0");
@@ -371,7 +352,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
     public void validate() {  
         if(hasOption("chopper.shift")) shiftChopper(option("chopper.shift").getInt());
 
-        checkZeroValues();
+        flagZeroedChannels();
         checkJumps();
 
         super.validate();
@@ -397,27 +378,23 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         info("---> " + (jumpPixels > 0 ? "found jump(s) in " + jumpPixels + " pixels." : "All good!"));
     }
 
-    private void checkZeroValues() {
+    private void flagZeroedChannels() {
         info("Flagging zeroed channels... ");
 
         instrument.new Fork<Void>() {
             @Override
             protected void process(HawcPlusPixel channel) {
                 channel.flag(Channel.FLAG_DEAD);
-                for(Frame exposure : HawcPlusIntegration.this) if(exposure != null) if(exposure.data[channel.index] != 0.0) {
+                for(final Frame exposure : HawcPlusIntegration.this) if(exposure != null) if(exposure.data[channel.index] != 0.0) {
                     channel.unflag(Channel.FLAG_DEAD);
                     return;
                 }
             }
-
         }.process();
-
     }
 
-
-
     @Override
-    public boolean checkConsistency(final Channel channel, final int from, final int to, float[] frameParms) {
+    protected boolean checkConsistency(final Channel channel, final int from, final int to, float[] frameParms) {
         boolean isOK = super.checkConsistency(channel, from, to, frameParms);
 
         HawcPlusPixel pixel = (HawcPlusPixel) channel;
@@ -425,16 +402,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         if(pixel.hasJumps) {
             if(fixJumps) isOK &= fixJumps(channel, from, to, frameParms);    
             else if(fixSubarray[pixel.sub]) isOK &= fixJumps(channel, from, to, frameParms);
-        }
-
-
-        if(checkTransients) {     
-            if(!checkBlockVariance(channel, from, to)) {
-                //flagBlock(channel, from, to, HawcPlusFrame.SAMPLE_TRANSIENT_NOISE);
-                channel.flag(HawcPlusPixel.FLAG_FLICKER);
-                isOK = false;
-            }
-            else channel.unflag(HawcPlusPixel.FLAG_FLICKER);
         }
 
         return isOK;
@@ -478,33 +445,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         if(to-from < minJumpLevelFrames) flagBlock(channel, from, to, HawcPlusFrame.SAMPLE_PHI0_JUMP);
         else levelBlock(channel, from, to, frameParms);
     }  
-
-
-    private boolean checkBlockVariance(Channel channel, final int from, int to) {
-        if(channel.variance == 1.0) return true;
-
-        double sum = 0.0, sumw = 0.0;
-
-        int clearFlag = ~HawcPlusFrame.SAMPLE_TRANSIENT_NOISE;
-
-        while(--to >= from) {
-            final HawcPlusFrame exposure = get(to);
-            if(exposure == null) continue;
-
-            exposure.sampleFlag[channel.index] &= clearFlag;
-
-            if(exposure.isFlagged(Frame.CHANNEL_WEIGHTING_FLAGS)) continue;
-            if(exposure.sampleFlag[channel.index] != 0) continue;
-
-            sum += exposure.relativeWeight * exposure.data[channel.index] * exposure.data[channel.index];
-            sumw += exposure.relativeWeight;
-        }
-
-        if(sumw == 0.0) return true;
-
-        double var = sum / sumw;
-        return var < transientLevel * transientLevel * channel.variance;
-    }
 
     private void flagBlock(final Channel channel, final int from, int to, int pattern) {
         while(--to >= from) {
@@ -551,7 +491,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         return super.getTableEntry(name);
     }
 
-    public void shiftChopper(int n) {
+    private void shiftChopper(int n) {
         if(n == 0) return;
 
         info("Shifting chopper signal by " + n + " frames.");
@@ -568,9 +508,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
     }
 
 
-    public void removeJumps() {
-        comments += "J ";
-        
+    private void removeJumps() {
+        comments += "J ";     
         
         final ChannelGroup<HawcPlusPixel> channels = hasOption("dejump.subarray") ?
                 instrument.getSubarrayChannels("jumpies", option("dejump.subarray").getList()) : instrument;
@@ -653,7 +592,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             pixel.jumpCounts += dJump[pixel.index].value();  
         
         Instrument.recycle(dJump);
-  
     }
 
     @Override
@@ -662,38 +600,5 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         else return super.perform(task);
         return true;
     }
-
-    /*
-	// TODO fill gaps in position data, if any...
-	private int fillGaps(double[] x) {   
-	    int from = 0;
-	    int gaps = 0;
-
-	    while(from < x.length-1) {
-	        // Skip over valid points until a gap is found...
-	        while(!Double.isNaN(x[from]) && from < x.length-1) from++;
-
-	        // Find the next valid point after the gap...
-	        int to = from;
-	        while(Double.isNaN(x[to]) && to < x.length-1) to++;
-
-	        if(to >= x.length) return gaps;
-
-	        gaps++;
-
-	        double last = x[from];
-	        double delta = (x[to] - x[from]) / (to - from);
-
-	        for(int i=from+1; i<to; i++) {
-	            last += delta;
-	            x[i] = last;
-	        }
-
-	        from = to;
-	    }
-
-	    return gaps;
-	}
-     */
 
 }

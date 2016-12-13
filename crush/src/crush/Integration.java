@@ -481,8 +481,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	public void calcScanSpeedStats() {
-	    boolean robust = hasOption("positions.robust");
-		aveScanSpeed = robust ? getMedianScanningVelocity() : getMeanScanningVelocity();
+		aveScanSpeed = getTypicalScanningSpeed();
 		info("Typical scanning speeds are " 
 				+ Util.f1.format(aveScanSpeed.value()/(instrument.getSizeUnitValue()/Unit.s)) 
 				+ " +- " + Util.f1.format(aveScanSpeed.rms()/(instrument.getSizeUnitValue()/Unit.s)) 
@@ -960,7 +959,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 
 	
-	public boolean checkConsistency(final Channel channel, int from, int to, float[] frameParms) {
+	protected boolean checkConsistency(final Channel channel, int from, int to, float[] frameParms) {
 	    return true;
 	}
 	
@@ -2112,49 +2111,27 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		return v;
 	}
 	
-	public DataPoint getMeanScanningVelocity() {
+	public DataPoint getTypicalScanningSpeed() {
         final Vector2D[] v = getScanningVelocities();       
-      
-        double sum = 0.0;
-        int n = 0;
-       
-        for(int t=v.length; --t >= 0; ) if(v[t] != null) if(!v[t].isNaN()) {
-            sum += v[t].length();
-            n++;
-        }
-        double avev = sum / n;
+        float[] speed = getFloats();
         
-        sum = 0.0;
-        for(int t=v.length; --t >= 0; ) if(v[t] != null) if(!v[t].isNaN()) {
-            double dev = (v[t].length() - avev);
-            sum += dev*dev;
+        int n=0;
+        for(int t=v.length; --t >= 0; ) if(v[t] != null) if(!v[t].isNaN()) speed[n++] = (float) v[t].length();        
+        
+        double avev = n > 10 ? Statistics.robustMean(speed, 0, n, 0.1) : Statistics.median(speed, 0, n);
+     
+        for(int i=n; --i >= 0; ) {
+            final float dev = (float) (speed[i] - avev);
+            speed[i] = dev * dev;
         }
-        double w = n > 0 ? n / sum : 0.0;
-        return new DataPoint(new WeightedPoint(avev, w));
+        double w = n > 10 ? 
+                1.0 / Statistics.robustMean(speed, 0, n, 0.1) : 
+                Statistics.medianNormalizedVariance / Statistics.median(speed, 0, n);
+                
+        recycle(speed);
+        
+        return new DataPoint(new WeightedPoint(avev, w));    
     }
-    
-	
-	public DataPoint getMedianScanningVelocity() {
-		final Vector2D[] v = getScanningVelocities();		
-		
-		final float[] speed = getFloats();
-		Arrays.fill(speed, 0, v.length, 0.0F);
-		
-		int n=0;
-		for(int t=v.length; --t >= 0; ) if(v[t] != null) if(!v[t].isNaN()) speed[n++] = (float) v[t].length();
-		double avev = n > 0 ? Statistics.median(speed, 0, n) : Double.NaN;
-		
-		n=0;
-		for(int t=v.length; --t >= 0; ) if(v[t] != null) if(!v[t].isNaN()) {
-			float dev = (float) (speed[n] - avev);
-			speed[n++] = dev*dev;
-		}
-		double w = n > 0 ? Statistics.medianNormalizedVariance / Statistics.median(speed, 0, n) : 0.0;
-		
-		recycle(speed);
-		
-		return new DataPoint(new WeightedPoint(avev, w));
-	}
 	
 	public int velocityClip(final Range range) { 
 		

@@ -1,7 +1,5 @@
->> dejump by channel group.
 >> obstime.[]
 >> fits.assign.<key> option
->> positions.robust
 >> skydip.attempts
 >> chopper.invert
 >> chopper.tolerance
@@ -9,17 +7,17 @@
 >> env.[], property.[]
 >> chopper.shift
 >> chopper.tolerance
->> transients, transients.level?
+>> (transients, transients.level)?
 >> source.coupling.s2n
 >> HAWC+: series
 >> vclip.strict
 
 
-2.34-a1 (devel.5)
+2.34-a2 (devel.11)
 
 	[NEW] New option 'vclip.strict' will discard any frames outside of the
 	acceptable speed range, rather than the default approach of simply 
-	flagging at slow speeds.
+	flagging slow motion for source modeling only.
 
 	[NEW] {HAWC+} Automatic subarray gain renormalization after loading
 	flatfield data.
@@ -28,10 +26,6 @@
 	HawcPlusPixels based on MUX (e.g. 'flag.mux=10,25-27') or rows
 	(e.g. 'flag.row=0,11').
  
-	[NEW] {HAWC+} Subarray relative gain normalizations via gain.R0, 
-	gain.R1, gain.T0 (and gain.T1) options. It makes for improved overall 
-	normalization and calibration regardless of subarray selection.
-
 	[NEW] {HAWC+} New option 'chopper.shift' allows shifting the chopper
 	signal by the specified number of frames forward relative to the data.
 	The detector transitions clearly lag the chopper by about 2 samples, so
@@ -39,14 +33,11 @@
 
 	[NEW] {HAWC+} New option 'chopper.tolerance' allows setting a
 	tolerance for the chopper position in arcsec. If the actual chopper
-	disatance is not within the nominal chopper amplitude, then the
+	distance is not within the nominal chopper amplitude, then the
 	exposure will not be used to avoid smearing.
 
 	[NEW] {skydip} Option 'skydip.attempts' now controls up to how many 
 	times CRUSH will attempt to fit the skydip data before giving up.
-
-	[NEW] Option 'positions.robust' enables robust scanning speed stats 
-	(default before, and now).
 
 	[NEW] Conditional settings based on total observing time using
 	'obstime.[]'. The condition inside the brackets is a minimum or maximum
@@ -70,17 +61,19 @@
 	[NEW] {skydip} The skydip resolution is now set by the new option
 	'skydip.grid' to avoid conflict with setting mapping grid sizes.
 
+	[FIX] {HAWC+} Do not set null frames during reading. It can mess 
+	things us later when data is realigned. Instead, incomplete frames
+	are nulled duting validation.
+
 	[FIX] {HAWC+} Do not notch if DIAG_HZ is invalid.
 
 	[FIX] Median noise weight determination was flawed, using data 
-	outside of the available range.
+	outside of the available range. Fortunately, the flawed code was
+	probably never used.
 
 	[FIX] 'source.coupling' was broken. Fixed.
 
 	[FIX] {skydip} Convergence exceptions are now caught...
-
-	[FIX] {HAWC+} For non-chopped scans, do not add the SMA position to
-	to the astrometry. It messes things up...
 
 	[FIX] {skydip} Handling of NaN elevation coordinates.
 
@@ -97,26 +90,26 @@
 	instead of Kelvin to the skydip model, resulting in bogus Jy/K value in
 	the fit. Fixed.
 
-	[TWEAK] {skydip} 3 fitting tries.
+	[TWEAK] {skydip} Acceptable tau range changed to 0:10. (Was 0:1).
 
-	[TWEAK] {skydip} Acceptable tau range changed to 0:10.
-
-	[TWEAK] {SOFIA} scan lookup by flight and scan numbers now works with
+	[TWEAK] {SOFIA} Scan lookup by flight and scan numbers now works with
 	the more standard SOFIA convention as well as the old HAWC+ convention
 	used in April and October 2016.
 
 	[TWEAK] {SOFIA} Improved reporting of errors encountered while 
 	accessing the FITS input.
 
+	[CONFIG] {HAWC+} Default map pixelization ('grid' option) set closer
+	to providing 5 pixels per beam in each band. 
+
+	[CONFIG] {HAWC+} Configuration for processing demodulated chop-scan
+	data.
+
 	[CONFIG] Disable 'source.nosync' when writing timestreams, covariances
 	or spectra.
 
 	[CONFIG] {HAWC+} Recalibrated based on Uranus (Flight 354), and 
 	determined pointing corrections.
-
-	[CONFIG] {HAWC+} Scanning speed flagging is now explicitly set for
-	each band configuration (hawc+/band-X.cfg). It helps get rid of 
-	artifacts at low scanning speeds at the beginning and end of rasters.
 
 	[CONFIG] {HAWC+} Incorporated optical pixel couplings derived from
 	OMC-1 rasters.
@@ -134,12 +127,8 @@
 	erroneously set to T when running intcals during skydips -- during
 	2016-12.)
 
-	[CONFIG] {HAWC+} Re-enable 'write.png' for Skydip reductions via the
-	'drp'.
-
-	[CONFIG] {SOFIA} Disabled smoothing of telescope position data for
-	velocity and acceleration clipping. The smoothing (by 1s) could 
-	result in overflagging of otherwise perfectly good data.
+	[CONFIG] {SOFIA} Reduced smoothing of telescope position data for
+	velocity and acceleration clipping (1.0 --> 0.1 seconds).
 
 	[CONFIG] {HAWC+} Real-time object coordinates (rtoc) are assumed to be
 	default starting Oct 2016, obsoleting the use of the NONSIDE FITS 
@@ -147,10 +136,15 @@
 	solution going forward.
 
 	[CONFIG] {HAWC+} Automatic skydip reductions based on OBSMODE or 
-	DIAGMODE keywords (which will be set accordingly starting with the 
-	Nov 30 commissioning flight).
+	DIAGMODE keywords, if available (i.e. starting Nov 2016).
 
-	[CODE] {HAWC+} When loading pixel (flatfield) data, killing all pixels
+	[CODE] HWPFilter made independent of PolKa in preparation for using
+	with HAWC+ also.
+
+	[CODE] Typical scanning speeds are estimated through a robust mean, 
+	rather than a median before.
+
+	[CODE] {HAWC+} When loading pixel (flatfield) data, kill all pixels
 	with bad coupling...
 
 	[CODE] Some cleanup on weight flagging...
