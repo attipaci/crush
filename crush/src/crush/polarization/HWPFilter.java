@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-package crush.polka;
+package crush.polarization;
 
 import crush.Integration;
 import crush.filters.KillFilter;
@@ -51,16 +51,16 @@ public class HWPFilter extends KillFilter {
 		
 		// Use waveplate PolKa.frequency and PolKa.jitter 
 		// Use filter.hwp.harmonics
-		PolKa polka = (PolKa) integration.instrument;
+		Oscillating hwp = (Oscillating) integration.instrument;
 		
-		if(!(polka.waveplateFrequency > 0.0)) {
-			integration.warning("Waveplate rotation not detected. Assuming total-power mode. Blacklisting 'filter.hwp'.");
-			polka.setOption("blacklist=filter.hwp");
+		if(!(hwp.getFrequency() > 0.0)) {
+		    integration.warning("Waveplate rotation not detected. Assuming total-power mode. Blacklisting 'filter.hwp'.");
+			integration.instrument.setOption("blacklist=filter.hwp");
 			return;
 		}
 		
-		double f0 = polka.waveplateFrequency;
-		double d = f0 * polka.jitter;
+		double f0 = hwp.getFrequency();
+		double d = f0 / hwp.getQ();
 		
 		// polarization is modulated at 4-theta...
 		int harmonics = hasOption("harmonics") ? option("harmonics").getInt() : 8;

@@ -37,7 +37,7 @@ import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.HeaderCardException;
 
-public class PolKa extends Laboca {
+public class PolKa extends Laboca implements Oscillating {
 	/**
 	 * 
 	 */
@@ -213,6 +213,16 @@ public class PolKa extends Laboca {
 		if(!hasAnalyzer) return super.getSourceModelInstance();
 		else if(hasOption("source.synchronized")) return new SyncPolarMap(this);
 		else return new PolarMap(this);
-	}  
+	}
+
+    @Override
+    public double getFrequency() {
+        return waveplateFrequency;
+    }
+
+    @Override
+    public double getQ() {
+        return 1.0 / jitter;
+    }  
 	
 }
