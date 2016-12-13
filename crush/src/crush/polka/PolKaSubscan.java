@@ -28,6 +28,7 @@ import crush.*;
 import crush.apex.APEXScan;
 import crush.filters.Filter;
 import crush.laboca.*;
+import crush.polarization.HWPFilter;
 import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.Parallel;
