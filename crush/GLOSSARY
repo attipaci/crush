@@ -290,6 +290,21 @@
 			both the 'x' and 'y' directions.
 			@See: 'correlated.<?>', 'detect.chopped'
 
+:: chopper.invert	@Instrument: HAWC+
+			@Expert
+			@Since: 2.34
+			An option to flip the direction associated with the
+			analog chopper R/S signals. There was such an apparent
+			flip between April and October 2016.
+
+:: chopper.shift=N	@Instrument: HAWC+
+			@Expert
+			@Since: 2.34
+			Shift the chopper R/S analog signals by N raw frames
+			(sampled at 203.25 Hz), relative to the detector 
+			readout to improve synchronization.
+			@See: 'shift'
+
 :: chopper.throw=X	@Instrument: SHARC
 			@Since: 2.17
 			@Advanced
@@ -303,6 +318,14 @@
 			was left in the same state (which is a reasonable
 			assumption :-).
 			@See: 'deconvolve'
+
+:: chopper.tolerance=X	@Instrument: HAWC+
+			@Advanced
+			@Since:2.34
+			Allows setting a tolerance for the chopper position in
+			arcsec. If the actual chopper distance is not within
+			the tolerance from the nominal chopper amplitude, then 
+			the exposure will not be used to avoid smearing.
 
 :: clip=X		@Expert
 			In early generations of the source map, force map
@@ -873,6 +896,36 @@
 			contains copies of the available tables and is 
 			configured to use them as needed.
 
+:: env.[]		@Since: 2.34
+			@Advanced
+			Set options conditionally based on the shell 
+			environment from which CRUSH is invoked. Inside the
+			backets, four kind of options may appear. These are:
+
+			  1. Existence of an environment variable. E.g.
+		
+			     env.[HOME] 	# true if HOME exists
+			
+			  2. Non-existence of a variable. E.g.
+
+			     env.[!HOME]	# true if HOME is undefined.	
+
+			  3. If a variable is set to a specific value. E.g.
+	
+			     env.[HOSTNAME?bar]  # true if HOSTNAME is 'bar'
+
+			  4. If a variable is set to any other value. E.g.
+			
+			     env.[HOSTNAME?!bar] # true if HOSTNAME isn't 'bar'
+
+			Note, that since CRUSH options are case insensitive, in
+			general, but because evironments are not necessarily
+			so, CRUSH will assume that the names of variables
+			exists in upper case (ALWAYS!), whereas their values
+			are matched case insensitive. Thus, 'env.[home]' and 
+			'env.[HOME]' both check the existence of 'HOME'.
+			@See: 'property.[]' 
+
 :: epoch=X		@Instrument: GISMO
 			Normally the coordinate epoch, in which the equatorial 
 			source coordinates are expressed, is stored in the data.
@@ -1221,7 +1274,32 @@
 
 				fits.[object?MARS] bright
 
-			
+
+:: fits.assing.<key> <option>	@Advanced
+				@Since: 2.34
+				Associate the values of FITS keys to CRUSH
+			configuration options directly. The assignment will 
+			happen when the input FITS files are read.
+		
+:: fixjumps		@Instrument: HAWC+
+			@Since: 2.34
+			@Expert
+			Attempt to 'fix' residual flux jumps that result from
+			imprecise correction in the MCE. Long jumps are
+			re-levelled, while shoter ones are flagged out to
+			minimize impact on source structure. Alternatively,
+			the same can be applied on a per-sibarray basis as
+			well via the 'fixjumps.<sub>' option.
+			@See: 'fixjumps.<sub>'
+
+:: fixjumps.<sub>	@Instrument: HAWC+
+			@Since: 2.34
+			@Expert
+			Same as 'fixjumps' but performed on a per-subarray
+			basis. e.g. 'fixjumps.R1' will apply the fix to the
+			R1 subarray.
+			@See: 'fixjumps'
+	
 :: flag=<list>		Specify a list of channels that ought to be ignored. 
 			Can use instrument-specific pixel IDs, fixed indices 
 			(usually data storage indexes) and ranges. E.g.:
@@ -2000,6 +2078,23 @@
 			available options
 			@See: 'obslog', 'obslog.file', 'obslog.format'
 
+:: obstime.[]		@Advanced
+			@Since: 2.34
+			Configure settings based on the total observing time
+			of all input scans. The condition inside the brackets
+			is a minimum or maximum obsercing time in seconds. E.g.
+		
+			  obstime.[<60]
+			  obstime.[>60]
+
+			The first activates for datasets longer than 1 minute,
+			the second for datasets shorter than a minute. Nesting
+			obstime conditions is possible with some limitations.
+			It is evaluated only once, after all scans have been
+			read. Thus, the condition will have no effect if 
+			activated later (e.g. if nested inside an iteration.[]
+			condition.).	
+
 :: offsets		@Advanced
 			Remove the residual DC offsets from the bolometer 
 			signals (ignored when 'drifts' below is also 
@@ -2424,6 +2519,28 @@
 
 			@See: 'system', 'grid', 'mapsize'
 
+:: propertry.[]		@Since: 2.34
+			@Advanced
+			Set options conditionally based on the values of
+			Java properties. The syntax is similar to the 'env.[]'
+			option (which sets CRUSH options conditionally based
+			on the shell environment). Inside the brackets, two
+			types of conditions may exists:
+			
+			  1. Match the value of a system property. E.g.:
+
+			       property.[user.name?bar]
+
+			     is true if 'user.name' is 'bar'.
+
+			  2. Match to any other value. E.g.:
+
+			       property.[user.name?!bar]
+
+			     is true, if 'user.name' is anything but 'bar'.
+
+			@See: 'env.[]'
+
 :: purify		@Instrument: PolKa
 			@Advanced
 			@Since: 2.11
@@ -2806,6 +2923,14 @@
 			reason for not using an alias in this case, is to 
 			retain, independently, 'skydip' option branches.
 
+
+:: skydip.attempts=N	@Advanced
+			@Since: 2.34
+			Try fit the skydip data multiple times, and pick the
+			best of all for reporting. Useful for mitigating
+			occasional convergence failures or getting stuck in
+			local minima.
+
 :: skydip.elRange=<min>:<max>	@Advanced
 				@Since: 2.14
 			Set the elevation range (in degress) to use for fitting
@@ -2957,6 +3082,13 @@
 			flagged and ignored from further source modeling steps
 			until these flags are cleared again in the reduction.
 			@See: 'correlated.<?>.gainrange'
+
+:: source.coupling.s2n=X	@Expert
+				@Since: 2.34
+				Set the minimum S/N required in the map for
+			using the position for estimating detector coupling
+			gains when the 'source.copuling' option is enabled.
+			@See: 'source.coupling'	
 
 :: source.despike  	@Advanced
 			Despike scan maps at. 
@@ -3580,7 +3712,16 @@
 			The value 'auto' can be specified to set the velocity
 			clipping range optimally based on the typical scanning
 			speeds.
-			@See: 'aclip', 'resolution'
+			@See: 'vclip.strict', 'aclip', 'resolution'
+
+:: vclip.strict		@Expert
+			@Since: 2.34
+			When present, CRUSH will discard any frames outside of
+			the acceptable range of mapping speeds (as defined by
+			the 'vclip' option), rather than the default approach
+			of simply flagging slow motion for source modelling
+			only. 
+
 
 :: ver.[<range>] key=value	@Since: 2.11
 				@Instrument: GISMO

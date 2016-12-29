@@ -256,10 +256,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         observer = origin.observer;
 
         environment = new SofiaEnvironmentData(header);	
-        if(!hasOption("tau.pwv")) instrument.getOptions().parse("tau.pwv " + environment.pwv.midPoint());
-
         aircraft = new SofiaAircraftData(header);
-
         telescope = new SofiaTelescopeData(header); 
         isTracking = telescope.isTracking();
 
@@ -279,7 +276,11 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         if(equatorial != null) info("Equatorial: " + equatorial);
         if(telescope.boresightEquatorial != null) info("Boresight: " + telescope.boresightEquatorial);  
         if(telescope.requestedEquatorial != null) info("Requested: " + telescope.requestedEquatorial);
-       
+
+        info("Altitude: " + Util.f2.format(aircraft.altitude.midPoint() / (1000.0 * Unit.ft)) + " kft, "
+           + "Tamb: " + Util.f1.format((environment.ambientT + Constant.zeroCelsius) / Unit.K) + " K"
+        );
+        
         info("Focus: " + telescope.focusT.toString(Util.f1, Unit.get("um")));
 
         instrument.parseHeader(header);
@@ -574,19 +575,16 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     @Override
     public String getPointingString(Offset2D pointing) {   
         // The pointing is xel, el (similar to az, el)
-        Vector2D taOffset = new Vector2D(pointing);
-         
-        // eq -> x: rotate by -VPA
-        taOffset.rotate(getTelescopeVPA() - getInstrumentVPA());
-        
+        Vector2D siOffset = new Vector2D(pointing);
+              
         // convert offset to pixels
         // The SI y axis is upside down relative to the elevation axis
         Vector2D pixelSize = instrument.getPixelSize();  
-        taOffset.scaleX(1.0 / pixelSize.x());
-        taOffset.scaleY(-1.0 / pixelSize.y());
+        siOffset.scaleX(1.0 / pixelSize.x());
+        siOffset.scaleY(-1.0 / pixelSize.y());
         
         return super.getPointingString(pointing) + "\n\n" +
-            "  TA offset --> " + Util.f2.format((taOffset.x())) + ", " + Util.f2.format(taOffset.y()) + " pixels";        
+            "  SIBS offset --> " + Util.f2.format((siOffset.x())) + ", " + Util.f2.format(siOffset.y()) + " pixels";        
     }
     
 

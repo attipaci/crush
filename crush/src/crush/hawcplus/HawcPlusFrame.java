@@ -28,6 +28,7 @@ import crush.Channel;
 import crush.Frame;
 import crush.Instrument;
 import crush.sofia.SofiaFrame;
+import jnum.astro.GeodeticCoordinates;
 import jnum.math.Vector2D;
 
 
@@ -118,13 +119,16 @@ public class HawcPlusFrame extends SofiaFrame {
     }
   
     @Override
+    public GeodeticCoordinates getSite() { return site; }
+    
+    @Override
     public boolean validate() {
         HawcPlusScan hawcScan = (HawcPlusScan) scan;
         HawcPlus hawc = hawcScan.instrument; 
         
         if(!isComplete) return false;
-        
-         // Skip data that is not normal observing
+         
+        // Skip data that is not normal observing
         if(status != FITS_FLAG_NORMAL_OBSERVING || (hawcScan.useBetweenScans && status == FITS_FLAG_BETWEEN_SCANS)) 
             return false;
         
@@ -137,22 +141,33 @@ public class HawcPlusFrame extends SofiaFrame {
         if(hasTelescopeInfo) {
             if(equatorial == null) return false;
           
+            if(Double.isNaN(LST)) return false;
+            if(Double.isNaN(site.longitude())) return false;
+            if(Double.isNaN(site.latitude())) return false;
+            if(Double.isNaN(telescopeVPA)) return false;
+            if(Double.isNaN(instrumentVPA)) return false;
+            
             if(chopperPosition != null) {
+                if(Double.isNaN(chopVPA)) return false;
+                
                 horizontalOffset.add(chopperPosition);
                 horizontal.addOffset(chopperPosition);
 
                 Vector2D offset = (Vector2D) chopperPosition.copy();
+                
                 horizontalToNativeEquatorial(offset);
+                
                 equatorial.addNativeOffset(offset);
             }
 
             // TODO HWP angle in equatorial... (check sign)
             hwpAngle += telescopeVPA;
         }
-        
+           
         if(hawc.darkSquidCorrection) darkCorrect();
 
         return super.validate();
+       
     }
     
 

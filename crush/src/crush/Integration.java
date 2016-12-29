@@ -556,18 +556,26 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public abstract FrameType getFrameInstance();
 	
+	public double getModulationFrequency(int signalMode) {
+	    if(this instanceof Chopping) {
+            Chopper chopper = ((Chopping) this).getChopper();
+            if(chopper != null) return chopper.frequency;
+        }
+        return 0.0;
+	}
+	
 	public double getCrossingTime() {
 		return getCrossingTime(scan.sourceModel == null ? instrument.getSourceSize() : scan.sourceModel.getSourceSize());
 	}
 	
+	// TODO what if not total power mode?
 	public double getCrossingTime(double sourceSize) {		
 		if(this instanceof Chopping) {
 			Chopper chopper = ((Chopping) this).getChopper();
 			if(chopper != null) return Math.min(chopper.stareDuration(), sourceSize / aveScanSpeed.value());
 		}
-		return sourceSize / aveScanSpeed.value();		
+		return getModulationFrequency(Frame.TOTAL_POWER) + sourceSize / aveScanSpeed.value();		
 	}
-
 
 	public double getPointCrossingTime() {
 		return getCrossingTime(scan.sourceModel == null ? instrument.getPointSize() : scan.sourceModel.getPointSize()); 

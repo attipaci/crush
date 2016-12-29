@@ -215,16 +215,19 @@ public abstract class AbstractGismo extends Camera<GismoPixel, GismoPixel> imple
 	@Override
 	public void readWiring(String fileName) throws IOException {
 		info("Loading wiring data from " + fileName);
-			
-		final Hashtable<String, GismoPixel> lookup = getIDLookup();
+		
+		final ChannelLookup<GismoPixel> lookup = new ChannelLookup<GismoPixel>(this);
 		final int groupPins = hasOption("correlated.pins.group") ? option("correlated.pins.group").getInt() : 1;
 		
 		new LineParser() {
             @Override
             protected boolean parse(String line) throws Exception {
                 SmartTokenizer tokens = new SmartTokenizer(line);
-                GismoPixel pixel = lookup.get(tokens.nextToken());
+                String id = tokens.nextToken();
+                
+                GismoPixel pixel = lookup.get(id);
                 if(pixel == null) return false;
+                
                 pixel.mux = tokens.nextInt();
                 pixel.pin = tokens.nextInt() / groupPins;
                 return true;

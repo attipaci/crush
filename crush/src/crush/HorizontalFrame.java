@@ -24,6 +24,7 @@ package crush;
 
 import jnum.astro.AstroProjector;
 import jnum.astro.EquatorialCoordinates;
+import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
@@ -144,11 +145,13 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	public double getParallacticAngle() {
 		return Math.atan2(sinPA, cosPA);
 	}
+	
+	public GeodeticCoordinates getSite() { return scan.site; }
  	
 	public void calcHorizontal() {
 		EquatorialCoordinates apparent = new EquatorialCoordinates();
 		getApparentEquatorial(apparent);
-		horizontal = apparent.toHorizontal(scan.site, LST);
+		horizontal = apparent.toHorizontal(getSite(), LST);
 	}
 	
 	// TODO use the mapping projection, instead of hardcoded SFL
@@ -174,7 +177,7 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	}
 	
 	public void setZenithTau(double value) {
-		zenithTau = value;
+		zenithTau = value;		
 		setTransmission(Math.exp(-zenithTau/horizontal.sinLat()));
 	}
 	

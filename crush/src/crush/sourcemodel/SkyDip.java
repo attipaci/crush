@@ -174,7 +174,7 @@ public class SkyDip extends SourceModel {
 		
 		fit(model);
 		
-		if(model.hasConverged()) {
+		if(model.hasConverged) {
 		    CRUSH.result(this,
 		            "Skydip result:\n" +
 		            "=================================================\n" +

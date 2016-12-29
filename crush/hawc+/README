@@ -491,6 +491,9 @@ For a general overview of channel divisions, please consult Section 3.
 		For HAWC+, these SQUID address lines are effectively the
 		detectors rows, hence the naming.
 
+   series	The grouping of pixels based on the series array through which
+		they are read out.
+
 
 
 4.2. Glossary of HAWC+ specific options
@@ -575,6 +578,13 @@ For a general overview of channel divisions, please consult Section 3.
 			correlated modality sub-options apply.
 			@See: 'correlated.<?>'
 
+
+   series		@Alias: 'correlated.series'
+			@Expert
+			Decorrelate on the series arrays. It seems that the
+			series array (at 4K) is sensitive to some level of
+			thermal fluctuation, and enabling decorrelation on
+			these can improve imaging quality.
 
    rotation=<deg>	@Expert
 			Specify the array rotation (in degrees), when pixel 

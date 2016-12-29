@@ -32,7 +32,6 @@ import jnum.io.LineParser;
 import jnum.text.SmartTokenizer;
 
 import java.io.*;
-import java.util.*;
 
 
 
@@ -107,7 +106,7 @@ public class Aszca extends APEXCamera<AszcaPixel> implements NonOverlapping {
 			
 		final String[] waferNames = { "e1", "e5", "e8", "ed", "f0", "f3" };
 		final int boxStartAddress = Integer.decode("0xe1");
-		final Hashtable<String, AszcaPixel> lookup = getIDLookup();
+		final ChannelLookup<AszcaPixel> lookup = new ChannelLookup<AszcaPixel>(this);
 		
 		new LineParser() {
             @Override

@@ -29,6 +29,7 @@ import crush.apex.APEXScan;
 import crush.filters.Filter;
 import crush.laboca.*;
 import crush.polarization.HWPFilter;
+import crush.polarization.PolarModulation;
 import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.Parallel;
@@ -51,6 +52,15 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 	
 	public PolKaSubscan(APEXScan<Laboca, LabocaSubscan> parent) {
 		super(parent);
+	}
+	
+	@Override
+    public double getModulationFrequency(int signalMode) {
+	    switch(signalMode) {
+	    case PolarModulation.Q : 
+	    case PolarModulation.U : return 4.0 * getWaveplateFrequency();
+	    default: return super.getModulationFrequency(signalMode);
+	    }
 	}
 	
 	@Override
@@ -104,7 +114,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 			warning("Invalid waveplate data. Will attempt workaround...");
 			calcMeanWavePlateFrequency();
 			Channel channel = hasOption("waveplate.tpchannel") ?
-					instrument.getIDLookup().get(option("waveplate.tpchannel").getValue()) :
+					new ChannelLookup<LabocaPixel>(instrument).get(option("waveplate.tpchannel").getValue()) :
 					instrument.referencePixel;
 			setTPPhases(channel);
 		}
@@ -126,7 +136,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 			trim();
 			
 			Channel channel = hasOption("waveplate.tpchannel") ?
-					instrument.getIDLookup().get(option("waveplate.tpchannel").getValue()) :
+					new ChannelLookup<LabocaPixel>(instrument).get(option("waveplate.tpchannel").getValue()) :
 					instrument.referencePixel;
 					
 			measureTPPhases(channel);

@@ -500,7 +500,7 @@ implements TableFormatter.Entries, BasicMessaging {
 	// TODO ability to flag groups divisions...
 	// perhaps flag.group, and flag.division...
 	public void flagPixels(Collection<String> list) {
-		Hashtable<String, ChannelType> lookup = getIDLookup();
+	    ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
 		ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>("flag", list.size());
 
 		for(String spec : list) channels.add(spec, lookup); 
@@ -528,7 +528,7 @@ implements TableFormatter.Entries, BasicMessaging {
 		
 		info("Defining " + list.size() + " blind channels.");		
 		
-		Hashtable<String, ChannelType> lookup = getIDLookup();
+		ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
 		
 		for(String id : list) {
 			ChannelType channel = lookup.get(id);
@@ -619,7 +619,8 @@ implements TableFormatter.Entries, BasicMessaging {
 		addGroup("blinds", copyGroup().discard(getNonDetectorFlags()).discard(Channel.FLAG_BLIND, ChannelGroup.KEEP_ANY_FLAG));
 		
 		if(options.containsKey("group")) {
-			Hashtable<String, ChannelType> lookup = getIDLookup();
+			ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
+			
 			Configurator option = option("group");
 			for(String name : option.getTimeOrderedKeys()) {
 				ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>(name);
@@ -836,8 +837,7 @@ implements TableFormatter.Entries, BasicMessaging {
 	public void loadChannelData(String fileName) throws IOException {
 		info("Loading pixel data from " + fileName);
 		
-
-        final Hashtable<String, ChannelType> lookup = getIDLookup();
+		final ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
         
         // Channels not contained in the data file are assumed dead...
         for(Channel channel : this) channel.flag(Channel.FLAG_DEAD);
@@ -846,8 +846,11 @@ implements TableFormatter.Entries, BasicMessaging {
             @Override
             protected boolean parse(String line) throws Exception {
                 SmartTokenizer tokens = new SmartTokenizer(line);
-                ChannelType channel = lookup.get(tokens.nextToken());
+                String id = tokens.nextToken();
+                
+                ChannelType channel = lookup.get(id);
                 if(channel == null) return false;
+                
                 // Channels in the file are not dead after all, or let ChannelType.parse decide that....
                 channel.unflag(Channel.FLAG_DEAD);
                 channel.parseValues(tokens);
@@ -964,16 +967,6 @@ implements TableFormatter.Entries, BasicMessaging {
 		return lookup;
 	}
 	
-	public Hashtable<String, ChannelType> getIDLookup() {
-		Hashtable<String, ChannelType> lookup = new Hashtable<String, ChannelType>();
-		for(ChannelType channel : this) {
-		    lookup.put(channel.getID(), channel);
-		    String index = channel.getFixedIndex() + "";
-		    if(!index.equals(channel.getID())) lookup.put(index, channel);
-		}
-		return lookup;
-	}
-	
 	public ChannelDivision<ChannelType> getDivision(String name, Field field, int discardFlags) throws IllegalAccessException {
 		Hashtable<Integer, ChannelGroup<ChannelType>> table = new Hashtable<Integer, ChannelGroup<ChannelType>>();
 	
@@ -1002,7 +995,7 @@ implements TableFormatter.Entries, BasicMessaging {
 	}
 	
 	public synchronized void addGroup(String name, Vector<String> idList) {
-		Hashtable<String, ChannelType> lookup = getIDLookup();
+		ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
 		ChannelGroup<ChannelType> group = new ChannelGroup<ChannelType>(name);
 		for(String id : idList) {
 			ChannelType pixel = lookup.get(id);
