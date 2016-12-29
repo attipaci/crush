@@ -1,19 +1,48 @@
->> obstime.[]
->> fits.assign.<key> option
->> skydip.attempts
->> chopper.invert
->> chopper.tolerance
->> fixjumps, fixjumps.R0 ...
->> env.[], property.[]
->> chopper.shift
->> chopper.tolerance
->> (transients, transients.level)?
->> source.coupling.s2n
->> HAWC+: series
->> vclip.strict
+
+2.34-b1 (beta)
 
 
-2.34-a2 (devel.11)
+	Overview
+	=====================================================================
+	This release fixes an unfortunate oops in 2.33 relating to an 
+	unintended botch-up in the pixel numbering (which is used, e.g. by
+	the 'flag' option). The bug affected LABOCA reductions the most.
+	It also brings many improvements and fine-tunings for HAWC+, based on
+	the December 2016 commissioning flights. (Some of it, like calibration
+	is yet to be finalized
+	=====================================================================
+
+
+	[BUG] {2.33-1} The dual approach to pixel IDs, introduced in 2.33-1, 
+	was flawed, and produced unpredictable behaviour for all instruments
+	with integer pixel ids (most supported instruments). Fixed.
+
+	[NEW] Ability to set configuration options conditionally based on
+	environment variables or Java properties. E.g.:
+
+	   env.[HOME]		# if HOME exists as an environment variable
+	   env.[!HOME]		# if HOME does not exists in the environment
+	   env.[HOSTNAME?bar]	# if HOSTNAME is set to 'bar', case independent
+	   env.[HOSTNAME?!bar]	# if HOSTNAME is not set to 'bar'.
+	
+	Similarly, for Java properties:
+
+	   property.[user.name?bar]	# if user.name is 'bar'
+	   property.[user.name?!bar]	# if user.name is not 'bar'
+	   
+
+	[NEW] Ability to assign the values of FITS keys to CRUSH configuration
+	options directly via the 'fits.assign.<key>' option'. E.g.
+
+	  fits.assign.OBJECT object
+
+        will set the CRUSH option 'object' to the same value as the OBJECT
+	keyword in the FITS. The assignments take place when the main FITS
+	header is read.
+
+	[NEW] New option 'source.coupling.s2n' sets the minimum S/N in the the
+	map that contributes to the estimation of coupling gains when the
+	'source.coupling' option is enabled.
 
 	[NEW] New option 'vclip.strict' will discard any frames outside of the
 	acceptable speed range, rather than the default approach of simply 
@@ -36,6 +65,10 @@
 	distance is not within the nominal chopper amplitude, then the
 	exposure will not be used to avoid smearing.
 
+	[NEW] {HAWC+} New option 'chopper.invert' flips the direction
+	associated with the analog chopper R/S signals. There was such an
+	apparent sign change between April and October 2016.
+
 	[NEW] {skydip} Option 'skydip.attempts' now controls up to how many 
 	times CRUSH will attempt to fit the skydip data before giving up.
 
@@ -43,8 +76,8 @@
 	'obstime.[]'. The condition inside the brackets is a minimum or maximum
 	observing time in seconds, e.g.:
 
-		obstime.[<60] 
-		obstime.[>60]
+		obstime.[>60] 
+		obstime.[<60]
 
 	The first activates for datasets longer than 1 minute, the second for
 	datasets shorter than a minute. Nesting obstime conditions is possible,
@@ -89,6 +122,12 @@
 	[FIX] {SOFIA} {skydip} Ambient temperature was passed in Celsius 
 	instead of Kelvin to the skydip model, resulting in bogus Jy/K value in
 	the fit. Fixed.
+
+	[TWEAK] Better treatment of chopped scans, for vclip, downsampling and
+	filter corrections.
+
+	[TWEAK] {SOFIA} Pointing fits now report SIBS offset instead of TA
+	offset (in pixels).
 
 	[TWEAK] {skydip} Acceptable tau range changed to 0:10. (Was 0:1).
 
@@ -149,7 +188,7 @@
 
 	[CODE] Some cleanup on weight flagging...
 
-	[CODE] Flagging  of channels/frames only through method calls for
+	[CODE] Flagging of channels/frames only through method calls for
 	better overall consistency.
 
 	[CODE] Removed an archaic sourceGain field from Instrument which was
@@ -267,7 +306,7 @@
 	[FIX] Additional check for NaN coordinates when preparing source maps.
 	Samples with NaN coordinate data will be flagged for exclusion.
 
-	[FIX] {HAWC+} Requested equatorian and boresight equatorial DEC 
+	[FIX] {HAWC+} Requested equatorial and boresight equatorial DEC 
 	coordinates parsed with units applied twice. Fixed.
 
 	[FIX] CRUSH could hang if an unexpected error occurs at initialization,

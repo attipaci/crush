@@ -32,6 +32,7 @@ import jnum.Util;
 import jnum.data.fitting.ChiSquared;
 import jnum.data.fitting.ConvergenceException;
 import jnum.data.fitting.DownhillSimplex;
+import jnum.data.fitting.Minimizer;
 import jnum.data.fitting.Parameter;
 import jnum.math.Range;
 
@@ -53,6 +54,8 @@ public class SkyDipModel {
 	Parameter kelvin = new Parameter("kelvin");
 	Parameter tau = new Parameter("tau", 1.0, new Range(0.0, 10.0));
 
+	boolean hasConverged = false;
+	
 	String dataUnit = "[dataunit]";
 
 	int usePoints = 0;
@@ -62,7 +65,7 @@ public class SkyDipModel {
 	
 	int attempts = 3;
 	
-	DownhillSimplex minimizer;
+	Minimizer minimizer;
 	Vector<Parameter> parameters = new Vector<Parameter>();
 	
 	
@@ -119,7 +122,8 @@ public class SkyDipModel {
 			
 		// Set some reasonable initial values for the offset and conversion...
 		if(Double.isNaN(offset.value())) offset.setValue(signalRange.min());
-		if(Double.isNaN(kelvin.value())) kelvin.setValue((signalRange.max() - signalRange.min()) / Tsky.value());	
+		if(Double.isNaN(kelvin.value())) kelvin.setValue((signalRange.max() - signalRange.min()) / Tsky.value());
+		
 	}
 
 	
@@ -142,8 +146,6 @@ public class SkyDipModel {
 		}
 		return sumdev;
 	}
-
-	public boolean hasConverged() { return minimizer.hasConverged(); }
 	
 	public void fit(final SkyDip skydip) { 
 	    
@@ -167,17 +169,13 @@ public class SkyDipModel {
         
         initParms(skydip);
         minimizer = new DownhillSimplex(chi2, parameters);
+        hasConverged = false;
         
-        boolean converged = false;
-        for(int i=0; i<attempts; i++) {
-            try { 
-                minimizer.minimize();
-                converged = true;
-                break;
-            }
-            catch(ConvergenceException e) {}
+        try {
+            minimizer.minimize(attempts); 
+            hasConverged = true;
         }
-        if(!converged) skydip.warning("Skydip fit did not converge!");
+        catch(ConvergenceException e) { skydip.warning("Skydip fit did not converge!"); }
         
 		final int dof = usePoints - parameters.size();
 		
@@ -196,7 +194,7 @@ public class SkyDipModel {
 	
 	@Override
 	public String toString() {	
-		if(!minimizer.hasConverged()) CRUSH.warning(this, "The fit has not converged. Try again!");
+		if(!hasConverged) CRUSH.warning(this, "The fit has not converged. Try again!");
 	
 		StringBuffer text = new StringBuffer();
 		

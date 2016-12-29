@@ -67,9 +67,21 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
     public double getMeanHWPAngle() {
         return 0.5 * (getFirstFrame().hwpAngle + getLastFrame().hwpAngle);
     }
+    
+    @Override
+    public double getMeanPWV() {
+        double sum = 0.0;
+        int n=0;
+        
+        for(HawcPlusFrame exposure : this) if(exposure != null) {
+            sum += exposure.PWV;
+            n++;
+        }
+        return sum / n;
+       
+    }
 
     protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {	
-
         int records = 0;
         for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
 
@@ -284,13 +296,13 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     frame.chopperPosition.scale(SofiaChopperData.volts2Angle);
 
                     if(invertChop) frame.chopperPosition.invert();
-
+      
                     // Rotate the chopper offset into the TA frame...
                     // C -> E' rot by theta_cp
                     // T -> E' rot by theta_ta
                     // C -> T rot by theta_cp - theta_ta
                     frame.chopperPosition.rotate(frame.chopVPA - frame.telescopeVPA);
-
+                   
                     // TODO if MCCS fixes alt/az inconsistency then we can just rely on their data...
                     //frame.horizontal = new HorizontalCoordinates(((double[]) row[iAZ])[0] * Unit.deg, ((double[]) row[iEL])[0] * Unit.deg);                
                     //frame.telescopeCoords = new TelescopeCoordinates(frame.horizontal);
@@ -354,8 +366,22 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
         flagZeroedChannels();
         checkJumps();
-
+              
         super.validate();
+    }
+    
+    @Override
+    public void setTau() throws Exception {
+        super.setTau();
+        printEquivalentTaus(zenithTau);
+    }
+    
+    private void printEquivalentTaus(double value) { 
+        CRUSH.values(this, "--->"
+                + " tau(" + Util.f0.format(instrument.instrumentData.wavelength/Unit.um) + "um):" + Util.f3.format(value)
+                + ", tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat())
+                + ", PWV:" + Util.f1.format(getTau("pwv", value)) + "um"
+        );      
     }
 
     private void checkJumps() {
@@ -488,7 +514,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("hwp")) return getMeanHWPAngle();
-        return super.getTableEntry(name);
+        else if(name.equals("pwv")) return getMeanPWV() / Unit.um;
+        else return super.getTableEntry(name);
     }
 
     private void shiftChopper(int n) {

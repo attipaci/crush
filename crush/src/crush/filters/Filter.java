@@ -329,6 +329,7 @@ public abstract class Filter implements Serializable, Cloneable {
 		System.arraycopy(rejected, 0, data, 0, rejected.length);
 	}
 	
+	// What about non-total power modulations...
 	protected double calcPointResponse() {
 		// Assume Gaussian source profile under crossing time
 		// sigmaT sigmaw = 1
@@ -340,6 +341,8 @@ public abstract class Filter implements Serializable, Cloneable {
 		final double T = integration.getPointCrossingTime();
 		final double sigma = Constant.sigmasInFWHM / (Constant.twoPi * T * df);
 		final double a = -0.5 / (sigma * sigma);
+		final double f0 = integration.getModulationFrequency(Frame.TOTAL_POWER) / df;
+		
 		
 		// Start from the 1/f filter cutoff
 		int minf = getHipassIndex();
@@ -348,7 +351,9 @@ public abstract class Filter implements Serializable, Cloneable {
 		
 		// just calculate x=0 component -- O(N)
 		// Below the hipass time-scale, the filter has no effect, so count it as such...
-		for(int f=minf; --f >= 0; ) sum += Math.exp(a*f*f);
+		for(int f=minf; --f >= 0; ) {
+		    sum += Math.exp(a*(f-f0)*(f-f0)) + Math.exp(a*(f+f0)*(f+f0));
+		}
 		double norm = sum;
 		
 		// Calculate the true source filtering above the hipass timescale...
@@ -358,7 +363,7 @@ public abstract class Filter implements Serializable, Cloneable {
 		// relative to the sum of the original real amplitudes.
 		
 		for(int f=nf; --f >= minf; ) {
-			double sourceResponse = Math.exp(a*f*f);
+			double sourceResponse = Math.exp(a*(f-f0)*(f-f0)) + Math.exp(a*(f+f0)*(f+f0));
 			sum += sourceResponse * responseAt(f);
 			norm += sourceResponse;
 		}

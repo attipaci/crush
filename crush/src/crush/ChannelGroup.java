@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009,2010 Attila Kovacs
+
 
 package crush;
 
@@ -95,33 +95,46 @@ implements Copiable<ChannelGroup<ChannelType>> {
         return channels;
     }
 
-    public final void add(String spec, Hashtable<String, ChannelType> lookup) {
-        add(spec, lookup, 0);
+    public final int add(String spec, ChannelLookup<ChannelType> lookup) {
+        return add(spec, lookup, 0);
     }
     
-    public void add(String spec, Hashtable<String, ChannelType> lookup, int excludeFlags) {
-        if(lookup.containsKey(spec)) {
+    public int add(String spec, ChannelLookup<ChannelType> lookup, int excludeFlags) {
+        
+        if(lookup.contains(spec)) {
             ChannelType channel = lookup.get(spec);
-            if(channel.isUnflagged(excludeFlags)) add(channel);
+            if(channel.isUnflagged(excludeFlags)) {
+                add(channel);
+                return 1;
+            }
         }
         else if(spec.contains("-")) {
             StringTokenizer tokens = new StringTokenizer(spec, "-");
-            if(tokens.countTokens() != 2) return;
+            if(tokens.countTokens() != 2) return 0;
             
             String from = tokens.nextToken();
             String to = tokens.nextToken();
             
-            if(!lookup.containsKey(from)) return;
-            if(!lookup.containsKey(to)) return;
+            if(!lookup.contains(from)) return 0;
+            if(!lookup.contains(to)) return 0;
             
             int fromIndex = lookup.get(from).getFixedIndex();
             int toIndex = lookup.get(to).getFixedIndex();
             
+            int n=0;
+            
             for(int i=fromIndex; i <= toIndex; i++) {
                 ChannelType channel = lookup.get(i + "");
-                if(channel != null) if(channel.isUnflagged(excludeFlags)) add(channel);
+                if(channel != null) if(channel.isUnflagged(excludeFlags)) {
+                    add(channel);
+                    n++;
+                }
             }
-        }    
+            
+            return n;
+        }
+        
+        return 0;
     }
     
     

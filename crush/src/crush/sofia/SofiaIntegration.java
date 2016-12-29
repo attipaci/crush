@@ -26,21 +26,49 @@ package crush.sofia;
 import crush.GroundBased;
 import crush.Integration;
 import crush.Scan;
+import jnum.LockedException;
+import jnum.Unit;
+import jnum.Util;
 
 public abstract class SofiaIntegration<InstrumentType extends SofiaCamera<?, ?>, FrameType extends SofiaFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -4771883165716694480L;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -4771883165716694480L;
 
-	
-	public SofiaIntegration(Scan<InstrumentType, ?> parent) {
-		super(parent);
-	}
 
-	
-	
+    public SofiaIntegration(Scan<InstrumentType, ?> parent) {
+        super(parent);
+    }
+
+    @Override
+    public double getModulationFrequency(int signalMode) {
+        SofiaScan<?,?> sofiaScan = (SofiaScan<?,?>) scan;
+        if(sofiaScan.isChopping) return sofiaScan.chopper.frequency;
+        return super.getModulationFrequency(signalMode);
+    }
+
+    public double getMeanPWV() { return ((SofiaScan<?,?>) scan).environment.pwv.midPoint(); }
+    
+    @Override
+    public void validate() {  
+        
+        double pwv = getMeanPWV();
+        info("PWV: " + Util.f1.format(pwv / Unit.um) + " um");
+
+        if(!hasOption("tau.pwv")) {
+            try { instrument.getOptions().process("tau.pwv", Double.toString(pwv / Unit.um)); }
+            catch(LockedException e) {}
+        }
+        if(!hasOption("tau")) {
+            try { instrument.getOptions().process("tau", "pwv"); }
+            catch(LockedException e) {}
+        }
+       
+        super.validate();
+    }
+
 }
 

@@ -34,7 +34,6 @@ import jnum.text.SmartTokenizer;
 import nom.tam.fits.*;
 
 import java.io.*;
-import java.util.*;
 
 
 
@@ -131,7 +130,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 	public void readWiring(String fileName) throws IOException {	
 		info("Loading wiring data from " + fileName);
 		
-		final Hashtable<String, LabocaPixel> lookup = getIDLookup();
+		final ChannelLookup<LabocaPixel> lookup = new ChannelLookup<LabocaPixel>(this);
 	
 		new LineParser() {
             @Override
@@ -169,7 +168,8 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 	public void readTemperatureGains(String fileName) throws IOException {
 		info("Loading He3 gains from " + fileName);
 		
-        final Hashtable<String, LabocaPixel> lookup = getIDLookup();
+		
+        final ChannelLookup<LabocaPixel> lookup = new ChannelLookup<LabocaPixel>(this);
         
 		new LineParser() {
             @Override

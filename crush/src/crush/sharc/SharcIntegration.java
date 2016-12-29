@@ -44,6 +44,9 @@ public class SharcIntegration extends CSOIntegration<Sharc, SharcFrame> {
 		return new SharcFrame((SharcScan) scan);
 	}
 
+	public double getModulationFrequency() {
+	    return ((SharcScan) scan).chop_frequency;
+	}
 	
 	public void readFrom(DataInput in) throws IOException {	
 		SharcScan sharcScan = (SharcScan) scan;

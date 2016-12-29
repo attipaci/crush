@@ -32,7 +32,6 @@ import jnum.io.LineParser;
 import jnum.text.SmartTokenizer;
 
 import java.io.*;
-import java.util.*;
 
 
 
@@ -86,7 +85,7 @@ public class Saboca extends APEXCamera<SabocaPixel> implements NonOverlapping {
 	public void readWiring(String fileName) throws IOException {
 		info("Loading wiring data from " + fileName);
 		
-		final Hashtable<String, SabocaPixel> lookup = getIDLookup();
+		final ChannelLookup<SabocaPixel> lookup = new ChannelLookup<SabocaPixel>(this);
 	
 		new LineParser() {
             @Override
