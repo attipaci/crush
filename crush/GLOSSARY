@@ -3083,9 +3083,9 @@
 			until these flags are cleared again in the reduction.
 			@See: 'correlated.<?>.gainrange'
 
-:: source.coupling.s2n=X	@Expert
-				@Since: 2.34
-				Set the minimum S/N required in the map for
+:: source.coupling.s2n=<min:max>	@Expert
+					@Since: 2.34
+			Set the acceptable range of S/N required in the map for
 			using the position for estimating detector coupling
 			gains when the 'source.copuling' option is enabled.
 			@See: 'source.coupling'	

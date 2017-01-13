@@ -1,3 +1,68 @@
+>> FFTDemo
+
+	--> Use configurator
+
+
+	-type=float, double, complex
+	-size=n
+	-source=file,noise,sin,cos,delta
+		-file=<path>
+		-m=N		<- for sin/cos/delta
+		-scale=X	<- for all sources...
+	-dir=forward, back
+	-mode=benchmark, write
+
+>> Mesh.Float / Double / Complex...
+
+>> Data2D<T extends LinearAlgebra<T>>
+
+	Data2D.Float / Double / Complex(?)
+	
+	.. Data2D<Samples<?>>>
+	.. Data2D<Mesh>
+
+>> Samples<T extends LinearAlgebra> (Data1D) -> DataSeries (GridData1D)
+
+	smoothing / filtering ...
+
+
+	
+
+:: Frame 
+   - data and flags only...
+
+	-> Frame2D<CoordinateType extends Coordinate2D> 
+	   + native coordinates
+
+		-> TelescopeFrame<CT extends SphericalCoordinates>
+		
+			-> HorizontalFrame
+			   - HO --> EQ conversions
+
+			-> EquatorialFrame
+			   - EQ --> HO conversions	  	
+
+
+
+:: Instrument
+
+		-> TelescopeInstrument
+	   	- Pixels
+	   	- jansky units
+
+
+
+:: FrameSet 
+   - 
+	-> Integration 
+		-> TelescopeIntegration
+
+::         Scan 
+		-> AstroScan
+
+
+
+
 >> Pointing
 
 	Scan.getPoiuntingString to use PointingData table

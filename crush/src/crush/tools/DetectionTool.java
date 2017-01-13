@@ -299,7 +299,7 @@ public class DetectionTool {
 		
 		for(int i=0; i<regions.size(); i++) {
 			
-			Region source = (Region) regions.elementAt(i);
+			Region source = (Region) regions.get(i);
 			
 			final double S2N = source.peak / source.dpeak;
 			lastS2N = S2N;
