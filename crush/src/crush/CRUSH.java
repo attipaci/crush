@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2017 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -59,8 +59,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.34-b1";
-    private static String revision = "devel.2";
+    private static String version = "2.34-b2";
+    private static String revision = "devel.4";
 
     public static String workPath = ".";
     public static String home = ".";

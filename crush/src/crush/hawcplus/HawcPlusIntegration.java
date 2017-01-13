@@ -73,12 +73,11 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         double sum = 0.0;
         int n=0;
         
-        for(HawcPlusFrame exposure : this) if(exposure != null) {
+        for(HawcPlusFrame exposure : this) if(exposure != null) if(!Double.isNaN(exposure.PWV)) {
             sum += exposure.PWV;
             n++;
         }
         return sum / n;
-       
     }
 
     protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {	
@@ -240,8 +239,9 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
                     if(!isConfigured) configure(row);
 
-                    frame.PWV = ((double[]) row[iPWV])[0] * (float) Unit.um; 
-
+                    final double pwv = ((double[]) row[iPWV])[0];
+                    frame.PWV = pwv < 0.0 ? Double.NaN : pwv * Unit.um;
+                    
                     frame.site = new GeodeticCoordinates(((double[]) row[iLON])[0] * Unit.deg, ((double[]) row[iLAT])[0] * Unit.deg);  
                     frame.LST = ((double[]) row[iLST])[0] * (float) Unit.hour;
 

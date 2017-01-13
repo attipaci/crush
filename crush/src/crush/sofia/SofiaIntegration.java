@@ -57,8 +57,14 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
         
         double pwv = getMeanPWV();
         info("PWV: " + Util.f1.format(pwv / Unit.um) + " um");
+     
 
         if(!hasOption("tau.pwv")) {
+            if(Double.isNaN(pwv)) {
+                pwv = 0.0;
+                info("--> FIX: Assuming PWV = 0 um for opacity correction...");
+            }
+           
             try { instrument.getOptions().process("tau.pwv", Double.toString(pwv / Unit.um)); }
             catch(LockedException e) {}
         }
@@ -66,6 +72,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
             try { instrument.getOptions().process("tau", "pwv"); }
             catch(LockedException e) {}
         }
+        
        
         super.validate();
     }

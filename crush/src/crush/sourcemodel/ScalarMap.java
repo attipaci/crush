@@ -681,14 +681,15 @@ public class ScalarMap extends SourceMap {
 
     @Override
     protected void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain) {
- 
-        final double threshold = hasSourceOption("coupling.s2n") ? sourceOption("coupling.s2n").getDouble() : 5.0;
+        final Range s2nRange = hasSourceOption("coupling.s2n") ?
+                Range.parse(sourceOption("coupling.s2n").getValue(), true) :
+                new Range(5.0, Double.POSITIVE_INFINITY);
         
+                
         CRUSH.Fork<DataPoint[]> calcCoupling = integration.new Fork<DataPoint[]>() {
             private AstroProjector projector;
             private Index2D index;
             private DataPoint[] sum;
-
              
             @Override
             protected void init() {
@@ -712,7 +713,7 @@ public class ScalarMap extends SourceMap {
                     double mapValue = map.getValue(i, j);
                     double s2n = mapValue / map.getRMS(i, j);
                     
-                    if(Math.abs(s2n) < threshold) continue; 
+                    if(!s2nRange.contains(Math.abs(s2n))) continue; 
                     
                     double baseValue = base.getValue(i,j);
                     
