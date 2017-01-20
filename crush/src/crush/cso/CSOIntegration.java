@@ -35,13 +35,14 @@ import crush.GroundBased;
 import crush.HorizontalFrame;
 import crush.Integration;
 import crush.Scan;
+import crush.array.SingleColorPixel;
 import crush.jcmt.JCMTTauTable;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 
 
-public abstract class CSOIntegration<InstrumentType extends CSOArray<?>, FrameType extends HorizontalFrame> 
+public abstract class CSOIntegration<InstrumentType extends CSOCamera<? extends SingleColorPixel>, FrameType extends HorizontalFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased {
 	/**
 	 * 

@@ -37,7 +37,7 @@ import java.util.*;
 import java.text.*;
 
 
-public class MakoScan<MakoType extends AbstractMako<?>> extends CSOScan<MakoType, MakoIntegration<MakoType>> {
+public class MakoScan<MakoType extends AbstractMako<? extends AbstractMakoPixel>> extends CSOScan<MakoType, MakoIntegration<MakoType>> {
 	/**
 	 * 
 	 */

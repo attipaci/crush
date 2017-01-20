@@ -32,7 +32,7 @@ import jnum.Util;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
-public class Scuba2 extends Camera<Scuba2Pixel, Scuba2Pixel> implements GroundBased, GridIndexed {
+public class Scuba2 extends Camera<Scuba2Pixel> implements GroundBased, GridIndexed {
 	/**
 	 * 
 	 */

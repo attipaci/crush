@@ -59,7 +59,7 @@ import jnum.text.TableFormatter;
 import jnum.util.*;
 import jnum.util.DataTable;
 
-public abstract class Scan<InstrumentType extends Instrument<?>, IntegrationType extends Integration<InstrumentType, ?>>
+public abstract class Scan<InstrumentType extends Instrument<? extends Channel>, IntegrationType extends Integration<InstrumentType, ? extends Frame>>
 extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatter.Entries, BasicMessaging {
 	/**
 	 * 

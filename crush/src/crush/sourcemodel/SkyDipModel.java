@@ -110,22 +110,17 @@ public class SkyDipModel {
 		return offset.value() + Tobs * kelvin.value();
 	}
 	
-	protected void initParms(SkyDip skydip) {
-		Range signalRange = new Range();
-		
-		for(int i=0; i<skydip.data.length; i++) if(skydip.data[i].weight() > 0.0) {
-			signalRange.include(skydip.data[i].value());
-		}
-		
+	protected void initParms(SkyDip skydip) {   
 		if(options.isConfigured("tsky")) Tsky.setValue(options.get("tsky").getDouble() * Unit.K);
 		else if(skydip.Tamb.weight() > 0.0) Tsky.setValue(skydip.Tamb.value());
-			
-		// Set some reasonable initial values for the offset and conversion...
-		if(Double.isNaN(offset.value())) offset.setValue(signalRange.min());
-		if(Double.isNaN(kelvin.value())) kelvin.setValue((signalRange.max() - signalRange.min()) / Tsky.value());
 		
+		Range signalRange = skydip.getRange();
+		
+		// Set some reasonable initial values for the offset and conversion...
+		if(Double.isNaN(offset.value())) offset.setValue(signalRange.midPoint());
+		if(Double.isNaN(kelvin.value())) kelvin.setValue(signalRange.span() / Tsky.value());
 	}
-
+	
 	
 	public double[] getParms() {
 		double[] parm = new double[parameters.size()];
@@ -148,6 +143,15 @@ public class SkyDipModel {
 	}
 	
 	public void fit(final SkyDip skydip) { 
+	    
+	    if(CRUSH.debug) {
+	        CRUSH.debug(this, "Initial skydip values: " + Tsky.value());
+            CRUSH.debug(this, "    Tsky = " + Tsky.value());
+            CRUSH.debug(this, "    offset = " + offset.value());
+            CRUSH.debug(this, "    kelvin = " + kelvin.value());
+            CRUSH.debug(this, "    tau = " + tau.value());
+        }
+	    
 	    
 	    int fromBin, toBin;
 	    if(elRange != null) {

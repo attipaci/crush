@@ -24,7 +24,7 @@ package crush.mako;
 
 import crush.*;
 import crush.array.DistortionModel;
-import crush.cso.CSOArray;
+import crush.cso.CSOCamera;
 import jnum.Unit;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
@@ -32,7 +32,7 @@ import nom.tam.fits.*;
 import java.util.*;
 
 
-public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> extends CSOArray<MakoPixelType> {
+public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> extends CSOCamera<MakoPixelType> {
 	/**
 	 * 
 	 */

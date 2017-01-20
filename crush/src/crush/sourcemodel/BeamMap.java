@@ -45,7 +45,7 @@ public class BeamMap extends SourceMap {
 	ScalarMap[] pixelMap;
 	private ScalarMap template;
 	
-	public BeamMap(Camera<?, ?> instrument) {
+	public BeamMap(Camera<?> instrument) {
 		super(instrument);
 	}
 
@@ -86,7 +86,7 @@ public class BeamMap extends SourceMap {
 		pixelMap = new ScalarMap[getArray().maxPixels() + 1];
 	}
 	
-	public Camera<?, ?> getArray() { return (Camera<?, ?>) getInstrument(); }
+	public Camera<?> getArray() { return (Camera<?>) getInstrument(); }
 	
 	@Override
 	public void reset(boolean clearContent) {
@@ -284,7 +284,7 @@ public class BeamMap extends SourceMap {
 		String fileName = CRUSH.workPath + File.separator + getDefaultCoreName() + ".rcp";
 		PrintStream out = new PrintStream(new FileOutputStream(fileName));
 		
-		Camera<?,?> array = (Camera<?,?>) scans.get(0).instrument;
+		Camera<?> array = (Camera<?>) scans.get(0).instrument;
 		for(Channel channel : array) channel.coupling = sourceGain[channel.index] / channel.gain;
 	
 		array.printPixelRCP(out, scan.getFirstIntegration().getASCIIHeader());

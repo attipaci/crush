@@ -47,7 +47,7 @@ import jnum.data.Statistics;
 import jnum.io.LineParser;
 import jnum.math.Vector2D;
 
-public class Mustang2 extends Camera<Mustang2Pixel, Mustang2Pixel> implements GroundBased {
+public class Mustang2 extends Camera<Mustang2Pixel> implements GroundBased {
 	/**
 	 * 
 	 */

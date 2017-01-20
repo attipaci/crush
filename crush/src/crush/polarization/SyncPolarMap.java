@@ -35,7 +35,7 @@ public class SyncPolarMap extends PolarMap {
 	 */
 	private static final long serialVersionUID = -46906674479028154L;
 
-	public SyncPolarMap(Camera<?, ?> instrument) {
+	public SyncPolarMap(Camera<?> instrument) {
 		super(instrument);
 	}
 

@@ -12,8 +12,6 @@
 	-dir=forward, back
 	-mode=benchmark, write
 
->> Mesh.Float / Double / Complex...
-
 >> Data2D<T extends LinearAlgebra<T>>
 
 	Data2D.Float / Double / Complex(?)
@@ -26,6 +24,7 @@
 	smoothing / filtering ...
 
 
+>> ant build fixes with explicit upper bounds in declarations...
 	
 
 :: Frame 

@@ -38,7 +38,7 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 
-public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends Camera<ChannelType, ChannelType> implements GroundBased {
+public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends Camera<ChannelType> implements GroundBased {
 	/**
 	 * 
 	 */

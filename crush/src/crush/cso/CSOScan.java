@@ -30,6 +30,7 @@ import crush.ElevationCouplingCurve;
 import crush.GroundBased;
 import crush.HorizontalFrame;
 import crush.Scan;
+import crush.array.SingleColorPixel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
@@ -38,7 +39,7 @@ import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.util.DataTable;
 
-public abstract class CSOScan<InstrumentType extends CSOArray<?>, IntegrationType extends CSOIntegration<InstrumentType,?>> 
+public abstract class CSOScan<InstrumentType extends CSOCamera<? extends SingleColorPixel>, IntegrationType extends CSOIntegration<InstrumentType, ? extends HorizontalFrame>> 
 extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	/**
 	 * 

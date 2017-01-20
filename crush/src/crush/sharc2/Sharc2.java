@@ -26,7 +26,7 @@ package crush.sharc2;
 import crush.*;
 import crush.array.Camera;
 import crush.array.GridIndexed;
-import crush.cso.CSOArray;
+import crush.cso.CSOCamera;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.Statistics;
@@ -40,7 +40,7 @@ import java.io.*;
 import java.util.*;
 
 
-public class Sharc2 extends CSOArray<Sharc2Pixel> implements GridIndexed {
+public class Sharc2 extends CSOCamera<Sharc2Pixel> implements GridIndexed {
 	/**
 	 * 
 	 */

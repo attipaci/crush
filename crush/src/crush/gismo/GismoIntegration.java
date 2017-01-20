@@ -462,7 +462,10 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	
 	
 	void levelSAE() { 
-		instrument.new Fork<Void>() {
+	    // TODO
+        // This cast, while seemingly unnecessary, is needed to avoid VerifyError when compiling with javac.
+	    // Alas, Eclipse compiles is just fine without the explicit cast, as expected...
+	    ((AbstractGismo) instrument).new Fork<Void>() {
 			@Override
 			protected void process(GismoPixel channel) { levelSAE(channel); }
 		}.process();
@@ -533,8 +536,6 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 		
 		notify("Logged to " + fileName);
 	}
-	
-	
 	
 	
 	@Override
