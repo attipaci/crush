@@ -57,7 +57,7 @@ import nom.tam.fits.*;
  * @param <FrameType>
  * 
  */
-public abstract class Integration<InstrumentType extends Instrument<?>, FrameType extends Frame> 
+public abstract class Integration<InstrumentType extends Instrument<? extends Channel>, FrameType extends Frame> 
 extends ArrayList<FrameType> 
 implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.Entries, BasicMessaging {
 	/**

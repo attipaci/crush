@@ -30,7 +30,7 @@ import jnum.Util;
 import jnum.astro.*;
 import jnum.math.Vector2D;
 
-public class MakoIntegration<MakoType extends AbstractMako<?>> extends CSOIntegration<MakoType, MakoFrame> {
+public class MakoIntegration<MakoType extends AbstractMako<? extends AbstractMakoPixel>> extends CSOIntegration<MakoType, MakoFrame> {
 	/**
 	 * 
 	 */

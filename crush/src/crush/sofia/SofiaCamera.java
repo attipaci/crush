@@ -40,7 +40,6 @@ import crush.CRUSH;
 import crush.Channel;
 import crush.GroundBased;
 import crush.Instrument;
-import crush.Pixel;
 import crush.ColorArrangement;
 import crush.Scan;
 import crush.array.Camera;
@@ -48,7 +47,7 @@ import jnum.Unit;
 import jnum.io.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
-public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends Channel> extends Camera<PixelType, ChannelType> implements GroundBased {
+public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<ChannelType> implements GroundBased {
     /**
      * 
      */
@@ -75,8 +74,7 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
 
     @Override
     public Instrument<ChannelType> copy() {
-        @SuppressWarnings("unchecked")
-        SofiaCamera<PixelType, ChannelType> copy = (SofiaCamera<PixelType, ChannelType>) super.copy();
+        SofiaCamera<ChannelType> copy = (SofiaCamera<ChannelType>) super.copy();
         if(instrumentData != null) copy.instrumentData = instrumentData.copy();
         if(array != null) copy.array = array.copy();
         return copy;
@@ -192,7 +190,7 @@ public abstract class SofiaCamera<PixelType extends Pixel, ChannelType extends C
 
     public double getTotalExposureTime(List<Scan<?,?>> scans) {
         double expTime = 0.0;
-        for(Scan<?,?> scan : scans) expTime += ((SofiaCamera<?,?>) scan.instrument).instrumentData.exposureTime;
+        for(Scan<?,?> scan : scans) expTime += ((SofiaCamera<?>) scan.instrument).instrumentData.exposureTime;
         return expTime;
     }
 

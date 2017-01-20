@@ -39,7 +39,7 @@ import jnum.data.WeightedPoint;
 import jnum.io.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
-public class APEXSubscan<InstrumentType extends APEXCamera<?>, FrameType extends APEXFrame> 
+public class APEXSubscan<InstrumentType extends APEXCamera<? extends APEXContinuumPixel>, FrameType extends APEXFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping {
 	/**
 	 * 

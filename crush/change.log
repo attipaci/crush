@@ -1,5 +1,5 @@
 
-2.34-b2 (devel.3)
+2.34-1 (20 January 2017)
 
 
 	Overview
@@ -8,14 +8,20 @@
 	unintended botch-up in the pixel numbering (which is used, e.g. by
 	the 'flag' option). The bug affected LABOCA reductions the most.
 	It also brings many improvements and fine-tunings for HAWC+, based on
-	the December 2016 commissioning flights. (Some of it, like calibration
-	is yet to be finalized...)
+	the December 2016 commissioning flights, including an 8% blind
+	calibration in all bands...
 	=====================================================================
 
 
 	[BUG] {2.33-1} The dual approach to pixel IDs, introduced in 2.33-1, 
 	was flawed, and produced unpredictable behaviour for all instruments
 	with integer pixel ids (most supported instruments). Fixed.
+
+	[NEW] {HAWC+} A default atmospheric altitude dependent extinction 
+	model has been added to provide a typical PWV estimate based on altitude
+	alone. The model is activated via the 'pwvmodel' option. Its parameters
+	are the typical PWV value (microns) at 41 kilofeer set by 'pwv41k' and
+	the scale height set by 'pwvscale' in kilofeet.
 
 	[NEW] Ability to set configuration options conditionally based on
 	environment variables or Java properties. E.g.:
@@ -40,7 +46,8 @@
 	keyword in the FITS. The assignments take place when the main FITS
 	header is read.
 
-	[NEW] New option 'source.coupling.s2n' sets an S/N range for what 		points in the map contribute to the estimation of coupling gains when 
+	[NEW] New option 'source.coupling.s2n' sets an S/N range for what
+ 	points in the map contribute to the estimation of coupling gains when 
 	the 'source.coupling' option is enabled.
 
 	[NEW] New option 'vclip.strict' will discard any frames outside of the
@@ -140,6 +147,9 @@
 	[TWEAK] {SOFIA} Improved reporting of errors encountered while 
 	accessing the FITS input.
 
+	[CONFIG] {LABOCA} RCPs updated to include 2016 RCP data (2016-06 and
+	2016-10) and tau lookup up to and including 2016-10-19.
+
 	[CONFIG] {HAWC+} 'weighting.noiserange' re-extended to 0.3:10 to
 	produce less flagging on bright sources (e.g. Mars). The range
 	extension should not affect lower S/N data adversely...
@@ -187,6 +197,15 @@
 
 	[CONFIG] {HAWC+} Automatic skydip reductions based on OBSMODE or 
 	DIAGMODE keywords, if available (i.e. starting Nov 2016).
+
+	[CODE] Added superflous cast to 'instrument.new Fork()' in 
+	GismoIntegration and HawcPlusIntegration, to avoid VerifyError when
+	compiled by javac (seems like a compiler bug).
+
+	[CODE] Fixed failed upper bound inference for javac build, by adding
+	explicit upper bounds to declarations.
+
+	[CODE] Removed unnecessary generic type PixelType from Camera.
 
 	[CODE] HWPFilter made independent of PolKa in preparation for using
 	with HAWC+ also.

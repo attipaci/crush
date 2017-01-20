@@ -38,7 +38,7 @@ import jnum.Unit;
 import jnum.Util;
 import crush.array.SingleColorArrangement;
 
-public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camera<PixelType, PixelType> implements GroundBased, Rotating {
+public abstract class CSOCamera<PixelType extends SingleColorPixel> extends Camera<PixelType> implements GroundBased, Rotating {
 	/**
 	 * 
 	 */
@@ -56,11 +56,11 @@ public abstract class CSOArray<PixelType extends SingleColorPixel> extends Camer
 	
 	public double excessLoad = 0.0;
 	
-	public CSOArray(String name, int size) {
+	public CSOCamera(String name, int size) {
 		super(name, new SingleColorArrangement<PixelType>(), size);
 	}
 
-	public CSOArray(String name) {
+	public CSOCamera(String name) {
 		super(name, new SingleColorArrangement<PixelType>());
 	}
 	

@@ -23,6 +23,7 @@
 
 package crush.sofia;
 
+import crush.Channel;
 import crush.GroundBased;
 import crush.Integration;
 import crush.Scan;
@@ -30,7 +31,7 @@ import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
 
-public abstract class SofiaIntegration<InstrumentType extends SofiaCamera<?, ?>, FrameType extends SofiaFrame> 
+public abstract class SofiaIntegration<InstrumentType extends SofiaCamera<? extends Channel>, FrameType extends SofiaFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased {
 
     /**
@@ -52,19 +53,29 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 
     public double getMeanPWV() { return ((SofiaScan<?,?>) scan).environment.pwv.midPoint(); }
     
+    public double getModelPWV() {
+        info("Estimating PWV based on altitude...");
+        double pwv41k = hasOption("pwv41k") ? option("pwv41k").getDouble() * Unit.um : 29.0 * Unit.um;
+        double b = 1.0 / (hasOption("pwvscale") ? option("pwvscale").getDouble() : 5.0);
+        double altkf = ((SofiaScan<?,?>) scan).aircraft.altitude.midPoint() / (1000.0 * Unit.ft);
+        return pwv41k * Math.exp(-b * (altkf - 41.0));
+    }
+    
     @Override
     public void validate() {  
-        
-        double pwv = getMeanPWV();
+        double pwv = Double.NaN;
+        if(hasOption("pwvmodel")) pwv = getModelPWV();
+        else {
+            pwv = getMeanPWV();
+            if(pwv == 0.0 || Double.isNaN(pwv)) {
+                info("--> FIX: Using default PWV model...");
+                pwv = getModelPWV();
+            } 
+        }
+
         info("PWV: " + Util.f1.format(pwv / Unit.um) + " um");
      
-
         if(!hasOption("tau.pwv")) {
-            if(Double.isNaN(pwv)) {
-                pwv = 0.0;
-                info("--> FIX: Assuming PWV = 0 um for opacity correction...");
-            }
-           
             try { instrument.getOptions().process("tau.pwv", Double.toString(pwv / Unit.um)); }
             catch(LockedException e) {}
         }

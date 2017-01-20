@@ -2556,6 +2556,27 @@
 			uncertainties in the waveplate angles.
 			@See: 'filter.hwp'
 
+:: pwv41k=X		@Instrument: SOFIA, HAWC+
+			@Expert
+			@Since: 2.34
+			Set the typical PWV value to X microns at 41 kilofeet
+			altitude.
+			@See: 'pwvmodel', 'pwvscale'
+
+:: pwvmodel		@Instrument: SOFIA, HAWC+
+			@Expert
+			@Since: 2.34
+			Estimate a typical PWV value (for opacity correction)
+			based on altitude alone.
+			@See: 'pwv41k', 'pwvscale'
+
+:: pwvscale=X		@Instrument: SOFIA, HAWC+
+			@Expert
+			@Since: 2.34
+			The typical water vapor scale height (kft) around 41 
+			kilofeet altitude.
+			@See: 'pwvmodel', 'pwv41k'
+
 :: quiet		@Since: 2.33
 			@Advanced
 			Suppress most console output, but keep reporting any

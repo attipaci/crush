@@ -39,7 +39,7 @@ import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 
 
-public abstract class Camera<PixelType extends Pixel, ChannelType extends Channel> extends Instrument<ChannelType> {
+public abstract class Camera<ChannelType extends Channel> extends Instrument<ChannelType> {
 	/**
 	 * 
 	 */

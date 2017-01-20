@@ -42,7 +42,7 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
-public class HawcPlus extends SofiaCamera<HawcPlusPixel, HawcPlusPixel> implements GridIndexed {
+public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed {
     /**
      * 
      */

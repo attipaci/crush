@@ -406,10 +406,13 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
     private void flagZeroedChannels() {
         info("Flagging zeroed channels... ");
-
-        instrument.new Fork<Void>() {
+        
+        // TODO
+        // This cast, while seemingly unnecessary, is needed to avoid VerifyError when compiling with javac.
+        // Alas, Eclipse compiles is just fine without the explicit cast, as expected...
+        ((HawcPlus) instrument).new Fork<Void>() {
             @Override
-            protected void process(HawcPlusPixel channel) {
+            protected void process(final HawcPlusPixel channel) {
                 channel.flag(Channel.FLAG_DEAD);
                 for(final Frame exposure : HawcPlusIntegration.this) if(exposure != null) if(exposure.data[channel.index] != 0.0) {
                     channel.unflag(Channel.FLAG_DEAD);
