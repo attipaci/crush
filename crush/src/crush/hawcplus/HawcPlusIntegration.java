@@ -413,13 +413,15 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         ((HawcPlus) instrument).new Fork<Void>() {
             @Override
             protected void process(final HawcPlusPixel channel) {
-                channel.flag(Channel.FLAG_DEAD);
+                channel.flag(Channel.FLAG_DISCARD);
                 for(final Frame exposure : HawcPlusIntegration.this) if(exposure != null) if(exposure.data[channel.index] != 0.0) {
-                    channel.unflag(Channel.FLAG_DEAD);
+                    channel.unflag(Channel.FLAG_DISCARD);
                     return;
                 }
             }
         }.process();
+        
+        for(Channel channel : instrument) if(channel.isFlagged(Channel.FLAG_DISCARD)) channel.flag(Channel.FLAG_DEAD);
     }
 
     @Override

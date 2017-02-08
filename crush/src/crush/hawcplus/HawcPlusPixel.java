@@ -108,7 +108,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 		
 		if(gain < 0.3) flag(Channel.FLAG_DEAD);
         else if(gain > 3.0) flag(Channel.FLAG_DEAD);
-		
+			
 		if(isFlagged(Channel.FLAG_DEAD)) coupling = 0.0;
 	}
 	
@@ -124,5 +124,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public final static int FLAG_ROW = softwareFlags.next('R', "Bad detector row gain").value();
 	public final static int FLAG_SERIES_ARRAY = softwareFlags.next('M', "Bad series array gain").value();
 	public final static int FLAG_FLICKER = softwareFlags.next('T', "Flicker noise").value();
+
+    
 
 }

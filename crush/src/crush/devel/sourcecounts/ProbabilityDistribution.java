@@ -92,6 +92,10 @@ public class ProbabilityDistribution implements Cloneable, Copiable<ProbabilityD
         this.resolution = resolution;
     }
   
+    public Range getRange() {
+        return new Range(from, from + resolution * size());
+    }
+    
     protected double[] getData() { return data; }
        
     public int size() { return data.length; }

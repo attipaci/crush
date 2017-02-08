@@ -2,7 +2,7 @@ package crush.devel.sourcecounts;
 
 import jnum.data.Histogram;
 
-public abstract class RegularTemplate extends Template {
+public abstract class RegularTemplate extends TemplateLibrary {
     public double dF;   
 
     public void init(Histogram mapHistogram, double maxFlux, int bins) {    

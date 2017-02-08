@@ -188,10 +188,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		//if(hasOption("shift")) shiftData();
 		if(hasOption("frames")) selectFrames();
-		
-		// Explicit downsampling should precede v-clipping
-		if(hasOption("downsample")) if(!option("downsample").equals("auto")) downsample();
-		
+			
 		if(!hasOption("lab")) {
 		    if(hasOption("vclip")) velocityClip();
 		    if(hasOption("aclip")) accelerationClip();
@@ -222,7 +219,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			throw new IllegalStateException("Too few valid channels (" + instrument.mappingChannels + ").");
 		
 		// Automatic downsampling after vclipping...
-		if(hasOption("downsample")) if(option("downsample").equals("auto")) downsample();
+		if(hasOption("downsample")) downsample();
 		
 		trim();
 		
@@ -1068,7 +1065,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void getRMSChannelWeights() {
 		comments += "W";
 		
-		final ChannelGroup<?> channels = instrument.getConnectedChannels();
+		final ChannelGroup<?> channels = instrument.getLiveChannels();
 		
 		Fork<DataPoint[]> variances = new Fork<DataPoint[]>() {
 			private DataPoint[] var;
@@ -1138,7 +1135,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void getDifferentialChannelWeights() {
 		final int delta = framesFor(10.0 * getPointCrossingTime());
-		final ChannelGroup<?> channels = instrument.getConnectedChannels();
+		final ChannelGroup<?> channels = instrument.getLiveChannels();
 		
 		comments += "w";
 			
@@ -1202,7 +1199,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void getRobustChannelWeights() {
 		comments += "[W]";
 	
-		instrument.getConnectedChannels().new Fork<Void>() {
+		instrument.getLiveChannels().new Fork<Void>() {
 			private float[] dev2;
 			
 			@Override
@@ -1254,9 +1251,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 	public void calcSourceNEFD() {
-		nefd = instrument.getSourceNEFD(gain) / instrument.janskyPerBeam();
-		if(hasOption("nefd.map")) nefd /= Math.sqrt(scan.weight);
-		comments += "(" + Util.e2.format(nefd) + ")";	
+		nefd = instrument.getSourceNEFD(gain);
+		if(hasOption("nefd.map")) nefd /= Math.sqrt(scan.weight);	
+		comments += "(" + Util.e2.format(nefd / instrument.janskyPerBeam()) + ")";	
 	}
 
 	public void getTimeWeights() { getTimeWeights(instrument); } 
@@ -1641,9 +1638,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
 		final int notSpike = ~Frame.SAMPLE_SPIKE;
 			
-		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
+		final ChannelGroup<?> liveChannels = instrument.getLiveChannels();
 		
-		setTempDespikeLevels(connectedChannels, significance);
+		setTempDespikeLevels(liveChannels, significance);
 		
 		final float[] frameLevel = getFloats();
 		
@@ -1652,7 +1649,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		new Fork<Void>() {
 			@Override
 			protected void process(final FrameType exposure) {
-				for(final Channel channel : connectedChannels) exposure.sampleFlag[channel.index] &= notSpike;
+				for(final Channel channel : liveChannels) exposure.sampleFlag[channel.index] &= notSpike;
 				if(exposure.index >= delta) {
 					final Frame before = get(exposure.index - delta);
 					frameLevel[exposure.index] = before == null ? Float.NaN : (float) Math.sqrt(1.0F / exposure.relativeWeight + 1.0F / before.relativeWeight);
@@ -1662,7 +1659,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		}.process();
 		
 		// perform the actual despiking...
-		connectedChannels.new Fork<Void>() {
+		liveChannels.new Fork<Void>() {
 			@Override 
 			protected void process(final Channel channel) {
 
@@ -1699,17 +1696,17 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void despikeAbsolute(final double significance) {
 		comments += "dA";
 		
-		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
+		final ChannelGroup<?> liveChannels = instrument.getLiveChannels();
 		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
 		final int notSpike = ~Frame.SAMPLE_SPIKE;
 		
-		setTempDespikeLevels(connectedChannels, significance);
+		setTempDespikeLevels(liveChannels, significance);
 		
 		new Fork<Void>() {
 			@Override
 			protected void process(final FrameType exposure) {
 				final float frameChi = 1.0F / (float)Math.sqrt(exposure.relativeWeight);
-				for(final Channel channel : connectedChannels) {
+				for(final Channel channel : liveChannels) {
 					// Clear any prior spike flag...
 					exposure.sampleFlag[channel.index] &= notSpike;
 					// Check for spikes...
@@ -1725,9 +1722,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void despikeGradual(final double significance, final double depth) {
 		comments += "dG";
 
-		final ChannelGroup<?> connectedChannels = instrument.getConnectedChannels();
+		final ChannelGroup<?> liveChannels = instrument.getLiveChannels();
 		
-		setTempDespikeLevels(connectedChannels, significance);
+		setTempDespikeLevels(liveChannels, significance);
 		
 		final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
 		final int notSpike = ~Frame.SAMPLE_SPIKE;
@@ -1742,7 +1739,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 				
 				// Clear prior spike flags...
 				// Find the largest not yet flagged as spike deviation.
-				for(final Channel channel : connectedChannels) {
+				for(final Channel channel : liveChannels) {
 					exposure.sampleFlag[channel.index] &= notSpike;
 					if((exposure.sampleFlag[channel.index] & excludeSamples) == 0)
 						maxdev = Math.max(maxdev, Math.abs(exposure.data[channel.index] / (float)channel.gain));
@@ -1750,7 +1747,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					
 				if(maxdev > 0.0) {
 					double minSignal = depth * maxdev;
-					for(final Channel channel : connectedChannels) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SOURCE_BLANK) == 0) {
+					for(final Channel channel : liveChannels) if((exposure.sampleFlag[channel.index] & Frame.SAMPLE_SOURCE_BLANK) == 0) {
 						final double critical = Math.max(channel.gain * minSignal, channel.temp * frameChi);
 						if(Math.abs(exposure.data[channel.index]) > critical) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SPIKE;
 					}
@@ -1768,7 +1765,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		comments += "dM";
 		
-		final ChannelGroup<?> liveChannels = instrument.getConnectedChannels();
+		final ChannelGroup<?> liveChannels = instrument.getLiveChannels();
 		final int nt = size();
 		final int mbSize = maxBlockSize;
 		final int notSpike = ~Frame.SAMPLE_SPIKE;
@@ -2708,7 +2705,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void writeProducts() {
 		
-
 		if(hasOption("write.pattern")) {
 			try { writeScanPattern(); }
 			catch(Exception e) { error(e); }

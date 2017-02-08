@@ -385,7 +385,7 @@ public class ScalarMap extends SourceMap {
             String method = "rms";
             if(weighting.isConfigured("method")) method = weighting.get("method").getValue().toLowerCase();
             else if(weighting.getValue().length() > 0) method = weighting.getValue().toLowerCase();
-            scan.weight = map.getChi2(method.equals("robust"));
+            scan.weight = 1.0 / map.getChi2(method.equals("robust"));
             if(Double.isNaN(scan.weight)) scan.weight = 0.0;
         }
 
@@ -635,22 +635,15 @@ public class ScalarMap extends SourceMap {
     }
 
     @Override
-    protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain) {
+    protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double frameGain, final double[] sourceGain) {
         // The use of iterables is a minor performance hit only (~3% overall)
         for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0)	
-            addPoint(index, channel, exposure, fGC * sourceGain[channel.index]);
-    }
-
-    protected final void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G) {	
-        addPoint(index, channel, exposure, G, channel.instrument.samplingInterval);
+            addPoint(index, channel, exposure, frameGain * sourceGain[channel.index], channel.instrument.samplingInterval);
     }
 
     protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {	
         map.addPointAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight / channel.variance, dt);
     }
-
-
-
 
     @Override
     protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
@@ -762,8 +755,14 @@ public class ScalarMap extends SourceMap {
             channel.coupling += (increment.value() / increment.weight()) * channel.coupling;
         }
         
-        Instrument.recycle(result);
+        // Normalize the couplings to 1.0
+        try {     
+            CorrelatedMode coupling = (CorrelatedMode) integration.instrument.modalities.get("coupling").get(0);
+            coupling.normalizeGains();
+        }
+        catch(Exception e) { warning(e); }
         
+        Instrument.recycle(result);
         
         // If the coupling falls out of range, then revert to the default of 1.0	
         if(hasSourceOption("coupling.range")) {
@@ -773,8 +772,7 @@ public class ScalarMap extends SourceMap {
                 else channel.unflag(Channel.FLAG_BLIND);
             }
         }
-        
-
+       
     }
 
     @Override

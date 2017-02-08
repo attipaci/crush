@@ -3,8 +3,7 @@ package crush.devel.sourcecounts;
 import java.util.List;
 import java.util.Vector;
 
-import jnum.data.Grid1D;
-import jnum.data.Histogram;
+import jnum.math.Range;
 
 public class SyntheticDistribution extends ProbabilityDistribution {
     /**
@@ -15,8 +14,9 @@ public class SyntheticDistribution extends ProbabilityDistribution {
     private Vector<ComponentSpectrum> components;
     private CharSpectrum composite;
     
-    public SyntheticDistribution(Histogram histogram, Grid1D grid, int overSampling) {
-        super(histogram, grid, overSampling);
+  
+    public SyntheticDistribution(Range range, double resolution) {
+        super(range, resolution);
         components = new Vector<ComponentSpectrum>();
         composite = new CharSpectrum(size() >>> 1);
     }

@@ -202,8 +202,8 @@ public class Mustang2 extends Camera<Mustang2Pixel> implements GroundBased {
 	}
 	
 	@Override
-	public float normalizeSkyGains() throws Exception {
-		float aveG = super.normalizeSkyGains();
+	public float normalizeArrayGains() throws Exception {
+		float aveG = super.normalizeArrayGains();
 		temperatureGain *= aveG;
 		return aveG;
 	}

@@ -30,6 +30,7 @@ import java.util.*;
 
 import crush.*;
 import jnum.Configurator;
+import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.Parallel;
 import jnum.Unit;
@@ -41,7 +42,6 @@ import jnum.astro.EquatorialCoordinates;
 import jnum.astro.FocalPlaneCoordinates;
 import jnum.astro.GalacticCoordinates;
 import jnum.data.Grid2D;
-import jnum.data.GridImage2D;
 import jnum.data.Index2D;
 import jnum.data.Statistics;
 import jnum.math.Range;
@@ -176,7 +176,7 @@ public abstract class SourceMap extends SourceModel {
     public double getSmoothing() { return smoothing; }
   
     public double getPixelizationSmoothing() {
-        return Math.sqrt(getGrid().getPixelArea()) / GridImage2D.fwhm2size;
+        return Math.sqrt(getGrid().getPixelArea()) / Constant.fwhm2size;
     }
 
     @Override
@@ -637,15 +637,14 @@ public abstract class SourceMap extends SourceModel {
             private void process(Frame exposure) {
                 if(exposure.isFlagged(Frame.SOURCE_FLAGS)) return;
 
-                final double fG = integration.gain * exposure.getSourceGain(signalMode);	
-                if(fG == 0.0) return;
+                final double frameGain = integration.gain * exposure.getSourceGain(signalMode);	
+                if(frameGain == 0.0) return;
 
                 mappingFrames++;
 
                 for(final Pixel pixel : pixels) {
                     localSource.getIndex(exposure, pixel, projector, index);
-                    localSource.add(exposure, pixel, index, fG, sourceGain);
-                    //localSource.add(exposure, pixel, index, (isMasked(index) ? fG : filtering * fG), sourceGain);
+                    localSource.add(exposure, pixel, index, frameGain, sourceGain);
                 }
             }
 

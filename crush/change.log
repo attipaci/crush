@@ -1,3 +1,65 @@
+>> sourcegains
+
+
+2.34-2 (devel.2)
+
+
+	[BUG] Scan weighting based on map noise produced inverted weights. 
+	This resulted in suboptimal 'faint' and 'deep' mode reductions. Fixed.
+
+	[NEW] New option 'sourcegains', can be used to merge the channel 
+	coupling constant into the channel gain variable, that is used for 
+	correlated noise removal. Incorporating the optical coupling into the 
+	correlated signal gains is useful for reducing skydips, when the 
+	correlated noise is optically, and not thermally dominated. Therefore, 
+	this option is now default for skydip reductions. There is no obvious 
+	use for the new option outside of skydips.
+
+	[FIX] {HAWC+} Flagging zeroed channels (e.g. produced by the 
+	demodulation step) unintentionally unflagged others. Fixed.
+
+	[FIX] Loading channel data (e.g. default flags) and flags before 
+	establishing channel groups, divisions, and modalities.
+
+	[TWEAK] Downsampling always after vclipping. Before now explicit 
+	downsampling preceded vclip, whereas automatic downsampling did not.
+	There was no compelling reason for this difference, which could
+	result in an unwanted difference if the same downsampling factor was
+	given explicitly or chosen automatically.
+
+	[TWEAK] Better initial tau guess for skydip fit.
+
+	[TWEAK] 'connected' channel group renamed 'live', as it's more
+	descriptive.
+
+	[TWEAK] Dead channels are initialized with zero gain/weight defaults.
+	This is just a safety measure to make sure they never contribute even
+	if accidentally included.
+
+	[TWEAK] Channel noise flagging now flags channels with default
+	weights also. This is just a safety pin, as under normal circumstances
+	alll channels should have proper noise weights derived before the
+	noise flagging is called... 
+
+	[TWEAK] {SOFIA} Don't force PWV as the default source of tau when
+	tau is not set. This way opacity correction can be disabled via
+	'-forget=tau', not only by setting tau explicitly to zero...
+
+	[CONFIG] {HAWC+} The source flatfields produced via the 
+	'source.flatfield' option now use unbiased maps, which do not attempt
+	to recover extended emission forcibly. Such maps are better suited
+	for unbiased gain estimation also.
+
+	[CONFIG] {HAWC+} Skydips reduce with R0 only, since it's the least
+	non-linear subarray.
+
+	[CONFIG] {HAWC+} Updated pixel and beam sizes for all bands. The
+	biggest change is for band C.
+
+	[CONFIG] {HAWC+} Refined PWV-tau relations based on a more careful 
+	selection of skydips. Updated calibrations.
+
+
 
 2.34-1 (20 January 2017)
 

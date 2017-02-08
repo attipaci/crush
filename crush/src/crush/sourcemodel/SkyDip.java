@@ -213,7 +213,7 @@ public class SkyDip extends SourceModel {
 		gnuplot(coreName, fileName, model);
 	}
 	
-	public Range getRange() {
+	public Range getSignalRange() {
 		Range range = new Range();
 		for(WeightedPoint point : data) if(point.weight() > 0.0) range.include(point.value());
 		return range;
@@ -225,6 +225,11 @@ public class SkyDip extends SourceModel {
 		return range;
 	}
 	
+	public Range getAirmassRange() {
+        Range elRange = getElevationRange();
+        return new Range(1.0 / Math.sin(elRange.max()), 1.0 / Math.sin(elRange.min()));
+    }
+	
 	public void gnuplot(String coreName, String dataName, SkyDipModel model) throws IOException {
 		String plotName = coreName + ".plt";
 		PrintWriter plot = new PrintWriter(new FileOutputStream(plotName));
@@ -232,7 +237,7 @@ public class SkyDip extends SourceModel {
 		plot.println("set xla 'Elevation (deg)");
 		plot.println("set yla 'Mean Pixel Response (" + getInstrument().getDataUnit().name() + ")");
 		
-		Range dataRange = getRange();
+		Range dataRange = getSignalRange();
 		dataRange.grow(1.05);
 		
 		Range elRange = getElevationRange();

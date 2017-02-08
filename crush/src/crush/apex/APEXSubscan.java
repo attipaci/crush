@@ -318,7 +318,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		
 		instrument.samplingInterval = instrument.integrationTime = ((double[]) hdu.getRow(0)[hdu.findColumn("INTEGTIM")])[0] * Unit.s;
 		// Use the integrationTime to convert to data weights...
-		instrument.dataWeights();
+		instrument.sampleWeights();
 		
 		info("Sampling at " + Util.f3.format(1.0/instrument.samplingInterval) + " Hz.");
 	
