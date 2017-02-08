@@ -58,8 +58,8 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	public double gain = 1.0;
 	public double nonlinearity = 0.0;
 	public double coupling = 1.0;
-	public double weight = 1.0;
-	public double variance = 1.0;
+	public double weight = DEFAULT_WEIGHT;
+	public double variance = DEFAULT_VARIANCE;
 	public double dof = 1.0;
 	
 	public double dependents = 0.0;
@@ -266,5 +266,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	public final static int SOFTWARE_FLAGS = (int) softwareFlags.getMask();
 	
 	
+	public final static double DEFAULT_VARIANCE = 1.0;
+	public final static double DEFAULT_WEIGHT = 1.0;
 }
  

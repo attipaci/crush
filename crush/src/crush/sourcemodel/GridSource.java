@@ -37,6 +37,7 @@ import crush.GenericInstrument;
 import crush.Instrument;
 import crush.Scan;
 import jnum.Configurator;
+import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.Data2D;
@@ -111,7 +112,7 @@ public abstract class GridSource<CoordinateType extends Coordinate2D> extends Gr
 	}
 
 	public double getInstrumentBeamArea() {
-		double size = instrument.getResolution() * fwhm2size;
+		double size = instrument.getResolution() * Constant.fwhm2size;
 		return size*size;
 	}
 	

@@ -76,9 +76,10 @@ public class Sharc2Pixel extends SingleColorPixel {
 	public String toString() {
 		return super.toString() + "\t" + Util.f3.format(coupling) + "\t" + Util.f3.format(rowGain);
 	}
+ 
 	
 	public double getAreaFactor() {
-		Vector2D size = ((Sharc2) instrument).getPixelSize();
+	    Vector2D size = ((Sharc2) instrument).getPixelSize();
 		return size.x() * size.y() / (defaultSize.x() * defaultSize.y());	
 	}
 	
@@ -94,5 +95,6 @@ public class Sharc2Pixel extends SingleColorPixel {
 
 	public final static int FLAG_13HZ = softwareFlags.next('^', "13Hz pickup").value();
 	public final static int FLAG_ROW = softwareFlags.next('y', "Bad row gain").value();
-	
+
+  
 }

@@ -326,7 +326,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     }
 
     @Override
-    public float normalizeSkyGains() throws Exception {
+    public float normalizeArrayGains() throws Exception {
         info("Normalizing subarray gains.");
 
         subarrayGainRenorm = new float[subarrays];

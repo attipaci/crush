@@ -1894,7 +1894,7 @@ the correlated signals) may be part of the second step of the decorrelation.
       <modality name>	Description
       ========================================================================
       all		All channels, regardless of their state
-      connected		All channels that are connected and generate signals
+      live		All channels that aren't dead.
       detectors		All detectors (e.g. excluding resistors etc.)
       obs-channels	All observing detectors (e.g. that see sky).
       gradients		A focal plane gradients of 'observing' detectors.

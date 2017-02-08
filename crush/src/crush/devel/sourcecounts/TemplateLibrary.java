@@ -17,46 +17,47 @@ import jnum.data.Histogram;
 import jnum.data.fitting.Parameter;
 import jnum.data.fitting.Parametric;
 
-public abstract class Template implements Parametric<Double> {
+public abstract class TemplateLibrary implements Parametric<Double> { 
     AstroMap map;
-    double resolution, fluxResolution;
+    private double mapArea;
+    
+    double s2nResolution, fluxResolution;
     int oversampling = 1;
   
     
-    Histogram mapHistogram;
-    public double[] histogram, modelHist, noiseHist, hiresModel;
+    Histogram s2nHistogram;
     
-    public CharSpectrum model, noise;
-    public CharSpectrum[] templates, sources, fluxSpecs;
-      
-  
-    Parameter backgrouund;
+    ProbabilityDistribution mapDistribution, noiseDistribution;
+    ProbabilityDistribution modelDistribution, hiresModelDistribution;
+    
+    CharSpectrum modelSpectrum, noiseSpectrum;
+    ComponentSpectrum[] componentSpectra, sourceSpectra, fluxSpectra;
+   
+    Parameter background;
     Parameter noiseScale;
     Parameter offset;
      
     
-    private double mapArea;
-   
-    
     //RandomGenerator random = new RandomGenerator2();
-    Random random = new Random();
+    private Random random = new Random();
 
-    public Template(AstroMap map, int oversampling) {
+    public TemplateLibrary(AstroMap map, double s2nBinSize, int oversampling) {
         this.map = map;
         this.oversampling = oversampling;
         
+        s2nHistogram = Histogram.createFrom(map.getS2N(), s2nBinSize);
         mapArea = map.getArea();
     }
 
     public double getMapArea() { return mapArea; }
      
-    public void init(double[] fluxes) {
-        resolution = mapHistogram.resolution;
+    public void init(double[] fluxes) {      
+        
        
-        double maxDev = mapHistogram.getMaxDev();
+        double maxDev = s2nHistogram.getMaxDev();
         System.err.println("Max histogram deviation is: " + maxDev);
 
-        int bins = 2 * ExtraMath.pow2ceil((int) Math.ceil(4.0 * maxDev / resolution));
+        //int bins = 2 * ExtraMath.pow2ceil((int) Math.ceil(4.0 * maxDev / s2nResolution));
 
         double maxFlux = 0.0;
         for(int i=0; i<fluxes.length; i++) if(fluxes[i] > maxFlux) maxFlux = fluxes[i];
@@ -64,11 +65,16 @@ public abstract class Template implements Parametric<Double> {
 
         System.err.println("Using " + bins + " histogram bins.");
 
-        resolution = mapHistogram.resolution;
-        histogram = mapHistogram.toFFTArray(bins);
-        modelHist = new double[bins];
-        noiseHist = new double[oversampling * bins];
-        hiresModel = new double[oversampling * bins];
+        s2nResolution = s2nHistogram.getResolution();
+        mapDistribution = new ProbabilityDistribution(s2nHistogram, grid, 4.0);
+        
+        System.err.println("Using " + mapDistribution.size() + " histogram bins.");
+        
+        modelDistribution = new ProbabilityDistribution(mapDistribution.getRange(), mapDistribution.getResolution());
+        noiseDistribution = new ProbabilityDistribution(mapDistribution.getRange(), mapDistribution.getResolution() / oversampling);
+        hiresModelDistribution = new ProbabilityDistribution(mapDistribution.getRange(), mapDistribution.getResolution() / oversampling);
+        
+
         CharSpectrum[][] temps = makeTemplates(fluxes, 1000, resolution / oversampling, oversampling * bins);
         templates = temps[0];
         fluxSpecs = temps[1];
@@ -256,7 +262,7 @@ public abstract class Template implements Parametric<Double> {
     }       
 
     public void setMapHistogram(Histogram mapHistogram) {
-        histogram = mapHistogram.toFFTArray(modelHist.length);
+        mapDistribution = mapHistogram.toFFTArray(modelHist.length);
     }       
 
     public void setNoise(Histogram noiseHistogram) {
@@ -315,7 +321,7 @@ public abstract class Template implements Parametric<Double> {
     }
 
     public double getReducedChi2() {
-        return getChi2() / (mapHistogram.size() - fitList.size());           
+        return getChi2() / (s2nHistogram.size() - fitList.size());           
     }
 
     @Override
@@ -349,10 +355,10 @@ public abstract class Template implements Parametric<Double> {
         for(int i=0; i<modelHist.length; i++) norm += modelHist[i];
         for(int i=0; i<modelHist.length; i++) modelHist[i] /= norm;
 
-        for(int i=0; i<histogram.length; i++) {
+        for(int i=0; i<mapDistribution.length; i++) {
             modelHist[i] *= mapPixels;
             double var = modelHist[i] > 1e-6 ? modelHist[i] : 1e-6;
-            double dev = histogram[i] - modelHist[i];
+            double dev = mapDistribution[i] - modelHist[i];
             chi2 += dev * dev / var;
         }
 
@@ -367,7 +373,7 @@ public abstract class Template implements Parametric<Double> {
     public void writeTemplates() throws IOException {       
         for(int i=0; i<templates.length; i++) {
             PrintWriter out = new PrintWriter(new FileOutputStream(CRUSH.workPath + File.separator + "template-" + (i+1) + ".dat"));
-            double[] p = new double[histogram.length];
+            double[] p = new double[mapDistribution.length];
             templates[i].toProbabilities(p);
             out.println(templates[i].toString(p));
             out.close();
@@ -424,18 +430,18 @@ public abstract class Template implements Parametric<Double> {
 
     public void writeFit(PrintStream out) {
         out.println("# data\tmodel\tdiff");
-        int n = histogram.length >> 1;
-        for(int i=n+1; i<histogram.length; i++) 
-            out.println(Util.f2.format(resolution*(i - histogram.length)) + 
-                    "\t" + Util.e3.format(histogram[i]) +
+        int n = mapDistribution.length >> 1;
+        for(int i=n+1; i<mapDistribution.length; i++) 
+            out.println(Util.f2.format(resolution*(i - mapDistribution.length)) + 
+                    "\t" + Util.e3.format(mapDistribution[i]) +
                     "\t" + Util.e3.format(modelHist[i]) +
-                    "\t" + Util.e3.format(modelHist[i] - histogram[i])
+                    "\t" + Util.e3.format(modelHist[i] - mapDistribution[i])
                     );
         for(int i=0; i<n; i++)
             out.println(Util.f2.format(resolution*(i)) + 
-                    "\t" + Util.e3.format(histogram[i]) +
+                    "\t" + Util.e3.format(mapDistribution[i]) +
                     "\t" + Util.e3.format(modelHist[i]) +
-                    "\t" + Util.e3.format(modelHist[i] - histogram[i])
+                    "\t" + Util.e3.format(modelHist[i] - mapDistribution[i])
                     );
         out.close();            
     }

@@ -26,6 +26,7 @@ import crush.*;
 import crush.astro.AstroImage;
 import crush.astro.AstroMap;
 import crush.sourcemodel.*;
+import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.SourceCatalog;
@@ -269,7 +270,7 @@ public class ImageTool {
 		}
 		else if(key.equalsIgnoreCase("-random")) {
 			Random random = new BufferedRandom();
-			image.smoothFWHM = Math.sqrt(image.getPixelArea()) / AstroImage.fwhm2size;
+			image.smoothFWHM = Math.sqrt(image.getPixelArea()) / Constant.fwhm2size;
 			image.extFilterFWHM = Double.NaN;
 			for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) 
 				image.setValue(i, j, random.nextGaussian() / Math.sqrt(image.getWeight(i, j)));

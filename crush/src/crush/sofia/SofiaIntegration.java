@@ -79,11 +79,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
             try { instrument.getOptions().process("tau.pwv", Double.toString(pwv / Unit.um)); }
             catch(LockedException e) {}
         }
-        if(!hasOption("tau")) {
-            try { instrument.getOptions().process("tau", "pwv"); }
-            catch(LockedException e) {}
-        }
-        
        
         super.validate();
     }

@@ -53,6 +53,8 @@ public class SkyDipModel {
 	Parameter offset = new Parameter("offset");
 	Parameter kelvin = new Parameter("kelvin");
 	Parameter tau = new Parameter("tau", 1.0, new Range(0.0, 10.0));
+	
+	double frequency;
 
 	boolean hasConverged = false;
 	
@@ -114,11 +116,22 @@ public class SkyDipModel {
 		if(options.isConfigured("tsky")) Tsky.setValue(options.get("tsky").getDouble() * Unit.K);
 		else if(skydip.Tamb.weight() > 0.0) Tsky.setValue(skydip.Tamb.value());
 		
-		Range signalRange = skydip.getRange();
+		Range signalRange = skydip.getSignalRange();
 		
 		// Set some reasonable initial values for the offset and conversion...
 		if(Double.isNaN(offset.value())) offset.setValue(signalRange.midPoint());
 		if(Double.isNaN(kelvin.value())) kelvin.setValue(signalRange.span() / Tsky.value());
+		else {
+		    Range amRange = skydip.getAirmassRange();
+		    double x = signalRange.span() / (amRange.span() * Tsky.value() * kelvin.value());
+		    if(x < 0.0) tau.setValue(0.1);
+		    else if(x > 1.0) tau.setValue(1.0);
+		    else {
+		        tau.setValue(-Math.log1p(-x));
+		        tau.setStepSize(0.03 * tau.value());
+		    }
+		}
+		
 	}
 	
 	
