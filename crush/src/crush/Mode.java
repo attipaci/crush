@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -262,7 +262,9 @@ public class Mode implements Serializable {
         public float[] getGains(boolean validate) throws Exception {
             final float[] parentgains = Mode.this.getGains(validate);
             final float[] gains = super.getGains(validate);
+             
             for(int i=gains.length; --i>=0; ) gains[i] *= parentgains[i];
+            
             return gains;
         }
 

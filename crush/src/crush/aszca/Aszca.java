@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 // Copyright (c) 2009 Attila Kovacs 
 
@@ -47,7 +47,7 @@ public class Aszca extends APEXCamera<AszcaPixel> implements NonOverlapping {
 	}
 	
 	@Override
-	public void initDivisions() {
+    protected void initDivisions() {
 		super.initDivisions();
 		
 		try { addDivision(getDivision("wafers", AszcaPixel.class.getField("wafer"), Channel.FLAG_DEAD)); }
@@ -64,7 +64,7 @@ public class Aszca extends APEXCamera<AszcaPixel> implements NonOverlapping {
 	}
 	
 	@Override
-	public void initModalities() {
+    protected void initModalities() {
 		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("wafers", "V", divisions.get("wafers"), AszcaPixel.class.getField("waferGain"))); }

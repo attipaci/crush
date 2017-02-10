@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
 package crush.laboca;
@@ -82,7 +82,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 	}
 	
 	@Override
-	public void initDivisions() {
+    protected void initDivisions() {
 		super.initDivisions();
 		
 		try { addDivision(getDivision("boxes", LabocaPixel.class.getField("box"), Channel.FLAG_DEAD)); }
@@ -97,7 +97,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 	}
 	
 	@Override
-	public void initModalities() {
+    protected void initModalities() {
 		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("boxes", "B", divisions.get("boxes"), LabocaPixel.class.getField("boxGain"))); }
@@ -206,7 +206,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 	
 	// Wiring is read when divisions are created...
 	@Override
-	public void loadChannelData() {
+    protected void loadChannelData() {
 		super.loadChannelData();
 		
 		if(hasOption("he3")) if(!option("he3").equals("calc")) {

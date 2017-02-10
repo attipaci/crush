@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 // Copyright (c) 2010 Attila Kovacs 
 
@@ -56,7 +56,7 @@ public class PArtemis extends APEXCamera<PArtemisPixel> implements GridIndexed {
 	}
 	
 	@Override
-	public void initDivisions() {
+    protected void initDivisions() {
 		super.initDivisions();
 		
 		try { addDivision(getDivision("rows", PArtemisPixel.class.getField("row"), Channel.FLAG_DEAD)); }
@@ -67,7 +67,7 @@ public class PArtemis extends APEXCamera<PArtemisPixel> implements GridIndexed {
 	}
 	
 	@Override
-	public void initModalities() {
+    protected void initModalities() {
 		super.initModalities();
 		
 		try { addModality(new CorrelatedModality("rows", "r", divisions.get("rows"), PArtemisPixel.class.getField("rowGain"))); }
@@ -82,7 +82,7 @@ public class PArtemis extends APEXCamera<PArtemisPixel> implements GridIndexed {
 	}
 	
 	@Override
-	public void loadChannelData() {
+    protected void loadChannelData() {
 		Vector2D pixelSize = PArtemisPixel.defaultSize;
 		
 		// Set the pixel size...

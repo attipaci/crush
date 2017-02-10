@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
 package crush.hawcplus;
@@ -39,6 +39,7 @@ import crush.sofia.SofiaScan;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
+import jnum.math.Vector2D;
 
 public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
 	/**
@@ -168,6 +169,16 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	    useBetweenScans = hasOption("betweenscans");
 	    
 	    super.validate();
+	   
+	    if(isNonSidereal) {
+	        EquatorialCoordinates first = getFirstIntegration().getFirstFrame().objectEq;
+	        EquatorialCoordinates last = getLastIntegration().getLastFrame().objectEq;
+	        Vector2D offset = last.getOffsetFrom(first);
+	        if(offset.isNull()) {
+	            info("Scan appears to be sidereal with real-time object coordinates...");
+	            isNonSidereal = false;
+	        }
+	    }
 	}
 	
 	 @Override

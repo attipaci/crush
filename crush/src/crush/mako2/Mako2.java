@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
 package crush.mako2;
@@ -84,7 +84,7 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 
 	
 	@Override
-	public void loadChannelData() {
+    protected void loadChannelData() {
 		if(hasOption("pixelsize.scale850")) scale850 = option("pixelsize.scale850").getDouble();
 		if(hasOption("offset.350")) offset350 = option("offset.350").getVector2D();
 		if(hasOption("offset.850")) offset350 = option("offset.850").getVector2D();

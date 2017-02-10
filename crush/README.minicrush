@@ -2,7 +2,7 @@
 		  *** CRUSH-2: Notes to minicrush users ***
 
 			        Attila Kovacs
-			  <attila[AT]submm.caltech.edu>
+			  <attila[AT]sigmyne.com>
 
 			  Last Updated: 21 Aug 2010
 
@@ -228,4 +228,4 @@ time-weighting=<dt>		weighting.frames.resolution=<dt>
 weighting=<method>		weighting.method=<method> 
 				  + weighting
 -------------------------------------------------------------------------------
-Copyright (C)2010 Attila Kovacs -- <attila[AT]submm.caltech.edu>
+Copyright (C)2010 Attila Kovacs -- <attila[AT]sigmyne.com>

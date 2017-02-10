@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
 package crush.scuba2;
@@ -88,7 +88,7 @@ public class Scuba2 extends Camera<Scuba2Pixel> implements GroundBased, GridInde
 	}
 
 	@Override
-	public void initDivisions() {
+    protected void initDivisions() {
 		super.initDivisions();
 		
 		try { addDivision(getDivision("subarrays", Scuba2Pixel.class.getField("subarrayNo"), Channel.FLAG_DEAD)); }
@@ -113,7 +113,7 @@ public class Scuba2 extends Camera<Scuba2Pixel> implements GroundBased, GridInde
 	}
 	
 	@Override
-	public void initModalities() {
+    protected void initModalities() {
 		super.initModalities();
 		
 		try {
@@ -147,7 +147,7 @@ public class Scuba2 extends Camera<Scuba2Pixel> implements GroundBased, GridInde
 	}
 	
 	@Override
-	public void loadChannelData() {
+    protected void loadChannelData() {
 		calcPixelPositions();
 		super.loadChannelData();
 	}

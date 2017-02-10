@@ -2,7 +2,7 @@
 		      *** A Guide to Using CRUSH-2. *** 
 
 			       Attila Kovacs 
-		       <attila[AT]submm.caltech.edu>
+		         <attila[AT]sigmyne.com>
 
 		       Last updated: 31 August 2016
 
@@ -2454,7 +2454,7 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
 
 Further support for instruments is possible. If interested to use CRUSH for
 your bolometer array, please contact Attila Kovacs 
-<attila[AT]submm.caltech.edu>.
+<attila[AT]sigmyne.com>.
 
 In principle, it is possible to extend CRUSH support for other types of scanning
 instruments, like heterodyne receiver arrays, or single-pixel receivers that

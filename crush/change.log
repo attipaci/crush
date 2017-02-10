@@ -1,4 +1,8 @@
->> sourcegains
+>> make source.flatfield a global option...
+>> correlated.sky
+>> Marc's request for error reporting no scans...
+>> fix imagetool (-scale -name)...
+>> check without fixjumps on OMC1 (E)
 
 
 2.34-2 (devel.2)
@@ -7,19 +11,20 @@
 	[BUG] Scan weighting based on map noise produced inverted weights. 
 	This resulted in suboptimal 'faint' and 'deep' mode reductions. Fixed.
 
-	[NEW] New option 'sourcegains', can be used to merge the channel 
-	coupling constant into the channel gain variable, that is used for 
-	correlated noise removal. Incorporating the optical coupling into the 
-	correlated signal gains is useful for reducing skydips, when the 
-	correlated noise is optically, and not thermally dominated. Therefore, 
-	this option is now default for skydip reductions. There is no obvious 
-	use for the new option outside of skydips.
+	[NEW] 
 
-	[FIX] {HAWC+} Flagging zeroed channels (e.g. produced by the 
-	demodulation step) unintentionally unflagged others. Fixed.
+	[NEW] New option 'sourcegains', can be used to merge the channel
+	coupling constant into the channel gain variable, that is used for
+	correlated noise removal. Incorporating the optical coupling into the
+	correlated signal gains is useful for reducing skydips, when the
+ 	correlated noise is optically, and not thermally dominated. Therefore,
+	this option is now default for skydip reductions. There is no obvious
+	use case for the new option outside of skydips.
 
 	[FIX] Loading channel data (e.g. default flags) and flags before 
 	establishing channel groups, divisions, and modalities.
+
+	[TWEAK] Try drain the DRP message queue before exiting.
 
 	[TWEAK] Downsampling always after vclipping. Before now explicit 
 	downsampling preceded vclip, whereas automatic downsampling did not.
@@ -54,11 +59,12 @@
 	non-linear subarray.
 
 	[CONFIG] {HAWC+} Updated pixel and beam sizes for all bands. The
-	biggest change is for band C.
+	biggest change is for band C (4.23 --> 4.02 arcsec/pixel).
 
 	[CONFIG] {HAWC+} Refined PWV-tau relations based on a more careful 
 	selection of skydips. Updated calibrations.
 
+	[CODE] Update e-mail address accross files.
 
 
 2.34-1 (20 January 2017)
