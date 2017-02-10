@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,11 +18,11 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 package crush.tools;
 /*******************************************************************************
- * Copyright (c) 2011 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2011 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -41,10 +41,10 @@ package crush.tools;
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
-// (C)2007 Attila Kovacs <attila@submm.caltech.edu>
+// (C)2007 Attila Kovacs <attila[AT]sigmyne.com>
 
 import java.util.*;
 
@@ -422,7 +422,7 @@ public class DetectionTool {
 		System.out.println("          Version: " + version);
 		System.out.println("          part of crush " + CRUSH.getFullVersion());
 		System.out.println("          http://www.submm.caltech.edu/~sharc/crush");
-		System.out.println("          Copyright (C)2011 Attila Kovacs <attila[AT]submm.caltech.edu>");
+		System.out.println("          Copyright (C)2011 Attila Kovacs <attila[AT]sigmyne.com>");
 		System.out.println();
 	}
 

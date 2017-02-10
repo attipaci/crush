@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 package crush.gismo;
 
@@ -174,7 +174,7 @@ public class SyntheticRCP {
 		System.out.println( 
 			"  -----------------------------------------------------------------------------\n" +
 			"  SyntheticRCP -- RCP generation tool.\n" +
-			"                  Copyright (C)2011 Attila Kovacs <attila[AT]submm.caltech.edu>\n" +
+			"                  Copyright (C)2011 Attila Kovacs <attila[AT]sigmyne.com>\n" +
 			"  -----------------------------------------------------------------------------\n" +	
 			"\n" +
 			"  Usage: java crush.array.SyntheticRCP <distortion> [rcp [rotation]]\n" +

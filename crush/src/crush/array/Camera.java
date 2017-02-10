@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 package crush.array;
 
@@ -56,7 +56,7 @@ public abstract class Camera<ChannelType extends Channel> extends Instrument<Cha
 	}
 	
 	@Override
-	public void initModalities() {
+    protected void initModalities() {
 		super.initModalities(); 
 		
 		CorrelatedMode common = (CorrelatedMode) modalities.get("obs-channels").get(0);
@@ -110,7 +110,7 @@ public abstract class Camera<ChannelType extends Channel> extends Instrument<Cha
 	}
 	
 	@Override
-	public void loadChannelData() {	
+    protected void loadChannelData() {	
 		// Rotation is applied to calculated / default positions only.
 		// RCP rotation is handled separately via 'rcp.rotate' option...
 		rotation = 0.0;

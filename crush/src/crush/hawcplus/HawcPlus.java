@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
 package crush.hawcplus;
@@ -127,7 +127,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     }
 
     @Override
-    public void initDivisions() {
+    protected void initDivisions() {
         super.initDivisions();
 
         try { addDivision(getDivision("polarrays", HawcPlusPixel.class.getField("pol"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
@@ -168,7 +168,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     }
 
     @Override
-    public void initGroups() {
+    protected void initGroups() {
         super.initGroups();
 
         subarrayGroups = new ArrayList<ChannelGroup<HawcPlusPixel>>(subarrays);
@@ -180,13 +180,13 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     }
 
     @Override
-    public void initModalities() {
+    protected void initModalities() {
         super.initModalities();
 
         addModality(modalities.get("obs-channels").new CoupledModality("polarrays", "p", new HawcPlusPolImbalance()));
 
         try { 
-            CorrelatedModality subMode = new CorrelatedModality("subarrays", "s", divisions.get("subarrays"), HawcPlusPixel.class.getField("subGain")); 
+            CorrelatedModality subMode = new CorrelatedModality("subarrays", "S", divisions.get("subarrays"), HawcPlusPixel.class.getField("subGain")); 
             //subMode.solveGains = false;
             subMode.setGainFlag(HawcPlusPixel.FLAG_SUB);
             addModality(subMode);
@@ -260,7 +260,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     }
 
     @Override
-    public void loadChannelData() {
+    protected void loadChannelData() {
 
         // The subarrays orientations
         subarrayOrientation = new double[subarrays];

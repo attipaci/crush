@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 package crush.sourcemodel;
 
@@ -47,6 +47,8 @@ public class SkyDip extends SourceModel {
 	WeightedPoint[] data;
 	double resolution;
 	WeightedPoint Tamb = new WeightedPoint(); // Assume the sky is at 0C.
+	String signalName = "obs-channels";
+	int signalIndex = 0;
 	
 	public SkyDip(Instrument<?> instrument) {
 		super(instrument);
@@ -82,6 +84,9 @@ public class SkyDip extends SourceModel {
 		
 		resolution = hasOption("skydip.grid") ? Math.abs(option("skydip.grid").getDouble()) * Unit.arcsec : 0.25 * Unit.deg;
 		
+		if(hasOption("skydip.signal")) signalName = option("skydip.signal").getValue();
+		if(hasOption("skydip.mode")) signalIndex = option("skydip.mode").getInt();
+		
 		int bins = (int) Math.ceil(Constant.rightAngle / resolution);
 		data = new WeightedPoint[bins];
 		for(int i=0; i<bins; i++) data[i] = new WeightedPoint();
@@ -107,7 +112,7 @@ public class SkyDip extends SourceModel {
 	public void add(Integration<?, ?> integration) {
 		integration.comments += "[Dip] ";
 		
-		CorrelatedMode mode = (CorrelatedMode) integration.instrument.modalities.get("obs-channels").get(0);
+		CorrelatedMode mode = (CorrelatedMode) integration.instrument.modalities.get(signalName).get(signalIndex);
 		CorrelatedSignal C = (CorrelatedSignal) integration.getSignal(mode);
 	
 		if(C == null) {

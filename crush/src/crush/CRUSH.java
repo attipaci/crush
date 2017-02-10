@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 package crush;
 
@@ -60,7 +60,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.34-2";
-    private static String revision = "devel.2";
+    private static String revision = "devel.3";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -338,7 +338,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     
 
-    public void initSourceModel() throws Exception {
+    private void initSourceModel() throws Exception {
         consoleReporter.addLine();
 
         // TODO Using the global options (intersect of scan options) instead of the first scan's
@@ -357,7 +357,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         setObjectOptions(source.getSourceName());
     }
 
-    public void initPipelines() {
+    private void initPipelines() {
         updateRuntimeConfig();
 
         String parallelMode = "hybrid";
@@ -705,7 +705,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
                         "          Version: " + getFullVersion() + "\n" + 
                         "          Featuring: jnum " + Util.getFullVersion() + ", nom.tam.fits " + Fits.version() + "\n" +
                         "          http://www.submm.caltech.edu/~sharc/crush\n" +
-                        "          Copyright (c)2016 Attila Kovacs <attila[AT]caltech.edu>\n" +
+                        "          Copyright (c)2017 Attila Kovacs <attila[AT]sigmyne.com>\n" +
                 " -----------------------------------------------------------------------------\n");	
     }
 
@@ -907,8 +907,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
         }
 
     }
-
-
 
     public static void countdown(int seconds) {
         String quickstart = System.getProperty("CRUSH_QUICKSTART");

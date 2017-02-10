@@ -2,7 +2,7 @@
 		  *** CRUSH-2: Notes to CRUSH-1.xx users ***
 
 			        Attila Kovacs
-			  <attila[AT]submm.caltech.edu>
+			  <attila[AT]sigmyne.com>
 
 			  Last Updated: 18 Jul 2011
 
@@ -104,7 +104,7 @@ for dealing with the different configuration scheme of CRUSH-2.
    1.xx, which were rarely used by the typical astronomer. Such features will 
    be slow to make it into CRUSH-2 due to their low priority. If there is
    a feature that you are sorely missing, please contact Attila Kovacs
-   <attila[AT]submm.caltech.edu> to see if it can be implemented quickly... 
+   <attila[AT]sigmyne.com> to see if it can be implemented quickly... 
 
    Here's a quick list of CRUSH-1.xx features not found in CRUSH-2:
 
@@ -362,4 +362,4 @@ CRUSH-1.xx	CRUSH-1.xx key		CRUSH-2
 -weightT=	TIME_WEIGHT_T		weighting.frames.resolution (in sec!).
 -width13Hz=	FILTER_13HZ_WIDTH	---
 ------------------------------------------------------------------------------
-Copyright (C)2010 -- Attila Kovacs <attila[AT]submm.caltech.edu>
+Copyright (C)2010 -- Attila Kovacs <attila[AT]sigmyne.com>

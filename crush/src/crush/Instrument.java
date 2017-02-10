@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
 package crush;
@@ -571,7 +571,7 @@ implements TableFormatter.Entries, BasicMessaging {
         }
     }
 
-    public void loadChannelData() {
+    protected void loadChannelData() {
         if(hasOption("pixeldata")) {
             Configurator c = option("pixeldata");
             if(!c.getValue().equalsIgnoreCase("write")) {
@@ -640,7 +640,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public int getNonDetectorFlags() { return Channel.FLAG_DEAD; }
 
-    public void initGroups() {
+    protected void initGroups() {
         groups = new Hashtable<String, ChannelGroup<ChannelType>>();
 
         addGroup("all", copyGroup());
@@ -662,7 +662,7 @@ implements TableFormatter.Entries, BasicMessaging {
         }
     }
 
-    public void initDivisions() {
+    protected void initDivisions() {
         divisions = new Hashtable<String, ChannelDivision<ChannelType>>();
 
         addDivision(new ChannelDivision<ChannelType>("all", groups.get("all")));
@@ -686,7 +686,7 @@ implements TableFormatter.Entries, BasicMessaging {
         }
     }
 
-    public void initModalities() {
+    protected void initModalities() {
         modalities = new Hashtable<String, Modality<?>>();
 
         try { addModality(new CorrelatedModality("all", "Ca", divisions.get("all"), Channel.class.getField("gain"))); }
@@ -703,12 +703,10 @@ implements TableFormatter.Entries, BasicMessaging {
 
         try { addModality(new CorrelatedModality("coupling", "Cc", divisions.get("obs-channels"), Channel.class.getField("coupling"))); }
         catch(NoSuchFieldException e) { error(e); }
-        
-        CorrelatedModality sky = new CorrelatedModality("sky", "Cs", divisions.get("obs-channels"), new SkyGain());
-        sky.solveGains = false;
-        addModality(sky);
-        
-        
+
+        try { addModality(modalities.get("obs-channels").new CoupledModality("sky", "Cs", Channel.class.getField("coupling"))); }
+        catch(NoSuchFieldException e) { error(e); }
+ 
         try { addModality(modalities.get("obs-channels").new NonLinearity("nonlinearity", "n", HawcPlusPixel.class.getField("nonlinearity"))); } 
         catch(NoSuchFieldException e) { error(e); }
 
@@ -874,7 +872,7 @@ implements TableFormatter.Entries, BasicMessaging {
     // The pixel data file should contain the blind channel information as well...
     // create the channel groups based on the wiring scheme.
 
-    public void loadChannelData(String fileName) throws IOException {
+    protected void loadChannelData(String fileName) throws IOException {
         info("Loading pixel data from " + fileName);
 
         final ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
@@ -1151,12 +1149,9 @@ implements TableFormatter.Entries, BasicMessaging {
         return this;
     }
 
-
     public void loadTempHardwareGains() {
         for(Channel channel : this) channel.temp = (float) channel.getHardwareGain();
     }
-
-
 
     public double[] getSourceGains(final boolean filterCorrected) {
         final double[] G = new double[size()];

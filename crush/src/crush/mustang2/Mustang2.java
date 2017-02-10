@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
 package crush.mustang2;
@@ -78,7 +78,7 @@ public class Mustang2 extends Camera<Mustang2Pixel> implements GroundBased {
 	
 	
 	@Override
-	public void initDivisions() {
+    protected void initDivisions() {
 		super.initDivisions();
 			
 		try { addDivision(getDivision("polarizations", Mustang2Pixel.class.getField("polarizationIndex"), Channel.FLAG_DEAD)); }
@@ -90,7 +90,7 @@ public class Mustang2 extends Camera<Mustang2Pixel> implements GroundBased {
 	}
 	
 	@Override
-	public void initModalities() {
+    protected void initModalities() {
 		super.initModalities();
 				
 		try {
@@ -215,7 +215,7 @@ public class Mustang2 extends Camera<Mustang2Pixel> implements GroundBased {
 	}
 	
 	@Override
-	public void loadChannelData() {
+    protected void loadChannelData() {
 		for(int i=0; i<readout.length; i++) if(hasOption("frequencies." + (i+1))) {
 			try { readout[i].parseFrequencies(option("frequencies." + (i+1)).getPath()); }
 			catch(IOException e) { error(e); }

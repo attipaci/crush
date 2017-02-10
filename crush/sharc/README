@@ -1,7 +1,7 @@
              *** CRUSH User's Manual Extension for SHARC ***
 
                               Attila Kovacs
-                      <attila[AT]submm.caltech.edu>
+                      <attila[AT]sigmyne.com>
 
                        Last updated: 2 June 2014
 
@@ -149,4 +149,4 @@ includes the bolometer nonlinearity (which for SHARC-2 is treated separately).
 
 
 ------------------------------------------------------------------------------
-Copyright (C)2014 -- Attila Kovacs <attila[AT]submm.caltech.edu>
+Copyright (C)2014 -- Attila Kovacs <attila[AT]sigmyne.com>

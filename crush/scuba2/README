@@ -1,7 +1,7 @@
             *** CRUSH User's Manual Extension for the SCUBA-2 ***
 
                               Attila Kovacs
-                        <attila[AT]submm.caltech.edu>
+                        <attila[AT]sigmyne.com>
 
                         Last updated: 8 Sep 2015
 
@@ -205,7 +205,7 @@ course, you may also use your own favorite FITS viewer/tool, if you prefer.
    is possible that with a more thorough analysis and a larger representative 
    sample of calibrator scans, the blind calibration may be improved. If you 
    would like to help improve the blind calibration, please contact Attila 
-   Kovacs <attila[AT]submm.caltech.edu>. 
+   Kovacs <attila[AT]sigmyne.com>. 
 
 
 3.2. Source brightness
@@ -728,4 +728,4 @@ them (or me). :-)
 
 
 -----------------------------------------------------------------------------
-Copyright (C)2015 Attila Kovacs <attila[AT]submm.caltech.edu>
+Copyright (C)2015 Attila Kovacs <attila[AT]sigmyne.com>

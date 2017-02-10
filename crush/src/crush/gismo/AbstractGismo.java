@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila_kovacs[AT]post.harvard.edu>.
+ * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -18,7 +18,7 @@
  *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
  * 
  * Contributors:
- *     Attila Kovacs <attila_kovacs[AT]post.harvard.edu> - initial API and implementation
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
 package crush.gismo;
@@ -102,7 +102,7 @@ public abstract class AbstractGismo extends Camera<GismoPixel> implements Ground
 	}
 
 	@Override
-	public void initDivisions() {
+    protected void initDivisions() {
 		super.initDivisions();
 		
 		try { addDivision(getDivision("mux", GismoPixel.class.getField("mux"), Channel.FLAG_DEAD)); 
@@ -133,7 +133,7 @@ public abstract class AbstractGismo extends Camera<GismoPixel> implements Ground
 	}
 	
 	@Override
-	public void initModalities() {
+    protected void initModalities() {
 		super.initModalities();
 		
 		try {
@@ -172,7 +172,7 @@ public abstract class AbstractGismo extends Camera<GismoPixel> implements Ground
 	}
 	
 	@Override
-	public void loadChannelData() {
+    protected void loadChannelData() {
 		// Update the pointing centers...
 		if(hasOption("pcenter")) arrayPointingCenter = option("pcenter").getVector2D();
 		
