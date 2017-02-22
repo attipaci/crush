@@ -9,8 +9,8 @@
 # It should be called from 'wrapper.sh' exlusively. Otherwise, it will not have
 # the desired effect.
 #
-# Author: Attila Kovacs <attila@submm.caltech.edu>
-# Date: 15 April 2015
+# Author: Attila Kovacs <attila@sigmyne.com>
+# Date: 11 February 2017
 # ============================================================================
 
 # Start by fail-safe defaults: default java, 32-bit mode, 1 GB of RAM, and
@@ -20,47 +20,6 @@ DATAMODEL="32"
 USEMB="1000"
 JVM=""
 EXTRAOPTS=""
-
-# Now, try locate the default Java, and set the JAVA variable to it.
-# If no default java is set, check if there is an Oracle/OpenJDK java installed
-# in the default location
-JAVA=`which java`
-if [ -z ${JAVA+x} ] ; then 
-  if [ -f /usr/java/latest/bin/java ] ; then 
-    JAVA="/usr/java/latest/bin/java"
-  fi
-fi
-
-# If no JRE was found, then print an informative error message and exit.
-if [ -z ${JAVA+x} ] ; then
-  echo ""
-  echo "ERROR! No Java Runtime Environment (JRE) found."
-  echo "       If Java is installed on your system, then set the JAVA variable"
-  echo "       manually to point to it, in a config file under"
-  echo "       /etc/crush2/startup/ or ~/.crush2/startup/"
-  echo "       E.g. place the line:"
-  echo ""
-  echo "          JAVA=\"/opt/java/bin/java\""
-  echo ""
-  echo "       in '~/.crush2/startup/java.conf'."
-  echo "       Otherwise, install a Java Runtime Environment (JRE), e.g."
-  echo "       from www.java.com."
-  echo ""
-  exit 1
-fi
-
-# Use 'java -version' to set VM defaults
-JVER=`$JAVA -version 2>&1 | tail -1`
-
-# Attempt to determine data mode (32 or 64 bit)
-if [[ $JVER == *"64-"* ]] ; then DATAMODEL="64"
-elif [[ $JVER == *"-64"* ]] ; then DATAMODEL="64"
-fi
-
-# Set "-server" VM for Oracle and OpenJDK java
-#if [[ $JVER == *"OpenJDK"* ]] ; then JVM="-server"
-#elif [[ $JVER == *"HotSpot"* ]] ; then JVM="-server"
-#fi
 
 # Attempt to configure 80% of total RAM...
 case `uname` in
@@ -92,20 +51,38 @@ case `uname` in
 esac
 
 
+
+# Now, try locate the default Java, and set the JAVA variable to it.
+# If no default java is set, check if there is an Oracle/OpenJDK java installed
+# in the default location
+JAVA=`which java`
+if [ -z ${JAVA+x} ] ; then 
+  if [ -f /usr/java/latest/bin/java ] ; then 
+    JAVA="/usr/java/latest/bin/java"
+  fi
+fi
+
+if [ -z ${JAVA+x} ] ; then
+  unset JAVA
+  exit 0
+fi
+
+# Use 'java -version' to set VM defaults
+JVER=`$JAVA -version 2>&1 | tail -1`
+
+# Attempt to determine data mode (32 or 64 bit)
+if [[ $JVER == *"64-"* ]] ; then DATAMODEL="64"
+elif [[ $JVER == *"-64"* ]] ; then DATAMODEL="64"
+fi
+
+# Set "-server" VM if possible
+if [[ $JVER == *"Server VM"* ]] ; then JVM="-server"
+fi
+
+
 # Sanity check the max memory setting to make use no more than 1900MB is used
 # with a 32-bit data model...
 if [[ $DATAMODEL == "32" && $USEMB -gt 1900 ]] ; then USEMB="1900" ; fi
 
-
-# Report the autoconf settings if DEBUG is set to "TRUE"
-if [[ $DEBUG == "TRUE" ]] ; then
-  echo "Autoconf:"
-  echo "  JAVA=$JAVA"
-  echo "  JVM=$JVM"
-  echo "  DATAMODEL=$DATAMODEL"
-  echo "  USEMB=$USEMB"
-  echo "  EXTRAOPTS=$EXTRAOPTS"
-  echo
-fi
 
 

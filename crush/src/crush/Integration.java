@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -263,15 +263,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		if(!hasOption("noslim")) slim(getThreadCount());
 		
-		if(hasOption("jackknife")) if(Math.random() < 0.5) {
-			notify("JACKKNIFE: This integration will produce an inverted source.");
-			gain *= -1.0;
-		}
-		
-		if(hasOption("jackknife.frames")) {
-			notify("JACKKNIFE: Randomly inverted frames in source.");
-			for(Frame exposure : this) exposure.jackknife();
-		}
+		if(instrument.getOptions().containsKey("jackknife")) jackknife();
 		
 		if(!hasOption("pixeldata")) if(hasOption("weighting")) if(!hasOption("uniformweights")) {
 			getDifferentialChannelWeights();
@@ -284,6 +276,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		isValid = true;
 		
 		if(hasOption("speedtest")) speedTest();
+	}
+	
+	public void jackknife() {
+	    if(hasOption("jackknife")) if(Math.random() < 0.5) {
+            notify("JACKKNIFE: This integration will produce an inverted source.");
+            gain *= -1.0;
+        }
+        
+	    if(hasOption("jackknife.frames")) {
+            notify("JACKKNIFE: Randomly inverted frames in source.");
+            for(Frame exposure : this) exposure.jackknife();
+        }
 	}
 	
 	public void setIteration(int i, int rounds) {

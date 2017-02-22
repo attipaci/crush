@@ -1,17 +1,46 @@
->> make source.flatfield a global option...
->> correlated.sky
->> Marc's request for error reporting no scans...
->> fix imagetool (-scale -name)...
->> check without fixjumps on OMC1 (E)
+
+2.34-2 (22 February 2017)
 
 
-2.34-2 (devel.2)
+	Overview
+	======================================================================
+	This update fixes two major bugs from recent releases, one that was
+	responsible for sub-optimal 'faint' and 'deep' mode reductions, and 
+	another that broke 'imagetool'. The release also includes improved 
+        deployment onto Windows systems. The updated Windows batch files
+	now provide the same functionality as the bash scripts under POSIX,
+	including automatic Java configuration and user-level runtime 
+	configurations. A new (experimental) 'install.bat', or the new .exe
+	installer, can be used for installing CRUSH on Windows systems in a 
+	standardized way. Finally, HAWC+ configurations have been tweaked 
+	once again, providing improved calibration for the December 2016 
+	commissioning run...
+	======================================================================
 
 
 	[BUG] Scan weighting based on map noise produced inverted weights. 
 	This resulted in suboptimal 'faint' and 'deep' mode reductions. Fixed.
 
-	[NEW] 
+	[BUG] {imagetool} 'imagetool' was broken due to a badly placed line of 
+	code. Fixed.
+
+	[EXPERIMENTAL] {Windows} An executable Windows installer is also
+	provided to make deployment on Windows simpler. It should normally be
+	'Run As Administrator'. The installer is experiemntal, and is expected
+	to become the standard way for deploying CRUSH onto Windows soon...
+
+	[EXPERIMENTAL] {Windows} There is now an 'install.bat' script located 
+        under the 'windows' sub-directory in crush, which can be used to 
+        install crush on Windows computers in a standardized way. After 
+        unpacking crush (from a ZIP file), users can run the 'install' script 
+        as Administrator, to install crush under C:\Program Files\, add the 
+        CRUSH executables to the default search path automatically, and add 
+        the 'show' tool the Start Menu. If run not as Administrator, the 
+        script performs an in-situ installation, without path manipulation or 
+        Start Menu shortcut.
+
+	[NEW] {HAWC+} New correlated modality 'sky' can be used to decorrelate
+	on the common optical signal in addition to the common thermal signal.
 
 	[NEW] New option 'sourcegains', can be used to merge the channel
 	coupling constant into the channel gain variable, that is used for
@@ -21,8 +50,31 @@
 	this option is now default for skydip reductions. There is no obvious
 	use case for the new option outside of skydips.
 
+	[FIX] {HAWC+} Revised how the 'non-sidereal' property of scans is
+	determined, even if real-time object coordinates are used at all times.
+	Thanks to the fix, the scans from Dec 2016 and after can be reduced
+	in non-equatorial coordinate systems. 
+
+	[FIX] Workaround for bad OGIP1.0 long FITS header values, reverting
+	to old CRUSH convention on these. Long HIERARCHs work, nonetheless...
+
 	[FIX] Loading channel data (e.g. default flags) and flags before 
 	establishing channel groups, divisions, and modalities.
+
+	[FIX] {Windows} Windows batch wrapper script was broken. Fixed.
+
+	[TWEAK] 'source.flatfield' is now a globally available option. However,
+	currently it isn't fine tuned for any instrument, other than HAWC+.
+	But, at least it can be...
+
+	[TWEAK] {Windows} Updated Windows batch scripts now provide equivalent
+	functionality to the UNIX shell scripts, such as automatic runtime
+	configuration, and support for manual tweaks to runtime settings
+	based on configuration files placed in 'C:\Program Data\crush\startup'
+	or '%USERPROFILE%\.crush\startup' directories. Users can set startup
+	variables such as JAVA, JVM, USEMB, and EXTRAOPTS. And, similarly to 
+	the POSIX behavior, these folders can host any batch-file content that 
+	will be called on before CRUSH is run.
 
 	[TWEAK] Try drain the DRP message queue before exiting.
 
@@ -64,7 +116,18 @@
 	[CONFIG] {HAWC+} Refined PWV-tau relations based on a more careful 
 	selection of skydips. Updated calibrations.
 
-	[CODE] Update e-mail address accross files.
+	[COSMETIC] Updated icon set without outlines.
+
+	[PACKAGE] {Windows} CRUSH is now distributed also as a .EXE installer
+	for windows. It should typically be run 'As Administrator', although
+	it will allow less-complete installations for non-privileged users also
+	(without PATH manipulation or Start Menu icons).
+
+	[PACKAGE] {Windows} ZIP archive now has all text files converted to
+        DOS/Windows format (linebreaks).
+
+	[CODE] Update e-mail address across files.
+
 
 
 2.34-1 (20 January 2017)

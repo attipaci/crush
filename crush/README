@@ -1,10 +1,10 @@
 
 		      *** A Guide to Using CRUSH-2. *** 
 
-			       Attila Kovacs 
-		         <attila[AT]sigmyne.com>
+		 	        Attila Kovacs 
+		          <attila[AT]sigmyne.com>
 
-		       Last updated: 31 August 2016
+		       Last updated: 14 February 2017
 
 
 
@@ -14,12 +14,14 @@ Table of Contents
 1. Getting Started
 
   1.1 Installation
-  1.2 The Tools of the CRUSH Suite
-  1.3 Quick Start
-  1.4 A Brief Description of What CRUSH Does and How...
-  1.5 Command-line Options and Scripting Support
-  1.6 Making Sense of the Console Output
-  1.7 Examples
+  1.2 (optional) Java Runtime Configuration
+  1.3 CRUSH Pipeline Configuration
+  1.4 The Tools of the CRUSH Suite
+  1.5 Quick Start
+  1.6 A Brief Description of What CRUSH Does and How...
+  1.7 Command-line Options and Scripting Support
+  1.8 Making Sense of the Console Output
+  1.9 Examples
 
 2. Advanced Topics
 
@@ -38,7 +40,6 @@ Table of Contents
   3.4 Scan Configuration
   3.5 Instrument Configuration
   3.6 Advanced startup environment and Java configuration
-
 
 4. Correlated Signals 
 
@@ -148,41 +149,30 @@ virtually any fast-sampling scanning camera.
 
    C. Windows Installation
    -----------------------
-   Extract the ZIP archive into the desired location.
+   Please refer to 'README.windows', which may be found either in the 
+   installation directory, or the 'windows\' subdirectory of the distribution
+   directory, or online under the 'Documents' tab.
 
-   To run CRUSH under Windows, copy/move the .bat files from under the 
-   'windows' subdirectory into the main crush directory. Additionally, you may 
-   want to add the crush installation directory to your path (in 
-   'autoexec.bat') to run crush from outside of its own directory. In this case
-   you should also set the CRUSH variable to point to the installation 
-   directory (to do this add a line like:
-
-	set CRUSH=<the-crush-directory>
-
-   in your 'autoexec.bat'. 
-
-   A note of caution: while Windows is generally case insensitive, this is not 
-   necessarily the case for Java paths. Therefore, when setting paths, such as 
-   'datapath', it is advised that drive letters appear capitalized, e.g. as 
-   'C:\data', as well as anything else that might warrant it (e.g. 
-   "My Documents").
- 
  
 
-   (optional) Java Configuration
-   -----------------------------
-   CRUSH ships with a default Java configuration. On the most common UNIX
-   platforms (Linux, Mac OS X, BSD, and Solaris), it will automatically attempt 
-   to set an optimal configuration. On other platforms, it comes with fail-safe 
-   default values (default java, 32-bit mode and 1GB of RAM use). 
+ 1.2 (optional) Java Configuration
+ =================================
 
-   To override the defaults on Windows, edit 'wrapper.bat' directly. 
 
-   On all other platforms, you can override the defaults by placing your 
-   settings in arbitrary files under /etc/crush2/startup or ~/.crush2/startup. 
-   (Any settings in the user's home under ~/.crush2/startup will overrride the 
-   system-wide values in /etc/crush2/startup. If multiple config files exist in
-   the same location, these will be parsed in non-specific order). 
+   CRUSH ships with a default Java configuration. On Windows and the most 
+   common POSIX platforms (Linux, Mac OS X, BSD, and Solaris), it will 
+   automatically attempt to set an optimal configuration. On other platforms, 
+   it comes with fail-safe default values (default java, 32-bit mode and 1GB 
+   of RAM use).  
+
+   You can override the defaults by placing your settings in arbitrary files 
+   under /etc/crush2/startup or ~/.crush2/startup (for the equivalent 
+   configuration under Windows, please refer to windows/README.windows)
+
+   (Any settings in the user's home under .crush2/startup will overrride the 
+   system-wide values in /etc/crush2/startup or C:\Program Data\startup. If 
+   multiple config files exist in the same location, these will be parsed in 
+   non-specific order). 
 
    E.g., placing the following lines in ~/.crush2/startup/java.conf overrides 
    all available runtime configuration settings:
@@ -250,8 +240,10 @@ virtually any fast-sampling scanning camera.
 
 
 
-   CRUSH Configuration
-   -------------------
+1.3.  CRUSH Pipeline Configuration
+==================================
+
+
    The preferred way of creating user-specific configurations for CRUSH is to
    place your personalized configuration files inside a '.crush2/' 
    configuration directory within your home. This way, your personalized 
@@ -284,8 +276,8 @@ virtually any fast-sampling scanning camera.
 
 
 
-1.2 The Tools of the CRUSH Suite
-================================
+1.4. The Tools of the CRUSH Suite
+=================================
 
 CRUSH provides a collection of other useful tools. Here's a short description
 of what is there and what they are used for. Each tool, when run without
@@ -318,8 +310,8 @@ options on the console.
 
 
 
-1.3 Quick Start
-===============
+1.5. Quick Start
+================
 
    To reduce data, simply specify the instrument (E.g. 'sharc2', 'laboca'...) 
    and the scan numbers/ids (or names of the scan files or directories) to 
@@ -438,8 +430,8 @@ options on the console.
 
    
 
-1.4 A Brief Description of What CRUSH Does and How...
-=====================================================
+1.6. A Brief Description of What CRUSH Does and How...
+=======================================================
 
    CRUSH is a pipeline reduction that is principally meant to remove
    correlated signals (correlated noise) in the time-streams to arrive
@@ -466,8 +458,8 @@ options on the console.
 
 
 
-1.5 Command-line Options and Scripting Support
-==============================================   
+1.7. Command-line Options and Scripting Support
+===============================================   
 
    Configuration of CRUSH is available either through command line 
    options or via scripting. You have seen scripting already in the form
@@ -583,8 +575,8 @@ options on the console.
 
 
 
-1.6 Making sense of the console output
-======================================
+1.8. Making sense of the console output
+=======================================
  
    Don't ignore the console output. It contains a lot of information, which
    may be useful for diagnosing your reduction, and troubleshooting if things
@@ -759,8 +751,8 @@ options on the console.
 
 
 
-1.7 Examples
-============
+1.9. Examples
+=============
 
    Reduce scans 12065-12069 and 12072 with zenith tau of 0.18:
 

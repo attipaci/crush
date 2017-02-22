@@ -38,6 +38,7 @@ Table of Contents
 
 
 
+
 #####################################################################
 1. Basic Rules
 #####################################################################
@@ -489,14 +490,14 @@ Table of Contents
     Since CRUSH allows the use of environment variables when defining values
     (see above), you can use {@HOME} for your UNIX home directory; or 
     {@HOMEPATH} for your user folder under Windows. Or, {#user.home} has the 
-    same effect universally, by referring to the the Java property
+    same effect universally, by referring to it as the Java property
     storing the location of the user's home folder.
 
     The tilde character '~' is also universally understood to 
     mean your home folder. And, finally, the UNIX-like '~johndoe' may specify 
     johndoe's home directory in any OS as long as it shares the same parent 
     directory with your home folder (e.g. both johndoe and your home folder 
-    reside under a common '/home' or 'C:\Documents and Settings'). 
+    reside under a common '/home' or 'C:\Users'). 
 	
     Thus, in UNIX systems (including MacOS), you may use:
 
@@ -508,12 +509,12 @@ Table of Contents
 
     while in Windows any of the following are acceptable:
 
-	datapath="~\My Data"			# Using the '~' shorthand
-	datapath="{$HOMEPATH}\My Data"		# Using environment variables
-	datapath="{#user.home}\My Data"		# Java properties
-	datapath=D:/data/Sharc2/2010		# UNIX-style paths
-	datapath=D:\data\Sharc2\2010		# proper Windows paths
-	datapath="~John Doe\Data"		# relative to another user
+	"~\My Data"			# Using the '~' shorthand
+	"{$HOMEPATH}\My Data"		# Using environment variables
+	"{#user.home}\My Data"		# Java properties
+	D:/data/Sharc2/2010		# UNIX-style paths
+	D:\data\Sharc2\2010		# proper Windows paths
+	"~John Doe\Data"		# relative to another user
 
 
 
