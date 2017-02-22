@@ -3183,6 +3183,15 @@
 			decoupled from the sky-noise gains).
 			@See: 'source.coupling', 'beammap'
 
+:: source.flatfield	@Advanced
+			@Since: 2.34-2
+			Use for deriving flatfields based on response to a 
+			source. fro it to work effectively, you need a scan
+			that moves brihgt source emission over all pixels. It
+			is a soft option, defined in 'default.cfg', and it
+			results in loading 'srcflat.cfg' for configuring
+			optimal settings for source gain derivation.
+
 :: source.inject=<path>		@Advanced
 				@Since: 2.23
 			Inject a source map into the timestreams. This may be

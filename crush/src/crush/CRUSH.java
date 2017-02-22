@@ -60,7 +60,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.34-2";
-    private static String revision = "devel.3";
+    private static String revision = "";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -373,7 +373,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         }
         else {		
             parallelTasks = Math.max(1, maxThreads / scans.size());
-            parallelScans = Math.max(1, maxThreads / parallelTasks);
+            parallelScans = Math.min(scans.size(), Math.max(1, maxThreads / parallelTasks));   
         }
 
         info("Will use " + parallelScans + " x " + parallelTasks + " grid of threads.");
@@ -957,8 +957,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
             int i=1;
             while(args.hasMoreTokens()) FitsToolkit.addLongKey(cursor, "ARG" + (i++), args.nextToken(), "Command-line argument.");
         }
-
-
+        
         cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
         cursor.add(new HeaderCard("COMMENT", " CRUSH Java VM & OS section", false));
         cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));

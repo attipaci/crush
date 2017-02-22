@@ -231,10 +231,7 @@ implements TableFormatter.Entries, BasicMessaging {
             info("Will use static source gains.");
         }
 
-        if(hasOption("jackknife.channels")) {
-            notify("JACKKNIFE: Randomly inverted channels in source.");
-            for(Channel channel : this) if(Math.random() < 0.5) channel.coupling *= -1.0;
-        }
+        if(hasOption("jackknife.channels")) jackknife();
 
         for(Channel channel : this) {
             channel.spikes = 0;
@@ -249,6 +246,11 @@ implements TableFormatter.Entries, BasicMessaging {
         }
      
         isValid = true;
+    }
+    
+    public void jackknife() {
+        notify("JACKKNIFE: Randomly inverted channels in source.");
+        for(Channel channel : this) if(Math.random() < 0.5) channel.coupling *= -1.0;
     }
 
     protected void flagChannels() {

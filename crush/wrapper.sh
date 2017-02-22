@@ -2,8 +2,8 @@
 #
 # ===========================================================================
 # Description: Java configuration wrapper script for CRUSH tools.
-# Author: Attila Kovacs <attila@submm.caltech.edu>
-# Updated: 15 September 2015
+# Author: Attila Kovacs <attila@sigmyne.com>
+# Updated: 11 February 2017
 # ===========================================================================  
 
 # Attempt to auto configure CRUSH. This should provide optimal settings on
@@ -11,8 +11,8 @@
 # fail-safe defaults. Users can override settings by uncommenting or editing 
 # lines further below, or preferably by adding their own persistent settings 
 # in under /etc/crush2/startup/ or ~/.crush2/startup/ (e.g. in java.conf).
-#if [ -L $0 ] ; then CRUSH=$(dirname $(readlink -f $0)) ; 
-#else CRUSH=$(dirname $0) ; fi
+# If you do not want automatic configuration, then comment or delete the line
+# below.
 
 source "$CRUSH/autoconf.sh"
 
@@ -34,6 +34,8 @@ source "$CRUSH/autoconf.sh"
 # define a user runtime configuration that uses the latest Oracle java in
 # 64-bit mode, allowing to use up to 4GB of ram, running the 'server' VM with
 # no extra options. 
+#
+# Add your specific installation defaults below...
 # -----------------------------------------------------------------------------
 
 # Most computers come with a suitable version of Java (Oracle, OpenJDK/IcedTea)
@@ -85,6 +87,8 @@ source "$CRUSH/autoconf.sh"
 
 
 
+
+
 # --------------------- DO NOT CHANGE BELOW THIS LINE -----------------------
 
 
@@ -121,7 +125,7 @@ if [ $# -ge 1 ] ; then
   fi
 fi
 
-
+# Verify the runtime configuration settings before launch...
 if [[ $DEBUG == "TRUE" ]] ; then 
   echo "Pre-launch:"
   echo "  JAVA=$JAVA"
@@ -132,8 +136,27 @@ if [[ $DEBUG == "TRUE" ]] ; then
   echo
 fi
 
-JAVAOPTS="-d$DATAMODEL -Xmx${USEMB}M $EXTRAOPTS"
-CLASSPATH="$CRUSH/crush2.jar:$CRUSH/tools.jar:$CRUSH/fits.jar:$CRUSH/jnum.jar:$CRUSH/bin"
+# If no JRE was found, then print an informative error message and exit.
+if [ -z ${JAVA+x} ] ; then
+  echo.
+  echo "ERROR! No Java Runtime Environment (JRE) found."
+  echo "       If Java is installed on your system, then set the JAVA variable"
+  echo "       manually to point to it, in a config file under"
+  echo "       /etc/crush2/startup/ or ~/.crush2/startup/"
+  echo "       E.g. place the line:"
+  echo.
+  echo "          JAVA=\"/opt/java/bin/java\""
+  echo.
+  echo "       in '~/.crush2/startup/java.conf'."
+  echo "       Otherwise, install a Java Runtime Environment (JRE), e.g."
+  echo "       from www.java.com."
+  echo.
+  exit 1
+fi
+
+
+JAVAOPTS="$JVM -d$DATAMODEL -Xmx${USEMB}M $EXTRAOPTS"
+CLASSPATH="$CRUSH/*:$CRUSH/bin"
 
 export CRUSH
 
