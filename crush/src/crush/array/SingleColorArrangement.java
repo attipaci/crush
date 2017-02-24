@@ -25,8 +25,8 @@ package crush.array;
 
 import java.util.List;
 
-import crush.ColorArrangement;
 import crush.Pixel;
+import crush.instrument.ColorArrangement;
 
 public class SingleColorArrangement<ChannelType extends SingleColorPixel> extends ColorArrangement<ChannelType> {
 	/**

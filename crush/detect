@@ -6,6 +6,6 @@ EXECNAME=$0
 while [ -L $EXECNAME ] ; do EXECNAME=`readlink $EXECNAME`; done
 CRUSH=`dirname $EXECNAME`
 
-source $CRUSH/wrapper.sh detect
+source $CRUSH/startup/wrapper.sh detect
 
 $JAVA $JAVAOPTS -classpath $CLASSPATH crushtools.SourceExtractor ${1+"$@"}

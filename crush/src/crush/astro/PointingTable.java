@@ -27,7 +27,7 @@ import java.util.*;
 import java.text.ParseException;
 
 import crush.CRUSH;
-import crush.iram.IRAMPointingModel;
+import crush.telescope.iram.IRAMPointingModel;
 import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;

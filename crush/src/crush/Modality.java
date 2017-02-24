@@ -27,7 +27,6 @@ package crush;
 import java.lang.reflect.*;
 import java.util.*;
 
-
 import jnum.Configurator;
 import jnum.Unit;
 import jnum.Util;

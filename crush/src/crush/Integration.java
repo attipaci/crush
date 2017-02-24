@@ -30,6 +30,10 @@ import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import crush.filters.*;
+import crush.telescope.Chopper;
+import crush.telescope.Chopping;
+import crush.telescope.GroundBased;
+import crush.telescope.HorizontalFrame;
 import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
@@ -369,7 +373,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		recycle(n);
 		
 		
-		info("Flagging out-of-range data." + flagged + " channel(s) discarded.");
+		info("Flagging out-of-range data. " + flagged + " channel(s) discarded.");
 
 		instrument.census();
 	}

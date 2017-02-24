@@ -6,28 +6,9 @@
 
 >> EXTRACP runtime option for extra classpath entries...
 
->> Windows self extracting
-        - create special zip with windows scripts already in place
-	  and bash scripts removed? (optional)
-	- add comment to run install.bat, and explain the installation
-
->> windows/README.txt -- for Windows specific installation and use...
-
 >> Reorganize hierarchy
 
-  jar/ -- add all jars therein to classpath
-       -- update wrapper.bat to do the same
        -- separate instrument jars so they are pluggable (not yet?)
-
-  scripts/
-
-  doc/ or documentation/
-
-  misc/?
- 
-  instruments/
-	e.g. sharc2/classname
-	
 
 
 >> FFTDemo
