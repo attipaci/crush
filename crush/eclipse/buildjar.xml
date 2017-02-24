@@ -1,0 +1,35 @@
+<project name="crush" default="create-jars">    
+  <property name="projectHome" location=".." />
+
+  <target name="create-jars" depends="crush.jar,crush-src.jar"/>
+
+  <target name="cleanall" depends="clean"/>
+	
+  <target name="clean">
+	<delete file="${projectHome}/lib/crush.jar"/> 
+	<delete file="${projectHome}/lib/crush-src.jar"/>
+  </target>
+
+  <target name="crush.jar">
+   <jar 
+	destfile="${projectHome}/lib/crush.jar" 
+	basedir="${projectHome}/bin"
+	includes="**/*.class" 
+	excludes="**/tools/**,**/ebex/**,**/test/**,**/devel/**,**/TODO*,**/*~,**/.*" 
+	index="true"
+	level="9" 
+	/>
+  </target>
+
+  <target name="crush-src.jar"> 
+   <jar 
+	destfile="${projectHome}/ant/archive/crush-src.jar" 
+	basedir="${projectHome}/src"
+	includes="build.xml,**/*.java" 
+	excludes="**/tools/**,**/ebex/**,**/test/**,**/devel/**,**/TODO*,**/*~,**/.*" 
+	index="false"
+	level="9" 
+    />
+  </target>   
+
+</project>

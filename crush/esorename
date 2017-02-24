@@ -6,6 +6,6 @@ EXECNAME=$0
 while [ -L $EXECNAME ] ; do EXECNAME=`readlink $EXECNAME`; done
 CRUSH=`dirname $EXECNAME`
 
-source $CRUSH/wrapper.sh esorename
+source $CRUSH/startup/wrapper.sh esorename
 
 $JAVA $JAVAOPTS -classpath $CLASSPATH crush.apex.ESORename ${1+"$@"} 

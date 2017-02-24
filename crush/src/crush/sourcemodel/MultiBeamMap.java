@@ -26,12 +26,12 @@ package crush.sourcemodel;
 
 import java.util.Collection;
 
-import crush.DualBeam;
 import crush.Instrument;
 import crush.Integration;
 import crush.Pixel;
 import crush.Scan;
 import crush.SourceModel;
+import crush.telescope.DualBeam;
 import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.Parallel;

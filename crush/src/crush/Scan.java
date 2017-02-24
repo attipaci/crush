@@ -32,6 +32,10 @@ import java.util.*;
 
 import crush.astro.AstroMap;
 import crush.sourcemodel.*;
+import crush.telescope.GroundBased;
+import crush.telescope.HorizontalFrame;
+import crush.telescope.InstantFocus;
+import crush.telescope.Mount;
 import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;

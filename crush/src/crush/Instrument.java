@@ -29,8 +29,13 @@ import java.util.*;
 import java.text.*;
 
 import crush.array.GeometricIndexed;
-import crush.hawcplus.HawcPlusPixel;
+import crush.instrument.ColorArrangement;
+import crush.instrument.hawcplus.HawcPlusPixel;
 import crush.sourcemodel.*;
+import crush.telescope.ChopperResponse;
+import crush.telescope.InstantFocus;
+import crush.telescope.Mount;
+import crush.telescope.PointingResponse;
 import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
@@ -617,7 +622,7 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public String getConfigPath() {
-        return CRUSH.home + File.separator + getName() + File.separator;
+        return CRUSH.home + File.separator + "config" + File.separator + getName() + File.separator;
     }
 
     public ChannelGroup<ChannelType> getLiveChannels() {
@@ -1401,10 +1406,10 @@ implements TableFormatter.Entries, BasicMessaging {
     }
 
     public static Instrument<?> forName(String name) {
-        File file = new File(CRUSH.home + File.separator + "instruments" + File.separator + name.toLowerCase());
-
+        File file = new File(CRUSH.home + File.separator + "config" + File.separator + name.toLowerCase() + File.separator + "class");
+        
         if(!file.exists()) {
-            CRUSH.error(Instrument.class, name + "' is not registered in instruments directory.");
+            CRUSH.error(Instrument.class, name + "' is not registered.");
             return null;
         }
 

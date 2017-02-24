@@ -50,7 +50,7 @@ import nom.tam.util.*;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.34
+ * @version 2.40
  * 
  */
 public class CRUSH extends Configurator implements BasicMessaging {
@@ -59,8 +59,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.34-2";
-    private static String revision = "";
+    private static String version = "2.40-a1";
+    private static String revision = "devel.1";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -108,8 +108,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
         home = System.getenv("CRUSH");
         if(home == null) home = ".";
 
-        LeapSeconds.dataFile = home + File.separator + "data" + File.separator + "leap-seconds.list";
-
         CRUSH crush = new CRUSH(args[0]);
 
         crush.checkJavaVM(5);     
@@ -151,6 +149,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     public void init(String[] args)throws Exception {	 
         readConfig("default.cfg");
+          
         commandLine = args[0];
 
         for(int i=1; i<args.length; i++) if(args[i].length() > 0) {
@@ -191,6 +190,10 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
 
+    public String getConfigPath() {
+        return CRUSH.home + File.separator + "config";
+    }
+    
     @Override
     public void readConfig(String fileName) {
         String userConfPath = System.getProperty("user.home") + File.separator + ".crush2"+ File.separator;
@@ -204,7 +207,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         configDepth++;
 
         try { 
-            String path = CRUSH.home + File.separator + fileName;
+            String path = getConfigPath() + File.separator + fileName;
             super.readConfig(path); 
             if(instrument != null) instrument.registerConfigFile(path);
             found = true;
@@ -254,6 +257,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     @Override
     public String getProperty(String name) {
         if(name.equals("instrument")) return instrument.getName();
+        if(name.equals("configpath")) return getConfigPath();
         else if(name.equals("version")) return version;
         else if(name.equals("fullversion")) return getFullVersion();
         else return super.getProperty(name);
@@ -472,6 +476,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
         consoleReporter.addLine();
 
         status(this, "Reading scan: " + scanID);
+        
+        if(hasOption("leapseconds")) LeapSeconds.dataFile = option("leapseconds").getPath();
 
         try {
             Scan<?,?> scan = null;

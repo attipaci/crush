@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+	 <project basedir="." default="build" name="crush">
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    
+	 <property name="crush" value="crush"/>
+	 <property name="jnum" value="jnum"/>
+	 <property name="tools" value="tools"/>
+
+	 <property name="sourcearchive" location="../archive" />
+	 <property name="sourcedir" location="source" />
+	 <property name="bindir" location="bin" />
+	 <property name="builddir" location="build" />
+	 <property name="libdir" location="../lib" />
+
+    <path id="crush.classpath">
+        <pathelement path="${bindir}"/>
+		  <fileset dir="${libdir}">
+        		<include name="**/fits.jar"/>
+        </fileset>
+    </path>
+
+	 <target name="unpack-sources">
+		<mkdir dir="${sourcedir}"/>
+		<unzip dest="${sourcedir}">
+  			<patternset>
+    			<include name="**/*.java"/>
+  			</patternset>
+			<fileset dir="${sourcearchive}">
+	        <include name="**/*-src.jar"/>
+	    	</fileset>
+		</unzip>
+    </target>
+
+    <target name="clean">
+        <delete dir="${bindir}"/>
+		  <delete dir="${builddir}"/>
+    </target>
+
+	 <target name="delete-source">
+			<delete dir="${sourcedir}"/>
+    </target>
+
+    <target name="cleanall" depends="clean,delete-source"/>
+
+    <target name="build" depends="compile,create-jars"/>
+
+	 <target name="install" depends="build">
+        <copy includeemptydirs="false" todir="${libdir}">
+            <fileset dir="${builddir}">
+                <exclude name="**/*.jar"/>
+            </fileset>
+        </copy>
+    </target>
+
+	 <target name="init">
+        <mkdir dir="${bindir}"/>
+		  <mkdir dir="${builddir}"/>
+        <copy includeemptydirs="false" todir="${bindir}">
+            <fileset dir="${sourcearchive}">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+ 
+    <target name="compile" depends="init">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+<!--
+		  <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+-->
+        <javac debug="true" debuglevel="${debuglevel}" destdir="${bindir}" includeantruntime="false" source="${source}" target="${target}" nowarn="on">
+            <src path="${sourcedir}"/>
+            <classpath refid="crush.classpath"/>
+        </javac>
+    </target>
+
+    <target name="create-jars" depends="crush.jar,jnum.jar,tools.jar">
+		<delete dir="${bindir}"/>
+	 </target>
+
+	 <target name="crush.jar" depends="compile">
+    	<jar 
+			destfile="${builddir}/${crush}.jar" 
+			basedir="${bindir}"
+			includes="crush/**/*.class" 
+			index="true"
+			level="9" 
+    	/>
+	 </target>
+
+	 <target name="jnum.jar" depends="compile">
+    	<jar 
+			destfile="${builddir}/${jnum}.jar" 
+			basedir="${bindir}"
+			includes="jnum/**/*.class" 
+			index="true"
+			level="9" 
+    	/>
+	 </target>
+
+	 <target name="tools.jar" depends="compile">
+    	<jar 
+			destfile="${builddir}/${tools}.jar" 
+			basedir="${bindir}"
+			includes="crushtools/**/*.class" 
+			index="true"
+			level="9" 
+    	/>
+	 </target>
+
+
+	 <target name="delete-jars">
+		<delete file="${libdir}/${crush}.jar"/>
+		<delete file="${libdir}/${jnum}.jar"/>
+		<delete file="${libdir}/${tools}.jar"/> 	
+ 	 </target>
+
+
+    <target name="create-source-jars" depends="crush-src.jar,jnum-src.jar,tools-src.jar"/>
+
+	 <target name="crush-src.jar">
+    	<jar 
+			destfile="${sourcearchive}/${crush}-src.jar" 
+			basedir="${sourcedir}"
+			includes="crush/**/*.java" 
+			index="true"
+			level="9" 
+    	/>
+	 </target>
+
+	 <target name="jnum-src.jar">
+    	<jar 
+			destfile="${sourcearchive}/${jnum}-src.jar" 
+			basedir="${sourcedir}"
+			includes="jnum/**/*.java" 
+			index="true"
+			level="9" 
+    	/>
+	 </target>
+
+	 <target name="tools-src.jar">
+    	<jar 
+			destfile="${sourcearchive}/${tools}-src.jar" 
+			basedir="${sourcedir}"
+			includes="crushtools/**/*.java" 
+			index="true"
+			level="9" 
+    	/>
+	 </target>
+
+	<target name="delete-source-jars">
+		<delete>
+			<fileset dir="${sourcearchive}" includes="*-src.jar"/>
+		</delete>
+ 	</target>
+
+</project>

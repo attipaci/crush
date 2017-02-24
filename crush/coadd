@@ -6,6 +6,6 @@ EXECNAME=$0
 while [ -L $EXECNAME ] ; do EXECNAME=`readlink $EXECNAME`; done
 CRUSH=`dirname $EXECNAME`
 
-source $CRUSH/wrapper.sh coadd
+source $CRUSH/startup/wrapper.sh coadd
 
 java $JAVAOPTS -classpath $CLASSPATH crushtools.SkyMapCoadder ${1+"$@"}

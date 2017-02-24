@@ -23,6 +23,7 @@
 package crush.sourcemodel;
 
 import crush.*;
+import crush.telescope.HorizontalFrame;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
