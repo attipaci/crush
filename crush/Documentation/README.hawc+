@@ -1,0 +1,658 @@
+
+	   *** CRUSH User's Manual Extension for SOFIA/HAWC+ ***
+
+			      Attila Kovacs
+		         <attila[AT]sigmyne.com>
+
+		       Last updated: 5 October 2016
+
+
+
+Table of Contents
+=================
+
+1. Introduction
+
+  1.1. A brief description of of what CRUSH does and how...
+
+2. Installation
+
+  2.1. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
+  2.2. Optional system-wide installation.
+  2.3. Optional startup environment & Java configuration
+  2.4. Optional automatic pipeline configuration (skyhawc)
+
+3. Quickstart guide
+
+  3.1. Locating scan data
+  3.2. A few common options to use with SOFIA/HAWC+
+
+4. Technical details for expert users
+
+  4.1. HAWC+ specific pixel divisions
+  4.2. Glossary of HAWC+ specific options
+  4.3. HAWC+ specific log quantities
+
+
+
+
+
+#####################################################################
+1. Introduction
+#####################################################################
+
+
+   This document contains information specific to using CRUSH-2 with 
+   SOFIA/HAWC+. 
+
+   You may use it as a standalone quickstart guide, with instructions for 
+   installation and basic use, or in conjucntion with the main CRUSH-2 README. 
+   Either way, it is recommended that users also familiarize themselves with 
+   the contents of the main CRUSH-2 README, found inside the distribution 
+   directory, and its Section 1 (Getting Started) especially. 
+
+
+
+1.1 A brief description of what CRUSH does and how...
+=====================================================
+
+   CRUSH is a reduction pipeline, designed mainly to remove correlated signals 
+   (correlated noise) in the detector time-streams to arrive at clean & 
+   independent bolometer signals, which are then used to derive a model of
+   the source (usually an image).
+
+   As such it is not an interactive reduction software (e.g. as opposed to
+   e.g. BoA). The term 'scripting' in CRUSH mainly means defining configuration
+   options (in the command line or through configuration files) which are
+   parsed in the order they are read.
+
+   During the reduction CRUSH aims to arrive at a consistent set of
+   solutions for various correlated signals, the corresponding gains and
+   the pixel weights, as well as tries to identify and flag problematic data,
+   and applies appropriate spectral filtering.
+
+   This means a series of reduction steps, which are iterated a few times
+   until the required self-consistent solutions are arrived at.
+
+   To learn more about the details please refer to Kovacs, A., "CRUSH:
+   fast and scalable data reduction for imaging arrays," Proc. SPIE 7020, 45,
+   (2008). If that does not satisfy your curiousity, then you can find yet
+   more explanation in Kovacs, A., PhD thesis, Caltech (2006).
+
+
+
+
+
+#####################################################################
+2. Installation
+#####################################################################
+
+
+   2.1. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
+   ================================================================
+
+     Step 1.
+     -------
+     Install Java (if necessary), e.g. from www.java.com. If you already have
+     Java, check that it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
+
+	> java -version
+
+     Note, that The GNU java a.k.a. gij (default on some older RedHat and 
+     Fedora systems) is painfully slow and unreliable, and will not always run 
+     CRUSH correctly. If you need Java, you can download the latest JRE from
+     www.java.com
+
+     Step 2.
+     -------
+     Unpack the tarball in the desired location (e.g. under '~/astrotools/'):
+
+        > cd ~/astrotools
+        > tar xzf crush-2.xx-x.tar.gz
+   
+
+     Step 3.
+     -------
+     Verify that CRUSH works:
+
+	> cd crush
+	> ./crush
+
+     You should see a brief information screen on how to use CRUSH.
+
+
+
+   2.2. Optional system-wide installation
+   ======================================
+   To create system-wide access to the crush executables, you may optionally 
+   wish to run 'install.sh' (as root or with 'sudo'). It will link the
+   executables to '/usr/bin', and install man pages.
+
+        > cd crush
+        > sudo bash install.sh
+
+   You can check the success of the above optional step by typing:
+
+        > man crush
+
+   If all is in order, you should see a basic description on the crush 
+   command-line syntax and options.
+
+
+
+   2.3. Optional startup environment & Java configuration
+   ======================================================
+   CRUSH ships with a default Java configuration. On the most common UNIX
+   platforms (Linux, Mac OS X, BSD, and Solaris), it will automatically attempt
+   to set an optimal configuration. On other platforms, it comes with fail-safe
+   default values (default java, 32-bit mode and 1GB of RAM use).
+
+   To override the defaults on Windows, edit 'wrapper.bat' directly.
+
+   On all other platforms, you can override the defaults by placing your
+   settings in arbitrary files under /etc/crush2/startup or ~/.crush2/startup.
+   (Any settings in the user's home under ~/.crush2/startup will override the
+   system-wide values in /etc/crush2/startup. If multiple config files exist in
+   the same location, these will be parse in non-specific order).
+
+   E.g., placing the following lines in ~/.crush2/startup/java.conf overrides
+   all available settings: 
+
+	  JAVA="/usr/java/latest/bin/java"
+	  DATAMODEL="64"
+	  USEMB="4000"
+	  JVM="server"
+	  EXTRAOPTS="-Djava.awt.headless=true"
+
+   Upon startup CRUSH will find and apply these settings, so it will use
+   "/usr/java/latest/bin/java" to run CRUSH, in 64-bit mode, with 4GB of RAM, 
+   using the HotSpot 'server' VM, and in headless mode (without display,
+	mouse or keyboard).
+
+   Below is a guide to the variables that you can override to set your own
+   Java runtime configuration:
+
+	JAVA		Set to the location of the Java executable you want
+			to use. E.g. "java" to use the default Java, or
+			"/usr/java/latest/bin/java" to use the latest from
+			Oracle or OpenJDK.
+
+	DATAMODEL	Set to "32" oir "64", to select 32 or 64-bit mode.
+			To use 64-bit mode you will need both a 64-bit OS
+			and a 64-bit JRE (Java Runtime Environment)
+			installation.
+
+	USEMB		Set to the maximum amount of RAM (in MB) available to
+			CRUSH. E.g. "4000" for 4GB. Note, that when DATAMODEL
+			is "32", you this value must be somewhere below 2000.
+			Thus, "1900" is a good maximum value to use in 32-bit
+			mode.  Due to the volume of full-rate HAWC+ data
+			(> 500MB/min), you will need to configure Java with at 
+			least 1.2GB of RAM to process the test simulation.
+
+	JVM		Usually set to "server" for Oracle or OpenJDK. If using
+			IBM's Java, set it to "" (empty string). On ARM
+			platforms, you probably get better performance using
+			"jamvm" or "avian". o see what VM options are
+			available, run 'java -help'. The VM options are listed
+			near the top of the resulting help screen.
+
+	EXTRAOPTS	Any other non-standard options you may want to pass
+			to the Java VM should go here. Typically set to "".
+
+
+   You can also specify environment variables, and add shell commands (bash),
+   since these configuration files are in fact sourced as bash scripts before
+   launching Java / CRUSH. For example you can add:
+
+     CRUSH_NO_UPDATE_CHECK="1"
+     CRUSH_NO_VM_CHECK="1" 
+
+     echo "Will try to parse my own configuration now... "
+	  
+     if [ -f ~/mycrushconfig.sh ] ; then
+         echo -n "OK"
+         source ~/mycrushconfig.sh
+     else
+         echo -n "Not found"
+     fi
+
+   The above will disable update checking (not recommended!) and VM checking
+   (also not recommended!) and will source the contents of 
+   '~/mycrushconfig.sh' if and when such a file exists.
+ 
+   
+
+
+   2.4. Optional automatic pipeline configuration (skyhawc)
+   ========================================================
+
+   Automatic pipeline reductions (such as in flight) should never hang if 
+   possible.
+
+   Unfortunately, there are two uncommon conditions that can cause CRUSH 
+   (Java, really) to hang indefinitely. First, while trying to render a PNG 
+   output if the X11 display connection had dropped unexpectedly. And second, 
+   while trying to check for updates if the network had disconnected 
+   unexpectedly. 
+   
+   Both of these scenarios can be preemted by specifying appropriate runtime 
+   options for running CRUSH reductions with limited scope.
+
+   Simply (create and) edit a file: 
+
+      ~/.crush2/startup/crush/autopipeline.conf
+
+   (This will specify settings only for the 'crush' executable, and will not
+   affect other tools, like 'imagetool' or 'show'). Into this file add the 
+   following lines:
+
+      CRUSH_NO_UPDATE_CHECK="1"
+      EXTRAOPTS="$EXTRAOPTS -Djava.awt.headless=true"
+
+   The first will disable update checking (which can hang if the network 
+   connection drops), while the second will run CRUSH in headless mode 
+   (assuming no X11 rendering functionality), in addition to any startup
+   options defined for all programs, thereby avoiding hangs if and 
+   when PNG outputs are rendered. 
+
+   Normal users, outside of the automatic pipeline, should probably not set
+   these options. Update notification is a useful feature, letting users know
+   if or when improved CRUSH releases become available. And, while CRUSH does
+   not currently require on-screen rendering, it is possible that future
+   releases may add graphical functionalities that users may want to access
+   (but would not be available in headless mode!). 
+
+
+  
+
+
+#####################################################################
+3. Quickstart guide
+#####################################################################
+
+   For SOFIA/HAWC+ CRUSH will be launched exclusively from the DRP pipeline.
+   See the DRP documentation for details.
+
+   However, if you wish to run CRUSH manually, you may easily do so from the
+   command-line with 'hawc+' as your instrument. E.g.:
+
+     ./crush hawc+ [...]
+
+   See the main README for more details.  
+
+
+
+3.1. Locating scan data
+=======================
+
+
+   By file name/path
+   -----------------
+   The default method of locating files is by file name, which may specify 
+   either an absolute path, e.g.:
+
+     > crush hawc+ /data/hawc+/F0004_HC_IMA_0_HAWC_HWPC_RAW_105.fits
+
+   or it can be filename/path relative to 'datapath'
+ 
+     > crush hawc+ F0004_HC_IMA_0_HAWC_HWPC_RAW_105.fits
+
+   The two are equilalent assuming that 'datapath' is set to '/data/hawc+' in
+   the second case, e.g. in the user configuration file 
+   '~/.crush/hawc+/default.cfg', or on the command-line.
+
+
+   By flight and scan numbers
+   --------------------------
+   Often the simpler way of locating input files is by a combination of flight
+   and scan numbers. This is often shorter, and allows to specify multiple 
+   scans and ranges with more ease.
+
+   Scan lookup by flight and scan number requires you to set 'datapath' to 
+   point to the data directory. E.g., by placing the line in the user 
+   configuration for HAWC+ (~/.crush2/hawc+/default.cfg):
+
+     datapath /data/hawc+
+
+   Now, you may simply reduce scan 105 from flight 4 as:
+
+     > crush hawc+ -flight=4 105
+
+   You can also reduce multiple scans, from multiple flight together. E.g.:
+
+     > crush hawc+ -flight=4 104-105 129 -flight=5 13 16 33-35
+
+   The above will co-reduce 3 scans (104, 105, 129) from flight #4 with 5 scans
+   (13, 16, 33, 34, 35) from flight #5.
+
+
+ 
+
+3.2. A few common options to use with SOFIA/HAWC+
+=================================================
+
+   The DRP interface to CRUSH allows manually specifying reduction options,
+   which are passed to CRUSH verbetum as a single line. Each option in the
+   line begins with a dash '-', and should not contain white spaces, unless
+   these are enclosed in quotes. E.g. below is a valid option line, with
+   three options, one of which contains a white-space characters:
+
+     -faint -name="My HAWC+ image.fits" -projection=TAN
+
+   Below is a brief guide to a few useful options, grouped by functionality.
+
+
+   HAWVC+ specific options
+   -----------------------
+
+     -subarray=<list>	Restrict imaging to specific subarrays only. The 
+			argument is a comma separated list of subarray IDs
+			(R0, R1, T0, T1). E.g.:
+			
+			  > crush hawc+ -subarray=R0,T0 ...
+   
+
+   Source type options
+   -------------------
+   The default reduction is generally OK for sources smaller than the field of 
+   view (<FoV/2) with S/N in the 10--1000 range. Outside this range, the 
+   following options can be used to obtain better results:
+
+
+     -bright		Reduce very bright sources (S/N > 1000).
+
+     -faint		Reduce faint sources (S/N < 30).
+
+     -deep		Optimized for the extraction of deep-field point
+			sources. It is similar to '-faint' (above) but it
+			also spatially filters the map, removing all signals
+			above a few beam scales. Use only for very faint
+			point sources.
+    
+     -extended		Reduce extended sources (>FoV/2). The retention of
+			scales larger than ~FoV/2 come at a price of
+			increased map noise (on those scales). See Section
+			2.4 of the main README on the 'Recovery of Extended
+			Emission'. Can be used on its own (assuming the 
+			default brightness setting) or together with '-faint'
+			or '-bright'.
+
+     -sourcesize=X	Can be used together with '-extended' (above), to
+			tweak just how extended the source is expected to be.
+			The argument is an approximate source diameter in
+			arcseconds. E.g. '-sourcesize=300.0'. 
+   
+
+     -source.sign=Z	By default, CRUSH assumes that sources are seen in
+			emission (+), and biases the reduction as such to 
+			produce images without filter bowls or other negative 
+			reduction artifatcs. However, your object may contain 
+			absorption features, for which you may want ot bias in 
+			the opposite direction (-), or not bias at all (0).
+			Set the sign accordingly to +, -, or 0. E.g.
+			'-source.sign=+'
+
+
+   Output map options
+   ------------------
+   These options change how the output FITS image will be constructed. All 
+   these options have reasonable default values, and so you should only
+   use them to override those if needed.
+
+
+     -grid=X		Set the pixelization of the map to X arcseconds.
+			(The default pixelization is chosen to be be around
+			1/5th of a beam for each HAWC+ band).
+
+     -projection=XXX	Change the WCS spherical projection. The following
+                        projections are supported:
+
+                                SFL  --  Sanson-Flamsteed
+                                SIN  --  Slant Orthographic
+                                TAN  --  Gnomonic
+                                ZEA  --  Zenithal Equal Area
+                                MER  --  Mercator
+                                CAR  --  Plate-Carree
+                                AIT  --  Hammer-Aitoff
+                                GLS  --  Global Sinusoidal
+                                STG  --  Stereographic
+                                ARC  --  Zenithal Equidistant
+
+			The default is SFL (Sanson-Flamsteed). E.g. 
+			'-projection=TAN'.
+
+     -ecliptic		Produce maps in ecliptic coordinates, instead of the
+			default equatorial (same as '-system=ecliptic').
+
+     -galactic		Produce maps in galactic coordinates, instead of the
+			default equatorial (same as '-system=galactic').
+
+     -supergalactic	Produce maps in super-galactic coordinates, instead of 
+			the default equatorial (same as 
+			'-system=supergalactic').
+
+     -horizontal	Produce maps in horizontal coordinates, instead of
+			the default equatorial (same as '-system=horizontal').
+
+     -focalplane	Produce maps in focal-plane coordinates, instead of the
+			default equatorial (same as '-system=focalplane').
+
+     -final:smooth=X	Smooth the final map by a Gaussian with X arcsec FWHM.
+			Alternatively, X can be one of 'minimal', 'halfbeam'
+			'2/3beam' or 'beam'. E.g. '-smooth=8.0' or 
+			'-smooth=2/3beam'. To turn smoothing off completely
+			use '-final:forget=smooth'.
+
+
+
+
+
+
+#####################################################################
+4. Technical details for expert users
+#####################################################################
+
+From this point on, the documentation is of more technical nature, intended
+for expert users only.
+
+
+4.1. HAWC+ specific pixel divisions
+===================================
+
+For a general overview of channel divisions, please consult Section 3.
+(Correlated Signals) in the main README document.
+
+
+   polarrays	Pixels of the the R and T polarization arrays, respectively.
+		
+   subarrays	Pixels of each of the 4 HAWC+ subarrays (40x32). Each subarray
+		may contain correlated signals to themselves, e.g. do to
+		correlated thermal fluctuations on their wafers.
+
+   bias		Groupinf of pixels by TES bias line. Each subarray has 20
+		bias lines, each applied to two consecutive detectors rows.
+
+   mux		A grouping of pixels based on their SQUID multiplexing scheme
+		Each 4x8 pixel quadrant of the array is read out through the
+		same SQUID amplifier. Therefore, it is not suprizing that 
+		correlated signals are present on these quadrants. The
+		decorrelating on 'mux' groups is default in GISMO reductions
+
+   rows		The HAWC+ multiplexing scheme is implemented in the time-domain
+		Thus, the first channels of each SQUID are read out at the same
+		time, followed by the second channel in each group etc. Thus,
+		if there is any pickup of high-frequency signals in the
+		multiplexing scheme, one could expect some correlated signals
+		to be present on these multiplexer address lines. There
+		is little evidence for these, but the reduction of very faint
+		compact sources may benefit from the additional decorrelation
+		on these groups.
+		For HAWC+, these SQUID address lines are effectively the
+		detectors rows, hence the naming.
+
+   series	The grouping of pixels based on the series array through which
+		they are read out.
+
+
+
+4.2. Glossary of HAWC+ specific options
+=======================================
+
+   band=X		Set the observing band to A, B, C, D, or E. Normally,
+			the band setting is automatic through the SPECTEL1
+			fits keyword. However, setting the band manually may
+			be useful for polling band specific settings. E.g.
+
+			  > crush hawc+ -band=A -poll=beam
+
+			The above line will report the Gaussian FWHM beam size
+			(in arcsec) used when reducing band A (53um) data.
+   
+   biaslines            @Alias: 'correlated.bias'
+                        @Expert
+                        Decorrelate TES bias lines. All correlated modality 
+			suboptions apply.
+                        @See: 'correlated.<?>'
+
+
+   calibrated		Set this option when the reduction includes the final
+			calibration (opacities and other calibration
+			corrections) to produce Level 3 data. Otherwise, CRUSH
+			will produce Level 2 output.
+
+   filter=<wavelength>	@Expert
+			Sets the filter band to one of:
+
+			  53um, 62um, 89um, 155um, or 216um
+
+			Normally, the filter is set automatically to the 
+			correct value based on the 'SPECTEL1' SOFIA header key.
+			For this reason, it is not recommended, nor trivial
+			for the user to override this automatic behaviour.
+			Rather, the setting of this option is useful for
+			setting conditional settings, which depend on the
+			HAWC+ waveband.
+
+   fixjumps		@Expert
+			Enables ficing timestream blocks around flux jumps
+			in such a way that these will not cause problems.
+			@See: 'jumpdata'
+
+   flight=N             Set the flight number for locating data files using
+                        scan numbers only. Remember to set 'datapath' also to
+                        specify the folder where scan files are stored.
+                        @See: 'datapath'
+
+   jumpdata=<path>	@Expert
+			@Since: 2.40
+			Specify the file containing the residual pixel jump
+			counts when flux jumps occur. The input file follows
+			the format by Darren with 3 columns: (1) The character 
+			'C' specifying that the value is per column, (2)
+			the column index (starting from 0), and (3) the
+			residual flux jump in readout counts.
+			@See: 'fixjumps'
+
+   mux			@Alias: 'correlated.mux'
+			@Expert
+			Decorrelate on SQUID muxes. All correlated modality
+			suboptions apply.
+			@See: 'correlated.<?>'
+
+   offset.R1=dx,dy
+   offset.R2=dx,dy
+   offset.T1=dx,dy
+   offset.T2=dx,dy	@Expert
+			Specify the subarray offset (as dx,dy arcseconds in
+			the focal plane) from their nominal positions, for
+			both the first and second subarrays of the R and T
+			polarization arrays. For example, specifying zero
+			offsets for all (default) describes the focal plane
+			where R and T are perfectly aligned relative to
+			one another, and the two subarrays of each form a 
+			single seamless polarization array.
+
+   pixelsize=<a>[,<b>]	@Expert
+			Specify the size of the pixels for calculating pixel 
+			positions based on a regular grid. A better way of 
+			setting the pixel positions is through the 'rcp' 
+			option. 
+			The argument can be either a lateral size (in arcsec) 
+			for square pixels, or two comma separated sizes for 
+			rectangular pixels.
+			@See: 'rcp', 'rotation', 'pcenter'
+
+   pols			@Alias: 'correlated.polarrays'
+			@Expert
+			Decorrelate each polarization array separately. All 
+			correlated modality sub-options apply.
+			@See: 'correlated.<?>'
+
+
+   series		@Alias: 'correlated.series'
+			@Expert
+			Decorrelate on the series arrays. It seems that the
+			series array (at 4K) is sensitive to some level of
+			thermal fluctuation, and enabling decorrelation on
+			these can improve imaging quality.
+
+   rotation=<deg>	@Expert
+			Specify the array rotation (in degrees), when pixel 
+			positions are calculated from a regular grid. A better 
+			way is to specify pixel positions via the 'rcp' option 
+			their rotation via 'rcp.rotate'.
+			@See: 'rcp', 'rcp.rotate', 'pixelsize'
+
+   rotation.T=<deg>	@Expert
+			Specify the rotation of the T polarization subarray
+			relative to the R subarray.
+
+   rows			@Alias: 'correlated.rows'
+			@Expert
+			Decorrelate along the 'row' direction of the arrays,
+			the same as SQUID address lines. All correlated 
+			modality sub-options apply.
+			@See: 'correlated.<?>'
+
+   rtoc			@Expert
+			@Since: 2.33
+			Instruct crush to reference maps to Real-Time Object 
+			Coordinates (RTOC) for sidereal and non-sidereal
+			sources alike. Normally, sidereal object coordinates
+			are determined via the header keywords OBSRA/OBSDEC or
+			OBJRA/OBJDEC. However, these were not always filled
+			correctly during the 2016 October flights, so this
+			option provides a workaround for those scans.
+
+   subarray=<list>	@Expert
+			Restrict the reduction only to the subarrays listed.
+			The argument is a comma-separated list of subarray 
+			codes: R1, R2, T1, T2 or R (= R1,R2) or T (= T1,T2). 
+			E.g.:
+
+			  > crush hawc+ -subarray=R1,T1 [...]
+
+   write.flatfield[=path]	@Expert
+				Write a DRP flatfield FITS file, to be used by
+			the chop-nod pipeline. The optional argument can 
+			specify the FITS file's name. Otherwise, a default
+			name is used, containing the scan's ID, and placed in
+			the the directory specified by 'outpath'.
+			The file format is specified by Marc Berthoud.
+			@See: 'outpath'
+
+
+4.3. HAWC+ specific log quantities
+==================================
+
+  Coming soon...
+
+
+
+
+
+------------------------------------------------------------------------------
+Copyright (C)2016 -- Attila Kovacs <attila[AT]sigmyne.com>
+
+

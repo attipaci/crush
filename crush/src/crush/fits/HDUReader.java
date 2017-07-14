@@ -23,7 +23,7 @@
 package crush.fits;
 
 import crush.CRUSH;
-import jnum.Parallel;
+import jnum.parallel.ParallelTask;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
@@ -49,7 +49,7 @@ public abstract class HDUReader {
 	}
 
 	
-	public abstract class Reader extends Parallel<Void> {
+	public abstract class Reader extends ParallelTask<Void> {
 		@Override
 		public void processChunk(int i, int threadCount) throws Exception {
 			final int frames = hdu.getNRows();

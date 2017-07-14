@@ -30,7 +30,6 @@ import jnum.astro.JulianEpoch;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
-import nom.tam.util.Cursor;
 
 public class SofiaTelescopeData extends SofiaData {
 	public String telescope = "SOFIA 2.5m";
@@ -157,66 +156,66 @@ public class SofiaTelescopeData extends SofiaData {
 	}
 	
 	@Override
-	public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-		//cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Telescope Data ------>", false));
+	public void editHeader(Header header) throws HeaderCardException {
+		//header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Telescope Data ------>", false));
 		
-		if(telescope != null) cursor.add(new HeaderCard("TELESCOP", telescope, "observatory name."));
-		if(telConfig != null) cursor.add(new HeaderCard("TELCONF", telConfig, "telescope configuration."));
+		if(telescope != null) header.addLine(new HeaderCard("TELESCOP", telescope, "observatory name."));
+		if(telConfig != null) header.addLine(new HeaderCard("TELCONF", telConfig, "telescope configuration."));
 		
 		if(boresightEquatorial != null) {
-			cursor.add(new HeaderCard("TELRA", boresightEquatorial.RA() / Unit.hourAngle, "(hour) Boresight RA."));
-			cursor.add(new HeaderCard("TELDEC", boresightEquatorial.DEC() / Unit.deg, "(deg) Boresight DEC."));
-			cursor.add(new HeaderCard("TELEQUI", boresightEquatorial.epoch.getYear(), "(yr) Boresight epoch."));
+			header.addLine(new HeaderCard("TELRA", boresightEquatorial.RA() / Unit.hourAngle, "(hour) Boresight RA."));
+			header.addLine(new HeaderCard("TELDEC", boresightEquatorial.DEC() / Unit.deg, "(deg) Boresight DEC."));
+			header.addLine(new HeaderCard("TELEQUI", boresightEquatorial.epoch.getYear(), "(yr) Boresight epoch."));
 		}
 		
-		if(!Double.isNaN(VPA)) cursor.add(new HeaderCard("TELVPA", VPA / Unit.deg, "(deg) Boresight position angle."));
+		if(!Double.isNaN(VPA)) header.addLine(new HeaderCard("TELVPA", VPA / Unit.deg, "(deg) Boresight position angle."));
 		
-		if(lastRewind != null) cursor.add(new HeaderCard("LASTREW", lastRewind, "UTC time of last telescope rewind."));
+		if(lastRewind != null) header.addLine(new HeaderCard("LASTREW", lastRewind, "UTC time of last telescope rewind."));
 		
-		if(!Double.isNaN(focusT.start)) cursor.add(new HeaderCard("FOCUS_ST", focusT.start / Unit.um, "(um) Focus T value at start."));
-		if(!Double.isNaN(focusT.end)) cursor.add(new HeaderCard("FOCUS_EN", focusT.end / Unit.um, "(um) Focus T value at end."));
+		if(!Double.isNaN(focusT.start)) header.addLine(new HeaderCard("FOCUS_ST", focusT.start / Unit.um, "(um) Focus T value at start."));
+		if(!Double.isNaN(focusT.end)) header.addLine(new HeaderCard("FOCUS_EN", focusT.end / Unit.um, "(um) Focus T value at end."));
 		
-		if(!Double.isNaN(relElevation)) cursor.add(new HeaderCard("TELEL", relElevation / Unit.deg, "(deg) Telescope elevation in cavity."));
-		if(!Double.isNaN(crossElevation)) cursor.add(new HeaderCard("TELXEL", crossElevation / Unit.deg, "(deg) Telescope cross elevation in cavity."));
-		if(!Double.isNaN(lineOfSightAngle)) cursor.add(new HeaderCard("TELLOS", lineOfSightAngle / Unit.deg, "(deg) Telescope line-of-sight angle in cavity."));
+		if(!Double.isNaN(relElevation)) header.addLine(new HeaderCard("TELEL", relElevation / Unit.deg, "(deg) Telescope elevation in cavity."));
+		if(!Double.isNaN(crossElevation)) header.addLine(new HeaderCard("TELXEL", crossElevation / Unit.deg, "(deg) Telescope cross elevation in cavity."));
+		if(!Double.isNaN(lineOfSightAngle)) header.addLine(new HeaderCard("TELLOS", lineOfSightAngle / Unit.deg, "(deg) Telescope line-of-sight angle in cavity."));
 	
-		if(!Double.isNaN(coarseElevation)) cursor.add(new HeaderCard("COARSEEL", coarseElevation / Unit.deg, "(deg) Coarse drive elevation."));
-		if(!Double.isNaN(fineDriveElevation)) cursor.add(new HeaderCard("FD_EL", fineDriveElevation / Unit.deg, "(deg) Fine drive elevation."));
-		if(!Double.isNaN(fineDriveCrossElevation)) cursor.add(new HeaderCard("FD_XEL", fineDriveCrossElevation / Unit.deg, "(deg) Fine drive cross elevation."));
-		if(!Double.isNaN(fineDriveLOS)) cursor.add(new HeaderCard("FD_LOS", fineDriveLOS / Unit.deg, "(deg) Fine drive line-of-sight angle."));
+		if(!Double.isNaN(coarseElevation)) header.addLine(new HeaderCard("COARSEEL", coarseElevation / Unit.deg, "(deg) Coarse drive elevation."));
+		if(!Double.isNaN(fineDriveElevation)) header.addLine(new HeaderCard("FD_EL", fineDriveElevation / Unit.deg, "(deg) Fine drive elevation."));
+		if(!Double.isNaN(fineDriveCrossElevation)) header.addLine(new HeaderCard("FD_XEL", fineDriveCrossElevation / Unit.deg, "(deg) Fine drive cross elevation."));
+		if(!Double.isNaN(fineDriveLOS)) header.addLine(new HeaderCard("FD_LOS", fineDriveLOS / Unit.deg, "(deg) Fine drive line-of-sight angle."));
 	
-		if(tascuStatus != null) cursor.add(new HeaderCard("TSC_STAT", tascuStatus, "TASCU system status at end."));
-		if(fbcStatus != null) cursor.add(new HeaderCard("FBC_STAT", fbcStatus, "flexible body compensation system status at end."));
+		if(tascuStatus != null) header.addLine(new HeaderCard("TSC_STAT", tascuStatus, "TASCU system status at end."));
+		if(fbcStatus != null) header.addLine(new HeaderCard("FBC_STAT", fbcStatus, "flexible body compensation system status at end."));
 	
 		if(requestedEquatorial != null) {
-			cursor.add(new HeaderCard("OBSRA", requestedEquatorial.RA() / Unit.hourAngle, "(hour) Requested RA."));
-			cursor.add(new HeaderCard("OBSDEC", requestedEquatorial.DEC() / Unit.deg, "(deg) Requested DEC."));
-			cursor.add(new HeaderCard("EQUINOX", epoch.getYear(), "(yr) The coordinate epoch."));
+			header.addLine(new HeaderCard("OBSRA", requestedEquatorial.RA() / Unit.hourAngle, "(hour) Requested RA."));
+			header.addLine(new HeaderCard("OBSDEC", requestedEquatorial.DEC() / Unit.deg, "(deg) Requested DEC."));
+			header.addLine(new HeaderCard("EQUINOX", epoch.getYear(), "(yr) The coordinate epoch."));
 		}
 		
-		if(!Double.isNaN(zenithAngle.start)) cursor.add(new HeaderCard("ZA_START", zenithAngle.start / Unit.deg, "(deg) Zenith angle at start."));
-		if(!Double.isNaN(zenithAngle.end)) cursor.add(new HeaderCard("ZA_END", zenithAngle.end / Unit.deg, "(deg) Zenith angle at end."));
+		if(!Double.isNaN(zenithAngle.start)) header.addLine(new HeaderCard("ZA_START", zenithAngle.start / Unit.deg, "(deg) Zenith angle at start."));
+		if(!Double.isNaN(zenithAngle.end)) header.addLine(new HeaderCard("ZA_END", zenithAngle.end / Unit.deg, "(deg) Zenith angle at end."));
 		
-		if(!Double.isNaN(sunAngle)) cursor.add(new HeaderCard("SUNANGL", sunAngle / Unit.deg, "(deg) Angle btw tel. pointing and Sun."));
-		if(!Double.isNaN(moonAngle)) cursor.add(new HeaderCard("MOONANGL", moonAngle / Unit.deg, "(deg) Angle btw tel. pointing and Moon ."));
+		if(!Double.isNaN(sunAngle)) header.addLine(new HeaderCard("SUNANGL", sunAngle / Unit.deg, "(deg) Angle btw tel. pointing and Sun."));
+		if(!Double.isNaN(moonAngle)) header.addLine(new HeaderCard("MOONANGL", moonAngle / Unit.deg, "(deg) Angle btw tel. pointing and Moon ."));
 		
-		if(userCoordinateSystem != null) cursor.add(new HeaderCard("USRCRDSY", userCoordinateSystem, "User coordinate system name."));
-		if(userReferenceSystem != null) cursor.add(new HeaderCard("USRREFCR", userReferenceSystem, "User reference system name."));
+		if(userCoordinateSystem != null) header.addLine(new HeaderCard("USRCRDSY", userCoordinateSystem, "User coordinate system name."));
+		if(userReferenceSystem != null) header.addLine(new HeaderCard("USRREFCR", userReferenceSystem, "User reference system name."));
 		
-		if(!Double.isNaN(userRefLon)) cursor.add(new HeaderCard("USRORIGX", userRefLon / Unit.deg, "(deg) user origin LON in ref. sys."));
-		if(!Double.isNaN(userRefLat)) cursor.add(new HeaderCard("USRORIGY", userRefLat / Unit.deg, "(deg) user origin LAT in ref. sys."));
-		if(!Double.isNaN(userRefAngle)) cursor.add(new HeaderCard("USRCRROT", userRefAngle / Unit.deg, "(deg) rotation of user system to reference."));
+		if(!Double.isNaN(userRefLon)) header.addLine(new HeaderCard("USRORIGX", userRefLon / Unit.deg, "(deg) user origin LON in ref. sys."));
+		if(!Double.isNaN(userRefLat)) header.addLine(new HeaderCard("USRORIGY", userRefLat / Unit.deg, "(deg) user origin LAT in ref. sys."));
+		if(!Double.isNaN(userRefAngle)) header.addLine(new HeaderCard("USRCRROT", userRefAngle / Unit.deg, "(deg) rotation of user system to reference."));
 
-		if(!Double.isNaN(userLongitude)) cursor.add(new HeaderCard("USRX", userLongitude / Unit.deg, "(deg) Object longitude in user system."));
-		if(!Double.isNaN(userLatitude)) cursor.add(new HeaderCard("USRY", userLatitude / Unit.deg, "(deg) Object latitude in user system."));
-		if(!Double.isNaN(userEquinox)) cursor.add(new HeaderCard("USREQNX", userEquinox, "(yr) User coordinate epoch."));
+		if(!Double.isNaN(userLongitude)) header.addLine(new HeaderCard("USRX", userLongitude / Unit.deg, "(deg) Object longitude in user system."));
+		if(!Double.isNaN(userLatitude)) header.addLine(new HeaderCard("USRY", userLatitude / Unit.deg, "(deg) Object latitude in user system."));
+		if(!Double.isNaN(userEquinox)) header.addLine(new HeaderCard("USREQNX", userEquinox, "(yr) User coordinate epoch."));
 		
-		if(!Double.isNaN(vHelio)) cursor.add(new HeaderCard("HELIOCOR", vHelio, "(km/s) Heliocentric velocity correction."));
-		if(!Double.isNaN(vLSR)) cursor.add(new HeaderCard("LSR_COR", vLSR, "(km/s) LSR velocity correction."));
+		if(!Double.isNaN(vHelio)) header.addLine(new HeaderCard("HELIOCOR", vHelio, "(km/s) Heliocentric velocity correction."));
+		if(!Double.isNaN(vLSR)) header.addLine(new HeaderCard("LSR_COR", vLSR, "(km/s) LSR velocity correction."));
 		
 		if(trackingMode != null) {
-			cursor.add(new HeaderCard("TRACMODE", trackingMode, "SOFIA tracking mode."));
-			cursor.add(new HeaderCard("TRACERR", hasTrackingError, "Was there a tracking error during the scan?"));
+			header.addLine(new HeaderCard("TRACMODE", trackingMode, "SOFIA tracking mode."));
+			header.addLine(new HeaderCard("TRACERR", hasTrackingError, "Was there a tracking error during the scan?"));
 		}
 		
 	}

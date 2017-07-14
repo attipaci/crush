@@ -27,7 +27,9 @@ package crush.telescope.sofia;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 import nom.tam.fits.BasicHDU;
@@ -56,6 +58,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     public SofiaInstrumentData instrumentData;
     public SofiaArrayData array;
 
+    Set<String> configFiles = new HashSet<String>();
     Vector<String> history = new Vector<String>();
 
     static {
@@ -91,6 +94,10 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     @Override
     public void registerConfigFile(String fileName) {
         super.registerConfigFile(fileName);
+        
+        if(configFiles.contains(fileName)) return; 
+        
+        configFiles.add(fileName);
         history.add("AUX: " + fileName); 
     }
 
@@ -127,33 +134,33 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     }
 
 
-    public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-        if(instrumentData != null) instrumentData.editHeader(header, cursor);
-        if(array != null) array.editHeader(header, cursor);
+    public void editHeader(Header header) throws HeaderCardException {
+        if(instrumentData != null) instrumentData.editHeader(header);
+        if(array != null) array.editHeader(header);
 
         //if(hasOption("pixeldata")) 
-        //	cursor.add(new HeaderCard("FLATFILE", option("pixeldata").getValue(), "pixel data file."));
+        //	header.addLine(new HeaderCard("FLATFILE", option("pixeldata").getValue(), "pixel data file."));
 
     }
 
     @Override
-    public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-        super.editImageHeader(scans, header, cursor);	
+    public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
+        super.editImageHeader(scans, header);	
 
         int level = hasOption("calibrated") ? 3 : 2;
         // TODO if multiple mission IDs, then Level 4...
 
         // Add SOFIA processing keys
-        cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Data Processing Keys ------>", false));
-        cursor.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
-        cursor.add(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
-        cursor.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getVersion(), "Software that produced this file."));
-        cursor.add(new HeaderCard("PIPEVERS", "crush v" + CRUSH.getFullVersion(), "Full software version information.")); 
-        cursor.add(new HeaderCard("PRODTYPE", "CRUSH-IMAGE", "Type of product produced by the software."));
-        cursor.add(new HeaderCard("DATAQUAL", getQualityString(scans), "Lowest quality input scan."));
+        header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Data Processing Keys ------>", false));
+        header.addLine(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
+        header.addLine(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
+        header.addLine(new HeaderCard("PIPELINE", "crush v" + CRUSH.getVersion(), "Software that produced this file."));
+        header.addLine(new HeaderCard("PIPEVERS", "crush v" + CRUSH.getFullVersion(), "Full software version information.")); 
+        header.addLine(new HeaderCard("PRODTYPE", "CRUSH-IMAGE", "Type of product produced by the software."));
+        header.addLine(new HeaderCard("DATAQUAL", getQualityString(scans), "Lowest quality input scan."));
 
         // Add required keys and prior history
-        cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Additional Required Primary Header Keys ------>", false));
+        header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Additional Required Primary Header Keys ------>", false));
 
         // TODO workaround for updates...
         // -----------------------------------------------------------------------------------------------------
@@ -161,8 +168,8 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         ((SofiaScan<?,?>) scans.get(0)).addRequiredPrimaryHeaderKeysTo(required);
         updateMultiScanKeys(scans, required);
 
-        Cursor<String, HeaderCard> c2 = required.iterator();
-        while(c2.hasNext()) cursor.add(c2.next());
+        Cursor<String, HeaderCard> c = required.iterator();
+        while(c.hasNext()) header.addLine(c.next());
         // -----------------------------------------------------------------------------------------------------	
     }	
 
@@ -261,18 +268,18 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     }
 
     @Override
-    public void addHistory(Cursor<String, HeaderCard> cursor, List<Scan<?,?>> scans) throws HeaderCardException {	
-        super.addHistory(cursor, scans);			
+    public void addHistory(Header header, List<Scan<?,?>> scans) throws HeaderCardException {	
+        super.addHistory(header, scans);			
 
         // Add auxiliary file information
-        try { FitsToolkit.addHistory(cursor, " PWD: " + new File(".").getCanonicalPath()); }
+        try { FitsToolkit.addHistory(header, " PWD: " + new File(".").getCanonicalPath()); }
         catch(Exception e) { warning("Could not determine PWD for HISTORY entry..."); }
 
-        for(int i=0; i<history.size(); i++) FitsToolkit.addHistory(cursor, " " + history.get(i));
+        for(int i=0; i<history.size(); i++) FitsToolkit.addHistory(header, " " + history.get(i));
 
         // Add obs-IDs for all input scans...
         if(scans != null) for(int i=0; i<scans.size(); i++)
-            FitsToolkit.addHistory(cursor, " OBS-ID[" + (i+1) + "]: " + scans.get(i).getID());	
+            FitsToolkit.addHistory(header, " OBS-ID[" + (i+1) + "]: " + scans.get(i).getID());	
     }
 
     @Override

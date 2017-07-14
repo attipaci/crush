@@ -56,6 +56,7 @@ public class Mode implements Serializable {
     public int gainType = Instrument.GAINS_BIDIRECTIONAL;
 
     private static int counter = 0;
+    
     private float[] gain;
 
     public Mode() {
@@ -104,6 +105,8 @@ public class Mode implements Serializable {
     public void setChannels(ChannelGroup<?> group) {
         channels = group;
         name = group.getName();
+        gain = new float[channels.size()];
+        Arrays.fill(gain, 1.0F);
         if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.setChannels(group);
     }
 
@@ -121,24 +124,27 @@ public class Mode implements Serializable {
         return getGains(true);
     }
 
+ 
+    public void applyProviderGains(boolean validate) throws Exception {
+        if(validate) gainProvider.validate(this);
+
+        for(int c=channels.size(); --c >= 0; ) {
+            gain[c] = (float) gainProvider.getGain(channels.get(c));
+            if(Float.isNaN(gain[c])) gain[c] = 0.0F;
+        }
+    }
+    
+    /**
+     * Returns a temporarily valid gain array for immediate use. The same array is updated every time
+     * getGains() is called, hence the stored values may change. 
+     * 
+     * @param validate
+     * @return
+     * @throws Exception
+     */
     public float[] getGains(boolean validate) throws Exception {
-        if(gainProvider == null) {
-            if(gain == null) {
-                gain = new float[channels.size()];
-                Arrays.fill(gain, 1.0F);
-            }
-            return gain;
-        }
-        else {
-            if(validate) gainProvider.validate(this);
-            if(gain == null) gain = new float[channels.size()];
-            if(gain.length != channels.size()) gain = new float[channels.size()];
-            for(int c=channels.size(); --c >= 0; ) {
-                gain[c] = (float) gainProvider.getGain(channels.get(c));
-                if(Float.isNaN(gain[c])) gain[c] = 0.0F;
-            }
-            return gain;
-        }
+        if(gainProvider != null) applyProviderGains(validate);
+        return gain;
     }
 
     public final boolean setGains(float[] gain) throws Exception {

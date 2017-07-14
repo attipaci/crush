@@ -32,13 +32,13 @@ import crush.polarization.PolarModulation;
 import crush.telescope.apex.APEXScan;
 import jnum.Constant;
 import jnum.ExtraMath;
-import jnum.Parallel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.Interpolator;
 import jnum.data.SimpleInterpolator;
 import jnum.data.WeightedPoint;
 import jnum.math.Vector2D;
+import jnum.parallel.ParallelTask;
 
 import java.util.*;
 
@@ -250,7 +250,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 			protected void postProcess() {
 				super.postProcess();
 				
-				for(Parallel<float[]> task : getWorkers()) {
+				for(ParallelTask<float[]> task : getWorkers()) {
 					float[] localFrameParms = task.getLocalResult();
 					parms.addForFrames(localFrameParms);
 					recycle(localFrameParms);

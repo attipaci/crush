@@ -139,7 +139,7 @@ public class APEXChoppedPhotometry extends Photometry {
 		        + "more accurately.");
 		
 		
-		if(scans.size() > 1) {
+		if(numberOfScans() > 1) {
 			info("Scan-to-scan scatter is measured by the reduced chi value. When |rChi| > 1, "
 			        + "you can multiply the quoted uncertainty by it to arrive at a more robust estimate "
 			        + "of the total measurement uncertainty.");

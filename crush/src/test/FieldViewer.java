@@ -8,9 +8,9 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 
 import jnum.Util;
-import jnum.data.CartesianGrid2D;
-import jnum.data.Grid2D;
-import jnum.data.GridImage2D;
+import jnum.data.image.CartesianGrid2D;
+import jnum.data.image.Grid2D;
+import jnum.data.image.GridImage2D;
 import jnum.math.Coordinate2D;
 import jnum.math.Range;
 import jnum.math.Vector2D;
@@ -95,7 +95,7 @@ public class FieldViewer {
 			int i = (int) Math.round(index.x());
 			int j = (int) Math.round(index.y());
 				
-			image.setValue(i, j, image.getValue(i, j) + values.get(key));
+			image.set(i, j, image.get(i, j) + values.get(key));
 			image.unflag(i, j);
 			n[i][j]++;
 		}

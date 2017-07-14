@@ -163,7 +163,7 @@ public class MultiFilter extends VariedFilter {
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		Arrays.fill(filtered, 0.0F);
 		
-		integration.getSequentialFFT().real2Amplitude(data);	
+		integration.getFFT().real2Amplitude(data);	
 		data[0] = 0.0F;
 		
 		// Apply the filters sequentially...
@@ -199,7 +199,7 @@ public class MultiFilter extends VariedFilter {
 		}
 		
 		// Convert to rejected signal...
-		integration.getSequentialFFT().amplitude2Real(filtered);
+		integration.getFFT().amplitude2Real(filtered);
 		
 		// Remove the DC component...
 		if(isPedantic) levelForChannel(channel, filtered);

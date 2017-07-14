@@ -35,8 +35,8 @@ import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
-import jnum.data.Asymmetry2D;
 import jnum.data.DataPoint;
+import jnum.data.image.Asymmetry2D;
 import jnum.math.Offset2D;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
@@ -705,17 +705,16 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		Offset2D relative = getNativePointingIncrement(pointing);
 		Vector2D nasmyth = getNasmythOffset(relative);
 		
-		double sizeUnit = instrument.getSizeUnitValue();
-		String sizeName = instrument.getSizeName();
+		Unit sizeUnit = instrument.getSizeUnit();
 	
 		// X and Y are absolute pointing offsets including the static pointing model...
 		Vector2D obs = observingModel.getCorrection(horizontal, (getMJD() % 1.0) * Unit.day, ambientT);
 		if(pointingCorrection != null) obs.add(pointingCorrection);
 			
-		data.new Entry("X", (relative.x() + obs.x()) / sizeUnit, sizeName);
-		data.new Entry("Y", (relative.y() + obs.y()) / sizeUnit, sizeName);
-		data.new Entry("NasX", (instrument.nasmythOffset.x() + nasmyth.x()) / sizeUnit, sizeName);
-		data.new Entry("NasY", (instrument.nasmythOffset.y() + nasmyth.y()) / sizeUnit, sizeName);
+		data.new Entry("X", (relative.x() + obs.x()), sizeUnit);
+		data.new Entry("Y", (relative.y() + obs.y()), sizeUnit);
+		data.new Entry("NasX", (instrument.nasmythOffset.x() + nasmyth.x()), sizeUnit);
+		data.new Entry("NasY", (instrument.nasmythOffset.y() + nasmyth.y()), sizeUnit);
 		return data;
 	}
 	

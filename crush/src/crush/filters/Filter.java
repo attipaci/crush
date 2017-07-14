@@ -33,8 +33,8 @@ import crush.Integration;
 import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
-import jnum.Parallel;
 import jnum.Util;
+import jnum.parallel.ParallelTask;
 
 
 public abstract class Filter implements Serializable, Cloneable {
@@ -186,7 +186,7 @@ public abstract class Filter implements Serializable, Cloneable {
 			protected void postProcess() {
 				super.postProcess();
 				
-				for(Parallel<float[]> task : getWorkers()) {
+				for(ParallelTask<float[]> task : getWorkers()) {
 					float[] localFrameParms = task.getLocalResult();
 					parms.addForFrames(localFrameParms);
 					Integration.recycle(localFrameParms);
@@ -302,7 +302,7 @@ public abstract class Filter implements Serializable, Cloneable {
 		// Pad with zeroes as necessary...
 		Arrays.fill(data, integration.size(), data.length, 0.0F);
 		
-		integration.getSequentialFFT().real2Amplitude(data);
+		integration.getFFT().real2Amplitude(data);
 		
 		updateProfile(channel);
 		
@@ -315,7 +315,7 @@ public abstract class Filter implements Serializable, Cloneable {
 			data[i++] *= rejection; 	
 		}
 		
-		integration.getSequentialFFT().amplitude2Real(data);
+		integration.getFFT().amplitude2Real(data);
 	}
 	
 	// Convert data into a rejected signal (unlevelled)

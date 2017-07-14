@@ -71,7 +71,7 @@ public abstract class Photometry extends SourceModel {
     @Override
     public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
         super.createFrom(collection);
-        Scan<?,?> firstScan = scans.get(0);
+        Scan<?,?> firstScan = getFirstScan();
         sourceName = firstScan.getSourceName();
         equatorial = firstScan.equatorial;
     }
@@ -82,7 +82,7 @@ public abstract class Photometry extends SourceModel {
     }
 
     @Override
-    public void add(SourceModel model, double weight) {
+    public void addModel(SourceModel model, double weight) {
         Photometry other = (Photometry) model;
         double renorm = getInstrument().janskyPerBeam() / other.getInstrument().janskyPerBeam();
         for(int c=flux.length; --c >= 0; ) {
@@ -91,7 +91,6 @@ public abstract class Photometry extends SourceModel {
             flux[c].average(F);
         }
         sourceFlux.average(other.sourceFlux);
-        if(other.sourceFlux.weight() > 0.0) integrationTime += other.integrationTime;
     }
 
     @Override
@@ -130,29 +129,31 @@ public abstract class Photometry extends SourceModel {
     }
 
     @Override
-    public void reset(boolean clearContent) {
-        super.reset(clearContent);
-        if(clearContent) {
-            if(flux != null) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) flux[i].noData();
-            sourceFlux.noData();
-        }
+    public void resetProcessing() {
+        super.resetProcessing();
         integrationTime = 0.0;
+    }
+    
+    @Override
+    public void clearContent() {
+        if(flux != null) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) flux[i].noData();
+        sourceFlux.noData();
     }
 
     public double getReducedChi2() {
-        if(scans.size() < 2) return Double.NaN;
+        if(numberOfScans() < 2) return Double.NaN;
 
         double mean = sourceFlux.value() / getInstrument().janskyPerBeam();
         double chi2 = 0.0;
 
 
-        for(Scan<?,?> scan : scans) {
+        for(Scan<?,?> scan : getScans()) {
             DataPoint F = scanFluxes.get(scan);			
             double dev = (F.value() - mean) / F.rms();
             chi2 += dev * dev;
         }
 
-        chi2 /= scans.size() - 1;
+        chi2 /= numberOfScans() - 1;
         return chi2;
     }
 
@@ -238,11 +239,11 @@ public abstract class Photometry extends SourceModel {
         out.println();
         out.println();
 
-        if(scanFluxes != null && scans.size() > 1) {
+        if(scanFluxes != null && numberOfScans() > 1) {
             out.println("# Photometry breakdown by scan:");
             out.println("# =============================================================================");
-            for(int i=0; i<scans.size(); i++) {
-                Scan<?,?> scan = scans.get(i);
+            for(int i=0; i<numberOfScans(); i++) {
+                Scan<?,?> scan = getScan(i);
                 DataPoint flux = scanFluxes.get(scan);	
                 out.println(scan.getID() + "\t" + (flux.weight() > 0.0 ? flux + " Jy/beam" : "---"));
             }
@@ -255,7 +256,7 @@ public abstract class Photometry extends SourceModel {
 
         CRUSH.notify(this, "Written " + fileName + "");
 
-        if(scans.size() > 1) gnuplot(coreName, fileName);
+        if(numberOfScans() > 1) gnuplot(coreName, fileName);
 
     }
 
@@ -321,14 +322,13 @@ public abstract class Photometry extends SourceModel {
         plot.println("set term unknown");
 
         plot.print("set xtics rotate by 45" + " right (");
-        for(int i=0; i<scans.size(); i++) {
-            Scan<?,?> scan = scans.get(i);
+        for(int i=0; i<numberOfScans(); i++) {
             if(i > 0) plot.print(", ");
-            plot.print("'" + scan.getID() + "' " + i);
+            plot.print("'" + getScan(i).getID() + "' " + i);
         }
         plot.println(")");
 
-        plot.println("set xra [-0.5:" + (scans.size() - 0.5) + "]");
+        plot.println("set xra [-0.5:" + (numberOfScans() - 0.5) + "]");
 
         plot.println("set label 1 'Produced by CRUSH " + CRUSH.getFullVersion() + "' at graph 0.99,0.04 right font ',12'");
 
@@ -367,11 +367,13 @@ public abstract class Photometry extends SourceModel {
 
         // Adjust the font size to fit the scans (as much as possible)...
         // Max ~70 scans will fit on the plot with the smallest font...
-        if(scans.size() > 54) fontSize = 8;
-        else if(scans.size() > 45) fontSize = 10;
-        else if(scans.size() > 39) fontSize = 12; 
-        else if(scans.size() > 34) fontSize = 14;
-        else if(scans.size() > 30) fontSize = 16;
+        int N = numberOfScans();
+        
+        if(N > 54) fontSize = 8;
+        else if(N > 45) fontSize = 10;
+        else if(N > 39) fontSize = 12; 
+        else if(N > 34) fontSize = 14;
+        else if(N > 30) fontSize = 16;
 
         plot.println("set term post eps enh col sol " + fontSize);
         plot.println("set out '" + coreName + ".eps'");

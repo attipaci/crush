@@ -127,8 +127,15 @@ public class DRPMessenger extends Thread {
 		queue.clear();
 	}
 	
+	// prevent the creation of new DRP messages...
+	private void disable() {
+	    CRUSH.removeReporter(DRP_REPORTER_ID); 
+	}
 	
 	public void shutdown() {  
+	    disable();
+	    
+	    // Give it some time to send any queued messages...
 	    try { drain(DEFAULT_TIMEOUT_MILLIS); }
 	    catch(InterruptedException e) {}
 	    
@@ -138,7 +145,7 @@ public class DRPMessenger extends Thread {
 		catch(InterruptedException e) {}	
 	}
 	
-	private void drain(int timeoutMillis) throws InterruptedException {
+	private synchronized void drain(int timeoutMillis) throws InterruptedException {
 	    while(--timeoutMillis >= 0) {
             if(queue.isEmpty()) return;
             else wait(1);
@@ -153,17 +160,14 @@ public class DRPMessenger extends Thread {
 		
 		try { while(!isInterrupted()) send(queue.take()); }
 		catch(IOException e) { 
-		    CRUSH.warning(this, "DRP messaging: " + e.getMessage());     
+		    CRUSH.warning(this, "DRP I/O error: " + e.getMessage());     
 		}		
 		catch(InterruptedException e) {
-		    CRUSH.removeReporter(DRP_REPORTER_ID); // prevent the creation of new DRP messages...
-			if(!queue.isEmpty()) CRUSH.info(this, "Sending queued DRP messages...");
-			try { while(!queue.isEmpty()) send(queue.take()); }
-			catch(InterruptedException e2) { CRUSH.warning(this, "DRP queue cleanup interrupted.");}
-			catch(IOException e2) { CRUSH.warning(this, "DRP messaging: " + e2.getMessage()); }
+		   CRUSH.debug(this, "Interrupted.");
 		}
+		catch(Exception e) { CRUSH.error(this, e); }
 		
-		CRUSH.removeReporter(DRP_REPORTER_ID);
+		disable();
 		
 		CRUSH.info(this, "DRP messaging stopped.");
 		

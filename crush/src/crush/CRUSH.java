@@ -33,19 +33,19 @@ import java.util.logging.Logger;
 
 import jnum.Configurator;
 import jnum.LockedException;
-import jnum.Parallel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.astro.LeapSeconds;
 import jnum.io.fits.FitsToolkit;
+import jnum.parallel.ParallelTask;
 import jnum.reporting.BasicMessaging;
 import jnum.reporting.Broadcaster;
 import jnum.reporting.ConsoleReporter;
 import jnum.reporting.Reporter;
 import jnum.text.VersionString;
 import nom.tam.fits.*;
-import nom.tam.util.*;
+
 
 /**
  * 
@@ -59,7 +59,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.40-a1";
+    private static String version = "2.40-a2";
     private static String revision = "devel.1";
 
     public static String workPath = ".";
@@ -72,7 +72,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public String commandLine;
 
     public static int maxThreads = 1;
-    public static ExecutorService executor;
+    public static ExecutorService executor, sourceExecutor;
+    
 
     public int parallelScans = 1;
     public int parallelTasks = 1;
@@ -348,11 +349,11 @@ public class CRUSH extends Configurator implements BasicMessaging {
         // TODO Using the global options (intersect of scan options) instead of the first scan's
         // for the source does not work properly (clipping...)
         source = scans.get(0).instrument.getSourceModelInstance();
-
+        
         if(source != null) {
-            source.commandLine = commandLine;
+            source.setCommandLine(commandLine);
             source.createFrom(scans);
-            source.setExecutor(executor);
+            source.setExecutor(sourceExecutor);
             source.setParallel(CRUSH.maxThreads);
         }
 
@@ -419,18 +420,15 @@ public class CRUSH extends Configurator implements BasicMessaging {
         Integration.setRecyclerCapacity((maxThreads + 1) << 2);
         SourceModel.setRecyclerCapacity(maxThreads << 1);
 
-        // Check if the current executor matches the requirements...
-        if(executor instanceof ThreadPoolExecutor) if(((ThreadPoolExecutor) executor).getMaximumPoolSize() == maxThreads) return;
-
         // Shut down the old executor (releases thread resources back to the OS!)
         if(executor != null) executor.shutdown();
+        if(sourceExecutor != null) sourceExecutor.shutdown();
 
         // Allocate the new thread pool...
-        ThreadPoolExecutor pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
-        pool.prestartAllCoreThreads();
-        executor = pool;
-
-        if(source != null) source.setExecutor(executor);
+        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
+        sourceExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
+        
+        if(source != null) source.setExecutor(sourceExecutor);
     }
 
     public void setOutpath() {
@@ -616,7 +614,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         queue.clear();
         for(Scan<?,?> scan : scans) queue.addAll(scan);
 
-        if(solveSource()) if(tasks.contains("source")) source.reset(true);
+        if(solveSource()) if(tasks.contains("source")) source.renew();
 
         for(int i=0; i<pipelines.size(); i++) {
             final Pipeline pipeline = pipelines.get(i);
@@ -702,6 +700,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         if(settings.containsKey(spec)) config.parseAll(settings.get(spec));
     }
 
+    public static String getCopyrightString() { return Util.getCopyrightString(); }
 
     public static void info() {
         System.err.println(
@@ -711,8 +710,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
                         "          Version: " + getFullVersion() + "\n" + 
                         "          Featuring: jnum " + Util.getFullVersion() + ", nom.tam.fits " + Fits.version() + "\n" +
                         "          http://www.submm.caltech.edu/~sharc/crush\n" +
-                        "          Copyright (c)2017 Attila Kovacs <attila[AT]sigmyne.com>\n" +
-                " -----------------------------------------------------------------------------\n");	
+                        "          " + getCopyrightString() + "\n" +
+                        " -----------------------------------------------------------------------------\n");	
     }
 
     public static void usage() {
@@ -940,65 +939,66 @@ public class CRUSH extends Configurator implements BasicMessaging {
         return version + " (" + revision + ")";
     }
 
-    public static void addHistory(Cursor<String, HeaderCard> cursor) throws HeaderCardException {
+    public static void addHistory(Header header) throws HeaderCardException {
         // Add the reduction to the history...
         AstroTime timeStamp = new AstroTime();
         timeStamp.now();
 
-        FitsToolkit.addHistory(cursor, "Reduced: crush v" + CRUSH.getFullVersion() + " @ " + timeStamp.getFitsTimeStamp());			
+        FitsToolkit.addHistory(header, "Reduced: crush v" + CRUSH.getFullVersion() + " @ " + timeStamp.getFitsTimeStamp());			
     }
 
     @Override
-    public void editHeader(Cursor<String, HeaderCard> cursor) throws HeaderCardException {
+    public void editHeader(Header header) throws HeaderCardException {        
+        
         // Add the system descriptors...	
-        cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        cursor.add(new HeaderCard("COMMENT", " CRUSH runtime configuration section", false));
-        cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        header.addLine(new HeaderCard("COMMENT", " CRUSH runtime configuration section", false));
+        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 
-        cursor.add(new HeaderCard("CRUSHVER", getFullVersion(), "CRUSH version information."));		
+        header.addLine(new HeaderCard("CRUSHVER", getFullVersion(), "CRUSH version information."));		
 
         if(commandLine != null) {
             StringTokenizer args = new StringTokenizer(commandLine);
-            cursor.add(new HeaderCard("ARGS", args.countTokens(), "The number of arguments passed from the command line."));
+            header.addLine(new HeaderCard("ARGS", args.countTokens(), "The number of arguments passed from the command line."));
             int i=1;
-            while(args.hasMoreTokens()) FitsToolkit.addLongKey(cursor, "ARG" + (i++), args.nextToken(), "Command-line argument.");
+            while(args.hasMoreTokens()) FitsToolkit.addLongKey(header, "ARG" + (i++), args.nextToken(), "Command-line argument.");
         }
         
-        cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        cursor.add(new HeaderCard("COMMENT", " CRUSH Java VM & OS section", false));
-        cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        header.addLine(new HeaderCard("COMMENT", " CRUSH Java VM & OS section", false));
+        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 
-        cursor.add(new HeaderCard("JAVA", Util.getProperty("java.vendor"), "Java vendor name."));
-        cursor.add(new HeaderCard("JAVAVER", Util.getProperty("java.version"), "The Java version."));
+        header.addLine(new HeaderCard("JAVA", Util.getProperty("java.vendor"), "Java vendor name."));
+        header.addLine(new HeaderCard("JAVAVER", Util.getProperty("java.version"), "The Java version."));
 
-        FitsToolkit.addLongKey(cursor, "JAVAHOME", Util.getProperty("java.home"), "Java location.");
-        cursor.add(new HeaderCard("JRE", Util.getProperty("java.runtime.name"), "Java Runtime Environment."));
-        cursor.add(new HeaderCard("JREVER", Util.getProperty("java.runtime.version"), "JRE version."));
-        cursor.add(new HeaderCard("JVM", Util.getProperty("java.vm.name"), "Java Virtual Machine."));
-        cursor.add(new HeaderCard("JVMVER", Util.getProperty("java.vm.version"), "JVM version."));
+        FitsToolkit.addLongKey(header, "JAVAHOME", Util.getProperty("java.home"), "Java location.");
+        header.addLine(new HeaderCard("JRE", Util.getProperty("java.runtime.name"), "Java Runtime Environment."));
+        header.addLine(new HeaderCard("JREVER", Util.getProperty("java.runtime.version"), "JRE version."));
+        header.addLine(new HeaderCard("JVM", Util.getProperty("java.vm.name"), "Java Virtual Machine."));
+        header.addLine(new HeaderCard("JVMVER", Util.getProperty("java.vm.version"), "JVM version."));
 
-        cursor.add(new HeaderCard("OS", Util.getProperty("os.name"), "Operation System name."));
-        cursor.add(new HeaderCard("OSVER", Util.getProperty("os.version"), "OS version."));
-        cursor.add(new HeaderCard("OSARCH", Util.getProperty("os.arch"), "OS architecture."));
+        header.addLine(new HeaderCard("OS", Util.getProperty("os.name"), "Operation System name."));
+        header.addLine(new HeaderCard("OSVER", Util.getProperty("os.version"), "OS version."));
+        header.addLine(new HeaderCard("OSARCH", Util.getProperty("os.arch"), "OS architecture."));
 
-        cursor.add(new HeaderCard("CPUS", Runtime.getRuntime().availableProcessors(), "Number of CPU cores/threads available."));
-        cursor.add(new HeaderCard("DMBITS", Util.getProperty("sun.arch.data.model"), "Bits in data model."));
-        cursor.add(new HeaderCard("CPENDIAN", Util.getProperty("sun.cpu.endian"), "CPU Endianness."));
-        cursor.add(new HeaderCard("MAXMEM", Runtime.getRuntime().maxMemory() / (1024 * 1024), "MB of available memory."));
+        header.addLine(new HeaderCard("CPUS", Runtime.getRuntime().availableProcessors(), "Number of CPU cores/threads available."));
+        header.addLine(new HeaderCard("DMBITS", Util.getProperty("sun.arch.data.model"), "Bits in data model."));
+        header.addLine(new HeaderCard("CPENDIAN", Util.getProperty("sun.cpu.endian"), "CPU Endianness."));
+        header.addLine(new HeaderCard("MAXMEM", Runtime.getRuntime().maxMemory() / (1024 * 1024), "MB of available memory."));
 
-        cursor.add(new HeaderCard("COUNTRY", Util.getProperty("user.country"), "The user country."));
-        cursor.add(new HeaderCard("LANGUAGE", Util.getProperty("user.language"), "The user language."));
+        header.addLine(new HeaderCard("COUNTRY", Util.getProperty("user.country"), "The user country."));
+        header.addLine(new HeaderCard("LANGUAGE", Util.getProperty("user.language"), "The user language."));
 
 
-        cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        cursor.add(new HeaderCard("COMMENT", " CRUSH configuration section", false));
-        cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        header.addLine(new HeaderCard("COMMENT", " CRUSH configuration section", false));
+        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 
-        super.editHeader(cursor);
+        super.editHeader(header);
 
-        cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        cursor.add(new HeaderCard("COMMENT", " End of CRUSH configuration section", false));
-        cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        header.addLine(new HeaderCard("COMMENT", " End of CRUSH configuration section", false));
+        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
     }
 
 
@@ -1071,7 +1071,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 
 
-    public static abstract class Fork<ReturnType> extends Parallel<ReturnType> {
+    public static abstract class Fork<ReturnType> extends ParallelTask<ReturnType> {
         private Exception exception;
         private int size;
         private int parallelism;

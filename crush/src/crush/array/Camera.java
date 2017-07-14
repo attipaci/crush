@@ -28,7 +28,6 @@ import java.util.*;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
-import nom.tam.util.Cursor;
 import crush.*;
 import crush.instrument.ColorArrangement;
 import crush.sourcemodel.*;
@@ -134,8 +133,8 @@ public abstract class Camera<ChannelType extends Channel> extends Instrument<Cha
 		
 	}
 		
-	public double getRotationAngle() {
-		return Double.NaN;
+	public final double getRotationAngle() {
+		return rotation;
 	}
 	
 	public void readRCP(String fileName)  throws IOException {		
@@ -239,9 +238,9 @@ public abstract class Camera<ChannelType extends Channel> extends Instrument<Cha
 	}
 	
 	@Override
-	public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-		super.editImageHeader(scans, header, cursor);
-		cursor.add(new HeaderCard("BEAM", getResolution() / Unit.arcsec, "The instrument FWHM (arcsec) of the beam."));
+	public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
+		super.editImageHeader(scans, header);
+		header.addLine(new HeaderCard("BEAM", getResolution() / Unit.arcsec, "The instrument FWHM (arcsec) of the beam."));
 	}
 	
 	public Vector2D getPointingCenterOffset() { return new Vector2D(); }

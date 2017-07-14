@@ -53,8 +53,8 @@ import crush.astro.AstroMap;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
-import jnum.astro.SourceCatalog;
-import jnum.data.Region;
+import jnum.data.image.region.Region2D;
+import jnum.data.image.region.SourceCatalog;
 import jnum.util.ConfidenceCalculator;
 
 
@@ -218,7 +218,7 @@ public class DetectionTool {
 	
 			// Remove anything that may have dropped below the search criterion...
 			for(int i=0; i<regions.size(); ) {
-				Region source = regions.from(i);
+				Region2D source = regions.from(i);
 				final double S2N = source.peak / source.dpeak;
 				
 				if(S2N < significance) {
@@ -231,7 +231,7 @@ public class DetectionTool {
 
 			System.err.println("Searching for sources...");
 
-			for(Region source : findPeaksAbove(significance)) if(flag[indexOfdX(source.dX)][indexOfdY(source.dY)] == 0){			
+			for(Region2D source : findPeaksAbove(significance)) if(flag[indexOfdX(source.dX)][indexOfdY(source.dY)] == 0){			
 				source.finetunePeak(); // Re-tune the peak. (may be necessary after the removal of a nearby source...)
 				final double S2N = source.peak / source.dpeak;
 
@@ -267,8 +267,8 @@ public class DetectionTool {
 		
 		System.err.println("Searching for matching negative peaks...");
 		// Count the corresponding negatives...
-		Vector<Region> negatives = new Vector<Region>(100);
-		for(Region neg : findPeaksBelow(-significance)) {
+		Vector<Region2D> negatives = new Vector<Region2D>(100);
+		for(Region2D neg : findPeaksBelow(-significance)) {
 			if(flag[indexOfdX(neg.dX)][indexOfdY(neg.dY)] == 0) { 
 				neg.flag(FLAG_NEG);
 				negatives.add(neg);
@@ -281,15 +281,15 @@ public class DetectionTool {
 		
 		// Sort sources in order of descending significance...
 		System.err.println("Sorting detection w.r.t. detection significance.");
-		Collections.sort(regions, new Comparator<Region>() {
-			public int compare(Region o1, Region o2) {
+		Collections.sort(regions, new Comparator<Region2D>() {
+			public int compare(Region2D o1, Region2D o2) {
 				return Double.compare(o2.peak/o2.dpeak, o1.peak/o1.dpeak);
 			}				
 		});
 		
 
 		// Clear the flags around the negatives...
-		for(Region neg : negatives) neg.unflag(FLAG_NEG);
+		for(Region2D neg : negatives) neg.unflag(FLAG_NEG);
 		
 		System.err.println("Revising list based on distribution of sources" + (gaussianStats ? "." : " and negatives."));
 		
@@ -299,7 +299,7 @@ public class DetectionTool {
 		
 		for(int i=0; i<regions.size(); i++) {
 			
-			Region source = (Region) regions.get(i);
+			Region2D source = (Region2D) regions.get(i);
 			
 			final double S2N = source.peak / source.dpeak;
 			lastS2N = S2N;
@@ -308,7 +308,7 @@ public class DetectionTool {
 			double expectedNegs = Q * points;
 			
 			int actualNegs = 0;
-			for(Region neg : negatives) if(neg.peak/neg.dpeak < -S2N) actualNegs++;
+			for(Region2D neg : negatives) if(neg.peak/neg.dpeak < -S2N) actualNegs++;
 			
 			double Nfalse = expectedNegs;
 			if(!gaussianStats) Nfalse += (actualNegs - expectedNegs) * Math.abs(Math.tanh((actualNegs - expectedNegs) / (2.0 * Math.sqrt(expectedNegs))));
@@ -357,7 +357,7 @@ public class DetectionTool {
 		if(criterion != SIGNAL_TO_NOISE) System.err.println(" " + kept + " source(s) kept.");
 		
 		int actualNegs = 0;
-		for(Region neg : negatives) if(neg.peak/neg.dpeak < -lastS2N) actualNegs++;
+		for(Region2D neg : negatives) if(neg.peak/neg.dpeak < -lastS2N) actualNegs++;
 		System.err.println(" " + actualNegs + " matching negative peaks remaining.");
 		
 		detections = kept;
@@ -377,13 +377,13 @@ public class DetectionTool {
 	}// Return them in descending order
 	
 	
-	public Vector<Region> findPeaks(final int dir, double S2N) {
+	public Vector<Region2D> findPeaks(final int dir, double S2N) {
 		// Estimate how much of the peak may be missed due to regridding...
 		final double sigma = image.getImageFWHM() / Constant.sigmasInFWHM;
 		final double halfpixeldev = delta / (2.0 * sigma);
 		final double searchS2N = S2N * Math.exp(-halfpixeldev * halfpixeldev / 2.0); // maximum peak position error is a half-diagonal pixel.
 		
-		Vector<Region> points = new Vector<Region>(100);
+		Vector<Region2D> points = new Vector<Region2D>(100);
 		
 		AstroImage s2n = image.getS2NImage();
 		
@@ -397,7 +397,7 @@ public class DetectionTool {
 				if(image.flag[i1][j1] == 0) if(dir * Double.compare(s2n.data[i1][j1], s2n.data[i][j]) > 0) isPeak = false;
 		
 			if(isPeak) {	
-				Region point = new Region(dXofIndex(i), dYofIndex(j), beamFWHM, false);
+				Region2D point = new Region2D(dXofIndex(i), dYofIndex(j), beamFWHM, false);
 				point.finetunePeak();
 		
 				if(dir * Double.compare(point.peak / point.dpeak, S2N) > 0) points.add(point);
@@ -405,8 +405,8 @@ public class DetectionTool {
 		}
 				
 		// Return peaks sorted from far to near...
-		Collections.sort(points, new Comparator<Region>() {
-			public int compare(Region a, Region b) {
+		Collections.sort(points, new Comparator<Region2D>() {
+			public int compare(Region2D a, Region2D b) {
 				return dir * Double.compare(b.peak / b.dpeak, a.peak / a.dpeak);
 			}
 		});

@@ -41,7 +41,6 @@ import jnum.data.ArrayUtil;
 import jnum.io.fits.FitsToolkit;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
-import nom.tam.util.Cursor;
 
 public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed {
     /**
@@ -293,12 +292,30 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
             pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
         }
 
-        setPixelSize(pixelSize);
+        setNominalPixelPositions(pixelSize);
 
         // TODO load bias gains? ...
 
         super.loadChannelData();
+        
+        if(hasOption("jumpdata")) {
+            try { readJumpLevels(option("jumpdata").getPath()); }
+            catch(Exception e) { warning(e); }
+        }
 
+    }
+    
+    public void readJumpLevels(String fileName) throws IOException, FitsException {
+        info("Loading jump levels from " + fileName);
+        
+        Fits fits = new Fits(fileName);
+        long[][] data = (long[][]) fits.getHDU(0).getData().getData();
+        
+        for(HawcPlusPixel pixel : this) pixel.jump = data[pixel.col][pixel.row];
+       
+        registerConfigFile(fileName);
+        fits.close();
+        
     }
     
     public final int getSubarrayIndex(String id) {
@@ -374,7 +391,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     }
 
 
-    private void setPixelSize(Vector2D size) {	
+    private void setNominalPixelPositions(Vector2D size) {	
         pixelSize = size;
 
         info("Boresight pixel from FITS is " + array.boresightIndex);
@@ -387,9 +404,9 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
             array.boresightIndex = defaultBoresightIndex;
             warning("Missing FITS boresight --> " + array.boresightIndex);
         }
-        Vector2D center = getPosition(0, array.boresightIndex.y(), array.boresightIndex.x());
+        Vector2D center = getSIBSPosition(0, array.boresightIndex.y(), array.boresightIndex.x());
 
-        for(HawcPlusPixel pixel : this) pixel.calcPosition();
+        for(HawcPlusPixel pixel : this) pixel.calcSIBSPosition();
 
         // Set the pointing center...
         setReferencePosition(center);
@@ -407,11 +424,11 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     }
 
     @Override
-    public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-        super.editImageHeader(scans, header, cursor);
+    public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
+        super.editImageHeader(scans, header);
         // Add HAWC+ specific keywords
-        cursor.add(new HeaderCard("COMMENT", "<------ HAWC+ Header Keys ------>", false));
-        cursor.add(new HeaderCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
+        header.addLine(new HeaderCard("COMMENT", "<------ HAWC+ Header Keys ------>", false));
+        header.addLine(new HeaderCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
     }
 
     @Override
@@ -605,21 +622,19 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 
     private void addHDU(Fits fits, BasicHDU<?> hdu, String extName) throws FitsException {
         hdu.addValue("EXTNAME", extName, "image content ID");
-        editHeader(hdu.getHeader(), hdu.getHeader().iterator());
+        editHeader(hdu.getHeader());
         fits.addHDU(hdu);
     }
 
-    public Vector2D getPosition(int sub, double row, double col) {
+    public Vector2D getSIBSPosition(int sub, double row, double col) {
         Vector2D v = new Vector2D(col, 39.0 - row);
         v.rotate(subarrayOrientation[sub]);
         v.add(subarrayOffset[sub]);
-        // In the geometry document X,Y is oriented like alpha,delta
-        // But, in crush, focal plane positions should be oriented like native
-        // systems, e.g. Az, EL. So, compared to the geOmetry document x -> -x
-        v.scaleX(-pixelSize.x());       
-        v.scaleY(pixelSize.y());
+        // X is oriented like AZ (tXEL), whereas Y is oriented like -tEL.
+        v.scaleX(pixelSize.x());       
+        v.scaleY(-pixelSize.y());
         v.scale(polZoom[sub>>1]);
-
+        // v is now in proper tXEL,tEL coordinates...
         return v;
     }
 

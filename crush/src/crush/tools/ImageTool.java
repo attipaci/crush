@@ -29,8 +29,8 @@ import crush.sourcemodel.*;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
-import jnum.astro.SourceCatalog;
-import jnum.data.Region;
+import jnum.data.image.region.Region2D;
+import jnum.data.image.region.SourceCatalog;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.util.*;
@@ -45,7 +45,7 @@ public class ImageTool {
 	static String version = "0.1-1";
 
 	AstroMap image;
-	Vector<Region> regions = new Vector<Region>();
+	Vector<Region2D> regions = new Vector<Region2D>();
 
 	public static void main(String args[]) {
 		versionInfo();
@@ -124,20 +124,20 @@ public class ImageTool {
 					System.err.println("Replacing flux plane.");
 					plane.setUnit(imageUnit);
 					plane.setImage(hdu);
-					image.setData(plane.getData());
+					image.setImage(plane.getImage());
 					image.setFlag(plane.getFlag());
 				}
 				else if(spec.equals("weight")) {
 					System.err.println("Replacing weight plane.");
 					plane.setUnit(new Unit("weight", 1.0 / (imageUnit.value() * imageUnit.value())));
 					plane.setImage(hdu);
-					image.setWeight(plane.getData());
+					image.setWeight(plane.getImage());
 				}
 				else if(spec.equals("time")) {
 					System.err.println("Replacing integration-time plane.");
 					plane.setUnit(Unit.get("s"));
 					plane.setImage(hdu);
-					image.setTime(plane.getData());
+					image.setTime(plane.getImage());
 				}
 				else if(spec.equals("flag")) {
 					System.err.println("Replacing integration-time plane.");
@@ -209,7 +209,7 @@ public class ImageTool {
 						AstroImage beamImage = new AstroImage();
 						beamImage.read(beamSpec);
 						beamImage.scale(1.0 / beamImage.getMax());
-						beam = beamImage.getData();
+						beam = beamImage.getImage();
 					}
 					catch(Exception e2) { System.err.println("ERROR! Cannot open beam FITS file " + beamSpec); }		
 				}		
@@ -273,7 +273,7 @@ public class ImageTool {
 			image.smoothFWHM = Math.sqrt(image.getPixelArea()) / Constant.fwhm2size;
 			image.extFilterFWHM = Double.NaN;
 			for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) 
-				image.setValue(i, j, random.nextGaussian() / Math.sqrt(image.getWeight(i, j)));
+				image.set(i, j, random.nextGaussian() / Math.sqrt(image.weightAt(i, j)));
 		}
 		else if(key.equalsIgnoreCase("-masks")) {
 			StringTokenizer actions = new StringTokenizer(tokens.nextToken(), ", \t");
@@ -297,8 +297,8 @@ public class ImageTool {
 					int iExt = image.fileName.lastIndexOf(".");
 					if(iExt < 0) iExt = image.fileName.length();
 					image.fileName = image.fileName.substring(0, iExt) + ".stacked" + image.fileName.substring(iExt);
-					image.regions.clear();
-					image.polygons.clear();
+					image.regions.noData();
+					image.polygons.noData();
 				}
 				else if(action.equalsIgnoreCase("match")) {
 					double pointingRMS = image.delta;

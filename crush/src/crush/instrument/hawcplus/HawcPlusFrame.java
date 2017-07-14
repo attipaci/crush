@@ -186,6 +186,8 @@ public class HawcPlusFrame extends SofiaFrame {
         offset.rotate(instrumentVPA);
     }
    
+    public final static int JUMP_RANGE = 1<<7;  // Jumps are 7-bit signed values...
+    
     public final static int FITS_FLAG_NORMAL_OBSERVING = 0;
     public final static int FITS_FLAG_LOS_REWIND = 1;
     public final static int FITS_FLAG_IVCURVES = 2;

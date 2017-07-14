@@ -27,8 +27,8 @@ import java.io.Serializable;
 import jnum.Configurator;
 import jnum.ExtraMath;
 import jnum.Unit;
-import jnum.data.Asymmetry2D;
 import jnum.data.DataPoint;
+import jnum.data.image.Asymmetry2D;
 
 /*******************************************************************************
  * Copyright (c) 2012 Attila Kovacs <attila[AT]sigmyne.com>.

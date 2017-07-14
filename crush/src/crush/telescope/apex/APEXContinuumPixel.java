@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
 
+import crush.CRUSH;
 import crush.Channel;
 import crush.Frame;
 import crush.PhaseData;
@@ -176,7 +177,7 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
 			data[i] = DataPoint.significanceOf(point);
 		}
 			
-		new DoubleFFT().real2Amplitude(data);
+		new DoubleFFT(CRUSH.executor).real2Amplitude(data);
 			
 		out.println(data[0]);
 		for(int i=2; i < data.length; i+=2) {

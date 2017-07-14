@@ -139,11 +139,10 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 		DataTable data = super.getPointingData();
 		Offset2D relative = getNativePointingIncrement(pointing);
 		
-		double sizeUnit = instrument.getSizeUnitValue();
-		String sizeName = instrument.getSizeName();
+		Unit sizeUnit = instrument.getSizeUnit();
 		
-		data.new Entry("FAZO", (relative.x() + fixedOffset.x()) / sizeUnit, sizeName);
-		data.new Entry("FZAO", -(relative.y() + fixedOffset.y()) / sizeUnit, sizeName);
+		data.new Entry("FAZO", (relative.x() + fixedOffset.x()), sizeUnit);
+		data.new Entry("FZAO", -(relative.y() + fixedOffset.y()), sizeUnit);
 		
 		return data;
 	}

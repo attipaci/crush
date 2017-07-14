@@ -26,8 +26,8 @@ package crush.fits;
 import java.io.IOException;
 
 import crush.CRUSH;
-import jnum.Parallel;
 import jnum.data.ArrayUtil;
+import jnum.parallel.ParallelTask;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
@@ -70,7 +70,7 @@ public abstract class HDURowReader {
 		return nextRow++;
 	}
 	
-	public abstract class Reader extends Parallel<Void> {
+	public abstract class Reader extends ParallelTask<Void> {
 		private Object[] row;
 		
 		@Override

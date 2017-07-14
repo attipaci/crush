@@ -71,12 +71,9 @@ public class SkyDip extends SourceModel {
 	}
 	
 	@Override
-	public void reset(boolean clearContent) {
-		super.reset(clearContent);
-		if(clearContent) if(data != null) {
-			for(int i=data.length; --i >= 0; ) if(data[i] != null) data[i].noData();
-			Tamb.noData();
-		}
+	public void clearContent() {   
+	    for(int i=data.length; --i >= 0; ) if(data[i] != null) data[i].noData();
+		if(Tamb != null) Tamb.noData();
 	}
 	
 	@Override
@@ -103,7 +100,7 @@ public class SkyDip extends SourceModel {
 	}
 	
 	@Override
-	public void add(SourceModel model, double weight) {
+	public void addModel(SourceModel model, double weight) {
 		SkyDip other = (SkyDip) model;
 		Tamb.average(other.Tamb);
 		for(int i=data.length; --i >= 0; ) data[i].average(other.data[i]);
@@ -267,7 +264,7 @@ public class SkyDip extends SourceModel {
 		
 		
 		plot.println("plot \\");
-		String id = scans.get(0).getID().replace("_", " ");
+		String id = getFirstScan().getID().replace("_", " ");
 		
 		plot.println("  '" + dataName + "' using 1:2 title 'Skydip " + id + "'with linesp lt 1 pt 5 lw 1, \\");
 		plot.println("  '" + dataName + "' using 1:3 title 'tau = " + Util.f3.format(model.tau.value()) + " +- " 

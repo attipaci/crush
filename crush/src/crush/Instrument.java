@@ -54,7 +54,6 @@ import jnum.text.SmartTokenizer;
 import jnum.text.TableFormatter;
 import jnum.util.HashCode;
 import nom.tam.fits.*;
-import nom.tam.util.*;
 
 
 public abstract class Instrument<ChannelType extends Channel> extends ChannelGroup<ChannelType> 
@@ -98,6 +97,7 @@ implements TableFormatter.Entries, BasicMessaging {
         setArrangement(layout);
         storeChannels = size;
     }
+    
 
     @Override
     public int hashCode() {
@@ -943,7 +943,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(hasOption("source.type")) {
             String type = option("source.type").getValue();
             if(type.equals("skydip")) return new SkyDip(this);		
-            if(type.equals("map")) return new ScalarMap(this);
+            if(type.equals("map")) return new AstroMap(this);
             if(type.equals("null")) return null;
             return null;
         }
@@ -1338,16 +1338,16 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public void parseImageHeader(Header header) {}
 
-    public void editImageHeader(List<Scan<?,?>> scans, Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-        cursor.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
-        cursor.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
+    public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
+        header.addLine(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
+        header.addLine(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
     }
 
     public void editScanHeader(Header header) throws HeaderCardException {
         if(hasOption("write.scandata.details")) Channel.flagSpace.editHeader('C', header);
     }
 
-    public void addHistory(Cursor<String, HeaderCard> cursor, List<Scan<?,?>> scans) throws HeaderCardException {}
+    public void addHistory(Header header, List<Scan<?,?>> scans) throws HeaderCardException {}
 
     // Sequential, because it is usually called from a parallel environment
     public void calcOverlap(final double pointSize) {
