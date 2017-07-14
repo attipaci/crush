@@ -130,7 +130,7 @@ public class MotionFilter extends KillFilter {
 		levelData();
 		
 		// FFT to get the scanning spectra
-		integration.getParallelFFT().real2Amplitude(data);
+		integration.getFFT().real2Amplitude(data);
 		
 		// Never
 		data[0] = 0.0F;

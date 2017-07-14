@@ -305,47 +305,45 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         Cursor<String, HeaderCard> cursor = sofiaHeader.iterator();
         while(cursor.hasNext()) cursor.next();
 
-        if(fileDate != null) cursor.add(new HeaderCard("DATE", fileDate, "Scan file creation date."));
+        if(fileDate != null) header.addLine(new HeaderCard("DATE", fileDate, "Scan file creation date."));
 
-        if(checksum != null) cursor.add(new HeaderCard("DATASUM", checksum, "Data file checksum."));
-        if(checksumVersion != null) cursor.add(new HeaderCard("CHECKVER", checksumVersion, "Checksum method version."));
+        if(checksum != null) header.addLine(new HeaderCard("DATASUM", checksum, "Data file checksum."));
+        if(checksumVersion != null) header.addLine(new HeaderCard("CHECKVER", checksumVersion, "Checksum method version."));
 
-        observation.editHeader(sofiaHeader, cursor);
-        processing.editHeader(sofiaHeader, cursor);
-        mission.editHeader(sofiaHeader, cursor);
-        origin.editHeader(sofiaHeader, cursor);
-        environment.editHeader(sofiaHeader, cursor);
-        aircraft.editHeader(sofiaHeader, cursor);
-        telescope.editHeader(sofiaHeader, cursor);
+        observation.editHeader(sofiaHeader);
+        processing.editHeader(sofiaHeader);
+        mission.editHeader(sofiaHeader);
+        origin.editHeader(sofiaHeader);
+        environment.editHeader(sofiaHeader);
+        aircraft.editHeader(sofiaHeader);
+        telescope.editHeader(sofiaHeader);
 
-        cursor.add(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));	
-        cursor.add(new HeaderCard("NODDING", isNodding, "Was nodding used?"));	
-        cursor.add(new HeaderCard("DITHER", isDithering, "Was dithering used?"));	
-        cursor.add(new HeaderCard("MAPPING", isMapping, "Was mapping?"));	
-        cursor.add(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
+        header.addLine(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));	
+        header.addLine(new HeaderCard("NODDING", isNodding, "Was nodding used?"));	
+        header.addLine(new HeaderCard("DITHER", isDithering, "Was dithering used?"));	
+        header.addLine(new HeaderCard("MAPPING", isMapping, "Was mapping?"));	
+        header.addLine(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
 
-        if(chopper != null) chopper.editHeader(sofiaHeader, cursor);
-        if(nodding != null) nodding.editHeader(sofiaHeader, cursor);
-        if(dither != null) dither.editHeader(sofiaHeader, cursor);
-        if(mapping != null) mapping.editHeader(sofiaHeader, cursor);
-        if(scanning != null) scanning.editHeader(sofiaHeader, cursor);
+        if(chopper != null) chopper.editHeader(sofiaHeader);
+        if(nodding != null) nodding.editHeader(sofiaHeader);
+        if(dither != null) dither.editHeader(sofiaHeader);
+        if(mapping != null) mapping.editHeader(sofiaHeader);
+        if(scanning != null) scanning.editHeader(sofiaHeader);
 
-        instrument.editHeader(sofiaHeader, cursor);
+        instrument.editHeader(sofiaHeader);
 
-        //cursor.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
-        //cursor.add(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
-        //cursor.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getReleaseVersion(), "Software that produced this file."));
-        //cursor.add(new HeaderCard("PIPEVERS", CRUSH.getFullVersion(), "Full software version information.")); 
-        //cursor.add(new HeaderCard("PRODTYPE", "CRUSH-SCAN-META", "Type of product produced by the software."));
+        //header.addLine(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
+        //header.addLine(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
+        //header.addLine(new HeaderCard("PIPELINE", "crush v" + CRUSH.getReleaseVersion(), "Software that produced this file."));
+        //header.addLine(new HeaderCard("PIPEVERS", CRUSH.getFullVersion(), "Full software version information.")); 
+        //header.addLine(new HeaderCard("PRODTYPE", "CRUSH-SCAN-META", "Type of product produced by the software."));
 
         // May overwrite existing values...
         header.updateLines(sofiaHeader);
 
-        cursor = header.iterator();
-        while(cursor.hasNext()) cursor.next();
-
-        addHistory(cursor);
-        instrument.addHistory(cursor, null);
+       
+        addHistory(header);
+        instrument.addHistory(header, null);
     }
 
 
@@ -392,8 +390,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         //if(scanning != null) scanning.editHeader(header, cursor);
     }
 
-    public void addHistory(Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-        for(int i=0; i<history.size(); i++) FitsToolkit.addHistory(cursor, history.get(i));
+    public void addHistory(Header header) throws HeaderCardException {
+        for(int i=0; i<history.size(); i++) FitsToolkit.addHistory(header, history.get(i));
     }
 
     public void parseHistory(Header header) {
@@ -544,20 +542,18 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         Offset2D relative = getNativePointingIncrement(pointing);
         //Vector2D nasmyth = getNasmythOffset(pointingOffset);
 
-        double sizeUnit = instrument.getSizeUnitValue();
-        String sizeName = instrument.getSizeName();
+        Unit sizeUnit = instrument.getSizeUnit();
 
-        data.new Entry("X", relative.x() / sizeUnit, sizeName);
-        data.new Entry("Y", relative.y() / sizeUnit, sizeName);
-        //data.new Entry("NasX", (instrument.nasmythOffset.x() + nasmyth.x()) / sizeUnit, sizeName);
-        //data.new Entry("NasY", (instrument.nasmythOffset.y() + nasmyth.y()) / sizeUnit, sizeName);
+        data.new Entry("X", relative.x(), sizeUnit);
+        data.new Entry("Y", relative.y(), sizeUnit);
+        //data.new Entry("NasX", (instrument.nasmythOffset.x() + nasmyth.x()), sizeUnit);
+        //data.new Entry("NasY", (instrument.nasmythOffset.y() + nasmyth.y()), sizeUnit);
         return data;
     }
 
 
     @Override
-    public Object getTableEntry(String name) {
-       
+    public Object getTableEntry(String name) {     
         if(name.equals("obstype")) return observation.obsType;
         
         // TODO Add Sofia Header data...  
@@ -568,23 +564,28 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         
         for(SofiaData group : groups) if(group != null) if(name.startsWith(group.getLogPrefix())) 
             return group.getTableEntry(name.substring(group.getLogPrefix().length()));
-        
-       
+            
         return super.getTableEntry(name);
     }
 
     @Override
-    public String getPointingString(Offset2D pointing) {   
-        // The pointing is xel, el (similar to az, el)
-        Vector2D siOffset = new Vector2D(pointing);
-              
+    public String getPointingString(Offset2D nativePointing) {
+        if(pointing == null) return "\nOoops. No pointing data.\n";
+        
+        Vector2D siOffset = new Vector2D(nativePointing); 
+        siOffset.rotate(getTelescopeVPA() - getInstrumentVPA());
+        
+        // Correct for the residual instrument rotation...
+        siOffset.rotate(-instrument.getRotationAngle());
+        
         // convert offset to pixels
         // The SI y axis is upside down relative to the elevation axis
         Vector2D pixelSize = instrument.getPixelSize();  
         siOffset.scaleX(1.0 / pixelSize.x());
         siOffset.scaleY(-1.0 / pixelSize.y());
-        
-        return super.getPointingString(pointing) + "\n\n" +
+       
+       
+        return super.getPointingString(nativePointing) + "\n\n" +
             "  SIBS offset --> " + Util.f2.format((siOffset.x())) + ", " + Util.f2.format(siOffset.y()) + " pixels";        
     }
     

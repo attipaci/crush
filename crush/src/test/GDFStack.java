@@ -27,20 +27,20 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import crush.astro.AstroMap;
-import jnum.Parallel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
-import jnum.data.CartesianGrid2D;
 import jnum.data.DataPoint;
-import jnum.data.GaussianSource;
-import jnum.data.GridMap2D;
-import jnum.data.Data2D.Task;
+import jnum.data.image.CartesianGrid2D;
+import jnum.data.image.GridMap2D;
+import jnum.data.image.Data2D.Task;
+import jnum.data.image.region.GaussianSource;
 import jnum.math.Coordinate2D;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
+import jnum.parallel.ParallelTask;
 
 
 public class GDFStack {
@@ -93,7 +93,7 @@ public class GDFStack {
 		
 		for(int i=size; --i >= 0; ) for(int j=size; --j >=0; ) {
 			DataPoint mean = getMeanFlux(i - c, j - c);		
-			stack.setValue(i, j, mean.value());
+			stack.set(i, j, mean.value());
 			stack.setWeight(i, j, mean.weight());
 			stack.unflag(i, j);
 		}
@@ -106,10 +106,10 @@ public class GDFStack {
 	public DataPoint getMeanFlux(final int di, final int dj) {
 		final double npts = map.getPointsPerSmoothingBeam();
 		
-		Task<DataPoint> stack = map.new Task<DataPoint>() {
+		Fork<DataPoint> stack = map.new Fork<DataPoint>() {
 			DataPoint mean;
 			@Override 
-			public void init() { mean = new DataPoint(); }
+			public void initialize() { mean = new DataPoint(); }
 			
 			@Override
 			public void process(int i, int j) {
@@ -123,9 +123,9 @@ public class GDFStack {
 				
 				if(map.isFlagged(i1, j1)) return;
 				
-				double G = model.getValue(i, j);
-				double wG = map.getWeight(i1, j1) / npts * G;
-				mean.add(wG * map.getValue(i1, j1));
+				double G = model.get(i, j);
+				double wG = map.weightAt(i1, j1) / npts * G;
+				mean.add(wG * map.get(i1, j1));
 				mean.addWeight(wG * G);
 			}
 			
@@ -137,7 +137,7 @@ public class GDFStack {
 			@Override
 			public DataPoint getResult() {
 				DataPoint combined = new DataPoint();
-				for(Parallel<DataPoint> task : getWorkers()) {
+				for(ParallelTask<DataPoint> task : getWorkers()) {
 					DataPoint partial = task.getLocalResult();
 					combined.add(partial.value());
 					combined.addWeight(partial.weight());
@@ -171,7 +171,7 @@ public class GDFStack {
 			source.setID(tokens.nextToken());
 			//source.setCoordinates(new EquatorialCoordinates(line.replace('+', ' ')));
 			source.setCoordinates(new EquatorialCoordinates(tokens.nextToken() + " " + tokens.nextToken() + "(J2000.0)"));
-			source.setPeak(1.0);
+			source.setPeakFrom(1.0);
 			source.setRadius(map.getImageBeam().getCircularEquivalentFWHM());
 			
 			sources.add(source);
@@ -195,7 +195,7 @@ public class GDFStack {
 					Double.parseDouble(tokens.nextToken()) * Unit.deg,
 					CoordinateEpoch.J2000));
 	
-			source.setPeak(1.0);
+			source.setPeakFrom(1.0);
 			source.setRadius(map.getImageBeam().getCircularEquivalentFWHM());
 			
 			tokens.nextToken();
@@ -227,7 +227,7 @@ public class GDFStack {
 					Double.parseDouble(tokens.nextToken()) * Unit.deg,
 					CoordinateEpoch.J2000));
 	
-			source.setPeak(1.0);
+			source.setPeakFrom(1.0);
 			source.setRadius(map.getImageBeam().getCircularEquivalentFWHM());
 			
 			tokens.nextToken();
@@ -236,7 +236,7 @@ public class GDFStack {
 			DataPoint S24 = new DataPoint();
 			S24.setValue(Double.parseDouble(tokens.nextToken()));
 			S24.setRMS(Double.parseDouble(tokens.nextToken()));	
-			source.setPeak(S24.value() * 1e-6 * map.getUnit().value());
+			source.setPeakFrom(S24.value() * 1e-6 * map.getUnit().value());
 				
 			sources.add(source);
 		}
@@ -249,7 +249,7 @@ public class GDFStack {
 	
 	public void makeModel() throws Exception {
 		 model = (AstroMap) map.copy(true);
-		 model.setData(new double[model.sizeX()][model.sizeY()]);
+		 model.setImage(new double[model.sizeX()][model.sizeY()]);
 		 //model.reset();
 		 
 		 for(GaussianSource<SphericalCoordinates> source : sources) {

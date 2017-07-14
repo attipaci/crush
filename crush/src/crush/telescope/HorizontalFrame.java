@@ -70,8 +70,8 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	public void getEquatorial(final Vector2D position, final EquatorialCoordinates coords) {
 		// The proper GLS convention uses actual cos(DEC)
 		// However, APECS uses cos(DEC0)
-		final double x = getX(position);
-		final double y = getY(position);
+		final double x = getNativeX(position);
+		final double y = getNativeY(position);
 		coords.setNativeLongitude(equatorial.x() + (cosPA * x - sinPA * y) / scan.equatorial.cosLat());
 		coords.setNativeLatitude(equatorial.y() + (cosPA * y + sinPA * x));
 	}
@@ -79,13 +79,13 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 	public void getHorizontal(final Vector2D position, final HorizontalCoordinates coords) {
 		// The proper GLS convention uses actual cos(DEC)
 		// However, APECS uses cos(DEC0)
-		coords.setNativeLongitude(horizontal.x() + getX(position) / scan.horizontal.cosLat());
-		coords.setNativeLatitude(horizontal.y() + getY(position));
+		coords.setNativeLongitude(horizontal.x() + getNativeX(position) / scan.horizontal.cosLat());
+		coords.setNativeLatitude(horizontal.y() + getNativeY(position));
 	}
 	
 	public void getHorizontalOffset(final Vector2D position, final Vector2D offset) {
-		offset.setX(horizontalOffset.x() + getX(position));
-		offset.setY(horizontalOffset.y() + getY(position));
+		offset.setX(horizontalOffset.x() + getNativeX(position));
+		offset.setY(horizontalOffset.y() + getNativeY(position));
 	}
 	
 	@Override

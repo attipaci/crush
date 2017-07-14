@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -26,9 +26,9 @@ package crush.polarization;
 
 import crush.*;
 import crush.array.*;
-import crush.astro.AstroMap;
-import crush.sourcemodel.ScalarMap;
+import crush.sourcemodel.AstroMap;
 import jnum.Unit;
+import jnum.data.image.Observation2D;
 import jnum.math.SphericalCoordinates;
 
 import java.util.*;
@@ -42,7 +42,7 @@ public class PolarMap extends SourceModel {
 	 */
 	private static final long serialVersionUID = -533094900293482665L;
 	
-	ScalarMap N,Q,U;
+	AstroMap N,Q,U;
 	public boolean usePolarization = false;
 	public boolean hasPolarization = false;
 	
@@ -53,8 +53,8 @@ public class PolarMap extends SourceModel {
 	public Camera<?> getArray() { return (Camera<?>) getInstrument(); }
 
 	
-	public ScalarMap getMapInstance() {
-		return new ScalarMap(getInstrument());
+	public AstroMap getMapInstance() {
+		return new AstroMap(getInstrument());
 	}
 	
 	@Override
@@ -89,37 +89,37 @@ public class PolarMap extends SourceModel {
 		N.enableLevel = true;
 		N.enableBias = true; // Includes blanking from Q and U
 		N.enableWeighting = true;
-		N.id = "N";
+		N.setID("N");
 		
-		Q = (ScalarMap) N.getWorkingCopy(false);
+		Q = (AstroMap) N.getWorkingCopy(false);
 		Q.standalone();
 		Q.signalMode = PolarModulation.Q;
 		Q.enableLevel = false;
 		Q.enableBias = false; // Prevents re-blanking on just Q
 		Q.enableWeighting = true;
-		Q.id = "Q";
+		Q.setID("Q");
 		
-		U = (ScalarMap) N.getWorkingCopy(false);
+		U = (AstroMap) N.getWorkingCopy(false);
 		U.standalone();
 		U.signalMode = PolarModulation.U;
 		U.enableLevel = false;
 		U.enableBias = false; // Prevents re-blanking on just U
 		U.enableWeighting = true;
-		U.id = "U";
+		U.setID("U");
 	}
 	
 	@Override
 	public SourceModel getWorkingCopy(boolean withContents) {
 		PolarMap copy = (PolarMap) super.getWorkingCopy(withContents);
-		copy.N = (ScalarMap) N.getWorkingCopy(withContents);
-		copy.Q = (ScalarMap) Q.getWorkingCopy(withContents);
-		copy.U = (ScalarMap) U.getWorkingCopy(withContents);
+		copy.N = (AstroMap) N.getWorkingCopy(withContents);
+		copy.Q = (AstroMap) Q.getWorkingCopy(withContents);
+		copy.U = (AstroMap) U.getWorkingCopy(withContents);
 		return copy;
 	}
 	
 	
 	@Override
-	public void add(SourceModel model, double weight) {
+	public void addModel(SourceModel model, double weight) {
 		PolarMap other = (PolarMap) model;
 		N.add(other.N, weight);
 		if(usePolarization()) {
@@ -168,24 +168,34 @@ public class PolarMap extends SourceModel {
 		if(usePolarization()) {
 			addProcessBrief("\n   [Q] ");
 			Q.process();
-			N.addMask(Q.getMask()); // Add the flagging data from Q
+			N.addMask(Q.map); // Add the flagging data from Q
 			
 			addProcessBrief("\n   [U] ");
 			U.process();
-			N.addMask(U.getMask()); // Add the flagging data from U
+			N.addMask(U.map); // Add the flagging data from U
 		
 			addProcessBrief("\n   ");	
 		}
 	}
 
 	@Override
-	public void reset(boolean clearContent) {
-		N.reset(clearContent);
+	public void resetProcessing() {
+	    super.resetProcessing();
+		N.resetProcessing();
 		if(usePolarization()) {
-			Q.reset(clearContent);
-			U.reset(clearContent);
+			Q.resetProcessing();
+			U.resetProcessing();
 		}
 	}
+	
+	@Override
+    public void clearContent() {
+        N.clearContent();
+        if(usePolarization()) {
+            Q.clearContent();
+            U.clearContent();
+        }
+    }
 	
 	
 	@Override
@@ -208,45 +218,45 @@ public class PolarMap extends SourceModel {
 	
 	
 	// Angles are measured East of North... 
-	public ScalarMap getAngles(ScalarMap P, ScalarMap F) {
-		final ScalarMap A = (ScalarMap) N.getWorkingCopy(false);
+	public AstroMap getAngles(AstroMap P, AstroMap F) {
+		final AstroMap A = (AstroMap) N.getWorkingCopy(false);
 		
-		final AstroMap q = Q.map;
-		final AstroMap u = U.map;
-		final AstroMap p = P.map;
-		final AstroMap f = F.map;
-		final AstroMap a = A.map;
+		final Observation2D q = Q.map;
+		final Observation2D u = U.map;
+		final Observation2D p = P.map;
+		final Observation2D f = F.map;
+		final Observation2D a = A.map;
 		
-		a.new Task<Void>() {
+		a.new Fork<Void>() {
 			@Override
 			public void process(int i, int j) {
 			  
-				if(f.isFlagged(i,j)) {
-				    a.flag(i,j);
+				if(!f.isValid(i,j)) {
+				    a.flag(i, j);
 				    return;
 				}
 				else a.unflag(i, j);
 				
-				final double p0 = p.getValue(i, j);
+				final double p0 = p.get(i, j).doubleValue();
 				
 				if(p0 == 0.0) {
 					a.flag(i, j);
 					return;
 				}
 				
-				final double q0 = q.getValue(i, j);
-				final double u0 = u.getValue(i, j);
+				final double q0 = q.get(i, j).doubleValue();
+				final double u0 = u.get(i, j).doubleValue();
 				
-				final double sigma2Q = 1.0 / q.getWeight(i,j);
-				final double sigma2U = 1.0 / u.getWeight(i,j);
+				final double sigma2Q = 1.0 / q.weightAt(i,j);
+				final double sigma2U = 1.0 / u.weightAt(i,j);
 				
-				a.setValue(i, j, 0.5 * Math.atan2(u0, q0) / Unit.deg);
-				a.setWeight(i, j, 4.0 * Unit.deg2 * p0 * p0 * p0 * p0 / (sigma2U * q0 * q0 + sigma2Q * u0 * u0));
+				a.set(i, j, 0.5 * Math.atan2(u0, q0) / Unit.deg);
+				a.setWeightAt(i, j, 4.0 * Unit.deg2 * p0 * p0 * p0 * p0 / (sigma2U * q0 * q0 + sigma2Q * u0 * u0));
 			}
 		}.process();
 		
-		A.id = "A";
-		a.sanitize();
+		A.setID("A");
+		a.validate();
 		
 		A.enableLevel = false;
 		A.enableWeighting = false;
@@ -258,27 +268,27 @@ public class PolarMap extends SourceModel {
 	}	
 	
 	
-	public ScalarMap getP() {
-		final ScalarMap P = (ScalarMap) N.getWorkingCopy(false);
+	public AstroMap getP() {
+		final AstroMap P = (AstroMap) N.getWorkingCopy(false);
 		
-		final AstroMap q = Q.map;
-		final AstroMap u = U.map;
-		final AstroMap p = P.map;
+		final Observation2D q = Q.map;
+		final Observation2D u = U.map;
+		final Observation2D p = P.map;
 		
-		p.new Task<Void>() {
+		p.new Fork<Void>() {
 			@Override
 			public void process(int i, int j) {
-				if(q.isFlagged(i, j) || u.isFlagged(i, j)) {
+				if(!q.isValid(i, j) || !u.isValid(i, j)) {
 					p.flag(i, j);
 					return;
 				}
 				
-				double q2 = q.getValue(i, j);
-				double u2 = u.getValue(i, j);
+				double q2 = q.get(i, j).doubleValue();
+				double u2 = u.get(i, j).doubleValue();
 				q2 *= q2; u2 *= u2;
 				
-				double sigma2Q = 1.0 / q.getWeight(i,j);
-				double sigma2U = 1.0 / u.getWeight(i,j);
+				double sigma2Q = 1.0 / q.weightAt(i,j);
+				double sigma2U = 1.0 / u.weightAt(i,j);
 				
 				// De-bias the Rice distribution
 				// The following approximation is approximately correct
@@ -289,33 +299,33 @@ public class PolarMap extends SourceModel {
 				if(pol2 < 0.0) pol2 = 0.0;
 				
 				// Propagate errors properly...
-				p.setValue(i, j, Math.sqrt(pol2));
-				p.setWeight(i, j, 1.0 / psigma2);
+				p.set(i, j, Math.sqrt(pol2));
+				p.setWeightAt(i, j, 1.0 / psigma2);
 				p.unflag(i, j);
 			}
 		}.process();
 		
-		P.id = "P";
-		p.sanitize();
+		P.setID("P");
+		p.validate();
 		return P;
 	}	
 	
-	public ScalarMap getI() {
+	public AstroMap getI() {
 		return getI(getP());
 	}	
 	
-	public ScalarMap getI(ScalarMap P) {	
-		final ScalarMap I = (ScalarMap) N.getWorkingCopy(false);
-		final AstroMap n = N.map;
-		final AstroMap p = P.map;
-		final AstroMap t = I.map;
+	public AstroMap getI(AstroMap P) {	
+		final AstroMap I = (AstroMap) N.getWorkingCopy(false);
+		final Observation2D n = N.map;
+		final Observation2D p = P.map;
+		final Observation2D t = I.map;
 		
-		t.new Task<Void>() {
+		t.new Fork<Void>() {
 			@Override
 			public void process(int i, int j) {
-				if(n.isUnflagged(i, j) && p.isUnflagged(i, j)) {
-					t.setValue(i, j, n.getValue(i, j) + p.getValue(i, j));
-					t.setWeight(i, j, n.getWeight(i, j));
+				if(n.isValid(i, j) && p.isValid(i, j)) {
+					t.set(i, j, n.get(i, j).doubleValue() + p.get(i, j).doubleValue());
+					t.setWeightAt(i, j, n.weightAt(i, j));
 					t.unflag(i, j);
 					// TODO check on what's the proper uncertainty on I (same as N or N+P from independent N,P)...
 					//t.setWeight(i, j, 1.0 / (1.0/n.getWeight(i, j) + 1.0/p.getWeight(i, j)));
@@ -324,37 +334,37 @@ public class PolarMap extends SourceModel {
 			}
 		}.process();
 
-		I.id = "I";
-		t.sanitize();
+		I.setID("I");
+		t.validate();
 		return I;
 	}
 	
 	
 
-	public ScalarMap getPolarFraction(ScalarMap P, ScalarMap I, double accuracy) {	
-		final ScalarMap F = (ScalarMap) P.getWorkingCopy(false);
-		final AstroMap p = P.map;
-		final AstroMap t = I.map;
-		final AstroMap f = F.map;
+	public AstroMap getPolarFraction(AstroMap P, AstroMap I, double accuracy) {	
+		final AstroMap F = (AstroMap) P.getWorkingCopy(false);
+		final Observation2D p = P.map;
+		final Observation2D t = I.map;
+		final Observation2D f = F.map;
 		
 		final double minw = 1.0 / (accuracy * accuracy);
 		
-		f.new Task<Void>() {
+		f.new Fork<Void>() {
 			@Override
 			public void process(int i, int j) {
 			     
-				if(t.isFlagged(i, j) || p.isFlagged(i, j)) {
+				if(!t.isValid(i, j) || !p.isValid(i, j)) {
 					f.flag(i, j);	
 					return;
 				}
 				
-				f.setValue(i, j, p.getValue(i, j) / t.getValue(i, j));
+				f.set(i, j, p.get(i, j).doubleValue() / t.get(i, j).doubleValue());
 
 				// f = a/b --> df/db = -a/b^2 * db
 				// df2 = (da / b)^2 + (a db / b2)^2 = a/b * ((da/a)^2 + (db/b)^2)
 				// 1 / wf = 1/(wa * b2) + a2/(wb*b4) = a2/b2 * (1/(wa*a2) + 1/(wb*b2))
 				// wf = b2/a2 / (1/(wa*a2) + 1/(wb*b2))
-				double p2 = p.getValue(i, j);
+				double p2 = p.get(i, j).doubleValue();
 				
 				if(p2 == 0.0) {
 					f.flag(i, j);	
@@ -362,24 +372,24 @@ public class PolarMap extends SourceModel {
 				}
 				
 				
-				double t2 = t.getValue(i, j);
+				double t2 = t.get(i, j).doubleValue();
 				p2 *= p2; t2 *= t2;
 				
-				f.setWeight(i, j, t2 / p2 / (1.0 / (p2 * p.getWeight(i, j)) + 1.0 / (t2 * t.getWeight(i, j))));
+				f.setWeightAt(i, j, t2 / p2 / (1.0 / (p2 * p.weightAt(i, j)) + 1.0 / (t2 * t.weightAt(i, j))));
 
 				// if sigma_f > accuracy than flag the datum
-				if(f.getWeight(i, j) < minw) f.flag(i, j);	
+				if(f.weightAt(i, j) < minw) f.flag(i, j);	
 				else f.unflag(i, j);
 			}
 		}.process();
 		
-		F.id = "F";
+		F.setID("F");
 		F.enableLevel = false;
 		F.enableWeighting = false;
 		F.enableBias = false;
 		
 		f.setUnit(Unit.unity);
-		f.sanitize();
+		f.validate();
 		return F;
 	}
 	
@@ -399,25 +409,25 @@ public class PolarMap extends SourceModel {
 		U.write(path, false);
 		
 		// Write P (polarized power)
-		ScalarMap P = getP();
+		AstroMap P = getP();
 		P.write(path, false);	
 			
 		// Write I (total power)
-		ScalarMap I = getI(P);
+		AstroMap I = getI(P);
 		I.write(path, false);	
 		
 		// Write F (polarized fraction)
         double accuracy = hasOption("source.polar.fraction.rmsclip") ?
                 option("source.polar.fraction.rmsclip").getDouble() : 0.03;
         
-        ScalarMap F = getPolarFraction(P, I, accuracy);
+        AstroMap F = getPolarFraction(P, I, accuracy);
 		
 		if(hasOption("source.polar.fraction")) {
 			F.write(path, false);
 		}
 
         if(hasOption("source.polar.angles")) {
-            ScalarMap A = getAngles(P, F);
+            AstroMap A = getAngles(P, F);
             A.write(path, false);
         }
 	}

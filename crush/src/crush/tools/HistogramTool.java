@@ -24,8 +24,8 @@ package crush.tools;
 
 import crush.*;
 import jnum.Util;
-import jnum.data.Data2D;
-import jnum.data.GridMap2D;
+import jnum.data.image.Data2D;
+import jnum.data.image.GridMap2D;
 import jnum.math.SphericalCoordinates;
 import jnum.util.*;
 
@@ -143,7 +143,7 @@ public class HistogramTool {
 		int[] count = new int[bins];
 
 		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.isUnflagged(i, j)) {
-			int bin = zeroBin + (int) Math.round(image.getValue(i, j) / binres);		
+			int bin = zeroBin + (int) Math.round(image.get(i, j) / binres);		
 			count[bin]++;
 		}
 

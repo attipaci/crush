@@ -30,11 +30,11 @@ import java.util.Arrays;
 import jnum.Constant;
 import jnum.Copiable;
 import jnum.ExtraMath;
-import jnum.Parallel;
 import jnum.Util;
 import jnum.data.DataPoint;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
+import jnum.parallel.ParallelTask;
 
 public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	/**
@@ -400,7 +400,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 			public DataPoint[] getResult() {
 				final DataPoint[] globalIncrement = DataPoint.createArray(mode.size());
 				
-				for(Parallel<DataPoint[]> task : getWorkers()) {
+				for(ParallelTask<DataPoint[]> task : getWorkers()) {
 					final DataPoint[] localIncrement = task.getLocalResult();
 					for(int k=mode.size(); --k >= 0; ) {
 						DataPoint global = globalIncrement[k];

@@ -27,7 +27,6 @@ import jnum.Unit;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
-import nom.tam.util.Cursor;
 
 public class SofiaScanningData extends SofiaData {
     public BracketedValues RA = new BracketedValues(), DEC = new BracketedValues();
@@ -51,14 +50,14 @@ public class SofiaScanningData extends SofiaData {
     }
 
     @Override
-    public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-        //cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Scanning Data ------>", false));
-        if(!Double.isNaN(RA.start)) cursor.add(new HeaderCard("SCNRA0", RA.start / Unit.hourAngle, "(hour) Initial scan RA."));
-        if(!Double.isNaN(DEC.start)) cursor.add(new HeaderCard("SCNDEC0", DEC.start / Unit.deg, "(deg) Initial scan DEC."));
-        if(!Double.isNaN(RA.end)) cursor.add(new HeaderCard("SCNRAF", RA.start / Unit.hourAngle, "(hour) Final scan RA."));
-        if(!Double.isNaN(DEC.end)) cursor.add(new HeaderCard("SCNDECF", DEC.start / Unit.deg, "Final scan DEC."));
-        if(!Double.isNaN(speed)) cursor.add(new HeaderCard("SCNRATE", speed / (Unit.arcsec / Unit.s), "(arcsec/s) Commanded slew rate on sky."));
-        if(!Double.isNaN(angle)) cursor.add(new HeaderCard("SCNDIR", angle / Unit.deg, "(deg) Scan direction on sky."));	
+    public void editHeader(Header header) throws HeaderCardException {
+        //header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Scanning Data ------>", false));
+        if(!Double.isNaN(RA.start)) header.addLine(new HeaderCard("SCNRA0", RA.start / Unit.hourAngle, "(hour) Initial scan RA."));
+        if(!Double.isNaN(DEC.start)) header.addLine(new HeaderCard("SCNDEC0", DEC.start / Unit.deg, "(deg) Initial scan DEC."));
+        if(!Double.isNaN(RA.end)) header.addLine(new HeaderCard("SCNRAF", RA.start / Unit.hourAngle, "(hour) Final scan RA."));
+        if(!Double.isNaN(DEC.end)) header.addLine(new HeaderCard("SCNDECF", DEC.start / Unit.deg, "Final scan DEC."));
+        if(!Double.isNaN(speed)) header.addLine(new HeaderCard("SCNRATE", speed / (Unit.arcsec / Unit.s), "(arcsec/s) Commanded slew rate on sky."));
+        if(!Double.isNaN(angle)) header.addLine(new HeaderCard("SCNDIR", angle / Unit.deg, "(deg) Scan direction on sky."));	
     }
 
     @Override

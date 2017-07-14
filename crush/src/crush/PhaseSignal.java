@@ -25,10 +25,10 @@ package crush;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import jnum.Parallel;
 import jnum.Util;
 import jnum.data.DataPoint;
 import jnum.data.WeightedPoint;
+import jnum.parallel.ParallelTask;
 
 public class PhaseSignal implements Serializable {
 	/**
@@ -132,7 +132,7 @@ public class PhaseSignal implements Serializable {
             protected void postProcess() {
                 super.postProcess();
                 
-                for(Parallel<double[]> task : getWorkers()) {
+                for(ParallelTask<double[]> task : getWorkers()) {
                     double[] localChannelParms = task.getLocalResult();
                     for(int k=mode.size(); --k >= 0; ) phaseParms.addAsync(mode.getChannels().get(k), localChannelParms[k]);
                     Instrument.recycle(localChannelParms);

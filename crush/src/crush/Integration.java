@@ -27,7 +27,6 @@ package crush;
 import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import crush.filters.*;
 import crush.telescope.Chopper;
@@ -38,7 +37,6 @@ import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.LockedException;
-import jnum.Parallel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.*;
@@ -48,6 +46,7 @@ import jnum.math.Complex;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
+import jnum.parallel.ParallelTask;
 import jnum.reporting.BasicMessaging;
 import jnum.text.TableFormatter;
 import jnum.util.HashCode;
@@ -88,7 +87,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public DataPoint aveScanSpeed;
 	public MultiFilter filter;
-	private FloatFFT sequentialFFT, parallelFFT;
+	private FloatFFT FFT;
 	
 	public double filterTimeScale = Double.POSITIVE_INFINITY;
 	public double nefd = Double.NaN; // It is readily cast into the Jy sqrt(s) units!!!
@@ -541,22 +540,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else return null;
 	}
 	
-	public FloatFFT getSequentialFFT() {
-		if(sequentialFFT == null) {
-			sequentialFFT = new FloatFFT();
-			sequentialFFT.setSequential();
-		}
-		return sequentialFFT;
-	}
 	
-	public FloatFFT getParallelFFT() {
-		if(parallelFFT == null) {
-			parallelFFT = new FloatFFT();
-			if(CRUSH.executor instanceof ThreadPoolExecutor) parallelFFT.setPool((ThreadPoolExecutor) CRUSH.executor);
-			else parallelFFT.setThreads(parallelism);
-		}
-			
-		return parallelFFT;
+	public FloatFFT getFFT() {
+		if(FFT == null) FFT = new FloatFFT();
+		FFT.setParallel(1);
+		return FFT;
 	}
 	
 	public abstract FrameType getFrameInstance();
@@ -791,7 +779,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			public void postProcess() {
 				super.postProcess();
-				for(Parallel<float[]> task : getWorkers()) {
+				for(ParallelTask<float[]> task : getWorkers()) {
 					float[] localFrameParms = task.getLocalResult();
 					parms.addForFrames(localFrameParms);
 					recycle(localFrameParms);
@@ -1105,7 +1093,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			public DataPoint[] getResult() {
 				
-				for(Parallel<DataPoint[]> task : getWorkers()) {
+				for(ParallelTask<DataPoint[]> task : getWorkers()) {
 					final DataPoint[] localVar = task.getLocalResult();
 					
 					if(var == null) var = localVar;
@@ -1184,7 +1172,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			public DataPoint[] getResult() {
 				init();
 				
-				for(Parallel<DataPoint[]> task : getWorkers()) {
+				for(ParallelTask<DataPoint[]> task : getWorkers()) {
 					final DataPoint[] localVar = task.getLocalResult();
 					for(int i=instrument.size(); --i >= 0; ) {
 						final DataPoint global = var[i];
@@ -1346,7 +1334,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			public WeightedPoint getResult() {
 				WeightedPoint global = new WeightedPoint();
-				for(Parallel<WeightedPoint> task : getWorkers()) {
+				for(ParallelTask<WeightedPoint> task : getWorkers()) {
 					WeightedPoint local = task.getLocalResult();
 					global.add(local.value());
 					global.addWeight(local.weight());
@@ -1878,7 +1866,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			public int[] getResult() {
 				init();
-				for(Parallel<int[]> task : getWorkers()) {
+				for(ParallelTask<int[]> task : getWorkers()) {
 					int[] localSpikes = task.getLocalResult();
 					for(int c=instrument.size(); --c >= 0; ) channelSpikes[c] += localSpikes[c];
 					Instrument.recycle(localSpikes);
@@ -1935,7 +1923,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			public Integer getResult() {
 				int globalSpikyFrames = 0;
-				for(Parallel<Integer> task : getWorkers()) globalSpikyFrames += task.getLocalResult();
+				for(ParallelTask<Integer> task : getWorkers()) globalSpikyFrames += task.getLocalResult();
 				return globalSpikyFrames;
 			}
 			
@@ -2391,7 +2379,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			
 			@Override
 			protected void init() {
-				fft = new FloatFFT();
+				fft = getFFT();
 				data = new float[windowSize];
 			}
 
@@ -2613,6 +2601,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		final float Jy = gain * (float) instrument.janskyPerBeam();
 		
 		final int nt = size();
+		
+		final FloatFFT fft = new FloatFFT();
+		fft.noParallel();
 
 		instrument.new Fork<Void>() {
 			private float[] data;
@@ -2639,7 +2630,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 					else data[t] = exposure.data[channel.index];
 				}
 				
-				final double[] spectrum = getSequentialFFT().averagePower(data, w);
+				final double[] spectrum = fft.averagePower(data, w);
 				final float[] channelSpectrum = new float[spectrum.length];
 				for(int i=spectrum.length; --i>=0; ) channelSpectrum[i] = (float) Math.sqrt(spectrum[i] / df) / Jy;		
 				spectra[channel.index] = channelSpectrum;	
@@ -3282,24 +3273,31 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	}
 	
 			
-	void writeDelayedCoupling(String name, Complex[][] spectrum) throws IOException {
-		int nF = spectrum[0].length;
-		
-		FauxComplexArray.Float C = new FauxComplexArray.Float(nF);
-		FloatFFT fft = new FloatFFT();
-		
-		float[][] delay = new float[spectrum.length][nF << 1];
+	void writeDelayedCoupling(String name, final Complex[][] spectrum) throws IOException {
+		final int nF = spectrum[0].length;
+		final float[][] delay = new float[spectrum.length][nF << 1];
 		
 		Channel[] allChannels = new Channel[instrument.storeChannels];		
 		for(Channel channel : instrument) allChannels[channel.getFixedIndex()] = channel;
 		
 		
-		for(int c=spectrum.length; --c >= 0; ) {
-			for(int f=nF; --f >= 0; ) C.set(f, spectrum[c][f]);
-			fft.amplitude2Real(C.getData());
-			System.arraycopy(C.getData(), 0, delay[c], 0, nF << 1);		
-		}
-	
+		instrument.new Fork<Void>() {
+		    private FauxComplexArray.Float C;  
+	        
+	        @Override
+            protected void init() {
+	            super.init();
+	            C = new FauxComplexArray.Float(nF);
+	        }
+	        
+            @Override
+            protected void process(Channel channel) {
+                for(int f=nF; --f >= 0; ) C.set(f, spectrum[channel.index][f]);
+                getFFT().amplitude2Real(C.getData());
+                System.arraycopy(C.getData(), 0, delay[channel.index], 0, nF << 1); 
+            }	
+		}.process();
+		
 		
 		String fileName = CRUSH.workPath + File.separator + getFileID() + "." + name + "-coupling.delay";
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
@@ -3309,7 +3307,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		
 		int n = nF << 1;
 				
-		final int nc = instrument.getPixelCount();
+		final int nc = instrument.storeChannels;
 		
 		for(int t=0; t<n; t++) {
 			out.print(Util.f5.format(t * instrument.samplingInterval));
@@ -3370,7 +3368,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Complex dComponent = new Complex();
 		Complex sComponent = new Complex();
 		
-		FloatFFT fft = new FloatFFT();
+		FloatFFT fft = getFFT();
 		double norm = 0.0;
 				
  		for(int from = 0; from < nt; from+=step) {

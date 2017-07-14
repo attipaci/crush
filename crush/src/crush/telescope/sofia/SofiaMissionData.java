@@ -26,7 +26,7 @@ package crush.telescope.sofia;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
-import nom.tam.util.Cursor;
+
 
 public class SofiaMissionData extends SofiaData {
     public String obsPlanID, aircraft, missionID;
@@ -48,12 +48,12 @@ public class SofiaMissionData extends SofiaData {
     }
 
     @Override
-    public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-        //cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Mission Data ------>", false));
-        if(aircraft != null) cursor.add(new HeaderCard("DEPLOY", aircraft, "aircraft base of operation."));
-        if(obsPlanID != null) cursor.add(new HeaderCard("PLANID", obsPlanID, "observing plan containing all AORs."));
-        if(missionID != null) cursor.add(new HeaderCard("MISSN-ID", missionID, "unique Mission ID in Mission Plan from MCCS."));
-        if(flightLeg >= 0) cursor.add(new HeaderCard("FLIGHTLG", flightLeg, "Flight leg identifier."));
+    public void editHeader(Header header) throws HeaderCardException {
+        //header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Mission Data ------>", false));
+        if(aircraft != null) header.addLine(new HeaderCard("DEPLOY", aircraft, "aircraft base of operation."));
+        if(obsPlanID != null) header.addLine(new HeaderCard("PLANID", obsPlanID, "observing plan containing all AORs."));
+        if(missionID != null) header.addLine(new HeaderCard("MISSN-ID", missionID, "unique Mission ID in Mission Plan from MCCS."));
+        if(flightLeg >= 0) header.addLine(new HeaderCard("FLIGHTLG", flightLeg, "Flight leg identifier."));
     }
 
     @Override

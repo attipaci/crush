@@ -26,7 +26,7 @@
  import nom.tam.fits.Header;
  import nom.tam.fits.HeaderCard;
  import nom.tam.fits.HeaderCardException;
- import nom.tam.util.Cursor;
+
 
  public class SofiaChopperData extends SofiaData {
      public double frequency = Double.NaN;
@@ -68,22 +68,22 @@
      }
 
      @Override
-     public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-         //cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Chopper Data ------>", false));
-         if(!Double.isNaN(frequency)) cursor.add(new HeaderCard("CHPFREQ", frequency / Unit.Hz, "(Hz) Chop frequency."));
-         if(!Double.isNaN(amplitude)) cursor.add(new HeaderCard("CHPAMP1", amplitude / Unit.arcsec, "(arcsec) Chop amplitude on sky."));
-         if(!Double.isNaN(amplitude2)) cursor.add(new HeaderCard("CHPAMP2", amplitude2 / Unit.arcsec, "(arcsec) Second chop amplitude on sky."));
-         if(!Double.isNaN(angle)) cursor.add(new HeaderCard("CHPANGLE", angle / Unit.deg, "(deg) Chop angle on sky."));
-         if(!Double.isNaN(tip)) cursor.add(new HeaderCard("CHPTIP", tip / Unit.arcsec, "(arcsec) Chopper tip on sky."));
-         if(!Double.isNaN(tilt)) cursor.add(new HeaderCard("CHPTILT", tilt / Unit.arcsec, "(arcsec) Chop tilt on sky."));
-         if(profileType != null) cursor.add(new HeaderCard("CHPPROF", profileType, "Chop profile from MCCS."));
-         if(symmetryType != null) cursor.add(new HeaderCard("CHPSYM", symmetryType, "Chop symmetry mode."));
-         if(coordinateSystem != null) cursor.add(new HeaderCard("CHPCRSYS", coordinateSystem, "Chop coordinate system."));
-         if(signalSource != null) cursor.add(new HeaderCard("CHPSRC", signalSource, "Source of chopper signal."));
-         if(driveMode != null) cursor.add(new HeaderCard("CHPACDC", driveMode, "Analog or Digital drive signal."));
-         if(waveFunction != null) cursor.add(new HeaderCard("CHPFUNC", waveFunction, "Chopper wave function."));
-         if(!Double.isNaN(settlingTime)) cursor.add(new HeaderCard("CHPSETL", settlingTime / Unit.ms, "(ms) Chopper settling time."));
-         if(!Double.isNaN(phase)) cursor.add(new HeaderCard("CHPPHASE", phase / Unit.ms, "(ms) Chop phase."));
+     public void editHeader(Header header) throws HeaderCardException {
+         //header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Chopper Data ------>", false));
+         if(!Double.isNaN(frequency)) header.addLine(new HeaderCard("CHPFREQ", frequency / Unit.Hz, "(Hz) Chop frequency."));
+         if(!Double.isNaN(amplitude)) header.addLine(new HeaderCard("CHPAMP1", amplitude / Unit.arcsec, "(arcsec) Chop amplitude on sky."));
+         if(!Double.isNaN(amplitude2)) header.addLine(new HeaderCard("CHPAMP2", amplitude2 / Unit.arcsec, "(arcsec) Second chop amplitude on sky."));
+         if(!Double.isNaN(angle)) header.addLine(new HeaderCard("CHPANGLE", angle / Unit.deg, "(deg) Chop angle on sky."));
+         if(!Double.isNaN(tip)) header.addLine(new HeaderCard("CHPTIP", tip / Unit.arcsec, "(arcsec) Chopper tip on sky."));
+         if(!Double.isNaN(tilt)) header.addLine(new HeaderCard("CHPTILT", tilt / Unit.arcsec, "(arcsec) Chop tilt on sky."));
+         if(profileType != null) header.addLine(new HeaderCard("CHPPROF", profileType, "Chop profile from MCCS."));
+         if(symmetryType != null) header.addLine(new HeaderCard("CHPSYM", symmetryType, "Chop symmetry mode."));
+         if(coordinateSystem != null) header.addLine(new HeaderCard("CHPCRSYS", coordinateSystem, "Chop coordinate system."));
+         if(signalSource != null) header.addLine(new HeaderCard("CHPSRC", signalSource, "Source of chopper signal."));
+         if(driveMode != null) header.addLine(new HeaderCard("CHPACDC", driveMode, "Analog or Digital drive signal."));
+         if(waveFunction != null) header.addLine(new HeaderCard("CHPFUNC", waveFunction, "Chopper wave function."));
+         if(!Double.isNaN(settlingTime)) header.addLine(new HeaderCard("CHPSETL", settlingTime / Unit.ms, "(ms) Chopper settling time."));
+         if(!Double.isNaN(phase)) header.addLine(new HeaderCard("CHPPHASE", phase / Unit.ms, "(ms) Chop phase."));
      }
 
      @Override

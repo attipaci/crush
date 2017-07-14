@@ -26,7 +26,6 @@ package crush.telescope.sofia;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
-import nom.tam.util.Cursor;
 
 public class SofiaOriginationData extends SofiaData {
     public String organization, observer, creator, operator;
@@ -49,14 +48,14 @@ public class SofiaOriginationData extends SofiaData {
     }
 
     @Override
-    public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-        //cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Origination Data ------>", false));
-        if(organization != null) cursor.add(new HeaderCard("ORIGIN", organization, "Organization where data originated."));
-        if(observer != null) cursor.add(new HeaderCard("OBSERVER", observer, "Name(s) of observer(s)."));
-        if(creator != null) cursor.add(new HeaderCard("CREATOR", creator, "Software / Task that created the raw data."));
-        if(operator != null) cursor.add(new HeaderCard("OPERATOR", operator, "Name(s) of operator(s)."));
-        if(fileName != null) cursor.add(new HeaderCard("FILENAME", fileName, "Original file name."));
-        if(observatory != null) cursor.add(new HeaderCard("OBSERVAT", observatory, "Observatory name."));
+    public void editHeader(Header header) throws HeaderCardException {
+        //header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Origination Data ------>", false));
+        if(organization != null) header.addLine(new HeaderCard("ORIGIN", organization, "Organization where data originated."));
+        if(observer != null) header.addLine(new HeaderCard("OBSERVER", observer, "Name(s) of observer(s)."));
+        if(creator != null) header.addLine(new HeaderCard("CREATOR", creator, "Software / Task that created the raw data."));
+        if(operator != null) header.addLine(new HeaderCard("OPERATOR", operator, "Name(s) of operator(s)."));
+        if(fileName != null) header.addLine(new HeaderCard("FILENAME", fileName, "Original file name."));
+        if(observatory != null) header.addLine(new HeaderCard("OBSERVAT", observatory, "Observatory name."));
     }
 
     @Override

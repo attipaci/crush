@@ -61,27 +61,63 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
         return pwv41k * Math.exp(-b * (altkf - 41.0));
     }
     
-    @Override
+   @Override
     public void validate() {  
-        double pwv = Double.NaN;
-        if(hasOption("pwvmodel")) pwv = getModelPWV();
-        else {
-            pwv = getMeanPWV();
-            if(pwv == 0.0 || Double.isNaN(pwv)) {
-                info("--> FIX: Using default PWV model...");
-                pwv = getModelPWV();
-            } 
+        validatePWV();    
+        super.validate();
+    }
+    
+    private void validatePWV() {
+        double pwv = getMeanPWV();
+        if(pwv == 0.0 || Double.isNaN(pwv)) {
+            info("--> FIX: Using default PWV model...");
+            pwv = getModelPWV(); 
         }
 
         info("PWV: " + Util.f1.format(pwv / Unit.um) + " um");
-     
+        
         if(!hasOption("tau.pwv")) {
             try { instrument.getOptions().process("tau.pwv", Double.toString(pwv / Unit.um)); }
             catch(LockedException e) {}
-        }
-       
-        super.validate();
+        }  
     }
+    
+
+    @Override
+    public void setTau() throws Exception {
+        if(!hasOption("tau")) return;
+        
+        String source = option("tau").getValue().toLowerCase();
+        
+        if(source.equals("atran")) setVaccaTau();
+        else if(source.equals("pwvmodel")) setPWVModelTau();
+        else super.setTau();
+    }
+    
+    
+    public void setVaccaTau() throws Exception {
+        AtranModel model = new AtranModel(instrument.getOptions());
+        double altitude = ((SofiaScan<?,?>) scan).aircraft.altitude.midPoint();
+        double elevation = 0.5 * (getFirstFrame().horizontal.EL() + getLastFrame().horizontal.EL());
+        
+        double C = model.getRelativeTransmission(altitude, elevation);
+        
+        info("Applying Vacca's atmospheric correction: " + Util.f3.format(C));
+        
+        setTau(-Math.log(model.getReferenceTransmission() * C) * Math.sin(elevation));
+    }
+    
+    public void setPWVModelTau() throws Exception {
+        double pwv = getModelPWV() / Unit.um;
+        
+        info("Using PWV model to correct fluxes: PWV = " + Util.f1.format(pwv));  
+        
+        try { instrument.getOptions().process("tau.pwv", Double.toString(pwv)); }
+        catch(LockedException e) {}
+        
+        this.setTau("pwv", pwv);
+    }
+
 
 }
 

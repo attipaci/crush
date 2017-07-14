@@ -30,20 +30,22 @@ import java.util.concurrent.ExecutorService;
 
 import crush.*;
 import crush.array.*;
-import crush.astro.AstroMap;
 import jnum.Unit;
 import jnum.data.*;
+import jnum.data.image.Index2D;
+import jnum.data.image.Observation2D;
+import jnum.data.image.region.GaussianSource;
+import jnum.math.Coordinate2D;
 import jnum.math.SphericalCoordinates;
-import jnum.projection.Projection2D;
 
-public class BeamMap extends SourceMap {
+public class BeamMap extends AstroModel2D {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -8380688477538977451L;
 	
-	ScalarMap[] pixelMap;
-	private ScalarMap template;
+	AstroMap[] pixelMap;
+	private AstroMap template;
 	
 	public BeamMap(Camera<?> instrument) {
 		super(instrument);
@@ -55,9 +57,9 @@ public class BeamMap extends SourceMap {
 	@Override
 	public SourceModel getWorkingCopy(boolean withContents) {
 		BeamMap copy = (BeamMap) super.getWorkingCopy(withContents);
-		copy.pixelMap = new ScalarMap[pixelMap.length];
+		copy.pixelMap = new AstroMap[pixelMap.length];
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null)
-			copy.pixelMap[p] = (ScalarMap) pixelMap[p].getWorkingCopy(withContents);	
+			copy.pixelMap[p] = (AstroMap) pixelMap[p].getWorkingCopy(withContents);	
 		return copy;
 	}
 	
@@ -80,33 +82,38 @@ public class BeamMap extends SourceMap {
 			
 		super.createFrom(collection);
 		
-		template = new ScalarMap(getInstrument());
+		template = new AstroMap(getInstrument());
 		template.createFrom(collection);
 		
-		pixelMap = new ScalarMap[getArray().maxPixels() + 1];
+		pixelMap = new AstroMap[getArray().maxPixels() + 1];
 	}
 	
 	public Camera<?> getArray() { return (Camera<?>) getInstrument(); }
 	
+
+    @Override
+    public void resetProcessing() {
+        super.resetProcessing();
+        for(AstroMap map : pixelMap) if(map != null) map.resetProcessing();
+    }
+
+    
+	
 	@Override
-	public void reset(boolean clearContent) {
-		super.reset(clearContent);
-		for(ScalarMap map : pixelMap) if(map != null) map.reset(clearContent);
+	public void clearContent() {
+		for(AstroMap map : pixelMap) if(map != null) map.clearContent();
 	}
 
-	
 		
 	@Override
-	public void add(SourceModel model, double weight) {
+	public void addModel(SourceModel model, double weight) {
 		if(!(model instanceof BeamMap)) throw new IllegalArgumentException("Cannot add " + model.getClass().getSimpleName() + " to " + getClass().getSimpleName());
 		BeamMap other = (BeamMap) model;
 		
 		for(int p=0; p<pixelMap.length; p++) if(other.pixelMap[p] != null) {
-			if(pixelMap[p] == null) pixelMap[p] = (ScalarMap) other.pixelMap[p].getWorkingCopy(false);
+			if(pixelMap[p] == null) pixelMap[p] = (AstroMap) other.pixelMap[p].getWorkingCopy(false);
 			pixelMap[p].add(other.pixelMap[p], weight);
 		}
-		
-		generation = Math.max(generation, other.generation);
 	}
 
 	@Override
@@ -118,11 +125,11 @@ public class BeamMap extends SourceMap {
 	@Override
 	protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain) {		
 		final int i = pixel.getFixedIndex();
-		ScalarMap map = pixelMap[i];
+		AstroMap map = pixelMap[i];
 		
 		if(map == null) {	
-			map = (ScalarMap) template.getWorkingCopy(false);
-			map.id = Integer.toString(i);
+			map = (AstroMap) template.getWorkingCopy(false);
+			map.setID(Integer.toString(i));
 			map.standalone();
 			pixelMap[i] = map;
 		}
@@ -138,13 +145,13 @@ public class BeamMap extends SourceMap {
 	@Override
 	public int countPoints() {
 		int points = 0;
-		for(ScalarMap map : pixelMap) if(map != null) points += map.countPoints();
+		for(AstroMap map : pixelMap) if(map != null) points += map.countPoints();
 		return points;
 	}
 
 	@Override
 	public double covariantPoints() {
-		for(ScalarMap map : pixelMap) if(map != null) return map.covariantPoints();
+		for(AstroMap map : pixelMap) if(map != null) return map.covariantPoints();
 		return 1.0;
 	}
 
@@ -160,40 +167,30 @@ public class BeamMap extends SourceMap {
 	
 
 	@Override
-	public Projection2D<SphericalCoordinates> getProjection() {
-		return template.getProjection();
-	}
-
-	@Override
-	public void setProjection(Projection2D<SphericalCoordinates> projection) {
-		if(template != null) template.setProjection(projection);
-	}
-
-	@Override
 	public boolean isMasked(Index2D index) {
 		return false;
 	}
 
 	@Override
 	public void setSize(int sizeX, int sizeY) {
-		for(ScalarMap map : pixelMap) if(map != null) map.setSize(sizeX, sizeY);
+		for(AstroMap map : pixelMap) if(map != null) map.setSize(sizeX, sizeY);
 	}
 
 	@Override
 	protected void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, final double[] syncGain, final boolean isMasked) {
-		final ScalarMap map = pixelMap[pixel.getFixedIndex()];
+		final AstroMap map = pixelMap[pixel.getFixedIndex()];
 		if(map != null) map.sync(exposure, pixel, index, fG, sourceGain, syncGain, isMasked);	
 	}
 
 
 	@Override
 	public void setBase() {
-		for(ScalarMap map : pixelMap) if(map != null) map.setBase();
+		for(AstroMap map : pixelMap) if(map != null) map.setBase();
 	}
 
 	@Override
 	public void process(Scan<?, ?> scan) {
-		for(ScalarMap map : pixelMap) if(map != null) map.process(scan);
+		for(AstroMap map : pixelMap) if(map != null) map.process(scan);
 	}
 
 
@@ -222,11 +219,11 @@ public class BeamMap extends SourceMap {
 	public void process() throws Exception {	
 		boolean process = hasSourceOption("process");	
 		
-		for(ScalarMap map : pixelMap) if(map != null) {	
+		for(AstroMap map : pixelMap) if(map != null) {	
 			if(process) map.process();
 			else {
-				map.map.normalize();
-				map.map.generation++; // Increment the map generation...
+				map.map.endAccumulation();
+				nextGeneration(); // Increment the map generation...
 			}
 		}
 	}
@@ -238,16 +235,16 @@ public class BeamMap extends SourceMap {
 		
 		int k = 0;
 		
-		for(Pixel pixel : scans.get(0).instrument.getMappingPixels(0)) {
+		for(Pixel pixel : getFirstScan().instrument.getMappingPixels(0)) {
 			int i = pixel.getFixedIndex();
-			ScalarMap beamMap = pixelMap[i];
+			AstroMap beamMap = pixelMap[i];
 			
 			pixel.getPosition().set(Double.NaN, Double.NaN);
 			
 			if(beamMap != null) if(beamMap.isValid()) {
-				AstroMap map = beamMap.map;
+				Observation2D map = beamMap.map;
 				if(smooth) map.smoothTo(getInstrument().getPointSize());
-				GaussianSource<SphericalCoordinates> source = beamMap.getPeakSource();
+				GaussianSource source = beamMap.getPeakSource();
 				
 				if(source != null) {
 					// Get the source peak in the pixel.
@@ -255,7 +252,7 @@ public class BeamMap extends SourceMap {
 					peaks[k++] = pixelPeak[i];
 
 					// Get the offset position if it makes sense, or set as NaN otherwise... 
-					map.getProjection().project(source.getCoordinates(), pixel.getPosition());				
+					getProjection().project((SphericalCoordinates) source.getCoordinates(), pixel.getPosition());				
 
 					// The pixel position is the opposite of its apparent offset.
 					pixel.getPosition().invert();
@@ -266,9 +263,9 @@ public class BeamMap extends SourceMap {
 		
 		final double mean = Statistics.median(peaks, 0, k);
 		
-		for(final Pixel pixel : scans.get(0).instrument.getMappingPixels(0)) {
+		for(final Pixel pixel : getFirstScan().instrument.getMappingPixels(0)) {
 			int i = pixel.getFixedIndex();
-			ScalarMap map = pixelMap[i];
+			AstroMap map = pixelMap[i];
 			if(map != null) {
 				final double rel = pixelPeak[i] / mean;
 				for(final Channel channel : pixel) channel.coupling *= rel;
@@ -278,16 +275,16 @@ public class BeamMap extends SourceMap {
 	
 	
 	public void writePixelData() throws IOException {
-		Scan<?,?> scan = scans.get(0);
-		double[] sourceGain = scan.instrument.getSourceGains(false);
+		
+		double[] sourceGain = getFirstScan().instrument.getSourceGains(false);
 		
 		String fileName = CRUSH.workPath + File.separator + getDefaultCoreName() + ".rcp";
 		PrintStream out = new PrintStream(new FileOutputStream(fileName));
 		
-		Camera<?> array = (Camera<?>) scans.get(0).instrument;
+		Camera<?> array = (Camera<?>) getFirstScan().instrument;
 		for(Channel channel : array) channel.coupling = sourceGain[channel.index] / channel.gain;
 	
-		array.printPixelRCP(out, scan.getFirstIntegration().getASCIIHeader());
+		array.printPixelRCP(out, getFirstScan().getFirstIntegration().getASCIIHeader());
 		
 		out.flush();
 		out.close();
@@ -307,17 +304,17 @@ public class BeamMap extends SourceMap {
 
 	@Override
 	public void noParallel() {
-		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) map.noParallel();
+		if(pixelMap != null) for(AstroMap map : pixelMap) if(map != null) map.noParallel();
 	}
 	
 	@Override
 	public void setParallel(int threads) {
-		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) map.setParallel(threads);
+		if(pixelMap != null) for(AstroMap map : pixelMap) if(map != null) map.setParallel(threads);
 	}
 	
 	@Override
 	public int getParallel() {
-		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) return map.getParallel();
+		if(pixelMap != null) for(AstroMap map : pixelMap) if(map != null) return map.getParallel();
 		return 1;
 	}
 
@@ -325,46 +322,42 @@ public class BeamMap extends SourceMap {
 	public boolean isValid() {
 		if(pixelMap == null) return false;
 		// Require at least one valid pixel map.
-		for(ScalarMap map : pixelMap) if(map != null) if(map.isValid()) return true;
+		for(AstroMap map : pixelMap) if(map != null) if(map.isValid()) return true;
 		return false;
 	}
 
 	@Override
-	public void addNonZero(SourceMap other) {
+	public void mergeAccumulate(AstroModel2D other) {
 		if(!(other instanceof BeamMap)) 
 			throw new IllegalStateException("Cannot add " + other.getClass().getSimpleName() + " to " + getClass().getSimpleName() + ".");
 		
 		BeamMap beammap = (BeamMap) other;
 		
 		for(int k=pixelMap.length; --k >= 0; ) {
-			ScalarMap map = pixelMap[k];
+			AstroMap map = pixelMap[k];
 			if(map == null) continue;
-			ScalarMap otherMap = beammap.pixelMap[k];
+			AstroMap otherMap = beammap.pixelMap[k];
 			if(otherMap == null) continue;
-			map.addNonZero(otherMap);
+			map.mergeAccumulate(otherMap);
 		}
 	}
 
 	@Override
 	public void setExecutor(ExecutorService executor) {
-		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) map.setExecutor(executor);
+		if(pixelMap != null) for(AstroMap map : pixelMap) if(map != null) map.setExecutor(executor);
 	}
 
 	@Override
 	public ExecutorService getExecutor() {
-		if(pixelMap != null) for(ScalarMap map : pixelMap) if(map != null) return map.getExecutor();
+		if(pixelMap != null) for(AstroMap map : pixelMap) if(map != null) return map.getExecutor();
 		return null;
 	}
 
 	@Override
-	public SphericalCoordinates getReference() {
+	public Coordinate2D getReference() {
 		return template.getReference();
 	}
 
-    @Override
-    public Grid2D<?> getGrid() {
-        return template.getGrid();
-    }
 
     @Override
     public int sizeX() {
@@ -376,6 +369,5 @@ public class BeamMap extends SourceMap {
         return template.sizeY();
     }
 
-	
 
 }

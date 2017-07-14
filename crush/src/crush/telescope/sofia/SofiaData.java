@@ -28,7 +28,7 @@ import jnum.text.TableFormatter;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
-import nom.tam.util.Cursor;
+
 
 public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
 
@@ -38,7 +38,7 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         catch(CloneNotSupportedException e) { return null; }
     }
 
-    public abstract void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException;
+    public abstract void editHeader(Header header) throws HeaderCardException;
 
     public HeaderCard makeCard(String key, boolean value, String comment) throws HeaderCardException {
         return new HeaderCard(key, value, comment);

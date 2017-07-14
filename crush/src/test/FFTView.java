@@ -4,9 +4,9 @@ import java.io.IOException;
 
 import jnum.Constant;
 import jnum.ExtraMath;
-import jnum.data.CartesianGrid2D;
-import jnum.data.GridImage2D;
-import jnum.data.GridMap2D;
+import jnum.data.image.CartesianGrid2D;
+import jnum.data.image.GridImage2D;
+import jnum.data.image.GridMap2D;
 import jnum.fft.MultiFFT;
 import jnum.math.Complex;
 import jnum.math.Coordinate2D;
@@ -35,15 +35,15 @@ public class FFTView {
 				norm = Double.parseDouble(args[2]);
 			}
 					
-			FFTView transfer = FFTView.fromImage(image, image.getWeight(), beamCorrection, norm);	
+			FFTView transfer = FFTView.fromImage(image, image.getWeights(), beamCorrection, norm);	
 			transfer.write("fft");
 			
 			if(args.length > 3) {
 				GridMap2D<Coordinate2D> map;
 				map = new GridMap2D<Coordinate2D>(args[3]);
-				FFTView spectrum = FFTView.fromImage(map.getFluxImage(), map.getWeight(), Double.NaN, Double.NaN);
+				FFTView spectrum = FFTView.fromImage(map.getFluxImage(), map.getWeights(), Double.NaN, Double.NaN);
 				spectrum.deconvolve(transfer);
-				map.setData(spectrum.backTransform(map.sizeX(), map.sizeY()));			
+				map.setImage(spectrum.backTransform(map.sizeX(), map.sizeY()));			
 				map.write("deconvolved.fits");	
 			}
 			
@@ -83,7 +83,7 @@ public class FFTView {
 		
 		double midw = w[midx][midy];
 		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.isUnflagged(i, j)) {
-			data[i][j].setX(image.getValue(i, j));	
+			data[i][j].setX(image.get(i, j));	
 		}
 
 		for(int i=image.sizeX(); --i >= 0; ) for(int j=image.sizeY(); --j >= 0; ) if(image.isUnflagged(i, j)) {
@@ -209,12 +209,12 @@ public class FFTView {
 					
 		// create A, phi images...
 		view.amplitudeImage = new GridImage2D<Coordinate2D>();
-		view.amplitudeImage.setData(A);
+		view.amplitudeImage.setImage(A);
 		view.amplitudeImage.createDefaultFlag();
 		view.amplitudeImage.setGrid(grid);
 		
 		view.phaseImage = new GridImage2D<Coordinate2D>();
-		view.phaseImage.setData(phi);
+		view.phaseImage.setImage(phi);
 		view.phaseImage.createDefaultFlag();
 		view.phaseImage.setGrid(grid);
 		
@@ -245,7 +245,7 @@ public class FFTView {
 			if(Double.isNaN(tA)) continue;
 			if(tA < 0.01) continue;
 			
-			amplitudeImage.setValue(i, j, amplitudeImage.valueAtIndex(i, j) / tA);
+			amplitudeImage.set(i, j, amplitudeImage.valueAtIndex(i, j) / tA);
 			
 			//double tPhi = transfer.phaseImage.valueAtIndex(index);
 			//phaseImage.setValue(i, j, phaseImage.valueAtIndex(i, j) - tPhi);

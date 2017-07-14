@@ -27,12 +27,12 @@ package crush.sourcemodel;
 import java.util.*;
 
 import crush.*;
-import jnum.Parallel;
 import jnum.astro.AstroProjector;
-import jnum.data.Index2D;
+import jnum.data.image.Index2D;
+import jnum.parallel.ParallelTask;
 
 
-public class SyncModulatedMap extends ScalarMap {
+public class SyncModulatedMap extends AstroMap {
 	
 	/**
 	 * 
@@ -114,7 +114,7 @@ public class SyncModulatedMap extends ScalarMap {
 				
 				for(final Pixel pixel : pixels) {
 					midFrame.project(pixel.getPosition(), projector);
-					map.getIndex(projector.offset, index);
+					map.getGrid().getIndex(projector.offset, index);
 				
 					final float fG = midFrame.getSourceGain(signalMode);
 						
@@ -131,7 +131,7 @@ public class SyncModulatedMap extends ScalarMap {
 			@Override
 			public Integer getResult() {
 				int total = 0;
-				for(Parallel<Integer> task : getWorkers()) total += task.getLocalResult();
+				for(ParallelTask<Integer> task : getWorkers()) total += task.getLocalResult();
 				return total;
 			}
 			

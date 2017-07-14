@@ -26,8 +26,8 @@ package crush;
 import java.io.Serializable;
 import java.util.*;
 
-
 import jnum.Configurator;
+
 
 
 public class Pipeline implements Runnable, Serializable {
@@ -50,9 +50,10 @@ public class Pipeline implements Runnable, Serializable {
 		this.threadCount = threadCount;
 	}
 	
-	public void setSourceModel(SourceModel source) {
+	public void setSourceModel(SourceModel source) {	    
 	    if(source != null) { 
 	        scanSource = crush.source.getWorkingCopy(false);
+	        scanSource.setExecutor(null);  // TODO use executor?
 	        scanSource.setParallel(threadCount);
 	    }
 	    else scanSource = null;
@@ -106,23 +107,26 @@ public class Pipeline implements Runnable, Serializable {
 	}
 	
 	private void updateSource(Scan<?,?> scan) {	
+	      
 		if(crush.source == null) return;
-		
+				
 		// Reset smoothing etc. for raw map.
-		scanSource.reset(true);
-	
-		// TODO why doesn't this work...
+		scanSource.renew();		
+		
 		scanSource.setInstrument(scan.instrument);
-			
+		
 		for(Integration<?, ?> integration: scan) {						
 			if(integration.hasOption("jackknife")) integration.comments += integration.gain > 0.0 ? "+" : "-";
 			else if(integration.gain < 0.0) integration.comments += "-";
 			scanSource.add(integration);
 		}		
-	
-		scanSource.process(scan);	
-		crush.source.add(scanSource, scan.weight);
 		
+		if(scan.getSourceGeneration() > 0) scanSource.enableLevel = false;
+       
+		scanSource.process(scan);	
+		
+		crush.source.add(scanSource, scan.weight);
+	
 		scanSource.postprocess(scan);
 	}
 	

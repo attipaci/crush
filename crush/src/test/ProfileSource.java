@@ -67,8 +67,8 @@ public class ProfileSource {
 		
 		for(int i=image.sizeX(); --i >=0; ) for(int j=image.sizeY(); --j >= 0; ) {
 			double r = ExtraMath.hypot((i - i0) * resolution.x(), (j - j0) * resolution.y());
-			try { image.setValue(i,  j, profile.getValue(r)); }
-			catch(Exception e) { image.setValue(i, j, 0.0); }
+			try { image.set(i,  j, profile.getValue(r)); }
+			catch(Exception e) { image.set(i, j, 0.0); }
 			image.unflag(i, j);
 		}
 		

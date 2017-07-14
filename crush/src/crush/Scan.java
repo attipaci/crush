@@ -30,7 +30,6 @@ import nom.tam.util.*;
 import java.io.*;
 import java.util.*;
 
-import crush.astro.AstroMap;
 import crush.sourcemodel.*;
 import crush.telescope.GroundBased;
 import crush.telescope.HorizontalFrame;
@@ -47,14 +46,22 @@ import jnum.astro.AstroTime;
 import jnum.astro.CelestialCoordinates;
 import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
+import jnum.astro.FocalPlaneCoordinates;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.astro.JulianEpoch;
 import jnum.astro.Precession;
 import jnum.astro.Weather;
 import jnum.data.*;
+import jnum.data.image.Asymmetry2D;
+import jnum.data.image.Map2D;
+import jnum.data.image.Observation2D;
+import jnum.data.image.region.CircularRegion;
+import jnum.data.image.region.EllipticalSource;
+import jnum.data.image.region.GaussianSource;
 import jnum.math.CoordinateSystem;
 import jnum.math.Offset2D;
+import jnum.math.Range;
 import jnum.math.Range2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
@@ -97,7 +104,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public int sourcePoints = 0;
 	public boolean isSplit = false;
 		
-	public GaussianSource<SphericalCoordinates> pointing;
+	public GaussianSource pointing;
 	
 	// Creates a scan with an initialized copy of the instrument
 	@SuppressWarnings("unchecked")
@@ -227,17 +234,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public void setSourceName(String value) {
 		sourceName = value;
 		instrument.setObjectOptions(sourceName);
-	}
-	
-	public Vector2D getPointingCorrection(Configurator option) {
-		if(!option.isEnabled) return null;
-		String value = option.getValue().toLowerCase();
-		if(value.equals("auto") || value.equals("suggest")) return null;
-		Vector2D correction = option.getVector2D(); 
-		correction.scale(instrument.getSizeUnitValue());
-		return correction;
-	}
-	
+	}	
+	   
+    public Vector2D getPointingCorrection(Configurator option) {
+        Vector2D correction = option.isEnabled ? option.getVector2D() : new Vector2D();
+        if(option.isConfigured("offset")) correction.add(option.get("offset").getVector2D());
+        correction.scale(instrument.getSizeUnitValue());
+        return correction;
+    }
+
 	public void pointingAt(Vector2D correction) {
 		if(correction == null) return;
 		double sizeUnit = instrument.getSizeUnitValue();
@@ -430,11 +435,13 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			cursor.add(new HeaderCard("TTYPE" + (k++), name, "The column name"));
 		}
 
-		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-		cursor.add(new HeaderCard("COMMENT", " CRUSH scan-specific configuration section", false));
-		cursor.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+		
+		
+		header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+		header.addLine(new HeaderCard("COMMENT", " CRUSH scan-specific configuration section", false));
+		header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 	
-		instrument.getStartupOptions().difference(global).editHeader(cursor);	
+		instrument.getStartupOptions().difference(global).editHeader(header);	
 		
 		return hdu;
 	}
@@ -483,8 +490,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		instrument.editScanHeader(header);
 		
-		if(pointing != null) if(sourceModel instanceof ScalarMap) {  
-		    pointing.editHeader(header, ((ScalarMap) sourceModel).map, instrument.getSizeUnit());
+		if(pointing != null) if(sourceModel instanceof AstroMap) {  
+		    pointing.editHeader(header, instrument.getSizeUnit());
 		}
 	}
 	
@@ -563,10 +570,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		else if(name.startsWith("src.")) {
 			if(pointing == null) return "---";
-			if(!(sourceModel instanceof ScalarMap)) return "---";
-			AstroMap map = ((ScalarMap) sourceModel).map;
+			if(!(sourceModel instanceof AstroMap)) return "---";
+			Map2D map = ((AstroMap) sourceModel).map;
 			Unit sizeUnit = new Unit(instrument.getSizeName(), instrument.getSizeUnitValue());
-			return pointing.getData(map, sizeUnit).getTableEntry(name.substring(4));
+			return pointing.getRepresentation(map.getGrid()).getData(sizeUnit).getTableEntry(name.substring(4));
 		}
 		else if(name.equals("object")) return sourceName;
 		else if(name.equals("id")) return getID();
@@ -763,28 +770,28 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		catch(Exception e) { error(e); }
 		
-		double sizeUnit = instrument.getSizeUnitValue();
-		String sizeName = instrument.getSizeName();
+		Unit sizeUnit = instrument.getSizeUnit();
 		
-		data.new Entry("dX", relative.x() / sizeUnit, sizeName);
-		data.new Entry("dY", relative.y() / sizeUnit, sizeName);
 		
-		data.new Entry("d" + nameX, relative.x() / sizeUnit, sizeName);
-		data.new Entry("d" + nameY, relative.y() / sizeUnit, sizeName);
+		data.new Entry("dX", relative.x(), sizeUnit);
+		data.new Entry("dY", relative.y(), sizeUnit);
+		
+		data.new Entry("d" + nameX, relative.x(), sizeUnit);
+		data.new Entry("d" + nameY, relative.y(), sizeUnit);
 	
-		data.new Entry(nameX, absolute.x() / sizeUnit, sizeName);
-		data.new Entry(nameY, absolute.y() / sizeUnit, sizeName);
+		data.new Entry(nameX, absolute.x(), sizeUnit);
+		data.new Entry(nameY, absolute.y(), sizeUnit);
 		
 		// Also print Nasmyth offsets if applicable...
 		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
 			Vector2D nasmyth = getNasmythOffset(relative);
 			
-			data.new Entry("dNasX", nasmyth.x() / sizeUnit, sizeName);
-			data.new Entry("dNasY", nasmyth.y() / sizeUnit, sizeName);
+			data.new Entry("dNasX", nasmyth.x(), sizeUnit);
+			data.new Entry("dNasY", nasmyth.y(), sizeUnit);
 			
 			nasmyth = getNasmythOffset(absolute);
-			data.new Entry("NasX", nasmyth.x() / sizeUnit, sizeName);
-			data.new Entry("NasY", nasmyth.y() / sizeUnit, sizeName);
+			data.new Entry("NasX", nasmyth.x(), sizeUnit);
+			data.new Entry("NasY", nasmyth.y(), sizeUnit);
 		}
 		
 		Asymmetry2D asym = getSourceAsymmetry(pointing);
@@ -794,15 +801,16 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		data.new Entry("dasymY", 100.0 * asym.getY().rms(), "%");
 	
 		if(pointing instanceof EllipticalSource) {
-			EllipticalSource<?> ellipse = (EllipticalSource<?>) pointing;
+			EllipticalSource ellipse = (EllipticalSource) pointing;
+			Unit deg = Unit.get("deg");
 			
 			DataPoint elongation = ellipse.getElongation();
 			data.new Entry("elong", 100.0 * elongation.value(), "%");
 			data.new Entry("delong", 100.0 * elongation.rms(), "%");
 			
 			DataPoint angle = ellipse.getAngle();
-			data.new Entry("angle", angle.value() / Unit.deg, "%");
-			data.new Entry("dangle", angle.value() / Unit.deg, "%");
+			data.new Entry("angle", angle.value(), deg);
+			data.new Entry("dangle", angle.value(), deg);
 			
 			DataPoint elongationX = getSourceElongationX(ellipse);
 			data.new Entry("elongX", 100.0 * elongationX.value(), "%");
@@ -815,10 +823,9 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public String getPointingString() {
 		String info = "";
 			
-		if(sourceModel instanceof ScalarMap) {
-			AstroMap map = ((ScalarMap) sourceModel).map;
-			Unit sizeUnit = new Unit(instrument.getSizeName(), instrument.getSizeUnitValue());
-			info += pointing.pointingInfo(map, sizeUnit) + "\n";
+		if(sourceModel instanceof AstroMap) {
+			Observation2D map = ((AstroMap) sourceModel).map;
+			info += pointing.pointingInfo(map) + "\n";
 		}
 		
 		info += getPointingString(getNativePointingIncrement(pointing));
@@ -826,23 +833,30 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	}
 	
 	
-	public Asymmetry2D getSourceAsymmetry(CircularRegion<SphericalCoordinates> region) {
-		if(!(sourceModel instanceof ScalarMap)) return null;
+	public Asymmetry2D getSourceAsymmetry(CircularRegion region) {
+		if(!(sourceModel instanceof AstroMap)) return null;
 		
-		double minr = instrument.getPointSize();
-		double maxr = (hasOption("focus.r") ? option("focus.r").getDouble() : 2.5) * instrument.getPointSize();
+		Range radialRange = new Range(
+		        instrument.getPointSize(),
+		        (hasOption("focus.r") ? option("focus.r").getDouble() : 2.5) * instrument.getPointSize()
+		);
 		
-		AstroMap map = ((ScalarMap) sourceModel).map; 
-		AstroSystem system = map.astroSystem();
-		if(!(system.isEquatorial() || system.isHorizontal())) return map.getAsymmetry(region, 0.0, minr, maxr);
+		
+		AstroMap source = ((AstroMap) sourceModel); 
+		AstroSystem system = source.astroSystem();
+		
+		CircularRegion.Representation r = region.getRepresentation(source.getGrid());
+		
+		if(!(system.isEquatorial() || system.isHorizontal())) return r.getAsymmetry2D(source.map, 0.0, radialRange);
+		   
 		
 		boolean isGroundEquatorial = this instanceof GroundBased && system.isEquatorial();
 		double angle = isGroundEquatorial ? this.getPA() : 0.0;
 
-		return map.getAsymmetry(region, angle, minr, maxr);
+		return r.getAsymmetry2D(source.map.getSignificance(), angle, radialRange);
 	}
 	
-	public DataPoint getSourceElongationX(EllipticalSource<?> ellipse) {
+	public DataPoint getSourceElongationX(EllipticalSource ellipse) {
 		DataPoint elongation = new DataPoint(ellipse.getElongation());
 		DataPoint angle = new DataPoint(ellipse.getAngle());
 		
@@ -858,7 +872,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		Asymmetry2D asym = getSourceAsymmetry(pointing);
 					
 		DataPoint elongation = pointing instanceof EllipticalSource ? 
-				getSourceElongationX((EllipticalSource<SphericalCoordinates>) pointing) : null;
+				getSourceElongationX((EllipticalSource) pointing) : null;
 		
 		return getFocusString(asym, elongation);
 	}
@@ -893,8 +907,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	
 	
-	protected String getPointingString(Offset2D pointing) {	
-	    if(pointing == null) return "";
+	protected String getPointingString(Offset2D nativePointing) {	
+	    if(nativePointing == null) return "";
 		// Print the native pointing offsets...
 		String text = "";
 		
@@ -905,7 +919,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		String nameY = "y";
 		
 		try {
-		    SphericalCoordinates coords = (SphericalCoordinates) pointing.getCoordinateClass().newInstance();
+		    SphericalCoordinates coords = (SphericalCoordinates) nativePointing.getCoordinateClass().newInstance();
 		    CoordinateSystem system = coords.getLocalCoordinateSystem();
 		    nameX = system.get(0).getShortLabel();
 		    nameY = system.get(1).getShortLabel();
@@ -913,12 +927,12 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		catch(Exception e) { error(e); }
 			
 		text += "  Offset: ";
-		text += Util.f1.format(pointing.x() / sizeUnit) + ", " + Util.f1.format(pointing.y() / sizeUnit) + " " 
+		text += Util.f1.format(nativePointing.x() / sizeUnit) + ", " + Util.f1.format(nativePointing.y() / sizeUnit) + " " 
 			+ sizeName + " (" + nameX + "," + nameY + ")";
 		
 		// Also print Nasmyth offsets if applicable...
 		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
-			Vector2D nasmyth = getNasmythOffset(pointing);
+			Vector2D nasmyth = getNasmythOffset(nativePointing);
 			text += "\n  Offset: ";		
 			text += Util.f1.format(nasmyth.x() / sizeUnit) + ", " + Util.f1.format(nasmyth.y() / sizeUnit) + " " 
 				+ sizeName + " (nasmyth)";
@@ -930,7 +944,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 
 
 
-	public Vector2D getEquatorialPointing(GaussianSource<SphericalCoordinates> source) {
+	public Vector2D getEquatorialPointing(GaussianSource source) {
 		if(!source.getCoordinates().getClass().equals(sourceModel.getReference().getClass()))
 			throw new IllegalArgumentException("pointing source is in a different coordinate system from source model.");
 		
@@ -955,28 +969,35 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	
 	
-	public Offset2D getNativePointing(GaussianSource<SphericalCoordinates> source) {
+	public Offset2D getNativePointing(GaussianSource source) {
 		Offset2D pointing = getNativePointingIncrement(source);
 		if(pointingCorrection != null) pointing.add(pointingCorrection);
 		return pointing;
 	}
 	
-	public Offset2D getNativePointingIncrement(GaussianSource<SphericalCoordinates> source) {
+	public Offset2D getNativePointingIncrement(GaussianSource source) {
 		if(!source.getCoordinates().getClass().equals(sourceModel.getReference().getClass()))
 			throw new IllegalArgumentException("pointing source is in a different coordinate system from source model.");
 		
-		SphericalCoordinates sourceCoords = source.getCoordinates();
+		SphericalCoordinates sourceCoords = (SphericalCoordinates) source.getCoordinates();
 		SphericalCoordinates nativeCoords = getNativeCoordinates();
 		
+		SphericalCoordinates reference = (SphericalCoordinates) sourceModel.getReference();
+		
 		if(sourceCoords.getClass().equals(nativeCoords.getClass())) {
-		    return new Offset2D(sourceModel.getReference(), sourceCoords.getOffsetFrom(sourceModel.getReference()));
+		    return new Offset2D(sourceModel.getReference(), sourceCoords.getOffsetFrom(reference));
         }
 		else if(sourceCoords instanceof EquatorialCoordinates)
-			return getNativeOffsetOf(new Offset2D(sourceModel.getReference(), sourceCoords.getOffsetFrom(sourceModel.getReference())));
+			return getNativeOffsetOf(new Offset2D(sourceModel.getReference(), sourceCoords.getOffsetFrom(reference)));
 		else if(sourceCoords instanceof CelestialCoordinates) {
 			EquatorialCoordinates sourceEq = ((CelestialCoordinates) sourceCoords).toEquatorial();
 			EquatorialCoordinates refEq = ((CelestialCoordinates) sourceModel.getReference()).toEquatorial();
 			return getNativeOffsetOf(new Offset2D(refEq, sourceEq.getOffsetFrom(refEq)));
+		}
+		else if(sourceCoords instanceof FocalPlaneCoordinates) {
+		    Vector2D offset = sourceCoords.getOffsetFrom(reference);
+		    offset.rotate(-0.5*(getFirstIntegration().getFirstFrame().getRotation() + getLastIntegration().getLastFrame().getRotation()));
+		    return new Offset2D(new FocalPlaneCoordinates(), offset);
 		}
 		
 		return null;

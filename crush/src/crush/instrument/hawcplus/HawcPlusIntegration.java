@@ -28,18 +28,14 @@ import java.util.List;
 
 import crush.CRUSH;
 import crush.Channel;
-import crush.ChannelGroup;
 import crush.Dependents;
 import crush.Frame;
-import crush.Instrument;
 import crush.fits.HDURowReader;
 import crush.telescope.sofia.SofiaChopperData;
 import crush.telescope.sofia.SofiaIntegration;
-import jnum.Parallel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
-import jnum.data.DataPoint;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.ArrayDataInput;
@@ -96,8 +92,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         for(int i=0; i<dataHDUs.size(); i++) 
             new HawcPlusRowReader(dataHDUs.get(i), ((HawcPlusScan) scan).fits.getStream()).read(1);	
     }
-
-
 
     class HawcPlusRowReader extends HDURowReader { 
         private int iSN=-1, iDAC=-1, iJump=-1, iTS=-1;
@@ -275,9 +269,9 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     //
                     //    phi = theta_si - theta_ta
                     //
-                    frame.instrumentVPA = ((double[]) row[iAVPA])[0] * (float) Unit.deg;
-                    frame.telescopeVPA = ((double[]) row[iTVPA])[0] * (float) Unit.deg;
-                    frame.chopVPA = ((double[]) row[iCVPA])[0] * (float) Unit.deg;
+                    frame.instrumentVPA = ((double[]) row[iAVPA])[0] * Unit.deg;
+                    frame.telescopeVPA = ((double[]) row[iTVPA])[0] * Unit.deg;
+                    frame.chopVPA = ((double[]) row[iCVPA])[0] * Unit.deg;
 
                     // rotation from pixel coordinates to telescope coordinates...  
                     frame.setRotation(frame.instrumentVPA - frame.telescopeVPA);
@@ -366,7 +360,9 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
   
         flagZeroedChannels();
         checkJumps();
-              
+        
+        if(hasOption("jumpdata")) correctJumps();
+        
         super.validate();
     }
     
@@ -540,97 +536,29 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
     }
 
 
-    private void removeJumps() {
-        comments += "J ";     
+    private void correctJumps() {
+        info("Flux-jumps correcting...");    
         
-        final ChannelGroup<HawcPlusPixel> channels = hasOption("dejump.subarray") ?
-                instrument.getSubarrayChannels("jumpies", option("dejump.subarray").getList()) : instrument;
-                    
-        Fork<DataPoint[]> search = new Fork<DataPoint[]>() {
-            private DataPoint[] sum;
-
-            @Override
-            protected void init() {
-                super.init();
-                sum = instrument.getDataPoints();
-                for(int c=sum.length; --c >= 0; ) sum[c].noData();
-            }
-
-            @Override
-            protected void process(HawcPlusFrame frame) {
-                if(frame.index < 1) return;
-                HawcPlusFrame prior = get(frame.index - 1);
-
-                if(prior == null) return;
-               
-                double w = 1.0 / (1.0 / frame.relativeWeight + 1.0 / prior.relativeWeight);
-                if(Double.isNaN(w)) return;
-                
-                for(HawcPlusPixel pixel : channels) if(pixel.hasJumps) {
-                    if(prior.jumpCounter[pixel.index] == frame.jumpCounter[pixel.index]) continue;
-
-                    int nJumps = frame.jumpCounter[pixel.index] - prior.jumpCounter[pixel.index];
-                    
-                    sum[pixel.index].add(w * (frame.data[pixel.index] - prior.data[pixel.index]) / nJumps);
-                    sum[pixel.index].addWeight(w);
-                }
-
-            }
-
-            @Override
-            public DataPoint[] getLocalResult() { return sum; }
-
-            @Override
-            public DataPoint[] getResult() {
-
-                for(Parallel<DataPoint[]> task : getWorkers()) {
-                    final DataPoint[] localSum = task.getLocalResult();
-
-                    if(sum == null) sum = localSum;
-                    else {
-                        for(int i=instrument.size(); --i >= 0; ) {
-                            final DataPoint global = sum[i];
-                            final DataPoint local = localSum[i];
-
-                            global.add(local.value());
-                            global.addWeight(local.weight());
-                        }
-                        Instrument.recycle(localSum);
-                    }
-                    
-                    for(int i=instrument.size(); --i >= 0; ) if(sum[i].weight() > 0.0) 
-                        sum[i].setValue(sum[i].value() / sum[i].weight());
-                }
-                 
-                return sum;
-            }   
-
-        };
-
-        search.process();
-
-        final DataPoint[] dJump = search.getResult();
         final HawcPlusFrame first = getFirstFrame();
-              
+        final int maxJump = HawcPlusFrame.JUMP_RANGE >> 1;
+        
+        
         new Fork<Void>() {
             @Override
             protected void process(HawcPlusFrame frame) {
-                for(HawcPlusPixel pixel : channels) if(dJump[pixel.index].weight() > 0.0)
-                    frame.data[pixel.index] -= dJump[pixel.index].value() * (frame.jumpCounter[pixel.index] - first.jumpCounter[pixel.index]);
+                for(HawcPlusPixel pixel : instrument) if(pixel.jump != 0.0) {
+                    int nJumps = frame.jumpCounter[pixel.index] - first.jumpCounter[pixel.index];
+                    // Check for wraparound...
+                    if(nJumps > maxJump) nJumps -= HawcPlusFrame.JUMP_RANGE;
+                    else if(nJumps < -maxJump) nJumps += HawcPlusFrame.JUMP_RANGE;
+                    
+                    frame.data[pixel.index] -= pixel.jump * nJumps;
+                }
             } 
         }.process();
         
-        for(HawcPlusPixel pixel : channels) if(dJump[pixel.index].weight() > 0.0) 
-            pixel.jumpCounts += dJump[pixel.index].value();  
-        
-        Instrument.recycle(dJump);
     }
 
-    @Override
-    public boolean perform(String task) {
-        if(task.equals("dejump")) removeJumps();
-        else return super.perform(task);
-        return true;
-    }
-
+  
+  
 }

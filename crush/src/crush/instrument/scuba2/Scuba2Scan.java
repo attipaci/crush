@@ -441,7 +441,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	@Override
 	public void setSourceModel(SourceModel model) {
 		super.setSourceModel(model);
-		sourceModel.id = instrument.filter;
+		sourceModel.setID(instrument.filter);
 	}	
 	
 	@Override

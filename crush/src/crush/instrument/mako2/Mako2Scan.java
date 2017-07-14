@@ -41,7 +41,7 @@ public class Mako2Scan extends MakoScan<Mako2> {
 	@Override
 	public void setSourceModel(SourceModel model) {
 		super.setSourceModel(model);
-		sourceModel.id = hasOption("850um") ? "850um" : "350um";
+		sourceModel.setID(hasOption("850um") ? "850um" : "350um");
 	}	
 	
 }

@@ -69,7 +69,6 @@ public abstract class CSOCamera<PixelType extends SingleColorPixel> extends Came
 		return "CSO";
 	}
 	
-
 	public abstract double getLoadTemperature();
 	
 	@Override

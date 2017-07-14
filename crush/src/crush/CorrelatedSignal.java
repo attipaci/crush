@@ -28,10 +28,10 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import jnum.ExtraMath;
-import jnum.Parallel;
 import jnum.data.DataPoint;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
+import jnum.parallel.ParallelTask;
 
 
 
@@ -435,7 +435,7 @@ public class CorrelatedSignal extends Signal {
 			protected void postProcess() {
 				super.postProcess();
 				
-				for(Parallel<float[]> task : getWorkers()) {
+				for(ParallelTask<float[]> task : getWorkers()) {
 					float[] localChannelParms = task.getLocalResult();
 					dependents.addForChannels(localChannelParms);
 					Instrument.recycle(localChannelParms);

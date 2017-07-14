@@ -27,7 +27,7 @@ import jnum.Unit;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
-import nom.tam.util.Cursor;
+
 
 public class SofiaEnvironmentData extends SofiaData {
     public BracketedValues pwv = new BracketedValues();
@@ -55,16 +55,16 @@ public class SofiaEnvironmentData extends SofiaData {
     }
 
     @Override
-    public void editHeader(Header header, Cursor<String, HeaderCard> cursor) throws HeaderCardException {
-        //cursor.add(new HeaderCard("COMMENT", "<------ SOFIA Environment Data ------>", false));
-        if(!Double.isNaN(pwv.start)) cursor.add(new HeaderCard("WVZ_STA", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
-        if(!Double.isNaN(pwv.end)) cursor.add(new HeaderCard("WVZ_END", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
-        if(!Double.isNaN(pwvLOS)) cursor.add(new HeaderCard("WVTALOS", pwvLOS / Unit.um, "(um) PWV at TA line-of-sight."));
-        if(!Double.isNaN(ambientT)) cursor.add(new HeaderCard("TEMP_OUT", ambientT, "(C) Ambient air temperature."));
-        if(!Double.isNaN(primaryT1)) cursor.add(new HeaderCard("TEMPPRI1", primaryT1, "(C) Primary mirror temperature #1."));
-        if(!Double.isNaN(primaryT2)) cursor.add(new HeaderCard("TEMPPRI2", primaryT2, "(C) Primary mirror temperature #2."));
-        if(!Double.isNaN(primaryT3)) cursor.add(new HeaderCard("TEMPPRI3", primaryT3, "(C) Primary mirror temperature #3."));
-        if(!Double.isNaN(secondaryT)) cursor.add(new HeaderCard("TEMPSEC1", secondaryT, "(C) Secondary mirror temperature."));
+    public void editHeader(Header header) throws HeaderCardException {
+        //header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Environment Data ------>", false));
+        if(!Double.isNaN(pwv.start)) header.addLine(new HeaderCard("WVZ_STA", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
+        if(!Double.isNaN(pwv.end)) header.addLine(new HeaderCard("WVZ_END", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
+        if(!Double.isNaN(pwvLOS)) header.addLine(new HeaderCard("WVTALOS", pwvLOS / Unit.um, "(um) PWV at TA line-of-sight."));
+        if(!Double.isNaN(ambientT)) header.addLine(new HeaderCard("TEMP_OUT", ambientT, "(C) Ambient air temperature."));
+        if(!Double.isNaN(primaryT1)) header.addLine(new HeaderCard("TEMPPRI1", primaryT1, "(C) Primary mirror temperature #1."));
+        if(!Double.isNaN(primaryT2)) header.addLine(new HeaderCard("TEMPPRI2", primaryT2, "(C) Primary mirror temperature #2."));
+        if(!Double.isNaN(primaryT3)) header.addLine(new HeaderCard("TEMPPRI3", primaryT3, "(C) Primary mirror temperature #3."));
+        if(!Double.isNaN(secondaryT)) header.addLine(new HeaderCard("TEMPSEC1", secondaryT, "(C) Secondary mirror temperature."));
     }
 
     @Override

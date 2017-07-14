@@ -36,8 +36,8 @@ public class HawcPlusPixel extends SingleColorPixel {
 	private static final long serialVersionUID = 5898856651596856837L;
 	public int pol, sub, subrow, col, mux, row, biasLine, seriesArray;
 	public int fitsIndex, fitsRow, fitsCol;
+	public float jump = 0.0F;
 	public boolean hasJumps = false;
-	public float jumpCounts;
 	
 	public double subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0, seriesGain = 1.0;
 	
@@ -64,9 +64,9 @@ public class HawcPlusPixel extends SingleColorPixel {
 	}
 	
 
-	public void calcPosition() {
+	public void calcSIBSPosition() {
 	    if(isFlagged(FLAG_BLIND)) position = null;
-	    position = ((HawcPlus) instrument).getPosition(sub, subrow, col);
+	    position = ((HawcPlus) instrument).getSIBSPosition(sub, subrow, col);
 	}
 		
 	@Override

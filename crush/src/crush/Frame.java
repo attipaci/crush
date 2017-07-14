@@ -252,14 +252,14 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	}
 
 	public void getEquatorial(final Vector2D position, final EquatorialCoordinates coords) {
-		coords.setNativeLongitude(equatorial.x() + getX(position) / scan.equatorial.cosLat());
-		coords.setNativeLatitude(equatorial.y() + getY(position));
+		coords.setNativeLongitude(equatorial.x() + getNativeX(position) / scan.equatorial.cosLat());
+		coords.setNativeLatitude(equatorial.y() + getNativeY(position));
 	}
 	
 	public void getEquatorialNativeOffset(final Vector2D position, final Vector2D offset) {
 		getEquatorialNativeOffset(offset);
-		offset.setX(offset.x() + getX(position));
-		offset.setY(offset.y() + getY(position));
+		offset.setX(offset.x() + getNativeX(position));
+		offset.setY(offset.y() + getNativeY(position));
 	}
 		
 	public void getNativeOffset(final Vector2D position, final Vector2D offset) {
@@ -327,11 +327,11 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	}
 	
 	
-	public double getX(final Vector2D fpPosition) {
+	public double getNativeX(final Vector2D fpPosition) {
 		return cosA * fpPosition.x() - sinA * fpPosition.y();	
 	}
 	
-	public double getY(final Vector2D fpPosition) {
+	public double getNativeY(final Vector2D fpPosition) {
 		return sinA * fpPosition.x() + cosA * fpPosition.y();	
 	}
 	
