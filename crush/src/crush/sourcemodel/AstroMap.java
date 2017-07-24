@@ -37,7 +37,7 @@ import jnum.Util;
 import jnum.astro.AstroProjector;
 import jnum.astro.AstroSystem;
 import jnum.data.*;
-import jnum.data.image.Abstract2D;
+import jnum.data.image.Data2D;
 import jnum.data.image.Flag2D;
 import jnum.data.image.Gaussian2D;
 import jnum.data.image.Image2D;
@@ -51,7 +51,7 @@ import jnum.data.image.overlay.RangeRestricted2D;
 import jnum.data.image.region.EllipticalSource;
 import jnum.data.image.region.GaussianSource;
 import jnum.data.image.region.SourceCatalog;
-import jnum.io.fits.FitsToolkit;
+import jnum.fits.FitsToolkit;
 import jnum.math.Coordinate2D;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
@@ -424,7 +424,7 @@ public class AstroMap extends AstroModel2D {
             map.smoothTo(optimal);
        
              if(hasOption("pointing.exposureclip")) {
-                Abstract2D exposure = map.getExposures();     
+                Data2D exposure = map.getExposures();     
                 exposure.restrictRange(new Range(option("pointing.exposureclip").getDouble() * exposure.select(0.9), Double.POSITIVE_INFINITY));
             }
             map.reweight(true);
@@ -451,16 +451,16 @@ public class AstroMap extends AstroModel2D {
         if(filter.isConfigured("interpolation")) {
             String spec = filter.get("interpolation").getValue().toLowerCase();
             // The default terminology...
-            if(spec.equals("nearest")) map.setInterpolationType(Abstract2D.NEAREST);
-            else if(spec.equals("linear")) map.setInterpolationType(Abstract2D.LINEAR);
-            else if(spec.equals("quadratic")) map.setInterpolationType(Abstract2D.QUADRATIC);
-            else if(spec.equals("cubic")) map.setInterpolationType(Abstract2D.SPLINE);
+            if(spec.equals("nearest")) map.setInterpolationType(Data2D.NEAREST);
+            else if(spec.equals("linear")) map.setInterpolationType(Data2D.LINEAR);
+            else if(spec.equals("quadratic")) map.setInterpolationType(Data2D.QUADRATIC);
+            else if(spec.equals("cubic")) map.setInterpolationType(Data2D.SPLINE);
             // And alternative names...
-            else if(spec.equals("none")) map.setInterpolationType(Abstract2D.NEAREST);
-            else if(spec.equals("bilinear")) map.setInterpolationType(Abstract2D.LINEAR);
-            else if(spec.equals("piecewise")) map.setInterpolationType(Abstract2D.QUADRATIC);
-            else if(spec.equals("bicubic")) map.setInterpolationType(Abstract2D.SPLINE);
-            else if(spec.equals("spline")) map.setInterpolationType(Abstract2D.SPLINE);
+            else if(spec.equals("none")) map.setInterpolationType(Data2D.NEAREST);
+            else if(spec.equals("bilinear")) map.setInterpolationType(Data2D.LINEAR);
+            else if(spec.equals("piecewise")) map.setInterpolationType(Data2D.QUADRATIC);
+            else if(spec.equals("bicubic")) map.setInterpolationType(Data2D.SPLINE);
+            else if(spec.equals("spline")) map.setInterpolationType(Data2D.SPLINE);
         }
 
         if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
@@ -481,7 +481,7 @@ public class AstroMap extends AstroModel2D {
     public Index2D getPeakIndex() {
         int sign = hasSourceOption("sign") ? sourceOption("sign").getSign() : 0;
         
-        Abstract2D s2n = map.getSignificance();
+        Data2D s2n = map.getSignificance();
         
         if(sign > 0) return s2n.indexOfMax();
         else if(sign < 0) return s2n.indexOfMin();
@@ -565,14 +565,14 @@ public class AstroMap extends AstroModel2D {
         // Eposure clip
         if(hasOption("exposureclip")) {
             addProcessBrief("(exposureclip) ");
-            Abstract2D exposure = map.getExposures();
+            Data2D exposure = map.getExposures();
             exposure.restrictRange(new Range(option("exposureclip").getDouble() * exposure.select(0.95), Double.POSITIVE_INFINITY));
         }
 
         // Noise clip
         if(hasOption("noiseclip")) {
             addProcessBrief("(noiseclip) ");
-            Abstract2D rms = map.getNoise();
+            Data2D rms = map.getNoise();
             rms.restrictRange(new Range(0, rms.select(0.05) * option("noiseclip").getDouble()));
         }
 
@@ -940,7 +940,7 @@ public class AstroMap extends AstroModel2D {
             thumbnail.smoothTo(fwhm);
         }
 
-        Abstract2D plane = thumbnail.getImage();
+        Data2D plane = thumbnail.getImage();
 
         if(option.isConfigured("plane")) {
             String spec = option.get("plane").getValue().toLowerCase();

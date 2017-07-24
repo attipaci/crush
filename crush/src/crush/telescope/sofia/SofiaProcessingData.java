@@ -23,9 +23,11 @@
 
 package crush.telescope.sofia;
 
+import jnum.fits.FitsToolkit;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 
 public class SofiaProcessingData extends SofiaData {
     String processLevel;
@@ -59,21 +61,23 @@ public class SofiaProcessingData extends SofiaData {
 
     @Override
     public void editHeader(Header header) throws HeaderCardException {
-        //header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Processing Information ------>", false));
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        
+        c.add(new HeaderCard("COMMENT", "<------ SOFIA Processing Information ------>", false));
         int level = 0;
         if(processLevel.toUpperCase().startsWith("LEVEL_")) {
             try { level = Integer.parseInt(processLevel.substring(6)); }
             catch(NumberFormatException e) {}
         }
 
-        if(processLevel != null) header.addLine(new HeaderCard("PROCSTAT", processLevel, getComment(level)));
-        if(headerStatus != null) header.addLine(new HeaderCard("HEADSTAT", headerStatus, "Status of header key/value pairs."));
-        if(softwareName != null) header.addLine(new HeaderCard("PIPELINE", softwareName, "Software that produced scan file."));
-        if(softwareFullVersion != null) header.addLine(new HeaderCard("PIPEVERS", softwareFullVersion, "Full version info of software."));
-        if(productType != null) header.addLine(new HeaderCard("PRODTYPE", productType, "Prodcu type produced by software."));
-        if(revision != null) header.addLine(new HeaderCard("FILEREV", revision, "File revision identifier."));
-        if(quality != null) header.addLine(new HeaderCard("DATAQUAL", quality, "Data quality."));
-        if(nSpectra >= 0) header.addLine(new HeaderCard("N_SPEC", nSpectra, "Number of spectra included."));
+        if(processLevel != null) c.add(new HeaderCard("PROCSTAT", processLevel, getComment(level)));
+        if(headerStatus != null) c.add(new HeaderCard("HEADSTAT", headerStatus, "Status of header key/value pairs."));
+        if(softwareName != null) c.add(new HeaderCard("PIPELINE", softwareName, "Software that produced scan file."));
+        if(softwareFullVersion != null) c.add(new HeaderCard("PIPEVERS", softwareFullVersion, "Full version info of software."));
+        if(productType != null) c.add(new HeaderCard("PRODTYPE", productType, "Prodcu type produced by software."));
+        if(revision != null) c.add(new HeaderCard("FILEREV", revision, "File revision identifier."));
+        if(quality != null) c.add(new HeaderCard("DATAQUAL", quality, "Data quality."));
+        if(nSpectra >= 0) c.add(new HeaderCard("N_SPEC", nSpectra, "Number of spectra included."));
     }
 
     @Override

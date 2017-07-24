@@ -25,9 +25,11 @@ package crush.telescope.sofia;
 
 import jnum.Unit;
 import jnum.Util;
+import jnum.fits.FitsToolkit;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 
 
 public class SofiaObservationData extends SofiaData {
@@ -68,21 +70,22 @@ public class SofiaObservationData extends SofiaData {
 
     @Override
     public void editHeader(Header header) throws HeaderCardException {
-        //header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Observation Data ------>", false));
-        if(sourceName != null) header.addLine(new HeaderCard("OBJECT", sourceName, "Object catalog name."));
-        if(!Double.isNaN(startMJD)) header.addLine(new HeaderCard("MJD-OBS", startMJD, "MJD at the start of observation."));
-        if(!Double.isNaN(startLST)) header.addLine(new HeaderCard("LST-OBS", Util.HMS(startLST), "LST at the start of observation"));
-        if(dataSource != null) header.addLine(new HeaderCard("DATASRC", dataSource, "data source category."));
-        if(obsType != null) header.addLine(new HeaderCard("OBSTYPE", obsType, "type of observation."));
-        if(errorStatus != null) header.addLine(new HeaderCard("OBSSTAT", errorStatus, "Observation error status."));
-        if(sourceType != null) header.addLine(new HeaderCard("SRCTYPE", sourceType, "AOR source type."));
-        if(dictionaryVersion != null) header.addLine(new HeaderCard("KWDICT", dictionaryVersion, "SOFIA keword dictionary version."));
-        if(obsID != null) header.addLine(new HeaderCard("OBS_ID", obsID, "Sofia observation ID."));
-        if(serialNo >= 0) header.addLine(new HeaderCard("OBSERNO", serialNo, "Observation serial number."));
-        if(imageID != null) header.addLine(new HeaderCard("IMAGEID", imageID, "Image ID within an observation."));
-        if(aotID != null) header.addLine(new HeaderCard("AOT_ID", aotID, "unique Astronomical Observation Template ID."));
-        if(aorID != null) header.addLine(new HeaderCard("AOR_ID", aorID, "unique Astronomical Observation Request ID."));
-        if(fileGroupID != null) header.addLine(new HeaderCard("FILEGPID", fileGroupID, "User ID for grouping files together."));
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        c.add(new HeaderCard("COMMENT", "<------ SOFIA Observation Data ------>", false));
+        if(sourceName != null) c.add(new HeaderCard("OBJECT", sourceName, "Object catalog name."));
+        if(!Double.isNaN(startMJD)) c.add(new HeaderCard("MJD-OBS", startMJD, "MJD at the start of observation."));
+        if(!Double.isNaN(startLST)) c.add(new HeaderCard("LST-OBS", Util.HMS(startLST), "LST at the start of observation"));
+        if(dataSource != null) c.add(new HeaderCard("DATASRC", dataSource, "data source category."));
+        if(obsType != null) c.add(new HeaderCard("OBSTYPE", obsType, "type of observation."));
+        if(errorStatus != null) c.add(new HeaderCard("OBSSTAT", errorStatus, "Observation error status."));
+        if(sourceType != null) c.add(new HeaderCard("SRCTYPE", sourceType, "AOR source type."));
+        if(dictionaryVersion != null) c.add(new HeaderCard("KWDICT", dictionaryVersion, "SOFIA keword dictionary version."));
+        if(obsID != null) c.add(new HeaderCard("OBS_ID", obsID, "Sofia observation ID."));
+        if(serialNo >= 0) c.add(new HeaderCard("OBSERNO", serialNo, "Observation serial number."));
+        if(imageID != null) c.add(new HeaderCard("IMAGEID", imageID, "Image ID within an observation."));
+        if(aotID != null) c.add(new HeaderCard("AOT_ID", aotID, "unique Astronomical Observation Template ID."));
+        if(aorID != null) c.add(new HeaderCard("AOR_ID", aorID, "unique Astronomical Observation Request ID."));
+        if(fileGroupID != null) c.add(new HeaderCard("FILEGPID", fileGroupID, "User ID for grouping files together."));
     }
 
 

@@ -27,10 +27,12 @@
  import jnum.Copiable;
  import jnum.Unit;
 import jnum.data.image.Grid2D;
+import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
  import nom.tam.fits.Header;
  import nom.tam.fits.HeaderCard;
  import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 
 
  public class SofiaArrayData extends SofiaData implements Copiable<SofiaArrayData> {
@@ -96,26 +98,28 @@ import jnum.math.Vector2D;
 
      @Override
      public void editHeader(Header header) throws HeaderCardException {
-         //header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Array Data ------>", false));
-         if(detectorName != null) header.addLine(new HeaderCard("DETECTOR", detectorName, "Detector name"));
-         if(detectorSizeString != null) header.addLine(new HeaderCard("DETSIZE", detectorSizeString, "Detector size"));
-         if(!Double.isNaN(pixelScale)) header.addLine(new HeaderCard("PIXSCAL", pixelScale / Unit.arcsec, "(arcsec) Pixel scale on sky."));
+         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+         
+         c.add(new HeaderCard("COMMENT", "<------ SOFIA Array Data ------>", false));
+         if(detectorName != null) c.add(new HeaderCard("DETECTOR", detectorName, "Detector name"));
+         if(detectorSizeString != null) c.add(new HeaderCard("DETSIZE", detectorSizeString, "Detector size"));
+         if(!Double.isNaN(pixelScale)) c.add(new HeaderCard("PIXSCAL", pixelScale / Unit.arcsec, "(arcsec) Pixel scale on sky."));
          if(subarrays > 0) {
-             header.addLine(new HeaderCard("SUBARRNO", subarrays, "Number of subarrays."));
+             c.add(new HeaderCard("SUBARRNO", subarrays, "Number of subarrays."));
              DecimalFormat d2 = new DecimalFormat("00");
              for(int i=0; i<subarrays; i++) if(subarraySize[i] != null)
-                 header.addLine(new HeaderCard("SUBARR" + d2.format(i+1), subarraySize[i], "Subarray " + (i+1) + " location and size."));
+                 c.add(new HeaderCard("SUBARR" + d2.format(i+1), subarraySize[i], "Subarray " + (i+1) + " location and size."));
          }
 
-         if(!Double.isNaN(saturationValue)) header.addLine(new HeaderCard("SATURATE", saturationValue, "Detector saturation level."));
-         if(!Double.isNaN(detectorAngle)) header.addLine(new HeaderCard("DET_ANGL", detectorAngle, "(deg) Detector angle wrt North."));
-         if(averagedFrames > 0) header.addLine(new HeaderCard("COADDS", averagedFrames, "Number of raw frames per sample."));
+         if(!Double.isNaN(saturationValue)) c.add(new HeaderCard("SATURATE", saturationValue, "Detector saturation level."));
+         if(!Double.isNaN(detectorAngle)) c.add(new HeaderCard("DET_ANGL", detectorAngle, "(deg) Detector angle wrt North."));
+         if(averagedFrames > 0) c.add(new HeaderCard("COADDS", averagedFrames, "Number of raw frames per sample."));
 
-         if(!Double.isNaN(boresightIndex.x())) header.addLine(new HeaderCard("SIBS_X", boresightIndex.x(), "(pixel) boresight pixel x."));
-         else header.addLine(new HeaderCard("SIBS_X", SofiaHeader.UNKNOWN_FLOAT_VALUE, "Undefined value."));
+         if(!Double.isNaN(boresightIndex.x())) c.add(new HeaderCard("SIBS_X", boresightIndex.x(), "(pixel) boresight pixel x."));
+         else c.add(new HeaderCard("SIBS_X", SofiaHeader.UNKNOWN_FLOAT_VALUE, "Undefined value."));
 
-         if(!Double.isNaN(boresightIndex.y())) header.addLine(new HeaderCard("SIBS_Y", boresightIndex.y(), "(pixel) boresight pixel y."));
-         else header.addLine(new HeaderCard("SIBS_Y", SofiaHeader.UNKNOWN_FLOAT_VALUE, "Undefined value."));
+         if(!Double.isNaN(boresightIndex.y())) c.add(new HeaderCard("SIBS_Y", boresightIndex.y(), "(pixel) boresight pixel y."));
+         else c.add(new HeaderCard("SIBS_Y", SofiaHeader.UNKNOWN_FLOAT_VALUE, "Undefined value."));
 
          if(grid != null) grid.editHeader(header); // TODO...
      }

@@ -46,6 +46,7 @@ import jnum.astro.AstroTime;
 import jnum.data.DataPoint;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
+import jnum.fits.FitsToolkit;
 import jnum.io.LineParser;
 import jnum.math.Range;
 import jnum.math.Vector2D;
@@ -54,6 +55,7 @@ import jnum.text.SmartTokenizer;
 import jnum.text.TableFormatter;
 import jnum.util.HashCode;
 import nom.tam.fits.*;
+import nom.tam.util.Cursor;
 
 
 public abstract class Instrument<ChannelType extends Channel> extends ChannelGroup<ChannelType> 
@@ -1339,12 +1341,13 @@ implements TableFormatter.Entries, BasicMessaging {
     public void parseImageHeader(Header header) {}
 
     public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
-        header.addLine(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
-        header.addLine(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        c.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
+        c.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
     }
 
     public void editScanHeader(Header header) throws HeaderCardException {
-        if(hasOption("write.scandata.details")) Channel.flagSpace.editHeader('C', header);
+        if(hasOption("write.scandata.details")) Channel.flagSpace.editHeader(header, 'C');
     }
 
     public void addHistory(Header header, List<Scan<?,?>> scans) throws HeaderCardException {}

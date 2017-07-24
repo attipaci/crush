@@ -37,12 +37,14 @@ import jnum.Util;
 import jnum.astro.*;
 import jnum.data.DataPoint;
 import jnum.data.image.Asymmetry2D;
+import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.util.*;
 import nom.tam.fits.*;
+import nom.tam.util.Cursor;
 
 import java.io.*;
 import java.text.*;
@@ -740,8 +742,9 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	@Override
 	public void editScanHeader(Header header) throws HeaderCardException {	
 		super.editScanHeader(header);
-		header.addValue("PROJECT", project, "The project ID for this scan");
-		if(basisSystem != null) header.addValue("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan.");
+		Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+		c.add(new HeaderCard("PROJECT", project, "The project ID for this scan"));
+		if(basisSystem != null) c.add(new HeaderCard("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan."));
 		
 	}
 	

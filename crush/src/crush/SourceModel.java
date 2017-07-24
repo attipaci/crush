@@ -34,6 +34,9 @@ import crush.instrument.GenericInstrument;
 import jnum.Configurator;
 import jnum.Unit;
 import jnum.Util;
+import jnum.fits.FitsHeaderEditing;
+import jnum.fits.FitsHeaderParsing;
+import jnum.fits.FitsToolkit;
 import jnum.math.Coordinate2D;
 import jnum.parallel.ParallelProcessing;
 import jnum.reporting.BasicMessaging;
@@ -44,9 +47,10 @@ import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 
 public abstract class SourceModel implements Serializable, Cloneable, TableFormatter.Entries, BasicMessaging, 
-ParallelProcessing {
+ParallelProcessing, FitsHeaderEditing, FitsHeaderParsing {
     /**
      * 
      */
@@ -480,6 +484,7 @@ ParallelProcessing {
     }
     
     
+    @Override
     public void parseHeader(Header header) throws Exception {
         if(header.containsKey("INSTRUME")) {
             instrument = Instrument.forName(header.getStringValue("INSTRUME"));
@@ -501,12 +506,13 @@ ParallelProcessing {
     }
 
 
+    @Override
     public void editHeader(Header header) throws HeaderCardException { 
-
-        header.addLine(new HeaderCard("SCANS", scans.size(), "The number of scans in this composite image."));
-        header.addLine(new HeaderCard("INTEGRTN", integrationTime / Unit.s, "The total integration time in seconds."));
-
-        header.addLine(new HeaderCard("V2JY", instrument.janskyPerBeam(), "1 Jy/beam in instrument data units."));  
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        
+        c.add(new HeaderCard("SCANS", scans.size(), "The number of scans in this composite image."));
+        c.add(new HeaderCard("INTEGRTN", integrationTime / Unit.s, "The total integration time in seconds."));
+        c.add(new HeaderCard("V2JY", instrument.janskyPerBeam(), "1 Jy/beam in instrument data units."));  
 
         if(instrument != null) {
             instrument.editImageHeader(scans, header);

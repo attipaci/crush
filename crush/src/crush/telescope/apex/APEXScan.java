@@ -35,10 +35,12 @@ import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
+import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
+import nom.tam.util.Cursor;
 
 import java.io.*;
 import java.util.logging.Level;
@@ -165,7 +167,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	
 		File file = new File(name);
 		
-		// Turn off FITS library warnings...
+		// Turn off warnings about multiple occurences of header keys...
         if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
 	
 		if(file.exists()) {
@@ -376,8 +378,9 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	@Override
 	public void editScanHeader(Header header) throws HeaderCardException {	
 		super.editScanHeader(header);
-		header.addValue("PROJECT", project, "The project ID for this scan");
-		header.addValue("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan.");
+		Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+		c.add(new HeaderCard("PROJECT", project, "The project ID for this scan"));
+		c.add(new HeaderCard("BASIS", basisSystem.getSimpleName(), "The coordinates system of the scan."));
 	}
 	
 	@Override

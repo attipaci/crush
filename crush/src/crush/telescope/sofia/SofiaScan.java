@@ -29,7 +29,7 @@ import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
-import jnum.io.fits.FitsToolkit;
+import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
@@ -247,7 +247,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         observation = new SofiaObservationData(header);
         setSourceName(observation.sourceName);
         project = observation.aorID;
-        descriptor = observation.obsID;
+        //descriptor = observation.obsID;
 
         processing = new SofiaProcessingData(header);
         mission = new SofiaMissionData(header);
@@ -301,14 +301,12 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         super.editScanHeader(header);		
 
         Header sofiaHeader = new Header();
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(sofiaHeader);
+      
+        if(fileDate != null) c.add(new HeaderCard("DATE", fileDate, "Scan file creation date."));
 
-        Cursor<String, HeaderCard> cursor = sofiaHeader.iterator();
-        while(cursor.hasNext()) cursor.next();
-
-        if(fileDate != null) header.addLine(new HeaderCard("DATE", fileDate, "Scan file creation date."));
-
-        if(checksum != null) header.addLine(new HeaderCard("DATASUM", checksum, "Data file checksum."));
-        if(checksumVersion != null) header.addLine(new HeaderCard("CHECKVER", checksumVersion, "Checksum method version."));
+        if(checksum != null) c.add(new HeaderCard("DATASUM", checksum, "Data file checksum."));
+        if(checksumVersion != null) c.add(new HeaderCard("CHECKVER", checksumVersion, "Checksum method version."));
 
         observation.editHeader(sofiaHeader);
         processing.editHeader(sofiaHeader);
@@ -318,11 +316,11 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         aircraft.editHeader(sofiaHeader);
         telescope.editHeader(sofiaHeader);
 
-        header.addLine(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));	
-        header.addLine(new HeaderCard("NODDING", isNodding, "Was nodding used?"));	
-        header.addLine(new HeaderCard("DITHER", isDithering, "Was dithering used?"));	
-        header.addLine(new HeaderCard("MAPPING", isMapping, "Was mapping?"));	
-        header.addLine(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
+        c.add(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));	
+        c.add(new HeaderCard("NODDING", isNodding, "Was nodding used?"));	
+        c.add(new HeaderCard("DITHER", isDithering, "Was dithering used?"));	
+        c.add(new HeaderCard("MAPPING", isMapping, "Was mapping?"));	
+        c.add(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
 
         if(chopper != null) chopper.editHeader(sofiaHeader);
         if(nodding != null) nodding.editHeader(sofiaHeader);
@@ -332,17 +330,17 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
         instrument.editHeader(sofiaHeader);
 
-        //header.addLine(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
-        //header.addLine(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
-        //header.addLine(new HeaderCard("PIPELINE", "crush v" + CRUSH.getReleaseVersion(), "Software that produced this file."));
-        //header.addLine(new HeaderCard("PIPEVERS", CRUSH.getFullVersion(), "Full software version information.")); 
-        //header.addLine(new HeaderCard("PRODTYPE", "CRUSH-SCAN-META", "Type of product produced by the software."));
+        //c.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
+        //c.add(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
+        //c.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getReleaseVersion(), "Software that produced this file."));
+        //c.add(new HeaderCard("PIPEVERS", CRUSH.getFullVersion(), "Full software version information.")); 
+        //c.add(new HeaderCard("PRODTYPE", "CRUSH-SCAN-META", "Type of product produced by the software."));
 
         // May overwrite existing values...
         header.updateLines(sofiaHeader);
 
        
-        addHistory(header);
+        addHistory(c);
         instrument.addHistory(header, null);
     }
 
@@ -390,8 +388,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         //if(scanning != null) scanning.editHeader(header, cursor);
     }
 
-    public void addHistory(Header header) throws HeaderCardException {
-        for(int i=0; i<history.size(); i++) FitsToolkit.addHistory(header, history.get(i));
+    public void addHistory(Cursor<String, HeaderCard> c) throws HeaderCardException {
+        for(int i=0; i<history.size(); i++) FitsToolkit.addHistory(c, history.get(i));
     }
 
     public void parseHistory(Header header) {

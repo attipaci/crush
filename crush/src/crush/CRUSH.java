@@ -37,7 +37,7 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.astro.LeapSeconds;
-import jnum.io.fits.FitsToolkit;
+import jnum.fits.FitsToolkit;
 import jnum.parallel.ParallelTask;
 import jnum.reporting.BasicMessaging;
 import jnum.reporting.Broadcaster;
@@ -45,6 +45,7 @@ import jnum.reporting.ConsoleReporter;
 import jnum.reporting.Reporter;
 import jnum.text.VersionString;
 import nom.tam.fits.*;
+import nom.tam.util.Cursor;
 
 
 /**
@@ -60,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.40-a2";
-    private static String revision = "devel.1";
+    private static String revision = "devel.2";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -83,12 +84,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     private int configDepth = 0;	// Used for 'nested' output of invoked configurations.
 
-    static { 
-        Locale.setDefault(Locale.US);
-        FitsFactory.setUseHierarch(true);
-        FitsFactory.setLongStringsEnabled(true);
-        Logger.getLogger(Header.class.getName()).setLevel(Level.WARNING);
-    }
 
     public static void main(String[] args) {
         info();
@@ -125,7 +120,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
     private CRUSH() {
-
+        Locale.setDefault(Locale.US);
+        FitsFactory.setUseHierarch(true);
+        FitsFactory.setLongStringsEnabled(true);
     }
 
     public CRUSH(String instrumentName) {
@@ -267,6 +264,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public void validate() throws Exception {	
         consoleReporter.addLine();
 
+        if(!debug) Logger.getLogger(HeaderCard.class.getName()).setLevel(Level.WARNING);
+        
         if(scans.size() == 0) {
             warning("No scans to reduce. Exiting.");
             consoleReporter.addLine();
@@ -943,62 +942,64 @@ public class CRUSH extends Configurator implements BasicMessaging {
         // Add the reduction to the history...
         AstroTime timeStamp = new AstroTime();
         timeStamp.now();
-
-        FitsToolkit.addHistory(header, "Reduced: crush v" + CRUSH.getFullVersion() + " @ " + timeStamp.getFitsTimeStamp());			
+        
+        FitsToolkit.addHistory(FitsToolkit.endOf(header), "Reduced: crush v" + CRUSH.getFullVersion() + " @ " + timeStamp.getFitsTimeStamp());			
     }
 
     @Override
     public void editHeader(Header header) throws HeaderCardException {        
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
         // Add the system descriptors...	
-        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        header.addLine(new HeaderCard("COMMENT", " CRUSH runtime configuration section", false));
-        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(new HeaderCard("COMMENT", " CRUSH runtime configuration section", false));
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 
-        header.addLine(new HeaderCard("CRUSHVER", getFullVersion(), "CRUSH version information."));		
+        c.add(new HeaderCard("CRUSHVER", getFullVersion(), "CRUSH version information."));		
 
         if(commandLine != null) {
             StringTokenizer args = new StringTokenizer(commandLine);
-            header.addLine(new HeaderCard("ARGS", args.countTokens(), "The number of arguments passed from the command line."));
+            c.add(new HeaderCard("ARGS", args.countTokens(), "The number of arguments passed from the command line."));
             int i=1;
-            while(args.hasMoreTokens()) FitsToolkit.addLongKey(header, "ARG" + (i++), args.nextToken(), "Command-line argument.");
+            while(args.hasMoreTokens()) FitsToolkit.addLongKey(c, "ARG" + (i++), args.nextToken(), "Command-line argument.");
         }
         
-        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        header.addLine(new HeaderCard("COMMENT", " CRUSH Java VM & OS section", false));
-        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(new HeaderCard("COMMENT", " CRUSH Java VM & OS section", false));
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 
-        header.addLine(new HeaderCard("JAVA", Util.getProperty("java.vendor"), "Java vendor name."));
-        header.addLine(new HeaderCard("JAVAVER", Util.getProperty("java.version"), "The Java version."));
+        c.add(new HeaderCard("JAVA", Util.getProperty("java.vendor"), "Java vendor name."));
+        c.add(new HeaderCard("JAVAVER", Util.getProperty("java.version"), "The Java version."));
 
-        FitsToolkit.addLongKey(header, "JAVAHOME", Util.getProperty("java.home"), "Java location.");
-        header.addLine(new HeaderCard("JRE", Util.getProperty("java.runtime.name"), "Java Runtime Environment."));
-        header.addLine(new HeaderCard("JREVER", Util.getProperty("java.runtime.version"), "JRE version."));
-        header.addLine(new HeaderCard("JVM", Util.getProperty("java.vm.name"), "Java Virtual Machine."));
-        header.addLine(new HeaderCard("JVMVER", Util.getProperty("java.vm.version"), "JVM version."));
+        FitsToolkit.addLongKey(c, "JAVAHOME", Util.getProperty("java.home"), "Java location.");
+        c.add(new HeaderCard("JRE", Util.getProperty("java.runtime.name"), "Java Runtime Environment."));
+        c.add(new HeaderCard("JREVER", Util.getProperty("java.runtime.version"), "JRE version."));
+        c.add(new HeaderCard("JVM", Util.getProperty("java.vm.name"), "Java Virtual Machine."));
+        c.add(new HeaderCard("JVMVER", Util.getProperty("java.vm.version"), "JVM version."));
 
-        header.addLine(new HeaderCard("OS", Util.getProperty("os.name"), "Operation System name."));
-        header.addLine(new HeaderCard("OSVER", Util.getProperty("os.version"), "OS version."));
-        header.addLine(new HeaderCard("OSARCH", Util.getProperty("os.arch"), "OS architecture."));
+        c.add(new HeaderCard("OS", Util.getProperty("os.name"), "Operation System name."));
+        c.add(new HeaderCard("OSVER", Util.getProperty("os.version"), "OS version."));
+        c.add(new HeaderCard("OSARCH", Util.getProperty("os.arch"), "OS architecture."));
 
-        header.addLine(new HeaderCard("CPUS", Runtime.getRuntime().availableProcessors(), "Number of CPU cores/threads available."));
-        header.addLine(new HeaderCard("DMBITS", Util.getProperty("sun.arch.data.model"), "Bits in data model."));
-        header.addLine(new HeaderCard("CPENDIAN", Util.getProperty("sun.cpu.endian"), "CPU Endianness."));
-        header.addLine(new HeaderCard("MAXMEM", Runtime.getRuntime().maxMemory() / (1024 * 1024), "MB of available memory."));
+        c.add(new HeaderCard("CPUS", Runtime.getRuntime().availableProcessors(), "Number of CPU cores/threads available."));
+        c.add(new HeaderCard("DMBITS", Util.getProperty("sun.arch.data.model"), "Bits in data model."));
+        c.add(new HeaderCard("CPENDIAN", Util.getProperty("sun.cpu.endian"), "CPU Endianness."));
+        c.add(new HeaderCard("MAXMEM", Runtime.getRuntime().maxMemory() / (1024 * 1024), "MB of available memory."));
 
-        header.addLine(new HeaderCard("COUNTRY", Util.getProperty("user.country"), "The user country."));
-        header.addLine(new HeaderCard("LANGUAGE", Util.getProperty("user.language"), "The user language."));
+        c.add(new HeaderCard("COUNTRY", Util.getProperty("user.country"), "The user country."));
+        c.add(new HeaderCard("LANGUAGE", Util.getProperty("user.language"), "The user language."));
 
 
-        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        header.addLine(new HeaderCard("COMMENT", " CRUSH configuration section", false));
-        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(new HeaderCard("COMMENT", " CRUSH configuration section", false));
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 
         super.editHeader(header);
 
-        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-        header.addLine(new HeaderCard("COMMENT", " End of CRUSH configuration section", false));
-        header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c = FitsToolkit.endOf(header);
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(new HeaderCard("COMMENT", " End of CRUSH configuration section", false));
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
     }
 
 

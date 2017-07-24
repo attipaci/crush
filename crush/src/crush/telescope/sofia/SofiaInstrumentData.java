@@ -25,9 +25,11 @@ package crush.telescope.sofia;
 
 import jnum.Copiable;
 import jnum.Unit;
+import jnum.fits.FitsToolkit;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 
 public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInstrumentData> {
 	public String dataType;
@@ -85,23 +87,24 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
 
 	@Override
 	public void editHeader(Header header) throws HeaderCardException {
-		//header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Instrument Data ------>", false));
-		if(instrumentName != null) header.addLine(new HeaderCard("INSTRUME", instrumentName, "Name of SOFIA instrument."));
-		if(dataType != null) header.addLine(new HeaderCard("DATATYPE", dataType, "Data type."));
-		if(instrumentConfig != null) header.addLine(new HeaderCard("INSTCFG", instrumentConfig, "Instrument configuration."));
-		if(instrumentMode != null) header.addLine(new HeaderCard("INSTMODE", instrumentMode, "Instrument observing mode."));
-		if(mccsMode != null) header.addLine(new HeaderCard("MCCSMODE", instrumentMode, "MCCS mode."));
-		if(hardwareVersion != null) header.addLine(new HeaderCard("INSTHWV", hardwareVersion, "Instrument hardware version."));
-		if(softwareVersion != null) header.addLine(new HeaderCard("INSTSWV", softwareVersion, "Instrument software version."));
-		if(!Double.isNaN(exposureTime)) header.addLine(new HeaderCard("EXPTIME", exposureTime / Unit.s, "(s) total effective on-source time."));
-		if(spectralElement1 != null) header.addLine(new HeaderCard("SPECTEL1", spectralElement1, "First spectral element."));
-		if(spectralElement2 != null) header.addLine(new HeaderCard("SPECTEL2", spectralElement2, "Second spectral element."));
-		if(slitID != null) header.addLine(new HeaderCard("SLIT", slitID, "Slit identifier."));
-		if(!Double.isNaN(wavelength)) header.addLine(new HeaderCard("WAVECENT", wavelength / Unit.um, "(um) wavelength at passband center."));
-		if(!Double.isNaN(bandwidthMicrons)) header.addLine(new HeaderCard("BANDWDTH", bandwidthMicrons, "(um) total bandwith."));
-		if(!Double.isNaN(spectralResolution)) header.addLine(new HeaderCard("RESOLUN", spectralResolution, "Spectral resolution."));
-		if(detectorChannel != null) header.addLine(new HeaderCard("DETCHAN", detectorChannel, "Detector channel ID."));
-		if(!Double.isNaN(totalIntegrationTime)) header.addLine(new HeaderCard("TOTINT", totalIntegrationTime / Unit.s, "(s) Total integration time."));
+	    Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+		c.add(new HeaderCard("COMMENT", "<------ SOFIA Instrument Data ------>", false));
+		if(instrumentName != null) c.add(new HeaderCard("INSTRUME", instrumentName, "Name of SOFIA instrument."));
+		if(dataType != null) c.add(new HeaderCard("DATATYPE", dataType, "Data type."));
+		if(instrumentConfig != null) c.add(new HeaderCard("INSTCFG", instrumentConfig, "Instrument configuration."));
+		if(instrumentMode != null) c.add(new HeaderCard("INSTMODE", instrumentMode, "Instrument observing mode."));
+		if(mccsMode != null) c.add(new HeaderCard("MCCSMODE", instrumentMode, "MCCS mode."));
+		if(hardwareVersion != null) c.add(new HeaderCard("INSTHWV", hardwareVersion, "Instrument hardware version."));
+		if(softwareVersion != null) c.add(new HeaderCard("INSTSWV", softwareVersion, "Instrument software version."));
+		if(!Double.isNaN(exposureTime)) c.add(new HeaderCard("EXPTIME", exposureTime / Unit.s, "(s) total effective on-source time."));
+		if(spectralElement1 != null) c.add(new HeaderCard("SPECTEL1", spectralElement1, "First spectral element."));
+		if(spectralElement2 != null) c.add(new HeaderCard("SPECTEL2", spectralElement2, "Second spectral element."));
+		if(slitID != null) c.add(new HeaderCard("SLIT", slitID, "Slit identifier."));
+		if(!Double.isNaN(wavelength)) c.add(new HeaderCard("WAVECENT", wavelength / Unit.um, "(um) wavelength at passband center."));
+		if(!Double.isNaN(bandwidthMicrons)) c.add(new HeaderCard("BANDWDTH", bandwidthMicrons, "(um) total bandwith."));
+		if(!Double.isNaN(spectralResolution)) c.add(new HeaderCard("RESOLUN", spectralResolution, "Spectral resolution."));
+		if(detectorChannel != null) c.add(new HeaderCard("DETCHAN", detectorChannel, "Detector channel ID."));
+		if(!Double.isNaN(totalIntegrationTime)) c.add(new HeaderCard("TOTINT", totalIntegrationTime / Unit.s, "(s) Total integration time."));
 	}
 	
 	   

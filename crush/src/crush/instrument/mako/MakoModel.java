@@ -120,8 +120,8 @@ public class MakoModel<PixelType extends AbstractMakoPixel> {
 			
 		CRUSH.info(this, "Parsed " + positions.size() + " positions.");
 		
-		distortion.get(distortion.getParameter("x", 0, 0)).setRange(xRange);
-		distortion.get(distortion.getParameter("y", 0, 0)).setRange(yRange);
+		distortion.get(distortion.getTerm("x", 0, 0)).setRange(xRange);
+		distortion.get(distortion.getTerm("y", 0, 0)).setRange(yRange);
 		
 	}
 	
