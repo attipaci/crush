@@ -38,9 +38,10 @@ import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.ArrayUtil;
-import jnum.io.fits.FitsToolkit;
+import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
+import nom.tam.util.Cursor;
 
 public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed {
     /**
@@ -427,8 +428,9 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
         super.editImageHeader(scans, header);
         // Add HAWC+ specific keywords
-        header.addLine(new HeaderCard("COMMENT", "<------ HAWC+ Header Keys ------>", false));
-        header.addLine(new HeaderCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        c.add(new HeaderCard("COMMENT", "<------ HAWC+ Header Keys ------>", false));
+        c.add(new HeaderCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
     }
 
     @Override

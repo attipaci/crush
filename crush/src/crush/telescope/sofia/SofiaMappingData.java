@@ -27,11 +27,13 @@ import jnum.Unit;
 import jnum.astro.EclipticCoordinates;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.GalacticCoordinates;
+import jnum.fits.FitsToolkit;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 
 
 public class SofiaMappingData extends SofiaData {
@@ -59,13 +61,14 @@ public class SofiaMappingData extends SofiaData {
 
     @Override
     public void editHeader(Header header) throws HeaderCardException {
-        //header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Mapping Data ------>", false));
-        if(coordinateSystem != null) header.addLine(new HeaderCard("MAPCRSYS", coordinateSystem, "Mapping coordinate system."));
-        if(pattern != null) header.addLine(new HeaderCard("MAPPATT", pattern, "Mapping pattern."));
-        if(sizeX != SofiaHeader.UNKNOWN_INT_VALUE) header.addLine(new HeaderCard("MAPNXPOS", sizeX, "Number of map positions in X"));
-        if(sizeY != SofiaHeader.UNKNOWN_INT_VALUE) header.addLine(new HeaderCard("MAPNYPOS", sizeY, "Number of map positions in Y"));
-        if(Double.isNaN(step.x())) header.addLine(new HeaderCard("MAPINTX", step.x() / Unit.arcmin, "(arcmin) Map step interval in X"));
-        if(Double.isNaN(step.y())) header.addLine(new HeaderCard("MAPINTY", step.y() / Unit.arcmin, "(arcmin) Map step interval in Y"));
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        c.add(new HeaderCard("COMMENT", "<------ SOFIA Mapping Data ------>", false));
+        if(coordinateSystem != null) c.add(new HeaderCard("MAPCRSYS", coordinateSystem, "Mapping coordinate system."));
+        if(pattern != null) c.add(new HeaderCard("MAPPATT", pattern, "Mapping pattern."));
+        if(sizeX != SofiaHeader.UNKNOWN_INT_VALUE) c.add(new HeaderCard("MAPNXPOS", sizeX, "Number of map positions in X"));
+        if(sizeY != SofiaHeader.UNKNOWN_INT_VALUE) c.add(new HeaderCard("MAPNYPOS", sizeY, "Number of map positions in Y"));
+        if(Double.isNaN(step.x())) c.add(new HeaderCard("MAPINTX", step.x() / Unit.arcmin, "(arcmin) Map step interval in X"));
+        if(Double.isNaN(step.y())) c.add(new HeaderCard("MAPINTY", step.y() / Unit.arcmin, "(arcmin) Map step interval in Y"));
     }
 
     public Class<? extends SphericalCoordinates> getBasis() {

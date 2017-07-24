@@ -28,6 +28,7 @@ import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -39,6 +40,7 @@ import crush.telescope.sofia.SofiaScan;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
+import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
 public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
@@ -58,6 +60,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	
 	public HawcPlusScan(HawcPlus instrument) {
 		super(instrument);
+		// Turn off warnings about multiple occurences of header keys...
 		if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
 	}
 
@@ -144,7 +147,8 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 	@Override
 	public void editScanHeader(Header header) throws HeaderCardException {
 		super.editScanHeader(header);
-		if(priorPipelineStep != null) header.addLine(new HeaderCard("PROCLEVL", priorPipelineStep, "Last processing step on input scan."));	
+		Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+		if(priorPipelineStep != null) c.add(new HeaderCard("PROCLEVL", priorPipelineStep, "Last processing step on input scan."));	
 	}
 
 	@Override

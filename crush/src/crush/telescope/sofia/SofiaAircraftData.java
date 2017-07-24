@@ -23,10 +23,12 @@
 
 
  import jnum.Unit;
- import jnum.text.TableFormatter;
+import jnum.fits.FitsToolkit;
+import jnum.text.TableFormatter;
  import nom.tam.fits.Header;
  import nom.tam.fits.HeaderCard;
  import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 
  public class SofiaAircraftData extends SofiaData implements TableFormatter.Entries {
 
@@ -57,17 +59,18 @@
 
      @Override
      public void editHeader(Header header) throws HeaderCardException {
-         //header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Aircraft Data ------>", false));
-         if(!Double.isNaN(longitude.start)) header.addLine(new HeaderCard("LON_STA", longitude.start / Unit.deg, "(deg) Longitude at start of observation."));
-         if(!Double.isNaN(longitude.end)) header.addLine(new HeaderCard("LON_END", longitude.end / Unit.deg, "(deg) Longitude at end of observation."));
-         if(!Double.isNaN(latitude.start)) header.addLine(new HeaderCard("LAT_STA", latitude.start / Unit.deg, "(deg) Latitude at start of observation."));
-         if(!Double.isNaN(latitude.end)) header.addLine(new HeaderCard("LAT_END", latitude.end / Unit.deg, "(deg) Latitude at end of observation."));
-         if(!Double.isNaN(altitude.start)) header.addLine(new HeaderCard("ALTI_STA", altitude.start / Unit.ft, "(ft) Altitude at start of observation."));
-         if(!Double.isNaN(altitude.end)) header.addLine(new HeaderCard("ALTI_END", altitude.end / Unit.ft, "(ft) Altitude at end of observation."));
-         if(!Double.isNaN(airSpeed)) header.addLine(new HeaderCard("AIRSPEED", airSpeed / Unit.kn, "(kn) Airspeed at start of observation."));
-         if(!Double.isNaN(groundSpeed)) header.addLine(new HeaderCard("GRDSPEED", groundSpeed / Unit.kn, "(kn) Ground speed at start of observation."));
-         if(!Double.isNaN(heading)) header.addLine(new HeaderCard("HEADING", heading / Unit.deg, "(deg) True aircraft heading at start of observation."));
-         if(!Double.isNaN(trackAngle)) header.addLine(new HeaderCard("TRACKANG", trackAngle / Unit.deg, "(deg) Aircraft tracking angle at start of observation."));	
+         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+         c.add(new HeaderCard("COMMENT", "<------ SOFIA Aircraft Data ------>", false));
+         if(!Double.isNaN(longitude.start)) c.add(new HeaderCard("LON_STA", longitude.start / Unit.deg, "(deg) Longitude at start of observation."));
+         if(!Double.isNaN(longitude.end)) c.add(new HeaderCard("LON_END", longitude.end / Unit.deg, "(deg) Longitude at end of observation."));
+         if(!Double.isNaN(latitude.start)) c.add(new HeaderCard("LAT_STA", latitude.start / Unit.deg, "(deg) Latitude at start of observation."));
+         if(!Double.isNaN(latitude.end)) c.add(new HeaderCard("LAT_END", latitude.end / Unit.deg, "(deg) Latitude at end of observation."));
+         if(!Double.isNaN(altitude.start)) c.add(new HeaderCard("ALTI_STA", altitude.start / Unit.ft, "(ft) Altitude at start of observation."));
+         if(!Double.isNaN(altitude.end)) c.add(new HeaderCard("ALTI_END", altitude.end / Unit.ft, "(ft) Altitude at end of observation."));
+         if(!Double.isNaN(airSpeed)) c.add(new HeaderCard("AIRSPEED", airSpeed / Unit.kn, "(kn) Airspeed at start of observation."));
+         if(!Double.isNaN(groundSpeed)) c.add(new HeaderCard("GRDSPEED", groundSpeed / Unit.kn, "(kn) Ground speed at start of observation."));
+         if(!Double.isNaN(heading)) c.add(new HeaderCard("HEADING", heading / Unit.deg, "(deg) True aircraft heading at start of observation."));
+         if(!Double.isNaN(trackAngle)) c.add(new HeaderCard("TRACKANG", trackAngle / Unit.deg, "(deg) Aircraft tracking angle at start of observation."));	
      }
 
      @Override

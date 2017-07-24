@@ -39,7 +39,7 @@ import jnum.astro.CelestialCoordinates;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.data.WeightedPoint;
-import jnum.io.fits.FitsToolkit;
+import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
 public class APEXSubscan<InstrumentType extends APEXCamera<? extends APEXContinuumPixel>, FrameType extends APEXFrame> 

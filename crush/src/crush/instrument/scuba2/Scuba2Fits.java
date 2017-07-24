@@ -69,7 +69,7 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 		this.file = file;
 		this.fileName = file.getName();
 		
-		// Turn off warning messages...
+		// Turn off warnings about multiple occurences of header keys...
 		if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
 		fits = new Fits(file);
 		HDU = fits.read();

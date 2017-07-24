@@ -27,7 +27,7 @@ import nom.tam.fits.*;
 import java.io.*;
 import java.util.*;
 
-import jnum.io.fits.FitsToolkit;
+import jnum.fits.FitsToolkit;
 
 public class GismoVis {
 

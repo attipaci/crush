@@ -59,6 +59,7 @@ import jnum.data.image.Observation2D;
 import jnum.data.image.region.CircularRegion;
 import jnum.data.image.region.EllipticalSource;
 import jnum.data.image.region.GaussianSource;
+import jnum.fits.FitsToolkit;
 import jnum.math.CoordinateSystem;
 import jnum.math.Offset2D;
 import jnum.math.Range;
@@ -436,10 +437,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 
 		
-		
-		header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
-		header.addLine(new HeaderCard("COMMENT", " CRUSH scan-specific configuration section", false));
-		header.addLine(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+		Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+		c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+		c.add(new HeaderCard("COMMENT", " CRUSH scan-specific configuration section", false));
+		c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 	
 		instrument.getStartupOptions().difference(global).editHeader(header);	
 		
@@ -450,43 +451,41 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public void editScanHeader(Header header) throws HeaderCardException {	
 		Locale.setDefault(Locale.US);
 		
-		header.addValue("EXTNAME", "Scan-" + getID(), "Scan data");
+		Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+		c.add(new HeaderCard("EXTNAME", "Scan-" + getID(), "Scan data"));
+		c.add(new HeaderCard("INSTRUME", instrument.getName(), "The instrument name"));
+		c.add(new HeaderCard("SCANID", getID(), "Scan ID."));
 		
-		header.addValue("INSTRUME", instrument.getName(), "The instrument name");
-		
-		header.addValue("SCANID", getID(), "Scan ID.");
-		
-		if(serialNo > 0) header.addValue("SCANNO", serialNo, "Serial number for the scan");
-		if(descriptor != null) header.addValue("SCANSPEC", descriptor, "Specifier by which the scan was invoked.");
-		if(observer != null) header.addValue("OBSERVER", observer, "Name(s) of the observer(s).");
-		if(project != null) header.addValue("PROJECT", project, "Description of the project");
-		if(creator != null) header.addValue("CREATOR", creator, "Software that wrote the scan data.");
-		if(timeStamp != null) header.addValue("DATE-OBS", timeStamp, "Start of observation.");
+		if(serialNo > 0) c.add(new HeaderCard("SCANNO", serialNo, "Serial number for the scan"));
+		if(descriptor != null) FitsToolkit.addLongKey(c, "SCANSPEC", descriptor, "Scan descriptor");
+		if(observer != null) c.add(new HeaderCard("OBSERVER", observer, "Name(s) of the observer(s)"));
+		if(project != null) c.add(new HeaderCard("PROJECT", project, "Description of the project"));
+		if(creator != null) c.add(new HeaderCard("CREATOR", creator, "Software that wrote the scan data"));
+		if(timeStamp != null) c.add(new HeaderCard("DATE-OBS", timeStamp, "Start of observation"));
 		
 		// The Source Descriptors
-		header.addValue("OBJECT", sourceName, "Object catalog name");
-		header.addValue("RADESYS", (equatorial.epoch instanceof JulianEpoch ? "FK5" : "FK4"), "World coordinate system id.");
-		header.addValue("RA", Util.hf2.format(equatorial.RA()), "Human Readable Right Ascention.");
-		header.addValue("DEC", Util.af1.format(equatorial.DEC()), "Human Readable Declination.");
-		header.addValue("EQUINOX", equatorial.epoch.getYear(), "Precession epoch.");	
+		c.add(new HeaderCard("OBJECT", sourceName, "Object catalog name"));
+		c.add(new HeaderCard("RADESYS", (equatorial.epoch instanceof JulianEpoch ? "FK5" : "FK4"), "World coordinate system id"));
+		c.add(new HeaderCard("RA", Util.hf2.format(equatorial.RA()), "Human Readable Right Ascention"));
+		c.add(new HeaderCard("DEC", Util.af1.format(equatorial.DEC()), "Human Readable Declination"));
+		c.add(new HeaderCard("EQUINOX", equatorial.epoch.getYear(), "Precession epoch"));	
 	
-		if(!Double.isNaN(MJD)) header.addValue("MJD", MJD, "Modified Julian Day.");
+		if(!Double.isNaN(MJD)) c.add(new HeaderCard("MJD", MJD, "Modified Julian Day"));
 		
 		if(this instanceof GroundBased) {
-			if(!Double.isNaN(LST)) header.addValue("LST", LST / Unit.hour, "Local Sidereal Time (hours).");
-			header.addValue("AZ", horizontal.AZ()/Unit.deg, "Azymuth (deg).");
-			header.addValue("EL", horizontal.EL()/Unit.deg, "Elevation (deg).");
-			header.addValue("PA", getPA()/Unit.deg, "Direction of zenith w.r.t. North (deg).");
+			if(!Double.isNaN(LST)) c.add(new HeaderCard("LST", LST / Unit.hour, "Local Sidereal Time (hours)"));
+			c.add(new HeaderCard("AZ", horizontal.AZ()/Unit.deg, "Azymuth (deg)."));
+			c.add(new HeaderCard("EL", horizontal.EL()/Unit.deg, "Elevation (deg)."));
+			c.add(new HeaderCard("PA", getPA()/Unit.deg, "Direction of zenith w.r.t. North (deg)"));
 		
 			if(site != null) {
-				header.addValue("SITELON", Util.af1.format(site.longitude()), "Geographic longitude of the observing site (deg).");
-				header.addValue("SITELAT", Util.af1.format(site.latitude()), "Geographic latitude of the observing site (deg).");
+				c.add(new HeaderCard("SITELON", Util.af1.format(site.longitude()), "Geodetic longitude of the observing site (deg)"));
+				c.add(new HeaderCard("SITELAT", Util.af1.format(site.latitude()), "Geodetic latitude of the observing site (deg)"));
 			}
 		}
 		
-		header.addValue("WEIGHT", weight, "Relative source weight of the scan.");
-		
-		header.addValue("TRACKIN", isTracking, "Was the telescope tracking during the observation?");
+		c.add(new HeaderCard("WEIGHT", weight, "Relative source weight of the scan"));	
+		c.add(new HeaderCard("TRACKIN", isTracking, "Was the telescope tracking during the observation?"));
 		
 		instrument.editScanHeader(header);
 		

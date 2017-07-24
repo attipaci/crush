@@ -25,7 +25,9 @@ package crush.telescope.cso;
 import java.io.IOException;
 
 import nom.tam.fits.Header;
+import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
+import nom.tam.util.Cursor;
 import crush.Scan;
 import crush.array.SingleColorPixel;
 import crush.telescope.ElevationCouplingCurve;
@@ -34,6 +36,7 @@ import crush.telescope.HorizontalFrame;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
+import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
@@ -124,13 +127,14 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	@Override
 	public void editScanHeader(Header header) throws HeaderCardException {	
 		super.editScanHeader(header);
-		header.addValue("MJD", iMJD, "Modified Julian Day.");
-		header.addValue("FAZO", fixedOffset.x() / Unit.arcsec, "Fixed AZ pointing offset.");
-		header.addValue("FZAO", -fixedOffset.y() / Unit.arcsec, "Fixed ZA pointing offset.");
-		header.addValue("ELGAIN", elevationResponse, "Relative response at elevation.");
-		header.addValue("TEMPERAT", ambientT / Unit.K, "Ambient temperature (K).");
-		header.addValue("PRESSURE", pressure / Unit.mbar, "Atmospheric pressure (mbar).");
-		header.addValue("HUMIDITY", humidity, "Humidity (%).");
+		Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+		c.add(new HeaderCard("MJD", iMJD, "Modified Julian Day."));
+		c.add(new HeaderCard("FAZO", fixedOffset.x() / Unit.arcsec, "Fixed AZ pointing offset."));
+		c.add(new HeaderCard("FZAO", -fixedOffset.y() / Unit.arcsec, "Fixed ZA pointing offset."));
+		c.add(new HeaderCard("ELGAIN", elevationResponse, "Relative response at elevation."));
+		c.add(new HeaderCard("TEMPERAT", ambientT / Unit.K, "Ambient temperature (K)."));
+		c.add(new HeaderCard("PRESSURE", pressure / Unit.mbar, "Atmospheric pressure (mbar)."));
+		c.add(new HeaderCard("HUMIDITY", humidity, "Humidity (%)."));
 	}
 	
 	

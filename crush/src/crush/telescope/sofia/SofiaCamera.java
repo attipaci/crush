@@ -46,7 +46,7 @@ import crush.array.Camera;
 import crush.instrument.ColorArrangement;
 import crush.telescope.GroundBased;
 import jnum.Unit;
-import jnum.io.fits.FitsToolkit;
+import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
 public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<ChannelType> implements GroundBased {
@@ -139,7 +139,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         if(array != null) array.editHeader(header);
 
         //if(hasOption("pixeldata")) 
-        //	header.addLine(new HeaderCard("FLATFILE", option("pixeldata").getValue(), "pixel data file."));
+        //	c.add(new HeaderCard("FLATFILE", option("pixeldata").getValue(), "pixel data file."));
 
     }
 
@@ -150,17 +150,19 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         int level = hasOption("calibrated") ? 3 : 2;
         // TODO if multiple mission IDs, then Level 4...
 
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        
         // Add SOFIA processing keys
-        header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Data Processing Keys ------>", false));
-        header.addLine(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
-        header.addLine(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
-        header.addLine(new HeaderCard("PIPELINE", "crush v" + CRUSH.getVersion(), "Software that produced this file."));
-        header.addLine(new HeaderCard("PIPEVERS", "crush v" + CRUSH.getFullVersion(), "Full software version information.")); 
-        header.addLine(new HeaderCard("PRODTYPE", "CRUSH-IMAGE", "Type of product produced by the software."));
-        header.addLine(new HeaderCard("DATAQUAL", getQualityString(scans), "Lowest quality input scan."));
+        c.add(new HeaderCard("COMMENT", "<------ SOFIA Data Processing Keys ------>", false));
+        c.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
+        c.add(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
+        c.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getVersion(), "Software that produced this file."));
+        c.add(new HeaderCard("PIPEVERS", "crush v" + CRUSH.getFullVersion(), "Full software version information.")); 
+        c.add(new HeaderCard("PRODTYPE", "CRUSH-IMAGE", "Type of product produced by the software."));
+        c.add(new HeaderCard("DATAQUAL", getQualityString(scans), "Lowest quality input scan."));
 
         // Add required keys and prior history
-        header.addLine(new HeaderCard("COMMENT", "<------ SOFIA Additional Required Primary Header Keys ------>", false));
+        c.add(new HeaderCard("COMMENT", "<------ SOFIA Additional Required Primary Header Keys ------>", false));
 
         // TODO workaround for updates...
         // -----------------------------------------------------------------------------------------------------
@@ -168,21 +170,23 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         ((SofiaScan<?,?>) scans.get(0)).addRequiredPrimaryHeaderKeysTo(required);
         updateMultiScanKeys(scans, required);
 
-        Cursor<String, HeaderCard> c = required.iterator();
-        while(c.hasNext()) header.addLine(c.next());
+        Cursor<String, HeaderCard> from = required.iterator();
+        while(from.hasNext()) c.add(from.next());
         // -----------------------------------------------------------------------------------------------------	
     }	
 
 
     public void updateMultiScanKeys(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        
         // Add mandatory TRACERR entry...
         boolean hasTrackingError = false;
-        for(Scan<?,?> scan : scans) hasTrackingError |= ((SofiaScan<?,?>) scan).telescope.hasTrackingError;
-        header.addValue("TRACERR", hasTrackingError, "Whether any input data had tracking errors.");
+        for(Scan<?,?> scan : scans) hasTrackingError |= ((SofiaScan<?,?>) scan).telescope.hasTrackingError;      
+        c.add(new HeaderCard("TRACERR", hasTrackingError, "Whether any input data had tracking errors."));
 
         // EXPTIME
         double expTime = getTotalExposureTime(scans);
-        if(!Double.isNaN(expTime)) header.addValue("EXPTIME", expTime, "(s) Total effective on-source time.");
+        if(!Double.isNaN(expTime)) c.add(new HeaderCard("EXPTIME", expTime, "(s) Total effective on-source time."));
 
         // AOR_ID, ASSC_AOR
         addAssociatedAORIDs(scans, header);
@@ -218,7 +222,8 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
             buf.append(aorIDs.get(i));
         }
 
-        header.addValue("ASSC_AOR", new String(buf), "Associated AOR IDs.");
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        c.add(new HeaderCard("ASSC_AOR", new String(buf), "Associated AOR IDs."));
     }
 
     public String getQualityString(List<Scan<?,?>> scans) {
@@ -271,15 +276,17 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     public void addHistory(Header header, List<Scan<?,?>> scans) throws HeaderCardException {	
         super.addHistory(header, scans);			
 
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        
         // Add auxiliary file information
-        try { FitsToolkit.addHistory(header, " PWD: " + new File(".").getCanonicalPath()); }
+        try { FitsToolkit.addHistory(c, " PWD: " + new File(".").getCanonicalPath()); }
         catch(Exception e) { warning("Could not determine PWD for HISTORY entry..."); }
 
-        for(int i=0; i<history.size(); i++) FitsToolkit.addHistory(header, " " + history.get(i));
+        for(int i=0; i<history.size(); i++) FitsToolkit.addHistory(c, " " + history.get(i));
 
         // Add obs-IDs for all input scans...
         if(scans != null) for(int i=0; i<scans.size(); i++)
-            FitsToolkit.addHistory(header, " OBS-ID[" + (i+1) + "]: " + scans.get(i).getID());	
+            FitsToolkit.addHistory(c, " OBS-ID[" + (i+1) + "]: " + scans.get(i).getID());	
     }
 
     @Override

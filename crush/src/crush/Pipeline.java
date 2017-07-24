@@ -89,8 +89,8 @@ public class Pipeline implements Runnable, Serializable {
 	
 	private void iterate(Scan<?,?> scan) throws InterruptedException {	
 		for(Integration<?, ?> integration: scan) {
+		    integration.nextIteration();
 			integration.setThreadCount(threadCount);
-			integration.comments = new String();
 		}
 
 		for(int i=0; i < ordering.size(); i++) {

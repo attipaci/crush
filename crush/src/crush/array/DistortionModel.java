@@ -84,12 +84,16 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Parameter> 
 		setY(xExp, yExp, cy);
 	}
 	
-	public Parameter getParameter(String dir, int xExp, int yExp) {
+	public Term getTerm(String dir, int xExp, int yExp) {
 	    Term match = new Term(dir, xExp, yExp);
-	    for(Term term : keySet()) if(term.equals(match)) return get(term);
-	    Parameter p = match.createParameter(0.0);
-	    put(match, p);
-	    return p;
+        for(Term term : keySet()) if(term.equals(match)) return term;
+        Parameter p = match.createParameter(0.0);
+        put(match, p);
+        return match;
+	}
+	
+	public Parameter getParameter(String dir, int xExp, int yExp) {
+	    return get(getTerm(dir, xExp, yExp));
 	}
 	
 	public void setX(int xExp, int yExp, double value) {
