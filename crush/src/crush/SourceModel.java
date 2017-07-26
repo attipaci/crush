@@ -38,7 +38,7 @@ import jnum.fits.FitsHeaderEditing;
 import jnum.fits.FitsHeaderParsing;
 import jnum.fits.FitsToolkit;
 import jnum.math.Coordinate2D;
-import jnum.parallel.ParallelProcessing;
+import jnum.parallel.Parallelizable;
 import jnum.reporting.BasicMessaging;
 import jnum.text.TableFormatter;
 import jnum.util.HashCode;
@@ -50,7 +50,7 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public abstract class SourceModel implements Serializable, Cloneable, TableFormatter.Entries, BasicMessaging, 
-ParallelProcessing, FitsHeaderEditing, FitsHeaderParsing {
+Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     /**
      * 
      */
