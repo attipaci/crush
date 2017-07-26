@@ -102,7 +102,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
         
         double C = model.getRelativeTransmission(altitude, elevation);
         
-        info("Applying Vacca's atmospheric correction: " + Util.f3.format(C));
+        info("Applying Bill Vacca's atmospheric correction: " + Util.f3.format(C));
         
         setTau(-Math.log(model.getReferenceTransmission() * C) * Math.sin(elevation));
     }
