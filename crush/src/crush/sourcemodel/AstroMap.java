@@ -55,6 +55,7 @@ import jnum.fits.FitsToolkit;
 import jnum.math.Coordinate2D;
 import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
+import jnum.parallel.ParallelPointOp;
 import jnum.parallel.ParallelTask;
 import jnum.plot.BufferedImageLayer;
 import jnum.plot.ColorScheme;
@@ -423,7 +424,7 @@ public class AstroMap extends AstroModel2D {
              
             map.smoothTo(optimal);
        
-             if(hasOption("pointing.exposureclip")) {
+            if(hasOption("pointing.exposureclip")) {
                 Data2D exposure = map.getExposures();     
                 exposure.restrictRange(new Range(option("pointing.exposureclip").getDouble() * exposure.select(0.9), Double.POSITIVE_INFINITY));
             }
@@ -521,7 +522,7 @@ public class AstroMap extends AstroModel2D {
     public void process() {	
           
         map.endAccumulation();
-               
+                
         nextGeneration(); // Increment the map generation...
 
         getInstrument().setResolution(getAverageResolution());
@@ -598,6 +599,7 @@ public class AstroMap extends AstroModel2D {
             double lambda = hasSourceOption("mem.lambda") ? sourceOption("mem.lambda").getDouble() : 0.1;
             map.MEM(null, lambda);
         }
+       
 
         if(hasSourceOption("intermediates")) {
             try { writeFits(CRUSH.workPath + File.separator + "intermediate.fits"); }
@@ -614,7 +616,7 @@ public class AstroMap extends AstroModel2D {
             else updateMask(Double.NaN, 3);
         } 
       
-        // Run the garbage collector
+         // Run the garbage collector
         //System.gc();
     }
 
@@ -631,17 +633,17 @@ public class AstroMap extends AstroModel2D {
             else if(sign > 0) s2nRange.setMin(Double.NEGATIVE_INFINITY);
         }
         
-        final Validating2D neighbors = map.getNeighborValidator(minNeighbors);
-        final Validating2D s2n = new RangeRestricted2D(map.getSignificance(), s2nRange);
+        final Validating<Index2D> neighbors = map.getNeighborValidator(minNeighbors);
+        final Validating<Index2D> s2n = new RangeRestricted2D(map.getSignificance(), s2nRange);
             
-        map.new Loop<Void>() {
+        map.loop(new ParallelPointOp.Simple<Index2D>() {
             @Override
-            protected void process(int i, int j) {
-                if(neighbors.isValid(i, j) && s2n.isValid(i, j)) map.unflag(i, j, FLAG_MASK);
-                else map.flag(i, j, FLAG_MASK);
-            }
-        }.process();
-        
+            public void process(Index2D index) {
+                if(neighbors.isValid(index) && s2n.isValid(index)) map.unflag(index, FLAG_MASK);
+                else map.flag(index, FLAG_MASK);
+            }       
+        });
+       
     }
 
     public void addMask(final Flagged2D flags) {
@@ -870,7 +872,8 @@ public class AstroMap extends AstroModel2D {
             if(file.exists()) file.delete();
             return;
         }
-
+   
+          
         // Re-level and weight map if allowed and 'deep' or not 'extended'.
         if(!hasOption("extended") || hasOption("deep")) {
             if(enableLevel) map.level(true);

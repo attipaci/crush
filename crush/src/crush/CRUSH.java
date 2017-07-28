@@ -61,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.40-a2";
-    private static String revision = "devel.3";
+    private static String revision = "devel.4";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -560,7 +560,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
             info("Round " + iteration + ": ");	
 
             setIteration(iteration, rounds);	
-            for(Scan<?,?> scan : scans) scan.setIteration(iteration, rounds);	
+            
 
             iterate();	
         }
@@ -626,7 +626,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         if(solveSource()) if(tasks.contains("source")) {
             source.process();
             source.sync();
-
+            
             info(" [Source] " + source.getProcessBrief());
             source.clearProcessBrief();
         }
@@ -660,6 +660,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     public final void setIteration(int i, int rounds) {	
         setIteration(this, i, rounds);
+        for(Scan<?,?> scan : scans) scan.setIteration(i, rounds);   
     }
 
     public void setObjectOptions(String sourceName) {
