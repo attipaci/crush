@@ -108,12 +108,6 @@
 			detected. You can still use 'analyzer' to override the
 			recorded setting.
 
-:: analyzer.h=X		@Instrument: PolKa
-			@Expert
-			@Since: 2.11
-			Set the H analyzer angle (in degrees).
-			@See: 'analyzer.v'
-
 :: analyzer.h.phase=X	@Instrument: PolKa
 			@Expert
 			@Since: 2.11
@@ -124,12 +118,6 @@
 			present.
 			@See: 'waveplate.tpchannel', 'waveplate.tpharmonic'
 			      'waveplate.tpchar', 'analyzer.v.phase' 	
-
-:: analyzer.v=X		@Instrument: PolKa
-			@Expert
-			@Since: 2.11
-			Set the V analyzer angle (in degrees).
-			@See: 'analyzer.h'
 
 :: analyzer.v.phase=X	@Instrument: PolKa
 			@Expert
@@ -3798,15 +3786,6 @@
 			lets you reduce such data, provided you know when this
 			happened.
 
-:: waveplate.despike=X	@Instrument: PolKa
-			@Expert
-			@Since: 2.11
-			When fitting the timestamp data, assuming regular
-			waveplate rotation (see 'waveplate.regulate'), this
-			option can set a despiking level.
-			@See: 'waveplate.regulate'
-			
-
 :: waveplate.fchannel=N	@Instrument: PolKa
 			@Expert
 			The LABOCA channel number (counting from 1),
@@ -3826,23 +3805,8 @@
 			frame can be set via 'waveplate.refangle'.
 			@See: 'waveplate.channel', 'waveplate.refangle'
  
-:: waveplate.incidence=X	@Instrument: PolKa
-				@Expert
-				@Since: 2.11
-			The waveplate incidence angle from normal, in degrees.
-			@See: 'waveplate.incidence.phase'
-
-:: waveplate.incidence.phase=X	@Instrument: PolKa
-				@Expert
-				@Since: 2.11
-			The waveplate phase (in degrees) of the plane of
-			incidence, measured from the reference position in the
-			direction of waveplate rotation.
-			@See: 'waveplate.incidence'
-
-:: waveplate.jitter=X	@Instrument: PolKa
+waveplate.jitter=X	@Instrument: PolKa
 			@Expert
-			@Obsolete
 			Specify the typical fractional waveplate jitter.
 			This information is used for designing optimal notch
 			filters for the total-power mode to reject any 
@@ -3876,18 +3840,11 @@
 			(e.g. a wire grid in the pupil)
 			@See: 'waveplate.channel'
 
-:: waveplate.recalc[=<method>]	@Instrument: PolKa
-				@Advanced
-				@Since: 2.32
+:: waveplate.fix	@Instrument: PolKa
+			@Advanced
+			@Since: 2.40
 			Recalculate the waveplate data from the reconstructed
-			waveplate crossings. By default, the recalculated
-			waveplate will use trapesoidal interpolation between
-			bracketing crossings. 
-			Alternatively, if the optional <method> argument is set
-			to 'uniform' A linear fit to the timestamp data will be 
-			used instead of the original timestamps. The quality of
-			the fit may be improved with despiking the data via
-			'waveplate.despike'. Requires timestamp information via
+			waveplate crossings. Requires timestamp information via
 			'waveplate.tchannel'.
 			@See: 'waveplate.despike', 'waveplate.tchannel' 
 

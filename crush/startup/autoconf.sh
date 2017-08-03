@@ -85,4 +85,3 @@ fi
 if [[ $DATAMODEL == "32" && $USEMB -gt 1900 ]] ; then USEMB="1900" ; fi
 
 
-
