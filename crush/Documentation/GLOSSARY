@@ -3796,6 +3796,14 @@
 			the details.
 			@See: 'waveplate.channel'
 
+:: waveplate.fix	@Instrument: PolKa
+			@Advanced
+			@Since: 2.40
+			Recalculate the waveplate data from the reconstructed
+			waveplate crossings. Requires timestamp information via
+			'waveplate.tchannel'.
+			@See: 'waveplate.despike', 'waveplate.tchannel' 
+
 :: waveplate.frequency=X	@Instrument: PolKa
 				@Obsolete
 				@Expert
@@ -3804,8 +3812,22 @@
 			readily available. The waveplate angle of the first
 			frame can be set via 'waveplate.refangle'.
 			@See: 'waveplate.channel', 'waveplate.refangle'
+
+:: waveplate.incidence=X	@Instrument: PolKa
+				@Expert
+				@Since: 2.11
+			The waveplate incidence angle from normal, in degrees.
+			@See: 'waveplate.incidence.phase'
+
+:: waveplate.incidence.phase=X	@Instrument: PolKa
+                        	@Expert
+                        	@Since: 2.11
+			The waveplate phase (in degrees) of the plane of
+			incidence, measured from the reference position in the
+			direction of waveplate rotation.
+			@See: 'waveplate.incidence'
  
-waveplate.jitter=X	@Instrument: PolKa
+:: waveplate.jitter=X	@Instrument: PolKa
 			@Expert
 			Specify the typical fractional waveplate jitter.
 			This information is used for designing optimal notch
@@ -3840,14 +3862,6 @@ waveplate.jitter=X	@Instrument: PolKa
 			(e.g. a wire grid in the pupil)
 			@See: 'waveplate.channel'
 
-:: waveplate.fix	@Instrument: PolKa
-			@Advanced
-			@Since: 2.40
-			Recalculate the waveplate data from the reconstructed
-			waveplate crossings. Requires timestamp information via
-			'waveplate.tchannel'.
-			@See: 'waveplate.despike', 'waveplate.tchannel' 
-
 :: waveplate.tchannel=N	@Instrument: PolKa
 			@Expert
 			@Since: 2.11
@@ -3855,6 +3869,16 @@ waveplate.jitter=X	@Instrument: PolKa
 			waveplate timestamp. This information can be used by
 			CRUSH to fully reconstruct the waveplate motion (at
 			least to the timestamping accuracy).
+
+:: waveplate.tp		@Instrument: PolKa
+			@Expert
+			@Since: 2.40
+			Use the total power modulation signature to determine
+			waveplate phases. Use with caution and onl if the
+			waveplate information is not otherwise present, such
+			as during 6-8 December 2011.
+			@See: 'waveplate.tpchannel', 'waveplate.tpharmonic'
+
 
 :: waveplate.tpchannel=N	@Instrument: PolKa
 				@Expert

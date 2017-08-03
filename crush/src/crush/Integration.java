@@ -96,7 +96,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	protected boolean isValid = false;
 	
 	private int parallelism = 1;
-	private boolean hasCurrentWeights = false;
 	
 	// The integration should carry a copy of the instrument s.t. the integration can freely modify it...
 	// The constructor of Integration thus copies the Scan instrument for private use...
@@ -155,7 +154,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void nextIteration() {
 	    comments = new String();
-	    hasCurrentWeights = false;
 	}
 	
 	public boolean hasOption(String key) {
@@ -1133,8 +1131,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			channel.weight = channel.variance > 0.0 ? channel.dof / channel.variance : 0.0;
 		}
 		Instrument.recycle(var);
-		
-		hasCurrentWeights = true;
 	}
 	
 	public void getDifferentialChannelWeights() {
@@ -3086,8 +3082,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else if(task.equals("filter")) {
 			if(filter == null) return false;
 			if(!filter.apply()) return false;
-			
-			if(!hasCurrentWeights) getChannelWeights();
 			updatePhases();
 		}
 		else if(task.equals("purify")) {
