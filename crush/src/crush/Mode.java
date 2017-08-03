@@ -105,8 +105,6 @@ public class Mode implements Serializable {
     public void setChannels(ChannelGroup<?> group) {
         channels = group;
         name = group.getName();
-        gain = new float[channels.size()];
-        Arrays.fill(gain, 1.0F);
         if(coupledModes != null) for(CoupledMode mode : coupledModes) mode.setChannels(group);
     }
 
@@ -125,9 +123,9 @@ public class Mode implements Serializable {
     }
 
  
-    public void applyProviderGains(boolean validate) throws Exception {
+    private void applyProviderGains(boolean validate) throws Exception {
         if(validate) gainProvider.validate(this);
-
+       
         for(int c=channels.size(); --c >= 0; ) {
             gain[c] = (float) gainProvider.getGain(channels.get(c));
             if(Float.isNaN(gain[c])) gain[c] = 0.0F;
@@ -143,6 +141,13 @@ public class Mode implements Serializable {
      * @throws Exception
      */
     public float[] getGains(boolean validate) throws Exception {
+        if(gain == null) {
+            gain = new float[channels.size()];
+            Arrays.fill(gain, 1.0F);
+        }
+        else if(gain.length != channels.size()) 
+            throw new IllegalStateException("Gain array size differs from mode channels.");
+        
         if(gainProvider != null) applyProviderGains(validate);
         return gain;
     }

@@ -6,6 +6,6 @@ EXECNAME=$0
 while [ -L $EXECNAME ] ; do EXECNAME=`readlink $EXECNAME`; done
 CRUSH=`dirname $EXECNAME`
 
-source $CRUSH/srartup/wrapper.sh imagetool
+source $CRUSH/startup/wrapper.sh imagetool
 
 $JAVA $JAVAOPTS -classpath $CLASSPATH crushtools.ImageTool ${1+"$@"}

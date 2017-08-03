@@ -461,8 +461,7 @@ public abstract class AstroModel2D extends SourceModel {
         Range xRange = range.getXRange();
         Range yRange = range.getYRange();
         
-        grid.refIndex.setX(0.5 - Math.rint(xRange.min() / delta.x()));
-        grid.refIndex.setY(0.5 - Math.rint(yRange.min() / delta.y()));
+        grid.getReferenceIndex().set(0.5 - Math.rint(xRange.min() / delta.x()), 0.5 - Math.rint(yRange.min() / delta.y()));
 
         if(CRUSH.debug) {
             Vector2D corner = new Vector2D(xRange.min(), yRange.min());
@@ -474,8 +473,8 @@ public abstract class AstroModel2D extends SourceModel {
             debug("far corner: " + corner);
         }
 
-        int sizeX = 1 + (int) Math.ceil(grid.refIndex.x() + xRange.max() / delta.x());
-        int sizeY = 1 + (int) Math.ceil(grid.refIndex.y() + yRange.max() / delta.y());
+        int sizeX = 1 + (int) Math.ceil(grid.getReferenceIndex().x() + xRange.max() / delta.x());
+        int sizeY = 1 + (int) Math.ceil(grid.getReferenceIndex().y() + yRange.max() / delta.y());
         
         if(CRUSH.debug) debug("map pixels: " + sizeX + " x " + sizeY);
          

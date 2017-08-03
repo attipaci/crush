@@ -578,7 +578,7 @@ public class AstroMap extends AstroModel2D {
         }
 
 
-        if(hasOption("clip") && enableBias) {	
+        if(enableBias) if(hasOption("clip")) {	
             double clipLevel = option("clip").getDouble();
             addProcessBrief("(clip:" + clipLevel + ") ");
             final int sign = hasSourceOption("sign") ? sourceOption("sign").getSign() : 0;
@@ -608,7 +608,7 @@ public class AstroMap extends AstroModel2D {
 
         // Coupled with blanking...
         if(!hasSourceOption("nosync")) {
-            if(hasOption("blank") && enableBias) {
+            if(enableBias && hasOption("blank")) {
                 final double blankingLevel = getBlankingLevel();
                 addProcessBrief("(blank:" + blankingLevel + ") ");
                 updateMask(blankingLevel, 3);

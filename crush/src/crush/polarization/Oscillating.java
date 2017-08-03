@@ -4,7 +4,7 @@ public interface Oscillating {
 
     public double getFrequency();
     
-    public double getQ();
+    public double getQualityFactor();
     
 }
 

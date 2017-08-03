@@ -60,7 +60,7 @@ public class HWPFilter extends KillFilter {
 		}
 		
 		double f0 = hwp.getFrequency();
-		double d = f0 / hwp.getQ();
+		double d = f0 / hwp.getQualityFactor();
 		
 		// polarization is modulated at 4-theta...
 		int harmonics = hasOption("harmonics") ? option("harmonics").getInt() : 8;

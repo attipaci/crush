@@ -207,12 +207,12 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public void jackknife() {
 		sign = Math.random() < 0.5 ? -1 : 1;
 	}
-		
+	
 	public float getSourceGain(final int mode) throws IllegalArgumentException {
-		if(mode == TOTAL_POWER) return sign * getTransmission();
-		else throw new IllegalArgumentException(getClass().getSimpleName() + " does not define signal mode " + mode);
+	    if(mode == TOTAL_POWER) return sign * getTransmission();
+        else throw new IllegalArgumentException(getClass().getSimpleName() + " does not define signal mode " + mode);
 	}
-
+	
 	public boolean validate() {
 	    if(isValid) return true;
 	    isValid = true;

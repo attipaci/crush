@@ -162,19 +162,17 @@ public class PolarMap extends SourceModel {
 	
 	@Override
 	public void process() throws Exception {		
-		addProcessBrief("\n   [N] ");
+		addProcessBrief("[N] ");
 		N.process();
 		
 		if(usePolarization()) {
-			addProcessBrief("\n   [Q] ");
+			addProcessBrief("[Q] ");
 			Q.process();
 			N.addMask(Q.map); // Add the flagging data from Q
 			
-			addProcessBrief("\n   [U] ");
+			addProcessBrief("[U] ");
 			U.process();
 			N.addMask(U.map); // Add the flagging data from U
-		
-			addProcessBrief("\n   ");	
 		}
 	}
 

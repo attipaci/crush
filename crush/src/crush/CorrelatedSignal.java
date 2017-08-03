@@ -20,7 +20,6 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009,2010 Attila Kovacs
 
 package crush;
 
@@ -51,7 +50,6 @@ public class CorrelatedSignal extends Signal {
 	
 	public CorrelatedSignal(CorrelatedMode mode, Integration<?, ?> integration) {
 		super(mode, integration);
-		syncGains = new float[mode.size()];
 		dependents = new Dependents(integration, mode.name);
 		resolution = mode.getFrameResolution(integration);
 		value = new float[mode.signalLength(integration)];
@@ -320,10 +318,10 @@ public class CorrelatedSignal extends Signal {
 		// Precalculate the gain-weight products...
 		for(int k=G.length; --k >= 0; ) { 
 		    if(CRUSH.debug) if(Float.isNaN(G[k])) integration.comments += "!" + channels.get(k).getID();
-		    
-			dG[k] = G[k] - syncGains[k];
-			if(dG[k] != 0.0) resyncGains = true;
-			
+		   
+		    dG[k] = G[k] - syncGains[k];
+		    if(dG[k] != 0.0) resyncGains = true;
+		        
 			final Channel channel = channels.get(k);
 			channel.temp = 0.0F;
 			channel.tempG = G[k];

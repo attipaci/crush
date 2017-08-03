@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -37,21 +37,20 @@ public class PolKaFrame extends LabocaFrame {
 	// phases for Q and U demodulation
 	float Q,U;
 	float Qh,Uh;
-	float etaQ = 0.0F, etaU = 0.0F;
+	float unpolarizedGain;
 	double waveplateOffset = Double.NaN, waveplateAngle = Double.NaN, waveplateFrequency = Double.NaN;
 	
 	public PolKaFrame(APEXScan<Laboca, LabocaSubscan> parent) {
 		super(parent);
 	}
 	
+	
 	@Override
 	public float getSourceGain(final int mode) {	
 		switch(mode) {
-		case PolarModulation.N : return 0.5F * super.getSourceGain(TOTAL_POWER);
+		case PolarModulation.N : return 0.5F * unpolarizedGain * super.getSourceGain(TOTAL_POWER);
 		case PolarModulation.Q : return 0.5F * Q * super.getSourceGain(TOTAL_POWER);
 		case PolarModulation.U : return 0.5F * U * super.getSourceGain(TOTAL_POWER);
-		case PolarModulation.etaQ : return etaQ;
-        case PolarModulation.etaU : return etaU;
 		default: return super.getSourceGain(mode);
 		}
 	}
@@ -71,24 +70,29 @@ public class PolKaFrame extends LabocaFrame {
 	
 	@Override
 	public boolean validate() {
-		
+
+        
+	    if(!super.validate()) return false;
+	    
 		final PolKa polka = (PolKa) scan.instrument;
 		
 		if(polka.isCounterRotating) waveplateAngle *= -1.0;
 		
-		final double dA = -(waveplateAngle - polka.referenceAngle - polka.incidencePhase);
-		final double projected = polka.incidencePhase + Math.atan2(Math.sin(dA), polka.cosi * Math.cos(dA));
+		final double iPhase = polka.incidencePhase;		
+		double vPlateAngle = polka.referenceAngle + waveplateAngle;
+		double projected = iPhase + Math.atan2(Math.sin(vPlateAngle - iPhase), polka.cosi * Math.cos(vPlateAngle - iPhase));
+		double vPolAngle = 4.0 * projected;
 		
-		final double theta = 4.0 * projected + 2.0 * (polka.isVertical ? polka.verticalAngle : polka.horizontalAngle);
-		
-		Qh = (float) Math.cos(theta);
-		Uh = (float) Math.sin(theta);
+		if(polka.analyzerPosition == PolKa.ANALYZER_H) vPolAngle += 2.0 * polka.analyzerDifferenceAngle;
+			
+		// The negative sign reflects the direction of rotation on sky...
+		Qh = (float) Math.cos(-vPolAngle);
+		Uh = (float) Math.sin(-vPolAngle);
 		
 		if(polka.isHorizontalPolarization) {
 		    Q = Qh;
 		    U = Uh;
-		    etaQ = polka.etaQh;
-		    etaU = polka.etaUh;
+		    unpolarizedGain = 1.0F + Qh * polka.etaQh + Uh * polka.etaUh;
 		}
 		else {
 		    // calculate Q and U phases on sky based on the horizontal orientation...
@@ -99,10 +103,13 @@ public class PolKaFrame extends LabocaFrame {
 		    Q = cos2PA * Qh - sin2PA * Uh;
 		    U = sin2PA * Qh + cos2PA * Uh;
 		    
-		    etaQ = cos2PA * polka.etaQh - sin2PA * polka.etaUh;
-            etaU = sin2PA * polka.etaQh + cos2PA * polka.etaUh;
+		    final float etaQ = cos2PA * polka.etaQh - sin2PA * polka.etaUh;
+            final float etaU = sin2PA * polka.etaQh + cos2PA * polka.etaUh;
+            
+            unpolarizedGain = 1.0F + Q * etaQ + U * etaU;
 		}
+	
+		return true;
 		
-		return super.validate();
 	}
 }
