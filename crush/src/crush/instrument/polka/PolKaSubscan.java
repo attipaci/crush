@@ -35,6 +35,7 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
+import jnum.math.Range;
 import jnum.math.Vector2D;
 import jnum.parallel.ParallelTask;
 
@@ -128,6 +129,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
             warning("Phaseless polarization (i.e. uncalibrated angles).");
         }
       
+                
 
         if(hasOption("waveplate.tpchar")) {
             trim();
@@ -141,10 +143,49 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
 
         super.validate();	
 
-        if(hasOption("purify")) removeTPModulation();
+        
+        if(hasOption("analyzer.detect")) detectAnalyzer();    
+        else if(hasOption("purify")) removeTPModulation();
     }
 
- 
+    
+    // TODO this needs to be verified and improved as necessary...
+    public void detectAnalyzer() {      
+        if(tpWaveform == null) removeTPModulation();
+           
+        Range r = new Range();
+        for(WeightedPoint p : tpWaveform) if(p.weight() > 0.0) r.include(p.value());
+        
+        final double threshold = r.min() + 0.25 * r.span();
+        boolean onPeak = false;
+        int peaks = 0;
+        
+        for(WeightedPoint p : tpWaveform) if(p.weight() > 0.0) {
+            if(onPeak) {
+                if(p.value() < threshold) onPeak = false;
+            }
+            else {
+                if(p.value() > threshold) {
+                    onPeak = true;
+                    peaks++;
+                }
+            }
+        }
+            
+        // Helmut's observation is that the H analyzer is double-peaked, whereas the V analyzer is single peaked...
+        PolKa polka = (PolKa) instrument;
+        if(peaks == 1) polka.analyzerPosition = PolKa.ANALYZER_V;
+        else if(peaks == 2) polka.analyzerPosition = PolKa.ANALYZER_H;
+        else {
+            warning("Cound not detect analyzer. Total power modulation has " + peaks + " peaks.");
+            polka.analyzerPosition = PolKa.ANALYZER_UNKNOWN;
+            return;
+        }
+        
+        info("Detected analyzer position is " + PolKa.analyzerIDs[polka.analyzerPosition]);
+        
+    }
+
     public void removeTPModulation() {
         PolKa polka = (PolKa) instrument;
 

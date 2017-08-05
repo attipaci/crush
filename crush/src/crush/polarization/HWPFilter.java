@@ -49,7 +49,7 @@ public class HWPFilter extends KillFilter {
 		
 		
 		
-		// Use waveplate PolKa.frequency and PolKa.jitter 
+		// Use waveplate frequency and jitter 
 		// Use filter.hwp.harmonics
 		Oscillating hwp = (Oscillating) integration.instrument;
 		
@@ -65,9 +65,7 @@ public class HWPFilter extends KillFilter {
 		// polarization is modulated at 4-theta...
 		int harmonics = hasOption("harmonics") ? option("harmonics").getInt() : 8;
 		
-		
-		
-		for(int n=1; n<=harmonics; n++)	
+		for(int n=1; n<=harmonics; n++)	if(n % 4 != 0)
 			kill(new Range(n * (f0 - 2.0 * d), n * (f0 + 2.0 * d)));
 		
 		integration.info("Half-waveplate filter: " + harmonics + " harmonics, " 
