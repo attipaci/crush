@@ -1,0 +1,160 @@
+
+                *** CRUSH Rebuild Guide for Developers ***
+
+                               Attila Kovacs
+                         <attila[AT]sigmyne.com>
+
+
+                       Last updated: 4 August 2017
+
+
+
+Table of Contents
+=================
+
+1. Introduction
+
+2. Prerequisites
+
+3. Rebuild Instructions
+
+
+
+
+
+
+
+#############################################################################
+1. Intoduction
+#############################################################################
+
+
+This is a simple guide, meant for developers, who wish to modify and or
+rebuild CRUSH from the source code. 
+
+As of version 2.40, the CRUSH source code -- including the crushtools and JNUM
+sub-packages, all configuration files, instrument data, shell wrappers, and 
+Documentation -- is distributed as a separate tarball or ZIP archive. You
+can find the source distributions at
+
+  http://www.submm.caltech.edu/~sharc/crush
+
+under the 'Download' tab.
+
+
+
+
+#############################################################################
+2. Prerequisites
+#############################################################################
+
+  Java JDK
+  ========
+  You need a Java Developers Kit (JDK), 1.6.0 or later, containing the 'javac'
+  compiler. If you do not have javac on your system, grab a JDK e.g. from 
+   
+    oracle.java.com
+
+
+
+  Apache ANT build system
+  =======================
+  The CRUSH source package includes build files to use with the Apache ANT
+  build system. If you don't already have ANT on your machine, you'll
+  probably want to install it.
+
+
+
+  nom.tam.fits libraries
+  ======================
+  CRUSH requires the excellent nom.tam.fits libraries both for (re)building
+  and for running. Since the FITS libraries are an external dependence, they
+  are not bundled with the source code of CRUSH. Grab a recent release
+  (>= 1.15.0) from:
+
+    https://github.com/nom-tam-fits/nom-tam-fits/releases
+
+  Alternatively, the FITS libraries are also readily provided for Debian-based
+  Linux distros (e.g. Ubuntu), altough these may not be the latest. You can
+  install these via:
+
+    > sudo apt-get install libfits-java
+
+
+
+
+#############################################################################
+3. Rebuild Instructions
+#############################################################################
+
+ 1. Unpack the source tarball (it will extract into a crush/ folder, the same 
+    as the binary package -- so you probably want to unpack it to a different 
+    location if you really want it to be independent from the binary one... 
+    -- but, it will work even if you unpack it on top of the binary one...)
+
+
+ 2. Go inside the ant/ subfolder:
+
+       > cd crush/ant
+
+
+ 3. Unpack the sources from the source jars (in crush/archive)
+
+       > ant unpack-sources
+
+    When finished, the source code is under the sources/ directory. You
+    can now modify it, as you wish... (E.g. try changing the version
+    string in crush/CRUSH.java -- this way you can easily check if your
+    private build has been successful or not...)
+
+
+ 4. Place the fits.jar (the nom.tam.fits library) inside crush/depends. You
+    may skip this step if you installed the FITS libraries via a Linux
+    package. 
+
+
+ 5. Compile
+
+       > ant
+
+    Note, that you might get an error about JAVA_HOME not being correctly set 
+    If necesssary, set JAVA_HOME to the main Java SDK folder (the one that has 
+    bin/ inside it containing javac) before running ant.
+
+    This step will recompile the source code in sources/ and create the binary 
+    jars in a build/ folder.
+
+
+ 6. Copy the binary jars from build/ and depends/ into crush/lib/. You can 
+    either do this manually, e.g. inside crush/:
+
+       > cp ant/build/*.jar lib/
+       > cp depends/*.jar lib/
+
+    or using ANT (from inside crush/ant/):
+
+       > ant install-jars
+
+
+ 6. Test. Go up one into the main crush directory, and try to run crush with 
+    your freshly minted JARs...
+
+
+ 7. Clean up.
+
+       > ant clean
+
+    will delete the build/ and its contents, but will leave your sources/ 
+    folder untouched (so you can keep modifying it). Alternatively,
+
+       > ant cleanall
+
+   will restore the ant/ directory to its original state, removing both build/ 
+   and sources/ folders.
+
+
+
+
+===============================================================================
+Copyright (C)2017 -- Attila Kovacs
+

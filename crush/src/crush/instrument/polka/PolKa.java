@@ -209,7 +209,7 @@ public class PolKa extends Laboca implements Oscillating {
     public final static int ANALYZER_UNKNOWN = -1;
     public final static int ANALYZER_NONE = 0;
     public final static int ANALYZER_H = 1;
-    public final static int ANALYZER_V= 2;
+    public final static int ANALYZER_V = 2;
     
     public final static String[] analyzerIDs = { "0", "H", "V" };
     

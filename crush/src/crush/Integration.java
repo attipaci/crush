@@ -3397,7 +3397,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			for(int f=nF; --f >= 0; ) {
 				D.get(f, dComponent);
 				S.get(f, sComponent);
-				norm += sComponent.asquare();
+				norm += sComponent.absSquared();
 				
 				sComponent.conjugate();
 				dComponent.multiplyBy(sComponent);

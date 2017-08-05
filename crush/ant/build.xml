@@ -47,14 +47,14 @@
 
 	<target name="build" depends="compile,create-jars"/>
 
-	<target name="install" depends="build">
-		<mkdir dir="${libdir}"/>
-		<copy includeemptydirs="false" todir="${libdir}">
+	<target name="install-jars" depends="build">
+		<copy dir="${libdir}"/>
+		<move includeemptydirs="false" todir="${libdir}">
 			<fileset dir="${builddir}">
-				<exclude name="**/*.jar"/>
+				<include name="**/*.jar"/>
 			</fileset>
 			<fileset dir="${dependsdir}">
-				<exclude name="**/*.jar"/>
+				<include name="**/*.jar"/>
 			</fileset>
 		</copy>
 	</target>

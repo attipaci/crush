@@ -156,7 +156,19 @@ fi
 
 
 JAVAOPTS="$JVM -d$DATAMODEL -Xmx${USEMB}M $EXTRAOPTS"
+
 CLASSPATH="$CRUSH/lib/*:$CRUSH/bin"
+
+# Add dependecy libraries from standard locations (Linux only...)
+# commons-compress.jar
+if [ -f /usr/share/java/commons-compress.jar ] ; then
+  CLASSPATH="$CLASSPATH:/usr/share/java/commons-compress.jar"
+fi
+
+# fits.jar
+if [ -f /usr/share/java/fits.jar ] ; then
+  CLASSPATH="$CLASSPATH:/usr/share/java/fits.jar"
+fi
 
 export CRUSH
 
