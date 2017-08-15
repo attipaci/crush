@@ -137,7 +137,7 @@ includes the bolometer nonlinearity (which for SHARC-2 is treated separately).
 			chop pattern is below this value, the corresponding
 			Fourier components are considered not measured (i.e.
 			set to zero). See the default value in 
-			'sharc/default.cfg'	
+			'config/sharc/default.cfg'	
 
    file=<path>		Specify the data file either as a fully specified
 			path, or relative to the path set by the 'datapath'

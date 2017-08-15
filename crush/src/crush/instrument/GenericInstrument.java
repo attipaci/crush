@@ -31,7 +31,6 @@ import crush.Instrument;
 import crush.Pixel;
 import crush.Scan;
 import crush.SourceModel;
-import jnum.Unit;
 
 public class GenericInstrument extends Instrument<Channel> {
 	/**
@@ -60,15 +59,6 @@ public class GenericInstrument extends Instrument<Channel> {
 		return null;
 	}
 
-	@Override
-	public String getSizeName() {
-		return "arcsec";
-	}
-
-	@Override
-	public double getSizeUnitValue() {
-		return Unit.arcsec;
-	}
 
 	@Override
 	public Scan<?, ?> getScanInstance() {

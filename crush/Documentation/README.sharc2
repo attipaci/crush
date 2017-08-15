@@ -90,7 +90,7 @@ will probably find it useful to study the main README document a little longer.
    350um		Specify that the 350um filter was used (default). This
                         adjuts conversion factors, tau scaling relations for
                         calculating in-band line-of sight opacitites, and beam
-                        sizes (see 'sharc2/default.cfg').
+                        sizes (see 'config/sharc2/default.cfg').
                         @See: 'jansky', 'tau.<?>', 'beam'.
 
    450um		Use if the 450um filter was used to observe with
@@ -272,8 +272,8 @@ will probably find it useful to study the main README document a little longer.
                         SHARC-2 runs, when the instrument was still mounted on
                         the Cassdegrain platform. The values should be correcly
                         configured in the default SHARC-2 configuration
-                        ('sharc2/default.cfg'), and there should be no reason
-                        for the user to change these settings...
+                        ('config/sharc2/default.cfg'), and there should be no 
+			reason for the user to change these settings...
                         @See: 'rotation'
 
    rows			@Alias: -> correlated.rows

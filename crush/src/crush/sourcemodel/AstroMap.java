@@ -420,7 +420,7 @@ public class AstroMap extends AstroModel2D {
 
         if(hasOption("pointing.suggest")) {
             double optimal = hasOption("smooth.optimal") ? 
-                    option("smooth.optimal").getDouble() * scan.instrument.getSizeUnitValue() : scan.instrument.getPointSize();
+                    option("smooth.optimal").getDouble() * scan.instrument.getSizeUnit().value() : scan.instrument.getPointSize();
              
             map.smoothTo(optimal);
        
@@ -467,7 +467,7 @@ public class AstroMap extends AstroModel2D {
         if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
 
         double filterScale = directive.equals("auto") ? 
-                5.0 * getSourceSize() : Double.parseDouble(directive) * getInstrument().getSizeUnitValue();
+                5.0 * getSourceSize() : Double.parseDouble(directive) * getInstrument().getSizeUnit().value();
 
         double filterBlanking = (allowBlanking && filter.isConfigured("blank")) ? filter.get("blank").getDouble() : Double.POSITIVE_INFINITY;
 
@@ -882,7 +882,7 @@ public class AstroMap extends AstroModel2D {
 
 
         if(hasOption("regrid")) {
-            map.resample(option("regrid").getDouble() * getInstrument().getSizeUnitValue());
+            map.resample(option("regrid").getDouble() * getInstrument().getSizeUnit().value());
         }
 
         if(info) map.toString();
@@ -926,7 +926,7 @@ public class AstroMap extends AstroModel2D {
             List<Double> offsets = option.get("crop").getDoubles();
             if(offsets.isEmpty()) thumbnail.autoCrop();
             else {
-                double sizeUnit = getInstrument().getSizeUnitValue();
+                double sizeUnit = getInstrument().getSizeUnit().value();
                 double dXmin = offsets.get(0) * sizeUnit;
                 double dYmin = offsets.size() > 0 ? offsets.get(1) * sizeUnit : dXmin;
                 double dXmax = offsets.size() > 1 ? offsets.get(2) * sizeUnit : -dXmin;

@@ -300,7 +300,7 @@ Table of Contents
 
    The two are equilalent assuming that 'datapath' is set to '/data/hawc+' in
    the second case, e.g. in the user configuration file 
-   '~/.crush/hawc+/default.cfg', or on the command-line.
+   '~/.crush2/hawc+/default.cfg', or on the command-line.
 
 
    By flight and scan numbers

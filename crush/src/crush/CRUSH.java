@@ -60,8 +60,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.40-a3";
-    private static String revision = "devel.3";
+    private static String version = "2.40-b1";
+    private static String revision = "devel.1";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -551,7 +551,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         if(isConfigured("extended")) info("Assuming extended source(s).");
 
-        info("Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getSizeUnitValue()) + " " + instrument.getSizeName() + " sized source(s).");
+        info("Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getSizeUnit().value()) + " " + instrument.getSizeUnit().name() + " sized source(s).");
 
         if(isConfigured("rounds")) rounds = get("rounds").getInt();
 

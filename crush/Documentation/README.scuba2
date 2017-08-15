@@ -364,7 +364,7 @@ course, you may also use your own favorite FITS viewer/tool, if you prefer.
 
    Alternatively, if the STARLINK_DIR environment variable is set, and points
    to the Starlink directory, as recommended by the Starlink installation, then
-   the default setting (in scuba2/default.cfg):
+   the default setting (in config/scuba2/default.cfg):
 
         ndf2fits {@STARLINK_DIR}/bin/convert/ndf2fits
 

@@ -79,7 +79,7 @@ public abstract class AstroModel2D extends SourceModel {
     public AstroModel2D(Instrument<?> instrument) {
         super(instrument);
         grid = new SphericalGrid();
-        grid.setResolution(hasOption("grid") ? option("grid").getDouble() * instrument.getSizeUnitValue() : 0.2 * instrument.getResolution());
+        grid.setResolution(hasOption("grid") ? option("grid").getDouble() * instrument.getSizeUnit().value() : 0.2 * instrument.getResolution());
         
     }
 
@@ -168,7 +168,7 @@ public abstract class AstroModel2D extends SourceModel {
     }
 
     public double getSmoothing(String spec) {
-        double sizeUnit = getInstrument().getSizeUnitValue();
+        double sizeUnit = getInstrument().getSizeUnit().value();
         double beam = getInstrument().getPointSize();
         double pixelSmoothing = getPixelizationSmoothing();
         double fwhm = 0.0;
@@ -452,7 +452,7 @@ public abstract class AstroModel2D extends SourceModel {
             List<Double> values = option("grid").getDoubles();
             if(values.size() == 1) delta.set(values.get(0), values.get(0));
             else delta.set(values.get(0), values.get(1));
-            delta.scale(getInstrument().getSizeUnitValue());
+            delta.scale(getInstrument().getSizeUnit().value());
         }
 
         // Make the reference fall on pixel boundaries.
@@ -928,7 +928,7 @@ public abstract class AstroModel2D extends SourceModel {
 
     @Override
     public Object getTableEntry(String name) {
-        if(name.equals("smooth")) return smoothing / getInstrument().getSizeUnitValue();
+        if(name.equals("smooth")) return smoothing / getInstrument().getSizeUnit().value();
         else return super.getTableEntry(name);
     }
 

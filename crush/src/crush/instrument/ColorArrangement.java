@@ -65,7 +65,7 @@ public abstract class ColorArrangement<ChannelType extends Channel> implements S
 	}
 	
 	public void validate(Configurator options) {
-		if(hasOption("beam")) instrument.setResolution(option("beam").getDouble() * instrument.getSizeUnitValue());
+		if(hasOption("beam")) instrument.setResolution(option("beam").getDouble() * instrument.getSizeUnit().value());
 	}
 	
 	public abstract int getPixelCount();

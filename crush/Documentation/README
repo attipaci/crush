@@ -149,9 +149,8 @@ virtually any fast-sampling scanning camera.
 
    C. Windows Installation
    -----------------------
-   Please refer to 'README.windows', which may be found either in the 
-   installation directory, or the 'windows\' subdirectory of the distribution
-   directory, or online under the 'Documents' tab.
+   Please refer to 'README.windows', which may be found in the Install\windows\
+   subdirectory of the distribution, or online under the 'Documents' tab.
 
  
 
@@ -559,10 +558,11 @@ options on the console.
    
     Startup Configuration
     ---------------------
-    At launch, crush will parse 'default.cfg' to establish a default 
+    At launch, crush will parse 'config/default.cfg' to establish a default 
     configuration set. All configurations files are first parsed from the 
-    files in the crush directory, then additional options or overriders 
-    are read also from the appropriate instrument subdirectories, if exist.
+    files in the config/ directory inside crush, then additional options or 
+    overriders  are read also from the appropriate instrument subdirectories, 
+    if exist.
  
     After that, crush will check if these configuration files also exists 
     under the inside the '~/.crush2' directory of the user. If so, they will be
@@ -1297,13 +1297,13 @@ necessary.) The commands are:
 				the following configuration files will be
 				loaded in order (provided they exist):
 
-				   default.cfg
-				   laboca/default.cfg
+				   <crush>/config/default.cfg
+				   <crush>/config/laboca/default.cfg
 				   ~/.crush2/default.cfg
 				   ~/.crush2/laboca/default.cfg
 				  
-				   faint.cfg
-				   laboca/faint.cfg
+				   <crush>/config/faint.cfg
+				   <crush>/config/laboca/faint.cfg
 				   ~/.crush2/faint.cfg
 				   ~/.crush2/laboca/faint.cfg
 				   
