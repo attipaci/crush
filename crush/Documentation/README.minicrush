@@ -115,17 +115,17 @@ with the new version.
    Because CRUSH-2 provides the ability of conditionally setting properties
    by date (both MJD date and calendar date!), there is no longer a need for
    such a lookup file. Instead, the date-specific RCP lookup is defined in
-   <instrument>/default.cfg. The equivalent configuration to the above is
-   achieved by:
+   config/<instrument>/default.cfg. The equivalent configuration to the above
+   is achieved by:
 
-	mjd.[54372.0--54391.0] rcp {$CRUSH}/laboca/laboca-2007-10.rcp
+      mjd.[54372.0--54391.0] rcp {?configpath}/laboca/laboca-2007-10.rcp
 
    (Note, that because the full path to the file is given, the RCP does not
    necessarily have to reside in the laboca subdirectory of crush-2!)
    MJDs are nice for astronomy, but not very meaningful to humans. Thus,
    The same can be defined by easier-to-understand calendar dates:
 
-	date.[2007.09.29--2007.10.17] rcp {$CRUSH}/laboca/laboca-2007-10.rcp
+      date.[2007.09.29-2007.10.17] rcp {?configpath}/laboca/laboca-2007-10.rcp
 
     Thus, if you would like to add RCP information for dates beyond the ones
     already defined in your CRUSH-2 distribution, simply add lines, like

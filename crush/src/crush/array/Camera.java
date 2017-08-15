@@ -90,16 +90,7 @@ public abstract class Camera<ChannelType extends Channel> extends Instrument<Cha
 		return table;
 	}
 		
-	@Override
-	public String getSizeName() {
-		return "arcsec";
-	}
 
-	@Override
-	public double getSizeUnitValue() {
-		return Unit.arcsec;
-	}
-	
 	public abstract int maxPixels();
 	
 	@Override

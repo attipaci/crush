@@ -35,10 +35,8 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
-import jnum.math.Range;
 import jnum.math.Vector2D;
 import jnum.parallel.ParallelTask;
-
 
 import java.util.*;
 
@@ -144,15 +142,19 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
         super.validate();	
 
         
-        if(hasOption("analyzer.detect")) detectAnalyzer();    
-        else if(hasOption("purify")) removeTPModulation();
+        //if(hasOption("analyzer.detect")) detectAnalyzer();    
+        //else 
+        
+        if(hasOption("purify")) removeTPModulation();
     }
 
     
+    
+    /*
     // TODO this needs to be verified and improved as necessary...
     public void detectAnalyzer() {      
-        if(tpWaveform == null) removeTPModulation();
-           
+        if(tpWaveform == null) removeTPModulation();      
+        
         Range r = new Range();
         for(WeightedPoint p : tpWaveform) if(p.weight() > 0.0) r.include(p.value());
         
@@ -185,6 +187,8 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
         info("Detected analyzer position is " + PolKa.analyzerIDs[polka.analyzerPosition]);
         
     }
+    */
+
 
     public void removeTPModulation() {
         PolKa polka = (PolKa) instrument;

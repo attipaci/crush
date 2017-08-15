@@ -491,9 +491,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void calcScanSpeedStats() {
 		aveScanSpeed = getTypicalScanningSpeed();
 		info("Typical scanning speeds are " 
-				+ Util.f1.format(aveScanSpeed.value()/(instrument.getSizeUnitValue()/Unit.s)) 
-				+ " +- " + Util.f1.format(aveScanSpeed.rms()/(instrument.getSizeUnitValue()/Unit.s)) 
-				+ " " + instrument.getSizeName() + "/s");
+				+ Util.f1.format(aveScanSpeed.value()/(instrument.getSizeUnit().value()/Unit.s)) 
+				+ " +- " + Util.f1.format(aveScanSpeed.rms()/(instrument.getSizeUnit().value()/Unit.s)) 
+				+ " " + instrument.getSizeUnit().name() + "/s");
 	}
 	
 	public void velocityClip() {
@@ -3460,7 +3460,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		else if(name.startsWith("chop")) {
 		    Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;
 		    if(name.equals("chopfreq")) return chopper == null ? null : chopper.frequency / Unit.Hz;
-		    else if(name.equals("chopthrow")) return chopper == null ? null : 2.0 * chopper.amplitude / instrument.getSizeUnitValue();
+		    else if(name.equals("chopthrow")) return chopper == null ? null : 2.0 * chopper.amplitude / instrument.getSizeUnit().value();
 		    else if(name.equals("chopeff")) return chopper == null ? null : chopper.efficiency;
 		}
 		

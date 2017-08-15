@@ -203,7 +203,7 @@ implements TableFormatter.Entries, BasicMessaging {
               
         initialize();
         
-        if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnitValue();
+        if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnit().value();
         if(hasOption("gain")) gain = option("gain").getDouble();
 
         if(arrangement != null) arrangement.validate(options);
@@ -608,15 +608,11 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public double getSourceSize() {
         double sourceSize = hasOption("sourcesize") ? 
-                ExtraMath.hypot(option("sourcesize").getDouble() * getSizeUnitValue(), getPointSize()) : getPointSize();
+                ExtraMath.hypot(option("sourcesize").getDouble() * getSizeUnit().value(), getPointSize()) : getPointSize();
                 return sourceSize;
     }
 
-    public final Unit getSizeUnit() { return new Unit(getSizeName(), getSizeUnitValue()); }
-
-    public abstract double getSizeUnitValue();
-
-    public abstract String getSizeName();
+    public Unit getSizeUnit() { return arcsec; }
 
     public void census() {
         mappingChannels = 0;      
@@ -1442,12 +1438,12 @@ implements TableFormatter.Entries, BasicMessaging {
         else if(name.equals("channels")) return size();
         else if(name.equals("maxchannels")) return storeChannels;
         else if(name.equals("mount")) return mount.name();
-        else if(name.equals("resolution")) return resolution / getSizeUnitValue();
-        else if(name.equals("sizeunit")) return getSizeName();
+        else if(name.equals("resolution")) return resolution / getSizeUnit().value();
+        else if(name.equals("sizeunit")) return getSizeUnit().name();
         else if(name.equals("ptfilter")) return getAverageFiltering();
-        else if(name.equals("FWHM")) return getAverageBeamFWHM() / getSizeUnitValue();
-        else if(name.equals("minFWHM")) return getMinBeamFWHM() / getSizeUnitValue();
-        else if(name.equals("maxFWHM")) return getMaxBeamFWHM() / getSizeUnitValue();
+        else if(name.equals("FWHM")) return getAverageBeamFWHM() / getSizeUnit().value();
+        else if(name.equals("minFWHM")) return getMinBeamFWHM() / getSizeUnit().value();
+        else if(name.equals("maxFWHM")) return getMaxBeamFWHM() / getSizeUnit().value();
         else if(name.equals("stat1f")) return getOneOverFStat();
 
         return TableFormatter.NO_SUCH_DATA;
@@ -1547,5 +1543,10 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public final static int GAINS_SIGNED = 0;
     public final static int GAINS_BIDIRECTIONAL = 1;
+    
+    // TODO no lookup access?
+    public final static Unit arcsec = Unit.get("arcsec");
+    public final static Unit arcmin = Unit.get("arcmin");
+    public final static Unit deg = Unit.get("deg");
 
 }

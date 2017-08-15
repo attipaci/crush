@@ -59,9 +59,11 @@ under the 'Download' tab.
 
   Apache ANT build system
   =======================
-  The CRUSH source package includes build files to use with the Apache ANT
-  build system. If you don't already have ANT on your machine, you'll
-  probably want to install it.
+  The CRUSH source package includes build files to use with the Apache Ant
+  build system. If you don't already have Ant on your machine, you'll
+  probably want to install it. You can find it at:
+
+    http://ant.apache.org
 
 
 
@@ -108,9 +110,9 @@ under the 'Download' tab.
     private build has been successful or not...)
 
 
- 4. Place the fits.jar (the nom.tam.fits library) inside crush/depends. You
+ 4. Place the fits.jar (the nom.tam.fits library) inside crush/depends/. You
     may skip this step if you installed the FITS libraries via a Linux
-    package. 
+    package, or if they are readily available as '/usr/share/java/fits.jar'. 
 
 
  5. Compile

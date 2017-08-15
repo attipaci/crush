@@ -240,16 +240,16 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
     public Vector2D getPointingCorrection(Configurator option) {
         Vector2D correction = option.isEnabled ? option.getVector2D() : new Vector2D();
         if(option.isConfigured("offset")) correction.add(option.get("offset").getVector2D());
-        correction.scale(instrument.getSizeUnitValue());
+        correction.scale(instrument.getSizeUnit().value());
         return correction;
     }
 
 	public void pointingAt(Vector2D correction) {
 		if(correction == null) return;
-		double sizeUnit = instrument.getSizeUnitValue();
+		double sizeUnit = instrument.getSizeUnit().value();
 		info("Adjusting pointing by " + 
 				Util.f1.format(correction.x() / sizeUnit) + ", " + Util.f1.format(correction.y() / sizeUnit) +
-				" " + instrument.getSizeName() + ".");
+				" " + instrument.getSizeUnit().name() + ".");
 		
 		for(Integration<?,?> integration : this) integration.pointingAt(correction);
 		if(pointingCorrection == null) pointingCorrection = correction;
@@ -487,13 +487,29 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		c.add(new HeaderCard("WEIGHT", weight, "Relative source weight of the scan"));	
 		c.add(new HeaderCard("TRACKIN", isTracking, "Was the telescope tracking during the observation?"));
 		
+
+        if(pointing != null) editPointingHeaderInfo(header);
+		
 		instrument.editScanHeader(header);
 		
-		if(pointing != null) if(sourceModel instanceof AstroMap) {  
-		    pointing.editHeader(header, instrument.getSizeUnit());
-		}
 	}
 	
+	public void editPointingHeaderInfo(Header header) throws HeaderCardException {
+	    if(pointing == null) return; 
+
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        
+        c.add(new HeaderCard("COMMENT", "<------ Fitted Pointing / Calibration Info ------>", false));
+	    
+	    Offset2D relative = getNativePointingIncrement(pointing);
+        Unit sizeUnit = instrument.getSizeUnit();
+        
+        c.add(new HeaderCard("PNT_DX", relative.x() / sizeUnit.value(), "(" + sizeUnit.name() + ") pointing offset in native X."));
+        c.add(new HeaderCard("PNT_DY", relative.y() / sizeUnit.value(), "(" + sizeUnit.name() + ") pointing offset in native Y."));
+        
+        pointing.editHeader(header, instrument.getSizeUnit());
+	    
+	}
 	
 	public void setSourceModel(SourceModel model) {
 		sourceModel = model;
@@ -571,8 +587,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			if(pointing == null) return "---";
 			if(!(sourceModel instanceof AstroMap)) return "---";
 			Map2D map = ((AstroMap) sourceModel).map;
-			Unit sizeUnit = new Unit(instrument.getSizeName(), instrument.getSizeUnitValue());
-			return pointing.getRepresentation(map.getGrid()).getData(sizeUnit).getTableEntry(name.substring(4));
+			return pointing.getRepresentation(map.getGrid()).getData(map.getProperties(), instrument.getSizeUnit()).getTableEntry(name.substring(4));
 		}
 		else if(name.equals("object")) return sourceName;
 		else if(name.equals("id")) return getID();
@@ -771,7 +786,6 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		Unit sizeUnit = instrument.getSizeUnit();
 		
-		
 		data.new Entry("dX", relative.x(), sizeUnit);
 		data.new Entry("dY", relative.y(), sizeUnit);
 		
@@ -911,8 +925,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		// Print the native pointing offsets...
 		String text = "";
 		
-		double sizeUnit = instrument.getSizeUnitValue();
-		String sizeName = instrument.getSizeName();
+		Unit sizeUnit = instrument.getSizeUnit();
 		
 		String nameX = "x";
 		String nameY = "y";
@@ -926,15 +939,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		catch(Exception e) { error(e); }
 			
 		text += "  Offset: ";
-		text += Util.f1.format(nativePointing.x() / sizeUnit) + ", " + Util.f1.format(nativePointing.y() / sizeUnit) + " " 
-			+ sizeName + " (" + nameX + "," + nameY + ")";
+		text += Util.f1.format(nativePointing.x() / sizeUnit.value()) + ", " + Util.f1.format(nativePointing.y() / sizeUnit.value()) + " " 
+			+ sizeUnit.name() + " (" + nameX + "," + nameY + ")";
 		
 		// Also print Nasmyth offsets if applicable...
 		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
 			Vector2D nasmyth = getNasmythOffset(nativePointing);
 			text += "\n  Offset: ";		
-			text += Util.f1.format(nasmyth.x() / sizeUnit) + ", " + Util.f1.format(nasmyth.y() / sizeUnit) + " " 
-				+ sizeName + " (nasmyth)";
+			text += Util.f1.format(nasmyth.x() / sizeUnit.value()) + ", " + Util.f1.format(nasmyth.y() / sizeUnit.value()) + " " 
+				+ sizeUnit.name() + " (nasmyth)";
 		}
 		
 		return text;

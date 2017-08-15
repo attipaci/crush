@@ -42,7 +42,8 @@ public class PolarMap extends SourceModel {
 	 */
 	private static final long serialVersionUID = -533094900293482665L;
 	
-	AstroMap N,Q,U;
+	AstroMap N, Q, U;
+	
 	public boolean usePolarization = false;
 	public boolean hasPolarization = false;
 	
@@ -92,20 +93,18 @@ public class PolarMap extends SourceModel {
 		N.setID("N");
 		
 		Q = (AstroMap) N.getWorkingCopy(false);
-		Q.standalone();
 		Q.signalMode = PolarModulation.Q;
+		Q.standalone();
 		Q.enableLevel = false;
-		Q.enableBias = false; // Prevents re-blanking on just Q
+		Q.enableBias = false; // Prevents re-blanking on just Q or U
 		Q.enableWeighting = true;
 		Q.setID("Q");
-		
-		U = (AstroMap) N.getWorkingCopy(false);
-		U.standalone();
+					
+		U = (AstroMap) Q.getWorkingCopy(false);
 		U.signalMode = PolarModulation.U;
-		U.enableLevel = false;
-		U.enableBias = false; // Prevents re-blanking on just U
-		U.enableWeighting = true;
+		U.standalone();		
 		U.setID("U");
+	
 	}
 	
 	@Override
@@ -122,6 +121,7 @@ public class PolarMap extends SourceModel {
 	public void addModel(SourceModel model, double weight) {
 		PolarMap other = (PolarMap) model;
 		N.add(other.N, weight);
+		
 		if(usePolarization()) {
 			Q.add(other.Q, weight);
 			U.add(other.U, weight);
@@ -429,6 +429,8 @@ public class PolarMap extends SourceModel {
             A.write(path, false);
         }
 	}
+	
+
 
 	@Override
 	public String getSourceName() {

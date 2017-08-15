@@ -21,7 +21,7 @@
 			Specify that the 350um filter was used (default). This 
 			adjuts conversion factors, tau scaling relations for 
 			calculating in-band line-of sight opacitites, and beam 
-			sizes (see 'sharc2/default.cfg').
+			sizes (see 'config/sharc2/default.cfg').
 			@See: 'jansky', 'tau.<?>', 'beam'.
 
 :: 450um		@Instrument: SHARC-2, SCUBA-2 
@@ -376,8 +376,8 @@
 			the following configuration files will be loaded in 
 			order (provided they exist):
 
-			    {$CRUSH}/default.cfg
-			    {$CRUSH}/laboca/default.cfg
+			    <crush>/config/default.cfg
+			    <crush/config/laboca/default.cfg
 			    ~/.crush2/default.cfg
 			    ~/.crush2/laboca/default.cfg
 				  
@@ -2766,8 +2766,8 @@
 			SHARC-2 runs, when the instrument was still mounted on 
 			the Cassdegrain platform. The values should be correcly
 			configured in the default SHARC-2 configuration 
-			('sharc2/default.cfg'), and there should be no reason 
-			for the user to change these settings...
+			('config/sharc2/default.cfg'), and there should be no 
+			reason for the user to change these settings...
 			@See: 'rotation'
 
 :: rotation		@Advanced

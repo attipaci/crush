@@ -1,3 +1,53 @@
+>> Update PolarMap to keep separate H,V (R/T or X/Y)
+	Q,U -> QH, UH, QV, UV
+
+>> Update PolarMap with better statistics...
+    G  --> total power gain
+    gp --> rel. pol gain (-1:1)
+  
+   total pol gain: Gp = G * gp;
+
+   variance term: 
+	sigma_p^2 = 1 / sum(w Gp^2)
+   
+   Covariance term: 
+	C_p0 = 1 / sum(w G Gp)
+
+   Correlation term: 
+	Corr_p0 = sqrt(sum wG^2) * sum(wGp^2)) / sum(w G Gp)
+
+
+   // How much does total power pollute polarization?
+   // -- the total power flux mapped by the correlation term.
+   
+   // Add the correlation to the de-biased total intensity to the
+   // polarization variance estimate...
+   var_pol += (I0^2 - sigma_I^2) * Corr_p0
+	
+
+>> PolarMap to write ds9 vectors...
+
+
+>> Update RPM and Debian packaging to work with new organzation
+>> Update HAWC User docs with new config locations
+>> Check all config path names...
+
+
+
+>> TP -- horizontal double peaked, V single peaked waveform.
+      -- second peaks ~50%, noise < 10%
+
+
+>> Fix mode.gains size issue if channels were discareded before use...
+>> HAWC+: no valid pixels if pixeldata cannot be read...
+>> static lookups to create dynamically on first use (register calls)
+    -- Unit.get...
+
+>> new Unit classes...
+
+
+
+
 HIRMES>
 
 	- ATRAN model submitted as table argument...

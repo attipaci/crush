@@ -299,46 +299,49 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     @Override
     public void editScanHeader(Header header) throws HeaderCardException {
         super.editScanHeader(header);		
-
-        Header sofiaHeader = new Header();
-        Cursor<String, HeaderCard> c = FitsToolkit.endOf(sofiaHeader);
-      
+ 
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        
+        // Add the system descriptors...   
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(new HeaderCard("COMMENT", " Section for preserved SOFIA header data", false));
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+          
         if(fileDate != null) c.add(new HeaderCard("DATE", fileDate, "Scan file creation date."));
 
         if(checksum != null) c.add(new HeaderCard("DATASUM", checksum, "Data file checksum."));
         if(checksumVersion != null) c.add(new HeaderCard("CHECKVER", checksumVersion, "Checksum method version."));
 
-        observation.editHeader(sofiaHeader);
-        processing.editHeader(sofiaHeader);
-        mission.editHeader(sofiaHeader);
-        origin.editHeader(sofiaHeader);
-        environment.editHeader(sofiaHeader);
-        aircraft.editHeader(sofiaHeader);
-        telescope.editHeader(sofiaHeader);
-
+        observation.editHeader(header);
+        processing.editHeader(header);
+        mission.editHeader(header);
+        origin.editHeader(header);
+        environment.editHeader(header);
+        aircraft.editHeader(header);
+        telescope.editHeader(header);
+        
+        
+        c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));	
         c.add(new HeaderCard("NODDING", isNodding, "Was nodding used?"));	
         c.add(new HeaderCard("DITHER", isDithering, "Was dithering used?"));	
         c.add(new HeaderCard("MAPPING", isMapping, "Was mapping?"));	
         c.add(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
 
-        if(chopper != null) chopper.editHeader(sofiaHeader);
-        if(nodding != null) nodding.editHeader(sofiaHeader);
-        if(dither != null) dither.editHeader(sofiaHeader);
-        if(mapping != null) mapping.editHeader(sofiaHeader);
-        if(scanning != null) scanning.editHeader(sofiaHeader);
+        if(chopper != null) chopper.editHeader(header);
+        if(nodding != null) nodding.editHeader(header);
+        if(dither != null) dither.editHeader(header);
+        if(mapping != null) mapping.editHeader(header);
+        if(scanning != null) scanning.editHeader(header);
 
-        instrument.editHeader(sofiaHeader);
+        instrument.editHeader(header);
 
+        c = FitsToolkit.endOf(header);
         //c.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
         //c.add(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
         //c.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getReleaseVersion(), "Software that produced this file."));
         //c.add(new HeaderCard("PIPEVERS", CRUSH.getFullVersion(), "Full software version information.")); 
         //c.add(new HeaderCard("PRODTYPE", "CRUSH-SCAN-META", "Type of product produced by the software."));
-
-        // May overwrite existing values...
-        header.updateLines(sofiaHeader);
-
        
         addHistory(c);
         instrument.addHistory(header, null);
@@ -565,11 +568,9 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
             
         return super.getTableEntry(name);
     }
-
-    @Override
-    public String getPointingString(Offset2D nativePointing) {
-        if(pointing == null) return "\nOoops. No pointing data.\n";
-        
+    
+    
+    public Vector2D getSIPixelOffset(Offset2D nativePointing) {
         Vector2D siOffset = new Vector2D(nativePointing); 
         siOffset.rotate(getTelescopeVPA() - getInstrumentVPA());
         
@@ -582,9 +583,30 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         siOffset.scaleX(1.0 / pixelSize.x());
         siOffset.scaleY(-1.0 / pixelSize.y());
        
-       
+        return siOffset;
+    }
+
+    @Override
+    public String getPointingString(Offset2D nativePointing) {  
+        Vector2D siOffset = getSIPixelOffset(nativePointing);
+        
         return super.getPointingString(nativePointing) + "\n\n" +
             "  SIBS offset --> " + Util.f2.format((siOffset.x())) + ", " + Util.f2.format(siOffset.y()) + " pixels";        
+    }
+    
+    @Override
+    public void editPointingHeaderInfo(Header header) throws HeaderCardException {
+        super.editPointingHeaderInfo(header);    
+        
+        if(pointing == null) return; 
+
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        
+        Vector2D siOffset = getSIPixelOffset(getNativePointingIncrement(pointing));
+         
+        c.add(new HeaderCard("SIBS_DX", siOffset.x(), "(pixels) SIBS pointing increment in X."));
+        c.add(new HeaderCard("SIBS_DY", siOffset.y(), "(pixels) SIBS pointing increment in Y."));
+  
     }
     
 
