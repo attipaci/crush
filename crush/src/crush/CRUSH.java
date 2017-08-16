@@ -61,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.40-b1";
-    private static String revision = "devel.1";
+    private static String revision = "devel.2";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -73,7 +73,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public String commandLine;
 
     public static int maxThreads = 1;
-    public static ExecutorService executor, sourceExecutor;
+    public static volatile ExecutorService executor, sourceExecutor;
     
 
     public int parallelScans = 1;
@@ -170,7 +170,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
         else if(key.equals("debug")) {
             Util.debug = debug = true;
             consoleReporter.setLevel(ConsoleReporter.LEVEL_DEBUG);
-
             debug("java: " + Util.getProperty("java.vendor") + ": " + Util.getProperty("java.version"));
             debug("java-path: " + Util.getProperty("java.home"));
             debug("jre: " + Util.getProperty("java.runtime.name") + ": " + Util.getProperty("java.runtime.version"));
@@ -354,11 +353,11 @@ public class CRUSH extends Configurator implements BasicMessaging {
             source.createFrom(scans);
             source.setExecutor(sourceExecutor);
             source.setParallel(CRUSH.maxThreads);
+            setObjectOptions(source.getSourceName());
         }
 
         consoleReporter.addLine();
 
-        setObjectOptions(source.getSourceName());
     }
 
     private void initPipelines() {
@@ -419,15 +418,19 @@ public class CRUSH extends Configurator implements BasicMessaging {
         Integration.setRecyclerCapacity((maxThreads + 1) << 2);
         SourceModel.setRecyclerCapacity(maxThreads << 1);
 
-        // Shut down the old executor (releases thread resources back to the OS!)
-        if(executor != null) executor.shutdown();
-        if(sourceExecutor != null) sourceExecutor.shutdown();
-
-        // Allocate the new thread pool...
+       
+        final ExecutorService oldExecutor = executor;
+        final ExecutorService oldSourceExecutor = executor;
+     
+        // Replace the executors first...
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
         sourceExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
         
         if(source != null) source.setExecutor(sourceExecutor);
+        
+        // Then, shut down the old executor (releases thread resources back to the OS!)
+        if(oldExecutor != null) oldExecutor.shutdown();
+        if(oldSourceExecutor != null) oldSourceExecutor.shutdown();
     }
 
     public void setOutpath() {
@@ -880,7 +883,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         }
         
         String name = System.getProperty("java.vm.name");
-        if(name.startsWith("GNU") | name.contains("libgcj")) {
+        if(name.startsWith("GNU") || name.contains("libgcj")) {
             for(int i=0; i<8; i++) System.err.print("**********");
             System.err.println();
 

@@ -23,6 +23,7 @@
 package crush.telescope.cso;
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -241,7 +242,9 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		
 		double value = Double.NaN;
 		try { 
-			value = Double.parseDouble(in.readLine().trim());
+		    String spec = in.readLine();
+		    if(spec == null) throw new EOFException("MaiTau EOF");
+			value = Double.parseDouble(spec.trim());
 			if(!Double.isNaN(value)) info("---> MaiTau(" + id + ") = " + Util.f3.format(value));
 		}
 		catch(NumberFormatException e) {}

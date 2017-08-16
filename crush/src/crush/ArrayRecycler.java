@@ -129,7 +129,9 @@ public class ArrayRecycler {
 	}
 	
 	public synchronized void clear() {
+	    ints.clear();
 		floats.clear();
+		doubles.clear();
 		points.clear();
 	}
 	
@@ -139,11 +141,13 @@ public class ArrayRecycler {
 	
 	public void setSize(int capacity) {
 		if(size() <= 0) {
+		    ints = null;
 			floats = null;
 			doubles = null;
 			points = null;
 		}
 		if(size() != capacity) {
+		    ints = new ArrayBlockingQueue<int[]>(capacity);
 			floats = new ArrayBlockingQueue<float[]>(capacity);
 			doubles = new ArrayBlockingQueue<double[]>(capacity);
 			points = new ArrayBlockingQueue<DataPoint[]>(capacity);

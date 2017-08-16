@@ -237,6 +237,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 				}
 				else {
 					String[] files = directory.list();
+					if(files == null) throw new FileNotFoundException("Not a directory or other I/O error.");
 					
 					for(int i=0; i<files.length; i++) if(files[i].startsWith(prefix)) if(files[i].substring(3).startsWith(scanID)) {
 						try { scanFiles.add(new Scuba2Fits(path + File.separator + files[i], instrument.getOptions())); }

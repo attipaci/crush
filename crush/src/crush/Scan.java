@@ -28,6 +28,7 @@ import nom.tam.fits.*;
 import nom.tam.util.*;
 
 import java.io.*;
+import java.text.ParseException;
 import java.util.*;
 
 import crush.sourcemodel.*;
@@ -134,7 +135,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		Scan<?,?> scan = (Scan<?,?>) o;
 		
 		if(size() != scan.size()) return false;
-		if(getID() != scan.getID()) return false;
+		if(!Util.equals(getID(), scan.getID())) return false;
 		if(MJD != scan.MJD) return false;
 		if(!Util.equals(instrument, scan.instrument)) return false;
 		return true;
@@ -148,7 +149,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(hasOption("segment")) {
             double segmentTime = 60.0 * Unit.s;
             try { segmentTime = option("segment").getDouble() * Unit.s; }
-            catch(Exception e) {}
+            catch(NumberFormatException e) {}
             segmentTo(segmentTime);
         }
 		
@@ -667,7 +668,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		else if(hasOption("pointing")) if(sourceModel.isValid()) {
 			Configurator pointingOption = option("pointing");
- 			if(pointingOption.equals("suggest") || pointingOption.equals("auto")) 
+ 			if(pointingOption.is("suggest") || pointingOption.is("auto")) 
 				warning("Cannot suggest focus for scan " + getID() + ".");
 		}
 	}
@@ -679,7 +680,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		else if(hasOption("pointing")) if(sourceModel.isValid()) {
 			Configurator pointingOption = option("pointing");
-			if(pointingOption.equals("suggest") || pointingOption.equals("auto"))
+			if(pointingOption.is("suggest") || pointingOption.is("auto"))
 				warning("Cannot suggest pointing for scan " + getID() + ".");
 		}
 	}
@@ -710,7 +711,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		try { gains.mapValueTo("estimator"); }
 		catch(LockedException e) {} // TODO...
 	
-		if(gains.isConfigured("estimator")) if(gains.get("estimator").equals("median")) isRobust = true; 
+		if(gains.isConfigured("estimator")) if(gains.get("estimator").is("median")) isRobust = true; 
 		
 		WeightedPoint[] G = new WeightedPoint[instrument.storeChannels];
 		for(int i=G.length; --i >= 0; ) G[i] = new WeightedPoint();	
@@ -747,7 +748,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public void decorrelate(String modalityName) {
 		boolean isRobust = false;
-		if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust = true;
+		if(hasOption("estimator")) if(option("estimator").is("median")) isRobust = true;
 		
 		for(IntegrationType integration : this) integration.decorrelate(modalityName, isRobust);
 		if(hasOption("correlated." + modalityName + ".span")) updateGains(modalityName);

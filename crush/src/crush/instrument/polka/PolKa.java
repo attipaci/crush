@@ -134,7 +134,7 @@ public class PolKa extends Laboca implements Oscillating {
 		etaQh = hasOption("polarization.q0") ? option("polarization.q0").getFloat() : 0.0F;
 		etaUh = hasOption("polarization.u0") ? option("polarization.u0").getFloat() : 0.0F;
 		
-		isHorizontalPolarization = hasOption("system") ? option("system").equals("horizontal") : false;
+		isHorizontalPolarization = hasOption("system") ? option("system").is("horizontal") : false;
 
 	
 		super.validate(scan);

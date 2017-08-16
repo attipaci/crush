@@ -46,7 +46,7 @@ public class MakoIntegration<MakoType extends AbstractMako<? extends AbstractMak
 		super.validate();	
 		
 		boolean directTau = false;
-		if(hasOption("tau")) directTau = option("tau").equals("direct"); 
+		if(hasOption("tau")) directTau = option("tau").is("direct"); 
 		
 		if(!directTau) {		
 			double measuredLoad = instrument.getLoadTemperature(); 
@@ -163,7 +163,7 @@ public class MakoIntegration<MakoType extends AbstractMako<? extends AbstractMak
 				
 				@Override
 				public void processRow(int i) throws FitsException {	
-					if(ch[i] == 255) return;
+					if((0xff & ch[i]) == 255) return;
 					
 					final MakoFrame frame = new MakoFrame(makoscan);
 					frame.index = i;
@@ -270,7 +270,7 @@ public class MakoIntegration<MakoType extends AbstractMako<? extends AbstractMak
 				}
 				@Override
 				public void processRow(int i) throws FitsException {	
-					if(ch[i] == 255) return;
+					if((0xff & ch[i]) == 255) return;
 					
 					final MakoFrame frame = new MakoFrame(makoscan);
 					frame.index = i;

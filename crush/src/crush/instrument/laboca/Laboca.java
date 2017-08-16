@@ -209,7 +209,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
     protected void loadChannelData() {
 		super.loadChannelData();
 		
-		if(hasOption("he3")) if(!option("he3").equals("calc")) {
+		if(hasOption("he3")) if(!option("he3").is("calc")) {
 			String fileName = hasOption("he3.gains") ? option("he3.gains").getPath() : getConfigPath() + "he3-gains.dat";
 			
 			try { readTemperatureGains(fileName); }

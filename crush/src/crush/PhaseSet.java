@@ -67,7 +67,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
         if(!super.equals(o)) return false;
         PhaseSet set = (PhaseSet) o;
         if(generation != set.generation) return false;
-        if(integration.getDisplayID() != set.integration.getDisplayID()) return false;
+        if(!Util.equals(integration.getDisplayID(), set.integration.getDisplayID())) return false;
         if(signals.size() != set.signals.size()) return false;
         if(phaseDeps.size() != set.phaseDeps.size()) return false;
         //if(!Util.equals(integrationDeps, set.integrationDeps)) return false;

@@ -57,9 +57,9 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	    
 		if(hasOption("he3")) {
 			Configurator he3 = option("he3");
-			if(he3.equals("blinds")) setBlindTemperatures();
+			if(he3.is("blinds")) setBlindTemperatures();
 			
-			if(he3.equals("gains")) {
+			if(he3.is("gains")) {
 				for(LabocaPixel pixel : instrument) pixel.temperatureGain = 0.0;
 			}
 			else temperatureCorrect();
@@ -119,7 +119,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	@Override
 	public void writeProducts() {
 		super.writeProducts();
-		if(hasOption("he3")) if(option("he3").equals("gains")) {
+		if(hasOption("he3")) if(option("he3").is("gains")) {
 			try { writeTemperatureGains(); }
 			catch(IOException e) { warning("Problem writing temperature gains."); }
 		}
@@ -168,7 +168,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 		if(!hasOption("he3")) return;
 		
 		Configurator directive = option("he3");
-		if(!(directive.equals("thermistor") || directive.equals("gains"))) return;
+		if(!(directive.is("thermistor") || directive.is("gains"))) return;
 			
 		info("Parsing He3 temperatures from MONITOR table... ");
 	

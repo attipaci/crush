@@ -165,6 +165,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		descriptor = scanDescriptor;
 
 		List<String> endings = null;
+		
 		if(hasOption("dataname.end")) endings = option("dataname.end").getList();
 		else {
 			endings = new ArrayList<String>();
@@ -190,7 +191,9 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 				}
 				else {
 					String[] files = directory.list();
-					for(int i=0; i<files.length; i++) for(String ending : endings)
+					if(files == null) throw new FileNotFoundException("Not a directory or other I/O error.");
+					
+					for(int i=files.length; --i >= 0; ) for(String ending : endings)
 						if(files[i].endsWith(ending))
 							return new File(dirName + File.separator + files[i]);
 					
@@ -756,8 +759,5 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		a2.setY(asym.getX());
 		return super.getFocusString(a2, elongation);
 	}
-	
-	
-	public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	
 }

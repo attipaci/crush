@@ -153,7 +153,10 @@ public class MakoScan<MakoType extends AbstractMako<? extends AbstractMakoPixel>
 			String timeSpec = scanDescriptor.replaceAll(":", "");
 			String id = "mako" + dateSpec + "_" +  timeSpec;
 			File datadir = new File(path);
-			for(File file : datadir.listFiles()) {
+			File[] files = datadir.listFiles();
+			if(files == null) throw new FileNotFoundException("Not a directory, or other I/O error.");
+			
+			for(File file : files) {
 				String name = file.getName();
 				if(name.startsWith(id)) if(name.endsWith("Stream.fits") || name.endsWith("Stream.fits.gz")) {
 					this.file = file;

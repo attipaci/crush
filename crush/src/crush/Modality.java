@@ -80,8 +80,10 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	
 	@Override
     public int hashCode() {
-        int hash = super.hashCode() ^ name.hashCode() ^ id.hashCode() ^ (solveGains ? 1: 0) ^ (phaseGains ? 2 : 0) 
+        int hash = super.hashCode() ^ (solveGains ? 1: 0) ^ (phaseGains ? 2 : 0) 
                 ^ HashCode.from(resolution);
+        if(name != null) hash ^= name.hashCode();
+        if(id != null) hash ^= id.hashCode();
         if(trigger != null) hash ^= trigger.hashCode();
         if(name != null) hash ^= name.hashCode();
         if(id != null) hash ^= id.hashCode();

@@ -135,7 +135,7 @@ public class SyntheticRCP {
 			
 			xOrder = yOrder = 0;
 			
-			spec.toLowerCase();
+			spec = spec.toLowerCase();
 			
 			int from = 0;
 			while(from < spec.length()) from = parse(spec, from);

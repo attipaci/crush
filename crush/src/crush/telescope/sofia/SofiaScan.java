@@ -635,7 +635,5 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
     // INSTRUME excluded from this list since it is added automatically...
     
-    public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
 
 }
