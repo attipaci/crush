@@ -117,7 +117,7 @@ public class DRPMessenger extends Thread {
 		String text = message.toString();
 		out.write(text.getBytes());
 		
-		if(CRUSH.debug) CRUSH.debug(this, "DRP> " + text.getBytes());
+		if(CRUSH.debug) CRUSH.debug(this, "DRP> " + text);
 		
 		out.flush();
 		socket.close();

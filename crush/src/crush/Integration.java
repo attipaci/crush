@@ -246,7 +246,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		// Must do this before direct tau estimates...
 		if(hasOption("level") || !hasOption("pixeldata")) {
 			boolean isRobust = false;
-			if(hasOption("estimator")) isRobust = option("estimator").equals("median");
+			if(hasOption("estimator")) isRobust = option("estimator").is("median");
 			info("Removing DC offsets" + (isRobust ? " (robust)" : "") + ".");
 			removeOffsets(isRobust);
 		}
@@ -383,7 +383,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public void downsample() {
 		// Keep to the rule of thumb of at least 2.5 samples per beam
-		if(option("downsample").equals("auto")) {
+		if(option("downsample").is("auto")) {
 			// Choose downsampling to accomodate at least 90% of scanning speeds... 
 			double maxv = aveScanSpeed.value() + 1.25 * aveScanSpeed.rms();
 			// Choose downsampling to accomodate at ~98% of scanning speeds... 
@@ -500,7 +500,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		Range vRange = null;
 		Configurator option = option("vclip");
 		
-		if(option.equals("auto")) {	
+		if(option.is("auto")) {	
 			// Move at least 5 fwhms over the stability timescale
 			// But less that 1/2.5 beams per sample to avoid smearing
 			vRange = new Range(5.0 * instrument.getSourceSize() / instrument.getStability(), 0.4 * instrument.getPointSize() / instrument.samplingInterval);
@@ -1046,7 +1046,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			try { gains.mapValueTo("estimator"); }
 			catch(LockedException e) {} // TODO...
 			
-			if(gains.isConfigured("estimator")) if(gains.get("estimator").equals("median")) isGainRobust = true; 
+			if(gains.isConfigured("estimator")) if(gains.get("estimator").is("median")) isGainRobust = true; 
 			
 			if(modality.updateAllGains(this, isGainRobust)) {
 				instrument.census();
@@ -1199,7 +1199,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	public void getRobustChannelWeights() {
 		comments += "[W]";
 	
-		instrument.getLiveChannels().new Fork<Void>() {
+		final ChannelGroup<?> channels = instrument.getLiveChannels();
+		
+		final DataPoint[] var = instrument.getDataPoints();
+		for(Channel channel : channels) var[channel.index].noData();
+		
+		channels.new Fork<Void>() {
 			private float[] dev2;
 			
 			@Override
@@ -1217,23 +1222,25 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 			@Override
 			protected void process(Channel channel) {
 				int points = 0;
+				double sumw = 0.0;
 				
 				for(final Frame exposure : Integration.this) if(exposure != null) if(exposure.isUnflagged(Frame.CHANNEL_WEIGHTING_FLAGS)) {
 					if(exposure.sampleFlag[channel.index] == 0) {
 						final float value = exposure.data[channel.index];
 						dev2[points++] = exposure.relativeWeight * value * value;
+						sumw += exposure.relativeWeight;
 					}		    
 				}	
 				
 				if(points > 0) {
-					channel.dof = Math.max(0.0, 1.0 - channel.dependents / points);
-					channel.variance = points > 0 ? (Statistics.median(dev2, 0, points) / Statistics.medianNormalizedVariance) : 0.0;
-					channel.weight = channel.variance > 0.0 ? channel.dof / channel.variance : 0.0;	
+				    var[channel.index].setValue(Statistics.median(dev2, 0, points) / Statistics.medianNormalizedVariance);
+				    var[channel.index].setWeight(sumw);
 				}
 			}
 			
 		}.process();
 		
+		setWeightsFromVarStats(channels, var);
 	}
 	
 
@@ -1383,7 +1390,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 		if(level <= 0.0) return;
 		
 		boolean robust = false;
-		if(hasOption("estimator")) if(option("estimator").equals("median")) robust=true;
+		if(hasOption("estimator")) if(option("estimator").is("median")) robust=true;
 		comments += robust ? "[J]" : "J";
 		
 		final double minLevelTime = hasOption("dejump.minlength") ? option("dejump.minlength").getDouble() * Unit.sec : 5.0 * getPointCrossingTime();
@@ -3053,7 +3060,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 	
 	public boolean perform(String task) {
 		boolean isRobust = false;
-		if(hasOption("estimator")) if(option("estimator").equals("median")) isRobust = true;
+		if(hasOption("estimator")) if(option("estimator").is("median")) isRobust = true;
 			
 		
 		if(task.equals("offsets")) {

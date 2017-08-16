@@ -47,7 +47,6 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 	private static final long serialVersionUID = 4654355516742128832L;
 
 	public ChannelType referencePixel;
-	public double rotation = 0.0;
 	
 	public APEXCamera(String name, int size) {
 		super(name, new SingleColorArrangement<APEXContinuumPixel>(), size);

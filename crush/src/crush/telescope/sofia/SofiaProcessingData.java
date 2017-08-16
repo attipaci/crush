@@ -65,7 +65,7 @@ public class SofiaProcessingData extends SofiaData {
         
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Processing Information ------>", false));
         int level = 0;
-        if(processLevel.toUpperCase().startsWith("LEVEL_")) {
+        if(processLevel != null) if(processLevel.toUpperCase().startsWith("LEVEL_")) {
             try { level = Integer.parseInt(processLevel.substring(6)); }
             catch(NumberFormatException e) {}
         }

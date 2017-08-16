@@ -506,7 +506,7 @@ public class AstroMap extends AstroModel2D {
         EllipticalSource source = new EllipticalSource(getPeakCoords(), beam.getMajorFWHM(), beam.getMinorFWHM(), beam.getPositionAngle());
         
         source.setPeakPositioning();
-        if(hasOption("pointing.method")) if(option("pointing.method").equals("centroid")) source.setCentroidPositioning();
+        if(hasOption("pointing.method")) if(option("pointing.method").is("centroid")) source.setCentroidPositioning();
         
         source.adaptTo(map);
         source.deconvolveWith(properties.getUnderlyingBeam());

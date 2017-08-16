@@ -295,7 +295,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		
 		SphericalCoordinates basisCoords = new HorizontalCoordinates();
 		try { basisCoords = scanSystem.newInstance(); }
-		catch(Exception e) {}
+		catch(Exception e) { error(e); }
 		String longitudeName = basisCoords.getCoordinateSystem().get(0).getShortLabel();
 		
 		out.println("   Chop: " + Util.f1.format(chopper_throw / Unit.arcsec) + "\" at " + Util.f3.format(chop_frequency) + " Hz" +
@@ -358,7 +358,9 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 	 * @return the simple date
 	 */
 	public String getFitsDateString() {
-		return AstroTime.fitsDateFormatter.format(AstroTime.getTTMillis(iMJD + 0.5));
+		synchronized(AstroTime.fitsDateFormatter) {
+		    return AstroTime.fitsDateFormatter.format(AstroTime.getTTMillis(iMJD + 0.5));
+		}
 	}
 	
 	

@@ -125,7 +125,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 		
 		
 		// Do not flag unassigned pixels when beam-mapping...
-		if(hasOption("source.type")) if(option("source.type").equals("beammap")) 
+		if(hasOption("source.type")) if(option("source.type").is("beammap")) 
 				for(AbstractMakoPixel pixel : this) pixel.unflag(AbstractMakoPixel.FLAG_UNASSIGNED);
 		
 		// Update the pointing center...

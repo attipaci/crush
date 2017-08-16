@@ -154,7 +154,7 @@ implements TableFormatter.Entries, BasicMessaging {
     public void validate(Vector<Scan<?,?>> scans) throws Exception {
         if(hasOption("jackknife.alternate")) {
             notify("JACKKNIFE! Alternating scans.");
-            for(int i=scans.size(); --i >= 0; ) if(i%2 == 1) 
+            for(int i=scans.size(); --i >= 0; ) if(i%2 != 0) 
                 for(Integration<?,?> subscan : scans.get(i)) subscan.gain *= -1.0;
         }
     }
@@ -1338,8 +1338,10 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        
         c.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
         c.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
+        c.add(new HeaderCard("V2JY", janskyPerBeam(), "1 Jy/beam in instrument data units."));
     }
 
     public void editScanHeader(Header header) throws HeaderCardException {

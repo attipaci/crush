@@ -94,7 +94,7 @@ public class PhaseSignal implements Serializable {
 		
 		// Allow phases.estimator to override the default estimator request
 		if(integration.hasOption("phases.estimator")) 
-			isRobust = integration.option("phases.estimator").equals("median");
+			isRobust = integration.option("phases.estimator").is("median");
 		
 		final boolean useMedians = isRobust;
 	
