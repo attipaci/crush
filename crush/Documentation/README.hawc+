@@ -135,8 +135,7 @@ Table of Contents
 
         > man crush
 
-   If all is in order, you should see a basic description on the crush 
-   command-line syntax and options.
+   If all is in order, you should see the UNIX manual page on the crush. 
 
 
 
@@ -653,6 +652,6 @@ For a general overview of channel divisions, please consult Section 3.
 
 
 ------------------------------------------------------------------------------
-Copyright (C)2016 -- Attila Kovacs <attila[AT]sigmyne.com>
+Copyright (C)2017 -- Attila Kovacs <attila[AT]sigmyne.com>
 
 
