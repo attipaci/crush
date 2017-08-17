@@ -352,15 +352,8 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 	}
 	
 	
-	/**
-	 * Gets the simple date.
-	 *
-	 * @return the simple date
-	 */
 	public String getFitsDateString() {
-		synchronized(AstroTime.fitsDateFormatter) {
-		    return AstroTime.fitsDateFormatter.format(AstroTime.getTTMillis(iMJD + 0.5));
-		}
+	    return AstroTime.getDateFormat(AstroTime.fitsDateFormat).format(AstroTime.getTTMillis(iMJD + 0.5));
 	}
 	
 	
