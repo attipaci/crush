@@ -69,6 +69,7 @@ implements TableFormatter.Entries, BasicMessaging {
     private ColorArrangement<? super ChannelType> arrangement;
     public Mount mount;
 
+    private double frequency;
     private double resolution;
     private double overlapPointSize = Double.NaN;
 
@@ -203,6 +204,9 @@ implements TableFormatter.Entries, BasicMessaging {
               
         initialize();
         
+        if(hasOption("frequency")) frequency = option("frequency").getDouble() * Unit.Hz;
+        else if(hasOption("wavelength")) frequency = Constant.c / (option("wavelength").getDouble() * Unit.um);
+            
         if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnit().value();
         if(hasOption("gain")) gain = option("gain").getDouble();
 
@@ -600,6 +604,8 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public void readWiring(String fileName) throws IOException {}
 
+    public double getFrequency() { return frequency; }
+    
     public double getResolution() { return resolution; }
 
     public void setResolution(double value) { resolution = value; }

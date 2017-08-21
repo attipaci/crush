@@ -8,7 +8,7 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 
 import jnum.Util;
-import jnum.data.image.CartesianGrid2D;
+import jnum.data.image.FlatGrid2D;
 import jnum.data.image.Grid2D;
 import jnum.data.image.GridImage2D;
 import jnum.math.Coordinate2D;
@@ -72,7 +72,7 @@ public class FieldViewer {
 		
 		
 		// create grid...
-		GridImage2D<Coordinate2D> image = new GridImage2D<Coordinate2D>(new CartesianGrid2D());
+		GridImage2D<Coordinate2D> image = new GridImage2D<Coordinate2D>(new FlatGrid2D());
 		image.setSize(1 + (int) Math.ceil(xRange.span() / res), 1 + (int) Math.ceil(yRange.span() / res));
 		Grid2D<Coordinate2D> grid = image.getGrid();
 		

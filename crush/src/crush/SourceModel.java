@@ -72,6 +72,11 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public boolean enableBias = true;   
   
     private StringBuffer processBrief = new StringBuffer();
+    
+    public int signalMode = Frame.TOTAL_POWER;
+    
+    protected int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
+
 
     public SourceModel(Instrument<?> instrument) {
         setInstrument(instrument);
@@ -84,6 +89,10 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public String getCommandLine() { return commandLine; }
     
     public void setCommandLine(String value) { this.commandLine = value; }
+    
+    public void setExcludeSamples(int pattern) {
+        excludeSamples = pattern;
+    }
 
     public List<Scan<?,?>> getScans() { return scans; }
 
@@ -209,6 +218,13 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
             for(Integration<?,?> integration : scan)
                 integration.gain *= integration.instrument.janskyPerBeam() / janskyPerBeam;
         }
+        
+        
+        if(getFirstScan().isNonSidereal) {
+            info("Forcing equatorial for moving object.");
+            getOptions().processSilent("system", "equatorial");
+        }
+        
 
     }
 

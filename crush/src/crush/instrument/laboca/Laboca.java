@@ -48,6 +48,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 		setResolution(19.5 * Unit.arcsec);
 	}
 	
+	
 	@Override
 	public int getNonDetectorFlags() {
 		return super.getNonDetectorFlags() | LabocaPixel.FLAG_RESISTOR;

@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import jnum.Constant;
 import jnum.ExtraMath;
-import jnum.data.image.CartesianGrid2D;
+import jnum.data.image.FlatGrid2D;
 import jnum.data.image.GridImage2D;
 import jnum.data.image.GridMap2D;
 import jnum.fft.MultiFFT;
@@ -176,7 +176,7 @@ public class FFTView {
 	
 		
 		// Create the FFT grid.
-		CartesianGrid2D grid = new CartesianGrid2D();
+		FlatGrid2D grid = new FlatGrid2D();
 		grid.setReference(new Coordinate2D());
 		grid.setReferenceIndex(new Vector2D(nx2, ny2));
 		

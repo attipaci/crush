@@ -33,10 +33,12 @@ import crush.array.*;
 import jnum.Unit;
 import jnum.data.*;
 import jnum.data.image.Index2D;
+import jnum.data.image.Map2D;
 import jnum.data.image.Observation2D;
 import jnum.data.image.region.GaussianSource;
 import jnum.math.Coordinate2D;
 import jnum.math.SphericalCoordinates;
+import nom.tam.fits.FitsException;
 
 public class BeamMap extends AstroModel2D {
 	/**
@@ -156,12 +158,12 @@ public class BeamMap extends AstroModel2D {
 	}
 
 	@Override
-	public double getPixelFootprint() {
+	public int getPixelFootprint() {
 		return pixelMap.length * template.getPixelFootprint();
 	}
 
 	@Override
-	public long baseFootprint(long pixels) {
+	public long baseFootprint(int pixels) {
 		return pixelMap.length * template.baseFootprint(pixels);
 	}
 	
@@ -209,12 +211,17 @@ public class BeamMap extends AstroModel2D {
 				else to = from+1;
 			}
 			
-			for(int p=from; p<to; p++) if(pixelMap[p] != null) if(pixelMap[p].isValid()) pixelMap[p].write(path, false);
+			for(int p=from; p<to; p++) if(pixelMap[p] != null) if(pixelMap[p].isValid()) pixelMap[p].write(path);
 		}
 		calcPixelData(false);
 		writePixelData();	
 	}
 
+
+    @Override
+    public void writeFits(String fileName) throws FitsException, IOException {}
+
+	
 	@Override
 	public void process() throws Exception {	
 		boolean process = hasSourceOption("process");	
@@ -319,14 +326,6 @@ public class BeamMap extends AstroModel2D {
 	}
 
 	@Override
-	public boolean isValid() {
-		if(pixelMap == null) return false;
-		// Require at least one valid pixel map.
-		for(AstroMap map : pixelMap) if(map != null) if(map.isValid()) return true;
-		return false;
-	}
-
-	@Override
 	public void mergeAccumulate(AstroModel2D other) {
 		if(!(other instanceof BeamMap)) 
 			throw new IllegalStateException("Cannot add " + other.getClass().getSimpleName() + " to " + getClass().getSimpleName() + ".");
@@ -368,6 +367,29 @@ public class BeamMap extends AstroModel2D {
     public int sizeY() {
         return template.sizeY();
     }
+
+    @Override
+    public boolean isEmpty() {
+        if(pixelMap == null) return true;
+        for(AstroMap map : pixelMap) if(map != null) if(!map.isEmpty()) return false;
+        return true;
+    }
+
+    @Override
+    protected void addPoint(Index2D index, Channel channel, Frame exposure, double G, double dt) {
+        // TODO not needed...
+    }
+
+    @Override
+    public void processFinal() {
+        if(pixelMap == null) return;
+        for(AstroMap map : pixelMap) if(map != null) map.processFinal();
+    }
+    
+    
+
+    @Override
+    public Map2D getMap2D() { return null; }
 
 
 }

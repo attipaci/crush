@@ -32,7 +32,7 @@ import jnum.Util;
 import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
 import jnum.data.DataPoint;
-import jnum.data.image.CartesianGrid2D;
+import jnum.data.image.FlatGrid2D;
 import jnum.data.image.GridMap2D;
 import jnum.data.image.Data2D.Task;
 import jnum.data.image.region.GaussianSource;
@@ -84,7 +84,7 @@ public class GDFStack {
 	public GridMap2D<Coordinate2D> getStack() {
 		int size = 1 + 2 * (int)Math.ceil(3.0 * map.getImageBeam().getCircularEquivalentFWHM() / map.getResolution().x());
 		GridMap2D<Coordinate2D> stack = new GridMap2D<Coordinate2D>(size, size);
-		stack.setGrid(new CartesianGrid2D());
+		stack.setGrid(new FlatGrid2D());
 		stack.setResolution(map.getResolution().x());
 		stack.setName("stack");
 		final int c = size / 2;
@@ -115,17 +115,17 @@ public class GDFStack {
 			public void process(int i, int j) {
 				final int i1 = i + di;
 				if(i1 < 0) return;
-				if(i1 >= map.sizeX()) return;
+				if(i1 >= cube.sizeX()) return;
 				
 				final int j1 = j + dj;
 				if(j1 < 0) return;
-				if(j1 >= map.sizeY()) return;
+				if(j1 >= cube.sizeY()) return;
 				
-				if(map.isFlagged(i1, j1)) return;
+				if(cube.isFlagged(i1, j1)) return;
 				
 				double G = model.get(i, j);
-				double wG = map.weightAt(i1, j1) / npts * G;
-				mean.add(wG * map.get(i1, j1));
+				double wG = cube.weightAt(i1, j1) / npts * G;
+				mean.add(wG * cube.get(i1, j1));
 				mean.addWeight(wG * G);
 			}
 			

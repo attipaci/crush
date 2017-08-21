@@ -45,8 +45,10 @@ import jnum.astro.AstroSystem;
 import jnum.astro.AstroTime;
 import jnum.astro.CelestialCoordinates;
 import jnum.astro.CoordinateEpoch;
+import jnum.astro.EclipticCoordinates;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.FocalPlaneCoordinates;
+import jnum.astro.GalacticCoordinates;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
 import jnum.astro.JulianEpoch;
@@ -312,6 +314,33 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	}
 	
 	public SphericalCoordinates getNativeCoordinates() { return horizontal; }
+	
+
+    public SphericalCoordinates getPositionReference(Configurator options) {
+        String system = options.isConfigured("system") ? options.get("system").getValue().toLowerCase() : "equatorial";
+
+        if(system.equals("horizontal")) return horizontal;
+        else if(system.equals("native")) return getNativeCoordinates(); 
+        else if(system.equals("focalplane")) return new FocalPlaneCoordinates(); 
+        else if(isNonSidereal) return equatorial;
+        else if(system.equals("ecliptic")) {
+            EclipticCoordinates ecliptic = new EclipticCoordinates();
+            ecliptic.fromEquatorial(equatorial);
+            return ecliptic;
+        }
+        else if(system.equals("galactic")) {
+            GalacticCoordinates galactic = new GalacticCoordinates();
+            galactic.fromEquatorial(equatorial);
+            return galactic;
+        }
+        else if(system.equals("supergalactic")) {
+            EclipticCoordinates sg = new EclipticCoordinates();
+            sg.fromEquatorial(equatorial);
+            return sg;
+        }
+        else return equatorial;
+    }
+    
 	
 	public IntegrationType getFirstIntegration() {
 		return get(0); 
@@ -765,6 +794,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public String getID() { return Integer.toString(serialNo); }
 
+	
 	public DataTable getPointingData() throws IllegalStateException {
 		if(pointing == null) throw new IllegalStateException("No pointing data for scan " + getID());
 		Offset2D relative = getNativePointingIncrement(pointing);

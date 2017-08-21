@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,11 +20,10 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package crush.sourcemodel;
 
-import java.awt.Color;
+
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -35,7 +34,6 @@ import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroProjector;
-import jnum.astro.AstroSystem;
 import jnum.data.*;
 import jnum.data.image.Data2D;
 import jnum.data.image.Flag2D;
@@ -57,10 +55,6 @@ import jnum.math.Range;
 import jnum.math.SphericalCoordinates;
 import jnum.parallel.ParallelPointOp;
 import jnum.parallel.ParallelTask;
-import jnum.plot.BufferedImageLayer;
-import jnum.plot.ColorScheme;
-import jnum.plot.ImageArea;
-import jnum.plot.colorscheme.Colorful;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
@@ -79,6 +73,7 @@ public class AstroMap extends AstroModel2D {
   
     public AstroMap(Instrument<?> instrument) {
         super(instrument);
+        createMap();
     }
 
     @Override
@@ -88,18 +83,10 @@ public class AstroMap extends AstroModel2D {
             MapProperties properties = map.getProperties();
             properties.setInstrumentName(instrument.getName());
             properties.setTelescopeName(instrument.getTelescopeName());
-            
-            // TODO is this necessary?
-            //properties.setPreferredGridUnit(instrument.getSizeUnit());
-            
-            // TODO add local units...
-        }
-               
+        }            
     }
     
   
-
-    
     public Unit getJanskyUnit() {
         return new Unit("Jy", Double.NaN) {
             private static final long serialVersionUID = -2228932903204574146L;
@@ -118,17 +105,11 @@ public class AstroMap extends AstroModel2D {
         };
     }
     
-    public AstroSystem astroSystem() {
-        return new AstroSystem((Class<? extends SphericalCoordinates>) getGrid().getReference().getClass());
-    }
-
-   
+  
 
     @Override
     public void addModel(SourceModel model, double weight) {       
-        AstroMap increment = (AstroMap) model;
-        map.accumulate(increment.map, weight);
-       
+        map.accumulate(((AstroMap) model).map, weight);   
     }
 
     @Override
@@ -138,7 +119,7 @@ public class AstroMap extends AstroModel2D {
 
 
     @Override
-    public SourceModel getWorkingCopy(boolean withContents) {
+    public AstroMap getWorkingCopy(boolean withContents) {
         AstroMap copy = (AstroMap) super.getWorkingCopy(withContents);
         
         try { copy.map = map.copy(withContents); }
@@ -158,33 +139,35 @@ public class AstroMap extends AstroModel2D {
         base = Image2D.createType(Double.class, map.sizeX(), map.sizeY());
     }
 
- 
-    @Override
-    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
-    
+    private void createMap() {
         map = new Observation2D(Double.class, Double.class, Flag2D.TYPE_INT);
 
         map.setParallel(CRUSH.maxThreads);
         map.setGrid(getGrid());
-        map.setCriticalFlags(~FLAG_MASK);
-                
-        super.createFrom(collection);
+        map.setCriticalFlags(~FLAG_MASK);  
         
         map.addLocalUnit(getNativeUnit());
         map.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky");
-        map.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin");
-
-        
+        map.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin");   
+           
         MapProperties properties = map.getProperties();
         properties.setInstrumentName(getInstrument().getName());
         properties.setCreatorName(CRUSH.class.getSimpleName());
-        properties.setCopyright(CRUSH.getCopyrightString());
-        properties.setObjectName(getFirstScan().getSourceName());
-        properties.setUnderlyingBeam(getAverageResolution());
+        properties.setCopyright(CRUSH.getCopyrightString());     
         properties.seDisplayGridUnit(getInstrument().getSizeUnit());
         
-        
         if(hasOption("unit")) map.setUnit(option("unit").getValue());
+    }
+ 
+    @Override
+    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
+        createMap();
+        
+        super.createFrom(collection);  
+        
+        MapProperties properties = map.getProperties();
+        properties.setObjectName(getFirstScan().getSourceName());
+        properties.setUnderlyingBeam(getAverageResolution());
     
         CRUSH.info(this, "\n" + map.getInfo());
 
@@ -354,10 +337,10 @@ public class AstroMap extends AstroModel2D {
     // 3 doubles:   24
     // 1 int:        4
     @Override
-    public double getPixelFootprint() { return 32; }
+    public int getPixelFootprint() { return 32; }
 
     @Override
-    public long baseFootprint(long pixels) { return 8L * pixels; }
+    public long baseFootprint(int pixels) { return 8L * pixels; }
 
     @Override
     public void setSize(int sizeX, int sizeY) {
@@ -681,13 +664,8 @@ public class AstroMap extends AstroModel2D {
         map.clear();
     }
 
+  
     @Override
-    protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double frameGain, final double[] sourceGain) {
-        // The use of iterables is a minor performance hit only (~3% overall)
-        for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0)	
-            addPoint(index, channel, exposure, frameGain * sourceGain[channel.index], channel.instrument.samplingInterval);
-    }
-
     protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {	
         map.accumulateAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight / channel.variance, dt);
     }
@@ -832,48 +810,18 @@ public class AstroMap extends AstroModel2D {
         return map.countPoints();
     }
 
+    @Override
     public boolean isEmpty() {
         return map.countPoints() == 0;
     }
 
-    @Override
-    public void write(String path) throws Exception {    
-        write(path, true);
-    }
-
-    public String getCoreName() {
-        if(hasOption("name")) {
-            String fileName = option("name").getPath();
-            if(fileName.toLowerCase().endsWith(".fits")) return fileName.substring(0, fileName.length()-5);
-            else return fileName;
-        }
-        else return getDefaultCoreName();
-    }
-
-    @Override
-    public boolean isValid() {
-        return !isEmpty();
-    }
-
-    public void write(String path, boolean info) throws Exception {		
-        // Remove the intermediate image file...
-        File intermediate = new File(path + File.separator + "intermediate." + getID() + ".fits");
-        if(intermediate.exists()) intermediate.delete();
-
-        String idExt = "";
-        if(getID() != null) if(getID().length() > 0) idExt = "." + getID();
-
-        String fileName = path + File.separator + getCoreName() + idExt + ".fits";
-
-        if(isEmpty()) {
-            // No file is created, any existing file with same name is erased.
-            warning("Source" + idExt + " is empty. Skipping.");
-            File file = new File(fileName);
-            if(file.exists()) file.delete();
-            return;
-        }
    
-          
+    @Override
+    public Map2D getMap2D() { return map; }
+
+    @Override
+    public void processFinal() {
+        
         // Re-level and weight map if allowed and 'deep' or not 'extended'.
         if(!hasOption("extended") || hasOption("deep")) {
             if(enableLevel) map.level(true);
@@ -884,15 +832,10 @@ public class AstroMap extends AstroModel2D {
         if(hasOption("regrid")) {
             map.resample(option("regrid").getDouble() * getInstrument().getSizeUnit().value());
         }
-
-        if(info) map.toString();
-        
-        writeFits(fileName);
-        
-        if(hasOption("write.png")) writePNG(option("write.png"), path);
     }
 
     
+    @Override
     public void writeFits(String fileName) throws FitsException, IOException {
         Fits fits = map.createFits(Float.class); 
         map.getProperties().setFileName(fileName);
@@ -911,87 +854,6 @@ public class AstroMap extends AstroModel2D {
     
  
 
-    public void writePNG(Configurator option, String path) throws InstantiationException, IllegalAccessException, IOException {
-        int width = DEFAULT_PNG_SIZE;
-        int height = DEFAULT_PNG_SIZE;
-
-        if(option.isConfigured("size")) {
-            StringTokenizer tokens = new StringTokenizer(option.get("size").getValue(), "xX*:, ");
-            width = Integer.parseInt(tokens.nextToken());
-            height = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : width;
-        }
-        Observation2D thumbnail = (Observation2D) map.copy(true);
-
-        if(option.isConfigured("crop")) {
-            List<Double> offsets = option.get("crop").getDoubles();
-            if(offsets.isEmpty()) thumbnail.autoCrop();
-            else {
-                double sizeUnit = getInstrument().getSizeUnit().value();
-                double dXmin = offsets.get(0) * sizeUnit;
-                double dYmin = offsets.size() > 0 ? offsets.get(1) * sizeUnit : dXmin;
-                double dXmax = offsets.size() > 1 ? offsets.get(2) * sizeUnit : -dXmin;
-                double dYmax = offsets.size() > 2 ? offsets.get(3) * sizeUnit : -dYmin;
-                thumbnail.crop(dXmin, dYmin, dXmax, dYmax);
-            }
-        }
-        else thumbnail.autoCrop(); 
-
-        // Smooth thumbnail by half a beam for nicer appearance
-        if(option.isConfigured("smooth")) {
-            String arg = option.get("smooth").getValue();
-            double fwhm = arg.length() > 0 ? getSmoothing(arg) : 0.5 * getInstrument().getPointSize();
-            thumbnail.smoothTo(fwhm);
-        }
-
-        Data2D plane = thumbnail.getImage();
-
-        if(option.isConfigured("plane")) {
-            String spec = option.get("plane").getValue().toLowerCase();
-            if(spec.equals("s2n")) plane = thumbnail.getSignificance();
-            else if(spec.equals("s/n")) plane = thumbnail.getSignificance();
-            else if(spec.equals("time")) plane = thumbnail.getExposures();
-            else if(spec.equals("noise")) plane = thumbnail.getNoise();
-            else if(spec.equals("rms")) plane = thumbnail.getNoise();
-            else if(spec.equals("weight")) plane = thumbnail.getWeights();
-        }
-
-
-        final ImageArea<BufferedImageLayer> imager = new ImageArea<BufferedImageLayer>();
-        final BufferedImageLayer image = new BufferedImageLayer(plane);
-
-        if(option.isConfigured("scaling")) {
-            String spec = option.get("scaling").getValue().toLowerCase();
-            if(spec.equals("log")) image.setScaling(BufferedImageLayer.SCALE_LOG);
-            if(spec.equals("sqrt")) image.setScaling(BufferedImageLayer.SCALE_SQRT);
-        }
-
-        if(option.isConfigured("spline")) image.setSpline();
-
-        imager.setContentLayer(image);
-        imager.setBackground(Color.LIGHT_GRAY);
-        imager.setOpaque(true);
-
-        ColorScheme scheme = new Colorful();
-
-        if(option.isConfigured("bg")) {
-            String spec = option.get("bg").getValue().toLowerCase();
-            if(spec.equals("transparent")) imager.setOpaque(false);
-            else {
-                try { imager.setBackground(new Color(Integer.decode(spec))); }
-                catch(NumberFormatException e) { imager.setBackground(Color.getColor(spec)); }
-            }
-        }
-
-        if(option.isConfigured("color")) {
-            String schemeName = option.get("color").getValue();
-            if(ColorScheme.schemes.containsKey(schemeName)) 
-                scheme = ColorScheme.getInstanceFor(schemeName);
-        }
-
-        image.setColorScheme(scheme);
-        imager.setSize(width, height);
-        imager.saveAs(map.getProperties().getFileName() + ".png", width, height);			
-    }
 
     @Override
     public String getSourceName() {
@@ -1042,8 +904,7 @@ public class AstroMap extends AstroModel2D {
     
     
     public static long FLAG_MASK = 1L<<16;
-    public static final int DEFAULT_PNG_SIZE = 300;
-
+ 
 
   
 }
