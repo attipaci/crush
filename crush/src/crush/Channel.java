@@ -193,6 +193,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		return text;
 	}
 	
+	public double getFrequency() { return instrument.getFrequency(); }
 	
 	public abstract double overlap(Channel channel, double pointSize);
 	

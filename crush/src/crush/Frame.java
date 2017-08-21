@@ -177,6 +177,8 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public final synchronized void removeDependents(double dp) {
 		dependents -= dp;
 	}
+
+	public double getChannelFrequency(Channel channel) { return channel.getFrequency(); }
 	
 	public float getTransmission() { return transmission; }
 	
@@ -184,8 +186,8 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	protected void setTransmission(double value) { setTransmission((float) value); }
 	
-	public float getTransmissionCorrection(Signal atm, float C2eps) {
-		return atm.valueAt(this) * C2eps;
+	public float getTransmissionCorrection(Signal atm, float signal2emissivity) {
+		return atm.valueAt(this) * signal2emissivity;
 	}
 	
 	public void slimTo(Instrument<?> instrument) {

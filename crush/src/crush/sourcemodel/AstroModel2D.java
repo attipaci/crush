@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,13 +20,14 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009 Attila Kovacs 
 
 package crush.sourcemodel;
 
 
 
+import java.awt.Color;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 import crush.*;
@@ -35,23 +36,30 @@ import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroProjector;
+import jnum.astro.AstroSystem;
 import jnum.astro.CoordinateEpoch;
-import jnum.astro.EclipticCoordinates;
 import jnum.astro.EquatorialCoordinates;
-import jnum.astro.FocalPlaneCoordinates;
-import jnum.astro.GalacticCoordinates;
 import jnum.data.Statistics;
+import jnum.data.image.Data2D;
 import jnum.data.image.Gaussian2D;
+import jnum.data.image.Image2D;
 import jnum.data.image.Index2D;
+import jnum.data.image.Map2D;
+import jnum.data.image.Observation2D;
 import jnum.data.image.SphericalGrid;
 import jnum.math.Range;
 import jnum.math.Range2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.parallel.ParallelTask;
+import jnum.plot.BufferedImageLayer;
+import jnum.plot.ColorScheme;
+import jnum.plot.ImageArea;
+import jnum.plot.colorscheme.Colorful;
 import jnum.projection.Gnomonic;
 import jnum.projection.Projection2D;
 import jnum.projection.SphericalProjection;
+import nom.tam.fits.FitsException;
 
 
 public abstract class AstroModel2D extends SourceModel {	
@@ -63,15 +71,8 @@ public abstract class AstroModel2D extends SourceModel {
     private SphericalGrid grid;
     
     public double smoothing = 0.0;  // TODO eliminate?
-    public int signalMode = Frame.TOTAL_POWER;
-
+   
     public boolean allowIndexing = true;
-    public int marginX = 0, marginY = 0;
-
-    public Range2D range;
-    
-    protected int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
-
 
     private int indexShiftX, indexMaskY;
     
@@ -79,26 +80,45 @@ public abstract class AstroModel2D extends SourceModel {
     public AstroModel2D(Instrument<?> instrument) {
         super(instrument);
         grid = new SphericalGrid();
-        grid.setResolution(hasOption("grid") ? option("grid").getDouble() * instrument.getSizeUnit().value() : 0.2 * instrument.getResolution());
-        
+        grid.setResolution(hasOption("grid") ? option("grid").getDouble() * instrument.getSizeUnit().value() : 0.2 * instrument.getResolution());  
     }
 
-    public void setExcludeSamples(int pattern) {
-        excludeSamples = pattern;
-    }
+   
 
     @Override
     public void resetProcessing() {
         super.resetProcessing();
-        setSmoothing();
+        updateSmoothing();
     }
     
+    @Override
+    public boolean isValid() {
+        return !isEmpty();
+    }
+
+    public abstract boolean isEmpty();
 
     protected String getDefaultFileName() {
         return CRUSH.workPath + File.separator + getSourceName() + ".fits";
     }
 
+    public String getCoreName() {
+        if(hasOption("name")) {
+            String fileName = option("name").getPath();
+            if(fileName.toLowerCase().endsWith(".fits")) return fileName.substring(0, fileName.length()-5);
+            else return fileName;
+        }
+        else return getDefaultCoreName();
+    }
 
+  
+    
+    public AstroSystem astroSystem() {
+        return new AstroSystem((Class<? extends SphericalCoordinates>) getGrid().getReference().getClass());
+    }
+
+ 
+  
     @Override
     public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
         super.createFrom(collection);
@@ -110,35 +130,8 @@ public abstract class AstroModel2D extends SourceModel {
 
         try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
         catch(Exception e) { projection = new Gnomonic(); }		
-
-        Scan<?,?> firstScan = getFirstScan();
-        String system = hasOption("system") ? option("system").getValue().toLowerCase() : "equatorial";
-
-        if(system.equals("horizontal")) projection.setReference(firstScan.horizontal);
-        else if(system.equals("native")) projection.setReference(firstScan.getNativeCoordinates()); 
-        else if(system.equals("focalplane")) projection.setReference(new FocalPlaneCoordinates()); 
-        else if(firstScan.isNonSidereal) {
-            info("Forcing equatorial for moving object.");
-            getOptions().processSilent("system", "equatorial");
-            projection.setReference(firstScan.equatorial);
-        }
-        else if(system.equals("ecliptic")) {
-            EclipticCoordinates ecliptic = new EclipticCoordinates();
-            ecliptic.fromEquatorial(firstScan.equatorial);
-            projection.setReference(ecliptic);
-        }
-        else if(system.equals("galactic")) {
-            GalacticCoordinates galactic = new GalacticCoordinates();
-            galactic.fromEquatorial(firstScan.equatorial);
-            projection.setReference(galactic);
-        }
-        else if(system.equals("supergalactic")) {
-            EclipticCoordinates sg = new EclipticCoordinates();
-            sg.fromEquatorial(firstScan.equatorial);
-            projection.setReference(sg);
-        }
-        else projection.setReference(firstScan.equatorial);
-
+        
+        projection.setReference(getFirstScan().getPositionReference(getOptions())); 
         setProjection(projection);
 
         setSize();
@@ -154,7 +147,7 @@ public abstract class AstroModel2D extends SourceModel {
     }
     
 
-    public void setSmoothing() {
+    public void updateSmoothing() {
         if(!hasOption("smooth")) return;
         setSmoothing(getSmoothing(option("smooth").getValue()));
     }
@@ -232,78 +225,13 @@ public abstract class AstroModel2D extends SourceModel {
         }.process();
     }
 
-    private void searchCorners(final Integration<?,?> integration) {
-        final Collection<? extends Pixel> pixels = integration.instrument.getPerimeterPixels();
-        if(pixels.size() == 0) return;
 
-        if(CRUSH.debug) debug("search pixels: " + pixels.size() + " : " + integration.instrument.size());
-        
-        
-        CRUSH.Fork<Range2D> findCorners = integration.new Fork<Range2D>() {
-            private Range2D range;
-            private AstroProjector projector;
 
-            @Override
-            protected void init() {
-                super.init();
-                projector = new AstroProjector(getProjection());
-            }
-
-            @Override
-            protected void process(Frame exposure) {	
-                for(Pixel pixel : pixels) {
-                    exposure.project(pixel.getPosition(), projector);
-                    
-                    // Check to make sure the sample produces a valid position...
-                    // If not, then flag out the corresponding data...
-                    if(Double.isNaN(projector.offset.x()) || Double.isNaN(projector.offset.y())) {
-                        for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
-                    }
-                    else {
-                        if(range == null) range = new Range2D(projector.offset);
-                        else range.include(projector.offset);
-                    }
-                }
-            }
-
-            @Override
-            public Range2D getLocalResult() { return range; }
-
-            @Override
-            public Range2D getResult() {
-                range = null;
-                for(ParallelTask<Range2D> task : getWorkers()) {
-                    Range2D local = task.getLocalResult();
-                    if(range == null) range = local;
-                    else if(local != null) range.include(local);
-                }
-                return range;
-            }		
-        };
-
-        findCorners.process();
-
-        Range2D range = findCorners.getResult();
-
-        // Check for null range...
-        if(range == null) {
-            if(CRUSH.debug) debug("map range " + integration.getDisplayID() + "> null");
-        }
-        else {
-            if(CRUSH.debug) debug("map range " + integration.getDisplayID() + "> "
-                    + Util.f1.format(range.getXRange().span() / Unit.arcsec) + " x " 
-                    + Util.f1.format(range.getYRange().span() / Unit.arcsec));
-
-            integration.scan.range.include(range);
-        }
-
-    }
-
-    public void searchCorners() throws Exception {
+    public Range2D searchCorners() throws Exception {
         final Vector2D fixedSize = new Vector2D(Double.NaN, Double.NaN);
         final boolean fixSize = hasOption("map.size");
 
-        range = new Range2D();
+        Range2D range = new Range2D();
         
         if(fixSize) {
             StringTokenizer sizes = new StringTokenizer(option("map.size").getValue(), " \t,:xX");
@@ -321,10 +249,16 @@ public abstract class AstroModel2D extends SourceModel {
 
             for(Scan<?,?> scan : getScans()) {
                 scan.range = new Range2D();
-                for(Integration<?,?> integration : scan) searchCorners(integration);
+                final Collection<? extends Pixel> pixels = scan.instrument.getPerimeterPixels();
+                for(Integration<?,?> integration : scan) {
+                    Range2D r = integration.searchCorners(pixels, getProjection());
+                    if(r != null) scan.range.include(r);
+                }
                 range.include(scan.range);
             }	       
         }
+        
+        return range;
     }
 
     public void index() throws Exception {
@@ -418,18 +352,18 @@ public abstract class AstroModel2D extends SourceModel {
     }
 
 
-    public long getMemoryFootprint(long pixels) {
-        return (long) (pixels * getPixelFootprint() + baseFootprint(pixels));
+    public long getMemoryFootprint(int pixels) {
+        return pixels * getPixelFootprint() + baseFootprint(pixels);
     }
 
-    public long getReductionFootprint(long pixels) {
+    public long getReductionFootprint(int pixels) {
         // The composite map + one copy for each thread, plus base image (double)
         return (CRUSH.maxThreads + 1) * getMemoryFootprint(pixels) + baseFootprint(pixels);
     }
 
-    public abstract double getPixelFootprint();
+    public abstract int getPixelFootprint();
 
-    public abstract long baseFootprint(long pixels);
+    public abstract long baseFootprint(int pixels);
 
     public final int pixels() { return sizeX() * sizeY(); }
 
@@ -439,7 +373,7 @@ public abstract class AstroModel2D extends SourceModel {
     public void setSize() throws Exception {
       
         // Figure out what offsets the corners of the map will have...
-        searchCorners(); 
+        Range2D range = searchCorners(); 
         
         if(CRUSH.debug) debug("map range: " + Util.f1.format(range.getXRange().span() / Unit.arcsec) + " x " 
                 +  Util.f1.format(range.getYRange().span() / Unit.arcsec) + " arcsec");
@@ -525,7 +459,7 @@ public abstract class AstroModel2D extends SourceModel {
         
         StringBuffer buf = new StringBuffer();
         
-        buf.append(" Map requires " + (getMemoryFootprint((long) sizeX * sizeY) >> 20) + " MB free memory.\n\n"); 
+        buf.append(" Map requires " + (getMemoryFootprint(sizeX * sizeY) >> 20) + " MB free memory.\n\n"); 
         
         boolean foundSuspects = false;
 
@@ -611,8 +545,15 @@ public abstract class AstroModel2D extends SourceModel {
         return slews;
     }
 
-    protected abstract void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain);
-
+  
+    protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double frameGain, final double[] sourceGain) {
+        // The use of iterables is a minor performance hit only (~3% overall)
+        for(final Channel channel : pixel) if((exposure.sampleFlag[channel.index] & excludeSamples) == 0)   
+            addPoint(index, channel, exposure, frameGain * sourceGain[channel.index], channel.instrument.samplingInterval);
+    }
+    
+    protected abstract void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt);
+    
     public abstract boolean isMasked(Index2D index); 
 
     public abstract void mergeAccumulate(AstroModel2D other);
@@ -929,10 +870,147 @@ public abstract class AstroModel2D extends SourceModel {
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("smooth")) return smoothing / getInstrument().getSizeUnit().value();
+        else if(name.equals("system")) return astroSystem().getID();
         else return super.getTableEntry(name);
+    }
+    
+    
+    @Override
+    public void write(String path) throws Exception {    
+        // Remove the intermediate image file...
+        File intermediate = new File(path + File.separator + "intermediate." + getID() + ".fits");
+        if(intermediate.exists()) intermediate.delete();
+
+        String idExt = "";
+        if(getID() != null) if(getID().length() > 0) idExt = "." + getID();
+
+        String fileName = path + File.separator + getCoreName() + idExt + ".fits";
+
+        if(isEmpty()) {
+            // No file is created, any existing file with same name is erased.
+            warning("Source" + idExt + " is empty. Skipping.");
+            File file = new File(fileName);
+            if(file.exists()) file.delete();
+            return;
+        }
+   
+        processFinal();
+     
+        writeFits(fileName);
+        
+        if(hasOption("write.png")) writePNG(getMap2D(), option("write.png"), fileName);
+    }
+    
+    public abstract void processFinal();
+    
+    public abstract void writeFits(String fileName) throws FitsException, IOException;
+    
+    public abstract Map2D getMap2D();
+
+    public void writePNG(Map2D map, Configurator config, String fileName) throws InstantiationException, IllegalAccessException, IOException { 
+        map = map.copy(true);
+        
+        Data2D values = map;
+        
+        
+        // Smooth thumbnail (by half a beam, default) for nicer appearance
+        if(config.isConfigured("smooth")) {
+            String arg = config.get("smooth").getValue();
+            double fwhm = arg.length() > 0 ? getSmoothing(arg) : 0.5 * getInstrument().getPointSize();
+            map.smoothTo(fwhm);
+        }
+        
+        
+        if(config.isConfigured("crop")) {
+            List<Double> offsets = config.get("crop").getDoubles();
+                  
+            if(offsets.isEmpty()) map.autoCrop();
+            else {
+                double sizeUnit = getInstrument().getSizeUnit().value();
+                double dXmin = offsets.get(0) * sizeUnit;
+                double dYmin = offsets.size() > 0 ? offsets.get(1) * sizeUnit : dXmin;
+                double dXmax = offsets.size() > 1 ? offsets.get(2) * sizeUnit : -dXmin;
+                double dYmax = offsets.size() > 2 ? offsets.get(3) * sizeUnit : -dYmin;
+                map.crop(dXmin, dYmin, dXmax, dYmax);
+            }
+        }
+        
+
+          
+        if(map instanceof Observation2D) if(config.isConfigured("plane")) {
+            Observation2D obs = (Observation2D) map;
+            
+            String spec = config.get("plane").getValue().toLowerCase();
+            if(spec.equals("s2n")) values = obs.getSignificance();
+            else if(spec.equals("s/n")) values = obs.getSignificance();
+            else if(spec.equals("time")) values = obs.getExposures();
+            else if(spec.equals("noise")) values = obs.getNoise();
+            else if(spec.equals("rms")) values = obs.getNoise();
+            else if(spec.equals("weight")) values = obs.getWeights();
+        }      
+               
+        
+        
+        writePNG(values.getImage(), config, fileName);  
+    }
+
+    public void writePNG(Image2D map, Configurator option, String fileName) throws InstantiationException, IllegalAccessException, IOException {
+        int width = DEFAULT_PNG_SIZE;
+        int height = DEFAULT_PNG_SIZE;
+
+        if(option.isConfigured("size")) {
+            StringTokenizer tokens = new StringTokenizer(option.get("size").getValue(), "xX*:, ");
+            width = Integer.parseInt(tokens.nextToken());
+            height = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : width;
+        }     
+      
+        if(!option.isConfigured("crop")) {
+            map = map.copy(true);
+            map.autoCrop(); 
+        }
+
+    
+        final ImageArea<BufferedImageLayer> imager = new ImageArea<BufferedImageLayer>();
+        final BufferedImageLayer image = new BufferedImageLayer(map);
+
+        if(option.isConfigured("scaling")) {
+            String spec = option.get("scaling").getValue().toLowerCase();
+            if(spec.equals("log")) image.setScaling(BufferedImageLayer.SCALE_LOG);
+            if(spec.equals("sqrt")) image.setScaling(BufferedImageLayer.SCALE_SQRT);
+        }
+
+        if(option.isConfigured("spline")) image.setSpline();
+
+        imager.setContentLayer(image);
+        imager.setBackground(Color.LIGHT_GRAY);
+        imager.setOpaque(true);
+
+        ColorScheme scheme = new Colorful();
+
+        if(option.isConfigured("bg")) {
+            String spec = option.get("bg").getValue().toLowerCase();
+            if(spec.equals("transparent")) imager.setOpaque(false);
+            else {
+                try { imager.setBackground(new Color(Integer.decode(spec))); }
+                catch(NumberFormatException e) { imager.setBackground(Color.getColor(spec)); }
+            }
+        }
+
+        if(option.isConfigured("color")) {
+            String schemeName = option.get("color").getValue();
+            if(ColorScheme.schemes.containsKey(schemeName)) 
+                scheme = ColorScheme.getInstanceFor(schemeName);
+        }
+
+        image.setColorScheme(scheme);
+        imager.setSize(width, height);
+        imager.saveAs(fileName + ".png", width, height);           
     }
 
   
+    
+    public static final int DEFAULT_PNG_SIZE = 300;
+
 
 }
 

@@ -393,7 +393,7 @@ public class PolarMap extends SourceModel {
 	
 	@Override
 	public void write(String path) throws Exception {
-		N.write(path, true);
+		N.write(path);
 		
 		if(!hasPolarization) {
 		    warning("No polarization products available.");
@@ -403,16 +403,16 @@ public class PolarMap extends SourceModel {
 			return;
 		}
 		
-		Q.write(path, false);
-		U.write(path, false);
+		Q.write(path);
+		U.write(path);
 		
 		// Write P (polarized power)
 		AstroMap P = getP();
-		P.write(path, false);	
+		P.write(path);	
 			
 		// Write I (total power)
 		AstroMap I = getI(P);
-		I.write(path, false);	
+		I.write(path);	
 		
 		// Write F (polarized fraction)
         double accuracy = hasOption("source.polar.fraction.rmsclip") ?
@@ -421,12 +421,12 @@ public class PolarMap extends SourceModel {
         AstroMap F = getPolarFraction(P, I, accuracy);
 		
 		if(hasOption("source.polar.fraction")) {
-			F.write(path, false);
+			F.write(path);
 		}
 
         if(hasOption("source.polar.angles")) {
             AstroMap A = getAngles(P, F);
-            A.write(path, false);
+            A.write(path);
         }
 	}
 	

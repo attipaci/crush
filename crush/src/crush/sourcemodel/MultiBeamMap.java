@@ -34,7 +34,7 @@ import crush.SourceModel;
 import crush.telescope.DualBeam;
 import jnum.Constant;
 import jnum.ExtraMath;
-import jnum.data.image.CartesianGrid2D;
+import jnum.data.image.FlatGrid2D;
 import jnum.data.image.Flag2D;
 import jnum.data.image.Gaussian2D;
 import jnum.data.image.Observation2D;
@@ -66,7 +66,7 @@ public class MultiBeamMap extends AstroMap {
 	}
 
 	@Override
-	public SourceModel getWorkingCopy(boolean withContents) {
+	public MultiBeamMap getWorkingCopy(boolean withContents) {
 		MultiBeamMap copy = (MultiBeamMap) super.getWorkingCopy(withContents);
 		copy.fft = new MultiFFT();
 		if(transformer != null) copy.transformer = transformer.copy();
@@ -95,7 +95,7 @@ public class MultiBeamMap extends AstroMap {
 		
 		transformer = new Observation2D(Double.class, Flag2D.TYPE_INT);
 		transformer.setSize(nx, ny + 2);		
-		transformer.setGrid(new CartesianGrid2D());
+		transformer.setGrid(new FlatGrid2D());
 		transformer.setReference(new Coordinate2D());
 		
 		double dFx = 1.0 / (nx * delta.x());
