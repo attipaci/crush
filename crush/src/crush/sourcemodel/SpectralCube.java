@@ -24,7 +24,6 @@
 package crush.sourcemodel;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
@@ -39,21 +38,21 @@ import crush.SourceModel;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.data.cube2.Data2D1;
+import jnum.data.cube2.Image2D1;
 import jnum.data.cube2.Observation2D1;
 import jnum.data.image.Data2D;
+import jnum.data.image.Flag2D;
 import jnum.data.image.Image2D;
 import jnum.data.image.Index2D;
 import jnum.data.image.Map2D;
 import jnum.data.image.MapProperties;
 import jnum.data.image.Observation2D;
-import jnum.data.image.region.SourceCatalog;
 import jnum.data.samples.Grid1D;
 import jnum.math.Coordinate2D;
 import jnum.math.Range;
-import jnum.math.Vector2D;
 import nom.tam.fits.FitsException;
 
-public class SpectralMap extends AstroModel2D {
+public class SpectralCube extends AstroModel2D {
    
     /**
      * 
@@ -66,7 +65,7 @@ public class SpectralMap extends AstroModel2D {
     Unit spectralUnit;
     boolean useWavelength = true;
     
-    public SpectralMap(Instrument<?> instrument) {
+    public SpectralCube(Instrument<?> instrument) {
         super(instrument);
         
         spectralUnit = Unit.get("GHz");
@@ -81,6 +80,17 @@ public class SpectralMap extends AstroModel2D {
         else useWavelength = true;
         
     }
+    
+
+    public Unit getJanskyUnit() {
+        return new Unit("Jy", Double.NaN) {
+            private static final long serialVersionUID = -2228932903204574146L;
+
+            @Override
+            public double value() { return getInstrument().janskyPerBeam() * cube.getPlane(0).getProperties().getUnderlyingBeam().getArea(); }
+        };
+    }
+
     
     public Range getFrequencyRange(Collection<? extends Scan<?,?>> scans) {
         Range r = new Range();
@@ -115,6 +125,30 @@ public class SpectralMap extends AstroModel2D {
     }
     
     
+    private void createCube() {
+        cube = new Observation2D1(Double.class, Double.class, Flag2D.TYPE_INT);
+
+        cube.setParallel(CRUSH.maxThreads);
+        cube.setGrid2D(getGrid());
+        cube.setCriticalFlags(~FLAG_MASK);  
+        
+        cube.addProprietaryUnit(getNativeUnit());
+        cube.addProprietaryUnit(getJanskyUnit(), "Jy, jansky, Jansky");
+        cube.addProprietaryUnit(getKelvinUnit(), "K, kelvin, Kelvin");   
+           
+        for(Observation2D plane : cube.getStack()) {
+            MapProperties properties = plane.getProperties();
+            properties.setInstrumentName(getInstrument().getName());
+            properties.setCreatorName(CRUSH.class.getSimpleName());
+            properties.setCopyright(CRUSH.getCopyrightString());     
+            properties.seDisplayGridUnit(getInstrument().getSizeUnit());
+        }
+            
+        if(hasOption("unit")) cube.setUnit(option("unit").getValue());
+    }
+ 
+    
+    
     @Override
     public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
            
@@ -122,13 +156,15 @@ public class SpectralMap extends AstroModel2D {
         
         super.createFrom(collection);  
         
-        MapProperties properties = map.getProperties();
-        properties.setObjectName(getFirstScan().getSourceName());
-        properties.setUnderlyingBeam(getAverageResolution());
+        for(Observation2D plane : cube.getStack()) {
+            MapProperties properties = plane.getProperties();
+            properties.setObjectName(getFirstScan().getSourceName());
+            properties.setUnderlyingBeam(getAverageResolution());
+        }
     
-        CRUSH.info(this, "\n" + cube.getPlane().getInfo());
+        CRUSH.info(this, "\n" + cube.getPlane(0).getInfo());
 
-        base = Image2D.createType(Double.class, sizeX(), sizeY());
+        base = Image2D1.create(Double.class, sizeX(), sizeY(), sizeZ());
 
         /*
         if(hasSourceOption("inject")) {
@@ -199,7 +235,7 @@ public class SpectralMap extends AstroModel2D {
 
     @Override
     public void mergeAccumulate(AstroModel2D other) {
-        cube.mergeAccumulate(((SpectralMap) other).cube);      
+        cube.mergeAccumulate(((SpectralCube) other).cube);      
     }
 
     @Override
@@ -232,7 +268,7 @@ public class SpectralMap extends AstroModel2D {
 
     @Override
     public double covariantPoints() {
-        return cube.getPlane().getPointsPerSmoothingBeam();      
+        return cube.getPlane(0).getPointsPerSmoothingBeam();      
     }
 
     @Override
@@ -249,7 +285,7 @@ public class SpectralMap extends AstroModel2D {
 
     @Override
     public void addModel(SourceModel model, double weight) {
-        cube.accumulate(((SpectralMap) model).cube, weight);
+        cube.accumulate(((SpectralCube) model).cube, weight);
     }
 
   
@@ -280,7 +316,7 @@ public class SpectralMap extends AstroModel2D {
    
     @Override
     public String getSourceName() {
-        return cube.getPlane().getProperties().getObjectName();
+        return cube.getPlane(0).getProperties().getObjectName();
     }
 
     @Override
@@ -315,7 +351,7 @@ public class SpectralMap extends AstroModel2D {
 
     @Override
     public Object getTableEntry(String name) {  
-        if(name.startsWith("map.")) return cube.getPlane().getTableEntry(name.substring(4));
+        if(name.startsWith("map.")) return cube.getPlane(0).getTableEntry(name.substring(4));
         else return super.getTableEntry(name);
     }
 
@@ -329,9 +365,7 @@ public class SpectralMap extends AstroModel2D {
     
     @Override
     public void process() throws Exception {
-        // TODO --> 'spectral.smooth'
-       
-        
+        // TODO --> 'spectral.smooth'     
     }
     
 
@@ -351,9 +385,14 @@ public class SpectralMap extends AstroModel2D {
 
     @Override
     public Map2D getMap2D() {
+       
         // TODO
         return null;
     }
     
 
+  
+    
+    public static long FLAG_MASK = 1L<<16;
+    
 }

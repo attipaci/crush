@@ -407,6 +407,18 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public Unit getNativeUnit() {
         return new Unit(hasOption("dataunit") ? option("dataunit").getValue() : "U", 1.0);
     }
+    
+
+    public Unit getKelvinUnit() {
+        return new Unit("K", Double.NaN) {
+            private static final long serialVersionUID = -847015844453378556L;
+
+            @Override
+            public double value() { return getInstrument().kelvin(); }   
+        };
+    }
+    
+  
 
     // Replace character sequences that are problematic in filenames with underscores "_"
     public String getCanonicalSourceName() {
@@ -606,6 +618,11 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
     public static ArrayBlockingQueue<SourceModel> recycler;
 
+
+    
+    public final static boolean ENABLE_BLANKING = true;
+    public final static boolean NO_BLANKING = false;
+ 
    
 }
 

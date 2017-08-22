@@ -269,5 +269,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	
 	public final static double DEFAULT_VARIANCE = 1.0;
 	public final static double DEFAULT_WEIGHT = 1.0;
+
+	
 }
  

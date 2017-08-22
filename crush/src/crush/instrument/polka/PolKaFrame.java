@@ -23,11 +23,13 @@
 
 package crush.instrument.polka;
 
+import crush.Channel;
 import crush.instrument.laboca.*;
 import crush.polarization.*;
 import crush.telescope.apex.APEXScan;
 import jnum.Constant;
 import jnum.Unit;
+import jnum.astro.Stokes;
 
 public class PolKaFrame extends LabocaFrame {
 	/**
@@ -44,6 +46,11 @@ public class PolKaFrame extends LabocaFrame {
 		super(parent);
 	}
 	
+	@Override
+    public void getChannelStokesResponse(Channel channel, Stokes toStokes) {  
+        toStokes.setNQUV(0.5 * unpolarizedGain, 0.5 * Q, 0.5 * U, 0.0);
+    }
+	
 	
 	@Override
 	public float getSourceGain(final int mode) {	
@@ -54,6 +61,7 @@ public class PolKaFrame extends LabocaFrame {
 		default: return super.getSourceGain(mode);
 		}
 	}
+	
 	
 	public void loadWaveplateData() {
 		final PolKa polka = (PolKa) scan.instrument;

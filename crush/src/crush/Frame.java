@@ -29,6 +29,7 @@ import java.util.Arrays;
 import jnum.Flagging;
 import jnum.astro.AstroProjector;
 import jnum.astro.EquatorialCoordinates;
+import jnum.astro.Stokes;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.util.*;
@@ -179,6 +180,10 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	}
 
 	public double getChannelFrequency(Channel channel) { return channel.getFrequency(); }
+
+	public void getChannelStokesResponse(Channel channel, Stokes toStokes) {
+	    toStokes.setNQUV(1.0, 0.0, 0.0, 0.0);
+	}
 	
 	public float getTransmission() { return transmission; }
 	

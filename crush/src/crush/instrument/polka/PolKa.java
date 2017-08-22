@@ -167,10 +167,12 @@ public class PolKa extends Laboca implements Oscillating {
 			break;
 		case 'V' :
 		case 'Y' :
-			analyzerPosition = ANALYZER_V; break;
+			analyzerPosition = ANALYZER_V;
+			break;
 		case 'H' :
 		case 'X' :
-			analyzerPosition = ANALYZER_H; break;
+			analyzerPosition = ANALYZER_H; 
+			break;
 		default :
 		    analyzerPosition = ANALYZER_UNKNOWN;
 			error("Polarization analyzer position is undefined.");
@@ -205,6 +207,8 @@ public class PolKa extends Laboca implements Oscillating {
     public boolean hasAnalyzer() {
         return(analyzerPosition == ANALYZER_H || analyzerPosition == ANALYZER_V);
     }
+    
+    
     
     public final static int ANALYZER_UNKNOWN = -1;
     public final static int ANALYZER_NONE = 0;
