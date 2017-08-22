@@ -96,16 +96,6 @@ public class AstroMap extends AstroModel2D {
         };
     }
 
-    public Unit getKelvinUnit() {
-        return new Unit("K", Double.NaN) {
-            private static final long serialVersionUID = -847015844453378556L;
-
-            @Override
-            public double value() { return getInstrument().kelvin(); }   
-        };
-    }
-    
-  
 
     @Override
     public void addModel(SourceModel model, double weight) {       
@@ -146,9 +136,9 @@ public class AstroMap extends AstroModel2D {
         map.setGrid(getGrid());
         map.setCriticalFlags(~FLAG_MASK);  
         
-        map.addLocalUnit(getNativeUnit());
-        map.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky");
-        map.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin");   
+        map.addProprietaryUnit(getNativeUnit());
+        map.addProprietaryUnit(getJanskyUnit(), "Jy, jansky, Jansky");
+        map.addProprietaryUnit(getKelvinUnit(), "K, kelvin, Kelvin");   
            
         MapProperties properties = map.getProperties();
         properties.setInstrumentName(getInstrument().getName());
@@ -897,11 +887,7 @@ public class AstroMap extends AstroModel2D {
         else return super.getTableEntry(name);
     }
 
-
-    
-    public final static boolean ENABLE_BLANKING = true;
-    public final static boolean NO_BLANKING = false;
-    
+   
     
     public static long FLAG_MASK = 1L<<16;
  
