@@ -3142,18 +3142,6 @@
 			sources.
 			@See: 'source.filter.blank'
 
-:: source.filter.interpolation=<type>	@Expert
-					@Since: 2.05
-			The interpolation type for the convolution filter.
-			The following <type> values are defined:
-
-			   nearest	Nearest discrete point.
-			   linear	Bilinear interpolation.
-			   cubic	Bicubic spline method.
-
-			The default value is 'cubic'.
-			@See: 'source.filer.type'
-
 :: source.filter.type=<type>	@Advanced
 				Specify the type ('convolution' or 'fft') of 
 				the large-scale structure filter. Convolution 

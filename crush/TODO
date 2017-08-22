@@ -1,3 +1,13 @@
+>> SpectralMap
+	smooth() to include spectral.smooth...
+	mask usage?
+
+>> HIRMES to have 2D integral mode (e.g. for pointing)
+   'integral', 'integral.spectralrange' ('auto' to use only image planes with
+   significant flux...)
+
+>> PolarMap update to use Frame.getChannelStokesResponse()...
+
 >> Update PolarMap to keep separate H,V (R/T or X/Y)
 	Q,U -> QH, UH, QV, UV
 
