@@ -29,8 +29,6 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 import crush.*;
-import jnum.Configurator;
-import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroProjector;
@@ -52,7 +50,6 @@ import jnum.data.image.region.SourceCatalog;
 import jnum.fits.FitsToolkit;
 import jnum.math.Coordinate2D;
 import jnum.math.Range;
-import jnum.math.SphericalCoordinates;
 import jnum.parallel.ParallelPointOp;
 import jnum.parallel.ParallelTask;
 import nom.tam.fits.Fits;
@@ -61,7 +58,7 @@ import nom.tam.fits.Header;
 
 
 
-public class AstroMap extends AstroModel2D {
+public class AstroMap extends AstroDataModel2D<Observation2D> {
     /**
      * 
      */
@@ -120,15 +117,10 @@ public class AstroMap extends AstroModel2D {
         return copy;
     }
 
-    @Override
-    public SphericalCoordinates getReference() {
-        return (SphericalCoordinates) map.getGrid().getReference();
-    }
-
-    public void standalone() {
+    public void standalone() { 
         base = Image2D.createType(Double.class, map.sizeX(), map.sizeY());
     }
-
+  
     private void createMap() {
         map = new Observation2D(Double.class, Double.class, Flag2D.TYPE_INT);
 
@@ -136,9 +128,9 @@ public class AstroMap extends AstroModel2D {
         map.setGrid(getGrid());
         map.setCriticalFlags(~FLAG_MASK);  
         
-        map.addProprietaryUnit(getNativeUnit());
-        map.addProprietaryUnit(getJanskyUnit(), "Jy, jansky, Jansky");
-        map.addProprietaryUnit(getKelvinUnit(), "K, kelvin, Kelvin");   
+        map.addLocalUnit(getNativeUnit());
+        map.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky");
+        map.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin");   
            
         MapProperties properties = map.getProperties();
         properties.setInstrumentName(getInstrument().getName());
@@ -344,46 +336,7 @@ public class AstroMap extends AstroModel2D {
     public int sizeY() { return map.sizeY(); }
 
  
-    @Override
-    public void process(Scan<?,?> scan) {	
-        
-        map.endAccumulation();
-            
-        map.add(base);
    
-        if(enableLevel) map.level(true);
-      
-        if(hasSourceOption("despike")) {
-            Configurator despike = sourceOption("despike");
-            double level = 10.0;
-
-            try { despike.mapValueTo("level"); }
-            catch(LockedException e) {} // TODO...
-
-            if(despike.isConfigured("level")) level = despike.get("level").getDouble();
-            map.despike(level);
-        }
-
-        filter(NO_BLANKING);      
-        
-        //map.validate();
-           
-        scan.weight = 1.0;				
-        if(hasOption("weighting.scans")) {
-            Configurator weighting = option("weighting.scans");
-            String method = "rms";
-            if(weighting.isConfigured("method")) method = weighting.get("method").getValue().toLowerCase();
-            else if(weighting.getValue().length() > 0) method = weighting.getValue().toLowerCase();
-            scan.weight = 1.0 / map.getChi2(method.equals("robust"));
-            if(Double.isNaN(scan.weight)) scan.weight = 0.0;
-        }
-
-        if(hasOption("scanmaps")) {
-            try { writeFits(CRUSH.workPath + File.separator + "scan-" + (int)scan.getMJD() + "-" + scan.getID() + ".fits"); }
-            catch(Exception e) { error(e); }
-        }
-       
-    }	
 
     @Override
     public void postprocess(Scan<?,?> scan) {
@@ -407,50 +360,7 @@ public class AstroMap extends AstroModel2D {
         }
         
     }
-
-    public void filter(boolean allowBlanking) {
-        if(!hasSourceOption("filter") || getSourceSize() <= 0.0) {
-            map.getProperties().resetFiltering();
-            return;
-        }
-
-        Configurator filter = sourceOption("filter");
-
-        try { filter.mapValueTo("fwhm"); }
-        catch(LockedException e) {} // TODO...
-
-        String mode = filter.isConfigured("type") ? filter.get("type").getValue() : "convolution";
-        String directive = "auto";
-
-        if(filter.isConfigured("interpolation")) {
-            String spec = filter.get("interpolation").getValue().toLowerCase();
-            // The default terminology...
-            if(spec.equals("nearest")) map.setInterpolationType(Data2D.NEAREST);
-            else if(spec.equals("linear")) map.setInterpolationType(Data2D.LINEAR);
-            else if(spec.equals("quadratic")) map.setInterpolationType(Data2D.QUADRATIC);
-            else if(spec.equals("cubic")) map.setInterpolationType(Data2D.SPLINE);
-            // And alternative names...
-            else if(spec.equals("none")) map.setInterpolationType(Data2D.NEAREST);
-            else if(spec.equals("bilinear")) map.setInterpolationType(Data2D.LINEAR);
-            else if(spec.equals("piecewise")) map.setInterpolationType(Data2D.QUADRATIC);
-            else if(spec.equals("bicubic")) map.setInterpolationType(Data2D.SPLINE);
-            else if(spec.equals("spline")) map.setInterpolationType(Data2D.SPLINE);
-        }
-
-        if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
-
-        double filterScale = directive.equals("auto") ? 
-                5.0 * getSourceSize() : Double.parseDouble(directive) * getInstrument().getSizeUnit().value();
-
-        double filterBlanking = (allowBlanking && filter.isConfigured("blank")) ? filter.get("blank").getDouble() : Double.POSITIVE_INFINITY;
-
-        Validating2D filterBlank = new RangeRestricted2D(map.getSignificance(), new Range(-filterBlanking, filterBlanking));
-        
-        if(mode.equalsIgnoreCase("fft")) map.fftFilterAbove(filterScale, filterBlank);
-        else map.filterAbove(filterScale, filterBlank);
-        
-        map.getProperties().setFilterBlanking(filterBlanking);
-    }
+  
 
     public Index2D getPeakIndex() {
         int sign = hasSourceOption("sign") ? sourceOption("sign").getSign() : 0;
@@ -491,110 +401,8 @@ public class AstroMap extends AstroModel2D {
     }
 
 
+
     @Override
-    public void process() {	
-          
-        map.endAccumulation();
-                
-        nextGeneration(); // Increment the map generation...
-
-        getInstrument().setResolution(getAverageResolution());
-
-        if(enableLevel) addProcessBrief("{level} ");
-
-        if(hasSourceOption("despike")) addProcessBrief("{despike} ");
-
-        if(hasSourceOption("filter") && getSourceSize() > 0.0) addProcessBrief("{filter} ");
-
-        if(enableWeighting) if(hasOption("weighting.scans"))
-            for(Scan<?,?> scan : getScans()) addProcessBrief("{" + Util.f2.format(scan.weight) + "} ");
-
-        if(hasSourceOption("redundancy"))  {
-            addProcessBrief("(check) ");
-            double minIntTime = getInstrument().integrationTime * sourceOption("redundancy").getInt();
-            map.getExposures().restrictRange(new Range(minIntTime, Double.POSITIVE_INFINITY));
-        }
-    
-        if(hasOption("smooth") && !hasOption("smooth.external")) {
-            addProcessBrief("(smooth) ");
-            map.smoothTo(getSmoothing());
-        }
-        
-    
-        if(hasOption("smooth.weights")) {
-            Observation2D copy = map.copy(true);
-            copy.smooth(getSmoothing(option("smooth.weights").getValue()));
-            map.setWeightImage(copy.getWeightImage());
-        }
-
-        // Apply the filtering to the final map, to reflect the correct blanking
-        // level...
-        if(hasSourceOption("filter")) addProcessBrief("(filter) ");
-
-        filter(ENABLE_BLANKING);
-        map.filterBeamCorrect();
-
-         
-        // Noise and exposure clip after smoothing for evened-out coverage...
-        // Eposure clip
-        if(hasOption("exposureclip")) {
-            addProcessBrief("(exposureclip) ");
-            Data2D exposure = map.getExposures();
-            exposure.restrictRange(new Range(option("exposureclip").getDouble() * exposure.select(0.95), Double.POSITIVE_INFINITY));
-        }
-
-        // Noise clip
-        if(hasOption("noiseclip")) {
-            addProcessBrief("(noiseclip) ");
-            Data2D rms = map.getNoise();
-            rms.restrictRange(new Range(0, rms.select(0.05) * option("noiseclip").getDouble()));
-        }
-
-
-        if(enableBias) if(hasOption("clip")) {	
-            double clipLevel = option("clip").getDouble();
-            addProcessBrief("(clip:" + clipLevel + ") ");
-            final int sign = hasSourceOption("sign") ? sourceOption("sign").getSign() : 0;
-            
-            Range s2nReject = new Range(-clipLevel, clipLevel);
-            
-            if(sign > 0) s2nReject.setMin(Double.NEGATIVE_INFINITY);
-            else if(sign < 0) s2nReject.setMax(Double.POSITIVE_INFINITY);
-            
-            map.getSignificance().discardRange(s2nReject);
-        }
-
-        // discard any invalid data...
-        //map.validate();
-
-        if(hasSourceOption("mem")) {
-            addProcessBrief("(MEM) ");
-            double lambda = hasSourceOption("mem.lambda") ? sourceOption("mem.lambda").getDouble() : 0.1;
-            map.MEM(null, lambda);
-        }
-       
-
-        if(hasSourceOption("intermediates")) {
-            try { writeFits(CRUSH.workPath + File.separator + "intermediate.fits"); }
-            catch(Exception e) { error(e); }
-        }
-
-        // Coupled with blanking...
-        if(!hasSourceOption("nosync")) {
-            if(enableBias && hasOption("blank")) {
-                final double blankingLevel = getBlankingLevel();
-                addProcessBrief("(blank:" + blankingLevel + ") ");
-                updateMask(blankingLevel, 3);
-            }
-            else updateMask(Double.NaN, 3);
-        } 
-      
-         // Run the garbage collector
-        //System.gc();
-    }
-
-
-
     public void updateMask(double blankingLevel, int minNeighbors) {
         if(Double.isNaN(blankingLevel)) blankingLevel = Double.POSITIVE_INFINITY;
         
@@ -633,7 +441,6 @@ public class AstroMap extends AstroModel2D {
         return map.isFlagged(i, j, FLAG_MASK);
     }
 
-    @Override
     public final boolean isMasked(Index2D index) {
         return isMasked(index.i(), index.j());
     }
@@ -659,6 +466,38 @@ public class AstroMap extends AstroModel2D {
     protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {	
         map.accumulateAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight / channel.variance, dt);
     }
+    
+    
+    public void maskSamples(byte sampleFlagPattern) {
+        for(Scan<?,?> scan : getScans()) for(Integration<?,?> integration : scan) maskSamples(integration, sampleFlagPattern);
+    }
+    
+    public void maskSamples(Integration<?,?> integration, final byte sampleFlagPattern) {
+        final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels(~0);
+        
+        integration.new Fork<Void>() {
+            private AstroProjector projector;
+            private Index2D index;
+
+            @Override
+            public void init() {
+                super.init();
+                projector = new AstroProjector(getProjection());
+                index = new Index2D();
+            }
+
+            @Override 
+            protected void process(final Frame exposure) {
+                 // Remove source from all but the blind channels...
+                for(final Pixel pixel : pixels)  {
+                    AstroMap.this.getIndex(exposure, pixel, projector, index); 
+                    if(isMasked(index)) for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= sampleFlagPattern;
+                }
+            }
+        }.process();
+        
+    }
+
 
     @Override
     protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, int signalMode) {
@@ -669,7 +508,7 @@ public class AstroMap extends AstroModel2D {
 
     
     @Override
-    protected void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, final double[] syncGain, final boolean isMasked) {
+    protected void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, final double[] syncGain) {
         // The use of iterables is a minor performance hit only (~3% overall)
         if(!map.isValid(index)) return;
         
@@ -681,7 +520,7 @@ public class AstroMap extends AstroModel2D {
             exposure.data[channel.index] -= fG * (sourceGain[channel.index] * mapValue - syncGain[channel.index] * baseValue);	
 
             // Do the blanking here...
-            if(isMasked) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
+            if(isMasked(index)) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
             else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SOURCE_BLANK;
         }
     }
@@ -887,10 +726,79 @@ public class AstroMap extends AstroModel2D {
         else return super.getTableEntry(name);
     }
 
-   
+
+    @Override
+    public Observation2D getData() {
+        return map;
+    }
+
+    @Override
+    public void endAccumulation() {
+        map.endAccumulation();
+    }
+
+    @Override
+    public void addBase() {
+        map.add(base);
+    }
+
+    @Override
+    public void smoothTo(double FWHM) {
+        map.smoothTo(FWHM);
+    }
     
-    public static long FLAG_MASK = 1L<<16;
+    
+    @Override
+    public void filter(double filterScale, double filterBlanking, boolean useFFT) {
+        Validating2D filterBlank = new RangeRestricted2D(map.getSignificance(), new Range(-filterBlanking, filterBlanking));
+        
+        if(useFFT) map.fftFilterAbove(filterScale, filterBlank);
+        else map.filterAbove(filterScale, filterBlank);
+        
+        map.getProperties().setFilterBlanking(filterBlanking);
+    }
+    
+    @Override
+    public void resetFiltering() {
+        map.getProperties().resetFiltering();
+    }
+
  
+
+    @Override
+    public void filterBeamCorrect() {
+        map.filterBeamCorrect();
+    }
+
+    @Override
+    public void memCorrect(double lambda) {
+        map.MEM(null, lambda);
+    }
+
+    @Override
+    public double getChi2(boolean isRobust) {
+        return map.getChi2(isRobust);
+    }
+
+    @Override
+    public Data<?, ?, ?> getExposures() {
+        return map.getExposures();
+    }
+
+    @Override
+    public Data<?, ?, ?> getWeights() {
+        return map.getWeights();
+    }
+
+    @Override
+    public Data<?, ?, ?> getNoise() {
+        return map.getNoise();
+    }
+
+    @Override
+    public Data<?, ?, ?> getSignificance() {
+        return map.getSignificance();
+    }
 
   
 }

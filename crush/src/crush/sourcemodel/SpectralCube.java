@@ -23,6 +23,7 @@
 
 package crush.sourcemodel;
 
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
@@ -37,6 +38,7 @@ import crush.Scan;
 import crush.SourceModel;
 import jnum.Constant;
 import jnum.Unit;
+import jnum.data.Data;
 import jnum.data.cube2.Data2D1;
 import jnum.data.cube2.Image2D1;
 import jnum.data.cube2.Observation2D1;
@@ -47,12 +49,13 @@ import jnum.data.image.Index2D;
 import jnum.data.image.Map2D;
 import jnum.data.image.MapProperties;
 import jnum.data.image.Observation2D;
+import jnum.data.image.Validating2D;
+import jnum.data.image.overlay.RangeRestricted2D;
 import jnum.data.samples.Grid1D;
-import jnum.math.Coordinate2D;
 import jnum.math.Range;
 import nom.tam.fits.FitsException;
 
-public class SpectralCube extends AstroModel2D {
+public class SpectralCube extends AstroDataModel2D<Observation2D1> {
    
     /**
      * 
@@ -91,6 +94,7 @@ public class SpectralCube extends AstroModel2D {
         };
     }
 
+   
     
     public Range getFrequencyRange(Collection<? extends Scan<?,?>> scans) {
         Range r = new Range();
@@ -132,9 +136,9 @@ public class SpectralCube extends AstroModel2D {
         cube.setGrid2D(getGrid());
         cube.setCriticalFlags(~FLAG_MASK);  
         
-        cube.addProprietaryUnit(getNativeUnit());
-        cube.addProprietaryUnit(getJanskyUnit(), "Jy, jansky, Jansky");
-        cube.addProprietaryUnit(getKelvinUnit(), "K, kelvin, Kelvin");   
+        cube.addLocalUnit(getNativeUnit());
+        cube.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky");
+        cube.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin");   
            
         for(Observation2D plane : cube.getStack()) {
             MapProperties properties = plane.getProperties();
@@ -214,6 +218,10 @@ public class SpectralCube extends AstroModel2D {
     public final int sizeZ() {
         return cube.sizeZ();
     }
+    
+    public final int getFrequencyBin(Frame exposure, Channel channel) {
+        return getFrequencyBin(exposure.getChannelFrequency(channel));
+    }
 
     public int getFrequencyBin(double frequency) {
         if(useWavelength) frequency = Constant.c / frequency;
@@ -223,14 +231,12 @@ public class SpectralCube extends AstroModel2D {
   
     @Override
     protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {    
-        Observation2D plane = cube.getPlane(getFrequencyBin(exposure.getChannelFrequency(channel)));
+        Observation2D plane = cube.getPlane(getFrequencyBin(exposure, channel));
         plane.accumulateAt(index.i(), index.j(), exposure.data[channel.index], G, exposure.relativeWeight / channel.variance, dt);
     }
 
-    @Override
-    public boolean isMasked(Index2D index) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean isMasked(int i, int j, int k) {
+        return cube.getPlane(k).isFlagged(i, j, FLAG_MASK);
     }
 
     @Override
@@ -239,15 +245,13 @@ public class SpectralCube extends AstroModel2D {
     }
 
     @Override
-    protected void sync(Frame exposure, Pixel pixel, Index2D index, double fG, double[] sourceGain, double[] syncGain,
-            boolean isMasked) {
-        for(final Channel channel : pixel) sync(exposure, channel, index, fG, sourceGain, syncGain, isMasked);
+    protected void sync(Frame exposure, Pixel pixel, Index2D index, double fG, double[] sourceGain, double[] syncGain) {
+        for(final Channel channel : pixel) sync(exposure, channel, index, fG, sourceGain, syncGain);
     }
  
-    protected void sync(Frame exposure, Channel channel, Index2D index, double fG, double[] sourceGain, double[] syncGain,
-            boolean isMasked) {
+    protected void sync(Frame exposure, Channel channel, Index2D index, double fG, double[] sourceGain, double[] syncGain) {
 
-        final int k = getFrequencyBin(exposure.getChannelFrequency(channel));
+        final int k = getFrequencyBin(exposure, channel);
         Observation2D plane = cube.getPlane(k);
         Data2D basePlane = base.getPlane(k);
 
@@ -261,7 +265,7 @@ public class SpectralCube extends AstroModel2D {
         exposure.data[channel.index] -= fG * (sourceGain[channel.index] * mapValue - syncGain[channel.index] * baseValue);  
 
         // Do the blanking here...
-        if(isMasked) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
+        if(isMasked(index.i(), index.j(), k)) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
         else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SOURCE_BLANK;
 
     }
@@ -301,12 +305,6 @@ public class SpectralCube extends AstroModel2D {
         return cube.countPoints() == 0;
     }
 
-    @Override
-    public Coordinate2D getReference() {
-        return cube.getGrid2D().getReference();
-    }
-
-  
 
     @Override
     public int countPoints() {
@@ -355,20 +353,7 @@ public class SpectralCube extends AstroModel2D {
         else return super.getTableEntry(name);
     }
 
-
     
-    @Override
-    public void process(Scan<?, ?> scan) {
-        // TODO Auto-generated method stub
-        
-    }
-    
-    @Override
-    public void process() throws Exception {
-        // TODO --> 'spectral.smooth'     
-    }
-    
-
     @Override
     public void processFinal() {
         // TODO Auto-generated method stub
@@ -392,7 +377,90 @@ public class SpectralCube extends AstroModel2D {
     
 
   
-    
-    public static long FLAG_MASK = 1L<<16;
-    
+    @Override
+    public void filter(double filterScale, double filterBlanking, boolean useFFT) {
+        for(Observation2D plane : cube.getStack()) {
+        
+            Validating2D filterBlank = new RangeRestricted2D(plane.getSignificance(), new Range(-filterBlanking, filterBlanking));
+        
+            if(useFFT) plane.fftFilterAbove(filterScale, filterBlank);
+            else plane.filterAbove(filterScale, filterBlank);
+        
+            plane.getProperties().setFilterBlanking(filterBlanking);
+        }
+    }
+
+    @Override
+    public void resetFiltering() {
+        for(Observation2D plane : cube.getStack()) plane.getProperties().resetFiltering();
+    }
+  
+
+    @Override
+    public Observation2D1 getData() {
+        return cube;
+    }
+
+    @Override
+    public void endAccumulation() {
+        cube.endAccumulation();
+    }
+
+    @Override
+    public void addBase() {
+        cube.add(base);
+    }
+
+    @Override
+    public void smoothTo(double FWHM) {
+        // TODO Auto-generated method stub
+        
+    }
+
+
+    @Override
+    public void filterBeamCorrect() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void memCorrect(double lambda) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void updateMask(double blankingLevel, int minNeighbors) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public double getChi2(boolean isRobust) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public Data<?, ?, ?> getExposures() {
+        return cube.getExposures();
+    }
+
+    @Override
+    public Data<?, ?, ?> getWeights() {
+        return cube.getWeights();
+    }
+
+    @Override
+    public Data<?, ?, ?> getNoise() {
+        return cube.getNoise();
+    }
+
+    @Override
+    public Data<?, ?, ?> getSignificance() {
+        return cube.getSignificance();
+    }
+
+   
 }

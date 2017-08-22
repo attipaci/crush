@@ -36,7 +36,6 @@ import jnum.data.image.Index2D;
 import jnum.data.image.Map2D;
 import jnum.data.image.Observation2D;
 import jnum.data.image.region.GaussianSource;
-import jnum.math.Coordinate2D;
 import jnum.math.SphericalCoordinates;
 import nom.tam.fits.FitsException;
 
@@ -166,12 +165,6 @@ public class BeamMap extends AstroModel2D {
 	public long baseFootprint(int pixels) {
 		return pixelMap.length * template.baseFootprint(pixels);
 	}
-	
-
-	@Override
-	public boolean isMasked(Index2D index) {
-		return false;
-	}
 
 	@Override
 	public void setSize(int sizeX, int sizeY) {
@@ -179,9 +172,9 @@ public class BeamMap extends AstroModel2D {
 	}
 
 	@Override
-	protected void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, final double[] syncGain, final boolean isMasked) {
+	protected void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, final double[] syncGain) {
 		final AstroMap map = pixelMap[pixel.getFixedIndex()];
-		if(map != null) map.sync(exposure, pixel, index, fG, sourceGain, syncGain, isMasked);	
+		if(map != null) map.sync(exposure, pixel, index, fG, sourceGain, syncGain);	
 	}
 
 
@@ -352,12 +345,6 @@ public class BeamMap extends AstroModel2D {
 		return null;
 	}
 
-	@Override
-	public Coordinate2D getReference() {
-		return template.getReference();
-	}
-
-
     @Override
     public int sizeX() {
         return template.sizeX();
@@ -386,8 +373,6 @@ public class BeamMap extends AstroModel2D {
         for(AstroMap map : pixelMap) if(map != null) map.processFinal();
     }
     
-    
-
     @Override
     public Map2D getMap2D() { return null; }
 

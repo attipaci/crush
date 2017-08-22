@@ -429,11 +429,16 @@ public abstract class AstroModel2D extends SourceModel {
 
 
     public final Projection2D<SphericalCoordinates> getProjection() { return grid.getProjection(); }
-
+    
+    
     public final void setProjection(Projection2D<SphericalCoordinates> projection) {
         getGrid().setProjection(projection);
     }
 
+    @Override
+    public final SphericalCoordinates getReference() {
+        return (SphericalCoordinates) getGrid().getReference();
+    }
 
    
     public void runtimeMemoryError(String message) {
@@ -553,8 +558,6 @@ public abstract class AstroModel2D extends SourceModel {
     }
     
     protected abstract void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt);
-    
-    public abstract boolean isMasked(Index2D index); 
 
     public abstract void mergeAccumulate(AstroModel2D other);
 
@@ -731,7 +734,7 @@ public abstract class AstroModel2D extends SourceModel {
         integration.comments += " ";
     }
 
-    protected abstract void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, double[] syncGain, final boolean isMasked);
+    protected abstract void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, double[] syncGain);
 
     public void setSyncGains(final Integration<?,?> integration, final Pixel pixel, final double[] sourceGain) {
         if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
@@ -759,7 +762,7 @@ public abstract class AstroModel2D extends SourceModel {
                 // Remove source from all but the blind channels...
                 for(final Pixel pixel : pixels)  {
                     AstroModel2D.this.getIndex(exposure, pixel, projector, index);	
-                    sync(exposure, pixel, index, fG, sourceGain, integration.sourceSyncGain, isMasked(index));
+                    sync(exposure, pixel, index, fG, sourceGain, integration.sourceSyncGain);
                 }
             }
         }.process();
@@ -820,37 +823,8 @@ public abstract class AstroModel2D extends SourceModel {
 
         if(CRUSH.debug) for(Pixel pixel : pixels) integration.checkForNaNs(pixel, 0, integration.size());
     }
-    
-    public void maskSamples(byte sampleFlagPattern) {
-        for(Scan<?,?> scan : getScans()) for(Integration<?,?> integration : scan) maskSamples(integration, sampleFlagPattern);
-    }
-    
-    public void maskSamples(Integration<?,?> integration, final byte sampleFlagPattern) {
-        final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels(~0);
-        
-        integration.new Fork<Void>() {
-            private AstroProjector projector;
-            private Index2D index;
-
-            @Override
-            public void init() {
-                super.init();
-                projector = new AstroProjector(getProjection());
-                index = new Index2D();
-            }
-
-            @Override 
-            protected void process(final Frame exposure) {
-                 // Remove source from all but the blind channels...
-                for(final Pixel pixel : pixels)  {
-                    AstroModel2D.this.getIndex(exposure, pixel, projector, index); 
-                    if(isMasked(index)) for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= sampleFlagPattern;
-                }
-            }
-        }.process();
-        
-    }
-
+   
+  
     public abstract double covariantPoints();
 
     protected abstract void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain);
@@ -906,6 +880,8 @@ public abstract class AstroModel2D extends SourceModel {
     public abstract void writeFits(String fileName) throws FitsException, IOException;
     
     public abstract Map2D getMap2D();
+    
+ 
 
     public void writePNG(Map2D map, Configurator config, String fileName) throws InstantiationException, IllegalAccessException, IOException { 
         map = map.copy(true);
@@ -934,9 +910,7 @@ public abstract class AstroModel2D extends SourceModel {
                 map.crop(dXmin, dYmin, dXmax, dYmax);
             }
         }
-        
-
-          
+               
         if(map instanceof Observation2D) if(config.isConfigured("plane")) {
             Observation2D obs = (Observation2D) map;
             
@@ -949,7 +923,6 @@ public abstract class AstroModel2D extends SourceModel {
             else if(spec.equals("weight")) values = obs.getWeights();
         }      
                
-        
         
         writePNG(values.getImage(), config, fileName);  
     }

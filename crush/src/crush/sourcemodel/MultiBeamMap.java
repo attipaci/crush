@@ -358,7 +358,7 @@ public class MultiBeamMap extends AstroMap {
 	
 	
 	@Override
-	public void process() {		
+	public void process() throws Exception {		
 		normalizeTransformer();
 		
 		backTransform();
