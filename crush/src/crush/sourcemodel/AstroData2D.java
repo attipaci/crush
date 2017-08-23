@@ -35,18 +35,28 @@ import jnum.Util;
 import jnum.data.Data;
 import jnum.math.Range;
 
-public abstract class AstroDataModel2D<DataType extends Data<?,?,?>> extends AstroModel2D {
+public abstract class AstroData2D<DataType extends Data<?,?,?>> extends AstroModel2D {
 
     /**
      * 
      */
     private static final long serialVersionUID = -6317603664492428554L;
 
-    public AstroDataModel2D(Instrument<?> instrument) {
+    public AstroData2D(Instrument<?> instrument) {
         super(instrument);
     }
 
     public abstract DataType getData();
+    
+    public abstract Data<?,?,?> getWeights();
+    
+    public abstract Data<?,?,?> getNoise();
+    
+    public abstract Data<?,?,?> getSignificance();
+    
+    public abstract Data<?,?,?> getExposures();
+    
+    
 
     public abstract void endAccumulation();
 
@@ -64,16 +74,14 @@ public abstract class AstroDataModel2D<DataType extends Data<?,?,?>> extends Ast
 
     public abstract void updateMask(double blankingLevel, int minNeighbors);
 
-    public abstract double getChi2(boolean isRobust);
+    
+   
+    
+    public final double getChi2(boolean isRobust) {
+        return isRobust ? getSignificance().getRobustVariance() : getSignificance().getVariance();
+    }
 
-    public abstract Data<?,?,?> getExposures();
-
-    public abstract Data<?,?,?> getWeights();
-
-    public abstract Data<?,?,?> getNoise();
-
-    public abstract Data<?,?,?> getSignificance();
-
+  
 
     public void smooth() {
         smoothTo(getSmoothing());
@@ -126,7 +134,7 @@ public abstract class AstroDataModel2D<DataType extends Data<?,?,?>> extends Ast
 
         filter(NO_BLANKING);      
 
-        //map.validate();
+        //validate();
 
         scan.weight = 1.0;              
         if(hasOption("weighting.scans")) {

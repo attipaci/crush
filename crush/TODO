@@ -1,6 +1,11 @@
+
+>> HIRMES:
+    * spectral opacity:
+        (a) sky gains vs source gains
+	(b) ATRAN corrections.	
+
 >> SpectralMap
 	smooth() to include spectral.smooth...
-	mask usage?
 
 >> HIRMES to have 2D integral mode (e.g. for pointing)
    'integral', 'integral.spectralrange' ('auto' to use only image planes with

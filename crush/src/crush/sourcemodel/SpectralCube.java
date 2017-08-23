@@ -55,7 +55,7 @@ import jnum.data.samples.Grid1D;
 import jnum.math.Range;
 import nom.tam.fits.FitsException;
 
-public class SpectralCube extends AstroDataModel2D<Observation2D1> {
+public class SpectralCube extends AstroData2D<Observation2D1> {
    
     /**
      * 
@@ -140,7 +140,7 @@ public class SpectralCube extends AstroDataModel2D<Observation2D1> {
         cube.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky");
         cube.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin");   
            
-        for(Observation2D plane : cube.getStack()) {
+        for(Observation2D plane : cube.getPlanes()) {
             MapProperties properties = plane.getProperties();
             properties.setInstrumentName(getInstrument().getName());
             properties.setCreatorName(CRUSH.class.getSimpleName());
@@ -160,7 +160,7 @@ public class SpectralCube extends AstroDataModel2D<Observation2D1> {
         
         super.createFrom(collection);  
         
-        for(Observation2D plane : cube.getStack()) {
+        for(Observation2D plane : cube.getPlanes()) {
             MapProperties properties = plane.getProperties();
             properties.setObjectName(getFirstScan().getSourceName());
             properties.setUnderlyingBeam(getAverageResolution());
@@ -379,7 +379,7 @@ public class SpectralCube extends AstroDataModel2D<Observation2D1> {
   
     @Override
     public void filter(double filterScale, double filterBlanking, boolean useFFT) {
-        for(Observation2D plane : cube.getStack()) {
+        for(Observation2D plane : cube.getPlanes()) {
         
             Validating2D filterBlank = new RangeRestricted2D(plane.getSignificance(), new Range(-filterBlanking, filterBlanking));
         
@@ -392,54 +392,13 @@ public class SpectralCube extends AstroDataModel2D<Observation2D1> {
 
     @Override
     public void resetFiltering() {
-        for(Observation2D plane : cube.getStack()) plane.getProperties().resetFiltering();
+        cube.resetFiltering();
     }
   
 
     @Override
     public Observation2D1 getData() {
         return cube;
-    }
-
-    @Override
-    public void endAccumulation() {
-        cube.endAccumulation();
-    }
-
-    @Override
-    public void addBase() {
-        cube.add(base);
-    }
-
-    @Override
-    public void smoothTo(double FWHM) {
-        // TODO Auto-generated method stub
-        
-    }
-
-
-    @Override
-    public void filterBeamCorrect() {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void memCorrect(double lambda) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void updateMask(double blankingLevel, int minNeighbors) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public double getChi2(boolean isRobust) {
-        // TODO Auto-generated method stub
-        return 0;
     }
 
     @Override
@@ -460,6 +419,39 @@ public class SpectralCube extends AstroDataModel2D<Observation2D1> {
     @Override
     public Data<?, ?, ?> getSignificance() {
         return cube.getSignificance();
+    }
+
+   
+    
+    @Override
+    public void endAccumulation() {
+        cube.endAccumulation();
+    }
+
+    @Override
+    public void addBase() {
+        cube.add(base);
+    }
+
+    @Override
+    public void smoothTo(double FWHM) {
+        cube.smooth2DTo(FWHM);
+    }
+    
+    @Override
+    public void filterBeamCorrect() {
+        cube.filterBeamCorrect();
+    }
+
+    @Override
+    public void memCorrect(double lambda) {
+        cube.memCorrect(null, lambda);
+    }
+
+    @Override
+    public void updateMask(double blankingLevel, int minNeighbors) {
+        // TODO Auto-generated method stub
+        
     }
 
    
