@@ -42,7 +42,6 @@ import jnum.data.image.Map2D;
 import jnum.data.image.MapProperties;
 import jnum.data.image.Observation2D;
 import jnum.data.image.Validating2D;
-import jnum.data.image.overlay.Flagged2D;
 import jnum.data.image.overlay.RangeRestricted2D;
 import jnum.data.image.region.EllipticalSource;
 import jnum.data.image.region.GaussianSource;
@@ -58,7 +57,7 @@ import nom.tam.fits.Header;
 
 
 
-public class AstroMap extends AstroDataModel2D<Observation2D> {
+public class AstroMap extends AstroData2D<Observation2D> {
     /**
      * 
      */
@@ -95,8 +94,9 @@ public class AstroMap extends AstroDataModel2D<Observation2D> {
 
 
     @Override
-    public void addModel(SourceModel model, double weight) {       
-        map.accumulate(((AstroMap) model).map, weight);   
+    public void addModel(SourceModel model, double weight) {  
+        AstroMap astro = (AstroMap) model;
+        map.accumulate(astro.map, weight);  
     }
 
     @Override
@@ -159,7 +159,7 @@ public class AstroMap extends AstroDataModel2D<Observation2D> {
             try { 
                 SourceCatalog catalog = new SourceCatalog(getReference().getClass());
                 catalog.read(option("mask").getPath()); 
-                flagMask(catalog); 
+                maskSources(catalog); 
             }
             catch(IOException e) { 
                 warning("Cannot read map mask. Check the file name and path."); 
@@ -208,7 +208,7 @@ public class AstroMap extends AstroDataModel2D<Observation2D> {
 
     }
 
-    public void flagMask(SourceCatalog catalog) {
+    public void maskSources(SourceCatalog catalog) {
         // Since the synching step is removal, the sources should be inserted with a negative sign to add into the
         // timestream.
         double resolution = getAverageResolution();
@@ -427,15 +427,7 @@ public class AstroMap extends AstroDataModel2D<Observation2D> {
        
     }
 
-    public void addMask(final Flagged2D flags) {
-        map.new Fork<Void>() {
-            @Override
-            protected void process(int i, int j) { 
-                if(flags.isFlagged(i, j, FLAG_MASK)) map.flag(i, j, FLAG_MASK);
-            }
-        }.process();
-    }
-
+  
   
     public final boolean isMasked(final int i, final int j) { 
         return map.isFlagged(i, j, FLAG_MASK);
@@ -488,7 +480,6 @@ public class AstroMap extends AstroDataModel2D<Observation2D> {
 
             @Override 
             protected void process(final Frame exposure) {
-                 // Remove source from all but the blind channels...
                 for(final Pixel pixel : pixels)  {
                     AstroMap.this.getIndex(exposure, pixel, projector, index); 
                     if(isMasked(index)) for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= sampleFlagPattern;
@@ -731,6 +722,26 @@ public class AstroMap extends AstroDataModel2D<Observation2D> {
     public Observation2D getData() {
         return map;
     }
+    
+    @Override
+    public Data<?, ?, ?> getExposures() {
+        return map.getExposures();
+    }
+
+    @Override
+    public Data<?, ?, ?> getWeights() {
+        return map.getWeights();
+    }
+
+    @Override
+    public Data<?, ?, ?> getNoise() {
+        return map.getNoise();
+    }
+
+    @Override
+    public Data<?, ?, ?> getSignificance() {
+        return map.getSignificance();
+    }
 
     @Override
     public void endAccumulation() {
@@ -763,7 +774,6 @@ public class AstroMap extends AstroDataModel2D<Observation2D> {
         map.getProperties().resetFiltering();
     }
 
- 
 
     @Override
     public void filterBeamCorrect() {
@@ -772,33 +782,11 @@ public class AstroMap extends AstroDataModel2D<Observation2D> {
 
     @Override
     public void memCorrect(double lambda) {
-        map.MEM(null, lambda);
+        map.memCorrect(null, lambda);
     }
 
-    @Override
-    public double getChi2(boolean isRobust) {
-        return map.getChi2(isRobust);
-    }
 
-    @Override
-    public Data<?, ?, ?> getExposures() {
-        return map.getExposures();
-    }
 
-    @Override
-    public Data<?, ?, ?> getWeights() {
-        return map.getWeights();
-    }
-
-    @Override
-    public Data<?, ?, ?> getNoise() {
-        return map.getNoise();
-    }
-
-    @Override
-    public Data<?, ?, ?> getSignificance() {
-        return map.getSignificance();
-    }
 
   
 }
