@@ -83,7 +83,73 @@ public abstract class AstroModel2D extends SourceModel {
         grid.setResolution(hasOption("grid") ? option("grid").getDouble() * instrument.getSizeUnit().value() : 0.2 * instrument.getResolution());  
     }
 
+
+    public abstract boolean isEmpty();
+    
+    public abstract int getPixelFootprint();
+
+    public abstract long baseFootprint(int pixels);
+    
+    public abstract void processFinal();
+    
+    public abstract void writeFits(String fileName) throws FitsException, IOException;
+    
+    public abstract Map2D getMap2D();
+    
+    public abstract void mergeAccumulate(AstroModel2D other);
+
+    public abstract void setSize(int sizeX, int sizeY);
+
+    public abstract int sizeX();
+
+    public abstract int sizeY();
+
+    public abstract double covariantPoints();
+
+      
+    protected abstract void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt);    
+    
+    protected abstract void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, double[] syncGain);
+
+    protected abstract void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain);
+
+    
+     
+    public long getMemoryFootprint(int pixels) {
+        return pixels * getPixelFootprint() + baseFootprint(pixels);
+    }
+
+    public long getReductionFootprint(int pixels) {
+        // The composite map + one copy for each thread, plus base image (double)
+        return (CRUSH.maxThreads + 1) * getMemoryFootprint(pixels) + baseFootprint(pixels);
+    }
+
+
+
+    public final int pixels() { return sizeX() * sizeY(); }
+
+    public final SphericalGrid getGrid() { return grid; }
+    
+ 
+    protected boolean isAddingToMaster() { return false; }
+
+
+    public final Projection2D<SphericalCoordinates> getProjection() { return grid.getProjection(); }
+    
+    
+    public final void setProjection(Projection2D<SphericalCoordinates> projection) {
+        getGrid().setProjection(projection);
+    }
+
+    @Override
+    public final SphericalCoordinates getReference() {
+        return (SphericalCoordinates) getGrid().getReference();
+    }
+
    
+    
+    
+    
 
     @Override
     public void resetProcessing() {
@@ -96,7 +162,7 @@ public abstract class AstroModel2D extends SourceModel {
         return !isEmpty();
     }
 
-    public abstract boolean isEmpty();
+
 
     protected String getDefaultFileName() {
         return CRUSH.workPath + File.separator + getSourceName() + ".fits";
@@ -273,7 +339,6 @@ public abstract class AstroModel2D extends SourceModel {
             if(runtime.totalMemory() - runtime.freeMemory() >= maxUsed) return;
             createLookup(integration);  
         }
-
     }
 
 
@@ -311,20 +376,15 @@ public abstract class AstroModel2D extends SourceModel {
                     if(CRUSH.debug) {
                         if(index.i() < 0 || index.i() >= sizeX() || index.j() < 0 || index.j() >= sizeY()) {
                             warning("!!! invalid map index pixel " + pixel.getID() + " frame " + exposure.index + ": " +
-                                    (exposure.sourceIndex == null ? 
-                                            index : 
-                                                exposure.sourceIndex[pixel.getIndex()]
-                                            )
-                                    );
+                                    (exposure.sourceIndex == null ? index : exposure.sourceIndex[pixel.getIndex()])
+                            );
                             index.set(0, 0);
                         }
                     }
 
-
                     exposure.sourceIndex[pixel.getIndex()] = (index.i() << indexShiftX) | index.j();
                 }
             }
-
         }.process();
     }
 
@@ -352,23 +412,6 @@ public abstract class AstroModel2D extends SourceModel {
     }
 
 
-    public long getMemoryFootprint(int pixels) {
-        return pixels * getPixelFootprint() + baseFootprint(pixels);
-    }
-
-    public long getReductionFootprint(int pixels) {
-        // The composite map + one copy for each thread, plus base image (double)
-        return (CRUSH.maxThreads + 1) * getMemoryFootprint(pixels) + baseFootprint(pixels);
-    }
-
-    public abstract int getPixelFootprint();
-
-    public abstract long baseFootprint(int pixels);
-
-    public final int pixels() { return sizeX() * sizeY(); }
-
-    public final SphericalGrid getGrid() { return grid; }
-    
  
     public void setSize() throws Exception {
       
@@ -421,26 +464,7 @@ public abstract class AstroModel2D extends SourceModel {
         catch(OutOfMemoryError e) { createMemoryError(sizeX, sizeY); }
     }
 
-    public abstract void setSize(int sizeX, int sizeY);
-
-    public abstract int sizeX();
-
-    public abstract int sizeY();
-
-
-    public final Projection2D<SphericalCoordinates> getProjection() { return grid.getProjection(); }
-    
-    
-    public final void setProjection(Projection2D<SphericalCoordinates> projection) {
-        getGrid().setProjection(projection);
-    }
-
-    @Override
-    public final SphericalCoordinates getReference() {
-        return (SphericalCoordinates) getGrid().getReference();
-    }
-
-   
+  
     public void runtimeMemoryError(String message) {
         error(message);
         CRUSH.suggest(this,
@@ -557,12 +581,7 @@ public abstract class AstroModel2D extends SourceModel {
             addPoint(index, channel, exposure, frameGain * sourceGain[channel.index], channel.instrument.samplingInterval);
     }
     
-    protected abstract void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt);
-
-    public abstract void mergeAccumulate(AstroModel2D other);
-
-    protected boolean isAddingToMaster() { return false; }
-
+ 
     protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
         if(CRUSH.debug) debug("add.pixels " + pixels.size() + " : " + integration.instrument.size());  
         return addForkFrames(integration, pixels, sourceGain, signalMode);
@@ -734,8 +753,6 @@ public abstract class AstroModel2D extends SourceModel {
         integration.comments += " ";
     }
 
-    protected abstract void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, double[] syncGain);
-
     public void setSyncGains(final Integration<?,?> integration, final Pixel pixel, final double[] sourceGain) {
         if(integration.sourceSyncGain == null) integration.sourceSyncGain = new double[sourceGain.length];
         for(Channel channel : pixel) integration.sourceSyncGain[channel.index] = sourceGain[channel.index];
@@ -824,10 +841,6 @@ public abstract class AstroModel2D extends SourceModel {
         if(CRUSH.debug) for(Pixel pixel : pixels) integration.checkForNaNs(pixel, 0, integration.size());
     }
    
-  
-    public abstract double covariantPoints();
-
-    protected abstract void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain);
 
     @Override
     public String suggestMakeValid() {
@@ -875,13 +888,6 @@ public abstract class AstroModel2D extends SourceModel {
         if(hasOption("write.png")) writePNG(getMap2D(), option("write.png"), fileName);
     }
     
-    public abstract void processFinal();
-    
-    public abstract void writeFits(String fileName) throws FitsException, IOException;
-    
-    public abstract Map2D getMap2D();
-    
- 
 
     public void writePNG(Map2D map, Configurator config, String fileName) throws InstantiationException, IllegalAccessException, IOException { 
         map = map.copy(true);

@@ -24,7 +24,6 @@
 package crush.sourcemodel;
 
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
@@ -39,6 +38,9 @@ import crush.SourceModel;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.data.Data;
+import jnum.data.Validating;
+import jnum.data.cube.Index3D;
+import jnum.data.cube.overlay.RangeRestricted3D;
 import jnum.data.cube2.Data2D1;
 import jnum.data.cube2.Image2D1;
 import jnum.data.cube2.Observation2D1;
@@ -53,7 +55,8 @@ import jnum.data.image.Validating2D;
 import jnum.data.image.overlay.RangeRestricted2D;
 import jnum.data.samples.Grid1D;
 import jnum.math.Range;
-import nom.tam.fits.FitsException;
+import jnum.parallel.ParallelPointOp;
+
 
 public class SpectralCube extends AstroData2D<Observation2D1> {
    
@@ -170,15 +173,8 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
 
         base = Image2D1.create(Double.class, sizeX(), sizeY(), sizeZ());
 
+        // TODO
         /*
-        if(hasSourceOption("inject")) {
-            try { injectSource(sourceOption("inject").getPath()); }
-            catch(Exception e) { 
-                warning("Cannot read injection map. Check the file name and path."); 
-                if(CRUSH.debug) CRUSH.trace(e);
-            }
-        }
-        
         if(hasSourceOption("model")) {
             try { applyModel(sourceOption("model").getPath()); }
             catch(Exception e) { 
@@ -278,8 +274,7 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
     @Override
     protected void calcCoupling(Integration<?, ?> integration, Collection<? extends Pixel> pixels, double[] sourceGain,
             double[] syncGain) {
-        // TODO Auto-generated method stub
-        
+        // TODO Auto-generated method stub  
     }
 
     @Override
@@ -362,15 +357,7 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
 
 
     @Override
-    public void writeFits(String fileName) throws FitsException, IOException {
-        // TODO Auto-generated method stub
-        
-    }
-
-
-    @Override
-    public Map2D getMap2D() {
-       
+    public Map2D getMap2D() {     
         // TODO
         return null;
     }
@@ -380,7 +367,6 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
     @Override
     public void filter(double filterScale, double filterBlanking, boolean useFFT) {
         for(Observation2D plane : cube.getPlanes()) {
-        
             Validating2D filterBlank = new RangeRestricted2D(plane.getSignificance(), new Range(-filterBlanking, filterBlanking));
         
             if(useFFT) plane.fftFilterAbove(filterScale, filterBlank);
@@ -450,8 +436,27 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
 
     @Override
     public void updateMask(double blankingLevel, int minNeighbors) {
-        // TODO Auto-generated method stub
+        if(Double.isNaN(blankingLevel)) blankingLevel = Double.POSITIVE_INFINITY;
         
+        Range s2nRange = new Range(-blankingLevel, blankingLevel);
+        
+        if(hasSourceOption("sign")) {
+            int sign = sourceOption("sign").getSign();
+            if(sign < 0) s2nRange.setMax(Double.POSITIVE_INFINITY);
+            else if(sign > 0) s2nRange.setMin(Double.NEGATIVE_INFINITY);
+        }
+        
+        final Validating<Index3D> neighbors = cube.getNeighborValidator(minNeighbors);
+        final Validating<Index3D> s2n = new RangeRestricted3D(cube.getSignificance(), s2nRange);
+            
+        cube.loop(new ParallelPointOp.Simple<Index3D>() {
+            @Override
+            public void process(Index3D index) {
+                if(neighbors.isValid(index) && s2n.isValid(index)) cube.unflag(index, FLAG_MASK);
+                else cube.flag(index, FLAG_MASK);
+            }       
+        });
+       
     }
 
    
