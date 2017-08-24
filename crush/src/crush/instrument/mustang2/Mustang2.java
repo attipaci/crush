@@ -262,7 +262,7 @@ public class Mustang2 extends Camera<Mustang2Pixel> implements GroundBased {
                 
                 if(tokens.hasMoreTokens()) {
                     id.polarizationAngle = Constant.rightAngle + Math.IEEEremainder(Double.parseDouble(tokens.nextToken()) * Unit.deg - pol0, Math.PI);
-                    if(id.polarizationAngle == Math.PI) id.polarizationAngle = 0.0;
+                    if(Util.fixedPrecisionEquals(id.polarizationAngle, Math.PI, 1e-6)) id.polarizationAngle = 0.0;
                 }
                 
                 return true;
@@ -323,9 +323,9 @@ public class Mustang2 extends Camera<Mustang2Pixel> implements GroundBased {
 	private void restrictPolarization(double polarizationAngle) {
 		if(Double.isNaN(polarizationAngle)) return;
 		polarizationAngle = Constant.rightAngle + Math.IEEEremainder(polarizationAngle, Math.PI);
-		if(polarizationAngle == Math.PI) polarizationAngle = 0.0;
+		if(Util.fixedPrecisionEquals(polarizationAngle, Math.PI, 1e-6)) polarizationAngle = 0.0;
 		info("Restricting polarization to " + Util.s3.format(polarizationAngle / Unit.deg) + "degrees.") ;
-		for(Mustang2Pixel pixel : this) if(pixel.polarizationAngle != polarizationAngle) pixel.flag(Channel.FLAG_DEAD);
+		for(Mustang2Pixel pixel : this) if(!Util.fixedPrecisionEquals(pixel.polarizationAngle, polarizationAngle, 1e-3)) pixel.flag(Channel.FLAG_DEAD);
 	}
 	
 	

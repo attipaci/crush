@@ -42,18 +42,16 @@ import jnum.data.image.Map2D;
 import jnum.data.image.MapProperties;
 import jnum.data.image.Observation2D;
 import jnum.data.image.Validating2D;
+import jnum.data.image.overlay.Flagged2D;
 import jnum.data.image.overlay.RangeRestricted2D;
 import jnum.data.image.region.EllipticalSource;
 import jnum.data.image.region.GaussianSource;
 import jnum.data.image.region.SourceCatalog;
-import jnum.fits.FitsToolkit;
 import jnum.math.Coordinate2D;
 import jnum.math.Range;
 import jnum.parallel.ParallelPointOp;
 import jnum.parallel.ParallelTask;
 import nom.tam.fits.Fits;
-import nom.tam.fits.FitsException;
-import nom.tam.fits.Header;
 
 
 
@@ -71,7 +69,8 @@ public class AstroMap extends AstroData2D<Observation2D> {
         super(instrument);
         createMap();
     }
-
+    
+  
     @Override
     public void setInstrument(Instrument<?> instrument) {
         super.setInstrument(instrument);
@@ -187,9 +186,8 @@ public class AstroMap extends AstroData2D<Observation2D> {
         // TODO Apply mask to data either via flag.inside or flag.outside + mask file.
 
 
-
         if(hasSourceOption("inject")) {
-            try { injectSource(sourceOption("inject").getPath()); }
+            try { injectSourceMap(sourceOption("inject").getPath()); }
             catch(Exception e) { 
                 warning("Cannot read injection map. Check the file name and path."); 
                 if(CRUSH.debug) CRUSH.trace(e);
@@ -281,7 +279,7 @@ public class AstroMap extends AstroData2D<Observation2D> {
         //for(int i=0; i<map.sizeX(); i++) Arrays.fill(base[i], 0.0);
     }
 
-    public void injectSource(String fileName) throws Exception {
+    public void injectSourceMap(String fileName) throws Exception {
         info("Injecting source structure.");
 
         Fits fits = new Fits(new File(fileName));
@@ -315,29 +313,7 @@ public class AstroMap extends AstroData2D<Observation2D> {
 
 
 
-    // 3 double maps (signal, weight, integrationTime), one int (flag)
-    // 3 doubles:   24
-    // 1 int:        4
-    @Override
-    public int getPixelFootprint() { return 32; }
-
-    @Override
-    public long baseFootprint(int pixels) { return 8L * pixels; }
-
-    @Override
-    public void setSize(int sizeX, int sizeY) {
-        map.setSize(sizeX, sizeY);
-    }
-
-    @Override
-    public int sizeX() { return map.sizeX(); }
-
-    @Override
-    public int sizeY() { return map.sizeY(); }
-
- 
    
-
     @Override
     public void postprocess(Scan<?,?> scan) {
         super.postprocess(scan);
@@ -427,6 +403,16 @@ public class AstroMap extends AstroData2D<Observation2D> {
        
     }
 
+    
+
+    public void mergeMask(final Flagged2D other) {
+        map.loop(new ParallelPointOp.Simple<Index2D>() {
+            @Override
+            public void process(Index2D index) {
+                if(other.isFlagged(index, FLAG_MASK)) map.flag(index, FLAG_MASK);
+            }       
+        });
+    }
   
   
     public final boolean isMasked(final int i, final int j) { 
@@ -437,22 +423,7 @@ public class AstroMap extends AstroData2D<Observation2D> {
         return isMasked(index.i(), index.j());
     }
 
-    @Override
-    public void setBase() { 
-        base.paste(map, false);
-    }
-
-    @Override
-    public void resetProcessing() {
-        super.resetProcessing();
-        map.resetProcessing();
-    }
-    
-    @Override
-    public void clearContent() {
-        map.clear();
-    }
-
+   
   
     @Override
     protected void addPoint(final Index2D index, final Channel channel, final Frame exposure, final double G, final double dt) {	
@@ -620,24 +591,7 @@ public class AstroMap extends AstroData2D<Observation2D> {
        
     }
 
-    @Override
-    public double covariantPoints() {
-        return map.getPointsPerSmoothingBeam();		
-    }
-
-    @Override
-    public int countPoints() {
-        return map.countPoints();
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return map.countPoints() == 0;
-    }
-
-   
-    @Override
-    public Map2D getMap2D() { return map; }
+ 
 
     @Override
     public void processFinal() {
@@ -655,24 +609,65 @@ public class AstroMap extends AstroData2D<Observation2D> {
     }
 
     
+ 
+    
+    // 3 double maps (signal, weight, integrationTime), one int (flag)
+    // 3 doubles:   24
+    // 1 int:        4
     @Override
-    public void writeFits(String fileName) throws FitsException, IOException {
-        Fits fits = map.createFits(Float.class); 
-        map.getProperties().setFileName(fileName);
-        
-        int nHDU = fits.getNumberOfHDUs();
-        for(int i=0; i<nHDU; i++) {
-            Header header = fits.getHDU(i).getHeader();
-            editHeader(header);
-        }   
-        
-        addScanHDUsTo(fits);
-        
-        FitsToolkit.write(fits, fileName);
-        fits.close();
+    public int getPixelFootprint() { return 32; }
+
+    @Override
+    public long baseFootprint(int pixels) { return 8L * pixels; }
+
+    @Override
+    public void setSize(int sizeX, int sizeY) {
+        map.setSize(sizeX, sizeY);
+    }
+
+    @Override
+    public int sizeX() { return map.sizeX(); }
+
+    @Override
+    public int sizeY() { return map.sizeY(); }
+
+ 
+    @Override
+    public void setBase() { 
+        base.paste(map, false);
+    }
+
+    @Override
+    public void resetProcessing() {
+        super.resetProcessing();
+        map.resetProcessing();
     }
     
- 
+    @Override
+    public void clearContent() {
+        map.clear();
+    }
+
+    @Override
+    public double covariantPoints() {
+        return map.getPointsPerSmoothingBeam();     
+    }
+
+    @Override
+    public int countPoints() {
+        return map.countPoints();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return map.countPoints() == 0;
+    }
+
+   
+    @Override
+    public Map2D getMap2D() { return map; }
+
+
 
 
     @Override
@@ -784,9 +779,6 @@ public class AstroMap extends AstroData2D<Observation2D> {
     public void memCorrect(double lambda) {
         map.memCorrect(null, lambda);
     }
-
-
-
 
   
 }

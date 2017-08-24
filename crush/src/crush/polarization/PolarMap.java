@@ -168,11 +168,11 @@ public class PolarMap extends SourceModel {
 		if(usePolarization()) {
 			addProcessBrief("[Q] ");
 			Q.process();
-			N.addMask(Q.map); // Add the flagging data from Q
+			N.mergeMask(Q.map); // Add the flagging data from Q
 			
 			addProcessBrief("[U] ");
 			U.process();
-			N.addMask(U.map); // Add the flagging data from U
+			N.mergeMask(U.map); // Add the flagging data from U
 		}
 	}
 

@@ -25,6 +25,7 @@
 package crush.sourcemodel;
 
 import java.io.File;
+import java.io.IOException;
 
 import crush.CRUSH;
 import crush.Instrument;
@@ -33,7 +34,11 @@ import jnum.Configurator;
 import jnum.LockedException;
 import jnum.Util;
 import jnum.data.Data;
+import jnum.fits.FitsToolkit;
 import jnum.math.Range;
+import nom.tam.fits.Fits;
+import nom.tam.fits.FitsException;
+import nom.tam.fits.Header;
 
 public abstract class AstroData2D<DataType extends Data<?,?,?>> extends AstroModel2D {
 
@@ -45,6 +50,8 @@ public abstract class AstroData2D<DataType extends Data<?,?,?>> extends AstroMod
     public AstroData2D(Instrument<?> instrument) {
         super(instrument);
     }
+    
+    
 
     public abstract DataType getData();
     
@@ -254,10 +261,24 @@ public abstract class AstroData2D<DataType extends Data<?,?,?>> extends AstroMod
         //System.gc();
     }
 
-  
-    
-    
+    @Override
+    public void writeFits(String fileName) throws FitsException, IOException {
+        Fits fits = getData().createFits(Float.class); 
+          
+        int nHDU = fits.getNumberOfHDUs();
+        for(int i=0; i<nHDU; i++) {
+            Header header = fits.getHDU(i).getHeader();
+            editHeader(header);
+        }   
+        
+        addScanHDUsTo(fits);
+        
+        FitsToolkit.write(fits, fileName);
+        fits.close();
+    }
 
+
+    
     
     public static long FLAG_MASK = 1L<<16;
 
