@@ -308,7 +308,7 @@ implements TableFormatter.Entries, BasicMessaging {
             Vector2D pos2 = pixels.get(j).getPosition();
             if(pos2 == null) return;
 
-            if(temp == null) temp = (Vector2D) pos1.copy();
+            if(temp == null) temp = pos1.copy();
             else temp.copy(pos1);
 
             pos1.copy(pos2);
@@ -336,7 +336,7 @@ implements TableFormatter.Entries, BasicMessaging {
             if(hasOption("jansky.inverse")) jansky = 1.0 / jansky;
             return jansky / getDataUnit().value();
         }
-        else return 1.0; // Safety pin...
+        return 1.0; // Safety pin...
     }
 
 
@@ -1276,7 +1276,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         if(sumw == 0.0) {
             if(mappingChannels > 0) throw new IllegalStateException("FLAG");
-            else throw new IllegalStateException("----");
+            throw new IllegalStateException("----");
         }
 
         census();

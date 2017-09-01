@@ -78,7 +78,7 @@ public abstract class AbstractGismo extends Camera<GismoPixel> implements Ground
 		AbstractGismo copy = (AbstractGismo) super.copy();
 		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
 		if(nasmythOffset != null) copy.nasmythOffset = (Vector2D) nasmythOffset.clone();
-		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
+		if(pixelSize != null) copy.pixelSize = pixelSize.copy();
 		
 		copy.detectorBias = Util.copyOf(detectorBias);
 		copy.secondStageBias = Util.copyOf(secondStageBias);

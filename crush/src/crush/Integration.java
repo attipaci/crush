@@ -145,7 +145,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     @Override
     public int compareTo(Integration<InstrumentType, FrameType> other) {
         if(integrationNo == other.integrationNo) return 0;
-        else return integrationNo < other.integrationNo ? -1 : 1;
+        return integrationNo < other.integrationNo ? -1 : 1;
     }
 
     public void reindex() {
@@ -2919,7 +2919,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             channelOffset[channel.index] = (float) channel.offset;
             channelWeight[channel.index] = (float) channel.weight;
             channelFlags[channel.index] = channel.getFlags();
-            if(whitener != null) filterProfile[channel.index] = whitener.getValidProfile(channel);
+            if(whitener != null) if(filterProfile != null) filterProfile[channel.index] = whitener.getValidProfile(channel);
             channelSpikes[channel.index] = (short) channel.spikes;
         }
 

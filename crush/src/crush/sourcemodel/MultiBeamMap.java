@@ -277,7 +277,7 @@ public class MultiBeamMap extends AstroMap {
 	private MultiBeamMap getDualBeam(DualBeam scan) {
 	
 		
-		final MultiBeamMap dual = (MultiBeamMap) getWorkingCopy(true);
+		final MultiBeamMap dual = getWorkingCopy(true);
 		dual.standalone();
 		
 		final double l = 0.5 * scan.getChopSeparation();
@@ -382,6 +382,12 @@ public class MultiBeamMap extends AstroMap {
 		super.noParallel();
 		transformer.noParallel();
 	}
+	
+	@Override
+    public void setParallel(int threads) {
+        super.setParallel(threads);
+        transformer.setParallel(threads);
+    }
 
 	@Override
 	protected void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain) {

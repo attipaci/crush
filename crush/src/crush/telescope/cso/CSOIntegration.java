@@ -206,7 +206,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 			setTau();
 			return;
 		}
-		else throw e;	
+		throw e;	
 		
 	}
 	

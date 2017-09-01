@@ -51,7 +51,7 @@ public class PArtemis extends APEXCamera<PArtemisPixel> implements GridIndexed {
 	@Override
 	public Instrument<PArtemisPixel> copy() {
 		PArtemis copy = (PArtemis) super.copy();
-		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
+		if(pixelSize != null) copy.pixelSize = pixelSize.copy();
 		return copy;
 	}
 	
@@ -125,7 +125,7 @@ public class PArtemis extends APEXCamera<PArtemisPixel> implements GridIndexed {
 
 	@Override
 	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-		Camera.addLocalFixedIndices((GridIndexed) this, fixedIndex, radius, toIndex);
+		Camera.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
 	}
 
 	@Override

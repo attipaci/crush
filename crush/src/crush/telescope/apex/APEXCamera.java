@@ -223,7 +223,7 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 	@Override
 	public SourceModel getSourceModelInstance() {
 		if(hasOption("chopped")) return new APEXChoppedPhotometry(this);
-		else return super.getSourceModelInstance();
+		return super.getSourceModelInstance();
 	}
 	
 	public ArrayList<APEXContinuumPixel> getNeighbours(APEXContinuumPixel pixel, double radius) {

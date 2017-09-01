@@ -246,6 +246,6 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	@Override
 	public Object getTableEntry(String name) {
 		if(name.equals("rmsHe3")) return rmsHe3 / Unit.mK;
-		else return super.getTableEntry(name);
+		return super.getTableEntry(name);
 	}
 }

@@ -72,7 +72,7 @@ public class Sharc2 extends CSOCamera<Sharc2Pixel> implements GridIndexed {
 		if(isHiGain != null) copy.isHiGain = Util.copyOf(isHiGain);
 		
 		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
-		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
+		if(pixelSize != null) copy.pixelSize = pixelSize.copy();
 		
 		return copy;
 	}

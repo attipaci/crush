@@ -26,10 +26,10 @@ package crush;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import crush.polarization.StokesResponse;
 import jnum.Flagging;
 import jnum.astro.AstroProjector;
 import jnum.astro.EquatorialCoordinates;
-import jnum.astro.Stokes;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.util.*;
@@ -86,7 +86,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		Frame copy = (Frame) clone();
 		
 		if(equatorial != null) copy.equatorial = (EquatorialCoordinates) equatorial.copy();
-		if(chopperPosition != null) copy.chopperPosition = (Vector2D) chopperPosition.copy();
+		if(chopperPosition != null) copy.chopperPosition = chopperPosition.copy();
 		
 		if(data != null) {
 			copy.data = new float[data.length];
@@ -181,7 +181,10 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 
 	public double getChannelFrequency(Channel channel) { return channel.getFrequency(); }
 
-	public void getChannelStokesResponse(Channel channel, Stokes toStokes) {
+	/**
+     * @param channel  
+     */
+	public void getChannelStokesResponse(Channel channel, StokesResponse toStokes) {
 	    toStokes.setNQUV(1.0, 0.0, 0.0, 0.0);
 	}
 	
@@ -217,7 +220,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	public float getSourceGain(final int mode) throws IllegalArgumentException {
 	    if(mode == TOTAL_POWER) return sign * getTransmission();
-        else throw new IllegalArgumentException(getClass().getSimpleName() + " does not define signal mode " + mode);
+        throw new IllegalArgumentException(getClass().getSimpleName() + " does not define signal mode " + mode);
 	}
 	
 	public boolean validate() {

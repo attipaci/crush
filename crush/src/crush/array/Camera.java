@@ -98,9 +98,9 @@ public abstract class Camera<ChannelType extends Channel> extends Instrument<Cha
 		if(hasOption("source.type")) {
 			String type = option("source.type").getValue();
 			if(type.equals("beammap")) return new BeamMap(this);
-			else return super.getSourceModelInstance();
+			return super.getSourceModelInstance();
 		}
-		else return super.getSourceModelInstance();
+		return super.getSourceModelInstance();
 	}
 	
 	@Override

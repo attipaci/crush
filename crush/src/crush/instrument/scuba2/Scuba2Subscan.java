@@ -92,7 +92,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 			setTau();
 			return;
 		}
-		else throw e;	
+		throw e;	
 		
 	}
 	

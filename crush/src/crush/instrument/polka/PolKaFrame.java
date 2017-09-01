@@ -29,7 +29,6 @@ import crush.polarization.*;
 import crush.telescope.apex.APEXScan;
 import jnum.Constant;
 import jnum.Unit;
-import jnum.astro.Stokes;
 
 public class PolKaFrame extends LabocaFrame {
 	/**
@@ -47,8 +46,9 @@ public class PolKaFrame extends LabocaFrame {
 	}
 	
 	@Override
-    public void getChannelStokesResponse(Channel channel, Stokes toStokes) {  
+    public void getChannelStokesResponse(Channel channel, StokesResponse toStokes) {  
         toStokes.setNQUV(0.5 * unpolarizedGain, 0.5 * Q, 0.5 * U, 0.0);
+        toStokes.setInverted(((PolKa) scan.instrument).analyzerPosition == PolKa.ANALYZER_H);
     }
 	
 	

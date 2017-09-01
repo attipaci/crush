@@ -58,7 +58,11 @@ public class MakoModel<PixelType extends AbstractMakoPixel> {
 		
 		int ver = Integer.parseInt(args[0]);
 		if(ver == 1) model = new MakoModel<MakoPixel>(new Mako());
-		if(ver == 2) model = new MakoModel<Mako2Pixel>(new Mako2());
+		else if(ver == 2) model = new MakoModel<Mako2Pixel>(new Mako2());
+		else {
+		    CRUSH.warning(MakoModel.class, "Unknown MAKO version number: " + ver);
+		    System.exit(1);
+		}
 		
 		try {
 			model.readRCP(args[1]);

@@ -86,9 +86,7 @@ public class APEXChoppedPhotometry extends Photometry {
 
 		subscan.instrument.getObservingChannels().new Fork<Void>() {
 			@Override
-			protected void process(APEXContinuumPixel channel) {
-				APEXContinuumPixel pixel = (APEXContinuumPixel) channel;
-				
+			protected void process(APEXContinuumPixel pixel) {	
 				WeightedPoint point = null;
 
 				ArrayList<APEXContinuumPixel> neighbours = subscan.instrument.getNeighbours(pixel, radius * pixel.getResolution());

@@ -148,7 +148,7 @@ public class DRPMessenger extends Thread {
 	private synchronized void drain(int timeoutMillis) throws InterruptedException {
 	    while(--timeoutMillis >= 0) {
             if(queue.isEmpty()) return;
-            else wait(1);
+            wait(1);
         }
 	}
 	

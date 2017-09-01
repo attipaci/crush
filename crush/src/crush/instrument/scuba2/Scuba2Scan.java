@@ -110,7 +110,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 		
 		BasicHDU<?> mainHDU = files.get(0).getHDUs()[0];
 		parseScanPrimaryHDU(mainHDU);
-		((Scuba2) instrument).addPixelsFor(hasSubarray);
+		instrument.addPixelsFor(hasSubarray);
 		instrument.parseScanPrimaryHDU(mainHDU);
 		instrument.validate(this);	
 		
@@ -362,7 +362,7 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			trackingClass = null;
 			return;
 		}
-		else isTracking = true;
+		isTracking = true;
 		
 		if(trackingSystem.equals("AZEL")) {
 			trackingClass = HorizontalCoordinates.class;

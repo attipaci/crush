@@ -26,6 +26,7 @@ package crush.sourcemodel;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
 
 import crush.CRUSH;
 import crush.Instrument;
@@ -34,13 +35,14 @@ import jnum.Configurator;
 import jnum.LockedException;
 import jnum.Util;
 import jnum.data.Data;
+import jnum.data.Observations;
 import jnum.fits.FitsToolkit;
 import jnum.math.Range;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 
-public abstract class AstroData2D<DataType extends Data<?,?,?>> extends AstroModel2D {
+public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? extends Data<?,?,?>>> extends AstroModel2D {
 
     /**
      * 
@@ -54,18 +56,8 @@ public abstract class AstroData2D<DataType extends Data<?,?,?>> extends AstroMod
     
 
     public abstract DataType getData();
+   
     
-    public abstract Data<?,?,?> getWeights();
-    
-    public abstract Data<?,?,?> getNoise();
-    
-    public abstract Data<?,?,?> getSignificance();
-    
-    public abstract Data<?,?,?> getExposures();
-    
-    
-
-    public abstract void endAccumulation();
 
     public abstract void addBase();
 
@@ -82,13 +74,51 @@ public abstract class AstroData2D<DataType extends Data<?,?,?>> extends AstroMod
     public abstract void updateMask(double blankingLevel, int minNeighbors);
 
     
+    
+    public final Data<?,?,?> getWeights() { return getData().getWeights(); }
+    
+    public final Data<?,?,?> getNoise() { return getData().getNoise(); }
+    
+    public final Data<?,?,?> getSignificance() { return getData().getSignificance(); }
+    
+    public final Data<?,?,?> getExposures() { return getData().getExposures(); }
+
+    public final void endAccumulation() { getData().endAccumulation(); }
    
+    @Override
+    public final ExecutorService getExecutor() { return getData().getExecutor(); }
+    
+    @Override
+    public final void setExecutor(ExecutorService e) { getData().setExecutor(e); }
+
+    @Override
+    public final int getParallel() { return getData().getParallel(); }
+    
+    @Override
+    public void noParallel() { getData().noParallel(); }
+
+    @Override
+    public void setParallel(int threads) { getData().setParallel(threads); }
+   
+   
+    @Override
+    public void clearContent() { getData().clear(); }
+
+    
+    @Override
+    public final boolean isEmpty() { return getData().countPoints() == 0; }
+
+    @Override
+    public final int countPoints() { return getData().countPoints(); }
+
+   
+    
     
     public final double getChi2(boolean isRobust) {
         return isRobust ? getSignificance().getRobustVariance() : getSignificance().getVariance();
     }
-
-  
+    
+   
 
     public void smooth() {
         smoothTo(getSmoothing());

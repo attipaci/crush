@@ -217,7 +217,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 	@Override
 	public Object getTableEntry(String name) {
 		if(name.equals("Tres")) return Tsky / Unit.K;
-		else return super.getTableEntry(name);
+		return super.getTableEntry(name);
 	}
 	
 	@Override

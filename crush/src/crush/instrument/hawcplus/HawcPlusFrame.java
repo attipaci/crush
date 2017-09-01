@@ -153,7 +153,7 @@ public class HawcPlusFrame extends SofiaFrame {
                 horizontalOffset.add(chopperPosition);
                 horizontal.addOffset(chopperPosition);
 
-                Vector2D offset = (Vector2D) chopperPosition.copy();
+                Vector2D offset = chopperPosition.copy();
                 
                 horizontalToNativeEquatorial(offset);
                 
