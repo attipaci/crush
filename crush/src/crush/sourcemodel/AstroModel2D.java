@@ -143,7 +143,7 @@ public abstract class AstroModel2D extends SourceModel {
 
     @Override
     public final SphericalCoordinates getReference() {
-        return (SphericalCoordinates) getGrid().getReference();
+        return getGrid().getReference();
     }
 
    
@@ -172,15 +172,15 @@ public abstract class AstroModel2D extends SourceModel {
         if(hasOption("name")) {
             String fileName = option("name").getPath();
             if(fileName.toLowerCase().endsWith(".fits")) return fileName.substring(0, fileName.length()-5);
-            else return fileName;
+            return fileName;
         }
-        else return getDefaultCoreName();
+        return getDefaultCoreName();
     }
 
   
     
     public AstroSystem astroSystem() {
-        return new AstroSystem((Class<? extends SphericalCoordinates>) getGrid().getReference().getClass());
+        return new AstroSystem(getGrid().getReference().getClass());
     }
 
  
@@ -534,7 +534,7 @@ public abstract class AstroModel2D extends SourceModel {
         Runtime runtime = Runtime.getRuntime();
         long max = runtime.maxMemory();
         long used = runtime.totalMemory() - runtime.freeMemory();
-        long required = (long) (getPixelFootprint() * sizeX * sizeY);
+        long required = getPixelFootprint() * sizeX * sizeY;
         if(used + required > max) createMemoryError(sizeX, sizeY); 
     }
 

@@ -147,7 +147,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	}
 		
 	class Sharc2Reader extends HDUReader {	
-		private boolean hasExtraTimingInfo, isDoubleUT;
+		private boolean isDoubleUT;
 		private int offset;
 
 		private float[] data, fUT, AZ, EL, AZO, ELO, AZE, ELE, RAO, DECO, LST, PA, chop;

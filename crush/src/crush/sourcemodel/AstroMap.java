@@ -26,7 +26,6 @@ package crush.sourcemodel;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 
 import crush.*;
 import jnum.Unit;
@@ -608,7 +607,15 @@ public class AstroMap extends AstroData2D<Observation2D> {
         }
     }
 
-    
+
+    @Override
+    public Object getTableEntry(String name) {  
+        if(name.equals("system")) return astroSystem().getID();
+        if(name.startsWith("map.")) return map.getTableEntry(name.substring(4));
+        return super.getTableEntry(name);
+    }
+
+
  
     
     // 3 double maps (signal, weight, integrationTime), one int (flag)
@@ -643,31 +650,15 @@ public class AstroMap extends AstroData2D<Observation2D> {
         map.resetProcessing();
     }
     
-    @Override
-    public void clearContent() {
-        map.clear();
-    }
 
     @Override
     public double covariantPoints() {
         return map.getPointsPerSmoothingBeam();     
     }
 
-    @Override
-    public int countPoints() {
-        return map.countPoints();
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return map.countPoints() == 0;
-    }
-
    
     @Override
     public Map2D getMap2D() { return map; }
-
-
 
 
     @Override
@@ -680,68 +671,12 @@ public class AstroMap extends AstroData2D<Observation2D> {
         return map.getUnit();
     }
     
-    @Override
-    public ExecutorService getExecutor() {
-        return map.getExecutor();
-    }
-    
-    @Override
-    public void setExecutor(ExecutorService e) {
-        map.setExecutor(e);
-    }
-
-    @Override
-    public void noParallel() {
-        map.noParallel();
-    }
-
-    @Override
-    public void setParallel(int threads) {
-        map.setParallel(threads);
-    }
-
-    @Override
-    public int getParallel() {
-        return map.getParallel();
-    }
-
-    @Override
-    public Object getTableEntry(String name) {	
-        if(name.equals("system")) return astroSystem().getID();
-        if(name.startsWith("map.")) return map.getTableEntry(name.substring(4));
-        else return super.getTableEntry(name);
-    }
-
-
+  
     @Override
     public Observation2D getData() {
         return map;
     }
     
-    @Override
-    public Data<?, ?, ?> getExposures() {
-        return map.getExposures();
-    }
-
-    @Override
-    public Data<?, ?, ?> getWeights() {
-        return map.getWeights();
-    }
-
-    @Override
-    public Data<?, ?, ?> getNoise() {
-        return map.getNoise();
-    }
-
-    @Override
-    public Data<?, ?, ?> getSignificance() {
-        return map.getSignificance();
-    }
-
-    @Override
-    public void endAccumulation() {
-        map.endAccumulation();
-    }
 
     @Override
     public void addBase() {

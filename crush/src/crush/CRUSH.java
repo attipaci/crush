@@ -27,7 +27,6 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,7 +60,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.40-b1";
-    private static String revision = "devel.8";
+    private static String revision = "devel.9";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -423,8 +422,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
         final ExecutorService oldSourceExecutor = executor;
      
         // Replace the executors first...
-        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
-        sourceExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
+        executor = Executors.newFixedThreadPool(maxThreads);
+        sourceExecutor = Executors.newFixedThreadPool(maxThreads);
         
         if(source != null) source.setExecutor(sourceExecutor);
         

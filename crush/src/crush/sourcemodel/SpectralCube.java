@@ -25,7 +25,6 @@ package crush.sourcemodel;
 
 
 import java.util.Collection;
-import java.util.concurrent.ExecutorService;
 
 import crush.CRUSH;
 import crush.Channel;
@@ -37,7 +36,6 @@ import crush.Scan;
 import crush.SourceModel;
 import jnum.Constant;
 import jnum.Unit;
-import jnum.data.Data;
 import jnum.data.Validating;
 import jnum.data.cube.Index3D;
 import jnum.data.cube.overlay.RangeRestricted3D;
@@ -278,35 +276,16 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
     }
 
     @Override
-    protected void clearContent() {
-        cube.clear();
-    }
-
-    @Override
     public void addModel(SourceModel model, double weight) {
         cube.accumulate(((SpectralCube) model).cube, weight);
     }
-
-  
 
     @Override
     public void setBase() {
         base.paste(cube, false);
     }
 
-   
-    @Override
-    public boolean isEmpty() {
-        return cube.countPoints() == 0;
-    }
-
-
-    @Override
-    public int countPoints() {
-        return cube.countPoints();
-    }
-
-   
+  
     @Override
     public String getSourceName() {
         return cube.getPlane(0).getProperties().getObjectName();
@@ -317,35 +296,11 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
         return cube.getUnit();
     }
     
-    @Override
-    public ExecutorService getExecutor() {
-        return cube.getExecutor();
-    }
-    
-    @Override
-    public void setExecutor(ExecutorService e) {
-        cube.setExecutor(e);
-    }
-
-    @Override
-    public void noParallel() {
-        cube.noParallel();
-    }
-
-    @Override
-    public void setParallel(int threads) {
-        cube.setParallel(threads);
-    }
-
-    @Override
-    public int getParallel() {
-        return cube.getParallel();
-    }
 
     @Override
     public Object getTableEntry(String name) {  
         if(name.startsWith("map.")) return cube.getPlane(0).getTableEntry(name.substring(4));
-        else return super.getTableEntry(name);
+        return super.getTableEntry(name);
     }
 
     
@@ -387,33 +342,7 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
         return cube;
     }
 
-    @Override
-    public Data<?, ?, ?> getExposures() {
-        return cube.getExposures();
-    }
-
-    @Override
-    public Data<?, ?, ?> getWeights() {
-        return cube.getWeights();
-    }
-
-    @Override
-    public Data<?, ?, ?> getNoise() {
-        return cube.getNoise();
-    }
-
-    @Override
-    public Data<?, ?, ?> getSignificance() {
-        return cube.getSignificance();
-    }
-
-   
-    
-    @Override
-    public void endAccumulation() {
-        cube.endAccumulation();
-    }
-
+ 
     @Override
     public void addBase() {
         cube.add(base);

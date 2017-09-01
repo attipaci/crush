@@ -194,7 +194,7 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 	@Override
 	protected Vector2D getDefaultArrayPointingCenter() {
 		if(hasOption("pointing.mode")) return getDefaultArrayPointingCenter(option("pointing.mode").getValue());
-		else return getDefaultArrayPointingCenter("350");
+		return getDefaultArrayPointingCenter("350");
 	}
 	
 	private Vector2D getDefaultArrayPointingCenter(String mode) {
@@ -257,7 +257,7 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 	public Object getTableEntry(String name) {
 		if(name.equals("df350")) return meanResonatorShift350;
 		if(name.equals("df850")) return meanResonatorShift850;
-		else return super.getTableEntry(name);
+		return super.getTableEntry(name);
 	}
 
 	

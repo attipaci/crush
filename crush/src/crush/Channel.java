@@ -109,7 +109,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	@Override
 	public int compareTo(Channel channel) {
 		if(channel.fixedIndex == fixedIndex) return 0;
-		else return fixedIndex < channel.fixedIndex ? -1 : 1;
+		return fixedIndex < channel.fixedIndex ? -1 : 1;
 	}
 	
 	@Override

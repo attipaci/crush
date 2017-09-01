@@ -460,7 +460,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		Cursor<String, HeaderCard> cursor = header.iterator();
 
 		int k=1;
-		for(String name : first.keySet()) {
+		if(first != null) for(String name : first.keySet()) {
 			cursor.setKey("TFORM" + k);
 			cursor.add(new HeaderCard("TTYPE" + (k++), name, "The column name"));
 		}
@@ -602,11 +602,11 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(name.startsWith("?")) {
 			name = name.substring(1).toLowerCase();
 			if(!hasOption(name)) return "---";
-			else {
-				String value = option(name).getValue();
-				if(value.length() == 0) return "<true>";
-				else return value;				
-			}
+	
+			String value = option(name).getValue();
+			if(value.length() == 0) return "<true>";
+			
+			return value;			
 		}
 		else if(name.startsWith("pnt.")) {
 			if(pointing == null) return "---";

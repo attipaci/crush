@@ -100,7 +100,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     public Instrument<HawcPlusPixel> copy() {
         HawcPlus copy = (HawcPlus) super.copy();
 
-        if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
+        if(pixelSize != null) copy.pixelSize = pixelSize.copy();
         if(hasSubarray != null) copy.hasSubarray = Arrays.copyOf(hasSubarray, hasSubarray.length);   
         if(subarrayOffset != null) copy.subarrayOffset = Arrays.copyOf(subarrayOffset, subarrayOffset.length);
         if(subarrayOrientation != null) copy.subarrayOrientation = Arrays.copyOf(subarrayOrientation, subarrayOrientation.length);

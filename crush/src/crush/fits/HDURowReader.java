@@ -44,7 +44,7 @@ public abstract class HDURowReader {
 	
 	public HDURowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException { 
 		this.hdu = hdu;
-		this.table = (BinaryTable) hdu.getData();
+		this.table = hdu.getData();
 		this.in = in;
 	}
 

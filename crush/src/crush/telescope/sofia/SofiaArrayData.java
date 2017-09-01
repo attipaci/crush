@@ -62,7 +62,7 @@ import nom.tam.util.Cursor;
              copy.subarraySize = new String[subarraySize.length];
              for(int i=subarraySize.length; --i >= 0; ) copy.subarraySize[i] = new String(subarraySize[i]);
          }
-         if(boresightIndex != null) copy.boresightIndex = (Vector2D) boresightIndex.copy();
+         if(boresightIndex != null) copy.boresightIndex = boresightIndex.copy();
          if(grid != null) copy.grid = grid.copy();	
          return copy;
      }

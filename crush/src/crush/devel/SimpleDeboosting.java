@@ -260,7 +260,7 @@ public class SimpleDeboosting {
 		//else return S < 0.5 ? dN(0.5*fluxRatio) : 0.5*(189.0+136.0) * Math.pow(S/5.0, -2.95);
 
 		// SHADES broken:
-		else return S < 0.5 ? dN(0.5*fluxRatio) : (735.0/9.0) / (Math.pow(S/9.0, 2.0) + Math.pow(S/9.0, 5.8));
+		return S < 0.5 ? dN(0.5*fluxRatio) : (735.0/9.0) / (Math.pow(S/9.0, 2.0) + Math.pow(S/9.0, 5.8));
 		
 		//return 1600*Math.pow(S/3.3, -1.0) * Math.exp(-S/3.3);		
 		//return 382.7 / (0.005 + Math.pow(S, 4.30));	

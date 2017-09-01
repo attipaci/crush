@@ -130,7 +130,7 @@ public class Sharc extends CSOCamera<SharcPixel> {
 	@Override
 	public SourceModel getSourceModelInstance() {
 		if(hasOption("deconvolve")) return new MultiBeamMap(this, SharcPixel.spacing);		
-		else return super.getSourceModelInstance();
+		return super.getSourceModelInstance();
 	}  
 	
 	

@@ -92,7 +92,7 @@ public class PolarMap extends SourceModel {
 		N.enableWeighting = true;
 		N.setID("N");
 		
-		Q = (AstroMap) N.getWorkingCopy(false);
+		Q = N.getWorkingCopy(false);
 		Q.signalMode = PolarModulation.Q;
 		Q.standalone();
 		Q.enableLevel = false;
@@ -100,7 +100,7 @@ public class PolarMap extends SourceModel {
 		Q.enableWeighting = true;
 		Q.setID("Q");
 					
-		U = (AstroMap) Q.getWorkingCopy(false);
+		U = Q.getWorkingCopy(false);
 		U.signalMode = PolarModulation.U;
 		U.standalone();		
 		U.setID("U");
@@ -110,9 +110,9 @@ public class PolarMap extends SourceModel {
 	@Override
 	public SourceModel getWorkingCopy(boolean withContents) {
 		PolarMap copy = (PolarMap) super.getWorkingCopy(withContents);
-		copy.N = (AstroMap) N.getWorkingCopy(withContents);
-		copy.Q = (AstroMap) Q.getWorkingCopy(withContents);
-		copy.U = (AstroMap) U.getWorkingCopy(withContents);
+		copy.N = N.getWorkingCopy(withContents);
+		copy.Q = Q.getWorkingCopy(withContents);
+		copy.U = U.getWorkingCopy(withContents);
 		return copy;
 	}
 	
@@ -217,7 +217,7 @@ public class PolarMap extends SourceModel {
 	
 	// Angles are measured East of North... 
 	public AstroMap getAngles(AstroMap P, AstroMap F) {
-		final AstroMap A = (AstroMap) N.getWorkingCopy(false);
+		final AstroMap A = N.getWorkingCopy(false);
 		
 		final Observation2D q = Q.map;
 		final Observation2D u = U.map;
@@ -233,7 +233,7 @@ public class PolarMap extends SourceModel {
 				    a.flag(i, j);
 				    return;
 				}
-				else a.unflag(i, j);
+				a.unflag(i, j);
 				
 				final double p0 = p.get(i, j).doubleValue();
 				
@@ -267,7 +267,7 @@ public class PolarMap extends SourceModel {
 	
 	
 	public AstroMap getP() {
-		final AstroMap P = (AstroMap) N.getWorkingCopy(false);
+		final AstroMap P = N.getWorkingCopy(false);
 		
 		final Observation2D q = Q.map;
 		final Observation2D u = U.map;
@@ -313,7 +313,7 @@ public class PolarMap extends SourceModel {
 	}	
 	
 	public AstroMap getI(AstroMap P) {	
-		final AstroMap I = (AstroMap) N.getWorkingCopy(false);
+		final AstroMap I = N.getWorkingCopy(false);
 		final Observation2D n = N.map;
 		final Observation2D p = P.map;
 		final Observation2D t = I.map;
@@ -340,7 +340,7 @@ public class PolarMap extends SourceModel {
 	
 
 	public AstroMap getPolarFraction(AstroMap P, AstroMap I, double accuracy) {	
-		final AstroMap F = (AstroMap) P.getWorkingCopy(false);
+		final AstroMap F = P.getWorkingCopy(false);
 		final Observation2D p = P.map;
 		final Observation2D t = I.map;
 		final Observation2D f = F.map;
@@ -497,8 +497,5 @@ public class PolarMap extends SourceModel {
 	public SphericalCoordinates getReference() {
 		return N.getReference();
 	}
-
-	
-
 	
 }

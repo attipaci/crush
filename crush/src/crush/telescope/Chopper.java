@@ -54,7 +54,7 @@ public class Chopper implements Serializable, Cloneable, Copiable<Chopper> {
 	public Chopper copy() {
 		Chopper copy = (Chopper) clone();
 		copy.phases = null;
-		copy.offset = (Vector2D) offset.copy();
+		copy.offset = offset.copy();
 		return copy;
 	}
 	

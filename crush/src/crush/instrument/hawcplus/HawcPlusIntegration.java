@@ -184,7 +184,6 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             return new Reader() {   
                 private AstroTime timeStamp;
                 private EquatorialCoordinates apparent;
-                private boolean isConfigured = false;
                 private CoordinateEpoch epoch;
 
                 @Override
@@ -198,7 +197,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
                 @Override
                 public void processRow(int i, Object[] row) {                    
-                    HawcPlus hawc = (HawcPlus) scan.instrument;
+                    HawcPlus hawc = scan.instrument;
 
                     // Create the frame object only if it cleared the above hurdles...
                     final HawcPlusFrame frame = new HawcPlusFrame(hawcPlusScan);
@@ -400,6 +399,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         info("---> " + (jumpPixels > 0 ? "found jump(s) in " + jumpPixels + " pixels." : "All good!"));
     }
 
+    @SuppressWarnings("cast")
     private void flagZeroedChannels() {
         info("Flagging zeroed channels... ");
         

@@ -60,7 +60,7 @@ public class BeamMap extends AstroModel2D {
 		BeamMap copy = (BeamMap) super.getWorkingCopy(withContents);
 		copy.pixelMap = new AstroMap[pixelMap.length];
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null)
-			copy.pixelMap[p] = (AstroMap) pixelMap[p].getWorkingCopy(withContents);	
+			copy.pixelMap[p] = pixelMap[p].getWorkingCopy(withContents);	
 		return copy;
 	}
 	
@@ -112,7 +112,7 @@ public class BeamMap extends AstroModel2D {
 		BeamMap other = (BeamMap) model;
 		
 		for(int p=0; p<pixelMap.length; p++) if(other.pixelMap[p] != null) {
-			if(pixelMap[p] == null) pixelMap[p] = (AstroMap) other.pixelMap[p].getWorkingCopy(false);
+			if(pixelMap[p] == null) pixelMap[p] = other.pixelMap[p].getWorkingCopy(false);
 			pixelMap[p].add(other.pixelMap[p], weight);
 		}
 	}
@@ -129,7 +129,7 @@ public class BeamMap extends AstroModel2D {
 		AstroMap map = pixelMap[i];
 		
 		if(map == null) {	
-			map = (AstroMap) template.getWorkingCopy(false);
+			map = template.getWorkingCopy(false);
 			map.setID(Integer.toString(i));
 			map.standalone();
 			pixelMap[i] = map;

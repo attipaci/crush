@@ -64,7 +64,7 @@ public class BracketedValues implements Cloneable, Copiable<BracketedValues> {
 	    String uName = u == null ? "" : " " + u.name();
 	    
 	    if(nf != null) return nf.format(start / uValue) + uName + " --> " + nf.format(end / uValue) + uName;
-	    else return start + uName + " --> " + end + uName;
+	    return start + uName + " --> " + end + uName;
 	}
 
 	

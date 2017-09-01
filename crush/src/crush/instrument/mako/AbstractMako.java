@@ -73,8 +73,8 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 	public Instrument<MakoPixelType> copy() {
 		AbstractMako<MakoPixelType> copy = (AbstractMako<MakoPixelType>) super.copy();
 		
-		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
-		if(pixelSize != null) copy.pixelSize = (Vector2D) pixelSize.copy();
+		if(arrayPointingCenter != null) copy.arrayPointingCenter = arrayPointingCenter.copy();
+		if(pixelSize != null) copy.pixelSize = pixelSize.copy();
 		
 		return copy;
 	}

@@ -52,7 +52,7 @@ public abstract class HorizontalFrame extends Frame implements GroundBased {
 		HorizontalFrame copy = (HorizontalFrame) super.copy(withContents);
 		
 		if(horizontal != null) copy.horizontal = (HorizontalCoordinates) horizontal.copy();
-		if(horizontalOffset != null) copy.horizontalOffset = (Vector2D) horizontalOffset.copy();
+		if(horizontalOffset != null) copy.horizontalOffset = horizontalOffset.copy();
 		
 		return copy;
 	}

@@ -77,7 +77,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
     public Filter getFilter(String name) {
         name = name.toLowerCase();
         if(name.equals("hwp")) return new HWPFilter(this, filter.getTempData());
-        else return super.getFilter(name);
+        return super.getFilter(name);
     }
 
 
@@ -296,7 +296,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
     @Override
     public Vector2D getTauCoefficients(String id) {
         if(id.equals(instrument.getName())) return getTauCoefficients("laboca");
-        else return super.getTauCoefficients(id);
+        return super.getTauCoefficients(id);
     }
 
     public ArrayList<Double> getMJDCrossings() {

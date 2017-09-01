@@ -521,7 +521,8 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 		
 		// Sync to data and calculate dependences...
 		integration.new Fork<Void>() {
-			@Override 
+			@SuppressWarnings("null")
+            @Override 
 			protected void process(Frame exposure){
 				for(int k=nc; --k >=0; ) {
 				    boolean calcDependents = sumwC2 == null ? false : sumwC2[k] > 0.0F;

@@ -208,16 +208,16 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 					throw new FileNotFoundException(message);
 				}
 			}
-			else {
-				String message = "Cannot find scan " + scanDescriptor;
 
-				if(!hasOption("object")) 
-					message += "\n    * Specify 'object' to help locate the scan.";
-				if(!hasOption("date")) 
-					message += "\n    * Specify 'date' for unique IRAM scan ID.";
-			
-				throw new FileNotFoundException(message);
-			}
+			String message = "Cannot find scan " + scanDescriptor;
+
+			if(!hasOption("object")) 
+			    message += "\n    * Specify 'object' to help locate the scan.";
+			if(!hasOption("date")) 
+			    message += "\n    * Specify 'date' for unique IRAM scan ID.";
+
+			throw new FileNotFoundException(message);
+
 		}
 		// Otherwise, just read as file names...
 		catch(NumberFormatException e) {

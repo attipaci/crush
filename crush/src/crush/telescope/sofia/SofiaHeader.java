@@ -91,7 +91,7 @@ public class SofiaHeader {
     
     public static float getHeaderValue(float value) {
         if(Float.isNaN(value)) return UNKNOWN_FLOAT_VALUE;
-        return (float) value;
+        return value;
     }
     
     public String getString(String key, String defaultValue) {

@@ -462,7 +462,8 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	}	
 	
 	
-	void levelSAE() { 
+	@SuppressWarnings("cast")
+    void levelSAE() { 
 	    // TODO
         // This cast, while seemingly unnecessary, is needed to avoid VerifyError when compiling with javac.
 	    // Alas, Eclipse compiles is just fine without the explicit cast, as expected...
