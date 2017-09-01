@@ -44,16 +44,16 @@ public abstract class ColorArrangement<ChannelType extends Channel> implements S
 		this.instrument = instrument;
 	}
 	
-	@Override
-	public Object clone() {
-		try { return super.clone(); }
+	@SuppressWarnings("unchecked")
+    @Override
+	public ColorArrangement<ChannelType> clone() {
+		try { return (ColorArrangement<ChannelType>) super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
 	@Override
-	@SuppressWarnings("unchecked")
 	public ColorArrangement<ChannelType> copy()  {
-		return (ColorArrangement<ChannelType>) clone();
+		return clone();
 	}
 	
 	public boolean hasOption(String key) {

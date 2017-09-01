@@ -77,13 +77,13 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public final int size() { return data.length; }
 	
 	@Override
-	public Object clone() {
-		try { return super.clone(); }
+	public Frame clone() {
+		try { return (Frame) super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
 	public Frame copy(boolean withContents) {
-		Frame copy = (Frame) clone();
+		Frame copy = clone();
 		
 		if(equatorial != null) copy.equatorial = (EquatorialCoordinates) equatorial.copy();
 		if(chopperPosition != null) copy.chopperPosition = chopperPosition.copy();

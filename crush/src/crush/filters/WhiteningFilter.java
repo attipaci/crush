@@ -62,7 +62,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 	}
 	
 	@Override
-	public Object clone() {
+	public WhiteningFilter clone() {
 		WhiteningFilter clone = (WhiteningFilter) super.clone();
 		if(A != null) clone.A = DataPoint.createArray(A.length);
 		if(temp != null) clone.temp = DataPoint.createArray(temp.length);

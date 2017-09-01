@@ -74,8 +74,8 @@ public class InstantFocus implements Serializable, Cloneable {
 	}
 	
 	@Override
-	public Object clone() {
-		try { return super.clone(); }
+	public InstantFocus clone() {
+		try { return (InstantFocus) super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	

@@ -113,7 +113,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
     @SuppressWarnings("unchecked")
     @Override
-    public Object clone() { 
+    public Integration<InstrumentType, FrameType> clone() { 
         Integration<InstrumentType, FrameType> clone = (Integration<InstrumentType, FrameType>) super.clone();
         // TODO redo it safely, s.t. existing reduction steps copy over as well?
         clone.dependents = new Hashtable<String, Dependents>(); 

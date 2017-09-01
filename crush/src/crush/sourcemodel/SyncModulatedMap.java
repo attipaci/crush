@@ -112,7 +112,7 @@ public class SyncModulatedMap extends AstroMap {
 		
 				goodFrames += waveSamples;
 				
-				for(final Pixel pixel : pixels) {
+				if(midFrame != null) for(final Pixel pixel : pixels) {
 					midFrame.project(pixel.getPosition(), projector);
 					map.getGrid().getIndex(projector.offset, index);
 				

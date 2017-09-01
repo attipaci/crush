@@ -153,8 +153,8 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
 
     @Override
-    public Object clone() {
-        try { return super.clone(); }
+    public SourceModel clone() {
+        try { return (SourceModel) super.clone(); }
         catch(CloneNotSupportedException e) { return null; }
     }	
 
@@ -177,8 +177,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public final SourceModel getWorkingCopy() { return getWorkingCopy(true); }
 
     public SourceModel getWorkingCopy(boolean withContents) {
-        SourceModel copy = (SourceModel) clone();
-        return copy;
+        return clone();
     }
 
     public SourceModel getCleanLocalCopy() {

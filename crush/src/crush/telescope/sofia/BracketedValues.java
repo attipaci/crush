@@ -33,14 +33,14 @@ public class BracketedValues implements Cloneable, Copiable<BracketedValues> {
 
 	
 	@Override
-	public Object clone() {
-		try { return super.clone(); }
+	public BracketedValues clone() {
+		try { return (BracketedValues) super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
 	@Override
 	public BracketedValues copy() {
-		return (BracketedValues) clone();
+		return clone();
 	}
 	
 	public void merge(BracketedValues bounds) {

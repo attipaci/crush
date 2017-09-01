@@ -49,13 +49,13 @@ public class Scuba2Subarray implements Cloneable {
 	}
 	
 	@Override 
-	public Object clone() {
-		try { return super.clone(); }
+	public Scuba2Subarray clone() {
+		try { return (Scuba2Subarray) super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
 	public Scuba2Subarray copy() {
-		Scuba2Subarray copy = (Scuba2Subarray) clone();
+		Scuba2Subarray copy = clone();
 		if(focalPlanePixelOffset != null) copy.focalPlanePixelOffset = (Vector2D) focalPlanePixelOffset.clone();
 		if(id != null) copy.id = new String(id);
 		copy.scuba2 = null;
