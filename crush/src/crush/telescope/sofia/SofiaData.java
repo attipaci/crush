@@ -33,8 +33,8 @@ import nom.tam.fits.HeaderCardException;
 public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
 
     @Override
-    public Object clone() {
-        try { return super.clone(); }
+    public SofiaData clone() {
+        try { return (SofiaData) super.clone(); }
         catch(CloneNotSupportedException e) { return null; }
     }
 

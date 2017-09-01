@@ -100,8 +100,8 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	
 	
 	@Override
-	public Object clone() {
-		try { return super.clone(); }
+	public Channel clone() {
+		try { return (Channel) super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }		
 	}
 	
@@ -114,7 +114,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	
 	@Override
 	public Channel copy() {
-		Channel copy = (Channel) clone();
+		Channel copy = clone();
 		copy.overlaps = null;
 		return copy;
 	}

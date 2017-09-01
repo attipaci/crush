@@ -68,7 +68,7 @@ public abstract class Filter implements Serializable, Cloneable {
 	}
 	
 	@Override
-	public Object clone() {
+	public Filter clone() {
 		try {
 			Filter clone = (Filter) super.clone();
 			clone.data = null;
@@ -166,7 +166,7 @@ public abstract class Filter implements Serializable, Cloneable {
 			@Override
 			protected void init() {
 				super.init();
-				worker = (Filter) Filter.this.clone();
+				worker = Filter.this.clone();
 				worker.makeTempData();
 				
 				worker.frameParms = integration.getFloats();

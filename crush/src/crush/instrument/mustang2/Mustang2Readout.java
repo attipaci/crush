@@ -44,14 +44,14 @@ public class Mustang2Readout implements Cloneable, Copiable<Mustang2Readout> {
 	public int getIndex() { return index; }
 
 	@Override
-	public Object clone() {
-		try { return super.clone(); }
+	public Mustang2Readout clone() {
+		try { return (Mustang2Readout) super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
 	@Override
 	public Mustang2Readout copy() {
-		return (Mustang2Readout) clone();
+		return clone();
 	}
 	
 	public void parseFrequencies(String fileName) throws IOException {

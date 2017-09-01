@@ -99,14 +99,14 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	}
 	
 	@Override
-	public Object clone() {
-		try { return super.clone(); }
+	public Signal clone() {
+		try { return (Signal) super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
 	@Override
     public Signal copy() {
-	    Signal copy = (Signal) clone();
+	    Signal copy = clone();
 	    if(drifts != null) copy.drifts = Arrays.copyOf(drifts, drifts.length);
 	    if(syncGains != null) copy.syncGains = Arrays.copyOf(syncGains, syncGains.length);
 	    if(value != null) copy.value = Arrays.copyOf(value, value.length);
@@ -292,13 +292,13 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	}
 	
 	public Signal getDifferential() {
-		Signal d = (Signal) clone();
+		Signal d = clone();
 		d.differentiate();
 		return d;
 	}
 	
 	public Signal getIntegral() {
-		Signal d = (Signal) clone();
+		Signal d = clone();
 		d.integrate();
 		return d;
 	}

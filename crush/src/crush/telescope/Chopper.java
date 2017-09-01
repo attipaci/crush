@@ -45,14 +45,14 @@ public class Chopper implements Serializable, Cloneable, Copiable<Chopper> {
 	public PhaseSet phases;
 	
 	@Override
-	public Object clone() {
-		try { return super.clone(); }
+	public Chopper clone() {
+		try { return (Chopper) super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
 	@Override
 	public Chopper copy() {
-		Chopper copy = (Chopper) clone();
+		Chopper copy = clone();
 		copy.phases = null;
 		copy.offset = offset.copy();
 		return copy;

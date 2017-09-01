@@ -57,6 +57,7 @@ public class MakoModel<PixelType extends AbstractMakoPixel> {
 		MakoModel<?> model = null;
 		
 		int ver = Integer.parseInt(args[0]);
+		
 		if(ver == 1) model = new MakoModel<MakoPixel>(new Mako());
 		else if(ver == 2) model = new MakoModel<Mako2Pixel>(new Mako2());
 		else {

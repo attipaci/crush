@@ -47,7 +47,7 @@ public abstract class SingleColorPixel extends Channel implements Pixel {
 	}
 	
 	@Override
-	public Object clone() {
+	public SingleColorPixel clone() {
 		SingleColorPixel clone = (SingleColorPixel) super.clone();
 		if(position != null) clone.position = (Vector2D) position.clone();
 		return clone;

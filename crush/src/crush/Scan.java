@@ -268,10 +268,10 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		// Reset the source coordinates to the pointing center
 		if(pointing.getCoordinates() instanceof HorizontalCoordinates) 
-			pointing.setCoordinates((SphericalCoordinates) horizontal.clone());
+			pointing.setCoordinates(horizontal.clone());
 
 		else if(pointing.getCoordinates() instanceof EquatorialCoordinates) 
-			pointing.setCoordinates((SphericalCoordinates) equatorial.clone());
+			pointing.setCoordinates(equatorial.clone());
 
 		else ((CelestialCoordinates) pointing.getCoordinates()).fromEquatorial(equatorial);
 		

@@ -47,7 +47,7 @@ public abstract class AdaptiveFilter extends VariedFilter {
 	}
 
 	@Override
-	public Object clone() {
+	public AdaptiveFilter clone() {
 		AdaptiveFilter clone = (AdaptiveFilter) super.clone();
 		if(profile != null) clone.profile = new float[profile.length];
 		return clone;

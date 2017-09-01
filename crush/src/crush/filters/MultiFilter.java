@@ -45,10 +45,10 @@ public class MultiFilter extends VariedFilter {
 	}
 	
 	@Override
-	public Object clone() {	
+	public MultiFilter clone() {	
 		MultiFilter clone = (MultiFilter) super.clone();
 		clone.filters = new ArrayList<Filter>(filters.size());
-		for(int i=0; i<filters.size(); i++) clone.filters.add((Filter) filters.get(i).clone());
+		for(int i=0; i<filters.size(); i++) clone.filters.add(filters.get(i).clone());
 		return clone;
 	}
 		
