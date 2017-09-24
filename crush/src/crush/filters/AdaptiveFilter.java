@@ -35,12 +35,10 @@ public abstract class AdaptiveFilter extends VariedFilter {
 	private static final long serialVersionUID = -2499384682820252338L;
 	
 	// TODO noiseFiltering to be replaced by dependents accounting...
-	protected float[][] profiles;
+	protected float[][] channelProfiles;
 	protected double dF;	
-
 	
 	private float[] profile;
-	
 		
 	public AdaptiveFilter(Integration<?, ?> integration) {
 		super(integration);
@@ -62,7 +60,7 @@ public abstract class AdaptiveFilter extends VariedFilter {
 	@Override
 	protected void setIntegration(Integration<?,?> integration) {
 		super.setIntegration(integration);
-		profiles = new float[integration.instrument.size()][];		
+		channelProfiles = new float[integration.instrument.size()][];		
 	}
 
 	protected void setSize(int nF) {
@@ -73,11 +71,11 @@ public abstract class AdaptiveFilter extends VariedFilter {
 		
 		updateSourceProfile();
 		
-		for(int i=profiles.length; --i >= 0; ) {
-			final float[] oldProfile = profiles[i];
+		for(int i=channelProfiles.length; --i >= 0; ) {
+			final float[] oldProfile = channelProfiles[i];
 			if(oldProfile == null) continue;
-			profiles[i] = new float[nF];
-			resample(oldProfile, profiles[i]);
+			channelProfiles[i] = new float[nF];
+			resample(oldProfile, channelProfiles[i]);
 		}
 	}
 	
@@ -109,8 +107,8 @@ public abstract class AdaptiveFilter extends VariedFilter {
 
 	protected void accumulateProfile(Channel channel) {	
 		for(int i=profile.length; --i >= 0; ) {
-			profiles[channel.index][i] *= profile[i];
-			profile[i] = profiles[channel.index][i];
+			channelProfiles[channel.index][i] *= profile[i];
+			profile[i] = channelProfiles[channel.index][i];
 		}	
 	}
 	
@@ -121,7 +119,7 @@ public abstract class AdaptiveFilter extends VariedFilter {
 	}
 	
 	public float[] getValidProfile(Channel channel) {
-		float[] response = profiles[channel.index];
+		float[] response = channelProfiles[channel.index];
 		
 		if(response == null) if(profile != null) {
 			response = new float[profile.length];
