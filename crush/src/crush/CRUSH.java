@@ -59,8 +59,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.40-b1";
-    private static String revision = "devel.11";
+    private static String version = "2.40-1";
+    private static String revision = "";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -720,7 +720,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         System.out.println(
                 " Usage: crush <instrument> [options] <scanlist> [[options] <scanlist> ...]\n" +
                         "\n" +
-                        "    <instrument>     Instrument name, e.g. 'scuba2', 'gismo', 'laboca'...\n" +
+                        "    <instrument>     Instrument name, e.g. 'hawc+', 'gismo', 'scuba2'...\n" +
                         "                     Try 'crush -help' for a list of supported cameras.\n" +
                         "    [options]        Various configuration options. See README and GLOSSARY.\n" +
                         "                     Global settings must precede scans on the argument list.\n" +
