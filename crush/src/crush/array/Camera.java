@@ -77,7 +77,7 @@ public abstract class Camera<ChannelType extends Channel> extends Instrument<Cha
 	}
 	
 	public void setReferencePosition(Vector2D position) {
-		Vector2D referencePosition = (Vector2D) position.clone();
+		Vector2D referencePosition = position.copy();
 		for(Pixel pixel : getPixels()) {
 		    Vector2D v = pixel.getPosition();
 		    if(v != null) v.subtract(referencePosition);
