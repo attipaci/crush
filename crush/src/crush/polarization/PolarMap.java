@@ -26,7 +26,7 @@ package crush.polarization;
 
 import crush.*;
 import crush.array.*;
-import crush.sourcemodel.AstroMap;
+import crush.sourcemodel.AstroIntensityMap;
 import jnum.Unit;
 import jnum.data.image.Observation2D;
 import jnum.math.SphericalCoordinates;
@@ -42,7 +42,7 @@ public class PolarMap extends SourceModel {
 	 */
 	private static final long serialVersionUID = -533094900293482665L;
 	
-	AstroMap N, Q, U;
+	AstroIntensityMap N, Q, U;
 	
 	public boolean usePolarization = false;
 	public boolean hasPolarization = false;
@@ -54,8 +54,8 @@ public class PolarMap extends SourceModel {
 	public Camera<?> getArray() { return (Camera<?>) getInstrument(); }
 
 	
-	public AstroMap getMapInstance() {
-		return new AstroMap(getInstrument());
+	public AstroIntensityMap getMapInstance() {
+		return new AstroIntensityMap(getInstrument());
 	}
 	
 	@Override
@@ -207,17 +207,17 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public void postprocess(Scan<?,?> scan) {
-		super.postprocess(scan);
+	public void postProcess(Scan<?,?> scan) {
+		super.postProcess(scan);
 		
 		// Treat N as a regular total-power map, so do the post-processing accordingly...
-		N.postprocess(scan);
+		N.postProcess(scan);
 	}
 	
 	
 	// Angles are measured East of North... 
-	public AstroMap getAngles(AstroMap P, AstroMap F) {
-		final AstroMap A = N.getWorkingCopy(false);
+	public AstroIntensityMap getAngles(AstroIntensityMap P, AstroIntensityMap F) {
+		final AstroIntensityMap A = N.getWorkingCopy(false);
 		
 		final Observation2D q = Q.map;
 		final Observation2D u = U.map;
@@ -266,8 +266,8 @@ public class PolarMap extends SourceModel {
 	}	
 	
 	
-	public AstroMap getP() {
-		final AstroMap P = N.getWorkingCopy(false);
+	public AstroIntensityMap getP() {
+		final AstroIntensityMap P = N.getWorkingCopy(false);
 		
 		final Observation2D q = Q.map;
 		final Observation2D u = U.map;
@@ -308,12 +308,12 @@ public class PolarMap extends SourceModel {
 		return P;
 	}	
 	
-	public AstroMap getI() {
+	public AstroIntensityMap getI() {
 		return getI(getP());
 	}	
 	
-	public AstroMap getI(AstroMap P) {	
-		final AstroMap I = N.getWorkingCopy(false);
+	public AstroIntensityMap getI(AstroIntensityMap P) {	
+		final AstroIntensityMap I = N.getWorkingCopy(false);
 		final Observation2D n = N.map;
 		final Observation2D p = P.map;
 		final Observation2D t = I.map;
@@ -339,8 +339,8 @@ public class PolarMap extends SourceModel {
 	
 	
 
-	public AstroMap getPolarFraction(AstroMap P, AstroMap I, double accuracy) {	
-		final AstroMap F = P.getWorkingCopy(false);
+	public AstroIntensityMap getPolarFraction(AstroIntensityMap P, AstroIntensityMap I, double accuracy) {	
+		final AstroIntensityMap F = P.getWorkingCopy(false);
 		final Observation2D p = P.map;
 		final Observation2D t = I.map;
 		final Observation2D f = F.map;
@@ -407,25 +407,25 @@ public class PolarMap extends SourceModel {
 		U.write(path);
 		
 		// Write P (polarized power)
-		AstroMap P = getP();
+		AstroIntensityMap P = getP();
 		P.write(path);	
 			
 		// Write I (total power)
-		AstroMap I = getI(P);
+		AstroIntensityMap I = getI(P);
 		I.write(path);	
 		
 		// Write F (polarized fraction)
         double accuracy = hasOption("source.polar.fraction.rmsclip") ?
                 option("source.polar.fraction.rmsclip").getDouble() : 0.03;
         
-        AstroMap F = getPolarFraction(P, I, accuracy);
+        AstroIntensityMap F = getPolarFraction(P, I, accuracy);
 		
 		if(hasOption("source.polar.fraction")) {
 			F.write(path);
 		}
 
         if(hasOption("source.polar.angles")) {
-            AstroMap A = getAngles(P, F);
+            AstroIntensityMap A = getAngles(P, F);
             A.write(path);
         }
 	}

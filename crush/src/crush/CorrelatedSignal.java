@@ -98,14 +98,9 @@ public class CorrelatedSignal extends Signal {
 		from = from / resolution;
 		to = ExtraMath.roundupRatio(to, resolution);
 		
-		double sum = 0.0, sumw=0;
-		for(int t=to; --t >= from; ) {
-			sum += weight[t] * value[t];
-			sumw += weight[t];
-		}
-		if(sumw == 0.0) return 0.0;
+		final double ave = Statistics.mean(value, weight, from, to).value();
+		if(Double.isNaN(ave)) return 0.0;
 		
-		final double ave = sum / sumw;
 		for(int t=to; --t >= from; ) value[t] -= ave;
 		return ave;
 	}
@@ -113,21 +108,12 @@ public class CorrelatedSignal extends Signal {
 	
 	@Override
 	public WeightedPoint getMedian() {
-		WeightedPoint[] temp = new WeightedPoint[value.length];
-		int n = 0;
-		for(int t=value.length; --t >= 0; ) if(weight[t] > 0.0)
-			temp[n++] = new WeightedPoint(value[t], weight[t]);
-		return Statistics.median(temp, 0, n);
+	    return Statistics.mean(value, weight);
 	}
 	
 	@Override
 	public WeightedPoint getMean() {
-		double sum = 0.0, sumw = 0.0;
-		for(int t=value.length; --t >= 0; ) if(weight[t] > 0.0) {
-			sum += weight[t] * value[t];
-			sumw += weight[t];
-		}	
-		return new WeightedPoint(sum / sumw, sumw);
+		return Statistics.mean(value, weight);
 	}
 	
 	@Override
@@ -498,7 +484,7 @@ public class CorrelatedSignal extends Signal {
 			}
 		}
 
-		Statistics.smartMedian(buffer, 0, n, 0.25, increment); 
+		Statistics.Inplace.smartMedian(buffer, 0, n, 0.25, increment); 
 	}
 	
 }

@@ -191,7 +191,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 		
 		// Calculate the median amplitude
 		System.arraycopy(A, 0, temp, 0, A.length);	
-		final double medA = Statistics.median(temp, whiteFrom, whiteTo).value();
+		final double medA = Statistics.Inplace.median(temp, whiteFrom, whiteTo).value();
 		final double critical = level * medA;
 		
 		// sigmaP = medP / sqrt(pts)
@@ -223,75 +223,11 @@ public class WhiteningFilter extends AdaptiveFilter {
 			else A[F].setValue(medA);
 		}
 		
-		// Do a neighbour based round as well, with different resolutions
-		// (like a feature seek).
-		// TODO Fix or eliminate neighbour-based whitening...
-		//if(neighbours) profileNeighbours();
-		
-		// TODO replace neighbour-based whitening
-		// with multires whitening...
-		// decimate by averaging power in neighbouring bins
-		// and reapply standard whitening fn...
-		
-		// Renormalize the whitening scaling s.t. it is median-power neutral
-		//double norm = medA / Statistics.median(temp, whiteFrom, whiteTo).value;
-		//if(Double.isNaN(norm)) norm = 1.0;		
-		//for(int F = nF; --F >= 0; ) profile[F] *= norm;
-		
 		channel.oneOverFStat = profile[whiteNoiseBin] / profile[oneOverFBin];
 		
 	}
 	
-	/*
-	protected void profileNeighbours() {
-		int N = A.length;
-		int maxBlock = N >> 2;
-		
-		// Cheat to make sure the lack of a zero-f component does not cause trouble...
-		A[0].copy(A[1]);
-		DataPoint d1 = new DataPoint();
-		DataPoint d2 = new DataPoint();
-		
-		for(int blockSize = 1; blockSize <= maxBlock; blockSize <<= 1) {	
-			final int N1 = N-1;
-
-			for(int F = 1; F < N1; F++) if(A[F].weight > 0.0) {
-				d1.copy(A[F]);
-				d1.subtract(A[F-1]);
-				
-				d2.copy(A[F]);
-				d2.subtract(A[F+1]);
-				
-				double s1 = Math.signum(d1.value) * d1.significance();
-				double s2 = Math.signum(d2.value) * d2.significance();
-				
-				double max = s1 > s2 ? A[F-1].value : A[F+1].value;				
-				double sig = Math.max(s1, s2);
-						
-				if(sig > 3.0) {
-					final double rescale = max / A[F].value;
-					for(int blockf = 0, f = F*blockSize; blockf < blockSize; blockf++, f++) profile[f] *= rescale;
-					A[F].value = max;
-				}
-			}				
-
-			// A' = sqrt(A1^2 + A2^2)
-			// dA' / dA1 = 0.5 / A' * 2*A1 = A1/A';
-			// s'2 = (A1/A' * s1)^2 + (A2/A' * s2)^2
-			// s'   = hypot(A1*s1, A2*s2) / A'
-			// 1.0 / wA' = (A1/A')^2 / w1 + (A2/A')^2 / w2
-			
-			for(int F = 0; F < N1; F += 2) {
-				final double A1 = ExtraMath.hypot(A[F].value, A[F+1].value);
-				final double var = (A[F].value * A[F].value / A[F].weight + A[F+1].value * A[F+1].value / A[F+1].weight) / (A1 * A1);
-				final int F1 = F >> 1;
-				A[F1].value = A1;
-				A[F1].weight = 1.0 / var;
-			}
-			N >>= 1;
-		}
-	}
-	*/
+	
 	
 	@Override
 	public String getID() {

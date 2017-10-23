@@ -1010,7 +1010,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             }
         }
 
-        if(sumw > 0.0) Statistics.smartMedian(buffer, 0, n, 0.25, increment);	
+        if(sumw > 0.0) Statistics.Inplace.smartMedian(buffer, 0, n, 0.25, increment);	
     }
 
 
@@ -1236,7 +1236,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
                 }	
 
                 if(points > 0) {
-                    var[channel.index].setValue(Statistics.median(dev2, 0, points) / Statistics.medianNormalizedVariance);
+                    var[channel.index].setValue(Statistics.Inplace.median(dev2, 0, points) / Statistics.medianNormalizedVariance);
                     var[channel.index].setWeight(sumw);
                 }
             }
@@ -2133,15 +2133,15 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         int n=0;
         for(int t=v.length; --t >= 0; ) if(v[t] != null) if(!v[t].isNaN()) speed[n++] = (float) v[t].length();        
 
-        double avev = n > 10 ? Statistics.robustMean(speed, 0, n, 0.1) : Statistics.median(speed, 0, n);
+        double avev = n > 10 ? Statistics.Inplace.robustMean(speed, 0, n, 0.1) : Statistics.Inplace.median(speed, 0, n);
 
         for(int i=n; --i >= 0; ) {
             final float dev = (float) (speed[i] - avev);
             speed[i] = dev * dev;
         }
         double w = n > 10 ? 
-                1.0 / Statistics.robustMean(speed, 0, n, 0.1) : 
-                    Statistics.medianNormalizedVariance / Statistics.median(speed, 0, n);
+                1.0 / Statistics.Inplace.robustMean(speed, 0, n, 0.1) : 
+                    Statistics.medianNormalizedVariance / Statistics.Inplace.median(speed, 0, n);
 
                 recycle(speed);
 
@@ -3098,7 +3098,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             dt *= Unit.day;
 
             Chopper chopper = new Chopper();
-            chopper.amplitude = Statistics.median(distance, 0, n);
+            chopper.amplitude = Statistics.Inplace.median(distance, 0, n);
 
             if(chopper.amplitude < threshold) {
                 chopper = null;

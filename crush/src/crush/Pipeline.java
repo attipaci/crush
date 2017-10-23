@@ -127,7 +127,7 @@ public class Pipeline implements Runnable, Serializable {
 		
 		crush.source.add(scanSource, scan.weight);
 	
-		scanSource.postprocess(scan);
+		scanSource.postProcess(scan);
 	}
 	
 

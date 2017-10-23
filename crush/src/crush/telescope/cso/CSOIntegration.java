@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -22,14 +22,8 @@
  ******************************************************************************/
 package crush.telescope.cso;
 
-import java.io.BufferedReader;
-import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 
 import crush.CRUSH;
 import crush.Integration;
@@ -141,7 +135,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		
 		if(source.equals("tables")) setTableTau();
 		else if(source.equals("direct")) setZenithTau(getDirectTau());
-		else if(source.equals("maitau") && hasOption("maitau.server")) setMaiTau();	
+		else if(source.equals("maitau")) setMaiTau();	
 		else if(source.equals("jctables") && hasOption("tau.jctables")) setJCMTTableTau();
 		else super.setTau();
 		
@@ -153,7 +147,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	}
 	
 	public void setMaiTau() throws Exception {
-		info("Requesing MaiTau via " + option("maitau.server") + "...");
+		info("Looking up MaiTau tables...");
 		
 		try {
 			try { setTau("350um", getMaiTau("350um")); }
@@ -211,56 +205,27 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	}
 	
 	public double getMaiTau(String id) throws IOException {
-			
-		if(!id.equalsIgnoreCase("225GHz") && !id.equalsIgnoreCase("350um")) 
+	    id = id.toLowerCase();	
+		double value = Double.NaN;
+
+		
+		if(!id.equals("225gHz") && !id.equalsIgnoreCase("350um")) 
 			throw new IllegalArgumentException("No MaiTau lookup for '" + id + "'.");
 		
-		if(!hasOption("maitau.server")) 
-			throw new IllegalArgumentException("MaiTau server not set. Use 'maitau.server' configuration key.");
-		
-		Socket tauServer = new Socket();
-		tauServer.setSoTimeout(MAITAU_TIMEOUT);
-		tauServer.setTcpNoDelay(true);
-		tauServer.setReuseAddress(true);
-		//tauServer.setPerformancePreferences(0, 1, 2); // connection time, latency, throughput
-		tauServer.setTrafficClass(0x10); // low latency
-		tauServer.connect(new InetSocketAddress(option("maitau.server").getValue(), 63225), MAITAU_CONNECTION_TIMEOUT);
-		
-		
-		PrintWriter out = new PrintWriter(tauServer.getOutputStream(), true);
-		BufferedReader in = new BufferedReader(new InputStreamReader(tauServer.getInputStream()));
-
-		while(in.read() != '>') skipNonPrompt(); // Seek for prompt
-
-		out.println("set noexit"); // Enter into interactive mode (do not disconnect after first command).
-		while(in.read() != '>') skipNonPrompt(); // Seek for prompt
-
-		out.println("set " + id); // Select which tau value to query...
-		while(in.read() != '>') skipNonPrompt(); // Seek for prompt
-
-		out.println("get tau " + scan.timeStamp); // Request tau for the specified date	
-		
-		double value = Double.NaN;
-		try { 
-		    String spec = in.readLine();
-		    if(spec == null) throw new EOFException("MaiTau EOF");
-			value = Double.parseDouble(spec.trim());
-			if(!Double.isNaN(value)) info("---> MaiTau(" + id + ") = " + Util.f3.format(value));
+		if(id.equals("225ghz")) {
+		    if(hasOption("maitau.225ghz")) maitau225GHz.load(option("maitau.225ghz").getPath());
+		    value = maitau225GHz.getTau(getMJD());
 		}
-		catch(NumberFormatException e) {}
-		
-		out.println("exit"); // Disconnect from Mai-Tau server 
-		in.close();
-		out.close();
-		
-		tauServer.close();
+		else if(id.equals("350um")) {
+            if(hasOption("maitau.350um")) maitau350um.load(option("maitau.350um").getPath());
+            value = maitau350um.getTau(getMJD());
+        }
 		
 		if(Double.isNaN(value)) throw new NumberFormatException("No " + id + " value for date in MaiTau database.");
 		
 		return value;
 	}
 
-	private void skipNonPrompt() {}
 	
 	@Override
 	public String getASCIIHeader() {
@@ -280,10 +245,10 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		return -Math.log(1.0-eps) * scan.horizontal.sinLat();
 	}
 	
-	public final float antennaTick = (float) (0.01 * Unit.s);
-	public final float tenthArcsec = (float) (0.1 * Unit.arcsec);
-	
-	public static int MAITAU_CONNECTION_TIMEOUT = 3000;
-	public static int MAITAU_TIMEOUT = 2000;
+	public final static float antennaTick = (float) (0.01 * Unit.s);
+	public final static float tenthArcsec = (float) (0.1 * Unit.arcsec);
+
+	static MaiTau maitau225GHz = new MaiTau();
+	static MaiTau maitau350um = new MaiTau();
 
 }

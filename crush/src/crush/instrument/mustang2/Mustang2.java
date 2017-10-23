@@ -195,7 +195,7 @@ public class Mustang2 extends Camera<Mustang2Pixel> implements GroundBased {
 		
 		// Normalize the gains
 		if(n > 0) {
-			temperatureGain = Statistics.median(G, 0, n);		
+			temperatureGain = Statistics.Inplace.median(G, 0, n);		
 			info("Average gain is " + Util.s2.format(temperatureGain) + " / K for " + n + " pixels.");
 			for(Channel pixel : this) pixel.gain /= temperatureGain;
 		}

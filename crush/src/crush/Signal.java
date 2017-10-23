@@ -218,21 +218,11 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	}
 		
 	public WeightedPoint getMedian() {
-		final float[] temp = integration.getFloats();
-		for(int t=value.length; --t >= 0; ) temp[t] = Float.isNaN(value[t]) ? 0.0F : value[t];
-		float median = Statistics.median(temp);
-		Integration.recycle(temp);
-		return new WeightedPoint(median, Double.POSITIVE_INFINITY);
+		return new WeightedPoint(Statistics.median(value), Double.POSITIVE_INFINITY);
 	}
 	
 	public WeightedPoint getMean() {
-		double sum = 0.0;
-		int n = 0;
-		for(int t=value.length; --t >= 0; ) if(!Float.isNaN(value[t])) {
-			sum += value[t];
-			n++;
-		}	
-		return new WeightedPoint(sum / n, Double.POSITIVE_INFINITY);
+	    return new WeightedPoint(Statistics.mean(value), Double.POSITIVE_INFINITY);		
 	}
 	
 	// Use a quadratic fit...
@@ -462,7 +452,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 						assert !Double.isNaN(point.value());
 						assert !Double.isInfinite(point.value());
 					}
-				if(n > 0) Statistics.smartMedian(gainData, 0, n, 0.25, increment);
+				if(n > 0) Statistics.Inplace.smartMedian(gainData, 0, n, 0.25, increment);
 			}
 			
 		}.process();

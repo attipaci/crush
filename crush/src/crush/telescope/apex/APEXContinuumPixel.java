@@ -204,7 +204,7 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
 	    
         int N = phases.size();
         for(int i=1; i < N; i++) points[k++] = getChopSignal(phases, i);
-        return Statistics.smartMedian(points, 0, k, 0.25);
+        return Statistics.Inplace.smartMedian(points, 0, k, 0.25);
     }
 	
 	public WeightedPoint getBGCorrectedLROffset(final PhaseSet phases, final Collection<APEXContinuumPixel> bgPixels, final double[] sourceGain) {
@@ -221,7 +221,7 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
         
         int N = phases.size();
         for(int i=1; i < N; i++) points[k++] = getBGCorrectedChopSignal(phases, i, bgPixels, sourceGain);
-        return Statistics.smartMedian(points, 0, k, 0.25);
+        return Statistics.Inplace.smartMedian(points, 0, k, 0.25);
     }
 	
 	

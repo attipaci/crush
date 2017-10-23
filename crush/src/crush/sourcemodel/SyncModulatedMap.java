@@ -32,7 +32,7 @@ import jnum.data.image.Index2D;
 import jnum.parallel.ParallelTask;
 
 
-public class SyncModulatedMap extends AstroMap {
+public class SyncModulatedMap extends AstroIntensityMap {
 	
 	/**
 	 * 
@@ -43,12 +43,7 @@ public class SyncModulatedMap extends AstroMap {
 		super(instrument);
 	}
 	
-	public double product(float[] a, float[] b) {
-		double sum = 0.0;
-		for(int i=0; i<a.length; i++) sum += a[i] * b[i];
-		return sum;
-	}
-	
+
 	@Override
 	protected int add(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {
 		final int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;	

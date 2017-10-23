@@ -45,7 +45,7 @@ import jnum.parallel.ParallelTask;
 
 public class GDFStack {
 	Vector<GaussianSource<SphericalCoordinates>> sources = new Vector<GaussianSource<SphericalCoordinates>>();
-	AstroMap map, model;
+	AstroIntensityMap map, model;
 
 	public static void main(String[] args) {
 		String fileName = args[0];
@@ -157,7 +157,7 @@ public class GDFStack {
 	
 	
 	public void readMap(String fileName) throws Exception {
-		map = new AstroMap();
+		map = new AstroIntensityMap();
 		map.read(fileName);
 	}
 	
@@ -248,7 +248,7 @@ public class GDFStack {
 	
 	
 	public void makeModel() throws Exception {
-		 model = (AstroMap) map.copy(true);
+		 model = (AstroIntensityMap) map.copy(true);
 		 model.setImage(new double[model.sizeX()][model.sizeY()]);
 		 //model.reset();
 		 

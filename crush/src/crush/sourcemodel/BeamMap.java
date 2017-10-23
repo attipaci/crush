@@ -45,8 +45,8 @@ public class BeamMap extends AstroModel2D {
 	 */
 	private static final long serialVersionUID = -8380688477538977451L;
 	
-	AstroMap[] pixelMap;
-	private AstroMap template;
+	AstroIntensityMap[] pixelMap;
+	private AstroIntensityMap template;
 	
 	public BeamMap(Camera<?> instrument) {
 		super(instrument);
@@ -58,7 +58,7 @@ public class BeamMap extends AstroModel2D {
 	@Override
 	public SourceModel getWorkingCopy(boolean withContents) {
 		BeamMap copy = (BeamMap) super.getWorkingCopy(withContents);
-		copy.pixelMap = new AstroMap[pixelMap.length];
+		copy.pixelMap = new AstroIntensityMap[pixelMap.length];
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null)
 			copy.pixelMap[p] = pixelMap[p].getWorkingCopy(withContents);	
 		return copy;
@@ -83,10 +83,10 @@ public class BeamMap extends AstroModel2D {
 			
 		super.createFrom(collection);
 		
-		template = new AstroMap(getInstrument());
+		template = new AstroIntensityMap(getInstrument());
 		template.createFrom(collection);
 		
-		pixelMap = new AstroMap[getArray().maxPixels() + 1];
+		pixelMap = new AstroIntensityMap[getArray().maxPixels() + 1];
 	}
 	
 	public Camera<?> getArray() { return (Camera<?>) getInstrument(); }
@@ -95,14 +95,14 @@ public class BeamMap extends AstroModel2D {
     @Override
     public void resetProcessing() {
         super.resetProcessing();
-        for(AstroMap map : pixelMap) if(map != null) map.resetProcessing();
+        for(AstroIntensityMap map : pixelMap) if(map != null) map.resetProcessing();
     }
 
     
 	
 	@Override
 	public void clearContent() {
-		for(AstroMap map : pixelMap) if(map != null) map.clearContent();
+		for(AstroIntensityMap map : pixelMap) if(map != null) map.clearContent();
 	}
 
 		
@@ -126,7 +126,7 @@ public class BeamMap extends AstroModel2D {
 	@Override
 	protected void add(final Frame exposure, final Pixel pixel, final Index2D index, final double fGC, final double[] sourceGain) {		
 		final int i = pixel.getFixedIndex();
-		AstroMap map = pixelMap[i];
+		AstroIntensityMap map = pixelMap[i];
 		
 		if(map == null) {	
 			map = template.getWorkingCopy(false);
@@ -146,13 +146,13 @@ public class BeamMap extends AstroModel2D {
 	@Override
 	public int countPoints() {
 		int points = 0;
-		for(AstroMap map : pixelMap) if(map != null) points += map.countPoints();
+		for(AstroIntensityMap map : pixelMap) if(map != null) points += map.countPoints();
 		return points;
 	}
 
 	@Override
 	public double covariantPoints() {
-		for(AstroMap map : pixelMap) if(map != null) return map.covariantPoints();
+		for(AstroIntensityMap map : pixelMap) if(map != null) return map.covariantPoints();
 		return 1.0;
 	}
 
@@ -168,24 +168,24 @@ public class BeamMap extends AstroModel2D {
 
 	@Override
 	public void setSize(int sizeX, int sizeY) {
-		for(AstroMap map : pixelMap) if(map != null) map.setSize(sizeX, sizeY);
+		for(AstroIntensityMap map : pixelMap) if(map != null) map.setSize(sizeX, sizeY);
 	}
 
 	@Override
 	protected void sync(final Frame exposure, final Pixel pixel, final Index2D index, final double fG, final double[] sourceGain, final double[] syncGain) {
-		final AstroMap map = pixelMap[pixel.getFixedIndex()];
+		final AstroIntensityMap map = pixelMap[pixel.getFixedIndex()];
 		if(map != null) map.sync(exposure, pixel, index, fG, sourceGain, syncGain);	
 	}
 
 
 	@Override
 	public void setBase() {
-		for(AstroMap map : pixelMap) if(map != null) map.setBase();
+		for(AstroIntensityMap map : pixelMap) if(map != null) map.setBase();
 	}
 
 	@Override
 	public void process(Scan<?, ?> scan) {
-		for(AstroMap map : pixelMap) if(map != null) map.process(scan);
+		for(AstroIntensityMap map : pixelMap) if(map != null) map.process(scan);
 	}
 
 
@@ -219,7 +219,7 @@ public class BeamMap extends AstroModel2D {
 	public void process() throws Exception {	
 		boolean process = hasSourceOption("process");	
 		
-		for(AstroMap map : pixelMap) if(map != null) {	
+		for(AstroIntensityMap map : pixelMap) if(map != null) {	
 			if(process) map.process();
 			else {
 				map.map.endAccumulation();
@@ -237,7 +237,7 @@ public class BeamMap extends AstroModel2D {
 		
 		for(Pixel pixel : getFirstScan().instrument.getMappingPixels(0)) {
 			int i = pixel.getFixedIndex();
-			AstroMap beamMap = pixelMap[i];
+			AstroIntensityMap beamMap = pixelMap[i];
 			
 			pixel.getPosition().set(Double.NaN, Double.NaN);
 			
@@ -261,11 +261,11 @@ public class BeamMap extends AstroModel2D {
 		}
 		if(k == 0) return;
 		
-		final double mean = Statistics.median(peaks, 0, k);
+		final double mean = Statistics.Inplace.median(peaks, 0, k);
 		
 		for(final Pixel pixel : getFirstScan().instrument.getMappingPixels(0)) {
 			int i = pixel.getFixedIndex();
-			AstroMap map = pixelMap[i];
+			AstroIntensityMap map = pixelMap[i];
 			if(map != null) {
 				final double rel = pixelPeak[i] / mean;
 				for(final Channel channel : pixel) channel.coupling *= rel;
@@ -304,17 +304,17 @@ public class BeamMap extends AstroModel2D {
 
 	@Override
 	public void noParallel() {
-		if(pixelMap != null) for(AstroMap map : pixelMap) if(map != null) map.noParallel();
+		if(pixelMap != null) for(AstroIntensityMap map : pixelMap) if(map != null) map.noParallel();
 	}
 	
 	@Override
 	public void setParallel(int threads) {
-		if(pixelMap != null) for(AstroMap map : pixelMap) if(map != null) map.setParallel(threads);
+		if(pixelMap != null) for(AstroIntensityMap map : pixelMap) if(map != null) map.setParallel(threads);
 	}
 	
 	@Override
 	public int getParallel() {
-		if(pixelMap != null) for(AstroMap map : pixelMap) if(map != null) return map.getParallel();
+		if(pixelMap != null) for(AstroIntensityMap map : pixelMap) if(map != null) return map.getParallel();
 		return 1;
 	}
 
@@ -326,9 +326,9 @@ public class BeamMap extends AstroModel2D {
 		BeamMap beammap = (BeamMap) other;
 		
 		for(int k=pixelMap.length; --k >= 0; ) {
-			AstroMap map = pixelMap[k];
+			AstroIntensityMap map = pixelMap[k];
 			if(map == null) continue;
-			AstroMap otherMap = beammap.pixelMap[k];
+			AstroIntensityMap otherMap = beammap.pixelMap[k];
 			if(otherMap == null) continue;
 			map.mergeAccumulate(otherMap);
 		}
@@ -336,12 +336,12 @@ public class BeamMap extends AstroModel2D {
 
 	@Override
 	public void setExecutor(ExecutorService executor) {
-		if(pixelMap != null) for(AstroMap map : pixelMap) if(map != null) map.setExecutor(executor);
+		if(pixelMap != null) for(AstroIntensityMap map : pixelMap) if(map != null) map.setExecutor(executor);
 	}
 
 	@Override
 	public ExecutorService getExecutor() {
-		if(pixelMap != null) for(AstroMap map : pixelMap) if(map != null) return map.getExecutor();
+		if(pixelMap != null) for(AstroIntensityMap map : pixelMap) if(map != null) return map.getExecutor();
 		return null;
 	}
 
@@ -358,7 +358,7 @@ public class BeamMap extends AstroModel2D {
     @Override
     public boolean isEmpty() {
         if(pixelMap == null) return true;
-        for(AstroMap map : pixelMap) if(map != null) if(!map.isEmpty()) return false;
+        for(AstroIntensityMap map : pixelMap) if(map != null) if(!map.isEmpty()) return false;
         return true;
     }
 
@@ -370,7 +370,7 @@ public class BeamMap extends AstroModel2D {
     @Override
     public void processFinal() {
         if(pixelMap == null) return;
-        for(AstroMap map : pixelMap) if(map != null) map.processFinal();
+        for(AstroIntensityMap map : pixelMap) if(map != null) map.processFinal();
     }
     
     @Override

@@ -26,6 +26,7 @@ package crush.sourcemodel;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
 import crush.CRUSH;
@@ -53,12 +54,15 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
         super(instrument);
     }
     
-    
+    @Override
+    public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
+        super.createFrom(collection);  
+        if(hasOption("unit")) getData().setUnit(option("unit").getValue());
+    }
 
     public abstract DataType getData();
    
-    
-
+   
     public abstract void addBase();
 
     public abstract void smoothTo(double FWHM);
@@ -292,9 +296,14 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
     }
 
     @Override
-    public void writeFits(String fileName) throws FitsException, IOException {
+    public void processFinal() {
+        getData().clearHistory();
+    }
+   
+    @Override
+    public void writeFits(String fileName) throws FitsException, IOException {        
         Fits fits = getData().createFits(Float.class); 
-          
+        
         int nHDU = fits.getNumberOfHDUs();
         for(int i=0; i<nHDU; i++) {
             Header header = fits.getHDU(i).getHeader();

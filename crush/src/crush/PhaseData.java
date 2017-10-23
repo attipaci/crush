@@ -217,7 +217,7 @@ public class PhaseData implements Serializable {
 			assert !Double.isInfinite(point.value());
 			
 		}
-		Statistics.smartMedian(temp, 0, n, 0.25, correlated);
+		Statistics.Inplace.smartMedian(temp, 0, n, 0.25, correlated);
 		
 		if(channelParms != null) addChannelDeps(mode, G, correlated.weight(), channelParms);
 	}
