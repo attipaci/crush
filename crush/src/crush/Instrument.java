@@ -947,7 +947,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(hasOption("source.type")) {
             String type = option("source.type").getValue();
             if(type.equals("skydip")) return new SkyDip(this);		
-            if(type.equals("map")) return new AstroMap(this);
+            if(type.equals("map")) return new AstroIntensityMap(this);
             if(type.equals("null")) return null;
             return null;
         }
@@ -1256,7 +1256,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         // Use robust mean (with 10% tails) to estimate average weight.
         weightRange.scale(Math.expm1(n > 10 ? 
-                Statistics.robustMean(weights, 0, n, 0.1) : Statistics.median(weights, 0, n)
+                Statistics.Inplace.robustMean(weights, 0, n, 0.1) : Statistics.Inplace.median(weights, 0, n)
                 ));
 
         Instrument.recycle(weights);

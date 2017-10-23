@@ -186,7 +186,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
         for(PhaseData p : this) if(p.phase == phaseValue) if(p.isUnflagged(channel)) {
             points[k++] = new WeightedPoint(p.value[channel.index], p.weight[channel.index]);
         }
-        return k > 0 ? Statistics.smartMedian(points, 0, k, 0.25).value() : Double.NaN;
+        return k > 0 ? Statistics.Inplace.smartMedian(points, 0, k, 0.25).value() : Double.NaN;
     }
 
     public double getRMSNoise(Channel channel, int phaseValue, double level) {
@@ -208,7 +208,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
             double dev = p.value[channel.index] * Math.sqrt(p.weight[channel.index]);
             var[k++] = dev * dev;
         }
-        return k > 1 ? Statistics.median(var, 0, k) / Statistics.medianNormalizedVariance : Double.NaN;
+        return k > 1 ? Statistics.Inplace.median(var, 0, k) / Statistics.medianNormalizedVariance : Double.NaN;
     }
 
 

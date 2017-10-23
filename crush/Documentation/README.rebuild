@@ -5,7 +5,7 @@
                          <attila[AT]sigmyne.com>
 
 
-                       Last updated: 4 August 2017
+                      Last updated: 28 September 2017
 
 
 
@@ -29,7 +29,7 @@ Table of Contents
 #############################################################################
 
 
-This is a simple guide, meant for developers, who wish to modify and or
+This is a simple guide meant for developers, who wish to modify and/or
 rebuild CRUSH from the source code. 
 
 As of version 2.40, the CRUSH source code -- including the crushtools and JNUM
@@ -131,7 +131,6 @@ under the 'Download' tab.
     either do this manually, e.g. inside crush/:
 
        > cp ant/build/*.jar lib/
-       > cp depends/*.jar lib/
 
     or using ANT (from inside crush/ant/):
 
@@ -142,11 +141,11 @@ under the 'Download' tab.
     your freshly minted JARs...
 
 
- 7. Clean up.
+ 7. Clean up. From crush/ant, run:
 
        > ant clean
 
-    will delete the build/ and its contents, but will leave your sources/ 
+    It will delete the build/ and its contents, but will leave your sources/ 
     folder untouched (so you can keep modifying it). Alternatively,
 
        > ant cleanall

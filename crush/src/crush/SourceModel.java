@@ -275,7 +275,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
     public abstract void process(Scan<?,?> scan);
 
-    public void postprocess(Scan<?,?> scan) {}
+    public void postProcess(Scan<?,?> scan) {}
 
     public abstract void sync(Integration<?,?> integration);
 

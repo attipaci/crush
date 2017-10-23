@@ -540,8 +540,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 	    for(int i=0; i<n; i++) {
             Object[] row = hdu.getRow(i);
              
-            if(((String) row[iLABEL]).equals("PWV")) {
-              
+            if(((String) row[iLABEL]).equals("PWV")) {     
                 sum += ((double[]) row[iVALUE])[0];
                 N++;
             }

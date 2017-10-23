@@ -212,7 +212,7 @@ public class MotionFilter extends KillFilter {
 		for(int i=0; i < spectrum.length; i += 2) {
 			vars[i] = spectrum[i] * spectrum[i] + spectrum[i+1] * spectrum[i+1];
 		}
-		return (float) Math.sqrt(Statistics.median(vars, 0, (spectrum.length >> 1) - 1) / Statistics.medianNormalizedVariance);
+		return (float) Math.sqrt(Statistics.Inplace.median(vars, 0, (spectrum.length >> 1) - 1) / Statistics.medianNormalizedVariance);
 	}
 	
 	

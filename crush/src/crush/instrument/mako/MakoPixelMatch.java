@@ -107,7 +107,7 @@ public class MakoPixelMatch extends ToneIdentifier<MakoFrequencyID> {
 			deltas[i] = id.delta / id.freq;
 		}
 		
-		double ave = Statistics.median(deltas);
+		double ave = Statistics.Inplace.median(deltas);
 		CRUSH.values(this, "Median hot/cold response is " + Util.s3.format(1e6 * ave) + " ppm / K");
 		
 		for(int i=size(); --i >= 0; ) {

@@ -73,12 +73,12 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
             @Override
             protected boolean parse(String line) throws Exception {
                 SmartTokenizer tokens = new SmartTokenizer(line);
-                Entry skydip = new Entry();
-                skydip.timeStamp = new TimeStamp(iMJD, tokens.nextToken());
-                skydip.tau.setValue(tokens.nextDouble());
+                Entry entry = new Entry();
+                entry.timeStamp = new TimeStamp(iMJD, tokens.nextToken());
+                entry.tau.setValue(tokens.nextDouble());
                 tokens.skip();
-                skydip.tau.setRMS(ExtraMath.hypot(0.005, tokens.nextDouble()));
-                add(skydip);
+                entry.tau.setRMS(ExtraMath.hypot(0.005, tokens.nextDouble()));
+                add(entry);
                 return true;
             }
 		}.read(fileName);

@@ -27,6 +27,7 @@ import java.util.Arrays;
 import crush.Channel;
 import crush.Integration;
 import jnum.Constant;
+import jnum.data.Statistics;
 
 public abstract class AdaptiveFilter extends VariedFilter {
 	/**
@@ -86,11 +87,7 @@ public abstract class AdaptiveFilter extends VariedFilter {
 			final int fromj = (int) Math.round(i * n);
 			final int toj = (int) Math.round((i+1) * n);
 			if(toj == fromj) to[i] = from[fromj];
-			else {
-				double sum = 0.0;
-				for(int j=toj; --j >= fromj; ) sum += from[j];
-				to[i] = (float) (sum / (toj - fromj));
-			}
+			else to[i] = Statistics.mean(from, fromj, toj);
 		}	
 	}
 	

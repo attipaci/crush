@@ -54,7 +54,7 @@ import nom.tam.fits.Fits;
 
 
 
-public class AstroMap extends AstroData2D<Observation2D> {
+public class AstroIntensityMap extends AstroData2D<Observation2D> {
     /**
      * 
      */
@@ -64,7 +64,7 @@ public class AstroMap extends AstroData2D<Observation2D> {
     protected Image2D base; 
   
   
-    public AstroMap(Instrument<?> instrument) {
+    public AstroIntensityMap(Instrument<?> instrument) {
         super(instrument);
         createMap();
     }
@@ -93,19 +93,19 @@ public class AstroMap extends AstroData2D<Observation2D> {
 
     @Override
     public void addModel(SourceModel model, double weight) {  
-        AstroMap astro = (AstroMap) model;
+        AstroIntensityMap astro = (AstroIntensityMap) model;
         map.accumulate(astro.map, weight);  
     }
 
     @Override
     public void mergeAccumulate(AstroModel2D other) {
-        map.mergeAccumulate(((AstroMap) other).map);
+        map.mergeAccumulate(((AstroIntensityMap) other).map);
     }
 
 
     @Override
-    public AstroMap getWorkingCopy(boolean withContents) {
-        AstroMap copy = (AstroMap) super.getWorkingCopy(withContents);
+    public AstroIntensityMap getWorkingCopy(boolean withContents) {
+        AstroIntensityMap copy = (AstroIntensityMap) super.getWorkingCopy(withContents);
         
         try { copy.map = map.copy(withContents); }
         catch(OutOfMemoryError e) { 
@@ -127,16 +127,15 @@ public class AstroMap extends AstroData2D<Observation2D> {
         map.setCriticalFlags(~FLAG_MASK);  
         
         map.addLocalUnit(getNativeUnit());
-        map.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky");
-        map.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin");   
+        map.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky, JY, jy, JANSKY");
+        map.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin, KELVIN");   
            
         MapProperties properties = map.getProperties();
         properties.setInstrumentName(getInstrument().getName());
         properties.setCreatorName(CRUSH.class.getSimpleName());
         properties.setCopyright(CRUSH.getCopyrightString());     
         properties.seDisplayGridUnit(getInstrument().getSizeUnit());
-        
-        if(hasOption("unit")) map.setUnit(option("unit").getValue());
+      
     }
  
     @Override
@@ -308,15 +307,11 @@ public class AstroMap extends AstroData2D<Observation2D> {
         map.renew();
         base.fill(0.0);
     }
-
-
-
-
    
     @Override
-    public void postprocess(Scan<?,?> scan) {
-        super.postprocess(scan);
-        
+    public void postProcess(Scan<?,?> scan) {
+        super.postProcess(scan);
+           
         if(isEmpty()) return;
 
         if(hasOption("pointing.suggest")) {
@@ -333,7 +328,6 @@ public class AstroMap extends AstroData2D<Observation2D> {
             
             scan.pointing = getPeakSource();
         }
-        
     }
   
 
@@ -451,7 +445,7 @@ public class AstroMap extends AstroData2D<Observation2D> {
             @Override 
             protected void process(final Frame exposure) {
                 for(final Pixel pixel : pixels)  {
-                    AstroMap.this.getIndex(exposure, pixel, projector, index); 
+                    AstroIntensityMap.this.getIndex(exposure, pixel, projector, index); 
                     if(isMasked(index)) for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= sampleFlagPattern;
                 }
             }
@@ -514,7 +508,7 @@ public class AstroMap extends AstroData2D<Observation2D> {
 
                 // Remove source from all but the blind channels...
                 for(final Pixel pixel : pixels)  {
-                    AstroMap.this.getIndex(exposure, pixel, projector, index);
+                    AstroIntensityMap.this.getIndex(exposure, pixel, projector, index);
                     final int i = index.i();
                     final int j = index.j();
 
@@ -594,6 +588,7 @@ public class AstroMap extends AstroData2D<Observation2D> {
 
     @Override
     public void processFinal() {
+        super.processFinal();
         
         // Re-level and weight map if allowed and 'deep' or not 'extended'.
         if(!hasOption("extended") || hasOption("deep")) {

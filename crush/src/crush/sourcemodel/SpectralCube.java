@@ -138,8 +138,8 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
         cube.setCriticalFlags(~FLAG_MASK);  
         
         cube.addLocalUnit(getNativeUnit());
-        cube.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky");
-        cube.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin");   
+        cube.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky, JY, jy, JANSKY");
+        cube.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin, KELVIN");   
            
         for(Observation2D plane : cube.getPlanes()) {
             MapProperties properties = plane.getProperties();

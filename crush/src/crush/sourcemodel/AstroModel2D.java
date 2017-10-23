@@ -190,8 +190,7 @@ public abstract class AstroModel2D extends SourceModel {
         super.createFrom(collection);
         
         info("Initializing Source Map.");	
- 
-           
+    
         Projection2D<SphericalCoordinates> projection = null;
 
         try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
@@ -552,7 +551,10 @@ public abstract class AstroModel2D extends SourceModel {
             ra[i] = (float) equatorial.RA();
             dec[i] = (float) equatorial.DEC();
         }
-        EquatorialCoordinates median = new EquatorialCoordinates(Statistics.median(ra), Statistics.median(dec), CoordinateEpoch.J2000);
+        
+        EquatorialCoordinates median = new EquatorialCoordinates(
+                Statistics.Inplace.median(ra), Statistics.Inplace.median(dec), CoordinateEpoch.J2000
+        );
 
         for(Scan<?,?> scan : getScans()) {
             EquatorialCoordinates equatorial = (EquatorialCoordinates) scan.equatorial.clone();
@@ -882,7 +884,7 @@ public abstract class AstroModel2D extends SourceModel {
         }
    
         processFinal();
-     
+        
         writeFits(fileName);
         
         if(hasOption("write.png")) writePNG(getMap2D(), option("write.png"), fileName);

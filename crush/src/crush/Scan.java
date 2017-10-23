@@ -614,8 +614,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		else if(name.startsWith("src.")) {
 			if(pointing == null) return "---";
-			if(!(sourceModel instanceof AstroMap)) return "---";
-			Map2D map = ((AstroMap) sourceModel).map;
+			if(!(sourceModel instanceof AstroIntensityMap)) return "---";
+			Map2D map = ((AstroIntensityMap) sourceModel).map;
 			return pointing.getRepresentation(map.getGrid()).getData(map.getProperties(), instrument.getSizeUnit()).getTableEntry(name.substring(4));
 		}
 		else if(name.equals("object")) return sourceName;
@@ -866,8 +866,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public String getPointingString() {
 		String info = "";
 			
-		if(sourceModel instanceof AstroMap) {
-			Observation2D map = ((AstroMap) sourceModel).map;
+		if(sourceModel instanceof AstroIntensityMap) {
+			Observation2D map = ((AstroIntensityMap) sourceModel).map;
 			info += pointing.pointingInfo(map) + "\n";
 		}
 		
@@ -877,7 +877,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	
 	public Asymmetry2D getSourceAsymmetry(CircularRegion region) {
-		if(!(sourceModel instanceof AstroMap)) return null;
+		if(!(sourceModel instanceof AstroIntensityMap)) return null;
 		
 		Range radialRange = new Range(
 		        instrument.getPointSize(),
@@ -885,7 +885,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		);
 		
 		
-		AstroMap source = ((AstroMap) sourceModel); 
+		AstroIntensityMap source = ((AstroIntensityMap) sourceModel); 
 		AstroSystem system = source.astroSystem();
 		
 		CircularRegion.Representation r = region.getRepresentation(source.getGrid());

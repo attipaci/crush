@@ -34,6 +34,7 @@ import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.Util;
+import jnum.data.Statistics;
 import jnum.parallel.ParallelTask;
 
 
@@ -410,17 +411,9 @@ public abstract class Filter implements Serializable, Cloneable {
 	protected void levelData() { level(data); }
 	
 	protected void level(float[] signal) {
-		double sum = 0.0;
-		int n = 0;
+		final float level = Statistics.mean(signal);
 
-		for(int i=integration.size(); --i >= 0; ) if(!Float.isNaN(signal[i])) {
-			sum += signal[i];
-			n++;
-		}
-
-		final float level = (float) (sum / n);
-
-		if(n > 0) for(int i=integration.size(); --i >= 0; ) {
+		if(!Double.isNaN(level)) for(int i=integration.size(); --i >= 0; ) {
 			if(Float.isNaN(signal[i])) signal[i] = 0.0F;
 			else signal[i] -= level;
 		}

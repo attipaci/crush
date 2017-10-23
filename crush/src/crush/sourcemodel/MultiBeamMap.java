@@ -44,7 +44,7 @@ import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.parallel.ParallelTask;
 
-public class MultiBeamMap extends AstroMap {
+public class MultiBeamMap extends AstroIntensityMap {
 	/**
 	 * 
 	 */
@@ -371,10 +371,10 @@ public class MultiBeamMap extends AstroMap {
 	
 	
 	@Override
-	public void postprocess(Scan<?,?> scan) {
+	public void postProcess(Scan<?,?> scan) {
 		backTransform();		
 		if(base != null) map.add(base);
-		super.postprocess(scan);
+		super.postProcess(scan);
 	}
 
 	@Override

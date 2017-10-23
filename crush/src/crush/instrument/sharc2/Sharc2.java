@@ -393,7 +393,7 @@ public class Sharc2 extends CSOCamera<Sharc2Pixel> implements GridIndexed {
 			data[n++] = T;
 		}
 		
-		return Statistics.smartMedian(data, 0, n, 0.25).value() - excessLoad;
+		return Statistics.Inplace.smartMedian(data, 0, n, 0.25).value() - excessLoad;
 	}
 	
 	public void calcGainCoefficients(double loadT) {
