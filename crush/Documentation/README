@@ -222,17 +222,17 @@ virtually any fast-sampling scanning camera.
  since these configuation files are in fact sourced as bash scripts before
  launching Java / CRUSH. For example you can add:
 
-      CRUSH_NO_UPDATE_CHECK="1"
-      CRUSH_NO_VM_CHECK="1" 
+	CRUSH_NO_UPDATE_CHECK="1"
+	CRUSH_NO_VM_CHECK="1" 
 	  
-      echo "Will try to parse my own configuration now... "
+	echo "Will try to parse my own configuration now... "
 
-      if [ -f \~/mycrushconfig.sh ] ; then
-          echo -n "OK"
-          source \~/mycrushconfig.sh
-      else
-          echo -n "Not found"
-      fi
+	if [ -f \~/mycrushconfig.sh ] ; then
+	   echo -n "OK"
+	   source \~/mycrushconfig.sh
+	else
+	   echo -n "Not found"
+	fi
 
  The above will disable update checking (not recommended!) and VM checking
  (also not recommended!) and will source the contents of 
@@ -339,13 +339,13 @@ virtually any fast-sampling scanning camera.
 
  * Reduce as many scans together as you can. E.g.
 		
-	> crush laboca 10657-10663 10781 11233-11235 [...]
+	 > crush laboca 10657-10663 10781 11233-11235 [...]
 
  * You can specify opacities, pointings, scaling etc, for each
    of the set of scans listed (See section for Scan-specific options). 
    E.g.,
 
-	> crush laboca -tau=0.32 10657-10663 10781 -tau=0.18 11233 [...]
+	 > crush laboca -tau=0.32 10657-10663 10781 -tau=0.18 11233 [...]
 
    will use a zenith tau value of 0.32 for 10657-10663 and 10781, and
    0.18 for the last scan (11233).
@@ -355,16 +355,16 @@ virtually any fast-sampling scanning camera.
    'extended' option, which will better preserve large scale structures
    albeit at the price of more noise. E.g.
 
-	> crush laboca -extended 10657-10663
+	 > crush laboca -extended 10657-10663
 
  * If your source is faint (meaning S/N `<` 10 in a single scan), then
    you may try using the `faint` option. E.g.
 
-	> crush laboca -faint 10657-10663
+	 > crush laboca -faint 10657-10663
 
    or,
 
-	> crush laboca -faint -extended 10657-10663
+	 > crush laboca -faint -extended 10657-10663
 
    to also try preserve extended structures (see above).
 
@@ -375,7 +375,7 @@ virtually any fast-sampling scanning camera.
    keeping structures up to the specified scales more or less intact. 
    E.g.
 
-	> crush [...] -sourcesize=45.0 10657-10663
+	 > crush [...] -sourcesize=45.0 10657-10663
   
    Will optimize reduction for <\~ 45 arcsec sources.
 
@@ -384,7 +384,7 @@ virtually any fast-sampling scanning camera.
    filtering to yield the cleanest looking maps possible.
    E.g.,
 
-	> crush laboca -deep 10657-10663
+	 > crush laboca -deep 10657-10663
 
    With just these few tips you should be able to achieve a decent job in
    getting the results you seek. CRUSH can also help you reduce 
@@ -392,7 +392,7 @@ virtually any fast-sampling scanning camera.
 
  * To reduce a laboca pointing/calibration scan 11564:
 
-	> crush laboca -point 11564
+	 > crush laboca -point 11564
 
    At the end of the reduction CRUSH will suggest pointing corrections
    and provide detailed information on the source (such as peak and
@@ -400,18 +400,18 @@ virtually any fast-sampling scanning camera.
    appropriate pointing corrections for your science scans, you
    can apply these via the `pointing=x,y` option. E.g.:
 
-	> crush laboca -pointing=3.2,-0.6 12069
+	 > crush laboca -pointing=3.2,-0.6 12069
 
  * You can also reduce skydips, for determining in-band atmospheric
    opacities. E.g.:
 
-	> crush laboca -skydip 26648
+	 > crush laboca -skydip 26648
 	  
  * Finally, you can derive pixel position information from appropriate
    scans, which are designed to ensure the source is moved over every
    detector, in a fully sampled manner. To reduce such beam-maps:
 
-	> crush aszca -beammap 5707
+	 > crush aszca -beammap 5707
 
    CRUSH will write rcp files as output, containing pixel positions
    source and sky gains in a standard 5 column APEX RCP format. 
@@ -922,7 +922,7 @@ virtually any fast-sampling scanning camera.
   corrections. CRUSH provides the means for a analyzing pointing/calibration
   data effectively, using the `point` option:
 
-       > crush [...] -point [...]
+	> crush [...] -point [...]
 
   At the end of the reduction, CRUSH will analyze the map, and suggest
   appropriate pointing corrections (to use with `-pointing`, or other
@@ -959,8 +959,8 @@ virtually any fast-sampling scanning camera.
 
 #### Pixelization (i.e. choosing the 'right' grid)
 
-  **Misconception 1**: You should always _Nyquist_ sample your map, with 2 pixels
-  per beam FWHM, to ensure ideal representation.
+  **Misconception 1**: You should always _Nyquist_ sample your map, with 2 
+  pixels per beam FWHM, to ensure ideal representation.
 
   There is more than one thing wrong with the above idea. First, there is no
   'Nyquist' sampling of Gaussian beams. The Nyquist sampling theorem applies 
@@ -990,8 +990,8 @@ virtually any fast-sampling scanning camera.
 
 #### Smoothing
    
-  **Misconception 2**: You should not smooth your maps, because it does something
-  _unnatural_ to your _raw_ image.
+  **Misconception 2**: You should not smooth your maps, because it does 
+  something _unnatural_ to your _raw_ image.
 
   Again, there are two reasons why this is wrong. The first problem with this 
   view is that there is no _natural_ or _raw_ image to start with, because 
@@ -1011,14 +1011,14 @@ virtually any fast-sampling scanning camera.
   image resolution (imageFWHM) increases with the smoothing width (`smoothFWHM`)
   as
 
-       imageFWHM^2 = beamFWHM^2 + smoothFWHM^2
+	imageFWHM^2 = beamFWHM^2 + smoothFWHM^2
 
   from the instrument resolution (`beamFWHM`). However, you can smooth a fair 
   bit before the degradation of resolution becomes a problem or even really
   noticeable. If you use sub-beam smoothing with `smoothFWHM < beamFWHM`, then 
   the relative widening is roughly
 
-    	 dW / W0 \~ 0.5 * (smoothFWHM / beamFWHM)^2
+	dW / W0 \~ 0.5 * (smoothFWHM / beamFWHM)^2
 
   Thus, smoothing by half a beam, degrades resolution by \~12% only... At the 
   same time, smoothing can bring many benefits:
@@ -1058,12 +1058,12 @@ virtually any fast-sampling scanning camera.
   can be controlled by 'final:smooth' (the `final` stands as a shorthand 
   conditional for the last iteration). Thus,
 
-      > crush [...] -smooth=halfbeam -final:smooth=minimal [...]
+	> crush [...] -smooth=halfbeam -final:smooth=minimal [...]
 
   smoothes by half a beam during the iterations, and only slightly for the 
   output image, while
 
-      > crush [...] -forget=smooth -final:forget=smooth [...]
+	> crush [...] -forget=smooth -final:forget=smooth [...]
 
   disables smoothing both during reduction and at the end. The table below
   summarizes the effect of the preset smoothing values, indicating both the
@@ -1141,11 +1141,11 @@ virtually any fast-sampling scanning camera.
  Iterating longer, will generally help recover more of the not-too-faint 
  large-scale emission (along with the large-scale noise!). Thus,
 
-   	 > crush -extended -rounds=50 [...] 
+   	> crush -extended -rounds=50 [...] 
 
  will generally recover more extended emission than just the default
 
-   	 > crush -extended [...]
+   	> crush -extended [...]
 
  (which iterates 10 times). In general, you may expect to recover significant
  (`>`5 sigma) emission up to scales L as:
@@ -1235,7 +1235,7 @@ virtually any fast-sampling scanning camera.
  CRUSH also provides `imagetool` for post-processing images after reduction. 
  The typical usage of imagetool is:
 
-       > imagetool -name=<output.fits> [options] <input.fits>
+	> imagetool -name=<output.fits> [options] <input.fits>
 
  which processes `<input.fits>` with the given options, and writes the result 
  to `<output.fits>`. 
@@ -1248,14 +1248,14 @@ virtually any fast-sampling scanning camera.
  many more image operations. See the imagetool manual (in your UNIX shell, or
  online) or simply run `imagetool` without an argument:
 
-       > imagetool
+	> imagetool
 
  One of the useful options allows to toggle between the noise estimate from 
  the detector time-streams (`-noise=data`) and from the image itself 
  (`-noise=image`) using a robust estimator. For example, after spatial 
  filtering, you probably want to re-estimate the map noise:
    
-       > imagetool [...] -extFilter=45.0 -noise=image <input.fits>
+	> imagetool [...] -extFilter=45.0 -noise=image <input.fits>
 
  The built-in image display tool `show` also takes all processing options
  of imagetool, but rather than writing the result, it will display it in
@@ -1856,7 +1856,7 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
  to all of them? That too is possible, by (creating and) editing a file
  under the corresponding `~/.crush2/startup/<progname>` directory. E.g.:
 
-     ~/.crush2/startup/crush/myconfig.conf
+	~/.crush2/startup/crush/myconfig.conf
 
  will source the bash snippled contained in `myconfig.conf` for reductions
  (`crush` executable) only. As with other startup scripts, the name of the
@@ -1867,8 +1867,8 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
  (bash) scripts. E.g., the `crush` startup configuration file may contain 
  the lines:
 
-     CRUSH_NO_UPDATE_CHECK="1"
-     EXTRAOPTS="$EXTRAOPTS -Djava.awt.headless=true"
+	CRUSH_NO_UPDATE_CHECK="1"
+	EXTRAOPTS="$EXTRAOPTS -Djava.awt.headless=true"
 
  (The first disables update checking, the second adds headless mode to the
  list of extra Java options already defined).
@@ -1942,12 +1942,12 @@ the correlated signals) may be part of the second step of the decorrelation.
 
  The decorrelation step is invoked by:
 
-       correlated.<modality-name>
+	correlated.<modality-name>
 
  For example, a decorrelation of the signals induced by the chopper 
  displacement in x (e.g. SHARC-2) is invoked by:
 
-       correlated.chopper-x
+	correlated.chopper-x
 
  (Of course, the same keyword must also appear in the pipeline 'ordering', 
  for the step to actually take place during the reduction process -- 
@@ -1956,8 +1956,8 @@ the correlated signals) may be part of the second step of the decorrelation.
  You can fine-tune how CRUSH deals with each correlated mode. For example, 
  the following lines:
 
-       correlated.obs-channels.resolution 1.0
-       correlated.obs-channels.gainrange 0.3--3.0
+	correlated.obs-channels.resolution 1.0
+	correlated.obs-channels.gainrange 0.3--3.0
 
  Specifies that atmospheric signals, which appear in all observing channels, 
  should be correlated. only every second (vs. the default every available 
@@ -1976,9 +1976,9 @@ the correlated signals) may be part of the second step of the decorrelation.
  own pixel groups, divisions and modalities using the `group` and `division` 
  keywords. Here is an example:
 
-       group.my-group-1 10,13,20-25
-       group.my-group-2 40-56,78,80-82
-       division.my-division my-group-1 my-group-2
+	group.my-group-1 10,13,20-25
+	group.my-group-2 40-56,78,80-82
+	division.my-division my-group-1 my-group-2
 
  The first two lines defines two pixel groups (`my-group-1` and `my-group-2`) 
  from pixel indexes and ranges, while the last line creates a division 
@@ -1986,7 +1986,7 @@ the correlated signals) may be part of the second step of the decorrelation.
  correlated modality with the same name as the division. So, given the 
  definitions above you can correlated.on `my-division` by:
 
-       correlated.my-division
+	correlated.my-division
 
 
 
@@ -2011,7 +2011,7 @@ values are generated during reduction, and therefore may not be available to
  the `outpath` directory). Equivalently, you can also set the filename 
  directly as an optional argument to `log` and `obslog`:
 
-      > crush [...] -log=myLog.log [...]
+	> crush [...] -log=myLog.log [...]
 
  You can specify the quantities, and the formatting in which they will appear,
  using the `log.format` and `obslog.format` keys. Below you will find more
@@ -2024,15 +2024,15 @@ values are generated during reduction, and therefore may not be available to
  set via the `log.conflict` and `obslog.conflict` keys, which can have one
  of the following values:
 
-       overwrite    Overwrites the previous log file, with a new one in the
-       		    newly specified format
+	overwrite   Overwrites the previous log file, with a new one in the
+		    newly specified format
 
-       version	    Tries to find a sub-version of the same log file (with .1,
-       		    .2, .3 ... extension added) in the new format, or create
+	version	    Tries to find a sub-version of the same log file (with .1,
+		    .2, .3 ... extension added) in the new format, or create
 		    the next available sub-version.
 
-   The default behaviour is to assume versioning, in order to preserve 
-   information in case of conflicts.
+ The default behaviour is to assume versioning, in order to preserve 
+ information in case of conflicts.
 
 
 
@@ -2411,14 +2411,14 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
 
    
     ASZCA	(2mm) APEX SZ Camera, from Berkeley, CA
-    	      	bolo.berkeley.edu/apexsz/instrument.html
+		bolo.berkeley.edu/apexsz/instrument.html
 
     GISMO	(2mm) Goddard-IRAM Superconducting 2-Millimeter Observer
-    		www.iram.es/IRAMES/mainWiki/
-					GoddardIramSuperconductingTwoMillimeter
+		www.iram.es/IRAMES/mainWiki/GoddardIramSuperconductingTwo\
+		Millimeter
 
     LABOCA	(870um) Large APEX Bolometer Camera
-    		www.apex-telescope.org/bolometer/laboca
+		www.apex-telescope.org/bolometer/laboca
 
     MAKO	(350um) KID technology demonstration camera for the CSO.
 
@@ -2430,14 +2430,14 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
 		www.gb.nrao.edu/mustang/
 
     p-ArTeMiS	(200um, 350um, 450um) 3-color camera for APEX (prototype)
-    		www.apex-telescope.org/instruments/pi/artemis
+		www.apex-telescope.org/instruments/pi/artemis
 
     PolKA	(polarimetry) Polarimeter for LABOCA
-    		www.mpifr-bonn.mpg.de/staff/gsiringo/laboca/
-							laboca_polarimeter.html
+		www.mpifr-bonn.mpg.de/staff/gsiringo/laboca/laboca\
+		_polarimeter.html
 
     SABOCA	(350um) Submillimeter APEX Bolometer Camera
-    		www.apex-telescope.org/bolometer/saboca
+		www.apex-telescope.org/bolometer/saboca
 
     SCUBA-2	(450um, 850um) Submillimetre Common User Bolometer Array 2
 		www.roe.ac.uk/ukatc/projects/scubatwo
@@ -2448,8 +2448,8 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
 
     SHARC-2	(350um, 450um, 850um) The second-generation Submillimeter 
 		High-Angular Resolution Camera
-    		Caltech, Pasadena, CA
-    		www.submm.caltech.edu:/~sharc
+		Caltech, Pasadena, CA
+		www.submm.caltech.edu:/~sharc
 
     SOFIA/HAWC+	(53um, 62um, 89um, 155um, 216um)
 		High-resolution Airborne Wide-angle Camera
