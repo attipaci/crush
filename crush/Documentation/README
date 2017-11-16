@@ -1930,8 +1930,8 @@ the correlated signals) may be part of the second step of the decorrelation.
    `y`      |	Response to the 'y' coordinate of the motion.
    `x^2`    |	Response to the square of the 'x' coordinate.
    `y^2`    |	Response to the square of the 'x' coordinate.
-   `|x|`    |	Response to the magnitude of of the 'x' coordinate.
-   `|y|`    |	Response to the magnitude of of the 'y' coordinate.
+   `\|x\|`  |	Response to the magnitude of of the 'x' coordinate.
+   `\|y\|`  |	Response to the magnitude of of the 'y' coordinate.
    `mag`    |	Response to the magnitude of the motion.
    `norm`   |	Response to the square of the magnitude.
 
@@ -2566,8 +2566,7 @@ is available at:
 I hope you'll find this helpful and may you end up with beautiful images!!!
 
 
-
-===============================================================================
+-----------------------------------------------------------------------------
 
 Copyright (C)2014 -- Attila Kovacs 
 
