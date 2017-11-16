@@ -1084,14 +1084,14 @@ options on the console.
    degradation of resolution (relative to the telescope beam) and the relative
    peak S/N on point sources:
 
-	Table 2. Smoothing properties
+   Table 2. Smoothing properties
 
-	setting        | widening     |	rel. S/N
-	---------------|--------------|---------
-	minimal	       |  	6%    |	    0.33
-	halfbeam       |        12%   |	    0.50
-	2/3beam        | 	22%   |	    0.67
-	beam           | 	41%   |	    1.00
+   setting        | widening     |	rel. S/N
+   ---------------|--------------|---------
+   minimal	  |  	6%    	 |	    0.33
+   halfbeam       |        12%   |	    0.50
+   2/3beam        | 	22%      |	    0.67
+   beam           | 	41%      |	    1.00
 
 
 
@@ -1144,12 +1144,12 @@ options on the console.
 	Table 1. Maximum faint structure scales for S/N <~ 5
 
 	
-		     |	compact (default)     | extended   |   Noise power
-	-------------|------------------------|------------|--------------
-	bright	     |	                      |            |
-	(default)    |	   FOV/2              |	 ~FOV	   |	 ~l^2
-	faint, deep  | 2*sourceSize or 2*beam |	 FOV/2	   |	  ~l
-	-----------------------------------------------------------
+	  	|	compact (default)     | extended   |   Noise power
+   -------------|-----------------------------|------------|--------------
+   bright	|	                      |            |
+   (default)    |	   FOV/2              |	 ~FOV	   |	 ~l^2
+   faint, deep  | 2*sourceSize or 2*beam      |	 FOV/2	   |	  ~l
+
 
 
    Iterating longer, will generally help recover more of the not-too-faint 
@@ -1929,33 +1929,33 @@ the correlated signals) may be part of the second step of the decorrelation.
    Some of the modalities (and pixel divisions) are common to all (or most)
    instruments. These are:
 
-      <modality name> |	Description
-      ----------------|-------------------------------------------------------
-      all	      |	All channels, regardless of their state
-      live	      |	All channels that aren't dead.
-      detectors	      |	All detectors (e.g. excluding resistors etc.)
-      obs-channels    |	All observing detectors (e.g. that see sky).
-      gradients	      |	A focal plane gradients of 'observing' detectors.
-      blinds	      |	Blind detectors (if exist)
-      telescope-x     |	Telescope position in the 'x' direction (e.g. AZ)
-      telescope-y     |	Telescope poistion in the 'y' direction (e.g. EL)
-      accel-<dir>     |	Acceleration in some direction (see below).
-      chopper-<dir>   |	Chopper motion in some direction (see below).
+   <modality name> |	Description
+   ----------------|-------------------------------------------------------
+   all	           |	All channels, regardless of their state
+   live	           |	All channels that aren't dead.
+   detectors	   |	All detectors (e.g. excluding resistors etc.)
+   obs-channels    |	All observing detectors (e.g. that see sky).
+   gradients	   |	A focal plane gradients of 'observing' detectors.
+   blinds	   |	Blind detectors (if exist)
+   telescope-x     |	Telescope position in the 'x' direction (e.g. AZ)
+   telescope-y     |	Telescope poistion in the 'y' direction (e.g. EL)
+   accel-<dir>     |	Acceleration in some direction (see below).
+   chopper-<dir>   |	Chopper motion in some direction (see below).
   
 
 
    Above, the motion-related modalities may have the following directionalities:
 
-       <dir>  |  Description
-       -------|-------------------------------------------------------------
-       x      |	Response to the 'x' coordinate of the motion.	
-       y      |	Response to the 'y' coordinate of the motion.
-       x^2    |	Response to the square of the 'x' coordinate.
-       y^2    |	Response to the square of the 'x' coordinate.
-       |x|    |	Response to the magnitude of of the 'x' coordinate.
-       |y|    |	Response to the magnitude of of the 'y' coordinate.
-       mag    |	Response to the magnitude of the motion.
-       norm   |	Response to the square of the magnitude.
+   <dir>  |  Description
+   -------|-------------------------------------------------------------
+   x      |	Response to the 'x' coordinate of the motion.	
+   y      |	Response to the 'y' coordinate of the motion.
+   x^2    |	Response to the square of the 'x' coordinate.
+   y^2    |	Response to the square of the 'x' coordinate.
+   |x|    |	Response to the magnitude of of the 'x' coordinate.
+   |y|    |	Response to the magnitude of of the 'y' coordinate.
+   mag    |	Response to the magnitude of the motion.
+   norm   |	Response to the square of the magnitude.
 
 
 
