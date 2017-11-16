@@ -200,13 +200,8 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
             double oversample = hasOption("waveplate.oversample") ? option("waveplate.oversample").getDouble() : 1.0;
             int n = (int)Math.round(oversample / (instrument.samplingInterval * polka.waveplateFrequency));
 
-            tpWaveform = new WeightedPoint[n];
-            dw = new WeightedPoint[n];
-            for(int i=dw.length; --i >= 0; ) {
-                tpWaveform[i] = new WeightedPoint();
-                dw[i] = new WeightedPoint();
-            }
-
+            tpWaveform = WeightedPoint.createArray(n);
+            dw = WeightedPoint.createArray(n);
             dAngle = Constant.twoPi / n;
         }
         else for(int i=dw.length; --i >= 0; ) dw[i].noData();

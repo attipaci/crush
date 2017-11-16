@@ -3470,8 +3470,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         int nt = size();
         int nF = windowSize >>> 1;
 
-                Complex[] c = new Complex[nF];
-                for(int i=nF; --i >= 0; ) c[i] = new Complex();
+                Complex[] c = Complex.createArray(nF);
 
                 FauxComplexArray.Float D = new FauxComplexArray.Float(nF);
                 FauxComplexArray.Float S = new FauxComplexArray.Float(nF);

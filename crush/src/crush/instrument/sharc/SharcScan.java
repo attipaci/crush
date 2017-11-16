@@ -170,7 +170,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		int leapDays = dy > 0 ?  (dy+3)/4 : dy/4 - 1;
 		int days2000 = dy * 365 + leapDays + (ut_day-1);
 		
-		long millis = Math.round(AstroTime.millis0UTC1Jan2000 + (days2000 * Unit.day + ut_time * Unit.hour) / Unit.ms);
+		long millis = Math.round(AstroTime.Millis0UTC1Jan2000 + (days2000 * Unit.day + ut_time * Unit.hour) / Unit.ms);
 		AstroTime time = new AstroTime();
 		time.setUTCMillis(millis);
 		timeStamp = time.getFitsTimeStamp();
@@ -178,7 +178,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		setMJD(time.getMJD());
 		
 		// Really iMJD is the MJD for the calendar date here...
-		iMJD = (int) AstroTime.mjdJ2000 + days2000;	
+		iMJD = (int) AstroTime.MJDJ2000 + days2000;	
 		
 		equatorial = new EquatorialCoordinates((hasOption("moving") ? -1.0 : 1.0) * in.readDouble(), in.readDouble());
 		double epoch = in.readDouble();
@@ -353,7 +353,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 	
 	
 	public String getFitsDateString() {
-	    return AstroTime.getDateFormat(AstroTime.fitsDateFormat).format(AstroTime.getTTMillis(iMJD + 0.5));
+	    return AstroTime.getDateFormat(AstroTime.FITSDateFormat).format(AstroTime.getTTMillis(iMJD + 0.5));
 	}
 	
 	

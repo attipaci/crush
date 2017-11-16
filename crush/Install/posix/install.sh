@@ -36,35 +36,25 @@ if [ -z "$SHAREDIR" ] ; then
 	echo SHAREDIR set automatically to $SHAREDIR
 fi
 
+# Determine the directory of this script
+SCRIPTNAME=$(readlink -f $0)
+SCRIPTDIR=$(dirname $SCRIPTNAME)
 
 
-# Determine where the script is being run from...
-NAME=$0
-
-if [ -L $NAME ]; then
-        NAME=`readlink -f $NAME`
-fi
-
-CURRENT_DIR=`pwd`
-INSTALL_FROM=$CURRENT_DIR
+INSTALL_FROM=$SCRIPTDIR
 
 
-# FIRST install the man pages
-# Go to the directory from where this script was called from (i.e. CRUSH)
-cd `dirname $NAME`
+# Determine the CRUSH distribution directory for this script...
+CRUSHDIR=$(readlink -f $0 | sed "s:crush.*:crush:")
 
 # Move to main CRUSH folder (2 levels up...)
-cd ../..
-
-# Make CRUSHDIR carry the absolute path to CRUSH
-CRUSHDIR=`pwd`
-echo CRUSH is located at $CRUSHDIR
+cd $CRUSHDIR
 
 echo Installing CRUSH manuals to $MANDIR...
 
 # Set the proper SELinux context for the man directory and its contents
-chcon -R -u system_u $INSTALL_FROM/man
-chcon -R -t man_t $INSTALL_FROM/man 
+#chcon -R -u system_u $INSTALL_FROM/man
+#chcon -R -t man_t $INSTALL_FROM/man 
 
 # Now copy the man pages to their destination.
 mkdir -p $MANDIR
@@ -76,8 +66,8 @@ OSNAME=`uname`
 if [ $OSNAME == "Linux" ] ; then
 	echo Installing Icons and desktop launchers under $SHAREDIR...
 	
-	chcon -R -u system_u $INSTALL_FROM/share
-	chcon -R -t usr_t $INSTALL_FROM/share
+	#chcon -R -u system_u $INSTALL_FROM/share
+	#chcon -R -t usr_t $INSTALL_FROM/share
 
 	mkdir -p $SHAREDIR
 	cp -r $INSTALL_FROM/share/* $SHAREDIR

@@ -740,9 +740,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		catch(LockedException e) {} // TODO...
 	
 		if(gains.isConfigured("estimator")) if(gains.get("estimator").is("median")) isRobust = true; 
-		
-		WeightedPoint[] G = new WeightedPoint[instrument.storeChannels];
-		for(int i=G.length; --i >= 0; ) G[i] = new WeightedPoint();	
+
+		WeightedPoint[] G = WeightedPoint.createArray(instrument.storeChannels);
 		
 		// Derive the scan gains
 		boolean gotGains = false;

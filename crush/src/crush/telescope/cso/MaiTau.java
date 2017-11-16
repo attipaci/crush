@@ -92,11 +92,11 @@ public class MaiTau extends Hashtable<String, MaiTau.Fit> {
 
 		public double getValue(double fracOfDay) {
 			double value = 0.0;
-			double power = 1.0;
+			double term = 1.0;
 
 			for(int i=0; i<coeff.length; i++) {
-				value += coeff[i] * power;
-				power *= fracOfDay;
+				value += coeff[i] * term;
+				term *= fracOfDay;
 			}
 
 			return value;

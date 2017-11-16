@@ -37,6 +37,8 @@ public class SofiaFrame extends HorizontalFrame {
      */
     private static final long serialVersionUID = -180851195016374209L;
     
+    public double utc;
+    
     public EquatorialCoordinates objectEq;
     public GeodeticCoordinates site;
      

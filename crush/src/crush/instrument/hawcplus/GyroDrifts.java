@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -26,16 +26,19 @@ package crush.instrument.hawcplus;
 import java.util.ArrayList;
 
 import crush.CRUSH;
+import crush.telescope.sofia.SofiaFrame;
 import crush.telescope.sofia.SofiaHeader;
+import crush.telescope.sofia.SofiaIntegration;
 import crush.telescope.sofia.SofiaScan;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
+import jnum.math.Range;
 import jnum.math.Vector2D;
 
 
-public class GyroDrifts extends ArrayList<GyroDrifts.Entry> {
+public class GyroDrifts extends ArrayList<GyroDrifts.Datum> {
     
     
     /**
@@ -44,37 +47,84 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Entry> {
     private static final long serialVersionUID = -3751194338137621151L;
 
     private SofiaScan<?,?> scan;
-    
-    public long scanStartMillis = -1;
-  
+
     public GyroDrifts(SofiaScan<?,?> scan) {
         this.scan = scan;
     } 
     
-    public void parse(SofiaHeader header) {
-        int i=0;
-        while(add(header, i++)) continue;
+    protected void validate() {
+        double fromUTC = scan.getFirstIntegration().getFirstFrame().utc;
+        for(int i=0; i<size(); i++) {
+            Datum drift = get(i);
+            drift.utcRange.setMin(fromUTC);
+            fromUTC = drift.nextUTC;
+        }    
+    }
+    
+    public void correct(SofiaIntegration<?,?> integration) {
+        if(isEmpty()) {
+            integration.warning("Skipping gyro drift correction. No data...");
+            return;
+        }
         
+        integration.info("Correcting for gyro drifts.");
+                
+        validate();
+        
+        int k = 0;
+        Datum drift = get(0);
+        boolean isExtrapolated = false;
+        
+        for(int i=0; i<integration.size(); i++) {
+            SofiaFrame frame = integration.get(i);
+            if(frame == null) continue;
+                    
+            if(!isExtrapolated) while(!drift.utcRange.contains(frame.utc)) {
+                drift = ++k < size() ? get(k) : null;
+                if(drift == null) break;
+            }
+         
+            if(drift == null) {
+                integration.warning("Extrapolated drift correction after frame " + i);
+                drift = get(k-1);
+                isExtrapolated = true;
+            }
+            
+            Vector2D offset = drift.delta.copy();
+            
+            double x = (frame.utc - drift.utcRange.min()) / drift.utcRange.span();
+            offset.scale(x);
+            
+            frame.equatorial.addOffset(offset);
+            
+            frame.equatorialToHorizontal(offset);
+            frame.horizontalOffset.add(offset);
+            frame.horizontal.addOffset(offset);
+        }
+    }
+    
+    protected void parse(SofiaHeader header) {
+        int i=0;     
+        while(add(header, i++)) continue;
     } 
  
     protected boolean add(SofiaHeader header, int index) {
-        Entry entry = new Entry();
-        if(entry.parse(header, index)) {
-            add(entry);
-        
+        Datum drift = new Datum();
+        if(drift.parse(header, index)) {
+            add(drift);
             CRUSH.detail(scan, " drift " + index + ": " 
-                    + Util.f1.format(entry.drift.length() / Unit.arcsec) + " arcsec.");
+                    + Util.f1.format(drift.delta.length() / Unit.arcsec) + " arcsec.");
         }
         else return false;
         
         return true;
     }
     
-    public class Entry {
+    protected class Datum implements Comparable<Datum> {
         int index;
-        public double timestampMillis;
-        public Vector2D drift;
-       
+        public Range utcRange = new Range();
+        public double nextUTC;
+        public Vector2D delta;
         
         public boolean parse(SofiaHeader header, int index) {
             this.index = index;
@@ -101,12 +151,22 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Entry> {
                     epoch
             );
                     
-            drift = after.getOffsetFrom(before);
-            
-            timestampMillis = 0.5 * (header.getDouble("DBTIME" + index) + header.getDouble("DATIME" + index));
+            delta = after.getOffsetFrom(before);
+               
+            utcRange.setMax(header.getDouble("DBTIME" + index));
+            nextUTC = header.getDouble("DATIME" + index);
+
             
             return true;
         }
+
+
+        @Override
+        public int compareTo(Datum o) {
+            return Double.compare(utcRange.max(), o.utcRange.max());
+        }
         
     }
+    
+
 }

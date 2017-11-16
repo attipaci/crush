@@ -4,7 +4,7 @@
 			      Attila Kovacs
 		         <attila[AT]sigmyne.com>
 
-		       Last updated: 5 October 2016
+		      Last updated: 28 October 2017
 
 
 
@@ -542,6 +542,15 @@ For a general overview of channel divisions, please consult Section 3.
                         scan numbers only. Remember to set 'datapath' also to
                         specify the folder where scan files are stored.
                         @See: 'datapath'
+
+   gyrocorrect		@Telescope: SOFIA
+			@Since: 2.41
+			@Advanced
+			Correct for gyro drifts based on guide-star relock
+			data stored in the scan headers. This isn't normally
+			needed when the gyros funtion properly. But,
+			occasionally, they drift a fair bit, and this option
+			can activate the correction scheme on demand.
 
    jumpdata=<path>	@Expert
 			@Since: 2.40

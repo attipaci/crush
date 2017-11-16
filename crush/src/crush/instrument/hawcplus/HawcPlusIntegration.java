@@ -209,7 +209,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     frame.parseData((int[][]) row[iDAC], (short[][]) row[iJump]);
                     frame.mceSerial = ((long[]) row[iSN])[0];
 
-                    timeStamp.setUTCMillis(Math.round(1000.0 * ((double[]) row[iTS])[0]));
+                    frame.utc = ((double[]) row[iTS])[0];
+                    timeStamp.setUTC(frame.utc);
                     frame.MJD = timeStamp.getMJD();
 
                     frame.hwpAngle = (float) (((int[]) row[iHWP])[0] * HawcPlus.hwpStep - hawc.hwpTelescopeVertical);
@@ -361,6 +362,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         checkJumps();
         
         if(hasOption("jumpdata")) correctJumps();
+        
+        if(hasOption("gyrocorrect")) ((HawcPlusScan) scan).gyroDrifts.correct(this);
         
         super.validate();
     }

@@ -27,16 +27,9 @@ MANDIR=$INSTALL_ROOT/share/man
 # The share directory
 SHAREDIR=$INSTALL_ROOT/share
 
-# Determine where the script is being run from...
-NAME=$0
-
-if [ -L $NAME ]; then
-        NAME=`readlink -f $NAME`
-fi
-
-CURRENT_DIR=`pwd`
-cd `dirname $NAME`
-CRUSH=`pwd`
+# Determine the directory of this script
+SCRIPTNAME=$(readlink -f $0)
+SCRIPTDIR=$(dirname $SCRIPTNAME)
 
 echo Removing CRUSH binaries from $BINDIR...
 rm -f $BINDIR/crush
@@ -48,8 +41,9 @@ rm -f $BINDIR/imagetool
 rm -f $BINDIR/jiggle
 rm -f $BINDIR/show
 
+
 echo Removing CRUSH manuals from $MANDIR...
-cd $CRUSH/man
+cd $SCRIPTDIR/man
 for page in man1/* ; do
         rm -f $MANDIR/$page
 done

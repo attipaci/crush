@@ -50,7 +50,7 @@ import nom.tam.util.Cursor;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.40
+ * @version 2.41
  * 
  */
 public class CRUSH extends Configurator implements BasicMessaging {

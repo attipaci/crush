@@ -121,8 +121,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		
 		markChopped(left, right, tolerance);
 		
-		tempPhase = new WeightedPoint[chopper.phases.size()];
-		for(int i=tempPhase.length; --i >=0; ) tempPhase[i] = new WeightedPoint();		
+		tempPhase = WeightedPoint.createArray(chopper.phases.size());		
 	}
 	
 	

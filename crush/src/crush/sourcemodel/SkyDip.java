@@ -61,12 +61,8 @@ public class SkyDip extends SourceModel {
 		copy.data = new WeightedPoint[data.length];
 		if(Tamb != null) copy.Tamb = (WeightedPoint) Tamb.clone();
 		
-		if(withContents) {
-			for(int i=data.length; --i >= 0; ) copy.data[i] = (WeightedPoint) data[i].clone();
-		}
-		else {
-			for(int i=data.length; --i >= 0; ) copy.data[i] = new WeightedPoint();
-		}
+		if(withContents) for(int i=data.length; --i >= 0; ) copy.data[i] = (WeightedPoint) data[i].clone();
+		else WeightedPoint.createArray(data.length);
 		return copy;
 	}
 	
@@ -85,9 +81,7 @@ public class SkyDip extends SourceModel {
 		if(hasOption("skydip.signal")) signalName = option("skydip.signal").getValue();
 		if(hasOption("skydip.mode")) signalIndex = option("skydip.mode").getInt();
 		
-		int bins = (int) Math.ceil(Constant.rightAngle / resolution);
-		data = new WeightedPoint[bins];
-		for(int i=0; i<bins; i++) data[i] = new WeightedPoint();
+		data = WeightedPoint.createArray((int) Math.ceil(Constant.rightAngle / resolution));
 	}
 	
 	public int getBin(double EL) {
@@ -189,7 +183,6 @@ public class SkyDip extends SourceModel {
 		String fileName = hasOption("name") ? option("name").getValue() : getDefaultCoreName();
 		String coreName = CRUSH.workPath + File.separator + fileName;
 		fileName = coreName + ".dat";
-		
 		
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 		StringTokenizer header = new StringTokenizer(model.toString(), "\n");

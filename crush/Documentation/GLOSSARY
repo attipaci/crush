@@ -1434,6 +1434,15 @@
 			channels.
 			@See: 'division'
 
+:: gyrocorrect		@Telescope: SOFIA
+			@Since: 2.41
+			@Advanced
+			Correct for gyro drifts based on guide-star relock
+			data stored in the scan headers. This isn't normally
+			needed when the gyros funtion properly. But, 
+			occasionally, they drift a fair bit, and this option
+			can activate the correction scheme on demand.
+
 :: he3=<source>		@Instrument: LABOCA
 			@Advanced
 			Correct time-streams for He3 temperature fluctuations. 
@@ -1757,6 +1766,18 @@
 			has no effect.
 			@See: 'read.sae'
 
+:: maitau.225GHz=<path>		@Advanced
+				@Instrument: SHARC-2
+				@Since: 2.41
+			Specify the file with the 225GHz MaiTau coefficients.
+			@See: 'tau.225GHz'				
+		
+:: maitau.350um=<path>		@Advanced
+				@Instrument: SHARC-2
+				@Since: 2.41
+			Specify the file with the 350um MaiTau coefficients.
+			@See: 'tau.350um'				
+		
 :: maitau.fallback=<type>	@Instrument: SHARC-2
 				@Advanced
 			Define which tau value to use in case the MaiTau lookup
@@ -1775,24 +1796,8 @@
 
 			Other than the 'direct' flag, the values may be 
 			specified with the corresponding tau settings.
-			@See: 'maitau.server', 'tau.225GHz', 'tau.350um',
-			      'tau.sharc2'
-
-:: maitau.server=IP	@Instrument: SHARC-2
-			@Expert
-			Specify the MaiTau server to use, either as an IP
-			address, or server name. This should probably be set to 
-			'agn.caltech.edu', or to the equivalent 
-			'fangorn.submm.caltech.edu'. MaiTau is a server-based
-			lookup of the CSO opacities, based on dailly polynomial
-			fits to the measured 225GHz and 350um tipper data. The
-			polynomials smooth out short-term fluctuations and 
-			measurement errors, providing a smoothly varying 
-			function of tau with time. When using MaiTau, CRUSH 
-			will try use the 350um fit, and then the 225GHz fit (if 
-			available), from which it calculates an appropriate 
-			in-band zenith tau value.
-			@See: 'tau.<?>.a', 'tau.<?>.b'
+			@See: 'maitau.225GHz', maitau.350um', 'tau.225GHz', 
+			'tau.350um', 'tau.sharc2'
 
 :: mappingfraction=X   	@Advanced
 			Specify a minimum fraction of pixels in the array

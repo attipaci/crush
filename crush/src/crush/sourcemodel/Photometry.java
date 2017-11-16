@@ -53,8 +53,7 @@ public abstract class Photometry extends SourceModel {
 
     public Photometry(Instrument<?> instrument) {
         super(instrument);
-        flux = new WeightedPoint[instrument.storeChannels+1];
-        for(int i=flux.length; --i >= 0; ) flux[i] = new WeightedPoint();
+        flux = WeightedPoint.createArray(instrument.storeChannels+1);
     }
 
 
