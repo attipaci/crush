@@ -1,7 +1,7 @@
 # CRUSH
 
 Author: Attila Kovacs <attila[AT]sigmyne.com>  
-Last updated: 14 February 2017
+Last updated: 16 November 2017
 
 
 ----------------------------------------------------------------------------
@@ -77,9 +77,7 @@ Last updated: 14 February 2017
 ## 1. Getting Started
 
 CRUSH-2 is a reduction and imaging package for various astronomical imaging
-arrays. It is based on the development centred on SHARC-2 (crush-1.xx) as
-well as a reincarnation for the APEX bolometers (minicrush). Version 2
-provides, for the first time, a unified platform for reducing data from
+arrays. Version 2 provides a unified platform for reducing data from
 virtually any fast-sampling scanning camera. 
 
 
@@ -88,7 +86,7 @@ virtually any fast-sampling scanning camera.
 
 #### Install Java (if not already installed)
    
-  Download Java, e.g. from www.java.com. If you already have Java, check that 
+  Download Java, e.g. from www.java.com. If you have Java already, check that 
   it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
 
 	> java -version
@@ -103,7 +101,7 @@ virtually any fast-sampling scanning camera.
 
   You can get the latest version of CRUSH from:
 
-	http://www.submm.caltech.edu/\~sharc/crush 
+	http://www.submm.caltech.edu/~sharc/crush 
 
   Linux users can grab one of the distribution packages to install CRUSH via
   a package manager. Packages are provided for both RPM-based distributions 
@@ -121,13 +119,13 @@ virtually any fast-sampling scanning camera.
 
   Unpack the tarball in the desired location (e.g. under `~/astrotools/`):
 
-        > cd ~/astrotools
-        > tar xzf crush-2.xx-x.tar.gz
+	> cd ~/astrotools
+	> tar xzf crush-2.xx-x.tar.gz
 
   Verify that CRUSH works:
 
-        > cd crush
-        > ./crush
+	> cd crush
+	> ./crush
 
   You should see a brief information screen on how to use CRUSH.
 
@@ -339,13 +337,13 @@ virtually any fast-sampling scanning camera.
 
  * Reduce as many scans together as you can. E.g.
 		
-	 > crush laboca 10657-10663 10781 11233-11235 [...]
+        > crush laboca 10657-10663 10781 11233-11235 [...]
 
  * You can specify opacities, pointings, scaling etc, for each
    of the set of scans listed (See section for Scan-specific options). 
    E.g.,
 
-	 > crush laboca -tau=0.32 10657-10663 10781 -tau=0.18 11233 [...]
+        > crush laboca -tau=0.32 10657-10663 10781 -tau=0.18 11233 [...]
 
    will use a zenith tau value of 0.32 for 10657-10663 and 10781, and
    0.18 for the last scan (11233).
@@ -355,16 +353,16 @@ virtually any fast-sampling scanning camera.
    'extended' option, which will better preserve large scale structures
    albeit at the price of more noise. E.g.
 
-	 > crush laboca -extended 10657-10663
+        > crush laboca -extended 10657-10663
 
  * If your source is faint (meaning S/N `<` 10 in a single scan), then
    you may try using the `faint` option. E.g.
 
-	 > crush laboca -faint 10657-10663
+        > crush laboca -faint 10657-10663
 
    or,
 
-	 > crush laboca -faint -extended 10657-10663
+        > crush laboca -faint -extended 10657-10663
 
    to also try preserve extended structures (see above).
 
@@ -375,7 +373,7 @@ virtually any fast-sampling scanning camera.
    keeping structures up to the specified scales more or less intact. 
    E.g.
 
-	 > crush [...] -sourcesize=45.0 10657-10663
+        > crush [...] -sourcesize=45.0 10657-10663
   
    Will optimize reduction for <\~ 45 arcsec sources.
 
@@ -384,7 +382,7 @@ virtually any fast-sampling scanning camera.
    filtering to yield the cleanest looking maps possible.
    E.g.,
 
-	 > crush laboca -deep 10657-10663
+        > crush laboca -deep 10657-10663
 
    With just these few tips you should be able to achieve a decent job in
    getting the results you seek. CRUSH can also help you reduce 
@@ -392,7 +390,7 @@ virtually any fast-sampling scanning camera.
 
  * To reduce a laboca pointing/calibration scan 11564:
 
-	 > crush laboca -point 11564
+        > crush laboca -point 11564
 
    At the end of the reduction CRUSH will suggest pointing corrections
    and provide detailed information on the source (such as peak and
@@ -400,18 +398,18 @@ virtually any fast-sampling scanning camera.
    appropriate pointing corrections for your science scans, you
    can apply these via the `pointing=x,y` option. E.g.:
 
-	 > crush laboca -pointing=3.2,-0.6 12069
+        > crush laboca -pointing=3.2,-0.6 12069
 
  * You can also reduce skydips, for determining in-band atmospheric
    opacities. E.g.:
 
-	 > crush laboca -skydip 26648
+        > crush laboca -skydip 26648
 	  
  * Finally, you can derive pixel position information from appropriate
    scans, which are designed to ensure the source is moved over every
    detector, in a fully sampled manner. To reduce such beam-maps:
 
-	 > crush aszca -beammap 5707
+        > crush aszca -beammap 5707
 
    CRUSH will write rcp files as output, containing pixel positions
    source and sky gains in a standard 5 column APEX RCP format. 
