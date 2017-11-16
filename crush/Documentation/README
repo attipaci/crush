@@ -1070,12 +1070,13 @@ virtually any fast-sampling scanning camera.
   degradation of resolution (relative to the telescope beam) and the relative
   peak S/N on point sources:
 
-   Table 1. Smoothing properties
+
+   **Table 1.** _Smoothing properties_
 
    setting        | widening     |	rel. S/N
-   ---------------|--------------|---------
+   ---------------|--------------|--------------
    minimal	  |  	6%    	 |	    0.33
-   halfbeam       |        12%   |	    0.50
+   halfbeam       |     12%      |	    0.50
    2/3beam        | 	22%      |	    0.67
    beam           | 	41%      |	    1.00
 
@@ -1126,7 +1127,7 @@ virtually any fast-sampling scanning camera.
  mode:
 
 
-   Table 2. Maximum faint structure scales for S/N `<`\~ 5
+   **Table 2.** _Maximum faint structure scales for S/N `<`\~ 5_
 
 	
    option       |	compact (default)     | extended   |   Noise power
@@ -1301,16 +1302,16 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
 					
 					2. ./<instrument>/
 
-					3. \~/.crush2/
+					3. ~/.crush2/
 
-					4. \~/.crush2/<instrument>/
+					4. ~/.crush2/<instrument>/
 
 				Whenever a matching file is found its contents
 				are parsed. Because of the ordering, it is 
 				convenient to create overriding configurations.
 				Thus instrument specific settings can be used 
 				to override default settings, and user specific
-				settings placed in '\~/.crush2' can override
+				settings placed in '~/.crush2' can override
 				shipped defaults. Whenever a configuration is
 				parsed, there is a note of it on the console
 				output so that one always knows which files 
@@ -1324,13 +1325,13 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
 
 				   <crush>/config/default.cfg
 				   <crush>/config/laboca/default.cfg
-				   \~/.crush2/default.cfg
-				   \~/.crush2/laboca/default.cfg
+				   ~/.crush2/default.cfg
+				   ~/.crush2/laboca/default.cfg
 				  
 				   <crush>/config/faint.cfg
 				   <crush>/config/laboca/faint.cfg
-				   \~/.crush2/faint.cfg
-				   \~/.crush2/laboca/faint.cfg
+				   ~/.crush2/faint.cfg
+				   ~/.crush2/laboca/faint.cfg
 				   
 				Each successively loaded file may override
 				the options set before it.
@@ -1893,45 +1894,46 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 ### 4.1 Modes and Modalities
 
- For each instrument, crush defines a set of 'modalities' (i.e. a set of
+ For each instrument, crush defines a set of _modalities_ (i.e. a set of
  correlated modes) on which decorrelation may be performed. Each mode in a
- 'modality' affects a 'group' of pixels. Thus, the collection of pixel groups
- with related modes constitutes a 'division'. For example, SHARC-2 has 12 
+ _modality_ affects a _group_ of pixels. Thus, the collection of pixel groups
+ with related modes constitutes a _division_. For example, SHARC-2 has 12 
  detector rows (each with 32 pixels). The dividing of pixels into 12 groups,
- each representing a detector row, is a pixel 'division'. Pixels in a given 
- row respond to the same correlated 'mode', and so there are 12 row-related 
- modes, which are bunched together in a 'modality'.
+ each representing a detector row, is a pixel _division_. Pixels in a given 
+ row respond to the same correlated _mode_, and so there are 12 row-related 
+ modes, which are bunched together in a _modality_.
 
  Some of the modalities (and pixel divisions) are common to all (or most)
  instruments. These are:
 
-   <modality name> |	Description
+   `<modality name>` |	Description
    ----------------|-------------------------------------------------------
-   all	           |	All channels, regardless of their state
-   live	           |	All channels that aren't dead.
-   detectors	   |	All detectors (e.g. excluding resistors etc.)
-   obs-channels    |	All observing detectors (e.g. that see sky).
-   gradients	   |	A focal plane gradients of 'observing' detectors.
-   blinds	   |	Blind detectors (if exist)
-   telescope-x     |	Telescope position in the 'x' direction (e.g. AZ)
-   telescope-y     |	Telescope poistion in the 'y' direction (e.g. EL)
-   accel-<dir>     |	Acceleration in some direction (see below).
-   chopper-<dir>   |	Chopper motion in some direction (see below).
+   `all`	   |	All channels, regardless of their state
+   `live`	   |	All channels that aren't dead.
+   `detectors`	   |	All detectors (e.g. excluding resistors etc.)
+   `obs-channels`  |	All observing detectors (e.g. that see sky).
+   `gradients`	   |	A focal plane gradients of 'observing' detectors.
+   `blinds`	   |	Blind detectors (if exist)
+   `telescope-x`   |	Telescope position in the 'x' direction (e.g. AZ)
+   `telescope-y`   |	Telescope poistion in the 'y' direction (e.g. EL)
+   `accel-<dir>`   |	Acceleration in some direction (see below).
+   `chopper-<dir>` |	Chopper motion in some direction (see below).
   
 
 
  Above, the motion-related modalities may have the following directionalities:
 
-   <dir>  |  Description
-   -------|-------------------------------------------------------------
-   x      |	Response to the 'x' coordinate of the motion.	
-   y      |	Response to the 'y' coordinate of the motion.
-   x^2    |	Response to the square of the 'x' coordinate.
-   y^2    |	Response to the square of the 'x' coordinate.
-   |x|    |	Response to the magnitude of of the 'x' coordinate.
-   |y|    |	Response to the magnitude of of the 'y' coordinate.
-   mag    |	Response to the magnitude of the motion.
-   norm   |	Response to the square of the magnitude.
+
+   `<dir>`  |  Description
+   ---------|-------------------------------------------------------------
+   `x`      |	Response to the 'x' coordinate of the motion.	
+   `y`      |	Response to the 'y' coordinate of the motion.
+   `x^2`    |	Response to the square of the 'x' coordinate.
+   `y^2`    |	Response to the square of the 'x' coordinate.
+   `|x|`    |	Response to the magnitude of of the 'x' coordinate.
+   `|y|`    |	Response to the magnitude of of the 'y' coordinate.
+   `mag`    |	Response to the magnitude of the motion.
+   `norm`   |	Response to the square of the magnitude.
 
 
 
@@ -2009,7 +2011,7 @@ values are generated during reduction, and therefore may not be available to
  the `outpath` directory). Equivalently, you can also set the filename 
  directly as an optional argument to `log` and `obslog`:
 
-      > crush [...] -log=myLog.log [...]  
+      > crush [...] -log=myLog.log [...]
 
  You can specify the quantities, and the formatting in which they will appear,
  using the `log.format` and `obslog.format` keys. Below you will find more
@@ -2392,12 +2394,12 @@ values are generated during reduction, and therefore may not be available to
 
 #### Telescope specific log entries
 
-   APEX: see the crush/apex/README.
+   APEX: see the `crush/Documentation/README.apex`.
 
 
 #### Instrument specific log entries
 
-   See the crush/<instrument>/README, for each <instrument>.
+   See the `crush/Documentation/README.<instrument>`, for each `<instrument>`.
   
 	
 ---------------------------------------------------------------------------
@@ -2416,7 +2418,7 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
 					GoddardIramSuperconductingTwoMillimeter
 
     LABOCA	(870um) Large APEX Bolometer Camera
-    		www.apex-telescope.org/bolometer/laboca		 
+    		www.apex-telescope.org/bolometer/laboca
 
     MAKO	(350um) KID technology demonstration camera for the CSO.
 
@@ -2447,7 +2449,7 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
     SHARC-2	(350um, 450um, 850um) The second-generation Submillimeter 
 		High-Angular Resolution Camera
     		Caltech, Pasadena, CA
-    		www.submm.caltech.edu:/\~sharc
+    		www.submm.caltech.edu:/~sharc
 
     SOFIA/HAWC+	(53um, 62um, 89um, 155um, 216um)
 		High-resolution Airborne Wide-angle Camera
@@ -2559,7 +2561,7 @@ in maps ('histogram').
 Downloading the CRUSH package(s), and further information on the FITS images
 is available at:
 
-	http://www.submm.caltech.edu/\~sharc/crush
+	http://www.submm.caltech.edu/~sharc/crush
 
 I hope you'll find this helpful and may you end up with beautiful images!!!
 
