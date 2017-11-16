@@ -104,7 +104,7 @@ virtually any fast-sampling scanning camera.
    -------------------
    You can get the latest version of CRUSH from:
 
-	http://www.submm.caltech.edu/~sharc/crush 
+	http://www.submm.caltech.edu/\~sharc/crush 
 
    Linux users can grab one of the distribution packages to install CRUSH via
    a package manager. Packages are provided for both RPM-based distributions 
@@ -120,9 +120,9 @@ virtually any fast-sampling scanning camera.
   
    #### A. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
    --------------------------------------------------------------
-   Unpack the tarball in the desired location (e.g. under '~/astrotools/'):
+   Unpack the tarball in the desired location (e.g. under '\~/astrotools/'):
 
-        > cd ~/astrotools
+        > cd \~/astrotools
         > tar xzf crush-2.xx-x.tar.gz
 
    Verify that CRUSH works:
@@ -167,7 +167,7 @@ virtually any fast-sampling scanning camera.
    of RAM use).  
 
    You can override the defaults by placing your settings in arbitrary files 
-   under /etc/crush2/startup or ~/.crush2/startup (for the equivalent 
+   under /etc/crush2/startup or \~/.crush2/startup (for the equivalent 
    configuration under Windows, please refer to windows/README.windows)
 
    (Any settings in the user's home under .crush2/startup will overrride the 
@@ -175,7 +175,7 @@ virtually any fast-sampling scanning camera.
    multiple config files exist in the same location, these will be parsed in 
    non-specific order). 
 
-   E.g., placing the following lines in ~/.crush2/startup/java.conf overrides 
+   E.g., placing the following lines in \~/.crush2/startup/java.conf overrides 
    all available runtime configuration settings:
 
 	JAVA="/usr/java/latest/bin/java"
@@ -228,16 +228,16 @@ virtually any fast-sampling scanning camera.
 	  
       echo "Will try to parse my own configuration now... "
 
-      if [ -f ~/mycrushconfig.sh ] ; then
+      if [ -f \~/mycrushconfig.sh ] ; then
           echo -n "OK"
-          source ~/mycrushconfig.sh
+          source \~/mycrushconfig.sh
       else
           echo -n "Not found"
       fi
 
    The above will disable update checking (not recommended!) and VM checking
    (also not recommended!) and will source the contents of 
-   '~/mycrushconfig.sh' if and when such a file exists.
+   '\~/mycrushconfig.sh' if and when such a file exists.
 
 
 
@@ -251,20 +251,20 @@ virtually any fast-sampling scanning camera.
    configurations will survive future updates to CRUSH.
 
    You can create/edit your default configuration by editing 'default.cfg'
-   (either in the installation folder or '~/.crush2', or in the appropriate
+   (either in the installation folder or '\~/.crush2', or in the appropriate
    instrument subdirectory within it. 
    As an example a user configuration for LABOCA data can be placed into 
-   '~/.crush2/laboca/default.cfg', with the a content:
+   '\~/.crush2/laboca/default.cfg', with the a content:
 	
-	datapath ~/data
-	outpath ~/images
+	datapath \~/data
+	outpath \~/images
 	project T-79.F-0002-2006
 
    This tells crush that when reducing LABOCA data it should look for raw data 
-   files in '~/data', write all output to '~/images', and specifies the default
+   files in '\~/data', write all output to '\~/images', and specifies the default
    project to be 'T-79.F-0002-2006' 
  
-   The tilde character '~' is used as a shorthand for the home directory 
+   The tilde character '\~' is used as a shorthand for the home directory 
    (similarly to UNIX shell syntax). In your configuration you can also refer 
    to environment variables or other settings (see more about it further below).
 
@@ -380,7 +380,7 @@ options on the console.
 
 	> crush [...] -sourcesize=45.0 10657-10663
   
-     Will optimize reduction for <~ 45 arcsec sources.
+     Will optimize reduction for <\~ 45 arcsec sources.
 
    * Finally, if your sources are not only faint, but also point-like, 
      you should try the 'deep' option. This will use the most aggressive
@@ -567,9 +567,9 @@ options on the console.
    if exist.
  
    After that, crush will check if these configuration files also exists 
-   under the inside the '~/.crush2' directory of the user. If so, they will be
+   under the inside the '\~/.crush2' directory of the user. If so, they will be
    used to override again. See more on this in the next section under the
-   'config' option. In this way, the '~/.crush' directory can be used as
+   'config' option. In this way, the '\~/.crush' directory can be used as
    a convenient way to create user specific setting and/or overrides to
    global defaults.
 
@@ -770,7 +770,7 @@ options on the console.
 			source NEV/NEFD of the instrument is shown in the 
 			brackets (e.g. as Jy sqrt(s)).
 
-	[C1~#.##]	Filtering corrections are applied directly and are
+	[C1\~#.##]	Filtering corrections are applied directly and are
 			#.## on average.
 
 	[C2=#.##]	Faint structures are corrected for filtering after
@@ -992,13 +992,13 @@ options on the console.
 
    Thus, you can choose a practical cutoff frequency (i.e. pixelization) based
    on the level of information loss and corruption you are willing to tolerate.
-   At 2.5 pixels pear FWHM, you retain ~95% of the underlying information, and 
+   At 2.5 pixels pear FWHM, you retain \~95% of the underlying information, and 
    corrupt it by the remaining 5%. With more pixels per beam, you get more 
    accurate maps. (The 2-pixels per beam, that many understand to be the 
    Nyquist  sampled, is certainly too few by most standards of accuracy!)
 
    Thus, the CRUSH default is to use around 5-pixels per FWHM, representing a 
-   compromise between completeness (~99%) with minimal corruption (<1%) and a 
+   compromise between completeness (\~99%) with minimal corruption (<1%) and a 
    senseless increase of map pixels (i.e. number of model parameters).
 
 
@@ -1032,9 +1032,9 @@ options on the console.
    noticeable. If you use sub-beam smoothing with smoothFWHM < beamFWHM, then 
    the relative widening is roughly
 
-    	 dW / W0 ~ 0.5 * (smoothFWHM / beamFWHM)^2
+    	 dW / W0 \~ 0.5 * (smoothFWHM / beamFWHM)^2
 
-   Thus, smoothing by half a beam, degrades resolution by ~12% only... At the 
+   Thus, smoothing by half a beam, degrades resolution by \~12% only... At the 
    same time, smoothing can bring many benefits:
 
    * Improves image appearance and S/N by rejecting pixelization noise. It is
@@ -1060,7 +1060,7 @@ options on the console.
    default reduction aims to provide maps with maximal resolution (i.e. no 
    smoothing), although a some smoothing is used during the iterations to aid
    convergence to a robust solution. 'faint' mode reductions smooth by 2/3 
-   beams (resulting in ~22% degradation of resolution), to provide better 
+   beams (resulting in \~22% degradation of resolution), to provide better 
    signal-to-noise at a moderate loss of spatial resolution. 
    Finally, 'deep' reductions yield beam smoothed images, which are ideal for 
    point source extraction, even if some spatial details are sacrificed.
@@ -1141,14 +1141,14 @@ options on the console.
    mode:
 
 
-   Table 3. Maximum faint structure scales for S/N <~ 5
+   Table 3. Maximum faint structure scales for S/N <\~ 5
 
 	
    option       |	compact (default)     | extended   |   Noise power
    -------------|-----------------------------|------------|--------------
    bright	|	                      |            |
-   (default)    |	   FOV/2              |	 ~FOV	   |	 ~l^2
-   faint, deep  | 2*sourceSize or 2*beam      |	 FOV/2	   |	  ~l
+   (default)    |	   FOV/2              |	 \~FOV	   |	 \~l^2
+   faint, deep  | 2*sourceSize or 2*beam      |	 FOV/2	   |	  \~l
 
 
 
@@ -1164,7 +1164,7 @@ options on the console.
    (which iterates 10 times). In general, you may expect to recover significant
    (>5 sigma) emission up to scales L as:
 
-	L ~= FoV + sqrt(N v T)
+	L \~= FoV + sqrt(N v T)
 
    in terms the number of iteration N, limiting Field-of-View (FoV), scanning 
    velocity v and correlated noise stability time-scale T. Unfortunately, the 
@@ -1172,7 +1172,7 @@ options on the console.
    of a second or less due to a highly variable atmosphere. At the same time, 
    the noise rms on the large scales will increase assymptotically as:
 
-	rms ~ sqrt(N)
+	rms \~ sqrt(N)
 
    for large numbers of iterations.
 
@@ -1321,16 +1321,16 @@ necessary.) The commands are:
 					
 					2. ./<instrument>/
 
-					3. ~/.crush2/
+					3. \~/.crush2/
 
-					4. ~/.crush2/<instrument>/
+					4. \~/.crush2/<instrument>/
 
 				Whenever a matching file is found its contents
 				are parsed. Because of the ordering, it is 
 				convenient to create overriding configurations.
 				Thus instrument specific settings can be used 
 				to override default settings, and user specific
-				settings placed in '~/.crush2' can override
+				settings placed in '\~/.crush2' can override
 				shipped defaults. Whenever a configuration is
 				parsed, there is a note of it on the console
 				output so that one always knows which files 
@@ -1344,13 +1344,13 @@ necessary.) The commands are:
 
 				   <crush>/config/default.cfg
 				   <crush>/config/laboca/default.cfg
-				   ~/.crush2/default.cfg
-				   ~/.crush2/laboca/default.cfg
+				   \~/.crush2/default.cfg
+				   \~/.crush2/laboca/default.cfg
 				  
 				   <crush>/config/faint.cfg
 				   <crush>/config/laboca/faint.cfg
-				   ~/.crush2/faint.cfg
-				   ~/.crush2/laboca/faint.cfg
+				   \~/.crush2/faint.cfg
+				   \~/.crush2/laboca/faint.cfg
 				   
 				Each successively loaded file may override
 				the options set before it.
@@ -1436,17 +1436,17 @@ necessary.) The commands are:
 
   The default reduction (see 'default.cfg') is optimized 
   for mapping compact (up to the field-of-view or smaller) sources in the S/N
-  range of ~10-1000. These options are useful if your source does not match
+  range of \~10-1000. These options are useful if your source does not match
   these criteria.
 
 
-	bright		Use for bright sources (S/N > ~1000). This setting
+	bright		Use for bright sources (S/N > \~1000). This setting
 			entirely bypasses all filtering to produce a very
 			faithful map. The drawback is more noise, but
 			that should not be an issue for such a bright guy :-)
 			Will invoke 'bright.cfg'.
 
-	faint		Use with faint sources (S/N < ~30) when the
+	faint		Use with faint sources (S/N < \~30) when the
 			source is faint but still visible in a single scan. 
 			This setting applies some more aggressive filtering of 
 			the timestreams, and extended structures. It invokes 
@@ -1467,7 +1467,7 @@ necessary.) The commands are:
 			extended structures becomes increasingly more 
 			difficult. For bright structures recovery up to FOV 
 			(or beyond!) should be possible, while for faint 
-			structures ~1/4 FOV - FOV scales are maximally 
+			structures \~1/4 FOV - FOV scales are maximally 
 			obtainable (see more on this in the section below.)
   
 	source.type=<type>	By default, crush will try to make a map from
@@ -1509,10 +1509,10 @@ necessary.) The commands are:
 
 
 	outpath=<path>	Set the directory into which output files (e.g. maps) 
-			will be written. Can use '~' for home directory and 
+			will be written. Can use '\~' for home directory and 
 			environment variables in {}'s. Thus,
 
-			   outpath=~/images
+			   outpath=\~/images
 
 			and
 
@@ -1605,7 +1605,7 @@ necessary.) The commands are:
 
 	grid=X		set the map pixelization to X arcsec. Pixelization
 			smaller than 2/5 beam is recommended. The default is
-			~1/5 beam pixelization.
+			\~1/5 beam pixelization.
 
 	name=		Specify the output image file name, relative to the
 			directory specified by 'outpath'. When not given
@@ -1875,13 +1875,13 @@ necessary.) The commands are:
 ============================================================
 
    We have seen before how to configure the startup environment and Java by
-   placing configuration snipplets inside the directory '~/.crush2/startup/'. 
+   placing configuration snipplets inside the directory '\~/.crush2/startup/'. 
    However, what if you want certain settings to apply to just a specific 
    program within the crush suite (e.g. to 'crush' or 'show') only, but not 
    to all of them? That too is possible, by (creating and) editing a file
-   under the corresponding '~/.crush2/startup/<progname>' directory. E.g.:
+   under the corresponding '\~/.crush2/startup/<progname>' directory. E.g.:
 
-     ~/.crush2/startup/crush/myconfig.conf
+     \~/.crush2/startup/crush/myconfig.conf
 
    will source the bash snippled contained in 'myconfig.conf' for reductions
    ('crush' executable) only. As with other startup scripts, the name of the
@@ -2480,7 +2480,7 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
     SHARC-2	(350um, 450um, 850um) The second-generation Submillimeter 
 		High-Angular Resolution Camera
     		Caltech, Pasadena, CA
-    		www.submm.caltech.edu:/~sharc
+    		www.submm.caltech.edu:/\~sharc
 
     SOFIA/HAWC+	(53um, 62um, 89um, 155um, 216um)
 		High-resolution Airborne Wide-angle Camera
@@ -2593,7 +2593,7 @@ in maps ('histogram').
 Downloading the CRUSH package(s), and further information on the FITS images
 is available at:
 
-	http://www.submm.caltech.edu/~sharc/crush
+	http://www.submm.caltech.edu/\~sharc/crush
 
 I hope you'll find this helpful and may you end up with beautiful images!!!
 
