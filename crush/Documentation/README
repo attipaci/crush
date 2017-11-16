@@ -69,7 +69,7 @@ Last updated: 14 February 2017
 ### 8. Further information
 
 
-
+----------------------------------------------------------------------------
 
 
 
@@ -85,10 +85,9 @@ virtually any fast-sampling scanning camera.
 
 
 ### 1.1 Installation
-=====================
 
    #### Install Java (if not already installed)
-   --------------------------------------------
+   
    Download Java, e.g. from www.java.com. If you already have Java, check that 
    it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
 
@@ -101,7 +100,7 @@ virtually any fast-sampling scanning camera.
 
 
    #### Download CRUSH
-   -------------------
+
    You can get the latest version of CRUSH from:
 
 	http://www.submm.caltech.edu/\~sharc/crush 
@@ -109,8 +108,8 @@ virtually any fast-sampling scanning camera.
    Linux users can grab one of the distribution packages to install CRUSH via
    a package manager. Packages are provided for both RPM-based distributions 
    (like Fedora, Redhat, CentOS, or SUSE), and Debian-based distributions (e.g.
-   Ubuntu, Mint). Both will install CRUSH in '/usr/share/crush'. Note, if you 
-   use one of these packages you will need root privileges (e.g. via 'sudo') on
+   Ubuntu, Mint). Both will install CRUSH in `/usr/share/crush`. Note, if you 
+   use one of these packages you will need root privileges (e.g. via `sudo`) on
    the machine. Unprivileged users should install using the tarball.
 
    For all others, CRUSH is distributed as a gzipped tarball (or as a zip 
@@ -119,10 +118,10 @@ virtually any fast-sampling scanning camera.
 
   
    #### A. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
-   --------------------------------------------------------------
-   Unpack the tarball in the desired location (e.g. under '\~/astrotools/'):
 
-        > cd \~/astrotools
+   Unpack the tarball in the desired location (e.g. under `~/astrotools/`):
+
+        > cd ~/astrotools
         > tar xzf crush-2.xx-x.tar.gz
 
    Verify that CRUSH works:
@@ -135,7 +134,7 @@ virtually any fast-sampling scanning camera.
 
 
    #### B. Installation via Linux packages
-   ---------------------------------------
+  
    Use the package manager on your system to install. E.g., on RPM-based 
    systems (Fedora, RHEL, CentOS, SUSE) you may type:
 
@@ -150,14 +149,14 @@ virtually any fast-sampling scanning camera.
 
 
    #### C. Windows Installation
-   ----------------------------
-   Please refer to 'README.windows', which may be found in the Install\windows\
-   subdirectory of the distribution, or online under the 'Documents' tab.
+   
+   Please refer to `README.windows`, which may be found in the 
+   `Install\windows\` subdirectory of the distribution, or online under the 
+   'Documents' tab.
 
  
 
 ### 1.2 (optional) Java Configuration
-=====================================
 
 
    CRUSH ships with a default Java configuration. On Windows and the most 
@@ -167,15 +166,15 @@ virtually any fast-sampling scanning camera.
    of RAM use).  
 
    You can override the defaults by placing your settings in arbitrary files 
-   under /etc/crush2/startup or \~/.crush2/startup (for the equivalent 
-   configuration under Windows, please refer to windows/README.windows)
+   under /etc/crush2/startup or `~/.crush2/startup` (for the equivalent 
+   configuration under Windows, please refer to `README.windows`)
 
-   (Any settings in the user's home under .crush2/startup will overrride the 
-   system-wide values in /etc/crush2/startup or C:\Program Data\startup. If 
-   multiple config files exist in the same location, these will be parsed in 
+   (Any settings in the user's home under `.crush2/startup` will overrride the 
+   system-wide values in `/etc/crush2/startup` or `C:\Program Data\startup`. 
+   If multiple config files exist in the same location, these will be parsed in 
    non-specific order). 
 
-   E.g., placing the following lines in \~/.crush2/startup/java.conf overrides 
+   E.g., placing the following lines in `~/.crush2/startup/java.conf` overrides 
    all available runtime configuration settings:
 
 	JAVA="/usr/java/latest/bin/java"
@@ -185,8 +184,8 @@ virtually any fast-sampling scanning camera.
 	EXTRAOPTS="-Djava.awt.headless=true"
 
    Upon startup CRUSH will find and apply these settings, so it will use
-   "/usr/java/latest/bin/java" to run CRUSH, in 64-bit mode, with 4GB of RAM, 
-   using the HotSpot 'server' VM, and in headless mode (without display,
+   `/usr/java/latest/bin/java` to run CRUSH, in 64-bit mode, with 4GB of RAM, 
+   using the HotSpot `server` VM, and in headless mode (without display,
    mouse or keyboard).
 
    Below is a guide to the variables that you can override to set your own
@@ -194,7 +193,7 @@ virtually any fast-sampling scanning camera.
 
 	JAVA		Set to the location of the Java executable you want
 			to use. E.g. "java" to use the default Java, or
-			"/usr/java/latest/bin/java" to use the latest from
+			`/usr/java/latest/bin/java` to use the latest from
 			Oracle or OpenJDK.
 
 	DATAMODEL	Set to "32" or "64", to select 32 or 64-bit mode.
@@ -208,11 +207,11 @@ virtually any fast-sampling scanning camera.
 			Thus, "1900" is a good maximum value to use in 32-bit
 			mode.
 
-	JVM		Usually set to "-server" for Oracle or OpenJDK. If 
+	JVM		Usually set to `-server` for Oracle or OpenJDK. If 
 			using IBM's Java, set it to "" (empty string). On ARM 
 			platforms, you probably get better performance using
-			"-jamvm" or "-avian". o see what VM options are 
-			available, run 'java -help'. The VM options are listed 
+			`-jamvm` or `-avian`. o see what VM options are 
+			available, run `java -help`. The VM options are listed 
 			near the top of the resulting help screen. 
 
 	EXTRAOPTS	Any other non-standard options you may want to pass
@@ -237,16 +236,15 @@ virtually any fast-sampling scanning camera.
 
    The above will disable update checking (not recommended!) and VM checking
    (also not recommended!) and will source the contents of 
-   '\~/mycrushconfig.sh' if and when such a file exists.
+   `~/mycrushconfig.sh` if and when such a file exists.
 
 
 
 ### 1.3.  CRUSH Pipeline Configuration
-======================================
 
 
    The preferred way of creating user-specific configurations for CRUSH is to
-   place your personalized configuration files inside a '.crush2/' 
+   place your personalized configuration files inside a `.crush2/` 
    configuration directory within your home. This way, your personalized 
    configurations will survive future updates to CRUSH.
 
@@ -278,7 +276,6 @@ virtually any fast-sampling scanning camera.
 
 
 ### 1.4. The Tools of the CRUSH Suite
-=====================================
 
 CRUSH provides a collection of other useful tools. Here's a short description
 of what is there and what they are used for. Each tool, when run without
@@ -312,7 +309,6 @@ options on the console.
 
 
 ### 1.5. Quick Start
-====================
 
    To reduce data, simply specify the instrument (E.g. 'sharc2', 'laboca'...) 
    and the scan numbers/ids (or names of the scan files or directories) to 
@@ -432,7 +428,6 @@ options on the console.
    
 
 ### 1.6. A Brief Description of What CRUSH Does and How...
-==========================================================
 
    CRUSH is a pipeline reduction that is principally meant to remove
    correlated signals (correlated noise) in the time-streams to arrive
@@ -460,7 +455,6 @@ options on the console.
 
 
 ### 1.7. Command-line Options and Scripting Support
-===================================================   
 
    Configuration of CRUSH is available either through command line 
    options or via scripting. You have seen scripting already in the form
@@ -476,7 +470,7 @@ options on the console.
 
 
    #### Basic Rules
-   ----------------
+ 
    When defining settings, keys can be separated from their values either by
    '=', ':' or empty spaces (or even a combination of these).
 
@@ -514,7 +508,7 @@ options on the console.
 
  
    #### Dynamic Conditionals
-   -------------------------
+ 
    Some conditions are interpreted dynamically. For example CRUSH, can 
    activate settings based on observation date (or MJD) or serial number, on 
    a scan-by-scan basis, such as:
@@ -559,7 +553,7 @@ options on the console.
 
    
    #### Startup Configuration
-   --------------------------
+   
    At launch, crush will parse 'config/default.cfg' to establish a default 
    configuration set. All configurations files are first parsed from the 
    files in the config/ directory inside crush, then additional options or 
@@ -578,7 +572,6 @@ options on the console.
 
 
 ### 1.8. Making sense of the console output
-===========================================
  
    Don't ignore the console output. It contains a lot of information, which
    may be useful for diagnosing your reduction, and troubleshooting if things
@@ -600,7 +593,6 @@ options on the console.
 
 
    ##### An example line from the console output
-   --------------------------------------------
 
    Let's begin with a concrete example. Here is a section from the console 
    output from the reduction of LABOCA scan 11564 (from 2007): 
@@ -664,14 +656,12 @@ options on the console.
 
    
    #### Console Output Reference Guide
-   ===================================
 
    Below is a reference guide for interpreting the console output for your 
    particular reduction:
   
 
    ##### Quantities inside the brackets:
-   -------------------------------------
 
 	[nnnnn|m]:	processing scan nnnnn, subscan m from the list
 
@@ -687,7 +677,6 @@ options on the console.
 
 
    ##### Reduction-step Shorthands (alphabetically)
-   ------------------------------------------------
 
 	a		Decorrelating amplifier boards (e.g. LABOCA,GISMO).
 
@@ -763,7 +752,6 @@ options on the console.
 			from the whitening is shown.	
 
   ##### Source model-specific:
-  ----------------------------
 
      
    	Map		Calculating source map from scan. The effective point
@@ -806,7 +794,6 @@ options on the console.
 
 
 ### 1.9. Examples
-=================
 
    Reduce scans 12065-12069 and 12072 with zenith tau of 0.18:
 
@@ -897,13 +884,13 @@ options on the console.
 
 
 
+----------------------------------------------------------------------------
 
 ## 2. Advanced Topics
 
 
 
 ### 2.1 Pointing Corrections
-============================
 
    Reducing the data with the correct pointing can be crucial (esp. when 
    attempting to detect/calibrate faint point sources). At times the pointing
@@ -928,7 +915,7 @@ options on the console.
 
 
    #### Obtaining Corrections
-   --------------------------
+
    Good practice demands that you regularly observe pointing/calibration 
    sources near your science targets, from which you can derive appropriate
    corrections. CRUSH provides the means for a analyzing pointing/calibration
@@ -944,7 +931,7 @@ options on the console.
 
 
    #### After Reduction (a poor alternative)
-   -----------------------------------------
+   
    You can also make pointing changes after the reduction (alas, now in 
    RA/DEC). You can read off the apparent source position from each separately 
    reduced scan (e.g. by using 'show' and placing the cursor above the apparent
@@ -963,7 +950,6 @@ options on the console.
 
 
 ### 2.2 Pixelization and Smoothing
-==================================
 
    There seem to be many misconceptions about the 'correct' choice of 
    pixelization and about the (mal)effects of smoothing. This section aims to 
@@ -972,8 +958,8 @@ options on the console.
 
 
    #### Pixelization (i.e. choosing the 'right' grid)
-   --------------------------------------------------
-   Misconception 1: You should always 'Nyquist' sample your map, with 2 pixels
+
+   *Misconception 1*: You should always 'Nyquist' sample your map, with 2 pixels
    per beam FWHM, to ensure ideal representation.
 
    There is more than one thing wrong with the above idea. First, there is no
@@ -1003,8 +989,8 @@ options on the console.
 
 
    #### Smoothing
-   --------------
-   Misconception 2: You should not smooth your maps, because it does something
+   
+   *Misconception 2*: You should not smooth your maps, because it does something
    'unnatural' to your 'raw' image.
 
    Again, there are two reasons why this is wrong. The first problem with this 
@@ -1099,7 +1085,6 @@ options on the console.
 
 
 ### 2.3 Recovery of Extended Emission
-======================================
 
    As a general rule, ground based instruments (in the mm and submm) are only 
    sensitive to structures smaller than the Field-of-View (FoV) of the 
@@ -1181,7 +1166,6 @@ options on the console.
 
 
 ### 2.4 Filtering corrections, transfer functions, etc.
-=======================================================
 
    Most reduction steps (decorrelation, 1/f drift removal, spectral filtering) 
    will impact different spatial frequencies of the source structure 
@@ -1205,7 +1189,7 @@ options on the console.
 
 
    #### Transfer functions and simulated sources
-   ---------------------------------------------
+
    The 'sources' option provides a means for inserting test sources into
    CRUSH maps, while one of the 'jackknife' options can be used to remove
    any real emission beforehand but retaining the signal and noise structure
@@ -1247,7 +1231,6 @@ options on the console.
 
 
 ### 2.5 Image processing post-reduction
-=======================================
 
    CRUSH also provides 'imagetool' for post-processing images after reduction. 
    The typical usage of imagetool is:
@@ -1283,12 +1266,11 @@ options on the console.
 
     
 ### 2.6 Reducing Very Large Datasets
-====================================
 
    Coming soon...
 
 
-
+---------------------------------------------------------------------------
 
 
 
@@ -1305,7 +1287,6 @@ adding the dash. (Also, '=' can be replaced by a space in scripting...)
 
 
 ### 3.1 Commands
-================
 
 There are a handful of keywords that are treated as commands by crush. (The
 difference being that commands are interpreted and acted on right away, whereas 
@@ -1430,7 +1411,6 @@ necessary.) The commands are:
 
 
 ### 3.2 Pipeline Configuration
-==============================
 
   #### a. Source types. 
 
@@ -1586,7 +1566,6 @@ necessary.) The commands are:
 
 
 ### 3.3 Source (Map) Configuration
-==================================
 	
 	altaz		Shorthand for 'system=horizontal' to reduce in Alt/Az.
 			It is also aliased to 'horizontal'.
@@ -1699,7 +1678,6 @@ necessary.) The commands are:
 
 
 ### 3.4 Scan Configuration
-==========================
 
    Some options relate to the scans, helping to configure and handle them
    These options are specified *before* the list or range of scans to
@@ -1814,7 +1792,6 @@ necessary.) The commands are:
 
 
 ### 3.5 Instrument Configuration
-================================
 
    There are various instrument configuration files. These reside in the
    corresponding instrument subdirectories inside the main crush directory.
@@ -1831,7 +1808,6 @@ necessary.) The commands are:
 
 
    #### Generic Instrument Parameters
-   ----------------------------------
 
 
 	pixeldata=<filename>	Specifies a pixel data file, providing initial
@@ -1872,7 +1848,6 @@ necessary.) The commands are:
 
 
 ### 3.6. Advanced startup environment and Java configuration
-============================================================
 
    We have seen before how to configure the startup environment and Java by
    placing configuration snipplets inside the directory '\~/.crush2/startup/'. 
@@ -1898,6 +1873,9 @@ necessary.) The commands are:
    (The first disables update checking, the second adds headless mode to the
    list of extra Java options already defined).
 
+
+
+--------------------------------------------------------------------------
   
 
 ## 4. Correlated Signals
@@ -1915,7 +1893,6 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 ### 4.1 Modes and Modalities
-============================
 
    For each instrument, crush defines a set of 'modalities' (i.e. a set of
    correlated modes) on which decorrelation may be performed. Each mode in a
@@ -1961,7 +1938,6 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 ### 4.2 Removing Correlated Signals
-===================================
 
    The decorrelation step is invoked by:
 
@@ -1991,7 +1967,6 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 ### 4.3 User-defined Modalities
-===============================
 
    In addition to the most common modalities listed above, each instruments 
    defines its specific ones (e.g. 'rows' for SHARC-2 from the example above). 
@@ -2029,8 +2004,7 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-### 5.1 Log Files and Versioning
-================================
+   ### 5.1 Log Files and Versioning
 
    You can specify the log files to use with the 'log.file' and 'obslog.file'
    keys (the default is to use <instrument>.log and <instrument>.obs.log in the
@@ -2063,8 +2037,7 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-### 5.2 Decimal Formatting of Values
-====================================
+   ### 5.2 Decimal Formatting of Values
 
    Many of the quantities you can log are floating point values, and you have
    the possibility of controlling how these will appear in your log files. 
@@ -2135,8 +2108,7 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 	
 
-### 5.3 Loggable Quantities
-===========================
+   ### 5.3 Loggable Quantities
 
    Currently, CRUSH offers the following quantities for logging. Directives
    starting with '?' will log the values of configuration keys. Other 
@@ -2387,7 +2359,6 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
    #### Source model specific log entries
-   --------------------------------------
 
 	map.beams	  Number of (smoothed) beams in the map.
 
@@ -2422,18 +2393,16 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
    #### Telescope specific log entries
-   -----------------------------------
 
    APEX: see the crush/apex/README.
 
 
    #### Instrument specific log entries
-   ------------------------------------
 
    See the crush/<instrument>/README, for each <instrument>.
   
 	
-
+---------------------------------------------------------------------------
 
 
 ## 6. Supported Cameras
@@ -2497,6 +2466,8 @@ side-band (DSB) receivers. Such new features may appear in future releases,
 especially upon specific request and/or arrangement...
 
 
+---------------------------------------------------------------------------
+
 
 ## 7. Future Developments (A Wish List...)
 
@@ -2507,8 +2478,7 @@ implementation. Nonetheless, the following avenues of feature enrichment are
 being considered. 
 
 
-### 7.1 Support for Heterodyne Receivers and Interferometry
-===========================================================
+   ### 7.1 Support for Heterodyne Receivers and Interferometry
 
    CRUSH was born as a bolometer array reduction package. However, there is no
    reason why many of its principles could not be applied to other types of 
@@ -2521,8 +2491,7 @@ being considered.
    to deal with immense data volumes also.
 
 
-### 7.2 Interactive Reductions
-==============================
+   ### 7.2 Interactive Reductions
 
    At present CRUSH offers only a reduction pipeline. This is ideal for
    crunching large volumes of data in a more-or-less automated fashion, and 
@@ -2543,8 +2512,7 @@ being considered.
    essential plotting capabilities, but that too may come sooner than later...
 
 
-### 7.3 Distributed and GPU Computing
-=====================================
+   ### 7.3 Distributed and GPU Computing
 
    The reduction paradigm of CRUSH is massively parallelizable. CRUSH can
    already make good use of any number of processing cores within a computer.
@@ -2561,8 +2529,7 @@ being considered.
    performace of CRUSH. 
 
 
-### 7.4 Graphical User-Interface (GUI)
-======================================
+   ### 7.4 Graphical User-Interface (GUI)
 
    The addition of a Graphical User Interface (GUI) to CRUSH would make 
    configurations more transparent and intuitive. It would allow users, who do 
@@ -2574,6 +2541,7 @@ being considered.
    details, such as monitoring quantities, signals or maps during the reduction.
 
 
+-----------------------------------------------------------------------------
 
 ## 8. Further information
 
