@@ -1,10 +1,9 @@
+# A Guide to Using CRUSH-2. 
 
-		      *** A Guide to Using CRUSH-2. *** 
+Attila Kovacs 
+<attila[AT]sigmyne.com>
 
-		 	        Attila Kovacs 
-		          <attila[AT]sigmyne.com>
-
-		       Last updated: 14 February 2017
+Last updated: 14 February 2017
 
 
 
@@ -14,53 +13,84 @@ Table of Contents
 1. Getting Started
 
   1.1 Installation
+
   1.2 (optional) Java Runtime Configuration
+
   1.3 CRUSH Pipeline Configuration
+
   1.4 The Tools of the CRUSH Suite
+
   1.5 Quick Start
+
   1.6 A Brief Description of What CRUSH Does and How...
+
   1.7 Command-line Options and Scripting Support
+
   1.8 Making Sense of the Console Output
+
   1.9 Examples
+
 
 2. Advanced Topics
 
   2.1 Pointing Corrections
+
   2.2 Pixelization and Smoothing
+
   2.3 Recovery of Extended Emission
+
   2.4 Filtering corrections, transfer functions, etc.
+
   2.5 Image Processing Post-Reduction
+
   2.6 Reducing Very Large Datasets (to do...)
+
 
 3. Advanced Configuration
 
   3.1 Commands
+
   3.2 Pipeline Configuration
+
   3.3 Source (Map) Configuration
+
   3.4 Scan Configuration
+
   3.5 Instrument Configuration
+
   3.6 Advanced startup environment and Java configuration
+
 
 4. Correlated Signals 
 
   4.1 Modes and Modalities
+
   4.2 Removing Correlated Signals
+
   4.3 User-defined Modalities
 
 5. Custom Logging Support
  
   5.1 Log Files and Versioning
+
   5.2 Decimal Formatting of Values
+
   5.3 Loggable Quantities
 
+
 6. Supported Cameras
+
 
 7. Future Developments (A Wish List...)
 
   7.1 Support for Heterodyne Receivers and Interferometry
+
   7.2 Interactive Reductions
+
   7.3 Distributed and GPU Computing
+
   7.4 Graphical User-Interface (GUI)
+
 
 8. Further information
 
@@ -70,9 +100,7 @@ Table of Contents
 
 
 
-#####################################################################
-1. Getting Started
-#####################################################################
+## 1. Getting Started
 
 CRUSH-2 is a reduction and imaging package for various astronomical imaging
 arrays. It is based on the development centred on SHARC-2 (crush-1.xx) as
@@ -661,7 +689,7 @@ options on the console.
    Quantities inside the brackets:
    -------------------------------
 
-   [nnnnn|m]:		processing scan nnnnn, subscan m from the list
+	[nnnnn|m]:	processing scan nnnnn, subscan m from the list
 
 	(#.##E#)	The effective point-source NEFD (usually after 
 			weighting or at the mapping step)
@@ -844,9 +872,7 @@ options on the console.
 
 
 
-#####################################################################
-2. Advanced Topics
-#####################################################################
+## 2. Advanced Topics
 
 
 
@@ -1032,16 +1058,15 @@ options on the console.
    degradation of resolution (relative to the telescope beam) and the relative
    peak S/N on point sources:
 
+	Table 2. Smoothing properties
 
-|           Table 2. Smoothing properties
-|           -------------------------------------
-|           setting          widening	rel. S/N
-|           =====================================
-|           minimal	         6%	    0.33
-|           halfbeam	        12%	    0.50
-|           2/3beam	        22%	    0.67
-|           beam		41%	    1.00
-|           -------------------------------------
+	setting        | widening     |	rel. S/N
+	---------------|--------------|---------
+	minimal	       |  	6%    |	    0.33
+	halfbeam       |        12%   |	    0.50
+	2/3beam        | 	22%   |	    0.67
+	beam           | 	41%   |	    1.00
+
 
 
 
@@ -1090,19 +1115,15 @@ options on the console.
    mode:
 
 
-|	Table 1. Maximum faint structure scales for S/N <~ 5
-|
-|	
-|		     |	  (compact)	extended      Noise power
-|		     |	  (DEFAULT)		      with size l
-|	===========================================================
-|	bright	     |	
-|	(DEFAULT)    |	   FOV/2	 ~FOV		 ~l^2
-|                    |
-|		     |	2*sourceSize	 		  
-|	faint, deep  |	     or		 FOV/2		  ~l
-|		     |	   2*beam
-|	-----------------------------------------------------------
+	Table 1. Maximum faint structure scales for S/N <~ 5
+
+	
+		     |	compact (default)     | extended   |   Noise power
+	-------------|------------------------|------------|--------------
+	bright	     |	                      |            |
+	(default)    |	   FOV/2              |	 ~FOV	   |	 ~l^2
+	faint, deep  | 2*sourceSize or 2*beam |	 FOV/2	   |	  ~l
+	-----------------------------------------------------------
 
 
    Iterating longer, will generally help recover more of the not-too-faint 
@@ -1245,9 +1266,7 @@ options on the console.
 
 
 
-#####################################################################
-3. Advanced Configuration
-#####################################################################
+## 3. Advanced Configuration
 
 
 In this section, you can find information on the most useful configuration
@@ -1852,9 +1871,7 @@ necessary.) The commands are:
 
   
 
-#####################################################################
-4. Correlated Signals
-#####################################################################
+## 4. Correlated Signals
 
 
 The removal of correlated signals, atmospheric or instrumental, is really the
@@ -1968,9 +1985,7 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-#####################################################################
-5. Custom Logging Support
-#####################################################################
+## 5. Custom Logging Support
 
 
    CRUSH (as of version 2.03 really) provides a poweful scan/reduction logging
@@ -2392,9 +2407,7 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-#####################################################################
-6. Supported Cameras
-#####################################################################
+## 6. Supported Cameras
 
 Currently, CRUSH supports the following instruments (in alphabetical order):
 
@@ -2456,9 +2469,7 @@ especially upon specific request and/or arrangement...
 
 
 
-#####################################################################
-7. Future Developments (A Wish List...)
-#####################################################################
+## 7. Future Developments (A Wish List...)
 
 
 There are a number of plans for new features in CRUSH. Some may come in the
@@ -2535,9 +2546,7 @@ being considered.
 
 
 
-#####################################################################
-8. Further information
-#####################################################################
+## 8. Further information
 
 
 CRUSH-2 is the next-generation data reduction package, inheriting its DNA from
