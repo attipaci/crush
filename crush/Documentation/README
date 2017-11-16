@@ -86,96 +86,96 @@ virtually any fast-sampling scanning camera.
 
 ### 1.1 Installation
 
-   #### Install Java (if not already installed)
+#### Install Java (if not already installed)
    
-   Download Java, e.g. from www.java.com. If you already have Java, check that 
-   it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
+  Download Java, e.g. from www.java.com. If you already have Java, check that 
+  it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
 
-        > java -version
+	> java -version
 
-   Note, that The GNU java a.k.a. gij (default on some older RedHat and Fedora
-   systems) is painfully slow and unreliable, and will not always run CRUSH
-   correctly. If you need Java, you can download the latest JRE from
-   wwww.java.com
+  Note, that The GNU java a.k.a. gij (default on some older RedHat and Fedora
+  systems) is painfully slow and unreliable, and will not always run CRUSH
+  correctly. If you need Java, you can download the latest JRE from
+  wwww.java.com
 
 
-   #### Download CRUSH
+#### Download CRUSH
 
-   You can get the latest version of CRUSH from:
+  You can get the latest version of CRUSH from:
 
 	http://www.submm.caltech.edu/\~sharc/crush 
 
-   Linux users can grab one of the distribution packages to install CRUSH via
-   a package manager. Packages are provided for both RPM-based distributions 
-   (like Fedora, Redhat, CentOS, or SUSE), and Debian-based distributions (e.g.
-   Ubuntu, Mint). Both will install CRUSH in `/usr/share/crush`. Note, if you 
-   use one of these packages you will need root privileges (e.g. via `sudo`) on
-   the machine. Unprivileged users should install using the tarball.
+  Linux users can grab one of the distribution packages to install CRUSH via
+  a package manager. Packages are provided for both RPM-based distributions 
+  (like Fedora, Redhat, CentOS, or SUSE), and Debian-based distributions (e.g.
+  Ubuntu, Mint). Both will install CRUSH in `/usr/share/crush`. Note, if you 
+  use one of these packages you will need root privileges (e.g. via `sudo`) on
+  the machine. Unprivileged users should install using the tarball.
 
-   For all others, CRUSH is distributed as a gzipped tarball (or as a zip 
-   archive). Simply unpack it in the directory, where you want the crush to 
-   reside. 
+  For all others, CRUSH is distributed as a gzipped tarball (or as a zip 
+  archive). Simply unpack it in the directory, where you want the crush to 
+  reside. 
 
   
-   #### A. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
+#### A. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
 
-   Unpack the tarball in the desired location (e.g. under `~/astrotools/`):
+  Unpack the tarball in the desired location (e.g. under `~/astrotools/`):
 
         > cd ~/astrotools
         > tar xzf crush-2.xx-x.tar.gz
 
-   Verify that CRUSH works:
+  Verify that CRUSH works:
 
         > cd crush
         > ./crush
 
-   You should see a brief information screen on how to use CRUSH.
+  You should see a brief information screen on how to use CRUSH.
 
 
 
-   #### B. Installation via Linux packages
+#### B. Installation via Linux packages
   
-   Use the package manager on your system to install. E.g., on RPM-based 
-   systems (Fedora, RHEL, CentOS, SUSE) you may type:
+  Use the package manager on your system to install. E.g., on RPM-based 
+  systems (Fedora, RHEL, CentOS, SUSE) you may type:
 
 	> sudo yum localinstall --nogpg crush-<version>-noarch.rpm
 
-   On Debian based systems (e.g. Ubuntu, Mint) the same is achieved by:
+  On Debian based systems (e.g. Ubuntu, Mint) the same is achieved by:
 
 	> sudo apt-get install crush-<version>.deb
 
-   Or, you may simply double click the package icon from a file browser. 
+  Or, you may simply double click the package icon from a file browser. 
 
 
 
-   #### C. Windows Installation
+#### C. Windows Installation
    
-   Please refer to `README.windows`, which may be found in the 
-   `Install\windows\` subdirectory of the distribution, or online under the 
-   'Documents' tab.
+  Please refer to `README.windows`, which may be found in the 
+  `Install\windows\` subdirectory of the distribution, or online under the 
+  'Documents' tab.
 
  
 
 ### 1.2 (optional) Java Configuration
 
 
-   CRUSH ships with a default Java configuration. On Windows and the most 
-   common POSIX platforms (Linux, Mac OS X, BSD, and Solaris), it will 
-   automatically attempt to set an optimal configuration. On other platforms, 
-   it comes with fail-safe default values (default java, 32-bit mode and 1GB 
-   of RAM use).  
+ CRUSH ships with a default Java configuration. On Windows and the most 
+ common POSIX platforms (Linux, Mac OS X, BSD, and Solaris), it will 
+ automatically attempt to set an optimal configuration. On other platforms, 
+ it comes with fail-safe default values (default java, 32-bit mode and 1GB 
+ of RAM use).
 
-   You can override the defaults by placing your settings in arbitrary files 
-   under /etc/crush2/startup or `~/.crush2/startup` (for the equivalent 
-   configuration under Windows, please refer to `README.windows`)
+ You can override the defaults by placing your settings in arbitrary files 
+ under /etc/crush2/startup or `~/.crush2/startup` (for the equivalent 
+ configuration under Windows, please refer to `README.windows`)
 
-   (Any settings in the user's home under `.crush2/startup` will overrride the 
-   system-wide values in `/etc/crush2/startup` or `C:\Program Data\startup`. 
-   If multiple config files exist in the same location, these will be parsed in 
-   non-specific order). 
+ (Any settings in the user's home under `.crush2/startup` will overrride the 
+ system-wide values in `/etc/crush2/startup` or `C:\Program Data\startup`. 
+ If multiple config files exist in the same location, these will be parsed in 
+ non-specific order). 
 
-   E.g., placing the following lines in `~/.crush2/startup/java.conf` overrides 
-   all available runtime configuration settings:
+ E.g., placing the following lines in `~/.crush2/startup/java.conf` overrides 
+ all available runtime configuration settings:
 
 	JAVA="/usr/java/latest/bin/java"
 	DATAMODEL="64"
@@ -183,13 +183,13 @@ virtually any fast-sampling scanning camera.
 	JVM="-server"
 	EXTRAOPTS="-Djava.awt.headless=true"
 
-   Upon startup CRUSH will find and apply these settings, so it will use
-   `/usr/java/latest/bin/java` to run CRUSH, in 64-bit mode, with 4GB of RAM, 
-   using the HotSpot `server` VM, and in headless mode (without display,
-   mouse or keyboard).
+ upon startup CRUSH will find and apply these settings, so it will use
+ `/usr/java/latest/bin/java` to run CRUSH, in 64-bit mode, with 4GB of RAM, 
+ using the HotSpot `server` VM, and in headless mode (without display,
+ mouse or keyboard).
 
-   Below is a guide to the variables that you can override to set your own
-   Java runtime configuration:
+ Below is a guide to the variables that you can override to set your own
+ Java runtime configuration:
 
 	JAVA		Set to the location of the Java executable you want
 			to use. E.g. "java" to use the default Java, or
@@ -218,9 +218,9 @@ virtually any fast-sampling scanning camera.
 			to the Java VM should go here. 
 	
 
-   You can also specify environment variables, and add shell scripts (bash),
-   since these configuation files are in fact sourced as bash scripts before
-   launching Java / CRUSH. For example you can add:
+ You can also specify environment variables, and add shell scripts (bash),
+ since these configuation files are in fact sourced as bash scripts before
+ launching Java / CRUSH. For example you can add:
 
       CRUSH_NO_UPDATE_CHECK="1"
       CRUSH_NO_VM_CHECK="1" 
@@ -234,41 +234,40 @@ virtually any fast-sampling scanning camera.
           echo -n "Not found"
       fi
 
-   The above will disable update checking (not recommended!) and VM checking
-   (also not recommended!) and will source the contents of 
-   `~/mycrushconfig.sh` if and when such a file exists.
+ The above will disable update checking (not recommended!) and VM checking
+ (also not recommended!) and will source the contents of 
+ `~/mycrushconfig.sh` if and when such a file exists.
 
 
 
 ### 1.3.  CRUSH Pipeline Configuration
 
+ The preferred way of creating user-specific configurations for CRUSH is to
+ place your personalized configuration files inside a `.crush2/` 
+ configuration directory within your home. This way, your personalized 
+ configurations will survive future updates to CRUSH.
 
-   The preferred way of creating user-specific configurations for CRUSH is to
-   place your personalized configuration files inside a `.crush2/` 
-   configuration directory within your home. This way, your personalized 
-   configurations will survive future updates to CRUSH.
-
-   You can create/edit your default configuration by editing 'default.cfg'
-   (either in the installation folder or '\~/.crush2', or in the appropriate
-   instrument subdirectory within it. 
-   As an example a user configuration for LABOCA data can be placed into 
-   '\~/.crush2/laboca/default.cfg', with the a content:
+ You can create/edit your default configuration by editing `default.cfg`
+ (either in the installation folder or `~/.crush2`, or in the appropriate
+ instrument subdirectory within it. 
+ As an example a user configuration for LABOCA data can be placed into 
+ `~/.crush2/laboca/default.cfg`, with the a content:
 	
 	datapath \~/data
 	outpath \~/images
 	project T-79.F-0002-2006
 
-   This tells crush that when reducing LABOCA data it should look for raw data 
-   files in '\~/data', write all output to '\~/images', and specifies the default
-   project to be 'T-79.F-0002-2006' 
+ This tells crush that when reducing LABOCA data it should look for raw data 
+ files in `~/data`, write all output to `~/images`, and specifies the default
+ project to be `T-79.F-0002-2006`
  
-   The tilde character '\~' is used as a shorthand for the home directory 
-   (similarly to UNIX shell syntax). In your configuration you can also refer 
-   to environment variables or other settings (see more about it further below).
+ The tilde character `~` is used as a shorthand for the home directory 
+ (similarly to UNIX shell syntax). In your configuration you can also refer 
+ to environment variables or other settings (see more about it further below).
 
-   Of course, you can create any number of configurations, name them as you 
-   like place them where you like (practical if you have many data locations, 
-   projects etc.). You can easily invoke configuration files as needed via
+ Of course, you can create any number of configurations, name them as you 
+ like place them where you like (practical if you have many data locations, 
+ projects etc.). You can easily invoke configuration files as needed via
 
 	> crush [...] -config=<path-to-myconfig> [...]
 
@@ -277,295 +276,296 @@ virtually any fast-sampling scanning camera.
 
 ### 1.4. The Tools of the CRUSH Suite
 
-CRUSH provides a collection of other useful tools. Here's a short description
-of what is there and what they are used for. Each tool, when run without
-options (or with the -help option) will provide you a list of available
-options on the console.
+ CRUSH provides a collection of other useful tools. Here's a short description
+ of what is there and what they are used for. Each tool, when run without
+ options (or with the -help option) will provide you a list of available
+ options on the console.
 
-  crush	        The principal reduction tool.
+	crush	        The principal reduction tool.
 
-  imagetool	A tool for manipulating images. Can also deal with images
-		produced by BoA (and to some degree other images also).
+	imagetool	A tool for manipulating images. Can also deal with 
+			images produced by BoA (and to some degree other 
+			images also).
 
-  show		A simple display program for the FITS files, with various
-		useful functions for simple analysis and image manipulation
-		After starting press 'h' for help.
+  	show		A simple display program for the FITS files, with 
+			various useful functions for simple analysis and image
+			manipulation capabilities.
 
-  coadd		Add FITS images together. Use as a last resort tool as it is
-		always better to reduced scans together.
+  	coadd		Add FITS images together. Use as a last resort tool as
+			it is always better to reduced scans together.
 
-  difference	Allows to look at the difference between two images.
+  	difference	Allows to look at the difference between two images.
 
-  histogram	Write a histogram of the pixel distribution of an image plane.
-  		(e.g. 'flux', 'rms', 's2n', 'weight', or 'time').
+  	histogram	Write a histogram of the pixel distribution of an 
+			image plane. (e.g. `flux`, `rms`, `s2n`, `weight`, or 
+			`time`).
+	
+  	detect		A source extraction tool for maps. You should make
+			sure that the noise is close enuogh to Gaussian (e.g. 
+			with `histogram`) before relying on this. 
 
-  detect	A source extraction tool for maps. You should make
-		sure that the noise is close enuogh to Gaussian (e.g. with
-		'histogram') before relying on this. 
-
-  esorename	Rename ESO archive files to their original names.
+	esorename	Rename ESO archive files to their original names.
 
 
 
 
 ### 1.5. Quick Start
 
-   To reduce data, simply specify the instrument (E.g. 'sharc2', 'laboca'...) 
-   and the scan numbers/ids (or names of the scan files or directories) to 
-   crush. (You may have to add './' before 'crush' if the current directory 
-   '.' is not in your path.) E.g.,
+ To reduce data, simply specify the instrument (E.g. `sharc2`, `laboca`...) 
+ and the scan numbers/ids (or names of the scan files or directories) to 
+ crush. (You may have to add `./` before `crush` if the current directory 
+ `.` is not in your path.) E.g.,
 
 	> crush laboca 10059
 
-   will reduce LABOCA scan 10059 with the default reduction parameters.
-   (Try 'crush -help' to see a full list of the supported instrument names.)
+ will reduce LABOCA scan 10059 with the default reduction parameters.
+ (Try `crush -help` to see a full list of the supported instrument names.)
 
-   After the instrument name, you can specify additional options. Some of these
-   apply to the reduction as a whole while others will affect the scan 
-   processing for those scan numbers that are listed *after* the option flag. 
+ After the instrument name, you can specify additional options. Some of these
+ apply to the reduction as a whole while others will affect the scan 
+ processing for those scan numbers that are listed *after* the option flag. 
 
-   If you are new to CRUSH (or used version 1.xx before), you should be able
-   to start working with it by the time you get to the end of this page.
-   Nevertheless, I recommend that you read on through the entire Sections 
-   1--2 (Getting Started & Basic Configuration), and you will become a  
-   truly well-versed user. :-)
+ If you are new to CRUSH (or used version 1.xx before), you should be able
+ to start working with it by the time you get to the end of this page.
+ Nevertheless, I recommend that you read on through the entire Sections 
+ 1--2 (Getting Started & Basic Configuration), and you will become a
+ truly well-versed user. :-)
 
-   Once you get the hang of it, and feel like you need more tweaking ability,
-   feel free to read on yet further to see what other fine tuning capabilities
-   exist...
+ Once you get the hang of it, and feel like you need more tweaking ability,
+ feel free to read on yet further to see what other fine tuning capabilities
+ exist...
 
-   Here are some quick tips:
+ Here are some quick tips:
 
-   * Reduce as many scans together as you can. E.g.
+ * Reduce as many scans together as you can. E.g.
 		
 	> crush laboca 10657-10663 10781 11233-11235 [...]
 
-   * You can specify opacities, pointings, scaling etc, for each
-     of the set of scans listed (See section for Scan-specific options). 
-     E.g.,
+ * You can specify opacities, pointings, scaling etc, for each
+   of the set of scans listed (See section for Scan-specific options). 
+   E.g.,
 
 	> crush laboca -tau=0.32 10657-10663 10781 -tau=0.18 11233 [...]
 
-     will use a zenith tau value of 0.32 for 10657-10663 and 10781, and
-     0.18 for the last scan (11233).
+   will use a zenith tau value of 0.32 for 10657-10663 and 10781, and
+   0.18 for the last scan (11233).
 
-   * If you suspect that you are missing extended emission (see section
-     on the Recovery of Extended Structures), then you can specify the
-     'extended' option, which will better preserve large scale structures
-     albeit at the price of more noise. E.g.
+ * If you suspect that you are missing extended emission (see section
+   on the Recovery of Extended Structures), then you can specify the
+   'extended' option, which will better preserve large scale structures
+   albeit at the price of more noise. E.g.
 
 	> crush laboca -extended 10657-10663
 
-   * If your source is faint (meaning S/N < 10 in a single scan), then
-     you may try using the 'faint' option. E.g.
+ * If your source is faint (meaning S/N `<` 10 in a single scan), then
+   you may try using the `faint` option. E.g.
 
 	> crush laboca -faint 10657-10663
 
-     or,	  
-	 
+   or,
+
 	> crush laboca -faint -extended 10657-10663
 
-     to also try preserve extended structures (see above).
+   to also try preserve extended structures (see above).
 
-   * For finer control of how much large scale structures are retained
-     you can use the 'sourcesize' option, providing a typical source 
-     scale (in arcsecs) that you'd like to see preserved. Then CRUSH will
-     optimize its settings to do the best it can to get clean maps while 
-     keeping structures up to the specified scales more or less intact. 
-     E.g.
+ * For finer control of how much large scale structures are retained
+   you can use the `sourcesize` option, providing a typical source 
+   scale (in arcsecs) that you'd like to see preserved. Then CRUSH will
+   optimize its settings to do the best it can to get clean maps while 
+   keeping structures up to the specified scales more or less intact. 
+   E.g.
 
 	> crush [...] -sourcesize=45.0 10657-10663
   
-     Will optimize reduction for <\~ 45 arcsec sources.
+   Will optimize reduction for <\~ 45 arcsec sources.
 
-   * Finally, if your sources are not only faint, but also point-like, 
-     you should try the 'deep' option. This will use the most aggressive
-     filtering to yield the cleanest looking maps possible.
-     E.g.,
+ * Finally, if your sources are not only faint, but also point-like, 
+   you should try the `deep` option. This will use the most aggressive
+   filtering to yield the cleanest looking maps possible.
+   E.g.,
 
 	> crush laboca -deep 10657-10663
-
 
    With just these few tips you should be able to achieve a decent job in
    getting the results you seek. CRUSH can also help you reduce 
    pointing/calibration, skydip, and beammap scans. E.g.:
 
-   * To reduce a laboca pointing/calibration scan 11564:
+ * To reduce a laboca pointing/calibration scan 11564:
 
 	> crush laboca -point 11564
 
-     At the end of the reduction CRUSH will suggest pointing corrections
-     and provide detailed information on the source (such as peak and
-     integrated fluxes, FWHM and elongation). Once you determine the
-     appropriate pointing corrections for your science scans, you
-     can apply these via the 'pointing=x,y' option. E.g.:
+   At the end of the reduction CRUSH will suggest pointing corrections
+   and provide detailed information on the source (such as peak and
+   integrated fluxes, FWHM and elongation). Once you determine the
+   appropriate pointing corrections for your science scans, you
+   can apply these via the `pointing=x,y` option. E.g.:
 
 	> crush laboca -pointing=3.2,-0.6 12069
 
-   * You can also reduce skydips, for determining in-band atmospheric
-     opacities. E.g.:
+ * You can also reduce skydips, for determining in-band atmospheric
+   opacities. E.g.:
 
 	> crush laboca -skydip 26648
 	  
-   * Finally, you can derive pixel position information from appropriate
-     scans, which are designed to ensure the source is moved over every
-     detector, in a fully sampled manner. To reduce such beam-maps:
+ * Finally, you can derive pixel position information from appropriate
+   scans, which are designed to ensure the source is moved over every
+   detector, in a fully sampled manner. To reduce such beam-maps:
 
 	> crush aszca -beammap 5707
 
-     CRUSH will write rcp files as output, containing pixel positions
-     source and sky gains in a standard 5 column APEX RCP format. 
-     You can feed the pixel position information to reduce other scans 
-     via the 'rcp' option.
+   CRUSH will write rcp files as output, containing pixel positions
+   source and sky gains in a standard 5 column APEX RCP format. 
+   You can feed the pixel position information to reduce other scans 
+   via the `rcp` option.
 
    
-   There are a lot more fine-tuning possibilities for the more adventurous. If 
-   interested, you can find documentation further below, as well as in the 
-   README files inside the instrument sub-directories. For a complete list of 
-   crush options, please refer to the GLOSSARY.
+ There are a lot more fine-tuning possibilities for the more adventurous. If 
+ interested, you can find documentation further below, as well as in the 
+ README files inside the instrument sub-directories. For a complete list of 
+ crush options, please refer to the GLOSSARY.
 
 
    
 
 ### 1.6. A Brief Description of What CRUSH Does and How...
 
-   CRUSH is a pipeline reduction that is principally meant to remove
-   correlated signals (correlated noise) in the time-streams to arrive
-   at clean & independent bolometer signals, which are then used to make
-   a source model (usually an image).
+ CRUSH is a pipeline reduction that is principally meant to remove
+ correlated signals (correlated noise) in the time-streams to arrive
+ at clean & independent bolometer signals, which are then used to make
+ a source model (usually an image).
 
-   As such it is not an interactive reduction software (e.g. as opposed to 
-   e.g. BoA). The term 'scripting' in CRUSH mainly means defining configuration 
-   options (in the command line or through configuration files) which are 
-   parsed in the order they are read.
+ As such it is not an interactive reduction software (e.g. as opposed to 
+ e.g. BoA). The term 'scripting' in CRUSH mainly means defining configuration 
+ options (in the command line or through configuration files) which are 
+ parsed in the order they are read.
 
-   During the reduction CRUSH aims to arrive at a consistent set of
-   solutions for various correlated signals, the corresponding gains and
-   the pixel weights, as well as tries to identify and flag problematic data.
+ During the reduction CRUSH aims to arrive at a consistent set of
+ solutions for various correlated signals, the corresponding gains and
+ the pixel weights, as well as tries to identify and flag problematic data.
 
-   This means a series of reduction steps, which are iterated a few times
-   until the required self-consistent solutions are arrived at. 
+ This means a series of reduction steps, which are iterated a few times
+ until the required self-consistent solutions are arrived at. 
    
-   To learn more about the details please refer to Kovacs, A., "CRUSH: 
-   fast and scalable data reduction for imaging arrays," Proc. SPIE 7020, 45, 
-   (2008). If that does not satisfy your curiousity, then you can find yet
-   more explanation in Kovacs, A., PhD thesis, Caltech (2006).
+ To learn more about the details please refer to Kovacs, A., "CRUSH: 
+ fast and scalable data reduction for imaging arrays," Proc. SPIE 7020, 45, 
+ (2008). If that does not satisfy your curiousity, then you can find yet
+ more explanation in Kovacs, A., PhD thesis, Caltech (2006).
 
 
 
 
 ### 1.7. Command-line Options and Scripting Support
 
-   Configuration of CRUSH is available either through command line 
-   options or via scripting. You have seen scripting already in the form
-   of 'default.cfg', which stores the default configuration values (Sec. 1.1). 
+ Configuration of CRUSH is available either through command line 
+ options or via scripting. You have seen scripting already in the form
+ of 'default.cfg', which stores the default configuration values (Sec. 1.1). 
 
-   The syntax is designed so that it accomodates both scripting and
-   command-line (bash) use alike. Thus, white spaces are optional and curved 
-   brackets are avoided (unless these are placed in quotes).
+ The syntax is designed so that it accomodates both scripting and
+ command-line (bash) use alike. Thus, white spaces are optional and curved 
+ brackets are avoided (unless these are placed in quotes).
 
-   For a complete guide on using the configuration engine, please read
-   README.syntax. Below we provide only a very basic overview, and describe
-   only what is specific to CRUSH, beyond the cofiguration engine in general.
+ For a complete guide on using the configuration engine, please read
+ README.syntax. Below we provide only a very basic overview, and describe
+ only what is specific to CRUSH, beyond the cofiguration engine in general.
 
 
-   #### Basic Rules
+#### Basic Rules
  
-   When defining settings, keys can be separated from their values either by
-   '=', ':' or empty spaces (or even a combination of these).
+  When defining settings, keys can be separated from their values either by
+  `=`, `:` or empty spaces (or even a combination of these).
 
-   Command line options start with a dash '-' in front. Thus, what may look
-   like:
+  Command line options start with a dash `-` in front. Thus, what may look
+  like:
 	
 	key1 value1
 	key2 value2, value3
 
-   in a configuration script, will end up as
+  in a configuration script, will end up as
 
 	> crush [...] -key1=value1 -key2=value2,value3 [...] 
 
-   on the command line. Otherwise, they two ways of configuring are generally 
-   equivalent to one-another. One exception to this rule is reading scans,
-   which is done via the 'read' key in a script, but on command line you can
-   simply list the scan number (or ranges or lists or names). I.e., 
+  on the command line. Otherwise, they two ways of configuring are generally 
+  equivalent to one-another. One exception to this rule is reading scans,
+  which is done via the `read` key in a script, but on command line you can
+  simply list the scan number (or ranges or lists or names). I.e., 
 
 	[...]
 	read 10056			# in script
 
 	> crush [...] 10056		# on the command line.
 
-   In the next section you'll find a description of the scripting keywords.
-   Now that you know how to use them also as command line options, you
-   can choose scripting or command-line, or mix-and-match them to your
-   liking and convenience...
+  In the next section you'll find a description of the scripting keywords.
+  Now that you know how to use them also as command line options, you
+  can choose scripting or command-line, or mix-and-match them to your
+  liking and convenience...
  
-   Key/value pairs are parsed in the order they are specified. Thus, each
-   specification may override previously defined values. 
+  Key/value pairs are parsed in the order they are specified. Thus, each
+  specification may override previously defined values. 
 
-   Lines that start with '#' designate comments that are ignored by the 
-   parser.
+  Lines that start with `#` designate comments that are ignored by the 
+  parser.
  
 
  
-   #### Dynamic Conditionals
+#### Dynamic Conditionals
  
-   Some conditions are interpreted dynamically. For example CRUSH, can 
-   activate settings based on observation date (or MJD) or serial number, on 
-   a scan-by-scan basis, such as:
+ Some conditions are interpreted dynamically. For example CRUSH, can 
+ activate settings based on observation date (or MJD) or serial number, on 
+ a scan-by-scan basis, such as:
 
 	mjd.[54555-54869] rcp {$CRUSH}/laboca/laboca-3.rcp
  
-   which loads the pixel positions (RCP) 'laboca-3.rcp' inside the 'laboca'
-   subfolder in the crush installation for scans taken in the MJD range
-   54555 to 54869. Similarly,
+ which loads the pixel positions (RCP) `laboca-3.rcp` inside the `laboca`
+ subfolder in the crush installation for scans taken in the MJD range
+ 54555 to 54869. Similarly,
 
 	date.[2007.02.28-2009.10.13] instrument.gain -1250.0
 
-   or
+ or
 
 	serial.[14203-15652] flag 112-154,173
 
-   are examples of setting activated based on dates or scan serial numbers.
+ are examples of setting activated based on dates or scan serial numbers.
 
-   You may also specify conditional settings based on the
-   source names under the 'object' branch. E.g.:
+ You may also specify conditional settings based on the
+ source names under the `object` branch. E.g.:
 
 	object.[Jupiter] bright
 
-   will invoke the 'bright' configuration for Jupiter. The check for the
-   source name is case insensitive, and matches all source names that begin
-   with the specified sequence of characters. Thus, the SHARC-2 configuration
-   line:
+ will invoke the `bright` configuration for Jupiter. The check for the
+ source name is case insensitive, and matches all source names that begin
+ with the specified sequence of characters. Thus, the SHARC-2 configuration
+ line:
 
 	object.[PNT_] point
 
-   will perform a pointing fit at the end of the reduction for all sources
-   whose catalog names begin with 'PNT_' (e.g. PNT_3C345).
+ will perform a pointing fit at the end of the reduction for all sources
+ whose catalog names begin with `PNT_` (e.g. `PNT_3C345`).
 
-   These examples also demonstrates that conditionals can be branched just
-   like options. (In the above cases, the conditions effectively reside in the
-   'mjd', 'date' or 'serial' branches). Other commonly used conditionals of
-   this type are iteration based settings:
+ These examples also demonstrates that conditionals can be branched just
+ like options. (In the above cases, the conditions effectively reside in the
+ `mjd`, `date` or `serial` branches). Other commonly used conditionals of
+ this type are iteration based settings:
 
 	> crush [...] -iteration.[last-1]whiten=2.0 [...]
 
-   will activate the noise whitening in the iteration before the last one.
+ will activate the noise whitening in the iteration before the last one.
 
    
-   #### Startup Configuration
+#### Startup Configuration
    
-   At launch, crush will parse 'config/default.cfg' to establish a default 
-   configuration set. All configurations files are first parsed from the 
-   files in the config/ directory inside crush, then additional options or 
-   overriders  are read also from the appropriate instrument subdirectories, 
-   if exist.
+  At launch, crush will parse `config/default.cfg` to establish a default 
+  configuration set. All configurations files are first parsed from the 
+  files in the `config/` directory inside crush, then additional options or 
+  overriders  are read also from the appropriate instrument subdirectories, 
+  if exist.
  
-   After that, crush will check if these configuration files also exists 
-   under the inside the '\~/.crush2' directory of the user. If so, they will be
-   used to override again. See more on this in the next section under the
-   'config' option. In this way, the '\~/.crush' directory can be used as
-   a convenient way to create user specific setting and/or overrides to
-   global defaults.
+  After that, crush will check if these configuration files also exists 
+  under the inside the `~/.crush2` directory of the user. If so, they will be
+  used to override again. See more on this in the next section under the
+  `config` option. In this way, the `~/.crush` directory can be used as
+  a convenient way to create user specific setting and/or overrides to
+  global defaults.
 
 
 
@@ -573,54 +573,54 @@ options on the console.
 
 ### 1.8. Making sense of the console output
  
-   Don't ignore the console output. It contains a lot of information, which
-   may be useful for diagnosing your reduction, and troubleshooting if things
-   don't go as expected. 
+ Don't ignore the console output. It contains a lot of information, which
+ may be useful for diagnosing your reduction, and troubleshooting if things
+ don't go as expected. 
 
-   In the beginning of the console output, you will see information from each
-   scan as it is being read, followed by output from the preprocessing steps
-   (such as downsampling, scan statistics, velocity clipping, opacity used,
-   pointing corrections applied etc.). This part is verbose enough that it 
-   should be eszsentially self-explanatory.
+ In the beginning of the console output, you will see information from each
+ scan as it is being read, followed by output from the preprocessing steps
+ (such as downsampling, scan statistics, velocity clipping, opacity used,
+ pointing corrections applied etc.). This part is verbose enough that it 
+ should be eszsentially self-explanatory.
 
-   Once all the scans are loaded, and the source model (usually a map) has been
-   created to accomidate the dataset, CRUSH will enter the iterated pipeline
-   reduction. It may look cryptic at first, as it captures a lot of information
-   in very little console space. Below is a short guide to figure out what
-   it all means. Understanding it will help you diagnose and troubleshoot all
-   sorts of issues that might affect the reduction of your dataset. So, don't
-   be shy, dive in!
+ Once all the scans are loaded, and the source model (usually a map) has been
+ created to accomidate the dataset, CRUSH will enter the iterated pipeline
+ reduction. It may look cryptic at first, as it captures a lot of information
+ in very little console space. Below is a short guide to figure out what
+ it all means. Understanding it will help you diagnose and troubleshoot all
+ sorts of issues that might affect the reduction of your dataset. So, don't
+ be shy, dive in!
 
 
-   ##### An example line from the console output
+##### An example line from the console output
 
-   Let's begin with a concrete example. Here is a section from the console 
-   output from the reduction of LABOCA scan 11564 (from 2007): 
+ Let's begin with a concrete example. Here is a section from the console 
+ output from the reduction of LABOCA scan 11564 (from 2007): 
 
     $ Round 4: 
     $
     $  [11564] D(128) C245 W(8.44E-2)245 dN(0)245 B245 c245 Map(8.44E-2) 
     $  [Source] {check} (smooth) (clip:4.0) (blank:10.0) (sync) 
 
-   Each 'phrase' (separated by spaces around it) represents a short summary of
-   a pipeline step. The leading characters identify the step, often followed by 
-   some quantitative capure (or figure-of-merit) summarizing what the step
-   accomplished.
+ Each _phrase_ (separated by spaces around it) represents a short summary of
+ a pipeline step. The leading characters identify the step, often followed by 
+ some quantitative capure (or figure-of-merit) summarizing what the step
+ accomplished.
 	
-   Here is how the above section is interpreted: 
+ Here is how the above section is interpreted: 
 
-        In the 4th iteration, the following steps are performed on scan 11564: 
+   In the 4th iteration, the following steps are performed on scan 11564: 
 
 	D(128)       	1/f filtering (on 128 frame timescale)
 
    	C245         	removing the correlated noise from the array with 
 			245 pixels surviving the gain range criterion.
 
-	W(8.44E0-2)  	Deriving pixel weights with the 'rms' method. The
+	W(8.44E0-2)  	Deriving pixel weights with the `rms` method. The
 			average sensitivity of the array is estimated to be
 			84.4 mJy sqrt(s).
 
-	dN(0)245     	Despiking via the 'neighbours' method, with 0 frames
+	dN(0)245     	Despiking via the `neighbours` method, with 0 frames
 			flagged as spiky, and 245 pixels surviving the
 			flagging of pixels with too many spikes.
 
@@ -650,18 +650,18 @@ options on the console.
 
 	(sync)	     	Synch the composite model back to the time-stream data.
 
-   Once the reduction is done, various files, including the source map, are
-   written. This is appropriately echoed on the console output.
+ Once the reduction is done, various files, including the source map, are
+ written. This is appropriately echoed on the console output.
 
 
    
-   #### Console Output Reference Guide
+#### Console Output Reference Guide
 
-   Below is a reference guide for interpreting the console output for your 
-   particular reduction:
+  Below is a reference guide for interpreting the console output for your 
+  particular reduction:
   
 
-   ##### Quantities inside the brackets:
+##### Quantities inside the brackets:
 
 	[nnnnn|m]:	processing scan nnnnn, subscan m from the list
 
@@ -676,7 +676,7 @@ options on the console.
 			the default full resolution.
 
 
-   ##### Reduction-step Shorthands (alphabetically)
+##### Reduction-step Shorthands (alphabetically)
 
 	a		Decorrelating amplifier boards (e.g. LABOCA,GISMO).
 
@@ -751,7 +751,7 @@ options on the console.
    	wh(x.xx)	Noise whitening. The average source throughput factor
 			from the whitening is shown.	
 
-  ##### Source model-specific:
+##### Source model-specific:
 
      
    	Map		Calculating source map from scan. The effective point
@@ -795,59 +795,59 @@ options on the console.
 
 ### 1.9. Examples
 
-   Reduce scans 12065-12069 and 12072 with zenith tau of 0.18:
+ Reduce scans 12065-12069 and 12072 with zenith tau of 0.18:
 
 	> crush laboca -tau=0.18 12065-12069 12072
 
-   Reduce scans 10562 and 10645 together, with the first scan observed at a
-   zenith tau of 0.21, and the second at tau of 0.35 with.
+ Reduce scans 10562 and 10645 together, with the first scan observed at a
+ zenith tau of 0.21, and the second at tau of 0.35 with.
 
 	> crush laboca -tau=0.21 10562 -tau=0.35 10645
 
-   Say you realize that the pointing was off by -5.4" in AZ, and 2.4" in EL
-   for the second scan. Then:
+ Say you realize that the pointing was off by -5.4" in AZ, and 2.4" in EL
+ for the second scan. Then:
 
 	> crush laboca -tau=0.21 10562 -tau=0.35 -pointing=-5.4,2.4 10645
 
-   Say scan 10049 is a scan of a bright source (e.g. Saturn) and the default
-   reduction ends up clipping much of it. Then,
+ Say scan 10049 is a scan of a bright source (e.g. Saturn) and the default
+ reduction ends up clipping much of it. Then,
 
 	> crush laboca -bright 10049
 
-   If the source still gets nipped from the resulting map, you can try 
-   disabling pixel weigting altogether (this is the likely culprit) by:
+ If the source still gets nipped from the resulting map, you can try 
+ disabling pixel weigting altogether (this is the likely culprit) by:
 	
 	> crush laboca -bright -blacklist=weighting 10049
 
-   Perhaps you suspect there is missing extended emission (large-scale 
-   structure) in scan 10550. You can try to recover more by:
+ Perhaps you suspect there is missing extended emission (large-scale 
+ structure) in scan 10550. You can try to recover more by:
 
 	> crush laboca -extended 10550.
 
-   Try reduce some faint source (scan 10057):
+ Try reduce some faint source (scan 10057):
 
 	> crush laboca -faint 10057
 
-   Maybe your faint source has extended structure that you want to try recover
-   better, and willing to pay some noise penalty for it. Then try:
+ Maybe your faint source has extended structure that you want to try recover
+ better, and willing to pay some noise penalty for it. Then try:
 
 	> crush laboca -faint -extended 10057.
 
-   You can also fine-tune, what is the largest source-scale (more-or-less) 
-   that you are interested in. Then the reduction will adjust its parameters
-   accordingly. Say you expect your source to be a blob around 1' in diameter,
-   then you can try:
+ You can also fine-tune, what is the largest source-scale (more-or-less) 
+ that you are interested in. Then the reduction will adjust its parameters
+ accordingly. Say you expect your source to be a blob around 1' in diameter,
+ then you can try:
 
 	> crush laboca -faint -sourcesize=60.0 10057.
 
-   You can also play with the blanking clipping methods above, if there is
-   annoying negative dips remaining around your brighter peaks. Note, that
-   you porbably want to stick with -extended, or else such dips may be the
-   result of the aggressive filtering settings applied to your specific
-   source size (via -size).
+ You can also play with the blanking clipping methods above, if there is
+ annoying negative dips remaining around your brighter peaks. Note, that
+ you porbably want to stick with -extended, or else such dips may be the
+ result of the aggressive filtering settings applied to your specific
+ source size (via `sourcesize`).
 
-   As mentioned before, command-line options and scripting are equivalent
-   ways of configuring the reduction. Thus, the running the script 'test.cfg':
+ As mentioned before, command-line options and scripting are equivalent
+ ways of configuring the reduction. Thus, the running the script `test.cfg`:
 
 	faint
 	extended
@@ -860,10 +860,11 @@ options on the console.
 	clip 3.0
 	iteration.[last-1] forget clip
 
-   via 
+ via 
+
 	> crush laboca -config=test.cfg	
 
-   is equivalent to the command line:
+ is equivalent to the command line:
 
 	> crush laboca -faint -extended -tau=0.18 \
 	  	-pointing=-3.2,4.8 12065-12069 \
@@ -871,15 +872,15 @@ options on the console.
 		-blank=10.0 -clip=3.0 -iteration.[last-1]forget:clip  
 
 
-   Finally, suppose you want to reduce a dataset on a very faint point source, 
-   such as a distance galaxy, or a faint core, with a set of scans:
+ Finally, suppose you want to reduce a dataset on a very faint point source, 
+ such as a distance galaxy, or a faint core, with a set of scans:
 
-        > crush laboca -deep 23165-23169 
+	> crush laboca -deep 23165-23169 
 
-   And, perhaps you want to comprate the result to a random jackknife, which
-   you can obtain with:
+ And, perhaps you want to comprate the result to a random jackknife, which
+ you can obtain with:
 
-        > crush labova -deep -jackknife 23165-23169
+	> crush labova -deep -jackknife 23165-23169
    
 
 
@@ -892,185 +893,184 @@ options on the console.
 
 ### 2.1 Pointing Corrections
 
-   Reducing the data with the correct pointing can be crucial (esp. when 
-   attempting to detect/calibrate faint point sources). At times the pointing
-   may be badly determined at the time of observation. Luckily, getting the 
-   exact pointing offset wrong at the time of the observation has no serious 
-   consequences as long as the source still falls on the array, and as long as 
-   the exact pointing can be determined later. If you, at the time of the data 
-   reduction, have a better guess of what the pointing was at the time the
-   data was taken (e.g. by fitting a model to the night's pointing data), you 
-   can specify the pointing offsets that you believe were more characteristic
-   to the data, by using the '-pointing' option *before* listing the scans 
-   that should be reduced with the given corrections. E.g.,
+ Reducing the data with the correct pointing can be crucial (esp. when 
+ attempting to detect/calibrate faint point sources). At times the pointing
+ may be badly determined at the time of observation. Luckily, getting the 
+ exact pointing offset wrong at the time of the observation has no serious 
+ consequences as long as the source still falls on the array, and as long as 
+ the exact pointing can be determined later. If you, at the time of the data 
+ reduction, have a better guess of what the pointing was at the time the
+ data was taken (e.g. by fitting a model to the night's pointing data), you 
+ can specify the pointing offsets that you believe were more characteristic
+ to the data, by using the `-pointing` option *before* listing the scans 
+ that should be reduced with the given corrections. E.g.,
 
 	> crush [...] -pointing=12.5,-7.3 <scans>
 
-   Will instruct minicrush that the 'true' pointing was at dAZ=12.5 and 
-   dEL=-7.3 arcsec each (i.e. it works just like pcorr on APECS).
+ Will instruct minicrush that the _true_ pointing was at dAZ=12.5 and 
+ dEL=-7.3 arcsec each (i.e. it works just like pcorr on APECS).
 
-   Some instruments, like SHARC-2, may allow specifying the aggregated pointing
-   offsets (e.g. 'fazo' and 'fzao') instead of the differential corrections 
-   supplied by 'pointing'.
+ Some instruments, like SHARC-2, may allow specifying the aggregated pointing
+ offsets (e.g. `fazo` and `fzao`) instead of the differential corrections 
+ supplied by `pointing`.
 
 
-   #### Obtaining Corrections
+#### Obtaining Corrections
 
-   Good practice demands that you regularly observe pointing/calibration 
-   sources near your science targets, from which you can derive appropriate
-   corrections. CRUSH provides the means for a analyzing pointing/calibration
-   data effectively, using the 'point' option:
+  Good practice demands that you regularly observe pointing/calibration 
+  sources near your science targets, from which you can derive appropriate
+  corrections. CRUSH provides the means for a analyzing pointing/calibration
+  data effectively, using the `point` option:
 
        > crush [...] -point [...]
 
-   At the end of the reduction, CRUSH will analyze the map, and suggest
-   appropriate pointing corrections (to use with '-pointing', or other
-   instrument-specific options), and provide calibration information as well
-   as some basic measures of source extent and shape.
+  At the end of the reduction, CRUSH will analyze the map, and suggest
+  appropriate pointing corrections (to use with `-pointing`, or other
+  instrument-specific options), and provide calibration information as well
+  as some basic measures of source extent and shape.
 
 
 
-   #### After Reduction (a poor alternative)
+#### After Reduction (a poor alternative)
    
-   You can also make pointing changes after the reduction (alas, now in 
-   RA/DEC). You can read off the apparent source position from each separately 
-   reduced scan (e.g. by using 'show' and placing the cursor above the apparent
-   source center/peak). Then you can use 'imagetool' to adjust the pointing. 
-   E.g.:
+  You can also make pointing changes after the reduction (alas, now in 
+  RA/DEC). You can read off the apparent source position from each separately 
+  reduced scan (e.g. by using `show` and placing the cursor above the apparent
+  source center/peak). Then you can use `imagetool` to adjust the pointing. 
+  E.g.:
 
 	> imagetool [...] -origin=3.0,-4.5 ... 
 
-   The above moves the map origin by 3" in RA and -4.5" in DEC. 
+ The above moves the map origin by 3" in RA and -4.5" in DEC. 
 
-   Then, other crush tools (like coadd, imagetool etc.) will use these images 
-   with the proper alignment. Clearly, this method of adjusting the pointing is
-   only practical if your source is clearly detected in the map.
+ Then, other crush tools (like `coadd`, `imagetool` etc.) will use these images 
+ with the proper alignment. Clearly, this method of adjusting the pointing is
+ only practical if your source is clearly detected in the map.
 
 
 
 
 ### 2.2 Pixelization and Smoothing
 
-   There seem to be many misconceptions about the 'correct' choice of 
-   pixelization and about the (mal)effects of smoothing. This section aims to 
-   offer a balanced account on choosing an appropriate mapping grid and on the 
-   pros and cons of applying smoothing to your maps.
+ There seem to be many misconceptions about the _correct_ choice of 
+ pixelization and about the (mal)effects of smoothing. This section aims to 
+ offer a balanced account on choosing an appropriate mapping grid and on the 
+ pros and cons of applying smoothing to your maps.
+
+#### Pixelization (i.e. choosing the 'right' grid)
+
+  **Misconception 1**: You should always _Nyquist_ sample your map, with 2 pixels
+  per beam FWHM, to ensure ideal representation.
+
+  There is more than one thing wrong with the above idea. First, there is no
+  'Nyquist' sampling of Gaussian beams. The Nyquist sampling theorem applies 
+  only to data, which has a natural cutoff frequency (the Nyquist frequency), 
+  above which there is no information present. Then, and only then, will 
+  sampled data (at a frequency strictly larger[!] than twice the Nyquist 
+  cutoff) preserve all information about the signals. 
+
+  Two pixels per beam is almost certainly too few for the case of Gaussian 
+  beams. Gaussian beams have no true frequency cutoff -- the signal spreads
+  across the spectrum, with information present at all frequencies, even if it
+  is increasingly tapered at the higher frequencies. By choosing a sampling 
+  (i.e. pixel size in your map) the information above your sampling rate will 
+  be aliased into the sampled band, corrupting your pixelized data. 
+
+  Thus, you can choose a practical cutoff frequency (i.e. pixelization) based
+  on the level of information loss and corruption you are willing to tolerate.
+  At 2.5 pixels pear FWHM, you retain \~95% of the underlying information, and 
+  corrupt it by the remaining 5%. With more pixels per beam, you get more 
+  accurate maps. (The 2-pixels per beam, that many understand to be the 
+  Nyquist  sampled, is certainly too few by most standards of accuracy!)
+
+  Thus, the CRUSH default is to use around 5-pixels per FWHM, representing a 
+  compromise between completeness (\~99%) with minimal corruption (`<`1%) and a 
+  senseless increase of map pixels (i.e. number of model parameters).
 
 
-   #### Pixelization (i.e. choosing the 'right' grid)
-
-   *Misconception 1*: You should always 'Nyquist' sample your map, with 2 pixels
-   per beam FWHM, to ensure ideal representation.
-
-   There is more than one thing wrong with the above idea. First, there is no
-   'Nyquist' sampling of Gaussian beams. The Nyquist sampling theorem applies 
-   only to data, which has a natural cutoff frequency (the Nyquist frequency), 
-   above which there is no information present. Then, and only then, will 
-   sampled data (at a frequency strictly larger[!] than twice the Nyquist 
-   cutoff) preserve all information about the signals. 
-
-   Two pixels per beam is almost certainly too few for the case of Gaussian 
-   beams. Gaussian beams have no true frequency cutoff -- the signal spreads
-   across the spectrum, with information present at all frequencies, even if it
-   is increasingly tapered at the higher frequencies. By choosing a sampling 
-   (i.e. pixel size in your map) the information above your sampling rate will 
-   be aliased into the sampled band, corrupting your pixelized data. 
-
-   Thus, you can choose a practical cutoff frequency (i.e. pixelization) based
-   on the level of information loss and corruption you are willing to tolerate.
-   At 2.5 pixels pear FWHM, you retain \~95% of the underlying information, and 
-   corrupt it by the remaining 5%. With more pixels per beam, you get more 
-   accurate maps. (The 2-pixels per beam, that many understand to be the 
-   Nyquist  sampled, is certainly too few by most standards of accuracy!)
-
-   Thus, the CRUSH default is to use around 5-pixels per FWHM, representing a 
-   compromise between completeness (\~99%) with minimal corruption (<1%) and a 
-   senseless increase of map pixels (i.e. number of model parameters).
-
-
-   #### Smoothing
+#### Smoothing
    
-   *Misconception 2*: You should not smooth your maps, because it does something
-   'unnatural' to your 'raw' image.
+  **Misconception 2**: You should not smooth your maps, because it does something
+  _unnatural_ to your _raw_ image.
 
-   Again, there are two reasons why this is wrong. The first problem with this 
-   view is that there is no 'natural' or 'raw' image to start with, because 
-   there is no 'natural' pixelization (see above). Secondly, by choosing a map 
-   pixel size, you effectively apply smoothing -- only that your smoothing 
-   kernel is a square pixel, with an abrupt edge, rather than a controlled (and
-   directionless) taper of choice. 
+  Again, there are two reasons why this is wrong. The first problem with this 
+  view is that there is no _natural_ or _raw_ image to start with, because 
+  there is no _natural_ pixelization (see above). Secondly, by choosing a map 
+  pixel size, you effectively apply smoothing -- only that your smoothing 
+  kernel is a square pixel, with an abrupt edge, rather than a controlled (and
+  directionless) taper of choice. 
 
-   (To convice yourself that a map pixels apply smoothing, consider the mapping 
-   process: each pixel will represent an average of the emission from the area 
-   it covers. Thus, the pixel values are essentially samples of a moving 
-   integral under the pixel shape -- i.e. samples of the emission convolved 
-   [smoothed] by the pixel shape.)
+  (To convice yourself that a map pixels apply smoothing, consider the mapping 
+  process: each pixel will represent an average of the emission from the area 
+  it covers. Thus, the pixel values are essentially samples of a moving 
+  integral under the pixel shape -- i.e. samples of the emission convolved 
+  [smoothed] by the pixel shape.)
 
-   However, smoothing does have one real con, in that it degrades the effective
-   resolution of the image. Consider smoothing by Gaussian kernels. Then, the
-   image resolution (imageFWHM) increases with the smoothing width (smoothFWHM)
-   as
+  However, smoothing does have one real con, in that it degrades the effective
+  resolution of the image. Consider smoothing by Gaussian kernels. Then, the
+  image resolution (imageFWHM) increases with the smoothing width (`smoothFWHM`)
+  as
 
        imageFWHM^2 = beamFWHM^2 + smoothFWHM^2
 
-   from the instrument resolution (beamFWHM). However, you can smooth a fair 
-   bit before the degradation of resolution becomes a problem or even really
-   noticeable. If you use sub-beam smoothing with smoothFWHM < beamFWHM, then 
-   the relative widening is roughly
+  from the instrument resolution (`beamFWHM`). However, you can smooth a fair 
+  bit before the degradation of resolution becomes a problem or even really
+  noticeable. If you use sub-beam smoothing with `smoothFWHM < beamFWHM`, then 
+  the relative widening is roughly
 
     	 dW / W0 \~ 0.5 * (smoothFWHM / beamFWHM)^2
 
-   Thus, smoothing by half a beam, degrades resolution by \~12% only... At the 
-   same time, smoothing can bring many benefits:
+  Thus, smoothing by half a beam, degrades resolution by \~12% only... At the 
+  same time, smoothing can bring many benefits:
 
-   * Improves image appearance and S/N by rejecting pixelization noise. It is
-     better to use a finer grid and smooth the image by the desired amount,
-     than to pixelize coarsely -- not only for visual appearance but also
-     for the preservation of information.
+ * Improves image appearance and S/N by rejecting pixelization noise. It is
+   better to use a finer grid and smooth the image by the desired amount,
+   than to pixelize coarsely -- not only for visual appearance but also
+   for the preservation of information.
 
-   * Smoothing can help avoid pathological solutions during the iterations, 
-     by linking nearby pixel values together.
+ * Smoothing can help avoid pathological solutions during the iterations, 
+   by linking nearby pixel values together.
 
-   * Beam-smoothing is the optimal (Wiener) filtering for determining point 
-     source fluxes in a white noise background. I.e., smoothing by the 
-     beam produces the highest signal-to-noise measurement of point sources.
+ * Beam-smoothing is the optimal (Wiener) filtering for determining point 
+   source fluxes in a white noise background. I.e., smoothing by the 
+   beam produces the highest signal-to-noise measurement of point sources.
 
-   * Beam-smoothing is mathematically equivalent to fitting fixed-width beams
-     at every pixel position. The beam-smoothed flux value in each pixel
-     represents the amplitude of a beam fitted at that position using 
-     chi-squared minimization. Thus, beam smoothed images are the bread-and-
-     butter of point source extraction (e.g. the 'detect' tool of CRUSH).
+ * Beam-smoothing is mathematically equivalent to fitting fixed-width beams
+   at every pixel position. The beam-smoothed flux value in each pixel
+   represents the amplitude of a beam fitted at that position using 
+   chi-squared minimization. Thus, beam smoothed images are the bread-and-
+   butter of point source extraction (e.g. the `detect` tool of CRUSH).
 
-   Given the pros and the con for smoothing, the different reduction modes 
-   (default, 'faint' or 'deep') of CRUSH make different compromises. The 
-   default reduction aims to provide maps with maximal resolution (i.e. no 
-   smoothing), although a some smoothing is used during the iterations to aid
-   convergence to a robust solution. 'faint' mode reductions smooth by 2/3 
-   beams (resulting in \~22% degradation of resolution), to provide better 
-   signal-to-noise at a moderate loss of spatial resolution. 
-   Finally, 'deep' reductions yield beam smoothed images, which are ideal for 
-   point source extraction, even if some spatial details are sacrificed.
+  Given the pros and the con for smoothing, the different reduction modes 
+  (_default_, `faint` or `deep`) of CRUSH make different compromises. The 
+  default reduction aims to provide maps with maximal resolution (i.e. no 
+  smoothing), although a some smoothing is used during the iterations to aid
+  convergence to a robust solution. `faint` mode reductions smooth by 2/3 
+  beams (resulting in \~22% degradation of resolution), to provide better 
+  signal-to-noise at a moderate loss of spatial resolution. 
+  Finally, `deep` reductions yield beam smoothed images, which are ideal for 
+  point source extraction, even if some spatial details are sacrificed.
 
-   You can change/override these default settings. The smoothing during 
-   reduction is  controlled by the 'smooth' setting, which can take both a 
-   Gaussian FWHM (in arcsec) as its arguments as well as the preset values 
-   'minimal', 'halfbeam', '2/3beam' and 'beam'. The smoothing of the final map 
-   can be controlled by 'final:smooth' (the 'final' stands as a shorthand 
-   conditional for the last iteration). Thus,
+  You can change/override these default settings. The smoothing during 
+  reduction is  controlled by the `smooth` setting, which can take both a 
+  Gaussian FWHM (in arcsec) as its arguments as well as the preset values 
+  `minimal`, `halfbeam`, `2/3beam` and `beam`. The smoothing of the final map 
+  can be controlled by 'final:smooth' (the `final` stands as a shorthand 
+  conditional for the last iteration). Thus,
 
       > crush [...] -smooth=halfbeam -final:smooth=minimal [...]
 
-   smoothes by half a beam during the iterations, and only slightly for the 
-   output image, while
+  smoothes by half a beam during the iterations, and only slightly for the 
+  output image, while
 
       > crush [...] -forget=smooth -final:forget=smooth [...]
 
-   disables smoothing both during reduction and at the end. The table below
-   summarizes the effect of the preset smoothing values, indicating both the
-   degradation of resolution (relative to the telescope beam) and the relative
-   peak S/N on point sources:
+  disables smoothing both during reduction and at the end. The table below
+  summarizes the effect of the preset smoothing values, indicating both the
+  degradation of resolution (relative to the telescope beam) and the relative
+  peak S/N on point sources:
 
-   Table 2. Smoothing properties
+   Table 1. Smoothing properties
 
    setting        | widening     |	rel. S/N
    ---------------|--------------|---------
@@ -1086,47 +1086,47 @@ options on the console.
 
 ### 2.3 Recovery of Extended Emission
 
-   As a general rule, ground based instruments (in the mm and submm) are only 
-   sensitive to structures smaller than the Field-of-View (FoV) of the 
-   instrument. All scales larger than the FoV will be strongly degenerate with 
-   the bright correlated atmosphere (a.k.a. sky noise), and will be very 
-   difficult, if not outright impossible, to measure accurately. In a sense, 
-   this is analogous to the limitations of interferometric imaging, or the 
-   diffraction-limited resolution of finite apertures. 
+ As a general rule, ground based instruments (in the mm and submm) are only 
+ sensitive to structures smaller than the Field-of-View (FoV) of the 
+ instrument. All scales larger than the FoV will be strongly degenerate with 
+ the bright correlated atmosphere (a.k.a. sky noise), and will be very 
+ difficult, if not outright impossible, to measure accurately. In a sense, 
+ this is analogous to the limitations of interferometric imaging, or the 
+ diffraction-limited resolution of finite apertures. 
 
-   However, there is a some room for pushing this limit, just like it is 
-   possible to obtain some limited amount of super-resolution (beyond the 
-   diffraction limit) using deconvolution. The limits to recovery of scales 
-   over the FoV is similar to those of obtaining super-resolution beyond the 
-   diffraction limit. Both these methods
+ However, there is a some room for pushing this limit, just like it is 
+ possible to obtain some limited amount of super-resolution (beyond the 
+ diffraction limit) using deconvolution. The limits to recovery of scales 
+ over the FoV is similar to those of obtaining super-resolution beyond the 
+ diffraction limit. Both these methods
 
-   1. yield imperfect answers, because the relevant spatial scales are 
-      poorly measured in the first place.
+ 1. yield imperfect answers, because the relevant spatial scales are 
+    poorly measured in the first place.
 
-   2. are only feasible for high signal-to-noise structures.
+ 2. are only feasible for high signal-to-noise structures.
 
-   3. can, at best, go beyond by a factor of a few beyond the fundamental 
-      limit.
+ 3. can, at best, go beyond by a factor of a few beyond the fundamental 
+    limit.
 
-   You can usually choose to recover more extended emission if you are willing 
-   to put up with more noise on those larger scales. This trade-off works 
-   backwards too -- i.e., you can get cleaner maps if you are willing to filter
-   them more.
+ You can usually choose to recover more extended emission if you are willing 
+ to put up with more noise on those larger scales. This trade-off works 
+ backwards too -- i.e., you can get cleaner maps if you are willing to filter
+ them more.
 
-   As a general principle, structures that are bright (>> 5-sigma) can be fully
-   recovered to up to a few times the field-of-view (FOV) of the bolometer 
-   array. However, the fainter the structure, the more it will be affected by 
-   filtering.
+ As a general principle, structures that are bright (`>>` 5-sigma) can be fully
+ recovered to up to a few times the field-of-view (FOV) of the bolometer 
+ array. However, the fainter the structure, the more it will be affected by 
+ filtering.
 
-   Generally, the fainter the reduction mode, the more filtering of faint
-   structures results, and the more limited the possibility of recovering 
-   extended structures becomes. The table below is a rough guide of what 
-   maximum scales you may expect for such faint feaures, and also, how noise is
-   expected to increase on the large scales as these are added in 'extended' 
-   mode:
+ Generally, the fainter the reduction mode, the more filtering of faint
+ structures results, and the more limited the possibility of recovering 
+ extended structures becomes. The table below is a rough guide of what 
+ maximum scales you may expect for such faint feaures, and also, how noise is
+ expected to increase on the large scales as these are added in `extended` 
+ mode:
 
 
-   Table 3. Maximum faint structure scales for S/N <\~ 5
+   Table 2. Maximum faint structure scales for S/N `<`\~ 5
 
 	
    option       |	compact (default)     | extended   |   Noise power
@@ -1137,29 +1137,29 @@ options on the console.
 
 
 
-   Iterating longer, will generally help recover more of the not-too-faint 
-   large-scale emission (along with the large-scale noise!). Thus,
+ Iterating longer, will generally help recover more of the not-too-faint 
+ large-scale emission (along with the large-scale noise!). Thus,
 
    	 > crush -extended -rounds=50 [...] 
 
-   will generally recover more extended emission than just the default
+ will generally recover more extended emission than just the default
 
    	 > crush -extended [...]
 
-   (which iterates 10 times). In general, you may expect to recover significant
-   (>5 sigma) emission up to scales L as:
+ (which iterates 10 times). In general, you may expect to recover significant
+ (`>`5 sigma) emission up to scales L as:
 
-	L \~= FoV + sqrt(N v T)
+	L ~= FoV + sqrt(N v T)
 
-   in terms the number of iteration N, limiting Field-of-View (FoV), scanning 
-   velocity v and correlated noise stability time-scale T. Unfortunately, the 
-   correlated noise stability of most ground-based instruments is on the order 
-   of a second or less due to a highly variable atmosphere. At the same time, 
-   the noise rms on the large scales will increase assymptotically as:
+ in terms the number of iteration N, limiting Field-of-View (FoV), scanning 
+ velocity v and correlated noise stability time-scale T. Unfortunately, the 
+ correlated noise stability of most ground-based instruments is on the order 
+ of a second or less due to a highly variable atmosphere. At the same time, 
+ the noise rms on the large scales will increase assymptotically as:
 
-	rms \~ sqrt(N)
+	rms ~ sqrt(N)
 
-   for large numbers of iterations.
+ for large numbers of iterations.
 
 
 
@@ -1167,107 +1167,106 @@ options on the console.
 
 ### 2.4 Filtering corrections, transfer functions, etc.
 
-   Most reduction steps (decorrelation, 1/f drift removal, spectral filtering) 
-   will impact different spatial frequencies of the source structure 
-   differently. In general, the low spatial frequency components are most 
-   affected (suppressed). E.g. decorrelating the full array will reject 
-   scales larger than the field-of-view, while 1/f filtering will result in
-   1/f spatial filtering of the map due to the scanning motion, which more
-   or less directly maps temporal frequencies into spatial frequencies.
+ Most reduction steps (decorrelation, 1/f drift removal, spectral filtering) 
+ will impact different spatial frequencies of the source structure 
+ differently. In general, the low spatial frequency components are most 
+ affected (suppressed). E.g. decorrelating the full array will reject 
+ scales larger than the field-of-view, while 1/f filtering will result in
+ 1/f spatial filtering of the map due to the scanning motion, which more
+ or less directly maps temporal frequencies into spatial frequencies.
 
-   The approach of CRUSH is to apply appropriate point-source corrections
-   (rescaling) such that point sources in the map yield the same fluxes no
-   matter how (i.e. with what options exactly) the source was reduced. 
-   While the corrections will be readily sufficient for a large fraction of 
-   the science cases in this simple form, there are two notable exceptions
-   to this rule: (i) extended emission, and (ii) small, fast maps reduced
-   in 'deep' mode (when the source is scanned over the same detector more than
-   once over the 'stability' timescale). 
+ The approach of CRUSH is to apply appropriate point-source corrections
+ (rescaling) such that point sources in the map yield the same fluxes no
+ matter how (i.e. with what options exactly) the source was reduced. 
+ While the corrections will be readily sufficient for a large fraction of 
+ the science cases in this simple form, there are two notable exceptions
+ to this rule: (i) extended emission, and (ii) small, fast maps reduced
+ in `deep` mode (when the source is scanned over the same detector more than
+ once over the `stability` timescale). 
 
-   The better approach for these cases is to measure a transfer function, or 
-   otherwise check the reduction of a similar simulated source.
+ The better approach for these cases is to measure a transfer function, or 
+ otherwise check the reduction of a similar simulated source.
 
 
-   #### Transfer functions and simulated sources
+#### Transfer functions and simulated sources
 
-   The 'sources' option provides a means for inserting test sources into
-   CRUSH maps, while one of the 'jackknife' options can be used to remove
-   any real emission beforehand but retaining the signal and noise structure
-   of the data otherwise (which is important in order to get a representative
-   measure of the transfer function). E.g.
+  The `sources` option provides a means for inserting test sources into
+  CRUSH maps, while one of the `jackknife` options can be used to remove
+  any real emission beforehand but retaining the signal and noise structure
+  of the data otherwise (which is important in order to get a representative
+  measure of the transfer function). E.g.
 
 	> crush [...] -jackknife.alternate -sources=test.mask ...
 
-   will apply an alternating jackknife to the input scans, and insert sources
-   specified in the mask file 'test.mask' (See 'example.mask' on the format
-   of mask files, and the GLOSSARY for more on jackknifing options).
+  will apply an alternating jackknife to the input scans, and insert sources
+  specified in the mask file `test.mask` (See `example.mask` on the format
+  of mask files, and the GLOSSARY for more on jackknifing options).
 
-   To measure transfer functions (i.e. complete spatial characterization of
-   the point-source response) you would want to insert a single beam-sized 
-   point source. Alternatively, you can insert one or more Gaussian-shaped 
-   source(s) with a range of FWHMs to create a simulated source structure that
-   resembles the structure you expect your source(s) to have.
+  To measure transfer functions (i.e. complete spatial characterization of
+  the point-source response) you would want to insert a single beam-sized 
+  point source. Alternatively, you can insert one or more Gaussian-shaped 
+  source(s) with a range of FWHMs to create a simulated source structure that
+  resembles the structure you expect your source(s) to have.
 
-   Make sure your test source is bright enough to see with high S/N, but not
-   too bright to trigger unintended flagging, or despiking. In general, a S/N
-   between 100 and 1000 should be fine for default reductions, and 100 to 300 
-   for 'faint' or 'deep' modes.
+  Make sure your test source is bright enough to see with high S/N, but not
+  too bright to trigger unintended flagging, or despiking. In general, a S/N
+  between 100 and 1000 should be fine for default reductions, and 100 to 300 
+  for `faint` or `deep` modes.
 
-   Additionally, in 'faint' or 'deep' modes, you may want to disable some 
-   features which may affect your relatively bright test sources differently
-   than your much fainter real science target(s). Thus, the following are
-   recommended for reducing 'faint' and 'deep' test sources:
+  Additionally, in `faint` or `deep` modes, you may want to disable some 
+  features which may affect your relatively bright test sources differently
+  than your much fainter real science target(s). Thus, the following are
+  recommended for reducing `faint` and `deep` test sources:
 
-	> crush [...] -blacklist=clip,blank,source.filter.blank    
+	> crush [...] -blacklist=clip,blank,source.filter.blank
 
-   Note also that the spatial filtering (transfer function) will be varying
-   with location on the map (since the scanning speed and directions will
-   themselves be non-uniform over the map). Therefore, it is strongly 
-   recommended that test sources are inserted near the same locations as the
-   real sources in the field.
+  Note also that the spatial filtering (transfer function) will be varying
+  with location on the map (since the scanning speed and directions will
+  themselves be non-uniform over the map). Therefore, it is strongly 
+  recommended that test sources are inserted near the same locations as the
+  real sources in the field.
     
-
 
 
 
 ### 2.5 Image processing post-reduction
 
-   CRUSH also provides 'imagetool' for post-processing images after reduction. 
-   The typical usage of imagetool is:
+ CRUSH also provides `imagetool` for post-processing images after reduction. 
+ The typical usage of imagetool is:
 
        > imagetool -name=<output.fits> [options] <input.fits>
 
-   which processes <input.fits> with the given options, and writes the result 
-   to <output.fits>. 
+ which processes `<input.fits>` with the given options, and writes the result 
+ to `<output.fits>`. 
 
-   With imagetool, you can apply the desired level of smoothing (-smooth=X), or
-   spatial filtering (-extFilter=X), specify circular regions to be skipped by 
-   the filter (-mask=<filename>). You can adjust the clipping of noisy map 
-   edges by relative exposure (-minExp=X) or by relative noise (-maxNoise=X).
-   You can also crop a rectangular region (-crop=dx1,dy1,dx2,dy2). There are 
-   many more image operations. See the imagetool manual (in your UNIX shell, or
-   online) or simply run 'imagetool' without an argument:
+ With imagetool, you can apply the desired level of smoothing (`-smooth`), or
+ spatial filtering (`-extFilter`), specify circular regions to be skipped by 
+ the filter (`-mask=<filename>`). You can adjust the clipping of noisy map 
+ edges by relative exposure (`-minExp`) or by relative noise (`-maxNoise`).
+ You can also crop a rectangular region (`-crop=dx1,dy1,dx2,dy2`). There are 
+ many more image operations. See the imagetool manual (in your UNIX shell, or
+ online) or simply run `imagetool` without an argument:
 
        > imagetool
 
-   One of the useful options allows to toggle between the noise estimate from 
-   the detector time-streams (-noise=data) and from the image itself 
-   (-noise=image) using a robust estimator. For example, after spatial 
-   filtering, you probably want to re-estimate the map noise:
+ One of the useful options allows to toggle between the noise estimate from 
+ the detector time-streams (`-noise=data`) and from the image itself 
+ (`-noise=image`) using a robust estimator. For example, after spatial 
+ filtering, you probably want to re-estimate the map noise:
    
        > imagetool [...] -extFilter=45.0 -noise=image <input.fits>
 
-   The built-in image display tool 'show' also takes all processing options
-   of imagetool, but rather than writing the result, it will display it in
-   an interactive window. See the manual page of 'show' (either inside your
-   UNIX shell, or online), or run 'show' without an argument.
+ The built-in image display tool `show` also takes all processing options
+ of imagetool, but rather than writing the result, it will display it in
+ an interactive window. See the manual page of `show` (either inside your
+ UNIX shell, or online), or run `show` without an argument.
 
 
 
     
 ### 2.6 Reducing Very Large Datasets
 
-   Coming soon...
+ Coming soon...
 
 
 ---------------------------------------------------------------------------
@@ -1279,19 +1278,19 @@ options on the console.
 
 In this section, you can find information on the most useful configuration
 options. A complete list of available settings can be found in the
-text file 'GLOSSARY', located in the CRUSH installation directory.
+text file GLOSSARY, located in the CRUSH installation directory.
 
 Configuration options here are listed as scripting keys i.e., without a 
 preceding dash. However, you can use the same options in the command line by 
-adding the dash. (Also, '=' can be replaced by a space in scripting...) 
+adding the dash. (Also, `=` can be replaced by space(s) in scripting...) 
 
 
 ### 3.1 Commands
 
-There are a handful of keywords that are treated as commands by crush. (The
-difference being that commands are interpreted and acted on right away, whereas 
-typical configuration keys are stored settings that are interpreted later as 
-necessary.) The commands are:
+ There are a handful of keywords that are treated as commands by crush. (The
+ difference being that commands are interpreted and acted on right away, whereas 
+ typical configuration keys are stored settings that are interpreted later as 
+ necessary.) The commands are:
    
 
    	config=<filename>	Load the configuration file filename. 
@@ -1412,21 +1411,21 @@ necessary.) The commands are:
 
 ### 3.2 Pipeline Configuration
 
-  #### a. Source types. 
+#### a. Source types. 
 
-  The default reduction (see 'default.cfg') is optimized 
+  The default reduction (see `default.cfg`) is optimized 
   for mapping compact (up to the field-of-view or smaller) sources in the S/N
   range of \~10-1000. These options are useful if your source does not match
   these criteria.
 
 
-	bright		Use for bright sources (S/N > \~1000). This setting
+	bright		Use for bright sources (S/N > ~1000). This setting
 			entirely bypasses all filtering to produce a very
 			faithful map. The drawback is more noise, but
 			that should not be an issue for such a bright guy :-)
 			Will invoke 'bright.cfg'.
 
-	faint		Use with faint sources (S/N < \~30) when the
+	faint		Use with faint sources (S/N < ~30) when the
 			source is faint but still visible in a single scan. 
 			This setting applies some more aggressive filtering of 
 			the timestreams, and extended structures. It invokes 
@@ -1483,7 +1482,7 @@ necessary.) The commands are:
 			point-like compact sources are assumed.	
 
 
-  #### b. Other commonly used pipeline settings:
+#### b. Other commonly used pipeline settings:
 
   (in typical order of importance to users...)
 
@@ -1679,21 +1678,21 @@ necessary.) The commands are:
 
 ### 3.4 Scan Configuration
 
-   Some options relate to the scans, helping to configure and handle them
-   These options are specified *before* the list or range of scans to
-   which they apply, and remain valid for all scans read after, or until
-   an overriding option is placed. E.g.
+ Some options relate to the scans, helping to configure and handle them
+ These options are specified *before* the list or range of scans to
+ which they apply, and remain valid for all scans read after, or until
+ an overriding option is placed. E.g.
 
 	> ./crush -option1=x 10218-10532 12425 -option2=y 11411 \
 	          -option1=z 10496
 
-   will set option1 to 'x' for all scans but the last one, which will have
-   this option set to 'z'. And the last two scans will have option2
-   set to 'y'.
+ will set option1 to 'x' for all scans but the last one, which will have
+ this option set to 'z'. And the last two scans will have option2
+ set to 'y'.
 
-   A detailed listing of all scan specific options can be found in the 
-   'GLOSSARY'. Here are a few of the most commonly used ones (in alphabetical
-   order).
+ A detailed listing of all scan specific options can be found in the 
+ 'GLOSSARY'. Here are a few of the most commonly used ones (in alphabetical
+ order).
 
 
 	pointing=dx,dy	  Specify incremental pointing offsets x,y in the
@@ -1793,21 +1792,21 @@ necessary.) The commands are:
 
 ### 3.5 Instrument Configuration
 
-   There are various instrument configuration files. These reside in the
-   corresponding instrument subdirectories inside the main crush directory.
-   Some types of files are commonly used among many or all instruments, while 
-   others may be strongly instrument specific. 
+ There are various instrument configuration files. These reside in the
+ corresponding instrument subdirectories inside the main crush directory.
+ Some types of files are commonly used among many or all instruments, while 
+ others may be strongly instrument specific. 
 
-   In most cases the instrument configurations should be set correctly, and 
-   you probably can leave these settings alone. However, here you will find
-   some of the most common instrument configuration options that you may, at 
-   times, want to adjust to your preference. 
+ In most cases the instrument configurations should be set correctly, and 
+ you probably can leave these settings alone. However, here you will find
+ some of the most common instrument configuration options that you may, at 
+ times, want to adjust to your preference. 
 
-   A more complete list of the available instrument-specific configuration
-   options can be found in the GLOSSARY.
+ A more complete list of the available instrument-specific configuration
+ options can be found in the GLOSSARY.
 
 
-   #### Generic Instrument Parameters
+#### Generic Instrument Parameters
 
 
 	pixeldata=<filename>	Specifies a pixel data file, providing initial
@@ -1849,29 +1848,29 @@ necessary.) The commands are:
 
 ### 3.6. Advanced startup environment and Java configuration
 
-   We have seen before how to configure the startup environment and Java by
-   placing configuration snipplets inside the directory '\~/.crush2/startup/'. 
-   However, what if you want certain settings to apply to just a specific 
-   program within the crush suite (e.g. to 'crush' or 'show') only, but not 
-   to all of them? That too is possible, by (creating and) editing a file
-   under the corresponding '\~/.crush2/startup/<progname>' directory. E.g.:
+ We have seen before how to configure the startup environment and Java by
+ placing configuration snipplets inside the directory `~/.crush2/startup/`. 
+ However, what if you want certain settings to apply to just a specific 
+ program within the crush suite (e.g. to `crush` or `show`) only, but not 
+ to all of them? That too is possible, by (creating and) editing a file
+ under the corresponding `~/.crush2/startup/<progname>` directory. E.g.:
 
-     \~/.crush2/startup/crush/myconfig.conf
+     ~/.crush2/startup/crush/myconfig.conf
 
-   will source the bash snippled contained in 'myconfig.conf' for reductions
-   ('crush' executable) only. As with other startup scripts, the name of the
-   file itself is irrelevant, and all files will be parsed inside the 
-   program's startup directory (albeit in unspecified order!).
+ will source the bash snippled contained in `myconfig.conf` for reductions
+ (`crush` executable) only. As with other startup scripts, the name of the
+ file itself is irrelevant, and all files will be parsed inside the 
+ program's startup directory (albeit in unspecified order!).
 
-   Inside this file you can set up environment variables, and add shell 
-   (bash) scripts. E.g., the 'crush' startup configuration file may contain 
-   the lines:
+ Inside this file you can set up environment variables, and add shell 
+ (bash) scripts. E.g., the `crush` startup configuration file may contain 
+ the lines:
 
      CRUSH_NO_UPDATE_CHECK="1"
      EXTRAOPTS="$EXTRAOPTS -Djava.awt.headless=true"
 
-   (The first disables update checking, the second adds headless mode to the
-   list of extra Java options already defined).
+ (The first disables update checking, the second adds headless mode to the
+ list of extra Java options already defined).
 
 
 
@@ -1894,17 +1893,17 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 ### 4.1 Modes and Modalities
 
-   For each instrument, crush defines a set of 'modalities' (i.e. a set of
-   correlated modes) on which decorrelation may be performed. Each mode in a
-   'modality' affects a 'group' of pixels. Thus, the collection of pixel groups
-   with related modes constitutes a 'division'. For example, SHARC-2 has 12 
-   detector rows (each with 32 pixels). The dividing of pixels into 12 groups,
-   each representing a detector row, is a pixel 'division'. Pixels in a given 
-   row respond to the same correlated 'mode', and so there are 12 row-related 
-   modes, which are bunched together in a 'modality'.
+ For each instrument, crush defines a set of 'modalities' (i.e. a set of
+ correlated modes) on which decorrelation may be performed. Each mode in a
+ 'modality' affects a 'group' of pixels. Thus, the collection of pixel groups
+ with related modes constitutes a 'division'. For example, SHARC-2 has 12 
+ detector rows (each with 32 pixels). The dividing of pixels into 12 groups,
+ each representing a detector row, is a pixel 'division'. Pixels in a given 
+ row respond to the same correlated 'mode', and so there are 12 row-related 
+ modes, which are bunched together in a 'modality'.
 
-   Some of the modalities (and pixel divisions) are common to all (or most)
-   instruments. These are:
+ Some of the modalities (and pixel divisions) are common to all (or most)
+ instruments. These are:
 
    <modality name> |	Description
    ----------------|-------------------------------------------------------
@@ -1921,7 +1920,7 @@ the correlated signals) may be part of the second step of the decorrelation.
   
 
 
-   Above, the motion-related modalities may have the following directionalities:
+ Above, the motion-related modalities may have the following directionalities:
 
    <dir>  |  Description
    -------|-------------------------------------------------------------
@@ -1939,51 +1938,51 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 ### 4.2 Removing Correlated Signals
 
-   The decorrelation step is invoked by:
+ The decorrelation step is invoked by:
 
        correlated.<modality-name>
 
-   For example, a decorrelation of the signals induced by the chopper 
-   displacement in x (e.g. SHARC-2) is invoked by:
+ For example, a decorrelation of the signals induced by the chopper 
+ displacement in x (e.g. SHARC-2) is invoked by:
 
        correlated.chopper-x
 
-   (Of course, the same keyword must also appear in the pipeline 'ordering', 
-   for the step to actually take place during the reduction process -- 
-   otherwise crush will not know when to correlated.the chopper signals.)
+ (Of course, the same keyword must also appear in the pipeline 'ordering', 
+ for the step to actually take place during the reduction process -- 
+ otherwise crush will not know when to correlated.the chopper signals.)
 
-   You can fine-tune how CRUSH deals with each correlated mode. For example, 
-   the following lines:
+ You can fine-tune how CRUSH deals with each correlated mode. For example, 
+ the following lines:
 
        correlated.obs-channels.resolution 1.0
        correlated.obs-channels.gainrange 0.3--3.0
 
-   Specifies that atmospheric signals, which appear in all observing channels, 
-   should be correlated. only every second (vs. the default every available 
-   frame), and that any channel that exhibits a response outside of 0.3--3.0 
-   times the 'average' response of the array, should be flagged, and ignored 
-   in the reduction afterwards.
+ Specifies that atmospheric signals, which appear in all observing channels, 
+ should be correlated. only every second (vs. the default every available 
+ frame), and that any channel that exhibits a response outside of 0.3--3.0 
+ times the 'average' response of the array, should be flagged, and ignored 
+ in the reduction afterwards.
 
 
 
 ### 4.3 User-defined Modalities
 
-   In addition to the most common modalities listed above, each instruments 
-   defines its specific ones (e.g. 'rows' for SHARC-2 from the example above). 
-   See the README files in the instrument sub-directories of crush for a full 
-   list of  predefined instrument specific modalities. You can also define your 
-   own pixel groups, divisions and modalities using the 'group' and 'division' 
-   keywords. Here is an example:
+ In addition to the most common modalities listed above, each instruments 
+ defines its specific ones (e.g. `rows` for SHARC-2 from the example above). 
+ See the README files in the instrument sub-directories of crush for a full 
+ list of  predefined instrument specific modalities. You can also define your 
+ own pixel groups, divisions and modalities using the `group` and `division` 
+ keywords. Here is an example:
 
        group.my-group-1 10,13,20-25
        group.my-group-2 40-56,78,80-82
        division.my-division my-group-1 my-group-2
 
-   The first two lines defines two pixel groups ('my-group-1' and 'my-group-2') 
-   from pixel indexes and ranges, while the last line creates a division 
-   ('my-division') from these pixel groupings. CRUSH will also create a 
-   correlated modality with the same name as the division. So, given the 
-   definitions above you can correlated.on 'my-division' by:
+ The first two lines defines two pixel groups (`my-group-1` and `my-group-2`) 
+ from pixel indexes and ranges, while the last line creates a division 
+ (`my-division`) from these pixel groupings. CRUSH will also create a 
+ correlated modality with the same name as the division. So, given the 
+ definitions above you can correlated.on `my-division` by:
 
        correlated.my-division
 
@@ -1991,38 +1990,37 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 ## 5. Custom Logging Support
 
+CRUSH (as of version 2.03 really) provides a poweful scan/reduction logging
+capability via the `log` and `obslog` keys. 
 
-   CRUSH (as of version 2.03 really) provides a poweful scan/reduction logging
-   capability via the 'log' and 'obslog' keys. 
-
-   'log' writes the log entries for each scan *after* the reduction, whereas 
-   'obslog' does not reduce data at all, only logs the scans immediately after 
-   reading them. While both logging functions work identically, some of the 
-   values are generated during reduction, and therefore may not be available to
-   'obslog'.
-
+`log` writes the log entries for each scan *after* the reduction, whereas 
+`obslog` does not reduce data at all, only logs the scans immediately after 
+reading them. While both logging functions work identically, some of the 
+values are generated during reduction, and therefore may not be available to
+`obslog`.
 
 
 
-   ### 5.1 Log Files and Versioning
 
-   You can specify the log files to use with the 'log.file' and 'obslog.file'
-   keys (the default is to use <instrument>.log and <instrument>.obs.log in the
-   'outpath' directory). Equivalently, you can also set the filename directly 
-   as an optional argument to 'log' and 'obslog':
+### 5.1 Log Files and Versioning
+
+ You can specify the log files to use with the `log.file` and `obslog.file`
+ keys (the default is to use `<instrument>.log` and `<instrument>.obs.log` in 
+ the `outpath` directory). Equivalently, you can also set the filename 
+ directly as an optional argument to `log` and `obslog`:
 
       > crush [...] -log=myLog.log [...]  
 
-   You can specify the quantities, and the formatting in which they will appear,
-   using the 'log.format' and 'obslog.format' keys. Below you will find more
-   information on how to set the number formatting of quantities and a list
-   of values available for the logging.
+ You can specify the quantities, and the formatting in which they will appear,
+ using the `log.format` and `obslog.format` keys. Below you will find more
+ information on how to set the number formatting of quantities and a list
+ of values available for the logging.
    
-   A log file always has a fixed format, the one which was used when creating 
-   it. Therefore, a conflict may arise if the same log file is specified for 
-   use with a different format. The policy for resolving such conflicts can be
-   set via the 'log.conflict' and 'obslog.conflict' keys, which can have one
-   of the following values:
+ A log file always has a fixed format, the one which was used when creating 
+ it. Therefore, a conflict may arise if the same log file is specified for 
+ use with a different format. The policy for resolving such conflicts can be
+ set via the `log.conflict` and `obslog.conflict` keys, which can have one
+ of the following values:
 
        overwrite    Overwrites the previous log file, with a new one in the
        		    newly specified format
@@ -2037,23 +2035,23 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-   ### 5.2 Decimal Formatting of Values
+### 5.2 Decimal Formatting of Values
 
-   Many of the quantities you can log are floating point values, and you have
-   the possibility of controlling how these will appear in your log files. 
-   Simply put one of the formatting directives in brackets after the value
-   to specifts its format. 
+ Many of the quantities you can log are floating point values, and you have
+ the possibility of controlling how these will appear in your log files. 
+ Simply put one of the formatting directives in brackets after the value
+ to specifts its format. 
 
-   E.g. the keys 'RA' or 'RAh' will write the right-ascention coordinate either
-   as radians or as hours, with the default floating point formats. However,
-   'RA(h:2)' will write the value in human-readable 'hh:mm:ss.ss' format, 
-   whereas 'RAh(f3)' will express it as 'hh.hhh'.
+ E.g. the keys `RA` or `RAh` will write the right-ascention coordinate either
+ as radians or as hours, with the default floating point formats. However,
+ `RA(h:2)` will write the value in human-readable `hh:mm:ss.ss` format, 
+ whereas `RAh(f3)` will express it as `hh.hhh`.
 
-   You can choose from the following formats to express various quantities.
-   Be careful, because not all formats are appropriate to all types of data.
-   (For example, you should not try to format angles expressed in degrees with
-   the DMS formatting capabilities of the 'a' angle formats. Use these only
-   with angles expressed in radians!)
+ You can choose from the following formats to express various quantities.
+ Be careful, because not all formats are appropriate to all types of data.
+ (For example, you should not try to format angles expressed in degrees with
+ the DMS formatting capabilities of the `a` angle formats. Use these only
+ with angles expressed in radians!)
 
 
 	d0...d9		Integer format with 0...9 digits. E.g. 'd3' will write
@@ -2080,7 +2078,7 @@ the correlated signals) may be part of the second step of the decorrelation.
 			(colons, symbols, and letters respectively).
 
 	h:0...h:3
-	hs0...hs3		
+	hs0...hs3
 	hl0...hl3	Hour-angle format (e.g. for RA coordinate) with 0...3
 			decimals on the seconds. E.g. 'h:2' formats angles in
 			'hh:mm:ss.ss' format. Use only with values expressed
@@ -2108,14 +2106,14 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 	
 
-   ### 5.3 Loggable Quantities
+### 5.3 Loggable Quantities
 
-   Currently, CRUSH offers the following quantities for logging. Directives
-   starting with '?' will log the values of configuration keys. Other 
-   quantitites reflect the various internals of the scan or instrument state.
-   More quantities will be added to this list in the future, especially 
-   values that are specific to certain instruments only. Keep an eye out for
-   changes/addititions :-).   
+ Currently, CRUSH offers the following quantities for logging. Directives
+ starting with '?' will log the values of configuration keys. Other 
+ quantitites reflect the various internals of the scan or instrument state.
+ More quantities will be added to this list in the future, especially 
+ values that are specific to certain instruments only. Keep an eye out for
+ changes/addititions :-).
 
 
 	?<keyword>	The value of the configuration <keyword>. If the
@@ -2358,7 +2356,7 @@ the correlated signals) may be part of the second step of the decorrelation.
 	zenithtau	In-band opacity at zenith.
 
 
-   #### Source model specific log entries
+#### Source model specific log entries
 
 	map.beams	  Number of (smoothed) beams in the map.
 
@@ -2392,12 +2390,12 @@ the correlated signals) may be part of the second step of the decorrelation.
 			  the instrument (e.g. in arcsecs).
 
 
-   #### Telescope specific log entries
+#### Telescope specific log entries
 
    APEX: see the crush/apex/README.
 
 
-   #### Instrument specific log entries
+#### Instrument specific log entries
 
    See the crush/<instrument>/README, for each <instrument>.
   
@@ -2457,7 +2455,7 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
 
 Further support for instruments is possible. If interested to use CRUSH for
 your bolometer array, please contact Attila Kovacs 
-<attila[AT]sigmyne.com>.
+`<attila[AT]sigmyne.com>`.
 
 In principle, it is possible to extend CRUSH support for other types of scanning
 instruments, like heterodyne receiver arrays, or single-pixel receivers that
@@ -2478,67 +2476,67 @@ implementation. Nonetheless, the following avenues of feature enrichment are
 being considered. 
 
 
-   ### 7.1 Support for Heterodyne Receivers and Interferometry
+### 7.1 Support for Heterodyne Receivers and Interferometry
 
-   CRUSH was born as a bolometer array reduction package. However, there is no
-   reason why many of its principles could not be applied to other types of 
-   instruments (astronomical or otherwise), especially those, which are affected
-   by correlated signals. Besides, CRUSH also provides powerful tools for other
-   analysis steps, like weighting, despiking, spectral filtering, and mapping.
+ CRUSH was born as a bolometer array reduction package. However, there is no
+ reason why many of its principles could not be applied to other types of 
+ instruments (astronomical or otherwise), especially those, which are affected
+ by correlated signals. Besides, CRUSH also provides powerful tools for other
+ analysis steps, like weighting, despiking, spectral filtering, and mapping.
 
-   Two obvious extensions would be heterodyne receivers (and receiver arrays) 
-   and the use of CRUSH for interferometry (e.g. ALMA) since it is well-suited
-   to deal with immense data volumes also.
-
-
-   ### 7.2 Interactive Reductions
-
-   At present CRUSH offers only a reduction pipeline. This is ideal for
-   crunching large volumes of data in a more-or-less automated fashion, and 
-   for making reduction painless. It is also ideal for most users, who might 
-   not wish to learn about the intricacies of each and every reduction step. 
-   However, in some cases having more control may be beneficial.
-
-   Many astronomers are used to interactive reduction packages (e.g. GILDAS
-   AIPS, BoA etc.). CRUSH should eventually offer such a capability also. This
-   would allow step-by-step reductions, together with varous plotting 
-   capabilities to look at data at every stage. Such a capability would be
-   very useful in the process of building pipelines for new instruments
-
-   It should be relatively simple to provide this feature. The current 
-   configuration languange of CRUSH can be easily adapted for more interactive
-   use. Even more detailed control may be possible though a standard scripting
-   language like JavaScript or Rhino. The main job would be to supply the
-   essential plotting capabilities, but that too may come sooner than later...
+ Two obvious extensions would be heterodyne receivers (and receiver arrays) 
+ and the use of CRUSH for interferometry (e.g. ALMA) since it is well-suited
+ to deal with immense data volumes also.
 
 
-   ### 7.3 Distributed and GPU Computing
+### 7.2 Interactive Reductions
 
-   The reduction paradigm of CRUSH is massively parallelizable. CRUSH can
-   already make good use of any number of processing cores within a computer.
-   It should be quite staighforward to extend implementation over several
-   computing nodes and super-computers, allowing orders of magnitude increases
-   in data reduction speeds and data volumes.
+ At present CRUSH offers only a reduction pipeline. This is ideal for
+ crunching large volumes of data in a more-or-less automated fashion, and 
+ for making reduction painless. It is also ideal for most users, who might 
+ not wish to learn about the intricacies of each and every reduction step. 
+ However, in some cases having more control may be beneficial.
 
-   Another way of improving speeds may come from the use of Graphical (GPU)
-   Computing. Today's grahics chips provide computing power well in excess of
-   that offered by the CPUs. This can be harnessed with programming tools
-   like CUDA or OpenCL. GPU computing is still in its infancy, and thus
-   its languange specifications are likely very fluid. But technical
-   details aside, GPUs clearly offer a way for boosting the number crunching
-   performace of CRUSH. 
+ Many astronomers are used to interactive reduction packages (e.g. GILDAS
+ AIPS, BoA etc.). CRUSH should eventually offer such a capability also. This
+ would allow step-by-step reductions, together with varous plotting 
+ capabilities to look at data at every stage. Such a capability would be
+ very useful in the process of building pipelines for new instruments
+
+ It should be relatively simple to provide this feature. The current 
+ configuration languange of CRUSH can be easily adapted for more interactive
+ use. Even more detailed control may be possible though a standard scripting
+ language like JavaScript or Rhino. The main job would be to supply the
+ essential plotting capabilities, but that too may come sooner than later...
 
 
-   ### 7.4 Graphical User-Interface (GUI)
+### 7.3 Distributed and GPU Computing
 
-   The addition of a Graphical User Interface (GUI) to CRUSH would make 
-   configurations more transparent and intuitive. It would allow users, who do 
-   not use CRUSH often, to avoid learning the complexities of command-line
-   options and scripting support, and instead click their way through the
-   essential configuration settings.
+ The reduction paradigm of CRUSH is massively parallelizable. CRUSH can
+ already make good use of any number of processing cores within a computer.
+ It should be quite staighforward to extend implementation over several
+ computing nodes and super-computers, allowing orders of magnitude increases
+ in data reduction speeds and data volumes.
 
-   GUIs may also aid the more expert users, in providing a way to look at 
-   details, such as monitoring quantities, signals or maps during the reduction.
+ Another way of improving speeds may come from the use of Graphical (GPU)
+ Computing. Today's grahics chips provide computing power well in excess of
+ that offered by the CPUs. This can be harnessed with programming tools
+ like CUDA or OpenCL. GPU computing is still in its infancy, and thus
+ its languange specifications are likely very fluid. But technical
+ details aside, GPUs clearly offer a way for boosting the number crunching
+ performace of CRUSH. 
+
+
+### 7.4 Graphical User-Interface (GUI)
+
+ The addition of a Graphical User Interface (GUI) to CRUSH would make 
+ configurations more transparent and intuitive. It would allow users, who do 
+ not use CRUSH often, to avoid learning the complexities of command-line
+ options and scripting support, and instead click their way through the
+ essential configuration settings.
+
+ GUIs may also aid the more expert users, in providing a way to look at 
+ details, such as monitoring quantities, signals or maps during the reduction.
 
 
 -----------------------------------------------------------------------------
@@ -2568,5 +2566,6 @@ I hope you'll find this helpful and may you end up with beautiful images!!!
 
 
 ===============================================================================
+
 Copyright (C)2014 -- Attila Kovacs 
 
