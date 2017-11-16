@@ -7,92 +7,66 @@ Last updated: 14 February 2017
 
 
 
-Table of Contents
-=================
+## Table of Contents
 
-1. Getting Started
+### 1. Getting Started
 
-  1.1 Installation
-
-  1.2 (optional) Java Runtime Configuration
-
-  1.3 CRUSH Pipeline Configuration
-
-  1.4 The Tools of the CRUSH Suite
-
-  1.5 Quick Start
-
-  1.6 A Brief Description of What CRUSH Does and How...
-
-  1.7 Command-line Options and Scripting Support
-
-  1.8 Making Sense of the Console Output
-
-  1.9 Examples
+  - 1.1 Installation
+  - 1.2 (optional) Java Runtime Configuration
+  - 1.3 CRUSH Pipeline Configuration
+  - 1.4 The Tools of the CRUSH Suite
+  - 1.5 Quick Start
+  - 1.6 A Brief Description of What CRUSH Does and How...
+  - 1.7 Command-line Options and Scripting Support
+  - 1.8 Making Sense of the Console Output
+  - 1.9 Examples
 
 
-2. Advanced Topics
+### 2. Advanced Topics
 
-  2.1 Pointing Corrections
-
-  2.2 Pixelization and Smoothing
-
-  2.3 Recovery of Extended Emission
-
-  2.4 Filtering corrections, transfer functions, etc.
-
-  2.5 Image Processing Post-Reduction
-
-  2.6 Reducing Very Large Datasets (to do...)
+  - 2.1 Pointing Corrections
+  - 2.2 Pixelization and Smoothing
+  - 2.3 Recovery of Extended Emission
+  - 2.4 Filtering corrections, transfer functions, etc.
+  - 2.5 Image Processing Post-Reduction
+  - 2.6 Reducing Very Large Datasets (to do...)
 
 
-3. Advanced Configuration
+### 3. Advanced Configuration
 
-  3.1 Commands
-
-  3.2 Pipeline Configuration
-
-  3.3 Source (Map) Configuration
-
-  3.4 Scan Configuration
-
-  3.5 Instrument Configuration
-
-  3.6 Advanced startup environment and Java configuration
+  - 3.1 Commands
+  - 3.2 Pipeline Configuration
+  - 3.3 Source (Map) Configuration
+  - 3.4 Scan Configuration
+  - 3.5 Instrument Configuration
+  - 3.6 Advanced startup environment and Java configuration
 
 
-4. Correlated Signals 
+### 4. Correlated Signals 
 
-  4.1 Modes and Modalities
+  - 4.1 Modes and Modalities
+  - 4.2 Removing Correlated Signals
+  - 4.3 User-defined Modalities
 
-  4.2 Removing Correlated Signals
-
-  4.3 User-defined Modalities
-
-5. Custom Logging Support
+### 5. Custom Logging Support
  
-  5.1 Log Files and Versioning
-
-  5.2 Decimal Formatting of Values
-
-  5.3 Loggable Quantities
+  - 5.1 Log Files and Versioning
+  - 5.2 Decimal Formatting of Values
+  - 5.3 Loggable Quantities
 
 
-6. Supported Cameras
+### 6. Supported Cameras
 
 
-7. Future Developments (A Wish List...)
+### 7. Future Developments (A Wish List...)
 
-  7.1 Support for Heterodyne Receivers and Interferometry
-
-  7.2 Interactive Reductions
-
-  7.3 Distributed and GPU Computing
-
-  7.4 Graphical User-Interface (GUI)
+  - 7.1 Support for Heterodyne Receivers and Interferometry
+  - 7.2 Interactive Reductions
+  - 7.3 Distributed and GPU Computing
+  - 7.4 Graphical User-Interface (GUI)
 
 
-8. Further information
+### 8. Further information
 
 
 
@@ -110,11 +84,11 @@ virtually any fast-sampling scanning camera.
 
 
 
-1.1 Installation
-================
+### 1.1 Installation
+=====================
 
-   Install Java (if not already installed)
-   ---------------------------------------
+   #### Install Java (if not already installed)
+   --------------------------------------------
    Download Java, e.g. from www.java.com. If you already have Java, check that 
    it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
 
@@ -126,8 +100,8 @@ virtually any fast-sampling scanning camera.
    wwww.java.com
 
 
-   Download CRUSH
-   --------------
+   #### Download CRUSH
+   -------------------
    You can get the latest version of CRUSH from:
 
 	http://www.submm.caltech.edu/~sharc/crush 
@@ -144,8 +118,8 @@ virtually any fast-sampling scanning camera.
    reside. 
 
   
-   A. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
-   ---------------------------------------------------------
+   #### A. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
+   --------------------------------------------------------------
    Unpack the tarball in the desired location (e.g. under '~/astrotools/'):
 
         > cd ~/astrotools
@@ -160,8 +134,8 @@ virtually any fast-sampling scanning camera.
 
 
 
-   B. Installation via Linux packages
-   ----------------------------------
+   #### B. Installation via Linux packages
+   ---------------------------------------
    Use the package manager on your system to install. E.g., on RPM-based 
    systems (Fedora, RHEL, CentOS, SUSE) you may type:
 
@@ -175,15 +149,15 @@ virtually any fast-sampling scanning camera.
 
 
 
-   C. Windows Installation
-   -----------------------
+   #### C. Windows Installation
+   ----------------------------
    Please refer to 'README.windows', which may be found in the Install\windows\
    subdirectory of the distribution, or online under the 'Documents' tab.
 
  
 
- 1.2 (optional) Java Configuration
- =================================
+### 1.2 (optional) Java Configuration
+=====================================
 
 
    CRUSH ships with a default Java configuration. On Windows and the most 
@@ -267,8 +241,8 @@ virtually any fast-sampling scanning camera.
 
 
 
-1.3.  CRUSH Pipeline Configuration
-==================================
+### 1.3.  CRUSH Pipeline Configuration
+======================================
 
 
    The preferred way of creating user-specific configurations for CRUSH is to
@@ -303,8 +277,8 @@ virtually any fast-sampling scanning camera.
 
 
 
-1.4. The Tools of the CRUSH Suite
-=================================
+### 1.4. The Tools of the CRUSH Suite
+=====================================
 
 CRUSH provides a collection of other useful tools. Here's a short description
 of what is there and what they are used for. Each tool, when run without
@@ -337,8 +311,8 @@ options on the console.
 
 
 
-1.5. Quick Start
-================
+### 1.5. Quick Start
+====================
 
    To reduce data, simply specify the instrument (E.g. 'sharc2', 'laboca'...) 
    and the scan numbers/ids (or names of the scan files or directories) to 
@@ -457,8 +431,8 @@ options on the console.
 
    
 
-1.6. A Brief Description of What CRUSH Does and How...
-=======================================================
+### 1.6. A Brief Description of What CRUSH Does and How...
+==========================================================
 
    CRUSH is a pipeline reduction that is principally meant to remove
    correlated signals (correlated noise) in the time-streams to arrive
@@ -485,8 +459,8 @@ options on the console.
 
 
 
-1.7. Command-line Options and Scripting Support
-===============================================   
+### 1.7. Command-line Options and Scripting Support
+===================================================   
 
    Configuration of CRUSH is available either through command line 
    options or via scripting. You have seen scripting already in the form
@@ -501,8 +475,8 @@ options on the console.
    only what is specific to CRUSH, beyond the cofiguration engine in general.
 
 
-   Basic Rules
-   -----------
+   #### Basic Rules
+   ----------------
    When defining settings, keys can be separated from their values either by
    '=', ':' or empty spaces (or even a combination of these).
 
@@ -539,8 +513,8 @@ options on the console.
  
 
  
-    Dynamic Conditionals
-    --------------------
+    #### Dynamic Conditionals
+    -------------------------
     Some conditions are interpreted dynamically. For example CRUSH, can 
     activate settings based on observation date (or MJD) or serial number, on 
     a scan-by-scan basis, such as:
@@ -584,8 +558,8 @@ options on the console.
     will activate the noise whitening in the iteration before the last one.
 
    
-    Startup Configuration
-    ---------------------
+    #### Startup Configuration
+    --------------------------
     At launch, crush will parse 'config/default.cfg' to establish a default 
     configuration set. All configurations files are first parsed from the 
     files in the config/ directory inside crush, then additional options or 
@@ -603,8 +577,8 @@ options on the console.
 
 
 
-1.8. Making sense of the console output
-=======================================
+### 1.8. Making sense of the console output
+===========================================
  
    Don't ignore the console output. It contains a lot of information, which
    may be useful for diagnosing your reduction, and troubleshooting if things
@@ -625,8 +599,8 @@ options on the console.
    be shy, dive in!
 
 
-   An example line from the console output
-   ----------------------------------------
+   ##### An example line from the console output
+   --------------------------------------------
 
    Let's begin with a concrete example. Here is a section from the console 
    output from the reduction of LABOCA scan 11564 (from 2007): 
@@ -645,49 +619,59 @@ options on the console.
 
         In the 4th iteration, the following steps are performed on scan 11564: 
 
-	D(128)       -- 1/f filtering (on 128 frame timescale)
-   	C245         -- removing the correlated noise from the array with 
+	D(128)       	1/f filtering (on 128 frame timescale)
+
+   	C245         	removing the correlated noise from the array with 
 			245 pixels surviving the gain range criterion.
-	W(8.44E0-2)  -- Deriving pixel weights with the 'rms' method. The
+
+	W(8.44E0-2)  	Deriving pixel weights with the 'rms' method. The
 			average sensitivity of the array is estimated to be
 			84.4 mJy sqrt(s).
-	dN(0)245     -- Despiking via the 'neighbours' method, with 0 frames
+
+	dN(0)245     	Despiking via the 'neighbours' method, with 0 frames
 			flagged as spiky, and 245 pixels surviving the
 			flagging of pixels with too many spikes.
-	B245	     -- Decorrelating on amplifier boxes, with 245 pixels 
+
+	B245	     	Decorrelating on amplifier boxes, with 245 pixels 
 			having acceptable gains to the correlated signals.
-	c245	     -- Decorrelating on electronic cables, with 245 pixels
+
+	c245	     	Decorrelating on electronic cables, with 245 pixels
 			showing acceptable gain response to these signals.
-	Map(8.44E-2) -- Mapping scan, with estimated point source NEFD of
+
+	Map(8.44E-2) 	Mapping scan, with estimated point source NEFD of
 			84.4 mJy sqry(s).
 
    Then, at the end of the iteration a composite source model is created. This
    is further processed as:
 
-	{check}	     -- Remove invalid data from the scan maps (before adding
+	{check}	     	Remove invalid data from the scan maps (before adding
 			to composite).
-	(smooth)     -- smooth composite by the desired amount.
-	(clip:4.0)   -- Discard map points below an S/N of 4.0 from composite.
-	(blank:10.0) -- Do not use bolometer data in other steps, which are
+
+	(smooth)     	smooth composite by the desired amount.
+
+	(clip:4.0)   	Discard map points below an S/N of 4.0 from composite.
+
+	(blank:10.0) 	Do not use bolometer data in other steps, which are
 			collected over the map points with S/N > 10, thus
 			reducing the bias that bright sources can cause in the
 			reduction steps.
-	(sync)	     -- Synch the composite model back to the time-stream data.
+
+	(sync)	     	Synch the composite model back to the time-stream data.
 
    Once the reduction is done, various files, including the source map, are
    written. This is appropriately echoed on the console output.
 
 
    
-   Console Output Reference Guide
-   ==============================
+   #### Console Output Reference Guide
+   ===================================
 
    Below is a reference guide for interpreting the console output for your 
    particular reduction:
   
 
-   Quantities inside the brackets:
-   -------------------------------
+   ##### Quantities inside the brackets:
+   -------------------------------------
 
 	[nnnnn|m]:	processing scan nnnnn, subscan m from the list
 
@@ -702,85 +686,127 @@ options on the console.
 			the default full resolution.
 
 
-   Reduction-step Shorthands (alphabetically)
-   ------------------------------------------
+   ##### Reduction-step Shorthands (alphabetically)
+   ------------------------------------------------
 
 	a		Decorrelating amplifier boards (e.g. LABOCA,GISMO).
+
 	am		Remove correlated telescope acceleration (magnitude)
+
 	ax		Remove correlated telescope x acceleration
+
 	ay		Remove correlated telescope y acceleration
+
 	B		Decorrelating electronic boxes (e.g. LABOCA).
+
 	C		Solving for correlated noise and pixel gains
 			The time resolution (in frames) is shown in brackets
 			if not full resolution, followed by the number of 
 			unflagged pixels if gains are solved and a gain range
 			is defined for flagging.
+
 	c		Decorrelating electronic cables (e.g. LABOCA)	
                         or geometric columns (e.g. GISMO)
+
 	cx		Remove correlated chopper x position
+
 	cy		Remove correlated chopper y position
+
 	D		Solving for pixel drifts (1/f filtering).
+
 	dA(#)		despiking absolute deviations.	
 			In brackets it shows the percentage # of frames
 			flagged in the data as spiky by any method.
+
 	dG(#)		like above but proceeds gradually.
+
 	dN(#)		despiking using neighbouring samples in the timeseries.
+
 	dM(#)		despiking at multiple resolutions (up to the 1/f
 			filter timescale).
+
 	E		Remove correlated SAE error signal (GISMO)	
+
 	G		Estimating atmospheric gradients accross the FOV.
+
 	J		De-jumping frames (e.g. for GISMO). Followed by two
 			colon (:) separated numbers: the first, the number of
 			de-jumped blocks that were re-levelled and kept; and
 			the number of blocks flagged.
+
 	m		Decorrelating on multiplexers (e.g. GISMO, SCUBA-2)
+
 	Mf		Filtering principal telescope motion.
+
 	O		Solving for pixel offsets
+
 	p		Decorrelating on (virtual) amplifier pins (e.g. GISMO)
+
 	Q		Decorrelating wafers (e.g. ASZCA).
+
 	r		Decorrelating on geometric rows (e.g. SHARC-2, GISMO)
+
 	t		Solving for the twisting of band cables (e.g. LABOCA).
+
 	tx		Remove correlated telescope x position
+
 	ty		Remove correlated telescope y position
+
 	tW		Estimating time weights.
+
 	W		Estimating pixel weights.
+
 	w		Estimating pixel weights using the 'differential'
 			method.
+
    	wh(x.xx)	Noise whitening. The average source throughput factor
 			from the whitening is shown.	
 
-  Source model-specific:
-  ----------------------
+  ##### Source model-specific:
+  ----------------------------
 
      
    	Map		Calculating source map from scan. The effective point
 			source NEV/NEFD of the instrument is shown in the 
 			brackets (e.g. as Jy sqrt(s)).
+
 	[C1~#.##]	Filtering corrections are applied directly and are
 			#.## on average.
+
 	[C2=#.##]	Faint structures are corrected for filtering after
 			the mapping via an average correction factor #.##.
 
-   [Source]		Solving for source map.
+   	[Source]	Solving for source map.
+
    	{check}		Discarding invalid map data.
+
 	{despike}	despiking scan maps before adding to composite.
+
 	{filter}	Spatial large-scale structure (LSS) filtering of the 
 			scan maps.
+
 	(level)		Zero levelling to map median.
+
 	(smooth)	Smoothing map.
+
 	(filter)	Spatial filtering of the composite map.
+
 	(noiseclip)	Clip out the excessively noisy parts of the map.
+
 	(filter)	Filtering large scale structures (i.e. sky-noise).
+
 	(exposureclip)	Clipping under-exposed map points.
+
 	(blank)		Blank excessively bright points from noise models.
+
 	(sync)		Removing the source model from the time-stream.
 
 
 
 
 
-1.9. Examples
-=============
+### 1.9. Examples
+=================
 
    Reduce scans 12065-12069 and 12072 with zenith tau of 0.18:
 
@@ -876,8 +902,8 @@ options on the console.
 
 
 
-2.1 Pointing Corrections
-========================
+### 2.1 Pointing Corrections
+============================
 
    Reducing the data with the correct pointing can be crucial (esp. when 
    attempting to detect/calibrate faint point sources). At times the pointing
@@ -901,8 +927,8 @@ options on the console.
    supplied by 'pointing'.
 
 
-   Obtaining Corrections
-   ---------------------
+   #### Obtaining Corrections
+   --------------------------
    Good practice demands that you regularly observe pointing/calibration 
    sources near your science targets, from which you can derive appropriate
    corrections. CRUSH provides the means for a analyzing pointing/calibration
@@ -917,8 +943,8 @@ options on the console.
 
 
 
-   After Reduction (a poor alternative)
-   ------------------------------------
+   #### After Reduction (a poor alternative)
+   -----------------------------------------
    You can also make pointing changes after the reduction (alas, now in 
    RA/DEC). You can read off the apparent source position from each separately 
    reduced scan (e.g. by using 'show' and placing the cursor above the apparent
@@ -936,8 +962,8 @@ options on the console.
 
 
 
-2.2 Pixelization and Smoothing
-==============================
+### 2.2 Pixelization and Smoothing
+==================================
 
    There seem to be many misconceptions about the 'correct' choice of 
    pixelization and about the (mal)effects of smoothing. This section aims to 
@@ -945,8 +971,8 @@ options on the console.
    pros and cons of applying smoothing to your maps.
 
 
-   Pixelization (i.e. choosing the 'right' grid)
-   ---------------------------------------------
+   #### Pixelization (i.e. choosing the 'right' grid)
+   --------------------------------------------------
    Misconception 1: You should always 'Nyquist' sample your map, with 2 pixels
    per beam FWHM, to ensure ideal representation.
 
@@ -976,8 +1002,8 @@ options on the console.
    senseless increase of map pixels (i.e. number of model parameters).
 
 
-   Smoothing
-   ---------
+   #### Smoothing
+   --------------
    Misconception 2: You should not smooth your maps, because it does something
    'unnatural' to your 'raw' image.
 
@@ -1072,8 +1098,8 @@ options on the console.
 
 
 
-2.3 Recovery of Extended Emission
-=================================
+### 2.3 Recovery of Extended Emission
+======================================
 
    As a general rule, ground based instruments (in the mm and submm) are only 
    sensitive to structures smaller than the Field-of-View (FoV) of the 
@@ -1154,8 +1180,8 @@ options on the console.
 
 
 
-2.4 Filtering corrections, transfer functions, etc.
-===================================================
+### 2.4 Filtering corrections, transfer functions, etc.
+=======================================================
 
     Most reduction steps (decorrelation, 1/f drift removal, spectral filtering) 
     will impact different spatial frequencies of the source structure 
@@ -1178,8 +1204,8 @@ options on the console.
     otherwise check the reduction of a similar simulated source.
 
 
-    Transfer functions and simulated sources
-    ----------------------------------------
+    #### Transfer functions and simulated sources
+    ---------------------------------------------
     The 'sources' option provides a means for inserting test sources into
     CRUSH maps, while one of the 'jackknife' options can be used to remove
     any real emission beforehand but retaining the signal and noise structure
@@ -1220,8 +1246,8 @@ options on the console.
 
 
 
-2.5 Image processing post-reduction
-====================================
+### 2.5 Image processing post-reduction
+=======================================
 
    CRUSH also provides 'imagetool' for post-processing images after reduction. 
    The typical usage of imagetool is:
@@ -1256,8 +1282,8 @@ options on the console.
 
 
     
-2.6 Reducing Very Large Datasets
-================================
+### 2.6 Reducing Very Large Datasets
+====================================
 
    Coming soon...
 
@@ -1278,8 +1304,8 @@ preceding dash. However, you can use the same options in the command line by
 adding the dash. (Also, '=' can be replaced by a space in scripting...) 
 
 
-3.1 Commands
-============
+### 3.1 Commands
+================
 
 There are a handful of keywords that are treated as commands by crush. (The
 difference being that commands are interpreted and acted on right away, whereas 
@@ -1403,10 +1429,12 @@ necessary.) The commands are:
 				telescope movement, or temperature data).
 
 
-3.2 Pipeline Configuration
-==========================
+### 3.2 Pipeline Configuration
+==============================
 
-  a. Source types. The default reduction (see 'default.cfg') is optimized 
+  #### a. Source types. 
+
+     The default reduction (see 'default.cfg') is optimized 
      for mapping compact (up to the field-of-view or smaller) sources in the S/N
      range of ~10-1000. These options are useful if your source does not match
      these criteria.
@@ -1475,8 +1503,9 @@ necessary.) The commands are:
 			point-like compact sources are assumed.	
 
 
-  b. Other commonly used pipeline settings:
-     (in typical order of importance to users...)
+  #### b. Other commonly used pipeline settings:
+
+  (in typical order of importance to users...)
 
 
 	outpath=<path>	Set the directory into which output files (e.g. maps) 
@@ -1556,8 +1585,8 @@ necessary.) The commands are:
 
 
 
-3.3 Source (Map) Configuration
-==============================
+### 3.3 Source (Map) Configuration
+==================================
 	
 	altaz		Shorthand for 'system=horizontal' to reduce in Alt/Az.
 			It is also aliased to 'horizontal'.
@@ -1669,8 +1698,8 @@ necessary.) The commands are:
 
 
 
-3.4 Scan Configuration
-======================
+### 3.4 Scan Configuration
+==========================
 
       Some options relate to the scans, helping to configure and handle them
       These options are specified *before* the list or range of scans to
@@ -1784,8 +1813,8 @@ necessary.) The commands are:
 
 
 
-3.5 Instrument Configuration
-============================
+### 3.5 Instrument Configuration
+================================
 
     There are various instrument configuration files. These reside in the
     corresponding instrument subdirectories inside the main crush directory.
@@ -1801,8 +1830,8 @@ necessary.) The commands are:
     options can be found in the GLOSSARY.
 
 
-    Generic Instrument Parameters
-    -----------------------------
+    #### Generic Instrument Parameters
+    ----------------------------------
 
 
 	pixeldata=<filename>	Specifies a pixel data file, providing initial
@@ -1842,8 +1871,8 @@ necessary.) The commands are:
 
 
 
-3.6. Advanced startup environment and Java configuration
-========================================================
+### 3.6. Advanced startup environment and Java configuration
+============================================================
 
    We have seen before how to configure the startup environment and Java by
    placing configuration snipplets inside the directory '~/.crush2/startup/'. 
@@ -1885,8 +1914,8 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-4.1 Modes and Modalities
-========================
+### 4.1 Modes and Modalities
+============================
 
    For each instrument, crush defines a set of 'modalities' (i.e. a set of
    correlated modes) on which decorrelation may be performed. Each mode in a
@@ -1900,39 +1929,39 @@ the correlated signals) may be part of the second step of the decorrelation.
    Some of the modalities (and pixel divisions) are common to all (or most)
    instruments. These are:
 
-      <modality name>	Description
-      ========================================================================
-      all		All channels, regardless of their state
-      live		All channels that aren't dead.
-      detectors		All detectors (e.g. excluding resistors etc.)
-      obs-channels	All observing detectors (e.g. that see sky).
-      gradients		A focal plane gradients of 'observing' detectors.
-      blinds		Blind detectors (if exist)
-      telescope-x	Telescope position in the 'x' direction (e.g. AZ)
-      telescope-y	Telescope poistion in the 'y' direction (e.g. EL)
-      accel-<dir>	Acceleration in some direction (see below).
-      chopper-<dir>	Chopper motion in some direction (see below).
-      ------------------------------------------------------------------------
+      <modality name> |	Description
+      ----------------|-------------------------------------------------------
+      all	      |	All channels, regardless of their state
+      live	      |	All channels that aren't dead.
+      detectors	      |	All detectors (e.g. excluding resistors etc.)
+      obs-channels    |	All observing detectors (e.g. that see sky).
+      gradients	      |	A focal plane gradients of 'observing' detectors.
+      blinds	      |	Blind detectors (if exist)
+      telescope-x     |	Telescope position in the 'x' direction (e.g. AZ)
+      telescope-y     |	Telescope poistion in the 'y' direction (e.g. EL)
+      accel-<dir>     |	Acceleration in some direction (see below).
+      chopper-<dir>   |	Chopper motion in some direction (see below).
+  
 
 
    Above, the motion-related modalities may have the following directionalities:
 
-       <dir>    Description
-       =======================================================================
-       x	Response to the 'x' coordinate of the motion.	
-       y	Response to the 'y' coordinate of the motion.
-       x^2	Response to the square of the 'x' coordinate.
-       y^2	Response to the square of the 'x' coordinate.
-       |x|	Response to the magnitude of of the 'x' coordinate.
-       |y|	Response to the magnitude of of the 'y' coordinate.
-       mag	Response to the magnitude of the motion.
-       norm	Response to the square of the magnitude.
-       -----------------------------------------------------------------------
+       <dir>  |  Description
+       -------|-------------------------------------------------------------
+       x      |	Response to the 'x' coordinate of the motion.	
+       y      |	Response to the 'y' coordinate of the motion.
+       x^2    |	Response to the square of the 'x' coordinate.
+       y^2    |	Response to the square of the 'x' coordinate.
+       |x|    |	Response to the magnitude of of the 'x' coordinate.
+       |y|    |	Response to the magnitude of of the 'y' coordinate.
+       mag    |	Response to the magnitude of the motion.
+       norm   |	Response to the square of the magnitude.
 
 
 
-4.2 Removing Correlated Signals
-===============================
+
+### 4.2 Removing Correlated Signals
+===================================
 
    The decorrelation step is invoked by:
 
@@ -1961,8 +1990,8 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-4.3 User-defined Modalities
-===========================
+### 4.3 User-defined Modalities
+===============================
 
    In addition to the most common modalities listed above, each instruments 
    defines its specific ones (e.g. 'rows' for SHARC-2 from the example above). 
@@ -2000,8 +2029,8 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-5.1 Log Files and Versioning
-============================
+### 5.1 Log Files and Versioning
+================================
 
    You can specify the log files to use with the 'log.file' and 'obslog.file'
    keys (the default is to use <instrument>.log and <instrument>.obs.log in the
@@ -2034,8 +2063,8 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-5.2 Decimal Formatting of Values
-================================
+### 5.2 Decimal Formatting of Values
+====================================
 
    Many of the quantities you can log are floating point values, and you have
    the possibility of controlling how these will appear in your log files. 
@@ -2106,8 +2135,8 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 	
 
-5.3 Loggable Quantities
-=======================
+### 5.3 Loggable Quantities
+===========================
 
    Currently, CRUSH offers the following quantities for logging. Directives
    starting with '?' will log the values of configuration keys. Other 
@@ -2357,8 +2386,8 @@ the correlated signals) may be part of the second step of the decorrelation.
 	zenithtau	In-band opacity at zenith.
 
 
-   Source model specific log entries
-   ---------------------------------
+   #### Source model specific log entries
+   --------------------------------------
 
 	map.beams	  Number of (smoothed) beams in the map.
 
@@ -2392,14 +2421,14 @@ the correlated signals) may be part of the second step of the decorrelation.
 			  the instrument (e.g. in arcsecs).
 
 
-   Telescope specific log erntries
-   -------------------------------
+   #### Telescope specific log entries
+   -----------------------------------
 
 	APEX: see the crush/apex/README.
 
 
-   Instrument specific log entries
-   -------------------------------
+   #### Instrument specific log entries
+   ------------------------------------
 
 	See the crush/<instrument>/README, for each <instrument>.
   
@@ -2478,8 +2507,8 @@ implementation. Nonetheless, the following avenues of feature enrichment are
 being considered. 
 
 
-7.1 Support for Heterodyne Receivers and Interferometry
-=======================================================
+### 7.1 Support for Heterodyne Receivers and Interferometry
+===========================================================
 
    CRUSH was born as a bolometer array reduction package. However, there is no
    reason why many of its principles could not be applied to other types of 
@@ -2492,8 +2521,8 @@ being considered.
    to deal with immense data volumes also.
 
 
-7.2 Interactive Reductions
-==========================
+### 7.2 Interactive Reductions
+==============================
 
    At present CRUSH offers only a reduction pipeline. This is ideal for
    crunching large volumes of data in a more-or-less automated fashion, and 
@@ -2514,8 +2543,8 @@ being considered.
    essential plotting capabilities, but that too may come sooner than later...
 
 
-7.3 Distributed and GPU Computing
-==================================
+### 7.3 Distributed and GPU Computing
+=====================================
 
    The reduction paradigm of CRUSH is massively parallelizable. CRUSH can
    already make good use of any number of processing cores within a computer.
@@ -2532,8 +2561,8 @@ being considered.
    performace of CRUSH. 
 
 
-7.4 Graphical User-Interface (GUI)
-==================================
+### 7.4 Graphical User-Interface (GUI)
+======================================
 
    The addition of a Graphical User Interface (GUI) to CRUSH would make 
    configurations more transparent and intuitive. It would allow users, who do 
