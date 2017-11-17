@@ -1016,7 +1016,7 @@ virtually any fast-sampling scanning camera.
   noticeable. If you use sub-beam smoothing with `smoothFWHM < beamFWHM`, then 
   the relative widening is roughly
 
-	dW / W0 \~ 0.5 * (smoothFWHM / beamFWHM)^2
+	dW / W0 ~ 0.5 * (smoothFWHM / beamFWHM)^2
 
   Thus, smoothing by half a beam, degrades resolution by \~12% only... At the 
   same time, smoothing can bring many benefits:
@@ -1073,10 +1073,10 @@ virtually any fast-sampling scanning camera.
 
    setting        | widening     |	rel. S/N
    ---------------|--------------|--------------
-   minimal	  |  	6%    	 |	    0.33
-   halfbeam       |     12%      |	    0.50
-   2/3beam        | 	22%      |	    0.67
-   beam           | 	41%      |	    1.00
+   minimal        |    6%        |	    0.33
+   halfbeam       |    12%       |	    0.50
+   2/3beam        | 	  22%       |	    0.67
+   beam           | 	  41%       |	    1.00
 
 
 
@@ -1128,11 +1128,10 @@ virtually any fast-sampling scanning camera.
    **Table 2.** _Maximum faint structure scales for S/N `<`\~ 5_
 
 	
-   option       |	compact (default)     | extended   |   Noise power
-   -------------|-----------------------------|------------|--------------
-   bright	|	                      |            |
-   (default)    |	   FOV/2              |	 \~FOV	   |	 \~l^2
-   faint, deep  | 2*sourceSize or 2*beam      |	 FOV/2	   |	  \~l
+   option           |    compact (default)   | extended | Noise power
+   -----------------|------------------------|----------|------------
+   bright,(default) |	       FOV/2         |  \~FOV   |  \~l^2
+   faint, deep      | 2*sourceSize or 2*beam |	 FOV/2  |   \~l
 
 
 
@@ -2408,49 +2407,49 @@ values are generated during reduction, and therefore may not be available to
 Currently, CRUSH supports the following instruments (in alphabetical order):
 
    
-    ASZCA	(2mm) APEX SZ Camera, from Berkeley, CA
-		bolo.berkeley.edu/apexsz/instrument.html
+    ASZCA        (2mm) APEX SZ Camera, from Berkeley, CA
+                 bolo.berkeley.edu/apexsz/instrument.html
 
-    GISMO	(2mm) Goddard-IRAM Superconducting 2-Millimeter Observer
-		www.iram.es/IRAMES/mainWiki/GoddardIramSuperconductingTwo\
-		Millimeter
+    GISMO	 (2mm) Goddard-IRAM Superconducting 2-Millimeter Observer
+                 www.iram.es/IRAMES/mainWiki/GoddardIramSuperconductingTwo\
+	         Millimeter
 
-    LABOCA	(870um) Large APEX Bolometer Camera
-		www.apex-telescope.org/bolometer/laboca
+    LABOCA       (870um) Large APEX Bolometer Camera
+                 www.apex-telescope.org/bolometer/laboca
 
-    MAKO	(350um) KID technology demonstration camera for the CSO.
+    MAKO         (350um) KID technology demonstration camera for the CSO.
 
-    MAKO-2	(350um, 850um) Second-generation KID technology demonstration
-		camera for the CSO with dual-pol pixel response, and dual-band 
-		imaging capability.
+    MAKO-2       (350um, 850um) Second-generation KID technology demonstration
+                 camera for the CSO with dual-pol pixel response, and dual-band 
+                 imaging capability.
 
-    MUSTANG-2	(3mm) Large focal plane array for the 100m Greenbank Telescope.
-		www.gb.nrao.edu/mustang/
+    MUSTANG-2    (3mm) Large focal plane array for the 100m Greenbank Telescope.
+                 www.gb.nrao.edu/mustang/
 
-    p-ArTeMiS	(200um, 350um, 450um) 3-color camera for APEX (prototype)
-		www.apex-telescope.org/instruments/pi/artemis
+    p-ArTeMiS    (200um, 350um, 450um) 3-color camera for APEX (prototype)
+                 www.apex-telescope.org/instruments/pi/artemis
 
-    PolKA	(polarimetry) Polarimeter for LABOCA
-		www.mpifr-bonn.mpg.de/staff/gsiringo/laboca/laboca\
-		_polarimeter.html
+    PolKA        (polarimetry) Polarimeter for LABOCA
+                 www.mpifr-bonn.mpg.de/staff/gsiringo/laboca/laboca\
+                 _polarimeter.html
 
-    SABOCA	(350um) Submillimeter APEX Bolometer Camera
-		www.apex-telescope.org/bolometer/saboca
+    SABOCA       (350um) Submillimeter APEX Bolometer Camera
+                 www.apex-telescope.org/bolometer/saboca
 
-    SCUBA-2	(450um, 850um) Submillimetre Common User Bolometer Array 2
-		www.roe.ac.uk/ukatc/projects/scubatwo
+    SCUBA-2      (450um, 850um) Submillimetre Common User Bolometer Array 2
+                 www.roe.ac.uk/ukatc/projects/scubatwo
 
-    SHARC	(350um, 450um) Submillimeter High-Angular Resolution Camera
-		Caltech, Pasadena, CA
-		http://www.submm.caltech.edu/cso/sharc/cso_sharc.html
+    SHARC        (350um, 450um) Submillimeter High-Angular Resolution Camera
+                 Caltech, Pasadena, CA
+                 http://www.submm.caltech.edu/cso/sharc/cso_sharc.html
 
-    SHARC-2	(350um, 450um, 850um) The second-generation Submillimeter 
-		High-Angular Resolution Camera
-		Caltech, Pasadena, CA
-		www.submm.caltech.edu:/~sharc
+    SHARC-2      (350um, 450um, 850um) The second-generation Submillimeter 
+                 High-Angular Resolution Camera
+                 Caltech, Pasadena, CA
+                 www.submm.caltech.edu:/~sharc
 
-    SOFIA/HAWC+	(53um, 62um, 89um, 155um, 216um)
-		High-resolution Airborne Wide-angle Camera
+    SOFIA/HAWC+  (53um, 62um, 89um, 155um, 216um)
+                 High-resolution Airborne Wide-angle Camera
 
 
 Further support for instruments is possible. If interested to use CRUSH for
