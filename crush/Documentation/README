@@ -9,64 +9,52 @@ Last updated: 16 November 2017
 
 ## Table of Contents
 
-### 1. Getting Started
+1. __Getting Started__
+    - 1.1. Installation
+    - 1.2. (optional) Java Runtime Configuration
+    - 1.3. CRUSH Pipeline Configuration
+    - 1.4. The Tools of the CRUSH Suite
+    - 1.5 Quick Start
+    - 1.6 A Brief Description of What CRUSH Does and How...
+    - 1.7 Command-line Options and Scripting Support
+    - 1.8 Making Sense of the Console Output
+    - 1.9 Examples
 
-  - 1.1 Installation
-  - 1.2 (optional) Java Runtime Configuration
-  - 1.3 CRUSH Pipeline Configuration
-  - 1.4 The Tools of the CRUSH Suite
-  - 1.5 Quick Start
-  - 1.6 A Brief Description of What CRUSH Does and How...
-  - 1.7 Command-line Options and Scripting Support
-  - 1.8 Making Sense of the Console Output
-  - 1.9 Examples
+2. __Advanced Topics__
+    - 2.1 Pointing Corrections
+    - 2.2 Pixelization and Smoothing
+    - 2.3 Recovery of Extended Emission
+    - 2.4 Filtering corrections, transfer functions, etc.
+    - 2.5 Image Processing Post-Reduction
+    - 2.6 Reducing Very Large Datasets (to do...)
 
+3. __Advanced Configuration__
+    - 3.1 Commands
+    - 3.2 Pipeline Configuration
+    - 3.3 Source (Map) Configuration
+    - 3.4 Scan Configuration
+    - 3.5 Instrument Configuration
+    - 3.6 Advanced startup environment and Java configuration
 
-### 2. Advanced Topics
+4. __Correlated Signals__ 
+    - 4.1 Modes and Modalities
+    - 4.2 Removing Correlated Signals
+    - 4.3 User-defined Modalities
 
-  - 2.1 Pointing Corrections
-  - 2.2 Pixelization and Smoothing
-  - 2.3 Recovery of Extended Emission
-  - 2.4 Filtering corrections, transfer functions, etc.
-  - 2.5 Image Processing Post-Reduction
-  - 2.6 Reducing Very Large Datasets (to do...)
+5. __Custom Logging Support__
+    - 5.1 Log Files and Versioning
+    - 5.2 Decimal Formatting of Values
+    - 5.3 Loggable Quantities
 
+6. __Supported Camera__
 
-### 3. Advanced Configuration
+7. __Future Developments (A Wish List...)__
+    - 7.1 Support for Heterodyne Receivers and Interferometry
+    - 7.2 Interactive Reductions
+    - 7.3 Distributed and GPU Computing
+    - 7.4 Graphical User-Interface (GUI)
 
-  - 3.1 Commands
-  - 3.2 Pipeline Configuration
-  - 3.3 Source (Map) Configuration
-  - 3.4 Scan Configuration
-  - 3.5 Instrument Configuration
-  - 3.6 Advanced startup environment and Java configuration
-
-
-### 4. Correlated Signals 
-
-  - 4.1 Modes and Modalities
-  - 4.2 Removing Correlated Signals
-  - 4.3 User-defined Modalities
-
-### 5. Custom Logging Support
- 
-  - 5.1 Log Files and Versioning
-  - 5.2 Decimal Formatting of Values
-  - 5.3 Loggable Quantities
-
-
-### 6. Supported Cameras
-
-
-### 7. Future Developments (A Wish List...)
-
-  - 7.1 Support for Heterodyne Receivers and Interferometry
-  - 7.2 Interactive Reductions
-  - 7.3 Distributed and GPU Computing
-  - 7.4 Graphical User-Interface (GUI)
-
-
-### 8. Further information
+8. __Further information__
 
 
 ----------------------------------------------------------------------------
@@ -101,7 +89,7 @@ virtually any fast-sampling scanning camera.
 
   You can get the latest version of CRUSH from:
 
-	http://www.submm.caltech.edu/~sharc/crush 
+   http://www.submm.caltech.edu/~sharc/crush 
 
   Linux users can grab one of the distribution packages to install CRUSH via
   a package manager. Packages are provided for both RPM-based distributions 
@@ -189,31 +177,31 @@ virtually any fast-sampling scanning camera.
  Below is a guide to the variables that you can override to set your own
  Java runtime configuration:
 
-	JAVA		Set to the location of the Java executable you want
-			to use. E.g. "java" to use the default Java, or
-			`/usr/java/latest/bin/java` to use the latest from
-			Oracle or OpenJDK.
+    JAVA       Set to the location of the Java executable you want
+               to use. E.g. "java" to use the default Java, or
+               `/usr/java/latest/bin/java` to use the latest from
+               Oracle or OpenJDK.
 
-	DATAMODEL	Set to "32" or "64", to select 32 or 64-bit mode.
-			To use 64-bit mode you will need both a 64-bit OS
-			and a 64-bit JRE (Java Runtime Environment)
-			installation.
+    DATAMODEL  Set to "32" or "64", to select 32 or 64-bit mode.
+               To use 64-bit mode you will need both a 64-bit OS
+               and a 64-bit JRE (Java Runtime Environment)
+               installation.
    
-	USEMB		Set to the maximum amount of RAM (in MB) available to 
-			CRUSH. E.g. "4000" for 4GB. Note, that when DATAMODEL
-			is "32", you this value must be somewhere below 2000.
-			Thus, "1900" is a good maximum value to use in 32-bit
-			mode.
+    USEMB      Set to the maximum amount of RAM (in MB) available to 
+               CRUSH. E.g. "4000" for 4GB. Note, that when DATAMODEL
+               is "32", you this value must be somewhere below 2000.
+               Thus, "1900" is a good maximum value to use in 32-bit
+               mode.
 
-	JVM		Usually set to `-server` for Oracle or OpenJDK. If 
-			using IBM's Java, set it to "" (empty string). On ARM 
-			platforms, you probably get better performance using
-			`-jamvm` or `-avian`. o see what VM options are 
-			available, run `java -help`. The VM options are listed 
-			near the top of the resulting help screen. 
+    JVM        Usually set to `-server` for Oracle or OpenJDK. If 
+               using IBM's Java, set it to "" (empty string). On ARM 
+               platforms, you probably get better performance using
+               `-jamvm` or `-avian`. o see what VM options are 
+               available, run `java -help`. The VM options are listed 
+               near the top of the resulting help screen. 
 
-	EXTRAOPTS	Any other non-standard options you may want to pass
-			to the Java VM should go here. 
+    EXTRAOPTS  Any other non-standard options you may want to pass
+               to the Java VM should go here. 
 	
 
  You can also specify environment variables, and add shell scripts (bash),
@@ -279,30 +267,30 @@ virtually any fast-sampling scanning camera.
  options (or with the -help option) will provide you a list of available
  options on the console.
 
-	crush	        The principal reduction tool.
+    crush       The principal reduction tool.
 
-	imagetool	A tool for manipulating images. Can also deal with 
-			images produced by BoA (and to some degree other 
-			images also).
+    imagetool   A tool for manipulating images. Can also deal with 
+                images produced by BoA (and to some degree other 
+                images also).
 
-  	show		A simple display program for the FITS files, with 
-			various useful functions for simple analysis and image
-			manipulation capabilities.
+    show        A simple display program for the FITS files, with 
+                various useful functions for simple analysis and image
+                manipulation capabilities.
 
-  	coadd		Add FITS images together. Use as a last resort tool as
-			it is always better to reduced scans together.
+    coadd       Add FITS images together. Use as a last resort tool as
+                it is always better to reduced scans together.
 
-  	difference	Allows to look at the difference between two images.
+    difference  Allows to look at the difference between two images.
 
-  	histogram	Write a histogram of the pixel distribution of an 
-			image plane. (e.g. `flux`, `rms`, `s2n`, `weight`, or 
-			`time`).
+    histogram   Write a histogram of the pixel distribution of an 
+                image plane. (e.g. `flux`, `rms`, `s2n`, `weight`, or 
+                `time`).
 	
-  	detect		A source extraction tool for maps. You should make
-			sure that the noise is close enuogh to Gaussian (e.g. 
-			with `histogram`) before relying on this. 
+    detect      A source extraction tool for maps. You should make
+                sure that the noise is close enuogh to Gaussian (e.g. 
+                with `histogram`) before relying on this. 
 
-	esorename	Rename ESO archive files to their original names.
+    esorename	 Rename ESO archive files to their original names.
 
 
 
@@ -488,9 +476,9 @@ virtually any fast-sampling scanning camera.
   simply list the scan number (or ranges or lists or names). I.e., 
 
 	[...]
-	read 10056			# in script
+	read 10056                # in script
 
-	> crush [...] 10056		# on the command line.
+	> crush [...] 10056       # on the command line.
 
   In the next section you'll find a description of the scripting keywords.
   Now that you know how to use them also as command line options, you
@@ -609,44 +597,45 @@ virtually any fast-sampling scanning camera.
 
    In the 4th iteration, the following steps are performed on scan 11564: 
 
-	D(128)       	1/f filtering (on 128 frame timescale)
+    D(128)        1/f filtering (on 128 frame timescale)
 
-   	C245         	removing the correlated noise from the array with 
-			245 pixels surviving the gain range criterion.
+    C245          removing the correlated noise from the array with 
+                  245 pixels surviving the gain range criterion.
 
-	W(8.44E0-2)  	Deriving pixel weights with the `rms` method. The
-			average sensitivity of the array is estimated to be
-			84.4 mJy sqrt(s).
+    W(8.44E0-2)   Deriving pixel weights with the `rms` method. The
+                  average sensitivity of the array is estimated to be
+                  84.4 mJy sqrt(s).
 
-	dN(0)245     	Despiking via the `neighbours` method, with 0 frames
-			flagged as spiky, and 245 pixels surviving the
-			flagging of pixels with too many spikes.
+    dN(0)245      Despiking via the `neighbours` method, with 0 frames
+                  flagged as spiky, and 245 pixels surviving the
+                  flagging of pixels with too many spikes.
 
-	B245	     	Decorrelating on amplifier boxes, with 245 pixels 
-			having acceptable gains to the correlated signals.
+    B245          Decorrelating on amplifier boxes, with 245 pixels 
+                  having acceptable gains to the correlated signals.
 
-	c245	     	Decorrelating on electronic cables, with 245 pixels
-			showing acceptable gain response to these signals.
+    c245          Decorrelating on electronic cables, with 245 pixels
+                  showing acceptable gain response to these signals.
 
-	Map(8.44E-2) 	Mapping scan, with estimated point source NEFD of
-			84.4 mJy sqry(s).
+    Map(8.44E-2)  Mapping scan, with estimated point source NEFD of
+                  84.4 mJy sqry(s).
 
    Then, at the end of the iteration a composite source model is created. This
    is further processed as:
 
-	{check}	     	Remove invalid data from the scan maps (before adding
-			to composite).
+    {check}       Remove invalid data from the scan maps (before adding
+                  to composite).
 
-	(smooth)     	smooth composite by the desired amount.
+    (smooth)      smooth composite by the desired amount.
 
-	(clip:4.0)   	Discard map points below an S/N of 4.0 from composite.
+    (clip:4.0)    Discard map points below an S/N of 4.0 from composite.
 
-	(blank:10.0) 	Do not use bolometer data in other steps, which are
-			collected over the map points with S/N > 10, thus
-			reducing the bias that bright sources can cause in the
-			reduction steps.
+    (blank:10.0)  Do not use bolometer data in other steps, which are
+                  collected over the map points with S/N > 10, thus
+                  reducing the bias that bright sources can cause in the
+                  reduction steps.
 
-	(sync)	     	Synch the composite model back to the time-stream data.
+    (sync)        Synchronize the composite model back to the time-stream
+                  data.
 
  Once the reduction is done, various files, including the source map, are
  written. This is appropriately echoed on the console output.
@@ -661,131 +650,131 @@ virtually any fast-sampling scanning camera.
 
 ##### Quantities inside the brackets:
 
-	[nnnnn|m]:	processing scan nnnnn, subscan m from the list
+    [nnnnn|m]:  processing scan nnnnn, subscan m from the list
 
-	(#.##E#)	The effective point-source NEFD (usually after 
-			weighting or at the mapping step)
-			shown in the effective mapping units times sqrt(s).
+    (#.##E#)    The effective point-source NEFD (usually after 
+                weighting or at the mapping step)
+                shown in the effective mapping units times sqrt(s).
 
-	[]		bracketed models are solved via median estimators
+    []          bracketed models are solved via median estimators
 
-	(#)		Indicates the time resolution of the given step as
-			the number of downsampled frames, when this is not
-			the default full resolution.
+    (#)         Indicates the time resolution of the given step as
+                the number of downsampled frames, when this is not
+                the default full resolution.
 
 
 ##### Reduction-step Shorthands (alphabetically)
 
-	a		Decorrelating amplifier boards (e.g. LABOCA,GISMO).
+    a          Decorrelating amplifier boards (e.g. LABOCA,GISMO).
 
-	am		Remove correlated telescope acceleration (magnitude)
+    am         Remove correlated telescope acceleration (magnitude)
 
-	ax		Remove correlated telescope x acceleration
+    ax         Remove correlated telescope x acceleration
 
-	ay		Remove correlated telescope y acceleration
+    ay         Remove correlated telescope y acceleration
 
-	B		Decorrelating electronic boxes (e.g. LABOCA).
+    B          Decorrelating electronic boxes (e.g. LABOCA).
 
-	C		Solving for correlated noise and pixel gains
-			The time resolution (in frames) is shown in brackets
-			if not full resolution, followed by the number of 
-			unflagged pixels if gains are solved and a gain range
-			is defined for flagging.
+    C          Solving for correlated noise and pixel gains
+               The time resolution (in frames) is shown in brackets
+               if not full resolution, followed by the number of 
+               unflagged pixels if gains are solved and a gain range
+               is defined for flagging.
 
-	c		Decorrelating electronic cables (e.g. LABOCA)	
-                        or geometric columns (e.g. GISMO)
+    c          Decorrelating electronic cables (e.g. LABOCA)	
+               or geometric columns (e.g. GISMO)
 
-	cx		Remove correlated chopper x position
+    cx         Remove correlated chopper x position
 
-	cy		Remove correlated chopper y position
+    cy         Remove correlated chopper y position
 
-	D		Solving for pixel drifts (1/f filtering).
+    D          Solving for pixel drifts (1/f filtering).
 
-	dA(#)		despiking absolute deviations.	
-			In brackets it shows the percentage # of frames
-			flagged in the data as spiky by any method.
+    dA(#)      despiking absolute deviations.	
+               In brackets it shows the percentage # of frames
+               flagged in the data as spiky by any method.
 
-	dG(#)		like above but proceeds gradually.
+    dG(#)      like above but proceeds gradually.
 
-	dN(#)		despiking using neighbouring samples in the timeseries.
+    dN(#)      despiking using neighbouring samples in the timeseries.
 
-	dM(#)		despiking at multiple resolutions (up to the 1/f
-			filter timescale).
+    dM(#)      despiking at multiple resolutions (up to the 1/f
+               filter timescale).
 
-	E		Remove correlated SAE error signal (GISMO)	
+    E          Remove correlated SAE error signal (GISMO)	
 
-	G		Estimating atmospheric gradients accross the FOV.
+    G          Estimating atmospheric gradients accross the FOV.
 
-	J		De-jumping frames (e.g. for GISMO). Followed by two
-			colon (:) separated numbers: the first, the number of
-			de-jumped blocks that were re-levelled and kept; and
-			the number of blocks flagged.
+    J          De-jumping frames (e.g. for GISMO). Followed by two
+               colon (:) separated numbers: the first, the number of
+               de-jumped blocks that were re-levelled and kept; and
+               the number of blocks flagged.
 
-	m		Decorrelating on multiplexers (e.g. GISMO, SCUBA-2)
+    m          Decorrelating on multiplexers (e.g. GISMO, SCUBA-2)
 
-	Mf		Filtering principal telescope motion.
+    Mf         Filtering principal telescope motion.
 
-	O		Solving for pixel offsets
+    O          Solving for pixel offsets
 
-	p		Decorrelating on (virtual) amplifier pins (e.g. GISMO)
+    p          Decorrelating on (virtual) amplifier pins (e.g. GISMO)
 
-	Q		Decorrelating wafers (e.g. ASZCA).
+    Q          Decorrelating wafers (e.g. ASZCA).
 
-	r		Decorrelating on geometric rows (e.g. SHARC-2, GISMO)
+    r          Decorrelating on geometric rows (e.g. SHARC-2, GISMO)
 
-	t		Solving for the twisting of band cables (e.g. LABOCA).
+    t          Solving for the twisting of band cables (e.g. LABOCA).
 
-	tx		Remove correlated telescope x position
+    tx         Remove correlated telescope x position
 
-	ty		Remove correlated telescope y position
+    ty         Remove correlated telescope y position
 
-	tW		Estimating time weights.
+    tW         Estimating time weights.
 
-	W		Estimating pixel weights.
+    W          Estimating pixel weights.
 
-	w		Estimating pixel weights using the 'differential'
-			method.
+    w          Estimating pixel weights using the 'differential'
+               method.
 
-   	wh(x.xx)	Noise whitening. The average source throughput factor
-			from the whitening is shown.	
+    wh(x.xx)  Noise whitening. The average source throughput factor
+              from the whitening is shown.	
 
 ##### Source model-specific:
 
      
-   	Map		Calculating source map from scan. The effective point
-			source NEV/NEFD of the instrument is shown in the 
-			brackets (e.g. as Jy sqrt(s)).
+    Map         Calculating source map from scan. The effective point
+                source NEV/NEFD of the instrument is shown in the 
+                brackets (e.g. as Jy sqrt(s)).
 
-	[C1\~#.##]	Filtering corrections are applied directly and are
-			#.## on average.
+    [C1\~#.##]  Filtering corrections are applied directly and are
+                #.## on average.
 
-	[C2=#.##]	Faint structures are corrected for filtering after
-			the mapping via an average correction factor #.##.
+    [C2=#.##]   Faint structures are corrected for filtering after
+                the mapping via an average correction factor #.##.
 
-   	[Source]	Solving for source map.
+    [Source]    Solving for source map.
 
-   	{check}		Discarding invalid map data.
+    {check}     Discarding invalid map data.
 
-	{despike}	despiking scan maps before adding to composite.
+    {despike}   despiking scan maps before adding to composite.
 
-	{filter}	Spatial large-scale structure (LSS) filtering of the 
-			scan maps.
+    {filter}    Spatial large-scale structure (LSS) filtering of the 
+                scan maps.
 
-	(level)		Zero levelling to map median.
+    (level)     Zero levelling to map median.
 
-	(smooth)	Smoothing map.
+    (smooth)    Smoothing map.
 
-	(filter)	Spatial filtering of the composite map.
+    (filter)    Spatial filtering of the composite map.
 
-	(noiseclip)	Clip out the excessively noisy parts of the map.
+    (noiseclip) Clip out the excessively noisy parts of the map.
 
-	(filter)	Filtering large scale structures (i.e. sky-noise).
+    (filter)    Filtering large scale structures (i.e. sky-noise).
 
-	(exposureclip)	Clipping under-exposed map points.
+    (exposureclip)  Clipping under-exposed map points.
 
-	(blank)		Blank excessively bright points from noise models.
+    (blank)    Blank excessively bright points from noise models.
 
-	(sync)		Removing the source model from the time-stream.
+    (sync)     Removing the source model from the time-stream.
 
 
 
@@ -1069,9 +1058,10 @@ virtually any fast-sampling scanning camera.
   peak S/N on point sources:
 
 
+   
    **Table 1.** _Smoothing properties_
 
-   setting        | widening     |	rel. S/N
+   _smooth_       | widening     |	rel. S/N
    ---------------|--------------|--------------
    minimal        |    6%        |	    0.33
    halfbeam       |    12%       |	    0.50
@@ -1126,13 +1116,14 @@ virtually any fast-sampling scanning camera.
 
 
    **Table 2.** _Maximum faint structure scales for S/N `<`\~ 5_
-
 	
-   option           |    compact (default)   | extended | Noise power
-   -----------------|------------------------|----------|------------
-   bright,(default) |	       FOV/2         |  \~FOV   |  \~l^2
-   faint, deep      | 2*sourceSize or 2*beam |	 FOV/2  |   \~l
-
+   option              | Max. sensitive scale        | Noise power scaling 
+   --------------------|-----------------------------|--------------------
+   _default_ / `bright`|	       FOV/2              |  \~L^2
+    + `extended`       |           FOV               |  \~L^2
+                       |                             |
+   `faint` / `deep`    | `2*sourceSize` or `2*beam`  |   \~L
+    + `extended`       |          FOV/2              |   \~L
 
 
  Iterating longer, will generally help recover more of the not-too-faint 
@@ -1911,8 +1902,8 @@ the correlated signals) may be part of the second step of the decorrelation.
    `obs-channels`  |	All observing detectors (e.g. that see sky).
    `gradients`	   |	A focal plane gradients of 'observing' detectors.
    `blinds`	   |	Blind detectors (if exist)
-   `telescope-x`   |	Telescope position in the 'x' direction (e.g. AZ)
-   `telescope-y`   |	Telescope poistion in the 'y' direction (e.g. EL)
+   `telescope-x`   |	Telescope position in the _x_ direction (e.g. AZ)
+   `telescope-y`   |	Telescope poistion in the _y_ direction (e.g. EL)
    `accel-<dir>`   |	Acceleration in some direction (see below).
    `chopper-<dir>` |	Chopper motion in some direction (see below).
   
@@ -1921,16 +1912,17 @@ the correlated signals) may be part of the second step of the decorrelation.
  Above, the motion-related modalities may have the following directionalities:
 
 
+
    `<dir>`  |  Description
-   ---------|-------------------------------------------------------------
-   `x`      |	Response to the 'x' coordinate of the motion.	
-   `y`      |	Response to the 'y' coordinate of the motion.
-   `x^2`    |	Response to the square of the 'x' coordinate.
-   `y^2`    |	Response to the square of the 'x' coordinate.
-   `\|x\|`  |	Response to the magnitude of of the 'x' coordinate.
-   `\|y\|`  |	Response to the magnitude of of the 'y' coordinate.
-   `mag`    |	Response to the magnitude of the motion.
-   `norm`   |	Response to the square of the magnitude.
+   ---------|-------------------------------
+   `x`      |	_x_ direction.	
+   `y`      |	_y_ direction.
+   `x^2`    |	square of the _x_ coordinate.
+   `y^2`    |	square of the _y_ coordinate.
+   `|x|`    |	_x_ magnitude.
+   `|y|`    |  _y_ magnitude.
+   `mag`    |  vector magnitude.
+   `norm`   |	square of vector magnitude.
 
 
 
@@ -2115,278 +2107,277 @@ values are generated during reduction, and therefore may not be available to
  changes/addititions :-).
 
 
-	?<keyword>	The value of the configuration <keyword>. If the
-			configuration option is not defined '---' is written.
-			If the keyword is set without a value, then '<true>'
-			is written.
+    ?<keyword>       The value of the configuration <keyword>. If the
+                     configuration option is not defined '---' is written.
+                     If the keyword is set without a value, then '<true>'
+                     is written.
 
-	AZ		Azymuth coordinate (in radians). E.g. 'AZ(a:1)'
-			produces ddd:mm:ss.s formatted output. See also 'AZd' 
-			and 'EL'.
+    AZ               Azymuth coordinate (in radians). E.g. 'AZ(a:1)'
+                     produces ddd:mm:ss.s formatted output. See also 'AZd' 
+                     and 'EL'.
 
-	AZd		Azymuth coordinate in degrees. E.g. 'AZd(f2)'
-			produces output in ddd.dd format. See also 'AZ' and 
-			'ELd'
+    AZd              Azymuth coordinate in degrees. E.g. 'AZd(f2)'
+                     produces output in ddd.dd format. See also 'AZ' and 
+                     'ELd'
 
-	channels	Number of channels processed in the reduction. See
-			also 'okchannels' and 'maxchannels'.
+    channels         Number of channels processed in the reduction. See
+                     also 'okchannels' and 'maxchannels'.
 
-	chopeff		Chopper efficiency.
+    chopeff          Chopper efficiency.
 
-	chopfreq	Chopper frequency (in Hz).
+    chopfreq         Chopper frequency (in Hz).
 
-	chopthrow	Chopper throw (2x amplitude).
+    chopthrow        Chopper throw (2x amplitude).
 
-	creator		Software that created the data file (as stored by
-			the FITS CREATOR keyword).
+    creator          Software that created the data file (as stored by
+                     the FITS CREATOR keyword).
 
-	date		Date (and time) of the observation. E.g. 
-			'date(yyyy-MM-dd)'. The format follows the rules for 
-			Java's SimpleDateFormat class.
+    date             Date (and time) of the observation. E.g. 
+                     'date(yyyy-MM-dd)'. The format follows the rules for 
+                     Java's SimpleDateFormat class.
 			
-	DEC		Declination coordinate (in radians). E.g. 'DEC(a:0)'
-			produces the declination in ddd:mm:ss format. See also
-			'RA' and 'DECd'.
+    DEC              Declination coordinate (in radians). E.g. 'DEC(a:0)'
+                     produces the declination in ddd:mm:ss format. See also
+                     'RA' and 'DECd'.
 
-	DECd		Declination coordinate (in degrees). E.g. 'DECd(f1)'
-			produces output in ddd.d format. See also 'RAh' and
-			'DEC'.
+    DECd             Declination coordinate (in degrees). E.g. 'DECd(f1)'
+                     produces output in ddd.d format. See also 'RAh' and
+                     'DEC'.
 
-	descriptor	A descriptor string for the scan (e.g. the scan number
-			or file name used to invoke the scan).
+    descriptor       A descriptor string for the scan (e.g. the scan number
+                     or file name used to invoke the scan).
 
-	dir		Scanning direction. E.g. 'HO', 'EQ', 'EC', 'GL', 'SG'.
+    dir              Scanning direction. E.g. 'HO', 'EQ', 'EC', 'GL', 'SG'.
 
-	EL		Elevation coordinate (in radians). 
+    EL               Elevation coordinate (in radians). 
 	
-	ELd		Elevation coordinate (in degrees).
+    ELd              Elevation coordinate (in degrees).
 
-	epoch		Full coordinate epoch, e.g. (J2000.0).
+    epoch            Full coordinate epoch, e.g. (J2000.0).
 
-	epochY		E.g. epochY(f1) -> 2000.0
+    epochY           E.g. epochY(f1) -> 2000.0
 
-	frames		Number of unflagged frames in the scan.
+    frames           Number of unflagged frames in the scan.
 
-	FWHM		Mean beam FWHM of the instrument (in 'sizeunit').
+    FWHM             Mean beam FWHM of the instrument (in 'sizeunit').
 
-	gain		Instrument gain.
+    gain             Instrument gain.
 
-	generation	Source model generation.
+    generation       Source model generation.
 
-	hipass		Highpass filtering timescale (in seconds)
+    hipass           Highpass filtering timescale (in seconds)
 
-	humidity	Ambient humidity (if recorded).
+    humidity         Ambient humidity (if recorded).
 
-	id		Scan identifier (e.g. scan number)
+    id               Scan identifier (e.g. scan number)
 
-	integrations	Number of integrations (subscans) contained in the 
-			scan.
+    integrations     Number of integrations (subscans) contained in the 
+                     scan.
 
-	LST		Local Sidereal Time (in seconds). E.g. use 'LST(t:1)'
-			to format is as 'hh:mm:ss.s'.
+    LST              Local Sidereal Time (in seconds). E.g. use 'LST(t:1)'
+                     to format is as 'hh:mm:ss.s'.
 
-	LSTh		LST in hours.
+    LSTh             LST in hours.
 
-	maxchannels	Maximum number of channels the instrument can have
-			(effectively the number of channels stored in the
-			data file).
+    maxchannels      Maximum number of channels the instrument can have
+                     (effectively the number of channels stored in the
+                     data file).
 
-	maxFWHM		Smallest beam of the instrument (in sizeunit).
+    maxFWHM          Smallest beam of the instrument (in sizeunit).
 
-	minFWHM		Largest beam of the instrument (in sizeunit).
+    minFWHM          Largest beam of the instrument (in sizeunit).
 
-	MJD		Modified Julian Date of the scan.
+    MJD              Modified Julian Date of the scan.
 
-	mount		The focus in which the instrument is mounted.
+    mount            The focus in which the instrument is mounted.
 
-	NEFD		Average Noise Equivalent Flux Density (Jy sqrt[s]) as a
-			measure of the array sensitivity.
+    NEFD             Average Noise Equivalent Flux Density (Jy sqrt[s]) as a
+                     measure of the array sensitivity.
 
-	object		Name of observed object.
+    object           Name of observed object.
 
-	observer	Name(s) of the observer(s).
+    observer         Name(s) of the observer(s).
 
-	obshours	Effective on-source time (in hours).
+    obshours         Effective on-source time (in hours).
 
-	obsmins		Effective on-source time (in minutes).
+    obsmins          Effective on-source time (in minutes).
 
-	obstime		Effective on-source time (in seconds).
+    obstime          Effective on-source time (in seconds).
 
-	okchannels	Number of good (unflagged) channels.
+    okchannels       Number of good (unflagged) channels.
 
-	PA		Mean parallactic angle (in radians).
+    PA               Mean parallactic angle (in radians).
 
-	PAd		Mean parallactic angle in degrees.
+    PAd              Mean parallactic angle in degrees.
 
-	pnt.angle	Source elongation angle on map (degrees).
+    pnt.angle        Source elongation angle on map (degrees).
 
-	pnt.asymX	Asymmetry in telescope X (%). 
+    pnt.asymX        Asymmetry in telescope X (%). 
 
-	pnt.asymY	Asymmetry in telescope Y (%). `
+    pnt.asymY        Asymmetry in telescope Y (%). `
 
-	pnt.AZ		Azymuth pointing (arcsec).
+    pnt.AZ           Azymuth pointing (arcsec).
 
-	pnt.EL          Elevation pointing (arcsec).
+    pnt.EL           Elevation pointing (arcsec).
 
-	pnt.DEC		Declination pointing (arcsec).
+    pnt.DEC          Declination pointing (arcsec).
 
-	pnt.dasymX      Asymmetry uncertainty in telescope X (%).
+    pnt.dasymX       Asymmetry uncertainty in telescope X (%).
 
-        pnt.dasymY      Asymmetry uncertainty in telescope Y (%). `
+    pnt.dasymY       Asymmetry uncertainty in telescope Y (%). `
 
-	pnt.dangle	Source elongation angle error (deg).
+    pnt.dangle       Source elongation angle error (deg).
 
-	pnt.dAZ		Azymuth pointing residual (if available).
+    pnt.dAZ          Azymuth pointing residual (if available).
 
-	pnt.dDEC	Pointing residual in the declination dir (if available).
+    pnt.dDEC         Pointing residual in the declination dir (if available).
 	
-	pnt.dEL		Elevation pointing residual (if available).
+    pnt.dEL          Elevation pointing residual (if available).
 
-	pnt.delong	Source elongation error (%).
+    pnt.delong       Source elongation error (%).
 
-	pnt.delongX	Source elongation error in telescope X direction (%).
+    pnt.delongX      Source elongation error in telescope X direction (%).
+
+    pnt.dNasX        Pointing residual in the Nasmyth X dir (if available).
+
+    pnt.dNasY        Pointing residual in the Nasmyth Y dir (if available).
+
+    pnt.dRA          Pointing residual in the RA direction (if available).
+
+    pnt.dX           Pointing residual in native X direction.
+
+    pnt.dY           Pointing residual in native Y direction.
+
+    pnt.elong        Source elongation (%).
+
+    pnt.elongX       Source elongation in telescope X direction (%).
+
+    pnt.RA           RA pointing (arcsec).
+
+    pnt.X            Aggregated X pointing correction (including applied
+                     corrections and sometimes the pointing model too).
+
+    pnt.Y            Aggregated Y pointing correction (including applied
+                     corrections and sometimes the pointing model too).
+
+    pressure         Ambient pressure (if recorded) in hPa.
+
+    project          Project name (if defined)
+
+    ptfilter         The point-source flux filtering throughput of the 
+                     reduction.
+
+    RA               Right-ascention coordinate (in radians). E.g. use
+                     'RA(h:2)' to format as 'hh:mm:ss.ss'.
+
+    RAd              Right-ascention coordinate (in degrees).
+
+    RAh              Righ-ascention coordinate (in hours).
+
+    rate             Sampling rate of the data (Hz). See also 'sampling'
+
+    resolution       Instrument resolution (i.e. FWHM of the main beam).
+                     in 'sizeunit'.
 	
-	pnt.dNasX	Pointing residual in the Nasmyth X dir (if available).
+    rmsspeed         RMS fluctuation of the scanning speed (arcsec/s).
 
-	pnt.dNasY	Pointing residual in the Nasmyth Y dir (if available).
+    sampling         Sampling interval (seconds). The inverse of 'rate'.
 
-	pnt.dRA		Pointing residual in the RA direction (if available).
+    scale            Scaling factor applied to the scan. 
 
-	pnt.dX		Pointing residual in native X direction.
+    scanspeed        Average scanning speed (arcsec/s).
 
-	pnt.dY		Pointing residual in native Y direction.
+    serial           Serial number of the scan.
 
-	pnt.elong	Source elongation (%).
+    sizeunit         Size unit for measuring resolutions. E.g. 'arcsec'. 
 
-	pnt.elongX	Source elongation in telescope X direction (%).
+    src.a            Major axis (arcsec) of the source ellipse.
 
-	pnt.RA		RA pointing (arcsec).
-
-	pnt.X		Aggregated X pointing correction (including applied
-			corrections and sometimes the pointing model too).
-
-	pnt.Y		Aggregated Y pointing correction (including applied
-                        corrections and sometimes the pointing model too).
-
-
-	pressure	Ambient pressure (if recorded) in hPa.
-
-	project		Project name (if defined)
-
-	ptfilter	The point-source flux filtering throughput of the 
-			reduction.
-
-	RA		Right-ascention coordinate (in radians). E.g. use
-			'RA(h:2)' to format as 'hh:mm:ss.ss'.
-
-	RAd		Right-ascention coordinate (in degrees).
-
-	RAh		Righ-ascention coordinate (in hours).
-
-	rate		Sampling rate of the data (Hz). See also 'sampling'
-
-	resolution	Instrument resolution (i.e. FWHM of the main beam).
-			in 'sizeunit'.
+    src.angle        Orientation of the source ellipse (deg).
 	
-	rmsspeed	RMS fluctuation of the scanning speed (arcsec/s).
+    src.b            Minor axis (arcsec) of the source ellipse.
 
-	sampling	Sampling interval (seconds). The inverse of 'rate'.
-
-	scale		Scaling factor applied to the scan. 
-
-	scanspeed	Average scanning speed (arcsec/s).
-
-	serial		Serial number of the scan.
-
-	sizeunit	Size unit for measuring resolutions. E.g. 'arcsec'. 
-
-	src.a		Major axis (arcsec) of the source ellipse.
-
-	src.angle	Orientation of the source ellipse (deg).
+    src.da           Uncertainty of the minor axis (arcsec).
 	
-	src.b		Minor axis (arcsec) of the source ellipse.
+    src.dangle       Uncertainty of the orientation (deg).
 
-	src.da		Uncertainty of the minor axis (arcsec).
+    src.db           Uncertainty of the major axis (deg).
+
+    src.dFWHM        Uncertainty of the source FWHM (arcsec).
+
+    src.dint         Uncertainty of the integrated source flux (Jy). 
+
+    src.dpeak        Uncertainty of the peah source flux (Jy/beam).
+
+    src.FWHM         Source FWHM (arcsec).
+
+    src.int          Integrated source flux (Jy) insize and adaptive
+                     aperture.
+
+    src.peak         Peak source flux (Jy/beam).
+
+    stat1f           A measure of the 1/f noise averaged over the array.
+                     The configurations options '1overf.freq' and 
+                     '1overf.ref' define the frequencies for the 1/f
+                     measurement and white-noise reference respectively.
+
+    Tamb             Ambient temperature (if recorded) in degrees C.
+
+    tau              The in-band, line-of-sight opacity value.
+
+    tau.<id>         The zenith tau value for <id>. E.g. 'tau.225GHz' or
+                     'tau.PWV' if these are defined by appropriate scaling
+                     relations.
+
+    UT               UT in seconds. E.g. use 'UT(t:1)' to format is as 
+                    'hh:mm:ss.s'.
+
+    UTh             UT in hours.
+
+    weight          The relative weight of the scan, based on the actual
+                    noise of the map it generates.
+
+    winddir         Wind direction (if recorded) in degrees.
+
+    windpk          Peak wind speed (if recorded) in m/s.
 	
-	src.dangle	Uncertainty of the orientation (deg).
+    windspeed       Wind speed (if recorded) im m/s.
 
-	src.db		Uncertainty of the major axis (deg).
-
-	src.dFWHM	Uncertainty of the source FWHM (arcsec).
-
-	src.dint	Uncertainty of the integrated source flux (Jy). 
-
-	src.dpeak	Uncertainty of the peah source flux (Jy/beam).
-
-	src.FWHM	Source FWHM (arcsec).
-
-	src.int		Integrated source flux (Jy) insize and adaptive
-			aperture.
-
-	src.peak	Peak source flux (Jy/beam).
-
-	stat1f		A measure of the 1/f noise averaged over the array.
-			The configurations options '1overf.freq' and 
-			'1overf.ref' define the frequencies for the 1/f
-			measurement and white-noise reference respectively.
-
-	Tamb		Ambient temperature (if recorded) in degrees C.
-
-	tau		The in-band, line-of-sight opacity value.
-
-	tau.<id>	The zenith tau value for <id>. E.g. 'tau.225GHz' or
-			'tau.PWV' if these are defined by appropriate scaling
-			relations.
-
-	UT		UT in seconds. E.g. use 'UT(t:1)' to format is as 
-			'hh:mm:ss.s'.
-
-	UTh		UT in hours.
-
-	weight		The relative weight of the scan, based on the actual
-			noise of the map it generates.
-
-	winddir		Wind direction (if recorded) in degrees.
-
-	windpk		Peak wind speed (if recorded) in m/s.
-	
-	windspeed	Wind speed (if recorded) im m/s.
-
-	zenithtau	In-band opacity at zenith.
+    zenithtau       In-band opacity at zenith.
 
 
 #### Source model specific log entries
 
-	map.beams	  Number of (smoothed) beams in the map.
+    map.beams        Number of (smoothed) beams in the map.
 
-	map.contentType	  Type of data stored in the map.
+    map.contentType  Type of data stored in the map.
 
-	map.creator	  Creator's name or description.
+    map.creator      Creator's name or description.
 	
-	map.depth	  Weighted average depth of the map in map units.
+    map.depth        Weighted average depth of the map in map units.
 
-	map.max		  Maximum value in map units.
+    map.max          Maximum value in map units.
 
-	map.min		  Minimum value in map units.
+    map.min          Minimum value in map units.
 
-	map.name	  Name of map data (e.g. object's name)
+    map.name         Name of map data (e.g. object's name)
 
-	map.points	  Number of pixels in the map.
+    map.points       Number of pixels in the map.
 
-	map.rms		  Typical RMS of the map in map units.
+    map.rms          Typical RMS of the map in map units.
 
-	map.size	  Size of the map in pixels e.g. '121x432'.
+    map.size         Size of the map in pixels e.g. '121x432'.
 
-	map.sizeX   	  Map size in the 'x' direction (pixels).
+    map.sizeX        Map size in the 'x' direction (pixels).
 
-	map.sizeY   	  Map size in the 'y' direction (pixels).
+    map.sizeY        Map size in the 'y' direction (pixels).
 
-	map.system	  Coordtinate system id, e.g. 'HO', 'EQ', 'GL' etc.
+    map.system       Coordinate system id, e.g. 'HO', 'EQ', 'GL' etc.
 
-	map.unit	  Name of map unit, e.g. 'Jy/beam'.
+    map.unit         Name of map unit, e.g. 'Jy/beam'.
 
-	smooth		  Smoothing applied, in the default size unit of
-			  the instrument (e.g. in arcsecs).
+    smooth           Smoothing applied, in the default size unit of
+                     the instrument (e.g. in arcsecs).
 
 
 #### Telescope specific log entries
@@ -2410,9 +2401,9 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
     ASZCA        (2mm) APEX SZ Camera, from Berkeley, CA
                  bolo.berkeley.edu/apexsz/instrument.html
 
-    GISMO	 (2mm) Goddard-IRAM Superconducting 2-Millimeter Observer
+    GISMO        (2mm) Goddard-IRAM Superconducting 2-Millimeter Observer
                  www.iram.es/IRAMES/mainWiki/GoddardIramSuperconductingTwo\
-	         Millimeter
+                 Millimeter
 
     LABOCA       (870um) Large APEX Bolometer Camera
                  www.apex-telescope.org/bolometer/laboca
@@ -2558,7 +2549,7 @@ in maps ('histogram').
 Downloading the CRUSH package(s), and further information on the FITS images
 is available at:
 
-	http://www.submm.caltech.edu/~sharc/crush
+   http://www.submm.caltech.edu/~sharc/crush
 
 I hope you'll find this helpful and may you end up with beautiful images!!!
 

@@ -1,527 +1,494 @@
-                  *** Configuration Engine User's Guide ***    
+# Configuration Syntax (crush / jnum)   
 
-                               Attila Kovacs
-                       <attila[AT]sigmyne.com>
+Author: Attila Kovacs <attila[AT]sigmyne.com>
 
-
-                       Last updated: 17 February 2016
+Last updated: 17 February 2016
 
 
-Table of Contents
-=================
+## Table of Contents
 
 1. Basic Rules
-
-  1.1. Unsetting and Resetting options
-  1.2. Hierarchical Configuration
-  1.3. Wildcards
-  1.4. Checking Configuraton State
+    - 1.1. Unsetting and Resetting options
+    - 1.2. Hierarchical Configuration
+    - 1.3. Wildcards
+    - 1.4. Checking Configuraton State
 
 2. Conditionals
-
-  2.1. Basic Conditionals
-  2.2. Dynamic Conditionals
-  2.3. Placement of Brackets
+    - 2.1. Basic Conditionals
+    - 2.2. Dynamic Conditionals
+    - 2.3. Placement of Brackets
 
 3. Persistent Setting/Unsetting
-
-  3.1. Locking, Unlocking, and Relocking
-  3.2  Blacklisting
+    - 3.1. Locking, Unlocking, and Relocking
+    - 3.2  Blacklisting
 
 4. Aliases
 
 5. References to variables
-
-  5.1. Path names
-
+    - 5.1. Path names
 
 
 
 
 
-#####################################################################
-1. Basic Rules
-#####################################################################
 
-   The configuration is really just a hierarchical list of key/value pairs, 
-   which define the settings, and some tools for manipulating this list.
+## 1. Basic Rules
 
-   The syntax is designed so that it accomodates both scripting and 
-   command-line (bash) use alike. 
-   Thus, white spaces are optional and curved brackets are avoided (unless these
-   are placed in quotes).
+The configuration is really just a hierarchical list of key/value pairs, which 
+define the settings, and some tools for manipulating this list.
 
-   When defining settings, keys can be separated from their values either by 
-   '=', ':' or empty spaces (or even a combination of these). 
+The syntax is designed so that it accomodates both scripting and command-line 
+(bash) use alike. Thus, white spaces are optional and curved brackets are 
+avoided (unless these are placed in quotes).
+
+When defining settings, keys can be separated from their values either by 
+`=` (equals sign), `:` (colon) or empty spaces (or even a combination of 
+these). 
  
-   Command line options start with a dash '-' in front. Thus, what may look
-   like:
+Command line options start with a `-` (dash) in front. Thus, what may look 
+like:
 	
-	key1 value1
-	key2 value2, value3
+    key1 value1
+    key2 value2, value3
 
-    in a configuration script, will end up as
+in a configuration script, will end up as
 
-	> [...] -key1=value1 -key2=value2,value3 [...] 
+    > [...] -key1=value1 -key2=value2,value3 [...] 
 
-    on the command line. Otherwise, they two ways of configuring are generally 
-    equivalent to one-another. 
+on the command line. Otherwise, they two ways of configuring are generally 
+equivalent to one-another. 
 
-    You can choose scripting or command-line, or mix-and-match them to your
-    liking and convenience...
+You can choose scripting or command-line, or mix-and-match them to your
+liking and convenience...
  
-    Key/value pairs are parsed in the order they are specified. Thus, each
-    specification may override previously defined values. 
+Key/value pairs are parsed in the order they are specified. Thus, each
+specification may override previously defined values. 
 
-    Lines that start with '#' designate comments that are ignored by the 
-    parser.
+Lines that start with `#` (hash) designate comments that are ignored by the 
+parser.
    
  
-1.1. Unsetting and Resetting Options
-====================================
+## 1.1. Unsetting and Resetting Options
    
-    There are a few special keys (or rather commands that have
-    the same syntax as keys), that are used to unset/reset options. 
-    The command 'forget' can be used to unset keys. Forgotten options can be 
-    reinstated to their prior values via the 'recall' command. E.g.:
+ There are a few special keys (or rather commands that have the same syntax as 
+ keys), that are used to unset/reset options. The command `forget` can be used
+ to unset keys. Forgotten options can be reinstated to their prior values via 
+ the `recall` command. E.g.:
 
-	forget tau,smooth
+    forget tau,smooth
 
-    Will unset the tau value and disable despiking. To later specify a new tau
-    and to reenable despiking with its previous setting, you may (say on the
-    command line this time):
+ Will unset the tau value and disable despiking. To later specify a new tau
+ and to reenable despiking with its previous setting, you may (say on the
+ command line this time):
 
-	> -tau=0.30 -recall=smooth
+    > -tau=0.30 -recall=smooth
 
-    As you can see, forgotten keys may be reconfigured at any time. There is
-    also a way to permanently remove a configuration key via the 'blacklist'
-    command. It works just like 'forget' except that all blacklisted keys will
-    be ignored until these are 'whitelist'-ed. Note, that 'whitelist' only
-    removes keys from the blacklist, but does NOT reinstate them -- this you 
-    have to do explicitly afterwards either using 'recall' or by specifying a
-    new value).
+ As you can see, forgotten keys may be reconfigured at any time. There is
+ also a way to permanently remove a configuration key via the `blacklist`
+ command. It works just like `forget` except that all blacklisted keys will
+ be ignored until these are `whitelist`-ed. Note, that `whitelist` only
+ removes keys from the blacklist, but does NOT reinstate them -- this you 
+ have to do explicitly afterwards either using `recall` or by specifying a
+ new value).
 
-	blacklist smooth		
-	smooth=8.0		# Has no effect, because smooth is blacklisted!
-	[...]
-	whitelist smooth	# Allows smooth to be set again...
-	smooth=6.5		# Sets the smoothing to 6.5"
+    blacklist smooth		
+    smooth=8.0                # Has no effect, because smooth is blacklisted!
+    [...]
+    whitelist smooth          # Allows smooth to be set again...
+    smooth=6.5                # Sets the smoothing to 6.5"
 	
-    All blacklisted settings can be cleared by:
+ All blacklisted settings can be cleared by:
 
-	forget blacklist
+    forget blacklist
 
-    See more about blacklisting in the corresponding section further below...
-
-
-1.2 Hierarchical Configuration
-==============================
-
-    The configuration engine is designed to support grouping options in 
-    tree-like hierarchies. So rather than thinking of the configuration as a 
-    simple list of <key, value> pairs, it is really a configration tree.
-
-    Every option represent a branch of that tree, from which further branches
-    can fan out, helping to group related keys together in a hierarchy. 
-    Branches are separated by periods, e.g.:
-
-	despike
-	despike.level 6.0
-	despike.method absolute
-
-    defines a despiking at 6-sigma, while the 'method' subkey selects the
-    despiking method used. 
-
-    It is possible to unset/reset entire branches with the commands 'remove' 
-    and 'restore', much the same way as 'forget' and 'recall' operate on 
-    individual settings. Thus, 
-
-	> crush [...] -remove=despike [...]
-
-    unsets both 'despike', 'despike.level' and 'despike.method' and all other 
-    existing branches of 'despike'. Similarly, 'restore' reinstates the full 
-    brach to its original state. 
+ See more about blacklisting in the corresponding section further below...
 
 
-1.3 Wildcards
-=============
+## 1.2 Hierarchical Configuration
+
+ The configuration engine is designed to support grouping options in tree-like 
+ hierarchies. So rather than thinking of the configuration as a simple list of 
+ `<key>`, `<value>` pairs, it is really a configration tree.
+
+ Every option represent a branch of that tree, from which further branches can 
+ fan out, helping to group related keys together in a hierarchy. Branches are 
+ separated by periods, e.g.:
+
+    despike
+    despike.level 6.0
+    despike.method absolute
+
+ defines a despiking at 6-sigma, while the `method` subkey selects the
+ despiking method used. 
+
+ It is possible to unset/reset entire branches with the commands `remove` 
+ and `restore`, much the same way as `forget` and `recall` operate on 
+ individual settings. Thus, 
+
+    > crush [...] -remove=despike [...]
+
+ unsets both `despike`, `despike.level` and `despike.method` and all other 
+ existing branches of `despike`. Similarly, `restore` reinstates the full 
+ brach to its state prior to `remove`. 
 
 
-    Thanks to the branching of configuration keys, wildcards '*' can be used to
-    configure all existing branches of a key at once. E.g.:
+## 1.3 Wildcards
 
-    	correlated.*.resolution=1.0
+ Thanks to the branching of configuration keys, wildcards `*` can be used to
+ configure all existing branches of a key at once. E.g.:
 
-    Will set the 'resolution' for every currently defined 'correlated' 
-    modality. Thus, if you had the common 'obs-channels' and 'gradients' modes 
-    defined as well as an instrument mode, say 'cables', then the above is 
-    equivalent to:
+    correlated.*.resolution=1.0
 
-        correlated.obs-channels.resolution 1.0
-	correlated.gradients.resolution 1.0
-	correlated.cables.resolution 1.0
+ Will set the `resolution` for every currently defined subkey of `correlated`. 
+ Thus, if you had `obs-channels`, `gradients` and `cables' modes already 
+ defined under `correlated` then the above is equivalent to:
 
-    Additionally, wildcards can be used with the 'forget', 'blacklist' or
-    'remove'. E.g.:
+    correlated.obs-channels.resolution 1.0
+    correlated.gradients.resolution 1.0
+    correlated.cables.resolution 1.0
 
-    	forget despike.*
+ Additionally, wildcards can be used with the `forget`, `blacklist` or
+ `remove`. E.g.:
+
+     forget despike.*
  
-    clears all sub-settings of 'despike' (while keeping despiking enabled, if
-    it already was).
+ clears all sub-settings of `despike` (while keeping `despike` itself enabled, 
+ if it already was).
 
-    Note, however, that wildcards will not have affect on options that will be
-    defined afterwards. They only act on the configuration tree at the time of
-    invocation.
+ Note, however, that wildcards will not have affect on options that will be
+ defined afterwards. They only act on the configuration tree at the time of
+ invocation.
 
 
-1.4 Checking Configuration State
-================================
+## 1.4 Checking Configuration State
 
-    You can check the current configuration state using the 'poll' command. 
-    Withoutan argument it lists the full current configuration, e.g.:
+ You can check the current configuration state using the `poll` command. 
+ Without an argument it lists the full current configuration, e.g.:
 
-       > crush [...] -poll
+    > crush [...] -poll
 
-    lists all the currently active settings at the time of polling, as well
-    as all settings that can be recalled (i.e. were unset using 'forget').
-    The comlete list of settings can be long, especially when you just want
-    to check for specific configurations. In this case, you can specify an
-    argument to poll, to lists only settings that start with the specified
-    pattern. For example, you care only to check despiking settings (for the
-    first round of despiking). Then, you would type:
+ lists all the currently active settings at the time of polling, as well as all
+ settings that can be recalled (i.e. were unset using `forget`). The comlete 
+ list of settings can be long, especially when you just want to check for 
+ specific configurations. In this case, you can specify an argument to poll, to
+ lists only settings that start with the specified pattern. For example, you 
+ care only to check despiking settings (for the first round of despiking). 
+ Then, you would type:
 
-       > crush [...] -poll=despike
+    > crush [...] -poll=despike
 
-    Or, you can also type:
+ Or, you can also type:
 
-       > crush [...] -despike.poll
+    > crush [...] -despike.poll
 
-    The difference is that the first method lists all configuration keys from 
-    the root of the configuration tree that start with the word 'despike', 
-    wereas, the second example lists the settings in the subtree of the 
-    'despike' key (hence without 'despike' appearing in in the list).
+ The difference is that the first method lists all configuration keys from 
+ the root of the configuration tree that start with the word `despike`, 
+ whereas, the second example lists the settings in the subtree of the `despike`
+ key (hence without `despike` appearing in in the list).
 
-    The listing will also note if any of the values have been locked (see
-    section on persistent configuration further below), or blacklisted. And,
-    it will also list any conditional settings defined that may alter the
-    state of the listed option keys.
+ The listing will also note if any of the values have been locked (see section 
+ on persistent configuration further below), or blacklisted. And, it will also 
+ list any conditional settings defined that may alter the state of the listed 
+ option keys.
 
-    You can also check on conditional statements similarly. E.g.:
+ You can also check on conditional statements similarly. E.g.:
 
-       > crush [...] -conditions
+    > crush [...] -conditions
 
-    or,
+ or,
 
-       > crush [...] -conditions=date
+    > crush [...] -conditions=date
 
-    for a selected list of conditions starting with 'date', or
+ for a selected list of conditions starting with `date`, or
 
-       > crush [...] -date.conditions
+    > crush [...] -date.conditions
 
-    for the subtree of conditions under the 'date' key (without preprending
-    the 'date' key itself).
+ for the subtree of conditions under the `date` key (without preprending
+ the `date` key itself).
 
-    Finally, you can also check what settings are currently blacklisted using
-    the 'blacklist' command, without an argument. E.g.:
+ Finally, you can also check what settings are currently blacklisted using
+ the `blacklist` command, without an argument. E.g.:
 
-       > crush [...] -blacklist
+    > crush [...] -blacklist
 
-    or,
+ or,
 
-       > crush [...] -despike.blacklist
+    > crush [...] -despike.blacklist
 
-    to check only for blacklisted settings under the despike branch.
-
+ to check only for blacklisted settings under the despike branch.
 
 
 
 
-#####################################################################
-2. Conditionals
-#####################################################################
+
+# 2. Conditionals
  
 
-    The configuration engine also provides the capability for conditional 
-    seyttings. Conditions are formally housed in square brackets. The syntax 
-    is:
+The configuration engine also provides the capability for conditional settings.
+Conditions are formally housed in square brackets. The syntax is:
 
-	[condition] key=value
+    [condition] key=value
 
-    if, or when, the 'condition' is met it will set the the specified 
-    configuration 'key' to the specified 'value'.
+if, or when, the `condition` is met it will set the the specified configuration
+`key` to the specified `value`.
 
 
-2.1 Basic Conditionals
-======================
+
+## 2.1 Basic Conditionals
  
-    The basic condition is the existence of another option key. For example,
+ The basic condition is the existence of another option key. For example,
 
-	[extended] forget correlated.gradients	
+    [extended] forget correlated.gradients	
 
-    will disable the decorrelation of gradient sky-noise if or when the 
-    'extended' key is defined, e.g. by
+ will disable the decorrelation of gradient sky-noise if or when the `extended`
+ key is defined, e.g. by
 	
-	> crush [...] -extended [...]
+    > crush [...] -extended [...]
 
-    Note, that if 'extended' is later unset (e.g. via 'forget', 'remove' or 
-    'blacklist') from the configuration it will not undo settings that were
-    conditionally activated when 'extended' was defined.
-
-
-    Value-based conditionals
-    ------------------------
-
-    You can also make settings activate conditioned on another key having been
-    set to a given value. The syntax for that is:
-
-  	[key1?value1] key2=value2
-
-    The above statement specifies that if key1 is set to value1, then key2 
-    will be set to value2. (Again, the '=' is optional...) 
+ Note, that if `extended` is later unset (e.g. via `forget`, `remove` or 
+ `blacklist`) from the configuration it will not undo settings that were
+ conditionally activated when 'extended' was defined.
 
 
+### Value-based conditionals
 
-2.2 Dynamic Conditionals
-========================
+ You can also make settings activate conditioned on another key having been set
+ to a given value. The syntax for that is:
 
-    Other conditions are interpreted. For example CRUSH (which uses this 
-    configuration engine) can activate settings based on observation date, on 
-    a scan-by-scan basis, such as:
+    [key1?value1] key2=value2
 
-	date.[2007.02.28-2009.10.13] instrument.gain -1250.0
+ The above statement specifies that if key1 is set to value1, then key2 
+ will be set to value2. (Again, the `=` is optional...) 
+
+
+
+## 2.2 Dynamic Conditionals
+
+ Other conditions are interpreted. For example CRUSH (which uses this 
+ configuration engine) can activate settings based on observation date, on a 
+ scan-by-scan basis, such as:
+
+    date.[2007.02.28-2009.10.13] instrument.gain -1250.0
     
-    which sets the the 'instrument.gain' to -1250.0 for scans within the
-    specified date range.
+ which sets the the `instrument.gain` to -1250.0 for scans within the specified
+ date range.
 
     
-2.3 Placement of brackets
-=========================
+# 2.3 Placement of brackets
 
-    The use of branched conditions can be tricky. For interpreted conditions
-    a key (e.g. 'date' above for CRUSH) defines the rule by which the condition
-    is interpreted. As such the square brackets should always follow afterwards.
+ The use of branched conditions can be tricky. For interpreted conditions a key
+ (e.g. `date` above for CRUSH) defines the rule by which the condition is 
+ interpreted. As such the square brackets should always follow afterwards.
 
-    For simple conditions, which are based on the existence of configuration
-    keys, the placement of brackets matters for how the conditional statement
-    is interpreted. E.g., the condition:
+ For simple conditions, which are based on the existence of configuration keys,
+ the placement of brackets matters for how the conditional statement is 
+ interpreted. E.g., the condition:
 
-    	  [key.subkey] option=value
+    [key.subkey] option=value
 
-    is not equivalent to
+ is not equivalent to
 
-       	  key.[subkey] option=value
+    key.[subkey] option=value
 
-    The second line assumes that 'option' is also a branch of 'key', so it 
-    actually sets the 'key.option' conditional on 'key.subkey'. In other words
-    the following would be truly equivalent statements:
+ The second line assumes that `option` is also a branch of `key`, so it 
+ actually sets the `key.option` conditional on `key.subkey`. In other words
+ the following would be truly equivalent statements:
 
-    	  key.[subkey] option=value
-    	  =
-	  [key.subkey] key.option=value
+    key.[subkey] option=value
+    =
+    [key.subkey] key.option=value
 
-    Here is an example to illustrate the difference with actual settings:
+ Here is an example to illustrate the difference with actual settings:
 
-    	  [source.model] blacklist clip
+    [source.model] blacklist clip
 
-    blacklists 'clip' whenever a source model is defined (via 'source.model').
-    On the other hand,
+ blacklists `clip` whenever a source model is defined (via `source.model`).
+ On the other hand,
 
-       	  source.[model] filter
+    source.[model] filter
 
-    can be used to activate the 'source.filter' when 'source.model' is defined.
+ can be used to activate the `source.filter` when `source.model` is defined.
 
-    It is possible to clear all conditional settings by:
+ It is possible to clear all conditional settings by:
 
-	  forget conditions
-
+    forget conditions
 
 
 
 
-##################################################################### 
-3. Persistent configuration
-##################################################################### 
+
+# 3. Persistent configuration
 
 
-3.1. Locking, unlocking, and relocking
-======================================
+## 3.1. Locking, unlocking, and relocking
 
 
-3.2. Blacklisting
-=================
+## 3.2. Blacklisting
 
 
 
 
-##################################################################### 
-4. Aliases
-#####################################################################
+# 4. Aliases
     
-    The configuration engine allows you to create your own shorthands for 
-    convenience, using the 'alias' directive. Some shorthands may be predefined 
-    for convenience. For example, when using CRUSH, one may prefer to simply 
-    type 'array' instead of 'correlated.obs-channels' (referring to the common-
-    mode signals seen by the group of observing channels). This shorthand is 
-    set (in 'default.cfg') by the statement:
+The configuration engine allows you to create your own shorthands for 
+convenience, using the `alias` directive. Some shorthands may be predefined 
+for convenience. For example, when using CRUSH, one may prefer to simply 
+type `array` instead of `correlated.obs-channels` (referring to the common-
+mode signals seen by the group of observing channels). This shorthand is 
+set (in `default.cfg`) by the statement:
 
-	alias.array correlated.obs-channels
+    alias.array correlated.obs-channels
 
-    Thus, the option:
+Thus, the option:
 
-	array.resolution=1.0
+    array.resolution=1.0
 
-    is translated by CRUSH into
+is translated by CRUSH into
 
-	correlated.obs-channels.resolution=1.0
+    correlated.obs-channels.resolution=1.0
 
-    Aliases are literal substitutions. Therefore, they can also be used
-    to shorthand full (or partial) statements. In this way 'altaz' is
-    is defined to be a shorthand for 'system=horizontal'. You can find this 
-    definition (in 'default.cfg') as:
+Aliases are literal substitutions. Therefore, they can also be used to 
+shorthand full (or partial) statements. In this way `altaz` is defined to be a 
+shorthand for `system=horizontal`. You can find this definition (in 
+`default.cfg`) as:
 
-	alias.altaz system horizontal
+    alias.altaz system horizontal
 
-    Finally, conditions can be also aliased. An example of this is the
-    preconfigured alias (also in 'default.cfg') 'final', which is defined as
+Finally, conditions can be also aliased. An example of this is the 
+preconfigured alias (also in `default.cfg`) `final`, which is defined as
 
-	alias.final iteration.[last]
+    alias.final iteration.[last]
 
-    Thus the the command line option '-final:smooth=beam' is equivalent
-    to the typing '-iteration.[last]smooth=beam'. (The ':' serves as a way
-    for separating conditions from the setting on the command line, where
-    spaces aren't allowed unless placed in a literal quote.)
-
-
-
-
-#####################################################################
-5. References
-#####################################################################
-
-    The configuration engine allows both static and dynamics references to be 
-    used when setting configuration values. All references are placed inside 
-    curly brackets. After the opening '{' a special character is used to define
-    what type of reference is used:
-
-	Table. Referencing
-	--------------------------------------------------------------
-	Description			Symbol		Example		
-        ==============================================================
-	Static reference to another	&		{&datapath}
-	configuration value/property
-	--------------------------------------------------------------
-	Dynamic reference to a
-	configuration value/property	?		{?tau.225GHz}
-	--------------------------------------------------------------
-	Shell environment variable	@		{@HOME}
-	--------------------------------------------------------------
-	Java property			#		{#user.home}
-	--------------------------------------------------------------
-
-   Thus, for example, you can set the path to the output data (e.g. images)
-   relative to the raw (input) data (which is specified by datapath. E.g.:
-
-	outpath = {&datapath}/images
-
-   So, if your 'datapath' was set to '/data/myobservations', then CRUSH will 
-   write its output into '/data/myobservations/images'. You could have also 
-   used:
-
-	outpath = {?datapath}/images
-
-   also. The difference is that the former is evaluated only once, when the
-   statement is parsed, substituting whatever value 'datapath' had at that 
-   particular point. In contrast, the latter, dynamic statement is evaluated 
-   every time it is queried by CRUSH, always substituting the current value of 
-   'datapath'. While the two forms can have effectively identical results if 
-   'datapath' remains unchanged, there are particular scenarios when you might 
-   need one or the other form specifically. Here are two examples:
-
-      * Static reference: Suppose you want to amend a previously defined value. 
-	For example, you want to read data from a sub-directory of the current
-	datapath. This requires the new datapath to refer back to its prior
-	value. If it is done with a dynamic reference, it will result in an
-	infinite recursion. Therefore, you will always want to use static 
-	self-references:
-
-	   datapath = {&datapath}/jan2012
-
-      * Dynamic reference: Suppose you want to refer to a value that has not
-	yet been defined. An example would be to try write output into sub-
-	folders by object name (e.g. for GISMO, where object name is usually
-	defined for locating scans). Then, you would write:
-
-	   datapath = /home/images/{?object}
-
-	So by setting this statement ahead of time (e.g. in a global 
-	configuration file), it can always have its desired effect.
-
-    In addition to querying configuration settings the same syntax can be used
-    to look up other CRUSH properties. Currently, the following are defined:
-
-	configpath		The folder containing the built-in 
-				configuration files (the config/ folder inside
-				CRUSH)
-
-	instrument		The name of the instrument providing the data.
-
-	version			The CRUSH version (e.g. 2.13-1).
-
-	fullversion		The CRUSH version including extra revision
-				information. E.g. '2.13-1 (beta1)'
-
-    Thus you can, for example set the output directory by instrument name and 
-    CRUSH version, E.g.:
-
-      outpath = {&outpath}/{&instrument}/{&version}
-
-    So, if you took data with LABOCA and reduced with CRUSH 2.13-1, then the
-    output will go to the 'laboca/2.13-1' subfolder within the the directory
-    specified by 'outpath'.
+Thus the the command line option `-final:smooth=beam` is equivalent to 
+`-iteration.[last]smooth=beam`. (The `:` serves as a way for separating 
+conditions from the setting on the command line, where spaces aren't allowed 
+unless the whole expressiobn is placed inside quotes.)
 
 
 
 
-5.1 Path Names
-==============
+# 5. References
 
-    Path names generally follow the rules of your OS. However, in order to
-    enable platform independent configuration files, the UNIX-like '/' is
-    always permitted (and is generally preferred) as a path separator. As a
-    result, you should avoid using path names that contain '/' characters 
-    (even in quoted or escaped forms!) other than those separating directories.
+The configuration engine allows both static and dynamics references to be 
+used when setting configuration values. All references are placed inside curly 
+brackets. After the opening `{` a special character is used to define
+what type of reference is used:
 
-    Since CRUSH allows the use of environment variables when defining values
-    (see above), you can use {@HOME} for your UNIX home directory; or 
-    {@HOMEPATH} for your user folder under Windows. Or, {#user.home} has the 
-    same effect universally, by referring to it as the Java property
-    storing the location of the user's home folder.
+__Table.__ Referencing
 
-    The tilde character '~' is also universally understood to 
-    mean your home folder. And, finally, the UNIX-like '~johndoe' may specify 
-    johndoe's home directory in any OS as long as it shares the same parent 
-    directory with your home folder (e.g. both johndoe and your home folder 
-    reside under a common '/home' or 'C:\Users'). 
+  Description                   |   Symbol    |   Example		
+  ------------------------------|-------------|----------------
+  Static reference to another	|     `&`     |  `{&datapath}`
+  configuration value/property  |             |
+                                |             |
+  Dynamic reference to a        |     `?`     |  `{?tau.225GHz}`
+  configuration value/property  |             | 
+                                |             |
+  Shell environment variable	|     `@`     |  `{@HOME}`
+                                |             |
+  Java property			|     `#`     |  `{#user.home}`
+
+
+Thus, for example, you can set the path to the output data (e.g. images)
+relative to the raw (input) data (which is specified by datapath. E.g.:
+
+    outpath = {&datapath}/images
+
+So, if your `datapath` was set to `/data/myobservations`, then CRUSH will 
+write its output into `/data/myobservations/images`. You could have also used:
+
+    outpath = {?datapath}/images
+
+also. The difference is that the former is evaluated only once, when the
+statement is parsed, substituting whatever value 'datapath' had at that 
+particular point. In contrast, the latter, dynamic statement is evaluated 
+every time it is queried by CRUSH, always substituting the current value of 
+`datapath`. While the two forms can have effectively identical results if 
+`datapath` remains unchanged, there are particular scenarios when you might 
+need one or the other form specifically. Here are two examples:
+
+ * Static reference: Suppose you want to amend a previously defined value. 
+   For example, you want to read data from a sub-directory of the current
+   datapath. This requires the new datapath to refer back to its prior value. 
+   If it is done with a dynamic reference, it will result in an infinite 
+   recursion. Therefore, you will always want to use static self-references:
+
+     datapath = {&datapath}/jan2012
+
+ * Dynamic reference: Suppose you want to refer to a value that has not yet 
+   been defined. An example would be to try write output into sub-folders by 
+   object name (e.g. for GISMO, where object name is usually defined for 
+   locating scans). Then, you would write:
+
+     datapath = /home/images/{?object}
+
+So by setting this statement ahead of time (e.g. in a global configuration 
+file), it can always have its desired effect.
+
+In addition to querying configuration settings the same syntax can be used to 
+look up other CRUSH properties. Currently, the following are defined:
+
+    configpath       The folder containing the built-in configuration files 
+                     (the config/ folder inside CRUSH)
+
+    instrument       The name of the instrument providing the data.
+
+    version          The CRUSH version (e.g. 2.13-1).
+
+    fullversion      The CRUSH version including extra revision information. 
+                     E.g. '2.13-1 (beta1)'
+
+Thus you can, for example set the output directory by instrument name and 
+CRUSH version, E.g.:
+
+    outpath = {&outpath}/{&instrument}/{&version}
+
+So, if you took data with LABOCA and reduced with CRUSH 2.13-1, then the
+output will go to the `laboca/2.13-1` subfolder within the the directory
+specified by `outpath`.
+
+
+
+
+## 5.1 Path Names
+
+ Path names generally follow the rules of your OS. However, in order to
+ enable platform independent configuration files, the UNIX-like `/` (slash) is
+ always permitted (and is generally preferred) as a path separator. As a 
+ result, you should avoid using path names that contain `/` characters 
+ (even in quoted or escaped forms!) other than those separating directories.
+
+ Since CRUSH allows the use of environment variables when defining values
+ (see above), you can use `{@HOME}` for your UNIX home directory; or 
+ `{@HOMEPATH}` for your user folder under Windows. Or, `{#user.home}` has the 
+ same effect universally, by referring to it as the Java property storing the 
+ location of the user's home folder.
+
+ The tilde character `~` is also universally understood to mean your home 
+ folder. And, finally, the UNIX-like `~johndoe` may specify `johndoe`'s home 
+ directory in any OS as long as it shares the same parent directory with your 
+ home folder (e.g. both `johndoe` and your home folder reside under a common 
+ `/home` or `C:\Users`). 
 	
-    Thus, in UNIX systems (including MacOS), you may use:
+ Thus, in UNIX systems (including MacOS), you may use:
 
-	datapath={@HOME}/mydata			# environment variables
-	datapath={#user.home}/mydata		# Java properties
-	datapath=~/mydata			# the '~' shorthand
-	datapath=~johndoe/data			# relative to another user
-	datapath=/mnt/data/2010			# Fully qualified path names
+    datapath={@HOME}/mydata             # environment variables
+    datapath={#user.home}/mydata        # Java properties
+    datapath=~/mydata                   # the '~' shorthand
+    datapath=~johndoe/data              # relative to another user
+    datapath=/mnt/data/2010             # Fully qualified path names
 
-    while in Windows any of the following are acceptable:
+ while in Windows any of the following are acceptable:
 
-	"~\My Data"			# Using the '~' shorthand
-	"{$HOMEPATH}\My Data"		# Using environment variables
-	"{#user.home}\My Data"		# Java properties
-	D:/data/Sharc2/2010		# UNIX-style paths
-	D:\data\Sharc2\2010		# proper Windows paths
-	"~John Doe\Data"		# relative to another user
+    "~\My Data"                         # Using the '~' shorthand
+    "{$HOMEPATH}\My Data"               # Using environment variables
+    "{#user.home}\My Data"              # Java properties
+    D:/data/Sharc2/2010                 # UNIX-style paths
+    D:\data\Sharc2\2010                 # proper Windows paths
+    "~John Doe\Data"                    # relative to another user
 
 
 
-===============================================================================
-Copyright (C)2016 -- Attila Kovacs 
+-----------------------------------------------------------------------------
+Copyright (C)2017 -- Attila Kovacs 
 
