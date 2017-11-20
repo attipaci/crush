@@ -1120,10 +1120,9 @@ virtually any fast-sampling scanning camera.
    option              | Max. sensitive scale        | Noise power scaling 
    --------------------|-----------------------------|--------------------
    _default_ / `bright`|          FOV/2              |  \~L^2
-   ` + extended`       |           FOV               |  \~L^2
-   _ _                 |                             |
+   `+ extended`        |           FOV               |  \~L^2
    `faint` / `deep`    | `2*sourceSize` or `2*beam`  |   \~L
-   ` + extended`       |          FOV/2              |   \~L
+   `+ extended`        |          FOV/2              |   \~L
 
 
  Iterating longer, will generally help recover more of the not-too-faint 
