@@ -1063,10 +1063,10 @@ virtually any fast-sampling scanning camera.
 
    _smooth_       | widening     |	rel. S/N
    ---------------|--------------|--------------
-   minimal        |    6%        |	    0.33
-   halfbeam       |    12%       |	    0.50
-   2/3beam        | 	  22%       |	    0.67
-   beam           | 	  41%       |	    1.00
+   minimal        |      6%      |      0.33
+   halfbeam       |      12%     |      0.50
+   2/3beam        | 	 22%     |      0.67
+   beam           |      41%     |      1.00
 
 
 
@@ -1119,9 +1119,9 @@ virtually any fast-sampling scanning camera.
 	
    option              | Max. sensitive scale        | Noise power scaling 
    --------------------|-----------------------------|--------------------
-   _default_ / `bright`|	       FOV/2              |  \~L^2
+   _default_ / `bright`|          FOV/2              |  \~L^2
     + `extended`       |           FOV               |  \~L^2
-                       |                             |
+   __                  |                             |
    `faint` / `deep`    | `2*sourceSize` or `2*beam`  |   \~L
     + `extended`       |          FOV/2              |   \~L
 
