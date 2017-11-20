@@ -1120,10 +1120,10 @@ virtually any fast-sampling scanning camera.
    option              | Max. sensitive scale        | Noise power scaling 
    --------------------|-----------------------------|--------------------
    _default_ / `bright`|          FOV/2              |  \~L^2
-    + `extended`       |           FOV               |  \~L^2
-   __                  |                             |
+   ` + extended`       |           FOV               |  \~L^2
+                       |                             |
    `faint` / `deep`    | `2*sourceSize` or `2*beam`  |   \~L
-    + `extended`       |          FOV/2              |   \~L
+   ` + extended`       |          FOV/2              |   \~L
 
 
  Iterating longer, will generally help recover more of the not-too-faint 
@@ -1915,14 +1915,14 @@ the correlated signals) may be part of the second step of the decorrelation.
 
    `<dir>`  |  Description
    ---------|-------------------------------
-   `x`      |	_x_ direction.	
-   `y`      |	_y_ direction.
-   `x^2`    |	square of the _x_ coordinate.
-   `y^2`    |	square of the _y_ coordinate.
-   `|x|`    |	_x_ magnitude.
+   `x`      |  _x_ direction.	
+   `y`      |  _y_ direction.
+   `x^2`    |  square of the _x_ coordinate.
+   `y^2`    |  square of the _y_ coordinate.
+   `|x|`    |  _x_ magnitude.
    `|y|`    |  _y_ magnitude.
    `mag`    |  vector magnitude.
-   `norm`   |	square of vector magnitude.
+   `norm`   |  square of vector magnitude.
 
 
 
