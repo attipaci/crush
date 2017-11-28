@@ -1,38 +1,38 @@
+# CRUSH: GISMO
 
-	      *** CRUSH User's Manual Extension for GISMO ***
+Author: Attila Kovacs <attila[AT]sigmyne.com>
 
-			      Attila Kovacs
-		        <attila[AT]sigmyne.com>
-
-		       Last updated: 2 April 2014
+Last updated: 2 April 2014
 
 
 
-Table of Contents
-=================
+#### Table of Contents
 
-1. Introduction
-2. Locating Scans
-  2.1 By file names
-  2.2 By scan numbers 
-3. Automatic Pointing Corrections
-  3.1 Setting an IRAM Pointing Model
-  3.2 Differential Pointing Model
-  3.3 Residual Pointing Corrections
-4. Extinction Correction
-5. GISMO-specific pixel divisions
-6. Runs 1 & 2 Peculiarities
-7. Glossary of GISMO-specific options
-8. GISMO-specific log quantities
+1. __Introduction__
+
+2. __Locating Scans__
+    - 2.1. By file names
+    - 2.2. By scan numbers 
+
+3. __Automatic Pointing Corrections__
+    - 3.1. Setting an IRAM Pointing Model
+    - 3.2. Differential Pointing Model
+    - 3.3. Residual Pointing Corrections
+
+4. __Extinction Correction__
+
+5. __GISMO-specific pixel divisions__
+
+6. __Glossary of GISMO-specific options__
+
+7. __GISMO-specific log quantities__
 
 
 
 
 
 
-#####################################################################
-1. Introduction
-#####################################################################
+## 1. Introduction
 
 
 This document contains information specific to using CRUSH-2 to reduce GISMO 
@@ -47,9 +47,7 @@ will probably find it useful to study the main README document a little longer.
 
 
 
-#####################################################################
-2. Locating Scans
-#####################################################################
+## 2. Locating Scans
 
 
 GISMO scans are typically stored in a filing hierarchy, organized by source 
@@ -68,7 +66,7 @@ directory, you will find several files. The ones ending with
 contain the merged data, which can be reduced by CRUSH. 
 
 You can instruct CRUSH several ways how to locate your data. Your main options 
-are either by their file names, or via a combination of 'object' name, 'date' 
+are either by their file names, or via a combination of `object` name, `date` 
 and scan number. The latter approach is especially useful for specifying 
 multiple scans taken on the same object, and over a handful of days, since it 
 allows you to list scan numbers and ranges for convenience.
@@ -77,47 +75,42 @@ You can find a more detailed explanation below.
 
 
 
-2.1 By file names
-=================    
+### 2.1 By file names
 
-   For single scans, it may be the simplest to specify the file name itself
-   (especially if your OS or shell supports autocompletion). Simply 
-   give the file name, either as a fully qualified path name, or relative
-   to the 'datapath' setting. Thus,
+ For single scans, it may be the simplest to specify the file name itself
+ (especially if your OS or shell supports autocompletion). Simply give the file
+ name, either as a fully qualified path name, or relative to the `datapath` 
+ setting. Thus,
 
-       > crush gismo /data/Mars/2010-04-12.79/[...]-GISMO-IRAM-condensed.fits
+    > crush gismo /data/Mars/2010-04-12.79/[...]-GISMO-IRAM-condensed.fits
        
-   and
+ and
 
-       > crush gismo -datapath=/data Mars/2010-04-12.79/[...]-GISMO-IRAM-cond \
-         ensed.fits
+    > crush gismo -datapath=/data Mars/2010-04-12.79/[...]-GISMO-IRAM-condensed\
+                  .fits
    
-   are equivalent.
+ are equivalent.
 
 
 
-2.2 By scan numbers
-===================
+### 2.2 By scan numbers
 
-   When reducing several scans together (which is the recommended way to deal
-   with datasets), it may be more convenient to use a combination of
-   'datapath', 'object', 'date' and the scan numbers, and let crush find the
-   desired data files based on these. E.g.:
+ When reducing several scans together (which is the recommended way to deal
+ with datasets), it may be more convenient to use a combination of `datapath`, 
+ `object`, `date` and the scan numbers, and let crush find the desired data 
+ files based on these. E.g.:
    
-       > crush gismo -datapath=/data -object=NGC3627 \
-                     -date=2010-11-08 32-39 43 \
-                     -date=2011-02-13 15 19-22 33
+    > crush gismo -datapath=/data -object=NGC3627 -date=2010-11-08 32-39 43 \
+                  -date=2011-02-13 15 19-22 33
 
-   Of course, for each scan, or set of scans, you may add additional options
-   such as pointing corrections (via 'pointing') or in-band opacities (via
-   'tau'), or calibration corrections (via 'scale') etc.
-
+ Of course, for each scan, or set of scans, you may add additional options such
+ as pointing corrections (via `pointing`) or in-band opacities (via `tau`), or 
+ calibration corrections (via `scale`) etc.
 
 
 
-#####################################################################
-3. Automatic Pointing Corrections
-#####################################################################
+
+## 3. Automatic Pointing Corrections
 
 A major improvement offered since crush 2.04 is the ability to apply automatic
 pointing corrections, (a) via supplying a differential pointing model, and (b)
@@ -126,114 +119,109 @@ combination of the two methods allows to reach pointing accuracies down to a
 few arcseconds. Below is a detailed explanation on how to use these methods.
 
 
-3.1 Setting an IRAM Pointing Model
-==================================
+## 3.1 Setting an IRAM Pointing Model
 
-   You can use the 'pointing.model' option to specify a file containing the
-   effective IRAM pointing constants. These are the P1 through P9 as decribed 
-   by Greve, A., et al. A&A, 115, 379, (1996), and the two Nasmyth offsets P10 
-   and P11. Additionally P12-P16 contain terms with 2AZ dependence, and 
-   refraction correction. The argument of the 'pointing.model' option should be
-   a file containing all relevant constants, one per line. E.g.:
+ You can use the `pointing.model` option to specify a file containing the
+ effective IRAM pointing constants. These are the P1 through P9 as decribed 
+ by Greve, A., et al. A&A, 115, 379, (1996), and the two Nasmyth offsets P10 
+ and P11. Additionally P12-P16 contain terms with 2AZ dependence, and 
+ refraction correction. The argument of the `pointing.model` option should be
+ a file containing all relevant constants, one per line. E.g.:
 
-	P1 = -3.15
-	P2 = -8.41
-	P3 = -0.18, -2.4, -4.2
-	P4 = 0.1, 17.5, 0.4
-	[...]
-	P11 = 1.0
+    P1 = -3.15
+    P2 = -8.41
+    P3 = -0.18, -2.4, -4.2
+    P4 = 0.1, 17.5, 0.4
+    [...]
+    P11 = 1.0
 
-   As shown in the example above, each constant can have a single value to
-   specify a static term, or a comma-separated list of 3 values for a time-
-   variant dynamical model: the static term plus two dynamic terms, Pn0, PnC, 
-   and PnS, from which the pointing constant Pn is calculated for a given UT 
-   phase (in radians) as:
+ As shown in the example above, each constant can have a single value to
+ specify a static term, or a comma-separated list of 3 values for a time-
+ variant dynamical model: the static term plus two dynamic terms, Pn0, PnC, and
+ PnS, from which the pointing constant Pn is calculated for a given UT phase 
+ (in radians) as:
 
-   	Pn = Pn0 + PnC * cos(UT) + PnS * sin(UT)
+    Pn = Pn0 + PnC * cos(UT) + PnS * sin(UT)
 
-   Such dynamical constants can be a powerful way to cyclical variations of
-   the pointing model due to a daily cycle (e.g. temperature cycle or heating
-   cycle by the Sun). However, if you rather stick to just the static values
-   you can set 'pointing.model.static' to ignore the dynamical terms even if
-   those were defined.
+ Such dynamical constants can be a powerful way to cyclical variations of
+ the pointing model due to a daily cycle (e.g. temperature cycle or heating
+ cycle by the Sun). However, if you rather stick to just the static values
+ you can set `pointing.model.static` to ignore the dynamical terms even if
+ those were defined.
 
-   The actual pointing correction calculated from the supplied pointing model
-   are reported on the console output during the processing of each scan.
+ The actual pointing correction calculated from the supplied pointing model
+ are reported on the console output during the processing of each scan.
 
-   UPDATE: 31.01.2012 ---->
+#### UPDATE: 31.01.2012
 
-   The new GISMO FITS format (ver 1.7) now includes all IRAM coordinate 
-   columns. As a result, crush uses the scanning offsets rather than absolute
-   AZ/EL positions for mapping. This seems to solve the pointing problems
-   experieced earlier, and provides excellent (<3" rms) pointing in both 
-   directions with static pointing constants only. 
+  The new GISMO FITS format (ver 1.7) now includes all IRAM coordinate columns.
+  As a result, crush uses the scanning offsets rather than absolute AZ/EL 
+  positions for mapping. This seems to solve the pointing problems experieced 
+  earlier, and provides excellent (<3" rms) pointing in both directions with 
+ static pointing constants only. 
 
 
-3.2. Differential Pointing Model
-================================
+### 3.2. Differential Pointing Model
    
-   Instead of specifying the full pointing model, you can also use the 
-   'pointing.model' option to set incremental corrections relative to the model
-   used by IRAM during the observations, if you set the 
-   'pointing.model.incremental' option as well. Then, for adjusting P4, P5, 
-   P10, and P11, the file could contain the lines:
+ Instead of specifying the full pointing model, you can also use the 
+ `pointing.model` option to set incremental corrections relative to the model
+ used by IRAM during the observations, if you set the 
+ `pointing.model.incremental` option as well. Then, for adjusting P4, P5, P10, 
+ and P11, the file could contain the lines:
 
-	P4 = 2.38
-	P5 = -6.12
-	P10 = -0.68
-	P11 = 4.30
+    P4 = 2.38
+    P5 = -6.12
+    P10 = -0.68
+    P11 = 4.30
 
-   Now, these values will be added to whatever pointing model was used during
-   the observations to calculate pointing corrections. Otherwise, the behaviour
-   is the same as described above.
+ Now, these values will be added to whatever pointing model was used during the
+ observations to calculate pointing corrections. Otherwise, the behaviour is 
+ the same as described above.
 
-   In addition to the standard IRAM pointing model above, TX and TY define
-   two linear temperature coefficients for the X and Y pointing respectively,
-   such that TX = dX(arcsec) / dT(C), and TY = dY(arcsec) / dT(C).
-
-
-3.3 Residual Pointing Corrections
-=================================
-
-   You can also apply residual pointing corrections based on observations
-   of nearby pointing sources. It is preferred that you observe pointing
-   sources frequently, and preferably at least once withing 30 minutes of all
-   your science scans, and withing 15 degrees distance on the sky. The more 
-   pointings you have and the closer they are in distance and time to your
-   source, the more reliable will be the derived corrections, which are 
-   weighted by their relative proximity on sky and in time.
-
-   To apply residual corrections, use the 'pointing.table' option whose 
-   argument should specify the pointing log file. Such log files, containing
-   pointing information are automatically generated during GISMO runs. However,
-   you should use an edited copy of this log, making sure to remove, or comment
-   out, all entries with unsuitale pointings. E.g. remove all bogus pointing on
-   very faint sources, where the automatic routine may hit a noise peak or
-   spike rather than a real source. Remove also any pointing data on extended
-   source, objects with multiple peaks or otherwise complex structure, etc.
-
-   For the option to work, the pointing log must contain certain mandatory
-   columns, such as 'id', 'UTh', 'AZd', 'Eld', 'pnt.X', 'pnt.Y', 'src.peak'
-   'src.dpeak', and 'src.FWHM'. Refer to the main README for details.
-
-   The residual corrections calculated from nearby pointing data are printed
-   on the console during the processing of each scan, together with a quality
-   indicator (qualities near or above 1 are considered good). 
-
-   The residual corrections can be used together with a pointing model 
-   (which is the preferred way to use this option), in which case increments 
-   are calculated on top of the model predictions, or without a pointing model
-   for an 'absolute' pointing correction. In either case, you can still specify
-   an additional correction manually, if desired, via the 'pointing' option,
-   as usual. The total combined correction (pointing model, incremental
-   correction based on pointing logs, and manual setting via 'pointing') are
-   displayed during the scan processing for verification.
+ In addition to the standard IRAM pointing model above, `TX` and `TY` define
+ two linear temperature coefficients for the _X_ and _Y_ pointing respectively,
+ such that TX = dX(arcsec) / dT(C), and TY = dY(arcsec) / dT(C).
 
 
+### 3.3 Residual Pointing Corrections
 
-#####################################################################
-4. Extinction Correction
-#####################################################################
+ You can also apply residual pointing corrections based on observations of 
+ nearby pointing sources. It is preferred that you observe pointing sources 
+ frequently, and preferably at least once withing 30 minutes of all your 
+ science scans, and withing 15 degrees distance on the sky. The more pointings 
+ you have and the closer they are in distance and time to your source, the more
+ reliable will be the derived corrections, which are weighted by their relative
+ proximity on sky and in time.
+
+ To apply residual corrections, use the `pointing.table` option whose argument 
+ should specify the pointing log file. Such log files, containing pointing 
+ information are automatically generated during GISMO runs. However, you should
+ use an edited copy of this log, making sure to remove, or comment out, all 
+ entries with unsuitale pointings. E.g. remove all bogus pointing on very faint
+ sources, where the automatic routine may hit a noise peak or spike rather than
+ a real source. Remove also any pointing data on extended source, objects with 
+ multiple peaks or otherwise complex structure, etc.
+
+ For the option to work, the pointing log must contain certain mandatory 
+ columns, such as `id`, `UTh`, `AZd`, `Eld`, `pnt.X`, `pnt.Y`, `src.peak`,
+ `src.dpeak`, and `src.FWHM`. Refer to the main README for details.
+
+ The residual corrections calculated from nearby pointing data are printed on 
+ the console during the processing of each scan, together with a quality
+ indicator (qualities near or above 1 are considered good). 
+
+ The residual corrections can be used together with a pointing model (which is 
+ the preferred way to use this option), in which case increments are calculated
+ on top of the model predictions, or without a pointing model for an 'absolute'
+ pointing correction. In either case, you can still specify an additional 
+ correction manually, if desired, via the `pointing` option, as usual. The 
+ total combined correction (pointing model, incremental correction based on 
+ pointing logs, and manual setting via `pointing`) are displayed during the 
+ scan processing for verification.
+
+
+
+## 4. Extinction Correction
 
 GISMO, being a 2-mm camera, typically operates with low atmospheric extinction.
 Nonetheless, properly accounting for the extinction is important for getting 
@@ -251,76 +239,60 @@ using the 'tau' option (see the GLOSSARY).
 
 
 
-#####################################################################
-5. GISMO-specific pixel divisions
-#####################################################################
+## 5. GISMO-specific pixel divisions
 
 For a general overview of channel divisions, please consult Section 3.
 (Correlated Signals) in the main README document.
 
-   mux		A grouping of pixels based on their SQUID multiplexing scheme
-		Each 4x8 pixel quadrant of the array is read out through the
-		same SQUID amplifier. Therefore, it is not suprizing that 
-		correlated signals are present on these quadrants. The
-		decorrelating on 'mux' groups is default in GISMO reductions
+    mux         A grouping of pixels based on their SQUID multiplexing scheme
+                Each 4x8 pixel quadrant of the array is read out through the
+                same SQUID amplifier. Therefore, it is not suprizing that 
+                correlated signals are present on these quadrants. The
+                decorrelating on 'mux' groups is default in GISMO reductions
 
-   pins		The GISMO multiplexing scheme is implemented in the time-domain
-		Thus, the first channels of each SQUID are read out at the same
-		time, followed by the second channel in each group etc. Thus,
-		if there is any pickup of high-frequency signals in the
-		multiplexing scheme, one could expect some correlated signals
-		to be present on these virtual readout pin groups. There
-		is little evidence for these, but the reduction of very faint
-		compact sources may benefit from the additional decorrelation
-		on these groups.
-		You can group neighboring 'pins' together for decorrelation
-		via the 'correlated.pins.group' option, or the equivalent
-		'pins.group' shorthand.
+    pins        The GISMO multiplexing scheme is implemented in the time-domain
+                Thus, the first channels of each SQUID are read out at the same
+                time, followed by the second channel in each group etc. Thus,
+                if there is any pickup of high-frequency signals in the
+                multiplexing scheme, one could expect some correlated signals
+                to be present on these virtual readout pin groups. There
+                is little evidence for these, but the reduction of very faint
+                compact sources may benefit from the additional decorrelation
+                on these groups.
+                You can group neighboring 'pins' together for decorrelation
+                via the 'correlated.pins.group' option, or the equivalent
+                'pins.group' shorthand.
 
-   rows		Geometric rows of the array (it has 16 rows and 8 columns).
-		You can also group n rows together for the decorrelation via
-		the 'correlated.rows.group=n' option, or the equivalent
-		'rows.group=n' shorthand.
+    rows        Geometric rows of the array (it has 16 rows and 8 columns).
+                You can also group n rows together for the decorrelation via
+                the 'correlated.rows.group=n' option, or the equivalent
+                'rows.group=n' shorthand.
 
-   cols		Geometric columns of the array (it has 16 rows and 8 columns).
-		You can also group n columns together for the decorrelation via
-		the 'correlated.cols.group=n' option, or the equivalent
-		'cols.group=n' shorthand.
-
-
-
-#####################################################################
-6. Runs 1&2 Peculiarities
-#####################################################################
+    cols        Geometric columns of the array (it has 16 rows and 8 columns).
+                You can also group n columns together for the decorrelation via
+                the 'correlated.cols.group=n' option, or the equivalent
+                'cols.group=n' shorthand.
 
 
 
-  6.1 Coordinate Epochs
 
 
+## 6. Glossary of GISMO-specific options
 
-  6.2 Pointing
-
-
-
-#####################################################################
-7. Glossary of GISMO-specific options
-#####################################################################
-
-   cols                 @Alias: 'correlated.cols'
+    cols                @Alias: 'correlated.cols'
                         @Expert
                         Specifies the grouping of channels by their geometric
-			location of the array divided into columns.
+                        location of the array divided into columns.
                         @See: 'correlated.<?>', 'rows'
 
-   date=YYYY-MM-DD	Specify the observing date (UT) in the format
-			YYYY-MM-DD. This is used for constructing the IRAM 
-			scan IDs by combining with scan numbers.
-			You also need to specify the 'object' and 'datapath' 
-			before CRUSH will be able to find scans by number.
-			@See: 'datapath', 'object'
+    date=YYYY-MM-DD     Specify the observing date (UT) in the format
+                        YYYY-MM-DD. This is used for constructing the IRAM 
+                        scan IDs by combining with scan numbers.
+                        You also need to specify the 'object' and 'datapath' 
+                        before CRUSH will be able to find scans by number.
+                        @See: 'datapath', 'object'
   
-   log.saegains       	@Since: 2.16
+    log.saegains        @Since: 2.16
                         @Expert
                         Log the SAE coupling coefficients against line-of-sight
                         tau, detector bias, and tuning settings. This is
@@ -330,80 +302,80 @@ For a general overview of channel divisions, please consult Section 3.
                         has no effect.
                         @See: 'read.sae'
 
-   mux			@Alias: 'correlated.mux'
-			@Expert
-			Specifies the grouping of channels by the SQUID 
-			multiplexing.
-			@See: 'correlated.<?>'
+    mux                 @Alias: 'correlated.mux'
+                        @Expert
+                        Specifies the grouping of channels by the SQUID 
+                        multiplexing.
+                        @See: 'correlated.<?>'
 
-   object=<name>	Give the IRAM catalog name (case sensitive) of the 
-			observed object. Use together with 'datapath' and 
-			'date' to allow locating scans by serial numbers.
-			@See: 'datapath', 'date'
+    object=<name>       Give the IRAM catalog name (case sensitive) of the 
+                        observed object. Use together with 'datapath' and 
+                        'date' to allow locating scans by serial numbers.
+                        @See: 'datapath', 'date'
 
-   pcenter=<row>,<col>	@Expert
-			Specify the pointing center as a row,col combination 
-			on the array. There are 16 rows and 8 columns on the 
-			GISMO array, and the numbering starts from 1. Thus, 
-			the geometric center of the array corresponds to 
-			8.5,4.5. This option is not used (ignored) if pixel
-			positions are defined by the 'rcp' option (which is 
-			default). In those cases, the pointing center can be 
-			adjusted via the 'rcp.center' option.
-			@See: 'rcp', 'rcp.center', 'pixelsize', 'rotation'
+    pcenter=<row>,<col>  @Expert
+                        Specify the pointing center as a row,col combination 
+                        on the array. There are 16 rows and 8 columns on the 
+                        GISMO array, and the numbering starts from 1. Thus, 
+                        the geometric center of the array corresponds to 
+                        8.5,4.5. This option is not used (ignored) if pixel
+                        positions are defined by the 'rcp' option (which is 
+                        default). In those cases, the pointing center can be 
+                        adjusted via the 'rcp.center' option.
+                        @See: 'rcp', 'rcp.center', 'pixelsize', 'rotation'
 
 
-   pixelsize=<a>[,<b>]	@Expert
-			Specify the size of the pixels for calculating pixel 
-			positions based on a regular grid. A better way of 
-			setting the pixel positions is through the 'rcp' 
-			option. 
-			The argument can be either a lateral size (in arcsec) 
-			for square pixels, or two comma separated sizes for 
-			rectangular pixels.
-			@See: 'rcp', 'rotation', 'pcenter'
+    pixelsize=<a>[,<b>]  @Expert
+                        Specify the size of the pixels for calculating pixel 
+                        positions based on a regular grid. A better way of 
+                        setting the pixel positions is through the 'rcp' 
+                        option. 
+                        The argument can be either a lateral size (in arcsec) 
+                        for square pixels, or two comma separated sizes for 
+                        rectangular pixels.
+                        @See: 'rcp', 'rotation', 'pcenter'
 
-   pointing.table=<file>	@Advanced
-				@Since: 2.04
-			Specify the reduction log file (produced via the 'log'
-			option) to use for applying incremental pointing
-			corrections base on the nearby pointing observations. 
-			You can use this option together with 'pointing.model' 
-			or separately. For more information see Section 3.2 
-			(above).
-			@See: 'pointing.model', 'pointing'
+    pointing.table=<file>       @Advanced
+                                @Since: 2.04
+                        Specify the reduction log file (produced via the 'log'
+                        option) to use for applying incremental pointing
+                        corrections base on the nearby pointing observations. 
+                        You can use this option together with 'pointing.model' 
+                        or separately. For more information see Section 3.2 
+                        (above).
+                        @See: 'pointing.model', 'pointing'
 
-   pointing.model=<file>	@Expert
-				@Since: 2.04
-				Specify a file containing differential
-			pointing constants (i.e. relative to those used by IRAM
-			during the observations). See Section 3.1 (above) for
-			details on the file format.
-			@See: 'pointing.table', 'pointing'
+    pointing.model=<file>       @Expert
+                                @Since: 2.04
+                        Specify a file containing differential
+                        pointing constants (i.e. relative to those used by IRAM
+                        during the observations). See Section 3.1 (above) for
+                        details on the file format.
+                        @See: 'pointing.table', 'pointing'
 
-   rotation=<deg>	@Expert
-			Specify the array rotation (in degrees), when pixel 
-			positions are calculated from a regular grid. A better 
-			way is to specify pixel positions via the 'rcp' option 
-			their rotation via 'rcp.rotate'.
-			@See: 'rcp', 'rcp.rotate', 'pixelsize'
+    rotation=<deg>      @Expert
+                        Specify the array rotation (in degrees), when pixel 
+                        positions are calculated from a regular grid. A better 
+                        way is to specify pixel positions via the 'rcp' option 
+                        their rotation via 'rcp.rotate'.
+                        @See: 'rcp', 'rcp.rotate', 'pixelsize'
 
-   pins			@Alias: 'correlated.pins'
-			@Expert
-			Specifies the grouping of channels by their virtual 
-			pin numbers in the multiplexing time domain.
-			@See: 'correlated.<?>'
+    pins                @Alias: 'correlated.pins'
+                        @Expert
+                        Specifies the grouping of channels by their virtual 
+                        pin numbers in the multiplexing time domain.
+                        @See: 'correlated.<?>'
 
-   pins.group=<n>	@Alias: 'correlated.pins.group'
-			@Expert
-			Because there are only four SQUID multiplexers in 
-			GISMO, there is little redundancy among the pixels, 
-			which are read out at exactly the same instant. This 
-			option allows to group together <n> consecutive 
-			samples, to combine pixels read in some time-interval.
-			@See: 'pins'
+    pins.group=<n>      @Alias: 'correlated.pins.group'
+                        @Expert
+                        Because there are only four SQUID multiplexers in 
+                        GISMO, there is little redundancy among the pixels, 
+                        which are read out at exactly the same instant. This 
+                        option allows to group together <n> consecutive 
+                        samples, to combine pixels read in some time-interval.
+                        @See: 'pins'
 
-   read.sae             @Expert
+    read.sae            @Expert
                         @Since: 2.16
                         The GISMO FITS contains both the TES feedback DAC
                         values (proportional to the flux, if the feedback is
@@ -417,23 +389,23 @@ For a general overview of channel divisions, please consult Section 3.
                         @See: 'sae'
 
 
-   rows                 @Alias: 'correlated.rows'
+    rows                @Alias: 'correlated.rows'
                         @Expert
                         Specifies the grouping of channels by their geometric
                         location of the array divided into rows.
                         @See: 'correlated.<?>', 'cols'
 
-   skipFWFix		@Expert
-			@Since: 2.15-2
-			During 2013 Oct/Nov we had lost some data due to 
-			firmware problems. Steve has attempted to reconstruct
-			as much of the affected frames as possible. At the same
-			the the reconstructed astrometry is flagged 
-			accordingly. Therefore, it is possile for CRUSH to
-			ignore the reconstructed data if the user wishes to do
-			so.
+    skipFWFix           @Expert
+                        @Since: 2.15-2
+                        During 2013 Oct/Nov we had lost some data due to 
+                        firmware problems. Steve has attempted to reconstruct
+                        as much of the affected frames as possible. At the same
+                        the the reconstructed astrometry is flagged 
+                        accordingly. Therefore, it is possile for CRUSH to
+                        ignore the reconstructed data if the user wishes to do
+                        so.
 
-   sae                  @Alias: -> correlated.sae
+    sae                 @Alias: -> correlated.sae
                         @Expert
                         @Since: 2.16
                         Remove signals correlated to the SAE (feed back loop
@@ -441,84 +413,82 @@ For a general overview of channel divisions, please consult Section 3.
                         this option has no effect on its own.
                         @See: 'read.sae'
 
-   sae.hipass=X		@Expert
+    sae.hipass=X        @Expert
                         @Since: 2.16
                         Hipass filter the SAE feedback loop error signal via
                         a Gaussian kernel with X seconds FWHM.
                         @See: 'read.sae', 'sae.smooth'
  
-   sae.smooth=X		@Expert
+    sae.smooth=X        @Expert
                         @Since: 2.16
                         Smooth the SAE feedback loop error signal with a
                         Gaussian kernel with X seconds FWHM.
                         @See: 'read.sae', 'sae.hipass'
 
-   SZ			@Since: 2.15-2
-			Optimize reduction for the detection of Sunyaev-
-			Zel'dovich signals (decrements). The SZ option is 
-			really just a trigger condition for activating other
-			settings. Check the configuration files under
-			the gismo/ crush folder (esp. 'default.cfg) to see
-			what this does exactly.
+    SZ                  @Since: 2.15-2
+                        Optimize reduction for the detection of Sunyaev-
+                        Zel'dovich signals (decrements). The SZ option is 
+                        really just a trigger condition for activating other
+                        settings. Check the configuration files under
+                        the gismo/ crush folder (esp. 'default.cfg) to see
+                        what this does exactly.
 
-   tau.timezone=AAA	@Advanced
-			@Since: 2.15-2
-			Specify the timezone in which skydip lookup tables
-			were compiled. For example the table compiled by G.
-			Bruni for 2012 Nov were in 'CET' whereas the table
-			by Israel Hermelo for 2013 Oct/Nov is in 'UTC'.
+    tau.timezone=AAA    @Advanced
+                        @Since: 2.15-2
+                        Specify the timezone in which skydip lookup tables
+                        were compiled. For example the table compiled by G.
+                        Bruni for 2012 Nov were in 'CET' whereas the table
+                        by Israel Hermelo for 2013 Oct/Nov is in 'UTC'.
 
-   ver.[<range>]	@Since: 2.11
-			@Expert
-			Set options for specific FITS merge versions. E.g.
+    ver=X               @Since: 2.11
+                        @Expert
+                        Force setting the merge version to X, ignoring the
+                        value stored in the FITS.
+
+    ver.[<range>]       @Since: 2.11
+                        @Expert
+                        Set options for specific FITS merge versions. E.g.
 			
-			  ver.[<1.7] pointing.model=old.model
+                          ver.[<1.7] pointing.model=old.model
 
-			@See: 'ver'
-
-   ver=X		@Since: 2.11
-			@Expert
-			Force setting the merge version to X, ignoring the
-			value stored in the FITS.
+                        @See: 'ver'
 
 
-#####################################################################
-8. GISMO-specific log quantities
-#####################################################################
+## 7. GISMO-specific log quantities
 
 
-	bias		The detector bias value (for column 0).
+    bias                The detector bias value (for column 0).
 
-        foc.dX          Focus X offset (mm).
+    foc.dX              Focus X offset (mm).
+       
+    foc.dY              Focus Y offset (mm).
         
-	foc.dY          Focus Y offset (mm).
-        
-	foc.dZ          Focus Z offset (mm).
+    foc.dZ              Focus Z offset (mm).
 
-	modelX		Static pointing model correction in azimuth (arcsec).
+    modelX              Static pointing model correction in azimuth (arcsec).
 
-	modelY		Static pointing model correction in elevation (arcsec). 
+    modelY              Static pointing model correction in elevation (arcsec). 
 
-	nasX		Nasmyth X position of instrument.
+    nasX                Nasmyth X position of instrument.
 
-	nasY		Nasmyth Y position of instrument.
+    nasY                Nasmyth Y position of instrument.
 
-	obstype		Type of observation.
+    obstype             Type of observation.
 
-	rot		Rotation of the instrument (deg).
+    rot                 Rotation of the instrument (deg).
 
-	stage2.biases	Second stage biases (4 integers)
+    stage2.biases       Second stage biases (4 integers)
 
-	stage2.feedbacks Second stage feedbacks (4 integers)
+    stage2.feedbacks    Second stage feedbacks (4 integers)
 	
-	stage3.biases	Third stage biases (4 integers)
+    stage3.biases       Third stage biases (4 integers)
 
-	stage4.feedbacks Third stage feedbacks (4 integers)
+    stage4.feedbacks    Third stage feedbacks (4 integers)
 
-	tiltX		Azymuth pointing correction from inclinometer (arcsec).
+    tiltX               Azymuth pointing correction from inclinometer (arcsec).
 
-	tiltY		Elevation pointing correction from inclinometer 
-			(arcsec).
+    tiltY               Elevation pointing correction from inclinometer 
+                        (arcsec).
 
 
 ------------------------------------------------------------------------------

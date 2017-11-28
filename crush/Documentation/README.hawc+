@@ -6,27 +6,30 @@ Author: Attila Kovacs <attila[AT]sigmyne.com>
 Last updated: 28 October 2017
 
 
+----------------------------------------------------------------------------
 
-## Table of Contents
+#### Table of Contents
 
 
-1. Introduction
+1. __Introduction__
      - 1.1. A brief description of of what CRUSH does and how...
 
-2. Installation
+2. __Installation__
      - 2.1. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
      - 2.2. Optional system-wide installation.
      - 2.3. Optional startup environment & Java configuration
      - 2.4. Optional automatic pipeline configuration (skyhawc)
 
-3. Quickstart guide
+3. __Quickstart guide__
      - 3.1. Locating scan data
      - 3.2. A few common options to use with SOFIA/HAWC+
 
-4. Technical details for expert users
+4. __Technical details for expert users__
      - 4.1. HAWC+ specific pixel divisions
      - 4.2. Glossary of HAWC+ specific options
      - 4.3. HAWC+ specific log quantities
+
+-----------------------------------------------------------------------------
 
 
 

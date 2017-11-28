@@ -7,7 +7,7 @@ Last updated: 16 November 2017
 ----------------------------------------------------------------------------
 
 
-## Table of Contents
+#### Table of Contents
 
 1. __Getting Started__
     - 1.1. Installation
@@ -46,7 +46,7 @@ Last updated: 16 November 2017
     - 5.2 Decimal Formatting of Values
     - 5.3 Loggable Quantities
 
-6. __Supported Camera__
+6. __Supported Cameras__
 
 7. __Future Developments (A Wish List...)__
     - 7.1 Support for Heterodyne Receivers and Interferometry
@@ -70,14 +70,14 @@ virtually any fast-sampling scanning camera.
 
 
 
-### 1.1 Installation
+### 1.1. Installation
 
 #### Install Java (if not already installed)
    
   Download Java, e.g. from www.java.com. If you have Java already, check that 
   it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
 
-	> java -version
+    > java -version
 
   Note, that The GNU java a.k.a. gij (default on some older RedHat and Fedora
   systems) is painfully slow and unreliable, and will not always run CRUSH
@@ -142,7 +142,7 @@ virtually any fast-sampling scanning camera.
 
  
 
-### 1.2 (optional) Java Configuration
+### 1.2. (optional) Java Configuration
 
 
  CRUSH ships with a default Java configuration. On Windows and the most 
@@ -878,7 +878,7 @@ virtually any fast-sampling scanning camera.
 
 
 
-### 2.1 Pointing Corrections
+### 2.1. Pointing Corrections
 
  Reducing the data with the correct pointing can be crucial (esp. when 
  attempting to detect/calibrate faint point sources). At times the pointing
@@ -937,7 +937,7 @@ virtually any fast-sampling scanning camera.
 
 
 
-### 2.2 Pixelization and Smoothing
+### 2.2. Pixelization and Smoothing
 
  There seem to be many misconceptions about the _correct_ choice of 
  pixelization and about the (mal)effects of smoothing. This section aims to 
@@ -946,7 +946,7 @@ virtually any fast-sampling scanning camera.
 
 #### Pixelization (i.e. choosing the 'right' grid)
 
-  **Misconception 1**: You should always _Nyquist_ sample your map, with 2 
+  **Misconception**: You should always _Nyquist_ sample your map, with 2 
   pixels per beam FWHM, to ensure ideal representation.
 
   There is more than one thing wrong with the above idea. First, there is no
@@ -977,15 +977,14 @@ virtually any fast-sampling scanning camera.
 
 #### Smoothing
    
-  **Misconception 2**: You should not smooth your maps, because it does 
+  **Misconception**: You should not smooth your maps, because it does 
   something _unnatural_ to your _raw_ image.
 
-  Again, there are two reasons why this is wrong. The first problem with this 
-  view is that there is no _natural_ or _raw_ image to start with, because 
-  there is no _natural_ pixelization (see above). Secondly, by choosing a map 
-  pixel size, you effectively apply smoothing -- only that your smoothing 
-  kernel is a square pixel, with an abrupt edge, rather than a controlled (and
-  directionless) taper of choice. 
+  The first problem with this view is that there is no _natural_ or _raw_ image
+  to start with, because there is no _natural_ pixelization (see above). 
+  Secondly, by choosing a map pixel size, you effectively apply smoothing -- 
+  only that your smoothing kernel is a square pixel, with an abrupt edge, 
+  rather than a controlled (and directionless) taper of choice. 
 
   (To convice yourself that a map pixels apply smoothing, consider the mapping 
   process: each pixel will represent an average of the emission from the area 
@@ -993,10 +992,10 @@ virtually any fast-sampling scanning camera.
   integral under the pixel shape -- i.e. samples of the emission convolved 
   [smoothed] by the pixel shape.)
 
-  However, smoothing does have one real con, in that it degrades the effective
-  resolution of the image. Consider smoothing by Gaussian kernels. Then, the
-  image resolution (imageFWHM) increases with the smoothing width (`smoothFWHM`)
-  as
+  However, smoothing (including coarse pixelization!) does have a real 
+  downside, in that it degrades the effective resolution of the image. Consider
+  smoothing by Gaussian kernels. Then, the image resolution (imageFWHM) 
+  increases with the smoothing width (`smoothFWHM`) as
 
 	imageFWHM^2 = beamFWHM^2 + smoothFWHM^2
 
@@ -1073,7 +1072,7 @@ virtually any fast-sampling scanning camera.
 
 
 
-### 2.3 Recovery of Extended Emission
+### 2.3. Recovery of Extended Emission
 
  As a general rule, ground based instruments (in the mm and submm) are only 
  sensitive to structures smaller than the Field-of-View (FoV) of the 
@@ -1153,7 +1152,7 @@ virtually any fast-sampling scanning camera.
 
 
 
-### 2.4 Filtering corrections, transfer functions, etc.
+### 2.4. Filtering corrections, transfer functions, etc.
 
  Most reduction steps (decorrelation, 1/f drift removal, spectral filtering) 
  will impact different spatial frequencies of the source structure 
@@ -1217,7 +1216,7 @@ virtually any fast-sampling scanning camera.
 
 
 
-### 2.5 Image processing post-reduction
+### 2.5. Image processing post-reduction
 
  CRUSH also provides `imagetool` for post-processing images after reduction. 
  The typical usage of imagetool is:
@@ -1252,7 +1251,7 @@ virtually any fast-sampling scanning camera.
 
 
     
-### 2.6 Reducing Very Large Datasets
+### 2.6. Reducing Very Large Datasets
 
  Coming soon...
 
@@ -1273,7 +1272,7 @@ preceding dash. However, you can use the same options in the command line by
 adding the dash. (Also, `=` can be replaced by space(s) in scripting...) 
 
 
-### 3.1 Commands
+### 3.1. Commands
 
  There are a handful of keywords that are treated as commands by crush. (The
  difference being that commands are interpreted and acted on right away, whereas 
@@ -1397,7 +1396,7 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
 				telescope movement, or temperature data).
 
 
-### 3.2 Pipeline Configuration
+### 3.2. Pipeline Configuration
 
 #### a. Source types. 
 
@@ -1552,7 +1551,7 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
 
 
 
-### 3.3 Source (Map) Configuration
+### 3.3. Source (Map) Configuration
 	
 	altaz		Shorthand for 'system=horizontal' to reduce in Alt/Az.
 			It is also aliased to 'horizontal'.
@@ -1664,7 +1663,7 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
 
 
 
-### 3.4 Scan Configuration
+### 3.4. Scan Configuration
 
  Some options relate to the scans, helping to configure and handle them
  These options are specified *before* the list or range of scans to
@@ -1778,7 +1777,7 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
 
 
 
-### 3.5 Instrument Configuration
+### 3.5. Instrument Configuration
 
  There are various instrument configuration files. These reside in the
  corresponding instrument subdirectories inside the main crush directory.
@@ -1879,7 +1878,7 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-### 4.1 Modes and Modalities
+### 4.1. Modes and Modalities
 
  For each instrument, crush defines a set of _modalities_ (i.e. a set of
  correlated modes) on which decorrelation may be performed. Each mode in a
@@ -1926,7 +1925,7 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-### 4.2 Removing Correlated Signals
+### 4.2. Removing Correlated Signals
 
  The decorrelation step is invoked by:
 
@@ -1955,7 +1954,7 @@ the correlated signals) may be part of the second step of the decorrelation.
 
 
 
-### 4.3 User-defined Modalities
+### 4.3. User-defined Modalities
 
  In addition to the most common modalities listed above, each instruments 
  defines its specific ones (e.g. `rows` for SHARC-2 from the example above). 
@@ -1992,7 +1991,7 @@ values are generated during reduction, and therefore may not be available to
 
 
 
-### 5.1 Log Files and Versioning
+### 5.1. Log Files and Versioning
 
  You can specify the log files to use with the `log.file` and `obslog.file`
  keys (the default is to use `<instrument>.log` and `<instrument>.obs.log` in 
@@ -2025,7 +2024,7 @@ values are generated during reduction, and therefore may not be available to
 
 
 
-### 5.2 Decimal Formatting of Values
+### 5.2. Decimal Formatting of Values
 
  Many of the quantities you can log are floating point values, and you have
  the possibility of controlling how these will appear in your log files. 
@@ -2096,7 +2095,7 @@ values are generated during reduction, and therefore may not be available to
 
 	
 
-### 5.3 Loggable Quantities
+### 5.3. Loggable Quantities
 
  Currently, CRUSH offers the following quantities for logging. Directives
  starting with '?' will log the values of configuration keys. Other 
@@ -2465,7 +2464,7 @@ implementation. Nonetheless, the following avenues of feature enrichment are
 being considered. 
 
 
-### 7.1 Support for Heterodyne Receivers and Interferometry
+### 7.1. Support for Heterodyne Receivers and Interferometry
 
  CRUSH was born as a bolometer array reduction package. However, there is no
  reason why many of its principles could not be applied to other types of 
@@ -2478,7 +2477,7 @@ being considered.
  to deal with immense data volumes also.
 
 
-### 7.2 Interactive Reductions
+### 7.2. Interactive Reductions
 
  At present CRUSH offers only a reduction pipeline. This is ideal for
  crunching large volumes of data in a more-or-less automated fashion, and 
@@ -2499,7 +2498,7 @@ being considered.
  essential plotting capabilities, but that too may come sooner than later...
 
 
-### 7.3 Distributed and GPU Computing
+### 7.3. Distributed and GPU Computing
 
  The reduction paradigm of CRUSH is massively parallelizable. CRUSH can
  already make good use of any number of processing cores within a computer.
@@ -2516,7 +2515,7 @@ being considered.
  performace of CRUSH. 
 
 
-### 7.4 Graphical User-Interface (GUI)
+### 7.4. Graphical User-Interface (GUI)
 
  The addition of a Graphical User Interface (GUI) to CRUSH would make 
  configurations more transparent and intuitive. It would allow users, who do 
@@ -2540,15 +2539,14 @@ predecessors. However, because the output FITS images are backward compatible
 with the  older versions (for the most part), parts of the original CRUSH 
 package can still be useful for manipulating images post reduction.
 
-Mainly, the crush-1.xx distribution provides tools for coadding images 
-('coadd'), image manipulation ('imagetool'), adjusting pointing in RA/DEC maps
-('jiggle'), or prducing histograms of the flux (signal-to-noise) distribution 
-in maps ('histogram').
+Mainly, the crush-1.xx distribution provides tools for displaying (`show`), 
+minupulating (`imagetool`), and coadding (`coadd`) or differencing 
+(`difference`) images, and  producing histogram (`histogram`) from them.
 
 Downloading the CRUSH package(s), and further information on the FITS images
 is available at:
 
-   http://www.submm.caltech.edu/~sharc/crush
+  http://www.submm.caltech.edu/~sharc/crush
 
 I hope you'll find this helpful and may you end up with beautiful images!!!
 

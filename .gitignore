@@ -1,4 +1,9 @@
 **/archive/
 **/bin/
 **/lib/
+**/*.class
+**/*.jar
 **/.metadata
+**/.*.swp
+**/*~
+

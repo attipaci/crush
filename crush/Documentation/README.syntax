@@ -2,32 +2,36 @@
 
 Author: Attila Kovacs <attila[AT]sigmyne.com>
 
-Last updated: 17 February 2016
+Last updated: 23 November 2017
 
 
-## Table of Contents
+-----------------------------------------------------------------------------
 
-1. Basic Rules
+#### Table of Contents
+
+1. __Basic Rules__
     - 1.1. Unsetting and Resetting options
     - 1.2. Hierarchical Configuration
-    - 1.3. Wildcards
-    - 1.4. Checking Configuraton State
+    - 1.3. Checking Configuraton State
 
-2. Conditionals
+2. __Conditionals__
     - 2.1. Basic Conditionals
     - 2.2. Dynamic Conditionals
     - 2.3. Placement of Brackets
 
-3. Persistent Setting/Unsetting
-    - 3.1. Locking, Unlocking, and Relocking
-    - 3.2  Blacklisting
+3. __Advanced configuration__
+    - 3.1. Wildcards
+    - 3.2. Aliases
+    - 3.3. References to variables
+    - 3.4. Path names
+    - 3.5. Locking, Unlocking, and Relocking
+    - 3.6.  Blacklisting
 
-4. Aliases
-
-5. References to variables
-    - 5.1. Path names
 
 
+
+
+---------------------------------------------------------------------------
 
 
 
@@ -58,8 +62,18 @@ in a configuration script, will end up as
 on the command line. Otherwise, they two ways of configuring are generally 
 equivalent to one-another. 
 
-You can choose scripting or command-line, or mix-and-match them to your
-liking and convenience...
+Because different shells (e.g. `bash`, `tcsh` or Windows `cmd`) have 
+different rules for interpreting command lines, it is sometimes useful to 
+enclose settings in quotes to prevent the shell from interpreting special 
+characters (like brackets, `$` or `@`). Thus:
+
+    > [...] "-key1=value1" "-key2=value2,value3" [...]
+
+is a more robust way of setting more complex command-line options, in
+all command-line shells. 
+
+You can choose scripting or command-line settings, or mix-and-match them 
+to your liking and convenience...
  
 Key/value pairs are parsed in the order they are specified. Thus, each
 specification may override previously defined values. 
@@ -68,7 +82,7 @@ Lines that start with `#` (hash) designate comments that are ignored by the
 parser.
    
  
-## 1.1. Unsetting and Resetting Options
+### 1.1. Unsetting and Resetting Options
    
  There are a few special keys (or rather commands that have the same syntax as 
  keys), that are used to unset/reset options. The command `forget` can be used
@@ -77,8 +91,8 @@ parser.
 
     forget tau,smooth
 
- Will unset the tau value and disable despiking. To later specify a new tau
- and to reenable despiking with its previous setting, you may (say on the
+ Will unset the tau value and disable smoothing. To later specify a new tau
+ and to reenable smoothing with its previous setting, you may (say on the
  command line this time):
 
     > -tau=0.30 -recall=smooth
@@ -91,7 +105,7 @@ parser.
  have to do explicitly afterwards either using `recall` or by specifying a
  new value).
 
-    blacklist smooth		
+    blacklist smooth          # Permanently disables 'smooth'	
     smooth=8.0                # Has no effect, because smooth is blacklisted!
     [...]
     whitelist smooth          # Allows smooth to be set again...
@@ -104,7 +118,7 @@ parser.
  See more about blacklisting in the corresponding section further below...
 
 
-## 1.2 Hierarchical Configuration
+### 1.2. Hierarchical Configuration
 
  The configuration engine is designed to support grouping options in tree-like 
  hierarchies. So rather than thinking of the configuration as a simple list of 
@@ -132,35 +146,8 @@ parser.
  brach to its state prior to `remove`. 
 
 
-## 1.3 Wildcards
 
- Thanks to the branching of configuration keys, wildcards `*` can be used to
- configure all existing branches of a key at once. E.g.:
-
-    correlated.*.resolution=1.0
-
- Will set the `resolution` for every currently defined subkey of `correlated`. 
- Thus, if you had `obs-channels`, `gradients` and `cables' modes already 
- defined under `correlated` then the above is equivalent to:
-
-    correlated.obs-channels.resolution 1.0
-    correlated.gradients.resolution 1.0
-    correlated.cables.resolution 1.0
-
- Additionally, wildcards can be used with the `forget`, `blacklist` or
- `remove`. E.g.:
-
-     forget despike.*
- 
- clears all sub-settings of `despike` (while keeping `despike` itself enabled, 
- if it already was).
-
- Note, however, that wildcards will not have affect on options that will be
- defined afterwards. They only act on the configuration tree at the time of
- invocation.
-
-
-## 1.4 Checking Configuration State
+### 1.3. Checking Configuration State
 
  You can check the current configuration state using the `poll` command. 
  Without an argument it lists the full current configuration, e.g.:
@@ -221,7 +208,7 @@ parser.
 
 
 
-# 2. Conditionals
+## 2. Conditionals
  
 
 The configuration engine also provides the capability for conditional settings.
@@ -234,7 +221,7 @@ if, or when, the `condition` is met it will set the the specified configuration
 
 
 
-## 2.1 Basic Conditionals
+### 2.1 Basic Conditionals
  
  The basic condition is the existence of another option key. For example,
 
@@ -249,9 +236,6 @@ if, or when, the `condition` is met it will set the the specified configuration
  `blacklist`) from the configuration it will not undo settings that were
  conditionally activated when 'extended' was defined.
 
-
-### Value-based conditionals
-
  You can also make settings activate conditioned on another key having been set
  to a given value. The syntax for that is:
 
@@ -262,7 +246,7 @@ if, or when, the `condition` is met it will set the the specified configuration
 
 
 
-## 2.2 Dynamic Conditionals
+### 2.2 Dynamic Conditionals
 
  Other conditions are interpreted. For example CRUSH (which uses this 
  configuration engine) can activate settings based on observation date, on a 
@@ -274,7 +258,7 @@ if, or when, the `condition` is met it will set the the specified configuration
  date range.
 
     
-# 2.3 Placement of brackets
+### 2.3 Placement of brackets
 
  The use of branched conditions can be tricky. For interpreted conditions a key
  (e.g. `date` above for CRUSH) defines the rule by which the condition is 
@@ -314,21 +298,37 @@ if, or when, the `condition` is met it will set the the specified configuration
     forget conditions
 
 
+## 3. Advanced configuration
 
 
+### 3.1. Wildcards
 
-# 3. Persistent configuration
+ Thanks to the branching of configuration keys, wildcards `*` can be used to
+ configure all existing branches of a key at once. E.g.:
 
+    correlated.*.resolution=1.0
 
-## 3.1. Locking, unlocking, and relocking
+ Will set the `resolution` for every currently defined subkey of `correlated`. 
+ Thus, if you had `obs-channels`, `gradients` and `cables' modes already 
+ defined under `correlated` then the above is equivalent to:
 
+    correlated.obs-channels.resolution 1.0
+    correlated.gradients.resolution 1.0
+    correlated.cables.resolution 1.0
 
-## 3.2. Blacklisting
+ Additionally, wildcards can be used with the `forget`, `blacklist` or
+ `remove`. E.g.:
 
+     forget despike.*
+ 
+ clears all sub-settings of `despike` (while keeping `despike` itself enabled, 
+ if it already was).
 
+ Note, however, that wildcards will not have affect on options that will be
+ defined afterwards. They only act on the configuration tree at the time of
+ invocation.
 
-
-# 4. Aliases
+### 3.2. Aliases
     
 The configuration engine allows you to create your own shorthands for 
 convenience, using the `alias` directive. Some shorthands may be predefined 
@@ -367,7 +367,7 @@ unless the whole expressiobn is placed inside quotes.)
 
 
 
-# 5. References
+### 3.3. References
 
 The configuration engine allows both static and dynamics references to be 
 used when setting configuration values. All references are placed inside curly 
@@ -378,15 +378,15 @@ __Table.__ Referencing
 
   Description                   |   Symbol    |   Example		
   ------------------------------|-------------|----------------
-  Static reference to another	|     `&`     |  `{&datapath}`
+  Static reference to another   |     `&`     |  `{&datapath}`
   configuration value/property  |             |
                                 |             |
   Dynamic reference to a        |     `?`     |  `{?tau.225GHz}`
   configuration value/property  |             | 
                                 |             |
-  Shell environment variable	|     `@`     |  `{@HOME}`
+  Shell environment variable    |     `@`     |  `{@HOME}`
                                 |             |
-  Java property			|     `#`     |  `{#user.home}`
+  Java property                 |     `#`     |  `{#user.home}`
 
 
 Thus, for example, you can set the path to the output data (e.g. images)
@@ -450,7 +450,7 @@ specified by `outpath`.
 
 
 
-## 5.1 Path Names
+### 3.4. Path Names
 
  Path names generally follow the rules of your OS. However, in order to
  enable platform independent configuration files, the UNIX-like `/` (slash) is
@@ -472,20 +472,34 @@ specified by `outpath`.
 	
  Thus, in UNIX systems (including MacOS), you may use:
 
-    datapath={@HOME}/mydata             # environment variables
-    datapath={#user.home}/mydata        # Java properties
-    datapath=~/mydata                   # the '~' shorthand
-    datapath=~johndoe/data              # relative to another user
-    datapath=/mnt/data/2010             # Fully qualified path names
+    ~/mydata                           # using the '~' shorthand
+    {@HOME}/mydata                     # using environment variables
+    {#user.home}/mydata                # using Java properties
+    ~johndoe/data                      # relative to another user
+    "~/My Data"                        # path names in quotes
+    /mnt/data/2017                     # fully qualified path names
 
  while in Windows any of the following are acceptable:
 
-    "~\My Data"                         # Using the '~' shorthand
-    "{$HOMEPATH}\My Data"               # Using environment variables
-    "{#user.home}\My Data"              # Java properties
+    "~\My Data"                         # using the '~' shorthand
+    "{$HOMEPATH}\My Data"               # using environment variables
+    "{#user.home}\My Data"              # using Java properties
+    "~John Doe\Data"                    # relative to another user
     D:/data/Sharc2/2010                 # UNIX-style paths
     D:\data\Sharc2\2010                 # proper Windows paths
-    "~John Doe\Data"                    # relative to another user
+
+
+
+
+### 3.5. Locking, unlocking, and relocking
+
+ (_coming soon..._)
+
+### 3.6. Blacklisting
+
+ (_coming soon..._)
+
+
 
 
 
