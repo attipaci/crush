@@ -104,7 +104,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     @Override
     public int hashCode() {
-        return super.hashCode() ^ mount.hashCode() ^ arrangement.hashCode() ^ HashCode.from(resolution);
+        return super.hashCode() ^ mount.hashCode() ^ arrangement.hashCode() ^ HashCode.from(getResolution());
     }
 
     @Override
@@ -113,7 +113,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(!(o instanceof Instrument)) return false;
         if(!super.equals(o)) return false;
         Instrument<?> i = (Instrument<?>) o;
-        if(resolution != i.resolution) return false;
+        if(getResolution() != i.getResolution()) return false;
         if(!Util.equals(mount, i.mount)) return false;
         if(!Util.equals(arrangement, i.arrangement)) return false;
         return true;
@@ -207,7 +207,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(hasOption("frequency")) frequency = option("frequency").getDouble() * Unit.Hz;
         else if(hasOption("wavelength")) frequency = Constant.c / (option("wavelength").getDouble() * Unit.um);
             
-        if(hasOption("resolution")) resolution = option("resolution").getDouble() * getSizeUnit().value();
+        if(hasOption("resolution")) setResolution(option("resolution").getDouble() * getSizeUnit().value());
         if(hasOption("gain")) gain = option("gain").getDouble();
 
         if(arrangement != null) arrangement.validate(options);
@@ -358,7 +358,7 @@ implements TableFormatter.Entries, BasicMessaging {
         Hashtable<String, Vector<String>> settings = option("mjd").conditionals;
 
         for(String rangeSpec : settings.keySet()) 
-            if(Range.parse(rangeSpec, true).contains(MJD)) options.parseAll(settings.get(rangeSpec));		
+            if(Range.from(rangeSpec, true).contains(MJD)) options.parseAll(settings.get(rangeSpec));		
     }
 
 
@@ -393,7 +393,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         // Make options an independent set of options, setting MJD specifics...
         Hashtable<String, Vector<String>> settings = option("serial").conditionals;
-        for(String rangeSpec : settings.keySet()) if(Range.parse(rangeSpec, true).contains(serialNo)) {
+        for(String rangeSpec : settings.keySet()) if(Range.from(rangeSpec, true).contains(serialNo)) {
             //debug("Setting options for " + rangeSpec);
             options.parseAll(settings.get(rangeSpec));
         }
@@ -520,8 +520,8 @@ implements TableFormatter.Entries, BasicMessaging {
             }
             catch(NumberFormatException e) {}
 
-            Range r = Range.parse(spec, false);
-            if(r.isEmpty()) r = Range.parse(spec, true);
+            Range r = Range.from(spec, false);
+            if(r.isEmpty()) r = Range.from(spec, true);
             if(r.isEmpty()) {
                 warning("Could not parse flag." + pixelField.getName() + " indices from: " + spec);
                 continue;
@@ -1385,7 +1385,7 @@ implements TableFormatter.Entries, BasicMessaging {
         final double radius = 2.0 * pointSize;
         final Hashtable<Integer, ChannelType> lookup = getFixedIndexLookup();
 
-        double nbeams = 2.0 * pointSize / resolution;
+        double nbeams = 2.0 * pointSize / getResolution();
         final ArrayList<Integer> nearbyIndex = new ArrayList<Integer>((int) Math.ceil(nbeams * nbeams));
 
         for(Channel channel : this) {
@@ -1446,7 +1446,7 @@ implements TableFormatter.Entries, BasicMessaging {
         else if(name.equals("channels")) return size();
         else if(name.equals("maxchannels")) return storeChannels;
         else if(name.equals("mount")) return mount.name();
-        else if(name.equals("resolution")) return resolution / getSizeUnit().value();
+        else if(name.equals("resolution")) return getResolution() / getSizeUnit().value();
         else if(name.equals("sizeunit")) return getSizeUnit().name();
         else if(name.equals("ptfilter")) return getAverageFiltering();
         else if(name.equals("FWHM")) return getAverageBeamFWHM() / getSizeUnit().value();

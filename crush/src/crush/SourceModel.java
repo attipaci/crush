@@ -180,7 +180,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
         return clone();
     }
 
-    public SourceModel getCleanLocalCopy() {
+    public SourceModel getCleanLocalCopy() {        
         final int threads = getParallel();
         final ExecutorService executor = getExecutor();
 
@@ -266,10 +266,10 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
         enableWeighting &= increment.enableWeighting;
         enableBias &= increment.enableBias;
         
-        addModel(increment, weight);
+        addModelData(increment, weight);
     }
     
-    public abstract void addModel(SourceModel model, double weight);
+    public abstract void addModelData(SourceModel model, double weight);
 
     public abstract void add(Integration<?,?> integration);
 
@@ -584,7 +584,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public void error(Throwable e) { CRUSH.error(this, e); }
 
 
-    public synchronized SourceModel getCleanRecycledLocalCopy() {	
+    public synchronized SourceModel getRecycledCleanLocalCopy() {	
         if(recycler != null) if(!recycler.isEmpty()) {
             try { 
                 SourceModel model = recycler.take(); 

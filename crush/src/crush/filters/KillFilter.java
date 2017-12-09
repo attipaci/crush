@@ -71,7 +71,7 @@ public class KillFilter extends FixedFilter {
 		
 		if(hasOption("bands")) {
 			final List<String> ranges = option("bands").getList();
-			for(String rangeSpec : ranges) kill(Range.parse(rangeSpec, true));			
+			for(String rangeSpec : ranges) kill(Range.from(rangeSpec, true));			
 		}
 	}
 	

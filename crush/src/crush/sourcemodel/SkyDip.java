@@ -94,7 +94,7 @@ public class SkyDip extends SourceModel {
 	}
 	
 	@Override
-	public void addModel(SourceModel model, double weight) {
+	public void addModelData(SourceModel model, double weight) {
 		SkyDip other = (SkyDip) model;
 		Tamb.average(other.Tamb);
 		for(int i=data.length; --i >= 0; ) data[i].average(other.data[i]);

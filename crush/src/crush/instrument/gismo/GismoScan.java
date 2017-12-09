@@ -249,7 +249,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		Hashtable<String, Vector<String>> settings = option("ver").conditionals;
 		
 		for(String rangeSpec : settings.keySet()) 
-			if(Range.parse(rangeSpec, true).contains(fitsVersion)) instrument.getOptions().parseAll(settings.get(rangeSpec));
+			if(Range.from(rangeSpec, true).contains(fitsVersion)) instrument.getOptions().parseAll(settings.get(rangeSpec));
 	}
 	
 	public void setScanIDOptions(String id) {

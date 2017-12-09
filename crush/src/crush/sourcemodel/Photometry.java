@@ -81,7 +81,7 @@ public abstract class Photometry extends SourceModel {
     }
 
     @Override
-    public void addModel(SourceModel model, double weight) {
+    public void addModelData(SourceModel model, double weight) {
         Photometry other = (Photometry) model;
         double renorm = getInstrument().janskyPerBeam() / other.getInstrument().janskyPerBeam();
         for(int c=flux.length; --c >= 0; ) {

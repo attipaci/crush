@@ -108,7 +108,7 @@ public class MultiBeamMap extends AstroIntensityMap {
 	
 	
 	@Override
-	public void addModel(SourceModel model, double weight) {
+	public void addModelData(SourceModel model, double weight) {
 		MultiBeamMap multibeam = (MultiBeamMap) model;
 		super.add(multibeam, weight);
 		

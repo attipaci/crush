@@ -69,8 +69,10 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
 
     public abstract void filter(double filterFWHM, double filterBlanking, boolean useFFT);
 
+    public abstract void setFiltering(double FWHM);
+    
     public abstract void resetFiltering();
-
+    
     public abstract void filterBeamCorrect();
 
     public abstract void memCorrect(double lambda);
@@ -135,28 +137,30 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
         }
 
         Configurator filter = sourceOption("filter");
+        String mode = filter.isConfigured("type") ? filter.get("type").getValue() : "convolution";
 
+        double filterBlanking = (allowBlanking && filter.isConfigured("blank")) ? filter.get("blank").getDouble() : Double.POSITIVE_INFINITY;
+
+        filter(getFilterScale(filter), filterBlanking, mode.equalsIgnoreCase("fft"));  
+    }
+
+    public double getFilterScale(Configurator filter) {
         try { filter.mapValueTo("fwhm"); }
         catch(LockedException e) {} // TODO...
 
-        String mode = filter.isConfigured("type") ? filter.get("type").getValue() : "convolution";
         String directive = "auto";
 
         if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
 
-        double filterScale = directive.equals("auto") ? 5.0 * getSourceSize() : Double.parseDouble(directive) * getInstrument().getSizeUnit().value();
-        double filterBlanking = (allowBlanking && filter.isConfigured("blank")) ? filter.get("blank").getDouble() : Double.POSITIVE_INFINITY;
+        return directive.equals("auto") ? 5.0 * getSourceSize() : Double.parseDouble(directive) * getInstrument().getSizeUnit().value();
 
-        filter(filterScale, filterBlanking, mode.equalsIgnoreCase("fft"));  
     }
-
-
 
 
     @Override
     public void process(Scan<?, ?> scan) {
         DataType data = getData();
-
+        
         endAccumulation();          
         addBase();
 
@@ -173,9 +177,9 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
             data.despike(level);
         }
 
-        filter(NO_BLANKING);      
-
-        //validate();
+        filter(NO_BLANKING);   
+        
+        //data.validate();
 
         scan.weight = 1.0;              
         if(hasOption("weighting.scans")) {
@@ -199,10 +203,9 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
 
     @Override
     public void process() throws Exception {
-        // TODO --> 'spectral.smooth'     
-        
+        // TODO --> 'spectral.smooth'           
         endAccumulation();
-
+        
         nextGeneration(); // Increment the map generation...
 
         getInstrument().setResolution(getAverageResolution());
@@ -232,10 +235,11 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
         // level...
         if(hasSourceOption("filter")) {
             addProcessBrief("(filter) ");
-            filter(ENABLE_BLANKING);
+            setFiltering(getFilterScale(sourceOption("filter")));
+            //filter(ENABLE_BLANKING);
             filterBeamCorrect();
         }
-
+        
 
         // Noise and exposure clip after smoothing for evened-out coverage...
         // Eposure clip
@@ -267,7 +271,7 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
         }
 
         // discard any invalid data...
-        //map.validate();
+        //getData().validate();
 
         if(hasSourceOption("mem")) {
             addProcessBrief("(MEM) ");

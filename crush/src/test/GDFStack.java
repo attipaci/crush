@@ -62,7 +62,7 @@ public class GDFStack {
 					catalogName += ".rel";
 				}
 				else {
-					Range range = Range.parse(args[2], true);
+					Range range = Range.from(args[2], true);
 					stacker.readMIPSSources(catalogName, range);
 					catalogName += "." + range.min() + "--" + range.max();
 				}

@@ -1,4 +1,10 @@
+>> filter blanking does not work...
+>> pointing.crop
+
 2.41-a1
+
+	[BUG] There was a nasty bug from 2.40 that broke 'deep' reductions 
+	completely, and effected other reductions slightly.
 
 	[NEW] {SOFIA} Implemented a correction scheme for gyro drifts, based
 	on the guide-star relock data stored in the FITS headers. The 
@@ -12,10 +18,21 @@
 	polynomial coefficients are set by the 'maitau.225GHz' and
 	'maitau.350um' keywords. (The 'maitau.server' keyword is obsoleted.)
 
-	[FIX] {SHARC-2} default pixeldata path was incorrect. Fixed.
+	[FIX] source.filter using the FFT method was broken in 2.40
+	due to a missing back transform and some other mishaps. Ooops.
+	Luckily, the FFT method was not default... 
+
+	[FIX] Some fixes to convolution filtering (used in deep mode).
+
+	[FIX] {SHARC-2} default pixeldata path was incorrect.
+
+	[CONFIG] 'source.despike' disabled in deep mode. There is little
+	evidence it's ever needed, and it can cause trouble in some cases
+	if one isn't careful...
 
 	[CODE] Better recognition of jansky unit specification even if 
 	provided in the wrong case, e.g. as 'JY' or 'jy', or 'JANSKY'.
+
 
 
 2.40-2 (11 October 2017)

@@ -118,7 +118,7 @@ public class PolarMap extends SourceModel {
 	
 	
 	@Override
-	public void addModel(SourceModel model, double weight) {
+	public void addModelData(SourceModel model, double weight) {
 		PolarMap other = (PolarMap) model;
 		N.add(other.N, weight);
 		

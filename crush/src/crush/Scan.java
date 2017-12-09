@@ -593,7 +593,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public Object getTableEntry(String name) {
 		
 		
-		if(horizontal == null) horizontal = equatorial.toHorizontal(site, LST);
+		if(horizontal == null) if(equatorial != null) if(site != null)
+		    horizontal = equatorial.toHorizontal(site, LST);
 		
 		Object modelEntry = null;
 		if(sourceModel != null) modelEntry = sourceModel.getTableEntry(name);

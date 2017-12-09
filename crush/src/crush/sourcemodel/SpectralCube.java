@@ -276,7 +276,7 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
     }
 
     @Override
-    public void addModel(SourceModel model, double weight) {
+    public void addModelData(SourceModel model, double weight) {
         cube.accumulate(((SpectralCube) model).cube, weight);
     }
 

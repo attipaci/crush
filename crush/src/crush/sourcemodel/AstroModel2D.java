@@ -605,8 +605,8 @@ public abstract class AstroModel2D extends SourceModel {
                 super.init();
     
                 if(isAddingToMaster()) localSource = AstroModel2D.this;
-                else localSource = (AstroModel2D) getCleanRecycledLocalCopy();
-                 
+                else localSource = (AstroModel2D) getRecycledCleanLocalCopy();
+                
                 projector = new AstroProjector(localSource.getProjection());   
                 index = new Index2D();
             }
@@ -632,7 +632,9 @@ public abstract class AstroModel2D extends SourceModel {
             }
 
             @Override
-            public Integer getLocalResult() { return mappingFrames; }
+            public Integer getLocalResult() { 
+                return mappingFrames;         
+            }
 
             @Override
             public Integer getResult() {				
@@ -645,8 +647,8 @@ public abstract class AstroModel2D extends SourceModel {
                         mergeAccumulate(localMap);
                         localMap.recycle();
                     }
-                }
-   
+                }     
+                
                 return mappingFrames;
             }	
         }
@@ -677,7 +679,7 @@ public abstract class AstroModel2D extends SourceModel {
                 super.init();
 
                 if(isAddingToMaster()) localSource = AstroModel2D.this;
-                else localSource = (AstroModel2D) getCleanRecycledLocalCopy();
+                else localSource = (AstroModel2D) getRecycledCleanLocalCopy();
 
                 projector = new AstroProjector(localSource.getProjection());
                 index = new Index2D();
@@ -744,10 +746,12 @@ public abstract class AstroModel2D extends SourceModel {
                 integration, 
                 integration.instrument.getMappingPixels(0), 
                 instrument.getSourceGains(signalCorrection), 
-                        signalMode
-                );
+                signalMode
+        );
 
-        if(CRUSH.debug) debug("mapping frames:" + mappingFrames);
+        if(CRUSH.debug) {
+            debug("mapping frames: " + mappingFrames + " --> map points: " + countPoints());    
+        }
 
         if(signalCorrection)
             integration.comments += "[C~" + Util.f2.format(1.0/averageFiltering) + "] ";

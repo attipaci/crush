@@ -2368,7 +2368,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         if(hasOption("notch.bands")) {
             List<String> ranges = option("notch.bands").getList();
             for(String rangeSpec : ranges) {
-                Range range = Range.parse(rangeSpec, true);
+                Range range = Range.from(rangeSpec, true);
                 for(double f = range.min(); f<range.max(); f += width) frequencies.add(f);
             }
         }

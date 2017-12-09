@@ -107,7 +107,7 @@ public class BeamMap extends AstroModel2D {
 
 		
 	@Override
-	public void addModel(SourceModel model, double weight) {
+	public void addModelData(SourceModel model, double weight) {
 		if(!(model instanceof BeamMap)) throw new IllegalArgumentException("Cannot add " + model.getClass().getSimpleName() + " to " + getClass().getSimpleName());
 		BeamMap other = (BeamMap) model;
 		
