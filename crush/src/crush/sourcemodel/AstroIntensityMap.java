@@ -96,7 +96,7 @@ public class AstroIntensityMap extends AstroData2D<Observation2D> {
     @Override
     public void addModelData(SourceModel model, double weight) {  
         AstroIntensityMap astro = (AstroIntensityMap) model;
-        map.accumulate(astro.map, weight);  
+        map.accumulate(astro.map, weight);   
     }
 
     @Override
@@ -710,7 +710,8 @@ public class AstroIntensityMap extends AstroData2D<Observation2D> {
 
     @Override
     public void filter(double filterScale, double filterBlanking, boolean useFFT) {
-        Validating2D filterBlank = new RangeRestricted2D(map.getSignificance(), new Range(-filterBlanking, filterBlanking));
+        Validating2D filterBlank = Double.isNaN(filterBlanking) || Double.isInfinite(filterBlanking) ?
+                null : new RangeRestricted2D(map.getSignificance(), new Range(-filterBlanking, filterBlanking));
 
         if(useFFT) map.fftFilterAbove(filterScale, filterBlank);
         else map.filterAbove(filterScale, filterBlank);

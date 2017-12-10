@@ -330,6 +330,12 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
             plane.getProperties().setFilterBlanking(filterBlanking);
         }
     }
+    
+    @Override
+    public void setFiltering(double FWHM) {
+        for(Observation2D plane : cube.getPlanes()) plane.getProperties().updateFiltering(FWHM);
+    }
+
 
     @Override
     public void resetFiltering() {
@@ -387,6 +393,7 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
         });
        
     }
+
 
    
 }

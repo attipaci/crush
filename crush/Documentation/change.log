@@ -1,10 +1,26 @@
->> filter blanking does not work...
->> pointing.crop
+>> Integrated flux in 'deep' is 0?
+>> filter blanking does not work well...
+>> weighting.scans does not work in deep...
+>> 'pointing.crop'
+>> Filtering properties not in data...
 
 2.41-a1
 
 	[BUG] There was a nasty bug from 2.40 that broke 'deep' reductions 
 	completely, and effected other reductions slightly.
+
+	[NEW] New option 'pointing.crop' can be used to restrict the are of
+	the pointing fit, which may be useful in a 'crowded' field. The option
+	takes 2 pairs of range arguments, formally as:
+	
+	   <minX>:<maxX>, <minY>:<maxY>
+
+	Where the values are offsets (in arcsec) from the center position.
+	E.g:
+		
+	   pointing.crop = -20:20, -20:20
+
+	will point only in the central 40" x 40" patch of the image.
 
 	[NEW] {SOFIA} Implemented a correction scheme for gyro drifts, based
 	on the guide-star relock data stored in the FITS headers. The 

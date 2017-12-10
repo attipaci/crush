@@ -139,7 +139,7 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
         Configurator filter = sourceOption("filter");
         String mode = filter.isConfigured("type") ? filter.get("type").getValue() : "convolution";
 
-        double filterBlanking = (allowBlanking && filter.isConfigured("blank")) ? filter.get("blank").getDouble() : Double.POSITIVE_INFINITY;
+        double filterBlanking = (allowBlanking && filter.isConfigured("blank")) ? filter.get("blank").getDouble() : Double.NaN;
 
         filter(getFilterScale(filter), filterBlanking, mode.equalsIgnoreCase("fft"));  
     }
@@ -177,6 +177,7 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
             data.despike(level);
         }
 
+        
         filter(NO_BLANKING);   
         
         //data.validate();
