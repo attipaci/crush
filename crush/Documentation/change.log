@@ -1,27 +1,16 @@
->> Integrated flux in 'deep' is 0?
->> filter blanking does not work well...
->> weighting.scans does not work in deep...
->> 'pointing.crop'
->> Filtering properties not in data...
+>> filter blanking does not work well (deprecate source.filter.blank?)
+>> weighting.scans does not work in deep(?)...
+>> crushtools does not recognise filtering (?)...
 
 2.41-a1
 
 	[BUG] There was a nasty bug from 2.40 that broke 'deep' reductions 
 	completely, and effected other reductions slightly.
 
-	[NEW] New option 'pointing.crop' can be used to restrict the are of
-	the pointing fit, which may be useful in a 'crowded' field. The option
-	takes 2 pairs of range arguments, formally as:
+	[NEW] New option 'pointing.radius' (in arcsec) can be used to restrict 
+	the pointing fit to a circular area around the nominal center position.
+	It may be useful for deriving ponting in a crowded' field.
 	
-	   <minX>:<maxX>, <minY>:<maxY>
-
-	Where the values are offsets (in arcsec) from the center position.
-	E.g:
-		
-	   pointing.crop = -20:20, -20:20
-
-	will point only in the central 40" x 40" patch of the image.
-
 	[NEW] {SOFIA} Implemented a correction scheme for gyro drifts, based
 	on the guide-star relock data stored in the FITS headers. The 
 	correction is not enabled by default (as it can be troublesome when
@@ -34,6 +23,9 @@
 	polynomial coefficients are set by the 'maitau.225GHz' and
 	'maitau.350um' keywords. (The 'maitau.server' keyword is obsoleted.)
 
+	[FIX] Integrated fluxes weren't reported correctly by the pointing
+	fits.
+
 	[FIX] source.filter using the FFT method was broken in 2.40
 	due to a missing back transform and some other mishaps. Ooops.
 	Luckily, the FFT method was not default... 
@@ -41,6 +33,9 @@
 	[FIX] Some fixes to convolution filtering (used in deep mode).
 
 	[FIX] {SHARC-2} default pixeldata path was incorrect.
+
+	[TWEAK] Improved pointing fits now concetrate more on the central
+	peak, can deal with negative peaks, and less likely to stall.
 
 	[CONFIG] 'source.despike' disabled in deep mode. There is little
 	evidence it's ever needed, and it can cause trouble in some cases

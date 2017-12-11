@@ -127,7 +127,7 @@ public class AstroIntensityMap extends AstroData2D<Observation2D> {
 
         map.setParallel(CRUSH.maxThreads);
         map.setGrid(getGrid());
-        map.setCriticalFlags(~FLAG_MASK);  
+        map.setValidatingFlags(~FLAG_MASK);  
 
         map.addLocalUnit(getNativeUnit());
         map.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky, JY, jy, JANSKY");
@@ -327,9 +327,8 @@ public class AstroIntensityMap extends AstroData2D<Observation2D> {
                 exposure.restrictRange(new Range(option("pointing.exposureclip").getDouble() * exposure.select(0.9), Double.POSITIVE_INFINITY));
             }
 
-            if(hasOption("pointing.crop")) {
-                final Range2D range = option("pointing.crop").getRange2D();
-                range.scale(Unit.arcsec);
+            if(hasOption("pointing.radius")) {
+                final double r = option("pointing.radius").getDouble() * Unit.arcsec;
 
                 map.new Fork<Void>() {
                     private Vector2D offset;
@@ -343,7 +342,7 @@ public class AstroIntensityMap extends AstroData2D<Observation2D> {
                     protected void process(int i, int j) {
                         offset.set(i, j);
                         map.getGrid().toOffset(offset);
-                        if(!range.contains(offset)) map.discard(i, j);
+                        if(offset.length() > r) map.discard(i, j);
                     }
                 }.process();
             }
@@ -379,13 +378,14 @@ public class AstroIntensityMap extends AstroData2D<Observation2D> {
         MapProperties properties = map.getProperties();
 
         Gaussian2D beam = map.getProperties().getImageBeam();
+        
         EllipticalSource source = new EllipticalSource(getPeakCoords(), beam.getMajorFWHM(), beam.getMinorFWHM(), beam.getPositionAngle());
 
         source.setPeakPositioning();
         if(hasOption("pointing.method")) if(option("pointing.method").is("centroid")) source.setCentroidPositioning();
 
         source.adaptTo(map);
-        source.deconvolveWith(properties.getUnderlyingBeam());
+        source.deconvolveWith(properties.getSmoothing());
 
         double criticalS2N = hasOption("pointing.significance") ? option("pointing.significance").getDouble() : 5.0;
         if(source.getPeak().significance() < criticalS2N) return null;

@@ -851,7 +851,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			data.new Entry("elong", 100.0 * elongation.value(), "%");
 			data.new Entry("delong", 100.0 * elongation.rms(), "%");
 			
-			DataPoint angle = ellipse.getAngle();
+			DataPoint angle = ellipse.getPositionAngle();
 			data.new Entry("angle", angle.value(), deg);
 			data.new Entry("dangle", angle.value(), deg);
 			
@@ -901,7 +901,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public DataPoint getSourceElongationX(EllipticalSource ellipse) {
 		DataPoint elongation = new DataPoint(ellipse.getElongation());
-		DataPoint angle = new DataPoint(ellipse.getAngle());
+		DataPoint angle = new DataPoint(ellipse.getPositionAngle());
 		
 		if(instrument instanceof GroundBased && pointing.getCoordinates() instanceof EquatorialCoordinates) {
 			angle.add(-getPA());
