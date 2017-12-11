@@ -326,6 +326,9 @@ public class AstroIntensityMap extends AstroData2D<Observation2D> {
                 Data2D exposure = map.getExposures();     
                 exposure.restrictRange(new Range(option("pointing.exposureclip").getDouble() * exposure.select(0.9), Double.POSITIVE_INFINITY));
             }
+            
+            // Robust weight before restricting to potentially tiny search area...
+            map.reweight(true);
 
             if(hasOption("pointing.radius")) {
                 final double r = option("pointing.radius").getDouble() * Unit.arcsec;
@@ -347,7 +350,6 @@ public class AstroIntensityMap extends AstroData2D<Observation2D> {
                 }.process();
             }
 
-            map.reweight(true);
 
             scan.pointing = getPeakSource();
         }
@@ -371,7 +373,7 @@ public class AstroIntensityMap extends AstroData2D<Observation2D> {
         return projector.getCoordinates();
     }
 
-    // TODO for non spherical coordinates...
+
     public GaussianSource getPeakSource() {
         map.level(true);
 
@@ -385,7 +387,7 @@ public class AstroIntensityMap extends AstroData2D<Observation2D> {
         if(hasOption("pointing.method")) if(option("pointing.method").is("centroid")) source.setCentroidPositioning();
 
         source.adaptTo(map);
-        source.deconvolveWith(properties.getSmoothing());
+        source.deconvolveWith(properties.getSmoothingBeam());
 
         double criticalS2N = hasOption("pointing.significance") ? option("pointing.significance").getDouble() : 5.0;
         if(source.getPeak().significance() < criticalS2N) return null;
