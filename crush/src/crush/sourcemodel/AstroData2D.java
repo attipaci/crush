@@ -176,21 +176,24 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
             if(despike.isConfigured("level")) level = despike.get("level").getDouble();
             data.despike(level);
         }
-
         
         filter(NO_BLANKING);   
         
         //data.validate();
-
+        
         scan.weight = 1.0;              
         if(hasOption("weighting.scans")) {
             Configurator weighting = option("weighting.scans");
+            
+            try { weighting.mapValueTo("method"); } 
+            catch (LockedException e) {}
+            
             String method = "rms";
             if(weighting.isConfigured("method")) method = weighting.get("method").getValue().toLowerCase();
-            else if(weighting.getValue().length() > 0) method = weighting.getValue().toLowerCase();
             scan.weight = 1.0 / getChi2(method.equals("robust"));
             if(Double.isNaN(scan.weight)) scan.weight = 0.0;
         }
+
 
         if(hasOption("scanmaps")) {
             try { writeFits(CRUSH.workPath + File.separator + "scan-" + (int)scan.getMJD() + "-" + scan.getID() + ".fits"); }
@@ -236,8 +239,8 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
         // level...
         if(hasSourceOption("filter")) {
             addProcessBrief("(filter) ");
-            setFiltering(getFilterScale(sourceOption("filter")));
-            //filter(ENABLE_BLANKING);
+            //setFiltering(getFilterScale(sourceOption("filter")));
+            filter(ENABLE_BLANKING);
             filterBeamCorrect();
         }
         

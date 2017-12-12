@@ -48,7 +48,6 @@ import jnum.data.image.region.GaussianSource;
 import jnum.data.image.region.SourceCatalog;
 import jnum.math.Coordinate2D;
 import jnum.math.Range;
-import jnum.math.Range2D;
 import jnum.math.Vector2D;
 import jnum.parallel.ParallelPointOp;
 import jnum.parallel.ParallelTask;
@@ -127,7 +126,7 @@ public class AstroIntensityMap extends AstroData2D<Observation2D> {
 
         map.setParallel(CRUSH.maxThreads);
         map.setGrid(getGrid());
-        map.setValidatingFlags(~FLAG_MASK);  
+        map.setValidatingFlags(~(FLAG_MASK));  
 
         map.addLocalUnit(getNativeUnit());
         map.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky, JY, jy, JANSKY");

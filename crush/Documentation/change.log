@@ -1,11 +1,13 @@
->> filter blanking does not work well (deprecate source.filter.blank?)
->> weighting.scans does not work in deep(?)...
->> crushtools does not recognise filtering (?)...
+>> test weighting scans 
+
 
 2.41-a1
 
 	[BUG] There was a nasty bug from 2.40 that broke 'deep' reductions 
 	completely, and effected other reductions slightly.
+
+	[BUG] Another equally nasty bug makde filter corrections (also used
+	in 'deep') completely garbage. Fixed.
 
 	[NEW] New option 'pointing.radius' (in arcsec) can be used to restrict 
 	the pointing fit to a circular area around the nominal center position.
@@ -22,6 +24,10 @@
 	MaiTau data there will ever be. The files with the 225GHz and 350um
 	polynomial coefficients are set by the 'maitau.225GHz' and
 	'maitau.350um' keywords. (The 'maitau.server' keyword is obsoleted.)
+
+	[FIX] {crushtools} Image processing tools (e.g. 'show', 'imagetool'
+	or 'detect' have not recognised extended structure filtering by
+	recen (>2.30) crush releases.
 
 	[FIX] Integrated fluxes weren't reported correctly by the pointing
 	fits.
