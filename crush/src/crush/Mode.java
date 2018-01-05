@@ -196,8 +196,8 @@ public class Mode implements Serializable {
         if(fixedGains) throw new IllegalStateException("Cannot solve gains for fixed gain modes.");
 
         float[] G0 = getGains();
-
-        WeightedPoint[] G = phaseGains && integration.isPhaseModulated()  
+      
+        WeightedPoint[] G = phaseGains && integration.isPhaseModulated()
                 ? ((PhaseModulated) integration).getPhases().getGainIncrement(this) 
                 : integration.getSignal(this).getGainIncrement(isRobust);
                 

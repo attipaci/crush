@@ -86,7 +86,7 @@ public class PhaseSignal implements Serializable {
 	protected void update(boolean isRobust) throws Exception {
 		// Make syncGains carry the gain increment since last sync...
 		syncGains();
-		
+			
 		final float[] G = mode.getGains();
 		final ChannelGroup<?> channels = mode.getChannels();
 		
@@ -163,6 +163,7 @@ public class PhaseSignal implements Serializable {
 		}.process();
 	
 		phaseParms.apply(channels);
+	
 		
 		generation++;
 		setSyncGains(G);

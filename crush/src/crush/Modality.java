@@ -116,9 +116,9 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		resolution = option.isConfigured("resolution") ? option.get("resolution").getDouble() * Unit.s : 0.0;
 		trigger = option.isConfigured("trigger") ? option.get("trigger").getValue() : null;
 		
-		if(option.isConfigured("nogains")) solveGains = false;	
-		if(option.isConfigured("phasegains")) phaseGains = true;
-		
+		solveGains = !option.isConfigured("nogains");	
+		phaseGains = option.isConfigured("phasegains");
+
 		boolean noGainField = option.isConfigured("nofield");
 		
 		setGainRange(option.isConfigured("gainrange") ? option.get("gainrange").getRange() : Range.getFullRange());

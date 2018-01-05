@@ -76,7 +76,12 @@ public class PhaseSet extends ArrayList<PhaseData> {
     }
 
     public PhaseSignal getSignal(Mode mode) {
-        return signals.get(mode);
+        PhaseSignal signal = signals.get(mode);
+        if(signal == null) if(mode instanceof CorrelatedMode) {
+            signal = new PhaseSignal(this, (CorrelatedMode) mode);
+            signals.put(mode, signal);
+        }
+        return signal;
     }
 
     public Integration<?,?> getIntegration() { return integration; }
@@ -86,7 +91,6 @@ public class PhaseSet extends ArrayList<PhaseData> {
     }
 
     public void update(ChannelGroup<?> channels) {
-
         integration.comments += ":P";
 
         for(PhaseData phase : this) phase.update(channels, integrationDeps);	
@@ -114,7 +118,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
     }
 
     public WeightedPoint[] getGainIncrement(Mode mode) {
-        return signals.get(mode).getGainIncrement();
+        return getSignal(mode).getGainIncrement();
     }
 
     protected void syncGains(final Mode mode) throws Exception {
@@ -170,7 +174,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
     }
 
 
-    public double getMeanLevel(Channel channel, int phaseValue) {
+    public double ZgetMeanLevel(Channel channel, int phaseValue) {
         double sum = 0.0, sumw = 0.0;
         for(PhaseData p : this) if(p.phase == phaseValue) if(p.isUnflagged(channel)) {
             sum += p.weight[channel.index] * p.value[channel.index];

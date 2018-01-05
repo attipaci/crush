@@ -1,13 +1,20 @@
->> test weighting scans 
+
+2.41-b1
 
 
-2.41-a1
+	[BUG] {APEX} Photometry reductions badly broken, for multiple reasons.
+	First, chopper positions weren't used due ot a coding bug. Second,
+	the chopper-phase decorrelation was fatally disabled.
 
 	[BUG] There was a nasty bug from 2.40 that broke 'deep' reductions 
 	completely, and effected other reductions slightly.
 
 	[BUG] Another equally nasty bug makde filter corrections (also used
 	in 'deep') completely garbage. Fixed.
+
+	[NEW] Packaging with OpenJDK compilation (instead of Eclipse's 
+	compiler), and new packaging script, and now bundling compression
+	libs also.
 
 	[NEW] New option 'pointing.radius' (in arcsec) can be used to restrict 
 	the pointing fit to a circular area around the nominal center position.
@@ -43,6 +50,16 @@
 	[TWEAK] Improved pointing fits now concetrate more on the central
 	peak, can deal with negative peaks, and less likely to stall.
 
+	[CONFIG] {HAWC+} Updated array geometry parameters for 2017-October
+	flight series (the focal planes got a new suspension just before,
+	so a change was expected.)
+
+	[CONFIG] {chopped} Velocity clipping ('vclip') and downsampling
+	are disabled by default for 'chopped' data.
+
+	[CONFIG] {APEX} Configuration for chopped photometry data moved
+	to 'apex/chopped.cfg'.
+	
 	[CONFIG] 'source.despike' disabled in deep mode. There is little
 	evidence it's ever needed, and it can cause trouble in some cases
 	if one isn't careful...

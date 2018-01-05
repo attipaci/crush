@@ -128,7 +128,7 @@ public class APEXChoppedPhotometry extends Photometry {
 		info("Note, that the results of the APEX chopped photometry reduction below include "
 		        + "an estimate of the systematic errors, based on the true scatter of the chopped "
 		        + "photometry measurements in each nod cycle. As such, these errors are higher than "
-		        + "expected from the nominal NEFD values alone, and reflect thephotometric uncertainty "
+		        + "expected from the nominal NEFD values alone, and reflect the photometric uncertainty "
 		        + "more accurately.");
 		
 		

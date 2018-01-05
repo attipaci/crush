@@ -250,6 +250,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 			default: sinA = 0.0; cosA = 1.0;
 			}		
 		}
+		
 		return true;
 	}
 	

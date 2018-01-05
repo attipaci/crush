@@ -284,7 +284,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         System.gc();
 
         isValid = true;
-
+        
         if(hasOption("speedtest")) speedTest();
     }
 

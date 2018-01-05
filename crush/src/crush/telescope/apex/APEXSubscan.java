@@ -43,7 +43,7 @@ import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
 public class APEXSubscan<InstrumentType extends APEXCamera<? extends APEXContinuumPixel>, FrameType extends APEXFrame> 
-extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping {
+extends Integration<InstrumentType, FrameType> implements PhaseModulated, GroundBased, Chopping {
 	/**
 	 * 
 	 */
@@ -162,7 +162,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 		
 		for(Frame exposure : this) if(exposure != null) {
 			exposure.unflag(Frame.CHOP_FLAGS);
-			
+				
 			if(Math.abs(exposure.chopperPosition.x() + chopper.amplitude) < tolerance) {
 				exposure.flag(Frame.CHOP_LEFT);
 				if(current.phase != Frame.CHOP_LEFT) {
@@ -498,11 +498,11 @@ extends Integration<InstrumentType, FrameType> implements GroundBased, Chopping 
 					
 					exposure.chopperPhase = phase[t];          
                     exposure.nodFlag = nodPhase;
-					
+				    
 					// Add the chopper offsets, if available...
-					if(chop != null) if(chop[t] > -m900) {
+					if(chop != null) if(chop[t] > m900) {			    
 					    exposure.chopperPosition.setX(chop[t] * Unit.deg);
-					    
+		
 					    if(!chopperIncluded) {
 					        // Add the chopping offsets to the horizontal coordinates and offsets
 					        exposure.horizontal.addX(exposure.chopperPosition.x() / exposure.horizontal.cosLat());

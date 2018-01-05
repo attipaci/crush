@@ -58,11 +58,13 @@ public class SkyDip extends SourceModel {
 	@Override
 	public SourceModel getWorkingCopy(boolean withContents) {
 		SkyDip copy = (SkyDip) super.getWorkingCopy(withContents);
-		copy.data = new WeightedPoint[data.length];
 		if(Tamb != null) copy.Tamb = (WeightedPoint) Tamb.clone();
 		
-		if(withContents) for(int i=data.length; --i >= 0; ) copy.data[i] = (WeightedPoint) data[i].clone();
-		else WeightedPoint.createArray(data.length);
+		if(withContents) {
+		    copy.data = new WeightedPoint[data.length];
+		    for(int i=data.length; --i >= 0; ) copy.data[i] = (WeightedPoint) data[i].clone();
+		}
+		else copy.data = WeightedPoint.createArray(data.length);
 		return copy;
 	}
 	

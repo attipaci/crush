@@ -59,8 +59,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.41-a1";
-    private static String revision = "devel.6";
+    private static String version = "2.41-b1";
+    private static String revision = "devel.1";
 
     public static String workPath = ".";
     public static String home = ".";

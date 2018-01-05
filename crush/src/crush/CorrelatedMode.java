@@ -83,11 +83,10 @@ public class CorrelatedMode extends Mode {
 		CorrelatedSignal signal = (CorrelatedSignal) integration.getSignal(this);
 		if(signal == null) signal = new CorrelatedSignal(this, integration);
 		signal.update(isRobust); 	
-
-		// Solve for the correlated phases also, if required
+		
+		// Solve for the correlated phases also, if required...
 		if(integration.isPhaseModulated()) if(integration.hasOption("phases")) {
-			PhaseSignal pSignal = ((PhaseModulated) integration).getPhases().signals.get(this);
-			if(pSignal == null) pSignal = new PhaseSignal(((PhaseModulated) integration).getPhases(), this);
+			PhaseSignal pSignal = ((PhaseModulated) integration).getPhases().getSignal(this);
 			pSignal.update(isRobust);
 		}
 	}	

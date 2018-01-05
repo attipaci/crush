@@ -187,6 +187,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		        info("Processing integration " + (i+1) + ":");
 				integration.validate();
 				i++;
+				debug("Integration has " + integration.getFrameCount(~0) + " valid frames.");
 			}
 			catch(Exception e) {
 				integration.warning("Integration " + (i+1) + " validation error (dropping from set):\n   --> " + e.getMessage());
