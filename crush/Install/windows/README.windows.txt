@@ -2,7 +2,7 @@
 	
 Author: Attila Kovacs <attila[AT]sigmyne.com>
 
-Last updated: 22 February 2017
+Last updated: 5 January 2018
 
 -----------------------------------------------------------------------------
 
@@ -71,7 +71,7 @@ for the Windows OS.
 
  Download the latest CRUSH package from:
 
-   http://www.submm.caltech.edu/~sharc/crush
+   http://www.sigmyne.com/crush
  
  You probably want to get the executable installer (`.EXE`). If that does not
  suit you, you can also download one of the archives (ZIP or tarball).

@@ -7,9 +7,9 @@
 	the chopper-phase decorrelation was fatally disabled.
 
 	[BUG] There was a nasty bug from 2.40 that broke 'deep' reductions 
-	completely, and effected other reductions slightly.
+	completely, and affected other reductions slightly.
 
-	[BUG] Another equally nasty bug makde filter corrections (also used
+	[BUG] Another equally nasty bug made filter corrections (also used
 	in 'deep') completely garbage. Fixed.
 
 	[NEW] Packaging with OpenJDK compilation (instead of Eclipse's 
@@ -63,6 +63,9 @@
 	[CONFIG] 'source.despike' disabled in deep mode. There is little
 	evidence it's ever needed, and it can cause trouble in some cases
 	if one isn't careful...
+
+	[DOC] Updated 'README.rebuild' for new source package organization.
+        (now in markdown format also).
 
 	[CODE] Better recognition of jansky unit specification even if 
 	provided in the wrong case, e.g. as 'JY' or 'jy', or 'JANSKY'.

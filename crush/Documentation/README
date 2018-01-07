@@ -1,7 +1,7 @@
 # CRUSH
 
 Author: Attila Kovacs <attila[AT]sigmyne.com>  
-Last updated: 16 November 2017
+Last updated: 5 January 2018
 
 
 ----------------------------------------------------------------------------
@@ -89,7 +89,7 @@ virtually any fast-sampling scanning camera.
 
   You can get the latest version of CRUSH from:
 
-   http://www.submm.caltech.edu/~sharc/crush 
+   http://www.sigmyne.com/crush 
 
   Linux users can grab one of the distribution packages to install CRUSH via
   a package manager. Packages are provided for both RPM-based distributions 
@@ -2546,7 +2546,7 @@ minupulating (`imagetool`), and coadding (`coadd`) or differencing
 Downloading the CRUSH package(s), and further information on the FITS images
 is available at:
 
-  http://www.submm.caltech.edu/~sharc/crush
+  http://www.sigmyne.com/crush
 
 I hope you'll find this helpful and may you end up with beautiful images!!!
 
