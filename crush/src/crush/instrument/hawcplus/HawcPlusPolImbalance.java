@@ -1,4 +1,5 @@
 /*******************************************************************************
+
  * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 

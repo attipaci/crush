@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -88,7 +88,7 @@ implements Copiable<ChannelGroup<ChannelType>> {
 
     public void setName(String value) { name = value; }
 
-    public ChannelGroup<ChannelType> copyGroup() {
+    public ChannelGroup<ChannelType> createGroup() {
         // All good channels
         ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>(name, size());
         channels.addAll(this);

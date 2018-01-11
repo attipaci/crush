@@ -76,7 +76,7 @@ public class CorrelatedMode extends Mode {
 	}
 
 	public ChannelGroup<?> getValidChannels() {
-		return getChannels().copyGroup().discard(skipFlags);
+		return getChannels().createGroup().discard(skipFlags);
 	}
 	
 	public void updateSignals(Integration<?, ?> integration, boolean isRobust) throws Exception {	

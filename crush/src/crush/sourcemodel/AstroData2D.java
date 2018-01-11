@@ -221,7 +221,7 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
         if(hasSourceOption("filter") && getSourceSize() > 0.0) addProcessBrief("{filter} ");
 
         if(enableWeighting) if(hasOption("weighting.scans"))
-            for(Scan<?,?> scan : getScans()) addProcessBrief("{" + Util.f2.format(scan.weight) + "} ");
+            for(Scan<?,?> scan : getScans()) addProcessBrief("{" + Util.f2.format(1.0/Math.sqrt(scan.weight)) + "x} ");
 
         if(hasSourceOption("redundancy"))  {
             addProcessBrief("(check) ");

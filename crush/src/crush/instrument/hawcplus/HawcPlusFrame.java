@@ -42,6 +42,8 @@ public class HawcPlusFrame extends SofiaFrame {
     float hwpAngle;
     byte[] jumpCounter;
     
+    public float LOS, roll;
+    
     int status;
 
     boolean isComplete = false;

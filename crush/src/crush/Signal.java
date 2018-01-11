@@ -555,7 +555,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	}
 	
 	public double getCovariance() {
-		final ChannelGroup<?> channels = mode.getChannels().copyGroup().discard(~0);
+		final ChannelGroup<?> channels = mode.getChannels().createGroup().discard(~0);
 		final int nc = integration.instrument.size();
 		
 		final double[] sumXS = new double[nc];

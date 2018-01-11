@@ -40,6 +40,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public boolean hasJumps = false;
 	
 	public double subGain = 1.0, muxGain = 1.0, pinGain = 1.0, biasGain = 1.0, seriesGain = 1.0;
+	public double losGain = 1.0, rollGain = 1.0;
 	
 	int jumpCounter = 0;
 	
@@ -124,6 +125,8 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public final static int FLAG_ROW = softwareFlags.next('R', "Bad detector row gain").value();
 	public final static int FLAG_SERIES_ARRAY = softwareFlags.next('M', "Bad series array gain").value();
 	public final static int FLAG_FLICKER = softwareFlags.next('T', "Flicker noise").value();
+	public final static int FLAG_LOS_RESPONSE = softwareFlags.next('L', "LOS response").value();
+	public final static int FLAG_ROLL_RESPONSE = softwareFlags.next('\\', "Roll response").value();
 
     
 

@@ -44,150 +44,150 @@ import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
 public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -3732251029215505308L;
-	
-	GyroDrifts gyroDrifts;
-	String priorPipelineStep;
-	boolean useBetweenScans;	
-		
-	double transitTolerance = Double.NaN;
-	
-	double focusTOffset;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -3732251029215505308L;
 
-	
-	public HawcPlusScan(HawcPlus instrument) {
-		super(instrument);
-		// Turn off warnings about multiple occurences of header keys...
-		if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
-	}
+    GyroDrifts gyroDrifts;
+    String priorPipelineStep;
+    boolean useBetweenScans;	
 
-	@Override
-	public HawcPlusIntegration getIntegrationInstance() {
-		return new HawcPlusIntegration(this);
-	}
+    double transitTolerance = Double.NaN;
 
-	@Override
+    double focusTOffset;
+
+
+    public HawcPlusScan(HawcPlus instrument) {
+        super(instrument);
+        // Turn off warnings about multiple occurences of header keys...
+        if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
+    }
+
+    @Override
+    public HawcPlusIntegration getIntegrationInstance() {
+        return new HawcPlusIntegration(this);
+    }
+
+    @Override
     public boolean isAORValid() {
-	    // In the early comissioning runs CDH defaulted to AOR being '0' instead of 'UNKNOWN'
+        // In the early comissioning runs CDH defaulted to AOR being '0' instead of 'UNKNOWN'
         return super.isAORValid() && !observation.aorID.equals("0");
     }
-	
-	@Override
+
+    @Override
     protected boolean isFileNameMatching(String fileName, int flightNo, int scanNo) {
-	    if(super.isFileNameMatching(fileName, flightNo, scanNo)) return true;
-	    
-	    // E.g. F0004_HC_IMA_0_HAWC_HWPC_RAW_109.fits
-	    String upperCaseName = fileName.toUpperCase();
-	    
-	    // 1. Check if the file name contains the instrument ID...
-	    if(!upperCaseName.contains("_" + instrument.getFileID().toUpperCase())) return false;
-	    	
-	    // 2. Check if the file name starts with the flight ID...
+        if(super.isFileNameMatching(fileName, flightNo, scanNo)) return true;
+
+        // E.g. F0004_HC_IMA_0_HAWC_HWPC_RAW_109.fits
+        String upperCaseName = fileName.toUpperCase();
+
+        // 1. Check if the file name contains the instrument ID...
+        if(!upperCaseName.contains("_" + instrument.getFileID().toUpperCase())) return false;
+
+        // 2. Check if the file name starts with the flight ID...
         String oldFlightID = "F" + Util.d4.format(flightNo) + "_"; 
         if(!upperCaseName.startsWith(oldFlightID)) return false;
-        
+
         // 3. Check if the file name contains the scans ID and a '.fits' extension...
         String oldScanID = "_" + Util.d3.format(scanNo) + ".FITS";
         return upperCaseName.contains(oldScanID);         
-	}
-	    
-	@Override
+    }
+
+    @Override
     public boolean isRequestedValid(SofiaHeader header) {
-	    if(!super.isRequestedValid(header)) return false;
-	    
-	    // Early CDH workaround when OBSRA=1.0 and OBSDEC=2.0 hardcoded...
+        if(!super.isRequestedValid(header)) return false;
+
+        // Early CDH workaround when OBSRA=1.0 and OBSDEC=2.0 hardcoded...
         double obsRA = header.getDouble("OBSRA");
         double obsDEC = header.getDouble("OBSDEC");
-        
+
         return !(obsRA == 1.0 && obsDEC == 2.0);
-	}
-	
-	@Override
-	public void parseHeader(SofiaHeader header) throws Exception {
-	    /*
+    }
+
+    @Override
+    public void parseHeader(SofiaHeader header) throws Exception {
+        /*
 	    if(header.containsKey("CMTFILE")) {
 	        String type = header.getString("CMTFILE").toLowerCase();
 	        if(!type.contains("scan")) throw new IllegalStateException("File does not appear to be a scan: " + type);
 	    }
-	    */
-	    
-	    priorPipelineStep = header.getString("PROCLEVL");
-		
-	    // If using real-time object coordinates regardless of whether sidereal or not, then treat as if non-sidereal...
-		// Update: (Nov 2016)
-	    //   NONSIDE has been removed from the FITS as there was no automatic way of setting it
-	    //           it relied on a manual checkbox in the CDH GUI.
-	    isNonSidereal = header.getBoolean("NONSIDE", false) || hasOption("rtoc");
-	    
-		if(hasOption("OBJRA") && hasOption("OBJDEC")) 
-		    objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
-			
-		super.parseHeader(header);	
-	
-		focusTOffset = header.getDouble("FCSTOFF") * Unit.um;
-		if(!Double.isNaN(focusTOffset)) info("Focus T Offset: " + Util.f1.format(focusTOffset / Unit.um));    
+         */
 
-		gyroDrifts = new GyroDrifts(this);
-		gyroDrifts.parse(header);
-	}
-	
-	@Override
+        priorPipelineStep = header.getString("PROCLEVL");
+
+        // If using real-time object coordinates regardless of whether sidereal or not, then treat as if non-sidereal...
+        // Update: (Nov 2016)
+        //   NONSIDE has been removed from the FITS as there was no automatic way of setting it
+        //           it relied on a manual checkbox in the CDH GUI.
+        isNonSidereal = header.getBoolean("NONSIDE", false) || hasOption("rtoc");
+
+        if(hasOption("OBJRA") && hasOption("OBJDEC")) 
+            objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
+
+        super.parseHeader(header);	
+
+        focusTOffset = header.getDouble("FCSTOFF") * Unit.um;
+        if(!Double.isNaN(focusTOffset)) info("Focus T Offset: " + Util.f1.format(focusTOffset / Unit.um));    
+
+        gyroDrifts = new GyroDrifts(this);
+        gyroDrifts.parse(header);
+    }
+
+    @Override
     protected EquatorialCoordinates guessReferenceCoordinates(SofiaHeader header) {
-	    if(isNonSidereal) {
-	        info("Referencing images to real-time object coordinates.");
-	        return null;
-	    }
-	    return super.guessReferenceCoordinates(header);
-	}
-	
-	    
-	@Override
-	public void editScanHeader(Header header) throws HeaderCardException {
-		super.editScanHeader(header);
-		Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-		if(priorPipelineStep != null) c.add(new HeaderCard("PROCLEVL", priorPipelineStep, "Last processing step on input scan."));	
-	}
+        if(isNonSidereal) {
+            info("Referencing images to real-time object coordinates.");
+            return null;
+        }
+        return super.guessReferenceCoordinates(header);
+    }
 
-	@Override
+
+    @Override
+    public void editScanHeader(Header header) throws HeaderCardException {
+        super.editScanHeader(header);
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        if(priorPipelineStep != null) c.add(new HeaderCard("PROCLEVL", priorPipelineStep, "Last processing step on input scan."));	
+    }
+
+    @Override
     public void addIntegrationsFrom(BasicHDU<?>[] HDU) throws Exception {
         ArrayList<BinaryTableHDU> dataHDUs = new ArrayList<BinaryTableHDU>();
-        
+
         for(int i=1; i<HDU.length; i++) if(HDU[i] instanceof BinaryTableHDU) {
             Header header = HDU[i].getHeader();
             String extName = header.getStringValue("EXTNAME");
             if(extName.equalsIgnoreCase("Timestream")) dataHDUs.add((BinaryTableHDU) HDU[i]);
         }
-        
+
         HawcPlusIntegration integration = this.getIntegrationInstance();
         integration.read(dataHDUs);
         add(integration);
-      
+
     }
-	
-	@Override
+
+    @Override
     public void validate() {
-	    if(hasOption("chopper.tolerance")) transitTolerance = Math.abs(option("chopper.tolerance").getDouble());
-	    useBetweenScans = hasOption("betweenscans");
-	    
-	    super.validate();
-	   
-	    if(isNonSidereal) {
-	        EquatorialCoordinates first = getFirstIntegration().getFirstFrame().objectEq;
-	        EquatorialCoordinates last = getLastIntegration().getLastFrame().objectEq;
-	        Vector2D offset = last.getOffsetFrom(first);
-	        if(offset.isNull()) {
-	            info("Scan appears to be sidereal with real-time object coordinates...");
-	            isNonSidereal = false;
-	        }
-	    }
-	}
-	
-	 @Override
-	 public Object getTableEntry(String name) {
-	     if(name.equals("hawc.dfoc")) return focusTOffset / Unit.um;
-	     return super.getTableEntry(name);
-	 }
+        if(hasOption("chopper.tolerance")) transitTolerance = Math.abs(option("chopper.tolerance").getDouble());
+        useBetweenScans = hasOption("betweenscans");
+
+        super.validate();
+        
+        if(isNonSidereal) {
+            EquatorialCoordinates first = getFirstIntegration().getFirstFrame().objectEq;
+            EquatorialCoordinates last = getLastIntegration().getLastFrame().objectEq;
+            Vector2D offset = last.getOffsetFrom(first);
+            if(offset.isNull()) {
+                info("Scan appears to be sidereal with real-time object coordinates...");
+                isNonSidereal = false;
+            }
+        }
+    }
+
+    @Override
+    public Object getTableEntry(String name) {
+        if(name.equals("hawc.dfoc")) return focusTOffset / Unit.um;
+        return super.getTableEntry(name);
+    }
 }

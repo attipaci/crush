@@ -1,6 +1,12 @@
+>> los, roll (accelerations).
+>> verify Jy/pixel in show...
+>> weighting.scans (still off?)
+>> HAWC+ edge pixels in all bands...
 
-2.41-b1
+2.41-b2
 
+	[BUG] Map sizing could run into a nasty Exception when the 'perimeter'
+	was used (without 'noslim'). Fixed.
 
 	[BUG] {APEX} Photometry reductions badly broken, for multiple reasons.
 	First, chopper positions weren't used due ot a coding bug. Second,
@@ -11,6 +17,9 @@
 
 	[BUG] Another equally nasty bug made filter corrections (also used
 	in 'deep') completely garbage. Fixed.
+
+	[BUG] {show} Smoothed units were mishandled in 2.40 all releases in
+	show and imagetool. It's been fixed and cleaned up. 
 
 	[NEW] Packaging with OpenJDK compilation (instead of Eclipse's 
 	compiler), and new packaging script, and now bundling compression
@@ -31,6 +40,9 @@
 	MaiTau data there will ever be. The files with the 225GHz and 350um
 	polynomial coefficients are set by the 'maitau.225GHz' and
 	'maitau.350um' keywords. (The 'maitau.server' keyword is obsoleted.)
+
+	[CHANGE] 'weighting.scans' now reports relative noise factors on
+	console rather than relative weighs. (It's easier to work with...)
 
 	[FIX] {crushtools} Image processing tools (e.g. 'show', 'imagetool'
 	or 'detect' have not recognised extended structure filtering by
@@ -66,6 +78,16 @@
 
 	[DOC] Updated 'README.rebuild' for new source package organization.
         (now in markdown format also).
+
+	[PACKAGE] Apache compression libraries (commons-compress.jar) is now
+	bundled in binary archives (tar.gz and exe), offering wider FITS
+	compression support (not for all supported cameras though!).
+
+	[PACKAGE] New simpler source package hierarchy for those who like to
+	tinker with the code. (And an updated README.rebuild to go with it.) 
+
+	[CODE] {FieldResponse} Can now set to use n'th derivative of the
+	signal represented by the field value...
 
 	[CODE] Better recognition of jansky unit specification even if 
 	provided in the wrong case, e.g. as 'JY' or 'jy', or 'JANSKY'.

@@ -272,6 +272,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         if(hasOption("invert")) gain *= -1.0;
 
         if(!hasOption("noslim")) slim(getThreadCount());
+        else instrument.reindex();
 
         if(instrument.getOptions().containsKey("jackknife")) jackknife();
 
@@ -735,7 +736,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
                 @Override
                 protected void process(FrameType frame) { if(frame != null) frame.slimTo(instrument); }
             }.process();
-
             instrument.reindex();
         }
     }
@@ -2456,7 +2456,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         if(pixels.size() == 0) return null;
 
         if(CRUSH.debug) debug("search pixels: " + pixels.size() + " : " + instrument.size());
-
 
         CRUSH.Fork<Range2D> findCorners = new Fork<Range2D>() {
             private Range2D range;

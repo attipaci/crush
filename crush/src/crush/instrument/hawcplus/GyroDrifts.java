@@ -152,7 +152,8 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Datum> {
             );
                     
             delta = after.getOffsetFrom(before);
-               
+            if(Double.isNaN(delta.length())) return false;   
+            
             utcRange.setMax(header.getDouble("DBTIME" + index));
             nextUTC = header.getDouble("DATIME" + index);
 

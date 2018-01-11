@@ -204,6 +204,7 @@ implements TableFormatter.Entries, BasicMessaging {
               
         initialize();
         
+
         if(hasOption("frequency")) frequency = option("frequency").getDouble() * Unit.Hz;
         else if(hasOption("wavelength")) frequency = Constant.c / (option("wavelength").getDouble() * Unit.um);
             
@@ -255,6 +256,7 @@ implements TableFormatter.Entries, BasicMessaging {
             debug("mapping channels: " + mappingChannels);
             debug("mapping pixels: " + getMappingPixels(~sourcelessChannelFlags()).size());
         }
+  
      
         isValid = true;
     }
@@ -654,12 +656,12 @@ implements TableFormatter.Entries, BasicMessaging {
     protected void initGroups() {
         groups = new Hashtable<String, ChannelGroup<ChannelType>>();
 
-        addGroup("all", copyGroup());
-        addGroup("live", copyGroup().discard(Channel.FLAG_DEAD));
-        addGroup("detectors", copyGroup().discard(getNonDetectorFlags()));
-        addGroup("obs-channels", copyGroup().discard(getNonDetectorFlags() | Channel.FLAG_BLIND));
-        addGroup("sensitive", copyGroup().discard(getNonDetectorFlags() | Channel.FLAG_BLIND | Channel.FLAG_SENSITIVITY));
-        addGroup("blinds", copyGroup().discard(getNonDetectorFlags()).discard(Channel.FLAG_BLIND, ChannelGroup.KEEP_ANY_FLAG));
+        addGroup("all", createGroup());
+        addGroup("live", createGroup().discard(Channel.FLAG_DEAD));
+        addGroup("detectors", createGroup().discard(getNonDetectorFlags()));
+        addGroup("obs-channels", createGroup().discard(getNonDetectorFlags() | Channel.FLAG_BLIND));
+        addGroup("sensitive", createGroup().discard(getNonDetectorFlags() | Channel.FLAG_BLIND | Channel.FLAG_SENSITIVITY));
+        addGroup("blinds", createGroup().discard(getNonDetectorFlags()).discard(Channel.FLAG_BLIND, ChannelGroup.KEEP_ANY_FLAG));
 
         if(options.containsKey("group")) {
             ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
@@ -977,6 +979,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public final List<? extends Pixel> getPerimeterPixels(int sections) { 
         final List<? extends Pixel> mappingPixels = getMappingPixels(~sourcelessChannelFlags());
+        
         if(sections <= 0) return mappingPixels;
 
         if(mappingPixels.size() < sections) return mappingPixels;

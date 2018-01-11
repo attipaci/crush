@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -32,6 +32,7 @@ public class FieldResponse extends Response {
 	private static final long serialVersionUID = -4490473787009977735L;
 	private Field field;
 	private boolean isFloating = false;
+	private int derivative = 0;
 	
 	public FieldResponse(Field field) {
 		this.field = field;
@@ -48,6 +49,10 @@ public class FieldResponse extends Response {
 	
 	public void setFloating(boolean value) { isFloating = value; }
 	
+	public void setDerivative(int n) {
+	    derivative = n;
+	}
+	
 	@Override
 	public Signal getSignal(Integration<?, ?> integration) {
 		float[] data = new float[integration.size()];	
@@ -58,7 +63,9 @@ public class FieldResponse extends Response {
 			}
 		}
 		catch(Exception e) { integration.warning("No field named " + field.getName() + " for signal."); }
-		return new Signal(this, integration, data, isFloating);
+		Signal s = new Signal(this, integration, data, isFloating);
+		for(int i=derivative; --i >= 0; ) s.differentiate();
+		return s;
 	}
 
 }

@@ -124,7 +124,7 @@ under the _Download_ tab.
 
  Optionally, for wider FITS compression support, copy/symlink 
  `commons-compress.jar` (Apache compression libraries) into `dist/crush/lib/`. 
- (Or, on Linux, you can simply install the `apache-commons-compress` package.
+ (Or, on Linux, you can simply install the `apache-commons-compress` package.)
 
 
 ### 3.5. Test

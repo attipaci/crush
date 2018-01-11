@@ -98,6 +98,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         private int iAZ=-1, iEL=-1, iRA=-1, iDEC=-1, iAVPA=-1, iTVPA=-1, iCVPA=-1;
         private int iLON=-1, iLAT=-1, iLST=-1, iPWV=-1, iORA=-1, iODEC=-1;
         private int iChopR=-1, iChopS=-1, iHWP=-1, iStat=-1;
+        private int iLOS=-1, iRoll=-1;
 
         private boolean isLab;
         private boolean isConfigured = false;
@@ -156,7 +157,10 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             iChopR = hdu.findColumn("sofiaChopR");
             iChopS = hdu.findColumn("sofiaChopS");
 
-            iPWV = hdu.findColumn("PWV");   
+            iPWV = hdu.findColumn("PWV");
+            
+            iLOS = hdu.findColumn("LOS");
+            iRoll = hdu.findColumn("ROLL");
         }
 
         private synchronized void configure(Object[] row) {
@@ -312,6 +316,9 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     else {
                         frame.horizontal = new HorizontalCoordinates(((double[]) row[iAZ])[0] * Unit.deg, ((double[]) row[iEL])[0] * Unit.deg);
                     }
+                    
+                    frame.LOS = (float) (((double[]) row[iLOS])[0] * Unit.deg);
+                    frame.roll = (float) (((double[]) row[iRoll])[0] * Unit.deg);
                     
                     frame.isComplete = true;
                 }

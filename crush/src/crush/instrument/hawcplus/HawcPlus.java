@@ -173,8 +173,11 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         super.initGroups();
 
         subarrayGroups = new ArrayList<ChannelGroup<HawcPlusPixel>>(subarrays);
-        for(int pol=0; pol<polArrays; pol++) for(int sub=0; sub<polSubarrays; sub++)
-            subarrayGroups.add(new ChannelGroup<HawcPlusPixel>(polID[pol] + sub));
+        for(int pol=0; pol<polArrays; pol++) for(int sub=0; sub<polSubarrays; sub++) {
+            ChannelGroup<HawcPlusPixel> g =  new ChannelGroup<HawcPlusPixel>(polID[pol] + sub);
+            subarrayGroups.add(g);
+            addGroup(g);
+        }
 
         for(HawcPlusPixel pixel : this) subarrayGroups.get(pixel.sub).add(pixel);
 
@@ -225,6 +228,19 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         }
         catch(NoSuchFieldException e) { error(e); }
 
+        try {
+            Modality<?> losResponse = new Modality<LOSResponse>("los", "L", divisions.get("detectors"), HawcPlusPixel.class.getField("losGain"), LOSResponse.class); 
+            losResponse.setGainFlag(HawcPlusPixel.FLAG_LOS_RESPONSE);
+            addModality(losResponse);
+        }
+        catch(NoSuchFieldException e) { error(e); }
+            
+        try { 
+            Modality<?> rollResponse = new Modality<RollResponse>("roll", "R", divisions.get("detectors"), HawcPlusPixel.class.getField("rollGain"), RollResponse.class);
+            rollResponse.setGainFlag(HawcPlusPixel.FLAG_ROLL_RESPONSE);
+            addModality(rollResponse);
+        }
+        catch(NoSuchFieldException e) { error(e); }
 
     }
 

@@ -314,9 +314,9 @@ public abstract class AstroModel2D extends SourceModel {
 
             for(Scan<?,?> scan : getScans()) {
                 scan.range = new Range2D();
-                final Collection<? extends Pixel> pixels = scan.instrument.getPerimeterPixels();
+                   
                 for(Integration<?,?> integration : scan) {
-                    Range2D r = integration.searchCorners(pixels, getProjection());
+                    Range2D r = integration.searchCorners(integration.instrument.getPerimeterPixels(), getProjection());
                     if(r != null) scan.range.include(r);
                 }
                 range.include(scan.range);

@@ -20,33 +20,33 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
+package crush.instrument.hawcplus;
 
-package crush.array;
+import crush.*;
 
-import java.util.List;
+import java.lang.reflect.*;
 
-import crush.Pixel;
-import crush.instrument.ColorArrangement;
+public class RollResponse extends FieldResponse {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 4687041979297880692L;
 
-public class SingleColorArrangement<ChannelType extends SingleColorPixel> extends ColorArrangement<ChannelType> {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3711770466718770949L;
-
-	@Override
-	public int getPixelCount() {
-		return instrument.size();
-	}
-
-	@Override
-	public List<? extends Pixel> getPixels() {
-		return instrument;
-	}
-
-	@Override
-	public List<? extends Pixel> getMappingPixels(int keepFlags) {
-		return instrument.getObservingChannels().createGroup().discard(~keepFlags);	
-	}
-
+    static Field field;
+    
+    private static final String fieldName  = "roll";
+    
+    static { 
+        try { field = HawcPlusFrame.class.getField(fieldName); }
+        catch(NoSuchFieldException e) {
+            CRUSH.warning(null, HawcPlusFrame.class.getSimpleName() + " has no field named '" + fieldName + "'.");
+            CRUSH.trace(e);
+        }
+    }
+    
+    public RollResponse() { 
+        super(field, true);
+        setDerivative(2);
+    }
+    
 }
