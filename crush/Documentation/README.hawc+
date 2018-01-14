@@ -534,6 +534,15 @@ for expert users only.
                         residual flux jump in readout counts.
                         @See: 'fixjumps'
 
+    los                 @Alias: 'correlated.los'
+                        @Since: 2.41
+                        @Expert
+                        Remove correlations with the second-derivative to the
+                        telescope line-of-sight (LOS) angle. It's a good proxy
+                        for removing pitch-type acceleration response from the
+                        detector timestreams.
+                        @See: 'correlated.<?>'
+
     mux                 @Alias: 'correlated.mux'
                         @Expert
                         Decorrelate on SQUID muxes. All correlated modality
@@ -553,6 +562,11 @@ for expert users only.
                         one another, and the two subarrays of each form a 
                         single seamless polarization array.
 
+    peakflux            @Since: 2.41
+                        Switch to peak-flux calibration instead of the default
+			aperture flux calibration. Recommended for point 
+			sources only.
+
     pixelsize=<a>[,<b>] @Expert
                         Specify the size of the pixels for calculating pixel 
                         positions based on a regular grid. A better way of 
@@ -567,6 +581,13 @@ for expert users only.
                         @Expert
                         Decorrelate each polarization array separately. All 
                         correlated modality sub-options apply.
+                        @See: 'correlated.<?>'
+
+    roll                @Alias: 'correlated.roll'
+                        @Since: 2.41
+                        @Expert
+                        Remove correlations with the second-derivative of the
+                        aircraft roll angle (roll-type accelerations).
                         @See: 'correlated.<?>'
 
     rotation=<deg>      @Expert

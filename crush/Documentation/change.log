@@ -1,9 +1,8 @@
->> los, roll (accelerations).
->> verify Jy/pixel in show...
->> weighting.scans (still off?)
->> HAWC+ edge pixels in all bands...
 
 2.41-b2
+
+	[BUG] A bug in the jnum subpackage broke 'weighting.scans' behavior
+	when the 'rms' method was used (in 'deep' mode). Fixed.
 
 	[BUG] Map sizing could run into a nasty Exception when the 'perimeter'
 	was used (without 'noslim'). Fixed.
@@ -20,6 +19,17 @@
 
 	[BUG] {show} Smoothed units were mishandled in 2.40 all releases in
 	show and imagetool. It's been fixed and cleaned up. 
+
+	[NEW] {HAWC+} New options 'los' and 'roll' (short for 'correlated.los'
+	and 'correlated.roll' respectively) introduced for removing 
+	correlations with the seconds derivatives of the telescope 
+	line-of-sight (LOS) angle, and the aircraft roll angle. As such, they
+	may be useful for removing signals indiced by pitch/roll type
+	accelerations.
+
+	[NEW] {HAWC+} The option 'peakflux' may be used to switch to peak
+	flux calibration from the default aperture flux calibration. 
+	Recommended for point-sources only.
 
 	[NEW] Packaging with OpenJDK compilation (instead of Eclipse's 
 	compiler), and new packaging script, and now bundling compression

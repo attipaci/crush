@@ -1766,6 +1766,16 @@
 			has no effect.
 			@See: 'read.sae'
 
+:: los			@Instrument: HAwC+
+			@Since: 2.41
+			@Expert
+			@Alias: 'correlated.los'
+			Remove correlations with the second-derivative to the
+			telescope line-of-sight (LOS) angle. It's a good proxy
+			for removing pitch-type acceleration response from the
+			detector timestreams.
+			@See: 'correlated.<?>'
+
 :: maitau.225GHz=<path>		@Advanced
 				@Instrument: SHARC-2
 				@Since: 2.41
@@ -2150,6 +2160,12 @@
 			being calculated (since a rectangular grid can no 
 			longer be assumed).
 			@See: 'rcp', 'rcenter', 'pixelsize', 'rotate'
+
+:: peakflux		@Instrument: HAWC+
+			@Since: 2.41
+			Switch to peak-flux calibration instead of the default
+			aperture flux calibration. Recommended for point
+			sources only.
 
 :: perimeter=N		@Expert
 			@Since: 2.30
@@ -2782,6 +2798,14 @@
 :: restore=<option>	Undoes the 'remove' option, reinstating the <option> 
 			tree to its prior state.
 			@See: 'remove'
+
+:: roll			@Instrument: HAWC+
+			@Since: 2.41
+			@Expert
+			@Alias: 'correlated.roll'
+			Remove correlations with the second-derivative of the
+			aircraft roll angle (roll-type accelerations).
+			@See: 'correlated.<?>'
 
 :: rot0			@Instrument: SHARC-2, MAKO
 			@Expert
