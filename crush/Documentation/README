@@ -2374,13 +2374,32 @@ values are generated during reduction, and therefore may not be available to
 
     map.unit         Name of map unit, e.g. 'Jy/beam'.
 
+    phot.flux        Photometric flux in Jy/beam (e.g. for LABOCA).
+
+    phot.dflux       Uncertainty in the photometric flux (Jy/beam).
+
+    skydip.kelvin    Data units that corresponf to a 1K load on the detectors.
+                     (for skydip data, if and when fitted.)
+
+    skydip.dkelvin   Uncertainty in data units per kelvin conversion.
+
+    skydip.tau       Tau value derived (or assumed) from skydip data
+   
+    skydip.dtau      Tau uncertainty from skydip data
+
+    skydip.tsky      Derived (or assumed) sky temperature in K.
+
+    skydip.dtsky     Sky temperature uncertanity (K).
+
     smooth           Smoothing applied, in the default size unit of
                      the instrument (e.g. in arcsecs).
 
 
+
+
 #### Telescope specific log entries
 
-   APEX: see the `crush/Documentation/README.apex`.
+   APEX: see the `crush/Documentation/README.apex.
 
 
 #### Instrument specific log entries

@@ -4014,10 +4014,6 @@
 :: whiten		@Alias -> 'filter.whiten'
 			@Advanced
 
-:: whiten.below		@Alias -> 'filter.whiten.below'
-			@Expert
-			@Since 2.00-b2
-
 :: whiten.level=X	@Alias -> 'filter.whiten.level'
 			@Advanced
 
@@ -4025,10 +4021,6 @@
 			@Expert
 			@Since: 2.01-1
 	
-:: whiten.neighbours	@Alias -> 'filter.whiten.neighbours'
-			@Expert
-			@Since 2.00-b2
-
 :: whiten.proberange=<spec>	@Alias -> 'filter.whiten.proberange'
 				@Expert
 				@Since 2.00-b2

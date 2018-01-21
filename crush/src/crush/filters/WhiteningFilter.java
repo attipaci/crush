@@ -40,9 +40,6 @@ public class WhiteningFilter extends AdaptiveFilter {
 	
 	double level = 1.2;
 	double significance = 2.0;
-	double maxBoost = 2.0;
-	boolean boost = false;
-	//boolean neighbours = false;
 	
 	private int nF; // The number of stacked frequency components
 	private int windows; // The number of stacked windows...
@@ -79,13 +76,6 @@ public class WhiteningFilter extends AdaptiveFilter {
 		super.updateConfig();
 		
 		setSize(integration.framesFor(integration.filterTimeScale));
-		
-		boost = hasOption("below");
-		
-		// Specify maximum boost as power, just like level...
-		if(hasOption("below.max")) maxBoost = Math.max(1.0, Math.sqrt(option("below.max").getDouble()));
-		
-		//neighbours = hasOption("neighbours");
 		
 		// Specify critical level as power, but use as amplitude...
 		if(hasOption("level")) level = Math.max(1.0, Math.sqrt(option("level").getDouble()));
@@ -210,11 +200,7 @@ public class WhiteningFilter extends AdaptiveFilter {
 				
 				// Check if there is excess/deficit power that needs filtering...
 				if(dev > significance) profile[F] = (float) (medA / A[F].value());
-				else if(boost && dev < -significance) {
-					profile[F] = (float) (medA / A[F].value());
-					// Make sure not too overboost...
-					if(profile[F]*lastProfile[F] > maxBoost) profile[F] = (float) maxBoost / lastProfile[F];
-				}
+		
 				// If there is no significant deviation, undo the last filtering...
 				else profile[F] = 1.0F / lastProfile[F];
 					

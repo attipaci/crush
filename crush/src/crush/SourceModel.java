@@ -84,6 +84,8 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     
     public String getID() { return id; }
     
+    public String getLoggingID() { return "model"; }
+    
     public void setID(String value) { this.id = value; }
     
     public String getCommandLine() { return commandLine; }

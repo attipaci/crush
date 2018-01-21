@@ -45,24 +45,24 @@ public abstract class Photometry extends SourceModel {
 
     public String sourceName;
     public double integrationTime;
-    public WeightedPoint[] flux;
-    public WeightedPoint sourceFlux = new WeightedPoint();
+    public DataPoint[] flux;
+    public DataPoint sourceFlux = new DataPoint();
     public EquatorialCoordinates equatorial;
 
     protected Hashtable<Scan<?,?>, DataPoint> scanFluxes = new Hashtable<Scan<?,?>, DataPoint>();
 
     public Photometry(Instrument<?> instrument) {
         super(instrument);
-        flux = WeightedPoint.createArray(instrument.storeChannels+1);
+        flux = DataPoint.createArray(instrument.storeChannels+1);
     }
 
 
     @Override
     public SourceModel getWorkingCopy(boolean withContents) {
         Photometry copy = (Photometry) super.getWorkingCopy(withContents);
-        copy.sourceFlux = (WeightedPoint) sourceFlux.clone();
-        copy.flux = new WeightedPoint[flux.length];
-        if(withContents) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = (WeightedPoint) flux[i].clone();
+        copy.sourceFlux = (DataPoint) sourceFlux.clone();
+        copy.flux = new DataPoint[flux.length];
+        if(withContents) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = (DataPoint) flux[i].clone();
         return copy;
     }
 
@@ -263,6 +263,17 @@ public abstract class Photometry extends SourceModel {
     public String getSourceName() {
         return sourceName;
     }
+    
+    @Override
+    public String getLoggingID() { return "phot"; }
+    
+    @Override
+    public Object getTableEntry(String name) {
+        if(name.equals("flux")) return sourceFlux.value();
+        if(name.equals("dflux")) return sourceFlux.rms();
+        return super.getTableEntry(name);
+    }
+
 
     @Override
     public Unit getUnit() {

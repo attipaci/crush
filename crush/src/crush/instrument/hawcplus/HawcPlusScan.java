@@ -188,6 +188,8 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("hawc.dfoc")) return focusTOffset / Unit.um;
+        if(name.equals("gyro.max")) return gyroDrifts.getMax() / Unit.arcsec;
+        if(name.equals("gyro.rms")) return gyroDrifts.getRMS() / Unit.arcsec;
         return super.getTableEntry(name);
     }
 }

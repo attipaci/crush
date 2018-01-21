@@ -53,6 +53,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 
     ArrayList<ChannelGroup<HawcPlusPixel>> subarrayGroups;
 
+    String bandID = "-";
+    
     boolean[] hasSubarray;
     Vector2D[] subarrayOffset;
     double[] subarrayOrientation;
@@ -256,6 +258,10 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 
         hasSubarray = new boolean[subarrays];
 
+        bandID = "-";
+        String filter = header.getString("SPECTEL1");
+        if(filter != null) if(filter.toLowerCase().startsWith("haw_")) bandID = filter.substring(4);
+        
         String mceMap = header.getString("MCEMAP");
         mceSubarray = new int[subarrays];
         Arrays.fill(mceSubarray, -1);
@@ -656,6 +662,13 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         return v;
     }
 
+
+    @Override
+    public Object getTableEntry(String name) {
+        if(name.equals("band")) return bandID;
+        return super.getTableEntry(name);
+    }
+    
     final static int polArrays = 2;
     final static int polSubarrays = 2;
     final static int subarrays = polArrays * polSubarrays;

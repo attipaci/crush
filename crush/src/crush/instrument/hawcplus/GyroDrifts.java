@@ -103,13 +103,32 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Datum> {
         }
     }
     
+    public double getMax() {
+        if(isEmpty()) return Double.NaN;
+        double max = 0.0;
+        for(Datum drift : this) if(drift.delta.length() > max) max = drift.delta.length();
+        return max;
+    }
+    
+    public double getRMS() {
+        if(isEmpty()) return Double.NaN;
+        double sum = 0.0;
+        for(Datum drift : this) sum += drift.delta.absSquared();
+        return Math.sqrt(sum / size());
+    }
+    
+    
+    
     protected void parse(SofiaHeader header) {
-        int i=0;     
-        while(add(header, i++)) continue;
+        for(int i=0; ; i++){
+            try { if(!add(header, i)) return; }
+            catch(IllegalStateException e) {}            
+        }
     } 
  
-    protected boolean add(SofiaHeader header, int index) {
+    protected boolean add(SofiaHeader header, int index) throws IllegalStateException {
         Datum drift = new Datum();
+        
         if(drift.parse(header, index)) {
             add(drift);
             CRUSH.detail(scan, " drift " + index + ": " 
@@ -126,7 +145,7 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Datum> {
         public double nextUTC;
         public Vector2D delta;
         
-        public boolean parse(SofiaHeader header, int index) {
+        public boolean parse(SofiaHeader header, int index) throws IllegalStateException {
             this.index = index;
             
             if(!header.containsKey("DBRA" + index)) return false;
@@ -152,7 +171,7 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Datum> {
             );
                     
             delta = after.getOffsetFrom(before);
-            if(Double.isNaN(delta.length())) return false;   
+            if(Double.isNaN(delta.length())) throw new IllegalStateException("NaN drift value.");   
             
             utcRange.setMax(header.getDouble("DBTIME" + index));
             nextUTC = header.getDouble("DATIME" + index);

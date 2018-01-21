@@ -644,13 +644,120 @@ for expert users only.
 
 ### 4.3. HAWC+ specific log quantities
 
-  Coming soon...
 
+    ac.airspeed         (km/h) Airspeed.
+    ac.alt              (m) Altitude.
+    ac.altkft           (kft) Altitude.
+    ac.dir              (deg) Direction of heading.
+    ac.gndspeed         (km/h) Groundspeed
+    ac.lat              (rad) Geodetic latitude
+    ac.latd             (deg) Geodetic latitude
+    ac.lon              (ra) Geodetic longitude
+    ac.lond             (deg) Geodetic longitude
+    ac.trkangle         (rad) Tracking angle
 
+    array.angle
+    array.ave
+    array.sibsx         
+    array.sibsy
 
+    chop.amp            (arcsec) Chop amplitude
+    chop.angle		
+    chop.flag           'C' if chopping or '-' if not
+    chop.frequency
+    chop.func
+    chop.mode
+    chop.profile
+    chop.src
+    chop.sys
+    chop.tilt
+    chop.tip
 
+    env.tamb
+    env.pwv             (um) Precipitable Water Vapor level
+    env.sect            (C) Secondary mirror temperature.
+    env.t1              (C) T1 temperature of the primary.
+    env.t2              (C) T2 temperature of the primary.
+    env.t2              (c) T3 temperature of the primary.
+    
+    inst.bw		Instrument bandwidth
+    inst.cfg            Instrument configuration
+    inst.datatype
+    inst.exp
+    inst.hwver          Hardware version
+    inst.inttime
+    inst.mode
+    inst.slit
+    inst.spec1          First spectral element (from SPECTEL1)
+    inst.spec2          Second spectral element (from SPECTEL2)
+    inst.swver          Software version
+    inst.wave
+
+    mssn.id             SOFIA Mission ID.
+    mssn.leg            Flight leg number
+    mssn.plan           Flight plan ID.
+
+    nod.amp             (arcsec) Nod amplitude
+    nod.angle
+    nod.dwell
+    nod.dx
+    nod.dy
+    nod.n
+    nod.pattern
+    nod.pos
+    nod.settle
+    nod.style
+    nod.sys
+
+    obs.aor             SOFIA AOR ID
+    obs.aot		SOFIA AOT ID
+    obs.dict            FITS keyword dictionary version ID.
+    obs.err
+    obs.fgid            File group ID.
+    obs.imgid           Image ID
+    obs.lst             (s) LST seconds.
+    obs.lsth            (h) LST hours
+    obs.mjd             (day) Modified Julian Date
+    obs.obj             Object name
+    obs.objtype         Object type
+    obs.obsid           Observation ID.
+    obs.serial
+    obs.src
+
+    orig.creator
+    orig.file
+    orig.observer       Name(s) of observer(s) or PI(s).
+    orig.operator       Name(s) of the operator(s).
+   
+    proc.head
+    proc.level
+    proc.nspec
+    proc.product
+    proc.q
+    proc.quality
+
+    tel.focus           (um) Telescope z-focus value
+    tel.bdec            Boresight declination
+    tel.bra             Boresight RA
+    tel.cfg             
+    tel.el              Telescope elevation
+    tel.epoch           Epoch for equatorial coordinates (e.g. 2000.0)
+    tel.fbc
+    tel.los             Telescope line-of-sight angle
+    tel.moonang         Angular distnce to the Moon
+    tel.rdec            Requested declination
+    tel.rew             
+    tel.rra             Requested RA
+    tel.sunang          Angular distance to the Sun
+    tel.trkerr
+    tel.trkmode
+    tel.vhelio          Radial velocity relative to the Sun.
+    tel.vlsr            LSR velocity
+    tel.vpa             Vertical position angle (i.e. parallactic angle)
+    tel.xel             Telescope cross-elevation angle
+    tel.za              Telescope zenith angle
 
 ------------------------------------------------------------------------------
-Copyright (C)2017 -- Attila Kovacs <attila[AT]sigmyne.com>
+Copyright (C)2018 -- Attila Kovacs <attila[AT]sigmyne.com>
 
 

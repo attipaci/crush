@@ -540,21 +540,41 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         DataTable data = super.getPointingData();
 
         Offset2D relative = getNativePointingIncrement(pointing);
-        //Vector2D nasmyth = getNasmythOffset(pointingOffset);
+        Vector2D siOffset = getSIPixelOffset(relative);
 
         Unit sizeUnit = instrument.getSizeUnit();
 
         data.new Entry("X", relative.x(), sizeUnit);
         data.new Entry("Y", relative.y(), sizeUnit);
-        //data.new Entry("NasX", (instrument.nasmythOffset.x() + nasmyth.x()), sizeUnit);
-        //data.new Entry("NasY", (instrument.nasmythOffset.y() + nasmyth.y()), sizeUnit);
+        data.new Entry("SIBSX", siOffset.x(), sizeUnit);
+        data.new Entry("SIBSY", siOffset.y(), sizeUnit);
+        
         return data;
     }
 
 
+    public int getFlightNumber() {
+        String missionID = mission.missionID;
+        int i = missionID.lastIndexOf("_F");
+        if(i < 0) return -1;
+        try { return Integer.parseInt(missionID.substring(i+2)); }
+        catch(NumberFormatException e) { return -1; }
+    }
+    
+    public int getScanNumber() {
+        String obsID = observation.obsID;
+        int i = obsID.lastIndexOf('-');
+        if(i < 0) return -1;
+        try { return Integer.parseInt(obsID.substring(i+1)); }
+        catch(NumberFormatException e) { return -1; }
+    }
+    
     @Override
     public Object getTableEntry(String name) {     
         if(name.equals("obstype")) return observation.obsType;
+        if(name.equals("flight")) return getFlightNumber();
+        if(name.equals("scanno")) return getScanNumber();
+        if(name.equals("date")) return date;
         
         // TODO Add Sofia Header data...  
         SofiaData[] groups = new SofiaData[] { 

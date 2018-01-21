@@ -137,7 +137,7 @@ public abstract class VariedFilter extends Filter {
 		// sigmaf = 2.35/2pi * 1/T;
 		// df = 1 / (n dt)
 		// sigmaF = sigmaf / df = 2.35/2Pi * n dt / T; 
-		
+
 		final double T = integration.getPointCrossingTime();
 		final double sigma = Constant.sigmasInFWHM / (Constant.twoPi * T * df);
 		final double a = -0.5 / (sigma * sigma);

@@ -97,6 +97,7 @@ public class SofiaObservationData extends SofiaData {
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("mjd")) return startMJD;
+        else if(name.equals("lst")) return startLST;
         else if(name.equals("lsth")) return startLST / Unit.hour;
         else if(name.equals("serial")) return serialNo;
         else if(name.equals("aor")) return aorID;

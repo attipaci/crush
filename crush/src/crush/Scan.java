@@ -597,6 +597,9 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(horizontal == null) if(equatorial != null) if(site != null)
 		    horizontal = equatorial.toHorizontal(site, LST);
 		
+		String sourceType = sourceModel == null ? "src." : sourceModel.getLoggingID();
+		
+		
 		Object modelEntry = null;
 		if(sourceModel != null) modelEntry = sourceModel.getTableEntry(name);
 		if(modelEntry != null) return modelEntry;
@@ -610,11 +613,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			
 			return value;			
 		}
+		else if(name.startsWith(sourceType + ".")) {
+            if(sourceModel == null) return "---";
+            return sourceModel.getTableEntry(name.substring(sourceType.length() + 1));
+        }
 		else if(name.startsWith("pnt.")) {
 			if(pointing == null) return "---";
 			return getPointingData().getTableEntry(name.substring(4));
 		}
-		else if(name.startsWith("src.")) {
+		else if(name.startsWith("src")) {
 			if(pointing == null) return "---";
 			if(!(sourceModel instanceof AstroIntensityMap)) return "---";
 			Map2D map = ((AstroIntensityMap) sourceModel).map;

@@ -96,7 +96,8 @@ import nom.tam.util.Cursor;
 
      @Override
      public Object getTableEntry(String name) {
-         if(name.equals("amp")) return amplitude / Unit.arcsec;
+         if(name.equals("flag")) return (amplitude == 0.0 || Double.isNaN(amplitude)) ? "-" : "C";
+         else if(name.equals("amp")) return amplitude / Unit.arcsec;
          else if(name.equals("angle")) return angle / Unit.deg;
          else if(name.equals("frequency")) return frequency / Unit.Hz;
          else if(name.equals("tip")) return tip / Unit.arcsec;

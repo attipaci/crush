@@ -76,12 +76,15 @@ import nom.tam.util.Cursor;
      @Override
      public Object getTableEntry(String name) {
          if(name.equals("alt")) return altitude.midPoint() / Unit.m;
-         else if(name.equals("lon")) return longitude.midPoint() / Unit.deg;
-         else if(name.equals("lat")) return latitude.midPoint() / Unit.deg;
-         else if(name.equals("airspeed")) return airSpeed / Unit.kmh;
-         else if(name.equals("gndspeed")) return groundSpeed / Unit.kmh;
-         else if(name.equals("dir")) return heading / Unit.deg;
-         else if(name.equals("trkangle")) return trackAngle / Unit.deg;
+         if(name.equals("altkft")) return altitude.midPoint() / Unit.kft;
+         if(name.equals("lon")) return longitude.midPoint();
+         if(name.equals("lat")) return latitude.midPoint();
+         if(name.equals("lond")) return longitude.midPoint() / Unit.deg;
+         if(name.equals("latd")) return latitude.midPoint() / Unit.deg;
+         if(name.equals("airspeed")) return airSpeed / Unit.kmh;
+         if(name.equals("gndspeed")) return groundSpeed / Unit.kmh;
+         if(name.equals("dir")) return heading / Unit.deg;
+         if(name.equals("trkangle")) return trackAngle / Unit.deg;
 
          return null;
      }

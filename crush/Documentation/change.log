@@ -1,3 +1,5 @@
+>> gyrocorrect?
+>> 'show' beam smoothing broken...
 
 2.41-b2
 
@@ -17,8 +19,11 @@
 	[BUG] Another equally nasty bug made filter corrections (also used
 	in 'deep') completely garbage. Fixed.
 
-	[BUG] {show} Smoothed units were mishandled in 2.40 all releases in
+	[BUG] {show} Smoothed units were mishandled in all 2.40 releases in
 	show and imagetool. It's been fixed and cleaned up. 
+  
+        [NEW] Source-model specific loggable quantities, such as 'skydip.tau'
+        (for skydips) 'phot.flux' (for photometry, e.g. LABOCA).
 
 	[NEW] {HAWC+} New options 'los' and 'roll' (short for 'correlated.los'
 	and 'correlated.roll' respectively) introduced for removing 
@@ -37,7 +42,7 @@
 
 	[NEW] New option 'pointing.radius' (in arcsec) can be used to restrict 
 	the pointing fit to a circular area around the nominal center position.
-	It may be useful for deriving ponting in a crowded' field.
+	It may be useful for deriving ponting in a 'crowded' field.
 	
 	[NEW] {SOFIA} Implemented a correction scheme for gyro drifts, based
 	on the guide-star relock data stored in the FITS headers. The 
@@ -50,6 +55,9 @@
 	MaiTau data there will ever be. The files with the 225GHz and 350um
 	polynomial coefficients are set by the 'maitau.225GHz' and
 	'maitau.350um' keywords. (The 'maitau.server' keyword is obsoleted.)
+
+	[DEPRECATE] The option 'whiten.below' (which allowed to amplify 
+        spectral bins) has been deprecated as it is fundamentally troublesome.
 
 	[CHANGE] 'weighting.scans' now reports relative noise factors on
 	console rather than relative weighs. (It's easier to work with...)
