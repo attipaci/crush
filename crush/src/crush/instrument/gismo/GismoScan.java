@@ -734,12 +734,12 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	@Override
 	public Object getTableEntry(String name) {	
 		if(name.equals("obstype")) return obsType;
-		else if(name.equals("modelX")) return observingModel.getDX(horizontal, (getMJD() % 1) * Unit.day, ambientT);
-		else if(name.equals("modelY")) return observingModel.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT);
-		else if(name.equals("tiltX")) return tiltCorrections.getDX(horizontal, (getMJD() % 1) * Unit.day, ambientT);
-		else if(name.equals("tiltY")) return tiltCorrections.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT);
-		else if(name.equals("dir")) return AstroSystem.getID(basisSystem);
-		else return super.getTableEntry(name);
+		if(name.equals("modelX")) return observingModel.getDX(horizontal, (getMJD() % 1) * Unit.day, ambientT);
+		if(name.equals("modelY")) return observingModel.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT);
+		if(name.equals("tiltX")) return tiltCorrections.getDX(horizontal, (getMJD() % 1) * Unit.day, ambientT);
+		if(name.equals("tiltY")) return tiltCorrections.getDY(horizontal, (getMJD() % 1) * Unit.day, ambientT);
+		if(name.equals("dir")) return AstroSystem.getID(basisSystem);
+		return super.getTableEntry(name);
 	}
 
 	@Override

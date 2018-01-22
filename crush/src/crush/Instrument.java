@@ -1443,19 +1443,19 @@ implements TableFormatter.Entries, BasicMessaging {
     public Object getTableEntry(String name) {
 
         if(name.equals("gain")) return gain;
-        else if(name.equals("sampling")) return samplingInterval / Unit.s;
-        else if(name.equals("rate")) return Unit.s / samplingInterval;
-        else if(name.equals("okchannels")) return mappingChannels;
-        else if(name.equals("channels")) return size();
-        else if(name.equals("maxchannels")) return storeChannels;
-        else if(name.equals("mount")) return mount.name();
-        else if(name.equals("resolution")) return getResolution() / getSizeUnit().value();
-        else if(name.equals("sizeunit")) return getSizeUnit().name();
-        else if(name.equals("ptfilter")) return getAverageFiltering();
-        else if(name.equals("FWHM")) return getAverageBeamFWHM() / getSizeUnit().value();
-        else if(name.equals("minFWHM")) return getMinBeamFWHM() / getSizeUnit().value();
-        else if(name.equals("maxFWHM")) return getMaxBeamFWHM() / getSizeUnit().value();
-        else if(name.equals("stat1f")) return getOneOverFStat();
+        if(name.equals("sampling")) return samplingInterval / Unit.s;
+        if(name.equals("rate")) return Unit.s / samplingInterval;
+        if(name.equals("okchannels")) return mappingChannels;
+        if(name.equals("channels")) return size();
+        if(name.equals("maxchannels")) return storeChannels;
+        if(name.equals("mount")) return mount.name();
+        if(name.equals("resolution")) return getResolution() / getSizeUnit().value();
+        if(name.equals("sizeunit")) return getSizeUnit().name();
+        if(name.equals("ptfilter")) return getAverageFiltering();
+        if(name.equals("FWHM")) return getAverageBeamFWHM() / getSizeUnit().value();
+        if(name.equals("minFWHM")) return getMinBeamFWHM() / getSizeUnit().value();
+        if(name.equals("maxFWHM")) return getMaxBeamFWHM() / getSizeUnit().value();
+        if(name.equals("stat1f")) return getOneOverFStat();
 
         return TableFormatter.NO_SUCH_DATA;
     }

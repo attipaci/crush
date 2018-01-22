@@ -597,12 +597,9 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(horizontal == null) if(equatorial != null) if(site != null)
 		    horizontal = equatorial.toHorizontal(site, LST);
 		
-		String sourceType = sourceModel == null ? "src." : sourceModel.getLoggingID();
+		String sourceType = sourceModel == null ? "model." : sourceModel.getLoggingID();
 		
 		
-		Object modelEntry = null;
-		if(sourceModel != null) modelEntry = sourceModel.getTableEntry(name);
-		if(modelEntry != null) return modelEntry;
 		
 		if(name.startsWith("?")) {
 			name = name.substring(1).toLowerCase();
@@ -613,66 +610,70 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			
 			return value;			
 		}
-		else if(name.startsWith(sourceType + ".")) {
+		if(name.startsWith(sourceType + ".")) {
             if(sourceModel == null) return "---";
             return sourceModel.getTableEntry(name.substring(sourceType.length() + 1));
         }
-		else if(name.startsWith("pnt.")) {
+		if(name.startsWith("pnt.")) {
 			if(pointing == null) return "---";
 			return getPointingData().getTableEntry(name.substring(4));
 		}
-		else if(name.startsWith("src")) {
+		if(name.startsWith("src.")) {
 			if(pointing == null) return "---";
 			if(!(sourceModel instanceof AstroIntensityMap)) return "---";
 			Map2D map = ((AstroIntensityMap) sourceModel).map;
 			return pointing.getRepresentation(map.getGrid()).getData(map.getProperties(), instrument.getSizeUnit()).getTableEntry(name.substring(4));
 		}
-		else if(name.equals("object")) return sourceName;
-		else if(name.equals("id")) return getID();
-		else if(name.equals("serial")) return serialNo;
-		else if(name.equals("MJD")) return MJD;
-		else if(name.equals("UT")) return (MJD - Math.floor(MJD)) * Unit.day;
-		else if(name.equals("UTh")) return (MJD - Math.floor(MJD)) * 24.0;
-		else if(name.equals("PA")) return getPA();
-		else if(name.equals("PAd")) return getPA() / Unit.deg;
-		else if(name.equals("AZ")) return horizontal.AZ();
-		else if(name.equals("EL")) return horizontal.EL();
-		else if(name.equals("RA")) return equatorial.RA() / Unit.timeAngle;
-		else if(name.equals("DEC")) return equatorial.DEC();
-		else if(name.equals("AZd")) return horizontal.AZ() / Unit.deg;
-		else if(name.equals("ELd")) return horizontal.EL() / Unit.deg;
-		else if(name.equals("RAd")) return equatorial.RA() / Unit.deg;
-		else if(name.equals("RAh")) return ((equatorial.RA() + 2.0 * Math.PI) / Unit.hourAngle) % 24.0;
-		else if(name.equals("DECd")) return equatorial.DEC() / Unit.deg;
-		else if(name.equals("epoch")) return equatorial.epoch.toString();
-		else if(name.equals("epochY")) return equatorial.epoch.getYear();
-		else if(name.equals("LST")) return LST;
-		else if(name.equals("LSTh")) return LST / Unit.hour;
-		else if(name.equals("date")) {
+		if(name.equals("object")) return sourceName;
+		if(name.equals("id")) return getID();
+		if(name.equals("serial")) return serialNo;
+		if(name.equals("MJD")) return MJD;
+		if(name.equals("UT")) return (MJD - Math.floor(MJD)) * Unit.day;
+		if(name.equals("UTh")) return (MJD - Math.floor(MJD)) * 24.0;
+		if(name.equals("PA")) return getPA();
+		if(name.equals("PAd")) return getPA() / Unit.deg;
+		if(name.equals("AZ")) return horizontal.AZ();
+		if(name.equals("EL")) return horizontal.EL();
+		if(name.equals("RA")) return equatorial.RA() / Unit.timeAngle;
+		if(name.equals("DEC")) return equatorial.DEC();
+		if(name.equals("AZd")) return horizontal.AZ() / Unit.deg;
+		if(name.equals("ELd")) return horizontal.EL() / Unit.deg;
+		if(name.equals("RAd")) return equatorial.RA() / Unit.deg;
+		if(name.equals("RAh")) return ((equatorial.RA() + 2.0 * Math.PI) / Unit.hourAngle) % 24.0;
+		if(name.equals("DECd")) return equatorial.DEC() / Unit.deg;
+		if(name.equals("epoch")) return equatorial.epoch.toString();
+		if(name.equals("epochY")) return equatorial.epoch.getYear();
+		if(name.equals("LST")) return LST;
+		if(name.equals("LSTh")) return LST / Unit.hour;
+		if(name.equals("date")) {
 			AstroTime time = new AstroTime();
 			time.setMJD(MJD);
 			return time.getDate();
 		}
-		else if(name.equals("obstime")) return getObservingTime() / Unit.sec;
-		else if(name.equals("obsmins")) return getObservingTime() / Unit.min;
-		else if(name.equals("obshours")) return getObservingTime() / Unit.hour;
-		else if(name.equals("weight")) return weight;
-		else if(name.equals("frames")) return getFrameCount(~0); 
-		else if(name.equals("project")) return project;
-		else if(name.equals("observer")) return observer; 
-		else if(name.equals("descriptor")) return descriptor;
-		else if(name.equals("creator")) return creator;
-		else if(name.equals("integrations")) return size();
-		else if(name.equals("generation")) return getSourceGeneration();
-		else if(this instanceof Weather) {	
+		if(name.equals("obstime")) return getObservingTime() / Unit.sec;
+		if(name.equals("obsmins")) return getObservingTime() / Unit.min;
+		if(name.equals("obshours")) return getObservingTime() / Unit.hour;
+		if(name.equals("weight")) return weight;
+		if(name.equals("frames")) return getFrameCount(~0); 
+		if(name.equals("project")) return project;
+		if(name.equals("observer")) return observer; 
+		if(name.equals("descriptor")) return descriptor;
+		if(name.equals("creator")) return creator;
+		if(name.equals("integrations")) return size();
+		if(name.equals("generation")) return getSourceGeneration();
+		if(this instanceof Weather) {	
 			if(name.equals("Tamb")) return ((Weather) this).getAmbientKelvins() - Constant.zeroCelsius;
-			else if(name.equals("humidity")) return ((Weather) this).getAmbientHumidity();
-			else if(name.equals("pressure")) return ((Weather) this).getAmbientPressure() / Unit.hPa;
-			else if(name.equals("windspeed")) return ((Weather) this).getWindSpeed() / (Unit.m / Unit.s);
-			else if(name.equals("windpk")) return ((Weather) this).getWindPeak() / (Unit.m / Unit.s);
-			else if(name.equals("winddir"))	return ((Weather) this).getWindDirection() / Unit.deg;
+			if(name.equals("humidity")) return ((Weather) this).getAmbientHumidity();
+			if(name.equals("pressure")) return ((Weather) this).getAmbientPressure() / Unit.hPa;
+			if(name.equals("windspeed")) return ((Weather) this).getWindSpeed() / (Unit.m / Unit.s);
+			if(name.equals("windpk")) return ((Weather) this).getWindPeak() / (Unit.m / Unit.s);
+			if(name.equals("winddir"))	return ((Weather) this).getWindDirection() / Unit.deg;
+			return "---";
 		}
-		
+		if(sourceModel != null) {
+		    Object modelEntry = sourceModel.getTableEntry(name);
+		    if(modelEntry != null) return modelEntry;
+		}
 		return getFirstIntegration().getTableEntry(name);
 	}
 	

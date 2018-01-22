@@ -235,8 +235,8 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 	@Override
 	public Object getTableEntry(String name) {
 		if(name.equals("ref")) return referencePixel.getID();
-		else if(name.equals("rot")) return rotation / Unit.deg;
-		else return super.getTableEntry(name);
+		if(name.equals("rot")) return rotation / Unit.deg;
+		return super.getTableEntry(name);
 	}
 	
 	@Override

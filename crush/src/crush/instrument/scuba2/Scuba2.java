@@ -308,13 +308,12 @@ public class Scuba2 extends Camera<Scuba2Pixel> implements GroundBased, GridInde
 	
 	@Override
 	public Object getTableEntry(String name) {
-	
 		if(name.equals("filter")) return filter;
-		else if(name.equals("foc.X")) return focusXOffset;
-		else if(name.equals("foc.Y")) return focusYOffset;
-		else if(name.equals("foc.Z")) return focusZOffset;
-		else if(name.equals("shutter?")) return Boolean.toString(shutterOpen);
-		else return super.getTableEntry(name);
+		if(name.equals("foc.X")) return focusXOffset;
+		if(name.equals("foc.Y")) return focusYOffset;
+		if(name.equals("foc.Z")) return focusZOffset;
+		if(name.equals("shutter?")) return Boolean.toString(shutterOpen);
+		return super.getTableEntry(name);
 	}
 	
 	@Override

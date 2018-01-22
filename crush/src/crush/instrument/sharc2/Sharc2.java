@@ -454,8 +454,8 @@ public class Sharc2 extends CSOCamera<Sharc2Pixel> implements GridIndexed {
 	@Override
 	public Object getTableEntry(String name) {	
 		if(name.equals("bias")) return bias0 / Unit.mV;
-		else if(name.equals("filter")) return filterName;
-		else return super.getTableEntry(name);
+		if(name.equals("filter")) return filterName;
+		return super.getTableEntry(name);
 	}
 	
 	@Override

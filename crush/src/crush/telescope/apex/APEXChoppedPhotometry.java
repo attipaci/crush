@@ -54,7 +54,7 @@ public class APEXChoppedPhotometry extends Photometry {
 		sourceFlux.noData();	
 		
 		for(int c=flux.length; --c >=0; ) {
-			flux[c] = (WeightedPoint) left[c].clone();
+			flux[c] = (DataPoint) left[c].clone();
 			flux[c].subtract(right[c]);
 			flux[c].scale(0.5);
 			if(flux[c].weight() > 0.0) sourceFlux.average(flux[c]);

@@ -393,13 +393,13 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	@Override
 	public Object getTableEntry(String name) {
 		if(name.equals("chop?")) return chopper == null ? false : true;
-		else if(name.equals("dir")) return direction;
-		else if(name.equals("geom")) return geometry;
-		else if(name.equals("planet?")) return isNonSidereal;
-		else if(name.equals("obsmode")) return mode;
-		else if(name.equals("obstype")) return type;
-		else if(name.equals("dir")) return AstroSystem.getID(basisSystem);
-		else return super.getTableEntry(name);
+		if(name.equals("dir")) return direction;
+		if(name.equals("geom")) return geometry;
+		if(name.equals("planet?")) return isNonSidereal;
+		if(name.equals("obsmode")) return mode;
+		if(name.equals("obstype")) return type;
+		if(name.equals("dir")) return AstroSystem.getID(basisSystem);
+		return super.getTableEntry(name);
 	}
 	
 }

@@ -453,10 +453,10 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 	@Override
 	public Object getTableEntry(String name) {
 		if(name.equals("obsmode")) return obsMode;
-		else if(name.equals("obstype")) return obsMode;
-		else if(name.equals("obspattern")) return scanPattern;
-		else if(name.equals("dir")) return AstroSystem.getID(trackingClass);
-		else return super.getTableEntry(name);
+		if(name.equals("obstype")) return obsMode;
+		if(name.equals("obspattern")) return scanPattern;
+		if(name.equals("dir")) return AstroSystem.getID(trackingClass);
+		return super.getTableEntry(name);
 	}
 	
 }

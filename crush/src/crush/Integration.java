@@ -3558,18 +3558,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     public Object getTableEntry(String name) {
 
         if(name.equals("scale")) return gain;
-        else if(name.equals("NEFD")) return nefd;
-        else if(name.equals("zenithtau")) return zenithTau;
-        else if(name.equals("tau")) return zenithTau / Math.cos(scan.horizontal.EL());
-        else if(name.startsWith("tau.")) return getTau(name.substring(4).toLowerCase());
-        else if(name.equals("scanspeed")) return aveScanSpeed.value() / (Unit.arcsec / Unit.s);
-        else if(name.equals("rmsspeed")) return aveScanSpeed.rms() / (Unit.arcsec / Unit.s);
-        else if(name.equals("hipass")) return filterTimeScale / Unit.s;
-        else if(name.startsWith("chop")) {
+        if(name.equals("NEFD")) return nefd;
+        if(name.equals("zenithtau")) return zenithTau;
+        if(name.equals("tau")) return zenithTau / Math.cos(scan.horizontal.EL());
+        if(name.startsWith("tau.")) return getTau(name.substring(4).toLowerCase());
+        if(name.equals("scanspeed")) return aveScanSpeed.value() / (Unit.arcsec / Unit.s);
+        if(name.equals("rmsspeed")) return aveScanSpeed.rms() / (Unit.arcsec / Unit.s);
+        if(name.equals("hipass")) return filterTimeScale / Unit.s;
+        if(name.startsWith("chop")) {
             Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;
             if(name.equals("chopfreq")) return chopper == null ? null : chopper.frequency / Unit.Hz;
-            else if(name.equals("chopthrow")) return chopper == null ? null : 2.0 * chopper.amplitude / instrument.getSizeUnit().value();
-            else if(name.equals("chopeff")) return chopper == null ? null : chopper.efficiency;
+            if(name.equals("chopthrow")) return chopper == null ? null : 2.0 * chopper.amplitude / instrument.getSizeUnit().value();
+            if(name.equals("chopeff")) return chopper == null ? null : chopper.efficiency;
         }
 
         return instrument.getTableEntry(name);

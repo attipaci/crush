@@ -66,10 +66,10 @@ public class PolKa extends Laboca implements Oscillating {
 	@Override
 	public Object getTableEntry(String name) {
 		if(name.equals("wpfreq")) return waveplateFrequency / Unit.Hz;
-		else if(name.equals("wpjitter")) return jitter;
-		else if(name.equals("wpdir")) return isCounterRotating ? "-" : "+";
-		else if(name.equals("analyzer")) return hasAnalyzer() ? analyzerIDs[analyzerPosition] :  "-";
-		else return super.getTableEntry(name);
+		if(name.equals("wpjitter")) return jitter;
+		if(name.equals("wpdir")) return isCounterRotating ? "-" : "+";
+		if(name.equals("analyzer")) return hasAnalyzer() ? analyzerIDs[analyzerPosition] :  "-";
+		return super.getTableEntry(name);
 	}
 
 	@Override

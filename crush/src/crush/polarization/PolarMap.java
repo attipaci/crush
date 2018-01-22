@@ -472,9 +472,9 @@ public class PolarMap extends SourceModel {
 	@Override
 	public Object getTableEntry(String name) {
 		if(name.startsWith("N.")) return N.getTableEntry(name.substring(2));
-		else if(name.startsWith("Q.")) return Q.getTableEntry(name.substring(2));
-		else if(name.startsWith("U.")) return U.getTableEntry(name.substring(2));
-		else return super.getTableEntry(name);
+		if(name.startsWith("Q.")) return Q.getTableEntry(name.substring(2));
+		if(name.startsWith("U.")) return U.getTableEntry(name.substring(2));
+		return super.getTableEntry(name);
 	}
 
 	@Override

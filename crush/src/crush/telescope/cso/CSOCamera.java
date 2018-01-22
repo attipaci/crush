@@ -189,18 +189,18 @@ public abstract class CSOCamera<PixelType extends SingleColorPixel> extends Came
 	@Override
 	public Object getTableEntry(String name) {
 		if(name.equals("dsos?")) return dsosUsed;
-		else if(name.equals("foc.X")) return focusX / Unit.mm;
-		else if(name.equals("foc.Y")) return focusY / Unit.mm;
-		else if(name.equals("foc.Z")) return focusZ / Unit.mm;
-		else if(name.equals("foc.dY")) return focusYOffset / Unit.mm;
-		else if(name.equals("foc.dZ")) return focusZOffset / Unit.mm;
-		else if(name.equals("foc.mode")) return focusMode;
-		else if(name.equals("rot")) return rotatorAngle / Unit.deg;
-		else if(name.equals("rot0")) return rotatorZeroAngle / Unit.deg;
-		else if(name.equals("rotoff")) return rotatorOffset / Unit.deg;
-		else if(name.equals("rotMode")) return rotatorMode;
-		else if(name.equals("load")) return excessLoad / Unit.K;
-		else return super.getTableEntry(name);
+		if(name.equals("foc.X")) return focusX / Unit.mm;
+		if(name.equals("foc.Y")) return focusY / Unit.mm;
+		if(name.equals("foc.Z")) return focusZ / Unit.mm;
+		if(name.equals("foc.dY")) return focusYOffset / Unit.mm;
+		if(name.equals("foc.dZ")) return focusZOffset / Unit.mm;
+		if(name.equals("foc.mode")) return focusMode;
+		if(name.equals("rot")) return rotatorAngle / Unit.deg;
+		if(name.equals("rot0")) return rotatorZeroAngle / Unit.deg;
+		if(name.equals("rotoff")) return rotatorOffset / Unit.deg;
+		if(name.equals("rotMode")) return rotatorMode;
+		if(name.equals("load")) return excessLoad / Unit.K;
+		return super.getTableEntry(name);
 	}
 	
 }

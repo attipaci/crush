@@ -161,9 +161,9 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	@Override
 	public Object getTableEntry(String name) {
 		if(name.equals("FAZO")) return fixedOffset.x() / Unit.arcsec;
-		else if(name.equals("FZAO")) return -fixedOffset.y() / Unit.arcsec;
-		else if(name.equals("dir")) return AstroSystem.getID(scanSystem);
-		else return super.getTableEntry(name);
+		if(name.equals("FZAO")) return -fixedOffset.y() / Unit.arcsec;
+		if(name.equals("dir")) return AstroSystem.getID(scanSystem);
+		return super.getTableEntry(name);
 	}
 	
 	@Override

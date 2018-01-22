@@ -69,8 +69,8 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("wpdelay")) return meanTimeStampDelay / Unit.ms;
-        else if(name.equals("wpok")) return hasTimeStamps;
-        else return super.getTableEntry(name);
+        if(name.equals("wpok")) return hasTimeStamps;
+        return super.getTableEntry(name);
     }
 
     @Override

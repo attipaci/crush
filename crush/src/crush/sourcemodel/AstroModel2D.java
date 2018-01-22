@@ -863,8 +863,8 @@ public abstract class AstroModel2D extends SourceModel {
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("smooth")) return smoothing / getInstrument().getSizeUnit().value();
-        else if(name.equals("system")) return astroSystem().getID();
-        else return super.getTableEntry(name);
+        if(name.equals("system")) return astroSystem().getID();
+        return super.getTableEntry(name);
     }
     
     

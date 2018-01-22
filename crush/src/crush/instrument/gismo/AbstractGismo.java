@@ -455,16 +455,16 @@ public abstract class AbstractGismo extends Camera<GismoPixel> implements Ground
 	@Override
 	public Object getTableEntry(String name) {
 		if(name.equals("foc.dX")) return focusXOffset / Unit.mm;
-		else if(name.equals("foc.dY")) return focusYOffset / Unit.mm;
-		else if(name.equals("foc.dZ")) return focusZOffset / Unit.mm;
-		else if(name.equals("nasX")) return nasmythOffset.x() / Unit.arcsec;
-		else if(name.equals("nasY")) return nasmythOffset.y() / Unit.arcsec;
-		else if(name.equals("bias")) return detectorBias[0];
-		else if(name.equals("stage2.biases")) return toString(secondStageBias);
-		else if(name.equals("stage2.feedbacks")) return toString(secondStageFeedback);
-		else if(name.equals("stage3.biases")) return toString(thirdStageBias);	
-		else if(name.equals("stage3.feedbacks")) return toString(thirdStageFeedback);	
-		else return super.getTableEntry(name);
+		if(name.equals("foc.dY")) return focusYOffset / Unit.mm;
+		if(name.equals("foc.dZ")) return focusZOffset / Unit.mm;
+		if(name.equals("nasX")) return nasmythOffset.x() / Unit.arcsec;
+		if(name.equals("nasY")) return nasmythOffset.y() / Unit.arcsec;
+		if(name.equals("bias")) return detectorBias[0];
+		if(name.equals("stage2.biases")) return toString(secondStageBias);
+		if(name.equals("stage2.feedbacks")) return toString(secondStageFeedback);
+		if(name.equals("stage3.biases")) return toString(thirdStageBias);	
+		if(name.equals("stage3.feedbacks")) return toString(thirdStageFeedback);	
+		return super.getTableEntry(name);
 	}
 	
 	@Override
