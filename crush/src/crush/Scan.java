@@ -599,11 +599,9 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		String sourceType = sourceModel == null ? "model." : sourceModel.getLoggingID();
 		
-		
-		
 		if(name.startsWith("?")) {
 			name = name.substring(1).toLowerCase();
-			if(!hasOption(name)) return "---";
+			if(!hasOption(name)) return null;
 	
 			String value = option(name).getValue();
 			if(value.length() == 0) return "<true>";
@@ -611,16 +609,16 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			return value;			
 		}
 		if(name.startsWith(sourceType + ".")) {
-            if(sourceModel == null) return "---";
+            if(sourceModel == null) return null;
             return sourceModel.getTableEntry(name.substring(sourceType.length() + 1));
         }
 		if(name.startsWith("pnt.")) {
-			if(pointing == null) return "---";
+			if(pointing == null) return null;
 			return getPointingData().getTableEntry(name.substring(4));
 		}
 		if(name.startsWith("src.")) {
-			if(pointing == null) return "---";
-			if(!(sourceModel instanceof AstroIntensityMap)) return "---";
+			if(pointing == null) return null;
+			if(!(sourceModel instanceof AstroIntensityMap)) return null;
 			Map2D map = ((AstroIntensityMap) sourceModel).map;
 			return pointing.getRepresentation(map.getGrid()).getData(map.getProperties(), instrument.getSizeUnit()).getTableEntry(name.substring(4));
 		}
@@ -668,7 +666,6 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			if(name.equals("windspeed")) return ((Weather) this).getWindSpeed() / (Unit.m / Unit.s);
 			if(name.equals("windpk")) return ((Weather) this).getWindPeak() / (Unit.m / Unit.s);
 			if(name.equals("winddir"))	return ((Weather) this).getWindDirection() / Unit.deg;
-			return "---";
 		}
 		if(sourceModel != null) {
 		    Object modelEntry = sourceModel.getTableEntry(name);

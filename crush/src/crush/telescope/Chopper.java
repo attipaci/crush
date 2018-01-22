@@ -23,6 +23,7 @@
 package crush.telescope;
 
 import java.io.Serializable;
+import jnum.text.TableFormatter;
 
 import crush.PhaseSet;
 import jnum.Copiable;
@@ -31,7 +32,7 @@ import jnum.Util;
 import jnum.math.*;
 
 
-public class Chopper implements Serializable, Cloneable, Copiable<Chopper> {
+public class Chopper implements Serializable, Cloneable, Copiable<Chopper>, TableFormatter.Entries {
 	/**
 	 * 
 	 */
@@ -60,6 +61,14 @@ public class Chopper implements Serializable, Cloneable, Copiable<Chopper> {
 	
 	public double stareDuration() {
 		return efficiency / (positions * frequency);		
+	}
+	
+	@Override
+    public Object getTableEntry(String name) {
+	    if(name.equals("chopfreq")) return frequency / Unit.Hz;
+        if(name.equals("chopthrow")) return amplitude / Unit.arcsec;
+        if(name.equals("chopeff")) return efficiency;
+        return null;
 	}
 	
 	@Override

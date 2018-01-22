@@ -525,8 +525,8 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("hwp")) return getMeanHWPAngle();
-        else if(name.equals("pwv")) return getMeanPWV() / Unit.um;
-        else return super.getTableEntry(name);
+        if(name.equals("pwv")) return getMeanPWV() / Unit.um;
+        return super.getTableEntry(name);
     }
 
     private void shiftChopper(int n) {

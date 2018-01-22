@@ -3556,7 +3556,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
     @Override
     public Object getTableEntry(String name) {
-
         if(name.equals("scale")) return gain;
         if(name.equals("NEFD")) return nefd;
         if(name.equals("zenithtau")) return zenithTau;
@@ -3565,11 +3564,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         if(name.equals("scanspeed")) return aveScanSpeed.value() / (Unit.arcsec / Unit.s);
         if(name.equals("rmsspeed")) return aveScanSpeed.rms() / (Unit.arcsec / Unit.s);
         if(name.equals("hipass")) return filterTimeScale / Unit.s;
-        if(name.startsWith("chop")) {
-            Chopper chopper = this instanceof Chopping ? ((Chopping) this).getChopper() : null;
-            if(name.equals("chopfreq")) return chopper == null ? null : chopper.frequency / Unit.Hz;
-            if(name.equals("chopthrow")) return chopper == null ? null : 2.0 * chopper.amplitude / instrument.getSizeUnit().value();
-            if(name.equals("chopeff")) return chopper == null ? null : chopper.efficiency;
+        if(name.startsWith("chop") && this instanceof Chopping) {
+            Chopper chopper = ((Chopping) this).getChopper();
+            if(chopper == null) return null;
+            return chopper.getTableEntry(name);
         }
 
         return instrument.getTableEntry(name);
