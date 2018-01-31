@@ -1,4 +1,4 @@
->> gyrocorrect?
+>> 'gyrocorrect' option
 >> 'show' beam smoothing broken...
 
 2.41-b2
@@ -47,8 +47,12 @@
 	[NEW] {SOFIA} Implemented a correction scheme for gyro drifts, based
 	on the guide-star relock data stored in the FITS headers. The 
 	correction is not enabled by default (as it can be troublesome when
-	the relock data itself is garbage), but can be enabled via the
-	'gyrocorrect' option.
+	the relock data itself is garbage), but can be enabled explicitly
+	via the 'gyrocorrect' option. You can also set a limit to how big
+	of a gyro drift can be corrected via the 'gyrocorrect.max' option
+	(in arcsecs). Drifts bigger than that will be ignored for single
+	scan reductions (assuming they are flukes), but dropped from multi-scan
+	reductions (in case they are in fact bad).
 
 	[NEW] {CSO} Maitau lookups now use offline lookup instead of 
 	contacting MaiTau server. Since the CSO has retired, we have all the
@@ -79,6 +83,14 @@
 
 	[TWEAK] Improved pointing fits now concetrate more on the central
 	peak, can deal with negative peaks, and less likely to stall.
+
+	[CONFIG] {LABOCA} Tau and calibration scaling data now up to and
+	including 2017-09-17.
+
+	[CONFIG] {HAWC+} Tweaked calibration for FS15 (Oct/Nov 2017) and
+	forward (band A, D, E).
+
+	[CONFIG] {HAWC+} Pointing corrections for FS15 (Oct/Nov 2017).
 
 	[CONFIG] {HAWC+} Updated array geometry parameters for 2017-October
 	flight series (the focal planes got a new suspension just before,

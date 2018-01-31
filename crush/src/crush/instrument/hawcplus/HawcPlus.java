@@ -544,7 +544,19 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
             if(!scan.instrument.instrumentData.instrumentConfig.equals(firstScan.instrument.instrumentData.instrumentConfig)) {
                 warning("Scan " + scans.get(i).getID() + " is in different instrument configuration. Removing from set.");
                 scans.remove(i);				
-            }		
+            }	          
+        }
+        
+        for(int i=scans.size(); --i >= 1; ) {
+            HawcPlusScan scan = (HawcPlusScan) scans.get(i);
+            
+            if(scan.hasOption("gyrocorrect")) if(scan.hasOption("gyrocorrect.max")) {
+                double limit = scan.option("gyrocorrect.max").getDouble() * Unit.arcsec;
+                if(scan.gyroDrifts.getMax() > limit) {
+                    warning("Scan " + scans.get(i).getID() + " has too large gyro drifts. Removing from set.");
+                    scans.remove(i);
+                }
+            }
         }
 
         super.validate(scans);

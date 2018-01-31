@@ -67,6 +67,14 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Datum> {
             return;
         }
         
+        if(integration.hasOption("gyrocorrect.max")) {
+            double limit = integration.option("gyrocorrect.max").getDouble() * Unit.arcsec;
+            if(getMax() > limit) {
+                integration.warning("Skipping gyro drift correction. Drifts are too large...");
+                return;
+            }
+        }
+        
         integration.info("Correcting for gyro drifts.");
                 
         validate();

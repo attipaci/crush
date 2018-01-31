@@ -728,7 +728,10 @@ for expert users only.
     orig.file
     orig.observer       Name(s) of observer(s) or PI(s).
     orig.operator       Name(s) of the operator(s).
-   
+  
+    pnt.dSIBSX          (pixels) SIBS pointing increment in X
+    pnt.dSIBSY		(pixels) SIBS pointinh increment in Y 
+
     proc.head
     proc.level
     proc.nspec

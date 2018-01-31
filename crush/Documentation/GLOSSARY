@@ -1434,7 +1434,7 @@
 			channels.
 			@See: 'division'
 
-:: gyrocorrect		@Telescope: SOFIA
+:: gyrocorrect		@Instrument: HAWC+
 			@Since: 2.41
 			@Advanced
 			Correct for gyro drifts based on guide-star relock
@@ -1442,6 +1442,17 @@
 			needed when the gyros funtion properly. But, 
 			occasionally, they drift a fair bit, and this option
 			can activate the correction scheme on demand.
+			@See: 'gyrocorrect.max'
+
+:: gyrocorrect.max=X	@Instrument: HAWC+
+			@Since: 2.41
+			@Expert
+			Set a limit to how large of a gyro drift (X in arcsec)
+			can be corrected for. When drifts larger than that are
+			found in a scan, then the correction is skipped for
+			single scan reductions (perhaps it's just a fluke)
+			or dropped from the set in multi-scan reductions
+			(to be safe).
 
 :: he3=<source>		@Instrument: LABOCA
 			@Advanced

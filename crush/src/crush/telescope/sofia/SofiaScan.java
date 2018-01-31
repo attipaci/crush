@@ -541,13 +541,10 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
         Offset2D relative = getNativePointingIncrement(pointing);
         Vector2D siOffset = getSIPixelOffset(relative);
+        //Unit sizeUnit = instrument.getSizeUnit();
 
-        Unit sizeUnit = instrument.getSizeUnit();
-
-        data.new Entry("X", relative.x(), sizeUnit);
-        data.new Entry("Y", relative.y(), sizeUnit);
-        data.new Entry("SIBSX", siOffset.x(), sizeUnit);
-        data.new Entry("SIBSY", siOffset.y(), sizeUnit);
+        data.new Entry("dSIBSX", siOffset.x(), Unit.unity);
+        data.new Entry("dSIBSY", siOffset.y(), Unit.unity);
         
         return data;
     }
