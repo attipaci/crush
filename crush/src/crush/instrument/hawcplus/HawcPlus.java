@@ -427,7 +427,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
             array.boresightIndex = defaultBoresightIndex;
             warning("Missing FITS boresight --> " + array.boresightIndex);
         }
-        Vector2D center = getSIBSPosition(0, array.boresightIndex.y(), array.boresightIndex.x());
+        Vector2D center = getSIBSPosition(0, 39.0 - array.boresightIndex.y(), array.boresightIndex.x());
 
         for(HawcPlusPixel pixel : this) pixel.calcSIBSPosition();
 
@@ -663,7 +663,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     }
 
     public Vector2D getSIBSPosition(int sub, double row, double col) {
-        Vector2D v = new Vector2D(col, 39.0 - row);
+        Vector2D v = new Vector2D(col, 39.0 - row); // X, Y
         v.rotate(subarrayOrientation[sub]);
         v.add(subarrayOffset[sub]);
         // X is oriented like AZ (tXEL), whereas Y is oriented like -tEL.

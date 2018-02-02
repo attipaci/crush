@@ -1,7 +1,24 @@
->> 'gyrocorrect' option
->> 'show' beam smoothing broken...
 
-2.41-b2
+2.41-2
+
+	[FIX] {HAWC+} SIBSY was not interpreted correctly, thus referencing
+	non-central pointing to the wrong location on the array. Fixed and
+	updated configurations to match.
+
+
+
+2.41-1 (31 January 2018)
+
+
+	Overview
+	=======================================================================
+	This release fixes several unfortunate bugs in the 2.40 releases that
+	completely crippled 'deep' mode reduction, and APEX/LABOCA photometry,
+	affected 'show' and 'imagetool' and were to blame for various other 
+	problems. There are also new feautures and impromevemts, including
+	an up-to-date configuration for HAWC+ including FS15 support. 	 
+	=======================================================================
+
 
 	[BUG] A bug in the jnum subpackage broke 'weighting.scans' behavior
 	when the 'rms' method was used (in 'deep' mode). Fixed.
