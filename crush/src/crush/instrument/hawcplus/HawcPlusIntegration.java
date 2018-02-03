@@ -528,6 +528,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         if(name.equals("pwv")) return getMeanPWV() / Unit.um;
         return super.getTableEntry(name);
     }
+    
 
     private void shiftChopper(int n) {
         if(n == 0) return;

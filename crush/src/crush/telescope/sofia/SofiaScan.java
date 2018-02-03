@@ -585,9 +585,19 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         return super.getTableEntry(name);
     }
     
+    public Vector2D getNominalPointingOffset(Offset2D nativePointing) {
+        Vector2D offset = new Vector2D(nativePointing); 
+        
+        // Add the pointing offset used in the reduction back in...
+        if(instrument.hasOption("pointing")) offset.add(instrument.option("pointing").getVector2D(Unit.arcsec));
+        
+        return offset;
+    }
     
-    public Vector2D getSIPixelOffset(Offset2D nativePointing) {
-        Vector2D siOffset = new Vector2D(nativePointing); 
+    
+    public Vector2D getSIPixelOffset(Offset2D nativePointing) { 
+        Vector2D siOffset = getNominalPointingOffset(nativePointing);
+       
         siOffset.rotate(getTelescopeVPA() - getInstrumentVPA());
         
         // Correct for the residual instrument rotation...

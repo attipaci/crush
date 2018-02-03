@@ -41,6 +41,7 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
 import jnum.fits.FitsToolkit;
+import jnum.math.Offset2D;
 import jnum.math.Vector2D;
 
 public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
@@ -164,8 +165,8 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
         HawcPlusIntegration integration = this.getIntegrationInstance();
         integration.read(dataHDUs);
         add(integration);
-
     }
+    
 
     @Override
     public void validate() {
@@ -185,6 +186,14 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
         }
     }
 
+
+    @Override
+    public Vector2D getNominalPointingOffset(Offset2D nativePointing) {
+        Vector2D offset = super.getNominalPointingOffset(nativePointing); 
+        offset.subtract(getFirstIntegration().getMeanChopperPosition());
+        return offset;
+    }    
+    
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("hawc.dfoc")) return focusTOffset / Unit.um;

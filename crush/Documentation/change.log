@@ -5,6 +5,9 @@
 	non-central pointing to the wrong location on the array. Fixed and
 	updated configurations to match.
 
+	[CHANGE] {HAWC+} Reported SIBS offset is now referred to the
+	uncorrected pointing center for the mean chopper position.
+
 
 
 2.41-1 (31 January 2018)

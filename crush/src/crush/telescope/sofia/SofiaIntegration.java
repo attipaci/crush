@@ -30,6 +30,7 @@ import crush.telescope.GroundBased;
 import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
+import jnum.math.Vector2D;
 
 public abstract class SofiaIntegration<InstrumentType extends SofiaCamera<? extends Channel>, FrameType extends SofiaFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased {
@@ -117,6 +118,22 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
         
         this.setTau("pwv", pwv);
     }
+    
+    
+    public Vector2D getMeanChopperPosition() {
+        Vector2D mean = new Vector2D();
+        int n = 0;
+        
+        for(SofiaFrame frame : this) if(frame != null) {
+            mean.add(frame.chopperPosition);
+            n++;
+        }
+        
+        if(n > 0) mean.scale(1.0 / n);
+          
+        return mean;        
+    }
+
 
 
 }
