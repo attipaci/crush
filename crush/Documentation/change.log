@@ -1,13 +1,41 @@
 
-2.41-2
+2.41-2 (1 February 2018)
 
-	[FIX] {HAWC+} SIBSY was not interpreted correctly, thus referencing
+
+	Overview
+	======================================================================
+	This updated 2.41 release brings new flatfields and a slightly updated
+	calibration for HAWC+, as well as workarounds for some of the 
+	astrometry glitches experienced during FS15. It also fixes a sign error
+	with non-central SIBS-Y positioning, and eliminates a flux reporting
+	discrepancy between console output and the logs. All relatively minor
+	changes, which nonetheless elevate the HAWC+ reduction quality.
+	======================================================================
+
+	[FIX] There was a discrepancy between integrated fluxes reported 
+	on console and those logged, due to differences in taking smoothing
+	into account. Now reconciled.
+
+	[FIX] {HAWC+} Discard frames with zero RA & DEC or zero NonSiderealRA 
+	& NonSiderealDec columns (astrometry glitches). 
+
+	[FIX] More error-proof FITS header editing for possibly invalid (NaN) 
+	coordinates.
+
+	[FIX] {HAWC+} SIBS_Y was not interpreted correctly, thus referencing
 	non-central pointing to the wrong location on the array. Fixed and
 	updated configurations to match.
 
 	[CHANGE] {HAWC+} Reported SIBS offset is now referred to the
 	uncorrected pointing center for the mean chopper position.
 
+	[CONFIG] {HAWC+} Static flagging and calibration updated with FS15
+	flatfields and flux logging fix. Only band A calibration is 
+	significantly different from FS14...
+
+	[CONFIG] {HAWC+} New FS15 flatfields for 170mK operating temperature.
+	(These are now default starting F443).
+	
 
 
 2.41-1 (31 January 2018)

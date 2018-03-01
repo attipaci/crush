@@ -496,17 +496,17 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		// The Source Descriptors
 		c.add(new HeaderCard("OBJECT", sourceName, "Object catalog name"));
 		c.add(new HeaderCard("RADESYS", (equatorial.epoch instanceof JulianEpoch ? "FK5" : "FK4"), "World coordinate system id"));
-		c.add(new HeaderCard("RA", Util.hf2.format(equatorial.RA()), "Human Readable Right Ascention"));
-		c.add(new HeaderCard("DEC", Util.af1.format(equatorial.DEC()), "Human Readable Declination"));
+		if(!Double.isNaN(equatorial.RA())) c.add(new HeaderCard("RA", Util.hf2.format(equatorial.RA()), "Human Readable Right Ascention"));
+		if(!Double.isNaN(equatorial.DEC())) c.add(new HeaderCard("DEC", Util.af1.format(equatorial.DEC()), "Human Readable Declination"));
 		c.add(new HeaderCard("EQUINOX", equatorial.epoch.getYear(), "Precession epoch"));	
 	
 		if(!Double.isNaN(MJD)) c.add(new HeaderCard("MJD", MJD, "Modified Julian Day"));
 		
 		if(this instanceof GroundBased) {
 			if(!Double.isNaN(LST)) c.add(new HeaderCard("LST", LST / Unit.hour, "Local Sidereal Time (hours)"));
-			c.add(new HeaderCard("AZ", horizontal.AZ()/Unit.deg, "Azymuth (deg)."));
-			c.add(new HeaderCard("EL", horizontal.EL()/Unit.deg, "Elevation (deg)."));
-			c.add(new HeaderCard("PA", getPA()/Unit.deg, "Direction of zenith w.r.t. North (deg)"));
+			if(!Double.isNaN(horizontal.AZ())) c.add(new HeaderCard("AZ", horizontal.AZ()/Unit.deg, "Azymuth (deg)."));
+			if(!Double.isNaN(horizontal.EL())) c.add(new HeaderCard("EL", horizontal.EL()/Unit.deg, "Elevation (deg)."));
+			if(!Double.isNaN(getPA())) c.add(new HeaderCard("PA", getPA()/Unit.deg, "Direction of zenith w.r.t. North (deg)"));
 		
 			if(site != null) {
 				c.add(new HeaderCard("SITELON", Util.af1.format(site.longitude()), "Geodetic longitude of the observing site (deg)"));

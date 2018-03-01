@@ -126,7 +126,7 @@ public class HawcPlusFrame extends SofiaFrame {
     @Override
     public boolean validate() {
         HawcPlusScan hawcScan = (HawcPlusScan) scan;
-        HawcPlus hawc = hawcScan.instrument; 
+        HawcPlus hawc = hawcScan.instrument;
         
         if(!isComplete) return false;
          
@@ -142,7 +142,12 @@ public class HawcPlusFrame extends SofiaFrame {
         
         if(hasTelescopeInfo) {
             if(equatorial == null) return false;
-          
+            if(equatorial.isNull()) return false;
+            if(scan.isNonSidereal) if(objectEq.isNull()) return false;
+            
+            if(equatorial.isNaN()) return false;
+            if(horizontal.isNaN()) return false;
+         
             if(Double.isNaN(LST)) return false;
             if(Double.isNaN(site.longitude())) return false;
             if(Double.isNaN(site.latitude())) return false;
