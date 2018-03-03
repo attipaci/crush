@@ -1,10 +1,10 @@
 
-2.41-2 (1 March 2018)
+2.41-2 (2 March 2018)
 
 
 	Overview
 	======================================================================
-	This updated 2.41 release brings new flatfields and a slightly updated
+	This updated 2.41 release brings new flatfields and a slightly tweaked
 	calibration for HAWC+, as well as workarounds for some of the 
 	astrometry glitches experienced during FS15. It also fixes a sign error
 	with non-central SIBS-Y positioning, and eliminates a flux reporting
@@ -29,7 +29,7 @@
 	[CHANGE] {HAWC+} Reported SIBS offset is now referred to the
 	uncorrected pointing center for the mean chopper position.
 
-	[CONFIG] 
+	[CONFIG] FS15 flux jump corrections using Darren's table. 
 
 	[CONFIG] {HAWC+} Added FS14 (May 2017) pointing corrections.
 	
