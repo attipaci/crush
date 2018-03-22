@@ -60,9 +60,9 @@ public abstract class Photometry extends SourceModel {
     @Override
     public SourceModel getWorkingCopy(boolean withContents) {
         Photometry copy = (Photometry) super.getWorkingCopy(withContents);
-        copy.sourceFlux = (DataPoint) sourceFlux.clone();
+        copy.sourceFlux = sourceFlux.copy();
         copy.flux = new DataPoint[flux.length];
-        if(withContents) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = (DataPoint) flux[i].clone();
+        if(withContents) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = flux[i].copy();
         return copy;
     }
 

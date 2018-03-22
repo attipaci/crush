@@ -46,15 +46,15 @@ public class APEXChoppedPhotometry extends Photometry {
 
 	@Override
 	public void process(Scan<?, ?> scan) {		
-		final WeightedPoint[] left = WeightedPoint.createArray(flux.length);
-		final WeightedPoint[] right = WeightedPoint.createArray(flux.length);
+		final DataPoint[] left = DataPoint.createArray(flux.length);
+		final DataPoint[] right = DataPoint.createArray(flux.length);
 
 		for(Integration<?,?> integration : scan) process((APEXSubscan<?,?>) integration, left, right);
 		
 		sourceFlux.noData();	
 		
 		for(int c=flux.length; --c >=0; ) {
-			flux[c] = (DataPoint) left[c].clone();
+			flux[c] = left[c].copy();
 			flux[c].subtract(right[c]);
 			flux[c].scale(0.5);
 			if(flux[c].weight() > 0.0) sourceFlux.average(flux[c]);

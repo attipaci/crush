@@ -144,7 +144,7 @@ public class IRAMTauTable extends LocalAverage<IRAMTauTable.Entry> {
 		@Override
 		public boolean isConsistentWith(LocalizedData other) {
 			Entry entry = (Entry) other;
-			DataPoint difference = (DataPoint) entry.tau.copy();
+			DataPoint difference = entry.tau.copy();
 			difference.subtract(tau);	
 			return Math.abs(difference.significance()) < 5.0;
 		}

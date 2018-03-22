@@ -59,7 +59,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.41-2";
+    private static String version = "2.41-3";
     private static String revision = "";
 
     public static String workPath = ".";
@@ -74,7 +74,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public static int maxThreads = 1;
     public static volatile ExecutorService executor, sourceExecutor;
     
-
     public int parallelScans = 1;
     public int parallelTasks = 1;
 
@@ -269,8 +268,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
             consoleReporter.addLine();
             exit(1);
         }
-
-         
+ 
         try { instrument.validate(scans); }
         catch(Error e) {
             error(e);
