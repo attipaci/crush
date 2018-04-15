@@ -125,7 +125,8 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         instrumentData = new SofiaInstrumentData(header);
 
         // Set the default angular resolution given the telescope size...
-        setResolution(1.22 * instrumentData.wavelength * Unit.um / telescopeDiameter);
+        double D = hasOption("aperture") ? option("aperture").getDouble() * Unit.m : telescopeDiameter;
+        setResolution(1.22 * instrumentData.wavelength / D);
 
         array = new SofiaArrayData(header);
 

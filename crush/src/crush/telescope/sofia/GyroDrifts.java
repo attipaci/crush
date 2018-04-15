@@ -21,15 +21,11 @@
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
-package crush.instrument.hawcplus;
+package crush.telescope.sofia;
 
 import java.util.ArrayList;
 
 import crush.CRUSH;
-import crush.telescope.sofia.SofiaFrame;
-import crush.telescope.sofia.SofiaHeader;
-import crush.telescope.sofia.SofiaIntegration;
-import crush.telescope.sofia.SofiaScan;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.CoordinateEpoch;
@@ -127,7 +123,7 @@ public class GyroDrifts extends ArrayList<GyroDrifts.Datum> {
     
     
     
-    protected void parse(SofiaHeader header) {
+    public void parse(SofiaHeader header) {
         for(int i=0; ; i++){
             try { if(!add(header, i)) return; }
             catch(IllegalStateException e) {}            

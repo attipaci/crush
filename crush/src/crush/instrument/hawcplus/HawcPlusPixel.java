@@ -79,7 +79,6 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public void uniformGains() {
 		super.uniformGains();
 		muxGain = 1.0;
-		pinGain = 1.0;
 	}
 	
 	

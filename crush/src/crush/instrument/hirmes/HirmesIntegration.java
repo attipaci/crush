@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -21,14 +21,12 @@
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
-package crush.instrument.hawcplus;
+package crush.instrument.hirmes;
 
-import java.io.File;
 import java.util.List;
 
 import crush.CRUSH;
 import crush.Channel;
-import crush.Dependents;
 import crush.Frame;
 import crush.fits.HDURowReader;
 import crush.telescope.sofia.SofiaChopperData;
@@ -40,43 +38,36 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.ArrayDataInput;
 
-public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFrame> {	
+public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {    
     /**
      * 
      */
-    private static final long serialVersionUID = -3894220792729801094L;
+    private static final long serialVersionUID = -7898186476366677656L;
+    
 
-    private boolean fixJumps = false, fixSubarray[] = new boolean[HawcPlus.subarrays];
-    private int minJumpLevelFrames = 0;
-
-    private Dependents driftParms;
-
-    public HawcPlusIntegration(HawcPlusScan parent) {
+    public HirmesIntegration(HirmesScan parent) {
         super(parent);
-    }	
+    }   
 
     @Override
-    public HawcPlusFrame getFrameInstance() {
-        return new HawcPlusFrame((HawcPlusScan) scan);
+    public HirmesFrame getFrameInstance() {
+        return new HirmesFrame((HirmesScan) scan);
     }
 
-    public double getMeanHWPAngle() {
-        return 0.5 * (getFirstFrame().hwpAngle + getLastFrame().hwpAngle);
-    }
     
     @Override
     public double getMeanPWV() {
         double sum = 0.0;
         int n=0;
         
-        for(HawcPlusFrame exposure : this) if(exposure != null) if(!Double.isNaN(exposure.PWV)) {
+        for(HirmesFrame exposure : this) if(exposure != null) if(!Double.isNaN(exposure.PWV)) {
             sum += exposure.PWV;
             n++;
         }
         return sum / n;
     }
 
-    protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {	
+    protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {   
         int records = 0;
         for(BinaryTableHDU hdu : dataHDUs) records += hdu.getAxes()[0];
 
@@ -90,14 +81,14 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         for(int t=records; --t>=0; ) add(null);
 
         for(int i=0; i<dataHDUs.size(); i++) 
-            new HawcPlusRowReader(dataHDUs.get(i), ((HawcPlusScan) scan).fits.getStream()).read(1);	
+            new HirmesRowReader(dataHDUs.get(i), ((HirmesScan) scan).fits.getStream()).read(1); 
     }
 
-    class HawcPlusRowReader extends HDURowReader { 
+    class HirmesRowReader extends HDURowReader { 
         private int iSN=-1, iDAC=-1, iJump=-1, iTS=-1;
         private int iAZ=-1, iEL=-1, iRA=-1, iDEC=-1, iAVPA=-1, iTVPA=-1, iCVPA=-1;
         private int iLON=-1, iLAT=-1, iLST=-1, iPWV=-1, iORA=-1, iODEC=-1;
-        private int iChopR=-1, iChopS=-1, iHWP=-1, iStat=-1;
+        private int iChopR=-1, iChopS=-1, iStat=-1;
         private int iLOS=-1, iRoll=-1;
 
         private boolean isLab;
@@ -105,9 +96,9 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
         private boolean invertChop = false;
 
-        private final HawcPlusScan hawcPlusScan = (HawcPlusScan) scan;
+        private final HirmesScan hirmesScan = (HirmesScan) scan;
 
-        public HawcPlusRowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
+        public HirmesRowReader(BinaryTableHDU hdu, ArrayDataInput in) throws FitsException {
             super(hdu, in);
 
             isLab = hasOption("lab");
@@ -115,15 +106,11 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             invertChop = hasOption("chopper.invert");
 
             // The Sofia timestamp (decimal seconds since 0 UTC 1 Jan 1970...
-            iTS = hdu.findColumn("Timestamp");   
-            iSN = hdu.findColumn("FrameCounter");
+            iTS = hdu.findColumn("TIMESTAMP");   
+            iSN = hdu.findColumn("FRAMECOUNTER");
 
-            iJump = hdu.findColumn("FluxJumps");
-            iDAC = hdu.findColumn("SQ1Feedback");
-
-            // HWP may be used in the future if support is extended for
-            // scan-mode polarimetry (or polarimetry, in general...
-            iHWP = hdu.findColumn("hwpCounts");
+            iJump = hdu.findColumn("FLUXJUMPS");
+            iDAC = hdu.findColumn("SQ1FEEDBACK");
 
             // Ignore coordinate info for 'lab' data...
             if(isLab) {
@@ -131,7 +118,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                 return;
             }
 
-            iStat = hdu.findColumn("Flag");
+            iStat = hdu.findColumn("FLAG");
 
             iAZ = hdu.findColumn("AZ");
             iEL = hdu.findColumn("EL");
@@ -141,21 +128,21 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
             iDEC = hdu.findColumn("DEC");
 
             if(scan.isNonSidereal) {
-                iORA = hdu.findColumn("NonSiderealRA");
-                iODEC = hdu.findColumn("NonSiderealDec");
+                iORA = hdu.findColumn("NONSIDEREALRA");
+                iODEC = hdu.findColumn("NONSIDEREALDEC");
             }
 
             iLST = hdu.findColumn("LST");
 
             iAVPA = hdu.findColumn("SIBS_VPA");
             iTVPA = hdu.findColumn("TABS_VPA");
-            iCVPA = hdu.findColumn("Chop_VPA");
+            iCVPA = hdu.findColumn("CHOP_VPA");
 
             iLON = hdu.findColumn("LON");
             iLAT = hdu.findColumn("LAT");  
 
-            iChopR = hdu.findColumn("sofiaChopR");
-            iChopS = hdu.findColumn("sofiaChopS");
+            iChopR = hdu.findColumn("SOFIACHOPR");
+            iChopS = hdu.findColumn("SOFIACHOPS");
 
             iPWV = hdu.findColumn("PWV");
             
@@ -196,29 +183,26 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
                     timeStamp = new AstroTime();
                     apparent = new EquatorialCoordinates(); 
-                    epoch = ((HawcPlusScan) scan).telescope.epoch;
+                    epoch = ((HirmesScan) scan).telescope.epoch;
                 }
 
                 @Override
-                public void processRow(int i, Object[] row) {                    
-                    HawcPlus hawc = scan.instrument;
-
+                public void processRow(int i, Object[] row) {
                     // Create the frame object only if it cleared the above hurdles...
-                    final HawcPlusFrame frame = new HawcPlusFrame(hawcPlusScan);
+                    final HirmesFrame frame = new HirmesFrame(hirmesScan);
                     frame.index = i;
                     frame.isComplete = false;
                     frame.hasTelescopeInfo = !isLab;
 
                     // Read the pixel data (DAC and MCE jump counter)
-                    frame.parseData((int[][]) row[iDAC], (short[][]) row[iJump]);
-                    frame.mceSerial = iSN < 0 ? 0 : ((long[]) row[iSN])[0];
+                    frame.parseData((int[][]) row[iDAC], iJump < 0 ? null : (short[][]) row[iJump]);
+                    frame.mceSerial = iSN < 0 ? 0L : ((long[]) row[iSN])[0];
 
-                    frame.utc = ((double[]) row[iTS])[0];
+   
+                    frame.utc = iTS < 0 ? i * instrument.samplingInterval : ((double[]) row[iTS])[0];
                     timeStamp.setUTC(frame.utc);
                     frame.MJD = timeStamp.getMJD();
-
-                    frame.hwpAngle = iHWP < 0 ? 0.0F : (float) (((int[]) row[iHWP])[0] * HawcPlus.hwpStep - hawc.hwpTelescopeVertical);
-
+                        
                     set(i, frame);
 
                     if(frame.hasTelescopeInfo) frame.hasTelescopeInfo = !Double.isNaN(((double[]) row[iRA])[0]);
@@ -233,17 +217,18 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
                     // Add the astrometry...
                     // ======================================================================================
 
-                    frame.status = ((int[]) row[iStat])[0];       
+                    frame.status = iStat < 0 ? 0 : ((int[]) row[iStat])[0];       
 
                     if(!isConfigured) configure(row);
 
-                    final double pwv = ((double[]) row[iPWV])[0];
+                    final double pwv = iPWV < 0 ? 0.0 : ((double[]) row[iPWV])[0];
                     frame.PWV = pwv < 0.0 ? Double.NaN : pwv * Unit.um;
                     
                     frame.site = new GeodeticCoordinates(
                             iLON < 0 ? 0.0 : ((double[]) row[iLON])[0] * Unit.deg, 
-                            iLAT < 0 ? 0.0 :((double[]) row[iLAT])[0] * Unit.deg
-                    );  
+                            iLAT < 0 ? 0.0 : ((double[]) row[iLAT])[0] * Unit.deg
+                    );
+                            
                     frame.LST = ((double[]) row[iLST])[0] * (float) Unit.hour;
 
                     frame.equatorial = new EquatorialCoordinates(
@@ -335,48 +320,17 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
 
     @Override
-    public void writeProducts() {
-        super.writeProducts();
-
-        if(hasOption("write.flatfield")) {
-            String fileName = option("write.flatfield").getValue();
-            if(fileName.isEmpty()) fileName = CRUSH.workPath + File.separator + "flatfield-" + getDisplayID() + ".fits";
-            try { instrument.writeFlatfield(fileName); }
-            catch(Exception e) { error(e); }
-        }
-    }
-
-    @Override
     public String getFullID(String separator) {
         return scan.getID();
     }
 
-    @Override
-    public void removeDrifts(final int targetFrameResolution, final boolean robust) {
-        fixJumps = hasOption("fixjumps");
-
-        fixSubarray[HawcPlus.R0] =  hasOption("fixjumps.r0");
-        fixSubarray[HawcPlus.R1] =  hasOption("fixjumps.r1");
-        fixSubarray[HawcPlus.T0] =  hasOption("fixjumps.t0");
-        fixSubarray[HawcPlus.T1] =  hasOption("fixjumps.t1");
-
-        minJumpLevelFrames = framesFor(10.0 * getPointCrossingTime());
-
-        driftParms = getDependents("drifts");
-
-        super.removeDrifts(targetFrameResolution, robust);
-    }
-
+ 
     @Override
     public void validate() {  
-        if(hasOption("chopper.shift")) shiftChopper(option("chopper.shift").getInt());
-  
         flagZeroedChannels();
         checkJumps();
         
-        if(hasOption("jumpdata")) correctJumps();
-        
-        if(hasOption("gyrocorrect")) ((HawcPlusScan) scan).gyroDrifts.correct(this);
+        if(hasOption("gyrocorrect")) ((HirmesScan) scan).gyroDrifts.correct(this);
         
         super.validate();
     }
@@ -402,7 +356,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
         new Fork<Void>() {        
             @Override
-            protected void process(HawcPlusFrame frame) {
+            protected void process(HirmesFrame frame) {
                 for(int k=startCounter.length; --k >= 0; ) 
                     if(frame.jumpCounter[k] != startCounter[k]) instrument.get(k).hasJumps = true;
             }
@@ -410,7 +364,7 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         }.process();
 
         int jumpPixels = 0;
-        for(HawcPlusPixel pixel : instrument) if(pixel.hasJumps) jumpPixels++;
+        for(HirmesPixel pixel : instrument) if(pixel.hasJumps) jumpPixels++;
 
         info("---> " + (jumpPixels > 0 ? "found jump(s) in " + jumpPixels + " pixels." : "All good!"));
     }
@@ -422,11 +376,11 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         // TODO
         // This cast, while seemingly unnecessary, is needed to avoid VerifyError when compiling with javac.
         // Alas, Eclipse compiles is just fine without the explicit cast, as expected...
-        ((HawcPlus) instrument).new Fork<Void>() {
+        ((Hirmes) instrument).new Fork<Void>() {
             @Override
-            protected void process(final HawcPlusPixel channel) {
+            protected void process(final HirmesPixel channel) {
                 channel.flag(Channel.FLAG_DISCARD);
-                for(final Frame exposure : HawcPlusIntegration.this) if(exposure != null) if(exposure.data[channel.index] != 0.0) {
+                for(final Frame exposure : HirmesIntegration.this) if(exposure != null) if(exposure.data[channel.index] != 0.0) {
                     channel.unflag(Channel.FLAG_DISCARD);
                     return;
                 }
@@ -436,146 +390,12 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
         for(Channel channel : instrument) if(channel.isFlagged(Channel.FLAG_DISCARD)) channel.flag(Channel.FLAG_DEAD);
     }
 
-    @Override
-    protected boolean checkConsistency(final Channel channel, final int from, final int to, float[] frameParms) {
-        boolean isOK = super.checkConsistency(channel, from, to, frameParms);
-
-        HawcPlusPixel pixel = (HawcPlusPixel) channel;
-
-        if(pixel.hasJumps) {
-            if(fixJumps) isOK &= fixJumps(channel, from, to, frameParms);    
-            else if(fixSubarray[pixel.sub]) isOK &= fixJumps(channel, from, to, frameParms);
-        }
-
-        return isOK;
-    }
-
-    private boolean fixJumps(final Channel channel, int from, final int to, float[] frameParms) { 
-        //int clearFlag = ~HawcPlusFrame.SAMPLE_PHI0_JUMP;
-        byte jumpStart = (byte) 0;   
-
-        HawcPlusFrame first = getFirstFrameFrom(from);
-        jumpStart = first.jumpCounter[channel.index];
-        from = first.index;
-
-        int n = 0;
-        for(int t=from; t < to; t++) {
-            final HawcPlusFrame exposure = get(t);
-            if(exposure == null) continue;
-
-            // Once flagged, stay flagged...
-            //exposure.sampleFlag[channel.index] &= clearFlag;
-
-            if(exposure.jumpCounter[channel.index] == jumpStart) continue;
-
-            fixBlock(channel, from, t, frameParms);
-            n++;
-
-            // Make jumpStart ready for the next block
-            from = t;
-            jumpStart = exposure.jumpCounter[channel.index];
-        }
-
-        if(from != first.index) {
-            fixBlock(channel, from, to, frameParms);
-            n++;
-        }
-
-        return n == 0;
-    }
-
-    private void fixBlock(Channel channel, final int from, int to, float[] frameParms) {
-        if(to-from < minJumpLevelFrames) flagBlock(channel, from, to, HawcPlusFrame.SAMPLE_PHI0_JUMP);
-        else levelBlock(channel, from, to, frameParms);
-    }  
-
-    private void flagBlock(final Channel channel, final int from, int to, int pattern) {
-        while(--to >= from) {
-            final Frame exposure = get(to);
-            if(exposure != null) exposure.sampleFlag[channel.index] |= pattern;
-        }
-    }
-
-    private void levelBlock(final Channel channel, final int from, final int to, float[] frameParms) {
-        double sum = 0.0, sumw = 0.0;
-
-        int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
-
-        for(int t=to; --t >= from; ) {
-            final Frame exposure = get(t);
-            if(exposure == null) continue;
-            if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
-            if((exposure.sampleFlag[channel.index] & excludeSamples) != 0) continue;
-
-            sum += exposure.relativeWeight * exposure.data[channel.index];
-            sumw += exposure.relativeWeight;
-        }
-        if(sumw == 0.0) return;
-
-        driftParms.addAsync(channel, 1.0);
-
-        final float ave = (float) (sum / sumw);
-
-        for(int t=to; --t >= from; ) {
-            final Frame exposure = get(t);
-            if(exposure == null) continue;
-            exposure.data[channel.index] -= ave;
-
-            if(exposure.isFlagged(Frame.MODELING_FLAGS)) continue;
-            if((exposure.sampleFlag[channel.index] & excludeSamples) != 0) continue;
-
-            frameParms[t] += exposure.relativeWeight / sumw;
-        }
-    }
-
+  
     @Override
     public Object getTableEntry(String name) {
-        if(name.equals("hwp")) return getMeanHWPAngle();
         if(name.equals("pwv")) return getMeanPWV() / Unit.um;
         return super.getTableEntry(name);
     }
-    
-
-    private void shiftChopper(int n) {
-        if(n == 0) return;
-
-        info("Shifting chopper signal by " + n + " frames.");
-
-        if(n > 0) {
-            for(int t=size(); --t >= n; ) get(t).chopperPosition = get(t-n).chopperPosition;
-            for(int t=n; --t >= 0; ) set(t, null);
-        }
-        else {
-            final int nt = size();
-            for(int t=0; t<nt; t++) get(t).chopperPosition = get(t+n).chopperPosition;
-            for(int t=nt-n; t<nt; t++) set(t, null);
-        }
-    }
-
-
-    private void correctJumps() {
-        info("Flux-jumps correcting...");    
-        
-        final HawcPlusFrame first = getFirstFrame();
-        final int maxJump = HawcPlusFrame.JUMP_RANGE >> 1;
-        
-        
-        new Fork<Void>() {
-            @Override
-            protected void process(HawcPlusFrame frame) {
-                for(HawcPlusPixel pixel : instrument) if(pixel.jump != 0.0) {
-                    int nJumps = frame.jumpCounter[pixel.index] - first.jumpCounter[pixel.index];
-                    // Check for wraparound...
-                    if(nJumps > maxJump) nJumps -= HawcPlusFrame.JUMP_RANGE;
-                    else if(nJumps < -maxJump) nJumps += HawcPlusFrame.JUMP_RANGE;
-                    
-                    frame.data[pixel.index] -= pixel.jump * nJumps;
-                }
-            } 
-        }.process();
-        
-    }
-
   
   
 }

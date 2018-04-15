@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -21,14 +21,12 @@
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
-package crush.instrument.hawcplus;
+package crush.instrument.hirmes;
 
 import nom.tam.fits.BasicHDU;
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.Header;
-import nom.tam.fits.HeaderCard;
-import nom.tam.fits.HeaderCardException;
-import nom.tam.util.Cursor;
+
 
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -41,34 +39,32 @@ import crush.telescope.sofia.SofiaScan;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
-import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.Vector2D;
 
-public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
+public class HirmesScan extends SofiaScan<Hirmes, HirmesIntegration> {    
     /**
      * 
      */
-    private static final long serialVersionUID = -3732251029215505308L;
-
+    private static final long serialVersionUID = 730005029452978874L;
+    
     GyroDrifts gyroDrifts;
-    String priorPipelineStep;
-    boolean useBetweenScans;	
+    boolean useBetweenScans;    
 
     double transitTolerance = Double.NaN;
 
     double focusTOffset;
 
 
-    public HawcPlusScan(HawcPlus instrument) {
+    public HirmesScan(Hirmes instrument) {
         super(instrument);
         // Turn off warnings about multiple occurences of header keys...
         if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
     }
 
     @Override
-    public HawcPlusIntegration getIntegrationInstance() {
-        return new HawcPlusIntegration(this);
+    public HirmesIntegration getIntegrationInstance() {
+        return new HirmesIntegration(this);
     }
 
     @Override
@@ -81,7 +77,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
     protected boolean isFileNameMatching(String fileName, int flightNo, int scanNo) {
         if(super.isFileNameMatching(fileName, flightNo, scanNo)) return true;
 
-        // E.g. F0004_HC_IMA_0_HAWC_HWPC_RAW_109.fits
+        // TODO check... E.g. F0004_HC_IMA_0_HIR_RAW_109.fits
         String upperCaseName = fileName.toUpperCase();
 
         // 1. Check if the file name contains the instrument ID...
@@ -109,14 +105,6 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 
     @Override
     public void parseHeader(SofiaHeader header) throws Exception {
-        /*
-	    if(header.containsKey("CMTFILE")) {
-	        String type = header.getString("CMTFILE").toLowerCase();
-	        if(!type.contains("scan")) throw new IllegalStateException("File does not appear to be a scan: " + type);
-	    }
-         */
-
-        priorPipelineStep = header.getString("PROCLEVL");
 
         // If using real-time object coordinates regardless of whether sidereal or not, then treat as if non-sidereal...
         // Update: (Nov 2016)
@@ -127,7 +115,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
         if(hasOption("OBJRA") && hasOption("OBJDEC")) 
             objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
 
-        super.parseHeader(header);	
+        super.parseHeader(header);  
 
         focusTOffset = header.getDouble("FCSTOFF") * Unit.um;
         if(!Double.isNaN(focusTOffset)) info("Focus T Offset: " + Util.f1.format(focusTOffset / Unit.um));    
@@ -145,14 +133,6 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
         return super.guessReferenceCoordinates(header);
     }
 
-
-    @Override
-    public void editScanHeader(Header header) throws HeaderCardException {
-        super.editScanHeader(header);
-        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        if(priorPipelineStep != null) c.add(new HeaderCard("PROCLEVL", priorPipelineStep, "Last processing step on input scan."));	
-    }
-
     @Override
     public void addIntegrationsFrom(BasicHDU<?>[] HDU) throws Exception {
         ArrayList<BinaryTableHDU> dataHDUs = new ArrayList<BinaryTableHDU>();
@@ -163,7 +143,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
             if(extName.equalsIgnoreCase("Timestream")) dataHDUs.add((BinaryTableHDU) HDU[i]);
         }
 
-        HawcPlusIntegration integration = this.getIntegrationInstance();
+        HirmesIntegration integration = this.getIntegrationInstance();
         integration.read(dataHDUs);
         add(integration);
     }
@@ -197,7 +177,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
     
     @Override
     public Object getTableEntry(String name) {
-        if(name.equals("hawc.dfoc")) return focusTOffset / Unit.um;
+        if(name.equals("hirmes.dfoc")) return focusTOffset / Unit.um;
         if(name.equals("gyro.max")) return gyroDrifts.getMax() / Unit.arcsec;
         if(name.equals("gyro.rms")) return gyroDrifts.getRMS() / Unit.arcsec;
         return super.getTableEntry(name);

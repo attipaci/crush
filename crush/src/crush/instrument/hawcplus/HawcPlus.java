@@ -182,7 +182,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         }
 
         for(HawcPlusPixel pixel : this) subarrayGroups.get(pixel.sub).add(pixel);
-
     }
 
     @Override
@@ -243,7 +242,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
             addModality(rollResponse);
         }
         catch(NoSuchFieldException e) { error(e); }
-
     }
 
     @Override
@@ -253,13 +251,13 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         // TODO should not be necessary if the header is proper...
         if(Double.isNaN(integrationTime) || integrationTime < 0.0) {
             warning("Missing SMPLFREQ. Will assume 203.25 Hz.");
-            integrationTime = samplingInterval = 1.0 * Unit.s / 203.25;
+            integrationTime = samplingInterval = Unit.s / 203.25;
         }
 
         hasSubarray = new boolean[subarrays];
 
         bandID = "-";
-        String filter = header.getString("SPECTEL1");
+        String filter = instrumentData.spectralElement1;
         if(filter != null) if(filter.toLowerCase().startsWith("haw_")) bandID = filter.substring(4);
         
         String mceMap = header.getString("MCEMAP");
@@ -325,7 +323,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
             try { readJumpLevels(option("jumpdata").getPath()); }
             catch(Exception e) { warning(e); }
         }
-
     }
     
     public void readJumpLevels(String fileName) throws IOException, FitsException {
@@ -337,8 +334,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         for(HawcPlusPixel pixel : this) pixel.jump = data[pixel.col][pixel.row];
        
         registerConfigFile(fileName);
-        fits.close();
-        
+        fits.close();   
     }
     
     public final int getSubarrayIndex(String id) {
@@ -410,7 +406,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
                 else hasSubarray[polarray + sub] = oldHasSubarray[polarray + sub];
             }
         }
-
     }
 
 
@@ -483,7 +478,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 
     private void parseTESBias(int sub, String values) {	    
         StringTokenizer tokens = new StringTokenizer(values, ", \t;");
-        for(int i=0; i<20; i++) {
+        for(int i=0; i<MCE_BIAS_LINES; i++) {
             if(!tokens.hasMoreTokens()) {
                 warning("Missing TES bias values for subarray " + sub);
                 break;
@@ -531,7 +526,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         super.validate(scan);
 
         createDarkSquidLookup();
-
     }
 
     @Override
@@ -638,7 +632,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
                 nonlinearT[pixel.subrow][col] = (float) pixel.nonlinearity;
                 if(pixel.isUnflagged()) flagT[pixel.subrow][col] = 0; 
             }
-
         }
 
         final Fits fits = new Fits();

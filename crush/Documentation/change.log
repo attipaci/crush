@@ -1,3 +1,22 @@
+>> 'aperture' (SOFIA)
+
+
+2.42-1
+
+	[NEW] {HIRMES} Created initial HIRMES classes to process simulated
+	data...
+
+	[NEW] {SOFIA} New option 'aperture' can define an effective aperture
+	diameter (m) for wavelength-dependent beam FWHM calculation.
+
+	[FIX] {SOFIA} Default wavelength-dependent beam size calculation had
+	wrong units. Fixed.
+
+	[FIX] {SpectralCube} Spectral unit determination had quotes around
+	String variable name. Fixed.
+
+
+
 2.41-3	(19 March 2018)
 
 

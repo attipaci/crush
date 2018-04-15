@@ -77,12 +77,11 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
     }
     
     public void setSpectralUnit(String spec) {
-        spectralUnit = Unit.get("spec");
+        spectralUnit = Unit.get(spec);
         String name = spectralUnit.name();
 
         if(name.endsWith("Hz")) useWavelength = false;
-        else useWavelength = true;
-        
+        else useWavelength = true;  
     }
     
 
@@ -306,8 +305,7 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
     
     @Override
     public void processFinal() {
-        // TODO Auto-generated method stub
-        
+        // TODO Auto-generated method stub   
     }
 
 
