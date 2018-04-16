@@ -56,7 +56,7 @@ import jnum.math.Range;
 import jnum.parallel.ParallelPointOp;
 
 
-public class SpectralCube extends AstroData2D<Observation2D1> {
+public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
    
     /**
      * 
@@ -354,7 +354,7 @@ public class SpectralCube extends AstroData2D<Observation2D1> {
 
     @Override
     public void smoothTo(double FWHM) {
-        cube.smooth2DTo(FWHM);
+        cube.smoothXYTo(FWHM);
     }
     
     @Override

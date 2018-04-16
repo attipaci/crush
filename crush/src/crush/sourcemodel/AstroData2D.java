@@ -36,6 +36,7 @@ import jnum.Configurator;
 import jnum.LockedException;
 import jnum.Util;
 import jnum.data.Data;
+import jnum.data.Index;
 import jnum.data.Observations;
 import jnum.fits.FitsToolkit;
 import jnum.math.Range;
@@ -43,7 +44,7 @@ import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 
-public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? extends Data<?,?,?>>> extends AstroModel2D {
+public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType extends Data<IndexType> & Observations<? extends Data<IndexType>>> extends AstroModel2D {
 
     /**
      * 
@@ -81,13 +82,13 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
 
     
     
-    public final Data<?,?,?> getWeights() { return getData().getWeights(); }
+    public final Data<?> getWeights() { return getData().getWeights(); }
     
-    public final Data<?,?,?> getNoise() { return getData().getNoise(); }
+    public final Data<?> getNoise() { return getData().getNoise(); }
     
-    public final Data<?,?,?> getSignificance() { return getData().getSignificance(); }
+    public final Data<?> getSignificance() { return getData().getSignificance(); }
     
-    public final Data<?,?,?> getExposures() { return getData().getExposures(); }
+    public final Data<?> getExposures() { return getData().getExposures(); }
 
     public final void endAccumulation() { getData().endAccumulation(); }
    
@@ -249,14 +250,14 @@ public abstract class AstroData2D<DataType extends Data<?,?,?> & Observations<? 
         // Eposure clip
         if(hasOption("exposureclip")) {
             addProcessBrief("(exposureclip) ");
-            Data<?,?,?> exposure = getExposures();
+            Data<?> exposure = getExposures();
             exposure.restrictRange(new Range(option("exposureclip").getDouble() * exposure.select(0.95), Double.POSITIVE_INFINITY));
         }
 
         // Noise clip
         if(hasOption("noiseclip")) {
             addProcessBrief("(noiseclip) ");
-            Data<?,?,?> rms = getNoise();
+            Data<?> rms = getNoise();
             rms.restrictRange(new Range(0, rms.select(0.05) * option("noiseclip").getDouble()));
         }
 

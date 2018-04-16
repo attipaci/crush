@@ -55,7 +55,7 @@ import nom.tam.fits.Fits;
 
 
 
-public class AstroIntensityMap extends AstroData2D<Observation2D> {
+public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
     /**
      * 
      */

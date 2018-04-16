@@ -185,7 +185,7 @@ public class MultiBeamMap extends AstroIntensityMap {
 		transformer.unflag();
 		transformer.getWeights().fill(w); // All frequencies have equal weight before deconvolution
 			
-		fft.real2Amplitude((Object[]) transformer.getImage().getData());		
+		fft.real2Amplitude((Object[]) transformer.getImage().getUnderlyingData());		
 		isSpectrum = true;
 	}
 	
@@ -193,7 +193,7 @@ public class MultiBeamMap extends AstroIntensityMap {
 	public void backTransform() {
 		if(!isSpectrum) throw new IllegalStateException("Expecting spectrum to transform back.");
 	
-		fft.amplitude2Real((Object[]) transformer.getImage().getData());
+		fft.amplitude2Real((Object[]) transformer.getImage().getUnderlyingData());
 		
 		// undo weight multiplication...
 		map.new Fork<Void>() {

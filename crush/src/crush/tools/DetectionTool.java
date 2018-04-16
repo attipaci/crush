@@ -159,7 +159,7 @@ public class DetectionTool {
 		System.err.println();
 	
 		double significance = 3.0;	
-		int priorSources = regions.size();
+		int priorSources = regions.getSize();
 		boolean reporting = verbose && priorSources == 0;
 
 		// Make room for sources...
@@ -217,7 +217,7 @@ public class DetectionTool {
 			image.updateStats(isOneSided && priorSources > 0, iterateNoise || k == 1);
 	
 			// Remove anything that may have dropped below the search criterion...
-			for(int i=0; i<regions.size(); ) {
+			for(int i=0; i<regions.getSize(); ) {
 				Region2D source = regions.from(i);
 				final double S2N = source.peak / source.dpeak;
 				
@@ -243,7 +243,7 @@ public class DetectionTool {
 				}
 			} 
 
-			int detections = regions.size() - priorSources;
+			int detections = regions.getSize() - priorSources;
 			
 			if(detections != 0) {
 				String lead = detections > 0 ? " +" : " ";
@@ -252,14 +252,14 @@ public class DetectionTool {
 			
 			if(detections <= 0) break;
 			
-			priorSources = regions.size();
+			priorSources = regions.getSize();
 		}
 		
 		/*
 		 * OK, at this point the initial source list is ready. Now clean it up.
 		 */
 		
-		if(regions.size() == 0) {
+		if(regions.getSize() == 0) {
 			System.err.println("No detections.");
 			return;			
 		}
@@ -276,7 +276,7 @@ public class DetectionTool {
 		}
 		
 	
-		System.err.println(" " + regions.size() + " source candidate(s) extracted.");
+		System.err.println(" " + regions.getSize() + " source candidate(s) extracted.");
 		System.err.println(" " + (negatives.size() > 0 ? negatives.size() + "" : "No") + " matching negative peaks.");
 		
 		// Sort sources in order of descending significance...
@@ -297,7 +297,7 @@ public class DetectionTool {
 		int kept = 0;
 		double lastS2N = Double.NaN;
 		
-		for(int i=0; i<regions.size(); i++) {
+		for(int i=0; i<regions.getSize(); i++) {
 			
 			Region2D source = (Region2D) regions.get(i);
 			

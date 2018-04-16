@@ -178,7 +178,7 @@ public class GDFStack {
 		}
 		in.close();
 		
-		System.err.println(">>> " + sources.size() + " sources.");
+		System.err.println(">>> " + sources.getSize() + " sources.");
 	}
 	
 	
@@ -211,7 +211,7 @@ public class GDFStack {
 		}
 		in.close();
 		
-		System.err.println(">>> " + sources.size() + " sources.");
+		System.err.println(">>> " + sources.getSize() + " sources.");
 	}
 	
 	public void readMIPSSources(String fileName) throws IOException {
@@ -242,7 +242,7 @@ public class GDFStack {
 		}
 		in.close();
 		
-		System.err.println(">>> " + sources.size() + " sources.");
+		System.err.println(">>> " + sources.getSize() + " sources.");
 	}
 	
 	
