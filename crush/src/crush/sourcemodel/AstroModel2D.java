@@ -919,7 +919,7 @@ public abstract class AstroModel2D extends SourceModel {
                 double dYmin = offsets.size() > 0 ? offsets.get(1) * sizeUnit : dXmin;
                 double dXmax = offsets.size() > 1 ? offsets.get(2) * sizeUnit : -dXmin;
                 double dYmax = offsets.size() > 2 ? offsets.get(3) * sizeUnit : -dYmin;
-                map.crop(dXmin, dYmin, dXmax, dYmax);
+                map.crop(new Vector2D(dXmin, dYmin), new Vector2D(dXmax, dYmax));
             }
         }
                
