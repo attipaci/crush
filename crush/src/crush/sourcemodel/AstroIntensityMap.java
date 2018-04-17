@@ -625,6 +625,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
         if(hasOption("regrid")) {
             map.resample(option("regrid").getDouble() * getInstrument().getSizeUnit().value());
         }
+
     }
 
 
