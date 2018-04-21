@@ -72,7 +72,7 @@ import nom.tam.util.Cursor;
      public void parseHeader(SofiaHeader header) {
          detectorName = header.getString("DETECTOR");
          detectorSizeString = header.getString("DETSIZE");
-         pixelScale = header.getDouble("PIXSCAL", Double.NaN) * Unit.arcsec;
+         pixelScale = header.getDouble("PIXSCAL", Double.NaN) * Unit.arcsec / Unit.mm;
          subarrays = header.getInt("SUBARRNO", 0);
 
          if(subarrays > 0) {
@@ -103,7 +103,7 @@ import nom.tam.util.Cursor;
          c.add(new HeaderCard("COMMENT", "<------ SOFIA Array Data ------>", false));
          if(detectorName != null) c.add(new HeaderCard("DETECTOR", detectorName, "Detector name"));
          if(detectorSizeString != null) c.add(new HeaderCard("DETSIZE", detectorSizeString, "Detector size"));
-         if(!Double.isNaN(pixelScale)) c.add(new HeaderCard("PIXSCAL", pixelScale / Unit.arcsec, "(arcsec) Pixel scale on sky."));
+         if(!Double.isNaN(pixelScale)) c.add(new HeaderCard("PIXSCAL", pixelScale * Unit.mm / Unit.arcsec, "(arcsec/mm) Pixel scale on sky."));
          if(subarrays > 0) {
              c.add(new HeaderCard("SUBARRNO", subarrays, "Number of subarrays."));
              DecimalFormat d2 = new DecimalFormat("00");

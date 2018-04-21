@@ -26,8 +26,9 @@ package crush.instrument.hirmes;
 
 import crush.Channel;
 import crush.array.SingleColorPixel;
-import jnum.Constant;
+import jnum.Unit;
 import jnum.Util;
+import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 
 public class HirmesPixel extends SingleColorPixel {
@@ -36,7 +37,7 @@ public class HirmesPixel extends SingleColorPixel {
      */
     private static final long serialVersionUID = 293691569452930105L;
     
-    public int sub, subrow, subcol, row, col, mux, pin, seriesArray, biasLine;
+    public int detArray, sub, subrow, subcol, row, col, mux, pin, seriesArray, biasLine;
     public float jump = 0.0F;
     public boolean hasJumps = false;
     
@@ -46,24 +47,27 @@ public class HirmesPixel extends SingleColorPixel {
     
     double frequency;
     
-    public HirmesPixel(Hirmes array, int zeroIndex) {
-        super(array, zeroIndex);
-           
-        mux = zeroIndex / Hirmes.muxRows;
-        pin = zeroIndex % Hirmes.muxRows;
+    public HirmesPixel(Hirmes hirmes, int zeroIndex) {
+        super(hirmes, zeroIndex);
+          
+        
+        mux = zeroIndex / Hirmes.muxPixels;
+        pin = zeroIndex % Hirmes.muxPixels;
         
         if(pin == Hirmes.DARK_SQUID_PIN) flag(FLAG_BLIND);
         
-        sub = zeroIndex >= Hirmes.imagingPixels ? Hirmes.HIRES_ARRAY : Hirmes.IMAGING_ARRAY;
+        detArray = zeroIndex >= Hirmes.lowresPixels ? Hirmes.HIRES_ARRAY : Hirmes.LORES_ARRAY;
         
-        row = subrow = pin % Hirmes.rows;   // Dark squid: row = 0;
-        if(sub > 0) row += Hirmes.rows;     // Hires: rows 16-31
+        sub = mux / Hirmes.rows;
+        row = mux;
+        subrow = row % Hirmes.rows;
+       
+        col = pin + sub * Hirmes.subCols;
+        subcol = col % Hirmes.lowresCols;
         
-        col = 2*mux + (pin >= Hirmes.rows ? 1 : 0); // each mux reads out 2 geometric columns...
-        subcol = col >= Hirmes.imagingCols ? col - Hirmes.imagingCols : col;
         
-        frequency = Constant.c / array.instrumentData.wavelength;
-        if(array.mode == Hirmes.MIDRES_MODE) frequency += subcol * array.frequencyStep;
+        frequency = hirmes.baseFrequency;
+        if(hirmes.mode == Hirmes.MIDRES_MODE) frequency += subcol * hirmes.frequencyStep;
         
         // TODO seriesArray, biasLine
     }
@@ -104,6 +108,8 @@ public class HirmesPixel extends SingleColorPixel {
         if(tokens.hasMoreTokens()) muxGain = tokens.nextDouble();            
         if(isFlagged(Channel.FLAG_DEAD)) coupling = 0.0;
     }
+    
+    public final static Vector2D physicalSize = new Vector2D(1.18 * Unit.mm, 1.01 * Unit.mm);
     
     public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();
     public final static int FLAG_BIAS = softwareFlags.next('b', "Bad TES bias gain").value();
