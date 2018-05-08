@@ -252,6 +252,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 
 		// the last value is based on the last difference...
 		value[n-1] = value[n-2];
+		
 		// otherwise, it's:
 		// v[n] = (f'[n+0.5] + f'[n-0.5]) = v[n] + v[n-1]
 		for(int t=nm1; --t > 0; ) value[t] = 0.5F * (value[t] + value[t-1]);

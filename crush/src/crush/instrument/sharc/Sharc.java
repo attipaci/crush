@@ -23,10 +23,12 @@
 
 package crush.instrument.sharc;
 
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import crush.CRUSH;
@@ -128,9 +130,9 @@ public class Sharc extends CSOCamera<SharcPixel> {
 	
 
 	@Override
-	public SourceModel getSourceModelInstance() {
+	public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
 		if(hasOption("deconvolve")) return new MultiBeamMap(this, SharcPixel.spacing);		
-		return super.getSourceModelInstance();
+		return super.getSourceModelInstance(scans);
 	}  
 	
 	

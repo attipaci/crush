@@ -20,6 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
+
 package crush;
 
 import java.io.*;
@@ -50,7 +51,7 @@ import nom.tam.util.Cursor;
 /**
  * 
  * @author Attila Kovacs
- * @version 2.41
+ * @version 2.42
  * 
  */
 public class CRUSH extends Configurator implements BasicMessaging {
@@ -60,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.42-a1";
-    private static String revision = "devel.5";
+    private static String revision = "(alpha)";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -343,7 +344,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         // TODO Using the global options (intersect of scan options) instead of the first scan's
         // for the source does not work properly (clipping...)
-        source = scans.get(0).instrument.getSourceModelInstance();
+        source = scans.get(0).instrument.getSourceModelInstance(scans);
         
         if(source != null) {
             source.setCommandLine(commandLine);
@@ -1094,18 +1095,16 @@ public class CRUSH extends Configurator implements BasicMessaging {
         protected abstract void processIndex(int index);
 
 
-        public void process() {
+        public final void process() {
             exception = null;
-            process(parallelism);
+            process(parallelism, executor);
         }
 
         @Override
-        public void process(int threads) {
-            try {
-                if(executor != null) process(threads, executor);
-                else process(threads);			
-            } catch(Exception e) { 
-                CRUSH.warning(this, executor.getClass().getSimpleName() + ": " + e.getMessage());
+        public final void process(int threads, ExecutorService executor) {
+            try { super.process(threads, executor); } 
+            catch(Exception e) { 
+                CRUSH.warning(this, (executor == null ? "<thread>" : executor.getClass().getSimpleName()) + ": " + e.getMessage());
                 if(debug) trace(e);
                 this.exception = e;
             }

@@ -945,7 +945,7 @@ implements TableFormatter.Entries, BasicMessaging {
         return scan;
     }
 
-    public SourceModel getSourceModelInstance() {
+    public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
         if(hasOption("source.type")) {
             String type = option("source.type").getValue();
             if(type.equals("skydip")) return new SkyDip(this);		

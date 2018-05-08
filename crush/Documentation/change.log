@@ -1,14 +1,18 @@
->> Why is pointing taking so long?
->> 'spectral.unit' (HIRMES)
->> 'aperture' (SOFIA)
 
-!! resample does not work...
+2.42-a1	(7 May 2018)
 
 
-2.42-1
+	Overview
+	======================================================================
+	This release introduces initial support for HIRMES. Currently it 
+	support imaging-mode simulated data only, but support for mid and-
+	hi-resolution spectroscopic imaging will be added gradually over 
+	May/June 2018.
+	======================================================================
+
 
 	[NEW] {HIRMES} Created initial HIRMES classes to process simulated
-	data...
+	imaging data. (More coming soon!)
 
 	[NEW] {SOFIA} New option 'aperture' can define an effective aperture
 	diameter (m) for wavelength-dependent beam FWHM calculation.
@@ -18,6 +22,17 @@
 
 	[FIX] {SpectralCube} Spectral unit determination had quotes around
 	String variable name. Fixed.
+
+	[DOC] {HIRMES} Initial HIRMES README documentation.
+
+	[DOX] {HAWC+} Slight corrections to the HAWC+ documentation.
+
+	[CODE] CRUSH.getSourceModelInstance now takes a list of scans as
+	argument so it can make decisions based on the data (e.g. spectral
+	cubes for multiwavelength data, or polarization maps for data with
+	multiple HWP angles...)
+
+	[CODE] Cleaner & more robust Task process(...) call hierarchy.
 
 
 

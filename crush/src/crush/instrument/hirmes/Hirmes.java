@@ -476,12 +476,24 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     }
     
     @Override
-    public SourceModel getSourceModelInstance() {
+    public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
         if(hasOption("source.type")) {
             String type = option("source.type").getValue();
             if(type.equals("spectralmap")) return new SpectralCube(this);      
         }
-        return super.getSourceModelInstance();
+        else {
+            double wavelength = Double.NaN;
+            for(Scan<?,?> scan : scans) {
+                double lambda = ((Hirmes) scan.instrument).instrumentData.wavelength;
+                if(Double.isNaN(wavelength)) wavelength = lambda;
+                else if(lambda != wavelength) {
+                    CRUSH.info(this, "Multiwavelength scan detected! Will produce spectral cube...");
+                    return new SpectralCube(this);
+                }
+            }
+        }
+        
+        return super.getSourceModelInstance(scans);
     }  
 
 

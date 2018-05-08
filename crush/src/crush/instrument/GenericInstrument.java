@@ -66,7 +66,7 @@ public class GenericInstrument extends Instrument<Channel> {
 	}
 
 	@Override
-	public SourceModel getSourceModelInstance() {
+	public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
 		return null;
 	}
 

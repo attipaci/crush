@@ -1,9 +1,9 @@
 
-# CRUSH: SOFIA/HAWC+
+# CRUSH: SOFIA/HIRMES
 
 Author: Attila Kovacs <attila[AT]sigmyne.com>
 
-Last updated: 7 May 2018
+Last updated: 2 May 2018
 
 
 ----------------------------------------------------------------------------
@@ -18,16 +18,15 @@ Last updated: 7 May 2018
      - 2.1. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
      - 2.2. Optional system-wide installation.
      - 2.3. Optional startup environment & Java configuration
-     - 2.4. Optional automatic pipeline configuration (skyhawc)
 
 3. __Quickstart guide__
      - 3.1. Locating scan data
-     - 3.2. A few common options to use with SOFIA/HAWC+
+     - 3.2. A few common options to use with SOFIA/HIRMES
 
 4. __Technical details for expert users__
-     - 4.1. HAWC+ specific pixel divisions
-     - 4.2. Glossary of HAWC+ specific options
-     - 4.3. HAWC+ specific log quantities
+     - 4.1. HIRMES specific pixel divisions
+     - 4.2. Glossary of HIRMES specific options
+     - 4.3. HIRMES specific log quantities
 
 -----------------------------------------------------------------------------
 
@@ -37,7 +36,7 @@ Last updated: 7 May 2018
 ## 1. Introduction
 
 
-This document contains information specific to using CRUSH-2 with SOFIA/HAWC+. 
+This document contains information specific to using CRUSH-2 with SOFIA/HIRMES. 
 
 You may use it as a standalone quickstart guide, with instructions for 
 installation and basic use, or in conjucntion with the main CRUSH-2 README. 
@@ -211,126 +210,71 @@ in Kovacs, A., PhD thesis, Caltech (2006).
  
    
 
-
-### 2.4. Optional automatic pipeline configuration (skyhawc)
-
- Automatic pipeline reductions (such as in flight) should never hang if 
- possible.
-
- Unfortunately, there are two uncommon conditions that can cause CRUSH (Java, 
- really) to hang indefinitely. First, while trying to render a PNG output if 
- the X11 display connection had dropped unexpectedly. And second, while trying 
- to check for updates if the network had disconnected unexpectedly. 
-   
- Both of these scenarios can be preemted by specifying appropriate runtime 
- options for running CRUSH reductions with limited scope.
-
- Simply (create and) edit a file: 
-
-    ~/.crush2/startup/crush/autopipeline.conf
-
- (This will specify settings only for the `crush` executable, and will not
- affect other tools, like `imagetool` or `show`). Into this file add the 
- following lines:
-
-    CRUSH_NO_UPDATE_CHECK="1"
-    EXTRAOPTS="$EXTRAOPTS -Djava.awt.headless=true"
-
- The first will disable update checking (which can hang if the network 
- connection drops), while the second will run CRUSH in headless mode (assuming 
- no X11 rendering functionality), in addition to any startup options defined 
- for all programs, thereby avoiding hangs if and when PNG outputs are rendered. 
-
- Normal users, outside of the automatic pipeline, should probably not set these
- options. Update notification is a useful feature, letting users know if or 
- when improved CRUSH releases become available. And, while CRUSH does not 
- currently require on-screen rendering, it is possible that future releases may
- add graphical functionalities that users may want to access (but would not be 
- available in headless mode!). 
-
-
-  
-
-
 ## 3. Quickstart guide
-
-For SOFIA/HAWC+ CRUSH will be launched exclusively from the DRP pipeline. See 
-the DRP documentation for details.
-
-However, if you wish to run CRUSH manually, you may easily do so from the 
-command-line with `hawc+` as your instrument. E.g.:
-
-    ./crush hawc+ [...]
-
-See the main README for more details.  
-
 
 
 ### 3.1. Locating scan data
 
 
 #### By file name/path
+
   The default method of locating files is by file name, which may specify 
   either an absolute path, e.g.:
 
-    > crush hawc+ /data/hawc+/F0004_HC_IMA_0_HAWC_HWPC_RAW_105.fits
+    > crush hawc+ /data/hirmes/simdataimv2.fits
 
   or it can be filename/path relative to `datapath`
  
-    > crush hawc+ F0004_HC_IMA_0_HAWC_HWPC_RAW_105.fits
+    > crush hawc+ simdataimv2.fits
 
-  The two are equilalent assuming that `datapath` is set to `/data/hawc+` in 
+  The two are equilalent assuming that `datapath` is set to `/data/hirmes` in 
   the second case, e.g. in the user configuration file 
-  `~/.crush2/hawc+/default.cfg`, or on the command-line.
+  `~/.crush2/hirmes/default.cfg`, or on the command-line.
 
 
 #### By flight and scan numbers
    
+  __Note.__ _This option is not available for simulated data, which do not 
+  follow the SOFIA file naming convention._
+
   Often the simpler way of locating input files is by a combination of flight
   and scan numbers. This is often shorter, and allows to specify multiple scans
   and ranges with more ease.
 
   Scan lookup by flight and scan number requires you to set `datapath` to point
   to the data directory. E.g., by placing the line in the user configuration 
-  for HAWC+ (`~/.crush2/hawc+/default.cfg`):
+  for HAWC+ (`~/.crush2/hirmes/default.cfg`):
 
-    datapath /data/hawc+
+    datapath /data/hirmes
 
-  Now, you may simply reduce scan 105 from flight 4 as:
+  Now, you may simply reduce scan 105 from flight 456 as:
 
-    > crush hawc+ -flight=4 105
+    > crush hawc+ -flight=456 105
 
   You can also reduce multiple scans, from multiple flight together. E.g.:
 
-    > crush hawc+ -flight=4 104-105 129 -flight=5 13 16 33-35
+    > crush hawc+ -flight=456 104-105 129 -flight=458 13 16 33-35
 
-  The above will co-reduce 3 scans (104, 105, 129) from flight #4 with 5 scans
-  (13, 16, 33, 34, 35) from flight #5.
+  The above will co-reduce 3 scans (104, 105, 129) from flight 456 with 5 
+  scans (13, 16, 33, 34, 35) from flight 458.
 
 
  
 
-### 3.2. A few common options to use with SOFIA/HAWC+
+### 3.2. A few common options to use with SOFIA/HIRMES
 
- The DRP interface to CRUSH allows manually specifying reduction options, which
- are passed to CRUSH verbetum as a single line. Each option in the line begins 
- with a dash `-`, and should not contain white spaces, unless these are 
- enclosed in quotes. E.g. below is a valid option line, with three options, one
- of which contains a white-space characters:
+ You may specify reduction options as command-line arguments to CRUSH. Each 
+ option in the line begins with a dash `-`, and should not contain white 
+ spaces, unless these are enclosed in quotes. E.g. below is a valid option 
+ line, with three options, one of which contains a white-space characters:
 
-    -faint -name="My HAWC+ image.fits" -projection=TAN
+    -faint -name="My HIRMES image.fits" -projection=TAN
 
  Below is a brief guide to a few useful options, grouped by functionality.
 
+#### HIRMES specific options
 
-#### HAWC+ specific options
 
-    -subarray=<list>    Restrict imaging to specific subarrays only. The 
-                        argument is a comma separated list of subarray IDs
-                        (R0, R1, T0, T1). E.g.:
-
-                          > crush hawc+ -subarray=R0,T0 ...
-   
 
 #### Source type options
    
@@ -430,85 +374,54 @@ From this point on, the documentation is of more technical nature, intended
 for expert users only.
 
 
-### 4.1. HAWC+ specific pixel divisions
+### 4.1. HIRMES specific pixel divisions
 
  For a general overview of channel divisions, please consult Section 3.
  (Correlated Signals) in the main README document.
 
 
-    polarrays   Pixels of the the R and T polarization arrays, respectively.
-		
-    subarrays   Pixels of each of the 4 HAWC+ subarrays (40x32). Each subarray
-                may contain correlated signals to themselves, e.g. do to
-                correlated thermal fluctuations on their wafers.
-
     bias        Grouping of pixels by TES bias line. Each subarray has 20
                 bias lines, each applied to two consecutive detectors rows.
 
-    mux         A grouping of pixels based on their SQUID multiplexing scheme
-                Each 4x8 pixel quadrant of the array is read out through the
-                same SQUID amplifier. Therefore, it is not suprizing that 
-                correlated signals are present on these quadrants. The
-                decorrelating on `mux` groups is default in HAWC+ reductions
+    cols        Grouping of detector pixels by physical (geomtric) detector
+                columns.
 
-    rows        The HAWC+ multiplexing scheme is implemented in the time-domain
-                Thus, the first channels of each SQUID are read out at the same
-                time, followed by the second channel in each group etc. Thus,
-                if there is any pickup of high-frequency signals in the
-                multiplexing scheme, one could expect some correlated signals
-                to be present on these multiplexer address lines. There
-                is little evidence for these, but the reduction of very faint
-                compact sources may benefit from the additional decorrelation
-                on these groups.
-                For HAWC+, these SQUID address lines are effectively the
-                detectors rows, hence the naming.
+    mux         A grouping of pixels based on their SQUID multiplexing scheme,
+		allowing to decorrelate pixels that share the same readout MUX.
+
+    pins        A grouping of pixels among different MUXes that share the
+                same MUX address (i.e. pin).
+
+    rows        Grouping of detector pixels by physical (geometric) detector
+                rows.
 
     series      The grouping of pixels based on the series array through which
                 they are read out.
 
 
 
-### 4.2. Glossary of HAWC+ specific options
+### 4.2. Glossary of HIRMES specific options
 
-    band=X              Set the observing band to A, B, C, D, or E. Normally,
-                        the band setting is automatic through the SPECTEL1
-                        fits keyword. However, setting the band manually may
-                        be useful for polling band specific settings. E.g.
-
-                          > crush hawc+ -band=A -poll=beam
-
-                        The above line will report the Gaussian FWHM beam size
-                        (in arcsec) used when reducing band A (53um) data.
-   
-    biaslines           @Alias: 'correlated.bias'
-                        @Expert
-                        Decorrelate TES bias lines. All correlated modality 
-                        suboptions apply.
-                        @See: 'correlated.<?>'
-
+    blinds              @Expert
+                        Use information from blind detectors (ones that are
+                        not illuminated) when decorrelating groups of channels
+                        The inclusion of blind detectors can be useful for
+                        removing correlated thermal and/or electronic noise.
 
     calibrated          Set this option when the reduction includes the final
                         calibration (opacities and other calibration
                         corrections) to produce Level 3 data. Otherwise, CRUSH
                         will produce Level 2 output.
 
-    filter=<wavelength> @Expert
-                        Sets the filter band to one of:
+    cols                @Alias: 'correlated.cols'
+                        @Expert
+                        Decorrelate on physical (geometric) detector columns. 
+                        All correlated modality suboptions apply.
+                        @See: 'correlated.<?>'
 
-                          53um, 62um, 89um, 155um, or 216um
-
-                        Normally, the filter is set automatically to the 
-                        correct value based on the 'SPECTEL1' SOFIA header key.
-                        For this reason, it is not recommended, nor trivial
-                        for the user to override this automatic behaviour.
-                        Rather, the setting of this option is useful for
-                        setting conditional settings, which depend on the
-                        HAWC+ waveband.
-
-    fixjumps            @Expert
-                        Enables ficing timestream blocks around flux jumps
-                        in such a way that these will not cause problems.
-                        @See: 'jumpdata'
+    darkcorrect         @Expert
+                        Include the dark SQUIDs when decorrelating over SQUID
+                        MUXes (`mux` option).
 
     flight=N            Set the flight number for locating data files using
                         scan numbers only. Remember to set 'datapath' also to
@@ -523,16 +436,6 @@ for expert users only.
                         needed when the gyros funtion properly. But,
                         occasionally, they drift a fair bit, and this option
                         can activate the correction scheme on demand.
-
-    jumpdata=<path>     @Expert
-                        @Since: 2.40
-                        Specify the file containing the residual pixel jump
-                        counts when flux jumps occur. The input file follows
-                        the format by Darren with 3 columns: (1) The character 
-                        'C' specifying that the value is per column, (2)
-                        the column index (starting from 0), and (3) the
-                        residual flux jump in readout counts.
-                        @See: 'fixjumps'
 
     los                 @Alias: 'correlated.los'
                         @Since: 2.41
@@ -549,23 +452,24 @@ for expert users only.
                         suboptions apply.
                         @See: 'correlated.<?>'
 
-    offset.R1=dx,dy
-    offset.R2=dx,dy
-    offset.T1=dx,dy
-    offset.T2=dx,dy     @Expert
+    offset.imaging=dx,dy   @Expert
+                           Specify the location (dx, dy pixel offsets) of the
+                           illuminated area of the low resolution array used
+                           for imaging mode.
+
+    offset.lores1=dx,dy
+    offset.lores2=dx,dy
+    offset.hires=dx,dy  @Expert
                         Specify the subarray offset (as dx,dy pixels in
                         the focal plane) from their nominal positions, for
-                        both the first and second subarrays of the R and T
-                        polarization arrays. For example, specifying zero
-                        offsets for all (default) describes the focal plane
-                        where R and T are perfectly aligned relative to
-                        one another, and the two subarrays of each form a 
-                        single seamless polarization array.
+                        the two lowres subarrays or the hires array. 
 
-    peakflux            @Since: 2.41
-                        Switch to peak-flux calibration instead of the default
-			aperture flux calibration. Recommended for point 
-			sources only.
+    pins                @Alias: 'correlated.pins'
+                        @Expert
+                        Decorrelate on pixels that share MUX addresses (pins)
+                        over different MUXes. All correlated modality
+                        suboptions apply.
+                        @See: 'correlated.<?>'
 
     pixelsize=<a>[,<b>] @Expert
                         Specify the size of the pixels for calculating pixel 
@@ -589,12 +493,15 @@ for expert users only.
                         @See: 'correlated.<?>'
 
     rotation=<deg>      @Expert
-                        Specify the array rotation (in degrees).
-                        @See: 'rotation.T', 'pixelsize'
+                        Specify the focal-plane rotation (in degrees).
+                        @See: 'pixelsize'
 
-    rotation.T=<deg>    @Expert
-                        Specify the rotation of the T polarization subarray
-                        relative to the R subarray.
+    rotation.lores1=<deg>     
+    rotation.lores2=<deg>
+    rotation.hires=<deg>
+                           @Expert
+                           Specify the relative rotation of each subarray in 
+                           the focal plane.
 
     rows                @Alias: 'correlated.rows'
                         @Expert
@@ -607,11 +514,9 @@ for expert users only.
                         @Since: 2.33
                         Instruct crush to reference maps to Real-Time Object 
                         Coordinates (RTOC) for sidereal and non-sidereal
-                        sources alike. Normally, sidereal object coordinates
+                        sources alike. Otherwise, sidereal object coordinates
                         are determined via the header keywords OBSRA/OBSDEC or
-                        OBJRA/OBJDEC. However, these were not always filled
-                        correctly during the 2016 October flights, so this
-                        option provides a workaround for those scans.
+                        OBJRA/OBJDEC.
 
     series              @Alias: 'correlated.series'
                         @Expert
@@ -620,21 +525,6 @@ for expert users only.
                         thermal fluctuation, and enabling decorrelation on
                         these can improve imaging quality.
 
-    subarray=<list>     @Expert
-                        Restrict the reduction only to the subarrays listed.
-                        The argument is a comma-separated list of subarray 
-                        codes: R1, R2, T1, T2 or R (= R1,R2) or T (= T1,T2). 
-                     
-                          > crush hawc+ -subarray=R1,T1 [...]
-
-    write.flatfield[=path]      @Expert
-                                Write a DRP flatfield FITS file, to be used by
-                        the chop-nod pipeline. The optional argument can 
-                        specify the FITS file's name. Otherwise, a default
-                        name is used, containing the scan's ID, and placed in
-                        the the directory specified by 'outpath'.
-                        The file format is specified by Marc Berthoud.
-                        @See: 'outpath'
 
 
 ### 4.3. HAWC+ specific log quantities
@@ -686,7 +576,7 @@ for expert users only.
     inst.exp
     inst.hwver          Hardware version
     inst.inttime
-    inst.mode
+    inst.mode		
     inst.slit
     inst.spec1          First spectral element (from SPECTEL1)
     inst.spec2          Second spectral element (from SPECTEL2)

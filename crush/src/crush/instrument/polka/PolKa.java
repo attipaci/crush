@@ -29,6 +29,7 @@ import crush.polarization.*;
 import jnum.Unit;
 
 import java.io.*;
+import java.util.List;
 import java.util.Vector;
 
 import nom.tam.fits.BinaryTableHDU;
@@ -188,8 +189,8 @@ public class PolKa extends Laboca implements Oscillating {
 	}
 	
 	@Override
-	public SourceModel getSourceModelInstance() {
-		if(!hasAnalyzer()) return super.getSourceModelInstance();
+	public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
+		if(!hasAnalyzer()) return super.getSourceModelInstance(scans);
 		else if(hasOption("source.synchronized")) return new SyncPolarMap(this);
 		else return new PolarMap(this);
 	}

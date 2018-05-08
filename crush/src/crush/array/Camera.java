@@ -94,13 +94,13 @@ public abstract class Camera<ChannelType extends Channel> extends Instrument<Cha
 	public abstract int maxPixels();
 	
 	@Override
-	public SourceModel getSourceModelInstance() {
+	public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
 		if(hasOption("source.type")) {
 			String type = option("source.type").getValue();
 			if(type.equals("beammap")) return new BeamMap(this);
-			return super.getSourceModelInstance();
+			return super.getSourceModelInstance(scans);
 		}
-		return super.getSourceModelInstance();
+		return super.getSourceModelInstance(scans);
 	}
 	
 	@Override

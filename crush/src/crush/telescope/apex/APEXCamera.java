@@ -37,6 +37,7 @@ import nom.tam.fits.*;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 
@@ -221,9 +222,9 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 	}
 	
 	@Override
-	public SourceModel getSourceModelInstance() {
+	public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
 		if(hasOption("chopped")) return new APEXChoppedPhotometry(this);
-		return super.getSourceModelInstance();
+		return super.getSourceModelInstance(scans);
 	}
 	
 	public ArrayList<APEXContinuumPixel> getNeighbours(APEXContinuumPixel pixel, double radius) {
