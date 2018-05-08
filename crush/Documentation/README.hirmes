@@ -131,18 +131,19 @@ in Kovacs, A., PhD thesis, Caltech (2006).
 
 ### 2.3. Optional startup environment & Java configuration
    
- CRUSH ships with a default Java configuration. On the most common UNIX 
- platforms (Linux, Mac OS X, BSD, and Solaris), it will automatically attempt
- to set an optimal configuration. On other platforms, it comes with fail-safe
- default values (default java, 32-bit mode and 1GB of RAM use).
+ CRUSH ships with a default Java configuration. On Windows and the most common 
+ UNIX  platforms (Linux, Mac OS X, BSD, and Solaris), it will automatically 
+ attempt to set an optimal configuration. On other platforms, it comes with 
+ fail-safe default values (default java, 32-bit mode and 1GB of RAM use).
 
- To override the defaults on Windows, edit `wrapper.bat` directly.
+ You can override the defaults by placing your settings in arbitrary files 
+ under `/etc/crush2/startup` or `~/.crush2/startup` (for the equivalent
+ configuration under Windows, please refer to `README.windows`) 
 
- On all other platforms, you can override the defaults by placing your settings
- in arbitrary files under `/etc/crush2/startup` or `~/.crush2/startup`. (Any 
- settings in the user's home under `~/.crush2/startup` will override the 
- system-wide values in `/etc/crush2/startup`. If multiple config files exist in
- the same location, these will be parsed by the shell in non-specific order).
+ (Any  settings in the user's home under `~/.crush2/startup` will override the 
+ system-wide values in `/etc/crush2/startup` or `C:\Program Data\startup`. 
+ If multiple config files exist in the same location, these will be parsed by 
+ the shell in non-specific order).
 
  E.g., placing the following lines in `~/.crush2/startup/java.conf` overrides
  all available settings: 
@@ -221,11 +222,11 @@ in Kovacs, A., PhD thesis, Caltech (2006).
   The default method of locating files is by file name, which may specify 
   either an absolute path, e.g.:
 
-    > crush hawc+ /data/hirmes/simdataimv2.fits
+    > crush hirmes /data/hirmes/simdataimv2.fits
 
   or it can be filename/path relative to `datapath`
  
-    > crush hawc+ simdataimv2.fits
+    > crush hirmes simdataimv2.fits
 
   The two are equilalent assuming that `datapath` is set to `/data/hirmes` in 
   the second case, e.g. in the user configuration file 
@@ -249,11 +250,11 @@ in Kovacs, A., PhD thesis, Caltech (2006).
 
   Now, you may simply reduce scan 105 from flight 456 as:
 
-    > crush hawc+ -flight=456 105
+    > crush hirmes -flight=456 105
 
   You can also reduce multiple scans, from multiple flight together. E.g.:
 
-    > crush hawc+ -flight=456 104-105 129 -flight=458 13 16 33-35
+    > crush hirmes -flight=456 104-105 129 -flight=458 13 16 33-35
 
   The above will co-reduce 3 scans (104, 105, 129) from flight 456 with 5 
   scans (13, 16, 33, 34, 35) from flight 458.
@@ -268,7 +269,7 @@ in Kovacs, A., PhD thesis, Caltech (2006).
  spaces, unless these are enclosed in quotes. E.g. below is a valid option 
  line, with three options, one of which contains a white-space characters:
 
-    -faint -name="My HIRMES image.fits" -projection=TAN
+   > crush hirmes -faint -name="My HIRMES image.fits" -projection=TAN ...
 
  Below is a brief guide to a few useful options, grouped by functionality.
 
@@ -359,11 +360,9 @@ in Kovacs, A., PhD thesis, Caltech (2006).
 
     -final:smooth=X     Smooth the final map by a Gaussian with X arcsec FWHM.
                         Alternatively, X can be one of `minimal`, `halfbeam`
-			`2/3beam` or `beam`. E.g. `-smooth=8.0` or 
-			`-smooth=2/3beam`. To turn smoothing off completely
-			use `-final:forget=smooth`.
-
-
+                        `2/3beam` or `beam`. E.g. `-smooth=8.0` or 
+                        `-smooth=2/3beam`. To turn smoothing off completely
+                        use `-final:forget=smooth`.
 
 
 
@@ -387,7 +386,7 @@ for expert users only.
                 columns.
 
     mux         A grouping of pixels based on their SQUID multiplexing scheme,
-		allowing to decorrelate pixels that share the same readout MUX.
+                allowing to decorrelate pixels that share the same readout MUX.
 
     pins        A grouping of pixels among different MUXes that share the
                 same MUX address (i.e. pin).

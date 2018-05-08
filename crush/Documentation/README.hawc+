@@ -131,19 +131,20 @@ in Kovacs, A., PhD thesis, Caltech (2006).
 
 
 ### 2.3. Optional startup environment & Java configuration
-   
- CRUSH ships with a default Java configuration. On the most common UNIX 
- platforms (Linux, Mac OS X, BSD, and Solaris), it will automatically attempt
- to set an optimal configuration. On other platforms, it comes with fail-safe
- default values (default java, 32-bit mode and 1GB of RAM use).
 
- To override the defaults on Windows, edit `wrapper.bat` directly.
+ CRUSH ships with a default Java configuration. On Windows and the most common
+ UNIX  platforms (Linux, Mac OS X, BSD, and Solaris), it will automatically
+ attempt to set an optimal configuration. On other platforms, it comes with
+ fail-safe default values (default java, 32-bit mode and 1GB of RAM use).
+  
+ You can override the defaults by placing your settings in arbitrary files
+ under `/etc/crush2/startup` or `~/.crush2/startup` (for the equivalent
+ configuration under Windows, please refer to `README.windows`)
 
- On all other platforms, you can override the defaults by placing your settings
- in arbitrary files under `/etc/crush2/startup` or `~/.crush2/startup`. (Any 
- settings in the user's home under `~/.crush2/startup` will override the 
- system-wide values in `/etc/crush2/startup`. If multiple config files exist in
- the same location, these will be parsed by the shell in non-specific order).
+ (Any  settings in the user's home under `~/.crush2/startup` will override the
+ system-wide values in `/etc/crush2/startup` or `C:\Program Data\startup`.
+ If multiple config files exist in the same location, these will be parsed by
+ the shell in non-specific order).
 
  E.g., placing the following lines in `~/.crush2/startup/java.conf` overrides
  all available settings: 
@@ -415,11 +416,9 @@ See the main README for more details.
 
     -final:smooth=X     Smooth the final map by a Gaussian with X arcsec FWHM.
                         Alternatively, X can be one of `minimal`, `halfbeam`
-			`2/3beam` or `beam`. E.g. `-smooth=8.0` or 
-			`-smooth=2/3beam`. To turn smoothing off completely
-			use `-final:forget=smooth`.
-
-
+                        `2/3beam` or `beam`. E.g. `-smooth=8.0` or 
+                        `-smooth=2/3beam`. To turn smoothing off completely
+                        use `-final:forget=smooth`.
 
 
 
