@@ -29,7 +29,6 @@ import java.io.PrintWriter;
 import java.util.Collection;
 
 import crush.CRUSH;
-import crush.Channel;
 import crush.Frame;
 import crush.PhaseData;
 import crush.PhaseSet;
@@ -58,7 +57,7 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
 	}
 	
 	@Override
-	public Channel copy() {
+	public APEXContinuumPixel copy() {
 		APEXContinuumPixel copy = (APEXContinuumPixel) super.copy();
 		if(fitsPosition != null) copy.fitsPosition = (Vector2D) fitsPosition.clone();
 		return copy;

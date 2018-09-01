@@ -26,10 +26,11 @@ package crush;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import jnum.CopiableContent;
 import jnum.Util;
 
 
-public class Dependents implements Serializable {
+public class Dependents implements Serializable, Cloneable, CopiableContent<Dependents> {
 	/**
 	 * 
 	 */
@@ -46,6 +47,32 @@ public class Dependents implements Serializable {
 		forChannel = new float[integration.instrument.size()];
 			
 		integration.dependents.put(name, this);
+	}
+	
+	@Override
+    protected Dependents clone() {
+	    try { return (Dependents) super.clone(); }
+	    catch(CloneNotSupportedException e) { return null; }
+	}
+	
+	@Override
+    public Dependents copy() {
+	    return copy(true);
+	}
+	
+	@Override
+    public Dependents copy(boolean withContents) {
+	    Dependents copy = clone();
+	    if(name != null) copy.name = new String(name);
+	    if(withContents) {
+	        if(forFrame != null) copy.forFrame = Arrays.copyOf(forFrame, forFrame.length);
+	        if(forChannel != null) copy.forChannel = Arrays.copyOf(forChannel, forChannel.length);
+	    }
+	    else {
+	        if(forFrame != null) copy.forFrame = new float[forFrame.length];
+	        if(forChannel != null) copy.forChannel = new float[forChannel.length];
+	    }
+	    return copy;	    
 	}
 	
 	@Override

@@ -57,10 +57,16 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 		super(name, new SingleColorArrangement<APEXContinuumPixel>());
 	}
 	
-	
 	@Override
 	public String getTelescopeName() {
 		return "APEX";
+	}
+	
+	@Override
+    public APEXCamera<ChannelType> copy() {
+	    APEXCamera<ChannelType> copy = (APEXCamera<ChannelType>) super.copy();
+	    if(referencePixel != null) copy.referencePixel = copy.get(referencePixel.index);
+	    return copy;
 	}
 
 	@Override

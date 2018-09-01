@@ -36,17 +36,17 @@ public class SingleColorArrangement<ChannelType extends SingleColorPixel> extend
 
 	@Override
 	public int getPixelCount() {
-		return instrument.size();
+		return getInstrument().size();
 	}
 
 	@Override
 	public List<? extends Pixel> getPixels() {
-		return instrument;
+		return getInstrument();
 	}
 
 	@Override
 	public List<? extends Pixel> getMappingPixels(int keepFlags) {
-		return instrument.getObservingChannels().createGroup().discard(~keepFlags);	
+		return getInstrument().getObservingChannels().createGroup().discard(~keepFlags);
 	}
 
 }

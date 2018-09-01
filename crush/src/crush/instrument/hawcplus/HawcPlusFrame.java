@@ -54,11 +54,17 @@ public class HawcPlusFrame extends SofiaFrame {
         super(hawcScan);
         create(hawcScan.instrument.size());
     }
-
+    
     @Override
-    public void create(int size) {
-        super.create(size);
-        jumpCounter = new byte[size];
+    public HawcPlusFrame copy(boolean withContents) {
+        HawcPlusFrame copy = (HawcPlusFrame) super.copy(withContents);
+        
+        if(jumpCounter != null) {
+            copy.jumpCounter = new byte[jumpCounter.length];
+            if(withContents) System.arraycopy(jumpCounter, 0, copy.jumpCounter, 0, jumpCounter.length);
+        }
+        
+        return copy;
     }
 
     public void parseData(int frameIndex, int[] DAC, short[] jump) {   
@@ -69,6 +75,8 @@ public class HawcPlusFrame extends SofiaFrame {
     private void parseData(int[] DAC, short[] jump, int from) {  
         HawcPlus hawc = (HawcPlus) scan.instrument;
         
+        if(jump != null) jumpCounter = new byte[data.length];
+        
         for(final HawcPlusPixel pixel : hawc) {
             data[pixel.index] = DAC[from + pixel.fitsIndex] / hawc.subarrayGainRenorm[pixel.sub];
             if(jump != null) jumpCounter[pixel.index] = (byte) jump[from + pixel.fitsIndex];
@@ -77,6 +85,8 @@ public class HawcPlusFrame extends SofiaFrame {
     
     public void parseData(int[][] DAC, short[][] jump) {  
         HawcPlus hawc = (HawcPlus) scan.instrument;
+        
+        if(jump != null) jumpCounter = new byte[data.length];
         
         for(final HawcPlusPixel pixel : hawc) {
             data[pixel.index] = DAC[pixel.fitsRow][pixel.fitsCol] / hawc.subarrayGainRenorm[pixel.sub];

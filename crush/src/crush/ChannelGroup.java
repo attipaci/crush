@@ -64,7 +64,8 @@ implements Copiable<ChannelGroup<ChannelType>> {
     public ChannelGroup<ChannelType> copy() {
         ChannelGroup<ChannelType> copy = (ChannelGroup<ChannelType>) clone();
         copy.clear();
-        for(ChannelType channel : this) copy.add((ChannelType) channel.copy());
+        for(int i=0; i<size(); i++) copy.add((ChannelType) get(i).copy());
+        copy.name = new String(name);
         return copy;
     }
 

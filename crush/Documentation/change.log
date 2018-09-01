@@ -1,3 +1,43 @@
+>> 'write.png.median'
+
+
+2.42-a2 
+
+	[NEW] {HIRMES} Parsing simple (linear) frequency mapping from FITS
+	header. 
+
+	[NEW] {HIRMES} Spectral cubes can now generate PNG previews, either
+	as av average or median (if 'write.png.median' is specified) image over
+	the spectral slices.
+
+	[NEW] {HIRMES} Default spectral resolution is now set to be 2x the
+	spectral detector channel spacing.
+
+	[FIX] {HIRMES} Include coordinate information in FITS headers generated
+	by Spectral Cubes.
+
+	[FIX] Many fixes to deep copy calls over all, which were partially
+	shallow in several cases. Some specific examples are shown below.
+
+	[FIX] CorrelatedSignal copies shared dependents. However, the method
+	was not called anywhere, so the bug had no impact.
+	
+	[FIX] {SOFIA} {HAWC+} {HIRMES} {SCUBA-2} Some frame copies, used when
+	downsampling were partially shallow, and could result in corruptions.
+
+	[FIX] {HAWC+} {HIRMES} Fixed shallow copies of some instrument 
+	properties (one instance could overwrite the properties of another
+	instance). Fixed with proper deep copy().
+
+	[FIX] {HIRMES} Parsing of imaging/spectroscopy modes from FITS header
+
+	[TWEAK] Use sigmyne.com for checking for new releases and in 
+	console info output.
+
+	[CODE] Integration.comments changed String -> StringBuffer for more
+	efficient handling.
+
+
 
 2.42-a1	(7 May 2018)
 
@@ -17,15 +57,23 @@
 	[NEW] {SOFIA} New option 'aperture' can define an effective aperture
 	diameter (m) for wavelength-dependent beam FWHM calculation.
 
+	[CHANGE] Updated startup scripts to not use -d32/-d64 option any more,
+	The options were meaningful for Solaris only, and have been deprecated 
+        in Java 10, where their attempted use results in an error.
+
 	[FIX] {SOFIA} Default wavelength-dependent beam size calculation had
 	wrong units. Fixed.
 
 	[FIX] {SpectralCube} Spectral unit determination had quotes around
 	String variable name. Fixed.
 
+	[TWEAK] {SOFIA} Discriminating scans that are in a different band 
+	moved from SofiaCamera -> HAWC+. (Since HIRMES allows to combine
+	data taken at slightly different wavelengths).
+
 	[DOC] {HIRMES} Initial HIRMES README documentation.
 
-	[DOX] {HAWC+} Slight corrections to the HAWC+ documentation.
+	[DOC] {HAWC+} Slight corrections to the HAWC+ documentation.
 
 	[CODE] CRUSH.getSourceModelInstance now takes a list of scans as
 	argument so it can make decisions based on the data (e.g. spectral

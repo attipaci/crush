@@ -116,8 +116,8 @@ public class Pipeline implements Runnable, Serializable {
 		scanSource.setInstrument(scan.instrument);
 		
 		for(Integration<?, ?> integration: scan) {						
-			if(integration.hasOption("jackknife")) integration.comments += integration.gain > 0.0 ? "+" : "-";
-			else if(integration.gain < 0.0) integration.comments += "-";
+			if(integration.hasOption("jackknife")) integration.comments.append(integration.gain > 0.0 ? "+" : "-");
+			else if(integration.gain < 0.0) integration.comments.append("-");
 			scanSource.add(integration);
 		}		
 		

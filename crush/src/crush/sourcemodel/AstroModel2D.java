@@ -196,7 +196,7 @@ public abstract class AstroModel2D extends SourceModel {
         try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
         catch(Exception e) { projection = new Gnomonic(); }		
         
-        projection.setReference(getFirstScan().getPositionReference(getOptions())); 
+        projection.setReference(getFirstScan().getPositionReference(hasOption("system") ? option("system").getValue() : "equatorial")); 
         setProjection(projection);
 
         setSize();
@@ -546,7 +546,7 @@ public abstract class AstroModel2D extends SourceModel {
         float[] dec = new float[scans];
 
         for(int i=scans; --i >= 0; ) {
-            EquatorialCoordinates equatorial = (EquatorialCoordinates) getScan(i).equatorial.clone();
+            EquatorialCoordinates equatorial = (EquatorialCoordinates) getScan(i).equatorial.copy();
             equatorial.precess(CoordinateEpoch.J2000);
             ra[i] = (float) equatorial.RA();
             dec[i] = (float) equatorial.DEC();
@@ -557,7 +557,7 @@ public abstract class AstroModel2D extends SourceModel {
         );
 
         for(Scan<?,?> scan : getScans()) {
-            EquatorialCoordinates equatorial = (EquatorialCoordinates) scan.equatorial.clone();
+            EquatorialCoordinates equatorial = (EquatorialCoordinates) scan.equatorial.copy();
             equatorial.precess(CoordinateEpoch.J2000);
             double d = equatorial.distanceTo(median);
             if(d > maxDistance) outliers.add(scan);
@@ -727,8 +727,8 @@ public abstract class AstroModel2D extends SourceModel {
     public void add(Integration<?,?> integration, int signalMode) {
         final Instrument<?> instrument = integration.instrument; 
 
-        integration.comments += "Map";
-        if(getID() != null) integration.comments += "." + getID();
+        integration.comments.append("Map");
+        if(getID() != null) integration.comments.append("." + getID());
         // For jackknived maps indicate sign...
 
         // Proceed only if there are enough pixels to do the job...
@@ -754,9 +754,9 @@ public abstract class AstroModel2D extends SourceModel {
         }
 
         if(signalCorrection)
-            integration.comments += "[C~" + Util.f2.format(1.0/averageFiltering) + "] ";
+            integration.comments.append("[C~" + Util.f2.format(1.0/averageFiltering) + "] ");
         
-        integration.comments += " ";
+        integration.comments.append(" ");
     }
 
     public void setSyncGains(final Integration<?,?> integration, final Pixel pixel, final double[] sourceGain) {
@@ -825,7 +825,7 @@ public abstract class AstroModel2D extends SourceModel {
         final double nf = sumfw > 0 ? N / sumfw : 0.0;
 
         // TODO revise for composite sources...
-        final Dependents parms = integration.dependents.containsKey("source") ? integration.dependents.get("source") : new Dependents(integration, "source");
+        final Dependents parms = integration.getDependents("source");
 
         for(int k=pixels.size(); --k >= 0; ) {
             Pixel pixel = pixels.get(k);

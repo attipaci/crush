@@ -102,7 +102,7 @@ if not defined JAVA (
 
 
 :: Set the Java runtime options based on the settings so far...
-set JAVAOPTS=%JVM% -d%DATAMODEL% -Xmx%USEMB%M %EXTRAOPTS%
+set JAVAOPTS=%JVM% -Xmx%USEMB%M %EXTRAOPTS%
 
 :: This line defines where java will look for the relevant source files. Leave
 :: it as is, unless you have a good reason to change it...

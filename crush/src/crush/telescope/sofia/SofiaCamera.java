@@ -40,11 +40,11 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 import crush.CRUSH;
 import crush.Channel;
-import crush.Instrument;
 import crush.Scan;
 import crush.array.Camera;
 import crush.instrument.ColorArrangement;
 import crush.telescope.GroundBased;
+import jnum.Constant;
 import jnum.Unit;
 import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
@@ -76,10 +76,14 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     }
 
     @Override
-    public Instrument<ChannelType> copy() {
+    public SofiaCamera<ChannelType> copy() {
         SofiaCamera<ChannelType> copy = (SofiaCamera<ChannelType>) super.copy();
+        
         if(instrumentData != null) copy.instrumentData = instrumentData.copy();
         if(array != null) copy.array = array.copy();
+        if(configFiles != null) copy.configFiles = new HashSet<String>(configFiles);
+        if(history != null) copy.history = new Vector<String>(history);
+        
         return copy;
     }
 
@@ -120,7 +124,8 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         if(instrumentData == null) return super.getName();
         return (instrumentData.instrumentName != null) ? instrumentData.instrumentName : super.getName();
     }
-
+    
+    
     public void parseHeader(SofiaHeader header) {		
         instrumentData = new SofiaInstrumentData(header);
 
@@ -128,6 +133,8 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         double D = hasOption("aperture") ? option("aperture").getDouble() * Unit.m : telescopeDiameter;
         setResolution(1.22 * instrumentData.wavelength / D);
 
+        setFrequency(Constant.c / instrumentData.wavelength);
+        
         array = new SofiaArrayData(header);
 
         samplingInterval = integrationTime = 1.0 / (header.getDouble("SMPLFREQ", Double.NaN) * Unit.Hz);
@@ -293,12 +300,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     @Override
     public void validate(Vector<Scan<?,?>> scans) throws Exception {
         final SofiaScan<?,?> firstScan = (SofiaScan<?,?>) scans.get(0);
-        double wavelength = firstScan.instrument.instrumentData.wavelength;
-        for(int i=scans.size(); --i >= 1; ) if(((SofiaScan<?,?>) scans.get(i)).instrument.instrumentData.wavelength != wavelength) {
-            warning("Scan " + scans.get(i).getID() + " in a different band. Removing from set.");
-            scans.remove(i);
-        }
-
+        
         if(scans.size() == 1) if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
 
         super.validate(scans);

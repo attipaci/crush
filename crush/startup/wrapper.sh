@@ -3,7 +3,7 @@
 # ===========================================================================
 # Description: Java configuration wrapper script for CRUSH tools.
 # Author: Attila Kovacs <attila@sigmyne.com>
-# Updated: 11 February 2017
+# Updated: 12 May 2018
 # ===========================================================================  
 
 # Attempt to auto configure CRUSH. This should provide optimal settings on
@@ -154,8 +154,7 @@ if [ -z ${JAVA+x} ] ; then
   exit 1
 fi
 
-
-JAVAOPTS="$JVM -d$DATAMODEL -Xmx${USEMB}M $EXTRAOPTS"
+JAVAOPTS="$JVM -Xmx${USEMB}M $EXTRAOPTS"
 
 CLASSPATH="$CRUSH/lib/*:$CRUSH/bin"
 

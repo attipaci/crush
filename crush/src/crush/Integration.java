@@ -76,7 +76,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
     public int integrationNo;	
 
-    public String comments = new String();
+    public StringBuffer comments = new StringBuffer();
 
     public float gain = 1.0F;
     public double zenithTau = 0.0;
@@ -156,7 +156,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
     public void nextIteration() {
-        comments = new String();
+        comments = new StringBuffer();
     }
 
     public boolean hasOption(String key) {
@@ -281,6 +281,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             instrument.census();
             info("Bootstrapping pixel weights (" + instrument.mappingChannels + " active channels).");
         }
+        
+        instrument.calcOverlap(scan.getPointSize());
 
         System.gc();
 
@@ -302,7 +304,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
     public void setIteration(int i, int rounds) {
-        CRUSH.setIteration(instrument.getOptions(), i, rounds);
+        CRUSH.setIteration(instrument.getOptions(), i, rounds);  
+        instrument.calcOverlap(scan.getPointSize());
     }
 
     public double getExposureTime() { return getFrameCount(Frame.SKIP_SOURCE_MODELING) * instrument.samplingInterval; }
@@ -396,7 +399,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
                 warning("No automatic downsampling for zero scan speed.");
                 return; 
             }
-            double maxInt = 0.4 * instrument.getPointSize() / maxv;
+            double maxInt = 0.4 * scan.getPointSize() / maxv;
 
             int factor = (int)Math.floor(maxInt / instrument.samplingInterval);
             if(factor == Integer.MAX_VALUE) {
@@ -507,7 +510,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         if(option.is("auto")) {	
             // Move at least 5 fwhms over the stability timescale
             // But less that 1/2.5 beams per sample to avoid smearing
-            vRange = new Range(5.0 * instrument.getSourceSize() / instrument.getStability(), 0.4 * instrument.getPointSize() / instrument.samplingInterval);
+            vRange = new Range(5.0 * instrument.getSourceSize() / instrument.getStability(), 0.4 * scan.getPointSize() / instrument.samplingInterval);
         }
         else {
             vRange = option.getRange(true);
@@ -578,8 +581,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         return getModulationFrequency(Frame.TOTAL_POWER) + sourceSize / aveScanSpeed.value();		
     }
 
-    public double getPointCrossingTime() {
-        return getCrossingTime(scan.sourceModel == null ? instrument.getPointSize() : scan.sourceModel.getPointSize()); 
+    
+    public final double getPointCrossingTime() {
+        return getCrossingTime(scan.getPointSize()); 
     }
 
     public double getMJD() {
@@ -828,8 +832,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
         final Dependents parms = getDependents("drifts");
 
-        if(driftN < size()) comments += (robust ? "[D]" : "D") + "(" + driftN + ")";
-        else comments += robust ? "[O]" : "O";
+        if(driftN < size()) comments.append((robust ? "[D]" : "D") + "(" + driftN + ")");
+        else comments.append(robust ? "[O]" : "O");
 
         // Remove the 1/f drifts from all channels
         removeChannelDrifts(instrument, parms, driftN, robust);	
@@ -938,7 +942,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             channel.filterTimeScale = Math.min(filterTimeScale, channel.filterTimeScale);
         }
 
-        if(inconsistencies > 0) comments += "!" + inconsistentChannels + ":" + inconsistencies;
+        if(inconsistencies > 0) comments.append("!" + inconsistentChannels + ":" + inconsistencies);
 
         Instrument.recycle(aveOffset);
 
@@ -1013,48 +1017,55 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         if(sumw > 0.0) Statistics.Inplace.smartMedian(buffer, 0, n, 0.25, increment);	
     }
 
-
     public boolean decorrelate(final String modalityName, final boolean isRobust) {
+        if(!decorrelateSignals(modalityName, isRobust)) return false;
+        return updateGains(modalityName, isRobust);
+    }
 
+    public boolean decorrelateSignals(final String modalityName, final boolean isRobust) {
         final Modality<?> modality = instrument.modalities.get(modalityName);
         if(modality == null) return false;
 
-        boolean solveGains = modality.solveGains && hasOption("gains");
-        modality.phaseGains = hasOption("phasegains");
         modality.setOptions(option("correlated." + modality.name));
 
         if(modality.trigger != null) if(!hasOption(modality.trigger)) return false;
 
-        final String left = isRobust ? "[" : "";
-        final String right = isRobust ? "]" : "";
-
-        comments += left + modality.id + right;
+        comments.append((isRobust ? "[" : "") + modality.id + (isRobust ? "]" : ""));
+        
         final int frameResolution = power2FramesFor(modality.resolution);
-        if(frameResolution > 1) comments += "(" + frameResolution + ")";	
+        if(frameResolution > 1) comments.append("(" + frameResolution + ")");	
 
         if(modality instanceof CorrelatedModality) {
             CorrelatedModality correlated = (CorrelatedModality) modality;
             if(correlated.solveSignal) correlated.updateSignals(this, isRobust);
         }	
 
-        // Continue to solve gains only if gains are derived per integration
-        // If the gains span over scans, then return to allow them to be
-        // derived globally...
-        if(hasOption("correlated." + modality.name + ".span")) return false;
+        return true;
+    }
+     
+    public boolean updateGains(final String modalityName, final boolean isRobust) {
+        
+        final Modality<?> modality = instrument.modalities.get(modalityName);
+        if(modality == null) return false;
+        
+        modality.setOptions(option("correlated." + modality.name));
 
-        boolean isGainRobust = false;		
-        if(solveGains) {
-            Configurator gains = option("gains");
+        boolean solveGains = modality.solveGains && hasOption("gains");
+        if(!solveGains) return true;
+       
+        if(modality.trigger != null) if(!hasOption(modality.trigger)) return false;
+        
+        Configurator gainOption = option("gains");
 
-            try { gains.mapValueTo("estimator"); }
-            catch(LockedException e) {} // TODO...
-
-            if(gains.isConfigured("estimator")) if(gains.get("estimator").is("median")) isGainRobust = true; 
-
-            if(modality.updateAllGains(this, isGainRobust)) {
-                instrument.census();
-                comments += instrument.mappingChannels;
-            }
+        try { gainOption.mapValueTo("estimator"); }
+        catch(LockedException e) {} // TODO...
+        
+        boolean isGainRobust = false;  
+        if(gainOption.isConfigured("estimator")) if(gainOption.get("estimator").is("median")) isGainRobust = true; 
+        
+        if(modality.updateAllGains(this, isGainRobust)) {
+            instrument.census();
+            comments.append(instrument.mappingChannels);
         }	
 
         return true;
@@ -1066,7 +1077,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 
     public void getRMSChannelWeights() {
-        comments += "W";
+        comments.append("W");
 
         final ChannelGroup<?> channels = instrument.getLiveChannels();
 
@@ -1140,7 +1151,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         final int delta = framesFor(10.0 * getPointCrossingTime());
         final ChannelGroup<?> channels = instrument.getLiveChannels();
 
-        comments += "w";
+        comments.append("w");
 
         CRUSH.Fork<DataPoint[]> variances = new CRUSH.Fork<DataPoint[]>(size() - delta, getThreadCount()) {
             private DataPoint[] var;
@@ -1200,7 +1211,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
     public void getRobustChannelWeights() {
-        comments += "[W]";
+        comments.append("[W]");
 
         final ChannelGroup<?> channels = instrument.getLiveChannels();
 
@@ -1253,17 +1264,17 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             calcSourceNEFD();
         }
         catch(IllegalStateException e) { 
-            comments += "(" + e.getMessage() + ")";
+            comments.append("(" + e.getMessage() + ")");
             nefd = Double.NaN;
         }
 
-        comments += instrument.mappingChannels;
+        comments.append(instrument.mappingChannels);
     }
 
     public void calcSourceNEFD() {
         nefd = instrument.getSourceNEFD(gain);
         if(hasOption("nefd.map")) nefd /= Math.sqrt(scan.weight);	
-        comments += "(" + Util.e2.format(nefd / instrument.janskyPerBeam()) + ")";	
+        comments.append("(" + Util.e6.format(nefd / instrument.janskyPerBeam()) + ")");	
     }
 
     public void getTimeWeights() { getTimeWeights(instrument); } 
@@ -1274,8 +1285,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
     public void getTimeWeights(ChannelGroup<?> channels, final int blockSize) { 
-        comments += "tW";
-        if(blockSize > 1) comments += "(" + blockSize + ")";
+        comments.append("tW");
+        if(blockSize > 1) comments.append("(" + blockSize + ")");
         getTimeWeights(channels, blockSize, true); 
     }
 
@@ -1394,7 +1405,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
         boolean robust = false;
         if(hasOption("estimator")) if(option("estimator").is("median")) robust=true;
-        comments += robust ? "[J]" : "J";
+        comments.append(robust ? "[J]" : "J");
 
         final double minLevelTime = hasOption("dejump.minlength") ? option("dejump.minlength").getDouble() * Unit.sec : 5.0 * getPointCrossingTime();
 
@@ -1443,7 +1454,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         // Otherwise, just reinstate the old weights...
         else for(final Frame exposure : this) if(exposure != null) exposure.relativeWeight = exposure.tempC;
 
-        comments += levelled + ":" + removed;
+        comments.append(levelled + ":" + removed);
     }
 
 
@@ -1641,7 +1652,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
     public void despikeNeighbouring(final double significance, final int delta) {
-        comments += "dN";
+        comments.append("dN");
 
         if(size() < delta) return;
 
@@ -1704,7 +1715,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
     public void despikeAbsolute(final double significance) {
-        comments += "dA";
+        comments.append("dA");
 
         final ChannelGroup<?> liveChannels = instrument.getLiveChannels();
         final int excludeSamples = Frame.SAMPLE_SOURCE_BLANK | Frame.SAMPLE_SKIP;
@@ -1730,7 +1741,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 
     public void despikeGradual(final double significance, final double depth) {
-        comments += "dG";
+        comments.append("dG");
 
         final ChannelGroup<?> liveChannels = instrument.getLiveChannels();
 
@@ -1773,7 +1784,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         if(maxBlockSize < 1) maxBlockSize = 1;	
         if(maxBlockSize > size()) maxBlockSize = size()>>>1;
 
-        comments += "dM";
+        comments.append("dM");
 
         final ChannelGroup<?> liveChannels = instrument.getLiveChannels();
         final int nt = size();
@@ -1903,7 +1914,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         Instrument.recycle(channelSpikes);
 
         instrument.census();
-        comments += instrument.mappingChannels;
+        comments.append(instrument.mappingChannels);
     }
 
     public void flagSpikyFrames(final double minSpikes) {
@@ -1945,7 +1956,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         flagger.process();
 
         //comments += "(" + Util.f1.format(100.0*spikyFrames/size()) + "%)";
-        comments += "(" + flagger.getResult() + ")";
+        comments.append("(" + flagger.getResult() + ")");
     }
 
     public boolean isDetectorStage() {
@@ -2253,7 +2264,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
     // TODO parallelize...
     public void checkForNaNs(final Iterable<? extends Channel> channels, final int from, int to) {
-        comments += "?";
+        comments.append("?");
 
         to = Math.min(to, size());
 
@@ -2263,14 +2274,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             if(exposure != null) for(final Channel channel : channels) {
 
                 if(Float.isNaN(exposure.data[channel.index])) {
-                    comments += "NaN: " + exposure.index + "," + channel.index;
-                    error(comments);
+                    comments.append("NaN: " + exposure.index + "," + channel.index);
+                    error(comments.toString());
                     System.exit(1);
                 }
 
                 if(Float.isInfinite(exposure.data[channel.index])) {
-                    comments += "Inf: " + exposure.index + "," + channel.index;
-                    error(comments);
+                    comments.append("Inf: " + exposure.index + "," + channel.index);
+                    error(comments.toString());
                     System.exit(1);
                 }
 
@@ -3164,7 +3175,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         boolean isRobust = false;
         if(hasOption("estimator")) if(option("estimator").is("median")) isRobust = true;
 
-
         if(task.equals("offsets")) {
             removeOffsets(isRobust);	    
         }
@@ -3195,14 +3205,14 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         }
         else if(task.equals("purify")) {
             if(this instanceof Purifiable) ((Purifiable) this).purify();
-            comments += "P";
+            comments.append("P");
         }
         else if(task.equals("dejump")) {
             dejumpFrames();
         }
         else return false;
 
-        comments += " ";	
+        comments.append(" ");	
 
         //Thread.yield();
 

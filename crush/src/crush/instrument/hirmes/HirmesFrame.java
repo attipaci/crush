@@ -51,19 +51,27 @@ public class HirmesFrame extends SofiaFrame {
         create(scan.instrument.size());
     }
 
-    @Override
-    public void create(int size) {
-        super.create(size);
-        jumpCounter = new byte[size];
-    }
-
     public void parseData(int frameIndex, int[] DAC, short[] jump) {   
         parseData(DAC, jump, frameIndex * FITS_CHANNELS);
+    }
+    
+    @Override
+    public HirmesFrame copy(boolean withContents) {
+        HirmesFrame copy = (HirmesFrame) super.copy(withContents);
+        
+        if(jumpCounter != null) {
+            copy.jumpCounter = new byte[jumpCounter.length];
+            if(withContents) System.arraycopy(jumpCounter, 0, copy.jumpCounter, 0, jumpCounter.length);
+        }
+        
+        return copy;
     }
 
     // Parses data for valid pixels only...   
     public void parseData(int[] DAC, short[] jump, int from) {  
         Hirmes hirmes = (Hirmes) scan.instrument;
+        
+        if(jump != null) jumpCounter = new byte[data.length];
         
         for(final HirmesPixel pixel : hirmes) {
             data[pixel.index] = DAC[from + pixel.getFixedIndex()];
@@ -73,6 +81,8 @@ public class HirmesFrame extends SofiaFrame {
     
     public void parseData(int[][] DAC, short[][] jump) {  
         Hirmes hirmes = (Hirmes) scan.instrument;
+        
+        if(jump != null) jumpCounter = new byte[data.length];
         
         for(final HirmesPixel pixel : hirmes) {
             data[pixel.index] = DAC[pixel.mux][pixel.pin];

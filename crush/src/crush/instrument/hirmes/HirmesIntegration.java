@@ -54,18 +54,6 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
         return new HirmesFrame((HirmesScan) scan);
     }
 
-    
-    @Override
-    public double getMeanPWV() {
-        double sum = 0.0;
-        int n=0;
-        
-        for(HirmesFrame exposure : this) if(exposure != null) if(!Double.isNaN(exposure.PWV)) {
-            sum += exposure.PWV;
-            n++;
-        }
-        return sum / n;
-    }
 
     protected void read(List<BinaryTableHDU> dataHDUs) throws Exception {   
         int records = 0;
@@ -326,13 +314,13 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
 
  
     @Override
-    public void validate() {  
+    public void validate() {   
         flagZeroedChannels();
-        checkJumps();
+        checkJumps();       
         
         if(hasOption("gyrocorrect")) ((HirmesScan) scan).gyroDrifts.correct(this);
         
-        super.validate();
+        super.validate(); 
     }
     
     @Override
@@ -350,10 +338,15 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
     }
 
     private void checkJumps() {
-        info("Checking for flux jumps... ");
-
         final byte[] startCounter = getFirstFrame().jumpCounter;   
-
+       
+        if(startCounter == null) {
+            warning("Scan has no jump counter data...");
+            return;
+        }
+        
+        info("Checking for flux jumps... ");
+        
         new Fork<Void>() {        
             @Override
             protected void process(HirmesFrame frame) {

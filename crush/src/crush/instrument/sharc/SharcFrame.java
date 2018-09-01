@@ -35,12 +35,10 @@ public class SharcFrame extends HorizontalFrame {
 	 * 
 	 */
 	private static final long serialVersionUID = 6241292032442297935L;
-	float[] quadrature;
 	
 	public SharcFrame(SharcScan parent) {
 		super(parent);
 		data = new float[Sharc.pixels];
-		quadrature = new float[Sharc.pixels];
 	}
 
 	public void readFrom(DataInput in, int index, float norm) throws IOException {

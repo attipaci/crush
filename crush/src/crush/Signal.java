@@ -53,6 +53,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	public Signal(Mode mode, Integration<?, ?> integration) {
 		this.mode = mode;
 		this.integration = integration;
+		
 		if(mode != null) {
 			syncGains = new float[mode.size()];
 			integration.addSignal(this);
@@ -346,7 +347,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 	
 	protected WeightedPoint[] getGainIncrement(boolean isRobust) {	
 		if(integration.hasOption("signal-response")) 
-			integration.comments += "{" + Util.f2.format(getCovariance()) + "}";
+			integration.comments.append("{" + Util.f2.format(getCovariance()) + "}");
 
 		// Precalculate the gain-weight products...
 		prepareFrameTempFields();

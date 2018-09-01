@@ -149,15 +149,13 @@ in Kovacs, A., PhD thesis, Caltech (2006).
  all available settings: 
 
     JAVA="/usr/java/latest/bin/java"
-    DATAMODEL="64"
     USEMB="4000"
     JVM="server"
     EXTRAOPTS="-Djava.awt.headless=true"
 
  Upon startup CRUSH will find and apply these settings, so it will use
- `/usr/java/latest/bin/java` to run CRUSH, in 64-bit mode, with 4GB of RAM, 
- using the HotSpot `server` VM, and in headless mode (without display, mouse 
- or keyboard).
+ `/usr/java/latest/bin/java` to run CRUSH with 4GB of RAM, using the HotSpot 
+ `server` VM, and in headless mode (without display, mouse or keyboard).
 
  Below is a guide to the variables that you can override to set your own
  Java runtime configuration:
@@ -167,16 +165,12 @@ in Kovacs, A., PhD thesis, Caltech (2006).
                    `/usr/java/latest/bin/java` to use the latest from Oracle or
                    OpenJDK.
 
-    DATAMODEL      Set to `32` or `64`, to select 32 or 64-bit mode. To use 
-                   64-bit mode you will need both a 64-bit OS and a 64-bit JRE 
-                   (Java Runtime Environment) installation.
-
-    USEMB          Set to the maximum amount of RAM (in MB) available to CRUSH.
-                   E.g. `4000` for 4GB. Note, that when `DATAMODEL` is `32`, 
-                   you this value must be somewhere below 2000. Thus, `1900` is
-                   a good maximum value to use in 32-bit mode.  Due to the 
-                   volume of full-rate HAWC+ data (> 500MB/min), you will need 
-                   to configure Java with plenty of RAM.
+    USEMB          Set to the maximum amount of RAM (in MB) available to
+                   CRUSH. E.g. "4000" for 4GB. On a 32-bit OS, or with a 32-bit
+                   Java installation no more than 2GB of RAM may be accesssed. 
+                   In practice, the maximum 32-bit OS/Java values range from 
+                   around "1000" (32-bit Windows / Java) to "1900" (32-bit 
+                   Linux / Java).    
 
     JVM            Usually set to `server` for Oracle or OpenJDK. If using 
                    IBM's Java, set it to "" (empty string). On ARM platforms, 
@@ -364,6 +358,21 @@ in Kovacs, A., PhD thesis, Caltech (2006).
                         `-smooth=2/3beam`. To turn smoothing off completely
                         use `-final:forget=smooth`.
 
+    -spectral.unit=<spec>  Set the spectral unit to use, e.g. to `GHz` or `um`.
+                        All spectral inputs and outputs will be referred to in
+                        the specified unit. (The default is `Hz`).
+                        @See: `spectral.grid`
+
+    -spectral.grid=X    Explcitly define the spectral bin (grid) size to X in
+                        the specified `spectral.unit` (default is `Hz`).
+			@See: `spectral.unit`, `spectral.resolution`
+
+    -spectral.resolution=R    Specify a spectral resolving power R at the
+                        center frequency of observation. This option is used
+                        only if the spectral bin (grid) size is not explicitly
+                        defined via `spectral.gid`.
+                        @See: `spectral.grid`
+    
 
 
 

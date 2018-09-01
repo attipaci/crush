@@ -51,6 +51,17 @@ public class SofiaFrame extends HorizontalFrame {
     public SofiaFrame(Scan<?, ?> parent) {
         super(parent);
     }
+   
+    @Override
+    public SofiaFrame copy(boolean withContents) {
+        SofiaFrame copy = (SofiaFrame) super.copy(withContents);
+        
+        if(objectEq != null) copy.objectEq = (EquatorialCoordinates) objectEq.copy();
+        if(site != null) copy.site = (GeodeticCoordinates) site.copy();
+        
+        return copy;
+    }
+    
     
     @Override
     public void project(final Vector2D position, final AstroProjector projector) {
@@ -82,4 +93,5 @@ public class SofiaFrame extends HorizontalFrame {
     }
     
     
+     
 }

@@ -199,14 +199,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(instrument.getOptions().containsKey("jackknife")) sourceName += "-JK";
 		
 		if(instrument.getOptions().containsKey("pointing")) pointingAt(getPointingCorrection(option("pointing")));	
+		
+		instrument.calcOverlap(getPointSize());
 	}
 	
 	public void setIteration(int i, int rounds) {
 		CRUSH.setIteration(instrument.getOptions(), i, rounds);
-		for(Integration<?,?> integration : this) if(integration.instrument != instrument) 
-			integration.setIteration(i, rounds);
+		instrument.calcOverlap(getPointSize());
+		for(Integration<?,?> integration : this) if(integration.instrument != instrument) integration.setIteration(i, rounds);	
 	}
- 	
 	
 	public int getSerial() { return serialNo; }
 
@@ -317,9 +318,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public SphericalCoordinates getNativeCoordinates() { return horizontal; }
 	
 
-    public SphericalCoordinates getPositionReference(Configurator options) {
-        String system = options.isConfigured("system") ? options.get("system").getValue().toLowerCase() : "equatorial";
-
+    public SphericalCoordinates getPositionReference(String system) {
         if(system.equals("horizontal")) return horizontal;
         else if(system.equals("native")) return getNativeCoordinates(); 
         else if(system.equals("focalplane")) return new FocalPlaneCoordinates(); 
@@ -775,7 +774,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			
 			if(isFlagging) {
 				integration.instrument.census();
-				integration.comments += integration.instrument.mappingChannels;
+				integration.comments.append(integration.instrument.mappingChannels);
 			}
 		}
 	}
@@ -784,17 +783,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		boolean isRobust = false;
 		if(hasOption("estimator")) if(option("estimator").is("median")) isRobust = true;
 		
-		for(IntegrationType integration : this) integration.decorrelate(modalityName, isRobust);
+		for(IntegrationType integration : this) integration.decorrelateSignals(modalityName, isRobust);
 		if(hasOption("correlated." + modalityName + ".span")) updateGains(modalityName);
+		
+		for(IntegrationType integration : this) if(integration.comments.charAt(integration.comments.length() - 1) != ' ') 
+		integration.comments.append(" ");
 	}
 	
 	public void perform(String task) { 
-		if(task.startsWith("correlated.")) {
-			String modalityName = task.substring(task.indexOf('.')+1);
-			decorrelate(modalityName);
-			for(IntegrationType integration : this) if(integration.comments.charAt(integration.comments.length() - 1) != ' ') 
-				integration.comments += " ";
-		}
+		if(task.startsWith("correlated.")) decorrelate(task.substring(task.indexOf('.')+1));
 		else for(IntegrationType integration : this) integration.perform(task);
 	}
 	
@@ -931,7 +928,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		if(elongation != null) info.append("  Elongation: " + elongation.toString(Unit.get("%")) + "\n");			
 		
-		double relFWHM = pointing.getFWHM().value() / instrument.getPointSize();
+		double relFWHM = pointing.getFWHM().value() / getPointSize();
 			
 		boolean force = hasOption("focus");
 		
@@ -954,7 +951,12 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		return new String(info);
 	}
 	
-	
+	public double getPointSize() {
+        double pointSize = instrument.getPointSize();
+        if(sourceModel != null) pointSize = Math.max(pointSize, sourceModel.getPointSize()); 
+        return pointSize;
+    }
+    
 	
 	protected String getPointingString(Offset2D nativePointing) {	
 	    if(nativePointing == null) return "";

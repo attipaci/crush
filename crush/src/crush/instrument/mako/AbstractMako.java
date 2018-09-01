@@ -70,9 +70,11 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 	//protected abstract int pixelCount();
 	
 	@Override
-	public Instrument<MakoPixelType> copy() {
+	public AbstractMako<MakoPixelType> copy() {
 		AbstractMako<MakoPixelType> copy = (AbstractMako<MakoPixelType>) super.copy();
 		
+		if(calModelName != null) copy.calModelName = new String(calModelName);
+		if(calVersion != null) copy.calVersion = new String(calVersion);
 		if(arrayPointingCenter != null) copy.arrayPointingCenter = arrayPointingCenter.copy();
 		if(pixelSize != null) copy.pixelSize = pixelSize.copy();
 		

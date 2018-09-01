@@ -157,7 +157,7 @@ public abstract class Filter implements Serializable, Cloneable {
 		
 		if(!isEnabled()) return false;
 		
-		integration.comments += getID();
+		integration.comments.append(getID());
 		
 		preFilter();
 		
@@ -258,9 +258,11 @@ public abstract class Filter implements Serializable, Cloneable {
 	}
 	
 	public void report() {
-		integration.comments += integration.instrument.mappingChannels > 0 ? 
+		integration.comments.append(
+		        integration.instrument.mappingChannels > 0 ? 
 				"(" + Util.f2.format(getMeanPointResponse()) + ")" :
-				"(---)";
+				"(---)"
+		);
 	}
 	
 	// TODO smart timestream access...

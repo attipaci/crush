@@ -157,29 +157,33 @@ implements TableFormatter.Entries, BasicMessaging {
             notify("JACKKNIFE! Alternating scans.");
             for(int i=scans.size(); --i >= 0; ) if(i%2 != 0) 
                 for(Integration<?,?> subscan : scans.get(i)) subscan.gain *= -1.0;
-        }
+        }  
     }
 
     @Override
-    public ChannelGroup<ChannelType> copy() {
+    public Instrument<ChannelType> copy() {
         Instrument<ChannelType> copy = (Instrument<ChannelType>) super.copy();
 
         for(Channel channel : copy) channel.instrument = copy;
 
-        copy.overlapPointSize = Double.NaN;
-
-        if(options != null) copy.setOptions(options.copy());
-        if(arrangement != null) {
-            copy.arrangement = arrangement.copy();
-            copy.arrangement.setInstrument(copy);
-        }
+        if(options != null) copy.options = options.copy();
+        
+        if(arrangement != null) copy.arrangement = arrangement.copyFor(copy);
 
         // TODO this needs to be done properly???
         copy.groups = null;
         copy.divisions = null;
         copy.modalities = null;
-
-        if(isInitialized) copy.initialize();
+        
+        if(overlapPointSize > 0.0) {
+            copy.overlapPointSize = Double.NaN;
+            copy.calcOverlap(overlapPointSize);
+        }
+        
+        if(isInitialized) {
+            copy.isInitialized = false;
+            copy.initialize();
+        }
 
         return copy;
     }
@@ -188,7 +192,7 @@ implements TableFormatter.Entries, BasicMessaging {
         initGroups();
         initDivisions();
         initModalities();       
-    
+        
         isInitialized = true;
     }
 
@@ -203,7 +207,6 @@ implements TableFormatter.Entries, BasicMessaging {
         flagChannels();
               
         initialize();
-        
 
         if(hasOption("frequency")) frequency = option("frequency").getDouble() * Unit.Hz;
         else if(hasOption("wavelength")) frequency = Constant.c / (option("wavelength").getDouble() * Unit.um);
@@ -607,6 +610,8 @@ implements TableFormatter.Entries, BasicMessaging {
     public void readWiring(String fileName) throws IOException {}
 
     public double getFrequency() { return frequency; }
+    
+    protected void setFrequency(double Hz) { frequency = Hz; }
     
     public double getResolution() { return resolution; }
 

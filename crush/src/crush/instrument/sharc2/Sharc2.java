@@ -65,9 +65,11 @@ public class Sharc2 extends CSOCamera<Sharc2Pixel> implements GridIndexed {
 	
 	
 	@Override
-	public Instrument<Sharc2Pixel> copy() {
+	public Sharc2 copy() {
 		Sharc2 copy = (Sharc2) super.copy();
 		
+		if(filterName != null) copy.filterName = new String(filterName);
+
 		if(rowGain != null) copy.rowGain = Util.copyOf(rowGain);	
 		if(isHiGain != null) copy.isHiGain = Util.copyOf(isHiGain);
 		

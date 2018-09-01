@@ -74,8 +74,9 @@ public abstract class AbstractGismo extends Camera<GismoPixel> implements Ground
 	public abstract int pixels();
 	
 	@Override
-	public Instrument<GismoPixel> copy() {
+	public AbstractGismo copy() {
 		AbstractGismo copy = (AbstractGismo) super.copy();
+		
 		if(arrayPointingCenter != null) copy.arrayPointingCenter = (Vector2D) arrayPointingCenter.clone();
 		if(nasmythOffset != null) copy.nasmythOffset = (Vector2D) nasmythOffset.clone();
 		if(pixelSize != null) copy.pixelSize = pixelSize.copy();

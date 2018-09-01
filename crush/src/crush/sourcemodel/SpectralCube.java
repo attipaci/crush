@@ -36,6 +36,7 @@ import crush.Scan;
 import crush.SourceModel;
 import jnum.Constant;
 import jnum.Unit;
+import jnum.Util;
 import jnum.data.Validating;
 import jnum.data.cube.Index3D;
 import jnum.data.cube.overlay.RangeRestricted3D;
@@ -52,8 +53,10 @@ import jnum.data.image.Observation2D;
 import jnum.data.image.Validating2D;
 import jnum.data.image.overlay.RangeRestricted2D;
 import jnum.data.samples.Grid1D;
+import jnum.math.CoordinateAxis;
 import jnum.math.Range;
 import jnum.parallel.ParallelPointOp;
+import jnum.text.GreekLetter;
 
 
 public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
@@ -71,16 +74,32 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
     
     public SpectralCube(Instrument<?> instrument) {
         super(instrument);
-        
-        spectralUnit = Unit.get("GHz");
-        if(hasOption("spectral.unit")) setSpectralUnit(option("spectral.unit").getValue());
     }
     
+    @Override
+    public SpectralCube getWorkingCopy(boolean withContents) {
+        SpectralCube copy = (SpectralCube) super.getWorkingCopy(withContents);
+
+        try { copy.cube = cube.copy(withContents); }
+        catch(OutOfMemoryError e) { 
+            runtimeMemoryError("Ran out of memory while making a copy of the spectral cube.");
+        }
+
+        copy.spectralUnit = spectralUnit.copy();
+        
+        return copy;
+    }
+    
+    public void standalone() {
+        base = Image2D1.create(Double.class, cube.sizeX(), cube.sizeY(), cube.sizeZ());
+    }
+
+
     public void setSpectralUnit(String spec) {
         spectralUnit = Unit.get(spec);
-        String name = spectralUnit.name();
+        String name = spectralUnit.name().toLowerCase();
 
-        if(name.endsWith("Hz")) useWavelength = false;
+        if(name.endsWith("hz")) useWavelength = false;
         else useWavelength = true;  
     }
     
@@ -95,7 +114,6 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
     }
 
    
-    
     public Range getFrequencyRange(Collection<? extends Scan<?,?>> scans) {
         Range r = new Range();
         for(Scan<?, ?> scan : scans) for(Integration<?, ?> integration : scan) {
@@ -104,24 +122,38 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         return r;
     }
     
-    public int getSizeZ() {  
-         
-        Range range = getFrequencyRange(getScans());
-            
-        useWavelength = hasOption("spectral.wavelength");
-        if(useWavelength) range.setRange(Constant.c / range.max(), Constant.c / range.min());
+    public int findSizeZ() {  
+        Range zRange = getFrequencyRange(getScans());
+        
+        spectralUnit = Unit.get("GHz");
+        if(hasOption("spectral.unit")) setSpectralUnit(option("spectral.unit").getValue());
+             
+        if(useWavelength) zRange.setRange(Constant.c / zRange.max(), Constant.c / zRange.min());
+
+        double zReference = zRange.midPoint();
         
         // TODO based on instrument.frequency & frequencyResolution 
-        double delta = range.midPoint() / 1000.0;
+        double delta = zRange.midPoint() / 1000.0; // Default to R ~ 1000 at the center frequency
         if(hasOption("spectral.grid")) delta = option("spectral.grid").getDouble() * spectralUnit.value();  
+        else if(hasOption("spectral.resolution")) delta = 0.5 * zRange.midPoint() / option("spectral.resolution").getDouble();
+
         
         Grid1D grid = cube.getGrid1D();
-        grid.getAxis().setUnit(spectralUnit);
         grid.setResolution(delta);
-        grid.setReference(getFirstScan().instrument.getFrequency());
-        grid.setReferenceIndex(0.5 - Math.rint(range.min() / delta));
-
-        int sizeZ = 1 + (int) Math.ceil(grid.getReferenceIndex().value() + range.max() / delta);
+        grid.setReference(zReference);
+        grid.setReferenceIndex(0.5 + Math.rint((zReference - zRange.min()) / delta));
+        
+        CoordinateAxis zAxis = grid.getAxis();   
+        zAxis.setUnit(spectralUnit);
+        zAxis.setLabel(useWavelength ? "Wavelength" : "Frequency");
+        zAxis.setFancyLabel(useWavelength ? GreekLetter.lambda + "" : "Frequency");
+           
+        
+        System.err.println("### f0=" + Util.s3.format(zRange.midPoint()) + ", df=" + Util.s3.format(grid.getResolution(0)) +
+                ", range=" + Util.s3.format(zRange.span()));
+        
+        
+        int sizeZ = 1 + (int) Math.ceil(zRange.span() / delta);
         
         if(CRUSH.debug) debug("spectral bins: " + sizeZ);
 
@@ -129,33 +161,36 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
     }
     
     
-    private void createCube() {
+    private void createCube() {        
         cube = new Observation2D1(Double.class, Double.class, Flag2D.TYPE_INT);
 
-        cube.setParallel(CRUSH.maxThreads);
+        cube.setParallel(CRUSH.maxThreads); 
         cube.setGrid2D(getGrid());
+        cube.setGrid1D(new Grid1D(3));
         cube.setCriticalFlags(~FLAG_MASK);  
         
         cube.addLocalUnit(getNativeUnit());
         cube.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky, JY, jy, JANSKY");
-        cube.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin, KELVIN");   
-           
-        for(Observation2D plane : cube.getPlanes()) {
-            MapProperties properties = plane.getProperties();
-            properties.setInstrumentName(getInstrument().getName());
-            properties.setCreatorName(CRUSH.class.getSimpleName());
-            properties.setCopyright(CRUSH.getCopyrightString());     
-            properties.seDisplayGridUnit(getInstrument().getSizeUnit());
-        }
+        cube.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin, KELVIN");  
+        
+        MapProperties properties = cube.getPlaneTemplate().getProperties();
+        properties.setInstrumentName(getInstrument().getName());
+        properties.setCreatorName(CRUSH.class.getSimpleName());
+        properties.setCopyright(CRUSH.getCopyrightString());     
+        properties.seDisplayGridUnit(getInstrument().getSizeUnit());
             
-        if(hasOption("unit")) cube.setUnit(option("unit").getValue());
+        if(hasOption("unit")) {
+            String unitName = option("unit").getValue();
+            cube.setUnit(unitName);
+            cube.getPlaneTemplate().setUnit(unitName);
+        }
     }
  
     
     
     @Override
     public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
-           
+        
         createCube();
         
         super.createFrom(collection);  
@@ -166,8 +201,10 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
             properties.setUnderlyingBeam(getAverageResolution());
         }
     
-        CRUSH.info(this, "\n" + cube.getPlane(0).getInfo());
-
+        
+        CRUSH.info(this, "\n" + cube.getPlaneTemplate().getInfo());
+        CRUSH.info(this, "Spectral Bins: " + sizeZ());
+        
         base = Image2D1.create(Double.class, sizeX(), sizeY(), sizeZ());
 
         // TODO
@@ -195,7 +232,10 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
 
     @Override
     public void setSize(int sizeX, int sizeY) {
-        cube.setSize(sizeX, sizeY, getSizeZ());
+        System.err.println("### Setting size to " + sizeX + " x " + sizeY);
+        cube.setSize(sizeX, sizeY, findSizeZ());
+        System.err.println("### checking " + cube.getPlaneTemplate().sizeX() + " x " + cube.getPlaneTemplate().sizeY());
+        
     }
 
     @Override
@@ -284,6 +324,13 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         base.paste(cube, false);
     }
 
+    @Override
+    public void resetProcessing() {
+        super.resetProcessing();
+        cube.resetProcessing();
+    }
+
+
   
     @Override
     public String getSourceName() {
@@ -307,12 +354,13 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
     public void processFinal() {
         // TODO Auto-generated method stub   
     }
+    
+    
 
 
     @Override
     public Map2D getMap2D() {     
-        // TODO
-        return null;
+        return hasOption("write.png.median") ? cube.getMedianZ() : cube.getAverageZ();
     }
     
 

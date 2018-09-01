@@ -82,6 +82,7 @@ public class CorrelatedMode extends Mode {
 	public void updateSignals(Integration<?, ?> integration, boolean isRobust) throws Exception {	
 		CorrelatedSignal signal = (CorrelatedSignal) integration.getSignal(this);
 		if(signal == null) signal = new CorrelatedSignal(this, integration);
+
 		signal.update(isRobust); 	
 		
 		// Solve for the correlated phases also, if required...

@@ -47,6 +47,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	public Instrument<?> instrument;
 	
 	private transient Collection<Overlap> overlaps;
+	
 	transient float temp, tempG, tempWG, tempWG2;
 	
 	public int index;
@@ -115,7 +116,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	@Override
 	public Channel copy() {
 		Channel copy = clone();
-		copy.overlaps = null;
+		copy.overlaps = null; // TODO copies aren't perfect since overlaps don't copy over...
 		return copy;
 	}
 	

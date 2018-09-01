@@ -30,19 +30,20 @@ import crush.Channel;
 import crush.Instrument;
 import crush.Pixel;
 import jnum.Configurator;
-import jnum.Copiable;
 
-public abstract class ColorArrangement<ChannelType extends Channel> implements Serializable, Cloneable, Copiable<ColorArrangement<ChannelType>> {
+public abstract class ColorArrangement<ChannelType extends Channel> implements Serializable, Cloneable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 6144882903894123342L;
 	
-	public Instrument<? extends ChannelType> instrument;
+	private Instrument<? extends ChannelType> instrument;
 		
 	public void setInstrument(Instrument<? extends ChannelType> instrument) {
 		this.instrument = instrument;
 	}
+	
+	public Instrument <? extends ChannelType> getInstrument() { return instrument; }
 	
 	@SuppressWarnings("unchecked")
     @Override
@@ -51,9 +52,10 @@ public abstract class ColorArrangement<ChannelType extends Channel> implements S
 		catch(CloneNotSupportedException e) { return null; }
 	}
 	
-	@Override
-	public ColorArrangement<ChannelType> copy()  {
-		return clone();
+	public ColorArrangement<ChannelType> copyFor(Instrument<? extends ChannelType> i)  {
+		ColorArrangement<ChannelType> copy = clone();
+		copy.instrument = i;
+		return copy;
 	}
 	
 	public boolean hasOption(String key) {

@@ -62,8 +62,15 @@ public class Scuba2 extends Camera<Scuba2Pixel> implements GroundBased, GridInde
 	}
 
 	@Override
-	public Instrument<Scuba2Pixel> copy() {
+	public Scuba2 copy() {
 		Scuba2 copy = (Scuba2) super.copy();
+		
+		if(filter != null) copy.filter = new String(filter);
+		
+		if(pointingCenter != null) copy.pointingCenter = pointingCenter.copy();
+		if(pointingCorrection != null) copy.pointingCorrection = pointingCorrection.copy();
+		if(userPointingOffset != null) copy.userPointingOffset = userPointingOffset.copy();
+		
 		if(subarray != null) {
 			copy.subarray = new Scuba2Subarray[subarray.length];
 			for(int i=subarray.length; --i >= 0; ) if(subarray[i] != null) {

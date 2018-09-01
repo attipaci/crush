@@ -59,13 +59,18 @@ public class Mode implements Serializable {
     
     private float[] gain;
 
-    public Mode() {
+    
+    public Mode(String name) {
         serialNo = ++counter;
-        name = "mode-" + serialNo;
+        this.name = name;
+    }
+    
+    public Mode() {
+        this("mode-" + (counter+1));
     }
 
     public Mode(ChannelGroup<?> group) {
-        this();
+        this(group.getName());
         setChannels(group);
     }
 

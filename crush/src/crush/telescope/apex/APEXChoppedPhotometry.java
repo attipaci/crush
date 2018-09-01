@@ -65,7 +65,7 @@ public class APEXChoppedPhotometry extends Photometry {
 		
 		scanFluxes.put(scan, F);
 		
-		scan.getLastIntegration().comments += " " + (F.weight() > 0.0 ? F.toString() : "<<invalid>>") + " ";
+		scan.getLastIntegration().comments.append(" " + (F.weight() > 0.0 ? F.toString() : "<<invalid>>") + " ");
 	}
 	
 	protected void process(final APEXSubscan<?,?> subscan, final WeightedPoint[] left, final WeightedPoint[] right) {		
@@ -107,7 +107,7 @@ public class APEXChoppedPhotometry extends Photometry {
 			    if(hasOption("chirange")) {
 			        Range r = option("chirange").getRange(true);
                     if(!r.contains(Math.sqrt(chi2))) {
-                        subscan.comments += " <<skip>>"; 
+                        subscan.comments.append(" <<skip>>"); 
                         df.noData();
                     }
                 }

@@ -106,7 +106,7 @@ public class SkyDip extends SourceModel {
 
     @Override
     public void add(Integration<?, ?> integration) {
-        integration.comments += "[Dip] ";
+        integration.comments.append("[Dip] ");
 
         CorrelatedMode mode = (CorrelatedMode) integration.instrument.modalities.get(signalName).get(signalIndex);
         CorrelatedSignal C = (CorrelatedSignal) integration.getSignal(mode);

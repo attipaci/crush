@@ -26,6 +26,7 @@ package crush.instrument.hirmes;
 
 import crush.Channel;
 import crush.array.SingleColorPixel;
+import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
@@ -49,7 +50,6 @@ public class HirmesPixel extends SingleColorPixel {
     
     public HirmesPixel(Hirmes hirmes, int zeroIndex) {
         super(hirmes, zeroIndex);
-          
         
         mux = zeroIndex / Hirmes.muxPixels;
         pin = zeroIndex % Hirmes.muxPixels;
@@ -65,12 +65,25 @@ public class HirmesPixel extends SingleColorPixel {
         col = pin + sub * Hirmes.subCols;
         subcol = col % Hirmes.lowresCols;
         
-        
         frequency = hirmes.baseFrequency;
-        if(hirmes.mode == Hirmes.MIDRES_MODE) frequency += subcol * hirmes.frequencyStep;
+        
+        if(hirmes.mode != Hirmes.IMAGING_MODE) {
+            if(detArray == Hirmes.LORES_ARRAY) frequency += subcol * hirmes.frequencyStep;
+            else frequency += subcol * hirmes.frequencyStep; // TODO check for hires...
+        }
         
         // TODO seriesArray, biasLine
     }
+    
+    @Override
+    public double overlap(final Channel channel, double pointSize) {
+       if(!(channel instanceof HirmesPixel)) return 0.0;
+        
+       HirmesPixel pixel = (HirmesPixel) channel;
+       double df = Constant.sigmasInFWHM * (pixel.getFrequency() - getFrequency()) / ((Hirmes) instrument).frequencyResolution;
+       return Math.exp(-0.5*df*df) * super.overlap(channel, pointSize);
+    }
+    
     
     @Override
     public double getFrequency() { return frequency; }
@@ -121,7 +134,5 @@ public class HirmesPixel extends SingleColorPixel {
     public final static int FLAG_FLICKER = softwareFlags.next('T', "Flicker noise").value();
     public final static int FLAG_LOS_RESPONSE = softwareFlags.next('L', "LOS response").value();
     public final static int FLAG_ROLL_RESPONSE = softwareFlags.next('\\', "Roll response").value();
-
-    
 
 }

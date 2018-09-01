@@ -39,7 +39,6 @@ public abstract class SingleColorPixel extends Channel implements Pixel {
 	 */
 	private static final long serialVersionUID = -3125855169655883839L;
 	public Vector2D position;
-	public Vector<? extends SingleColorPixel> neighbours;
 	public boolean isIndependent = false;
 	
 	public SingleColorPixel(Instrument<? extends SingleColorPixel> instrument, int backendIndex) { 
@@ -47,10 +46,10 @@ public abstract class SingleColorPixel extends Channel implements Pixel {
 	}
 	
 	@Override
-	public SingleColorPixel clone() {
-		SingleColorPixel clone = (SingleColorPixel) super.clone();
-		if(position != null) clone.position = (Vector2D) position.clone();
-		return clone;
+	public SingleColorPixel copy() {
+		SingleColorPixel copy = (SingleColorPixel) super.copy();
+		if(position != null) copy.position = position.copy();
+		return copy;
 	}
 	
 	
@@ -58,7 +57,7 @@ public abstract class SingleColorPixel extends Channel implements Pixel {
 	public final Vector2D getPosition() { return position; }
 	
 	@Override
-	public final double distanceTo(final Pixel pixel) {	
+	public double distanceTo(final Pixel pixel) {
 		Vector2D position = getPosition();
 		if(position == null) return Double.NaN;
 		
@@ -77,7 +76,12 @@ public abstract class SingleColorPixel extends Channel implements Pixel {
 	// Assume Gaussian response with FWHM = resolution;
 	public double overlap(final Channel channel, double pointSize) {
 		if(isIndependent) return 0.0;
-		
+
+		if(channel.instrument != instrument) return 0.0;
+
+		if(channel.isFlagged(Channel.FLAG_BLIND | Channel.FLAG_DEAD)) return 0.0;
+		if(isFlagged(Channel.FLAG_BLIND | Channel.FLAG_DEAD)) return 0.0;
+
 		final double isigma = Constant.sigmasInFWHM / pointSize;
 		
 		if(channel instanceof Pixel) {

@@ -129,7 +129,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		return true;
 	}
 	
-	public void create(int size) {
+	protected void create(int size) {
 		data = new float[size];
 		sampleFlag = new byte[size];
 	}

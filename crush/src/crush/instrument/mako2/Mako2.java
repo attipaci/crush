@@ -51,7 +51,7 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 	
 	public double scale850 = 1.92;	// 850um pixel separation rel. to 350um separation.
 	
-	Mako2PixelMatch identifier;
+	Mako2PixelMatch identifier;     // TODO How to copy() ?
 	double meanResonatorShift350;
 	double meanResonatorShift850;
 	
@@ -64,6 +64,14 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 	public Mako2Pixel getChannelInstance(int backendIndex) {
 		return new Mako2Pixel(this, backendIndex);
 	}	
+	
+	@Override
+    public Mako2 copy() {
+	    Mako2 copy = (Mako2) super.copy();
+	    copy.offset350 = offset350.copy();
+	    copy.offset850 = offset850.copy();
+	    return copy;
+	}
 	
 	@Override
 	public Scan<?, ?> getScanInstance() {

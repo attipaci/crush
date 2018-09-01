@@ -23,6 +23,8 @@
 
 package crush.instrument.scuba2;
 
+import java.util.Arrays;
+
 import crush.*;
 import crush.telescope.HorizontalFrame;
 
@@ -39,6 +41,19 @@ public class Scuba2Frame extends HorizontalFrame {
 	
 	public Scuba2Frame(Scuba2Scan parent) {
 		super(parent);
+	}
+	
+	@Override
+    public Scuba2Frame copy(boolean withContents) {
+	    Scuba2Frame copy = (Scuba2Frame) super.copy(withContents);
+	    
+	    if(darkSquid != null) {
+	        copy.darkSquid = new int[darkSquid.length][];
+	        for(int i=darkSquid.length; --i >=0; ) if(darkSquid[i] != null) 
+	            copy.darkSquid[i] = Arrays.copyOf(darkSquid[i], darkSquid[i].length);
+	    }
+	    
+	    return copy;
 	}
 	
 	public void parseData(final int[][] DAC, final int channelOffset, final float scaling, int[] readoutLevel) {

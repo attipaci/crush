@@ -33,11 +33,11 @@ import crush.array.SingleColorArrangement;
 import crush.telescope.Mount;
 import crush.telescope.sofia.SofiaCamera;
 import crush.telescope.sofia.SofiaHeader;
+import crush.telescope.sofia.SofiaScan;
 import jnum.Configurator;
 import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
-import jnum.data.ArrayUtil;
 import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
@@ -99,21 +99,28 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     }
 
     @Override
-    public Instrument<HawcPlusPixel> copy() {
+    public HawcPlus copy() {
         HawcPlus copy = (HawcPlus) super.copy();
 
         if(pixelSize != null) copy.pixelSize = pixelSize.copy();
         if(hasSubarray != null) copy.hasSubarray = Arrays.copyOf(hasSubarray, hasSubarray.length);   
-        if(subarrayOffset != null) copy.subarrayOffset = Arrays.copyOf(subarrayOffset, subarrayOffset.length);
+        if(subarrayOffset != null) copy.subarrayOffset = Vector2D.copyOf(subarrayOffset);
         if(subarrayOrientation != null) copy.subarrayOrientation = Arrays.copyOf(subarrayOrientation, subarrayOrientation.length);
         if(polZoom != null) copy.polZoom = Arrays.copyOf(polZoom, polZoom.length);
         if(darkSquidLookup != null) {
-            try { copy.darkSquidLookup = (int[][]) ArrayUtil.copyOf(darkSquidLookup); } 
-            catch(Exception e) { error(e); }
+            copy.darkSquidLookup = new int[darkSquidLookup.length][];
+            for(int i=darkSquidLookup.length; --i >=0; ) if(darkSquidLookup[i] != null)
+                copy.darkSquidLookup[i] = Arrays.copyOf(darkSquidLookup[i], darkSquidLookup[i].length);
         }
+        
         if(mceSubarray != null) copy.mceSubarray = Arrays.copyOf(mceSubarray, mceSubarray.length);
-        if(detectorBias != null) copy.detectorBias = Arrays.copyOf(detectorBias, detectorBias.length);
+        if(detectorBias != null) {
+            copy.detectorBias = new int[detectorBias.length][];
+            for(int i=detectorBias.length; --i >=0; ) if(detectorBias[i] != null)
+                copy.detectorBias[i] = Arrays.copyOf(detectorBias[i], detectorBias[i].length);
+        }
         if(subarrayGainRenorm != null) copy.subarrayGainRenorm = Arrays.copyOf(subarrayGainRenorm, subarrayGainRenorm.length);
+
 
         return copy;
     }
@@ -532,6 +539,13 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     public void validate(Vector<Scan<?,?>> scans) throws Exception {
         final HawcPlusScan firstScan = (HawcPlusScan) scans.get(0);
 
+        double wavelength = firstScan.instrument.instrumentData.wavelength;
+        for(int i=scans.size(); --i >= 1; ) if(((SofiaScan<?,?>) scans.get(i)).instrument.instrumentData.wavelength != wavelength) {
+            warning("Scan " + scans.get(i).getID() + " in a different band. Removing from set.");
+            scans.remove(i);
+        }
+
+        
         for(int i=scans.size(); --i >= 1; ) {
             HawcPlusScan scan = (HawcPlusScan) scans.get(i);
 

@@ -51,8 +51,20 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
         if(sofiaScan.isChopping) return sofiaScan.chopper.frequency;
         return super.getModulationFrequency(signalMode);
     }
+    
+  
+    public double getMeanPWV() {
+        double sum = 0.0;
+        int n=0;
+        
+        for(SofiaFrame exposure : this) if(exposure != null) if(!Double.isNaN(exposure.PWV)) {
+            sum += exposure.PWV;
+            n++;
+        }
+        return sum / n;
+    }
 
-    public double getMeanPWV() { return ((SofiaScan<?,?>) scan).environment.pwv.midPoint(); }
+    //public double getMeanPWV() { return ((SofiaScan<?,?>) scan).environment.pwv.midPoint(); }
     
     public double getModelPWV() {
         info("Estimating PWV based on altitude...");

@@ -60,8 +60,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.42-a1";
-    private static String revision = "(alpha)";
+    private static String version = "2.42-a2";
+    private static String revision = "devel.1";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -287,7 +287,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
         
         // Make the global options derive from those of the first scan...
         // This way any options that were activated conditionally for that scan become 'global' starters as well...
-        instrument = (Instrument<?>) scans.get(0).instrument.copy();
+        instrument = scans.get(0).instrument.copy();
+        instrument.setOptions(this);
         
         // Keep only the non-specific global options here...
         for(Scan<?,?> scan : scans) instrument.getOptions().intersect(scan.instrument.getOptions()); 		
@@ -342,9 +343,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private void initSourceModel() throws Exception {
         consoleReporter.addLine();
 
-        // TODO Using the global options (intersect of scan options) instead of the first scan's
-        // for the source does not work properly (clipping...)
-        source = scans.get(0).instrument.getSourceModelInstance(scans);
+        source = instrument.getSourceModelInstance(scans);
         
         if(source != null) {
             source.setCommandLine(commandLine);
@@ -352,6 +351,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
             source.setExecutor(sourceExecutor);
             source.setParallel(CRUSH.maxThreads);
             setObjectOptions(source.getSourceName());
+        }
+        else {
+            warning("No source model or invalid source model type.");
         }
 
         consoleReporter.addLine();
@@ -555,7 +557,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         info("Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getSizeUnit().value()) + " " + instrument.getSizeUnit().name() + " sized source(s).");
 
         if(isConfigured("rounds")) rounds = get("rounds").getInt();
-
+        
         for(int iteration=1; iteration<=rounds; iteration++) {
             consoleReporter.addLine();
             info("Round " + iteration + ": ");	
@@ -655,7 +657,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     public void summarize(Integration<?,?> integration) {
         info(" [" + integration.getDisplayID() + "] " + integration.comments);
-        integration.comments = new String();
+        integration.comments = new StringBuffer();
     }	
 
     public final void setIteration(int i, int rounds) {	
@@ -709,7 +711,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
                         " crush -- Reduction and imaging tool for astronomical cameras.\n" +
                         "          Version: " + getFullVersion() + "\n" + 
                         "          Featuring: jnum " + Util.getFullVersion() + ", nom.tam.fits " + Fits.version() + "\n" +
-                        "          http://www.submm.caltech.edu/~sharc/crush\n" +
+                        "          http://www.sigmyne.com/crush\n" +
                         "          " + getCopyrightString() + "\n" +
                         " -----------------------------------------------------------------------------\n");	
     }
@@ -811,7 +813,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         String version = null;
 
         try {
-            URL versionURL = new URL("http://www.submm.caltech.edu/~sharc/crush/v2/release.version");
+            URL versionURL = new URL("http://www.sigmyne.com/crush/v2/release.version");
             URLConnection connection = versionURL.openConnection();
             try {
                 connection.setConnectTimeout(TCP_CONNECTION_TIMEOUT);

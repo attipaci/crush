@@ -65,6 +65,15 @@ public class PolKa extends Laboca implements Oscillating {
 	}
 	
 	@Override
+    public PolKa copy() {
+	    PolKa copy = (PolKa) super.copy();
+	    if(offsetChannel != null) copy.offsetChannel = copy.get(offsetChannel.index);
+	    if(phaseChannel != null) copy.phaseChannel = copy.get(phaseChannel.index);
+	    if(frequencyChannel != null) copy.frequencyChannel = copy.get(frequencyChannel.index);
+	    return copy;
+	}
+	
+	@Override
 	public Object getTableEntry(String name) {
 		if(name.equals("wpfreq")) return waveplateFrequency / Unit.Hz;
 		if(name.equals("wpjitter")) return jitter;

@@ -51,7 +51,7 @@ public class Mako extends AbstractMako<MakoPixel> {
 
 	double Tsky = Double.NaN;
 	
-	MakoPixelMatch identifier;
+	MakoPixelMatch identifier;         // TODO how to copy() ?
 	
 	public Mako() {
 		super("mako", rows * cols);

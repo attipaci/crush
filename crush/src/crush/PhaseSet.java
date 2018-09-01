@@ -91,7 +91,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
     }
 
     public void update(ChannelGroup<?> channels) {
-        integration.comments += ":P";
+        integration.comments.append(":P");
 
         for(PhaseData phase : this) phase.update(channels, integrationDeps);	
 
@@ -104,7 +104,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
             if(N > size()) N = size();
         }
 
-        if(N < size()) integration.comments += "(" + N + ")";
+        if(N < size()) integration.comments.append("(" + N + ")");
 
         removeDrifts(channels, N);
 
@@ -126,7 +126,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
     }
 
     public void getWeights() {
-        integration.comments += ",P";
+        integration.comments.append(",P");
 
         for(Channel channel : integration.instrument) if(channel instanceof PhaseWeighting) 
             ((PhaseWeighting) channel).deriveRelativePhaseWeights(this); 
@@ -135,7 +135,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
   
 
     public void despike(double level) { 
-        integration.comments += ",P";
+        integration.comments.append(",P");
 
         Hashtable<Integer, Double> levels = new Hashtable<Integer, Double>();
         Hashtable<Integer, Double> noise = new Hashtable<Integer, Double>();
@@ -154,7 +154,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
             }
         }
 
-        integration.comments += "(" + spikes + ")";
+        integration.comments.append("(" + spikes + ")");
     }
 
     private int despike(Channel channel, double significance, double offset, double noise) { 

@@ -225,8 +225,8 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
             info("Forcing equatorial for moving object.");
             getOptions().processSilent("system", "equatorial");
         }
+         
         
-
     }
 
 
@@ -461,13 +461,13 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
         // If there aren't enough good pixels in the scan, do not generate a map...
         if(integration.hasOption("mappingpixels")) if(pixels.size() < integration.option("mappingpixels").getInt()) {
-            integration.comments += "(!ch)";
+            integration.comments.append("(!ch)");
             return false;
         }
 
         // If there aren't enough good pixels in the scan, do not generate a map...
         if(integration.hasOption("mappingfraction")) if(pixels.size() < integration.option("mappingfraction").getDouble() * nObs) {
-            integration.comments += "(!ch%)";
+            integration.comments.append("(!ch%)");
             return false;
         }
 

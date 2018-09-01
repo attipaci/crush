@@ -206,7 +206,7 @@ public class PolKaSubscan extends LabocaSubscan implements Periodic, Purifiable 
         }
         else for(int i=dw.length; --i >= 0; ) dw[i].noData();
 
-        comments += "P(" + dw.length + ") ";
+        comments.append("P(" + dw.length + ") ");
 
         final ChannelGroup<?> channels = instrument.getObservingChannels();
         final Dependents parms = getDependents("tpmod");

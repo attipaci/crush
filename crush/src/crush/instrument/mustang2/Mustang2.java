@@ -34,7 +34,6 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
 import crush.Channel;
 import crush.CorrelatedModality;
-import crush.Instrument;
 import crush.Scan;
 import crush.array.Camera;
 import crush.array.SingleColorArrangement;
@@ -64,10 +63,10 @@ public class Mustang2 extends Camera<Mustang2Pixel> implements GroundBased {
 		setResolution(6.2 * Unit.arcsec);
 		mount = Mount.CASSEGRAIN;
 		samplingInterval = integrationTime = 1.0 * Unit.ms;
-	}
+	}	
 	
 	@Override
-	public Instrument<Mustang2Pixel> copy() {
+	public Mustang2 copy() {
 		Mustang2 copy = (Mustang2) super.copy();
 		if(readout != null) {
 			copy.readout = new Mustang2Readout[readout.length];

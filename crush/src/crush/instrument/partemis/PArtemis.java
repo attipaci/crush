@@ -49,7 +49,7 @@ public class PArtemis extends APEXCamera<PArtemisPixel> implements GridIndexed {
 	}
 	
 	@Override
-	public Instrument<PArtemisPixel> copy() {
+	public PArtemis copy() {
 		PArtemis copy = (PArtemis) super.copy();
 		if(pixelSize != null) copy.pixelSize = pixelSize.copy();
 		return copy;

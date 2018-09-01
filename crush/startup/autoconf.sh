@@ -12,19 +12,19 @@
 # the desired effect.
 #
 # Author: Attila Kovacs <attila@sigmyne.com>
-# Date: 11 February 2017
+# Date: 12 May 2018
 # ============================================================================
 
 # Start by fail-safe defaults: default java, 32-bit mode, 1 GB of RAM, and
 # default VM with no extra options...
 JAVA="java"
-DATAMODEL="32"
 USEMB="1000"
 JVM=""
 EXTRAOPTS=""
 
 # Attempt to configure 80% of total RAM...
-case `uname` in
+OSNAME=`uname`
+case $OSNAME in
 "Linux")
 	# Linux...
 	read -a MEMVALS <<< `cat /proc/meminfo | grep "MemTotal"`
@@ -53,7 +53,6 @@ case `uname` in
 esac
 
 
-
 # Now, try locate the default Java, and set the JAVA variable to it.
 # If no default java is set, check if there is an Oracle/OpenJDK java installed
 # in the default location
@@ -70,20 +69,15 @@ if [ -z ${JAVA+x} ] ; then
 fi
 
 # Use 'java -version' to set VM defaults
-JVER=`$JAVA -version 2>&1 | tail -1`
-
-# Attempt to determine data mode (32 or 64 bit)
-if [[ $JVER == *"64-"* ]] ; then DATAMODEL="64"
-elif [[ $JVER == *"-64"* ]] ; then DATAMODEL="64"
-fi
-
-# Set "-server" VM if possible
-if [[ $JVER == *"Server VM"* ]] ; then JVM="-server"
-fi
+VMVER=`$JAVA -version 2>&1 | tail -1`
 
 
 # Sanity check the max memory setting to make use no more than 1900MB is used
 # with a 32-bit data model...
-if [[ $DATAMODEL == "32" && $USEMB -gt 1900 ]] ; then USEMB="1900" ; fi
+if [[ $VMVER != *"64-"* && $VMVER != *"-64"* ]] ; then
+  if [[ $USEMB -gt 1900 ]] ; then USEMB="1900"; fi 
+fi
 
+# Set "-server" VM if possible
+if [[ $VMVER == *"Server VM"* ]] ; then JVM="-server"; fi
 

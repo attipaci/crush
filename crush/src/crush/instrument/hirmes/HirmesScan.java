@@ -68,12 +68,6 @@ public class HirmesScan extends SofiaScan<Hirmes, HirmesIntegration> {
     }
 
     @Override
-    public boolean isAORValid() {
-        // In the early comissioning runs CDH defaulted to AOR being '0' instead of 'UNKNOWN'
-        return super.isAORValid() && !observation.aorID.equals("0");
-    }
-
-    @Override
     protected boolean isFileNameMatching(String fileName, int flightNo, int scanNo) {
         if(super.isFileNameMatching(fileName, flightNo, scanNo)) return true;
 
@@ -93,24 +87,9 @@ public class HirmesScan extends SofiaScan<Hirmes, HirmesIntegration> {
     }
 
     @Override
-    public boolean isRequestedValid(SofiaHeader header) {
-        if(!super.isRequestedValid(header)) return false;
-
-        // Early CDH workaround when OBSRA=1.0 and OBSDEC=2.0 hardcoded...
-        double obsRA = header.getDouble("OBSRA");
-        double obsDEC = header.getDouble("OBSDEC");
-
-        return !(obsRA == 1.0 && obsDEC == 2.0);
-    }
-
-    @Override
     public void parseHeader(SofiaHeader header) throws Exception {
 
-        // If using real-time object coordinates regardless of whether sidereal or not, then treat as if non-sidereal...
-        // Update: (Nov 2016)
-        //   NONSIDE has been removed from the FITS as there was no automatic way of setting it
-        //           it relied on a manual checkbox in the CDH GUI.
-        isNonSidereal = header.getBoolean("NONSIDE", false) || hasOption("rtoc");
+        isNonSidereal = hasOption("rtoc");
 
         if(hasOption("OBJRA") && hasOption("OBJDEC")) 
             objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
@@ -154,7 +133,7 @@ public class HirmesScan extends SofiaScan<Hirmes, HirmesIntegration> {
         if(hasOption("chopper.tolerance")) transitTolerance = Math.abs(option("chopper.tolerance").getDouble());
         useBetweenScans = hasOption("betweenscans");
 
-        super.validate();
+        super.validate();       
         
         if(isNonSidereal) {
             EquatorialCoordinates first = getFirstIntegration().getFirstFrame().objectEq;

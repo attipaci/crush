@@ -96,7 +96,7 @@ public abstract class Photometry extends SourceModel {
     public void add(Integration<?, ?> integration) {
         if(!integration.isPhaseModulated()) return;
 
-        integration.comments += "[Phot]";
+        integration.comments.append("[Phot]");
         Instrument<?> instrument = integration.instrument;
         final PhaseSet phases = ((PhaseModulated) integration).getPhases();
 

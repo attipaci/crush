@@ -60,8 +60,9 @@ public class CorrelatedSignal extends Signal {
 	@Override
     public Signal copy() {
 	    CorrelatedSignal copy = (CorrelatedSignal) super.copy();
-	    if(weight != null) weight = Arrays.copyOf(weight, weight.length);
-	    if(sourceFiltering != null) sourceFiltering = Arrays.copyOf(sourceFiltering, sourceFiltering.length);
+	    if(dependents != null) copy.dependents = dependents.copy();
+	    if(weight != null) copy.weight = Arrays.copyOf(weight, weight.length);
+	    if(sourceFiltering != null) copy.sourceFiltering = Arrays.copyOf(sourceFiltering, sourceFiltering.length);
 	    return copy;
 	}
 
@@ -205,13 +206,6 @@ public class CorrelatedSignal extends Signal {
 		final ChannelGroup<?> channels = mode.getChannels();
 		final int skipFlags = mode.skipFlags;
 		
-		// The reduced filtering effect due to model time-resolution
-		//final double T =  (resolution - 1) * integration.instrument.samplingInterval;
-		//final double phit = 1.0 - T / (T + integration.getPointCrossingTime());
-		
-		final SourceModel model = integration.scan.sourceModel;
-		final double pointSize = model == null ? integration.instrument.getPointSize() : model.getPointSize();
-		integration.instrument.calcOverlap(pointSize);
 		
 		new CRUSH.Fork<Void>(channels.size(), integration.getThreadCount()) {
 			@Override
@@ -228,9 +222,7 @@ public class CorrelatedSignal extends Signal {
 					if(other.isFlagged(skipFlags)) continue;
 					phi += overlap.value * dependents.get(other);
 				}
-					
-				
-				//phi *= phit;
+						
 				
 				if(nP > 0.0) phi /= nP;
 				if(phi > 1.0) phi = 1.0;
@@ -303,7 +295,7 @@ public class CorrelatedSignal extends Signal {
 		// Make syncGains carry the gain increment from last sync...
 		// Precalculate the gain-weight products...
 		for(int k=G.length; --k >= 0; ) { 
-		    if(CRUSH.debug) if(Float.isNaN(G[k])) integration.comments += "!" + channels.get(k).getID();
+		    if(CRUSH.debug) if(Float.isNaN(G[k])) integration.comments.append("!" + channels.get(k).getID());
 		   
 		    dG[k] = G[k] - syncGains[k];
 		    if(dG[k] != 0.0) resyncGains = true;
