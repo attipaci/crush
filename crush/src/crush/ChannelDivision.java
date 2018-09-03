@@ -54,18 +54,6 @@ public class ChannelDivision<ChannelType extends Channel> extends Vector<Channel
 		setDefaultNames();
 	}
 	
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!(o instanceof ChannelDivision)) return false;
-		if(!super.equals(o)) return false;
-		return ((ChannelDivision<?>) o).name.equals(name);
-	}
-	
-	@Override
-	public int hashCode() { return super.hashCode() ^ name.hashCode(); }
-
-	
 	public void setDefaultNames() {
 		for(int i=size(); --i >= 0; ) get(i).setName(name + "-" + (i+1));
 	}

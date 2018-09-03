@@ -134,8 +134,15 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         
         // TODO based on instrument.frequency & frequencyResolution 
         double delta = zRange.midPoint() / 1000.0; // Default to R ~ 1000 at the center frequency
-        if(hasOption("spectral.grid")) delta = option("spectral.grid").getDouble() * spectralUnit.value();  
-        else if(hasOption("spectral.resolution")) delta = 0.5 * zRange.midPoint() / option("spectral.resolution").getDouble();
+        if(hasOption("spectral.grid")) {
+            System.err.println("### using spectral grid...");
+            delta = option("spectral.grid").getDouble() * spectralUnit.value();  
+        }
+        else if(hasOption("spectral.resolution")) {
+            System.err.println("### using spectral resolution R ~ " + option("spectral.resolution").getDouble());
+            delta = 0.5 * zRange.midPoint() / option("spectral.resolution").getDouble();
+        }
+        else System.err.println("### default spectral resolution...");
 
         
         Grid1D grid = cube.getGrid1D();

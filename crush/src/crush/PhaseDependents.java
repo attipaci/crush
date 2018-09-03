@@ -26,8 +26,6 @@ package crush;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import jnum.Util;
-
 
 public class PhaseDependents implements Serializable {
 	/**
@@ -45,24 +43,7 @@ public class PhaseDependents implements Serializable {
 		forChannel = new double[phases.getIntegration().instrument.size()];
 		phases.phaseDeps.put(name, this);
 	}
-	
-	@Override
-	public int hashCode() {
-		return super.hashCode() ^ name.hashCode() ^ phases.hashCode();
-	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!(o instanceof PhaseDependents)) return false;
-		if(!super.equals(o)) return false;
-		PhaseDependents deps = (PhaseDependents) o;
-		if(!Util.equals(name, deps.name)) return false;
-		if(!Util.equals(phases, deps.phases)) return false;
-		//if(!Arrays.equals(forPhase, deps.forPhase)) return false;
-		//if(!Arrays.equals(forChannel, deps.forChannel)) return false;
-		return true;
-	}
+
 	
 	public String getName() { return name; }
 	

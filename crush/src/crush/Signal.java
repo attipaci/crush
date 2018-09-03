@@ -67,28 +67,6 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 		driftN = values.length;
 	}
 	
-	
-	@Override
-	public int hashCode() {
-		return super.hashCode() ^ mode.hashCode() ^ integration.getDisplayID().hashCode() ^ resolution ^ driftN;
-	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!(o instanceof Signal)) return false;
-		if(!super.equals(o)) return false;
-		
-		Signal sig = (Signal) o;
-		if(resolution != sig.resolution) return false;
-		if(driftN != sig.driftN) return false;
-		if(!integration.getID().equals(sig.integration.getID())) return false;
-		if(!Util.equals(mode, sig.mode)) return false;
-		return true;
-		
-	}
-	
-	
 	public Mode getMode() {
 		return mode;
 	}

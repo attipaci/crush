@@ -25,8 +25,8 @@ package crush;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 import jnum.Copiable;
 import jnum.Flagging;
@@ -34,7 +34,6 @@ import jnum.Util;
 import jnum.text.SmartTokenizer;
 import jnum.util.FlagSpace;
 import jnum.util.FlagBlock;
-import jnum.util.HashCode;
 
 
 
@@ -78,27 +77,6 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 		this.instrument = instrument;
 		setFixedIndex(fixedIndex);
 	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!(o instanceof Channel)) return false;
-		if(!super.equals(o)) return false;
-		Channel c = (Channel) o;
-		if(!Util.equals(c.instrument, instrument)) return false;
-		if(c.fixedIndex != fixedIndex) return false;
-		if(c.weight != weight) return false;
-		if(c.gain != gain) return false;
-		if(c.dof != dof) return false;
-		if(c.dependents != dependents) return false;
-		return true;
-	}
-	
-	@Override
-	public int hashCode() { return super.hashCode() ^ instrument.getName().hashCode() ^ HashCode.from(fixedIndex)
-			^ HashCode.from(weight) ^ HashCode.from(gain) ^ HashCode.from(dof) ^ HashCode.from(dependents); 
-	}
-	
 	
 	@Override
 	public Channel clone() {
@@ -208,7 +186,7 @@ public abstract class Channel implements Serializable, Cloneable, Comparable<Cha
 	
 	public synchronized void addOverlap(Overlap overlap) {
 		if(overlap.a != this && overlap.b != this) return;
-		if(overlaps == null) overlaps = new ArrayList<Overlap>();
+		if(overlaps == null) overlaps = new HashSet<Overlap>();
 		overlaps.add(overlap);		
 	}
 	

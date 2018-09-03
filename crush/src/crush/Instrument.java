@@ -41,7 +41,6 @@ import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.LockedException;
 import jnum.Unit;
-import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.data.DataPoint;
 import jnum.data.Statistics;
@@ -53,7 +52,6 @@ import jnum.math.Vector2D;
 import jnum.reporting.BasicMessaging;
 import jnum.text.SmartTokenizer;
 import jnum.text.TableFormatter;
-import jnum.util.HashCode;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
@@ -101,23 +99,6 @@ implements TableFormatter.Entries, BasicMessaging {
         storeChannels = size;
     }
     
-
-    @Override
-    public int hashCode() {
-        return super.hashCode() ^ mount.hashCode() ^ arrangement.hashCode() ^ HashCode.from(getResolution());
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if(o == this) return true;
-        if(!(o instanceof Instrument)) return false;
-        if(!super.equals(o)) return false;
-        Instrument<?> i = (Instrument<?>) o;
-        if(getResolution() != i.getResolution()) return false;
-        if(!Util.equals(mount, i.mount)) return false;
-        if(!Util.equals(arrangement, i.arrangement)) return false;
-        return true;
-    }
 
     public void setParent(Object o) { this.parent = o; }
 
@@ -1379,6 +1360,7 @@ implements TableFormatter.Entries, BasicMessaging {
                 for(int k=channel.index; --k >= 0; ) {
                     final Channel other = get(k);
                     final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
+                    if(overlap.value == 0.0) continue;
                     channel.addOverlap(overlap);
                     other.addOverlap(overlap);
                 }	

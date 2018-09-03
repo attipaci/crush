@@ -121,27 +121,6 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	    return getID().compareTo(other.getID());
 	}
 	
-	@Override
-	public int hashCode() {
-		int hash = super.hashCode() ^ size() ^ getID().hashCode() ^ HashCode.from(MJD);
-		if(instrument != null) hash ^= instrument.hashCode();
-		return hash;
-	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!(o instanceof Scan)) return false;
-		if(!super.equals(o)) return false;
-		Scan<?,?> scan = (Scan<?,?>) o;
-		
-		if(size() != scan.size()) return false;
-		if(!Util.equals(getID(), scan.getID())) return false;
-		if(MJD != scan.MJD) return false;
-		if(!Util.equals(instrument, scan.instrument)) return false;
-		return true;
-	}
-	
 	public void validate() {	
 		info("Processing scan data:");
 			

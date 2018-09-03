@@ -29,10 +29,8 @@ import java.util.Hashtable;
 
 import jnum.Configurator;
 import jnum.Unit;
-import jnum.Util;
 import jnum.data.fitting.Parameter;
 import jnum.math.Vector2D;
-import jnum.util.HashCode;
 
 
 
@@ -151,21 +149,6 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Parameter> 
 		
 		public Term(String dir, int expX, int expY) {
 		    this.dir = dir; this.xExp = expX; this.yExp = expY; 
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if(!(o instanceof Term)) return false;
-			Term term = (Term) o;
-			if(!Util.equals(term.dir, dir)) return false;
-			if(term.xExp != xExp) return false;
-			if(term.yExp != yExp) return false;
-			return true;			
-		}
-		
-		@Override
-		public int hashCode() {
-			return super.hashCode() ^ dir.hashCode() ^ HashCode.from(xExp) ^ HashCode.from(yExp);
 		}
 		
 		public double getValue(double x, double y) {

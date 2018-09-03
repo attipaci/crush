@@ -1,4 +1,5 @@
 >> 'write.png.median'
+>> Hirmes 'pixelscale'
 
 
 2.42-a2 
@@ -33,6 +34,11 @@
 
 	[TWEAK] Use sigmyne.com for checking for new releases and in 
 	console info output.
+
+	[CODE] Got rid of a whole lot of equals()/hashCode() override. It's
+	best to just treat most CRUSH objects as unique, which aren't equal
+	unless the same exact object. The exception to the rule are some ID 
+	classes.
 
 	[CODE] Integration.comments changed String -> StringBuffer for more
 	efficient handling.

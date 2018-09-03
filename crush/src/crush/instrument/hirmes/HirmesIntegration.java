@@ -185,7 +185,6 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
                     // Read the pixel data (DAC and MCE jump counter)
                     frame.parseData((int[][]) row[iDAC], iJump < 0 ? null : (short[][]) row[iJump]);
                     frame.mceSerial = iSN < 0 ? 0L : ((long[]) row[iSN])[0];
-
    
                     frame.utc = iTS < 0 ? i * instrument.samplingInterval : ((double[]) row[iTS])[0];
                     timeStamp.setUTC(frame.utc);

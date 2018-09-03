@@ -30,7 +30,6 @@ import crush.*;
 import crush.array.Camera;
 import crush.array.GridIndexed;
 import crush.array.SingleColorArrangement;
-import crush.telescope.Mount;
 import crush.telescope.sofia.SofiaCamera;
 import crush.telescope.sofia.SofiaHeader;
 import crush.telescope.sofia.SofiaScan;
@@ -74,7 +73,6 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 
     public HawcPlus() {
         super("hawc+", new SingleColorArrangement<HawcPlusPixel>(), pixels);
-        mount = Mount.NASMYTH_COROTATING;
     }
 
     @Override
@@ -448,14 +446,16 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         return super.getChannelDataHeader() + "\teff\tGmux\tidx\tsub\trow\tcol";
     }
 
+
     @Override
     public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
         super.editImageHeader(scans, header);
         // Add HAWC+ specific keywords
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ HAWC+ Header Keys ------>", false));
-        c.add(new HeaderCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
+                c.add(new HeaderCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
     }
+    
 
     @Override
     public void readData(BasicHDU<?>[] hdu) throws Exception {      
@@ -519,8 +519,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
          */
 
         clear();
+        
         ensureCapacity(nSub * subarrayPixels);
-
         for(int c=0; c<pixels; c++) {
             HawcPlusPixel pixel = new HawcPlusPixel(this, c);
             if(hasSubarray[pixel.sub]) add(pixel);

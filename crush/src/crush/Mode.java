@@ -40,8 +40,6 @@ public class Mode implements Serializable {
      */
     private static final long serialVersionUID = -1953090499269762683L;
 
-    private transient int serialNo;
-
     public String name;
     private ChannelGroup<?> channels;
     public GainProvider gainProvider;
@@ -61,7 +59,6 @@ public class Mode implements Serializable {
 
     
     public Mode(String name) {
-        serialNo = ++counter;
         this.name = name;
     }
     
@@ -87,18 +84,6 @@ public class Mode implements Serializable {
     public void setGainProvider(GainProvider source) {
         this.gainProvider = source;
     }	
-
-    @Override
-    public boolean equals(Object o) {
-        if(o == this) return true;
-        if(!(o instanceof Mode)) return false;
-        if(!super.equals(o)) return false;
-        return serialNo == ((Mode) o).serialNo;
-    }
-
-    @Override
-    public int hashCode() { return super.hashCode() ^ serialNo; }
-
 
 
     public String getName() { return name; }	
@@ -242,7 +227,6 @@ public class Mode implements Serializable {
 
     private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
         stream.defaultReadObject();
-        serialNo = ++counter;
     }
 
     public class CoupledMode extends CorrelatedMode {

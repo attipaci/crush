@@ -29,11 +29,8 @@ import java.util.*;
 
 import jnum.Configurator;
 import jnum.Unit;
-import jnum.Util;
 import jnum.data.WeightedPoint;
 import jnum.math.Range;
-import jnum.util.HashCode;
-
 
 
 public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
@@ -76,37 +73,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 			catch(Exception e) { CRUSH.error(this, e); }
 		}
 		setDefaultNames();
-	}
-	
-	@Override
-    public int hashCode() {
-        int hash = super.hashCode() ^ (solveGains ? 1: 0) ^ (phaseGains ? 2 : 0) 
-                ^ HashCode.from(resolution);
-        if(name != null) hash ^= name.hashCode();
-        if(id != null) hash ^= id.hashCode();
-        if(trigger != null) hash ^= trigger.hashCode();
-        if(name != null) hash ^= name.hashCode();
-        if(id != null) hash ^= id.hashCode();
-        return hash;
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        if(o == this) return true;
-        if(!(o instanceof Modality)) return false;
-        if(!super.equals(o)) return false;
-        
-        Modality<?> modality = (Modality<?>) o;
-        if(solveGains != modality.solveGains) return false;
-        if(phaseGains != modality.phaseGains) return false;
-        if(Double.compare(resolution, modality.resolution) != 0) return false;
-        if(!Util.equals(trigger, modality.trigger)) return false;
-        if(!id.equals(modality.id)) return false;
-        if(!name.equals(modality.name)) return false;
-        return true;
-    }
-    
-	
+	}	
 	
 	public void setDefaultNames() {
 		for(int i=size(); --i >= 0; ) get(i).name = name + ":" + get(i).getChannels().getName();

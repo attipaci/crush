@@ -26,7 +26,6 @@ package crush.instrument.hirmes;
 
 import crush.Channel;
 import crush.array.SingleColorPixel;
-import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
@@ -46,6 +45,7 @@ public class HirmesPixel extends SingleColorPixel {
     
     int jumpCounter = 0;
     
+    Vector2D focalPlanePosition;
     double frequency;
     
     public HirmesPixel(Hirmes hirmes, int zeroIndex) {
@@ -65,33 +65,47 @@ public class HirmesPixel extends SingleColorPixel {
         col = pin + sub * Hirmes.subCols;
         subcol = col % Hirmes.lowresCols;
         
-        frequency = hirmes.baseFrequency;
-        
-        if(hirmes.mode != Hirmes.IMAGING_MODE) {
-            if(detArray == Hirmes.LORES_ARRAY) frequency += subcol * hirmes.frequencyStep;
-            else frequency += subcol * hirmes.frequencyStep; // TODO check for hires...
-        }
-        
         // TODO seriesArray, biasLine
     }
+    
+    
+    @Override
+    public HirmesPixel copy() {
+        HirmesPixel copy = (HirmesPixel) super.copy();
+        if(focalPlanePosition != null) copy.focalPlanePosition = focalPlanePosition.copy();
+        return copy;
+    }
+    
     
     @Override
     public double overlap(final Channel channel, double pointSize) {
        if(!(channel instanceof HirmesPixel)) return 0.0;
-        
-       HirmesPixel pixel = (HirmesPixel) channel;
-       double df = Constant.sigmasInFWHM * (pixel.getFrequency() - getFrequency()) / ((Hirmes) instrument).frequencyResolution;
-       return Math.exp(-0.5*df*df) * super.overlap(channel, pointSize);
+       
+       HirmesPixel pixel = (HirmesPixel) channel;       
+       if(pixel.getFrequency() != getFrequency()) return 0.0; // TODO, do it better...
+       
+       return super.overlap(channel, pointSize);
     }
     
     
     @Override
     public double getFrequency() { return frequency; }
 
-    public void calcSIBSPosition() {
-        if(isFlagged(FLAG_BLIND)) position = null;
-        position = ((Hirmes) instrument).getSIBSPosition(sub, subrow, subcol);
+
+    public void calcSIBSPosition3D() {
+        Hirmes hirmes = (Hirmes) instrument; 
+        
+        if(isFlagged(FLAG_BLIND)) {
+            focalPlanePosition = position = null;
+            frequency = Double.NaN;
+        }
+        else {
+            focalPlanePosition = hirmes.getFocalPlanePosition(sub, subrow, subcol);
+            position = hirmes.getSIBSPosition(focalPlanePosition);
+            frequency = hirmes.getFrequency(focalPlanePosition);
+        }
     }
+
         
     @Override
     public int getCriticalFlags() {

@@ -24,8 +24,6 @@ package crush;
 
 import java.io.Serializable;
 
-import jnum.Util;
-import jnum.util.HashCode;
 
 public abstract class ZeroMeanGains implements Serializable, GainProvider {
 	/**
@@ -34,19 +32,6 @@ public abstract class ZeroMeanGains implements Serializable, GainProvider {
 	private static final long serialVersionUID = -5916984290768232863L;
 	
 	private double aveG = 0.0;
-	
-	@Override
-	public int hashCode() { return super.hashCode() ^ HashCode.from(aveG); }
-	
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!(o instanceof ZeroMeanGains)) return false;
-		if(!super.equals(o)) return false;
-		ZeroMeanGains g = (ZeroMeanGains) o;
-		if(!Util.equals(aveG, g.aveG, 1e-6)) return false;
-		return true;
-	}
 	
 	@Override
 	public final double getGain(Channel c) throws Exception {

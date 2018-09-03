@@ -25,7 +25,6 @@ package crush;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import jnum.Util;
 import jnum.data.DataPoint;
 import jnum.data.WeightedPoint;
 import jnum.parallel.ParallelTask;
@@ -53,28 +52,6 @@ public class PhaseSignal implements Serializable {
 		syncGains = new float[mode.size()];
 	
 		phases.signals.put(mode, this);
-	}
-	
-	@Override
-	public int hashCode() {
-		int hash = super.hashCode() ^ mode.hashCode() ^ generation;
-		//if(value != null) hash ^= HashCode.sampleFrom(value);
-		//if(syncGains != null) hash ^= HashCode.sampleFrom(syncGains);
-		return hash;
-	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!(o instanceof PhaseSignal)) return false;
-		if(!super.equals(o)) return false;
-		
-		PhaseSignal sig = (PhaseSignal) o;
-		if(generation != sig.generation) return false;
-		if(!Util.equals(mode, sig.mode)) return false;
-		//if(!Arrays.equals(value, sig.value)) return false;
-		//if(!Arrays.equals(syncGains, sig.syncGains)) return false;
-		return true;
 	}
 	
 	public int size() { return value == null ? 0 : value.length; }

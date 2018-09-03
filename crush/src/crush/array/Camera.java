@@ -122,8 +122,6 @@ public abstract class Camera<ChannelType extends Channel> extends Instrument<Cha
 		}
 		
 		super.loadChannelData();
-		
-		
 	}
 		
 	public final double getRotationAngle() {

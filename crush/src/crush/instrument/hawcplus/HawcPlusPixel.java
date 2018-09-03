@@ -34,6 +34,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	 * 
 	 */
 	private static final long serialVersionUID = 5898856651596856837L;
+	
 	public int pol, sub, subrow, col, mux, row, biasLine, seriesArray;
 	public int fitsIndex, fitsRow, fitsCol;
 	public float jump = 0.0F;
@@ -81,7 +82,6 @@ public class HawcPlusPixel extends SingleColorPixel {
 		muxGain = 1.0;
 	}
 	
-	
 	@Override
 	public String toString() {
 		return super.toString() 
@@ -126,7 +126,5 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public final static int FLAG_FLICKER = softwareFlags.next('T', "Flicker noise").value();
 	public final static int FLAG_LOS_RESPONSE = softwareFlags.next('L', "LOS response").value();
 	public final static int FLAG_ROLL_RESPONSE = softwareFlags.next('\\', "Roll response").value();
-
-    
 
 }

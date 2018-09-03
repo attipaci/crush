@@ -33,7 +33,6 @@ import java.util.concurrent.ExecutorService;
 import crush.instrument.GenericInstrument;
 import jnum.Configurator;
 import jnum.Unit;
-import jnum.Util;
 import jnum.fits.FitsHeaderEditing;
 import jnum.fits.FitsHeaderParsing;
 import jnum.fits.FitsToolkit;
@@ -41,7 +40,6 @@ import jnum.math.Coordinate2D;
 import jnum.parallel.Parallelizable;
 import jnum.reporting.BasicMessaging;
 import jnum.text.TableFormatter;
-import jnum.util.HashCode;
 import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
@@ -124,29 +122,6 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     }
 
     public Instrument<?> getInstrument() { return instrument; }
-
-    @Override
-    public int hashCode() {
-        int hash = super.hashCode() ^ generation;
-        if(instrument != null) hash ^= instrument.hashCode();
-        if(scans != null) hash ^= HashCode.sampleFrom(scans);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if(o == this) return true;
-        if(!(o instanceof SourceModel)) return false;
-        if(!super.equals(o)) return false;
-
-        SourceModel model = (SourceModel) o;
-        if(generation != model.generation) return false;
-        if(!Util.equals(instrument, model.instrument)) return false;
-        if(!Util.equals(scans, model.scans)) return false;
-        return true;
-    }
-
-    
  
     
     public Configurator getOptions() {

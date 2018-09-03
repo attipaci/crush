@@ -27,7 +27,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 import jnum.CopiableContent;
-import jnum.Util;
 
 
 public class Dependents implements Serializable, Cloneable, CopiableContent<Dependents> {
@@ -74,23 +73,7 @@ public class Dependents implements Serializable, Cloneable, CopiableContent<Depe
 	    }
 	    return copy;	    
 	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!(o instanceof Dependents)) return false;
-		if(!super.equals(o)) return false;
-		Dependents d = (Dependents) o;
-		if(!getName().equals(d.getName())) return false;
-		if(!Util.equals(integration, d.integration)) return false;
-		return true;
-	}
-	
-	@Override
-	public int hashCode() {
-		return super.hashCode() ^ integration.getDisplayID().hashCode() ^ getName().hashCode();
-	}
-	
+		
 	public String getName() { return name; }
 	
 	public void setName(String value) { this.name = value; }

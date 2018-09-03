@@ -106,29 +106,6 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		return copy;
 	}
 	
-	@Override
-	public int hashCode() { 
-		return super.hashCode() ^ HashCode.from(MJD) ^ data.length ^ index ^ flag
-				^ HashCode.from(dependents) ^ HashCode.from(dof) ^ HashCode.sampleFrom(data); 
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!(o instanceof Frame)) return false;
-		if(!super.equals(o)) return false;
-		Frame frame = (Frame) o;
-		if(MJD != frame.MJD) return false;
-		if(index != frame.index) return false;
-		if(flag != frame.flag) return false;
-		if(dependents != frame.dependents) return false;
-		if(dof != frame.dof) return false;
-		if(!Arrays.equals(data, frame.data)) return false;
-		//if(!Arrays.equals(sampleFlag, frame.sampleFlag)) return false;
-		//if(!Arrays.equals(sourceIndex, frame.sourceIndex)) return false;
-		return true;
-	}
-	
 	protected void create(int size) {
 		data = new float[size];
 		sampleFlag = new byte[size];

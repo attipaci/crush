@@ -52,7 +52,6 @@ import jnum.parallel.ParallelTask;
 import jnum.projection.Projection2D;
 import jnum.reporting.BasicMessaging;
 import jnum.text.TableFormatter;
-import jnum.util.HashCode;
 import nom.tam.fits.*;
 
 /**
@@ -122,24 +121,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         if(this instanceof Chopping) ((Chopping) this).setChopper(null);
 
         return clone;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if(o == this) return true;
-        if(!(o instanceof Integration)) return false;
-        if(!super.equals(o)) return false;
-
-        final Integration<?,?> other = (Integration<?,?>) o;
-        if(other.integrationNo != integrationNo) return false;
-        if(!other.scan.getID().equals(scan.getID())) return false;
-        if(other.size() != size()) return false;
-        return other.getDisplayID().equals(getDisplayID());
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode() ^ scan.getID().hashCode() ^ HashCode.from(integrationNo) ^ size() ^ getDisplayID().hashCode();
     }
 
     @Override
@@ -1274,7 +1255,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     public void calcSourceNEFD() {
         nefd = instrument.getSourceNEFD(gain);
         if(hasOption("nefd.map")) nefd /= Math.sqrt(scan.weight);	
-        comments.append("(" + Util.e6.format(nefd / instrument.janskyPerBeam()) + ")");	
+        comments.append("(" + Util.e2.format(nefd / instrument.janskyPerBeam()) + ")");	
     }
 
     public void getTimeWeights() { getTimeWeights(instrument); } 

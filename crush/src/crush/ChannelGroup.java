@@ -69,22 +69,6 @@ implements Copiable<ChannelGroup<ChannelType>> {
         return copy;
     }
 
-    // Parallelize...
-    @Override
-    public boolean equals(Object o) {
-        if(o == this) return true;
-        if(!(o instanceof ChannelGroup)) return false;
-        if(!super.equals(o)) return false;
-        ChannelGroup<?> group = (ChannelGroup<?>) o;
-        if(size() != group.size()) return false;
-        if(!group.name.equals(name)) return false;
-        for(int i=size(); --i >=0; ) if(!group.get(i).equals(get(i))) return false;
-        return true;
-    }
-
-    @Override
-    public int hashCode() { return super.hashCode() ^ name.hashCode() ^ size(); }
-
     public String getName() { return name; }
 
     public void setName(String value) { name = value; }

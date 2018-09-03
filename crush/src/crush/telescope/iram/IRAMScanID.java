@@ -46,7 +46,9 @@ public class IRAMScanID implements Comparable<IRAMScanID> {
 	
 	@Override
 	public boolean equals(Object o) {
-		if(!super.equals(o)) return false;
+		if(this == o) return true;
+		if(!(o instanceof IRAMScanID)) return false;
+		
 		IRAMScanID other = (IRAMScanID) o;
 		if(year != other.year) return false;
 		if(month != other.month) return false;

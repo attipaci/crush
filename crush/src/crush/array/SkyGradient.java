@@ -37,16 +37,6 @@ public class SkyGradient extends ZeroMeanGains {
 	}
 	
 	@Override
-	public int hashCode() { return super.hashCode() ^ (horizontal ? 1 : 0); }
-	
-	@Override
-	public boolean equals(Object o) {
-		if(o == this) return true;
-		if(!super.equals(o)) return false;
-		return horizontal == ((SkyGradient) o).horizontal;
-	}
-	
-	@Override
 	public double getRelativeGain(Channel c) throws Exception {
 		SingleColorPixel pixel = (SingleColorPixel) c;
 		if(pixel.position == null) return Double.NaN;

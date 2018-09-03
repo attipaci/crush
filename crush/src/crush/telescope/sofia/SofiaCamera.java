@@ -44,6 +44,7 @@ import crush.Scan;
 import crush.array.Camera;
 import crush.instrument.ColorArrangement;
 import crush.telescope.GroundBased;
+import crush.telescope.Mount;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.fits.FitsToolkit;
@@ -68,6 +69,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
 
     public SofiaCamera(String name, ColorArrangement<? super ChannelType> layout) {
         super(name, layout);
+        mount = Mount.NASMYTH_COROTATING;
     }
 
 
@@ -180,7 +182,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
 
         Cursor<String, HeaderCard> from = required.iterator();
         while(from.hasNext()) c.add(from.next());
-        // -----------------------------------------------------------------------------------------------------	
+        // -----------------------------------------------------------------------------------------------------
     }	
 
 
