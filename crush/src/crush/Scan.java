@@ -598,7 +598,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			if(pointing == null) return null;
 			if(!(sourceModel instanceof AstroIntensityMap)) return null;
 			Map2D map = ((AstroIntensityMap) sourceModel).map;
-			return pointing.getRepresentation(map.getGrid()).getData(map.getProperties(), instrument.getSizeUnit()).getTableEntry(name.substring(4));
+			return pointing.getRepresentation(map.getGrid()).getData(map, instrument.getSizeUnit()).getTableEntry(name.substring(4));
 		}
 		if(name.equals("object")) return sourceName;
 		if(name.equals("id")) return getID();

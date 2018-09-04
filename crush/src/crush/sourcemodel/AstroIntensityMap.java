@@ -38,7 +38,6 @@ import jnum.data.image.Gaussian2D;
 import jnum.data.image.Image2D;
 import jnum.data.image.Index2D;
 import jnum.data.image.Map2D;
-import jnum.data.image.MapProperties;
 import jnum.data.image.Observation2D;
 import jnum.data.image.Validating2D;
 import jnum.data.image.overlay.Flagged2D;
@@ -46,6 +45,7 @@ import jnum.data.image.overlay.RangeRestricted2D;
 import jnum.data.image.region.EllipticalSource;
 import jnum.data.image.region.GaussianSource;
 import jnum.data.image.region.SourceCatalog;
+import jnum.fits.FitsProperties;
 import jnum.math.Coordinate2D;
 import jnum.math.Range;
 import jnum.math.Vector2D;
@@ -75,7 +75,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
     public void setInstrument(Instrument<?> instrument) {
         super.setInstrument(instrument);
         if(map != null) {
-            MapProperties properties = map.getProperties();
+            FitsProperties properties = map.getFitsProperties();
             properties.setInstrumentName(instrument.getName());
             properties.setTelescopeName(instrument.getTelescopeName());
         }            
@@ -87,7 +87,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
             private static final long serialVersionUID = -2228932903204574146L;
 
             @Override
-            public double value() { return getInstrument().janskyPerBeam() * map.getProperties().getUnderlyingBeam().getArea(); }
+            public double value() { return getInstrument().janskyPerBeam() * map.getUnderlyingBeam().getArea(); }
         };
     }
 
@@ -131,13 +131,13 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
         map.addLocalUnit(getNativeUnit());
         map.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky, JY, jy, JANSKY");
         map.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin, KELVIN");   
+        
+        map.setDisplayGridUnit(getInstrument().getSizeUnit());
 
-        MapProperties properties = map.getProperties();
+        FitsProperties properties = map.getFitsProperties();
         properties.setInstrumentName(getInstrument().getName());
         properties.setCreatorName(CRUSH.class.getSimpleName());
         properties.setCopyright(CRUSH.getCopyrightString());     
-        properties.seDisplayGridUnit(getInstrument().getSizeUnit());
-
     }
 
     @Override
@@ -146,9 +146,10 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
 
         super.createFrom(collection);  
 
-        MapProperties properties = map.getProperties();
+        FitsProperties properties = map.getFitsProperties();
         properties.setObjectName(getFirstScan().getSourceName());
-        properties.setUnderlyingBeam(getAverageResolution());
+        
+        map.setUnderlyingBeam(getAverageResolution());
 
         CRUSH.info(this, "\n" + map.getInfo());
 
@@ -376,9 +377,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
     public GaussianSource getPeakSource() {
         map.level(true);
 
-        MapProperties properties = map.getProperties();
-
-        Gaussian2D beam = map.getProperties().getImageBeam();
+        Gaussian2D beam = map.getImageBeam();
         
         EllipticalSource source = new EllipticalSource(getPeakCoords(), beam.getMajorFWHM(), beam.getMinorFWHM(), beam.getPositionAngle());
 
@@ -386,7 +385,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
         if(hasOption("pointing.method")) if(option("pointing.method").is("centroid")) source.setCentroidPositioning();
 
         source.adaptTo(map);
-        source.deconvolveWith(properties.getSmoothingBeam());
+        source.deconvolveWith(map.getSmoothingBeam());
 
         double criticalS2N = hasOption("pointing.significance") ? option("pointing.significance").getDouble() : 5.0;
         if(source.getPeak().significance() < criticalS2N) return null;
@@ -684,7 +683,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
 
     @Override
     public String getSourceName() {
-        return map.getProperties().getObjectName();
+        return map.getFitsProperties().getObjectName();
     }
 
     @Override
@@ -718,18 +717,18 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
         if(useFFT) map.fftFilterAbove(filterScale, filterBlank);
         else map.filterAbove(filterScale, filterBlank);
 
-        map.getProperties().setFilterBlanking(filterBlanking);
+        map.setFilterBlanking(filterBlanking);
     }
     
 
     @Override
     public void setFiltering(double FWHM) {
-        map.getProperties().updateFiltering(FWHM);
+        map.updateFiltering(FWHM);
     }
 
     @Override
     public void resetFiltering() {
-        map.getProperties().resetFiltering();
+        map.resetFiltering();
     }
 
 

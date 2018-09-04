@@ -48,11 +48,11 @@ import jnum.data.image.Flag2D;
 import jnum.data.image.Image2D;
 import jnum.data.image.Index2D;
 import jnum.data.image.Map2D;
-import jnum.data.image.MapProperties;
 import jnum.data.image.Observation2D;
 import jnum.data.image.Validating2D;
 import jnum.data.image.overlay.RangeRestricted2D;
 import jnum.data.samples.Grid1D;
+import jnum.fits.FitsProperties;
 import jnum.math.CoordinateAxis;
 import jnum.math.Range;
 import jnum.parallel.ParallelPointOp;
@@ -109,7 +109,7 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
             private static final long serialVersionUID = -2228932903204574146L;
 
             @Override
-            public double value() { return getInstrument().janskyPerBeam() * cube.getPlane(0).getProperties().getUnderlyingBeam().getArea(); }
+            public double value() { return getInstrument().janskyPerBeam() * cube.getPlane(0).getUnderlyingBeam().getArea(); }
         };
     }
 
@@ -180,16 +180,17 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         cube.addLocalUnit(getJanskyUnit(), "Jy, jansky, Jansky, JY, jy, JANSKY");
         cube.addLocalUnit(getKelvinUnit(), "K, kelvin, Kelvin, KELVIN");  
         
-        MapProperties properties = cube.getPlaneTemplate().getProperties();
+        cube.getPlaneTemplate().setDisplayGridUnit(getInstrument().getSizeUnit());
+        
+        FitsProperties properties = cube.getPlaneTemplate().getFitsProperties();
         properties.setInstrumentName(getInstrument().getName());
         properties.setCreatorName(CRUSH.class.getSimpleName());
         properties.setCopyright(CRUSH.getCopyrightString());     
-        properties.seDisplayGridUnit(getInstrument().getSizeUnit());
+
             
         if(hasOption("unit")) {
             String unitName = option("unit").getValue();
             cube.setUnit(unitName);
-            cube.getPlaneTemplate().setUnit(unitName);
         }
     }
  
@@ -203,9 +204,8 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         super.createFrom(collection);  
         
         for(Observation2D plane : cube.getPlanes()) {
-            MapProperties properties = plane.getProperties();
-            properties.setObjectName(getFirstScan().getSourceName());
-            properties.setUnderlyingBeam(getAverageResolution());
+            plane.getFitsProperties().setObjectName(getFirstScan().getSourceName());
+            plane.setUnderlyingBeam(getAverageResolution());
         }
     
         
@@ -341,7 +341,7 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
   
     @Override
     public String getSourceName() {
-        return cube.getPlane(0).getProperties().getObjectName();
+        return cube.getPlane(0).getFitsProperties().getObjectName();
     }
 
     @Override
@@ -380,13 +380,13 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
             if(useFFT) plane.fftFilterAbove(filterScale, filterBlank);
             else plane.filterAbove(filterScale, filterBlank);
         
-            plane.getProperties().setFilterBlanking(filterBlanking);
+            plane.setFilterBlanking(filterBlanking);
         }
     }
     
     @Override
     public void setFiltering(double FWHM) {
-        for(Observation2D plane : cube.getPlanes()) plane.getProperties().updateFiltering(FWHM);
+        for(Observation2D plane : cube.getPlanes()) plane.updateFiltering(FWHM);
     }
 
 
