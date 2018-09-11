@@ -92,7 +92,7 @@ public class PolarMap extends SourceModel {
 		N.enableWeighting = true;
 		N.setID("N");
 		
-		Q = N.getWorkingCopy(false);
+		Q = N.copy(false);
 		Q.signalMode = PolarModulation.Q;
 		Q.standalone();
 		Q.enableLevel = false;
@@ -100,7 +100,7 @@ public class PolarMap extends SourceModel {
 		Q.enableWeighting = true;
 		Q.setID("Q");
 					
-		U = Q.getWorkingCopy(false);
+		U = Q.copy(false);
 		U.signalMode = PolarModulation.U;
 		U.standalone();		
 		U.setID("U");
@@ -108,11 +108,11 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public SourceModel getWorkingCopy(boolean withContents) {
-		PolarMap copy = (PolarMap) super.getWorkingCopy(withContents);
-		copy.N = N.getWorkingCopy(withContents);
-		copy.Q = Q.getWorkingCopy(withContents);
-		copy.U = U.getWorkingCopy(withContents);
+	public SourceModel copy(boolean withContents) {
+		PolarMap copy = (PolarMap) super.copy(withContents);
+		copy.N = N.copy(withContents);
+		copy.Q = Q.copy(withContents);
+		copy.U = U.copy(withContents);
 		return copy;
 	}
 	
@@ -217,7 +217,7 @@ public class PolarMap extends SourceModel {
 	
 	// Angles are measured East of North... 
 	public AstroIntensityMap getAngles(AstroIntensityMap P, AstroIntensityMap F) {
-		final AstroIntensityMap A = N.getWorkingCopy(false);
+		final AstroIntensityMap A = N.copy(false);
 		
 		final Observation2D q = Q.map;
 		final Observation2D u = U.map;
@@ -267,7 +267,7 @@ public class PolarMap extends SourceModel {
 	
 	
 	public AstroIntensityMap getP() {
-		final AstroIntensityMap P = N.getWorkingCopy(false);
+		final AstroIntensityMap P = N.copy(false);
 		
 		final Observation2D q = Q.map;
 		final Observation2D u = U.map;
@@ -313,7 +313,7 @@ public class PolarMap extends SourceModel {
 	}	
 	
 	public AstroIntensityMap getI(AstroIntensityMap P) {	
-		final AstroIntensityMap I = N.getWorkingCopy(false);
+		final AstroIntensityMap I = N.copy(false);
 		final Observation2D n = N.map;
 		final Observation2D p = P.map;
 		final Observation2D t = I.map;
@@ -340,7 +340,7 @@ public class PolarMap extends SourceModel {
 	
 
 	public AstroIntensityMap getPolarFraction(AstroIntensityMap P, AstroIntensityMap I, double accuracy) {	
-		final AstroIntensityMap F = P.getWorkingCopy(false);
+		final AstroIntensityMap F = P.copy(false);
 		final Observation2D p = P.map;
 		final Observation2D t = I.map;
 		final Observation2D f = F.map;

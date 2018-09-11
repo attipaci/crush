@@ -35,6 +35,10 @@
 	[TWEAK] Use sigmyne.com for checking for new releases and in 
 	console info output.
 
+	[CODE] SourceModel.getWorkingCopy(*) -> copy(*) from CopiableContent<>.
+	And, the copies are made more complete (keeping references to external
+	objects, including base).
+
 	[CODE] Got rid of a whole lot of equals()/hashCode() override. It's
 	best to just treat most CRUSH objects as unique, which aren't equal
 	unless the same exact object. The exception to the rule are some ID 

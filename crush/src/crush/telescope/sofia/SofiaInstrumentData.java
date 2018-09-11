@@ -51,18 +51,7 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
 	
 	@Override
 	public SofiaInstrumentData copy() {
-		SofiaInstrumentData copy = (SofiaInstrumentData) clone();
-		if(dataType != null) copy.dataType = new String(dataType);
-		if(instrumentConfig != null) copy.instrumentConfig = new String(instrumentConfig);
-		if(instrumentMode != null) copy.instrumentMode = new String(instrumentMode);
-		if(mccsMode != null) copy.mccsMode = new String(mccsMode);
-		if(hardwareVersion != null) copy.hardwareVersion = new String(hardwareVersion);
-		if(softwareVersion != null) copy.softwareVersion = new String(softwareVersion);
-		if(spectralElement1 != null) copy.spectralElement1 = new String(spectralElement1);
-		if(spectralElement2 != null) copy.spectralElement2 = new String(spectralElement2);
-		if(slitID != null) copy.slitID = new String(slitID);
-		if(detectorChannel != null) copy.detectorChannel = new String(detectorChannel);
-		return copy;
+		return (SofiaInstrumentData) clone();
 	}
 	
 	public void parseHeader(SofiaHeader header) {

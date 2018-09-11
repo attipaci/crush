@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 
 import crush.instrument.GenericInstrument;
 import jnum.Configurator;
+import jnum.CopiableContent;
 import jnum.Unit;
 import jnum.fits.FitsHeaderEditing;
 import jnum.fits.FitsHeaderParsing;
@@ -47,7 +48,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
-public abstract class SourceModel implements Serializable, Cloneable, TableFormatter.Entries, BasicMessaging, 
+public abstract class SourceModel implements Serializable, Cloneable, CopiableContent<SourceModel>, TableFormatter.Entries, BasicMessaging,
 Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     /**
      * 
@@ -151,10 +152,15 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
 
 
-    public final SourceModel getWorkingCopy() { return getWorkingCopy(true); }
+    @Override
+    public final SourceModel copy() { return copy(true); }
 
-    public SourceModel getWorkingCopy(boolean withContents) {
-        return clone();
+    @Override
+    public SourceModel copy(boolean withContents) {
+        SourceModel copy = clone();
+        if(processBrief != null) copy.processBrief = new StringBuffer(processBrief);
+        if(scans != null) copy.scans = new Vector<Scan<?,?>>(scans);
+        return copy;
     }
 
     public SourceModel getCleanLocalCopy() {        
@@ -164,7 +170,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
         noParallel();
         setExecutor(null);
 
-        SourceModel copy = getWorkingCopy(false);
+        SourceModel copy = copy(false);
         
         copy.resetProcessing();
 

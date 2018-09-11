@@ -58,11 +58,16 @@ public abstract class Photometry extends SourceModel {
 
 
     @Override
-    public SourceModel getWorkingCopy(boolean withContents) {
-        Photometry copy = (Photometry) super.getWorkingCopy(withContents);
-        copy.sourceFlux = sourceFlux.copy();
-        copy.flux = new DataPoint[flux.length];
-        if(withContents) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = flux[i].copy();
+    public SourceModel copy(boolean withContents) {
+        Photometry copy = (Photometry) super.copy(withContents);
+        if(equatorial != null) copy.equatorial = (EquatorialCoordinates) equatorial.copy();
+        if(sourceFlux != null) copy.sourceFlux = sourceFlux.copy();
+        if(flux != null) {
+            copy.flux = new DataPoint[flux.length];
+            if(withContents) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = flux[i].copy();
+        }
+        copy.scanFluxes = new Hashtable<Scan<?,?>, DataPoint>();
+        copy.scanFluxes.putAll(scanFluxes);
         return copy;
     }
 

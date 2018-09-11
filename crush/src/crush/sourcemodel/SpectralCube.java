@@ -43,7 +43,6 @@ import jnum.data.cube.overlay.RangeRestricted3D;
 import jnum.data.cube2.Data2D1;
 import jnum.data.cube2.Image2D1;
 import jnum.data.cube2.Observation2D1;
-import jnum.data.image.Data2D;
 import jnum.data.image.Flag2D;
 import jnum.data.image.Image2D;
 import jnum.data.image.Index2D;
@@ -77,8 +76,8 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
     }
     
     @Override
-    public SpectralCube getWorkingCopy(boolean withContents) {
-        SpectralCube copy = (SpectralCube) super.getWorkingCopy(withContents);
+    public SpectralCube copy(boolean withContents) {
+        SpectralCube copy = (SpectralCube) super.copy(withContents);
 
         try { copy.cube = cube.copy(withContents); }
         catch(OutOfMemoryError e) { 
@@ -278,6 +277,13 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
     public boolean isMasked(int i, int j, int k) {
         return cube.getPlane(k).isFlagged(i, j, FLAG_MASK);
     }
+    
+
+    @Override
+    public void addModelData(SourceModel model, double weight) {
+        cube.accumulate(((SpectralCube) model).cube, weight);   
+    }
+
 
     @Override
     public void mergeAccumulate(AstroModel2D other) {
@@ -290,16 +296,14 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
     }
  
     protected void sync(Frame exposure, Channel channel, Index2D index, double fG, double[] sourceGain, double[] syncGain) {
-
         final int k = getFrequencyBin(exposure, channel);
         Observation2D plane = cube.getPlane(k);
-        Data2D basePlane = base.getPlane(k);
 
         // The use of iterables is a minor performance hit only (~3% overall)
         if(!plane.isValid(index)) return;
 
         final float mapValue = plane.get(index).floatValue();
-        final float baseValue = basePlane.getValid(index, 0.0F).floatValue();
+        final float baseValue = base.getPlane(k).getValid(index, 0.0F).floatValue();
 
         // Do not check for flags, to get a true difference image...
         exposure.data[channel.index] -= fG * (sourceGain[channel.index] * mapValue - syncGain[channel.index] * baseValue);  
@@ -307,7 +311,6 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         // Do the blanking here...
         if(isMasked(index.i(), index.j(), k)) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SOURCE_BLANK;
         else exposure.sampleFlag[channel.index] &= ~Frame.SAMPLE_SOURCE_BLANK;
-
     }
 
     @Override
@@ -321,11 +324,7 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         // TODO Auto-generated method stub  
     }
 
-    @Override
-    public void addModelData(SourceModel model, double weight) {
-        cube.accumulate(((SpectralCube) model).cube, weight);
-    }
-
+  
     @Override
     public void setBase() {
         base.paste(cube, false);
@@ -336,7 +335,6 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         super.resetProcessing();
         cube.resetProcessing();
     }
-
 
   
     @Override

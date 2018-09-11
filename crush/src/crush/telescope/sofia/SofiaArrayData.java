@@ -22,8 +22,9 @@
  ******************************************************************************/package crush.telescope.sofia;
 
  import java.text.DecimalFormat;
+import java.util.Arrays;
 
- import crush.CRUSH;
+import crush.CRUSH;
  import jnum.Copiable;
  import jnum.Unit;
 import jnum.data.image.Grid2D;
@@ -56,12 +57,7 @@ import nom.tam.util.Cursor;
      @Override
      public SofiaArrayData copy() {
          SofiaArrayData copy = (SofiaArrayData) clone();
-         if(detectorName != null) copy.detectorName = new String(detectorName);
-         if(detectorSizeString != null) copy.detectorSizeString = new String(detectorSizeString);
-         if(subarraySize != null) {
-             copy.subarraySize = new String[subarraySize.length];
-             for(int i=subarraySize.length; --i >= 0; ) copy.subarraySize[i] = new String(subarraySize[i]);
-         }
+         if(subarraySize != null) copy.subarraySize = Arrays.copyOf(subarraySize, subarraySize.length);
          if(boresightIndex != null) copy.boresightIndex = boresightIndex.copy();
          if(grid != null) copy.grid = grid.copy();	
          return copy;

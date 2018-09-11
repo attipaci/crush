@@ -62,7 +62,6 @@ public class Dependents implements Serializable, Cloneable, CopiableContent<Depe
 	@Override
     public Dependents copy(boolean withContents) {
 	    Dependents copy = clone();
-	    if(name != null) copy.name = new String(name);
 	    if(withContents) {
 	        if(forFrame != null) copy.forFrame = Arrays.copyOf(forFrame, forFrame.length);
 	        if(forChannel != null) copy.forChannel = Arrays.copyOf(forChannel, forChannel.length);

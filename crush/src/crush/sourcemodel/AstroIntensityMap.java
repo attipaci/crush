@@ -62,7 +62,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
     private static final long serialVersionUID = 224617446250418317L;
 
     public Observation2D map;
-    protected Image2D base; 
+    protected transient Image2D base;     // referenced, not copied...
 
 
     public AstroIntensityMap(Instrument<?> instrument) {
@@ -94,31 +94,30 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
 
     @Override
     public void addModelData(SourceModel model, double weight) {  
-        AstroIntensityMap astro = (AstroIntensityMap) model;
-        map.accumulate(astro.map, weight);   
+        map.accumulate(((AstroIntensityMap) model).map, weight);
     }
 
     @Override
-    public void mergeAccumulate(AstroModel2D other) {
-        AstroIntensityMap from = (AstroIntensityMap) other;      
-        map.mergeAccumulate(from.getData());
+    public void mergeAccumulate(AstroModel2D other) {    
+        map.mergeAccumulate(((AstroIntensityMap) other).map);
     }
 
 
     @Override
-    public AstroIntensityMap getWorkingCopy(boolean withContents) {
-        AstroIntensityMap copy = (AstroIntensityMap) super.getWorkingCopy(withContents);
+    public AstroIntensityMap copy(boolean withContents) {
+        AstroIntensityMap copy = (AstroIntensityMap) super.copy(withContents);
 
-        try { copy.map = map.copy(withContents); }
-        catch(OutOfMemoryError e) { 
-            runtimeMemoryError("Ran out of memory while making a copy of the source map.");
+        if(map != null) {
+            try { copy.map = map.copy(withContents); }
+            catch(OutOfMemoryError e) { runtimeMemoryError("Ran out of memory while making a copy of the source map."); }
+            copy.map.setGrid(getGrid());
         }
-
+        
         return copy;
     }
 
     public void standalone() { 
-        base = Image2D.createType(Double.class, map.sizeX(), map.sizeY());
+        base = Image2D.createType(Double.class, sizeX(), sizeY());
     }
 
     private void createMap() {

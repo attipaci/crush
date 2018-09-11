@@ -56,8 +56,7 @@ public class Scuba2Subarray implements Cloneable {
 	
 	public Scuba2Subarray copy() {
 		Scuba2Subarray copy = clone();
-		if(focalPlanePixelOffset != null) copy.focalPlanePixelOffset = (Vector2D) focalPlanePixelOffset.clone();
-		if(id != null) copy.id = new String(id);
+		if(focalPlanePixelOffset != null) copy.focalPlanePixelOffset = focalPlanePixelOffset.copy();
 		copy.scuba2 = null;
 		return copy;
 	}

@@ -66,8 +66,8 @@ public class MultiBeamMap extends AstroIntensityMap {
 	}
 
 	@Override
-	public MultiBeamMap getWorkingCopy(boolean withContents) {
-		MultiBeamMap copy = (MultiBeamMap) super.getWorkingCopy(withContents);
+	public MultiBeamMap copy(boolean withContents) {
+		MultiBeamMap copy = (MultiBeamMap) super.copy(withContents);
 		copy.fft = new MultiFFT();
 		if(transformer != null) copy.transformer = transformer.copy();
 		return copy;
@@ -275,9 +275,8 @@ public class MultiBeamMap extends AstroIntensityMap {
 	
 
 	private MultiBeamMap getDualBeam(DualBeam scan) {
-	
-		
-		final MultiBeamMap dual = getWorkingCopy(true);
+	    
+		final MultiBeamMap dual = copy(true);
 		dual.standalone();
 		
 		final double l = 0.5 * scan.getChopSeparation();

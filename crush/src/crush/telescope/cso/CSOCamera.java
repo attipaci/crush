@@ -67,8 +67,6 @@ public abstract class CSOCamera<PixelType extends SingleColorPixel> extends Came
 	@Override
     public CSOCamera<PixelType> copy() {
 	    CSOCamera<PixelType> copy = (CSOCamera<PixelType>) super.copy();
-	    if(focusMode != null) copy.focusMode = new String(focusMode);
-	    if(rotatorMode != null) copy.rotatorMode = new String(rotatorMode);
 	    return copy;
 	}
 

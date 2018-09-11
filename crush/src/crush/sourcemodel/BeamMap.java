@@ -46,7 +46,7 @@ public class BeamMap extends AstroModel2D {
 	private static final long serialVersionUID = -8380688477538977451L;
 	
 	AstroIntensityMap[] pixelMap;
-	private AstroIntensityMap template;
+	private transient AstroIntensityMap template;
 	
 	public BeamMap(Camera<?> instrument) {
 		super(instrument);
@@ -56,11 +56,11 @@ public class BeamMap extends AstroModel2D {
 	protected boolean isAddingToMaster() { return true; }
 	
 	@Override
-	public SourceModel getWorkingCopy(boolean withContents) {
-		BeamMap copy = (BeamMap) super.getWorkingCopy(withContents);
+	public BeamMap copy(boolean withContents) {
+		BeamMap copy = (BeamMap) super.copy(withContents);
 		copy.pixelMap = new AstroIntensityMap[pixelMap.length];
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null)
-			copy.pixelMap[p] = pixelMap[p].getWorkingCopy(withContents);	
+			copy.pixelMap[p] = pixelMap[p].copy(withContents);	
 		return copy;
 	}
 	
@@ -112,7 +112,7 @@ public class BeamMap extends AstroModel2D {
 		BeamMap other = (BeamMap) model;
 		
 		for(int p=0; p<pixelMap.length; p++) if(other.pixelMap[p] != null) {
-			if(pixelMap[p] == null) pixelMap[p] = other.pixelMap[p].getWorkingCopy(false);
+			if(pixelMap[p] == null) pixelMap[p] = other.pixelMap[p].copy(false);
 			pixelMap[p].add(other.pixelMap[p], weight);
 		}
 	}
@@ -129,9 +129,8 @@ public class BeamMap extends AstroModel2D {
 		AstroIntensityMap map = pixelMap[i];
 		
 		if(map == null) {	
-			map = template.getWorkingCopy(false);
+			map = template.copy(false);
 			map.setID(Integer.toString(i));
-			map.standalone();
 			pixelMap[i] = map;
 		}
 			

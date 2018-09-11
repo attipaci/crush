@@ -83,6 +83,12 @@ public abstract class AstroModel2D extends SourceModel {
         grid.setResolution(hasOption("grid") ? option("grid").getDouble() * instrument.getSizeUnit().value() : 0.2 * instrument.getResolution());  
     }
 
+    @Override
+    public AstroModel2D copy(boolean withContents) {
+        AstroModel2D copy = (AstroModel2D) super.copy(withContents);
+        if(grid != null) copy.grid = (SphericalGrid) grid.copy();
+        return copy;
+    }
 
     public abstract boolean isEmpty();
     
@@ -113,8 +119,8 @@ public abstract class AstroModel2D extends SourceModel {
 
     protected abstract void calcCoupling(final Integration<?,?> integration, final Collection<? extends Pixel> pixels, final double[] sourceGain, final double[] syncGain);
 
-    
-     
+
+
     public long getMemoryFootprint(int pixels) {
         return pixels * getPixelFootprint() + baseFootprint(pixels);
     }
@@ -177,12 +183,11 @@ public abstract class AstroModel2D extends SourceModel {
         return getDefaultCoreName();
     }
 
-  
+
     
     public AstroSystem astroSystem() {
         return new AstroSystem(getGrid().getReference().getClass());
     }
-
  
   
     @Override

@@ -91,7 +91,8 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
     public final Data<?> getExposures() { return getData().getExposures(); }
 
     public final void endAccumulation() { getData().endAccumulation(); }
-   
+
+
     @Override
     public final ExecutorService getExecutor() { return getData().getExecutor(); }
     
@@ -208,7 +209,6 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
 
     @Override
     public void process() throws Exception {
-        // TODO --> 'spectral.smooth'           
         endAccumulation();
         
         nextGeneration(); // Increment the map generation...

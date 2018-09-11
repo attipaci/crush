@@ -52,7 +52,7 @@ public class Pipeline implements Runnable, Serializable {
 	
 	public void setSourceModel(SourceModel source) {	    
 	    if(source != null) { 
-	        scanSource = crush.source.getWorkingCopy(false);
+	        scanSource = crush.source.copy(false);
 	        scanSource.setExecutor(null);  // TODO use executor?
 	        scanSource.setParallel(threadCount);
 	    }
