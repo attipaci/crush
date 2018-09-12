@@ -138,7 +138,7 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
             delta = option("spectral.grid").getDouble() * spectralUnit.value();  
         }
         else if(hasOption("spectral.resolution")) {
-            System.err.println("### using spectral resolution R ~ " + option("spectral.resolution").getDouble());
+            System.err.println("### using spectral resolution R ~ " + Util.s3.format(option("spectral.resolution").getDouble()));
             delta = 0.5 * zRange.midPoint() / option("spectral.resolution").getDouble();
         }
         else System.err.println("### default spectral resolution...");
@@ -238,10 +238,7 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
 
     @Override
     public void setSize(int sizeX, int sizeY) {
-        System.err.println("### Setting size to " + sizeX + " x " + sizeY);
         cube.setSize(sizeX, sizeY, findSizeZ());
-        System.err.println("### checking " + cube.getPlaneTemplate().sizeX() + " x " + cube.getPlaneTemplate().sizeY());
-        
     }
 
     @Override
