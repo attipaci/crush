@@ -58,7 +58,6 @@ implements Copiable<ChannelGroup<ChannelType>> {
 
     public int getThreadCount() { return parallelism; }
 
-
     @Override
     @SuppressWarnings("unchecked")
     public ChannelGroup<ChannelType> copy() {

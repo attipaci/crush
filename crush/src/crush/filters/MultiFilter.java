@@ -44,12 +44,22 @@ public class MultiFilter extends VariedFilter {
 		super(integration);
 	}
 	
-	@Override
+	@SuppressWarnings("unchecked")
+    @Override
 	public MultiFilter clone() {	
 		MultiFilter clone = (MultiFilter) super.clone();
-		clone.filters = new ArrayList<Filter>(filters.size());
-		for(int i=0; i<filters.size(); i++) clone.filters.add(filters.get(i).clone());
+		if(filters != null) clone.filters = (ArrayList<Filter>) filters.clone();
 		return clone;
+	}
+	
+	@Override
+    public MultiFilter copy(boolean withContents) {
+	    MultiFilter copy = (MultiFilter) super.copy(withContents);
+	    if(filters != null) for(int i=filters.size(); --i >= 0; ) {
+	        Filter f = filters.get(i);
+	        if(f != null) copy.filters.set(i, f.copy(withContents));
+	    }
+	    return copy;
 	}
 		
 	public ArrayList<Filter> getFilters() { return filters; }

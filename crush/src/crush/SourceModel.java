@@ -130,9 +130,14 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     }
 
 
+    @SuppressWarnings("unchecked")
     @Override
     public SourceModel clone() {
-        try { return (SourceModel) super.clone(); }
+        try { 
+            SourceModel clone = (SourceModel) super.clone(); 
+            if(scans != null) clone.scans = (Vector<Scan<?,?>>) scans.clone(); 
+            return clone;
+        }
         catch(CloneNotSupportedException e) { return null; }
     }	
 
@@ -159,7 +164,6 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public SourceModel copy(boolean withContents) {
         SourceModel copy = clone();
         if(processBrief != null) copy.processBrief = new StringBuffer(processBrief);
-        if(scans != null) copy.scans = new Vector<Scan<?,?>>(scans);
         return copy;
     }
 

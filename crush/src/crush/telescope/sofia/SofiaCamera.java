@@ -76,6 +76,14 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     public SofiaCamera(String name, ColorArrangement<? super ChannelType> layout, int size) {
         super(name, layout, size);
     }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public SofiaCamera<ChannelType> clone() {
+        SofiaCamera<ChannelType> clone = (SofiaCamera<ChannelType>) super.clone();
+        if(history != null) clone.history = (Vector<String>) history.clone();
+        return clone();
+    }
 
     @Override
     public SofiaCamera<ChannelType> copy() {
@@ -84,7 +92,6 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         if(instrumentData != null) copy.instrumentData = instrumentData.copy();
         if(array != null) copy.array = array.copy();
         if(configFiles != null) copy.configFiles = new HashSet<String>(configFiles);
-        if(history != null) copy.history = new Vector<String>(history);
         
         return copy;
     }

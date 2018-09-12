@@ -32,13 +32,14 @@ import crush.Frame;
 import crush.Integration;
 import jnum.Configurator;
 import jnum.Constant;
+import jnum.CopiableContent;
 import jnum.ExtraMath;
 import jnum.Util;
 import jnum.data.Statistics;
 import jnum.parallel.ParallelTask;
 
 
-public abstract class Filter implements Serializable, Cloneable {
+public abstract class Filter implements Serializable, Cloneable, CopiableContent<Filter> {
 	/**
 	 * 
 	 */
@@ -72,11 +73,31 @@ public abstract class Filter implements Serializable, Cloneable {
 	public Filter clone() {
 		try {
 			Filter clone = (Filter) super.clone();
+			if(channels != null) clone.channels = (ChannelGroup<?>) channels.clone();
 			clone.data = null;
 			clone.frameParms = null;
 			return clone;
 		} catch(CloneNotSupportedException e) { return null; }
 	}
+	
+	@Override
+    public Filter copy() { return copy(true); }
+	
+	@Override
+    public Filter copy(boolean withContents) {
+	    Filter copy = clone();
+	    if(data != null) {
+	        copy.data = new float[data.length];
+	        if(withContents) System.arraycopy(data, 0, copy.data, 0, data.length);
+	    }
+	    if(frameParms != null) {
+            copy.frameParms = new float[frameParms.length];
+            if(withContents) System.arraycopy(frameParms, 0, copy.frameParms, 0, frameParms.length);
+        }
+	    if(parms != null) copy.parms = parms.copy();
+	    return copy;
+	}
+	
 	
 	protected void makeTempData() {
 		if(data != null) discardTempData();
@@ -167,7 +188,7 @@ public abstract class Filter implements Serializable, Cloneable {
 			@Override
 			protected void init() {
 				super.init();
-				worker = Filter.this.clone();
+				worker = Filter.this.copy();
 				worker.makeTempData();
 				
 				worker.frameParms = integration.getFloats();

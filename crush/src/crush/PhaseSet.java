@@ -63,6 +63,8 @@ public class PhaseSet extends ArrayList<PhaseData> {
         }
         return signal;
     }
+    
+    // TODO clone hash tables?
 
     public Integration<?,?> getIntegration() { return integration; }
 
