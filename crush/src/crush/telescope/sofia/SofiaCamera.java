@@ -82,7 +82,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     public SofiaCamera<ChannelType> clone() {
         SofiaCamera<ChannelType> clone = (SofiaCamera<ChannelType>) super.clone();
         if(history != null) clone.history = (Vector<String>) history.clone();
-        return clone();
+        return clone;
     }
 
     @Override
