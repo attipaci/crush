@@ -233,8 +233,8 @@ public class SkyDip extends SourceModel {
         String plotName = coreName + ".plt";
         PrintWriter plot = new PrintWriter(new FileOutputStream(plotName));
 
-        plot.println("set xla 'Elevation (deg)");
-        plot.println("set yla 'Mean Pixel Response (" + getInstrument().getDataUnit().name() + ")");
+        plot.println("set xla 'Elevation (deg)'");
+        plot.println("set yla 'Mean Pixel Response (" + getInstrument().getDataUnit().name() + ")'");
 
         Range dataRange = getSignalRange();
         dataRange.grow(1.05);
