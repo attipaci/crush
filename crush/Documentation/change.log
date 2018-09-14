@@ -7,6 +7,12 @@
 	[NEW] {HIRMES} Parsing simple (linear) frequency mapping from FITS
 	header. 
 
+	[NEW] {HIRMES} Spectral cubes can generate further data products, such
+	as a flattened image ('write.flattened'), aggregate 1D field spectra 
+	('write.fieldspec'), and EPS/PNG plots thereof ('write.fieldspec.png',
+	'write.fieldspec.eps'). The plot appearance can be further tweaked
+	with a set of further options.
+
 	[NEW] {HIRMES} Spectral cubes can now generate PNG previews, either
 	as av average or median (if 'write.png.median' is specified) image over
 	the spectral slices.
