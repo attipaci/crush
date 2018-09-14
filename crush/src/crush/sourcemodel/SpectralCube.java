@@ -25,6 +25,7 @@ package crush.sourcemodel;
 
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 
 import crush.CRUSH;
@@ -54,10 +55,14 @@ import jnum.data.image.overlay.RangeRestricted2D;
 import jnum.data.samples.Grid1D;
 import jnum.data.samples.Samples1D;
 import jnum.fits.FitsProperties;
+import jnum.fits.FitsToolkit;
 import jnum.math.CoordinateAxis;
 import jnum.math.Range;
 import jnum.parallel.ParallelPointOp;
 import jnum.text.GreekLetter;
+import nom.tam.fits.Fits;
+import nom.tam.fits.FitsException;
+import nom.tam.fits.Header;
 
 
 public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
@@ -448,17 +453,40 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
     public void write(String path) throws Exception {    
         super.write(path);
         
-        if(hasOption("write.zspec")) {
-            String gnuplot = "gnuplot";
-            if(hasOption("gnuplot")) {
-                String cmd = option("gnuplot").getValue();
-                if(cmd.length() > 0) gnuplot = Util.getSystemPath(cmd);
-            }
-            String coreName = path + File.separator + getCoreName() + ".spec";
-            Samples1D spectrum = cube.getZSamples();
-            spectrum.writeASCIITable(coreName, cube.getGrid1D(), "Flux");
-            spectrum.gnuplot(coreName, cube.getGrid1D(), "Flux", gnuplot, option("write.zspec.png"), option("write.zspec.eps"), hasOption("write.zspec.show")); 
+        if(hasOption("write.flattened")) {
+            writeFlattenedFits(path + File.separator + getCoreName() + ".flattened.fits");
         }
+        
+        if(hasOption("write.fieldspec")) {
+            plotSpectrum(path + File.separator + getCoreName() + ".fieldspec");
+        }
+    }
+    
+    public void plotSpectrum(String coreName) throws IOException {
+        String gnuplot = "gnuplot";
+        if(hasOption("gnuplot")) {
+            String cmd = option("gnuplot").getValue();
+            if(cmd.length() > 0) gnuplot = Util.getSystemPath(cmd);
+        }
+        Samples1D spectrum = cube.getZSamples();
+        spectrum.writeASCIITable(coreName, cube.getGrid1D(), "Flux");
+        spectrum.gnuplot(coreName, cube.getGrid1D(), "Flux", gnuplot, option("write.fieldspec")); 
+    }
+    
+    public void writeFlattenedFits(String fileName) throws FitsException, IOException {  
+        Map2D image = getMap2D();
+        Fits fits = image.createFits(Float.class); 
+        
+        int nHDU = fits.getNumberOfHDUs();
+        for(int i=0; i<nHDU; i++) {
+            Header header = fits.getHDU(i).getHeader();
+            image.editHeader(header);
+        }   
+        
+        addScanHDUsTo(fits);
+        
+        FitsToolkit.write(fits, fileName);
+        fits.close();
     }
 
    

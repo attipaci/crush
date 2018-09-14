@@ -3451,6 +3451,13 @@
 :: spa			@Alias --> 'source.polar.angles'
 			@Since: 2.11
 
+:: spectral.unit=<spec>	        @Instrument: HIRMES
+                                @Since: 2.42       
+                        Specify the unit of the spectral axis in the output 
+                        data. It can be a wavelength unit, such as 'um' 
+                        (micron) or a frequency unit, such as 'GHz'.
+                        @See: 'unit'
+
 :: spf			@Alias --> 'source.polar.fraction'
 			@Since: 2.10
 
@@ -4123,6 +4130,69 @@
 			support EPS output but only when the 'gnuplot' options 
 			is also set.
 			@See: 'gnuplot', 'write.png', 'skydip'
+
+
+:: write.fieldspec      @Instrument: HIRMES
+                        @Since: 2.42
+                        Write the aggregate 1D field spectrum as and ASCII
+                        table also. This data can also be readiliy plotted
+                        using gnuplot if the '.eps' and/or '.png' sub-options
+                        are set (see below). The plot can be customized via
+                        a set of sub-options '.lt', '.lw', '.pt', '.ps' and
+                        '.style' in accordance with gnuplot's capabilities.
+                        @See: 'gnuplot'
+
+:: write.fieldspec.eps  @Instrument: HIRMES
+                        @Since: 2.42
+                        Create an EPS plot from the aggregate 1D field spectrum
+                        using gnuplot.
+                        @See: 'gnuplot'
+
+:: write.fieldspec.lt=N         @Instrument: HIRMES
+                                @Since: 2.42        
+                        Set the plot line type to gnuplot's built-in type N 
+                        (integer).
+
+:: write.fieldspec.lw=X         @Instrument: HIRMES
+				@Since: 2.42
+                        Set the plot line with to X points wide, e.g. 2.5.
+
+:: write.fieldspec.png  @Instrument: HIRMES
+                        @Since: 2.42
+                        Create a PNG plot from the aggregate 1D field spectrum 
+                        using gnuplot. A set of sub-options can be used to 
+                        customize the appearance.
+
+:: write.fieldspec.png.bg=<color>       @Instrument: HIRMES     
+                      	                @Since: 2.42
+                        Set the PNG background color to the specified color 
+                        (e.g. 'white' or '#FFFFFF', or 'transparent').
+
+:: write.fieldspec.png.size=NxM         @Instrument: HIRMES
+                                        @Since: 2.42
+                        Set the PNG output size to N by M pixels
+
+:: write.fieldspec.ps=X         @Instrument: HIRMES
+                                @Since: 2.42
+                        Set the plot point size scale factor to X, e.g. 1.5.
+
+:: write.fieldspec.pt=N         @Instrument: HIRMES
+                                @Since: 2.42        
+                        Set the plot point tyle to gnuplot's built-in type N 
+                        (integer).
+
+:: write.fieldspec.show         @Instrument: HIRMES        
+                                @Since: 2.42
+                        Display the plot on screen right away.
+
+:: write.fieldspec.style=<plotstyle>     @Instrument: HIRMES 
+                                         @Since: 2.42
+                        Set the gnuplot plotting style for 1D data. E.g. 
+                        'histep', or 'points' or 'lines' or 'linespoints'
+
+:: write.flattened      @Instrument: HIRMES
+                        @Since: 2.42
+                        Write a flattened 2D (monochrome) FITS image also.
 
 :: write.flatfield[=<path>]	@Expert
 				@Since: 2.31

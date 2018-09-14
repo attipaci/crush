@@ -324,8 +324,6 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
         FitsToolkit.write(fits, fileName);
         fits.close();
     }
-
-
     
     
     public static long FLAG_MASK = 1L<<16;

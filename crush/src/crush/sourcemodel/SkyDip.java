@@ -254,7 +254,7 @@ public class SkyDip extends SourceModel {
         }
 
         plot.println("set term push");
-        plot.println("set term unknown");
+        plot.println("set term dumb");
 
         plot.println("set label 1 'Produced by CRUSH " + CRUSH.getFullVersion() + "' at graph 0.01,0.04 left font ',12'");
 
