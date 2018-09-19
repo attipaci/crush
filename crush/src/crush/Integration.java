@@ -125,8 +125,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
     @Override
     public int compareTo(Integration<InstrumentType, FrameType> other) {
-        if(integrationNo == other.integrationNo) return 0;
-        return integrationNo < other.integrationNo ? -1 : 1;
+        return Double.compare(getMJD(), other.getMJD());
     }
 
     public void reindex() {

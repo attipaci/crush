@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -25,7 +25,6 @@ package crush.telescope.sofia;
 
 import jnum.Unit;
 import jnum.fits.FitsToolkit;
-import jnum.math.Vector2D;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
@@ -33,11 +32,10 @@ import nom.tam.util.Cursor;
 
 public class SofiaNoddingData extends SofiaData {
     public double dwellTime = Double.NaN;
-    public int cycles = 0;
+    public int cycles = UNKNOWN_INT_VALUE;
     public double settlingTime = Double.NaN;
     public double amplitude = Double.NaN;
     public String beamPosition, pattern, style, coordinateSystem;
-    public Vector2D offset;
     public double angle = Double.NaN;
 
     public SofiaNoddingData() {}
@@ -48,22 +46,14 @@ public class SofiaNoddingData extends SofiaData {
     }
 
     public void parseHeader(SofiaHeader header) {
-        dwellTime = header.getDouble("NODTIME", Double.NaN) * Unit.s;
+        dwellTime = header.getDouble("NODTIME") * Unit.s;
         cycles = header.getInt("NODN");
-        settlingTime = header.getDouble("NODSETL", Double.NaN) * Unit.s;
-        amplitude = header.getDouble("NODAMP", Double.NaN) * Unit.arcsec;
+        settlingTime = header.getDouble("NODSETL") * Unit.s;
+        amplitude = header.getDouble("NODAMP") * Unit.arcsec;
         beamPosition = header.getString("NODBEAM");
         pattern = header.getString("NODPATT");
         style = header.getString("NODSTYLE");
         coordinateSystem = header.getString("NODCRSYS");
-
-        // not in 3.0
-        if(header.containsKey("NODPOSX") || header.containsKey("NODPOSY")) {
-            offset = new Vector2D(header.getDouble("NODPOSX", 0.0), header.getDouble("NODPOSY", 0.0));
-            offset.scale(Unit.deg);
-        }
-        else offset = null;
-
         angle = header.getDouble("NODANGLE", Double.NaN) * Unit.deg;
     }
 
@@ -71,19 +61,16 @@ public class SofiaNoddingData extends SofiaData {
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Nodding Data ------>", false));
-        if(cycles != SofiaHeader.UNKNOWN_INT_VALUE) c.add(new HeaderCard("NODN", cycles, "Number of nod cycles."));
-        if(!Double.isNaN(amplitude)) c.add(new HeaderCard("NODAMP", amplitude / Unit.arcsec, "(arcsec) Nod amplitude on sky."));
-        if(!Double.isNaN(angle)) c.add(new HeaderCard("NODANGLE", angle / Unit.deg, "(deg) Nod angle on sky."));
-        if(!Double.isNaN(dwellTime)) c.add(new HeaderCard("NODTIME", dwellTime / Unit.s, "(s) Total dwell time per nod position."));
-        if(!Double.isNaN(settlingTime)) c.add(new HeaderCard("NODSETL", settlingTime / Unit.s, "(s) Nod settling time."));
-        if(pattern != null) c.add(new HeaderCard("NODPATT", pattern, "Pointing sequence for one nod cycle."));
-        if(style != null) c.add(new HeaderCard("NODSTYLE", style, "Nodding style."));
-        if(coordinateSystem != null) c.add(new HeaderCard("NODCRSYS", coordinateSystem, "Nodding coordinate system."));
-        if(offset != null) {
-            c.add(new HeaderCard("NODPOSX", offset.x() / Unit.deg, "(deg) nod position x in nod coords."));
-            c.add(new HeaderCard("NODPOSY", offset.y() / Unit.deg, "(deg) nod position y in nod coords."));
-        }
-        if(beamPosition != null) c.add(new HeaderCard("NODBEAM", beamPosition, "Nod beam position."));
+        c.add(makeCard("NODN", cycles, "Number of nod cycles."));
+        c.add(makeCard("NODAMP", amplitude / Unit.arcsec, "(arcsec) Nod amplitude on sky."));
+        c.add(makeCard("NODANGLE", angle / Unit.deg, "(deg) Nod angle on sky."));
+        c.add(makeCard("NODTIME", dwellTime / Unit.s, "(s) Total dwell time per nod position."));
+        c.add(makeCard("NODSETL", settlingTime / Unit.s, "(s) Nod settling time."));
+        c.add(makeCard("NODPATT", pattern, "Pointing sequence for one nod cycle."));
+        c.add(makeCard("NODCRSYS", coordinateSystem, "Nodding coordinate system."));
+        c.add(makeCard("NODBEAM", beamPosition, "Nod beam position."));
+        
+        if(style != null) c.add(makeCard("NODSTYLE", style, "Nodding style."));
     }
 
     @Override
@@ -94,8 +81,6 @@ public class SofiaNoddingData extends SofiaData {
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("amp")) return amplitude / Unit.arcsec;
-        else if(name.equals("dx")) return offset.x() / Unit.arcsec;
-        else if(name.equals("dy")) return offset.y() / Unit.arcsec;
         else if(name.equals("angle")) return angle / Unit.deg;
         else if(name.equals("dwell")) return dwellTime / Unit.s;
         else if(name.equals("settle")) return settlingTime / Unit.s;

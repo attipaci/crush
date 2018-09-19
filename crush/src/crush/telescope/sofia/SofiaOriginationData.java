@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -30,8 +30,7 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaOriginationData extends SofiaData {
-    public String organization, observer, creator, operator;
-    public String fileName, observatory;
+    public String organization, observer, creator, operator, fileName;
 
     public SofiaOriginationData() {}
 
@@ -46,19 +45,17 @@ public class SofiaOriginationData extends SofiaData {
         creator = header.getString("CREATOR");
         operator = header.getString("OPERATOR");
         fileName = header.getString("FILENAME");	
-        //fileName = header.getString("OBSERVAT");		// not in 3.0
     }
 
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Origination Data ------>", false));
-        if(organization != null) c.add(new HeaderCard("ORIGIN", organization, "Organization where data originated."));
-        if(observer != null) c.add(new HeaderCard("OBSERVER", observer, "Name(s) of observer(s)."));
-        if(creator != null) c.add(new HeaderCard("CREATOR", creator, "Software / Task that created the raw data."));
-        if(operator != null) c.add(new HeaderCard("OPERATOR", operator, "Name(s) of operator(s)."));
-        if(fileName != null) FitsToolkit.addLongKey(c, "FILENAME", fileName, "Original file name.");
-        if(observatory != null) c.add(new HeaderCard("OBSERVAT", observatory, "Observatory name."));
+        c.add(makeCard("ORIGIN", organization, "Organization where data originated."));
+        c.add(makeCard("OBSERVER", observer, "Name(s) of observer(s)."));
+        c.add(makeCard("CREATOR", creator, "Software / Task that created the raw data."));
+        c.add(makeCard("OPERATOR", operator, "Name(s) of operator(s)."));
+        FitsToolkit.addLongKey(c, "FILENAME", fileName == null ? UNKNOWN_STRING_VALUE : fileName, "Original file name.");
     }
 
     @Override

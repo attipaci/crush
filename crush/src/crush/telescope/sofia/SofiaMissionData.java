@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -31,8 +31,8 @@ import nom.tam.util.Cursor;
 
 
 public class SofiaMissionData extends SofiaData {
-    public String obsPlanID, aircraft, missionID;
-    public int flightLeg = SofiaHeader.UNKNOWN_INT_VALUE;
+    public String obsPlanID, base, missionID;
+    public int flightLeg = UNKNOWN_INT_VALUE;
 
     public SofiaMissionData() {}
 
@@ -44,7 +44,7 @@ public class SofiaMissionData extends SofiaData {
 
     public void parseHeader(SofiaHeader header) {
         obsPlanID = header.getString("PLANID");	// TODO map to project?	
-        aircraft = header.getString("DEPLOY");	
+        base = header.getString("DEPLOY");	
         missionID = header.getString("MISSN-ID");
         flightLeg = header.getInt("FLIGHTLG");
     }
@@ -53,10 +53,10 @@ public class SofiaMissionData extends SofiaData {
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Mission Data ------>", false));
-        if(aircraft != null) c.add(new HeaderCard("DEPLOY", aircraft, "aircraft base of operation."));
+        c.add(makeCard("DEPLOY", base, "aircraft base of operation."));
+        c.add(makeCard("MISSN-ID", missionID, "unique Mission ID in Mission Plan from MCCS."));
+        c.add(makeCard("FLIGHTLG", flightLeg, "Flight leg identifier."));
         if(obsPlanID != null) c.add(new HeaderCard("PLANID", obsPlanID, "observing plan containing all AORs."));
-        if(missionID != null) c.add(new HeaderCard("MISSN-ID", missionID, "unique Mission ID in Mission Plan from MCCS."));
-        if(flightLeg >= 0) c.add(new HeaderCard("FLIGHTLG", flightLeg, "Flight leg identifier."));
     }
 
     @Override

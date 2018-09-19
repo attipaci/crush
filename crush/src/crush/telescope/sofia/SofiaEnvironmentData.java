@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -33,10 +33,10 @@ import nom.tam.util.Cursor;
 
 public class SofiaEnvironmentData extends SofiaData {
     public BracketedValues pwv = new BracketedValues();
-    public double pwvLOS = Double.NaN;
 
     public double ambientT = Double.NaN;
-    public double primaryT1 = Double.NaN, primaryT2 = Double.NaN, primaryT3 = Double.NaN, secondaryT = Double.NaN;
+    public double primaryT1 = Double.NaN, primaryT2 = Double.NaN;
+    public double primaryT3 = Double.NaN, secondaryT = Double.NaN;
 
     public SofiaEnvironmentData() {}
 
@@ -46,28 +46,26 @@ public class SofiaEnvironmentData extends SofiaData {
     }
 
     public void parseHeader(SofiaHeader header) {
-        pwv.start = header.getDouble("WVZ_STA", Double.NaN) * Unit.um;
-        pwv.end = header.getDouble("WVZ_END", Double.NaN) * Unit.um;
-        pwvLOS = header.getDouble("WVTALOS", Double.NaN) * Unit.um;		// not in 3.0
-        ambientT = header.getDouble("TEMP_OUT", Double.NaN) * Unit.K;
-        primaryT1 = header.getDouble("TEMPPRI1", Double.NaN) * Unit.K;
-        primaryT2 = header.getDouble("TEMPPRI2", Double.NaN) * Unit.K;
-        primaryT3 = header.getDouble("TEMPPRI3", Double.NaN) * Unit.K;
-        secondaryT = header.getDouble("TEMPSEC1", Double.NaN) * Unit.K;
+        pwv.start = header.getDouble("WVZ_STA") * Unit.um;
+        pwv.end = header.getDouble("WVZ_END") * Unit.um;
+        ambientT = header.getDouble("TEMP_OUT") * Unit.K;
+        primaryT1 = header.getDouble("TEMPPRI1") * Unit.K;
+        primaryT2 = header.getDouble("TEMPPRI2") * Unit.K;
+        primaryT3 = header.getDouble("TEMPPRI3") * Unit.K;
+        secondaryT = header.getDouble("TEMPSEC1") * Unit.K;
     }
 
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Environment Data ------>", false));
-        if(!Double.isNaN(pwv.start)) c.add(new HeaderCard("WVZ_STA", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
-        if(!Double.isNaN(pwv.end)) c.add(new HeaderCard("WVZ_END", pwv.end / Unit.um, "(um) Precipitable Water Vapor at end."));
-        if(!Double.isNaN(pwvLOS)) c.add(new HeaderCard("WVTALOS", pwvLOS / Unit.um, "(um) PWV at TA line-of-sight."));
-        if(!Double.isNaN(ambientT)) c.add(new HeaderCard("TEMP_OUT", ambientT, "(C) Ambient air temperature."));
-        if(!Double.isNaN(primaryT1)) c.add(new HeaderCard("TEMPPRI1", primaryT1, "(C) Primary mirror temperature #1."));
-        if(!Double.isNaN(primaryT2)) c.add(new HeaderCard("TEMPPRI2", primaryT2, "(C) Primary mirror temperature #2."));
-        if(!Double.isNaN(primaryT3)) c.add(new HeaderCard("TEMPPRI3", primaryT3, "(C) Primary mirror temperature #3."));
-        if(!Double.isNaN(secondaryT)) c.add(new HeaderCard("TEMPSEC1", secondaryT, "(C) Secondary mirror temperature."));
+        c.add(makeCard("WVZ_STA", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
+        c.add(makeCard("WVZ_END", pwv.end / Unit.um, "(um) Precipitable Water Vapor at end."));
+        c.add(makeCard("TEMP_OUT", ambientT, "(C) Ambient air temperature."));
+        c.add(makeCard("TEMPPRI1", primaryT1, "(C) Primary mirror temperature #1."));
+        c.add(makeCard("TEMPPRI2", primaryT2, "(C) Primary mirror temperature #2."));
+        c.add(makeCard("TEMPPRI3", primaryT3, "(C) Primary mirror temperature #3."));
+        c.add(makeCard("TEMPSEC1", secondaryT, "(C) Secondary mirror temperature."));
     }
 
     @Override

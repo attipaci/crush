@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -265,7 +265,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         
         if(isRequestedValid(header)) {
             equatorial = (EquatorialCoordinates) telescope.requestedEquatorial.copy();  
-            calcPrecessions(telescope.epoch);
+            calcPrecessions(equatorial.epoch);
         }
         else {
             warning("No valid OBSRA/OBSDEC in header.");

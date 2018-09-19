@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -27,6 +27,7 @@ package crush.telescope.sofia;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -169,11 +170,10 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     @Override
     public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
         super.editImageHeader(scans, header);	
-
-        int level = hasOption("calibrated") ? 3 : 2;
-        // TODO if multiple mission IDs, then Level 4...
-           
-        SofiaScan<?,?> first = (SofiaScan<?,?>) Scan.getEarliest(scans);
+       
+        scans = new ArrayList<Scan<?,?>>(scans);
+        Collections.sort(scans);
+        SofiaScan<?,?> first = (SofiaScan<?,?>) scans.get(0);
         
         boolean isChopping = first.isChopping;
         boolean isNodding = first.isNodding;
@@ -181,58 +181,69 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         boolean isMapping = first.isMapping;
         boolean isScanning = first.isScanning;
         
-        SofiaAircraftData aircraft = first.aircraft == null ? null : (SofiaAircraftData) first.aircraft.clone();
-        SofiaChopperData chopper = first.chopper == null ? null : (SofiaChopperData) first.chopper.clone();
-        SofiaDitheringData dither = first.dither == null ? null : (SofiaDitheringData) first.dither.clone();
-        SofiaEnvironmentData environment = first.environment == null ? null : (SofiaEnvironmentData) first.environment.clone();
-        SofiaMappingData mapping = first.mapping == null ? null : (SofiaMappingData) first.mapping.clone();
-        SofiaMissionData mission = first.mission == null ? null : (SofiaMissionData) first.mission.clone();
-        SofiaNoddingData nodding = first.nodding == null ? null : (SofiaNoddingData) first.nodding.clone();
-        SofiaObservationData observation = first.observation == null ? null : (SofiaObservationData) first.observation.clone();
-        SofiaOriginationData origin = first.origin == null ? null : (SofiaOriginationData) first.origin.clone();
-        SofiaProcessingData processing = first.processing == null ? null : (SofiaProcessingData) first.processing.clone();
-        SofiaScanningData scanning = first.scanning == null ? null : (SofiaScanningData) first.scanning.clone();
-        SofiaTelescopeData telescope = first.telescope == null ? null : (SofiaTelescopeData) first.telescope.clone();
+        SofiaAircraftData aircraft = (SofiaAircraftData) first.aircraft.clone();
+        SofiaEnvironmentData environment = (SofiaEnvironmentData) first.environment.clone();
+        SofiaMissionData mission = (SofiaMissionData) first.mission.clone();  
+        SofiaObservationData observation = (SofiaObservationData) first.observation.clone();
+        SofiaOriginationData origin = (SofiaOriginationData) first.origin.clone();
+        SofiaTelescopeData telescope = (SofiaTelescopeData) first.telescope.clone();
         
+        SofiaChopperData chopper = first.chopper == null ? null : (SofiaChopperData) first.chopper.clone();
+        SofiaNoddingData nodding = first.nodding == null ? null : (SofiaNoddingData) first.nodding.clone();
+        SofiaDitheringData dither = first.dither == null ? null : (SofiaDitheringData) first.dither.clone();
+        SofiaMappingData mapping = first.mapping == null ? null : (SofiaMappingData) first.mapping.clone();
+        SofiaScanningData scanning = first.scanning == null ? null : (SofiaScanningData) first.scanning.clone();
+        
+        HashSet<String> aors = new HashSet<String>();
+        HashSet<String> missionIDs = new HashSet<String>();
+        HashSet<Double> freqs = new HashSet<Double>();
+         
         for(Scan<?,?> scan : scans) {
-            SofiaScan<?,?> sofiaScan = (SofiaScan<?,?>) scan;
+            SofiaScan<?,?> sofiaScan = (SofiaScan<?,?>) scan; 
+            
+            if(SofiaHeader.isValid(sofiaScan.observation.aorID)) aors.add(sofiaScan.observation.aorID);
+            if(SofiaHeader.isValid(sofiaScan.mission.missionID)) missionIDs.add(sofiaScan.mission.missionID);
+            freqs.add(sofiaScan.instrument.getFrequency());
+            
+            if(scan == first) continue;
+             
             boolean isSameFlight = sofiaScan.getFlightNumber() == first.getFlightNumber();
-                
+      
+            if(array != null) array.merge(sofiaScan.instrument.array, isSameFlight);
+            if(instrumentData != null) instrumentData.merge(sofiaScan.instrument.instrumentData, isSameFlight);
+            if(spectral != null) spectral.merge(sofiaScan.instrument.spectral, isSameFlight);
+            
             isChopping |= sofiaScan.isChopping;
             isNodding |= sofiaScan.isNodding;
             isDithering |= sofiaScan.isDithering;
             isMapping |= sofiaScan.isMapping;
-            isScanning |= sofiaScan.isScanning;
+            isScanning |= sofiaScan.isScanning;   
             
-            if(aircraft != null) aircraft.merge(sofiaScan.aircraft, isSameFlight);
+            aircraft.merge(sofiaScan.aircraft, isSameFlight);
+            environment.merge(sofiaScan.environment, isSameFlight);
+            mission.merge(sofiaScan.mission, isSameFlight);
+            observation.merge(sofiaScan.observation, isSameFlight);
+            telescope.merge(sofiaScan.telescope, isSameFlight);
+             
             if(chopper != null) chopper.merge(sofiaScan.chopper, isSameFlight);
-            if(dither != null) dither.merge(sofiaScan.dither, isSameFlight);
-            if(environment != null) environment.merge(sofiaScan.environment, isSameFlight);
-            if(mapping != null) mapping.merge(sofiaScan.mapping, isSameFlight);
-            if(mission != null) mission.merge(sofiaScan.mission, isSameFlight);
             if(nodding != null) nodding.merge(sofiaScan.nodding, isSameFlight);
-            if(observation != null) observation.merge(sofiaScan.observation, isSameFlight);
-            if(processing != null) processing.merge(sofiaScan.processing, isSameFlight);
-            if(scanning != null) scanning.merge(sofiaScan.scanning, isSameFlight);
-            if(telescope != null) telescope.merge(sofiaScan.telescope, isSameFlight);
+            if(dither != null) dither.merge(sofiaScan.dither, isSameFlight);
+            if(mapping != null) mapping.merge(sofiaScan.mapping, isSameFlight);   
+            if(scanning != null) scanning.merge(sofiaScan.scanning, isSameFlight);  
         }
         
-        editHeader(header);
-        
-        if(observation != null) observation.editHeader(header);
-        if(processing != null) processing.editHeader(header);
-        if(mission != null) mission.editHeader(header);
-        if(origin != null) origin.editHeader(header);
-        if(environment != null) environment.editHeader(header);
-        if(aircraft != null) aircraft.editHeader(header);
-        if(telescope != null) telescope.editHeader(header);  
+        observation.aorID = first.observation.aorID;
+        mission.missionID = first.mission.missionID;
+            
+        observation.editHeader(header);
+        mission.editHeader(header);
+        origin.editHeader(header);
+        environment.editHeader(header);
+        aircraft.editHeader(header);
+        telescope.editHeader(header);  
      
-        if(chopper != null) chopper.editHeader(header);
-        if(nodding != null) nodding.editHeader(header);
-        if(dither != null) dither.editHeader(header);
-        if(mapping != null) mapping.editHeader(header);
-        if(scanning != null) scanning.editHeader(header);
-  
+        editHeader(header);
+
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Observing Mode Switches ------>", false));
@@ -241,23 +252,86 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         c.add(new HeaderCard("DITHER", isDithering, "Was dithering used?"));    
         c.add(new HeaderCard("MAPPING", isMapping, "Was mapping?"));    
         c.add(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
+   
         
+        if(chopper != null) if(isChopping) chopper.editHeader(header);
+        if(nodding != null) if(isNodding) nodding.editHeader(header);
+        if(dither != null) if(isDithering) dither.editHeader(header);
+        if(mapping != null) if(isMapping) mapping.editHeader(header);
+        if(scanning != null) if(isScanning) scanning.editHeader(header);
+  
+        c = FitsToolkit.endOf(header);
+           
         // Add SOFIA processing keys
+        String productType = "UNKNOWN";
+        if(header.containsKey("NAXIS3")) productType = "CUBE";
+        else if(header.containsKey("NAXIS2")) productType = "IMAGE";
+        else if(header.containsKey("NAXIS1")) productType = "1D";
+        
+        
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Data Processing Keys ------>", false));
+        int level = hasOption("calibrated") ? 3 : 2;
+        // TODO if multiple mission IDs, then Level 4...
+    
         c.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
-        c.add(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
+        c.add(new HeaderCard("HEADSTAT", SofiaProcessingData.MODIFIED, "See original header values in the scan HDUs."));
         c.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getVersion(), "Software that produced this file."));
         c.add(new HeaderCard("PIPEVERS", "crush v" + CRUSH.getFullVersion(), "Full software version information.")); 
-        c.add(new HeaderCard("PRODTYPE", "CRUSH-IMAGE", "Type of product produced by the software."));
+        c.add(new HeaderCard("PRODTYPE", "CRUSH-" + productType, "Type of product produced by the software."));
         c.add(new HeaderCard("DATAQUAL", getQualityString(scans), "Lowest quality input scan."));
- 
-        // AOR_ID, ASSC_AOR
-        addAssociatedAORIDs(scans, header);
-  
+        
+        // Remove first scan's info from list of associated properties...
+        if(SofiaHeader.isValid(observation.aorID)) aors.remove(observation.aorID);
+        if(SofiaHeader.isValid(mission.missionID)) missionIDs.remove(mission.missionID);
+        freqs.remove(first.instrument.getFrequency());
+        
+        if(!aors.isEmpty()) FitsToolkit.addLongKey(c, "ASSC_AOR", SofiaProcessingData.toString(aors), "Associated AOR IDs.");
+        if(!missionIDs.isEmpty()) FitsToolkit.addLongKey(c, "ASSC_MSN", SofiaProcessingData.toString(missionIDs), "Associated Mission IDs.");
+        if(!freqs.isEmpty()) FitsToolkit.addLongKey(c, "ASSC_FRQ", SofiaProcessingData.toString(freqs), "Associated frequencies.");
+               
         // Update/add EXPTIME
         double expTime = getTotalExposureTime(scans);
         if(!Double.isNaN(expTime)) header.addValue("EXPTIME", expTime, "(s) Total effective on-source time.");        
     }	
+    
+
+
+    public ArrayList<String> getAORIDs(List<Scan<?,?>> scans) {
+        ArrayList<String> aorIDs = new ArrayList<String>();
+
+        for(int i=0; i<scans.size(); i++) {
+            SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);
+            String ID = scan.observation.aorID;
+            if(!aorIDs.contains(ID)) aorIDs.add(ID);
+        }
+
+        return aorIDs;
+    }
+    
+    public ArrayList<String> getMissionIDs(List<Scan<?,?>> scans) {
+        ArrayList<String> missionIDs = new ArrayList<String>();
+
+        for(int i=0; i<scans.size(); i++) {
+            SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);
+            String ID = scan.mission.missionID;
+            if(!missionIDs.contains(ID)) missionIDs.add(ID);
+        }
+
+        return missionIDs;
+    }
+    
+    public ArrayList<Double> getFrequencies(List<Scan<?,?>> scans) {
+        ArrayList<Double> freqs = new ArrayList<Double>();
+
+        for(int i=0; i<scans.size(); i++) {
+            SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);
+            double f = scan.instrument.getFrequency();
+            if(!freqs.contains(f)) freqs.add(f);
+        }
+
+        return freqs;
+    }
+
 
 
     public double getTotalExposureTime(List<Scan<?,?>> scans) {
@@ -271,22 +345,9 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         return false;
     }
 
-    public void addAssociatedAORIDs(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
-        ArrayList<String> aorIDs = getAORIDs(scans);
-        if(aorIDs.size() < 2) return;
-
-        StringBuffer buf = new StringBuffer();
-        buf.append(aorIDs.get(1));
-
-        for(int i=2; i<aorIDs.size(); i++) {
-            buf.append(", ");
-            buf.append(aorIDs.get(i));
-        }
-
-        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("ASSC_AOR", new String(buf), "Associated AOR IDs."));
-    }
-
+   
+    
+   
     public String getQualityString(List<Scan<?,?>> scans) {
         int overall = ((SofiaScan<?,?>) scans.get(0)).processing.qualityLevel;
         for(int i=scans.size(); --i > 0; ) {
@@ -296,18 +357,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         return SofiaProcessingData.qualityNames[overall];
     }
 
-    public ArrayList<String> getAORIDs(List<Scan<?,?>> scans) {
-        ArrayList<String> aorIDs = new ArrayList<String>();
-
-        for(int i=0; i<scans.size(); i++) {
-            SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);
-            String aorID = scan.observation.aorID;
-            if(!aorIDs.contains(aorID)) aorIDs.add(aorID);
-        }
-
-        return aorIDs;
-    }
-
+   
     public SofiaScan<?,?> getEarliestScan(List<Scan<?,?>> scans) {
         double firstMJD = scans.get(0).getMJD();
         Scan<?,?> earliestScan = scans.get(0);
@@ -355,17 +405,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         SofiaScan<?,?> firstScan = (SofiaScan<?,?>) scans.get(0);
         
         if(scans.size() == 1) if(firstScan.getObservingTime() < 3.3 * Unit.min) setPointing(firstScan);
-      
-        firstScan = (SofiaScan<?,?>) Scan.getEarliest(scans);
-        for(Scan<?,?> scan : scans) {
-            SofiaScan<?,?> sofiaScan = (SofiaScan<?,?>) scan;
-            boolean isSameFlight = sofiaScan.getFlightNumber() == firstScan.getFlightNumber();
-            
-            if(array != null) array.merge(sofiaScan.instrument.array, isSameFlight);
-            if(instrumentData != null) instrumentData.merge(sofiaScan.instrument.instrumentData, isSameFlight);
-            if(spectral != null) spectral.merge(sofiaScan.instrument.spectral, isSameFlight);
-        }
-        
+     
         super.validate(scans);
     }
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -49,21 +49,21 @@ public class SofiaHeader {
     }
     
     public final int getInt(String key) {
-        return getInt(key, UNKNOWN_INT_VALUE);
+        return getInt(key, SofiaData.UNKNOWN_INT_VALUE);
     }
     
     public int getInt(String key, int defaultValue) {
         int value = header.getIntValue(key, defaultValue);
-        return value == UNKNOWN_INT_VALUE ? defaultValue : value;
+        return value == SofiaData.UNKNOWN_INT_VALUE ? defaultValue : value;
     }
     
     public final long getLong(String key) {
-        return getLong(key, UNKNOWN_INT_VALUE);
+        return getLong(key, SofiaData.UNKNOWN_INT_VALUE);
     }
     
     public long getLong(String key, long defaultValue) {
         long value = header.getLongValue(key, defaultValue);
-        return value == UNKNOWN_INT_VALUE ? defaultValue : value;
+        return value == SofiaData.UNKNOWN_INT_VALUE ? defaultValue : value;
     }
     
     public final float getFloat(String key) {
@@ -72,7 +72,7 @@ public class SofiaHeader {
     
     public float getFloat(String key, float defaultValue) {
         float value = header.getFloatValue(key, defaultValue);
-        return value == UNKNOWN_FLOAT_VALUE ? Float.NaN : value;
+        return value == SofiaData.UNKNOWN_FLOAT_VALUE ? Float.NaN : value;
     }
     
     public final double getDouble(String key) {
@@ -81,27 +81,27 @@ public class SofiaHeader {
     
     public double getDouble(String key, double defaultValue) {
         double value = header.getDoubleValue(key, defaultValue);
-        return value == UNKNOWN_DOUBLE_VALUE ? Double.NaN : value;
+        return value == SofiaData.UNKNOWN_DOUBLE_VALUE ? Double.NaN : value;
     }
     
     public static double getHeaderValue(double value) {
-        if(Double.isNaN(value)) return UNKNOWN_DOUBLE_VALUE;
+        if(Double.isNaN(value)) return SofiaData.UNKNOWN_DOUBLE_VALUE;
         return value;
     }
     
     public static float getHeaderValue(float value) {
-        if(Float.isNaN(value)) return UNKNOWN_FLOAT_VALUE;
+        if(Float.isNaN(value)) return SofiaData.UNKNOWN_FLOAT_VALUE;
         return value;
     }
     
     public String getString(String key, String defaultValue) {
         if(!header.containsKey(key)) return defaultValue;
         String record = header.findCard(key).getValue();
-        return record.equalsIgnoreCase(UNKNOWN_STRING_VALUE) ? defaultValue : record;
+        return record.equalsIgnoreCase(SofiaData.UNKNOWN_STRING_VALUE) ? defaultValue : record;
     }
     
     public String getString(String key) {
-        return getString(key, UNKNOWN_STRING_VALUE);
+        return getString(key, null);
     }
     
     public double getHMSTime(String key) {
@@ -116,24 +116,21 @@ public class SofiaHeader {
     
     public static boolean isValid(String headerValue) {
         if(headerValue == null) return false;
-        return headerValue.length() > 0 && !headerValue.equalsIgnoreCase(UNKNOWN_STRING_VALUE);
+        return headerValue.length() > 0 && !headerValue.equalsIgnoreCase(SofiaData.UNKNOWN_STRING_VALUE);
     }
     
     public static boolean isValid(int headerValue) {
-        return headerValue != UNKNOWN_INT_VALUE;
+        return headerValue != SofiaData.UNKNOWN_INT_VALUE;
     }
     
     public static boolean isValid(float headerValue) {
-        return headerValue != UNKNOWN_FLOAT_VALUE && !Float.isNaN(headerValue) && !Float.isInfinite(headerValue);
+        return headerValue != SofiaData.UNKNOWN_FLOAT_VALUE && !Float.isNaN(headerValue) && !Float.isInfinite(headerValue);
     }
     
     public static boolean isValid(double headerValue) {
-        return headerValue != UNKNOWN_FLOAT_VALUE && !Double.isNaN(headerValue) && !Double.isInfinite(headerValue);
+        return headerValue != SofiaData.UNKNOWN_FLOAT_VALUE && !Double.isNaN(headerValue) && !Double.isInfinite(headerValue);
     }
     
-    public final static int UNKNOWN_INT_VALUE = -9999;
-    public final static float UNKNOWN_FLOAT_VALUE = -9999.0F;
-    public final static double UNKNOWN_DOUBLE_VALUE = -9999.0;
-    public final static String UNKNOWN_STRING_VALUE = "UNKNOWN";
+
     
 }

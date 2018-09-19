@@ -118,7 +118,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	@Override
 	public int compareTo(Scan<?, ?> other) {
-	    return getID().compareTo(other.getID());
+	    return Double.compare(getMJD(), other.getMJD());
 	}
 	
 	public void validate() {	
@@ -1143,4 +1143,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
         return first;
     }
     
+    public static Scan<?,?> getLatest(Collection<Scan<?,?>> scans) {
+        double lastMJD = Double.NEGATIVE_INFINITY;
+        Scan<?,?> last = null;
+        
+        for(Scan<?,?> scan : scans) if(scan != null) if(scan.getMJD() > lastMJD) {
+            last = scan;
+            lastMJD = scan.getMJD();
+        }
+        return last;
+    }
+  
 }

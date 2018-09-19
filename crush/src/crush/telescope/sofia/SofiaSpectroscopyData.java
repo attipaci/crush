@@ -63,17 +63,17 @@ public class SofiaSpectroscopyData extends SofiaData implements Copiable<SofiaSp
         frontEnd = header.getString("FRONTEND");
         backEnd = header.getString("BACKEND");
                
-        bandwidth = header.getDouble("BANDWID", Double.NaN) * Unit.MHz;
-        frequencyResolution = header.getDouble("FREQRES", Double.NaN) * Unit.MHz;
-        Tsys = header.getDouble("TSYS", Double.NaN) * Unit.K;
+        bandwidth = header.getDouble("BANDWID") * Unit.MHz;
+        frequencyResolution = header.getDouble("FREQRES") * Unit.MHz;
+        Tsys = header.getDouble("TSYS") * Unit.K;
         
-        observingFrequency = header.getDouble("OBSFREQ", Double.NaN) * Unit.MHz;
-        imageFrequency = header.getDouble("IMAGFREQ", Double.NaN) * Unit.MHz;
-        restFrequency = header.getDouble("RESTFREQ", Double.NaN) * Unit.MHz;
+        observingFrequency = header.getDouble("OBSFREQ") * Unit.MHz;
+        imageFrequency = header.getDouble("IMAGFREQ") * Unit.MHz;
+        restFrequency = header.getDouble("RESTFREQ") * Unit.MHz;
         
         velocityType = header.getString("VELDEF");
-        frameVelocity = header.getDouble("VFRAME", Double.NaN) * Unit.km / Unit.s;
-        sourceVelocity = header.getDouble("RVSYS", Double.NaN) * Unit.km / Unit.s;
+        frameVelocity = header.getDouble("VFRAME") * Unit.km / Unit.s;
+        sourceVelocity = header.getDouble("RVSYS") * Unit.km / Unit.s;
     }
 
     @Override
@@ -82,21 +82,21 @@ public class SofiaSpectroscopyData extends SofiaData implements Copiable<SofiaSp
 
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Spectroscopy Data ------>", false));
         
-        if(frontEnd != null) c.add(new HeaderCard("FRONTEND", frontEnd, "Frontend device name."));
-        if(backEnd != null) c.add(new HeaderCard("BACKEND", backEnd, "Backend device name."));
+        c.add(makeCard("FRONTEND", frontEnd, "Frontend device name."));
+        c.add(makeCard("BACKEND", backEnd, "Backend device name."));
         
-        if(!Double.isNaN(bandwidth)) c.add(new HeaderCard("BANDWID", bandwidth / Unit.MHz, "(MHz) Total spectral bandwidth."));
-        if(!Double.isNaN(frequencyResolution)) c.add(new HeaderCard("FREQRES", frequencyResolution / Unit.MHz, "(MHz) Spectral frequency resolution."));
-        if(!Double.isNaN(Tsys)) c.add(new HeaderCard("TSYS", Tsys / Unit.K, "(K) System temperature."));
+        c.add(makeCard("BANDWID", bandwidth / Unit.MHz, "(MHz) Total spectral bandwidth."));
+        c.add(makeCard("FREQRES", frequencyResolution / Unit.MHz, "(MHz) Spectral frequency resolution."));
+        c.add(makeCard("TSYS", Tsys / Unit.K, "(K) System temperature."));
         
-        if(!Double.isNaN(observingFrequency)) c.add(new HeaderCard("OBSFREQ", observingFrequency / Unit.MHz, "(MHz) Observing frequency at reference channel."));
-        if(!Double.isNaN(imageFrequency)) c.add(new HeaderCard("IMAGFREQ", imageFrequency / Unit.MHz, "(MHz) Image frequency at reference channel."));
-        if(!Double.isNaN(restFrequency)) c.add(new HeaderCard("RESTFREQ", imageFrequency / Unit.MHz, "(MHz) Rest frequency at reference channel."));
+        c.add(makeCard("OBSFREQ", observingFrequency / Unit.MHz, "(MHz) Observing frequency at reference channel."));
+        c.add(makeCard("IMAGFREQ", imageFrequency / Unit.MHz, "(MHz) Image frequency at reference channel."));
+        c.add(makeCard("RESTFREQ", imageFrequency / Unit.MHz, "(MHz) Rest frequency at reference channel."));
         
-        if(velocityType != null) c.add(new HeaderCard("VELDEF", velocityType, "Velocity system definition."));
+        c.add(makeCard("VELDEF", velocityType, "Velocity system definition."));
 
-        if(!Double.isNaN(frameVelocity)) c.add(new HeaderCard("VFRAME", frameVelocity / (Unit.km / Unit.s), "(km/s) Radial velocity of reference frame wrt observer."));
-        if(!Double.isNaN(sourceVelocity)) c.add(new HeaderCard("RVSYS", sourceVelocity / (Unit.km / Unit.s), "(km/s) Source radial velocity wrt observer."));
+        c.add(makeCard("VFRAME", frameVelocity / (Unit.km / Unit.s), "(km/s) Radial velocity of reference frame wrt observer."));
+        c.add(makeCard("RVSYS", sourceVelocity / (Unit.km / Unit.s), "(km/s) Source radial velocity wrt observer."));
     }
     
     public double getRedshift() {

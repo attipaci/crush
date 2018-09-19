@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -23,6 +23,11 @@
 
 package crush.telescope.sofia;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import jnum.Util;
 import jnum.fits.FitsToolkit;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
@@ -30,8 +35,11 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaProcessingData extends SofiaData {
+    Set<String> associatedAORs, associatedMissionIDs;
+    Set<Double> associatedFrequencies;
     String processLevel;
-    String headerStatus, softwareName, softwareFullVersion, productType, revision, quality; 
+    String headerStatus;
+    String softwareName, softwareFullVersion, productType, revision, quality; 
     int nSpectra = -1;
     int qualityLevel = defaultQuality;
 
@@ -45,13 +53,38 @@ public class SofiaProcessingData extends SofiaData {
     public void parseHeader(SofiaHeader header) {
         processLevel = header.getString("PROCSTAT");
         headerStatus = header.getString("HEADSTAT");
+        quality = header.getString("DATAQUAL");
+        nSpectra = header.getInt("N_SPEC", -1);
         softwareName = header.getString("PIPELINE");
         softwareFullVersion = header.getString("PIPEVERS");
         productType = header.getString("PRODTYPE");
         revision = header.getString("FILEREV");
-        quality = header.getString("DATAQUAL");				// new in 3.0
-        nSpectra = header.getInt("N_SPEC", -1);				// new in 3.0
-
+        
+        String list = header.getString("ASSC_AOR");
+        if(list == null) associatedAORs = null;
+        else {
+            associatedAORs = new HashSet<String>();
+            StringTokenizer tokens = new StringTokenizer(list, ",");
+            while(tokens.hasMoreTokens()) associatedAORs.add(tokens.nextToken().trim());
+        }
+        
+        list = header.getString("ASSC_MSN");
+        if(list == null) associatedMissionIDs = null;
+        else {
+            associatedMissionIDs = new HashSet<String>();
+            StringTokenizer tokens = new StringTokenizer(list, ",");
+            while(tokens.hasMoreTokens()) associatedMissionIDs.add(tokens.nextToken().trim());
+        }
+        
+        list = header.getString("ASSC_FRQ");
+        if(list == null) associatedFrequencies = null;
+        else {
+            associatedFrequencies = new HashSet<Double>();
+            StringTokenizer tokens = new StringTokenizer(list, " \t,");
+            while(tokens.hasMoreTokens()) associatedFrequencies.add(Double.parseDouble(tokens.nextToken()));
+        }
+            
+        
         qualityLevel = defaultQuality;
         if(quality != null) for(int i=qualityNames.length; --i >= 0; ) if(quality.equalsIgnoreCase(qualityNames[i])) {
             qualityLevel = i;
@@ -70,14 +103,23 @@ public class SofiaProcessingData extends SofiaData {
             catch(NumberFormatException e) {}
         }
 
-        if(processLevel != null) c.add(new HeaderCard("PROCSTAT", processLevel, getComment(level)));
-        if(headerStatus != null) c.add(new HeaderCard("HEADSTAT", headerStatus, "Status of header key/value pairs."));
-        if(softwareName != null) c.add(new HeaderCard("PIPELINE", softwareName, "Software that produced scan file."));
-        if(softwareFullVersion != null) c.add(new HeaderCard("PIPEVERS", softwareFullVersion, "Full version info of software."));
-        if(productType != null) c.add(new HeaderCard("PRODTYPE", productType, "Prodcu type produced by software."));
-        if(revision != null) c.add(new HeaderCard("FILEREV", revision, "File revision identifier."));
-        if(quality != null) c.add(new HeaderCard("DATAQUAL", quality, "Data quality."));
-        if(nSpectra >= 0) c.add(new HeaderCard("N_SPEC", nSpectra, "Number of spectra included."));
+        if(processLevel != null) c.add(makeCard("PROCSTAT", processLevel, getComment(level)));
+        if(headerStatus != null) c.add(makeCard("HEADSTAT", headerStatus, "Status of header key/value pairs."));
+        if(softwareName != null) c.add(makeCard("PIPELINE", softwareName, "Software that produced scan file."));
+        if(softwareFullVersion != null) c.add(makeCard("PIPEVERS", softwareFullVersion, "Full version info of software."));
+        if(productType != null) c.add(makeCard("PRODTYPE", productType, "Prodcu type produced by software."));
+        if(revision != null) c.add(makeCard("FILEREV", revision, "File revision identifier."));
+        if(quality != null) c.add(makeCard("DATAQUAL", quality, "Data quality."));
+        if(nSpectra >= 0) c.add(makeCard("N_SPEC", nSpectra, "Number of spectra included."));
+        
+        if(associatedAORs != null) if(!associatedAORs.isEmpty())
+            FitsToolkit.addLongKey(c, "ASSC_AOR", toString(associatedAORs), "Associated AOR IDs.");
+        
+        if(associatedMissionIDs != null) if(!associatedMissionIDs.isEmpty()) 
+            FitsToolkit.addLongKey(c, "ASSC_MSN", toString(associatedMissionIDs), "Associated Mission IDs.");
+        
+        if(associatedFrequencies != null) if(!associatedFrequencies.isEmpty())
+            FitsToolkit.addLongKey(c, "ASSC_FRQ", toString(associatedFrequencies), "Associated Frequencies.");
     }
 
     @Override
@@ -97,6 +139,21 @@ public class SofiaProcessingData extends SofiaData {
         return super.getTableEntry(name);
     }
 
+    public void addAssociatedAOR(String id) {
+        if(associatedAORs == null) associatedAORs = new HashSet<String>();
+        associatedAORs.add(id);
+    }
+    
+    public void addAssociatedMissionID(String id) {
+        if(associatedMissionIDs == null) associatedMissionIDs = new HashSet<String>();
+        associatedMissionIDs.add(id);
+    }
+    
+    public void addAssociatedFrequency(double value) {
+        if(associatedFrequencies == null) associatedFrequencies = new HashSet<Double>();
+        associatedFrequencies.add(value);
+    }
+    
     public static String getComment(int level) {
         if(level < 0 || level > 4) return "Invalid processing level: " + level;
         return processLevelComment[level];
@@ -111,6 +168,58 @@ public class SofiaProcessingData extends SofiaData {
             "Higher order product (e.g. composites)."
     };
 
-    public static String qualityNames[] = { "FAIL", "PROBLEM", "TEST", "USABLE", "NOMINAL" };
+    
+    public static String toString(Set<?> set) {
+        if(set.isEmpty()) return null;
+        
+        Object[] array = set.toArray();
+          
+        StringBuffer buf = new StringBuffer();
+        buf.append(array[0]);
+
+        for(int i=1; i<array.length; i++) if(array[i] == null) {
+            Object o = array[i];
+           
+            if(o instanceof Short) if((Short) o == UNKNOWN_INT_VALUE) continue;
+            else if(o instanceof Integer) if((Integer) o == UNKNOWN_INT_VALUE) continue;
+            else if(o instanceof Long) if((Long) o == UNKNOWN_INT_VALUE) continue;
+            else if(o instanceof Float) if((Float) o == UNKNOWN_FLOAT_VALUE) continue;
+            else if(o instanceof Double) if((Double) o == UNKNOWN_DOUBLE_VALUE) continue;
+            else if(o instanceof String) if(Util.equals(o, UNKNOWN_STRING_VALUE)) continue;
+            
+            buf.append(", ");
+            buf.append(o);
+        }
+
+        return new String(buf);
+    }
+    
+    
+    @Override
+    public void merge(SofiaData other, boolean isSameFlight) {
+        if(!(other instanceof SofiaProcessingData)) return;
+        SofiaProcessingData p = (SofiaProcessingData) other;
+        int level = Math.min(qualityLevel, p.qualityLevel);
+          
+        super.merge(other, isSameFlight);
+        
+        qualityLevel = level;
+        quality = qualityNames[qualityLevel];
+        
+        headerStatus = MODIFIED;
+    }
+    
+ 
+    public static String FAIL = "FAIL";
+    public static String PROBLEM = "PROBLEM";
+    public static String TEST = "TEST";
+    public static String USABLE = "USABLE";
+    public static String NOMINAL = "NOMINAL";
+    
+    public static String ORIGINAL = "ORIGINAL";
+    public static String MODIFIED = "MODIFIED";
+    public static String CORRECTED = "CORRECTED";
+    
+    public static String qualityNames[] = { FAIL, PROBLEM, TEST, USABLE, NOMINAL };
     public static int defaultQuality = qualityNames.length - 1;
 }

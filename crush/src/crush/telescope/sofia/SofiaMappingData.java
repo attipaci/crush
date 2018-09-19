@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -38,8 +38,7 @@ import nom.tam.util.Cursor;
 
 public class SofiaMappingData extends SofiaData {
     public String coordinateSystem;
-    public String pattern;
-    public int sizeX = 0, sizeY = 0;
+    public int sizeX = UNKNOWN_INT_VALUE, sizeY = UNKNOWN_INT_VALUE;
     public Vector2D step = new Vector2D(Double.NaN, Double.NaN);
 
     public SofiaMappingData() {}
@@ -52,7 +51,6 @@ public class SofiaMappingData extends SofiaData {
 
     public void parseHeader(SofiaHeader header) {
         coordinateSystem = header.getString("MAPCRSYS");
-        pattern = header.getString("MAPPATT");
         sizeX = header.getInt("MAPNXPOS");
         sizeY = header.getInt("MAPNYPOS");
         step.setX(header.getDouble("MAPINTX", Double.NaN) * Unit.arcmin);
@@ -63,12 +61,14 @@ public class SofiaMappingData extends SofiaData {
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Mapping Data ------>", false));
-        if(coordinateSystem != null) c.add(new HeaderCard("MAPCRSYS", coordinateSystem, "Mapping coordinate system."));
-        if(pattern != null) c.add(new HeaderCard("MAPPATT", pattern, "Mapping pattern."));
-        if(sizeX != SofiaHeader.UNKNOWN_INT_VALUE) c.add(new HeaderCard("MAPNXPOS", sizeX, "Number of map positions in X"));
-        if(sizeY != SofiaHeader.UNKNOWN_INT_VALUE) c.add(new HeaderCard("MAPNYPOS", sizeY, "Number of map positions in Y"));
-        if(Double.isNaN(step.x())) c.add(new HeaderCard("MAPINTX", step.x() / Unit.arcmin, "(arcmin) Map step interval in X"));
-        if(Double.isNaN(step.y())) c.add(new HeaderCard("MAPINTY", step.y() / Unit.arcmin, "(arcmin) Map step interval in Y"));
+        
+        c.add(makeCard("MAPCRSYS", coordinateSystem, "Mapping coordinate system."));
+        c.add(makeCard("MAPNXPOS", sizeX, "Number of map positions in X"));
+        c.add(makeCard("MAPNYPOS", sizeY, "Number of map positions in Y"));
+        
+        Vector2D v = step == null ? new Vector2D(Double.NaN, Double.NaN) : step;
+        c.add(makeCard("MAPINTX", v.x() / Unit.arcmin, "(arcmin) Map step interval in X"));
+        c.add(makeCard("MAPINTY", v.y() / Unit.arcmin, "(arcmin) Map step interval in Y"));
     }
 
     public Class<? extends SphericalCoordinates> getBasis() {
@@ -91,7 +91,6 @@ public class SofiaMappingData extends SofiaData {
         else if(name.equals("nx")) return sizeX;
         else if(name.equals("ny")) return sizeY;
         else if(name.equals("sys")) return coordinateSystem;
-        else if(name.equals("pattern")) return pattern;
         
         return super.getTableEntry(name);
     }    

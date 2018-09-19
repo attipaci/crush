@@ -26,6 +26,7 @@ package crush.telescope.sofia;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Collection;
 
 import crush.CRUSH;
 import jnum.Util;
@@ -60,11 +61,15 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
     }
 
     public HeaderCard makeCard(String key, float value, String comment) throws HeaderCardException {
-        return new HeaderCard(key, Float.isNaN(value) ? SofiaHeader.UNKNOWN_FLOAT_VALUE : value, comment);
+        return new HeaderCard(key, Float.isNaN(value) ? UNKNOWN_FLOAT_VALUE : value, comment);
     }
 
     public HeaderCard makeCard(String key, double value, String comment) throws HeaderCardException {
-        return new HeaderCard(key, Double.isNaN(value) ? SofiaHeader.UNKNOWN_DOUBLE_VALUE : value, comment);
+        return new HeaderCard(key, Double.isNaN(value) ? UNKNOWN_DOUBLE_VALUE : value, comment);
+    }
+    
+    public HeaderCard makeCard(String key, String value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, value == null ? UNKNOWN_STRING_VALUE : value, comment);
     }
 
     public abstract String getLogID();
@@ -98,11 +103,16 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         }      
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private Object merge(Object former, Object latter, boolean isSameFlight) {
+        if(former == null) return null;
+        if(latter == null) return null;
+        
         if(!former.getClass().isAssignableFrom(latter.getClass())) throw new IllegalArgumentException("Cannot merge two different types: "
                 + former.getClass().getSimpleName() + " / " + latter.getClass().getSimpleName());
              
-        if(former instanceof BracketedValues) {
+           
+        else if(former instanceof BracketedValues) {
             if(!isSameFlight) return null;
             ((BracketedValues) former).end = ((BracketedValues) latter).end;
         }
@@ -111,6 +121,9 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         }
         else if(former instanceof Range2D) {
             ((Range2D) former).include((Range2D) latter);
+        }
+        else if(former instanceof Collection) {
+            ((Collection) former).addAll((Collection) latter);
         }
         else if(former instanceof Object[]) {
             Object[] A = (Object[]) former;
@@ -125,19 +138,19 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
             short[] A = (short[]) former;
             short[] B = (short[]) latter;
             if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = (short) SofiaHeader.UNKNOWN_INT_VALUE;
+            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = (short) UNKNOWN_INT_VALUE;
         }
         else if(former instanceof int[]) {
             int[] A = (int[]) former;
             int[] B = (int[]) latter;
             if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = SofiaHeader.UNKNOWN_INT_VALUE;
+            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = UNKNOWN_INT_VALUE;
         }
         else if(former instanceof long[]) {
             long[] A = (long[]) former;
             long[] B = (long[]) latter;
             if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = SofiaHeader.UNKNOWN_INT_VALUE;
+            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = UNKNOWN_INT_VALUE;
         }
         else if(former instanceof float[]) {
             float[] A = (float[]) former;
@@ -151,8 +164,24 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
             if(A.length != B.length) return null;
             for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = Double.NaN;
         }
-        else if(!Util.equals(former, latter)) return null;
+        else if(!Util.equals(former, latter)) {
+            if(former instanceof Number) {
+                if(former instanceof Double) return Double.NaN;
+                if(former instanceof Float) return Float.NaN;
+                if(former instanceof Long) return UNKNOWN_INT_VALUE;
+                if(former instanceof Integer) return UNKNOWN_INT_VALUE;
+                if(former instanceof Short) return (short) UNKNOWN_INT_VALUE;
+                return former;
+            }
+            if(former instanceof Boolean) return ((Boolean) former) | ((Boolean) latter);
+            return null;
+        }
         
         return former;
     }
+    
+    public final static int UNKNOWN_INT_VALUE = -9999;
+    public final static float UNKNOWN_FLOAT_VALUE = -9999.0F;
+    public final static double UNKNOWN_DOUBLE_VALUE = -9999.0;
+    public final static String UNKNOWN_STRING_VALUE = "UNKNOWN";
 }

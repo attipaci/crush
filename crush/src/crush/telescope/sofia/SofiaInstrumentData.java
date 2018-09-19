@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -33,11 +33,12 @@ import nom.tam.util.Cursor;
 
 public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInstrumentData> {
 	public String dataType;
-	public String instrumentName, instrumentConfig, instrumentMode, mccsMode, hardwareVersion, softwareVersion;
+	public String instrumentName, instrumentConfig, instrumentMode;
+	public String mccsMode;
 	public double exposureTime = Double.NaN;
-	public String spectralElement1, spectralElement2, slitID;
+	public String spectralElement1, spectralElement2;
+	public String slitID;
 	public double wavelength = Double.NaN;
-	public double bandwidthMicrons = Double.NaN;
 	public double spectralResolution = Double.NaN;
 	public String detectorChannel;
 	public double totalIntegrationTime = Double.NaN;
@@ -60,17 +61,14 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
 		instrumentConfig = header.getString("INSTCFG");
 		instrumentMode =header.getString("INSTMODE");
 		mccsMode = header.getString("MCCSMODE");
-		hardwareVersion = header.getString("INSTHWV");							// not in 3.0
-		softwareVersion = header.getString("INSTSWV");							// not in 3.0
-		exposureTime = header.getDouble("EXPTIME", Double.NaN) * Unit.s;
+		exposureTime = header.getDouble("EXPTIME") * Unit.s;
 		spectralElement1 = header.getString("SPECTEL1");
 		spectralElement2 = header.getString("SPECTEL2");
 		slitID = header.getString("SLIT");
-		wavelength = header.getDouble("WAVECENT", Double.NaN) * Unit.um;
-		bandwidthMicrons = header.getDouble("BANDWDTH", Double.NaN);
-		spectralResolution = header.getDouble("RESOLUN", Double.NaN);
-		detectorChannel = header.getString("DETCHAN");							// new in 3.0
-		totalIntegrationTime = header.getDouble("TOTINT", Double.NaN) * Unit.s;	// new in 3.0
+		wavelength = header.getDouble("WAVECENT") * Unit.um;
+		spectralResolution = header.getDouble("RESOLUN");
+		detectorChannel = header.getString("DETCHAN");
+		totalIntegrationTime = header.getDouble("TOTINT") * Unit.s;
 
 	}
 
@@ -78,29 +76,26 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
 	public void editHeader(Header header) throws HeaderCardException {
 	    Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
 		c.add(new HeaderCard("COMMENT", "<------ SOFIA Instrument Data ------>", false));
-		if(instrumentName != null) c.add(new HeaderCard("INSTRUME", instrumentName, "Name of SOFIA instrument."));
-		if(dataType != null) c.add(new HeaderCard("DATATYPE", dataType, "Data type."));
-		if(instrumentConfig != null) c.add(new HeaderCard("INSTCFG", instrumentConfig, "Instrument configuration."));
-		if(instrumentMode != null) c.add(new HeaderCard("INSTMODE", instrumentMode, "Instrument observing mode."));
-		if(mccsMode != null) c.add(new HeaderCard("MCCSMODE", instrumentMode, "MCCS mode."));
-		if(hardwareVersion != null) c.add(new HeaderCard("INSTHWV", hardwareVersion, "Instrument hardware version."));
-		if(softwareVersion != null) c.add(new HeaderCard("INSTSWV", softwareVersion, "Instrument software version."));
-		if(!Double.isNaN(exposureTime)) c.add(new HeaderCard("EXPTIME", exposureTime / Unit.s, "(s) total effective on-source time."));
-		if(spectralElement1 != null) c.add(new HeaderCard("SPECTEL1", spectralElement1, "First spectral element."));
-		if(spectralElement2 != null) c.add(new HeaderCard("SPECTEL2", spectralElement2, "Second spectral element."));
-		if(slitID != null) c.add(new HeaderCard("SLIT", slitID, "Slit identifier."));
-		if(!Double.isNaN(wavelength)) c.add(new HeaderCard("WAVECENT", wavelength / Unit.um, "(um) wavelength at passband center."));
-		if(!Double.isNaN(bandwidthMicrons)) c.add(new HeaderCard("BANDWDTH", bandwidthMicrons, "(um) total bandwith."));
-		if(!Double.isNaN(spectralResolution)) c.add(new HeaderCard("RESOLUN", spectralResolution, "Spectral resolution."));
-		if(detectorChannel != null) c.add(new HeaderCard("DETCHAN", detectorChannel, "Detector channel ID."));
-		if(!Double.isNaN(totalIntegrationTime)) c.add(new HeaderCard("TOTINT", totalIntegrationTime / Unit.s, "(s) Total integration time."));
+		c.add(makeCard("INSTRUME", instrumentName, "Name of SOFIA instrument."));
+		c.add(makeCard("DATATYPE", dataType, "Data type."));
+		c.add(makeCard("INSTCFG", instrumentConfig, "Instrument configuration."));
+		c.add(makeCard("INSTMODE", instrumentMode, "Instrument observing mode."));
+		c.add(makeCard("MCCSMODE", instrumentMode, "MCCS mode."));
+		c.add(makeCard("EXPTIME", exposureTime / Unit.s, "(s) total effective on-source time."));
+		c.add(makeCard("SPECTEL1", spectralElement1, "First spectral element."));
+		c.add(makeCard("SPECTEL2", spectralElement2, "Second spectral element."));
+
+		if(!Double.isNaN(wavelength)) c.add(makeCard("WAVECENT", wavelength / Unit.um, "(um) wavelength at passband center."));
+		if(slitID != null) c.add(makeCard("SLIT", slitID, "Slit identifier."));
+		if(!Double.isNaN(spectralResolution)) c.add(makeCard("RESOLUN", spectralResolution, "Spectral resolution."));
+        if(detectorChannel != null) c.add(makeCard("DETCHAN", detectorChannel, "Detector channel ID."));
+        if(!Double.isNaN(totalIntegrationTime)) c.add(makeCard("TOTINT", totalIntegrationTime / Unit.s, "(s) Total integration time."));
 	}
 	
 	   
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("wave")) return wavelength / Unit.um;
-        else if(name.equals("bw")) return bandwidthMicrons;
         else if(name.equals("exp")) return exposureTime / Unit.s;
         else if(name.equals("inttime")) return totalIntegrationTime / Unit.s;
         else if(name.equals("datatype")) return dataType;
@@ -109,8 +104,6 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
         else if(name.equals("slit")) return slitID;
         else if(name.equals("spec1")) return spectralElement1;
         else if(name.equals("spec2")) return spectralElement2;
-        else if(name.equals("hwver")) return hardwareVersion;
-        else if(name.equals("swver")) return softwareVersion; 
         
         return super.getTableEntry(name);
     }

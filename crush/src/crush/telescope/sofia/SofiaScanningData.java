@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -33,6 +33,7 @@ import nom.tam.util.Cursor;
 public class SofiaScanningData extends SofiaData {
     public BracketedValues RA = new BracketedValues(), DEC = new BracketedValues();
     public double speed = Double.NaN, angle = Double.NaN;
+    public String scanType;
 
     public SofiaScanningData() {}
 
@@ -49,18 +50,20 @@ public class SofiaScanningData extends SofiaData {
         DEC.end = header.getDMSAngle("SCNDECF");
         speed = header.getDouble("SCNRATE", Double.NaN) * Unit.arcsec / Unit.s;
         angle = header.getDouble("SCNDIR", Double.NaN) * Unit.deg;
+        scanType = header.getString("SCANTYPE");    // New in Rev. G.
     }
 
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Scanning Data ------>", false));
-        if(!Double.isNaN(RA.start)) c.add(new HeaderCard("SCNRA0", RA.start / Unit.hourAngle, "(hour) Initial scan RA."));
-        if(!Double.isNaN(DEC.start)) c.add(new HeaderCard("SCNDEC0", DEC.start / Unit.deg, "(deg) Initial scan DEC."));
-        if(!Double.isNaN(RA.end)) c.add(new HeaderCard("SCNRAF", RA.start / Unit.hourAngle, "(hour) Final scan RA."));
-        if(!Double.isNaN(DEC.end)) c.add(new HeaderCard("SCNDECF", DEC.start / Unit.deg, "Final scan DEC."));
-        if(!Double.isNaN(speed)) c.add(new HeaderCard("SCNRATE", speed / (Unit.arcsec / Unit.s), "(arcsec/s) Commanded slew rate on sky."));
-        if(!Double.isNaN(angle)) c.add(new HeaderCard("SCNDIR", angle / Unit.deg, "(deg) Scan direction on sky."));	
+        c.add(makeCard("SCNRA0", RA.start / Unit.hourAngle, "(hour) Initial scan RA."));
+        c.add(makeCard("SCNDEC0", DEC.start / Unit.deg, "(deg) Initial scan DEC."));
+        c.add(makeCard("SCNRAF", RA.start / Unit.hourAngle, "(hour) Final scan RA."));
+        c.add(makeCard("SCNDECF", DEC.start / Unit.deg, "Final scan DEC."));
+        c.add(makeCard("SCNRATE", speed / (Unit.arcsec / Unit.s), "(arcsec/s) Commanded slew rate on sky."));
+        c.add(makeCard("SCNDIR", angle / Unit.deg, "(deg) Scan direction on sky."));	
+        c.add(makeCard("SCANTYPE", scanType, "Scan type.")); 
     }
 
     @Override
@@ -74,7 +77,7 @@ public class SofiaScanningData extends SofiaData {
         else if(name.equals("ra")) return RA.midPoint() / Unit.hourAngle;
         else if(name.equals("dec")) return DEC.midPoint() / Unit.deg;
         else if(name.equals("speed")) return speed / (Unit.arcsec / Unit.s);
-      
+        else if(name.equals("type")) return scanType;
         return super.getTableEntry(name);
     }
 

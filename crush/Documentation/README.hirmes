@@ -601,8 +601,6 @@ for expert users only.
     ac.lond             (deg) Geodetic longitude
     ac.trkangle         (rad) Tracking angle
 
-    array.angle
-    array.ave
     array.sibsx         
     array.sibsy
 
@@ -610,10 +608,7 @@ for expert users only.
     chop.angle		
     chop.flag           'C' if chopping or '-' if not
     chop.frequency
-    chop.func
-    chop.mode
     chop.profile
-    chop.src
     chop.sys
     chop.tilt
     chop.tip
@@ -630,17 +625,14 @@ for expert users only.
     gyro.max            (arcsec) Maximum gyro drift during scan/
     gyro.rms            (arcsec) RMS gyro drift during scan.
 
-    inst.bw             Instrument bandwidth
     inst.cfg            Instrument configuration
     inst.datatype
     inst.exp
-    inst.hwver          Hardware version
     inst.inttime
     inst.mode		
     inst.slit
     inst.spec1          First spectral element (from SPECTEL1)
     inst.spec2          Second spectral element (from SPECTEL2)
-    inst.swver          Software version
     inst.wave
 
     mssn.id             SOFIA Mission ID.
@@ -650,8 +642,6 @@ for expert users only.
     nod.amp             (arcsec) Nod amplitude
     nod.angle
     nod.dwell
-    nod.dx
-    nod.dy
     nod.n
     nod.pattern
     nod.pos
@@ -662,16 +652,11 @@ for expert users only.
     obs.aor             SOFIA AOR ID
     obs.aot             SOFIA AOT ID
     obs.dict            FITS keyword dictionary version ID.
-    obs.err
     obs.fgid            File group ID.
     obs.imgid           Image ID
-    obs.lst             (s) LST seconds.
-    obs.lsth            (h) LST hours
-    obs.mjd             (day) Modified Julian Date
     obs.obj             Object name
     obs.objtype         Object type
     obs.obsid           Observation ID.
-    obs.serial
     obs.src
 
     orig.creator
@@ -688,6 +673,12 @@ for expert users only.
     proc.product
     proc.q
     proc.quality
+
+    scan.angle          (deg) Scan position angle
+    scan.dec            (deg) Declination
+    scan.ra             (hour) R.A.
+    scan.speed          (arcsec/s) Scanning speed.
+    scan.type           Type of scan, e.g. 'LISSAJOUS'.
 
     spec.bw             (MHz) Total spectral bandwidth.
     spec.df             (MHz) Frequency spacing of channels.
@@ -707,15 +698,11 @@ for expert users only.
     tel.epoch           Epoch for equatorial coordinates (e.g. 2000.0)
     tel.fbc
     tel.los             Telescope line-of-sight angle
-    tel.moonang         Angular distnce to the Moon
     tel.rdec            Requested declination
     tel.rew             
     tel.rra             Requested RA
-    tel.sunang          Angular distance to the Sun
     tel.trkerr
     tel.trkmode
-    tel.vhelio          Radial velocity relative to the Sun.
-    tel.vlsr            LSR velocity
     tel.vpa             Vertical position angle (i.e. parallactic angle)
     tel.xel             Telescope cross-elevation angle
     tel.za              Telescope zenith angle

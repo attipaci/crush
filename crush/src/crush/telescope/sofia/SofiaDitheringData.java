@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -33,11 +33,10 @@ import nom.tam.util.Cursor;
 
 public class SofiaDitheringData extends SofiaData {
     public String coordinateSystem;
-    public Vector2D offset;
+    public Vector2D offset = new Vector2D(Double.NaN, Double.NaN);
     public String patternShape;
-    public int positions = SofiaHeader.UNKNOWN_INT_VALUE;
-    public int index = SofiaHeader.UNKNOWN_INT_VALUE;
-    public double spacing = Double.NaN;
+    public int positions = UNKNOWN_INT_VALUE;
+    public int index = UNKNOWN_INT_VALUE;
 
     public SofiaDitheringData() {}
 
@@ -47,34 +46,31 @@ public class SofiaDitheringData extends SofiaData {
     }
 
     public void parseHeader(SofiaHeader header) {
-
         coordinateSystem = header.getString("DTHCRSYS");		// new in 3.0
 
-        if(header.containsKey("DTHXOFF") || header.containsKey("DTHYOFF")) {
-            offset = new Vector2D(header.getDouble("DTHXOFF", 0.0), header.getDouble("DTHYOFF", 0.0));
-            offset.scale(Unit.arcsec);
-        }
-        else offset = null;		// new in 3.0
-
+        offset = new Vector2D(Double.NaN, Double.NaN);
+        offset.setX(header.getDouble("DTHXOFF"));
+        offset.setY(header.getDouble("DTHYOFF"));
+     
         patternShape = header.getString("DTHPATT");
         positions = header.getInt("DTHNPOS");
         index = header.getInt("DTHINDEX");
-        spacing = header.getDouble("DTHOFFS", Double.NaN) * Unit.arcsec;
     }
 
     @Override
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Dithering Data ------>", false));
-        if(coordinateSystem != null) c.add(new HeaderCard("DTHCRSYS", coordinateSystem, "Dither coordinate system."));
-        if(offset != null) {
-            c.add(new HeaderCard("DTHXOFF", offset.x() / Unit.arcsec, "(arcsec) Dither X offset."));
-            c.add(new HeaderCard("DTHYOFF", offset.y() / Unit.arcsec, "(arcsec) Dither Y offset."));
-        }
-        if(patternShape != null) c.add(new HeaderCard("DTHPATT", patternShape, "Approximate shape of dither pattern."));
-        if(positions != SofiaHeader.UNKNOWN_INT_VALUE) c.add(new HeaderCard("DTHNPOS", positions, "Number of dither positions."));
-        c.add(new HeaderCard("DTHINDEX", index, "Dither position index."));
-        if(!Double.isNaN(spacing)) c.add(new HeaderCard("DTHOFFS", spacing / Unit.arcsec, "(arcsec) Dither spacing."));
+        
+        c.add(makeCard("DTHCRSYS", coordinateSystem, "Dither coordinate system."));
+        
+        Vector2D v = offset == null ? new Vector2D(Double.NaN, Double.NaN) : offset;
+        c.add(makeCard("DTHXOFF", v.x() / Unit.arcsec, "(arcsec) Dither X offset."));
+        c.add(makeCard("DTHYOFF", v.y() / Unit.arcsec, "(arcsec) Dither Y offset."));
+        
+        c.add(makeCard("DTHPATT", patternShape, "Approximate shape of dither pattern."));
+        c.add(makeCard("DTHNPOS", positions, "Number of dither positions."));
+        c.add(makeCard("DTHINDEX", index, "Dither position index."));
     }
 
     @Override
@@ -86,7 +82,6 @@ public class SofiaDitheringData extends SofiaData {
     public Object getTableEntry(String name) {
         if(name.equals("dx")) return offset.x() / Unit.arcsec;
         else if(name.equals("dy")) return offset.y() / Unit.arcsec;
-        else if(name.equals("spacing")) return spacing / Unit.arcsec;
         else if(name.equals("index")) return index;
         else if(name.equals("pattern")) return patternShape;
         else if(name.equals("npos")) return positions;
