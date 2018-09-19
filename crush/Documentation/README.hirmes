@@ -532,10 +532,62 @@ for expert users only.
                         series array (at 4K) is sensitive to some level of
                         thermal fluctuation, and enabling decorrelation on
                         these can improve imaging quality.
+   
+    spectral.obs        Output spectra in the observing frame rather than the
+                        default rest frame.
+
+    spectral.unit=<spec>        Specify the unit of the spectral axis in the 
+                        output data. It can be a wavelength unit, such as 'um' 
+                        (micron) or a frequency unit, such as 'GHz'.
+ 
+    write.fieldspec     Write the aggregate 1D field spectrum as and ASCII
+                        table also. This data can also be readiliy plotted
+                        using gnuplot if the '.eps' and/or '.png' sub-options
+                        are set (see below). The plot can be customized via
+                        a set of sub-options '.lt', '.lw', '.pt', '.ps' and
+                        '.style' in accordance with gnuplot's capabilities.
+                        @See: 'gnuplot'
+
+    write.fieldspec.eps	        Create an EPS plot from the aggregate 1D
+                                field spectrum using gnuplot.
+                                @See: 'gnuplot'
+				
+    write.fieldspec.lt=N        Set the plot line type to gnuplot's built-in 
+                                type N (integer).
+   
+    write.fieldspec.lw=X        Set the plot line with to X points wide, e.g.
+				2.5.
+ 
+    write.fieldspec.png         Create a PNG plot from the aggregate 1D
+                                field spectrum using gnuplot. A set of sub-
+                                options can be used to customize the appearance
+                                
+    write.fieldspec.png.bg=<color>      Set the PNG background color to the
+                                        specified color (e.g. 'white' or
+                                        '#FFFFFF', or 'transparent').
+
+    write.fieldspec.png.size=NxM        Set the PNG output size to N by M 
+                                        pixels 
+
+    write.fieldspec.ps=X        Set the plot point size scale factor to X, e.g.
+				1.5.
+   
+    write.fieldspec.pt=N        Set the plot point tyle to gnuplot's built-in
+                                type N (integer).
+    
+    write.fieldspec.show        Display the plot on screen right away.
+    
+    write.fieldspec.style=<plotstyle>   Set the gnuplot plotting style for 1D
+                                        data. E.g. 'histep', or 'points' or
+                                        'lines' or 'linespoints'
+
+    write.flattened     Write a flattened 2D (monochrome) FITS image also.
 
 
 
-### 4.3. HAWC+ specific log quantities
+
+
+### 4.3. HIRMES specific log quantities
 
 
     ac.airspeed         (km/h) Airspeed.
@@ -636,6 +688,16 @@ for expert users only.
     proc.product
     proc.q
     proc.quality
+
+    spec.bw             (MHz) Total spectral bandwidth.
+    spec.df             (MHz) Frequency spacing of channels.
+    spec.obsfreq        (GHz) Observing frequency at the reference channel.
+    spec.restfreq       (GHz) Rest frequency at the reference channel.
+    spec.tsys           (K) System temperature (if applicable).
+    spec.vsys           Radial velocity reference system.
+    spec.vframe         (km/s) Radial velocity of refence frame wrt observer.
+    spec.vrad           (km/s) Source radial velocity wrt observer.
+    spec.z		redshift of source.
 
     tel.focus           (um) Telescope z-focus value
     tel.bdec            Boresight declination

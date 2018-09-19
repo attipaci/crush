@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -24,6 +24,13 @@
 package crush.telescope.sofia;
 
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
+import crush.CRUSH;
+import jnum.Util;
+import jnum.math.Range;
+import jnum.math.Range2D;
 import jnum.text.TableFormatter;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
@@ -69,6 +76,83 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         return null;
     }
 
+    protected static Object defaultMerge(Object a, Object b) {
+        if(!Util.equals(a,  b)) return null;
+        return a;
+    }
 
-
+    public void merge(SofiaData other, boolean isSameFlight) {
+        if(other == null) return;   // TODO throw exception?
+        
+        Field[] fields = getClass().getDeclaredFields();
+       
+        for(Field f : fields) if(f.isAccessible()) {
+            int mods = f.getModifiers();
+            
+            if(Modifier.isStatic(mods)) continue;
+            if(Modifier.isPrivate(mods)) continue;
+            if(Modifier.isTransient(mods)) continue;
+            
+            try { f.set(this, merge(f.get(this), f.get(other), isSameFlight)); } 
+            catch (Exception e) { CRUSH.error(this, e); }
+        }      
+    }
+    
+    private Object merge(Object former, Object latter, boolean isSameFlight) {
+        if(!former.getClass().isAssignableFrom(latter.getClass())) throw new IllegalArgumentException("Cannot merge two different types: "
+                + former.getClass().getSimpleName() + " / " + latter.getClass().getSimpleName());
+             
+        if(former instanceof BracketedValues) {
+            if(!isSameFlight) return null;
+            ((BracketedValues) former).end = ((BracketedValues) latter).end;
+        }
+        else if(former instanceof Range) {
+            ((Range) former).include((Range) latter);
+        }
+        else if(former instanceof Range2D) {
+            ((Range2D) former).include((Range2D) latter);
+        }
+        else if(former instanceof Object[]) {
+            Object[] A = (Object[]) former;
+            Object[] B = (Object[]) latter;
+            if(A.length != B.length) return null;
+            for(int i=A.length; --i >= 0; ) A[i] = merge(A[i], B[i], isSameFlight);
+        }
+        else if(former instanceof boolean[]) return null;    // No default merges for some types...
+        else if(former instanceof byte[]) return null;
+        else if(former instanceof char[]) return null;
+        else if(former instanceof short[]) {
+            short[] A = (short[]) former;
+            short[] B = (short[]) latter;
+            if(A.length != B.length) return null;
+            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = (short) SofiaHeader.UNKNOWN_INT_VALUE;
+        }
+        else if(former instanceof int[]) {
+            int[] A = (int[]) former;
+            int[] B = (int[]) latter;
+            if(A.length != B.length) return null;
+            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = SofiaHeader.UNKNOWN_INT_VALUE;
+        }
+        else if(former instanceof long[]) {
+            long[] A = (long[]) former;
+            long[] B = (long[]) latter;
+            if(A.length != B.length) return null;
+            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = SofiaHeader.UNKNOWN_INT_VALUE;
+        }
+        else if(former instanceof float[]) {
+            float[] A = (float[]) former;
+            float[] B = (float[]) latter;
+            if(A.length != B.length) return null;
+            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = Float.NaN;
+        }
+        else if(former instanceof double[]) {
+            double[] A = (double[]) former;
+            double[] B = (double[]) latter;
+            if(A.length != B.length) return null;
+            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = Double.NaN;
+        }
+        else if(!Util.equals(former, latter)) return null;
+        
+        return former;
+    }
 }

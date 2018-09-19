@@ -252,6 +252,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     @Override
     public void parseHeader(SofiaHeader header) {
         super.parseHeader(header);
+        
+        spectral = null;    // Discard spectroscopy header data entirely...
 
         // TODO should not be necessary if the header is proper...
         if(Double.isNaN(integrationTime) || integrationTime < 0.0) {

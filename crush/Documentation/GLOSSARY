@@ -1239,13 +1239,6 @@
 
 			to specify beam smoothing in the last iteration.
 
-:: fits.addKeys=<list>	@Expert
-			@Instrument: SOFIA*, HAWC+
-			@Since:2.23
-			Specify a comma-separated list of keys that should be
-			migrated from the first scan to the image header, in
-			addition to the list of required SOFIA header keys.
-
 :: fits.[key]
 :: fits.[key?value]	@Advanced
 			@Since: 2.23
@@ -3450,6 +3443,11 @@
 
 :: spa			@Alias --> 'source.polar.angles'
 			@Since: 2.11
+
+:: spectral.obs         @Instrument: HIRMES
+                        @Since: 2.42
+                        Output spectra in the observing frame rather than the
+                        default rest frame.
 
 :: spectral.unit=<spec>	        @Instrument: HIRMES
                                 @Since: 2.42       

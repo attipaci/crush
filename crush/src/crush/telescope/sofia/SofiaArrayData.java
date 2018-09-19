@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -122,6 +122,7 @@ public class SofiaArrayData extends SofiaData implements Copiable<SofiaArrayData
         if(grid != null) grid.editHeader(header); // TODO...
     }
 
+   
     @Override
     public String getLogID() {
         return "array";
@@ -136,6 +137,7 @@ public class SofiaArrayData extends SofiaData implements Copiable<SofiaArrayData
 
         return super.getTableEntry(name);
     }
-
+    
+  
 
 }

@@ -61,7 +61,7 @@ public class SofiaEnvironmentData extends SofiaData {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Environment Data ------>", false));
         if(!Double.isNaN(pwv.start)) c.add(new HeaderCard("WVZ_STA", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
-        if(!Double.isNaN(pwv.end)) c.add(new HeaderCard("WVZ_END", pwv.start / Unit.um, "(um) Precipitable Water Vapor at start."));
+        if(!Double.isNaN(pwv.end)) c.add(new HeaderCard("WVZ_END", pwv.end / Unit.um, "(um) Precipitable Water Vapor at end."));
         if(!Double.isNaN(pwvLOS)) c.add(new HeaderCard("WVTALOS", pwvLOS / Unit.um, "(um) PWV at TA line-of-sight."));
         if(!Double.isNaN(ambientT)) c.add(new HeaderCard("TEMP_OUT", ambientT, "(C) Ambient air temperature."));
         if(!Double.isNaN(primaryT1)) c.add(new HeaderCard("TEMPPRI1", primaryT1, "(C) Primary mirror temperature #1."));

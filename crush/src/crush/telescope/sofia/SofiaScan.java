@@ -72,7 +72,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public SofiaDitheringData dither;
     public SofiaMappingData mapping;
     public SofiaScanningData scanning;
-    
+      
     public Fits fits;
 
     public SofiaScan(InstrumentType instrument) {
@@ -344,50 +344,6 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
        
         addHistory(c);
         instrument.addHistory(header, null);
-    }
-
-
-    public ArrayList<String> getRequiredPrimaryHeaderKeys() {
-        ArrayList<String> keys = new ArrayList<String>(requiredKeys.length);
-        for(String key : requiredKeys) keys.add(key.toUpperCase());
-
-        // Add any additional keys specified by the 'fits.addkeys
-        if(hasOption("fits.addkeys")) for(String key : option("fits.addkeys").getList()) {
-            key = key.toUpperCase();
-            if(!keys.contains(key)) keys.add(key);			
-        }
-        return keys;
-    }
-
-    public void addRequiredPrimaryHeaderKeysTo(Header header) throws HeaderCardException {
-        Header h = new Header();
-        editScanHeader(h);
-
-        for(String key : getRequiredPrimaryHeaderKeys()) {
-            HeaderCard card = h.findCard(key);
-            if(card == null) continue;
-            header.addLine(card);
-        }
-
-        // Copy the subarray specs (if defined)
-        if(instrument.array.subarrays > 0) for(int i=0; i<instrument.array.subarrays; i++) {
-            String key = "SUBARR" + Util.d2.format(i);
-            HeaderCard card = h.findCard(key);
-            if(card == null) continue;	
-            header.addLine(card);
-        }
-
-        Cursor<String, HeaderCard> cursor = header.iterator();
-
-        // Add the observing mode keywords at the end...
-        while(cursor.hasNext()) cursor.next();
-
-        // Add the observing mode keywords at the end...
-        //if(chopper != null) chopper.editHeader(header, cursor);
-        //if(nodding != null) nodding.editHeader(header, cursor);
-        //if(dither != null) dither.editHeader(header, cursor);
-        //if(mapping != null) mapping.editHeader(header, cursor);
-        //if(scanning != null) scanning.editHeader(header, cursor);
     }
 
     public void addHistory(Cursor<String, HeaderCard> c) throws HeaderCardException {

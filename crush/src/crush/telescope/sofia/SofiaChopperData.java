@@ -21,13 +21,12 @@
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/package crush.telescope.sofia;
 
-
  import jnum.Unit;
-import jnum.fits.FitsToolkit;
-import nom.tam.fits.Header;
+ import jnum.fits.FitsToolkit;
+ import nom.tam.fits.Header;
  import nom.tam.fits.HeaderCard;
  import nom.tam.fits.HeaderCardException;
-import nom.tam.util.Cursor;
+ import nom.tam.util.Cursor;
 
 
  public class SofiaChopperData extends SofiaData {
@@ -50,7 +49,6 @@ import nom.tam.util.Cursor;
          this();
          parseHeader(header);
      }
-
 
      public void parseHeader(SofiaHeader header) {
          frequency = header.getDouble("CHPFREQ", Double.NaN) * Unit.Hz;

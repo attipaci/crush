@@ -31,6 +31,7 @@ import crush.sourcemodel.AstroIntensityMap;
 import crush.sourcemodel.SpectralCube;
 import crush.telescope.sofia.SofiaCamera;
 import crush.telescope.sofia.SofiaHeader;
+import crush.telescope.sofia.SofiaSpectroscopyData;
 import jnum.Constant;
 import jnum.LockedException;
 import jnum.Unit;
@@ -44,7 +45,7 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
      * 
      */
     private static final long serialVersionUID = 6205260168688969947L;
-
+    
     Vector2D pixelScale;
     Vector2D pixelSize;
 
@@ -65,6 +66,8 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     double baseFrequency;
     double frequencyStep = 0.0;          // frequency step... 
     double frequencyResolution = 0.0;
+    
+    double z = 0.0;                      // Doppler shift. 
 
     public Hirmes() {
         super("hirmes", new SingleColorArrangement<HirmesPixel>(), pixels);
@@ -224,6 +227,9 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     public void parseHeader(SofiaHeader header) {
         super.parseHeader(header);
 
+        spectral = new SofiaSpectroscopyData(header);
+        // TODO use info from spectral header...
+        
         // TODO should not be necessary if the header is proper...
         if(Double.isNaN(integrationTime) || integrationTime < 0.0) {
             warning("Missing SMPLFREQ. Will assume 203.25 Hz.");
@@ -235,17 +241,24 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
 
         String config = instrumentData.instrumentMode;
 
-        if(config.equalsIgnoreCase("SPECTRAL_IMAGING")) mode = IMAGING_MODE;
+        if(config.equalsIgnoreCase("SPECTRAL_IMAGING")) {
+            mode = IMAGING_MODE;
+            spectral = null; // Discard spectral header info entirely.
+        }
         else if(config.equalsIgnoreCase("LOW-RES")) mode = LORES_MODE;
         else if(config.equalsIgnoreCase("MED-RES")) mode = MIDRES_MODE;
         else if(config.equalsIgnoreCase("HI-RES")) mode = HIRES_MODE;
 
+        // TODO deprecate in favor of standard spectral/array header values.
         baseFrequency = header.getDouble("SPECREF", Constant.c / instrumentData.wavelength);
         frequencyStep = header.getDouble("SPECSTEP", 0.0);
 
         // TODO Add actual spectral resolution....
         frequencyResolution = instrumentData.spectralResolution > 0.0 ? 
                 baseFrequency / instrumentData.spectralResolution : 2.0 * frequencyStep;    
+        
+        // Doppler correction to rest frame...
+        z = hasOption("spectral.obs") ? spectral.getRedshift() : 0.0;
 
         // Set the spectral grid to a default value...
         if(mode != IMAGING_MODE) if(!hasOption("spectral.grid") && !hasOption("spectral.resolution")) {
@@ -325,6 +338,21 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
         }
     }
 
+    
+    @Override
+    public double[] getSourceGains(final boolean filterCorrected) {
+        double[] G = super.getSourceGains(filterCorrected);
+        if(mode != IMAGING_MODE) {
+            final double rest2Obs = 1.0 / (1.0 + z);
+            for(HirmesPixel pixel : this) G[pixel.index] *= getRelativeTransmission(pixel.getFrequency() * rest2Obs);
+        }
+        return G;        
+    }
+    
+    public double getRelativeTransmission(double fobs) {
+        // TODO spectral telluric corrections go here...
+        return 1.0;
+    }
 
     public final String getSubarrayID(int sub) {
         return subID[sub];
@@ -497,7 +525,7 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     public double getFrequency(Vector2D focalPlanePosition) {
         if(mode == IMAGING_MODE) return baseFrequency;
         // Simple linear frequency dispersion along x...
-        return baseFrequency + focalPlanePosition.x() / HirmesPixel.physicalSize.x() * frequencyStep;  
+        return (1.0 + z) * (baseFrequency + focalPlanePosition.x() / HirmesPixel.physicalSize.x() * frequencyStep);  
     }
 
 

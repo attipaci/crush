@@ -23,6 +23,7 @@
 
 package crush.telescope.sofia;
 
+import jnum.Constant;
 import jnum.Copiable;
 import jnum.Unit;
 import jnum.fits.FitsToolkit;
@@ -84,18 +85,22 @@ public class SofiaSpectroscopyData extends SofiaData implements Copiable<SofiaSp
         if(frontEnd != null) c.add(new HeaderCard("FRONTEND", frontEnd, "Frontend device name."));
         if(backEnd != null) c.add(new HeaderCard("BACKEND", backEnd, "Backend device name."));
         
-        if(!Double.isNaN(bandwidth)) c.add(new HeaderCard("BANDWID", bandwidth / Unit.MHz, "(MHz) Total backend bandwidth."));
-        if(!Double.isNaN(frequencyResolution)) c.add(new HeaderCard("FREQRES", frequencyResolution / Unit.MHz, "(MHz) Backend frequency resolution."));
+        if(!Double.isNaN(bandwidth)) c.add(new HeaderCard("BANDWID", bandwidth / Unit.MHz, "(MHz) Total spectral bandwidth."));
+        if(!Double.isNaN(frequencyResolution)) c.add(new HeaderCard("FREQRES", frequencyResolution / Unit.MHz, "(MHz) Spectral frequency resolution."));
         if(!Double.isNaN(Tsys)) c.add(new HeaderCard("TSYS", Tsys / Unit.K, "(K) System temperature."));
         
-        if(!Double.isNaN(observingFrequency)) c.add(new HeaderCard("OBSFREQ", observingFrequency / Unit.MHz, "(MHz) observing frequency at reference channel."));
-        if(!Double.isNaN(imageFrequency)) c.add(new HeaderCard("IMAGFREQ", imageFrequency / Unit.MHz, "(MHz) image frequency at reference channel."));
-        if(!Double.isNaN(restFrequency)) c.add(new HeaderCard("RESTFREQ", imageFrequency / Unit.MHz, "(MHz) rest frequency at reference channel."));
+        if(!Double.isNaN(observingFrequency)) c.add(new HeaderCard("OBSFREQ", observingFrequency / Unit.MHz, "(MHz) Observing frequency at reference channel."));
+        if(!Double.isNaN(imageFrequency)) c.add(new HeaderCard("IMAGFREQ", imageFrequency / Unit.MHz, "(MHz) Image frequency at reference channel."));
+        if(!Double.isNaN(restFrequency)) c.add(new HeaderCard("RESTFREQ", imageFrequency / Unit.MHz, "(MHz) Rest frequency at reference channel."));
         
         if(velocityType != null) c.add(new HeaderCard("VELDEF", velocityType, "Velocity system definition."));
 
-        if(!Double.isNaN(frameVelocity)) c.add(new HeaderCard("VFRAME", frameVelocity / (Unit.km / Unit.s), "(km/s) radial velocity of reference frame."));
-        if(!Double.isNaN(sourceVelocity)) c.add(new HeaderCard("RVSYS", sourceVelocity / (Unit.km / Unit.s), "(km/s) Source radial velocity."));
+        if(!Double.isNaN(frameVelocity)) c.add(new HeaderCard("VFRAME", frameVelocity / (Unit.km / Unit.s), "(km/s) Radial velocity of reference frame wrt observer."));
+        if(!Double.isNaN(sourceVelocity)) c.add(new HeaderCard("RVSYS", sourceVelocity / (Unit.km / Unit.s), "(km/s) Source radial velocity wrt observer."));
+    }
+    
+    public double getRedshift() {
+        return Math.sqrt((1.0 + sourceVelocity / Constant.c) / (1.0 - sourceVelocity / Constant.c)) - 1.0;
     }
 
     @Override
@@ -113,6 +118,7 @@ public class SofiaSpectroscopyData extends SofiaData implements Copiable<SofiaSp
         else if(name.equals("vsys")) return velocityType;
         else if(name.equals("vframe")) return frameVelocity / (Unit.km / Unit.s);
         else if(name.equals("vrad")) return sourceVelocity / (Unit.km / Unit.s);
+        else if(name.equals("z")) return getRedshift();
         return super.getTableEntry(name);
     }
 

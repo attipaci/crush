@@ -1132,4 +1132,15 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
     public void error(Throwable e) { CRUSH.error(this, e); }
 	
 	
+    public static Scan<?,?> getEarliest(Collection<Scan<?,?>> scans) {
+        double firstMJD = Double.POSITIVE_INFINITY;
+        Scan<?,?> first = null;
+        
+        for(Scan<?,?> scan : scans) if(scan != null) if(scan.getMJD() < firstMJD) {
+            first = scan;
+            firstMJD = scan.getMJD();
+        }
+        return first;
+    }
+    
 }

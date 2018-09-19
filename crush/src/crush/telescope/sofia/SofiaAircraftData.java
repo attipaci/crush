@@ -23,12 +23,12 @@
 
 
  import jnum.Unit;
-import jnum.fits.FitsToolkit;
-import jnum.text.TableFormatter;
+ import jnum.fits.FitsToolkit;
+ import jnum.text.TableFormatter;
  import nom.tam.fits.Header;
  import nom.tam.fits.HeaderCard;
  import nom.tam.fits.HeaderCardException;
-import nom.tam.util.Cursor;
+ import nom.tam.util.Cursor;
 
  public class SofiaAircraftData extends SofiaData implements TableFormatter.Entries {
 
@@ -43,6 +43,7 @@ import nom.tam.util.Cursor;
          this();
          parseHeader(header);
      }
+
 
      public void parseHeader(SofiaHeader header) {
          altitude.start = header.getDouble("ALTI_STA", Double.NaN) * Unit.ft;
@@ -88,6 +89,7 @@ import nom.tam.util.Cursor;
 
          return null;
      }
+
 
      @Override
      public String getLogID() {
