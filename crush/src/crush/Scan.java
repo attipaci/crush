@@ -762,9 +762,12 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		boolean isRobust = false;
 		if(hasOption("estimator")) if(option("estimator").is("median")) isRobust = true;
 		
-		for(IntegrationType integration : this) integration.decorrelateSignals(modalityName, isRobust);
-		if(hasOption("correlated." + modalityName + ".span")) updateGains(modalityName);
-		
+		if(hasOption("correlated." + modalityName + ".span")) {
+		    for(IntegrationType integration : this) integration.decorrelateSignals(modalityName, isRobust);
+		    updateGains(modalityName);
+		}
+		else for(IntegrationType integration : this) integration.decorrelate(modalityName, isRobust);
+		    
 		for(IntegrationType integration : this) if(integration.comments.charAt(integration.comments.length() - 1) != ' ') 
 		integration.comments.append(" ");
 	}
