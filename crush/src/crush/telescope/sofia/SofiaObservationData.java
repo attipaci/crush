@@ -84,9 +84,7 @@ public class SofiaObservationData extends SofiaData {
     }
     
     @Override
-    public void merge(SofiaData other, boolean isSameFlight) {
-        if(!(other instanceof SofiaObservationData)) return;
-        
+    public void merge(SofiaData other, boolean isSameFlight) {     
         String localSourceName = sourceName;
         
         super.merge(other, isSameFlight);

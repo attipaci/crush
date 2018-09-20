@@ -5,7 +5,7 @@
 2.42-a2 
 
 	[NEW] {SOFIA} All SOFIA header values are now written to the primary 
-	FITS headers, combining data from all input scans.
+	FITS headers, combining data from input scans.
 
 	[NEW] {HIRMES} Parsing simple (linear) frequency mapping from FITS
 	header. 
@@ -24,6 +24,14 @@
 
 	[NEW] {HIRMES} Default spectral resolution is now set to be 2x the
 	spectral detector channel spacing.
+
+	[FIX] Command line arguments weren't correctly recorded via the ARGn
+	FITS keywords. Fixed.
+
+	[FIX] {SOFIA} All required SOFIA header keys are written.
+
+	[FIX] {SOFIA} Removed obsolete SOFIA header keys and the corresponding
+	log entries.
 
 	[FIX] {SOFIA} PWV_END just repeated PWV_STA. fixed.
 
@@ -44,6 +52,9 @@
 	instance). Fixed with proper deep copy().
 
 	[FIX] {HIRMES} Parsing of imaging/spectroscopy modes from FITS header
+
+	[TWEAK] {SOFIA} SOFIA header keys updated to match Rev. G. of the DCS
+	keyword presciption & dictionary.
 
 	[TWEAK] Use sigmyne.com for checking for new releases and in 
 	console info output.

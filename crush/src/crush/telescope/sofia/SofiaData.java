@@ -80,10 +80,6 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         return null;
     }
 
-    protected static Object defaultMerge(Object a, Object b) {
-        if(!Util.equals(a,  b)) return null;
-        return a;
-    }
 
     public void merge(SofiaData other, boolean isSameFlight) {
         if(other == null) return;   // TODO throw exception?
@@ -110,7 +106,7 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         if(former instanceof BracketedValues) {
             if(!isSameFlight) return null;
             return new BracketedValues(((BracketedValues) former).start, ((BracketedValues) latter).end); 
-        }
+        }  
         else if(former instanceof Range) {
             Range merged = ((Range) former).copy();
             merged.include((Range) latter);

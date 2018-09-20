@@ -267,7 +267,6 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         c.add(new HeaderCard("MAPPING", isMapping, "Was mapping?"));    
         c.add(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
    
-        
         if(chopper != null) if(isChopping) chopper.editHeader(header);
         if(nodding != null) if(isNodding) nodding.editHeader(header);
         if(dither != null) if(isDithering) dither.editHeader(header);
@@ -277,21 +276,17 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         c = FitsToolkit.endOf(header);
            
         // Add SOFIA processing keys
-        String productType = "UNKNOWN";
-        if(header.containsKey("NAXIS3")) productType = "CUBE";
-        else if(header.containsKey("NAXIS2")) productType = "IMAGE";
-        else if(header.containsKey("NAXIS1")) productType = "1D";
-        
-        
+          
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Data Processing Keys ------>", false));
         int level = hasOption("calibrated") ? 3 : 2;
-        // TODO if multiple mission IDs, then Level 4...
+        
+        // TODO if multiple mission IDs, then Level 4?...
     
         c.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
         c.add(new HeaderCard("HEADSTAT", SofiaProcessingData.MODIFIED, "See original header values in the scan HDUs."));
         c.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getVersion(), "Software that produced this file."));
         c.add(new HeaderCard("PIPEVERS", "crush v" + CRUSH.getFullVersion(), "Full software version information.")); 
-        c.add(new HeaderCard("PRODTYPE", "CRUSH-" + productType, "Type of product produced by the software."));
+        c.add(new HeaderCard("PRODTYPE", "CRUSH-" + getProductType(header), "Type of product produced by the software."));
         c.add(new HeaderCard("DATAQUAL", getQualityString(scans), "Lowest quality input scan."));
         
         // Remove first scan's info from list of associated properties...
@@ -301,67 +296,22 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         
         if(!aors.isEmpty()) FitsToolkit.addLongKey(c, "ASSC_AOR", SofiaProcessingData.toString(aors), "Associated AOR IDs.");
         if(!missionIDs.isEmpty()) FitsToolkit.addLongKey(c, "ASSC_MSN", SofiaProcessingData.toString(missionIDs), "Associated Mission IDs.");
-        if(!freqs.isEmpty()) FitsToolkit.addLongKey(c, "ASSC_FRQ", SofiaProcessingData.toString(freqs), "Associated frequencies.");
-               
-        // Update/add EXPTIME
-        double expTime = getTotalExposureTime(scans);
-        if(!Double.isNaN(expTime)) header.addValue("EXPTIME", expTime, "(s) Total effective on-source time.");        
+        if(!freqs.isEmpty()) FitsToolkit.addLongKey(c, "ASSC_FRQ", SofiaProcessingData.toString(freqs), "Associated frequencies.");               
     }	
     
 
-
-    public ArrayList<String> getAORIDs(List<Scan<?,?>> scans) {
-        ArrayList<String> aorIDs = new ArrayList<String>();
-
-        for(int i=0; i<scans.size(); i++) {
-            SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);
-            String ID = scan.observation.aorID;
-            if(!aorIDs.contains(ID)) aorIDs.add(ID);
+    protected String getProductType(Header h) {
+        int axes = h.getIntValue("NAXIS");
+        
+        switch(axes) {
+        case 0: return "HEADER";
+        case 1: return "1D";
+        case 2: return "IMAGE";
+        case 3: return "CUBE";
         }
-
-        return aorIDs;
-    }
-    
-    public ArrayList<String> getMissionIDs(List<Scan<?,?>> scans) {
-        ArrayList<String> missionIDs = new ArrayList<String>();
-
-        for(int i=0; i<scans.size(); i++) {
-            SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);
-            String ID = scan.mission.missionID;
-            if(!missionIDs.contains(ID)) missionIDs.add(ID);
-        }
-
-        return missionIDs;
-    }
-    
-    public ArrayList<Double> getFrequencies(List<Scan<?,?>> scans) {
-        ArrayList<Double> freqs = new ArrayList<Double>();
-
-        for(int i=0; i<scans.size(); i++) {
-            SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);
-            double f = scan.instrument.getFrequency();
-            if(!freqs.contains(f)) freqs.add(f);
-        }
-
-        return freqs;
+        return axes > 0 ? axes + "D" : "UKNOWN";
     }
 
-
-
-    public double getTotalExposureTime(List<Scan<?,?>> scans) {
-        double expTime = 0.0;
-        for(Scan<?,?> scan : scans) expTime += ((SofiaCamera<?>) scan.instrument).instrumentData.exposureTime;
-        return expTime;
-    }
-
-    public boolean containsDithering(List<Scan<?,?>> scans) {
-        for(Scan<?,?> scan : scans) if(((SofiaScan<?,?>) scan).isDithering) return true;
-        return false;
-    }
-
-   
-    
-   
     public String getQualityString(List<Scan<?,?>> scans) {
         int overall = ((SofiaScan<?,?>) scans.get(0)).processing.qualityLevel;
         for(int i=scans.size(); --i > 0; ) {

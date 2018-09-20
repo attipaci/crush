@@ -40,8 +40,8 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
 	public String slitID;
 	public double wavelength = Double.NaN;
 	public double spectralResolution = Double.NaN;
-	public String detectorChannel;
-	public double totalIntegrationTime = Double.NaN;
+	public String detectorChannel;                     // FORCAST
+	public double totalIntegrationTime = Double.NaN;   // FORCAST
 	
 	public SofiaInstrumentData() {}
 	
@@ -113,6 +113,19 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
         return "inst";
     }
     
+    @Override
+    public void merge(SofiaData other, boolean isSameFlight) { 
+        SofiaInstrumentData inst = (SofiaInstrumentData) other;
+        
+        double tExp = exposureTime + inst.exposureTime;
+        double tTot = totalIntegrationTime + inst.totalIntegrationTime;
+        
+        super.merge(other, isSameFlight);
+        
+        exposureTime = tExp;
+        totalIntegrationTime = tTot;
+        
+    }
 
 
 }
