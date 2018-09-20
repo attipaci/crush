@@ -175,18 +175,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         Collections.sort(scans);
         SofiaScan<?,?> first = (SofiaScan<?,?>) scans.get(0);
         
-        boolean isChopping = first.isChopping;
-        boolean isNodding = first.isNodding;
-        boolean isDithering = first.isDithering;
-        boolean isMapping = first.isMapping;
-        boolean isScanning = first.isScanning;
-        
-        SofiaAircraftData aircraft = (SofiaAircraftData) first.aircraft.clone();
-        SofiaEnvironmentData environment = (SofiaEnvironmentData) first.environment.clone();
-        SofiaMissionData mission = (SofiaMissionData) first.mission.clone();  
-        SofiaObservationData observation = (SofiaObservationData) first.observation.clone();
-        SofiaOriginationData origin = (SofiaOriginationData) first.origin.clone();
-        SofiaTelescopeData telescope = (SofiaTelescopeData) first.telescope.clone();
+        boolean isChopping = false, isNodding = false, isDithering = false, isMapping = false, isScanning = false;
         
         SofiaChopperData chopper = null;
         SofiaNoddingData nodding = null;
@@ -194,61 +183,67 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         SofiaMappingData mapping = null;
         SofiaScanningData scanning = null;
         
+        SofiaAircraftData aircraft = (SofiaAircraftData) first.aircraft.clone();
+        SofiaEnvironmentData environment = (SofiaEnvironmentData) first.environment.clone();
+        SofiaMissionData mission = (SofiaMissionData) first.mission.clone();  
+        SofiaObservationData observation = (SofiaObservationData) first.observation.clone();
+        SofiaOriginationData origin = (SofiaOriginationData) first.origin.clone();
+        SofiaTelescopeData telescope = (SofiaTelescopeData) first.telescope.clone();
+                
         HashSet<String> aors = new HashSet<String>();
         HashSet<String> missionIDs = new HashSet<String>();
         HashSet<Double> freqs = new HashSet<Double>();
          
         for(int i=0; i<scans.size(); i++) {
-            final SofiaScan<?,?> sofiaScan = (SofiaScan<?,?>) scans.get(i); 
+            final SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);       
+            final boolean isSameFlight = scan.getFlightNumber() == first.getFlightNumber();
             
-            if(SofiaHeader.isValid(sofiaScan.observation.aorID)) aors.add(sofiaScan.observation.aorID);
-            if(SofiaHeader.isValid(sofiaScan.mission.missionID)) missionIDs.add(sofiaScan.mission.missionID);
-            freqs.add(sofiaScan.instrument.getFrequency());
+            if(SofiaHeader.isValid(scan.observation.aorID)) aors.add(scan.observation.aorID);
+            if(SofiaHeader.isValid(scan.mission.missionID)) missionIDs.add(scan.mission.missionID);
+            freqs.add(scan.instrument.getFrequency());
+             
+            isChopping |= scan.isChopping;
+            isNodding |= scan.isNodding;
+            isDithering |= scan.isDithering;
+            isMapping |= scan.isMapping;
+            isScanning |= scan.isScanning;
             
-            final boolean isSameFlight = sofiaScan.getFlightNumber() == first.getFlightNumber();
-          
-            if(sofiaScan.chopper != null) {
-                if(chopper == null) chopper = (SofiaChopperData) sofiaScan.chopper.clone();
-                else chopper.merge(sofiaScan.chopper, isSameFlight);
+            if(scan.chopper != null) {
+                if(chopper == null) chopper = (SofiaChopperData) scan.chopper.clone();
+                else chopper.merge(scan.chopper, isSameFlight);
             }
             
-            if(sofiaScan.nodding != null) {
-                if(nodding == null) nodding = (SofiaNoddingData) sofiaScan.nodding.clone();
-                else nodding.merge(sofiaScan.nodding, isSameFlight);
+            if(scan.nodding != null) {
+                if(nodding == null) nodding = (SofiaNoddingData) scan.nodding.clone();
+                else nodding.merge(scan.nodding, isSameFlight);
             }
             
-            if(sofiaScan.dither != null) {
-                if(dither == null) dither = (SofiaDitheringData) sofiaScan.dither.clone();
-                else dither.merge(sofiaScan.dither, isSameFlight);
+            if(scan.dither != null) {
+                if(dither == null) dither = (SofiaDitheringData) scan.dither.clone();
+                else dither.merge(scan.dither, isSameFlight);
             }
         
-            if(sofiaScan.mapping != null) {
-                if(mapping == null) mapping = (SofiaMappingData) sofiaScan.mapping.clone();
-                else mapping.merge(sofiaScan.mapping, isSameFlight);   
+            if(scan.mapping != null) {
+                if(mapping == null) mapping = (SofiaMappingData) scan.mapping.clone();
+                else mapping.merge(scan.mapping, isSameFlight);   
             }
             
-            if(sofiaScan.scanning != null) {
-                if(scanning == null) scanning = (SofiaScanningData) sofiaScan.scanning.clone();
-                else scanning.merge(sofiaScan.scanning, isSameFlight);  
+            if(scan.scanning != null) {
+                if(scanning == null) scanning = (SofiaScanningData) scan.scanning.clone();
+                else scanning.merge(scan.scanning, isSameFlight);  
             }
+          
+            if(array != null) array.merge(scan.instrument.array, isSameFlight);
+            if(instrumentData != null) instrumentData.merge(scan.instrument.instrumentData, isSameFlight);
+            if(spectral != null) spectral.merge(scan.instrument.spectral, isSameFlight);
             
-            if(sofiaScan == first) continue;
-         
-            if(array != null) array.merge(sofiaScan.instrument.array, isSameFlight);
-            if(instrumentData != null) instrumentData.merge(sofiaScan.instrument.instrumentData, isSameFlight);
-            if(spectral != null) spectral.merge(sofiaScan.instrument.spectral, isSameFlight);
+            if(scan == first) continue;
             
-            isChopping |= sofiaScan.isChopping;
-            isNodding |= sofiaScan.isNodding;
-            isDithering |= sofiaScan.isDithering;
-            isMapping |= sofiaScan.isMapping;
-            isScanning |= sofiaScan.isScanning;   
-            
-            aircraft.merge(sofiaScan.aircraft, isSameFlight);
-            environment.merge(sofiaScan.environment, isSameFlight);
-            mission.merge(sofiaScan.mission, isSameFlight);
-            observation.merge(sofiaScan.observation, isSameFlight);
-            telescope.merge(sofiaScan.telescope, isSameFlight);
+            aircraft.merge(scan.aircraft, isSameFlight);
+            environment.merge(scan.environment, isSameFlight);
+            mission.merge(scan.mission, isSameFlight);
+            observation.merge(scan.observation, isSameFlight);
+            telescope.merge(scan.telescope, isSameFlight);
         }
         
         observation.aorID = first.observation.aorID;

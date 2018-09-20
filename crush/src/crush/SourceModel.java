@@ -58,9 +58,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     private Instrument<?> instrument;
 
     private String id;
-    private String commandLine;
-    
-    
+     
     private Vector<Scan<?,?>> scans;
     private int generation = 0;
     
@@ -86,11 +84,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public String getLoggingID() { return "model"; }
     
     public void setID(String value) { this.id = value; }
-    
-    public String getCommandLine() { return commandLine; }
-    
-    public void setCommandLine(String value) { this.commandLine = value; }
-    
+       
     public void setExcludeSamples(int pattern) {
         excludeSamples = pattern;
     }

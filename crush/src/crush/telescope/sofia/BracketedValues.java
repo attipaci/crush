@@ -31,6 +31,14 @@ import jnum.Unit;
 public class BracketedValues implements Cloneable, Copiable<BracketedValues> {
 	public double start = Double.NaN, end = Double.NaN;
 
+	public BracketedValues() {
+	    this(Double.NaN, Double.NaN);
+	}
+	
+	public BracketedValues(double start, double end) {
+	    this.start = start;
+	    this.end = end;
+	}
 	
 	@Override
 	public BracketedValues clone() {

@@ -26,7 +26,6 @@ package crush.telescope.sofia;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
 
 import crush.CRUSH;
 import jnum.Util;
@@ -88,10 +87,8 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
 
     public void merge(SofiaData other, boolean isSameFlight) {
         if(other == null) return;   // TODO throw exception?
-        
-        Field[] fields = getClass().getDeclaredFields();
        
-        for(Field f : fields) if(f.isAccessible()) {
+        for(Field f : getClass().getDeclaredFields()) {
             int mods = f.getModifiers();
             
             if(Modifier.isStatic(mods)) continue;
@@ -102,28 +99,27 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
             catch (Exception e) { CRUSH.error(this, e); }
         }      
     }
-    
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+
     private Object merge(Object former, Object latter, boolean isSameFlight) {
         if(former == null) return null;
         if(latter == null) return null;
         
         if(!former.getClass().isAssignableFrom(latter.getClass())) throw new IllegalArgumentException("Cannot merge two different types: "
                 + former.getClass().getSimpleName() + " / " + latter.getClass().getSimpleName());
-             
-           
-        else if(former instanceof BracketedValues) {
+                    
+        if(former instanceof BracketedValues) {
             if(!isSameFlight) return null;
-            ((BracketedValues) former).end = ((BracketedValues) latter).end;
+            return new BracketedValues(((BracketedValues) former).start, ((BracketedValues) latter).end); 
         }
         else if(former instanceof Range) {
-            ((Range) former).include((Range) latter);
+            Range merged = ((Range) former).copy();
+            merged.include((Range) latter);
+            return merged;
         }
         else if(former instanceof Range2D) {
-            ((Range2D) former).include((Range2D) latter);
-        }
-        else if(former instanceof Collection) {
-            ((Collection) former).addAll((Collection) latter);
+            Range2D merged = ((Range2D) former).copy();
+            merged.include((Range2D) latter);
+            return merged;
         }
         else if(former instanceof Object[]) {
             Object[] A = (Object[]) former;
@@ -137,32 +133,42 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         else if(former instanceof short[]) {
             short[] A = (short[]) former;
             short[] B = (short[]) latter;
+            short[] merged = new short[A.length];
             if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = (short) UNKNOWN_INT_VALUE;
+            for(int i=A.length; --i >= 0; ) merged[i] = A[i] == B[i] ? A[i] : (short) UNKNOWN_INT_VALUE;
+            return merged;
         }
         else if(former instanceof int[]) {
             int[] A = (int[]) former;
             int[] B = (int[]) latter;
+            int[] merged = new int[A.length];
             if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = UNKNOWN_INT_VALUE;
+            for(int i=A.length; --i >= 0; ) merged[i] = A[i] == B[i] ? A[i] : UNKNOWN_INT_VALUE;
+            return merged;
         }
         else if(former instanceof long[]) {
             long[] A = (long[]) former;
             long[] B = (long[]) latter;
+            long[] merged = new long[A.length];
             if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = UNKNOWN_INT_VALUE;
+            for(int i=A.length; --i >= 0; ) merged[i] = A[i] == B[i] ? A[i] : UNKNOWN_INT_VALUE;
+            return merged;
         }
         else if(former instanceof float[]) {
             float[] A = (float[]) former;
             float[] B = (float[]) latter;
+            float[] merged = new float[A.length];
             if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = Float.NaN;
+            for(int i=A.length; --i >= 0; ) merged[i] = A[i] == B[i] ? A[i] : Float.NaN;
+            return merged;
         }
         else if(former instanceof double[]) {
             double[] A = (double[]) former;
             double[] B = (double[]) latter;
+            double[] merged = new double[A.length];
             if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) if(A[i] != B[i]) A[i] = Double.NaN;
+            for(int i=A.length; --i >= 0; ) merged[i] = A[i] == B[i] ? A[i] : Double.NaN;
+            return merged;
         }
         else if(!Util.equals(former, latter)) {
             if(former instanceof Number) {

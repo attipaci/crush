@@ -61,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.42-a2";
-    private static String revision = "devel.12";
+    private static String revision = "devel.13";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -70,7 +70,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public Instrument<?> instrument;
     public Vector<Scan<?,?>> scans = new Vector<Scan<?,?>>();
     public SourceModel source;
-    public String commandLine;
+    public String[] args;
 
     public static int maxThreads = 1;
     public static volatile ExecutorService executor, sourceExecutor;
@@ -146,14 +146,10 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     public void init(String[] args)throws Exception {	 
         readConfig("default.cfg");
-          
-        commandLine = args[0];
-
-        for(int i=1; i<args.length; i++) if(args[i].length() > 0) {
-            commandLine += " " + args[i]; 
-            parseArgument(args[i]);
-        }	
-
+        
+        this.args = args;
+        for(int i=1; i<args.length; i++) if(args[i].length() > 0) parseArgument(args[i]);
+     
         validate();
     }
     
@@ -346,7 +342,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
         source = scans.get(0).instrument.getSourceModelInstance(scans);
         
         if(source != null) {
-            source.setCommandLine(commandLine);
             source.createFrom(scans);
             source.setExecutor(sourceExecutor);
             source.setParallel(CRUSH.maxThreads);
@@ -960,11 +955,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         c.add(new HeaderCard("CRUSHVER", getFullVersion(), "CRUSH version information."));		
 
-        if(commandLine != null) {
-            StringTokenizer args = new StringTokenizer(commandLine);
-            c.add(new HeaderCard("ARGS", args.countTokens(), "The number of arguments passed from the command line."));
-            int i=1;
-            while(args.hasMoreTokens()) FitsToolkit.addLongKey(c, "ARG" + (i++), args.nextToken(), "Command-line argument.");
+        if(args != null) {
+            c.add(new HeaderCard("ARGS", args.length-1, "The number of arguments passed from the command line."));
+            for(int i=1; i<args.length; i++) FitsToolkit.addLongKey(c, "ARG" + i, args[i], "Command-line argument.");
         }
         
         c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
