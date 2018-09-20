@@ -66,7 +66,7 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
     public HeaderCard makeCard(String key, double value, String comment) throws HeaderCardException {
         return new HeaderCard(key, Double.isNaN(value) ? UNKNOWN_DOUBLE_VALUE : value, comment);
     }
-    
+
     public HeaderCard makeCard(String key, String value, String comment) throws HeaderCardException {
         return new HeaderCard(key, value == null ? UNKNOWN_STRING_VALUE : value, comment);
     }
@@ -80,31 +80,44 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         return null;
     }
 
+    /**
+     * Merges the data contained in non-private, non-transient fields, including those declared in superclasses
+     * up to SofiaData. It is assumed that merges are performed chronologically, i.e. that the data in the
+     * argument describes the header state a later time than what's already represented by this object's data.
+     * 
+     * @param other The SOFIA header data object to merge information from.
+     * @param isSameFlight
+     */
     public void merge(SofiaData other, boolean isSameFlight) {
         if(other == null) return;   // TODO throw exception?
         if(other == this) return;
-       
-        for(Field f : getClass().getDeclaredFields()) {
-            int mods = f.getModifiers();
-            
-            if(Modifier.isStatic(mods)) continue;
-            if(Modifier.isPrivate(mods)) continue;
-            if(Modifier.isTransient(mods)) continue;
-            
-            try { f.set(this, merge(f.get(this), f.get(other), isSameFlight)); } 
-            catch (Exception e) { CRUSH.error(this, e); }
-        }      
+
+        Class<?> cls = getClass();
+
+        while(SofiaData.class.isAssignableFrom(cls)) {
+            for(Field f : cls.getDeclaredFields()) {
+                int mods = f.getModifiers();
+
+                if(Modifier.isStatic(mods)) continue;
+                if(Modifier.isPrivate(mods)) continue;
+                if(Modifier.isTransient(mods)) continue;
+
+                try { f.set(this, merge(f.get(this), f.get(other), isSameFlight)); } 
+                catch (Exception e) { CRUSH.error(this, e); }
+            }   
+            cls = cls.getSuperclass();
+        }
     }
 
     private Object merge(Object former, Object latter, boolean isSameFlight) {
         if(former == latter) return former;
         if(former == null) return null;
         if(latter == null) return null;
-        
-        
+
+
         if(!former.getClass().isAssignableFrom(latter.getClass())) throw new IllegalArgumentException("Cannot merge two different types: "
                 + former.getClass().getSimpleName() + " / " + latter.getClass().getSimpleName());
-                    
+
         if(former instanceof BracketedValues) {
             if(!isSameFlight) return null;
             return new BracketedValues(((BracketedValues) former).start, ((BracketedValues) latter).end); 
@@ -180,12 +193,23 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
             if(former instanceof Boolean) return ((Boolean) former) | ((Boolean) latter);
             return null;
         }
-        
+
         return former;
     }
-    
-    
-    
+
+    public static SofiaData extractFrom(Object from, Class<? extends SofiaData> type, Class<?> topClass) {  
+        Class<?> cls = from.getClass();
+        while(topClass.isAssignableFrom(cls)) {
+            for(Field f : cls.getDeclaredFields()) if(!Modifier.isStatic(f.getModifiers())) if(type.isAssignableFrom(f.getType())) {
+                try { return (SofiaData) f.get(from); } 
+                catch (Exception e) {}
+            }
+            cls = cls.getSuperclass();
+        }
+        return null;
+    }
+
+
     public final static int UNKNOWN_INT_VALUE = -9999;
     public final static float UNKNOWN_FLOAT_VALUE = -9999.0F;
     public final static double UNKNOWN_DOUBLE_VALUE = -9999.0;

@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 
 import nom.tam.fits.BasicHDU;
@@ -165,7 +166,6 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
 
         //if(hasOption("pixeldata")) 
         //	c.add(new HeaderCard("FLATFILE", option("pixeldata").getValue(), "pixel data file."));
-
     }
 
     @Override
@@ -179,9 +179,9 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         boolean isChopping = false, isNodding = false, isDithering = false, isMapping = false, isScanning = false;
                      
         // Associated IDs...
-        HashSet<String> aors = new HashSet<String>();
-        HashSet<String> missionIDs = new HashSet<String>();
-        HashSet<Double> freqs = new HashSet<Double>();
+        TreeSet<String> aors = new TreeSet<String>();
+        TreeSet<String> missionIDs = new TreeSet<String>();
+        TreeSet<Double> freqs = new TreeSet<Double>();
          
         for(int i=0; i<scans.size(); i++) {
             final SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);       
