@@ -114,7 +114,8 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
     }
     
     @Override
-    public void merge(SofiaData other, boolean isSameFlight) { 
+    public void merge(SofiaData other, boolean isSameFlight) {
+        if(other == this) return;
         SofiaInstrumentData inst = (SofiaInstrumentData) other;
         
         double tExp = exposureTime + inst.exposureTime;

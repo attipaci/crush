@@ -233,9 +233,15 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
                 else scanning.merge(scan.scanning, isSameFlight);  
             }
           
-            if(array != null) array.merge(scan.instrument.array, isSameFlight);
-            if(instrumentData != null) instrumentData.merge(scan.instrument.instrumentData, isSameFlight);
-            if(spectral != null) spectral.merge(scan.instrument.spectral, isSameFlight);
+            
+            if(instrumentData != scan.instrument.instrumentData) 
+                instrumentData.merge(scan.instrument.instrumentData, isSameFlight);
+            
+            if(array != null) if(array != scan.instrument.array) 
+                array.merge(scan.instrument.array, isSameFlight);
+            
+            if(spectral != null) if(spectral != scan.instrument.spectral) 
+                spectral.merge(scan.instrument.spectral, isSameFlight);
             
             if(scan == first) continue;
             

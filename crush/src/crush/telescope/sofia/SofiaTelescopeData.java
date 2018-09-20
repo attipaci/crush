@@ -155,8 +155,13 @@ public class SofiaTelescopeData extends SofiaData {
 
     @Override
     public void merge(SofiaData other, boolean isSameFlight) {
+        if(other == this) return;
+        
+        boolean hasError = hasTrackingError | ((SofiaTelescopeData) other).hasTrackingError;
+        
         super.merge(other, isSameFlight);   
-        hasTrackingError |= ((SofiaTelescopeData) other).hasTrackingError;
+        
+        hasTrackingError = hasError;
     }
 
 

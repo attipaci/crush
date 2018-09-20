@@ -197,6 +197,8 @@ public class SofiaProcessingData extends SofiaData {
     
     @Override
     public void merge(SofiaData other, boolean isSameFlight) {
+        if(other == this) return;
+        
         SofiaProcessingData p = (SofiaProcessingData) other;
         int level = Math.min(qualityLevel, p.qualityLevel);
           

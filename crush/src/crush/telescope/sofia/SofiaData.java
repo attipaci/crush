@@ -83,6 +83,7 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
 
     public void merge(SofiaData other, boolean isSameFlight) {
         if(other == null) return;   // TODO throw exception?
+        if(other == this) return;
        
         for(Field f : getClass().getDeclaredFields()) {
             int mods = f.getModifiers();
@@ -97,8 +98,10 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
     }
 
     private Object merge(Object former, Object latter, boolean isSameFlight) {
+        if(former == latter) return former;
         if(former == null) return null;
         if(latter == null) return null;
+        
         
         if(!former.getClass().isAssignableFrom(latter.getClass())) throw new IllegalArgumentException("Cannot merge two different types: "
                 + former.getClass().getSimpleName() + " / " + latter.getClass().getSimpleName());
