@@ -27,6 +27,7 @@ package crush.telescope.sofia;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -39,7 +40,6 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
-import crush.CRUSH;
 import crush.Channel;
 import crush.Scan;
 import crush.array.Camera;
@@ -48,6 +48,7 @@ import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import jnum.Constant;
 import jnum.Unit;
+import jnum.Util;
 import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
@@ -176,92 +177,44 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         SofiaScan<?,?> first = (SofiaScan<?,?>) scans.get(0);
         
         boolean isChopping = false, isNodding = false, isDithering = false, isMapping = false, isScanning = false;
-        
-        SofiaChopperData chopper = null;
-        SofiaNoddingData nodding = null;
-        SofiaDitheringData dither = null;
-        SofiaMappingData mapping = null;
-        SofiaScanningData scanning = null;
-        
-        SofiaAircraftData aircraft = (SofiaAircraftData) first.aircraft.clone();
-        SofiaEnvironmentData environment = (SofiaEnvironmentData) first.environment.clone();
-        SofiaMissionData mission = (SofiaMissionData) first.mission.clone();  
-        SofiaObservationData observation = (SofiaObservationData) first.observation.clone();
-        SofiaOriginationData origin = (SofiaOriginationData) first.origin.clone();
-        SofiaTelescopeData telescope = (SofiaTelescopeData) first.telescope.clone();
-                
+                     
+        // Associated IDs...
         HashSet<String> aors = new HashSet<String>();
         HashSet<String> missionIDs = new HashSet<String>();
         HashSet<Double> freqs = new HashSet<Double>();
          
         for(int i=0; i<scans.size(); i++) {
             final SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);       
-            final boolean isSameFlight = scan.getFlightNumber() == first.getFlightNumber();
             
-            if(SofiaHeader.isValid(scan.observation.aorID)) aors.add(scan.observation.aorID);
-            if(SofiaHeader.isValid(scan.mission.missionID)) missionIDs.add(scan.mission.missionID);
-            freqs.add(scan.instrument.getFrequency());
+            if(scan == null) continue;
+            
+            if(SofiaHeader.isValid(scan.observation.aorID)) if(!Util.equals(scan.observation.aorID, first.observation.aorID)) 
+                aors.add(scan.observation.aorID);
+            
+            if(SofiaHeader.isValid(scan.mission.missionID)) if(!Util.equals(scan.mission.missionID, first.mission.missionID))
+                missionIDs.add(scan.mission.missionID);
+            
+            if(first.instrument.getFrequency() != scan.instrument.getFrequency()) 
+                freqs.add(scan.instrument.getFrequency());
              
             isChopping |= scan.isChopping;
             isNodding |= scan.isNodding;
             isDithering |= scan.isDithering;
             isMapping |= scan.isMapping;
             isScanning |= scan.isScanning;
-            
-            if(scan.chopper != null) {
-                if(chopper == null) chopper = (SofiaChopperData) scan.chopper.clone();
-                else chopper.merge(scan.chopper, isSameFlight);
-            }
-            
-            if(scan.nodding != null) {
-                if(nodding == null) nodding = (SofiaNoddingData) scan.nodding.clone();
-                else nodding.merge(scan.nodding, isSameFlight);
-            }
-            
-            if(scan.dither != null) {
-                if(dither == null) dither = (SofiaDitheringData) scan.dither.clone();
-                else dither.merge(scan.dither, isSameFlight);
-            }
-        
-            if(scan.mapping != null) {
-                if(mapping == null) mapping = (SofiaMappingData) scan.mapping.clone();
-                else mapping.merge(scan.mapping, isSameFlight);   
-            }
-            
-            if(scan.scanning != null) {
-                if(scanning == null) scanning = (SofiaScanningData) scan.scanning.clone();
-                else scanning.merge(scan.scanning, isSameFlight);  
-            }
-          
-            
-            if(instrumentData != scan.instrument.instrumentData) 
-                instrumentData.merge(scan.instrument.instrumentData, isSameFlight);
-            
-            if(array != null) if(array != scan.instrument.array) 
-                array.merge(scan.instrument.array, isSameFlight);
-            
-            if(spectral != null) if(spectral != scan.instrument.spectral) 
-                spectral.merge(scan.instrument.spectral, isSameFlight);
-            
-            if(scan == first) continue;
-            
-            aircraft.merge(scan.aircraft, isSameFlight);
-            environment.merge(scan.environment, isSameFlight);
-            mission.merge(scan.mission, isSameFlight);
-            observation.merge(scan.observation, isSameFlight);
-            telescope.merge(scan.telescope, isSameFlight);
         }
-        
-        observation.aorID = first.observation.aorID;
-        mission.missionID = first.mission.missionID;
-            
-        observation.editHeader(header);
-        mission.editHeader(header);
-        origin.editHeader(header);
-        environment.editHeader(header);
-        aircraft.editHeader(header);
-        telescope.editHeader(header);  
+                 
+        editHeader(SofiaObservationData.class, header, scans);
+        editHeader(SofiaMissionData.class, header, scans);
+        editHeader(SofiaOriginationData.class, header, scans);
+        editHeader(SofiaEnvironmentData.class, header, scans);
+        editHeader(SofiaAircraftData.class, header, scans);
+        editHeader(SofiaTelescopeData.class, header, scans);
      
+        instrumentData = (SofiaInstrumentData) getMerged(SofiaInstrumentData.class, scans);
+        array = (SofiaArrayData) getMerged(SofiaArrayData.class, scans);
+        spectral = (SofiaSpectroscopyData) getMerged(SofiaSpectroscopyData.class, scans);
+        
         editHeader(header);
 
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
@@ -273,58 +226,56 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         c.add(new HeaderCard("MAPPING", isMapping, "Was mapping?"));    
         c.add(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
    
-        if(chopper != null) if(isChopping) chopper.editHeader(header);
-        if(nodding != null) if(isNodding) nodding.editHeader(header);
-        if(dither != null) if(isDithering) dither.editHeader(header);
-        if(mapping != null) if(isMapping) mapping.editHeader(header);
-        if(scanning != null) if(isScanning) scanning.editHeader(header);
-  
-        c = FitsToolkit.endOf(header);
-           
-        // Add SOFIA processing keys
-          
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Data Processing Keys ------>", false));
-        int level = hasOption("calibrated") ? 3 : 2;
-        
-        // TODO if multiple mission IDs, then Level 4?...
-    
-        c.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
-        c.add(new HeaderCard("HEADSTAT", SofiaProcessingData.MODIFIED, "See original header values in the scan HDUs."));
-        c.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getVersion(), "Software that produced this file."));
-        c.add(new HeaderCard("PIPEVERS", "crush v" + CRUSH.getFullVersion(), "Full software version information.")); 
-        c.add(new HeaderCard("PRODTYPE", "CRUSH-" + getProductType(header), "Type of product produced by the software."));
-        c.add(new HeaderCard("DATAQUAL", getQualityString(scans), "Lowest quality input scan."));
-        
-        // Remove first scan's info from list of associated properties...
-        if(SofiaHeader.isValid(observation.aorID)) aors.remove(observation.aorID);
-        if(SofiaHeader.isValid(mission.missionID)) missionIDs.remove(mission.missionID);
-        freqs.remove(first.instrument.getFrequency());
-        
-        if(!aors.isEmpty()) FitsToolkit.addLongKey(c, "ASSC_AOR", SofiaProcessingData.toString(aors), "Associated AOR IDs.");
-        if(!missionIDs.isEmpty()) FitsToolkit.addLongKey(c, "ASSC_MSN", SofiaProcessingData.toString(missionIDs), "Associated Mission IDs.");
-        if(!freqs.isEmpty()) FitsToolkit.addLongKey(c, "ASSC_FRQ", SofiaProcessingData.toString(freqs), "Associated frequencies.");               
+        if(isChopping) editHeader(SofiaChopperData.class, header, scans);
+        if(isNodding) editHeader(SofiaNoddingData.class, header, scans);
+        if(isDithering) editHeader(SofiaDitheringData.class, header, scans);
+        if(isMapping) editHeader(SofiaMappingData.class, header, scans);
+        if(isScanning) editHeader(SofiaScanningData.class, header, scans);
+
+        SofiaProcessingData processing = new SofiaProcessingData.CRUSH(hasOption("calibrated"), header.getIntValue("NAXIS"), getLowestQuality(scans));
+        processing.associatedAORs = aors;
+        processing.associatedMissionIDs = missionIDs;
+        processing.associatedFrequencies = freqs;
+       
+        processing.editHeader(header);
     }	
     
-
-    protected String getProductType(Header h) {
-        int axes = h.getIntValue("NAXIS");
+    public SofiaData getMerged(Class<? extends SofiaData> type, Collection<Scan<?,?>> scans) throws HeaderCardException {
+        ArrayList<Scan<?,?>> ordered = new ArrayList<Scan<?,?>>(scans);
+        Collections.sort(ordered);
         
-        switch(axes) {
-        case 0: return "HEADER";
-        case 1: return "1D";
-        case 2: return "IMAGE";
-        case 3: return "CUBE";
-        }
-        return axes > 0 ? axes + "D" : "UKNOWN";
-    }
+        SofiaData merged = null;
+        int flightNo = 0;
+        
+        for(int i=0; i<ordered.size(); i++) {
+            SofiaScan<?,?> scan = (SofiaScan<?,?>) ordered.get(i);
+            if(scan == null) continue;
+            if(scan.getData(type) == null) continue;
+            
+            if(merged == null) {
+                merged = scan.getData(type).clone();
+                flightNo = scan.getFlightNumber();
+            }
+            else merged.merge(scan.getData(type), scan.getFlightNumber() == flightNo);
+        }    
+        
+        return merged;
+    }        
 
-    public String getQualityString(List<Scan<?,?>> scans) {
+    public void editHeader(Class<? extends SofiaData> type, Header header, Collection<Scan<?,?>> scans) throws HeaderCardException {
+        SofiaData merged = getMerged(type, scans);        
+        if(merged != null) merged.editHeader(header);
+    }
+    
+
+  
+    public int getLowestQuality(List<Scan<?,?>> scans) {
         int overall = ((SofiaScan<?,?>) scans.get(0)).processing.qualityLevel;
         for(int i=scans.size(); --i > 0; ) {
             int level = ((SofiaScan<?,?>) scans.get(i)).processing.qualityLevel;
             if(level < overall) overall = level;
         }
-        return SofiaProcessingData.qualityNames[overall];
+        return overall;
     }
 
    

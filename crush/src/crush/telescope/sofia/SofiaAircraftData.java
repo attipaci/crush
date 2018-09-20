@@ -97,5 +97,7 @@ public class SofiaAircraftData extends SofiaData implements TableFormatter.Entri
     public String getLogID() {
         return "ac";
     }
+    
+  
 
 }

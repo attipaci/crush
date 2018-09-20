@@ -86,11 +86,14 @@ public class SofiaObservationData extends SofiaData {
     @Override
     public void merge(SofiaData other, boolean isSameFlight) {
         if(other == this) return;
-        String localSourceName = sourceName;
+        
+        String origSourceName = sourceName;
+        String origAOR = aorID;
         
         super.merge(other, isSameFlight);
         
-        sourceName = localSourceName;
+        sourceName = origSourceName;
+        aorID = origAOR;
     }
 
     @Override

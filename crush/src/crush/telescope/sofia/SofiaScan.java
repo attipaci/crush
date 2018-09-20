@@ -591,7 +591,28 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
   
     }
     
-
+    public SofiaData getData(Class<? extends SofiaData> type) {
+        if(type.equals(SofiaInstrumentData.class)) return instrument.instrumentData;
+        if(type.equals(SofiaArrayData.class)) return instrument.array;
+        if(type.equals(SofiaSpectroscopyData.class)) return instrument.spectral;
+        
+        if(type.equals(SofiaAircraftData.class)) return aircraft;
+        if(type.equals(SofiaEnvironmentData.class)) return environment;
+        if(type.equals(SofiaMissionData.class)) return mission;
+        if(type.equals(SofiaObservationData.class)) return observation;
+        if(type.equals(SofiaOriginationData.class)) return origin;
+        if(type.equals(SofiaProcessingData.class)) return processing;
+        if(type.equals(SofiaTelescopeData.class)) return telescope;
+       
+        if(type.equals(SofiaChopperData.class)) return chopper;
+        if(type.equals(SofiaNoddingData.class)) return nodding;
+        if(type.equals(SofiaDitheringData.class)) return dither;
+        if(type.equals(SofiaMappingData.class)) return mapping;
+        if(type.equals(SofiaScanningData.class)) return scanning;
+        return null;
+    }
+    
+    
     public final static String[] requiredKeys = { 
             "DATASRC", "KWDICT", 
             "DATAQUAL", 

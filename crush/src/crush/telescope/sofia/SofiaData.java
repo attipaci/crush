@@ -80,7 +80,6 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         return null;
     }
 
-
     public void merge(SofiaData other, boolean isSameFlight) {
         if(other == null) return;   // TODO throw exception?
         if(other == this) return;
@@ -184,6 +183,8 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         
         return former;
     }
+    
+    
     
     public final static int UNKNOWN_INT_VALUE = -9999;
     public final static float UNKNOWN_FLOAT_VALUE = -9999.0F;

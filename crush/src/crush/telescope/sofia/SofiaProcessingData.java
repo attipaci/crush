@@ -104,12 +104,12 @@ public class SofiaProcessingData extends SofiaData {
         }
 
         if(processLevel != null) c.add(makeCard("PROCSTAT", processLevel, getComment(level)));
-        if(headerStatus != null) c.add(makeCard("HEADSTAT", headerStatus, "Status of header key/value pairs."));
-        if(softwareName != null) c.add(makeCard("PIPELINE", softwareName, "Software that produced scan file."));
-        if(softwareFullVersion != null) c.add(makeCard("PIPEVERS", softwareFullVersion, "Full version info of software."));
-        if(productType != null) c.add(makeCard("PRODTYPE", productType, "Prodcu type produced by software."));
+        if(headerStatus != null) c.add(makeCard("HEADSTAT", headerStatus, "Header state."));
+        if(softwareName != null) c.add(makeCard("PIPELINE", softwareName, "Software that created this file."));
+        if(softwareFullVersion != null) c.add(makeCard("PIPEVERS", softwareFullVersion, "Full software version info."));
+        if(productType != null) c.add(makeCard("PRODTYPE", productType, "Type of product."));
         if(revision != null) c.add(makeCard("FILEREV", revision, "File revision identifier."));
-        if(quality != null) c.add(makeCard("DATAQUAL", quality, "Data quality."));
+        if(quality != null) c.add(makeCard("DATAQUAL", quality, "Data quality level."));
         if(nSpectra >= 0) c.add(makeCard("N_SPEC", nSpectra, "Number of spectra included."));
         
         if(associatedAORs != null) if(!associatedAORs.isEmpty())
@@ -195,6 +195,7 @@ public class SofiaProcessingData extends SofiaData {
     }
     
     
+    
     @Override
     public void merge(SofiaData other, boolean isSameFlight) {
         if(other == this) return;
@@ -210,7 +211,35 @@ public class SofiaProcessingData extends SofiaData {
         headerStatus = MODIFIED;
     }
     
- 
+    public static String getLevelName(int level) {
+        return "LEVEL_" + level;
+    }
+    
+    protected String getProductType(int dims) {
+        switch(dims) {
+        case 0: return "HEADER";
+        case 1: return "1D";
+        case 2: return "IMAGE";
+        case 3: return "CUBE";
+        }
+        return dims > 0 ? dims + "D" : "UKNOWN";
+    }
+
+    
+    public static class CRUSH extends SofiaProcessingData {
+      
+        public CRUSH(boolean isCalibrated, int dims, int qualityLevel) {
+            processLevel = getLevelName(isCalibrated ? 3 : 2);
+            headerStatus = SofiaProcessingData.MODIFIED;
+            softwareName = "crush v" + crush.CRUSH.getVersion();
+            softwareFullVersion = "crush v" + crush.CRUSH.getFullVersion();
+            productType = "CRUSH-" + getProductType(dims);
+            this.qualityLevel = qualityLevel; 
+        } 
+        
+    }
+    
+    
     public static String FAIL = "FAIL";
     public static String PROBLEM = "PROBLEM";
     public static String TEST = "TEST";

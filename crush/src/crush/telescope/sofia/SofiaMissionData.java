@@ -72,5 +72,16 @@ public class SofiaMissionData extends SofiaData {
         
         return super.getTableEntry(name);
     }    
+    
+    @Override
+    public void merge(SofiaData other, boolean isSameFlight) {
+        if(other == this) return;
+        
+        String origMissionID = missionID;
+        
+        super.merge(other, isSameFlight);
+        
+        missionID = origMissionID;
+    }
 
 }
