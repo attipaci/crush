@@ -188,27 +188,52 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         SofiaOriginationData origin = (SofiaOriginationData) first.origin.clone();
         SofiaTelescopeData telescope = (SofiaTelescopeData) first.telescope.clone();
         
-        SofiaChopperData chopper = first.chopper == null ? null : (SofiaChopperData) first.chopper.clone();
-        SofiaNoddingData nodding = first.nodding == null ? null : (SofiaNoddingData) first.nodding.clone();
-        SofiaDitheringData dither = first.dither == null ? null : (SofiaDitheringData) first.dither.clone();
-        SofiaMappingData mapping = first.mapping == null ? null : (SofiaMappingData) first.mapping.clone();
-        SofiaScanningData scanning = first.scanning == null ? null : (SofiaScanningData) first.scanning.clone();
+        SofiaChopperData chopper = null;
+        SofiaNoddingData nodding = null;
+        SofiaDitheringData dither = null;
+        SofiaMappingData mapping = null;
+        SofiaScanningData scanning = null;
         
         HashSet<String> aors = new HashSet<String>();
         HashSet<String> missionIDs = new HashSet<String>();
         HashSet<Double> freqs = new HashSet<Double>();
          
-        for(Scan<?,?> scan : scans) {
-            SofiaScan<?,?> sofiaScan = (SofiaScan<?,?>) scan; 
+        for(int i=0; i<scans.size(); i++) {
+            final SofiaScan<?,?> sofiaScan = (SofiaScan<?,?>) scans.get(i); 
             
             if(SofiaHeader.isValid(sofiaScan.observation.aorID)) aors.add(sofiaScan.observation.aorID);
             if(SofiaHeader.isValid(sofiaScan.mission.missionID)) missionIDs.add(sofiaScan.mission.missionID);
             freqs.add(sofiaScan.instrument.getFrequency());
             
-            if(scan == first) continue;
-             
-            boolean isSameFlight = sofiaScan.getFlightNumber() == first.getFlightNumber();
-      
+            final boolean isSameFlight = sofiaScan.getFlightNumber() == first.getFlightNumber();
+          
+            if(sofiaScan.chopper != null) {
+                if(chopper == null) chopper = (SofiaChopperData) sofiaScan.chopper.clone();
+                else chopper.merge(sofiaScan.chopper, isSameFlight);
+            }
+            
+            if(sofiaScan.nodding != null) {
+                if(nodding == null) nodding = (SofiaNoddingData) sofiaScan.nodding.clone();
+                else nodding.merge(sofiaScan.nodding, isSameFlight);
+            }
+            
+            if(sofiaScan.dither != null) {
+                if(dither == null) dither = (SofiaDitheringData) sofiaScan.dither.clone();
+                else dither.merge(sofiaScan.dither, isSameFlight);
+            }
+        
+            if(sofiaScan.mapping != null) {
+                if(mapping == null) mapping = (SofiaMappingData) sofiaScan.mapping.clone();
+                else mapping.merge(sofiaScan.mapping, isSameFlight);   
+            }
+            
+            if(sofiaScan.scanning != null) {
+                if(scanning == null) scanning = (SofiaScanningData) sofiaScan.scanning.clone();
+                else scanning.merge(sofiaScan.scanning, isSameFlight);  
+            }
+            
+            if(sofiaScan == first) continue;
+         
             if(array != null) array.merge(sofiaScan.instrument.array, isSameFlight);
             if(instrumentData != null) instrumentData.merge(sofiaScan.instrument.instrumentData, isSameFlight);
             if(spectral != null) spectral.merge(sofiaScan.instrument.spectral, isSameFlight);
@@ -224,12 +249,6 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
             mission.merge(sofiaScan.mission, isSameFlight);
             observation.merge(sofiaScan.observation, isSameFlight);
             telescope.merge(sofiaScan.telescope, isSameFlight);
-             
-            if(chopper != null) chopper.merge(sofiaScan.chopper, isSameFlight);
-            if(nodding != null) nodding.merge(sofiaScan.nodding, isSameFlight);
-            if(dither != null) dither.merge(sofiaScan.dither, isSameFlight);
-            if(mapping != null) mapping.merge(sofiaScan.mapping, isSameFlight);   
-            if(scanning != null) scanning.merge(sofiaScan.scanning, isSameFlight);  
         }
         
         observation.aorID = first.observation.aorID;
@@ -246,7 +265,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
 
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Observing Mode Switches ------>", false));
+        c.add(new HeaderCard("COMMENT", "<------ SOFIA Data Collection Keywords ------>", false));
         c.add(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));   
         c.add(new HeaderCard("NODDING", isNodding, "Was nodding used?"));   
         c.add(new HeaderCard("DITHER", isDithering, "Was dithering used?"));    
