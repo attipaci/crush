@@ -47,29 +47,6 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
 
     public abstract void editHeader(Header header) throws HeaderCardException;
 
-    public HeaderCard makeCard(String key, boolean value, String comment) throws HeaderCardException {
-        return new HeaderCard(key, value, comment);
-    }
-
-    public HeaderCard makeCard(String key, int value, String comment) throws HeaderCardException {
-        return new HeaderCard(key, value, comment);
-    }
-
-    public HeaderCard makeCard(String key, long value, String comment) throws HeaderCardException {
-        return new HeaderCard(key, value, comment);
-    }
-
-    public HeaderCard makeCard(String key, float value, String comment) throws HeaderCardException {
-        return new HeaderCard(key, Float.isNaN(value) ? UNKNOWN_FLOAT_VALUE : value, comment);
-    }
-
-    public HeaderCard makeCard(String key, double value, String comment) throws HeaderCardException {
-        return new HeaderCard(key, Double.isNaN(value) ? UNKNOWN_DOUBLE_VALUE : value, comment);
-    }
-
-    public HeaderCard makeCard(String key, String value, String comment) throws HeaderCardException {
-        return new HeaderCard(key, value == null ? UNKNOWN_STRING_VALUE : value, comment);
-    }
 
     public abstract String getLogID();
 
@@ -207,6 +184,31 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
             cls = cls.getSuperclass();
         }
         return null;
+    }
+    
+
+    public static HeaderCard makeCard(String key, boolean value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, value, comment);
+    }
+
+    public static HeaderCard makeCard(String key, int value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, value, comment);
+    }
+
+    public static HeaderCard makeCard(String key, long value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, value, comment);
+    }
+
+    public static HeaderCard makeCard(String key, float value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, Float.isNaN(value) ? UNKNOWN_FLOAT_VALUE : value, comment);
+    }
+
+    public static HeaderCard makeCard(String key, double value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, Double.isNaN(value) ? UNKNOWN_DOUBLE_VALUE : value, comment);
+    }
+
+    public static HeaderCard makeCard(String key, String value, String comment) throws HeaderCardException {
+        return new HeaderCard(key, value == null ? UNKNOWN_STRING_VALUE : value, comment);
     }
 
 

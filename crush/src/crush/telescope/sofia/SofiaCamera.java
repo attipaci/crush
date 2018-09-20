@@ -50,6 +50,7 @@ import crush.telescope.Mount;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
+import jnum.astro.AstroTime;
 import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
@@ -175,9 +176,9 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         scans = new ArrayList<Scan<?,?>>(scans);
         Collections.sort(scans);
         SofiaScan<?,?> first = (SofiaScan<?,?>) scans.get(0);
-        
-        boolean isChopping = false, isNodding = false, isDithering = false, isMapping = false, isScanning = false;
-                     
+               
+        BracketedValues utc = first.utc;
+           
         // Associated IDs...
         TreeSet<String> aors = new TreeSet<String>();
         TreeSet<String> missionIDs = new TreeSet<String>();
@@ -196,14 +197,19 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
             
             if(first.instrument.getFrequency() != scan.instrument.getFrequency()) 
                 freqs.add(scan.instrument.getFrequency());
-             
-            isChopping |= scan.isChopping;
-            isNodding |= scan.isNodding;
-            isDithering |= scan.isDithering;
-            isMapping |= scan.isMapping;
-            isScanning |= scan.isScanning;
+            
+            if(utc != null) {
+                if(scan.getFlightNumber() == first.getFlightNumber()) utc.end = scan.utc.end;
+                else utc.end = Double.NaN;
+            }
         }
-                 
+        
+        
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        c.add(SofiaData.makeCard("DATE-OBS", first.timeStamp, "Start of observation"));    
+        c.add(SofiaData.makeCard("UTCSTART", AstroTime.FITSTimeFormat.format(first.utc.start), "UTC start of observation"));
+        c.add(SofiaData.makeCard("UTCEND", AstroTime.FITSTimeFormat.format(first.utc.end), "UTC end of observation (if same flight)"));
+          
         editHeader(SofiaObservationData.class, header, scans);
         editHeader(SofiaMissionData.class, header, scans);
         editHeader(SofiaOriginationData.class, header, scans);
@@ -215,22 +221,17 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         array = (SofiaArrayData) getMerged(SofiaArrayData.class, scans);
         spectral = (SofiaSpectroscopyData) getMerged(SofiaSpectroscopyData.class, scans);
         
-        editHeader(header);
-
-        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        SofiaCollectionData obsMode = (SofiaCollectionData) getMerged(SofiaCollectionData.class, scans);
         
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Data Collection Keywords ------>", false));
-        c.add(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));   
-        c.add(new HeaderCard("NODDING", isNodding, "Was nodding used?"));   
-        c.add(new HeaderCard("DITHER", isDithering, "Was dithering used?"));    
-        c.add(new HeaderCard("MAPPING", isMapping, "Was mapping?"));    
-        c.add(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
-   
-        if(isChopping) editHeader(SofiaChopperData.class, header, scans);
-        if(isNodding) editHeader(SofiaNoddingData.class, header, scans);
-        if(isDithering) editHeader(SofiaDitheringData.class, header, scans);
-        if(isMapping) editHeader(SofiaMappingData.class, header, scans);
-        if(isScanning) editHeader(SofiaScanningData.class, header, scans);
+        editHeader(header);
+        
+        obsMode.editHeader(header);
+        
+        if(obsMode.isChopping) editHeader(SofiaChopperData.class, header, scans);
+        if(obsMode.isNodding) editHeader(SofiaNoddingData.class, header, scans);
+        if(obsMode.isDithering) editHeader(SofiaDitheringData.class, header, scans);
+        if(obsMode.isMapping) editHeader(SofiaMappingData.class, header, scans);
+        if(obsMode.isScanning) editHeader(SofiaScanningData.class, header, scans);
 
         SofiaProcessingData processing = new SofiaProcessingData.CRUSH(hasOption("calibrated"), header.getIntValue("NAXIS"), getLowestQuality(scans));
         processing.associatedAORs = aors;

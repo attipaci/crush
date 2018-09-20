@@ -55,11 +55,11 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public String checksum, checksumVersion;
 
     public BracketedValues utc = new BracketedValues();
-    public boolean isChopping = false, isNodding = false, isDithering = false, isMapping = false, isScanning = false;
-
+ 
     Vector<String> history = new Vector<String>();
 
     public SofiaObservationData observation;
+    public SofiaCollectionData mode;
     public SofiaProcessingData processing;
     public SofiaMissionData mission;
     public SofiaOriginationData origin;
@@ -80,7 +80,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     }
 
     public boolean useChopper() {
-        return isChopping || hasOption("chopped");
+        return mode.isChopping || hasOption("chopped");
     }
 
     @Override
@@ -237,17 +237,12 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         checksum = header.getString("DATASUM");				// not in 3.0
         checksumVersion = header.getString("CHECKVER");		// not in 3.0
 
-        isChopping = header.getBoolean("CHOPPING", false);
-        isNodding = header.getBoolean("NODDING", false);
-        isDithering = header.getBoolean("DITHER", false);
-        isMapping = header.getBoolean("MAPPING", false);
-        isScanning = header.getBoolean("SCANNING", false);
-
         observation = new SofiaObservationData(header);
         setSourceName(observation.sourceName);
         project = observation.aorID;
         //descriptor = observation.obsID;
-
+        
+        mode = new SofiaCollectionData(header);
         processing = new SofiaProcessingData(header);
         mission = new SofiaMissionData(header);
 
@@ -285,11 +280,11 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
         instrument.parseHeader(header);
 
-        if(isChopping) chopper = new SofiaChopperData(header);
-        if(isNodding) nodding = new SofiaNoddingData(header);
-        if(isDithering) dither = new SofiaDitheringData(header);
-        if(isMapping) mapping = new SofiaMappingData(header);
-        if(isScanning) scanning = new SofiaScanningData(header);	
+        if(mode.isChopping) chopper = new SofiaChopperData(header);
+        if(mode.isNodding) nodding = new SofiaNoddingData(header);
+        if(mode.isDithering) dither = new SofiaDitheringData(header);
+        if(mode.isMapping) mapping = new SofiaMappingData(header);
+        if(mode.isScanning) scanning = new SofiaScanningData(header);	
 
         parseHistory(header.getFitsHeader());
     }
@@ -312,35 +307,30 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         if(checksumVersion != null) c.add(new HeaderCard("CHECKVER", checksumVersion, "Checksum method version."));
 
         observation.editHeader(header);
-        processing.editHeader(header);
         mission.editHeader(header);
         origin.editHeader(header);
         environment.editHeader(header);
         aircraft.editHeader(header);
         telescope.editHeader(header);
-
-
-        c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("CHOPPING", isChopping, "Was chopper in use?"));	
-        c.add(new HeaderCard("NODDING", isNodding, "Was nodding used?"));	
-        c.add(new HeaderCard("DITHER", isDithering, "Was dithering used?"));	
-        c.add(new HeaderCard("MAPPING", isMapping, "Was mapping?"));	
-        c.add(new HeaderCard("SCANNING", isScanning, "Was scanning?"));
-
+        
+        instrument.editHeader(header);
+    
+        mode.editHeader(header);
+    
         if(chopper != null) chopper.editHeader(header);
         if(nodding != null) nodding.editHeader(header);
         if(dither != null) dither.editHeader(header);
         if(mapping != null) mapping.editHeader(header);
         if(scanning != null) scanning.editHeader(header);
-
-        instrument.editHeader(header);
+   
+        processing.editHeader(header);
 
         c = FitsToolkit.endOf(header);
-        //c.add(new HeaderCard("PROCSTAT", "LEVEL_" + level, SofiaProcessingData.getComment(level)));
-        //c.add(new HeaderCard("HEADSTAT", "UNKNOWN", "See original header values in the scan HDUs."));
-        //c.add(new HeaderCard("PIPELINE", "crush v" + CRUSH.getReleaseVersion(), "Software that produced this file."));
-        //c.add(new HeaderCard("PIPEVERS", CRUSH.getFullVersion(), "Full software version information.")); 
-        //c.add(new HeaderCard("PRODTYPE", "CRUSH-SCAN-META", "Type of product produced by the software."));
+        
+        // Add the system descriptors...   
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
+        c.add(new HeaderCard("COMMENT", " Section for scan-specific processing history", false));
+        c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
 
         addHistory(c);
         instrument.addHistory(header, null);

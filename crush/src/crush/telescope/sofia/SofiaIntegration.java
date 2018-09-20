@@ -48,7 +48,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
     @Override
     public double getModulationFrequency(int signalMode) {
         SofiaScan<?,?> sofiaScan = (SofiaScan<?,?>) scan;
-        if(sofiaScan.isChopping) return sofiaScan.chopper.frequency;
+        if(sofiaScan.mode.isChopping) return sofiaScan.chopper.frequency;
         return super.getModulationFrequency(signalMode);
     }
     
@@ -145,8 +145,6 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
           
         return mean;        
     }
-
-
 
 }
 

@@ -34,6 +34,7 @@ import crush.instrument.GenericInstrument;
 import jnum.Configurator;
 import jnum.CopiableContent;
 import jnum.Unit;
+import jnum.astro.AstroTime;
 import jnum.fits.FitsHeaderEditing;
 import jnum.fits.FitsHeaderParsing;
 import jnum.fits.FitsToolkit;
@@ -517,7 +518,8 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     @Override
     public void editHeader(Header header) throws HeaderCardException { 
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        
+          
+        c.add(new HeaderCard("DATE", AstroTime.getDateFormat(AstroTime.FITSFormat).format(new Date()), "File creation time."));
         c.add(new HeaderCard("SCANS", scans.size(), "The number of scans in this composite image."));
         c.add(new HeaderCard("INTEGRTN", integrationTime / Unit.s, "The total integration time in seconds."));
        

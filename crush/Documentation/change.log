@@ -4,6 +4,7 @@
 
 2.42-a2 
 
+
 	[NEW] {SOFIA} All SOFIA header values are now written to the primary 
 	FITS headers, combining data from input scans.
 
@@ -52,6 +53,8 @@
 	instance). Fixed with proper deep copy().
 
 	[FIX] {HIRMES} Parsing of imaging/spectroscopy modes from FITS header
+
+	[TWEAK] FITS keyword 'DATE' added to reflect the file creation date.
 
 	[TWEAK] {SOFIA} SOFIA header keys updated to match Rev. G. of the DCS
 	keyword presciption & dictionary.
