@@ -317,6 +317,8 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
         for(int i=0; i<nHDU; i++) {
             Header header = fits.getHDU(i).getHeader();
             editHeader(header);
+            File f = new File(fileName);
+            header.addValue("FILENAME", f.getName(), "Name at creation");
         }   
         
         addScanHDUsTo(fits);

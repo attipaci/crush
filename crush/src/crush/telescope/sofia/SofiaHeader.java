@@ -30,6 +30,7 @@ import nom.tam.fits.Header;
 public class SofiaHeader {
     private Header header;
     
+   
     public SofiaHeader(Header h) {
         this.header = h;
     }

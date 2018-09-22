@@ -36,8 +36,10 @@ import java.util.logging.Logger;
 
 import crush.CRUSH;
 import crush.telescope.sofia.GyroDrifts;
+import crush.telescope.sofia.SofiaExtendedScanningData;
 import crush.telescope.sofia.SofiaHeader;
 import crush.telescope.sofia.SofiaScan;
+import crush.telescope.sofia.SofiaScanningData;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
@@ -50,7 +52,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
      * 
      */
     private static final long serialVersionUID = -3732251029215505308L;
-
+   
     GyroDrifts gyroDrifts;
     String priorPipelineStep;
     boolean useBetweenScans;	
@@ -106,6 +108,12 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
 
         return !(obsRA == 1.0 && obsDEC == 2.0);
     }
+    
+    @Override
+    protected SofiaScanningData getScanningDataInstance(SofiaHeader header) {
+        return new SofiaExtendedScanningData(header);
+    }
+
 
     @Override
     public void parseHeader(SofiaHeader header) throws Exception {
@@ -128,7 +136,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
             objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
 
         super.parseHeader(header);	
-
+     
         focusTOffset = header.getDouble("FCSTOFF") * Unit.um;
         if(!Double.isNaN(focusTOffset)) info("Focus T Offset: " + Util.f1.format(focusTOffset / Unit.um));    
 

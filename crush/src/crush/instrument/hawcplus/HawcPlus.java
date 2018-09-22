@@ -51,7 +51,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     Vector2D pixelSize;
 
     ArrayList<ChannelGroup<HawcPlusPixel>> subarrayGroups;
-
+     
     String bandID = "-";
     
     boolean[] hasSubarray;
@@ -248,11 +248,11 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         }
         catch(NoSuchFieldException e) { error(e); }
     }
-
+  
     @Override
     public void parseHeader(SofiaHeader header) {
         super.parseHeader(header);
-        
+              
         spectral = null;    // Discard spectroscopy header data entirely...
 
         // TODO should not be necessary if the header is proper...
@@ -287,6 +287,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         if(hasOption("subarray")) selectSubarrays(option("subarray").getValue());
     }
 
+
+    
     @Override
     protected void loadChannelData() {
 
@@ -448,17 +450,16 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         return super.getChannelDataHeader() + "\teff\tGmux\tidx\tsub\trow\tcol";
     }
 
-
     @Override
-    public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
+    public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {           
         super.editImageHeader(scans, header);
+               
         // Add HAWC+ specific keywords
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ HAWC+ Header Keys ------>", false));
                 c.add(new HeaderCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
     }
     
-
     @Override
     public void readData(BasicHDU<?>[] hdu) throws Exception {      
         for(int i=1; i<hdu.length; i++) {

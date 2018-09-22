@@ -294,7 +294,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		if(quadrature != 0) delta *= 2.0;
 		
 		SphericalCoordinates basisCoords = new HorizontalCoordinates();
-		try { basisCoords = scanSystem.newInstance(); }
+		try { basisCoords = scanSystem.getConstructor().newInstance(); }
 		catch(Exception e) { error(e); }
 		String longitudeName = basisCoords.getCoordinateSystem().get(0).getShortLabel();
 		

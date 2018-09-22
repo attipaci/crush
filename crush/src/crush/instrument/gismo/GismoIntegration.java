@@ -245,7 +245,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 					}
 					else {
 						try {
-							CelestialCoordinates celestial = (CelestialCoordinates) gismoScan.basisSystem.newInstance();
+							CelestialCoordinates celestial = (CelestialCoordinates) gismoScan.basisSystem.getConstructor().newInstance();
 							celestial.set(X0[i], Y0[i]);
 							if(gismoScan.basisOffset != null) 
 								celestial.addOffset(gismoScan.basisOffset);
@@ -255,8 +255,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 							frame.equatorial = celestial.toEquatorial();
 							frame.calcHorizontal();
 						}
-						catch(InstantiationException e) { error(e); }
-						catch(IllegalAccessException e) { error(e); }
+						catch(Exception e) { error(e); }
 					}
 						
 					// Calculate the parallactic angle

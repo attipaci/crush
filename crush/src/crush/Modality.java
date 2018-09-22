@@ -66,7 +66,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		for(int i=0; i<division.size(); i++) {
 		    ChannelGroup<?> group = division.get(i);
 			try {
-				ModeType mode = modeClass.newInstance();
+				ModeType mode = modeClass.getConstructor().newInstance();
 				mode.setChannels(group);
 				add(mode);
 			}

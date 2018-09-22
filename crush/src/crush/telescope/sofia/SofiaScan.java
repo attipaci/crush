@@ -55,7 +55,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public String checksum, checksumVersion;
 
     public BracketedValues utc = new BracketedValues();
- 
+
     Vector<String> history = new Vector<String>();
 
     public SofiaObservationData observation;
@@ -74,6 +74,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public SofiaScanningData scanning;
 
     public Fits fits;
+    
+    LinkedHashMap<String, HeaderCard> preservedKeys = new LinkedHashMap<String, HeaderCard>();
 
     public SofiaScan(InstrumentType instrument) {
         super(instrument);
@@ -207,6 +209,10 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         return null;  
     }
 
+    
+    protected SofiaScanningData getScanningDataInstance(SofiaHeader header) {
+        return new SofiaScanningData(header);
+    }
 
     public void parseHeader(SofiaHeader header) throws Exception {
         // Load any options based on the FITS header...
@@ -214,6 +220,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
         fileDate = header.getString("DATE");
         date = header.getString("DATE-OBS");
+        if(date == null) date = defaultFITSDate;
 
         String startTime = header.getString("UTCSTART", null);
         String endTime = header.getString("UTCEND", null);
@@ -241,7 +248,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         setSourceName(observation.sourceName);
         project = observation.aorID;
         //descriptor = observation.obsID;
-        
+
         mode = new SofiaCollectionData(header);
         processing = new SofiaProcessingData(header);
         mission = new SofiaMissionData(header);
@@ -284,8 +291,13 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         if(mode.isNodding) nodding = new SofiaNoddingData(header);
         if(mode.isDithering) dither = new SofiaDitheringData(header);
         if(mode.isMapping) mapping = new SofiaMappingData(header);
-        if(mode.isScanning) scanning = new SofiaScanningData(header);	
+        if(mode.isScanning) scanning = getScanningDataInstance(header);	
 
+        for(String key : instrument.getPreservedHeaderKeys()) {
+            HeaderCard card = header.getFitsHeader().findCard(key);
+            if(card != null) preservedKeys.put(key, card);
+        }
+        
         parseHistory(header.getFitsHeader());
     }
 
@@ -312,21 +324,21 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         environment.editHeader(header);
         aircraft.editHeader(header);
         telescope.editHeader(header);
-        
+
         instrument.editHeader(header);
-    
+
         mode.editHeader(header);
-    
+
         if(chopper != null) chopper.editHeader(header);
         if(nodding != null) nodding.editHeader(header);
         if(dither != null) dither.editHeader(header);
         if(mapping != null) mapping.editHeader(header);
         if(scanning != null) scanning.editHeader(header);
-   
+
         processing.editHeader(header);
 
         c = FitsToolkit.endOf(header);
-        
+
         // Add the system descriptors...   
         c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
         c.add(new HeaderCard("COMMENT", " Section for scan-specific processing history", false));
@@ -335,6 +347,16 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
         addHistory(c);
         instrument.addHistory(header, null);
     }
+
+
+    public void addPreservedHeaderKeysTo(Header header) throws HeaderCardException {
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        
+        c.add(new HeaderCard("COMMENT", "<------ SOFIA Additional SI keys ------>", false));
+        
+        for(String key : preservedKeys.keySet()) if(!header.containsKey(key)) c.add(preservedKeys.get(key));
+    }
+
 
     public void addHistory(Cursor<String, HeaderCard> c) throws HeaderCardException {
         for(int i=0; i<history.size(); i++) FitsToolkit.addHistory(c, history.get(i));
@@ -581,15 +603,8 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
     }
 
-    public SofiaData getData(Class<? extends SofiaData> type) {
-        // Find a matching field in this scan including superclasses...
-        SofiaData data = SofiaData.extractFrom(this, type, SofiaScan.class);
-        if(data != null) return data;
-        
-        // Or try to find it in the instrument...
-        return SofiaData.extractFrom(instrument, type, SofiaCamera.class);    
-    }
 
-   
+    public static String defaultFITSDate = "1970-01-01T00:00:00.0";
+
 
 }

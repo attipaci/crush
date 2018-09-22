@@ -112,21 +112,5 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
     public String getLogID() {
         return "inst";
     }
-    
-    @Override
-    public void merge(SofiaData other, boolean isSameFlight) {
-        if(other == this) return;
-        SofiaInstrumentData inst = (SofiaInstrumentData) other;
-        
-        double tExp = exposureTime + inst.exposureTime;
-        double tTot = totalIntegrationTime + inst.totalIntegrationTime;
-        
-        super.merge(other, isSameFlight);
-        
-        exposureTime = tExp;
-        totalIntegrationTime = tTot;
-        
-    }
-
-
+   
 }

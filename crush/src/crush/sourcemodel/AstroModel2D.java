@@ -75,8 +75,8 @@ public abstract class AstroModel2D extends SourceModel {
     public boolean allowIndexing = true;
 
     private int indexShiftX, indexMaskY;
-    
 
+    
     public AstroModel2D(Instrument<?> instrument) {
         super(instrument);
         grid = new SphericalGrid();
@@ -883,7 +883,7 @@ public abstract class AstroModel2D extends SourceModel {
         if(getID() != null) if(getID().length() > 0) idExt = "." + getID();
 
         String fileName = path + File.separator + getCoreName() + idExt + ".fits";
-
+           
         if(isEmpty()) {
             // No file is created, any existing file with same name is erased.
             warning("Source" + idExt + " is empty. Skipping.");
@@ -900,7 +900,7 @@ public abstract class AstroModel2D extends SourceModel {
     }
     
 
-    public void writePNG(Map2D map, Configurator config, String fileName) throws InstantiationException, IllegalAccessException, IOException { 
+    public void writePNG(Map2D map, Configurator config, String fileName) throws Exception { 
         map = map.copy(true);
         
         Data2D values = map;
@@ -944,7 +944,7 @@ public abstract class AstroModel2D extends SourceModel {
         writePNG(values.getImage(), config, fileName);  
     }
 
-    public void writePNG(Image2D map, Configurator option, String fileName) throws InstantiationException, IllegalAccessException, IOException {
+    public void writePNG(Image2D map, Configurator option, String fileName) throws Exception {
         int width = DEFAULT_PNG_SIZE;
         int height = DEFAULT_PNG_SIZE;
 

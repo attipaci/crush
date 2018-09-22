@@ -418,7 +418,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		}
 		else {
 			try { 
-				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.newInstance(); 
+				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.getConstructor().newInstance(); 
 				basisCoords.set(lon, lat);
 				if(basisCoords instanceof Precessing) ((Precessing) basisCoords).setEpoch(epoch);
 				equatorial = basisCoords.toEquatorial();

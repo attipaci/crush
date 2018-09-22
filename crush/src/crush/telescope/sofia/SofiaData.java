@@ -23,14 +23,6 @@
 
 package crush.telescope.sofia;
 
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-
-import crush.CRUSH;
-import jnum.Util;
-import jnum.math.Range;
-import jnum.math.Range2D;
 import jnum.text.TableFormatter;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
@@ -57,123 +49,7 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         return null;
     }
 
-    /**
-     * Merges the data contained in non-private, non-transient fields, including those declared in superclasses
-     * up to SofiaData. It is assumed that merges are performed chronologically, i.e. that the data in the
-     * argument describes the header state a later time than what's already represented by this object's data.
-     * 
-     * @param other The SOFIA header data object to merge information from.
-     * @param isSameFlight
-     */
-    public void merge(SofiaData other, boolean isSameFlight) {
-        if(other == null) return;   // TODO throw exception?
-        if(other == this) return;
-
-        Class<?> cls = getClass();
-
-        while(SofiaData.class.isAssignableFrom(cls)) {
-            for(Field f : cls.getDeclaredFields()) {
-                int mods = f.getModifiers();
-
-                if(Modifier.isStatic(mods)) continue;
-                if(Modifier.isPrivate(mods)) continue;
-                if(Modifier.isTransient(mods)) continue;
-
-                try { f.set(this, merge(f.get(this), f.get(other), isSameFlight)); } 
-                catch (Exception e) { CRUSH.error(this, e); }
-            }   
-            cls = cls.getSuperclass();
-        }
-    }
-
-    private Object merge(Object former, Object latter, boolean isSameFlight) {
-        if(former == latter) return former;
-        if(former == null) return null;
-        if(latter == null) return null;
-
-
-        if(!former.getClass().isAssignableFrom(latter.getClass())) throw new IllegalArgumentException("Cannot merge two different types: "
-                + former.getClass().getSimpleName() + " / " + latter.getClass().getSimpleName());
-
-        if(former instanceof BracketedValues) {
-            if(!isSameFlight) return null;
-            return new BracketedValues(((BracketedValues) former).start, ((BracketedValues) latter).end); 
-        }  
-        else if(former instanceof Range) {
-            Range merged = ((Range) former).copy();
-            merged.include((Range) latter);
-            return merged;
-        }
-        else if(former instanceof Range2D) {
-            Range2D merged = ((Range2D) former).copy();
-            merged.include((Range2D) latter);
-            return merged;
-        }
-        else if(former instanceof Object[]) {
-            Object[] A = (Object[]) former;
-            Object[] B = (Object[]) latter;
-            if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) A[i] = merge(A[i], B[i], isSameFlight);
-        }
-        else if(former instanceof boolean[]) return null;    // No default merges for some types...
-        else if(former instanceof byte[]) return null;
-        else if(former instanceof char[]) return null;
-        else if(former instanceof short[]) {
-            short[] A = (short[]) former;
-            short[] B = (short[]) latter;
-            short[] merged = new short[A.length];
-            if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) merged[i] = A[i] == B[i] ? A[i] : (short) UNKNOWN_INT_VALUE;
-            return merged;
-        }
-        else if(former instanceof int[]) {
-            int[] A = (int[]) former;
-            int[] B = (int[]) latter;
-            int[] merged = new int[A.length];
-            if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) merged[i] = A[i] == B[i] ? A[i] : UNKNOWN_INT_VALUE;
-            return merged;
-        }
-        else if(former instanceof long[]) {
-            long[] A = (long[]) former;
-            long[] B = (long[]) latter;
-            long[] merged = new long[A.length];
-            if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) merged[i] = A[i] == B[i] ? A[i] : UNKNOWN_INT_VALUE;
-            return merged;
-        }
-        else if(former instanceof float[]) {
-            float[] A = (float[]) former;
-            float[] B = (float[]) latter;
-            float[] merged = new float[A.length];
-            if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) merged[i] = A[i] == B[i] ? A[i] : Float.NaN;
-            return merged;
-        }
-        else if(former instanceof double[]) {
-            double[] A = (double[]) former;
-            double[] B = (double[]) latter;
-            double[] merged = new double[A.length];
-            if(A.length != B.length) return null;
-            for(int i=A.length; --i >= 0; ) merged[i] = A[i] == B[i] ? A[i] : Double.NaN;
-            return merged;
-        }
-        else if(!Util.equals(former, latter)) {
-            if(former instanceof Number) {
-                if(former instanceof Double) return Double.NaN;
-                if(former instanceof Float) return Float.NaN;
-                if(former instanceof Long) return UNKNOWN_INT_VALUE;
-                if(former instanceof Integer) return UNKNOWN_INT_VALUE;
-                if(former instanceof Short) return (short) UNKNOWN_INT_VALUE;
-                return former;
-            }
-            if(former instanceof Boolean) return ((Boolean) former) | ((Boolean) latter);
-            return null;
-        }
-
-        return former;
-    }
-
+    /*
     public static SofiaData extractFrom(Object from, Class<? extends SofiaData> type, Class<?> topClass) {  
         Class<?> cls = from.getClass();
         while(topClass.isAssignableFrom(cls)) {
@@ -185,6 +61,7 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         }
         return null;
     }
+    */
     
 
     public static HeaderCard makeCard(String key, boolean value, String comment) throws HeaderCardException {

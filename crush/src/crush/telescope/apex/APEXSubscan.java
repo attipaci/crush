@@ -421,7 +421,7 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 					tempOffset = new Vector2D();
 					
 					if(apexScan.basisSystem != HorizontalCoordinates.class && apexScan.basisSystem != EquatorialCoordinates.class) {
-						try { basisCoords = (CelestialCoordinates) apexScan.basisSystem.newInstance(); }
+						try { basisCoords = (CelestialCoordinates) apexScan.basisSystem.getConstructor().newInstance(); }
 						catch(Exception e) {
 							throw new IllegalStateException("Cannot instantiate " + apexScan.basisSystem.getName() +
 									": " + e.getMessage());

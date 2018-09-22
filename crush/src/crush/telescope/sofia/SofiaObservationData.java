@@ -32,6 +32,7 @@ import nom.tam.util.Cursor;
 
 public class SofiaObservationData extends SofiaData {
     public String sourceName, obsID, dataSource, obsType, sourceType;
+    private boolean isPrimaryObsID = false;
     public String dictionaryVersion;
     public String imageID, aotID, aorID, fileGroupID, redGroupID, blueGroupID;
   
@@ -67,7 +68,7 @@ public class SofiaObservationData extends SofiaData {
         c.add(makeCard("OBSTYPE", obsType, "type of observation."));
         c.add(makeCard("SRCTYPE", sourceType, "AOR source type."));
         c.add(makeCard("KWDICT", dictionaryVersion, "SOFIA keword dictionary version."));
-        c.add(makeCard("OBS_ID", obsID, "Sofia observation ID."));
+        c.add(makeCard("OBS_ID", (isPrimaryObsID ? "P_" : "") + obsID, "Sofia observation ID."));
        
         if(imageID != null) c.add(makeCard("IMAGEID", imageID, "Image ID within an observation."));
         if(aotID != null) c.add(makeCard("AOT_ID", aotID, "unique Astronomical Observation Template ID."));
@@ -81,19 +82,6 @@ public class SofiaObservationData extends SofiaData {
     @Override
     public String getLogID() {
         return "obs";
-    }
-    
-    @Override
-    public void merge(SofiaData other, boolean isSameFlight) {
-        if(other == this) return;
-        
-        String origSourceName = sourceName;
-        String origAOR = aorID;
-        
-        super.merge(other, isSameFlight);
-        
-        sourceName = origSourceName;
-        aorID = origAOR;
     }
 
     @Override

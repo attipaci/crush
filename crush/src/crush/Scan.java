@@ -792,7 +792,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		Class<?> coordinateClass = relative.getCoordinateClass();
 		
 		try {
-		    SphericalCoordinates coords = (SphericalCoordinates) coordinateClass.newInstance();
+		    SphericalCoordinates coords = (SphericalCoordinates) coordinateClass.getConstructor().newInstance();
 		    CoordinateSystem system = coords.getCoordinateSystem();
 		    nameX = system.get(0).getShortLabel();
 		    nameY = system.get(1).getShortLabel();
@@ -951,7 +951,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		String nameY = "y";
 		
 		try {
-		    SphericalCoordinates coords = (SphericalCoordinates) nativePointing.getCoordinateClass().newInstance();
+		    SphericalCoordinates coords = (SphericalCoordinates) nativePointing.getCoordinateClass().getConstructor().newInstance();
 		    CoordinateSystem system = coords.getLocalCoordinateSystem();
 		    nameX = system.get(0).getShortLabel();
 		    nameY = system.get(1).getShortLabel();

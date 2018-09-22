@@ -194,22 +194,7 @@ public class SofiaProcessingData extends SofiaData {
         return new String(buf);
     }
     
-    
-    
-    @Override
-    public void merge(SofiaData other, boolean isSameFlight) {
-        if(other == this) return;
-        
-        SofiaProcessingData p = (SofiaProcessingData) other;
-        int level = Math.min(qualityLevel, p.qualityLevel);
-          
-        super.merge(other, isSameFlight);
-        
-        qualityLevel = level;
-        quality = qualityNames[qualityLevel];
-        
-        headerStatus = MODIFIED;
-    }
+ 
     
     public static String getLevelName(int level) {
         return "LEVEL_" + level;
@@ -231,8 +216,8 @@ public class SofiaProcessingData extends SofiaData {
         public CRUSH(boolean isCalibrated, int dims, int qualityLevel) {
             processLevel = getLevelName(isCalibrated ? 3 : 2);
             headerStatus = SofiaProcessingData.MODIFIED;
-            softwareName = "crush v" + crush.CRUSH.getVersion();
-            softwareFullVersion = "crush v" + crush.CRUSH.getFullVersion();
+            softwareName = "crush";
+            softwareFullVersion = crush.CRUSH.getFullVersion();
             productType = "CRUSH-" + getProductType(dims);
             this.qualityLevel = qualityLevel; 
         } 

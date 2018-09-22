@@ -75,7 +75,6 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     
     protected int excludeSamples = ~Frame.SAMPLE_SOURCE_BLANK;
 
-
     public SourceModel(Instrument<?> instrument) {
         setInstrument(instrument);
     }

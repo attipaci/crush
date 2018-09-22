@@ -26,10 +26,9 @@ package crush.telescope.sofia;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -42,6 +41,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 import crush.Channel;
+import crush.CRUSH;
 import crush.Scan;
 import crush.array.Camera;
 import crush.instrument.ColorArrangement;
@@ -173,12 +173,9 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
         super.editImageHeader(scans, header);	
        
-        scans = new ArrayList<Scan<?,?>>(scans);
-        Collections.sort(scans);
-        SofiaScan<?,?> first = (SofiaScan<?,?>) scans.get(0);
-               
-        BracketedValues utc = first.utc;
-           
+        SofiaScan<?,?> first = (SofiaScan<?,?>) Scan.getEarliest(scans);
+        SofiaScan<?,?> last = (SofiaScan<?,?>) Scan.getLatest(scans);
+              
         // Associated IDs...
         TreeSet<String> aors = new TreeSet<String>();
         TreeSet<String> missionIDs = new TreeSet<String>();
@@ -186,8 +183,6 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
          
         for(int i=0; i<scans.size(); i++) {
             final SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);       
-            
-            if(scan == null) continue;
             
             if(SofiaHeader.isValid(scan.observation.aorID)) if(!Util.equals(scan.observation.aorID, first.observation.aorID)) 
                 aors.add(scan.observation.aorID);
@@ -197,77 +192,104 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
             
             if(first.instrument.getFrequency() != scan.instrument.getFrequency()) 
                 freqs.add(scan.instrument.getFrequency());
-            
-            if(utc != null) {
-                if(scan.getFlightNumber() == first.getFlightNumber()) utc.end = scan.utc.end;
-                else utc.end = Double.NaN;
-            }
         }
         
-        
+        // SOFIA date and time keys...
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(SofiaData.makeCard("DATE-OBS", first.timeStamp, "Start of observation"));    
-        c.add(SofiaData.makeCard("UTCSTART", AstroTime.FITSTimeFormat.format(first.utc.start), "UTC start of observation"));
-        c.add(SofiaData.makeCard("UTCEND", AstroTime.FITSTimeFormat.format(first.utc.end), "UTC end of observation (if same flight)"));
-          
-        editHeader(SofiaObservationData.class, header, scans);
-        editHeader(SofiaMissionData.class, header, scans);
-        editHeader(SofiaOriginationData.class, header, scans);
-        editHeader(SofiaEnvironmentData.class, header, scans);
-        editHeader(SofiaAircraftData.class, header, scans);
-        editHeader(SofiaTelescopeData.class, header, scans);
+        c.add(SofiaData.makeCard("DATE-OBS", first.timeStamp, "Start of observation"));
+        c.add(SofiaData.makeCard("UTCSTART", AstroTime.FITSTimeFormat.format(first.utc.start), "UTC start of first scan"));
+        c.add(SofiaData.makeCard("UTCEND", AstroTime.FITSTimeFormat.format(last.utc.end), "UTC end of last scan"));
+        // DATE is added automatically...  
+        
+        // SOFIA observation keys...
+        // Make the OBS_ID processed!
+        SofiaObservationData observation = (SofiaObservationData) first.observation.clone();
+        if(observation.obsID != null) if(!observation.obsID.startsWith("P_")) observation.obsID = "P_" + first.observation.obsID;
+        observation.editHeader(header);
+        
+        // SOFIA mission keys...
+        first.mission.editHeader(header);
+        
+        // SOFIA origination keys....
+        SofiaOriginationData origin = (SofiaOriginationData) first.origin.clone();
+        origin.organization = hasOption("organization") ? option("organization").getValue() : null;
+        origin.creator = "crush " + CRUSH.getVersion();
+        origin.fileName = null; // FILENAME fills automatically at writing...
+        origin.editHeader(header);
+        
+        // SOFIA environmental keys...
+        SofiaEnvironmentData env = (SofiaEnvironmentData) first.environment.clone();
+        env.pwv = new BracketedValues(first.environment.pwv.start, last.environment.pwv.end);
+        env.editHeader(header);
+      
+        // SOFIA aircraft keys...
+        first.aircraft.editHeader(header);
+
+        // SOFIA telescope keys...
+        SofiaTelescopeData tel = (SofiaTelescopeData) first.telescope.clone();
+        tel.focusT = new BracketedValues(first.environment.pwv.start, last.environment.pwv.end);
+        tel.tascuStatus = last.telescope.tascuStatus;
+        tel.fbcStatus = last.telescope.fbcStatus;
+        tel.requestedEquatorial = first.objectCoords;
+        tel.zenithAngle = new BracketedValues(first.telescope.zenithAngle.start, first.telescope.zenithAngle.end);
+        tel.hasTrackingError = hasTrackingError(scans);
+        tel.editHeader(header);
      
-        instrumentData = (SofiaInstrumentData) getMerged(SofiaInstrumentData.class, scans);
-        array = (SofiaArrayData) getMerged(SofiaArrayData.class, scans);
-        spectral = (SofiaSpectroscopyData) getMerged(SofiaSpectroscopyData.class, scans);
+        // SOFIA instrument keys..
+        instrumentData.exposureTime = getTotalExposureTime(scans);
         
-        SofiaCollectionData obsMode = (SofiaCollectionData) getMerged(SofiaCollectionData.class, scans);
-        
+        // SOFIA array keys...
+        if(array != null) array.boresightIndex = scans.size() > 1 ? new Vector2D(Double.NaN, Double.NaN) : first.instrument.array.boresightIndex;
+                      
         editHeader(header);
         
-        obsMode.editHeader(header);
+        // SOFIA collection keys...
+        first.mode.editHeader(header);
         
-        if(obsMode.isChopping) editHeader(SofiaChopperData.class, header, scans);
-        if(obsMode.isNodding) editHeader(SofiaNoddingData.class, header, scans);
-        if(obsMode.isDithering) editHeader(SofiaDitheringData.class, header, scans);
-        if(obsMode.isMapping) editHeader(SofiaMappingData.class, header, scans);
-        if(obsMode.isScanning) editHeader(SofiaScanningData.class, header, scans);
-
+        // SOFIA keys specific to collection modes...
+        if(first.mode.isChopping) first.chopper.editHeader(header);
+        if(first.mode.isNodding) first.nodding.editHeader(header);
+        if(first.mode.isDithering) {
+            SofiaDitheringData dither = (SofiaDitheringData) first.dither.clone();
+            if(scans.size() > 1) dither.index = SofiaData.UNKNOWN_INT_VALUE;
+            dither.editHeader(header);
+        }
+        if(first.mode.isMapping) first.mapping.editHeader(header);
+        if(first.mode.isScanning) first.scanning.editHeader(header);
+        
+        // SOFIA data processing keys
         SofiaProcessingData processing = new SofiaProcessingData.CRUSH(hasOption("calibrated"), header.getIntValue("NAXIS"), getLowestQuality(scans));
         processing.associatedAORs = aors;
         processing.associatedMissionIDs = missionIDs;
         processing.associatedFrequencies = freqs;
-       
         processing.editHeader(header);
+        
+        first.addPreservedHeaderKeysTo(header);
+        
     }	
     
-    public SofiaData getMerged(Class<? extends SofiaData> type, Collection<Scan<?,?>> scans) throws HeaderCardException {
-        ArrayList<Scan<?,?>> ordered = new ArrayList<Scan<?,?>>(scans);
-        Collections.sort(ordered);
-        
-        SofiaData merged = null;
-        int flightNo = 0;
-        
-        for(int i=0; i<ordered.size(); i++) {
-            SofiaScan<?,?> scan = (SofiaScan<?,?>) ordered.get(i);
-            if(scan == null) continue;
-            if(scan.getData(type) == null) continue;
-            
-            if(merged == null) {
-                merged = scan.getData(type).clone();
-                flightNo = scan.getFlightNumber();
-            }
-            else merged.merge(scan.getData(type), scan.getFlightNumber() == flightNo);
-        }    
-        
-        return merged;
-    }        
-
-    public void editHeader(Class<? extends SofiaData> type, Header header, Collection<Scan<?,?>> scans) throws HeaderCardException {
-        SofiaData merged = getMerged(type, scans);        
-        if(merged != null) merged.editHeader(header);
-    }
     
+    public LinkedHashSet<String> getPreservedHeaderKeys() {
+        LinkedHashSet<String> keys = new LinkedHashSet<String>();
+    
+         // Add any additional keys that should be added to the FITS header can specified by the 'fits.addkeys' option
+        if(hasOption("fits.addkeys")) for(String key : option("fits.addkeys").getList()) {
+            key = key.toUpperCase();
+            if(!keys.contains(key)) keys.add(key);          
+        }
+        return keys;
+    }
+   
+    public boolean hasTrackingError(Collection<Scan<?,?>> scans) {
+        for(Scan<?,?> scan : scans) if(((SofiaScan<?,?>) scan).telescope.hasTrackingError) return true;
+        return false;
+    }
+
+    public double getTotalExposureTime(Collection<Scan<?,?>> scans) {
+        double t = 0.0;
+        for(Scan<?,?> scan : scans) t += ((SofiaCamera<?>) scan.instrument).instrumentData.exposureTime;
+        return t;
+    }
 
   
     public int getLowestQuality(List<Scan<?,?>> scans) {
@@ -284,7 +306,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         double firstMJD = scans.get(0).getMJD();
         Scan<?,?> earliestScan = scans.get(0);
 
-        for(int i=scans.size(); --i > 1; ) if(scans.get(i).getMJD() < firstMJD) {
+        for(int i=1; i < scans.size(); i++) if(scans.get(i).getMJD() < firstMJD) {
             earliestScan = scans.get(i);
             firstMJD = earliestScan.getMJD();
         }

@@ -1193,11 +1193,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     public void getRobustChannelWeights() {
         comments.append("[W]");
 
-        final ChannelGroup<?> channels = instrument.getLiveChannels();
-
+        final ChannelGroup<? extends Channel> channels = instrument.getLiveChannels();
+        
         final DataPoint[] var = instrument.getDataPoints();
         for(Channel channel : channels) var[channel.index].noData();
 
+        
         channels.new Fork<Void>() {
             private float[] dev2;
 
@@ -1233,6 +1234,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             }
 
         }.process();
+      
 
         setWeightsFromVarStats(channels, var);
     }

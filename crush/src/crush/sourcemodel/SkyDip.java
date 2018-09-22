@@ -186,6 +186,7 @@ public class SkyDip extends SourceModel {
         String fileName = hasOption("name") ? option("name").getValue() : getDefaultCoreName();
         String coreName = CRUSH.workPath + File.separator + fileName;
         fileName = coreName + ".dat";
+        
 
         PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
         StringTokenizer header = new StringTokenizer(model.toString(), "\n");
@@ -208,6 +209,7 @@ public class SkyDip extends SourceModel {
         out.close();
 
         CRUSH.notify(this, "Written " + fileName);
+        
 
         gnuplot(coreName, fileName, model);
     }
@@ -277,7 +279,6 @@ public class SkyDip extends SourceModel {
         plot.println((hasOption("show") ? "" : "#")  + "replot");
 
         plot.close();
-
         CRUSH.notify(this, "Written " + plotName);
 
         if(hasOption("gnuplot")) {
@@ -295,8 +296,9 @@ public class SkyDip extends SourceModel {
         plot.println("set out '" + coreName + ".eps'");
         plot.println("replot");
 
-        plot.println("print 'Written " + coreName + ".eps'");
-        CRUSH.notify(this, "Written " + coreName + ".eps");	
+        String fileName = coreName + ".eps";
+        plot.println("print 'Written " + fileName + "'");
+        CRUSH.notify(this, "Written " + fileName);	
     }
 
     public void gnuplotPNG(PrintWriter plot, String coreName) {
@@ -323,8 +325,10 @@ public class SkyDip extends SourceModel {
                 " butt size " + sizeX + "," + sizeY);
         plot.println("set out '" + coreName + ".png'");
         plot.println("replot");
-        plot.println("print 'Written " + coreName + ".png'");	
-        CRUSH.notify(this, "Written " + coreName + ".png");
+        
+        String fileName = coreName + ".png";
+        plot.println("print 'Written " + fileName + "'");	
+        CRUSH.notify(this, "Written " + fileName);
     }
 
     public void fit(SkyDipModel model) {

@@ -359,7 +359,7 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		}
 		else {
 			try { 
-				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.newInstance();
+				CelestialCoordinates basisCoords = (CelestialCoordinates) basisSystem.getConstructor().newInstance();
 				basisCoords.set(lon, lat);
 				equatorial = basisCoords.toEquatorial();
 				calcHorizontal();

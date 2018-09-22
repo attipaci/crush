@@ -55,7 +55,7 @@ public class SofiaOriginationData extends SofiaData {
         c.add(makeCard("OBSERVER", observer, "Name(s) of observer(s)."));
         c.add(makeCard("CREATOR", creator, "Software / Task that created the raw data."));
         c.add(makeCard("OPERATOR", operator, "Name(s) of operator(s)."));
-        FitsToolkit.addLongKey(c, "FILENAME", fileName == null ? UNKNOWN_STRING_VALUE : fileName, "Original file name.");
+        if(fileName != null) FitsToolkit.addLongKey(c, "FILENAME", fileName == null ? UNKNOWN_STRING_VALUE : fileName, "Original file name.");
     }
 
     @Override

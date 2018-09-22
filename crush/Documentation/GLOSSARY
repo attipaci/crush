@@ -1255,6 +1255,12 @@
 
 				fits.[object?MARS] bright
 
+:: fits.addkeys=<list>  @Telescope: SOFIA
+                        @Expert
+                        @Since: 2.23
+                        Specify a comma-separated list of keys that should be
+                        migrated from the first scan to the image header, in
+                        addition to the list of required SOFIA header keys.
 
 :: fits.assing.<key> <option>	@Advanced
 				@Since: 2.34

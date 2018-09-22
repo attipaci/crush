@@ -470,7 +470,7 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         }
         Samples1D spectrum = cube.getZSamples();
         spectrum.writeASCIITable(coreName, cube.getGrid1D(), "Flux");
-        spectrum.gnuplot(coreName, cube.getGrid1D(), "Flux", gnuplot, option("write.fieldspec")); 
+        spectrum.gnuplot(coreName, cube.getGrid1D(), "Flux", gnuplot, option("write.fieldspec"));
     }
     
     public void writeFlattenedFits(String fileName) throws FitsException, IOException {  

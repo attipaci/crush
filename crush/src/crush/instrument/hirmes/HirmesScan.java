@@ -27,15 +27,16 @@ import nom.tam.fits.BasicHDU;
 import nom.tam.fits.BinaryTableHDU;
 import nom.tam.fits.Header;
 
-
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import crush.CRUSH;
 import crush.telescope.sofia.GyroDrifts;
+import crush.telescope.sofia.SofiaExtendedScanningData;
 import crush.telescope.sofia.SofiaHeader;
 import crush.telescope.sofia.SofiaScan;
+import crush.telescope.sofia.SofiaScanningData;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.EquatorialCoordinates;
@@ -47,7 +48,7 @@ public class HirmesScan extends SofiaScan<Hirmes, HirmesIntegration> {
      * 
      */
     private static final long serialVersionUID = 730005029452978874L;
-    
+      
     GyroDrifts gyroDrifts;
     boolean useBetweenScans;    
 
@@ -87,6 +88,11 @@ public class HirmesScan extends SofiaScan<Hirmes, HirmesIntegration> {
     }
 
     @Override
+    protected SofiaScanningData getScanningDataInstance(SofiaHeader header) {
+        return new SofiaExtendedScanningData(header);
+    }    
+    
+    @Override
     public void parseHeader(SofiaHeader header) throws Exception {
 
         isNonSidereal = hasOption("rtoc");
@@ -95,13 +101,14 @@ public class HirmesScan extends SofiaScan<Hirmes, HirmesIntegration> {
             objectCoords = new EquatorialCoordinates(header.getHMSTime("OBJRA") * Unit.timeAngle, header.getDMSAngle("OBJDEC"), telescope.epoch);
 
         super.parseHeader(header);  
-
+      
         focusTOffset = header.getDouble("FCSTOFF") * Unit.um;
         if(!Double.isNaN(focusTOffset)) info("Focus T Offset: " + Util.f1.format(focusTOffset / Unit.um));    
 
         gyroDrifts = new GyroDrifts(this);
         gyroDrifts.parse(header);
     }
+    
 
     @Override
     protected EquatorialCoordinates guessReferenceCoordinates(SofiaHeader header) {

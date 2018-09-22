@@ -1414,7 +1414,7 @@ implements TableFormatter.Entries, BasicMessaging {
             BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
             String className = in.readLine();
             in.close();
-            return (Instrument<?>) Class.forName(className).newInstance(); 
+            return (Instrument<?>) Class.forName(className).getConstructor().newInstance(); 
         }
         catch(IOException e) {
             CRUSH.error(Instrument.class, "Problem reading '" + file.getName() + "'");

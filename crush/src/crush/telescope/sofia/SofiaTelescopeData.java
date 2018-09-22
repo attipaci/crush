@@ -105,6 +105,7 @@ public class SofiaTelescopeData extends SofiaData {
         trackingMode = header.getString("TRACMODE", null);
         hasTrackingError = header.getBoolean("TRACERR", false);
 
+        
     }
 
 
@@ -133,8 +134,8 @@ public class SofiaTelescopeData extends SofiaData {
         c.add(makeCard("TELXEL", crossElevation / Unit.deg, "(deg) Telescope cross elevation in cavity."));
         c.add(makeCard("TELLOS", lineOfSightAngle / Unit.deg, "(deg) Telescope line-of-sight angle in cavity."));
 
-        c.add(makeCard("TSC_STAT", tascuStatus, "TASCU system status at end."));
-        c.add(makeCard("FBC_STAT", fbcStatus, "flexible body compensation system status at end."));
+        c.add(makeCard("TSC-STAT", tascuStatus, "TASCU system status at end."));
+        c.add(makeCard("FBC-STAT", fbcStatus, "flexible body compensation system status at end."));
 
         eq = requestedEquatorial == null ? new EquatorialCoordinates(Double.NaN, Double.NaN) : requestedEquatorial;
 
@@ -152,18 +153,6 @@ public class SofiaTelescopeData extends SofiaData {
         }
 
     }
-
-    @Override
-    public void merge(SofiaData other, boolean isSameFlight) {
-        if(other == this) return;
-        
-        boolean hasError = hasTrackingError | ((SofiaTelescopeData) other).hasTrackingError;
-        
-        super.merge(other, isSameFlight);   
-        
-        hasTrackingError = hasError;
-    }
-
 
     // TODO complete...
     @Override
