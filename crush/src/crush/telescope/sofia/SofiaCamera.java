@@ -26,6 +26,8 @@ package crush.telescope.sofia;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -212,7 +214,13 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         
         // SOFIA origination keys....
         SofiaOriginationData origin = (SofiaOriginationData) first.origin.clone();
-        origin.organization = hasOption("organization") ? option("organization").getValue() : null;
+        
+        if(hasOption("organization")) origin.organization = option("organization").getValue();
+        else {
+            try { origin.organization = InetAddress.getLocalHost().getCanonicalHostName(); } 
+            catch (UnknownHostException e) { origin.organization = null; }
+        }
+        
         origin.creator = "crush " + CRUSH.getVersion();
         origin.fileName = null; // FILENAME fills automatically at writing...
         origin.editHeader(header);
