@@ -115,7 +115,7 @@ public class SofiaExtendedScanningData extends SofiaScanningData {
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("pattern")) return pattern;
-        else if(name.equals("angle")) return currentPositionAngle / Unit.deg;
+        else if(name.equals("PA")) return currentPositionAngle / Unit.deg;
         else if(name.equals("T")) return duration / Unit.s;
         else if(name.equals("iters")) return iterations;
         else if(name.equals("nsub")) return subscans;

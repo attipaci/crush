@@ -1,5 +1,5 @@
 >> 'write.png.median'
->> 'fits.addkeys'
+>> 'organization'
 >> Hirmes 'pixelscale'
 
 
@@ -65,6 +65,14 @@
 
 	[TWEAK] Use sigmyne.com for checking for new releases and in 
 	console info output.
+
+	[CONFIG] {HAWC+} Additional HAWC keys migrated from original headers.
+        These are chop-nod-pol keywords that have nothing to do with CRUSH but
+        SOFIA counts them as required keywords, so there they go marching...
+
+	[DOC] {HAWC+} {HIRMES} Common SOFIA-specific documentation is now 
+        separated into README.sofia. The instrumenr-specific manuals for HAWC+
+	and HIRMES, are now just differential guides on top.
 
 	[CODE] Java 11+ compatibility: Class.newInstance() is deprecated in 
 	Java 11. Updated source to use Class.getConstructor().newInstance() 

@@ -51,9 +51,9 @@ public class SofiaOriginationData extends SofiaData {
     public void editHeader(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Origination Data ------>", false));
-        c.add(makeCard("ORIGIN", organization, "Organization where data originated."));
+        c.add(makeCard("ORIGIN", organization, "Creator organization / node."));
+        c.add(makeCard("CREATOR", creator, "Creator software / task."));
         c.add(makeCard("OBSERVER", observer, "Name(s) of observer(s)."));
-        c.add(makeCard("CREATOR", creator, "Software / Task that created the raw data."));
         c.add(makeCard("OPERATOR", operator, "Name(s) of operator(s)."));
         if(fileName != null) FitsToolkit.addLongKey(c, "FILENAME", fileName == null ? UNKNOWN_STRING_VALUE : fileName, "Original file name.");
     }
@@ -67,6 +67,7 @@ public class SofiaOriginationData extends SofiaData {
     public Object getTableEntry(String name) {
         if(name.equals("creator")) return creator;
         else if(name.equals("file")) return fileName;
+        else if(name.equals("org")) return organization;
         else if(name.equals("observer")) return observer;
         else if(name.equals("operator")) return operator;
         

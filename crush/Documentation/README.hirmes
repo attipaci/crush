@@ -3,7 +3,7 @@
 
 Author: Attila Kovacs <attila[AT]sigmyne.com>
 
-Last updated: 19 Sep 2018
+Last updated: 23 Sep 2018
 
 
 ----------------------------------------------------------------------------
@@ -12,21 +12,14 @@ Last updated: 19 Sep 2018
 
 
 1. __Introduction__
-     - 1.1. A brief description of of what CRUSH does and how...
 
-2. __Installation__
-     - 2.1. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
-     - 2.2. Optional system-wide installation.
-     - 2.3. Optional startup environment & Java configuration
+2. __Quickstart guide__
+     - 2.1. HIRMES specific options
 
-3. __Quickstart guide__
-     - 3.1. Locating scan data
-     - 3.2. A few common options to use with SOFIA/HIRMES
-
-4. __Technical details for expert users__
-     - 4.1. HIRMES specific pixel divisions
-     - 4.2. Glossary of HIRMES specific options
-     - 4.3. HIRMES specific log quantities
+3. __Technical details for expert users__
+     - 3.1. HIRMES specific pixel divisions
+     - 3.2. Glossary of HIRMES specific options
+     - 3.3. HIRMES specific log quantities
 
 -----------------------------------------------------------------------------
 
@@ -36,227 +29,18 @@ Last updated: 19 Sep 2018
 ## 1. Introduction
 
 
-This document contains information specific to using CRUSH-2 with SOFIA/HIRMES. 
+This document contains information specific to using CRUSH-2 with 
+SOFIA/HIRMES. It should be used in conjuction with the more generic README
+for SOFIA instruments (`README.sofia`), and with the master README for using 
+CRUSH in general.
 
-You may use it as a standalone quickstart guide, with instructions for 
-installation and basic use, or in conjucntion with the main CRUSH-2 README. 
-Either way, it is recommended that users also familiarize themselves with 
-the contents of the main CRUSH-2 README, found inside the distribution 
-directory, and its Section 1 (Getting Started) especially. 
+It is recommended that you also familiarize yourself with both the SOFIA
+specific README (`README.sofia`) and the main CRUSH-2 README (especially 
+Section _1. Getting Started_), which covers installation and basic usage.
 
 
 
-### 1.1 A brief description of what CRUSH does and how...
-
-CRUSH is a reduction pipeline, designed mainly to remove correlated signals 
-(correlated noise) in the detector time-streams to arrive at clean & 
-independent bolometer signals, which are then used to derive a model of the 
-source (usually an image).
-
-As such it is not an interactive reduction software (e.g. as opposed to e.g. 
-BoA). The term _scripting_ in CRUSH mainly means defining configuration options
-(in the command line or through configuration files) which are parsed in the 
-order they are read.
-
-During the reduction CRUSH aims to arrive at a consistent set of solutions for 
-various correlated signals, the corresponding gains and the pixel weights, as 
-well as tries to identify and flag problematic data, and applies appropriate 
-spectral filtering.
-
-This means a series of reduction steps, which are iterated a few times until 
-the required self-consistent solutions are arrived at.
-
-To learn more about the details please refer to Kovacs, A., "CRUSH: fast and 
-scalable data reduction for imaging arrays," Proc. SPIE 7020, 45, (2008). If 
-that does not satisfy your curiousity, then you can find yet more explanation 
-in Kovacs, A., PhD thesis, Caltech (2006).
-
-
-
-
-
-## 2. Installation
-
-
-### 2.1. Installation from tarball (POSIX/UNIX, incl. Mac OS X)
-
-#### Step 1.
-    
-  Install Java (if necessary), e.g. from www.java.com. If you already have 
-  Java, check that it is version 1.6.0 (a.k.a. Java 6) or later, by typing:
-
-    > java -version
-
-  Note, that The GNU java a.k.a. `gij` (default on some older RedHat and Fedora 
-  systems) is painfully slow and unreliable, and will not always run CRUSH 
-  correctly. If you need Java, you can download the latest JRE from
-
-  www.java.com
-
-#### Step 2.
-  
-  Unpack the tarball in the desired location (e.g. under `~/astrotools/`):
-
-    > cd ~/astrotools
-    > tar xzf crush-2.xx-x.tar.gz
-   
-
-#### Step 3.
-    
-  Verify that CRUSH works:
-
-    > cd crush
-    > ./crush
-
-  You should see a brief information screen on how to use CRUSH.
-
-
-
-### 2.2. Optional system-wide installation
-
- To create system-wide access to the crush executables, you may optionally 
- wish to run `install.sh` (as root or with `sudo`). It will link the
- executables to `/usr/bin`, and install man pages.
-
-    > cd crush
-    > sudo bash install.sh
-
- You can check the success of the above optional step by typing:
-
-    > man crush
-
- If all is in order, you should see the UNIX manual page on the crush. 
-
-
-
-### 2.3. Optional startup environment & Java configuration
-   
- CRUSH ships with a default Java configuration. On Windows and the most common 
- UNIX  platforms (Linux, Mac OS X, BSD, and Solaris), it will automatically 
- attempt to set an optimal configuration. On other platforms, it comes with 
- fail-safe default values (default java, 32-bit mode and 1GB of RAM use).
-
- You can override the defaults by placing your settings in arbitrary files 
- under `/etc/crush2/startup` or `~/.crush2/startup` (for the equivalent
- configuration under Windows, please refer to `README.windows`) 
-
- (Any  settings in the user's home under `~/.crush2/startup` will override the 
- system-wide values in `/etc/crush2/startup` or `C:\Program Data\startup`. 
- If multiple config files exist in the same location, these will be parsed by 
- the shell in non-specific order).
-
- E.g., placing the following lines in `~/.crush2/startup/java.conf` overrides
- all available settings: 
-
-    JAVA="/usr/java/latest/bin/java"
-    USEMB="4000"
-    JVM="server"
-    EXTRAOPTS="-Djava.awt.headless=true"
-
- Upon startup CRUSH will find and apply these settings, so it will use
- `/usr/java/latest/bin/java` to run CRUSH with 4GB of RAM, using the HotSpot 
- `server` VM, and in headless mode (without display, mouse or keyboard).
-
- Below is a guide to the variables that you can override to set your own
- Java runtime configuration:
-
-    JAVA           Set to the location of the Java executable you want to use. 
-                   E.g. `java` to use the default Java, or
-                   `/usr/java/latest/bin/java` to use the latest from Oracle or
-                   OpenJDK.
-
-    USEMB          Set to the maximum amount of RAM (in MB) available to
-                   CRUSH. E.g. "4000" for 4GB. On a 32-bit OS, or with a 32-bit
-                   Java installation no more than 2GB of RAM may be accesssed. 
-                   In practice, the maximum 32-bit OS/Java values range from 
-                   around "1000" (32-bit Windows / Java) to "1900" (32-bit 
-                   Linux / Java).    
-
-    JVM            Usually set to `server` for Oracle or OpenJDK. If using 
-                   IBM's Java, set it to "" (empty string). On ARM platforms, 
-                   you probably get better performance using `jamvm` or 
-                   `avian`. o see what VM options are available, run 
-                   `java -help`. The VM options are listed near the top of the 
-                   resulting help screen.
-
-    EXTRAOPTS      Any other non-standard options you may want to pass to the 
-                   Java VM should go here. Typically set to "".
-
-
- You can also specify environment variables, and add shell commands (bash),
- since these configuration files are in fact sourced as bash scripts before
- launching Java / CRUSH. For example you can add:
-
-    CRUSH_NO_UPDATE_CHECK="1"
-    CRUSH_NO_VM_CHECK="1" 
-
-    echo "Will try to parse my own configuration now... "
-	  
-    if [ -f ~/mycrushconfig.sh ] ; then
-        echo -n "OK"
-        source ~/mycrushconfig.sh
-    else
-        echo -n "Not found"
-    fi
-
- The above will disable update checking (not recommended!) and VM checking
- (also not recommended!) and will source the contents of  `~/mycrushconfig.sh` 
- if and when such a file exists.
- 
-   
-
-## 3. Quickstart guide
-
-
-### 3.1. Locating scan data
-
-
-#### By file name/path
-
-  The default method of locating files is by file name, which may specify 
-  either an absolute path, e.g.:
-
-    > crush hirmes /data/hirmes/simdataimv2.fits
-
-  or it can be filename/path relative to `datapath`
- 
-    > crush hirmes simdataimv2.fits
-
-  The two are equilalent assuming that `datapath` is set to `/data/hirmes` in 
-  the second case, e.g. in the user configuration file 
-  `~/.crush2/hirmes/default.cfg`, or on the command-line.
-
-
-#### By flight and scan numbers
-   
-  __Note.__ _This option is not available for simulated data, which do not 
-  follow the SOFIA file naming convention._
-
-  Often the simpler way of locating input files is by a combination of flight
-  and scan numbers. This is often shorter, and allows to specify multiple scans
-  and ranges with more ease.
-
-  Scan lookup by flight and scan number requires you to set `datapath` to point
-  to the data directory. E.g., by placing the line in the user configuration 
-  for HAWC+ (`~/.crush2/hirmes/default.cfg`):
-
-    datapath /data/hirmes
-
-  Now, you may simply reduce scan 105 from flight 456 as:
-
-    > crush hirmes -flight=456 105
-
-  You can also reduce multiple scans, from multiple flight together. E.g.:
-
-    > crush hirmes -flight=456 104-105 129 -flight=458 13 16 33-35
-
-  The above will co-reduce 3 scans (104, 105, 129) from flight 456 with 5 
-  scans (13, 16, 33, 34, 35) from flight 458.
-
-
- 
-
-### 3.2. A few common options to use with SOFIA/HIRMES
+## 2. __Quickstart guide__
 
  You may specify reduction options as command-line arguments to CRUSH. Each 
  option in the line begins with a dash `-`, and should not contain white 
@@ -265,98 +49,13 @@ in Kovacs, A., PhD thesis, Caltech (2006).
 
    > crush hirmes -faint -name="My HIRMES image.fits" -projection=TAN ...
 
- Below is a brief guide to a few useful options, grouped by functionality.
-
-#### HIRMES specific options
-
-
-
-#### Source type options
-   
-  The default reduction is generally OK for sources smaller than the field of 
-  view (<FoV/2) with S/N in the 10--1000 range. Outside this range, the 
-  following options can be used to obtain better results:
+ The SOFIA README offers is a brief guide to a few useful options for using
+ CRUSH with any SOFIA instrument. Here only the options specific to HIRMES
+ are discussed.
 
 
-    -bright             Reduce very bright sources (S/N > 1000).
+### 2.1 HIRMES specific options
 
-    -faint              Reduce faint sources (S/N < 30).
-
-    -deep               Optimized for the extraction of deep-field point 
-                        sources. It is similar to `-faint` (above) but it also 
-                        spatially filters the map, removing all signals above a
-                        few beam scales. Use only for very faint point sources.
-    
-    -extended           Reduce extended sources (>FoV/2). The retention of
-                        scales larger than ~FoV/2 come at a price of increased 
-                        map noise (on those scales). See Section 2.4 of the 
-                        main README on the 'Recovery of Extended Emission'. Can
-                        be used on its own (assuming the default brightness 
-                        setting) or together with `-faint` or `-bright`.
-
-     -sourcesize=X      Can be used together with `-extended` (above), to
-                        tweak just how extended the source is expected to be.
-                        The argument is an approximate source diameter in
-                        arcseconds. E.g. `-sourcesize=300.0`. 
-
-     -source.sign=Z     By default, CRUSH assumes that sources are seen in
-                        emission (+), and biases the reduction as such to 
-                        produce images without filter bowls or other negative 
-                        reduction artifatcs. However, your object may contain 
-                        absorption features, for which you may want ot bias in 
-                        the opposite direction (-), or not bias at all (0).
-                        Set the sign accordingly to +, -, or 0. E.g.
-                        `-source.sign=+`
-
-
-#### Output map options
-  These options change how the output FITS image will be constructed. All 
-  these options have reasonable default values, and so you should only use them
-  to override those if needed.
-
-
-    -grid=X             Set the pixelization of the map to X arcseconds. (The 
-                        default pixelization is chosen to be be around 1/5th of
-                        a beam for each HAWC+ band).
-
-    -projection=XXX     Change the WCS spherical projection. The following
-                        projections are supported:
-
-                                SFL  --  Sanson-Flamsteed
-                                SIN  --  Slant Orthographic
-                                TAN  --  Gnomonic
-                                ZEA  --  Zenithal Equal Area
-                                MER  --  Mercator
-                                CAR  --  Plate-Carree
-                                AIT  --  Hammer-Aitoff
-                                GLS  --  Global Sinusoidal
-                                STG  --  Stereographic
-                                ARC  --  Zenithal Equidistant
-
-                        The default is SFL (Sanson-Flamsteed). E.g. 
-                        `-projection=TAN`.
-
-    -ecliptic           Produce maps in ecliptic coordinates, instead of the
-                        default equatorial (same as `-system=ecliptic`).
-
-    -galactic           Produce maps in galactic coordinates, instead of the
-                        default equatorial (same as `-system=galactic`).
-
-    -supergalactic      Produce maps in super-galactic coordinates, instead of 
-                        the default equatorial (same as 
-                        `-system=supergalactic`).
-
-    -horizontal         Produce maps in horizontal coordinates, instead of
-                        the default equatorial (same as `-system=horizontal`).
-
-    -focalplane         Produce maps in focal-plane coordinates, instead of the
-                        default equatorial (same as `-system=focalplane`).
-
-    -final:smooth=X     Smooth the final map by a Gaussian with X arcsec FWHM.
-                        Alternatively, X can be one of `minimal`, `halfbeam`
-                        `2/3beam` or `beam`. E.g. `-smooth=8.0` or 
-                        `-smooth=2/3beam`. To turn smoothing off completely
-                        use `-final:forget=smooth`.
 
     -spectral.unit=<spec>  Set the spectral unit to use, e.g. to `GHz` or `um`.
                         All spectral inputs and outputs will be referred to in
@@ -365,7 +64,7 @@ in Kovacs, A., PhD thesis, Caltech (2006).
 
     -spectral.grid=X    Explcitly define the spectral bin (grid) size to X in
                         the specified `spectral.unit` (default is `Hz`).
-			@See: `spectral.unit`, `spectral.resolution`
+                        @See: `spectral.unit`, `spectral.resolution`
 
     -spectral.resolution=R    Specify a spectral resolving power R at the
                         center frequency of observation. This option is used
@@ -376,13 +75,13 @@ in Kovacs, A., PhD thesis, Caltech (2006).
 
 
 
-## 4. Technical details for expert users
+## 3. Technical details for expert users
 
 From this point on, the documentation is of more technical nature, intended
 for expert users only.
 
 
-### 4.1. HIRMES specific pixel divisions
+### 3.1. HIRMES specific pixel divisions
 
  For a general overview of channel divisions, please consult Section 3.
  (Correlated Signals) in the main README document.
@@ -408,18 +107,13 @@ for expert users only.
 
 
 
-### 4.2. Glossary of HIRMES specific options
+### 3.2. Glossary of HIRMES specific options
 
     blinds              @Expert
                         Use information from blind detectors (ones that are
                         not illuminated) when decorrelating groups of channels
                         The inclusion of blind detectors can be useful for
                         removing correlated thermal and/or electronic noise.
-
-    calibrated          Set this option when the reduction includes the final
-                        calibration (opacities and other calibration
-                        corrections) to produce Level 3 data. Otherwise, CRUSH
-                        will produce Level 2 output.
 
     cols                @Alias: 'correlated.cols'
                         @Expert
@@ -430,11 +124,6 @@ for expert users only.
     darkcorrect         @Expert
                         Include the dark SQUIDs when decorrelating over SQUID
                         MUXes (`mux` option).
-
-    flight=N            Set the flight number for locating data files using
-                        scan numbers only. Remember to set 'datapath' also to
-                        specify the folder where scan files are stored.
-                        @See: 'datapath'
 
     gyrocorrect         @Telescope: SOFIA
                         @Since: 2.41
@@ -461,9 +150,9 @@ for expert users only.
                         @See: 'correlated.<?>'
 
     offset.imaging=dx,dy   @Expert
-                           Specify the location (dx, dy pixel offsets) of the
-                           illuminated area of the low resolution array used
-                           for imaging mode.
+                        Specify the location (dx, dy pixel offsets) of the
+                        illuminated area of the low resolution array used
+                        for imaging mode.
 
     offset.lores1=dx,dy
     offset.lores2=dx,dy
@@ -506,10 +195,9 @@ for expert users only.
 
     rotation.lores1=<deg>     
     rotation.lores2=<deg>
-    rotation.hires=<deg>
-                           @Expert
-                           Specify the relative rotation of each subarray in 
-                           the focal plane.
+    rotation.hires=<deg>   @Expert
+                        Specify the relative rotation of each subarray in 
+                        the focal plane.
 
     rows                @Alias: 'correlated.rows'
                         @Expert
@@ -536,6 +224,12 @@ for expert users only.
     spectral.obs        Output spectra in the observing frame rather than the
                         default rest frame.
 
+    spectral.resolution=R        Specify a spectral resolving power R at the
+                        center frequency of observation. This option is used
+                        only if the spectral bin (grid) size is not explicitly
+                        defined via `spectral.gid`.
+                        @See: `spectral.grid`
+
     spectral.unit=<spec>        Specify the unit of the spectral axis in the 
                         output data. It can be a wavelength unit, such as 'um' 
                         (micron) or a frequency unit, such as 'GHz'.
@@ -548,38 +242,33 @@ for expert users only.
                         '.style' in accordance with gnuplot's capabilities.
                         @See: 'gnuplot'
 
-    write.fieldspec.eps	        Create an EPS plot from the aggregate 1D
-                                field spectrum using gnuplot.
-                                @See: 'gnuplot'
+    write.fieldspec.eps	   Create an EPS plot from the aggregate 1D field 
+                        spectrum using gnuplot.
+                        @See: 'gnuplot'
 				
-    write.fieldspec.lt=N        Set the plot line type to gnuplot's built-in 
-                                type N (integer).
+    write.fieldspec.lt=N   Set the plot line type to gnuplot's built-in type N. 
    
-    write.fieldspec.lw=X        Set the plot line with to X points wide, e.g.
-				2.5.
+    write.fieldspec.lw=X   Set the plot line with to X points wide, e.g. 2.5.
  
-    write.fieldspec.png         Create a PNG plot from the aggregate 1D
-                                field spectrum using gnuplot. A set of sub-
-                                options can be used to customize the appearance
+    write.fieldspec.png    Create a PNG plot from the aggregate 1D field 
+                        spectrum using gnuplot. A set of sub-options can be 
+                        used to customize the appearance
                                 
-    write.fieldspec.png.bg=<color>      Set the PNG background color to the
-                                        specified color (e.g. 'white' or
-                                        '#FFFFFF', or 'transparent').
+    write.fieldspec.png.bg=<color>   Set the PNG background color to the
+                        specified color (e.g. 'white' or '#FFFFFF', or 
+                        'transparent').
 
-    write.fieldspec.png.size=NxM        Set the PNG output size to N by M 
-                                        pixels 
+    write.fieldspec.png.size=NxM     Set the PNG output size to N by M pixels. 
 
-    write.fieldspec.ps=X        Set the plot point size scale factor to X, e.g.
-				1.5.
+    write.fieldspec.ps=X   Set the plot point size scale factor to X, e.g. 1.5.
    
-    write.fieldspec.pt=N        Set the plot point tyle to gnuplot's built-in
-                                type N (integer).
+    write.fieldspec.pt=N   Set the plot point tyle to gnuplot built-in type N.
     
-    write.fieldspec.show        Display the plot on screen right away.
+    write.fieldspec.show   Display the plot on screen right away.
     
     write.fieldspec.style=<plotstyle>   Set the gnuplot plotting style for 1D
-                                        data. E.g. 'histep', or 'points' or
-                                        'lines' or 'linespoints'
+                        data. E.g. 'histep', or 'points' or 'lines' or 
+                        'linespoints'.
 
     write.flattened     Write a flattened 2D (monochrome) FITS image also.
 
@@ -587,126 +276,18 @@ for expert users only.
 
 
 
-### 4.3. HIRMES specific log quantities
+### 3.3. HIRMES specific log quantities
+
+ Here you will find only the log quantities specific to HIRMES. See also 
+ `README.sofia` for all SOFIA specific log quantities, and the main CRUSH
+ `README` for an even more generic list of available log quantities.
 
 
-    ac.airspeed         (km/h) Airspeed.
-    ac.alt              (m) Altitude.
-    ac.altkft           (kft) Altitude.
-    ac.dir              (deg) Direction of heading.
-    ac.gndspeed         (km/h) Groundspeed
-    ac.lat              (rad) Geodetic latitude
-    ac.latd             (deg) Geodetic latitude
-    ac.lon              (ra) Geodetic longitude
-    ac.lond             (deg) Geodetic longitude
-    ac.trkangle         (rad) Tracking angle
-
-    array.sibsx         
-    array.sibsy
-
-    chop.amp            (arcsec) Chop amplitude
-    chop.angle		
-    chop.flag           'C' if chopping or '-' if not
-    chop.frequency
-    chop.profile
-    chop.sys
-    chop.tilt
-    chop.tip
-
-    dfoc                (um) Focus offset.
-
-    env.tamb
-    env.pwv             (um) Precipitable Water Vapor level
-    env.sect            (C) Secondary mirror temperature.
-    env.t1              (C) T1 temperature of the primary.
-    env.t2              (C) T2 temperature of the primary.
-    env.t2              (c) T3 temperature of the primary.
-    
-    gyro.max            (arcsec) Maximum gyro drift during scan/
+    gyro.max            (arcsec) Maximum gyro drift during scan.
     gyro.rms            (arcsec) RMS gyro drift during scan.
 
-    inst.cfg            Instrument configuration
-    inst.datatype
-    inst.exp
-    inst.inttime
-    inst.mode		
-    inst.slit
-    inst.spec1          First spectral element (from SPECTEL1)
-    inst.spec2          Second spectral element (from SPECTEL2)
-    inst.wave
 
-    mssn.id             SOFIA Mission ID.
-    mssn.leg            Flight leg number
-    mssn.plan           Flight plan ID.
-
-    nod.amp             (arcsec) Nod amplitude
-    nod.angle
-    nod.dwell
-    nod.n
-    nod.pattern
-    nod.pos
-    nod.settle
-    nod.style
-    nod.sys
-
-    obs.aor             SOFIA AOR ID
-    obs.aot             SOFIA AOT ID
-    obs.dict            FITS keyword dictionary version ID.
-    obs.fgid            File group ID.
-    obs.imgid           Image ID
-    obs.obj             Object name
-    obs.objtype         Object type
-    obs.obsid           Observation ID.
-    obs.src
-
-    orig.creator
-    orig.file
-    orig.observer       Name(s) of observer(s) or PI(s).
-    orig.operator       Name(s) of the operator(s).
-  
-    pnt.dSIBSX          (pixels) SIBS pointing increment in X
-    pnt.dSIBSY          (pixels) SIBS pointinh increment in Y 
-
-    proc.head
-    proc.level
-    proc.nspec
-    proc.product
-    proc.q
-    proc.quality
-
-    scan.angle          (deg) Scan position angle
-    scan.dec            (deg) Declination
-    scan.ra             (hour) R.A.
-    scan.speed          (arcsec/s) Scanning speed.
-    scan.type           Type of scan, e.g. 'LISSAJOUS'.
-
-    spec.bw             (MHz) Total spectral bandwidth.
-    spec.df             (MHz) Frequency spacing of channels.
-    spec.obsfreq        (GHz) Observing frequency at the reference channel.
-    spec.restfreq       (GHz) Rest frequency at the reference channel.
-    spec.tsys           (K) System temperature (if applicable).
-    spec.vsys           Radial velocity reference system.
-    spec.vframe         (km/s) Radial velocity of refence frame wrt observer.
-    spec.vrad           (km/s) Source radial velocity wrt observer.
-    spec.z		redshift of source.
-
-    tel.focus           (um) Telescope z-focus value
-    tel.bdec            Boresight declination
-    tel.bra             Boresight RA
-    tel.cfg             
-    tel.el              Telescope elevation
-    tel.epoch           Epoch for equatorial coordinates (e.g. 2000.0)
-    tel.fbc
-    tel.los             Telescope line-of-sight angle
-    tel.rdec            Requested declination
-    tel.rew             
-    tel.rra             Requested RA
-    tel.trkerr
-    tel.trkmode
-    tel.vpa             Vertical position angle (i.e. parallactic angle)
-    tel.xel             Telescope cross-elevation angle
-    tel.za              Telescope zenith angle
-
+ 
 ------------------------------------------------------------------------------
 Copyright (C)2018 -- Attila Kovacs <attila[AT]sigmyne.com>
 

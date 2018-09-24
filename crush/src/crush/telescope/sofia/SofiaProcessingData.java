@@ -133,7 +133,7 @@ public class SofiaProcessingData extends SofiaData {
         else if(name.equals("nspec")) return nSpectra;
         else if(name.equals("quality")) return quality;
         else if(name.equals("level")) return processLevel;
-        else if(name.equals("head")) return headerStatus;
+        else if(name.equals("stat")) return headerStatus;
         else if(name.equals("product")) return productType;
         
         return super.getTableEntry(name);
