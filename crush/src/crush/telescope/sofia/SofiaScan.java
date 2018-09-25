@@ -352,7 +352,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     public void addPreservedHeaderKeysTo(Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         
-        c.add(new HeaderCard("COMMENT", "<------ SOFIA Additional SI keys ------>", false));
+        c.add(new HeaderCard("COMMENT", "<------ SOFIA Additional SI keys from first scan ------>", false));
         
         for(String key : preservedKeys.keySet()) if(!header.containsKey(key)) c.add(preservedKeys.get(key));
     }

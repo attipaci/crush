@@ -30,6 +30,9 @@
 	[NEW] {HIRMES} Default spectral resolution is now set to be 2x the
 	spectral detector channel spacing.
 
+        [FIX] {HAWC+} Update the value of PIXSCAL (array.pixelScale) to 
+        match the mean lateral pixel size used in the reduction.
+
 	[FIX] Command line arguments weren't correctly recorded via the ARGn
 	FITS keywords. Fixed.
 

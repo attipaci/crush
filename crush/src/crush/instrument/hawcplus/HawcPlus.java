@@ -322,6 +322,8 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
             pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
         }
 
+        array.pixelScale = getPlateScale(pixelSize, HawcPlusPixel.physicalSize);
+        
         setNominalPixelPositions(pixelSize);
 
         // TODO load bias gains? ...
@@ -724,5 +726,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 
     public static final Vector2D defaultBoresightIndex = new Vector2D(33.5, 19.5);
 
+    
+    
 }
 

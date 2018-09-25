@@ -67,9 +67,9 @@ public class SofiaTelescopeData extends SofiaData {
         epoch = header.containsKey("EQUINOX") ? CoordinateEpoch.forString(header.getDouble("EQUINOX") + "") : CoordinateEpoch.J2000;
 
         requestedEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, epoch);
-       
+          
         boresightEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, epoch);
-        if(header.containsKey("TELEQUI")) boresightEquatorial.setEpoch(CoordinateEpoch.forString(header.getDouble("TELEQUI") + ""));
+        if(header.containsKey("TELEQUI")) boresightEquatorial.epoch = CoordinateEpoch.forString(header.getString("TELEQUI"));
 
         try { 
             double RA = header.getHMSTime("TELRA");
@@ -121,7 +121,7 @@ public class SofiaTelescopeData extends SofiaData {
 
         c.add(makeCard("TELRA", eq.RA() / Unit.hourAngle, "(hour) Boresight RA."));
         c.add(makeCard("TELDEC", eq.DEC() / Unit.deg, "(deg) Boresight DEC."));
-        c.add(makeCard("TELEQUI", eq.epoch.getYear(), "(yr) Boresight epoch."));
+        c.add(makeCard("TELEQUI", eq.epoch.toString(), "Boresight epoch."));
 
         c.add(makeCard("TELVPA", VPA / Unit.deg, "(deg) Boresight position angle."));
 
@@ -183,4 +183,13 @@ public class SofiaTelescopeData extends SofiaData {
         return "tel";
     }
 
+    @Override
+    public void setEnd(SofiaData last) {
+        super.setEnd(last);
+        
+        SofiaTelescopeData telescope = (SofiaTelescopeData) last;
+        tascuStatus = telescope.tascuStatus;
+        fbcStatus = telescope.fbcStatus;
+    }
+    
 }

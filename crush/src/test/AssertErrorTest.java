@@ -2,74 +2,58 @@ package test;
 
 import java.util.ArrayList;
 
-public class AssertErrorTest {
-    public static void main(String[] args) {       
-        Instrument<?> myInstrument = getInstrument(args[0]); 
-        myInstrument.getTest().run();
-    }
-    
-    public static Instrument<?> getInstrument(String name) {
-        if(name.equalsIgnoreCase("mine")) return new MyInstrument();
-        return null;
-    }
-}
 
 
-
-
-class Channel {
+// 1. A simple object and a collection class for it...
+class Item {
     int index;
 }
 
-class MyChannel extends Channel {   
-}
-
-
-class ChannelGroup<ChannelType extends Channel> extends ArrayList<ChannelType> {      
+class ItemGroup<ItemType extends Item> extends ArrayList<ItemType> {      
     
-    public class Fork {
+    // 2. The collection has a method that returns another collection
+    //    with the same generic type, ItemType with an upper bound of Item.
+    public ItemGroup<ItemType> getItems() {
+        ItemGroup<ItemType> items = new ItemGroup<ItemType>();
+        items.addAll(this);
+        return items;
+    }
+    
+    // 3. The collection has an abstract nested class, e.g. for processing elements...
+    public abstract class Fork {
         public Fork() {}
         
-        public void print(int index) { print(get(index)); }
+        // 4. The nested class has an abstract method that takes
+        //    the same generic type argument that the collection that instantiated
+        //    this Fork consists of. The argument ItemType has an upper bound
+        //    of Item by construct.
+        public abstract void process(ItemType item); 
+    }
+}
+
+
+// 5. A specific Item implementation with the corresponding specific collection implementation
+//    They can be completely bare...
+class MyItem extends Item {   
+}
+
+
+class MyGroup extends ItemGroup<MyItem> {
+}
+
+
+// 6. The test case that fails...
+public class AssertErrorTest {
+    public static void main(String[] args) {
+        // We instantiate a new specific Item group, and get a second collection of
+        // the same type of items from it...
+        ItemGroup<?> items = new MyGroup().getItems();
         
-        public void print(ChannelType channel) { System.out.println(channel.index); } 
-    }
-}
-    
-
-
-
-abstract class Instrument<ChannelType extends Channel> extends ChannelGroup<ChannelType> { 
-    public ChannelGroup<ChannelType> getChannels() {
-        ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>();
-        channels.addAll(this);
-        return channels;
-    }
-    
-    public abstract Test<?> getTest();
- 
-}
-
-class MyInstrument extends Instrument<MyChannel> {
-    public MyInstrument() {
-        add(new MyChannel());
-    }
-    
-    @Override
-    public Test<?> getTest() {
-        return new Test<MyInstrument>(this);
-    }
-}
-
-class Test<InstrumentType extends Instrument<?>> {
-    InstrumentType instrument;
-    
-    public Test(InstrumentType instrument) {
-        this.instrument = instrument;
-    }
-    
-    public void run() {
-        ChannelGroup<?> channels = instrument.getChannels();
-        channels.new Fork().print(0);
+        // We then try to create a type-restricted nested class to process that
+        // group of channels. But, this trips the compiler...
+        items.new Fork() {
+            @Override
+            public void process(Item item) { System.err.println(item.index); }
+        }.process(items.get(0));
     }
 }

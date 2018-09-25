@@ -227,7 +227,7 @@ in Kovacs, A., PhD thesis, Caltech (2006).
 
 
 #### By flight and scan numbers
-   
+
   Often the simpler way of locating input files is by a combination of flight
   and scan numbers. This is often shorter, and allows to specify multiple scans
   and ranges with more ease.
@@ -249,6 +249,9 @@ in Kovacs, A., PhD thesis, Caltech (2006).
   The above will co-reduce 3 scans (104, 105, 129) from flight 354 with 5 
   scans (13, 16, 33, 34, 35) from flight 362.
 
+  __Note.__ Locating scans by flight and scan number may not be possible for
+  simulated data, or data that has been renamed from it's original file name.
+   
 
 ### 3.2. A few common options to use with SOFIA instruments
 
@@ -527,6 +530,7 @@ for expert users only.
     scan.ra             (hour) R.A.
     scan.speed          (arcsec/s) Scanning speed.
     scan.strips         Number of raster strips
+    scan.sys		Scan coordinate system name.
     scan.T              (s) Scan duration
     scan.t0             (s) Lissajous time shift.
     scan.trk            Is tracking enabled?

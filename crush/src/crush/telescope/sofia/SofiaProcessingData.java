@@ -23,9 +23,9 @@
 
 package crush.telescope.sofia;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 import jnum.Util;
 import jnum.fits.FitsToolkit;
@@ -36,7 +36,7 @@ import nom.tam.util.Cursor;
 
 public class SofiaProcessingData extends SofiaData {
     Set<String> associatedAORs, associatedMissionIDs;
-    Set<Double> associatedFrequencies;
+    Set<Float> associatedFrequencies;
     String processLevel;
     String headerStatus;
     String softwareName, softwareFullVersion, productType, revision, quality; 
@@ -63,7 +63,7 @@ public class SofiaProcessingData extends SofiaData {
         String list = header.getString("ASSC_AOR");
         if(list == null) associatedAORs = null;
         else {
-            associatedAORs = new HashSet<String>();
+            associatedAORs = new TreeSet<String>();
             StringTokenizer tokens = new StringTokenizer(list, ",");
             while(tokens.hasMoreTokens()) associatedAORs.add(tokens.nextToken().trim());
         }
@@ -71,7 +71,7 @@ public class SofiaProcessingData extends SofiaData {
         list = header.getString("ASSC_MSN");
         if(list == null) associatedMissionIDs = null;
         else {
-            associatedMissionIDs = new HashSet<String>();
+            associatedMissionIDs = new TreeSet<String>();
             StringTokenizer tokens = new StringTokenizer(list, ",");
             while(tokens.hasMoreTokens()) associatedMissionIDs.add(tokens.nextToken().trim());
         }
@@ -79,9 +79,9 @@ public class SofiaProcessingData extends SofiaData {
         list = header.getString("ASSC_FRQ");
         if(list == null) associatedFrequencies = null;
         else {
-            associatedFrequencies = new HashSet<Double>();
+            associatedFrequencies = new TreeSet<Float>();
             StringTokenizer tokens = new StringTokenizer(list, " \t,");
-            while(tokens.hasMoreTokens()) associatedFrequencies.add(Double.parseDouble(tokens.nextToken()));
+            while(tokens.hasMoreTokens()) associatedFrequencies.add(Float.parseFloat(tokens.nextToken()));
         }
             
         
@@ -140,18 +140,18 @@ public class SofiaProcessingData extends SofiaData {
     }
 
     public void addAssociatedAOR(String id) {
-        if(associatedAORs == null) associatedAORs = new HashSet<String>();
+        if(associatedAORs == null) associatedAORs = new TreeSet<String>();
         associatedAORs.add(id);
     }
     
     public void addAssociatedMissionID(String id) {
-        if(associatedMissionIDs == null) associatedMissionIDs = new HashSet<String>();
+        if(associatedMissionIDs == null) associatedMissionIDs = new TreeSet<String>();
         associatedMissionIDs.add(id);
     }
     
     public void addAssociatedFrequency(double value) {
-        if(associatedFrequencies == null) associatedFrequencies = new HashSet<Double>();
-        associatedFrequencies.add(value);
+        if(associatedFrequencies == null) associatedFrequencies = new TreeSet<Float>();
+        associatedFrequencies.add((float) value);
     }
     
     public static String getComment(int level) {
@@ -177,7 +177,7 @@ public class SofiaProcessingData extends SofiaData {
         StringBuffer buf = new StringBuffer();
         buf.append(array[0]);
 
-        for(int i=1; i<array.length; i++) if(array[i] == null) {
+        for(int i=1; i<array.length; i++) if(array[i] != null) {
             Object o = array[i];
            
             if(o instanceof Short) if((Short) o == UNKNOWN_INT_VALUE) continue;

@@ -23,6 +23,10 @@
 
 package crush.telescope.sofia;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+
+import crush.CRUSH;
 import jnum.text.TableFormatter;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
@@ -36,7 +40,9 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
         try { return (SofiaData) super.clone(); }
         catch(CloneNotSupportedException e) { return null; }
     }
-
+    
+  
+    
     public abstract void editHeader(Header header) throws HeaderCardException;
 
 
@@ -87,8 +93,59 @@ public abstract class SofiaData implements Cloneable, TableFormatter.Entries {
     public static HeaderCard makeCard(String key, String value, String comment) throws HeaderCardException {
         return new HeaderCard(key, value == null ? UNKNOWN_STRING_VALUE : value, comment);
     }
+    
+    public void setStart(SofiaData first) {   
+        if(!getClass().isAssignableFrom(first.getClass())) 
+                throw new IllegalArgumentException("Class mismatch: " + getClass().getSimpleName() + " / " + first.getClass().getSimpleName());
+       
+        Class<?> cls = getClass();
+        while(SofiaData.class.isAssignableFrom(cls)) {
+            for(Field f : cls.getDeclaredFields()) {
+                int mods = f.getModifiers();
+                if(Modifier.isStatic(mods)) continue;
+                if(Modifier.isPrivate(mods)) continue;
+                if(BracketedValues.class.isAssignableFrom(f.getType())) {
+                    try { 
+                        f.set(this, new BracketedValues(
+                            ((BracketedValues) f.get(first)).start, 
+                            ((BracketedValues) f.get(this)).end)); 
+                    }
+                    catch (Exception e) { CRUSH.warning(this, e); }
+                }
+            }
+            cls = cls.getSuperclass();
+        } 
+    }
 
-
+    public void setEnd(SofiaData last) {
+        if(!getClass().isAssignableFrom(last.getClass())) 
+                throw new IllegalArgumentException("Class mismatch: " + getClass().getSimpleName() + " / " + last.getClass().getSimpleName());
+       
+        Class<?> cls = getClass();
+        while(SofiaData.class.isAssignableFrom(cls)) {
+            for(Field f : cls.getDeclaredFields()) {
+                int mods = f.getModifiers();
+                if(Modifier.isStatic(mods)) continue;
+                if(Modifier.isPrivate(mods)) continue;
+                if(BracketedValues.class.isAssignableFrom(f.getType())) {
+                    try { 
+                        f.set(this, new BracketedValues(
+                            ((BracketedValues) f.get(this)).start, 
+                            ((BracketedValues) f.get(last)).end)); 
+                    }
+                    catch (Exception e) { CRUSH.warning(this, e); }
+                }
+            }
+            cls = cls.getSuperclass();
+        } 
+    }
+    
+    public static SofiaData getMerged(SofiaData first, SofiaData last) {
+        SofiaData merged = first.clone();
+        merged.setEnd(last);
+        return merged;
+    }
+    
     public final static int UNKNOWN_INT_VALUE = -9999;
     public final static float UNKNOWN_FLOAT_VALUE = -9999.0F;
     public final static double UNKNOWN_DOUBLE_VALUE = -9999.0;

@@ -51,7 +51,6 @@ import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import jnum.Constant;
 import jnum.Unit;
-import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
@@ -181,19 +180,13 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         // Associated IDs...
         TreeSet<String> aors = new TreeSet<String>();
         TreeSet<String> missionIDs = new TreeSet<String>();
-        TreeSet<Double> freqs = new TreeSet<Double>();
+        TreeSet<Float> freqs = new TreeSet<Float>();
          
         for(int i=0; i<scans.size(); i++) {
             final SofiaScan<?,?> scan = (SofiaScan<?,?>) scans.get(i);       
-            
-            if(SofiaHeader.isValid(scan.observation.aorID)) if(!Util.equals(scan.observation.aorID, first.observation.aorID)) 
-                aors.add(scan.observation.aorID);
-            
-            if(SofiaHeader.isValid(scan.mission.missionID)) if(!Util.equals(scan.mission.missionID, first.mission.missionID))
-                missionIDs.add(scan.mission.missionID);
-            
-            if(first.instrument.getFrequency() != scan.instrument.getFrequency()) 
-                freqs.add(scan.instrument.getFrequency());
+            if(SofiaHeader.isValid(scan.observation.aorID)) aors.add(scan.observation.aorID);      
+            if(SofiaHeader.isValid(scan.mission.missionID)) missionIDs.add(scan.mission.missionID);
+            if(!Double.isNaN(scan.instrument.getFrequency())) freqs.add((float) scan.instrument.getFrequency());
         }
         
         // SOFIA date and time keys...
@@ -205,7 +198,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         
         // SOFIA observation keys...
         // Make the OBS_ID processed!
-        SofiaObservationData observation = (SofiaObservationData) first.observation.clone();
+        SofiaObservationData observation = (SofiaObservationData) SofiaData.getMerged(first.observation, last.observation);
         if(observation.obsID != null) if(!observation.obsID.startsWith("P_")) observation.obsID = "P_" + first.observation.obsID;
         observation.editHeader(header);
         
@@ -226,28 +219,22 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         origin.editHeader(header);
         
         // SOFIA environmental keys...
-        SofiaEnvironmentData env = (SofiaEnvironmentData) first.environment.clone();
-        env.pwv = new BracketedValues(first.environment.pwv.start, last.environment.pwv.end);
-        env.editHeader(header);
+        SofiaData.getMerged(first.environment, last.environment).editHeader(header);
       
         // SOFIA aircraft keys...
-        first.aircraft.editHeader(header);
-
+        SofiaData.getMerged(first.aircraft, last.aircraft).editHeader(header);
+        
         // SOFIA telescope keys...
-        SofiaTelescopeData tel = (SofiaTelescopeData) first.telescope.clone();
-        tel.focusT = new BracketedValues(first.environment.pwv.start, last.environment.pwv.end);
-        tel.tascuStatus = last.telescope.tascuStatus;
-        tel.fbcStatus = last.telescope.fbcStatus;
+        SofiaTelescopeData tel = (SofiaTelescopeData) SofiaData.getMerged(first.telescope, last.telescope);
         tel.requestedEquatorial = first.objectCoords;
-        tel.zenithAngle = new BracketedValues(first.telescope.zenithAngle.start, first.telescope.zenithAngle.end);
-        tel.hasTrackingError = hasTrackingError(scans);
+        tel.hasTrackingError = hasTrackingError(scans);   
         tel.editHeader(header);
      
         // SOFIA instrument keys..
         instrumentData.exposureTime = getTotalExposureTime(scans);
         
         // SOFIA array keys...
-        if(array != null) array.boresightIndex = scans.size() > 1 ? new Vector2D(Double.NaN, Double.NaN) : first.instrument.array.boresightIndex;
+        if(array != null) array.boresightIndex = scans.size() == 1 ? first.instrument.array.boresightIndex : new Vector2D(Double.NaN, Double.NaN);
                       
         editHeader(header);
         
@@ -263,8 +250,8 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
             dither.editHeader(header);
         }
         if(first.mode.isMapping) first.mapping.editHeader(header);
-        if(first.mode.isScanning) first.scanning.editHeader(header);
-        
+        if(first.mode.isScanning) SofiaData.getMerged(first.scanning, last.scanning).editHeader(header);
+      
         // SOFIA data processing keys
         SofiaProcessingData processing = new SofiaProcessingData.CRUSH(hasOption("calibrated"), header.getIntValue("NAXIS"), getLowestQuality(scans));
         processing.associatedAORs = aors;
@@ -272,9 +259,9 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         processing.associatedFrequencies = freqs;
         processing.editHeader(header);
         
-        first.addPreservedHeaderKeysTo(header);
-        
+        first.addPreservedHeaderKeysTo(header);     
     }	
+    
     
     
     public LinkedHashSet<String> getPreservedHeaderKeys() {
@@ -361,6 +348,15 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         super.validate(scans);
     }
 
+    /**
+     * 
+     * @param angularSize   (radian) Projected angular size on sky. 
+     * @param physicalSize  (m) Physical/geometric size on focal plane unit.
+     * @return plate scaling (radians/m) for the focal plane projected through the telescope.
+     */
+    public static double getPlateScale(Vector2D angularSize, Vector2D physicalSize) {
+        return Math.sqrt(angularSize.x() * angularSize.y() / (physicalSize.x() * physicalSize.y()));
+    }
 
     public abstract Vector2D getPixelSize();
 

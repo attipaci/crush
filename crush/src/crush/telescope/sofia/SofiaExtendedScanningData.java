@@ -32,7 +32,7 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public class SofiaExtendedScanningData extends SofiaScanningData {
-    String pattern;
+    String pattern, coordinateSystem;
     Vector2D amplitude = new Vector2D(Double.NaN, Double.NaN);
     double currentPositionAngle = Double.NaN, duration = Double.NaN, relFrequency = Double.NaN, relPhase = Double.NaN;
     double t0 = Double.NaN, gyroTimeWindow = Double.NaN;
@@ -58,6 +58,7 @@ public class SofiaExtendedScanningData extends SofiaScanningData {
         super.parseHeader(header);
         
         pattern = header.getString("SCNPATT");
+        coordinateSystem = header.getString("SCNCRSYS");
         
         amplitude = new Vector2D(header.getDouble("SCNAMPXL"), header.getDouble("SCNAMPEL"));
         amplitude.scale(Unit.arcsec);
@@ -90,6 +91,7 @@ public class SofiaExtendedScanningData extends SofiaScanningData {
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Extra Scanning Data ------>", false));
                 
         c.add(makeCard("SCNPATT", pattern, "Scan pattern."));
+        c.add(makeCard("SCNCRSYS", coordinateSystem, "Scan coordinate system."));
         c.add(makeCard("SCNANGLC", currentPositionAngle / Unit.deg, "(deg) current scan angle."));
         c.add(makeCard("SCNANGLS", positionAngle.start / Unit.deg, "(deg) initial scan angle."));
         c.add(makeCard("SCNANGLF", positionAngle.end / Unit.deg, "(deg) final scan angle."));
@@ -115,6 +117,7 @@ public class SofiaExtendedScanningData extends SofiaScanningData {
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("pattern")) return pattern;
+        else if(name.equals("sys")) return coordinateSystem;
         else if(name.equals("PA")) return currentPositionAngle / Unit.deg;
         else if(name.equals("T")) return duration / Unit.s;
         else if(name.equals("iters")) return iterations;

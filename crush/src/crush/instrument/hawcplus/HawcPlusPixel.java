@@ -26,7 +26,9 @@ package crush.instrument.hawcplus;
 
 import crush.Channel;
 import crush.array.SingleColorPixel;
+import jnum.Unit;
 import jnum.Util;
+import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 
 public class HawcPlusPixel extends SingleColorPixel {
@@ -116,6 +118,8 @@ public class HawcPlusPixel extends SingleColorPixel {
     public String getID() {
 	    return HawcPlus.polID[pol] + (sub & 1) + "[" + subrow + "," + col + "]";
 	}
+	
+	public static final Vector2D physicalSize = new Vector2D(1.132 * Unit.mm, 1.132 * Unit.mm);
 	
 	//public final static int FLAG_POL = softwareFlags.next('p', "Bad polarray gain").value();
 	public final static int FLAG_SUB = softwareFlags.next('@', "Bad subarray gain").value();

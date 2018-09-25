@@ -80,7 +80,7 @@ public class SofiaInstrumentData extends SofiaData implements Copiable<SofiaInst
 		c.add(makeCard("DATATYPE", dataType, "Data type."));
 		c.add(makeCard("INSTCFG", instrumentConfig, "Instrument configuration."));
 		c.add(makeCard("INSTMODE", instrumentMode, "Instrument observing mode."));
-		c.add(makeCard("MCCSMODE", instrumentMode, "MCCS mode."));
+		c.add(makeCard("MCCSMODE", mccsMode, "MCCS mode."));
 		c.add(makeCard("EXPTIME", exposureTime / Unit.s, "(s) total effective on-source time."));
 		c.add(makeCard("SPECTEL1", spectralElement1, "First spectral element."));
 		c.add(makeCard("SPECTEL2", spectralElement2, "Second spectral element."));
