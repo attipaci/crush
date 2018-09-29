@@ -329,8 +329,8 @@ public class Mustang2 extends Camera<Mustang2Pixel> implements GroundBased {
 	
 	
 	@Override
-	public String getCommonHelp() {
-		return super.getCommonHelp() + 
+	public String getScanOptionsHelp() {
+		return super.getScanOptionsHelp() + 
 				"     -sparse        Reduce sparsely sampled data on a coarser grid.\n";
 	}
 	

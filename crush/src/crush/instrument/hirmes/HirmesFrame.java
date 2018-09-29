@@ -85,8 +85,8 @@ public class HirmesFrame extends SofiaFrame {
         if(jump != null) jumpCounter = new byte[data.length];
         
         for(final HirmesPixel pixel : hirmes) {
-            data[pixel.index] = DAC[pixel.mux][pixel.pin];
-            if(jump != null) jumpCounter[pixel.index] = (byte) jump[pixel.mux][pixel.pin];
+            data[pixel.index] = DAC[pixel.readrow][pixel.readcol];
+            if(jump != null) jumpCounter[pixel.index] = (byte) jump[pixel.readrow][pixel.readcol];
         }
     }
 
@@ -163,7 +163,8 @@ public class HirmesFrame extends SofiaFrame {
             }
 
         }
-           
+      
+        
         if(hirmes.darkSquidCorrection) darkCorrect();
 
         return super.validate();

@@ -367,7 +367,7 @@ virtually any fast-sampling scanning camera.
 
    With just these few tips you should be able to achieve a decent job in
    getting the results you seek. CRUSH can also help you reduce 
-   pointing/calibration, skydip, and beammap scans. E.g.:
+   pointing/calibration, skydip, and pixelmap scans. E.g.:
 
  * To reduce a laboca pointing/calibration scan 11564:
 
@@ -384,13 +384,13 @@ virtually any fast-sampling scanning camera.
  * You can also reduce skydips, for determining in-band atmospheric
    opacities. E.g.:
 
-        > crush laboca -skydip 26648
+        > crush hawc+ -skydip 26648
 	  
  * Finally, you can derive pixel position information from appropriate
    scans, which are designed to ensure the source is moved over every
    detector, in a fully sampled manner. To reduce such beam-maps:
 
-        > crush aszca -beammap 5707
+        > crush gismo -pixelmap 5707
 
    CRUSH will write rcp files as output, containing pixel positions
    source and sky gains in a standard 5 column APEX RCP format. 
@@ -1432,7 +1432,7 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
 	source.type=<type>	By default, crush will try to make a map from
 				the data. However, some istruments may take
 			data that is analyzed differently. For example, you 
-			may want to use crush to reduce beam maps (to
+			may want to use crush to reduce pixel maps (to
 			determine the positions of your pixels on sky), or
 			skydips (to derive appropriate opacities), or do
 			point source photometry. Presently, the following
@@ -1443,12 +1443,12 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
 			   skydip	Reduced skydips, and determine 
 					opacities by fitting a model to it.
 
-			   beammap	Create individual maps for every
+			   pixelmap	Create individual maps for every
 					pixel, and use it to determine their
 					location in the field of view.
 			
-			Note, that you may also just use 'skydip' and 'beammap'
-			shorthands to the same effect. E.g.
+			Note, that you may also just use 'skydip' and 
+			'pixelmap' shorthands to the same effect. E.g.
 
 			  > crush [...] -skydip [...]
 
@@ -1549,18 +1549,6 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
 	altaz		Shorthand for 'system=horizontal' to reduce in Alt/Az.
 			It is also aliased to 'horizontal'.
 
-	beammap		Reduce beam map data. Instead of making a single map
-			from all pixels, separate maps are created for each
-			pixel (Note, this can chew up some memory if you have
-			a lot of pixels). At the end of the reduction CRUSH
-			determines the actual pixel offsets in the focal plane.
-			This option is equivalent to 'source.type=beammap'.
-	
-	beammap.writemaps	Beam maps (above) normally only produce the
-				pixel position information. Use this option
-			if you want CRUSH to write individual pixel maps as
-			well, so you can peek at these yourself.
-
 	grid=X		set the map pixelization to X arcsec. Pixelization
 			smaller than 2/5 beam is recommended. The default is
 			\~1/5 beam pixelization.
@@ -1577,8 +1565,20 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
 				<sourcename>.<firstscan>-<lastscan>.fits
 
 			For mapping. Other source model types (e.g. skydips
-			or beam maps) may have different default naming 
+			or pixel maps) may have different default naming 
 			conventions.
+
+	pixelmap	Reduce pixel map data. Instead of making a single map
+			from all pixels, separate maps are created for each
+			pixel (Note, this can chew up some memory if you have
+			a lot of pixels). At the end of the reduction CRUSH
+			determines the actual pixel offsets in the focal plane.
+			This option is equivalent to 'source.type=pixelmap'.
+	
+	pixelmap.writemaps	Pixel maps (above) normally only produce the
+				pixel position information. Use this option
+			if you want CRUSH to write individual pixel maps as
+			well, so you can peek at these yourself.
 
 	projection=	Choose a map projection to use. The following 
 			projections are supported:
@@ -1800,7 +1800,7 @@ adding the dash. (Also, `=` can be replaced by space(s) in scripting...)
 	rcp		Specify pixel positions (and optionally point-source
 			and sky-noise gains). These are standard IRAM
 			or APEX RCP files containing the information in ASCII
-			columns. RCP files can be produced by the 'beammap' 
+			columns. RCP files can be produced by the 'pixelmap' 
 			option, from scans, which move a bright point source 
 			over all pixels.
 

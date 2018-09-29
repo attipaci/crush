@@ -224,7 +224,7 @@ CRUSH-1.xx	CRUSH-1.xx key		CRUSH-2
 -ErowDrift=	ROW_DRIFT_ESTIMATOR	--- (see 'estimator')
 -edge=		IGNORE_ARRAY_EDGES	--- (not needed, \
 					     use 'flag' if really want it)
--efficiency	---			beammap or source.coupling
+-efficiency	---			pixelmap or source.coupling
 -estimator=	DEFAULT_ESTIMATOR	estimator
 -excessLoad=	DEFAULT_EXCESS_LOAD	excessLoad
 -extended	---			extended

@@ -322,8 +322,8 @@ public class Scuba2 extends Camera<Scuba2Pixel> implements GroundBased, GridInde
 	}
 	
 	@Override
-	public String getCommonHelp() {
-		return super.getCommonHelp() + 
+	public String getScanOptionsHelp() {
+		return super.getScanOptionsHelp() + 
 				"     -450um         Select 450um imaging mode.\n" +
 				"     -850um         Select 850um imaging mode (default).\n";
 	}
@@ -347,7 +347,7 @@ public class Scuba2 extends Camera<Scuba2Pixel> implements GroundBased, GridInde
 	}
 
 	@Override
-	public Vector2D getPixelSize() {
+	public Vector2D getSIPixelSize() {
 		final double size = physicalPixelSize * plateScale;
 		return new Vector2D(size, size);
 	}

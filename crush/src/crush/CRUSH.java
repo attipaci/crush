@@ -61,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.42-b1";
-    private static String revision = "devel.7";
+    private static String revision = "";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -740,6 +740,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
                         "     aszca          APEX S-Z Camera.\n" +
                         "     gismo          Goddard-IRAM 2mm Observer.\n" +
                         "     hawc+          SOFIA/HAWC+ camera.\n" +
+                        "     hirmes         SOFIA/HIRMES camera.\n" +
                         "     laboca         LABOCA 870um camera at APEX.\n" +
                         "     mako           MAKO 350um KID demo camera at the CSO.\n" +
                         "     mako2          Gen. 2 MAKO 350um/850um KID demo camera at CSO.\n" +
@@ -753,7 +754,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
                         "\n" +		
                         " Try 'crush <instrument> -help' to get an instrument-specific version of this\n" +
                         " help screen.\n\n") +
-                " For full and detailed description of all options please consult the GLOSSARY.\n" +
+                " For full and detailed description of all options please consult the GLOSSARY" +
+                (instrument == null ? ".\n" : ",\n and/or README." + instrument.getName() + ".") +
                 " Here are some commonly used options" +
                 (instrument == null ? ":" : " for " + instrument.getName() + ":") + "\n\n" +
                 "   Location of input files:\n" +
@@ -775,8 +777,10 @@ public class CRUSH extends Configurator implements BasicMessaging {
                 "     -altaz         Reduce in horizontal coordinates (e.g. for pointing).\n" +
                 "     -ecliptic      Reduce in Ecliptic coordinates.\n" +
                 "     -galactic      Reduce in Galactic coordinates.\n" +
+                "     -gzip          Compress the output with gzip if possible.\n" +
                 "     -final:smooth= Smoothing in the final iteration, either as FWHM (arcsec)\n" +
                 "                    or one of: 'minimal', 'halfbeam', '2/3beam, 'beam'\n" +
+                (instrument != null ? instrument.getMapConfigHelp() : "") +
                 "\n" +
                 "   Commonly used options for scans:\n" +
                 "     -tau=          Specify an in-band zenith tau, source ID, or interpolation\n" +
@@ -785,13 +789,14 @@ public class CRUSH extends Configurator implements BasicMessaging {
                 "                    E.g. 'tau.225GHz=0.075'.\n" +
                 "     -scale=        Apply a calibration correction factor to the scan(s).\n" +
                 "     -pointing=     x,y pointing corrections in arcsec.\n" +
-                (instrument != null ? instrument.getCommonHelp() : "") +
+                (instrument != null ? instrument.getScanOptionsHelp() : "") +
                 "\n" +
                 "   Alternative reduction modes:\n" +
                 "     -point         Reduce pointing/calibration scans.\n" +
                 "     -skydip        Reduce skydips to obtain in-band zenith opacity.\n" +
-                "     -beammap       Derive pixel position data from beam maps.\n" +
+                "     -pixelmap      Derive pixel position data from beam maps.\n" +
                 "     -split         Indicate that the scans are part of a larger dataset.\n" +
+                (instrument != null ? instrument.getReductionModesHelp() : "") +
                 "\n" +
                 "   Other useful options:\n" +
                 "     -show          Display the result (if possible) at the end.\n" +

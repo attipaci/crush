@@ -155,9 +155,6 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         array = new SofiaArrayData(header);
 
         spectral = new SofiaSpectroscopyData(header);
-        
-        samplingInterval = integrationTime = 1.0 / (header.getDouble("SMPLFREQ", Double.NaN) * Unit.Hz);
-        if(samplingInterval < 0.0) samplingInterval = integrationTime = Double.NaN;
     }
 
 
@@ -358,7 +355,32 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         return Math.sqrt(angularSize.x() * angularSize.y() / (physicalSize.x() * physicalSize.y()));
     }
 
-    public abstract Vector2D getPixelSize();
+    public abstract Vector2D getSIPixelSize();
+    
+    @Override
+    public String getMapConfigHelp() {
+        return super.getMapConfigHelp() + 
+                "     -calibrated    Produce Level 3 calibrated data (instead of Level 2).\n" +
+                "     -organization= Specify the organization where data is being reduced.\n";
+    }
+    
+    
+    @Override
+    public String getScanOptionsHelp() {
+        return super.getScanOptionsHelp() + 
+                "     -PWV=          Manually set the water vapor level (microns).\n" +
+                "     -tau=atran     Use the standard ATRAN model for opacity correction.\n" +
+                "     -tau=pwv       Use a PWV value (via PWV option) for tau correction.\n" +
+                "     -tau=pwvmodel  Use an empirical PWV model to provide tau correction.\n";
+    }
+    
+    
+    @Override
+    public String getDataLocationHelp() {
+        return super.getDataLocationHelp() +
+                "     -flight=       Flight number to use with scan numbers and ranges.\n";
+    }
+    
 
     public static final double telescopeDiameter = 2.5 * Unit.m;
 

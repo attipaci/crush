@@ -39,7 +39,7 @@ import jnum.data.image.region.GaussianSource;
 import jnum.math.SphericalCoordinates;
 import nom.tam.fits.FitsException;
 
-public class BeamMap extends AstroModel2D {
+public class PixelMap extends AstroModel2D {
 	/**
 	 * 
 	 */
@@ -48,7 +48,7 @@ public class BeamMap extends AstroModel2D {
 	AstroIntensityMap[] pixelMap;
 	private transient AstroIntensityMap template;
 	
-	public BeamMap(Camera<?> instrument) {
+	public PixelMap(Camera<?> instrument) {
 		super(instrument);
 	}
 
@@ -56,8 +56,8 @@ public class BeamMap extends AstroModel2D {
 	protected boolean isAddingToMaster() { return true; }
 	
 	@Override
-	public BeamMap copy(boolean withContents) {
-		BeamMap copy = (BeamMap) super.copy(withContents);
+	public PixelMap copy(boolean withContents) {
+		PixelMap copy = (PixelMap) super.copy(withContents);
 		copy.pixelMap = new AstroIntensityMap[pixelMap.length];
 		for(int p=0; p<pixelMap.length; p++) if(pixelMap[p] != null)
 			copy.pixelMap[p] = pixelMap[p].copy(withContents);	
@@ -81,12 +81,14 @@ public class BeamMap extends AstroModel2D {
 			}
 		}
 			
+		  
+        template = new AstroIntensityMap(getInstrument());
+        template.createFrom(collection);
+        
+        pixelMap = new AstroIntensityMap[getArray().maxPixels() + 1];
+		
 		super.createFrom(collection);
-		
-		template = new AstroIntensityMap(getInstrument());
-		template.createFrom(collection);
-		
-		pixelMap = new AstroIntensityMap[getArray().maxPixels() + 1];
+	
 	}
 	
 	public Camera<?> getArray() { return (Camera<?>) getInstrument(); }
@@ -108,8 +110,8 @@ public class BeamMap extends AstroModel2D {
 		
 	@Override
 	public void addModelData(SourceModel model, double weight) {
-		if(!(model instanceof BeamMap)) throw new IllegalArgumentException("Cannot add " + model.getClass().getSimpleName() + " to " + getClass().getSimpleName());
-		BeamMap other = (BeamMap) model;
+		if(!(model instanceof PixelMap)) throw new IllegalArgumentException("Cannot add " + model.getClass().getSimpleName() + " to " + getClass().getSimpleName());
+		PixelMap other = (PixelMap) model;
 		
 		for(int p=0; p<pixelMap.length; p++) if(other.pixelMap[p] != null) {
 			if(pixelMap[p] == null) pixelMap[p] = other.pixelMap[p].copy(false);
@@ -157,7 +159,7 @@ public class BeamMap extends AstroModel2D {
 
 	@Override
 	public int getPixelFootprint() {
-		return pixelMap.length * template.getPixelFootprint();
+	    return pixelMap.length * template.getPixelFootprint();
 	}
 
 	@Override
@@ -319,15 +321,15 @@ public class BeamMap extends AstroModel2D {
 
 	@Override
 	public void mergeAccumulate(AstroModel2D other) {
-		if(!(other instanceof BeamMap)) 
+		if(!(other instanceof PixelMap)) 
 			throw new IllegalStateException("Cannot add " + other.getClass().getSimpleName() + " to " + getClass().getSimpleName() + ".");
 		
-		BeamMap beammap = (BeamMap) other;
+		PixelMap pixelmap = (PixelMap) other;
 		
 		for(int k=pixelMap.length; --k >= 0; ) {
 			AstroIntensityMap map = pixelMap[k];
 			if(map == null) continue;
-			AstroIntensityMap otherMap = beammap.pixelMap[k];
+			AstroIntensityMap otherMap = pixelmap.pixelMap[k];
 			if(otherMap == null) continue;
 			map.mergeAccumulate(otherMap);
 		}

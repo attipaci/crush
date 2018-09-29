@@ -37,7 +37,7 @@ public class HirmesPixel extends SingleColorPixel {
      */
     private static final long serialVersionUID = 293691569452930105L;
     
-    public int detArray, sub, subrow, subcol, row, col, mux, pin, seriesArray, biasLine;
+    public int detArray, sub, readrow, readcol, subrow, subcol, row, col, mux, pin, seriesArray, biasLine;
     public float jump = 0.0F;
     public boolean hasJumps = false;
     
@@ -46,24 +46,47 @@ public class HirmesPixel extends SingleColorPixel {
     int jumpCounter = 0;
     
     Vector2D focalPlanePosition;
-    double frequency;
+    
+    double restFrequency;
     
     public HirmesPixel(Hirmes hirmes, int zeroIndex) {
         super(hirmes, zeroIndex);
         
-        mux = zeroIndex / Hirmes.muxPixels;
-        pin = zeroIndex % Hirmes.muxPixels;
+        readrow = zeroIndex / Hirmes.readoutCols;
+        readcol = zeroIndex % Hirmes.readoutCols;
+        int virtcol = (Hirmes.subCols-1) - readcol;
         
-        if(pin == Hirmes.DARK_SQUID_PIN) flag(FLAG_BLIND);
+        sub = readrow / Hirmes.rows;
+         
+        if(zeroIndex < Hirmes.lowresPixels) {
+            detArray = Hirmes.LORES_ARRAY;
+            
+            row = readrow;
+            subcol = virtcol;
+            
+            subrow = row % Hirmes.rows;  
+            col = subcol + sub * Hirmes.subCols; 
+        }
+        else {
+            detArray = Hirmes.HIRES_ARRAY;
+                       
+            subrow = virtcol % Hirmes.rows;
+            subcol = (readcol == Hirmes.subCols) ? -1 : 2 * (readrow - sub * Hirmes.rows) + virtcol / Hirmes.rows;
+           
+            row = sub * Hirmes.rows + subrow;
+            col = sub * Hirmes.subCols + subcol;
+        }
         
-        detArray = zeroIndex >= Hirmes.lowresPixels ? Hirmes.HIRES_ARRAY : Hirmes.LORES_ARRAY;
-        
-        sub = mux / Hirmes.rows;
-        row = mux;
-        subrow = row % Hirmes.rows;
-       
-        col = pin + sub * Hirmes.subCols;
-        subcol = col % Hirmes.lowresCols;
+        if(readcol == Hirmes.subCols) {
+            flag(FLAG_BLIND);
+            subcol = -1;
+            col = -sub;
+        }
+
+          
+        // TODO
+        //hirmes.mux = hirmes.getMuxIndex(sub, row, col);
+        //pin = hirmes.getPinIndex(sub, row, col);
         
         // TODO seriesArray, biasLine
     }
@@ -89,7 +112,7 @@ public class HirmesPixel extends SingleColorPixel {
     
     
     @Override
-    public double getFrequency() { return frequency; }
+    public double getFrequency() { return restFrequency; }
 
 
     public void calcSIBSPosition3D() {
@@ -97,15 +120,21 @@ public class HirmesPixel extends SingleColorPixel {
         
         if(isFlagged(FLAG_BLIND)) {
             focalPlanePosition = position = null;
-            frequency = Double.NaN;
+            restFrequency = Double.NaN;
         }
         else {
-            focalPlanePosition = hirmes.getFocalPlanePosition(sub, subrow, subcol);
+            focalPlanePosition = (sub == Hirmes.HIRES_SUBARRAY) ? 
+                    hirmes.getHiresFocalPlanePosition(subcol, subrow) :
+                    hirmes.getFocalPlanePosition(sub, subrow, subcol);
+                    
             position = hirmes.getSIBSPosition(focalPlanePosition);
-            frequency = hirmes.getFrequency(focalPlanePosition);
+            restFrequency = hirmes.getRestFrequency(focalPlanePosition);
         }
     }
 
+    public boolean isDark() {
+        return subcol < 0 || position == null;
+    }
         
     @Override
     public int getCriticalFlags() {
@@ -116,6 +145,13 @@ public class HirmesPixel extends SingleColorPixel {
     public void uniformGains() {
         super.uniformGains();
         muxGain = 1.0;
+    }
+    
+    @Override
+    public String getID() {
+        return sub == Hirmes.HIRES_SUBARRAY ?
+                Hirmes.subID[sub] + subcol + "[" + subrow + "]" :
+                Hirmes.subID[sub] + "[" + subrow + "," + subcol + "]";
     }
     
     

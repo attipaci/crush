@@ -148,31 +148,8 @@
 			Set the instrument beam to X arcseconds.
 			@See: 'resolution'
 
-:: beammap		Effectively the same as 'source.type=beammap', which is
-			invoked by a condition, not an alias because aliasing
-			would interfere with the similarly named 
-			'beammap.process' and 'beammap.writemaps' options.
-			Used for reducing beam map data. Instead of making a 
-			single map from all pixels, separate maps are created 
-			for each pixel (Note, this can chew up some memory if 
-			you have a lot of pixels). At the end of the reduction 
-			CRUSH determines the actual pixel offsets in the focal 
-			plane.
-			@See: 'source.type', 'map', 'skydip', 'grid'
-	
-:: beammap.process	@Advanced
-			Specify that beam-maps should undergo the same
-			post-processing steps (e.g. smoothing, clipping
-			filtering, etc.) that are used for regular map-making.
-			When the option is not set, beam-maps are used in their
-			raw maximum-likelihood forms.
-			@See: 'beammap', 'beammap.writemaps'
-
-:: beammap.writemaps	Beam maps normally only produce the pixel position 
-			information. Use this option if you want CRUSH to write
- 			individual pixel maps as well, so you can peek at these
-			yourself.
-			@See: 'beammap', beammap.process'
+:: beammap		@Deprecated
+			@See: 'pixelmap'
 
 :: blacklist[=<list>]	Similar to 'forget', except it will not set options 
 			even if they are then specified at a later time. This 
@@ -1323,8 +1300,8 @@
 			Produce maps in focal-plane coordinates. This is 
 			practical only for beam-mapping. Thus, focal-plane
 			coordinates are default when 'source.type' is set to
-			'beammap'
-			@See: 'beammap', 'source.type'
+			'pixelmap'
+			@See: 'pixelmap', 'source.type'
 
 :: forget=<list>...	Forget the priorly set values for the listed options 
 			as if they were never defined. E.g. 
@@ -1453,6 +1430,11 @@
 			or dropped from the set in multi-scan reductions
 			(to be safe).
 
+:: gzip			@Since: 2.42
+			Compress the output (e.g. FITS) with gzip, if possible.
+			(The output file name will have .gz extention added as 
+			needed.)
+
 :: he3=<source>		@Instrument: LABOCA
 			@Advanced
 			Correct time-streams for He3 temperature fluctuations. 
@@ -1481,8 +1463,8 @@
 :: horizontal		@Alias -> system=horizontal
 			Reduce in horizontal coordinates (for mapping).
 			This is often useful for determining pointing offsets
-			or for beam mapping.
-			@See: 'system', 'center', 'beammap', 'fazo', 'fzao'
+			or for pixel location mapping.
+			@See: 'system', 'center', 'pixelmap', 'fazo', 'fzao'
 
 :: id.[<range>]		@Instrument: GISMO
 			@Advanced
@@ -1515,6 +1497,13 @@
 			parallel threads will be the smaller of the allowed 
 			number of CPUs and the number of scans processed.
 
+:: imaging.aperture=X[,Y]    
+
+			@Instrument: HIRMES
+			@Expert
+			@Since: 2.42
+                        Specifies the imaging aperture size, either as a square
+                        of X arcseconds size, or a rectangle of X by Y arcsec.
 
 :: indexing		@Expert
 			Allows the use of data indexing to speed up coordinate
@@ -1910,7 +1899,7 @@
 				<sourcename>.<firstscan>-<lastscan>.fits
 
 			For mapping. Other source model types (e.g. skydips
-			or beam maps) may have different default naming 
+			or pixel maps) may have different default naming 
 			conventions.
 			@See: 'outpath'
 
@@ -2108,6 +2097,11 @@
 			activated later (e.g. if nested inside an iteration.[]
 			condition.).	
 
+:: offset.*		@Instrument: SCUBA-2, HAWC+, HIRMES
+			Specify subarray offsets. See the instrument README
+			docs for specifics.
+			@See: 'rotation.*'
+
 :: offsets		@Advanced
 			Remove the residual DC offsets from the bolometer 
 			signals (ignored when 'drifts' below is also 
@@ -2120,6 +2114,17 @@
 			@See: 'offsets', 'drifts', 'weighting', 'despike'
 			      'source', 'correlated.<?>', 'whiten',
 			      'time-weighting'
+
+:: organization         @Telescope: SOFIA
+			@Since: 2.42
+                        Specify the organization at which CRUSH is being used
+                        for reducing data. The value of this option is stored
+                        directly in the FITS ORIGIN header key as required by
+                        the DCS. If you want the ORIGIN key to be set properly
+                        you might consider adding the organization option to
+                        `~/.crush2/sofia/default.cfg`, e.g. as:
+
+                          organization SOFIA Science and Mission Ops
 
 :: outpath=<path>	Specify the output path, where all CRUSH output will be 
 			written (including maps etc.). Path names follow the
@@ -2332,6 +2337,35 @@
 			Specify a scaling (zoom) factor to apply to the 
 			positions in the 'pixelid' file. Use this to scale
 			the positions to physical size of the array in arcsecs.
+
+:: pixelmap		@Since: 2.42
+			(Used to be 'beammap')
+			Effectively the same as 'source.type=pixelmap', which 
+                        is invoked by a condition, not an alias because 
+                        aliasing would interfere with the similarly named 
+			'pixelmap.process' and 'pixelmap.writemaps' options.
+			Used for reducing pixel map data. Instead of making a 
+			single map from all pixels, separate maps are created 
+			for each pixel (Note, this can chew up some memory if 
+			you have a lot of pixels). At the end of the reduction 
+			CRUSH determines the actual pixel offsets in the focal 
+			plane.
+			@See: 'source.type', 'map', 'skydip', 'grid'
+	
+:: pixelmap.process	@Advanced
+			(Used to be 'beammap.process')
+			Specify that pixel maps should undergo the same
+			post-processing steps (e.g. smoothing, clipping
+			filtering, etc.) that are used for regular map-making.
+			When the option is not set, pixel maps are used in 
+                        their raw maximum-likelihood forms.
+			@See: 'pixelmap', 'pixelmap.writemaps'
+
+:: pixelmap.writemaps	Pixel maps normally only produce the pixel position 
+			information as output. Use this option if you want 
+                        CRUSH to write individual pixel maps as well, so you  
+                        can peek at these yourself.
+			@See: 'pixelmap', pixelmap.process'
 			
 :: pixelsize=X		@Instrument: SHARC
 			@Since: 2.17
@@ -2350,6 +2384,14 @@
 :: planetary		@Since: 2.11
 			@Deprecated: 2.15
 			@Alias -> moving
+
+:: platescale=X         @Instrument: HIRMES
+                        @Expert
+                        @Since: 2.42
+                        Override the plate scale recorded in the FITS, and
+                        set it manually to X arcsec/mm.
+                        @See: 'pixelsize'
+
 
 :: point		@Since: 2.00-b4
 			This is a convenience key for triggering settings for
@@ -2397,8 +2439,8 @@
 			pointing sources. Currently 'centroid' (default) and 
 			'peak' are supported. This option also controls how 
 			pixel position information (RCP) is calculated for 
-			'beammap' reductions.
-			@See: 'point', 'beammap'
+			'pixelmap' reductions.
+			@See: 'point', 'pixelmap'
 
 :: pointing.model=<name>	@Advanced
 				@Instrument: GISMO
@@ -2663,12 +2705,12 @@
 			section of the README.). The file should conform to the
 			standard IRAM or APEX RCP specs containing the 
 			information in ASCII columns. RCP files can be produced 
-			by the 'beammap' option, from scans, which move a 
-			bright point source over all pixels.
+			by the 'pixelmap' option, from scans, when the 
+			observation moves a bright source over all pixels.
 			For rectangular arrays, pixel positions can also be 
 			calculated on a regular grid using 'pixelsize' and 
 			'pcenter'
-			@See: 'beammap', 'pixelsize', 'pcenter' 
+			@See: 'pixelmap', 'pixelsize', 'pcenter' 
 
 :: rcp.center=x,y	@Advanced
 			Define the center RCP position at x,y in arcseconds.
@@ -2831,6 +2873,11 @@
 :: rotation		@Advanced
 			Define the instrument rotation (in degrees) if
 			applicable.	
+
+:: rotation.*		@Instrument: SCUBA-2, HAWC+, HIRMES
+			Specify subarray offsets. See the instrument README 
+			docs for specifics.
+			@See: 'offset.*' 
 
 :: rounds=N		@Advanced
 			Iterate N times. You may want to increase the number
@@ -3215,7 +3262,7 @@
 			columns of RCP files.). This option can be used to 
 			treat the supplied source gains as static (i.e. 
 			decoupled from the sky-noise gains).
-			@See: 'source.coupling', 'beammap'
+			@See: 'source.coupling', 'pixelmap'
 
 :: source.flatfield	@Advanced
 			@Since: 2.34-2
@@ -3388,7 +3435,7 @@
 :: source.type=<type>	By default, crush will try to make a map from
 			the data. However, some istruments may take
 			data that is analyzed differently. For example, you 
-			may want to use crush to reduce beam maps (to
+			may want to use crush to reduce pixel maps (to
 			determine the positions of your pixels on sky), or
 			skydips (to derive appropriate opacities), or do
 			point source photometry. Presently, the following
@@ -3399,19 +3446,19 @@
 			   skydip	Reduced skydips, and determine 
 					opacities by fitting a model to it.
 
-			   beammap	Create individual maps for every
+			   pixelmap	Create individual maps for every
 					pixel, and use it to determine their
 					location in the field of view.
 
 			   null		Do not generate a source model.
 					Useful for lab/diagnostic reductions.
 	
-			Note, that you may also just use 'skydip' and 'beammap'
-			shorthands to the same effect. E.g.
+			Note, that you may also just use 'skydip' and 
+			'pixelmap' shorthands to the same effect. E.g.
 
 			  > crush [...] -skydip [...]
 
-			@See: 'skydip', 'beammap'
+			@See: 'skydip', 'pixelmap'
 
 
 :: sources=<filename>	@Advanced
@@ -3450,10 +3497,28 @@
 :: spa			@Alias --> 'source.polar.angles'
 			@Since: 2.11
 
+:: spectral.grid=X      @Instrument: SOFIA
+			@Advanced
+			@Since: 2.42
+                        Specify the bin spacing in the spectral dimension to
+                        X, in the units set by 'spectral.unit'. When present
+                        this option supercedes the 'spectral.R', which
+                        is an elternative way to set the spectral bin size.
+                        @See: 'spectral.unit'
+
 :: spectral.obs         @Instrument: HIRMES
                         @Since: 2.42
                         Output spectra in the observing frame rather than the
                         default rest frame.
+
+:: spectral.R=X		@Instrument: HIRMES
+			@Advanced
+			@Since: 2.42        
+			Specify a spectral resolving power X (f/df) at the
+                        reference frequency of observation. This option is used
+                        only if the spectral bin (grid) size is not explicitly
+                        defined via `spectral.gid`.
+                        @See: `spectral.grid`
 
 :: spectral.unit=<spec>	        @Instrument: HIRMES
                                 @Since: 2.42       
@@ -4194,10 +4259,6 @@
                         Set the gnuplot plotting style for 1D data. E.g. 
                         'histep', or 'points' or 'lines' or 'linespoints'
 
-:: write.flattened      @Instrument: HIRMES
-                        @Since: 2.42
-                        Write a flattened 2D (monochrome) FITS image also.
-
 :: write.flatfield[=<path>]	@Expert
 				@Since: 2.31
                         	Write a DRP flatfield FITS file, to be used by
@@ -4207,6 +4268,15 @@
 			the the directory specified by 'outpath'.
 			The file format is specified by Marc Berthoud.
 			@See: 'outpath'
+
+:: write.flattened      @Instrument: HIRMES
+                        @Since: 2.42
+                        Write a flattened 2D (monochrome) FITS image also.
+
+:: write.flattened.gzip @Instrument: HIRMES
+			@Since: 2.42
+			Compress flattened image with gzip.
+			@See: 'gzip'
 
 :: write.pixeldata	@Expert
 			Write the pixel data file (gains, weights, 

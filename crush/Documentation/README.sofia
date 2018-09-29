@@ -336,6 +336,10 @@ in Kovacs, A., PhD thesis, Caltech (2006).
     -galactic           Produce maps in galactic coordinates, instead of the
                         default equatorial (same as `-system=galactic`).
 
+    -gzip		Compress the output (e.g. FITS) with GZIP, if possible.
+			(The output file name will have .gz extension added as 
+			needed.)
+
     -supergalactic      Produce maps in super-galactic coordinates, instead of 
                         the default equatorial (same as 
                         `-system=supergalactic`).

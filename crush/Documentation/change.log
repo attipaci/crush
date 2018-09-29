@@ -1,19 +1,34 @@
->> 'write.png.median'
->> 'organization'
->> Hirmes 'pixelscale'
+
+2.42-b1 
 
 
-2.42-a2 
+	Overview
+	======================================================================
+	This release adds forward compatibility to Java 10 & 11. Now supports
+	all reduction modes for HIRMES simulations (v.6), complete with
+	physical array layout & dimensions and predicted optical dispersion
+	parameters. Data products for SOFIA cameras (HAWC+ and HIRMES) now
+	have FITS fully populated FITS headers, compliant with Rev. G of the 
+        DCS prescription. Under the hood many loose end have been tied up. Many
+	updates to documentation...
+	======================================================================
 
+	[NEW] New option 'gzip' can be used to write GZIP'ed output, when
+	it is available (e.g. FITS outputs).
+
+	[NEW] {HIRMES} Now works with Version 6 simulated data, supporting all
+	modes (spectral imaging, lo/mid/hi-res spectroscopy) with physical
+	pixel layouts and realistic dispersion models (grating and FPI).
+
+	[NEW] {SOFIA} New option 'organization' allows to specify what value
+	is written for the FITS 'ORIGIN' keyword (SOFIA requirement). Its 
+	default value is set to 'Sofia Data Processing System', as requested.
 
 	[NEW] {SOFIA} All required SOFIA header values are now written to the 
         primary FITS headers, according to the DSC specification available.
 
 	[NEW] {HAWC+} Extra scanning keywords are parsed and migrated to
 	scan and image headers.
-
-	[NEW] {HIRMES} Parsing simple (linear) frequency mapping from FITS
-	header. 
 
 	[NEW] {HIRMES} Now processing SOFIA spectral (heterodyne) header keys.
 
@@ -30,8 +45,12 @@
 	[NEW] {HIRMES} Default spectral resolution is now set to be 2x the
 	spectral detector channel spacing.
 
-        [FIX] {HAWC+} Update the value of PIXSCAL (array.pixelScale) to 
-        match the mean lateral pixel size used in the reduction.
+	[FIX] {pixelmap} Pixelmap (formerly known as beammap) functionality was 
+	broken. 
+
+        [FIX] {HAWC+} Change interpretation of the value of PIXSCAL 
+	(array.pixelSize) to correspond to the mean lateral pixel size used in 
+	the reduction.
 
 	[FIX] Command line arguments weren't correctly recorded via the ARGn
 	FITS keywords. Fixed.
@@ -41,7 +60,7 @@
 	[FIX] {SOFIA} Removed obsolete SOFIA header keys and the corresponding
 	log entries.
 
-	[FIX] {SOFIA} PWV_END just repeated PWV_STA. fixed.
+	FIX] {SOFIA} PWV_END just repeated PWV_STA. fixed.
 
 	[FIX] {HIRMES} Include coordinate information in FITS headers generated
 	by Spectral Cubes.
@@ -61,6 +80,10 @@
 
 	[FIX] {HIRMES} Parsing of imaging/spectroscopy modes from FITS header
 
+        [CHANGE] 'beammap' has been renamed to the more descriptive 'pixelmap'.
+	However, the 'beammap' option will continue to be recognized for the 
+	foreseeable future... 
+ 
 	[TWEAK] FITS keyword 'DATE' added to reflect the file creation date.
 
 	[TWEAK] {SOFIA} SOFIA header keys updated to match Rev. G. of the DCS
@@ -73,9 +96,17 @@
         These are chop-nod-pol keywords that have nothing to do with CRUSH but
         SOFIA counts them as required keywords, so there they go marching...
 
+	[DOC] Updated '-help' information for HAWC+ & HIRMES.
+
 	[DOC] {HAWC+} {HIRMES} Common SOFIA-specific documentation is now 
         separated into README.sofia. The instrumenr-specific manuals for HAWC+
 	and HIRMES, are now just differential guides on top.
+
+	[CODE] Source does not compile under Java 10/11 due to a javac compiler
+	bug (JDK-8211004). If you do want to build CRUSH from source, you
+	can use any JDK version 1.6 -- 1.8, or an alternate compiler (such 
+	as Eclipse's ecj or IBM's java). Hopefully the guys at Oracle will fix
+	the bug soon...
 
 	[CODE] Java 11+ compatibility: Class.newInstance() is deprecated in 
 	Java 11. Updated source to use Class.getConstructor().newInstance() 

@@ -3,7 +3,7 @@
 
 Author: Attila Kovacs <attila[AT]sigmyne.com>
 
-Last updated: 23 Sep 2018
+Last updated: 27 Sep 2018
 
 
 ----------------------------------------------------------------------------
@@ -48,6 +48,17 @@ Section _1. Getting Started_), which covers installation and basic usage.
  line, with three options, one of which contains a white-space characters:
 
    > crush hirmes -faint -name="My HIRMES image.fits" -projection=TAN ...
+
+ Spectral cubes can be quite large, and mostly empty, especially in 
+ mid-resolution mode. As such, you may want to produce compressed output. 
+ CRUSH has an option for that:
+
+    gzip               Compress outputs (e.g. FITS) with gzip, if possible.
+                       (The .gz extension will be added to the output name as
+                       necessary.)
+
+ The 'gzip' option is enabled, by default, for spectral cubes. To disable,
+ use '-blacklist=gzip' command-line option.
 
  The SOFIA README offers is a brief guide to a few useful options for using
  CRUSH with any SOFIA instrument. Here only the options specific to HIRMES
@@ -125,14 +136,17 @@ for expert users only.
                         Include the dark SQUIDs when decorrelating over SQUID
                         MUXes (`mux` option).
 
-    gyrocorrect         @Telescope: SOFIA
-                        @Since: 2.41
+    gyrocorrect         @Since: 2.41
                         @Advanced
                         Correct for gyro drifts based on guide-star relock
                         data stored in the scan headers. This isn't normally
                         needed when the gyros funtion properly. But,
                         occasionally, they drift a fair bit, and this option
                         can activate the correction scheme on demand.
+
+    imaging.aperture=X[,Y]    @Expert
+                        Specifies the imaging aperture size, either as a square
+                        of X arcseconds size, or a rectangle of X by Y arcsec.  
 
     los                 @Alias: 'correlated.los'
                         @Since: 2.41
@@ -149,13 +163,8 @@ for expert users only.
                         suboptions apply.
                         @See: 'correlated.<?>'
 
-    offset.imaging=dx,dy   @Expert
-                        Specify the location (dx, dy pixel offsets) of the
-                        illuminated area of the low resolution array used
-                        for imaging mode.
-
-    offset.lores1=dx,dy
-    offset.lores2=dx,dy
+    offset.blue=dx,dy
+    offset.red=dx,dy
     offset.hires=dx,dy  @Expert
                         Specify the subarray offset (as dx,dy pixels in
                         the focal plane) from their nominal positions, for
@@ -168,19 +177,18 @@ for expert users only.
                         suboptions apply.
                         @See: 'correlated.<?>'
 
-    pixelsize=<a>[,<b>] @Expert
+    pixelsize=X[,Y] @Expert
                         Specify the size of the pixels for calculating pixel 
                         positions based on a regular grid. 
-                        The argument can be either a lateral size (in arcsec) 
+                        The argument can be either X lateral size (in arcsec) 
                         for square pixels, or two comma separated sizes for 
                         rectangular pixels.
-                        @See: 'rotation', 'pcenter'
+                        @See: 'platescale', 'rotation', 'pcenter'
 
-    pols                @Alias: 'correlated.polarrays'
-                        @Expert
-                        Decorrelate each polarization array separately. All 
-                        correlated modality sub-options apply.
-                        @See: 'correlated.<?>'
+    platescale=X        @Expert
+                        Override the plate scale recorded in the FITS, and
+                        set it manually to X arcsec/mm.
+                        @See: 'pixelsize'
 
     roll                @Alias: 'correlated.roll'
                         @Since: 2.41
@@ -193,8 +201,8 @@ for expert users only.
                         Specify the focal-plane rotation (in degrees).
                         @See: 'pixelsize'
 
-    rotation.lores1=<deg>     
-    rotation.lores2=<deg>
+    rotation.red=<deg>     
+    rotation.blue=<deg>
     rotation.hires=<deg>   @Expert
                         Specify the relative rotation of each subarray in 
                         the focal plane.
@@ -220,11 +228,17 @@ for expert users only.
                         series array (at 4K) is sensitive to some level of
                         thermal fluctuation, and enabling decorrelation on
                         these can improve imaging quality.
-   
+  
+    spectral.grid=X     Specify the bin spacing in the spectral dimension to
+                        X, in the units set by 'spectral.unit'. When present
+                        this option supercedes the 'spectral.R', which
+                        is an elternative way to set the spectral bin size.
+                        @See: 'spectral.unit' 
+
     spectral.obs        Output spectra in the observing frame rather than the
                         default rest frame.
 
-    spectral.resolution=R        Specify a spectral resolving power R at the
+    spectral.R=X        Specify a spectral resolving power X at the
                         center frequency of observation. This option is used
                         only if the spectral bin (grid) size is not explicitly
                         defined via `spectral.gid`.
@@ -232,8 +246,8 @@ for expert users only.
 
     spectral.unit=<spec>        Specify the unit of the spectral axis in the 
                         output data. It can be a wavelength unit, such as 'um' 
-                        (micron) or a frequency unit, such as 'GHz'.
- 
+                        (micron) or a frequency unit, such as 'GHz'. 
+
     write.fieldspec     Write the aggregate 1D field spectrum as and ASCII
                         table also. This data can also be readiliy plotted
                         using gnuplot if the '.eps' and/or '.png' sub-options
@@ -249,6 +263,10 @@ for expert users only.
     write.fieldspec.lt=N   Set the plot line type to gnuplot's built-in type N. 
    
     write.fieldspec.lw=X   Set the plot line with to X points wide, e.g. 2.5.
+
+    write.fieldspec.nodata=<string>  Set how NaN (no data) values are reported
+                        The specified string will be used verbetum where no
+                        valid data is available. 
  
     write.fieldspec.png    Create a PNG plot from the aggregate 1D field 
                         spectrum using gnuplot. A set of sub-options can be 
@@ -272,7 +290,7 @@ for expert users only.
 
     write.flattened     Write a flattened 2D (monochrome) FITS image also.
 
-
+    write.flattened.gzip   Compress the flattened image with gzip.
 
 
 
@@ -282,10 +300,20 @@ for expert users only.
  `README.sofia` for all SOFIA specific log quantities, and the main CRUSH
  `README` for an even more generic list of available log quantities.
 
+    gratingAngle        (deg) Grating angle
 
     gyro.max            (arcsec) Maximum gyro drift during scan.
     gyro.rms            (arcsec) RMS gyro drift during scan.
 
+    FPIk                (1/radian) FPI dispersion constant
+
+    mode                HIRMES configuration mode.
+
+    ref.x               (mm) Focal plane reference X position.
+    ref.y               (mm) Focal plane reference Y position.
+
+    strip               [0-7] Integer index of hires strip in used, if 
+                        applicable
 
  
 ------------------------------------------------------------------------------

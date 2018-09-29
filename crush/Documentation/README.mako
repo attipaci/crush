@@ -93,7 +93,7 @@ only:
 
    assign		Attempt to assign resonances to pixels. This is
 			a prerequisite for making maps, but is not required
-			for timestream analysis or for 'beammap'.
+			for timestream analysis or for 'pixelmap'.
 			Resonances that cannot be assigned will be ignored.
 
    assing.max=X		The maximum distance a resoance may fall from the

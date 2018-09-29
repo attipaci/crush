@@ -72,7 +72,7 @@ public class Gismo extends AbstractGismo implements GridIndexed {
 	}
 	
 	@Override
-	public Vector2D getPixelSize() {
+	public Vector2D getSIPixelSize() {
 		return pixelSize;
 	}
 	

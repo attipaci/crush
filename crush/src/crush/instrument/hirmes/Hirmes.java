@@ -30,14 +30,17 @@ import crush.array.SingleColorArrangement;
 import crush.sourcemodel.AstroIntensityMap;
 import crush.sourcemodel.SpectralCube;
 import crush.telescope.sofia.SofiaCamera;
+import crush.telescope.sofia.SofiaData;
 import crush.telescope.sofia.SofiaHeader;
 import crush.telescope.sofia.SofiaSpectroscopyData;
 import jnum.Constant;
 import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
+import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
+import nom.tam.util.Cursor;
 
 
 public class Hirmes extends SofiaCamera<HirmesPixel> {
@@ -45,29 +48,37 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
      * 
      */
     private static final long serialVersionUID = 6205260168688969947L;
+
+    // TODO Clarify mux readout wiring (Elmer)
+    // TODO S/N flattened spectra
+
+    double plateScale = defaultPlateScale;
+    Vector2D loresPixelSize;                // (arcsec)
+    Vector2D[] hiresPixelSize = new Vector2D[hiresCols];      // (arcsec)
     
-    Vector2D pixelScale;
-    Vector2D pixelSize;
-
-    ArrayList<ChannelGroup<HirmesPixel>> subarrayGroups;
-
-    Vector2D[] subarrayOffset;
-    double[] subarrayOrientation;
-
-    boolean darkSquidCorrection = false;
-    int[] darkSquidLookup;               // col
-
-    int[] mceSubarray;                   // subarray assignment for MCE 0-3
-    int[][] detectorBias;                // sub [2], line [rows]
-
     int detArray = LORES_ARRAY;
     int mode = IMAGING_MODE;
-
-    double baseFrequency;
-    double frequencyStep = 0.0;          // frequency step... 
-    double frequencyResolution = 0.0;
+    int hiresColUsed = -1;                  // [0-7] Hires strip index used.
+     
     
-    double z = 0.0;                      // Doppler shift. 
+    Vector2D focalPlaneReference;           // (mm) on the focal-plane coordinate system
+    double gratingAngle;
+    double fpiConstant = Double.NaN;        // FPI dispersion contant
+    int gratingIndex;                       // [0-2]
+        
+    ArrayList<ChannelGroup<HirmesPixel>> subarrayGroups;
+
+    Vector2D[] subarrayPixelOffset;         // (lowres pixels)
+    double[] subarrayOrientation;   
+    Vector2D hiresFocalPlaneOffset;         // (mm) Hires-array offset, calculated from subarrayPixelOffset & loresPixelSpacing
+
+  
+    boolean darkSquidCorrection = false;
+    int[] darkSquidLookup;                // col
+
+    //int[][] detectorBias;                 // array [2], line [rows]
+
+    double z = 0.0;                         // Doppler shift. 
 
     public Hirmes() {
         super("hirmes", new SingleColorArrangement<HirmesPixel>(), pixels);
@@ -80,17 +91,22 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     public Hirmes copy() {
         Hirmes copy = (Hirmes) super.copy();
 
-        if(pixelScale != null) copy.pixelScale = pixelScale.copy();  
-        if(pixelSize != null) copy.pixelSize = pixelSize.copy();  
-        if(subarrayOffset != null) copy.subarrayOffset = Vector2D.copyOf(subarrayOffset);
+        if(loresPixelSize != null) copy.loresPixelSize = loresPixelSize.copy();
+        if(hiresPixelSize != null) copy.hiresPixelSize = Vector2D.copyOf(hiresPixelSize);
+        if(focalPlaneReference != null) copy.focalPlaneReference = focalPlaneReference.copy();
+        if(subarrayPixelOffset != null) copy.subarrayPixelOffset = Vector2D.copyOf(subarrayPixelOffset);
         if(subarrayOrientation != null) copy.subarrayOrientation = Arrays.copyOf(subarrayOrientation, subarrayOrientation.length);
+        
+
         if(darkSquidLookup != null) copy.darkSquidLookup = Arrays.copyOf(darkSquidLookup, darkSquidLookup.length);
-        if(mceSubarray != null) copy.mceSubarray = Arrays.copyOf(mceSubarray, mceSubarray.length);
+        
+        /*
         if(detectorBias != null) {
             copy.detectorBias = new int[detectorBias.length][];
             for(int i=detectorBias.length; --i >= 0; ) if(detectorBias[i] != null) 
                 copy.detectorBias[i] = Arrays.copyOf(detectorBias[i], detectorBias[i].length);
         }
+        */
 
         return copy;
     }
@@ -226,68 +242,59 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     @Override
     public void parseHeader(SofiaHeader header) {
         super.parseHeader(header);
-
-        spectral = new SofiaSpectroscopyData(header);
-        // TODO use info from spectral header...
         
-        // TODO should not be necessary if the header is proper...
-        if(Double.isNaN(integrationTime) || integrationTime < 0.0) {
-            warning("Missing SMPLFREQ. Will assume 203.25 Hz.");
-            integrationTime = samplingInterval = Unit.s / 203.25;
-        }
+        spectral = new SofiaSpectroscopyData(header);
+        
+        samplingInterval = integrationTime = 1.0 / (header.getDouble("SMPLFREQ", Double.NaN) * Unit.Hz);
+        if(samplingInterval < 0.0) samplingInterval = integrationTime = Double.NaN;
 
-        if(array.detectorName.equalsIgnoreCase("HIRMES_LOW")) detArray = LORES_ARRAY;
-        else if(array.detectorName.equalsIgnoreCase("HIRMES_HIGH")) detArray = HIRES_ARRAY;
-
+        focalPlaneReference = new Vector2D(header.getDouble("CRX") * Unit.mm, header.getDouble("CRY") * Unit.mm);
+        gratingAngle = header.getDouble("GRATANGL", Double.NaN) * Unit.deg;
+        fpiConstant = header.getDouble("FPIK", Double.NaN);
+ 
+        if(array.detectorName.equalsIgnoreCase("HIRMES-LOW")) detArray = LORES_ARRAY;
+        else if(array.detectorName.equalsIgnoreCase("HIRMES-HI")) detArray = HIRES_ARRAY;
         String config = instrumentData.instrumentMode;
 
-        if(config.equalsIgnoreCase("SPECTRAL_IMAGING")) {
-            mode = IMAGING_MODE;
-            spectral = null; // Discard spectral header info entirely.
-        }
+        if(config.equalsIgnoreCase("SPECTRAL_IMAGING")) mode = IMAGING_MODE;
         else if(config.equalsIgnoreCase("LOW-RES")) mode = LORES_MODE;
         else if(config.equalsIgnoreCase("MED-RES")) mode = MIDRES_MODE;
         else if(config.equalsIgnoreCase("HI-RES")) mode = HIRES_MODE;
+       
+        hiresColUsed = header.getInt("HIRESSUB", -1);
 
-        // TODO deprecate in favor of standard spectral/array header values.
-        baseFrequency = header.getDouble("SPECREF", Constant.c / instrumentData.wavelength);
-        frequencyStep = header.getDouble("SPECSTEP", 0.0);
-
-        // TODO Add actual spectral resolution....
-        frequencyResolution = instrumentData.spectralResolution > 0.0 ? 
-                baseFrequency / instrumentData.spectralResolution : 2.0 * frequencyStep;    
-        
+           
         // Doppler correction to rest frame...
         z = hasOption("spectral.obs") ? spectral.getRedshift() : 0.0;
 
+        
         // Set the spectral grid to a default value...
-        if(mode != IMAGING_MODE) if(!hasOption("spectral.grid") && !hasOption("spectral.resolution")) {
-            double R = baseFrequency / frequencyResolution;
+        if(mode != IMAGING_MODE) if(!hasOption("spectral.grid") && !hasOption("spectral.r")) {
             try { 
-                getOptions().process("spectral.resolution", R + ""); 
+                double R = spectral.observingFrequency / spectral.frequencyResolution;
+                getOptions().process("spectral.r", R + ""); 
                 info("Set spectral resolution to R ~ " + Util.f1.format(R));
             }
             catch(LockedException e) {}
         }
 
-        mceSubarray = new int[subarrays];
-        Arrays.fill(mceSubarray, -1);
-
-        /* TODO
-        String mceMap = header.getString("MCEMAP");
-        if(mceMap != null) {
-            StringTokenizer tokens = new StringTokenizer(mceMap, " \t,;:");
-            for(int sub=0; sub<subarrays; sub++) if(tokens.hasMoreTokens()) {
-                String assignment = tokens.nextToken();
-                try { 
-                    int mce = Integer.parseInt(assignment);
-                    if(mce >= 0) mceSubarray[mce] = sub;
-                }
-                catch(NumberFormatException e) { warning("Invalid MCE assignment: " + assignment);}
-            }       
-        } 
-         */  
+        if(mode == LORES_MODE || mode == HIRES_MODE) gratingIndex = getGratingIndex(Constant.c / spectral.observingFrequency);
+        
     }
+    
+    @Override
+    public void editHeader(Header header) throws HeaderCardException {             
+        // Add HAWC+ specific keywords
+        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
+        c.add(new HeaderCard("COMMENT", "<------ HIRMES Header Keys ------>", false));
+        c.add(SofiaData.makeCard("SMPLFREQ", 1.0 / samplingInterval, "(Hz) Detector readout rate."));
+        c.add(SofiaData.makeCard("CRX", focalPlaneReference.x() / Unit.mm, "(mm) Focal plane center x."));
+        c.add(SofiaData.makeCard("CRY", focalPlaneReference.y() / Unit.mm, "(mm) Focal plane center y"));
+        c.add(SofiaData.makeCard("GRATANGL", gratingAngle / Unit.deg, "Grating angle"));
+        c.add(SofiaData.makeCard("FPIK", fpiConstant, "FPI dispecrison constant"));
+        c.add(new HeaderCard("HIRESSUB", hiresColUsed, "[0-7] Hires col used."));
+    }
+    
 
     @Override
     protected void loadChannelData() {
@@ -296,59 +303,59 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
         ensureCapacity(pixels);
         for(int c=0; c<pixels; c++) add(new HirmesPixel(this, c));
 
+        
+        
         // The subarrays orientations
         subarrayOrientation = new double[subarrays];
-        subarrayOrientation[LORES_SUBARRAY_1] = hasOption("rotation.lores1") ? option("rotation.lores1").getDouble() * Unit.deg : 0.0;
-        subarrayOrientation[LORES_SUBARRAY_2] = hasOption("rotation.lores2") ? option("rotation.lores2").getDouble() * Unit.deg : 0.0;
+        subarrayOrientation[LORES_SUBARRAY_1] = hasOption("rotation.blue") ? option("rotation.blue").getDouble() * Unit.deg : 0.0;
+        subarrayOrientation[LORES_SUBARRAY_2] = hasOption("rotation.red") ? option("rotation.red").getDouble() * Unit.deg : 0.0;
         subarrayOrientation[HIRES_SUBARRAY] = hasOption("rotation.hires") ? option("rotation.hires").getDouble() * Unit.deg : 0.0;
 
         // The subarray offsets (after rotation, in pixels)
-        subarrayOffset = new Vector2D[subarrays];
-        subarrayOffset[LORES_SUBARRAY_1] = hasOption("offset.lores1") ? option("offset.lores1").getVector2D() : new Vector2D();
-        subarrayOffset[LORES_SUBARRAY_2] = hasOption("offset.lores2") ? option("offset.lores2").getVector2D() : new Vector2D();
-        subarrayOffset[HIRES_SUBARRAY] = hasOption("offset.hires") ? option("offset.hires").getVector2D() : new Vector2D();
+        subarrayPixelOffset = new Vector2D[subarrays];
+        subarrayPixelOffset[LORES_SUBARRAY_1] = hasOption("offset.blue") ? option("offset.blue").getVector2D() : new Vector2D(-7.816, 0.0);
+        subarrayPixelOffset[LORES_SUBARRAY_2] = hasOption("offset.red") ? option("offset.red").getVector2D() : new Vector2D(-40.175, 0.0);
+        subarrayPixelOffset[HIRES_SUBARRAY] = hasOption("offset.hires") ? option("offset.hires").getVector2D() : new Vector2D();
 
-        pixelScale = new Vector2D(array.pixelScale, array.pixelScale);
         
-        // Set the pixel size...
-        if(hasOption("pixelscale")) {
-            StringTokenizer tokens = new StringTokenizer(option("pixelscale").getValue(), " \t,:xX");
-            pixelScale.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-            pixelScale.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
-        }
-        
-        // Set the default pixel size, based on the default physical size and the recorded pixel scale (arcsec/mm)
-        Vector2D pixelSize = new Vector2D(HirmesPixel.physicalSize.x() * pixelScale.x(), HirmesPixel.physicalSize.y() * pixelScale.y());        
-        setNominalPixelPositions(pixelSize);
+        hiresFocalPlaneOffset = subarrayPixelOffset[HIRES_SUBARRAY].copy();
+        hiresFocalPlaneOffset.multiplyByComponents(loresPixelSpacing);
+ 
+        setNominalPixelPositions();
 
         // TODO load bias gains? ...
-
         super.loadChannelData();
 
         final int blindFlag = hasOption("blinds") ? Channel.FLAG_BLIND : Channel.FLAG_DEAD;
-
-        final double imagingPos = hasOption("offset.imaging") ? option("offset.imaging").getDouble() : 0.0;
-        final int fromCol = (int) Math.floor(imagingPos);
-        final int toCol = (int) Math.ceil(imagingPos + 16.0);
-
+        
+        Vector2D imageAperture = hasOption("imaging.aperture") ? option("imaging.aperture").getDimension2D(Unit.arcsec) : defaultImagingAperture; 
+        imageAperture.add(new Vector2D(loresPixelSize.x(), loresPixelSize.y())); // Include partially illuminated pixels.
+        imageAperture.scale(0.5);
+                 
         for(HirmesPixel pixel : this) {
             if(pixel.detArray != detArray) pixel.flag(Channel.FLAG_DEAD);
-            else if(mode == IMAGING_MODE) if(pixel.col < fromCol || pixel.col >= toCol) pixel.flag(blindFlag);
-            else if(pixel.pin == DARK_SQUID_PIN) pixel.flag(blindFlag);
+            else if(pixel.isDark()) pixel.flag(blindFlag);
+            else if(pixel.sub == HIRES_SUBARRAY) {
+                if(pixel.subcol != hiresColUsed) pixel.flag(blindFlag);
+            }
+            else if(mode == IMAGING_MODE) {
+                if(Math.abs(pixel.getPosition().x()) > imageAperture.x()) pixel.flag(blindFlag);
+                if(Math.abs(pixel.getPosition().y()) > imageAperture.y()) pixel.flag(blindFlag);  
+            }
         }
     }
-
     
+
     @Override
     public double[] getSourceGains(final boolean filterCorrected) {
         double[] G = super.getSourceGains(filterCorrected);
-        if(mode != IMAGING_MODE) {
-            final double rest2Obs = 1.0 / (1.0 + z);
-            for(HirmesPixel pixel : this) G[pixel.index] *= getRelativeTransmission(pixel.getFrequency() * rest2Obs);
-        }
+
+        final double rest2Obs = 1.0 / (1.0 + z);
+        for(HirmesPixel pixel : this) G[pixel.index] *= getRelativeTransmission(pixel.getFrequency() * rest2Obs);
+        
         return G;        
     }
-    
+
     public double getRelativeTransmission(double fobs) {
         // TODO spectral telluric corrections go here...
         return 1.0;
@@ -364,34 +371,37 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     }
 
 
-    private void setNominalPixelPositions(Vector2D size) { 
-        pixelSize = size;
+    private void setNominalPixelPositions() { 
         
-        // Adjust the plate scale to link apparent size to physical size...
-        pixelScale.setX(size.x() / HirmesPixel.physicalSize.x());
-        pixelScale.setY(size.y() / HirmesPixel.physicalSize.y());
-        
-        // Set the scalar plate-scale to the geometric mean in the x/y directions...
-        array.pixelScale = Math.sqrt(pixelScale.x() * pixelScale.y());
-        
-        info("Boresight pixel from FITS is " + array.boresightIndex);
-
-        if(hasOption("pcenter")) {
-            array.boresightIndex = option("pcenter").getVector2D(); 
-            info("Boresight override --> " + array.boresightIndex);
-        } 
-        else if(Double.isNaN(array.boresightIndex.x())) {
-            array.boresightIndex = mode == IMAGING_MODE ? defaultImagingBoresightIndex : defaultSpectralBoresightIndex;
-            if(mode == IMAGING_MODE) if(hasOption("offset.imaging")) array.boresightIndex.addX(option("offset.imaging").getDouble());
-            warning("Missing FITS boresight --> " + array.boresightIndex);
+        // Set the pixel sizes...
+        if(hasOption("pixelsize.lores")) {
+            loresPixelSize = option("pixelsize.lores").getDimension2D(Unit.arcsec);
+            plateScale = Math.sqrt(loresPixelSize.x() / loresPixelSpacing.x() * loresPixelSize.y() / loresPixelSpacing.y()); 
         }
-        Vector2D center = getSIBSPosition(getFocalPlanePosition(0, (rows - 1) - array.boresightIndex.y(), array.boresightIndex.x()));
-
+        else {
+            if(hasOption("platescale")) plateScale = option("platescale").getDouble() * Unit.arcsec / Unit.mm; 
+            loresPixelSize = loresPixelSpacing.copy();
+            loresPixelSize.scale(plateScale);
+        }
+            
+        for(int i=0; i<hiresCols; i++) {
+            if(hasOption("pixelsize.hires" + (i+1))) hiresPixelSize[i] = option("pixelsize.hires" + (i+1)).getVector2D(Unit.arcsec);
+            else {
+                hiresPixelSize[i] = new Vector2D(hiresWidthMicrons[i], hiresHeightMicrons[i]);
+                hiresPixelSize[i].scale(Unit.um * plateScale);
+            }
+        }
+        
+        // Update the SOFIA standard pixel size...
+        if(detArray == LORES_ARRAY) array.pixelSize = Math.sqrt(loresPixelSize.x() * loresPixelSize.y());
+        else array.pixelSize = Math.sqrt(hiresPixelSize[hiresColUsed].x() * hiresPixelSize[hiresColUsed].y());
+               
+        Vector2D center = getSIBSPosition(focalPlaneReference);  
         for(HirmesPixel pixel : this) pixel.calcSIBSPosition3D();
-
+        
         // Set the pointing center...
         setReferencePosition(center);
-    }
+      }
 
 
     @Override
@@ -403,17 +413,6 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     public String getChannelDataHeader() {
         return super.getChannelDataHeader() + "\teff\tGmux\tidx\tsub\trow\tcol";
     }
-
-    /*
-    @Override
-    public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
-        super.editImageHeader(scans, header);
-        // Add SOFIA specific keywords
-        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        c.add(new HeaderCard("COMMENT", "<------ " + getName().toUpperCase() + " Header Keys ------>", false));
-    }
-    */
-
 
     @Override
     public void readData(BasicHDU<?>[] hdu) throws Exception {   
@@ -504,30 +503,69 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     }
 
     public void createDarkSquidLookup() {
-        darkSquidLookup = new int[muxes];
-
+        darkSquidLookup = new int[readoutRows];
         Arrays.fill(darkSquidLookup, -1);
-        for(HirmesPixel pixel : this) if(pixel.pin == DARK_SQUID_PIN) darkSquidLookup[pixel.mux] = pixel.index;
+        for(HirmesPixel pixel : this) if(pixel.isDark()) darkSquidLookup[pixel.mux] = pixel.index;
+    }
+
+    public Vector2D getPixelSize(int sub, int col) {
+        if(sub == HIRES_SUBARRAY) return hiresPixelSize[col];
+        return loresPixelSize;
     }
 
 
     @Override
-    public final Vector2D getPixelSize() { return pixelSize; }
-
+    public final Vector2D getSIPixelSize() { 
+        if(detArray == LORES_ARRAY) return loresPixelSize;
+        return hiresPixelSize[hiresColUsed];    
+    }
 
     public Vector2D getFocalPlanePosition(int sub, double row, double col) {      
-        Vector2D v = new Vector2D(col * HirmesPixel.physicalSize.x(), -row * HirmesPixel.physicalSize.y()); // X, Y
+        Vector2D v = (sub == HIRES_SUBARRAY) ? new Vector2D(0.0, row-7.5) : new Vector2D(-col, row-7.5); // xp, yp
         v.rotate(subarrayOrientation[sub]);
-        v.add(subarrayOffset[sub]);
+        v.add(subarrayPixelOffset[sub]);
+        v.multiplyByComponents(loresPixelSpacing); // Offsets are in lores pixels...
+        return v;
+    }
+    
+    public Vector2D getHiresFocalPlanePosition(int strip, int row) {
+        Vector2D v = new Vector2D(0.0, (row-7.5) * hiresHeightMicrons[strip] * Unit.um);
+        v.rotate(subarrayOrientation[HIRES_SUBARRAY]);
+        v.addX(hiresColOffsetMillis[strip] * Unit.mm);
+        v.add(hiresFocalPlaneOffset);  
+        
         return v;
     }
 
-    public double getFrequency(Vector2D focalPlanePosition) {
-        if(mode == IMAGING_MODE) return baseFrequency;
-        // Simple linear frequency dispersion along x...
-        return (1.0 + z) * (baseFrequency + focalPlanePosition.x() / HirmesPixel.physicalSize.x() * frequencyStep);  
+    public double getRestFrequency(Vector2D focalPlanePosition) {
+        return (1.0 + z) * getObservingFrequency(focalPlanePosition);
+    }
+    
+    public double getObservingFrequency(Vector2D focalPlanePosition) {
+        final double[] n = { 0.0220311,0.0129907,0.0076615 };
+        
+        if(mode == LORES_MODE || mode == MIDRES_MODE) {
+            final double beta = 12.0 * Unit.deg - getM6Angle(focalPlanePosition.x()) - gratingAngle;
+            final double lambdaMicrons = -(Math.sin(gratingAngle) - Math.sin(beta)) / n[gratingIndex];            
+            return Constant.c / (lambdaMicrons * Unit.um);
+        }
+        else if(!Double.isNaN(fpiConstant)) {
+            return spectral.observingFrequency / Math.cos(fpiConstant * plateScale * focalPlanePosition.distanceTo(focalPlaneReference));
+        }
+        return spectral.observingFrequency;
     }
 
+   
+    public int getGratingIndex(double wavelength) {
+        if(wavelength > 71.8 * Unit.um) return 2;
+        if(wavelength > 42.4 * Unit.um) return 1;
+        return 0;
+    }
+    
+    public double getM6Angle(double fpx) {
+        fpx /= Unit.mm; 
+        return Math.atan(fpx / 546.48) + (3.17e-9 * fpx - 2.30e-7) * fpx*fpx;
+    }
 
     public Vector2D getImagingPosition(Vector2D focalPlanePosition) {
         Vector2D v = focalPlanePosition.copy();
@@ -538,8 +576,8 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
 
     public Vector2D getSIBSPosition(Vector2D focalPlanePosition) {
         Vector2D v = getImagingPosition(focalPlanePosition);
-        v.scale(array.pixelScale);       
-        v.scaleY(-1.0);
+        v.scale(plateScale);       
+        //v.scaleX(-1.0);
         return v;
     }
 
@@ -551,27 +589,42 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
             if(type.equals("spectralmap")) return new SpectralCube(this); 
             return super.getSourceModelInstance(scans);
         }
-
-        double wavelength = Double.NaN;
-        for(Scan<?,?> scan : scans) {    
-            double lambda = ((Hirmes) scan.instrument).instrumentData.wavelength;
-            if(Double.isNaN(wavelength)) wavelength = lambda;
-            else if(lambda != wavelength) {
-                CRUSH.info(this, "Multiwavelength scan set detected! Will produce spectral cube...");
-                return new SpectralCube(this);
-            }
-        }
-
-        return mode == IMAGING_MODE ? new AstroIntensityMap(this) : new SpectralCube(this);
+        if(hasOption("pointing.suggest")) return new AstroIntensityMap(this);
+        return new SpectralCube(this);
     }  
 
 
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("mode")) return modeName[mode];
+        if(name.equals("gratingAngle")) return gratingAngle / Unit.deg;
+        if(name.equals("gratingIdx")) return gratingIndex;
+        if(name.equals("ref.x")) return focalPlaneReference.x() / Unit.mm;
+        if(name.equals("ref.y")) return focalPlaneReference.y() / Unit.mm;
+        if(name.equals("strip")) return hiresColUsed > 0 ? hiresColUsed : null;
+        if(name.equals("FPIk")) return fpiConstant;
         return super.getTableEntry(name);
     }
+    
+    @Override
+    public String getMapConfigHelp() {
+        return super.getMapConfigHelp() +
+                "     -spectral.obs  Produce observing frame spectra (w/o Dopper correction).\n" +
+                "     -spectral.R=   Specify the spectral resolution for which data is binned.\n" +
+                "     -spectral.unit=  Specify the spectral unit (wavelength or frequency).\n";
+    }
+    
 
+    @Override
+    public String getReductionModesHelp() {
+        return super.getReductionModesHelp() +
+                "     -spectral      Produce spectral cubes (default).\n";
+    }
+    
+    
+
+    final static int readoutRows = 36;
+    final static int readoutCols = 33;
 
     final static int rows = 16;
 
@@ -581,35 +634,34 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     final static int lowresCols = 64;
     final static int hiresCols = 8;
 
-    final static int muxes = 36;
-    final static int muxPixels = 33;      // 32 + 1 dark squid.
-
-
-    final static int lowresPixels = (lowresCols>>>1) * muxPixels;
-    final static int hiresPixels = (hiresCols>>>1) * muxPixels;
+    final static int lowresPixels = 32 * readoutCols; // Including blinds
+    final static int hiresPixels = 4 * readoutCols;   // Including blinds
 
     final static int pixels = lowresPixels + hiresPixels;
-
-    final static int DARK_SQUID_PIN = muxPixels - 1;
-    //final static int MCE_BIAS_LINES = rows;   // TODO
 
     final static int LORES_ARRAY = 0;
     final static int HIRES_ARRAY = 1;
 
     final static int LORES_SUBARRAY_1 = 0;
     final static int LORES_SUBARRAY_2 = 1;
-    final static int HIRES_SUBARRAY = 2;
+    final static int HIRES_SUBARRAY = 2; 
 
     final static int IMAGING_MODE = 0;
     final static int LORES_MODE = 1;
     final static int MIDRES_MODE = 2;
     final static int HIRES_MODE = 3;
+    
+    final static Vector2D loresPixelSpacing = new Vector2D(1.180 * Unit.mm, 1.180 * Unit.mm);
 
-    final static String[] subID = { "lo1", "lo2", "hi" };
+    final static double defaultPlateScale = 6.203 * Unit.arcsec / Unit.mm;
+    
+    final static double hiresWidthMicrons[] = { 480, 574, 686, 821, 982, 1175, 1405, 1680 };
+    final static double hiresHeightMicrons[] = { 410, 488, 582, 694, 828, 989, 1181, 1410 };
+    
+    final static double[] hiresColOffsetMillis = { 0.0, 0.9922, 2.1161, 3.5049, 5.1582, 7.2088, 9.5228, 12.4433 }; 
+    final static Vector2D defaultImagingAperture = new Vector2D(118.0 * Unit.arcsec, 118.0 * Unit.arcsec);  
+    
+    final static String[] subID = { "blue", "red", "hi" };
     final static String[] modeName = { "imaging", "lo-res", "mid-res", "hi-res" };
-
-    public static final Vector2D defaultImagingBoresightIndex = new Vector2D(7.5, 7.5);
-    public static final Vector2D defaultSpectralBoresightIndex = new Vector2D(0.0, 7.5);
-
 }
 

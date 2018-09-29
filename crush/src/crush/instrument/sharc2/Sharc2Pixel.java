@@ -58,7 +58,7 @@ public class Sharc2Pixel extends SingleColorPixel {
 	
 	public void calcPosition() {
 		// ALt/Az maps show this to be correct...
-		position = getPosition(((Sharc2) instrument).getPixelSize(), row, col);
+		position = getPosition(((Sharc2) instrument).getSIPixelSize(), row, col);
 	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {
@@ -79,7 +79,7 @@ public class Sharc2Pixel extends SingleColorPixel {
  
 	
 	public double getAreaFactor() {
-	    Vector2D size = ((Sharc2) instrument).getPixelSize();
+	    Vector2D size = ((Sharc2) instrument).getSIPixelSize();
 		return size.x() * size.y() / (defaultSize.x() * defaultSize.y());	
 	}
 	

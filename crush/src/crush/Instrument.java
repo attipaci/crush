@@ -451,11 +451,19 @@ implements TableFormatter.Entries, BasicMessaging {
     public String getDataLocationHelp() {
         return "";
     }
-
-    public String getCommonHelp() {
+    
+    public String getMapConfigHelp() {
         return "";
     }
 
+    public String getScanOptionsHelp() {
+        return "";
+    }
+
+    public String getReductionModesHelp() {
+        return "";
+    }
+    
     public boolean hasOption(String name) {
         return options.isConfigured(name);
     }

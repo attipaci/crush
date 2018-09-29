@@ -459,8 +459,8 @@ public class Sharc2 extends CSOCamera<Sharc2Pixel> implements GridIndexed {
 	}
 	
 	@Override
-	public String getCommonHelp() {
-		return super.getCommonHelp() + 
+	public String getScanOptionsHelp() {
+		return super.getScanOptionsHelp() + 
 				"     -fazo=         Correct the pointing with this FAZO value.\n" +
 				"     -fzao=         Correct the pointing with this FZAO value.\n" +
 				"     -350um         Select 450um imaging mode (default).\n" +
@@ -488,7 +488,7 @@ public class Sharc2 extends CSOCamera<Sharc2Pixel> implements GridIndexed {
 
 
 	@Override
-	public Vector2D getPixelSize() {
+	public Vector2D getSIPixelSize() {
 		return pixelSize;
 	}
 

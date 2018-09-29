@@ -139,7 +139,7 @@ public class PArtemis extends APEXCamera<PArtemisPixel> implements GridIndexed {
 	}
 
 	@Override
-	public Vector2D getPixelSize() {
+	public Vector2D getSIPixelSize() {
 		return pixelSize;
 	}
 	

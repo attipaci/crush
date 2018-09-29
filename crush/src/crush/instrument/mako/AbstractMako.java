@@ -200,8 +200,8 @@ public abstract class AbstractMako<MakoPixelType extends AbstractMakoPixel> exte
 	
 	
 	@Override
-	public String getCommonHelp() {
-		return super.getCommonHelp() + 
+	public String getScanOptionsHelp() {
+		return super.getScanOptionsHelp() + 
 				"     -fazo=        Correct the pointing with this FAZO value.\n" +
 				"     -fzao=        Correct the pointing with this FZAO value.\n";
 	}

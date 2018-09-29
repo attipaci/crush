@@ -40,7 +40,7 @@ import nom.tam.util.Cursor;
 
 public class SofiaArrayData extends SofiaData implements Copiable<SofiaArrayData> {
     public String detectorName, detectorSizeString;
-    public double pixelScale = Double.NaN;
+    public double pixelSize = Double.NaN;
     public int subarrays = 0;
     public String[] subarraySize;
     public Vector2D boresightIndex = new Vector2D();	// boresight
@@ -67,7 +67,7 @@ public class SofiaArrayData extends SofiaData implements Copiable<SofiaArrayData
     public void parseHeader(SofiaHeader header) {
         detectorName = header.getString("DETECTOR");
         detectorSizeString = header.getString("DETSIZE");
-        pixelScale = header.getDouble("PIXSCAL") * Unit.arcsec / Unit.mm;
+        pixelSize = header.getDouble("PIXSCAL") * Unit.arcsec;
         subarrays = header.getInt("SUBARRNO", 0);
 
         if(subarrays > 0) {
@@ -94,7 +94,7 @@ public class SofiaArrayData extends SofiaData implements Copiable<SofiaArrayData
         c.add(new HeaderCard("COMMENT", "<------ SOFIA Array Data ------>", false));
         c.add(makeCard("DETECTOR", detectorName, "Detector name"));
         c.add(makeCard("DETSIZE", detectorSizeString, "Detector size"));
-        c.add(makeCard("PIXSCAL", pixelScale * Unit.mm / Unit.arcsec, "(arcsec/mm) Pixel scale on sky."));
+        c.add(makeCard("PIXSCAL", pixelSize / Unit.arcsec, "(arcsec) Pixel sizel on sky."));
         if(subarrays > 0) {
             c.add(makeCard("SUBARRNO", subarrays, "Number of subarrays."));
             DecimalFormat d2 = new DecimalFormat("00");

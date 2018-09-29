@@ -130,10 +130,10 @@ public class Mako2 extends AbstractMako<Mako2Pixel> {
 		}
 		else {
 			// TODO why are pixels flagged other than unassigned...
-			boolean beammap = false;
-			if(hasOption("source.type")) if(option("source.type").getValue().equalsIgnoreCase("beammap")) beammap = true;
+			boolean pixelmap = false;
+			if(hasOption("source.type")) if(option("source.type").getValue().equalsIgnoreCase("pixelmap")) pixelmap = true;
 			
-			if(!beammap) warning("No pixel ids. All pixels mapped to tracking position...");
+			if(!pixelmap) warning("No pixel ids. All pixels mapped to tracking position...");
 		
 			for(AbstractMakoPixel pixel : this) {
 				pixel.position = new Vector2D();

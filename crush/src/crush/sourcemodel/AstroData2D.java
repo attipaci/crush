@@ -166,7 +166,7 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
         endAccumulation();          
         addBase();
 
-        if(enableLevel) data.level(true);
+        if(enableLevel) level(true);
 
         if(hasSourceOption("despike")) {
             Configurator despike = sourceOption("despike");
@@ -205,7 +205,9 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
 
     }
     
-    
+    public void level(boolean isRobust) {
+        getData().level(isRobust);
+    }
 
     @Override
     public void process() throws Exception {
@@ -318,12 +320,14 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
             Header header = fits.getHDU(i).getHeader();
             editHeader(header);
             File f = new File(fileName);
-            header.addValue("FILENAME", f.getName(), "Name at creation");
+            header.addValue("FILENAME", f.getName(), "Name at creation");       
         }   
         
         addScanHDUsTo(fits);
         
-        FitsToolkit.write(fits, fileName);
+        if(hasOption("gzip")) FitsToolkit.writeGZIP(fits, fileName);
+        else FitsToolkit.write(fits, fileName);
+        
         fits.close();
     }
     

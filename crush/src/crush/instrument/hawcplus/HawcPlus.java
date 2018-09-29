@@ -31,6 +31,7 @@ import crush.array.Camera;
 import crush.array.GridIndexed;
 import crush.array.SingleColorArrangement;
 import crush.telescope.sofia.SofiaCamera;
+import crush.telescope.sofia.SofiaData;
 import crush.telescope.sofia.SofiaHeader;
 import crush.telescope.sofia.SofiaScan;
 import jnum.Configurator;
@@ -47,7 +48,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
      * 
      */
     private static final long serialVersionUID = 3009881856872575936L;
-
+    
     Vector2D pixelSize;
 
     ArrayList<ChannelGroup<HawcPlusPixel>> subarrayGroups;
@@ -252,6 +253,9 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     @Override
     public void parseHeader(SofiaHeader header) {
         super.parseHeader(header);
+        
+        samplingInterval = integrationTime = 1.0 / (header.getDouble("SMPLFREQ", Double.NaN) * Unit.Hz);
+        if(samplingInterval < 0.0) samplingInterval = integrationTime = Double.NaN;
               
         spectral = null;    // Discard spectroscopy header data entirely...
 
@@ -312,7 +316,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         polZoom[T_ARRAY] = hasOption("zoom.t") ? option("zoom.t").getDouble() : 1.0;
 
         // The default pixelSizes...
-        Vector2D pixelSize = new Vector2D(array.pixelScale, array.pixelScale);
+        Vector2D pixelSize = new Vector2D(array.pixelSize, array.pixelSize);
 
         // Set the pixel size...
         if(hasOption("pixelsize")) {
@@ -322,7 +326,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
             pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
         }
 
-        array.pixelScale = getPlateScale(pixelSize, HawcPlusPixel.physicalSize);
+        array.pixelSize = Math.sqrt(pixelSize.x() * pixelSize.y());
         
         setNominalPixelPositions(pixelSize);
 
@@ -453,13 +457,14 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     }
 
     @Override
-    public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {           
-        super.editImageHeader(scans, header);
+    public void editHeader(Header header) throws HeaderCardException {           
+        super.editHeader(header);
                
         // Add HAWC+ specific keywords
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
         c.add(new HeaderCard("COMMENT", "<------ HAWC+ Header Keys ------>", false));
-                c.add(new HeaderCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
+        c.add(SofiaData.makeCard("SMPLFREQ", 1.0 / samplingInterval, "(Hz) Detector readout rate."));
+        c.add(SofiaData.makeCard("PROCLEVL", "crush", "Last pipeline processing step on the data."));
     }
     
     @Override
@@ -606,7 +611,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     public final int cols() { return subarrayCols; }
 
     @Override
-    public final Vector2D getPixelSize() { return pixelSize; }
+    public final Vector2D getSIPixelSize() { return pixelSize; }
 
 
     /**
@@ -692,6 +697,27 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         if(name.equals("band")) return bandID;
         return super.getTableEntry(name);
     }
+    
+    
+    @Override
+    public String getScanOptionsHelp() {
+        return super.getScanOptionsHelp() + 
+                "     -subarray=     Comma-separated list of subarrays to use, e.g. 'R0,T0'.\n";
+                
+    }
+    
+    @Override
+    public String getMapConfigHelp() {
+        return super.getScanOptionsHelp() + 
+                "     -peakflux      Calibarate for peak fluxes (default is apertures).\n";
+    }
+    
+    @Override
+    public String getReductionModesHelp() {
+        return super.getReductionModesHelp() +
+                "     -write.flatfield  Write flatfield file for the chop-nod pipeline.\n";
+    }
+    
     
     final static int polArrays = 2;
     final static int polSubarrays = 2;

@@ -137,8 +137,8 @@ public class Sharc extends CSOCamera<SharcPixel> {
 	
 	
 	@Override
-	public String getCommonHelp() {
-		return super.getCommonHelp() + 
+	public String getScanOptionsHelp() {
+		return super.getScanOptionsHelp() + 
 				"     -fazo=         Correct the pointing with this FAZO value.\n" +
 				"     -fzao=         Correct the pointing with this FZAO value.\n" +
 				"     -350um         Select 450um imaging mode (default).\n" +

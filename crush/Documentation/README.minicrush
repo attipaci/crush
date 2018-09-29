@@ -46,7 +46,7 @@ with the new version.
    User Experience
    ---------------
    
-	* Skydip, beammap, and pointing/calibration reductions.
+	* Skydip, pixelmap, and pointing/calibration reductions.
 
 	* Faster reductions (~2-3x faster, depending on machine and
 	  configuration).

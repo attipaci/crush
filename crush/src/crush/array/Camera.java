@@ -97,7 +97,7 @@ public abstract class Camera<ChannelType extends Channel> extends Instrument<Cha
 	public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
 		if(hasOption("source.type")) {
 			String type = option("source.type").getValue();
-			if(type.equals("beammap")) return new BeamMap(this);
+			if(type.equals("pixelmap")) return new PixelMap(this);
 			return super.getSourceModelInstance(scans);
 		}
 		return super.getSourceModelInstance(scans);
@@ -292,7 +292,7 @@ public abstract class Camera<ChannelType extends Channel> extends Instrument<Cha
 		final int row = fixedIndex / geometric.cols();
 		final int col = fixedIndex % geometric.cols();
 		
-		final Vector2D pixelSize = geometric.getPixelSize();
+		final Vector2D pixelSize = geometric.getSIPixelSize();
 		final int dc = (int)Math.ceil(radius / pixelSize.x());
 		final int dr = (int)Math.ceil(radius / pixelSize.y());
 		

@@ -26,6 +26,7 @@ package crush.sourcemodel;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Collection;
 
 import crush.CRUSH;
@@ -36,6 +37,7 @@ import crush.Integration;
 import crush.Pixel;
 import crush.Scan;
 import crush.SourceModel;
+import jnum.Configurator;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
@@ -45,6 +47,7 @@ import jnum.data.cube.overlay.RangeRestricted3D;
 import jnum.data.cube2.Data2D1;
 import jnum.data.cube2.Image2D1;
 import jnum.data.cube2.Observation2D1;
+import jnum.data.image.Data2D;
 import jnum.data.image.Flag2D;
 import jnum.data.image.Image2D;
 import jnum.data.image.Index2D;
@@ -52,8 +55,9 @@ import jnum.data.image.Map2D;
 import jnum.data.image.Observation2D;
 import jnum.data.image.Validating2D;
 import jnum.data.image.overlay.RangeRestricted2D;
+import jnum.data.samples.Data1D;
 import jnum.data.samples.Grid1D;
-import jnum.data.samples.Samples1D;
+import jnum.data.samples.overlay.Overlay1D;
 import jnum.fits.FitsProperties;
 import jnum.fits.FitsToolkit;
 import jnum.math.CoordinateAxis;
@@ -141,16 +145,12 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         // TODO based on instrument.frequency & frequencyResolution 
         double delta = zRange.midPoint() / 1000.0; // Default to R ~ 1000 at the center frequency
         if(hasOption("spectral.grid")) {
-            System.err.println("### using spectral grid...");
             delta = option("spectral.grid").getDouble() * spectralUnit.value();  
         }
         else if(hasOption("spectral.resolution")) {
-            System.err.println("### using spectral resolution R ~ " + Util.s3.format(option("spectral.resolution").getDouble()));
             delta = 0.5 * zRange.midPoint() / option("spectral.resolution").getDouble();
         }
-        else System.err.println("### default spectral resolution...");
-
-        
+           
         Grid1D grid = cube.getGrid1D();
         grid.setResolution(delta);
         grid.setReference(zReference);
@@ -161,11 +161,6 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         zAxis.setLabel(useWavelength ? "Wavelength" : "Frequency");
         zAxis.setFancyLabel(useWavelength ? GreekLetter.lambda + "" : "Frequency");
            
-        
-        System.err.println("### f0=" + Util.s3.format(zRange.midPoint()) + ", df=" + Util.s3.format(grid.getResolution(0)) +
-                ", range=" + Util.s3.format(zRange.span()));
-        
-        
         int sizeZ = 1 + (int) Math.ceil(zRange.span() / delta);
         
         if(CRUSH.debug) debug("spectral bins: " + sizeZ);
@@ -364,15 +359,16 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         // TODO Auto-generated method stub   
     }
     
+    @Override
+    public void level(boolean isRobust) {
+        for(Data2D plane : cube.getPlanes()) plane.level(isRobust);
+    }
     
-
-
     @Override
     public Map2D getMap2D() {     
         return hasOption("write.png.median") ? cube.getMedianZ() : cube.getAverageZ();
     }
     
-
   
     @Override
     public void filter(double filterScale, double filterBlanking, boolean useFFT) {
@@ -468,9 +464,41 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
             String cmd = option("gnuplot").getValue();
             if(cmd.length() > 0) gnuplot = Util.getSystemPath(cmd);
         }
-        Samples1D spectrum = cube.getZSamples();
-        spectrum.writeASCIITable(coreName, cube.getGrid1D(), "Flux");
-        spectrum.gnuplot(coreName, cube.getGrid1D(), "Flux", gnuplot, option("write.fieldspec"));
+        
+        final Data1D[] mean = cube.getZMeanSamples();
+        
+        Data1D spectrum = new Overlay1D(mean[0]) {
+            @Override
+            protected String getASCIITableHeader(Grid1D grid, String yName) {
+                return super.getASCIITableHeader(grid, yName) + "\trms";
+            }
+                
+            @Override
+            protected String getASCIITableEntry(int index, Grid1D grid, String nanValue) {
+                double rms = 1.0 / Math.sqrt(mean[1].get(index).doubleValue()) / getUnit().value();
+                String sRMS = Double.isNaN(rms) ? nanValue : Util.s3.format(rms);
+                return super.getASCIITableEntry(index, grid, nanValue) + "\t" + sRMS;
+            }         
+
+            @Override
+            protected void configGnuplot(PrintWriter plot, String coreName, Grid1D grid, String yName, Configurator options) throws IOException {       
+                super.configGnuplot(plot, coreName, grid, yName, options);
+                plot.println("set yra [0:*]");
+                plot.println("set style fill transparent solid 0.3");
+            }
+           
+            @Override
+            protected String getPlotCommand(String coreName) {          
+                return super.getPlotCommand(coreName) + 
+                        ",\\\n '' using 1:2:(0.5 * delta):4 notitle with boxxyerr lt 1" + 
+                        ",\\\n0 notitle lt -1";
+            }
+        };
+        
+        String nanValue = hasOption("write.fieldspec.nodata") ? option("write.fieldspec.nodata").getValue() : "---";
+        
+        spectrum.writeASCIITable(coreName, cube.getGrid1D(), "Flux", nanValue);
+        spectrum.gnuplot(coreName, cube.getGrid1D(), "Mean Flux", gnuplot, option("write.fieldspec"));
     }
     
     public void writeFlattenedFits(String fileName) throws FitsException, IOException {  
@@ -485,7 +513,9 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         
         addScanHDUsTo(fits);
         
-        FitsToolkit.write(fits, fileName);
+        if(hasOption("write.flattened.gzip")) FitsToolkit.writeGZIP(fits, fileName);
+        else FitsToolkit.write(fits, fileName);
+        
         fits.close();
     }
 

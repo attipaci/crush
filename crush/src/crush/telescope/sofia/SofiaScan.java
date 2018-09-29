@@ -573,7 +573,7 @@ extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
 
         // convert offset to pixels
         // The SI y axis is upside down relative to the elevation axis
-        Vector2D pixelSize = instrument.getPixelSize();  
+        Vector2D pixelSize = instrument.getSIPixelSize();  
         siOffset.scaleX(1.0 / pixelSize.x());
         siOffset.scaleY(-1.0 / pixelSize.y());
 
