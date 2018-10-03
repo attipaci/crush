@@ -82,7 +82,8 @@ virtually any fast-sampling scanning camera.
   Note, that The GNU java a.k.a. gij (default on some older RedHat and Fedora
   systems) is painfully slow and unreliable, and will not always run CRUSH
   correctly. If you need Java, you can download the latest JRE from
-  wwww.java.com
+  
+   http://wwww.java.com
 
 
 #### Download CRUSH

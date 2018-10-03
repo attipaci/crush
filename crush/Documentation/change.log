@@ -1,3 +1,4 @@
+>> Update LABOCA tables, if available...
 
 2.42-b1 
 
@@ -44,6 +45,9 @@
 
 	[NEW] {HIRMES} Default spectral resolution is now set to be 2x the
 	spectral detector channel spacing.
+
+	[FIX] {SCUBA-2} LST calculation had a rate flaw, which is now fixed.
+	It could have resulted in poorly calculated Alt/Az coordinates.
 
 	[FIX] {pixelmap} Pixelmap (formerly known as beammap) functionality was 
 	broken. 

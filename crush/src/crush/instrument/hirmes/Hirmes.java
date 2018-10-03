@@ -610,7 +610,7 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     public String getMapConfigHelp() {
         return super.getMapConfigHelp() +
                 "     -spectral.obs  Produce observing frame spectra (w/o Dopper correction).\n" +
-                "     -spectral.R=   Specify the spectral resolution for which data is binned.\n" +
+                "     -spectral.R=   Override the spectral resolution for which data is binned.\n" +
                 "     -spectral.unit=  Specify the spectral unit (wavelength or frequency).\n";
     }
     
