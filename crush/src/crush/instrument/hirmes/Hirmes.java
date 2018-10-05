@@ -58,16 +58,13 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     
     int detArray = LORES_ARRAY;
     int mode = IMAGING_MODE;
-    int hiresColUsed = -1;                  // [0-7] Hires strip index used.
-     
+    int hiresColUsed = -1;                  // [0-7] Hires strip index used.   
     
     Vector2D focalPlaneReference;           // (mm) on the focal-plane coordinate system
     double gratingAngle;
     double fpiConstant = Double.NaN;        // FPI dispersion contant
     int gratingIndex;                       // [0-2]
         
-    ArrayList<ChannelGroup<HirmesPixel>> subarrayGroups;
-
     Vector2D[] subarrayPixelOffset;         // (lowres pixels)
     double[] subarrayOrientation;   
     Vector2D hiresFocalPlaneOffset;         // (mm) Hires-array offset, calculated from subarrayPixelOffset & loresPixelSpacing
@@ -87,18 +84,20 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     @Override
     public String getFileID() { return "HIR"; }
 
+    
+    
     @Override
     public Hirmes copy() {
         Hirmes copy = (Hirmes) super.copy();
-
+          
         if(loresPixelSize != null) copy.loresPixelSize = loresPixelSize.copy();
         if(hiresPixelSize != null) copy.hiresPixelSize = Vector2D.copyOf(hiresPixelSize);
         if(focalPlaneReference != null) copy.focalPlaneReference = focalPlaneReference.copy();
+        if(hiresFocalPlaneOffset != null) copy.hiresFocalPlaneOffset = hiresFocalPlaneOffset.copy();
         if(subarrayPixelOffset != null) copy.subarrayPixelOffset = Vector2D.copyOf(subarrayPixelOffset);
         if(subarrayOrientation != null) copy.subarrayOrientation = Arrays.copyOf(subarrayOrientation, subarrayOrientation.length);
         
-
-        if(darkSquidLookup != null) copy.darkSquidLookup = Arrays.copyOf(darkSquidLookup, darkSquidLookup.length);
+        if(darkSquidLookup != null) copy.darkSquidLookup = Arrays.copyOf(darkSquidLookup, darkSquidLookup.length);      
         
         /*
         if(detectorBias != null) {
@@ -169,15 +168,6 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     @Override
     protected void initGroups() {
         super.initGroups();
-
-        subarrayGroups = new ArrayList<ChannelGroup<HirmesPixel>>(subarrays);
-        for(int sub=0; sub<subarrays; sub++) {
-            ChannelGroup<HirmesPixel> g = new ChannelGroup<HirmesPixel>(subID[sub]);
-            subarrayGroups.add(g);
-            addGroup(g);
-        }
-
-        for(HirmesPixel pixel : this) subarrayGroups.get(pixel.sub).add(pixel);
     }
 
     @Override
@@ -262,14 +252,12 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
         else if(config.equalsIgnoreCase("HI-RES")) mode = HIRES_MODE;
        
         hiresColUsed = header.getInt("HIRESSUB", -1);
-
            
         // Doppler correction to rest frame...
         z = hasOption("spectral.obs") ? spectral.getRedshift() : 0.0;
 
-        
         // Set the spectral grid to a default value...
-        if(mode != IMAGING_MODE) if(!hasOption("spectral.grid") && !hasOption("spectral.r")) {
+        if(!hasOption("spectral.grid") && !hasOption("spectral.r")) {
             try { 
                 double R = spectral.observingFrequency / spectral.frequencyResolution;
                 getOptions().process("spectral.r", R + ""); 
@@ -278,8 +266,7 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
             catch(LockedException e) {}
         }
 
-        if(mode == LORES_MODE || mode == HIRES_MODE) gratingIndex = getGratingIndex(Constant.c / spectral.observingFrequency);
-        
+        if(mode == LORES_MODE || mode == MIDRES_MODE) gratingIndex = getGratingIndex(Constant.c / spectral.observingFrequency);  
     }
     
     @Override
@@ -301,22 +288,19 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
         clear();
 
         ensureCapacity(pixels);
-        for(int c=0; c<pixels; c++) add(new HirmesPixel(this, c));
-
-        
+        for(int c=0; c<pixels; c++) add(new HirmesPixel(this, c));       
         
         // The subarrays orientations
         subarrayOrientation = new double[subarrays];
-        subarrayOrientation[LORES_SUBARRAY_1] = hasOption("rotation.blue") ? option("rotation.blue").getDouble() * Unit.deg : 0.0;
-        subarrayOrientation[LORES_SUBARRAY_2] = hasOption("rotation.red") ? option("rotation.red").getDouble() * Unit.deg : 0.0;
+        subarrayOrientation[LORES_BLUE_SUBARRAY] = hasOption("rotation.blue") ? option("rotation.blue").getDouble() * Unit.deg : 0.0;
+        subarrayOrientation[LORES_RED_SUBARRAY] = hasOption("rotation.red") ? option("rotation.red").getDouble() * Unit.deg : 0.0;
         subarrayOrientation[HIRES_SUBARRAY] = hasOption("rotation.hires") ? option("rotation.hires").getDouble() * Unit.deg : 0.0;
 
         // The subarray offsets (after rotation, in pixels)
         subarrayPixelOffset = new Vector2D[subarrays];
-        subarrayPixelOffset[LORES_SUBARRAY_1] = hasOption("offset.blue") ? option("offset.blue").getVector2D() : new Vector2D(-7.816, 0.0);
-        subarrayPixelOffset[LORES_SUBARRAY_2] = hasOption("offset.red") ? option("offset.red").getVector2D() : new Vector2D(-40.175, 0.0);
+        subarrayPixelOffset[LORES_BLUE_SUBARRAY] = hasOption("offset.blue") ? option("offset.blue").getVector2D() : new Vector2D(-7.816, 0.0);
+        subarrayPixelOffset[LORES_RED_SUBARRAY] = hasOption("offset.red") ? option("offset.red").getVector2D() : new Vector2D(-40.175, 0.0);
         subarrayPixelOffset[HIRES_SUBARRAY] = hasOption("offset.hires") ? option("offset.hires").getVector2D() : new Vector2D();
-
         
         hiresFocalPlaneOffset = subarrayPixelOffset[HIRES_SUBARRAY].copy();
         hiresFocalPlaneOffset.multiplyByComponents(loresPixelSpacing);
@@ -328,10 +312,10 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
 
         final int blindFlag = hasOption("blinds") ? Channel.FLAG_BLIND : Channel.FLAG_DEAD;
         
-        Vector2D imageAperture = hasOption("imaging.aperture") ? option("imaging.aperture").getDimension2D(Unit.arcsec) : defaultImagingAperture; 
+        Vector2D imageAperture = hasOption("imaging.aperture") ? option("imaging.aperture").getDimension2D(Unit.arcsec) : defaultImagingAperture.copy(); 
         imageAperture.add(new Vector2D(loresPixelSize.x(), loresPixelSize.y())); // Include partially illuminated pixels.
         imageAperture.scale(0.5);
-                 
+           
         for(HirmesPixel pixel : this) {
             if(pixel.detArray != detArray) pixel.flag(Channel.FLAG_DEAD);
             else if(pixel.isDark()) pixel.flag(blindFlag);
@@ -340,9 +324,10 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
             }
             else if(mode == IMAGING_MODE) {
                 if(Math.abs(pixel.getPosition().x()) > imageAperture.x()) pixel.flag(blindFlag);
-                if(Math.abs(pixel.getPosition().y()) > imageAperture.y()) pixel.flag(blindFlag);  
+                if(Math.abs(pixel.getPosition().y()) > imageAperture.y()) pixel.flag(blindFlag);
             }
         }
+
     }
     
 
@@ -379,7 +364,7 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
             plateScale = Math.sqrt(loresPixelSize.x() / loresPixelSpacing.x() * loresPixelSize.y() / loresPixelSpacing.y()); 
         }
         else {
-            if(hasOption("platescale")) plateScale = option("platescale").getDouble() * Unit.arcsec / Unit.mm; 
+            plateScale = hasOption("platescale") ? option("platescale").getDouble() * Unit.arcsec / Unit.mm : defaultPlateScale;
             loresPixelSize = loresPixelSpacing.copy();
             loresPixelSize.scale(plateScale);
         }
@@ -546,7 +531,7 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
         
         if(mode == LORES_MODE || mode == MIDRES_MODE) {
             final double beta = 12.0 * Unit.deg - getM6Angle(focalPlanePosition.x()) - gratingAngle;
-            final double lambdaMicrons = -(Math.sin(gratingAngle) - Math.sin(beta)) / n[gratingIndex];            
+            final double lambdaMicrons = -(Math.sin(gratingAngle) - Math.sin(beta)) / n[gratingIndex];  
             return Constant.c / (lambdaMicrons * Unit.um);
         }
         else if(!Double.isNaN(fpiConstant)) {
@@ -642,8 +627,8 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     final static int LORES_ARRAY = 0;
     final static int HIRES_ARRAY = 1;
 
-    final static int LORES_SUBARRAY_1 = 0;
-    final static int LORES_SUBARRAY_2 = 1;
+    final static int LORES_BLUE_SUBARRAY = 0;
+    final static int LORES_RED_SUBARRAY = 1;
     final static int HIRES_SUBARRAY = 2; 
 
     final static int IMAGING_MODE = 0;
@@ -659,7 +644,7 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     final static double hiresHeightMicrons[] = { 410, 488, 582, 694, 828, 989, 1181, 1410 };
     
     final static double[] hiresColOffsetMillis = { 0.0, 0.9922, 2.1161, 3.5049, 5.1582, 7.2088, 9.5228, 12.4433 }; 
-    final static Vector2D defaultImagingAperture = new Vector2D(118.0 * Unit.arcsec, 118.0 * Unit.arcsec);  
+    final static Vector2D defaultImagingAperture = new Vector2D(119.0 * Unit.arcsec, 103.0 * Unit.arcsec);  
     
     final static String[] subID = { "blue", "red", "hi" };
     final static String[] modeName = { "imaging", "lo-res", "mid-res", "hi-res" };

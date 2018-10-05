@@ -3517,7 +3517,7 @@
 			Specify a spectral resolving power X (f/df) at the
                         reference frequency of observation. This option is used
                         only if the spectral bin (grid) size is not explicitly
-                        defined via `spectral.gid`.
+                        defined via `spectral.grid`.
                         @See: `spectral.grid`
 
 :: spectral.unit=<spec>	        @Instrument: HIRMES

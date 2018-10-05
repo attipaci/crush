@@ -116,6 +116,7 @@ for expert users only.
     series      The grouping of pixels based on the series array through which
                 they are read out.
 
+    subarrays   Grouping of pixels by subarray.
 
 
 ### 3.2. Glossary of HIRMES specific options
@@ -241,7 +242,7 @@ for expert users only.
     spectral.R=X        Specify a spectral resolving power X at the
                         center frequency of observation. This option is used
                         only if the spectral bin (grid) size is not explicitly
-                        defined via `spectral.gid`.
+                        defined via `spectral.grid`.
                         @See: `spectral.grid`
 
     spectral.unit=<spec>        Specify the unit of the spectral axis in the 

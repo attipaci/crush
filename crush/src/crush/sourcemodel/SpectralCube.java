@@ -147,8 +147,8 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         if(hasOption("spectral.grid")) {
             delta = option("spectral.grid").getDouble() * spectralUnit.value();  
         }
-        else if(hasOption("spectral.resolution")) {
-            delta = 0.5 * zRange.midPoint() / option("spectral.resolution").getDouble();
+        else if(hasOption("spectral.r")) {
+            delta = 0.5 * zRange.midPoint() / option("spectral.r").getDouble();
         }
            
         Grid1D grid = cube.getGrid1D();
@@ -160,7 +160,7 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
         zAxis.setUnit(spectralUnit);
         zAxis.setLabel(useWavelength ? "Wavelength" : "Frequency");
         zAxis.setFancyLabel(useWavelength ? GreekLetter.lambda + "" : "Frequency");
-           
+     
         int sizeZ = 1 + (int) Math.ceil(zRange.span() / delta);
         
         if(CRUSH.debug) debug("spectral bins: " + sizeZ);
@@ -209,8 +209,13 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
             plane.setUnderlyingBeam(getAverageResolution());
         }
     
-        
+         
         CRUSH.info(this, "\n" + cube.getPlaneTemplate().getInfo());
+        
+        Grid1D g = cube.getGrid1D();
+        Unit zUnit = g.getAxis().getUnit();
+        
+        CRUSH.info(this, "Spectral Reference: " + Util.s4.format(g.getReferenceValue(0) / zUnit.value()) + " " + zUnit.name());
         CRUSH.info(this, "Spectral Bins: " + sizeZ());
         
         base = Image2D1.create(Double.class, sizeX(), sizeY(), sizeZ());
