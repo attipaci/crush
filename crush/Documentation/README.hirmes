@@ -77,7 +77,7 @@ Section _1. Getting Started_), which covers installation and basic usage.
                         the specified `spectral.unit` (default is `Hz`).
                         @See: `spectral.unit`, `spectral.resolution`
 
-    -spectral.resolution=R    Specify a spectral resolving power R at the
+    -spectral.R=X       Specify a spectral resolving power X (f/df) at the
                         center frequency of observation. This option is used
                         only if the spectral bin (grid) size is not explicitly
                         defined via `spectral.gid`.

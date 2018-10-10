@@ -1,10 +1,18 @@
 #!/bin/bash
 
-# Find the absolute path to CRUSH (follow links manually, not using '-f'
-# which does not work on MacOS X)
-EXECNAME=$0
-while [ -L $EXECNAME ] ; do EXECNAME=`readlink $EXECNAME`; done
-CRUSH=`dirname $EXECNAME`
+# Find the absolute path to CRUSH (follow links manually, not using 'readlink 
+# -f' which does not work on MacOS X)
+CURRENT_DIR=`pwd`
+cd `dirname $0`
+RUNAS=`basename $0`
+while [ -L $RUNAS ] ; do
+  RUNAS=`readlink $(basename $RUNAS)`
+  cd `dirname $RUNAS`
+  RUNAS=`basename $RUNAS`
+done
+CRUSH=`pwd`
+cd $CURRENT_DIR
+
 
 # Configure the runtime settings (classpaths, java runtime options)
 source $CRUSH/startup/wrapper.sh crush

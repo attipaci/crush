@@ -60,8 +60,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.42-b2";
-    private static String revision = "beta";
+    private static String version = "2.42-1";
+    private static String revision = "rc1";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -724,7 +724,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
                         "                     E.g.: 10628-10633 11043 myscan.fits\n" +
                         "\n" +
                         "   Try 'crush <instrument> -poll' for a list of current settings or\n" +
-                        "   'crush -help' for a full list of instruments and brief list of commonly\n" +
+                        "   'crush -help' for a full list of instruments and a brief list of commonly\n" +
                 "   used options.\n"); 
     }
 

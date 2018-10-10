@@ -186,17 +186,19 @@ in Kovacs, A., PhD thesis, Caltech (2006).
  since these configuration files are in fact sourced as bash scripts before
  launching Java / CRUSH. For example you can add:
 
-    CRUSH_NO_UPDATE_CHECK="1"
-    CRUSH_NO_VM_CHECK="1" 
+```bash
+ CRUSH_NO_UPDATE_CHECK="1"
+ CRUSH_NO_VM_CHECK="1" 
 
-    echo "Will try to parse my own configuration now... "
+ echo "Will try to parse my own configuration now... "
 	  
-    if [ -f ~/mycrushconfig.sh ] ; then
-        echo -n "OK"
-        source ~/mycrushconfig.sh
-    else
-        echo -n "Not found"
-    fi
+ if [ -f ~/mycrushconfig.sh ] ; then
+     echo -n "OK"
+     source ~/mycrushconfig.sh
+ else
+     echo -n "Not found"
+ fi
+```
 
  The above will disable update checking (not recommended!) and VM checking
  (also not recommended!) and will source the contents of  `~/mycrushconfig.sh` 
@@ -336,9 +338,9 @@ in Kovacs, A., PhD thesis, Caltech (2006).
     -galactic           Produce maps in galactic coordinates, instead of the
                         default equatorial (same as `-system=galactic`).
 
-    -gzip		Compress the output (e.g. FITS) with GZIP, if possible.
-			(The output file name will have .gz extension added as 
-			needed.)
+    -gzip               Compress the output (e.g. FITS) with GZIP, if possible.
+                        (The output file name will have .gz extension added as
+                        needed.)
 
     -supergalactic      Produce maps in super-galactic coordinates, instead of 
                         the default equatorial (same as 
@@ -534,7 +536,7 @@ for expert users only.
     scan.ra             (hour) R.A.
     scan.speed          (arcsec/s) Scanning speed.
     scan.strips         Number of raster strips
-    scan.sys		Scan coordinate system name.
+    scan.sys            Scan coordinate system name.
     scan.T              (s) Scan duration
     scan.t0             (s) Lissajous time shift.
     scan.trk            Is tracking enabled?

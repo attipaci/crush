@@ -46,6 +46,13 @@
 	[NEW] {HIRMES} Default spectral resolution is now set to be 2x the
 	spectral detector channel spacing.
 
+	[FIX] RPM and Debian (.deb) packages were broken for several reasons.
+	Hopefully all of them are now fixed.
+	
+	[FIX] POSIX runner scripts did not follow links correctly. 
+	Unfortunately, the simple solution of using `readlink -f` does not
+	work on MacOS X. Hence a more verbose bash workaround is needed.
+
 	[FIX] {SCUBA-2} LST calculation had a rate flaw, which is now fixed.
 	It could have resulted in poorly calculated Alt/Az coordinates.
 
@@ -96,6 +103,9 @@
 	[TWEAK] Use sigmyne.com for checking for new releases and in 
 	console info output.
 
+	[CONFIG] {LABOCA} Updated skydip and calibrator data with 2018 April
+	run values.
+
 	[CONFIG] {HAWC+} Additional HAWC keys migrated from original headers.
         These are chop-nod-pol keywords that have nothing to do with CRUSH but
         SOFIA counts them as required keywords, so there they go marching...
@@ -128,6 +138,22 @@
 	[CODE] Integration.comments changed String -> StringBuffer for more
 	efficient handling.
 
+	[PACKAGE] Updated RPM and Debian (.deb) package JRE requirements to
+	headless, with full JRE recommended.
+
+	[PACKAGE] RPM and Debian (.deb) packages now distinguish between 
+	required packages and recommended packages (gnuplot, commons-compress).
+	The latter are not essential to CRUSH per se, but enable certain
+	advanced features. Being 'recommended' mean they will be installed
+	along CRUSH if possible, but that CRUSH can be installed without them
+	too, if they are problematic.
+
+	[PACKAGE] RPM and Debian (.deb) packages have been updated with
+	dependecies provided by other packages (e.g. commons-compress.jar) 
+	which are no longer bundled when available otherwise.
+	('fits.jar' continues to be included --  the RPM an nom-tam-fits 
+	package in the repos is old [1.15.1], while the Debian package has
+	a broken version lookup -- thus neither are suitable for use by CRUSH.)
 
 
 2.42-a1	(7 May 2018)

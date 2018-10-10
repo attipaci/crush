@@ -165,11 +165,7 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
         catch(Exception e) { error(e); }  
     }
 
-    @Override
-    protected void initGroups() {
-        super.initGroups();
-    }
-
+ 
     @Override
     protected void initModalities() {
         super.initModalities();

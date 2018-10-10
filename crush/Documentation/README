@@ -164,10 +164,10 @@ virtually any fast-sampling scanning camera.
  E.g., placing the following lines in `~/.crush2/startup/java.conf` overrides 
  all available runtime configuration settings:
 
-	JAVA="/usr/java/latest/bin/java"
-	USEMB="4000"
-	JVM="-server"
-	EXTRAOPTS="-Djava.awt.headless=true"
+    JAVA="/usr/java/latest/bin/java"
+    USEMB="4000"
+    JVM="-server"
+    EXTRAOPTS="-Djava.awt.headless=true"
 
  upon startup CRUSH will find and apply these settings, so it will use
  `/usr/java/latest/bin/java` to run CRUSH with 4GB of RAM, using the HotSpot 
@@ -202,17 +202,19 @@ virtually any fast-sampling scanning camera.
  since these configuation files are in fact sourced as bash scripts before
  launching Java / CRUSH. For example you can add:
 
-	CRUSH_NO_UPDATE_CHECK="1"
-	CRUSH_NO_VM_CHECK="1" 
+```bash
+ CRUSH_NO_UPDATE_CHECK="1"
+ CRUSH_NO_VM_CHECK="1" 
 	  
-	echo "Will try to parse my own configuration now... "
+ echo "Will try to parse my own configuration now... "
 
-	if [ -f \~/mycrushconfig.sh ] ; then
-	   echo -n "OK"
-	   source \~/mycrushconfig.sh
-	else
-	   echo -n "Not found"
-	fi
+ if [ -f \~/mycrushconfig.sh ] ; then
+   echo -n "OK"
+   source \~/mycrushconfig.sh
+ else
+   echo -n "Not found"
+ fi
+```
 
  The above will disable update checking (not recommended!) and VM checking
  (also not recommended!) and will source the contents of 
