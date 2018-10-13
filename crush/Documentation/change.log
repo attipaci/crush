@@ -1,17 +1,17 @@
->> Update LABOCA tables, if available...
 
-2.42-b1 
+2.42-1 (12 Oct 2018) 
 
 
 	Overview
 	======================================================================
-	This release adds forward compatibility to Java 10 & 11. Now supports
-	all reduction modes for HIRMES simulations (v.6), complete with
-	physical array layout & dimensions and predicted optical dispersion
-	parameters. Data products for SOFIA cameras (HAWC+ and HIRMES) now
-	have FITS fully populated FITS headers, compliant with Rev. G of the 
-        DCS prescription. Under the hood many loose end have been tied up. Many
-	updates to documentation...
+	This release adds forward compatibility to Java 10 & 11, and fixes some
+	old problems with the Linux binary packages (.rpm and .deb). 
+	CRUSH Now supports all reduction modes for HIRMES simulations (v.6), 
+	complete with physical array layout & dimensions and predicted optical 
+	dispersion parameters. Data products for SOFIA cameras (HAWC+ and 
+	HIRMES) now have FITS fully populated FITS headers, compliant with 
+	Rev. G of the DCS prescription. Under the hood many loose end have been
+	tied up. Many updates to documentation...
 	======================================================================
 
 	[NEW] New option 'gzip' can be used to write GZIP'ed output, when
@@ -47,6 +47,9 @@
 	spectral detector channel spacing.
 
 	[FIX] RPM and Debian (.deb) packages were broken for several reasons.
+	(Scripts did not follow symlinks in /usr/bin properly; missing app
+	icons for 'show'; and the fits.jar provided by Debian's libfits-java
+	crashes when trying to retrieve version info).
 	Hopefully all of them are now fixed.
 	
 	[FIX] POSIX runner scripts did not follow links correctly. 
