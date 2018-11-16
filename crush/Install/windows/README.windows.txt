@@ -189,7 +189,6 @@ differs from the usual POSIX one. For further details, please look at the __Java
  A typical runtime configuration file may contain entries like:
  
     set JAVA=C:\Program Files\Java\jre6\bin\java
-    set DATAMODEL=64
     set USEMB=4000
     set JVM=-server
     set EXTRAOPTS=-showversion

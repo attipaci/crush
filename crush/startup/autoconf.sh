@@ -12,7 +12,7 @@
 # the desired effect.
 #
 # Author: Attila Kovacs <attila@sigmyne.com>
-# Date: 12 May 2018
+# Date: 3 November 2018
 # ============================================================================
 
 # Start by fail-safe defaults: default java, 32-bit mode, 1 GB of RAM, and

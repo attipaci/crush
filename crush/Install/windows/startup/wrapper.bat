@@ -1,7 +1,7 @@
 :: ===========================================================================
 :: Description: Java configuration wrapper batch file for CRUSH tools.
 :: Author: Attila Kovacs <attila@sigmyne.com>
-:: Updated: 11 February 2017
+:: Updated: 3 November 2018
 :: ===========================================================================  
 @echo off
 
@@ -22,14 +22,13 @@ call "%STARTUP%\autoconf.bat"
 :: You may place entries like:
 ::
 ::   set JAVA=C:\Program Files\Java\jre6\bin\java
-::   set DATAMODEL=64
-::   set USEMB=4000
+::   set USEMB=1000
 ::   set EXTRAOPTS=
 ::
 :: (The contents of which are parsed as a DOS batch file, so you may put other 
 :: batch directives in there also.). The above would define a user runtime 
-:: configuration that uses the latest Oracle java in 64-bit mode, allowing to 
-:: use up to 4GB of ram, with no extra options.
+:: configuration that uses the latest Oracle java, allowing to use up to 1GB 
+:: of ram, with no extra options.
 ::
 :: Add your specific installation defaults below... 
 :: -----------------------------------------------------------------------------
@@ -40,17 +39,13 @@ call "%STARTUP%\autoconf.bat"
 ::
 ::set JAVA=java
 
-:: Set the data model to be 32-bit or 64-bit. To use 64-bit model, you need
-:: a 64-bit OS and a 64-bit Java installation
-::
-::set DATAMODEL=32
-
 :: Choose the maximum amount of RAM (in MB) that you will allow Java to use.
 :: The default is to use up to 80% of the total available RAM. On 32-bit
 :: machines (or when DATAMODEL is set to "32") the value should remain 
-:: significantly below 2000, e.g. 1900. In 64-bit mode, you can specify more
+:: significantly below 2000, and in practice below 1200. In 64-bit mode, you 
+:: can specify more...
 ::
-::set USEMB=1900
+::set USEMB=1200
 
 
 :: --------------------- DO NOT CHANGE BELOW THIS LINE -----------------------

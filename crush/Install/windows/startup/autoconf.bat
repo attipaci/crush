@@ -7,7 +7,7 @@
 :: have the desired effect.
 ::
 :: Author: Attila Kovacs <attila@sigmyne.com>
-:: Date: 12 May 2018
+:: Date: 3 November 2018
 :: ============================================================================
 
 @echo off
@@ -37,18 +37,15 @@ if errorlevel 1 exit /b 0
 set vmtype=
 for /f "tokens=* skip=2 USEBACKQ" %%l in (`%JAVA% -version 2^>^&1`) do if not defined  vmtype set vmtype=%%l
 
-echo.%vmtype% | FIND /I "64-bit" >Nul 
-if %errorlevel%!=0 ( 
-  echo.%vmtype% | FIND /I "-64" >Nul
-  if %errorlevel%!=0 (
-    rem The Windows 32-bit VM seems to max out at around 1200M heap size...
-    if %USEMB% gtr 1000 set USEMB=1000
-  )
+echo.%vmtype% | FIND /I "64" >Nul 
+if %errorlevel% neq 0 ( 
+  rem The Windows 32-bit VM seems to max out at around 1200M heap size...
+  if %USEMB% gtr 1000 set USEMB=1000
 )
 
 
 echo.%vmtype% | FIND /I "Server VM" > Nul
-if %errorlevel%==0 ( 
+if %errorlevel% eq 0 ( 
   set JVM=-server
 )
 

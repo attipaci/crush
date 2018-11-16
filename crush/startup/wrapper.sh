@@ -3,7 +3,7 @@
 # ===========================================================================
 # Description: Java configuration wrapper script for CRUSH tools.
 # Author: Attila Kovacs <attila@sigmyne.com>
-# Updated: 12 May 2018
+# Updated: 3 November 2018
 # ===========================================================================  
 
 # Attempt to auto configure CRUSH. This should provide optimal settings on

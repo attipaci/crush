@@ -60,8 +60,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.42-1";
-    private static String revision = "";
+    private static String version = "2.42-2";
+    private static String revision = "devel.2";
 
     public static String workPath = ".";
     public static String home = ".";
@@ -84,26 +84,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private int configDepth = 0;	// Used for 'nested' output of invoked configurations.
 
 
-    public static void main(String[] args) {
-        info();
-
-        Util.setReporter(broadcaster);
-
-        if(args.length == 0) {
-            usage();
-            new CRUSH().checkJavaVM(0);
-            System.exit(0);			
-        }
-
-        if(args[0].equalsIgnoreCase("-help")) {
-            help(null);
-            System.exit(0);	
-        }
-
-        home = System.getenv("CRUSH");
-        if(home == null) home = ".";
-
-        CRUSH crush = new CRUSH(args[0]);
+    public static void main(String[] args) {        
+        CRUSH crush = new CRUSH();
 
         crush.checkJavaVM(5);     
         crush.checkForUpdates();	
@@ -114,19 +96,78 @@ public class CRUSH extends Configurator implements BasicMessaging {
         }
         catch(Exception e) { crush.error(e); }
 
+        crush.shutdown();
+        
         // TODO should not be needed if background processes are all wrapped up...
-        crush.exit(0);
+        System.exit(0);
     }
 
-    private CRUSH() {
+    public CRUSH() {
+        info();
+        
         Locale.setDefault(Locale.US);
         FitsFactory.setUseHierarch(true);
         FitsFactory.setLongStringsEnabled(true);
+
+        Util.setReporter(broadcaster);
+
+        home = System.getenv("CRUSH");
+        if(home == null) home = ".";
     }
+    
+    /**
+     * Initialize CRUSH for the given instrument, and no extra options...
+     * 
+     * @param instrumentName    The instrument to use CRUSH with, e.g. "sharc2", or "hirmes"
+     * @throws Exception        If CRUSH could not be initialized with the specified instrument name.
+     */
+    public final void init(String instrumentName) throws Exception {
+        init(new String[] { instrumentName });
+    }
+    
+    /**
+     * Same as {@link init(String[])} except the arguments as specified as a List rather than
+     * an array.
+     * @see init(String[])
+     * 
+     * @param args          A list of arguments, like on the command-line. See {@link init(String[]) for
+     *                      more.  
+     * @throws Exception    An exception indicative of a problem encountered during initialization.
+     */
+    public final void init(List<String> args) throws Exception {
+        String[] array = new String[args.size()];
+        args.toArray(array);
+        init(array);
+    }
+    
+    
+    /**
+     * Initialize CRUSH for the given argument list, as if the list were command-line arguments. 
+     * 
+     * 
+     * @param args          The list of argument to initialize CRUSH with. The first argument must be the
+     *                      instrument name to use CRUSH with, e.g. "sharc2" or "hirmes", or else "-help" 
+     *                      to print just a help screen. The arguments that follow must either be options, 
+     *                      starting with a dash ('-'), or else scan specifiers. E.g. 
+     *                      
+     *                         { "hirmes", "-faint", "-flight=405", "68", "70-77" }
+     *                      
+     * @throws Exception    An exception indicative of a problem encountered during initialization.
+     */  
+    public void init(String[] args) throws Exception {	 
 
-    public CRUSH(String instrumentName) {
-        this();
+        if(args.length == 0) {
+            usage();
+            System.exit(0);         
+        }
 
+        if(args[0].equalsIgnoreCase("-help")) {
+            help(null);
+            System.exit(0); 
+        }
+        
+        String instrumentName = args[0];
+        
         instrument = Instrument.forName(instrumentName.toLowerCase());
         instrument.setOptions(this);
 
@@ -135,16 +176,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
             System.exit(1);
         }
 
-        info(this, "Instrument is " + instrument.getName().toUpperCase());
-    }
-
-    public boolean hasOption(String name) {
-        return isConfigured(name);
-    }
-
-    public Configurator option(String name) { return get(name); }
-
-    public void init(String[] args)throws Exception {	 
+        info(this, "Instrument is " + instrument.getName().toUpperCase());        
+        
         readConfig("default.cfg");
         
         this.args = args;
@@ -152,6 +185,14 @@ public class CRUSH extends Configurator implements BasicMessaging {
      
         validate();
     }
+    
+    public boolean hasOption(String name) {
+        return isConfigured(name);
+    }
+
+    public Configurator option(String name) { return get(name); }
+
+
     
     private void parseArgument(String arg) {
         if(arg.charAt(0) == '-') parseSilent(arg.substring(1));
@@ -1003,10 +1044,13 @@ public class CRUSH extends Configurator implements BasicMessaging {
         c.add(new HeaderCard("COMMENT", " ----------------------------------------------------", false));
     }
 
-
-    public void exit(int exitValue) {
+    public void shutdown() {
         if(instrument != null) instrument.shutdown();
         Util.setDefaultReporter();
+    }
+
+    public void exit(int exitValue) {
+        shutdown();
         System.exit(exitValue);
     }
 
@@ -1123,9 +1167,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public static void remove(Reporter r) { broadcaster.remove(r); }
 
     public static void removeReporter(String id) { broadcaster.remove(id); }
+    
 
-
-
+    
     public static CRUSHConsoleReporter consoleReporter = new CRUSHConsoleReporter("crush-console");
     public static Broadcaster broadcaster = new Broadcaster("CRUSH-broadcast", consoleReporter);
 

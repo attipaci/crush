@@ -1,4 +1,18 @@
 
+
+	[BUG] {Windows} The Windows 'autoconf.bat' had malformed 'if' 
+	conditions causing all CRUSH programs to fail. Fixed.
+
+	[BUG] {Windows} Self-extracting .EXE archive was badly broken. It 
+	neither contained the self-extraction code, not the AUTORUN directive. 
+	Both have been fixed.
+
+	[TWEAK] A few checks and initialization steps migrated from from 
+	CRUSH.main() to the constructor. This should make it easier to invoke
+	CRUSH from another Java program...
+
+
+
 2.42-1 (12 Oct 2018) 
 
 
