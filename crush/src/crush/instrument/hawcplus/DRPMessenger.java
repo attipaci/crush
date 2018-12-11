@@ -112,7 +112,10 @@ public class DRPMessenger extends Thread {
         OutputStream out = socket.getOutputStream();
 		
 		// TODO additional check. Is it needed?
-		if(out == null) throw new IOException("Socket has no output stream.");
+		if(out == null) {
+		    socket.close();
+		    throw new IOException("Socket has no output stream.");
+		}
 		
 		String text = message.toString();
 		out.write(text.getBytes());
@@ -156,7 +159,7 @@ public class DRPMessenger extends Thread {
 	public void run() {
 		CRUSH.info(this, "Starting DRP messaging service.");
 		
-		CRUSH.add(new Reporter());
+		CRUSH.addReporter(new Reporter());
 		
 		try { while(!isInterrupted()) send(queue.take()); }
 		catch(IOException e) { 

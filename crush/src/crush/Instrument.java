@@ -25,6 +25,7 @@ package crush;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.text.*;
 
@@ -1410,33 +1411,20 @@ implements TableFormatter.Entries, BasicMessaging {
         overlapPointSize = pointSize;
     }
 
-    public static Instrument<?> forName(String name) {
+    public static Instrument<?> forName(String name) throws Exception {
         File file = new File(CRUSH.home + File.separator + "config" + File.separator + name.toLowerCase() + File.separator + "class");
         
-        if(!file.exists()) {
-            CRUSH.error(Instrument.class, name + "' is not registered.");
-            return null;
-        }
+        if(!file.exists()) throw new IllegalArgumentException("Unknown instrument: '" + name + "'");
 
-        try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-            String className = in.readLine();
-            in.close();
-            return (Instrument<?>) Class.forName(className).getConstructor().newInstance(); 
-        }
-        catch(IOException e) {
-            CRUSH.error(Instrument.class, "Problem reading '" + file.getName() + "'");
-            return null;
-        }
-        catch(Exception e) { 
-            CRUSH.error(Instrument.class, e);
-            return null; 	
-        }
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+        String className = in.readLine();
+        in.close();
+        return (Instrument<?>) Class.forName(className).getConstructor().newInstance(); 
     }
 
     @Override
     public Object getTableEntry(String name) {
-
         if(name.equals("gain")) return gain;
         if(name.equals("sampling")) return samplingInterval / Unit.s;
         if(name.equals("rate")) return Unit.s / samplingInterval;

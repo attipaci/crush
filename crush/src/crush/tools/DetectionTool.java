@@ -224,7 +224,7 @@ public class DetectionTool {
 				if(S2N < significance) {
 					source.unflag(FLAG_DETECTION);
 					source.addPoint(true);
-					regions.remove(i);
+					regions.removeReporter(i);
 				}
 				else i++;
 			}
@@ -239,7 +239,7 @@ public class DetectionTool {
 					source.correct(beamFWHM);					
 					source.subtractPoint(true);
 					source.flag(FLAG_DETECTION);
-					regions.add(source);
+					regions.addReporter(source);
 				}
 			} 
 

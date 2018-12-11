@@ -1,3 +1,4 @@
+2.42-2 
 
 
 	[BUG] {Windows} The Windows 'autoconf.bat' had malformed 'if' 
@@ -7,9 +8,18 @@
 	neither contained the self-extraction code, not the AUTORUN directive. 
 	Both have been fixed.
 
+	[FIX] Spectral axis CRVAL header value in FITS was not cast to the
+	proper units, but was written in their natural SI units. Now fixed.
+
 	[TWEAK] A few checks and initialization steps migrated from from 
 	CRUSH.main() to the constructor. This should make it easier to invoke
 	CRUSH from another Java program...
+
+	[API] Change CRUSH API to make it easier to call CRUSH from another
+	Java program.
+
+	[DOC] New markdown/HTML for 'Calling CRUSH from a Java program' 
+	describing the top-level CRUSH API (README.java).
 
 
 

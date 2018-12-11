@@ -125,7 +125,7 @@ public class GDFStack {
 				
 				double G = model.get(i, j);
 				double wG = cube.weightAt(i1, j1) / npts * G;
-				mean.add(wG * cube.get(i1, j1));
+				mean.addReporter(wG * cube.get(i1, j1));
 				mean.addWeight(wG * G);
 			}
 			
@@ -139,7 +139,7 @@ public class GDFStack {
 				DataPoint combined = new DataPoint();
 				for(ParallelTask<DataPoint> task : getWorkers()) {
 					DataPoint partial = task.getLocalResult();
-					combined.add(partial.value());
+					combined.addReporter(partial.value());
 					combined.addWeight(partial.weight());
 				}
 				combined.scaleValue(1.0 / combined.weight());
@@ -174,7 +174,7 @@ public class GDFStack {
 			source.setPeakFrom(1.0);
 			source.setRadius(map.getImageBeam().getCircularEquivalentFWHM());
 			
-			sources.add(source);
+			sources.addReporter(source);
 		}
 		in.close();
 		
@@ -207,7 +207,7 @@ public class GDFStack {
 			
 				
 			if(rangeS24.contains(S24.value()))
-				sources.add(source);
+				sources.addReporter(source);
 		}
 		in.close();
 		
@@ -238,7 +238,7 @@ public class GDFStack {
 			S24.setRMS(Double.parseDouble(tokens.nextToken()));	
 			source.setPeakFrom(S24.value() * 1e-6 * map.getUnit().value());
 				
-			sources.add(source);
+			sources.addReporter(source);
 		}
 		in.close();
 		

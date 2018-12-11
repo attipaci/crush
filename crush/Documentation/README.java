@@ -1,0 +1,458 @@
+# Calling CRUSH from another Java program
+
+
+Author: Attila Kovacs
+
+
+Last updated: 11 December 2018
+
+
+-------------------------------------------------------------------------
+
+#### Table of Contents
+
+1. __Prerequisites__
+
+2. __Create a new CRUSH instance__
+
+3. __Options and input files__
+
+4. __Reduction__
+
+5. __CRUSH messages__
+
+
+__Appendix A.__ _Reporter API_
+
+
+-------------------------------------------------------------------------
+
+
+
+
+## 1. Prerequisites
+
+
+### 1.1. JAR libraries
+
+The CRUSH library mainly consists of two JAR archives:
+
+    crush.jar
+    jnum.jar
+
+You will find both inside the CRUSH distribution directory under `lib`. As such
+you can simply add `crush/lib/*` to your classpath.
+
+(`jnum.jar` contains generic Java numerical classes and utilities, which CRUSH
+heavily relies on, while the reduction pipeline is in `crush.jar`). 
+Additionally, you will be needing the `nom.tam.fits` libraries (`fits.jar`)
+with version 1.15.2 or later (if and when available).
+
+
+### 1.2. Distribution configuration files
+
+Beyond the Java code, CRUSH relies heavily on various configuration files
+and instrument meta-data. These are part of the CRUSH distribution. For CRUSH 
+to work properly, it will need to know where to locate these configuration 
+files. You have either specify the location of the CRUSH distribution directory
+via a environment variable `CRUSH` _before_ you  launch your program, e.g. in 
+`bash`:
+
+```bash
+   CRUSH="/home/johndoe/crush"
+```
+
+or, you can do it in Java _after_ launch, but _before_ instantiating a new 
+CRUSH object:
+
+```java
+   CRUSH.home = "/home/johndoe/crush";
+```
+
+### 1.3. Java startup options. 
+
+You may want to tweak some of the Java VM options for startup, especially the
+`-Xmx` option that sets how much RAM your Java program may access. As a rule 
+of  thumb you'll want Java/CRUSH have access to RAM about twice the combined
+size of all input scans you want to process, or more.
+
+
+## 2. Create a new CRUSH instance.
+
+ You will want to create a fresh CRUSH instance for each reduction process you
+ want to launch. You can do that with the constructor:
+
+```java
+   public CRUSH(String instrumentName) throws Exception
+```
+
+ The constructor will throw an exception if the instrument name is not
+ recognised, or if the relevant class files for that instrument cannot be
+ located, or if some other issue was encountered during initialization. (The
+ exact type of the Exception may be dependent on the specific instrument class,
+ which is why is in the most generic `Exception` form). The `instrumentName` 
+ argument is case-insensitive, but for consistency I recommend using lower 
+ case names, e.g. `hirmes`.
+
+```java
+import crush.CRUSH;
+
+    // ... 
+
+    // Create a new CRUSH instance for HIRMES...
+    // Note: an exception may be thrown...
+    CRUSH crush = new CRUSH("hirmes");
+```
+
+
+
+## 3. Options and input files.
+
+ Once you successfully created a CRUSH instance (without an exception), you can
+ proceed by specifying any non-default reduction options, and list the scans to
+ be reduced. 
+ 
+### 3.1. Setting CRUSH options
+
+ Add the extra reduction options via calls to:
+
+```java
+   public boolean setOption(String option);
+```
+  
+ where the `option` argument is a `<key>[=][<value>]` pair. They are just
+ like the command-line arguments to CRUSH (but without the leading dash), or 
+ lines in the configuration files. E.g.:
+
+```java
+   crush.setOption("faint");	// Same as '-faint' on the command line
+   crush.setOption("datapath=/data/hirmes"); // raw data path
+   crush.setOption("outpath /reduced");      // output path 
+   crush.setOption("name = Arp220.fits");    // output image file name
+```
+
+ As you can see above, key/value pairs are separated by white-space and/or `=`
+ characters (any number and any combination of those).
+
+ The `setOption()` call will return `true` if the option was successfully 
+ set, or `false` if an existing lock on the option prevented changes. (The 
+ latter is normal behavior, it's simply informing you that the option you 
+ requested was blocked).
+
+ CRUSH is optimized to take maximum advantage of the CPU resources on your 
+ system. This may be not so great when you are running CRUSH from another
+ program, which may end up being CPU-starved as a result. Luckily, CRUSH has
+ the options `threads` _or_ `idle`. The former `threads` can be used to 
+ explicitly specify how many threads CRUSH may use. You can throttle CRUSH by 
+ setting `threads` to a value smaller than 
+ `Runtime.getRuntime().availableProcessors()`, e.g.:
+
+```java
+   crush.setOption("threads "+(Runtime.getRuntime().availableProcessors()-1));
+```
+
+ Alternatively, you can specify the number, or percentage of processors to
+ leave idle by CRUSH. For example, the following is equivalent to the above:
+
+```java
+   crush.setOption("idle 1");
+```
+
+ You can also specify a percentage of the CPU resources to leave unused, e.g.:
+
+```java
+   crush.setOption("idle 25%");
+```
+ 
+ which will idle 1 CPU if you have 4, or 2 CPUs if you have 8 etc. 
+
+
+ __Tip__: You can put all options into an appropriate configuration file for
+ your program, and load them all with the single call:
+
+```
+   crush.readConfigFile(String path) throws IOException
+```
+
+ This way you can avoid hard-coding options, and have for free a way to edit
+ your configuration options on-the-fly without needing to restart your program
+ even.
+
+ 
+### 3.2. Loading scan data
+ 
+ Once you have configured the options you want to use, you can load the scans 
+ to which tyou want the options applied, using:
+
+```java
+   public void read(String identifier) throws OutOfMemoryError, 
+         FileNotFoundException, UnsupportedScanException, Exception
+```
+  
+ Here `identifier` can be a file path/name, or a scan ID (e.g. `451.33` for
+ flight 451, scan 33) or a scan number (e.g. `33`), or a range (e.g. `33-36`).
+ Using file path/name is probably the most straightforward. It can be either
+ a file path/name relative to the `datapath` option (if defined), or an
+ absolute path. E.g.
+
+```java
+   public crush.read("/data/2016-12-03_HA_F354_009_CAL_unk_HAWD_HWPOpen_RAW.fits");
+```
+
+ The call will throw an `OutOfMemoryError` if the scan could not be loaded due
+ to insufficient VM memory (If so, you might want to tweak the `-Xmx` option
+ of the VM to allow Java to access more RAM). Or, it may throw an exception 
+ such as:
+
+     FileNotFoundException      If no matching scan data file was found.
+     UnsupportedScanException	If the scan does not match the instrument type.
+     Exception                  Any other exception/error...
+
+ You can proceed setting more options and read more scans if desired, by 
+ successive calls to `setOption()` and `read()`...
+
+
+
+## 4. Reduction
+
+ Once you loaded all the desired  input scans with the desired options, you can
+ proceed to reducing the data with:
+
+```java
+  public void reduce() throws Exception
+``` 
+
+ This will run the reduction pipeline, and write the requested data products
+ before returning. It may take a whilem but if all goes well it returns 
+ normally without throwing an exception.
+
+ After the reduction is complete (or if it failed) you should finish by
+ calling
+
+```java
+  public void shutdown()
+```
+  
+ to kill any background processes that may have been spawned by the the 
+ reduction process. 
+
+
+
+## 5. CRUSH Messages
+
+ CRUSH comes with its own messaging architecture, defined in the 
+ `jnum.reporting` package. It is similar to Java's built-in `Logger` class
+ in functionality but with some different (better) features.
+
+ The basic functionality is defined by the abstract `Reporter` class.
+
+ To capture messages from CRUSH, you can create your own `Reporter` 
+ implementation that will deal with the different types of messages produced by
+ CRUSH. Each message type is  handled by a corresponding method in the
+ `Reporter` class: `info()`, `notify()`, `debug()`, `warning()`, `error()`, 
+ `trace()`, `status()`, `result()`, `detail()`, `values()`, and `suggest()`.
+
+```java
+import jnum.reporter.*;
+
+class MyReporter extends Reporter {
+    public MyReporter {
+        // Call super with a String ID
+        super("My-Reporter-ID");
+    }
+
+    public void info(Object owner, String message) {
+        // Deal with however you want with the message coming
+        // from owner. owner is either the specific object
+        // that sent the message, or else an enclosing class
+        // if the message was sent e.g. by a static call.
+        // ...
+    }
+
+    // ...
+ }
+```
+
+ (If you are a fan of the built-in `Logger` class, you might want to use the 
+ existing `LogReporter` class, which will conveniently forward CRUSH messages 
+ to the `Logger` object of your choice.)
+
+ CRUSH's handles its messages through a `Broadcaster`, which is a subclass of 
+ `Reporter` that simply distributes incoming messages to the connected list of 
+ `Reporter` children. 
+ 
+ By default, `CRUSH.broadcaster` has only a `CRUSHConsoleReporter` connected 
+ to it, which formats and prints messages to the console. If you rather not
+ spam your console with CRUSH message, the you can call:
+
+```java
+   CRUSH.getBroadcaster().clear();
+```
+
+ The above removes all existing consumers of messages, including the default 
+ `CRUSHConsoleReporter` instance. You can also do it more surgically, if you 
+ will, by:
+
+```java
+   CRUSH.removeReporter("crush-console");
+```
+
+ (Where `"crush-console"` is the ID of CRUSHConsoleReporter).
+
+ Whether or not you want to keep the default console messaging, you can add
+ any number of your own message consumers as:
+
+```java
+   MyReporter r = new MyReporter();
+   CRUSH.addReporter(r)
+
+   CRUSH crush = new CRUSH("hirmes");
+   // ...
+```
+
+ You probably want to set up your `Reporter` before you instantiate CRUSH,
+ which is why this is done via a static call. This way, any messages produced
+ during instantiation will be captured by your class as well.
+
+ Easy-peasy.
+ 
+
+## 6. Example
+
+To summarize the above, here is a sample code for integrating CRUSH into your
+Java program. First, a static initialization of CRUSH, once, and before 
+instnatiation.
+
+```java
+import crush.CRUSH;
+
+  // ...
+
+  // Specify where the CRUSH distribution resides...
+  CRUSH.home = "/home/johndoe/crush";
+  
+  // Disable console messaging...
+  CRUSH.getBroascaster().clear();
+
+  // Add your own Reporter implementation
+  Reporter r = new MyReporter();
+  CRUSH.addReporter(r);
+```
+
+After the global initialization above, for each reduction run you will need
+something like:
+
+```java
+  CRUSH crush = null;
+
+  try {
+    // Create a CRUSH instance for reducing HIRMES data
+    crush = new CRUSH("hirmes");
+
+    // Load options from your specific CRUSH config file
+    crush.readConfigFile("/home/myprogram/mycrushoptions.cfg");
+
+    // Set some more options, e.g. as input by the user, e.g. from a GUI
+    if(userSelectFaint) crush.setOption("faint");
+
+    // Read in the scan (or scans) with the options defined so far...
+    crush.read("/data/2016-12-03_HA_F354_009_CAL_unk_HAWD_HWPOpen_RAW.fits");
+
+    // ... more options, and more scans as you need...    
+
+    // Now reduce...
+    // This will take a while, and will write data products as configured...
+    // You Reporter implementation (if configured) will be receiving lots of 
+    // messages about what's going on, so that you can keep an eye on it...
+    crush.reduce();
+  }
+  catch(Exception e) {
+    // Deal with any exception that we may have encountered in the process...
+  }     
+
+  if(crush != null) {  
+    // Shut down any background processes that may have been spawned...
+    crush.shutdown():
+  }
+```
+
+
+## Appendix A. Reporter API
+
+ Here is some more information to help build your own Reporter implementation
+ for capturing CRUSH messages.
+
+ First, your Reporter subclass will have to call Reporter's only public 
+ constructor:
+
+```java
+   public Reporter(String id);
+```
+
+ with a `String` ID of your choice. CRUSH's broadcaster maintains a `Hashtable`
+ of `Reporter`s mapped to `String` IDs to which it sends messages. As such, 
+ each active `Reporter must have a unique ID. Otherwise, adding a `Reporter` 
+ will replace a previously present `Reporter` with the same ID. 
+
+
+ Next, your `Reporter` class needs to implement the following methods (which
+ are all declared `abstract` in `Reporter` itself):		 
+
+```java
+    public void info(Object owner, String message);
+   
+    public void notify(Object owner, String message);
+    
+    public void debug(Object owner, String message);
+    
+    public void warning(Object owner, String message);
+    
+    public void error(Object owner, String message);
+    
+    public void status(Object owner, String message);
+    
+    public void result(Object owner, String message);
+    
+    public void detail(Object owner, String message);
+    
+    public void values(Object owner, String message); 
+    
+    public void suggest(Object owner, String message);
+    
+    public void trace(Throwable e);
+```
+
+ Most of the above takes an `owner` argument, which is either a specific 
+ object, or else a class, to which the `message` is associated with. I.e.
+ `owner` may be a `crush.Instrument` instance or `crush.Instrument.class`.
+ The `owner` is often the object or class that produced the message, but it 
+ does not have to be.
+
+ Finally, the last method `trace()` is for reporting stack traces, normally
+ generated by exceptions and errors.
+
+ Addditionally, you may also override some of the `Reporter` methods that
+ have default implementations. These (includinf their default implementations)
+ are:
+
+```java
+    public void error(Object owner, Throwable e, boolean debug) {
+`       error(owner, e.getMessage());
+        if(debug) trace(e);
+    }
+    
+    public void error(Object owner, Throwable e) {
+        error(owner, e, true);
+    }
+    
+    public void warning(Object owner, Exception e, boolean debug) {
+        warning(owner, e.getMessage());
+        if(debug) trace(e);
+    }
+    
+    public void warning(Object owner, Exception e) {
+        warning(owner, e, false);
+    }
+```
+
+
