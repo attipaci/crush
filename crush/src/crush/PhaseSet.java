@@ -240,8 +240,8 @@ public class PhaseSet extends ArrayList<PhaseData> {
         }		
     }
 
-    public void write() throws IOException {
-        String filename = CRUSH.workPath + File.separator + integration.scan.getID() + "-" + integration.getFileID() + ".phases.tms";
+    public void write(String path) throws IOException {
+        String filename = path + File.separator + integration.scan.getID() + "-" + integration.getFileID() + ".phases.tms";
         PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename)));
         write(out);
         out.close();

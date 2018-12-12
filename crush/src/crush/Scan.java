@@ -658,8 +658,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		return max;		
 	}
 	
-	public void writeProducts() {
-		for(Integration<?,?> integration : this) integration.writeProducts();
+	public void writeProducts(String path) {
+		for(Integration<?,?> integration : this) integration.writeProducts(path);
 		
 		if(!hasOption("lab")) {
 		    reportFocus();
@@ -667,7 +667,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		    
 		if(hasOption("log")) {
-			try { writeLog(option("log"), CRUSH.workPath + File.separator + instrument.getName() + ".log"); }
+			try { writeLog(option("log"), path + File.separator + instrument.getName() + ".log"); }
 			catch(IOException e) {
 				warning("Could not write log.");
 				if(CRUSH.debug) CRUSH.trace(e);

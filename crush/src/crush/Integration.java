@@ -2554,8 +2554,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         }.process();
     }
 
-    public void writeASCIITimeStream() throws IOException {
-        String filename = CRUSH.workPath + File.separator + scan.getID() + "-" + getFileID() + ".tms";
+    public void writeASCIITimeStream(String path) throws IOException {
+        String filename = path + File.separator + scan.getID() + "-" + getFileID() + ".tms";
         final PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename), 1000000));
         out.println("# " + Util.e3.format(1.0/instrument.samplingInterval));
         final int nc = instrument.size();
@@ -2748,8 +2748,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         return spectra;
     }
 
-    public void writeSpectra(String windowName, int windowSize) throws IOException {
-        String fileName = CRUSH.workPath + File.separator + getFileID() + ".spec";
+    public void writeSpectra(String path, String windowName, int windowSize) throws IOException {
+        String fileName = path + File.separator + getFileID() + ".spec";
 
         final float[][] spectrum = getSpectra(windowName, windowSize);
         final double df = 1.0 / (instrument.samplingInterval * windowSize);
@@ -2779,11 +2779,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
 
-    public void writeCovariances() {
+    public void writeCovariances(String path) {
 
         final double[][] covar = getCovariance(); 
         List<String> specs = hasOption("write.covar") ? option("write.covar").getList() : new ArrayList<String>();
-        String prefix = CRUSH.workPath + File.separator + "covar";
+        String prefix = path + File.separator + "covar";
 
         // If no argument is specified, write the full covariance in backend channel ordering
         if(specs.size() == 0) specs.add("full");
@@ -2808,34 +2808,34 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         }
     }
 
-    public void writeProducts() {
+    public void writeProducts(String path) {
 
         if(hasOption("write.pattern")) {
-            try { writeScanPattern(); }
+            try { writeScanPattern(path); }
             catch(Exception e) { error(e); }
         }
 
         if(hasOption("write.pixeldata")) {
-            String fileName = CRUSH.workPath + File.separator + "pixel-" + getFileID() + ".dat";
+            String fileName = path + File.separator + "pixel-" + getFileID() + ".dat";
             try { instrument.writeChannelData(fileName, getASCIIHeader()); }
             catch(Exception e) { error(e); }
         }
 
-        if(hasOption("write.covar")) writeCovariances();
+        if(hasOption("write.covar")) writeCovariances(path);
 
         if(hasOption("write.ascii")) {
-            try { writeASCIITimeStream(); }
+            try { writeASCIITimeStream(path); }
             catch(Exception e) { error(e); }
         }
 
         if(hasOption("write.phases")) if(isPhaseModulated()) {
-            try { ((PhaseModulated) this).getPhases().write(); }
+            try { ((PhaseModulated) this).getPhases().write(path); }
             catch(Exception e) { error(e); }
         }
 
         if(hasOption("write.signals")) for(Mode mode : signals.keySet()) {
             try { 
-                PrintStream out = new PrintStream(new FileOutputStream(CRUSH.workPath + File.separator + mode.name + "-" + getFileID() + ".tms"));
+                PrintStream out = new PrintStream(new FileOutputStream(path + File.separator + mode.name + "-" + getFileID() + ".tms"));
                 signals.get(mode).print(out);
                 notify("Written " + mode.name + ".tms");
                 out.close();
@@ -2849,19 +2849,19 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             String windowName = argument.length() == 0 ? "Hamming" : argument;
             int windowSize = spectrumOption.isConfigured("size") ? spectrumOption.get("size").getInt() : 2*framesFor(filterTimeScale);
 
-            try { writeSpectra(windowName, windowSize); }
+            try { writeSpectra(path, windowName, windowSize); }
             catch(Exception e) { error(e); }
         }
 
 
-        if(hasOption("write.coupling")) writeCouplingGains(option("write.coupling").getList()); 
+        if(hasOption("write.coupling")) writeCouplingGains(path, option("write.coupling").getList()); 
 
-        if(hasOption("write.coupling.spec")) writeCouplingSpectrum(option("write.coupling.spec").getList()); 
+        if(hasOption("write.coupling.spec")) writeCouplingSpectrum(path, option("write.coupling.spec").getList()); 
 
     }
 
-    public void writeScanPattern() throws IOException {
-        String fileName = CRUSH.workPath + File.separator + "pattern-" + getFileID() + ".dat";
+    public void writeScanPattern(String path) throws IOException {
+        String fileName = path + File.separator + "pattern-" + getFileID() + ".dat";
         PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 
         for(int i=0; i<size(); i++) {
@@ -3251,9 +3251,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         return signal;
     }
 
-    void writeCouplingGains(List<String> signalNames) {
+    void writeCouplingGains(String path, List<String> signalNames) {
         for(String name : signalNames) {
-            try { writeCouplingGains(name); }
+            try { writeCouplingGains(path, name); }
             catch(Exception e) {
                 warning("Couplings for '" + name + "' not written: " + e.getMessage());
                 if(CRUSH.debug) CRUSH.trace(e);
@@ -3261,7 +3261,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         }
     }
 
-    void writeCouplingGains(String name) throws Exception { 
+    void writeCouplingGains(String path, String name) throws Exception { 
         Modality<?> modality = instrument.modalities.get(name);
         if(modality == null) return;
 
@@ -3271,7 +3271,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
         for(Mode mode : modality) getCouplingGains(getSignal(mode), g);
 
-        String fileName = CRUSH.workPath + File.separator + getFileID() + "." + name + "-coupling.dat";
+        String fileName = path + File.separator + getFileID() + "." + name + "-coupling.dat";
         PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
         out.println(this.getASCIIHeader());
         out.println("#");
@@ -3296,11 +3296,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
 
-    void writeCouplingSpectrum(List<String> signalNames) {
+    void writeCouplingSpectrum(String path, List<String> signalNames) {
         int windowSize = hasOption("write.coupling.spec.windowsize") ? option("write.couplig.spec.windowsize").getInt() : framesFor(filterTimeScale);
 
         for(String name : signalNames) {
-            try { writeCouplingSpectrum(name, windowSize); }
+            try { writeCouplingSpectrum(path, name, windowSize); }
             catch(Exception e) {
                 warning("Coupling spectra for '" + name + "' not written: " + e.getMessage());
                 if(CRUSH.debug) CRUSH.trace(e);
@@ -3308,13 +3308,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         }
     }	
 
-    void writeCouplingSpectrum(String name, int windowSize) throws Exception {
+    void writeCouplingSpectrum(String path, String name, int windowSize) throws Exception {
         Modality<?> modality = instrument.modalities.get(name);
         if(modality == null) return;
 
         modality.updateAllGains(this, false);
 
-        String fileName = CRUSH.workPath + File.separator + getFileID() + "." + name + "-coupling.spec";
+        String fileName = path + File.separator + getFileID() + "." + name + "-coupling.spec";
         PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 
         out.println(this.getASCIIHeader());
@@ -3362,7 +3362,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         notify("Written " + fileName);
         out.close();
 
-        writeDelayedCoupling(name, C);
+        writeDelayedCoupling(path, name, C);
     }
 
     void getCouplingSpectrum(Signal signal, int windowSize, Complex[][] C) throws Exception {	
@@ -3378,7 +3378,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
 
-    void writeDelayedCoupling(String name, final Complex[][] spectrum) throws IOException {
+    void writeDelayedCoupling(String path, String name, final Complex[][] spectrum) throws IOException {
         final int nF = spectrum[0].length;
         final float[][] delay = new float[spectrum.length][nF << 1];
 
@@ -3404,7 +3404,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         }.process();
 
 
-        String fileName = CRUSH.workPath + File.separator + getFileID() + "." + name + "-coupling.delay";
+        String fileName = path + File.separator + getFileID() + "." + name + "-coupling.delay";
         PrintWriter out = new PrintWriter(new FileOutputStream(fileName));
 
         out.println(this.getASCIIHeader());

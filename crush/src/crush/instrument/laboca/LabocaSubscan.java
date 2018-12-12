@@ -110,17 +110,17 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 		
 	}
 	
-	public void writeTemperatureGains() throws IOException {
+	public void writeTemperatureGains(String path) throws IOException {
 		// Now write to a file
-		String fileName = CRUSH.workPath + File.separator + "he3-gains-" + scan.getID() + ".dat";
+		String fileName = path + File.separator + "he3-gains-" + scan.getID() + ".dat";
 		instrument.writeTemperatureGains(fileName, getASCIIHeader());
 	}
 
 	@Override
-	public void writeProducts() {
-		super.writeProducts();
+	public void writeProducts(String path) {
+		super.writeProducts(path);
 		if(hasOption("he3")) if(option("he3").is("gains")) {
-			try { writeTemperatureGains(); }
+			try { writeTemperatureGains(path); }
 			catch(IOException e) { warning("Problem writing temperature gains."); }
 		}
 	}

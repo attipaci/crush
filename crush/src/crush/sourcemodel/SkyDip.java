@@ -144,7 +144,7 @@ public class SkyDip extends SourceModel {
     }
 
     @Override
-    public void process(Scan<?, ?> scan) {
+    public void process(Scan<?, ?> scan, String workPath) {
         for(int i=0; i<data.length; i++) if(data[i].weight() > 0.0) data[i].scaleValue(1.0 / data[i].weight());
         if(scan instanceof Weather) {
             double ambientT = ((Weather) scan).getAmbientKelvins();
@@ -184,7 +184,7 @@ public class SkyDip extends SourceModel {
         else warning("Skydip fit did not converge...");
 
         String fileName = hasOption("name") ? option("name").getValue() : getDefaultCoreName();
-        String coreName = CRUSH.workPath + File.separator + fileName;
+        String coreName = path + File.separator + fileName;
         fileName = coreName + ".dat";
         
 
@@ -367,7 +367,7 @@ public class SkyDip extends SourceModel {
     }
 
     @Override
-    public void process() throws Exception {
+    public void process(String workPath) throws Exception {
         // TODO Auto-generated method stub
     }
 

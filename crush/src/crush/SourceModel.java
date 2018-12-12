@@ -254,7 +254,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
     public abstract void add(Integration<?,?> integration);
 
-    public abstract void process(Scan<?,?> scan);
+    public abstract void process(Scan<?,?> scan, String workPath);
 
     public void postProcess(Scan<?,?> scan) {}
 
@@ -343,7 +343,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
         return "            * Check the console output for any problems when reading scans.\n";
     }
 
-    public abstract void process() throws Exception;
+    public abstract void process(String workPath) throws Exception;
 
 
     public void sync() throws Exception {

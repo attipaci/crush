@@ -21,6 +21,8 @@
 	[DOC] New markdown/HTML for 'Calling CRUSH from a Java program' 
 	describing the top-level CRUSH API (README.java).
 
+	[CODE] Change static variable CRUSH.workPath into proper instance 
+	variable.
 
 
 2.42-1 (12 Oct 2018) 

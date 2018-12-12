@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
-import crush.CRUSH;
 import crush.Instrument;
 import crush.Scan;
 import jnum.Configurator;
@@ -160,7 +159,7 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
 
 
     @Override
-    public void process(Scan<?, ?> scan) {
+    public void process(Scan<?, ?> scan, String workPath) {
         DataType data = getData();
         
         endAccumulation();          
@@ -198,19 +197,20 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
 
 
         if(hasOption("scanmaps")) {
-            try { writeFits(CRUSH.workPath + File.separator + "scan-" + (int)scan.getMJD() + "-" + scan.getID() + ".fits"); }
+            try { writeFits(workPath + File.separator + "scan-" + (int)scan.getMJD() + "-" + scan.getID() + ".fits"); }
             catch(Exception e) { error(e); }
         }
 
 
     }
     
+    
     public void level(boolean isRobust) {
         getData().level(isRobust);
     }
 
     @Override
-    public void process() throws Exception {
+    public void process(String workPath) throws Exception {
         endAccumulation();
         
         nextGeneration(); // Increment the map generation...
@@ -288,7 +288,7 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
 
 
         if(hasSourceOption("intermediates")) {
-            try { writeFits(CRUSH.workPath + File.separator + "intermediate.fits"); }
+            try { writeFits(workPath + File.separator + "intermediate.fits"); }
             catch(Exception e) { error(e); }
         }
 

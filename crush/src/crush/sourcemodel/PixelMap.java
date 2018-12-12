@@ -185,8 +185,8 @@ public class PixelMap extends AstroModel2D {
 	}
 
 	@Override
-	public void process(Scan<?, ?> scan) {
-		for(AstroIntensityMap map : pixelMap) if(map != null) map.process(scan);
+	public void process(Scan<?, ?> scan, String workPath) {
+		for(AstroIntensityMap map : pixelMap) if(map != null) map.process(scan, workPath);
 	}
 
 
@@ -208,7 +208,7 @@ public class PixelMap extends AstroModel2D {
 			for(int p=from; p<to; p++) if(pixelMap[p] != null) if(pixelMap[p].isValid()) pixelMap[p].write(path);
 		}
 		calcPixelData(false);
-		writePixelData();	
+		writePixelData(path);	
 	}
 
 
@@ -217,11 +217,11 @@ public class PixelMap extends AstroModel2D {
 
 	
 	@Override
-	public void process() throws Exception {	
+	public void process(String workPath) throws Exception {	
 		boolean process = hasSourceOption("process");	
 		
 		for(AstroIntensityMap map : pixelMap) if(map != null) {	
-			if(process) map.process();
+			if(process) map.process(workPath);
 			else {
 				map.map.endAccumulation();
 				nextGeneration(); // Increment the map generation...
@@ -275,11 +275,11 @@ public class PixelMap extends AstroModel2D {
 	}
 	
 	
-	public void writePixelData() throws IOException {
+	public void writePixelData(String path) throws IOException {
 		
 		double[] sourceGain = getFirstScan().instrument.getSourceGains(false);
 		
-		String fileName = CRUSH.workPath + File.separator + getDefaultCoreName() + ".rcp";
+		String fileName = path + File.separator + getDefaultCoreName() + ".rcp";
 		PrintStream out = new PrintStream(new FileOutputStream(fileName));
 		
 		Camera<?> array = (Camera<?>) getFirstScan().instrument;

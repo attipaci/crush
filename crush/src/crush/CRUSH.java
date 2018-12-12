@@ -61,16 +61,18 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private static String version = "2.42-2";
-    private static String revision = "devel.5";
+    private static String revision = "devel.6";
 
-    public static String workPath = ".";
     public static String home = ".";
     public static boolean debug = false;
 
+    
     public Instrument<?> instrument;
     public Vector<Scan<?,?>> scans = new Vector<Scan<?,?>>();
     public SourceModel source;
+    public String workPath = ".";
     public String[] commandLine;
+    
 
     public static int maxThreads = 1;
     public static volatile ExecutorService executor, sourceExecutor;
@@ -115,15 +117,15 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
     
     /**
-     * This is the public constructor of CRUSH that may be used to create a CRUSH instance inside another Java program.
+     * Public constructor that may be used to create a CRUSH instance inside another Java program.
      * One should create a fresh CRUSH instance at the beginning of each reduction run, as it is not guranteed that
      * CRUSH will return to a 'fresh' state at the end of a previous run.
      * 
      * 
-     * @param instrumentName The (case-insensitive) name of the CRUSH-supported instrument for which to instantiate a
-     *                  a new pipeline instance. E.g. "hirmes" or "hawc+".
-     * @throws Exception An appropriate exception will be thrown if the specified instrument is unrecognised or if
-     *                  the pipeline could not be fully initialized for that specific instrument.
+     * @param instrumentName    The (case-insensitive) name of the CRUSH-supported instrument for which to instantiate a
+     *                          a new pipeline instance. E.g. <tt>"hirmes"</tt> or <tt>"hawc+"</tt>.
+     * @throws Exception        An appropriate exception will be thrown if the specified instrument is unrecognised or if
+     *                          the pipeline could not be fully initialized for that specific instrument.
      */
     public CRUSH(String instrumentName) throws Exception {
         this();
@@ -131,9 +133,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
     
     /**
-     * Initialize CRUSH for the given instrument, and no extra options...
+     * Initializes CRUSH for the given instrument, and no extra options...
      * 
-     * @param instrumentName    The instrument to use CRUSH with, e.g. "sharc2", or "hirmes"
+     * @param instrumentName    The instrument to use CRUSH with, e.g. <tt>"sharc2"</tt>, or <tt>"hirmes"</tt>
      * @throws Exception        If CRUSH could not be initialized with the specified instrument name.
      */
     private final void setInstrument(String instrumentName) throws Exception {
@@ -149,15 +151,17 @@ public class CRUSH extends Configurator implements BasicMessaging {
     
     
     /**
-     * Initialize CRUSH for the given argument list, as if the list were command-line arguments. 
+     * Initializes CRUSH for the given argument list, as if the list were command-line arguments. 
      * 
      * 
      * @param args          The list of argument to initialize CRUSH with. The first argument must be the
-     *                      instrument name to use CRUSH with, e.g. "sharc2" or "hirmes", or else "-help" 
-     *                      to print just a help screen. The arguments that follow must either be options, 
-     *                      starting with a dash ('-'), or else scan specifiers. E.g. 
-     *                      
+     *                      instrument name to use CRUSH with, e.g. <tt>"sharc2"</tt> or <tt>"hirmes"</tt>, or 
+     *                      else <tt>"-help"</tt> to print just a help screen. The arguments that follow must
+     *                      either be options, starting with a dash ('-'), or else scan specifiers. E.g.   
+     *                                       
+     *                      <pre>
      *                         { "hirmes", "-faint", "-flight=405", "68", "70-77" }
+     *                      </pre>
      *                      
      * @throws Exception    An exception indicative of a problem encountered during initialization.
      */  
@@ -186,19 +190,19 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     /**
      * The simplest way to specify extra reduction options to CRUSH after initialization with the public constructor.
-     * The argument is expected to be a <key>[=][<value>] pair with the separator being any number of '=' characters or
-     * white spaces following the the <key> argument. The rules are the same as for command-line options to 
+     * The argument is expected to be a &lt;key&gt;[=][&lt;value&gt;] pair with the separator being any number of '=' characters or
+     * white spaces following the the &lt;key&gt; argument. The rules are the same as for command-line options to 
      * CRUSH (except no leading dash '-', and the same as for lines in the configuration file. In fact, this 
-     * method is nothing but a convenient wrapper for Configurator.parse(String), but rather than throwing a
-     * LockedException, it simply returns true or false depending whether the option was successfully set, or else
+     * method is nothing but a convenient wrapper for {@link jnum.Configurator#parse(String)}, but rather than throwing a
+     * {@link jnum.LockedException}, it simply returns true or false depending whether the option was successfully set, or else
      * blocked by an existing lock.
      * 
      * 
-     * @param line The option specification as a <key>[=][<value>]. E.g. "faint" or "datapath=/home/data/".
-     * @return True if the option was successfully applied, or false if an existing lock on <key> prevented setting
-     *      a new value.
+     * @param line  The option specification as a &lt;key&gt;[=][&lt;value&gt;]. E.g. "faint" or "datapath=/home/data/".
+     * @return      <tt>true</tt> if the option was successfully applied, or <tt>false</tt> if an existing lock on 
+     *              &lt;key&gt; prevented setting a new value.
      *      
-     * @see parse(String).
+     * @see #parse(String).
      */
     public final boolean setOption(String line) {
         try { 
@@ -209,25 +213,27 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
    
     /**
-     * Check if a specific option key was set and is active. Same as isConfigured(key) just with a more
+     * Checks if a specific option key was set and is active. Same as {@link #isConfigured(String)} just with a more
      * obvious name...
      * 
      * 
-     * @param name
-     * @return
+     * @param name  The name of the option <tt>key</tt>.
+     * @return      <tt>true</tt> if the option is explicitly set and is active, or <tt>false</tt> otherwise.
      * 
-     * @see isConfigured(String).
+     * @see #isConfigured(String)
      */
     public boolean hasOption(String name) {
         return isConfigured(name);
     }
 
     /**
-     * Return the Configurator brack for a given CRUSH option. Same as Configurator.get(String) just with 
+     * Returns the Configurator brack for a given CRUSH option. Same as {@link get(String)} just with 
      * a more obvious name...
      * 
-     * @param name
-     * @return
+     * @param   name
+     * @return  The {@link jnum.Configurator} option branch for the specified name argument. 
+     * 
+     * @see #get(String)
      */
     public Configurator option(String name) { return get(name); }
 
@@ -550,13 +556,13 @@ public class CRUSH extends Configurator implements BasicMessaging {
      * Attempts to load a scan's data for the current instrument, and using the current configuration settings.  
      * 
      * 
-     * @param scanID Scan file name or path (absolute, or relative to 'datapath'), or scan IDs, numbers, or ranges, depending
-     *          on what ways of specifiying scans is available for the given instrument.
+     * @param scanID    Scan file name or path (absolute, or relative to <tt>datapath</tt>), or scan IDs, numbers, or ranges, depending
+     *                  on what ways of specifiying scans is available for the given instrument.
      * @throws OutOfMemoryError If we ran out of Java heap space while loading the scan. You way need to tweak the '-Xmx' runtime
      *          option to java to allow it to use more RAM.
      * @throws FileNotFoundException if no scan file could be matched to the given scanID under the current set of configuration
-     *          options (e.g. "datapath", "object", "date", or "flight" -- depending what the current instrument might use for
-     *          locating data).
+     *          options (e.g. <tt>datapath</tt>, <tt>object</tt>, <tt>date</tt>, or <tt>flight</tt> &mdash; depending what the 
+     *          current instrument might use for locating data).
      * @throws UnsupportedScanException If a scan file was found but the file is not supported by the current instrument. For
      *          example if you try to load a SHARC-2 scan while CRUSH was initialized for HIRMES.
      * @throws Exception An apppropriate exception is thrown if the Scan cannot be located, or else could not be properly read
@@ -649,13 +655,14 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     /**
      * Runs the reduction pipeline for the currently loaded scans and reduction options. This may take a while, but you
-     * can get messages from CRUSH on what's going on via your own jnum.reporter.Reporter implementation that you can
-     * add to CRUSH's message broadcaster (see add(Reporter)).
+     * can get messages from CRUSH on what's going on via your own {@link jnum.reporter.Reporter} implementation that you can
+     * add to CRUSH's message broadcaster (see {@link #add(Reporter)}).
      * 
      * 
-     * @throws Exception An appropriate exception if something did not go as expected during the reduction process.
+     * @throws Exception    An appropriate exception if something did not go as expected during the reduction process.
      * 
-     * @see add(Reporter), getBroadcaster()
+     * @see #add(Reporter)
+     * @see #getBroadcaster()
      */
     public void reduce() throws Exception {	
         int rounds = 0;
@@ -701,7 +708,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
             else warning("The reduction did not result in a source model.");
         }
 
-        for(Scan<?,?> scan : scans) scan.writeProducts();   
+        for(Scan<?,?> scan : scans) scan.writeProducts(workPath);   
     }
 
     public void iterate() throws Exception {
@@ -741,7 +748,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         summarize();
 
         if(solveSource()) if(tasks.contains("source")) {
-            source.process();
+            source.process(workPath);
             source.sync();
             
             info(" [Source] " + source.getProcessBrief());
@@ -1241,7 +1248,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 
     /**
-     * Get CRUSH's message broadcaster.
+     * Gets CRUSH's message broadcaster.
      * 
      * 
      * @return The message broadcaster used by CRUSH.
@@ -1249,26 +1256,26 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public static Broadcaster getBroadcaster() { return broadcaster; }
 
     /**
-     * Add a message consumer (Reporter) to which CRUSH messages will be broadcast to.
+     * Adds a message consumer ({@link jnum.reporting.Reporter}) to which CRUSH messages will be broadcast to.
      * 
-     * @param r  The additional Reporter object that will be used to consume CRUSH messages.
+     * @param r     The additional Reporter object that will be used to consume CRUSH messages.
      * @return The prior 
      */
     public static Reporter addReporter(Reporter r) { return broadcaster.add(r); }
 
     /**
-     * Removes the given Reporter object from CRUSH's message broadcast. CRUSH will send no more messages 
+     * Removes the given {@link jnum.reporting.Reporter} object from CRUSH's message broadcast. CRUSH will send no more messages 
      * for that reporter to consume.
      * 
-     * @param r The message cosumer to remove from CRUSH's message broadcast.
+     * @param r     The message cosumer to remove from CRUSH's message broadcast.
      */
     public static void removeReporter(Reporter r) { broadcaster.remove(r); }
 
     /**
-     * Remove a message consumer, identified by its String ID, from CRUSH's message broadcasting.
+     * Removes a message consumer, identified by its String ID, from CRUSH's message broadcasting.
      * 
      * 
-     * @param id The String ID of the Reporter object to be removed from CRUSH broadcasts.
+     * @param id    The String ID of the {@link jnum.reporting.Reporter} object to be removed from CRUSH broadcasts.
      * @return The Reporter object that was removed from CRUSH message broadcasts, or null if no 
      *      Reporter by this ID was subscribed to CRUSH broadcasts.
      */

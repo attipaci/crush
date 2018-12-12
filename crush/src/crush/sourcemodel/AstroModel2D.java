@@ -171,7 +171,7 @@ public abstract class AstroModel2D extends SourceModel {
 
 
     protected String getDefaultFileName() {
-        return CRUSH.workPath + File.separator + getSourceName() + ".fits";
+        return getSourceName() + ".fits";
     }
 
     public String getCoreName() {

@@ -45,7 +45,7 @@ public class APEXChoppedPhotometry extends Photometry {
 
 
 	@Override
-	public void process(Scan<?, ?> scan) {		
+	public void process(Scan<?, ?> scan, String workPath) {		
 		final DataPoint[] left = DataPoint.createArray(flux.length);
 		final DataPoint[] right = DataPoint.createArray(flux.length);
 

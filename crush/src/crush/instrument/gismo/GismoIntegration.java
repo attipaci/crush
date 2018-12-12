@@ -488,11 +488,11 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 
 	
 	@Override
-	public void writeProducts() {
-		super.writeProducts();
+	public void writeProducts(String path) {
+		super.writeProducts(path);
 		
 		if(hasOption("log.saegains")) {
-			try { logSAEGains(); }
+			try { logSAEGains(path); }
 			catch(IOException e) { error(e); }
 		}
 		
@@ -509,10 +509,10 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 		return isOK;
 	}
 	
-	void logSAEGains() throws IOException {
+	void logSAEGains(String path) throws IOException {
 		if(!checkSAEComplete()) return;
 		
-		String fileName = CRUSH.workPath + File.separator + "saegain.log";
+		String fileName = path + File.separator + "saegain.log";
 		PrintWriter out = new PrintWriter(new FileOutputStream(fileName, true));
 		
 		out.println(this.getASCIIHeader());

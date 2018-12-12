@@ -152,26 +152,26 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public void process(Scan<?, ?> scan) {
-		N.process(scan);
+	public void process(Scan<?, ?> scan, String workPath) {
+		N.process(scan, workPath);
 		if(usePolarization()) {
-			Q.process(scan);
-			U.process(scan);
+			Q.process(scan, workPath);
+			U.process(scan, workPath);
 		}
 	}
 	
 	@Override
-	public void process() throws Exception {		
+	public void process(String workPath) throws Exception {		
 		addProcessBrief("[N] ");
-		N.process();
+		N.process(workPath);
 		
 		if(usePolarization()) {
 			addProcessBrief("[Q] ");
-			Q.process();
+			Q.process(workPath);
 			N.mergeMask(Q.map); // Add the flagging data from Q
 			
 			addProcessBrief("[U] ");
-			U.process();
+			U.process(workPath);
 			N.mergeMask(U.map); // Add the flagging data from U
 		}
 	}
