@@ -45,7 +45,7 @@ public class APEXChoppedPhotometry extends Photometry {
 
 
 	@Override
-	public void process(Scan<?, ?> scan, String workPath) {		
+	public void process(Scan<?, ?> scan) {		
 		final DataPoint[] left = DataPoint.createArray(flux.length);
 		final DataPoint[] right = DataPoint.createArray(flux.length);
 
@@ -124,7 +124,7 @@ public class APEXChoppedPhotometry extends Photometry {
 	
 
 	@Override
-	public void write(String path) throws Exception {	
+	public void write() throws Exception {	
 		info("Note, that the results of the APEX chopped photometry reduction below include "
 		        + "an estimate of the systematic errors, based on the true scatter of the chopped "
 		        + "photometry measurements in each nod cycle. As such, these errors are higher than "
@@ -138,7 +138,7 @@ public class APEXChoppedPhotometry extends Photometry {
 			        + "of the total measurement uncertainty.");
 		}
 		
-		super.write(path);
+		super.write();
 	}
 
 	

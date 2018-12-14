@@ -2808,8 +2808,9 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         }
     }
 
-    public void writeProducts(String path) {
-
+    public void writeProducts() {
+        String path = instrument.getOutputPath();
+        
         if(hasOption("write.pattern")) {
             try { writeScanPattern(path); }
             catch(Exception e) { error(e); }

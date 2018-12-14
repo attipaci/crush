@@ -185,13 +185,13 @@ public class PixelMap extends AstroModel2D {
 	}
 
 	@Override
-	public void process(Scan<?, ?> scan, String workPath) {
-		for(AstroIntensityMap map : pixelMap) if(map != null) map.process(scan, workPath);
+	public void process(Scan<?, ?> scan) {
+		for(AstroIntensityMap map : pixelMap) if(map != null) map.process(scan);
 	}
 
 
 	@Override
-	public void write(String path) throws Exception {
+	public void write() throws Exception {
 		if(hasSourceOption("writemaps")) {
 			int from = 0;
 			int to = pixelMap.length;
@@ -205,10 +205,10 @@ public class PixelMap extends AstroModel2D {
 				else to = from+1;
 			}
 			
-			for(int p=from; p<to; p++) if(pixelMap[p] != null) if(pixelMap[p].isValid()) pixelMap[p].write(path);
+			for(int p=from; p<to; p++) if(pixelMap[p] != null) if(pixelMap[p].isValid()) pixelMap[p].write();
 		}
 		calcPixelData(false);
-		writePixelData(path);	
+		writePixelData(getOutputPath());	
 	}
 
 
@@ -217,11 +217,11 @@ public class PixelMap extends AstroModel2D {
 
 	
 	@Override
-	public void process(String workPath) throws Exception {	
+	public void process() throws Exception {	
 		boolean process = hasSourceOption("process");	
 		
 		for(AstroIntensityMap map : pixelMap) if(map != null) {	
-			if(process) map.process(workPath);
+			if(process) map.process();
 			else {
 				map.map.endAccumulation();
 				nextGeneration(); // Increment the map generation...

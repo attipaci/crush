@@ -75,13 +75,13 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 	}
 	
 	@Override
-	public void writeProducts(String path) {
-		super.writeProducts(path);
+	public void writeProducts() {
+		super.writeProducts();
 		
 		// Needs 'excessload'
 		if(hasOption("response.calc")) {
 			instrument.calcGainCoefficients(getSkyLoadTemperature());
-			try { instrument.writeGainCoefficients(path + File.separator + "response-" + getFileID() + ".dat", getASCIIHeader()); }
+			try { instrument.writeGainCoefficients(instrument.getOutputPath() + File.separator + "response-" + getFileID() + ".dat", getASCIIHeader()); }
 			catch(IOException e) { warning("Could not write nonlinearity coefficients: " + e.getMessage()); }
 		}
 	}

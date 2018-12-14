@@ -112,7 +112,7 @@ public abstract class Photometry extends SourceModel {
     }
 
     @Override
-    public void process(String workPath) throws Exception {
+    public void process() throws Exception {
         super.sync();
 
         DataPoint F = new DataPoint(sourceFlux);
@@ -217,11 +217,11 @@ public abstract class Photometry extends SourceModel {
     }
 
     @Override
-    public void write(String path) throws Exception {
+    public void write() throws Exception {
 
         report();
     
-        String coreName = path + File.separator + this.getDefaultCoreName();
+        String coreName = getOutputPath() + File.separator + this.getDefaultCoreName();
         String fileName = coreName + ".dat";
 
         PrintWriter out = new PrintWriter(new FileOutputStream(fileName));

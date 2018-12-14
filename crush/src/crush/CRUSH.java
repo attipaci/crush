@@ -60,8 +60,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      */
     private static final long serialVersionUID = 6284421525275783456L;
 
-    private static String version = "2.42-2";
-    private static String revision = "devel.6";
+    private final static String version = "2.42-2";
+    private final static String revision = "devel.7";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -70,7 +70,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
     public Instrument<?> instrument;
     public Vector<Scan<?,?>> scans = new Vector<Scan<?,?>>();
     public SourceModel source;
-    public String workPath = ".";
     public String[] commandLine;
     
 
@@ -486,7 +485,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
 
     public void updateRuntimeConfig() {
-        if(containsKey("outpath")) setOutpath();
+        setOutpath();
 
         maxThreads = Runtime.getRuntime().availableProcessors();
 
@@ -522,11 +521,10 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
     public void setOutpath() {
-        workPath = get("outpath").getPath();
-        File workFolder = new File(workPath);	
+        File workFolder = new File(instrument.getOutputPath());	
         if(workFolder.exists()) return;	
 
-        warning("The specified output path does not exists: '" + workPath + "'");
+        warning("The specified output path does not exists: '" + instrument.getOutputPath() + "'");
 
         if(!hasOption("outpath.create")) {
             error("Invalid static output path.");
@@ -588,7 +586,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
             Scan<?,?> scan = null;
             if(isConfigured("obslog")) {
                 scan = instrument.readScan(scanID, false);
-                scan.writeLog(get("obslog"),  workPath + File.separator + instrument.getName() + ".obs.log");
+                scan.writeLog(get("obslog"),  instrument.getOutputPath() + File.separator + instrument.getName() + ".obs.log");
             }
             else { 
                 scan = instrument.readScan(scanID, true);
@@ -702,13 +700,13 @@ public class CRUSH extends Configurator implements BasicMessaging {
             source.suggestions();
 
             if(source.isValid()) {
-                try { source.write(workPath); }
+                try { source.write(); }
                 catch(Exception e) { error(e); }
             }
             else warning("The reduction did not result in a source model.");
         }
 
-        for(Scan<?,?> scan : scans) scan.writeProducts(workPath);   
+        for(Scan<?,?> scan : scans) scan.writeProducts();   
     }
 
     public void iterate() throws Exception {
@@ -748,7 +746,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         summarize();
 
         if(solveSource()) if(tasks.contains("source")) {
-            source.process(workPath);
+            source.process();
             source.sync();
             
             info(" [Source] " + source.getProcessBrief());

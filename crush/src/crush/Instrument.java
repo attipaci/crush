@@ -124,14 +124,22 @@ implements TableFormatter.Entries, BasicMessaging {
         isValid = false;
         isInitialized = false;
         startupOptions = null;
+        
     }
-
+    
     public Configurator getOptions() {
         return options;
     }
 
     public Configurator getStartupOptions() { return startupOptions; }
 
+
+    public String getOutputPath() {
+        if(hasOption("outpath")) return option("outpath").getPath();
+        return ".";
+    }
+    
+    
     // TODO check for incompatible scans
     public void validate(Vector<Scan<?,?>> scans) throws Exception {
         if(hasOption("jackknife.alternate")) {

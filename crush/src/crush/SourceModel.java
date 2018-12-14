@@ -254,7 +254,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
     public abstract void add(Integration<?,?> integration);
 
-    public abstract void process(Scan<?,?> scan, String workPath);
+    public abstract void process(Scan<?,?> scan);
 
     public void postProcess(Scan<?,?> scan) {}
 
@@ -262,7 +262,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
     public abstract void setBase();
 
-    public abstract void write(String path) throws Exception;
+    public abstract void write() throws Exception;
 
     public abstract boolean isValid();
 
@@ -343,7 +343,7 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
         return "            * Check the console output for any problems when reading scans.\n";
     }
 
-    public abstract void process(String workPath) throws Exception;
+    public abstract void process() throws Exception;
 
 
     public void sync() throws Exception {
@@ -491,6 +491,10 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
     }
     
+   
+    public String getOutputPath() {
+        return getInstrument().getOutputPath();
+    }
     
     @Override
     public void parseHeader(Header header) throws Exception {
@@ -566,6 +570,8 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
     public void error(Throwable e) { CRUSH.error(this, e); }
 
 
+    
+    
     public synchronized SourceModel getRecycledCleanLocalCopy() {	
         if(recycler != null) if(!recycler.isEmpty()) {
             try { 

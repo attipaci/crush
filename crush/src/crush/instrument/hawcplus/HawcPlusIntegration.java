@@ -323,12 +323,12 @@ public class HawcPlusIntegration extends SofiaIntegration<HawcPlus, HawcPlusFram
 
 
     @Override
-    public void writeProducts(String path) {
-        super.writeProducts(path);
+    public void writeProducts() {
+        super.writeProducts();
 
         if(hasOption("write.flatfield")) {
             String fileName = option("write.flatfield").getValue();
-            if(fileName.isEmpty()) fileName = path + File.separator + "flatfield-" + getDisplayID() + ".fits";
+            if(fileName.isEmpty()) fileName = instrument.getOutputPath() + File.separator + "flatfield-" + getDisplayID() + ".fits";
             try { instrument.writeFlatfield(fileName); }
             catch(Exception e) { error(e); }
         }

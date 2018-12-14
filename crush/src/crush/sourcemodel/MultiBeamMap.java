@@ -127,7 +127,7 @@ public class MultiBeamMap extends AstroIntensityMap {
 	}
 	
 	@Override
-	public void process(Scan<?, ?> scan, String workPath) {
+	public void process(Scan<?, ?> scan) {
 		DualBeam dual = (DualBeam) scan;
 		
 		map.endAccumulation();
@@ -357,14 +357,14 @@ public class MultiBeamMap extends AstroIntensityMap {
 	
 	
 	@Override
-	public void process(String workPath) throws Exception {		
+	public void process() throws Exception {		
 		normalizeTransformer();
 		
 		backTransform();
 		
 		if(base != null) map.add(base);
 		
-		super.process(workPath);
+		super.process();
 	}
 	
 	

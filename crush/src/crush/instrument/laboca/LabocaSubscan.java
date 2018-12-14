@@ -117,10 +117,10 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	}
 
 	@Override
-	public void writeProducts(String path) {
-		super.writeProducts(path);
+	public void writeProducts() {
+		super.writeProducts();
 		if(hasOption("he3")) if(option("he3").is("gains")) {
-			try { writeTemperatureGains(path); }
+			try { writeTemperatureGains(instrument.getOutputPath()); }
 			catch(IOException e) { warning("Problem writing temperature gains."); }
 		}
 	}

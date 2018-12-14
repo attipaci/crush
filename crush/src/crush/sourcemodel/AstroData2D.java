@@ -159,7 +159,7 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
 
 
     @Override
-    public void process(Scan<?, ?> scan, String workPath) {
+    public void process(Scan<?, ?> scan) {
         DataType data = getData();
         
         endAccumulation();          
@@ -197,7 +197,7 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
 
 
         if(hasOption("scanmaps")) {
-            try { writeFits(workPath + File.separator + "scan-" + (int)scan.getMJD() + "-" + scan.getID() + ".fits"); }
+            try { writeFits(getOutputPath() + File.separator + "scan-" + (int)scan.getMJD() + "-" + scan.getID() + ".fits"); }
             catch(Exception e) { error(e); }
         }
 
@@ -210,7 +210,7 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
     }
 
     @Override
-    public void process(String workPath) throws Exception {
+    public void process() throws Exception {
         endAccumulation();
         
         nextGeneration(); // Increment the map generation...
@@ -288,7 +288,7 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
 
 
         if(hasSourceOption("intermediates")) {
-            try { writeFits(workPath + File.separator + "intermediate.fits"); }
+            try { writeFits(getOutputPath() + File.separator + "intermediate.fits"); }
             catch(Exception e) { error(e); }
         }
 

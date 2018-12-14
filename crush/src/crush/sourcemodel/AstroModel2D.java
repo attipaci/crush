@@ -874,15 +874,15 @@ public abstract class AstroModel2D extends SourceModel {
     
     
     @Override
-    public void write(String path) throws Exception {    
+    public void write() throws Exception {    
         // Remove the intermediate image file...
-        File intermediate = new File(path + File.separator + "intermediate." + getID() + ".fits");
+        File intermediate = new File(getOutputPath() + File.separator + "intermediate." + getID() + ".fits");
         if(intermediate.exists()) intermediate.delete();
 
         String idExt = "";
         if(getID() != null) if(getID().length() > 0) idExt = "." + getID();
 
-        String fileName = path + File.separator + getCoreName() + idExt + ".fits";
+        String fileName = getOutputPath() + File.separator + getCoreName() + idExt + ".fits";
            
         if(isEmpty()) {
             // No file is created, any existing file with same name is erased.

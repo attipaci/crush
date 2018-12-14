@@ -152,26 +152,26 @@ public class PolarMap extends SourceModel {
 	}
 
 	@Override
-	public void process(Scan<?, ?> scan, String workPath) {
-		N.process(scan, workPath);
+	public void process(Scan<?, ?> scan) {
+		N.process(scan);
 		if(usePolarization()) {
-			Q.process(scan, workPath);
-			U.process(scan, workPath);
+			Q.process(scan);
+			U.process(scan);
 		}
 	}
 	
 	@Override
-	public void process(String workPath) throws Exception {		
+	public void process() throws Exception {		
 		addProcessBrief("[N] ");
-		N.process(workPath);
+		N.process();
 		
 		if(usePolarization()) {
 			addProcessBrief("[Q] ");
-			Q.process(workPath);
+			Q.process();
 			N.mergeMask(Q.map); // Add the flagging data from Q
 			
 			addProcessBrief("[U] ");
-			U.process(workPath);
+			U.process();
 			N.mergeMask(U.map); // Add the flagging data from U
 		}
 	}
@@ -392,8 +392,8 @@ public class PolarMap extends SourceModel {
 	}
 	
 	@Override
-	public void write(String path) throws Exception {
-		N.write(path);
+	public void write() throws Exception {
+		N.write();
 		
 		if(!hasPolarization) {
 		    warning("No polarization products available.");
@@ -403,16 +403,16 @@ public class PolarMap extends SourceModel {
 			return;
 		}
 		
-		Q.write(path);
-		U.write(path);
+		Q.write();
+		U.write();
 		
 		// Write P (polarized power)
 		AstroIntensityMap P = getP();
-		P.write(path);	
+		P.write();	
 			
 		// Write I (total power)
 		AstroIntensityMap I = getI(P);
-		I.write(path);	
+		I.write();	
 		
 		// Write F (polarized fraction)
         double accuracy = hasOption("source.polar.fraction.rmsclip") ?
@@ -421,12 +421,12 @@ public class PolarMap extends SourceModel {
         AstroIntensityMap F = getPolarFraction(P, I, accuracy);
 		
 		if(hasOption("source.polar.fraction")) {
-			F.write(path);
+			F.write();
 		}
 
         if(hasOption("source.polar.angles")) {
             AstroIntensityMap A = getAngles(P, F);
-            A.write(path);
+            A.write();
         }
 	}
 	

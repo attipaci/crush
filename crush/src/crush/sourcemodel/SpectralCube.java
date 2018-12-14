@@ -451,8 +451,10 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
     }
 
     @Override
-    public void write(String path) throws Exception {    
-        super.write(path);
+    public void write() throws Exception {    
+        super.write();
+        
+        String path = getOutputPath();
         
         if(hasOption("write.flattened")) {
             writeFlattenedFits(path + File.separator + getCoreName() + ".flattened.fits");

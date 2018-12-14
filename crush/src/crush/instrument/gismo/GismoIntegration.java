@@ -488,11 +488,11 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 
 	
 	@Override
-	public void writeProducts(String path) {
-		super.writeProducts(path);
+	public void writeProducts() {
+		super.writeProducts();
 		
 		if(hasOption("log.saegains")) {
-			try { logSAEGains(path); }
+			try { logSAEGains(instrument.getOutputPath()); }
 			catch(IOException e) { error(e); }
 		}
 		

@@ -123,7 +123,7 @@ public class Pipeline implements Runnable, Serializable {
 		
 		if(scan.getSourceGeneration() > 0) scanSource.enableLevel = false;
        
-		scanSource.process(scan, crush.workPath);	
+		scanSource.process(scan);	
 		
 		crush.source.add(scanSource, scan.weight);
 	
