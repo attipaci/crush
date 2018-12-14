@@ -57,38 +57,80 @@ public class HirmesPixel extends SingleColorPixel {
         int virtcol = (Hirmes.subCols-1) - readcol;
         
         sub = readrow / Hirmes.rows;
-         
-        if(zeroIndex < Hirmes.lowresPixels) {
-            detArray = Hirmes.LORES_ARRAY;
+        
+        detArray = zeroIndex < Hirmes.lowresPixels ? Hirmes.LORES_ARRAY : Hirmes.HIRES_ARRAY;
+        
+        if(virtcol < 0) {
+            // Blind SQUIDs...
+            flag(FLAG_BLIND);
+            detArray = 
+            subcol = -1;
+            col = -sub;
+            mux = readrow;
+            pin = -1;
+        }
+        
+        else if(detArray == Hirmes.LORES_ARRAY) {
+            // LORES array...
             
             row = readrow;
             subcol = virtcol;
             
             subrow = row % Hirmes.rows;  
             col = subcol + sub * Hirmes.subCols; 
+            
+            // It's easiest to index MUXes from reverse indexed physical columns...
+            final int mcol = (Hirmes.lowresCols-1) - col; 
+            mux = mcol / 4;
+            
+            // MUX numbers are pairwise swapped...
+            mux ^= 1;
+            
+            // Address lines increase by 8 along the reversed columns
+            pin = 8 * (mcol % 4);
+            
+            // Address lines are increasing away from center row.
+            if(row > 7) {
+                mux += 16;
+                pin += (row % 8); 
+            }
+            else {
+                pin += ((7-row) % 8);
+            }   
+           
         }
+        
         else {
-            detArray = Hirmes.HIRES_ARRAY;
-                       
+            // HIRES array...
+            
             subrow = virtcol % Hirmes.rows;
             subcol = (readcol == Hirmes.subCols) ? -1 : 2 * (readrow - sub * Hirmes.rows) + virtcol / Hirmes.rows;
            
             row = sub * Hirmes.rows + subrow;
             col = sub * Hirmes.subCols + subcol;
+            
+            // MUX numbers in quartiles.
+            mux = 32;
+            if(col > 3) mux++;      // If we are on the right side, the MUX is 1 higher
+            if(row > 7) mux += 2;   // If we are on top half, then MUX is higher by 2...
+            
+            // Address lines increase by 8 with columns...
+            pin = 8 * (subcol % 4);
+            
+            // Address lines are increasing away from center row
+            if(row > 7) {
+                mux += 16;
+                pin += (row % 8);
+            }
+            else {
+                pin += ((7-row) % 8);
+            }
+                
         }
-        
-        if(readcol == Hirmes.subCols) {
-            flag(FLAG_BLIND);
-            subcol = -1;
-            col = -sub;
-        }
-
           
-        // TODO
-        //hirmes.mux = hirmes.getMuxIndex(sub, row, col);
-        //pin = hirmes.getPinIndex(sub, row, col);
+        seriesArray = mux >>> 1;   // series array on pair-wise MUX, TODO ckeck!
         
-        // TODO seriesArray, biasLine
+        // TODO biasLine
     }
     
     
