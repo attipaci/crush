@@ -65,7 +65,7 @@ public class CSOTauTable extends LocalAverage<CSOTauTable.Entry> {
 	}
 	
 	public void setOptions(Configurator options) {
-		if(options.containsKey("window")) timeWindow = options.get("window").getDouble() * Unit.hour;
+		if(options.containsKey("window")) timeWindow = options.option("window").getDouble() * Unit.hour;
 	}
 	
 	protected void read(final int iMJD, String fileName) throws IOException {

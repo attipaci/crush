@@ -65,7 +65,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 			else temperatureCorrect();
 			
 			if(he3.containsKey("maxrms")) {
-				double maxrms = he3.get("maxrms").getDouble() * Unit.mK;
+				double maxrms = he3.option("maxrms").getDouble() * Unit.mK;
 				if(rmsHe3 > maxrms) {
 					warning("Scan " + scan.getID() + " temperature fluctuations exceed limit. Removing from dataset.");
 					clear();

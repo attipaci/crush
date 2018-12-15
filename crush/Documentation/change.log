@@ -8,6 +8,11 @@
 	neither contained the self-extraction code, not the AUTORUN directive. 
 	Both have been fixed.
 
+	[NEW] {HIRMES} Updated to work with v.7 sims, complete with correlated
+	noise on MUX rows ('mux') and cols ('pins'), as well as separated
+	temperature and sky correlated noise and using blind pixels for
+	cleaner speparation of these in imaging mode.
+
 	[FIX] Spectral axis CRVAL header value in FITS was not cast to the
 	proper units, but was written in their natural SI units. Now fixed.
 
@@ -18,11 +23,15 @@
 	[API] Change CRUSH API to make it easier to call CRUSH from another
 	Java program.
 
-	[DOC] New markdown/HTML for 'Calling CRUSH from a Java program' 
-	describing the top-level CRUSH API (README.java).
+	[DOC] {README.api} New markdown/HTML for describing the top-level 
+	CRUSH API 
+
+	[DOC] {CRUSH.java} Inline javadoc for the public CRUSH API.
 
 	[CODE] Change static variable CRUSH.workPath into proper instance 
 	variable.
+
+
 
 
 2.42-1 (12 Oct 2018) 

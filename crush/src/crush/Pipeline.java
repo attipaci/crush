@@ -62,11 +62,11 @@ public class Pipeline implements Runnable, Serializable {
 	public int getThreadCount() { return threadCount; }
 
 	public boolean hasOption(String name) {
-		return crush.isConfigured(name);
+		return crush.hasOption(name);
 	}
 	
 	public Configurator option(String name) {
-		return crush.get(name);
+		return crush.option(name);
 	}
 	
 	public void setOrdering(List<String> ordering) { this.ordering = ordering; }

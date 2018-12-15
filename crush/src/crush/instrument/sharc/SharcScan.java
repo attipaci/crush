@@ -109,7 +109,7 @@ public class SharcScan extends CSOScan<Sharc, SharcIntegration> implements DualB
 		
 		String filterName = Integer.toString((int)filter) + "um";
 		info("Setting options for " + filterName + " filter.");
-		if(!hasOption(filterName)) instrument.getOptions().parseSilent(filterName);
+		if(!hasOption(filterName)) instrument.getOptions().setOption(filterName);
 		
 		super.validate();		
 	}

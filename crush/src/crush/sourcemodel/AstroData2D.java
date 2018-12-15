@@ -138,9 +138,9 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
         }
 
         Configurator filter = sourceOption("filter");
-        String mode = filter.isConfigured("type") ? filter.get("type").getValue() : "convolution";
+        String mode = filter.hasOption("type") ? filter.option("type").getValue() : "convolution";
 
-        double filterBlanking = (allowBlanking && filter.isConfigured("blank")) ? filter.get("blank").getDouble() : Double.NaN;
+        double filterBlanking = (allowBlanking && filter.hasOption("blank")) ? filter.option("blank").getDouble() : Double.NaN;
 
         filter(getFilterScale(filter), filterBlanking, mode.equalsIgnoreCase("fft"));  
     }
@@ -151,7 +151,7 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
 
         String directive = "auto";
 
-        if(filter.isConfigured("fwhm")) directive = filter.get("fwhm").getValue().toLowerCase();
+        if(filter.hasOption("fwhm")) directive = filter.option("fwhm").getValue().toLowerCase();
 
         return directive.equals("auto") ? 5.0 * getSourceSize() : Double.parseDouble(directive) * getInstrument().getSizeUnit().value();
 
@@ -174,7 +174,7 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
             try { despike.mapValueTo("level"); }
             catch(LockedException e) {} // TODO...
 
-            if(despike.isConfigured("level")) level = despike.get("level").getDouble();
+            if(despike.hasOption("level")) level = despike.option("level").getDouble();
             data.despike(level);
         }
         
@@ -190,7 +190,7 @@ public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType e
             catch (LockedException e) {}
             
             String method = "rms";
-            if(weighting.isConfigured("method")) method = weighting.get("method").getValue().toLowerCase();
+            if(weighting.hasOption("method")) method = weighting.option("method").getValue().toLowerCase();
             scan.weight = 1.0 / getChi2(method.equals("robust"));
             if(Double.isNaN(scan.weight)) scan.weight = 0.0;
         }

@@ -70,7 +70,7 @@ public class CorrelatedModality extends Modality<CorrelatedMode> {
 	@Override
 	public void setOptions(Configurator option) {
 		super.setOptions(option);
-		solveSignal = !option.isConfigured("nosignals");
+		solveSignal = !option.hasOption("nosignals");
 	}
 	
 	public void setSkipFlags(int pattern) {

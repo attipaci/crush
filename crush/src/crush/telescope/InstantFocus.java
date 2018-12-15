@@ -94,30 +94,30 @@ public class InstantFocus implements Serializable, Cloneable {
 	public void deriveFrom(Asymmetry2D asym, DataPoint xElongation, Configurator options) {
 		x = y = z = null;
 		
-		if(options.isConfigured("focus.elong0")) 
-			xElongation.add(-0.01 * options.get("focus.elong0").getDouble());
+		if(options.hasOption("focus.elong0")) 
+			xElongation.add(-0.01 * options.option("focus.elong0").getDouble());
 		
-		double s2n = options.isConfigured("focus.significance") ? options.get("focus.significance").getDouble() : 2.0;
+		double s2n = options.hasOption("focus.significance") ? options.option("focus.significance").getDouble() : 2.0;
 			
 		if(asym != null) {
-			if(options.isConfigured("focus.xcoeff")) if(asym.getX().significance() > s2n) {
+			if(options.hasOption("focus.xcoeff")) if(asym.getX().significance() > s2n) {
 				x = new DataPoint(asym.getX());
-				x.scale(-Unit.mm / options.get("focus.xcoeff").getDouble());
-				if(options.isConfigured("focus.xscatter")) 
-					x.setRMS(ExtraMath.hypot(x.rms(), options.get("focus.xscatter").getDouble() * Unit.mm));
+				x.scale(-Unit.mm / options.option("focus.xcoeff").getDouble());
+				if(options.hasOption("focus.xscatter")) 
+					x.setRMS(ExtraMath.hypot(x.rms(), options.option("focus.xscatter").getDouble() * Unit.mm));
 			}
-			if(options.isConfigured("focus.ycoeff")) if(asym.getY().significance() > s2n) {
+			if(options.hasOption("focus.ycoeff")) if(asym.getY().significance() > s2n) {
 				y = new DataPoint(asym.getY());
-				y.scale(-Unit.mm / options.get("focus.ycoeff").getDouble());			
-				if(options.isConfigured("focus.yscatter")) 
-					y.setRMS(ExtraMath.hypot(y.rms(), options.get("focus.yscatter").getDouble() * Unit.mm));
+				y.scale(-Unit.mm / options.option("focus.ycoeff").getDouble());			
+				if(options.hasOption("focus.yscatter")) 
+					y.setRMS(ExtraMath.hypot(y.rms(), options.option("focus.yscatter").getDouble() * Unit.mm));
 			}
 		}
-		if(xElongation != null) if(xElongation.significance() > s2n) if(options.isConfigured("focus.zcoeff")) {
+		if(xElongation != null) if(xElongation.significance() > s2n) if(options.hasOption("focus.zcoeff")) {
 			z = new DataPoint(xElongation);			
-			z.scale(-Unit.mm / options.get("focus.zcoeff").getDouble());
-			if(options.isConfigured("focus.zscatter")) 
-				z.setRMS(ExtraMath.hypot(z.rms(), options.get("focus.zscatter").getDouble() * Unit.mm));
+			z.scale(-Unit.mm / options.option("focus.zcoeff").getDouble());
+			if(options.hasOption("focus.zscatter")) 
+				z.setRMS(ExtraMath.hypot(z.rms(), options.option("focus.zscatter").getDouble() * Unit.mm));
 		}	
 	}
 	

@@ -82,11 +82,11 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 	public BasicHDU<?>[] getHDUs() { return HDU; }
 	
 	public boolean hasOption(String key) {
-		return options.isConfigured(key);
+		return options.hasOption(key);
 	}
 	
 	public Configurator option(String key) {
-		return options.get(key);
+		return options.option(key);
 	}
 	
 	public int getSubarrayIndex() { return fileName.charAt(2) - 'a'; }
@@ -139,12 +139,12 @@ public class Scuba2Fits implements Comparable<Scuba2Fits> {
 		File sdf = new File(sdfName);
 		if(!sdf.exists()) throw new FileNotFoundException("SDF file '" + sdfName + "' not found."); 
 					
-		if(!options.isConfigured("ndf2fits")) 
+		if(!options.hasOption("ndf2fits")) 
 			throw new FileNotFoundException("Please set path to 'ndf2fits' with the 'ndf2fits' option. E.g.\n"
 					+ "  ndf2fits = /usr/local/starlink/bin/ndf2fits\n");
 		
 		String inName = sdf.getAbsolutePath();
-		String command = options.get("ndf2fits").getValue();
+		String command = options.option("ndf2fits").getValue();
 		String outName = sdf.getParentFile().getPath() + File.separator + getFitsName(sdf.getName());
 		
 		Runtime runtime = Runtime.getRuntime();

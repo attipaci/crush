@@ -222,7 +222,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	   
     public Vector2D getPointingCorrection(Configurator option) {
         Vector2D correction = option.isEnabled ? option.getVector2D() : new Vector2D();
-        if(option.isConfigured("offset")) correction.add(option.get("offset").getVector2D());
+        if(option.hasOption("offset")) correction.add(option.option("offset").getVector2D());
         correction.scale(instrument.getSizeUnit().value());
         return correction;
     }
@@ -544,19 +544,19 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		try { option.mapValueTo("file"); }
 		catch(LockedException e) {}
 		
-		String fileName = option.isConfigured("file") ? 
-				option.get("file").getPath() : defaultFileName;
+		String fileName = option.hasOption("file") ? 
+				option.option("file").getPath() : defaultFileName;
 
-		String format = option.isConfigured("format") ? 
-				option.get("format").getValue() : 
+		String format = option.hasOption("format") ? 
+				option.option("format").getValue() : 
 				"date(yyyy-MM-dd)  id\tobject\tobsmins(f1)\tAZd(f1) ELd(f1)\tRAh(f1) DECd(f1)";
 		
 		// Allow literal '\t' to represent a tab, like in C or Java 
 		format = Util.fromEscapedString(format);
 				
 		int conflictPolicy = LogFile.CONFLICT_DEFAULT;
-		if(option.isConfigured("conflict")) {
-			String policy = option.get("conflict").getValue().toLowerCase();
+		if(option.hasOption("conflict")) {
+			String policy = option.option("conflict").getValue().toLowerCase();
 			if(policy.equals("overwrite")) conflictPolicy = LogFile.CONFLICT_OVERWRITE;
 			else if(policy.equals("version")) conflictPolicy = LogFile.CONFLICT_VERSION;
 		}
@@ -724,7 +724,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		try { gains.mapValueTo("estimator"); }
 		catch(LockedException e) {} // TODO...
 	
-		if(gains.isConfigured("estimator")) if(gains.get("estimator").is("median")) isRobust = true; 
+		if(gains.hasOption("estimator")) if(gains.option("estimator").is("median")) isRobust = true; 
 
 		WeightedPoint[] G = WeightedPoint.createArray(instrument.storeChannels);
 		

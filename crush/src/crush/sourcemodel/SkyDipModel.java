@@ -74,21 +74,21 @@ public class SkyDipModel {
 	public void setOptions(Configurator options) {
 		this.options = options;	
 		
-		if(options.isConfigured("elrange")) {
-			elRange = options.get("elrange").getRange(true);
+		if(options.hasOption("elrange")) {
+			elRange = options.option("elrange").getRange(true);
 			elRange.scale(Unit.deg);
 		}
 		
-		if(options.isConfigured("attempts")) {
-		    attempts = options.get("attempts").getInt();
+		if(options.hasOption("attempts")) {
+		    attempts = options.option("attempts").getInt();
 		}
 		
-		uniformWeights = options.isConfigured("uniform");
+		uniformWeights = options.hasOption("uniform");
 		
 		parameters.clear();
 		
-		if(options.isConfigured("fit")) {
-			List<String> names = options.get("fit").getList();
+		if(options.hasOption("fit")) {
+			List<String> names = options.option("fit").getList();
 			for(String name : names) {
 				name = name.toLowerCase();
 				
@@ -113,7 +113,7 @@ public class SkyDipModel {
 	}
 	
 	protected void initParms(SkyDip skydip) {   
-		if(options.isConfigured("tsky")) Tsky.setValue(options.get("tsky").getDouble() * Unit.K);
+		if(options.hasOption("tsky")) Tsky.setValue(options.option("tsky").getDouble() * Unit.K);
 		else if(skydip.Tamb.weight() > 0.0) Tsky.setValue(skydip.Tamb.value());
 		
 		Range signalRange = skydip.getSignalRange();

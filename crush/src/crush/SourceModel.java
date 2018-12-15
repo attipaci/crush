@@ -138,11 +138,11 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
 
     public boolean hasOption(String name) {
-        return getOptions().isConfigured(name);
+        return getOptions().hasOption(name);
     }
 
     public Configurator option(String name) {
-        return getOptions().get(name);
+        return getOptions().option(name);
     }
 
     public boolean hasSourceOption(String name) { return hasOption("source." + name); }
@@ -318,11 +318,11 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
 
 
         Configurator options = getOptions();
-        if(options.isConfigured("deep")) buf.append(
+        if(options.hasOption("deep")) buf.append(
                 "            * Reduce with 'faint' instead of 'deep'.\n");
-        else if(options.isConfigured("faint")) buf.append(
+        else if(options.hasOption("faint")) buf.append(
                 "            * Reduce with default settings instead of 'faint'.\n");
-        else if(!options.isConfigured("bright")) buf.append(
+        else if(!options.hasOption("bright")) buf.append(
                 "            * Reduce with 'bright'.\n");
 
         instrument.troubleshootFewPixels();

@@ -299,7 +299,7 @@ public class DetectionTool {
 		
 		for(int i=0; i<regions.getSize(); i++) {
 			
-			Region2D source = (Region2D) regions.get(i);
+			Region2D source = (Region2D) regions.option(i);
 			
 			final double S2N = source.peak / source.dpeak;
 			lastS2N = S2N;

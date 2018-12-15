@@ -80,16 +80,16 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 	}
 	
 	public void setOptions(Configurator option) {	
-		resolution = option.isConfigured("resolution") ? option.get("resolution").getDouble() * Unit.s : 0.0;
-		trigger = option.isConfigured("trigger") ? option.get("trigger").getValue() : null;
+		resolution = option.hasOption("resolution") ? option.option("resolution").getDouble() * Unit.s : 0.0;
+		trigger = option.hasOption("trigger") ? option.option("trigger").getValue() : null;
 		
-		solveGains = !option.isConfigured("nogains");	
-		phaseGains = option.isConfigured("phasegains");
+		solveGains = !option.hasOption("nogains");	
+		phaseGains = option.hasOption("phasegains");
 
-		boolean noGainField = option.isConfigured("nofield");
+		boolean noGainField = option.hasOption("nofield");
 		
-		setGainRange(option.isConfigured("gainrange") ? option.get("gainrange").getRange() : Range.getFullRange());
-		setGainDirection(option.isConfigured("signed") ? Instrument.GAINS_SIGNED : Instrument.GAINS_BIDIRECTIONAL);
+		setGainRange(option.hasOption("gainrange") ? option.option("gainrange").getRange() : Range.getFullRange());
+		setGainDirection(option.hasOption("signed") ? Instrument.GAINS_SIGNED : Instrument.GAINS_BIDIRECTIONAL);
 		
 		for(Mode mode : this) {
 			if(noGainField) mode.setGainProvider(null);

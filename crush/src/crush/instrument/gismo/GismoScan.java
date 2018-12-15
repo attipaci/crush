@@ -102,19 +102,19 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 		Vector2D correction = super.getPointingCorrection(option);
 		IRAMPointingModel model = null;
 		
-		if(option.isConfigured("model")) {
+		if(option.hasOption("model")) {
 			try { 
 				double UT = (getMJD() % 1.0) * Unit.day;
-				model = new IRAMPointingModel(option.get("model").getPath());
+				model = new IRAMPointingModel(option.option("model").getPath());
 			
 				// Keep the pointing model referenced to the nominal array center even if
 				// pointing on a different location on the array...
 				model.addNasmythOffset(instrument.getPointingCenterOffset());	
 				
-				if(option.isConfigured("model.static")) model.setStatic(true);
+				if(option.hasOption("model.static")) model.setStatic(true);
 				
 				Vector2D modelCorr = model.getCorrection(horizontal, UT, ambientT);
-				if(!option.isConfigured("model.incremental")) modelCorr.subtract(observingModel.getCorrection(horizontal, UT, ambientT));	
+				if(!option.hasOption("model.incremental")) modelCorr.subtract(observingModel.getCorrection(horizontal, UT, ambientT));	
 				
 				info("Got pointing from model: " + 
 						Util.f1.format(modelCorr.x() / Unit.arcsec) + ", " +
@@ -125,14 +125,14 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 				else correction.add(modelCorr);
 			}
 			catch(IOException e) {
-				warning("Cannot read pointing model from " + option.get("model").getValue());
+				warning("Cannot read pointing model from " + option.option("model").getValue());
 			}
 		}
 			
-		if(option.isConfigured("table")) {
+		if(option.hasOption("table")) {
 			try { 
 				if(model == null) model = new IRAMPointingModel();
-				String logName = option.get("table").getPath();
+				String logName = option.option("table").getPath();
 				correction.add(PointingTable.get(logName).getIncrement(getMJD(), ambientT, horizontal, model));
 			}
 			catch(Exception e) {

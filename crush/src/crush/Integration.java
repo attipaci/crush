@@ -1041,7 +1041,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         catch(LockedException e) {} // TODO...
         
         boolean isGainRobust = false;  
-        if(gainOption.isConfigured("estimator")) if(gainOption.get("estimator").is("median")) isGainRobust = true; 
+        if(gainOption.hasOption("estimator")) if(gainOption.option("estimator").is("median")) isGainRobust = true; 
         
         if(modality.updateAllGains(this, isGainRobust)) {
             instrument.census();
@@ -1563,18 +1563,18 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 
     public void despike(Configurator despike) {
-        String method = despike.isConfigured("method") ? despike.get("method").getValue().toLowerCase() : "absolute";
+        String method = despike.hasOption("method") ? despike.option("method").getValue().toLowerCase() : "absolute";
 
         double level = 10.0;
 
         try { despike.mapValueTo("level"); }
         catch(LockedException e) {}	 // TODO...
 
-        if(despike.isConfigured("level")) level = despike.get("level").getDouble();
+        if(despike.hasOption("level")) level = despike.option("level").getDouble();
 
-        double flagFraction = despike.isConfigured("flagfraction") ? despike.get("flagfraction").getDouble() : 1.0;
-        int flagCount = despike.isConfigured("flagcount") ? despike.get("flagcount").getInt() : Integer.MAX_VALUE;
-        int frameSpikes = despike.isConfigured("framespikes") ? despike.get("framespikes").getInt() : instrument.size();
+        double flagFraction = despike.hasOption("flagfraction") ? despike.option("flagfraction").getDouble() : 1.0;
+        int flagCount = despike.hasOption("flagcount") ? despike.option("flagcount").getInt() : Integer.MAX_VALUE;
+        int frameSpikes = despike.hasOption("framespikes") ? despike.option("framespikes").getInt() : instrument.size();
 
         if(method.equals("neighbours") || method.equals("neighbors")) {
             int delta = isPhaseModulated() ? 1 : framesFor(0.2 * getPointCrossingTime());
@@ -2848,7 +2848,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             Configurator spectrumOption = option("write.spectrum");
             String argument = spectrumOption.getValue();
             String windowName = argument.length() == 0 ? "Hamming" : argument;
-            int windowSize = spectrumOption.isConfigured("size") ? spectrumOption.get("size").getInt() : 2*framesFor(filterTimeScale);
+            int windowSize = spectrumOption.hasOption("size") ? spectrumOption.option("size").getInt() : 2*framesFor(filterTimeScale);
 
             try { writeSpectra(path, windowName, windowSize); }
             catch(Exception e) { error(e); }
@@ -3221,7 +3221,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         try { weighting.mapValueTo("method"); }
         catch(LockedException e) {}
 
-        if(weighting.isConfigured("method")) method = weighting.get("method").getValue().toLowerCase();
+        if(weighting.hasOption("method")) method = weighting.option("method").getValue().toLowerCase();
 
         getChannelWeights(method);
 

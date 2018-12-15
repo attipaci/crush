@@ -262,7 +262,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(hasOption("blind")) setBlindChannels(option("blind").getList()); 
         if(hasOption("flag")) flagChannels(option("flag").getList()); 
 
-        if(options.containsKey("flag")) flagFields(options.get("flag"));
+        if(options.containsKey("flag")) flagFields(options.option("flag"));
         
         for(Channel channel : this) if(channel.weight == 0.0) channel.flag(Channel.FLAG_DEAD);
         
@@ -411,7 +411,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         info("Setting FITS header options.");
 
-        final Hashtable<String, Vector<String>> conditionals = options.get("fits").conditionals;
+        final Hashtable<String, Vector<String>> conditionals = options.option("fits").conditionals;
 
         for(String condition : conditionals.keySet()) {		    
             StringTokenizer tokens = new StringTokenizer(condition, "?");
@@ -435,12 +435,12 @@ implements TableFormatter.Entries, BasicMessaging {
     protected void setFitsAssignments(Header header) {
         if(!options.containsKey("fits.assign")) return;
 
-        Configurator assignments = options.get("fits.assign");
+        Configurator assignments = options.option("fits.assign");
 
         for(String fitsKey : assignments.branches.keySet()) {
             fitsKey = fitsKey.toUpperCase();
             if(header.containsKey(fitsKey)) {
-                String arg = options.get("fits.assign." + fitsKey).getValue();
+                String arg = options.option("fits.assign." + fitsKey).getValue();
                 StringTokenizer tokens = new StringTokenizer(arg, " \t:=");
                 if(tokens.countTokens() == 0) continue;
                 String option = tokens.nextToken();
@@ -473,15 +473,15 @@ implements TableFormatter.Entries, BasicMessaging {
     }
     
     public boolean hasOption(String name) {
-        return options.isConfigured(name);
+        return options.hasOption(name);
     }
 
     public Configurator option(String name) {
-        return options.get(name);
+        return options.option(name);
     }
 
     public void setOption(String line) {
-        options.parseSilent(line);
+        options.setOption(line);
     }
 
     public void forget(String key) {
@@ -496,7 +496,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
 
     public void flagFields(Configurator option) {
-        for(String name : option.getKeys(false)) if(option.isConfigured(name)) flagField(name, option.get(name).getList());   
+        for(String name : option.getKeys(false)) if(option.hasOption(name)) flagField(name, option.option(name).getList());   
     }
 
     public void flagField(String fieldName, List<String> specs) {
@@ -671,7 +671,7 @@ implements TableFormatter.Entries, BasicMessaging {
             Configurator option = option("group");
             for(String name : option.getTimeOrderedKeys()) {
                 ChannelGroup<ChannelType> channels = new ChannelGroup<ChannelType>(name);
-                for(String spec : option.get(name).getList()) channels.add(spec, lookup, Channel.FLAG_DEAD);
+                for(String spec : option.option(name).getList()) channels.add(spec, lookup, Channel.FLAG_DEAD);
                 addGroup(name, channels);
             }
         }
@@ -691,7 +691,7 @@ implements TableFormatter.Entries, BasicMessaging {
             Configurator option = option("division");
             for(String name : option.getTimeOrderedKeys()) {
                 ChannelDivision<ChannelType> division = new ChannelDivision<ChannelType>(name);
-                for(String groupName : option.get(name).getList()) {
+                for(String groupName : option.option(name).getList()) {
                     ChannelGroup<ChannelType> group = groups.get(groupName);
                     if(group != null) division.add(group);
                     else warning("Channel group '" + groupName + "' is undefined.");
@@ -769,8 +769,8 @@ implements TableFormatter.Entries, BasicMessaging {
         if(options.containsKey("division")) {
             Configurator option = option("division");
             for(String name : option.getTimeOrderedKeys()) {
-                String id = option.isConfigured(name + ".id") ? option(name + ".id").getValue() : name;
-                if(option.isConfigured(name + ".gainfield")) {
+                String id = option.hasOption(name + ".id") ? option(name + ".id").getValue() : name;
+                if(option.hasOption(name + ".gainfield")) {
                     try {
                         Field field = getChannelInstance(-1).getClass().getField(option(name + ".gainfield").getValue());
                         addModality(new CorrelatedModality(name, id, divisions.get(name), field));
@@ -781,7 +781,7 @@ implements TableFormatter.Entries, BasicMessaging {
                 }
                 else addModality(new CorrelatedModality(name, id, divisions.get(name)));
 
-                if(option.isConfigured(name + ".gainflag")) {
+                if(option.hasOption(name + ".gainflag")) {
                     modalities.get(name).setGainFlag(option(name + ".gainflag").getInt());
                 }
             }

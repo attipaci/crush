@@ -51,9 +51,9 @@ public class MakoPixelMatch extends ToneIdentifier<MakoFrequencyID> {
 	
 	public MakoPixelMatch(Configurator options) throws IOException {
 		super(options);
-		if(options.isConfigured("uniform")) uniformize();
-		if(options.isConfigured("trange")) {
-			deltaRange = options.get("trange").getRange();
+		if(options.hasOption("uniform")) uniformize();
+		if(options.hasOption("trange")) {
+			deltaRange = options.option("trange").getRange();
 			deltaRange.scale(Unit.K);
 		}
 		read(options.getValue());

@@ -61,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private final static String version = "2.42-2";
-    private final static String revision = "devel.7";
+    private final static String revision = "devel.8";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -187,58 +187,9 @@ public class CRUSH extends Configurator implements BasicMessaging {
         validate();
     }
 
-    /**
-     * The simplest way to specify extra reduction options to CRUSH after initialization with the public constructor.
-     * The argument is expected to be a &lt;key&gt;[=][&lt;value&gt;] pair with the separator being any number of '=' characters or
-     * white spaces following the the &lt;key&gt; argument. The rules are the same as for command-line options to 
-     * CRUSH (except no leading dash '-', and the same as for lines in the configuration file. In fact, this 
-     * method is nothing but a convenient wrapper for {@link jnum.Configurator#parse(String)}, but rather than throwing a
-     * {@link jnum.LockedException}, it simply returns true or false depending whether the option was successfully set, or else
-     * blocked by an existing lock.
-     * 
-     * 
-     * @param line  The option specification as a &lt;key&gt;[=][&lt;value&gt;]. E.g. "faint" or "datapath=/home/data/".
-     * @return      <tt>true</tt> if the option was successfully applied, or <tt>false</tt> if an existing lock on 
-     *              &lt;key&gt; prevented setting a new value.
-     *      
-     * @see #parse(String).
-     */
-    public final boolean setOption(String line) {
-        try { 
-            parse(line);
-            return true;
-        }
-        catch(LockedException e) { return false; }
-    }
-   
-    /**
-     * Checks if a specific option key was set and is active. Same as {@link #isConfigured(String)} just with a more
-     * obvious name...
-     * 
-     * 
-     * @param name  The name of the option <tt>key</tt>.
-     * @return      <tt>true</tt> if the option is explicitly set and is active, or <tt>false</tt> otherwise.
-     * 
-     * @see #isConfigured(String)
-     */
-    public boolean hasOption(String name) {
-        return isConfigured(name);
-    }
-
-    /**
-     * Returns the Configurator brack for a given CRUSH option. Same as {@link get(String)} just with 
-     * a more obvious name...
-     * 
-     * @param   name
-     * @return  The {@link jnum.Configurator} option branch for the specified name argument. 
-     * 
-     * @see #get(String)
-     */
-    public Configurator option(String name) { return get(name); }
-
     
     private void parseArgument(String arg) {
-        if(arg.charAt(0) == '-') parseSilent(arg.substring(1));
+        if(arg.charAt(0) == '-') setOption(arg.substring(1));
         else {
             try { read(arg); }
             catch(OutOfMemoryError e) { exit(1); }
@@ -384,7 +335,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         
         System.gc();
               
-        if(!isConfigured("lab")) initSourceModel();
+        if(!hasOption("lab")) initSourceModel();
 
         initPipelines();
 
@@ -489,15 +440,15 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         maxThreads = Runtime.getRuntime().availableProcessors();
 
-        if(isConfigured("threads")) {
-            maxThreads = get("threads").getInt();
+        if(hasOption("threads")) {
+            maxThreads = option("threads").getInt();
             if(maxThreads < 1) maxThreads = 1;
         }
-        else if(isConfigured("idle")) {
-            String spec = get("idle").getValue();
+        else if(hasOption("idle")) {
+            String spec = option("idle").getValue();
             if(spec.charAt(spec.length() - 1) == '%') maxThreads -= (int)Math.round(0.01 * 
                     Double.parseDouble(spec.substring(0, spec.length()-1)) * maxThreads);
-            else maxThreads -= get("idle").getInt();
+            else maxThreads -= option("idle").getInt();
         }
         maxThreads = Math.max(1, maxThreads);
 
@@ -584,15 +535,15 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         try {
             Scan<?,?> scan = null;
-            if(isConfigured("obslog")) {
+            if(hasOption("obslog")) {
                 scan = instrument.readScan(scanID, false);
-                scan.writeLog(get("obslog"),  instrument.getOutputPath() + File.separator + instrument.getName() + ".obs.log");
+                scan.writeLog(option("obslog"),  instrument.getOutputPath() + File.separator + instrument.getName() + ".obs.log");
             }
             else { 
                 scan = instrument.readScan(scanID, true);
                 scan.validate();
                 if(scan.size() == 0) warning(scan, "Scan " + scan.getID() + " contains no valid data. Skipping.");
-                else if(isConfigured("subscans.split")) scans.addAll(scan.split());	
+                else if(hasOption("subscans.split")) scans.addAll(scan.split());	
                 else scans.add(scan);
 
                 System.gc();
@@ -667,16 +618,16 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         status(this, "Reducing " + scans.size() + " scan(s).");
 
-        if(isConfigured("bright")) info("Bright source reduction.");
-        else if(isConfigured("faint")) info("Faint source reduction.");
-        else if(isConfigured("deep")) info("Deep source reduction.");
+        if(hasOption("bright")) info("Bright source reduction.");
+        else if(hasOption("faint")) info("Faint source reduction.");
+        else if(hasOption("deep")) info("Deep source reduction.");
         else info("Default reduction.");
 
-        if(isConfigured("extended")) info("Assuming extended source(s).");
+        if(hasOption("extended")) info("Assuming extended source(s).");
 
         info("Assuming " + Util.f1.format(instrument.getSourceSize()/instrument.getSizeUnit().value()) + " " + instrument.getSizeUnit().name() + " sized source(s).");
 
-        if(isConfigured("rounds")) rounds = get("rounds").getInt();
+        if(hasOption("rounds")) rounds = option("rounds").getInt();
         
         for(int iteration=1; iteration<=rounds; iteration++) {
             consoleReporter.addLine();
@@ -710,7 +661,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     }
 
     public void iterate() throws Exception {
-        List<String> ordering = get("ordering").getLowerCaseList();
+        List<String> ordering = option("ordering").getLowerCaseList();
         ArrayList<String> tasks = new ArrayList<String>(ordering.size());
 
         for(int i=0; i < ordering.size(); i++) {
@@ -753,7 +704,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
             source.clearProcessBrief();
         }
 
-        if(isConfigured("whiten")) if(get("whiten").isConfigured("once")) purge("whiten");
+        if(hasOption("whiten")) if(option("whiten").hasOption("once")) purge("whiten");
     }
 
 
@@ -791,7 +742,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
         if(!containsKey("object")) return;
 
-        Hashtable<String, Vector<String>> settings = get("object").conditionals;
+        Hashtable<String, Vector<String>> settings = option("object").conditionals;
         for(String spec : settings.keySet()) if(sourceName.startsWith(spec)) 
             instrument.getOptions().parseAll(settings.get(spec));
 
@@ -800,7 +751,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
 
     public boolean solveSource() {
         if(source == null) return false;
-        return isConfigured("source");
+        return hasOption("source");
     }
 
 

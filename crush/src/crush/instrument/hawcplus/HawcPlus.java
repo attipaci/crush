@@ -537,7 +537,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         }
 
 
-        if(!hasOption("filter")) getOptions().parseSilent("filter " + instrumentData.wavelength + "um");	
+        if(!hasOption("filter")) getOptions().setOption("filter " + instrumentData.wavelength + "um");	
         info("HAWC+ Filter set to " + option("filter").getValue());
 
         super.validate(scan);

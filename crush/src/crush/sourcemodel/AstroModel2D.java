@@ -907,15 +907,15 @@ public abstract class AstroModel2D extends SourceModel {
         
         
         // Smooth thumbnail (by half a beam, default) for nicer appearance
-        if(config.isConfigured("smooth")) {
-            String arg = config.get("smooth").getValue();
+        if(config.hasOption("smooth")) {
+            String arg = config.option("smooth").getValue();
             double fwhm = arg.length() > 0 ? getSmoothing(arg) : 0.5 * getInstrument().getPointSize();
             map.smoothTo(fwhm);
         }
         
         
-        if(config.isConfigured("crop")) {
-            List<Double> offsets = config.get("crop").getDoubles();
+        if(config.hasOption("crop")) {
+            List<Double> offsets = config.option("crop").getDoubles();
                   
             if(offsets.isEmpty()) map.autoCrop();
             else {
@@ -928,10 +928,10 @@ public abstract class AstroModel2D extends SourceModel {
             }
         }
                
-        if(map instanceof Observation2D) if(config.isConfigured("plane")) {
+        if(map instanceof Observation2D) if(config.hasOption("plane")) {
             Observation2D obs = (Observation2D) map;
             
-            String spec = config.get("plane").getValue().toLowerCase();
+            String spec = config.option("plane").getValue().toLowerCase();
             if(spec.equals("s2n")) values = obs.getSignificance();
             else if(spec.equals("s/n")) values = obs.getSignificance();
             else if(spec.equals("time")) values = obs.getExposures();
@@ -948,13 +948,13 @@ public abstract class AstroModel2D extends SourceModel {
         int width = DEFAULT_PNG_SIZE;
         int height = DEFAULT_PNG_SIZE;
 
-        if(option.isConfigured("size")) {
-            StringTokenizer tokens = new StringTokenizer(option.get("size").getValue(), "xX*:, ");
+        if(option.hasOption("size")) {
+            StringTokenizer tokens = new StringTokenizer(option.option("size").getValue(), "xX*:, ");
             width = Integer.parseInt(tokens.nextToken());
             height = tokens.hasMoreTokens() ? Integer.parseInt(tokens.nextToken()) : width;
         }     
       
-        if(!option.isConfigured("crop")) {
+        if(!option.hasOption("crop")) {
             map = map.copy(true);
             map.autoCrop(); 
         }
@@ -963,13 +963,13 @@ public abstract class AstroModel2D extends SourceModel {
         final ImageArea<BufferedImageLayer> imager = new ImageArea<BufferedImageLayer>();
         final BufferedImageLayer image = new BufferedImageLayer(map);
 
-        if(option.isConfigured("scaling")) {
-            String spec = option.get("scaling").getValue().toLowerCase();
+        if(option.hasOption("scaling")) {
+            String spec = option.option("scaling").getValue().toLowerCase();
             if(spec.equals("log")) image.setScaling(BufferedImageLayer.SCALE_LOG);
             if(spec.equals("sqrt")) image.setScaling(BufferedImageLayer.SCALE_SQRT);
         }
 
-        if(option.isConfigured("spline")) image.setSpline();
+        if(option.hasOption("spline")) image.setSpline();
 
         imager.setContentLayer(image);
         imager.setBackground(Color.LIGHT_GRAY);
@@ -977,8 +977,8 @@ public abstract class AstroModel2D extends SourceModel {
 
         ColorScheme scheme = new Colorful();
 
-        if(option.isConfigured("bg")) {
-            String spec = option.get("bg").getValue().toLowerCase();
+        if(option.hasOption("bg")) {
+            String spec = option.option("bg").getValue().toLowerCase();
             if(spec.equals("transparent")) imager.setOpaque(false);
             else {
                 try { imager.setBackground(new Color(Integer.decode(spec))); }
@@ -986,8 +986,8 @@ public abstract class AstroModel2D extends SourceModel {
             }
         }
 
-        if(option.isConfigured("color")) {
-            String schemeName = option.get("color").getValue();
+        if(option.hasOption("color")) {
+            String schemeName = option.option("color").getValue();
             if(ColorScheme.schemes.containsKey(schemeName)) 
                 scheme = ColorScheme.getInstanceFor(schemeName);
         }

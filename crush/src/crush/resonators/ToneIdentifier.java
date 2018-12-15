@@ -52,10 +52,10 @@ public abstract class ToneIdentifier<IDType extends FrequencyID> extends ArrayLi
 	
 	public ToneIdentifier(Configurator options) {
 		this();
-		if(options.isConfigured("power")) power = options.get("power").getDouble();
-		if(options.isConfigured("max")) maxDeviation = options.get("max").getDouble();
-		if(options.isConfigured("attempts")) attempts = options.get("attempts").getInt();
-		if(options.isConfigured("deltarange")) deltaRange = options.get("deltarange").getRange();
+		if(options.hasOption("power")) power = options.option("power").getDouble();
+		if(options.hasOption("max")) maxDeviation = options.option("max").getDouble();
+		if(options.hasOption("attempts")) attempts = options.option("attempts").getInt();
+		if(options.hasOption("deltarange")) deltaRange = options.option("deltarange").getRange();
 	}
 		
 	public Range getShiftRange() { return deltaRange; }

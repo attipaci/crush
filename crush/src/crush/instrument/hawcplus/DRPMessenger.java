@@ -46,14 +46,14 @@ public class DRPMessenger extends Thread {
 	private boolean isTimestamping = true;
 	
 	public DRPMessenger(Configurator options) throws IOException {
-		String host = options.isConfigured("host") ? options.get("host").getValue() : DEFAULT_HOST;
-		int port = options.isConfigured("port") ? options.get("port").getInt() : DEFAULT_DRP_PORT;
+		String host = options.hasOption("host") ? options.option("host").getValue() : DEFAULT_HOST;
+		int port = options.hasOption("port") ? options.option("port").getInt() : DEFAULT_DRP_PORT;
 		
-		if(options.isConfigured("timeout")) setTimeout((int) Math.ceil(1000.0 * options.get("timeout").getDouble()));
-		if(options.isConfigured("id")) setSenderID(options.get("id").getValue());
-		setTimestamping(options.isConfigured("timestamp"));
+		if(options.hasOption("timeout")) setTimeout((int) Math.ceil(1000.0 * options.option("timeout").getDouble()));
+		if(options.hasOption("id")) setSenderID(options.option("id").getValue());
+		setTimestamping(options.hasOption("timestamp"));
 		
-		int capacity = options.isConfigured("fifo") ? options.get("fifo").getInt() : DEFAULT_QUEUE_CAPACITY;
+		int capacity = options.hasOption("fifo") ? options.option("fifo").getInt() : DEFAULT_QUEUE_CAPACITY;
 	
 		address = new InetSocketAddress(host, port);
 		queue = new ArrayBlockingQueue<Message>(capacity);

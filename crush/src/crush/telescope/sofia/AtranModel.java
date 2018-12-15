@@ -40,13 +40,13 @@ public class AtranModel {
     }
     
     private void init(Configurator options) throws IllegalStateException {
-        if(options.isConfigured("atran.amcoeffs")) amCoeffs = options.get("atran.amcoeffs").getDoubles();
+        if(options.hasOption("atran.amcoeffs")) amCoeffs = options.option("atran.amcoeffs").getDoubles();
         else throw new IllegalStateException("Undefined option 'atran.amcoeffs'");
         
-        if(options.isConfigured("atran.altcoeffs")) altCoeffs = options.get("atran.altcoeffs").getDoubles();
+        if(options.hasOption("atran.altcoeffs")) altCoeffs = options.option("atran.altcoeffs").getDoubles();
         else throw new IllegalStateException("Undefined option 'atran.altcoeffs'");
         
-        if(options.isConfigured("atran.reference")) referenceTransmission = options.get("atran.reference").getDouble();
+        if(options.hasOption("atran.reference")) referenceTransmission = options.option("atran.reference").getDouble();
     }
     
     public double getReferenceTransmission() { return referenceTransmission; }

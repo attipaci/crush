@@ -58,13 +58,13 @@ public class DistortionModel extends Hashtable<DistortionModel.Term, Parameter> 
 			int xExp = key.charAt(1) - '0';
 			int yExp = key.charAt(2) - '0';
 			if(xExp < 0 || yExp < 0) continue;
-			double value = options.get(key).getDouble();
+			double value = options.option(key).getDouble();
 			if(dir == 'x') setX(xExp, yExp, value);
 			else if(dir == 'y') setY(xExp, yExp, value);	
 		}
 		
-		if(options.containsKey("unit")) unit = Unit.get(options.get("unit").getValue());
-		if(options.containsKey("name")) id = options.get("name").getValue();
+		if(options.containsKey("unit")) unit = Unit.get(options.option("unit").getValue());
+		if(options.containsKey("name")) id = options.option("name").getValue();
 	}
 	
 	public String getName() { return id; }
