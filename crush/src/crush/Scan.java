@@ -277,8 +277,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 	public void calcEquatorial() {
 		equatorial = horizontal.toEquatorial(site, LST);
-		equatorial.epoch = new JulianEpoch();
-		equatorial.epoch.setMJD(MJD);
+		equatorial.epoch = JulianEpoch.forMJD(MJD);
 		if(fromApparent == null) calcPrecessions(CoordinateEpoch.J2000);
 		fromApparent.precess(equatorial);		
 	}

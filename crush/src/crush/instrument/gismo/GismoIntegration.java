@@ -416,8 +416,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 					apparent.setLatitude(DEC[i] * Unit.deg);
 
 					if(catalogToApparent == null) {
-						CoordinateEpoch apparentEpoch = new JulianEpoch();
-						apparentEpoch.setMJD(frame.MJD);
+						CoordinateEpoch apparentEpoch = JulianEpoch.forMJD(frame.MJD);
 						catalogToApparent = new Precession(scan.equatorial.epoch, apparentEpoch);
 					}
 					catalogToApparent.precess(apparent);
