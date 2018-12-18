@@ -31,6 +31,10 @@
 	[FIX] Spectral axis CRVAL header value in FITS was not cast to the
 	proper units, but was written in their natural SI units. Now fixed.
 
+	[CHANGE] Renamed options: 
+	  'phaseweights' -> 'weighting.phases'
+	  'phasedespike' -> 'despike.phases' 
+
 	[TWEAK] A few checks and initialization steps migrated from from 
 	CRUSH.main() to the constructor. This should make it easier to invoke
 	CRUSH from another Java program...

@@ -672,6 +672,15 @@
 			@See: 'despike.flagcount', 'despike.flagfraction',
 			      'despike.framespikes', 'despike.level',
 
+:: despike.phases	@Expert
+			@Since: 2.43
+			@Old: 'phasedespike' (2.15 - 2.42)
+			When set, the phase data (such as position-switched
+			phases) will be despiked together with the regular
+			high-frequency despiking. The despiking level is the
+			same as for the 'despike' option.
+			@See: 'despike', 'despike.level', 'weighting.phases'
+
 :: detect.chopped	@Advanced
 			Try determine from the data itself if the chopper was 
 			used, and set the 'chopped' flag accordingly. This can 
@@ -2223,14 +2232,6 @@
 			phases also.
 			@See: 'estimator'
 
-:: phasedespike		@Expert
-			@Since: 2.15
-			When set, the phase data (such as position-switched
-			phases) will be despiked together with the regular
-			high-frequency despiking. The despiking level is the
-			same as for the 'despike' option.
-			@See: 'despike', 'despike.level', 'phaseweights'
-
 :: phasegains		@Expert
 			@Since: 2.04
 			Use the information in the phases to calculate gains
@@ -2240,16 +2241,6 @@
 			modality.
 			@See: 'correlated.<?>.phasegains'
 
-:: phaseweights		@Expert
-			@Since: 2.15
-			When set, CRUSH will calculate proper noise weights
-			for the phase data as well as the high-frequency 
-			time-stream, under the expectation that the phase
-			noise can be dominated by 1/f-type behaviour on the
-			relevant timescales. The calculation of phase weights
-			improves the reliability of the photometry.
-			@See: 'weighting', 'phases', 'chopped'
-	
 :: pins			@Alias -> correlated.pins
 			@Instrument: GISMO, SCUBA-2
 			@Advanced
@@ -4090,7 +4081,17 @@
 
 			@See: 'weighting.frames.noiserange'
 
-
+:: weighting.phases	@Expert
+			@Since: 2.43
+			@Old: 'phaseweights' (2.15 - 2.42)
+			When set, CRUSH will calculate proper noise weights
+			for the phase data as well as the high-frequency 
+			time-stream, under the expectation that the phase
+			noise can be dominated by 1/f-type behaviour on the
+			relevant timescales. The calculation of phase weights
+			improves the reliability of the photometry.
+			@See: 'weighting', 'phases', 'chopped'
+	
 :: weighting.scans	@Advanced
 			If specified, each scan gets an assigned weight
 			with which it contributes to the composite map.

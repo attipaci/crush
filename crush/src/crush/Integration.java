@@ -1594,7 +1594,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
         if(hasOption("despike.blocks")) flagSpikyBlocks();
 
-        if(isPhaseModulated()) if(hasOption("phasedespike")) {
+        if(isPhaseModulated()) if(despike.hasOption("phases")) {
             PhaseSet phases = ((PhaseModulated) this).getPhases();
             if(phases != null) phases.despike(level);
         }	
@@ -3218,7 +3218,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
         getChannelWeights(method);
 
-        if(isPhaseModulated()) if(hasOption("phaseweights")) {
+        if(isPhaseModulated()) if(weighting.hasOption("phases")) {
             PhaseSet phases = ((PhaseModulated) this).getPhases();
             if(phases != null) phases.getWeights();
         }
