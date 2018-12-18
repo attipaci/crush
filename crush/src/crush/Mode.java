@@ -142,6 +142,7 @@ public class Mode implements Serializable {
         return gain;
     }
 
+    
     public final boolean setGains(float[] gain) throws Exception {
         return setGains(gain, true);
     }

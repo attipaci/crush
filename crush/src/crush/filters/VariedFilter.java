@@ -85,6 +85,9 @@ public abstract class VariedFilter extends Filter {
 		dp = points >= 0.0 ? (float) (rejected / points) : 0.0F;
 		
 		final double response = calcPointResponse();
+		
+		if(Double.isNaN(response)) return;
+		
 		pointResponse[channel.index] = (float) response;
 		
 		channel.directFiltering *= response;
@@ -122,7 +125,6 @@ public abstract class VariedFilter extends Filter {
 			final double G = getPointResponse(channel);
 			sumwG2 += channel.weight * G * G;
 			sumwG += channel.weight * G;
-	
 		}
 		
 		return sumwG2 / sumwG;

@@ -440,6 +440,9 @@
 			the correlated fast samples. You can also set this
 			globally for all correlated modalities/modes using
 			the 'phasegains' keyword.
+			Note, when the modulation is optical (such as a 
+			chopping or waveplate stepping), phase-baed gains 
+			should be derived for optically coupled modes only!
 			@See: 'phasegains'
 
 :: correlated.<?>.resolution=X	@Advanced
@@ -482,6 +485,12 @@
 			   chopper.trigger=chopped
 
 			@See: 'chopper', 'chopped'
+
+:: correlated.<?>.uniform	@Expert	
+				@Since: 2.43
+			Use uniform gains for this correlated modality,
+			overriding any gains that may have been loaded or
+			obtained prior.
 
 :: correlated.*		@Advanced
 			You can use wildcards '*' to set options for all

@@ -63,7 +63,7 @@ public class APEXChoppedPhotometry extends Photometry {
 		DataPoint F = new DataPoint(sourceFlux);
 		F.scale(1.0 / getInstrument().janskyPerBeam());
 		
-		scanFluxes.put(scan, F);
+		scanFluxes.put(scan, F.copy());
 		
 		scan.getLastIntegration().comments.append(" " + (F.weight() > 0.0 ? F.toString() : "<<invalid>>") + " ");
 	}
@@ -133,7 +133,7 @@ public class APEXChoppedPhotometry extends Photometry {
 		
 		
 		if(numberOfScans() > 1) {
-			info("Scan-to-scan scatter is measured by the reduced chi value. When |rChi| > 1, "
+			info("\nScan-to-scan scatter is measured by the reduced chi value. When |rChi| > 1, "
 			        + "you can multiply the quoted uncertainty by it to arrive at a more robust estimate "
 			        + "of the total measurement uncertainty.");
 		}

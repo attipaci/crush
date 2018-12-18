@@ -25,6 +25,7 @@ package crush.filters;
 import java.util.Arrays;
 
 import crush.Channel;
+import crush.Frame;
 import crush.Integration;
 import jnum.Constant;
 import jnum.data.Statistics;
@@ -153,6 +154,7 @@ public abstract class AdaptiveFilter extends VariedFilter {
 		// sigmaF = sigmaf / df = 2.35/2Pi * n dt / T; 
 		
 		final double T = integration.getPointCrossingTime();
+		final double F0 = integration.isPhaseModulated() ? integration.getModulationFrequency(Frame.TOTAL_POWER) / dF : 0.0;
 		final double sigma = Constant.sigmasInFWHM / (Constant.twoPi * T * dF);
 		final double a = -0.5 / (sigma * sigma);
 		
@@ -160,16 +162,15 @@ public abstract class AdaptiveFilter extends VariedFilter {
 		
 		// just calculate x=0 component -- O(N)
 		for(int F=sourceProfile.length; --F >= 0; ) {
-			sourceProfile[F] = (float) Math.exp(a*F*F);
+			sourceProfile[F] = 0.5F * (float) (Math.exp(a*(F-F0)*(F-F0)) + Math.exp(a*(F+F0)*(F+F0)));
 			sourceNorm += sourceProfile[F];
 		}
 	}
 	
+
 	@Override
 	protected double calcPointResponse() {
-		// Start from the 1/f filter cutoff
-		double hipassf = 0.5 / integration.filterTimeScale;
-		int minF = (int) Math.ceil(hipassf / dF);
+		int minF = (int) Math.ceil(getHipassIndex() * df / dF);
 		
 		double sum = 0.0;
 		
@@ -178,7 +179,7 @@ public abstract class AdaptiveFilter extends VariedFilter {
 			
 		// Calculate the true source filtering above the hipass timescale...
 		for(int F=profile.length; --F >= minF; ) sum += sourceProfile[F] * profile[F];
-			
+
 		return sum / sourceNorm;
 	}
 	

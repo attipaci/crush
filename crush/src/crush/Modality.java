@@ -87,6 +87,7 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		phaseGains = option.hasOption("phasegains");
 
 		boolean noGainField = option.hasOption("nofield");
+		boolean uniformGains = option.hasOption("uniform");
 		
 		setGainRange(option.hasOption("gainrange") ? option.option("gainrange").getRange() : Range.getFullRange());
 		setGainDirection(option.hasOption("signed") ? Instrument.GAINS_SIGNED : Instrument.GAINS_BIDIRECTIONAL);
@@ -94,6 +95,10 @@ public class Modality<ModeType extends Mode> extends ArrayList<ModeType> {
 		for(Mode mode : this) {
 			if(noGainField) mode.setGainProvider(null);
 			mode.phaseGains = phaseGains;
+			if(uniformGains) if(!mode.fixedGains) { 
+			    try { mode.uniformGains(); }
+			    catch(Exception e) { CRUSH.warning(this, e); }
+			}
 		}
 	}
 

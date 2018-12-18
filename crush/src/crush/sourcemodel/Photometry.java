@@ -66,7 +66,7 @@ public abstract class Photometry extends SourceModel {
             copy.flux = new DataPoint[flux.length];
             if(withContents) for(int i=flux.length; --i >= 0; ) if(flux[i] != null) copy.flux[i] = flux[i].copy();
         }
-        copy.scanFluxes = new Hashtable<Scan<?,?>, DataPoint>();
+        copy.scanFluxes = new Hashtable<Scan<?,?>, DataPoint>(scanFluxes.size());
         copy.scanFluxes.putAll(scanFluxes);
         return copy;
     }
@@ -95,6 +95,9 @@ public abstract class Photometry extends SourceModel {
             flux[c].average(F);
         }
         sourceFlux.average(other.sourceFlux);
+        scanFluxes.putAll(other.scanFluxes);
+        
+        integrationTime += other.integrationTime;
     }
 
     @Override
@@ -150,9 +153,9 @@ public abstract class Photometry extends SourceModel {
         double mean = sourceFlux.value() / getInstrument().janskyPerBeam();
         double chi2 = 0.0;
 
-
         for(Scan<?,?> scan : getScans()) {
-            DataPoint F = scanFluxes.get(scan);			
+            DataPoint F = scanFluxes.get(scan);		
+            if(F == null) continue;
             double dev = (F.value() - mean) / F.rms();
             chi2 += dev * dev;
         }
@@ -249,6 +252,7 @@ public abstract class Photometry extends SourceModel {
             for(int i=0; i<numberOfScans(); i++) {
                 Scan<?,?> scan = getScan(i);
                 DataPoint flux = scanFluxes.get(scan);	
+                if(flux == null) continue;
                 out.println(scan.getID() + "\t" + (flux.weight() > 0.0 ? flux + " Jy/beam" : "---"));
             }
 

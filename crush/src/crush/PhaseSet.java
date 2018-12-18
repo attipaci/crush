@@ -156,7 +156,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
     }
 
 
-    public double ZgetMeanLevel(Channel channel, int phaseValue) {
+    public double getMeanLevel(Channel channel, int phaseValue) {
         double sum = 0.0, sumw = 0.0;
         for(PhaseData p : this) if(p.phase == phaseValue) if(p.isUnflagged(channel)) {
             sum += p.weight[channel.index] * p.value[channel.index];

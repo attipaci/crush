@@ -158,7 +158,7 @@ public class PhaseSignal implements Serializable {
 		return dG;
 	}
 	
-	protected WeightedPoint getGainIncrement(final Channel channel) {
+	protected WeightedPoint getGainIncrement(final Channel channel) {	    
 		double sum = 0.0, sumw = 0.0;
 
 		for(int i=phases.size(); --i >= 0; ) {
@@ -172,6 +172,7 @@ public class PhaseSignal implements Serializable {
 			sum += (wC * phase.value[channel.index]);
 			sumw += (wC * C);
 		}
+
 		return sumw > 0.0 ? new WeightedPoint(sum / sumw, sumw) : new WeightedPoint();
 	}
 	

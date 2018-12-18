@@ -122,8 +122,10 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
 
 		final WeightedPoint value = getChopSignal(phases, i);
 		
-		bg.scale(G[this.index]);	
-		if(bg.weight() > 0.0) value.subtract(bg);
+		if(bg.weight() > 0.0) {
+		    bg.scale(G[this.index]);  
+		    value.subtract(bg);
+		}
 		
 		return value;
 	}
@@ -193,7 +195,6 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
 		int N = phases.size();
 		final WeightedPoint lr = new WeightedPoint();
 		for(int i=1; i < N; i++) lr.average(getChopSignal(phases, i));
-		//lr.scaleWeight(0.5);
 		return lr;
 	}
 	
@@ -210,7 +211,6 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
 		int N = phases.size();
 		final WeightedPoint lr = new DataPoint();
 		for(int i=1; i < N; i++) lr.average(getBGCorrectedChopSignal(phases, i, bgPixels, sourceGain));
-		//lr.scaleWeight(0.5);
 		return lr;
 	}
 

@@ -70,7 +70,7 @@ public class PhaseData implements Serializable {
 			
 		channels.new Fork<Void>() {
 			@Override
-			protected void process(final Channel channel) {
+			protected void process(final Channel channel) {			    
 				double sum = 0.0, sumw = 0.0;
 				
 				for(int t=start.index; t<to; t++) {

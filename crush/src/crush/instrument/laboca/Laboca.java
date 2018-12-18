@@ -94,6 +94,9 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 		
 		try { addDivision(getDivision("amps", LabocaPixel.class.getField("amp"), Channel.FLAG_DEAD)); }
 		catch(Exception e) { error(e); }
+
+		try { addDivision(getDivision("pins", LabocaPixel.class.getField("pin"), Channel.FLAG_DEAD)); }
+		catch(Exception e) { error(e); }
 		
 	}
 	

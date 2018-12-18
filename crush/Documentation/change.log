@@ -1,5 +1,9 @@
-2.42-2 
+2.43-b1 
 
+
+	[BUG] {APEX} {Photometry} merging of photometry data from multithreaded
+	reductions did not carry over the individual scan fluxes, which then
+	resulted in a NullPointerException being thrown. Fixed.
 
 	[BUG] {Windows} The Windows 'autoconf.bat' had malformed 'if' 
 	conditions causing all CRUSH programs to fail. Fixed.
@@ -8,10 +12,21 @@
 	neither contained the self-extraction code, not the AUTORUN directive. 
 	Both have been fixed.
 
+	[NEW] Decorrelation ('correlated.<?>' options) now have a new 
+	sub-option 'uniform' that can be set to force using uniform gains
+	regardless of what gains may have been loaded or calculated prior.
+	(The new option is used by the updated LABOCA configs.) 
+
 	[NEW] {HIRMES} Updated to work with v.7 sims, complete with correlated
 	noise on MUX rows ('mux') and cols ('pins'), as well as separated
 	temperature and sky correlated noise and using blind pixels for
 	cleaner speparation of these in imaging mode.
+
+	[FIX] AdaptiveFilter spectral source profile calculation to take
+	modulation (e.g. by chopping/waveplate) into account.
+
+	[FIX] Crossing time calculations to take only scanning motion into
+	account. Modulation is accounted for separately.
 
 	[FIX] Spectral axis CRVAL header value in FITS was not cast to the
 	proper units, but was written in their natural SI units. Now fixed.
@@ -27,6 +42,11 @@
 	CRUSH API 
 
 	[DOC] {CRUSH.java} Inline javadoc for the public CRUSH API.
+
+	[CONFIG] {LABOCA} Updated configurations, especially for chopped & 
+	faint modes, to favor solution stability. Chopped configuration 
+	has been more thoroughly revised, especially on how gains are dealt 
+	with.
 
 	[CODE] Change static variable CRUSH.workPath into proper instance 
 	variable.

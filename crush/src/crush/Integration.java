@@ -552,13 +552,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         return getCrossingTime(scan.sourceModel == null ? instrument.getSourceSize() : scan.sourceModel.getSourceSize());
     }
 
-    // TODO what if not total power mode?
-    public double getCrossingTime(double sourceSize) {		
-        if(this instanceof Chopping) {
-            Chopper chopper = ((Chopping) this).getChopper();
-            if(chopper != null) return Math.min(chopper.stareDuration(), sourceSize / aveScanSpeed.value());
-        }
-        return getModulationFrequency(Frame.TOTAL_POWER) + sourceSize / aveScanSpeed.value();		
+    public double getCrossingTime(double sourceSize) {
+        return Math.min(sourceSize / aveScanSpeed.value(), size() * instrument.integrationTime);
     }
 
     
@@ -2667,8 +2662,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
         FitsToolkit.write(fits, name);
         fits.close();
-
-        notify("Written " + name);
     }
 
     protected double[][] condenseCovariance(double[][] covar) {
