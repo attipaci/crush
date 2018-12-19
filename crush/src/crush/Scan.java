@@ -725,11 +725,21 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 		if(gains.hasOption("estimator")) if(gains.option("estimator").is("median")) isRobust = true; 
 
-		WeightedPoint[] G = WeightedPoint.createArray(instrument.storeChannels);
+		Hashtable<Integer, WeightedPoint[]> phaseGains = new Hashtable<Integer, WeightedPoint[]>();
+
+		final boolean usePhases = hasOption("correlated." + modalityName + ".phasegains");
 		
 		// Derive the scan gains
 		boolean gotGains = false;
-		for(IntegrationType integration : this) {	
+		for(IntegrationType integration : this) {
+		    final int phase = usePhases ? integration.getPhase() : 0;
+		    WeightedPoint[] G = phaseGains.get(phase);
+		    
+		    if(G == null) {
+		        G = WeightedPoint.createArray(instrument.storeChannels);
+		        phaseGains.put(phase, G);
+		    }
+		    		    
 			try {		
 				Modality<?> modality = integration.instrument.modalities.get(modalityName);
 				if(modality.trigger != null) if(!hasOption(modality.trigger)) continue;
@@ -741,11 +751,18 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		
 		if(!gotGains) return;
 		
+		try { processPhaseGains(phaseGains); }
+		catch(Exception e) {
+		    warning(e);
+		    return;
+		}
 		
 		// Apply the gain increment
 		for(IntegrationType integration : this) {
 			Modality<?> modality = integration.instrument.modalities.get(modalityName);
 			boolean isFlagging = false; 
+			
+			WeightedPoint[] G = phaseGains.get(usePhases ? integration.getPhase() : 0);
 			
 			try { isFlagging |= modality.applyGains(G, integration); }
 			catch(Exception e) { error(e); }
@@ -756,6 +773,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 			}
 		}
 	}
+	
+	public void processPhaseGains(Hashtable<Integer, WeightedPoint[]> phaseGains) throws Exception {}
 	
 	public void decorrelate(String modalityName) {
 		boolean isRobust = false;

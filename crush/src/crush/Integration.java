@@ -261,13 +261,13 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             instrument.census();
             info("Bootstrapping pixel weights (" + instrument.mappingChannels + " active channels).");
         }
-        
+
         instrument.calcOverlap(scan.getPointSize());
 
         System.gc();
 
         isValid = true;
-        
+
         if(hasOption("speedtest")) speedTest();
     }
 
@@ -553,10 +553,17 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
     public double getCrossingTime(double sourceSize) {
+        /*
+        if(this instanceof Chopping) {
+            Chopper chopper = ((Chopping) this).getChopper();
+            if(chopper != null) return Math.min(chopper.stareDuration(), sourceSize / aveScanSpeed.value());
+        }
+        */
+
         return Math.min(sourceSize / aveScanSpeed.value(), size() * instrument.integrationTime);
     }
 
-    
+
     public final double getPointCrossingTime() {
         return getCrossingTime(scan.getPointSize()); 
     }
@@ -1006,7 +1013,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         if(modality.trigger != null) if(!hasOption(modality.trigger)) return false;
 
         comments.append((isRobust ? "[" : "") + modality.id + (isRobust ? "]" : ""));
-        
+
         final int frameResolution = power2FramesFor(modality.resolution);
         if(frameResolution > 1) comments.append("(" + frameResolution + ")");	
 
@@ -1017,27 +1024,27 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
         return true;
     }
-     
+
     public boolean updateGains(final String modalityName, final boolean isRobust) {
-        
+
         final Modality<?> modality = instrument.modalities.get(modalityName);
         if(modality == null) return false;
-        
+
         modality.setOptions(option("correlated." + modality.name));
 
         boolean solveGains = modality.solveGains && hasOption("gains");
         if(!solveGains) return true;
-       
+
         if(modality.trigger != null) if(!hasOption(modality.trigger)) return false;
-        
+
         Configurator gainOption = option("gains");
 
         try { gainOption.mapValueTo("estimator"); }
         catch(LockedException e) {} // TODO...
-        
+
         boolean isGainRobust = false;  
         if(gainOption.hasOption("estimator")) if(gainOption.option("estimator").is("median")) isGainRobust = true; 
-        
+
         if(modality.updateAllGains(this, isGainRobust)) {
             instrument.census();
             comments.append(instrument.mappingChannels);
@@ -1189,11 +1196,11 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         comments.append("[W]");
 
         final ChannelGroup<? extends Channel> channels = instrument.getLiveChannels();
-        
+
         final DataPoint[] var = instrument.getDataPoints();
         for(Channel channel : channels) var[channel.index].noData();
 
-        
+
         channels.new Fork<Void>() {
             private float[] dev2;
 
@@ -1229,7 +1236,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             }
 
         }.process();
-      
+
 
         setWeightsFromVarStats(channels, var);
     }
@@ -2506,21 +2513,21 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
         return range;
     }
-    
+
     public Range getFrequencyRange(final ChannelGroup<?> channels) {
         Fork<Range> search = new Fork<Range>() {
             Range range;
-            
+
             @Override
             protected void init() {
                 range = new Range();
             }
-            
+
             @Override
             protected void process(FrameType frame) {
                 for(Channel channel : channels) range.include(frame.getChannelFrequency(channel));
             }
-            
+
             @Override
             public Range getLocalResult() { return range; }
 
@@ -2534,7 +2541,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
                 return range;
             }     
         };
-        
+
         search.process();
         return search.getResult();
     }
@@ -2803,7 +2810,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
     public void writeProducts() {
         String path = instrument.getOutputPath();
-        
+
         if(hasOption("write.pattern")) {
             try { writeScanPattern(path); }
             catch(Exception e) { error(e); }
@@ -3130,6 +3137,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     public String getID() {
         return Integer.toString(integrationNo + 1);
     }
+    
+    public int getPhase() { return 0; }
 
     public String getFullID(String separator) {
         return scan.getID() + separator + (integrationNo + 1);		
@@ -3224,7 +3233,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         }
     }
 
-    public void getChannelWeights(String method) {
+    private void getChannelWeights(String method) {
         if(method.equals("robust")) getRobustChannelWeights();
         else if(method.equals("differential")) getDifferentialChannelWeights();
         else getRMSChannelWeights();	

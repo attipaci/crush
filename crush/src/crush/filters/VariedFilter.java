@@ -141,6 +141,7 @@ public abstract class VariedFilter extends Filter {
 		// sigmaF = sigmaf / df = 2.35/2Pi * n dt / T; 
 
 		final double T = integration.getPointCrossingTime();
+		final double f0 = integration.getModulationFrequency(Frame.TOTAL_POWER) / df;
 		final double sigma = Constant.sigmasInFWHM / (Constant.twoPi * T * df);
 		final double a = -0.5 / (sigma * sigma);
 		
@@ -148,7 +149,7 @@ public abstract class VariedFilter extends Filter {
 		
 		// just calculate x=0 component -- O(N)
 		for(int f=sourceProfile.length; --f >= 0; ) {
-			sourceProfile[f] = (float) Math.exp(a*f*f);
+			sourceProfile[f] = 0.5F * (float) (Math.exp(a*(f-f0)*(f-f0)) + Math.exp(a*(f+f0)*(f+f0)));
 			sourceNorm += sourceProfile[f];
 		}
 	}

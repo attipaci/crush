@@ -22,13 +22,14 @@
  ******************************************************************************/
 package crush.telescope.apex;
 
-import java.util.ArrayList;
 
 import crush.*;
 import crush.sourcemodel.Photometry;
 import jnum.data.DataPoint;
 import jnum.data.WeightedPoint;
 import jnum.math.Range;
+
+
 
 public class APEXChoppedPhotometry extends Photometry {
 
@@ -77,14 +78,14 @@ public class APEXChoppedPhotometry extends Photometry {
 		final double[] sourceGain = subscan.instrument.getSourceGains(false);
 		final PhaseSet phases = subscan.getPhases();
 
-		final double radius = hasOption("neighbours.radius") ? option("neighbours.radius").getDouble() : 0.0;	
+		//final double radius = hasOption("neighbours.radius") ? option("neighbours.radius").getDouble() : 0.0;	
 
 		subscan.instrument.getObservingChannels().new Fork<Void>() {
 			@Override
 			protected void process(APEXContinuumPixel pixel) {	
 				WeightedPoint point = null;
 
-				ArrayList<APEXContinuumPixel> neighbours = subscan.instrument.getNeighbours(pixel, radius * pixel.getResolution());
+				//ArrayList<APEXContinuumPixel> neighbours = subscan.instrument.getNeighbours(pixel, radius * pixel.getResolution());
 
 				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.getFixedIndex()];
 				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.getFixedIndex()];
@@ -101,9 +102,13 @@ public class APEXChoppedPhotometry extends Photometry {
 					catch(IOException e) { error(e); }
 				 */
 
-				WeightedPoint df = pixel.getBGCorrectedLROffset(phases, neighbours, sourceGain);	
-				double chi2 = pixel.getBGCorrectedLRChi2(phases, neighbours, df.value(), sourceGain);
+				//WeightedPoint df = pixel.getBGCorrectedLROffset(phases, neighbours, sourceGain);	
+				//double chi2 = pixel.getBGCorrectedLRChi2(phases, neighbours, df.value(), sourceGain);
 
+			    WeightedPoint df = pixel.getLROffset(phases);    
+                double chi2 = pixel.getLRChi2(phases, df.value());
+
+				
 			    if(hasOption("chirange")) {
 			        Range r = option("chirange").getRange(true);
                     if(!r.contains(Math.sqrt(chi2))) {

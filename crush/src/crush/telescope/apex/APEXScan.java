@@ -27,6 +27,7 @@ package crush.telescope.apex;
 import crush.*;
 import crush.telescope.Chopper;
 import crush.telescope.GroundBased;
+import jnum.NonConformingException;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroSystem;
@@ -35,6 +36,7 @@ import jnum.astro.CoordinateEpoch;
 import jnum.astro.EquatorialCoordinates;
 import jnum.astro.GeodeticCoordinates;
 import jnum.astro.HorizontalCoordinates;
+import jnum.data.WeightedPoint;
 import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.SphericalCoordinates;
@@ -43,6 +45,7 @@ import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
 import java.io.*;
+import java.util.Hashtable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -78,6 +81,29 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		get(0).nodPhase = 0;
 	}
 	
+	@Override
+    public void processPhaseGains(Hashtable<Integer, WeightedPoint[]> phaseGains) throws Exception {
+	    super.processPhaseGains(phaseGains);
+	    
+	    WeightedPoint[] L = phaseGains.get(Frame.CHOP_LEFT);
+	    WeightedPoint[] R = phaseGains.get(Frame.CHOP_RIGHT);
+	    
+	    if(L == null && R == null) return;
+	    
+	    if(L == null || R == null) 
+	        throw new IllegalStateException("Incomplete set of chop phases -- L:" + (L == null ? "null" : "OK") + "vs. R:" + (R == null ? "null" : "OK"));
+	    
+	    if(L.length != R.length)
+	        throw new NonConformingException("Size mismatch -- L:" + L.length + "vs. R:" + R.length);
+
+	    
+	    for(int c=L.length; --c >= 0; ) if(L[c] != null && R[c] != null) {
+	        L[c].add(R[c]);
+	        L[c].scale(0.5);
+	        R[c] = L[c];
+	    }
+	    
+	}
 	
 	public boolean readMonitor() { return false; }
 	

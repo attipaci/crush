@@ -12,6 +12,11 @@
 	neither contained the self-extraction code, not the AUTORUN directive. 
 	Both have been fixed.
 
+	[NEW] Gains derived from phases now allow to be processed as needed
+	before applying. For example, for LABOCA photometry the gains
+	derived for nod-left and nod-right are now arithmetic averaged to
+	provide a scan-averaged gain. 
+
 	[NEW] Decorrelation ('correlated.<?>' options) now have a new 
 	sub-option 'uniform' that can be set to force using uniform gains
 	regardless of what gains may have been loaded or calculated prior.
@@ -21,6 +26,10 @@
 	noise on MUX rows ('mux') and cols ('pins'), as well as separated
 	temperature and sky correlated noise and using blind pixels for
 	cleaner speparation of these in imaging mode.
+
+	[FIX] {APEX} {Photometry} A mistake in the chopped configuration file
+	has incapacitated chopped photometry. Fixed ('gains.span' corrected
+	to 'array.span' + 'boxes.span' + 'cables.span')
 
 	[FIX] AdaptiveFilter spectral source profile calculation to take
 	modulation (e.g. by chopping/waveplate) into account.

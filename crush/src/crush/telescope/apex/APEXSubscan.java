@@ -572,6 +572,9 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 	}
 
 	@Override
+    public int getPhase() { return nodPhase; }
+	
+	@Override
 	public PhaseSet getPhases() {
 		Chopper chopper = getChopper();
 		return chopper == null ? null : chopper.phases;

@@ -154,7 +154,7 @@ public abstract class AdaptiveFilter extends VariedFilter {
 		// sigmaF = sigmaf / df = 2.35/2Pi * n dt / T; 
 		
 		final double T = integration.getPointCrossingTime();
-		final double F0 = integration.isPhaseModulated() ? integration.getModulationFrequency(Frame.TOTAL_POWER) / dF : 0.0;
+		final double F0 = integration.getModulationFrequency(Frame.TOTAL_POWER) / dF;
 		final double sigma = Constant.sigmasInFWHM / (Constant.twoPi * T * dF);
 		final double a = -0.5 / (sigma * sigma);
 		
