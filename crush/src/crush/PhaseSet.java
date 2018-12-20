@@ -63,8 +63,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
         }
         return signal;
     }
-    
-    // TODO clone hash tables?
+   
 
     public Integration<?,?> getIntegration() { return integration; }
 
@@ -118,7 +117,7 @@ public class PhaseSet extends ArrayList<PhaseData> {
 
     public void despike(double level) { 
         integration.comments.append(",P");
-
+        
         Hashtable<Integer, Double> levels = new Hashtable<Integer, Double>();
         Hashtable<Integer, Double> noise = new Hashtable<Integer, Double>();
 
@@ -142,6 +141,8 @@ public class PhaseSet extends ArrayList<PhaseData> {
     private int despike(Channel channel, double significance, double offset, double noise) { 
         int spikes = 0;
 
+        if(Double.isNaN(noise)) return 0;
+        
         for(PhaseData p : this) {
             double dev = (p.value[channel.index] - offset) / noise;
 

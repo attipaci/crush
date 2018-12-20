@@ -316,19 +316,21 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
 
         if(isEmpty()) return;
 
+        
+        
         if(hasOption("pointing.suggest")) {
             double optimal = hasOption("smooth.optimal") ? option("smooth.optimal").getDouble() * scan.instrument.getSizeUnit().value() : scan.instrument.getPointSize();
 
             map.smoothTo(optimal);
-
+               
             if(hasOption("pointing.exposureclip")) {
                 Data2D exposure = map.getExposures();     
                 exposure.restrictRange(new Range(option("pointing.exposureclip").getDouble() * exposure.select(0.9), Double.POSITIVE_INFINITY));
             }
-            
+                 
             // Robust weight before restricting to potentially tiny search area...
             map.reweight(true);
-
+            
             if(hasOption("pointing.radius")) {
                 final double r = option("pointing.radius").getDouble() * Unit.arcsec;
 
@@ -349,8 +351,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
                 }.process();
             }
 
-
-            scan.pointing = getPeakSource();
+            scan.pointing = getPeakSource();     
         }
     }
 
