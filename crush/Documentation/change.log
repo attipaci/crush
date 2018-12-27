@@ -1,4 +1,4 @@
-2.43-1 (28 December 2018)
+2.43-1 (27 December 2018)
  
 
 	Overview
@@ -62,7 +62,7 @@
 	  'phaseweights' -> 'weighting.phases'
 	  'phasedespike' -> 'despike.phases' 
 
-	[TWEAK] A few checks and initialization steps migrated from from 
+	[TWEAK] A few checks and initialization steps migrated from 
 	CRUSH.main() to the constructor. This should make it easier to invoke
 	CRUSH from another Java program...
 
