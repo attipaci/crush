@@ -1,5 +1,14 @@
 2.43-b1 
 
+	Overview
+	=======================================================================
+	This release fixes the broken Windows deployment (both installer and 
+	runner scripts), and bumps preliminary SOFIA/HIRMES support to v.7 
+	simulated data. It also restores APEX (LABOCA & SABOCA) photometry 
+	mode, which was quite incapacitated yet again.
+	For developers, this version now offers an API for incorporating CRUSH
+	into another Java application.
+	=======================================================================
 
 	[BUG] {APEX} {Photometry} merging of photometry data from multithreaded
 	reductions did not carry over the individual scan fluxes, which then
@@ -27,6 +36,9 @@
 	temperature and sky correlated noise and using blind pixels for
 	cleaner speparation of these in imaging mode.
 
+	[FIX] Robust weighting ('weighting.method=robust') was broken due to
+	a bad overall weight normalization (sum vs. average). Fixed.
+
 	[FIX] {APEX} {Photometry} A mistake in the chopped configuration file
 	has incapacitated chopped photometry. Fixed ('gains.span' corrected
 	to 'array.span' + 'boxes.span' + 'cables.span')
@@ -39,6 +51,11 @@
 
 	[FIX] Spectral axis CRVAL header value in FITS was not cast to the
 	proper units, but was written in their natural SI units. Now fixed.
+
+	[CHANGE] {APEX} {photometry} Disable removing 1/f drifts from phase 
+	signals. It's really unnecessary (since phases are always differenced
+	anyway) and can cause unwanted discontinuities. (Corresponding code
+	is also discarded).
 
 	[CHANGE] Renamed options: 
 	  'phaseweights' -> 'weighting.phases'
@@ -55,6 +72,12 @@
 	CRUSH API 
 
 	[DOC] {CRUSH.java} Inline javadoc for the public CRUSH API.
+
+	[CONFIG] Restructured configurations. Now static (non-iteration 
+	specific) settings for 'extended' mode are in 'extended.cfg'. Options
+	for reducing 'chopped' data are in 'chopped.cfg', 'lab' mode
+	configurations are in 'lab.cfg', and options for 'derive' (deriving
+	pixel data) are in 'derive.cfg'. 
 
 	[CONFIG] {LABOCA} Updated configurations, especially for chopped & 
 	faint modes, to favor solution stability. Chopped configuration 

@@ -40,7 +40,7 @@ public class LabocaPixel extends APEXContinuumPixel {
 	public int amp = -1;
 	public int cable = -1;
 	public int pin = -1;
-	
+
 	public double boxGain = 1.0;
 	public double ampGain = 1.0;
 	public double cableGain = 1.0;
@@ -99,5 +99,4 @@ public class LabocaPixel extends APEXContinuumPixel {
 	public final static int FLAG_CABLE = softwareFlags.next('c', "Bad cable gain").value();
 	public final static int FLAG_BOX = softwareFlags.next('b', "Bad amplifier box gain").value();
 	public final static int FLAG_AMP = softwareFlags.next('a', "Bad amp gain").value();
-
 }

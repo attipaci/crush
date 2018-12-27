@@ -25,8 +25,6 @@ package crush;
 import java.io.*;
 import java.util.*;
 
-import jnum.ExtraMath;
-import jnum.Unit;
 import jnum.Util;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
@@ -75,19 +73,6 @@ public class PhaseSet extends ArrayList<PhaseData> {
         integration.comments.append(":P");
 
         for(PhaseData phase : this) phase.update(channels, integrationDeps);	
-
-        int N = size();
-
-        if(integration.hasOption("stability")) {
-            double T = (integration.instrument.integrationTime * integration.size()) / size();	
-            N = (int) Math.ceil(integration.option("stability").getDouble() * Unit.s / T);
-            if((N & 1) != 0) N++;
-            if(N > size()) N = size();
-        }
-
-        if(N < size()) integration.comments.append("(" + N + ")");
-
-        removeDrifts(channels, N);
 
         generation++;
     }
@@ -198,48 +183,6 @@ public class PhaseSet extends ArrayList<PhaseData> {
         return k > 1 ? Statistics.Inplace.median(var, 0, k) / Statistics.medianNormalizedVariance : Double.NaN;
     }
 
-
-
-    public void removeDrifts(ChannelGroup<?> channels, int nPhases) {
-        //integration.comments += "|DP(" + nPhases + ")";
-        final PhaseDependents parms = getPhaseDependents("drifts");
-
-        parms.clear(channels);
-
-        for(Channel channel : channels) removeDrifts(channel, nPhases, parms);
-
-        parms.apply(channels);
-    }
-
-
-    private void removeDrifts(final Channel channel, final int blockSize, final PhaseDependents parms) {		
-
-        int nParms = ExtraMath.roundupRatio(size(), blockSize);
-
-        for(int N=0; N < nParms; N++) {
-            final int from = N * blockSize;
-            final int to = Math.min(size(), from + blockSize);
-            double sum = 0.0, sumw = 0.0;
-
-            for(int n=from; n<to; n++) {
-                PhaseData phase = get(n);
-                if(phase.isFlagged(channel)) continue;
-
-                sum += phase.weight[channel.index] * phase.value[channel.index];
-                sumw += phase.weight[channel.index];
-            }
-
-            if(sumw > 0.0) {
-                double level = (float) (sum / sumw);
-                for(int n=from; n<to; n++) {
-                    PhaseData phase = get(n);
-                    phase.value[channel.index] -= level;
-                    if(phase.isUnflagged(channel)) parms.addAsync(phase, phase.weight[channel.index] / sumw);
-                }
-                parms.addAsync(channel, 1.0);
-            }		
-        }		
-    }
 
     public void write(String path) throws IOException {
         String filename = path + File.separator + integration.scan.getID() + "-" + integration.getFileID() + ".phases.tms";

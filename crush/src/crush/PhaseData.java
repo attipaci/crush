@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -116,8 +116,7 @@ public class PhaseData implements Serializable {
 			if(channel instanceof PhaseWeighting) weight[channel.index] *= ((PhaseWeighting) channel).getRelativePhaseWeight();
 		}
 		
-		parms.apply(channels, start.index, to);
-		
+		parms.apply(channels, start.index, to);		
 	}
 	
 	public final WeightedPoint getValue(final Channel channel) {

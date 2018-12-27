@@ -103,7 +103,7 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 	@Override
     protected void initModalities() {
 		super.initModalities();
-		
+	
 		try { addModality(new CorrelatedModality("boxes", "B", divisions.get("boxes"), LabocaPixel.class.getField("boxGain"))); }
 		catch(NoSuchFieldException e) { error(e); }
 		
@@ -119,11 +119,11 @@ public class Laboca extends APEXCamera<LabocaPixel> implements NonOverlapping {
 	
 		try { addModality(new Modality<LabocaHe3Response>("temperature", "T", divisions.get("detectors"), LabocaPixel.class.getField("temperatureGain"), LabocaHe3Response.class));	}
 		catch(NoSuchFieldException e) { error(e); }
-		
+
 		modalities.get("boxes").setGainFlag(LabocaPixel.FLAG_BOX);
 		modalities.get("cables").setGainFlag(LabocaPixel.FLAG_CABLE);
 		modalities.get("amps").setGainFlag(LabocaPixel.FLAG_AMP);
-		
+
 		((CorrelatedModality) modalities.get("boxes")).setSkipFlags(~(LabocaPixel.FLAG_RESISTOR | Channel.FLAG_SENSITIVITY));
 		((CorrelatedModality) modalities.get("cables")).setSkipFlags(~(LabocaPixel.FLAG_RESISTOR | Channel.FLAG_SENSITIVITY));
 		((CorrelatedModality) modalities.get("amps")).setSkipFlags(~(LabocaPixel.FLAG_RESISTOR | Channel.FLAG_SENSITIVITY));

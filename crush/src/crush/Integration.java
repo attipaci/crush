@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -836,7 +836,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
 
-    public void removeChannelDrifts(final ChannelGroup<? extends Channel> channels, final Dependents parms, final int driftN, final boolean robust) {
+    public void removeChannelDrifts(final ChannelGroup<? extends Channel> channels, final Dependents parms, final int driftN, final boolean robust) {    
         parms.clear(channels, 0, size());
 
         final DataPoint[] aveOffset = instrument.getDataPoints();
@@ -1108,25 +1108,15 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
                         Instrument.recycle(localVar);
                     }
                 }
+                
+                for(int i=instrument.size(); --i >= 0; ) if(var[i].weight() > 0.0) var[i].scaleValue(1.0 / var[i].weight());
+                
                 return var;
             }	
         };
 
         variances.process();
-        setWeightsFromVarStats(channels, variances.getResult());
-    }
-
-    private void setWeightsFromVarStats(ChannelGroup<?> channels, final DataPoint[] var) {
-        if(var == null) return;
-
-        for(Channel channel : channels) {
-            final DataPoint x = var[channel.index];
-            if(x.weight() <= 0.0) return;
-            channel.dof = Math.max(0.0, 1.0 - channel.dependents / x.weight());
-            channel.variance = x.value() / x.weight();
-            channel.weight = channel.variance > 0.0 ? channel.dof / channel.variance : 0.0;
-        }
-        Instrument.recycle(var);
+        setWeightsFromVarianceStats(channels, variances.getResult());
     }
 
     public void getDifferentialChannelWeights() {
@@ -1183,13 +1173,15 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
                     }
                     Instrument.recycle(localVar);
                 }
+                for(int i=instrument.size(); --i >= 0; ) if(var[i].weight() > 0.0) var[i].scaleValue(1.0 / var[i].weight());
+                
                 return var;
             }	
         };
 
         variances.process();
-        setWeightsFromVarStats(channels, variances.getResult());
-
+        
+        setWeightsFromVarianceStats(channels, variances.getResult());
     }
 
     public void getRobustChannelWeights() {
@@ -1198,16 +1190,16 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         final ChannelGroup<? extends Channel> channels = instrument.getLiveChannels();
 
         final DataPoint[] var = instrument.getDataPoints();
-        for(Channel channel : channels) var[channel.index].noData();
+        for(DataPoint p : var) p.noData();
 
 
         channels.new Fork<Void>() {
-            private float[] dev2;
+            private DataPoint[] dev2;
 
             @Override
             protected void init() {
                 super.init();
-                dev2 = getFloats();
+                dev2 = getDataPoints();
             }
 
             @Override
@@ -1218,27 +1210,38 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
             @Override
             protected void process(Channel channel) {
-                int points = 0;
-                double sumw = 0.0;
+                int points = 0; 
 
-                for(final Frame exposure : Integration.this) if(exposure != null) if(exposure.isUnflagged(Frame.CHANNEL_WEIGHTING_FLAGS)) {
+                for(final Frame exposure : Integration.this) if(exposure != null) if(exposure.isUnflagged(Frame.CHANNEL_WEIGHTING_FLAGS))
                     if(exposure.sampleFlag[channel.index] == 0) {
-                        final float value = exposure.data[channel.index];
-                        dev2[points++] = exposure.relativeWeight * value * value;
-                        sumw += exposure.relativeWeight;
-                    }		    
-                }	
-
-                if(points > 0) {
-                    var[channel.index].setValue(Statistics.Inplace.median(dev2, 0, points) / Statistics.medianNormalizedVariance);
-                    var[channel.index].setWeight(sumw);
-                }
+                        final DataPoint p = dev2[points++];          
+                        final float dev = exposure.data[channel.index];
+                        p.setValue(dev * dev);
+                        p.setWeight(exposure.relativeWeight);
+                    }	
+                
+                Statistics.Inplace.median(dev2, 0, points, var[channel.index]);
+                var[channel.index].scaleValue(1.0 / Statistics.medianNormalizedVariance);
             }
-
+            
         }.process();
 
+        setWeightsFromVarianceStats(channels, var);
+    }
 
-        setWeightsFromVarStats(channels, var);
+    
+
+    private void setWeightsFromVarianceStats(ChannelGroup<?> channels, final DataPoint[] var) {
+        if(var == null) return;
+       
+        for(Channel channel : channels) {
+            final DataPoint x = var[channel.index];
+            if(x.weight() <= 0.0) return;
+            channel.dof = Math.max(0.0, 1.0 - channel.dependents / x.weight());
+            channel.variance = x.value();
+            channel.weight = channel.variance > 0.0 ? channel.dof / channel.variance : 0.0;
+        }
+        Instrument.recycle(var);
     }
 
 

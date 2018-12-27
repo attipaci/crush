@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -86,10 +86,8 @@ public class CorrelatedMode extends Mode {
 		signal.update(isRobust); 	
 		
 		// Solve for the correlated phases also, if required...
-		if(integration.isPhaseModulated()) if(integration.hasOption("phases")) {
-			PhaseSignal pSignal = ((PhaseModulated) integration).getPhases().getSignal(this);
-			pSignal.update(isRobust);
-		}
+		if(integration.isPhaseModulated()) if(integration.hasOption("phases"))
+			((PhaseModulated) integration).getPhases().getSignal(this).update(isRobust);
 	}	
 	
 	

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -157,7 +157,7 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 		
 		// Flag frames according to chopper phase ---> left, right, transit.
 		PhaseData current = new PhaseData(this);
-		int nPhases = 0;
+
 		int transitFlag = Frame.CHOP_TRANSIT | Frame.SKIP_MODELING | Frame.SKIP_WEIGHTING | Frame.SKIP_SOURCE_MODELING;
 		
 		for(Frame exposure : this) if(exposure != null) {
@@ -172,7 +172,6 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 					current.start = exposure;
 					current.end = exposure;
 					if(current.phase != 0) chopper.phases.add(current);
-					nPhases++;
 				}
 				else current.end = exposure;
 				usable++;
@@ -186,7 +185,6 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 					current.start = exposure;
 					current.end = exposure;
 					if(current.phase != 0) chopper.phases.add(current);
-					nPhases++;
 				}
 				else current.end = exposure;
 				usable++;
@@ -210,8 +208,6 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 		
 		// Get the initial phase data...
 		updatePhases();
-		
-		filterTimeScale = size() * instrument.integrationTime / nPhases; 
 		
 	}
 	

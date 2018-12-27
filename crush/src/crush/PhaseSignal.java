@@ -61,7 +61,7 @@ public class PhaseSignal implements Serializable {
 	public double getWeight(int i) { return weight[i]; }
 	
 	protected void update(boolean isRobust) throws Exception {
-		// Make syncGains carry the gain increment since last sync...
+		// Make sure any gain changes are synched back to the timestreams
 		syncGains();
 			
 		final float[] G = mode.getGains();

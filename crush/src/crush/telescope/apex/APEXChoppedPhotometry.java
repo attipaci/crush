@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -21,6 +21,7 @@
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 package crush.telescope.apex;
+
 
 
 import crush.*;
@@ -105,10 +106,10 @@ public class APEXChoppedPhotometry extends Photometry {
 				//WeightedPoint df = pixel.getBGCorrectedLROffset(phases, neighbours, sourceGain);	
 				//double chi2 = pixel.getBGCorrectedLRChi2(phases, neighbours, df.value(), sourceGain);
 
+
 			    WeightedPoint df = pixel.getLROffset(phases);    
                 double chi2 = pixel.getLRChi2(phases, df.value());
 
-				
 			    if(hasOption("chirange")) {
 			        Range r = option("chirange").getRange(true);
                     if(!r.contains(Math.sqrt(chi2))) {
