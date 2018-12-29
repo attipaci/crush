@@ -1,3 +1,24 @@
+
+	[PRUNE] Remove future support for: ASZCa, p-ArTeMiS, MAKO, MAKO-2,
+	SHARC (first gen.), and MUSTANG-2. Legacy support for these instruments
+	is available via 2.43-1 and earlier releases.
+
+	[PRUNE] {GISMO} Remove support for processing SAE data. It was 
+	introduced as an experiment, but it did not prove of much use. There
+	is little point of keeping support for it down the line.
+
+	[PRUNE] Remove unused SyncModMap and 'source.synchronized' option.
+
+	[CODE] {Gismo} Simplified hierarchy by eliminating AbstractGismo.
+
+	[CODE] {Integration} Introducing new loop() / fork() methods that work
+	with PointOp / ParallelPointOp, and new FrameView and TimeStreamView
+	that provide Data1D access along in one direction. These additions
+	will allow simplifying many of the operations on Integration objects.
+
+
+
+
 2.43-1 (27 December 2018)
  
 

@@ -292,16 +292,6 @@ For a general overview of channel divisions, please consult Section 3.
                         before CRUSH will be able to find scans by number.
                         @See: 'datapath', 'object'
   
-    log.saegains        @Since: 2.16
-                        @Expert
-                        Log the SAE coupling coefficients against line-of-sight
-                        tau, detector bias, and tuning settings. This is
-                        primarily a diagnostic option for checking and/or
-                        finetuning the feedback parameters of GISMO. The
-                        option requires 'read.sae' be set also, or else it
-                        has no effect.
-                        @See: 'read.sae'
-
     mux                 @Alias: 'correlated.mux'
                         @Expert
                         Specifies the grouping of channels by the SQUID 
@@ -375,20 +365,6 @@ For a general overview of channel divisions, please consult Section 3.
                         samples, to combine pixels read in some time-interval.
                         @See: 'pins'
 
-    read.sae            @Expert
-                        @Since: 2.16
-                        The GISMO FITS contains both the TES feedback DAC
-                        values (proportional to the flux, if the feedback is
-                        working as expected) and an error term 'SAE'. By
-                        default CRUSH does not parse the SAE data, since it is
-                        large, and not usually useful. However, this option
-                        enables parsing the SAE signals, which is a
-                        prerequisite for using it, e.g. for decorrelating
-                        (e.g. 'correlated.sae'), or measuring couplings
-                        (e.g. 'write.coupling=sae').
-                        @See: 'sae'
-
-
     rows                @Alias: 'correlated.rows'
                         @Expert
                         Specifies the grouping of channels by their geometric
@@ -404,26 +380,6 @@ For a general overview of channel divisions, please consult Section 3.
                         accordingly. Therefore, it is possile for CRUSH to
                         ignore the reconstructed data if the user wishes to do
                         so.
-
-    sae                 @Alias: -> correlated.sae
-                        @Expert
-                        @Since: 2.16
-                        Remove signals correlated to the SAE (feed back loop
-                        error). Also requires 'read.sae' to be set, otherwise
-                        this option has no effect on its own.
-                        @See: 'read.sae'
-
-    sae.hipass=X        @Expert
-                        @Since: 2.16
-                        Hipass filter the SAE feedback loop error signal via
-                        a Gaussian kernel with X seconds FWHM.
-                        @See: 'read.sae', 'sae.smooth'
- 
-    sae.smooth=X        @Expert
-                        @Since: 2.16
-                        Smooth the SAE feedback loop error signal with a
-                        Gaussian kernel with X seconds FWHM.
-                        @See: 'read.sae', 'sae.hipass'
 
     SZ                  @Since: 2.15-2
                         Optimize reduction for the detection of Sunyaev-

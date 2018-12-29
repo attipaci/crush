@@ -51,7 +51,7 @@ import java.text.*;
 import java.util.*;
 
 
-public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements GroundBased, Weather {
+public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBased, Weather {
 	/**
 	 * 
 	 */
@@ -74,7 +74,7 @@ public class GismoScan extends Scan<AbstractGismo, GismoIntegration> implements 
 	public Vector2D nasmythOffset, equatorialOffset, horizontalOffset, pakoOffsets;
 	public Vector2D basisOffset = new Vector2D();
 	
-	public GismoScan(AbstractGismo instrument) {
+	public GismoScan(Gismo instrument) {
 		super(instrument);
 	}
 	

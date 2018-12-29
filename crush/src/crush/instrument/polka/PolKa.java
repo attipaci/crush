@@ -200,8 +200,7 @@ public class PolKa extends Laboca implements Oscillating {
 	@Override
 	public SourceModel getSourceModelInstance(List<Scan<?,?>> scans) {
 		if(!hasAnalyzer()) return super.getSourceModelInstance(scans);
-		else if(hasOption("source.synchronized")) return new SyncPolarMap(this);
-		else return new PolarMap(this);
+		return new PolarMap(this);
 	}
 	
     @Override

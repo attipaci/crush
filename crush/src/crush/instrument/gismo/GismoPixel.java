@@ -37,11 +37,11 @@ public class GismoPixel extends SingleColorPixel {
 	 */
 	private static final long serialVersionUID = -2948396506109435290L;
 	public int row, col, mux, pin;
-	public double muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0, saeGain = 0.0;
+	public double muxGain = 1.0, pinGain = 1.0, colGain = 1.0, rowGain = 1.0;
 	
 	// 16 x 8 (rows x cols)
 	
-	public GismoPixel(AbstractGismo array, int zeroIndex) {
+	public GismoPixel(Gismo array, int zeroIndex) {
 		super(array, zeroIndex);
 		row = zeroIndex / 8;
 		col = zeroIndex % 8;
@@ -55,7 +55,7 @@ public class GismoPixel extends SingleColorPixel {
 
 	public void calcPosition() {
 		// ALt/Az maps show this to be correct...
-		position = getPosition(((AbstractGismo) instrument).pixelSize, row, col);
+		position = getPosition(((Gismo) instrument).pixelSize, row, col);
 	}
 	
 	public static Vector2D getPosition(Vector2D size, double row, double col) {

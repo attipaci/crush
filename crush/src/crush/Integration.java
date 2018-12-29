@@ -37,10 +37,12 @@ import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.LockedException;
+import jnum.PointOp;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.AstroProjector;
 import jnum.data.*;
+import jnum.data.samples.Data1D;
 import jnum.fft.FloatFFT;
 import jnum.fits.FitsToolkit;
 import jnum.math.Complex;
@@ -48,6 +50,7 @@ import jnum.math.Range;
 import jnum.math.Range2D;
 import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
+import jnum.parallel.ParallelPointOp;
 import jnum.parallel.ParallelTask;
 import jnum.projection.Projection2D;
 import jnum.reporting.BasicMessaging;
@@ -3576,6 +3579,166 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 
 
+    public <ReturnType> ReturnType loop(final PointOp<FrameType, ReturnType> op) {
+        for(FrameType frame : this) if(frame != null) {
+            op.process(frame);
+            if(op.exception != null) return null;
+        }
+        Thread.yield();
+        return op.getResult();
+    }
+    
+    
+    public <ReturnType> ReturnType fork(final ParallelPointOp<FrameType, ReturnType> op) {
+      
+        Fork<ReturnType> fork = new Fork<ReturnType>() {
+            private ParallelPointOp<FrameType, ReturnType> localOp;
+
+            @Override
+            public void init() {
+                super.init();
+                localOp = op.newInstance();
+            }
+            
+            @Override
+            protected void process(FrameType frame) {
+                localOp.process(frame);
+            }
+          
+            @Override
+            public ReturnType getLocalResult() { return localOp.getResult(); }
+            
+
+            @Override
+            public ReturnType getResult() { 
+                ParallelPointOp<FrameType, ReturnType> globalOp = op.newInstance();
+                
+                for(ParallelTask<ReturnType> worker : getWorkers()) {
+                    globalOp.mergeResult(worker.getLocalResult());
+                }
+                return globalOp.getResult();
+            }
+            
+        };
+        
+        fork.process();
+        
+        return fork.getResult();
+    }
+    
+    
+    public class FrameView extends Data1D {
+        private ChannelGroup<?> channels;
+        private FrameType frame;
+        private int excludeFlags;
+        private byte excludeSamples;
+        
+        public FrameView() { this(instrument); }
+        
+        public FrameView(ChannelGroup<?> channels) { this.channels = channels; }
+        
+        public void setFrame(FrameType exposure) { this.frame = exposure; }
+        
+        public void setExcludeFlags(int pattern) { this.excludeFlags = pattern; }
+        
+        public void setExcludeSamples(byte pattern) { this.excludeSamples = pattern; }
+        
+        
+        @Override
+        public int size() {
+            return channels.size();
+        }
+
+        @Override
+        public Number get(int i) {
+            Channel channel = channels.get(i);
+            
+            if(frame == null) return Float.NaN;
+            if(frame.isFlagged(excludeFlags)) return Float.NaN;
+            if((frame.sampleFlag[channel.index] & excludeSamples) != 0) return Float.NaN;
+            return frame.data[channel.index];
+        }
+
+        @Override
+        public void add(int i, Number value) {
+            if(frame != null) frame.data[channels.get(i).index] += value.floatValue();
+        }
+
+        @Override
+        public void set(int i, Number value) {
+            if(frame != null) frame.data[channels.get(i).index] = value.floatValue();
+        }
+
+        @Override
+        public Class<? extends Number> getElementType() {
+            return Float.class;
+        }
+
+        @Override
+        public Object getCore() {
+            float[] data = new float[size()];
+            for(int i=size(); --i >= 0; ) data[i] = frame.data[channels.get(i).index];
+            return data;
+        }
+        
+    }
+
+    
+    public class TimeStreamView extends Data1D {
+        private Channel channel;
+        private int from, to;
+        private int excludeFlags;
+        private byte excludeSamples;
+        
+        public TimeStreamView() { this(0, Integration.this.size()); }
+        
+        public TimeStreamView(int from, int to) { 
+            this.from = Math.max(from, 0);
+            this.to = Math.min(to, Integration.this.size());
+            if(to < from) to = from;
+        }
+        
+        public void setChannel(Channel c) { this.channel = c; }
+        
+        public void setExcludeFlags(int pattern) { this.excludeFlags = pattern; }
+        
+        public void setExcludeSamples(byte pattern) { this.excludeSamples = pattern; }
+        
+        
+        @Override
+        public int size() { return to - from; }
+
+        @Override
+        public Number get(int i) {
+            final FrameType frame = Integration.this.get(from + i);
+            if(frame == null) return Float.NaN;
+            if(frame.isFlagged(excludeFlags)) return Float.NaN;
+            if((frame.sampleFlag[channel.index] & excludeSamples) != 0) return Float.NaN;
+            return frame.data[channel.index];
+        }
+
+        @Override
+        public void add(int i, Number value) {
+            Integration.this.get(from + i).data[channel.index] += value.floatValue();
+        }
+
+        @Override
+        public void set(int i, Number value) {
+            Integration.this.get(from + i).data[channel.index] = value.floatValue();
+        }
+
+        @Override
+        public Class<? extends Number> getElementType() {
+            return Float.class;
+        }
+
+        @Override
+        public Object getCore() {
+            float[] data = new float[size()];
+            for(int i=size(); --i >= 0; ) data[i] = Integration.this.get(from + i).data[channel.index];
+            return data;
+        }
+    }
 
     public abstract class Fork<ReturnType> extends CRUSH.Fork<ReturnType> {
         public Fork() { super(size(), getThreadCount()); }

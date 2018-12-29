@@ -30,7 +30,7 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 import crush.Scan;
 import crush.array.SingleColorPixel;
-import crush.telescope.ElevationCouplingCurve;
+import crush.instrument.sharc2.ElevationCouplingCurve;
 import crush.telescope.GroundBased;
 import crush.telescope.HorizontalFrame;
 import jnum.Unit;

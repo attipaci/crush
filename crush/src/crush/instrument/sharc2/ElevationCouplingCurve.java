@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,28 +20,40 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
+// Copyright (c) 2007,2008,2009,2010 Attila Kovacs
 
-package crush.instrument.mako2;
+package crush.instrument.sharc2;
 
-import crush.SourceModel;
-import crush.instrument.mako.MakoScan;
+import java.io.*;
 
-public class Mako2Scan extends MakoScan<Mako2> {
+import jnum.Unit;
+import jnum.data.Interpolator;
+import jnum.io.LineParser;
+import jnum.text.SmartTokenizer;
+
+
+public class ElevationCouplingCurve extends Interpolator {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 9146779622501912860L;
+	private static final long serialVersionUID = 1L;
 
-
-	public Mako2Scan(Mako2 instrument) {
-		super(instrument);
+	public ElevationCouplingCurve(String fileName) throws IOException {
+		super(fileName);		
 	}
 	
-	
 	@Override
-	public void setSourceModel(SourceModel model) {
-		super.setSourceModel(model);
-		sourceModel.setID(hasOption("850um") ? "850um" : "350um");
+	public void readData(String fileName) throws IOException {
+	    new LineParser() {
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                Interpolator.Data response = new Interpolator.Data();
+                response.ordinate = tokens.nextDouble() * Unit.deg;
+                response.value = tokens.nextDouble();
+                add(response);
+                return true;
+            }     
+	    }.read(fileName);
 	}	
-	
 }

@@ -1772,17 +1772,6 @@
 			available options
 			@See: 'log', 'log.file', 'log.format'
 
-:: log.saegains		@Instrument: GISMO
-			@Since: 2.16
-			@Expert
-			Log the SAE coupling coefficients against line-of-sight
-			tau, detector bias, and tuning settings. This is
-			primarily a diagnostic option for checking and/or
-			finetuning the feedback parameters of GISMO. The
-			option requires 'read.sae' be set also, or else it
-			has no effect.
-			@See: 'read.sae'
-
 :: los			@Instrument: HAwC+
 			@Since: 2.41
 			@Expert
@@ -2763,21 +2752,6 @@
 			@See: 'datapath', @APEX:'project', @GISMO:'date',
 			      @GISMO:'object'
 
-:: read.sae		@Instrument: GISMO
-			@Expert
-			@Since: 2.16
-			The GISMO FITS contains both the TES feedback DAC
-			values (proportional to the flux, if the feedback is
-			working as expected) and an error term 'SAE'. By
-			default CRUSH does not parse the SAE data, since it is
-			large, and not usually useful. However, this option
-			enables parsing the SAE signals, which is a 
-			prerequisite for using it, e.g. for decorrelating
-			(e.g. 'correlated.sae'), or measuring couplings
-			(e.g. 'write.coupling=sae').
-			@See: 'sae'
-
-
 :: recall=<option>	Undoes 'forget', and reinstates the <option> to its 
 			old value.
 			@See: 'forget'	
@@ -2903,29 +2877,6 @@
 			OBJRA/OBJDEC. However, these were not always filled
 			correctly during the 2016 October flights, so this
 			option provides a workaround for those scans.
-
-:: sae			@Alias: -> correlated.sae
-			@Instrument: GISMO
-			@Expert
-			@Since: 2.16
-			Remove signals correlated to the SAE (feed back loop
-			error). Also requires 'read.sae' to be set, otherwise
-			this option has no effect on its own.
-			@See: 'read.sae'
-
-:: sae.hipass=X		@Instrument: GISMO
-			@Expert
-			@Since: 2.16
-			Hipass filter the SAE feedback loop error signal via
-			a Gaussian kernel with X seconds FWHM.
-			@See: 'read.sae', 'sae.smooth'
-
-:: sae.smooth=X		@Instrument: GISMO
-			@Expert
-			@Since: 2.16
-			Smooth the SAE feedback loop error signal with a 
-			Gaussian kernel with X seconds FWHM.
-			@See: 'read.sae', 'sae.hipass'
 
 :: scale=<arg>		Set the calibration scaling of the data. The option
 			can take as argument, either:
@@ -3364,8 +3315,7 @@
 			polarization, anbd will be ignored otherwise.
 			You can also use the shorthand 'pol' to the same 
 			effect.
-			@See: 'pol', 'spf', 'source.synchronized', 
-			      'waveplate.refangle', 'analyzer'
+			@See: 'pol', 'spf', 'waveplate.refangle', 'analyzer'
 
 :: source.polar.angles		@Instrument: PolKa
 				@Since: 2.11
@@ -3415,22 +3365,6 @@
 			The signature determines how source clipping and
 			blanking are implemented.
 			@See: 'clip', 'blank'
-
-:: source.synchronized 	@Instrument: PolKa
-			@Advanced
-			CRUSH offers two methods of analyzing 
-			polarization data. The default is an inventive method
-			that extracts polarization from repeated observations
-			over each map pixels, which can be scattered in time. 
-			As such, the default method can be used also for fast
-			scanning (relative to waveplate rotation). The more
-			traditional approach is to scan slowly, and integrate
-			an entire waveplate rotation over one map pixel. This
-			"synchronized" mode can be selected with this option. It
-			is only suitable for reducing data, where telescope
-			movement is always less than a map pixel in a quarter
-			waveplate cycle.
-			@See: 'grid'
 
 :: source.type=<type>	By default, crush will try to make a map from
 			the data. However, some istruments may take

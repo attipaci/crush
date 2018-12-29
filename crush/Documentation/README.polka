@@ -126,8 +126,7 @@ little longer.
                         polarization, anbd will be ignored otherwise.
                         You can also use the shorthand 'pol' to the same
                         effect.
-                        @See: 'pol', 'spf', 'source.synchronized',
-                              'waveplate.refangle', 'analyzer'
+                        @See: 'pol', 'spf', 'waveplate.refangle', 'analyzer'
 
 :: source.polar.angles		@Since: 2.11
                                 @Advanced
@@ -152,21 +151,6 @@ little longer.
                         (i.e. 3% rms). You can also use the shorthand version
                         'spf.rmsclip'.
                         @See: 'spf', 'source.polar.fraction'
-
-:: source.synchronized 	@Advanced
-                        CRUSH offers two methods of analyzing
-                        polarization data. The default is an inventive method
-                        that extracts polarization from repeated observations
-                        over each map pixels, which can be scattered in time.
-                        As such, the default method can be used also for fast
-                        scanning (relative to waveplate rotation). The more
-                        traditional approach is to scan slowly, and integrate
-                        an entire waveplate rotation over one map pixel. This
-                        "synchronized" mode can be selected with this option. It
-                        is only suitable for reducing data, where telescope
-                        movement is always less than a map pixel in a quarter
-                        waveplate cycle.
-                        @See: 'grid'
 
 :: waveplate.channel=N  @Expert
                         Specify the LABOCA channel (counting from 1) that

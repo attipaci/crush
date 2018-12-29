@@ -24,10 +24,6 @@
 
 package crush.instrument.gismo;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 import crush.*;
 import crush.fits.HDUReader;
@@ -38,7 +34,7 @@ import jnum.astro.*;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
-public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> implements GroundBased {
+public class GismoIntegration extends Integration<Gismo, GismoFrame> implements GroundBased {
 	/**
 	 * 
 	 */
@@ -49,24 +45,6 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	public GismoIntegration(GismoScan parent) {
 		super(parent);
 	}	
-	
-	
-	@Override
-	public void validate() {
-		super.validate();
-		
-		if(hasOption("read.sae")) {
-			levelSAE();
-			
-			SAEModality saeMode = (SAEModality) instrument.modalities.get("sae");
-			if(saeMode != null) {
-				info("Initializing SAE signals for decorrelation");
-				saeMode.init(this);
-			}
-		
-			discardSAEFields();
-		}
-	}
 	
 	@Override
 	public void setTau() throws Exception {
@@ -109,7 +87,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 	}
 		
 	class GismoReader extends HDUReader {	
-		private float[] DAC, SAE;
+		private float[] DAC;
 		private double[] MJD, LST, dX, dY, AZE, ELE;
 		private double[] X0, Y0, cEL; //AZ, EL, cAZ, cEL, tAZ, tEL, posA;
 		private int[] NS, SN, CAL;
@@ -122,7 +100,6 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 			super(hdu);
 		
 			int iDAC = hdu.findColumn("DAC");
-			int iSAE = hdu.findColumn("SAE");
 			
 			channels = table.getSizes()[iDAC];
 			
@@ -159,8 +136,6 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 					
 			int iCAL = hdu.findColumn("CalFlag"); // 0=none, 1=shutter, 2=ivcurve
 			if(iCAL > 0) CAL = (int[]) table.getColumn(iCAL);
-			
-			if(hasOption("read.sae")) if(iSAE > 0) SAE = (float[]) table.getColumn(iSAE);
 			
 			// These columns below have been retired in March 2012
 			// But even before that, these did not carry actual data, as thermometry
@@ -219,11 +194,6 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 					
 					// Read the pixel data
 					frame.parseData(DAC, i*channels, channels);	
-					
-					if(SAE != null) {
-						frame.SAE = new float[frame.data.length];
-						frame.parseSAE(SAE, i*channels, channels);
-					}
 					
 					// Add in the astrometry...
 					frame.MJD = MJD[i];
@@ -458,85 +428,7 @@ public class GismoIntegration extends Integration<AbstractGismo, GismoFrame> imp
 			};
 		}
 	}	
-	
-	
-	@SuppressWarnings("cast")
-    void levelSAE() { 
-	    // TODO
-        // This cast, while seemingly unnecessary, is needed to avoid VerifyError when compiling with javac.
-	    // Alas, Eclipse compiles is just fine without the explicit cast, as expected...
-	    ((AbstractGismo) instrument).new Fork<Void>() {
-			@Override
-			protected void process(GismoPixel channel) { levelSAE(channel); }
-		}.process();
-		
-		for(GismoPixel pixel : instrument) levelSAE(pixel); 
-		
-	}
-	
-	void levelSAE(GismoPixel channel) {
-		double sum = 0.0;
-		int n=0;
-		for(GismoFrame exposure : this) if(exposure != null) {
-			sum += exposure.SAE[channel.index];
-			n++;
-		}
-		float ave = n > 0 ? (float) (sum / n) : 0.0F;
-		for(GismoFrame exposure : this) if(exposure != null) exposure.SAE[channel.index] -= ave;		
-	}
 
-	
-	@Override
-	public void writeProducts() {
-		super.writeProducts();
-		
-		if(hasOption("log.saegains")) {
-			try { logSAEGains(instrument.getOutputPath()); }
-			catch(IOException e) { error(e); }
-		}
-		
-	}
-	
-	public void discardSAEFields() {
-		for(GismoFrame exposure : this) if(exposure != null) exposure.SAE = null;
-	}
-	
-	private boolean checkSAEComplete() {
-		boolean isOK = true;
-		if(!hasOption("read.sae")) { isOK = false; warning("SAE values not parsed. Use 'read.sae' option."); }
-		if(!hasOption("noslim")) { isOK = false; warning("Use 'noslim' option to write complete SAE data."); }
-		return isOK;
-	}
-	
-	void logSAEGains(String path) throws IOException {
-		if(!checkSAEComplete()) return;
-		
-		String fileName = path + File.separator + "saegain.log";
-		PrintWriter out = new PrintWriter(new FileOutputStream(fileName, true));
-		
-		out.println(this.getASCIIHeader());
-		out.println("#");
-		out.println("# ID\ttau\tbias\t2nd-stage-bias(x4)\t2nd-stage-feedback(x4)\t3rd-stage-bias(x4)\t3rd-stage-feedback(x4)");
-		
-		out.print(scan.getID() + "\t" + Util.f3.format(zenithTau / Math.sin(scan.horizontal.EL())));
-		out.print("\t" + instrument.detectorBias[0]);
-		
-		for(int i=0; i<4; i++) out.print("\t" + instrument.secondStageBias[i]);
-		for(int i=0; i<4; i++) out.print("\t" + instrument.secondStageFeedback[i]);
-		for(int i=0; i<4; i++) out.print("\t" + instrument.thirdStageBias[i]);
-		for(int i=0; i<4; i++) out.print("\t" + instrument.thirdStageFeedback[i]);
-		
-		for(int c=0; c<instrument.size(); c++) {
-			GismoPixel pixel = instrument.get(c);
-			out.print("\t" + Util.e3.format(pixel.saeGain));
-		}
-		out.println();
-		
-		out.close();
-		
-		notify("Logged to " + fileName);
-	}
-	
 	
 	@Override
 	public String getFullID(String separator) {
