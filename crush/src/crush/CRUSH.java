@@ -813,19 +813,13 @@ public class CRUSH extends Configurator implements BasicMessaging {
                         "\n" +
                         " Supported instruments (mandatory first argument to crush):\n" +
                         "\n" +
-                        "     aszca          APEX S-Z Camera.\n" +
                         "     gismo          Goddard-IRAM 2mm Observer.\n" +
                         "     hawc+          SOFIA/HAWC+ camera.\n" +
                         "     hirmes         SOFIA/HIRMES camera.\n" +
                         "     laboca         LABOCA 870um camera at APEX.\n" +
-                        "     mako           MAKO 350um KID demo camera at the CSO.\n" +
-                        "     mako2          Gen. 2 MAKO 350um/850um KID demo camera at CSO.\n" +
-                        "     mustang2       MUSTANG-2 3mm camera at the GBT.\n" +
-                        "     p-artemis      ArTeMiS prototype at APEX.\n" +
                         "     polka          PolKa polarimetry frontend for LABOCA.\n" +
                         "     saboca         SABOCA 350um camera at APEX.\n" +
                         "     scuba2         SCUBA-2 450um/850um camera at the JCMT.\n" +
-                        "     sharc          Original SHARC 350um camera at the CSO.\n" +
                         "     sharc2         SHARC-2 350um/450um/850um camera at the CSO.\n" +
                         "\n" +		
                         " Try 'crush <instrument> -help' to get an instrument-specific version of this\n" +

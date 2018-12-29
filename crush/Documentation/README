@@ -2411,15 +2411,38 @@ values are generated during reduction, and therefore may not be available to
 Currently, CRUSH supports the following instruments (in alphabetical order):
 
    
-    ASZCA        (2mm) APEX SZ Camera, from Berkeley, CA
-                 bolo.berkeley.edu/apexsz/instrument.html
-
     GISMO        (2mm) Goddard-IRAM Superconducting 2-Millimeter Observer
                  www.iram.es/IRAMES/mainWiki/GoddardIramSuperconductingTwo\
                  Millimeter
 
     LABOCA       (870um) Large APEX Bolometer Camera
                  www.apex-telescope.org/bolometer/laboca
+
+    PolKA        (polarimetry) Polarimeter for LABOCA
+                 www.mpifr-bonn.mpg.de/staff/gsiringo/laboca/laboca\
+                 _polarimeter.html
+
+    SABOCA       (350um) Submillimeter APEX Bolometer Camera
+                 www.apex-telescope.org/bolometer/saboca
+
+    SCUBA-2      (450um, 850um) Submillimetre Common User Bolometer Array 2
+                 www.roe.ac.uk/ukatc/projects/scubatwo
+
+    SHARC-2      (350um, 450um, 850um) The second-generation Submillimeter 
+                 High-Angular Resolution Camera
+                 Caltech, Pasadena, CA
+                 www.submm.caltech.edu:/~sharc
+
+    SOFIA/HAWC+  (53um, 62um, 89um, 155um, 216um)
+                 High-resolution Airborne Wide-angle Camera
+
+
+The following instruments have legacy support only (supported by CRUSH 2.43-1
+and earlier releases):
+
+
+    ASZCA        (2mm) APEX SZ Camera, from Berkeley, CA
+                 bolo.berkeley.edu/apexsz/instrument.html
 
     MAKO         (350um) KID technology demonstration camera for the CSO.
 
@@ -2433,27 +2456,11 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
     p-ArTeMiS    (200um, 350um, 450um) 3-color camera for APEX (prototype)
                  www.apex-telescope.org/instruments/pi/artemis
 
-    PolKA        (polarimetry) Polarimeter for LABOCA
-                 www.mpifr-bonn.mpg.de/staff/gsiringo/laboca/laboca\
-                 _polarimeter.html
-
-    SABOCA       (350um) Submillimeter APEX Bolometer Camera
-                 www.apex-telescope.org/bolometer/saboca
-
-    SCUBA-2      (450um, 850um) Submillimetre Common User Bolometer Array 2
-                 www.roe.ac.uk/ukatc/projects/scubatwo
-
     SHARC        (350um, 450um) Submillimeter High-Angular Resolution Camera
                  Caltech, Pasadena, CA
                  http://www.submm.caltech.edu/cso/sharc/cso_sharc.html
 
-    SHARC-2      (350um, 450um, 850um) The second-generation Submillimeter 
-                 High-Angular Resolution Camera
-                 Caltech, Pasadena, CA
-                 www.submm.caltech.edu:/~sharc
 
-    SOFIA/HAWC+  (53um, 62um, 89um, 155um, 216um)
-                 High-resolution Airborne Wide-angle Camera
 
 
 Further support for instruments is possible. If interested to use CRUSH for
