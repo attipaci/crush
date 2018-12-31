@@ -94,11 +94,11 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
             invertChop = hasOption("chopper.invert");
 
             // The Sofia timestamp (decimal seconds since 0 UTC 1 Jan 1970...
-            iTS = hdu.findColumn("TIMESTAMP");   
-            iSN = hdu.findColumn("FRAMECOUNTER");
+            iTS = hdu.findColumn("Timestamp");   
+            iSN = hdu.findColumn("FrameCounter");
 
-            iJump = hdu.findColumn("FLUXJUMPS");
-            iDAC = hdu.findColumn("SQ1FEEDBACK");
+            iJump = hdu.findColumn("FluxJumps");
+            iDAC = hdu.findColumn("SQ1Feedback");
 
             // Ignore coordinate info for 'lab' data...
             if(isLab) {
@@ -106,7 +106,7 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
                 return;
             }
 
-            iStat = hdu.findColumn("FLAG");
+            iStat = hdu.findColumn("Flag");
 
             iAZ = hdu.findColumn("AZ");
             iEL = hdu.findColumn("EL");
@@ -116,21 +116,21 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
             iDEC = hdu.findColumn("DEC");
 
             if(scan.isNonSidereal) {
-                iORA = hdu.findColumn("NONSIDEREALRA");
-                iODEC = hdu.findColumn("NONSIDEREALDEC");
+                iORA = hdu.findColumn("NonSiderealRA");
+                iODEC = hdu.findColumn("NonSiderealDec");
             }
 
             iLST = hdu.findColumn("LST");
 
             iAVPA = hdu.findColumn("SIBS_VPA");
             iTVPA = hdu.findColumn("TABS_VPA");
-            iCVPA = hdu.findColumn("CHOP_VPA");
+            iCVPA = hdu.findColumn("Chop_VPA");
 
             iLON = hdu.findColumn("LON");
             iLAT = hdu.findColumn("LAT");  
 
-            iChopR = hdu.findColumn("SOFIACHOPR");
-            iChopS = hdu.findColumn("SOFIACHOPS");
+            iChopR = hdu.findColumn("sofiaChopR");
+            iChopS = hdu.findColumn("sofiaChopS");
 
             iPWV = hdu.findColumn("PWV");
             
