@@ -25,7 +25,7 @@
 package crush.instrument.hawcplus;
 
 import crush.Channel;
-import crush.ZeroMeanGains;
+import crush.instrument.ZeroMeanGains;
 
 public class HawcPolImbalance extends ZeroMeanGains {
 

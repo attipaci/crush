@@ -25,8 +25,8 @@
 package crush.instrument.gismo;
 
 import crush.*;
-import crush.astro.PointingTable;
 import crush.telescope.GroundBased;
+import crush.telescope.PointingTable;
 import crush.telescope.iram.IRAMPointingModel;
 import crush.telescope.iram.IRAMScanID;
 import crush.telescope.iram.IRAMTauTable;

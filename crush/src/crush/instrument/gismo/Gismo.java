@@ -27,8 +27,12 @@ import java.io.*;
 import java.util.*;
 
 import crush.*;
-import crush.array.*;
+import crush.instrument.ChannelDivision;
+import crush.instrument.ChannelGroup;
+import crush.instrument.ChannelLookup;
+import crush.instrument.GridIndexed;
 import crush.instrument.PixelLayout;
+import crush.instrument.SingleColorLayout;
 import crush.telescope.GroundBased;
 import crush.telescope.InstantFocus;
 import crush.telescope.Mount;

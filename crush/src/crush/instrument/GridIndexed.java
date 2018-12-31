@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,22 +20,17 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush;
 
+package crush.instrument;
 
-public abstract class Response extends Mode {
+import jnum.math.Vector2D;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -8619855129077390006L;
-
-	public Response() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-
-	public abstract Signal getSignal(Integration<?, ?> integration);
+public interface GridIndexed extends GeometricIndexed {
 	
+	public int rows();
+	
+	public int cols();
+	
+	public Vector2D getSIPixelSize();
 	
 }

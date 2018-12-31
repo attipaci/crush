@@ -26,6 +26,9 @@ package crush;
 
 import java.lang.reflect.*;
 
+import crush.instrument.ChannelDivision;
+import crush.instrument.FieldGainProvider;
+import crush.instrument.GainProvider;
 import jnum.Configurator;
 import jnum.math.Range;
 

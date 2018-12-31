@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.array;
+package crush.instrument;
 
 import java.io.Serializable;
 import java.util.ArrayList;

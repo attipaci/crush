@@ -20,49 +20,44 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush;
+// Copyright (c) 2009,2010 Attila Kovacs
 
-import jnum.math.Vector2D;
+package crush.instrument;
 
-public enum Motion {
-	X("x"), Y("y"), Z("z"), 
-	X2("x^2"), Y2("y^2"), Z2("z^2"), 
-	X_MAGNITUDE("|x|"), Y_MAGNITUDE("|y|"), Z_MAGNITUDE("|z|"), 
-	MAGNITUDE("mag"), 
-	NORM("norm");
+import java.util.*;
+
+import crush.Channel;
+
+public class ChannelDivision<ChannelType extends Channel> extends Vector<ChannelGroup<ChannelType>> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2792676960859301146L;
 	
-	public String id;
+	public String name;
 	
-	private Motion(String id) {
-		this.id = id;
+	public ChannelDivision(String name) { this.name = name; }
+	
+	public ChannelDivision(ChannelGroup<ChannelType> group) { 
+		this(group.getName());
+		add(group);
+		setDefaultNames();
 	}
 	
-	public String getID() { return id; } 
-	
-	public static Motion forName(String name) {
-		name = name.toLowerCase();
-		for(Motion m : Motion.values()) if(m.id.equals(name)) return m;
-		return null;
+	public ChannelDivision(String name, ChannelGroup<ChannelType> group) { 
+		this(name);
+		add(group);
+		setDefaultNames();
 	}
 	
-	public double getValue(Vector2D v) {
-		switch(this) {
-		case X: return v.x();
-		case Y: return v.y();
-		case X2 : return v.x() * v.x();
-		case Y2 : return v.y() * v.y();
-		case X_MAGNITUDE : return Math.abs(v.x());
-		case Y_MAGNITUDE : return Math.abs(v.y());
-		case MAGNITUDE : return v.length();
-		case NORM : return v.absSquared(); 
-		default : return Double.NaN;
-		}
-		
+	public ChannelDivision(String name, Vector<ChannelGroup<ChannelType>> groups) { 
+		this(name);
+		addAll(groups);
+		setDefaultNames();
 	}
 	
-	public final static int TELESCOPE = 1<<0;
-	public final static int SCANNING = 1<<1;
-	public final static int CHOPPER = 1<<2;
-	public final static int PROJECT_GLS = 1<<3;
+	public void setDefaultNames() {
+		for(int i=size(); --i >= 0; ) get(i).setName(name + "-" + (i+1));
+	}
 	
 }

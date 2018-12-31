@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,30 +20,13 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush;
 
-import java.lang.reflect.Field;
+package crush.instrument;
 
-public class FieldGainProvider implements GainProvider {
-	private Field gainField;
-	
-	public FieldGainProvider(Field f) {
-		this.gainField = f;
-	}
-	
-	@Override
-	public double getGain(Channel c) throws IllegalAccessException {
-		return gainField.getDouble(c);
-	}
-	
-	@Override
-	public void setGain(Channel c, double value) throws IllegalAccessException {
-		Class<?> fieldClass = gainField.getClass();
-		if(fieldClass.equals(float.class)) gainField.setFloat(c, (float) value);
-		else gainField.setDouble(c, value);
-	}
-	
-	@Override
-	public void validate(Mode mode) throws Exception {}
+import java.util.List;
+
+public interface GeometricIndexed {
+
+	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex);
 	
 }

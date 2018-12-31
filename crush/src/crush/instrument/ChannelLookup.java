@@ -21,9 +21,12 @@
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
-package crush;
+package crush.instrument;
 
 import java.util.Hashtable;
+
+import crush.CRUSH;
+import crush.Channel;
 
 public class ChannelLookup<ChannelType extends Channel> {
     private Hashtable<String, ChannelType> ids;

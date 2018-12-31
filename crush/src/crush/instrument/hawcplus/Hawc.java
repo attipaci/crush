@@ -27,7 +27,9 @@ import java.io.IOException;
 import java.util.*;
 
 import crush.*;
-import crush.array.GridIndexed;
+import crush.instrument.ChannelDivision;
+import crush.instrument.ChannelGroup;
+import crush.instrument.GridIndexed;
 import crush.instrument.PixelLayout;
 import crush.telescope.sofia.SofiaInstrument;
 import crush.telescope.sofia.SofiaData;

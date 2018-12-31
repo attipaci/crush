@@ -21,11 +21,22 @@
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
-package crush.array;
+package crush.instrument;
 
-public interface Rotating {
+import crush.Channel;
+import jnum.data.RealValue;
 
-	public double getRotation();
+public class Overlap extends RealValue {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7567199967596593068L;
+	public Channel a, b;
 	
-	public void rotate(double angle);
+	public Overlap(Channel a, Channel b, double overlap) {
+		this.a = a;
+		this.b = b;
+		setValue(overlap);
+	}
+	
 }

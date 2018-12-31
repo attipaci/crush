@@ -28,7 +28,7 @@ import java.io.IOException;
 import crush.CRUSH;
 import crush.Integration;
 import crush.Scan;
-import crush.array.SingleColorPixel;
+import crush.instrument.SingleColorPixel;
 import crush.telescope.GroundBased;
 import crush.telescope.HorizontalFrame;
 import crush.telescope.jcmt.JCMTTauTable;

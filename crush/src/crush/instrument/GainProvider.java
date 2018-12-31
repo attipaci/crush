@@ -20,42 +20,16 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009,2010 Attila Kovacs
+package crush.instrument;
 
-package crush;
+import crush.Channel;
+import crush.Mode;
 
-import java.util.*;
+public interface GainProvider {
 
-public class ChannelDivision<ChannelType extends Channel> extends Vector<ChannelGroup<ChannelType>> {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 2792676960859301146L;
+	public double getGain(Channel c) throws Exception;
 	
-	public String name;
+	public void setGain(Channel c, double value) throws Exception;
 	
-	public ChannelDivision(String name) { this.name = name; }
-	
-	public ChannelDivision(ChannelGroup<ChannelType> group) { 
-		this(group.getName());
-		add(group);
-		setDefaultNames();
-	}
-	
-	public ChannelDivision(String name, ChannelGroup<ChannelType> group) { 
-		this(name);
-		add(group);
-		setDefaultNames();
-	}
-	
-	public ChannelDivision(String name, Vector<ChannelGroup<ChannelType>> groups) { 
-		this(name);
-		addAll(groups);
-		setDefaultNames();
-	}
-	
-	public void setDefaultNames() {
-		for(int i=size(); --i >= 0; ) get(i).setName(name + "-" + (i+1));
-	}
-	
+	public void validate(Mode mode) throws Exception;
 }

@@ -21,16 +21,8 @@
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
-package crush.array;
+package crush.instrument;
 
-import jnum.math.Vector2D;
+public interface NonOverlapping {
 
-public interface GridIndexed extends GeometricIndexed {
-	
-	public int rows();
-	
-	public int cols();
-	
-	public Vector2D getSIPixelSize();
-	
 }

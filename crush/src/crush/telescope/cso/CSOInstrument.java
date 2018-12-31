@@ -30,13 +30,13 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
 import crush.Instrument;
 import crush.Scan;
-import crush.array.Rotating;
-import crush.array.SingleColorPixel;
+import crush.instrument.Rotating;
+import crush.instrument.SingleColorLayout;
+import crush.instrument.SingleColorPixel;
 import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import jnum.Unit;
 import jnum.Util;
-import crush.array.SingleColorLayout;
 
 public abstract class CSOInstrument<PixelType extends SingleColorPixel> extends Instrument<PixelType> implements GroundBased, Rotating {
 	/**

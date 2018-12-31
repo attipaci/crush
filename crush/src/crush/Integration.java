@@ -29,10 +29,14 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 import crush.filters.*;
+import crush.instrument.ChannelDivision;
+import crush.instrument.ChannelGroup;
+import crush.instrument.Response;
 import crush.telescope.Chopper;
 import crush.telescope.Chopping;
 import crush.telescope.GroundBased;
 import crush.telescope.HorizontalFrame;
+import crush.telescope.Motion;
 import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
@@ -3828,7 +3832,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
 
 
-    private static ArrayRecycler recycler = new ArrayRecycler();
+    private static Recycler recycler = new Recycler();
 
 
 }

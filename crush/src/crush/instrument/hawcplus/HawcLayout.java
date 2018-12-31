@@ -26,7 +26,7 @@ package crush.instrument.hawcplus;
 import java.util.Arrays;
 import java.util.StringTokenizer;
 
-import crush.array.SingleColorLayout;
+import crush.instrument.SingleColorLayout;
 import jnum.Unit;
 import jnum.math.Vector2D;
 

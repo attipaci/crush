@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,23 +20,28 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
+package crush.telescope;
 
-package crush;
+import crush.Integration;
+import crush.Signal;
 
-import java.io.Serializable;
-
-public class Overlap implements Serializable {
+public class PositionResponse extends MotionResponse {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -7567199967596593068L;
-	Channel a, b;
-	double value;
+	private static final long serialVersionUID = -8122571998749162314L;
+	int type;
 	
-	public Overlap(Channel a, Channel b, double overlap) {
-		this.a = a;
-		this.b = b;
-		this.value = overlap;
+	public PositionResponse(int type) {
+		setType(type);
 	}
 
+	public void setType(int type) {
+		this.type = type;
+	}
+	
+	@Override
+	public Signal getSignal(Integration<?, ?> integration, Motion direction) {
+		return integration.getPositionSignal(this, type, direction);
+	}	
 }

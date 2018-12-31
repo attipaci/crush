@@ -26,10 +26,10 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 import crush.Channel;
-import crush.ChannelGroup;
 import crush.Dependents;
 import crush.Frame;
 import crush.Integration;
+import crush.instrument.ChannelGroup;
 import jnum.Configurator;
 import jnum.Constant;
 import jnum.CopiableContent;

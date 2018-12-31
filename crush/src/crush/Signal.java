@@ -27,6 +27,7 @@ package crush;
 import java.io.*;
 import java.util.Arrays;
 
+import crush.instrument.ChannelGroup;
 import jnum.Constant;
 import jnum.Copiable;
 import jnum.ExtraMath;

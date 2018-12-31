@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,13 +20,36 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
+package crush.telescope;
 
-package crush.array;
+import java.util.StringTokenizer;
 
-import java.util.List;
+import crush.Integration;
+import crush.Signal;
+import crush.instrument.Response;
 
-public interface GeometricIndexed {
 
-	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex);
+public abstract class MotionResponse extends Response {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7298231042057007209L;
+
+	public MotionResponse() {
+		super();
+	}
 	
+	public abstract Signal getSignal(Integration<?, ?> integration, Motion direction);
+
+	@Override
+	public Signal getSignal(Integration<?, ?> integration) {
+		StringTokenizer tokens = new StringTokenizer(name, "-:");
+		tokens.nextToken();
+		String type = tokens.nextToken();
+		
+		Motion direction = Motion.forName(type);
+		return getSignal(integration, direction);
+	}
+
 }

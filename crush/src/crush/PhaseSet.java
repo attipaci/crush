@@ -25,6 +25,7 @@ package crush;
 import java.io.*;
 import java.util.*;
 
+import crush.instrument.ChannelGroup;
 import jnum.Util;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,22 +20,12 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush;
 
-public class AccelerationResponse extends MotionResponse {
+package crush.instrument;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 6674558238592018995L;
+public interface Rotating {
 
-	public AccelerationResponse() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-
-	@Override
-	public Signal getSignal(Integration<?, ?> integration, Motion direction) {
-		return integration.getAccelerationSignal(this, direction);
-	}	
+	public double getRotation();
+	
+	public void rotate(double angle);
 }

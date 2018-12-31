@@ -26,7 +26,7 @@ package crush.instrument.hirmes;
 import java.util.Arrays;
 
 import crush.Channel;
-import crush.array.SingleColorLayout;
+import crush.instrument.SingleColorLayout;
 import crush.telescope.sofia.SofiaData;
 import crush.telescope.sofia.SofiaHeader;
 import jnum.Unit;

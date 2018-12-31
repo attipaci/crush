@@ -10,7 +10,16 @@
 	is little point of keeping support for it down the line.
 
 	[PRUNE] Remove unused SyncModMap and 'source.synchronized' option.
+
+	[API] Lots of refactoring across packages, especially from crush to
+	crush.instrument and crush.telescope.
+
+	[API] Some refactoring: *Camera -> *Instrument, HawcPlus* -> Hawc*.
 	
+	[CODE] {HAWC+} {HIRMES} Pixel position related code moved to 
+	specific PixelLayout derivative class for better separation and
+	transparency.
+
 	[CODE] Instrument rotation now always applied after RPC read, not only
 	for APEX cameras...
 

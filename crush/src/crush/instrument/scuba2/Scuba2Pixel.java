@@ -23,7 +23,7 @@
 
 package crush.instrument.scuba2;
 
-import crush.array.SingleColorPixel;
+import crush.instrument.SingleColorPixel;
 import jnum.Unit;
 import jnum.math.Vector2D;
 

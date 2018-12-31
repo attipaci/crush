@@ -25,6 +25,8 @@ package crush;
 
 import java.lang.reflect.*;
 
+import crush.instrument.ChannelGroup;
+
 
 public class CorrelatedMode extends Mode {
 	

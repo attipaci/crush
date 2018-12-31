@@ -22,7 +22,7 @@
  ******************************************************************************/
 // Copyright (c) 2009 Attila Kovacs 
 
-package crush.array;
+package crush.instrument;
 
 import java.util.*;
 

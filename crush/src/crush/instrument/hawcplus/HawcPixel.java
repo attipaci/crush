@@ -25,7 +25,7 @@ package crush.instrument.hawcplus;
 
 
 import crush.Channel;
-import crush.array.SingleColorPixel;
+import crush.instrument.SingleColorPixel;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;

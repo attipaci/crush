@@ -22,9 +22,6 @@
  ******************************************************************************/
 package crush.telescope;
 
-import crush.Motion;
-import crush.PositionResponse;
-
 public class PointingResponse extends PositionResponse {
 
 	/**

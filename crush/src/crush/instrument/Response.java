@@ -20,25 +20,25 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush;
+package crush.instrument;
 
-public class PositionResponse extends MotionResponse {
+import crush.Integration;
+import crush.Mode;
+import crush.Signal;
+
+public abstract class Response extends Mode {
+
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -8122571998749162314L;
-	int type;
-	
-	public PositionResponse(int type) {
-		setType(type);
+	private static final long serialVersionUID = -8619855129077390006L;
+
+	public Response() {
+		super();
+		// TODO Auto-generated constructor stub
 	}
 
-	public void setType(int type) {
-		this.type = type;
-	}
+	public abstract Signal getSignal(Integration<?, ?> integration);
 	
-	@Override
-	public Signal getSignal(Integration<?, ?> integration, Motion direction) {
-		return integration.getPositionSignal(this, type, direction);
-	}	
+	
 }

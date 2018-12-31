@@ -20,9 +20,13 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush;
+package crush.instrument;
 
 import java.io.Serializable;
+
+import crush.Channel;
+import crush.CorrelatedMode;
+import crush.Mode;
 
 
 public abstract class ZeroMeanGains implements Serializable, GainProvider {

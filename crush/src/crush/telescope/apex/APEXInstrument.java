@@ -25,13 +25,13 @@
 package crush.telescope.apex;
 
 import crush.*;
-import crush.array.SingleColorPixel;
+import crush.instrument.SingleColorLayout;
+import crush.instrument.SingleColorPixel;
 import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import jnum.Unit;
 import jnum.astro.EquatorialCoordinates;
 import jnum.math.Vector2D;
-import crush.array.SingleColorLayout;
 import nom.tam.fits.*;
 
 import java.io.*;

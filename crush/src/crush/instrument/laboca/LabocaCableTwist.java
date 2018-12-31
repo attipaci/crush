@@ -23,7 +23,7 @@
 package crush.instrument.laboca;
 
 import crush.Channel;
-import crush.ZeroMeanGains;
+import crush.instrument.ZeroMeanGains;
 
 /**
  * @author pumukli

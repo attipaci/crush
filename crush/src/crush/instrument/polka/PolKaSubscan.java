@@ -25,6 +25,8 @@ package crush.instrument.polka;
 
 import crush.*;
 import crush.filters.Filter;
+import crush.instrument.ChannelGroup;
+import crush.instrument.ChannelLookup;
 import crush.instrument.laboca.*;
 import crush.polarization.HWPFilter;
 import crush.polarization.PolarModulation;

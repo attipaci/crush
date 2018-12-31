@@ -23,6 +23,7 @@
 package crush.instrument.hawcplus;
 
 import crush.*;
+import crush.instrument.FieldResponse;
 
 import java.lang.reflect.*;
 

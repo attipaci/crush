@@ -20,7 +20,7 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush.astro;
+package crush.telescope;
 
 import java.io.IOException;
 import java.util.*;

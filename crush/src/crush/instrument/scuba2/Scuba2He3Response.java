@@ -23,7 +23,7 @@
 
 package crush.instrument.scuba2;
 
-import crush.FieldResponse;
+import crush.instrument.FieldResponse;
 
 public class Scuba2He3Response extends FieldResponse {
 

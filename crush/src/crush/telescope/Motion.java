@@ -20,14 +20,49 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush;
+package crush.telescope;
 
+import jnum.math.Vector2D;
 
-public interface GainProvider {
-
-	public double getGain(Channel c) throws Exception;
+public enum Motion {
+	X("x"), Y("y"), Z("z"), 
+	X2("x^2"), Y2("y^2"), Z2("z^2"), 
+	X_MAGNITUDE("|x|"), Y_MAGNITUDE("|y|"), Z_MAGNITUDE("|z|"), 
+	MAGNITUDE("mag"), 
+	NORM("norm");
 	
-	public void setGain(Channel c, double value) throws Exception;
+	public String id;
 	
-	public void validate(Mode mode) throws Exception;
+	private Motion(String id) {
+		this.id = id;
+	}
+	
+	public String getID() { return id; } 
+	
+	public static Motion forName(String name) {
+		name = name.toLowerCase();
+		for(Motion m : Motion.values()) if(m.id.equals(name)) return m;
+		return null;
+	}
+	
+	public double getValue(Vector2D v) {
+		switch(this) {
+		case X: return v.x();
+		case Y: return v.y();
+		case X2 : return v.x() * v.x();
+		case Y2 : return v.y() * v.y();
+		case X_MAGNITUDE : return Math.abs(v.x());
+		case Y_MAGNITUDE : return Math.abs(v.y());
+		case MAGNITUDE : return v.length();
+		case NORM : return v.absSquared(); 
+		default : return Double.NaN;
+		}
+		
+	}
+	
+	public final static int TELESCOPE = 1<<0;
+	public final static int SCANNING = 1<<1;
+	public final static int CHOPPER = 1<<2;
+	public final static int PROJECT_GLS = 1<<3;
+	
 }

@@ -24,7 +24,7 @@
 package crush.instrument.sharc2;
 
 import crush.*;
-import crush.array.GridIndexed;
+import crush.instrument.GridIndexed;
 import crush.instrument.PixelLayout;
 import crush.telescope.cso.CSOInstrument;
 import jnum.Unit;

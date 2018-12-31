@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -20,33 +20,25 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
+package crush.telescope;
 
-package crush.array;
+import crush.Integration;
+import crush.Signal;
 
-import java.util.List;
+public class AccelerationResponse extends MotionResponse {
 
-import crush.Pixel;
-import crush.instrument.PixelLayout;
-
-public class SingleColorLayout<ChannelType extends SingleColorPixel> extends PixelLayout<ChannelType> {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 3711770466718770949L;
+	private static final long serialVersionUID = 6674558238592018995L;
 
-	@Override
-	public int getPixelCount() {
-		return getInstrument().size();
+	public AccelerationResponse() {
+		super();
+		// TODO Auto-generated constructor stub
 	}
 
 	@Override
-	public List<? extends Pixel> getPixels() {
-		return getInstrument();
-	}
-
-	@Override
-	public List<? extends Pixel> getMappingPixels(int keepFlags) {
-		return getInstrument().getObservingChannels().createGroup().discard(~keepFlags);
-	}
-
+	public Signal getSignal(Integration<?, ?> integration, Motion direction) {
+		return integration.getAccelerationSignal(this, direction);
+	}	
 }

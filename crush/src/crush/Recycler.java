@@ -29,15 +29,15 @@ import jnum.data.DataPoint;
 import jnum.data.WeightedPoint;
 
 
-public class ArrayRecycler {
+public class Recycler {
 	private ArrayBlockingQueue<int[]> ints;
 	private ArrayBlockingQueue<float[]> floats;
 	private ArrayBlockingQueue<double[]> doubles;
 	private ArrayBlockingQueue<DataPoint[]> points;
 
-	public ArrayRecycler() {}
+	public Recycler() {}
 	
-	public ArrayRecycler(int capacity) {
+	public Recycler(int capacity) {
 		this();
 		setSize(capacity);
 	}

@@ -26,6 +26,8 @@ package crush;
 import java.util.Arrays;
 import java.util.Collection;
 
+import crush.instrument.ChannelGroup;
+import crush.instrument.Overlap;
 import jnum.ExtraMath;
 import jnum.data.DataPoint;
 import jnum.data.Statistics;
@@ -220,7 +222,7 @@ public class CorrelatedSignal extends Signal {
 				if(overlaps != null) for(Overlap overlap : overlaps) {
 					final Channel other = (overlap.a == channel) ? overlap.b : overlap.a; 
 					if(other.isFlagged(skipFlags)) continue;
-					phi += overlap.value * dependents.get(other);
+					phi += overlap.value() * dependents.get(other);
 				}
 						
 				

@@ -28,12 +28,18 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.text.*;
 
-import crush.array.GeometricIndexed;
-import crush.array.Rotating;
-import crush.array.SkyGradient;
+import crush.instrument.ChannelDivision;
+import crush.instrument.ChannelGroup;
+import crush.instrument.ChannelLookup;
+import crush.instrument.GeometricIndexed;
+import crush.instrument.NonOverlapping;
+import crush.instrument.Overlap;
 import crush.instrument.PixelLayout;
+import crush.instrument.Rotating;
+import crush.instrument.SkyGradient;
 import crush.instrument.hawcplus.HawcPixel;
 import crush.sourcemodel.*;
+import crush.telescope.AccelerationResponse;
 import crush.telescope.ChopperResponse;
 import crush.telescope.InstantFocus;
 import crush.telescope.Mount;
@@ -1496,7 +1502,7 @@ implements TableFormatter.Entries, BasicMessaging {
                 for(int k=channel.index; --k >= 0; ) {
                     final Channel other = get(k);
                     final Overlap overlap = new Overlap(channel, other, channel.overlap(other, pointSize));
-                    if(overlap.value == 0.0) continue;
+                    if(overlap.isNull()) continue;
                     channel.addOverlap(overlap);
                     other.addOverlap(overlap);
                 }	
@@ -1663,7 +1669,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public static void clearRecycler() { recycler.clear(); }
 
-    private static ArrayRecycler recycler = new ArrayRecycler();
+    private static Recycler recycler = new Recycler();
 
     public final static int GAINS_SIGNED = 0;
     public final static int GAINS_BIDIRECTIONAL = 1;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -21,8 +21,31 @@
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
 
-package crush;
+package crush.instrument;
 
-public interface NonOverlapping {
+import java.util.List;
+
+import crush.Pixel;
+
+public class SingleColorLayout<ChannelType extends SingleColorPixel> extends PixelLayout<ChannelType> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3711770466718770949L;
+
+	@Override
+	public int getPixelCount() {
+		return getInstrument().size();
+	}
+
+	@Override
+	public List<? extends Pixel> getPixels() {
+		return getInstrument();
+	}
+
+	@Override
+	public List<? extends Pixel> getMappingPixels(int keepFlags) {
+		return getInstrument().getObservingChannels().createGroup().discard(~keepFlags);
+	}
 
 }

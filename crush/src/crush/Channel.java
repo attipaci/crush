@@ -28,6 +28,7 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashSet;
 
+import crush.instrument.Overlap;
 import jnum.Copiable;
 import jnum.Flagging;
 import jnum.Util;

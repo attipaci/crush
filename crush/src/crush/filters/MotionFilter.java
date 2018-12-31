@@ -25,7 +25,7 @@ package crush.filters;
 import java.util.Arrays;
 
 import crush.Integration;
-import crush.Motion;
+import crush.telescope.Motion;
 import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;

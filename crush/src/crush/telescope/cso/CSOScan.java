@@ -29,7 +29,7 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 import crush.Scan;
-import crush.array.SingleColorPixel;
+import crush.instrument.SingleColorPixel;
 import crush.instrument.sharc2.ElevationCouplingCurve;
 import crush.telescope.GroundBased;
 import crush.telescope.HorizontalFrame;

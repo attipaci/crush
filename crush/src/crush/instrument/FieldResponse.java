@@ -20,9 +20,13 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush;
+package crush.instrument;
 
 import java.lang.reflect.*;
+
+import crush.Frame;
+import crush.Integration;
+import crush.Signal;
 
 
 public class FieldResponse extends Response {

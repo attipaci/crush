@@ -34,7 +34,6 @@ import java.util.List;
 import crush.Channel;
 import crush.Instrument;
 import crush.Pixel;
-import crush.array.GridIndexed;
 import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;

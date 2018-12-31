@@ -26,6 +26,8 @@ package crush.instrument.hirmes;
 import java.util.*;
 
 import crush.*;
+import crush.instrument.ChannelDivision;
+import crush.instrument.ChannelGroup;
 import crush.sourcemodel.AstroIntensityMap;
 import crush.sourcemodel.SpectralCube;
 import crush.telescope.sofia.SofiaInstrument;

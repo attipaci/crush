@@ -26,8 +26,10 @@ package crush.instrument.scuba2;
 import java.util.*;
 
 import crush.*;
-import crush.array.*;
+import crush.instrument.DistortionModel;
+import crush.instrument.GridIndexed;
 import crush.instrument.PixelLayout;
+import crush.instrument.SingleColorLayout;
 import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import jnum.Unit;

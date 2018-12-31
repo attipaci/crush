@@ -20,54 +20,49 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-// Copyright (c) 2009,2010 Attila Kovacs
+package crush.instrument;
 
-package crush;
+import crush.Channel;
 
-import java.lang.reflect.*;
-
-public class FieldGradientMode extends CorrelatedMode {
+public class SkyGradient extends ZeroMeanGains {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 6661319100565424381L;
-	private Field field;
-
-	public FieldGradientMode(Field field) {
-		this.field = field;
-	}
+	private static final long serialVersionUID = 5605187091928172211L;
+	private boolean horizontal = true;
 	
-	public FieldGradientMode(Field field, ChannelGroup<?> channels) {
-		this.field = field;
-		setChannels(channels);
-	}
-	
-	public Field getField() { return field; }
-
-	@Override
-	public void setChannels(ChannelGroup<?> channels) {
-		super.setChannels(channels);
-		name += ":" + field.getName();
+	private SkyGradient(boolean isHorizontal) {
+		this.horizontal = isHorizontal;
 	}
 	
 	@Override
-	public float[] getGains(boolean validate) throws Exception {
-		float[] gains = super.getGains(validate);
-		
-		double sumwg = 0.0, sumw = 0.0;
-		for(Channel channel : getChannels()) if(channel.isUnflagged()) {
-			sumwg += channel.weight * field.getDouble(channel);
-			sumw += channel.weight;	
-		}
-		
-		float aveg = sumw > 0.0 ? (float)(sumwg / sumw) : 0.0F;
-
-		for(int c=size(); --c >= 0; ) {
-			Channel channel = getChannel(c);
-			gains[c] = field.getFloat(channel) - aveg;
-		}
-
-		return gains;
+	public double getRelativeGain(Channel c) throws Exception {
+		SingleColorPixel pixel = (SingleColorPixel) c;
+		if(pixel.position == null) return Double.NaN;
+		return (horizontal ? pixel.position.x() : pixel.position.y());
 	}
+
+	@Override
+	public void setRawGain(Channel c, double value) throws Exception {
+		throw new UnsupportedOperationException("Cannot change gradient gains.");
+	}
+
+	public static class X extends SkyGradient {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 627602461300041682L;
+
+		public X() { super(true); }
+	}
+	
+	public static class Y extends SkyGradient {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -2925386841948261256L;
+
+		public Y() { super(false); }
+	}
+
 }
-

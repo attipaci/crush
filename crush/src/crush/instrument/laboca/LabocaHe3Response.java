@@ -23,6 +23,7 @@
 package crush.instrument.laboca;
 
 import crush.*;
+import crush.instrument.FieldResponse;
 
 import java.lang.reflect.*;
 

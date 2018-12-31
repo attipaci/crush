@@ -25,6 +25,7 @@ package crush;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import crush.instrument.ChannelGroup;
 import jnum.data.DataPoint;
 import jnum.data.WeightedPoint;
 import jnum.parallel.ParallelTask;

@@ -29,6 +29,10 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Vector;
 
+import crush.instrument.ChannelGroup;
+import crush.instrument.FieldGainProvider;
+import crush.instrument.GainProvider;
+import crush.instrument.Response;
 import jnum.ExtraMath;
 import jnum.data.WeightedPoint;
 import jnum.math.Range;

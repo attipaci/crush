@@ -24,7 +24,9 @@
 package crush.instrument.laboca;
 
 import crush.*;
-import crush.array.*;
+import crush.instrument.ChannelLookup;
+import crush.instrument.NonOverlapping;
+import crush.instrument.SingleColorPixel;
 import crush.telescope.apex.*;
 import jnum.Unit;
 import jnum.Util;

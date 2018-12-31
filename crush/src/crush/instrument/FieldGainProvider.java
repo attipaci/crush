@@ -20,32 +20,33 @@
  * Contributors:
  *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
  ******************************************************************************/
-package crush;
+package crush.instrument;
 
-import java.util.StringTokenizer;
+import java.lang.reflect.Field;
 
+import crush.Channel;
+import crush.Mode;
 
-public abstract class MotionResponse extends Response {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7298231042057007209L;
-
-	public MotionResponse() {
-		super();
+public class FieldGainProvider implements GainProvider {
+	private Field gainField;
+	
+	public FieldGainProvider(Field f) {
+		this.gainField = f;
 	}
 	
-	public abstract Signal getSignal(Integration<?, ?> integration, Motion direction);
-
 	@Override
-	public Signal getSignal(Integration<?, ?> integration) {
-		StringTokenizer tokens = new StringTokenizer(name, "-:");
-		tokens.nextToken();
-		String type = tokens.nextToken();
-		
-		Motion direction = Motion.forName(type);
-		return getSignal(integration, direction);
+	public double getGain(Channel c) throws IllegalAccessException {
+		return gainField.getDouble(c);
 	}
-
+	
+	@Override
+	public void setGain(Channel c, double value) throws IllegalAccessException {
+		Class<?> fieldClass = gainField.getClass();
+		if(fieldClass.equals(float.class)) gainField.setFloat(c, (float) value);
+		else gainField.setDouble(c, value);
+	}
+	
+	@Override
+	public void validate(Mode mode) throws Exception {}
+	
 }

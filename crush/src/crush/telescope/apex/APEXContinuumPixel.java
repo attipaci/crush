@@ -33,7 +33,7 @@ import crush.Frame;
 import crush.PhaseData;
 import crush.PhaseSet;
 import crush.PhaseWeighting;
-import crush.array.SingleColorPixel;
+import crush.instrument.SingleColorPixel;
 import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
