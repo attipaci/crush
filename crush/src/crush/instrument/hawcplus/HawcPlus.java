@@ -27,10 +27,10 @@ import java.io.IOException;
 import java.util.*;
 
 import crush.*;
-import crush.array.Camera;
 import crush.array.GridIndexed;
-import crush.array.SingleColorArrangement;
-import crush.telescope.sofia.SofiaCamera;
+import crush.array.SingleColorLayout;
+import crush.instrument.PixelLayout;
+import crush.telescope.sofia.SofiaInstrument;
 import crush.telescope.sofia.SofiaData;
 import crush.telescope.sofia.SofiaHeader;
 import crush.telescope.sofia.SofiaScan;
@@ -43,7 +43,7 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
-public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed {
+public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridIndexed {
     /**
      * 
      */
@@ -73,7 +73,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
 
 
     public HawcPlus() {
-        super("hawc+", new SingleColorArrangement<HawcPlusPixel>(), pixels);
+        super("hawc+", new SingleColorLayout<HawcPlusPixel>(), pixels);
     }
 
     @Override
@@ -442,7 +442,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
         for(HawcPlusPixel pixel : this) pixel.calcSIBSPosition();
 
         // Set the pointing center...
-        setReferencePosition(center);
+        getLayout().setReferencePosition(center);
     }
 
 
@@ -596,7 +596,7 @@ public class HawcPlus extends SofiaCamera<HawcPlusPixel> implements GridIndexed 
     // TODO... currently treating all subarrays as non-overlapping -- which is valid for point sources...
     @Override
     public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-        Camera.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+        PixelLayout.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
         for(int sub=1; sub < subarrays; sub++) {
             final int subOffset = sub * subarrayPixels;
             for(int i = toIndex.size(); --i >= 0; ) toIndex.add(toIndex.get(i) + subOffset);

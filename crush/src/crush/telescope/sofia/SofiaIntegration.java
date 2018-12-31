@@ -32,7 +32,7 @@ import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
 
-public abstract class SofiaIntegration<InstrumentType extends SofiaCamera<? extends Channel>, FrameType extends SofiaFrame> 
+public abstract class SofiaIntegration<InstrumentType extends SofiaInstrument<? extends Channel>, FrameType extends SofiaFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased {
 
     /**

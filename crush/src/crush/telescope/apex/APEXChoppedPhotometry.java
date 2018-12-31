@@ -39,11 +39,11 @@ public class APEXChoppedPhotometry extends Photometry {
 	 */
 	private static final long serialVersionUID = -3704113753270498352L;
 
-	public APEXChoppedPhotometry(APEXCamera<?> instrument) {
+	public APEXChoppedPhotometry(APEXInstrument<?> instrument) {
 		super(instrument);
 	}
 	
-	public APEXCamera<?> getAPEXArray() { return (APEXCamera<?>) getInstrument(); }
+	public APEXInstrument<?> getAPEXArray() { return (APEXInstrument<?>) getInstrument(); }
 
 
 	@Override

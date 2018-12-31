@@ -42,7 +42,7 @@ import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.util.DataTable;
 
-public abstract class CSOScan<InstrumentType extends CSOCamera<? extends SingleColorPixel>, IntegrationType extends CSOIntegration<InstrumentType, ? extends HorizontalFrame>> 
+public abstract class CSOScan<InstrumentType extends CSOInstrument<? extends SingleColorPixel>, IntegrationType extends CSOIntegration<InstrumentType, ? extends HorizontalFrame>> 
 extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	/**
 	 * 

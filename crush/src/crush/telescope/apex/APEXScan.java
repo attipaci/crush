@@ -51,7 +51,7 @@ import java.util.logging.Logger;
 
 
 
-public class APEXScan<InstrumentType extends APEXCamera<? extends APEXContinuumPixel>, SubscanType extends APEXSubscan<InstrumentType, ? extends APEXFrame>> 
+public class APEXScan<InstrumentType extends APEXInstrument<? extends APEXContinuumPixel>, SubscanType extends APEXSubscan<InstrumentType, ? extends APEXFrame>> 
 extends Scan<InstrumentType, SubscanType> implements GroundBased {
 	/**
 	 * 

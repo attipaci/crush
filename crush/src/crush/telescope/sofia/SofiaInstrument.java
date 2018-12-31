@@ -43,10 +43,10 @@ import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 import crush.Channel;
+import crush.Instrument;
 import crush.CRUSH;
 import crush.Scan;
-import crush.array.Camera;
-import crush.instrument.ColorArrangement;
+import crush.instrument.PixelLayout;
 import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import jnum.Constant;
@@ -55,7 +55,7 @@ import jnum.astro.AstroTime;
 import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
-public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<ChannelType> implements GroundBased {
+public abstract class SofiaInstrument<ChannelType extends Channel> extends Instrument<ChannelType> implements GroundBased {
     /**
      * 
      */
@@ -74,27 +74,27 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
         FitsFactory.setLongStringsEnabled(true);
     }
 
-    public SofiaCamera(String name, ColorArrangement<? super ChannelType> layout) {
+    public SofiaInstrument(String name, PixelLayout<? super ChannelType> layout) {
         super(name, layout);
         mount = Mount.NASMYTH_COROTATING;
     }
 
 
-    public SofiaCamera(String name, ColorArrangement<? super ChannelType> layout, int size) {
+    public SofiaInstrument(String name, PixelLayout<? super ChannelType> layout, int size) {
         super(name, layout, size);
     }
     
     @SuppressWarnings("unchecked")
     @Override
-    public SofiaCamera<ChannelType> clone() {
-        SofiaCamera<ChannelType> clone = (SofiaCamera<ChannelType>) super.clone();
+    public SofiaInstrument<ChannelType> clone() {
+        SofiaInstrument<ChannelType> clone = (SofiaInstrument<ChannelType>) super.clone();
         if(history != null) clone.history = (Vector<String>) history.clone();
         return clone;
     }
 
     @Override
-    public SofiaCamera<ChannelType> copy() {
-        SofiaCamera<ChannelType> copy = (SofiaCamera<ChannelType>) super.copy();
+    public SofiaInstrument<ChannelType> copy() {
+        SofiaInstrument<ChannelType> copy = (SofiaInstrument<ChannelType>) super.copy();
         
         if(instrumentData != null) copy.instrumentData = instrumentData.copy();
         if(array != null) copy.array = array.copy();
@@ -123,7 +123,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
     }
 
     @Override
-    protected void loadChannelData(String fileName) throws IOException {
+    public void loadChannelData(String fileName) throws IOException {
         super.loadChannelData(fileName);
         registerConfigFile(fileName);
     }
@@ -279,7 +279,7 @@ public abstract class SofiaCamera<ChannelType extends Channel> extends Camera<Ch
 
     public double getTotalExposureTime(Collection<Scan<?,?>> scans) {
         double t = 0.0;
-        for(Scan<?,?> scan : scans) t += ((SofiaCamera<?>) scan.instrument).instrumentData.exposureTime;
+        for(Scan<?,?> scan : scans) t += ((SofiaInstrument<?>) scan.instrument).instrumentData.exposureTime;
         return t;
     }
 

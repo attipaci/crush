@@ -28,17 +28,17 @@ import nom.tam.fits.BasicHDU;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
+import crush.Instrument;
 import crush.Scan;
-import crush.array.Camera;
 import crush.array.Rotating;
 import crush.array.SingleColorPixel;
 import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import jnum.Unit;
 import jnum.Util;
-import crush.array.SingleColorArrangement;
+import crush.array.SingleColorLayout;
 
-public abstract class CSOCamera<PixelType extends SingleColorPixel> extends Camera<PixelType> implements GroundBased, Rotating {
+public abstract class CSOInstrument<PixelType extends SingleColorPixel> extends Instrument<PixelType> implements GroundBased, Rotating {
 	/**
 	 * 
 	 */
@@ -56,17 +56,17 @@ public abstract class CSOCamera<PixelType extends SingleColorPixel> extends Came
 	
 	public double excessLoad = 0.0;
 	
-	public CSOCamera(String name, int size) {
-		super(name, new SingleColorArrangement<PixelType>(), size);
+	public CSOInstrument(String name, int size) {
+		super(name, new SingleColorLayout<PixelType>(), size);
 	}
 
-	public CSOCamera(String name) {
-		super(name, new SingleColorArrangement<PixelType>());
+	public CSOInstrument(String name) {
+		super(name, new SingleColorLayout<PixelType>());
 	}
 	
 	@Override
-    public CSOCamera<PixelType> copy() {
-	    CSOCamera<PixelType> copy = (CSOCamera<PixelType>) super.copy();
+    public CSOInstrument<PixelType> copy() {
+	    CSOInstrument<PixelType> copy = (CSOInstrument<PixelType>) super.copy();
 	    return copy;
 	}
 

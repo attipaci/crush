@@ -29,7 +29,6 @@ import java.util.StringTokenizer;
 import java.util.concurrent.ExecutorService;
 
 import crush.*;
-import crush.array.*;
 import jnum.Unit;
 import jnum.data.*;
 import jnum.data.image.Index2D;
@@ -48,7 +47,7 @@ public class PixelMap extends AstroModel2D {
 	AstroIntensityMap[] pixelMap;
 	private transient AstroIntensityMap template;
 	
-	public PixelMap(Camera<?> instrument) {
+	public PixelMap(Instrument<?> instrument) {
 		super(instrument);
 	}
 
@@ -85,14 +84,11 @@ public class PixelMap extends AstroModel2D {
         template = new AstroIntensityMap(getInstrument());
         template.createFrom(collection);
         
-        pixelMap = new AstroIntensityMap[getArray().maxPixels() + 1];
+        pixelMap = new AstroIntensityMap[getInstrument().maxPixels() + 1];
 		
 		super.createFrom(collection);
 	
 	}
-	
-	public Camera<?> getArray() { return (Camera<?>) getInstrument(); }
-	
 
     @Override
     public void resetProcessing() {
@@ -282,10 +278,10 @@ public class PixelMap extends AstroModel2D {
 		String fileName = path + File.separator + getDefaultCoreName() + ".rcp";
 		PrintStream out = new PrintStream(new FileOutputStream(fileName));
 		
-		Camera<?> array = (Camera<?>) getFirstScan().instrument;
-		for(Channel channel : array) channel.coupling = sourceGain[channel.index] / channel.gain;
+		Instrument<?> instrument = getFirstScan().instrument;
+		for(Channel channel : instrument) channel.coupling = sourceGain[channel.index] / channel.gain;
 	
-		array.printPixelRCP(out, getFirstScan().getFirstIntegration().getASCIIHeader());
+		instrument.printPixelRCP(out, getFirstScan().getFirstIntegration().getASCIIHeader());
 		
 		out.flush();
 		out.close();

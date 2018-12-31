@@ -52,7 +52,7 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
 	public double relativePhaseWeight = 1.0;
 	
 	
-	public APEXContinuumPixel(APEXCamera<?> array, int backendIndex) {
+	public APEXContinuumPixel(APEXInstrument<?> array, int backendIndex) {
 		super(array, backendIndex);
 	}
 	

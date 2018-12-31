@@ -24,9 +24,9 @@
 package crush.instrument.sharc2;
 
 import crush.*;
-import crush.array.Camera;
 import crush.array.GridIndexed;
-import crush.telescope.cso.CSOCamera;
+import crush.instrument.PixelLayout;
+import crush.telescope.cso.CSOInstrument;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.Statistics;
@@ -40,7 +40,7 @@ import java.io.*;
 import java.util.*;
 
 
-public class Sharc2 extends CSOCamera<Sharc2Pixel> implements GridIndexed {
+public class Sharc2 extends CSOInstrument<Sharc2Pixel> implements GridIndexed {
 	/**
 	 * 
 	 */
@@ -157,7 +157,7 @@ public class Sharc2 extends CSOCamera<Sharc2Pixel> implements GridIndexed {
 		// Make all pixels the same size. Also calculate their positions...
 		for(Sharc2Pixel pixel : this) pixel.calcPosition();
 		Vector2D center = Sharc2Pixel.getPosition(size, arrayPointingCenter.x() - 1.0, arrayPointingCenter.y() - 1.0);
-		setReferencePosition(center);
+		getLayout().setReferencePosition(center);
 	}
 	
 	
@@ -470,7 +470,7 @@ public class Sharc2 extends CSOCamera<Sharc2Pixel> implements GridIndexed {
 	
 	@Override
 	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-		Camera.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+		PixelLayout.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
 	}
 
 
@@ -492,14 +492,11 @@ public class Sharc2 extends CSOCamera<Sharc2Pixel> implements GridIndexed {
 		return pixelSize;
 	}
 
-	
 
 	
 	public final static int rows = 12;
 	public final static int cols = 32;
 	public final static int pixels = rows * cols;
-
-
 	
 }
 

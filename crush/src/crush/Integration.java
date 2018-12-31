@@ -2563,7 +2563,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
     public void writeASCIITimeStream(String path) throws IOException {
-        String filename = path + File.separator + scan.getID() + "-" + getFileID() + ".tms";
+        String filename = path + File.separator + getFileID() + ".tms";
         final PrintStream out = new PrintStream(new BufferedOutputStream(new FileOutputStream(filename), 1000000));
         out.println("# " + Util.e3.format(1.0/instrument.samplingInterval));
         final int nc = instrument.size();
@@ -3130,7 +3130,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         return 
                 "# Instrument: " + instrument.getName() + "\n" +
                 "# Scan: " + scan.getID() + "\n" +
-                (scan.size() > 1 ? "# Integration: " + (integrationNo + 1) + "\n" : "") +
+                (scan.size() > 1 ? "# Integration: " + getID() + "\n" : "") +
                 "# Object: " + scan.getSourceName() + "\n" +
                 "# Date: " + scan.timeStamp + " (MJD: " + scan.getMJD() + ")\n" +
                 "# Project: " + scan.project + "\n" +
@@ -3147,7 +3147,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     public int getPhase() { return 0; }
 
     public String getFullID(String separator) {
-        return scan.getID() + separator + (integrationNo + 1);		
+        return scan.getID() + separator + getID();		
     }
 
     public String getDisplayID() {

@@ -39,6 +39,9 @@ public class GenericInstrument extends Instrument<Channel> {
 	private static final long serialVersionUID = -7286113017649967311L;
 	private String telescope;
 	
+	private int pixels = 0;
+	
+	
 	public GenericInstrument(String name, int size) {
 		super(name, null, size);
 	}
@@ -75,11 +78,20 @@ public class GenericInstrument extends Instrument<Channel> {
 		return null;
 	}
 
+	public void setPixelCount(int n) {
+	    pixels = n;
+	}
+	
 	@Override
 	public int getPixelCount() {
-		return 0;
+		return pixels;
 	}
 
+	@Override
+	public int maxPixels() {
+	    return pixels;
+	}
+	
 	@Override
 	public List<? extends Pixel> getPixels() {
 		return null;

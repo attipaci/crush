@@ -29,7 +29,9 @@ import java.util.*;
 import java.text.*;
 
 import crush.array.GeometricIndexed;
-import crush.instrument.ColorArrangement;
+import crush.array.Rotating;
+import crush.array.SkyGradient;
+import crush.instrument.PixelLayout;
 import crush.instrument.hawcplus.HawcPlusPixel;
 import crush.sourcemodel.*;
 import crush.telescope.ChopperResponse;
@@ -41,6 +43,7 @@ import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.LockedException;
 import jnum.Unit;
+import jnum.Util;
 import jnum.astro.AstroTime;
 import jnum.data.DataPoint;
 import jnum.data.Statistics;
@@ -64,8 +67,9 @@ implements TableFormatter.Entries, BasicMessaging {
     private static final long serialVersionUID = -7651803433436713372L;
 
     private Configurator options, startupOptions;
-    private ColorArrangement<? super ChannelType> arrangement;
+    private PixelLayout<? super ChannelType> layout;
     public Mount mount;
+    private double rotation;
 
     private double frequency;
     private double resolution;
@@ -86,16 +90,17 @@ implements TableFormatter.Entries, BasicMessaging {
     private Object parent;
 
     public boolean isInitialized = false, isValid = false;
+    private boolean standardWeights = false;
 
-    public Instrument(String name, ColorArrangement<? super ChannelType> layout) {
+    public Instrument(String name, PixelLayout<? super ChannelType> layout) {
         super(name);
-        setArrangement(layout);
+        setLayout(layout);
         startupOptions = options;
     }
 
-    public Instrument(String name, ColorArrangement<? super ChannelType> layout, int size) {
+    public Instrument(String name, PixelLayout<? super ChannelType> layout, int size) {
         super(name, size);
-        setArrangement(layout);
+        setLayout(layout);
         storeChannels = size;
     }
     
@@ -103,19 +108,19 @@ implements TableFormatter.Entries, BasicMessaging {
     public void setParent(Object o) { this.parent = o; }
 
     public Object getParent() { return parent; }
-
+    
     @Override
     public boolean add(ChannelType channel) {
         channel.index = size();
         return super.add(channel);
     }
 
-    public void setArrangement(ColorArrangement<? super ChannelType> layout) {
-        this.arrangement = layout;
+    public void setLayout(PixelLayout<? super ChannelType> layout) {
+        this.layout = layout;
         if(layout != null) layout.setInstrument(this);
     }
 
-    public ColorArrangement<?> getArrangement() { return arrangement; }
+    public PixelLayout<?> getLayout() { return layout; }
 
     // Load the static instrument settings, which are not meant to be date-dependent...
     public void setOptions(Configurator options) {
@@ -157,7 +162,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
         if(options != null) copy.options = options.copy();
         
-        if(arrangement != null) copy.arrangement = arrangement.copyFor(copy);
+        if(layout != null) copy.layout = layout.copyFor(copy);
 
         // TODO this needs to be done properly???
         copy.groups = null;
@@ -203,7 +208,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(hasOption("resolution")) setResolution(option("resolution").getDouble() * getSizeUnit().value());
         if(hasOption("gain")) gain = option("gain").getDouble();
 
-        if(arrangement != null) arrangement.validate(options);
+        if(layout != null) layout.validate(options);
         
         if(hasOption("scramble")) scramble();
 
@@ -724,6 +729,20 @@ implements TableFormatter.Entries, BasicMessaging {
  
         try { addModality(modalities.get("obs-channels").new NonLinearity("nonlinearity", "n", HawcPlusPixel.class.getField("nonlinearity"))); } 
         catch(NoSuchFieldException e) { error(e); }
+        
+        // Gradients
+        CorrelatedMode common = (CorrelatedMode) modalities.get("obs-channels").get(0);
+        
+        CorrelatedMode gx = common.new CoupledMode(new SkyGradient.X());
+        gx.name = "gradients:x";
+        CorrelatedMode gy = common.new CoupledMode(new SkyGradient.Y());
+        gy.name = "gradients:y";
+        
+        CorrelatedModality gradients = new CorrelatedModality("gradients", "G");
+        gradients.add(gx);
+        gradients.add(gy);
+        
+        addModality(gradients);
 
         // Add pointing response modes...
         addModality(new Modality<PointingResponse>("telescope-x", "Tx", divisions.get("detectors"), PointingResponse.class));
@@ -887,11 +906,27 @@ implements TableFormatter.Entries, BasicMessaging {
     // The pixel data file should contain the blind channel information as well...
     // create the channel groups based on the wiring scheme.
 
-    protected void loadChannelData(String fileName) throws IOException {
+    public void loadChannelData(String fileName) throws IOException {
         info("Loading pixel data from " + fileName);
 
         final ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
 
+        rotation = 0.0;
+        
+        if(hasOption("rcp")) {
+            try { readRCP(option("rcp").getPath()); }
+            catch(IOException e) { warning("Cannot update pixel RCP data. Using values from FITS."); }
+        }
+        
+        // Apply instrument rotation...
+        if(hasOption("rotation")) rotate(option("rotation").getDouble() * Unit.deg);
+        
+        // Instruments with a rotator should apply explicit rotation after pixel positions are finalized...
+        if(this instanceof Rotating) {
+            double angle = ((Rotating) this).getRotation();
+            if(angle != 0.0) rotate(angle);
+        }   
+        
         // Channels not contained in the data file are assumed dead...
         for(Channel channel : this) channel.flag(Channel.FLAG_DEAD);
 
@@ -917,8 +952,127 @@ implements TableFormatter.Entries, BasicMessaging {
 
         if(integrationTime > 0.0) sampleWeights();
     }
+    
 
-    private boolean standardWeights = false;
+
+    public void readRCP(String fileName)  throws IOException {      
+        info("Reading RCP from " + fileName);
+        
+        // Channels not in the RCP file are assumed to be blind...
+        for(ChannelType channel : this) {
+            channel.flag(Channel.FLAG_BLIND);
+        }
+        
+        final Hashtable<String, Pixel> idLookup = layout.getPixelLookup(); 
+        final boolean useGains = hasOption("rcp.gains");
+            
+        if(useGains) info("Initial Source Gains set from RCP file.");
+        
+        new LineParser() {
+
+            @Override
+            protected boolean parse(String line) throws Exception {
+                SmartTokenizer tokens = new SmartTokenizer(line);
+                int columns = tokens.countTokens();
+                Pixel pixel = idLookup.get(tokens.nextToken());
+                
+                if(pixel == null) return false;
+          
+                if(pixel instanceof Channel) {
+                    Channel channel = (Channel) pixel;
+                    double sourceGain = tokens.nextDouble();
+                    double coupling = (columns == 3 || columns > 4) ? sourceGain / tokens.nextDouble() : sourceGain / channel.gain;
+
+                    if(useGains) channel.coupling = coupling;
+                    if(sourceGain != 0.0) channel.unflag(Channel.FLAG_BLIND);
+                }
+
+                Vector2D position = pixel.getPosition();
+                position.setX(tokens.nextDouble() * Unit.arcsec);
+                position.setY(tokens.nextDouble() * Unit.arcsec);
+                return true;
+            }
+            
+        }.read(fileName);
+        
+        
+        flagInvalidPositions();
+        
+        if(hasOption("rcp.center")) {
+            Vector2D offset = option("rcp.center").getVector2D();
+            offset.scale(Unit.arcsec);
+            for(Pixel pixel : getPixels()) pixel.getPosition().subtract(offset);
+        }
+        
+        if(hasOption("rcp.rotate")) {
+            double angle = option("rcp.rotate").getDouble() * Unit.deg;
+            for(Pixel pixel : getPixels()) pixel.getPosition().rotate(angle);
+        }
+        
+        if(hasOption("rcp.zoom")) {
+            double zoom = option("rcp.zoom").getDouble();
+            for(Pixel pixel : getPixels()) pixel.getPosition().scale(zoom);
+        }
+        
+    }
+    
+
+    public String getRCPHeader() { return "ch\t[Gpnt]\t[Gsky]ch\t[dX\"]\t[dY\"]"; }
+    
+    public void printPixelRCP(PrintStream out, String header)  throws IOException {
+        out.println("# CRUSH Receiver Channel Parameter (RCP) Data File.");
+        out.println("#");
+        if(header != null) out.println(header);
+        out.println("#");
+        out.println("# " + getRCPHeader());
+        
+        for(Pixel pixel : getMappingPixels(~sourcelessChannelFlags())) 
+            if(pixel.getPosition() != null) if(!pixel.getPosition().isNaN()) 
+                out.println(pixel.getRCPString());
+    }
+
+    public void generateRCPFrom(String rcpFileName, String pixelFileName) throws IOException {
+        readRCP(rcpFileName);
+        loadChannelData(pixelFileName);
+        printPixelRCP(System.out, null);
+    }
+    
+    public void flagInvalidPositions() {
+        for(Pixel pixel : getPixels()) if(pixel.getPosition().length() > 1 * Unit.deg) 
+            for(Channel channel : pixel) channel.flag(Channel.FLAG_BLIND);
+    }
+  
+
+    public abstract int maxPixels();
+    
+    protected void setPointing(Scan<?,?> scan) {
+        if(hasOption("point")) return;
+        info("Setting 'point' option to obtain pointing/calibration data.");
+        setOption("point");
+        scan.instrument.setOption("point");     
+    }
+    
+    
+
+    
+    public final double getRotationAngle() {
+        return rotation;
+    }
+     
+    public void setRotationAngle(double angle) {
+        this.rotation = angle;
+    }
+
+    public void rotate(double angle) {
+        if(Double.isNaN(angle)) return;
+        
+        info("Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
+        
+        layout.rotate(angle);
+        
+        rotation += angle;
+    }
+    
 
     public synchronized void standardWeights() {
         if(standardWeights) return;
@@ -952,68 +1106,43 @@ implements TableFormatter.Entries, BasicMessaging {
             String type = option("source.type").getValue();
             if(type.equals("skydip")) return new SkyDip(this);		
             if(type.equals("map")) return new AstroIntensityMap(this);
+            if(type.equals("pixelmap")) return new PixelMap(this);
             if(type.equals("null")) return null;
             return null;
         }
+        
         return null;
     }  
 
-    public int getPixelCount() { return arrangement.getPixelCount(); }
+    public int getPixelCount() { return layout.getPixelCount(); }
 
-    public List<? extends Pixel> getPixels() { return arrangement.getPixels(); }
+    public List<? extends Pixel> getPixels() { return layout.getPixels(); }
 
-    public List<? extends Pixel> getMappingPixels(int keepFlags) { return arrangement.getMappingPixels(keepFlags); }
+    public List<? extends Pixel> getMappingPixels(int keepFlags) { return layout.getMappingPixels(keepFlags); }
 
-    public final List<? extends Pixel> getPerimeterPixels() { 
-        int sections = 0;
 
-        if(hasOption("perimeter")) {
-            if(option("perimeter").getValue().equalsIgnoreCase("auto")) {
-                // n ~ pi r^2   --> r ~ sqrt(n / pi)
-                // np ~ 2 pi r ~ 2 sqrt(pi n) ~ 3.55 sqrt(n)
-                // Add factor of ~2 margin --> np ~ 7 sqrt(n)
-                sections = (int) Math.ceil(7 * Math.sqrt(size()));
-            }
-            else sections = option("perimeter").getInt();
-        }
-        return getPerimeterPixels(sections); 
-    }
+    
 
-    public final List<? extends Pixel> getPerimeterPixels(int sections) { 
-        final List<? extends Pixel> mappingPixels = getMappingPixels(~sourcelessChannelFlags());
+    public Vector2D getPointingCenterOffset() { return new Vector2D(); }
+    
+
+    
+    // Returns the offset of the pointing center from the the rotation center for a given rotation...
+    public Vector2D getPointingOffset(double rotationAngle) {
+        Vector2D offset = new Vector2D();
         
-        if(sections <= 0) return mappingPixels;
-
-        if(mappingPixels.size() < sections) return mappingPixels;
-
-        final Pixel[] sPixel = new Pixel[sections];
-        final double[] maxd = new double[sections];
-        Arrays.fill(maxd, Double.NEGATIVE_INFINITY);
-
-        final Vector2D centroid = new Vector2D();
-        for(Pixel p : mappingPixels) centroid.add(p.getPosition());
-        centroid.scale(1.0 / mappingPixels.size());
-
-        final double dA = Constant.twoPi / sections;
-        final Vector2D relative = new Vector2D();
-
-        for(Pixel p : mappingPixels) {
-            relative.setDifference(p.getPosition(), centroid);
-
-            final int bin = (int) Math.floor((relative.angle() + Math.PI) / dA);
-
-            final double d = relative.length();
-            if(d > maxd[bin]) {
-                maxd[bin] = d;
-                sPixel[bin] = p;
-            }
+        final double sinA = Math.sin(rotationAngle);
+        final double cosA = Math.cos(rotationAngle);
+        
+        if(mount == Mount.CASSEGRAIN) {
+            Vector2D dP = getPointingCenterOffset();    
+            offset.setX(dP.x() * (1.0 - cosA) + dP.y() * sinA);
+            offset.setY(dP.x() * sinA + dP.y() * (1.0 - cosA));
         }
-
-        final ArrayList<Pixel> perimeter = new ArrayList<Pixel>(sections);
-        for(int i=sections; --i >= 0; ) if(sPixel[i] != null) perimeter.add(sPixel[i]);
-
-        return perimeter;
+        return offset;
     }
+        
+  
 
     public Hashtable<Integer, ChannelType> getFixedIndexLookup() {
         Hashtable<Integer, ChannelType> lookup = new Hashtable<Integer, ChannelType>();
@@ -1112,19 +1241,6 @@ implements TableFormatter.Entries, BasicMessaging {
         out.println();
     }
 
-    /*
-	public void normalizeGains(int method) {	
-		double aveG = 0.0, sumw = 0.0;
-		for(Channel channel : this) if(channel.isUnflagged(~Channel.FLAG_BLIND)) { 
-			double G = channel.gain;
-			if(method == GAINS_BIDIRECTIONAL) G = Math.abs(G);
-			aveG += channel.weight * G; 
-			sumw += channel.weight;
-		}	
-		if(sumw > 0) aveG /= sumw;
-		for(Channel channel : this) channel.gain  /= aveG;
-	}
-     */
 
     public void reindex() {
         for(int k=size(); --k >= 0; ) get(k).index = k;
@@ -1345,7 +1461,9 @@ implements TableFormatter.Entries, BasicMessaging {
         data.put("Channel_Flags", flags);
     }
 
-    public void parseImageHeader(Header header) {}
+    public void parseImageHeader(Header header) {
+        setResolution(header.getDoubleValue("BEAM", getResolution() / Unit.arcsec) * Unit.arcsec);        
+    }
 
     public void editImageHeader(List<Scan<?,?>> scans, Header header) throws HeaderCardException {
         Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
@@ -1353,6 +1471,7 @@ implements TableFormatter.Entries, BasicMessaging {
         c.add(new HeaderCard("TELESCOP", getTelescopeName(), "Telescope name."));
         c.add(new HeaderCard("INSTRUME", getName(), "The instrument used."));	
         c.add(new HeaderCard("V2JY", janskyPerBeam(), "1 Jy/beam in instrument data units."));
+        c.add(new HeaderCard("BEAM", getResolution() / Unit.arcsec, "The instrument FWHM (arcsec) of the beam."));
     }
 
     public void editScanHeader(Header header) throws HeaderCardException {
@@ -1439,6 +1558,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(name.equals("channels")) return size();
         if(name.equals("maxchannels")) return storeChannels;
         if(name.equals("mount")) return mount.name();
+        if(name.equals("rot")) return rotation / Unit.deg;
         if(name.equals("resolution")) return getResolution() / getSizeUnit().value();
         if(name.equals("sizeunit")) return getSizeUnit().name();
         if(name.equals("ptfilter")) return getAverageFiltering();
@@ -1484,6 +1604,8 @@ implements TableFormatter.Entries, BasicMessaging {
 
         CRUSH.suggest(getParent(), new String(buf));
     }
+    
+    
 
     public int[] getInts() { return recycler.getIntArray(size()); }
 

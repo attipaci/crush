@@ -26,10 +26,10 @@ package crush.instrument.hirmes;
 import java.util.*;
 
 import crush.*;
-import crush.array.SingleColorArrangement;
+import crush.array.SingleColorLayout;
 import crush.sourcemodel.AstroIntensityMap;
 import crush.sourcemodel.SpectralCube;
-import crush.telescope.sofia.SofiaCamera;
+import crush.telescope.sofia.SofiaInstrument;
 import crush.telescope.sofia.SofiaData;
 import crush.telescope.sofia.SofiaHeader;
 import crush.telescope.sofia.SofiaSpectroscopyData;
@@ -43,7 +43,7 @@ import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
 
-public class Hirmes extends SofiaCamera<HirmesPixel> {
+public class Hirmes extends SofiaInstrument<HirmesPixel> {
     /**
      * 
      */
@@ -78,7 +78,7 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
     double z = 0.0;                         // Doppler shift. 
 
     public Hirmes() {
-        super("hirmes", new SingleColorArrangement<HirmesPixel>(), pixels);
+        super("hirmes", new SingleColorLayout<HirmesPixel>(), pixels);
     }
 
     @Override
@@ -381,7 +381,7 @@ public class Hirmes extends SofiaCamera<HirmesPixel> {
         for(HirmesPixel pixel : this) pixel.calcSIBSPosition3D();
         
         // Set the pointing center...
-        setReferencePosition(center);
+        getLayout().setReferencePosition(center);
       }
 
 

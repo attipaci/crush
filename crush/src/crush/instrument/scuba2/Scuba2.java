@@ -27,6 +27,7 @@ import java.util.*;
 
 import crush.*;
 import crush.array.*;
+import crush.instrument.PixelLayout;
 import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import jnum.Unit;
@@ -34,7 +35,7 @@ import jnum.Util;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
-public class Scuba2 extends Camera<Scuba2Pixel> implements GroundBased, GridIndexed {
+public class Scuba2 extends Instrument<Scuba2Pixel> implements GroundBased, GridIndexed {
 	/**
 	 * 
 	 */
@@ -55,7 +56,7 @@ public class Scuba2 extends Camera<Scuba2Pixel> implements GroundBased, GridInde
 	
 	
 	public Scuba2() {
-		super("scuba2", new SingleColorArrangement<Scuba2Pixel>(), SUBARRAYS * Scuba2Subarray.PIXELS);
+		super("scuba2", new SingleColorLayout<Scuba2Pixel>(), SUBARRAYS * Scuba2Subarray.PIXELS);
 		//integrationTime = samplingInterval = 1.0/200.0 * Unit.sec;
 		mount = Mount.RIGHT_NASMYTH;
 		subarray = new Scuba2Subarray[SUBARRAYS];
@@ -343,7 +344,7 @@ public class Scuba2 extends Camera<Scuba2Pixel> implements GroundBased, GridInde
 
 	@Override
 	public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-		Camera.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+		PixelLayout.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
 	}
 
 	@Override

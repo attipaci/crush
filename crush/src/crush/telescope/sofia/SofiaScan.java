@@ -42,7 +42,7 @@ import java.io.*;
 import java.util.*;
 
 
-public abstract class SofiaScan<InstrumentType extends SofiaCamera<? extends Channel>, IntegrationType extends SofiaIntegration<InstrumentType, ? extends SofiaFrame>> 
+public abstract class SofiaScan<InstrumentType extends SofiaInstrument<? extends Channel>, IntegrationType extends SofiaIntegration<InstrumentType, ? extends SofiaFrame>> 
 extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     /**
      * 

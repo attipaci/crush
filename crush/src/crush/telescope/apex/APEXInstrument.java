@@ -25,14 +25,13 @@
 package crush.telescope.apex;
 
 import crush.*;
-import crush.array.Camera;
 import crush.array.SingleColorPixel;
 import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import jnum.Unit;
 import jnum.astro.EquatorialCoordinates;
 import jnum.math.Vector2D;
-import crush.array.SingleColorArrangement;
+import crush.array.SingleColorLayout;
 import nom.tam.fits.*;
 
 import java.io.*;
@@ -41,7 +40,7 @@ import java.util.List;
 import java.util.Vector;
 
 
-public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends Camera<ChannelType> implements GroundBased {
+public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> extends Instrument<ChannelType> implements GroundBased {
 	/**
 	 * 
 	 */
@@ -49,12 +48,12 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 
 	public ChannelType referencePixel;
 	
-	public APEXCamera(String name, int size) {
-		super(name, new SingleColorArrangement<APEXContinuumPixel>(), size);
+	public APEXInstrument(String name, int size) {
+		super(name, new SingleColorLayout<APEXContinuumPixel>(), size);
 	}
 	
-	public APEXCamera(String name) {
-		super(name, new SingleColorArrangement<APEXContinuumPixel>());
+	public APEXInstrument(String name) {
+		super(name, new SingleColorLayout<APEXContinuumPixel>());
 	}
 	
 	@Override
@@ -63,8 +62,8 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 	}
 	
 	@Override
-    public APEXCamera<ChannelType> copy() {
-	    APEXCamera<ChannelType> copy = (APEXCamera<ChannelType>) super.copy();
+    public APEXInstrument<ChannelType> copy() {
+	    APEXInstrument<ChannelType> copy = (APEXInstrument<ChannelType>) super.copy();
 	    if(referencePixel != null) copy.referencePixel = copy.get(referencePixel.index);
 	    return copy;
 	}
@@ -72,10 +71,7 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 	@Override
 	public void readRCP(String fileName)  throws IOException {		
 		super.readRCP(fileName);
-	
-		if(referencePixel != null) setReferencePosition(referencePixel.position);	
-		// Take dewar rotation into account...
-		for(SingleColorPixel pixel : this) pixel.position.rotate(rotation);
+		if(referencePixel != null) getLayout().setReferencePosition(referencePixel.position);	
 	}
 	
 
@@ -110,11 +106,12 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 			
 		info("Instrument mounted in " + mount.name + " cabin.");
 		
-		rotation = header.getDoubleValue("DEWUSER", 0.0) - header.getDoubleValue("DEWZERO", 0.0);
+		double rotation = header.getDoubleValue("DEWUSER", 0.0) - header.getDoubleValue("DEWZERO", 0.0);
 		if(rotation != 0.0) {
 			info("Dewar rotated at " + rotation + " deg.");
 			rotation *= Unit.deg;
 		}
+		setRotationAngle(rotation);
 		
 		storeChannels = xOffset.length;
 		clear();
@@ -131,7 +128,7 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 		
 		int referenceBENumber = ((int[]) row[hdu.findColumn("REFFEED")])[0];
 		referencePixel = get(referenceBENumber-1);
-		setReferencePosition(referencePixel.fitsPosition);
+		getLayout().setReferencePosition(referencePixel.fitsPosition);
 		info(storeChannels + " channels found. Reference pixel is " + referenceBENumber);
 
 		// Take instrument rotation into account
@@ -141,7 +138,7 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 
 	@Override
 	public Scan<?, ?> getScanInstance() {
-		return new APEXScan<APEXCamera<?>, APEXSubscan<APEXCamera<?>,?>>(this);
+		return new APEXScan<APEXInstrument<?>, APEXSubscan<APEXInstrument<?>,?>>(this);
 	}
 
 	@Override
@@ -242,7 +239,6 @@ public abstract class APEXCamera<ChannelType extends APEXContinuumPixel> extends
 	@Override
 	public Object getTableEntry(String name) {
 		if(name.equals("ref")) return referencePixel.getID();
-		if(name.equals("rot")) return rotation / Unit.deg;
 		return super.getTableEntry(name);
 	}
 	

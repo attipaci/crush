@@ -42,7 +42,7 @@ import jnum.data.WeightedPoint;
 import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
-public class APEXSubscan<InstrumentType extends APEXCamera<? extends APEXContinuumPixel>, FrameType extends APEXFrame> 
+public class APEXSubscan<InstrumentType extends APEXInstrument<? extends APEXContinuumPixel>, FrameType extends APEXFrame> 
 extends Integration<InstrumentType, FrameType> implements PhaseModulated, GroundBased, Chopping {
 	/**
 	 * 
@@ -559,7 +559,7 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 	@SuppressWarnings("unchecked")
 	@Override
 	public FrameType getFrameInstance() {
-		return (FrameType) new APEXFrame((APEXScan<APEXCamera<?>, APEXSubscan<APEXCamera<?>, FrameType>>) scan);
+		return (FrameType) new APEXFrame((APEXScan<APEXInstrument<?>, APEXSubscan<APEXInstrument<?>, FrameType>>) scan);
 	}
 			
 	public void fitsRCP() {

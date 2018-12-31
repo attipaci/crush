@@ -28,6 +28,7 @@ import java.util.*;
 
 import crush.*;
 import crush.array.*;
+import crush.instrument.PixelLayout;
 import crush.telescope.GroundBased;
 import crush.telescope.InstantFocus;
 import crush.telescope.Mount;
@@ -39,7 +40,7 @@ import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 import nom.tam.fits.*;
 
-public class Gismo extends Camera<GismoPixel> implements GroundBased, GridIndexed {
+public class Gismo extends Instrument<GismoPixel> implements GroundBased, GridIndexed {
 	/**
 	 * 
 	 */
@@ -58,7 +59,7 @@ public class Gismo extends Camera<GismoPixel> implements GroundBased, GridIndexe
 	
 	
 	public Gismo() {
-	    super("gismo", new SingleColorArrangement<GismoPixel>(), pixels);
+	    super("gismo", new SingleColorLayout<GismoPixel>(), pixels);
         setResolution(16.7 * Unit.arcsec);
         
         arrayPointingCenter = (Vector2D) defaultPointingCenter.clone();
@@ -78,7 +79,7 @@ public class Gismo extends Camera<GismoPixel> implements GroundBased, GridIndexe
     
     @Override
     public void addLocalFixedIndices(int fixedIndex, double radius, List<Integer> toIndex) {
-        Camera.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
+        PixelLayout.addLocalFixedIndices(this, fixedIndex, radius, toIndex);
     }
 
 
@@ -225,7 +226,7 @@ public class Gismo extends Camera<GismoPixel> implements GroundBased, GridIndexe
 		for(GismoPixel pixel : this) pixel.calcPosition();
 		
 		// Set the pointing center...
-		setReferencePosition(center);
+		getLayout().setReferencePosition(center);
 	}
 	
 	// Calculates the offset of the pointing center from the nominal center of the array

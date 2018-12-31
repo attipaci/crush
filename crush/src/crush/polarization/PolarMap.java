@@ -25,7 +25,6 @@ package crush.polarization;
 
 
 import crush.*;
-import crush.array.*;
 import crush.sourcemodel.AstroIntensityMap;
 import jnum.Unit;
 import jnum.data.image.Observation2D;
@@ -47,12 +46,10 @@ public class PolarMap extends SourceModel {
 	public boolean usePolarization = false;
 	public boolean hasPolarization = false;
 	
-	public PolarMap(Camera<?> instrument) {
+	public PolarMap(Instrument<?> instrument) {
 		super(instrument);	
 	}
 	
-	public Camera<?> getArray() { return (Camera<?>) getInstrument(); }
-
 	
 	public AstroIntensityMap getMapInstance() {
 		return new AstroIntensityMap(getInstrument());

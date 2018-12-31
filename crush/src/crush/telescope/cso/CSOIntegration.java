@@ -37,7 +37,7 @@ import jnum.Unit;
 import jnum.Util;
 
 
-public abstract class CSOIntegration<InstrumentType extends CSOCamera<? extends SingleColorPixel>, FrameType extends HorizontalFrame> 
+public abstract class CSOIntegration<InstrumentType extends CSOInstrument<? extends SingleColorPixel>, FrameType extends HorizontalFrame> 
 extends Integration<InstrumentType, FrameType> implements GroundBased {
 	/**
 	 * 
