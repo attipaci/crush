@@ -32,7 +32,7 @@ import crush.array.GeometricIndexed;
 import crush.array.Rotating;
 import crush.array.SkyGradient;
 import crush.instrument.PixelLayout;
-import crush.instrument.hawcplus.HawcPlusPixel;
+import crush.instrument.hawcplus.HawcPixel;
 import crush.sourcemodel.*;
 import crush.telescope.ChopperResponse;
 import crush.telescope.InstantFocus;
@@ -727,7 +727,7 @@ implements TableFormatter.Entries, BasicMessaging {
         try { addModality(modalities.get("obs-channels").new CoupledModality("sky", "Cs", Channel.class.getField("coupling"))); }
         catch(NoSuchFieldException e) { error(e); }
  
-        try { addModality(modalities.get("obs-channels").new NonLinearity("nonlinearity", "n", HawcPlusPixel.class.getField("nonlinearity"))); } 
+        try { addModality(modalities.get("obs-channels").new NonLinearity("nonlinearity", "n", HawcPixel.class.getField("nonlinearity"))); } 
         catch(NoSuchFieldException e) { error(e); }
         
         // Gradients
@@ -912,6 +912,7 @@ implements TableFormatter.Entries, BasicMessaging {
         final ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
 
         rotation = 0.0;
+        layout.initialize();
         
         if(hasOption("rcp")) {
             try { readRCP(option("rcp").getPath()); }
@@ -1566,8 +1567,8 @@ implements TableFormatter.Entries, BasicMessaging {
         if(name.equals("minFWHM")) return getMinBeamFWHM() / getSizeUnit().value();
         if(name.equals("maxFWHM")) return getMaxBeamFWHM() / getSizeUnit().value();
         if(name.equals("stat1f")) return getOneOverFStat();
-
-        return TableFormatter.NO_SUCH_DATA;
+        
+        return layout.getTableEntry(name);        
     }
 
     public String getFocusString(InstantFocus focus) {

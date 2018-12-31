@@ -36,14 +36,6 @@
 			MAKO-2.
 			@See: '350um' and '450um'
 
-:: 850um.maxfreq=X	@Instrument: MAKO-2
-			@Since: 2.21
-			@Expert
-			Specify a readout frequency (in MHz) below which are
-			the 850um channels. CRUSH uses this frequency boundary
-			to determine which channels are assigned to which 
-			subarray.	
-
 :: accel		@Alias -> 'correlated.accel-mag'
 			@Advanced
 		 	Can be used to enable acceleration response 
@@ -227,7 +219,7 @@
 			@See: 'pointing'
 
 :: chirange=min:max	@Since: 2.31
-			@Instrument: APEX
+			@Telescope: APEX
 			@Expert
 			A range of acceptable reduced chi values for 
 			photometry. If a subscan cannot contribute photometry 
@@ -269,20 +261,6 @@
 			(sampled at 203.25 Hz), relative to the detector 
 			readout to improve synchronization.
 			@See: 'shift'
-
-:: chopper.throw=X	@Instrument: SHARC
-			@Since: 2.17
-			@Advanced
-			Deconvolve with this chopper throw (arcsec) instead
-			of the value stored in the file. The chopper throws 
-			that appear in SHARC data are often approximate only.
-			You can "determine" the effective throw by minimizing
-			deconvolution lobes while reducing bright pointing
-			sources. You can then apply the same values to the
-			science data, assuming that the chopper controller
-			was left in the same state (which is a reasonable
-			assumption :-).
-			@See: 'deconvolve'
 
 :: chopper.tolerance=X	@Instrument: HAWC+
 			@Advanced
@@ -370,7 +348,7 @@
 :: convert		@Since: 2.01-3
 			@Advanced
 
-			@Instrument : SCUBA2
+			@Instrument : SCUBA-2
 			Just convert all the SDF files to FITS, then exit. 
 			Batch conversion is useful if you are going to reduce
 			the same dataset many times over (e.g. to optimize
@@ -562,26 +540,6 @@
 			instrumental gain starting from Dec 10, 2009.
 			@See: 'mjd', 'serial'
 
-:: deconvolve		@Instrument: SHARC
-			@Since: 2.17
-			@Advanced
-			Procude deconvolved maps. Otherwise, CRUSH will produce
-                        dual-beam maps. Specifying the "correct" chopper throw
-			may be crutial in getting optimal deconvolution 
-			results.
-			@See: 'chopper.throw'
-
-:: deconvolve.above=X 	@Instrument: SHARC
-			@Since: 2.17
-			@Expert
-			Set the deconvolution threshold to X. Usually 0<X<2.
-                        When the transfer function (Fourier transform) of the
-                        chop pattern is below this value, the corresponding
-                        Fourier components are considered not measured (i.e.
-                        set to zero). See the default value in
-                        'sharc/default.cfg'
-			@See: 'deconvolve'
-
 :: deep			Use for very faint sources which are not at all 
 			detected in single scans, or if you think
 			there is too much residual noise (baselines) in your 
@@ -621,7 +579,6 @@
 			own, to specify a despiking method, S/N level and
 			flagging criteria. See the various despiking options
 			below:
-
 
 :: despike.blocks	@Expert
 			@Since: 2.33
@@ -674,7 +631,7 @@
 
 :: despike.phases	@Expert
 			@Since: 2.43
-			@Old: 'phasedespike' (2.15 - 2.42)
+			@Was: 'phasedespike' (2.15 - 2.42)
 			When set, the phase data (such as position-switched
 			phases) will be despiked together with the regular
 			high-frequency despiking. The despiking level is the
@@ -970,7 +927,7 @@
 			'faint.cfg'.
 			@See: 'bright', 'deep'
 
-:: fazo			@Instrument: SHARC-2, MAKO
+:: fazo			@Telescope: CSO
 			An alternative to 'center' for providing pointing 
 			corrections. As opposed to 'center', which specifies 
 			incremental corrections, this option takes an absolute 
@@ -979,21 +936,10 @@
 			by the antenna computer during the observations).
 			@See: 'fzao', 'center'
 
-:: febe			@Instrument: APEX
+:: febe			@Telescope: APEX
 			@Expert
 			Defines the frontend-backend combination to use. 
 			E.g. for LABOCA, this would be set to 'LABOCA-ABBA'.
-
-:: file=<name>		@Instrument: SHARC
-			@Since: 2.17
-			Specify the data file (relative to 'datapath') 
-			containing the SHARC scans. You can then refer to 
-			specific scans inside the file by number or range.
-			(Note, that a ranges for SHARC are treated as rows
-			belonging to the same master scan). You can also
-			use 'list' after this option to provide just a listing
-			of the scan entries contained in the data file.
-			@See: 'datapath'
 
 :: fillgaps		@Since: 2.30
 			@Advanced
@@ -1304,7 +1250,7 @@
 			@See: 'pixeldata'
 
 
-:: flight=N		@Instrument: SOFIA
+:: flight=N		@Telescope: SOFIA
 			@Since: 2.33
 			Set the flight number for locating data files using
 			scan numbers only. Remember to set 'datapath' also to
@@ -1344,7 +1290,7 @@
 			useful for quick peeks at the data without processing
 			the full scan, or when a part of the data is corrupted.
 
-:: fzao			@Instrument: SHARC-2, MAKO
+:: fzao			@Telescope: CSO
 			Specify a zenith pointing offset.
 			@See: 'fazo'
 
@@ -2264,69 +2210,6 @@
 			determined without prior bias).
 			@See: 'gainnoise', 'uniform', 'flag', 'blind'
 
-:: pixelid=<file>	@Instrument: MAKO, MAKO-2
-			@Since: 2.21
-			@Advanced
-			Specify the file that contains the pixel frequency ids.
-			After matching the readout channels to the available
-			ids, these become the standard pixel id used by CRUSH
-			for all other purposes. Note, that MAKO and MAKO-2 have
-			different file specifications for the argument.		
-
-:: pixelid.attempts=N	@Instrument: MAKO, MAKO-2
-			@Since: 2.21
-			@Advanced
-			Set the number of fitting attempts for matching
-			readout frequencies to pixelid values. Each attempt
-			starts off from a random fitting position within
-			'pixelid.deltarange'. Thus, the more attempts are
-			taken, the less likely it is that the best fit will
-			be stuck in a local minimum value. The final fit will	
-			be chosen as the one with the lowest minimum out of
-			N attempts.
-
-:: pixelid.center=x,y	@Instrument: MAKO-2
-			@Since: 2.21
-			@Advanced
-			Set the nominal array center position (in arcsecs) for 
-			the pixel positions contained in the 'pixelid' file. 
-
-:: pixelid.deltarange=min:max	@Instrument: MAKO, MAKO-2
-				@Since: 2.21
-				@Expert
-			Set the range of tolerated mean fractional frequency
-			shift when matching readout frequencies to a list
-			of 'pixelid' values.
-
-:: pixelid.max=X	@Instrument: MAKO, MAKO-2
-			@Since: 2.21
-			@Expert
-			Specify a maximum normalized deviation (relative to the
-			mean deviation under the given cost function) for valid
-			pixel identification. Pixels, whose closest frequency
-			match is outside this range will remain unassigned.
-
-:: pixelid.power=X	@Instrument: MAKO, MAKO-2
-			@Since: 2.21
-			@Expert
-			Change the power exponent used when caluclating the
-			cost function for matching pixel ids to observed 
-			readout frequencies. A value of 2.0 corresponds to a
-			standard chi-squared. A value of 1.0 minimizes
-			absolute deviation.
-
-:: pixelid.rotate=X	@Instrument: MAKO-2
-			Rotate the pixel positions in the 'pixelid' file by
-			X degrees to obtain proper orientation on the focal 
-			plane.
-
-:: pixelid.zoom=X	@Instrument: MAKO-2
-			@Since: 2.21
-			@Advanced
-			Specify a scaling (zoom) factor to apply to the 
-			positions in the 'pixelid' file. Use this to scale
-			the positions to physical size of the array in arcsecs.
-
 :: pixelmap		@Since: 2.42
 			(Used to be 'beammap')
 			Effectively the same as 'source.type=pixelmap', which 
@@ -2356,11 +2239,6 @@
                         can peek at these yourself.
 			@See: 'pixelmap', pixelmap.process'
 			
-:: pixelsize=X		@Instrument: SHARC
-			@Since: 2.17
-			@Expert
-			Specify the pixel spacing in arcseconds.
-
 :: pixelsize=X,Y	@Instrument: SHARC-2, GISMO, P-ArTeMiS, MAKO
 			@Expert
 			Specify the size of rectangular pixels in a grid. This
@@ -2380,7 +2258,6 @@
                         Override the plate scale recorded in the FITS, and
                         set it manually to X arcsec/mm.
                         @See: 'pixelsize'
-
 
 :: point		@Since: 2.00-b4
 			This is a convenience key for triggering settings for
@@ -2563,7 +2440,7 @@
 			rates are determined.
 			@See: 'aclip', 'vclip', 'downsample'
 
-:: project=<id>    	@Instrument: APEX
+:: project=<id>    	@Telescope: APEX
 			Some instruments (e.g. APEX bolometers) may require a 
 			project ID to be set in order to locate scans by serial 
 			number. Use capitalized form when defining APEX 
@@ -2625,21 +2502,21 @@
 			uncertainties in the waveplate angles.
 			@See: 'filter.hwp'
 
-:: pwv41k=X		@Instrument: SOFIA, HAWC+
+:: pwv41k=X		@Telescope: SOFIA
 			@Expert
 			@Since: 2.34
 			Set the typical PWV value to X microns at 41 kilofeet
 			altitude.
 			@See: 'pwvmodel', 'pwvscale'
 
-:: pwvmodel		@Instrument: SOFIA, HAWC+
+:: pwvmodel		@Telescope: SOFIA
 			@Expert
 			@Since: 2.34
 			Estimate a typical PWV value (for opacity correction)
 			based on altitude alone.
 			@See: 'pwv41k', 'pwvscale'
 
-:: pwvscale=X		@Instrument: SOFIA, HAWC+
+:: pwvscale=X		@Telescope: SOFIA
 			@Expert
 			@Since: 2.34
 			The typical water vapor scale height (kft) around 41 
@@ -3431,7 +3308,7 @@
 :: spa			@Alias --> 'source.polar.angles'
 			@Since: 2.11
 
-:: spectral.grid=X      @Instrument: SOFIA
+:: spectral.grid=X      @Instrument: HIRMES
 			@Advanced
 			@Since: 2.42
                         Specify the bin spacing in the spectral dimension to
@@ -3710,7 +3587,7 @@
 			@See: 'tau.window'
 
 :: tau.window=X		@Expert
-			@Instrument: APEX, SHARC-2, MAKO, GISMO, MAKO-2, SCUBA-2
+			@Telescope: APEX, CSO, JCMT
 			@Since: 2.13
 			Set the 1-sigma Gaussian weighting window (in hours) 
 			for deriving local weighted average tau values from a 
@@ -3821,13 +3698,6 @@
 			will be reported).
 			@See: 'quiet'
 
-:: wafers		@Alias: -> correlated.wafers
-			@Instrument: ASZCA
-			@Advanced
-			Decorrelate on detector wafers (wedges) or set options
-			for it.
-			@See: 'correlated.<?>'
-
 :: waveplate.channel=N  @Instrument: PolKa
 			@Expert
 			Specify the LABOCA channel (counting from 1) that
@@ -3936,7 +3806,6 @@
 			as during 6-8 December 2011.
 			@See: 'waveplate.tpchannel', 'waveplate.tpharmonic'
 
-
 :: waveplate.tpchannel=N	@Instrument: PolKa
 				@Expert
 				@Since: 2.11
@@ -4017,7 +3886,7 @@
 
 :: weighting.phases	@Expert
 			@Since: 2.43
-			@Old: 'phaseweights' (2.15 - 2.42)
+			@Was: 'phaseweights' (2.15 - 2.42)
 			When set, CRUSH will calculate proper noise weights
 			for the phase data as well as the high-frequency 
 			time-stream, under the expectation that the phase

@@ -1,3 +1,5 @@
+2.50-a1
+
 
 	[PRUNE] Remove future support for: ASZCa, p-ArTeMiS, MAKO, MAKO-2,
 	SHARC (first gen.), and MUSTANG-2. Legacy support for these instruments
@@ -8,6 +10,13 @@
 	is little point of keeping support for it down the line.
 
 	[PRUNE] Remove unused SyncModMap and 'source.synchronized' option.
+	
+	[CODE] Instrument rotation now always applied after RPC read, not only
+	for APEX cameras...
+
+	[CODE] Eliminate Camera layer, to simplify Instrument type hieratchy.
+	Functionality is migrated to Instrument and PixelLayout (formerly
+	known as ColorArrangement).
 
 	[CODE] {Gismo} Simplified hierarchy by eliminating AbstractGismo.
 

@@ -109,7 +109,7 @@ public class GDFStack {
 		Fork<DataPoint> stack = map.new Fork<DataPoint>() {
 			DataPoint mean;
 			@Override 
-			public void initialize() { mean = new DataPoint(); }
+			public void setDefaults() { mean = new DataPoint(); }
 			
 			@Override
 			public void process(int i, int j) {

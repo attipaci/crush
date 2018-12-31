@@ -64,8 +64,6 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Instr
     public SofiaInstrumentData instrumentData;
     public SofiaArrayData array;
     public SofiaSpectroscopyData spectral;
-     
-
 
     Set<String> configFiles = new HashSet<String>();
     Vector<String> history = new Vector<String>();
@@ -250,7 +248,7 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Instr
         if(first.mode.isScanning) SofiaData.getMerged(first.scanning, last.scanning).editHeader(header);
       
         // SOFIA data processing keys
-        SofiaProcessingData processing = new SofiaProcessingData.CRUSH(hasOption("calibrated"), header.getIntValue("NAXIS"), getLowestQuality(scans));
+        SofiaProcessingData processing = new SofiaProcessingData.CRUSH(hasOption("calibrated"), header.getIntValue("NAXIS"), getLowestQualityScan(scans));
         processing.associatedAORs = aors;
         processing.associatedMissionIDs = missionIDs;
         processing.associatedFrequencies = freqs;
@@ -272,53 +270,6 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Instr
         return keys;
     }
    
-    public boolean hasTrackingError(Collection<Scan<?,?>> scans) {
-        for(Scan<?,?> scan : scans) if(((SofiaScan<?,?>) scan).telescope.hasTrackingError) return true;
-        return false;
-    }
-
-    public double getTotalExposureTime(Collection<Scan<?,?>> scans) {
-        double t = 0.0;
-        for(Scan<?,?> scan : scans) t += ((SofiaInstrument<?>) scan.instrument).instrumentData.exposureTime;
-        return t;
-    }
-
-  
-    public int getLowestQuality(List<Scan<?,?>> scans) {
-        int overall = ((SofiaScan<?,?>) scans.get(0)).processing.qualityLevel;
-        for(int i=scans.size(); --i > 0; ) {
-            int level = ((SofiaScan<?,?>) scans.get(i)).processing.qualityLevel;
-            if(level < overall) overall = level;
-        }
-        return overall;
-    }
-
-   
-    public SofiaScan<?,?> getEarliestScan(List<Scan<?,?>> scans) {
-        double firstMJD = scans.get(0).getMJD();
-        Scan<?,?> earliestScan = scans.get(0);
-
-        for(int i=1; i < scans.size(); i++) if(scans.get(i).getMJD() < firstMJD) {
-            earliestScan = scans.get(i);
-            firstMJD = earliestScan.getMJD();
-        }
-
-        return (SofiaScan<?, ?>) earliestScan;
-    }
-
-
-    public SofiaScan<?,?> getLatestScan(List<Scan<?,?>> scans) {
-        double lastMJD = scans.get(0).getMJD();
-        Scan<?,?> latestScan = scans.get(0);
-
-        for(int i=scans.size(); --i > 1; ) if(scans.get(i).getMJD() > lastMJD) {
-            latestScan = scans.get(i);
-            lastMJD = latestScan.getMJD();
-        }
-
-        return (SofiaScan<?, ?>) latestScan;
-    }
-
     @Override
     public void addHistory(Header header, List<Scan<?,?>> scans) throws HeaderCardException {	
         super.addHistory(header, scans);			
@@ -381,7 +332,60 @@ public abstract class SofiaInstrument<ChannelType extends Channel> extends Instr
                 "     -flight=       Flight number to use with scan numbers and ranges.\n";
     }
     
+    
+    
+    
+    
+    public static SofiaScan<?,?> getEarliestScan(List<Scan<?,?>> scans) {
+        double firstMJD = scans.get(0).getMJD();
+        Scan<?,?> earliestScan = scans.get(0);
 
+        for(int i=1; i < scans.size(); i++) if(scans.get(i).getMJD() < firstMJD) {
+            earliestScan = scans.get(i);
+            firstMJD = earliestScan.getMJD();
+        }
+
+        return (SofiaScan<?, ?>) earliestScan;
+    }
+
+
+    public static SofiaScan<?,?> getLatestScan(List<Scan<?,?>> scans) {
+        double lastMJD = scans.get(0).getMJD();
+        Scan<?,?> latestScan = scans.get(0);
+
+        for(int i=scans.size(); --i > 1; ) if(scans.get(i).getMJD() > lastMJD) {
+            latestScan = scans.get(i);
+            lastMJD = latestScan.getMJD();
+        }
+
+        return (SofiaScan<?, ?>) latestScan;
+    }
+    
+    
+    public static int getLowestQualityScan(List<Scan<?,?>> scans) {
+        int overall = ((SofiaScan<?,?>) scans.get(0)).processing.qualityLevel;
+        for(int i=scans.size(); --i > 0; ) {
+            int level = ((SofiaScan<?,?>) scans.get(i)).processing.qualityLevel;
+            if(level < overall) overall = level;
+        }
+        return overall;
+    }
+ 
+    
+    public static boolean hasTrackingError(Collection<Scan<?,?>> scans) {
+        for(Scan<?,?> scan : scans) if(((SofiaScan<?,?>) scan).telescope.hasTrackingError) return true;
+        return false;
+    }
+
+    public static double getTotalExposureTime(Collection<Scan<?,?>> scans) {
+        double t = 0.0;
+        for(Scan<?,?> scan : scans) t += ((SofiaInstrument<?>) scan.instrument).instrumentData.exposureTime;
+        return t;
+    }
+
+
+    
+    
     public static final double telescopeDiameter = 2.5 * Unit.m;
 
 }
