@@ -39,8 +39,9 @@ import jnum.Configurator;
 import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.math.Vector2D;
+import jnum.text.TableFormatter;
 
-public abstract class PixelLayout<ChannelType extends Channel> implements Serializable, Cloneable {
+public abstract class PixelLayout<ChannelType extends Channel> implements Serializable, Cloneable, TableFormatter.Entries {
 	/**
 	 * 
 	 */
@@ -67,6 +68,8 @@ public abstract class PixelLayout<ChannelType extends Channel> implements Serial
 		return copy;
 	}
 	
+	public void initialize() {}
+	
 	public boolean hasOption(String key) {
 		return instrument.hasOption(key);
 	}
@@ -75,7 +78,7 @@ public abstract class PixelLayout<ChannelType extends Channel> implements Serial
 		return instrument.option(key);
 	}
 	
-	public void initialize() {   
+	public void setDefaults() {   
 
 	}
 	
@@ -196,7 +199,10 @@ public abstract class PixelLayout<ChannelType extends Channel> implements Serial
         }
     }
 
-    
+    @Override
+    public Object getTableEntry(String name) {
+        return TableFormatter.NO_SUCH_DATA;        
+    }
    
     
     public static void addLocalFixedIndices(GridIndexed geometric, int fixedIndex, double radius, Collection<Integer> toIndex) {

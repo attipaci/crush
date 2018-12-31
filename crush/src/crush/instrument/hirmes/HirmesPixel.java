@@ -159,6 +159,7 @@ public class HirmesPixel extends SingleColorPixel {
 
     public void calcSIBSPosition3D() {
         Hirmes hirmes = (Hirmes) instrument; 
+        HirmesLayout layout = hirmes.getLayout();
         
         if(isFlagged(FLAG_BLIND)) {
             focalPlanePosition = position = null;
@@ -166,10 +167,10 @@ public class HirmesPixel extends SingleColorPixel {
         }
         else {
             focalPlanePosition = (sub == Hirmes.HIRES_SUBARRAY) ? 
-                    hirmes.getHiresFocalPlanePosition(subcol, subrow) :
-                    hirmes.getFocalPlanePosition(sub, subrow, subcol);
+                    layout.getHiresFocalPlanePosition(subcol, subrow) :
+                    layout.getFocalPlanePosition(sub, subrow, subcol);
                     
-            position = hirmes.getSIBSPosition(focalPlanePosition);
+            position = layout.getSIBSPosition(focalPlanePosition);
             restFrequency = hirmes.getRestFrequency(focalPlanePosition);
         }
     }

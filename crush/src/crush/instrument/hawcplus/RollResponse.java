@@ -37,9 +37,9 @@ public class RollResponse extends FieldResponse {
     private static final String fieldName  = "roll";
     
     static { 
-        try { field = HawcPlusFrame.class.getField(fieldName); }
+        try { field = HawcFrame.class.getField(fieldName); }
         catch(NoSuchFieldException e) {
-            CRUSH.warning(null, HawcPlusFrame.class.getSimpleName() + " has no field named '" + fieldName + "'.");
+            CRUSH.warning(null, HawcFrame.class.getSimpleName() + " has no field named '" + fieldName + "'.");
             CRUSH.trace(e);
         }
     }

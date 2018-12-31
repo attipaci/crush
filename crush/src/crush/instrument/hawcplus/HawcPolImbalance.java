@@ -27,7 +27,7 @@ package crush.instrument.hawcplus;
 import crush.Channel;
 import crush.ZeroMeanGains;
 
-public class HawcPlusPolImbalance extends ZeroMeanGains {
+public class HawcPolImbalance extends ZeroMeanGains {
 
     /**
      * 
@@ -36,7 +36,7 @@ public class HawcPlusPolImbalance extends ZeroMeanGains {
 
     @Override
     public double getRelativeGain(Channel c) throws Exception {
-        return ((HawcPlusPixel) c).pol == 0 ? 1.0 : -1.0;
+        return ((HawcPixel) c).pol == 0 ? 1.0 : -1.0;
     }
 
     @Override

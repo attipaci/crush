@@ -32,7 +32,7 @@ import jnum.astro.GeodeticCoordinates;
 import jnum.math.Vector2D;
 
 
-public class HawcPlusFrame extends SofiaFrame {
+public class HawcFrame extends SofiaFrame {
     /**
      * 
      */
@@ -50,14 +50,14 @@ public class HawcPlusFrame extends SofiaFrame {
     
   
     
-    public HawcPlusFrame(HawcPlusScan hawcScan) {
+    public HawcFrame(HawcScan hawcScan) {
         super(hawcScan);
         create(hawcScan.instrument.size());
     }
     
     @Override
-    public HawcPlusFrame copy(boolean withContents) {
-        HawcPlusFrame copy = (HawcPlusFrame) super.copy(withContents);
+    public HawcFrame copy(boolean withContents) {
+        HawcFrame copy = (HawcFrame) super.copy(withContents);
         
         if(jumpCounter != null) {
             copy.jumpCounter = new byte[jumpCounter.length];
@@ -73,22 +73,22 @@ public class HawcPlusFrame extends SofiaFrame {
 
     // Parses data for valid pixels only...
     private void parseData(int[] DAC, short[] jump, int from) {  
-        HawcPlus hawc = (HawcPlus) scan.instrument;
+        Hawc hawc = (Hawc) scan.instrument;
         
         if(jump != null) jumpCounter = new byte[data.length];
         
-        for(final HawcPlusPixel pixel : hawc) {
+        for(final HawcPixel pixel : hawc) {
             data[pixel.index] = DAC[from + pixel.fitsIndex] / hawc.subarrayGainRenorm[pixel.sub];
             if(jump != null) jumpCounter[pixel.index] = (byte) jump[from + pixel.fitsIndex];
         }
     }
     
     public void parseData(int[][] DAC, short[][] jump) {  
-        HawcPlus hawc = (HawcPlus) scan.instrument;
+        Hawc hawc = (Hawc) scan.instrument;
         
         if(jump != null) jumpCounter = new byte[data.length];
         
-        for(final HawcPlusPixel pixel : hawc) {
+        for(final HawcPixel pixel : hawc) {
             data[pixel.index] = DAC[pixel.fitsRow][pixel.fitsCol] / hawc.subarrayGainRenorm[pixel.sub];
             if(jump != null) jumpCounter[pixel.index] = (byte) jump[pixel.fitsRow][pixel.fitsCol];
         }
@@ -98,7 +98,7 @@ public class HawcPlusFrame extends SofiaFrame {
     public void cloneReadout(Frame from) {
         super.cloneReadout(from);
         
-        HawcPlusFrame frame = (HawcPlusFrame) from;
+        HawcFrame frame = (HawcFrame) from;
         jumpCounter = frame.jumpCounter;
         chopperPosition = frame.chopperPosition;
         hwpAngle = frame.hwpAngle;
@@ -111,7 +111,7 @@ public class HawcPlusFrame extends SofiaFrame {
         super.addDataFrom(other, scaling);
         if(scaling == 0.0) return;
         
-        final HawcPlusFrame frame = (HawcPlusFrame) other;
+        final HawcFrame frame = (HawcFrame) other;
         final float fScale = (float) scaling;
         
         hwpAngle += fScale * frame.hwpAngle;
@@ -135,8 +135,8 @@ public class HawcPlusFrame extends SofiaFrame {
     
     @Override
     public boolean validate() {
-        HawcPlusScan hawcScan = (HawcPlusScan) scan;
-        HawcPlus hawc = hawcScan.instrument;
+        HawcScan hawcScan = (HawcScan) scan;
+        Hawc hawc = hawcScan.instrument;
         
         if(!isComplete) return false;
          
@@ -189,9 +189,9 @@ public class HawcPlusFrame extends SofiaFrame {
     
 
     public void darkCorrect() {
-        HawcPlus hawc = (HawcPlus) scan.instrument;
+        Hawc hawc = (Hawc) scan.instrument;
 
-        for(HawcPlusPixel pixel : hawc) if(!pixel.isFlagged(Channel.FLAG_BLIND))
+        for(HawcPixel pixel : hawc) if(!pixel.isFlagged(Channel.FLAG_BLIND))
             data[pixel.index] -= data[hawc.darkSquidLookup[pixel.sub][pixel.col]];
     }
   

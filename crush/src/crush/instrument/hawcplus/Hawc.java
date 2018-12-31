@@ -28,7 +28,6 @@ import java.util.*;
 
 import crush.*;
 import crush.array.GridIndexed;
-import crush.array.SingleColorLayout;
 import crush.instrument.PixelLayout;
 import crush.telescope.sofia.SofiaInstrument;
 import crush.telescope.sofia.SofiaData;
@@ -43,23 +42,18 @@ import jnum.math.Vector2D;
 import nom.tam.fits.*;
 import nom.tam.util.Cursor;
 
-public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridIndexed {
+public class Hawc extends SofiaInstrument<HawcPixel> implements GridIndexed {
     /**
      * 
      */
     private static final long serialVersionUID = 3009881856872575936L;
-    
-    Vector2D pixelSize;
 
-    ArrayList<ChannelGroup<HawcPlusPixel>> subarrayGroups;
+
+    ArrayList<ChannelGroup<HawcPixel>> subarrayGroups;
      
     String bandID = "-";
     
     boolean[] hasSubarray;
-    Vector2D[] subarrayOffset;
-    double[] subarrayOrientation;
-
-    double[] polZoom;
 
     boolean darkSquidCorrection = false;
     int[][] darkSquidLookup;           // sub,col
@@ -72,12 +66,15 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
     float[] subarrayGainRenorm;
 
 
-    public HawcPlus() {
-        super("hawc+", new SingleColorLayout<HawcPlusPixel>(), pixels);
+    public Hawc() {
+        super("hawc+", new HawcLayout(), pixels);
     }
 
     @Override
     public String getFileID() { return "HAW"; }
+    
+    @Override
+    public HawcLayout getLayout() { return (HawcLayout) super.getLayout(); }
 
     @Override
     public void setOptions(Configurator options) {
@@ -98,14 +95,11 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
     }
 
     @Override
-    public HawcPlus copy() {
-        HawcPlus copy = (HawcPlus) super.copy();
+    public Hawc copy() {
+        Hawc copy = (Hawc) super.copy();
 
-        if(pixelSize != null) copy.pixelSize = pixelSize.copy();
         if(hasSubarray != null) copy.hasSubarray = Arrays.copyOf(hasSubarray, hasSubarray.length);   
-        if(subarrayOffset != null) copy.subarrayOffset = Vector2D.copyOf(subarrayOffset);
-        if(subarrayOrientation != null) copy.subarrayOrientation = Arrays.copyOf(subarrayOrientation, subarrayOrientation.length);
-        if(polZoom != null) copy.polZoom = Arrays.copyOf(polZoom, polZoom.length);
+
         if(darkSquidLookup != null) {
             copy.darkSquidLookup = new int[darkSquidLookup.length][];
             for(int i=darkSquidLookup.length; --i >=0; ) if(darkSquidLookup[i] != null)
@@ -126,29 +120,29 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
 
 
     @Override
-    public HawcPlusPixel getChannelInstance(int backendIndex) {
-        return new HawcPlusPixel(this, backendIndex);
+    public HawcPixel getChannelInstance(int backendIndex) {
+        return new HawcPixel(this, backendIndex);
     }
 
     @Override
     public Scan<?, ?> getScanInstance() {
-        return new HawcPlusScan(this);
+        return new HawcScan(this);
     }
 
     @Override
     protected void initDivisions() {
         super.initDivisions();
 
-        try { addDivision(getDivision("polarrays", HawcPlusPixel.class.getField("pol"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
+        try { addDivision(getDivision("polarrays", HawcPixel.class.getField("pol"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
         catch(Exception e) { error(e); }	
 
-        try { addDivision(getDivision("subarrays", HawcPlusPixel.class.getField("sub"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
+        try { addDivision(getDivision("subarrays", HawcPixel.class.getField("sub"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
         catch(Exception e) { error(e); }	
 
-        try { addDivision(getDivision("bias", HawcPlusPixel.class.getField("biasLine"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
+        try { addDivision(getDivision("bias", HawcPixel.class.getField("biasLine"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
         catch(Exception e) { error(e); } 
 
-        try { addDivision(getDivision("series", HawcPlusPixel.class.getField("seriesArray"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
+        try { addDivision(getDivision("series", HawcPixel.class.getField("seriesArray"), Channel.FLAG_DEAD | Channel.FLAG_BLIND)); }
         catch(Exception e) { error(e); } 
 
 
@@ -156,14 +150,14 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
         // Otherwise, decorrelate including the dark SQUIDs...
         int muxSkipFlag = hasOption("darkcorrect") ? Channel.FLAG_DEAD | Channel.FLAG_BLIND : Channel.FLAG_DEAD;
 
-        try { addDivision(getDivision("mux", HawcPlusPixel.class.getField("mux"), muxSkipFlag)); 
-        ChannelDivision<HawcPlusPixel> muxDivision = divisions.get("mux");
+        try { addDivision(getDivision("mux", HawcPixel.class.getField("mux"), muxSkipFlag)); 
+        ChannelDivision<HawcPixel> muxDivision = divisions.get("mux");
 
         // Order mux channels in pin order...
-        for(ChannelGroup<HawcPlusPixel> mux : muxDivision) {
-            Collections.sort(mux, new Comparator<HawcPlusPixel>() {
+        for(ChannelGroup<HawcPixel> mux : muxDivision) {
+            Collections.sort(mux, new Comparator<HawcPixel>() {
                 @Override
-                public int compare(HawcPlusPixel o1, HawcPlusPixel o2) {
+                public int compare(HawcPixel o1, HawcPixel o2) {
                     if(o1.row == o2.row) return 0;
                     return o1.row > o2.row ? 1 : -1;
                 }	
@@ -172,7 +166,7 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
         }
         catch(Exception e) { error(e); }
 
-        try { addDivision(getDivision("rows", HawcPlusPixel.class.getField("row"), muxSkipFlag)); }
+        try { addDivision(getDivision("rows", HawcPixel.class.getField("row"), muxSkipFlag)); }
         catch(Exception e) { error(e); }	
     }
 
@@ -180,71 +174,71 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
     protected void initGroups() {
         super.initGroups();
 
-        subarrayGroups = new ArrayList<ChannelGroup<HawcPlusPixel>>(subarrays);
-        for(int pol=0; pol<polArrays; pol++) for(int sub=0; sub<polSubarrays; sub++) {
-            ChannelGroup<HawcPlusPixel> g =  new ChannelGroup<HawcPlusPixel>(polID[pol] + sub);
+        subarrayGroups = new ArrayList<ChannelGroup<HawcPixel>>(subarrays);
+        for(int pol=0; pol < polArrays; pol++) for(int sub=0; sub < polSubarrays; sub++) {
+            ChannelGroup<HawcPixel> g =  new ChannelGroup<HawcPixel>(polID[pol] + sub);
             subarrayGroups.add(g);
             addGroup(g);
         }
 
-        for(HawcPlusPixel pixel : this) subarrayGroups.get(pixel.sub).add(pixel);
+        for(HawcPixel pixel : this) subarrayGroups.get(pixel.sub).add(pixel);
     }
 
     @Override
     protected void initModalities() {
         super.initModalities();
 
-        addModality(modalities.get("obs-channels").new CoupledModality("polarrays", "p", new HawcPlusPolImbalance()));
+        addModality(modalities.get("obs-channels").new CoupledModality("polarrays", "p", new HawcPolImbalance()));
 
         try { 
-            CorrelatedModality subMode = new CorrelatedModality("subarrays", "S", divisions.get("subarrays"), HawcPlusPixel.class.getField("subGain")); 
+            CorrelatedModality subMode = new CorrelatedModality("subarrays", "S", divisions.get("subarrays"), HawcPixel.class.getField("subGain")); 
             //subMode.solveGains = false;
-            subMode.setGainFlag(HawcPlusPixel.FLAG_SUB);
+            subMode.setGainFlag(HawcPixel.FLAG_SUB);
             addModality(subMode);
         }
         catch(NoSuchFieldException e) { error(e); }
 
         try {
-            CorrelatedModality biasMode = new CorrelatedModality("bias", "b", divisions.get("bias"), HawcPlusPixel.class.getField("biasGain"));     
+            CorrelatedModality biasMode = new CorrelatedModality("bias", "b", divisions.get("bias"), HawcPixel.class.getField("biasGain"));     
             //biasMode.solveGains = false;
-            biasMode.setGainFlag(HawcPlusPixel.FLAG_BIAS);
+            biasMode.setGainFlag(HawcPixel.FLAG_BIAS);
             addModality(biasMode);
         }
         catch(NoSuchFieldException e) { error(e); }  
 
         try {
-            CorrelatedModality seriesMode = new CorrelatedModality("series", "s", divisions.get("series"), HawcPlusPixel.class.getField("seriesGain"));     
+            CorrelatedModality seriesMode = new CorrelatedModality("series", "s", divisions.get("series"), HawcPixel.class.getField("seriesGain"));     
             //seriesMode.solveGains = false;
-            seriesMode.setGainFlag(HawcPlusPixel.FLAG_SERIES_ARRAY);
+            seriesMode.setGainFlag(HawcPixel.FLAG_SERIES_ARRAY);
             addModality(seriesMode);
         }
         catch(NoSuchFieldException e) { error(e); } 
 
         try {
-            CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), HawcPlusPixel.class.getField("muxGain"));		
+            CorrelatedModality muxMode = new CorrelatedModality("mux", "m", divisions.get("mux"), HawcPixel.class.getField("muxGain"));		
             //muxMode.solveGains = false;
-            muxMode.setGainFlag(HawcPlusPixel.FLAG_MUX);
+            muxMode.setGainFlag(HawcPixel.FLAG_MUX);
             addModality(muxMode);
         }
         catch(NoSuchFieldException e) { error(e); }	
 
         try { 
-            Modality<?> addressMode = new CorrelatedModality("rows", "r", divisions.get("rows"), HawcPlusPixel.class.getField("pinGain")); 
-            addressMode.setGainFlag(HawcPlusPixel.FLAG_ROW);
+            Modality<?> addressMode = new CorrelatedModality("rows", "r", divisions.get("rows"), HawcPixel.class.getField("pinGain")); 
+            addressMode.setGainFlag(HawcPixel.FLAG_ROW);
             addModality(addressMode);
         }
         catch(NoSuchFieldException e) { error(e); }
 
         try {
-            Modality<?> losResponse = new Modality<LOSResponse>("los", "L", divisions.get("detectors"), HawcPlusPixel.class.getField("losGain"), LOSResponse.class); 
-            losResponse.setGainFlag(HawcPlusPixel.FLAG_LOS_RESPONSE);
+            Modality<?> losResponse = new Modality<LOSResponse>("los", "L", divisions.get("detectors"), HawcPixel.class.getField("losGain"), LOSResponse.class); 
+            losResponse.setGainFlag(HawcPixel.FLAG_LOS_RESPONSE);
             addModality(losResponse);
         }
         catch(NoSuchFieldException e) { error(e); }
             
         try { 
-            Modality<?> rollResponse = new Modality<RollResponse>("roll", "R", divisions.get("detectors"), HawcPlusPixel.class.getField("rollGain"), RollResponse.class);
-            rollResponse.setGainFlag(HawcPlusPixel.FLAG_ROLL_RESPONSE);
+            Modality<?> rollResponse = new Modality<RollResponse>("roll", "R", divisions.get("detectors"), HawcPixel.class.getField("rollGain"), RollResponse.class);
+            rollResponse.setGainFlag(HawcPixel.FLAG_ROLL_RESPONSE);
             addModality(rollResponse);
         }
         catch(NoSuchFieldException e) { error(e); }
@@ -277,7 +271,7 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
 
         if(mceMap != null) {
             StringTokenizer tokens = new StringTokenizer(mceMap, " \t,;:");
-            for(int sub=0; sub<subarrays; sub++) if(tokens.hasMoreTokens()) {
+            for(int sub=0; sub < subarrays; sub++) if(tokens.hasMoreTokens()) {
                 String assignment = tokens.nextToken();
                 try { 
                     int mce = Integer.parseInt(assignment);
@@ -295,43 +289,6 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
     
     @Override
     protected void loadChannelData() {
-
-        // The subarrays orientations
-        subarrayOrientation = new double[subarrays];
-        subarrayOrientation[R0] = hasOption("rotation.r0") ? option("rotation.r0").getDouble() * Unit.deg : 0.0;
-        subarrayOrientation[R1] = hasOption("rotation.r1") ? option("rotation.r1").getDouble() * Unit.deg : Math.PI;
-        subarrayOrientation[T0] = hasOption("rotation.t0") ? option("rotation.t0").getDouble() * Unit.deg : 0.0;
-        subarrayOrientation[T1] = hasOption("rotation.t1") ? option("rotation.t1").getDouble() * Unit.deg : Math.PI;
-
-        // The subarray offsets (after rotation, in pixels)
-        subarrayOffset = new Vector2D[subarrays];
-        subarrayOffset[R0] = hasOption("offset.r0") ? option("offset.r0").getVector2D() : new Vector2D();
-        subarrayOffset[R1] = hasOption("offset.r1") ? option("offset.r1").getVector2D() : new Vector2D(67.03, -39.0);
-        subarrayOffset[T0] = hasOption("offset.t0") ? option("offset.t0").getVector2D() : new Vector2D();
-        subarrayOffset[T1] = hasOption("offset.t1") ? option("offset.t1").getVector2D() : new Vector2D(67.03, -39.0);
-
-        // The relative zoom of the polarization planes...
-        polZoom = new double[polArrays];
-        polZoom[R_ARRAY] = hasOption("zoom.r") ? option("zoom.r").getDouble() : 1.0;
-        polZoom[T_ARRAY] = hasOption("zoom.t") ? option("zoom.t").getDouble() : 1.0;
-
-        // The default pixelSizes...
-        Vector2D pixelSize = new Vector2D(array.pixelSize, array.pixelSize);
-
-        // Set the pixel size...
-        if(hasOption("pixelsize")) {
-            pixelSize = new Vector2D();
-            StringTokenizer tokens = new StringTokenizer(option("pixelsize").getValue(), " \t,:xX");
-            pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-            pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
-        }
-
-        array.pixelSize = Math.sqrt(pixelSize.x() * pixelSize.y());
-        
-        setNominalPixelPositions(pixelSize);
-
-        // TODO load bias gains? ...
-
         super.loadChannelData();
         
         if(hasOption("jumpdata")) {
@@ -346,7 +303,7 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
         Fits fits = new Fits(fileName);
         long[][] data = (long[][]) fits.getHDU(0).getData().getData();
         
-        for(HawcPlusPixel pixel : this) pixel.jump = data[pixel.col][pixel.row];
+        for(HawcPixel pixel : this) pixel.jump = data[pixel.col][pixel.row];
        
         registerConfigFile(fileName);
         fits.close();   
@@ -366,8 +323,8 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
         return polID[sub>>1] + (sub&1);
     }
 
-    public ChannelGroup<HawcPlusPixel> getSubarrayChannels(String name, List<String> specs) {
-        final ChannelGroup<HawcPlusPixel> channels = new ChannelGroup<HawcPlusPixel>(name, size());
+    public ChannelGroup<HawcPixel> getSubarrayChannels(String name, List<String> specs) {
+        final ChannelGroup<HawcPixel> channels = new ChannelGroup<HawcPixel>(name, size());
 
         for(String id : specs) {
             try { channels.addAll(subarrayGroups.get(getSubarrayIndex(id))); }
@@ -384,10 +341,10 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
         subarrayGainRenorm = new float[subarrays];
 
         try {
-            CorrelatedModality subs = new CorrelatedModality("subs", "S", divisions.get("subarrays"), HawcPlusPixel.class.getField("gain"));
+            CorrelatedModality subs = new CorrelatedModality("subs", "S", divisions.get("subarrays"), HawcPixel.class.getField("gain"));
             for(int i=0; i<subs.size(); i++) {
                 CorrelatedMode mode = subs.get(i);
-                int sub = ((HawcPlusPixel) mode.getChannel(0)).sub;
+                int sub = ((HawcPixel) mode.getChannel(0)).sub;
                 
                 subarrayGainRenorm[sub] = mode.normalizeGains();
                 info("--> " + getSubarrayID(sub) + " gain = " + Util.f3.format(subarrayGainRenorm[sub]));
@@ -423,27 +380,6 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
         }
     }
 
-
-    private void setNominalPixelPositions(Vector2D size) {	
-        pixelSize = size;
-
-        info("Boresight pixel from FITS is " + array.boresightIndex);
-
-        if(hasOption("pcenter")) {
-            array.boresightIndex = option("pcenter").getVector2D();	
-            info("Boresight override --> " + array.boresightIndex);
-        } 
-        else if(Double.isNaN(array.boresightIndex.x())) {
-            array.boresightIndex = defaultBoresightIndex;
-            warning("Missing FITS boresight --> " + array.boresightIndex);
-        }
-        Vector2D center = getSIBSPosition(0, 39.0 - array.boresightIndex.y(), array.boresightIndex.x());
-
-        for(HawcPlusPixel pixel : this) pixel.calcSIBSPosition();
-
-        // Set the pointing center...
-        getLayout().setReferencePosition(center);
-    }
 
 
     @Override
@@ -531,8 +467,8 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
         clear();
         
         ensureCapacity(nSub * subarrayPixels);
-        for(int c=0; c<pixels; c++) {
-            HawcPlusPixel pixel = new HawcPlusPixel(this, c);
+        for(int c=0; c < pixels; c++) {
+            HawcPixel pixel = new HawcPixel(this, c);
             if(hasSubarray[pixel.sub]) add(pixel);
         }
 
@@ -547,7 +483,7 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
 
     @Override
     public void validate(Vector<Scan<?,?>> scans) throws Exception {
-        final HawcPlusScan firstScan = (HawcPlusScan) scans.get(0);
+        final HawcScan firstScan = (HawcScan) scans.get(0);
 
         double wavelength = firstScan.instrument.instrumentData.wavelength;
         for(int i=scans.size(); --i >= 1; ) if(((SofiaScan<?,?>) scans.get(i)).instrument.instrumentData.wavelength != wavelength) {
@@ -557,7 +493,7 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
 
         
         for(int i=scans.size(); --i >= 1; ) {
-            HawcPlusScan scan = (HawcPlusScan) scans.get(i);
+            HawcScan scan = (HawcScan) scans.get(i);
 
             if(!scan.instrument.instrumentData.instrumentConfig.equals(firstScan.instrument.instrumentData.instrumentConfig)) {
                 warning("Scan " + scans.get(i).getID() + " is in different instrument configuration. Removing from set.");
@@ -566,7 +502,7 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
         }
         
         for(int i=scans.size(); --i >= 1; ) {
-            HawcPlusScan scan = (HawcPlusScan) scans.get(i);
+            HawcScan scan = (HawcScan) scans.get(i);
             
             if(scan.hasOption("gyrocorrect")) if(scan.hasOption("gyrocorrect.max")) {
                 double limit = scan.option("gyrocorrect.max").getDouble() * Unit.arcsec;
@@ -590,7 +526,7 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
     public void createDarkSquidLookup() {
         darkSquidLookup = new int[subarrays][subarrayCols];
         for(int i=subarrays; --i >= 0; ) Arrays.fill(darkSquidLookup[i], -1);
-        for(HawcPlusPixel pixel : this) if(pixel.isFlagged(Channel.FLAG_BLIND)) darkSquidLookup[pixel.sub][pixel.col] = pixel.index;
+        for(HawcPixel pixel : this) if(pixel.isFlagged(Channel.FLAG_BLIND)) darkSquidLookup[pixel.sub][pixel.col] = pixel.index;
     }
 
     // TODO... currently treating all subarrays as non-overlapping -- which is valid for point sources...
@@ -611,7 +547,7 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
     public final int cols() { return subarrayCols; }
 
     @Override
-    public final Vector2D getSIPixelSize() { return pixelSize; }
+    public final Vector2D getSIPixelSize() { return getLayout().getPixelSize(); }
 
 
     /**
@@ -641,10 +577,10 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
             Arrays.fill(gainT[i], 1.0F);
         }
 
-        for(HawcPlusPixel pixel : this) {
+        for(HawcPixel pixel : this) {
             float iG = (float)(1.0 / (subarrayGainRenorm[pixel.sub] * pixel.gain * pixel.coupling));
 
-            int col = (pixel.sub & 1) * HawcPlus.subarrayCols + pixel.col;
+            int col = (pixel.sub & 1) * subarrayCols + pixel.col;
 
             if(pixel.pol == R_ARRAY) {
                 gainR[pixel.subrow][col] = iG;
@@ -679,18 +615,6 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
         fits.addHDU(hdu);
     }
 
-    public Vector2D getSIBSPosition(int sub, double row, double col) {
-        Vector2D v = new Vector2D(col, 39.0 - row); // X, Y
-        v.rotate(subarrayOrientation[sub]);
-        v.add(subarrayOffset[sub]);
-        // X is oriented like AZ (tXEL), whereas Y is oriented like -tEL.
-        v.scaleX(pixelSize.x());       
-        v.scaleY(-pixelSize.y());
-        v.scale(polZoom[sub>>1]);
-        // v is now in proper tXEL,tEL coordinates...
-        return v;
-    }
-
 
     @Override
     public Object getTableEntry(String name) {
@@ -718,7 +642,7 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
                 "     -write.flatfield  Write flatfield file for the chop-nod pipeline.\n";
     }
     
-    
+  
     final static int polArrays = 2;
     final static int polSubarrays = 2;
     final static int subarrays = polArrays * polSubarrays;
@@ -731,8 +655,9 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
     final static int polArrayPixels = rows * polCols;
 
     final static int pixels = polArrays * polArrayPixels;
-
+    
     final static int DARK_SQUID_ROW = rows - 1;
+
 
     final static int MCE_BIAS_LINES = 20;
 
@@ -747,11 +672,12 @@ public class HawcPlus extends SofiaInstrument<HawcPlusPixel> implements GridInde
 
     private static DRPMessenger drp;
 
-    private static final int R_ARRAY = 0;
-    private static final int T_ARRAY = 1;
+    static final int R_ARRAY = 0;
+    static final int T_ARRAY = 1;
 
     public static final Vector2D defaultBoresightIndex = new Vector2D(33.5, 19.5);
 
+    
     
     
 }

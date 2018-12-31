@@ -31,7 +31,7 @@ import jnum.Util;
 import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 
-public class HawcPlusPixel extends SingleColorPixel {
+public class HawcPixel extends SingleColorPixel {
 	/**
 	 * 
 	 */
@@ -47,30 +47,30 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	int jumpCounter = 0;
 	
-	public HawcPlusPixel(HawcPlus array, int zeroIndex) {
+	public HawcPixel(Hawc array, int zeroIndex) {
 		super(array, zeroIndex);
 		
-		col = zeroIndex % HawcPlus.subarrayCols;
-		row = zeroIndex / HawcPlus.subarrayCols;
-		sub = zeroIndex / HawcPlus.subarrayPixels;
+		col = zeroIndex % Hawc.subarrayCols;
+		row = zeroIndex / Hawc.subarrayCols;
+		sub = zeroIndex / Hawc.subarrayPixels;
 		pol = (sub>>1);
 		
-		fitsRow = subrow = row % HawcPlus.rows;
+		fitsRow = subrow = row % Hawc.rows;
 		biasLine = row >>> 1;
 		
-		fitsCol = mux = sub * HawcPlus.subarrayCols + col;
+		fitsCol = mux = sub * Hawc.subarrayCols + col;
 		seriesArray = mux >>> 2;
 		
-		fitsIndex = fitsRow * HawcPlusFrame.FITS_COLS + fitsCol;
+		fitsIndex = fitsRow * HawcFrame.FITS_COLS + fitsCol;
 		
 		// Flag the dark squids as such...
-		if(subrow == HawcPlus.DARK_SQUID_ROW) flag(FLAG_BLIND);
+		if(subrow == Hawc.DARK_SQUID_ROW) flag(FLAG_BLIND);
 	}
 	
 
 	public void calcSIBSPosition() {
 	    if(isFlagged(FLAG_BLIND)) position = null;
-	    position = ((HawcPlus) instrument).getSIBSPosition(sub, subrow, col);
+	    position = ((HawcLayout) instrument.getLayout()).getSIBSPosition(sub, subrow, col);
 	}
 		
 	@Override
@@ -88,7 +88,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	public String toString() {
 		return super.toString() 
 		        + "\t" + Util.f3.format(coupling) 
-		        + "\t" + Util.f3.format(((HawcPlus) instrument).subarrayGainRenorm[sub])
+		        + "\t" + Util.f3.format(((Hawc) instrument).subarrayGainRenorm[sub])
 		        + "\t" + Util.f3.format(muxGain) 
 		        + "\t" + getFixedIndex() 
 		        + "\t" + sub 
@@ -116,7 +116,7 @@ public class HawcPlusPixel extends SingleColorPixel {
 	
 	@Override
     public String getID() {
-	    return HawcPlus.polID[pol] + (sub & 1) + "[" + subrow + "," + col + "]";
+	    return Hawc.polID[pol] + (sub & 1) + "[" + subrow + "," + col + "]";
 	}
 	
 	public static final Vector2D physicalSize = new Vector2D(1.132 * Unit.mm, 1.132 * Unit.mm);

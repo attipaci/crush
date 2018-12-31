@@ -47,7 +47,7 @@ import jnum.fits.FitsToolkit;
 import jnum.math.Offset2D;
 import jnum.math.Vector2D;
 
-public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {	
+public class HawcScan extends SofiaScan<Hawc, HawcIntegration> {	
     /**
      * 
      */
@@ -62,15 +62,15 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
     double focusTOffset;
 
 
-    public HawcPlusScan(HawcPlus instrument) {
+    public HawcScan(Hawc instrument) {
         super(instrument);
         // Turn off warnings about multiple occurences of header keys...
         if(!CRUSH.debug) Logger.getLogger(Header.class.getName()).setLevel(Level.SEVERE);
     }
 
     @Override
-    public HawcPlusIntegration getIntegrationInstance() {
-        return new HawcPlusIntegration(this);
+    public HawcIntegration getIntegrationInstance() {
+        return new HawcIntegration(this);
     }
 
     @Override
@@ -171,7 +171,7 @@ public class HawcPlusScan extends SofiaScan<HawcPlus, HawcPlusIntegration> {
             if(extName.equalsIgnoreCase("Timestream")) dataHDUs.add((BinaryTableHDU) HDU[i]);
         }
 
-        HawcPlusIntegration integration = this.getIntegrationInstance();
+        HawcIntegration integration = this.getIntegrationInstance();
         integration.read(dataHDUs);
         add(integration);
     }
