@@ -28,7 +28,7 @@ import java.util.*;
 import crush.*;
 import crush.instrument.ChannelDivision;
 import crush.instrument.ChannelGroup;
-import crush.sourcemodel.AstroIntensityMap;
+import crush.sourcemodel.IntensityMap;
 import crush.sourcemodel.SpectralCube;
 import crush.telescope.sofia.SofiaInstrument;
 import crush.telescope.sofia.SofiaData;
@@ -263,14 +263,14 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
     
 
     @Override
-    protected void loadChannelData() {
+    protected void initLayout() {
         clear();
 
         ensureCapacity(pixels);
         for(int c=0; c<pixels; c++) add(new HirmesPixel(this, c));       
         
         // TODO load bias gains? ...
-        super.loadChannelData();
+        super.initLayout();
     }
     
 
@@ -451,7 +451,7 @@ public class Hirmes extends SofiaInstrument<HirmesPixel> {
             if(type.equals("spectralmap")) return new SpectralCube(this); 
             return super.getSourceModelInstance(scans);
         }
-        if(hasOption("pointing.suggest")) return new AstroIntensityMap(this);
+        if(hasOption("pointing.suggest")) return new IntensityMap(this);
         return new SpectralCube(this);
     }  
 

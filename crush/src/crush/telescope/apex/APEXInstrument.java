@@ -29,6 +29,7 @@ import crush.instrument.SingleColorLayout;
 import crush.instrument.SingleColorPixel;
 import crush.telescope.GroundBased;
 import crush.telescope.Mount;
+import crush.telescope.TelescopeInstrument;
 import jnum.Unit;
 import jnum.astro.EquatorialCoordinates;
 import jnum.math.Vector2D;
@@ -40,7 +41,7 @@ import java.util.List;
 import java.util.Vector;
 
 
-public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> extends Instrument<ChannelType> implements GroundBased {
+public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> extends TelescopeInstrument<ChannelType> implements GroundBased {
 	/**
 	 * 
 	 */

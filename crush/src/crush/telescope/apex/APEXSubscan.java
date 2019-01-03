@@ -31,7 +31,8 @@ import java.io.*;
 import crush.fits.HDUReader;
 import crush.telescope.Chopper;
 import crush.telescope.Chopping;
-import crush.telescope.GroundBased;
+import crush.telescope.GroundBasedIntegration;
+import crush.telescope.TelescopeFrame;
 import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
@@ -43,7 +44,7 @@ import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
 public class APEXSubscan<InstrumentType extends APEXInstrument<? extends APEXContinuumPixel>, FrameType extends APEXFrame> 
-extends Integration<InstrumentType, FrameType> implements PhaseModulated, GroundBased, Chopping {
+extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModulated, Chopping {
 	/**
 	 * 
 	 */
@@ -109,8 +110,8 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 		
 		
 		
-		Vector2D left = new Vector2D(nodPhase == Frame.CHOP_LEFT ? 0.0 : 2.0 * getChopper().amplitude, 0.0);
-		Vector2D right = new Vector2D(nodPhase == Frame.CHOP_LEFT ? -2.0 * chopper.amplitude : 0.0, 0.0);
+		Vector2D left = new Vector2D(nodPhase == TelescopeFrame.CHOP_LEFT ? 0.0 : 2.0 * getChopper().amplitude, 0.0);
+		Vector2D right = new Vector2D(nodPhase == TelescopeFrame.CHOP_LEFT ? -2.0 * chopper.amplitude : 0.0, 0.0);
 		
 		// 1/5 beams ~90% on the boundary
 		// 1/4 beams ~85% on the boundary
@@ -139,14 +140,14 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 			Vector2D position = pixel.getPosition();
 			
 			if(position.distanceTo(left) < tolerance) for(Channel channel : pixel) {
-				channel.sourcePhase |= Frame.CHOP_LEFT;
+				channel.sourcePhase |= TelescopeFrame.CHOP_LEFT;
 				buf.append(" L" + channel.getID());
 			}
 			else if(position.distanceTo(right) < tolerance) for(Channel channel : pixel) {
-				channel.sourcePhase |= Frame.CHOP_RIGHT;
+				channel.sourcePhase |= TelescopeFrame.CHOP_RIGHT;
 				buf.append(" R" + channel.getID()); 
 			}
-			else for(Channel channel : pixel) channel.sourcePhase &= ~Frame.CHOP_FLAGS;
+			else for(Channel channel : pixel) channel.sourcePhase &= ~TelescopeFrame.CHOP_FLAGS;
 		}
 		
 		info(new String(buf));
@@ -158,16 +159,16 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 		// Flag frames according to chopper phase ---> left, right, transit.
 		PhaseData current = new PhaseData(this);
 
-		int transitFlag = Frame.CHOP_TRANSIT | Frame.SKIP_MODELING | Frame.SKIP_WEIGHTING | Frame.SKIP_SOURCE_MODELING;
+		int transitFlag = TelescopeFrame.CHOP_TRANSIT | Frame.SKIP_MODELING | Frame.SKIP_WEIGHTING | Frame.SKIP_SOURCE_MODELING;
 		
-		for(Frame exposure : this) if(exposure != null) {
-			exposure.unflag(Frame.CHOP_FLAGS);
+		for(TelescopeFrame exposure : this) if(exposure != null) {
+			exposure.unflag(TelescopeFrame.CHOP_FLAGS);
 				
 			if(Math.abs(exposure.chopperPosition.x() + chopper.amplitude) < tolerance) {
-				exposure.flag(Frame.CHOP_LEFT);
-				if(current.phase != Frame.CHOP_LEFT) {
+				exposure.flag(TelescopeFrame.CHOP_LEFT);
+				if(current.phase != TelescopeFrame.CHOP_LEFT) {
 					current = new PhaseData(this);
-					current.phase = Frame.CHOP_LEFT;
+					current.phase = TelescopeFrame.CHOP_LEFT;
 					//if(current.phase == nodPhase) current.flag |= PhaseOffsets.SKIP_GAINS;
 					current.start = exposure;
 					current.end = exposure;
@@ -177,10 +178,10 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 				usable++;
 			}
 			else if(Math.abs(exposure.chopperPosition.x() - chopper.amplitude) < tolerance) {
-				exposure.flag(Frame.CHOP_RIGHT);
-				if(current.phase != Frame.CHOP_RIGHT) {
+				exposure.flag(TelescopeFrame.CHOP_RIGHT);
+				if(current.phase != TelescopeFrame.CHOP_RIGHT) {
 					current = new PhaseData(this);
-					current.phase = Frame.CHOP_RIGHT;
+					current.phase = TelescopeFrame.CHOP_RIGHT;
 					//if(current.phase == nodPhase) current.flag |= PhaseOffsets.SKIP_GAINS;
 					current.start = exposure;
 					current.end = exposure;
@@ -201,7 +202,7 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 		// Discard transit frames altogether...
 		for(int i=size(); --i >=0; ) {
 			final Frame exposure = get(i);
-			if(exposure != null) if(exposure.isFlagged(Frame.CHOP_TRANSIT)) set(i, null);
+			if(exposure != null) if(exposure.isFlagged(TelescopeFrame.CHOP_TRANSIT)) set(i, null);
 		}
 		
 		removeOffsets(false);
@@ -386,22 +387,22 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 			final String phase1 = header.getStringValue("PHASE1");	
 			final String phase2 = header.getStringValue("PHASE2");
 
-			nodPhase = Frame.CHOP_LEFT;
+			nodPhase = TelescopeFrame.CHOP_LEFT;
 
 			if(phase1 != null) {
-				if(phase1.equalsIgnoreCase("WON")) nodPhase = Frame.CHOP_LEFT;
-				else if(phase1.equalsIgnoreCase("WOFF")) nodPhase = Frame.CHOP_RIGHT;
+				if(phase1.equalsIgnoreCase("WON")) nodPhase = TelescopeFrame.CHOP_LEFT;
+				else if(phase1.equalsIgnoreCase("WOFF")) nodPhase = TelescopeFrame.CHOP_RIGHT;
 			}
 			else if(phase2 != null) {
-				if(phase2.equalsIgnoreCase("WON")) nodPhase = Frame.CHOP_RIGHT;
-				else if(phase2.equalsIgnoreCase("WOFF")) nodPhase = Frame.CHOP_LEFT;
+				if(phase2.equalsIgnoreCase("WON")) nodPhase = TelescopeFrame.CHOP_RIGHT;
+				else if(phase2.equalsIgnoreCase("WOFF")) nodPhase = TelescopeFrame.CHOP_LEFT;
 			}
 
 			if(apexScan.chopper != null) chopper = apexScan.chopper.copy();
 
 			if(chopper != null)
-			    info("Nodding " + (nodPhase == Frame.CHOP_LEFT ? "[LEFT]" : 
-					(nodPhase == Frame.CHOP_RIGHT ? "[RIGHT]" : "[???]")));		
+			    info("Nodding " + (nodPhase == TelescopeFrame.CHOP_LEFT ? "[LEFT]" : 
+					(nodPhase == TelescopeFrame.CHOP_RIGHT ? "[RIGHT]" : "[???]")));		
 		}	
 		
 		
@@ -453,7 +454,7 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
 						exposure.calcHorizontal();
 					}	
 					else if(apexScan.basisSystem == EquatorialCoordinates.class) {
-						exposure.equatorial = new EquatorialCoordinates(X[t] * Unit.deg, Y[t] * Unit.deg, scan.equatorial.epoch);
+						exposure.equatorial = new EquatorialCoordinates(X[t] * Unit.deg, Y[t] * Unit.deg, getScan().equatorial.epoch);
 						exposure.calcHorizontal();
 					}
 					else {
@@ -472,7 +473,7 @@ extends Integration<InstrumentType, FrameType> implements PhaseModulated, Ground
                         }
 					    else if(apexScan.basisSystem == EquatorialCoordinates.class) { 
 					        exposure.horizontalOffset = exposure.equatorial.getNativeOffsetFrom(
-                                    new EquatorialCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg, scan.equatorial.epoch)
+                                    new EquatorialCoordinates(objX[t] * Unit.deg, objY[t] * Unit.deg, getScan().equatorial.epoch)
                             );
 					        exposure.equatorialNativeToHorizontal(exposure.horizontalOffset);
 					    }

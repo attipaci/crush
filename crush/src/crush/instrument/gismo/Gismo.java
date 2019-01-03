@@ -36,6 +36,7 @@ import crush.instrument.SingleColorLayout;
 import crush.telescope.GroundBased;
 import crush.telescope.InstantFocus;
 import crush.telescope.Mount;
+import crush.telescope.TelescopeInstrument;
 import jnum.Unit;
 import jnum.Util;
 import jnum.data.DataPoint;
@@ -44,7 +45,7 @@ import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 import nom.tam.fits.*;
 
-public class Gismo extends Instrument<GismoPixel> implements GroundBased, GridIndexed {
+public class Gismo extends TelescopeInstrument<GismoPixel> implements GroundBased, GridIndexed {
 	/**
 	 * 
 	 */
@@ -203,7 +204,7 @@ public class Gismo extends Instrument<GismoPixel> implements GroundBased, GridIn
 	}
 	
 	@Override
-    protected void loadChannelData() {
+    protected void initLayout() {
 		// Update the pointing centers...
 		if(hasOption("pcenter")) arrayPointingCenter = option("pcenter").getVector2D();
 		
@@ -219,7 +220,7 @@ public class Gismo extends Instrument<GismoPixel> implements GroundBased, GridIn
 
 		setPlateScale(pixelSize);
 			
-		super.loadChannelData();
+		super.initLayout();
 	}
 	
 	public void setPlateScale(Vector2D size) {

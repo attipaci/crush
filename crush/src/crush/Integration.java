@@ -34,8 +34,6 @@ import crush.instrument.ChannelGroup;
 import crush.instrument.Response;
 import crush.telescope.Chopper;
 import crush.telescope.Chopping;
-import crush.telescope.GroundBased;
-import crush.telescope.HorizontalFrame;
 import crush.telescope.Motion;
 import jnum.Configurator;
 import jnum.Constant;
@@ -44,7 +42,6 @@ import jnum.LockedException;
 import jnum.PointOp;
 import jnum.Unit;
 import jnum.Util;
-import jnum.astro.AstroProjector;
 import jnum.data.*;
 import jnum.data.samples.Data1D;
 import jnum.fft.FloatFFT;
@@ -52,11 +49,11 @@ import jnum.fits.FitsToolkit;
 import jnum.math.Complex;
 import jnum.math.Range;
 import jnum.math.Range2D;
-import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.parallel.ParallelPointOp;
 import jnum.parallel.ParallelTask;
 import jnum.projection.Projection2D;
+import jnum.projection.Projector2D;
 import jnum.reporting.BasicMessaging;
 import jnum.text.TableFormatter;
 import nom.tam.fits.*;
@@ -81,11 +78,10 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     public InstrumentType instrument;
 
     public int integrationNo;	
-
+    
     public StringBuffer comments = new StringBuffer();
 
     public float gain = 1.0F;
-    public double zenithTau = 0.0;
 
     public Hashtable<String, Dependents> dependents = new Hashtable<String, Dependents>(); 
     private Hashtable<Mode, Signal> signals = new Hashtable<Mode, Signal>();	
@@ -135,6 +131,8 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         return Double.compare(getMJD(), other.getMJD());
     }
 
+    public Scan<InstrumentType, ? extends Integration<InstrumentType, ?>> getScan() { return scan; }
+    
     public void reindex() {
         for(int k=size(); --k >= 0; ) {
             final Frame exposure = get(k);
@@ -160,6 +158,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
     public int getThreadCount() { return parallelism; }
+
 
     public void validate() {
         if(isValid) return;		
@@ -239,14 +238,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             if(hasOption("estimator")) isRobust = option("estimator").is("median");
             info("Removing DC offsets" + (isRobust ? " (robust)" : "") + ".");
             removeOffsets(isRobust);
-        }
-
-        if(hasOption("tau")) {
-            try { setTau(); }
-            catch(Exception e) { 
-                warning("Problem setting tau: " + e.getMessage()); 
-                if(CRUSH.debug) CRUSH.trace(e);
-            }
         }
 
         if(hasOption("scale")) {
@@ -416,72 +407,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         info("Applying scaling factor " + Util.f3.format(value));		
     }
 
-    // Try in this order:
-    //   1. in-band value, e.g. "0.304"
-    //   2. scaling relation, e.g. "225GHz", provided "tau.225GHz" is defined.
-    //	 
-    public void setTau() throws Exception {	
-        String spec = option("tau").getValue();
-
-        try { setTau(Double.parseDouble(spec)); }
-        catch(Exception notanumber) {
-            String id = spec.toLowerCase();
-            if(hasOption("tau." + id)) setTau(id, option("tau." + id).getDouble());
-            else throw new IllegalArgumentException("Supplied tau is neither a number nor a known subtype.");
-        }
-    }
-
-    public void setTau(String id, double value) {
-        Vector2D t = getTauCoefficients(id);
-        Vector2D inband = getTauCoefficients(instrument.getName());
-        try { setZenithTau(inband.x() / t.x() * (value - t.y()) + inband.y()); }
-        catch(Exception e) { 
-            warning("Could not set zenith tau: " + e.getMessage()); 
-            if(CRUSH.debug) CRUSH.trace(e);
-        }
-    }
-
-    public double getTau(String id, double value) {
-        Vector2D t = getTauCoefficients(id);
-        Vector2D inband = getTauCoefficients(instrument.getName());
-        return t.x() / inband.x() * (value - inband.y()) + t.y();
-    }
-
-    public double getTau(String id) {
-        return getTau(id, zenithTau);
-    }
-
-    public Vector2D getTauCoefficients(String id) {
-        String key = "tau." + id.toLowerCase();
-
-        if(!hasOption(key + ".a")) throw new IllegalStateException(key + " has no scaling relation.");
-
-        Vector2D coeff = new Vector2D();
-        coeff.setX(option(key + ".a").getDouble());
-        if(hasOption(key + ".b")) coeff.setY(option(key + ".b").getDouble());
-
-        return coeff;
-    }
-
-    public void setTau(final double value) throws Exception {	
-        if(this instanceof GroundBased) {
-            try { setZenithTau(value); }
-            catch(NumberFormatException e) {}
-        }
-        else {
-            final double transmission = Math.exp(-value);
-            for(Frame frame : this) if(frame != null) frame.setTransmission(transmission);
-        }
-    }
-
-    public void setZenithTau(final double value) {
-        if(!(this instanceof GroundBased)) throw new UnsupportedOperationException("Only implementation of GroundBased can set a zenith tau.");
-        info("Setting zenith tau to " + Util.f3.format(value));
-        zenithTau = value;
-
-        for(Frame frame : this) if(frame != null) ((HorizontalFrame) frame).setZenithTau(value);
-    }
-
+   
     public void calcScanSpeedStats() {
         aveScanSpeed = getTypicalScanningSpeed();
         info("Typical scanning speeds are " 
@@ -736,13 +662,6 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     public void scale(final double factor) {
         if(factor == 1.0) return;
         for(Frame frame : this) if(frame != null) frame.scale(factor);
-    }
-
-
-    public double getPA() {
-        HorizontalFrame first = (HorizontalFrame) getFirstFrame();
-        HorizontalFrame last = (HorizontalFrame) getLastFrame();
-        return 0.5 * (Math.atan2(first.sinPA, first.cosPA) + Math.atan2(last.sinPA, last.cosPA));
     }
 
 
@@ -2027,35 +1946,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
 
     public Vector2D[] getPositions(final int type) {
         final Vector2D[] position = new Vector2D[size()];
-        SphericalCoordinates coords = new SphericalCoordinates();
-
-        for(Frame exposure : this) if(exposure != null) {
-            final Vector2D pos = new Vector2D();
-            position[exposure.index] = pos;
-
-            // Telescope motion should be w/o chopper...
-            // TELESCOPE motion with or w/o SCANNING and CHOPPER
-            if((type & Motion.TELESCOPE) != 0) {
-                coords.copy(exposure.getNativeCoords());
-                // Subtract the chopper motion if it is not requested...
-                if((type & Motion.CHOPPER) == 0) coords.subtractNativeOffset(exposure.chopperPosition);
-                pos.copy(coords);
-
-                if((type & Motion.PROJECT_GLS) != 0) pos.scaleX(coords.cosLat());
-            }
-
-            // Scanning includes the chopper motion
-            // SCANNING with or without CHOPPER
-            else if((type & Motion.SCANNING) != 0) {
-                exposure.getNativeOffset(pos);
-                // Subtract the chopper motion if it is not requested...
-                if((type & Motion.CHOPPER) == 0) pos.subtract(exposure.chopperPosition);
-            }	
-
-            // CHOPPER only...
-            else if(type == Motion.CHOPPER) pos.copy(exposure.chopperPosition);
-        }
-
+        for(FrameType exposure : this) if(exposure != null) position[exposure.index] = exposure.getPosition(type);
         return position;
     }
 
@@ -2457,72 +2348,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
                 }.process();		
     }
 
-    public Range2D searchCorners(final Collection<? extends Pixel> pixels, final Projection2D<SphericalCoordinates> projection) {
-        if(pixels.size() == 0) return null;
-
-        if(CRUSH.debug) debug("search pixels: " + pixels.size() + " : " + instrument.size());
-
-        CRUSH.Fork<Range2D> findCorners = new Fork<Range2D>() {
-            private Range2D range;
-            private AstroProjector projector;
-
-            @Override
-            protected void init() {
-                super.init();
-                range = new Range2D();
-                projector = new AstroProjector(projection);
-            }
-
-            @Override
-            protected void process(FrameType exposure) {    
-                for(Pixel pixel : pixels) {
-                    exposure.project(pixel.getPosition(), projector);
-
-                    // Check to make sure the sample produces a valid position...
-                    // If not, then flag out the corresponding data...
-                    if(Double.isNaN(projector.offset.x()) || Double.isNaN(projector.offset.y())) {
-                        for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
-                    }
-                    else {
-                        if(range == null) range = new Range2D(projector.offset);
-                        else range.include(projector.offset);
-                    }
-                }
-            }
-
-            @Override
-            public Range2D getLocalResult() { return range; }
-
-            @Override
-            public Range2D getResult() {
-                range = null;
-                for(ParallelTask<Range2D> task : getWorkers()) {
-                    Range2D local = task.getLocalResult();
-                    if(range == null) range = local;
-                    else if(local != null) range.include(local);
-                }
-                return range;
-            }       
-        };
-
-        findCorners.process();
-
-        Range2D range = findCorners.getResult();
-
-        // Check for null range...
-        if(range == null) {
-            if(CRUSH.debug) debug("map range " + getDisplayID() + "> null");
-        }
-        else {
-            if(CRUSH.debug) debug("map range " + getDisplayID() + "> "
-                    + Util.f1.format(range.getXRange().span() / Unit.arcsec) + " x " 
-                    + Util.f1.format(range.getYRange().span() / Unit.arcsec));
-
-
-        }
-
-        return range;
-    }
+   
 
     public Range getFrequencyRange(final ChannelGroup<?> channels) {
         Fork<Range> search = new Fork<Range>() {
@@ -3131,18 +2957,12 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
     }
 
     public String getASCIIHeader() {
-        return 
-                "# Instrument: " + instrument.getName() + "\n" +
-                "# Scan: " + scan.getID() + "\n" +
+        return scan.getASCIIHeader() +
                 (scan.size() > 1 ? "# Integration: " + getID() + "\n" : "") +
-                "# Object: " + scan.getSourceName() + "\n" +
-                "# Date: " + scan.timeStamp + " (MJD: " + scan.getMJD() + ")\n" +
-                "# Project: " + scan.project + "\n" +
-                "# Exposure: " + (getFrameCount(Frame.SOURCE_FLAGS) * instrument.integrationTime) + " s.\n" +
-                "# Equatorial: " + scan.equatorial + "\n" +
-                (scan instanceof GroundBased ? "# Horizontal: " + scan.horizontal + "\n" : "") +
-                "# CRUSH version: " + CRUSH.getFullVersion();
+                "# Exposure: " + (getFrameCount(Frame.SOURCE_FLAGS) * instrument.integrationTime) + " s.\n";
     }
+    
+
 
     public String getID() {
         return Integer.toString(integrationNo + 1);
@@ -3558,14 +3378,82 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
             for(int t=size()-nFrames; t<size(); t++) set(t, null);
         }
     }
+    
+    
+    public Range2D searchCorners(final Collection<? extends Pixel> pixels, final Projection2D<?> projection) {
+        if(pixels.size() == 0) return null;
+
+        if(CRUSH.debug) debug("search pixels: " + pixels.size() + " : " + instrument.size());
+
+        CRUSH.Fork<Range2D> findCorners = new Fork<Range2D>() {
+            private Range2D range;
+            private Projector2D<?> projector;
+
+            @Override
+            protected void init() {
+                super.init();
+                range = new Range2D();
+                projector = instrument.getProjectorInstance(scan.getReferenceCoordinates());
+            }
+
+            @Override
+            protected void process(FrameType exposure) {    
+                for(Pixel pixel : pixels) {
+                    exposure.project(pixel.getPosition(), projector);
+
+                    // Check to make sure the sample produces a valid position...
+                    // If not, then flag out the corresponding data...
+                    if(Double.isNaN(projector.offset.x()) || Double.isNaN(projector.offset.y())) {
+                        for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= Frame.SAMPLE_SKIP;
+                    }
+                    else {
+                        if(range == null) range = new Range2D(projector.offset);
+                        else range.include(projector.offset);
+                    }
+                }
+            }
+
+            @Override
+            public Range2D getLocalResult() { return range; }
+
+            @Override
+            public Range2D getResult() {
+                range = null;
+                for(ParallelTask<Range2D> task : getWorkers()) {
+                    Range2D local = task.getLocalResult();
+                    if(range == null) range = local;
+                    else if(local != null) range.include(local);
+                }
+                return range;
+            }       
+        };
+
+        findCorners.process();
+
+        Range2D range = findCorners.getResult();
+
+        // Check for null range...
+        if(range == null) {
+            if(CRUSH.debug) debug("map range " + getDisplayID() + "> null");
+        }
+        else {
+            if(CRUSH.debug) debug("map range " + getDisplayID() + "> "
+                    + Util.f1.format(range.getXRange().span() / Unit.arcsec) + " x " 
+                    + Util.f1.format(range.getYRange().span() / Unit.arcsec));
+
+
+        }
+
+        return range;
+    }
+    
+    
+    
 
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("scale")) return gain;
         if(name.equals("NEFD")) return nefd;
-        if(name.equals("zenithtau")) return zenithTau;
-        if(name.equals("tau")) return zenithTau / Math.cos(scan.horizontal.EL());
-        if(name.startsWith("tau.")) return getTau(name.substring(4).toLowerCase());
         if(name.equals("scanspeed")) return aveScanSpeed.value() / (Unit.arcsec / Unit.s);
         if(name.equals("rmsspeed")) return aveScanSpeed.rms() / (Unit.arcsec / Unit.s);
         if(name.equals("hipass")) return filterTimeScale / Unit.s;

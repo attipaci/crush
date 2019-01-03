@@ -44,7 +44,7 @@ import nom.tam.fits.*;
 public class ImageTool {
 	static String version = "0.1-1";
 
-	AstroIntensityMap image;
+	IntensityMap image;
 	Vector<Region2D> regions = new Vector<Region2D>();
 
 	public static void main(String args[]) {
@@ -68,11 +68,11 @@ public class ImageTool {
 	}
 	
 	public ImageTool(String path) throws Exception {
-		this(new AstroIntensityMap());
+		this(new IntensityMap());
 		image.read(path);
 	}
 
-	public ImageTool(AstroIntensityMap map) {
+	public ImageTool(IntensityMap map) {
 		this.image = map;
 	}
 	

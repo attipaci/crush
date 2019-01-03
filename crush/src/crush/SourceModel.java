@@ -461,8 +461,8 @@ Parallelizable, FitsHeaderEditing, FitsHeaderParsing {
                         "# Object: " + getSourceName() + "\n");
 
         if(!scans.isEmpty()) {
-            Scan<?,?> firstScan = scans.get(0);	
-            header.append("# Equatorial: " + firstScan.equatorial + "\n");
+            Coordinate2D ref = scans.get(0).getReferenceCoordinates();
+            header.append("# " + ref.getClass().getSimpleName() + ": " + ref + "\n");
         }
 
         header.append("# Scans: ");

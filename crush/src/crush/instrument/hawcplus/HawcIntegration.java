@@ -158,8 +158,8 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
             int storeCols = ((int[][]) row[iDAC])[0].length;
             info("FITS has " + storeRows + "x" + storeCols + " arrays.");
 
-            if(scan.equatorial == null) 
-                scan.equatorial = new EquatorialCoordinates(((double[]) row[iRA])[0] * Unit.hourAngle, ((double[]) row[iDEC])[0] * Unit.deg, CoordinateEpoch.J2000);
+            if(getScan().equatorial == null) 
+                getScan().equatorial = new EquatorialCoordinates(((double[]) row[iRA])[0] * Unit.hourAngle, ((double[]) row[iDEC])[0] * Unit.deg, CoordinateEpoch.J2000);
 
             if(iORA >= 0) if(Double.isNaN(((double[]) row[iORA])[0])) {
                 iORA = iODEC = -1;
@@ -248,7 +248,7 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
                                 );
                     }
 
-                    EquatorialCoordinates reference = scan.isNonSidereal ? frame.objectEq : scan.equatorial;
+                    EquatorialCoordinates reference = scan.isNonSidereal ? frame.objectEq : getScan().equatorial;
 
                     // I  -> T      rot by phi (instrument rotation)
                     // T' -> E      rot by -theta_ta
@@ -304,7 +304,7 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
                     if(!Double.isNaN(frame.site.longitude())) {
                         // Calculate AZ/EL -- the values in the table are noisy aircraft values...  
                         apparent.copy(frame.equatorial);
-                        scan.toApparent.precess(apparent);
+                        getScan().toApparent.precess(apparent);
                         frame.horizontal = apparent.toHorizontal(frame.site, frame.LST);
                     }
                     else if(iAZ >= 0 && iEL >= 0) {
@@ -378,7 +378,7 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
     private void printEquivalentTaus(double value) { 
         CRUSH.values(this, "--->"
                 + " tau(" + Util.f0.format(instrument.instrumentData.wavelength/Unit.um) + "um):" + Util.f3.format(value)
-                + ", tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat())
+                + ", tau(LOS):" + Util.f3.format(value / getScan().horizontal.sinLat())
                 + ", PWV:" + Util.f1.format(getTau("pwv", value)) + "um"
         );      
     }

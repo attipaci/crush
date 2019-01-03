@@ -24,16 +24,14 @@
 package crush.telescope.sofia;
 
 import crush.Channel;
-import crush.Integration;
-import crush.Scan;
-import crush.telescope.GroundBased;
+import crush.telescope.GroundBasedIntegration;
 import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
 import jnum.math.Vector2D;
 
 public abstract class SofiaIntegration<InstrumentType extends SofiaInstrument<? extends Channel>, FrameType extends SofiaFrame> 
-extends Integration<InstrumentType, FrameType> implements GroundBased {
+extends GroundBasedIntegration<InstrumentType, FrameType> {
 
     /**
      * 
@@ -41,7 +39,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
     private static final long serialVersionUID = -4771883165716694480L;
 
 
-    public SofiaIntegration(Scan<InstrumentType, ?> parent) {
+    public SofiaIntegration(SofiaScan<InstrumentType, ?> parent) {
         super(parent);
     }
 

@@ -82,7 +82,7 @@ public class LabocaSubscan extends APEXSubscan<Laboca, LabocaFrame> {
 	public void setZenithTau(double value) {	
 		super.setZenithTau(value);
 		CRUSH.values(this, "--->"
-				+ " tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat())
+				+ " tau(LOS):" + Util.f3.format(value / getScan().horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv", zenithTau)) + "mm"
 		);		
 	}

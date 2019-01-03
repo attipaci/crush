@@ -42,20 +42,20 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
-import crush.Instrument;
 import crush.CRUSH;
 import crush.Channel;
 import crush.Scan;
 import crush.instrument.PixelLayout;
 import crush.telescope.GroundBased;
 import crush.telescope.Mount;
+import crush.telescope.TelescopeInstrument;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.astro.AstroTime;
 import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
-public abstract class SofiaInstrument<ChannelType extends Channel> extends Instrument<ChannelType> implements GroundBased {
+public abstract class SofiaInstrument<ChannelType extends Channel> extends TelescopeInstrument<ChannelType> implements GroundBased {
     /**
      * 
      */

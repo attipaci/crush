@@ -27,14 +27,14 @@ package crush.instrument.gismo;
 
 import crush.*;
 import crush.fits.HDUReader;
-import crush.telescope.GroundBased;
+import crush.telescope.GroundBasedIntegration;
 import jnum.Unit;
 import jnum.Util;
 import jnum.astro.*;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
-public class GismoIntegration extends Integration<Gismo, GismoFrame> implements GroundBased {
+public class GismoIntegration extends GroundBasedIntegration<Gismo, GismoFrame> {
 	/**
 	 * 
 	 */
@@ -55,7 +55,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 	public void printEquivalentTaus() {
 	    CRUSH.values(this, "--->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
-				+ ", tau(LOS):" + Util.f3.format(zenithTau / scan.horizontal.sinLat())
+				+ ", tau(LOS):" + Util.f3.format(zenithTau / getScan().horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
 		);		
 	}
@@ -208,7 +208,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 							frame.horizontal.addOffset(gismoScan.basisOffset);
 					}
 					else if(gismoScan.basisSystem == EquatorialCoordinates.class) {
-						frame.equatorial = new EquatorialCoordinates(X0[i], Y0[i], scan.equatorial.epoch);
+						frame.equatorial = new EquatorialCoordinates(X0[i], Y0[i], getScan().equatorial.epoch);
 						if(gismoScan.basisOffset != null) 
 							frame.equatorial.addOffset(gismoScan.basisOffset);
 						frame.calcHorizontal();	
@@ -387,7 +387,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 
 					if(catalogToApparent == null) {
 						CoordinateEpoch apparentEpoch = JulianEpoch.forMJD(frame.MJD);
-						catalogToApparent = new Precession(scan.equatorial.epoch, apparentEpoch);
+						catalogToApparent = new Precession(getScan().equatorial.epoch, apparentEpoch);
 					}
 					catalogToApparent.precess(apparent);
 
@@ -395,7 +395,7 @@ public class GismoIntegration extends Integration<Gismo, GismoFrame> implements 
 					//frame.chopperPosition.x = chop[i] * Unit.arcsec;
 
 					// Calculate the horizontal offset	
-					apparent.toHorizontal(trackingCenter, scan.site, frame.LST);
+					apparent.toHorizontal(trackingCenter, getScan().site, frame.LST);
 
 					frame.horizontal = new HorizontalCoordinates(
 							AZ[i] * Unit.deg,

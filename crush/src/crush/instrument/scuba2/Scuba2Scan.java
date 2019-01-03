@@ -24,7 +24,7 @@
 package crush.instrument.scuba2;
 
 import crush.*;
-import crush.telescope.GroundBased;
+import crush.telescope.GroundBasedScan;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
@@ -44,7 +44,7 @@ import java.io.*;
 import java.util.*;
 
 
-public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBased, Weather {
+public class Scuba2Scan extends GroundBasedScan<Scuba2, Scuba2Subscan> implements Weather {
 	/**
 	 * 
 	 */
@@ -189,9 +189,8 @@ public class Scuba2Scan extends Scan<Scuba2, Scuba2Subscan> implements GroundBas
 			horizontal.setLongitude(0.5*(firstFrame.horizontal.x() + lastFrame.horizontal.x()));
 			horizontal.setLatitude(0.5*(firstFrame.horizontal.y() + lastFrame.horizontal.y()));
 		}
-			
-		double PA = 0.5 * (firstFrame.getParallacticAngle() + lastFrame.getParallacticAngle());
-		info("   Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");
+
+		info("   Mean parallactic angle is " + Util.f1.format(getPositionAngle() / Unit.deg) + " deg.");
 		
 		super.validate();
 	}

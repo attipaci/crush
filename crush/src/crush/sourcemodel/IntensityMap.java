@@ -30,7 +30,6 @@ import java.util.*;
 import crush.*;
 import jnum.Unit;
 import jnum.Util;
-import jnum.astro.AstroProjector;
 import jnum.data.*;
 import jnum.data.image.Data2D;
 import jnum.data.image.Flag2D;
@@ -51,11 +50,12 @@ import jnum.math.Range;
 import jnum.math.Vector2D;
 import jnum.parallel.ParallelPointOp;
 import jnum.parallel.ParallelTask;
+import jnum.projection.Projector2D;
 import nom.tam.fits.Fits;
 
 
 
-public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
+public class IntensityMap extends SourceData2D<Index2D, Observation2D> {
     /**
      * 
      */
@@ -65,7 +65,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
     protected transient Image2D base;     // referenced, not copied...
 
 
-    public AstroIntensityMap(Instrument<?> instrument) {
+    public IntensityMap(Instrument<?> instrument) {
         super(instrument);
         createMap();
     }
@@ -94,18 +94,18 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
 
     @Override
     public void addModelData(SourceModel model, double weight) {  
-        map.accumulate(((AstroIntensityMap) model).map, weight);
+        map.accumulate(((IntensityMap) model).map, weight);
     }
 
     @Override
-    public void mergeAccumulate(AstroModel2D other) {    
-        map.mergeAccumulate(((AstroIntensityMap) other).map);
+    public void mergeAccumulate(SourceModel2D other) {    
+        map.mergeAccumulate(((IntensityMap) other).map);
     }
 
 
     @Override
-    public AstroIntensityMap copy(boolean withContents) {
-        AstroIntensityMap copy = (AstroIntensityMap) super.copy(withContents);
+    public IntensityMap copy(boolean withContents) {
+        IntensityMap copy = (IntensityMap) super.copy(withContents);
 
         if(map != null) {
             try { copy.map = map.copy(withContents); }
@@ -367,7 +367,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
     }
 
     public Coordinate2D getPeakCoords() {
-        AstroProjector projector = new AstroProjector(getProjection());
+        Projector2D<?> projector = getProjectorInstance();
         getGrid().getOffset(getPeakIndex(), projector.offset);
         projector.deproject();
         return projector.getCoordinates();
@@ -456,20 +456,20 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
         final Collection<? extends Pixel> pixels = integration.instrument.getMappingPixels(~0);
 
         integration.new Fork<Void>() {
-            private AstroProjector projector;
+            private Projector2D<?> projector;
             private Index2D index;
 
             @Override
             public void init() {
                 super.init();
-                projector = new AstroProjector(getProjection());
+                projector = getProjectorInstance();
                 index = new Index2D();
             }
 
             @Override 
             protected void process(final Frame exposure) {
                 for(final Pixel pixel : pixels)  {
-                    AstroIntensityMap.this.getIndex(exposure, pixel, projector, index); 
+                    IntensityMap.this.getIndex(exposure, pixel, projector, index); 
                     if(isMasked(index)) for(Channel channel : pixel) exposure.sampleFlag[channel.index] |= sampleFlagPattern;
                 }
             }
@@ -513,14 +513,14 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
 
 
                 CRUSH.Fork<DataPoint[]> calcCoupling = integration.new Fork<DataPoint[]>() {
-                    private AstroProjector projector;
+                    private Projector2D<?> projector;
                     private Index2D index;
                     private DataPoint[] sum;
 
                     @Override
                     protected void init() {
                         super.init();
-                        projector = new AstroProjector(getProjection());
+                        projector = getProjectorInstance();
                         index = new Index2D();
                         sum = integration.instrument.getDataPoints();
                         for(int i=sum.length; --i >= 0; ) sum[i].noData();
@@ -532,7 +532,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
 
                         // Remove source from all but the blind channels...
                         for(final Pixel pixel : pixels)  {
-                            AstroIntensityMap.this.getIndex(exposure, pixel, projector, index);
+                            IntensityMap.this.getIndex(exposure, pixel, projector, index);
                             final int i = index.i();
                             final int j = index.j();
 
@@ -629,8 +629,7 @@ public class AstroIntensityMap extends AstroData2D<Index2D, Observation2D> {
 
 
     @Override
-    public Object getTableEntry(String name) {  
-        if(name.equals("system")) return astroSystem().getID();
+    public Object getTableEntry(String name) {
         if(name.startsWith("map.")) return map.getTableEntry(name.substring(4));
         return super.getTableEntry(name);
     }

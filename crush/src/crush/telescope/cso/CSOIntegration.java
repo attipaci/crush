@@ -26,10 +26,8 @@ import java.io.File;
 import java.io.IOException;
 
 import crush.CRUSH;
-import crush.Integration;
-import crush.Scan;
 import crush.instrument.SingleColorPixel;
-import crush.telescope.GroundBased;
+import crush.telescope.GroundBasedIntegration;
 import crush.telescope.HorizontalFrame;
 import crush.telescope.jcmt.JCMTTauTable;
 import jnum.Constant;
@@ -38,13 +36,13 @@ import jnum.Util;
 
 
 public abstract class CSOIntegration<InstrumentType extends CSOInstrument<? extends SingleColorPixel>, FrameType extends HorizontalFrame> 
-extends Integration<InstrumentType, FrameType> implements GroundBased {
+extends GroundBasedIntegration<InstrumentType, FrameType> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 8762250193431287809L;
 
-	public CSOIntegration(Scan<InstrumentType, ?> parent) {
+	public CSOIntegration(CSOScan<InstrumentType, ?> parent) {
 		super(parent);
 	}
 	
@@ -117,7 +115,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		CRUSH.values(this, "--->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz", value))
 				+ ", tau(350um):" + Util.f3.format(getTau("350um", value))
-				+ ", tau(LOS):" + Util.f3.format(value / scan.horizontal.sinLat())
+				+ ", tau(LOS):" + Util.f3.format(value / getScan().horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv", value)) + "mm"
 		);		
 	}
@@ -141,7 +139,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 		
 		printEquivalentTaus(zenithTau);
 		
-		double tauLOS = zenithTau / scan.horizontal.sinLat();
+		double tauLOS = zenithTau / getScan().horizontal.sinLat();
 		CRUSH.values(this, "Optical load is " + Util.f1.format(((CSOScan<?,?>) scan).ambientT * (1.0 - Math.exp(-tauLOS))) + " K.");
 	
 	}
@@ -230,7 +228,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 	@Override
 	public String getASCIIHeader() {
 	 
-		double eps = hasOption("lab") ? 1.0 : 1.0 - Math.exp(-zenithTau / scan.horizontal.sinLat());
+		double eps = hasOption("lab") ? 1.0 : 1.0 - Math.exp(-zenithTau / getScan().horizontal.sinLat());
 		double Tload = ((CSOScan<?, ?>) scan).getAmbientKelvins();
 		
 		return super.getASCIIHeader() + "\n" 
@@ -242,7 +240,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 
 	public double getDirectTau() { 
 		double eps = (instrument.getLoadTemperature() - instrument.excessLoad) / ((CSOScan<?,?>) scan).ambientT; 	
-		return -Math.log(1.0-eps) * scan.horizontal.sinLat();
+		return -Math.log(1.0-eps) * getScan().horizontal.sinLat();
 	}
 	
 	public final static float antennaTick = (float) (0.01 * Unit.s);

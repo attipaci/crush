@@ -43,14 +43,14 @@ import nom.tam.fits.Fits;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 
-public abstract class AstroData2D<IndexType extends Index<IndexType>, DataType extends Data<IndexType> & Observations<? extends Data<IndexType>>> extends AstroModel2D {
+public abstract class SourceData2D<IndexType extends Index<IndexType>, DataType extends Data<IndexType> & Observations<? extends Data<IndexType>>> extends SourceModel2D {
 
     /**
      * 
      */
     private static final long serialVersionUID = -6317603664492428554L;
 
-    public AstroData2D(Instrument<?> instrument) {
+    public SourceData2D(Instrument<?> instrument) {
         super(instrument);
     }
     

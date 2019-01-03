@@ -28,10 +28,10 @@ import java.util.Arrays;
 
 import crush.polarization.StokesResponse;
 import jnum.Flagging;
-import jnum.astro.AstroProjector;
-import jnum.astro.EquatorialCoordinates;
-import jnum.math.SphericalCoordinates;
+import jnum.math.Angle;
+import jnum.math.Coordinate2D;
 import jnum.math.Vector2D;
+import jnum.projection.Projector2D;
 import jnum.util.*;
 
 
@@ -43,19 +43,17 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public Scan<?, ?> scan;
 	public int index;
 	
-	public EquatorialCoordinates equatorial;
-	public Vector2D chopperPosition = new Vector2D(); // in the native coordinate system, standard direction (e.g. -RAO, DECO)
+	public double MJD;
 	
-	public double MJD, LST;
-	public double sinA = Double.NaN, cosA = Double.NaN; // These are the projected array rotation...
-
 	private int flag = 0;
 	public double dof = 1.0;
 	public double dependents = 0.0;
 	public float relativeWeight = 1.0F;
 	
 	public int sign = 1;
-	private float transmission = 1.0F;
+	
+	private Angle rotation;
+
 	
 	// Some temporary fields to speed up some operations...
 	public transient float tempC, tempWC, tempWC2;
@@ -63,8 +61,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public float[] data;
 	public byte[] sampleFlag;
 	public int[] sourceIndex;
-	
-	public boolean hasTelescopeInfo = true;
+
 	
 	private boolean isValid = false;
 	
@@ -73,10 +70,13 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		index = parent.size();
 	}
 	
+	public Scan<?,?> getScan() { return scan; }
+	
+	public Instrument<?> getInstrument() { return getScan().instrument; }
 	
 	public final int size() { return data.length; }
 	
-	@Override
+    @Override
 	public Frame clone() {
 		try { return (Frame) super.clone(); }
 		catch(CloneNotSupportedException e) { return null; }
@@ -85,9 +85,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public Frame copy(boolean withContents) {
 		Frame copy = clone();
 		
-		if(equatorial != null) copy.equatorial = (EquatorialCoordinates) equatorial.copy();
-		if(chopperPosition != null) copy.chopperPosition = chopperPosition.copy();
-		
+				
 		if(data != null) {
 			copy.data = new float[data.length];
 			if(withContents) System.arraycopy(data, 0, copy.data, 0, data.length);
@@ -158,23 +156,11 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 
 	public double getChannelFrequency(Channel channel) { return channel.getFrequency(); }
 
-	/**
-     * @param channel  
-     */
+	
 	public void getChannelStokesResponse(Channel channel, StokesResponse toStokes) {
 	    toStokes.setNQUV(1.0, 0.0, 0.0, 0.0);
 	}
-	
-	public float getTransmission() { return transmission; }
-	
-	protected void setTransmission(float value) { transmission = value; }
-	
-	protected void setTransmission(double value) { setTransmission((float) value); }
-	
-	public float getTransmissionCorrection(Signal atm, float signal2emissivity) {
-		return atm.valueAt(this) * signal2emissivity;
-	}
-	
+
 	public void slimTo(Instrument<?> instrument) {
 		float[] reduced = new float[instrument.size()];
 		byte[] newSampleFlag = new byte[instrument.size()];
@@ -196,8 +182,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	}
 	
 	public float getSourceGain(final int mode) throws IllegalArgumentException {
-	    if(mode == TOTAL_POWER) return sign * getTransmission();
-        throw new IllegalArgumentException(getClass().getSimpleName() + " does not define signal mode " + mode);
+	    return 1.0F;
 	}
 	
 	public boolean validate() {
@@ -206,27 +191,6 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	    
 		if(sampleFlag == null) sampleFlag = new byte[data.length];
 		else if(sampleFlag.length != data.length) sampleFlag = new byte[data.length];
-		
-		if(!hasTelescopeInfo) return true;
-		
-		// Set the platform rotation, unless the rotation was explicitly set already
-		if(Double.isNaN(cosA) || Double.isNaN(sinA)) {
-			switch(scan.instrument.mount) {
-			case CASSEGRAIN: 
-			case GREGORIAN: 
-			case NASMYTH_COROTATING:
-			case PRIME_FOCUS: sinA = 0.0; cosA = 1.0; break;
-			case LEFT_NASMYTH: {
-				SphericalCoordinates nativeCoords = getNativeCoords();
-				sinA = -nativeCoords.sinLat(); cosA = nativeCoords.cosLat(); break;
-			}
-			case RIGHT_NASMYTH: {
-				SphericalCoordinates nativeCoords = getNativeCoords();
-				sinA = nativeCoords.sinLat(); cosA = nativeCoords.cosLat(); break;
-			}
-			default: sinA = 0.0; cosA = 1.0;
-			}		
-		}
 		
 		return true;
 	}
@@ -239,61 +203,52 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	    isValid = false;
 	}
 
-	public void getEquatorial(final Vector2D position, final EquatorialCoordinates coords) {
-		coords.setNativeLongitude(equatorial.x() + getNativeX(position) / scan.equatorial.cosLat());
-		coords.setNativeLatitude(equatorial.y() + getNativeY(position));
-	}
 	
-	public void getEquatorialNativeOffset(final Vector2D position, final Vector2D offset) {
-		getEquatorialNativeOffset(offset);
-		offset.setX(offset.x() + getNativeX(position));
-		offset.setY(offset.y() + getNativeY(position));
-	}
-		
-	public void getNativeOffset(final Vector2D position, final Vector2D offset) {
-		getEquatorialNativeOffset(position, offset);
-	}
 	
-	public void getNativeOffset(final Vector2D offset) {
-		getEquatorialNativeOffset(offset);
-	}
+	/**
+	 * Absolute spherical, incl. chopper, in the native coordinates of the telescope
+	 * 
+	 * @return
+	 */
+	public abstract Coordinate2D getNativeCoords();
 	
-	public void getFocalPlaneOffset(final Vector2D position, final Vector2D offset) {
-		getNativeOffset(offset);
-		final double x = offset.x();
-		offset.setX(position.x() + x * cosA + offset.y() * sinA);
-		offset.setY(position.y() + offset.y() * cosA - x * sinA);
-	}
-	
-	public void getEquatorialNativeOffset(Vector2D offset) {
-		equatorial.getNativeOffsetFrom(scan.equatorial, offset);		
-	}
-	
-	public Vector2D getEquatorialNativeOffset() {
-		Vector2D offset = new Vector2D();
-		getEquatorialNativeOffset(offset);
-		return offset;
-	}
-	
-	public void getApparentEquatorial(EquatorialCoordinates apparent) {
-		apparent.copy(equatorial);
-		scan.toApparent.precess(apparent);
-	}
-	
-	// Absolute spherical, incl. chopper, in the native coordinates of the telescope
-	public abstract SphericalCoordinates getNativeCoords();
-	
-	// Offset from tracking center, incl. chopper, in the native coordinates of the telescope
-	// e.g. RAO, DECO for equatorial, or AZO, ELO for horizontal...
+	/**
+	 *  Offset from tracking center, incl. chopper, in the native coordinates of the telescope.
+	 *  e.g. RAO, DECO for equatorial, or AZO, ELO for horizontal...
+	 * @return
+	 */
 	public abstract Vector2D getNativeOffset();
 	
-	public void pointingAt(Vector2D offset) {
-		Vector2D nativeOffset = getNativeOffset();
-		if(nativeOffset != null) nativeOffset.subtract(offset);
-		SphericalCoordinates coords = getNativeCoords();
-		if(coords != null) coords.subtractOffset(offset);
-	}
 
+	public abstract void pointingAt(Vector2D offset);
+	
+
+    public double getNativeX(final Vector2D fpPosition) { 
+        return rotation.cos() * fpPosition.x() - rotation.sin() * fpPosition.y();   
+    }
+    
+    public double getNativeY(final Vector2D fpPosition) {
+        return rotation.sin() * fpPosition.x() + rotation.cos() * fpPosition.y();   
+    }
+	
+    public final double getRotation() {
+        return rotation == null ? Double.NaN : rotation.value();
+    }
+    
+    public void setRotation(double angle) {
+        rotation = new Angle(angle);
+    }
+    
+    public void getFocalPlaneOffset(final Vector2D fpPosition, final Vector2D offset) {
+        getNativeOffset(offset);
+        final double x = offset.x();
+        offset.setX(fpPosition.x() + x * rotation.cos() + offset.y() * rotation.sin());
+        offset.setY(fpPosition.y() + offset.y() * rotation.cos() - x * rotation.sin());
+    }
+    
+    public abstract void getNativeOffset(final Vector2D offset);
+    
+    
 	public void scale(double factor) {
 		if(factor == 0.0) Arrays.fill(data, 0.0F);
 		else {
@@ -304,25 +259,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	
 	public void invert() { scale(-1.0); }
 	
-
-	public double getRotation() {
-		return Math.atan2(sinA, cosA);
-	}
-	
-	public void setRotation(double angle) {
-		sinA = Math.sin(angle);
-		cosA = Math.cos(angle);
-	}
-	
-	
-	public double getNativeX(final Vector2D fpPosition) {
-		return cosA * fpPosition.x() - sinA * fpPosition.y();	
-	}
-	
-	public double getNativeY(final Vector2D fpPosition) {
-		return sinA * fpPosition.x() + cosA * fpPosition.y();	
-	}
-	
+   
 	public void addDataFrom(final Frame other, final double scaling) {
 		if(scaling == 0.0) return;
 		final float fScale = (float) scaling;
@@ -333,52 +270,15 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 		}
 	}
 	
-	public void project(final Vector2D fpOffset, final AstroProjector projector) {
-		if(projector.isFocalPlane()) {
-			projector.setReferenceCoords();
-			// Deproject SFL focal plane offsets...
-			getFocalPlaneOffset(fpOffset, projector.offset);
-			projector.getCoordinates().addNativeOffset(projector.offset);
-			projector.project();
-		}
-		else if(scan.isNonSidereal) {
-			projector.setReferenceCoords();
-			// Deproject SFL native offsets...
-			getEquatorialNativeOffset(fpOffset, projector.offset);
-			projector.getEquatorial().addNativeOffset(projector.offset);
-			projector.projectFromEquatorial();
-		}
-		else {
-			getEquatorial(fpOffset, projector.getEquatorial());		
-			projector.projectFromEquatorial();
-		}
-	
-	}	
-	
-	
-	// Native offsets are in standard directions (e.g. -RA, DEC)
-	public void nativeToNativeEquatorial(Vector2D offset) {}
-	
-	public final void nativeToEquatorial(Vector2D offset) {
-		nativeToNativeEquatorial(offset);
-		offset.scaleX(-1.0);
+	public void project(final Vector2D fpOffset, final Projector2D<?> projector) {
+	    if(projector == null) return;
+	    projector.offset.copy(fpOffset);
+	    projector.project();	    
 	}
 	
-	// Native offsets are in standard directions (e.g. -RA, DEC)
-	public void nativeEquatorialToNative(Vector2D offset) {}
 	
-	public final void equatorialToNative(Vector2D offset) {
-		offset.scaleX(-1.0);
-		nativeEquatorialToNative(offset);
-	}
-	
-	public void nativeToEquatorial(SphericalCoordinates coords, EquatorialCoordinates equatorial) {
-		equatorial.copy(coords);
-	}
-	
-	public void equatorialToNative(EquatorialCoordinates equatorial, SphericalCoordinates coords) {
-		coords.copy(equatorial);
-	}
+	public abstract Vector2D getPosition(final int type);
+
 	
 	public static final FlagBlock<Byte> sampleFlags = new FlagSpace.Byte("sample-flags").getDefaultFlagBlock();
 	public static byte SAMPLE_SOURCE_BLANK = sampleFlags.next('B', "Blanked").value();
@@ -396,13 +296,7 @@ public abstract class Frame implements Serializable, Cloneable, Flagging {
 	public static int SKIP_MODELING = frameFlags.next('M', "Skip Models").value();
 	public static int SKIP_WEIGHTING = frameFlags.next('W', "Skip Weighting").value();
 	
-	public static int CHOP_LEFT = frameFlags.next('L', "Chop Left").value();
-	public static int CHOP_RIGHT = frameFlags.next('R', "Chop Right").value();
-	public static int CHOP_TRANSIT = frameFlags.next('T', "Chop Transit").value();
-	public static int CHOP_FLAGS = CHOP_LEFT | CHOP_RIGHT | CHOP_TRANSIT;
-	
-	public static int NOD_LEFT = frameFlags.next('<', "Nod Left").value();
-	public static int NOD_RIGHT = frameFlags.next('>', "Nod Right").value();
+
 	
 	public static int BAD_DATA = FLAG_SPIKY | FLAG_JUMP;
 	public static int MODELING_FLAGS = SKIP_MODELING | BAD_DATA | FLAG_DOF | FLAG_WEIGHT;

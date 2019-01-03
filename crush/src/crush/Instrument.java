@@ -42,7 +42,6 @@ import crush.sourcemodel.*;
 import crush.telescope.AccelerationResponse;
 import crush.telescope.ChopperResponse;
 import crush.telescope.InstantFocus;
-import crush.telescope.Mount;
 import crush.telescope.PointingResponse;
 import jnum.Configurator;
 import jnum.Constant;
@@ -54,10 +53,15 @@ import jnum.astro.AstroTime;
 import jnum.data.DataPoint;
 import jnum.data.Statistics;
 import jnum.data.WeightedPoint;
+import jnum.data.image.FlatGrid2D;
+import jnum.data.image.Grid2D;
 import jnum.fits.FitsToolkit;
 import jnum.io.LineParser;
+import jnum.math.Coordinate2D;
 import jnum.math.Range;
 import jnum.math.Vector2D;
+import jnum.projection.DefaultProjection2D;
+import jnum.projection.Projector2D;
 import jnum.reporting.BasicMessaging;
 import jnum.text.SmartTokenizer;
 import jnum.text.TableFormatter;
@@ -74,7 +78,6 @@ implements TableFormatter.Entries, BasicMessaging {
 
     private Configurator options, startupOptions;
     private PixelLayout<? super ChannelType> layout;
-    public Mount mount;
     private double rotation;
 
     private double frequency;
@@ -150,6 +153,13 @@ implements TableFormatter.Entries, BasicMessaging {
         return ".";
     }
     
+
+    public Projector2D<?> getProjectorInstance(Coordinate2D reference) {      
+        return new Projector2D<Coordinate2D>(new DefaultProjection2D(reference));      
+    }
+    
+    
+    public Grid2D<?> getGridInstance() { return new FlatGrid2D(); }
     
     // TODO check for incompatible scans
     public void validate(Vector<Scan<?,?>> scans) throws Exception {
@@ -201,6 +211,8 @@ implements TableFormatter.Entries, BasicMessaging {
         startupOptions = options.copy();
 
         reindex();
+        
+        initLayout();
         
         loadChannelData();   
          
@@ -909,14 +921,8 @@ implements TableFormatter.Entries, BasicMessaging {
         sampleWeights();
     }
 
-    // The pixel data file should contain the blind channel information as well...
-    // create the channel groups based on the wiring scheme.
-
-    public void loadChannelData(String fileName) throws IOException {
-        info("Loading pixel data from " + fileName);
-
-        final ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
-
+    
+    protected void initLayout() {
         rotation = 0.0;
         layout.initialize();
         
@@ -924,6 +930,7 @@ implements TableFormatter.Entries, BasicMessaging {
             try { readRCP(option("rcp").getPath()); }
             catch(IOException e) { warning("Cannot update pixel RCP data. Using values from FITS."); }
         }
+        
         
         // Apply instrument rotation...
         if(hasOption("rotation")) rotate(option("rotation").getDouble() * Unit.deg);
@@ -933,6 +940,17 @@ implements TableFormatter.Entries, BasicMessaging {
             double angle = ((Rotating) this).getRotation();
             if(angle != 0.0) rotate(angle);
         }   
+        
+    }
+    
+    // The pixel data file should contain the blind channel information as well...
+    // create the channel groups based on the wiring scheme.
+
+    public void loadChannelData(String fileName) throws IOException {
+        info("Loading pixel data from " + fileName);
+
+        final ChannelLookup<ChannelType> lookup = new ChannelLookup<ChannelType>(this);
+
         
         // Channels not contained in the data file are assumed dead...
         for(Channel channel : this) channel.flag(Channel.FLAG_DEAD);
@@ -1040,6 +1058,7 @@ implements TableFormatter.Entries, BasicMessaging {
 
     public void generateRCPFrom(String rcpFileName, String pixelFileName) throws IOException {
         readRCP(rcpFileName);
+        initLayout();
         loadChannelData(pixelFileName);
         printPixelRCP(System.out, null);
     }
@@ -1061,25 +1080,8 @@ implements TableFormatter.Entries, BasicMessaging {
     
     
 
-    
-    public final double getRotationAngle() {
-        return rotation;
-    }
-     
-    public void setRotationAngle(double angle) {
-        this.rotation = angle;
-    }
 
-    public void rotate(double angle) {
-        if(Double.isNaN(angle)) return;
-        
-        info("Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
-        
-        layout.rotate(angle);
-        
-        rotation += angle;
-    }
-    
+
 
     public synchronized void standardWeights() {
         if(standardWeights) return;
@@ -1112,7 +1114,7 @@ implements TableFormatter.Entries, BasicMessaging {
         if(hasOption("source.type")) {
             String type = option("source.type").getValue();
             if(type.equals("skydip")) return new SkyDip(this);		
-            if(type.equals("map")) return new AstroIntensityMap(this);
+            if(type.equals("map")) return new IntensityMap(this);
             if(type.equals("pixelmap")) return new PixelMap(this);
             if(type.equals("null")) return null;
             return null;
@@ -1128,29 +1130,51 @@ implements TableFormatter.Entries, BasicMessaging {
     public List<? extends Pixel> getMappingPixels(int keepFlags) { return layout.getMappingPixels(keepFlags); }
 
 
-    
-
-    public Vector2D getPointingCenterOffset() { return new Vector2D(); }
-    
-
-    
-    // Returns the offset of the pointing center from the the rotation center for a given rotation...
+    /*
+     *  Returns the offset of the pointing center from the the rotation center for a given rotation...
+     *  
+     *  @param rotationAngle    
+     *  
+     *  @return
+     */
     public Vector2D getPointingOffset(double rotationAngle) {
-        Vector2D offset = new Vector2D();
-        
-        final double sinA = Math.sin(rotationAngle);
-        final double cosA = Math.cos(rotationAngle);
-        
-        if(mount == Mount.CASSEGRAIN) {
-            Vector2D dP = getPointingCenterOffset();    
-            offset.setX(dP.x() * (1.0 - cosA) + dP.y() * sinA);
-            offset.setY(dP.x() * sinA + dP.y() * (1.0 - cosA));
-        }
-        return offset;
+        return new Vector2D();
     }
         
-  
+    
+    /*
+     * Returns the offset of the pointing center w.r.t. the optical axis in the natural focal-plane system of the instrument.
+     * 
+     * @return          The focal plane offset of the pointing center from the optical axis in the natural coordinate system
+     *                  of the instrument. 
+     * 
+     */
+    public Vector2D getPointingCenterOffset() { return new Vector2D(); }
+    
+    
+    public double getRotationAngle() {
+        return rotation;
+    }
+     
+    public void setRotationAngle(double angle) {
+        this.rotation = angle;
+    }
+    
 
+
+    
+    
+    public void rotate(double angle) {
+        if(Double.isNaN(angle)) return;
+        
+        info("Applying rotation at " + Util.f1.format(angle / Unit.deg) + " deg.");
+        
+        getLayout().rotate(angle);
+    }
+    
+
+    
+   
     public Hashtable<Integer, ChannelType> getFixedIndexLookup() {
         Hashtable<Integer, ChannelType> lookup = new Hashtable<Integer, ChannelType>();
         for(ChannelType channel : this) lookup.put(channel.getFixedIndex(), channel);
@@ -1564,10 +1588,9 @@ implements TableFormatter.Entries, BasicMessaging {
         if(name.equals("okchannels")) return mappingChannels;
         if(name.equals("channels")) return size();
         if(name.equals("maxchannels")) return storeChannels;
-        if(name.equals("mount")) return mount.name();
-        if(name.equals("rot")) return rotation / Unit.deg;
         if(name.equals("resolution")) return getResolution() / getSizeUnit().value();
         if(name.equals("sizeunit")) return getSizeUnit().name();
+        if(name.equals("rot")) return rotation / Unit.deg;
         if(name.equals("ptfilter")) return getAverageFiltering();
         if(name.equals("FWHM")) return getAverageBeamFWHM() / getSizeUnit().value();
         if(name.equals("minFWHM")) return getMinBeamFWHM() / getSizeUnit().value();

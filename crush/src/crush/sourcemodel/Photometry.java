@@ -25,9 +25,8 @@ package crush.sourcemodel;
 import crush.*;
 import jnum.Unit;
 import jnum.Util;
-import jnum.astro.EquatorialCoordinates;
 import jnum.data.*;
-import jnum.math.SphericalCoordinates;
+import jnum.math.Coordinate2D;
 
 import java.awt.Color;
 import java.io.File;
@@ -47,7 +46,6 @@ public abstract class Photometry extends SourceModel {
     public double integrationTime;
     public DataPoint[] flux;
     public DataPoint sourceFlux = new DataPoint();
-    public EquatorialCoordinates equatorial;
 
     protected Hashtable<Scan<?,?>, DataPoint> scanFluxes = new Hashtable<Scan<?,?>, DataPoint>();
 
@@ -60,7 +58,6 @@ public abstract class Photometry extends SourceModel {
     @Override
     public SourceModel copy(boolean withContents) {
         Photometry copy = (Photometry) super.copy(withContents);
-        if(equatorial != null) copy.equatorial = (EquatorialCoordinates) equatorial.copy();
         if(sourceFlux != null) copy.sourceFlux = sourceFlux.copy();
         if(flux != null) {
             copy.flux = new DataPoint[flux.length];
@@ -77,12 +74,11 @@ public abstract class Photometry extends SourceModel {
         super.createFrom(collection);
         Scan<?,?> firstScan = getFirstScan();
         sourceName = firstScan.getSourceName();
-        equatorial = firstScan.equatorial;
     }
 
     @Override
-    public SphericalCoordinates getReference() {
-        return equatorial;
+    public Coordinate2D getReference() {
+        return getFirstScan().getReferenceCoordinates();
     }
 
     @Override

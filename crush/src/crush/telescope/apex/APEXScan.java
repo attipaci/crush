@@ -26,7 +26,8 @@ package crush.telescope.apex;
 
 import crush.*;
 import crush.telescope.Chopper;
-import crush.telescope.GroundBased;
+import crush.telescope.GroundBasedScan;
+import crush.telescope.TelescopeFrame;
 import jnum.NonConformingException;
 import jnum.Unit;
 import jnum.Util;
@@ -52,7 +53,7 @@ import java.util.logging.Logger;
 
 
 public class APEXScan<InstrumentType extends APEXInstrument<? extends APEXContinuumPixel>, SubscanType extends APEXSubscan<InstrumentType, ? extends APEXFrame>> 
-extends Scan<InstrumentType, SubscanType> implements GroundBased {
+extends GroundBasedScan<InstrumentType, SubscanType> {
 	/**
 	 * 
 	 */
@@ -85,8 +86,8 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
     public void processPhaseGains(Hashtable<Integer, WeightedPoint[]> phaseGains) throws Exception {
 	    super.processPhaseGains(phaseGains);
 	    
-	    WeightedPoint[] L = phaseGains.get(Frame.CHOP_LEFT);
-	    WeightedPoint[] R = phaseGains.get(Frame.CHOP_RIGHT);
+	    WeightedPoint[] L = phaseGains.get(TelescopeFrame.CHOP_LEFT);
+	    WeightedPoint[] R = phaseGains.get(TelescopeFrame.CHOP_RIGHT);
 	    
 	    if(L == null && R == null) return;
 	    
@@ -427,5 +428,35 @@ extends Scan<InstrumentType, SubscanType> implements GroundBased {
 		if(name.equals("dir")) return AstroSystem.getID(basisSystem);
 		return super.getTableEntry(name);
 	}
+
+    @Override
+    public double getAmbientKelvins() {
+        return Double.NaN;  // TODO
+    }
+
+    @Override
+    public double getAmbientPressure() {
+        return Double.NaN;  // TODO
+    }
+
+    @Override
+    public double getAmbientHumidity() {
+        return Double.NaN;  // TODO
+    }
+
+    @Override
+    public double getWindSpeed() {
+        return Double.NaN;  // TODO
+    }
+
+    @Override
+    public double getWindDirection() {
+        return Double.NaN;  // TODO
+    }
+
+    @Override
+    public double getWindPeak() {
+        return Double.NaN;  // TODO
+    }
 	
 }

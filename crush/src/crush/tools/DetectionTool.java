@@ -65,7 +65,7 @@ import jnum.util.ConfidenceCalculator;
 public class DetectionTool {
 	static String version = "0.1-1";
 	
-	AstroIntensityMap image;
+	IntensityMap image;
 	SourceCatalog<?> catalog;
 	
 	double significance = 4.0;
@@ -105,7 +105,7 @@ public class DetectionTool {
 			}
 
 			
-			AstroIntensityMap image = detectionTool.image;
+			IntensityMap image = detectionTool.image;
 			
 			//image.extFilterFWHM = Double.NaN;
 			//image.clearRegions();
@@ -123,14 +123,14 @@ public class DetectionTool {
 	}
 
 
-	public void setImage(AstroIntensityMap map) {
+	public void setImage(IntensityMap map) {
 		this.image = map;
 		// Make sure map is convolved at least to beam
 		image.smoothTo(map.instrument.resolution);
 	}
 	
 	
-	public boolean extract(AstroIntensityMap image, String optionString) {
+	public boolean extract(IntensityMap image, String optionString) {
 		StringTokenizer tokens = new StringTokenizer(optionString, "=");
 
 		String key = tokens.nextToken();

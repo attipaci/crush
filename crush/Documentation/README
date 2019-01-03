@@ -2437,7 +2437,7 @@ Currently, CRUSH supports the following instruments (in alphabetical order):
                  High-resolution Airborne Wide-angle Camera
 
 
-The following instruments have legacy support only (supported by CRUSH 2.43-1
+The following instruments have legacy support only (supported by CRUSH 2.4x
 and earlier releases):
 
 

@@ -24,7 +24,7 @@
 package crush.instrument.scuba2;
 
 import crush.*;
-import crush.telescope.GroundBased;
+import crush.telescope.GroundBasedIntegration;
 import crush.telescope.jcmt.JCMTTauTable;
 import jnum.Unit;
 import jnum.Util;
@@ -39,7 +39,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements GroundBased {
+public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
 	/**
 	 * 
 	 */
@@ -99,7 +99,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 	public void printEquivalentTaus() {	
 		CRUSH.values(this, "--->"
 				+ " tau(225GHz):" + Util.f3.format(getTau("225ghz"))
-				+ ", tau(LOS):" + Util.f3.format(getTau("scuba2") / scan.horizontal.sinLat())
+				+ ", tau(LOS):" + Util.f3.format(getTau("scuba2") / getScan().horizontal.sinLat())
 				+ ", PWV:" + Util.f2.format(getTau("pwv")) + "mm"
 		);		
 	}
@@ -329,7 +329,7 @@ public class Scuba2Subscan extends Integration<Scuba2, Scuba2Frame> implements G
 				frame.MJD = MJDTAI[i] + TAI2TT;
 				time.setMJD(frame.MJD);
 						
-				frame.LST = time.getLMST(scan.site.longitude(), scuba2Scan.dUT1);
+				frame.LST = time.getLMST(getScan().site.longitude(), scuba2Scan.dUT1);
 					
 				frame.horizontal = new HorizontalCoordinates(AZ[i], EL[i]);
 				frame.horizontalOffset = new Vector2D((AZ[i] - tAZ[i]) * frame.horizontal.cosLat(), EL[i] - tEL[i]);		

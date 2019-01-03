@@ -59,7 +59,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 			double eps = (measuredLoad - instrument.excessLoad) / ((Sharc2Scan) scan).getAmbientKelvins();
 			double tauLOS = -Math.log(1.0-eps);
 			info("Tau from bolometers (not used):");
-			printEquivalentTaus(tauLOS * scan.horizontal.sinLat());
+			printEquivalentTaus(tauLOS * getScan().horizontal.sinLat());
 			
 			if(!hasOption("excessload")) instrument.excessLoad = measuredLoad - getSkyLoadTemperature();
 			info("Excess optical load on bolometers is " + Util.f1.format(instrument.excessLoad) + " K. (not used)");		
@@ -244,9 +244,7 @@ public class Sharc2Integration extends CSOIntegration<Sharc2, Sharc2Frame> {
 					        AZ[i] * Unit.deg + AZE[i] * Unit.arcsec,
 					        EL[i] * Unit.deg + ELE[i] * Unit.arcsec);
 
-					final double pa = PA[i] * Unit.deg;
-					frame.sinPA = Math.sin(pa);
-					frame.cosPA = Math.cos(pa);
+					frame.setParallacticAngle(PA[i] * Unit.deg);
 
 					frame.LST = LST[i] * Unit.hour;
 

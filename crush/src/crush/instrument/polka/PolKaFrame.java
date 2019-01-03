@@ -29,6 +29,7 @@ import crush.polarization.*;
 import crush.telescope.apex.APEXScan;
 import jnum.Constant;
 import jnum.Unit;
+import jnum.math.Angle;
 
 public class PolKaFrame extends LabocaFrame {
 	/**
@@ -103,9 +104,11 @@ public class PolKaFrame extends LabocaFrame {
 		    unpolarizedGain = 1.0F + Qh * polka.etaQh + Uh * polka.etaUh;
 		}
 		else {
+		    final Angle PA = getParallacticAngle();
+		    
 		    // calculate Q and U phases on sky based on the horizontal orientation...
-		    final float cos2PA = (float)(cosPA * cosPA - sinPA * sinPA);
-		    final float sin2PA = (float)(2.0 * sinPA * cosPA);
+		    final float cos2PA = (float)(PA.cos() * PA.cos() - PA.sin() * PA.sin());
+		    final float sin2PA = (float)(2.0 * PA.sin() * PA.cos());
 		
 		    // Rotate by PA 
 		    Q = cos2PA * Qh - sin2PA * Uh;

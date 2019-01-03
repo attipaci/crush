@@ -29,11 +29,11 @@ import java.io.PrintWriter;
 import java.util.Collection;
 
 import crush.CRUSH;
-import crush.Frame;
 import crush.PhaseData;
 import crush.PhaseSet;
 import crush.PhaseWeighting;
 import crush.instrument.SingleColorPixel;
+import crush.telescope.TelescopeFrame;
 import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
@@ -96,8 +96,8 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
 		final PhaseData B = phases.get(i-1);
 		
 		// Check that it's a left/right chop pair...
-		if(A.phase == Frame.CHOP_LEFT && B.phase != Frame.CHOP_RIGHT) return new WeightedPoint();
-		if(B.phase == Frame.CHOP_LEFT && A.phase != Frame.CHOP_RIGHT) return new WeightedPoint();
+		if(A.phase == TelescopeFrame.CHOP_LEFT && B.phase != TelescopeFrame.CHOP_RIGHT) return new WeightedPoint();
+		if(B.phase == TelescopeFrame.CHOP_LEFT && A.phase != TelescopeFrame.CHOP_RIGHT) return new WeightedPoint();
 		
 		// Check that neither phase is flagged...
 		if(A.isFlagged(this) || B.isFlagged(this)) return new WeightedPoint();
@@ -105,7 +105,7 @@ public abstract class APEXContinuumPixel extends SingleColorPixel implements Pha
 		final WeightedPoint signal = A.getValue(this);		
 		signal.subtract(B.getValue(this));
 		
-		if((A.phase & Frame.CHOP_LEFT) == 0) signal.scale(-1.0);
+		if((A.phase & TelescopeFrame.CHOP_LEFT) == 0) signal.scale(-1.0);
 		return signal;
 	}
 	

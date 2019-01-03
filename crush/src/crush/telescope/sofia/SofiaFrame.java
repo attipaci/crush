@@ -23,7 +23,6 @@
 
 package crush.telescope.sofia;
 
-import crush.Scan;
 import crush.telescope.HorizontalFrame;
 import jnum.astro.AstroProjector;
 import jnum.astro.EquatorialCoordinates;
@@ -48,7 +47,7 @@ public class SofiaFrame extends HorizontalFrame {
      
     public double PWV;
 
-    public SofiaFrame(Scan<?, ?> parent) {
+    public SofiaFrame(SofiaScan<?, ?> parent) {
         super(parent);
     }
    

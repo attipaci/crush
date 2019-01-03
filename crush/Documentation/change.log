@@ -1,5 +1,12 @@
+>> AstroModel2D.findOutliers()
+>> AstroModel2D.findSlewing()
+>> CSOInstrument rotation (explicit AND Nasmyth)
+
+
+
 2.50-a1
 
+	[FIX] {ElevationResponse} Change default serialVersionUID to generated.
 
 	[PRUNE] Remove future support for: ASZCa, p-ArTeMiS, MAKO, MAKO-2,
 	SHARC (first gen.), and MUSTANG-2. Legacy support for these instruments

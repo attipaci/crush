@@ -26,6 +26,7 @@ package crush.telescope.apex;
 
 import crush.*;
 import crush.sourcemodel.Photometry;
+import crush.telescope.TelescopeFrame;
 import jnum.data.DataPoint;
 import jnum.data.WeightedPoint;
 import jnum.math.Range;
@@ -88,8 +89,8 @@ public class APEXChoppedPhotometry extends Photometry {
 
 				//ArrayList<APEXContinuumPixel> neighbours = subscan.instrument.getNeighbours(pixel, radius * pixel.getResolution());
 
-				if((pixel.sourcePhase & Frame.CHOP_LEFT) != 0) point = left[pixel.getFixedIndex()];
-				else if((pixel.sourcePhase & Frame.CHOP_RIGHT) != 0) point = right[pixel.getFixedIndex()];
+				if((pixel.sourcePhase & TelescopeFrame.CHOP_LEFT) != 0) point = left[pixel.getFixedIndex()];
+				else if((pixel.sourcePhase & TelescopeFrame.CHOP_RIGHT) != 0) point = right[pixel.getFixedIndex()];
 				else return;
 
 				/*

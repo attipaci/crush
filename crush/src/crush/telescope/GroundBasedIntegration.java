@@ -1,0 +1,144 @@
+/*******************************************************************************
+ * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * All rights reserved. 
+ * 
+ * This file is part of crush.
+ * 
+ *     crush is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ * 
+ *     crush is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ * 
+ *     You should have received a copy of the GNU General Public License
+ *     along with crush.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * Contributors:
+ *     Attila Kovacs <attila[AT]sigmyne.com> - initial API and implementation
+ ******************************************************************************/
+
+
+package crush.telescope;
+
+
+
+import crush.CRUSH;
+import crush.Channel;
+import crush.Integration;
+import jnum.Util;
+import jnum.math.Vector2D;
+
+
+public abstract class GroundBasedIntegration<InstrumentType extends TelescopeInstrument<? extends Channel>, FrameType extends HorizontalFrame>
+extends Integration<InstrumentType, FrameType> implements GroundBased {
+
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 5302265555895118823L;
+    public double zenithTau = 0.0;
+    
+    
+    public GroundBasedIntegration(GroundBasedScan<InstrumentType, ? extends GroundBasedIntegration<?,?>> parent) {
+        super(parent);
+    }
+
+    
+    @Override
+    public GroundBasedScan<InstrumentType, GroundBasedIntegration<InstrumentType, FrameType>> getScan() { 
+        return (GroundBasedScan<InstrumentType, GroundBasedIntegration<InstrumentType, FrameType>>) super.getScan(); 
+    }
+   
+    
+    
+    @Override
+    public void validate() {
+        super.validate();
+        
+        if(hasOption("tau")) {
+            try { setTau(); }
+            catch(Exception e) { 
+                warning("Problem setting tau: " + e.getMessage()); 
+                if(CRUSH.debug) CRUSH.trace(e);
+            }
+        }
+        
+    }
+
+     
+ 
+    // Try in this order:
+    //   1. in-band value, e.g. "0.304"
+    //   2. scaling relation, e.g. "225GHz", provided "tau.225GHz" is defined.
+    //   
+    public void setTau() throws Exception { 
+        String spec = option("tau").getValue();
+
+        try { setTau(Double.parseDouble(spec)); }
+        catch(Exception notanumber) {
+            String id = spec.toLowerCase();
+            if(hasOption("tau." + id)) setTau(id, option("tau." + id).getDouble());
+            else throw new IllegalArgumentException("Supplied tau is neither a number nor a known subtype.");
+        }
+    }
+
+    public void setTau(String id, double value) {
+        Vector2D t = getTauCoefficients(id);
+        Vector2D inband = getTauCoefficients(instrument.getName());
+        try { setZenithTau(inband.x() / t.x() * (value - t.y()) + inband.y()); }
+        catch(Exception e) { 
+            warning("Could not set zenith tau: " + e.getMessage()); 
+            if(CRUSH.debug) CRUSH.trace(e);
+        }
+    }
+
+    public double getTau(String id, double value) {
+        Vector2D t = getTauCoefficients(id);
+        Vector2D inband = getTauCoefficients(instrument.getName());
+        return t.x() / inband.x() * (value - inband.y()) + t.y();
+    }
+
+    public double getTau(String id) {
+        return getTau(id, zenithTau);
+    }
+
+    public Vector2D getTauCoefficients(String id) {
+        String key = "tau." + id.toLowerCase();
+
+        if(!hasOption(key + ".a")) throw new IllegalStateException(key + " has no scaling relation.");
+
+        Vector2D coeff = new Vector2D();
+        coeff.setX(option(key + ".a").getDouble());
+        if(hasOption(key + ".b")) coeff.setY(option(key + ".b").getDouble());
+
+        return coeff;
+    }
+
+    public void setTau(final double value) throws Exception {   
+        try { setZenithTau(value); }
+        catch(NumberFormatException e) {}
+    }
+
+    public void setZenithTau(final double value) {
+        info("Setting zenith tau to " + Util.f3.format(value));
+        zenithTau = value;
+
+        for(FrameType frame : this) if(frame != null) ((HorizontalFrame) frame).setZenithTau(value);
+    }
+
+   
+    @Override
+    public Object getTableEntry(String name) {
+        if(name.equals("zenithtau")) return zenithTau;
+        if(name.equals("tau")) return zenithTau / Math.cos(getScan().horizontal.EL());
+        if(name.startsWith("tau.")) return getTau(name.substring(4).toLowerCase());
+        return super.getTableEntry(name);
+    }
+
+    
+}

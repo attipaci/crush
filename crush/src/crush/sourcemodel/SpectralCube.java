@@ -69,7 +69,7 @@ import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 
 
-public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
+public class SpectralCube extends SourceData2D<Index3D, Observation2D1> {
    
     /**
      * 
@@ -290,7 +290,7 @@ public class SpectralCube extends AstroData2D<Index3D, Observation2D1> {
 
 
     @Override
-    public void mergeAccumulate(AstroModel2D other) {
+    public void mergeAccumulate(SourceModel2D other) {
         cube.mergeAccumulate(((SpectralCube) other).cube);      
     }
 

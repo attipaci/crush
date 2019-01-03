@@ -27,33 +27,18 @@ package crush;
 import nom.tam.fits.*;
 import nom.tam.util.*;
 
+import crush.sourcemodel.*;
+import crush.telescope.InstantFocus;
+
+
 import java.io.*;
 import java.util.*;
-
-import crush.sourcemodel.*;
-import crush.telescope.GroundBased;
-import crush.telescope.HorizontalFrame;
-import crush.telescope.InstantFocus;
-import crush.telescope.Mount;
 import jnum.Configurator;
-import jnum.Constant;
 import jnum.ExtraMath;
 import jnum.LockedException;
 import jnum.Unit;
 import jnum.Util;
-import jnum.astro.AstroSystem;
 import jnum.astro.AstroTime;
-import jnum.astro.CelestialCoordinates;
-import jnum.astro.CoordinateEpoch;
-import jnum.astro.EclipticCoordinates;
-import jnum.astro.EquatorialCoordinates;
-import jnum.astro.FocalPlaneCoordinates;
-import jnum.astro.GalacticCoordinates;
-import jnum.astro.GeodeticCoordinates;
-import jnum.astro.HorizontalCoordinates;
-import jnum.astro.JulianEpoch;
-import jnum.astro.Precession;
-import jnum.astro.Weather;
 import jnum.data.*;
 import jnum.data.image.Asymmetry2D;
 import jnum.data.image.Map2D;
@@ -62,6 +47,7 @@ import jnum.data.image.region.CircularRegion;
 import jnum.data.image.region.EllipticalSource;
 import jnum.data.image.region.GaussianSource;
 import jnum.fits.FitsToolkit;
+import jnum.math.Coordinate2D;
 import jnum.math.CoordinateSystem;
 import jnum.math.Offset2D;
 import jnum.math.Range;
@@ -84,17 +70,11 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	private int serialNo = -1;
 	private double MJD = Double.NaN;
 	private String sourceName;
-	
-	public double LST = Double.NaN;
-	
+		
 	public String timeStamp;
 	public String descriptor;
 	public String observer, creator, project;
 	
-	public EquatorialCoordinates equatorial, apparent;
-	public HorizontalCoordinates horizontal;
-	public GeodeticCoordinates site;
-	public Precession fromApparent, toApparent;
 	public Vector2D pointingCorrection;
 	
 	public Range2D range;
@@ -134,31 +114,11 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
         }
 		
 		isNonSidereal |= hasOption("moving");
-		
-		Frame firstFrame = getFirstIntegration().getFirstFrame();
-		Frame lastFrame = getLastIntegration().getLastFrame();
-		
-		if(Double.isNaN(MJD)) setMJD(firstFrame.MJD);
-		if(Double.isNaN(LST)) LST = 0.5 * (firstFrame.LST + lastFrame.LST);
+
 		
 		//debug("MJD: " + Util.f3.format(MJD) + " --> Epoch is J" + Util.f2.format(JulianEpoch.getYearForMJD(MJD)));
 		//debug("LST: " + Util.f3.format(LST/Unit.hour));
-		
-		if(!hasOption("lab")) {
-		    if(equatorial == null) calcEquatorial();
-
-		    // Use J2000 coordinates
-		    if(!equatorial.epoch.equals(CoordinateEpoch.J2000)) precess(CoordinateEpoch.J2000);
-		    info("  Equatorial: " + equatorial.toString());
-
-		    // Calculate apparent and approximate horizontal coordinates.... 
-		    if(apparent == null) calcApparent();
-		    
-		    // TODO below are only for horizontal...
-		    if(Double.isNaN(LST)) LST = 0.5 * (getFirstIntegration().getFirstFrame().LST + getFirstIntegration().getFirstFrame().LST);
-		    if(horizontal == null && site != null) calcHorizontal();
-		    if(horizontal != null) info("  Horizontal: " + horizontal.toString());
-		}
+	
 		
 		for(int i=0; i<size(); ) {
 			Integration<InstrumentType, ?> integration = get(i);
@@ -196,7 +156,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	}
 	
 	public double getMJD() {
-		return MJD;
+	    return MJD;
 	}
 	
 	public void setMJD(double MJD) {
@@ -219,7 +179,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		sourceName = value;
 		instrument.setObjectOptions(sourceName);
 	}	
-	   
+
+	
     public Vector2D getPointingCorrection(Configurator option) {
         Vector2D correction = option.isEnabled ? option.getVector2D() : new Vector2D();
         if(option.hasOption("offset")) correction.add(option.option("offset").getVector2D());
@@ -239,87 +200,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		else pointingCorrection.add(correction);
 	}
 	
-	public void applyPointing() {
-		Offset2D differential = getNativePointingIncrement(pointing);
-		pointingAt(differential);
-		
-		Vector2D arcsecs = (Vector2D) differential.clone();
-		arcsecs.scale(1.0 / Unit.arcsec);
-		//debug("pointing at " + arcsecs);
-		
-		// Reset the source coordinates to the pointing center
-		if(pointing.getCoordinates() instanceof HorizontalCoordinates) 
-			pointing.setCoordinates(horizontal.clone());
 
-		else if(pointing.getCoordinates() instanceof EquatorialCoordinates) 
-			pointing.setCoordinates(equatorial.clone());
 
-		else ((CelestialCoordinates) pointing.getCoordinates()).fromEquatorial(equatorial);
-		
-		if(pointingCorrection == null) pointingCorrection = differential;
-		else pointingCorrection.add(differential);
-	}
-	
-	
-	public void precess(CoordinateEpoch epoch) {
-		Precession toEpoch = new Precession(equatorial.epoch, epoch);
-		toEpoch.precess(equatorial);
-		for(Integration<?,?> integration : this) for(Frame frame : integration) 
-			if(frame != null) if(frame.equatorial != null) toEpoch.precess(frame.equatorial);	
-		calcPrecessions(epoch);
-	}
-	
-	public void calcPrecessions(CoordinateEpoch epoch) {
-		JulianEpoch apparentEpoch = JulianEpoch.forMJD(MJD);
-		fromApparent = new Precession(apparentEpoch, epoch);
-		toApparent = new Precession(epoch, apparentEpoch);
-	}
-		
-	public void calcEquatorial() {
-		equatorial = horizontal.toEquatorial(site, LST);
-		equatorial.epoch = JulianEpoch.forMJD(MJD);
-		if(fromApparent == null) calcPrecessions(CoordinateEpoch.J2000);
-		fromApparent.precess(equatorial);		
-	}
-	
-	public void calcApparent() {
-		apparent = (EquatorialCoordinates) equatorial.clone();
-		if(toApparent == null) calcPrecessions(equatorial.epoch);
-		toApparent.precess(apparent);
-	}
-	
-	public void calcHorizontal() {  
-		if(apparent == null) calcApparent();
-		horizontal = apparent.toHorizontal(site, LST);
-	}
-	
-	public SphericalCoordinates getNativeCoordinates() { return horizontal; }
-	
-
-    public SphericalCoordinates getPositionReference(String system) {
-        if(system.equals("horizontal")) return horizontal;
-        else if(system.equals("native")) return getNativeCoordinates(); 
-        else if(system.equals("focalplane")) return new FocalPlaneCoordinates(); 
-        else if(isNonSidereal) return equatorial;
-        else if(system.equals("ecliptic")) {
-            EclipticCoordinates ecliptic = new EclipticCoordinates();
-            ecliptic.fromEquatorial(equatorial);
-            return ecliptic;
-        }
-        else if(system.equals("galactic")) {
-            GalacticCoordinates galactic = new GalacticCoordinates();
-            galactic.fromEquatorial(equatorial);
-            return galactic;
-        }
-        else if(system.equals("supergalactic")) {
-            EclipticCoordinates sg = new EclipticCoordinates();
-            sg.fromEquatorial(equatorial);
-            return sg;
-        }
-        else return equatorial;
-    }
-    
-	
 	public IntegrationType getFirstIntegration() {
 		return get(0); 
 	}
@@ -407,11 +289,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		add((IntegrationType) merged);
 	}
 	
-	public double getPA() {
-		HorizontalFrame first = (HorizontalFrame) get(0).getFirstFrame();
-		HorizontalFrame last = (HorizontalFrame) get(size()-1).getLastFrame();
-		return 0.5 * (Math.atan2(first.sinPA, first.cosPA) + Math.atan2(last.sinPA, last.cosPA));
-	}
+
 	
 	public BasicHDU<?> getSummaryHDU(Configurator global) throws FitsException, IOException {
 		Object[][] table = new Object[size()][];
@@ -470,61 +348,34 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(creator != null) c.add(new HeaderCard("CREATOR", creator, "Software that wrote the scan data"));
 		if(timeStamp != null) c.add(new HeaderCard("DATE-OBS", timeStamp, "Start of observation"));
 		
+        double MJD = getMJD();
+        if(!Double.isNaN(MJD)) c.add(new HeaderCard("MJD", MJD, "Modified Julian Day"));
+		
 		// The Source Descriptors
 		c.add(new HeaderCard("OBJECT", sourceName, "Object catalog name"));
-		c.add(new HeaderCard("RADESYS", (equatorial.epoch instanceof JulianEpoch ? "FK5" : "FK4"), "World coordinate system id"));
-		if(!Double.isNaN(equatorial.RA())) c.add(new HeaderCard("RA", Util.hf2.format(equatorial.RA()), "Human Readable Right Ascention"));
-		if(!Double.isNaN(equatorial.DEC())) c.add(new HeaderCard("DEC", Util.af1.format(equatorial.DEC()), "Human Readable Declination"));
-		c.add(new HeaderCard("EQUINOX", equatorial.epoch.getYear(), "Precession epoch"));	
 	
-		if(!Double.isNaN(MJD)) c.add(new HeaderCard("MJD", MJD, "Modified Julian Day"));
-		
-		if(this instanceof GroundBased) {
-			if(!Double.isNaN(LST)) c.add(new HeaderCard("LST", LST / Unit.hour, "Local Sidereal Time (hours)"));
-			if(!Double.isNaN(horizontal.AZ())) c.add(new HeaderCard("AZ", horizontal.AZ()/Unit.deg, "Azymuth (deg)."));
-			if(!Double.isNaN(horizontal.EL())) c.add(new HeaderCard("EL", horizontal.EL()/Unit.deg, "Elevation (deg)."));
-			if(!Double.isNaN(getPA())) c.add(new HeaderCard("PA", getPA()/Unit.deg, "Direction of zenith w.r.t. North (deg)"));
-		
-			if(site != null) {
-				c.add(new HeaderCard("SITELON", Util.af1.format(site.longitude()), "Geodetic longitude of the observing site (deg)"));
-				c.add(new HeaderCard("SITELAT", Util.af1.format(site.latitude()), "Geodetic latitude of the observing site (deg)"));
-			}
-		}
 		
 		c.add(new HeaderCard("WEIGHT", weight, "Relative source weight of the scan"));	
 		c.add(new HeaderCard("TRACKIN", isTracking, "Was the telescope tracking during the observation?"));
 		
 
-        if(pointing != null) editPointingHeaderInfo(header);
 		
 		instrument.editScanHeader(header);
 		
 	}
 	
-	public void editPointingHeaderInfo(Header header) throws HeaderCardException {
-	    if(pointing == null) return; 
 
-        Cursor<String, HeaderCard> c = FitsToolkit.endOf(header);
-        
-        c.add(new HeaderCard("COMMENT", "<------ Fitted Pointing / Calibration Info ------>", false));
-	    
-	    Offset2D relative = getNativePointingIncrement(pointing);
-        Unit sizeUnit = instrument.getSizeUnit();
-        
-        c.add(new HeaderCard("PNT_DX", relative.x() / sizeUnit.value(), "(" + sizeUnit.name() + ") pointing offset in native X."));
-        c.add(new HeaderCard("PNT_DY", relative.y() / sizeUnit.value(), "(" + sizeUnit.name() + ") pointing offset in native Y."));
-        
-        pointing.editHeader(header, instrument.getSizeUnit());
-	    
-	}
 	
 	public void setSourceModel(SourceModel model) {
 		sourceModel = model;
 	}
 	
 	public double getObservingTime() {
+	    return getObservingTime(~0);
+	}
+	
+	public double getObservingTime(int skipFlags) {
 		double t = 0.0;
-		int skipFlags = ~(Frame.CHOP_LEFT | Frame.CHOP_RIGHT);
 		for(IntegrationType integration : this) t += integration.getFrameCount(skipFlags) * integration.instrument.integrationTime;
 		return t;
 	}
@@ -570,9 +421,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	@Override
 	public Object getTableEntry(String name) {
 		
-		
-		if(horizontal == null) if(equatorial != null) if(site != null)
-		    horizontal = equatorial.toHorizontal(site, LST);
+	
 		
 		String sourceType = sourceModel == null ? "model." : sourceModel.getLoggingID();
 		
@@ -595,8 +444,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		}
 		if(name.startsWith("src.")) {
 			if(pointing == null) return null;
-			if(!(sourceModel instanceof AstroIntensityMap)) return null;
-			Map2D map = ((AstroIntensityMap) sourceModel).map;
+			if(!(sourceModel instanceof IntensityMap)) return null;
+			Map2D map = ((IntensityMap) sourceModel).map;
 			return pointing.getRepresentation(map.getGrid()).getData(map, instrument.getSizeUnit()).getTableEntry(name.substring(4));
 		}
 		if(name.equals("object")) return sourceName;
@@ -605,21 +454,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(name.equals("MJD")) return MJD;
 		if(name.equals("UT")) return (MJD - Math.floor(MJD)) * Unit.day;
 		if(name.equals("UTh")) return (MJD - Math.floor(MJD)) * 24.0;
-		if(name.equals("PA")) return getPA();
-		if(name.equals("PAd")) return getPA() / Unit.deg;
-		if(name.equals("AZ")) return horizontal.AZ();
-		if(name.equals("EL")) return horizontal.EL();
-		if(name.equals("RA")) return equatorial.RA() / Unit.timeAngle;
-		if(name.equals("DEC")) return equatorial.DEC();
-		if(name.equals("AZd")) return horizontal.AZ() / Unit.deg;
-		if(name.equals("ELd")) return horizontal.EL() / Unit.deg;
-		if(name.equals("RAd")) return equatorial.RA() / Unit.deg;
-		if(name.equals("RAh")) return ((equatorial.RA() + 2.0 * Math.PI) / Unit.hourAngle) % 24.0;
-		if(name.equals("DECd")) return equatorial.DEC() / Unit.deg;
-		if(name.equals("epoch")) return equatorial.epoch.toString();
-		if(name.equals("epochY")) return equatorial.epoch.getYear();
-		if(name.equals("LST")) return LST;
-		if(name.equals("LSTh")) return LST / Unit.hour;
+        if(name.equals("PA")) return getPositionAngle();
+        if(name.equals("PAd")) return getPositionAngle() / Unit.deg;
 		if(name.equals("date")) {
 			AstroTime time = new AstroTime();
 			time.setMJD(MJD);
@@ -636,14 +472,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		if(name.equals("creator")) return creator;
 		if(name.equals("integrations")) return size();
 		if(name.equals("generation")) return getSourceGeneration();
-		if(this instanceof Weather) {	
-			if(name.equals("Tamb")) return ((Weather) this).getAmbientKelvins() - Constant.zeroCelsius;
-			if(name.equals("humidity")) return ((Weather) this).getAmbientHumidity();
-			if(name.equals("pressure")) return ((Weather) this).getAmbientPressure() / Unit.hPa;
-			if(name.equals("windspeed")) return ((Weather) this).getWindSpeed() / (Unit.m / Unit.s);
-			if(name.equals("windpk")) return ((Weather) this).getWindPeak() / (Unit.m / Unit.s);
-			if(name.equals("winddir"))	return ((Weather) this).getWindDirection() / Unit.deg;
-		}
+		
 		if(sourceModel != null) {
 		    Object modelEntry = sourceModel.getTableEntry(name);
 		    if(modelEntry != null) return modelEntry;
@@ -797,6 +626,45 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	public String getID() { return Integer.toString(serialNo); }
 
+	public abstract Coordinate2D getNativeCoordinates();
+	
+	public Coordinate2D getReferenceCoordinates() { return getNativeCoordinates(); }
+	
+	public Coordinate2D getPositionReference(String system) {
+        return getNativeCoordinates(); 
+	}
+	 
+	/**
+	 * The angle between the reference coordinates (e.g. equatorial) and the native coordinate system of the telescope (e.g. horizontal).
+	 * 
+	 * 
+	 * @return
+	 */
+	public double getPositionAngle() { return 0.0; }
+	
+    public Offset2D getNativePointing(GaussianSource source) {
+        Offset2D pointing = getNativePointingIncrement(source);
+        if(pointingCorrection != null) pointing.add(pointingCorrection);
+        return pointing;
+    }
+	
+	public Offset2D getNativePointingIncrement(GaussianSource source) {
+        if(!source.getCoordinates().getClass().equals(sourceModel.getReference().getClass()))
+            throw new IllegalArgumentException("pointing source is in a different coordinate system from source model.");
+        
+        Coordinate2D sourceCoords = source.getCoordinates();
+        Coordinate2D nativeCoords = getNativeCoordinates();
+        
+        if(sourceCoords instanceof Vector2D) if(sourceCoords.getClass().equals(nativeCoords.getClass())) {
+            Vector2D offset = new Vector2D(sourceModel.getReference());
+            offset.subtract((Vector2D) sourceCoords);
+            offset.invert();
+            return new Offset2D(sourceModel.getReference(), offset);
+        }
+        
+        return null;
+	}
+	
 	
 	public DataTable getPointingData() throws IllegalStateException {
 		if(pointing == null) throw new IllegalStateException("No pointing data for scan " + getID());
@@ -828,17 +696,7 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		data.new Entry(nameX, absolute.x(), sizeUnit);
 		data.new Entry(nameY, absolute.y(), sizeUnit);
 		
-		// Also print Nasmyth offsets if applicable...
-		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
-			Vector2D nasmyth = getNasmythOffset(relative);
-			
-			data.new Entry("dNasX", nasmyth.x(), sizeUnit);
-			data.new Entry("dNasY", nasmyth.y(), sizeUnit);
-			
-			nasmyth = getNasmythOffset(absolute);
-			data.new Entry("NasX", nasmyth.x(), sizeUnit);
-			data.new Entry("NasY", nasmyth.y(), sizeUnit);
-		}
+	
 		
 		Asymmetry2D asym = getSourceAsymmetry(pointing);
 		data.new Entry("asymX", 100.0 * asym.getX().value(), "%");
@@ -869,8 +727,8 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	public String getPointingString() {
 		String info = "";
 			
-		if(sourceModel instanceof AstroIntensityMap) {
-			Observation2D map = ((AstroIntensityMap) sourceModel).map;
+		if(sourceModel instanceof IntensityMap) {
+			Observation2D map = ((IntensityMap) sourceModel).map;
 			info += pointing.pointingInfo(map) + "\n";
 		}
 		
@@ -880,35 +738,30 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 	
 	
 	public Asymmetry2D getSourceAsymmetry(CircularRegion region) {
-		if(!(sourceModel instanceof AstroIntensityMap)) return null;
+		if(!(sourceModel instanceof IntensityMap)) return null;
 		
 		Range radialRange = new Range(
 		        instrument.getPointSize(),
 		        (hasOption("focus.r") ? option("focus.r").getDouble() : 2.5) * instrument.getPointSize()
 		);
 		
+		return getSourceAsymmetry(region, radialRange);
+	}
 		
-		AstroIntensityMap source = ((AstroIntensityMap) sourceModel); 
-		AstroSystem system = source.astroSystem();
-		
-		CircularRegion.Representation r = region.getRepresentation(source.getGrid());
-		
-		if(!(system.isEquatorial() || system.isHorizontal())) return r.getAsymmetry2D(source.map, 0.0, radialRange);
-		   
-		
-		boolean isGroundEquatorial = this instanceof GroundBased && system.isEquatorial();
-		double angle = isGroundEquatorial ? this.getPA() : 0.0;
+	public Asymmetry2D getSourceAsymmetry(CircularRegion region, Range radialRange) {	
+	    if(!(sourceModel instanceof IntensityMap)) return null;
 
-		return r.getAsymmetry2D(source.map.getSignificance(), angle, radialRange);
+        IntensityMap source = ((IntensityMap) sourceModel);
+        
+        CircularRegion.Representation r = region.getRepresentation(source.getGrid());
+	    return r.getAsymmetry2D(source.map.getSignificance(), 0.0, radialRange);
 	}
 	
 	public DataPoint getSourceElongationX(EllipticalSource ellipse) {
 		DataPoint elongation = new DataPoint(ellipse.getElongation());
 		DataPoint angle = new DataPoint(ellipse.getPositionAngle());
 		
-		if(instrument instanceof GroundBased && pointing.getCoordinates() instanceof EquatorialCoordinates) {
-			angle.add(-getPA());
-		}
+		angle.subtract(getPositionAngle());
 		
 		elongation.scale(Math.cos(2.0 * angle.value()));
 		return elongation;		
@@ -979,115 +832,28 @@ extends Vector<IntegrationType> implements Comparable<Scan<?, ?>>, TableFormatte
 		text += "  Offset: ";
 		text += Util.f1.format(nativePointing.x() / sizeUnit.value()) + ", " + Util.f1.format(nativePointing.y() / sizeUnit.value()) + " " 
 			+ sizeUnit.name() + " (" + nameX + "," + nameY + ")";
-		
-		// Also print Nasmyth offsets if applicable...
-		if(instrument.mount == Mount.LEFT_NASMYTH || instrument.mount == Mount.RIGHT_NASMYTH) {
-			Vector2D nasmyth = getNasmythOffset(nativePointing);
-			text += "\n  Offset: ";		
-			text += Util.f1.format(nasmyth.x() / sizeUnit.value()) + ", " + Util.f1.format(nasmyth.y() / sizeUnit.value()) + " " 
-				+ sizeUnit.name() + " (nasmyth)";
-		}
+	
 		
 		return text;
 	}	
 	
 
 
+	   public String getASCIIHeader() {
+	        return 
+	                "# CRUSH version: " + CRUSH.getFullVersion() +
+	                "# Instrument: " + instrument.getName() + "\n" +
+	                "# Scan: " + getID() + "\n" +
+	                "# Object: " + getSourceName() + "\n" +
+	                "# Date: " + timeStamp + " (MJD: " + getMJD() + ")\n" +
+	                "# Project: " + project + "\n";
+	    }
+	
 
-	public Vector2D getEquatorialPointing(GaussianSource source) {
-		if(!source.getCoordinates().getClass().equals(sourceModel.getReference().getClass()))
-			throw new IllegalArgumentException("pointing source is in a different coordinate system from source model.");
-		
-		
-		EquatorialCoordinates sourceCoords = null;
-		EquatorialCoordinates reference = null;
-		
-		if(source.getCoordinates() instanceof EquatorialCoordinates) {
-			sourceCoords = (EquatorialCoordinates) source.getCoordinates();
-			reference = (EquatorialCoordinates) sourceModel.getReference();
-			if(!sourceCoords.epoch.equals(equatorial.epoch)) sourceCoords.precess(equatorial.epoch);
-		}
-		else {
-			sourceCoords = (EquatorialCoordinates) equatorial.clone();
-			reference = (EquatorialCoordinates) equatorial.clone();
-			((CelestialCoordinates) source.getCoordinates()).toEquatorial(sourceCoords);
-			((CelestialCoordinates) sourceModel.getReference()).toEquatorial(reference);
-		}
-			
-		return sourceCoords.getOffsetFrom(reference);
-	}
-	
-	
-	
-	public Offset2D getNativePointing(GaussianSource source) {
-		Offset2D pointing = getNativePointingIncrement(source);
-		if(pointingCorrection != null) pointing.add(pointingCorrection);
-		return pointing;
-	}
-	
-	public Offset2D getNativePointingIncrement(GaussianSource source) {
-		if(!source.getCoordinates().getClass().equals(sourceModel.getReference().getClass()))
-			throw new IllegalArgumentException("pointing source is in a different coordinate system from source model.");
-		
-		SphericalCoordinates sourceCoords = (SphericalCoordinates) source.getCoordinates();
-		SphericalCoordinates nativeCoords = getNativeCoordinates();
-		
-		SphericalCoordinates reference = (SphericalCoordinates) sourceModel.getReference();
-		
-		if(sourceCoords.getClass().equals(nativeCoords.getClass())) {
-		    return new Offset2D(sourceModel.getReference(), sourceCoords.getOffsetFrom(reference));
-        }
-		else if(sourceCoords instanceof EquatorialCoordinates)
-			return getNativeOffsetOf(new Offset2D(sourceModel.getReference(), sourceCoords.getOffsetFrom(reference)));
-		else if(sourceCoords instanceof CelestialCoordinates) {
-			EquatorialCoordinates sourceEq = ((CelestialCoordinates) sourceCoords).toEquatorial();
-			EquatorialCoordinates refEq = ((CelestialCoordinates) sourceModel.getReference()).toEquatorial();
-			return getNativeOffsetOf(new Offset2D(refEq, sourceEq.getOffsetFrom(refEq)));
-		}
-		else if(sourceCoords instanceof FocalPlaneCoordinates) {
-		    Vector2D offset = sourceCoords.getOffsetFrom(reference);
-		    offset.rotate(-0.5*(getFirstIntegration().getFirstFrame().getRotation() + getLastIntegration().getLastFrame().getRotation()));
-		    return new Offset2D(new FocalPlaneCoordinates(), offset);
-		}
-		
-		return null;
-	}
+
  
-	public Offset2D getNativeOffsetOf(Offset2D equatorial) {
-	    if(!equatorial.getCoordinateClass().equals(EquatorialCoordinates.class))
-	        throw new IllegalArgumentException("not an equatorial offset");
-	    
-	    // Equatorial offset (RA/DEC)
-        Vector2D offset = new Vector2D(equatorial);
-        
-        // Rotate to Horizontal...
-        Vector2D from = (Vector2D) offset.clone();
-        ((HorizontalFrame) getFirstIntegration().getFirstFrame()).equatorialToNative(from);
-        Vector2D to = (Vector2D) offset.clone();
-        ((HorizontalFrame) getLastIntegration().getLastFrame()).equatorialToNative(to);
-        offset.setX(0.5 * (from.x() + to.x()));
-        offset.setY(0.5 * (from.y() + to.y()));
-        return new Offset2D(getNativeCoordinates(), offset);
-	}
 
-	// Inverse rotation from Native to Nasmyth...
-	public Vector2D getNasmythOffset(Offset2D pointing) {
-		SphericalCoordinates coords = getNativeCoordinates();
-		if(!pointing.getCoordinateClass().equals(coords.getClass())) 
-		    throw new IllegalArgumentException("non-native pointing offset."); 
-		
-		double sinA = instrument.mount == Mount.LEFT_NASMYTH ? -coords.sinLat() : coords.sinLat();
-		double cosA = coords.cosLat();
-		
-		
-		// Inverse rotation from Native to Nasmyth...
-		Vector2D nasmyth = new Vector2D();
-		nasmyth.setX(cosA * pointing.x() + sinA * pointing.y());
-		nasmyth.setY(cosA * pointing.y() - sinA * pointing.x());
-		
-		return nasmyth;
-	}
-	
+
 	@Override
 	public String toString() { return "Scan " + getID(); }
 	

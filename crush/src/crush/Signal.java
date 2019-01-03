@@ -389,7 +389,7 @@ public class Signal implements Serializable, Cloneable, Copiable<Signal> {
 				
 				return globalIncrement;
 			}
-			
+
 		};
 		increments.process();
 		return increments.getResult();

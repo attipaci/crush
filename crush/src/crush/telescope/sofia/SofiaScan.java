@@ -25,6 +25,7 @@ package crush.telescope.sofia;
 
 import crush.*;
 import crush.telescope.GroundBased;
+import crush.telescope.GroundBasedScan;
 import jnum.Constant;
 import jnum.Unit;
 import jnum.Util;
@@ -43,7 +44,7 @@ import java.util.*;
 
 
 public abstract class SofiaScan<InstrumentType extends SofiaInstrument<? extends Channel>, IntegrationType extends SofiaIntegration<InstrumentType, ? extends SofiaFrame>> 
-extends Scan<InstrumentType, IntegrationType> implements Weather, GroundBased {
+extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather, GroundBased {
     /**
      * 
      */

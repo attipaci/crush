@@ -22,7 +22,7 @@
  ******************************************************************************/
 // Copyright (c) 2007,2008,2009,2010 Attila Kovacs
 
-package crush.instrument.sharc2;
+package crush.telescope.cso;
 
 import java.io.*;
 
@@ -33,12 +33,13 @@ import jnum.text.SmartTokenizer;
 
 
 public class ElevationCouplingCurve extends Interpolator {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 
-	public ElevationCouplingCurve(String fileName) throws IOException {
+	/**
+     * 
+     */
+    private static final long serialVersionUID = -5270756363805282761L;
+
+    public ElevationCouplingCurve(String fileName) throws IOException {
 		super(fileName);		
 	}
 	

@@ -28,17 +28,17 @@ import nom.tam.fits.BasicHDU;
 import nom.tam.fits.FitsException;
 import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCardException;
-import crush.Instrument;
 import crush.Scan;
 import crush.instrument.Rotating;
 import crush.instrument.SingleColorLayout;
 import crush.instrument.SingleColorPixel;
 import crush.telescope.GroundBased;
 import crush.telescope.Mount;
+import crush.telescope.TelescopeInstrument;
 import jnum.Unit;
 import jnum.Util;
 
-public abstract class CSOInstrument<PixelType extends SingleColorPixel> extends Instrument<PixelType> implements GroundBased, Rotating {
+public abstract class CSOInstrument<PixelType extends SingleColorPixel> extends TelescopeInstrument<PixelType> implements GroundBased, Rotating {
 	/**
 	 * 
 	 */
@@ -131,6 +131,7 @@ public abstract class CSOInstrument<PixelType extends SingleColorPixel> extends 
 	public double getRotation() {
 		return (mount == Mount.CASSEGRAIN ? rotatorAngle : 0.0) - rotatorZeroAngle;
 	}
+	
 
 	public void parseScanPrimaryHDU(BasicHDU<?> hdu) throws HeaderCardException, FitsException {
 		Header header = hdu.getHeader();

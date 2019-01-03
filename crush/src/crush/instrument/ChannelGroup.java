@@ -29,7 +29,6 @@ import java.util.*;
 
 import crush.CRUSH;
 import crush.Channel;
-import crush.CRUSH.Fork;
 import jnum.Copiable;
 import jnum.data.Statistics;
 

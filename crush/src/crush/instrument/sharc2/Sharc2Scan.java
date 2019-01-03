@@ -68,7 +68,7 @@ public class Sharc2Scan extends CSOScan<Sharc2, Sharc2Integration> {
 			
 		// When the telescope is not tracking, the equatorial coordinates may be bogus...
 		// Use the horizontal coordinates to make sure the equatorial ones make sense...
-		EquatorialCoordinates eq2 = horizontal.toEquatorial(site, LST);
+		EquatorialCoordinates eq2 = horizontal.toEquatorial(site, LST);		
 		eq2.epoch = apparent.epoch;		
 		eq2.precess(equatorial.epoch);
 		

@@ -105,7 +105,31 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> implements GridIndexed {
 	public Scan<?, ?> getScanInstance() {
 		return new Sharc2Scan(this);
 	}
+	
+	
+	@Override
+    protected void initLayout() {
+	    // Update the pointing center...
+        if(hasOption("pcenter")) arrayPointingCenter = option("pcenter").getVector2D();
+        
+        Vector2D pixelSize = Sharc2Pixel.defaultSize;
+        
+        // Set the pixel size...
+        if(hasOption("pixelsize")) {
+            pixelSize = new Vector2D();
+            StringTokenizer tokens = new StringTokenizer(option("pixelsize").getValue(), " \t,:xX");
+            pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
+            pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
+        }
 
+        calcPositions(pixelSize);
+        
+        checkRotation();
+        
+        super.initLayout();
+        
+	}
+	
 	@Override
     protected void loadChannelData() {
 		double gainCompress = 1.0;
@@ -119,25 +143,7 @@ public class Sharc2 extends CSOInstrument<Sharc2Pixel> implements GridIndexed {
 			catch(IOException e) { warning("Problem parsing nonlinearity file."); }		
 		}
 	
-		// Update the pointing center...
-		if(hasOption("pcenter")) arrayPointingCenter = option("pcenter").getVector2D();
-		
-		Vector2D pixelSize = Sharc2Pixel.defaultSize;
-		
-		// Set the pixel size...
-		if(hasOption("pixelsize")) {
-			pixelSize = new Vector2D();
-			StringTokenizer tokens = new StringTokenizer(option("pixelsize").getValue(), " \t,:xX");
-			pixelSize.setX(Double.parseDouble(tokens.nextToken()) * Unit.arcsec);
-			pixelSize.setY(tokens.hasMoreTokens() ? Double.parseDouble(tokens.nextToken()) * Unit.arcsec : pixelSize.x());
-		}
-
-		calcPositions(pixelSize);
-		
-		
-	
-		checkRotation();
-		
+			
 		super.loadChannelData();
 		
 		gain *= gainCompress;

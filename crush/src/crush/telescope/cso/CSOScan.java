@@ -28,10 +28,8 @@ import nom.tam.fits.Header;
 import nom.tam.fits.HeaderCard;
 import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
-import crush.Scan;
 import crush.instrument.SingleColorPixel;
-import crush.instrument.sharc2.ElevationCouplingCurve;
-import crush.telescope.GroundBased;
+import crush.telescope.GroundBasedScan;
 import crush.telescope.HorizontalFrame;
 import jnum.Unit;
 import jnum.Util;
@@ -43,7 +41,7 @@ import jnum.math.Vector2D;
 import jnum.util.DataTable;
 
 public abstract class CSOScan<InstrumentType extends CSOInstrument<? extends SingleColorPixel>, IntegrationType extends CSOIntegration<InstrumentType, ? extends HorizontalFrame>> 
-extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
+extends GroundBasedScan<InstrumentType, IntegrationType> implements Weather {
 	/**
 	 * 
 	 */
@@ -93,17 +91,7 @@ extends Scan<InstrumentType, IntegrationType> implements GroundBased, Weather {
 	}
 
 
-	@Override
-	public void calcHorizontal() {
-		HorizontalFrame firstFrame = getFirstIntegration().getFirstFrame();
-		HorizontalFrame lastFrame = getLastIntegration().getLastFrame();
-		
-		horizontal = new HorizontalCoordinates(
-				0.5 * (firstFrame.horizontal.x() + lastFrame.horizontal.x()),  
-				0.5 * (firstFrame.horizontal.y() + lastFrame.horizontal.y())
-		);
-			
-	}
+
 	
 	@Override
 	public void validate() {

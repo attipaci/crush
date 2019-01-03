@@ -25,7 +25,7 @@
 package crush.instrument.gismo;
 
 import crush.*;
-import crush.telescope.GroundBased;
+import crush.telescope.GroundBasedScan;
 import crush.telescope.PointingTable;
 import crush.telescope.iram.IRAMPointingModel;
 import crush.telescope.iram.IRAMScanID;
@@ -51,7 +51,7 @@ import java.text.*;
 import java.util.*;
 
 
-public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBased, Weather {
+public class GismoScan extends GroundBasedScan<Gismo, GismoIntegration> implements Weather {
 	/**
 	 * 
 	 */
@@ -92,8 +92,7 @@ public class GismoScan extends Scan<Gismo, GismoIntegration> implements GroundBa
 	@Override
 	public void validate() {	
 		super.validate();
-		double PA = 0.5 * (getFirstIntegration().getFirstFrame().getParallacticAngle() + getLastIntegration().getLastFrame().getParallacticAngle());
-		info("Mean parallactic angle is " + Util.f1.format(PA / Unit.deg) + " deg.");	
+		info("Mean parallactic angle is " + Util.f1.format(getPositionAngle() / Unit.deg) + " deg.");	
 	}
 	
 	

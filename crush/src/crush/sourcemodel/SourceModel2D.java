@@ -35,40 +35,36 @@ import jnum.Configurator;
 import jnum.ExtraMath;
 import jnum.Unit;
 import jnum.Util;
-import jnum.astro.AstroProjector;
 import jnum.astro.AstroSystem;
-import jnum.astro.CoordinateEpoch;
-import jnum.astro.EquatorialCoordinates;
-import jnum.data.Statistics;
 import jnum.data.image.Data2D;
 import jnum.data.image.Gaussian2D;
+import jnum.data.image.Grid2D;
 import jnum.data.image.Image2D;
 import jnum.data.image.Index2D;
 import jnum.data.image.Map2D;
 import jnum.data.image.Observation2D;
 import jnum.data.image.SphericalGrid;
+import jnum.math.Coordinate2D;
 import jnum.math.Range;
 import jnum.math.Range2D;
-import jnum.math.SphericalCoordinates;
 import jnum.math.Vector2D;
 import jnum.parallel.ParallelTask;
 import jnum.plot.BufferedImageLayer;
 import jnum.plot.ColorScheme;
 import jnum.plot.ImageArea;
 import jnum.plot.colorscheme.Colorful;
-import jnum.projection.Gnomonic;
 import jnum.projection.Projection2D;
-import jnum.projection.SphericalProjection;
+import jnum.projection.Projector2D;
 import nom.tam.fits.FitsException;
 
 
-public abstract class AstroModel2D extends SourceModel {	
+public abstract class SourceModel2D extends SourceModel {	
     /**
      * 
      */
     private static final long serialVersionUID = -8110425445687949465L;
 
-    private SphericalGrid grid;
+    private Grid2D<?> grid;
     
     public double smoothing = 0.0;  // TODO eliminate?
    
@@ -77,16 +73,16 @@ public abstract class AstroModel2D extends SourceModel {
     private int indexShiftX, indexMaskY;
 
     
-    public AstroModel2D(Instrument<?> instrument) {
+    public SourceModel2D(Instrument<?> instrument) {
         super(instrument);
-        grid = new SphericalGrid();
+        grid = instrument.getGridInstance();
         grid.setResolution(hasOption("grid") ? option("grid").getDouble() * instrument.getSizeUnit().value() : 0.2 * instrument.getResolution());  
     }
 
     @Override
-    public AstroModel2D copy(boolean withContents) {
-        AstroModel2D copy = (AstroModel2D) super.copy(withContents);
-        if(grid != null) copy.grid = (SphericalGrid) grid.copy();
+    public SourceModel2D copy(boolean withContents) {
+        SourceModel2D copy = (SourceModel2D) super.copy(withContents);
+        if(grid != null) copy.grid = grid.copy();
         return copy;
     }
 
@@ -102,7 +98,7 @@ public abstract class AstroModel2D extends SourceModel {
     
     public abstract Map2D getMap2D();
     
-    public abstract void mergeAccumulate(AstroModel2D other);
+    public abstract void mergeAccumulate(SourceModel2D other);
 
     public abstract void setSize(int sizeX, int sizeY);
 
@@ -134,21 +130,24 @@ public abstract class AstroModel2D extends SourceModel {
 
     public final int pixels() { return sizeX() * sizeY(); }
 
-    public final SphericalGrid getGrid() { return grid; }
+    public final Grid2D<?> getGrid() { return grid; }
     
  
     protected boolean isAddingToMaster() { return false; }
 
 
-    public final Projection2D<SphericalCoordinates> getProjection() { return grid.getProjection(); }
+    public final Projection2D<?> getProjection() { return grid.getProjection(); }
+    
+    public final Projector2D<?> getProjectorInstance() { return getInstrument().getProjectorInstance(getReference()); }
     
     
-    public final void setProjection(Projection2D<SphericalCoordinates> projection) {
-        getGrid().setProjection(projection);
+    public final void setProjection(Projection2D<?> projection) {
+        getGrid().setProjection((Projection2D) projection);
     }
+   
 
     @Override
-    public final SphericalCoordinates getReference() {
+    public final Coordinate2D getReference() {
         return getGrid().getReference();
     }
 
@@ -185,24 +184,15 @@ public abstract class AstroModel2D extends SourceModel {
 
 
     
-    public AstroSystem astroSystem() {
-        return new AstroSystem(getGrid().getReference().getClass());
-    }
- 
-  
+
     @Override
     public void createFrom(Collection<? extends Scan<?,?>> collection) throws Exception {
         super.createFrom(collection);
         
         info("Initializing Source Map.");	
     
-        Projection2D<SphericalCoordinates> projection = null;
-
-        try { projection = hasOption("projection") ? SphericalProjection.forName(option("projection").getValue()) : new Gnomonic(); }
-        catch(Exception e) { projection = new Gnomonic(); }		
-        
-        projection.setReference(getFirstScan().getPositionReference(hasOption("system") ? option("system").getValue() : "equatorial")); 
-        setProjection(projection);
+        Coordinate2D ref = getFirstScan().getPositionReference(hasOption("system") ? option("system").getValue() : "equatorial");
+        setProjection(getInstrument().getProjectorInstance(ref).getProjection());
 
         setSize();
 
@@ -266,12 +256,12 @@ public abstract class AstroModel2D extends SourceModel {
         final Collection<? extends Pixel> pixels = instrument.getMappingPixels(~instrument.sourcelessChannelFlags());
 
         new CRUSH.Fork<Void>(integration.size(), integration.getThreadCount()) {
-            private AstroProjector projector;
+            private Projector2D<?> projector;
 
             @Override
             public void init() {
                 super.init();
-                projector = new AstroProjector(getProjection());
+                projector = getProjectorInstance();
             }
 
             @Override
@@ -357,13 +347,13 @@ public abstract class AstroModel2D extends SourceModel {
         indexMaskY = (1<<indexShiftX) - 1;
 
         integration.new Fork<Void>() {
-            private AstroProjector projector;
+            private Projector2D<?> projector;
             private Index2D index;
 
             @Override
             protected void init() {
                 super.init();
-                projector = new AstroProjector(getProjection());
+                projector = getProjectorInstance();
                 index = new Index2D();
             }
 
@@ -392,7 +382,7 @@ public abstract class AstroModel2D extends SourceModel {
         }.process();
     }
 
-    public final void getIndex(final Frame exposure, final Pixel pixel, final AstroProjector projector, final Index2D index) {
+    public final void getIndex(final Frame exposure, final Pixel pixel, final Projector2D<?> projector, final Index2D index) {
         if(exposure.sourceIndex == null) {
             exposure.project(pixel.getPosition(), projector);
             getGrid().getIndex(projector.offset, index);    
@@ -545,6 +535,7 @@ public abstract class AstroModel2D extends SourceModel {
     public Collection<Scan<?,?>> findOutliers(double maxDistance) {
         ArrayList<Scan<?,?>> outliers = new ArrayList<Scan<?,?>>();
 
+        /* TODO
         int scans = numberOfScans();
         
         float[] ra = new float[scans];
@@ -567,17 +558,23 @@ public abstract class AstroModel2D extends SourceModel {
             double d = equatorial.distanceTo(median);
             if(d > maxDistance) outliers.add(scan);
         }
+        */
+        
         return outliers;
     }
 
     public Collection<Scan<?,?>> findSlewing(double maxDistance) {
         ArrayList<Scan<?,?>> slews = new ArrayList<Scan<?,?>>();
+        
+        /*
         double cosLat = getProjection().getReference().cosLat();
 
         for(Scan<?,?> scan : getScans()) {
             double span = ExtraMath.hypot(scan.range.getXRange().span() * cosLat, scan.range.getYRange().span());
             if(span > maxDistance) slews.add(scan);
         }
+        */
+        
         return slews;
     }
 
@@ -598,8 +595,8 @@ public abstract class AstroModel2D extends SourceModel {
     protected int addForkFrames(final Integration<?,?> integration, final List<? extends Pixel> pixels, final double[] sourceGain, final int signalMode) {	
         
         class Mapper extends CRUSH.Fork<Integer> {
-            private AstroModel2D localSource;
-            private AstroProjector projector;
+            private SourceModel2D localSource;
+            private Projector2D<?> projector;
             private Index2D index;
             private int mappingFrames = 0;
 
@@ -609,10 +606,10 @@ public abstract class AstroModel2D extends SourceModel {
             protected void init() {         
                 super.init();
     
-                if(isAddingToMaster()) localSource = AstroModel2D.this;
-                else localSource = (AstroModel2D) getRecycledCleanLocalCopy();
+                if(isAddingToMaster()) localSource = SourceModel2D.this;
+                else localSource = (SourceModel2D) getRecycledCleanLocalCopy();
                 
-                projector = new AstroProjector(localSource.getProjection());   
+                projector = localSource.getProjectorInstance();   
                 index = new Index2D();
             }
 
@@ -648,7 +645,7 @@ public abstract class AstroModel2D extends SourceModel {
                     mappingFrames += task.getLocalResult();
 
                     if(!isAddingToMaster()) {
-                        AstroModel2D localMap = ((Mapper) task).localSource;
+                        SourceModel2D localMap = ((Mapper) task).localSource;
                         mergeAccumulate(localMap);
                         localMap.recycle();
                     }
@@ -673,8 +670,8 @@ public abstract class AstroModel2D extends SourceModel {
         }
 
         class Mapper extends CRUSH.Fork<Void> {
-            private AstroModel2D localSource;
-            private AstroProjector projector;
+            private SourceModel2D localSource;
+            private Projector2D<?> projector;
             private Index2D index;
 
             Mapper() { super(pixels.size(), integration.getThreadCount()); }
@@ -683,10 +680,10 @@ public abstract class AstroModel2D extends SourceModel {
             protected void init() {
                 super.init();
 
-                if(isAddingToMaster()) localSource = AstroModel2D.this;
-                else localSource = (AstroModel2D) getRecycledCleanLocalCopy();
+                if(isAddingToMaster()) localSource = SourceModel2D.this;
+                else localSource = (SourceModel2D) getRecycledCleanLocalCopy();
 
-                projector = new AstroProjector(localSource.getProjection());
+                projector = localSource.getProjectorInstance();
                 index = new Index2D();
             }
 
@@ -706,7 +703,7 @@ public abstract class AstroModel2D extends SourceModel {
             @Override
             public Void getResult() {				
                 for(ParallelTask<Void> task : getWorkers()) if(!isAddingToMaster()) {
-                    AstroModel2D localMap = ((Mapper) task).localSource;
+                    SourceModel2D localMap = ((Mapper) task).localSource;
                     mergeAccumulate(localMap);
                     localMap.recycle();
                 }
@@ -773,13 +770,13 @@ public abstract class AstroModel2D extends SourceModel {
         if(CRUSH.debug) debug("sync.pixels " + pixels.size() + " : " + integration.instrument.size());
 
         integration.new Fork<Void>() {
-            private AstroProjector projector;
+            private Projector2D<?> projector;
             private Index2D index;
 
             @Override
             public void init() {
                 super.init();
-                projector = new AstroProjector(getProjection());
+                projector = getProjectorInstance();
                 index = new Index2D();
             }
 
@@ -789,7 +786,7 @@ public abstract class AstroModel2D extends SourceModel {
 
                 // Remove source from all but the blind channels...
                 for(final Pixel pixel : pixels)  {
-                    AstroModel2D.this.getIndex(exposure, pixel, projector, index);	
+                    SourceModel2D.this.getIndex(exposure, pixel, projector, index);	
                     sync(exposure, pixel, index, fG, sourceGain, integration.sourceSyncGain);
                 }
             }
@@ -868,7 +865,11 @@ public abstract class AstroModel2D extends SourceModel {
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("smooth")) return smoothing / getInstrument().getSizeUnit().value();
-        if(name.equals("system")) return astroSystem().getID();
+        if(name.equals("system")) {
+            Grid2D<?> grid = getGrid();
+            if(grid instanceof SphericalGrid) return new AstroSystem(((SphericalGrid) grid).getReference().getClass()).getID();
+            return "cartesian";
+        }
         return super.getTableEntry(name);
     }
     
