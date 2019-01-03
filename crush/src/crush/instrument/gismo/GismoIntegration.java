@@ -47,6 +47,9 @@ public class GismoIntegration extends GroundBasedIntegration<Gismo, GismoFrame> 
 	}	
 	
 	@Override
+    public GismoScan getScan() { return (GismoScan) super.getScan(); }
+	
+	@Override
 	public void setTau() throws Exception {
 		super.setTau();
 		printEquivalentTaus();

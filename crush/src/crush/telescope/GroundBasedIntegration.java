@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -34,7 +34,7 @@ import jnum.math.Vector2D;
 
 
 public abstract class GroundBasedIntegration<InstrumentType extends TelescopeInstrument<? extends Channel>, FrameType extends HorizontalFrame>
-extends Integration<InstrumentType, FrameType> implements GroundBased {
+extends Integration<InstrumentType, FrameType> {
 
 
     /**
@@ -44,14 +44,15 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
     public double zenithTau = 0.0;
     
     
-    public GroundBasedIntegration(GroundBasedScan<InstrumentType, ? extends GroundBasedIntegration<?,?>> parent) {
+    public GroundBasedIntegration(GroundBasedScan<InstrumentType, ? extends GroundBasedIntegration<InstrumentType, ? extends FrameType>> parent) {
         super(parent);
     }
-
+  
     
+    @SuppressWarnings("unchecked")
     @Override
-    public GroundBasedScan<InstrumentType, GroundBasedIntegration<InstrumentType, FrameType>> getScan() { 
-        return (GroundBasedScan<InstrumentType, GroundBasedIntegration<InstrumentType, FrameType>>) super.getScan(); 
+    public GroundBasedScan<InstrumentType, ? extends GroundBasedIntegration<InstrumentType, FrameType>> getScan() { 
+        return (GroundBasedScan<InstrumentType, ? extends GroundBasedIntegration<InstrumentType, FrameType>>) super.getScan(); 
     }
    
     
@@ -66,8 +67,7 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
                 warning("Problem setting tau: " + e.getMessage()); 
                 if(CRUSH.debug) CRUSH.trace(e);
             }
-        }
-        
+        }     
     }
 
      
@@ -130,13 +130,19 @@ extends Integration<InstrumentType, FrameType> implements GroundBased {
 
         for(FrameType frame : this) if(frame != null) ((HorizontalFrame) frame).setZenithTau(value);
     }
-
-   
+    
+    
     @Override
     public Object getTableEntry(String name) {
         if(name.equals("zenithtau")) return zenithTau;
         if(name.equals("tau")) return zenithTau / Math.cos(getScan().horizontal.EL());
         if(name.startsWith("tau.")) return getTau(name.substring(4).toLowerCase());
+        if(name.startsWith("chop") && this instanceof Chopping) {
+            Chopper chopper = ((Chopping) this).getChopper();
+            if(chopper == null) return null;
+            return chopper.getTableEntry(name);
+        }
+        
         return super.getTableEntry(name);
     }
 

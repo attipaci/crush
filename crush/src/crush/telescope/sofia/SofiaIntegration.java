@@ -39,8 +39,14 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
     private static final long serialVersionUID = -4771883165716694480L;
 
 
-    public SofiaIntegration(SofiaScan<InstrumentType, ?> parent) {
+    public SofiaIntegration(SofiaScan<InstrumentType, ? extends SofiaIntegration<InstrumentType, FrameType>> parent) {
         super(parent);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public SofiaScan<InstrumentType, ? extends SofiaIntegration<InstrumentType, FrameType>> getScan() { 
+        return (SofiaScan<InstrumentType, ? extends SofiaIntegration<InstrumentType, FrameType>>) super.getScan(); 
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -40,7 +40,7 @@ import nom.tam.fits.HeaderCardException;
 import nom.tam.util.Cursor;
 
 public abstract class GroundBasedScan<InstrumentType extends TelescopeInstrument<? extends Channel>, IntegrationType extends GroundBasedIntegration<InstrumentType, ?>> 
-extends TelescopeScan<InstrumentType, IntegrationType> implements GroundBased, Weather { 
+extends TelescopeScan<InstrumentType, IntegrationType> implements Weather { 
     /**
      * 
      */
@@ -94,7 +94,7 @@ extends TelescopeScan<InstrumentType, IntegrationType> implements GroundBased, W
     public double getPositionAngle() {
         return 0.5 * (getFirstIntegration().getFirstFrame().getParallacticAngle().value() + getLastIntegration().getLastFrame().getParallacticAngle().value());
     }
-
+    
     @Override
     public SphericalCoordinates getPositionReference(String system) {
         if(system.equals("horizontal")) return horizontal;

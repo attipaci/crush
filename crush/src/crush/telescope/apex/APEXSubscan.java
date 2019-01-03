@@ -56,9 +56,20 @@ extends GroundBasedIntegration<InstrumentType, FrameType> implements PhaseModula
 	
 	double pwv = Double.NaN;
 	
-	public APEXSubscan(APEXScan<InstrumentType, ?> parent) {
+	public APEXSubscan(APEXScan<InstrumentType, ? extends APEXSubscan<InstrumentType, ? extends FrameType>> parent) {
 		super(parent);
 	}
+	
+    @SuppressWarnings("unchecked")
+    @Override
+    public APEXScan<InstrumentType, ? extends APEXSubscan<InstrumentType, FrameType>> getScan() { 
+        return (APEXScan<InstrumentType, ? extends APEXSubscan<InstrumentType, FrameType>>) super.getScan(); 
+    }
+    
+    
+    public APEXScan<InstrumentType, APEXSubscan<InstrumentType, FrameType>> getScanInstance() {
+        return new APEXScan<InstrumentType, APEXSubscan<InstrumentType, FrameType>>(instrument);
+    }
 	
 	@Override
 	public void setTau() throws Exception {	

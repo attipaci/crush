@@ -30,7 +30,6 @@ import crush.instrument.DistortionModel;
 import crush.instrument.GridIndexed;
 import crush.instrument.PixelLayout;
 import crush.instrument.SingleColorLayout;
-import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import crush.telescope.TelescopeInstrument;
 import jnum.Unit;
@@ -38,7 +37,7 @@ import jnum.Util;
 import jnum.math.Vector2D;
 import nom.tam.fits.*;
 
-public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GroundBased, GridIndexed {
+public class Scuba2 extends TelescopeInstrument<Scuba2Pixel> implements GridIndexed {
 	/**
 	 * 
 	 */

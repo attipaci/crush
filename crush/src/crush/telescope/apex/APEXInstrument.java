@@ -27,7 +27,6 @@ package crush.telescope.apex;
 import crush.*;
 import crush.instrument.SingleColorLayout;
 import crush.instrument.SingleColorPixel;
-import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import crush.telescope.TelescopeInstrument;
 import jnum.Unit;
@@ -41,7 +40,7 @@ import java.util.List;
 import java.util.Vector;
 
 
-public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> extends TelescopeInstrument<ChannelType> implements GroundBased {
+public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> extends TelescopeInstrument<ChannelType> {
 	/**
 	 * 
 	 */
@@ -138,8 +137,8 @@ public abstract class APEXInstrument<ChannelType extends APEXContinuumPixel> ext
 	}
 
 	@Override
-	public Scan<?, ?> getScanInstance() {
-		return new APEXScan<APEXInstrument<?>, APEXSubscan<APEXInstrument<?>,?>>(this);
+	public APEXScan<? extends APEXInstrument<ChannelType>, ? extends APEXSubscan<? extends APEXInstrument<ChannelType>, ?>> getScanInstance() {
+		return new APEXScan<APEXInstrument<ChannelType>, APEXSubscan<APEXInstrument<ChannelType>, ?>>(this);
 	}
 
 	@Override

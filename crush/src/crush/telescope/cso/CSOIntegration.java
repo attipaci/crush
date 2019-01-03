@@ -42,9 +42,15 @@ extends GroundBasedIntegration<InstrumentType, FrameType> {
 	 */
 	private static final long serialVersionUID = 8762250193431287809L;
 
-	public CSOIntegration(CSOScan<InstrumentType, ?> parent) {
+	public CSOIntegration(CSOScan<InstrumentType, ? extends CSOIntegration<InstrumentType, ? extends FrameType>> parent) {
 		super(parent);
 	}
+	
+    @SuppressWarnings("unchecked")
+    @Override
+    public CSOScan<InstrumentType, ? extends CSOIntegration<InstrumentType, FrameType>> getScan() { 
+        return (CSOScan<InstrumentType, ? extends CSOIntegration<InstrumentType, FrameType>>) super.getScan(); 
+    }
 	
 	@Override
 	public void validate() {	

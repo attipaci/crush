@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -22,6 +22,7 @@
  ******************************************************************************/
 
 package crush.telescope;
+
 
 import crush.Channel;
 import crush.Instrument;
@@ -96,5 +97,6 @@ public abstract class TelescopeInstrument<ChannelType extends Channel> extends I
         return super.getTableEntry(name);        
     }
     
+
     
 }

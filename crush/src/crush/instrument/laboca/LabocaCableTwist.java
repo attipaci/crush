@@ -26,7 +26,7 @@ import crush.Channel;
 import crush.instrument.ZeroMeanGains;
 
 /**
- * @author pumukli
+ * @author Attila Kovacs <attila@sigmyne.com>
  *
  */
 public class LabocaCableTwist extends ZeroMeanGains {

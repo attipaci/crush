@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -55,6 +55,7 @@ import jnum.plot.ImageArea;
 import jnum.plot.colorscheme.Colorful;
 import jnum.projection.Projection2D;
 import jnum.projection.Projector2D;
+
 import nom.tam.fits.FitsException;
 
 
@@ -566,7 +567,7 @@ public abstract class SourceModel2D extends SourceModel {
     public Collection<Scan<?,?>> findSlewing(double maxDistance) {
         ArrayList<Scan<?,?>> slews = new ArrayList<Scan<?,?>>();
         
-        /*
+        /* TODO
         double cosLat = getProjection().getReference().cosLat();
 
         for(Scan<?,?> scan : getScans()) {

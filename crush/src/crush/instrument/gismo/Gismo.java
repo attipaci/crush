@@ -33,7 +33,6 @@ import crush.instrument.ChannelLookup;
 import crush.instrument.GridIndexed;
 import crush.instrument.PixelLayout;
 import crush.instrument.SingleColorLayout;
-import crush.telescope.GroundBased;
 import crush.telescope.InstantFocus;
 import crush.telescope.Mount;
 import crush.telescope.TelescopeInstrument;
@@ -45,7 +44,7 @@ import jnum.math.Vector2D;
 import jnum.text.SmartTokenizer;
 import nom.tam.fits.*;
 
-public class Gismo extends TelescopeInstrument<GismoPixel> implements GroundBased, GridIndexed {
+public class Gismo extends TelescopeInstrument<GismoPixel> implements GridIndexed {
 	/**
 	 * 
 	 */

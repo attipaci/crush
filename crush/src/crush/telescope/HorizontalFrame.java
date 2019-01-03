@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -32,7 +32,7 @@ import jnum.math.Vector2D;
 import jnum.projection.Projector2D;
 
 
-public abstract class HorizontalFrame extends TelescopeFrame implements GroundBased {
+public abstract class HorizontalFrame extends TelescopeFrame {
 	/**
 	 * 
 	 */

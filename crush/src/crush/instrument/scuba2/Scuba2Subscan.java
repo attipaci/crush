@@ -56,6 +56,8 @@ public class Scuba2Subscan extends GroundBasedIntegration<Scuba2, Scuba2Frame> {
 		super(parent);
 	}	
 	
+	@Override
+    public Scuba2Scan getScan() { return (Scuba2Scan) super.getScan(); }
 	
 	@Override
 	public void setTau() throws Exception {

@@ -48,6 +48,9 @@ public class HirmesIntegration extends SofiaIntegration<Hirmes, HirmesFrame> {
     public HirmesIntegration(HirmesScan parent) {
         super(parent);
     }   
+    
+    @Override
+    public HirmesScan getScan() { return (HirmesScan) super.getScan(); }
 
     @Override
     public HirmesFrame getFrameInstance() {

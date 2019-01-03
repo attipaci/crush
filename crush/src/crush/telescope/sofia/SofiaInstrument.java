@@ -46,7 +46,6 @@ import crush.CRUSH;
 import crush.Channel;
 import crush.Scan;
 import crush.instrument.PixelLayout;
-import crush.telescope.GroundBased;
 import crush.telescope.Mount;
 import crush.telescope.TelescopeInstrument;
 import jnum.Constant;
@@ -55,7 +54,7 @@ import jnum.astro.AstroTime;
 import jnum.fits.FitsToolkit;
 import jnum.math.Vector2D;
 
-public abstract class SofiaInstrument<ChannelType extends Channel> extends TelescopeInstrument<ChannelType> implements GroundBased {
+public abstract class SofiaInstrument<ChannelType extends Channel> extends TelescopeInstrument<ChannelType> {
     /**
      * 
      */

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -60,7 +60,7 @@ import nom.tam.fits.*;
 
 /**
  * 
- * @author pumukli
+ * @author Attila Kovacs <attila@sigmyne.com>
  *
  * @param <InstrumentType>
  * @param <FrameType>
@@ -121,7 +121,7 @@ implements Comparable<Integration<InstrumentType, FrameType>>, TableFormatter.En
         clone.dependents = new Hashtable<String, Dependents>(); 
         clone.signals = new Hashtable<Mode, Signal>();
         clone.filter = null;
-        if(this instanceof Chopping) ((Chopping) this).setChopper(null);
+        if(this instanceof Chopping) ((Chopping) clone).setChopper(null);
 
         return clone;
     }

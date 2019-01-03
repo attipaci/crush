@@ -54,6 +54,9 @@ public class HawcIntegration extends SofiaIntegration<Hawc, HawcFrame> {
     public HawcIntegration(HawcScan parent) {
         super(parent);
     }	
+    
+    @Override
+    public HawcScan getScan() { return (HawcScan) super.getScan(); }
 
     @Override
     public HawcFrame getFrameInstance() {

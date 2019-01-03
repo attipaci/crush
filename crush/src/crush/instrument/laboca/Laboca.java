@@ -238,7 +238,7 @@ public class Laboca extends APEXInstrument<LabocaPixel> implements NonOverlappin
 	
 
 	@Override
-	public Scan<?, ?> getScanInstance() {
+	public LabocaScan getScanInstance() {
 		return new LabocaScan(this);
 	}
 	

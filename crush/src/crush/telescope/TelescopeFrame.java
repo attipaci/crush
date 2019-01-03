@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -63,6 +63,7 @@ public abstract class TelescopeFrame extends Frame {
         return copy;
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public TelescopeScan<? extends TelescopeInstrument<?>, ? extends Integration<?, ? extends TelescopeFrame>> getScan() { 
         return (TelescopeScan<? extends TelescopeInstrument<?>, ? extends Integration<?, ? extends TelescopeFrame>>) scan; 

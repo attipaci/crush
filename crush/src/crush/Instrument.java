@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Attila Kovacs <attila[AT]sigmyne.com>.
+ * Copyright (c) 2019 Attila Kovacs <attila[AT]sigmyne.com>.
  * All rights reserved. 
  * 
  * This file is part of crush.
@@ -1635,7 +1635,7 @@ implements TableFormatter.Entries, BasicMessaging {
         CRUSH.suggest(getParent(), new String(buf));
     }
     
-    
+
 
     public int[] getInts() { return recycler.getIntArray(size()); }
 
