@@ -138,7 +138,6 @@ implements TableFormatter.Entries, BasicMessaging {
         isValid = false;
         isInitialized = false;
         startupOptions = null;
-        
     }
     
     public Configurator getOptions() {

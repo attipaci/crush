@@ -64,12 +64,14 @@ public class SofiaTelescopeData extends SofiaData {
 
         telConfig = header.getString("TELCONF");
 
-        epoch = header.containsKey("EQUINOX") ? CoordinateEpoch.forString(header.getDouble("EQUINOX") + "") : CoordinateEpoch.J2000;
+        epoch = CoordinateEpoch.J2000;
+        if(header.containsKey("EQUINOX")) epoch = CoordinateEpoch.forString(header.getDouble("EQUINOX", 2000.0) + "");
 
         requestedEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, epoch);
-          
+
         boresightEquatorial = new EquatorialCoordinates(Double.NaN, Double.NaN, epoch);
-        if(header.containsKey("TELEQUI")) boresightEquatorial.epoch = CoordinateEpoch.forString(header.getString("TELEQUI"));
+        if(header.containsKey("TELEQUI")) boresightEquatorial.epoch = CoordinateEpoch.forString(header.getString("TELEQUI", "J2000"));
+
 
         try { 
             double RA = header.getHMSTime("TELRA");
@@ -105,7 +107,7 @@ public class SofiaTelescopeData extends SofiaData {
         trackingMode = header.getString("TRACMODE", null);
         hasTrackingError = header.getBoolean("TRACERR", false);
 
-        
+
     }
 
 
@@ -186,10 +188,10 @@ public class SofiaTelescopeData extends SofiaData {
     @Override
     public void setEnd(SofiaData last) {
         super.setEnd(last);
-        
+
         SofiaTelescopeData telescope = (SofiaTelescopeData) last;
         tascuStatus = telescope.tascuStatus;
         fbcStatus = telescope.fbcStatus;
     }
-    
+
 }

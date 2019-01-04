@@ -61,7 +61,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
     private static final long serialVersionUID = 6284421525275783456L;
 
     private final static String version = "2.50-a1";
-    private final static String revision = "devel.9";
+    private final static String revision = "devel.10";
 
     public static String home = ".";
     public static boolean debug = false;
@@ -183,8 +183,6 @@ public class CRUSH extends Configurator implements BasicMessaging {
         
         commandLine = args;
         for(int i=1; i<args.length; i++) if(args[i].length() > 0) parseArgument(args[i]);
-     
-        validate();
     }
 
     
@@ -298,7 +296,7 @@ public class CRUSH extends Configurator implements BasicMessaging {
         else return super.getProperty(name);
     }
 
-    public void validate() throws Exception {	
+    private void validate() throws Exception {	
         consoleReporter.addLine();
 
         if(!debug) Logger.getLogger(HeaderCard.class.getName()).setLevel(Level.WARNING);
@@ -614,6 +612,8 @@ public class CRUSH extends Configurator implements BasicMessaging {
      * @see #getBroadcaster()
      */
     public void reduce() throws Exception {	
+        validate();
+        
         int rounds = 0;
 
         status(this, "Reducing " + scans.size() + " scan(s).");

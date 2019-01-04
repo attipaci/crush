@@ -242,16 +242,19 @@ extends GroundBasedScan<IntegrationType> implements Weather {
         AstroTime time = new AstroTime();
         time.parseFitsTimeStamp(timeStamp);
         setMJD(time.getMJD());	
+        
+        checksum = header.getString("DATASUM");             // not in 3.0
+        checksumVersion = header.getString("CHECKVER");     // not in 3.0
+       
+        
         calcPrecessions(CoordinateEpoch.J2000);
-
-        checksum = header.getString("DATASUM");				// not in 3.0
-        checksumVersion = header.getString("CHECKVER");		// not in 3.0
 
         observation = new SofiaObservationData(header);
         setSourceName(observation.sourceName);
         project = observation.aorID;
         //descriptor = observation.obsID;
 
+        
         mode = new SofiaCollectionData(header);
         processing = new SofiaProcessingData(header);
         mission = new SofiaMissionData(header);

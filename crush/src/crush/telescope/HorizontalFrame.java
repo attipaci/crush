@@ -183,7 +183,7 @@ public abstract class HorizontalFrame extends TelescopeFrame {
 	@Override
 	public void pointingAt(Vector2D center) {
 		super.pointingAt(center);
-		calcEquatorial();
+		if(hasTelescopeInfo) calcEquatorial();
 	}
 	
 	public void setZenithTau(double value) {
